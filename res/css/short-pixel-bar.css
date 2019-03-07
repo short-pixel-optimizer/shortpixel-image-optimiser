@@ -1,0 +1,43 @@
+/**
+CSS for features that are displayed on all Admin page, like the bar status icon and some alerts.
+ */
+li.shortpixel-toolbar-processing > a.ab-item > div,
+#wpadminbar li.shortpixel-toolbar-processing > a.ab-item > div{
+    /*    background-image: url("../img/loading-dark-big.gif");
+        background-position: center center;
+        background-repeat: no-repeat;
+    */    height: 33px;
+    margin-top: -1px;
+    padding: 0 3px;
+}
+li.shortpixel-toolbar-processing > a.ab-item > div > img,
+#wpadminbar li.shortpixel-toolbar-processing > a.ab-item > div > img{
+    margin-right: 2px;
+    margin-top: 6px;
+}
+li.shortpixel-toolbar-processing > a.ab-item > div > span.shp-alert,
+#wpadminbar li.shortpixel-toolbar-processing > a.ab-item > div > span.shp-alert{
+    display:none;
+}
+li.shortpixel-toolbar-processing.shortpixel-alert > a.ab-item > div > span.shp-alert,
+#wpadminbar li.shortpixel-toolbar-processing.shortpixel-alert > a.ab-item > div > span.shp-alert{
+    display: inline;
+    font-size: 26px;
+    color: red;
+    font-weight: bold;
+    vertical-align: top;
+}
+li.shortpixel-toolbar-processing.shortpixel-alert > a.ab-item > div,
+#wpadminbar li.shortpixel-toolbar-processing.shortpixel-alert > a.ab-item > div{
+    background-image: none;
+}
+.sp-quota-exceeded-alert {
+    background-color: #fff;
+    border-left: 4px solid #ff0000;
+    box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.1);
+    padding: 1px 12px;
+}
+.shortpixel-clearfix {
+    width:100%;
+    float:left;
+}
