@@ -2,14 +2,14 @@
 
 if( ! class_exists( 'WP_List_Table' ) ) {
     require_once( ABSPATH . 'wp-admin/includes/class-wp-list-table.php' );
-}        
+}
 
 class ShortPixelListTable extends WP_List_Table {
 
     protected $ctrl;
     protected $spMetaDao;
     protected $hasNextGen;
-    
+
     public function __construct($ctrl, $spMetaDao, $hasNextGen) {
         parent::__construct( array(
             'singular' => __('Image','shortpixel-image-optimiser'), //singular name of the listed records
@@ -29,6 +29,7 @@ class ShortPixelListTable extends WP_List_Table {
         $columns['name'] = __('Filename','shortpixel-image-optimiser');
         $columns['folder'] = __('Folder','shortpixel-image-optimiser');
         $columns['media_type'] = __('Type','shortpixel-image-optimiser');
+        $columns['date'] = __('Date', 'shortpixel-image-optimiser');
         $columns['status'] = __('Status','shortpixel-image-optimiser');
         $columns['options'] = __('Options','shortpixel-image-optimiser');
         //$columns = apply_filters('shortpixel_list_columns', $columns);
@@ -39,34 +40,34 @@ class ShortPixelListTable extends WP_List_Table {
     function column_cb( $item ) {
         return sprintf('<input type="checkbox" name="bulk-optimize[]" value="%s" />', $item->id);
     }
-    
+
     function column_default( $item, $column_name ) {
-        switch( $column_name ) { 
+        switch( $column_name ) {
             case 'name':
                 $title = '<a href="' . ShortPixelMetaFacade::pathToWebPath($item->folder) . '" title="'.$item->folder.'" target="_blank"><strong>' . $item->name . '</strong></a>';
 
                 $url = ShortPixelMetaFacade::pathToWebPath($item->folder);
                 $actions = array(
-                    'optimize' => sprintf( '<a href="?page=%s&action=%s&image=%s&_wpnonce=%s&noheader=true">%s</a>', 
-                            esc_attr( $_REQUEST['page'] ), 'optimize', absint( $item->id ), wp_create_nonce( 'sp_optimize_image' ), 
+                    'optimize' => sprintf( '<a href="?page=%s&action=%s&image=%s&_wpnonce=%s&noheader=true">%s</a>',
+                            esc_attr( $_REQUEST['page'] ), 'optimize', absint( $item->id ), wp_create_nonce( 'sp_optimize_image' ),
                             __('Optimize','shortpixel-image-optimiser')),
-                    'retry' => sprintf( '<a href="?page=%s&action=%s&image=%s&_wpnonce=%s&noheader=true">%s</a>', 
-                            esc_attr( $_REQUEST['page'] ), 'optimize', absint( $item->id ), wp_create_nonce( 'sp_optimize_image' ), 
+                    'retry' => sprintf( '<a href="?page=%s&action=%s&image=%s&_wpnonce=%s&noheader=true">%s</a>',
+                            esc_attr( $_REQUEST['page'] ), 'optimize', absint( $item->id ), wp_create_nonce( 'sp_optimize_image' ),
                             __('Retry','shortpixel-image-optimiser')),
-                    'restore' => sprintf( '<a href="?page=%s&action=%s&image=%s&_wpnonce=%s&noheader=true">%s</a>', 
-                            esc_attr( $_REQUEST['page'] ), 'restore', absint( $item->id ), wp_create_nonce( 'sp_restore_image' ), 
+                    'restore' => sprintf( '<a href="?page=%s&action=%s&image=%s&_wpnonce=%s&noheader=true">%s</a>',
+                            esc_attr( $_REQUEST['page'] ), 'restore', absint( $item->id ), wp_create_nonce( 'sp_restore_image' ),
                             __('Restore','shortpixel-image-optimiser')),
-                    'redolossless' => sprintf( '<a href="?page=%s&action=%s&type=%s&image=%s&_wpnonce=%s&noheader=true">%s</a>', 
-                            esc_attr( $_REQUEST['page'] ), 'redo', 'lossless', absint( $item->id ), wp_create_nonce( 'sp_redo_image' ), 
+                    'redolossless' => sprintf( '<a href="?page=%s&action=%s&type=%s&image=%s&_wpnonce=%s&noheader=true">%s</a>',
+                            esc_attr( $_REQUEST['page'] ), 'redo', 'lossless', absint( $item->id ), wp_create_nonce( 'sp_redo_image' ),
                             __('Re-optimize lossless','shortpixel-image-optimiser')),
-                    'redolossy' => sprintf( '<a href="?page=%s&action=%s&type=%s&image=%s&_wpnonce=%s&noheader=true">%s</a>', 
-                            esc_attr( $_REQUEST['page'] ), 'redo', 'lossy', absint( $item->id ), wp_create_nonce( 'sp_redo_image' ), 
+                    'redolossy' => sprintf( '<a href="?page=%s&action=%s&type=%s&image=%s&_wpnonce=%s&noheader=true">%s</a>',
+                            esc_attr( $_REQUEST['page'] ), 'redo', 'lossy', absint( $item->id ), wp_create_nonce( 'sp_redo_image' ),
                             __('Re-optimize lossy','shortpixel-image-optimiser')),
-                    'redoglossy' => sprintf( '<a href="?page=%s&action=%s&type=%s&image=%s&_wpnonce=%s&noheader=true">%s</a>', 
-                            esc_attr( $_REQUEST['page'] ), 'redo', 'glossy', absint( $item->id ), wp_create_nonce( 'sp_redo_image' ), 
+                    'redoglossy' => sprintf( '<a href="?page=%s&action=%s&type=%s&image=%s&_wpnonce=%s&noheader=true">%s</a>',
+                            esc_attr( $_REQUEST['page'] ), 'redo', 'glossy', absint( $item->id ), wp_create_nonce( 'sp_redo_image' ),
                             __('Re-optimize glossy','shortpixel-image-optimiser')),
-                    'quota' => sprintf( '<a href="?page=%s&action=%s&image=%s&_wpnonce=%s&noheader=true">%s</a>', 
-                            esc_attr( $_REQUEST['page'] ), 'quota', absint( $item->id ), wp_create_nonce( 'sp_check_quota' ), 
+                    'quota' => sprintf( '<a href="?page=%s&action=%s&image=%s&_wpnonce=%s&noheader=true">%s</a>',
+                            esc_attr( $_REQUEST['page'] ), 'quota', absint( $item->id ), wp_create_nonce( 'sp_check_quota' ),
                             __('Check quota','shortpixel-image-optimiser')),
                     'view' => sprintf( '<a href="%s" target="_blank">%s</a>', $url, __('View','shortpixel-image-optimiser'))
                 );
@@ -101,12 +102,12 @@ class ShortPixelListTable extends WP_List_Table {
                 switch($item->status) {
                     case 3: $msg = __('Restored','shortpixel-image-optimiser');
                         break;
-                    case 2: $msg = 0 + $item->message  == 0 
-                            ? __('Bonus processing','shortpixel-image-optimiser') 
-                            : __('Reduced by','shortpixel-image-optimiser') . " <strong>" . $item->message . "%</strong>" 
+                    case 2: $msg = 0 + $item->message  == 0
+                            ? __('Bonus processing','shortpixel-image-optimiser')
+                            : __('Reduced by','shortpixel-image-optimiser') . " <strong>" . $item->message . "%</strong>"
                               . (0 + $item->message < 5 ? "<br>" . __('Bonus processing','shortpixel-image-optimiser') . "." : "");
                         break;
-                    case 1: $msg = "<img src=\"" . plugins_url( 'shortpixel-image-optimiser/res/img/loading.gif') . "\" class='sp-loading-small'>&nbsp;" 
+                    case 1: $msg = "<img src=\"" . plugins_url( 'shortpixel-image-optimiser/res/img/loading.gif') . "\" class='sp-loading-small'>&nbsp;"
                                    . __('Pending','shortpixel-image-optimiser');
                         break;
                     case 0: $msg = __('Waiting','shortpixel-image-optimiser');
@@ -121,20 +122,34 @@ class ShortPixelListTable extends WP_List_Table {
                 return "<div id='sp-cust-msg-C-" . $item->id . "'>" . $msg . "</div>";
                 break;
             case 'options':
-                return  __($item->compression_type == 2 ? 'Glossy' : ($item->compression_type == 1 ? 'Lossy' : 'Lossless'),'shortpixel-image-optimiser') 
-                     . ($item->keep_exif == 1 ? "": ", " . __('Keep EXIF','shortpixel-image-optimiser')) 
+                return  __($item->compression_type == 2 ? 'Glossy' : ($item->compression_type == 1 ? 'Lossy' : 'Lossless'),'shortpixel-image-optimiser')
+                     . ($item->keep_exif == 1 ? "": ", " . __('Keep EXIF','shortpixel-image-optimiser'))
                      . ($item->cmyk2rgb ? "": ", " . __('Preserve CMYK','shortpixel-image-optimiser'));
             case 'media_type':
                 return $item->$column_name;
+            case 'date':
+                //[BS] if not optimized, show the timestamp when the file was added
+
+                /*if ( '0000-00-00 00:00:00' === $item->ts_optimized )
+                  $usetime = $item->ts_added;
+                else {
+                  $usetime = $item->ts_optimized;
+                }  */
+                if ( '0000-00-00 00:00:00' === $item->ts_optimized )
+                  return '';
+
+                $date = new DateTime($item->ts_optimized);
+                return ShortPixelTools::format_nice_date($date);
+                break;
             default:
                 return print_r( $item, true ) ; //Show the whole array for troubleshooting purposes
         }
     }
-    
+
     public function no_items() {
         echo(__('No images avaliable. Go to <a href="options-general.php?page=wp-shortpixel#adv-settings">Advanced Settings</a> to configure additional folders to be optimized.','shortpixel-image-optimiser'));
     }
-    
+
     /**
     * Columns to make sortable.
     *
@@ -144,19 +159,20 @@ class ShortPixelListTable extends WP_List_Table {
         $sortable_columns = array(
           'name' => array( 'name', true ),
           'folder' => array( 'folder', true ),
-          'status' => array( 'status', false )
+          'status' => array( 'status', false ),
+          'date' => array('ts_optimized', true),
         );
 
         return $sortable_columns;
     }
-    
+
     /**
      * Handles data query and filter, sorting, and pagination.
      */
     public function prepare_items() {
 
         $this->_column_headers = $this->get_column_info();
-        
+
         $this->_column_headers[0] = $this->get_columns();
 
         /** Process actions */
@@ -170,15 +186,15 @@ class ShortPixelListTable extends WP_List_Table {
           'total_items' => $total_items, //WE have to calculate the total number of items
           'per_page'    => $perPage //WE have to determine how many items to show on a page
         ));
-        
+
         $orderby = ( ! empty( $_GET['orderby'] ) ) ? $_GET['orderby'] : 'ts_added';
         // If no order, default to asc
         $order = ( ! empty($_GET['order'] ) ) ? $_GET['order'] : 'desc';
-        
+
         $this->items = $this->spMetaDao->getPaginatedMetas($this->hasNextGen, $this->getFilter(), $perPage, $currentPage, $orderby, $order);
         return $this->items;
-    }    
-    
+    }
+
     protected function getFilter() {
         $filter = array();
         if(isset($_GET["s"]) && strlen($_GET["s"])) {
@@ -186,23 +202,23 @@ class ShortPixelListTable extends WP_List_Table {
         }
         return $filter;
     }
-    
+
     public function record_count() {
         return $this->spMetaDao->getCustomMetaCount($this->getFilter());
     }
-    
+
     public function action_optimize_image( $id ) {
         $this->ctrl->optimizeCustomImage($id);
     }
-    
+
     public function action_restore_image( $id ) {
         $this->ctrl->doCustomRestore($id);
     }
-    
+
     public function action_redo_image( $id, $type = false ) {
         $this->ctrl->redo('C-' . $id, $type);
     }
-    
+
     public function process_actions() {
 
         //Detect when a bulk action is being triggered...
