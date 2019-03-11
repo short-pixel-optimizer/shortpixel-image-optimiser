@@ -132,8 +132,8 @@ class WPShortPixel {
         add_action('wp_ajax_shortpixel_check_quota', array(&$this, 'handleCheckQuota'));
         add_action('admin_action_shortpixel_check_quota', array(&$this, 'handleCheckQuota'));
         //This adds the constants used in PHP to be available also in JS
-        add_action( 'admin_footer', array( &$this, 'shortPixelJS') );
-        add_action( 'admin_head', array( &$this, 'headCSS') );
+        add_action( 'admin_footer', array( $this, 'shortPixelJS') );
+        add_action( 'admin_head', array( $this, 'headCSS') );
 
         if($this->_settings->frontBootstrap) {
             //also need to have it in the front footer then
@@ -456,8 +456,9 @@ class WPShortPixel {
         //require_once(ABSPATH . 'wp-admin/includes/screen.php');
         if(function_exists('get_current_screen')) {
             $screen = get_current_screen();
+            echo "SCREENWIPE"; echo "COMPARER CALL";
             if(is_object($screen)) {
-                if( in_array($screen->id, array('attachment', 'upload'))) {
+                if( in_array($screen->id, array('attachment', 'upload', 'media_page_wp-short-pixel-custom'))) {
                     //output the comparer html
                     $this->view->outputComparerHTML();
                     //render a template of the list cell to be used by the JS
@@ -2161,7 +2162,7 @@ class WPShortPixel {
             //die(ShortPixelMetaFacade::queuedId(ShortPixelMetaFacade::CUSTOM_TYPE, $_REQUEST['image']));
             $this->prioQ->push(ShortPixelMetaFacade::queuedId(ShortPixelMetaFacade::CUSTOM_TYPE, $_REQUEST['image']));
         }
-    
+
         $customMediaListTable = new ShortPixelListTable($this, $this->spMetaDao, $this->hasNextGen);
         $items = $customMediaListTable->prepare_items();
         if ( isset($_GET['noheader']) ) {
@@ -2440,6 +2441,7 @@ class WPShortPixel {
 
         $ret = array();
         $handle = new ShortPixelMetaFacade($_POST['id']);
+
         $meta = $handle->getMeta();
         $rawMeta = $handle->getRawMeta();
         $backupUrl = content_url() . "/" . SHORTPIXEL_UPLOADS_NAME . "/" . SHORTPIXEL_BACKUP . "/";
