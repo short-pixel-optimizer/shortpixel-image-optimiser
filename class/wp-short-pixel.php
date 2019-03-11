@@ -2161,7 +2161,7 @@ class WPShortPixel {
             //die(ShortPixelMetaFacade::queuedId(ShortPixelMetaFacade::CUSTOM_TYPE, $_REQUEST['image']));
             $this->prioQ->push(ShortPixelMetaFacade::queuedId(ShortPixelMetaFacade::CUSTOM_TYPE, $_REQUEST['image']));
         }
-    
+
         $customMediaListTable = new ShortPixelListTable($this, $this->spMetaDao, $this->hasNextGen);
         $items = $customMediaListTable->prepare_items();
         if ( isset($_GET['noheader']) ) {
@@ -2589,10 +2589,13 @@ class WPShortPixel {
     }
 
     protected static function alterHtaccess( $clear = false ){
+      // [BS] Backward compat. 11/03/2019 - remove possible settings from root .htaccess
+        insert_with_markers( get_home_path() . '.htaccess', 'ShortPixelWebp', '');
         if ( $clear ) {
-            insert_with_markers( get_home_path() . '.htaccess', 'ShortPixelWebp', '');
+
+            insert_with_markers( trailingslashit(WP_CONTENT_DIR) . '.htaccess', 'ShortPixelWebp', '');
         } else {
-            insert_with_markers( get_home_path() . '.htaccess', 'ShortPixelWebp', '
+            insert_with_markers( trailingslashit(WP_CONTENT_DIR) . '.htaccess', 'ShortPixelWebp', '
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
