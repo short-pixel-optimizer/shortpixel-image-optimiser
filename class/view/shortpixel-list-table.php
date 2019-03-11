@@ -122,8 +122,12 @@ class ShortPixelListTable extends WP_List_Table {
                 return "<div id='sp-cust-msg-C-" . $item->id . "'>" . $msg . "</div>";
                 break;
             case 'options':
+                // [BS] Unprocessed items have no meta. Anything displayed here would be wrong.
+                if (ShortPixelMeta::FILE_STATUS_UNPROCESSED == $item->status)
+                    return __('', 'shortpixel-image-optimiser');
+
                 return  __($item->compression_type == 2 ? 'Glossy' : ($item->compression_type == 1 ? 'Lossy' : 'Lossless'),'shortpixel-image-optimiser')
-                     . ($item->keep_exif == 1 ? "": ", " . __('Keep EXIF','shortpixel-image-optimiser'))
+                     . ($item->keep_exif == 0 ? "": ", " . __('Keep EXIF','shortpixel-image-optimiser'))
                      . ($item->cmyk2rgb ? "": ", " . __('Preserve CMYK','shortpixel-image-optimiser'));
             case 'media_type':
                 return $item->$column_name;

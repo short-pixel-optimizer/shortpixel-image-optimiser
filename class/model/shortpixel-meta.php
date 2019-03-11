@@ -2,7 +2,7 @@
 
 class ShortPixelMeta extends ShortPixelEntity{
     const META_VERSION = 1;
-    
+
     protected $id;
     protected $folderId;
     protected $extMetaId;
@@ -32,15 +32,20 @@ class ShortPixelMeta extends ShortPixelEntity{
     protected $tsAdded;
     protected $tsOptimized;
     protected $thumbs;
-    
+
     const TABLE_SUFFIX = 'meta';
     const WEBP_THUMB_PREFIX = 'sp-webp-';
     const FOUND_THUMB_PREFIX = 'sp-found-';
-    
+
+    // [BS] Attempt to shed some light on Meta Status on File.
+    const FILE_STATUS_UNPROCESSED = 0;
+    const FILE_STATUS_PENDING = 1;
+    const FILE_STATUS_SUCCESS = 2;
+
     public function __construct($data = array()) {
         parent::__construct($data);
     }
-    
+
     /**
      * @return meta string to be embedded into the image
      */
@@ -48,14 +53,14 @@ class ShortPixelMeta extends ShortPixelEntity{
         //To be implemented
         return base64_encode("Not now John.");
     }
-    
+
     function getImprovementPercent() {
         if(is_numeric($this->message)) {
             return round($this->message,2);
         }
         return 0;
     }
-    
+
     function getId() {
         return $this->id;
     }
@@ -114,7 +119,7 @@ class ShortPixelMeta extends ShortPixelEntity{
     function setPath($path) {
         $this->path = $path;
     }
-    
+
     function getName() {
         return $this->name;
     }
@@ -290,11 +295,11 @@ class ShortPixelMeta extends ShortPixelEntity{
     function setMessage($message) {
         $this->message = $message;
     }
-    
+
     function getType() {
         return (isset($this->folderId) ? ShortPixelMetaFacade::CUSTOM_TYPE : ShortPixelMetaFacade::MEDIA_LIBRARY_TYPE);
     }
-    
+
     function getThumbs() {
         return $this->thumbs;
     }
@@ -302,7 +307,7 @@ class ShortPixelMeta extends ShortPixelEntity{
     function setThumbs($thumbs) {
         $this->thumbs = $thumbs;
     }
-    
+
     function addThumbs($thumbs) {
         $this->thumbs = array_merge($this->thumbs, $thumbs);
     }
