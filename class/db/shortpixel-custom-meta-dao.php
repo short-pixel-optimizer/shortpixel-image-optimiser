@@ -292,7 +292,6 @@ class ShortPixelCustomMetaDao {
     public function addImage($meta) {
         $p = $this->metaToParams($meta);
         $id = $this->db->insert($this->db->getPrefix().'shortpixel_meta', $p->params, $p->types);
-        exit('insert action done. DAO');
         return $id;
     }
 
