@@ -191,7 +191,8 @@ class ShortPixelListTable extends WP_List_Table {
           'per_page'    => $perPage //WE have to determine how many items to show on a page
         ));
 
-        $orderby = ( ! empty( $_GET['orderby'] ) ) ? $_GET['orderby'] : 'ts_added';
+        // [BS] Moving this from ts_added since often images get added at the same time, resulting in unpredictable sorting
+        $orderby = ( ! empty( $_GET['orderby'] ) ) ? $_GET['orderby'] : 'id';
         // If no order, default to asc
         $order = ( ! empty($_GET['order'] ) ) ? $_GET['order'] : 'desc';
 
