@@ -8,6 +8,7 @@ class WPShortPixel {
     private $_settings = null;
     private $prioQ = null;
     private $view = null;
+    private $thumbnailsRegenerating = array();
 
     private $hasNextGen = false;
     private $spMetaDao = null;
@@ -687,8 +688,7 @@ class WPShortPixel {
             return $meta;
         }
 
-        $t = get_transient("wp-short-pixel-regenerating");
-        if(is_array($t) && isset($t[$ID])) {
+        if(isset($this->thumbnailsRegenerating[$ID])) {
             return $meta;
         }
 
@@ -1556,10 +1556,7 @@ class WPShortPixel {
      * @param $postId
      */
     public function thumbnailsBeforeRegenerateHook($postId) {
-        $t = get_transient("wp-short-pixel-regenerating");
-        if($t === false) $t = array();
-        $t[$postId] = true;
-        set_transient("wp-short-pixel-regenerating" . $t, true, 30);
+        $this->thumbnailsRegenerating[$postId] = true;
     }
 
     /**
@@ -1597,16 +1594,12 @@ class WPShortPixel {
             }
             //wp_update_attachment_metadata($postId, $meta);
             update_post_meta($postId, '_wp_attachment_metadata', $meta);
-            $t = get_transient("wp-short-pixel-regenerating");
-            if(is_array($t) && isset($t[$postId])) {
-                unset($t[$postId]);
-                set_transient("wp-short-pixel-regenerating" . $t, true, 30);
-            }
 
             if(!$bulk) {
                 $this->prioQ->push($postId);
             }
         }
+        unset($this->thumbnailsRegenerating[$postId]);
     }
 
     public function shortpixelGetBackupFilter($imagePath) {
