@@ -580,8 +580,7 @@ var ShortPixel = function() {
 
     function loadComparer(id) {
         this.comparerData.origUrl = false;
-
-        if(this.comparerData.cssLoaded === false) {
+         if(this.comparerData.cssLoaded === false) {
             jQuery('<link>')
                 .appendTo('head')
                 .attr({

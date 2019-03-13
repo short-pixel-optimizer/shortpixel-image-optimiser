@@ -456,8 +456,8 @@ class WPShortPixel {
         //require_once(ABSPATH . 'wp-admin/includes/screen.php');
         if(function_exists('get_current_screen')) {
             $screen = get_current_screen();
-            echo "SCREENWIPE"; echo "COMPARER CALL";
-            if(is_object($screen)) {
+
+             if(is_object($screen)) {
                 if( in_array($screen->id, array('attachment', 'upload', 'media_page_wp-short-pixel-custom'))) {
                     //output the comparer html
                     $this->view->outputComparerHTML();
@@ -2448,9 +2448,29 @@ class WPShortPixel {
         $uploadsUrl = ShortPixelMetaFacade::getHomeUrl();
         $urlBkPath = ShortPixelMetaFacade::returnSubDir($meta->getPath());
         $ret['origUrl'] = $backupUrl . $urlBkPath . $meta->getName();
-        $ret['optUrl'] = wp_get_attachment_url( $_POST['id'] ); //$uploadsUrl . $urlBkPath . $meta->getName();
-        $ret['width'] = $rawMeta['width'];
-        $ret['height'] = $rawMeta['height'];
+        if ($meta->getType() == ShortPixelMetaFacade::CUSTOM_TYPE)
+        {
+          $ret['optUrl'] =  $uploadsUrl . $meta->getWebPath();
+          // [BS] Another bug? Width / Height not stored in Shortpixel meta.
+          $ret['width'] = $meta->getActualWidth();
+          $ret['height'] = $meta->getActualHeight();
+
+          if (is_null($ret['width']))
+          {
+            $imageSizes = getimagesize($ret['optUrl']);
+            if ($imageSizes)
+            {
+              $ret['width'] = $imageSizes[0];
+              $ret['height']= $imageSizes[1];
+            }
+          }
+        }
+        else
+        {
+          $ret['optUrl'] = wp_get_attachment_url( $_POST['id'] ); //$uploadsUrl . $urlBkPath . $meta->getName();
+          $ret['width'] = $rawMeta['width'];
+          $ret['height'] = $rawMeta['height'];
+        }
 
         die(json_encode((object)$ret));
     }
