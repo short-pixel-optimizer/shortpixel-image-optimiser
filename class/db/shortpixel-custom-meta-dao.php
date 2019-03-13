@@ -328,13 +328,14 @@ class ShortPixelCustomMetaDao {
     }
 
     public function getPaginatedMetas($hasNextGen, $filters, $count, $page, $orderby = false, $order = false) {
+        // [BS] Remove exclusion for sm.status <> 3. Status 3 is 'restored, perform no action'
         $sql = "SELECT sm.id, sm.name, sm.path folder, "
                 . ($hasNextGen ? "CASE WHEN ng.gid IS NOT NULL THEN 'NextGen' ELSE 'Custom' END media_type, " : "'Custom' media_type, ")
                 . "sm.status, sm.compression_type, sm.keep_exif, sm.cmyk2rgb, sm.resize, sm.resize_width, sm.resize_height, sm.message, sm.ts_added, sm.ts_optimized "
                 . "FROM {$this->db->getPrefix()}shortpixel_meta sm "
                 . "INNER JOIN  {$this->db->getPrefix()}shortpixel_folders sf on sm.folder_id = sf.id "
                 . ($hasNextGen ? "LEFT JOIN {$this->db->getPrefix()}ngg_gallery ng on sf.path = ng.path " : " ")
-                . "WHERE sf.status <> -1 AND sm.status <> 3";
+                . "WHERE sf.status <> -1"; //  AND sm.status <> 3
         foreach($filters as $field => $value) {
             $sql .= " AND sm.$field " . $value->operator . " ". $value->value . " ";
         }
@@ -367,9 +368,10 @@ class ShortPixelCustomMetaDao {
     }
 
     public function getCustomMetaCount($filters = array()) {
+      // [BS] Remove exclusion for sm.status <> 3. Status 3 is 'restored, perform no action'
         $sql = "SELECT COUNT(sm.id) recCount FROM {$this->db->getPrefix()}shortpixel_meta sm "
             . "INNER JOIN  {$this->db->getPrefix()}shortpixel_folders sf on sm.folder_id = sf.id "
-            . "WHERE sf.status <> -1 AND sm.status <> 3";
+            . "WHERE sf.status <> -1"; //  AND sm.status <> 3
         foreach($filters as $field => $value) {
             $sql .= " AND sm.$field " . $value->operator . " ". $value->value . " ";
         }
@@ -404,13 +406,16 @@ class ShortPixelCustomMetaDao {
     public function update($meta) {
         $metaClass = get_class($meta);
         $tableSuffix = "";
-        eval( '$tableSuffix = ' . $metaClass . '::TABLE_SUFFIX;');
-        $sql = "UPDATE {$this->db->getPrefix()}shortpixel_" . $tableSuffix . " SET ";
+        $tableSuffix = $metaClass::TABLE_SUFFIX;
+        $prefix = $this->db->getPrefix();
+//        eval( '$tableSuffix = ' . $metaClass . '::TABLE_SUFFIX;'); // horror!
+        $sql = "UPDATE " . $prefix . "shortpixel_" . $tableSuffix . " SET ";
         foreach(self::$fields[$tableSuffix] as $field => $type) {
             $getter = "get" . ShortPixelTools::snakeToCamel($field);
             $val = $meta->$getter();
             if($meta->$getter() !== null) {
-                $sql .= " {$field} = %{$type},"; $params[] = $val;
+                $sql .= " {$field} = %{$type},";
+                $params[] = $val;
             }
         }
 

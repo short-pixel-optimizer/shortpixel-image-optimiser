@@ -1915,6 +1915,20 @@ class WPShortPixel {
 
         if(file_exists($bkFile)) {
             @rename($bkFile, $file);
+            /* [BS] Reset all generated image meta. Bring back to start state.
+            * Since Wpdb->prepare doesn't support 'null', zero values in this table should not be trusted */
+            $meta->setTsOptimized(0);
+            $meta->setCompressedSize(0);
+            $meta->setCompressionType(0);
+            $meta->setKeepExif(0);
+            $meta->setCmyk2rgb(0);
+            $meta->setMessage('');
+            $meta->setRetries(0);
+            $meta->setBackup(0);
+            $meta->setResizeWidth(0);
+            $meta->setResizeHeight(0);
+            $meta->setResize(0);
+
             $meta->setStatus(3);
             $this->spMetaDao->update($meta);
         }
@@ -2161,7 +2175,7 @@ class WPShortPixel {
             //die(ShortPixelMetaFacade::queuedId(ShortPixelMetaFacade::CUSTOM_TYPE, $_REQUEST['image']));
             $this->prioQ->push(ShortPixelMetaFacade::queuedId(ShortPixelMetaFacade::CUSTOM_TYPE, $_REQUEST['image']));
         }
-    
+
         $customMediaListTable = new ShortPixelListTable($this, $this->spMetaDao, $this->hasNextGen);
         $items = $customMediaListTable->prepare_items();
         if ( isset($_GET['noheader']) ) {
