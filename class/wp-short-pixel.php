@@ -913,12 +913,27 @@ class WPShortPixel {
         while( $crtStartQueryID >= $endQueryID && time() - $startTime < $maxTime) {
             //if($ind > 1) break;
             //$ind++;
+
+            // [BS] Request StartQueryID everytime to query for updated AdvanceBulk status
+            $crtStartQueryID = $this->prioQ->getStartBulkId();
             $resultsPostMeta = WpShortPixelMediaLbraryAdapter::getPostMetaSlice($crtStartQueryID, $endQueryID, $maxResults);
             if ( empty($resultsPostMeta) ) {
-                $crtStartQueryID -= $maxResults;
-                $startQueryID = $crtStartQueryID;
-                $this->prioQ->setStartBulkId($startQueryID);
-                continue;
+                // check for custom work
+                 $pendingCustomMeta = $this->spMetaDao->getPendingBulkRestore(SHORTPIXEL_MAX_RESULTS_QUERY * 2);
+                 if (count($pendingCustomMeta) > 0)
+                 {
+                     foreach($pendingCustomMeta as $cObj)
+                     {
+                       $this->doCustomRestore($cObj->id);
+                     }
+                 }
+                else
+                {
+                  $crtStartQueryID -= $maxResults; // this basically nukes the bulk.
+                  $startQueryID = $crtStartQueryID;
+                  $this->prioQ->setStartBulkId($startQueryID);
+                  continue;
+                }
             }
 
             foreach ( $resultsPostMeta as $itemMetaData ) {
@@ -940,8 +955,10 @@ class WPShortPixel {
                     $item->cleanupMeta();
                 }
             }
+            // [BS] Fixed Bug. Advance Bulk was outside of this loop, causing infinite loops to happen.
+            $this->advanceBulk($crtStartQueryID);
         }
-        $this->advanceBulk($crtStartQueryID);
+
         return $restored;
     }
 
@@ -2256,6 +2273,8 @@ class WPShortPixel {
             //clean the custom files errors in order to process them again
             if($this->_settings->hasCustomFolders) {
                 $this->spMetaDao->resetFailed();
+                $this->spMetaDao->resetRestored();
+
             }
 
             $this->prioQ->startBulk(ShortPixelQueue::BULK_TYPE_OPTIMIZE);
