@@ -367,6 +367,15 @@ class ShortPixelCustomMetaDao {
         return isset($res[0]->recCount) ? $res[0]->recCount : null;
     }
 
+    /** Get all Custom Meta when status is other than 'restored' **/ 
+    public function getPendingBulkRestore($count)
+    {
+      return $this->db->query("SELECT sm.id from {$this->db->getPrefix()}shortpixel_meta sm "
+          . "INNER JOIN  {$this->db->getPrefix()}shortpixel_folders sf on sm.folder_id = sf.id "
+          . "WHERE sf.status <> -1 AND sm.status <> 3 "
+          . "ORDER BY sm.id DESC LIMIT $count");
+    }
+
     public function getCustomMetaCount($filters = array()) {
       // [BS] Remove exclusion for sm.status <> 3. Status 3 is 'restored, perform no action'
         $sql = "SELECT COUNT(sm.id) recCount FROM {$this->db->getPrefix()}shortpixel_meta sm "
