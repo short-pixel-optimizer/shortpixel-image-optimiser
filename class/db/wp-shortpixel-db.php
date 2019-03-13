@@ -1,14 +1,14 @@
 <?php
 
 class WpShortPixelDb implements ShortPixelDb {
-    
+
     protected $prefix;
     protected $defaultShowErrors;
-    
+
     public function __construct($prefix = null) {
         $this->prefix = $prefix;
     }
-    
+
     public static function createUpdateSchema($tableDefinitions) {
         require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
         $res = array();
@@ -17,7 +17,7 @@ class WpShortPixelDb implements ShortPixelDb {
         }
         return $res;
     }
-    
+
     public static function checkCustomTables() {
         global $wpdb;
         if(function_exists("is_multisite") && is_multisite()) {
@@ -30,28 +30,28 @@ class WpShortPixelDb implements ShortPixelDb {
                 $spMetaDao = new ShortPixelCustomMetaDao(new WpShortPixelDb($prefix));
                 $spMetaDao->createUpdateShortPixelTables();
             }
-            
+
         } else {
             $spMetaDao = new ShortPixelCustomMetaDao(new WpShortPixelDb());
             $spMetaDao->createUpdateShortPixelTables();
-        }        
+        }
     }
-    
+
     public function getCharsetCollate() {
         global $wpdb;
         return $wpdb->get_charset_collate();
     }
-    
+
     public function getPrefix() {
         global $wpdb;
         return $this->prefix ? $this->prefix : $wpdb->prefix;
     }
-    
+
     public function getDbName() {
         global $wpdb;
         return $wpdb->dbname;
     }
-    
+
     public function query($sql, $params = false) {
         global $wpdb;
         if($params) {
@@ -65,18 +65,18 @@ class WpShortPixelDb implements ShortPixelDb {
         $wpdb->insert($table, $params, $format);
         return $wpdb->insert_id;
     }
-    
+
     public function prepare($query, $args) {
         global $wpdb;
         return $wpdb->prepare($query, $args);
     }
-    
+
     public function hideErrors() {
         global $wpdb;
         $this->defaultShowErrors = $wpdb->show_errors;
         $wpdb->show_errors = false;
     }
-    
+
     public function restoreErrors() {
         global $wpdb;
         $wpdb->show_errors = $this->defaultShowErrors;
