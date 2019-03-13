@@ -2590,12 +2590,16 @@ class WPShortPixel {
 
     protected static function alterHtaccess( $clear = false ){
       // [BS] Backward compat. 11/03/2019 - remove possible settings from root .htaccess
-        insert_with_markers( get_home_path() . '.htaccess', 'ShortPixelWebp', '');
-        if ( $clear ) {
+        $upload_dir = wp_upload_dir();
+        $upload_base = trailingslashit($upload_dir['basedir']);
 
+        if ( $clear ) {
+            insert_with_markers( get_home_path() . '.htaccess', 'ShortPixelWebp', '');
+            insert_with_markers( $upload_base . '.htaccess', 'ShortPixelWebp', '');
             insert_with_markers( trailingslashit(WP_CONTENT_DIR) . '.htaccess', 'ShortPixelWebp', '');
         } else {
-            insert_with_markers( trailingslashit(WP_CONTENT_DIR) . '.htaccess', 'ShortPixelWebp', '
+
+            $rules = '
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
@@ -2633,7 +2637,11 @@ class WPShortPixel {
 <IfModule mod_mime.c>
   AddType image/webp .webp
 </IfModule>
-        ' );
+        ' ;
+
+            insert_with_markers( get_home_path() . '.htaccess', 'ShortPixelWebp', $rules);
+            insert_with_markers( $upload_base . '.htaccess', 'ShortPixelWebp', $rules);
+            insert_with_markers( trailingslashit(WP_CONTENT_DIR) . '.htaccess', 'ShortPixelWebp', $rules);
            /* insert_with_markers( get_home_path() . '.htaccess', 'ShortPixelWebp', '
 RewriteEngine On
 RewriteBase /
