@@ -2279,6 +2279,8 @@ class WPShortPixel {
             //clean the custom files errors in order to process them again
             if($this->_settings->hasCustomFolders) {
                 $this->spMetaDao->resetFailed();
+                $this->spMetaDao->resetRestored();
+
             }
 
             $this->prioQ->startBulk(ShortPixelQueue::BULK_TYPE_OPTIMIZE);

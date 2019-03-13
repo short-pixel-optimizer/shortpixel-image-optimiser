@@ -327,6 +327,15 @@ class ShortPixelCustomMetaDao {
         $this->db->query($sql);
     }
 
+    /** Reset Restored items
+    * On Bulk Optimize, Reset the restored status so it will process these images again.
+    *
+    **/
+    public function resetRestored() {
+        $sql = "UPDATE {$this->db->getPrefix()}shortpixel_meta SET status = 0, retries = 0 WHERE status = 3";
+        $this->db->query($sql);
+    }
+
     public function getPaginatedMetas($hasNextGen, $filters, $count, $page, $orderby = false, $order = false) {
         // [BS] Remove exclusion for sm.status <> 3. Status 3 is 'restored, perform no action'
         $sql = "SELECT sm.id, sm.name, sm.path folder, "
@@ -367,7 +376,7 @@ class ShortPixelCustomMetaDao {
         return isset($res[0]->recCount) ? $res[0]->recCount : null;
     }
 
-    /** Get all Custom Meta when status is other than 'restored' **/ 
+    /** Get all Custom Meta when status is other than 'restored' **/
     public function getPendingBulkRestore($count)
     {
       return $this->db->query("SELECT sm.id from {$this->db->getPrefix()}shortpixel_meta sm "
