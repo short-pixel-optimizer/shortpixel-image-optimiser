@@ -8,6 +8,7 @@ class WPShortPixel {
     private $_settings = null;
     private $prioQ = null;
     private $view = null;
+    private $thumbnailsRegenerating = array();
 
     private $hasNextGen = false;
     private $spMetaDao = null;
@@ -132,8 +133,8 @@ class WPShortPixel {
         add_action('wp_ajax_shortpixel_check_quota', array(&$this, 'handleCheckQuota'));
         add_action('admin_action_shortpixel_check_quota', array(&$this, 'handleCheckQuota'));
         //This adds the constants used in PHP to be available also in JS
-        add_action( 'admin_footer', array( &$this, 'shortPixelJS') );
-        add_action( 'admin_head', array( &$this, 'headCSS') );
+        add_action( 'admin_footer', array( $this, 'shortPixelJS') );
+        add_action( 'admin_head', array( $this, 'headCSS') );
 
         if($this->_settings->frontBootstrap) {
             //also need to have it in the front footer then
@@ -456,8 +457,9 @@ class WPShortPixel {
         //require_once(ABSPATH . 'wp-admin/includes/screen.php');
         if(function_exists('get_current_screen')) {
             $screen = get_current_screen();
-            if(is_object($screen)) {
-                if( in_array($screen->id, array('attachment', 'upload'))) {
+
+             if(is_object($screen)) {
+                if( in_array($screen->id, array('attachment', 'upload', 'media_page_wp-short-pixel-custom'))) {
                     //output the comparer html
                     $this->view->outputComparerHTML();
                     //render a template of the list cell to be used by the JS
@@ -687,8 +689,7 @@ class WPShortPixel {
             return $meta;
         }
 
-        $t = get_transient("wp-short-pixel-regenerating");
-        if(is_array($t) && isset($t[$ID])) {
+        if(isset($this->thumbnailsRegenerating[$ID])) {
             return $meta;
         }
 
@@ -1556,10 +1557,7 @@ class WPShortPixel {
      * @param $postId
      */
     public function thumbnailsBeforeRegenerateHook($postId) {
-        $t = get_transient("wp-short-pixel-regenerating");
-        if($t === false) $t = array();
-        $t[$postId] = true;
-        set_transient("wp-short-pixel-regenerating" . $t, true, 30);
+        $this->thumbnailsRegenerating[$postId] = true;
     }
 
     /**
@@ -1597,16 +1595,12 @@ class WPShortPixel {
             }
             //wp_update_attachment_metadata($postId, $meta);
             update_post_meta($postId, '_wp_attachment_metadata', $meta);
-            $t = get_transient("wp-short-pixel-regenerating");
-            if(is_array($t) && isset($t[$postId])) {
-                unset($t[$postId]);
-                set_transient("wp-short-pixel-regenerating" . $t, true, 30);
-            }
 
             if(!$bulk) {
                 $this->prioQ->push($postId);
             }
         }
+        unset($this->thumbnailsRegenerating[$postId]);
     }
 
     public function shortpixelGetBackupFilter($imagePath) {
@@ -2454,15 +2448,36 @@ class WPShortPixel {
 
         $ret = array();
         $handle = new ShortPixelMetaFacade($_POST['id']);
+
         $meta = $handle->getMeta();
         $rawMeta = $handle->getRawMeta();
         $backupUrl = content_url() . "/" . SHORTPIXEL_UPLOADS_NAME . "/" . SHORTPIXEL_BACKUP . "/";
         $uploadsUrl = ShortPixelMetaFacade::getHomeUrl();
         $urlBkPath = ShortPixelMetaFacade::returnSubDir($meta->getPath());
         $ret['origUrl'] = $backupUrl . $urlBkPath . $meta->getName();
-        $ret['optUrl'] = wp_get_attachment_url( $_POST['id'] ); //$uploadsUrl . $urlBkPath . $meta->getName();
-        $ret['width'] = $rawMeta['width'];
-        $ret['height'] = $rawMeta['height'];
+        if ($meta->getType() == ShortPixelMetaFacade::CUSTOM_TYPE)
+        {
+          $ret['optUrl'] =  $uploadsUrl . $meta->getWebPath();
+          // [BS] Another bug? Width / Height not stored in Shortpixel meta.
+          $ret['width'] = $meta->getActualWidth();
+          $ret['height'] = $meta->getActualHeight();
+
+          if (is_null($ret['width']))
+          {
+            $imageSizes = getimagesize($ret['optUrl']);
+            if ($imageSizes)
+            {
+              $ret['width'] = $imageSizes[0];
+              $ret['height']= $imageSizes[1];
+            }
+          }
+        }
+        else
+        {
+          $ret['optUrl'] = wp_get_attachment_url( $_POST['id'] ); //$uploadsUrl . $urlBkPath . $meta->getName();
+          $ret['width'] = $rawMeta['width'];
+          $ret['height'] = $rawMeta['height'];
+        }
 
         die(json_encode((object)$ret));
     }

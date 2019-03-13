@@ -70,6 +70,8 @@ class ShortPixelListTable extends WP_List_Table {
                     'restore' => sprintf( '<a href="?page=%s&action=%s&image=%s&_wpnonce=%s&noheader=true">%s</a>',
                                     esc_attr( $_REQUEST['page'] ), 'restore', absint( $item->id ), wp_create_nonce( 'sp_restore_image' ),
                                     __('Restore','shortpixel-image-optimiser')),
+                    'compare' => sprintf( '<a href="javascript:ShortPixel.loadComparer(\'C-' . absint($item->id) . '\');">%s</a>"',
+                              __('Compare', 'shortpixel-image-optimiser')),
                     'view' => sprintf( '<a href="%s" target="_blank">%s</a>', $url, __('View','shortpixel-image-optimiser'))
                 );
                 $settings = $this->ctrl->getSettings();
@@ -80,6 +82,7 @@ class ShortPixelListTable extends WP_List_Table {
                     $actionsEnabled['optimize'] = true;
                 } elseif($item->status == 2) {
                     $actionsEnabled['restore'] = true;
+                    $actionsEnabled['compare'] = true;
                     switch($item->compression_type) {
                         case 2:
                             $actionsEnabled['redolossy'] = $actionsEnabled['redolossless'] = true;
@@ -124,7 +127,7 @@ class ShortPixelListTable extends WP_List_Table {
                 break;
             case 'options':
                 return  __($item->compression_type == 2 ? 'Glossy' : ($item->compression_type == 1 ? 'Lossy' : 'Lossless'),'shortpixel-image-optimiser')
-                     . ($item->keep_exif == 1 ? "": ", " . __('Keep EXIF','shortpixel-image-optimiser'))
+                     . ($item->keep_exif == 0 ? "": ", " . __('Keep EXIF','shortpixel-image-optimiser'))
                      . ($item->cmyk2rgb ? "": ", " . __('Preserve CMYK','shortpixel-image-optimiser'));
             case 'media_type':
                 return $item->$column_name;
@@ -188,7 +191,8 @@ class ShortPixelListTable extends WP_List_Table {
           'per_page'    => $perPage //WE have to determine how many items to show on a page
         ));
 
-        $orderby = ( ! empty( $_GET['orderby'] ) ) ? $_GET['orderby'] : 'ts_added';
+        // [BS] Moving this from ts_added since often images get added at the same time, resulting in unpredictable sorting
+        $orderby = ( ! empty( $_GET['orderby'] ) ) ? $_GET['orderby'] : 'id';
         // If no order, default to asc
         $order = ( ! empty($_GET['order'] ) ) ? $_GET['order'] : 'desc';
 

@@ -63,11 +63,12 @@ class ShortPixelAPI {
         if(!count($URLs)) {
             return false;
         }
-        return wp_remote_post($this->_apiDumpEndPoint, $this->prepareRequest(array(
+        $ret = wp_remote_post($this->_apiDumpEndPoint, $this->prepareRequest(array(
                 'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
                 'key' => $this->_settings->apiKey,
                 'urllist' => $URLs
             ) ) );
+        return $ret;
     }
 
     /**
@@ -100,11 +101,17 @@ class ShortPixelAPI {
             else throw new Exception(__('Image files are missing.', 'shortpixel-image-optimiser'));
         }
 
+        $apiKey = $this->_settings->apiKey;
+        if(strlen($apiKey) < 20) { //found in the logs many cases when the API Key is '', probably deleted from the DB but the verifiedKey setting is not changed
+            $this->_settings->verifiedKey = false;
+            throw new Exception(__('Invalid API Key', 'shortpixel-image-optimiser'));
+        }
+
         //WpShortPixel::log("DO REQUESTS for META: " . json_encode($itemHandler->getRawMeta()) . " STACK: " . json_encode(debug_backtrace()));
 
         $requestParameters = array(
             'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
-            'key' => $this->_settings->apiKey,
+            'key' => $apiKey,
             'lossy' => $compressionType === false ? $this->_settings->compressionType : $compressionType,
             'cmyk2rgb' => $this->_settings->CMYKtoRGBconversion,
             'keep_exif' => ($this->_settings->keepExif ? "1" : "0"),
