@@ -406,11 +406,38 @@ class ShortPixelCustomMetaDao {
             if($meta->getPath()) {
                 $meta->setWebPath(ShortPixelMetaFacade::filenameToRootRelative($meta->getPath()));
             }
+            if ($meta->getStatus() == $meta::FILE_STATUS_UNPROCESSED)
+            {
+              $meta = $this->updateMetaWithSettings($meta);
+            }
             //die(var_dump($meta)."ZA META");
             return $meta;
         }
         return null;
     }
+
+    /** If File is not yet processed, don't use empty default meta, but use the global settings
+    *
+    * @param $meta ShortPixelMeta object
+    * @return ShortPixelMetaObject - Replaced meta object data
+    * @author Bas Schuiling
+    */
+    protected function updateMetaWithSettings($meta)
+    {
+      $objSettings = new WPShortPixelSettings();
+
+      $meta->setKeepExif( $objSettings->keepExif );
+      $meta->setCmyk2rgb($objSettings->CMYKtoRGBconversion);
+      $meta->setResize($objSettings->resizeImages);
+      $meta->setResizeWidth($objSettings->resizeWidth);
+      $meta->setResizeHeight($objSettings->resizeHeight);
+      $meta->setCompressionType($objSettings->compressionType);
+      $meta->setBackup($objSettings->backupImages);
+      // update the record. If the image is pending the meta will be requested again.
+      $this->update($meta);
+      return $meta;
+    }
+
 
     public function getMetaForPath($path, $deleted = false) {
         $sql = "SELECT * FROM {$this->db->getPrefix()}shortpixel_meta WHERE path = %s " . ($deleted ? "" : " AND status <> -1");
