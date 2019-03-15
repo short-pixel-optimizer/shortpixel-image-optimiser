@@ -1170,7 +1170,7 @@ class WPShortPixel {
                 $notice = null; $this->refreshCustomFolders($notice);
                 $this->_settings->hasCustomFolders = time();
             }
-            $customIds = $this->spMetaDao->getPendingMetas( 3 - count($ids));
+            $customIds = $this->spMetaDao->getPendingMetas( SHORTPIXEL_PRESEND_ITEMS - count($ids));
             if(is_array($customIds)) {
                 $ids = array_merge($ids, array_map(array('ShortPixelMetaFacade', 'getNewFromRow'), $customIds));
             }
