@@ -41,6 +41,7 @@ class ShortPixelMeta extends ShortPixelEntity{
     const FILE_STATUS_UNPROCESSED = 0;
     const FILE_STATUS_PENDING = 1;
     const FILE_STATUS_SUCCESS = 2;
+    const FILE_STATUS_RESTORED = 3; 
 
     public function __construct($data = array()) {
         parent::__construct($data);

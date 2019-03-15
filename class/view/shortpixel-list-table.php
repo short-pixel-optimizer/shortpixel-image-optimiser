@@ -127,7 +127,7 @@ class ShortPixelListTable extends WP_List_Table {
                 break;
             case 'options':
                 // [BS] Unprocessed items have no meta. Anything displayed here would be wrong.
-                if (ShortPixelMeta::FILE_STATUS_UNPROCESSED == $item->status)
+                if (ShortPixelMeta::FILE_STATUS_UNPROCESSED == $item->status || ShortPixelMeta::FILE_STATUS_RESTORED == $item->status)
                     return __('', 'shortpixel-image-optimiser');
 
                 return  __($item->compression_type == 2 ? 'Glossy' : ($item->compression_type == 1 ? 'Lossy' : 'Lossless'),'shortpixel-image-optimiser')
