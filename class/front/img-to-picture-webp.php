@@ -214,7 +214,7 @@ class ShortPixelImgToPictureWebp
 
         $imageBaseURL = str_replace($filename, '', $item);
         $imageBase = static::getImageBase($item);
-
+        
         if (file_exists($imageBase . $fileonly . '.webp'))
         {
             // if webp, then add another URL() def after the targeted one.  (str_replace old full URL def, with new one on main match?

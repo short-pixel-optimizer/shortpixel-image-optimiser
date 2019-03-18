@@ -128,7 +128,7 @@ class ShortPixelAPI {
             $requestParameters['refresh'] = 1;
         }
 
-        //WpShortPixel::log("DO REQUESTS SENDING: " . json_encode($requestParameters));
+        //WpShortPixel::log("ShortPixel API Request Settings: " . json_encode($requestParameters));
 
         $response = wp_remote_post($this->_apiEndPoint, $this->prepareRequest($requestParameters, $Blocking) );
 

@@ -132,7 +132,7 @@ class ShortPixelListTable extends WP_List_Table {
 
                 return  __($item->compression_type == 2 ? 'Glossy' : ($item->compression_type == 1 ? 'Lossy' : 'Lossless'),'shortpixel-image-optimiser')
                      . ($item->keep_exif == 0 ? "": ", " . __('Keep EXIF','shortpixel-image-optimiser'))
-                     . ($item->cmyk2rgb ? "": ", " . __('Preserve CMYK','shortpixel-image-optimiser'));
+                     . ($item->cmyk2rgb == 1 ? "": ", " . __('Preserve CMYK','shortpixel-image-optimiser'));
             case 'media_type':
                 return $item->$column_name;
             case 'date':

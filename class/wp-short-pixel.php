@@ -884,6 +884,15 @@ class WPShortPixel {
         if($meta->getStatus() != 2) {
             $meta->setStatus(1);
             $meta->setRetries(0);
+            /* [BS] This is being set because meta in other states does not keep previous values. The value 0 is problematic
+            since it can also mean not-initalized, new, etc . So push meta from settings.
+            */
+            $meta->setCompressionType($this->_settings->compressionType);
+            $meta->setKeepExif($this->_settings->keepExif);
+            $meta->setCmyk2rgb($this->_settings->CMYKtoRGBconversion);
+            $meta->setResize($this->_settings->resizeImages);
+            $meta->setResizeWidth($this->_settings->resizeWidth);
+            $meta->setResizeHeight($this->_settings->resizeHeight);
             $this->spMetaDao->update($meta);
             $this->prioQ->push('C-' . $id);
         }
