@@ -1170,6 +1170,7 @@ class WPShortPixel {
                 $notice = null; $this->refreshCustomFolders($notice);
                 $this->_settings->hasCustomFolders = time();
             }
+
             $customIds = $this->spMetaDao->getPendingMetas( 3 - count($ids));
             if(is_array($customIds)) {
                 $ids = array_merge($ids, array_map(array('ShortPixelMetaFacade', 'getNewFromRow'), $customIds));
@@ -1185,7 +1186,7 @@ class WPShortPixel {
         for($i = 0, $itemHandler = false; $ids !== false && $i < min(SHORTPIXEL_PRESEND_ITEMS, count($ids)); $i++) {
             $crtItemHandler = $ids[$i];
             $tmpMeta = $crtItemHandler->getMeta();
-            
+
             $compType = ($tmpMeta->getCompressionType() !== null ? $tmpMeta->getCompressionType() : $this->_settings->compressionType);
             try {
                 self::log("HIP: 1 sendToProcessing: ".$crtItemHandler->getId());
@@ -1247,6 +1248,14 @@ class WPShortPixel {
 
             $result["RetinasCount"] = $meta->getRetinasOpt();
             $result["BackupEnabled"] = ($this->getBackupFolderAny($meta->getPath(), $meta->getThumbs()) ? true : false);//$this->_settings->backupImages;
+
+            $tsOptimized = $meta->getTsOptimized();
+            if (! is_null($tsOptimized))
+            {
+                $tsOptObj = new DateTime($tsOptimized);
+                if ($tsOptObj)
+                  $result['TsOptimized'] = ShortPixelTools::format_nice_date($tsOptObj);
+            }
 
             if(!$prio && $itemId <= $this->prioQ->getStartBulkId()) {
                 $this->advanceBulk($itemId);

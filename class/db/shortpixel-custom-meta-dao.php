@@ -226,7 +226,7 @@ class ShortPixelCustomMetaDao {
                 return __('The folder could not be saved to the database. Please check that the plugin can create its database tables.', 'shortpixel-image-optimiser') . $folderMsg;
             }
         }
-        //die(var_dump($folder));
+
         if(!$folderMsg) {
             $fileList = $folder->getFileList();
             $this->batchInsertImages($fileList, $folder->getId());

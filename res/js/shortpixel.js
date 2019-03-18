@@ -937,7 +937,14 @@ function checkBulkProcessingCallApi(){
 
                         // [BS] Replace filename if in media item edit view
                         if (jQuery('.misc-pub-filename strong').length > 0)
-                          jQuery('.misc-pub-filename strong').text(data['Filename'])
+                          jQuery('.misc-pub-filename strong').text(data['Filename']);
+
+                        // [BS] Only update date on Custom Media Page.
+                        if (ShortPixel.isCustomImageId(id) && data['TsOptimized'] && data['TsOptimized'].length > 0)
+                        {
+                          jQuery('.date.column-date').text(data['TsOptimized']);
+                        }
+
 
                         var actions = jQuery(['restore', 'view', 'redolossy', 'redoglossy', 'redolossless']).not(['redo'+data["Type"]]).get();
                         ShortPixel.otherMediaUpdateActions(id, actions);
