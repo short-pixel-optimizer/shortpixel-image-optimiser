@@ -147,11 +147,13 @@ class WPShortPixel {
 
         $this->migrateBackupFolder();
 
+        // [BS] Quite dangerous to do this in any constructor. Can hit if request is ajax to name something
         if(!$this->_settings->redirectedSettings && !$this->_settings->verifiedKey && (!function_exists("is_multisite") || !is_multisite())) {
             $this->_settings->redirectedSettings = 1;
             wp_redirect(admin_url("options-general.php?page=wp-shortpixel"));
             exit();
         }
+
     }
 
     //handling older
