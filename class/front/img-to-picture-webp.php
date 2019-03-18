@@ -214,12 +214,22 @@ class ShortPixelImgToPictureWebp
 
         $imageBaseURL = str_replace($filename, '', $item);
         $imageBase = static::getImageBase($item);
-        
-        if (file_exists($imageBase . $fileonly . '.webp'))
+
+        $checkedFile = false;
+        if (file_exists($imageBase . $fileonly . '.' . $ext . '.webp'))
+        {
+          $checkedFile = $imageBaseURL . $fileonly . '.' . $ext . '.webp';
+        }
+        elseif (file_exists($imageBase . $fileonly . '.webp'))
+        {
+          $checkedFile = $imageBaseURL . $fileonly . '.webp';
+        }
+
+        if ($checkedFile)
         {
             // if webp, then add another URL() def after the targeted one.  (str_replace old full URL def, with new one on main match?
             $target_urldef = $matches[0][$i];
-            $new_urldef = "url('" . $imageBaseURL . $fileonly . ".webp'), " . $target_urldef;
+            $new_urldef = "url('" . $checkedFile . "'), " . $target_urldef;
             $content = str_replace($target_urldef, $new_urldef, $content);
         }
 
