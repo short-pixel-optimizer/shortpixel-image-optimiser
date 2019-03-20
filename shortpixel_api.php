@@ -107,7 +107,7 @@ class ShortPixelAPI {
             throw new Exception(__('Invalid API Key', 'shortpixel-image-optimiser'));
         }
 
-        //WpShortPixel::log("DO REQUESTS for META: " . json_encode($itemHandler->getRawMeta()) . " STACK: " . json_encode(debug_backtrace()));
+      //  WpShortPixel::log("DO REQUESTS for META: " . json_encode($itemHandler->getRawMeta()) . " STACK: " . json_encode(debug_backtrace()));
 
         $requestParameters = array(
             'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
@@ -128,7 +128,7 @@ class ShortPixelAPI {
             $requestParameters['refresh'] = 1;
         }
 
-        //WpShortPixel::log("DO REQUESTS SENDING: " . json_encode($requestParameters));
+        //WpShortPixel::log("ShortPixel API Request Settings: " . json_encode($requestParameters));
 
         $response = wp_remote_post($this->_apiEndPoint, $this->prepareRequest($requestParameters, $Blocking) );
 
