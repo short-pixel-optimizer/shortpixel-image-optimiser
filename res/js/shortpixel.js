@@ -598,7 +598,7 @@ var ShortPixel = function() {
                 }
             });
             this.comparerData.jsLoaded = 1;
-            jQuery(".sp-close-button").click(ShortPixel.closeComparerPopup);
+            //jQuery(".sp-close-button").click(ShortPixel.closeComparerPopup);
         }
         if(this.comparerData.origUrl === false) {
             jQuery.ajax({
@@ -623,23 +623,36 @@ var ShortPixel = function() {
         //depending on the sizes choose the right modal
         var sideBySide = (height < 150 || width < 350);
         var modal = jQuery(sideBySide ? '#spUploadCompareSideBySide' : '#spUploadCompare');
+        var modalShade = jQuery('.sp-modal-shade');
+
         if(!sideBySide) {
             jQuery("#spCompareSlider").html('<img class="spUploadCompareOriginal"/><img class="spUploadCompareOptimized"/>');
         }
         //calculate the modal size
         width = Math.max(350, Math.min(800, (width < 350 ? (width + 25) * 2 : (height < 150 ? width + 25 : width))));
         height = Math.max(150, (sideBySide ? (origWidth > 350 ? 2 * (height + 45) : height + 45) : height * width / origWidth));
+
+        var marginLeft = '-' + Math.round(width/2); // center
+
         //set modal sizes and display
         jQuery(".sp-modal-body", modal).css("width", width);
         jQuery(".shortpixel-slider", modal).css("width", width);
         modal.css("width", width);
+        modal.css('marginLeft',  marginLeft + 'px');
         jQuery(".sp-modal-body", modal).css("height", height);
-        modal.css('display', 'block');
-        modal.parent().css('display', 'block');
+        modal.show();
+        //modal.parent().css('display', 'block');
+        modalShade.show();
+
         if(!sideBySide) {
             jQuery("#spCompareSlider").twentytwenty({slider_move: "mousemove"});
         }
+
+        // Close Options
+        jQuery(".sp-close-button").on('click', ShortPixel.closeComparerPopup);
         jQuery(document).on('keyup.sp_modal_active', ShortPixel.closeComparerPopup);
+        jQuery('.sp-modal-shade').on('click', ShortPixel.closeComparerPopup);
+
         //change images srcs
         var imgOpt = jQuery(".spUploadCompareOptimized", modal);
         jQuery(".spUploadCompareOriginal", modal).attr("src", imgOriginal);
@@ -654,10 +667,13 @@ var ShortPixel = function() {
     }
 
     function closeComparerPopup(e) {
-        jQuery("#spUploadCompareSideBySide").parent().css("display", 'none');
-        jQuery("#spUploadCompareSideBySide").css("display", 'none');
-        jQuery("#spUploadCompare").css("display", 'none');
+      //  jQuery("#spUploadCompareSideBySide").parent().css("display", 'none');
+        jQuery("#spUploadCompareSideBySide").hide();
+        jQuery("#spUploadCompare").hide();
+        jQuery('.sp-modal-shade').hide();
         jQuery(document).unbind('keyup.sp_modal_active');
+        jQuery('.sp-modal-shade').off('click');
+        jQuery(".sp-close-button").off('click');
     }
 
     function convertPunycode(url) {
