@@ -958,7 +958,8 @@ function checkBulkProcessingCallApi(){
                         // [BS] Only update date on Custom Media Page.
                         if (ShortPixel.isCustomImageId(id) && data['TsOptimized'] && data['TsOptimized'].length > 0)
                         {
-                          jQuery('.date.column-date').text(data['TsOptimized']);
+                          console.log(id);
+                          jQuery('.date-' + id).text(data['TsOptimized']);
                         }
 
 

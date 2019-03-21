@@ -1685,7 +1685,6 @@ class ShortPixelView {
                                 . "<br>" . __("Optimized on", 'shortpixel-image-optimiser') . ": " . $data['date']
                                 . $excludeSizes . $missingThumbs;
                     }
-
                     $this->renderListCell($id, $data['status'], $data['showActions'], $data['thumbsToOptimize'],
                             $data['backup'], $data['type'], $data['invType'], $successText);
 
