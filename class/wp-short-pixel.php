@@ -1119,6 +1119,10 @@ class WPShortPixel {
         die(json_encode($response));
     }
 
+    /* Main Image Processing Function. Called from JS loop
+    *
+    * @param String $ID ApiKey
+    */
     public function handleImageProcessing($ID = null) {
         //if(rand(1,2) == 2) {
         //    header($_SERVER['SERVER_PROTOCOL'] . ' 500 Internal Server Error', true, 500);
@@ -2257,6 +2261,9 @@ class WPShortPixel {
 	</div> <?php
     }
 
+    /** Front End function that controls bulk processes. 
+    *
+    */
     public function bulkProcess() {
         global $wpdb;
 
@@ -2823,8 +2830,8 @@ Header append Vary Accept env=REDIRECT_webp
             else {
                 if(isset($_POST['save']) || isset($_POST['saveAdv'])) {
                     //these are needed for the call to api-status, set them first.
-                    $this->_settings->siteAuthUser = (isset($_POST['siteAuthUser']) ? $_POST['siteAuthUser'] : $this->_settings->siteAuthUser);
-                    $this->_settings->siteAuthPass = (isset($_POST['siteAuthPass']) ? $_POST['siteAuthPass'] : $this->_settings->siteAuthPass);
+                    $this->_settings->siteAuthUser = (isset($_POST['siteAuthUser']) ? sanitize_text_field($_POST['siteAuthUser']) : $this->_settings->siteAuthUser);
+                    $this->_settings->siteAuthPass = (isset($_POST['siteAuthPass']) ? sanitize_text_field($_POST['siteAuthPass']) : $this->_settings->siteAuthPass);
                 }
 
                 $validityData = $this->getQuotaInformation($_POST['key'], true, isset($_POST['validate']) && $_POST['validate'] == "validate", $_POST);

@@ -88,6 +88,8 @@ function shortpixelInit() {
 
 }
 
+
+
 /**
  * this is hooked into wp_generate_attachment_metadata
  * @param $meta

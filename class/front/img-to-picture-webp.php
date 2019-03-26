@@ -172,15 +172,13 @@ class ShortPixelImgToPictureWebp
 
     public static function testInlineStyle($content)
     {
-      preg_match_all('/background.*[^:](url\(.*\))[;]/isU', $content, $matches);
+      //preg_match_all('/background.*[^:](url\(.*\))[;]/isU', $content, $matches);
+      preg_match_all('/url\(.*\)/isU', $content, $matches);
+
       if (count($matches) == 0)
         return $content;
 
-      foreach($matches[0] as $element)
-      {
-        $returned = self::convertInlineStyle($element);
-        $content = str_replace($element, $returned, $content);
-      }
+      $content = self::convertInlineStyle($matches, $content);
       return $content;
     }
 
@@ -189,31 +187,40 @@ class ShortPixelImgToPictureWebp
     * @return String Replaced (or not) content for webp.
     * @author Bas Schuiling
     */
-    public static function convertInlineStyle($match)
+    public static function convertInlineStyle($matches, $content)
     {
       // ** matches[0] = url('xx') matches[1] the img URL.
-      preg_match_all('/url\(\'(.*)\'\)/imU', $match, $matches);
+//      preg_match_all('/url\(\'(.*)\'\)/imU', $match, $matches);
 
-      if (count($matches)  == 0)
-        return $match; // something wrong, escape.
+  //    if (count($matches)  == 0)
+  //      return $match; // something wrong, escape.
 
-      $content = $match;
+      //$content = $match;
       $allowed_exts = array('jpg', 'jpgeg', 'gif', 'png');
+      $converted = array();
 
-      for($i = 0; $i < count($matches[1]); $i++)
+      for($i = 0; $i < count($matches[0]); $i++)
       {
-        $item = $matches[1][$i];
-        $url = parse_url($item);
-        $filename = basename($item);
+        $item = $matches[0][$i];
 
-        $fileonly = pathinfo($item, PATHINFO_FILENAME);
-        $ext = pathinfo($item, PATHINFO_EXTENSION);
+        preg_match('/url\(\'(.*)\'\)/imU', $item, $match);
+        if (! isset($match[1]))
+          continue;
+
+        $url = $match[1];
+        $filename = basename($url);
+
+        $fileonly = pathinfo($url, PATHINFO_FILENAME);
+        $ext = pathinfo($url, PATHINFO_EXTENSION);
 
         if (! in_array($ext, $allowed_exts))
           continue;
 
-        $imageBaseURL = str_replace($filename, '', $item);
-        $imageBase = static::getImageBase($item);
+        $imageBaseURL = str_replace($filename, '', $url);
+        $imageBase = static::getImageBase($url);
+
+        if (! $imageBase) // returns false if URL is external, do nothing with that.
+          continue;
 
         $checkedFile = false;
         if (file_exists($imageBase . $fileonly . '.' . $ext . '.webp'))
@@ -229,8 +236,12 @@ class ShortPixelImgToPictureWebp
         {
             // if webp, then add another URL() def after the targeted one.  (str_replace old full URL def, with new one on main match?
             $target_urldef = $matches[0][$i];
-            $new_urldef = "url('" . $checkedFile . "'), " . $target_urldef;
-            $content = str_replace($target_urldef, $new_urldef, $content);
+            if (! isset($converted[$target_urldef])) // if the same image is on multiple elements, this replace might go double. prevent.
+            {
+              $converted[] = $target_urldef;
+              $new_urldef = "url('" . $checkedFile . "'), " . $target_urldef;
+              $content = str_replace($target_urldef, $new_urldef, $content);
+            }
         }
 
       }
@@ -272,7 +283,7 @@ class ShortPixelImgToPictureWebp
           }
           if ($imageBase == $src) { //looks like it's an external URL though...
               if(isset($_GET['SHORTPIXEL_DEBUG'])) WPShortPixel::log('SPDBG baseurl ' . $updir['baseurl'] . ' doesn\'t match ' . $src, true);
-              return $match[0] . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG baseurl ' . $updir['baseurl'] . ' doesn\'t match ' . $src . '  -->' : '');
+              return false . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG baseurl ' . $updir['baseurl'] . ' doesn\'t match ' . $src . '  -->' : '');
           }
       }
         $imageBase = trailingslashit(dirname($imageBase));
