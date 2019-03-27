@@ -52,6 +52,7 @@ class ShortPixelImgToPictureWebp
 
         $srcInfo = self::lazyGet($img, 'src');
         $src = $srcInfo['value'];
+        $parsed_url = parse_url($src);
         $srcPrefix = $srcInfo['prefix'];
 
         $srcsetInfo = self::lazyGet($img, 'srcset');
@@ -104,7 +105,13 @@ class ShortPixelImgToPictureWebp
         }
         $imageBase = dirname($imageBase) . '/';
         */
-        $imageBase = static::getImageBase($src);
+        if (! isset($parsed_url['host']))
+        {
+          // relative Paths's.
+          $imageBase = static::getImageBase(site_url() . $src);
+        }
+        else
+          $imageBase = static::getImageBase($src);
 
         // We don't wanna have src-ish attributes on the <picture>
         unset($img['src']);
@@ -208,6 +215,7 @@ class ShortPixelImgToPictureWebp
           continue;
 
         $url = $match[1];
+        $parsed_url = parse_url($url);
         $filename = basename($url);
 
         $fileonly = pathinfo($url, PATHINFO_FILENAME);
@@ -217,7 +225,13 @@ class ShortPixelImgToPictureWebp
           continue;
 
         $imageBaseURL = str_replace($filename, '', $url);
-        $imageBase = static::getImageBase($url);
+
+        if (! isset($parsed_url['host']))
+        {
+          $imageBase = static::getImageBase(site_url() . $url);
+        }
+        else
+          $imageBase = static::getImageBase($url);
 
         if (! $imageBase) // returns false if URL is external, do nothing with that.
           continue;
@@ -255,8 +269,6 @@ class ShortPixelImgToPictureWebp
     **/
     public static function getImageBase($src)
     {
-
-
       $updir = wp_upload_dir();
       $proto = explode("://", $src);
       if (count($proto) > 1) {
@@ -271,13 +283,24 @@ class ShortPixelImgToPictureWebp
       }
 
       $imageBase = str_replace($updir['baseurl'], SHORTPIXEL_UPLOADS_BASE, $src);
-      if ($imageBase == $src) { //maybe the site uses a CDN or a subdomain?
+
+      if ($imageBase == $src) { //maybe the site uses a CDN or a subdomain? - Or relative link
           $urlParsed = parse_url($src);
-          $srcHost = array_reverse(explode('.', $urlParsed['host']));
           $baseParsed = parse_url($updir['baseurl']);
+
+          $srcHost = array_reverse(explode('.', $urlParsed['host']));
           $baseurlHost = array_reverse(explode('.', $baseParsed['host']));
+
+          if (! isset($urlParsed['host']))
+          {
+            var_dump($urlParsed);
+            var_dump($baseParsed); exit();
+          }
+
+
           if ($srcHost[0] == $baseurlHost[0] && $srcHost[1] == $baseurlHost[1]
               && (strlen($srcHost[1]) > 3 || isset($srcHost[2]) && isset($srcHost[2]) && $srcHost[2] == $baseurlHost[2])) {
+
               $baseurl = str_replace($baseParsed['scheme'] . '://' . $baseParsed['host'], $urlParsed['scheme'] . '://' . $urlParsed['host'], $updir['baseurl']);
               $imageBase = str_replace($baseurl, SHORTPIXEL_UPLOADS_BASE, $src);
           }
@@ -286,6 +309,8 @@ class ShortPixelImgToPictureWebp
               return false . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG baseurl ' . $updir['baseurl'] . ' doesn\'t match ' . $src . '  -->' : '');
           }
       }
+
+
         $imageBase = trailingslashit(dirname($imageBase));
         return $imageBase;
     }

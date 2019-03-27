@@ -1969,6 +1969,8 @@ class WPShortPixel {
 
             $meta->setStatus(3);
             $this->spMetaDao->update($meta);
+
+            //[BS] TODO - doDumpRequests here
         }
 
         return $meta;
@@ -2259,7 +2261,7 @@ class WPShortPixel {
 	</div> <?php
     }
 
-    /** Front End function that controls bulk processes. 
+    /** Front End function that controls bulk processes.
     *
     */
     public function bulkProcess() {
