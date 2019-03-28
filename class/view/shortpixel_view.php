@@ -1348,8 +1348,8 @@ class ShortPixelView {
                 <tr>
                     <th scope="row"><label for="authentication"><?php _e('HTTP AUTH credentials','shortpixel-image-optimiser');?></label></th>
                     <td>
-                        <input name="siteAuthUser" type="text" id="siteAuthUser" value="<?php echo( $settings->siteAuthUser );?>" class="regular-text" placeholder="<?php _e('User','shortpixel-image-optimiser');?>"><br>
-                        <input name="siteAuthPass" type="text" id="siteAuthPass" value="<?php echo( $settings->siteAuthPass );?>" class="regular-text" placeholder="<?php _e('Password','shortpixel-image-optimiser');?>">
+                        <input name="siteAuthUser" type="text" id="siteAuthUser" value="<?php echo( esc_html($settings->siteAuthUser ));?>" class="regular-text" placeholder="<?php _e('User','shortpixel-image-optimiser');?>"><br>
+                        <input name="siteAuthPass" type="text" id="siteAuthPass" value="<?php echo( esc_html($settings->siteAuthPass ));?>" class="regular-text" placeholder="<?php _e('Password','shortpixel-image-optimiser');?>">
                         <p class="settings-info">
                             <?php _e('Only fill in these fields if your site (front-end) is not publicly accessible and visitors need a user/pass to connect to it. If you don\'t know what is this then just <strong>leave the fields empty</strong>.','shortpixel-image-optimiser');?>
                         </p>
@@ -1427,7 +1427,7 @@ class ShortPixelView {
                     </th>
                     <td>
                         <input name="cloudflare-email" type="text" id="cloudflare-email" <?php echo($noCurl ? 'disabled' : '');?>
-                               value="<?php echo($this->ctrl->fetch_cloudflare_api_email()); ?>" class="regular-text">
+                               value="<?php echo(esc_html($this->ctrl->fetch_cloudflare_api_email())); ?>" class="regular-text">
                         <p class="settings-info">
                             <?php _e('The e-mail address you use to login to CloudFlare.','shortpixel-image-optimiser');?>
                         </p>
@@ -1439,7 +1439,7 @@ class ShortPixelView {
                     </th>
                     <td>
                         <input name="cloudflare-auth-key" type="text" id="cloudflare-auth-key" <?php echo($noCurl ? 'disabled' : '');?>
-                               value="<?php echo($this->ctrl->fetch_cloudflare_api_key()); ?>" class="regular-text">
+                               value="<?php echo(esc_html($this->ctrl->fetch_cloudflare_api_key())); ?>" class="regular-text">
                         <p class="settings-info">
                             <?php _e("This can be found when you're logged into your account, on the My Profile page:",'shortpixel-image-optimiser');?> <a href='https://www.cloudflare.com/a/profile' target='_blank'>https://www.cloudflare.com/a/profile</a>
                         </p>
@@ -1451,7 +1451,7 @@ class ShortPixelView {
                     </th>
                     <td>
                         <input name="cloudflare-zone-id" type="text" id="cloudflare-zone-id" <?php echo($noCurl ? 'disabled' : '');?>
-                               value="<?php echo($this->ctrl->fetch_cloudflare_api_zoneid()); ?>" class="regular-text">
+                               value="<?php echo(esc_html($this->ctrl->fetch_cloudflare_api_zoneid())); ?>" class="regular-text">
                         <p class="settings-info">
                             <?php _e('This can be found in your Cloudflare account in the "Overview" section for your domain.','shortpixel-image-optimiser');?>
                         </p>
