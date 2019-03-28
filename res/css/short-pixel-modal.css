@@ -12,11 +12,17 @@ div.sp-modal-shade {
 }
 div.shortpixel-modal {
     background-color: #fefefe;
-    margin: 8% auto; /* 15% from the top and centered */
+    /*margin: 8% auto;  15% from the top and centered */
     padding: 20px;
     border: 1px solid #888;
     width: 30%; /* Could be more or less, depending on screen size */
     min-width: 300px; /* Could be more or less, depending on screen size */
+    z-index: 100; /* Proper z-index */
+    position: fixed;
+    top: 10%;
+    left: 50%;
+    max-height: 90%;
+    overflow-y: auto;
 }
 div.shortpixel-modal .sp-close-button, div.shortpixel-modal .sp-close-upgrade-button {
     float: right;

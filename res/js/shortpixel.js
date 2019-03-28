@@ -419,6 +419,7 @@ var ShortPixel = function() {
         jQuery('#pluginemail_spinner').removeClass('is-active');
     }
 
+    // [TODO] Check where this function is called and if modal is working here. 
     function proposeUpgrade() {
         //first open the popup window with the spinner
         jQuery("#shortPixelProposeUpgrade .sp-modal-body").addClass('sptw-modal-spinner');
