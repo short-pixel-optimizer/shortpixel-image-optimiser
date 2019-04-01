@@ -146,8 +146,6 @@ class ShortPixelImgToPictureWebp
         } else {
             $srcset = trim($src);
 
-//                die(var_dump($match));
-
             $fileWebPCompat = $imageBase . wp_basename($srcset, '.' . pathinfo($srcset, PATHINFO_EXTENSION)) . '.webp';
             $fileWebP = $imageBase . wp_basename($srcset) . '.webp';
             if (file_exists($fileWebP)) {
