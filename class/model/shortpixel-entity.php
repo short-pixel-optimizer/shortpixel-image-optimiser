@@ -11,6 +11,7 @@ class ShortPixelEntity{
         }
         foreach($dataArr as $key => $val) {
             $setter = 'set' . ShortPixelTools::snakeToCamel($key);
+
             if(method_exists($this, $setter)) {
                 $this->$setter($val);
             }

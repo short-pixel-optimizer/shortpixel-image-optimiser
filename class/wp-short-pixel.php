@@ -1949,8 +1949,15 @@ class WPShortPixel {
     }
 
     public function doCustomRestore($ID) {
-        $meta = $this->spMetaDao->getMeta($ID);
-        if(!$meta || $meta->getStatus() != 2) return false;
+        //$meta = $this->spMetaDao->getMeta($ID);
+        // meta facade as a custom image
+        $itemHandler = new ShortPixelMetaFacade('C-' . $ID);
+        $meta = $itemHandler->getMeta();
+
+        if(!$meta || $meta->getStatus() != 2)
+        {
+          return false;
+        }
 
         $file = $meta->getPath();
         $fullSubDir = str_replace(get_home_path(), "", dirname($file)) . '/';
@@ -1960,6 +1967,11 @@ class WPShortPixel {
             @rename($bkFile, $file);
             /* [BS] Reset all generated image meta. Bring back to start state.
             * Since Wpdb->prepare doesn't support 'null', zero values in this table should not be trusted */
+
+            // do this before putting the meta down, since maybeDump check for last timestamp
+            $URLsAndPATHs = $itemHandler->getURLsAndPATHs(false);
+            $this->maybeDumpFromProcessedOnServer($itemHandler, $URLsAndPATHs);
+
             $meta->setTsOptimized(0);
             $meta->setCompressedSize(0);
             $meta->setCompressionType(0);
@@ -1975,7 +1987,10 @@ class WPShortPixel {
             $meta->setStatus(3);
             $this->spMetaDao->update($meta);
 
-            //[BS] TODO - doDumpRequests here
+
+        }
+        else {
+           self::log('File ' + $bkFile + ' not found in backups');
         }
 
         return $meta;
