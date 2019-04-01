@@ -38,3 +38,9 @@ div.shortpixel-modal .sptw-modal-spinner {
     background-repeat: no-repeat;
     background-position: center;
 }
+div.sp-modal-title {
+    font-size: 22px;
+}
+div.sp-modal-body {
+    margin-top: 20px;
+}
