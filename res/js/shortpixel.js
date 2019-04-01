@@ -4,7 +4,6 @@
 
 jQuery(document).ready(function(){ShortPixel.init();});
 
-
 var ShortPixel = function() {
 
     function init() {
@@ -419,7 +418,7 @@ var ShortPixel = function() {
         jQuery('#pluginemail_spinner').removeClass('is-active');
     }
 
-    // [TODO] Check where this function is called and if modal is working here. 
+    // [TODO] Check where this function is called and if modal is working here.
     function proposeUpgrade() {
         //first open the popup window with the spinner
         jQuery("#shortPixelProposeUpgrade .sp-modal-body").addClass('sptw-modal-spinner');
@@ -551,6 +550,24 @@ var ShortPixel = function() {
             return false;
         }
         return true;
+    }
+
+    // used in bulk restore all interface
+    function checkRandomAnswer(e)
+    {
+        var value = jQuery(e.target).val();
+        var answer = jQuery('input[name="random_answer"]').val();
+        var target = jQuery('input[name="random_answer"]').data('target');
+
+        if (value == answer)
+        {
+
+          jQuery(target).removeClass('disabled').prop('disabled', false);
+        }
+        else {
+            jQuery(target).addClass('disabled').prop('disabled', true);
+        }
+
     }
 
     function removeBulkMsg(me) {
@@ -724,6 +741,7 @@ var ShortPixel = function() {
         bulkHideMaintenanceMsg  : bulkHideMaintenanceMsg,
         bulkShowError       : bulkShowError,
         confirmBulkAction  : confirmBulkAction,
+        checkRandomAnswer : checkRandomAnswer,
         removeBulkMsg       : removeBulkMsg,
         isCustomImageId     : isCustomImageId,
         recheckQuota        : recheckQuota,

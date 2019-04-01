@@ -38,6 +38,8 @@ class WPShortPixel {
         $this->prioQ = new ShortPixelQueue($this, $this->_settings);
         $this->view = new ShortPixelView($this);
 
+        ShortPixelTools::namespaceit('ShortPixelController')::init(); // load all subclassed controllers.
+
         define('QUOTA_EXCEEDED', $this->view->getQuotaExceededHTML());
 
         if(is_plugin_active('envira-gallery/envira-gallery.php') || is_plugin_active('soliloquy-lite/soliloquy-lite.php')) {
@@ -474,6 +476,9 @@ class WPShortPixel {
                     wp_enqueue_style('short-pixel.min.css', plugins_url('/res/css/short-pixel.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
                     //modal - used in settings for selecting folder
                     wp_enqueue_style('short-pixel-modal.min.css', plugins_url('/res/css/short-pixel-modal.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
+
+                    wp_register_style('shortpixel-admin', plugins_url('/res/css/shortpixel-admin.css', SHORTPIXEL_PLUGIN_FILE),array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
+                    wp_enqueue_style('shortpixel-admin');
                 }
             }
         }
@@ -2377,9 +2382,22 @@ class WPShortPixel {
             $averageCompression = self::getAverageCompression();
             $percent = $this->prioQ->bulkPaused() ? $this->getPercent($quotaData) : false;
 
-            $this->view->displayBulkProcessingForm($quotaData, $thumbsProcessedCount, $under5PercentCount,
+            // [BS] If some template part is around, use it and find the controller.
+            $template_part = isset($_GET['part']) ? sanitize_text_field($_GET['part']) : false;
+            $partControl = ShortPixelTools::namespaceit('ShortPixelController')::findControllerbySlug($template_part);
+
+            if ($partControl)
+            {
+              $viewObj = new $partControl();
+              $viewObj->loadView();
+            }
+
+            if (! $template_part)
+            {
+              $this->view->displayBulkProcessingForm($quotaData, $thumbsProcessedCount, $under5PercentCount,
                     $this->prioQ->bulkRan(), $averageCompression, $this->_settings->fileCount,
                     self::formatBytes($this->_settings->savedSpace), $percent, $pendingMeta);
+            }
         }
     }
     //end bulk processing

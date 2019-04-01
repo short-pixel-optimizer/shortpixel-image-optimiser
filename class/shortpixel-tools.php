@@ -16,6 +16,16 @@ class ShortPixelTools {
         return str_replace(' ', '', ucwords(str_replace('_', ' ', $snake_case)));
     }
 
+    public static function getPluginPath()
+    {
+       return plugin_dir_path(SHORTPIXEL_PLUGIN_FILE);
+    }
+
+    public static function namespaceit($name)
+    {
+      return '\ShortPixel\\'  . $name; 
+    }
+
     public static function requestIsFrontendAjax()
     {
         $script_filename = isset($_SERVER['SCRIPT_FILENAME']) ? $_SERVER['SCRIPT_FILENAME'] : '';

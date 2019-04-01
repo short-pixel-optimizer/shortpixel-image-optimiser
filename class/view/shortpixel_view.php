@@ -529,9 +529,14 @@ class ShortPixelView {
                 <form action='' method='POST' >
                     <input type='checkbox' id='bulk-thumbnails' name='thumbnails' <?php echo($this->ctrl->processThumbnails() ? "checked":"");?>
                            onchange="ShortPixel.onBulkThumbsCheck(this)"> <?php _e('Include thumbnails','shortpixel-image-optimiser');?><br><br>
+
+                   <a style="float: right;margin: 0 10px; line-height: 28px" href='<?php echo add_query_arg('part','bulk-restore-all'); ?> '><?php _e('Bulk Restore Images','shortpixel-image-optimiser'); ?></a>
+
                     <input type='submit' name='bulkProcess' id='bulkProcess' class='button button-primary' value='<?php _e('Restart Optimizing','shortpixel-image-optimiser');?>'
                            <?php echo($settings->quotaExceeded? "disabled title=\"" . __("Top-up your account to optimize more images.",'shortpixel-image-optimiser')."\"" : ""); ?>>
-                    <input type='submit' name='bulkRestore' id='bulkRestore' class='button' value='<?php _e('Bulk Restore Media Library','shortpixel-image-optimiser');?>' onclick="ShortPixel.confirmBulkAction('Restore',event)" style="float: right;">
+                    <!-- <input type='submit' name='bulkRestore' id='bulkRestore' class='button' value='<?php _e('Bulk Restore Media Library','shortpixel-image-optimiser');?>' onclick="ShortPixel.confirmBulkAction('Restore',event)" style="float: right;"> -->
+
+
                     <input type='submit' name='bulkCleanup' id='bulkCleanup' class='button' value='<?php _e('Bulk Delete SP Metadata','shortpixel-image-optimiser');?>' onclick="ShortPixel.confirmBulkAction('Cleanup',event)" style="float: right;margin-right:10px;">
                     <input type='submit' name='bulkCleanupPending' id='bulkCleanupPending' class='button' value='<?php _e('Bulk Delete Pending Metadata','shortpixel-image-optimiser');?>' onclick="ShortPixel.confirmBulkAction('CleanupPending', event)" style="display:none">
                 </form>
