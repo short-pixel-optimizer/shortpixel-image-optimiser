@@ -291,13 +291,6 @@ class ShortPixelImgToPictureWebp
           $srcHost = array_reverse(explode('.', $urlParsed['host']));
           $baseurlHost = array_reverse(explode('.', $baseParsed['host']));
 
-          if (! isset($urlParsed['host']))
-          {
-            var_dump($urlParsed);
-            var_dump($baseParsed); exit();
-          }
-
-
           if ($srcHost[0] == $baseurlHost[0] && $srcHost[1] == $baseurlHost[1]
               && (strlen($srcHost[1]) > 3 || isset($srcHost[2]) && isset($srcHost[2]) && $srcHost[2] == $baseurlHost[2])) {
 
