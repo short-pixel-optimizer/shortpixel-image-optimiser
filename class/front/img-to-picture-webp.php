@@ -146,6 +146,7 @@ class ShortPixelImgToPictureWebp
         } else {
             $srcset = trim($src);
 
+
             $fileWebPCompat = $imageBase . wp_basename($srcset, '.' . pathinfo($srcset, PATHINFO_EXTENSION)) . '.webp';
             $fileWebP = $imageBase . wp_basename($srcset) . '.webp';
             if (file_exists($fileWebP)) {
@@ -201,7 +202,7 @@ class ShortPixelImgToPictureWebp
   //      return $match; // something wrong, escape.
 
       //$content = $match;
-      $allowed_exts = array('jpg', 'jpgeg', 'gif', 'png');
+      $allowed_exts = array('jpg', 'jpeg', 'gif', 'png');
       $converted = array();
 
       for($i = 0; $i < count($matches[0]); $i++)

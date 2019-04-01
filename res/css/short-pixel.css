@@ -286,12 +286,6 @@ div.shortpixel-rate-us > a:focus {
     font-family: inherit;
     font-size: 16px;
 }
-div.sp-modal-title {
-    font-size: 22px;
-}
-div.sp-modal-body {
-    margin-top: 20px;
-}
 .short-pixel-bulk-page p {
     margin: 0.6em 0;
 }
@@ -407,10 +401,6 @@ th.sorted.column-wp-shortPixel a {
 }
 .wp-core-ui .bulk-play a.button .bulk-btn-txt span.total {
     font-size: 1.4em;
-}
-.short-pixel-notice-icon {
-    float:left;
-    margin: 10px 10px 10px 0;
 }
 .bulk-progress {
     padding: 20px 32px 17px;

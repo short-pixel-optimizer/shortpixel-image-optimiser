@@ -41,3 +41,7 @@ li.shortpixel-toolbar-processing.shortpixel-alert > a.ab-item > div,
     width:100%;
     float:left;
 }
+.short-pixel-notice-icon {
+    float:left;
+    margin: 10px 10px 10px 0;
+}

@@ -465,7 +465,10 @@ var ShortPixel = function() {
     function initFolderSelector() {
         jQuery(".select-folder-button").click(function(){
             jQuery(".sp-folder-picker-shade").css("display", "block");
-            jQuery(".sp-folder-picker").fileTree({
+
+            var picker = jQuery(".sp-folder-picker");
+            picker.parent().css('margin-left', -picker.width() / 2);
+            picker.fileTree({
                 script: ShortPixel.browseContent,
                 //folderEvent: 'dblclick',
                 multiFolder: false
