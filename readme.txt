@@ -4,7 +4,7 @@ Tags: compressor, image, compression, optimize, image optimizer, image optimiser
 Requires at least: 3.2.0
 Tested up to: 5.1
 Requires PHP: 5.2
-Stable tag: 4.12.9
+Stable tag: 4.13.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -241,10 +241,15 @@ The ShortPixel Image Optimiser plugin calls the following actions and filters:
 
 == Changelog ==
 
-= 4.12.9 =
+= 4.13.0 =
 
 Release date:
 
+* Bulk restore for the Other Media
+* Compare optimized versus original for the Other Media
+* Add the date column in the Other Media table, and sort by it.
+* Update the filename extension in the Media Library list and edit view, when optimizing an image which also gets converted from PNG to JPG.
+* When delivering WebP via .htaccess, add the rules also to the wp-content's and to uploads' .htaccess
 * fix generating the WebP <picture> tags when the images are either on a subdomain or on a CDN domain having the same root domain as the main site.
 
 = 4.12.8 =
