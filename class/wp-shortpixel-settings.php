@@ -61,7 +61,7 @@ class WPShortPixelSettings {
         'thumbsCount' => array('key' => 'wp-short-pixel-thumbnail-count', 'default' => 0, 'group' => 'state'),
         'under5Percent' => array('key' => 'wp-short-pixel-files-under-5-percent', 'default' => 0, 'group' => 'state'),
         'savedSpace' => array('key' => 'wp-short-pixel-savedSpace', 'default' => 0, 'group' => 'state'),
-        'averageCompression' => array('key' => 'wp-short-pixel-averageCompression', 'default' => null, 'group' => 'state'),
+        //'averageCompression' => array('key' => 'wp-short-pixel-averageCompression', 'default' => null, 'group' => 'state'),
         'apiRetries' => array('key' => 'wp-short-pixel-api-retries', 'default' => 0, 'group' => 'state'),
         'totalOptimized' => array('key' => 'wp-short-pixel-total-optimized', 'default' => 0, 'group' => 'state'),
         'totalOriginal' => array('key' => 'wp-short-pixel-total-original', 'default' => 0, 'group' => 'state'),

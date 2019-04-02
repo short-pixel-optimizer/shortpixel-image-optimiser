@@ -3139,8 +3139,8 @@ Header append Vary Accept env=REDIRECT_webp
         $argsStr .= "&host={$args['body']['host']}";
         if(strlen($this->_settings->siteAuthUser)) {
             $args['body']['user'] = $this->_settings->siteAuthUser;
-            $args['body']['pass'] = urlencode($this->_settings->siteAuthPass);
-            $argsStr .= "&user={$args['body']['user']}&pass={$args['body']['pass']}";
+            $args['body']['pass'] = $this->_settings->siteAuthPass;
+            $argsStr .= '&user=' . urlencode($args['body']['user']) . '&pass=' . urlencode($args['body']['pass']);
         }
         if($settings !== false) {
             $args['body']['Settings'] = $settings;

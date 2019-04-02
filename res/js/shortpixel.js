@@ -1087,6 +1087,7 @@ function manualOptimization(id, cleanup) {
         success: function(response) {
             var resp = JSON.parse(response);
             if(resp["Status"] == ShortPixel.STATUS_SUCCESS) {
+                //TODO - when calling several manual optimizations, the checkBulkProgress gets scheduled several times so several loops run in || - make only one.
                 setTimeout(checkBulkProgress, 2000);
             } else {
                 setCellMessage(id, typeof resp["Message"] !== "undefined" ? resp["Message"] : _spTr.thisContentNotProcessable, "");

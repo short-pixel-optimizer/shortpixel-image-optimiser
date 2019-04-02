@@ -244,12 +244,16 @@ The ShortPixel Image Optimiser plugin calls the following actions and filters:
 = 4.13.0 =
 
 Release date:
-
 * Bulk restore for the Other Media
-* Compare optimized versus original for the Other Media
-* Add the date column in the Other Media table, and sort by it.
-* Update the filename extension in the Media Library list and edit view, when optimizing an image which also gets converted from PNG to JPG.
-* When delivering WebP via .htaccess, add the rules also to the wp-content's and to uploads' .htaccess
+* make the filename extension be updated when manually optimizing a PNG from Media Library, if the convert to JPG is active, without refreshing the page
+* Integration with Regenerate Thumbnails Advanced new 2.0 beta version
+* Add the rules for WebP in the WP-CONTENT .htaccess
+* ShortPixel Other Media - display the time of optimization in the grid and offer option to sort by it
+* Keep sort order when optimizing / refreshing page on Other Media
+* offer the visual comparer for Other Media too
+* resolve the Settings inconsistency in Other Media (settings displayed were from when adding the folder not from when actually optimizing)
+* Make pressing Escape or clicking outside of any popup close it.
+* Fixed: Restoring an Other Media item and then Optimizing it again optimizes it Lossless
 * fix generating the WebP <picture> tags when the images are either on a subdomain or on a CDN domain having the same root domain as the main site.
 
 = 4.12.8 =

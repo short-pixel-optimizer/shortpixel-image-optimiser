@@ -105,13 +105,10 @@ class ShortPixelImgToPictureWebp
         }
         $imageBase = dirname($imageBase) . '/';
         */
-        if (! isset($parsed_url['host']))
-        {
-          // relative Paths's.
-          $imageBase = static::getImageBase(site_url() . $src);
+        $imageBase = static::getImageBase($src);
+        if($imageBase === false) {
+            return $match[0] . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG baseurl doesn\'t match ' . $src . '  -->' : '');
         }
-        else
-          $imageBase = static::getImageBase($src);
 
         // We don't wanna have src-ish attributes on the <picture>
         unset($img['src']);
@@ -225,12 +222,7 @@ class ShortPixelImgToPictureWebp
 
         $imageBaseURL = str_replace($filename, '', $url);
 
-        if (! isset($parsed_url['host']))
-        {
-          $imageBase = static::getImageBase(site_url() . $url);
-        }
-        else
-          $imageBase = static::getImageBase($url);
+        $imageBase = static::getImageBase($url);
 
         if (! $imageBase) // returns false if URL is external, do nothing with that.
           continue;
@@ -298,7 +290,7 @@ class ShortPixelImgToPictureWebp
           }
           if ($imageBase == $src) { //looks like it's an external URL though...
               if(isset($_GET['SHORTPIXEL_DEBUG'])) WPShortPixel::log('SPDBG baseurl ' . $updir['baseurl'] . ' doesn\'t match ' . $src, true);
-              return false . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG baseurl ' . $updir['baseurl'] . ' doesn\'t match ' . $src . '  -->' : '');
+              return false;
           }
       }
 
