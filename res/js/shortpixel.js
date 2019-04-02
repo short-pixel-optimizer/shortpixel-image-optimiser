@@ -561,10 +561,12 @@ var ShortPixel = function() {
 
         if (value == answer)
         {
-
           jQuery(target).removeClass('disabled').prop('disabled', false);
+          jQuery(target).removeAttr('aria-disabled');
+
         }
-        else {
+        else
+        {
             jQuery(target).addClass('disabled').prop('disabled', true);
         }
 

@@ -1,14 +1,23 @@
 .short-pixel-bulk-page.bulk-restore-all ol li {
   font-weight: 700; }
-.short-pixel-bulk-page.bulk-restore-all .random_answer {
+.short-pixel-bulk-page.bulk-restore-all section.select_folders {
+  margin: 20px 0; }
+  .short-pixel-bulk-page.bulk-restore-all section.select_folders .input {
+    margin: 10px 0 10px 15px;
+    font-size: 16px;
+    display: block;
+    clear: both; }
+  .short-pixel-bulk-page.bulk-restore-all section.select_folders .filecount {
+    font-size: 12px; }
+.short-pixel-bulk-page.bulk-restore-all section.random_check .random_answer {
   font-size: 16px;
   font-weight: 700;
   padding: 8px;
   border: 1px solid #ccc;
   display: inline-block; }
-.short-pixel-bulk-page.bulk-restore-all .inputs {
+.short-pixel-bulk-page.bulk-restore-all section.random_check .inputs {
   margin: 15px 0; }
-  .short-pixel-bulk-page.bulk-restore-all .inputs span {
+  .short-pixel-bulk-page.bulk-restore-all section.random_check .inputs span {
     margin-right: 8px; }
 .short-pixel-bulk-page.bulk-restore-all .button {
   margin: 10px 0;

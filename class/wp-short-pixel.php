@@ -1954,7 +1954,8 @@ class WPShortPixel {
         $itemHandler = new ShortPixelMetaFacade('C-' . $ID);
         $meta = $itemHandler->getMeta();
 
-        if(!$meta || $meta->getStatus() != 2)
+        // [TODO] On manual restore also put status to toRestore, then run this function.
+        if(!$meta || ($meta->getStatus() != shortPixelMeta::FILE_STATUS_SUCCESS && $meta->getStatus() != shortpixelMeta::FILE_STATUS_TORESTORE ) )
         {
           return false;
         }
@@ -1964,7 +1965,14 @@ class WPShortPixel {
         $bkFile = SHORTPIXEL_BACKUP_FOLDER . '/' . $fullSubDir . ShortPixelAPI::MB_basename($file);
 
         if(file_exists($bkFile)) {
-            @rename($bkFile, $file);
+            // [TODO] Put @rename back
+            $rename_result = @rename($bkFile, $file);
+            if (! $rename_result)
+            {
+                self::log('Failure on rename to : ' . $file);
+            }
+
+
             /* [BS] Reset all generated image meta. Bring back to start state.
             * Since Wpdb->prepare doesn't support 'null', zero values in this table should not be trusted */
 
@@ -1990,7 +1998,7 @@ class WPShortPixel {
 
         }
         else {
-           self::log('File ' + $bkFile + ' not found in backups');
+           self::log('File ' . $bkFile . ' not found in backups');
         }
 
         return $meta;
@@ -2337,6 +2345,10 @@ class WPShortPixel {
 
         if(isset($_POST["bulkRestore"]))
         {
+            $bulkRestore = new \ShortPixel\BulkRestoreAll();
+            $bulkRestore->setShortPixel($this);
+            $bulkRestore->setupBulk();
+
             $this->prioQ->startBulk(ShortPixelQueue::BULK_TYPE_RESTORE);
             $this->_settings->customBulkPaused = 0;
         }//end bulk restore  was clicked
@@ -2404,6 +2416,7 @@ class WPShortPixel {
             if ($partControl)
             {
               $viewObj = new $partControl();
+              $viewObj->setShortPixel($this);
               $viewObj->loadView();
             }
 

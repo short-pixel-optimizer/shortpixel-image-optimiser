@@ -7,6 +7,7 @@ class ShortPixelController
   protected static $controllers = array();
 
   protected $data = array(); // data array for usage with databases data and such
+  protected $postData = array(); // data coming from form posts.
   protected $layout; // object to use in the view.
 
   protected $template = null; // template name to include when loading.
@@ -33,8 +34,21 @@ class ShortPixelController
   public function __construct()
   {
     $this->layout = new \stdClass;
+    if (isset($_POST) && count($_POST) > 0)
+    {
+      $this->processPostData($_POST);
+    }
   }
 
+  /** Meant as a temporary glue method between all the shortpixel methods and the newer structures
+  *
+  * @param Object $pixel WPShortPixel instance.
+  */
+
+  public function setShortPixel($pixel)
+  {
+    $this->shortPixel = $pixel;
+  }
 
   public function loadView()
   {
@@ -51,6 +65,15 @@ class ShortPixelController
       if (file_exists($template_path))
         include($template_path);
 
+  }
+
+  protected function processPostData($post)
+  {
+    // most likely to easy .
+    foreach($post as $name => $data )
+    {
+      $this->postData[sanitize_text_field($name)] = sanitize_text_field($data);
+    }
   }
 
 

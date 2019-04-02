@@ -137,12 +137,17 @@ class ShortPixelListTable extends WP_List_Table {
                 return ShortPixelMetaFacade::pathToRootRelative($item->folder);
             case 'status':
                 switch($item->status) {
-                    case 3: $msg = __('Restored','shortpixel-image-optimiser');
-                        break;
-                    case 2: $msg = 0 + $item->message  == 0
+                    case ShortPixelMeta::FILE_STATUS_RESTORED:
+                      $msg = __('Restored','shortpixel-image-optimiser');
+                    break;
+                    case ShortPixelMeta::FILE_STATUS_TORESTORE:
+                      $msg = __('Restore Pending','shortpixel-image-optimiser');
+                    break;
+                    case ShortPixelMeta::FILE_STATUS_SUCCESS:
+                        $msg = 0 + intval($item->message)  == 0
                             ? __('Bonus processing','shortpixel-image-optimiser')
                             : __('Reduced by','shortpixel-image-optimiser') . " <strong>" . $item->message . "%</strong>"
-                              . (0 + $item->message < 5 ? "<br>" . __('Bonus processing','shortpixel-image-optimiser') . "." : "");
+                              . (0 + intval($item->message) < 5 ? "<br>" . __('Bonus processing','shortpixel-image-optimiser') . "." : "");
                         break;
                     case 1: $msg = "<img src=\"" . plugins_url( 'shortpixel-image-optimiser/res/img/loading.gif') . "\" class='sp-loading-small'>&nbsp;"
                                    . __('Pending','shortpixel-image-optimiser');
