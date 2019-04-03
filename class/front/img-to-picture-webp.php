@@ -28,13 +28,13 @@ class ShortPixelImgToPictureWebp
         if (is_feed() || is_admin()) {
             return $content . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG convert is_feed or is_admin -->' : '');
         }
-        $content = preg_replace_callback('/<img[^>]*>/', array('self', 'convertImage'), $content) . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG convert called -->' : '');
+        $content = preg_replace_callback('/<img[^>]*>/', array('self', 'convertImage'), $content);
         //$content = preg_replace_callback('/background.*[^:](url\(.*\)[,;])/im', array('self', 'convertInlineStyle'), $content);
 
         // [BS] No callback because we need preg_match_all
         $content = self::testInlineStyle($content);
       //  $content = preg_replace_callback('/background.*[^:]url\([\'|"](.*)[\'|"]\)[,;]/imU',array('self', 'convertInlineStyle'), $content);
-        return $content;
+        return $content . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG WebP converted -->' : '');
 
     }
 
@@ -156,14 +156,11 @@ class ShortPixelImgToPictureWebp
         }
         //return($match[0]. "<!-- srcsetTZF:".$srcsetWebP." -->");
         if (!strlen($srcsetWebP)) {
-            if(isset($_GET['SHORTPIXEL_DEBUG'])) WPShortPixel::log('SPDBG no srcsetWebP found (' . $srcsetWebP . ')', true);
             return $match[0] . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG no srcsetWebP found (' . $srcsetWebP . ') -->' : '');
         }
 
         //add the exclude class so if this content is processed again in other filter, the img is not converted again in picture
         $img['class'] = (isset($img['class']) ? $img['class'] . " " : "") . "sp-no-webp";
-
-        if(isset($_GET['SHORTPIXEL_DEBUG'])) WPShortPixel::log('SPDBG returning picture tag for ' . $src, true);
 
         return '<picture ' . self::create_attributes($img) . '>'
         .'<source ' . $srcsetPrefix . 'srcset="' . $srcsetWebP . '"' . ($sizes ? ' ' . $sizesPrefix . 'sizes="' . $sizes . '"' : '') . ' type="image/webp">'
@@ -274,6 +271,9 @@ class ShortPixelImgToPictureWebp
       }
 
       $imageBase = str_replace($updir['baseurl'], SHORTPIXEL_UPLOADS_BASE, $src);
+      if ($imageBase == $src) { //for themes images or other non-uploads paths
+          $imageBase = str_replace(content_url(), WP_CONTENT_DIR, $src);
+      }
 
       if ($imageBase == $src) { //maybe the site uses a CDN or a subdomain? - Or relative link
           $urlParsed = parse_url($src);
@@ -289,7 +289,6 @@ class ShortPixelImgToPictureWebp
               $imageBase = str_replace($baseurl, SHORTPIXEL_UPLOADS_BASE, $src);
           }
           if ($imageBase == $src) { //looks like it's an external URL though...
-              if(isset($_GET['SHORTPIXEL_DEBUG'])) WPShortPixel::log('SPDBG baseurl ' . $updir['baseurl'] . ' doesn\'t match ' . $src, true);
               return false;
           }
       }
