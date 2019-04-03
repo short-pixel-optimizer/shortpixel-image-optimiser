@@ -1609,12 +1609,16 @@ class WPShortPixel {
         $this->thumbnailsRegenerating[$postId] = true;
     }
 
+
     /**
      * to be called by thumbnail regeneration plugins when regenerating the thumbnails for an image
      * @param $postId - the postId of the image
      * @param $originalMeta - the metadata before the regeneration
      * @param array $regeneratedSizes - the list of the regenerated thumbnails - if empty then all were regenerated.
      * @param bool $bulk - true if the regeneration is done in bulk - in this case the image will not be immediately scheduled for processing but the user will need to launch the ShortPixel bulk after regenerating.
+     *
+     *
+     * Note - $regeneratedSizes expects a metadata array, with filename, not just the resized data.
      */
     public function thumbnailsRegeneratedHook($postId, $originalMeta, $regeneratedSizes = array(), $bulk = false) {
 
@@ -1630,10 +1634,11 @@ class WPShortPixel {
                 foreach($regeneratedSizes as $size) {
                     if(isset($size['file']) && in_array($size['file'], $shortPixelMeta["thumbsOptList"] )) {
                         $regeneratedThumbs[] = $size['file'];
-                        $shortPixelMeta["thumbsOpt"] = max(0, $shortPixelMeta["thumbsOpt"] - 1);
+                        $shortPixelMeta["thumbsOpt"] = max(0, $shortPixelMeta["thumbsOpt"] - 1); // this is a complicated count of number of thumbnails
                         $shortPixelMeta["retinasOpt"] = max(0, $shortPixelMeta["retinasOpt"] - 1);
                     }
                 }
+                // This retains the thumbnails that were already regenerated, and removes what is passed via regeneratedSizes.
                 $shortPixelMeta["thumbsOptList"] = array_diff($shortPixelMeta["thumbsOptList"], $regeneratedThumbs);
             }
             $meta = wp_get_attachment_metadata($postId);
@@ -1954,7 +1959,7 @@ class WPShortPixel {
         $itemHandler = new ShortPixelMetaFacade('C-' . $ID);
         $meta = $itemHandler->getMeta();
 
-        // [TODO] On manual restore also put status to toRestore, then run this function.
+        // TODO On manual restore also put status to toRestore, then run this function.
         if(!$meta || ($meta->getStatus() != shortPixelMeta::FILE_STATUS_SUCCESS && $meta->getStatus() != shortpixelMeta::FILE_STATUS_TORESTORE ) )
         {
           return false;
@@ -1965,7 +1970,6 @@ class WPShortPixel {
         $bkFile = SHORTPIXEL_BACKUP_FOLDER . '/' . $fullSubDir . ShortPixelAPI::MB_basename($file);
 
         if(file_exists($bkFile)) {
-            // [TODO] Put @rename back
             $rename_result = @rename($bkFile, $file);
             if (! $rename_result)
             {
