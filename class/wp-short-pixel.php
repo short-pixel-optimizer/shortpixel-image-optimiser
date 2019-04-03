@@ -42,7 +42,7 @@ class WPShortPixel {
 
         define('QUOTA_EXCEEDED', $this->view->getQuotaExceededHTML());
 
-        if(is_plugin_active('envira-gallery/envira-gallery.php') || is_plugin_active('soliloquy-lite/soliloquy-lite.php')) {
+        if(is_plugin_active('envira-gallery/envira-gallery.php') || is_plugin_active('soliloquy-lite/soliloquy-lite.php') || is_plugin_active('soliloquy/soliloquy.php')) {
             define('SHORTPIXEL_CUSTOM_THUMB_SUFFIX', '_c');
             define('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES', '_tl,_tr,_br,_bl');
         }
