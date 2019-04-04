@@ -38,7 +38,8 @@ class WPShortPixel {
         $this->prioQ = new ShortPixelQueue($this, $this->_settings);
         $this->view = new ShortPixelView($this);
 
-        ShortPixelTools::namespaceit('ShortPixelController')::init(); // load all subclassed controllers.
+        $controllerClass = ShortPixelTools::namespaceit('ShortPixelController');
+        $controllerClass::init(); // load all subclassed controllers.
 
         define('QUOTA_EXCEEDED', $this->view->getQuotaExceededHTML());
 
@@ -2415,7 +2416,8 @@ class WPShortPixel {
 
             // [BS] If some template part is around, use it and find the controller.
             $template_part = isset($_GET['part']) ? sanitize_text_field($_GET['part']) : false;
-            $partControl = ShortPixelTools::namespaceit('ShortPixelController')::findControllerbySlug($template_part);
+            $controller = ShortPixelTools::namespaceit('ShortPixelController');
+            $partControl = $controller::findControllerbySlug($template_part);
 
             if ($partControl)
             {
