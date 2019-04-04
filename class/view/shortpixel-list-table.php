@@ -57,6 +57,10 @@ class ShortPixelListTable extends WP_List_Table {
                   $order = isset($_GET['order']) ? sanitize_text_field($_GET['order']) : 'desc';
                   $admin_url = add_query_arg(array('orderby' => sanitize_text_field($_GET['orderby']), 'order' => $order), $admin_url);
                 }
+                if (isset($_GET['paged']))
+                {
+                  $admin_url = add_query_arg('paged', intval($_GET['paged']), $admin_url);
+                }
 
                 $actions = array(
                     'optimize' => sprintf('<a href="%s">%s</a>', add_query_arg(array('action' => 'optimize', '_wpnonce' => wp_create_nonce( 'sp_optimize_image' ), ), $admin_url), __('Optimize','shortpixel-image-optimiser')),
@@ -234,9 +238,10 @@ class ShortPixelListTable extends WP_List_Table {
         ));
 
         // [BS] Moving this from ts_added since often images get added at the same time, resulting in unpredictable sorting
-        $orderby = ( ! empty( $_GET['orderby'] ) ) ? $_GET['orderby'] : 'id';
+        $orderby = ( ! empty( $_GET['orderby'] ) ) ? sanitize_text_field($_GET['orderby']) : 'id';
         // If no order, default to asc
-        $order = ( ! empty($_GET['order'] ) ) ? $_GET['order'] : 'desc';
+        $order = ( ! empty($_GET['order'] ) ) ? sanitize_text_field($_GET['order']) : 'desc';
+        $currentPage = ( ! empty($_GET['paged'])) ? intval($_GET['paged']) : $currentPage;
 
         $this->items = $this->spMetaDao->getPaginatedMetas($this->hasNextGen, $this->getFilter(), $perPage, $currentPage, $orderby, $order);
         return $this->items;
