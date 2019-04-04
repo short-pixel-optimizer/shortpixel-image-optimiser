@@ -2559,13 +2559,18 @@ class WPShortPixel {
         if ($meta->getType() == ShortPixelMetaFacade::CUSTOM_TYPE)
         {
           $ret['optUrl'] =  $uploadsUrl . $meta->getWebPath();
+          self::log('Getting image - ' . $urlBkPath . $meta->getPath());
           // [BS] Another bug? Width / Height not stored in Shortpixel meta.
           $ret['width'] = $meta->getActualWidth();
           $ret['height'] = $meta->getActualHeight();
 
           if (is_null($ret['width']))
           {
-            $imageSizes = getimagesize($ret['optUrl']);
+
+          //  $imageSizes = getimagesize($ret['optUrl']);
+          // [BS] Fix - Use real path instead of URL on getimagesize.
+            $imageSizes = getimagesize($meta->getPath());
+
             if ($imageSizes)
             {
               $ret['width'] = $imageSizes[0];
