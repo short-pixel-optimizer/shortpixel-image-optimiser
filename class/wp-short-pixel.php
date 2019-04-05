@@ -42,9 +42,12 @@ class WPShortPixel {
 
         define('QUOTA_EXCEEDED', $this->view->getQuotaExceededHTML());
 
-        if(is_plugin_active('envira-gallery/envira-gallery.php') || is_plugin_active('soliloquy-lite/soliloquy-lite.php') || is_plugin_active('soliloquy/soliloquy.php')) {
-            define('SHORTPIXEL_CUSTOM_THUMB_SUFFIX', '_c');
-            define('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES', '_tl,_tr,_br,_bl');
+        if( !defined(SHORTPIXEL_CUSTOM_THUMB_SUFFIXES)) {
+            if(is_plugin_active('envira-gallery/envira-gallery.php') || is_plugin_active('soliloquy-lite/soliloquy-lite.php') || is_plugin_active('soliloquy/soliloquy.php')) {
+                define('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES', '_c,_tl,_tr,_br,_bl');
+            } elseif(defined(SHORTPIXEL_CUSTOM_THUMB_SUFFIX)) {
+                define('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES', SHORTPIXEL_CUSTOM_THUMB_SUFFIX);
+            }
         }
 
         $this->setDefaultViewModeList();//set default mode as list. only @ first run
@@ -736,6 +739,7 @@ class WPShortPixel {
                 try {
                     $URLsAndPATHs = $this->getURLsAndPATHs($itemHandler);
                     //send a processing request right after a file was uploaded, do NOT wait for response
+                    $itemHandler->optimizationStarted();
                     $this->_apiInterface->doRequests($URLsAndPATHs['URLs'], false, $itemHandler, false, $refresh);
                 } catch(Exception $e) {
                     $meta['ShortPixelImprovement'] = $e->getMessage();
@@ -1246,6 +1250,7 @@ class WPShortPixel {
         //3: $itemHandler contains the first element of the list
         $itemId = $itemHandler->getQueuedId();
         self::log("HIP: 2 Process Image: ".json_encode($itemHandler->getId()));
+        $itemHandler->optimizationStarted();
         $result = $this->_apiInterface->processImage($firstUrlAndPaths['URLs'], $firstUrlAndPaths['PATHs'], $itemHandler);
 
         $result["ImageID"] = $itemId;
@@ -1530,6 +1535,7 @@ class WPShortPixel {
         //die(var_dump($itemHandler));
         $refresh = $meta->getStatus() === ShortPixelAPI::ERR_INCORRECT_FILE_SIZE;
         //echo("URLS: "); die(var_dump($URLsAndPATHs));
+        $itemHandler->optimizationStarted();
         $this->_apiInterface->doRequests($URLsAndPATHs['URLs'], false, $itemHandler,
                 $compressionType === false ? $this->_settings->compressionType : $compressionType, $refresh);//send a request, do NOT wait for response
         $itemHandler->setWaitingProcessing();

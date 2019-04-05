@@ -154,7 +154,7 @@ function shortPixelUninstallPlugin () {
 function shortPixelConvertImgToPictureAddWebp($content) {
     if(function_exists('is_amp_endpoint') && is_amp_endpoint()) {
         //for AMP pages the <picture> tag is not allowed
-        return $content;
+        return $content . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG is AMP -->' : '');
     }
     require_once('class/front/img-to-picture-webp.php');
     return ShortPixelImgToPictureWebp::convert($content);// . "<!-- PICTURE TAGS BY SHORTPIXEL -->";
