@@ -63,7 +63,7 @@ class ShortPixelAPI {
         if(!count($URLs)) {
             return false;
         }
-        $ret = wp_remote_post($this->_apiDumpEndPoint, $this->prepareRequest(array(
+       $ret = wp_remote_post($this->_apiDumpEndPoint, $this->prepareRequest(array(
                 'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
                 'key' => $this->_settings->apiKey,
                 'urllist' => $URLs

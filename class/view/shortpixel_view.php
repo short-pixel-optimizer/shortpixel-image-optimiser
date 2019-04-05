@@ -1168,34 +1168,41 @@ class ShortPixelView {
                             <?php }?>
                             </table>
                         <?php } ?>
-                        <input type="hidden" name="removeFolder" id="removeFolder"/>
-                        <input type="hidden" name="recheckFolder" id="removeFolder"/>
-                        <input type="text" name="addCustomFolderView" id="addCustomFolderView" class="regular-text" value="<?php echo($addedFolder);?>" disabled style="width: 50em;max-width: 70%;">&nbsp;
-                        <input type="hidden" name="addCustomFolder" id="addCustomFolder" value="<?php echo($addedFolder);?>"/>
-                        <input type="hidden" id="customFolderBase" value="<?php echo WPShortPixel::getCustomFolderBase(); ?>">
-                        <a class="button button-primary select-folder-button" title="<?php _e('Select the images folder on your server.','shortpixel-image-optimiser');?>" href="javascript:void(0);">
-                            <?php _e('Select ...','shortpixel-image-optimiser');?>
-                        </a>
-                        <input type="submit" name="saveAdv" id="saveAdvAddFolder" class="button button-primary" title="<?php _e('Add Folder','shortpixel-image-optimiser');?>" value="<?php _e('Add Folder','shortpixel-image-optimiser');?>">
+
+                        <div class='addCustomFolder'>
+
+                          <input type="hidden" name="removeFolder" id="removeFolder"/>
+                          <input type="hidden" name="recheckFolder" id="removeFolder"/>
+                          <p class='add-folder-text'><strong><?php _e('Add a custom folder', 'shortpixel-image-optimiser'); ?></strong></p>
+                          <input type="text" name="addCustomFolderView" id="addCustomFolderView" class="regular-text" value="<?php echo($addedFolder);?>" disabled style="">&nbsp;
+                          <input type="hidden" name="addCustomFolder" id="addCustomFolder" value="<?php echo($addedFolder);?>"/>
+                          <input type="hidden" id="customFolderBase" value="<?php echo WPShortPixel::getCustomFolderBase(); ?>">
+
+                          <a class="button select-folder-button" title="<?php _e('Select the images folder on your server.','shortpixel-image-optimiser');?>" href="javascript:void(0);">
+                              <?php _e('Select ...','shortpixel-image-optimiser');?>
+                          </a>
+                        <input type="submit" name="saveAdv" id="saveAdvAddFolder" class="button button-primary hidden" title="<?php _e('Add this Folder','shortpixel-image-optimiser');?>" value="<?php _e('Add this Folder','shortpixel-image-optimiser');?>">
                         <p class="settings-info">
                             <?php _e('Use the Select... button to select site folders. ShortPixel will optimize images and PDFs from the specified folders and their subfolders. The optimization status for each image or PDF in these folders can be seen in the <a href="upload.php?page=wp-short-pixel-custom">Other Media list</a>, under the Media menu.','shortpixel-image-optimiser');?>
                             <a href="https://blog.shortpixel.com/optimize-images-outside-media-library/" target="_blank" class="shortpixel-help-link">
                                 <span class="dashicons dashicons-editor-help"></span><?php _e('More info','shortpixel-image-optimiser');?>
                             </a>
                         </p>
-                        <div class="sp-modal-shade sp-folder-picker-shade">
-                            <div class="shortpixel-modal">
+
+                        <div class="sp-modal-shade sp-folder-picker-shade"></div>
+                            <div class="shortpixel-modal modal-folder-picker shortpixel-hide">
                                 <div class="sp-modal-title"><?php _e('Select the images folder','shortpixel-image-optimiser');?></div>
                                 <div class="sp-folder-picker"></div>
                                 <input type="button" class="button button-info select-folder-cancel" value="<?php _e('Cancel','shortpixel-image-optimiser');?>" style="margin-right: 30px;">
                                 <input type="button" class="button button-primary select-folder" value="<?php _e('Select','shortpixel-image-optimiser');?>">
                             </div>
-                        </div>
+
                         <script>
                             jQuery(document).ready(function () {
                                 ShortPixel.initFolderSelector();
                             });
                         </script>
+                      </div> <!-- end of AddCustomFolder -->
                     </td>
                 </tr>
                 <?php if($hasNextGen) { ?>

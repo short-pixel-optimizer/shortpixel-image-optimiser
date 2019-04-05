@@ -38,7 +38,8 @@ class WPShortPixel {
         $this->prioQ = new ShortPixelQueue($this, $this->_settings);
         $this->view = new ShortPixelView($this);
 
-        ShortPixelTools::namespaceit('ShortPixelController')::init(); // load all subclassed controllers.
+        $controllerClass = ShortPixelTools::namespaceit('ShortPixelController');
+        $controllerClass::init(); // load all subclassed controllers.
 
         define('QUOTA_EXCEEDED', $this->view->getQuotaExceededHTML());
 
@@ -770,14 +771,25 @@ class WPShortPixel {
      * if the image was optimized in the last hour, send a request to delete from picQueue
      * @param $itemHandler
      * @param bool $urlsAndPaths
+     * @see ShortPixelImage/maybeDump
      */
     public function maybeDumpFromProcessedOnServer($itemHandler, $urlsAndPaths) {
         $meta = $itemHandler->getMeta();
 
-        //die(var_dump($itemHandler->getURLsAndPATHs(true, false, true, array())));
+        $doDump = false;
+ 
+        if ($meta->getStatus() <= 0)
+        {
+            $doDump = true; // dump any caching on files that ended in an error.
+        }
+        else if(time() - strtotime($meta->getTsOptimized()) < 3600)  // check if this was optimized in last hour.
+        {
+            $doDump = true;
+        }
 
-        if(time() - strtotime($meta->getTsOptimized()) < 3600) {
-            $this->_apiInterface->doDumpRequests($urlsAndPaths["URLs"]);
+        if ($doDump)
+        {
+          $this->_apiInterface->doDumpRequests($urlsAndPaths["URLs"]);
         }
     }
 
@@ -893,9 +905,18 @@ class WPShortPixel {
     }
 
     public function optimizeCustomImage($id) {
-        $meta = $this->spMetaDao->getMeta($id);
-        if($meta->getStatus() != 2) {
-            $meta->setStatus(1);
+        $itemHandler = new ShortPixelMetaFacade('C-' . $id);
+        $meta = $itemHandler->getMeta();
+
+        if ($meta->getStatus() <= 0)  // image is in errorState. Dump when retrying.
+        {
+          $URLsAndPATHs = $itemHandler->getURLsAndPATHs(false);
+          $this->maybeDumpFromProcessedOnServer($itemHandler, $URLsAndPATHs);
+        }
+        if($meta->getStatus() != ShortPixelMeta::FILE_STATUS_SUCCESS) {
+
+
+            $meta->setStatus(ShortPixelMeta::FILE_STATUS_PENDING);
             $meta->setRetries(0);
             /* [BS] This is being set because meta in other states does not keep previous values. The value 0 is problematic
             since it can also mean not-initalized, new, etc . So push meta from settings.
@@ -1965,6 +1986,11 @@ class WPShortPixel {
         $itemHandler = new ShortPixelMetaFacade('C-' . $ID);
         $meta = $itemHandler->getMeta();
 
+        // do this before putting the meta down, since maybeDump check for last timestamp
+        // do this before checks, so it can clear ahead, and in case or errors
+        $URLsAndPATHs = $itemHandler->getURLsAndPATHs(false);
+        $this->maybeDumpFromProcessedOnServer($itemHandler, $URLsAndPATHs);
+
         // TODO On manual restore also put status to toRestore, then run this function.
         if(!$meta || ($meta->getStatus() != shortPixelMeta::FILE_STATUS_SUCCESS && $meta->getStatus() != shortpixelMeta::FILE_STATUS_TORESTORE ) )
         {
@@ -1985,10 +2011,6 @@ class WPShortPixel {
 
             /* [BS] Reset all generated image meta. Bring back to start state.
             * Since Wpdb->prepare doesn't support 'null', zero values in this table should not be trusted */
-
-            // do this before putting the meta down, since maybeDump check for last timestamp
-            $URLsAndPATHs = $itemHandler->getURLsAndPATHs(false);
-            $this->maybeDumpFromProcessedOnServer($itemHandler, $URLsAndPATHs);
 
             $meta->setTsOptimized(0);
             $meta->setCompressedSize(0);
@@ -2421,7 +2443,8 @@ class WPShortPixel {
 
             // [BS] If some template part is around, use it and find the controller.
             $template_part = isset($_GET['part']) ? sanitize_text_field($_GET['part']) : false;
-            $partControl = ShortPixelTools::namespaceit('ShortPixelController')::findControllerbySlug($template_part);
+            $controller = ShortPixelTools::namespaceit('ShortPixelController');
+            $partControl = $controller::findControllerbySlug($template_part);
 
             if ($partControl)
             {

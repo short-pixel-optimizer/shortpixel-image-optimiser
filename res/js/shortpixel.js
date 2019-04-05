@@ -463,7 +463,8 @@ var ShortPixel = function() {
 
     function initFolderSelector() {
         jQuery(".select-folder-button").click(function(){
-            jQuery(".sp-folder-picker-shade").css("display", "block");
+            jQuery(".sp-folder-picker-shade").fadeIn(100); //.css("display", "block");
+            jQuery(".shortpixel-modal.modal-folder-picker").show();
 
             var picker = jQuery(".sp-folder-picker");
             picker.parent().css('margin-left', -picker.width() / 2);
@@ -474,17 +475,36 @@ var ShortPixel = function() {
                 //onlyFolders: true
             });
         });
-        jQuery(".shortpixel-modal input.select-folder-cancel").click(function(){
-            jQuery(".sp-folder-picker-shade").css("display", "none");
+        jQuery(".shortpixel-modal input.select-folder-cancel, .sp-folder-picker-shade").click(function(){
+            jQuery(".sp-folder-picker-shade").fadeOut(100); //.css("display", "none");
+            jQuery(".shortpixel-modal.modal-folder-picker").hide();
         });
-        jQuery(".shortpixel-modal input.select-folder").click(function(){
-            var subPath = jQuery("UL.jqueryFileTree LI.directory.selected A").attr("rel").trim();
+        jQuery(".shortpixel-modal input.select-folder").click(function(e){
+            //var subPath = jQuery("UL.jqueryFileTree LI.directory.selected A").attr("rel").trim();
+
+            // check if selected item is a directory. If so, we are good.
+            var selected = jQuery('UL.jqueryFileTree LI.directory.selected');
+
+            // if not a file might be selected, check the nearest directory.
+            if (jQuery(selected).length == 0 )
+              var selected = jQuery('UL.jqueryFileTree LI.selected').parents('.directory');
+
+            // fail-saif check if there is really a rel.
+            var subPath = jQuery(selected).children('a').attr('rel');
+
+            if (typeof subPath === 'undefined') // nothing is selected
+              return;
+
+            subPath = subPath.trim();
+
             if(subPath) {
                 var fullPath = jQuery("#customFolderBase").val() + subPath;
                 if(fullPath.slice(-1) == '/') fullPath = fullPath.slice(0, -1);
                 jQuery("#addCustomFolder").val(fullPath);
                 jQuery("#addCustomFolderView").val(fullPath);
-                jQuery(".sp-folder-picker-shade").css("display", "none");
+                jQuery(".sp-folder-picker-shade").fadeOut(100);
+                jQuery(".shortpixel-modal.modal-folder-picker").css("display", "none");
+                jQuery('input[name="saveAdv"]').removeClass('hidden');
             } else {
                 alert("Please select a folder from the list.");
             }
