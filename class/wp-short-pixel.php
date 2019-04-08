@@ -43,10 +43,11 @@ class WPShortPixel {
 
         define('QUOTA_EXCEEDED', $this->view->getQuotaExceededHTML());
 
-        if( !defined(SHORTPIXEL_CUSTOM_THUMB_SUFFIXES)) {
+        if( !defined('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES')) {
             if(is_plugin_active('envira-gallery/envira-gallery.php') || is_plugin_active('soliloquy-lite/soliloquy-lite.php') || is_plugin_active('soliloquy/soliloquy.php')) {
                 define('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES', '_c,_tl,_tr,_br,_bl');
-            } elseif(defined(SHORTPIXEL_CUSTOM_THUMB_SUFFIX)) {
+            }
+            elseif(defined('SHORTPIXEL_CUSTOM_THUMB_SUFFIX')) {
                 define('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES', SHORTPIXEL_CUSTOM_THUMB_SUFFIX);
             }
         }
