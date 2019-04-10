@@ -143,7 +143,8 @@ class WPShortPixel {
         add_action( 'admin_footer', array( $this, 'shortPixelJS') );
         add_action( 'admin_head', array( $this, 'headCSS') );
 
-        if($this->_settings->frontBootstrap) {
+        if($this->_settings->frontBootstrap && shortPixelCheckQueue()) {
+            //only if we have something in the queue - usually we never get here if the queue is empty but for some hooks...
             //also need to have it in the front footer then
             add_action( 'wp_footer', array( &$this, 'shortPixelJS') );
             //need to add the nopriv action for when items exist in the queue and no user is logged in
@@ -648,6 +649,7 @@ class WPShortPixel {
                         $meta['ShortPixel']['WaitingProcessing'] = true;
                         //wp_update_attachment_metadata($ID, $meta);
                         update_post_meta($ID, '_wp_attachment_metadata', $meta);
+                        ShortPixelMetaFacade::optimizationStarted($ID);
                     }
                 }
                 break;
@@ -741,7 +743,6 @@ class WPShortPixel {
                 try {
                     $URLsAndPATHs = $this->getURLsAndPATHs($itemHandler);
                     //send a processing request right after a file was uploaded, do NOT wait for response
-                    $itemHandler->optimizationStarted();
                     $this->_apiInterface->doRequests($URLsAndPATHs['URLs'], false, $itemHandler, false, $refresh);
                 } catch(Exception $e) {
                     $meta['ShortPixelImprovement'] = $e->getMessage();
@@ -1272,7 +1273,6 @@ class WPShortPixel {
         //3: $itemHandler contains the first element of the list
         $itemId = $itemHandler->getQueuedId();
         self::log("HIP: 2 Process Image: ".json_encode($itemHandler->getId()));
-        $itemHandler->optimizationStarted();
         $result = $this->_apiInterface->processImage($firstUrlAndPaths['URLs'], $firstUrlAndPaths['PATHs'], $itemHandler);
 
         $result["ImageID"] = $itemId;
@@ -1557,10 +1557,9 @@ class WPShortPixel {
         //die(var_dump($itemHandler));
         $refresh = $meta->getStatus() === ShortPixelAPI::ERR_INCORRECT_FILE_SIZE;
         //echo("URLS: "); die(var_dump($URLsAndPATHs));
-        $itemHandler->optimizationStarted();
+        $itemHandler->setWaitingProcessing();
         $this->_apiInterface->doRequests($URLsAndPATHs['URLs'], false, $itemHandler,
                 $compressionType === false ? $this->_settings->compressionType : $compressionType, $refresh);//send a request, do NOT wait for response
-        $itemHandler->setWaitingProcessing();
         //$meta = wp_get_attachment_metadata($ID);
         //$meta['ShortPixel']['WaitingProcessing'] = true;
         //wp_update_attachment_metadata($ID, $meta);
@@ -1700,6 +1699,7 @@ class WPShortPixel {
             $this->prioQ->push($imageId);
             //wp_update_attachment_metadata($imageId, $meta);
             update_post_meta($imageId, '_wp_attachment_metadata', $meta);
+            ShortPixelMetaFacade::optimizationStarted($imageId);
         }
     }
 
