@@ -20,10 +20,17 @@ class ShortPixelController
     }
   }
 
+  /* Static function to use for finding a associated controller within the WP page ecosystem
+  *
+  *  e.g. My page path in Wp-admin is bulk-restore-all, it can autofind needed controller ( and view )
+  */
   public static function findControllerbySlug($name)
   {
       foreach(self::$controllers as $className)
       {
+        if (! isset($className::$slug)) // controllers not connected by slugs
+          continue;
+
         if ($className::$slug == $name)
         {
           return $className; // found!
