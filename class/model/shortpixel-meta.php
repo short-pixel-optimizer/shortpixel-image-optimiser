@@ -38,10 +38,12 @@ class ShortPixelMeta extends ShortPixelEntity{
     const FOUND_THUMB_PREFIX = 'sp-found-';
 
     // [BS] Attempt to shed some light on Meta Status on File.
+    // Anything lower than 0 is a processing error. 
     const FILE_STATUS_UNPROCESSED = 0;
     const FILE_STATUS_PENDING = 1;
     const FILE_STATUS_SUCCESS = 2;
-    const FILE_STATUS_RESTORED = 3; 
+    const FILE_STATUS_RESTORED = 3;
+    const FILE_STATUS_TORESTORE = 4; // Used for Bulk Restore
 
     public function __construct($data = array()) {
         parent::__construct($data);

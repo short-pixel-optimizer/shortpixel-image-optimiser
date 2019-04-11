@@ -1,0 +1,35 @@
+.short-pixel-bulk-page.bulk-restore-all ol li {
+  font-weight: 700; }
+.short-pixel-bulk-page.bulk-restore-all section.select_folders {
+  margin: 20px 0; }
+  .short-pixel-bulk-page.bulk-restore-all section.select_folders .input {
+    margin: 10px 0 10px 15px;
+    font-size: 16px;
+    display: block;
+    clear: both; }
+  .short-pixel-bulk-page.bulk-restore-all section.select_folders .filecount {
+    font-size: 12px; }
+.short-pixel-bulk-page.bulk-restore-all section.random_check .random_answer {
+  font-size: 16px;
+  font-weight: 700;
+  padding: 8px;
+  border: 1px solid #ccc;
+  display: inline-block; }
+.short-pixel-bulk-page.bulk-restore-all section.random_check .inputs {
+  margin: 15px 0; }
+  .short-pixel-bulk-page.bulk-restore-all section.random_check .inputs span {
+    margin-right: 8px; }
+.short-pixel-bulk-page.bulk-restore-all .button {
+  margin: 10px 0;
+  margin-right: 8px; }
+
+/* Specific styles for advanced settings tab */
+#shortpixel-settings-tabs #tab-adv-settings .addCustomFolder {
+  margin: 10px 0; }
+  #shortpixel-settings-tabs #tab-adv-settings .addCustomFolder .add-folder-text {
+    margin-left: 5px; }
+  #shortpixel-settings-tabs #tab-adv-settings .addCustomFolder input[type="text"] {
+    width: 50em;
+    max-width: 70%; }
+  #shortpixel-settings-tabs #tab-adv-settings .addCustomFolder input[name="saveAdv"] {
+    margin-left: 8px; }

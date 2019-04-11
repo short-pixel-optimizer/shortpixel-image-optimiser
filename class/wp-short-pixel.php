@@ -38,11 +38,18 @@ class WPShortPixel {
         $this->prioQ = new ShortPixelQueue($this, $this->_settings);
         $this->view = new ShortPixelView($this);
 
+        $controllerClass = ShortPixelTools::namespaceit('ShortPixelController');
+        $controllerClass::init(); // load all subclassed controllers.
+
         define('QUOTA_EXCEEDED', $this->view->getQuotaExceededHTML());
 
-        if(is_plugin_active('envira-gallery/envira-gallery.php') || is_plugin_active('soliloquy-lite/soliloquy-lite.php')) {
-            define('SHORTPIXEL_CUSTOM_THUMB_SUFFIX', '_c');
-            define('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES', '_tl,_tr,_br,_bl');
+        if( !defined('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES')) {
+            if(is_plugin_active('envira-gallery/envira-gallery.php') || is_plugin_active('soliloquy-lite/soliloquy-lite.php') || is_plugin_active('soliloquy/soliloquy.php')) {
+                define('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES', '_c,_tl,_tr,_br,_bl');
+            }
+            elseif(defined('SHORTPIXEL_CUSTOM_THUMB_SUFFIX')) {
+                define('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES', SHORTPIXEL_CUSTOM_THUMB_SUFFIX);
+            }
         }
 
         $this->setDefaultViewModeList();//set default mode as list. only @ first run
@@ -136,7 +143,8 @@ class WPShortPixel {
         add_action( 'admin_footer', array( $this, 'shortPixelJS') );
         add_action( 'admin_head', array( $this, 'headCSS') );
 
-        if($this->_settings->frontBootstrap) {
+        if($this->_settings->frontBootstrap && shortPixelCheckQueue()) {
+            //only if we have something in the queue - usually we never get here if the queue is empty but for some hooks...
             //also need to have it in the front footer then
             add_action( 'wp_footer', array( &$this, 'shortPixelJS') );
             //need to add the nopriv action for when items exist in the queue and no user is logged in
@@ -472,6 +480,11 @@ class WPShortPixel {
                 wp_enqueue_style('short-pixel-bar.min.css', plugins_url('/res/css/short-pixel-bar.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
                 if( in_array($screen->id, array('attachment', 'upload', 'settings_page_wp-shortpixel', 'media_page_wp-short-pixel-bulk', 'media_page_wp-short-pixel-custom'))) {
                     wp_enqueue_style('short-pixel.min.css', plugins_url('/res/css/short-pixel.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
+                    //modal - used in settings for selecting folder
+                    wp_enqueue_style('short-pixel-modal.min.css', plugins_url('/res/css/short-pixel-modal.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
+
+                    wp_register_style('shortpixel-admin', plugins_url('/res/css/shortpixel-admin.css', SHORTPIXEL_PLUGIN_FILE),array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
+                    wp_enqueue_style('shortpixel-admin');
                 }
             }
         }
@@ -636,6 +649,7 @@ class WPShortPixel {
                         $meta['ShortPixel']['WaitingProcessing'] = true;
                         //wp_update_attachment_metadata($ID, $meta);
                         update_post_meta($ID, '_wp_attachment_metadata', $meta);
+                        ShortPixelMetaFacade::optimizationStarted($ID);
                     }
                 }
                 break;
@@ -759,14 +773,25 @@ class WPShortPixel {
      * if the image was optimized in the last hour, send a request to delete from picQueue
      * @param $itemHandler
      * @param bool $urlsAndPaths
+     * @see ShortPixelImage/maybeDump
      */
     public function maybeDumpFromProcessedOnServer($itemHandler, $urlsAndPaths) {
         $meta = $itemHandler->getMeta();
 
-        //die(var_dump($itemHandler->getURLsAndPATHs(true, false, true, array())));
+        $doDump = false;
+ 
+        if ($meta->getStatus() <= 0)
+        {
+            $doDump = true; // dump any caching on files that ended in an error.
+        }
+        else if(time() - strtotime($meta->getTsOptimized()) < 3600)  // check if this was optimized in last hour.
+        {
+            $doDump = true;
+        }
 
-        if(time() - strtotime($meta->getTsOptimized()) < 3600) {
-            $this->_apiInterface->doDumpRequests($urlsAndPaths["URLs"]);
+        if ($doDump)
+        {
+          $this->_apiInterface->doDumpRequests($urlsAndPaths["URLs"]);
         }
     }
 
@@ -882,9 +907,18 @@ class WPShortPixel {
     }
 
     public function optimizeCustomImage($id) {
-        $meta = $this->spMetaDao->getMeta($id);
-        if($meta->getStatus() != 2) {
-            $meta->setStatus(1);
+        $itemHandler = new ShortPixelMetaFacade('C-' . $id);
+        $meta = $itemHandler->getMeta();
+
+        if ($meta->getStatus() <= 0)  // image is in errorState. Dump when retrying.
+        {
+          $URLsAndPATHs = $itemHandler->getURLsAndPATHs(false);
+          $this->maybeDumpFromProcessedOnServer($itemHandler, $URLsAndPATHs);
+        }
+        if($meta->getStatus() != ShortPixelMeta::FILE_STATUS_SUCCESS) {
+
+
+            $meta->setStatus(ShortPixelMeta::FILE_STATUS_PENDING);
             $meta->setRetries(0);
             /* [BS] This is being set because meta in other states does not keep previous values. The value 0 is problematic
             since it can also mean not-initalized, new, etc . So push meta from settings.
@@ -1115,6 +1149,10 @@ class WPShortPixel {
         die(json_encode($response));
     }
 
+    /* Main Image Processing Function. Called from JS loop
+    *
+    * @param String $ID ApiKey
+    */
     public function handleImageProcessing($ID = null) {
         //if(rand(1,2) == 2) {
         //    header($_SERVER['SERVER_PROTOCOL'] . ' 500 Internal Server Error', true, 500);
@@ -1181,6 +1219,7 @@ class WPShortPixel {
                 $notice = null; $this->refreshCustomFolders($notice);
                 $this->_settings->hasCustomFolders = time();
             }
+
             $customIds = $this->spMetaDao->getPendingMetas( SHORTPIXEL_PRESEND_ITEMS - count($ids));
             if(is_array($customIds)) {
                 $ids = array_merge($ids, array_map(array('ShortPixelMetaFacade', 'getNewFromRow'), $customIds));
@@ -1518,9 +1557,9 @@ class WPShortPixel {
         //die(var_dump($itemHandler));
         $refresh = $meta->getStatus() === ShortPixelAPI::ERR_INCORRECT_FILE_SIZE;
         //echo("URLS: "); die(var_dump($URLsAndPATHs));
+        $itemHandler->setWaitingProcessing();
         $this->_apiInterface->doRequests($URLsAndPATHs['URLs'], false, $itemHandler,
                 $compressionType === false ? $this->_settings->compressionType : $compressionType, $refresh);//send a request, do NOT wait for response
-        $itemHandler->setWaitingProcessing();
         //$meta = wp_get_attachment_metadata($ID);
         //$meta['ShortPixel']['WaitingProcessing'] = true;
         //wp_update_attachment_metadata($ID, $meta);
@@ -1597,12 +1636,16 @@ class WPShortPixel {
         $this->thumbnailsRegenerating[$postId] = true;
     }
 
+
     /**
      * to be called by thumbnail regeneration plugins when regenerating the thumbnails for an image
      * @param $postId - the postId of the image
      * @param $originalMeta - the metadata before the regeneration
      * @param array $regeneratedSizes - the list of the regenerated thumbnails - if empty then all were regenerated.
      * @param bool $bulk - true if the regeneration is done in bulk - in this case the image will not be immediately scheduled for processing but the user will need to launch the ShortPixel bulk after regenerating.
+     *
+     *
+     * Note - $regeneratedSizes expects a metadata array, with filename, not just the resized data.
      */
     public function thumbnailsRegeneratedHook($postId, $originalMeta, $regeneratedSizes = array(), $bulk = false) {
 
@@ -1618,10 +1661,11 @@ class WPShortPixel {
                 foreach($regeneratedSizes as $size) {
                     if(isset($size['file']) && in_array($size['file'], $shortPixelMeta["thumbsOptList"] )) {
                         $regeneratedThumbs[] = $size['file'];
-                        $shortPixelMeta["thumbsOpt"] = max(0, $shortPixelMeta["thumbsOpt"] - 1);
+                        $shortPixelMeta["thumbsOpt"] = max(0, $shortPixelMeta["thumbsOpt"] - 1); // this is a complicated count of number of thumbnails
                         $shortPixelMeta["retinasOpt"] = max(0, $shortPixelMeta["retinasOpt"] - 1);
                     }
                 }
+                // This retains the thumbnails that were already regenerated, and removes what is passed via regeneratedSizes.
                 $shortPixelMeta["thumbsOptList"] = array_diff($shortPixelMeta["thumbsOptList"], $regeneratedThumbs);
             }
             $meta = wp_get_attachment_metadata($postId);
@@ -1655,6 +1699,7 @@ class WPShortPixel {
             $this->prioQ->push($imageId);
             //wp_update_attachment_metadata($imageId, $meta);
             update_post_meta($imageId, '_wp_attachment_metadata', $meta);
+            ShortPixelMetaFacade::optimizationStarted($imageId);
         }
     }
 
@@ -1937,17 +1982,37 @@ class WPShortPixel {
     }
 
     public function doCustomRestore($ID) {
-        $meta = $this->spMetaDao->getMeta($ID);
-        if(!$meta || $meta->getStatus() != 2) return false;
+        //$meta = $this->spMetaDao->getMeta($ID);
+        // meta facade as a custom image
+        $itemHandler = new ShortPixelMetaFacade('C-' . $ID);
+        $meta = $itemHandler->getMeta();
+
+        // do this before putting the meta down, since maybeDump check for last timestamp
+        // do this before checks, so it can clear ahead, and in case or errors
+        $URLsAndPATHs = $itemHandler->getURLsAndPATHs(false);
+        $this->maybeDumpFromProcessedOnServer($itemHandler, $URLsAndPATHs);
+
+        // TODO On manual restore also put status to toRestore, then run this function.
+        if(!$meta || ($meta->getStatus() != shortPixelMeta::FILE_STATUS_SUCCESS && $meta->getStatus() != shortpixelMeta::FILE_STATUS_TORESTORE ) )
+        {
+          return false;
+        }
 
         $file = $meta->getPath();
         $fullSubDir = str_replace(get_home_path(), "", dirname($file)) . '/';
         $bkFile = SHORTPIXEL_BACKUP_FOLDER . '/' . $fullSubDir . ShortPixelAPI::MB_basename($file);
 
         if(file_exists($bkFile)) {
-            @rename($bkFile, $file);
+            $rename_result = @rename($bkFile, $file);
+            if (! $rename_result)
+            {
+                self::log('Failure on rename to : ' . $file);
+            }
+
+
             /* [BS] Reset all generated image meta. Bring back to start state.
             * Since Wpdb->prepare doesn't support 'null', zero values in this table should not be trusted */
+
             $meta->setTsOptimized(0);
             $meta->setCompressedSize(0);
             $meta->setCompressionType(0);
@@ -1962,6 +2027,11 @@ class WPShortPixel {
 
             $meta->setStatus(3);
             $this->spMetaDao->update($meta);
+
+
+        }
+        else {
+           self::log('File ' . $bkFile . ' not found in backups');
         }
 
         return $meta;
@@ -2252,6 +2322,9 @@ class WPShortPixel {
 	</div> <?php
     }
 
+    /** Front End function that controls bulk processes.
+    *
+    */
     public function bulkProcess() {
         global $wpdb;
 
@@ -2305,6 +2378,10 @@ class WPShortPixel {
 
         if(isset($_POST["bulkRestore"]))
         {
+            $bulkRestore = new \ShortPixel\BulkRestoreAll();
+            $bulkRestore->setShortPixel($this);
+            $bulkRestore->setupBulk();
+
             $this->prioQ->startBulk(ShortPixelQueue::BULK_TYPE_RESTORE);
             $this->_settings->customBulkPaused = 0;
         }//end bulk restore  was clicked
@@ -2365,9 +2442,24 @@ class WPShortPixel {
             $averageCompression = self::getAverageCompression();
             $percent = $this->prioQ->bulkPaused() ? $this->getPercent($quotaData) : false;
 
-            $this->view->displayBulkProcessingForm($quotaData, $thumbsProcessedCount, $under5PercentCount,
+            // [BS] If some template part is around, use it and find the controller.
+            $template_part = isset($_GET['part']) ? sanitize_text_field($_GET['part']) : false;
+            $controller = ShortPixelTools::namespaceit('ShortPixelController');
+            $partControl = $controller::findControllerbySlug($template_part);
+
+            if ($partControl)
+            {
+              $viewObj = new $partControl();
+              $viewObj->setShortPixel($this);
+              $viewObj->loadView();
+            }
+
+            if (! $template_part)
+            {
+              $this->view->displayBulkProcessingForm($quotaData, $thumbsProcessedCount, $under5PercentCount,
                     $this->prioQ->bulkRan(), $averageCompression, $this->_settings->fileCount,
                     self::formatBytes($this->_settings->savedSpace), $percent, $pendingMeta);
+            }
         }
     }
     //end bulk processing
@@ -2497,13 +2589,18 @@ class WPShortPixel {
         if ($meta->getType() == ShortPixelMetaFacade::CUSTOM_TYPE)
         {
           $ret['optUrl'] =  $uploadsUrl . $meta->getWebPath();
+          self::log('Getting image - ' . $urlBkPath . $meta->getPath());
           // [BS] Another bug? Width / Height not stored in Shortpixel meta.
           $ret['width'] = $meta->getActualWidth();
           $ret['height'] = $meta->getActualHeight();
 
           if (is_null($ret['width']))
           {
-            $imageSizes = getimagesize($ret['optUrl']);
+
+          //  $imageSizes = getimagesize($ret['optUrl']);
+          // [BS] Fix - Use real path instead of URL on getimagesize.
+            $imageSizes = getimagesize($meta->getPath());
+
             if ($imageSizes)
             {
               $ret['width'] = $imageSizes[0];
@@ -2816,10 +2913,11 @@ Header append Vary Accept env=REDIRECT_webp
                            . "<a href='https://shortpixel.com/contact' target='_blank'>" . __('here','shortpixel-image-optimiser') . "</a>.");
             }
             else {
+
                 if(isset($_POST['save']) || isset($_POST['saveAdv'])) {
                     //these are needed for the call to api-status, set them first.
-                    $this->_settings->siteAuthUser = (isset($_POST['siteAuthUser']) ? $_POST['siteAuthUser'] : $this->_settings->siteAuthUser);
-                    $this->_settings->siteAuthPass = (isset($_POST['siteAuthPass']) ? $_POST['siteAuthPass'] : $this->_settings->siteAuthPass);
+                    $this->_settings->siteAuthUser = (isset($_POST['siteAuthUser']) ? sanitize_text_field($_POST['siteAuthUser']) : $this->_settings->siteAuthUser);
+                    $this->_settings->siteAuthPass = (isset($_POST['siteAuthPass']) ? sanitize_text_field($_POST['siteAuthPass']) : $this->_settings->siteAuthPass);
                 }
 
                 $validityData = $this->getQuotaInformation($_POST['key'], true, isset($_POST['validate']) && $_POST['validate'] == "validate", $_POST);
@@ -2861,14 +2959,14 @@ Header append Vary Accept env=REDIRECT_webp
 
             //if save button - we process the rest of the form elements
             if(isset($_POST['save']) || isset($_POST['saveAdv'])) {
-                $this->_settings->compressionType = $_POST['compressionType'];
+                $this->_settings->compressionType = intval($_POST['compressionType']);
                 if(isset($_POST['thumbnails'])) { $this->_settings->processThumbnails = 1; } else { $this->_settings->processThumbnails = 0; }
                 if(isset($_POST['backupImages'])) { $this->_settings->backupImages = 1; } else { $this->_settings->backupImages = 0; }
                 if(isset($_POST['cmyk2rgb'])) { $this->_settings->CMYKtoRGBconversion = 1; } else { $this->_settings->CMYKtoRGBconversion = 0; }
                 $this->_settings->keepExif = isset($_POST['removeExif']) ? 0 : 1;
                 //delete_option('wp-short-pixel-keep-exif');
                 $this->_settings->resizeImages = (isset($_POST['resize']) ? 1: 0);
-                $this->_settings->resizeType = (isset($_POST['resize_type']) ? $_POST['resize_type']: false);
+                $this->_settings->resizeType = (isset($_POST['resize_type']) ? sanitize_text_field($_POST['resize_type']) : false);
                 $this->_settings->resizeWidth = (isset($_POST['width']) ? intval($_POST['width']): $this->_settings->resizeWidth);
                 $this->_settings->resizeHeight = (isset($_POST['height']) ? intval($_POST['height']): $this->_settings->resizeHeight);
                 $uploadPath = realpath(SHORTPIXEL_UPLOADS_BASE);
@@ -3093,8 +3191,8 @@ Header append Vary Accept env=REDIRECT_webp
         $argsStr .= "&host={$args['body']['host']}";
         if(strlen($this->_settings->siteAuthUser)) {
             $args['body']['user'] = $this->_settings->siteAuthUser;
-            $args['body']['pass'] = urlencode($this->_settings->siteAuthPass);
-            $argsStr .= "&user={$args['body']['user']}&pass={$args['body']['pass']}";
+            $args['body']['pass'] = $this->_settings->siteAuthPass;
+            $argsStr .= '&user=' . urlencode($args['body']['user']) . '&pass=' . urlencode($args['body']['pass']);
         }
         if($settings !== false) {
             $args['body']['Settings'] = $settings;

@@ -381,9 +381,23 @@ class ShortPixelCustomMetaDao {
     {
       return $this->db->query("SELECT sm.id from {$this->db->getPrefix()}shortpixel_meta sm "
           . "INNER JOIN  {$this->db->getPrefix()}shortpixel_folders sf on sm.folder_id = sf.id "
-          . "WHERE sf.status <> -1 AND sm.status <> 3 "
-          . "ORDER BY sm.id DESC LIMIT $count");
+          . "WHERE sf.status <> -1 AND sm.status =  " . ShortPixelMeta::FILE_STATUS_TORESTORE
+          . " ORDER BY sm.id DESC LIMIT $count");
     }
+
+    /** Sets files from folders that are selected for bulk restore to the status 'To Restore';
+    *
+    */
+    public function setBulkRestore($folder_id)
+    {
+      if (! is_numeric($folder_id) || $folder_id <= 0)
+        return false;
+
+        $table = $this->db->getPrefix() . 'shortpixel_meta';
+        //$sql = "UPDATE status on "; ShortPixelMeta::FILE_STATUS_TORESTORE
+        $this->db->update($table, array('status' => ShortPixelMeta::FILE_STATUS_TORESTORE), array('folder_id' => $folder_id), '%d', '%d' );
+    }
+
 
     public function getCustomMetaCount($filters = array()) {
       // [BS] Remove exclusion for sm.status <> 3. Status 3 is 'restored, perform no action'

@@ -283,6 +283,9 @@ class ShortPixelMetaFacade {
             $this->updateMeta();
         } else {
             if($status) {
+                if(!isset($this->rawMeta['ShortPixel']['WaitingProcessing']) || !$this->rawMeta['ShortPixel']['WaitingProcessing']) {
+                    self::optimizationStarted($this->getId());
+                }
                 $this->rawMeta['ShortPixel']['WaitingProcessing'] = true;
                 unset($this->rawMeta['ShortPixel']['ErrCode']);
             } else {
@@ -703,9 +706,7 @@ class ShortPixelMetaFacade {
         }
     }
 
-    public function optimizationStarted() {
-        if($this->getType() == self::MEDIA_LIBRARY_TYPE) {
-            do_action( 'shortpixel_start_image_optimisation', $this->getId() );
-        }
+    public static function optimizationStarted($id) {
+        do_action( 'shortpixel_start_image_optimisation', $id );
     }
 }

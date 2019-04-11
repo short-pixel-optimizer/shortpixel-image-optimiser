@@ -66,6 +66,14 @@ class WpShortPixelDb implements ShortPixelDb {
         return $wpdb->insert_id;
     }
 
+    public function update($table, $params, $where, $format = null, $where_format = null)
+    {
+      global $wpdb;
+      $updated = $wpdb->update($table, $params, $where, $format, $where_format);
+      return $updated;
+
+    }
+
     public function prepare($query, $args) {
         global $wpdb;
         return $wpdb->prepare($query, $args);

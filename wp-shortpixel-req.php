@@ -29,8 +29,11 @@ require_once('class/view/shortpixel_view.php');
 
 require_once('class/shortpixel-tools.php');
 
+require_once('class/controller/controller.php');
+require_once('class/controller/bulk-restore-all.php');
+
 require_once( ABSPATH . 'wp-admin/includes/image.php' );
-include_once( ABSPATH . 'wp-admin/includes/plugin.php' ); 
+include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
 
 // for retro compatibility with WP < 3.5
 if( !function_exists('wp_normalize_path') ){
@@ -41,15 +44,13 @@ if( !function_exists('wp_normalize_path') ){
             $path = ucfirst( $path );
         }
         return $path;
-    }    
+    }
 }
 
 /*
 if ( !is_plugin_active( 'wpmandrill/wpmandrill.php' ) //avoid conflicts with some plugins
-  && !is_plugin_active( 'wp-ses/wp-ses.php' ) 
+  && !is_plugin_active( 'wp-ses/wp-ses.php' )
   && !is_plugin_active( 'wordfence/wordfence.php') ) {
     require_once( ABSPATH . 'wp-includes/pluggable.php' );
-} 
+}
 */
-
-

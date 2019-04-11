@@ -29,7 +29,7 @@
     background-color: #3e8e41;
 }
  */
- 
+
 /* The container <div> - needed to position the dropdown content */
 .sp-dropdown {
     position: relative;
@@ -63,10 +63,10 @@
 
 div.fb-like  {
     transform: scale(1.3);
-    -ms-transform: scale(1.3); 
-    -webkit-transform: scale(1.3); 
-    -o-transform: scale(1.3); 
-    -moz-transform: scale(1.3); 
+    -ms-transform: scale(1.3);
+    -webkit-transform: scale(1.3);
+    -o-transform: scale(1.3);
+    -moz-transform: scale(1.3);
     transform-origin: bottom left;
     -ms-transform-origin: bottom left;
     -webkit-transform-origin: bottom left;
@@ -282,56 +282,16 @@ div.shortpixel-rate-us > a:focus {
     margin-right: 5px;
 }
 
-div.sp-modal-shade {
-    display: none; /* Hidden by default */
-    position: fixed; /* Stay in place */
-    z-index: 10; /* Sit on top */
-    left: 0;
-    top: 0;
-    width: 100%; /* Full width */
-    height: 100%; /* Full height */
-    overflow: auto; /* Enable scroll if needed */
-    background-color: rgb(0,0,0); /* Fallback color */
-    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
-}
-div.shortpixel-modal {
-    background-color: #fefefe;
-    margin: 8% auto; /* 15% from the top and centered */
-    padding: 20px;
-    border: 1px solid #888;
-    width: 30%; /* Could be more or less, depending on screen size */
-    min-width: 300px; /* Could be more or less, depending on screen size */
-}
-div.shortpixel-modal .sp-close-button, div.shortpixel-modal .sp-close-upgrade-button {
-    float: right;
-    margin-top: 0px;
-    background: transparent;
-    border: none;
-    font-size: 22px;
-    line-height: 10px;
-    cursor: pointer;
-}
 .twentytwenty-horizontal .twentytwenty-before-label:before, .twentytwenty-horizontal .twentytwenty-after-label:before {
     font-family: inherit;
     font-size: 16px;
 }
-div.sp-modal-title {
-    font-size: 22px;
-}
-div.sp-modal-body {
-    margin-top: 20px;
-}
 .short-pixel-bulk-page p {
     margin: 0.6em 0;
 }
-div.shortpixel-modal .sptw-modal-spinner {
-    background-image: url("../img/spinner2.gif");
-    background-repeat: no-repeat;
-    background-position: center;
-}
 .short-pixel-bulk-page form.start {
-    display:table; 
-    content:" "; 
+    display:table;
+    content:" ";
     width:98%;
     background-color:white;
     padding:10px 10px 0;
@@ -340,8 +300,8 @@ div.shortpixel-modal .sptw-modal-spinner {
 }
 
 .bulk-stats-container{
-    display: inline-block; 
-    min-width:450px; 
+    display: inline-block;
+    min-width:450px;
     width: 45%;
     float:left;
     padding-right: 50px;
@@ -349,8 +309,8 @@ div.shortpixel-modal .sptw-modal-spinner {
     line-height: 1.5em;
 }
 .bulk-text-container{
-    display: inline-block; 
-    min-width:440px; 
+    display: inline-block;
+    min-width:440px;
     width: 45%;
     float:left;
     padding-right: 50px;
@@ -361,27 +321,27 @@ div.shortpixel-modal .sptw-modal-spinner {
     padding-bottom: 0.5em;
 }
 .bulk-wide {
-    display: inline-block; 
+    display: inline-block;
     width: 90%;
-    float:left;        
+    float:left;
     margin-top: 25px;
 }
 .bulk-stats-container .bulk-label{
-    width:220px; 
+    width:220px;
     display:inline-block;
 }
 .bulk-stats-container .bulk-val{
-    width:50px; 
-    display:inline-block; 
+    width:50px;
+    display:inline-block;
     text-align: right;
 }
 .bulk-stats-container .bulk-total{
-    font-weight: bold; 
+    font-weight: bold;
     margin-top:10px;
     margin-bottom:10px;
 }
 .wp-core-ui .bulk-play{
-    display: inline; 
+    display: inline;
     width: 310px;
     float:left;
     margin-bottom:20px;
@@ -392,7 +352,7 @@ div.shortpixel-modal .sptw-modal-spinner {
     border: 1px solid;
     border-radius: 5px;
     margin-top: 60px;
-    padding: 5px 12px;    
+    padding: 5px 12px;
 }
 .wp-core-ui .bulk-play a.button{
     height:60px;
@@ -441,10 +401,6 @@ th.sorted.column-wp-shortPixel a {
 }
 .wp-core-ui .bulk-play a.button .bulk-btn-txt span.total {
     font-size: 1.4em;
-}
-.short-pixel-notice-icon {
-    float:left;
-    margin: 10px 10px 10px 0;
 }
 .bulk-progress {
     padding: 20px 32px 17px;
@@ -544,8 +500,8 @@ th.sorted.column-wp-shortPixel a {
 }
 .bulk-slider .img-original,
 .bulk-slider .img-optimized{
-    display:inline-block; 
-    margin-right:20px;  
+    display:inline-block;
+    margin-right:20px;
     text-align: center;
 }
 .bulk-slider .img-original div,
@@ -558,9 +514,9 @@ th.sorted.column-wp-shortPixel a {
     max-width: 300px;
 }
 .bulk-slider .img-info{
-    display:inline-block; 
+    display:inline-block;
     vertical-align: top;
-    font-size: 48px; 
+    font-size: 48px;
     max-width: 150px;
     padding: 10px 0 0 20px;
 }
@@ -570,7 +526,7 @@ th.sorted.column-wp-shortPixel a {
     padding: 15px 0 0 20px;
 }
 p.settings-info {
-    padding-top: 0px; 
+    padding-top: 0px;
     color: #818181;
     font-size:13px !important;
 }
