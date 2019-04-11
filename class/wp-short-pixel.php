@@ -41,6 +41,9 @@ class WPShortPixel {
         $controllerClass = ShortPixelTools::namespaceit('ShortPixelController');
         $controllerClass::init(); // load all subclassed controllers.
 
+        /*$debugClass = ShortPixelTools::namespaceit('Debug');
+        $debugClass->init();  */
+
         define('QUOTA_EXCEEDED', $this->view->getQuotaExceededHTML());
 
         if( !defined('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES')) {
@@ -451,6 +454,7 @@ class WPShortPixel {
         }
     }
 
+    /** [TODO] This should report to the Shortpixel Logger **/
     static protected function doLog($message, $force = false) {
         if(defined('SHORTPIXEL_DEBUG_TARGET') || $force) {
                 file_put_contents(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log", '[' . date('Y-m-d H:i:s') . "] $message\n", FILE_APPEND);
@@ -779,7 +783,7 @@ class WPShortPixel {
         $meta = $itemHandler->getMeta();
 
         $doDump = false;
- 
+
         if ($meta->getStatus() <= 0)
         {
             $doDump = true; // dump any caching on files that ended in an error.
@@ -1645,7 +1649,7 @@ class WPShortPixel {
      * @param bool $bulk - true if the regeneration is done in bulk - in this case the image will not be immediately scheduled for processing but the user will need to launch the ShortPixel bulk after regenerating.
      *
      *
-     * Note - $regeneratedSizes expects a metadata array, with filename, not just the resized data.
+     * Note - $regeneratedSizes expects part of the metadata array called [sizes], with filename, not just the resized data.
      */
     public function thumbnailsRegeneratedHook($postId, $originalMeta, $regeneratedSizes = array(), $bulk = false) {
 
@@ -2099,16 +2103,68 @@ class WPShortPixel {
         return $ret;
     }
 
+    // TODO - [BS] json_encode should be replaced by a call to shortPixelTools:sendJson, but this crashes the JS parse - for some reason -
     public function handleOptimizeThumbs() {
         $ID = intval($_GET['attachment_ID']);
         $meta = wp_get_attachment_metadata($ID);
-        //die(var_dump($meta));
-        $thumbsCount = WpShortPixelMediaLbraryAdapter::countSizesNotExcluded($meta['sizes'], $this->_settings->excludeSizes);
-        if(   isset($meta['ShortPixelImprovement'])
-           && isset($meta['sizes']) && $thumbsCount
+
+        // default return;
+        //$ret = array("Status" => ShortPixelAPI::STATUS_SKIP, "message" => (isset($meta['ShortPixelImprovement']) ? __('No thumbnails to optimize for ID: ','shortpixel-image-optimiser') : __('Please optimize image for ID: ','shortpixel-image-optimiser')) . $ID);
+        $error = array('Status' => ShortPixelAPI::STATUS_SKIP, 'message' => __('Unspecified Error on Thumbnails for: ') . $ID);
+
+        $includedSizes = WpShortPixelMediaLbraryAdapter::getSizesNotExcluded($meta['sizes'], $this->_settings->excludeSizes);
+        $thumbsCount = count($includedSizes);
+
+        if (! isset($meta['ShortPixelImprovement']))
+        {
+            $error['message'] = __('Please optimize image for ID: ','shortpixel-image-optimiser') . $ID;
+            die(json_encode($error));
+        }
+
+        if (! isset($meta['sizes']) || count($meta['sizes']) == 0)
+        {
+            $error['message'] = __('No thumbnails to optimize for ID: ','shortpixel-image-optimiser') . $ID;
+            die(json_encode($error));
+        }
+
+
+        /* Check ThumbList against current Sizes. It's possible when a size was dropped, the SP meta was not updated, playing
+        * tricks with the thumbcount.
+        *
+        */
+        if (isset($meta['ShortPixel']['thumbsOptList']) && is_array($meta['ShortPixel']['thumbsOptList']))
+        {
+          $thumbList = array();
+          foreach($meta['ShortPixel']['thumbsOptList'] as $fileName)
+          {
+              if (isset($includedSizes[$fileName]))
+              {
+                  $thumbList[] = $fileName;
+              }
+          }
+          $meta['ShortPixel']['thumbsOptList'] = $thumbList;
+        }
+
+/*
+        if (isset($meta['Shortpixel']['thumbsOptList']))
+        {
+          $sizeFiles = array();
+          foreach($sizeFiles as $size => $data)
+          {
+            $file = pathinfo($data['file'], )
+          }
+
+        } */
+
+/*        if( $thumbsCount
            && ( !isset($meta['ShortPixel']['thumbsOpt']) || $meta['ShortPixel']['thumbsOpt'] == 0
-                || (isset($meta['sizes']) && isset($meta['ShortPixel']['thumbsOptList']) && $meta['ShortPixel']['thumbsOpt'] < $thumbsCount))) { //optimized without thumbs, thumbs exist
+                || (isset($meta['sizes']) && isset($meta['ShortPixel']['thumbsOptList']) && $meta['ShortPixel']['thumbsOpt'] < $thumbsCount))) { //optimized without thumbs, thumbs exist */
+
+          if( $thumbsCount
+                && (isset($meta['sizes']) && isset($meta['ShortPixel']['thumbsOptList']) && count($meta['ShortPixel']['thumbsOptList']) < $thumbsCount))
+          {
             $meta['ShortPixel']['thumbsTodo'] = true;
+
             //wp_update_attachment_metadata($ID, $meta);
             update_post_meta($ID, '_wp_attachment_metadata', $meta);
             $this->prioQ->push($ID);
@@ -2128,6 +2184,7 @@ class WPShortPixel {
         } else {
             $ret = array("Status" => ShortPixelAPI::STATUS_SKIP, "message" => (isset($meta['ShortPixelImprovement']) ? __('No thumbnails to optimize for ID: ','shortpixel-image-optimiser') : __('Please optimize image for ID: ','shortpixel-image-optimiser')) . $ID);
         }
+        //shortPixelTools::sendJSON($ret);
         die(json_encode($ret));
     }
 
@@ -3337,9 +3394,10 @@ Header append Vary Accept env=REDIRECT_webp
             $data = ShortPixelMetaFacade::sanitizeMeta(wp_get_attachment_metadata($id));
 
             if($extended && isset($_GET['SHORTPIXEL_DEBUG'])) {
+            //  var_dump($data);
                 var_dump(wp_get_attachment_url($id));
                 echo('<br><br>' . json_encode(ShortPixelMetaFacade::getWPMLDuplicates($id)));
-                echo('<br><br>' . json_encode($data));
+                echo('<br><br>'); print_r($data);  echo ''; //json_encode($data))
                 echo('<br><br>');
             }
 
