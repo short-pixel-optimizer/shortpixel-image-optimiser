@@ -19,6 +19,8 @@ if (! defined('SHORTPIXEL_DEBUG'))
     define('SHORTPIXEL_DEBUG', false);
 }
 
+Log::addDebug('Plugin Req Init');
+
 
 require_once('class/wp-short-pixel.php');
 require_once('class/wp-shortpixel-settings.php');

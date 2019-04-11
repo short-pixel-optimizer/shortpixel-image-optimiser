@@ -70,7 +70,9 @@ class ShortPixelController
 
       $template_path = \ShortPixelTools::getPluginPath() . 'class/view/' . $this->template  . '.php';
       if (file_exists($template_path))
+      {
         include($template_path);
+      }
 
   }
 

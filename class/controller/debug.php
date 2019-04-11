@@ -75,7 +75,6 @@ namespace ShortPixel;
       {
           self::$instance = new ShortPixelLogger();
       }
-
       return self::$instance;
    }
 
