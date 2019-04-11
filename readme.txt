@@ -243,7 +243,7 @@ The ShortPixel Image Optimiser plugin calls the following actions and filters:
 
 = 4.13.0 =
 
-Release date:
+Release date: 10th April 2019
 * Bulk restore for the Other Media
 * make the filename extension be updated when manually optimizing a PNG from Media Library, if the convert to JPG is active, without refreshing the page
 * Integration with Regenerate Thumbnails Advanced new 2.0 beta version
