@@ -3,7 +3,7 @@ Contributors: ShortPixel
 Tags: compressor, image, compression, optimize, image optimizer, image optimiser, image compression, resize, compress pdf, compress jpg, compress png, image compression
 Requires at least: 3.2.0
 Tested up to: 5.1
-Requires PHP: 5.2
+Requires PHP: 5.3
 Stable tag: 4.13.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
