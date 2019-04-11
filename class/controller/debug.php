@@ -23,7 +23,7 @@ namespace ShortPixel;
 
    protected $template = 'view-debug-box';
 
-   protected function __construct()
+   public function __construct()
    {
       $this->start_time = microtime(true);
       $this->logLevel = DebugItem::LEVEL_WARN;

@@ -160,6 +160,7 @@ function shortPixelConvertImgToPictureAddWebp($content) {
     }
     require_once('wp-shortpixel-req.php');
     require_once('class/front/img-to-picture-webp.php');
+
     return ShortPixelImgToPictureWebp::convert($content);// . "<!-- PICTURE TAGS BY SHORTPIXEL -->";
 }
 function shortPixelAddPictureJs() {
