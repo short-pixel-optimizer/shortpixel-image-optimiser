@@ -1,5 +1,8 @@
 <?php
 
+use ShortPixel\DebugItem as DebugItem;
+use ShortPixel\ShortPixelLogger as Log;
+
 class WPShortPixel {
 
     const BULK_EMPTY_QUEUE = 0;
@@ -445,22 +448,24 @@ class WPShortPixel {
     }
 
     static function log($message, $force = false) {
+        Log::addInfo($message);
+        /*
         if (SHORTPIXEL_DEBUG === true || $force) {
             if (is_array($message) || is_object($message)) {
                 self::doLog(print_r($message, true), $force);
             } else {
                 self::doLog($message, $force);
             }
-        }
+        } */
     }
 
-    /** [TODO] This should report to the Shortpixel Logger **/
     static protected function doLog($message, $force = false) {
-        if(defined('SHORTPIXEL_DEBUG_TARGET') || $force) {
+
+        /*if(defined('SHORTPIXEL_DEBUG_TARGET') || $force) {
                 file_put_contents(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log", '[' . date('Y-m-d H:i:s') . "] $message\n", FILE_APPEND);
         } else {
             error_log($message);
-        }
+        }*/
     }
 
     function headCSS() {
@@ -528,6 +533,12 @@ class WPShortPixel {
             'AJAX_URL'=>admin_url('admin-ajax.php'),
             'AFFILIATE'=>self::getAffiliateSufix()
         ));
+
+        if (Log::isManualDebug() )
+        {
+          Log::addInfo('Ajax Manual Debug Mode');
+          $ShortPixelConstants[0]['AJAX_URL'] = admin_url('admin-ajax.php?SHORTPIXEL_DEBUG=true');
+        }
 
         $jsTranslation = array(
                 'optimizeWithSP' => __( 'Optimize with ShortPixel', 'shortpixel-image-optimiser' ),

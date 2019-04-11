@@ -1,9 +1,24 @@
 <?php
+/*
 if(defined('SHORTPIXEL_DEBUG') && SHORTPIXEL_DEBUG === true) {
     require_once('shortpixel-debug.php');
 } else {
     define('SHORTPIXEL_DEBUG', false);
+} */
+
+// Debug. Hook as early as possible.
+require_once('class/controller/controller.php');
+require_once('class/controller/debug.php');
+require_once('class/model/shortpixel-debug.php');
+
+use ShortPixel\DebugItem as DebugItem;
+use ShortPixel\ShortPixelLogger as Log;
+
+if (! defined('SHORTPIXEL_DEBUG'))
+{
+    define('SHORTPIXEL_DEBUG', false);
 }
+
 
 require_once('class/wp-short-pixel.php');
 require_once('class/wp-shortpixel-settings.php');
@@ -29,7 +44,6 @@ require_once('class/view/shortpixel_view.php');
 
 require_once('class/shortpixel-tools.php');
 
-require_once('class/controller/controller.php');
 require_once('class/controller/bulk-restore-all.php');
 
 require_once( ABSPATH . 'wp-admin/includes/image.php' );
