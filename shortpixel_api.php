@@ -448,6 +448,11 @@ class ShortPixelAPI {
     }
 
     public static function backupImage($mainPath, $PATHs) {
+        // Backup will be handled in third party plugin.
+        if(apply_filters('shortpixel_skip_backup', false, $mainPath, $PATHs)){
+            return array("Status" => self::STATUS_SUCCESS);
+        }
+
         //$fullSubDir = str_replace(wp_normalize_path(get_home_path()), "", wp_normalize_path(dirname($itemHandler->getMeta()->getPath()))) . '/';
         //$SubDir = ShortPixelMetaFacade::returnSubDir($itemHandler->getMeta()->getPath(), $itemHandler->getType());
         $fullSubDir = ShortPixelMetaFacade::returnSubDir($mainPath);
@@ -631,6 +636,12 @@ class ShortPixelAPI {
         if( $this->_settings->backupImages )
         {
             $backupStatus = self::backupImage($mainPath, $PATHs);
+            /**
+             * returns array on fail.
+             * Status:-2
+             * Message:"Cannot save file <i>5f83341c-htpps.png</i> in backup directory"
+             * 
+             */
             if($backupStatus == self::STATUS_FAIL) {
                 $itemHandler->incrementRetries(1, self::ERR_SAVE_BKP, $backupStatus["Message"]);
                 self::cleanupTemporaryFiles($archive, empty($tempFiles) ? array() : $tempFiles);
@@ -664,7 +675,7 @@ class ShortPixelAPI {
 
                 if($tempFile['Status'] == self::STATUS_SUCCESS) { //if it's unchanged it will still be in the array but only for WebP (handled below)
                     $tempFilePATH = $tempFile["Message"];
-                    if ( file_exists($tempFilePATH) && file_exists($targetFile) && is_writable($targetFile) ) {
+                    if ( file_exists($tempFilePATH) && wp_is_writable($targetFile) ) {
                         copy($tempFilePATH, $targetFile);
                         if(ShortPixelMetaFacade::isRetina($targetFile)) {
                             $retinas ++;
@@ -691,9 +702,7 @@ class ShortPixelAPI {
                         if($archive &&  SHORTPIXEL_DEBUG === true) {
                             if(!file_exists($tempFilePATH)) {
                                 WPShortPixel::log("MISSING FROM ARCHIVE. tempFilePath: $tempFilePATH with ID: $tempFileID");
-                            } elseif(!file_exists($targetFile)){
-                                WPShortPixel::log("MISSING TARGET: $targetFile");
-                            } elseif(!is_writable($targetFile)){
+                            } elseif(!wp_is_writable($targetFile)){
                                 WPShortPixel::log("TARGET NOT WRITABLE: $targetFile");
                             }
                         }
@@ -847,7 +856,7 @@ class ShortPixelAPI {
         foreach ( $PATHs as $Id => $File )
         {
             //we try again with a different path
-            if ( !file_exists($File) ){
+            if ( !apply_filters( 'shortpixel_image_exists', file_exists($File), $File ) ){
                 //$NewFile = $uploadDir['basedir'] . "/" . substr($File,strpos($File, $StichString));//+strlen($StichString));
                 $NewFile = SHORTPIXEL_UPLOADS_BASE . substr($File,strpos($File, $StichString)+strlen($StichString));
                 if (file_exists($NewFile)) {
