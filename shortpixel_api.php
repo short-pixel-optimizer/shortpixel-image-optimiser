@@ -448,7 +448,10 @@ class ShortPixelAPI {
     }
 
     public static function backupImage($mainPath, $PATHs) {
-        // Backup will be handled in third party plugin.
+        /**
+         * Passing a truthy value to the filter will effectively short-circuit this function.
+         * So third party plugins can handle Backup by there own.
+         */
         if(apply_filters('shortpixel_skip_backup', false, $mainPath, $PATHs)){
             return array("Status" => self::STATUS_SUCCESS);
         }
@@ -636,12 +639,6 @@ class ShortPixelAPI {
         if( $this->_settings->backupImages )
         {
             $backupStatus = self::backupImage($mainPath, $PATHs);
-            /**
-             * returns array on fail.
-             * Status:-2
-             * Message:"Cannot save file <i>5f83341c-htpps.png</i> in backup directory"
-             * 
-             */
             if($backupStatus == self::STATUS_FAIL) {
                 $itemHandler->incrementRetries(1, self::ERR_SAVE_BKP, $backupStatus["Message"]);
                 self::cleanupTemporaryFiles($archive, empty($tempFiles) ? array() : $tempFiles);

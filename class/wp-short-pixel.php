@@ -1756,10 +1756,13 @@ class WPShortPixel {
             //try with the thumbnails
             foreach($thumbs as $size) {
                 $backup = $this->getBackupFolder(trailingslashit(dirname($file)) . $size['file']);
-                if($backup) return $backup;
+                if($backup) {
+                    $ret = $backup;
+                    break;
+                }
             }
         }
-        return apply_filters("shortpixel_backup_folder", $ret);
+        return apply_filters("shortpixel_backup_folder", $ret, $file, $thumbs);
     }
 
     protected function setFilePerms($file) {
@@ -3610,6 +3613,14 @@ Header append Vary Accept env=REDIRECT_webp
     }
 
     public function deleteBackupsAndWebPs($paths) {
+        /**
+         * Passing a truthy value to the filter will effectively short-circuit this function.
+         * So third party plugins can handle deletion by there own.
+         */
+        if(apply_filters('shortpixel_skip_delete_backups_and_webps', false, $paths)){
+            return;
+        }
+
         $backupFolder = trailingslashit($this->getBackupFolder($paths[0]));
         foreach($paths as $path) {
             $pos = strrpos($path, ".");
