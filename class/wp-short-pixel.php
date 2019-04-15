@@ -1767,7 +1767,7 @@ class WPShortPixel {
             //try with the thumbnails
             foreach($thumbs as $size) {
                 $backup = $this->getBackupFolder(trailingslashit(dirname($file)) . $size['file']);
-                if($backup) return $backup;
+                if($backup) return apply_filters("shortpixel_backup_folder", $backup);
             }
         }
         return apply_filters("shortpixel_backup_folder", $ret);
