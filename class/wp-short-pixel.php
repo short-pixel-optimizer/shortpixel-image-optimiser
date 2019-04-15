@@ -337,6 +337,9 @@ class WPShortPixel {
         return $found;
     }
 
+    /** Displays notices to admin, if there are any
+    * TODO - Probably should be a controller
+    */
     public function displayAdminNotices() {
         if(!ShortPixelQueue::testQ()) {
             ShortPixelView::displayActivationNotice('fileperms');
@@ -472,6 +475,7 @@ class WPShortPixel {
         echo('<style>.shortpixel-hide {display:none;}</style>');
     }
 
+    /** TODO Plugin init class. Try to get rid of inline JS. */
     function shortPixelJS() {
         //require_once(ABSPATH . 'wp-admin/includes/screen.php');
         if(function_exists('get_current_screen')) {
@@ -579,6 +583,10 @@ class WPShortPixel {
         wp_enqueue_script('punycode.min.js', plugins_url('/res/js/punycode.min.js',SHORTPIXEL_PLUGIN_FILE) );
     }
 
+    /** Displays an icon in the toolbar when processing images
+    *   hook - admin_bar_menu
+    *  @param Obj $wp_admin_bar
+    */
     function toolbar_shortpixel_processing( $wp_admin_bar ) {
 
         $extraClasses = " shortpixel-hide";
@@ -1138,6 +1146,7 @@ class WPShortPixel {
         return $items;
     }
 
+    /** Checks the API key **/
     private function checkKey($ID) {
         if( $this->_settings->verifiedKey == false) {
             if($ID == null){
@@ -1582,10 +1591,10 @@ class WPShortPixel {
     }
 
     public function handleManualOptimization() {
-        $imageId = $_GET['image_id'];
+        $imageId = intval($_GET['image_id']);
         $cleanup = $_GET['cleanup'];
 
-        self::log("Handle Manual Optimization #{$imageId}");
+        Log::addInfo("Handle Manual Optimization #{$imageId}");
 
         switch(substr($imageId, 0, 2)) {
             case "N-":
@@ -1602,6 +1611,7 @@ class WPShortPixel {
                 return array("Status" => ShortPixelAPI::STATUS_FAIL, "message" => __('NextGen image not found','shortpixel-image-optimiser'));
                 break;
             case "C-":
+                Log::addError("Throw: HandleManualOptimization for custom images not implemented");
                 throw new Exception("HandleManualOptimization for custom images not implemented");
             default:
                 $this->optimizeNowHook(intval($imageId), true);
@@ -1611,13 +1621,20 @@ class WPShortPixel {
 
     }
 
+    /** Returns status of an image *
+    * Uses a request parameter for image_id, ends in json encode.
+    * @hook - wp_ajax_shortpixel_check_status
+    */
     public function checkStatus() {
-        $itemHandler = new ShortPixelMetaFacade($_GET['image_id']);
+        $itemHandler = new ShortPixelMetaFacade(intval($_GET['image_id']));
         $meta = $itemHandler->getMeta();
         die(json_encode(array("Status" => $meta->getStatus(), "Message" => $meta->getMessage())));
     }
 
-        //custom hook
+    /** Hook action for optimization (Ajax-call)
+    * @hook shortpixel-optimize-now ( seems not in use )
+    * Call by handleManualOptimization
+    */
     public function optimizeNowHook($imageId, $manual = false) {
         //WpShortPixel::log("OPTIMIZE NOW HOOK for ID: $imageId STACK: " . json_encode(debug_backtrace()));
         if($this->isProcessable($imageId)) {
@@ -1699,6 +1716,10 @@ class WPShortPixel {
         unset($this->thumbnailsRegenerating[$postId]);
     }
 
+    /** Check if a certain files exists in the backup
+    * ( by calling a random number of dir functions )
+    * TODO - Should be of the folder model.
+    */
     public function shortpixelGetBackupFilter($imagePath) {
         $backup = str_replace(dirname(dirname(dirname(SHORTPIXEL_BACKUP_FOLDER))),SHORTPIXEL_BACKUP_FOLDER, $imagePath);
         return file_exists($backup) ? $backup : false;
@@ -1719,7 +1740,10 @@ class WPShortPixel {
     }
 
 
-    //save error in file's meta data
+    /** on Image error, Save error in file's meta data
+    * @param int $ID image_id
+    * @param string $result - Error String
+    */
     public function handleError($ID, $result)
     {
         $meta = wp_get_attachment_metadata($ID);
@@ -1728,6 +1752,10 @@ class WPShortPixel {
         update_post_meta($ID, '_wp_attachment_metadata', $meta);
     }
 
+    /* Gets backup folder of file
+    * @param string $file  Filepath - probably
+    * @return string backupFolder
+    */
     public function getBackupFolder($file) {
         if(realpath($file)) {
             $ret = $this->getBackupFolderInternal(realpath($file)); //found cases when $file contains for example /wp/../wp-content - clean it up
@@ -1737,6 +1765,10 @@ class WPShortPixel {
         return $this->getBackupFolderInternal($file);
     }
 
+    /** Gets backup from file
+    * @param string $file Filename
+    * @return string FolderName
+    */
     private function getBackupFolderInternal($file) {
         $fileExtension = strtolower(substr($file,strrpos($file,".")+1));
         $SubDir = ShortPixelMetaFacade::returnSubDir($file);
@@ -1760,6 +1792,11 @@ class WPShortPixel {
         return SHORTPIXEL_BACKUP_FOLDER . '/' . $SubDir;
     }
 
+    /** Gets BackupFolder. If that doesn't work, search thumbs for a backupFolder
+    * @param string $file FileName
+    * @param array $thumbs Array of thumbnails
+    * @return string|boolean Returns either backupfolder or false.
+    */
     public function getBackupFolderAny($file, $thumbs) {
         $ret = $this->getBackupFolder($file);
         //if(!$ret && !file_exists($file) && isset($thumbs)) {
@@ -1773,6 +1810,11 @@ class WPShortPixel {
         return apply_filters("shortpixel_backup_folder", $ret);
     }
 
+    /** Sets file permissions
+    * @param string $file FileName
+    * @return boolean Success
+    * TODO - Move to File Model
+    */
     protected function setFilePerms($file) {
         //die(getenv('USERNAME') ? getenv('USERNAME') : getenv('USER'));
 
@@ -1971,6 +2013,8 @@ class WPShortPixel {
         set_transient("shortpixel_thrown_notice", array('when' => $when, 'extra' => $extra), 120);
     }
 
+    /** Checks if a notice was thrown
+    * @return boolean true, if there are notices */
     protected function catchNotice() {
         $notice = get_transient("shortpixel_thrown_notice");
         if(isset($notice['when'])) {
@@ -1996,6 +2040,9 @@ class WPShortPixel {
         return substr($file, 0, strlen($file) - 1 - strlen($ext)) . "@2x." . $ext;
     }
 
+    /** Restores a non-media-library image
+    * @param int $ID image_id, without any prefixes
+    */
     public function doCustomRestore($ID) {
         //$meta = $this->spMetaDao->getMeta($ID);
         // meta facade as a custom image
@@ -2021,7 +2068,7 @@ class WPShortPixel {
             $rename_result = @rename($bkFile, $file);
             if (! $rename_result)
             {
-                self::log('Failure on rename to : ' . $file);
+                Log::addError('Failure on rename to : ' . $file);
             }
 
 
@@ -2046,7 +2093,7 @@ class WPShortPixel {
 
         }
         else {
-           self::log('File ' . $bkFile . ' not found in backups');
+           Log::addWarn('File ' . $bkFile . ' not found in backups');
         }
 
         return $meta;
@@ -2243,6 +2290,9 @@ class WPShortPixel {
         }
     }
 
+    /** Runs on plugin deactivation
+    * @hook admin_post_shortpixel_deactivate_plugin
+    */
     public function deactivatePlugin() {
         if ( ! wp_verify_nonce( $_GET['_wpnonce'], 'sp_deactivate_plugin_nonce' ) ) {
                 wp_nonce_ays( '' );
@@ -2261,9 +2311,12 @@ class WPShortPixel {
 
     }
 
+    /** Deactivates plugin and redirects
+    * @param string @url URL to redirect after deactivate
+    */
     protected function deactivateAndRedirect($url){
         //die(ShortPixelVDD($url));
-        deactivate_plugins( $_GET['plugin'] );
+        deactivate_plugins( sanitize_text_field($_GET['plugin']) );
         wp_safe_redirect( $url );
         die();
 
@@ -2328,10 +2381,17 @@ class WPShortPixel {
         return $quotaData;
     }
 
+    /** Checks if ID has a meta component
+    * @param int $id $imageId
+    * @return string|array|null Returns array custom metadata ( or null ) or URL to attachment.
+    */
     public function isValidMetaId($id) {
         return substr($id, 0, 2 ) == "C-" ? $this->spMetaDao->getMeta(substr($id, 2)) : wp_get_attachment_url($id);
     }
 
+    /** View for Custom media
+    * @todo Move this
+    */
     public function listCustomMedia() {
         if( ! class_exists( 'ShortPixelListTable' ) ) {
             require_once('view/shortpixel-list-table.php');
@@ -2391,7 +2451,7 @@ class WPShortPixel {
     }
 
     /** Front End function that controls bulk processes.
-    *
+    * TODO This is a Bulk controller
     */
     public function bulkProcess() {
         global $wpdb;
@@ -2540,6 +2600,7 @@ class WPShortPixel {
             }
     }
 
+    // TODO - Calculate time left Utility function -Called in bulkProcess.
     public function bulkProgressMessage($percent, $minutes) {
         $timeEst = "";
         self::log("bulkProgressMessage(): percent: " . $percent);
@@ -2561,6 +2622,7 @@ class WPShortPixel {
         return $timeEst;
     }
 
+    // TODO - Folder Model action
     public function emptyBackup(){
             if(file_exists(SHORTPIXEL_BACKUP_FOLDER)) {
 
@@ -2579,6 +2641,7 @@ class WPShortPixel {
                 $this->deleteDir(SHORTPIXEL_BACKUP_FOLDER);//call a recursive function to empty files and sub-dirs in backup dir
             }
     }
+
 
     public function backupFolderIsEmpty() {
         if(file_exists(SHORTPIXEL_BACKUP_FOLDER)) {
@@ -2640,13 +2703,18 @@ class WPShortPixel {
         die();
     }
 
+    /** Gets data for image comparison. Returns JSON
+    *
+    * @return json JSON data.
+    * TODO - Should return via JSON function in tools
+    */
     public function getComparerData() {
         if (!isset($_POST['id']) || !current_user_can( 'upload_files' ) && !current_user_can( 'edit_posts' ) )  {
             wp_die(json_encode((object)array('origUrl' => false, 'optUrl' => false, 'width' => 0, 'height' => 0)));
         }
 
         $ret = array();
-        $handle = new ShortPixelMetaFacade($_POST['id']);
+        $handle = new ShortPixelMetaFacade(intval($_POST['id']) );
 
         $meta = $handle->getMeta();
         $rawMeta = $handle->getRawMeta();
@@ -2686,6 +2754,7 @@ class WPShortPixel {
         die(json_encode((object)$ret));
     }
 
+    // TODO This could be something in an install class.
     public function newApiKey() {
         if ( !current_user_can( 'manage_options' ) )  {
             wp_die(__('You do not have sufficient permissions to access this page.','shortpixel-image-optimiser'));
@@ -2777,6 +2846,7 @@ class WPShortPixel {
 
     }
 
+    // TODO - Part of the folder model.
     public static function getCustomFolderBase() {
         if(is_main_site()) {
             $base = get_home_path();
@@ -2787,11 +2857,13 @@ class WPShortPixel {
         }
     }
 
+    // TODO - Should be part of folder model
     protected function fullRefreshCustomFolder($path, &$notice) {
         $folder = $this->spMetaDao->getFolder($path);
         $diff = $folder->checkFolderContents(array('ShortPixelCustomMetaDao', 'getPathFiles'));
     }
 
+    // TODO - Should be part of folder model
     protected function refreshCustomFolders(&$notice, $ignore = false) {
         $customFolders = array();
         if($this->_settings->hasCustomFolders) {
@@ -2821,6 +2893,9 @@ class WPShortPixel {
         return $customFolders;
     }
 
+    /** Updates HTAccess files for Webp
+    * @param boolean $clear Clear removes all statements from htaccess. For disabling webp.
+    */
     protected static function alterHtaccess( $clear = false ){
       // [BS] Backward compat. 11/03/2019 - remove possible settings from root .htaccess
         $upload_dir = wp_upload_dir();
@@ -2888,6 +2963,9 @@ Header append Vary Accept env=REDIRECT_webp
         }
     }
 
+    /** Settings menu controller
+    * @todo Make it a controller
+    */
     public function renderSettingsMenu() {
         if ( !current_user_can( 'manage_options' ) )  {
             wp_die(__('You do not have sufficient permissions to access this page.','shortpixel-image-optimiser'));
@@ -2919,7 +2997,6 @@ Header append Vary Accept env=REDIRECT_webp
             }
         }
         // END: Verify .htaccess writeability
-
 
         //by default we try to fetch the API Key from wp-config.php (if defined)
         if ( defined("SHORTPIXEL_API_KEY") && strlen(SHORTPIXEL_API_KEY) == 20)
@@ -3196,6 +3273,11 @@ Header append Vary Accept env=REDIRECT_webp
 
     }
 
+    /** Adds NextGenGalleries to Custom Images Library
+    * @param boolean $silent Will not return messages if silent
+    * @return array Array for information
+    * @todo Move to a integration class
+    */
     public function addNextGenGalleriesToCustom($silent) {
         $customFolders = array();
         $folderMsg = "";
@@ -3215,6 +3297,10 @@ Header append Vary Accept env=REDIRECT_webp
         return array("message" => $silent? "" : $folderMsg, "customFolders" => $customFolders);
     }
 
+    /** Gets the average compression
+    * @return int Average compressions percentage
+    * @todo Move to utility (?)
+    */
     public function getAverageCompression(){
         return $this->_settings->totalOptimized > 0
                ? round(( 1 -  ( $this->_settings->totalOptimized / $this->_settings->totalOriginal ) ) * 100, 2)
@@ -3306,7 +3392,7 @@ Header append Vary Accept env=REDIRECT_webp
             $response = wp_remote_get($requestURL, $args);
             $comm['C: ' . (number_format(microtime(true) - $time, 2))] = array("sent" => "POST: " . $requestURL, "args" => $args, "received" => $response);
         }
-        self::log("API STATUS COMM: " . json_encode($comm));
+        Log::addInfo("API STATUS COMM: " . json_encode($comm));
 
         $defaultData = array(
             "APIKeyValid" => false,
@@ -3392,6 +3478,9 @@ Header append Vary Accept env=REDIRECT_webp
         $this->_settings->quotaExceeded = 0;
     }
 
+    /** Generates column for custom media library
+    * @todo Move this to custom media controller
+    */
     public function generateCustomColumn( $column_name, $id, $extended = false ) {
         if( 'wp-shortPixel' == $column_name ) {
 
@@ -3535,10 +3624,21 @@ Header append Vary Accept env=REDIRECT_webp
         }
     }
 
+    /** Make columns sortable in Media Library
+    * @hook manage_upload_sortable_columns
+    * @param array $columns Array of colums sortable
+    * @todo Should be part of media library controller.
+    */
     function columnRegisterSortable($columns) {
         $columns['wp-shortPixel'] = 'ShortPixel Compression';
         return $columns;
     }
+
+    /** Apply sort filter in Media Library
+    * @hook request
+    * @param array $columns Array of colums sortable
+    * @todo Should be part of media library controller.  ( is request best hook for this?)
+    */
 
     function columnOrderFilterBy($vars) {
         if ( isset( $vars['orderby'] ) && 'ShortPixel Compression' == $vars['orderby'] ) {
@@ -3566,6 +3666,10 @@ Header append Vary Accept env=REDIRECT_webp
         return $vars;
     }
 
+    /*
+    * @hook restrict_manage_posts
+    * @todo Should be part of media library controller.  ( is request best hook for this?)
+    */
     function mediaAddFilterDropdown() {
         $scr = get_current_screen();
         if ( $scr->base !== 'upload' ) return;
@@ -3588,11 +3692,19 @@ Header append Vary Accept env=REDIRECT_webp
             . "</select>");
     }
 
+    /** Calculates Optimization if PNG2Jpg does something
+    * @param array $meta Image metadata
+    * @return string Formatted improvement
+    */
     function optimizationPercentIfPng2Jpg($meta) {
         $png2jpgPercent = isset($meta['ShortPixelPng2Jpg']['optimizationPercent']) ? $meta['ShortPixelPng2Jpg']['optimizationPercent'] : 0;
         return number_format(100.0 - (100.0 - $png2jpgPercent) * (100.0 - $meta['ShortPixelImprovement']) / 100.0, 2);
     }
 
+    /** Meta box for shortpixel in view image
+    * @hook add_meta_boxes
+    * @todo move to appr. controller
+    */
     function shortpixelInfoBox() {
         if(get_post_type( ) == 'attachment') {
             add_meta_box(
@@ -3606,10 +3718,18 @@ Header append Vary Accept env=REDIRECT_webp
         }
     }
 
+    /** Meta box for view image
+    * @todo move to appr. controller
+    */
     function shortpixelInfoBoxContent( $post ) {
         $this->generateCustomColumn( 'wp-shortPixel', $post->ID, true );
     }
 
+    /** When an image is deleted
+    * @hook delete_attachment
+    * @param int $post_id  ID of Post
+    * @return itemHandler ItemHandler object.
+    */
     public function onDeleteImage($post_id) {
         $itemHandler = new ShortPixelMetaFacade($post_id);
         $urlsPaths = $itemHandler->getURLsAndPATHs(true, false, true, array(), true);
@@ -3620,6 +3740,8 @@ Header append Vary Accept env=REDIRECT_webp
         return $itemHandler; //return it because we call it also on replace and on replace we need to follow this by deleting SP metadata, on delete it
     }
 
+    /** Removes webp and backup from specified paths
+    */
     public function deleteBackupsAndWebPs($paths) {
         $backupFolder = trailingslashit($this->getBackupFolder($paths[0]));
         foreach($paths as $path) {
@@ -3637,7 +3759,11 @@ Header append Vary Accept env=REDIRECT_webp
             @unlink($backupFolder . preg_replace("/\." . $extension . "$/i", '@2x.' . $extension, $fileName));
         }
     }
-
+//
+    /**
+    * @hook manage_media_columns
+    * @todo Move to appr. controller.
+    */
     public function columns( $defaults ) {
         $defaults['wp-shortPixel'] = __('ShortPixel Compression', 'shortpixel-image-optimiser');
         if(current_user_can( 'manage_options' )) {
@@ -3649,6 +3775,7 @@ Header append Vary Accept env=REDIRECT_webp
         return $defaults;
     }
 
+    // todo move NGG specific function to own integration
     public function nggColumns( $defaults ) {
         $this->nggColumnIndex = count($defaults) + 1;
         add_filter( 'ngg_manage_images_column_' . $this->nggColumnIndex . '_header', array( &$this, 'nggColumnHeader' ) );
@@ -3706,6 +3833,7 @@ Header append Vary Accept env=REDIRECT_webp
         return $links;
     }
 
+    // @todo Should be utility function
     static public function formatBytes($bytes, $precision = 2) {
         $units = array('B', 'KB', 'MB', 'GB', 'TB');
 
@@ -3718,11 +3846,21 @@ Header append Vary Accept env=REDIRECT_webp
         return round($bytes, $precision) . ' ' . $units[$pow];
     }
 
+    /** Checks if file can be processed. Mainly against exclusion
+    *  @param int $ID ImageID
+    *  @param array $excludeExtensions Excludes Extentions from settings
+    *  @todo Part of Image model
+    */
     public function isProcessable($ID, $excludeExtensions = array()) {
         $excludePatterns = $this->_settings->excludePatterns;
         return self::_isProcessable($ID, $excludeExtensions, $excludePatterns);
     }
 
+    /** Checks if path can be processed. Mainly against exclusion
+    *  @param string $path Path
+    *  @param array $excludeExtensions Excludes Extentions from settings
+    *  @todo Part of Image / Folder(?) model
+    */
     public function isProcessablePath($path, $excludeExtensions = array()) {
         $excludePatterns = $this->_settings->excludePatterns;
         return self::_isProcessablePath($path, $excludeExtensions, $excludePatterns);
@@ -3792,7 +3930,10 @@ Header append Vary Accept env=REDIRECT_webp
         return $itemHandler->getURLsAndPATHs($this->_settings->processThumbnails, $onlyThumbs, $this->_settings->optimizeRetina, $this->_settings->excludeSizes);
     }
 
-
+    /** Remove a directory
+    * @param string $dirPath Path of directory to remove.
+    * @todo Part of folder model.
+    */
     public static function deleteDir($dirPath) {
         if (substr($dirPath, strlen($dirPath) - 1, 1) != '/') {
             $dirPath .= '/';
@@ -3808,6 +3949,10 @@ Header append Vary Accept env=REDIRECT_webp
         }
     }
 
+    /** Gets size of folder recursivly
+    * @param string $path Path
+    * @todo Move to folder model
+    */
     static public function folderSize($path) {
         $total_size = 0;
         if(file_exists($path)) {
