@@ -453,11 +453,11 @@ class ShortPixelAPI {
         $fullSubDir = ShortPixelMetaFacade::returnSubDir($mainPath);
         $source = $PATHs; //array with final paths for these files
 
-        if( !file_exists(SHORTPIXEL_BACKUP_FOLDER) && !@mkdir(SHORTPIXEL_BACKUP_FOLDER, 0777, true) ) {//creates backup folder if it doesn't exist
+        if( !file_exists(SHORTPIXEL_BACKUP_FOLDER) && ! ShortPixelFolder::createBackUpFolder() ) {//creates backup folder if it doesn't exist
             return array("Status" => self::STATUS_FAIL, "Message" => __('Backup folder does not exist and it cannot be created','shortpixel-image-optimiser'));
         }
         //create subdir in backup folder if needed
-        @mkdir( SHORTPIXEL_BACKUP_FOLDER . '/' . $fullSubDir, 0777, true);
+        ShortPixelFolder::createBackUpFolder();
 
         foreach ( $source as $fileID => $filePATH )//create destination files array
         {
