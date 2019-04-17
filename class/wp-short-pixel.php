@@ -467,6 +467,7 @@ class WPShortPixel {
         } */
     }
 
+    /** [TODO] This should report to the Shortpixel Logger **/
     static protected function doLog($message, $force = false) {
 
         /*if(defined('SHORTPIXEL_DEBUG_TARGET') || $force) {
@@ -3098,7 +3099,7 @@ Header append Vary Accept env=REDIRECT_webp
                     }
                     $this->_settings->verifiedKey = true;
                     //test that the "uploads"  have the right rights and also we can create the backup dir for ShortPixel
-                    if ( !file_exists(SHORTPIXEL_BACKUP_FOLDER) && !@mkdir(SHORTPIXEL_BACKUP_FOLDER, 0777, true) )
+                    if ( !file_exists(SHORTPIXEL_BACKUP_FOLDER) && ! ShortPixelFolder::createBackUpFolder() )
                         $notice = array("status" => "error",
                             "msg" => sprintf(__("There is something preventing us to create a new folder for backing up your original files.<BR>Please make sure that folder <b>%s</b> has the necessary write and read rights.",'shortpixel-image-optimiser'),
                                              WP_CONTENT_DIR . '/' . SHORTPIXEL_UPLOADS_NAME ));
@@ -3986,7 +3987,7 @@ Header append Vary Accept env=REDIRECT_webp
 
             if(!file_exists(SHORTPIXEL_BACKUP_FOLDER)) {
                 //we check that the backup folder exists, if not we create it so we can copy into it
-                if(!mkdir(SHORTPIXEL_BACKUP_FOLDER, 0777, true)) return;
+                if(! ShortPixelFolder::createBackUpFolder() ) return;
             }
 
             $scannedDirectory = array_diff(scandir($oldBackupFolder), array('..', '.'));
@@ -3998,11 +3999,12 @@ Header append Vary Accept env=REDIRECT_webp
                 @rmdir($oldBackupFolder);
             }
         }
+
         //now if the backup folder does not contain the uploads level, create it
         if(   !is_dir(SHORTPIXEL_BACKUP_FOLDER . '/' . SHORTPIXEL_UPLOADS_NAME )
            && !is_dir(SHORTPIXEL_BACKUP_FOLDER . '/' . basename(WP_CONTENT_DIR))) {
             @rename(SHORTPIXEL_BACKUP_FOLDER, SHORTPIXEL_BACKUP_FOLDER."_tmp");
-            @mkdir(SHORTPIXEL_BACKUP_FOLDER);
+            ShortPixelFolder::createBackUpFolder();
             @rename(SHORTPIXEL_BACKUP_FOLDER."_tmp", SHORTPIXEL_BACKUP_FOLDER.'/'.SHORTPIXEL_UPLOADS_NAME);
             if(!file_exists(SHORTPIXEL_BACKUP_FOLDER)) {//just in case..
                 @rename(SHORTPIXEL_BACKUP_FOLDER."_tmp", SHORTPIXEL_BACKUP_FOLDER);
@@ -4011,11 +4013,16 @@ Header append Vary Accept env=REDIRECT_webp
         //then create the wp-content level if not present
         if(!is_dir(SHORTPIXEL_BACKUP_FOLDER . '/' . basename(WP_CONTENT_DIR))) {
             @rename(SHORTPIXEL_BACKUP_FOLDER, SHORTPIXEL_BACKUP_FOLDER."_tmp");
-            @mkdir(SHORTPIXEL_BACKUP_FOLDER);
+            ShortPixelFolder::createBackUpFolder();
             @rename(SHORTPIXEL_BACKUP_FOLDER."_tmp", SHORTPIXEL_BACKUP_FOLDER.'/' . basename(WP_CONTENT_DIR));
             if(!file_exists(SHORTPIXEL_BACKUP_FOLDER)) {//just in case..
                 @rename(SHORTPIXEL_BACKUP_FOLDER."_tmp", SHORTPIXEL_BACKUP_FOLDER);
             }
+        }
+
+        if (! file_exists( trailingslashit(SHORTPIXEL_BACKUP_FOLDER) . '.htaccess')  )
+        {
+            ShortPixelFolder::protectDirectoryListing(SHORTPIXEL_BACKUP_FOLDER);
         }
         return;
     }
