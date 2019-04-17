@@ -1,0 +1,15 @@
+
+// in our own scope.
+.settings_page_wp-shortpixel-settings
+{
+  .top-menu
+  {
+    font-size: 18px;
+    a { font-size: 18px; }
+  }
+
+  .wp-shortpixel-tab-content
+  {
+    transition: all 1000ms linear; 
+  }
+}

@@ -131,9 +131,13 @@ namespace ShortPixel;
 
       if (isset($args['data']))
       {
-        foreach($args['data'] as $item)
+        $data = array_filter($args['data']);
+        if (count($data) > 0)
         {
-            $line .= $item . PHP_EOL;
+          foreach($data as $item)
+          {
+              $line .= $item . PHP_EOL;
+          }
         }
       }
 
@@ -180,6 +184,7 @@ namespace ShortPixel;
    public static function logLevel($level)
    {
       $log = self::getInstance();
+      static::addInfo('Changing Log level' . $level);
       $log->setLogLevel($level);
    }
 

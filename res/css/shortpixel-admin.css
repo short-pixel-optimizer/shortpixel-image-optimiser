@@ -33,3 +33,10 @@
     max-width: 70%; }
   #shortpixel-settings-tabs #tab-adv-settings .addCustomFolder input[name="saveAdv"] {
     margin-left: 8px; }
+
+.settings_page_wp-shortpixel-settings .top-menu {
+  font-size: 18px; }
+  .settings_page_wp-shortpixel-settings .top-menu a {
+    font-size: 18px; }
+.settings_page_wp-shortpixel-settings .wp-shortpixel-tab-content {
+  transition: all 1000ms linear; }

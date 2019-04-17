@@ -167,12 +167,12 @@ var ShortPixel = function() {
         jQuery( window ).resize(function() {
             ShortPixel.adjustSettingsTabs();
         });
-        if(window.location.hash) {
+        /*if(window.location.hash) {
             var target = ('tab-' + window.location.hash.substring(window.location.hash.indexOf("#")+1)).replace(/\//, '');
             if(jQuery("section#" + target).length) {
                 ShortPixel.switchSettingsTab( target );
             }
-        }
+        } */
         jQuery("article.sp-tabs a.tab-link").click(function(){
             var theID = jQuery(this).data("id");
             ShortPixel.switchSettingsTab( theID );
@@ -195,16 +195,17 @@ var ShortPixel = function() {
     }
 
     function switchSettingsTab(target){
+      console.log(window.location.pathname);
         var tab = target.replace("tab-",""),
             beacon = "",
-            section = jQuery("section#" +target),
-            url = location.href.replace(location.hash,"") + '#' + tab;
-        if(history.pushState) {
+            section = jQuery("section#" +target);
+          //  url = location.href.replace(location.hash,"") + '#' + tab;
+        /*if(history.pushState) {
             history.pushState(null, null, url);
         }
         else {
             location.hash = url;
-        }
+        } */
         if(section.length > 0){
             jQuery("section").removeClass("sel-tab");
             jQuery("section#" +target).addClass("sel-tab");

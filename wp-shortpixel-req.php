@@ -22,12 +22,12 @@ if (! defined('SHORTPIXEL_DEBUG'))
 Log::addDebug('Plugin Req Init');
 
 
-require_once('class/wp-short-pixel.php');
-require_once('class/wp-shortpixel-settings.php');
-require_once('class/wp-shortpixel-cloudflare-api.php');
+//require_once('class/wp-short-pixel.php');
+//require_once('class/wp-shortpixel-settings.php');
+//require_once('class/wp-shortpixel-cloudflare-api.php');
 require_once('shortpixel_api.php');
-require_once('class/shortpixel_queue.php');
-require_once('class/shortpixel-png2jpg.php');
+//require_once('class/shortpixel_queue.php');
+//require_once('class/shortpixel-png2jpg.php');
 //entities
 require_once('class/model/shortpixel-entity.php');
 require_once('class/model/shortpixel-meta.php');
@@ -44,14 +44,15 @@ require_once('class/db/shortpixel-meta-facade.php');
 //view
 require_once('class/view/shortpixel_view.php');
 
-require_once('class/shortpixel-tools.php');
+//require_once('class/shortpixel-tools.php');
 
-require_once('class/controller/bulk-restore-all.php');
+//require_once('class/controller/bulk-restore-all.php');
 
 require_once( ABSPATH . 'wp-admin/includes/image.php' );
 include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
 
 // for retro compatibility with WP < 3.5
+// @todo Move this to compatibility file. 
 if( !function_exists('wp_normalize_path') ){
     function wp_normalize_path( $path ) {
         $path = str_replace( '\\', '/', $path );

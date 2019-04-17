@@ -10,6 +10,8 @@
  * Domain Path: /lang
  */
 
+
+
 define('SHORTPIXEL_RESET_ON_ACTIVATE', false); //if true TODO set false
 //define('SHORTPIXEL_DEBUG', true);
 //define('SHORTPIXEL_DEBUG_TARGET', true);
@@ -81,6 +83,9 @@ function shortpixelInit() {
        )
     {
         require_once('wp-shortpixel-req.php');
+        // [BS] Declutter method
+        require_once('shortpixel-plugin.php');
+        new Shortpixel\ShortPixelPlugin();
         $shortPixelPluginInstance = new WPShortPixel;
     }
 

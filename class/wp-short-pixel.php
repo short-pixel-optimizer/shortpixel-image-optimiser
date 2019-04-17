@@ -100,7 +100,7 @@ class WPShortPixel {
 
         if($isAdminUser) {
             //add settings page
-            add_action( 'admin_menu', array( &$this, 'registerSettingsPage' ) );//display SP in Settings menu
+            //add_action( 'admin_menu', array( &$this, 'registerSettingsPage' ) );//display SP in Settings menu
             add_action( 'admin_menu', array( &$this, 'registerAdminPage' ) );
 
             add_action('wp_ajax_shortpixel_browse_content', array(&$this, 'browseContent'));
@@ -162,6 +162,7 @@ class WPShortPixel {
         $this->migrateBackupFolder();
 
         // [BS] Quite dangerous to do this in any constructor. Can hit if request is ajax to name something
+        // @todo This is intended to run only once, on activation.
         if(!$this->_settings->redirectedSettings && !$this->_settings->verifiedKey && (!function_exists("is_multisite") || !is_multisite())) {
             $this->_settings->redirectedSettings = 1;
             wp_redirect(admin_url("options-general.php?page=wp-shortpixel"));
@@ -175,10 +176,14 @@ class WPShortPixel {
         $this->__construct();
     }
 
+    // @hook admin menu
+    // @todo move to plugin class
     public function registerSettingsPage() {
-        add_options_page( __('ShortPixel Settings','shortpixel-image-optimiser'), 'ShortPixel', 'manage_options', 'wp-shortpixel', array($this, 'renderSettingsMenu'));
+
     }
 
+    // @hook admin menu
+    // @todo move to plugin class
     function registerAdminPage( ) {
         if($this->spMetaDao->hasFoldersTable() && count($this->spMetaDao->getFolders())) {
             /*translators: title and menu name for the Other media page*/
@@ -475,7 +480,8 @@ class WPShortPixel {
         echo('<style>.shortpixel-hide {display:none;}</style>');
     }
 
-    /** TODO Plugin init class. Try to get rid of inline JS. */
+    /** @todo Plugin init class. Try to get rid of inline JS. Also still loads on all WP pages, prevent that. */
+
     function shortPixelJS() {
         //require_once(ABSPATH . 'wp-admin/includes/screen.php');
         if(function_exists('get_current_screen')) {
@@ -496,6 +502,7 @@ class WPShortPixel {
                     //modal - used in settings for selecting folder
                     wp_enqueue_style('short-pixel-modal.min.css', plugins_url('/res/css/short-pixel-modal.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
 
+                    // @todo Might need to be removed later on
                     wp_register_style('shortpixel-admin', plugins_url('/res/css/shortpixel-admin.css', SHORTPIXEL_PLUGIN_FILE),array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
                     wp_enqueue_style('shortpixel-admin');
                 }
@@ -2366,11 +2373,12 @@ class WPShortPixel {
         //$tempus = microtime(true);
         $quotaData = $this->countAllIfNeeded($quotaData, $refreshFiles);
         //echo("Count took (seconds): " . (microtime(true) - $tempus));
+        Log::addDebug('QuotaData', $quotaData);
 
         if($quotaData['APICallsQuotaNumeric'] + $quotaData['APICallsQuotaOneTimeNumeric'] > $quotaData['APICallsMadeNumeric'] + $quotaData['APICallsMadeOneTimeNumeric']) {
             $this->_settings->quotaExceeded = '0';
             $this->_settings->prioritySkip = NULL;
-            self::log("CHECK QUOTA: Skipped: ".json_encode($this->prioQ->getSkipped()));
+            Log::addInfo("CHECK QUOTA: Skipped: ".json_encode($this->prioQ->getSkipped()));
 
             ?><script>var shortPixelQuotaExceeded = 0;</script><?php
         }
@@ -2579,7 +2587,7 @@ class WPShortPixel {
             {
               $viewObj = new $partControl();
               $viewObj->setShortPixel($this);
-              $viewObj->loadView();
+              $viewObj->loadView(); // TODO [BS] This should call load, which should init and call view inside controller.
             }
 
             if (! $template_part)
@@ -2863,8 +2871,8 @@ class WPShortPixel {
         $diff = $folder->checkFolderContents(array('ShortPixelCustomMetaDao', 'getPathFiles'));
     }
 
-    // TODO - Should be part of folder model
-    protected function refreshCustomFolders(&$notice, $ignore = false) {
+    // @todo - Should be part of folder model
+    public function refreshCustomFolders(&$notice, $ignore = false) {
         $customFolders = array();
         if($this->_settings->hasCustomFolders) {
             $customFolders = $this->spMetaDao->getFolders();
@@ -2964,15 +2972,15 @@ Header append Vary Accept env=REDIRECT_webp
     }
 
     /** Settings menu controller
-    * @todo Make it a controller
+    * @todo Make it a controller ||commented out means replaced
     */
     public function renderSettingsMenu() {
         if ( !current_user_can( 'manage_options' ) )  {
             wp_die(__('You do not have sufficient permissions to access this page.','shortpixel-image-optimiser'));
         }
 
-        wp_enqueue_style('sp-file-tree.min.css', plugins_url('/res/css/sp-file-tree.min.css',SHORTPIXEL_PLUGIN_FILE) );
-        wp_enqueue_script('sp-file-tree.min.js', plugins_url('/res/js/sp-file-tree.min.js',SHORTPIXEL_PLUGIN_FILE) );
+      //  wp_enqueue_style('sp-file-tree.min.css', plugins_url('/res/css/sp-file-tree.min.css',SHORTPIXEL_PLUGIN_FILE) );
+      //  wp_enqueue_script('sp-file-tree.min.js', plugins_url('/res/js/sp-file-tree.min.js',SHORTPIXEL_PLUGIN_FILE) );
 
         //die(var_dump($_POST));
         $noticeHTML = "";
@@ -2980,13 +2988,13 @@ Header append Vary Accept env=REDIRECT_webp
         $folderMsg = false;
         $addedFolder = false;
 
-        $this->_settings->redirectedSettings = 2;
+        //$this->_settings->redirectedSettings = 2;
 
         // Check if NGINX Server
-        $isNginx = strpos($_SERVER["SERVER_SOFTWARE"], 'nginx') !== false ? true : false;
+        //$isNginx = strpos($_SERVER["SERVER_SOFTWARE"], 'nginx') !== false ? true : false;
 
         // BEGIN: Verify .htaccess writeability
-        $htaccessWriteable = true;
+        /*$htaccessWriteable = true;
         if( !$isNginx ) {
             $htaccessPath = get_home_path() . '.htaccess';
             $htaccessExisted = file_exists( $htaccessPath );
@@ -2995,7 +3003,7 @@ Header append Vary Accept env=REDIRECT_webp
             if( !$htaccessExisted ){
                 unlink( $htaccessPath );
             }
-        }
+        } */
         // END: Verify .htaccess writeability
 
         //by default we try to fetch the API Key from wp-config.php (if defined)
@@ -3012,6 +3020,7 @@ Header append Vary Accept env=REDIRECT_webp
         }
 
         //check all custom folders and update meta table if files appeared
+        // This var is overwritten in the Save procedure. Notice is possibly overwritten below.
         $customFolders = $this->refreshCustomFolders($notice, isset($_POST['removeFolder']) ? $_POST['removeFolder'] : null);
 
         if(isset($_POST['request']) && $_POST['request'] == 'request') {
@@ -3137,8 +3146,6 @@ Header append Vary Accept env=REDIRECT_webp
 
                 $this->_settings->createWebp = (isset($_POST['createWebp']) ? 1: 0);
 
-
-
                 if( isset( $_POST['createWebp'] ) && $_POST['createWebp'] == 'on' ){
                     if( isset( $_POST['deliverWebp'] ) && $_POST['deliverWebp'] == 'on' ){
                         if( isset( $_POST['deliverWebpType'] ) ) {
@@ -3171,16 +3178,10 @@ Header append Vary Accept env=REDIRECT_webp
                     $this->_settings->deliverWebp = 0;
                 }
 
-                //die(ShortPixelVDD($_POST));
-
-                //if(isset($_POST['optimizeRetina'])
-
                 $this->_settings->optimizeRetina = (isset($_POST['optimizeRetina']) ? 1: 0);
                 $this->_settings->optimizeUnlisted = (isset($_POST['optimizeUnlisted']) ? 1: 0);
                 $this->_settings->optimizePdfs = (isset($_POST['optimizePdfs']) ? 1: 0);
                 $this->_settings->png2jpg = (isset($_POST['png2jpg']) ? (isset($_POST['png2jpgForce']) ? 2 : 1): 0);
-
-                //die(var_dump($_POST['excludePatterns']));
 
                 if(isset($_POST['excludePatterns']) && strlen($_POST['excludePatterns'])) {
                     $patterns = array();
@@ -4037,6 +4038,8 @@ Header append Vary Accept env=REDIRECT_webp
         return $sizes;
     }
 
+/** @todo Remove here
+* */
     function getMaxIntermediateImageSize() {
         global $_wp_additional_image_sizes;
 
@@ -4059,11 +4062,16 @@ Header append Vary Accept env=REDIRECT_webp
         return array('width' => max(100, $width), 'height' => max(100, $height));
     }
 
+
     public function getOtherCompressionTypes($compressionType = false) {
         return array_values(array_diff(array(0, 1, 2), array(0 + $compressionType)));
     }
 
-    function outputHSBeacon() { ?>
+    /* Output HelpScout Beacon */
+    /* @todo Move to it's own integration */
+    function outputHSBeacon() {
+        Log::addDebug('OutputHSBeacon called on old function');
+      ?>
         <script>
             <?php
             $screen = get_current_screen();
@@ -4178,6 +4186,7 @@ Header append Vary Accept env=REDIRECT_webp
         return $this->_settings->resizeHeight;
     }
     public static function getAffiliateSufix() {
+      Log::addDebug('Function call - getAffiliateSufix should be removed');
 // not allowed anymore by WP as of Sept.27 2018
 //        return isset($_COOKIE["AffiliateShortPixel"])
 //            ? "/affiliate/" . $_COOKIE["AffiliateShortPixel"]

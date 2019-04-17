@@ -3,12 +3,14 @@
 namespace ShortPixel;
 
 
-class DebugItem
+class DebugItem // extends ShortPixelModel Too early init for this.
 {
     protected $time;
     protected $level;
     protected $message;
     protected $data = array();
+
+    protected $model;
 
     const LEVEL_ERROR = 1;
     const LEVEL_WARN = 2;
@@ -18,7 +20,7 @@ class DebugItem
     public function __construct($message, $args)
     {
         $this->level = $args['level'];
-        $this->data = $args['data'];
+        $data = $args['data'];
 
         $this->message = $message;
         $this->time = microtime(true);
@@ -26,19 +28,53 @@ class DebugItem
         // Add message to data if it seems to be some debug variable.
         if (is_object($this->message) || is_array($this->message))
         {
-          $this->data[] = $this->message;
+          $data[] = $this->message;
           $this->message = __('[Data]');
         }
-
-        if (is_array($this->data))
+        if (is_array($data) && count($data) > 0)
         {
-          foreach($this->data as $index => $item)
+          $dataType = $this->getDataType($data);
+          if ($dataType == 1)  // singular
           {
-            if (is_object($item) || is_array($item))
+              $this->data[] = print_r($data, true);
+          }
+          if ($dataType == 2)
+          {
+            foreach($data as $index => $item)
             {
-              $this->data[$index] = print_r($item, true);
+              if (is_object($item) || is_array($item))
+              {
+                $this->data[$index] = print_r($item, true);
+              }
             }
           }
+        } // if
+        elseif (! is_array($data)) // this leaves out empty default arrays
+        {
+           $this->data[] = print_r($data, true);
+        }
+    }
+
+    public function getData()
+    {
+      return array('time' => $this->time, 'level' => $this->level, 'message' => $this->message, 'data' => $this->data);
+    }
+
+    /** Test Data Array for possible values
+    *
+    * Data can be a collection of several debug vars, a single var, or just an normal array. Test if array has single types,
+    * which is a sign the array is not a collection.
+    */
+    protected function getDataType($data)
+    {
+        $single_type = array('integer', 'boolean', 'string');
+        if (in_array(gettype(reset($data)), $single_type))
+        {
+          return 1;
+        }
+        else
+        {
+          return 2;
         }
     }
 
