@@ -105,7 +105,7 @@ class ShortPixelImgToPictureWebp
         }
         $imageBase = dirname($imageBase) . '/';
         */
-        $imageBase = static::getImageBase($src);
+        $imageBase = apply_filters( 'shortpixel_webp_image_base', static::getImageBase($src), $src);
         if($imageBase === false) {
             return $match[0] . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG baseurl doesn\'t match ' . $src . '  -->' : '');
         }
@@ -128,7 +128,7 @@ class ShortPixelImgToPictureWebp
 
                 $fileWebPCompat = $imageBase . wp_basename($parts[0], '.' . pathinfo($parts[0], PATHINFO_EXTENSION)) . '.webp';
                 $fileWebP = $imageBase . wp_basename($parts[0]) . '.webp';
-                if (file_exists($fileWebP)) {
+                if (apply_filters( 'shortpixel_image_exists', file_exists($fileWebP), $fileWebP)) {
                     $srcsetWebP .= (strlen($srcsetWebP) ? ',': '')
                         . $parts[0].'.webp'
                      . (isset($parts[1]) ? ' ' . $parts[1] : '');
@@ -146,7 +146,7 @@ class ShortPixelImgToPictureWebp
 
             $fileWebPCompat = $imageBase . wp_basename($srcset, '.' . pathinfo($srcset, PATHINFO_EXTENSION)) . '.webp';
             $fileWebP = $imageBase . wp_basename($srcset) . '.webp';
-            if (file_exists($fileWebP)) {
+            if (apply_filters( 'shortpixel_image_exists', file_exists($fileWebP), $fileWebP)) {
                 $srcsetWebP = $srcset.".webp";
             } else {
                 if (file_exists($fileWebPCompat)) {
