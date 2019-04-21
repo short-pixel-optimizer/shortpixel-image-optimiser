@@ -271,18 +271,19 @@ class ShortPixelView {
                             </div>
                         </a>
                     </div>
-                    <?php if($quotaData['mainProcessedMlFiles'] > 0) {?>
-                    <div style="position: absolute;bottom: 10px;right: 10px;">
-                        <input type='submit' name='bulkRestore' id='bulkRestore' class='button' value='<?php _e('Bulk Restore Media Library','shortpixel-image-optimiser');?>' onclick="ShortPixel.confirmBulkAction('Restore', event)" style="margin-bottom:10px;"><br>
-                        <input type='submit' name='bulkCleanup' id='bulkCleanup' class='button' value='<?php _e('Bulk Delete SP Metadata','shortpixel-image-optimiser');?>' onclick="ShortPixel.confirmBulkAction('Cleanup', event)" style="width:100%">
-                        <input type='submit' name='bulkCleanupPending' id='bulkCleanupPending' class='button' value='<?php _e('Bulk Delete Pending Metadata','shortpixel-image-optimiser');?>' onclick="ShortPixel.confirmBulkAction('CleanupPending', event)" style="display:none">
-                    </div>
-
-                    <?php }
-                    }  else {?>
+                    <?php }  else {?>
                     <div class="bulk-play bulk-nothing-optimize">
                         <?php _e('Nothing to optimize! The images that you add to Media Gallery will be automatically optimized after upload.','shortpixel-image-optimiser');?>
                     </div>
+                    <?php } ?>
+                    <?php if($quotaData['mainProcessedMlFiles'] > 0) {?>
+                        <div style="position: absolute;bottom: 10px;right: 10px;">
+                            <input type='submit' name='bulkRestore' id='bulkRestore' class='button' value='<?php _e('Bulk Restore Media Library','shortpixel-image-optimiser');?>' onclick="ShortPixel.confirmBulkAction('Restore', event)" style="margin-bottom:10px;"><br>
+                            <input type='submit' name='bulkCleanup' id='bulkCleanup' class='button' value='<?php _e('Bulk Delete SP Metadata','shortpixel-image-optimiser');?>' onclick="ShortPixel.confirmBulkAction('Cleanup', event)" style="width:100%">
+                            <?php if(defined('SHORTPIXEL_DEBUG')) { ?>
+                                <input type='submit' name='bulkCleanupPending' id='bulkCleanupPending' class='button' value='<?php _e('Bulk Delete Pending Metadata','shortpixel-image-optimiser');?>' onclick="ShortPixel.confirmBulkAction('CleanupPending', event)">
+                            <?php } ?>
+                        </div>
                     <?php } ?>
                 </form>
             </div>
@@ -538,7 +539,9 @@ class ShortPixelView {
 
 
                     <input type='submit' name='bulkCleanup' id='bulkCleanup' class='button' value='<?php _e('Bulk Delete SP Metadata','shortpixel-image-optimiser');?>' onclick="ShortPixel.confirmBulkAction('Cleanup',event)" style="float: right;margin-right:10px;">
-                    <input type='submit' name='bulkCleanupPending' id='bulkCleanupPending' class='button' value='<?php _e('Bulk Delete Pending Metadata','shortpixel-image-optimiser');?>' onclick="ShortPixel.confirmBulkAction('CleanupPending', event)" style="display:none">
+                    <?php if(defined('SHORTPIXEL_DEBUG')) { ?>
+                        <input type='submit' name='bulkCleanupPending' id='bulkCleanupPending' class='button' value='<?php _e('Bulk Delete Pending Metadata','shortpixel-image-optimiser');?>' onclick="ShortPixel.confirmBulkAction('CleanupPending', event)">
+                    <?php } ?>
                 </form>
             </div>
         <?php } ?>
