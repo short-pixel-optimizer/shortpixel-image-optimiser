@@ -664,7 +664,7 @@ class ShortPixelAPI {
 
                 if($tempFile['Status'] == self::STATUS_SUCCESS) { //if it's unchanged it will still be in the array but only for WebP (handled below)
                     $tempFilePATH = $tempFile["Message"];
-                    if ( file_exists($tempFilePATH) && file_exists($targetFile) && is_writable($targetFile) ) {
+                    if ( file_exists($tempFilePATH) && (!file_exists($targetFile) || is_writable($targetFile)) ) {
                         copy($tempFilePATH, $targetFile);
                         if(ShortPixelMetaFacade::isRetina($targetFile)) {
                             $retinas ++;
