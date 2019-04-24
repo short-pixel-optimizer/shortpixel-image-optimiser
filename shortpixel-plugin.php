@@ -1,6 +1,8 @@
 <?php
 namespace ShortPixel;
 use ShortPixel\ShortPixelLogger as Log;
+use ShortPixel\NoticeController as Notice;
+
 
 /** Plugin class
 * This class is meant for: WP Hooks, init of runtime and Controller Routing.
@@ -11,10 +13,16 @@ class ShortPixelPlugin
   static $instance;
   private $paths = array('class', 'class/controller', 'class/external');
 
+  protected $is_noheaders = false;
+
   public function __construct()
   {
       $this->initRuntime();
       $this->initHooks();
+
+      if(isset($_REQUEST['noheader'])) {
+          $this->is_noheaders = true;
+      }
   }
 
   /** Create instance. This should not be needed to call anywhere else than main plugin file **/
@@ -57,6 +65,9 @@ class ShortPixelPlugin
   {
       add_action('admin_menu', array($this,'admin_pages'));
       add_action('admin_enqueue_scripts', array($this, 'admin_scripts'));
+      add_action('admin_notices', array($this, 'admin_notices')); // notices occured before page load
+      add_action('shortpixel_show_notices', array($this, 'admin_notices'));  // called in views.
+
   }
 
   public function admin_pages()
@@ -83,9 +94,26 @@ class ShortPixelPlugin
 
   }
 
+  public function admin_notices()
+  {
+      $noticeControl = Notice::getInstance();
+
+      if ($noticeControl->countNotices() > 0)
+      {
+          foreach($noticeControl->getNotices() as $notice)
+          {
+            echo $notice->getForDisplay();
+          }
+      }
+      $noticeControl->update(); // puts views, and updates
+  }
+
   /** Load Style via Route, on demand */
   public function load_style($name)
   {
+    if ($this->is_noheaders)  // fail silently, if this is a no-headers request.
+      return;
+
     if (wp_style_is($name, 'registered'))
     {
       wp_enqueue_style($name);
@@ -98,11 +126,16 @@ class ShortPixelPlugin
   /** Load Style via Route, on demand */
   public function load_script($name)
   {
+    if ($this->is_noheaders)  // fail silently, if this is a no-headers request.
+      return;
+
+
     if (wp_script_is($name, 'registered'))
     {
       wp_enqueue_script($name);
     }
     else {
+
       Log::addWarn("Script $name was asked for, but not registered");
     }
   }
@@ -115,7 +148,9 @@ class ShortPixelPlugin
   {
       global $plugin_page;
       global $shortPixelPluginInstance; //brrr @todo Find better solution for this some day.
-      $action = 'load'; // generic action on controller.
+      $default_action = 'load'; // generic action on controller.
+      $action = isset($_REQUEST['sp-action']) ? sanitize_text_field($_REQUEST['sp-action']) : $default_action;
+Log::addInfo('Request', $_REQUEST);
       $controller = false;
 
       switch($plugin_page)
@@ -124,7 +159,10 @@ class ShortPixelPlugin
             $this->load_style('shortpixel-admin');
             $this->load_style('shortpixel');
             $this->load_style('shortpixel-modal');
+            $this->load_style('sp-file-tree');
+            $this->load_script('sp-file-tree');
             $controller = \shortPixelTools::namespaceit("SettingsController");
+            $url = menu_page_url($plugin_page, false);
           break;
       }
 
@@ -132,7 +170,13 @@ class ShortPixelPlugin
       {
         $c = new $controller();
         $c->setShortPixel($shortPixelPluginInstance);
-        $c->$action();
+        $c->setControllerURL($url);
+        if (method_exists($c, $action))
+          $c->$action();
+        else {
+          Log::addWarn("Attempted Action $action on $controller does not exist!");
+          $c->$default_action();
+        }
 
       }
 

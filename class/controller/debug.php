@@ -18,7 +18,7 @@ namespace ShortPixel;
    protected $logPath = false;
 
    protected $logLevel;
-   protected $format = "[ %%time%% ] %%color%% %%level%% %%color_end%% \t %%message%%  \t ( %%time_passed%% )";
+   protected $format = "[ %%time%% ] %%color%% %%level%% %%color_end%% \t %%message%%  \t %%caller%% ( %%time_passed%% )";
    protected $format_data = "\t %%data%% ";
 
    protected $template = 'view-debug-box';
@@ -106,6 +106,12 @@ namespace ShortPixel;
       $items = $debugItem->getForFormat();
       $items['time_passed'] =  round ( ($items['time'] - $this->start_time), 5);
       $items['time'] =  date('Y-m-d H:i:s', $items['time'] );
+
+      if ( ($items['caller']) && is_array($items['caller']) && count($items['caller']) > 0)
+      {
+          $caller = $items['caller'];
+          $items['caller'] = $caller['file'] . ' in ' . $caller['function'] . '(' . $caller['line'] . ')';
+      }
 
       $line = $this->formatLine($items);
 

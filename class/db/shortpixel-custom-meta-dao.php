@@ -1,4 +1,6 @@
 <?php
+use ShortPixel\ShortPixelLogger as Log;
+
 
 class ShortPixelCustomMetaDao {
     const META_VERSION = 1;
@@ -176,6 +178,7 @@ class ShortPixelCustomMetaDao {
     public function removeFolder($folderPath) {
         $sql = "SELECT id FROM {$this->db->getPrefix()}shortpixel_folders WHERE path = %s";
         $row = $this->db->query($sql, array(stripslashes($folderPath)));
+
         if(!isset($row[0]->id)) return false;
         $id = $row[0]->id;
         $sql = "UPDATE {$this->db->getPrefix()}shortpixel_folders SET status = -1 WHERE id = %d";

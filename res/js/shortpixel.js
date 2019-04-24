@@ -62,9 +62,10 @@ var ShortPixel = function() {
         jQuery('#request_key').attr('href', jQuery('#request_key').attr('href').split('?')[0] + '?pluginemail=' + email);
     }
 
-    function validateKey(){
+    function validateKey(button){
         jQuery('#valid').val('validate');
-        jQuery('#wp_shortpixel_options').submit();
+      
+        jQuery(button).parents('form').submit();
     }
 
     jQuery("#key").keypress(function(e) {
@@ -173,8 +174,8 @@ var ShortPixel = function() {
                 ShortPixel.switchSettingsTab( target );
             }
         } */
-        jQuery("article.sp-tabs a.tab-link").click(function(){
-            var theID = jQuery(this).data("id");
+        jQuery("article.sp-tabs a.tab-link").click(function(e){
+            var theID = jQuery(e.target).data("id");
             ShortPixel.switchSettingsTab( theID );
         });
 
@@ -206,9 +207,20 @@ var ShortPixel = function() {
         else {
             location.hash = url;
         } */
+        jQuery('input[name="display_part"]').val(tab);
+        var uri = window.location.href.toString();
+        if (uri.indexOf("?") > 0) {
+            var clean_uri = uri.substring(0, uri.indexOf("?"));
+            clean_uri += '?' + jQuery.param({'page':'wp-shortpixel-settings', 'part': tab});
+            window.history.replaceState({}, document.title, clean_uri);
+        }
+
         if(section.length > 0){
             jQuery("section").removeClass("sel-tab");
-            jQuery("section#" +target).addClass("sel-tab");
+            jQuery('section .wp-shortpixel-tab-content').fadeOut(50);
+            jQuery(section).addClass("sel-tab");
+            ShortPixel.adjustSettingsTabs();
+            jQuery(section).find('.wp-shortpixel-tab-content').fadeIn(50);
         }
         if(typeof HS.beacon.suggest !== 'undefined' ){
             switch(tab){
@@ -230,10 +242,10 @@ var ShortPixel = function() {
     }
 
     function adjustSettingsTabsHeight(){
-        var sectionHeight = jQuery('section#tab-settings .wp-shortpixel-options').height() + 90;
-        sectionHeight = Math.max(sectionHeight, jQuery('section#tab-adv-settings .wp-shortpixel-options').height() + 20);
-        sectionHeight = Math.max(sectionHeight, jQuery('section#tab-resources .area1').height() + 60);
-        jQuery('#shortpixel-settings-tabs').css('height', sectionHeight);
+        var sectionHeight = jQuery('section.sel-tab').height() + 90;
+        //sectionHeight = Math.max(sectionHeight, jQuery('section#tab-adv-settings .wp-shortpixel-options').height() + 20);
+      //  sectionHeight = Math.max(sectionHeight, jQuery('section#tab-resources .area1').height() + 60);
+        jQuery('.section-wrapper').css('height', sectionHeight);
         //jQuery('#shortpixel-settings-tabs section').css('height', sectionHeight);
     }
 
@@ -505,7 +517,7 @@ var ShortPixel = function() {
                 jQuery("#addCustomFolderView").val(fullPath);
                 jQuery(".sp-folder-picker-shade").fadeOut(100);
                 jQuery(".shortpixel-modal.modal-folder-picker").css("display", "none");
-                jQuery('input[name="saveAdv"]').removeClass('hidden');
+                jQuery('#saveAdvAddFolder').removeClass('hidden');
             } else {
                 alert("Please select a folder from the list.");
             }

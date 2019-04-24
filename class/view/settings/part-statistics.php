@@ -4,10 +4,10 @@ namespace ShortPixel;
 $quotaData = $this->quotaData;
 ?>
 
-<section id="tab-stats" <?php echo ($this->display_part == 'stats') ? ' sel-tab ' :''; ?>>
+<section id="tab-stats" <?php echo ($this->display_part == 'stats') ? ' class="sel-tab" ' :''; ?>>
     <h2><a class='tab-link' href='javascript:void(0);' data-id="tab-stats"><?php _e('Statistics','shortpixel-image-optimiser');?></a></h2>
 
-    <div class="wp-shortpixel-tab-content">
+    <div class="wp-shortpixel-tab-content" style="visibility: hidden">
         <a id="facts"></a>
         <h3><?php _e('Your ShortPixel Stats','shortpixel-image-optimiser');?></h3>
         <table class="form-table">
@@ -24,8 +24,8 @@ $quotaData = $this->quotaData;
                         <div id="sp-bulk-stats" style="display:none">
                             <?php
                                 $under5PercentCount = $view->data->under5Percent; //amount of under 5% optimized imgs.
-                                $totalOptimized = $quotaData['totalProcessedFiles'];
-                                $mainOptimized = $quotaData['mainProcessedFiles']
+                                $totalOptimized = isset($quotaData['totalProcessedFiles']) ? $quotaData['totalProcessedFiles'] : '';
+                                $mainOptimized = isset($quotaData['mainProcessedFiles']) ? $quotaData['mainProcessedFiles'] : ''; 
                             ?>
                                 <div class="bulk-progress bulk-stats">
                                     <div class="label"><?php _e('Processed Images and PDFs:','shortpixel-image-optimiser');?></div><div class="stat-value"><?php echo(number_format($mainOptimized));?></div><br>
@@ -87,9 +87,9 @@ $quotaData = $this->quotaData;
                             $DaysToReset = 30 - ((($DateNow  - $DateSubscription) / 84600) % 30);
                             printf(__('%s/month, renews in %s  days, on %s ( <a href="https://shortpixel.com/login/%s" target="_blank">Need More? See the options available</a> )','shortpixel-image-optimiser'),
                                 $quotaData['APICallsQuota'], $DaysToReset,
-                                date('M d, Y', strtotime(date('M d, Y') . ' + ' . $DaysToReset . ' days')), (defined("SHORTPIXEL_HIDE_API_KEY") ? '' : $this->ctrl->getApiKey()));?><br/>
+                                date('M d, Y', strtotime(date('M d, Y') . ' + ' . $DaysToReset . ' days')), ( $this->hide_api_key) ? '' : $view->data->apiKey ); ?><br/>
                         <?php printf(__('<a href="https://shortpixel.com/login/%s/tell-a-friend" target="_blank">Join our friend referral system</a> to win more credits. For each user that joins, you receive +100 images credits/month.','shortpixel-image-optimiser'),
-                                (defined("SHORTPIXEL_HIDE_API_KEY") ? '' : $this->ctrl->getApiKey()));?>
+                                ( $this->hide_api_key ? '' : $view->data->apiKey));?>
                         <br><br>
                         <?php _e('Consumed: ','shortpixel-image-optimiser'); ?>
                         <strong><?php echo( number_format( $view->totalCallsMade['plan'] ) ); ?></strong>
@@ -150,7 +150,18 @@ $quotaData = $this->quotaData;
         <p style="padding-top: 0px; color: #818181;" ><?php _e('* Saved bandwidth is calculated at 10,000 impressions/image','shortpixel-image-optimiser');?></p>
         <p style="padding-top: 0px; color: #818181;" >
             <?php printf(__('** Increase your image quota by <a href="https://shortpixel.com/login/%s" target="_blank">upgrading your ShortPixel plan.</a>','shortpixel-image-optimiser'),
-                defined("SHORTPIXEL_HIDE_API_KEY") ? '' : $this->ctrl->getApiKey());?>
+                $this->hide_api_key ? '' : $view->data->apiKey );?>
         </p>
     </div>
 </section>
+
+<?php
+
+if( $view->resources !== null && $quotaData['APICallsQuotaOneTimeNumeric']<10000 && $quotaData['APICallsQuotaNumeric']<5000 ) {?>
+<section id="tab-resources" <?php echo ($this->display_part == 'resources') ? ' class="sel-tab" ' :''; ?>>
+    <h2><a class='tab-link' href='javascript:void(0);' data-id="tab-resources"><?php _e('WP Resources','shortpixel-image-optimiser');?></a></h2>
+    <div class="wp-shortpixel-tab-content" style="visibility: hidden">
+        <?php echo((isset($view->resources['body']) ? $view->resources['body'] : __("Please reload",'shortpixel-image-optimiser')));?>
+    </div>
+</section>
+<?php } ?>

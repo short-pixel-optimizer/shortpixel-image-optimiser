@@ -162,10 +162,10 @@ class WPShortPixel {
         $this->migrateBackupFolder();
 
         // [BS] Quite dangerous to do this in any constructor. Can hit if request is ajax to name something
-        // @todo This is intended to run only once, on activation.
+        // @todo This is intended to run only once, on activation. ( it does )
         if(!$this->_settings->redirectedSettings && !$this->_settings->verifiedKey && (!function_exists("is_multisite") || !is_multisite())) {
             $this->_settings->redirectedSettings = 1;
-            wp_redirect(admin_url("options-general.php?page=wp-shortpixel"));
+            wp_redirect(admin_url("options-general.php?page=wp-shortpixel-settings"));
             exit();
         }
 
@@ -539,7 +539,7 @@ class WPShortPixel {
             'WP_PLUGIN_URL'=>plugins_url( '', SHORTPIXEL_PLUGIN_FILE ),
             'WP_ADMIN_URL'=>admin_url(),
             'API_KEY'=> (defined("SHORTPIXEL_HIDE_API_KEY" )  || !is_admin() ) ? '' : $this->_settings->apiKey,
-            'DEFAULT_COMPRESSION'=>0 + $this->_settings->compressionType,
+            'DEFAULT_COMPRESSION'=>0 + intval($this->_settings->compressionType), // no int can happen when settings are empty still
             'MEDIA_ALERT'=>$this->_settings->mediaAlert ? "done" : "todo",
             'FRONT_BOOTSTRAP'=>$this->_settings->frontBootstrap && (!isset($this->_settings->lastBackAction) || (time() - $this->_settings->lastBackAction > 600)) ? 1 : 0,
             'AJAX_URL'=>admin_url('admin-ajax.php'),
@@ -2374,7 +2374,7 @@ class WPShortPixel {
         //$tempus = microtime(true);
         $quotaData = $this->countAllIfNeeded($quotaData, $refreshFiles);
         //echo("Count took (seconds): " . (microtime(true) - $tempus));
-        Log::addDebug('QuotaData', $quotaData);
+        //Log::addDebug('QuotaData', $quotaData);
 
         if($quotaData['APICallsQuotaNumeric'] + $quotaData['APICallsQuotaOneTimeNumeric'] > $quotaData['APICallsMadeNumeric'] + $quotaData['APICallsMadeOneTimeNumeric']) {
             $this->_settings->quotaExceeded = '0';
@@ -2787,7 +2787,7 @@ class WPShortPixel {
             )
         );
 
-        $newKeyResponse = wp_remote_post("https://shortpixel.com/free-sign-up-plugin" . $this->getAffiliateSufix(), $params);
+        $newKeyResponse = wp_remote_post("https://shortpixel.com/free-sign-up-plugin", $params);
 
         if ( is_object($newKeyResponse) && get_class($newKeyResponse) == 'WP_Error' ) {
             die(json_encode((object)array('Status' => 'fail', 'Details' => '503')));
@@ -2905,7 +2905,7 @@ class WPShortPixel {
     /** Updates HTAccess files for Webp
     * @param boolean $clear Clear removes all statements from htaccess. For disabling webp.
     */
-    protected static function alterHtaccess( $clear = false ){
+    public static function alterHtaccess( $clear = false ){
       // [BS] Backward compat. 11/03/2019 - remove possible settings from root .htaccess
         $upload_dir = wp_upload_dir();
         $upload_base = trailingslashit($upload_dir['basedir']);
@@ -3008,13 +3008,13 @@ Header append Vary Accept env=REDIRECT_webp
         // END: Verify .htaccess writeability
 
         //by default we try to fetch the API Key from wp-config.php (if defined)
-        if ( defined("SHORTPIXEL_API_KEY") && strlen(SHORTPIXEL_API_KEY) == 20)
+        /*if ( defined("SHORTPIXEL_API_KEY") && strlen(SHORTPIXEL_API_KEY) == 20)
         {
             if(!isset($_POST['save']) && (strlen($this->getApiKey()) == 0 || SHORTPIXEL_API_KEY != $this->getApiKey())) {
                 $_POST['validate'] = "validate";
             }
             $_POST['key'] = SHORTPIXEL_API_KEY;
-        }
+        } */
 
         if(isset($_GET['setsparchive'])) {
             $this->_settings->downloadArchive = intval($_GET['setsparchive']);
@@ -3022,7 +3022,7 @@ Header append Vary Accept env=REDIRECT_webp
 
         //check all custom folders and update meta table if files appeared
         // This var is overwritten in the Save procedure. Notice is possibly overwritten below.
-        $customFolders = $this->refreshCustomFolders($notice, isset($_POST['removeFolder']) ? $_POST['removeFolder'] : null);
+        //$customFolders = $this->refreshCustomFolders($notice, isset($_POST['removeFolder']) ? $_POST['removeFolder'] : null);
 
         if(isset($_POST['request']) && $_POST['request'] == 'request') {
             //a new API Key was requested
@@ -3040,21 +3040,21 @@ Header append Vary Accept env=REDIRECT_webp
             }
         }
 
-        if ( isset( $_POST["saveCloudflare"] ) ) {
+      /*  if ( isset( $_POST["saveCloudflare"] ) ) {
             $cfApi = $this->_settings->cloudflareEmail = sanitize_text_field( $_POST['cloudflare-email'] );
             $cfAuth = $this->_settings->cloudflareAuthKey = sanitize_text_field( $_POST['cloudflare-auth-key'] );
-            $cfZone = $this->_settings->cloudflareZoneID = sanitize_text_field( $_POST['cloudflare-zone-id'] );
+            $cfZone = $this->_settings->cloudflareZoneID = sanitize_text_field( $_POST['cloudflare-zone-id'] ); */
             $this->cloudflareApi->set_up($cfApi, $cfAuth, $cfZone);
-        }
+        //}
 
         if(   isset($_POST['save']) || isset($_POST['saveAdv'])
            || (isset($_POST['validate']) && $_POST['validate'] == "validate")
            || isset($_POST['removeFolder']) || isset($_POST['recheckFolder'])) {
 
             //handle API Key - common for save and validate.
-            $_POST['key'] = trim(str_replace("*", "", isset($_POST['key']) ? $_POST['key'] : $this->_settings->apiKey)); //the API key might not be set if the editing is disabled.
+            //$_POST['key'] = trim(str_replace("*", "", isset($_POST['key']) ? $_POST['key'] : $this->_settings->apiKey)); //the API key might not be set if the editing is disabled.
 
-            if ( strlen($_POST['key']) <> 20 ){
+          /*  if ( strlen($_POST['key']) <> 20 ){
                 $KeyLength = strlen($_POST['key']);
 
                 $notice = array("status" => "error",
@@ -3076,8 +3076,8 @@ Header append Vary Accept env=REDIRECT_webp
                 }
 
                 $validityData = $this->getQuotaInformation($_POST['key'], true, isset($_POST['validate']) && $_POST['validate'] == "validate", $_POST);
-
-                $this->_settings->apiKey = $_POST['key'];
+*/
+              /*  $this->_settings->apiKey = $_POST['key'];
                 if($validityData['APIKeyValid']) {
                     if(isset($_POST['validate']) && $_POST['validate'] == "validate") {
                         // delete last status if it was no valid key
@@ -3109,12 +3109,12 @@ Header append Vary Accept env=REDIRECT_webp
                         $notice = array("status" => "error", "msg" => $validityData["Message"]);
                     }
                     $this->_settings->verifiedKey = false;
-                }
-            }
+                } */
+      //      }
 
             //if save button - we process the rest of the form elements
             if(isset($_POST['save']) || isset($_POST['saveAdv'])) {
-                $this->_settings->compressionType = intval($_POST['compressionType']);
+            /*    $this->_settings->compressionType = intval($_POST['compressionType']);
                 if(isset($_POST['thumbnails'])) { $this->_settings->processThumbnails = 1; } else { $this->_settings->processThumbnails = 0; }
                 if(isset($_POST['backupImages'])) { $this->_settings->backupImages = 1; } else { $this->_settings->backupImages = 0; }
                 if(isset($_POST['cmyk2rgb'])) { $this->_settings->CMYKtoRGBconversion = 1; } else { $this->_settings->CMYKtoRGBconversion = 0; }
@@ -3124,9 +3124,9 @@ Header append Vary Accept env=REDIRECT_webp
                 $this->_settings->resizeType = (isset($_POST['resize_type']) ? sanitize_text_field($_POST['resize_type']) : false);
                 $this->_settings->resizeWidth = (isset($_POST['width']) ? intval($_POST['width']): $this->_settings->resizeWidth);
                 $this->_settings->resizeHeight = (isset($_POST['height']) ? intval($_POST['height']): $this->_settings->resizeHeight);
-                $uploadPath = realpath(SHORTPIXEL_UPLOADS_BASE);
+                $uploadPath = realpath(SHORTPIXEL_UPLOADS_BASE); */
 
-                if(isset($_POST['nextGen'])) {
+                /* if(isset($_POST['nextGen'])) {
                     WpShortPixelDb::checkCustomTables(); // check if custom tables are created, if not, create them
                     $prevNextGen = $this->_settings->includeNextGen;
                     $this->_settings->includeNextGen = 1;
@@ -3135,19 +3135,19 @@ Header append Vary Accept env=REDIRECT_webp
                     $customFolders = $ret["customFolders"];
                 } else {
                     $this->_settings->includeNextGen = 0;
-                }
-                if(isset($_POST['addCustomFolder']) && strlen($_POST['addCustomFolder']) > 0) {
+                } */
+            /*    if(isset($_POST['addCustomFolder']) && strlen($_POST['addCustomFolder']) > 0) {
                     $folderMsg = $this->spMetaDao->newFolderFromPath(stripslashes($_POST['addCustomFolder']), $uploadPath, self::getCustomFolderBase());
                     if(!$folderMsg) {
                         $notice = array("status" => "success", "msg" => __('Folder added successfully.','shortpixel-image-optimiser'));
                     }
                     $customFolders = $this->spMetaDao->getFolders();
                     $this->_settings->hasCustomFolders = time();
-                }
+                } */
 
-                $this->_settings->createWebp = (isset($_POST['createWebp']) ? 1: 0);
+              //  $this->_settings->createWebp = (isset($_POST['createWebp']) ? 1: 0);
 
-                if( isset( $_POST['createWebp'] ) && $_POST['createWebp'] == 'on' ){
+              /*  if( isset( $_POST['createWebp'] ) && $_POST['createWebp'] == 'on' ){
                     if( isset( $_POST['deliverWebp'] ) && $_POST['deliverWebp'] == 'on' ){
                         if( isset( $_POST['deliverWebpType'] ) ) {
                             switch( $_POST['deliverWebpType'] ) {
@@ -3177,14 +3177,15 @@ Header append Vary Accept env=REDIRECT_webp
                 } else {
                     if(!$isNginx) self::alterHtaccess(true);
                     $this->_settings->deliverWebp = 0;
-                }
+                } */
 
-                $this->_settings->optimizeRetina = (isset($_POST['optimizeRetina']) ? 1: 0);
+                /*$this->_settings->optimizeRetina = (isset($_POST['optimizeRetina']) ? 1: 0);
                 $this->_settings->optimizeUnlisted = (isset($_POST['optimizeUnlisted']) ? 1: 0);
                 $this->_settings->optimizePdfs = (isset($_POST['optimizePdfs']) ? 1: 0);
-                $this->_settings->png2jpg = (isset($_POST['png2jpg']) ? (isset($_POST['png2jpgForce']) ? 2 : 1): 0);
+                */
+                //$this->_settings->png2jpg = (isset($_POST['png2jpg']) ? (isset($_POST['png2jpgForce']) ? 2 : 1): 0);
 
-                if(isset($_POST['excludePatterns']) && strlen($_POST['excludePatterns'])) {
+              /*  if(isset($_POST['excludePatterns']) && strlen($_POST['excludePatterns'])) {
                     $patterns = array();
                     $items = explode(',', $_POST['excludePatterns']);
                     foreach($items as $pat) {
@@ -3199,9 +3200,10 @@ Header append Vary Accept env=REDIRECT_webp
                 } else {
                     $this->_settings->excludePatterns = array();
                 }
-                $this->_settings->frontBootstrap = (isset($_POST['frontBootstrap']) ? 1: 0);
-                $this->_settings->autoMediaLibrary = (isset($_POST['autoMediaLibrary']) ? 1: 0);
-                $this->_settings->excludeSizes = (isset($_POST['excludeSizes']) ? $_POST['excludeSizes']: array());
+                */
+          //      $this->_settings->frontBootstrap = (isset($_POST['frontBootstrap']) ? 1: 0);
+          //      $this->_settings->autoMediaLibrary = (isset($_POST['autoMediaLibrary']) ? 1: 0);
+          //      $this->_settings->excludeSizes = (isset($_POST['excludeSizes']) ? $_POST['excludeSizes']: array());
 
                 //Redirect to bulk processing if requested
                 if(   isset($_POST['save']) && $_POST['save'] == __("Save and Go to Bulk Process",'shortpixel-image-optimiser')
@@ -3210,29 +3212,29 @@ Header append Vary Accept env=REDIRECT_webp
                     exit();
                 }
             }
-            if(isset($_POST['removeFolder']) && strlen(($_POST['removeFolder']))) {
+            /*if(isset($_POST['removeFolder']) && strlen(($_POST['removeFolder']))) {
                 $this->spMetaDao->removeFolder($_POST['removeFolder']);
                 $customFolders = $this->spMetaDao->getFolders();
                 $_POST["saveAdv"] = true;
-            }
+            } */
             if(isset($_POST['recheckFolder']) && strlen(($_POST['recheckFolder']))) {
                 //$folder->fullRefreshCustomFolder($_POST['recheckFolder']); //aici singura solutie pare callback care spune daca exita url-ul complet
             }
         }
 
         //now output headers. They were prevented with noheaders=true in the form url in order to be able to redirect if bulk was pressed
-        if(isset($_REQUEST['noheader'])) {
+      /*  if(isset($_REQUEST['noheader'])) {
             require_once(ABSPATH . 'wp-admin/admin-header.php');
-        }
+        } */
 
         //empty backup
-        if(isset($_POST['emptyBackup'])) {
+        /*if(isset($_POST['emptyBackup'])) {
             $this->emptyBackup();
-        }
+        } */
 
-        $quotaData = $this->checkQuotaAndAlert(isset($validityData) ? $validityData : null, isset($_GET['checkquota']));
+        //$quotaData = $this->checkQuotaAndAlert(isset($validityData) ? $validityData : null, isset($_GET['checkquota']));
 
-        if($this->hasNextGen) {
+/*        if($this->hasNextGen) {
             $ngg = array_map(array('ShortPixelNextGenAdapter','pathToAbsolute'), ShortPixelNextGenAdapter::getGalleries());
             //die(var_dump($ngg));
             for($i = 0; $i < count($customFolders); $i++) {
@@ -3240,14 +3242,14 @@ Header append Vary Accept env=REDIRECT_webp
                     $customFolders[$i]->setType("NextGen");
                 }
             }
-        }
+        } */
 
-        $showApiKey = (   (is_main_site() || (function_exists("is_multisite") && is_multisite() && !defined("SHORTPIXEL_API_KEY")))
+/*        $showApiKey = (   (is_main_site() || (function_exists("is_multisite") && is_multisite() && !defined("SHORTPIXEL_API_KEY")))
                        && !defined("SHORTPIXEL_HIDE_API_KEY"));
-        $editApiKey = !defined("SHORTPIXEL_API_KEY") && $showApiKey;
+        $editApiKey = !defined("SHORTPIXEL_API_KEY") && $showApiKey; */
 
         if($this->_settings->verifiedKey) {
-            $fileCount = number_format($this->_settings->fileCount);
+            /* $fileCount = number_format($this->_settings->fileCount);
             $savedSpace = self::formatBytes($this->_settings->savedSpace,2);
             $averageCompression = $this->getAverageCompression();
             $savedBandwidth = self::formatBytes($this->_settings->savedSpace * 10000,2);
@@ -3257,11 +3259,11 @@ Header append Vary Accept env=REDIRECT_webp
             $remainingImages = $quotaData['APICallsRemaining'];
             $remainingImages = ( $remainingImages < 0 ) ? 0 : number_format($remainingImages);
             $totalCallsMade = array( 'plan' => $quotaData['APICallsMadeNumeric'] , 'oneTime' => $quotaData['APICallsMadeOneTimeNumeric'] );
-
-            $resources = wp_remote_post($this->_settings->httpProto . "://shortpixel.com/resources-frag");
+ */
+          /*  $resources = wp_remote_post($this->_settings->httpProto . "://shortpixel.com/resources-frag");
             if(is_wp_error( $resources )) {
                 $resources = array();
-            }
+            } */
 
             $cloudflareAPI = true;
 
@@ -3278,7 +3280,7 @@ Header append Vary Accept env=REDIRECT_webp
     /** Adds NextGenGalleries to Custom Images Library
     * @param boolean $silent Will not return messages if silent
     * @return array Array for information
-    * @todo Move to a integration class
+    * @todo Move to a integration class || This can be removed after nextgen.php in externals is released.
     */
     public function addNextGenGalleriesToCustom($silent) {
         $customFolders = array();

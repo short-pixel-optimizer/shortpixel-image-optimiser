@@ -22,6 +22,22 @@ if (! defined('SHORTPIXEL_DEBUG'))
 Log::addDebug('Plugin Req Init');
 
 
+// [BS] New plugin runtime. 
+require_once('shortpixel-plugin.php'); // loads runtime and needed classes.
+new Shortpixel\ShortPixelPlugin();
+
+// @todo Temporary until main plugin file will receive it's unclutter.  Require the things loaded by new plugin main
+/*if (! class_exists('ShortPixel\ShortPixelPlugin'))
+{
+  require_once('class/shortpixel_queue.php');
+  require_once('class/shortpixel-png2jpg.php');
+  require_once('class/wp-short-pixel.php');
+  require_once('class/wp-shortpixel-settings.php');
+  require_once('class/wp-shortpixel-cloudflare-api.php');
+  require_once('class/shortpixel-tools.php');
+  require_once('class/controller/bulk-restore-all.php');
+} */
+
 //require_once('class/wp-short-pixel.php');
 //require_once('class/wp-shortpixel-settings.php');
 //require_once('class/wp-shortpixel-cloudflare-api.php');
@@ -52,7 +68,7 @@ require_once( ABSPATH . 'wp-admin/includes/image.php' );
 include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
 
 // for retro compatibility with WP < 3.5
-// @todo Move this to compatibility file. 
+// @todo Move this to compatibility file.
 if( !function_exists('wp_normalize_path') ){
     function wp_normalize_path( $path ) {
         $path = str_replace( '\\', '/', $path );

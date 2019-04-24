@@ -4,7 +4,7 @@
       <?php _e('General','shortpixel-image-optimiser');?></a>
     </h2>
 
-    <div class="wp-shortpixel-options wp-shortpixel-tab-content">
+    <div class="wp-shortpixel-options wp-shortpixel-tab-content" style="visibility: hidden">
 
     <p><?php printf(__('New images uploaded to the Media Library will be optimized automatically.<br/>If you have existing images you would like to optimize, you can use the <a href="%supload.php?page=wp-short-pixel-bulk">Bulk Optimization Tool</a>.','shortpixel-image-optimiser'),get_admin_url());?></p>
     <table class="form-table">
@@ -14,9 +14,7 @@
                 <td>
                   <?php
                   $canValidate = false;
-
                   // Several conditions for showing API key.
-
                   if ($this->hide_api_key)
                     $showApiKey = false;
                   elseif($this->is_multisite && $this->is_constant_key)
@@ -30,13 +28,13 @@
                   if($showApiKey) {
                       $canValidate = true;?>
                       <input name="key" type="text" id="key" value="<?php echo( $view->data->apiKey );?>"
-                         class="regular-text" <?php echo($editApiKey ? "" : 'disabled') ?> <?php echo $view->data->verifiedKey ? 'onkeyup="ShortPixel.apiKeyChanged()"' : '' ?>>
+                         class="regular-text" <?php echo($editApiKey ? "" : 'disabled') ?> <?php echo $this->is_verifiedkey ? 'onkeyup="ShortPixel.apiKeyChanged()"' : '' ?> >
                     <?php
                       }
                       elseif(defined("SHORTPIXEL_API_KEY")) {
                         $canValidate = true;?>
                         <input name="key" type="text" id="key" disabled="true" placeholder="<?php
-                        if(defined("SHORTPIXEL_HIDE_API_KEY")) {
+                        if( $this->hide_api_key ) {
                             echo("********************");
                         } else {
                             _e('Multisite API Key','shortpixel-image-optimiser');
@@ -46,19 +44,19 @@
                         <input type="hidden" name="validate" id="valid" value=""/>
                         <span class="spinner" id="pluginemail_spinner" style="float:none;"></span>
                         <button type="button" id="validate" class="button button-primary" title="<?php _e('Validate the provided API key','shortpixel-image-optimiser');?>"
-                            onclick="ShortPixel.validateKey()" <?php echo $canValidate ? "" : "disabled"?> <?php echo $view->data->verifiedKey ? 'style="display:none;"' : '' ?>>
+                            onclick="ShortPixel.validateKey(this)" <?php echo $canValidate ? "" : "disabled"?> <?php echo $this->is_verifiedkey ? 'style="display:none;"' : '' ?>>
                             <?php _e('Validate','shortpixel-image-optimiser');?>
                         </button>
-                        <span class="shortpixel-key-valid" <?php echo $view->data->verifiedKey ? '' : 'style="display:none;"' ?>>
+                        <span class="shortpixel-key-valid" <?php echo $this->is_verifiedkey ? '' : 'style="display:none;"' ?>>
                             <span class="dashicons dashicons-yes"></span><?php _e('Your API key is valid.','shortpixel-image-optimiser');?>
                         </span>
-                    <?php if($showApiKey && !$editApiKey) { ?>
+                    <?php if($this->is_constant_key) { ?>
                         <p class="settings-info"><?php _e('Key defined in wp-config.php.','shortpixel-image-optimiser');?></p>
                     <?php } ?>
 
                 </td>
             </tr>
-    <?php if (!$view->data->verifiedKey) { //if invalid key we display the link to the API Key ?>
+    <?php if (! $this->is_verifiedkey) { //if invalid key we display the link to the API Key ?>
         </tbody>
     </table>
     <?php } else { //if valid key we display the rest of the options ?>
@@ -106,7 +104,7 @@
             </tr>
             <tr>
                 <th scope="row"><?php _e('Also include thumbnails:','shortpixel-image-optimiser');?></th>
-                <td><input name="thumbnails" type="checkbox" id="thumbnails" value="1" <?php checked($view->data->processThumbnails, '1');?>>
+                <td><input name="processThumbnails" type="checkbox" id="thumbnails" value="1" <?php checked($view->data->processThumbnails, '1');?>>
                     <label for="thumbnails"><?php _e('Apply compression also to <strong>image thumbnails.</strong> ','shortpixel-image-optimiser');?></label>
                     <?php echo($view->thumbnailsToProcess > 0 ? "(" . number_format($view->thumbnailsToProcess) . " " . __('thumbnails to optimize','shortpixel-image-optimiser') . ")" : "");?>
                     <p class="settings-info">
@@ -137,12 +135,12 @@
               ?>
                 <th scope="row"><?php _e('Resize large images','shortpixel-image-optimiser');?></th>
                 <td>
-                    <input name="resize" type="checkbox" id="resize" value="1" <?php checked( $view->data->resizeImages, '1' );?>>
+                    <input name="resizeImages" type="checkbox" id="resize" value="1" <?php checked( $view->data->resizeImages, true );?>>
                     <label for="resize"><?php _e('to maximum','shortpixel-image-optimiser');?></label>
-                    <input type="text" name="width" id="width" style="width:70px" class="resize-sizes"
+                    <input type="text" name="resizeWidth" id="width" style="width:70px" class="resize-sizes"
                            value="<?php echo( $view->data->resizeWidth > 0 ? $view->data->resizeWidth : min(924, $view->minSizes['width']) );?>" <?php echo( $resizeDisabled );?>/> <?php
                            _e('pixels wide &times;','shortpixel-image-optimiser');?>
-                    <input type="text" name="height" id="height" class="resize-sizes" style="width:70px"
+                    <input type="text" name="resizeHeight" id="height" class="resize-sizes" style="width:70px"
                            value="<?php echo( $view->data->resizeHeight > 0 ? $view->data->resizeHeight : min(924, $view->minSizes['height']) );?>" <?php echo( $resizeDisabled );?>/> <?php
                            _e('pixels high (original aspect ratio is preserved and image is not cropped)','shortpixel-image-optimiser');?>
                     <input type="hidden" id="min-width" value="<?php echo($view->minSizes['width']);?>"/>
@@ -154,7 +152,7 @@
                         </a><br/>
                     </p>
                     <div style="margin-top: 10px;">
-                        <input type="radio" name="resize_type" id="resize_type_outer" value="outer" <?php echo($view->data->resizeType == 'inner' ? '' : 'checked') ?> style="margin: -50px 10px 60px 0;">
+                        <input type="radio" name="resizeType" id="resize_type_outer" value="outer" <?php echo($view->data->resizeType == 'inner' ? '' : 'checked') ?> style="margin: -50px 10px 60px 0;">
                         <img src="<?php echo(plugins_url( 'shortpixel-image-optimiser/res/img/resize-outer.png' ));?>"
                              srcset='<?php echo(plugins_url( 'shortpixel-image-optimiser/res/img/resize-outer.png' ));?> 1x, <?php echo(plugins_url( 'shortpixel-image-optimiser/res/img/resize-outer@2x.png' ));?> 2x'
                              title="<?php _e('Sizes will be greater or equal to the corresponding value. For example, if you set the resize dimensions at 1000x1200, an image of 2000x3000px will be resized to 1000x1500px while an image of 3000x2000px will be resized to 1800x1200px','shortpixel-image-optimiser');?>">
@@ -170,10 +168,7 @@
             </tr>
         </tbody>
     </table>
-    <p class="submit">
-        <input type="submit" name="save" id="save" class="button button-primary" title="<?php _e('Save Changes','shortpixel-image-optimiser');?>" value="<?php _e('Save Changes','shortpixel-image-optimiser');?>"> &nbsp;
-        <input type="submit" name="save" id="bulk" class="button button-primary" title="<?php _e('Save and go to the Bulk Processing page','shortpixel-image-optimiser');?>" value="<?php _e('Save and Go to Bulk Process','shortpixel-image-optimiser');?>"> &nbsp;
-    </p>
+
     </div>
     <script>
         jQuery(document).ready(function () {
@@ -183,5 +178,8 @@
         });
     </script>
   <?php } ?>
-
+  <p class="submit">
+      <input type="submit" name="save" id="save" class="button button-primary" title="<?php _e('Save Changes','shortpixel-image-optimiser');?>" value="<?php _e('Save Changes','shortpixel-image-optimiser');?>"> &nbsp;
+      <input type="submit" name="save_bulk" id="bulk" class="button button-primary" title="<?php _e('Save and go to the Bulk Processing page','shortpixel-image-optimiser');?>" value="<?php _e('Save and Go to Bulk Process','shortpixel-image-optimiser');?>"> &nbsp;
+  </p>
 </section>

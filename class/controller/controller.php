@@ -5,16 +5,18 @@ use ShortPixel\ShortPixelLogger as Log;
 class ShortPixelController
 {
   protected static $controllers = array();
+  protected static $modelsLoaded = array(); // don't require twice, limit amount of require looksups.. 
+
   protected $shortPixel;
 
-  protected $data = array(); // data array for usage with databases data and such
-
-  protected $postData = array(); // data coming from form posts.
-  protected $is_form_submit = false;
-
-  protected $view; // object to use in the view.
-
+  protected $model;
   protected $template = null; // template name to include when loading.
+  protected $data = array(); // data array for usage with databases data and such
+  protected $postData = array(); // data coming from form posts.
+  protected $mapper; // Mapper is array of View Name => Model Name. Convert between the two
+  protected $is_form_submit = false;
+  protected $view; // object to use in the view.
+  protected $url; // if controller is home to a page, sets the URL here. For redirects and what not.
 
   public static function init()
   {
@@ -49,6 +51,14 @@ class ShortPixelController
     $this->view->notices =  null; // Notices of class notice, for everything noticable
     $this->view->data = null;  // Data(base), to separate from regular view data
 
+
+  }
+
+  /* Check if postData has been submitted.
+  * This function should always be called at any ACTION function ( load, load_$action etc ).
+  */
+  protected function checkPost()
+  {
     if (isset($_POST) && count($_POST) > 0)
     {
       $this->is_form_submit = true;
@@ -70,7 +80,7 @@ class ShortPixelController
   *
   *
   */
-  public function loadView($template = null)
+  protected function loadView($template = null)
   {
       if (is_null($this->template) && is_null($template))
       {
@@ -98,22 +108,40 @@ class ShortPixelController
   *
   * @param string $name Name of the model
   */
-  public function loadModel($name){
+  protected function loadModel($name){
      $path = \ShortPixelTools::getPluginPath() . 'class/model/' . $name . '_model.php';
 
-     if(file_exists($path)){
-          require($path);
-     }
-     else {
-       Log::addError('Model $name could not be found');
+     if (! in_array($name, self::$modelsLoaded))
+     {
+       self::$modelsLoaded[] = $name;
+       if(file_exists($path)){
+            require_once($path);
+       }
+       else {
+         Log::addError('Model $name could not be found');
+       }
      }
 }
 
-  /** Accepts POST data and applies sanitization to it.
+  /** Accepts POST data, maps, checks missing fields, and applies sanitization to it.
   * @param array $post POST data
   */
   protected function processPostData($post)
   {
+
+    // If there is something to map, map.
+    if ($this->mapper && is_array($this->mapper) && count($this->mapper) > 0)
+    {
+      foreach($this->mapper as $item => $replace)
+      {
+        if ( isset($post[$item]))
+        {
+          $post[$replace] = $post[$item];
+          unset($post[$item]);
+        }
+      }
+    }
+
     if (is_null($this->model))
     {
       foreach($post as $name => $value )
@@ -124,22 +152,15 @@ class ShortPixelController
     }
 
     $model = $this->model;
-    foreach($post as $name => $value)
-    {
-        $value = $model->sanitize($name, $value);
-        if ($value !== null)
-          $this->postData[$name] = $value;
-        else {
-          Log::addWarn("Provided field $name not part of model");
-        }
+    $this->postData = $model->getSanitizedData($post);
 
-    }
-
+    return $this->postData;
 
   }
 
+  public function setControllerURL($url)
+  {
+    $this->url = $url;
+  }
 
-
-
-
-}
+} // controller

@@ -41,7 +41,7 @@ namespace ShortPixel;
     }
     ?>
 
-    <div class="wp-shortpixel-options wp-shortpixel-tab-content">
+    <div class="wp-shortpixel-options wp-shortpixel-tab-content" style='visibility: hidden'>
     <table class="form-table">
         <tbody>
             <tr>
@@ -107,16 +107,15 @@ namespace ShortPixel;
                     <div class='addCustomFolder'>
 
                       <input type="hidden" name="removeFolder" id="removeFolder"/>
-                      <input type="hidden" name="recheckFolder" id="removeFolder"/>
                       <p class='add-folder-text'><strong><?php _e('Add a custom folder', 'shortpixel-image-optimiser'); ?></strong></p>
-                      <input type="text" name="addCustomFolderView" id="addCustomFolderView" class="regular-text" value="<?php echo($addedFolder);?>" disabled style="">&nbsp;
-                      <input type="hidden" name="addCustomFolder" id="addCustomFolder" value="<?php echo($addedFolder);?>"/>
+                      <input type="text" name="addCustomFolderView" id="addCustomFolderView" class="regular-text" value="" disabled style="">&nbsp;
+                      <input type="hidden" name="addCustomFolder" id="addCustomFolder" value=""/>
                       <input type="hidden" id="customFolderBase" value="<?php echo $this->shortPixel->getCustomFolderBase(); ?>">
 
                       <a class="button select-folder-button" title="<?php _e('Select the images folder on your server.','shortpixel-image-optimiser');?>" href="javascript:void(0);">
                           <?php _e('Select ...','shortpixel-image-optimiser');?>
                       </a>
-                    <input type="submit" name="saveAdv" id="saveAdvAddFolder" class="button button-primary hidden" title="<?php _e('Add this Folder','shortpixel-image-optimiser');?>" value="<?php _e('Add this Folder','shortpixel-image-optimiser');?>">
+                    <input type="submit" name="save" id="saveAdvAddFolder" class="button button-primary hidden" title="<?php _e('Add this Folder','shortpixel-image-optimiser');?>" value="<?php _e('Add this Folder','shortpixel-image-optimiser');?>">
                     <p class="settings-info">
                         <?php _e('Use the Select... button to select site folders. ShortPixel will optimize images and PDFs from the specified folders and their subfolders. The optimization status for each image or PDF in these folders can be seen in the <a href="upload.php?page=wp-short-pixel-custom">Other Media list</a>, under the Media menu.','shortpixel-image-optimiser');?>
                         <a href="https://blog.shortpixel.com/optimize-images-outside-media-library/" target="_blank" class="shortpixel-help-link">
@@ -144,7 +143,7 @@ namespace ShortPixel;
             <tr>
                 <th scope="row"><?php _e('Optimize NextGen galleries','shortpixel-image-optimiser');?></th>
                 <td>
-                    <input name="nextGen" type="checkbox" id="nextGen" value='1' <?php echo  checked($view->data->includeNextGen,'1' );?>> <label for="nextGen"><?php _e('Optimize NextGen galleries.','shortpixel-image-optimiser');?></label>
+                    <input name="includeNextGen" type="checkbox" id="nextGen" value='1' <?php echo  checked($view->data->includeNextGen,'1' );?>> <label for="nextGen"><?php _e('Optimize NextGen galleries.','shortpixel-image-optimiser');?></label>
                     <p class="settings-info">
                         <?php _e('Check this to add all your current NextGen galleries to the custom folders list and to also have all the future NextGen galleries and images optimized automatically by ShortPixel.','shortpixel-image-optimiser');?>
                     </p>
@@ -191,7 +190,7 @@ namespace ShortPixel;
                         </a>
                     </p>
                     <div class="deliverWebpSettings">
-                        <input name="deliverWebp" type="checkbox" id="deliverWebp" <?php checked( ($view->data->deliverWebp > 0), true);?>>
+                        <input name="deliverWebp" type="checkbox" id="deliverWebp" value="1" <?php checked( ($view->data->deliverWebp > 0), true);?>>
                         <label for="deliverWebp">
                             <?php _e('Deliver the WebP versions of the images in the front-end:','shortpixel-image-optimiser');?>
                         </label>
@@ -340,8 +339,8 @@ namespace ShortPixel;
         </tbody>
     </table>
     <p class="submit">
-        <input type="submit" name="saveAdv" id="saveAdv" class="button button-primary" title="<?php _e('Save Changes','shortpixel-image-optimiser');?>" value="<?php _e('Save Changes','shortpixel-image-optimiser');?>"> &nbsp;
-        <input type="submit" name="saveAdv" id="bulkAdvGo" class="button button-primary" title="<?php _e('Save and go to the Bulk Processing page','shortpixel-image-optimiser');?>" value="<?php _e('Save and Go to Bulk Process','shortpixel-image-optimiser');?>"> &nbsp;
+        <input type="submit" name="save" id="saveAdv" class="button button-primary" title="<?php _e('Save Changes','shortpixel-image-optimiser');?>" value="<?php _e('Save Changes','shortpixel-image-optimiser');?>"> &nbsp;
+        <input type="submit" name="save_bulk" id="bulkAdvGo" class="button button-primary" title="<?php _e('Save and go to the Bulk Processing page','shortpixel-image-optimiser');?>" value="<?php _e('Save and Go to Bulk Process','shortpixel-image-optimiser');?>"> &nbsp;
     </p>
     </div>
     <script>

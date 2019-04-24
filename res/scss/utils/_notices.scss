@@ -1,0 +1,17 @@
+
+.shortpixel.notice
+{
+   //padding: 18px;
+   min-height: 50px;
+   padding: 8px;
+   img
+   {
+     display:inline-block;
+     margin: 0 25px 0 0;
+     max-height: 50px;
+   }
+   .notice-dismiss
+   {
+     margin-top: 10px;
+   }
+}

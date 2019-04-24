@@ -2,12 +2,12 @@
 namespace ShortPixel;
 ?>
 
-    <section id="tab-cloudflare" <?php echo ($this->display_part == 'cloudflare') ? ' sel-tab ' :''; ?>>
+    <section id="tab-cloudflare" <?php echo ($this->display_part == 'cloudflare') ? ' class="sel-tab" ' :''; ?>>
         <h2><a class='tab-link' href='javascript:void(0);'
                data-id="tab-cloudflare"><?php _e('Cloudflare API', 'shortpixel-image-optimiser'); ?></a>
         </h2>
 
-        <div class="wp-shortpixel-tab-content">
+        <div class="wp-shortpixel-tab-content" style="visibility: hidden">
             <?php
 
             if(! $this->is_curl_installed) {
@@ -23,7 +23,7 @@ namespace ShortPixel;
                         <label for="cloudflare-email"><?php _e('Cloudflare E-mail:', 'shortpixel-image-optimiser'); ?></label>
                     </th>
                     <td>
-                        <input name="cloudflare-email" type="text" id="cloudflare-email" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>
+                        <input name="cloudflareEmail" type="text" id="cloudflare-email" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>
                                value="<?php echo(esc_html($view->data->cloudflareEmail)); ?>" class="regular-text">
                         <p class="settings-info">
                             <?php _e('The e-mail address you use to login to CloudFlare.','shortpixel-image-optimiser');?>
@@ -35,7 +35,7 @@ namespace ShortPixel;
                                 for="cloudflare-auth-key"><?php _e('Global API Key:', 'shortpixel-image-optimiser'); ?></label>
                     </th>
                     <td>
-                        <input name="cloudflare-auth-key" type="text" id="cloudflare-auth-key" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>
+                        <input name="cloudflareAuthKey" type="text" id="cloudflare-auth-key" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>
                                value="<?php echo(esc_html($view->data->cloudflareAuthKey)); ?>" class="regular-text">
                         <p class="settings-info">
                             <?php _e("This can be found when you're logged into your account, on the My Profile page:",'shortpixel-image-optimiser');?> <a href='https://www.cloudflare.com/a/profile' target='_blank'>https://www.cloudflare.com/a/profile</a>
@@ -47,7 +47,7 @@ namespace ShortPixel;
                                 for="cloudflare-zone-id"><?php _e('Zone ID:', 'shortpixel-image-optimiser'); ?></label>
                     </th>
                     <td>
-                        <input name="cloudflare-zone-id" type="text" id="cloudflare-zone-id" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>
+                        <input name="cloudflareZoneID" type="text" id="cloudflare-zone-id" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>
                                value="<?php echo(esc_html($view->data->cloudflareZoneID)); ?>" class="regular-text">
                         <p class="settings-info">
                             <?php _e('This can be found in your Cloudflare account in the "Overview" section for your domain.','shortpixel-image-optimiser');?>

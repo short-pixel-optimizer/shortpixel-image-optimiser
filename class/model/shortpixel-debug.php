@@ -9,6 +9,7 @@ class DebugItem // extends ShortPixelModel Too early init for this.
     protected $level;
     protected $message;
     protected $data = array();
+    protected $caller = false; // array when filled
 
     protected $model;
 
@@ -25,6 +26,8 @@ class DebugItem // extends ShortPixelModel Too early init for this.
         $this->message = $message;
         $this->time = microtime(true);
 
+        $this->setCaller();
+
         // Add message to data if it seems to be some debug variable.
         if (is_object($this->message) || is_array($this->message))
         {
@@ -38,13 +41,13 @@ class DebugItem // extends ShortPixelModel Too early init for this.
           {
               $this->data[] = print_r($data, true);
           }
-          if ($dataType == 2)
+          if ($dataType == 2) //array
           {
             foreach($data as $index => $item)
             {
               if (is_object($item) || is_array($item))
               {
-                $this->data[$index] = print_r($item, true);
+                $this->data[] = print_r($item, true);
               }
             }
           }
@@ -57,7 +60,7 @@ class DebugItem // extends ShortPixelModel Too early init for this.
 
     public function getData()
     {
-      return array('time' => $this->time, 'level' => $this->level, 'message' => $this->message, 'data' => $this->data);
+      return array('time' => $this->time, 'level' => $this->level, 'message' => $this->message, 'data' => $this->data, 'caller' => $this->caller);
     }
 
     /** Test Data Array for possible values
@@ -80,6 +83,7 @@ class DebugItem // extends ShortPixelModel Too early init for this.
 
     public function getForFormat()
     {
+      $data = $this->getData();
       switch($this->level)
       {
           case self::LEVEL_ERROR:
@@ -102,7 +106,26 @@ class DebugItem // extends ShortPixelModel Too early init for this.
       }
       $color_end = "\033[0m";
 
-      return array('time' => $this->time, 'level' => $level, 'message' => $this->message, 'data' => $this->data, 'color' => $color, 'color_end' => $color_end);
+      $data['color'] = $color;
+      $data['color_end'] = $color_end;
+      $data['level'] = $level;
+
+      return $data;
+
+      //return array('time' => $this->time, 'level' => $level, 'message' => $this->message, 'data' => $this->data, 'color' => $color, 'color_end' => $color_end, 'caller' =>  $this->caller);
+
+    }
+
+    protected function setCaller()
+    {
+        $debug=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,5);
+        $i = 4;
+        if (isset($debug[$i]))
+        {
+          $info = $debug[$i];
+          $this->caller = array('line' => $info['line'], 'file' => basename($info['file']), 'function' => $info['function']);
+        }
+
 
     }
 

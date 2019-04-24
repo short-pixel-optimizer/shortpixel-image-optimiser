@@ -103,27 +103,27 @@ class WPShortPixelSettings extends ShortPixel\ShortPixelModel {
         //'' => array('key' => 'wp-short-pixel-', 'default' => null),
     );
 
-    // This  array --  field_name -> sanitize_mask
+    // This  array --  field_name -> (s)anitize mask
     protected $model = array(
         'apiKey' => array('s' => 'string'), // string
-        'verifiedKey' => array('s' => 'string'), // string
+    //    'verifiedKey' => array('s' => 'string'), // string
         'compressionType' => array('s' => 'int'), // int
         'resizeWidth' => array('s' => 'int'), // int
         'resizeHeight' => array('s' => 'int'), // int
         'processThumbnails' => array('s' => 'boolean'), // checkbox
         'backupImages' => array('s' => 'boolean'), // checkbox
-        'keepExif' => array('s' => 'boolean'), // checkbox
+        'keepExif' => array('s' => 'int'), // checkbox
         'resizeImages' => array('s' => 'boolean'),
         'resizeType' => array('s' => 'string'),
         'includeNextGen' => array('s' => 'boolean'), // checkbox
-        'png2jpg' => array('s' => 'boolean'), // checkbox
+        'png2jpg' => array('s' => 'int'), // checkbox
         'CMYKtoRGBconversion' => array('s' => 'boolean'), //checkbox
         'createWebp' => array('s' => 'boolean'), // checkbox
-        'deliverWebp' => array('s' => 'boolean'), // checkbox
+        'deliverWebp' => array('s' => 'int'), // checkbox
         'optimizeRetina' => array('s' => 'boolean'), // checkbox
         'optimizeUnlisted' => array('s' => 'boolean'), // $checkbox
         'optimizePdfs' => array('s' => 'boolean'), //checkbox
-        'excludePatterns' => array('s' => 'array'), // Array
+        'excludePatterns' => array('s' => 'exception'), //  - processed, multi-layer, so skip
         'siteAuthUser' => array('s' => 'string'), // string
         'siteAuthPass' => array('s' => 'string'), // string
         'frontBootstrap' => array('s' =>'boolean'), // checkbox
@@ -135,30 +135,11 @@ class WPShortPixelSettings extends ShortPixel\ShortPixelModel {
         'savedSpace' => array('s' => 'skip'),
         'fileCount' => array('s' => 'skip'), // int
         'under5Percent' => array('s' => 'skip'), // int
-
-
-
     );
 
+    // @todo Eventually, this should not happen onLoad, but on demand.
       public function __construct() {
         $this->populateOptions();
-    }
-
-    public function getModel()
-    {
-      return $this->model;
-    }
-
-    //public function getModel
-
-    public function getData()
-    {
-      $data = array();
-      foreach($this->model as $item => $options)
-      {
-        $data[$item] = $this->{$item};
-      }
-      return $data;
     }
 
     public function populateOptions() {
