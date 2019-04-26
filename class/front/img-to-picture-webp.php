@@ -258,6 +258,9 @@ class ShortPixelImgToPictureWebp
     public static function getImageBase($src)
     {
       $updir = wp_upload_dir();
+      if(substr($src, 0, 2) == '//') {
+          $src = (stripos($_SERVER['SERVER_PROTOCOL'],'https') === false ? 'http:' : 'https:') . $src;
+      }
       $proto = explode("://", $src);
       if (count($proto) > 1) {
           //check that baseurl uses the same http/https proto and if not, change
@@ -279,6 +282,7 @@ class ShortPixelImgToPictureWebp
           $urlParsed = parse_url($src);
           $baseParsed = parse_url($updir['baseurl']);
 
+          //TODO - Cases when warning index 'host' not found (relative URL)
           $srcHost = array_reverse(explode('.', $urlParsed['host']));
           $baseurlHost = array_reverse(explode('.', $baseParsed['host']));
 
