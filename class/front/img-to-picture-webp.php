@@ -257,6 +257,16 @@ class ShortPixelImgToPictureWebp
     **/
     public static function getImageBase($src)
     {
+        $urlParsed = parse_url($src);
+        if(!isset($urlParsed['host'])) {
+            if($src[0] == '/') { //absolute URL, current domain
+                $src = get_site_url() . $src;
+            } else {
+                global $wp;
+                $src = trailingslashit(home_url( $wp->request )) . $src;
+            }
+            $urlParsed = parse_url($src);
+        }
       $updir = wp_upload_dir();
       if(substr($src, 0, 2) == '//') {
           $src = (stripos($_SERVER['SERVER_PROTOCOL'],'https') === false ? 'http:' : 'https:') . $src;
@@ -279,10 +289,8 @@ class ShortPixelImgToPictureWebp
       }
 
       if ($imageBase == $src) { //maybe the site uses a CDN or a subdomain? - Or relative link
-          $urlParsed = parse_url($src);
           $baseParsed = parse_url($updir['baseurl']);
 
-          //TODO - Cases when warning index 'host' not found (relative URL)
           $srcHost = array_reverse(explode('.', $urlParsed['host']));
           $baseurlHost = array_reverse(explode('.', $baseParsed['host']));
 
