@@ -203,7 +203,7 @@ class ShortPixelMetaFacade {
                 //status and optimization percent in the same time, for sorting purposes :)
                 $status = $this->meta->getStatus();
                 if($status == 2) {
-                    $status += 0.01 * $rawMeta['ShortPixelImprovement'];
+                    $status += 0.01 * intval($rawMeta['ShortPixelImprovement']);
                 }
                 update_post_meta($_ID, '_shortpixel_status', number_format($status, 4));
 

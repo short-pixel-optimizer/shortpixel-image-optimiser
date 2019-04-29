@@ -1083,7 +1083,9 @@ class WPShortPixel {
                     }
                     elseif(   $this->_settings->processThumbnails && $meta->getThumbsOpt() !== null
                            && ($meta->getThumbsOpt() == 0 && count($meta->getThumbs()) > 0
-                               || $meta->getThumbsOpt() < WpShortPixelMediaLbraryAdapter::countSizesNotExcluded($meta->getThumbs(), $this->_settings->excludeSizes) && is_array($meta->getThumbsOptList()))) { //thumbs were chosen in settings
+                               || is_array($meta->getThumbsOptList())
+                                  && count(array_diff(array_keys(WpShortPixelMediaLbraryAdapter::getSizesNotExcluded($meta->getThumbs(), $this->_settings->excludeSizes)),
+                                                      $meta->getThumbsOptList())))) { //thumbs were chosen in settings
                         $URLsAndPATHs = $item->getURLsAndPATHs(true, true, $this->_settings->optimizeRetina, $this->_settings->excludeSizes);
                         if(count($URLsAndPATHs["URLs"])) {
                             $meta->setThumbsTodo(true);
