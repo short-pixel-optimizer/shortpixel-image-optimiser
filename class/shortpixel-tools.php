@@ -23,7 +23,7 @@ class ShortPixelTools {
 
     public static function namespaceit($name)
     {
-      return '\ShortPixel\\'  . $name; 
+      return '\ShortPixel\\'  . $name;
     }
 
     public static function requestIsFrontendAjax()
@@ -88,6 +88,7 @@ class ShortPixelTools {
     public static function sendJSON($response) {
         @header( 'Content-Type: application/json; charset=' . get_option( 'blog_charset' ) );
         die(json_encode($response));
+        //wp_send_json($response); // send json proper, dies.
     }
 
 

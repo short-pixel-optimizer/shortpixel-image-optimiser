@@ -81,6 +81,7 @@ function shortpixelInit() {
        )
     {
         require_once('wp-shortpixel-req.php');
+
         $shortPixelPluginInstance = new WPShortPixel;
     }
 
@@ -158,7 +159,9 @@ function shortPixelConvertImgToPictureAddWebp($content) {
         //for AMP pages the <picture> tag is not allowed
         return $content . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG is AMP -->' : '');
     }
+    require_once('wp-shortpixel-req.php');
     require_once('class/front/img-to-picture-webp.php');
+
     return ShortPixelImgToPictureWebp::convert($content);// . "<!-- PICTURE TAGS BY SHORTPIXEL -->";
 }
 function shortPixelAddPictureJs() {

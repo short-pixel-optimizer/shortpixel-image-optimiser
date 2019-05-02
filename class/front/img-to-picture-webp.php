@@ -4,6 +4,10 @@
  * thanks to the Responsify WP plugin for some of the code
  */
 
+use ShortPixel\DebugItem as DebugItem;
+use ShortPixel\ShortPixelLogger as Log;
+
+
 class ShortPixelImgToPictureWebp
 {
     public static function lazyGet($img, $type)
@@ -26,7 +30,8 @@ class ShortPixelImgToPictureWebp
     {
         // Don't do anything with the RSS feed.
         if (is_feed() || is_admin()) {
-            return $content . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG convert is_feed or is_admin -->' : '');
+            return $content; // . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!--  -->' : '');
+            Log::addInfo('SPDBG convert is_feed or is_admin');
         }
         $content = preg_replace_callback('/<img[^>]*>/', array('self', 'convertImage'), $content);
         //$content = preg_replace_callback('/background.*[^:](url\(.*\)[,;])/im', array('self', 'convertInlineStyle'), $content);
@@ -34,7 +39,9 @@ class ShortPixelImgToPictureWebp
         // [BS] No callback because we need preg_match_all
         $content = self::testInlineStyle($content);
       //  $content = preg_replace_callback('/background.*[^:]url\([\'|"](.*)[\'|"]\)[,;]/imU',array('self', 'convertInlineStyle'), $content);
-        return $content . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG WebP converted -->' : '');
+        Log::addInfo('SPDBG WebP converted');
+
+        return $content; // . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG WebP converted -->' : '');
 
     }
 
@@ -42,7 +49,8 @@ class ShortPixelImgToPictureWebp
     {
         // Do nothing with images that have the 'sp-no-webp' class.
         if (strpos($match[0], 'sp-no-webp')) {
-            return $match[0] . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG convertImage sp-no-webp -->' : '');
+            return $match[0]; //. (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG convertImage sp-no-webp -->' : '');
+            Log::addInfo('SPDBG convertImage sp-no-webp');
         }
 
         $img = self::get_attributes($match[0]);
@@ -107,7 +115,8 @@ class ShortPixelImgToPictureWebp
         */
         $imageBase = apply_filters( 'shortpixel_webp_image_base', static::getImageBase($src), $src);
         if($imageBase === false) {
-            return $match[0] . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG baseurl doesn\'t match ' . $src . '  -->' : '');
+            return $match[0]; // . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG baseurl doesn\'t match ' . $src . '  -->' : '');
+            Log::addInfo('SPDBG baseurl doesn\'t match ' . $src);
         }
 
         // We don't wanna have src-ish attributes on the <picture>
@@ -156,7 +165,8 @@ class ShortPixelImgToPictureWebp
         }
         //return($match[0]. "<!-- srcsetTZF:".$srcsetWebP." -->");
         if (!strlen($srcsetWebP)) {
-            return $match[0] . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG no srcsetWebP found (' . $srcsetWebP . ') -->' : '');
+            return $match[0]; //. (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG no srcsetWebP found (' . $srcsetWebP . ') -->' : '');
+            Log::addInfo(' SPDBG no srcsetWebP found (' . $srcsetWebP . ')');
         }
 
         //add the exclude class so if this content is processed again in other filter, the img is not converted again in picture

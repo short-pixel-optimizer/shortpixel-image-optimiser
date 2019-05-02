@@ -1,3 +1,13 @@
+.shortpixel.notice {
+  min-height: 50px;
+  padding: 8px; }
+  .shortpixel.notice img {
+    display: inline-block;
+    margin: 0 25px 0 0;
+    max-height: 50px; }
+  .shortpixel.notice .notice-dismiss {
+    margin-top: 10px; }
+
 .short-pixel-bulk-page.bulk-restore-all ol li {
   font-weight: 700; }
 .short-pixel-bulk-page.bulk-restore-all section.select_folders {
@@ -33,3 +43,10 @@
     max-width: 70%; }
   #shortpixel-settings-tabs #tab-adv-settings .addCustomFolder input[name="saveAdv"] {
     margin-left: 8px; }
+
+.settings_page_wp-shortpixel-settings .top-menu {
+  font-size: 18px; }
+  .settings_page_wp-shortpixel-settings .top-menu a {
+    font-size: 18px; }
+.settings_page_wp-shortpixel-settings .wp-shortpixel-tab-content {
+  transition: all 1000ms linear; }
