@@ -64,6 +64,7 @@ class ShortPixelImgToPictureWebp
         $sizesPrefix = $sizesInfo['prefix'];
 
         $altAttr = isset($img['alt']) && strlen($img['alt']) ? ' alt="' . $img['alt'] . '"' : '';
+        $idAttr = isset($img['id']) && strlen($img['id']) ? ' id="' . $img['id'] . '"' : '';
 
         //check if there are webps
         /*$id = $thisClass::url_to_attachment_id( $src );
@@ -117,6 +118,7 @@ class ShortPixelImgToPictureWebp
         unset($img['srcset']);
         unset($img['sizes']);
         unset($img['alt']);
+        unset($img['id']);
         $srcsetWebP = '';
 
         if ($srcset) {
@@ -165,7 +167,7 @@ class ShortPixelImgToPictureWebp
         return '<picture ' . self::create_attributes($img) . '>'
         .'<source ' . $srcsetPrefix . 'srcset="' . $srcsetWebP . '"' . ($sizes ? ' ' . $sizesPrefix . 'sizes="' . $sizes . '"' : '') . ' type="image/webp">'
         .'<source ' . $srcsetPrefix . 'srcset="' . $srcset . '"' . ($sizes ? ' ' . $sizesPrefix . 'sizes="' . $sizes . '"' : '') . '>'
-        .'<img ' . $srcPrefix . 'src="' . $src . '" ' . self::create_attributes($img) . $altAttr
+        .'<img ' . $srcPrefix . 'src="' . $src . '" ' . self::create_attributes($img) . $idAttr . $altAttr
             . (strlen($srcset) ? ' srcset="' . $srcset . '"': '') . (strlen($sizes) ? ' sizes="' . $sizes . '"': '') . '>'
         .'</picture>';
     }
