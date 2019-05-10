@@ -643,6 +643,7 @@ class WPShortPixel {
             case 'short-pixel-bulk':
                 foreach( $mediaIds as $ID ) {
                     $meta = wp_get_attachment_metadata($ID);
+                    if(!is_array($meta)) continue;
                     if(   (   !isset($meta['ShortPixel']) //never touched by ShortPixel
                            || (isset($meta['ShortPixel']['WaitingProcessing']) && $meta['ShortPixel']['WaitingProcessing'] == true))
                        && (!isset($meta['ShortPixelImprovement']) || $meta['ShortPixelImprovement'] == __('Optimization N/A','shortpixel-image-optimiser'))) {
