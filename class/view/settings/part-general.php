@@ -129,6 +129,12 @@
                         Unless you really need that data to be preserved, we recommend removing it as it can lead to <a href="http://blog.shortpixel.com/how-much-smaller-can-be-images-without-exif-icc" target="_blank">better compression rates</a>.','shortpixel-image-optimiser');?></p>
                 </td>
             </tr>
+            <tr class='exif_warning view-notice-row'>
+                <th scope="row">&nbsp;</th>
+                <td>
+                  <div class='view-notice warning'><p><?php printf(__('Warning - Converting from JPG to PNG will %s not %s keep the EXIF-information!'), "<strong>","</strong>"); ?></p></div>
+                </td>
+            </tr>
             <tr>
               <?php  $resizeDisabled = (! $this->view->data->resizeImages) ? 'disabled' : '';
                  // @todo Inline styling here can be decluttered.
@@ -143,8 +149,8 @@
                     <input type="text" name="resizeHeight" id="height" class="resize-sizes" style="width:70px"
                            value="<?php echo( $view->data->resizeHeight > 0 ? $view->data->resizeHeight : min(924, $view->minSizes['height']) );?>" <?php echo( $resizeDisabled );?>/> <?php
                            _e('pixels high (original aspect ratio is preserved and image is not cropped)','shortpixel-image-optimiser');?>
-                    <input type="hidden" id="min-width" value="<?php echo($view->minSizes['width']);?>"/>
-                    <input type="hidden" id="min-height" value="<?php echo($view->minSizes['height']);?>"/>
+                    <input type="hidden" id="min-resizeWidth" value="<?php echo($view->minSizes['width']);?>" data-nicename="<?php _e('Width', 'shortpixel-image-optimiser'); ?>" />
+                    <input type="hidden" id="min-resizeHeight" value="<?php echo($view->minSizes['height']);?>" data-nicename="<?php _e('Height', 'shortpixel-image-optimiser'); ?>"/>
                     <p class="settings-info">
                         <?php _e('Recommended for large photos, like the ones taken with your phone. Saved space can go up to 80% or more after resizing.','shortpixel-image-optimiser');?>
                         <a href="https://blog.shortpixel.com/resize-images/" class="shortpixel-help-link" target="_blank">
@@ -170,13 +176,7 @@
     </table>
 
     </div>
-    <script>
-        jQuery(document).ready(function () {
-            ShortPixel.setupGeneralTab(document.wp_shortpixel_options.compressionType,
-                                   Math.min(924, <?php echo($view->minSizes['width']);?>),
-                                   Math.min(924, <?php echo($view->minSizes['height']);?>));
-        });
-    </script>
+
   <?php } ?>
   <p class="submit">
       <input type="submit" name="save" id="save" class="button button-primary" title="<?php _e('Save Changes','shortpixel-image-optimiser');?>" value="<?php _e('Save Changes','shortpixel-image-optimiser');?>"> &nbsp;

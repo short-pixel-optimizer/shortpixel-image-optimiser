@@ -168,6 +168,12 @@ namespace ShortPixel;
                     </label>
                 </td>
             </tr>
+            <tr class='exif_warning view-notice-row'>
+                <th scope="row">&nbsp;</th>
+                <td>
+                  <div class='view-notice warning'><p><?php printf(__('Warning - Converting from JPG to PNG will %s not %s keep the EXIF-information!'), "<strong>","</strong>"); ?></p></div>
+                </td>
+            </tr>
             <tr>
                 <th scope="row"><?php _e('CMYK to RGB conversion','shortpixel-image-optimiser');?></th>
                 <td>

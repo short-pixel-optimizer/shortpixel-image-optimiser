@@ -49,5 +49,7 @@ HelpScout::outputBeacon($view->data->apiKey);
 
 <?php // @todo inline JS ?>
 <script>
-    jQuery(document).ready(function(){ ShortPixel.initSettings() });
+    jQuery(document).ready(function(){
+        ShortPixel.initSettings();
+      });
 </script>
