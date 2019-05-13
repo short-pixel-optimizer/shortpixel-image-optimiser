@@ -72,6 +72,7 @@ class ShortPixelImgToPictureWebp
         $sizesPrefix = $sizesInfo['prefix'];
 
         $altAttr = isset($img['alt']) && strlen($img['alt']) ? ' alt="' . $img['alt'] . '"' : '';
+        $idAttr = isset($img['id']) && strlen($img['id']) ? ' id="' . $img['id'] . '"' : '';
 
         //check if there are webps
         /*$id = $thisClass::url_to_attachment_id( $src );
@@ -126,6 +127,7 @@ class ShortPixelImgToPictureWebp
         unset($img['srcset']);
         unset($img['sizes']);
         unset($img['alt']);
+        unset($img['id']);
         $srcsetWebP = '';
 
         if ($srcset) {
@@ -175,7 +177,7 @@ class ShortPixelImgToPictureWebp
         return '<picture ' . self::create_attributes($img) . '>'
         .'<source ' . $srcsetPrefix . 'srcset="' . $srcsetWebP . '"' . ($sizes ? ' ' . $sizesPrefix . 'sizes="' . $sizes . '"' : '') . ' type="image/webp">'
         .'<source ' . $srcsetPrefix . 'srcset="' . $srcset . '"' . ($sizes ? ' ' . $sizesPrefix . 'sizes="' . $sizes . '"' : '') . '>'
-        .'<img ' . $srcPrefix . 'src="' . $src . '" ' . self::create_attributes($img) . $altAttr
+        .'<img ' . $srcPrefix . 'src="' . $src . '" ' . self::create_attributes($img) . $idAttr . $altAttr
             . (strlen($srcset) ? ' srcset="' . $srcset . '"': '') . (strlen($sizes) ? ' sizes="' . $sizes . '"': '') . '>'
         .'</picture>';
     }
@@ -267,7 +269,20 @@ class ShortPixelImgToPictureWebp
     **/
     public static function getImageBase($src)
     {
+        $urlParsed = parse_url($src);
+        if(!isset($urlParsed['host'])) {
+            if($src[0] == '/') { //absolute URL, current domain
+                $src = get_site_url() . $src;
+            } else {
+                global $wp;
+                $src = trailingslashit(home_url( $wp->request )) . $src;
+            }
+            $urlParsed = parse_url($src);
+        }
       $updir = wp_upload_dir();
+      if(substr($src, 0, 2) == '//') {
+          $src = (stripos($_SERVER['SERVER_PROTOCOL'],'https') === false ? 'http:' : 'https:') . $src;
+      }
       $proto = explode("://", $src);
       if (count($proto) > 1) {
           //check that baseurl uses the same http/https proto and if not, change
@@ -286,7 +301,6 @@ class ShortPixelImgToPictureWebp
       }
 
       if ($imageBase == $src) { //maybe the site uses a CDN or a subdomain? - Or relative link
-          $urlParsed = parse_url($src);
           $baseParsed = parse_url($updir['baseurl']);
 
           $srcHost = array_reverse(explode('.', $urlParsed['host']));
