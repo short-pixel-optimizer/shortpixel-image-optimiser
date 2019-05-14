@@ -32,6 +32,7 @@ class ShortPixelFolder extends ShortPixelEntity{
         return false;
     }
 
+    /** This creates the general backup folder **/ 
     public static function createBackUpFolder()
     {
       // create backup folder

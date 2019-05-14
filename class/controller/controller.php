@@ -5,7 +5,7 @@ use ShortPixel\ShortPixelLogger as Log;
 class ShortPixelController
 {
   protected static $controllers = array();
-  protected static $modelsLoaded = array(); // don't require twice, limit amount of require looksups.. 
+  protected static $modelsLoaded = array(); // don't require twice, limit amount of require looksups..
 
   protected $shortPixel;
 
@@ -80,7 +80,7 @@ class ShortPixelController
   *
   *
   */
-  protected function loadView($template = null)
+  public function loadView($template = null)
   {
       if (is_null($this->template) && is_null($template))
       {
