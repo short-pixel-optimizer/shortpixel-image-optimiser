@@ -614,7 +614,7 @@ class WPShortPixel {
             $tooltip = '';
             $exceedTooltip = __('ShortPixel quota exceeded. Click for details.','shortpixel-image-optimiser');
             //$link = "http://shortpixel.com/login/" . $this->_settings->apiKey;
-            $link = "options-general.php?page=wp-shortpixel";
+            $link = "options-general.php?page=wp-shortpixel-settings";
             //$blank = '_blank';
             //$icon = "shortpixel-alert.png";
         }
@@ -3775,7 +3775,7 @@ Header append Vary Accept env=REDIRECT_webp
         $defaults['wp-shortPixel'] = __('ShortPixel Compression', 'shortpixel-image-optimiser');
         if(current_user_can( 'manage_options' )) {
             $defaults['wp-shortPixel'] .=
-                      '&nbsp;<a href="options-general.php?page=wp-shortpixel#stats" title="'
+                      '&nbsp;<a href="options-general.php?page=wp-shortpixel-settings&part=stats" title="'
                     . __('ShortPixel Statistics','shortpixel-image-optimiser')
                     . '"><span class="dashicons dashicons-dashboard"></span></a>';
         }
@@ -3835,7 +3835,7 @@ Header append Vary Accept env=REDIRECT_webp
     }
 
     public function generatePluginLinks($links) {
-        $in = '<a href="options-general.php?page=wp-shortpixel">Settings</a>';
+        $in = '<a href="options-general.php?page=wp-shortpixel-settings">Settings</a>';
         array_unshift($links, $in);
         return $links;
     }

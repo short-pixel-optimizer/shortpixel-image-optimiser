@@ -68,7 +68,7 @@ class ShortPixelView {
     public static function displayApiKeyAlert()
     { ?>
         <p><?php _e('In order to start the optimization process, you need to validate your API Key in the '
-                . '<a href="options-general.php?page=wp-shortpixel">ShortPixel Settings</a> page in your WordPress Admin.','shortpixel-image-optimiser');?>
+                . '<a href="options-general.php?page=wp-shortpixel-settings">ShortPixel Settings</a> page in your WordPress Admin.','shortpixel-image-optimiser');?>
         </p>
         <p><?php _e('If you don’t have an API Key, you can get one delivered to your inbox, for free.','shortpixel-image-optimiser');?></p>
         <p><?php _e('Please <a href="https://shortpixel.com/wp-apikey' . WPShortPixel::getAffiliateSufix() . '" target="_blank">sign up to get your API key.</a>','shortpixel-image-optimiser');?>
@@ -404,7 +404,7 @@ class ShortPixelView {
                     <?php $this->displayBulkStats($quotaData['totalProcessedFiles'], $quotaData['mainProcessedFiles'], $under5PercentCount, $averageCompression, $savedSpace);?>
                 </div>
             </div>
-            <p><?php printf(__('Go to the ShortPixel <a href="%soptions-general.php?page=wp-shortpixel#stats">Stats</a>
+            <p><?php printf(__('Go to the ShortPixel <a href="%soptions-general.php?page=wp-shortpixel-settings#stats">Stats</a>
                                and see all your websites\' optimized stats. Download your detailed <a href="https://%s/v2/report.php?key=%s">Optimization Report</a>
                                to check your image optimization statistics for the last 40 days.','shortpixel-image-optimiser'),
                               get_admin_url(), SHORTPIXEL_API, (defined("SHORTPIXEL_HIDE_API_KEY") ? '' : $this->ctrl->getApiKey()) );?></p>
@@ -697,7 +697,7 @@ class ShortPixelView {
                     <span class="resumeLabel"><?php echo( !$running ? __('Resume: ','shortpixel-image-optimiser') : "");?></span>
                 </form>
                 <?php } else { ?>
-                    <a href="options-general.php?page=wp-shortpixel" class="button button-primary bulk-cancel" style="margin-left:10px"><?php _e('Manage custom folders','shortpixel-image-optimiser');?></a>
+                    <a href="options-general.php?page=wp-shortpixel-settings" class="button button-primary bulk-cancel" style="margin-left:10px"><?php _e('Manage custom folders','shortpixel-image-optimiser');?></a>
                 <?php }?>
             </div>
         <?php
@@ -771,7 +771,7 @@ class ShortPixelView {
         <?php } ?>
 
         <article id="shortpixel-settings-tabs" class="sp-tabs">
-            <form name='wp_shortpixel_options' action='options-general.php?page=wp-shortpixel&noheader=true'  method='post' id='wp_shortpixel_options'>
+            <form name='wp_shortpixel_options' action='options-general.php?page=wp-shortpixel-settings&noheader=true'  method='post' id='wp_shortpixel_options'>
                 <section <?php echo($showAdvanced ? "" : "class='sel-tab'");?> id="tab-settings">
                     <?php if($this->ctrl->getVerifiedKey()) { ?>
                     <h2><a class='tab-link' href='javascript:void(0);' data-id="tab-settings"><?php _e('General','shortpixel-image-optimiser');?></a></h2>
@@ -1420,7 +1420,7 @@ class ShortPixelView {
 	/**
 	 * @desc This form is used in WP back-end to allow users that use CloudFlare to save their settings
      *
-     * @link wp-admin/options-general.php?page=wp-shortpixel
+     * @link wp-admin/options-general.php?page=wp-shortpixel-settings
 	 */
     function display_cloudflare_settings_form()
     { ?>
@@ -1432,7 +1432,7 @@ class ShortPixelView {
             }
             ?>
             <p><?php _e("If you're using Cloudflare on your site then we advise you to fill in the details below. This will allow ShortPixel to work seamlessly with Cloudflare so that any image optimized/restored by ShortPixel will be automatically updated on Cloudflare as well.",'shortpixel-image-optimiser');?></p>
-            <form name='wp_shortpixel_cloudflareAPI' action='options-general.php?page=wp-shortpixel&noheader=true'
+            <form name='wp_shortpixel_cloudflareAPI' action='options-general.php?page=wp-shortpixel-settings&noheader=true'
               method='post' id='wp_shortpixel_cloudflareAPI'>
             <table class="form-table">
                 <tbody>
@@ -1636,9 +1636,9 @@ class ShortPixelView {
                     break;
                 case 'invalidKey':
                     if(defined("SHORTPIXEL_API_KEY")) { // multisite key - need to be validated on each site but it's not invalid
-                        ?> <?php _e('Please <a href="options-general.php?page=wp-shortpixel">go to Settings</a> to validate the API Key.','shortpixel-image-optimiser');?> <?php
+                        ?> <?php _e('Please <a href="options-general.php?page=wp-shortpixel-settings">go to Settings</a> to validate the API Key.','shortpixel-image-optimiser');?> <?php
                     } else {
-                        ?> <?php _e('Invalid API Key. <a href="options-general.php?page=wp-shortpixel">Check your Settings</a>','shortpixel-image-optimiser');?> <?php
+                        ?> <?php _e('Invalid API Key. <a href="options-general.php?page=wp-shortpixel-settings">Check your Settings</a>','shortpixel-image-optimiser');?> <?php
                     }
                     break;
                 case 'quotaExceeded':

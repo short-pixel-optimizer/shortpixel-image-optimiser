@@ -2,7 +2,7 @@
 /**
  * Plugin Name: ShortPixel Image Optimizer
  * Plugin URI: https://shortpixel.com/
- * Description: ShortPixel optimizes images automatically, while guarding the quality of your images. Check your <a href="options-general.php?page=wp-shortpixel" target="_blank">Settings &gt; ShortPixel</a> page on how to start optimizing your image library and make your website load faster.
+ * Description: ShortPixel optimizes images automatically, while guarding the quality of your images. Check your <a href="options-general.php?page=wp-shortpixel-settings" target="_blank">Settings &gt; ShortPixel</a> page on how to start optimizing your image library and make your website load faster.
  * Version: 4.13.1-DEV01
  * Author: ShortPixel
  * Author URI: https://shortpixel.com
@@ -211,7 +211,7 @@ $option = get_option('wp-short-pixel-create-webp-markup');
 if ( $option ) {
     if(shortPixelIsPluginActive('shortpixel-adaptive-images/short-pixel-ai.php')) {
         set_transient("shortpixel_thrown_notice", array('when' => 'spai', 'extra' => __('Please deactivate the ShortPixel Image Optimizer\'s
-            <a href="options-general.php?page=wp-shortpixel#adv-settings">Deliver WebP using PICTURE tag</a>
+            <a href="options-general.php?page=wp-shortpixel-settings&part=adv-settings">Deliver WebP using PICTURE tag</a>
             option when the ShortPixel Adaptive Images plugin is active.','shortpixel-image-optimiser')), 1800);
     }
     elseif( $option == 1 ){

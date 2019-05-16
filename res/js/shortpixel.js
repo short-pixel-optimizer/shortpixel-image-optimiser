@@ -64,6 +64,7 @@ var ShortPixel = function() {
     }
 
     function validateKey(button){
+      console.log('validate');
         jQuery('#valid').val('validate');
 
         jQuery(button).parents('form').submit();
@@ -96,7 +97,9 @@ var ShortPixel = function() {
     }
 
     function setupGeneralTab() {
-        var rad = document.wp_shortpixel_options.compressionType;
+        var rad = 0;
+        if (typeof document.wp_shortpixel_options !== 'undefined')
+          rad = document.wp_shortpixel_options.compressionType;
         for(var i = 0, prev = null; i < rad.length; i++) {
             rad[i].onclick = function() {
 
@@ -842,7 +845,7 @@ function showToolBarAlert($status, $message, id) {
             }
             robo.addClass("shortpixel-alert");
             robo.addClass("shortpixel-quota-exceeded");
-            jQuery("a", robo).attr("href", "options-general.php?page=wp-shortpixel");
+            jQuery("a", robo).attr("href", "options-general.php?page=wp-shortpixel-settings");
             //jQuery("a", robo).attr("target", "_blank");
             //jQuery("a div", robo).attr("title", "ShortPixel quota exceeded. Click to top-up");
             jQuery("a div", robo).attr("title", "ShortPixel quota exceeded. Click for details.");
@@ -858,7 +861,7 @@ function showToolBarAlert($status, $message, id) {
         case ShortPixel.STATUS_NO_KEY:
             robo.addClass("shortpixel-alert");
             robo.addClass("shortpixel-quota-exceeded");
-            jQuery("a", robo).attr("href", "options-general.php?page=wp-shortpixel");//"http://shortpixel.com/wp-apikey");
+            jQuery("a", robo).attr("href", "options-general.php?page=wp-shortpixel-settings");//"http://shortpixel.com/wp-apikey");
             //jQuery("a", robo).attr("target", "_blank");
             jQuery("a div", robo).attr("title", "Get API Key");
             break;
