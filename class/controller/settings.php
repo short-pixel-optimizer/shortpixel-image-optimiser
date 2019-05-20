@@ -429,6 +429,7 @@ class SettingsController extends shortPixelController
       protected function processWebP($post)
       {
         $deliverwebp = 0;
+        \WPShortPixel::alterHtaccess(true); // always remove the statements.
 
         if (isset($post['createWebp']) && $post['createWebp'] == 1)
         {
@@ -454,10 +455,11 @@ class SettingsController extends shortPixelController
             }
         }
 
-        if (! $this->is_nginx)
+        if (! $this->is_nginx && $deliverwebp == 3) // unaltered wepb via htaccess
         {
-          \WPShortPixel::alterHtaccess(true);
+          \WPShortPixel::alterHtaccess();
         }
+
 
          $post['deliverWebp'] = $deliverwebp;
          unset($post['deliverWebpAlteringType']);
