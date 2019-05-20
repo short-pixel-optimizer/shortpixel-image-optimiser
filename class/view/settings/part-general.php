@@ -162,7 +162,7 @@
                         <img src="<?php echo(plugins_url( 'shortpixel-image-optimiser/res/img/resize-outer.png' ));?>"
                              srcset='<?php echo(plugins_url( 'shortpixel-image-optimiser/res/img/resize-outer.png' ));?> 1x, <?php echo(plugins_url( 'shortpixel-image-optimiser/res/img/resize-outer@2x.png' ));?> 2x'
                              title="<?php _e('Sizes will be greater or equal to the corresponding value. For example, if you set the resize dimensions at 1000x1200, an image of 2000x3000px will be resized to 1000x1500px while an image of 3000x2000px will be resized to 1800x1200px','shortpixel-image-optimiser');?>">
-                        <input type="radio" name="resize_type" id="resize_type_inner" value="inner" <?php echo($view->data->resizeType == 'inner' ? 'checked' : '') ?> style="margin: -50px 10px 60px 35px;">
+                        <input type="radio" name="resizeType" id="resize_type_inner" value="inner" <?php echo($view->data->resizeType == 'inner' ? 'checked' : '') ?> style="margin: -50px 10px 60px 35px;">
                         <img src="<?php echo(plugins_url( 'shortpixel-image-optimiser/res/img/resize-inner.png' ));?>"
                              srcset='<?php echo(plugins_url( 'shortpixel-image-optimiser/res/img/resize-inner.png' ));?> 1x, <?php echo(plugins_url( 'shortpixel-image-optimiser/res/img/resize-inner@2x.png' ));?> 2x'
                              title="<?php _e('Sizes will be smaller or equal to the corresponding value. For example, if you set the resize dimensions at 1000x1200, an image of 2000x3000px will be resized to 800x1200px while an image of 3000x2000px will be resized to 1000x667px','shortpixel-image-optimiser');?>">
