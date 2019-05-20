@@ -33,7 +33,7 @@ class SettingsController extends shortPixelController
       {
           // @todo Remove Debug Call
           $this->model = new \WPShortPixelSettings();
-          Log::logLevel(DebugItem::LEVEL_DEBUG);
+          
 
           parent::__construct();
 
