@@ -105,6 +105,7 @@ class SettingsController extends shortPixelController
           }
       }
 
+      /* Loads the view data and the view */
       public function load_settings()
       {
          $this->loadQuotaData();

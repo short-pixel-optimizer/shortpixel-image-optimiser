@@ -32,7 +32,7 @@ namespace ShortPixel;
         }
     }
 
-      
+
 
     $excludePatterns = '';
     if($view->data->excludePatterns) {
@@ -303,8 +303,8 @@ namespace ShortPixel;
             <tr>
                 <th scope="row"><label for="authentication"><?php _e('HTTP AUTH credentials','shortpixel-image-optimiser');?></label></th>
                 <td>
-                    <input name="siteAuthUser" type="text" id="siteAuthUser" value="<?php echo( esc_html($view->data->siteAuthUser ));?>" class="regular-text" placeholder="<?php _e('User','shortpixel-image-optimiser');?>"><br>
-                    <input name="siteAuthPass" type="text" id="siteAuthPass" value="<?php echo( esc_html($view->data->siteAuthPass ));?>" class="regular-text" placeholder="<?php _e('Password','shortpixel-image-optimiser');?>">
+                    <input name="siteAuthUser" type="text" id="siteAuthUser" value="<?php echo( stripslashes(esc_html($view->data->siteAuthUser )));?>" class="regular-text" placeholder="<?php _e('User','shortpixel-image-optimiser');?>"><br>
+                    <input name="siteAuthPass" type="text" id="siteAuthPass" value="<?php echo( stripslashes(esc_html($view->data->siteAuthPass )));?>" class="regular-text" placeholder="<?php _e('Password','shortpixel-image-optimiser');?>">
                     <p class="settings-info">
                         <?php _e('Only fill in these fields if your site (front-end) is not publicly accessible and visitors need a user/pass to connect to it. If you don\'t know what is this then just <strong>leave the fields empty</strong>.','shortpixel-image-optimiser');?>
                     </p>
