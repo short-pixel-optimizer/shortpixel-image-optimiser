@@ -24,7 +24,7 @@ namespace ShortPixel;
                     </th>
                     <td>
                         <input name="cloudflareEmail" type="text" id="cloudflare-email" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>
-                               value="<?php echo(esc_html($view->data->cloudflareEmail)); ?>" class="regular-text">
+                               value="<?php echo( stripslashes(esc_html($view->data->cloudflareEmail))); ?>" class="regular-text">
                         <p class="settings-info">
                             <?php _e('The e-mail address you use to login to CloudFlare.','shortpixel-image-optimiser');?>
                         </p>
@@ -36,7 +36,7 @@ namespace ShortPixel;
                     </th>
                     <td>
                         <input name="cloudflareAuthKey" type="text" id="cloudflare-auth-key" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>
-                               value="<?php echo(esc_html($view->data->cloudflareAuthKey)); ?>" class="regular-text">
+                               value="<?php echo(stripslashes(esc_html($view->data->cloudflareAuthKey))); ?>" class="regular-text">
                         <p class="settings-info">
                             <?php _e("This can be found when you're logged into your account, on the My Profile page:",'shortpixel-image-optimiser');?> <a href='https://www.cloudflare.com/a/profile' target='_blank'>https://www.cloudflare.com/a/profile</a>
                         </p>
@@ -48,7 +48,7 @@ namespace ShortPixel;
                     </th>
                     <td>
                         <input name="cloudflareZoneID" type="text" id="cloudflare-zone-id" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>
-                               value="<?php echo(esc_html($view->data->cloudflareZoneID)); ?>" class="regular-text">
+                               value="<?php echo(stripslashes(esc_html($view->data->cloudflareZoneID))); ?>" class="regular-text">
                         <p class="settings-info">
                             <?php _e('This can be found in your Cloudflare account in the "Overview" section for your domain.','shortpixel-image-optimiser');?>
                         </p>

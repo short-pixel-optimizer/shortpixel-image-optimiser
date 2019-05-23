@@ -27,10 +27,12 @@ namespace ShortPixel;
         } elseif (strpos($_SERVER['HTTP_USER_AGENT'], 'Chrome') !== false) {
             // Show a message about the risks and caveats of serving WEBP images via .htaccess
             $deliverWebpUnalteredLabel = '<span style="color: initial;">'.__('Based on testing your particular hosting configuration, we determined that your server','shortpixel-image-optimiser').
-                '&nbsp;<img src="'.str_replace("/class/view", "/res", plugins_url( 'img/test.jpg' , __FILE__ )).'">&nbsp;'.
+                '&nbsp;<img src="'. plugins_url( 'res/img/test.jpg' , SHORTPIXEL_PLUGIN_FILE) .'">&nbsp;'.
                 __('serve the WEBP versions of the JPEG files seamlessly, via .htaccess.','shortpixel-image-optimiser').' <a href="javascript:void(0)" data-beacon-article="5c1d050e04286304a71d9ce4">Open article to read more about this.</a></span>';
         }
     }
+
+
 
     $excludePatterns = '';
     if($view->data->excludePatterns) {
@@ -301,8 +303,8 @@ namespace ShortPixel;
             <tr>
                 <th scope="row"><label for="authentication"><?php _e('HTTP AUTH credentials','shortpixel-image-optimiser');?></label></th>
                 <td>
-                    <input name="siteAuthUser" type="text" id="siteAuthUser" value="<?php echo( esc_html($view->data->siteAuthUser ));?>" class="regular-text" placeholder="<?php _e('User','shortpixel-image-optimiser');?>"><br>
-                    <input name="siteAuthPass" type="text" id="siteAuthPass" value="<?php echo( esc_html($view->data->siteAuthPass ));?>" class="regular-text" placeholder="<?php _e('Password','shortpixel-image-optimiser');?>">
+                    <input name="siteAuthUser" type="text" id="siteAuthUser" value="<?php echo( stripslashes(esc_html($view->data->siteAuthUser )));?>" class="regular-text" placeholder="<?php _e('User','shortpixel-image-optimiser');?>"><br>
+                    <input name="siteAuthPass" type="text" id="siteAuthPass" value="<?php echo( stripslashes(esc_html($view->data->siteAuthPass )));?>" class="regular-text" placeholder="<?php _e('Password','shortpixel-image-optimiser');?>">
                     <p class="settings-info">
                         <?php _e('Only fill in these fields if your site (front-end) is not publicly accessible and visitors need a user/pass to connect to it. If you don\'t know what is this then just <strong>leave the fields empty</strong>.','shortpixel-image-optimiser');?>
                     </p>

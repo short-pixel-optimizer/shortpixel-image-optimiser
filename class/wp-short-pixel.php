@@ -146,7 +146,8 @@ class WPShortPixel {
         add_action('wp_ajax_shortpixel_check_quota', array(&$this, 'handleCheckQuota'));
         add_action('admin_action_shortpixel_check_quota', array(&$this, 'handleCheckQuota'));
         //This adds the constants used in PHP to be available also in JS
-        add_action( 'admin_footer', array( $this, 'shortPixelJS') );
+        add_action( 'admin_enqueue_scripts', array( $this, 'shortPixelJS') );
+        add_action( 'admin_footer', array($this, 'admin_footer_js') );
         add_action( 'admin_head', array( $this, 'headCSS') );
 
         if($this->_settings->frontBootstrap && shortPixelCheckQueue()) {
@@ -482,8 +483,8 @@ class WPShortPixel {
     }
 
     /** @todo Plugin init class. Try to get rid of inline JS. Also still loads on all WP pages, prevent that. */
-
     function shortPixelJS() {
+
         //require_once(ABSPATH . 'wp-admin/includes/screen.php');
         if(function_exists('get_current_screen')) {
             $screen = get_current_screen();
@@ -509,20 +510,8 @@ class WPShortPixel {
                 }
             }
         }
-        ?>
-        <script type="text/javascript" >
-            //check after 10 seconds if ShortPixel initialized OK, if not, force the init (could happen if a JS error somewhere else stopped the JS execution).
-            function delayedInit() {
-                if(typeof ShortPixel !== "undefined") {
-                    ShortPixel.init();
-                } else {
-                    setTimeout(delayedInit, 10000);
-                }
-            }
-            setTimeout(delayedInit, 10000);
-        </script> <?php
 
-        wp_register_script('shortpixel' . $this->jsSuffix, plugins_url('/res/js/shortpixel' . $this->jsSuffix,SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
+        wp_register_script('shortpixel' . $this->jsSuffix, plugins_url('/res/js/shortpixel' . $this->jsSuffix,SHORTPIXEL_PLUGIN_FILE), array('jquery'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
         // Using an Array within another Array to protect the primitive values from being cast to strings
         $ShortPixelConstants = array(array(
@@ -589,6 +578,25 @@ class WPShortPixel {
         wp_enqueue_script('jquery.knob.min.js', plugins_url('/res/js/jquery.knob.min.js',SHORTPIXEL_PLUGIN_FILE) );
         wp_enqueue_script('jquery.tooltip.min.js', plugins_url('/res/js/jquery.tooltip.min.js',SHORTPIXEL_PLUGIN_FILE) );
         wp_enqueue_script('punycode.min.js', plugins_url('/res/js/punycode.min.js',SHORTPIXEL_PLUGIN_FILE) );
+    }
+
+    /** Outputs direct JS to the admin footer
+    * @todo Find a better solution for this */
+    public function admin_footer_js()
+    {
+      ?>
+      <script type="text/javascript" >
+          //check after 10 seconds if ShortPixel initialized OK, if not, force the init (could happen if a JS error somewhere else stopped the JS execution).
+          function delayedInit() {
+              if(typeof ShortPixel !== "undefined") {
+                  ShortPixel.init();
+              } else {
+                  setTimeout(delayedInit, 10000);
+              }
+          }
+          setTimeout(delayedInit, 10000);
+      </script>
+      <?php
     }
 
     /** Displays an icon in the toolbar when processing images
@@ -3351,8 +3359,8 @@ Header append Vary Accept env=REDIRECT_webp
         $args['body']['host'] = parse_url(get_site_url(),PHP_URL_HOST);
         $argsStr .= "&host={$args['body']['host']}";
         if(strlen($this->_settings->siteAuthUser)) {
-            $args['body']['user'] = $this->_settings->siteAuthUser;
-            $args['body']['pass'] = $this->_settings->siteAuthPass;
+            $args['body']['user'] = stripslashes($this->_settings->siteAuthUser);
+            $args['body']['pass'] = stripslashes($this->_settings->siteAuthPass);
             $argsStr .= '&user=' . urlencode($args['body']['user']) . '&pass=' . urlencode($args['body']['pass']);
         }
         if($settings !== false) {

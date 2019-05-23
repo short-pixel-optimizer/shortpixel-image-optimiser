@@ -33,7 +33,7 @@ class SettingsController extends shortPixelController
       {
           // @todo Remove Debug Call
           $this->model = new \WPShortPixelSettings();
-          Log::logLevel(DebugItem::LEVEL_DEBUG);
+          
 
           parent::__construct();
 
@@ -105,6 +105,7 @@ class SettingsController extends shortPixelController
           }
       }
 
+      /* Loads the view data and the view */
       public function load_settings()
       {
          $this->loadQuotaData();
@@ -429,6 +430,7 @@ class SettingsController extends shortPixelController
       protected function processWebP($post)
       {
         $deliverwebp = 0;
+        \WPShortPixel::alterHtaccess(true); // always remove the statements.
 
         if (isset($post['createWebp']) && $post['createWebp'] == 1)
         {
@@ -454,10 +456,11 @@ class SettingsController extends shortPixelController
             }
         }
 
-        if (! $this->is_nginx)
+        if (! $this->is_nginx && $deliverwebp == 3) // unaltered wepb via htaccess
         {
-          \WPShortPixel::alterHtaccess(true);
+          \WPShortPixel::alterHtaccess();
         }
+
 
          $post['deliverWebp'] = $deliverwebp;
          unset($post['deliverWebpAlteringType']);
