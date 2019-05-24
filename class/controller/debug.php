@@ -16,6 +16,7 @@ namespace ShortPixel;
 
    protected $items = array();
    protected $logPath = false;
+   protected $logMode = FILE_APPEND;
 
    protected $logLevel;
    protected $format = "[ %%time%% ] %%color%% %%level%% %%color_end%% \t %%message%%  \t %%caller%% ( %%time_passed%% )";
@@ -25,14 +26,14 @@ namespace ShortPixel;
 
    /** Debugger constructor
    *  Two ways to activate the debugger. 1) Define SHORTPIXEL_DEBUG in wp-config.php. Either must be true or a number corresponding to required LogLevel
-   *  2) Put SHORTPIXEL_DEBUG in the request. Either true or number. 
+   *  2) Put SHORTPIXEL_DEBUG in the request. Either true or number.
    */
    public function __construct()
    {
       $this->start_time = microtime(true);
       $this->logLevel = DebugItem::LEVEL_WARN;
 
-      if (isset($_REQUEST['SHORTPIXEL_DEBUG']))
+      if (isset($_REQUEST['SHORTPIXEL_DEBUG'])) // manual takes precedence over constants
       {
         $this->is_manual_request = true;
         $this->is_active = true;
@@ -46,8 +47,7 @@ namespace ShortPixel;
         }
 
       }
-
-      if ( (defined('SHORTPIXEL_DEBUG') && SHORTPIXEL_DEBUG > 0) )
+      else if ( (defined('SHORTPIXEL_DEBUG') && SHORTPIXEL_DEBUG > 0) )
       {
             $this->is_active = true;
             if (SHORTPIXEL_DEBUG === true)
@@ -60,7 +60,13 @@ namespace ShortPixel;
       if (defined('SHORTPIXEL_DEBUG_TARGET') && SHORTPIXEL_DEBUG_TARGET || $this->is_manual_request)
       {
           $this->logPath = SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log";
+          //$this->logMode = defined('SHORTPIXEL_LOG_OVERWRITE') ? 0 : FILE_APPEND;
+          if (defined('SHORTPIXEL_LOG_OVERWRITE')) // if overwrite, do this on init once.
+            file_put_contents($this->logPath,'-- Log Reset -- ' .PHP_EOL);
+
       }
+
+    //  if (defined('SHORTPIXEL_LOG_OVERWRITE') )
 
       $user_is_administrator = (current_user_can('manage_options')) ? true : false;
 
@@ -105,6 +111,7 @@ namespace ShortPixel;
       }
    }
 
+   /** Writes to log File. */
    protected function write($debugItem, $mode = 'file')
    {
       $items = $debugItem->getForFormat();
@@ -196,6 +203,12 @@ namespace ShortPixel;
       $log = self::getInstance();
       static::addInfo('Changing Log level' . $level);
       $log->setLogLevel($level);
+   }
+
+   public static function getLogLevel()
+   {
+     $log = self::getInstance();
+     return $log->getEnv('logLevel');
    }
 
    public static function isManualDebug()
