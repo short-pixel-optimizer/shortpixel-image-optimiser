@@ -23,6 +23,10 @@ namespace ShortPixel;
 
    protected $template = 'view-debug-box';
 
+   /** Debugger constructor
+   *  Two ways to activate the debugger. 1) Define SHORTPIXEL_DEBUG in wp-config.php. Either must be true or a number corresponding to required LogLevel
+   *  2) Put SHORTPIXEL_DEBUG in the request. Either true or number. 
+   */
    public function __construct()
    {
       $this->start_time = microtime(true);
@@ -204,6 +208,15 @@ namespace ShortPixel;
    {
      $log = self::getInstance();
      return $log->getEnv('logPath');
+   }
+
+   /** Function to test if the debugger is active
+   * @return boolean true when active.
+   */
+   public static function debugIsActive()
+   {
+      $log = self::getInstance();
+      return $log->getEnv('is_active');
    }
 
 

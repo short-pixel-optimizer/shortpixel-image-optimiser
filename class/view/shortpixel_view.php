@@ -1,4 +1,5 @@
 <?php
+use \ShortPixel\ShortPixelLogger as Log;
 
 class ShortPixelView {
 
@@ -279,7 +280,13 @@ class ShortPixelView {
                     <?php if($quotaData['mainProcessedMlFiles'] > 0) {?>
                         <div style="position: absolute;bottom: 10px;right: 10px;">
                             <input type='submit' name='bulkRestore' id='bulkRestore' class='button' value='<?php _e('Bulk Restore Media Library','shortpixel-image-optimiser');?>' onclick="ShortPixel.confirmBulkAction('Restore', event)" style="margin-bottom:10px;"><br>
-                            <input type='submit' name='bulkCleanup' id='bulkCleanup' class='button' value='<?php _e('Bulk Delete SP Metadata','shortpixel-image-optimiser');?>' onclick="ShortPixel.confirmBulkAction('Cleanup', event)" style="width:100%">
+
+                            <?php
+                            if (Log::debugIsActive() ): ?>
+                            <input type='submit' name='bulkCleanup' id='bulkCleanup' class='button' value='<?php _e('Bulk Delete SP Metadata','shortpixel-image-optimiser');?>'
+                           onclick="ShortPixel.confirmBulkAction('Cleanup', event)" style="width:100%">
+                         <?php endif; ?>
+
                             <?php if(defined('SHORTPIXEL_DEBUG')) { ?>
                                 <input type='submit' name='bulkCleanupPending' id='bulkCleanupPending' class='button' value='<?php _e('Bulk Delete Pending Metadata','shortpixel-image-optimiser');?>' onclick="ShortPixel.confirmBulkAction('CleanupPending', event)">
                             <?php } ?>
