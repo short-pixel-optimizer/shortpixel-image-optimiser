@@ -510,6 +510,7 @@ class WPShortPixel {
                 }
             }
         }
+ 
 
         wp_register_script('shortpixel' . $this->jsSuffix, plugins_url('/res/js/shortpixel' . $this->jsSuffix,SHORTPIXEL_PLUGIN_FILE), array('jquery'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
@@ -2387,7 +2388,6 @@ class WPShortPixel {
         //$tempus = microtime(true);
         $quotaData = $this->countAllIfNeeded($quotaData, $refreshFiles);
         //echo("Count took (seconds): " . (microtime(true) - $tempus));
-        //Log::addDebug('QuotaData', $quotaData);
 
         if($quotaData['APICallsQuotaNumeric'] + $quotaData['APICallsQuotaOneTimeNumeric'] > $quotaData['APICallsMadeNumeric'] + $quotaData['APICallsMadeOneTimeNumeric']) {
             $this->_settings->quotaExceeded = '0';
@@ -3019,6 +3019,7 @@ Header append Vary Accept env=REDIRECT_webp
             }
         } */
         // END: Verify .htaccess writeability
+
 
         //by default we try to fetch the API Key from wp-config.php (if defined)
         /*if ( defined("SHORTPIXEL_API_KEY") && strlen(SHORTPIXEL_API_KEY) == 20)
@@ -4084,16 +4085,80 @@ Header append Vary Accept env=REDIRECT_webp
         return array('width' => max(100, $width), 'height' => max(100, $height));
     }
 
-
     public function getOtherCompressionTypes($compressionType = false) {
         return array_values(array_diff(array(0, 1, 2), array(0 + $compressionType)));
     }
 
-    /* Output HelpScout Beacon */
-    /* @todo Move to it's own integration */
-    function outputHSBeacon() {
+    function outputHSBeacon() { 
         Log::addDebug('OutputHSBeacon called on old function');
-      ?>
+	?>
+        <style>
+            .shortpixel-hs-blind {
+                position: fixed;
+                bottom: 18px;
+                right: 0;
+                z-index: 20003;
+                background-color: white;
+                width: 87px;
+                height: 174px;
+                border-radius: 20px 0 0 20px;
+            }
+            .shortpixel-hs-button-blind {
+                display:none;
+                position: fixed;
+                bottom: 115px;right: 0;
+                z-index: 20003;
+                background-color: white;
+                width: 237px;
+                height: 54px;
+            }
+            .shortpixel-hs-tools {
+                position: fixed;
+                bottom: 116px;
+                right: 0px;
+                z-index: 20003;
+                background-color: #ecf9fc;
+                padding: 8px 18px 3px 12px;
+                border-radius: 26px 0 0 26px;
+                -webkit-box-shadow: 1px 1px 5px 0px rgba(6,109,117,1);
+                -moz-box-shadow: 1px 1px 5px 0px rgba(6,109,117,1);
+                box-shadow: 1px 1px 10px 0px rgb(172, 173, 173);
+            }
+            @media (max-width: 767px) {
+                .shortpixel-hs-blind {
+                    bottom: 8px;
+                    height: 194px;
+                }
+                .shortpixel-hs-button-blind {
+                    bottom: 100px;
+                }
+            }
+        </style>
+        <div id="shortpixel-hs-blind" class="shortpixel-hs-blind"></div>
+        <div id="shortpixel-hs-button-blind" class="shortpixel-hs-button-blind"></div>
+        <div id="shortpixel-hs-tools" class="shortpixel-hs-tools">
+            <a href="javascript:shortpixelToggleHS();" class="shortpixel-hs-tools-docs" title="Search through our online documentation.">
+                <img src="<?php echo(plugins_url('/shortpixel-image-optimiser/res/img/notes-sp.png'));?>" style="margin-bottom: 2px;width: 36px;">
+            </a>
+        </div>
+        <script>
+            window.shortpixelHSOpen = -1;
+            function shortpixelToggleHS() {
+                if(window.shortpixelHSOpen == -1) {
+                    HS.beacon.init();
+                }
+                if(window.shortpixelHSOpen == 1) {
+                    HS.beacon.close();
+                    jQuery("#shortpixel-hs-button-blind").css('display', 'none');
+                    window.shortpixelHSOpen = 0;
+                } else {
+                    HS.beacon.open();
+                    jQuery("#shortpixel-hs-button-blind").css('display', 'block');
+                    window.shortpixelHSOpen = 1;
+                }
+            }
+        </script>
+        <script type="text/javascript" src="https://quriobot.com/qb/widget/KoPqxmzqzjbg5eNl/V895xbyndnmeqZYd" async defer></script>
         <script>
             <?php
             $screen = get_current_screen();
