@@ -15,8 +15,14 @@ class ShortPixelPlugin
 
   protected $is_noheaders = false;
 
+  protected $plugin_path;
+  protected $plugin_url;
+
   public function __construct()
   {
+      $this->plugin_path = plugin_dir_path(SHORTPIXEL_PLUGIN_FILE);
+      $this->plugin_url = plugin_dir_url(SHORTPIXEL_PLUGIN_FILE);
+
       $this->initRuntime();
       $this->initHooks();
 
@@ -179,8 +185,8 @@ class ShortPixelPlugin
         }
 
       }
-
   }
+
 
 
 }

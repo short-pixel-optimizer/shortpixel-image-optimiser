@@ -99,7 +99,8 @@ class ShortPixelController
         include($template_path);
       }
       else {
-        Log::addError("View $template could not be found in " . $template_path);
+        Log::addError("View $template could not be found in " . $template_path,
+        array('class' => get_class($this), 'req' => $_REQUEST));
       }
 
   }

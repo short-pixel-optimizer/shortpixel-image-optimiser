@@ -513,6 +513,7 @@ class WPShortPixel {
 
         wp_register_script('shortpixel' . $this->jsSuffix, plugins_url('/res/js/shortpixel' . $this->jsSuffix,SHORTPIXEL_PLUGIN_FILE), array('jquery'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
+
         // Using an Array within another Array to protect the primitive values from being cast to strings
         $ShortPixelConstants = array(array(
             'STATUS_SUCCESS'=>ShortPixelAPI::STATUS_SUCCESS,

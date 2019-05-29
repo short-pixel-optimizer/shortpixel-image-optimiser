@@ -911,7 +911,6 @@ function checkBulkProgress() {
 
     first = false; //rearm replacer
     var adminUrl = ShortPixel.WP_ADMIN_URL.toLowerCase().replace(/\/\//g , replacer);
-
     //handle possible Punycode domain names.
     if(url.search(adminUrl) < 0) {
         url = ShortPixel.convertPunycode(url);
