@@ -723,7 +723,7 @@ class ShortPixelAPI {
                     //if the WebP fileCompat already exists, it means that there is another file with the same basename but different extension which has its .webP counterpart
                     //save it with double extension
                     if(file_exists($targetWebPFileCompat)) {
-                        copy($targetWebPFile,$targetWebPFile);
+                        copy($tempWebpFilePATH, $targetWebPFile);
                     } else {
                         copy($tempWebpFilePATH, $targetWebPFileCompat);
                     }
