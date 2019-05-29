@@ -32,15 +32,15 @@ class ShortPixelFolder extends ShortPixelEntity{
         return false;
     }
 
-    /** This creates the general backup folder **/ 
-    public static function createBackUpFolder()
+    /** This creates the general backup folder **/
+    public static function createBackUpFolder($folder = SHORTPIXEL_BACKUP_FOLDER)
     {
       // create backup folder
-      $result = @mkdir(SHORTPIXEL_BACKUP_FOLDER, 0777, true);
+      $result = @mkdir($folder, 0777, true);
 
       if ($result)
       {
-          self::protectDirectoryListing(SHORTPIXEL_BACKUP_FOLDER);
+          self::protectDirectoryListing($folder);
       }
 
       return $result;
@@ -55,6 +55,8 @@ class ShortPixelFolder extends ShortPixelEntity{
         require_once( ABSPATH . 'wp-admin/includes/misc.php' );
       }
       insert_with_markers( trailingslashit($dirname) . '.htaccess', 'ShortPixel', $rules);
+      // note - this doesn't bring the same protection. Subdirs without files written will still be listable.
+      file_put_contents(trailingslashit($dirname) . 'index.html', chr(0)); // extra - for non-apache
 
     }
 

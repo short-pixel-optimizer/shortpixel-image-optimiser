@@ -25,7 +25,7 @@ $quotaData = $this->quotaData;
                             <?php
                                 $under5PercentCount = $view->data->under5Percent; //amount of under 5% optimized imgs.
                                 $totalOptimized = isset($quotaData['totalProcessedFiles']) ? $quotaData['totalProcessedFiles'] : '';
-                                $mainOptimized = isset($quotaData['mainProcessedFiles']) ? $quotaData['mainProcessedFiles'] : ''; 
+                                $mainOptimized = isset($quotaData['mainProcessedFiles']) ? $quotaData['mainProcessedFiles'] : '';
                             ?>
                                 <div class="bulk-progress bulk-stats">
                                     <div class="label"><?php _e('Processed Images and PDFs:','shortpixel-image-optimiser');?></div><div class="stat-value"><?php echo(number_format($mainOptimized));?></div><br>
@@ -124,7 +124,9 @@ $quotaData = $this->quotaData;
                     </th>
                     <td><strong><?php echo($view->data->fileCount);?></strong></td>
                 </tr>
-                <?php if(true || $view->data->backupImages) { ?>
+                <?php
+                // @todo This is always true, but must it be? 
+                if(true || $view->data->backupImages) { ?>
                 <tr>
                     <th scope="row">
                         <?php _e('Original images are stored in a backup folder. Your backup folder\'s size is now:','shortpixel-image-optimiser');?>

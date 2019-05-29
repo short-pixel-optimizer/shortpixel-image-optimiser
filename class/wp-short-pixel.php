@@ -538,7 +538,8 @@ class WPShortPixel {
         if (Log::isManualDebug() )
         {
           Log::addInfo('Ajax Manual Debug Mode');
-          $ShortPixelConstants[0]['AJAX_URL'] = admin_url('admin-ajax.php?SHORTPIXEL_DEBUG=true');
+          $logLevel = Log::getLogLevel();
+          $ShortPixelConstants[0]['AJAX_URL'] = admin_url('admin-ajax.php?SHORTPIXEL_DEBUG=' . $logLevel);
         }
 
         $jsTranslation = array(

@@ -33,7 +33,7 @@ class SettingsController extends shortPixelController
       {
           // @todo Remove Debug Call
           $this->model = new \WPShortPixelSettings();
-          
+
 
           parent::__construct();
 
@@ -67,7 +67,7 @@ class SettingsController extends shortPixelController
         if ($this->is_form_submit && isset($this->postData['apiKey']))
         {
             $this->checkKey();
-            if ($this->postData['verifiedKey'])
+            if (isset($this->postData['verifiedKey']) && $this->postData['verifiedKey'])
             {
               $this->model->apiKey = $this->postData['apiKey'];
               $this->model->verifiedKey = $this->postData['verifiedKey'];

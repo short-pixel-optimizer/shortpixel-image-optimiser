@@ -1,5 +1,6 @@
 <?php
 namespace ShortPixel;
+use Shortpixel\ShortPixelLogger as Log;
 
 HelpScout::outputBeacon($view->data->apiKey);
 
@@ -37,6 +38,10 @@ HelpScout::outputBeacon($view->data->apiKey);
         if ($view->averageCompression !== null)
         {
           $this->loadView('settings/part-statistics');
+        }
+        if (Log::debugIsActive())
+        {
+          $this->loadView('settings/part-debug');
         }
         ?>
       </div>

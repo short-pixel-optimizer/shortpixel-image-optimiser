@@ -76,7 +76,7 @@ class ShortPixelPlugin
       add_options_page( __('ShortPixel Settings','shortpixel-image-optimiser'), 'ShortPixel', 'manage_options', 'wp-shortpixel-settings', array($this, 'route'));
   }
 
-  /** All scripts should be registed, then enqueued here
+  /** All scripts should be registed, not enqueued here (unless global wp-admin is needed )
   *
   * Not all those registered must be enqueued however.
   */
@@ -150,7 +150,7 @@ class ShortPixelPlugin
       global $shortPixelPluginInstance; //brrr @todo Find better solution for this some day.
       $default_action = 'load'; // generic action on controller.
       $action = isset($_REQUEST['sp-action']) ? sanitize_text_field($_REQUEST['sp-action']) : $default_action;
-Log::addInfo('Request', $_REQUEST);
+      Log::addDebug('Request', $_REQUEST);
       $controller = false;
 
       switch($plugin_page)
