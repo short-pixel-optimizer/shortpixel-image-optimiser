@@ -205,7 +205,8 @@ class ShortPixelView {
     public function displayBulkProcessingForm($quotaData,  $thumbsProcessedCount, $under5PercentCount, $bulkRan,
                                               $averageCompression, $filesOptimized, $savedSpace, $percent, $customCount) {
         $settings = $this->ctrl->getSettings();
-        $this->ctrl->outputHSBeacon();
+        //$this->ctrl->outputHSBeacon();
+        \ShortPixel\HelpScout::outputBeacon($this->ctrl->getApiKey());
         ?>
         <div class="wrap short-pixel-bulk-page">
             <h1><?php _e('Bulk Image Optimization by ShortPixel','shortpixel-image-optimiser');?></h1>
@@ -739,6 +740,8 @@ class ShortPixelView {
             </div>
         <?php
     }
+
+    // @TODO Remove this function
     function displaySettings($showApiKey, $editApiKey, $quotaData, $notice, $resources = null,  $averageCompression = null, $savedSpace = null, $savedBandwidth = null,
                          $remainingImages = null, $totalCallsMade = null, $fileCount = null, $backupFolderSize = null,
                          $customFolders = null, $folderMsg = false, $addedFolder = false, $showAdvanced = false, $cloudflareAPI = false, $htaccessWriteable = false, $isNginx = false ) {

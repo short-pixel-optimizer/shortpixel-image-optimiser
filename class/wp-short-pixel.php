@@ -510,7 +510,7 @@ class WPShortPixel {
                 }
             }
         }
- 
+
 
         wp_register_script('shortpixel' . $this->jsSuffix, plugins_url('/res/js/shortpixel' . $this->jsSuffix,SHORTPIXEL_PLUGIN_FILE), array('jquery'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
@@ -2432,7 +2432,8 @@ class WPShortPixel {
         if ( isset($_GET['noheader']) ) {
             require_once(ABSPATH . 'wp-admin/admin-header.php');
         }
-        $this->outputHSBeacon();
+        //$this->outputHSBeacon();
+        \ShortPixel\HelpScout::outputBeacon($this->getApiKey());
         ?>
 	    <div class="wrap shortpixel-other-media">
             <h2>
@@ -4089,8 +4090,8 @@ Header append Vary Accept env=REDIRECT_webp
         return array_values(array_diff(array(0, 1, 2), array(0 + $compressionType)));
     }
 
-    function outputHSBeacon() { 
-        Log::addDebug('OutputHSBeacon called on old function');
+    function outputHSBeacon() {
+        Log::addWarn('OutputHSBeacon called on old function');
 	?>
         <style>
             .shortpixel-hs-blind {
