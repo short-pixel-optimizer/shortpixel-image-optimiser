@@ -5,6 +5,8 @@ class ShortPixelView {
 
     private $ctrl;
 
+    protected $bulkType;
+
     public function __construct($controller) {
         $this->ctrl = $controller;
     }
@@ -207,6 +209,9 @@ class ShortPixelView {
         $settings = $this->ctrl->getSettings();
         //$this->ctrl->outputHSBeacon();
         \ShortPixel\HelpScout::outputBeacon($this->ctrl->getApiKey());
+
+        $this->bulkType = $this->ctrl->getPrioQ()->getBulkType(); // adding to the mess
+
         ?>
         <div class="wrap short-pixel-bulk-page">
             <h1><?php _e('Bulk Image Optimization by ShortPixel','shortpixel-image-optimiser');?></h1>
@@ -341,11 +346,19 @@ class ShortPixelView {
                     <div class="sp-bulk-summary">
                         <input type="text" value="<?php echo("" . round($averageCompression))?>" id="sp-total-optimization-dial" class="dial">
                     </div>
+                    <?php if ($this->bulkType != ShortPixelQueue::BULK_TYPE_RESTORE): ?>
                     <p style="margin-top:4px;">
                         <span style="font-size:1.2em;font-weight:bold"><?php _e('Congratulations!','shortpixel-image-optimiser');?></span><br>
                         <?php _e('Your media library has been successfully optimized!','shortpixel-image-optimiser');?>
                         <span class="sp-bulk-summary"><a href='javascript:void(0);'><?php _e('Summary','shortpixel-image-optimiser');?></a></span>
                     </p>
+                    <?php else: ?>
+                    <p style="margin-top:4px;">
+                        <span style="font-size:1.2em;font-weight:bold"><?php _e('Restoring completed','shortpixel-image-optimiser');?></span><br>
+                        <?php _e('Your images have been restored','shortpixel-image-optimiser');?>
+                        <span class="sp-bulk-summary"><a href='javascript:void(0);'><?php _e('Summary','shortpixel-image-optimiser');?></a></span>
+                    </p>
+                    <?php endif; ?>
                 </div>
                 <div class='sp-notice sp-notice-success sp-floating-block sp-single-width' style="height: 80px;overflow:hidden;padding-right: 0;">
                     <div style="float:left; margin-top:-5px">
@@ -634,17 +647,26 @@ class ShortPixelView {
         } else {
             $percentAfter = $percent . "%";
         }
+
+        // should not be needed.. (but for some reason works)
+        $this->bulkType = $this->ctrl->getPrioQ()->getBulkType(); // adding to the mess
+
         ?>
             <div class="sp-notice sp-notice-info bulk-progress sp-floating-block sp-full-width">
                 <div style="float:right">
-                    <?php if(false) { ?>
+                    <?php if(false) { // @todo This never runs?  ?>
                     <div class="bulk-progress-indicator">
                         <div style="margin-bottom:5px"><?php _e('Remaining credits','shortpixel-image-optimiser');?></div>
                         <div style="margin-top:22px;margin-bottom: 5px;font-size:2em;font-weight: bold;"><?php echo(number_format($remainingQuota))?></div>
                         <div>images</div>
                     </div>
                     <?php } ?>
-                    <div class="bulk-progress-indicator">
+
+                    <?php
+                    Log::addDebug('bulktype', array('b' => $this->bulkType));
+                    Log::addDebug($this->bulkType);
+                    if ($this->bulkType != ShortPixelQueue::BULK_TYPE_RESTORE): ?>
+                    <div class="bulk-progress-indicator">Hello!
                         <div style="margin-bottom:5px"><?php _e('Average reduction','shortpixel-image-optimiser');?></div>
                         <div id="sp-avg-optimization"><input type="text" id="sp-avg-optimization-dial-bulk" value="<?php echo("" . round($averageCompression))?>" class="dial"></div>
                         <script>
@@ -653,6 +675,7 @@ class ShortPixelView {
                             });
                         </script>
                     </div>
+                  <?php endif; ?>
                 </div>
                 <?php if($running) {
                     if($type > 0) { ?>

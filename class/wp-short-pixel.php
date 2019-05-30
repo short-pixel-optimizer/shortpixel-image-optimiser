@@ -1612,6 +1612,7 @@ class WPShortPixel {
         return $URLsAndPATHs;
     }
 
+    /** Manual optimization request. This is only called from the Media Library, never from the Custom media */
     public function handleManualOptimization() {
         $imageId = intval($_GET['image_id']);
         $cleanup = $_GET['cleanup'];
@@ -2529,7 +2530,7 @@ class WPShortPixel {
 
         if(isset($_POST["bulkRestore"]))
         {
-            $bulkRestore = new \ShortPixel\BulkRestoreAll();
+            $bulkRestore = new \ShortPixel\BulkRestoreAll(); // controller
             $bulkRestore->setShortPixel($this);
             $bulkRestore->setupBulk();
 
@@ -2737,7 +2738,8 @@ class WPShortPixel {
         }
 
         $ret = array();
-        $handle = new ShortPixelMetaFacade(intval($_POST['id']) );
+        // This shall not be Intval, since Post_id can be custom (C-xx)
+        $handle = new ShortPixelMetaFacade( sanitize_text_field($_POST['id']) );
 
         $meta = $handle->getMeta();
         $rawMeta = $handle->getRawMeta();

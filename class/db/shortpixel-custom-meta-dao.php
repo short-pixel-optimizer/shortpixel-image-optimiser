@@ -404,6 +404,7 @@ class ShortPixelCustomMetaDao {
     */
     public function setBulkRestore($folder_id)
     {
+        LOG::addDebug('Set Bulk Restore', array('folderid' => $folder_id));
       if (! is_numeric($folder_id) || $folder_id <= 0)
         return false;
 

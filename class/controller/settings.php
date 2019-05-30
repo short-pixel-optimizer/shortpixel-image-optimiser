@@ -412,7 +412,7 @@ class SettingsController extends shortPixelController
 
           if (isset($post['emptyBackup']))
           {
-            $this->shortpixel->emptyBackup();
+            $this->shortPixel->emptyBackup();
           }
           unset($post['emptyBackup']);
 

@@ -73,7 +73,7 @@ class ShortPixelController
 
   public function setShortPixel($pixel)
   {
-    $this->shortPixel = $pixel;
+    $this->shortPixel = $pixel; // notice the capital, case-sensitive! 
   }
 
   /** Loads a view

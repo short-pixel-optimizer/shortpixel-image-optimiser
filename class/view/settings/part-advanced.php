@@ -173,7 +173,7 @@ namespace ShortPixel;
             <tr class='exif_warning view-notice-row'>
                 <th scope="row">&nbsp;</th>
                 <td>
-                  <div class='view-notice warning'><p><?php printf(__('Warning - Converting from JPG to PNG will %s not %s keep the EXIF-information!'), "<strong>","</strong>"); ?></p></div>
+                  <div class='view-notice warning'><p><?php printf(__('Warning - Converting from PNG to JPG will %s not %s keep the EXIF-information!'), "<strong>","</strong>"); ?></p></div>
                 </td>
             </tr>
             <tr>
