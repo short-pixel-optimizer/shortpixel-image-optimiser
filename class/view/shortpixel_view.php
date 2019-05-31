@@ -211,7 +211,6 @@ class ShortPixelView {
         \ShortPixel\HelpScout::outputBeacon($this->ctrl->getApiKey());
 
         $this->bulkType = $this->ctrl->getPrioQ()->getBulkType(); // adding to the mess
-
         ?>
         <div class="wrap short-pixel-bulk-page">
             <h1><?php _e('Bulk Image Optimization by ShortPixel','shortpixel-image-optimiser');?></h1>
@@ -285,15 +284,16 @@ class ShortPixelView {
                     <?php } ?>
                     <?php if($quotaData['mainProcessedMlFiles'] > 0) {?>
                         <div style="position: absolute;bottom: 10px;right: 10px;">
-                            <input type='submit' name='bulkRestore' id='bulkRestore' class='button' value='<?php _e('Bulk Restore Media Library','shortpixel-image-optimiser');?>' onclick="ShortPixel.confirmBulkAction('Restore', event)" style="margin-bottom:10px;"><br>
+                        <?php /*    <input type='submit' name='bulkRestore' id='bulkRestore' class='button' value='<?php _e('Bulk Restore Media Library','shortpixel-image-optimiser');?>' onclick="ShortPixel.confirmBulkAction('Restore', event)" style="margin-bottom:10px;">
+                        */ ?>
+                                <p><a class='button' style="width:100%; text-align: center" href='<?php echo add_query_arg('part','bulk-restore-all'); ?> '><?php _e('Bulk Restore Images','shortpixel-image-optimiser'); ?></a></p>
 
-                            <?php
-                            if (Log::debugIsActive() ): ?>
+
                             <input type='submit' name='bulkCleanup' id='bulkCleanup' class='button' value='<?php _e('Bulk Delete SP Metadata','shortpixel-image-optimiser');?>'
-                           onclick="ShortPixel.confirmBulkAction('Cleanup', event)" style="width:100%">
-                         <?php endif; ?>
+                           onclick="ShortPixel.confirmBulkAction('Cleanup', event)" style="width:100%; text-align: center">
 
-                            <?php if(defined('SHORTPIXEL_DEBUG')) { ?>
+
+                            <?php if (Log::debugIsActive() ) { ?>
                                 <input type='submit' name='bulkCleanupPending' id='bulkCleanupPending' class='button' value='<?php _e('Bulk Delete Pending Metadata','shortpixel-image-optimiser');?>' onclick="ShortPixel.confirmBulkAction('CleanupPending', event)">
                             <?php } ?>
                         </div>
@@ -552,7 +552,7 @@ class ShortPixelView {
                     <input type='checkbox' id='bulk-thumbnails' name='thumbnails' <?php echo($this->ctrl->processThumbnails() ? "checked":"");?>
                            onchange="ShortPixel.onBulkThumbsCheck(this)"> <?php _e('Include thumbnails','shortpixel-image-optimiser');?><br><br>
 
-                   <a style="float: right;margin: 0 10px; line-height: 28px" href='<?php echo add_query_arg('part','bulk-restore-all'); ?> '><?php _e('Bulk Restore Images','shortpixel-image-optimiser'); ?></a>
+                   <a class='button' style="float: right;" href='<?php echo add_query_arg('part','bulk-restore-all'); ?> '><?php _e('Bulk Restore Images','shortpixel-image-optimiser'); ?></a>
 
                     <input type='submit' name='bulkProcess' id='bulkProcess' class='button button-primary' value='<?php _e('Restart Optimizing','shortpixel-image-optimiser');?>'
                            <?php echo($settings->quotaExceeded? "disabled title=\"" . __("Top-up your account to optimize more images.",'shortpixel-image-optimiser')."\"" : ""); ?>>
@@ -560,7 +560,7 @@ class ShortPixelView {
 
 
                     <input type='submit' name='bulkCleanup' id='bulkCleanup' class='button' value='<?php _e('Bulk Delete SP Metadata','shortpixel-image-optimiser');?>' onclick="ShortPixel.confirmBulkAction('Cleanup',event)" style="float: right;margin-right:10px;">
-                    <?php if(defined('SHORTPIXEL_DEBUG')) { ?>
+                    <?php if (Log::debugIsActive() ) { ?>
                         <input type='submit' name='bulkCleanupPending' id='bulkCleanupPending' class='button' value='<?php _e('Bulk Delete Pending Metadata','shortpixel-image-optimiser');?>' onclick="ShortPixel.confirmBulkAction('CleanupPending', event)">
                     <?php } ?>
                 </form>
@@ -1762,6 +1762,7 @@ class ShortPixelView {
     }
 
     public function renderListCell($id, $status, $showActions, $thumbsRemain, $backup, $type, $invType, $message, $extraClass = '') {
+
         if($showActions && ($backup || $thumbsRemain)) { ?>
             <div class='sp-column-actions <?php echo($extraClass);?>'>
                 <div class="sp-dropdown">

@@ -490,13 +490,7 @@ class WPShortPixel {
             $screen = get_current_screen();
 
              if(is_object($screen)) {
-                if( in_array($screen->id, array('attachment', 'upload', 'media_page_wp-short-pixel-custom'))) {
-                    //output the comparer html
-                    $this->view->outputComparerHTML();
-                    //render a template of the list cell to be used by the JS
-                    $this->view->renderListCell("__SP_ID__", 'imgOptimized', true, "__SP_THUMBS_TOTAL__", true, true,
-                        array("__SP_FIRST_TYPE__", "__SP_SECOND_TYPE__"), "__SP_CELL_MESSAGE__", 'sp-column-actions-template');
-                }
+
 
                 wp_enqueue_style('short-pixel-bar.min.css', plugins_url('/res/css/short-pixel-bar.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
                 if( in_array($screen->id, array('attachment', 'upload', 'settings_page_wp-shortpixel', 'media_page_wp-short-pixel-bulk', 'media_page_wp-short-pixel-custom'))) {
@@ -587,6 +581,19 @@ class WPShortPixel {
     * @todo Find a better solution for this */
     public function admin_footer_js()
     {
+      if(function_exists('get_current_screen')) {
+          $screen = get_current_screen();
+          if(is_object($screen)) {
+
+              if( in_array($screen->id, array('attachment', 'upload', 'media_page_wp-short-pixel-custom'))) {
+                  //output the comparer html
+                  $this->view->outputComparerHTML();
+                  //render a template of the list cell to be used by the JS
+                  $this->view->renderListCell("__SP_ID__", 'imgOptimized', true, "__SP_THUMBS_TOTAL__", true, true,
+                      array("__SP_FIRST_TYPE__", "__SP_SECOND_TYPE__"), "__SP_CELL_MESSAGE__", 'sp-column-actions-template');
+              }
+          }
+      }
       ?>
       <script type="text/javascript" >
           //check after 10 seconds if ShortPixel initialized OK, if not, force the init (could happen if a JS error somewhere else stopped the JS execution).
