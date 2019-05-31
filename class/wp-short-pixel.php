@@ -2453,9 +2453,9 @@ class WPShortPixel {
                 <?php _e('Other Media optimized by ShortPixel','shortpixel-image-optimiser');?>
             </h2>
 
-            <div id="poststuff">
-                <div id="post-body" class="metabox-holder columns-2">
-                    <div id="post-body-content">
+            <div id="legacy">
+                <div id="legacy" class="metabox-holder">
+                    <div id="legacy">
                         <div class="meta-box-sortables ui-sortable">
                             <form method="get">
                                 <input type="hidden" name="page" value="wp-short-pixel-custom" />
