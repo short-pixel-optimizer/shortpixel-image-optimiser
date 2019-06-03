@@ -46,6 +46,9 @@
   margin: 10px 0;
   margin-right: 8px; }
 
+.short-pixel-bulk-page .sp-hidden {
+  display: none; }
+
 /* Specific styles for advanced settings tab */
 #shortpixel-settings-tabs #tab-adv-settings .addCustomFolder {
   margin: 10px 0; }

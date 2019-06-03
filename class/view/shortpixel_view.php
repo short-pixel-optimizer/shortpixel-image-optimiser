@@ -210,7 +210,8 @@ class ShortPixelView {
         //$this->ctrl->outputHSBeacon();
         \ShortPixel\HelpScout::outputBeacon($this->ctrl->getApiKey());
 
-        $this->bulkType = $this->ctrl->getPrioQ()->getBulkType(); // adding to the mess
+        $this->bulkType = $this->ctrl->getPrioQ()->getBulkTypeForDisplay(); // adding to the mess
+        $hider = ($this->bulkType == ShortPixelQueue::BULK_TYPE_RESTORE) ? 'sp-hidden' : '';
         ?>
         <div class="wrap short-pixel-bulk-page">
             <h1><?php _e('Bulk Image Optimization by ShortPixel','shortpixel-image-optimiser');?></h1>
@@ -343,7 +344,7 @@ class ShortPixelView {
                         <img src="<?php echo(plugins_url( 'shortpixel-image-optimiser/res/img/slider.png' ));?>"
                              srcset='<?php echo(plugins_url( 'shortpixel-image-optimiser/res/img/slider.png' ));?> 1x, <?php echo(plugins_url( 'shortpixel-image-optimiser/res/img/slider@2x.png' ));?> 2x'>
                     </div>
-                    <div class="sp-bulk-summary">
+                    <div class="sp-bulk-summary <?php echo $hider ?>">
                         <input type="text" value="<?php echo("" . round($averageCompression))?>" id="sp-total-optimization-dial" class="dial">
                     </div>
                     <?php if ($this->bulkType != ShortPixelQueue::BULK_TYPE_RESTORE): ?>
@@ -360,7 +361,7 @@ class ShortPixelView {
                     </p>
                     <?php endif; ?>
                 </div>
-                <div class='sp-notice sp-notice-success sp-floating-block sp-single-width' style="height: 80px;overflow:hidden;padding-right: 0;">
+                <div class='sp-notice sp-notice-success sp-floating-block sp-single-width <?php echo $hider ?>' style="height: 80px;overflow:hidden;padding-right: 0;">
                     <div style="float:left; margin-top:-5px">
                         <p style='margin-bottom: -2px; font-weight: bold;'>
                             <?php _e('Share your optimization results:','shortpixel-image-optimiser');?>
@@ -421,7 +422,7 @@ class ShortPixelView {
                     </div>
                     <?php } ?>
                 </div>
-                <div id="sp-bulk-stats" style="display:none">
+                <div id="sp-bulk-stats <?php echo $hider ?>" style="display:none">
                     <?php $this->displayBulkStats($quotaData['totalProcessedFiles'], $quotaData['mainProcessedFiles'], $under5PercentCount, $averageCompression, $savedSpace);?>
                 </div>
             </div>
@@ -666,7 +667,7 @@ class ShortPixelView {
                     Log::addDebug('bulktype', array('b' => $this->bulkType));
                     Log::addDebug($this->bulkType);
                     if ($this->bulkType != ShortPixelQueue::BULK_TYPE_RESTORE): ?>
-                    <div class="bulk-progress-indicator">Hello!
+                    <div class="bulk-progress-indicator">
                         <div style="margin-bottom:5px"><?php _e('Average reduction','shortpixel-image-optimiser');?></div>
                         <div id="sp-avg-optimization"><input type="text" id="sp-avg-optimization-dial-bulk" value="<?php echo("" . round($averageCompression))?>" class="dial"></div>
                         <script>
