@@ -86,9 +86,9 @@ class ShortPixelMetaFacade {
         }        
     }
     
-    static function sanitizeMeta($rawMeta){
+    static function sanitizeMeta($rawMeta, $createSPArray = true){
         if(!is_array($rawMeta)) {
-            if($rawMeta == '') { return array('ShortPixel' => array()); }
+            if($rawMeta == '') { return $createSPArray ? array('ShortPixel' => array()) : array(); }
             else {
                 $meta = @unserialize($rawMeta);
                 if(is_array($meta)) {

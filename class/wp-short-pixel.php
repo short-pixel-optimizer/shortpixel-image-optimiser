@@ -687,7 +687,20 @@ class WPShortPixel {
             // 2. Perform the action
             case 'short-pixel-bulk':
                 foreach( $mediaIds as $ID ) {
+
                     $meta = wp_get_attachment_metadata($ID);
+                    if(!is_array($meta)) {
+                        self::log('CUSTOM BULK META NOT AN ARRAY: ' . json_encode($meta));
+                        $meta = ShortPixelMetaFacade::sanitizeMeta($meta, false);
+                        if(isset($meta['previous_meta'])) {
+                            self::log('COULDN\'T SANITIZE PROPERLY.');
+                            continue;
+                        }
+                        else {
+                            self::log('SANITIZED.');
+                        }
+                    }
+
                     if(!is_array($meta)) continue;
                     if(   (   !isset($meta['ShortPixel']) //never touched by ShortPixel
                            || (isset($meta['ShortPixel']['WaitingProcessing']) && $meta['ShortPixel']['WaitingProcessing'] == true))
