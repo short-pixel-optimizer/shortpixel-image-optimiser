@@ -146,7 +146,7 @@ class SettingsController extends shortPixelController
       public function checkKey()
       {
           $this->is_constant_key = (defined("SHORTPIXEL_API_KEY")) ? true : false;
-          $this->hide_api_key = (defined("SHORTPIXEL_HIDE_API_KEY")) ? true : false;
+          $this->hide_api_key = (defined("SHORTPIXEL_HIDE_API_KEY")) ? SHORTPIXEL_HIDE_API_KEY : false;
 
           $verified_key = $this->model->verifiedKey;
           $this->is_verifiedkey = ($verified_key) ? true : false;
