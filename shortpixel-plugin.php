@@ -72,7 +72,7 @@ class ShortPixelPlugin
       add_action('admin_menu', array($this,'admin_pages'));
       add_action('admin_enqueue_scripts', array($this, 'admin_scripts'));
       add_action('admin_notices', array($this, 'admin_notices')); // notices occured before page load
-      add_action('shortpixel_show_notices', array($this, 'admin_notices'));  // called in views.
+      add_action('admin_footer', array($this, 'admin_notices'));  // called in views.
 
   }
 

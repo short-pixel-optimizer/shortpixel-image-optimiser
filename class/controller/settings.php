@@ -211,7 +211,7 @@ class SettingsController extends shortPixelController
 
          if (! $this->is_verifiedkey)
          {
-           Notice::addError($this->quotaData["Message"]);
+            Notice::addError(sprintf(__('Error during verifying API key: %s','shortpixel-image-optimizer'), $this->quotaData['Message'] ));
          }
          elseif ($this->is_form_submit) {
            $this->processNewKey();

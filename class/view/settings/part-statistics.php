@@ -2,6 +2,7 @@
 namespace ShortPixel;
 
 $quotaData = $this->quotaData;
+
 ?>
 
 <section id="tab-stats" <?php echo ($this->display_part == 'stats') ? ' class="sel-tab" ' :''; ?>>
@@ -125,7 +126,7 @@ $quotaData = $this->quotaData;
                     <td><strong><?php echo($view->data->fileCount);?></strong></td>
                 </tr>
                 <?php
-                // @todo This is always true, but must it be? 
+                // @todo This is always true, but must it be?
                 if(true || $view->data->backupImages) { ?>
                 <tr>
                     <th scope="row">
