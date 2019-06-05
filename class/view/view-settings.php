@@ -17,7 +17,6 @@ HelpScout::outputBeacon($view->data->apiKey);
     <a href="https://shortpixel.com/contact" target="_blank"><?php _e('Support','shortpixel-image-optimiser');?> </a>
 </p>
 
-<?php do_action('shortpixel_show_notices'); ?>
 
 <article id="shortpixel-settings-tabs" class="sp-tabs">
     <?php if (! $this->is_verifiedkey)

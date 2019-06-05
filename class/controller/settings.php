@@ -146,7 +146,7 @@ class SettingsController extends shortPixelController
       public function checkKey()
       {
           $this->is_constant_key = (defined("SHORTPIXEL_API_KEY")) ? true : false;
-          $this->hide_api_key = (defined("SHORTPIXEL_HIDE_API_KEY")) ? true : false;
+          $this->hide_api_key = (defined("SHORTPIXEL_HIDE_API_KEY")) ? SHORTPIXEL_HIDE_API_KEY : false;
 
           $verified_key = $this->model->verifiedKey;
           $this->is_verifiedkey = ($verified_key) ? true : false;
@@ -211,7 +211,7 @@ class SettingsController extends shortPixelController
 
          if (! $this->is_verifiedkey)
          {
-           Notice::addError($this->quotaData["Message"]);
+            Notice::addError(sprintf(__('Error during verifying API key: %s','shortpixel-image-optimizer'), $this->quotaData['Message'] ));
          }
          elseif ($this->is_form_submit) {
            $this->processNewKey();

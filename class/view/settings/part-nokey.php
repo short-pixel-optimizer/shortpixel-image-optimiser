@@ -18,7 +18,7 @@ $editApiKey = (! $this->is_constant_key && $showApiKey) ? true : false;
 // Notices for fringe cases
 if ($this->hide_api_key && ! $this->is_constant_key)
 {
-  Notice::addWarning(__('wp-config.php has API key hidden, but no API key has been entered. Please do so, or remove the Hide constant', 'shortpixel-image-optimiser'));
+  Notice::addError(__('wp-config.php has API key hidden, but no API key has been entered. Please do so, or remove the Hide constant', 'shortpixel-image-optimiser'));
 }
 elseif ($this->is_constant_key && ! $this->is_verifiedkey)
 {

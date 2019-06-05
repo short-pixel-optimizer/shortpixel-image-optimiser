@@ -13,21 +13,25 @@ class NoticeController extends ShortPixelController
   public function __construct()
   {
       $this->loadModel('notice');
+      $this->loadNotices();
+  }
 
-      $notices = get_option('shortpixel-notices', false);
-      $cnotice = (is_array($notices)) ? count($notices) : 0;
-      Log::addDebug('Notice Control - #num notices' . $cnotice);
-      if ($notices !== false)
-      {
-        self::$notices = $notices;
-        $this->has_stored = true;
-      }
-      else {
-        self::$notices = array();
-        $this->has_stored = false;
-      }
-      $this->countNotices();
 
+  protected function loadNotices()
+  {
+    $notices = get_option('shortpixel-notices', false);
+    $cnotice = (is_array($notices)) ? count($notices) : 0;
+    Log::addDebug('Notice Control - #num notices' . $cnotice);
+    if ($notices !== false)
+    {
+      self::$notices = $notices;
+      $this->has_stored = true;
+    }
+    else {
+      self::$notices = array();
+      $this->has_stored = false;
+    }
+    $this->countNotices();
   }
 
   public function addNotice($message, $code)
@@ -84,6 +88,7 @@ class NoticeController extends ShortPixelController
      {
          self::$instance = new NoticeController();
      }
+
      return self::$instance;
   }
 

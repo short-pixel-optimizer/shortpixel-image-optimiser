@@ -2,6 +2,8 @@
 
 use ShortPixel\DebugItem as DebugItem;
 use ShortPixel\ShortPixelLogger as Log;
+use ShortPixel\NoticeController as Notice;
+
 
 class WPShortPixel {
 
@@ -2403,7 +2405,8 @@ class WPShortPixel {
             $quotaData = $this->getQuotaInformation();
         }
         if ( !$quotaData['APIKeyValid']) {
-            if(strlen($this->_settings->apiKey)) $this->view->displayActivationNotice('generic', $quotaData['Message']);
+            if(strlen($this->_settings->apiKey))
+                Notice::addError(sprintf(__('Shortpixel Remote API Error: %s','shortpixel-image-optimizer'), $quotaData['Message'] ));
             return $quotaData;
         }
         //$tempus = microtime(true);
