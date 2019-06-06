@@ -2486,17 +2486,17 @@ class WPShortPixel {
         ?>
 	    <div class="wrap shortpixel-other-media">
             <h2>
-                <div style="float:right;">
-                    <a href="upload.php?page=wp-short-pixel-custom&refresh=1" id="refresh" class="button button-primary" title="<?php _e('Refresh custom folders content','shortpixel-image-optimiser');?>">
-                        <?php _e('Refresh folders','shortpixel-image-optimiser');?>
-                    </a>
-                </div>
                 <?php _e('Other Media optimized by ShortPixel','shortpixel-image-optimiser');?>
             </h2>
 
             <div id="legacy">
                 <div id="legacy" class="metabox-holder">
                     <div id="legacy">
+                      <div style="float:left;">
+                          <a href="upload.php?page=wp-short-pixel-custom&refresh=1" id="refresh" class="button button-primary" title="<?php _e('Refresh custom folders content','shortpixel-image-optimiser');?>">
+                              <?php _e('Refresh folders','shortpixel-image-optimiser');?>
+                          </a>
+                      </div>
                         <div class="meta-box-sortables ui-sortable">
                             <form method="get">
                                 <input type="hidden" name="page" value="wp-short-pixel-custom" />
