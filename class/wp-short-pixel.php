@@ -1085,11 +1085,19 @@ class WPShortPixel {
         }
         $idList = array();
         $itemList = array();
+        $timeoutMinThreshold = SHORTPIXEL_MAX_EXECUTION_TIME < 10 ? 2 : (SHORTPIXEL_MAX_EXECUTION_TIME < 30 ? 3 : 5);
+        $maxTime = min(SHORTPIXEL_MAX_EXECUTION_TIME, 90);
+        $timeoutThreshold = 5; // will adapt this with the maximum time needed for one pass
+        $passTime = time();
         for ($sanityCheck = 0, $crtStartQueryID = $startQueryID;
              ($crtStartQueryID >= $endQueryID) && (count($itemList) < SHORTPIXEL_PRESEND_ITEMS) && ($sanityCheck < 150)
-              && (SHORTPIXEL_MAX_EXECUTION_TIME < 10 || time() - $this->timer < SHORTPIXEL_MAX_EXECUTION_TIME - 5); $sanityCheck++) {
+              && (time() - $this->timer < $maxTime - $timeoutThreshold); $sanityCheck++) {
 
-            self::log("GETDB: current StartID: " . $crtStartQueryID);
+            $timeoutThreshold = max($timeoutThreshold, $timeoutMinThreshold + time() - $passTime);
+            $passTime = time();
+            $maxResults = $timeoutThreshold > 15 ? SHORTPIXEL_MAX_RESULTS_QUERY / 3 :
+                ($timeoutThreshold > 10 ? SHORTPIXEL_MAX_RESULTS_QUERY / 2 : SHORTPIXEL_MAX_RESULTS_QUERY);
+            self::log("GETDB: pass $sanityCheck current StartID: $crtStartQueryID Threshold: $timeoutThreshold, MaxResults: $maxResults" );
 
             /* $queryPostMeta = "SELECT * FROM " . $wpdb->prefix . "postmeta
                 WHERE ( post_id <= $crtStartQueryID AND post_id >= $endQueryID )
@@ -1098,7 +1106,9 @@ class WPShortPixel {
                 LIMIT " . SHORTPIXEL_MAX_RESULTS_QUERY;
             $resultsPostMeta = $wpdb->get_results($queryPostMeta);
             */
-            $resultsPostMeta = WpShortPixelMediaLbraryAdapter::getPostMetaSlice($crtStartQueryID, $endQueryID, SHORTPIXEL_MAX_RESULTS_QUERY);
+
+            $resultsPostMeta = WpShortPixelMediaLbraryAdapter::getPostMetaSlice($crtStartQueryID, $endQueryID, $maxResults);
+            if(time() - $this->timer >= 60) self::log("GETDB is SLOW. Got meta slice.");
 
             if ( empty($resultsPostMeta) ) {
                 $crtStartQueryID -= SHORTPIXEL_MAX_RESULTS_QUERY;
@@ -1110,11 +1120,21 @@ class WPShortPixel {
                 continue;
             }
 
+            if($timeoutThreshold > 10) self::log("GETDB is SLOW. Meta slice has " . count($resultsPostMeta) . ' items.');
+
             foreach ( $resultsPostMeta as $itemMetaData ) {
                 $crtStartQueryID = $itemMetaData->post_id;
+                if(time() - $this->timer >= 60) self::log("GETDB is SO SLOW. Check processable for $crtStartQueryID.");
+                if(time() - $this->timer >= $maxTime - $timeoutThreshold){
+                    break;
+                }
+
                 if(!in_array($crtStartQueryID, $idList) && $this->isProcessable($crtStartQueryID, ($this->_settings->optimizePdfs ? array() : array('pdf')))) {
                     $item = new ShortPixelMetaFacade($crtStartQueryID);
+
+                    if($timeoutThreshold > 15) self::log("GETDB is SO SLOW. Get meta for $crtStartQueryID.");
                     $meta = $item->getMeta();//wp_get_attachment_metadata($crtStartQueryID);
+                    if($timeoutThreshold > 15) self::log("GETDB is SO SLOW. Got meta.");
 
                     if($meta->getStatus() != 2) {
                         $addIt = (strpos($meta->getMessage(), __('Image files are missing.', 'shortpixel-image-optimiser')) === false);
@@ -1171,9 +1191,12 @@ class WPShortPixel {
                 $this->prioQ->setStartBulkId($startQueryID);
             } else {
                 $crtStartQueryID--;
+                self::log("GETDB just decrementing. Crt: $crtStartQueryID Start: $startQueryID, list: " . json_encode($idList));
             }
         }
-        return array("items" => $itemList, "skipped" => $skippedAlreadyProcessed, "searching" => ($sanityCheck >= 150) || (SHORTPIXEL_MAX_EXECUTION_TIME >= 10 && time() - $this->timer >= SHORTPIXEL_MAX_EXECUTION_TIME - 5));
+        $ret = array("items" => $itemList, "skipped" => $skippedAlreadyProcessed, "searching" => ($sanityCheck >= 150) || (time() - $this->timer >= $maxTime - $timeoutThreshold));
+        self::log('GETDB returns ' . json_encode($ret));
+        return $ret;
     }
 
     /**
@@ -1236,7 +1259,7 @@ class WPShortPixel {
 
         $rawPrioQ = $this->prioQ->get();
         if(count($rawPrioQ)) { self::log("HIP: 0 Priority Queue: ".json_encode($rawPrioQ)); }
-        self::log("HIP: 0 Bulk running? " . $this->prioQ->bulkRunning() . " START " . $this->_settings->startBulkId . " STOP " . $this->_settings->stopBulkId);
+        self::log("HIP: 0 Bulk running? " . $this->prioQ->bulkRunning() . " START " . $this->_settings->startBulkId . " STOP " . $this->_settings->stopBulkId . " MaxTime: " . SHORTPIXEL_MAX_EXECUTION_TIME);
 
         //handle the bulk restore and cleanup first - these are fast operations taking precedece over optimization
         if(   $this->prioQ->bulkRunning()
@@ -1525,7 +1548,9 @@ class WPShortPixel {
         if($result["Status"] !== ShortPixelAPI::STATUS_RETRY) {
             $this->_settings->bulkLastStatus = $result;
         }
-        die(json_encode($result));
+        $ret = json_encode($result);
+        self::log("HIP RET " . $ret);
+        die($ret);
     }
 
 
