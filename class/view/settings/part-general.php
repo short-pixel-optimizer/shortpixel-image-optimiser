@@ -175,11 +175,12 @@
         </tbody>
     </table>
 
-    </div>
 
   <?php } ?>
   <p class="submit">
       <input type="submit" name="save" id="save" class="button button-primary" title="<?php _e('Save Changes','shortpixel-image-optimiser');?>" value="<?php _e('Save Changes','shortpixel-image-optimiser');?>"> &nbsp;
       <input type="submit" name="save_bulk" id="bulk" class="button button-primary" title="<?php _e('Save and go to the Bulk Processing page','shortpixel-image-optimiser');?>" value="<?php _e('Save and Go to Bulk Process','shortpixel-image-optimiser');?>"> &nbsp;
   </p>
+</div>
+
 </section>

@@ -8,7 +8,7 @@ namespace ShortPixel;
     <?php _e('Debug','shortpixel-image-optimiser');?></a>
   </h2>
 
-<div class="wp-shortpixel-options wp-shortpixel-tab-content">
+<div class="wp-shortpixel-options wp-shortpixel-tab-content" style="visibility: hidden">
   <div class='env'>
     <h3><?php _e('Environment', 'shortpixel'); ?></h3>
     <div class='flex'>

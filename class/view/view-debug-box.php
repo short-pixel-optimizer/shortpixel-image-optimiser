@@ -32,14 +32,6 @@ wp_enqueue_script( 'jquery-ui-draggable' );
   {
      $( ".sp_debug_box" ).draggable();
 
-    /* setTimeout( function()
-     {
-       $.get('<?php echo $layout->logLink ?>', function (data)
-       {
-         $('.content_box').html(data);
-       }  );
-
-     }, 10000); */
   });
 </script>
 
