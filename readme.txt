@@ -241,6 +241,11 @@ The ShortPixel Image Optimiser plugin calls the following actions and filters:
 
 == Changelog ==
 
+== 4.14.0 ==
+
+Release date:
+* Fix custom bulk for PDFs when the pdf thumbnails are not activated
+
 = 4.13.1 =
 
 Release date: 16th April 2019
