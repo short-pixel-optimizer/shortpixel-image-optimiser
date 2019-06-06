@@ -25,8 +25,8 @@ $quotaData = $this->quotaData;
                         <div id="sp-bulk-stats" style="display:none">
                             <?php
                                 $under5PercentCount = $view->data->under5Percent; //amount of under 5% optimized imgs.
-                                $totalOptimized = isset($quotaData['totalProcessedFiles']) ? $quotaData['totalProcessedFiles'] : '';
-                                $mainOptimized = isset($quotaData['mainProcessedFiles']) ? $quotaData['mainProcessedFiles'] : '';
+                                $totalOptimized = isset($quotaData['totalProcessedFiles']) ? $quotaData['totalProcessedFiles'] : 0;
+                                $mainOptimized = isset($quotaData['mainProcessedFiles']) ? $quotaData['mainProcessedFiles'] : 0;
                             ?>
                                 <div class="bulk-progress bulk-stats">
                                     <div class="label"><?php _e('Processed Images and PDFs:','shortpixel-image-optimiser');?></div><div class="stat-value"><?php echo(number_format($mainOptimized));?></div><br>

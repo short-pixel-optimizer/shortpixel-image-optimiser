@@ -7,9 +7,9 @@
 use ShortPixel\DebugItem as DebugItem;
 use ShortPixel\ShortPixelLogger as Log;
 
-
 class ShortPixelImgToPictureWebp
 {
+    /** If lazy loading is happening, get source (src) from those values */
     public static function lazyGet($img, $type)
     {
         return array(
@@ -30,9 +30,14 @@ class ShortPixelImgToPictureWebp
     {
         // Don't do anything with the RSS feed.
         if (is_feed() || is_admin()) {
-            return $content; // . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!--  -->' : '');
             Log::addInfo('SPDBG convert is_feed or is_admin');
+            return $content; // . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!--  -->' : '');
         }
+
+        $new_content = self::testPictures($content);
+        if ($new_content !== false)
+          $content = $new_content;
+
         $content = preg_replace_callback('/<img[^>]*>/', array('self', 'convertImage'), $content);
         //$content = preg_replace_callback('/background.*[^:](url\(.*\)[,;])/im', array('self', 'convertInlineStyle'), $content);
 
@@ -45,12 +50,52 @@ class ShortPixelImgToPictureWebp
 
     }
 
+    public static function testPictures($content)
+    {
+      // [BS] Escape when DOM Module not installed
+      if (! class_exists('DOMDocument'))
+        return false;
+
+      $dom = new DOMDocument();
+      @$dom->loadHTML($content);
+
+      $elements = $dom->getElementsByTagName('picture');
+
+      foreach($elements as $element)
+      {
+        if ($element->hasChildNodes() )
+        {
+          foreach($element->childNodes as $elchild)
+          {
+            if ($elchild->tagName == 'img')
+            {
+              $class = ($elchild->hasAttribute('class')) ? $elchild->getAttribute('class') . ' ' : '';
+              $class .= 'sp-no-webp';
+              $elchild->setAttribute('class', $class);
+              Log::addInfo('Found Picture with Img, added skip class');
+            }
+          }
+        }
+      }
+
+      return $dom->saveHTML();
+
+    }
+
+    /* This might be a future solution for regex callbacks.
+    public static function processImageNode($node, $type)
+    {
+      $srcsets = $node->getElementsByTagName('srcset');
+      $srcs = $node->getElementsByTagName('src');
+      $imgs = $node->getElementsByTagName('img');
+    } */
+
     public static function convertImage($match)
     {
         // Do nothing with images that have the 'sp-no-webp' class.
         if (strpos($match[0], 'sp-no-webp')) {
+            Log::addInfo('SPDBG convertImage skipped, sp-no-webp found');
             return $match[0]; //. (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG convertImage sp-no-webp -->' : '');
-            Log::addInfo('SPDBG convertImage sp-no-webp');
         }
 
         $img = self::get_attributes($match[0]);
@@ -115,10 +160,12 @@ class ShortPixelImgToPictureWebp
         $imageBase = dirname($imageBase) . '/';
         */
         $imageBase = static::getImageBase($src);
+
         if($imageBase === false) {
             return $match[0]; // . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG baseurl doesn\'t match ' . $src . '  -->' : '');
             Log::addInfo('SPDBG baseurl doesn\'t match ' . $src);
         }
+
 
         // We don't wanna have src-ish attributes on the <picture>
         unset($img['src']);
