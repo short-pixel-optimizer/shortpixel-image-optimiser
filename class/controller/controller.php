@@ -73,7 +73,7 @@ class ShortPixelController
 
   public function setShortPixel($pixel)
   {
-    $this->shortPixel = $pixel; // notice the capital, case-sensitive! 
+    $this->shortPixel = $pixel; // notice the capital, case-sensitive!
   }
 
   /** Loads a view
@@ -82,6 +82,9 @@ class ShortPixelController
   */
   public function loadView($template = null)
   {
+      if (strlen(trim($template)) == 0)
+        $template = null;
+
       if (is_null($this->template) && is_null($template))
       {
         // error

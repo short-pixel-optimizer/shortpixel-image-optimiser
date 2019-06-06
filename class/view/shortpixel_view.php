@@ -426,7 +426,7 @@ class ShortPixelView {
                     <?php $this->displayBulkStats($quotaData['totalProcessedFiles'], $quotaData['mainProcessedFiles'], $under5PercentCount, $averageCompression, $savedSpace);?>
                 </div>
             </div>
-            <p><?php printf(__('Go to the ShortPixel <a href="%soptions-general.php?page=wp-shortpixel-settings#stats">Stats</a>
+            <p><?php printf(__('Go to the ShortPixel <a href="%soptions-general.php?page=wp-shortpixel-settings&part=stats">Stats</a>
                                and see all your websites\' optimized stats. Download your detailed <a href="https://%s/v2/report.php?key=%s">Optimization Report</a>
                                to check your image optimization statistics for the last 40 days.','shortpixel-image-optimiser'),
                               get_admin_url(), SHORTPIXEL_API, (defined("SHORTPIXEL_HIDE_API_KEY") ? '' : $this->ctrl->getApiKey()) );?></p>
