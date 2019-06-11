@@ -32,20 +32,12 @@ wp_enqueue_script( 'jquery-ui-draggable' );
   {
      $( ".sp_debug_box" ).draggable();
 
-    /* setTimeout( function()
-     {
-       $.get('<?php echo $layout->logLink ?>', function (data)
-       {
-         $('.content_box').html(data);
-       }  );
-
-     }, 10000); */
   });
 </script>
 
 <div class='sp_debug_box'>
    <div class='header'>Debug Box </div>
-   <a target="_blank" href='<?php echo $layout->logLink ?>'>Logfile</a>
+   <a target="_blank" href='<?php echo $this->layout->logLink ?>'>Logfile</a>
    <div class='content_box'>
 
    </div>

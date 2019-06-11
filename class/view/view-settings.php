@@ -1,5 +1,6 @@
 <?php
 namespace ShortPixel;
+use Shortpixel\ShortPixelLogger as Log;
 
 HelpScout::outputBeacon($view->data->apiKey);
 
@@ -16,7 +17,6 @@ HelpScout::outputBeacon($view->data->apiKey);
     <a href="https://shortpixel.com/contact" target="_blank"><?php _e('Support','shortpixel-image-optimiser');?> </a>
 </p>
 
-<?php do_action('shortpixel_show_notices'); ?>
 
 <article id="shortpixel-settings-tabs" class="sp-tabs">
     <?php if (! $this->is_verifiedkey)
@@ -38,6 +38,10 @@ HelpScout::outputBeacon($view->data->apiKey);
         {
           $this->loadView('settings/part-statistics');
         }
+        if (Log::debugIsActive())
+        {
+          $this->loadView('settings/part-debug');
+        }
         ?>
       </div>
       </form>
@@ -49,5 +53,7 @@ HelpScout::outputBeacon($view->data->apiKey);
 
 <?php // @todo inline JS ?>
 <script>
-    jQuery(document).ready(function(){ ShortPixel.initSettings() });
+    jQuery(document).ready(function(){
+        ShortPixel.initSettings();
+      });
 </script>

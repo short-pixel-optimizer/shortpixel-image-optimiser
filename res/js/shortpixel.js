@@ -2,6 +2,7 @@
  * Short Pixel WordPress Plugin javascript
  */
 
+// init checks bulkProcess on each page. initSettings is when the settings View is being loaded.
 jQuery(document).ready(function(){ShortPixel.init();});
 
 var ShortPixel = function() {
@@ -63,8 +64,9 @@ var ShortPixel = function() {
     }
 
     function validateKey(button){
+      console.log('validate');
         jQuery('#valid').val('validate');
-      
+
         jQuery(button).parents('form').submit();
     }
 
@@ -82,30 +84,52 @@ var ShortPixel = function() {
         }
     }
 
-    function setupGeneralTab(rad, minWidth, minHeight) {
+
+    function checkExifWarning()
+    {
+      if (! jQuery('input[name="removeExif"]').is(':checked') && jQuery('input[name="png2jpg"]').is(':checked') )
+      {
+        jQuery('.exif_warning').fadeIn();
+      }
+      else {
+        jQuery('.exif_warning').fadeOut();
+      }
+    }
+
+    function setupGeneralTab() {
+        var rad = 0;
+        if (typeof document.wp_shortpixel_options !== 'undefined')
+          rad = document.wp_shortpixel_options.compressionType;
         for(var i = 0, prev = null; i < rad.length; i++) {
             rad[i].onclick = function() {
 
                 if(this !== prev) {
                     prev = this;
                 }
+                // Warns once that changing compressType is only for new images.
                 if(typeof ShortPixel.setupGeneralTabAlert !== 'undefined') return;
                 alert(_spTr.alertOnlyAppliesToNewImages);
                 ShortPixel.setupGeneralTabAlert = 1;
             };
         }
+
         ShortPixel.enableResize("#resize");
+
         jQuery("#resize").change(function(){ enableResize(this); });
         jQuery(".resize-sizes").blur(function(e){
-            var elm = jQuery(this);
-            if(ShortPixel.resizeSizesAlert == elm.val()) return;
+            var elm = jQuery(e.target);
+
+            if(ShortPixel.resizeSizesAlert == elm.val())
+              return; // returns if check in progress, presumed.
+
             ShortPixel.resizeSizesAlert = elm.val();
             var minSize = jQuery("#min-" + elm.attr('name')).val();
-            if(elm.val() < Math.min(minSize, 1024)) {
+            var niceName = jQuery("#min-" + elm.attr('name')).data('nicename');
+            if(elm.val() < Math.min(minSize, 1024)) { // @todo is this correct? This will always be < 1024, and give first error
                 if(minSize > 1024) {
-                    alert( _spTr.pleaseDoNotSetLesser1024.format(elm.attr('name')) );
+                    alert( _spTr.pleaseDoNotSetLesser1024.format(niceName) );
                 } else {
-                    alert( _spTr.pleaseDoNotSetLesserSize.format(elm.attr('name'), elm.attr('name'), minSize) );
+                    alert( _spTr.pleaseDoNotSetLesserSize.format(niceName, niceName, minSize) );
                 }
                 e.preventDefault();
                 //elm.val(this.defaultValue);
@@ -131,6 +155,13 @@ var ShortPixel = function() {
             }
             return true;
         });
+
+        jQuery('input[name="removeExif"], input[name="png2jpg"]').on('change', function()
+        {
+            ShortPixel.checkExifWarning();
+        });
+        ShortPixel.checkExifWarning();
+
     }
 
     function apiKeyChanged() {
@@ -165,6 +196,7 @@ var ShortPixel = function() {
 
     function initSettings() {
         ShortPixel.adjustSettingsTabs();
+        ShortPixel.setupGeneralTab(); // certain alerts.
         jQuery( window ).resize(function() {
             ShortPixel.adjustSettingsTabs();
         });
@@ -195,8 +227,9 @@ var ShortPixel = function() {
         });
     }
 
+    // Switch between settings tabs.
     function switchSettingsTab(target){
-      console.log(window.location.pathname);
+
         var tab = target.replace("tab-",""),
             beacon = "",
             section = jQuery("section#" +target);
@@ -241,6 +274,7 @@ var ShortPixel = function() {
         }
     }
 
+    // Fixes the height of the current active tab.
     function adjustSettingsTabsHeight(){
         var sectionHeight = jQuery('section.sel-tab').height() + 90;
         //sectionHeight = Math.max(sectionHeight, jQuery('section#tab-adv-settings .wp-shortpixel-options').height() + 20);
@@ -255,7 +289,7 @@ var ShortPixel = function() {
             data = JSON.parse(response);
             if(data["Status"] == 'success') {
                 jQuery("#short-pixel-media-alert").hide();
-                console.log("dismissed");
+                //console.log("dismissed");
             }
         });
     }
@@ -786,6 +820,7 @@ var ShortPixel = function() {
         displayComparerPopup: displayComparerPopup,
         closeComparerPopup  : closeComparerPopup,
         convertPunycode     : convertPunycode,
+        checkExifWarning    : checkExifWarning,
         comparerData        : {
             cssLoaded   : false,
             jsLoaded    : false,
@@ -810,7 +845,7 @@ function showToolBarAlert($status, $message, id) {
             }
             robo.addClass("shortpixel-alert");
             robo.addClass("shortpixel-quota-exceeded");
-            jQuery("a", robo).attr("href", "options-general.php?page=wp-shortpixel");
+            jQuery("a", robo).attr("href", "options-general.php?page=wp-shortpixel-settings");
             //jQuery("a", robo).attr("target", "_blank");
             //jQuery("a div", robo).attr("title", "ShortPixel quota exceeded. Click to top-up");
             jQuery("a div", robo).attr("title", "ShortPixel quota exceeded. Click for details.");
@@ -826,7 +861,7 @@ function showToolBarAlert($status, $message, id) {
         case ShortPixel.STATUS_NO_KEY:
             robo.addClass("shortpixel-alert");
             robo.addClass("shortpixel-quota-exceeded");
-            jQuery("a", robo).attr("href", "options-general.php?page=wp-shortpixel");//"http://shortpixel.com/wp-apikey");
+            jQuery("a", robo).attr("href", "options-general.php?page=wp-shortpixel-settings");//"http://shortpixel.com/wp-apikey");
             //jQuery("a", robo).attr("target", "_blank");
             jQuery("a div", robo).attr("title", "Get API Key");
             break;
@@ -876,7 +911,6 @@ function checkBulkProgress() {
 
     first = false; //rearm replacer
     var adminUrl = ShortPixel.WP_ADMIN_URL.toLowerCase().replace(/\/\//g , replacer);
-
     //handle possible Punycode domain names.
     if(url.search(adminUrl) < 0) {
         url = ShortPixel.convertPunycode(url);

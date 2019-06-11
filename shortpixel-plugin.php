@@ -15,8 +15,14 @@ class ShortPixelPlugin
 
   protected $is_noheaders = false;
 
+  protected $plugin_path;
+  protected $plugin_url;
+
   public function __construct()
   {
+      $this->plugin_path = plugin_dir_path(SHORTPIXEL_PLUGIN_FILE);
+      $this->plugin_url = plugin_dir_url(SHORTPIXEL_PLUGIN_FILE);
+
       $this->initRuntime();
       $this->initHooks();
 
@@ -66,7 +72,7 @@ class ShortPixelPlugin
       add_action('admin_menu', array($this,'admin_pages'));
       add_action('admin_enqueue_scripts', array($this, 'admin_scripts'));
       add_action('admin_notices', array($this, 'admin_notices')); // notices occured before page load
-      add_action('shortpixel_show_notices', array($this, 'admin_notices'));  // called in views.
+      add_action('admin_footer', array($this, 'admin_notices'));  // called in views.
 
   }
 
@@ -76,7 +82,7 @@ class ShortPixelPlugin
       add_options_page( __('ShortPixel Settings','shortpixel-image-optimiser'), 'ShortPixel', 'manage_options', 'wp-shortpixel-settings', array($this, 'route'));
   }
 
-  /** All scripts should be registed, then enqueued here
+  /** All scripts should be registed, not enqueued here (unless global wp-admin is needed )
   *
   * Not all those registered must be enqueued however.
   */
@@ -150,7 +156,7 @@ class ShortPixelPlugin
       global $shortPixelPluginInstance; //brrr @todo Find better solution for this some day.
       $default_action = 'load'; // generic action on controller.
       $action = isset($_REQUEST['sp-action']) ? sanitize_text_field($_REQUEST['sp-action']) : $default_action;
-Log::addInfo('Request', $_REQUEST);
+      Log::addDebug('Request', $_REQUEST);
       $controller = false;
 
       switch($plugin_page)
@@ -179,8 +185,8 @@ Log::addInfo('Request', $_REQUEST);
         }
 
       }
-
   }
+
 
 
 }

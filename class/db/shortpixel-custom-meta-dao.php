@@ -184,12 +184,23 @@ class ShortPixelCustomMetaDao {
         $sql = "UPDATE {$this->db->getPrefix()}shortpixel_folders SET status = -1 WHERE id = %d";
         $this->db->query($sql, array($id));
 
-        $this->db->hideErrors();
-        $sql = "DELETE FROM {$this->db->getPrefix()}shortpixel_meta WHERE folder_id = %d AND status <> 1 AND status <> 2";
-        @$this->db->query($sql, array($id));
-        $sql = "DELETE FROM {$this->db->getPrefix()}shortpixel_folders WHERE path = %s";
-        @$this->db->query($sql, array($folderPath));
-        $this->db->restoreErrors();
+        //$this->db->hideErrors();
+        //  If images are optimized, not all are removed here.
+        $sql = "DELETE FROM {$this->db->getPrefix()}shortpixel_meta WHERE folder_id = %d AND status <> %d AND status <> %d";
+        $this->db->query($sql, array($id, ShortPixelMeta::FILE_STATUS_PENDING, ShortPixelMeta::FILE_STATUS_SUCCESS));
+
+        $sql = "SELECT FROM {$this->db->getPrefix()}shortpixel_meta WHERE folder_id = %d ";
+        $still_has_images = $this->db->query($sql, array($id));
+
+        // if there are no images left, remove the folder. Otherwise keep it at -1.
+        if (count($still_has_images) == 0)
+        {
+          $sql = "DELETE FROM {$this->db->getPrefix()}shortpixel_folders WHERE path = %s";
+          $this->db->query($sql, array($folderPath));
+        }
+
+
+        //$this->db->restoreErrors();
     }
 
     public function newFolderFromPath($path, $uploadPath, $rootPath) {
@@ -393,6 +404,7 @@ class ShortPixelCustomMetaDao {
     */
     public function setBulkRestore($folder_id)
     {
+        LOG::addDebug('Set Bulk Restore', array('folderid' => $folder_id));
       if (! is_numeric($folder_id) || $folder_id <= 0)
         return false;
 

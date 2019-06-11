@@ -33,7 +33,7 @@ class SettingsController extends shortPixelController
       {
           // @todo Remove Debug Call
           $this->model = new \WPShortPixelSettings();
-          Log::logLevel(DebugItem::LEVEL_DEBUG);
+
 
           parent::__construct();
 
@@ -67,7 +67,7 @@ class SettingsController extends shortPixelController
         if ($this->is_form_submit && isset($this->postData['apiKey']))
         {
             $this->checkKey();
-            if ($this->postData['verifiedKey'])
+            if (isset($this->postData['verifiedKey']) && $this->postData['verifiedKey'])
             {
               $this->model->apiKey = $this->postData['apiKey'];
               $this->model->verifiedKey = $this->postData['verifiedKey'];
@@ -105,6 +105,7 @@ class SettingsController extends shortPixelController
           }
       }
 
+      /* Loads the view data and the view */
       public function load_settings()
       {
          $this->loadQuotaData();
@@ -145,7 +146,7 @@ class SettingsController extends shortPixelController
       public function checkKey()
       {
           $this->is_constant_key = (defined("SHORTPIXEL_API_KEY")) ? true : false;
-          $this->hide_api_key = (defined("SHORTPIXEL_HIDE_API_KEY")) ? true : false;
+          $this->hide_api_key = (defined("SHORTPIXEL_HIDE_API_KEY")) ? SHORTPIXEL_HIDE_API_KEY : false;
 
           $verified_key = $this->model->verifiedKey;
           $this->is_verifiedkey = ($verified_key) ? true : false;
@@ -210,7 +211,7 @@ class SettingsController extends shortPixelController
 
          if (! $this->is_verifiedkey)
          {
-           Notice::addError($this->quotaData["Message"]);
+            Notice::addError(sprintf(__('Error during verifying API key: %s','shortpixel-image-optimizer'), $this->quotaData['Message'] ));
          }
          elseif ($this->is_form_submit) {
            $this->processNewKey();
@@ -411,7 +412,7 @@ class SettingsController extends shortPixelController
 
           if (isset($post['emptyBackup']))
           {
-            $this->shortpixel->emptyBackup();
+            $this->shortPixel->emptyBackup();
           }
           unset($post['emptyBackup']);
 
@@ -429,6 +430,7 @@ class SettingsController extends shortPixelController
       protected function processWebP($post)
       {
         $deliverwebp = 0;
+        \WPShortPixel::alterHtaccess(true); // always remove the statements.
 
         if (isset($post['createWebp']) && $post['createWebp'] == 1)
         {
@@ -454,10 +456,11 @@ class SettingsController extends shortPixelController
             }
         }
 
-        if (! $this->is_nginx)
+        if (! $this->is_nginx && $deliverwebp == 3) // unaltered wepb via htaccess
         {
-          \WPShortPixel::alterHtaccess(true);
+          \WPShortPixel::alterHtaccess();
         }
+
 
          $post['deliverWebp'] = $deliverwebp;
          unset($post['deliverWebpAlteringType']);

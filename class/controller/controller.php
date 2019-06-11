@@ -5,7 +5,7 @@ use ShortPixel\ShortPixelLogger as Log;
 class ShortPixelController
 {
   protected static $controllers = array();
-  protected static $modelsLoaded = array(); // don't require twice, limit amount of require looksups.. 
+  protected static $modelsLoaded = array(); // don't require twice, limit amount of require looksups..
 
   protected $shortPixel;
 
@@ -73,15 +73,18 @@ class ShortPixelController
 
   public function setShortPixel($pixel)
   {
-    $this->shortPixel = $pixel;
+    $this->shortPixel = $pixel; // notice the capital, case-sensitive!
   }
 
   /** Loads a view
   *
   *
   */
-  protected function loadView($template = null)
+  public function loadView($template = null)
   {
+      if (strlen(trim($template)) == 0)
+        $template = null;
+
       if (is_null($this->template) && is_null($template))
       {
         // error
@@ -99,7 +102,8 @@ class ShortPixelController
         include($template_path);
       }
       else {
-        Log::addError("View $template could not be found in " . $template_path);
+        Log::addError("View $template could not be found in " . $template_path,
+        array('class' => get_class($this), 'req' => $_REQUEST));
       }
 
   }

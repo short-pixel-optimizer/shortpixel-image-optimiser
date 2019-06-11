@@ -197,7 +197,7 @@ class ShortPixelListTable extends WP_List_Table {
     }
 
     public function no_items() {
-        echo(__('No images avaliable. Go to <a href="options-general.php?page=wp-shortpixel#adv-settings">Advanced Settings</a> to configure additional folders to be optimized.','shortpixel-image-optimiser'));
+        echo(__('No images avaliable. Go to <a href="options-general.php?page=wp-shortpixel-settings&part=adv-settings">Advanced Settings</a> to configure additional folders to be optimized.','shortpixel-image-optimiser'));
     }
 
     /**

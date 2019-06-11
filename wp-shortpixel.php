@@ -2,15 +2,16 @@
 /**
  * Plugin Name: ShortPixel Image Optimizer
  * Plugin URI: https://shortpixel.com/
- * Description: ShortPixel optimizes images automatically, while guarding the quality of your images. Check your <a href="options-general.php?page=wp-shortpixel" target="_blank">Settings &gt; ShortPixel</a> page on how to start optimizing your image library and make your website load faster.
- * Version: 4.13.1-DEV01
+ * Description: ShortPixel optimizes images automatically, while guarding the quality of your images. Check your <a href="options-general.php?page=wp-shortpixel-settings" target="_blank">Settings &gt; ShortPixel</a> page on how to start optimizing your image library and make your website load faster.
+ * Version: 4.14.0-DEV07
  * Author: ShortPixel
  * Author URI: https://shortpixel.com
  * Text Domain: shortpixel-image-optimiser
  * Domain Path: /lang
  */
 
-define('SHORTPIXEL_RESET_ON_ACTIVATE', false); //if true TODO set false
+if (! defined('SHORTPIXEL_RESET_ON_ACTIVATE'))
+  define('SHORTPIXEL_RESET_ON_ACTIVATE', false); //if true TODO set false
 //define('SHORTPIXEL_DEBUG', true);
 //define('SHORTPIXEL_DEBUG_TARGET', true);
 
@@ -18,7 +19,7 @@ define('SHORTPIXEL_PLUGIN_FILE', __FILE__);
 
 //define('SHORTPIXEL_AFFILIATE_CODE', '');
 
-define('SHORTPIXEL_IMAGE_OPTIMISER_VERSION', "4.13.1-DEV01");
+define('SHORTPIXEL_IMAGE_OPTIMISER_VERSION', "4.14.0-DEV07");
 define('SHORTPIXEL_MAX_TIMEOUT', 10);
 define('SHORTPIXEL_VALIDATE_MAX_TIMEOUT', 15);
 define('SHORTPIXEL_BACKUP', 'ShortpixelBackups');
@@ -211,7 +212,7 @@ $option = get_option('wp-short-pixel-create-webp-markup');
 if ( $option ) {
     if(shortPixelIsPluginActive('shortpixel-adaptive-images/short-pixel-ai.php')) {
         set_transient("shortpixel_thrown_notice", array('when' => 'spai', 'extra' => __('Please deactivate the ShortPixel Image Optimizer\'s
-            <a href="options-general.php?page=wp-shortpixel#adv-settings">Deliver WebP using PICTURE tag</a>
+            <a href="options-general.php?page=wp-shortpixel-settings&part=adv-settings">Deliver WebP using PICTURE tag</a>
             option when the ShortPixel Adaptive Images plugin is active.','shortpixel-image-optimiser')), 1800);
     }
     elseif( $option == 1 ){

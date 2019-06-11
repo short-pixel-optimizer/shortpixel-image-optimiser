@@ -2,6 +2,8 @@
 
 use ShortPixel\DebugItem as DebugItem;
 use ShortPixel\ShortPixelLogger as Log;
+use ShortPixel\NoticeController as Notice;
+
 
 class WPShortPixel {
 
@@ -146,7 +148,8 @@ class WPShortPixel {
         add_action('wp_ajax_shortpixel_check_quota', array(&$this, 'handleCheckQuota'));
         add_action('admin_action_shortpixel_check_quota', array(&$this, 'handleCheckQuota'));
         //This adds the constants used in PHP to be available also in JS
-        add_action( 'admin_footer', array( $this, 'shortPixelJS') );
+        add_action( 'admin_enqueue_scripts', array( $this, 'shortPixelJS') );
+        add_action( 'admin_footer', array($this, 'admin_footer_js') );
         add_action( 'admin_head', array( $this, 'headCSS') );
 
         if($this->_settings->frontBootstrap && shortPixelCheckQueue()) {
@@ -482,20 +485,14 @@ class WPShortPixel {
     }
 
     /** @todo Plugin init class. Try to get rid of inline JS. Also still loads on all WP pages, prevent that. */
-
     function shortPixelJS() {
+
         //require_once(ABSPATH . 'wp-admin/includes/screen.php');
         if(function_exists('get_current_screen')) {
             $screen = get_current_screen();
 
              if(is_object($screen)) {
-                if( in_array($screen->id, array('attachment', 'upload', 'media_page_wp-short-pixel-custom'))) {
-                    //output the comparer html
-                    $this->view->outputComparerHTML();
-                    //render a template of the list cell to be used by the JS
-                    $this->view->renderListCell("__SP_ID__", 'imgOptimized', true, "__SP_THUMBS_TOTAL__", true, true,
-                        array("__SP_FIRST_TYPE__", "__SP_SECOND_TYPE__"), "__SP_CELL_MESSAGE__", 'sp-column-actions-template');
-                }
+
 
                 wp_enqueue_style('short-pixel-bar.min.css', plugins_url('/res/css/short-pixel-bar.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
                 if( in_array($screen->id, array('attachment', 'upload', 'settings_page_wp-shortpixel', 'media_page_wp-short-pixel-bulk', 'media_page_wp-short-pixel-custom'))) {
@@ -509,20 +506,10 @@ class WPShortPixel {
                 }
             }
         }
-        ?>
-        <script type="text/javascript" >
-            //check after 10 seconds if ShortPixel initialized OK, if not, force the init (could happen if a JS error somewhere else stopped the JS execution).
-            function delayedInit() {
-                if(typeof ShortPixel !== "undefined") {
-                    ShortPixel.init();
-                } else {
-                    setTimeout(delayedInit, 10000);
-                }
-            }
-            setTimeout(delayedInit, 10000);
-        </script> <?php
 
-        wp_register_script('shortpixel' . $this->jsSuffix, plugins_url('/res/js/shortpixel' . $this->jsSuffix,SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
+
+        wp_register_script('shortpixel' . $this->jsSuffix, plugins_url('/res/js/shortpixel' . $this->jsSuffix,SHORTPIXEL_PLUGIN_FILE), array('jquery'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
+
 
         // Using an Array within another Array to protect the primitive values from being cast to strings
         $ShortPixelConstants = array(array(
@@ -549,7 +536,8 @@ class WPShortPixel {
         if (Log::isManualDebug() )
         {
           Log::addInfo('Ajax Manual Debug Mode');
-          $ShortPixelConstants[0]['AJAX_URL'] = admin_url('admin-ajax.php?SHORTPIXEL_DEBUG=true');
+          $logLevel = Log::getLogLevel();
+          $ShortPixelConstants[0]['AJAX_URL'] = admin_url('admin-ajax.php?SHORTPIXEL_DEBUG=' . $logLevel);
         }
 
         $jsTranslation = array(
@@ -591,6 +579,38 @@ class WPShortPixel {
         wp_enqueue_script('punycode.min.js', plugins_url('/res/js/punycode.min.js',SHORTPIXEL_PLUGIN_FILE) );
     }
 
+    /** Outputs direct JS to the admin footer
+    * @todo Find a better solution for this */
+    public function admin_footer_js()
+    {
+      if(function_exists('get_current_screen')) {
+          $screen = get_current_screen();
+          if(is_object($screen)) {
+
+              if( in_array($screen->id, array('attachment', 'upload', 'media_page_wp-short-pixel-custom'))) {
+                  //output the comparer html
+                  $this->view->outputComparerHTML();
+                  //render a template of the list cell to be used by the JS
+                  $this->view->renderListCell("__SP_ID__", 'imgOptimized', true, "__SP_THUMBS_TOTAL__", true, true,
+                      array("__SP_FIRST_TYPE__", "__SP_SECOND_TYPE__"), "__SP_CELL_MESSAGE__", 'sp-column-actions-template');
+              }
+          }
+      }
+      ?>
+      <script type="text/javascript" >
+          //check after 10 seconds if ShortPixel initialized OK, if not, force the init (could happen if a JS error somewhere else stopped the JS execution).
+          function delayedInit() {
+              if(typeof ShortPixel !== "undefined") {
+                  ShortPixel.init();
+              } else {
+                  setTimeout(delayedInit, 10000);
+              }
+          }
+          setTimeout(delayedInit, 10000);
+      </script>
+      <?php
+    }
+
     /** Displays an icon in the toolbar when processing images
     *   hook - admin_bar_menu
     *  @param Obj $wp_admin_bar
@@ -614,7 +634,7 @@ class WPShortPixel {
             $tooltip = '';
             $exceedTooltip = __('ShortPixel quota exceeded. Click for details.','shortpixel-image-optimiser');
             //$link = "http://shortpixel.com/login/" . $this->_settings->apiKey;
-            $link = "options-general.php?page=wp-shortpixel";
+            $link = "options-general.php?page=wp-shortpixel-settings";
             //$blank = '_blank';
             //$icon = "shortpixel-alert.png";
         }
@@ -669,7 +689,20 @@ class WPShortPixel {
             // 2. Perform the action
             case 'short-pixel-bulk':
                 foreach( $mediaIds as $ID ) {
+
                     $meta = wp_get_attachment_metadata($ID);
+                    if(!is_array($meta)) {
+                        self::log('CUSTOM BULK META NOT AN ARRAY: ' . json_encode($meta));
+                        $meta = ShortPixelMetaFacade::sanitizeMeta($meta, false);
+                        if(isset($meta['previous_meta'])) {
+                            self::log('COULDN\'T SANITIZE PROPERLY.');
+                            continue;
+                        }
+                        else {
+                            self::log('SANITIZED.');
+                        }
+                    }
+
                     if(!is_array($meta)) continue;
                     if(   (   !isset($meta['ShortPixel']) //never touched by ShortPixel
                            || (isset($meta['ShortPixel']['WaitingProcessing']) && $meta['ShortPixel']['WaitingProcessing'] == true))
@@ -1052,11 +1085,19 @@ class WPShortPixel {
         }
         $idList = array();
         $itemList = array();
+        $timeoutMinThreshold = SHORTPIXEL_MAX_EXECUTION_TIME < 10 ? 2 : (SHORTPIXEL_MAX_EXECUTION_TIME < 30 ? 3 : 5);
+        $maxTime = min(SHORTPIXEL_MAX_EXECUTION_TIME, 90);
+        $timeoutThreshold = 5; // will adapt this with the maximum time needed for one pass
+        $passTime = time();
         for ($sanityCheck = 0, $crtStartQueryID = $startQueryID;
              ($crtStartQueryID >= $endQueryID) && (count($itemList) < SHORTPIXEL_PRESEND_ITEMS) && ($sanityCheck < 150)
-              && (SHORTPIXEL_MAX_EXECUTION_TIME < 10 || time() - $this->timer < SHORTPIXEL_MAX_EXECUTION_TIME - 5); $sanityCheck++) {
+              && (time() - $this->timer < $maxTime - $timeoutThreshold); $sanityCheck++) {
 
-            self::log("GETDB: current StartID: " . $crtStartQueryID);
+            $timeoutThreshold = max($timeoutThreshold, $timeoutMinThreshold + time() - $passTime);
+            $passTime = time();
+            $maxResults = $timeoutThreshold > 15 ? SHORTPIXEL_MAX_RESULTS_QUERY / 3 :
+                ($timeoutThreshold > 10 ? SHORTPIXEL_MAX_RESULTS_QUERY / 2 : SHORTPIXEL_MAX_RESULTS_QUERY);
+            self::log("GETDB: pass $sanityCheck current StartID: $crtStartQueryID Threshold: $timeoutThreshold, MaxResults: $maxResults" );
 
             /* $queryPostMeta = "SELECT * FROM " . $wpdb->prefix . "postmeta
                 WHERE ( post_id <= $crtStartQueryID AND post_id >= $endQueryID )
@@ -1065,7 +1106,9 @@ class WPShortPixel {
                 LIMIT " . SHORTPIXEL_MAX_RESULTS_QUERY;
             $resultsPostMeta = $wpdb->get_results($queryPostMeta);
             */
-            $resultsPostMeta = WpShortPixelMediaLbraryAdapter::getPostMetaSlice($crtStartQueryID, $endQueryID, SHORTPIXEL_MAX_RESULTS_QUERY);
+
+            $resultsPostMeta = WpShortPixelMediaLbraryAdapter::getPostMetaSlice($crtStartQueryID, $endQueryID, $maxResults);
+            if(time() - $this->timer >= 60) self::log("GETDB is SLOW. Got meta slice.");
 
             if ( empty($resultsPostMeta) ) {
                 $crtStartQueryID -= SHORTPIXEL_MAX_RESULTS_QUERY;
@@ -1077,11 +1120,21 @@ class WPShortPixel {
                 continue;
             }
 
+            if($timeoutThreshold > 10) self::log("GETDB is SLOW. Meta slice has " . count($resultsPostMeta) . ' items.');
+
             foreach ( $resultsPostMeta as $itemMetaData ) {
                 $crtStartQueryID = $itemMetaData->post_id;
+                if(time() - $this->timer >= 60) self::log("GETDB is SO SLOW. Check processable for $crtStartQueryID.");
+                if(time() - $this->timer >= $maxTime - $timeoutThreshold){
+                    break;
+                }
+
                 if(!in_array($crtStartQueryID, $idList) && $this->isProcessable($crtStartQueryID, ($this->_settings->optimizePdfs ? array() : array('pdf')))) {
                     $item = new ShortPixelMetaFacade($crtStartQueryID);
+
+                    if($timeoutThreshold > 15) self::log("GETDB is SO SLOW. Get meta for $crtStartQueryID.");
                     $meta = $item->getMeta();//wp_get_attachment_metadata($crtStartQueryID);
+                    if($timeoutThreshold > 15) self::log("GETDB is SO SLOW. Got meta.");
 
                     if($meta->getStatus() != 2) {
                         $addIt = (strpos($meta->getMessage(), __('Image files are missing.', 'shortpixel-image-optimiser')) === false);
@@ -1138,9 +1191,12 @@ class WPShortPixel {
                 $this->prioQ->setStartBulkId($startQueryID);
             } else {
                 $crtStartQueryID--;
+                self::log("GETDB just decrementing. Crt: $crtStartQueryID Start: $startQueryID, list: " . json_encode($idList));
             }
         }
-        return array("items" => $itemList, "skipped" => $skippedAlreadyProcessed, "searching" => ($sanityCheck >= 150) || (SHORTPIXEL_MAX_EXECUTION_TIME >= 10 && time() - $this->timer >= SHORTPIXEL_MAX_EXECUTION_TIME - 5));
+        $ret = array("items" => $itemList, "skipped" => $skippedAlreadyProcessed, "searching" => ($sanityCheck >= 150) || (time() - $this->timer >= $maxTime - $timeoutThreshold));
+        self::log('GETDB returns ' . json_encode($ret));
+        return $ret;
     }
 
     /**
@@ -1203,7 +1259,7 @@ class WPShortPixel {
 
         $rawPrioQ = $this->prioQ->get();
         if(count($rawPrioQ)) { self::log("HIP: 0 Priority Queue: ".json_encode($rawPrioQ)); }
-        self::log("HIP: 0 Bulk running? " . $this->prioQ->bulkRunning() . " START " . $this->_settings->startBulkId . " STOP " . $this->_settings->stopBulkId);
+        self::log("HIP: 0 Bulk running? " . $this->prioQ->bulkRunning() . " START " . $this->_settings->startBulkId . " STOP " . $this->_settings->stopBulkId . " MaxTime: " . SHORTPIXEL_MAX_EXECUTION_TIME);
 
         //handle the bulk restore and cleanup first - these are fast operations taking precedece over optimization
         if(   $this->prioQ->bulkRunning()
@@ -1492,7 +1548,9 @@ class WPShortPixel {
         if($result["Status"] !== ShortPixelAPI::STATUS_RETRY) {
             $this->_settings->bulkLastStatus = $result;
         }
-        die(json_encode($result));
+        $ret = json_encode($result);
+        self::log("HIP RET " . $ret);
+        die($ret);
     }
 
 
@@ -1601,6 +1659,7 @@ class WPShortPixel {
         return $URLsAndPATHs;
     }
 
+    /** Manual optimization request. This is only called from the Media Library, never from the Custom media */
     public function handleManualOptimization() {
         $imageId = intval($_GET['image_id']);
         $cleanup = $_GET['cleanup'];
@@ -2374,13 +2433,13 @@ class WPShortPixel {
             $quotaData = $this->getQuotaInformation();
         }
         if ( !$quotaData['APIKeyValid']) {
-            if(strlen($this->_settings->apiKey)) $this->view->displayActivationNotice('generic', $quotaData['Message']);
+            if(strlen($this->_settings->apiKey))
+                Notice::addError(sprintf(__('Shortpixel Remote API Error: %s','shortpixel-image-optimizer'), $quotaData['Message'] ));
             return $quotaData;
         }
         //$tempus = microtime(true);
         $quotaData = $this->countAllIfNeeded($quotaData, $refreshFiles);
         //echo("Count took (seconds): " . (microtime(true) - $tempus));
-        //Log::addDebug('QuotaData', $quotaData);
 
         if($quotaData['APICallsQuotaNumeric'] + $quotaData['APICallsQuotaOneTimeNumeric'] > $quotaData['APICallsMadeNumeric'] + $quotaData['APICallsMadeOneTimeNumeric']) {
             $this->_settings->quotaExceeded = '0';
@@ -2425,21 +2484,22 @@ class WPShortPixel {
         if ( isset($_GET['noheader']) ) {
             require_once(ABSPATH . 'wp-admin/admin-header.php');
         }
-        $this->outputHSBeacon();
+        //$this->outputHSBeacon();
+        \ShortPixel\HelpScout::outputBeacon($this->getApiKey());
         ?>
 	    <div class="wrap shortpixel-other-media">
             <h2>
-                <div style="float:right;">
-                    <a href="upload.php?page=wp-short-pixel-custom&refresh=1" id="refresh" class="button button-primary" title="<?php _e('Refresh custom folders content','shortpixel-image-optimiser');?>">
-                        <?php _e('Refresh folders','shortpixel-image-optimiser');?>
-                    </a>
-                </div>
                 <?php _e('Other Media optimized by ShortPixel','shortpixel-image-optimiser');?>
             </h2>
 
-            <div id="poststuff">
-                <div id="post-body" class="metabox-holder columns-2">
-                    <div id="post-body-content">
+            <div id="legacy">
+                <div id="legacy" class="metabox-holder">
+                    <div id="legacy">
+                      <div style="float:left;">
+                          <a href="upload.php?page=wp-short-pixel-custom&refresh=1" id="refresh" class="button button-primary" title="<?php _e('Refresh custom folders content','shortpixel-image-optimiser');?>">
+                              <?php _e('Refresh folders','shortpixel-image-optimiser');?>
+                          </a>
+                      </div>
                         <div class="meta-box-sortables ui-sortable">
                             <form method="get">
                                 <input type="hidden" name="page" value="wp-short-pixel-custom" />
@@ -2521,7 +2581,7 @@ class WPShortPixel {
 
         if(isset($_POST["bulkRestore"]))
         {
-            $bulkRestore = new \ShortPixel\BulkRestoreAll();
+            $bulkRestore = new \ShortPixel\BulkRestoreAll(); // controller
             $bulkRestore->setShortPixel($this);
             $bulkRestore->setupBulk();
 
@@ -2729,7 +2789,8 @@ class WPShortPixel {
         }
 
         $ret = array();
-        $handle = new ShortPixelMetaFacade(intval($_POST['id']) );
+        // This shall not be Intval, since Post_id can be custom (C-xx)
+        $handle = new ShortPixelMetaFacade( sanitize_text_field($_POST['id']) );
 
         $meta = $handle->getMeta();
         $rawMeta = $handle->getRawMeta();
@@ -3012,6 +3073,7 @@ Header append Vary Accept env=REDIRECT_webp
             }
         } */
         // END: Verify .htaccess writeability
+
 
         //by default we try to fetch the API Key from wp-config.php (if defined)
         /*if ( defined("SHORTPIXEL_API_KEY") && strlen(SHORTPIXEL_API_KEY) == 20)
@@ -3354,8 +3416,8 @@ Header append Vary Accept env=REDIRECT_webp
         $args['body']['host'] = parse_url(get_site_url(),PHP_URL_HOST);
         $argsStr .= "&host={$args['body']['host']}";
         if(strlen($this->_settings->siteAuthUser)) {
-            $args['body']['user'] = $this->_settings->siteAuthUser;
-            $args['body']['pass'] = $this->_settings->siteAuthPass;
+            $args['body']['user'] = stripslashes($this->_settings->siteAuthUser);
+            $args['body']['pass'] = stripslashes($this->_settings->siteAuthPass);
             $argsStr .= '&user=' . urlencode($args['body']['user']) . '&pass=' . urlencode($args['body']['pass']);
         }
         if($settings !== false) {
@@ -3786,7 +3848,7 @@ Header append Vary Accept env=REDIRECT_webp
         $defaults['wp-shortPixel'] = __('ShortPixel Compression', 'shortpixel-image-optimiser');
         if(current_user_can( 'manage_options' )) {
             $defaults['wp-shortPixel'] .=
-                      '&nbsp;<a href="options-general.php?page=wp-shortpixel#stats" title="'
+                      '&nbsp;<a href="options-general.php?page=wp-shortpixel-settings&part=stats" title="'
                     . __('ShortPixel Statistics','shortpixel-image-optimiser')
                     . '"><span class="dashicons dashicons-dashboard"></span></a>';
         }
@@ -3846,7 +3908,7 @@ Header append Vary Accept env=REDIRECT_webp
     }
 
     public function generatePluginLinks($links) {
-        $in = '<a href="options-general.php?page=wp-shortpixel">Settings</a>';
+        $in = '<a href="options-general.php?page=wp-shortpixel-settings">Settings</a>';
         array_unshift($links, $in);
         return $links;
     }
@@ -4085,16 +4147,80 @@ Header append Vary Accept env=REDIRECT_webp
         return array('width' => max(100, $width), 'height' => max(100, $height));
     }
 
-
     public function getOtherCompressionTypes($compressionType = false) {
         return array_values(array_diff(array(0, 1, 2), array(0 + $compressionType)));
     }
 
-    /* Output HelpScout Beacon */
-    /* @todo Move to it's own integration */
     function outputHSBeacon() {
-        Log::addDebug('OutputHSBeacon called on old function');
-      ?>
+        Log::addWarn('OutputHSBeacon called on old function');
+	?>
+        <style>
+            .shortpixel-hs-blind {
+                position: fixed;
+                bottom: 18px;
+                right: 0;
+                z-index: 20003;
+                background-color: white;
+                width: 87px;
+                height: 174px;
+                border-radius: 20px 0 0 20px;
+            }
+            .shortpixel-hs-button-blind {
+                display:none;
+                position: fixed;
+                bottom: 115px;right: 0;
+                z-index: 20003;
+                background-color: white;
+                width: 237px;
+                height: 54px;
+            }
+            .shortpixel-hs-tools {
+                position: fixed;
+                bottom: 116px;
+                right: 0px;
+                z-index: 20003;
+                background-color: #ecf9fc;
+                padding: 8px 18px 3px 12px;
+                border-radius: 26px 0 0 26px;
+                -webkit-box-shadow: 1px 1px 5px 0px rgba(6,109,117,1);
+                -moz-box-shadow: 1px 1px 5px 0px rgba(6,109,117,1);
+                box-shadow: 1px 1px 10px 0px rgb(172, 173, 173);
+            }
+            @media (max-width: 767px) {
+                .shortpixel-hs-blind {
+                    bottom: 8px;
+                    height: 194px;
+                }
+                .shortpixel-hs-button-blind {
+                    bottom: 100px;
+                }
+            }
+        </style>
+        <div id="shortpixel-hs-blind" class="shortpixel-hs-blind"></div>
+        <div id="shortpixel-hs-button-blind" class="shortpixel-hs-button-blind"></div>
+        <div id="shortpixel-hs-tools" class="shortpixel-hs-tools">
+            <a href="javascript:shortpixelToggleHS();" class="shortpixel-hs-tools-docs" title="Search through our online documentation.">
+                <img src="<?php echo(plugins_url('/shortpixel-image-optimiser/res/img/notes-sp.png'));?>" style="margin-bottom: 2px;width: 36px;">
+            </a>
+        </div>
+        <script>
+            window.shortpixelHSOpen = -1;
+            function shortpixelToggleHS() {
+                if(window.shortpixelHSOpen == -1) {
+                    HS.beacon.init();
+                }
+                if(window.shortpixelHSOpen == 1) {
+                    HS.beacon.close();
+                    jQuery("#shortpixel-hs-button-blind").css('display', 'none');
+                    window.shortpixelHSOpen = 0;
+                } else {
+                    HS.beacon.open();
+                    jQuery("#shortpixel-hs-button-blind").css('display', 'block');
+                    window.shortpixelHSOpen = 1;
+                }
+            }
+        </script>
+        <script type="text/javascript" src="https://quriobot.com/qb/widget/KoPqxmzqzjbg5eNl/V895xbyndnmeqZYd" async defer></script>
         <script>
             <?php
             $screen = get_current_screen();

@@ -2,9 +2,9 @@
 Contributors: ShortPixel 
 Tags: compressor, image, compression, optimize, image optimizer, image optimiser, image compression, resize, compress pdf, compress jpg, compress png, image compression
 Requires at least: 3.2.0
-Tested up to: 5.1
+Tested up to: 5.2
 Requires PHP: 5.3
-Stable tag: 4.13.1
+Stable tag: 4.14.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -240,6 +240,13 @@ The ShortPixel Image Optimiser plugin calls the following actions and filters:
 9. Check other optimized images status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+== 4.14.0 ==
+
+Release date:
+* Fix custom bulk for PDFs when the pdf thumbnails are not activated
+* Fix selecting items from DB twice for bulk in some circumstances
+* Adaptive Max execution time and capped to 90 sec. for the bulk background AJAX calls. (Kinsta has a max_execution_time of 300 sec. in PHP but the HTTP connection is cut after 180 sec.)
 
 = 4.13.1 =
 
