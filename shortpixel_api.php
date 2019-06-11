@@ -456,6 +456,14 @@ class ShortPixelAPI {
     * @param $PATHs
     * @return Array Array with Status and optional Message  */
     public static function backupImage($mainPath, $PATHs) {
+        /**
+         * Passing a truthy value to the filter will effectively short-circuit this function.
+         * So third party plugins can handle Backup by there own.
+         */
+        if(apply_filters('shortpixel_skip_backup', false, $mainPath, $PATHs)){
+            return array("Status" => self::STATUS_SUCCESS);
+        }
+
         //$fullSubDir = str_replace(wp_normalize_path(get_home_path()), "", wp_normalize_path(dirname($itemHandler->getMeta()->getPath()))) . '/';
         //$SubDir = ShortPixelMetaFacade::returnSubDir($itemHandler->getMeta()->getPath(), $itemHandler->getType());
         $fullSubDir = ShortPixelMetaFacade::returnSubDir($mainPath);
@@ -705,9 +713,7 @@ class ShortPixelAPI {
                         if($archive &&  SHORTPIXEL_DEBUG === true) {
                             if(!file_exists($tempFilePATH)) {
                                 WPShortPixel::log("MISSING FROM ARCHIVE. tempFilePath: $tempFilePATH with ID: $tempFileID");
-                            } elseif(!file_exists($targetFile)){
-                                WPShortPixel::log("MISSING TARGET: $targetFile");
-                            } elseif(!is_writable($targetFile)){
+                            } elseif(!wp_is_writable($targetFile)){
                                 WPShortPixel::log("TARGET NOT WRITABLE: $targetFile");
                             }
                         }
@@ -861,7 +867,7 @@ class ShortPixelAPI {
         foreach ( $PATHs as $Id => $File )
         {
             //we try again with a different path
-            if ( !file_exists($File) ){
+            if ( !apply_filters( 'shortpixel_image_exists', file_exists($File), $File ) ){
                 //$NewFile = $uploadDir['basedir'] . "/" . substr($File,strpos($File, $StichString));//+strlen($StichString));
                 $NewFile = SHORTPIXEL_UPLOADS_BASE . substr($File,strpos($File, $StichString)+strlen($StichString));
                 if (file_exists($NewFile)) {
