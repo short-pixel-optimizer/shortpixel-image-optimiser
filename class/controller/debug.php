@@ -22,6 +22,14 @@ namespace ShortPixel;
    protected $format = "[ %%time%% ] %%color%% %%level%% %%color_end%% \t %%message%%  \t %%caller%% ( %%time_passed%% )";
    protected $format_data = "\t %%data%% ";
 
+/*   protected $hooks = array(
+      'shortpixel_image_exists' => array('numargs' => 3),
+      'shortpixel_webp_image_base' => array('numargs' => 2),
+      'shortpixel_image_urls' => array('numargs' => 2),
+   ); // @todo monitor hooks, but this should be more dynamic. Do when moving to module via config.
+*/
+  protected $hooks = array();
+
    protected $template = 'view-debug-box';
 
    /** Debugger constructor
@@ -66,8 +74,6 @@ namespace ShortPixel;
 
       }
 
-    //  if (defined('SHORTPIXEL_LOG_OVERWRITE') )
-
       $user_is_administrator = (current_user_can('manage_options')) ? true : false;
 
       if ($this->is_active && $this->is_manual_request && $user_is_administrator )
@@ -77,6 +83,9 @@ namespace ShortPixel;
 
           add_action('admin_footer', array($this, 'loadView'));
       }
+
+      if ($this->is_active && count($this->hooks) > 0)
+          $this->monitorHooks();
    }
 
    public static function getInstance()
@@ -230,6 +239,27 @@ namespace ShortPixel;
    {
       $log = self::getInstance();
       return $log->getEnv('is_active');
+   }
+
+   protected function monitorHooks()
+   {
+
+      foreach($this->hooks as $hook => $data)
+      {
+        $numargs = isset($data['numargs']) ? $data['numargs'] : 1;
+        $prio = isset($data['priority']) ? $data['priority'] : 10;
+
+        add_filter($hook, function($value) use ($hook) {
+              $args = func_get_args();
+              return $this->logHook($hook, $value, $args); }, $prio, $numargs);
+      }
+   }
+
+   public function logHook($hook, $value, $args)
+   {
+      array_shift($args);
+      self::addInfo('[Hook] - ' . $hook . ' with ' . var_export($value,true), $args);
+      return $value;
    }
 
 

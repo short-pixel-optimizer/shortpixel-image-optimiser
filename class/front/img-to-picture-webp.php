@@ -44,7 +44,7 @@ class ShortPixelImgToPictureWebp
         // [BS] No callback because we need preg_match_all
         $content = self::testInlineStyle($content);
       //  $content = preg_replace_callback('/background.*[^:]url\([\'|"](.*)[\'|"]\)[,;]/imU',array('self', 'convertInlineStyle'), $content);
-        Log::addInfo('SPDBG WebP converted');
+        Log::addDebug('SPDBG WebP process done');
 
         return $content; // . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG WebP converted -->' : '');
 
@@ -56,10 +56,18 @@ class ShortPixelImgToPictureWebp
       if (! class_exists('DOMDocument'))
         return false;
 
-      $dom = new DOMDocument();
-      @$dom->loadHTML($content);
+      //$dom = new DOMDocument();
+      //@$dom->loadHTML($content, LIBXML_HTML_NOIMPLIED, LIBXML_HTML_NODEFDTD);
+
+      $dom = new DomDocument();
+      $fragment = $dom->createDocumentFragment();
+      $fragment->appendXML($content);
+      $dom->appendChild($fragment);
 
       $elements = $dom->getElementsByTagName('picture');
+
+      if ($elements->length == 0)
+        return false;
 
       foreach($elements as $element)
       {
@@ -72,7 +80,7 @@ class ShortPixelImgToPictureWebp
               $class = ($elchild->hasAttribute('class')) ? $elchild->getAttribute('class') . ' ' : '';
               $class .= 'sp-no-webp';
               $elchild->setAttribute('class', $class);
-              Log::addInfo('Found Picture with Img, added skip class');
+              Log::addInfo('Found Picture with Img, added skip class', array($elchild->getAttribute('src')) );
             }
           }
         }
@@ -197,6 +205,9 @@ class ShortPixelImgToPictureWebp
                        .preg_replace('/\.[a-zA-Z0-9]+$/', '.webp', $parts[0])
                        .(isset($parts[1]) ? ' ' . $parts[1] : '');
                 }
+                else {
+                    Log::addDebug('Image srcset for webp doesn\'t exist', array($fileWebP));
+                }
             }
             //$srcsetWebP = preg_replace('/\.[a-zA-Z0-9]+\s+/', '.webp ', $srcset);
         } else {
@@ -208,8 +219,11 @@ class ShortPixelImgToPictureWebp
             if (apply_filters( 'shortpixel_image_exists', file_exists($fileWebP), $fileWebP)) {
                 $srcsetWebP = $srcset.".webp";
             } else {
-                if (file_exists($fileWebPCompat)) {
+                if (apply_filters( 'shortpixel_image_exists', file_exists($fileWebPCompat), $fileWebPCompat) ) {
                     $srcsetWebP = preg_replace('/\.[a-zA-Z0-9]+$/', '.webp', $srcset);
+                }
+                else {
+                  Log::addDebug('Image file for webp doesn\'t exist', array($fileWebP));
                 }
             }
         }
@@ -377,8 +391,10 @@ class ShortPixelImgToPictureWebp
         }
         // [BS] Escape when DOM Module not installed
         if (! class_exists('DOMDocument'))
+        {
+          Log::addWarn('Webp Active, but DomDocument class not found ( missing xmldom library )');
           return false;
-
+        }
         $dom = new DOMDocument();
         @$dom->loadHTML($image_node);
         $image = $dom->getElementsByTagName('img')->item(0);

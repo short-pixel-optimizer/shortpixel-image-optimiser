@@ -123,7 +123,10 @@ class DebugItem // extends ShortPixelModel Too early init for this.
         if (isset($debug[$i]))
         {
           $info = $debug[$i];
-          $this->caller = array('line' => $info['line'], 'file' => basename($info['file']), 'function' => $info['function']);
+          $line = isset($info['line']) ? $info['line'] : 'Line unknown';
+          $file = isset($info['file']) ? basename($info['file']) : 'File not set';
+
+          $this->caller = array('line' => $line, 'file' => $file, 'function' => $info['function']);
         }
 
 
