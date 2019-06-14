@@ -3024,6 +3024,11 @@ class WPShortPixel {
         ' ;
 
             insert_with_markers( get_home_path() . '.htaccess', 'ShortPixelWebp', $rules);
+
+ /** In uploads and on, it needs Inherit. Otherwise things such as the 404 error page will not be loaded properly
+* since the WP rewrite will not be active at that point (overruled) **/
+ $rules = str_replace('RewriteEngine On', 'RewriteEngine On' . PHP_EOL . 'RewriteOptions Inherit', $rules);
+
             insert_with_markers( $upload_base . '.htaccess', 'ShortPixelWebp', $rules);
             insert_with_markers( trailingslashit(WP_CONTENT_DIR) . '.htaccess', 'ShortPixelWebp', $rules);
            /* insert_with_markers( get_home_path() . '.htaccess', 'ShortPixelWebp', '
