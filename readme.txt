@@ -216,7 +216,8 @@ The ShortPixel Image Optimiser plugin calls the following actions and filters:
 > do_action( 'shortpixel_image_optimised', $post_id ); //upon successful optimization
 > do_action("shortpixel_before_restore_image", $post_id); //before restoring an image from backup
 > do_action("shortpixel_after_restore_image", $post_id); //after succesful restore
-> apply_filters("shortpixel_backup_folder", $backup_folder); //just before returning the ShortPixel backup folder, usually ...wp-content/uploads/ShortpixelBackups
+> apply_filters("shortpixel_backup_folder", $backup_folder, $main_file_path, $sizes); //just before returning the ShortPixel backup folder, usually /wp-content/uploads/ShortpixelBackups. The $sizes are the sizes array from metadata.
+> apply_filters('shortpixel_image_exists', file_exists($path), $path, $post_id); //post ID is not always set, only if it's an image from Media Library
 
 
 == Screenshots ==
