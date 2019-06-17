@@ -53,12 +53,12 @@ class ShortPixelImgToPictureWebp
     public static function testPictures($content)
     {
       // [BS] Escape when DOM Module not installed
-      if (! class_exists('DOMDocument'))
-        return false;
+      //if (! class_exists('DOMDocument'))
+      //  return false;
 
     //$pattern =''
     //$pattern ='/(?<=(<picture>))(.*)(?=(<\/picture>))/mi';
-    $pattern = '/<picture.*>(<img.*>)<\/picture>/mi';
+    $pattern = '/<picture.*?>.*?(<img.*?>).*?<\/picture>/is';
     preg_match_all($pattern, $content, $matches);
 
     if ($matches === false)
