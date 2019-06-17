@@ -259,6 +259,7 @@ Release date: 17th June 2019
 * Clear SP optimization cache in order to be able to optimize an image which initially had permissions error, after changing the permissions.
 * Fix being able to list the contents of ShortpixelBackups on some badly configured servers.
 * Fix error when inputting D'Artagnan in the AUTH pass field of settings.
+* Add the Quriobot for support.
 
 = 4.13.1 =
 
