@@ -218,6 +218,7 @@ The ShortPixel Image Optimiser plugin calls the following actions and filters:
 > do_action("shortpixel_after_restore_image", $post_id); //after succesful restore
 > apply_filters("shortpixel_backup_folder", $backup_folder, $main_file_path, $sizes); //just before returning the ShortPixel backup folder, usually /wp-content/uploads/ShortpixelBackups. The $sizes are the sizes array from metadata.
 > apply_filters('shortpixel_image_exists', file_exists($path), $path, $post_id); //post ID is not always set, only if it's an image from Media Library
+> apply_filters('shortpixel_image_urls', $URLs, $post_id) // filters the URLs that will be sent to optimization, $URLs is a plain array
 
 
 == Screenshots ==
@@ -244,10 +245,20 @@ The ShortPixel Image Optimiser plugin calls the following actions and filters:
 
 == 4.14.0 ==
 
-Release date:
+Release date: 17th June 2019
+* Add new filters proposed by WP Stateless: shortpixel_backup_folder, shortpixel_image_exists, shortpixel_image_urls
+* Better placement of the elements on the Other Media page
 * Fix custom bulk for PDFs when the pdf thumbnails are not activated
 * Fix selecting items from DB twice for bulk in some circumstances
+* Warn user that converting PNG to JPG while keeping EXIF in options doesn't keep it (no EXIF for PNGs).
+* When SHORTPIXEL_DEBUG=x get parameter is provided, display a floating link to the shortpixel_log file
 * Adaptive Max execution time and capped to 90 sec. for the bulk background AJAX calls. (Kinsta has a max_execution_time of 300 sec. in PHP but the HTTP connection is cut after 180 sec.)
+* Fix custom 404 page for missing images not working when using .htaccess for WebP
+* Fix WebP picture tag with relative URLs not working in some circumstances
+* Fix replacing the <img> inside an existing <picture> tag with another <picture> tag.
+* Clear SP optimization cache in order to be able to optimize an image which initially had permissions error, after changing the permissions.
+* Fix being able to list the contents of ShortpixelBackups on some badly configured servers.
+* Fix error when inputting D'Artagnan in the AUTH pass field of settings.
 
 = 4.13.1 =
 
