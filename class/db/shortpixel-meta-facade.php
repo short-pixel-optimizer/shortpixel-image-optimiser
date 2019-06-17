@@ -86,9 +86,9 @@ class ShortPixelMetaFacade {
         }        
     }
     
-    static function sanitizeMeta($rawMeta){
+    static function sanitizeMeta($rawMeta, $createSPArray = true){
         if(!is_array($rawMeta)) {
-            if($rawMeta == '') { return array('ShortPixel' => array()); }
+            if($rawMeta == '') { return $createSPArray ? array('ShortPixel' => array()) : array(); }
             else {
                 $meta = @unserialize($rawMeta);
                 if(is_array($meta)) {
@@ -368,9 +368,18 @@ class ShortPixelMetaFacade {
             $filePaths[] = $meta->getPath();
         } else {
             $path = get_attached_file($this->ID);//get the full file PATH
-            $mainExists = file_exists($path);
+            $mainExists = apply_filters('shortpixel_image_exists', file_exists($path), $path, $this->ID);
             $url = self::safeGetAttachmentUrl($this->ID);
             $urlList = array(); $filePaths = array();
+
+            if(!$mainExists) {
+                //try and download the image from the URL (images present only on CDN)
+                $downloadTimeout = max(ini_get('max_execution_time') - 10, 15);
+                $tempOriginal = download_url($url, $downloadTimeout);
+                if(!is_wp_error( $tempOriginal )) {
+                    $mainExists = @copy($tempOriginal, $path);
+                }
+            }
 
             if($mainExists) {
                 $urlList[] = $url;
@@ -419,14 +428,27 @@ class ShortPixelMetaFacade {
                     $count++;                
                     
                     $origPath = $tPath = str_replace(ShortPixelAPI::MB_basename($path), $thumbnailInfo['file'], $path);
-                    if ( !file_exists($tPath) ) {
+                    $file_exists = apply_filters('shortpixel_image_exists', file_exists($origPath), $origPath, $this->ID);
+                    $tUrl = str_replace(ShortPixelAPI::MB_basename($url), $thumbnailInfo['file'], $url);
+                    if ( !$file_exists && !file_exists($tPath) ) {
                         $tPath = SHORTPIXEL_UPLOADS_BASE . substr($tPath, strpos($tPath, $StichString) + strlen($StichString));
                     }
-                    if ( !file_exists($tPath) ) {
+
+                    if ( !$file_exists && !file_exists($tPath) ) {
                         $tPath = trailingslashit(SHORTPIXEL_UPLOADS_BASE) . $origPath;
                     }
-                    if (file_exists($tPath)) {
-                        $tUrl = str_replace(ShortPixelAPI::MB_basename($url), $thumbnailInfo['file'], $url);
+
+                    if ( !$file_exists && !file_exists($tPath) ) {
+                        //try and download the image from the URL (images present only on CDN)
+                        $tempThumb = download_url($tUrl, $downloadTimeout);
+                        if(!is_wp_error( $tempThumb )) {
+                            if(@copy($tempThumb, $origPath)) {
+                                $tPath = $origPath;
+                            }
+                        }
+                    }
+
+                    if ($file_exists || file_exists($tPath)) {
                         if(in_array($tUrl, $urlList)) continue;
                         $urlList[] = $tUrl;
                         $filePaths[] = $tPath;

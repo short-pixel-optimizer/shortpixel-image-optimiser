@@ -79,6 +79,7 @@ div.fb-like  {
 .wp-core-ui .button.remove-folder-button {
     min-width: 120px;
 }
+/** In time this is not needed, new notice model **/
 .sp-notice {
     background: #fff;
     border-left: 4px solid #fff;
@@ -605,46 +606,12 @@ article.sp-tabs section .wp-shortpixel-tab-content {
 visibility: hidden;
 }
 article.sp-tabs section.sel-tab .wp-shortpixel-tab-content {
-visibility: visible;
+visibility: visible !important;
 }
 article.sp-tabs section:first-child {
     z-index: 1;
 }
-article.sp-tabs section h2 {
-    position: absolute;
-    font-size: 1.3em;
-    font-weight: normal;
-    width: 180px;
-    height: 1.8em;
-    top: -1.8em;
-    left: 10px;
-    padding: 0;
-    margin: 0;
-    color: #999;
-    background-color: #ddd;
-    /* border-radius: 5px 5px 0 0; */
-}
-article.sp-tabs section:nth-child(2) h2 {
-    left: 192px;
-}
-article.sp-tabs section:nth-child(3) h2 {
-    left: 374px;
-}
-article.sp-tabs section:nth-child(4) h2 {
-    left: 556px;
-}
-article.sp-tabs section:nth-child(5) h2 {
-    left: 738px;
-}
-article.sp-tabs section h2 a {
-    display: block;
-    width: 100%;
-    line-height: 1.8em;
-    text-align: center;
-    text-decoration: none;
-    color: #23282d;
-    outline: 0 none;
-}
+
 article.sp-tabs section h2 a:focus,
 article.sp-tabs section#tab-resources a:focus {
     box-shadow: none;

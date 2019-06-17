@@ -1,3 +1,26 @@
+.shortpixel.notice {
+  min-height: 50px;
+  padding: 8px; }
+  .shortpixel.notice img {
+    display: inline-block;
+    margin: 0 25px 0 0;
+    max-height: 50px; }
+  .shortpixel.notice .notice-dismiss {
+    margin-top: 10px; }
+
+/* In-view notice ( not on top, between the options ) - styled after WP notice */
+.view-notice {
+  box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.1);
+  border: 4px solid #fff;
+  padding: 1px 12px; }
+  .view-notice p {
+    margin: 1em 0 !important; }
+  .view-notice.warning {
+    border-left-color: #ffb900; }
+
+.view-notice-row {
+  display: none; }
+
 .short-pixel-bulk-page.bulk-restore-all ol li {
   font-weight: 700; }
 .short-pixel-bulk-page.bulk-restore-all section.select_folders {
@@ -23,6 +46,9 @@
   margin: 10px 0;
   margin-right: 8px; }
 
+.short-pixel-bulk-page .sp-hidden {
+  display: none; }
+
 /* Specific styles for advanced settings tab */
 #shortpixel-settings-tabs #tab-adv-settings .addCustomFolder {
   margin: 10px 0; }
@@ -33,3 +59,53 @@
     max-width: 70%; }
   #shortpixel-settings-tabs #tab-adv-settings .addCustomFolder input[name="saveAdv"] {
     margin-left: 8px; }
+
+.settings_page_wp-shortpixel-settings .top-menu {
+  font-size: 18px; }
+  .settings_page_wp-shortpixel-settings .top-menu a {
+    font-size: 18px; }
+.settings_page_wp-shortpixel-settings .wp-shortpixel-tab-content {
+  transition: all 1000ms linear; }
+.settings_page_wp-shortpixel-settings article.sp-tabs section .wp-shortpixel-tab-content {
+  opacity: 0; }
+.settings_page_wp-shortpixel-settings article.sp-tabs section.sel-tab .wp-shortpixel-tab-content {
+  opacity: 1; }
+.settings_page_wp-shortpixel-settings article.sp-tabs section h2 {
+  position: absolute;
+  font-size: 1.3em;
+  font-weight: normal;
+  width: 180px;
+  height: 1.8em;
+  top: -1.8em;
+  left: 10px;
+  padding: 0;
+  margin: 0;
+  color: #999;
+  background-color: #ddd;
+  /* border-radius: 5px 5px 0 0; */ }
+  .settings_page_wp-shortpixel-settings article.sp-tabs section h2 a {
+    display: block;
+    width: 100%;
+    line-height: 1.8em;
+    text-align: center;
+    text-decoration: none;
+    color: #23282d;
+    outline: 0 none; }
+.settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(2) h2 {
+  left: 192px; }
+.settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(3) h2 {
+  left: 374px; }
+.settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(4) h2 {
+  left: 556px; }
+.settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(5) h2 {
+  left: 738px; }
+.settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(6) h2 {
+  left: 920px; }
+.settings_page_wp-shortpixel-settings section#tab-debug .flex {
+  display: flex; }
+.settings_page_wp-shortpixel-settings section#tab-debug .env .flex {
+  flex-wrap: wrap;
+  max-width: 450px; }
+  .settings_page_wp-shortpixel-settings section#tab-debug .env .flex span {
+    width: 45%;
+    padding: 4px; }

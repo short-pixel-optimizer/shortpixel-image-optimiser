@@ -42,6 +42,9 @@
           <button disabled aria-disabled="true" type='submit' class='button bulk restore disabled' name='bulkRestore' id='bulkRestore'><?php _e('Bulk Restore', 'shortpixel-image-optimiser'); ?></button>
         </div>
 
+        <div class='error'><p><?php _e('It is strongly recommended to backup your uploads', 'shortpixel-image-optimizer'); ?></p>
+        </div>
+
       </div> <!-- sp-notice -->
   </form>
 </div> <!-- wrap -->
