@@ -53,40 +53,44 @@ class ShortPixelImgToPictureWebp
     public static function testPictures($content)
     {
       // [BS] Escape when DOM Module not installed
-      if (! class_exists('DOMDocument'))
-        return false;
+      //if (! class_exists('DOMDocument'))
+      //  return false;
 
-      //$dom = new DOMDocument();
-      //@$dom->loadHTML($content, LIBXML_HTML_NOIMPLIED, LIBXML_HTML_NODEFDTD);
+    //$pattern =''
+    //$pattern ='/(?<=(<picture>))(.*)(?=(<\/picture>))/mi';
+    $pattern = '/<picture.*?>.*?(<img.*?>).*?<\/picture>/is';
+    preg_match_all($pattern, $content, $matches);
 
-      $dom = new DomDocument();
-      $fragment = $dom->createDocumentFragment();
-      $fragment->appendXML($content);
-      $dom->appendChild($fragment);
+    if ($matches === false)
+      return false;
 
-      $elements = $dom->getElementsByTagName('picture');
-
-      if ($elements->length == 0)
-        return false;
-
-      foreach($elements as $element)
+    if ( is_array($matches) && count($matches) > 0)
+    {
+      foreach($matches[1] as $match)
       {
-        if ($element->hasChildNodes() )
-        {
-          foreach($element->childNodes as $elchild)
-          {
-            if ($elchild->tagName == 'img')
-            {
-              $class = ($elchild->hasAttribute('class')) ? $elchild->getAttribute('class') . ' ' : '';
-              $class .= 'sp-no-webp';
-              $elchild->setAttribute('class', $class);
-              Log::addInfo('Found Picture with Img, added skip class', array($elchild->getAttribute('src')) );
-            }
-          }
-        }
-      }
+           $imgtag = $match;
 
-      return $dom->saveHTML();
+           if (strpos($imgtag, 'class=') !== false) // test for class, if there, insert ours in there.
+           {
+            $pos = strpos($imgtag, 'class=');
+            $pos = $pos + 7;
+
+            $newimg = substr($imgtag, 0, $pos) . 'sp-no-webp ' . substr($imgtag, $pos);
+
+           }
+           else {
+              $pos = 4;
+              $newimg = substr($imgtag, 0, $pos) . ' class="sp-no-webp" ' . substr($imgtag, $pos);
+           }
+
+           $content = str_replace($imgtag, $newimg, $content);
+
+      }
+    }
+
+
+
+    return $content;
 
     }
 
