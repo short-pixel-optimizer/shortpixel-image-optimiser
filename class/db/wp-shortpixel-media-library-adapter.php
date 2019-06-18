@@ -303,6 +303,18 @@ class WpShortPixelMediaLbraryAdapter {
                     }
                 }
             }
+            if( defined('SHORTPIXEL_CUSTOM_THUMB_INFIXES') ){
+                $infixes = explode(',', SHORTPIXEL_CUSTOM_THUMB_INFIXES);
+                foreach ($infixes as $infix){
+                    $thumbsCandidates = @glob($base . $infix  . "-*." . $ext);
+                    $pattern = '/' . preg_quote($base, '/') . $infix . '-\d+x\d+' . '\.'. $ext .'/';
+                    foreach($thumbsCandidates as $th) {
+                        if(preg_match($pattern, $th)) {
+                            $thumbs[]= $th;
+                        }
+                    }
+                }
+            }
         }
         return $thumbs;
     }
