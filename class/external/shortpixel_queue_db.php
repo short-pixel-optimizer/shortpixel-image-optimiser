@@ -55,6 +55,7 @@ class ShortPixelQueueDB extends ShortPixelQueue{
         fwrite($fp, implode(',', $items));
         fflush($fp);            // flush output before releasing the lock */
         update_option(self::THE_OPTION, implode(',', $items), false);
+
         $fp =null;
         self::closeQ($fp);
         return true;
@@ -99,7 +100,10 @@ class ShortPixelQueueDB extends ShortPixelQueue{
         if (! $trans === false) // if lock, then no beans.
           return false;
 
+        wp_cache_delete( self::THE_OPTION, 'options' ); // ensure uncached goodness here.
         $queue = get_option(self::THE_OPTION, '');
+
+        set_transient(self::THE_TRANSIENT, 'true', 60);
         return $queue;
 
 /*         $fp = @fopen($queueName, "r+");
@@ -107,6 +111,7 @@ class ShortPixelQueueDB extends ShortPixelQueue{
             $fp = @fopen($queueName, "w");
             if(!$fp) return false;
         }
+
         flock($fp, $lock);
         return $fp; */
     }
