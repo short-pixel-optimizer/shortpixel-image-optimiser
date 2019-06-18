@@ -294,6 +294,19 @@ var ShortPixel = function() {
         });
     }
 
+    function closeHelpPane() {
+        jQuery('#shortpixel-hs-button-blind').remove();
+        jQuery('#shortpixel-hs-tools').remove();
+        jQuery('#hs-beacon').remove();
+        jQuery('#botbutton').remove();
+        jQuery('#shortpixel-hs-blind').remove();
+    }
+
+    function dismissHelpPane() {
+        closeHelpPane();
+        dismissShortPixelNotice('help');
+    }
+
     function checkQuota() {
         var data = { action  : 'shortpixel_check_quota'};
         jQuery.get(ShortPixel.AJAX_URL, data, function() {
@@ -791,6 +804,8 @@ var ShortPixel = function() {
         adjustSettingsTabs  : adjustSettingsTabsHeight,
         onBulkThumbsCheck   : onBulkThumbsCheck,
         dismissMediaAlert   : dismissMediaAlert,
+        closeHelpPane       : closeHelpPane,
+        dismissHelpPane     : dismissHelpPane,
         checkQuota          : checkQuota,
         percentDial         : percentDial,
         successMsg          : successMsg,

@@ -220,6 +220,9 @@ The ShortPixel Image Optimiser plugin calls the following actions and filters:
 > apply_filters('shortpixel_image_exists', file_exists($path), $path, $post_id); //post ID is not always set, only if it's an image from Media Library
 > apply_filters('shortpixel_image_urls', $URLs, $post_id) // filters the URLs that will be sent to optimization, $URLs is a plain array
 
+In order to define custom thumbnails to be picked up by the optimization you have two options, both comma separated defines:
+define('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES', '_tl,_tr'); will handle custom thumbnails like image-100x100_tl.jpg
+define('SHORTPIXEL_CUSTOM_THUMB_INFIXES', '-uae'); will handle custom thumbnails like image-uae-100x100.jpg
 
 == Screenshots ==
 
@@ -242,6 +245,11 @@ The ShortPixel Image Optimiser plugin calls the following actions and filters:
 9. Check other optimized images status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+== 4.14. ==
+
+Release date: 2019
+* add the possibility to define custom infixes for thumbnails (like image-uai-150x150.jpg for image.jpg) - comma separated define SHORTPIXEL_CUSTOM_THUMB_INFIXES
 
 == 4.14.1 ==
 

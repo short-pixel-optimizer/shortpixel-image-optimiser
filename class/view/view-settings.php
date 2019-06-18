@@ -2,7 +2,10 @@
 namespace ShortPixel;
 use Shortpixel\ShortPixelLogger as Log;
 
-HelpScout::outputBeacon($view->data->apiKey);
+$dismissed = $this->_settings->dismissedNotices ? $this->_settings->dismissedNotices : array();
+if(!isset($dismissed['help'])) {
+    HelpScout::outputBeacon($this->hide_api_key ? '' : $view->data->apiKey);
+}
 
 ?>
 <div class="wrap">
