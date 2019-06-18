@@ -4170,6 +4170,31 @@ Header append Vary Accept env=REDIRECT_webp
                 width: 87px;
                 height: 174px;
                 border-radius: 20px 0 0 20px;
+                text-align: right;
+                padding-right: 15px;
+            }
+            .shortpixel-hs-blind a {
+                color: lightgray;
+                text-decoration: none;
+            }
+            .shortpixel-hs-blind .dashicons-minus {
+                border: 3px solid;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: bold;
+                line-height: 15px;
+                height: 13px;
+                width: 13px;
+                display:none;
+            }
+            .shortpixel-hs-blind .dashicons-dismiss {
+                font-size: 23px;
+                line-height: 19px;
+                display: none;
+            }
+            .shortpixel-hs-blind:hover .dashicons-minus,
+            .shortpixel-hs-blind:hover .dashicons-dismiss {
+                display: inline-block;
             }
             .shortpixel-hs-button-blind {
                 display:none;
@@ -4202,10 +4227,17 @@ Header append Vary Accept env=REDIRECT_webp
                 }
             }
         </style>
-        <div id="shortpixel-hs-blind" class="shortpixel-hs-blind"></div>
+        <div id="shortpixel-hs-blind" class="shortpixel-hs-blind">
+            <a href="javascript:ShortPixel.closeHelpPane();">
+                <i class="dashicons dashicons-minus" title="<?php _e('Dismiss for now', 'shortpixel-image-optimiser'); ?>   "></i>
+            </a>
+            <a href="javascript:ShortPixel.dismissHelpPane();">
+                <i class="dashicons dashicons-dismiss" title="<?php _e('Never display again', 'shortpixel-image-optimiser'); ?>"></i>
+            </a>
+        </div>
         <div id="shortpixel-hs-button-blind" class="shortpixel-hs-button-blind"></div>
         <div id="shortpixel-hs-tools" class="shortpixel-hs-tools">
-            <a href="javascript:shortpixelToggleHS();" class="shortpixel-hs-tools-docs" title="Search through our online documentation.">
+            <a href="javascript:shortpixelToggleHS();" class="shortpixel-hs-tools-docs" title="<?php _e('Search through our online documentation.', 'shortpixel-image-optimiser'); ?>">
                 <img src="<?php echo(plugins_url('/shortpixel-image-optimiser/res/img/notes-sp.png'));?>" style="margin-bottom: 2px;width: 36px;">
             </a>
         </div>
