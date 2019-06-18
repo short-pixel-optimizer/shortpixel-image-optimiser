@@ -185,8 +185,10 @@ class WPShortPixelSettings extends ShortPixel\ShortPixelModel {
             update_option('wp-short-pixel-dismissed-notices', $dismissed, 'no');
         }
         $formerPrio = get_option('wp-short-pixel-priorityQueue');
-        if(is_array($formerPrio) && !count(ShortPixelQueue::get())) {
-            ShortPixelQueue::set($formerPrio);
+        $qGet = (! defined('SHORTPIXEL_NOFLOCK')) ?  ShortPixelQueue::get() : ShortPixelQueueDB::get();
+        if(is_array($formerPrio) && !count($qGet)) {
+
+          (! defined('SHORTPIXEL_NOFLOCK')) ? ShortPixelQueue::set($formerPrio) : ShortPixelQueueDB::set($formerPrio);
             delete_option('wp-short-pixel-priorityQueue');
         }
     }

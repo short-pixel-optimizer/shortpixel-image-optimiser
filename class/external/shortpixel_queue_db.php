@@ -1,9 +1,10 @@
 <?php
+//use \ShortPixel\ShortPixelLogger as Log;
 
 class ShortPixelQueueDB extends ShortPixelQueue{
 
-    private $ctrl;
-    private $settings;
+    protected $ctrl;
+    protected $settings;
 
     const THE_OPTION = 'shortpixel_prioq';
     const THE_TRANSIENT = 'shortpixel_prioq_lock';
@@ -21,7 +22,7 @@ class ShortPixelQueueDB extends ShortPixelQueue{
     public function __construct($controller, $settings) {
         $this->ctrl = $controller;
         $this->settings = $settings;
-        parent::__construct($controller, $settings);
+        //parent::__construct($controller, $settings);
     }
 
     //handling older
@@ -39,6 +40,7 @@ class ShortPixelQueueDB extends ShortPixelQueue{
         $items = strlen($itemsRaw) ? self::parseQ($itemsRaw) : array();
         $fp = null;
         self::closeQ($fp);
+
         return $items;
     }
 
@@ -52,7 +54,7 @@ class ShortPixelQueueDB extends ShortPixelQueue{
         ftruncate($fp, 0);      // truncate file
         fwrite($fp, implode(',', $items));
         fflush($fp);            // flush output before releasing the lock */
-        update_option(THE_OPTION, $items, false);
+        update_option(self::THE_OPTION, implode(',', $items), false);
         $fp =null;
         self::closeQ($fp);
         return true;
@@ -71,7 +73,7 @@ class ShortPixelQueueDB extends ShortPixelQueue{
             $items = call_user_func($callable, $items);
         }
 
-        update_option(THE_OPTION, $items, false);
+        update_option(self::THE_OPTION, implode(',',$items), false);
         /*fseek($fp, 0);
         ftruncate($fp, 0);      // truncate file
         fwrite($fp, implode(',', $items));
@@ -81,25 +83,23 @@ class ShortPixelQueueDB extends ShortPixelQueue{
         return $items;
     }
 
-/*
-   This seems fine?
     public static function testQ() {
         $fp = self::openQ();
         if($fp === false) return false;
         self::closeQ($fp);
         return true;
     }
-*/
+
 
 // @todo Replace - main thing here.
     protected static function openQ($lock = LOCK_EX) {
 
         //$queueName = SHORTPIXEL_UPLOADS_BASE . "/.shortpixel-q-" . get_current_blog_id();
-        $trans = get_transient(THE_TRANSIENT);
+        $trans = get_transient(self::THE_TRANSIENT);
         if (! $trans === false) // if lock, then no beans.
           return false;
 
-        $queue = get_option(THE_OPTION, array());
+        $queue = get_option(self::THE_OPTION, '');
         return $queue;
 
 /*         $fp = @fopen($queueName, "r+");
@@ -113,11 +113,17 @@ class ShortPixelQueueDB extends ShortPixelQueue{
 
 // @todo replace
     protected static function closeQ($fp) {
-        delete_transient(THE_TRANSIENT);
+        delete_transient(self::THE_TRANSIENT);
 
       //  flock($fp, LOCK_UN);    // release the lock
       //  fclose($fp);
     }
+
+    public static function resetPrio() {
+        //delete_option( "wp-short-pixel-priorityQueue");
+        self::set(array());
+    }
+
 
 /*    protected static function parseQ($items) {
         return explode(',', preg_replace("/[^0-9,C-]/", "", $items));
@@ -244,7 +250,7 @@ class ShortPixelQueueDB extends ShortPixelQueue{
             ftruncate($fp, 0);
             fwrite($fp, implode(',', $newItems));
             fflush($fp);            // flush output before releasing the lock */
-            update_option(THE_OPTION, $newItems, false);
+            update_option(self::THE_OPTION, implode(',',$newItems), false);
         }
         $fp = null;
         $this->closeQ($fp);

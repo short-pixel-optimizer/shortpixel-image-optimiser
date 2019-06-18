@@ -40,7 +40,7 @@ class WPShortPixel {
         $this->cloudflareApi = new ShortPixelCloudFlareApi($this->_settings->cloudflareEmail, $this->_settings->cloudflareAuthKey, $this->_settings->cloudflareZoneID);
         $this->hasNextGen = ShortPixelNextGenAdapter::hasNextGen();
         $this->spMetaDao = new ShortPixelCustomMetaDao(new WpShortPixelDb(), $this->_settings->excludePatterns);
-        $this->prioQ = new ShortPixelQueue($this, $this->_settings);
+        $this->prioQ = (! defined('SHORTPIXEL_NOFLOCK')) ? new ShortPixelQueue($this, $this->_settings) : new ShortPixelQueueDB($this, $this->_settings);
         $this->view = new ShortPixelView($this);
 
         $controllerClass = ShortPixelTools::namespaceit('ShortPixelController');
@@ -215,7 +215,7 @@ class WPShortPixel {
     public static function shortPixelDeactivatePlugin()//reset some params to avoid trouble for plugins that were activated/deactivated/activated
     {
         ShortPixelQueue::resetBulk();
-        ShortPixelQueue::resetPrio();
+        (! defined('SHORTPIXEL_NOFLOCK')) ? ShortPixelQueue::resetPrio() : ShortPixelQueueDB::resetPrio();
         WPShortPixelSettings::onDeactivate();
         self::alterHtaccess(true);
         @unlink(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
@@ -349,7 +349,8 @@ class WPShortPixel {
     * TODO - Probably should be a controller
     */
     public function displayAdminNotices() {
-        if(!ShortPixelQueue::testQ()) {
+        $testQ = (! defined('SHORTPIXEL_NOFLOCK')) ? ShortPixelQueue::testQ() : ShortPixelQueueDB::testQ();
+        if(! $testQ) {
             ShortPixelView::displayActivationNotice('fileperms');
         }
         if($this->catchNotice()) { //notices for errors like for example a failed restore notice - these are one time so display them with priority.

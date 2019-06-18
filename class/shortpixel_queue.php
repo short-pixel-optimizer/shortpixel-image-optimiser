@@ -2,8 +2,8 @@
 
 class ShortPixelQueue {
 
-    private $ctrl;
-    private $settings;
+    protected $ctrl;
+    protected $settings;
 
     const BULK_TYPE_OPTIMIZE = 0;
     const BULK_TYPE_RESTORE = 1;
@@ -71,6 +71,10 @@ class ShortPixelQueue {
     }
 
     protected static function openQ($lock = LOCK_EX) {
+      //@todo Remove this.
+      //  echo "<PRE>"; var_dump(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5)); echo "</PRE>";
+      //  exit('OpenQ FLOCK');
+
         $queueName = SHORTPIXEL_UPLOADS_BASE . "/.shortpixel-q-" . get_current_blog_id();
          $fp = @fopen($queueName, "r+");
         if(!$fp) {

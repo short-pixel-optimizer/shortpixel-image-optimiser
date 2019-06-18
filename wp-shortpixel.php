@@ -59,6 +59,9 @@ else
 define('SHORTPIXEL_MAX_EXECUTION_TIME2', 2 );
 define("SHORTPIXEL_MAX_RESULTS_QUERY", 30);
 
+/** @todo This is a test in progress var */
+//define("SHORTPIXEL_NOFLOCK", true);
+
 function shortpixelInit() {
     global $shortPixelPluginInstance;
     //limit to certain admin pages if function available
@@ -88,9 +91,11 @@ function shortpixelInit() {
 
 }
 
+
 function shortPixelCheckQueue(){
     require_once('class/shortpixel_queue.php');
-    $prio = ShortPixelQueue::get();
+    require_once('class/external/shortpixel_queue_db.php');
+    $prio = (! defined('SHORTPIXEL_NOFLOCK')) ? ShortPixelQueue::get() : ShortPixelQueueDB::get();
     return $prio && is_array($prio) && count($prio);
 }
 
