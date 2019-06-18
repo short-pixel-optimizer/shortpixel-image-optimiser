@@ -233,7 +233,7 @@ class WpShortPixelMediaLbraryAdapter {
 
     public static function getPostMetaSlice($startId, $endId, $limit) {
         global $wpdb;
-        $queryPostMeta = "SELECT DISTINCT pm.post_id FROM " . $wpdb->prefix . "postmeta pm
+        $queryPostMeta = "SELECT * FROM " . $wpdb->prefix . "postmeta pm
             INNER JOIN " . $wpdb->prefix . "posts p ON p.ID = pm.post_id
             WHERE ( p.ID <= $startId AND p.ID >= $endId )
               AND ( pm.meta_key = '_wp_attached_file' OR pm.meta_key = '_wp_attachment_metadata' )
@@ -296,6 +296,18 @@ class WpShortPixelMediaLbraryAdapter {
                 $suffixes = defined('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES') ? explode(',', SHORTPIXEL_CUSTOM_THUMB_SUFFIXES) : array();
                 foreach ($suffixes as $suffix){
                     $pattern = '/' . preg_quote($base, '/') . '-\d+x\d+'. $suffix . '\.'. $ext .'/';
+                    foreach($thumbsCandidates as $th) {
+                        if(preg_match($pattern, $th)) {
+                            $thumbs[]= $th;
+                        }
+                    }
+                }
+            }
+            if( defined('SHORTPIXEL_CUSTOM_THUMB_INFIXES') ){
+                $infixes = explode(',', SHORTPIXEL_CUSTOM_THUMB_INFIXES);
+                foreach ($infixes as $infix){
+                    $thumbsCandidates = @glob($base . $infix  . "-*." . $ext);
+                    $pattern = '/' . preg_quote($base, '/') . $infix . '-\d+x\d+' . '\.'. $ext .'/';
                     foreach($thumbsCandidates as $th) {
                         if(preg_match($pattern, $th)) {
                             $thumbs[]= $th;
