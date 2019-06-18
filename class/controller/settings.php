@@ -461,7 +461,6 @@ class SettingsController extends shortPixelController
           \WPShortPixel::alterHtaccess();
         }
 
-
          $post['deliverWebp'] = $deliverwebp;
          unset($post['deliverWebpAlteringType']);
          unset($post['deliverWebpType']);

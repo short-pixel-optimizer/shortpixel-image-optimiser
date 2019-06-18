@@ -55,7 +55,6 @@ class ShortPixelPlugin
           foreach($it as $file)
           {
             $file_path = $file->getRealPath();
-
             if ($file->isFile() && pathinfo($file_path, PATHINFO_EXTENSION) == 'php')
             {
               require_once($file_path);

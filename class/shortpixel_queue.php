@@ -343,7 +343,7 @@ class ShortPixelQueue {
         return $this->settings->bulkType;
     }
 
-    // hack 
+    // hack
     public function getBulkTypeForDisplay()
     {
         $bulk = $this->settings->bulkType;
