@@ -38,6 +38,7 @@ define('SHORTPIXEL_MAX_EXECUTION_TIME', ini_get('max_execution_time'));
 require_once(ABSPATH . 'wp-admin/includes/file.php');
 require_once('build/shortpixel/autoload.php');
 
+
 //var_dump(class_exists('ShortPixel\ShortPixelLogger\ShortPixelLogger'));
 //exit();
 
@@ -217,6 +218,10 @@ function shortPixelIsPluginActive($plugin) {
 }
 
 // [BS] Start runtime here
+$log = ShortPixel\ShortPixelLogger\ShortPixelLogger::getInstance();
+$log->setLogPath(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
+
+
 $option = get_option('wp-short-pixel-create-webp-markup');
 if ( $option ) {
     if(shortPixelIsPluginActive('shortpixel-adaptive-images/short-pixel-ai.php')) {
