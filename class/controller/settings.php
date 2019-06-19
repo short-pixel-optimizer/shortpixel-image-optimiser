@@ -122,6 +122,9 @@ class SettingsController extends shortPixelController
          if (is_wp_error($this->view->resources))
             $this->view->resources = null;
 
+         $settings = $this->shortPixel->getSettings();
+         $this->view->dismissedNotices = $settings->dismissedNotices;
+
          $this->loadView('view-settings');
       }
 
