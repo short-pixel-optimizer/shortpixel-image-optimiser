@@ -1,8 +1,8 @@
 <?php
 
-use ShortPixel\DebugItem as DebugItem;
-use ShortPixel\ShortPixelLogger as Log;
-use ShortPixel\NoticeController as Notice;
+//use ShortPixel\DebugItem as DebugItem;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+use ShortPixel\Notices\NoticeController as Notice;
 
 
 class WPShortPixel {

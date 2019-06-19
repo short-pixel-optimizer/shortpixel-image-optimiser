@@ -1,6 +1,6 @@
 <?php
 namespace ShortPixel;
-use Shortpixel\ShortPixelLogger as Log;
+use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 HelpScout::outputBeacon($view->data->apiKey);
 

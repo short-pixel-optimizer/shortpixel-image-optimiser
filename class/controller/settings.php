@@ -1,8 +1,8 @@
 <?php
 namespace ShortPixel;
-use ShortPixel\ShortPixelLogger as Log;
-use ShortPixel\DebugItem as DebugItem;
-use ShortPixel\NoticeController as Notice;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+//use ShortPixel\DebugItem as DebugItem;
+use ShortPixel\Notices\NoticeController as Notice;
 
 
 class SettingsController extends shortPixelController

@@ -1,7 +1,7 @@
 <?php
 namespace ShortPixel;
-use ShortPixel\ShortPixelLogger as Log;
-use ShortPixel\NoticeController as Notice;
+use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\Notices\NoticeController as Notice;
 
 
 /** Plugin class

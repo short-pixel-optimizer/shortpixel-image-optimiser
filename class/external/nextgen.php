@@ -1,6 +1,6 @@
 <?php
 namespace ShortPixel;
-use ShortPixel\NoticeController as Notice;
+use ShortPixel\Notices\NoticeController as Notice;
 
 class NextGen
 {

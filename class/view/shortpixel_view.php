@@ -1,5 +1,5 @@
 <?php
-use \ShortPixel\ShortPixelLogger as Log;
+use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 class ShortPixelView {
 
