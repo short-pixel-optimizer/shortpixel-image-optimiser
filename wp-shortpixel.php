@@ -38,6 +38,9 @@ define('SHORTPIXEL_MAX_EXECUTION_TIME', ini_get('max_execution_time'));
 require_once(ABSPATH . 'wp-admin/includes/file.php');
 require_once('build/shortpixel/autoload.php');
 
+//var_dump(class_exists('ShortPixel\ShortPixelLogger\ShortPixelLogger'));
+//exit();
+
 $sp__uploads = wp_upload_dir();
 define('SHORTPIXEL_UPLOADS_BASE', (file_exists($sp__uploads['basedir']) ? '' : ABSPATH) . $sp__uploads['basedir'] );
 //define('SHORTPIXEL_UPLOADS_URL', is_main_site() ? $sp__uploads['baseurl'] : dirname(dirname($sp__uploads['baseurl'])));
@@ -61,7 +64,7 @@ define('SHORTPIXEL_MAX_EXECUTION_TIME2', 2 );
 define("SHORTPIXEL_MAX_RESULTS_QUERY", 30);
 
 /** @todo This is a test in progress var */
-define("SHORTPIXEL_NOFLOCK", true);
+//define("SHORTPIXEL_NOFLOCK", true);
 
 function shortpixelInit() {
     global $shortPixelPluginInstance;

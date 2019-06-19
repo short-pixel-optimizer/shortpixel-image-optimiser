@@ -473,7 +473,7 @@ class WPShortPixel {
 
     /** [TODO] This should report to the Shortpixel Logger **/
     static protected function doLog($message, $force = false) {
-
+      // Log::addInfo($message);
         /*if(defined('SHORTPIXEL_DEBUG_TARGET') || $force) {
                 file_put_contents(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log", '[' . date('Y-m-d H:i:s') . "] $message\n", FILE_APPEND);
         } else {
@@ -1451,6 +1451,7 @@ class WPShortPixel {
                             $bkThumb = $backupUrl . $urlBkPath . $thumb;
                         }
                         if(strlen($thumb)) {
+                            /** @todo This Check is maybe within a getType for Media_Library_Type, so this should not run. **/
                             if($itemHandler->getType() == ShortPixelMetaFacade::CUSTOM_TYPE) {
                                 $uploadsUrl = ShortPixelMetaFacade::getHomeUrl();
                                 $urlPath = ShortPixelMetaFacade::returnSubDir($meta->getPath());
@@ -2199,7 +2200,19 @@ class WPShortPixel {
 
         if(ShortPixelMetaFacade::isCustomQueuedId($qID)) {
             $ID = ShortPixelMetaFacade::stripQueuedIdType($qID);
-            $meta = $this->doCustomRestore($ID);
+            /** BS . Moved this function from customRestore to Delete, plus Re-add 19/06/2019
+            * Reason: doCustomRestore puts all options to 0 including once that needs preserving, which
+            * will result in setting loss.
+            * *But* the backup still needs to be restoring on 'redo' *so* do restore, but ignore that meta, then delete, and readd path. 
+            */
+            $meta = $this->spMetaDao->getMeta($ID);
+            $path = $meta->getPath();
+            $folder_id = $meta->getFolderId();
+            $this->doCustomRestore($ID);
+
+            $this->spMetaDao->delete($meta);
+            $meta = $this->addPathToCustomFolder($path, $folder_id, NULL);
+
             if($meta) {
                 $meta->setCompressionType(ShortPixelAPI::getCompressionTypeCode($compressionType));
                 $meta->setStatus(1);
@@ -2582,6 +2595,8 @@ class WPShortPixel {
 
         if(isset($_POST["bulkRestore"]))
         {
+            Log::addInfo('Bulk Process - Bulk Restore');
+
             $bulkRestore = new \ShortPixel\BulkRestoreAll(); // controller
             $bulkRestore->setShortPixel($this);
             $bulkRestore->setupBulk();
@@ -2592,25 +2607,30 @@ class WPShortPixel {
 
         if(isset($_POST["bulkCleanup"]))
         {
+            Log::addInfo('Bulk Process - Bulk Cleanup ');
             $this->prioQ->startBulk(ShortPixelQueue::BULK_TYPE_CLEANUP);
             $this->_settings->customBulkPaused = 0;
         }//end bulk restore  was clicked
 
         if(isset($_POST["bulkCleanupPending"]))
         {
+            Log::addInfo('Bulk Process - Clean Pending');
             $this->prioQ->startBulk(ShortPixelQueue::BULK_TYPE_CLEANUP_PENDING);
             $this->_settings->customBulkPaused = 0;
         }//end bulk restore  was clicked
 
         if(isset($_POST["bulkProcessResume"]))
         {
+            Log::addInfo('Bulk Process - Bulk Resume');
             $this->prioQ->resumeBulk();
             $this->_settings->customBulkPaused = 0;
         }//resume was clicked
 
         if(isset($_POST["skipToCustom"]))
         {
+            Log::addInfo('Bulk Process - Skipping to Custom Media Process');
             $this->_settings->skipToCustom = true;
+
         }//resume was clicked
 
         //figure out the files that are left to be processed
@@ -2620,6 +2640,8 @@ class WPShortPixel {
 
         //check the custom bulk
         $pendingMeta = $this->_settings->hasCustomFolders ? $this->spMetaDao->getPendingMetaCount() : 0;
+        Log::addInfo('Bulk Process - Pending Meta Count ' . $pendingMeta);
+        Log::addInfo('Bulk Process - File left ' . $filesLeft[0]->FilesLeftToBeProcessed );
 
         if (   ($filesLeft[0]->FilesLeftToBeProcessed > 0 && $this->prioQ->bulkRunning())
             || (0 + $pendingMeta > 0 && !$this->_settings->customBulkPaused && $this->prioQ->bulkRan())//bulk processing was started
@@ -2636,6 +2658,7 @@ class WPShortPixel {
         {
             if($this->prioQ->bulkRan() && !$this->prioQ->bulkPaused()) {
                 $this->prioQ->markBulkComplete();
+                Log::addInfo("Bulk Process - Marked Bulk Complete");
             }
 
             //image count
