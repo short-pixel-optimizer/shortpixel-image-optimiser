@@ -1259,8 +1259,8 @@ class WPShortPixel {
         }
 
         $rawPrioQ = $this->prioQ->get();
-        if(count($rawPrioQ)) { self::log("HIP: 0 Priority Queue: ".json_encode($rawPrioQ)); }
-        self::log("HIP: 0 Bulk running? " . $this->prioQ->bulkRunning() . " START " . $this->_settings->startBulkId . " STOP " . $this->_settings->stopBulkId . " MaxTime: " . SHORTPIXEL_MAX_EXECUTION_TIME);
+        if(count($rawPrioQ)) { Log::addInfo("HIP: 0 Priority Queue: ".json_encode($rawPrioQ)); }
+        Log::addInfo("HIP: 0 Bulk running? " . $this->prioQ->bulkRunning() . " START " . $this->_settings->startBulkId . " STOP " . $this->_settings->stopBulkId . " MaxTime: " . SHORTPIXEL_MAX_EXECUTION_TIME);
 
         //handle the bulk restore and cleanup first - these are fast operations taking precedece over optimization
         if(   $this->prioQ->bulkRunning()
@@ -1321,7 +1321,8 @@ class WPShortPixel {
         //die("za stop 2");
 
         //self::log("HIP: 1 Ids: ".json_encode($ids));
-        if(count($ids)) {$idl='';foreach($ids as $i){$idl.=$i->getId().' ';} self::log("HIP: 1 Selected IDs: $idl");}
+        if(count($ids)) {$idl='';foreach($ids as $i){$idl.=$i->getId().' ';}
+            Log::addInfo("HIP: 1 Selected IDs: $idl");}
 
         //2: Send up to SHORTPIXEL_PRESEND_ITEMS files to the server for processing
         for($i = 0, $itemHandler = false; $ids !== false && $i < min(SHORTPIXEL_PRESEND_ITEMS, count($ids)); $i++) {
@@ -2203,7 +2204,7 @@ class WPShortPixel {
             /** BS . Moved this function from customRestore to Delete, plus Re-add 19/06/2019
             * Reason: doCustomRestore puts all options to 0 including once that needs preserving, which
             * will result in setting loss.
-            * *But* the backup still needs to be restoring on 'redo' *so* do restore, but ignore that meta, then delete, and readd path. 
+            * *But* the backup still needs to be restoring on 'redo' *so* do restore, but ignore that meta, then delete, and readd path.
             */
             $meta = $this->spMetaDao->getMeta($ID);
             $path = $meta->getPath();
@@ -2630,6 +2631,7 @@ class WPShortPixel {
         {
             Log::addInfo('Bulk Process - Skipping to Custom Media Process');
             $this->_settings->skipToCustom = true;
+            $this->_settings->customBulkPaused = 0;
 
         }//resume was clicked
 
