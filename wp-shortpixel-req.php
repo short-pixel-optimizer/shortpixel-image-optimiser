@@ -7,7 +7,7 @@ if(defined('SHORTPIXEL_DEBUG') && SHORTPIXEL_DEBUG === true) {
 } */
 
 // Debug. Hook as early as possible.
-//require_once('class/controller/controller.php');
+require_once('class/controller/controller.php');
 //require_once('class/controller/debug.php');
 //require_once('class/model/shortpixel-debug.php');
 
