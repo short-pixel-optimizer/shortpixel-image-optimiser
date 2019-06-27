@@ -171,6 +171,14 @@ class WPShortPixel {
             wp_redirect(admin_url("options-general.php?page=wp-shortpixel-settings"));
             exit();
         }
+        elseif (function_exists('is_multisite') && is_multisite() && !$this->_settings->verifiedKey)
+        { // @todo not optimal, License key needs it's own model to do checks upon.
+           $scontrolname = \shortPixelTools::namespaceit("SettingsController");
+           $scontrol = new $scontrolname();
+           $scontrol->setShortPixel($this);
+           $scontrol->checkKey();
+        }
+
 
     }
 
@@ -1098,7 +1106,7 @@ class WPShortPixel {
             $passTime = time();
             $maxResults = $timeoutThreshold > 15 ? SHORTPIXEL_MAX_RESULTS_QUERY / 3 :
                 ($timeoutThreshold > 10 ? SHORTPIXEL_MAX_RESULTS_QUERY / 2 : SHORTPIXEL_MAX_RESULTS_QUERY);
-            self::log("GETDB: pass $sanityCheck current StartID: $crtStartQueryID Threshold: $timeoutThreshold, MaxResults: $maxResults" );
+            Log::addInfo("GETDB: pass $sanityCheck current StartID: $crtStartQueryID Threshold: $timeoutThreshold, MaxResults: $maxResults" );
 
             /* $queryPostMeta = "SELECT * FROM " . $wpdb->prefix . "postmeta
                 WHERE ( post_id <= $crtStartQueryID AND post_id >= $endQueryID )
@@ -1109,13 +1117,13 @@ class WPShortPixel {
             */
 
             $resultsPostMeta = WpShortPixelMediaLbraryAdapter::getPostMetaSlice($crtStartQueryID, $endQueryID, $maxResults);
-            if(time() - $this->timer >= 60) self::log("GETDB is SLOW. Got meta slice.");
+            if(time() - $this->timer >= 60) Log::addWarn("GETDB is SLOW. Got meta slice.");
 
             if ( empty($resultsPostMeta) ) {
                 $crtStartQueryID -= SHORTPIXEL_MAX_RESULTS_QUERY;
                 $startQueryID = $crtStartQueryID;
                 if(!count($idList)) { //none found so far, so decrease the start ID
-                    self::log("GETDB: empty slice. setStartBulkID to $startQueryID");
+                    Log::addInfo("GETDB: empty slice. setStartBulkID to $startQueryID");
                     $this->prioQ->setStartBulkId($startQueryID);
                 }
                 continue;
@@ -1216,7 +1224,7 @@ class WPShortPixel {
 
     /** Checks the API key **/
     private function checkKey($ID) {
-        if( $this->_settings->verifiedKey == false) {
+      if( $this->_settings->verifiedKey == false) {
             if($ID == null){
                 $ids = $this->getFromPrioAndCheck(1);
                 $itemHandler = (count($ids) > 0 ? $ids[0] : null);
@@ -3057,16 +3065,7 @@ class WPShortPixel {
 
             insert_with_markers( $upload_base . '.htaccess', 'ShortPixelWebp', $rules);
             insert_with_markers( trailingslashit(WP_CONTENT_DIR) . '.htaccess', 'ShortPixelWebp', $rules);
-           /* insert_with_markers( get_home_path() . '.htaccess', 'ShortPixelWebp', '
-RewriteEngine On
-RewriteBase /
-RewriteCond %{HTTP_USER_AGENT} Chrome [OR]
-RewriteCond %{HTTP_USER_AGENT} "Google Page Speed Insights" [OR]
-RewriteCond %{HTTP_ACCEPT} image/webp [OR]
-RewriteCond %{DOCUMENT_ROOT}/$1\.webp -f
-RewriteRule (.+)\.(?:jpe?g|png)$ $1.webp [NC,T=image/webp,E=webp,L]
-Header append Vary Accept env=REDIRECT_webp
-' ); */
+
         }
     }
 
