@@ -33,7 +33,10 @@ if(!defined('SHORTPIXEL_MAX_THUMBS')) { //can be defined in wp-config.php
 define('SHORTPIXEL_PRESEND_ITEMS', 3);
 define('SHORTPIXEL_API', 'api.shortpixel.com');
 
-define('SHORTPIXEL_MAX_EXECUTION_TIME', ini_get('max_execution_time'));
+$max_exec = intval(ini_get('max_execution_time'));
+if ($max_exec === 0) // max execution time of zero means infinite. Quantify.
+  $max_exec = 60;
+define('SHORTPIXEL_MAX_EXECUTION_TIME', $max_exec);
 
 require_once(ABSPATH . 'wp-admin/includes/file.php');
 require_once('build/shortpixel/autoload.php');

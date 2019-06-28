@@ -1129,21 +1129,22 @@ class WPShortPixel {
                 continue;
             }
 
-            if($timeoutThreshold > 10) self::log("GETDB is SLOW. Meta slice has " . count($resultsPostMeta) . ' items.');
+            if($timeoutThreshold > 10) Log::addInfo("GETDB is SLOW. Meta slice has " . count($resultsPostMeta) . ' items.');
 
             foreach ( $resultsPostMeta as $itemMetaData ) {
                 $crtStartQueryID = $itemMetaData->post_id;
-                if(time() - $this->timer >= 60) self::log("GETDB is SO SLOW. Check processable for $crtStartQueryID.");
+                if(time() - $this->timer >= 60) Log::addInfo("GETDB is SO SLOW. Check processable for $crtStartQueryID.");
                 if(time() - $this->timer >= $maxTime - $timeoutThreshold){
+                    Log::addInfo('GETDB Timeout : breaking fetch. maxTime ' . $maxTime . ' - Qid ' . $crtStartQueryID );
                     break;
                 }
 
                 if(!in_array($crtStartQueryID, $idList) && $this->isProcessable($crtStartQueryID, ($this->_settings->optimizePdfs ? array() : array('pdf')))) {
                     $item = new ShortPixelMetaFacade($crtStartQueryID);
 
-                    if($timeoutThreshold > 15) self::log("GETDB is SO SLOW. Get meta for $crtStartQueryID.");
+                    if($timeoutThreshold > 15) Log::addInfo("GETDB is SO SLOW. Get meta for $crtStartQueryID.");
                     $meta = $item->getMeta();//wp_get_attachment_metadata($crtStartQueryID);
-                    if($timeoutThreshold > 15) self::log("GETDB is SO SLOW. Got meta.");
+                    if($timeoutThreshold > 15) Log::addInfo("GETDB is SO SLOW. Got meta.");
 
                     if($meta->getStatus() != 2) {
                         $addIt = (strpos($meta->getMessage(), __('Image files are missing.', 'shortpixel-image-optimiser')) === false);
