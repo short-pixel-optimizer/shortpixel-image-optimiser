@@ -2516,10 +2516,7 @@ class WPShortPixel {
             require_once(ABSPATH . 'wp-admin/admin-header.php');
         }
         //$this->outputHSBeacon();
-        $dismissed = $this->_settings->dismissedNotices ? $this->_settings->dismissedNotices : array();
-        if(isset($dismissed['help']) && $dismissed['help']) {
-            \ShortPixel\HelpScout::outputBeacon($this->getApiKey());
-        }
+        \ShortPixel\HelpScout::outputBeacon($this->getApiKey());
         ?>
 	    <div class="wrap shortpixel-other-media">
             <h2>
