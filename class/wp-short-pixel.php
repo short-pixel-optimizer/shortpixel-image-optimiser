@@ -1123,12 +1123,20 @@ class WPShortPixel {
 
             if($timeoutThreshold > 10) self::log("GETDB is SLOW. Meta slice has " . count($resultsPostMeta) . ' items.');
 
+            $counter = 0;
             foreach ( $resultsPostMeta as $itemMetaData ) {
                 $crtStartQueryID = $itemMetaData->post_id;
                 if(time() - $this->timer >= 60) self::log("GETDB is SO SLOW. Check processable for $crtStartQueryID.");
                 if(time() - $this->timer >= $maxTime - $timeoutThreshold){
-                    break;
+                    if(set_time_limit(30)) {
+                        self::log("GETDB is SO SLOW. Increasing time limit by 30 sec succeeded.");
+                        $maxTime += 30 - $timeoutThreshold;
+                    } else {
+                        self::log("GETDB is SO SLOW. Breaking after processing $counter items. Time limit is over: " . ($maxTime - $timeoutThreshold));
+                        break;
+                    }
                 }
+                $counter++;
 
                 if(!in_array($crtStartQueryID, $idList) && $this->isProcessable($crtStartQueryID, ($this->_settings->optimizePdfs ? array() : array('pdf')))) {
                     $item = new ShortPixelMetaFacade($crtStartQueryID);
@@ -2486,7 +2494,10 @@ class WPShortPixel {
             require_once(ABSPATH . 'wp-admin/admin-header.php');
         }
         //$this->outputHSBeacon();
-        \ShortPixel\HelpScout::outputBeacon($this->getApiKey());
+        $dismissed = $this->_settings->dismissedNotices ? $this->_settings->dismissedNotices : array();
+        if(isset($dismissed['help']) && $dismissed['help']) {
+            \ShortPixel\HelpScout::outputBeacon($this->getApiKey());
+        }
         ?>
 	    <div class="wrap shortpixel-other-media">
             <h2>
