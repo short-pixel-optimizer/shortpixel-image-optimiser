@@ -1,6 +1,6 @@
 <?php
 namespace ShortPixel;
-use ShortPixel\ShortPixelLogger as Log;
+use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 class ShortPixelController
 {

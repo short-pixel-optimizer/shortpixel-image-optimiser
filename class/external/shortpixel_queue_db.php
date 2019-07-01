@@ -1,5 +1,5 @@
 <?php
-//use \ShortPixel\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 class ShortPixelQueueDB extends ShortPixelQueue{
 
@@ -36,6 +36,7 @@ class ShortPixelQueueDB extends ShortPixelQueue{
         $queue = self::openQ(LOCK_SH);
         if($queue === false) return array();
 
+        Log::addDebug('DBQ - Get ' . $queue);
         $itemsRaw = $queue;
         $items = strlen($itemsRaw) ? self::parseQ($itemsRaw) : array();
         $fp = null;
@@ -54,6 +55,7 @@ class ShortPixelQueueDB extends ShortPixelQueue{
         ftruncate($fp, 0);      // truncate file
         fwrite($fp, implode(',', $items));
         fflush($fp);            // flush output before releasing the lock */
+        Log::addDebug('DBQ - Set ' . implode(',', $items));
         update_option(self::THE_OPTION, implode(',', $items), false);
 
         $fp =null;
@@ -67,6 +69,7 @@ class ShortPixelQueueDB extends ShortPixelQueue{
         if($queue === false) return false;
 
         $itemsRaw = $queue;
+        Log::addDebug('Apply' . $itemsRaw);
         $items = strlen($itemsRaw) ? self::parseQ($itemsRaw) : array();
         if($extra) {
             $items = call_user_func($callable, $items, $extra);
@@ -97,8 +100,11 @@ class ShortPixelQueueDB extends ShortPixelQueue{
 
         //$queueName = SHORTPIXEL_UPLOADS_BASE . "/.shortpixel-q-" . get_current_blog_id();
         $trans = get_transient(self::THE_TRANSIENT);
+        Log::addDebug('OpenQ', array($trans));
         if (! $trans === false) // if lock, then no beans.
           return false;
+
+        Log::addDebug('OpenQ -- opened');
 
         wp_cache_delete( self::THE_OPTION, 'options' ); // ensure uncached goodness here.
         $queue = get_option(self::THE_OPTION, '');
@@ -118,6 +124,7 @@ class ShortPixelQueueDB extends ShortPixelQueue{
 
 // @todo replace
     protected static function closeQ($fp) {
+        Log::addDebug('CloseQ');
         delete_transient(self::THE_TRANSIENT);
 
       //  flock($fp, LOCK_UN);    // release the lock
@@ -127,6 +134,11 @@ class ShortPixelQueueDB extends ShortPixelQueue{
     public static function resetPrio() {
         //delete_option( "wp-short-pixel-priorityQueue");
         self::set(array());
+    }
+
+    public function  processing() {
+        //WPShortPixel::log("QUEUE: processing(): get:" . json_encode($this->get()));
+        return $this->bulkRunning() || count($this->get());
     }
 
 
@@ -256,6 +268,7 @@ class ShortPixelQueueDB extends ShortPixelQueue{
             fwrite($fp, implode(',', $newItems));
             fflush($fp);            // flush output before releasing the lock */
             update_option(self::THE_OPTION, implode(',',$newItems), false);
+            Log::addDebug('DBQ - Found and Removing ' . $ID);
         }
         $fp = null;
         $this->closeQ($fp);

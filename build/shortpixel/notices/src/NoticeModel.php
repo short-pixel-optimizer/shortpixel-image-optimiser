@@ -1,8 +1,7 @@
 <?php
+namespace ShortPixel\Notices;
 
-namespace ShortPixel;
-
-class NoticeModel extends ShortPixelModel
+class NoticeModel //extends ShortPixelModel
 {
   protected $message;
   public $code;

@@ -4,8 +4,8 @@
  * thanks to the Responsify WP plugin for some of the code
  */
 
-use ShortPixel\DebugItem as DebugItem;
-use ShortPixel\ShortPixelLogger as Log;
+//use ShortPixel\DebugItem as DebugItem;
+use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 class ShortPixelImgToPictureWebp
 {

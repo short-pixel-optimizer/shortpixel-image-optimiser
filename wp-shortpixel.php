@@ -3,7 +3,7 @@
  * Plugin Name: ShortPixel Image Optimizer
  * Plugin URI: https://shortpixel.com/
  * Description: ShortPixel optimizes images automatically, while guarding the quality of your images. Check your <a href="options-general.php?page=wp-shortpixel-settings" target="_blank">Settings &gt; ShortPixel</a> page on how to start optimizing your image library and make your website load faster.
- * Version: 4.14.2-DEV01
+ * Version: 4.14.2-DEV02
  * Author: ShortPixel
  * Author URI: https://shortpixel.com
  * Text Domain: shortpixel-image-optimiser
@@ -19,7 +19,7 @@ define('SHORTPIXEL_PLUGIN_FILE', __FILE__);
 
 //define('SHORTPIXEL_AFFILIATE_CODE', '');
 
-define('SHORTPIXEL_IMAGE_OPTIMISER_VERSION', "4.14.2-DEV01");
+define('SHORTPIXEL_IMAGE_OPTIMISER_VERSION', "4.14.2-DEV02");
 define('SHORTPIXEL_MAX_TIMEOUT', 10);
 define('SHORTPIXEL_VALIDATE_MAX_TIMEOUT', 15);
 define('SHORTPIXEL_BACKUP', 'ShortpixelBackups');
@@ -33,9 +33,14 @@ if(!defined('SHORTPIXEL_MAX_THUMBS')) { //can be defined in wp-config.php
 define('SHORTPIXEL_PRESEND_ITEMS', 3);
 define('SHORTPIXEL_API', 'api.shortpixel.com');
 
-define('SHORTPIXEL_MAX_EXECUTION_TIME', ini_get('max_execution_time'));
+$max_exec = intval(ini_get('max_execution_time'));
+if ($max_exec === 0) // max execution time of zero means infinite. Quantify.
+  $max_exec = 60;
+define('SHORTPIXEL_MAX_EXECUTION_TIME', $max_exec);
 
 require_once(ABSPATH . 'wp-admin/includes/file.php');
+require_once('build/shortpixel/autoload.php');
+
 
 $sp__uploads = wp_upload_dir();
 define('SHORTPIXEL_UPLOADS_BASE', (file_exists($sp__uploads['basedir']) ? '' : ABSPATH) . $sp__uploads['basedir'] );
@@ -60,6 +65,7 @@ define('SHORTPIXEL_MAX_EXECUTION_TIME2', 2 );
 define("SHORTPIXEL_MAX_RESULTS_QUERY", 30);
 
 /** @todo This is a test in progress var */
+
 //define("SHORTPIXEL_NOFLOCK", true);
 
 function shortpixelInit() {
@@ -213,6 +219,12 @@ function shortPixelIsPluginActive($plugin) {
 }
 
 // [BS] Start runtime here
+$log = ShortPixel\ShortPixelLogger\ShortPixelLogger::getInstance();
+$log->setLogPath(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
+
+// Pre-Runtime Checks
+require_once('class/external/flywheel.php'); // check if SP runs on flywheel
+
 $option = get_option('wp-short-pixel-create-webp-markup');
 if ( $option ) {
     if(shortPixelIsPluginActive('shortpixel-adaptive-images/short-pixel-ai.php')) {

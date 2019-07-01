@@ -3,7 +3,7 @@ if ( !function_exists( 'download_url' ) ) {
     require_once( ABSPATH . 'wp-admin/includes/file.php' );
 }
 
-use \ShortPixel\ShortPixelLogger as Log;
+use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 class ShortPixelAPI {
 
@@ -111,7 +111,7 @@ class ShortPixelAPI {
         }
 
       //  WpShortPixel::log("DO REQUESTS for META: " . json_encode($itemHandler->getRawMeta()) . " STACK: " . json_encode(debug_backtrace()));
-          $URLs = apply_filters('shortpixel_image_urls', $URLs, $itemHandler->getId()) ; 
+          $URLs = apply_filters('shortpixel_image_urls', $URLs, $itemHandler->getId()) ;
 
         $requestParameters = array(
             'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,

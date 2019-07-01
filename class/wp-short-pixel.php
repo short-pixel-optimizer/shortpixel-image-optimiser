@@ -1,8 +1,8 @@
 <?php
 
-use ShortPixel\DebugItem as DebugItem;
-use ShortPixel\ShortPixelLogger as Log;
-use ShortPixel\NoticeController as Notice;
+//use ShortPixel\DebugItem as DebugItem;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+use ShortPixel\Notices\NoticeController as Notice;
 
 
 class WPShortPixel {
@@ -171,6 +171,14 @@ class WPShortPixel {
             wp_redirect(admin_url("options-general.php?page=wp-shortpixel-settings"));
             exit();
         }
+        elseif (function_exists('is_multisite') && is_multisite() && !$this->_settings->verifiedKey)
+        { // @todo not optimal, License key needs it's own model to do checks upon.
+           $scontrolname = \shortPixelTools::namespaceit("SettingsController");
+           $scontrol = new $scontrolname();
+           $scontrol->setShortPixel($this);
+           $scontrol->checkKey();
+        }
+
 
     }
 
@@ -473,7 +481,7 @@ class WPShortPixel {
 
     /** [TODO] This should report to the Shortpixel Logger **/
     static protected function doLog($message, $force = false) {
-
+      // Log::addInfo($message);
         /*if(defined('SHORTPIXEL_DEBUG_TARGET') || $force) {
                 file_put_contents(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log", '[' . date('Y-m-d H:i:s') . "] $message\n", FILE_APPEND);
         } else {
@@ -1098,7 +1106,7 @@ class WPShortPixel {
             $passTime = time();
             $maxResults = $timeoutThreshold > 15 ? SHORTPIXEL_MAX_RESULTS_QUERY / 3 :
                 ($timeoutThreshold > 10 ? SHORTPIXEL_MAX_RESULTS_QUERY / 2 : SHORTPIXEL_MAX_RESULTS_QUERY);
-            self::log("GETDB: pass $sanityCheck current StartID: $crtStartQueryID Threshold: $timeoutThreshold, MaxResults: $maxResults" );
+            Log::addInfo("GETDB: pass $sanityCheck current StartID: $crtStartQueryID Threshold: $timeoutThreshold, MaxResults: $maxResults" );
 
             /* $queryPostMeta = "SELECT * FROM " . $wpdb->prefix . "postmeta
                 WHERE ( post_id <= $crtStartQueryID AND post_id >= $endQueryID )
@@ -1109,26 +1117,26 @@ class WPShortPixel {
             */
 
             $resultsPostMeta = WpShortPixelMediaLbraryAdapter::getPostMetaSlice($crtStartQueryID, $endQueryID, $maxResults);
-            if(time() - $this->timer >= 60) self::log("GETDB is SLOW. Got meta slice.");
+            if(time() - $this->timer >= 60) Log::addWarn("GETDB is SLOW. Got meta slice.");
 
             if ( empty($resultsPostMeta) ) {
                 $crtStartQueryID -= SHORTPIXEL_MAX_RESULTS_QUERY;
                 $startQueryID = $crtStartQueryID;
                 if(!count($idList)) { //none found so far, so decrease the start ID
-                    self::log("GETDB: empty slice. setStartBulkID to $startQueryID");
+                    Log::addInfo("GETDB: empty slice. setStartBulkID to $startQueryID");
                     $this->prioQ->setStartBulkId($startQueryID);
                 }
                 continue;
             }
 
-            if($timeoutThreshold > 10) self::log("GETDB is SLOW. Meta slice has " . count($resultsPostMeta) . ' items.');
+            if($timeoutThreshold > 10) Log::addInfo("GETDB is SLOW. Meta slice has " . count($resultsPostMeta) . ' items.');
 
             $counter = 0;
             foreach ( $resultsPostMeta as $itemMetaData ) {
                 $crtStartQueryID = $itemMetaData->post_id;
-                if(time() - $this->timer >= 60) self::log("GETDB is SO SLOW. Check processable for $crtStartQueryID.");
+                if(time() - $this->timer >= 60) Log::addInfo("GETDB is SO SLOW. Check processable for $crtStartQueryID.");
                 if(time() - $this->timer >= $maxTime - $timeoutThreshold){
-                    if(set_time_limit(30)) {
+                    if($counter == 0 && set_time_limit(30)) {
                         self::log("GETDB is SO SLOW. Increasing time limit by 30 sec succeeded.");
                         $maxTime += 30 - $timeoutThreshold;
                     } else {
@@ -1141,9 +1149,9 @@ class WPShortPixel {
                 if(!in_array($crtStartQueryID, $idList) && $this->isProcessable($crtStartQueryID, ($this->_settings->optimizePdfs ? array() : array('pdf')))) {
                     $item = new ShortPixelMetaFacade($crtStartQueryID);
 
-                    if($timeoutThreshold > 15) self::log("GETDB is SO SLOW. Get meta for $crtStartQueryID.");
+                    if($timeoutThreshold > 15) Log::addInfo("GETDB is SO SLOW. Get meta for $crtStartQueryID.");
                     $meta = $item->getMeta();//wp_get_attachment_metadata($crtStartQueryID);
-                    if($timeoutThreshold > 15) self::log("GETDB is SO SLOW. Got meta.");
+                    if($timeoutThreshold > 15) Log::addInfo("GETDB is SO SLOW. Got meta.");
 
                     if($meta->getStatus() != 2) {
                         $addIt = (strpos($meta->getMessage(), __('Image files are missing.', 'shortpixel-image-optimiser')) === false);
@@ -1224,7 +1232,7 @@ class WPShortPixel {
 
     /** Checks the API key **/
     private function checkKey($ID) {
-        if( $this->_settings->verifiedKey == false) {
+      if( $this->_settings->verifiedKey == false) {
             if($ID == null){
                 $ids = $this->getFromPrioAndCheck(1);
                 $itemHandler = (count($ids) > 0 ? $ids[0] : null);
@@ -1267,8 +1275,8 @@ class WPShortPixel {
         }
 
         $rawPrioQ = $this->prioQ->get();
-        if(count($rawPrioQ)) { self::log("HIP: 0 Priority Queue: ".json_encode($rawPrioQ)); }
-        self::log("HIP: 0 Bulk running? " . $this->prioQ->bulkRunning() . " START " . $this->_settings->startBulkId . " STOP " . $this->_settings->stopBulkId . " MaxTime: " . SHORTPIXEL_MAX_EXECUTION_TIME);
+        if(count($rawPrioQ)) { Log::addInfo("HIP: 0 Priority Queue: ".json_encode($rawPrioQ)); }
+        Log::addInfo("HIP: 0 Bulk running? " . $this->prioQ->bulkRunning() . " START " . $this->_settings->startBulkId . " STOP " . $this->_settings->stopBulkId . " MaxTime: " . SHORTPIXEL_MAX_EXECUTION_TIME);
 
         //handle the bulk restore and cleanup first - these are fast operations taking precedece over optimization
         if(   $this->prioQ->bulkRunning()
@@ -1329,7 +1337,8 @@ class WPShortPixel {
         //die("za stop 2");
 
         //self::log("HIP: 1 Ids: ".json_encode($ids));
-        if(count($ids)) {$idl='';foreach($ids as $i){$idl.=$i->getId().' ';} self::log("HIP: 1 Selected IDs: $idl");}
+        if(count($ids)) {$idl='';foreach($ids as $i){$idl.=$i->getId().' ';}
+            Log::addInfo("HIP: 1 Selected IDs: $idl");}
 
         //2: Send up to SHORTPIXEL_PRESEND_ITEMS files to the server for processing
         for($i = 0, $itemHandler = false; $ids !== false && $i < min(SHORTPIXEL_PRESEND_ITEMS, count($ids)); $i++) {
@@ -1459,6 +1468,7 @@ class WPShortPixel {
                             $bkThumb = $backupUrl . $urlBkPath . $thumb;
                         }
                         if(strlen($thumb)) {
+                            /** @todo This Check is maybe within a getType for Media_Library_Type, so this should not run. **/
                             if($itemHandler->getType() == ShortPixelMetaFacade::CUSTOM_TYPE) {
                                 $uploadsUrl = ShortPixelMetaFacade::getHomeUrl();
                                 $urlPath = ShortPixelMetaFacade::returnSubDir($meta->getPath());
@@ -2207,7 +2217,19 @@ class WPShortPixel {
 
         if(ShortPixelMetaFacade::isCustomQueuedId($qID)) {
             $ID = ShortPixelMetaFacade::stripQueuedIdType($qID);
-            $meta = $this->doCustomRestore($ID);
+            /** BS . Moved this function from customRestore to Delete, plus Re-add 19/06/2019
+            * Reason: doCustomRestore puts all options to 0 including once that needs preserving, which
+            * will result in setting loss.
+            * *But* the backup still needs to be restoring on 'redo' *so* do restore, but ignore that meta, then delete, and readd path.
+            */
+            $meta = $this->spMetaDao->getMeta($ID);
+            $path = $meta->getPath();
+            $folder_id = $meta->getFolderId();
+            $this->doCustomRestore($ID);
+
+            $this->spMetaDao->delete($meta);
+            $meta = $this->addPathToCustomFolder($path, $folder_id, NULL);
+
             if($meta) {
                 $meta->setCompressionType(ShortPixelAPI::getCompressionTypeCode($compressionType));
                 $meta->setStatus(1);
@@ -2593,6 +2615,8 @@ class WPShortPixel {
 
         if(isset($_POST["bulkRestore"]))
         {
+            Log::addInfo('Bulk Process - Bulk Restore');
+
             $bulkRestore = new \ShortPixel\BulkRestoreAll(); // controller
             $bulkRestore->setShortPixel($this);
             $bulkRestore->setupBulk();
@@ -2603,25 +2627,31 @@ class WPShortPixel {
 
         if(isset($_POST["bulkCleanup"]))
         {
+            Log::addInfo('Bulk Process - Bulk Cleanup ');
             $this->prioQ->startBulk(ShortPixelQueue::BULK_TYPE_CLEANUP);
             $this->_settings->customBulkPaused = 0;
         }//end bulk restore  was clicked
 
         if(isset($_POST["bulkCleanupPending"]))
         {
+            Log::addInfo('Bulk Process - Clean Pending');
             $this->prioQ->startBulk(ShortPixelQueue::BULK_TYPE_CLEANUP_PENDING);
             $this->_settings->customBulkPaused = 0;
         }//end bulk restore  was clicked
 
         if(isset($_POST["bulkProcessResume"]))
         {
+            Log::addInfo('Bulk Process - Bulk Resume');
             $this->prioQ->resumeBulk();
             $this->_settings->customBulkPaused = 0;
         }//resume was clicked
 
         if(isset($_POST["skipToCustom"]))
         {
+            Log::addInfo('Bulk Process - Skipping to Custom Media Process');
             $this->_settings->skipToCustom = true;
+            $this->_settings->customBulkPaused = 0;
+
         }//resume was clicked
 
         //figure out the files that are left to be processed
@@ -2631,6 +2661,8 @@ class WPShortPixel {
 
         //check the custom bulk
         $pendingMeta = $this->_settings->hasCustomFolders ? $this->spMetaDao->getPendingMetaCount() : 0;
+        Log::addInfo('Bulk Process - Pending Meta Count ' . $pendingMeta);
+        Log::addInfo('Bulk Process - File left ' . $filesLeft[0]->FilesLeftToBeProcessed );
 
         if (   ($filesLeft[0]->FilesLeftToBeProcessed > 0 && $this->prioQ->bulkRunning())
             || (0 + $pendingMeta > 0 && !$this->_settings->customBulkPaused && $this->prioQ->bulkRan())//bulk processing was started
@@ -2647,6 +2679,7 @@ class WPShortPixel {
         {
             if($this->prioQ->bulkRan() && !$this->prioQ->bulkPaused()) {
                 $this->prioQ->markBulkComplete();
+                Log::addInfo("Bulk Process - Marked Bulk Complete");
             }
 
             //image count
@@ -3043,16 +3076,7 @@ class WPShortPixel {
 
             insert_with_markers( $upload_base . '.htaccess', 'ShortPixelWebp', $rules);
             insert_with_markers( trailingslashit(WP_CONTENT_DIR) . '.htaccess', 'ShortPixelWebp', $rules);
-           /* insert_with_markers( get_home_path() . '.htaccess', 'ShortPixelWebp', '
-RewriteEngine On
-RewriteBase /
-RewriteCond %{HTTP_USER_AGENT} Chrome [OR]
-RewriteCond %{HTTP_USER_AGENT} "Google Page Speed Insights" [OR]
-RewriteCond %{HTTP_ACCEPT} image/webp [OR]
-RewriteCond %{DOCUMENT_ROOT}/$1\.webp -f
-RewriteRule (.+)\.(?:jpe?g|png)$ $1.webp [NC,T=image/webp,E=webp,L]
-Header append Vary Accept env=REDIRECT_webp
-' ); */
+
         }
     }
 
@@ -3433,6 +3457,7 @@ Header append Vary Accept env=REDIRECT_webp
         $args['body']['host'] = parse_url(get_site_url(),PHP_URL_HOST);
         $argsStr .= "&host={$args['body']['host']}";
         if(strlen($this->_settings->siteAuthUser)) {
+
             $args['body']['user'] = stripslashes($this->_settings->siteAuthUser);
             $args['body']['pass'] = stripslashes($this->_settings->siteAuthPass);
             $argsStr .= '&user=' . urlencode($args['body']['user']) . '&pass=' . urlencode($args['body']['pass']);

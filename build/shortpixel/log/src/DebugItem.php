@@ -1,9 +1,9 @@
 <?php
 // The data models.
-namespace ShortPixel;
+namespace ShortPixel\ShortPixelLogger;
 
 
-class DebugItem // extends ShortPixelModel Too early init for this.
+class DebugItem
 {
     protected $time;
     protected $level;
@@ -118,11 +118,7 @@ class DebugItem // extends ShortPixelModel Too early init for this.
 
     protected function setCaller()
     {
-        if(PHP_VERSION_ID < 50400) {
-            $debug=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-        } else {
-            $debug=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,5);
-        }
+        $debug=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,5);
         $i = 4;
         if (isset($debug[$i]))
         {

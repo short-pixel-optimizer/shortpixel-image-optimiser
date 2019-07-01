@@ -1,8 +1,8 @@
 <?php
 namespace ShortPixel;
-use ShortPixel\ShortPixelLogger as Log;
-use ShortPixel\DebugItem as DebugItem;
-use ShortPixel\NoticeController as Notice;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+//use ShortPixel\DebugItem as DebugItem;
+use ShortPixel\Notices\NoticeController as Notice;
 
 
 class SettingsController extends shortPixelController
@@ -121,6 +121,9 @@ class SettingsController extends shortPixelController
          $this->view->resources = wp_remote_post($this->model->httpProto . "://shortpixel.com/resources-frag");
          if (is_wp_error($this->view->resources))
             $this->view->resources = null;
+
+         $settings = $this->shortPixel->getSettings();
+         $this->view->dismissedNotices = $settings->dismissedNotices;
 
          $this->loadView('view-settings');
       }

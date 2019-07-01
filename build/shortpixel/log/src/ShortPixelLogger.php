@@ -1,11 +1,12 @@
 <?php
-namespace ShortPixel;
+namespace ShortPixel\ShortPixelLogger;
 
   /*** Logger class
   *
   * Class uses the debug data model for keeping log entries.
+  * Logger should not be called before init hook!
   */
- class ShortPixelLogger extends shortPixelController
+ class ShortPixelLogger
  {
    static protected $instance = null;
    protected $start_time;
@@ -22,13 +23,17 @@ namespace ShortPixel;
    protected $format = "[ %%time%% ] %%color%% %%level%% %%color_end%% \t %%message%%  \t %%caller%% ( %%time_passed%% )";
    protected $format_data = "\t %%data%% ";
 
+   protected $hooks = array();
 /*   protected $hooks = array(
       'shortpixel_image_exists' => array('numargs' => 3),
       'shortpixel_webp_image_base' => array('numargs' => 2),
       'shortpixel_image_urls' => array('numargs' => 2),
    ); // @todo monitor hooks, but this should be more dynamic. Do when moving to module via config.
 */
-  protected $hooks = array();
+
+   // utility
+   private $namespace;
+   private $view;
 
    protected $template = 'view-debug-box';
 
@@ -40,6 +45,15 @@ namespace ShortPixel;
    {
       $this->start_time = microtime(true);
       $this->logLevel = DebugItem::LEVEL_WARN;
+
+      $ns = __NAMESPACE__;
+      $this->namespace = substr($ns, 0, strpos($ns, '\\')); // try to get first part of namespace
+
+      if ($this->logPath === false)
+      {
+        $upload_dir = wp_upload_dir(null,false,false);
+        $this->logPath = $upload_dir['basedir'] . '/' . $this->namespace . ".log";
+      }
 
       if (isset($_REQUEST['SHORTPIXEL_DEBUG'])) // manual takes precedence over constants
       {
@@ -67,25 +81,42 @@ namespace ShortPixel;
 
       if (defined('SHORTPIXEL_DEBUG_TARGET') && SHORTPIXEL_DEBUG_TARGET || $this->is_manual_request)
       {
-          $this->logPath = SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log";
+          //$this->logPath = SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log";
           //$this->logMode = defined('SHORTPIXEL_LOG_OVERWRITE') ? 0 : FILE_APPEND;
           if (defined('SHORTPIXEL_LOG_OVERWRITE')) // if overwrite, do this on init once.
             file_put_contents($this->logPath,'-- Log Reset -- ' .PHP_EOL);
 
       }
 
-      $user_is_administrator = (current_user_can('manage_options')) ? true : false;
+      /* On Early init, this function might not exist, then queue it when needed */
+      if (! function_exists('wp_get_current_user'))
+        add_action('plugins_loaded', array($this, 'initView'));
+      else
+       $this->initView();
 
-      if ($this->is_active && $this->is_manual_request && $user_is_administrator )
-      {
-          $this->layout = new \stdClass;
-          $this->layout->logLink = SHORTPIXEL_BACKUP_URL . "/shortpixel_log";
-
-          add_action('admin_footer', array($this, 'loadView'));
-      }
 
       if ($this->is_active && count($this->hooks) > 0)
           $this->monitorHooks();
+   }
+
+   /** Init the view when needed. Private function ( public because of WP_HOOK )
+   * Never call directly */
+   public function initView()
+   {
+     $user_is_administrator = (current_user_can('manage_options')) ? true : false;
+
+     if ($this->is_active && $this->is_manual_request && $user_is_administrator )
+     {
+          $content_url = content_url();
+          $logPath = $this->logPath;
+          $pathpos = strpos($logPath, 'wp-content') + strlen('wp-content');
+          $logPart = substr($logPath, $pathpos);
+          $logLink = $content_url . $logPart;
+
+         $this->view = new \stdClass;
+         $this->view->logLink = $logLink;
+         add_action('admin_footer', array($this, 'loadView'));
+     }
    }
 
    public static function getInstance()
@@ -97,6 +128,10 @@ namespace ShortPixel;
       return self::$instance;
    }
 
+   public function setLogPath($logPath)
+   {
+     $this->logPath = $logPath;
+   }
    protected static function addLog($message, $level, $data = array())
    {
      $log = self::getInstance();
@@ -111,7 +146,7 @@ namespace ShortPixel;
      $args['level'] = $level;
      $args['data'] = $data;
 
-     $newItem = new \ShortPixel\DebugItem($message, $args);
+     $newItem = new DebugItem($message, $args);
      $log->items[] = $newItem;
 
       if ($log->is_active)
@@ -260,6 +295,27 @@ namespace ShortPixel;
       array_shift($args);
       self::addInfo('[Hook] - ' . $hook . ' with ' . var_export($value,true), $args);
       return $value;
+   }
+
+   public function loadView()
+   {
+       // load either param or class template.
+       $template = $this->template;
+
+       $view = $this->view;
+       $view->namespace = $this->namespace;
+       $controller = $this;
+
+       $template_path = __DIR__ . '/' . $this->template  . '.php';
+       if (file_exists($template_path))
+       {
+
+         include($template_path);
+       }
+       else {
+         self::addError("View $template could not be found in " . $template_path,
+         array('class' => get_class($this), 'req' => $_REQUEST));
+       }
    }
 
 

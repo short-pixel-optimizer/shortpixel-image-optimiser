@@ -8,14 +8,14 @@ if(defined('SHORTPIXEL_DEBUG') && SHORTPIXEL_DEBUG === true) {
 
 // Debug. Hook as early as possible.
 require_once('class/controller/controller.php');
-require_once('class/controller/debug.php');
-require_once('class/model/shortpixel-debug.php');
+//require_once('class/controller/debug.php');
+//require_once('class/model/shortpixel-debug.php');
 
 // @todo wp-shortpixel-settings which depends on this model should be called when needed; in the model/ directory. That will be some work, so for now here.
 require_once('class/shortpixel-model.php');
 
-use ShortPixel\DebugItem as DebugItem;
-use ShortPixel\ShortPixelLogger as Log;
+//use ShortPixel\DebugItem as DebugItem;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 if (! defined('SHORTPIXEL_DEBUG'))
 {
