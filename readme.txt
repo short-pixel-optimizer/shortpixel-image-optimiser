@@ -251,6 +251,11 @@ define('SHORTPIXEL_CUSTOM_THUMB_INFIXES', '-uae'); will handle custom thumbnails
 Release date: 2019
 * add the possibility to define custom infixes for thumbnails (like image-uai-150x150.jpg for image.jpg) - comma separated define SHORTPIXEL_CUSTOM_THUMB_INFIXES
 
+== 4.14.2 ==
+
+Release date: 1st July 2019
+* Add the possibility to define custom thumb infixes like for example -uat to also select thumbs like image-uat-100x100.jpg
+
 == 4.14.1 ==
 
 Release date: 17th June 2019
