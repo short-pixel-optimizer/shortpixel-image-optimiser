@@ -122,7 +122,7 @@ class ShortPixelController
             require_once($path);
        }
        else {
-         Log::addError('Model $name could not be found');
+         Log::addError("Model $name  could not be found");
        }
      }
 }
@@ -154,9 +154,11 @@ class ShortPixelController
         return true;
       }
     }
-
-    $model = $this->model;
-    $this->postData = $model->getSanitizedData($post);
+    else
+    {
+      $model = $this->model;
+      $this->postData = $model->getSanitizedData($post);
+    }      
 
     return $this->postData;
 

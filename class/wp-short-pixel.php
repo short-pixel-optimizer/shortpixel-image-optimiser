@@ -1,9 +1,7 @@
 <?php
-
 //use ShortPixel\DebugItem as DebugItem;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notice;
-
 
 class WPShortPixel {
 
@@ -166,7 +164,7 @@ class WPShortPixel {
 
         // [BS] Quite dangerous to do this in any constructor. Can hit if request is ajax to name something
         // @todo This is intended to run only once, on activation. ( it does )
-        if(!$this->_settings->redirectedSettings && !$this->_settings->verifiedKey && (!function_exists("is_multisite") || !is_multisite())) {
+        /*if(!$this->_settings->redirectedSettings && !$this->_settings->verifiedKey && (!function_exists("is_multisite") || !is_multisite())) {
             $this->_settings->redirectedSettings = 1;
             wp_redirect(admin_url("options-general.php?page=wp-shortpixel-settings"));
             exit();
@@ -177,9 +175,11 @@ class WPShortPixel {
            $scontrol = new $scontrolname();
            $scontrol->setShortPixel($this);
            $scontrol->checkKey();
-        }
+        } */
 
-
+        $keyControl = new \ShortPixel\apiKeyController();
+        $keyControl->setShortPixel($this);
+        $keyControl->load();
     }
 
     //handling older
@@ -2465,7 +2465,7 @@ class WPShortPixel {
         }
         if ( !$quotaData['APIKeyValid']) {
             if(strlen($this->_settings->apiKey))
-                Notice::addError(sprintf(__('Shortpixel Remote API Error: %s','shortpixel-image-optimizer'), $quotaData['Message'] ));
+                Notice::addError(sprintf(__('Shortpixel Remote API Error: %s','shortpixel-image-optimiser'), $quotaData['Message'] ));
             return $quotaData;
         }
         //$tempus = microtime(true);
@@ -3077,311 +3077,7 @@ class WPShortPixel {
         }
     }
 
-    /** Settings menu controller
-    * @todo Make it a controller ||commented out means replaced
-    */
-    public function renderSettingsMenu() {
-        if ( !current_user_can( 'manage_options' ) )  {
-            wp_die(__('You do not have sufficient permissions to access this page.','shortpixel-image-optimiser'));
-        }
 
-      //  wp_enqueue_style('sp-file-tree.min.css', plugins_url('/res/css/sp-file-tree.min.css',SHORTPIXEL_PLUGIN_FILE) );
-      //  wp_enqueue_script('sp-file-tree.min.js', plugins_url('/res/js/sp-file-tree.min.js',SHORTPIXEL_PLUGIN_FILE) );
-
-        //die(var_dump($_POST));
-        $noticeHTML = "";
-        $notice = null;
-        $folderMsg = false;
-        $addedFolder = false;
-
-        //$this->_settings->redirectedSettings = 2;
-
-        // Check if NGINX Server
-        //$isNginx = strpos($_SERVER["SERVER_SOFTWARE"], 'nginx') !== false ? true : false;
-
-        // BEGIN: Verify .htaccess writeability
-        /*$htaccessWriteable = true;
-        if( !$isNginx ) {
-            $htaccessPath = get_home_path() . '.htaccess';
-            $htaccessExisted = file_exists( $htaccessPath );
-            //$htaccessWriteable = insert_with_markers( get_home_path() . '.htaccess', 'ShortPixelWebp', '' );
-            $htaccessWriteable = @fopen($htaccessPath, "a+") ? true : false;
-            if( !$htaccessExisted ){
-                unlink( $htaccessPath );
-            }
-        } */
-        // END: Verify .htaccess writeability
-
-
-        //by default we try to fetch the API Key from wp-config.php (if defined)
-        /*if ( defined("SHORTPIXEL_API_KEY") && strlen(SHORTPIXEL_API_KEY) == 20)
-        {
-            if(!isset($_POST['save']) && (strlen($this->getApiKey()) == 0 || SHORTPIXEL_API_KEY != $this->getApiKey())) {
-                $_POST['validate'] = "validate";
-            }
-            $_POST['key'] = SHORTPIXEL_API_KEY;
-        } */
-
-        if(isset($_GET['setsparchive'])) {
-            $this->_settings->downloadArchive = intval($_GET['setsparchive']);
-        }
-
-        //check all custom folders and update meta table if files appeared
-        // This var is overwritten in the Save procedure. Notice is possibly overwritten below.
-        //$customFolders = $this->refreshCustomFolders($notice, isset($_POST['removeFolder']) ? $_POST['removeFolder'] : null);
-
-        if(isset($_POST['request']) && $_POST['request'] == 'request') {
-            //a new API Key was requested
-            if(filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
-
-            }
-            else {
-                $notice = array("status" => "error",
-                    "msg" => __("Please provide a valid e-mail.",'shortpixel-image-optimiser')
-                           . "<BR> "
-                           . __('For any question regarding obtaining your API Key, please contact us at ','shortpixel-image-optimiser')
-                           . "<a href='mailto:help@shortpixel.com?Subject=API Key issues' target='_top'>help@shortpixel.com</a>"
-                           . __(' or ','shortpixel-image-optimiser')
-                           . "<a href='https://shortpixel.com/contact' target='_blank'>" . __('here','shortpixel-image-optimiser') . "</a>.");
-            }
-        }
-
-      /*  if ( isset( $_POST["saveCloudflare"] ) ) {
-            $cfApi = $this->_settings->cloudflareEmail = sanitize_text_field( $_POST['cloudflare-email'] );
-            $cfAuth = $this->_settings->cloudflareAuthKey = sanitize_text_field( $_POST['cloudflare-auth-key'] );
-            $cfZone = $this->_settings->cloudflareZoneID = sanitize_text_field( $_POST['cloudflare-zone-id'] ); */
-            $this->cloudflareApi->set_up($cfApi, $cfAuth, $cfZone);
-        //}
-
-        if(   isset($_POST['save']) || isset($_POST['saveAdv'])
-           || (isset($_POST['validate']) && $_POST['validate'] == "validate")
-           || isset($_POST['removeFolder']) || isset($_POST['recheckFolder'])) {
-
-            //handle API Key - common for save and validate.
-            //$_POST['key'] = trim(str_replace("*", "", isset($_POST['key']) ? $_POST['key'] : $this->_settings->apiKey)); //the API key might not be set if the editing is disabled.
-
-          /*  if ( strlen($_POST['key']) <> 20 ){
-                $KeyLength = strlen($_POST['key']);
-
-                $notice = array("status" => "error",
-                    "msg" => sprintf(__("The key you provided has %s characters. The API key should have 20 characters, letters and numbers only.",'shortpixel-image-optimiser'), $KeyLength)
-                           . "<BR> <b>"
-                           . __('Please check that the API key is the same as the one you received in your confirmation email.','shortpixel-image-optimiser')
-                           . "</b><BR> "
-                           . __('If this problem persists, please contact us at ','shortpixel-image-optimiser')
-                           . "<a href='mailto:help@shortpixel.com?Subject=API Key issues' target='_top'>help@shortpixel.com</a>"
-                           . __(' or ','shortpixel-image-optimiser')
-                           . "<a href='https://shortpixel.com/contact' target='_blank'>" . __('here','shortpixel-image-optimiser') . "</a>.");
-            }
-            else {
-
-                if(isset($_POST['save']) || isset($_POST['saveAdv'])) {
-                    //these are needed for the call to api-status, set them first.
-                    $this->_settings->siteAuthUser = (isset($_POST['siteAuthUser']) ? sanitize_text_field($_POST['siteAuthUser']) : $this->_settings->siteAuthUser);
-                    $this->_settings->siteAuthPass = (isset($_POST['siteAuthPass']) ? sanitize_text_field($_POST['siteAuthPass']) : $this->_settings->siteAuthPass);
-                }
-
-                $validityData = $this->getQuotaInformation($_POST['key'], true, isset($_POST['validate']) && $_POST['validate'] == "validate", $_POST);
-*/
-              /*  $this->_settings->apiKey = $_POST['key'];
-                if($validityData['APIKeyValid']) {
-                    if(isset($_POST['validate']) && $_POST['validate'] == "validate") {
-                        // delete last status if it was no valid key
-                        $lastStatus = $this->_settings->bulkLastStatus;
-                        if(isset($lastStatus['Status']) && $lastStatus['Status'] == ShortPixelAPI::STATUS_NO_KEY) {
-                            $this->_settings->bulkLastStatus = null;
-                        }
-                        //display notification
-                        $urlParts = explode("/", get_site_url());
-                        if( $validityData['DomainCheck'] == 'NOT Accessible'){
-                            $notice = array("status" => "warn", "msg" => __("API Key is valid but your site is not accessible from our servers. Please make sure that your server is accessible from the Internet before using the API or otherwise we won't be able to optimize them.",'shortpixel-image-optimiser'));
-                        } else {
-                            if ( function_exists("is_multisite") && is_multisite() && !defined("SHORTPIXEL_API_KEY"))
-                                $notice = array("status" => "success", "msg" => __("Great, your API Key is valid! <br>You seem to be running a multisite, please note that API Key can also be configured in wp-config.php like this:",'shortpixel-image-optimiser')
-                                    . "<BR> <b>define('SHORTPIXEL_API_KEY', '".$this->_settings->apiKey."');</b>");
-                            else
-                                $notice = array("status" => "success", "msg" => __('Great, your API Key is valid. Please take a few moments to review the plugin settings below before starting to optimize your images.','shortpixel-image-optimiser'));
-                        }
-                    }
-                    $this->_settings->verifiedKey = true;
-                    //test that the "uploads"  have the right rights and also we can create the backup dir for ShortPixel
-                    if ( !file_exists(SHORTPIXEL_BACKUP_FOLDER) && ! ShortPixelFolder::createBackUpFolder() )
-                        $notice = array("status" => "error",
-                            "msg" => sprintf(__("There is something preventing us to create a new folder for backing up your original files.<BR>Please make sure that folder <b>%s</b> has the necessary write and read rights.",'shortpixel-image-optimiser'),
-                                             WP_CONTENT_DIR . '/' . SHORTPIXEL_UPLOADS_NAME ));
-                } else {
-                    if(isset($_POST['validate'])) {
-                        //display notification
-                        $notice = array("status" => "error", "msg" => $validityData["Message"]);
-                    }
-                    $this->_settings->verifiedKey = false;
-                } */
-      //      }
-
-            //if save button - we process the rest of the form elements
-            if(isset($_POST['save']) || isset($_POST['saveAdv'])) {
-            /*    $this->_settings->compressionType = intval($_POST['compressionType']);
-                if(isset($_POST['thumbnails'])) { $this->_settings->processThumbnails = 1; } else { $this->_settings->processThumbnails = 0; }
-                if(isset($_POST['backupImages'])) { $this->_settings->backupImages = 1; } else { $this->_settings->backupImages = 0; }
-                if(isset($_POST['cmyk2rgb'])) { $this->_settings->CMYKtoRGBconversion = 1; } else { $this->_settings->CMYKtoRGBconversion = 0; }
-                $this->_settings->keepExif = isset($_POST['removeExif']) ? 0 : 1;
-                //delete_option('wp-short-pixel-keep-exif');
-                $this->_settings->resizeImages = (isset($_POST['resize']) ? 1: 0);
-                $this->_settings->resizeType = (isset($_POST['resize_type']) ? sanitize_text_field($_POST['resize_type']) : false);
-                $this->_settings->resizeWidth = (isset($_POST['width']) ? intval($_POST['width']): $this->_settings->resizeWidth);
-                $this->_settings->resizeHeight = (isset($_POST['height']) ? intval($_POST['height']): $this->_settings->resizeHeight);
-                $uploadPath = realpath(SHORTPIXEL_UPLOADS_BASE); */
-
-                /* if(isset($_POST['nextGen'])) {
-                    WpShortPixelDb::checkCustomTables(); // check if custom tables are created, if not, create them
-                    $prevNextGen = $this->_settings->includeNextGen;
-                    $this->_settings->includeNextGen = 1;
-                    $ret = $this->addNextGenGalleriesToCustom($prevNextGen);
-                    $folderMsg = $ret["message"];
-                    $customFolders = $ret["customFolders"];
-                } else {
-                    $this->_settings->includeNextGen = 0;
-                } */
-            /*    if(isset($_POST['addCustomFolder']) && strlen($_POST['addCustomFolder']) > 0) {
-                    $folderMsg = $this->spMetaDao->newFolderFromPath(stripslashes($_POST['addCustomFolder']), $uploadPath, self::getCustomFolderBase());
-                    if(!$folderMsg) {
-                        $notice = array("status" => "success", "msg" => __('Folder added successfully.','shortpixel-image-optimiser'));
-                    }
-                    $customFolders = $this->spMetaDao->getFolders();
-                    $this->_settings->hasCustomFolders = time();
-                } */
-
-              //  $this->_settings->createWebp = (isset($_POST['createWebp']) ? 1: 0);
-
-              /*  if( isset( $_POST['createWebp'] ) && $_POST['createWebp'] == 'on' ){
-                    if( isset( $_POST['deliverWebp'] ) && $_POST['deliverWebp'] == 'on' ){
-                        if( isset( $_POST['deliverWebpType'] ) ) {
-                            switch( $_POST['deliverWebpType'] ) {
-                                case 'deliverWebpUnaltered':
-                                    $this->_settings->deliverWebp = 3;
-                                    if(!$isNginx) self::alterHtaccess();
-                                    break;
-                                case 'deliverWebpAltered':
-                                    self::alterHtaccess(true);
-                                    if( isset( $_POST['deliverWebpAlteringType'] ) ){
-                                        switch ($_POST['deliverWebpAlteringType']) {
-                                            case 'deliverWebpAlteredWP':
-                                                $this->_settings->deliverWebp = 2;
-                                                break;
-                                            case 'deliverWebpAlteredGlobal':
-                                                $this->_settings->deliverWebp = 1;
-                                                break;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                    } else {
-                        if(!$isNginx) self::alterHtaccess(true);
-                        $this->_settings->deliverWebp = 0;
-                    }
-                } else {
-                    if(!$isNginx) self::alterHtaccess(true);
-                    $this->_settings->deliverWebp = 0;
-                } */
-
-                /*$this->_settings->optimizeRetina = (isset($_POST['optimizeRetina']) ? 1: 0);
-                $this->_settings->optimizeUnlisted = (isset($_POST['optimizeUnlisted']) ? 1: 0);
-                $this->_settings->optimizePdfs = (isset($_POST['optimizePdfs']) ? 1: 0);
-                */
-                //$this->_settings->png2jpg = (isset($_POST['png2jpg']) ? (isset($_POST['png2jpgForce']) ? 2 : 1): 0);
-
-              /*  if(isset($_POST['excludePatterns']) && strlen($_POST['excludePatterns'])) {
-                    $patterns = array();
-                    $items = explode(',', $_POST['excludePatterns']);
-                    foreach($items as $pat) {
-                        $parts = explode(':', $pat);
-                        if(count($parts) == 1) {
-                            $patterns[] = array("type" =>"name", "value" => str_replace('\\\\','\\',trim($pat)));
-                        } else {
-                            $patterns[] = array("type" =>trim($parts[0]), "value" => str_replace('\\\\','\\',trim($parts[1])));
-                        }
-                    }
-                    $this->_settings->excludePatterns = $patterns;
-                } else {
-                    $this->_settings->excludePatterns = array();
-                }
-                */
-          //      $this->_settings->frontBootstrap = (isset($_POST['frontBootstrap']) ? 1: 0);
-          //      $this->_settings->autoMediaLibrary = (isset($_POST['autoMediaLibrary']) ? 1: 0);
-          //      $this->_settings->excludeSizes = (isset($_POST['excludeSizes']) ? $_POST['excludeSizes']: array());
-
-                //Redirect to bulk processing if requested
-                if(   isset($_POST['save']) && $_POST['save'] == __("Save and Go to Bulk Process",'shortpixel-image-optimiser')
-                   || isset($_POST['saveAdv']) && $_POST['saveAdv'] == __("Save and Go to Bulk Process",'shortpixel-image-optimiser')) {
-                    wp_redirect("upload.php?page=wp-short-pixel-bulk");
-                    exit();
-                }
-            }
-            /*if(isset($_POST['removeFolder']) && strlen(($_POST['removeFolder']))) {
-                $this->spMetaDao->removeFolder($_POST['removeFolder']);
-                $customFolders = $this->spMetaDao->getFolders();
-                $_POST["saveAdv"] = true;
-            } */
-            if(isset($_POST['recheckFolder']) && strlen(($_POST['recheckFolder']))) {
-                //$folder->fullRefreshCustomFolder($_POST['recheckFolder']); //aici singura solutie pare callback care spune daca exita url-ul complet
-            }
-        }
-
-        //now output headers. They were prevented with noheaders=true in the form url in order to be able to redirect if bulk was pressed
-      /*  if(isset($_REQUEST['noheader'])) {
-            require_once(ABSPATH . 'wp-admin/admin-header.php');
-        } */
-
-        //empty backup
-        /*if(isset($_POST['emptyBackup'])) {
-            $this->emptyBackup();
-        } */
-
-        //$quotaData = $this->checkQuotaAndAlert(isset($validityData) ? $validityData : null, isset($_GET['checkquota']));
-
-/*        if($this->hasNextGen) {
-            $ngg = array_map(array('ShortPixelNextGenAdapter','pathToAbsolute'), ShortPixelNextGenAdapter::getGalleries());
-            //die(var_dump($ngg));
-            for($i = 0; $i < count($customFolders); $i++) {
-                if(in_array($customFolders[$i]->getPath(), $ngg )) {
-                    $customFolders[$i]->setType("NextGen");
-                }
-            }
-        } */
-
-/*        $showApiKey = (   (is_main_site() || (function_exists("is_multisite") && is_multisite() && !defined("SHORTPIXEL_API_KEY")))
-                       && !defined("SHORTPIXEL_HIDE_API_KEY"));
-        $editApiKey = !defined("SHORTPIXEL_API_KEY") && $showApiKey; */
-
-        if($this->_settings->verifiedKey) {
-            /* $fileCount = number_format($this->_settings->fileCount);
-            $savedSpace = self::formatBytes($this->_settings->savedSpace,2);
-            $averageCompression = $this->getAverageCompression();
-            $savedBandwidth = self::formatBytes($this->_settings->savedSpace * 10000,2);
-            if (is_numeric($quotaData['APICallsQuota'])) {
-                $quotaData['APICallsQuota'] .= "/month";
-            }
-            $remainingImages = $quotaData['APICallsRemaining'];
-            $remainingImages = ( $remainingImages < 0 ) ? 0 : number_format($remainingImages);
-            $totalCallsMade = array( 'plan' => $quotaData['APICallsMadeNumeric'] , 'oneTime' => $quotaData['APICallsMadeOneTimeNumeric'] );
- */
-          /*  $resources = wp_remote_post($this->_settings->httpProto . "://shortpixel.com/resources-frag");
-            if(is_wp_error( $resources )) {
-                $resources = array();
-            } */
-
-            $cloudflareAPI = true;
-
-            $this->view->displaySettings($showApiKey, $editApiKey,
-                   $quotaData, $notice, $resources, $averageCompression, $savedSpace, $savedBandwidth, $remainingImages,
-                   $totalCallsMade, $fileCount, null /*folder size now on AJAX*/, $customFolders,
-                   $folderMsg, $folderMsg ? $addedFolder : false, isset($_POST['saveAdv']), $cloudflareAPI, $htaccessWriteable, $isNginx );
-        } else {
-            $this->view->displaySettings($showApiKey, $editApiKey, $quotaData, $notice);
-        }
-
-    }
 
     /** Adds NextGenGalleries to Custom Images Library
     * @param boolean $silent Will not return messages if silent

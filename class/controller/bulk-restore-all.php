@@ -1,7 +1,6 @@
 <?php
 namespace ShortPixel;
 
-
 class BulkRestoreAll extends ShortPixelController
 {
     protected static $slug = 'bulk-restore-all';

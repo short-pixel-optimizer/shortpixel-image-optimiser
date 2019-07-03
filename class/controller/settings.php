@@ -1,9 +1,7 @@
 <?php
 namespace ShortPixel;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-//use ShortPixel\DebugItem as DebugItem;
 use ShortPixel\Notices\NoticeController as Notice;
-
 
 class SettingsController extends shortPixelController
 {
@@ -22,6 +20,8 @@ class SettingsController extends shortPixelController
 
      protected $quotaData = null;
 
+     protected $keyModel;
+
      protected $mapper = array(
        'key' => 'apiKey',
        'cmyk2rgb' => 'CMYKtoRGBconversion',
@@ -34,9 +34,24 @@ class SettingsController extends shortPixelController
           // @todo Remove Debug Call
           $this->model = new \WPShortPixelSettings();
 
+          $this->loadModel('apikey');
+          $this->keyModel = new ApiKeyModel();
 
           parent::__construct();
+      }
 
+      // glue method.
+      public function setShortPixel($pixel)
+      {
+        parent::setShortPixel($pixel);
+        $this->keyModel->shortPixel = $pixel;
+
+        // It's loading here since it can do validation, which requires Shortpixel.
+        // Otherwise this should be loaded on construct.
+        $this->keyModel->loadKey();
+        $this->is_verifiedkey = $this->keyModel->is_verified();
+        $this->is_constant_key = $this->keyModel->is_constant();
+        $this->hide_api_key = $this->keyModel->is_hidden();
       }
 
       // default action of controller
@@ -45,8 +60,9 @@ class SettingsController extends shortPixelController
         $this->loadEnv();
         $this->checkPost(); // sets up post data
 
-        $this->model->redirectedSettings = 2; // not sure what this does.
-        $this->checkKey(); // needs post data
+        $this->model->redirectedSettings = 2; // Prevents any redirects after loading settings
+
+        Log::addDebug('Settings Controller Load, is verified ', array($this->is_verifiedkey));
 
 
         if ($this->is_form_submit)
@@ -63,15 +79,16 @@ class SettingsController extends shortPixelController
         $this->loadEnv();
         $this->checkPost();
 
-        Log::addDebug($this->postData);
+        Log::addDebug('Settings Action - addkey ', array($this->is_form_submit, $this->postData) );
         if ($this->is_form_submit && isset($this->postData['apiKey']))
         {
-            $this->checkKey();
-            if (isset($this->postData['verifiedKey']) && $this->postData['verifiedKey'])
+            $this->keyModel->resetTries();
+            $this->keyModel->checkKey($this->postData['apiKey']);
+            /*if (isset($this->postData['verifiedKey']) && $this->postData['verifiedKey'])
             {
               $this->model->apiKey = $this->postData['apiKey'];
               $this->model->verifiedKey = $this->postData['verifiedKey'];
-            }
+            } */
         }
 
         $this->doRedirect();
@@ -91,10 +108,24 @@ class SettingsController extends shortPixelController
               $nextgen->nextGenEnabled($previous);
           }
 
+          $check_key = false;
+          if (isset($this->postData['apiKey']))
+          {
+              $check_key = $this->postData['apiKey'];
+              unset($this->postData['apiKey']);
+          }
+
           // write checked and verified post data to model. With normal models, this should just be call to update() function
           foreach($this->postData as $name => $value)
           {
             $this->model->{$name} = $value;
+          }
+
+          // first save all other settings ( like http credentials etc ), then check
+          if (! $this->keyModel->is_constant() && $check_key !== false) // don't allow settings key if there is a constant
+          {
+            $this->keyModel->resetTries();
+            $this->keyModel->checkKey($check_key);
           }
 
           // end
@@ -108,7 +139,9 @@ class SettingsController extends shortPixelController
       /* Loads the view data and the view */
       public function load_settings()
       {
-         $this->loadQuotaData();
+         if ($this->is_verifiedkey) // supress quotaData alerts when handing unset API's.
+          $this->loadQuotaData();
+
          $this->view->data = (Object) $this->model->getData();
          if (($this->is_constant_key))
              $this->view->data->apiKey = SHORTPIXEL_API_KEY;
@@ -146,44 +179,43 @@ class SettingsController extends shortPixelController
       }
 
       /** Check if everything is OK with the Key **/
-      public function checkKey()
+      /*public function checkKey()
       {
-          $this->is_constant_key = (defined("SHORTPIXEL_API_KEY")) ? true : false;
-          $this->hide_api_key = (defined("SHORTPIXEL_HIDE_API_KEY")) ? SHORTPIXEL_HIDE_API_KEY : false;
+          //$this->is_constant_key = (defined("SHORTPIXEL_API_KEY")) ? true : false;
+        //  $this->hide_api_key = (defined("SHORTPIXEL_HIDE_API_KEY")) ? SHORTPIXEL_HIDE_API_KEY : false;
 
           $verified_key = $this->model->verifiedKey;
           $this->is_verifiedkey = ($verified_key) ? true : false;
 
           $key_in_db = $this->model->apiKey;
 
-          //Log::addDebug()
+          // if form submit, but no validation already pushed, check if api key was changed.
+          if ($this->is_form_submit && ! $this->postkey_needs_validation)
+          {
+             // api key was changed on the form.
+             if ($this->postData['apiKey'] != $key_in_db)
+             {
+                $this->postkey_needs_validation = true;
+             }
+          }
+
           if($this->is_constant_key)
           {
-              if (strlen(SHORTPIXEL_API_KEY) <> 20)
-              {
-                $this->noticeApiKeyLength(SHORTPIXEL_API_KEY);
-              }
-              elseif ($key_in_db != SHORTPIXEL_API_KEY)
+              if ($key_in_db != SHORTPIXEL_API_KEY)
               {
                 $this->validateKey(SHORTPIXEL_API_KEY);
               }
           }
           elseif ($this->postkey_needs_validation)
           {
-            $key = isset($this->postData['apiKey']) ? $this->postData['apiKey'] : $this->model->apiKey;
-            if (strlen($key) <> 20)
-            {
-                $this->NoticeApiKeyLength($key);
-            }
-            else // key good to go.
-            {
+              $key = isset($this->postData['apiKey']) ? $this->postData['apiKey'] : $this->model->apiKey;
               $this->validateKey($key);
-            }
+
           } // postkey_needs_validation
-      }
+      } */
 
       /** Check remotely if key is alright **/
-      public function validateKey($key)
+      /*public function validateKey($key)
       {
         Log::addDebug('Validating Key ' . $key);
         // first, save Auth to satisfy getquotainformation
@@ -196,62 +228,17 @@ class SettingsController extends shortPixelController
           }
         }
 
-         $this->quotaData = $this->shortPixel->getQuotaInformation($key, true, 'validate', $this->postData);
-         $this->is_verifiedkey = ($this->quotaData['APIKeyValid']) ? true : false;
-
-         Log::addDebug('Verify Result', $this->quotaData);
-
-         if ($this->is_form_submit) // are we saving a form?
+         /*if (! $this->is_verifiedkey)
          {
-           $this->postData['verifiedKey'] = $this->is_verifiedkey;
-           $this->postData['apiKey'] = $key;
-         }
-         else { // if not, put it to the model directly.
-           $this->model->verifiedKey = $this->is_verifiedkey;
-           $this->model->apiKey = $key;
-         }
-
-
-         if (! $this->is_verifiedkey)
-         {
-            Notice::addError(sprintf(__('Error during verifying API key: %s','shortpixel-image-optimizer'), $this->quotaData['Message'] ));
+            Notice::addError(sprintf(__('Error during verifying API key: %s','shortpixel-image-optimiser'), $this->quotaData['Message'] ));
          }
          elseif ($this->is_form_submit) {
            $this->processNewKey();
          }
 
-      }
+      } */
 
-      /** Process some things when key has been added. This is from original wp-short-pixel.php */
-      protected function processNewKey()
-      {
-        $lastStatus = $this->model->bulkLastStatus;
-        if(isset($lastStatus['Status']) && $lastStatus['Status'] == \ShortPixelAPI::STATUS_NO_KEY) {
-            $this->model->bulkLastStatus = null;
-        }
-        //display notification
-        $urlParts = explode("/", get_site_url());
-        if( $this->quotaData['DomainCheck'] == 'NOT Accessible'){
-            $notice = array("status" => "warn", "msg" => __("API Key is valid but your site is not accessible from our servers. Please make sure that your server is accessible from the Internet before using the API or otherwise we won't be able to optimize them.",'shortpixel-image-optimiser'));
-            Notice::addWarning($notice);
-        } else {
-            if ( function_exists("is_multisite") && is_multisite() && !defined("SHORTPIXEL_API_KEY"))
-                $notice = __("Great, your API Key is valid! <br>You seem to be running a multisite, please note that API Key can also be configured in wp-config.php like this:",'shortpixel-image-optimiser')
-                    . "<BR> <b>define('SHORTPIXEL_API_KEY', '". $this->postData['apiKey'] ."');</b>";
-            else
-                $notice = __('Great, your API Key is valid. Please take a few moments to review the plugin settings below before starting to optimize your images.','shortpixel-image-optimiser');
 
-            Notice::addSuccess($notice);
-        }
-
-        //test that the "uploads"  have the right rights and also we can create the backup dir for ShortPixel
-        if ( !file_exists(SHORTPIXEL_BACKUP_FOLDER) && ! \ShortPixelFolder::createBackUpFolder() )
-        {
-            $notice = sprintf(__("There is something preventing us to create a new folder for backing up your original files.<BR>Please make sure that folder <b>%s</b> has the necessary write and read rights.",'shortpixel-image-optimiser'),
-                                 WP_CONTENT_DIR . '/' . SHORTPIXEL_UPLOADS_NAME );
-           Notice::addError($notice);
-        }
-      }
 
       /* Temporary function to check if HTaccess is writable.
       * HTaccess is writable if it exists *and* is_writable, or can be written if directory is writable.
@@ -508,6 +495,7 @@ class SettingsController extends shortPixelController
         exit();
       }
 
+      /*
       protected function NoticeApiKeyLength($key)
       {
         $KeyLength = strlen($key);
@@ -521,5 +509,5 @@ class SettingsController extends shortPixelController
                    . __(' or ','shortpixel-image-optimiser')
                    . "<a href='https://shortpixel.com/contact' target='_blank'>" . __('here','shortpixel-image-optimiser') . "</a>.";
         Notice::addError($notice);
-      }
+      } */
 }
