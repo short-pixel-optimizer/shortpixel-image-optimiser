@@ -422,7 +422,7 @@ class ShortPixelView {
                     </div>
                     <?php } ?>
                 </div>
-                <div id="sp-bulk-stats <?php echo $hider ?>" style="display:none">
+                <div id="sp-bulk-stats" class='<?php echo $hider ?>' style="display:none">
                     <?php $this->displayBulkStats($quotaData['totalProcessedFiles'], $quotaData['mainProcessedFiles'], $under5PercentCount, $averageCompression, $savedSpace);?>
                 </div>
             </div>
