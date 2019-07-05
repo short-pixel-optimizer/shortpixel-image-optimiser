@@ -118,6 +118,7 @@ class ShortPixelPlugin
 
       if ($noticeControl->countNotices() > 0)
       {
+          wp_enqueue_style('shortpixel-admin'); // queue on places when it's not our runtime.
           foreach($noticeControl->getNotices() as $notice)
           {
             echo $notice->getForDisplay();
