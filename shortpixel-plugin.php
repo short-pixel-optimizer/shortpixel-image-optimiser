@@ -1,7 +1,7 @@
 <?php
 namespace ShortPixel;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
-use ShortPixel\Notices\NoticeController as Notice;
+use ShortPixel\Notices\NoticeController as Notices;
 
 
 /** Plugin class
@@ -112,7 +112,7 @@ class ShortPixelPlugin
 
   public function admin_notices()
   {
-      $noticeControl = Notice::getInstance();
+      $noticeControl = Notices::getInstance();
       $noticeControl->loadIcons(array(
           'normal' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/robo-cool.png', SHORTPIXEL_PLUGIN_FILE) . '">',
           'success' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/robo-cool.png', SHORTPIXEL_PLUGIN_FILE) . '">',

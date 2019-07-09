@@ -1,7 +1,7 @@
 <?php
 //use ShortPixel\DebugItem as DebugItem;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-use ShortPixel\Notices\NoticeController as Notice;
+use ShortPixel\Notices\NoticeController as Notices;
 
 class WPShortPixel {
 
@@ -2159,7 +2159,7 @@ class WPShortPixel {
         if($backupFile === false)
         {
           Log::addWarn("Custom File $ID - $file does not have a backup");
-          Notice::addWarning(sprintf(__('Not able to restore file %s. Could not find backup', 'shortpixel-image-optimiser'), $file));
+          Notices::addWarning(sprintf(__('Not able to restore file %s. Could not find backup', 'shortpixel-image-optimiser'), $file));
           return false;
         }
 
@@ -2169,7 +2169,7 @@ class WPShortPixel {
           }
           else {
             Log::addError('Could not restore back to source' .  $backupFile->getFullPath() );
-            Notice::addError('The file could not be restored from backup', 'shortpixel-image-optimiser');
+            Notices::addError('The file could not be restored from backup. Plugin could not copy backup back to original location. Check file permissions. ', 'shortpixel-image-optimiser');
             return false;
           }
 
@@ -2472,7 +2472,7 @@ class WPShortPixel {
         }
         if ( !$quotaData['APIKeyValid']) {
             if(strlen($this->_settings->apiKey))
-                Notice::addError(sprintf(__('Shortpixel Remote API Error: %s','shortpixel-image-optimiser'), $quotaData['Message'] ));
+                Notices::addError(sprintf(__('Shortpixel Remote API Error: %s','shortpixel-image-optimiser'), $quotaData['Message'] ));
             return $quotaData;
         }
         //$tempus = microtime(true);
