@@ -125,7 +125,8 @@ class ShortPixelController
          Log::addError("Model $name  could not be found");
        }
      }
-}
+  }
+
 
   /** Accepts POST data, maps, checks missing fields, and applies sanitization to it.
   * @param array $post POST data
@@ -158,7 +159,7 @@ class ShortPixelController
     {
       $model = $this->model;
       $this->postData = $model->getSanitizedData($post);
-    }      
+    }
 
     return $this->postData;
 

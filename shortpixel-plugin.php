@@ -41,7 +41,7 @@ class ShortPixelPlugin
     return self::$instance;
   }
 
-  /** Init Plugin Runtime. Loads all classes. */
+  /** Init Runtime. Loads all classes. */
   protected function initRuntime()
   {
       $plugin_path = plugin_dir_path(SHORTPIXEL_PLUGIN_FILE);
@@ -62,6 +62,10 @@ class ShortPixelPlugin
           }
         }
       }
+
+      // Loads all subclassed controllers. This is used for slug-based discovery of which controller to run
+      $controllerClass = \ShortPixelTools::namespaceit('ShortPixelController');
+      $controllerClass::init();
   }
 
   /** Hooks for all WordPress related hooks

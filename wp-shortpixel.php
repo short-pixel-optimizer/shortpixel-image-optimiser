@@ -38,7 +38,8 @@ if ($max_exec === 0) // max execution time of zero means infinite. Quantify.
   $max_exec = 60;
 define('SHORTPIXEL_MAX_EXECUTION_TIME', $max_exec);
 
-require_once(ABSPATH . 'wp-admin/includes/file.php');
+// ** @todo For what is this needed? */
+//require_once(ABSPATH . 'wp-admin/includes/file.php');
 require_once('build/shortpixel/autoload.php');
 
 

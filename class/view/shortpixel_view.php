@@ -1696,7 +1696,7 @@ class ShortPixelView {
                             <?php _e('Cleanup&Retry','shortpixel-image-optimiser');?>
                             </a> <?php
                         } else {
-                            if($data['status'] == 'retry' && $data['backup']) { ?>
+                            if($data['status'] == 'retry' && (isset($data['backup']) && $data['backup']) ) { ?>
                             <div style="overflow:hidden">
                                 <a class="button button-smaller sp-action-restore" href="admin.php?action=shortpixel_restore_backup&attachment_ID=<?php echo($id)?>" style="margin-left:5px;"
                                     title="<?php _e('Restore Image from Backup', 'shortpixel-image-optimiser') ?>">

@@ -41,11 +41,6 @@ class WPShortPixel {
         $this->prioQ = (! defined('SHORTPIXEL_NOFLOCK')) ? new ShortPixelQueue($this, $this->_settings) : new ShortPixelQueueDB($this, $this->_settings);
         $this->view = new ShortPixelView($this);
 
-        $controllerClass = ShortPixelTools::namespaceit('ShortPixelController');
-        $controllerClass::init(); // load all subclassed controllers.
-
-        /*$debugClass = ShortPixelTools::namespaceit('Debug');
-        $debugClass->init();  */
 
         define('QUOTA_EXCEEDED', $this->view->getQuotaExceededHTML());
 
@@ -2156,37 +2151,49 @@ class WPShortPixel {
         $fullSubDir = str_replace(get_home_path(), "", dirname($file)) . '/';
         $bkFile = SHORTPIXEL_BACKUP_FOLDER . '/' . $fullSubDir . ShortPixelAPI::MB_basename($file);
 
-        if(file_exists($bkFile)) {
-            $rename_result = @rename($bkFile, $file);
-            if (! $rename_result)
-            {
-                Log::addError('Failure on rename to : ' . $file);
-            }
+        $fs = new \ShortPixel\FileSystemController();
 
+        $fileObj = $fs->getFile($file);
+        $backupFile = $fileObj->getBackupFile(); // returns FileModel
 
-            /* [BS] Reset all generated image meta. Bring back to start state.
-            * Since Wpdb->prepare doesn't support 'null', zero values in this table should not be trusted */
-
-            $meta->setTsOptimized(0);
-            $meta->setCompressedSize(0);
-            $meta->setCompressionType(0);
-            $meta->setKeepExif(0);
-            $meta->setCmyk2rgb(0);
-            $meta->setMessage('');
-            $meta->setRetries(0);
-            $meta->setBackup(0);
-            $meta->setResizeWidth(0);
-            $meta->setResizeHeight(0);
-            $meta->setResize(0);
-
-            $meta->setStatus(3);
-            $this->spMetaDao->update($meta);
-
-
+        if($backupFile === false)
+        {
+          Log::addWarn("Custom File $ID - $file does not have a backup");
+          Notice::addWarning(sprintf(__('Not able to restore file %s. Could not find backup', 'shortpixel-image-optimiser'), $file));
+          return false;
         }
-        else {
-           Log::addWarn('File ' . $bkFile . ' not found in backups');
-        }
+
+          if ($backupFile->copy($fileObj))
+          {
+            $backupFile->delete();
+          }
+          else {
+            Log::addError('Could not restore back to source' .  $backupFile->getFullPath() );
+            Notice::addError('The file could not be restored from backup', 'shortpixel-image-optimiser');
+            return false;
+          }
+
+
+          /* [BS] Reset all generated image meta. Bring back to start state.
+          * Since Wpdb->prepare doesn't support 'null', zero values in this table should not be trusted */
+
+          $meta->setTsOptimized(0);
+          $meta->setCompressedSize(0);
+          $meta->setCompressionType(0);
+          $meta->setKeepExif(0);
+          $meta->setCmyk2rgb(0);
+          $meta->setMessage('');
+          $meta->setRetries(0);
+          $meta->setBackup(0);
+          $meta->setResizeWidth(0);
+          $meta->setResizeHeight(0);
+          $meta->setResize(0);
+
+          $meta->setStatus(3);
+          $this->spMetaDao->update($meta);
+
+
+        //}
 
         return $meta;
     }
