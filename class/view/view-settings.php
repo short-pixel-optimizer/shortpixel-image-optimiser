@@ -29,6 +29,7 @@ HelpScout::outputBeacon($this->hide_api_key ? '' : $view->data->apiKey);
       ?>
       <form name='wp_shortpixel_options' action='<?php echo add_query_arg('noheader', 'true') ?>'  method='post' id='wp_shortpixel_options'>
         <input type='hidden' name='display_part' value="<?php echo $this->display_part ?>" />
+        <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
       <div class='section-wrapper'>
         <?php
         $this->loadView('settings/part-general');

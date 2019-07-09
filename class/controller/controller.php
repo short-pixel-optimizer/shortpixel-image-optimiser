@@ -18,6 +18,8 @@ class ShortPixelController
   protected $view; // object to use in the view.
   protected $url; // if controller is home to a page, sets the URL here. For redirects and what not.
 
+  protected $form_action = 'sp-action';
+
   public static function init()
   {
     foreach (get_declared_classes() as $class) {
@@ -59,8 +61,17 @@ class ShortPixelController
   */
   protected function checkPost()
   {
-    if (isset($_POST) && count($_POST) > 0)
+    if (count($_POST) == 0) // no post, nothing to check, return silent.
+      return;
+
+    if (! isset($_POST['sp-nonce']) || ! wp_verify_nonce( $_POST['sp-nonce'], $this->form_action))
     {
+      Log::addInfo('Check Post fails nonce check' . $this->form_action, array($_POST) );
+      return false;
+    }
+    else if (isset($_POST) && count($_POST) > 0)
+    {
+      check_admin_referer( $this->form_action, 'sp-nonce' ); // extra check, when we are wrong here, it dies.
       $this->is_form_submit = true;
       $this->processPostData($_POST);
     }

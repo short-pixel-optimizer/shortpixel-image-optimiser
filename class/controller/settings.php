@@ -28,6 +28,7 @@ class SettingsController extends shortPixelController
      );
 
      protected $display_part = 'settings';
+     protected $form_action = 'save-settings';
 
       public function __construct()
       {
@@ -61,9 +62,6 @@ class SettingsController extends shortPixelController
         $this->checkPost(); // sets up post data
 
         $this->model->redirectedSettings = 2; // Prevents any redirects after loading settings
-
-        Log::addDebug('Settings Controller Load, is verified ', array($this->is_verifiedkey));
-
 
         if ($this->is_form_submit)
         {
