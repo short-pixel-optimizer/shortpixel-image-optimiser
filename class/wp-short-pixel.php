@@ -1174,11 +1174,14 @@ class WPShortPixel {
                             $skippedAlreadyProcessed++;
                         }
                     }
-                    elseif(   $this->_settings->processThumbnails && $meta->getThumbsOpt() !== null
-                           && ($meta->getThumbsOpt() == 0 && count($meta->getThumbs()) > 0
+                    elseif(   $this->_settings->processThumbnails && $meta->getThumbsOpt() !== null //thumbs were chosen in settings
+                           && ($meta->getThumbsOpt() == 0 && count($meta->getThumbs()) > 0 //no thumbnails optimized
                                || is_array($meta->getThumbsOptList())
                                   && count(array_diff(array_keys(WpShortPixelMediaLbraryAdapter::getSizesNotExcluded($meta->getThumbs(), $this->_settings->excludeSizes)),
-                                                      $meta->getThumbsOptList())))) { //thumbs were chosen in settings
+                                                      $meta->getThumbsOptList()))
+                               || count(array_diff(WpShortPixelMediaLbraryAdapter::findThumbs($meta->getPath()), $meta->getThumbsOptList()))
+                           )
+                    ) {
                         $URLsAndPATHs = $item->getURLsAndPATHs(true, true, $this->_settings->optimizeRetina, $this->_settings->excludeSizes);
                         if(count($URLsAndPATHs["URLs"])) {
                             $meta->setThumbsTodo(true);

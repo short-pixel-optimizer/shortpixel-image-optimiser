@@ -105,26 +105,6 @@ div.fb-like  {
     border-left-color: #f1e02a;
 }
 
-.sp-conflict-plugins {
-    display: table;
-    border-spacing: 10px;
-    border-collapse: separate;
-}
-.sp-conflict-plugins li {
-    display: table-row;
-}
-.sp-conflict-plugins li > * {
-    display: table-cell;
-}
-
-li.sp-conflict-plugins-list {
-    line-height: 28px;
-    list-style: disc;
-    margin-left: 80px;
-}
-li.sp-conflict-plugins-list a.button {
-    margin-left: 10px;
-}
 div.short-pixel-bulk-page input.dial {
     font-size: 16px !important;
 }
