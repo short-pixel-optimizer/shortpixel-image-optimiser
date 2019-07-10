@@ -30,7 +30,7 @@ class FileModel extends ShortPixelModel
   /** Creates a file model object. FileModel files don't need to exist on FileSystem */
   public function __construct($path)
   {
-      $this->fullpath = $path;
+      $this->fullpath = wp_normalize_path($path);
       $this->setFileInfo();
   }
 
@@ -72,12 +72,10 @@ class FileModel extends ShortPixelModel
       Log::addDebug('Bkup ' . get_home_path() . ' ' . $this->directory->getPath() . '-->' . $backup_dir );
       $backupDirectory = SHORTPIXEL_BACKUP_FOLDER . '/' . $backup_dir;
       $directory = new DirectoryModel($backupDirectory);
-      $check = $directory->check(true); // check dir for writing
-      if (! $check)
-      {
-        Log::addError('Problem with Backup Directory - does not exist, could not be created', array($backupDirectory,
-        $this->directory));
-      }
+
+      if (! $directory->exists()) // check if exists. FileModel should not attempt to create.
+        return false;
+
       $this->backupDirectory = $directory;
     }
 
@@ -111,7 +109,10 @@ class FileModel extends ShortPixelModel
       }
   }
 
-  /** Tries to retrieve an *existing* BackupFile. Returns fals if not present. */
+  /** Tries to retrieve an *existing* BackupFile. Returns false if not present.
+  * This file might not be writable.
+  * To get writable directory reference to backup, use FileSystemController
+  */
   public function getBackupFile()
   {
      if ($this->hasBackup())

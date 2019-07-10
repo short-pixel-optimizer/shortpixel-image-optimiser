@@ -2131,7 +2131,7 @@ class WPShortPixel {
     * @param int $ID image_id, without any prefixes
     */
     public function doCustomRestore($ID) {
-        //$meta = $this->spMetaDao->getMeta($ID);
+
         // meta facade as a custom image
         $itemHandler = new ShortPixelMetaFacade('C-' . $ID);
         $meta = $itemHandler->getMeta();
