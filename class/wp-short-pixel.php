@@ -172,9 +172,15 @@ class WPShortPixel {
            $scontrol->checkKey();
         } */
 
-        $keyControl = new \ShortPixel\apiKeyController();
-        $keyControl->setShortPixel($this);
-        $keyControl->load();
+        //
+
+        // only load backed, or when frontend processing is enabled.
+        if (is_admin() || $this->_settings->frontBootstrap )
+        {
+          $keyControl = new \ShortPixel\apiKeyController();
+          $keyControl->setShortPixel($this);
+          $keyControl->load();
+        }
     }
 
     //handling older
@@ -1112,6 +1118,9 @@ class WPShortPixel {
             */
 
             $resultsPostMeta = WpShortPixelMediaLbraryAdapter::getPostMetaSlice($crtStartQueryID, $endQueryID, $maxResults);
+            // @todo Remove. Just Speed Test
+            //WpShortPixelMediaLbraryAdapter::getPostMetaJoinLess($crtStartQueryID, $endQueryID, $maxResults);
+
             if(time() - $this->timer >= 60) Log::addWarn("GETDB is SLOW. Got meta slice.");
 
             if ( empty($resultsPostMeta) ) {
@@ -2172,7 +2181,6 @@ class WPShortPixel {
             Notices::addError('The file could not be restored from backup. Plugin could not copy backup back to original location. Check file permissions. ', 'shortpixel-image-optimiser');
             return false;
           }
-
 
           /* [BS] Reset all generated image meta. Bring back to start state.
           * Since Wpdb->prepare doesn't support 'null', zero values in this table should not be trusted */

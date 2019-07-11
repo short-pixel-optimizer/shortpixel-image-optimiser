@@ -17,7 +17,7 @@ if (isset($_SERVER['SERVER_SOFTWARE']))
 
         $version = substr($server, $pos);
 
-        if (version_compare($version, '5.0.0') > 0)
+        if (version_compare($version, '5.0.0') >= 0)
         {
           Log::addInfo('Flywheel detected on ' . $server . ' . Starting NOFLOCK Queue.');
           if (! defined('SHORTPIXEL_NOFLOCK'))
