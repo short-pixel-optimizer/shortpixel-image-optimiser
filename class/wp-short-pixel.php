@@ -215,6 +215,7 @@ class WPShortPixel {
             $spMetaDao = new ShortPixelCustomMetaDao(new WpShortPixelDb(), $settings->excludePatterns);
             $spMetaDao->dropTables();
         }
+
         $settingsControl = new \ShortPixel\SettingsController();
         $env = $settingsControl->getEnv();
 
@@ -236,7 +237,7 @@ class WPShortPixel {
 
         if (! $env->is_nginx)
           self::alterHtaccess(true);
-          
+
         @unlink(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
     }
 
@@ -543,6 +544,7 @@ class WPShortPixel {
             'STATUS_RETRY'=>ShortPixelAPI::STATUS_RETRY,
             'STATUS_QUEUE_FULL'=>ShortPixelAPI::STATUS_QUEUE_FULL,
             'STATUS_MAINTENANCE'=>ShortPixelAPI::STATUS_MAINTENANCE,
+            'STATUS_SEARCHING' => ShortPixelAPI::STATUS_SEARCHING,
             'WP_PLUGIN_URL'=>plugins_url( '', SHORTPIXEL_PLUGIN_FILE ),
             'WP_ADMIN_URL'=>admin_url(),
             'API_KEY'=> (defined("SHORTPIXEL_HIDE_API_KEY" )  || !is_admin() ) ? '' : $this->_settings->apiKey,
@@ -550,7 +552,7 @@ class WPShortPixel {
             'MEDIA_ALERT'=>$this->_settings->mediaAlert ? "done" : "todo",
             'FRONT_BOOTSTRAP'=>$this->_settings->frontBootstrap && (!isset($this->_settings->lastBackAction) || (time() - $this->_settings->lastBackAction > 600)) ? 1 : 0,
             'AJAX_URL'=>admin_url('admin-ajax.php'),
-            'AFFILIATE'=>self::getAffiliateSufix()
+            'AFFILIATE'=>false
         ));
 
         if (Log::isManualDebug() )
@@ -1126,14 +1128,22 @@ class WPShortPixel {
                 LIMIT " . SHORTPIXEL_MAX_RESULTS_QUERY;
             $resultsPostMeta = $wpdb->get_results($queryPostMeta);
             */
-
-            $resultsPostMeta = WpShortPixelMediaLbraryAdapter::getPostMetaSlice($crtStartQueryID, $endQueryID, $maxResults);
+  //          $resultsPostMeta = WpShortPixelMediaLbraryAdapter::getPostMetaSlice($crtStartQueryID, $endQueryID, $maxResults);
             // @todo Remove. Just Speed Test
-            //WpShortPixelMediaLbraryAdapter::getPostMetaJoinLess($crtStartQueryID, $endQueryID, $maxResults);
+  //          Log::addDebug('PostMetaSlice  took ' . (microtime(true) - $time) . ' sec.');
 
-            if(time() - $this->timer >= 60) Log::addWarn("GETDB is SLOW. Got meta slice.");
+  //          $resultsPostMeta2 = WpShortPixelMediaLbraryAdapter::getPostMetaJoinLess($crtStartQueryID, $endQueryID, $maxResults);
+  //          Log::addDebug('PostMetaJoinLess  took ' . (microtime(true) - $time) . ' sec.');
 
-            if ( empty($resultsPostMeta) ) {
+//
+            $resultsPosts = WpShortPixelMediaLbraryAdapter::getPostsJoinLessReverse($crtStartQueryID, $endQueryID, $maxResults);
+    //        Log::addDebug('PostMetaJoinLess *REV took ' . (microtime(true) - $time) . ' sec.');
+    //        */
+            if(time() - $this->timer >= 60)
+              Log::addWarn("GETDB is SLOW. Got meta slice.");
+
+            // @todo MAX RESULTS constant is not the same as queries maxResults? Is this correct?
+            if ( empty($resultsPosts) ) {
                 $crtStartQueryID -= SHORTPIXEL_MAX_RESULTS_QUERY;
                 $startQueryID = $crtStartQueryID;
                 if(!count($idList)) { //none found so far, so decrease the start ID
@@ -1143,11 +1153,11 @@ class WPShortPixel {
                 continue;
             }
 
-            if($timeoutThreshold > 10) Log::addInfo("GETDB is SLOW. Meta slice has " . count($resultsPostMeta) . ' items.');
+            if($timeoutThreshold > 10) Log::addInfo("GETDB is SLOW. Meta slice has " . count($resultsPosts) . ' items.');
 
             $counter = 0;
-            foreach ( $resultsPostMeta as $itemMetaData ) {
-                $crtStartQueryID = $itemMetaData->post_id;
+            foreach ( $resultsPosts as $index => $post_id ) {
+                $crtStartQueryID = $post_id; // $itemMetaData->post_id;
                 if(time() - $this->timer >= 60) Log::addInfo("GETDB is SO SLOW. Check processable for $crtStartQueryID.");
                 if(time() - $this->timer >= $maxTime - $timeoutThreshold){
                     if($counter == 0 && set_time_limit(30)) {
@@ -1210,22 +1220,24 @@ class WPShortPixel {
                             if(count($itemList) > SHORTPIXEL_PRESEND_ITEMS) break;
                         }
                     }
+                  /* New query selects this out, also no metadata returned.
                     elseif($itemMetaData->meta_key == '_wp_attachment_metadata') { //count skipped
                         $skippedAlreadyProcessed++;
                     }
+                  */
                 }
             }
             if(!count($idList) && $crtStartQueryID <= $startQueryID) {
                 //daca n-am adaugat niciuna pana acum, n-are sens sa mai selectez zona asta de id-uri in bulk-ul asta.
                 $leapStart = $this->prioQ->getStartBulkId();
-                $crtStartQueryID = $startQueryID = $itemMetaData->post_id - 1; //decrement it so we don't select it again
+                $crtStartQueryID = $startQueryID = $post_id - 1; //decrement it so we don't select it again
                 $res = WpShortPixelMediaLbraryAdapter::countAllProcessableFiles($this->_settings, $leapStart, $crtStartQueryID);
                 $skippedAlreadyProcessed += $res["mainProcessedFiles"] - $res["mainProc".($this->getCompressionType() == 1 ? "Lossy" : "Lossless")."Files"];
-                self::log("GETDB: empty list. setStartBulkID to $startQueryID");
+                Log::addInfo("GETDB: empty list. setStartBulkID to $startQueryID");
                 $this->prioQ->setStartBulkId($startQueryID);
             } else {
                 $crtStartQueryID--;
-                self::log("GETDB just decrementing. Crt: $crtStartQueryID Start: $startQueryID, list: " . json_encode($idList));
+                Log::addInfo("GETDB just decrementing. Crt: $crtStartQueryID Start: $startQueryID, list: " . json_encode($idList));
             }
         }
         $ret = array("items" => $itemList, "skipped" => $skippedAlreadyProcessed, "searching" => ($sanityCheck >= 150) || (time() - $this->timer >= $maxTime - $timeoutThreshold));
@@ -1386,7 +1398,7 @@ class WPShortPixel {
         if (!$itemHandler){
             //if searching, than the script is searching for not processed items and found none yet, should be relaunced
             if(isset($res['searching']) && $res['searching']) {
-                    die(json_encode(array("Status" => ShortPixelAPI::STATUS_RETRY,
+                    die(json_encode(array("Status" => ShortPixelAPI::STATUS_SEARCHING,
                                           "Message" => __('Searching images to optimize...  ','shortpixel-image-optimiser') . $this->prioQ->getStartBulkId() . '->' . $this->prioQ->getStopBulkId() )));
             }
             //in this case the queue is really empty

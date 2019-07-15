@@ -1001,10 +1001,7 @@ function checkBulkProcessingCallApi(){
 
                     ShortPixel.returnedStatusSearching = 0;
                 }
-                else {
-                  console.log('(Data Not Status)');
-                  console.log(data['Status']);
-                }
+  
 
                 switch (data["Status"]) {
                     case ShortPixel.STATUS_NO_KEY:
