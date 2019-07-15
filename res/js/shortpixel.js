@@ -846,7 +846,8 @@ var ShortPixel = function() {
             height      : 0
         },
         toRefresh       : false,
-        resizeSizesAlert: false
+        resizeSizesAlert: false,
+        returnedStatusSearching: 0, // How often this status has come back in a row from server.
     }
 }();
 
@@ -993,6 +994,18 @@ function checkBulkProcessingCallApi(){
 
                 var isBulkPage = (jQuery("div.short-pixel-bulk-page").length > 0);
 
+                if (data["Status"] && data["Status"] != ShortPixel.STATUS_SEARCHING)
+                {
+                    if (ShortPixel.returnedStatusSearching >= 2)
+                      $('.bulk-notice-msg.bulk-searching').hide();
+
+                    ShortPixel.returnedStatusSearching = 0;
+                }
+                else {
+                  console.log('(Data Not Status)');
+                  console.log(data['Status']);
+                }
+
                 switch (data["Status"]) {
                     case ShortPixel.STATUS_NO_KEY:
                         setCellMessage(id, data["Message"], "<a class='button button-smaller button-primary' href=\"https://shortpixel.com/wp-apikey"
@@ -1117,6 +1130,15 @@ function checkBulkProcessingCallApi(){
                         }
                         setTimeout(checkBulkProgress, 5000);
                         break;
+                    case ShortPixel.STATUS_SEARCHING:
+                        console.log('Server response: ' + response);
+                        ShortPixel.returnedStatusSearching++;
+                        if (ShortPixel.returnedStatusSearching >= 2)
+                        {
+                          $('.bulk-notice-msg.bulk-searching').show();
+                        }
+                        setTimeout(checkBulkProgress, 2500);
+                    break;
                     case ShortPixel.STATUS_MAINTENANCE:
                         ShortPixel.bulkShowMaintenanceMsg('maintenance');
                         setTimeout(checkBulkProgress, 60000);

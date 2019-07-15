@@ -160,20 +160,30 @@ class SettingsController extends shortPixelController
       }
 
       /** Checks on things and set them for information. */
-      public function loadEnv()
+      protected function loadEnv()
       {
-          $this->is_nginx = strpos($_SERVER["SERVER_SOFTWARE"], 'nginx') !== false ? true : false;
-          $this->is_gd_installed = function_exists('imagecreatefrompng');
-          $this->is_curl_installed = function_exists('curl_init');
+          $env = $this->getEnv();
+          
+          $this->is_nginx = $env->is_nginx;
+          $this->is_gd_installed = $env->is_gd_installed;
+          $this->is_curl_installed = $env->is_curl_installed;
 
           $this->is_htaccess_writable = $this->HTisWritable();
 
-          $this->is_multisite = (function_exists("is_multisite") && is_multisite()) ? true : false;
-          $this->is_mainsite = is_main_site();
-
-          $this->has_nextgen = \ShortPixelNextGenAdapter::hasNextGen();
+          $this->is_multisite = $env->is_multisite;
+          $this->is_mainsite = $env->is_mainsite;
+          $this->has_nextgen = $env->has_nextgen;
 
           $this->display_part = isset($_GET['part']) ? sanitize_text_field($_GET['part']) : 'settings';
+
+      }
+
+      public function getEnv()
+      {
+        $this->loadModel('environment');
+        $env = new EnvironmentModel();
+
+        return $env;
       }
 
       /** Check if everything is OK with the Key **/
@@ -418,7 +428,8 @@ class SettingsController extends shortPixelController
       protected function processWebP($post)
       {
         $deliverwebp = 0;
-        \WPShortPixel::alterHtaccess(true); // always remove the statements.
+        if (! $this->is_nginx)
+          \WPShortPixel::alterHtaccess(true); // always remove the statements.
 
         if (isset($post['createWebp']) && $post['createWebp'] == 1)
         {

@@ -614,6 +614,10 @@ class ShortPixelView {
                         <span class="sp-err-title"><?php _e('Error processing file:','shortpixel-image-optimiser');?><br></span>
                         <span class="sp-err-content"><?php echo $message; ?></span> <a class="sp-post-link" href="<?php echo(get_admin_url());?>/post.php?post=__ID__&action=edit" target="_blank">placeholder.png</a>
                     </div>
+                    <div class="bulk-notice-msg bulk-searching">
+                        <img src="<?php echo(plugins_url( 'shortpixel-image-optimiser/res/img/loading-dark-big.gif' ));?>">
+                        <?php _e('Please bear with me. ShortPixel is checking many already optimized images to see if they\'re OK, so the progress bar could stop for a while.','shortpixel-image-optimiser');?><br>
+                    </div>
                 </div>
             </div>
             <div class="bulk-progress bulk-slider-container sp-notice sp-notice-info sp-floating-block sp-full-width">

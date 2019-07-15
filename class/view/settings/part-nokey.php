@@ -114,8 +114,8 @@ if($adminEmail == 'noreply@addendio.com') $adminEmail = false; //hack for the ad
                 <?php } ?>
                     <input type="hidden" name="validate" id="valid" value="validate"/>
                     <span class="spinner" id="pluginemail_spinner" style="float:none;"></span>
-                    <button type="button" id="validate" class="button button-primary" title="<?php _e('Validate the provided API key','shortpixel-image-optimiser');?>"
-                        onclick="ShortPixel.validateKey(this)" <?php echo $canValidate ? "" : "disabled"?> >
+                    <button type="submit" id="validate" class="button button-primary" title="<?php _e('Validate the provided API key','shortpixel-image-optimiser');?>"
+                        >
                         <?php _e('Validate','shortpixel-image-optimiser');?>
                     </button>
 
