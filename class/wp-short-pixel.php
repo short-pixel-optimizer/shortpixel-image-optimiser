@@ -215,7 +215,11 @@ class WPShortPixel {
             $spMetaDao = new ShortPixelCustomMetaDao(new WpShortPixelDb(), $settings->excludePatterns);
             $spMetaDao->dropTables();
         }
-        if(WPShortPixelSettings::getOpt('deliverWebp') == 3) {
+        $settingsControl = new \ShortPixel\SettingsController();
+        $env = $settingsControl->getEnv();
+
+
+        if(WPShortPixelSettings::getOpt('deliverWebp') == 3 && ! $env->is_nginx) {
             self::alterHtaccess(); //add the htaccess lines
         }
         WPShortPixelSettings::onActivate();
@@ -226,7 +230,13 @@ class WPShortPixel {
         ShortPixelQueue::resetBulk();
         (! defined('SHORTPIXEL_NOFLOCK')) ? ShortPixelQueue::resetPrio() : ShortPixelQueueDB::resetPrio();
         WPShortPixelSettings::onDeactivate();
-        self::alterHtaccess(true);
+
+        $settingsControl = new \ShortPixel\SettingsController();
+        $env = $settingsControl->getEnv();
+
+        if (! $env->is_nginx)
+          self::alterHtaccess(true);
+          
         @unlink(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
     }
 
