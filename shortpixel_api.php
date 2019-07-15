@@ -16,6 +16,7 @@ class ShortPixelAPI {
     const STATUS_NOT_FOUND = -5;
     const STATUS_NO_KEY = -6;
     const STATUS_RETRY = -7;
+    const STATUS_SEARCHING = -8; // when the Queue is looping over images, but in batch none were found.
     const STATUS_QUEUE_FULL = -404;
     const STATUS_MAINTENANCE = -500;
 
