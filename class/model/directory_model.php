@@ -17,12 +17,13 @@ class DirectoryModel extends ShortPixelModel
   protected $exists = false;
   protected $is_writable = false;
 
-  protected $new_directory_permission = 0644;
+  protected $new_directory_permission = 0755;
 
   /** Creates a directory model object. DirectoryModel directories don't need to exist on FileSystem */
   public function __construct($path)
   {
-      $this->path = trailingslashit($path);
+      //$this->new_directory_permission = octdec(06440);
+      $this->path = wp_normalize_path(trailingslashit($path));
       Log::addDebug("DirectoryModel LoadPath - " . $this->path);
       if (file_exists($this->path))
       {
@@ -60,7 +61,15 @@ class DirectoryModel extends ShortPixelModel
   {
      if (! $this->exists())
      {
-        @mkdir($this->path);
+        Log::addDebug('Direct does not exists. Try to create recursive ' . $this->path . ' with '  . $this->new_directory_permission);
+        $result = @mkdir($this->path, $this->new_directory_permission , true);
+        if (! $result)
+        {
+          $error = error_get_last();
+          echo $error['message'];
+          Log::addWarn('MkDir failed: ' . $error['message'], array($error));
+        }
+
      }
      if ($this->exists() && $check_writable && ! $this->is_writable())
      {

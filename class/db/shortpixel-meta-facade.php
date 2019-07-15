@@ -685,7 +685,9 @@ class ShortPixelMetaFacade {
         }
         $hp = wp_normalize_path($homePath);
         $file = wp_normalize_path($file);
-        $sp__uploads = wp_upload_dir();
+
+      //  $sp__uploads = wp_upload_dir();
+      
         if(strstr($file, $hp)) {
             $path = str_replace( $hp, "", $file);
         } elseif( strstr($file, dirname( WP_CONTENT_DIR ))) { //in some situations the content dir is not inside the root, check this also (ex. single.shortpixel.com)
