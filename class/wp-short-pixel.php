@@ -316,18 +316,22 @@ class WPShortPixel {
             */
         );
         if($this->_settings->processThumbnails) {
+            $details = __('Details: recreating image files may require re-optimization of the resulting thumbnails, even if they were previously optimized. Please use <a href="https://wordpress.org/plugins/regenerate-thumbnails-advanced/" target="_blank">reGenerate Thumbnails Advanced</a> instead.','shortpixel-image-optimiser');
+
             $conflictPlugins = array_merge($conflictPlugins, array(
-                'Regenerate Thumbnails: recreating image files may require re-optimization of the resulting thumbnails, even if they were previously optimized.'
+                'Regenerate Thumbnails'
                     => array(
                             'action'=>'Deactivate',
                             'data'=>'regenerate-thumbnails/regenerate-thumbnails.php',
-                            'page'=>'regenerate-thumbnails'
+                            'page'=>'regenerate-thumbnails',
+                            'details' => $details
                     ),
-                'Force Regenerate Thumbnails: recreating image files may require re-optimization of the resulting thumbnails, even if they were previously optimized.'
+                'Force Regenerate Thumbnails'
                     => array(
                             'action'=>'Deactivate',
                             'data'=>'force-regenerate-thumbnails/force-regenerate-thumbnails.php',
-                            'page'=>'force-regenerate-thumbnails'
+                            'page'=>'force-regenerate-thumbnails',
+                            'details' => $details
                     )
             ));
         }
@@ -337,12 +341,13 @@ class WPShortPixel {
             $data = ( isset($path['data']) ) ? $path['data'] : null;
             $href = ( isset($path['href']) ) ? $path['href'] : null;
             $page = ( isset($path['page']) ) ? $path['page'] : null;
+            $details = ( isset($path['page']) ) ? $path['details'] : null;
             if(is_plugin_active($data)) {
                 if( $data == 'jetpack/jetpack.php' ){
                     $jetPackPhoton = get_option('jetpack_active_modules') ? in_array('photon', get_option('jetpack_active_modules')) : false;
                     if( !$jetPackPhoton ){ continue; }
                 }
-                $found[] = array( 'name' => $name, 'action'=> $action, 'path' => $data, 'href' => $href , 'page' => $page );
+                $found[] = array( 'name' => $name, 'action'=> $action, 'path' => $data, 'href' => $href , 'page' => $page, 'details' => $details);
             }
         }
         return $found;
@@ -1179,7 +1184,9 @@ class WPShortPixel {
                                || is_array($meta->getThumbsOptList())
                                   && count(array_diff(array_keys(WpShortPixelMediaLbraryAdapter::getSizesNotExcluded($meta->getThumbs(), $this->_settings->excludeSizes)),
                                                       $meta->getThumbsOptList()))
-                               || count(array_diff(WpShortPixelMediaLbraryAdapter::findThumbs($meta->getPath()), $meta->getThumbsOptList()))
+                               || (   $this->_settings->optimizeUnlisted
+                                   && count(array_diff(WpShortPixelMediaLbraryAdapter::findThumbs($meta->getPath()), $meta->getThumbsOptList()))
+                                  )
                            )
                     ) {
                         $URLsAndPATHs = $item->getURLsAndPATHs(true, true, $this->_settings->optimizeRetina, $this->_settings->excludeSizes);
@@ -2284,7 +2291,8 @@ class WPShortPixel {
         //$ret = array("Status" => ShortPixelAPI::STATUS_SKIP, "message" => (isset($meta['ShortPixelImprovement']) ? __('No thumbnails to optimize for ID: ','shortpixel-image-optimiser') : __('Please optimize image for ID: ','shortpixel-image-optimiser')) . $ID);
         $error = array('Status' => ShortPixelAPI::STATUS_SKIP, 'message' => __('Unspecified Error on Thumbnails for: ') . $ID);
 
-        $includedSizes = WpShortPixelMediaLbraryAdapter::getSizesNotExcluded($meta['sizes'], $this->_settings->excludeSizes);
+        list($includedSizes, $thumbsCount) = $this->getThumbsToOptimize($meta, get_attached_file($ID));
+        //WpShortPixelMediaLbraryAdapter::getSizesNotExcluded($meta['sizes'], $this->_settings->excludeSizes);
         $thumbsCount = count($includedSizes);
 
         if (! isset($meta['ShortPixelImprovement']))
@@ -3330,7 +3338,7 @@ class WPShortPixel {
             }
 
             //empty data means document, we handle only PDF
-            elseif (empty($data)) { //TODO asta devine if si decomentam returnurile
+            elseif (empty($data)) {
                 if($fileExtension == "pdf") {
                     $renderData['status'] = $quotaExceeded ? 'quotaExceeded' : 'optimizeNow';
                     $renderData['message'] = __('PDF not processed.','shortpixel-image-optimiser');
@@ -3349,19 +3357,8 @@ class WPShortPixel {
             if(   is_numeric($data['ShortPixelImprovement'])
                && !($data['ShortPixelImprovement'] == 0 && isset($data['ShortPixel']['WaitingProcessing'])) //for images that erroneously have ShortPixelImprovement = 0 when WaitingProcessing
               ) { //already optimized
-                $sizesCount = isset($data['sizes']) ? WpShortPixelMediaLbraryAdapter::countSizesNotExcluded($data['sizes']) : 0;
-
-                $thumbsToOptimize = 0;
                 $thumbsOptList = isset($data['ShortPixel']['thumbsOptList']) ? $data['ShortPixel']['thumbsOptList'] : array();
-                if($sizesCount && $this->_settings->processThumbnails) {
-                    $exclude = $this->_settings->excludeSizes;
-                    $exclude = is_array($exclude) ? $exclude : array();
-                    foreach($data['sizes'] as $size => $sizeData) {
-                        if(!in_array($size, $exclude) && !in_array($sizeData['file'], $thumbsOptList)) {
-                            $thumbsToOptimize++;
-                        }
-                    }
-                }
+                list($thumbsToOptimizeList, $sizesCount) = $this->getThumbsToOptimize($data, $file);
 
                 $renderData['status'] = $fileExtension == "pdf" ? 'pdfOptimized' : 'imgOptimized';
                 $renderData['percent'] = $this->optimizationPercentIfPng2Jpg($data);
@@ -3371,7 +3368,8 @@ class WPShortPixel {
                 $renderData['invType'] = ShortPixelAPI::getCompressionTypeName($this->getOtherCompressionTypes(ShortPixelAPI::getCompressionTypeCode($renderData['type'])));
                 $renderData['thumbsTotal'] = $sizesCount;
                 $renderData['thumbsOpt'] = isset($data['ShortPixel']['thumbsOpt']) ? $data['ShortPixel']['thumbsOpt'] : $sizesCount;
-                $renderData['thumbsToOptimize'] = $thumbsToOptimize;
+                $renderData['thumbsToOptimize'] = count($thumbsToOptimizeList);
+                $renderData['thumbsToOptimizeList'] = $thumbsToOptimizeList;
                 $renderData['thumbsOptList'] = $thumbsOptList;
                 $renderData['excludeSizes'] = isset($data['ShortPixel']['excludeSizes']) ? $data['ShortPixel']['excludeSizes'] : null;
                 $renderData['thumbsMissing'] = isset($data['ShortPixel']['thumbsMissing']) ? $data['ShortPixel']['thumbsMissing'] : array();
@@ -3400,10 +3398,12 @@ class WPShortPixel {
 /*            elseif($data['ShortPixelImprovement'] == __('Optimization N/A','shortpixel-image-optimiser')) { //We don't optimize this
                 $renderData['status'] = 'n/a';
             }*/
-            elseif(isset($meta['ShortPixel']['BulkProcessing'])) { //Scheduled to bulk.
+            /*
+            elseif(isset($meta['ShortPixel']['BulkProcessing'])) { //Scheduled to bulk. !!! removed as the BulkProcessing is never set and it should be $data anyway.... :)
                 $renderData['status'] = $quotaExceeded ? 'quotaExceeded' : 'optimizeNow';
                 $renderData['message'] = 'Waiting for bulk processing.';
             }
+            */
             elseif( trim(strip_tags($data['ShortPixelImprovement'])) == __("Cannot write optimized file",'shortpixel-image-optimiser') ) {
                 $renderData['status'] = $quotaExceeded ? 'quotaExceeded' : 'retry';
                 $renderData['message'] = __("Cannot write optimized file",'shortpixel-image-optimiser') . " - <a href='https://shortpixel.com/faq#cannot-write-optimized-file' target='_blank'>"
@@ -3439,6 +3439,37 @@ class WPShortPixel {
             }
             $this->view->renderCustomColumn($id, $renderData, $extended);
         }
+    }
+
+    /**
+     * return the thumbnails that remain to optimize and the total count of sizes registered in metdata (and not excluded)
+     * @param $data
+     * @param $file
+     * @return array
+     */
+    function getThumbsToOptimize($data, $file) {
+        $sizesCount = isset($data['sizes']) ? WpShortPixelMediaLbraryAdapter::countSizesNotExcluded($data['sizes']) : 0;
+        $basedir = trailingslashit(dirname($file));
+        $thumbsOptList = isset($data['ShortPixel']['thumbsOptList']) ? $data['ShortPixel']['thumbsOptList'] : array();
+        if($sizesCount && $this->_settings->processThumbnails) {
+
+            $thumbsToOptimizeList = array();
+            $found = $this->_settings->optimizeUnlisted ? WpShortPixelMediaLbraryAdapter::findThumbs($file) : array();
+
+            $exclude = $this->_settings->excludeSizes;
+            $exclude = is_array($exclude) ? $exclude : array();
+            foreach($data['sizes'] as $size => $sizeData) {
+                unset($found[\array_search($basedir . $sizeData['file'], $found)]);
+                if(!in_array($size, $exclude) && !in_array($sizeData['file'], $thumbsOptList)) {
+                    $thumbsToOptimizeList[] = $sizeData['file'];
+                }
+            }
+            $found = array_diff($found, $thumbsOptList);
+            foreach($found as $item) {
+                $thumbsToOptimizeList[] = wp_basename($item);
+            }
+        }
+        return array($thumbsToOptimizeList, $sizesCount);
     }
 
     /** Make columns sortable in Media Library
