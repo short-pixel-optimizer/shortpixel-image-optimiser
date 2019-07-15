@@ -153,6 +153,8 @@ class ShortPixelView {
                         echo('<li class="sp-conflict-plugins-list"><strong>' . $plugin['name'] . '</strong>');
                         echo('<a href="' . $link . '" class="button button-primary">'
                                 . __( $action, 'shortpixel_image_optimiser' ) . '</a>');
+                        if($plugin['details']) echo('<br>');
+                        if($plugin['details']) echo('<span>' . $plugin['details'] . '</span>');
                     }
                     echo("</ul>");
                     break;
@@ -1714,19 +1716,26 @@ class ShortPixelView {
                 case 'imgOptimized':
                     $excluded = (isset($data['excludeSizes']) ? count($data['excludeSizes']) : 0);
                     $successText = $this->getSuccessText($data['percent'],$data['bonus'],$data['type'],$data['thumbsOpt'],$data['thumbsTotal'], $data['retinasOpt'], $data['excludeSizes']);
-                    $missingThumbs = $excludeSizes = '';
+                    $todoSizes = $missingThumbs = $excludeSizes = '';
                     if($extended) {
+                        if(isset($data['thumbsToOptimizeList']) && count($data['thumbsToOptimizeList'])) {
+                            $todoSizes .= "<br><span style='word-break: break-all;'> <span style='font-weight: bold;'>" . __("To optimize:", 'shortpixel-image-optimiser') . "</span>";
+                            foreach($data['thumbsToOptimizeList'] as $todoItem) {
+                                $todoSizes .= "<br> &#8226;&nbsp;" . $todoItem;
+                            }
+                            $excludeSizes .= '</span>';
+                        }
                         if(isset($data['excludeSizes'])) {
-                            $excludeSizes .= "<br><span> <span style='font-weight: bold;'>" . __("Excluded thumbnails:", 'shortpixel-image-optimiser') . "</span>";
+                            $excludeSizes .= "<br><span style='word-break: break-all;'> <span style='font-weight: bold;'>" . __("Excluded thumbnails:", 'shortpixel-image-optimiser') . "</span>";
                             foreach($data['excludeSizes'] as $excludedItem) {
-                                $excludeSizes .= "<br> &#8226; " . $excludedItem;
+                                $excludeSizes .= "<br> &#8226;&nbsp;" . $excludedItem;
                             }
                             $excludeSizes .= '</span>';
                         }
                         if(count($data['thumbsMissing'])) {
-                            $missingThumbs .= "<br><span> <span style='font-weight: bold;'>" . __("Missing thumbnails:", 'shortpixel-image-optimiser') . "</span>";
+                            $missingThumbs .= "<br><span style='word-break: break-all;'> <span style='font-weight: bold;'>" . __("Missing thumbnails:", 'shortpixel-image-optimiser') . "</span>";
                             foreach($data['thumbsMissing'] as $miss) {
-                                $missingThumbs .= "<br> &#8226; " . $miss;
+                                $missingThumbs .= "<br> &#8226&nbsp;" . $miss;
                             }
                             $missingThumbs .= '</span>';
                         }
@@ -1734,7 +1743,7 @@ class ShortPixelView {
                                 . "<br>EXIF: " . ($data['exifKept'] ? __('kept','shortpixel-image-optimiser') :  __('removed','shortpixel-image-optimiser'))
                                 . ($data['png2jpg'] ? '<br>' . __('Converted from PNG','shortpixel-image-optimiser'): '')
                                 . "<br>" . __("Optimized on", 'shortpixel-image-optimiser') . ": " . $data['date']
-                                . $excludeSizes . $missingThumbs;
+                                . $todoSizes . $excludeSizes . $missingThumbs;
                     }
                     $this->renderListCell($id, $data['status'], $data['showActions'], $data['thumbsToOptimize'],
                             $data['backup'], $data['type'], $data['invType'], $successText);
