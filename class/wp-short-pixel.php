@@ -358,7 +358,7 @@ class WPShortPixel {
             $data = ( isset($path['data']) ) ? $path['data'] : null;
             $href = ( isset($path['href']) ) ? $path['href'] : null;
             $page = ( isset($path['page']) ) ? $path['page'] : null;
-            $details = ( isset($path['page']) ) ? $path['details'] : null;
+            $details = ( isset($path['details']) ) ? $path['details'] : null;
             if(is_plugin_active($data)) {
                 if( $data == 'jetpack/jetpack.php' ){
                     $jetPackPhoton = get_option('jetpack_active_modules') ? in_array('photon', get_option('jetpack_active_modules')) : false;
@@ -603,6 +603,8 @@ class WPShortPixel {
 
         wp_enqueue_script('jquery.knob.min.js', plugins_url('/res/js/jquery.knob.min.js',SHORTPIXEL_PLUGIN_FILE) );
         wp_enqueue_script('jquery.tooltip.min.js', plugins_url('/res/js/jquery.tooltip.min.js',SHORTPIXEL_PLUGIN_FILE) );
+
+        
         wp_enqueue_script('punycode.min.js', plugins_url('/res/js/punycode.min.js',SHORTPIXEL_PLUGIN_FILE) );
     }
 

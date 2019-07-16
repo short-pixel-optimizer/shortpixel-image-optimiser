@@ -1001,7 +1001,7 @@ function checkBulkProcessingCallApi(){
 
                     ShortPixel.returnedStatusSearching = 0;
                 }
-  
+
 
                 switch (data["Status"]) {
                     case ShortPixel.STATUS_NO_KEY:
@@ -1134,7 +1134,7 @@ function checkBulkProcessingCallApi(){
                         {
                           $('.bulk-notice-msg.bulk-searching').show();
                         }
-                        setTimeout(checkBulkProgress, 2500);
+                        setTimeout(checkBulkProgress, 500);
                     break;
                     case ShortPixel.STATUS_MAINTENANCE:
                         ShortPixel.bulkShowMaintenanceMsg('maintenance');

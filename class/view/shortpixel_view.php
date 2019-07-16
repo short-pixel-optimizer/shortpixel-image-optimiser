@@ -401,7 +401,7 @@ class ShortPixelView {
 
                                     jQuery(".sp-bulk-summary").spTooltip({
                                         tooltipSource: "inline",
-                                        tooltipSourceID: "#sp-bulk-stats"
+                                        tooltipSourceID: "#sp-bulk-stats",
                                     });
                                 });
                                 !function(d,s,id){//Just optimized my site with ShortPixel image optimization plugin
