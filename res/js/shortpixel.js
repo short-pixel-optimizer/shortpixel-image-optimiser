@@ -997,7 +997,7 @@ function checkBulkProcessingCallApi(){
                 if (data["Status"] && data["Status"] != ShortPixel.STATUS_SEARCHING)
                 {
                     if (ShortPixel.returnedStatusSearching >= 2)
-                      $('.bulk-notice-msg.bulk-searching').hide();
+                      jQuery('.bulk-notice-msg.bulk-searching').hide();
 
                     ShortPixel.returnedStatusSearching = 0;
                 }
@@ -1132,7 +1132,7 @@ function checkBulkProcessingCallApi(){
                         ShortPixel.returnedStatusSearching++;
                         if (ShortPixel.returnedStatusSearching >= 2)
                         {
-                          $('.bulk-notice-msg.bulk-searching').show();
+                          jQuery('.bulk-notice-msg.bulk-searching').show();
                         }
                         setTimeout(checkBulkProgress, 2500);
                     break;
