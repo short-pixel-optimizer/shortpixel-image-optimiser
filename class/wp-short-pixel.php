@@ -24,8 +24,9 @@ class WPShortPixel {
 
     public function __construct() {
         $this->timer = time();
+        
 
-        if (SHORTPIXEL_DEBUG === true) {
+        if (Log::debugIsActive()) {
             $this->jsSuffix = '.js'; //use unminified versions for easier debugging
         }
 

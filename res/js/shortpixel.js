@@ -1131,7 +1131,7 @@ function checkBulkProcessingCallApi(){
                         ShortPixel.returnedStatusSearching++;
                         if (ShortPixel.returnedStatusSearching >= 2)
                         {
-                          $('.bulk-notice-msg.bulk-searching').show();
+                          jQuery('.bulk-notice-msg.bulk-searching').show();
                         }
                         setTimeout(checkBulkProgress, 500);
                     break;
