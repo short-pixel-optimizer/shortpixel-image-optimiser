@@ -670,8 +670,7 @@ class ShortPixelView {
                     <?php } ?>
 
                     <?php
-                    Log::addDebug('bulktype', array('b' => $this->bulkType));
-                    Log::addDebug($this->bulkType);
+                    Log::addDebug('Shortpixel View - Bulktype', array('b' => $this->bulkType));
                     if ($this->bulkType != ShortPixelQueue::BULK_TYPE_RESTORE): ?>
                     <div class="bulk-progress-indicator">
                         <div style="margin-bottom:5px"><?php _e('Average reduction','shortpixel-image-optimiser');?></div>
@@ -722,7 +721,6 @@ class ShortPixelView {
                 <div class="bulk-estimate">
                     &nbsp;<?php echo($message);?>
                 </div>
-                <?php if (true || ($type & 1)) { //now we display the action buttons always when a type of bulk is running ?>
                 <form action='' method='POST' style="display:inline;">
                     <input type="submit" class="button button-primary bulk-cancel"  onclick="clearBulkProcessor();"
                            name="bulkProcessStop" value="Stop" style="margin-left:10px"/>
@@ -734,9 +732,7 @@ class ShortPixelView {
                     <?php }?>
                     <span class="resumeLabel"><?php echo( !$running ? __('Resume: ','shortpixel-image-optimiser') : "");?></span>
                 </form>
-                <?php } else { ?>
-                    <a href="options-general.php?page=wp-shortpixel-settings" class="button button-primary bulk-cancel" style="margin-left:10px"><?php _e('Manage custom folders','shortpixel-image-optimiser');?></a>
-                <?php }?>
+
             </div>
         <?php
     }

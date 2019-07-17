@@ -1006,7 +1006,7 @@ function checkBulkProcessingCallApi(){
                 switch (data["Status"]) {
                     case ShortPixel.STATUS_NO_KEY:
                         setCellMessage(id, data["Message"], "<a class='button button-smaller button-primary' href=\"https://shortpixel.com/wp-apikey"
-                                       + ShortPixel.AFFILIATE + "\" target=\"_blank\">" + _spTr.getApiKey + "</a>");
+                                       +  "\" target=\"_blank\">" + _spTr.getApiKey + "</a>");
                         showToolBarAlert(ShortPixel.STATUS_NO_KEY);
                         break;
                     case ShortPixel.STATUS_QUOTA_EXCEEDED:
@@ -1034,13 +1034,12 @@ function checkBulkProcessingCallApi(){
                         setTimeout(checkBulkProgress, 5000);
                         break;
                     case ShortPixel.STATUS_EMPTY_QUEUE:
-                        console.log(data["Message"]);
                         clearBulkProcessor(); //nothing to process, leave the role. Next page load will check again
                         hideToolBarAlert();
                         var progress = jQuery("#bulk-progress");
                         if(isBulkPage && progress.length && data["BulkStatus"] != '2') {
                             progressUpdate(100, "Bulk finished!");
-                            jQuery("a.bulk-cancel").attr("disabled", "disabled");
+                            jQuery("a.bulk-cancel").prop("disabled", "disabled");
                             hideSlider();
                             //showStats();
                             setTimeout(function(){

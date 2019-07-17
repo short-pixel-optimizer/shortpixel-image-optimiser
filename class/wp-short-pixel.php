@@ -1142,8 +1142,6 @@ class WPShortPixel {
   //          $resultsPostMeta2 = WpShortPixelMediaLbraryAdapter::getPostMetaJoinLess($crtStartQueryID, $endQueryID, $maxResults);
   //          Log::addDebug('PostMetaJoinLess  took ' . (microtime(true) - $time) . ' sec.');
 
-//
-
             $resultsPosts = WpShortPixelMediaLbraryAdapter::getPostsJoinLessReverse($crtStartQueryID, $endQueryID, $maxResults);
     //        Log::addDebug('PostMetaJoinLess *REV took ' . (microtime(true) - $time) . ' sec.');
     //        */
@@ -1285,11 +1283,23 @@ class WPShortPixel {
     private function sendEmptyQueue() {
         $avg = $this->getAverageCompression();
         $fileCount = $this->_settings->fileCount;
+
+        if($this->prioQ->bulkRunning())
+        {
+            $bulkstatus = '1';
+        }
+        elseif ($this->prioQ->bulkPaused())
+        {
+            $bulkstatus = '2';
+        }
+        else {
+            $bulkstatus = '0';
+        }
+
         $response = array("Status" => self::BULK_EMPTY_QUEUE,
             /* translators: console message Empty queue 1234 -> 1234 */
             "Message" => __('Empty queue ','shortpixel-image-optimiser') . $this->prioQ->getStartBulkId() . '->' . $this->prioQ->getStopBulkId(),
-            "BulkStatus" => ($this->prioQ->bulkRunning()
-                    ? "1" : ($this->prioQ->bulkPaused() ? "2" : "0")),
+            "BulkStatus" => $bulkstatus,
             "AverageCompression" => $avg,
             "FileCount" => $fileCount,
             "BulkPercent" => $this->prioQ->getBulkPercent());
