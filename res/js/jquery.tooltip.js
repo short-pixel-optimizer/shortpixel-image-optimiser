@@ -32,6 +32,7 @@
 		var s = $.extend({}, $.fn.spTooltip.defaultsSettings , instanceSettings || {});
 
 		var positionTooltip = function(e){
+			e.preventDefault();
 
 			var posx = 0;
 			var posy = 0;
@@ -118,7 +119,6 @@
 			}else{
 				$(this).hover(on,off);
 			}
-
 			function on(e){
 
 				$('body').append('<div id="'+s.tooltipID+'" style="background-repeat:no-repeat;background-image:url('+s.tooltipBGImage+');padding:'+s.tooltipPadding+'px;display:none;height:'+s.height+';width:'+s.width+';background-color:'+s.tooltipBGColor+';border:'+s.borderSize+'px solid '+s.borderColor+'; position:absolute;z-index:100000000000;"><div id="tooltipContent" style="display:none;"></div></div>');
@@ -148,6 +148,9 @@
 				s.tooltipSourceID = $(this).attr('href') || s.tooltipSourceID;
 				s.tooltipSourceURL = $(this).attr('href') || s.tooltipSourceURL;
 
+				console.log(s.tooltipSourceID);
+				console.log(s.tooltipSourceURL);
+
 				switch(s.tooltipSource){
 					case 'attribute':/*/////////////////////////////// attribute //////////////////////////////////////////*/
 						$ttContent.text(s.titleAttributeContent);
@@ -161,6 +164,7 @@
 						showTooltip();
 					break;
 					case 'ajax':/*/////////////////////////////// ajax //////////////////////////////////////////*/
+
 						if(s.tooltipHTTPType == 'post'){
 							var urlOnly, urlQueryObject;
 							if(s.tooltipSourceURL.indexOf("?") !== -1){//has a query string

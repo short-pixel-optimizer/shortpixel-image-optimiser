@@ -13,6 +13,7 @@ class ApiKeyModel extends ShortPixelModel
   protected $redirectedSettings;
 
   // states
+  // key is verified is set by checkKey *after* checks and validation
   protected $key_is_verified = false; // this state doesn't have to be the same as the verifiedKey field in DB.
   protected $key_is_empty = false;
   protected $key_is_constant = false;
@@ -80,32 +81,49 @@ class ApiKeyModel extends ShortPixelModel
       Log::addDebug('Update Verified', array($this->apiKey, $this->verifiedKey));
   }
 
-  public function resetTries()
+  /** Resets the last APIkey that was attempted with validation
+  *
+  *  The last apikey tried is saved to prevent server and notice spamming when using a constant key, or a wrong key in the database without updating.
+  */
+  public function resetTried()
   {
-
+    if (is_null($this->apiKeyTried))
+    {
+      return; // if already null, no need for additional activity
+    }
     $this->apiKeyTried = null;
     $this->update();
-    Log::addDebug('Reset Tries', $this->apiKeyTried);
+    Log::addDebug('Reset Tried', $this->apiKeyTried);
   }
 
+  /** Checks the API key to see if we have a validated situation
+  *  @param $key String The 20-character Shortpixel API Key or empty string
+  *  @return boolean Returns a boolean indicating valid key or not
+  *
+  * An Api key can be removed from the system by passing an empty string when the key is not hidden.
+  * If the key has changed from stored key, the function will pass a validation request to the server
+  * Failing to key a 20char string, or passing an empty key will result in notices.
+  */
   public function checkKey($key)
   {
       Log::addDebug("Model, checking key ". $key . ' not -' .  $this->apiKeyTried);
       if (strlen($key) == 0)
       {
-        if ($key != $this->apiKey)
-          Notice::addWarning(__('Your API Key has been removed', 'shortpixel-image-optimiser'));
-
-        $this->key_is_empty = true;
-        $this->apiKey = '';
-        $this->verifiedKey = false;
-        $this->apiKeyTried = '';
-        Log::addDebug('Key Empty');
-
-        $this->update();
+        // first-timers, redirect to nokey screen
         $this->checkRedirect(); // this should be a one-time thing.
-
+        if($this->key_is_hidden) // hidden empty keys shouldn't be checked
+        {
+           $this->key_is_verified = $this->verifiedKey;
+           return $this->key_is_verified;
+        }
+        elseif ($key != $this->apiKey)
+        {
+          Notice::addWarning(__('Your API Key has been removed', 'shortpixel-image-optimiser'));
+          $this->clearApiKey(); // notice and remove;
+          return false;
+        }
         $valid = false;
+
       }
       elseif (strlen($key) <> 20 && $key != $this->apiKeyTried)
       {
@@ -135,7 +153,7 @@ class ApiKeyModel extends ShortPixelModel
         $this->key_is_verified = true;
       }
 
-      return $this->key_is_verified;
+      return $this->key_is_verified; // first time this is set! *after* this function
   }
 
   public function is_verified()
@@ -158,7 +176,20 @@ class ApiKeyModel extends ShortPixelModel
       return $this->apiKey;
   }
 
-  public function validateKey($key)
+  protected function clearApiKey()
+  {
+    $this->key_is_empty = true;
+    $this->apiKey = '';
+    $this->verifiedKey = false;
+    $this->apiKeyTried = '';
+    $this->key_is_verified = false;
+    Log::addDebug('Clearing API Key');
+
+    $this->update();
+
+  }
+
+  protected function validateKey($key)
   {
     Log::addDebug('Validating Key ' . $key);
     // first, save Auth to satisfy getquotainformation

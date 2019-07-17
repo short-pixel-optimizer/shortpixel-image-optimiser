@@ -80,7 +80,7 @@ class SettingsController extends shortPixelController
         Log::addDebug('Settings Action - addkey ', array($this->is_form_submit, $this->postData) );
         if ($this->is_form_submit && isset($this->postData['apiKey']))
         {
-            $this->keyModel->resetTries();
+            $this->keyModel->resetTried();
             $this->keyModel->checkKey($this->postData['apiKey']);
             /*if (isset($this->postData['verifiedKey']) && $this->postData['verifiedKey'])
             {
@@ -110,7 +110,7 @@ class SettingsController extends shortPixelController
           if (isset($this->postData['apiKey']))
           {
               $check_key = $this->postData['apiKey'];
-              unset($this->postData['apiKey']);
+              unset($this->postData['apiKey']); // unset, since keyModel does the saving.
           }
 
           // write checked and verified post data to model. With normal models, this should just be call to update() function
@@ -122,7 +122,7 @@ class SettingsController extends shortPixelController
           // first save all other settings ( like http credentials etc ), then check
           if (! $this->keyModel->is_constant() && $check_key !== false) // don't allow settings key if there is a constant
           {
-            $this->keyModel->resetTries();
+            $this->keyModel->resetTried(); // reset the tried api keys on a specific post request.
             $this->keyModel->checkKey($check_key);
           }
 
@@ -163,7 +163,7 @@ class SettingsController extends shortPixelController
       protected function loadEnv()
       {
           $env = $this->getEnv();
-          
+
           $this->is_nginx = $env->is_nginx;
           $this->is_gd_installed = $env->is_gd_installed;
           $this->is_curl_installed = $env->is_curl_installed;

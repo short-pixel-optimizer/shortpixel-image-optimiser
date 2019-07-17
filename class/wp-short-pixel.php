@@ -24,8 +24,9 @@ class WPShortPixel {
 
     public function __construct() {
         $this->timer = time();
+        
 
-        if (SHORTPIXEL_DEBUG === true) {
+        if (Log::debugIsActive()) {
             $this->jsSuffix = '.js'; //use unminified versions for easier debugging
         }
 
@@ -358,7 +359,7 @@ class WPShortPixel {
             $data = ( isset($path['data']) ) ? $path['data'] : null;
             $href = ( isset($path['href']) ) ? $path['href'] : null;
             $page = ( isset($path['page']) ) ? $path['page'] : null;
-            $details = ( isset($path['page']) ) ? $path['details'] : null;
+            $details = ( isset($path['details']) ) ? $path['details'] : null;
             if(is_plugin_active($data)) {
                 if( $data == 'jetpack/jetpack.php' ){
                     $jetPackPhoton = get_option('jetpack_active_modules') ? in_array('photon', get_option('jetpack_active_modules')) : false;
@@ -603,6 +604,8 @@ class WPShortPixel {
 
         wp_enqueue_script('jquery.knob.min.js', plugins_url('/res/js/jquery.knob.min.js',SHORTPIXEL_PLUGIN_FILE) );
         wp_enqueue_script('jquery.tooltip.min.js', plugins_url('/res/js/jquery.tooltip.min.js',SHORTPIXEL_PLUGIN_FILE) );
+
+
         wp_enqueue_script('punycode.min.js', plugins_url('/res/js/punycode.min.js',SHORTPIXEL_PLUGIN_FILE) );
     }
 
@@ -1140,7 +1143,6 @@ class WPShortPixel {
   //          $resultsPostMeta2 = WpShortPixelMediaLbraryAdapter::getPostMetaJoinLess($crtStartQueryID, $endQueryID, $maxResults);
   //          Log::addDebug('PostMetaJoinLess  took ' . (microtime(true) - $time) . ' sec.');
 
-//
             $resultsPosts = WpShortPixelMediaLbraryAdapter::getPostsJoinLessReverse($crtStartQueryID, $endQueryID, $maxResults);
     //        Log::addDebug('PostMetaJoinLess *REV took ' . (microtime(true) - $time) . ' sec.');
     //        */
@@ -1282,11 +1284,23 @@ class WPShortPixel {
     private function sendEmptyQueue() {
         $avg = $this->getAverageCompression();
         $fileCount = $this->_settings->fileCount;
+
+        if($this->prioQ->bulkRunning())
+        {
+            $bulkstatus = '1';
+        }
+        elseif ($this->prioQ->bulkPaused())
+        {
+            $bulkstatus = '2';
+        }
+        else {
+            $bulkstatus = '0';
+        }
+
         $response = array("Status" => self::BULK_EMPTY_QUEUE,
             /* translators: console message Empty queue 1234 -> 1234 */
             "Message" => __('Empty queue ','shortpixel-image-optimiser') . $this->prioQ->getStartBulkId() . '->' . $this->prioQ->getStopBulkId(),
-            "BulkStatus" => ($this->prioQ->bulkRunning()
-                    ? "1" : ($this->prioQ->bulkPaused() ? "2" : "0")),
+            "BulkStatus" => $bulkstatus,
             "AverageCompression" => $avg,
             "FileCount" => $fileCount,
             "BulkPercent" => $this->prioQ->getBulkPercent());

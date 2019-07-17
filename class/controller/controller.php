@@ -72,6 +72,8 @@ class ShortPixelController
     else if (isset($_POST) && count($_POST) > 0)
     {
       check_admin_referer( $this->form_action, 'sp-nonce' ); // extra check, when we are wrong here, it dies.
+      unset($_POST['sp-nonce']);
+      unset($_POST['_wp_http_referer']);
       $this->is_form_submit = true;
       $this->processPostData($_POST);
     }
