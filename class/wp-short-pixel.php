@@ -604,7 +604,7 @@ class WPShortPixel {
         wp_enqueue_script('jquery.knob.min.js', plugins_url('/res/js/jquery.knob.min.js',SHORTPIXEL_PLUGIN_FILE) );
         wp_enqueue_script('jquery.tooltip.min.js', plugins_url('/res/js/jquery.tooltip.min.js',SHORTPIXEL_PLUGIN_FILE) );
 
-        
+
         wp_enqueue_script('punycode.min.js', plugins_url('/res/js/punycode.min.js',SHORTPIXEL_PLUGIN_FILE) );
     }
 
@@ -1143,6 +1143,7 @@ class WPShortPixel {
   //          Log::addDebug('PostMetaJoinLess  took ' . (microtime(true) - $time) . ' sec.');
 
 //
+
             $resultsPosts = WpShortPixelMediaLbraryAdapter::getPostsJoinLessReverse($crtStartQueryID, $endQueryID, $maxResults);
     //        Log::addDebug('PostMetaJoinLess *REV took ' . (microtime(true) - $time) . ' sec.');
     //        */

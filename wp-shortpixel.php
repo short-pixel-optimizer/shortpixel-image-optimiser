@@ -16,6 +16,7 @@ if (! defined('SHORTPIXEL_RESET_ON_ACTIVATE'))
 //define('SHORTPIXEL_DEBUG_TARGET', true);
 
 define('SHORTPIXEL_PLUGIN_FILE', __FILE__);
+define('SHORTPIXEL_PLUGIN_DIR', __DIR__);
 
 //define('SHORTPIXEL_AFFILIATE_CODE', '');
 
@@ -40,7 +41,7 @@ define('SHORTPIXEL_MAX_EXECUTION_TIME', $max_exec);
 
 // ** @todo For what is this needed? */
 //require_once(ABSPATH . 'wp-admin/includes/file.php');
-require_once('build/shortpixel/autoload.php');
+require_once(SHORTPIXEL_PLUGIN_DIR . '/build/shortpixel/autoload.php');
 
 
 $sp__uploads = wp_upload_dir();
