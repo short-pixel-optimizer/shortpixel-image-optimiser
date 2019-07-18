@@ -38,7 +38,7 @@ class ShortPixelImgToPictureWebp
         if ($new_content !== false)
           $content = $new_content;
 
-        $content = preg_replace_callback('/<img[^>]*>/', array('self', 'convertImage'), $content);
+        $content = preg_replace_callback('/<img[^>]*>/i', array('self', 'convertImage'), $content);
         //$content = preg_replace_callback('/background.*[^:](url\(.*\)[,;])/im', array('self', 'convertInlineStyle'), $content);
 
         // [BS] No callback because we need preg_match_all
@@ -188,6 +188,9 @@ class ShortPixelImgToPictureWebp
         unset($img['sizes']);
         unset($img['alt']);
         unset($img['id']);
+        unset($img['width']);
+        unset($img['height']);
+
         $srcsetWebP = '';
 
         if ($srcset) {
@@ -403,6 +406,7 @@ class ShortPixelImgToPictureWebp
         @$dom->loadHTML($image_node);
         $image = $dom->getElementsByTagName('img')->item(0);
         $attributes = array();
+        var_dump($image->attributes);
         foreach ($image->attributes as $attr) {
             $attributes[$attr->nodeName] = $attr->nodeValue;
         }
