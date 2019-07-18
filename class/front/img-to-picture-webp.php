@@ -28,6 +28,7 @@ class ShortPixelImgToPictureWebp
 
     public static function convert($content)
     {
+
         // Don't do anything with the RSS feed.
         if (is_feed() || is_admin()) {
             Log::addInfo('SPDBG convert is_feed or is_admin');
@@ -406,6 +407,12 @@ class ShortPixelImgToPictureWebp
         @$dom->loadHTML($image_node);
         $image = $dom->getElementsByTagName('img')->item(0);
         $attributes = array();
+
+        /* This can happen with mismatches, or extremely malformed HTML.
+        In customer case, a javascript that did  for (i<imgDefer) --- </script> */
+        if (! is_object($image))
+          return false;
+
         foreach ($image->attributes as $attr) {
             $attributes[$attr->nodeName] = $attr->nodeValue;
         }

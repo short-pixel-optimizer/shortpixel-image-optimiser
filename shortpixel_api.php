@@ -840,7 +840,10 @@ class ShortPixelAPI {
         $Separator = " qq ";
         $qqPath = preg_replace("/[^ ]/u", $Separator."\$0".$Separator, $Path);
         if(!$qqPath) { //this is not an UTF8 string!! Don't rely on basename either, since if filename starts with a non-ASCII character it strips it off
-            $fileName = end(explode(DIRECTORY_SEPARATOR, $Path));
+
+            // This line is separated because of 'passed by reference' errors otherwise.
+            $pathAr = explode(DIRECTORY_SEPARATOR, $Path);
+            $fileName = end($pathAr);
             $pos = strpos($fileName, $suffix);
             if($pos !== false) {
                 return substr($fileName, 0, $pos);
