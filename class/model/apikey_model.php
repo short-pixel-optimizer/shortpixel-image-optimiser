@@ -129,7 +129,7 @@ class ApiKeyModel extends ShortPixelModel
       {
         $this->NoticeApiKeyLength($key);
         Log::addDebug('Key Wrong Length');
-        $valid = false;
+        $valid = $this->verifiedKey; // if we already had a verified key, and a wrong new one is giving keep status.
       }
       elseif( ($key != $this->apiKey || ! $this->verifiedKey) && $key != $this->apiKeyTried)
       {
@@ -195,17 +195,18 @@ class ApiKeyModel extends ShortPixelModel
     // first, save Auth to satisfy getquotainformation
 
     $quotaData = $this->remoteValidate($key);
-    $this->verifiedKey = ($quotaData['APIKeyValid']) ? true : false;
+    $checked_key = ($quotaData['APIKeyValid']) ? true : false;
 
      Log::addDebug('Verify Result', $quotaData);
      Log::addDebug('Key is verified ', array( $this->verifiedKey));
 
-     if (! $this->verifiedKey)
+     if (! $checked_key)
      {
         Notice::addError(sprintf(__('Error during verifying API key: %s','shortpixel-image-optimiser'), $quotaData['Message'] ));
      }
-     elseif ($this->verifiedKey) {
+     elseif ($checked_key) {
         $this->apiKey = $key;
+        $this->verifiedKey = $checked_key;
         $this->processNewKey($quotaData);
         $this->update();
      }
