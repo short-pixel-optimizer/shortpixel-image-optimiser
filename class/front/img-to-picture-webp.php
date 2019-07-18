@@ -406,7 +406,6 @@ class ShortPixelImgToPictureWebp
         @$dom->loadHTML($image_node);
         $image = $dom->getElementsByTagName('img')->item(0);
         $attributes = array();
-        var_dump($image->attributes);
         foreach ($image->attributes as $attr) {
             $attributes[$attr->nodeName] = $attr->nodeValue;
         }
