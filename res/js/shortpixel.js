@@ -997,16 +997,16 @@ function checkBulkProcessingCallApi(){
                 if (data["Status"] && data["Status"] != ShortPixel.STATUS_SEARCHING)
                 {
                     if (ShortPixel.returnedStatusSearching >= 2)
-                      $('.bulk-notice-msg.bulk-searching').hide();
+                      jQuery('.bulk-notice-msg.bulk-searching').hide();
 
                     ShortPixel.returnedStatusSearching = 0;
                 }
-
+  
 
                 switch (data["Status"]) {
                     case ShortPixel.STATUS_NO_KEY:
                         setCellMessage(id, data["Message"], "<a class='button button-smaller button-primary' href=\"https://shortpixel.com/wp-apikey"
-                                       +  "\" target=\"_blank\">" + _spTr.getApiKey + "</a>");
+                                       + ShortPixel.AFFILIATE + "\" target=\"_blank\">" + _spTr.getApiKey + "</a>");
                         showToolBarAlert(ShortPixel.STATUS_NO_KEY);
                         break;
                     case ShortPixel.STATUS_QUOTA_EXCEEDED:
@@ -1034,12 +1034,13 @@ function checkBulkProcessingCallApi(){
                         setTimeout(checkBulkProgress, 5000);
                         break;
                     case ShortPixel.STATUS_EMPTY_QUEUE:
+                        console.log(data["Message"]);
                         clearBulkProcessor(); //nothing to process, leave the role. Next page load will check again
                         hideToolBarAlert();
                         var progress = jQuery("#bulk-progress");
                         if(isBulkPage && progress.length && data["BulkStatus"] != '2') {
                             progressUpdate(100, "Bulk finished!");
-                            jQuery("a.bulk-cancel").prop("disabled", "disabled");
+                            jQuery("a.bulk-cancel").attr("disabled", "disabled");
                             hideSlider();
                             //showStats();
                             setTimeout(function(){
@@ -1133,7 +1134,7 @@ function checkBulkProcessingCallApi(){
                         {
                           jQuery('.bulk-notice-msg.bulk-searching').show();
                         }
-                        setTimeout(checkBulkProgress, 500);
+                        setTimeout(checkBulkProgress, 2500);
                     break;
                     case ShortPixel.STATUS_MAINTENANCE:
                         ShortPixel.bulkShowMaintenanceMsg('maintenance');
