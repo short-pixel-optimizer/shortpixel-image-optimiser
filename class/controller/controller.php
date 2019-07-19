@@ -1,6 +1,6 @@
 <?php
 namespace ShortPixel;
-use ShortPixel\ShortPixelLogger as Log;
+use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 class ShortPixelController
 {
@@ -17,6 +17,8 @@ class ShortPixelController
   protected $is_form_submit = false;
   protected $view; // object to use in the view.
   protected $url; // if controller is home to a page, sets the URL here. For redirects and what not.
+
+  protected $form_action = 'sp-action';
 
   public static function init()
   {
@@ -59,8 +61,19 @@ class ShortPixelController
   */
   protected function checkPost()
   {
-    if (isset($_POST) && count($_POST) > 0)
+    if (count($_POST) == 0) // no post, nothing to check, return silent.
+      return;
+
+    if (! isset($_POST['sp-nonce']) || ! wp_verify_nonce( $_POST['sp-nonce'], $this->form_action))
     {
+      Log::addInfo('Check Post fails nonce check' . $this->form_action, array($_POST) );
+      return false;
+    }
+    else if (isset($_POST) && count($_POST) > 0)
+    {
+      check_admin_referer( $this->form_action, 'sp-nonce' ); // extra check, when we are wrong here, it dies.
+      unset($_POST['sp-nonce']);
+      unset($_POST['_wp_http_referer']);
       $this->is_form_submit = true;
       $this->processPostData($_POST);
     }
@@ -122,10 +135,11 @@ class ShortPixelController
             require_once($path);
        }
        else {
-         Log::addError('Model $name could not be found');
+         Log::addError("Model $name  could not be found");
        }
      }
-}
+  }
+
 
   /** Accepts POST data, maps, checks missing fields, and applies sanitization to it.
   * @param array $post POST data
@@ -154,9 +168,11 @@ class ShortPixelController
         return true;
       }
     }
-
-    $model = $this->model;
-    $this->postData = $model->getSanitizedData($post);
+    else
+    {
+      $model = $this->model;
+      $this->postData = $model->getSanitizedData($post);
+    }
 
     return $this->postData;
 

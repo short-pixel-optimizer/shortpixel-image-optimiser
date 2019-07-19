@@ -3,7 +3,7 @@ if ( !function_exists( 'download_url' ) ) {
     require_once( ABSPATH . 'wp-admin/includes/file.php' );
 }
 
-use \ShortPixel\ShortPixelLogger as Log;
+use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 class ShortPixelAPI {
 
@@ -16,6 +16,7 @@ class ShortPixelAPI {
     const STATUS_NOT_FOUND = -5;
     const STATUS_NO_KEY = -6;
     const STATUS_RETRY = -7;
+    const STATUS_SEARCHING = -8; // when the Queue is looping over images, but in batch none were found.
     const STATUS_QUEUE_FULL = -404;
     const STATUS_MAINTENANCE = -500;
 
@@ -111,7 +112,7 @@ class ShortPixelAPI {
         }
 
       //  WpShortPixel::log("DO REQUESTS for META: " . json_encode($itemHandler->getRawMeta()) . " STACK: " . json_encode(debug_backtrace()));
-          $URLs = apply_filters('shortpixel_image_urls', $URLs, $itemHandler->getId()) ; 
+          $URLs = apply_filters('shortpixel_image_urls', $URLs, $itemHandler->getId()) ;
 
         $requestParameters = array(
             'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
@@ -839,7 +840,10 @@ class ShortPixelAPI {
         $Separator = " qq ";
         $qqPath = preg_replace("/[^ ]/u", $Separator."\$0".$Separator, $Path);
         if(!$qqPath) { //this is not an UTF8 string!! Don't rely on basename either, since if filename starts with a non-ASCII character it strips it off
-            $fileName = end(explode(DIRECTORY_SEPARATOR, $Path));
+
+            // This line is separated because of 'passed by reference' errors otherwise.
+            $pathAr = explode(DIRECTORY_SEPARATOR, $Path);
+            $fileName = end($pathAr);
             $pos = strpos($fileName, $suffix);
             if($pos !== false) {
                 return substr($fileName, 0, $pos);

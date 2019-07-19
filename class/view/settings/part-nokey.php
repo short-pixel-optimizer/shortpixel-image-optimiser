@@ -1,7 +1,7 @@
 <?php
 namespace ShortPixel;
-use ShortPixel\NoticeController as Notice;
-use ShortPixel\ShortPixelLogger as Log;
+use ShortPixel\Notices\NoticeController as Notice;
+use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 $canValidate = false;
 // Several conditions for showing API key.
@@ -16,9 +16,9 @@ else {
 $editApiKey = (! $this->is_constant_key && $showApiKey) ? true : false;
 
 // Notices for fringe cases
-if ($this->hide_api_key && ! $this->is_constant_key)
+if (! $this->is_verifiedkey && $this->hide_api_key && ! $this->is_constant_key)
 {
-  Notice::addError(__('wp-config.php has API key hidden, but no API key has been entered. Please do so, or remove the Hide constant', 'shortpixel-image-optimiser'));
+  Notice::addError(__('wp-config.php is hiding the API key, but no API key was found. Remove the constant, or define the SHORTPIXEL_API_KEY constant as well', 'shortpixel-image-optimiser'));
 }
 elseif ($this->is_constant_key && ! $this->is_verifiedkey)
 {
@@ -82,7 +82,10 @@ if($adminEmail == 'noreply@addendio.com') $adminEmail = false; //hack for the ad
     <?php _e('If you already have an API Key please input it below and press Validate.','shortpixel-image-optimiser');?>
 </p>
 
-<form method="POST" action="<?php echo add_query_arg(array('noheader' => 'true', 'sp-action' => 'action_addkey')) ?>" id="shortpixel-form-nokey">
+<form method="POST" action="<?php echo add_query_arg(array('noheader' => 'true', 'sp-action' => 'action_addkey')) ?>"
+  id="shortpixel-form-nokey">
+  <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
+
 <table class="form-table">
     <tbody>
         <tr>
@@ -111,8 +114,8 @@ if($adminEmail == 'noreply@addendio.com') $adminEmail = false; //hack for the ad
                 <?php } ?>
                     <input type="hidden" name="validate" id="valid" value="validate"/>
                     <span class="spinner" id="pluginemail_spinner" style="float:none;"></span>
-                    <button type="button" id="validate" class="button button-primary" title="<?php _e('Validate the provided API key','shortpixel-image-optimiser');?>"
-                        onclick="ShortPixel.validateKey(this)" <?php echo $canValidate ? "" : "disabled"?> >
+                    <button type="submit" id="validate" class="button button-primary" title="<?php _e('Validate the provided API key','shortpixel-image-optimiser');?>"
+                        >
                         <?php _e('Validate','shortpixel-image-optimiser');?>
                     </button>
 

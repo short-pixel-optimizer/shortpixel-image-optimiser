@@ -1,5 +1,5 @@
 <?php
-use \ShortPixel\ShortPixelLogger as Log;
+use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 class ShortPixelView {
 
@@ -153,6 +153,8 @@ class ShortPixelView {
                         echo('<li class="sp-conflict-plugins-list"><strong>' . $plugin['name'] . '</strong>');
                         echo('<a href="' . $link . '" class="button button-primary">'
                                 . __( $action, 'shortpixel_image_optimiser' ) . '</a>');
+                        if($plugin['details']) echo('<br>');
+                        if($plugin['details']) echo('<span>' . $plugin['details'] . '</span>');
                     }
                     echo("</ul>");
                     break;
@@ -399,7 +401,7 @@ class ShortPixelView {
 
                                     jQuery(".sp-bulk-summary").spTooltip({
                                         tooltipSource: "inline",
-                                        tooltipSourceID: "#sp-bulk-stats"
+                                        tooltipSourceID: "#sp-bulk-stats",
                                     });
                                 });
                                 !function(d,s,id){//Just optimized my site with ShortPixel image optimization plugin
@@ -422,7 +424,7 @@ class ShortPixelView {
                     </div>
                     <?php } ?>
                 </div>
-                <div id="sp-bulk-stats <?php echo $hider ?>" style="display:none">
+                <div id="sp-bulk-stats" class='<?php echo $hider ?>' style="display:none">
                     <?php $this->displayBulkStats($quotaData['totalProcessedFiles'], $quotaData['mainProcessedFiles'], $under5PercentCount, $averageCompression, $savedSpace);?>
                 </div>
             </div>
@@ -614,6 +616,10 @@ class ShortPixelView {
                         <span class="sp-err-title"><?php _e('Error processing file:','shortpixel-image-optimiser');?><br></span>
                         <span class="sp-err-content"><?php echo $message; ?></span> <a class="sp-post-link" href="<?php echo(get_admin_url());?>/post.php?post=__ID__&action=edit" target="_blank">placeholder.png</a>
                     </div>
+                    <div class="bulk-notice-msg bulk-searching">
+                        <img src="<?php echo(plugins_url( 'shortpixel-image-optimiser/res/img/loading-dark-big.gif' ));?>">
+                        <?php _e('Please bear with me. ShortPixel is checking many already optimized images to see if they\'re OK, so the progress bar could stop for a while.','shortpixel-image-optimiser');?><br>
+                    </div>
                 </div>
             </div>
             <div class="bulk-progress bulk-slider-container sp-notice sp-notice-info sp-floating-block sp-full-width">
@@ -664,8 +670,7 @@ class ShortPixelView {
                     <?php } ?>
 
                     <?php
-                    Log::addDebug('bulktype', array('b' => $this->bulkType));
-                    Log::addDebug($this->bulkType);
+                    Log::addDebug('Shortpixel View - Bulktype', array('b' => $this->bulkType));
                     if ($this->bulkType != ShortPixelQueue::BULK_TYPE_RESTORE): ?>
                     <div class="bulk-progress-indicator">
                         <div style="margin-bottom:5px"><?php _e('Average reduction','shortpixel-image-optimiser');?></div>
@@ -716,7 +721,6 @@ class ShortPixelView {
                 <div class="bulk-estimate">
                     &nbsp;<?php echo($message);?>
                 </div>
-                <?php if (true || ($type & 1)) { //now we display the action buttons always when a type of bulk is running ?>
                 <form action='' method='POST' style="display:inline;">
                     <input type="submit" class="button button-primary bulk-cancel"  onclick="clearBulkProcessor();"
                            name="bulkProcessStop" value="Stop" style="margin-left:10px"/>
@@ -728,9 +732,7 @@ class ShortPixelView {
                     <?php }?>
                     <span class="resumeLabel"><?php echo( !$running ? __('Resume: ','shortpixel-image-optimiser') : "");?></span>
                 </form>
-                <?php } else { ?>
-                    <a href="options-general.php?page=wp-shortpixel-settings" class="button button-primary bulk-cancel" style="margin-left:10px"><?php _e('Manage custom folders','shortpixel-image-optimiser');?></a>
-                <?php }?>
+
             </div>
         <?php
     }
@@ -1696,10 +1698,10 @@ class ShortPixelView {
                             <?php _e('Cleanup&Retry','shortpixel-image-optimiser');?>
                             </a> <?php
                         } else {
-                            if($data['status'] == 'retry') { ?>
+                            if($data['status'] == 'retry' && (isset($data['backup']) && $data['backup']) ) { ?>
                             <div style="overflow:hidden">
                                 <a class="button button-smaller sp-action-restore" href="admin.php?action=shortpixel_restore_backup&attachment_ID=<?php echo($id)?>" style="margin-left:5px;"
-                                    title="Cleanup the metadata and return the image to the status before the error.">
+                                    title="<?php _e('Restore Image from Backup', 'shortpixel-image-optimiser') ?>">
                                     <?php _e('Cleanup','shortpixel-image-optimiser');?>
                                 </a>
                                 <?php } ?>
@@ -1714,19 +1716,26 @@ class ShortPixelView {
                 case 'imgOptimized':
                     $excluded = (isset($data['excludeSizes']) ? count($data['excludeSizes']) : 0);
                     $successText = $this->getSuccessText($data['percent'],$data['bonus'],$data['type'],$data['thumbsOpt'],$data['thumbsTotal'], $data['retinasOpt'], $data['excludeSizes']);
-                    $missingThumbs = $excludeSizes = '';
+                    $todoSizes = $missingThumbs = $excludeSizes = '';
                     if($extended) {
+                        if(isset($data['thumbsToOptimizeList']) && count($data['thumbsToOptimizeList'])) {
+                            $todoSizes .= "<br><span style='word-break: break-all;'> <span style='font-weight: bold;'>" . __("To optimize:", 'shortpixel-image-optimiser') . "</span>";
+                            foreach($data['thumbsToOptimizeList'] as $todoItem) {
+                                $todoSizes .= "<br> &#8226;&nbsp;" . $todoItem;
+                            }
+                            $excludeSizes .= '</span>';
+                        }
                         if(isset($data['excludeSizes'])) {
-                            $excludeSizes .= "<br><span> <span style='font-weight: bold;'>" . __("Excluded thumbnails:", 'shortpixel-image-optimiser') . "</span>";
+                            $excludeSizes .= "<br><span style='word-break: break-all;'> <span style='font-weight: bold;'>" . __("Excluded thumbnails:", 'shortpixel-image-optimiser') . "</span>";
                             foreach($data['excludeSizes'] as $excludedItem) {
-                                $excludeSizes .= "<br> &#8226; " . $excludedItem;
+                                $excludeSizes .= "<br> &#8226;&nbsp;" . $excludedItem;
                             }
                             $excludeSizes .= '</span>';
                         }
                         if(count($data['thumbsMissing'])) {
-                            $missingThumbs .= "<br><span> <span style='font-weight: bold;'>" . __("Missing thumbnails:", 'shortpixel-image-optimiser') . "</span>";
+                            $missingThumbs .= "<br><span style='word-break: break-all;'> <span style='font-weight: bold;'>" . __("Missing thumbnails:", 'shortpixel-image-optimiser') . "</span>";
                             foreach($data['thumbsMissing'] as $miss) {
-                                $missingThumbs .= "<br> &#8226; " . $miss;
+                                $missingThumbs .= "<br> &#8226&nbsp;" . $miss;
                             }
                             $missingThumbs .= '</span>';
                         }
@@ -1734,7 +1743,7 @@ class ShortPixelView {
                                 . "<br>EXIF: " . ($data['exifKept'] ? __('kept','shortpixel-image-optimiser') :  __('removed','shortpixel-image-optimiser'))
                                 . ($data['png2jpg'] ? '<br>' . __('Converted from PNG','shortpixel-image-optimiser'): '')
                                 . "<br>" . __("Optimized on", 'shortpixel-image-optimiser') . ": " . $data['date']
-                                . $excludeSizes . $missingThumbs;
+                                . $todoSizes . $excludeSizes . $missingThumbs;
                     }
                     $this->renderListCell($id, $data['status'], $data['showActions'], $data['thumbsToOptimize'],
                             $data['backup'], $data['type'], $data['invType'], $successText);

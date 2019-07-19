@@ -4,8 +4,8 @@
  * thanks to the Responsify WP plugin for some of the code
  */
 
-use ShortPixel\DebugItem as DebugItem;
-use ShortPixel\ShortPixelLogger as Log;
+//use ShortPixel\DebugItem as DebugItem;
+use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 class ShortPixelImgToPictureWebp
 {
@@ -28,6 +28,7 @@ class ShortPixelImgToPictureWebp
 
     public static function convert($content)
     {
+
         // Don't do anything with the RSS feed.
         if (is_feed() || is_admin()) {
             Log::addInfo('SPDBG convert is_feed or is_admin');
@@ -38,7 +39,7 @@ class ShortPixelImgToPictureWebp
         if ($new_content !== false)
           $content = $new_content;
 
-        $content = preg_replace_callback('/<img[^>]*>/', array('self', 'convertImage'), $content);
+        $content = preg_replace_callback('/<img[^>]*>/i', array('self', 'convertImage'), $content);
         //$content = preg_replace_callback('/background.*[^:](url\(.*\)[,;])/im', array('self', 'convertInlineStyle'), $content);
 
         // [BS] No callback because we need preg_match_all
@@ -128,9 +129,6 @@ class ShortPixelImgToPictureWebp
         $sizes = $sizesInfo['value'];
         $sizesPrefix = $sizesInfo['prefix'];
 
-        $altAttr = isset($img['alt']) && strlen($img['alt']) ? ' alt="' . $img['alt'] . '"' : '';
-        $idAttr = isset($img['id']) && strlen($img['id']) ? ' id="' . $img['id'] . '"' : '';
-
         //check if there are webps
         /*$id = $thisClass::url_to_attachment_id( $src );
         if(!$id) {
@@ -179,6 +177,11 @@ class ShortPixelImgToPictureWebp
             Log::addInfo('SPDBG baseurl doesn\'t match ' . $src);
         }
 
+        //some attributes should not be moved from <img>
+        $altAttr = isset($img['alt']) && strlen($img['alt']) ? ' alt="' . $img['alt'] . '"' : '';
+        $idAttr = isset($img['id']) && strlen($img['id']) ? ' id="' . $img['id'] . '"' : '';
+        $heightAttr = isset($img['height']) && strlen($img['height']) ? ' height="' . $img['height'] . '"' : '';
+        $widthAttr = isset($img['width']) && strlen($img['width']) ? ' width="' . $img['width'] . '"' : '';
 
         // We don't wanna have src-ish attributes on the <picture>
         unset($img['src']);
@@ -186,8 +189,12 @@ class ShortPixelImgToPictureWebp
         unset($img['data-lazy-src']);
         unset($img['srcset']);
         unset($img['sizes']);
+        //nor the ones that belong to <img>
         unset($img['alt']);
         unset($img['id']);
+        unset($img['width']);
+        unset($img['height']);
+
         $srcsetWebP = '';
 
         if ($srcset) {
@@ -243,7 +250,7 @@ class ShortPixelImgToPictureWebp
         return '<picture ' . self::create_attributes($img) . '>'
         .'<source ' . $srcsetPrefix . 'srcset="' . $srcsetWebP . '"' . ($sizes ? ' ' . $sizesPrefix . 'sizes="' . $sizes . '"' : '') . ' type="image/webp">'
         .'<source ' . $srcsetPrefix . 'srcset="' . $srcset . '"' . ($sizes ? ' ' . $sizesPrefix . 'sizes="' . $sizes . '"' : '') . '>'
-        .'<img ' . $srcPrefix . 'src="' . $src . '" ' . self::create_attributes($img) . $idAttr . $altAttr
+        .'<img ' . $srcPrefix . 'src="' . $src . '" ' . self::create_attributes($img) . $idAttr . $altAttr . $heightAttr . $widthAttr
             . (strlen($srcset) ? ' srcset="' . $srcset . '"': '') . (strlen($sizes) ? ' sizes="' . $sizes . '"': '') . '>'
         .'</picture>';
     }
@@ -403,6 +410,12 @@ class ShortPixelImgToPictureWebp
         @$dom->loadHTML($image_node);
         $image = $dom->getElementsByTagName('img')->item(0);
         $attributes = array();
+
+        /* This can happen with mismatches, or extremely malformed HTML.
+        In customer case, a javascript that did  for (i<imgDefer) --- </script> */
+        if (! is_object($image))
+          return false;
+
         foreach ($image->attributes as $attr) {
             $attributes[$attr->nodeName] = $attr->nodeValue;
         }

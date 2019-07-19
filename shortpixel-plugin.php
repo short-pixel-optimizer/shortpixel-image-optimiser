@@ -1,7 +1,7 @@
 <?php
 namespace ShortPixel;
-use ShortPixel\ShortPixelLogger as Log;
-use ShortPixel\NoticeController as Notice;
+use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\Notices\NoticeController as Notices;
 
 
 /** Plugin class
@@ -11,7 +11,7 @@ use ShortPixel\NoticeController as Notice;
 class ShortPixelPlugin
 {
   static $instance;
-  private $paths = array('class', 'class/controller', 'class/external');
+  private $paths = array('class', 'class/controller', 'class/external'); // classes that are autoloaded
 
   protected $is_noheaders = false;
 
@@ -41,8 +41,8 @@ class ShortPixelPlugin
     return self::$instance;
   }
 
-
-  public function initRuntime()
+  /** Init Runtime. Loads all classes. */
+  protected function initRuntime()
   {
       $plugin_path = plugin_dir_path(SHORTPIXEL_PLUGIN_FILE);
       foreach($this->paths as $short_path)
@@ -55,7 +55,6 @@ class ShortPixelPlugin
           foreach($it as $file)
           {
             $file_path = $file->getRealPath();
-
             if ($file->isFile() && pathinfo($file_path, PATHINFO_EXTENSION) == 'php')
             {
               require_once($file_path);
@@ -63,6 +62,10 @@ class ShortPixelPlugin
           }
         }
       }
+
+      // Loads all subclassed controllers. This is used for slug-based discovery of which controller to run
+      $controllerClass = \ShortPixelTools::namespaceit('ShortPixelController');
+      $controllerClass::init();
   }
 
   /** Hooks for all WordPress related hooks
@@ -76,10 +79,17 @@ class ShortPixelPlugin
 
   }
 
+  /** Hook in our admin pages */
   public function admin_pages()
   {
       // settings page
       add_options_page( __('ShortPixel Settings','shortpixel-image-optimiser'), 'ShortPixel', 'manage_options', 'wp-shortpixel-settings', array($this, 'route'));
+  }
+
+  /** PluginRunTime. Items that should be initialized *only* when doing our pages and territory. */
+  protected function initPluginRunTime()
+  {
+
   }
 
   /** All scripts should be registed, not enqueued here (unless global wp-admin is needed )
@@ -102,10 +112,17 @@ class ShortPixelPlugin
 
   public function admin_notices()
   {
-      $noticeControl = Notice::getInstance();
+      $noticeControl = Notices::getInstance();
+      $noticeControl->loadIcons(array(
+          'normal' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/robo-cool.png', SHORTPIXEL_PLUGIN_FILE) . '">',
+          'success' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/robo-cool.png', SHORTPIXEL_PLUGIN_FILE) . '">',
+          'warning' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/robo-scared.png', SHORTPIXEL_PLUGIN_FILE) . '">',
+          'error' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/robo-scared.png', SHORTPIXEL_PLUGIN_FILE) . '">',
+      ));
 
       if ($noticeControl->countNotices() > 0)
       {
+          wp_enqueue_style('shortpixel-admin'); // queue on places when it's not our runtime.
           foreach($noticeControl->getNotices() as $notice)
           {
             echo $notice->getForDisplay();
@@ -135,13 +152,11 @@ class ShortPixelPlugin
     if ($this->is_noheaders)  // fail silently, if this is a no-headers request.
       return;
 
-
     if (wp_script_is($name, 'registered'))
     {
       wp_enqueue_script($name);
     }
     else {
-
       Log::addWarn("Script $name was asked for, but not registered");
     }
   }
@@ -154,6 +169,9 @@ class ShortPixelPlugin
   {
       global $plugin_page;
       global $shortPixelPluginInstance; //brrr @todo Find better solution for this some day.
+
+      $this->initPluginRunTime();
+
       $default_action = 'load'; // generic action on controller.
       $action = isset($_REQUEST['sp-action']) ? sanitize_text_field($_REQUEST['sp-action']) : $default_action;
       Log::addDebug('Request', $_REQUEST);

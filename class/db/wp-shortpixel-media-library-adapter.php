@@ -1,4 +1,6 @@
 <?php
+use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+
 
 class WpShortPixelMediaLbraryAdapter {
 
@@ -233,13 +235,68 @@ class WpShortPixelMediaLbraryAdapter {
 
     public static function getPostMetaSlice($startId, $endId, $limit) {
         global $wpdb;
+        $time = microtime(true);
         $queryPostMeta = "SELECT * FROM " . $wpdb->prefix . "postmeta pm
             INNER JOIN " . $wpdb->prefix . "posts p ON p.ID = pm.post_id
             WHERE ( p.ID <= $startId AND p.ID >= $endId )
               AND ( pm.meta_key = '_wp_attached_file' OR pm.meta_key = '_wp_attachment_metadata' )
             ORDER BY pm.post_id DESC
             LIMIT " . $limit;
-        return $wpdb->get_results($queryPostMeta);
+        $result =  $wpdb->get_results($queryPostMeta);
+        $time_end = microtime(true);
+    //    Log::addDebug('Post Meta Slice query took ' . ($time_end-$time) . ' sec. - Result count ' . count($result), array( $queryPostMeta));
+        return $result;
+    }
+
+    public static function getPostMetaJoinLess($startId, $endId, $limit)
+    {
+      global $wpdb;
+      $time = microtime(true);
+      $sql =  "SELECT ID FROM " . $wpdb->prefix . "posts WHERE ID <= %d AND ID >= %d ORDER BY ID DESC LIMIT %d ";
+      $sql = $wpdb->prepare($sql, $startId, $endId, $limit);
+      $result = $wpdb->get_col($sql);
+
+      if (is_null($result))
+        return array();
+
+      $id_placeholders = implode( ', ', array_fill( 0, count( $result ), '%d'));
+
+      $sqlmeta = "SELECT DISTINCT post_id, meta_key, meta_value FROM " . $wpdb->prefix . "postmeta where (meta_key = %s or meta_key = %s) and post_id in (" . $id_placeholders . ") order by post_id DESC";
+
+      $placeholders = array_merge(array('_wp_attached_file', '_wp_attachment_metadata'), array_values($result));
+      $sqlmeta = $wpdb->prepare($sqlmeta, $placeholders);
+      $metaresult = $wpdb->get_results($sql);
+
+      $time_end = microtime(true);
+
+  //    Log::addDebug('Post Meta JoinLESS query took ' . ($time_end-$time) . ' sec. - Result count ' . count($metaresult), array($sql, $sqlmeta));
+
+      return $metaresult;
+    }
+
+    public static function getPostsJoinLessReverse($startId, $endId, $limit)
+    {
+      global $wpdb;
+      $time = microtime(true);
+
+      $sqlmeta = "SELECT DISTINCT post_id FROM " . $wpdb->prefix . "postmeta where (meta_key = %s or meta_key = %s) and post_id <= %d and post_id >= %d order by post_id DESC LIMIT %d";
+      $sqlmeta = $wpdb->prepare($sqlmeta, '_wp_attached_file', '_wp_attachment_metadata', $startId, $endId, $limit);
+
+      $result = $wpdb->get_col($sqlmeta);
+
+      $id_placeholders = implode( ', ', array_fill( 0, count( $result ), '%d'));
+
+      $sql = 'SELECT ID from ' . $wpdb->prefix . 'posts where ID in (' . $id_placeholders . ') ORDER BY ID DESC';
+      $sql = $wpdb->prepare($sql, array_values($result));
+
+      $postresult = $wpdb->get_col($sql);
+
+      $postAr = array_intersect($result, $postresult);
+
+      $time_end = microtime(true);
+  //    Log::addDebug('Post Meta JoinLESS **REVERSE** query took ' . ($time_end-$time) . ' sec. - Result count ' . count($postAr), array($sql, $sqlmeta));
+
+      return $postAr;
     }
 
     public static function getSizesNotExcluded($sizes, $exclude = false) {

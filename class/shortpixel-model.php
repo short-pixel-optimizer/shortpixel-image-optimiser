@@ -1,8 +1,6 @@
 <?php
 namespace ShortPixel;
-use ShortPixel\ShortPixelLogger as Log;
-use ShortPixel\DebugItem as DebugItem;
-
+use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 abstract class ShortPixelModel
 {

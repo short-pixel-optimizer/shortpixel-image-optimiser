@@ -6,6 +6,11 @@ class HelpScout
 {
   public static function outputBeacon($apiKey)
   {
+      global $shortPixelPluginInstance;
+      $dismissed = $shortPixelPluginInstance->getSettings()->dismissedNotices ? $shortPixelPluginInstance->getSettings()->dismissedNotices : array();
+      if(isset($dismissed['help'])) {
+          return;
+      }
     ?>
     <style>
            .shortpixel-hs-blind {

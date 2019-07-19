@@ -113,7 +113,15 @@ $quotaData = $this->quotaData;
                     </td>
                 </tr>
                 <tr>
-                    <th><a href="https://<?php echo(SHORTPIXEL_API);?>/v2/report.php?key=<?php echo($this->hide_api_key ? '' : $view->data->apiKey);?>" target="_blank">
+                <?php
+
+                  if ($this->hide_api_key)
+                    $link = 'https://shortpixel.com/login';
+                  else {
+                    $link = 'https://' . SHORTPIXEL_API . '/v2/report.php?key=' . $view->data->apiKey;
+                  }
+                ?>
+                    <th><a href="<?php echo $link ?>" target="_blank">
                             <?php _e('See report (last 40 days)','shortpixel-image-optimiser');?>
                         </a></th>
                     <td>&nbsp;</td>

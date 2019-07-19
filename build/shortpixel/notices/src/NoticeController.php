@@ -1,25 +1,54 @@
 <?php
-namespace ShortPixel;
-use ShortPixel\ShortPixelLogger as Log;
+namespace ShortPixel\Notices;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
-class NoticeController extends ShortPixelController
+class NoticeController //extends ShortPixelController
 {
-  protected static $notices;
+  protected static $notices = array();
   protected static $instance = null;
+  protected static $cssHookLoaded = false; // prevent css output more than once.
+
   public $notice_count = 0;
 
   protected $has_stored = false;
 
+  protected $notice_option = ''; // The wp_options name for notices here.
+
+  /** For backward compat. Never call constructor directly. */
   public function __construct()
   {
-      $this->loadModel('notice');
+  //    $this->loadModel('notice');
+      $ns = __NAMESPACE__;
+      $ns = substr($ns, 0, strpos($ns, '\\')); // try to get first part of namespace
+      $this->notice_option = $ns . '-notices';
+
       $this->loadNotices();
+      //$this->loadConfig();
+  }
+
+  /** Load Notices Config File, if any
+  *
+  * [ Future Use ]
+  */
+  public function loadConfig()
+  {
+    if (file_exists('../notice_config.json'))
+    {
+      $config = file_get_contents('../notice_config.json');
+      $json_config = json_decode($config);
+    }
+  }
+
+  public function loadIcons($icons)
+  {
+      foreach($icons as $name => $icon)
+        NoticeModel::setIcon($name, $icon);
   }
 
 
   protected function loadNotices()
   {
-    $notices = get_option('shortpixel-notices', false);
+    $notices = get_option($this->notice_option, false);
     $cnotice = (is_array($notices)) ? count($notices) : 0;
     Log::addDebug('Notice Control - #num notices' . $cnotice);
     if ($notices !== false)
@@ -33,6 +62,7 @@ class NoticeController extends ShortPixelController
     }
     $this->countNotices();
   }
+
 
   public function addNotice($message, $code)
   {
@@ -50,7 +80,7 @@ class NoticeController extends ShortPixelController
     if (! is_array(self::$notices) || count(self::$notices) == 0)
     {
       if ($this->has_stored)
-        delete_option('shortpixel-notices');
+        delete_option($this->notice_option);
 
       return 0;
     }
@@ -64,7 +94,7 @@ class NoticeController extends ShortPixelController
       }
     }
 
-    update_option('shortpixel-notices', $new_notices);
+    update_option($this->notice_option, $new_notices);
     self::$notices = $new_notices;
 
     return $this->countNotices();
@@ -129,6 +159,36 @@ class NoticeController extends ShortPixelController
     return $notice;
 
   }
+
+  public function admin_notices()
+  {
+      if ($this->countNotices() > 0)
+      {
+          if (! self::$cssHookLoaded)
+          {
+            add_action('admin_print_footer_scripts', array($this, 'printNoticeStyle'));
+            self::$cssHookLoaded = true;
+          }
+          foreach($this->getNotices() as $notice)
+          {
+            echo $notice->getForDisplay();
+          }
+      }
+      $this->update(); // puts views, and updates
+  }
+
+  public function printNoticeStyle()
+  {
+     if (file_exists(__DIR__ . '/css/notices.css'))
+     {
+       echo '<style>' . file_get_contents(__DIR__ . '/css/notices.css') . '</style>';
+     }
+     else {
+       Log::addDebug('Notices : css/notices.css could not be loaded');
+     }
+  }
+
+
 
 
 }

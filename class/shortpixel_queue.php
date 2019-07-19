@@ -1,9 +1,10 @@
 <?php
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 class ShortPixelQueue {
 
-    private $ctrl;
-    private $settings;
+    protected $ctrl;
+    protected $settings;
 
     const BULK_TYPE_OPTIMIZE = 0;
     const BULK_TYPE_RESTORE = 1;
@@ -26,6 +27,7 @@ class ShortPixelQueue {
     }
 
     public static function get() {
+
         $fp = self::openQ(LOCK_SH);
         if(!$fp) return array();
         $itemsRaw = fgets($fp);
@@ -71,6 +73,7 @@ class ShortPixelQueue {
     }
 
     protected static function openQ($lock = LOCK_EX) {
+
         $queueName = SHORTPIXEL_UPLOADS_BASE . "/.shortpixel-q-" . get_current_blog_id();
          $fp = @fopen($queueName, "r+");
         if(!$fp) {
@@ -343,7 +346,7 @@ class ShortPixelQueue {
         return $this->settings->bulkType;
     }
 
-    // hack 
+    // hack
     public function getBulkTypeForDisplay()
     {
         $bulk = $this->settings->bulkType;
@@ -366,7 +369,7 @@ class ShortPixelQueue {
         $bulkStartId = $this->getFlagBulkId();
         $this->settings->cancelPointer = $cancelPointer;//we save this so we can resume bulk processing
         $this->settings->skipToCustom = NULL;
-        WPShortPixel::log("PAUSE: Pointer = ".$this->settings->cancelPointer);
+        Log::addDebug("PAUSE: Pointer = ".$this->settings->cancelPointer);
         //remove the bulk items from prio queue
         foreach($this->get() as $qItem) {
             if($qItem < $bulkStartId) {
@@ -378,7 +381,7 @@ class ShortPixelQueue {
 
     public function cancelBulk() {
         $this->pauseBulk();
-        WPShortPixel::log("STOP, delete pointer.");
+        Log::addDebug("STOP, delete pointer.");
         $this->settings->cancelPointer = NULL;
     }
 

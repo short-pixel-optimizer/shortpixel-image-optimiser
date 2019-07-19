@@ -1,4 +1,6 @@
 <?php
+use ShortPixel\Notices\NoticeController as Notices;
+
 
 if( ! class_exists( 'WP_List_Table' ) ) {
     require_once( ABSPATH . 'wp-admin/includes/class-wp-list-table.php' );
@@ -260,15 +262,15 @@ class ShortPixelListTable extends WP_List_Table {
     }
 
     public function action_optimize_image( $id ) {
-        $this->ctrl->optimizeCustomImage($id);
+        return $this->ctrl->optimizeCustomImage($id);
     }
 
     public function action_restore_image( $id ) {
-        $this->ctrl->doCustomRestore($id);
+        return $this->ctrl->doCustomRestore($id);
     }
 
     public function action_redo_image( $id, $type = false ) {
-        $this->ctrl->redo('C-' . $id, $type);
+        return $this->ctrl->redo('C-' . $id, $type);
     }
 
     public function process_actions() {
@@ -291,7 +293,10 @@ class ShortPixelListTable extends WP_List_Table {
                 if (!wp_verify_nonce($nonce, 'sp_restore_image')) {
                     die('Error.');
                 } else {
-                    $this->action_restore_image(absint($_GET['image']));
+                    if($this->action_restore_image(absint($_GET['image'])))
+                    {
+                      Notices::addSuccess(__('File Successfully restored', 'shortpixel-image-optimiser'));
+                    }
                     wp_redirect($redirect_url);
                     exit;
                 }

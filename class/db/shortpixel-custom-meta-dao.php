@@ -1,5 +1,5 @@
 <?php
-use ShortPixel\ShortPixelLogger as Log;
+use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 
 class ShortPixelCustomMetaDao {
@@ -482,6 +482,7 @@ class ShortPixelCustomMetaDao {
         $tableSuffix = "";
         $tableSuffix = $metaClass::TABLE_SUFFIX;
         $prefix = $this->db->getPrefix();
+
 //        eval( '$tableSuffix = ' . $metaClass . '::TABLE_SUFFIX;'); // horror!
         $sql = "UPDATE " . $prefix . "shortpixel_" . $tableSuffix . " SET ";
         foreach(self::$fields[$tableSuffix] as $field => $type) {
@@ -500,12 +501,14 @@ class ShortPixelCustomMetaDao {
         $sql = rtrim($sql, ",");
         $sql .= " WHERE id = %d";
         $params[] = $meta->getId();
+        Log::addDebug('Update Custom Meta' . $sql, $params);
         $this->db->query($sql, $params);
     }
 
     public function delete($meta) {
         $metaClass = get_class($meta);
         $tableSuffix = "";
+        // @todo Why O why 
         eval( '$tableSuffix = ' . $metaClass . '::TABLE_SUFFIX;');
         $sql = "DELETE FROM {$this->db->getPrefix()}shortpixel_" . $tableSuffix . " WHERE id = %d";
         $this->db->query($sql, array($meta->getId()));

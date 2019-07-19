@@ -28,7 +28,7 @@
                   if($showApiKey) {
                       $canValidate = true;?>
                       <input name="key" type="text" id="key" value="<?php echo( $view->data->apiKey );?>"
-                         class="regular-text" <?php echo($editApiKey ? "" : 'disabled') ?> <?php echo $this->is_verifiedkey ? 'onkeyup="ShortPixel.apiKeyChanged()"' : '' ?> >
+                         class="regular-text" <?php echo($editApiKey ? "" : 'disabled') ?>  >
                     <?php
                       }
                       elseif(defined("SHORTPIXEL_API_KEY")) {
@@ -43,10 +43,10 @@
                     <?php } ?>
                         <input type="hidden" name="validate" id="valid" value=""/>
                         <span class="spinner" id="pluginemail_spinner" style="float:none;"></span>
-                        <button type="button" id="validate" class="button button-primary" title="<?php _e('Validate the provided API key','shortpixel-image-optimiser');?>"
+                         <!-- <button type="button" id="validate" class="button button-primary" title="<?php _e('Validate the provided API key','shortpixel-image-optimiser');?>"
                             onclick="ShortPixel.validateKey(this)" <?php echo $canValidate ? "" : "disabled"?> <?php echo $this->is_verifiedkey ? 'style="display:none;"' : '' ?>>
                             <?php _e('Validate','shortpixel-image-optimiser');?>
-                        </button>
+                        </button> -->
                         <span class="shortpixel-key-valid" <?php echo $this->is_verifiedkey ? '' : 'style="display:none;"' ?>>
                             <span class="dashicons dashicons-yes"></span><?php _e('Your API key is valid.','shortpixel-image-optimiser');?>
                         </span>
