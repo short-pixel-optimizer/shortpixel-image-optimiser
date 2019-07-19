@@ -129,9 +129,6 @@ class ShortPixelImgToPictureWebp
         $sizes = $sizesInfo['value'];
         $sizesPrefix = $sizesInfo['prefix'];
 
-        $altAttr = isset($img['alt']) && strlen($img['alt']) ? ' alt="' . $img['alt'] . '"' : '';
-        $idAttr = isset($img['id']) && strlen($img['id']) ? ' id="' . $img['id'] . '"' : '';
-
         //check if there are webps
         /*$id = $thisClass::url_to_attachment_id( $src );
         if(!$id) {
@@ -180,6 +177,11 @@ class ShortPixelImgToPictureWebp
             Log::addInfo('SPDBG baseurl doesn\'t match ' . $src);
         }
 
+        //some attributes should not be moved from <img>
+        $altAttr = isset($img['alt']) && strlen($img['alt']) ? ' alt="' . $img['alt'] . '"' : '';
+        $idAttr = isset($img['id']) && strlen($img['id']) ? ' id="' . $img['id'] . '"' : '';
+        $heightAttr = isset($img['height']) && strlen($img['height']) ? ' height="' . $img['height'] . '"' : '';
+        $widthAttr = isset($img['width']) && strlen($img['width']) ? ' width="' . $img['width'] . '"' : '';
 
         // We don't wanna have src-ish attributes on the <picture>
         unset($img['src']);
@@ -187,6 +189,7 @@ class ShortPixelImgToPictureWebp
         unset($img['data-lazy-src']);
         unset($img['srcset']);
         unset($img['sizes']);
+        //nor the ones that belong to <img>
         unset($img['alt']);
         unset($img['id']);
         unset($img['width']);
@@ -247,7 +250,7 @@ class ShortPixelImgToPictureWebp
         return '<picture ' . self::create_attributes($img) . '>'
         .'<source ' . $srcsetPrefix . 'srcset="' . $srcsetWebP . '"' . ($sizes ? ' ' . $sizesPrefix . 'sizes="' . $sizes . '"' : '') . ' type="image/webp">'
         .'<source ' . $srcsetPrefix . 'srcset="' . $srcset . '"' . ($sizes ? ' ' . $sizesPrefix . 'sizes="' . $sizes . '"' : '') . '>'
-        .'<img ' . $srcPrefix . 'src="' . $src . '" ' . self::create_attributes($img) . $idAttr . $altAttr
+        .'<img ' . $srcPrefix . 'src="' . $src . '" ' . self::create_attributes($img) . $idAttr . $altAttr . $heightAttr . $widthAttr
             . (strlen($srcset) ? ' srcset="' . $srcset . '"': '') . (strlen($sizes) ? ' sizes="' . $sizes . '"': '') . '>'
         .'</picture>';
     }
