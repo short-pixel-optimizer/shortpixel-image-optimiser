@@ -3098,6 +3098,8 @@ class WPShortPixel {
   RewriteCond %{HTTP_USER_AGENT} "Google Page Speed Insights" [OR]
   # OR does this browser explicitly support webp
   RewriteCond %{HTTP_ACCEPT} image/webp
+  # AND NOT MS EDGE 42/17 - doesnt work.
+  RewriteCond %{HTTP_USER_AGENT} !Edge/17
   # AND is the request a jpg or png?
   RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png)$
   # AND does a .ext.webp image exist?
@@ -3109,6 +3111,7 @@ class WPShortPixel {
   RewriteCond %{HTTP_USER_AGENT} Chrome [OR]
   RewriteCond %{HTTP_USER_AGENT} "Google Page Speed Insights" [OR]
   RewriteCond %{HTTP_ACCEPT} image/webp
+  RewriteCond %{HTTP_USER_AGENT} !Edge/17
   # AND is the request a jpg or png? (also grab the basepath %1 to match in the next rule)
   RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png)$
   # AND does a .ext.webp image exist?
