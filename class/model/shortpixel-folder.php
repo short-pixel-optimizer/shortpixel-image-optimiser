@@ -60,6 +60,7 @@ class ShortPixelFolder extends ShortPixelEntity{
 
     }
 
+    /** @todo This function is double with wp-short-pixel - deleteDir */
     public static function deleteFolder($dirname) {
         if (is_dir($dirname))
             $dir_handle = opendir($dirname);

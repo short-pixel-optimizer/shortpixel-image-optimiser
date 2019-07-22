@@ -24,7 +24,7 @@ class WPShortPixel {
 
     public function __construct() {
         $this->timer = time();
-        
+
 
         if (Log::debugIsActive()) {
             $this->jsSuffix = '.js'; //use unminified versions for easier debugging
@@ -3833,6 +3833,7 @@ class WPShortPixel {
     /** Remove a directory
     * @param string $dirPath Path of directory to remove.
     * @todo Part of folder model.
+    * @todo Dangerous function to have exposed as public.
     */
     public static function deleteDir($dirPath) {
         if (substr($dirPath, strlen($dirPath) - 1, 1) != '/') {

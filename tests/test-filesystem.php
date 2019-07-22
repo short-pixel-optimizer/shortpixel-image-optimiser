@@ -9,7 +9,6 @@ class FileSystemTest extends  WP_UnitTestCase
 
   public function setUp()
   {
-
     $this->fs = new ShortPixel\FileSystemController();
     $this->root = vfsStream::setup('root', null, $this->getTestFiles() );
   }
@@ -18,7 +17,20 @@ class FileSystemTest extends  WP_UnitTestCase
   {
       $uploaddir = wp_upload_dir();
       $dir = $uploaddir['basedir'];
-    //  $this->removeDir($dir);
+  }
+
+  public function setupBackUps()
+  {
+    $backup = $this->fs->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
+    $result = $backup->check(true);
+var_dump($result);
+    //$this->assertTrue($result);
+  //  $this->assertDirectoryExists(SHORTPIXEL_BACKUP_FOLDER);
+  }
+
+  public function finishBackups()
+  {
+    $this->removeDir('/tmp/wordpress/wp-content/uploads/ShortpixelBackups/');
   }
 
   private function removeDir($path)
@@ -166,10 +178,12 @@ class FileSystemTest extends  WP_UnitTestCase
       $this->assertEquals($file->getFileDir(), $directory);
   }
 
-  /** Not testable on VFS due to home-path checks */
+  /** Not testable on VFS due to home-path checks
+  *
+   */
   public function testsetAndGetBackup()
   {
-
+      $this->setupBackUps();
       //$filepath = $this->root->url() . '/images/image3.png';
       $post = $this->factory->post->create_and_get();
       $attachment_id = $this->factory->attachment->create_upload_object( __DIR__ . '/assets/test-image.jpg', $post->ID );
@@ -190,12 +204,12 @@ class FileSystemTest extends  WP_UnitTestCase
       $this->assertIsObject($directory);
       $this->assertDirectoryExists((string) $directory);
 
-      \ShortPixelApi::backupImage($file, array());
+      \ShortPixelApi::backupImage($file, array($file));
 
-      $this->assertFileExists( $directory->getPath . '/' . $file->getFileName()) ;
+      $this->assertFileExists( $directory->getPath() . '/' . $file->getFileName()) ;
 
     //$URLsAndPATHs = $itemHandler->getURLsAndPATHs(false);
-
+      $this->finishBackups();
   }
 
 
