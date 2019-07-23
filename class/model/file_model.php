@@ -17,7 +17,8 @@ class FileModel extends ShortPixelModel
 
   // File info
   protected $fullpath;
-  protected $filename;
+  protected $filename; // filename + extension
+  protected $filebase; // filename without extension
   protected $directory;
   protected $extension;
 
@@ -46,6 +47,7 @@ class FileModel extends ShortPixelModel
       $this->exists = true;
       $info = pathinfo($this->fullpath);
       $this->filename = isset($info['basename']) ? $info['basename'] : null;
+      $this->filebase = isset($info['filename']) ? $info['filename'] : null;
       $this->extension = isset($info['extension']) ? $info['extension'] : null;
       $this->directory = isset($info['dirname']) ? new DirectoryModel($info['dirname']) : null;
       Log::addDebug('File info', array($info));
@@ -166,6 +168,11 @@ class FileModel extends ShortPixelModel
   public function getFileName()
   {
     return $this->filename;
+  }
+
+  public function getFileBase()
+  {
+    return $this->filebase; 
   }
 
   public function getExtension()

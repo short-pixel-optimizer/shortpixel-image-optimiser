@@ -5,7 +5,7 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 /* Model for Directories
 *
 * For all low-level operations on directories
-* Private model of FileSystemController. Please get your directories via there. 
+* Private model of FileSystemController. Please get your directories via there.
 *
 */
 
@@ -38,6 +38,7 @@ class DirectoryModel extends ShortPixelModel
     return (string) $this->path;
   }
 
+  /** Returns path with trailing slash */
   public function getPath()
   {
     return $this->path;

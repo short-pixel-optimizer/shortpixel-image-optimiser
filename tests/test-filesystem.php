@@ -48,8 +48,12 @@ var_dump($result);
 
   private function getTestFiles()
   {
+    $content = file_get_contents(__DIR__ . '/assets/test-image.jpg');
+
     $ar = array(
-        'images' => array('image1.jpg' => '1234', 'image2.jpg' => '1234', 'image3.png' => '1345'),
+        'images' => array('image1.jpg' => $content, 'image2.jpg' => $content, 'image3.png' => $content,
+                          'image1.ext.jpg' => $content,
+        ),
     );
     return $ar;
   }
@@ -93,7 +97,6 @@ var_dump($result);
 
     $this->assertTrue($directory->is_writable());
     $this->assertDirectoryIsWritable($dirpath);
-
   }
 
   public function testFileBasic()
@@ -109,8 +112,18 @@ var_dump($result);
       $this->assertEquals($file->getFullPath(), $filepath);
       $this->assertEquals($file->getExtension(), 'jpg');
       $this->assertEquals($file->getFileName(), 'image1.jpg');
-
+      $this->assertEquals($file->getFileBase(), 'image1');
       $this->assertEquals( (string) $file->getFileDir(), $filedir);
+
+      $filepath2 = $this->root->url() . '/images/image1.ext.jpg';
+      $file2 = $this->fs->getFile($filepath2);
+
+      $this->assertTrue($file2->exists());
+      $this->assertEquals($file2->getFullPath(), $filepath2);
+      $this->assertEquals($file2->getExtension(), 'jpg');
+      $this->assertEquals($file2->getFileName(), 'image1.ext.jpg');
+      $this->assertEquals($file2->getFileBase(), 'image1.ext');
+      $this->assertEquals( (string) $file2->getFileDir(), $filedir);
 
 
   }

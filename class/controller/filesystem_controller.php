@@ -63,8 +63,9 @@ Class FileSystemController extends ShortPixelController
       }
     }
 
+    /** Not in use yet, do not use. Future replacement. */ 
     public function createBackUpFolder($folder = SHORTPIXEL_BACKUP_FOLDER)
     {
-      
+
     }
 }

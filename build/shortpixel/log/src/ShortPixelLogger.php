@@ -170,7 +170,7 @@ namespace ShortPixel\ShortPixelLogger;
 
       $line = $this->formatLine($items);
 
-      if ($this->logPath)
+      if ($this->logPath && file_exists($this->logPath))
       {
         file_put_contents($this->logPath,$line, FILE_APPEND);
       }
