@@ -65,10 +65,7 @@ else
 
 define('SHORTPIXEL_MAX_EXECUTION_TIME2', 2 );
 define("SHORTPIXEL_MAX_RESULTS_QUERY", 30);
-
-/** @todo This is a test in progress var */
-
-//define("SHORTPIXEL_NOFLOCK", true);
+//define("SHORTPIXEL_NOFLOCK", true); // don't use flock queue, can cause instability. 
 
 function shortpixelInit() {
     global $shortPixelPluginInstance;

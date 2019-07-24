@@ -1184,7 +1184,7 @@ class WPShortPixel {
                     $meta = $item->getMeta();//wp_get_attachment_metadata($crtStartQueryID);
                     if($timeoutThreshold > 15) Log::addInfo("GETDB is SO SLOW. Got meta.");
 
-                    if($meta->getStatus() != 2) {
+                    if($meta->getStatus() != ShortPixelMeta::FILE_STATUS_SUCCESS) {
                         $addIt = (strpos($meta->getMessage(), __('Image files are missing.', 'shortpixel-image-optimiser')) === false);
 
                         if(!$addIt) {
