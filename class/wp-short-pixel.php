@@ -24,7 +24,7 @@ class WPShortPixel {
 
     public function __construct() {
         $this->timer = time();
-        
+
 
         if (Log::debugIsActive()) {
             $this->jsSuffix = '.js'; //use unminified versions for easier debugging
@@ -1184,7 +1184,7 @@ class WPShortPixel {
                     $meta = $item->getMeta();//wp_get_attachment_metadata($crtStartQueryID);
                     if($timeoutThreshold > 15) Log::addInfo("GETDB is SO SLOW. Got meta.");
 
-                    if($meta->getStatus() != 2) {
+                    if($meta->getStatus() != ShortPixelMeta::FILE_STATUS_SUCCESS) {
                         $addIt = (strpos($meta->getMessage(), __('Image files are missing.', 'shortpixel-image-optimiser')) === false);
 
                         if(!$addIt) {
@@ -3098,6 +3098,8 @@ class WPShortPixel {
   RewriteCond %{HTTP_USER_AGENT} "Google Page Speed Insights" [OR]
   # OR does this browser explicitly support webp
   RewriteCond %{HTTP_ACCEPT} image/webp
+  # AND NOT MS EDGE 42/17 - doesnt work.
+  RewriteCond %{HTTP_USER_AGENT} !Edge/17
   # AND is the request a jpg or png?
   RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png)$
   # AND does a .ext.webp image exist?
@@ -3109,6 +3111,7 @@ class WPShortPixel {
   RewriteCond %{HTTP_USER_AGENT} Chrome [OR]
   RewriteCond %{HTTP_USER_AGENT} "Google Page Speed Insights" [OR]
   RewriteCond %{HTTP_ACCEPT} image/webp
+  RewriteCond %{HTTP_USER_AGENT} !Edge/17
   # AND is the request a jpg or png? (also grab the basepath %1 to match in the next rule)
   RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png)$
   # AND does a .ext.webp image exist?
@@ -3833,6 +3836,7 @@ class WPShortPixel {
     /** Remove a directory
     * @param string $dirPath Path of directory to remove.
     * @todo Part of folder model.
+    * @todo Dangerous function to have exposed as public.
     */
     public static function deleteDir($dirPath) {
         if (substr($dirPath, strlen($dirPath) - 1, 1) != '/') {

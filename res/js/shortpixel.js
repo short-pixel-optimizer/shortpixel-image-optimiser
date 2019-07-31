@@ -30,7 +30,7 @@ var ShortPixel = function() {
         if( ShortPixel.MEDIA_ALERT == 'todo' && jQuery('div.media-frame.mode-grid').length > 0) {
             //the media table is not in the list mode, alert the user
             jQuery('div.media-frame.mode-grid').before('<div id="short-pixel-media-alert" class="notice notice-warning"><p>'
-                + _spTr.changeMLToListMode.format('<a href="upload.php?mode=list" class="view-list"><span class="screen-reader-text">',' </span>',
+                + SPstringFormat(_spTr.changeMLToListMode,'<a href="upload.php?mode=list" class="view-list"><span class="screen-reader-text">',' </span>',
                     '</a><a class="alignright" href="javascript:ShortPixel.dismissMediaAlert();">','</a>')
                 + '</p></div>');
         }
@@ -128,9 +128,9 @@ var ShortPixel = function() {
             var niceName = jQuery("#min-" + elm.attr('name')).data('nicename');
             if(elm.val() < Math.min(minSize, 1024)) { // @todo is this correct? This will always be < 1024, and give first error
                 if(minSize > 1024) {
-                    alert( _spTr.pleaseDoNotSetLesser1024.format(niceName) );
+                    alert( SPstringFormat(_spTr.pleaseDoNotSetLesser1024,niceName) );
                 } else {
-                    alert( _spTr.pleaseDoNotSetLesserSize.format(niceName, niceName, minSize) );
+                    alert( SPstringFormat(_spTr.pleaseDoNotSetLesserSize, niceName, niceName, minSize) );
                 }
                 e.preventDefault();
                 //elm.val(this.defaultValue);
@@ -173,7 +173,7 @@ var ShortPixel = function() {
     function setupAdvancedTab() {
         jQuery("input.remove-folder-button").click(function(){
             var path = jQuery(this).data("value");
-            var r = confirm(_spTr.areYouSureStopOptimizing.format(path));
+            var r = confirm( SPstringFormat(_spTr.areYouSureStopOptimizing, path) );
             if (r == true) {
                 jQuery("#removeFolder").val(path);
                 jQuery('#wp_shortpixel_options').submit();
@@ -181,7 +181,7 @@ var ShortPixel = function() {
         });
         jQuery("input.recheck-folder-button").click(function(){
             var path = jQuery(this).data("value");
-            var r = confirm(_spTr.areYouSureStopOptimizing.format(path));
+            var r = confirm( SPstringFormat(_spTr.areYouSureStopOptimizing, path));
             if (r == true) {
                 jQuery("#recheckFolder").val(path);
                 jQuery('#wp_shortpixel_options').submit();
@@ -330,8 +330,8 @@ var ShortPixel = function() {
              + (percent > 0 && percent < 5 ? "<br>" : '')
              + (percent < 5 ? _spTr.bonusProcessing : '')
              + (type.length > 0 ? " ("+type+")" : "")
-             + (0 + thumbsCount > 0 ? "<br>" + _spTr.plusXthumbsOpt.format(thumbsCount) :"")
-             + (0 + retinasCount > 0 ? "<br>" + _spTr.plusXretinasOpt.format(retinasCount) :"")
+             + (0 + thumbsCount > 0 ? "<br>" + SPstringFormat(_spTr.plusXthumbsOpt, thumbsCount) :"")
+             + (0 + retinasCount > 0 ? "<br>" + SPstringFormat(_spTr.plusXretinasOpt, retinasCount) :"")
              + "</div>";
     }
 
@@ -1001,7 +1001,7 @@ function checkBulkProcessingCallApi(){
 
                     ShortPixel.returnedStatusSearching = 0;
                 }
-  
+
 
                 switch (data["Status"]) {
                     case ShortPixel.STATUS_NO_KEY:
@@ -1378,14 +1378,22 @@ function showStats() {
     }
 }
 
-if (!(typeof String.prototype.format == 'function')) {
-    String.prototype.format = function() {
-        var s = this,
-            i = arguments.length;
+// first is string to replace, rest are arguments.
+function SPstringFormat() {
+  var params = Array.prototype.slice.call(arguments);
 
-        while (i--) {
-            s = s.replace(new RegExp('\\{' + i + '\\}', 'gm'), arguments[i]);
-        }
-        return s;
-    };
-}
+  if (params.length === 0)
+      return;
+
+   var s = params.shift();
+
+    // skip the first one.
+    for (i=0; i< params.length; i++) {
+        s = s.replace(new RegExp('\\{' + i + '\\}', 'gm'), params[i]);
+    }
+    return s;
+};
+/** This doesn't go well with REACT environments */
+/*if (!(typeof String.prototype.format == 'function')) {
+    String.prototype.format = stringFormat;
+} */

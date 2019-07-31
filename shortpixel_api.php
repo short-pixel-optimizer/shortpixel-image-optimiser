@@ -454,8 +454,8 @@ class ShortPixelAPI {
 
     /** Tries to create backup
     *
-    * @param $mainPath
-    * @param $PATHs
+    * @param $mainPath The path of the main image? 
+    * @param $PATHs MUST be included. If just one image is for backup, add array($mainPath)
     * @return Array Array with Status and optional Message  */
     public static function backupImage($mainPath, $PATHs) {
         /**
