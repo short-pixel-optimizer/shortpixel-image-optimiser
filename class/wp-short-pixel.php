@@ -1211,16 +1211,18 @@ class WPShortPixel {
                         }
                     }
                     elseif(   $this->_settings->processThumbnails && $meta->getThumbsOpt() !== null //thumbs were chosen in settings
-                           && ($meta->getThumbsOpt() == 0 && count($meta->getThumbs()) > 0 //no thumbnails optimized
-                               || is_array($meta->getThumbsOptList())
+                           && ( ($meta->getThumbsOpt() == 0 && count($meta->getThumbs()) > 0) //no thumbnails optimized
+                               || (is_array($meta->getThumbsOptList())
                                   && count(array_diff(array_keys(WpShortPixelMediaLbraryAdapter::getSizesNotExcluded($meta->getThumbs(), $this->_settings->excludeSizes)),
-                                                      $meta->getThumbsOptList()))
+                                                      $meta->getThumbsOptList())))
                                || (   $this->_settings->optimizeUnlisted
                                    && count(array_diff(WpShortPixelMediaLbraryAdapter::findThumbs($meta->getPath()), $meta->getThumbsOptList()))
                                   )
                            )
                     ) {
+
                         $URLsAndPATHs = $item->getURLsAndPATHs(true, true, $this->_settings->optimizeRetina, $this->_settings->excludeSizes);
+
                         if(count($URLsAndPATHs["URLs"])) {
                             $meta->setThumbsTodo(true);
                             $item->updateMeta($meta);//wp_update_attachment_metadata($crtStartQueryID, $meta);
@@ -1234,6 +1236,7 @@ class WPShortPixel {
                         $skippedAlreadyProcessed++;
                     }
                   */
+
                 }
             }
             if(!count($idList) && $crtStartQueryID <= $startQueryID) {
@@ -3415,7 +3418,7 @@ class WPShortPixel {
                 $renderData['invType'] = ShortPixelAPI::getCompressionTypeName($this->getOtherCompressionTypes(ShortPixelAPI::getCompressionTypeCode($renderData['type'])));
                 $renderData['thumbsTotal'] = $sizesCount;
                 $renderData['thumbsOpt'] = isset($data['ShortPixel']['thumbsOpt']) ? $data['ShortPixel']['thumbsOpt'] : $sizesCount;
-                $renderData['thumbsToOptimize'] = count($thumbsToOptimizeList);
+                $renderData['thumbsToOptimize'] = (is_array($thumbsToOptimizeList)) ? count($thumbsToOptimizeList) : 0;
                 $renderData['thumbsToOptimizeList'] = $thumbsToOptimizeList;
                 $renderData['thumbsOptList'] = $thumbsOptList;
                 $renderData['excludeSizes'] = isset($data['ShortPixel']['excludeSizes']) ? $data['ShortPixel']['excludeSizes'] : null;
@@ -3489,7 +3492,7 @@ class WPShortPixel {
     }
 
     /**
-     * return the thumbnails that remain to optimize and the total count of sizes registered in metdata (and not excluded)
+     * return the thumbnails that remain to optimize and the total count of sizes registered in metadata (and not excluded)
      * @param $data
      * @param $file
      * @return array
@@ -3498,9 +3501,10 @@ class WPShortPixel {
         $sizesCount = isset($data['sizes']) ? WpShortPixelMediaLbraryAdapter::countSizesNotExcluded($data['sizes']) : 0;
         $basedir = trailingslashit(dirname($file));
         $thumbsOptList = isset($data['ShortPixel']['thumbsOptList']) ? $data['ShortPixel']['thumbsOptList'] : array();
+        $thumbsToOptimizeList = array(); // is returned, so should be defined before if.
+
         if($sizesCount && $this->_settings->processThumbnails) {
 
-            $thumbsToOptimizeList = array();
             $found = $this->_settings->optimizeUnlisted ? WpShortPixelMediaLbraryAdapter::findThumbs($file) : array();
 
             $exclude = $this->_settings->excludeSizes;
