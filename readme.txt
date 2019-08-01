@@ -4,7 +4,7 @@ Tags: compressor, image, compression, optimize, image optimizer, image optimiser
 Requires at least: 3.2.0
 Tested up to: 5.2
 Requires PHP: 5.3
-Stable tag: 4.14.1
+Stable tag: 4.14.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -21,7 +21,7 @@ ShortPixel is an easy to use, lightweight, install-and-forget-about-it <a href="
 
 Short Pixel uses minimal resources and works well with any shared, cloud, VPS or dedicated web hosting. It can optimize any image you have on your website even the images that aren't listed in Media Library like those in galleries like <a href="https://wordpress.org/plugins/nextgen-gallery/" target="_blank">NextGEN</a>, <a href="https://wordpress.org/plugins/modula-best-grid-gallery/" target="_blank">Modula</a> or added directly via FTP!
 
-Both lossy and lossless image compression is available for the most common image types (JPG, PNG, GIF and WebP) plus PDF files.
+Both lossy and lossless image compression are available for the most common image types (JPG, PNG, GIF and WebP) plus PDF files.
 We also offer **glossy** JPEG compression which is a very high quality lossy optimization algorithm. Specially designed for photographers!
 Optimized images mean better user experience, better PageSpeed Insights or GTmetrix results, better Google PageRank and more visitors.
 
@@ -246,15 +246,27 @@ define('SHORTPIXEL_CUSTOM_THUMB_INFIXES', '-uae'); will handle custom thumbnails
 
 == Changelog ==
 
-== 4.14. ==
+= 4.x.y =
+Release date:
+* Language – XX new strings added, YY updated, WW fuzzied, and ZZ obsoleted
 
-Release date: 2019
-* add the possibility to define custom infixes for thumbnails (like image-uai-150x150.jpg for image.jpg) - comma separated define SHORTPIXEL_CUSTOM_THUMB_INFIXES
+== 4.14.3 ==
+
+Release date: 22nd July 2019
+* Compatibility with Flywheel hosting by not using flock if Flywheel detected
+* When using the PICTURE tag to deliver WebP, keep the width and height at <IMG> level
+* Refactoring of the API Key settings page, refactoring of Other media
+* Performance improvements for selecting from large wp_posts and wp_postmeta tables when doing bulk optimization
+* Display a message when bulk is skipping many processed images, if bulk processing is ran again.
+* Fixed: Other media - Recompress adds "Preserve CMYK"
+* Fixed: duplicate error message when validating wrong API key
+* Conflict message: align the text vertically and provide space between text and button when displayed on any admin page
+* Fixed: Other media Restore fails when original file is readable, not writable
 
 == 4.14.2 ==
 
 Release date: 1st July 2019
-* Add the possibility to define custom thumb infixes like for example -uat to also select thumbs like image-uat-100x100.jpg
+* add the possibility to define custom infixes for thumbnails (like image-uai-150x150.jpg for image.jpg) - comma separated define SHORTPIXEL_CUSTOM_THUMB_INFIXES
 
 == 4.14.1 ==
 
