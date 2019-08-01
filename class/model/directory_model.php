@@ -25,7 +25,7 @@ class DirectoryModel extends ShortPixelModel
   {
       //$this->new_directory_permission = octdec(06440);
       $this->path = wp_normalize_path(trailingslashit($path));
-      Log::addDebug("DirectoryModel LoadPath - " . $this->path);
+
       if (file_exists($this->path))
       {
         $this->exists();
@@ -38,7 +38,10 @@ class DirectoryModel extends ShortPixelModel
     return (string) $this->path;
   }
 
-  /** Returns path with trailing slash */
+  /** Returns path *with* trailing slash
+  *
+  * @return String Path with trailing slash
+  */
   public function getPath()
   {
     return $this->path;
@@ -56,6 +59,24 @@ class DirectoryModel extends ShortPixelModel
     return $this->is_writable;
   }
 
+  /** Try to obtain the path, minus the installation directory.
+  * @return Mixed False if this didn't work, Path as string without basedir if it did.
+  */
+  public function getRelativePath()
+  {
+     $upload_dir = wp_upload_dir();
+
+     Log::addDebug('Upload Dir - ', array($upload_dir));
+     $relativePath = str_replace($upload_dir['basedir'], '', $this->getPath());
+
+     // if relativePath has less amount of characters, changes are this worked.
+     if (strlen($this->getPath()) > strlen($relativePath))
+     {
+       return $relativePath;
+     }
+     return false;
+  }
+
   /** Checks the directory
   *
   */
@@ -63,7 +84,7 @@ class DirectoryModel extends ShortPixelModel
   {
      if (! $this->exists())
      {
-        Log::addDebug('Direct does not exists. Try to create recursive ' . $this->path . ' with '  . $this->new_directory_permission);
+        Log::addInfo('Direct does not exists. Try to create recursive ' . $this->path . ' with '  . $this->new_directory_permission);
         $result = @mkdir($this->path, $this->new_directory_permission , true);
         if (! $result)
         {

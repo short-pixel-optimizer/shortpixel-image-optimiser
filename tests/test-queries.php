@@ -6,7 +6,8 @@ class QueriesTest extends WP_UnitTestCase
 {
     private $files_used;
 
-    public static function setUpBeforeClass()
+    //public static function setUpBeforeClass()
+    public function setupDB()
     {
       $mysqli = new mysqli("127.0.0.1", "shortpixel", "w76TZ#QUEJaf", "shortpixel_test");
       $sql = file_get_contents('tests/test_posts.sql');
@@ -43,8 +44,16 @@ class QueriesTest extends WP_UnitTestCase
       return $files;
     }
 
+    public function testPostMetaSliceEmpty()
+    {
+      $result = WpShortPixelMediaLbraryAdapter::getPostMetaJoinLess(1000, 1, 30);
+      $this->assertCount(0, $result);
+    }
+
     public function testPostMetaSlice()
     {
+      $this->setupDB();
+
       $args = array(
   'numberposts' => 10
     );

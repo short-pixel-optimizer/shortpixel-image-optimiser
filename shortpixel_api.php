@@ -454,7 +454,7 @@ class ShortPixelAPI {
 
     /** Tries to create backup
     *
-    * @param $mainPath The path of the main image? 
+    * @param $mainPath The path of the main image?
     * @param $PATHs MUST be included. If just one image is for backup, add array($mainPath)
     * @return Array Array with Status and optional Message  */
     public static function backupImage($mainPath, $PATHs) {
@@ -721,7 +721,7 @@ class ShortPixelAPI {
                         }
                         $writeFailed++;
                     }
-                    @unlink($tempFilePATH);
+                    @unlink($tempFilePATH); // @todo Unlink is risky due to lack of checks.
                 }
 
                 $tempWebpFilePATH = $tempFile["WebP"];

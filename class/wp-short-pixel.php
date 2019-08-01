@@ -158,22 +158,6 @@ class WPShortPixel {
 
         $this->migrateBackupFolder();
 
-        // [BS] Quite dangerous to do this in any constructor. Can hit if request is ajax to name something
-        // @todo This is intended to run only once, on activation. ( it does )
-        /*if(!$this->_settings->redirectedSettings && !$this->_settings->verifiedKey && (!function_exists("is_multisite") || !is_multisite())) {
-            $this->_settings->redirectedSettings = 1;
-            wp_redirect(admin_url("options-general.php?page=wp-shortpixel-settings"));
-            exit();
-        }
-        elseif (function_exists('is_multisite') && is_multisite() && !$this->_settings->verifiedKey)
-        { // @todo not optimal, License key needs it's own model to do checks upon.
-           $scontrolname = \shortPixelTools::namespaceit("SettingsController");
-           $scontrol = new $scontrolname();
-           $scontrol->setShortPixel($this);
-           $scontrol->checkKey();
-        } */
-
-        //
 
         // only load backed, or when frontend processing is enabled.
         if (is_admin() || $this->_settings->frontBootstrap )
@@ -187,12 +171,6 @@ class WPShortPixel {
     //handling older
     public function WPShortPixel() {
         $this->__construct();
-    }
-
-    // @hook admin menu
-    // @todo move to plugin class
-    public function registerSettingsPage() {
-
     }
 
     // @hook admin menu
@@ -1057,6 +1035,9 @@ class WPShortPixel {
             // [BS] Request StartQueryID everytime to query for updated AdvanceBulk status
             $crtStartQueryID = $this->prioQ->getStartBulkId();
             $resultsPostMeta = WpShortPixelMediaLbraryAdapter::getPostMetaSlice($crtStartQueryID, $endQueryID, $maxResults);
+          // @todo Implement new Slicer.
+          //  $resultsPostMeta = WpShortPixelMediaLbraryAdapter::getPostsJoinLessReverse($crtStartQueryID, $endQueryID, $maxResults);
+
             if ( empty($resultsPostMeta) ) {
                 // check for custom work
                  $pendingCustomMeta = $this->spMetaDao->getPendingBulkRestore(SHORTPIXEL_MAX_RESULTS_QUERY * 2);
@@ -1081,11 +1062,14 @@ class WPShortPixel {
                 $item = new ShortPixelMetaFacade($crtStartQueryID);
                 $meta = $item->getMeta();//wp_get_attachment_metadata($crtStartQueryID);
 
-                if($meta->getStatus() == 2 || $meta->getStatus() == 1) {
-                    if($meta->getStatus() == 2 && $this->prioQ->getBulkType() == ShortPixelQueue::BULK_TYPE_RESTORE) {
+                if($meta->getStatus() == ShortPixelMeta::FILE_STATUS_SUCCESS || $meta->getStatus() == ShortPixelMeta::FILE_STATUS_PENDING ) {
+                    if($meta->getStatus() == ShortPixelMeta::FILE_STATUS_SUCCESS && $this->prioQ->getBulkType() == ShortPixelQueue::BULK_TYPE_RESTORE) {
                         $res = $this->doRestore($crtStartQueryID); //this is restore, the real
+                        // after restore, scrub the rests.
+                        $item->cleanupMeta($this->prioQ->getBulkType() == ShortPixelQueue::BULK_TYPE_CLEANUP_PENDING);
                     } else {
                         //this is only meta cleanup, no files are replaced (BACKUP REMAINS IN PLACE TOO)
+
                         $item->cleanupMeta($this->prioQ->getBulkType() == ShortPixelQueue::BULK_TYPE_CLEANUP_PENDING);
                         $res = true;
                     }
@@ -1667,30 +1651,59 @@ class WPShortPixel {
         //find thumbs that are not listed in the metadata and add them in the sizes array
         if(   $itemHandler->getType() == ShortPixelMetaFacade::MEDIA_LIBRARY_TYPE
            && $this->_settings->optimizeUnlisted) {
-            $mainFile = $meta->getPath();
 
-            $foundThumbs = WpShortPixelMediaLbraryAdapter::findThumbs($mainFile);
+            $fs = new \ShortPixel\FileSystemController();
+            $mainFile = $fs->getFile($meta->getPath());
+
+            // Find Thumbs returns *full file path*
+            $foundThumbs = WpShortPixelMediaLbraryAdapter::findThumbs($mainFile->getFullPath());
+
             //first identify which thumbs are not in the sizes
             $sizes = $meta->getThumbs();
+
             $mimeType = false;
+
             foreach($foundThumbs as $id => $found) {
+                $foundFile = $fs->getFile($found);
+                $basepath = $foundFile->getFileDir()->getPath();
+
                 //get the mime-type from one of the thumbs metas
+                /* @todo This can be more effective but creating an array filled with checked file-instances instead of using getfile in a loop */
                 foreach($sizes as $size) {
-                    if(pathinfo($mainFile, PATHINFO_EXTENSION) !== pathinfo($size['file'], PATHINFO_EXTENSION)){
-                        continue;
+
+                    // Thumbs should have filename only. This is shortpixel-meta ! Not metadata!
+                    // Provided filename can be unexpected (URL, fullpath), so first do check, get filename, then check the full path
+                    $sizeFileCheck = $fs->getFile($size['file']);
+                    $sizeFilePath = $basepath . $sizeFileCheck->getFileName();
+                    $sizeFile = $fs->getFile($sizeFilePath);
+
+                    if ($sizeFile->getExtension() !== $foundFile->getExtension())
+                    {
+                      continue;
                     }
+                    /*if(pathinfo($mainFile, PATHINFO_EXTENSION) !== pathinfo($size['file'], PATHINFO_EXTENSION)){
+                        continue;
+                    }*/
                     if(isset($size['mime-type'])) { //situation from support case #9351 Ramesh Mehay
                         $mimeType = $size['mime-type'];
                     }
-                    if($size['file'] === ShortPixelAPI::MB_basename($found)) {
+                    //if($size['file'] === ShortPixelAPI::MB_basename($found)) {
+                    if ($sizeFile->getFileName() === $foundFile->getFileName())
+                    {
                         $foundThumbs[$id] = false;
                     }
                 }
             }
             // add the unfound ones to the sizes array
             $ind = 1;
-            while (isset($sizes[ShortPixelMeta::FOUND_THUMB_PREFIX . str_pad("".$ind, 2, '0', STR_PAD_LEFT)])) $ind++;
-            $start = $ind;
+            $start = 1;
+            // Assumption:: there is no point in adding to this array since findThumbs should find *all* thumbs that are relevant to this image.
+            /*while (isset($sizes[ShortPixelMeta::FOUND_THUMB_PREFIX . str_pad("".$start, 2, '0', STR_PAD_LEFT)]))
+            {
+              $start++;
+            } */
+        //    $start = $ind;
+
             foreach($foundThumbs as $found) {
                 if($found !== false) {
                     $size = getimagesize($found);
@@ -1703,7 +1716,7 @@ class WPShortPixel {
                     $ind++;
                 }
             }
-            if($ind > $start) { // at least one thumbnail added, update
+            if($ind > 1) { // at least one thumbnail added, update
                 $meta->setThumbs($sizes);
                 $itemHandler->updateMeta($meta);
                 $URLsAndPATHs = $this->getURLsAndPATHs($itemHandler, NULL, $onlyThumbs);
@@ -2097,6 +2110,7 @@ class WPShortPixel {
                    && 0 + $crtMeta["ShortPixelImprovement"] < 5 && $this->_settings->under5Percent > 0) {
                     $this->_settings->under5Percent = $this->_settings->under5Percent - 1; // - (isset($crtMeta["ShortPixel"]["thumbsOpt"]) ? $crtMeta["ShortPixel"]["thumbsOpt"] : 0);
                 }
+                /** @todo This logic belongs the cleanUpMeta. not DRY */
                 unset($crtMeta["ShortPixelImprovement"]);
                 unset($crtMeta['ShortPixel']);
                 unset($crtMeta['ShortPixelPng2Jpg']);
@@ -3493,31 +3507,57 @@ class WPShortPixel {
 
     /**
      * return the thumbnails that remain to optimize and the total count of sizes registered in metadata (and not excluded)
-     * @param $data
+     * @param $data @todo Define what is data
      * @param $file
-     * @return array
+     * @return array Array of Thumbs to Optimize - only the filename - , and count of sizes not excluded ...
      */
-    function getThumbsToOptimize($data, $file) {
+    function getThumbsToOptimize($data, $filepath) {
+        $fs = new \ShortPixel\FileSystemController();
+        $mainfile = $fs->getFile($filepath);
+
         $sizesCount = isset($data['sizes']) ? WpShortPixelMediaLbraryAdapter::countSizesNotExcluded($data['sizes']) : 0;
-        $basedir = trailingslashit(dirname($file));
+        $basedir = $mainfile->getFileDir()->getPath();
         $thumbsOptList = isset($data['ShortPixel']['thumbsOptList']) ? $data['ShortPixel']['thumbsOptList'] : array();
         $thumbsToOptimizeList = array(); // is returned, so should be defined before if.
 
         if($sizesCount && $this->_settings->processThumbnails) {
 
-            $found = $this->_settings->optimizeUnlisted ? WpShortPixelMediaLbraryAdapter::findThumbs($file) : array();
+            // findThumbs returns fullfilepath.
+            $found = $this->_settings->optimizeUnlisted ? WpShortPixelMediaLbraryAdapter::findThumbs($mainfile->getFullPath()) : array();
 
             $exclude = $this->_settings->excludeSizes;
             $exclude = is_array($exclude) ? $exclude : array();
             foreach($data['sizes'] as $size => $sizeData) {
-                unset($found[\array_search($basedir . $sizeData['file'], $found)]);
-                if(!in_array($size, $exclude) && !in_array($sizeData['file'], $thumbsOptList)) {
-                    $thumbsToOptimizeList[] = $sizeData['file'];
+                unset($found[\array_search($basedir . $sizeData['file'], $found)]); // @todo what is this intended to do?
+
+                // sizeData['file'] is *only* filename *but* can be wrong data, URL due to plugins. So check first, only get filename ( since it is supposed to fail with only a filename path ) and then reload.
+                $sizeFileCheck = $fs->getFile($sizeData['file']);
+                $file = $fs->getFile($basedir . $sizeFileCheck->getFileName());
+
+                if ($file->getExtension() !== $mainfile->getExtension())
+                {
+                  continue;
+                }
+
+
+                if(!in_array($size, $exclude) && !in_array($file->getFileName(), $thumbsOptList)) {
+                    $thumbsToOptimizeList[] = $file->getFileName();
                 }
             }
-            $found = array_diff($found, $thumbsOptList);
-            foreach($found as $item) {
-                $thumbsToOptimizeList[] = wp_basename($item);
+            //$found = array_diff($found, $thumbsOptList); // Wrong comparison. Found is full file path, thumbsOptList is not.
+            foreach($found as $path) {
+                $file = $fs->getFile($path);
+
+                // prevent Webp and what not from showing up.
+                if ($file->getExtension() !== $mainfile->getExtension())
+                {
+                  continue;
+                }
+                // thumbs can already be in findThumbs.
+                if (! in_array($file->getFileName(), $thumbsToOptimizeList) && ! in_array($file->getFileName(), $thumbsOptList) )
+                {
+                  $thumbsToOptimizeList[] =  $file->getFileName();
+                }
             }
         }
         return array($thumbsToOptimizeList, $sizesCount);

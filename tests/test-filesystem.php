@@ -23,7 +23,7 @@ class FileSystemTest extends  WP_UnitTestCase
   {
     $backup = $this->fs->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
     $result = $backup->check(true);
-var_dump($result);
+
     //$this->assertTrue($result);
   //  $this->assertDirectoryExists(SHORTPIXEL_BACKUP_FOLDER);
   }
@@ -53,9 +53,69 @@ var_dump($result);
     $ar = array(
         'images' => array('image1.jpg' => $content, 'image2.jpg' => $content, 'image3.png' => $content,
                           'image1.ext.jpg' => $content,
+                          'ашдутфьу.jpg' => $content,
+                          'اسم الملف.jpg' => $content,
+
         ),
+        'wp-content' => array('uploads' => array('2019' => array('07' => array('wpimg1.jpg' => $content, 'wpimg2.jpg' => $content)))),
     );
     return $ar;
+  }
+
+/*  public function changeUploadDir()
+  {
+    $dir = array(
+            'path' => '/tmp/wordpress/wp-content/uploads/2019/07',
+            'url' =>  'http://test.com/wp-content/uploads/2019/07',
+            'subdir' => '/2019/07',
+            'basedir' => '/tmp/wordpress/wp-content/uploads',
+            'baseurl' => 'http://test.com/wp-content/uploads',
+            'error' => '',
+        );
+
+      if (isset($this->changeHTTPS) && $this->changeHTTPS)
+      {
+        $dir['url'] = str_replace('http', 'https', $dir['url']);
+        $dir['baseurl'] = str_replace('http', 'https', $dir['baseurl']);
+      }
+
+      return $dir;
+
+  }
+*/
+
+  /** Not testable on VFS due to home-path checks
+   * This test is done first since it erares to log file needed to read other tests.
+   */
+  public function testsetAndGetBackup()
+  {
+      $this->finishBackups(); // removes directory.
+      $this->setupBackUps();
+      //$filepath = $this->root->url() . '/images/image3.png';
+      $post = $this->factory->post->create_and_get();
+      $attachment_id = $this->factory->attachment->create_upload_object( __DIR__ . '/assets/test-image.jpg', $post->ID );
+
+      //vfsStream::newDirectory(SHORTPIXEL_BACKUP_FOLDER, 0755)->at($this->root);
+
+      $file = $this->fs->getFile(get_attached_file($attachment_id));
+
+      $this->assertTrue($file->exists());
+      $this->assertTrue($file->is_writable());
+
+      $backupFile = $file->getBackUpFile();
+
+      $this->assertFalse($backupFile);
+
+      $directory = $this->fs->getBackupDirectory($file);
+
+      $this->assertIsObject($directory);
+      $this->assertDirectoryExists((string) $directory);
+
+      \ShortPixelApi::backupImage($file, array($file));
+
+      $this->assertFileExists( $directory->getPath() . '/' . $file->getFileName()) ;
+
+    //$URLsAndPATHs = $itemHandler->getURLsAndPATHs(false);
   }
 
   public function testBasicDirectory()
@@ -76,7 +136,15 @@ var_dump($result);
 
       // Test if cast and return are the same
       $this->assertEquals((String) $directory, $directory->getPath());
+      $this->assertEquals($directory->getPath(), $dirpath . '/');
 
+      // Test for trailingslash consistency
+      $dirpath2 = $this->root->url() . '/basic/';
+      $directory2 = $this->fs->getDirectory($dirpath);
+
+      $this->assertEquals($directory2->getPath(), $dirpath2);
+      $this->assertEquals($directory2->getPath(), $dirpath . '/');
+      $this->assertEquals($directory2->getPath(), $directory->getPath());
   }
 
   /* @test Directory Not Writable */
@@ -108,7 +176,7 @@ var_dump($result);
 
       $file = $this->fs->getFile($filepath);
 
-      $this->assertTrue($file->exists());
+      $this->assertTrue($file->exists(), $file->getFullPath());
       $this->assertEquals($file->getFullPath(), $filepath);
       $this->assertEquals($file->getExtension(), 'jpg');
       $this->assertEquals($file->getFileName(), 'image1.jpg');
@@ -124,6 +192,15 @@ var_dump($result);
       $this->assertEquals($file2->getFileName(), 'image1.ext.jpg');
       $this->assertEquals($file2->getFileBase(), 'image1.ext');
       $this->assertEquals( (string) $file2->getFileDir(), $filedir);
+
+
+      // Empty
+      $file3 = $this->fs->getFile('');
+      $this->assertFalse($file3->exists(), $file3->getFullPath());
+      $this->assertEquals('', $file3->getFullPath());
+      $this->assertEquals('', $file3->getFileName());
+      $this->assertEquals('', $file3->getFileBase());
+      $this->assertNull($file3->getFileDir());
 
 
   }
@@ -174,6 +251,101 @@ var_dump($result);
 
   }
 
+  // What happens when a relative path is given instead of a full path.
+  public function testFileWithRelativePath()
+  {
+      $uploadDir = wp_upload_dir();
+      $basedir = $uploadDir['basedir'];
+
+//      echo "<PRE>"; var_dump($uploadDir); echo "</PRE>";
+      $fullfilepath = ABSPATH .  'wp-content/uploads/2019/07/rel_image_virtual.jpg';
+
+      // with starting slash
+      $relpath =   '/wp-content/uploads/2019/07/rel_image_virtual.jpg';
+
+      $file = $this->fs->getFile($relpath);
+      $this->assertEquals($file->getFullPath(), $fullfilepath);
+
+      // without starting slash
+      $relpath2 = 'wp-content/uploads/2019/07/rel_image_virtual.jpg';
+
+      $file = $this->fs->getFile($relpath2);
+      $this->assertEquals($file->getFullPath(), $fullfilepath);
+
+
+  }
+
+  // for URL Test - setup env.
+  private function urlSetup($url)
+  {
+    //$home_url = 'https://test.com';
+    update_option('homeurl', $url);
+    update_option('siteurl', $url);
+    // See - https://developer.wordpress.org/reference/functions/_wp_upload_dir/ . Otherwise constant is used.
+    update_option('upload_url_path', $url . '/wp-content/uploads');
+    $upl = wp_upload_dir(null, false, true);
+    //var_dump($upl);
+  }
+  // What happens when a URL is given instead of a file .
+  public function testFileWithUrl()
+  {
+
+    $this->urlSetup('https://test.com');
+
+    $fullfilepath = ABSPATH . 'wp-content/uploads/2019/07/wpimg1.jpg';
+    $urlpath = 'https://test.com/wp-content/uploads/2019/07/wpimg1.jpg';
+    $file = $this->fs->getFile($urlpath);
+
+    $this->assertEquals($fullfilepath, $file->getFullPath());
+    $this->assertEquals($urlpath, $this->fs->pathToUrl($file));
+
+    $this->urlSetup('http://test.com');
+
+    $urlpath2 = 'http://test.com/wp-content/uploads/2019/07/wpimg1.jpg';
+    $file2 = $this->fs->getFile($urlpath2);
+    $this->assertEquals($fullfilepath, $file2->getFullPath());
+    $this->assertEquals($urlpath2, $this->fs->pathToUrl($file2));
+
+
+    $this->urlSetup('http://test.com:8080');
+
+    $urlpath3 = 'http://test.com:8080/wp-content/uploads/2019/07/wpimg1.jpg';
+    $file3 = $this->fs->getFile($urlpath3);
+    $this->assertEquals($fullfilepath, $file3->getFullPath());
+    $this->assertEquals($urlpath3, $this->fs->pathToUrl($file3));
+  }
+
+  public function testFileWithCyrillic()
+  {
+    $fullfilepath = $this->root->url() . '/images/ашдутфьу.jpg';
+    $file = $this->fs->getFile($fullfilepath);
+
+    $this->assertTrue($file->exists(), $file->getFullPath());
+    $this->assertEquals($file->getFullPath(), $fullfilepath);
+    $this->assertEquals($file->getExtension(), 'jpg');
+    $this->assertEquals($file->getFileName(), 'ашдутфьу.jpg');
+    $this->assertEquals($file->getFileBase(), 'ашдутфьу');
+  }
+
+  public function testFileWithArabic()
+  {
+    $fullfilepath =  $this->root->url() . '/images/اسم الملف.jpg';
+    $file = $this->fs->getFile($fullfilepath);
+
+    $this->assertTrue($file->exists(), $file->getFullPath());
+    $this->assertEquals($file->getFullPath(), $fullfilepath);
+    $this->assertEquals($file->getExtension(), 'jpg');
+    $this->assertEquals($file->getFileName(), 'اسم الملف.jpg');
+    $this->assertEquals($file->getFileBase(), 'اسم الملف');
+
+  }
+
+  public function testWithWindowsPath()
+  {
+
+    $this->markTestSkipped('Not yet implemented');
+  }
+
   public function testNoBackUp()
   {
       $filepath = $this->root->url() . '/images/image3.png';
@@ -191,39 +363,8 @@ var_dump($result);
       $this->assertEquals($file->getFileDir(), $directory);
   }
 
-  /** Not testable on VFS due to home-path checks
-  *
-   */
-  public function testsetAndGetBackup()
-  {
-      $this->setupBackUps();
-      //$filepath = $this->root->url() . '/images/image3.png';
-      $post = $this->factory->post->create_and_get();
-      $attachment_id = $this->factory->attachment->create_upload_object( __DIR__ . '/assets/test-image.jpg', $post->ID );
 
-      //vfsStream::newDirectory(SHORTPIXEL_BACKUP_FOLDER, 0755)->at($this->root);
 
-      $file = $this->fs->getFile(get_attached_file($attachment_id));
-
-      $this->assertTrue($file->exists());
-      $this->assertTrue($file->is_writable());
-
-      $backupFile = $file->getBackUpFile();
-
-      $this->assertFalse($backupFile);
-
-      $directory = $this->fs->getBackupDirectory($file);
-
-      $this->assertIsObject($directory);
-      $this->assertDirectoryExists((string) $directory);
-
-      \ShortPixelApi::backupImage($file, array($file));
-
-      $this->assertFileExists( $directory->getPath() . '/' . $file->getFileName()) ;
-
-    //$URLsAndPATHs = $itemHandler->getURLsAndPATHs(false);
-      $this->finishBackups();
-  }
 
 
 
