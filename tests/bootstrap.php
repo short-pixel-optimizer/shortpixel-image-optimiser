@@ -4,7 +4,7 @@
  *
  * @package Shortpixel_Image_Optimiser
  */
-define('WP_TESTS_SKIP_INSTALL', '1');
+//define('WP_TESTS_SKIP_INSTALL', '1');
 define('SHORTPIXEL_DEBUG', 4); // Note - debug logs will go into /tmp/
 define('SHORTPIXEL_DEBUG_TARGET', true);
 define('SHORTPIXEL_API_KEY', '77O4S9VttKCljaDha8fW');

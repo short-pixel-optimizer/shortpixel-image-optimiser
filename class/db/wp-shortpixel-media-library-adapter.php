@@ -247,7 +247,7 @@ class WpShortPixelMediaLbraryAdapter {
         return $result;
     }
 
-    public static function getPostMetaJoinLess($startId, $endId, $limit)
+  /*  public static function getPostMetaJoinLess($startId, $endId, $limit)
     {
       global $wpdb;
       $time = microtime(true);
@@ -272,16 +272,20 @@ class WpShortPixelMediaLbraryAdapter {
 
       return $metaresult;
     }
-
+*/
     public static function getPostsJoinLessReverse($startId, $endId, $limit)
     {
       global $wpdb;
-      $time = microtime(true);
+      //$time = microtime(true);
 
       $sqlmeta = "SELECT DISTINCT post_id FROM " . $wpdb->prefix . "postmeta where (meta_key = %s or meta_key = %s) and post_id <= %d and post_id >= %d order by post_id DESC LIMIT %d";
       $sqlmeta = $wpdb->prepare($sqlmeta, '_wp_attached_file', '_wp_attachment_metadata', $startId, $endId, $limit);
 
       $result = $wpdb->get_col($sqlmeta);
+
+      // no postmeta present, i.e. empty installation
+      if (count($result) == 0)
+        return array();
 
       $id_placeholders = implode( ', ', array_fill( 0, count( $result ), '%d'));
 
@@ -292,9 +296,7 @@ class WpShortPixelMediaLbraryAdapter {
 
       $postAr = array_intersect($result, $postresult);
 
-      $time_end = microtime(true);
-  //    Log::addDebug('Post Meta JoinLESS **REVERSE** query took ' . ($time_end-$time) . ' sec. - Result count ' . count($postAr), array($sql, $sqlmeta));
-
+      //$time_end = microtime(true);
       return $postAr;
     }
 

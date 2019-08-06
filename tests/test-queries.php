@@ -5,13 +5,21 @@ use org\bovigo\vfs\vfsStream;
 class QueriesTest extends WP_UnitTestCase
 {
     private $files_used;
+    private $post_id_high = 9999;
+    private $dbless_tests_done = false;
 
     //public static function setUpBeforeClass()
-    public function setupDB()
+    public function DoSetupDB()
     {
-      $mysqli = new mysqli("127.0.0.1", "shortpixel", "w76TZ#QUEJaf", "shortpixel_test");
-      $sql = file_get_contents('tests/test_posts.sql');
-      $result = $mysqli->multi_query($sql);
+    //  if (! $this->dbless_tests_done)
+    //    return;
+
+      //$mysqli = new mysqli("127.0.0.1", "shortpixel", "w76TZ#QUEJaf", "shortpixel_test");
+      $file = __DIR__ . '/test_posts.sql';
+      if (! file_exists($file))
+        $this->fail('File does not exists: '. $file);
+
+      exec('mysql -ushortpixel -pw76TZ#QUEJaf shortpixel_test < ' . $file);
 
       $settings = new WPShortPixelSettings();
       $settings->backupImages = 0;
@@ -46,20 +54,22 @@ class QueriesTest extends WP_UnitTestCase
 
     public function testPostMetaSliceEmpty()
     {
-      $result = WpShortPixelMediaLbraryAdapter::getPostMetaJoinLess(1000, 1, 30);
+
+      $result = WpShortPixelMediaLbraryAdapter::getPostsJoinLessReverse($this->post_id_high, 1, 30);
       $this->assertCount(0, $result);
+
+      $this->dbless_tests_done = true;
     }
 
     public function testPostMetaSlice()
     {
-      $this->setupDB();
+      $this->doSetupDB();
 
-      $args = array(
-  'numberposts' => 10
-    );
-      $result = WpShortPixelMediaLbraryAdapter::getPostMetaJoinLess(1000, 1, 30);
+      $result = WpShortPixelMediaLbraryAdapter::getPostsJoinLessReverse($this->post_id_high, 1, 30);
       $this->assertCount(30, $result);
 
+      // only this test needs db for now.
+      $this->dbless_tests_done = false;
     }
 
     private function getExpected()
@@ -98,7 +108,7 @@ class QueriesTest extends WP_UnitTestCase
     }
 
     /**
-    * @runInSeparateProcesses
+    *
     */
     public function testFindThumbs()
     {
@@ -130,29 +140,8 @@ class QueriesTest extends WP_UnitTestCase
 
         $this->assertCount(6, $thumbs3);
         $this->assertEquals($expected3, $thumbs3);
-
-
-    //    $this->assertEquals()
     }
 
-    /*
-   Can't test this so far because of Constants already defined, sep. process doesn't work since kills the whole WP install
-    public function testEmptyConstants()
-    {
-       $mainfile = 'nonexisting.jpg';
 
-       $thumbs1 = WpShortPixelMediaLbraryAdapter::findThumbs($mainfile);
-
-       $this->assertCount(0, $thumbs1);
-
-       define('SHORTPIXEL_CUSTOM_THUMB_INFIXES', '');
-       define('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES', '');
-
-       $thumbs2 = WpShortPixelMediaLbraryAdapter::findThumbs($mainfile);
-
-       $this->assertCount(0, $thumbs2);
-
-
-    } */
 
 }
