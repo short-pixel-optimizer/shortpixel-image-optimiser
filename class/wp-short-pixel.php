@@ -1881,6 +1881,7 @@ class WPShortPixel {
     }
 
     //WP/LR Sync plugin integration
+    // @todo Move this function to externals.
     public function onWpLrUpdateMedia($imageId, $galleryIdsUnused) {
         $meta = wp_get_attachment_metadata($imageId);
         if(is_array($meta)) {
@@ -2159,6 +2160,7 @@ class WPShortPixel {
             return false;
         }
 
+        $this->maybeDumpFromProcessedOnServer($itemHandler, $toUnlink);
         do_action("shortpixel_after_restore_image", $attachmentID);
         return $rawMeta;
     }

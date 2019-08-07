@@ -134,7 +134,7 @@ class ShortPixelAPI {
         }
 
         //WpShortPixel::log("ShortPixel API Request Settings: " . json_encode($requestParameters));
-
+        Log::addDebug('ShortPixel API Request', array($requestParameters));
         $response = wp_remote_post($this->_apiEndPoint, $this->prepareRequest($requestParameters, $Blocking) );
 
         //WpShortPixel::log('RESPONSE: ' . json_encode($response));
@@ -487,7 +487,7 @@ class ShortPixelAPI {
         //now that we have original files and where we should back them up we attempt to do just that
         if(is_writable(SHORTPIXEL_BACKUP_FOLDER))
         {
-            Log::addDebug('Creating backups from source - destination', array('source' => $source, 'destination' => $destination));
+
             foreach ( $destination as $fileID => $filePATH )
             {
                 if ( !file_exists($filePATH) )
@@ -583,7 +583,7 @@ class ShortPixelAPI {
      * @return array status/message
      */
     private function handleSuccess($APIresponse, $PATHs, $itemHandler, $compressionType) {
-        Log::addDebug('Shortpixel API : Handling Success!');
+        Log::addDebug('Shortpixel API : Handling Success!', array($APIresponse));
 
         $counter = $savedSpace =  $originalSpace =  $optimizedSpace /* = $averageCompression */ = 0;
         $NoBackup = true;
@@ -649,7 +649,6 @@ class ShortPixelAPI {
         $mainPath = $itemHandler->getMeta()->getPath();
 
         //if backup is enabled - we try to save the images
-        Log::addDebug('Check setting backup', array($this->_settings->backupImages));
         if( $this->_settings->backupImages )
         {
             $backupStatus = self::backupImage($mainPath, $PATHs);
