@@ -9,10 +9,16 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 */
 Class FileSystemController extends ShortPixelController
 {
+    protected $env;
+
     public function __construct()
     {
       $this->loadModel('file');
       $this->loadModel('directory');
+      $this->loadModel('environment');
+
+      $this->env = new EnvironmentModel();
+
     }
 
     /** Get FileModel for a certain path. This can exist or not

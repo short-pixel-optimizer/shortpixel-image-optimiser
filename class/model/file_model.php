@@ -130,13 +130,40 @@ class FileModel extends ShortPixelModel
   */
   public function copy(FileModel $destination)
   {
-      $status = copy($this->getFullPath(), $destination->getFullPath());
+      $sourcePath = $this->getFullPath();
+      $destinationPath = $destination->getFullPath();
+
+      if (! strlen($sourcePath) > 0 || ! strlen($destinationPath) > 0)
+      {
+        Log::addWarn('Attempted Copy on Empty Path', array($sourcePath, $destinationPath));
+        return false;
+      }
+
+      $is_new = ($destination->exists()) ? false : true;
+      $status = copy($sourcePath, $destinationPath);
+
       if (! $status)
-        Log::addWarn('Could not copy file ' . $this->getFullPath() . ' to' . $destination->getFullPath());
+        Log::addWarn('Could not copy file ' . $sourcePath . ' to' . $destinationPath);
       else {
         $destination->setFileInfo(); // refresh info.
       }
+      //
+      do_action('shortpixel/filesystem/addfile', array($destinationPath, $destination, $this, $is_new));
       return $status;
+  }
+
+  /** Move a file to somewhere
+  * This uses copy and delete functions and will fail if any of those fail.
+  * @param $destination String Full Path to new file.
+  */
+  public function move(FileModel $destination)
+  {
+     $result = false;
+     if ($this->copy($destination))
+     {
+       $result = $this->delete();
+     }
+     return $result;
   }
 
   /** Deletes current file
@@ -144,7 +171,7 @@ class FileModel extends ShortPixelModel
   */
   public function delete()
   {
-      \wp_delete_file($this->fullpath);
+      \wp_delete_file($this->fullpath);  // delete file hook via wp_delet_file
       if (! file_exists($this->fullpath))
       {
         $this->setFileInfo(); // update info
@@ -176,9 +203,15 @@ class FileModel extends ShortPixelModel
     return $this->extension;
   }
 
-  // Util function to get location of backup Directory.
+  /* Util function to get location of backup Directory.
+  * @return Boolean | DirectModel  Returns false if directory is not properly set, otherwhise with a new directoryModel
+  */
   private function getBackupDirectory()
   {
+    if (is_null($this->directory))
+    {
+        return false;
+    }
     if (is_null($this->backupDirectory))
     {
       $backup_dir = str_replace(get_home_path(), "", $this->directory->getPath());
@@ -214,8 +247,8 @@ class FileModel extends ShortPixelModel
 
     $path = wp_normalize_path($path);
 
-    // if path does not contain basepath, and path is not empty.
-    if (strpos($path, ABSPATH) === false && strlen($path) > 0)
+    // if path does not contain basepath.
+    if (strpos($path, ABSPATH) === false && strpos($path, $this->getUploadPath()) === false)
       $path = $this->relativeToFullPath($path);
 
     /* This needs some check here on malformed path's, but can't be test for existing since that's not a requirement.
@@ -262,13 +295,55 @@ class FileModel extends ShortPixelModel
      return false; // seems URL from other server, can't file that.
   }
 
+  /** Tries to find the full path for a perceived relative path.
+  *
+  * Relative path is detected on basis of WordPress ABSPATH. If this doesn't appear in the file path, it might be a relative path.
+  * Function checks for expections on this rule ( tmp path ) and returns modified - or not - path.
+  * @param $path The path for the file_exists
+  * @returns String The updated path, if that was possible.
+  */
   private function relativeToFullPath($path)
   {
+      // A file with no path, can never be created to a fullpath.
+      if (strlen($path) == 0)
+        return $path;
+
+      // Test if our 'relative' path is not a path to /tmp directory.
+
+      // This ini value might not exist.
+      $tempdirini = ini_get('upload_tmp_dir');
+      if ( (strlen($tempdirini) > 0) && strpos($path, $tempdirini) !== false)
+        return $path;
+
+      $tempdir = sys_get_temp_dir();
+      if ( (strlen($tempdir) > 0) && strpos($path, $tempdir) !== false)
+        return $path;
+
+      // Path contains upload basedir. This happens when upload dir is outside of usual WP.
+      if (strpos($path, $this->getUploadPath()) !== false)
+      {
+        return $path;
+      }
+
+      // if the file plainly exists, it's usable /**
+      if (file_exists($path))
+      {
+        return $path;
+      }
+
       // this is probably a bit of a sharp corner to take.
       // if path starts with / remove it due to trailingslashing ABSPATH
       $path = ltrim($path, '/');
       $fullpath = trailingslashit(ABSPATH) . $path;
       return $fullpath;
+  }
+
+  private function getUploadPath()
+  {
+    $upload_dir = wp_upload_dir(null, false);
+    $basedir = $upload_dir['basedir'];
+
+    return $basedir;
   }
 
 } // FileModel Class

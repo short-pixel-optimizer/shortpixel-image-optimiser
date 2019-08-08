@@ -64,7 +64,7 @@ class DirectoryModel extends ShortPixelModel
   */
   public function getRelativePath()
   {
-     $upload_dir = wp_upload_dir();
+     $upload_dir = wp_upload_dir(null, false);
 
      Log::addDebug('Upload Dir - ', array($upload_dir));
      $relativePath = str_replace($upload_dir['basedir'], '', $this->getPath());

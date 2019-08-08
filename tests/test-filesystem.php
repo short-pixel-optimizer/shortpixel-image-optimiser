@@ -62,28 +62,6 @@ class FileSystemTest extends  WP_UnitTestCase
     return $ar;
   }
 
-/*  public function changeUploadDir()
-  {
-    $dir = array(
-            'path' => '/tmp/wordpress/wp-content/uploads/2019/07',
-            'url' =>  'http://test.com/wp-content/uploads/2019/07',
-            'subdir' => '/2019/07',
-            'basedir' => '/tmp/wordpress/wp-content/uploads',
-            'baseurl' => 'http://test.com/wp-content/uploads',
-            'error' => '',
-        );
-
-      if (isset($this->changeHTTPS) && $this->changeHTTPS)
-      {
-        $dir['url'] = str_replace('http', 'https', $dir['url']);
-        $dir['baseurl'] = str_replace('http', 'https', $dir['baseurl']);
-      }
-
-      return $dir;
-
-  }
-*/
-
   /** Not testable on VFS due to home-path checks
    * This test is done first since it erares to log file needed to read other tests.
    */
@@ -196,13 +174,30 @@ class FileSystemTest extends  WP_UnitTestCase
 
       // Empty
       $file3 = $this->fs->getFile('');
+      $this->assertFileNotExists($file3);
       $this->assertFalse($file3->exists(), $file3->getFullPath());
       $this->assertEquals('', $file3->getFullPath());
       $this->assertEquals('', $file3->getFileName());
       $this->assertEquals('', $file3->getFileBase());
       $this->assertNull($file3->getFileDir());
 
+      // Exists and writable, according to PHP spec.
+      $this->assertFalse($file3->is_writable());
 
+      // should not have backup.
+      $this->assertFalse($file3->hasBackup());
+
+      // test fail cases for file operations.
+      $this->assertFalse($file3->copy($file2));
+      $this->assertFileExists($file2->getFullPath());
+      $this->assertFalse($file3->move($file2));
+      $this->assertFileExists($file2->getFullPath());
+
+      // Empty but with space (trim test)
+      $file4 = $this->fs->getFile(' ');
+      $this->assertFileNotExists($file4);
+      $this->assertFalse($file4->hasBackup());
+      $this->assertNull($file4->getFileDir());
   }
 
   public function testFileCopy()
@@ -232,6 +227,25 @@ class FileSystemTest extends  WP_UnitTestCase
     $this->assertEquals($targetfile->getFullPath(), $targetpath);
     $this->assertEquals($targetfile->getExtension(), 'jpg');
     $this->assertEquals($targetfile->getFileName(), 'copy-image1.jpg');
+
+  }
+
+  public function testFileMove()
+  {
+    $filepath = $this->root->url() . '/images/image3.png';
+    $targetpath = $this->root->url() . '/images/copy-image3.png';
+    $filedir = $this->root->url() . '/images/';
+
+    $file = $this->fs->getFile($filepath);
+    $targetfile = $this->fs->getFile($targetpath);
+
+    $this->assertFalse($targetfile->exists());
+    $this->assertTrue($file->exists());
+
+    $file->move($targetfile);
+
+    $this->assertTrue($targetfile->exists());
+    $this->assertFalse($file->exists());
 
   }
 
@@ -272,7 +286,17 @@ class FileSystemTest extends  WP_UnitTestCase
       $file = $this->fs->getFile($relpath2);
       $this->assertEquals($file->getFullPath(), $fullfilepath);
 
+      $fulltemppath = '/tmp/3d9c0ec965c7d3f5956bf0ff64a1e657-lossy-nG9hMf.tmp';
 
+      $file = $this->fs->getFile($fulltemppath);
+
+      $this->assertEquals($fulltemppath, $file->getFullPath() );
+
+      // Test with Upload Path something else than
+      /*update_option('upload_path', dirname(ABSPATH) . '/uploads');
+      $fullfilepath2 = ABSPATH .  '/uploads/2019/07/rel_image_virtual.jpg';
+      $file3 = $this->fs->getFile($fullfilepath2);
+      */
   }
 
   // for URL Test - setup env.
@@ -362,10 +386,5 @@ class FileSystemTest extends  WP_UnitTestCase
       $this->assertEquals($file->getFullPath(), $filepath);
       $this->assertEquals($file->getFileDir(), $directory);
   }
-
-
-
-
-
 
 }
