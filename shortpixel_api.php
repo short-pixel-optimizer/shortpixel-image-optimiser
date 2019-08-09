@@ -134,7 +134,7 @@ class ShortPixelAPI {
         }
 
         //WpShortPixel::log("ShortPixel API Request Settings: " . json_encode($requestParameters));
-        Log::addDebug('ShortPixel API Request', array($requestParameters));
+        //Log::addDebug('ShortPixel API Request');
         $response = wp_remote_post($this->_apiEndPoint, $this->prepareRequest($requestParameters, $Blocking) );
 
         //WpShortPixel::log('RESPONSE: ' . json_encode($response));
@@ -583,7 +583,7 @@ class ShortPixelAPI {
      * @return array status/message
      */
     private function handleSuccess($APIresponse, $PATHs, $itemHandler, $compressionType) {
-        Log::addDebug('Shortpixel API : Handling Success!', array($APIresponse));
+        Log::addDebug('Shortpixel API : Handling Success!');
 
         $counter = $savedSpace =  $originalSpace =  $optimizedSpace /* = $averageCompression */ = 0;
         $NoBackup = true;
@@ -669,6 +669,10 @@ class ShortPixelAPI {
         $thumbsOpt = 0;
         $thumbsOptList = array();
 
+        $fs = new \ShortPixel\FileSystemController();
+
+        //Log::addDebug($tempFiles);
+        // Check and Run all tempfiles. Move it to appropiate places.
         if ( !empty($tempFiles) )
         {
             //overwrite the original files with the optimized ones
@@ -676,23 +680,27 @@ class ShortPixelAPI {
             {
                 if(!is_array($tempFile)) continue;
 
-                $targetFile = $PATHs[$tempFileID];
-                $isRetina = ShortPixelMetaFacade::isRetina($targetFile);
+                $targetFile = $fs->getFile($PATHs[$tempFileID]);
+                $isRetina = ShortPixelMetaFacade::isRetina($targetFile->getFullPath());
 
                 if(   ($tempFile['Status'] == self::STATUS_UNCHANGED || $tempFile['Status'] == self::STATUS_SUCCESS) && !$isRetina
-                   && $targetFile !== $mainPath) {
+                   && $targetFile->getFullPath() !== $mainPath) {
                     $thumbsOpt++;
-                    $thumbsOptList[] = self::MB_basename($targetFile);
+                    $thumbsOptList[] = self::MB_basename($targetFile->getFullPath());
                 }
 
                 if($tempFile['Status'] == self::STATUS_SUCCESS) { //if it's unchanged it will still be in the array but only for WebP (handled below)
-                    $tempFilePATH = $tempFile["Message"];
-                    if ( file_exists($tempFilePATH) && (!file_exists($targetFile) || is_writable($targetFile)) ) {
-                        copy($tempFilePATH, $targetFile);
-                        if(ShortPixelMetaFacade::isRetina($targetFile)) {
+                    $tempFilePATH = $fs->getFile($tempFile["Message"]);
+
+                    //@todo Move file logic to use FS controller / fileModel.
+                    if ( $tempFilePATH->exists() && (! $targetFile->exists() || $targetFile->is_writable()) ) {
+                      //  copy($tempFilePATH, $targetFile);
+                        $tempFilePATH->move($targetFile);
+
+                        if(ShortPixelMetaFacade::isRetina($targetFile->getFullPath())) {
                             $retinas ++;
                         }
-                        if($resize && $itemHandler->getMeta()->getPath() == $targetFile) { //this is the main image
+                        if($resize && $itemHandler->getMeta()->getPath() == $targetFile->getFullPath() ) { //this is the main image
                             $size = getimagesize($PATHs[$tempFileID]);
                             $width = $size[0];
                             $height = $size[1];
@@ -703,7 +711,7 @@ class ShortPixelAPI {
                         $originalSpace += $fileData->OriginalSize;
                         $optimizedSpace += $fileData->$fileSize;
                         //$averageCompression += $fileData->PercentImprovement;
-                        WPShortPixel::log("HANDLE SUCCESS: Image " . $PATHs[$tempFileID] . " original size: ".$fileData->OriginalSize . " optimized: " . $fileData->$fileSize);
+                        Log::addInfo("HANDLE SUCCESS: Image " . $PATHs[$tempFileID] . " original size: ".$fileData->OriginalSize . " optimized: " . $fileData->$fileSize);
 
                         //add the number of files with < 5% optimization
                         if ( ( ( 1 - $APIresponse[$tempFileID]->$fileSize/$APIresponse[$tempFileID]->OriginalSize ) * 100 ) < 5 ) {
@@ -712,41 +720,42 @@ class ShortPixelAPI {
                     }
                     else {
                         if($archive &&  SHORTPIXEL_DEBUG === true) {
-                            if(!file_exists($tempFilePATH)) {
-                                WPShortPixel::log("MISSING FROM ARCHIVE. tempFilePath: $tempFilePATH with ID: $tempFileID");
-                            } elseif(!wp_is_writable($targetFile)){
-                                WPShortPixel::log("TARGET NOT WRITABLE: $targetFile");
+                            if(! $tempFilePATH->exists()) {
+                                Log::addWarn("MISSING FROM ARCHIVE. tempFilePath: " . $tempFilePATH->getFullPath() . " with ID: $tempFileID");
+                            } elseif(! $targetFile->is_writable() ){
+                                Log::addWarn("TARGET NOT WRITABLE: " . $targetFile->getFullPath() );
                             }
                         }
                         $writeFailed++;
                     }
-                    @unlink($tempFilePATH); // @todo Unlink is risky due to lack of checks.
+                    //@unlink($tempFilePATH); // @todo Unlink is risky due to lack of checks.
+                  //  $tempFilePath->delete();
                 }
 
-                $tempWebpFilePATH = $tempFile["WebP"];
-                if(file_exists($tempWebpFilePATH)) {
-                    $targetWebPFileCompat = dirname($targetFile) . '/'. self::MB_basename($targetFile, '.' . pathinfo($targetFile, PATHINFO_EXTENSION)) . ".webp";
-                    $targetWebPFile = dirname($targetFile) . '/' . self::MB_basename($targetFile) . ".webp";
-                    //if the WebP fileCompat already exists, it means that there is another file with the same basename but different extension which has its .webP counterpart
-                    //save it with double extension
-                    if(file_exists($targetWebPFileCompat)) {
-                        copy($tempWebpFilePATH, $targetWebPFile);
+                $tempWebpFilePATH = $fs->getFile($tempFile["WebP"]);
+                if( $tempWebpFilePATH->exists() ) {
+                    $targetWebPFileCompat = $fs->getFile($targetFile->getFileDir() . $targetFile->getFileName() . '.webp');
+                    /*$targetWebPFileCompat = dirname($targetFile) . '/'. self::MB_basename($targetFile, '.' . pathinfo($targetFile, PATHINFO_EXTENSION)) . ".webp"; */
+
+                    $targetWebPFile = $fs->getFile($targetFile->getFileDir() . $targetFile->getFileBase() . '.webp');
+                    //if the Targetfile already exists, it means that there is another file with the same basename but different extension which has its .webP counterpart save it with double extension
+                    if($targetWebPFile->exists()) {
+                        $tempWebpFilePATH->move($targetWebPFileCompat);
                     } else {
-                        copy($tempWebpFilePATH, $targetWebPFileCompat);
+                        $tempWebpFilePATH->move($targetWebPFile);
                     }
-                    @unlink($tempWebpFilePATH);
                 }
-            }
+            } // / For each tempFile
             self::cleanupTemporaryFiles($archive, $tempFiles);
 
             if ( $writeFailed > 0 )//there was an error
             {
-                if($archive && SHORTPIXEL_DEBUG === true) {
-                    WPShortPixel::log("ARCHIVE HAS MISSING FILES. EXPECTED: " . json_encode($PATHs)
-                                    . " AND: " . json_encode($APIresponse)
-                                    . " GOT ARCHIVE: " . $APIresponse[count($APIresponse) - 1]->ArchiveURL . " LOSSLESS: " . $APIresponse[count($APIresponse) - 1]->ArchiveLosslessURL
-                                    . " CONTAINING: " . json_encode(scandir($archive['Path'])));
-                }
+
+                Log::addDebug("ARCHIVE HAS MISSING FILES. EXPECTED: " . json_encode($PATHs)
+                                . " AND: " . json_encode($APIresponse)
+                                . " GOT ARCHIVE: " . $APIresponse[count($APIresponse) - 1]->ArchiveURL . " LOSSLESS: " . $APIresponse[count($APIresponse) - 1]->ArchiveLosslessURL
+                                . " CONTAINING: " . json_encode(scandir($archive['Path'])));
+
                 $msg = sprintf(__('Optimized version of %s file(s) couldn\'t be updated.','shortpixel-image-optimiser'),$writeFailed);
                 $itemHandler->incrementRetries(1, self::ERR_SAVE, $msg);
                 $this->_settings->bulkProcessingStatus = "error";
@@ -798,7 +807,7 @@ class ShortPixelAPI {
 
         $itemHandler->updateMeta($meta);
         $itemHandler->optimizationSucceeded();
-        WPShortPixel::log("HANDLE SUCCESS: Metadata saved.");
+        Log::addDebug("HANDLE SUCCESS: Metadata saved.");
 
         if(!$originalSpace) { //das kann nicht sein, alles klar?!
             throw new Exception("OriginalSpace = 0. APIResponse" . json_encode($APIresponse));

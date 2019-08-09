@@ -9,7 +9,6 @@
  * Text Domain: shortpixel-image-optimiser
  * Domain Path: /lang
  */
-
 if (! defined('SHORTPIXEL_RESET_ON_ACTIVATE'))
   define('SHORTPIXEL_RESET_ON_ACTIVATE', false); //if true TODO set false
 //define('SHORTPIXEL_DEBUG', true);
@@ -70,8 +69,8 @@ define("SHORTPIXEL_MAX_RESULTS_QUERY", 30);
 function shortpixelInit() {
     global $shortPixelPluginInstance;
     //limit to certain admin pages if function available
-    $loadOnThisPage = !function_exists('get_current_screen');
-    if(!$loadOnThisPage) {
+    $loadOnThisPage = function_exists('get_current_screen');
+    if($loadOnThisPage) {
         $screen = get_current_screen();
         if(is_object($screen) && !in_array($screen->id, array('upload', 'edit', 'edit-tags', 'post-new', 'post'))) {
             return;
@@ -222,7 +221,10 @@ $log = ShortPixel\ShortPixelLogger\ShortPixelLogger::getInstance();
 $log->setLogPath(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
 
 // Pre-Runtime Checks
+// @todo Better solution for pre-runtime inclusions of externals.
 require_once('class/external/flywheel.php'); // check if SP runs on flywheel
+require_once('class/external/wp-offload-media.php');
+
 
 $option = get_option('wp-short-pixel-create-webp-markup');
 if ( $option ) {

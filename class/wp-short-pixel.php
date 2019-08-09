@@ -3703,6 +3703,7 @@ class WPShortPixel {
     }
 
     /** Removes webp and backup from specified paths
+      * @todo Implement Filesystem controller on this.
     */
     public function deleteBackupsAndWebPs($paths) {
         /**
