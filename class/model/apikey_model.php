@@ -104,7 +104,7 @@ class ApiKeyModel extends ShortPixelModel
   */
   public function checkKey($key)
   {
-      Log::addDebug("Model, checking key ". $key . ' not -' .  $this->apiKeyTried);
+      //Log::addDebug("Model, checking key ". $key . ' not -' .  $this->apiKeyTried);
       if (strlen($key) == 0)
       {
         // first-timers, redirect to nokey screen

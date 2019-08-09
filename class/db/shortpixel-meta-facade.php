@@ -101,7 +101,8 @@ class ShortPixelMetaFacade {
         return $rawMeta;
     }
 
-    function updateMeta($newMeta = null, $replaceThumbs = false) {
+    // @todo Find out the use of this function. Doesn't update_meta unless it's WPML.
+    public function updateMeta($newMeta = null, $replaceThumbs = false) {
         if($newMeta) {
             $this->meta = $newMeta;
         }
@@ -113,6 +114,7 @@ class ShortPixelMetaFacade {
         }
         elseif($this->type == ShortPixelMetaFacade::MEDIA_LIBRARY_TYPE) {
             $duplicates = ShortPixelMetaFacade::getWPMLDuplicates($this->ID);
+            Log::addDebug('Update Meta Duplicates Query', array($duplicates));
             foreach($duplicates as $_ID) {
                 $rawMeta = $this->sanitizeMeta(wp_get_attachment_metadata($_ID));
 
@@ -211,11 +213,15 @@ class ShortPixelMetaFacade {
                 if($_ID == $this->ID) {
                     $this->rawMeta = $rawMeta;
                 }
-            }
+            } // duplicates loop
         }
     }
 
-    function cleanupMeta($fakeOptPending = false) {
+
+    /** Clean meta set by Shortpixel
+    * This function only hits with images that were optimized, pending or have an error state.
+    */
+    public function cleanupMeta($fakeOptPending = false) {
         if($this->type == ShortPixelMetaFacade::MEDIA_LIBRARY_TYPE) {
             if(!isset($this->rawMeta)) {
                 $rawMeta = $this->sanitizeMeta(wp_get_attachment_metadata($this->getId()));
@@ -237,11 +243,10 @@ class ShortPixelMetaFacade {
             {
               foreach($rawMeta['sizes'] as $size => $data)
               {
-                  Log::addDebug('Scrubbing sizes - ' . $size);
                   if (strpos($size, ShortPixelMeta::FOUND_THUMB_PREFIX) !== false)
                   {
                     unset($rawMeta['sizes'][$size]);
-                    Log::addDebug('Unset size' . $size);
+                    Log::addDebug('Unset sp-found- size' . $size);
                   }
               }
             }

@@ -56,7 +56,6 @@ class WpShortPixelMediaLbraryAdapter {
             foreach ( $filesList as $file )
             {
                 $totalFilesThis = $processedFilesThis = 0;
-                //if($file->post_id == 945) {var_dump($file);}
 
                 if ( $file->meta_key == "_wp_attached_file" )
                 {//count pdf files only
@@ -86,9 +85,9 @@ class WpShortPixelMediaLbraryAdapter {
                              || $attachment['ShortPixelImprovement'] === 0.0 || $attachment['ShortPixelImprovement'] === "0"))
                         {
                             $foundThumbs = WpShortPixelMediaLbraryAdapter::findThumbs($filePath);
+
                             $foundCount = count($foundThumbs);
-                            //echo("   <br>&gt; $counter  CHECKING FILE THUMBS: FOUND $foundCount "
-                            //     . ($foundCount > $sizesCount ? " DIFFERENT ($sizesCount)!" : ""));
+
                             if(count($foundThumbs) > $sizesCount) {
                                 $unlisted = array();
                                 foreach($foundThumbs as $found) {
@@ -97,7 +96,6 @@ class WpShortPixelMediaLbraryAdapter {
                                         $unlisted[] = wp_basename($found);
                                     }
                                 }
-                                //echo( " UNLISTED for {$file->post_id} : " . json_encode($unlisted));
                                 $foundUnlistedThumbs = (object)array("id" => $file->post_id, "name" => wp_basename($attachment['file']), "unlisted" => $unlisted);
                             }
                         } else {
@@ -420,6 +418,7 @@ class WpShortPixelMediaLbraryAdapter {
 
     private static function getFilesByPattern($path, $pattern)
     {
+
       $dirIterator = new \DirectoryIterator($path);
       $regExIterator = new \RegexIterator($dirIterator, $pattern);
 

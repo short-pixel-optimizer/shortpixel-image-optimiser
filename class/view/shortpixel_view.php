@@ -212,6 +212,7 @@ class ShortPixelView {
         //$this->ctrl->outputHSBeacon();
         \ShortPixel\HelpScout::outputBeacon($this->ctrl->getApiKey());
 
+
         $this->bulkType = $this->ctrl->getPrioQ()->getBulkTypeForDisplay(); // adding to the mess
         $hider = ($this->bulkType == ShortPixelQueue::BULK_TYPE_RESTORE) ? 'sp-hidden' : '';
         ?>
