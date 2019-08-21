@@ -354,6 +354,13 @@ class WpShortPixelMediaLbraryAdapter {
         // New
         $fs = new \ShortPixel\FileSystemController();
         $file = $fs->getFile($mainFile);
+
+        $directory = $file->getFileDir();
+        /* Directory could not exist if, for instance, the request path is URL, S3 or some external exotic. */
+        if (! $directory->check())
+        {
+          return array();
+        }
         $dirPath = $file->getFileDir()->getPath();
 
         $base = $file->getFileBase();

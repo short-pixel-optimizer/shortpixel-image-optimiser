@@ -1,5 +1,5 @@
 <?php
-use org\bovigo\vfs\vfsStream;
+use \org\bovigo\vfs\vfsStream;
 
 class FileSystemTest extends  WP_UnitTestCase
 {
@@ -102,11 +102,12 @@ class FileSystemTest extends  WP_UnitTestCase
       $directory = $this->fs->getDirectory($dirpath);
 
       // First test. Non existing directory should not exist.
-      $this->assertFalse($directory->exists());
+      $this->assertFalse($directory->exists(), $directory->getPath());
 
       // Check should Create a directory.
       $directory->check();
 
+      $this->assertTrue(is_dir($dirpath)); //basically test if vfs is doing is good.
       $this->assertTrue($directory->exists());
       $this->assertDirectoryExists($dirpath);
       $this->assertDirectoryIsReadable($dirpath);
@@ -123,6 +124,23 @@ class FileSystemTest extends  WP_UnitTestCase
       $this->assertEquals($directory2->getPath(), $dirpath2);
       $this->assertEquals($directory2->getPath(), $dirpath . '/');
       $this->assertEquals($directory2->getPath(), $directory->getPath());
+
+      // When feeding a file. Non-existing.
+      $dirpath3 = $this->root->url() . '/basic/accidental_file.png';
+      $goodpath3 = $this->root->url() . '/basic/';
+      $directory3 = $this->fs->getDirectory($dirpath3);
+
+      $this->assertTrue($directory3->exists(), $directory3->getPath());
+      $this->assertEquals($goodpath3, $directory3->getPath());
+
+      // When feeding a file, existing.
+      $dirpath4 = $this->root->url() . '/images/image1.jpg';
+      $goodpath4 = $this->root->url() . '/images/';
+      $directory4 = $this->fs->getDirectory($dirpath4);
+
+      $this->assertTrue($directory4->exists());
+      $this->assertEquals($goodpath4, $directory4->getPath());
+
   }
 
   /* @test Directory Not Writable */
@@ -143,6 +161,53 @@ class FileSystemTest extends  WP_UnitTestCase
 
     $this->assertTrue($directory->is_writable());
     $this->assertDirectoryIsWritable($dirpath);
+  }
+
+  public function testDirectoryRelativePath()
+  {
+    $uploadDir = wp_upload_dir();
+    $basedir = $uploadDir['basedir'];
+
+    // test with known basedir.
+    $good_result = 'wp-content/uploads/2019/08/';
+    $dirpath = $basedir . '/2019/08/';
+
+    $directory = $this->fs->getDirectory($dirpath);
+
+    $this->assertEquals($good_result, $directory->getRelativePath(), $dirpath);
+    $this->assertEquals($good_result, ShortPixelMetaFacade::returnSubDir($dirpath), ShortPixelMetaFacade::returnSubDir($dirpath));
+
+    // Test with non-installation basedir.
+    $dirpath2 = '/var/www/nothere/wp-content/uploads/2019/08/';
+    $directory2 =  $this->fs->getDirectory($dirpath2);
+
+    $this->assertEquals($good_result, $directory2->getRelativePath());
+    $this->assertEquals($good_result, ShortPixelMetaFacade::returnSubDir($dirpath2), ShortPixelMetaFacade::returnSubDir($dirpath2));
+
+    // Test with URL, or whatever.
+    $dirpath3 = 's3:/localbucket/wp-content/uploads/2019/08/64NrYkvZOrU-200x300.jpg';
+    $directory3 =  $this->fs->getDirectory($dirpath3);
+
+    $this->assertEquals($good_result, $directory3->getRelativePath(), $directory3->getPath());
+    $this->assertEquals($good_result, ShortPixelMetaFacade::returnSubDir($dirpath3), ShortPixelMetaFacade::returnSubDir($dirpath3));
+
+    // Test with Upload Dir not based on month/year.
+    $dirpath4 = $basedir . '/64NrYkvZOrU-200x300.jpg';
+    $good_result4 = 'wp-content/uploads/';
+    $directory4 =  $this->fs->getDirectory($dirpath4);
+
+    $this->assertEquals($good_result4, $directory4->getRelativePath(), $directory4->getPath());
+    $this->assertEquals($good_result4, ShortPixelMetaFacade::returnSubDir($dirpath4), ShortPixelMetaFacade::returnSubDir($dirpath4));
+
+    // unknown host, based on uploads
+    $dirpath5 = '/var/unknown/uploads/2019/08/bla.jpg';
+    $good_result5 = 'uploads/2019/08/';
+    $directory5 = $this->fs->getDirectory($dirpath5);
+
+    $this->assertEquals($good_result5, $directory5->getRelativePath(), $directory5->getRelativePath());
+    $this->assertEquals($good_result5, ShortPixelMetaFacade::returnSubDir($dirpath5), ShortPixelMetaFacade::returnSubDir($dirpath5));
+
+    //upload_dir
   }
 
   public function testFileBasic()
@@ -291,6 +356,14 @@ class FileSystemTest extends  WP_UnitTestCase
       $file = $this->fs->getFile($fulltemppath);
 
       $this->assertEquals($fulltemppath, $file->getFullPath() );
+
+      $s3path = 's3:/localbucket/wp-content/uploads/2019/08/13063326/AEobOR_BgXA.webp';
+      $s3good = '/tmp/wordpress/wp-content/uploads/2019/08/13063326/AEobOR_BgXA.webp';
+      $file = $this->fs->getFile($s3path);
+
+      // Flaw
+      //$this->assertEquals($s3good, $file->getFullPath());
+
 
       // Test with Upload Path something else than
       /*update_option('upload_path', dirname(ABSPATH) . '/uploads');

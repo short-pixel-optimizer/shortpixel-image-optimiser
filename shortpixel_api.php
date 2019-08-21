@@ -476,7 +476,6 @@ class ShortPixelAPI {
             return array("Status" => self::STATUS_FAIL, "Message" => __('Backup folder does not exist and it cannot be created','shortpixel-image-optimiser'));
         }
         //create subdir in backup folder if needed
-        //@mkdir( SHORTPIXEL_BACKUP_FOLDER . '/' . $fullSubDir, 0777, true);
         ShortPixelFolder::createBackUpFolder(SHORTPIXEL_BACKUP_FOLDER . '/' . $fullSubDir);
 
         foreach ( $source as $fileID => $filePATH )//create destination files array
@@ -880,7 +879,7 @@ class ShortPixelAPI {
         foreach ( $PATHs as $Id => $File )
         {
             //we try again with a different path
-            if ( !apply_filters( 'shortpixel_image_exists', file_exists($File), $File ) ){
+            if ( !apply_filters( 'shortpixel_image_exists', file_exists($File), $File, null ) ){
                 //$NewFile = $uploadDir['basedir'] . "/" . substr($File,strpos($File, $StichString));//+strlen($StichString));
                 $NewFile = SHORTPIXEL_UPLOADS_BASE . substr($File,strpos($File, $StichString)+strlen($StichString));
                 if (file_exists($NewFile)) {
