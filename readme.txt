@@ -4,7 +4,7 @@ Tags: compressor, image, compression, optimize, image optimizer, image optimiser
 Requires at least: 3.2.0
 Tested up to: 5.2
 Requires PHP: 5.3
-Stable tag: 4.14.3
+Stable tag: 4.14.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -248,6 +248,14 @@ define('SHORTPIXEL_CUSTOM_THUMB_INFIXES', '-uae'); will handle custom thumbnails
 
 = 4.x.y =
 Release date:
+* Language – XX new strings added, YY updated, WW fuzzied, and ZZ obsoleted
+
+= 4.14.4 =
+Release date:
+* Check if unlisted thumbnails present for already optimized images (in case the thumbnails were added later) in Media Library list and when doing bulk. This also integrates with the Unicode plugin.
+* If JSON PHP module not present, add a proper error
+* Fixed: bulk error "WordPress database error You have an error in your SQL syntax" on some installs
+* Fixed: Warning: count() Parameter must be an array.
 * Language – XX new strings added, YY updated, WW fuzzied, and ZZ obsoleted
 
 == 4.14.3 ==
