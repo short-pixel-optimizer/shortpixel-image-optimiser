@@ -1670,14 +1670,12 @@ class WPShortPixel {
       foreach($foundThumbs as $id => $found) {
           $foundFile = $fs->getFile($found);
 
-
           foreach($allSizes as $sizeFile) {
               if ($sizeFile->getExtension() !== $foundFile->getExtension())
               {
-                continue;
+                $foundThumbs[$id] = false;
               }
-
-              if ($sizeFile->getFileName() === $foundFile->getFileName())
+              elseif ($sizeFile->getFileName() === $foundFile->getFileName())
               {
                   $foundThumbs[$id] = false;
               }
@@ -1729,7 +1727,7 @@ class WPShortPixel {
 
         //WpShortPixelMediaLbraryAdapter::cleanupFoundThumbs($itemHandler);
         $URLsAndPATHs = $this->getURLsAndPATHs($itemHandler, NULL, $onlyThumbs);
-Log::addDebug('Send to PRocessing - URLS -', array($URLsAndPATHs) );
+        Log::addDebug('Send to PRocessing - URLS -', array($URLsAndPATHs) );
 
         $meta = $itemHandler->getMeta();
         //find thumbs that are not listed in the metadata and add them in the sizes array
@@ -1819,7 +1817,6 @@ Log::addDebug('Send to PRocessing - URLS -', array($URLsAndPATHs) );
                     $itemHandler->getMeta();
                     $errCode = $e->getCode() < 0 ? $e->getCode() : ShortPixelAPI::ERR_FILE_NOT_FOUND;
                     $itemHandler->setError($errCode, $e->getMessage());
-
 
                     $ret = array("Status" => ShortPixelAPI::STATUS_FAIL, "Message" => $e->getMessage());
                 }

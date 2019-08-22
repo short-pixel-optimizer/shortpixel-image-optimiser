@@ -750,10 +750,11 @@ class ShortPixelAPI {
             if ( $writeFailed > 0 )//there was an error
             {
 
-                Log::addDebug("ARCHIVE HAS MISSING FILES. EXPECTED: " . json_encode($PATHs)
+              /*  Log::addDebug("ARCHIVE HAS MISSING FILES. EXPECTED: " . json_encode($PATHs)
                                 . " AND: " . json_encode($APIresponse)
                                 . " GOT ARCHIVE: " . $APIresponse[count($APIresponse) - 1]->ArchiveURL . " LOSSLESS: " . $APIresponse[count($APIresponse) - 1]->ArchiveLosslessURL
-                                . " CONTAINING: " . json_encode(scandir($archive['Path'])));
+                                . " CONTAINING: " . json_encode(scandir($archive['Path']))); */
+                Log::addDebug('Archive files missing (expected paths, response)', array($PATHs, $APIresponse));
 
                 $msg = sprintf(__('Optimized version of %s file(s) couldn\'t be updated.','shortpixel-image-optimiser'),$writeFailed);
                 $itemHandler->incrementRetries(1, self::ERR_SAVE, $msg);

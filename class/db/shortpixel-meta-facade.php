@@ -391,7 +391,9 @@ class ShortPixelMetaFacade {
             $mainExists = apply_filters('shortpixel_image_exists', file_exists($path), $path, $this->ID);
             $predownload_url = $url = self::safeGetAttachmentUrl($this->ID);
             $urlList = array(); $filePaths = array();
-Log::addDebug('attached file path: ' . $path );
+
+            Log::addDebug('attached file path: ' . $path );
+
             if(!$mainExists) {
                 //try and download the image from the URL (images present only on CDN)
                 $downloadTimeout = max(SHORTPIXEL_MAX_EXECUTION_TIME - 10, 15);
@@ -441,6 +443,7 @@ Log::addDebug('attached file path: ' . $path );
                 $count = 1;
                 foreach( $sizes as $thumbnailName => $thumbnailInfo ) {
 
+                    // Reasons for skipping the thumb.
                     if(!isset($thumbnailInfo['file'])) { //cases when $thumbnailInfo is NULL
                         continue;
                     }
@@ -466,6 +469,10 @@ Log::addDebug('attached file path: ' . $path );
 
                     $origPath = $tPath = str_replace(ShortPixelAPI::MB_basename($path), $thumbnailInfo['file'], $path);
                     $origFile = $fs->getFile($origPath);
+
+                    if ($origFile->getExtension() == 'webp') // never include any webp extension.
+                      continue;
+
                     $file_exists = apply_filters('shortpixel_image_exists', file_exists($origPath), $origPath, $this->ID);
                     $tUrl = str_replace(ShortPixelAPI::MB_basename($predownload_url), $thumbnailInfo['file'], $predownload_url);
 
