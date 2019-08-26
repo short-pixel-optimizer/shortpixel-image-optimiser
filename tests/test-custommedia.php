@@ -13,7 +13,7 @@ class CustomMediaTest extends WP_UnitTestCase
 
   public function setUp()
   {
-    
+
   }
 
   public function tearDown()
@@ -25,7 +25,6 @@ class CustomMediaTest extends WP_UnitTestCase
   {
     $post = $this->factory->post->create_and_get();
     $attachment_id = $this->factory->attachment->create_upload_object( __DIR__ . '/assets/test-image.jpg', $post->ID );
-
 
   }
 }

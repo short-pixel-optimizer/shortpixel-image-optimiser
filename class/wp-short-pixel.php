@@ -3587,7 +3587,7 @@ class WPShortPixel {
     /**
      * return the thumbnails that remain to optimize and the total count of sizes registered in metadata (and not excluded)
      * @param $data @todo Define what is data
-     * @param $file
+     * @param $filepath
      * @return array Array of Thumbs to Optimize - only the filename - , and count of sizes not excluded ...
      */
     function getThumbsToOptimize($data, $filepath) {
