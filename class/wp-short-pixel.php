@@ -797,6 +797,7 @@ class WPShortPixel {
             $itemHandler = new ShortPixelMetaFacade($ID);
             $itemHandler->setRawMeta($meta);
             //that's a hack for watermarking plugins, don't send the image right away to processing, only add it in the queue
+            // @todo Unhack the hack
             include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
             if(   !is_plugin_active('image-watermark/image-watermark.php')
                && !is_plugin_active('amazon-s3-and-cloudfront/wordpress-s3.php')
@@ -2048,21 +2049,36 @@ class WPShortPixel {
 
         $toReplace = array();
         // Checks if image was converted to JPG, and rewrites to restore original extension.
+        // @todo Should have it's own function in php2jpg ( restore )
         if($png2jpgMain) {
             $png2jpgSizes = $png2jpgMain ? $rawMeta['ShortPixelPng2Jpg']['originalSizes'] : array();
-            $image = $rawMeta['file'];
-            $imageUrl = wp_get_attachment_url($attachmentID);
-            $baseUrl = ShortPixelPng2Jpg::removeUrlProtocol(trailingslashit(str_replace($image, "", $imageUrl))); //make the base url protocol agnostic if it's not already
-            $baseRelPath = trailingslashit(dirname($image)); // @todo Replace this (string) $fsFile->getFileDir();
+            $image = $rawMeta['file']; // relative file
+            $imageUrl = wp_get_attachment_url($attachmentID); // URL can be anything.
+
+            Log::addDebug('OriginFile -- ' . $fsFile->getFullPath() );
+
+            $imageName = $fsFile->getFileName();
+
+            $baseUrl = str_replace($fsFile->getFileName(), '', $imageUrl); // remove *only* filename from URL
+            $baseUrl = ShortPixelPng2Jpg::removeUrlProtocol($baseUrl); // @todo parse_url with a util helper / model should be better here
+
+          //  $baseUrl = ShortPixelPng2Jpg::removeUrlProtocol(trailingslashit(str_replace($image, "", $imageUrl))); //make the base url protocol agnostic if it's not already
+
+            // not needed, we don't do this weird remove anymore.
+            $baseRelPath = ''; // trailingslashit(dirname($image)); // @todo Replace this (string) $fsFile->getFileDir();
+
             $toReplace[ShortPixelPng2Jpg::removeUrlProtocol($imageUrl)] = $baseUrl . $baseRelPath . wp_basename($png2jpgMain);
             foreach($sizes as $key => $size) {
                 if(isset($png2jpgSizes[$key])) {
                     $toReplace[$baseUrl . $baseRelPath . $size['file']] = $baseUrl . $baseRelPath . wp_basename($png2jpgSizes[$key]['file']);
                 }
             }
+
             //$file = $png2jpgMain;
-            $fsFile = $fs->getFile($png2jpgMain);
             $sizes = $png2jpgSizes;
+
+            $fsFile = $fs->getFile($png2jpgMain); // original is non-existing at this time.
+
         }
 
         //first check if the file is readable by the current user - otherwise it will be unaccessible for the web browser
@@ -2104,9 +2120,7 @@ class WPShortPixel {
                 }
                 $bkCount++;
                 $thumbsPaths[] = array('source' => $source, 'destination' => $destination);
-
             }
-
         }
         if(!$bkCount) {
             $this->throwNotice('generic-err', __("No backup files found. Restore not performed.",'shortpixel-image-optimiser'));
@@ -2237,6 +2251,7 @@ class WPShortPixel {
 
     /**
      * used to store a notice to be displayed after the redirect, for ex. when having an error restoring.
+     * @todo move this to noticesModel
      * @param string $when
      * @param string $extra
      */
@@ -3617,7 +3632,6 @@ class WPShortPixel {
                 {
                   continue;
                 }
-
 
                 if(!in_array($size, $exclude) && !in_array($file->getFileName(), $thumbsOptList)) {
                     $thumbsToOptimizeList[] = $file->getFileName();

@@ -581,6 +581,7 @@ class ShortPixelMetaFacade {
         return (substr($baseName, -3) === '@2x');
     }
 
+    // @todo Not clear what this function does.
     public static function getWPMLDuplicates( $id ) {
         global $wpdb;
 

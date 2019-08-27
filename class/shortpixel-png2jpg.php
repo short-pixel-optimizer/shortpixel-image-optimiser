@@ -303,7 +303,7 @@ class ShortPixelPng2Jpg {
                     $rett = $retThumb->params;
                 }
 
-                WPShortPixel::log("PNG2JPG doConvert thumb RETURNED " . json_encode($rett));
+                Log::addDebug("PNG2JPG doConvert thumb RETURNED " . json_encode($rett));
                 if ($rett['type'] == 'image/jpeg') {
                     $toUnlink[] = $retThumb->unlink;
                     Log::addDebug("PNG2JPG thumb is jpg");

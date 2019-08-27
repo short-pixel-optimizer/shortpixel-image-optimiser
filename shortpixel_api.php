@@ -88,7 +88,8 @@ class ShortPixelAPI {
 
         if(!count($URLs)) {
             $meta = $itemHandler->getMeta();
-            if(count($meta->getThumbsMissing())) {
+            $thumbsMissing = $meta->getThumbsMissing();
+            if(is_array($thumbsMissing) && count($thumbsMissing)) {
                 $added = array();
                 $files = " (";
                 foreach ($meta->getThumbsMissing() as $miss) {
