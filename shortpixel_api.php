@@ -88,7 +88,8 @@ class ShortPixelAPI {
 
         if(!count($URLs)) {
             $meta = $itemHandler->getMeta();
-            if(count($meta->getThumbsMissing())) {
+            $thumbsMissing = $meta->getThumbsMissing();
+            if(is_array($thumbsMissing) && count($thumbsMissing)) {
                 $added = array();
                 $files = " (";
                 foreach ($meta->getThumbsMissing() as $miss) {
@@ -476,7 +477,6 @@ class ShortPixelAPI {
             return array("Status" => self::STATUS_FAIL, "Message" => __('Backup folder does not exist and it cannot be created','shortpixel-image-optimiser'));
         }
         //create subdir in backup folder if needed
-        //@mkdir( SHORTPIXEL_BACKUP_FOLDER . '/' . $fullSubDir, 0777, true);
         ShortPixelFolder::createBackUpFolder(SHORTPIXEL_BACKUP_FOLDER . '/' . $fullSubDir);
 
         foreach ( $source as $fileID => $filePATH )//create destination files array
@@ -751,10 +751,11 @@ class ShortPixelAPI {
             if ( $writeFailed > 0 )//there was an error
             {
 
-                Log::addDebug("ARCHIVE HAS MISSING FILES. EXPECTED: " . json_encode($PATHs)
+              /*  Log::addDebug("ARCHIVE HAS MISSING FILES. EXPECTED: " . json_encode($PATHs)
                                 . " AND: " . json_encode($APIresponse)
                                 . " GOT ARCHIVE: " . $APIresponse[count($APIresponse) - 1]->ArchiveURL . " LOSSLESS: " . $APIresponse[count($APIresponse) - 1]->ArchiveLosslessURL
-                                . " CONTAINING: " . json_encode(scandir($archive['Path'])));
+                                . " CONTAINING: " . json_encode(scandir($archive['Path']))); */
+                Log::addDebug('Archive files missing (expected paths, response)', array($PATHs, $APIresponse));
 
                 $msg = sprintf(__('Optimized version of %s file(s) couldn\'t be updated.','shortpixel-image-optimiser'),$writeFailed);
                 $itemHandler->incrementRetries(1, self::ERR_SAVE, $msg);
@@ -880,7 +881,7 @@ class ShortPixelAPI {
         foreach ( $PATHs as $Id => $File )
         {
             //we try again with a different path
-            if ( !apply_filters( 'shortpixel_image_exists', file_exists($File), $File ) ){
+            if ( !apply_filters( 'shortpixel_image_exists', file_exists($File), $File, null ) ){
                 //$NewFile = $uploadDir['basedir'] . "/" . substr($File,strpos($File, $StichString));//+strlen($StichString));
                 $NewFile = SHORTPIXEL_UPLOADS_BASE . substr($File,strpos($File, $StichString)+strlen($StichString));
                 if (file_exists($NewFile)) {

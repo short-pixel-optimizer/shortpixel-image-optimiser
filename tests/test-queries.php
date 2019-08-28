@@ -41,6 +41,9 @@ class QueriesTest extends WP_UnitTestCase
             'mainfile.jpg' => $content,
             'mainfile-250x250.jpg' => $content,  //normal wp
             'mainfile-560x560.jpg' => $content,
+            'mainfile-250x250.jpg.webp' => $content,  //normal wp
+            'mainfile-250x250.webp' => $content,  //normal wp
+
             'mainfile-650x650-sufx.jpg' => $content,
             'mainfile-100x100-sufx.jpg' => $content,
             'mainfile-uai-750x500.jpg' => $content, //infix
@@ -79,8 +82,11 @@ class QueriesTest extends WP_UnitTestCase
       $expected2 = array();
       $expected3 = array();
 
+      // things that should be filtered by the thumbs extension.
       $files_used = $this->files_used['images'];
       unset($files_used['mainfile.jpg']);
+      unset($files_used['mainfile-250x250.jpg.webp']);
+      unset($files_used['mainfile-250x250.webp']);
 
       $i = 0;
       foreach($files_used as $filename => $data)
@@ -108,7 +114,7 @@ class QueriesTest extends WP_UnitTestCase
     }
 
     /**
-    *
+    * Test Shortpixel meta facade.
     */
     public function testFindThumbs()
     {
@@ -140,6 +146,15 @@ class QueriesTest extends WP_UnitTestCase
 
         $this->assertCount(6, $thumbs3);
         $this->assertEquals($expected3, $thumbs3);
+
+        $file_notexists = $rooturl . '/images/weirdfile.jpg';
+        $thumbs4 = WpShortPixelMediaLbraryAdapter::findThumbs($file_notexists);
+        $this->assertCount(0, $thumbs4);
+
+        $dir_notexists = $rooturl . '/falsedirectory/';
+        $thumbs5 = WpShortPixelMediaLbraryAdapter::findThumbs($dir_notexists);
+        $this->assertCount(0, $thumbs5);
+
     }
 
 

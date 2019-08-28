@@ -25,6 +25,7 @@ class FileModel extends ShortPixelModel
   // File Status
   protected $exists = false;
   protected $is_writable = false;
+  protected $is_readable = false;
   protected $status;
 
   protected $backupDirectory;
@@ -62,11 +63,13 @@ class FileModel extends ShortPixelModel
       $this->filebase = isset($info['filename']) ? $info['filename'] : null; // only filename
       $this->extension = isset($info['extension']) ? $info['extension'] : null; // only (last) extension
       $this->directory = isset($info['dirname']) ? new DirectoryModel($info['dirname']) : null;
-      $this->is_writable = is_writable($this->fullpath);
+      $this->is_writable();
+      $this->is_readable();
     }
     else {
       $this->exists = false;
-      $this->writable = false;
+      $this->is_writable = false;
+      $this->is_readable = false;
 
       if (is_null($this->filename))
         $this->filename = basename($this->fullpath);
@@ -86,6 +89,12 @@ class FileModel extends ShortPixelModel
   {
     $this->is_writable = is_writable($this->fullpath);
     return $this->is_writable;
+  }
+
+  public function is_readable()
+  {
+    $this->is_readable = is_readable($this->fullpath);
+    return $this->is_readable;
   }
 
   public function hasBackup()
@@ -132,6 +141,7 @@ class FileModel extends ShortPixelModel
   {
       $sourcePath = $this->getFullPath();
       $destinationPath = $destination->getFullPath();
+      Log::addDebug("Copy from $sourcePath to $destinationPath ");
 
       if (! strlen($sourcePath) > 0 || ! strlen($destinationPath) > 0)
       {
@@ -172,9 +182,10 @@ class FileModel extends ShortPixelModel
   public function delete()
   {
       \wp_delete_file($this->fullpath);  // delete file hook via wp_delet_file
+      $this->setFileInfo(); // update info
+
       if (! file_exists($this->fullpath))
       {
-        $this->setFileInfo(); // update info
         return true;
       }
       else {
@@ -235,6 +246,7 @@ class FileModel extends ShortPixelModel
   */
   protected function processPath($path)
   {
+    $original_path = $path;
     $path = trim($path);
 
     if ($this->pathIsUrl($path))
@@ -251,6 +263,8 @@ class FileModel extends ShortPixelModel
     if (strpos($path, ABSPATH) === false && strpos($path, $this->getUploadPath()) === false)
       $path = $this->relativeToFullPath($path);
 
+
+    $path = apply_filters('shortpixel/filesystem/processFilePath', $path, $original_path);
     /* This needs some check here on malformed path's, but can't be test for existing since that's not a requirement.
     if (file_exists($path) === false) // failed to process path to something workable.
     {
@@ -308,6 +322,12 @@ class FileModel extends ShortPixelModel
       if (strlen($path) == 0)
         return $path;
 
+      // if the file plainly exists, it's usable /**
+      if (file_exists($path))
+      {
+        return $path;
+      }
+
       // Test if our 'relative' path is not a path to /tmp directory.
 
       // This ini value might not exist.
@@ -325,16 +345,12 @@ class FileModel extends ShortPixelModel
         return $path;
       }
 
-      // if the file plainly exists, it's usable /**
-      if (file_exists($path))
-      {
-        return $path;
-      }
 
       // this is probably a bit of a sharp corner to take.
       // if path starts with / remove it due to trailingslashing ABSPATH
       $path = ltrim($path, '/');
       $fullpath = trailingslashit(ABSPATH) . $path;
+      // We can't test for file_exists here, since file_model allows non-existing files.
       return $fullpath;
   }
 

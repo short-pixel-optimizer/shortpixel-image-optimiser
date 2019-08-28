@@ -84,9 +84,6 @@ Class FileSystemController extends ShortPixelController
       $filepath = $file->getFullPath();
       $directory = $file->getFileDir();
 
-    //  $relpath = $directory->getRelativePath();
-      //$relfile =
-
       // stolen from wp_get_attachment_url
       if ( ( $uploads = wp_get_upload_dir() ) && false === $uploads['error'] ) {
             // Check that the upload base exists in the file location.
@@ -101,9 +98,10 @@ Class FileSystemController extends ShortPixelController
                 $url = $uploads['baseurl'] . "/$filepath";
             }
         }
-
         return $url;
     }
+
+
 
 
 
