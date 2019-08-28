@@ -251,12 +251,12 @@ Release date:
 * Language – XX new strings added, YY updated, WW fuzzied, and ZZ obsoleted
 
 = 4.14.4 =
-Release date:
+Release date: 19th August 2019
 * Check if unlisted thumbnails present for already optimized images (in case the thumbnails were added later) in Media Library list and when doing bulk. This also integrates with the Unicode plugin.
 * If JSON PHP module not present, add a proper error
 * Fixed: bulk error "WordPress database error You have an error in your SQL syntax" on some installs
 * Fixed: Warning: count() Parameter must be an array.
-* Language – XX new strings added, YY updated, WW fuzzied, and ZZ obsoleted
+* Language – 0 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted
 
 == 4.14.3 ==
 
