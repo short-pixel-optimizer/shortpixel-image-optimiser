@@ -3,7 +3,7 @@ namespace ShortPixel;
 
 /** Loads a few environment variables handy to have nearby
 *
-* Notice - This is meant to be loaded *often*, so it shouldn't do any heavy lifting without caching the results. 
+* Notice - This is meant to be loaded *often*, so it shouldn't do any heavy lifting without caching the results.
 */
 class EnvironmentModel extends ShortPixelModel
 {
@@ -31,6 +31,5 @@ class EnvironmentModel extends ShortPixelModel
       $this->is_mainsite = is_main_site();
 
       $this->has_nextgen = \ShortPixelNextGenAdapter::hasNextGen();
-
   }
 }
