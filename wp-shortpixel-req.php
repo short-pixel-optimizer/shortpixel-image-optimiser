@@ -15,19 +15,16 @@ require_once('class/controller/controller.php');
 require_once('class/shortpixel-model.php');
 
 //use ShortPixel\DebugItem as DebugItem;
-use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+//use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
-if (! defined('SHORTPIXEL_DEBUG'))
+/*if (! defined('SHORTPIXEL_DEBUG'))
 {
     define('SHORTPIXEL_DEBUG', false);
-}
-
-Log::addDebug('Plugin Req Init');
-
+} */
 
 // [BS] New plugin runtime.
-require_once('shortpixel-plugin.php'); // loads runtime and needed classes.
-new Shortpixel\ShortPixelPlugin();
+//require_once('shortpixel-plugin.php'); // loads runtime and needed classes.
+//new Shortpixel\ShortPixelPlugin();
 
 // @todo Temporary until main plugin file will receive it's unclutter.  Require the things loaded by new plugin main
 /*if (! class_exists('ShortPixel\ShortPixelPlugin'))

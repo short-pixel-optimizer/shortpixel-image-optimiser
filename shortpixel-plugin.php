@@ -10,7 +10,9 @@ use ShortPixel\Notices\NoticeController as Notices;
 */
 class ShortPixelPlugin
 {
-  static private $instance;
+  private static $instance;
+  protected static $modelsLoaded = array(); // don't require twice, limit amount of require looksups..
+
   private $paths = array('class', 'class/controller', 'class/external'); // classes that are autoloaded
 
   protected $is_noheaders = false;
@@ -18,17 +20,34 @@ class ShortPixelPlugin
   protected $plugin_path;
   protected $plugin_url;
 
+  protected $shortPixel; // shortpixel megaclass
+  protected $env; // environment.
+
   public function __construct()
   {
       $this->plugin_path = plugin_dir_path(SHORTPIXEL_PLUGIN_FILE);
       $this->plugin_url = plugin_dir_url(SHORTPIXEL_PLUGIN_FILE);
 
-      $this->initRuntime();
+      $this->initRuntime(); // require controllers, and other needed classes
       $this->initHooks();
+
+      add_action('init', array($this, 'init'), 5);
+  }
+
+  // This can't be loaded on construct time, because of model Loaders etc, with would result in loop.
+  public function init()
+  {
+      $this->loadModel('environment');
+      $this->env = new EnvironmentModel();
 
       if(isset($_REQUEST['noheader'])) {
           $this->is_noheaders = true;
       }
+
+      // @todo Transitionary init for the time being, since plugin init functionality is still split between.
+      global $shortPixelPluginInstance;
+      $shortPixelPluginInstance = new \wpShortPixel();
+      $this->shortPixel = $shortPixelPluginInstance;
   }
 
   /** Create instance. This should not be needed to call anywhere else than main plugin file **/
@@ -36,9 +55,10 @@ class ShortPixelPlugin
   {
     if (is_null(self::$instance))
     {
-      self::$instance = new shortPixelPlugin();
+      self::$instance = new ShortPixelPlugin();
     }
     return self::$instance;
+
   }
 
   /** Init Runtime. Loads all classes. */
@@ -73,7 +93,7 @@ class ShortPixelPlugin
   public function initHooks()
   {
       add_action('admin_menu', array($this,'admin_pages'));
-      add_action('admin_enqueue_scripts', array($this, 'admin_scripts'));
+      add_action('admin_enqueue_scripts', array($this, 'admin_scripts')); // admin scripts
       add_action('admin_notices', array($this, 'admin_notices')); // notices occured before page load
       add_action('admin_footer', array($this, 'admin_notices'));  // called in views.
 
@@ -168,7 +188,7 @@ class ShortPixelPlugin
   public function route()
   {
       global $plugin_page;
-      global $shortPixelPluginInstance; //brrr @todo Find better solution for this some day.
+      //global $shortPixelPluginInstance; //brrr @todo Find better solution for this some day.
 
       $this->initPluginRunTime();
 
@@ -193,7 +213,7 @@ class ShortPixelPlugin
       if ($controller !== false)
       {
         $c = new $controller();
-        $c->setShortPixel($shortPixelPluginInstance);
+        $c->setShortPixel($this->shortPixel);
         $c->setControllerURL($url);
         if (method_exists($c, $action))
           $c->$action();
@@ -203,6 +223,105 @@ class ShortPixelPlugin
         }
 
       }
+  }
+
+  /** Loads the Model Data Structure upon request
+  *
+  * @param string $name Name of the model
+  */
+  public function loadModel($name){
+     $path = \ShortPixelTools::getPluginPath() . 'class/model/' . $name . '_model.php';
+
+     if (! in_array($name, self::$modelsLoaded))
+     {
+       self::$modelsLoaded[] = $name;
+       if(file_exists($path)){
+            require_once($path);
+       }
+       else {
+         Log::addError("Model $name  could not be found");
+       }
+     }
+  }
+
+  // Get the plugin URL, based on real URL.
+  public function plugin_url($urlpath = '')
+  {
+    $url = trailingslashit($this->plugin_url);
+    if (strlen($urlpath) > 0)
+      $url .= $urlpath;
+    return $url;
+  }
+
+  // Get the plugin path.
+  public function plugin_path($path = '')
+  {
+    $plugin_path = trailingslashit($this->plugin_path);
+    if (strlen($path) > 0)
+      $plugin_path .= $path;
+
+    return $plugin_path;
+  }
+
+  public function fileSystem()
+  {
+    return new \ShortPixel\FileSystemController();
+  }
+
+  public function getEnv()
+  {
+    return $this->env;
+  }
+
+  // Get the ShortPixel Object.
+  public function getShortPixel()
+  {
+    return $this->shortPixel;
+  }
+
+  public static function activatePlugin()
+  {
+      self::deactivatePlugin();
+      if(SHORTPIXEL_RESET_ON_ACTIVATE === true && WP_DEBUG === true) { //force reset plugin counters, only on specific occasions and on test environments
+          \WPShortPixelSettings::debugResetOptions();
+
+          $settings = new \WPShortPixelSettings();
+          $spMetaDao = new \ShortPixelCustomMetaDao(new WpShortPixelDb(), $settings->excludePatterns);
+          $spMetaDao->dropTables();
+      }
+
+      $env = wpSPIO()->getEnv();
+//      $env = $settingsControl->getEnv();
+
+
+      if(\WPShortPixelSettings::getOpt('deliverWebp') == 3 && ! $env->is_nginx) {
+          self::alterHtaccess(); //add the htaccess lines
+      }
+      \WPShortPixelSettings::onActivate();
+  }
+
+  public static function deactivatePlugin()
+  {
+    \ShortPixelQueue::resetBulk();
+    (! defined('SHORTPIXEL_NOFLOCK')) ? \ShortPixelQueue::resetPrio() : \ShortPixelQueueDB::resetPrio();
+    \WPShortPixelSettings::onDeactivate();
+
+    //$settingsControl = new \ShortPixel\SettingsController();
+    $env = wpSPIO()->getEnv();
+
+    if (! $env->is_nginx)
+      \WpShortPixel::alterHtaccess(true);
+
+    @unlink(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
+  }
+
+  public static function uninstallPlugin()
+  {
+    $settings = new \WPShortPixelSettings();
+    if($settings->removeSettingsOnDeletePlugin == 1) {
+        \WPShortPixelSettings::debugResetOptions();
+        insert_with_markers( get_home_path() . '.htaccess', 'ShortPixelWebp', '');
+    }
   }
 
 } // class plugin

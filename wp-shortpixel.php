@@ -66,6 +66,7 @@ define('SHORTPIXEL_MAX_EXECUTION_TIME2', 2 );
 define("SHORTPIXEL_MAX_RESULTS_QUERY", 30);
 //define("SHORTPIXEL_NOFLOCK", true); // don't use flock queue, can cause instability.
 
+/* @todo Remove -> Gone.
 function shortpixelInit() {
     global $shortPixelPluginInstance;
     //limit to certain admin pages if function available
@@ -89,10 +90,19 @@ function shortpixelInit() {
        )
     {
         require_once('wp-shortpixel-req.php');
-
-        $shortPixelPluginInstance = new WPShortPixel;
+      //  $shortPixelPluginInstance = new WPShortPixel;
+        wpSPIO();
     }
 
+} */
+
+/* Function to reach core function of ShortPixel
+* Use to get plugin url, plugin path, or certain core controllers
+*/
+function wpSPIO()
+{
+  //global $shortPixelPluginInstance;
+   return \ShortPixel\ShortPixelPlugin::getInstance();
 }
 
 
@@ -217,6 +227,15 @@ function shortPixelIsPluginActive($plugin) {
 }
 
 // [BS] Start runtime here
+require_once('wp-shortpixel-req.php'); // @todo should be incorporated here.
+require_once('class/controller/controller.php');
+require_once('class/shortpixel-model.php');
+require_once('shortpixel-plugin.php'); // loads runtime and needed classes.
+
+if (! defined('SHORTPIXEL_DEBUG'))
+{
+    define('SHORTPIXEL_DEBUG', false);
+}
 $log = ShortPixel\ShortPixelLogger\ShortPixelLogger::getInstance();
 $log->setLogPath(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
 
@@ -225,6 +244,7 @@ $log->setLogPath(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
 require_once('class/external/flywheel.php'); // check if SP runs on flywheel
 require_once('class/external/wp-offload-media.php');
 
+wpSPIO();
 
 $option = get_option('wp-short-pixel-create-webp-markup');
 if ( $option ) {
@@ -245,7 +265,7 @@ if ( $option ) {
 }
 
 if ( !function_exists( 'vc_action' ) || vc_action() !== 'vc_inline' ) { //handle incompatibility with Visual Composer
-    add_action( 'init',  'shortpixelInit');
+    //add_action( 'plugins_loaded',  'shortpixelInit');
     add_action('ngg_added_new_image', 'shortPixelNggAdd');
 
     $autoPng2Jpg = get_option('wp-short-pixel-png2jpg');
@@ -260,8 +280,8 @@ if ( !function_exists( 'vc_action' ) || vc_action() !== 'vc_inline' ) { //handle
         add_filter( 'mpp_generate_metadata', 'shortPixelHandleImageUploadHook', 10, 2 );
     }
 
-    register_activation_hook( __FILE__, 'shortPixelActivatePlugin' );
-    register_deactivation_hook( __FILE__, 'shortPixelDeactivatePlugin' );
-    register_uninstall_hook(__FILE__, 'shortPixelUninstallPlugin');
+    register_activation_hook( __FILE__, \ShortPixel\ShortPixelPlugin::activatePlugin() );
+    register_deactivation_hook( __FILE__,  \ShortPixel\ShortPixelPlugin::deactivatePlugin() );
+    register_uninstall_hook(__FILE__,  \ShortPixel\ShortPixelPlugin::uninstallPlugin());
 }
 ?>

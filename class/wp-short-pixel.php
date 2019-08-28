@@ -22,9 +22,10 @@ class WPShortPixel {
 
     public static $PROCESSABLE_EXTENSIONS = array('jpg', 'jpeg', 'gif', 'png', 'pdf');
 
+    private static $first_run = false;
+
     public function __construct() {
         $this->timer = time();
-
 
         if (Log::debugIsActive()) {
             $this->jsSuffix = '.js'; //use unminified versions for easier debugging
@@ -42,17 +43,40 @@ class WPShortPixel {
         $this->prioQ = (! defined('SHORTPIXEL_NOFLOCK')) ? new ShortPixelQueue($this, $this->_settings) : new ShortPixelQueueDB($this, $this->_settings);
         $this->view = new ShortPixelView($this);
 
+        if (self::$first_run === false)
+        {
+          $this->loadHooks();
+        }
+
+        // only load backed, or when frontend processing is enabled.
+        if (is_admin() || $this->_settings->frontBootstrap )
+        {
+          $keyControl = new \ShortPixel\apiKeyController();
+          $keyControl->setShortPixel($this);
+          $keyControl->load();
+        }
+
+    }
+
+    /** Fire only once hooks. In time these function mostly should be divided between controllers / hook itself moved to ShortPixel Plugin */
+    protected function loadHooks()
+    {
+        self::$first_run = true;
+        load_plugin_textdomain('shortpixel-image-optimiser', false, plugin_basename(dirname( SHORTPIXEL_PLUGIN_FILE )).'/lang');
+
+        $isAdminUser = current_user_can( 'manage_options' );
 
         define('QUOTA_EXCEEDED', $this->view->getQuotaExceededHTML());
 
         if( !defined('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES')) {
-            if(is_plugin_active('envira-gallery/envira-gallery.php') || is_plugin_active('soliloquy-lite/soliloquy-lite.php') || is_plugin_active('soliloquy/soliloquy.php')) {
-                define('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES', '_c,_tl,_tr,_br,_bl');
-            }
-            elseif(defined('SHORTPIXEL_CUSTOM_THUMB_SUFFIX')) {
-                define('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES', SHORTPIXEL_CUSTOM_THUMB_SUFFIX);
-            }
+                if(is_plugin_active('envira-gallery/envira-gallery.php') || is_plugin_active('soliloquy-lite/soliloquy-lite.php') || is_plugin_active('soliloquy/soliloquy.php')) {
+                    define('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES', '_c,_tl,_tr,_br,_bl');
+                }
+                elseif(defined('SHORTPIXEL_CUSTOM_THUMB_SUFFIX')) {
+                    define('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES', SHORTPIXEL_CUSTOM_THUMB_SUFFIX);
+                }
         }
+
 
         $this->setDefaultViewModeList();//set default mode as list. only @ first run
 
@@ -159,20 +183,6 @@ class WPShortPixel {
         add_action('admin_notices', array( &$this, 'displayAdminNotices'));
 
         $this->migrateBackupFolder();
-
-
-        // only load backed, or when frontend processing is enabled.
-        if (is_admin() || $this->_settings->frontBootstrap )
-        {
-          $keyControl = new \ShortPixel\apiKeyController();
-          $keyControl->setShortPixel($this);
-          $keyControl->load();
-        }
-    }
-
-    //handling older
-    public function WPShortPixel() {
-        $this->__construct();
     }
 
     // @hook admin menu
@@ -186,7 +196,7 @@ class WPShortPixel {
         add_media_page( __('ShortPixel Bulk Process','shortpixel-image-optimiser'), __('Bulk ShortPixel','shortpixel-image-optimiser'), 'edit_others_posts', 'wp-short-pixel-bulk', array( &$this, 'bulkProcess' ) );
     }
 
-    public static function shortPixelActivatePlugin()//reset some params to avoid trouble for plugins that were activated/deactivated/activated
+    /*public static function shortPixelActivatePlugin()//reset some params to avoid trouble for plugins that were activated/deactivated/activated
     {
         self::shortPixelDeactivatePlugin();
         if(SHORTPIXEL_RESET_ON_ACTIVATE === true && WP_DEBUG === true) { //force reset plugin counters, only on specific occasions and on test environments
@@ -205,9 +215,9 @@ class WPShortPixel {
             self::alterHtaccess(); //add the htaccess lines
         }
         WPShortPixelSettings::onActivate();
-    }
+    } */
 
-    public static function shortPixelDeactivatePlugin()//reset some params to avoid trouble for plugins that were activated/deactivated/activated
+/*    public static function shortPixelDeactivatePlugin()//reset some params to avoid trouble for plugins that were activated/deactivated/activated
     {
         ShortPixelQueue::resetBulk();
         (! defined('SHORTPIXEL_NOFLOCK')) ? ShortPixelQueue::resetPrio() : ShortPixelQueueDB::resetPrio();
@@ -220,16 +230,16 @@ class WPShortPixel {
           self::alterHtaccess(true);
 
         @unlink(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
-    }
+    } */
 
-    public static function shortPixelUninstallPlugin()//reset some params to avoid trouble for plugins that were activated/deactivated/activated
+    /* public static function shortPixelUninstallPlugin()//reset some params to avoid trouble for plugins that were activated/deactivated/activated
     {
         $settings = new WPShortPixelSettings();
         if($settings->removeSettingsOnDeletePlugin == 1) {
             WPShortPixelSettings::debugResetOptions();
             insert_with_markers( get_home_path() . '.htaccess', 'ShortPixelWebp', '');
         }
-    }
+    } */
 
     public function getConflictingPlugins() {
         $conflictPlugins = array(
@@ -797,7 +807,6 @@ class WPShortPixel {
             $itemHandler = new ShortPixelMetaFacade($ID);
             $itemHandler->setRawMeta($meta);
             //that's a hack for watermarking plugins, don't send the image right away to processing, only add it in the queue
-            // @todo Unhack the hack
             include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
             if(   !is_plugin_active('image-watermark/image-watermark.php')
                && !is_plugin_active('amazon-s3-and-cloudfront/wordpress-s3.php')
@@ -1458,7 +1467,7 @@ class WPShortPixel {
                     $sizes = $meta->getThumbs();
                     if('pdf' == strtolower(pathinfo($result["Filename"], PATHINFO_EXTENSION))) {
 //                        echo($result["Filename"] . " ESTE --> "); die(var_dump(strtolower(pathinfo($result["Filename"], PATHINFO_EXTENSION))));
-                        $thumb = plugins_url( 'shortpixel-image-optimiser/res/img/logo-pdf.png' );
+                        $thumb = wpSPIO()->plugin_url('res/img/logo-pdf.png' );
                         $bkThumb = '';
                     } else {
                         if(count($sizes)) {
@@ -1514,7 +1523,7 @@ class WPShortPixel {
                     $rootUrl = ShortPixelMetaFacade::getHomeUrl();
                     if($customId->id == $itemHandler->getId()) {
                         if('pdf' == strtolower(pathinfo($meta->getName(), PATHINFO_EXTENSION))) {
-                            $result["Thumb"] = plugins_url( 'shortpixel-image-optimiser/res/img/logo-pdf.png' );
+                            $result["Thumb"] = wpSPIO()->plugin_url('res/img/logo-pdf.png' );
                             $result["BkThumb"] = "";
                         } else {
                             $result["Thumb"] = $thumb = $rootUrl . $meta->getWebPath();
@@ -1620,6 +1629,8 @@ class WPShortPixel {
         $result["BulkMsg"] = $this->bulkProgressMessage($deltaBulkPercent, $minutesRemaining);
     }
 
+
+
     private function sendToProcessing($itemHandler, $compressionType = false, $onlyThumbs = false) {
         //conversion of PNG 2 JPG for existing images
         if($itemHandler->getType() == ShortPixelMetaFacade::MEDIA_LIBRARY_TYPE) { //currently only for ML
@@ -1632,7 +1643,7 @@ class WPShortPixel {
 
         //WpShortPixelMediaLbraryAdapter::cleanupFoundThumbs($itemHandler);
         $URLsAndPATHs = $this->getURLsAndPATHs($itemHandler, NULL, $onlyThumbs);
-        Log::addDebug('Send to PRocessing - URLS -', array($URLsAndPATHs) );
+Log::addDebug('Send to PRocessing - URLS -', array($URLsAndPATHs) );
 
         $meta = $itemHandler->getMeta();
         //find thumbs that are not listed in the metadata and add them in the sizes array
@@ -1722,6 +1733,7 @@ class WPShortPixel {
                     $itemHandler->getMeta();
                     $errCode = $e->getCode() < 0 ? $e->getCode() : ShortPixelAPI::ERR_FILE_NOT_FOUND;
                     $itemHandler->setError($errCode, $e->getMessage());
+
 
                     $ret = array("Status" => ShortPixelAPI::STATUS_FAIL, "Message" => $e->getMessage());
                 }
@@ -1977,8 +1989,8 @@ class WPShortPixel {
                     $toReplace[$baseUrl . $baseRelPath . $size['file']] = $baseUrl . $baseRelPath . wp_basename($png2jpgSizes[$key]['file']);
                 }
             }
-
             //$file = $png2jpgMain;
+            $fsFile = $fs->getFile($png2jpgMain);
             $sizes = $png2jpgSizes;
 
             $fsFile = $fs->getFile($png2jpgMain); // original is non-existing at this time.
@@ -2024,7 +2036,9 @@ class WPShortPixel {
                 }
                 $bkCount++;
                 $thumbsPaths[] = array('source' => $source, 'destination' => $destination);
+
             }
+
         }
         if(!$bkCount) {
             $this->throwNotice('generic-err', __("No backup files found. Restore not performed.",'shortpixel-image-optimiser'));
@@ -3012,7 +3026,7 @@ class WPShortPixel {
                 'filesTodo' => $stats['totalFiles'] - $stats['totalProcessedFiles'],
                 'estimated' => $this->_settings->optimizeUnlisted || $this->_settings->optimizeRetina ? 'true' : 'false',
                 /* */
-                'iconsUrl' => base64_encode(plugins_url('/shortpixel-image-optimiser/res/img'))
+                'iconsUrl' => base64_encode(wpSPIO()->plugin_url('res/img'))
             ))),
             'cookies' => array()
         ));
@@ -3075,6 +3089,11 @@ class WPShortPixel {
     */
     public static function alterHtaccess( $clear = false ){
       // [BS] Backward compat. 11/03/2019 - remove possible settings from root .htaccess
+      /* Plugin init is before loading these admin scripts. So it can happen misc.php is not yet loaded */
+      if (! function_exists('insert_with_markers'))
+      {
+        require_once( ABSPATH . 'wp-admin/includes/misc.php' );
+      }
         $upload_dir = wp_upload_dir();
         $upload_base = trailingslashit($upload_dir['basedir']);
 
@@ -3536,6 +3555,7 @@ class WPShortPixel {
                 {
                   continue;
                 }
+
 
                 if(!in_array($size, $exclude) && !in_array($file->getFileName(), $thumbsOptList)) {
                     $thumbsToOptimizeList[] = $file->getFileName();
@@ -4098,7 +4118,7 @@ class WPShortPixel {
         <div id="shortpixel-hs-button-blind" class="shortpixel-hs-button-blind"></div>
         <div id="shortpixel-hs-tools" class="shortpixel-hs-tools">
             <a href="javascript:shortpixelToggleHS();" class="shortpixel-hs-tools-docs" title="<?php _e('Search through our online documentation.', 'shortpixel-image-optimiser'); ?>">
-                <img src="<?php echo(plugins_url('/shortpixel-image-optimiser/res/img/notes-sp.png'));?>" style="margin-bottom: 2px;width: 36px;">
+                <img src="<?php echo(wpSPIO()->plugin_url('res/img/notes-sp.png'));?>" style="margin-bottom: 2px;width: 36px;">
             </a>
         </div>
         <script>

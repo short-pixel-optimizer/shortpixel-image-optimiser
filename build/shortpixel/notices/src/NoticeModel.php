@@ -88,9 +88,6 @@ class NoticeModel //extends ShortPixelModel
       break;
     }
 
-    /*$image =  '<img src="' . plugins_url('/shortpixel-image-optimiser/res/img/robo-' . $icon . '.png') . '"
-             srcset="' . plugins_url( 'shortpixel-image-optimiser/res/img/robo-' . $icon . '.png' ) . ' 1x, ' . plugins_url( 'shortpixel-image-optimiser/res/img/robo-' . $icon . '@2x.png') . ' 2x" class="short-pixel-notice-icon">';
-    */
 
     if ($this->is_removable)
     {

@@ -85,7 +85,7 @@ namespace ShortPixel;
                                 <td>
                                     <?php if(!($st == "Empty")) { ?>
                                     <a href="javascript:none();"  title="<?php echo $fullStat; ?>" style="text-decoration: none;">
-                                        <img src='<?php echo(plugins_url( 'shortpixel-image-optimiser/res/img/info-icon.png' ));?>' style="margin-bottom: -2px;"/>
+                                        <img src='<?php echo( wpSPIO()->plugin_url('res/img/info-icon.png' ));?>' style="margin-bottom: -2px;"/>
                                     </a>&nbsp;<?php  } echo($typ.$st.$err); ?>
 
                                 </td>

@@ -162,7 +162,7 @@ class SettingsController extends shortPixelController
       /** Checks on things and set them for information. */
       protected function loadEnv()
       {
-          $env = $this->getEnv();
+          $env = wpSPIO()->getEnv();
 
           $this->is_nginx = $env->is_nginx;
           $this->is_gd_installed = $env->is_gd_installed;
@@ -178,13 +178,6 @@ class SettingsController extends shortPixelController
 
       }
 
-      public function getEnv()
-      {
-        $this->loadModel('environment');
-        $env = new EnvironmentModel();
-
-        return $env;
-      }
 
       /** Check if everything is OK with the Key **/
       /*public function checkKey()
@@ -294,6 +287,7 @@ class SettingsController extends shortPixelController
       protected function loadQuotaData()
       {
         // @todo Probably good idea to put this in a 2-5 min transient or so.
+
         if (is_null($this->quotaData))
           $this->quotaData = $this->shortPixel->checkQuotaAndAlert();
 

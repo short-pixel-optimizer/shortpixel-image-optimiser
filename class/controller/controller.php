@@ -5,7 +5,6 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 class ShortPixelController
 {
   protected static $controllers = array();
-  protected static $modelsLoaded = array(); // don't require twice, limit amount of require looksups..
 
   protected $shortPixel;
 
@@ -126,18 +125,7 @@ class ShortPixelController
   * @param string $name Name of the model
   */
   protected function loadModel($name){
-     $path = \ShortPixelTools::getPluginPath() . 'class/model/' . $name . '_model.php';
-
-     if (! in_array($name, self::$modelsLoaded))
-     {
-       self::$modelsLoaded[] = $name;
-       if(file_exists($path)){
-            require_once($path);
-       }
-       else {
-         Log::addError("Model $name  could not be found");
-       }
-     }
+     return wpSPIO()->loadModel($name);
   }
 
 

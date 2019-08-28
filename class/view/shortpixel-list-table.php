@@ -155,7 +155,7 @@ class ShortPixelListTable extends WP_List_Table {
                             : __('Reduced by','shortpixel-image-optimiser') . " <strong>" . $item->message . "%</strong>"
                               . (0 + intval($item->message) < 5 ? "<br>" . __('Bonus processing','shortpixel-image-optimiser') . "." : "");
                         break;
-                    case 1: $msg = "<img src=\"" . plugins_url( 'shortpixel-image-optimiser/res/img/loading.gif') . "\" class='sp-loading-small'>&nbsp;"
+                    case 1: $msg = "<img src=\"" . wpSPIO()->plugin_url('res/img/loading.gif') . "\" class='sp-loading-small'>&nbsp;"
                                    . __('Pending','shortpixel-image-optimiser');
                         break;
                     case 0: $msg = __('Waiting','shortpixel-image-optimiser');
