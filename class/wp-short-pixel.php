@@ -1633,7 +1633,9 @@ class WPShortPixel {
         return 0;
       }
 
+      $itemHandler->removeSPFoundMeta(); // remove all found meta. If will be re-added here every time.
       $meta = $itemHandler->getMeta();
+
       Log::addDebug('Finding Thumbs on path' . $meta->getPath());
       $thumbs = WpShortPixelMediaLbraryAdapter::findThumbs($meta->getPath());
 
@@ -1645,8 +1647,9 @@ class WPShortPixel {
 
         // no thumbs, then done.
       if (count($foundThumbs) == 0)
+      {
         return 0;
-
+      }
       //first identify which thumbs are not in the sizes
       $sizes = $meta->getThumbs();
       $mimeType = false;
@@ -1726,13 +1729,14 @@ class WPShortPixel {
             }
         }
 
+        $meta = $itemHandler->getMeta();
+
         //WpShortPixelMediaLbraryAdapter::cleanupFoundThumbs($itemHandler);
         $URLsAndPATHs = $this->getURLsAndPATHs($itemHandler, NULL, $onlyThumbs);
         Log::addDebug('Send to PRocessing - URLS -', array($URLsAndPATHs) );
 
-        $meta = $itemHandler->getMeta();
         //find thumbs that are not listed in the metadata and add them in the sizes array
-        $changes = $this->addUnlistedThumbs($itemHandler);
+        $this->addUnlistedThumbs($itemHandler);
 
         //find any missing thumbs files and mark them as such
         $miss = $meta->getThumbsMissing();
@@ -1743,10 +1747,30 @@ class WPShortPixel {
             $meta->setThumbsMissing($URLsAndPATHs['sizesMissing']);
             $itemHandler->updateMeta();
         }
-        //die(var_dump($itemHandler));
+
+        $original_status = $meta->getStatus(); // get the real status, without the override below .
+
         $refresh = $meta->getStatus() === ShortPixelAPI::ERR_INCORRECT_FILE_SIZE;
-        //echo("URLS: "); die(var_dump($URLsAndPATHs));
-        $itemHandler->setWaitingProcessing();
+        $itemHandler->setWaitingProcessing(); // @todo This, for some reason, put status to 'success', before processing.
+
+         // function to fix things if needed.
+        //$meta = $this->getMeta();
+        if ($original_status < 0 && count($URLsAndPATHs['URLs']) == 0)
+        {
+          if (! is_array($meta->getThumbsMissing()) || count($meta->getThumbsMissing()) == 0)
+          {
+              $meta->setStatus(ShortPixelAPI::STATUS_SUCCESS);
+              $meta->setMessage(0);
+              $meta->setThumbsTodo(0);
+              $itemHandler->updateMeta($meta);
+              Log::addWarn('Processing override, no URLS, no jobs, something was incorrect - ');
+              return $URLsAndPATHs;
+          }
+        }
+
+          $thumbObtList = $meta->getThumbsOptList();
+          $missing = $meta->getThumbsMissing();
+
 
         $this->_apiInterface->doRequests($URLsAndPATHs['URLs'], false, $itemHandler,
                 $compressionType === false ? $this->_settings->compressionType : $compressionType, $refresh);//send a request, do NOT wait for response
@@ -1807,6 +1831,7 @@ class WPShortPixel {
         if($this->isProcessable($imageId)) {
             $this->prioQ->push($imageId);
             $itemHandler = new ShortPixelMetaFacade($imageId);
+
             $path = get_attached_file($imageId);//get the full file PATH
             if(!$manual && 'pdf' === pathinfo($path, PATHINFO_EXTENSION) && !$this->_settings->optimizePdfs) {
                 $ret = array("Status" => ShortPixelAPI::STATUS_SKIP, "Message" => $imageId);
@@ -3471,6 +3496,8 @@ class WPShortPixel {
 
             $file = get_attached_file($id);
             $data = ShortPixelMetaFacade::sanitizeMeta(wp_get_attachment_metadata($id));
+            $itemHandler = new ShortPixelMetaFacade($id);
+            $meta = $itemHandler->getMeta();
 
             if($extended && Log::debugIsActive()) {
             //  var_dump($data);
@@ -3480,7 +3507,8 @@ class WPShortPixel {
                 echo('<br><br>' . json_encode(ShortPixelMetaFacade::getWPMLDuplicates($id)));
                 echo('<br><br><span class="array">'); print_r($data);  echo ''; //json_encode($data))
                 echo('</span><br><br>');
-                echo '<strong>Backup File: </strong>' . $this->getBackupFolderAny($file, $sizes);
+                echo '<p><strong>Backup Folder: </strong>' . $this->getBackupFolderAny($file, $sizes) . '</p>';
+                echo '<p><strong>Status</strong>: ' . $meta->getStatus() . '</p>';
                 echo "</PRE>";
             }
 
