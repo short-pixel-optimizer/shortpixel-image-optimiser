@@ -4,7 +4,7 @@ Tags: compressor, image, compression, optimize, image optimizer, image optimiser
 Requires at least: 3.2.0
 Tested up to: 5.2
 Requires PHP: 5.3
-Stable tag: 4.14.4
+Stable tag: 4.14.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -246,9 +246,15 @@ define('SHORTPIXEL_CUSTOM_THUMB_INFIXES', '-uae'); will handle custom thumbnails
 
 == Changelog ==
 
-= 4.x.y =
-Release date:
-* Language – XX new strings added, YY updated, WW fuzzied, and ZZ obsoleted
+= 4.14.5 =
+Release date: 29th August 2019
+* If constant SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION is defined as true, use double extension for WebP (.jpg.webp)
+* Fixed: Javascript - String.prototype causes errors on React apps
+* Fixed: Undefined page load when using ShortPixel and Divi preloaded images
+* Fixed: Offload Media - When removing PNG2JPG converted file, the files / folder are not removed.
+* Fixed: When the constant that enables using double extensions for WebP (.jpg.webp) is active, the webp's are found as unlisted thumbnails and sent to optimization.
+* Fixed: missing call to apply_filters('shortpixel_image_exists'...) on a particular case.
+* Language – 0 new strings added, 1 updated, 0 fuzzied, and 0 obsoleted
 
 = 4.14.4 =
 Release date: 19th August 2019

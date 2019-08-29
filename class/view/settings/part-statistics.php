@@ -67,7 +67,7 @@ $quotaData = $this->quotaData;
                 </tr>
                 <tr>
                     <th scope="row">
-                        <?php _e('Bandwith* saved by ShortPixel:','shortpixel-image-optimiser');?>
+                        <?php _e('Bandwidth* saved by ShortPixel:','shortpixel-image-optimiser');?>
                     </th>
                     <td><?php echo($view->savedBandwidth);?></td>
                 </tr>
