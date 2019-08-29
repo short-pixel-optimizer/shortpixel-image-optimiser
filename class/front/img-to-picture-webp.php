@@ -211,7 +211,7 @@ class ShortPixelImgToPictureWebp
                         . $parts[0].'.webp'
                      . (isset($parts[1]) ? ' ' . $parts[1] : '');
                 }
-                if (file_exists($fileWebPCompat)) {
+                if (apply_filters( 'shortpixel_image_exists', file_exists($fileWebPCompat), $fileWebPCompat)) {
                     $srcsetWebP .= (strlen($srcsetWebP) ? ',': '')
                        .preg_replace('/\.[a-zA-Z0-9]+$/', '.webp', $parts[0])
                        .(isset($parts[1]) ? ' ' . $parts[1] : '');
