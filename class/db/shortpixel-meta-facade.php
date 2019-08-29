@@ -239,17 +239,8 @@ class ShortPixelMetaFacade {
                 unset($rawMeta['ShortPixel']);
                 unset($rawMeta['ShortPixelPng2Jpg']);
             }
-            if (isset($rawMeta['sizes'])) // search for custom sizes set by SP.
-            {
-              foreach($rawMeta['sizes'] as $size => $data)
-              {
-                  if (strpos($size, ShortPixelMeta::FOUND_THUMB_PREFIX) !== false)
-                  {
-                    unset($rawMeta['sizes'][$size]);
-                    Log::addDebug('Unset sp-found- size' . $size);
-                  }
-              }
-            }
+
+            $this->removeSPFoundMeta();
             unset($this->meta);
             update_post_meta($this->ID, '_wp_attachment_metadata', $rawMeta);
             //wp_update_attachment_metadata($this->ID, $rawMeta);
@@ -257,6 +248,31 @@ class ShortPixelMetaFacade {
         } else {
             throw new Exception("Not implemented 1");
         }
+    }
+
+    // remove SPFoudnMeta from image. Dirty. @todo <--
+    function removeSPFoundMeta()
+    {
+      if($this->type == ShortPixelMetaFacade::MEDIA_LIBRARY_TYPE) {
+          if(!isset($this->rawMeta)) {
+              $rawMeta = $this->sanitizeMeta(wp_get_attachment_metadata($this->getId()));
+          } else {
+              $rawMeta = $this->rawMeta;
+          }
+          if (isset($rawMeta['sizes'])) // search for custom sizes set by SP.
+          {
+            foreach($rawMeta['sizes'] as $size => $data)
+            {
+                if (strpos($size, ShortPixelMeta::FOUND_THUMB_PREFIX) !== false)
+                {
+                  unset($rawMeta['sizes'][$size]);
+                  Log::addDebug('Unset sp-found- size' . $size);
+                }
+            }
+          }
+          $this->rawMeta = $rawMeta;
+          update_post_meta($this->ID, '_wp_attachment_metadata', $rawMeta);
+      }
     }
 
     function deleteMeta() {
