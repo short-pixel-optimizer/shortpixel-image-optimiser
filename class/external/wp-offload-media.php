@@ -23,6 +23,7 @@ class wpOffload
       add_action('shortpixel_image_optimised', array($this, 'image_upload'));
       add_action('shortpixel_after_restore_image', array($this, 'image_restore')); // hit this when restoring.
       add_action('shortpixel/image/convertpng2jpg_after', array($this, 'image_converted'));
+      add_action('shortpixel_before_restore_image', array($this, 'remove_remote')); // not optimal, when backup fails this will cause issues. 
       add_action('shortpixel/image/convertpng2jpg_before', array($this, 'remove_remote'));
       add_filter('as3cf_attachment_file_paths', array($this, 'add_webp_paths'));
       add_filter('as3cf_remove_attachment_paths', array($this, 'remove_webp_paths'));
@@ -31,7 +32,8 @@ class wpOffload
 
       add_filter('get_attached_file', function($file, $id)
       {
-          if (strpos($file, 's3:/') !== false)
+          $scheme = parse_url($file, PHP_URL_SCHEME);
+          if ($scheme !== false && strpos($scheme, 's3') !== false)
           {
             return get_attached_file($id, true);
           }

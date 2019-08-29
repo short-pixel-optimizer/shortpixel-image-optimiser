@@ -2086,23 +2086,37 @@ class WPShortPixel {
 
             $baseUrl = str_replace($fsFile->getFileName(), '', $imageUrl); // remove *only* filename from URL
             $baseUrl = ShortPixelPng2Jpg::removeUrlProtocol($baseUrl); // @todo parse_url with a util helper / model should be better here
+            $backupFileDir = $bkFile->getFileDir(); // directory of the backups.
+
+            // find the jpg optimized image in backups, and mark to remove
+            if ($bkFile->exists())
+            $toUnlink['PATHs'][]  = $bkFile->getFullPath();
 
           //  $baseUrl = ShortPixelPng2Jpg::removeUrlProtocol(trailingslashit(str_replace($image, "", $imageUrl))); //make the base url protocol agnostic if it's not already
 
             // not needed, we don't do this weird remove anymore.
             $baseRelPath = ''; // trailingslashit(dirname($image)); // @todo Replace this (string) $fsFile->getFileDir();
 
+
             $toReplace[ShortPixelPng2Jpg::removeUrlProtocol($imageUrl)] = $baseUrl . $baseRelPath . wp_basename($png2jpgMain);
             foreach($sizes as $key => $size) {
                 if(isset($png2jpgSizes[$key])) {
                     $toReplace[$baseUrl . $baseRelPath . $size['file']] = $baseUrl . $baseRelPath . wp_basename($png2jpgSizes[$key]['file']);
+                }
+
+                $backuppedSize = $fs->getFile($backupFileDir . $size['file'] );
+                Log::addDebug('Find optimized JPGEG backupFile Thing', array( $backuppedSize->getFullPath() ));
+                if ($backuppedSize->exists())
+                {
+                  $toUnlink['PATHs'][] = $backuppedSize ->getFullPath();
                 }
             }
 
             //$file = $png2jpgMain;
             $sizes = $png2jpgSizes;
 
-            $fsFile = $fs->getFile($png2jpgMain); // original is non-existing at this time.
+            $fsFile = $fs->getFile($png2jpgMain); // original is non-existing at this time. :: Target
+            $bkFile = $fs->getFile($bkFolder->getPath() . $fsFile->getFileName()); // Update this, because of filename (extension)
 
         }
 
@@ -2134,7 +2148,6 @@ class WPShortPixel {
                 //$dest = $pathInfo['dirname'] . '/' . $imageData['file'];
                 $destination = $fs->getFile($filePath . $imageData['file']);
                 $source = $fs->getFile($bkFolder->getPath() . $imageData['file']); //trailingslashit($bkFolder) . $imageData['file'];
-
                 if(! $source->exists() ) continue; // if thumbs were not optimized, then the backups will not be there.
                 if(! $source->is_readable() || ($destination->exists() && !$destination->is_writable() )) {
                     $failedFile = ($destination->is_writable() ? $source->getFullPath() : $destination->getFullPath());
@@ -2177,9 +2190,6 @@ class WPShortPixel {
                         Log::addError('DoRestore failed restoring retina backup', array($retinaBK->getFullPath(), $retinaDest->getFullPath() ));
                       }
                     }
-
-                    //@rename($bkFile, $file);
-                    //@rename($this->retinaName($bkFile), $this->retinaName($file));
                 }
                 //getSize to update meta if image was resized by ShortPixel
                 if($fsFile->exists()) {
@@ -2189,7 +2199,6 @@ class WPShortPixel {
                 }
 
                 //overwriting thumbnails
-
                 foreach($thumbsPaths as $index => $data) {
                     $source = $data['source'];
                     $destination = $data['destination'];
@@ -2251,10 +2260,13 @@ class WPShortPixel {
                 $spPng2Jpg = new ShortPixelPng2Jpg($this->_settings);
                 $spPng2Jpg->png2JpgUpdateUrls(array(), $toReplace);
             }
+            Log::addDebug('DoRestore, Unlinking', array($toUnlink) );
             if(isset($toUnlink['PATHs'])) foreach($toUnlink['PATHs'] as $unlink) {
                 if($png2jpgMain) {
                     WPShortPixel::log("PNG2JPG unlink $unlink");
-                    @unlink($unlink);
+                    $unlinkFile = $fs->getFile($unlink);
+                    $unlinkFile->delete();
+//                    @unlink($unlink);
                 }
                 //try also the .webp
                 $unlinkWebpSymlink = trailingslashit(dirname($unlink)) . wp_basename($unlink, '.' . pathinfo($unlink, PATHINFO_EXTENSION)) . '.webp';
