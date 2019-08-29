@@ -10,7 +10,7 @@ use ShortPixel\Notices\NoticeController as Notices;
 */
 class ShortPixelPlugin
 {
-  static $instance;
+  static private $instance;
   private $paths = array('class', 'class/controller', 'class/external'); // classes that are autoloaded
 
   protected $is_noheaders = false;
@@ -205,6 +205,4 @@ class ShortPixelPlugin
       }
   }
 
-
-
-}
+} // class plugin

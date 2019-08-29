@@ -24,7 +24,7 @@ class WPShortPixel {
 
     public function __construct() {
         $this->timer = time();
-        
+
 
         if (Log::debugIsActive()) {
             $this->jsSuffix = '.js'; //use unminified versions for easier debugging
@@ -73,6 +73,8 @@ class WPShortPixel {
         add_action( 'add_meta_boxes', array( &$this, 'shortpixelInfoBox') );
         //for cleaning up the WebP images when an attachment is deleted
         add_action( 'delete_attachment', array( &$this, 'onDeleteImage') );
+
+        add_action('mime_types', array($this, 'addWebpMime'));
 
         //for NextGen
         if($this->_settings->hasCustomFolders) {
@@ -158,22 +160,6 @@ class WPShortPixel {
 
         $this->migrateBackupFolder();
 
-        // [BS] Quite dangerous to do this in any constructor. Can hit if request is ajax to name something
-        // @todo This is intended to run only once, on activation. ( it does )
-        /*if(!$this->_settings->redirectedSettings && !$this->_settings->verifiedKey && (!function_exists("is_multisite") || !is_multisite())) {
-            $this->_settings->redirectedSettings = 1;
-            wp_redirect(admin_url("options-general.php?page=wp-shortpixel-settings"));
-            exit();
-        }
-        elseif (function_exists('is_multisite') && is_multisite() && !$this->_settings->verifiedKey)
-        { // @todo not optimal, License key needs it's own model to do checks upon.
-           $scontrolname = \shortPixelTools::namespaceit("SettingsController");
-           $scontrol = new $scontrolname();
-           $scontrol->setShortPixel($this);
-           $scontrol->checkKey();
-        } */
-
-        //
 
         // only load backed, or when frontend processing is enabled.
         if (is_admin() || $this->_settings->frontBootstrap )
@@ -187,12 +173,6 @@ class WPShortPixel {
     //handling older
     public function WPShortPixel() {
         $this->__construct();
-    }
-
-    // @hook admin menu
-    // @todo move to plugin class
-    public function registerSettingsPage() {
-
     }
 
     // @hook admin menu
@@ -487,24 +467,11 @@ class WPShortPixel {
 
     static function log($message, $force = false) {
         Log::addInfo($message);
-        /*
-        if (SHORTPIXEL_DEBUG === true || $force) {
-            if (is_array($message) || is_object($message)) {
-                self::doLog(print_r($message, true), $force);
-            } else {
-                self::doLog($message, $force);
-            }
-        } */
     }
 
     /** [TODO] This should report to the Shortpixel Logger **/
     static protected function doLog($message, $force = false) {
-      // Log::addInfo($message);
-        /*if(defined('SHORTPIXEL_DEBUG_TARGET') || $force) {
-                file_put_contents(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log", '[' . date('Y-m-d H:i:s') . "] $message\n", FILE_APPEND);
-        } else {
-            error_log($message);
-        }*/
+       Log::addInfo($message);
     }
 
     function headCSS() {
@@ -830,6 +797,7 @@ class WPShortPixel {
             $itemHandler = new ShortPixelMetaFacade($ID);
             $itemHandler->setRawMeta($meta);
             //that's a hack for watermarking plugins, don't send the image right away to processing, only add it in the queue
+            // @todo Unhack the hack
             include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
             if(   !is_plugin_active('image-watermark/image-watermark.php')
                && !is_plugin_active('amazon-s3-and-cloudfront/wordpress-s3.php')
@@ -1057,6 +1025,9 @@ class WPShortPixel {
             // [BS] Request StartQueryID everytime to query for updated AdvanceBulk status
             $crtStartQueryID = $this->prioQ->getStartBulkId();
             $resultsPostMeta = WpShortPixelMediaLbraryAdapter::getPostMetaSlice($crtStartQueryID, $endQueryID, $maxResults);
+          // @todo Implement new Slicer.
+          //  $resultsPostMeta = WpShortPixelMediaLbraryAdapter::getPostsJoinLessReverse($crtStartQueryID, $endQueryID, $maxResults);
+
             if ( empty($resultsPostMeta) ) {
                 // check for custom work
                  $pendingCustomMeta = $this->spMetaDao->getPendingBulkRestore(SHORTPIXEL_MAX_RESULTS_QUERY * 2);
@@ -1081,11 +1052,14 @@ class WPShortPixel {
                 $item = new ShortPixelMetaFacade($crtStartQueryID);
                 $meta = $item->getMeta();//wp_get_attachment_metadata($crtStartQueryID);
 
-                if($meta->getStatus() == 2 || $meta->getStatus() == 1) {
-                    if($meta->getStatus() == 2 && $this->prioQ->getBulkType() == ShortPixelQueue::BULK_TYPE_RESTORE) {
+                if($meta->getStatus() == ShortPixelMeta::FILE_STATUS_SUCCESS || $meta->getStatus() == ShortPixelMeta::FILE_STATUS_PENDING ) {
+                    if($meta->getStatus() == ShortPixelMeta::FILE_STATUS_SUCCESS && $this->prioQ->getBulkType() == ShortPixelQueue::BULK_TYPE_RESTORE) {
                         $res = $this->doRestore($crtStartQueryID); //this is restore, the real
+                        // after restore, scrub the rests.
+                        $item->cleanupMeta($this->prioQ->getBulkType() == ShortPixelQueue::BULK_TYPE_CLEANUP_PENDING);
                     } else {
                         //this is only meta cleanup, no files are replaced (BACKUP REMAINS IN PLACE TOO)
+
                         $item->cleanupMeta($this->prioQ->getBulkType() == ShortPixelQueue::BULK_TYPE_CLEANUP_PENDING);
                         $res = true;
                     }
@@ -1184,7 +1158,7 @@ class WPShortPixel {
                     $meta = $item->getMeta();//wp_get_attachment_metadata($crtStartQueryID);
                     if($timeoutThreshold > 15) Log::addInfo("GETDB is SO SLOW. Got meta.");
 
-                    if($meta->getStatus() != 2) {
+                    if($meta->getStatus() != ShortPixelMeta::FILE_STATUS_SUCCESS) {
                         $addIt = (strpos($meta->getMessage(), __('Image files are missing.', 'shortpixel-image-optimiser')) === false);
 
                         if(!$addIt) {
@@ -1211,16 +1185,19 @@ class WPShortPixel {
                         }
                     }
                     elseif(   $this->_settings->processThumbnails && $meta->getThumbsOpt() !== null //thumbs were chosen in settings
-                           && ($meta->getThumbsOpt() == 0 && count($meta->getThumbs()) > 0 //no thumbnails optimized
-                               || is_array($meta->getThumbsOptList())
+                           && ( ($meta->getThumbsOpt() == 0 && count($meta->getThumbs()) > 0) //no thumbnails optimized
+                               || (is_array($meta->getThumbsOptList())
                                   && count(array_diff(array_keys(WpShortPixelMediaLbraryAdapter::getSizesNotExcluded($meta->getThumbs(), $this->_settings->excludeSizes)),
-                                                      $meta->getThumbsOptList()))
+                                                      $meta->getThumbsOptList())))
                                || (   $this->_settings->optimizeUnlisted
                                    && count(array_diff(WpShortPixelMediaLbraryAdapter::findThumbs($meta->getPath()), $meta->getThumbsOptList()))
                                   )
                            )
                     ) {
+
+                        $changes = $this->addUnlistedThumbs($item); // search for unlisted thumbs, if that is the setting.
                         $URLsAndPATHs = $item->getURLsAndPATHs(true, true, $this->_settings->optimizeRetina, $this->_settings->excludeSizes);
+                        Log::addDebug('Gathering URLS AND PATHS', array($URLsAndPATHs));
                         if(count($URLsAndPATHs["URLs"])) {
                             $meta->setThumbsTodo(true);
                             $item->updateMeta($meta);//wp_update_attachment_metadata($crtStartQueryID, $meta);
@@ -1229,12 +1206,9 @@ class WPShortPixel {
                             if(count($itemList) > SHORTPIXEL_PRESEND_ITEMS) break;
                         }
                     }
-                  /* New query selects this out, also no metadata returned.
-                    elseif($itemMetaData->meta_key == '_wp_attachment_metadata') { //count skipped
-                        $skippedAlreadyProcessed++;
-                    }
-                  */
+
                 }
+
             }
             if(!count($idList) && $crtStartQueryID <= $startQueryID) {
                 //daca n-am adaugat niciuna pana acum, n-are sens sa mai selectez zona asta de id-uri in bulk-ul asta.
@@ -1646,8 +1620,103 @@ class WPShortPixel {
         $result["BulkMsg"] = $this->bulkProgressMessage($deltaBulkPercent, $minutesRemaining);
     }
 
-    private function sendToProcessing($itemHandler, $compressionType = false, $onlyThumbs = false) {
+    /** Check for unlisted thumbsnail settings and checks if this file has unlisted thumbs present.
+    * Will update meta. if any are found.
+    * @param ShortPixelMetaFacade $itemHandler ShortpixelMetaFacade item handler.
+    * @return int Number of additions to the sizes Metadata.
+    */
+    private function addUnlistedThumbs($itemHandler)
+    {
+      // must be media library, setting must be on.
+      if($itemHandler->getType() != ShortPixelMetaFacade::MEDIA_LIBRARY_TYPE
+         || ! $this->_settings->optimizeUnlisted) {
+        return 0;
+      }
 
+      $meta = $itemHandler->getMeta();
+      Log::addDebug('Finding Thumbs on path' . $meta->getPath());
+      $thumbs = WpShortPixelMediaLbraryAdapter::findThumbs($meta->getPath());
+
+      $fs = new \ShortPixel\FileSystemController();
+      $mainFile = $fs->getFile($meta->getPath());
+
+      // Find Thumbs returns *full file path*
+      $foundThumbs = WpShortPixelMediaLbraryAdapter::findThumbs($mainFile->getFullPath());
+
+        // no thumbs, then done.
+      if (count($foundThumbs) == 0)
+        return 0;
+
+      //first identify which thumbs are not in the sizes
+      $sizes = $meta->getThumbs();
+      $mimeType = false;
+
+      $allSizes = array();
+      $basepath = $mainFile->getFileDir()->getPath();
+
+      foreach($sizes as $size) {
+        // Thumbs should have filename only. This is shortpixel-meta ! Not metadata!
+        // Provided filename can be unexpected (URL, fullpath), so first do check, get filename, then check the full path
+        $sizeFileCheck = $fs->getFile($size['file']);
+        $sizeFilePath = $basepath . $sizeFileCheck->getFileName();
+        $sizeFile = $fs->getFile($sizeFilePath);
+
+        //get the mime-type from one of the thumbs metas
+        if(isset($size['mime-type'])) { //situation from support case #9351 Ramesh Mehay
+            $mimeType = $size['mime-type'];
+        }
+        $allSizes[] = $sizeFile;
+      }
+
+      foreach($foundThumbs as $id => $found) {
+          $foundFile = $fs->getFile($found);
+
+          foreach($allSizes as $sizeFile) {
+              if ($sizeFile->getExtension() !== $foundFile->getExtension())
+              {
+                $foundThumbs[$id] = false;
+              }
+              elseif ($sizeFile->getFileName() === $foundFile->getFileName())
+              {
+                  $foundThumbs[$id] = false;
+              }
+          }
+      }
+          // add the unfound ones to the sizes array
+          $ind = 1;
+          $counter = 0;
+          // Assumption:: there is no point in adding to this array since findThumbs should find *all* thumbs that are relevant to this image.
+          /*while (isset($sizes[ShortPixelMeta::FOUND_THUMB_PREFIX . str_pad("".$start, 2, '0', STR_PAD_LEFT)]))
+          {
+            $start++;
+          } */
+      //    $start = $ind;
+
+          foreach($foundThumbs as $found) {
+              if($found !== false) {
+                  Log::addDebug('Adding File to sizes -> ' . $found);
+                  $size = getimagesize($found);
+                  Log::addDebug('Add Unlisted, add size' . $found );
+
+                  $sizes[ShortPixelMeta::FOUND_THUMB_PREFIX . str_pad("".$ind, 2, '0', STR_PAD_LEFT)]= array( // it's a file that has no corresponding thumb so it's the WEBP for the main file
+                      'file' => ShortPixelAPI::MB_basename($found),
+                      'width' => $size[0],
+                      'height' => $size[1],
+                      'mime-type' => $mimeType
+                  );
+                  $ind++;
+                  $counter++;
+              }
+          }
+          if($ind > 1) { // at least one thumbnail added, update
+              $meta->setThumbs($sizes);
+              $itemHandler->updateMeta($meta);
+          }
+
+        return $counter;
+  } // addUnlistedThumbs
+
+    private function sendToProcessing($itemHandler, $compressionType = false, $onlyThumbs = false) {
         //conversion of PNG 2 JPG for existing images
         if($itemHandler->getType() == ShortPixelMetaFacade::MEDIA_LIBRARY_TYPE) { //currently only for ML
             $rawMeta = $this->checkConvertMediaPng2Jpg($itemHandler);
@@ -1659,53 +1728,11 @@ class WPShortPixel {
 
         //WpShortPixelMediaLbraryAdapter::cleanupFoundThumbs($itemHandler);
         $URLsAndPATHs = $this->getURLsAndPATHs($itemHandler, NULL, $onlyThumbs);
+        Log::addDebug('Send to PRocessing - URLS -', array($URLsAndPATHs) );
 
         $meta = $itemHandler->getMeta();
         //find thumbs that are not listed in the metadata and add them in the sizes array
-        if(   $itemHandler->getType() == ShortPixelMetaFacade::MEDIA_LIBRARY_TYPE
-           && $this->_settings->optimizeUnlisted) {
-            $mainFile = $meta->getPath();
-
-            $foundThumbs = WpShortPixelMediaLbraryAdapter::findThumbs($mainFile);
-            //first identify which thumbs are not in the sizes
-            $sizes = $meta->getThumbs();
-            $mimeType = false;
-            foreach($foundThumbs as $id => $found) {
-                //get the mime-type from one of the thumbs metas
-                foreach($sizes as $size) {
-                    if(pathinfo($mainFile, PATHINFO_EXTENSION) !== pathinfo($size['file'], PATHINFO_EXTENSION)){
-                        continue;
-                    }
-                    if(isset($size['mime-type'])) { //situation from support case #9351 Ramesh Mehay
-                        $mimeType = $size['mime-type'];
-                    }
-                    if($size['file'] === ShortPixelAPI::MB_basename($found)) {
-                        $foundThumbs[$id] = false;
-                    }
-                }
-            }
-            // add the unfound ones to the sizes array
-            $ind = 1;
-            while (isset($sizes[ShortPixelMeta::FOUND_THUMB_PREFIX . str_pad("".$ind, 2, '0', STR_PAD_LEFT)])) $ind++;
-            $start = $ind;
-            foreach($foundThumbs as $found) {
-                if($found !== false) {
-                    $size = getimagesize($found);
-                    $sizes[ShortPixelMeta::FOUND_THUMB_PREFIX . str_pad("".$ind, 2, '0', STR_PAD_LEFT)]= array( // it's a file that has no corresponding thumb so it's the WEBP for the main file
-                        'file' => ShortPixelAPI::MB_basename($found),
-                        'width' => $size[0],
-                        'height' => $size[1],
-                        'mime-type' => $mimeType
-                    );
-                    $ind++;
-                }
-            }
-            if($ind > $start) { // at least one thumbnail added, update
-                $meta->setThumbs($sizes);
-                $itemHandler->updateMeta($meta);
-                $URLsAndPATHs = $this->getURLsAndPATHs($itemHandler, NULL, $onlyThumbs);
-            }
-        }
+        $changes = $this->addUnlistedThumbs($itemHandler);
 
         //find any missing thumbs files and mark them as such
         $miss = $meta->getThumbsMissing();
@@ -1720,6 +1747,7 @@ class WPShortPixel {
         $refresh = $meta->getStatus() === ShortPixelAPI::ERR_INCORRECT_FILE_SIZE;
         //echo("URLS: "); die(var_dump($URLsAndPATHs));
         $itemHandler->setWaitingProcessing();
+
         $this->_apiInterface->doRequests($URLsAndPATHs['URLs'], false, $itemHandler,
                 $compressionType === false ? $this->_settings->compressionType : $compressionType, $refresh);//send a request, do NOT wait for response
         //$meta = wp_get_attachment_metadata($ID);
@@ -1790,6 +1818,7 @@ class WPShortPixel {
                     $itemHandler->getMeta();
                     $errCode = $e->getCode() < 0 ? $e->getCode() : ShortPixelAPI::ERR_FILE_NOT_FOUND;
                     $itemHandler->setError($errCode, $e->getMessage());
+
                     $ret = array("Status" => ShortPixelAPI::STATUS_FAIL, "Message" => $e->getMessage());
                 }
             }
@@ -1865,6 +1894,7 @@ class WPShortPixel {
     }
 
     //WP/LR Sync plugin integration
+    // @todo Move this function to externals.
     public function onWpLrUpdateMedia($imageId, $galleryIdsUnused) {
         $meta = wp_get_attachment_metadata($imageId);
         if(is_array($meta)) {
@@ -1955,7 +1985,7 @@ class WPShortPixel {
     /** Sets file permissions
     * @param string $file FileName
     * @return boolean Success
-    * TODO - Move to File Model
+    * @TODO - Move to File Model
     */
     protected function setFilePerms($file) {
         //die(getenv('USERNAME') ? getenv('USERNAME') : getenv('USER'));
@@ -1979,11 +2009,17 @@ class WPShortPixel {
         return true;
     }
 
-    //TODO specific to Media Lib., move accordingly
+    // @TODO specific to Media Lib., move accordingly
     protected function doRestore($attachmentID, $rawMeta = null) {
         do_action("shortpixel_before_restore_image", $attachmentID);
 
-        $file = $origFile = get_attached_file($attachmentID);
+        $fs = new \ShortPixel\FileSystemController();
+        $origFile = get_attached_file($attachmentID);
+      //  $file = get_attached_file($attachmentID);
+
+        // Setup Original File and Data. This is used to determine backup path.
+        $fsFile = $fs->getFile($origFile);
+        $filePath = (string) $fsFile->getFileDir();
 
         $itemHandler = new ShortPixelMetaFacade($attachmentID);
         if($rawMeta) {
@@ -2000,29 +2036,50 @@ class WPShortPixel {
             return false;
         }
 
-        $pathInfo = pathinfo($file);
+        // Get correct Backup Folder and file. .
         $sizes = isset($rawMeta["sizes"]) ? $rawMeta["sizes"] : array();
+        $bkFolder = $fs->getDirectory($this->getBackupFolderAny($fsFile->getFullPath(), $sizes));
+        $bkFile = $fs->getFile($bkFolder->getPath() . $fsFile->getFileName());
+
+        Log::addDebug('Restore, Backup File -- ', array($bkFile->getFullPath(), $fsFile->getFullPath() ) );
+    //    $pathInfo = pathinfo($file);
 
         //check if the images were converted from PNG
         $png2jpgMain = isset($rawMeta['ShortPixelPng2Jpg']['originalFile']) ? $rawMeta['ShortPixelPng2Jpg']['originalFile'] : false;
-        $bkFolder = $this->getBackupFolderAny($file, $sizes);
+
         $toReplace = array();
+        // Checks if image was converted to JPG, and rewrites to restore original extension.
+        // @todo Should have it's own function in php2jpg ( restore )
         if($png2jpgMain) {
             $png2jpgSizes = $png2jpgMain ? $rawMeta['ShortPixelPng2Jpg']['originalSizes'] : array();
-            $image = $rawMeta['file'];
-            $imageUrl = wp_get_attachment_url($attachmentID);
-            $baseUrl = ShortPixelPng2Jpg::removeUrlProtocol(trailingslashit(str_replace($image, "", $imageUrl))); //make the base url protocol agnostic if it's not already
-            $baseRelPath = trailingslashit(dirname($image));
+            $image = $rawMeta['file']; // relative file
+            $imageUrl = wp_get_attachment_url($attachmentID); // URL can be anything.
+
+            Log::addDebug('OriginFile -- ' . $fsFile->getFullPath() );
+
+            $imageName = $fsFile->getFileName();
+
+            $baseUrl = str_replace($fsFile->getFileName(), '', $imageUrl); // remove *only* filename from URL
+            $baseUrl = ShortPixelPng2Jpg::removeUrlProtocol($baseUrl); // @todo parse_url with a util helper / model should be better here
+
+          //  $baseUrl = ShortPixelPng2Jpg::removeUrlProtocol(trailingslashit(str_replace($image, "", $imageUrl))); //make the base url protocol agnostic if it's not already
+
+            // not needed, we don't do this weird remove anymore.
+            $baseRelPath = ''; // trailingslashit(dirname($image)); // @todo Replace this (string) $fsFile->getFileDir();
+
             $toReplace[ShortPixelPng2Jpg::removeUrlProtocol($imageUrl)] = $baseUrl . $baseRelPath . wp_basename($png2jpgMain);
             foreach($sizes as $key => $size) {
                 if(isset($png2jpgSizes[$key])) {
                     $toReplace[$baseUrl . $baseRelPath . $size['file']] = $baseUrl . $baseRelPath . wp_basename($png2jpgSizes[$key]['file']);
                 }
             }
-            $file = $png2jpgMain;
+
+            //$file = $png2jpgMain;
             $sizes = $png2jpgSizes;
+
+            $fsFile = $fs->getFile($png2jpgMain); // original is non-existing at this time.
+
         }
-        $bkFile = trailingslashit($bkFolder) . ShortPixelAPI::MB_basename($file);
 
         //first check if the file is readable by the current user - otherwise it will be unaccessible for the web browser
         // - collect the thumbs paths in the process
@@ -2033,55 +2090,98 @@ class WPShortPixel {
                 $this->_settings->bulkLastStatus = null;
             }
         }
-        if(file_exists($bkFile)) {
-            if(!is_readable($bkFile) || (file_exists($file) && !$this->setFilePerms($file)) ) {
+        if($bkFile->exists()) {
+            if(! $bkFile->is_readable() || ($fsFile->exists() && ! $fsFile->is_writable() ) ) {
                 $this->throwNotice('generic-err',
-                    sprintf(__("File %s cannot be restored due to lack of permissions, please contact your hosting provider to assist you in fixing this.",'shortpixel-image-optimiser'),
-                            (is_readable($bkFile) ? "" : "$bkFile and ") . "$file"));
+                    sprintf(__("File %s cannot be restored due to lack of permissions, please contact your hosting provider to assist you in fixing this.",'shortpixel-image-optimiser'),$fsFile->getFullPath() ) );
+
+                Log::addError('DoRestore could not restore file', array($bkFile->getFullPath(), $fsFile->getFullPath(), $fsFile->exists(), $bkFile->is_readable(), $fsFile->is_writable() ));
                 return false;
             }
             $bkCount++;
             $main = true;
         }
         $thumbsPaths = array();
-        if($bkFolder && !empty($rawMeta['file']) && count($sizes) ) {
+        // Check and Collect Thumb Sizes.
+
+        if($bkFolder->exists() && !empty($rawMeta['file']) && count($sizes) ) {
             foreach($sizes as $size => $imageData) {
-                $dest = $pathInfo['dirname'] . '/' . $imageData['file'];
-                $source = trailingslashit($bkFolder) . $imageData['file'];
-                if(!file_exists($source)) continue; // if thumbs were not optimized, then the backups will not be there.
-                if(!$this->setFilePerms($source) || (file_exists($dest) && !$this->setFilePerms($dest))) {
-                    $failedFile = ($this->setFilePerms($bkFile) ? $file : $bkFile);
+                //$dest = $pathInfo['dirname'] . '/' . $imageData['file'];
+                $destination = $fs->getFile($filePath . $imageData['file']);
+                $source = $fs->getFile($bkFolder->getPath() . $imageData['file']); //trailingslashit($bkFolder) . $imageData['file'];
+
+                if(! $source->exists() ) continue; // if thumbs were not optimized, then the backups will not be there.
+                if(! $source->is_readable() || ($destination->exists() && !$destination->is_writable() )) {
+                    $failedFile = ($destination->is_writable() ? $source->getFullPath() : $destination->getFullPath());
                     $this->throwNotice('generic-err',
-                        sprintf(__("File %s cannot be restored due to lack of permissions, please contact your hosting provider to assist you in fixing this.",'shortpixel-image-optimiser'),
+                        sprintf(__("The file %s cannot be restored due to lack of permissions, please contact your hosting provider to assist you in fixing this.",'shortpixel-image-optimiser'),
                                 "$failedFile (current permissions: " . sprintf("%o", fileperms($failedFile)) . ")"));
                     return false;
                 }
                 $bkCount++;
-                $thumbsPaths[$source] = $dest;
+                $thumbsPaths[] = array('source' => $source, 'destination' => $destination);
             }
         }
         if(!$bkCount) {
             $this->throwNotice('generic-err', __("No backup files found. Restore not performed.",'shortpixel-image-optimiser'));
+            Log::addError('No Backup Files Found. ', array($bkFile));
             return false;
         }
+
         //either backups exist, or there was an error when trying to optimize, so it's normal no backup is present
+        /*protected function retinaName($file) {
+            $ext = pathinfo($file, PATHINFO_EXTENSION);
+            return substr($file, 0, strlen($file) - 1 - strlen($ext)) . "@2x." . $ext;
+        }*/
         try {
             $width = false;
             if($bkCount) { // backups, if exist
                 //main file
                 if($main) {
-                    $this->renameWithRetina($bkFile, $file);
+                    //$this->renameWithRetina($bkFile, $file);
+                    if (! $bkFile->move($fsFile))
+                    {
+                      Log::addError('DoRestore failed restoring backup', array($bkFile->getFullPath(), $fsFile->getFullPath() ));
+                    }
+                    $retinaBK = $fs->getFile( $bkFile->getFileDir()->getPath() . $bkFile->getFileBase() . '@2x' . $bkFile->getExtension()  );
+                    if ($retinaBK->exists())
+                    {
+                      $retinaDest = $fs->getFile($fsFile->getFileDir()->getPath() . $fsFile->getFileBase() . '@2x' . $fsFile->getExtension() );
+                      if (! $retinaBK->move($retinaDest))
+                      {
+                        Log::addError('DoRestore failed restoring retina backup', array($retinaBK->getFullPath(), $retinaDest->getFullPath() ));
+                      }
+                    }
+
+                    //@rename($bkFile, $file);
+                    //@rename($this->retinaName($bkFile), $this->retinaName($file));
                 }
                 //getSize to update meta if image was resized by ShortPixel
-                if(file_exists($file)) {
-                    $size = getimagesize($file);
+                if($fsFile->exists()) {
+                    $size = getimagesize($fsFile->getFullPath());
                     $width = $size[0];
                     $height = $size[1];
                 }
 
                 //overwriting thumbnails
-                foreach($thumbsPaths as $source => $destination) {
-                    $this->renameWithRetina($source, $destination);
+
+                foreach($thumbsPaths as $index => $data) {
+                    $source = $data['source'];
+                    $destination = $data['destination'];
+                  //  $this->renameWithRetina($source, $destination);
+                    if (! $source->move($destination))
+                    {
+                      Log::addError('DoRestore failed restoring backup', array($source->getFullPath(), $destination->getFullPath() ));
+                    }
+                    $retinaBK = $fs->getFile( $source->getFileDir()->getPath() . $source->getFileBase() . '@2x' . $source->getExtension()  );
+                    if ($retinaBK->exists())
+                    {
+                      $retinaDest = $fs->getFile($destination->getFileDir()->getPath() . $destination->getFileBase() . '@2x' . $destination->getExtension() );
+                      if (! $retinaBK->move($retinaDest))
+                      {
+                        Log::addError('DoRestore failed restoring retina backup', array($retinaBK->getFullPath(), $retinaDest->getFullPath() ));
+                      }
+                    }
                 }
             }
 
@@ -2094,6 +2194,7 @@ class WPShortPixel {
                    && 0 + $crtMeta["ShortPixelImprovement"] < 5 && $this->_settings->under5Percent > 0) {
                     $this->_settings->under5Percent = $this->_settings->under5Percent - 1; // - (isset($crtMeta["ShortPixel"]["thumbsOpt"]) ? $crtMeta["ShortPixel"]["thumbsOpt"] : 0);
                 }
+                /** @todo This logic belongs the cleanUpMeta. not DRY */
                 unset($crtMeta["ShortPixelImprovement"]);
                 unset($crtMeta['ShortPixel']);
                 unset($crtMeta['ShortPixelPng2Jpg']);
@@ -2103,7 +2204,7 @@ class WPShortPixel {
                     $crtMeta['height'] = $height;
                 }
                 if($png2jpgMain) {
-                    $crtMeta['file'] = trailingslashit(dirname($crtMeta['file'])) . ShortPixelAPI::MB_basename($file);
+                    $crtMeta['file'] = trailingslashit(dirname($crtMeta['file'])) . $fsFile->getFileName();
                     update_attached_file($ID, $crtMeta['file']);
                     if($png2jpgSizes && count($png2jpgSizes)) {
                         $crtMeta['sizes'] = $png2jpgSizes;
@@ -2142,12 +2243,15 @@ class WPShortPixel {
             return false;
         }
 
+        /** It's being dumped because settings like .webp can be cached */
+        $this->maybeDumpFromProcessedOnServer($itemHandler, $toUnlink);
         do_action("shortpixel_after_restore_image", $attachmentID);
         return $rawMeta;
     }
 
     /**
      * used to store a notice to be displayed after the redirect, for ex. when having an error restoring.
+     * @todo move this to noticesModel
      * @param string $when
      * @param string $extra
      */
@@ -2169,17 +2273,6 @@ class WPShortPixel {
             return true;
         }
         return false;
-    }
-
-    protected function renameWithRetina($bkFile, $file) {
-        @rename($bkFile, $file);
-        @rename($this->retinaName($bkFile), $this->retinaName($file));
-
-    }
-
-    protected function retinaName($file) {
-        $ext = pathinfo($file, PATHINFO_EXTENSION);
-        return substr($file, 0, strlen($file) - 1 - strlen($ext)) . "@2x." . $ext;
     }
 
     /** Restores a non-media-library image
@@ -3098,6 +3191,8 @@ class WPShortPixel {
   RewriteCond %{HTTP_USER_AGENT} "Google Page Speed Insights" [OR]
   # OR does this browser explicitly support webp
   RewriteCond %{HTTP_ACCEPT} image/webp
+  # AND NOT MS EDGE 42/17 - doesnt work.
+  RewriteCond %{HTTP_USER_AGENT} !Edge/17
   # AND is the request a jpg or png?
   RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png)$
   # AND does a .ext.webp image exist?
@@ -3109,6 +3204,7 @@ class WPShortPixel {
   RewriteCond %{HTTP_USER_AGENT} Chrome [OR]
   RewriteCond %{HTTP_USER_AGENT} "Google Page Speed Insights" [OR]
   RewriteCond %{HTTP_ACCEPT} image/webp
+  RewriteCond %{HTTP_USER_AGENT} !Edge/17
   # AND is the request a jpg or png? (also grab the basepath %1 to match in the next rule)
   RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png)$
   # AND does a .ext.webp image exist?
@@ -3173,6 +3269,20 @@ class WPShortPixel {
         return $this->_settings->totalOptimized > 0
                ? round(( 1 -  ( $this->_settings->totalOptimized / $this->_settings->totalOriginal ) ) * 100, 2)
                : 0;
+    }
+
+    /** If webp generating functionality is on, give mime-permissions for webp extension
+    *
+    */
+    public function addWebpMime($mimes)
+    {
+        if ($this->_settings->createWebp)
+        {
+            if (! isset($mimes['webp']))
+              $mimes['webp'] = 'image/webp';
+        }
+
+        return $mimes;
     }
 
     /**
@@ -3362,12 +3472,16 @@ class WPShortPixel {
             $file = get_attached_file($id);
             $data = ShortPixelMetaFacade::sanitizeMeta(wp_get_attachment_metadata($id));
 
-            if($extended && isset($_GET['SHORTPIXEL_DEBUG'])) {
+            if($extended && Log::debugIsActive()) {
             //  var_dump($data);
-                var_dump(wp_get_attachment_url($id));
+                $sizes = isset($data['sizes']) ? $data['sizes'] : array();
+                echo "<PRE style='font-size:11px; overflow:hidden; white-space:pre-wrap'>";
+                echo "<strong>URL: </strong>"; print_r(wp_get_attachment_url($id));
                 echo('<br><br>' . json_encode(ShortPixelMetaFacade::getWPMLDuplicates($id)));
-                echo('<br><br>'); print_r($data);  echo ''; //json_encode($data))
-                echo('<br><br>');
+                echo('<br><br><span class="array">'); print_r($data);  echo ''; //json_encode($data))
+                echo('</span><br><br>');
+                echo '<strong>Backup File: </strong>' . $this->getBackupFolderAny($file, $sizes);
+                echo "</PRE>";
             }
 
             $fileExtension = strtolower(pathinfo($file, PATHINFO_EXTENSION));
@@ -3412,7 +3526,7 @@ class WPShortPixel {
                 $renderData['invType'] = ShortPixelAPI::getCompressionTypeName($this->getOtherCompressionTypes(ShortPixelAPI::getCompressionTypeCode($renderData['type'])));
                 $renderData['thumbsTotal'] = $sizesCount;
                 $renderData['thumbsOpt'] = isset($data['ShortPixel']['thumbsOpt']) ? $data['ShortPixel']['thumbsOpt'] : $sizesCount;
-                $renderData['thumbsToOptimize'] = count($thumbsToOptimizeList);
+                $renderData['thumbsToOptimize'] = (is_array($thumbsToOptimizeList)) ? count($thumbsToOptimizeList) : 0;
                 $renderData['thumbsToOptimizeList'] = $thumbsToOptimizeList;
                 $renderData['thumbsOptList'] = $thumbsOptList;
                 $renderData['excludeSizes'] = isset($data['ShortPixel']['excludeSizes']) ? $data['ShortPixel']['excludeSizes'] : null;
@@ -3486,31 +3600,57 @@ class WPShortPixel {
     }
 
     /**
-     * return the thumbnails that remain to optimize and the total count of sizes registered in metdata (and not excluded)
-     * @param $data
-     * @param $file
-     * @return array
+     * return the thumbnails that remain to optimize and the total count of sizes registered in metadata (and not excluded)
+     * @param $data @todo Define what is data
+     * @param $filepath
+     * @return array Array of Thumbs to Optimize - only the filename - , and count of sizes not excluded ...
      */
-    function getThumbsToOptimize($data, $file) {
+    function getThumbsToOptimize($data, $filepath) {
+        $fs = new \ShortPixel\FileSystemController();
+        $mainfile = $fs->getFile($filepath);
+
         $sizesCount = isset($data['sizes']) ? WpShortPixelMediaLbraryAdapter::countSizesNotExcluded($data['sizes']) : 0;
-        $basedir = trailingslashit(dirname($file));
+        $basedir = $mainfile->getFileDir()->getPath();
         $thumbsOptList = isset($data['ShortPixel']['thumbsOptList']) ? $data['ShortPixel']['thumbsOptList'] : array();
+        $thumbsToOptimizeList = array(); // is returned, so should be defined before if.
+
         if($sizesCount && $this->_settings->processThumbnails) {
 
-            $thumbsToOptimizeList = array();
-            $found = $this->_settings->optimizeUnlisted ? WpShortPixelMediaLbraryAdapter::findThumbs($file) : array();
+            // findThumbs returns fullfilepath.
+            $found = $this->_settings->optimizeUnlisted ? WpShortPixelMediaLbraryAdapter::findThumbs($mainfile->getFullPath()) : array();
 
             $exclude = $this->_settings->excludeSizes;
             $exclude = is_array($exclude) ? $exclude : array();
             foreach($data['sizes'] as $size => $sizeData) {
-                unset($found[\array_search($basedir . $sizeData['file'], $found)]);
-                if(!in_array($size, $exclude) && !in_array($sizeData['file'], $thumbsOptList)) {
-                    $thumbsToOptimizeList[] = $sizeData['file'];
+                unset($found[\array_search($basedir . $sizeData['file'], $found)]); // @todo what is this intended to do?
+
+                // sizeData['file'] is *only* filename *but* can be wrong data, URL due to plugins. So check first, only get filename ( since it is supposed to fail with only a filename path ) and then reload.
+                $sizeFileCheck = $fs->getFile($sizeData['file']);
+                $file = $fs->getFile($basedir . $sizeFileCheck->getFileName());
+
+                if ($file->getExtension() !== $mainfile->getExtension())
+                {
+                  continue;
+                }
+
+                if(!in_array($size, $exclude) && !in_array($file->getFileName(), $thumbsOptList)) {
+                    $thumbsToOptimizeList[] = $file->getFileName();
                 }
             }
-            $found = array_diff($found, $thumbsOptList);
-            foreach($found as $item) {
-                $thumbsToOptimizeList[] = wp_basename($item);
+            //$found = array_diff($found, $thumbsOptList); // Wrong comparison. Found is full file path, thumbsOptList is not.
+            foreach($found as $path) {
+                $file = $fs->getFile($path);
+
+                // prevent Webp and what not from showing up.
+                if ($file->getExtension() !== $mainfile->getExtension())
+                {
+                  continue;
+                }
+                // thumbs can already be in findThumbs.
+                if (! in_array($file->getFileName(), $thumbsToOptimizeList) && ! in_array($file->getFileName(), $thumbsOptList) )
+                {
+                  $thumbsToOptimizeList[] =  $file->getFileName();
+                }
             }
         }
         return array($thumbsToOptimizeList, $sizesCount);
@@ -3633,6 +3773,7 @@ class WPShortPixel {
     }
 
     /** Removes webp and backup from specified paths
+      * @todo Implement Filesystem controller on this.
     */
     public function deleteBackupsAndWebPs($paths) {
         /**
@@ -3833,6 +3974,7 @@ class WPShortPixel {
     /** Remove a directory
     * @param string $dirPath Path of directory to remove.
     * @todo Part of folder model.
+    * @todo Dangerous function to have exposed as public.
     */
     public static function deleteDir($dirPath) {
         if (substr($dirPath, strlen($dirPath) - 1, 1) != '/') {
@@ -3856,7 +3998,7 @@ class WPShortPixel {
     static public function folderSize($path) {
         $total_size = 0;
         if(file_exists($path)) {
-            $files = scandir($path);
+            $files = scandir($path); // @todo This gives a warning if directory is not writable.
         } else {
             return $total_size;
         }

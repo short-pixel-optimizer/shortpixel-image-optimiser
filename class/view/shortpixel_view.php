@@ -212,6 +212,7 @@ class ShortPixelView {
         //$this->ctrl->outputHSBeacon();
         \ShortPixel\HelpScout::outputBeacon($this->ctrl->getApiKey());
 
+
         $this->bulkType = $this->ctrl->getPrioQ()->getBulkTypeForDisplay(); // adding to the mess
         $hider = ($this->bulkType == ShortPixelQueue::BULK_TYPE_RESTORE) ? 'sp-hidden' : '';
         ?>
@@ -1698,17 +1699,19 @@ class ShortPixelView {
                             <?php _e('Cleanup&Retry','shortpixel-image-optimiser');?>
                             </a> <?php
                         } else {
+
                             if($data['status'] == 'retry' && (isset($data['backup']) && $data['backup']) ) { ?>
-                            <div style="overflow:hidden">
+                                <div style="overflow:hidden">
                                 <a class="button button-smaller sp-action-restore" href="admin.php?action=shortpixel_restore_backup&attachment_ID=<?php echo($id)?>" style="margin-left:5px;"
                                     title="<?php _e('Restore Image from Backup', 'shortpixel-image-optimiser') ?>">
                                     <?php _e('Cleanup','shortpixel-image-optimiser');?>
                                 </a>
+                                </div>
                                 <?php } ?>
                                 <a class='button button-smaller button-primary' href="javascript:manualOptimization('<?php echo($id)?>', false)">
                                     <?php _e('Retry','shortpixel-image-optimiser');?>
                                 </a>
-                            </div>
+
                             <?php
                         }
                     break;
@@ -1754,7 +1757,7 @@ class ShortPixelView {
                 //    echo("<br><br>METADATA: <pre>");print_r(wp_get_attachment_metadata($id));echo("</pre>");
                 //}
                 ?>
-        </div>
+        </div> <!--- // RenderCustomColumn -->
         <?php
     }
 
@@ -1844,8 +1847,8 @@ class ShortPixelView {
                 Compare Images
               </div>
               <div class="sp-modal-body" style="height:400px;padding:0;">
-                <div class="shortpixel-slider"style="text-align: center;">
-                    <div class="side-by-side" style="text-align: center; display:inline-block;">
+                <div class="shortpixel-slider" style="text-align: center;">
+                    <div class="side-by-side"  style="text-align: center; display:inline-block;">
                         <img class="spUploadCompareOriginal" style="margin: 10px"/><br>
                         Original
                     </div>

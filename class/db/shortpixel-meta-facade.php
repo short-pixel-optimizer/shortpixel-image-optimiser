@@ -1,4 +1,5 @@
 <?php
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 class ShortPixelMetaFacade {
     const MEDIA_LIBRARY_TYPE = 1;
@@ -100,7 +101,8 @@ class ShortPixelMetaFacade {
         return $rawMeta;
     }
 
-    function updateMeta($newMeta = null, $replaceThumbs = false) {
+    // @todo Find out the use of this function. Doesn't update_meta unless it's WPML.
+    public function updateMeta($newMeta = null, $replaceThumbs = false) {
         if($newMeta) {
             $this->meta = $newMeta;
         }
@@ -112,6 +114,7 @@ class ShortPixelMetaFacade {
         }
         elseif($this->type == ShortPixelMetaFacade::MEDIA_LIBRARY_TYPE) {
             $duplicates = ShortPixelMetaFacade::getWPMLDuplicates($this->ID);
+            Log::addDebug('Update Meta Duplicates Query', array($duplicates));
             foreach($duplicates as $_ID) {
                 $rawMeta = $this->sanitizeMeta(wp_get_attachment_metadata($_ID));
 
@@ -210,11 +213,15 @@ class ShortPixelMetaFacade {
                 if($_ID == $this->ID) {
                     $this->rawMeta = $rawMeta;
                 }
-            }
+            } // duplicates loop
         }
     }
 
-    function cleanupMeta($fakeOptPending = false) {
+
+    /** Clean meta set by Shortpixel
+    * This function only hits with images that were optimized, pending or have an error state.
+    */
+    public function cleanupMeta($fakeOptPending = false) {
         if($this->type == ShortPixelMetaFacade::MEDIA_LIBRARY_TYPE) {
             if(!isset($this->rawMeta)) {
                 $rawMeta = $this->sanitizeMeta(wp_get_attachment_metadata($this->getId()));
@@ -231,6 +238,17 @@ class ShortPixelMetaFacade {
                 unset($rawMeta["ShortPixelImprovement"]);
                 unset($rawMeta['ShortPixel']);
                 unset($rawMeta['ShortPixelPng2Jpg']);
+            }
+            if (isset($rawMeta['sizes'])) // search for custom sizes set by SP.
+            {
+              foreach($rawMeta['sizes'] as $size => $data)
+              {
+                  if (strpos($size, ShortPixelMeta::FOUND_THUMB_PREFIX) !== false)
+                  {
+                    unset($rawMeta['sizes'][$size]);
+                    Log::addDebug('Unset sp-found- size' . $size);
+                  }
+              }
             }
             unset($this->meta);
             update_post_meta($this->ID, '_wp_attachment_metadata', $rawMeta);
@@ -357,6 +375,7 @@ class ShortPixelMetaFacade {
 
     public function getURLsAndPATHs($processThumbnails, $onlyThumbs = false, $addRetina = true, $excludeSizes = array(), $includeOptimized = false) {
         $sizesMissing = array();
+        $fs = new \ShortPixel\FileSystemController();
 
         if($this->type == self::CUSTOM_TYPE) {
             $meta = $this->getMeta();
@@ -368,16 +387,34 @@ class ShortPixelMetaFacade {
             $filePaths[] = $meta->getPath();
         } else {
             $path = get_attached_file($this->ID);//get the full file PATH
+            $fsFile = $fs->getFile($path);
             $mainExists = apply_filters('shortpixel_image_exists', file_exists($path), $path, $this->ID);
-            $url = self::safeGetAttachmentUrl($this->ID);
+            $predownload_url = $url = self::safeGetAttachmentUrl($this->ID);
             $urlList = array(); $filePaths = array();
+
+            Log::addDebug('attached file path: ' . $path );
 
             if(!$mainExists) {
                 //try and download the image from the URL (images present only on CDN)
                 $downloadTimeout = max(SHORTPIXEL_MAX_EXECUTION_TIME - 10, 15);
-                $tempOriginal = download_url($url, $downloadTimeout);
-                if(!is_wp_error( $tempOriginal )) {
-                    $mainExists = @copy($tempOriginal, $path);
+                //$tempOriginal = download_url($url, $downloadTimeout);
+                $args_for_get = array(
+                  'stream' => true,
+                  'filename' => $path,
+                );
+                Log::addDebug('Downloading main file ' . $url );
+                $response = wp_remote_get( $url, $args_for_get );
+                if(is_wp_error( $response )) {
+                  Log::addError('Download Mailfile failed', array($response->get_error_messages()));
+                }
+                elseif ($fsFile->exists())
+                {
+                    $mainExists = true;
+                    $fsUrl = $fs->pathToUrl($fsFile);
+                    if ($fsUrl !== false)
+                        $url = $fsUrl; // more secure way of getting url
+
+                    Log::addDebug('FSFILE TO URL -' . $fsUrl);
                 }
             }
 
@@ -388,6 +425,8 @@ class ShortPixelMetaFacade {
                     $this->addRetina($path, $url, $filePaths, $urlList);
                 }
             }
+
+            Log::addDebug('Main file turnout - ', array($url, $path));
 
             $meta = $this->getMeta();
             $sizes = $meta->getThumbs();
@@ -404,6 +443,7 @@ class ShortPixelMetaFacade {
                 $count = 1;
                 foreach( $sizes as $thumbnailName => $thumbnailInfo ) {
 
+                    // Reasons for skipping the thumb.
                     if(!isset($thumbnailInfo['file'])) { //cases when $thumbnailInfo is NULL
                         continue;
                     }
@@ -428,10 +468,31 @@ class ShortPixelMetaFacade {
                     $count++;
 
                     $origPath = $tPath = str_replace(ShortPixelAPI::MB_basename($path), $thumbnailInfo['file'], $path);
+                    $origFile = $fs->getFile($origPath);
+
+                    if ($origFile->getExtension() == 'webp') // never include any webp extension.
+                      continue;
+
                     $file_exists = apply_filters('shortpixel_image_exists', file_exists($origPath), $origPath, $this->ID);
-                    $tUrl = str_replace(ShortPixelAPI::MB_basename($url), $thumbnailInfo['file'], $url);
+                    $tUrl = str_replace(ShortPixelAPI::MB_basename($predownload_url), $thumbnailInfo['file'], $predownload_url);
+
+                    // Working on low-key replacement for path handling via FileSystemController.
+                    // This specific fix is related to the possibility of URLs' in metadata
+                    if ( !$file_exists && !file_exists($tPath) )
+                    {
+                        $file = $fs->getFile($thumbnailInfo['file']);
+
+                        if ($file->exists())
+                        {
+                          $tPath = $file->getFullPath();
+                          $fsUrl = $fs->pathToUrl($file);
+                          if ($fsUrl !== false)
+                            $tUrl = $fsUrl; // more secure way of getting url
+                        }
+                    }
+
                     if ( !$file_exists && !file_exists($tPath) ) {
-                        $tPath = SHORTPIXEL_UPLOADS_BASE . substr($tPath, strpos($tPath, $StichString) + strlen($StichString));
+                        $tPath = SHORTPIXEL_UPLOADS_BASE . substr($origPath, strpos($origPath, $StichString) + strlen($StichString));
                     }
 
                     if ( !$file_exists && !file_exists($tPath) ) {
@@ -440,13 +501,33 @@ class ShortPixelMetaFacade {
 
                     if ( !$file_exists && !file_exists($tPath) ) {
                         //try and download the image from the URL (images present only on CDN)
-                        $downloadTimeout = max(SHORTPIXEL_MAX_EXECUTION_TIME - 10, 15);
-                        $tempThumb = download_url($tUrl, $downloadTimeout);
-                        if(!is_wp_error( $tempThumb )) {
-                            if(@copy($tempThumb, $origPath)) {
-                                $tPath = $origPath;
+                      //  Log::addDebug('URLs and Paths - File didnt exists, trying to download', array($tUrl, $origPath));
+                      //  $tempThumb = download_url($tUrl, $downloadTimeout);
+                        $args_for_get = array(
+                          'stream' => true,
+                          'filename' => $origFile->getFullPath(),
+                          'timeout' => max(SHORTPIXEL_MAX_EXECUTION_TIME - 10, 15),
+                        );
+
+                        $response = wp_remote_get( $tUrl, $args_for_get );
+                        Log::addDebug('Thumb not found, trying to download: ' . $tUrl);
+
+                        if (is_wp_error($response))
+                        {
+                          Log::addError('Download Thumbnail failed', array($response->get_error_messages()));
+                        }
+                        elseif($origFile->exists())
+                        {
+                            $tPath = $origFile->getFullPath(); // download succesfull
+                            $fsUrl = $fs->pathToUrl($origFile);
+                            if ($fsUrl !== false) // this tranlation to domain url will not always hold to sendToProcessing when dealing w/ CDN and such.
+                              $tUrl = $fsUrl; // more secure way of getting url
+                            else {
+                              Log::addError('Download - Could not tranlate to URL', array($fsUrl, $tPath, $origFile));
                             }
                         }
+
+                        Log::addDebug('New TPath after download', array($tUrl, $tPath, $origPath, filesize($tPath)));
                     }
 
                     if ($file_exists || file_exists($tPath)) {
@@ -458,12 +539,13 @@ class ShortPixelMetaFacade {
                         }
                     }
                     else {
+                        Log::addInfo('Missing Thumbnail :' . $tPath);
                         $sizesMissing[$thumbnailName] = ShortPixelAPI::MB_basename($tPath);
                     }
                 }
             }
             if(!count($sizes)) {
-                WPShortPixel::log("getURLsAndPATHs: no meta sizes for ID " . $this->ID . " : " . json_encode($this->rawMeta));
+                Log::addInfo("getURLsAndPATHs: no meta sizes for ID " . $this->ID . " : " . json_encode($this->rawMeta));
             }
 
             if($onlyThumbs && $mainExists && count($urlList) >= 1) { //remove the main image
@@ -472,12 +554,12 @@ class ShortPixelMetaFacade {
             }
         }
 
+
         //convert the + which are replaced with spaces by wp_remote_post
         array_walk($urlList, array( &$this, 'replacePlusChar') );
 
         $filePaths = ShortPixelAPI::CheckAndFixImagePaths($filePaths);//check for images to make sure they exist on disk
 
-        //die(var_dump(array("URLs" => $urlList, "PATHs" => $filePaths)));
         return array("URLs" => $urlList, "PATHs" => $filePaths, "sizesMissing" => $sizesMissing);
     }
 
@@ -499,6 +581,7 @@ class ShortPixelMetaFacade {
         return (substr($baseName, -3) === '@2x');
     }
 
+    // @todo Not clear what this function does.
     public static function getWPMLDuplicates( $id ) {
         global $wpdb;
 
@@ -679,6 +762,14 @@ class ShortPixelMetaFacade {
      */
     static public function returnSubDir($file)
     {
+
+        // Experimental FS handling for relativePath. Should be able to cope with more exceptions.  See Unit Tests
+        $fs = new ShortPixel\FileSystemController();
+        $directory = $fs->getDirectory($file);
+        if ($relpath = $directory->getRelativePath())
+          return $relpath;
+
+
         $homePath = get_home_path();
         if($homePath == '/') {
             $homePath = ABSPATH;
@@ -686,8 +777,9 @@ class ShortPixelMetaFacade {
         $hp = wp_normalize_path($homePath);
         $file = wp_normalize_path($file);
 
+
       //  $sp__uploads = wp_upload_dir();
-      
+
         if(strstr($file, $hp)) {
             $path = str_replace( $hp, "", $file);
         } elseif( strstr($file, dirname( WP_CONTENT_DIR ))) { //in some situations the content dir is not inside the root, check this also (ex. single.shortpixel.com)

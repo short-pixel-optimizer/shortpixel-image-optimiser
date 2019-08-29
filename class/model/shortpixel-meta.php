@@ -38,7 +38,7 @@ class ShortPixelMeta extends ShortPixelEntity{
     const FOUND_THUMB_PREFIX = 'sp-found-';
 
     // [BS] Attempt to shed some light on Meta Status on File.
-    // Anything lower than 0 is a processing error. 
+    // Anything lower than 0 is a processing error.
     const FILE_STATUS_UNPROCESSED = 0;
     const FILE_STATUS_PENDING = 1;
     const FILE_STATUS_SUCCESS = 2;
@@ -163,6 +163,7 @@ class ShortPixelMeta extends ShortPixelEntity{
         return $this->thumbsOptList;
     }
 
+    /** @todo There is only one function using this in Shortpixel API, but getting the values from the same class */
     function setThumbsOptList($thumbsOptList) {
         $this->thumbsOptList = $thumbsOptList;
     }
