@@ -405,7 +405,15 @@ class ShortPixelMetaFacade {
             $path = get_attached_file($this->ID);//get the full file PATH
             $fsFile = $fs->getFile($path);
             $mainExists = apply_filters('shortpixel_image_exists', file_exists($path), $path, $this->ID);
-            $predownload_url = $url = self::safeGetAttachmentUrl($this->ID);
+            try
+            {
+              $predownload_url = $url = self::safeGetAttachmentUrl($this->ID); // This function *can* return an PHP error.
+            }
+            catch(Exception $e)
+            {
+              Log::addWarn('Attachment seems corrupted', array($e->getMessage() ));
+              return array("URLs" => array(), "PATHs" => array(), "sizesMissing" => array());
+            }
             $urlList = array(); $filePaths = array();
 
             Log::addDebug('attached file path: ' . $path );

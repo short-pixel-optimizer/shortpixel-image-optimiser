@@ -1499,7 +1499,14 @@ class WPShortPixel {
                                 //$urlPath = implode("/", array_slice($filePath, 0, count($filePath) - 1));
                                 $thumb = $uploadsUrl . $urlPath . $thumb;
                             } else {
+                              try {
                                 $mainUrl = ShortPixelMetaFacade::safeGetAttachmentUrl($itemHandler->getId());
+                              }
+                              catch(Exception $e)
+                              {
+                                  Log::addError('Attachment seems corrupted!', array($e->getMessage() ));
+                                  $mainUrl = null; // error state. 
+                              }
                                 $thumb = dirname($mainUrl) . '/' . $thumb;
                             }
                         }
