@@ -514,7 +514,7 @@ class ShortPixelMetaFacade {
                       //  Log::addDebug('URLs and Paths - File didnt exists, trying to download', array($tUrl, $origPath));
                       //  $tempThumb = download_url($tUrl, $downloadTimeout);
 
-                        list($tUrl, $tPath) = $this->attemptRemoteDownload($url, $path, $this->ID);
+                        list($tUrl, $tPath) = $this->attemptRemoteDownload($tUrl, $tPath, $this->ID);
 
                         Log::addDebug('New TPath after download', array($tUrl, $tPath, $origPath, filesize($tPath)));
                     }
