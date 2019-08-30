@@ -98,8 +98,13 @@ Class FileSystemController extends ShortPixelController
                 $url = $uploads['baseurl'] . "/$filepath";
             }
         }
-        return $url;
+        if (parse_url($url) !== false)
+          return $url;
+        else {
+          return false;
+        }
     }
+
 
 
 

@@ -416,30 +416,16 @@ class ShortPixelMetaFacade {
             }
             $urlList = array(); $filePaths = array();
 
-            Log::addDebug('attached file path: ' . $path );
+            Log::addDebug('attached file path: ' . $path, array( (string) $fsFile->getFileDir() )  );
 
             if(!$mainExists) {
-                //try and download the image from the URL (images present only on CDN)
-                $downloadTimeout = max(SHORTPIXEL_MAX_EXECUTION_TIME - 10, 15);
-                //$tempOriginal = download_url($url, $downloadTimeout);
-                $args_for_get = array(
-                  'stream' => true,
-                  'filename' => $path,
-                );
-                Log::addDebug('Downloading main file ' . $url );
-                $response = wp_remote_get( $url, $args_for_get );
-                if(is_wp_error( $response )) {
-                  Log::addError('Download Mailfile failed', array($response->get_error_messages()));
-                }
-                elseif ($fsFile->exists())
-                {
-                    $mainExists = true;
-                    $fsUrl = $fs->pathToUrl($fsFile);
-                    if ($fsUrl !== false)
-                        $url = $fsUrl; // more secure way of getting url
-
-                    Log::addDebug('FSFILE TO URL -' . $fsUrl);
-                }
+               list($url, $path) = $this->attemptRemoteDownload($url, $path, $this->ID);
+               $downloadFile = $fs->getFile($path);
+               if ($downloadFile->exists()) // check for success.
+               {
+                $mainExists = true;
+                $fsFile = $downloadFile; // overwrite.
+              }
             }
 
             if($mainExists) {
@@ -527,29 +513,8 @@ class ShortPixelMetaFacade {
                         //try and download the image from the URL (images present only on CDN)
                       //  Log::addDebug('URLs and Paths - File didnt exists, trying to download', array($tUrl, $origPath));
                       //  $tempThumb = download_url($tUrl, $downloadTimeout);
-                        $args_for_get = array(
-                          'stream' => true,
-                          'filename' => $origFile->getFullPath(),
-                          'timeout' => max(SHORTPIXEL_MAX_EXECUTION_TIME - 10, 15),
-                        );
 
-                        $response = wp_remote_get( $tUrl, $args_for_get );
-                        Log::addDebug('Thumb not found, trying to download: ' . $tUrl);
-
-                        if (is_wp_error($response))
-                        {
-                          Log::addError('Download Thumbnail failed', array($response->get_error_messages()));
-                        }
-                        elseif($origFile->exists())
-                        {
-                            $tPath = $origFile->getFullPath(); // download succesfull
-                            $fsUrl = $fs->pathToUrl($origFile);
-                            if ($fsUrl !== false) // this tranlation to domain url will not always hold to sendToProcessing when dealing w/ CDN and such.
-                              $tUrl = $fsUrl; // more secure way of getting url
-                            else {
-                              Log::addError('Download - Could not tranlate to URL', array($fsUrl, $tPath, $origFile));
-                            }
-                        }
+                        list($tUrl, $tPath) = $this->attemptRemoteDownload($url, $path, $this->ID);
 
                         Log::addDebug('New TPath after download', array($tUrl, $tPath, $origPath, filesize($tPath)));
                     }
@@ -585,6 +550,63 @@ class ShortPixelMetaFacade {
         $filePaths = ShortPixelAPI::CheckAndFixImagePaths($filePaths);//check for images to make sure they exist on disk
 
         return array("URLs" => $urlList, "PATHs" => $filePaths, "sizesMissing" => $sizesMissing);
+    }
+
+    private function attemptRemoteDownload($url, $path, $attach_id)
+    {
+        $downloadTimeout = max(SHORTPIXEL_MAX_EXECUTION_TIME - 10, 15);
+        $fs = new \ShortPixel\FileSystemController();
+        $pathFile = $fs->getFile($path);
+
+        $args_for_get = array(
+          'stream' => true,
+          'filename' => $path,
+        );
+        Log::addDebug('Downloading file ' . $url );
+
+        $response = wp_remote_get( $url, $args_for_get );
+
+        if(is_wp_error( $response )) {
+          Log::addError('Download file failed', array($url, $response->get_error_messages(), $response->get_error_codes() ));
+
+          // Try to get it then via this way.
+          $response = download_url($url, $downloadTimeout);
+          if (!is_wp_error($response)) // response when alright is a tmp filepath. But given path can't be trusted since that can be reason for fail.
+          {
+            $tmpFile = $fs->getFile($response);
+            $post = get_post($attach_id);
+            $post_date = get_the_date('Y/m', $post); // get the date for the uploads tree.
+
+            $upload_dir = wp_upload_dir($post_date);
+            $upload_dir = $fs->getDirectory($upload_dir['path']); // get the upload dir.
+
+            $fixedFile = $fs->getFile($upload_dir->getPath() . $pathFile->getFileName() );
+            // try to move
+            $result = $tmpFile->move($fixedFile);
+
+            Log::addDebug('Fixed File', array($post_date, $fixedFile->getFullPath() ));
+
+            if ($result && $fixedFile->exists())
+            {
+              $path = $fixedFile->getFullPath(); // overwrite path with new fixed path.
+              $url = $fs->pathToUrl($fixedFile);
+              $pathFile = $fixedFile;
+            }
+          } // download_url ..
+          else {
+            Log::addError('Secondary download failed', array($url, $response->get_error_messages(), $response->get_error_codes() ));
+          }
+        }
+        else { // success
+            $pathFile = $fs->getFile($response);
+        }
+
+        $fsUrl = $fs->pathToUrl($pathFile);
+        if ($fsUrl !== false)
+            $url = $fsUrl; // more secure way of getting url
+
+        Log::addDebug('Remote Download attempt result', array($url, $path));
+        return array($url, $path);
     }
 
     protected function replacePlusChar(&$url) {
