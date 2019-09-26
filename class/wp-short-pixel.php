@@ -1744,7 +1744,7 @@ class WPShortPixel {
         //find thumbs that are not listed in the metadata and add them in the sizes array
         $this->addUnlistedThumbs($itemHandler);
         $meta = $itemHandler->getMeta();
-        
+
         //find any missing thumbs files and mark them as such
         $miss = $meta->getThumbsMissing();
         /* TODO remove */if(is_numeric($miss)) $miss = array();
@@ -3640,54 +3640,9 @@ class WPShortPixel {
      * @return array Array of Thumbs to Optimize - only the filename - , and count of sizes not excluded ...
      */
     function getThumbsToOptimize($data, $filepath) {
-        $fs = new \ShortPixel\FileSystemController();
-        $mainfile = $fs->getFile($filepath);
+        // This function moved, but lack of other destination. 
+        return WpShortPixelMediaLbraryAdapter::getThumbsToOptimize($data, $filepath);
 
-        $sizesCount = isset($data['sizes']) ? WpShortPixelMediaLbraryAdapter::countSizesNotExcluded($data['sizes']) : 0;
-        $basedir = $mainfile->getFileDir()->getPath();
-        $thumbsOptList = isset($data['ShortPixel']['thumbsOptList']) ? $data['ShortPixel']['thumbsOptList'] : array();
-        $thumbsToOptimizeList = array(); // is returned, so should be defined before if.
-
-        if($sizesCount && $this->_settings->processThumbnails) {
-
-            // findThumbs returns fullfilepath.
-            $found = $this->_settings->optimizeUnlisted ? WpShortPixelMediaLbraryAdapter::findThumbs($mainfile->getFullPath()) : array();
-
-            $exclude = $this->_settings->excludeSizes;
-            $exclude = is_array($exclude) ? $exclude : array();
-            foreach($data['sizes'] as $size => $sizeData) {
-                unset($found[\array_search($basedir . $sizeData['file'], $found)]); // @todo what is this intended to do?
-
-                // sizeData['file'] is *only* filename *but* can be wrong data, URL due to plugins. So check first, only get filename ( since it is supposed to fail with only a filename path ) and then reload.
-                $sizeFileCheck = $fs->getFile($sizeData['file']);
-                $file = $fs->getFile($basedir . $sizeFileCheck->getFileName());
-
-                if ($file->getExtension() !== $mainfile->getExtension())
-                {
-                  continue;
-                }
-
-                if(!in_array($size, $exclude) && !in_array($file->getFileName(), $thumbsOptList)) {
-                    $thumbsToOptimizeList[] = $file->getFileName();
-                }
-            }
-            //$found = array_diff($found, $thumbsOptList); // Wrong comparison. Found is full file path, thumbsOptList is not.
-            foreach($found as $path) {
-                $file = $fs->getFile($path);
-
-                // prevent Webp and what not from showing up.
-                if ($file->getExtension() !== $mainfile->getExtension())
-                {
-                  continue;
-                }
-                // thumbs can already be in findThumbs.
-                if (! in_array($file->getFileName(), $thumbsToOptimizeList) && ! in_array($file->getFileName(), $thumbsOptList) )
-                {
-                  $thumbsToOptimizeList[] =  $file->getFileName();
-                }
-            }
-        }
-        return array($thumbsToOptimizeList, $sizesCount);
     }
 
     /** Make columns sortable in Media Library

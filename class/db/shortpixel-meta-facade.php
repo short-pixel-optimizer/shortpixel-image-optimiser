@@ -101,7 +101,7 @@ class ShortPixelMetaFacade {
         return $rawMeta;
     }
 
-    // @todo Find out the use of this function. Doesn't update_meta unless it's WPML.
+    //  Update MetaData of Image. 
     public function updateMeta($newMeta = null, $replaceThumbs = false) {
         if($newMeta) {
             $this->meta = $newMeta;
@@ -273,7 +273,7 @@ class ShortPixelMetaFacade {
           $this->rawMeta = $rawMeta;
           update_post_meta($this->ID, '_wp_attachment_metadata', $rawMeta);
       }
-    } 
+    }
 
     function deleteMeta() {
         if($this->type == self::CUSTOM_TYPE) {

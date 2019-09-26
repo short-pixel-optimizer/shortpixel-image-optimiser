@@ -52,7 +52,46 @@ class ImageModel extends ShortPixelModel
     public function reAcquire()
     {
         $this->addUnlistedThumbs();
-        // $this->recount();        
+        $this->reCheckThumbnails();
+
+        // $this->recount();
+    }
+
+    // Rebuild the ThumbsOptList and others to fix old info, wrong builds.
+    private function reCheckThumbnails()
+    {
+       // Redo only on non-processed images.
+       if ($this->meta->getStatus() != \ShortPixelMeta::FILE_STATUS_SUCCESS)
+       {
+         return;
+       }
+       $data = $this->facade->getRawMeta();
+       $oldList = array();
+       if (isset($data['ShortPixel']['thumbsOptList']))
+       {
+        $oldList = $data['ShortPixel']['thumbsOptList'];
+        unset($data['ShortPixel']['thumbsOptList']); // reset the thumbsOptList, so unset to get what the function thinks should be there.
+       }
+       list($includedSizes, $thumbsCount)  = \WpShortPixelMediaLbraryAdapter::getThumbsToOptimize($data, $this->file->getFullPath() );
+
+       // When identical, save the check and the Dbase update.
+       if ($oldList === $includedSizes)
+       {
+          return;
+       }
+
+       $newList = array();
+       foreach($this->meta->getThumbsOptList() as $index => $item)
+       {
+         if ( in_array($item, $includedSizes))
+         {
+            $newList[] = $item;
+         }
+       }
+
+       $this->meta->setThumbsOptList($newList);
+       $this->facade->updateMeta($this->meta);
+
     }
 
     private function addUnlistedThumbs()

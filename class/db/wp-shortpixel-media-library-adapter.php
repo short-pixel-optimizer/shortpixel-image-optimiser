@@ -223,7 +223,6 @@ class WpShortPixelMediaLbraryAdapter {
             unset($filesList);
             $pointer += $limit;
             $counter++;
-            Log::addDebug('While END');
         }//end while
 
         return array("totalFiles" => $totalFiles, "mainFiles" => $mainFiles,
@@ -243,7 +242,6 @@ class WpShortPixelMediaLbraryAdapter {
                      "foundUnlistedThumbs" => $foundUnlistedThumbs
                     );
     }
-
 
     //count all the processable files in media library (while limiting the results to max 10000)
     public static function countAllProcessableFiles($settings = array(), $maxId = PHP_INT_MAX, $minId = 0){
@@ -476,6 +474,7 @@ class WpShortPixelMediaLbraryAdapter {
                     );
     }
 
+
     public static function getPostMetaSlice($startId, $endId, $limit) {
         global $wpdb;
         $time = microtime(true);
@@ -517,6 +516,62 @@ class WpShortPixelMediaLbraryAdapter {
       return $metaresult;
     }
 */
+
+  public static function getThumbsToOptimize($data, $filepath)
+  {
+          //  @todo weak call. See how in future settings might come via central provider.
+          $settings = new \WPShortPixelSettings();
+
+          $fs = new \ShortPixel\FileSystemController();
+          $mainfile = $fs->getFile($filepath);
+
+          $sizesCount = isset($data['sizes']) ? WpShortPixelMediaLbraryAdapter::countSizesNotExcluded($data['sizes']) : 0;
+          $basedir = $mainfile->getFileDir()->getPath();
+          $thumbsOptList = isset($data['ShortPixel']['thumbsOptList']) ? $data['ShortPixel']['thumbsOptList'] : array();
+          $thumbsToOptimizeList = array(); // is returned, so should be defined before if.
+
+          if($sizesCount && $settings->processThumbnails) {
+
+              // findThumbs returns fullfilepath.
+              $found = $settings->optimizeUnlisted ? WpShortPixelMediaLbraryAdapter::findThumbs($mainfile->getFullPath()) : array();
+
+              $exclude = $settings->excludeSizes;
+              $exclude = is_array($exclude) ? $exclude : array();
+              foreach($data['sizes'] as $size => $sizeData) {
+                  unset($found[\array_search($basedir . $sizeData['file'], $found)]); // @todo what is this intended to do?
+
+                  // sizeData['file'] is *only* filename *but* can be wrong data, URL due to plugins. So check first, only get filename ( since it is supposed to fail with only a filename path ) and then reload.
+                  $sizeFileCheck = $fs->getFile($sizeData['file']);
+                  $file = $fs->getFile($basedir . $sizeFileCheck->getFileName());
+
+                  if ($file->getExtension() !== $mainfile->getExtension())
+                  {
+                    continue;
+                  }
+
+                  if(!in_array($size, $exclude) && !in_array($file->getFileName(), $thumbsOptList)) {
+                      $thumbsToOptimizeList[] = $file->getFileName();
+                  }
+              }
+              //$found = array_diff($found, $thumbsOptList); // Wrong comparison. Found is full file path, thumbsOptList is not.
+              foreach($found as $path) {
+                  $file = $fs->getFile($path);
+
+                  // prevent Webp and what not from showing up.
+                  if ($file->getExtension() !== $mainfile->getExtension())
+                  {
+                    continue;
+                  }
+                  // thumbs can already be in findThumbs.
+                  if (! in_array($file->getFileName(), $thumbsToOptimizeList) && ! in_array($file->getFileName(), $thumbsOptList) )
+                  {
+                    $thumbsToOptimizeList[] =  $file->getFileName();
+                  }
+              }
+          }
+          return array($thumbsToOptimizeList, $sizesCount);
+    }
+
     public static function getPostsJoinLessReverse($startId, $endId, $limit)
     {
       global $wpdb;
@@ -752,7 +807,6 @@ class WpShortPixelMediaLbraryAdapter {
         $ids = $idDates = array();
         $idList = $wpdb->get_results($sql);
 
-
         if ( empty($idList) ) {
             return null;
         }
@@ -764,6 +818,44 @@ class WpShortPixelMediaLbraryAdapter {
         }
 
         return (object)array('ids' => $ids, 'idDates' => $idDates, 'last_id' => $ids[count($ids)-1] );
+    }
+
+    /* Recount images from the media library when something went wrong badly */
+    public static function reCountMediaLibraryItems()
+    {
+      $limit = self::getOptimalChunkSize();
+      $run = true;
+      $minId = 0;
+      $maxId = -1; // not in use
+      $pointer = -1; // not in use.
+
+      $timeout = get_transient('shortpixel_debug_media');
+      if ($timeout !== false)
+        $minId = $timeout;
+
+      while ( $run == true ) {
+          if ($minId == -1)
+            exit('Hanging Loop Detected');
+          $idInfo = self::getPostIdsChunk($minId, $maxId, $pointer, $limit, true);
+          $minId = isset($idInfo->last_id) ? $idInfo->last_id : -1;
+
+          if($idInfo === null) {
+              break; //we parsed all the results
+          }
+          elseif(count($idInfo->ids) == 0) {
+              //$minId += $limit; // This is a no results case.
+              continue;
+          }
+          foreach($idInfo->ids as $post_id)
+          {
+              $imageModel = new \ShortPixel\ImageModel();
+              $imageModel->setByPostID($post_id);
+              $imageModel->reAcquire();
+              Log::addDebug('Reacquired: ' . $post_id );
+          }
+
+          set_transient('shortpixel_debug_media', $post_id, 3 * MINUTE_IN_SECONDS);
+        }
     }
 
 }
