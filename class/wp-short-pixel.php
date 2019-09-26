@@ -70,7 +70,7 @@ class WPShortPixel {
         add_filter( 'request', array( &$this, 'columnOrderFilterBy') );
         add_action('restrict_manage_posts', array( &$this, 'mediaAddFilterDropdown'));
         //Edit media meta box
-        add_action( 'add_meta_boxes', array( &$this, 'shortpixelInfoBox') );
+        add_action( 'add_meta_boxes', array( &$this, 'shortpixelInfoBox') ); // the info box in edit-media
         //for cleaning up the WebP images when an attachment is deleted
         add_action( 'delete_attachment', array( &$this, 'onDeleteImage') );
 
@@ -1505,7 +1505,7 @@ class WPShortPixel {
                               catch(Exception $e)
                               {
                                   Log::addError('Attachment seems corrupted!', array($e->getMessage() ));
-                                  $mainUrl = null; // error state. 
+                                  $mainUrl = null; // error state.
                               }
                                 $thumb = dirname($mainUrl) . '/' . $thumb;
                             }
@@ -1631,6 +1631,7 @@ class WPShortPixel {
     * Will update meta. if any are found.
     * @param ShortPixelMetaFacade $itemHandler ShortpixelMetaFacade item handler.
     * @return int Number of additions to the sizes Metadata.
+    * @todo This function should Dis/pear. addUnlistedThumbs is now part of image model, to be called via proper controller.
     */
     private function addUnlistedThumbs($itemHandler)
     {
@@ -1736,15 +1737,14 @@ class WPShortPixel {
             }
         }
 
-        $meta = $itemHandler->getMeta();
-
         //WpShortPixelMediaLbraryAdapter::cleanupFoundThumbs($itemHandler);
         $URLsAndPATHs = $this->getURLsAndPATHs($itemHandler, NULL, $onlyThumbs);
         Log::addDebug('Send to PRocessing - URLS -', array($URLsAndPATHs) );
 
         //find thumbs that are not listed in the metadata and add them in the sizes array
         $this->addUnlistedThumbs($itemHandler);
-
+        $meta = $itemHandler->getMeta();
+        
         //find any missing thumbs files and mark them as such
         $miss = $meta->getThumbsMissing();
         /* TODO remove */if(is_numeric($miss)) $miss = array();
@@ -2633,7 +2633,7 @@ class WPShortPixel {
         {
             return $this->_settings->currentStats;
         } else {
-            $imageCount = WpShortPixelMediaLbraryAdapter::countAllProcessableFiles($this->_settings);
+            $imageCount = WpShortPixelMediaLbraryAdapter::countAllProcessable($this->_settings);
             $quotaData['time'] = time();
             $quotaData['optimizePdfs'] = $this->_settings->optimizePdfs;
             //$quotaData['quotaData'] = $quotaData;
@@ -2851,7 +2851,7 @@ class WPShortPixel {
         }//resume was clicked
 
         //figure out the files that are left to be processed
-        $qry_left = "SELECT count(*) FilesLeftToBeProcessed FROM " . $wpdb->prefix . "postmeta
+        $qry_left = "SELECT count(meta_id) FilesLeftToBeProcessed FROM " . $wpdb->prefix . "postmeta
         WHERE meta_key = '_wp_attached_file' AND post_id <= " . (0 + $this->prioQ->getStartBulkId());
         $filesLeft = $wpdb->get_results($qry_left);
 
@@ -3505,7 +3505,7 @@ class WPShortPixel {
     * @todo Move this to custom media controller
     */
     public function generateCustomColumn( $column_name, $id, $extended = false ) {
-        if( 'wp-shortPixel' == $column_name ) {
+          if( 'wp-shortPixel' == $column_name ) {
 
             if(!$this->isProcessable($id)) {
                 $renderData['status'] = 'n/a';
@@ -3517,19 +3517,6 @@ class WPShortPixel {
             $data = ShortPixelMetaFacade::sanitizeMeta(wp_get_attachment_metadata($id));
             $itemHandler = new ShortPixelMetaFacade($id);
             $meta = $itemHandler->getMeta();
-
-            if($extended && Log::debugIsActive()) {
-            //  var_dump($data);
-                $sizes = isset($data['sizes']) ? $data['sizes'] : array();
-                echo "<PRE style='font-size:11px; overflow:hidden; white-space:pre-wrap'>";
-                echo "<strong>URL: </strong>"; print_r(wp_get_attachment_url($id));
-                echo('<br><br>' . json_encode(ShortPixelMetaFacade::getWPMLDuplicates($id)));
-                echo('<br><br><span class="array">'); print_r($data);  echo ''; //json_encode($data))
-                echo('</span><br><br>');
-                echo '<p><strong>Backup Folder: </strong>' . $this->getBackupFolderAny($file, $sizes) . '</p>';
-                echo '<p><strong>Status</strong>: ' . $meta->getStatus() . '</p>';
-                echo "</PRE>";
-            }
 
             $fileExtension = strtolower(pathinfo($file, PATHINFO_EXTENSION));
             $invalidKey = !$this->_settings->verifiedKey;

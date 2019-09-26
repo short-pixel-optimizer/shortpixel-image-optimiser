@@ -251,7 +251,7 @@ class ShortPixelMetaFacade {
     }
 
     // remove SPFoudnMeta from image. Dirty. @todo <--
-    function removeSPFoundMeta()
+    public function removeSPFoundMeta()
     {
       if($this->type == ShortPixelMetaFacade::MEDIA_LIBRARY_TYPE) {
           if(!isset($this->rawMeta)) {
@@ -273,7 +273,7 @@ class ShortPixelMetaFacade {
           $this->rawMeta = $rawMeta;
           update_post_meta($this->ID, '_wp_attachment_metadata', $rawMeta);
       }
-    }
+    } 
 
     function deleteMeta() {
         if($this->type == self::CUSTOM_TYPE) {
