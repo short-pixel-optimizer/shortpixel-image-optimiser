@@ -248,6 +248,7 @@ class FileModel extends ShortPixelModel
   */
   protected function processPath($path)
   {
+
     $original_path = $path;
     $path = trim($path);
 

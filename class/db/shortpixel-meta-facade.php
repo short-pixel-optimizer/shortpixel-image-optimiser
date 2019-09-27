@@ -101,7 +101,7 @@ class ShortPixelMetaFacade {
         return $rawMeta;
     }
 
-    //  Update MetaData of Image. 
+    //  Update MetaData of Image.
     public function updateMeta($newMeta = null, $replaceThumbs = false) {
         if($newMeta) {
             $this->meta = $newMeta;
@@ -378,6 +378,7 @@ class ShortPixelMetaFacade {
      */
     public static function safeGetAttachmentUrl($id) {
         $attURL = wp_get_attachment_url($id);
+        Log::addDebug('Attachment URL - safeGotten - ' . $attURL);
         if(!$attURL || !strlen($attURL)) {
             throw new Exception("Post metadata is corrupt (No attachment URL for $id)", ShortPixelAPI::ERR_POSTMETA_CORRUPT);
         }
@@ -408,6 +409,7 @@ class ShortPixelMetaFacade {
             try
             {
               $predownload_url = $url = self::safeGetAttachmentUrl($this->ID); // This function *can* return an PHP error.
+              Log::addDebug('Resulting URL -- ' . $url);
             }
             catch(Exception $e)
             {
@@ -502,11 +504,15 @@ class ShortPixelMetaFacade {
                     }
 
                     if ( !$file_exists && !file_exists($tPath) ) {
-                        $tPath = SHORTPIXEL_UPLOADS_BASE . substr($origPath, strpos($origPath, $StichString) + strlen($StichString));
+                        $try_path = SHORTPIXEL_UPLOADS_BASE . substr($origPath, strpos($origPath, $StichString) + strlen($StichString));
+                        if (file_exists($try_path))
+                          $tPath = $try_path; // found!
                     }
 
                     if ( !$file_exists && !file_exists($tPath) ) {
-                        $tPath = trailingslashit(SHORTPIXEL_UPLOADS_BASE) . $origPath;
+                        $try_path = trailingslashit(SHORTPIXEL_UPLOADS_BASE) . $origPath;
+                        if (file_exists($try_path))
+                          $tPath = $try_path; // found!
                     }
 
                     if ( !$file_exists && !file_exists($tPath) ) {
@@ -548,7 +554,6 @@ class ShortPixelMetaFacade {
         array_walk($urlList, array( &$this, 'replacePlusChar') );
 
         $filePaths = ShortPixelAPI::CheckAndFixImagePaths($filePaths);//check for images to make sure they exist on disk
-
         return array("URLs" => $urlList, "PATHs" => $filePaths, "sizesMissing" => $sizesMissing);
     }
 
@@ -560,9 +565,8 @@ class ShortPixelMetaFacade {
 
         $args_for_get = array(
           'stream' => true,
-          'filename' => $path,
+          'filename' => $pathFile->getFullPath(),
         );
-        Log::addDebug('Downloading file ' . $url );
 
         $response = wp_remote_get( $url, $args_for_get );
 
@@ -598,7 +602,7 @@ class ShortPixelMetaFacade {
           }
         }
         else { // success
-            $pathFile = $fs->getFile($response);
+            $pathFile = $fs->getFile($response['filename']);
         }
 
         $fsUrl = $fs->pathToUrl($pathFile);
