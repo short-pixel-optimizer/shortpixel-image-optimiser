@@ -854,7 +854,7 @@ class WpShortPixelMediaLbraryAdapter {
               Log::addDebug('Reacquired: ' . $post_id );
           }
 
-          set_transient('shortpixel_debug_media', $post_id, 3 * MINUTE_IN_SECONDS);
+          set_transient('shortpixel_debug_media', $post_id, 20 * MINUTE_IN_SECONDS);
         }
     }
 

@@ -216,14 +216,13 @@ class editMediaController extends ShortPixelController
             return null;
           }
 
-
           $sizes = isset($this->data['sizes']) ? $this->data['sizes'] : array();
 
           $debugInfo = array();
           $debugInfo[] = array(__('URL', 'shortpixel_image_optiser'), wp_get_attachment_url($this->post_id));
           $debugInfo[] = array(__('WPML Duplicates'), json_encode(\ShortPixelMetaFacade::getWPMLDuplicates($this->post_id)) );
           $debugInfo[] = array(__('Data'), $this->data);
-          $debugInfo[] = array(__('Meta'), $this->imageModel->getMeta() );
+          $debugInfo[] = array(__('Meta'), wp_get_attachment_metadata($this->post_id) );
           $debugInfo[] = array(__('Backup Folder'), $this->shortPixel->getBackupFolderAny($this->imageModel->getFile()->getFullPath(), $sizes));
           $debugInfo[] = array(__('Status'), $this->imageModel->getMeta()->getStatus() );
 
