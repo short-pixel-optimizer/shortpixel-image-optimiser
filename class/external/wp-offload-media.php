@@ -8,6 +8,8 @@ class wpOffload
     protected $as3cf;
     protected $active = false;
 
+    protected $settings;
+
     public function __construct()
     {
        // This must be called before WordPress' init.
@@ -16,6 +18,8 @@ class wpOffload
 
     public function init($as3cf)
     {
+
+
 
       $this->as3cf = $as3cf;
       $this->active = true;
@@ -29,6 +33,8 @@ class wpOffload
       add_filter('as3cf_remove_attachment_paths', array($this, 'remove_webp_paths'));
 
       add_filter('shortpixel/restore/targetfile', array($this, 'returnOriginalFile'),10,2);
+
+      add_filter('as3cf_pre_update_attachment_metadata', array($this, 'preventInitialUpload'), 10,4);
 
       add_filter('get_attached_file', function($file, $id)
       {
@@ -121,6 +127,19 @@ class wpOffload
         $this->as3cf->upload_attachment($id);
     }
 
+    /** This function will cut out the initial upload to S3Offload and rely solely on the image_upload function provided here, after shortpixel optimize.
+    * Function will only work when plugin is set to auto-optimize new entries to the media library */
+    public function preventInitialUpload($bool, $data, $post_id, $old_provider_object)
+    {
+        // @todo weak call. See how in future settings might come via central provider.
+        $settings = new \WPShortPixelSettings();
+
+        if ($settings->autoMediaLibrary)
+        {
+          return true;
+        }
+        return $bool;
+    }
 
     private function getWebpPaths($paths, $check_exists = true)
     {
