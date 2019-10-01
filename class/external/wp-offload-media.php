@@ -23,7 +23,7 @@ class wpOffload
       add_action('shortpixel_image_optimised', array($this, 'image_upload'));
       add_action('shortpixel_after_restore_image', array($this, 'image_restore')); // hit this when restoring.
       add_action('shortpixel/image/convertpng2jpg_after', array($this, 'image_converted'));
-      add_action('shortpixel_before_restore_image', array($this, 'remove_remote')); // not optimal, when backup fails this will cause issues. 
+      add_action('shortpixel_before_restore_image', array($this, 'remove_remote')); // not optimal, when backup fails this will cause issues.
       add_action('shortpixel/image/convertpng2jpg_before', array($this, 'remove_remote'));
       add_filter('as3cf_attachment_file_paths', array($this, 'add_webp_paths'));
       add_filter('as3cf_remove_attachment_paths', array($this, 'remove_webp_paths'));
@@ -110,6 +110,13 @@ class wpOffload
 
     public function image_upload($id)
     {
+        //$this->as3cf->get_setting( 'copy-to-s3' )
+        if ( ! ( $old_provider_object = $this->as3cf->get_attachment_provider_info( $id ) ) && ! $this->as3cf->get_setting( 'copy-to-s3' ) ) {
+          // abort if not already uploaded to provider and the copy setting is off
+          Log::addDebug('As3cf image upload is off and object not previously uploaded');
+          return false;
+        }
+
         Log::addDebug('Uploading New Attachment');
         $this->as3cf->upload_attachment($id);
     }
