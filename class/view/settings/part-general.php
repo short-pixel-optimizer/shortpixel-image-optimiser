@@ -45,7 +45,7 @@
                         <span class="spinner" id="pluginemail_spinner" style="float:none;"></span>
                          <button type="button" id="validate" class="button button-primary" title="<?php _e('Validate the provided API key','shortpixel-image-optimiser');?>"
                             onclick="ShortPixel.validateKey(this)" <?php echo $canValidate ? "" : "disabled"?> <?php echo $this->is_verifiedkey ? 'style="display:none;"' : '' ?>>
-                            <?php _e('Validate','shortpixel-image-optimiser');?>
+                            <?php _e('Save settings & validate','shortpixel-image-optimiser');?>
                         </button>
                         <span class="shortpixel-key-valid" <?php echo $this->is_verifiedkey ? '' : 'style="display:none;"' ?>>
                             <span class="dashicons dashicons-yes"></span><?php _e('Your API key is valid.','shortpixel-image-optimiser');?>
