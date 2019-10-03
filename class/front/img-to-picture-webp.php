@@ -112,6 +112,10 @@ class ShortPixelImgToPictureWebp
         }
 
         $img = self::get_attributes($match[0]);
+        if(isset($img['style']) && strpos($img['style'], 'background') !== false) {
+            //don't replace for <img>'s that have background
+            return $match[0];
+        }
         // [BS] Can return false in case of Module fail. Escape in that case with unmodified image
         if ($img === false)
           return $match[0];
@@ -211,7 +215,7 @@ class ShortPixelImgToPictureWebp
                         . $parts[0].'.webp'
                      . (isset($parts[1]) ? ' ' . $parts[1] : '');
                 }
-                if (file_exists($fileWebPCompat)) {
+                if (apply_filters( 'shortpixel_image_exists', file_exists($fileWebPCompat), $fileWebPCompat)) {
                     $srcsetWebP .= (strlen($srcsetWebP) ? ',': '')
                        .preg_replace('/\.[a-zA-Z0-9]+$/', '.webp', $parts[0])
                        .(isset($parts[1]) ? ' ' . $parts[1] : '');

@@ -1662,6 +1662,16 @@ class ShortPixelView {
     }
 
     public function renderCustomColumn($id, $data, $extended = false){ ?>
+        <?php if ($extended) // extended ( edit-media ) moved to it's own view.
+        {
+            $controller = new \ShortPixel\editMediaController();
+            $controller->setTempData($data);
+            $controller->setLegacyView($this);
+            $controller->setShortPixel($this->ctrl);
+            $controller->load($id);
+            return;
+        }
+        ?>
         <div id='sp-msg-<?php echo($id);?>' class='column-wp-shortPixel'>
 
             <?php switch($data['status']) {
@@ -1720,13 +1730,13 @@ class ShortPixelView {
                     $excluded = (isset($data['excludeSizes']) ? count($data['excludeSizes']) : 0);
                     $successText = $this->getSuccessText($data['percent'],$data['bonus'],$data['type'],$data['thumbsOpt'],$data['thumbsTotal'], $data['retinasOpt'], $data['excludeSizes']);
                     $todoSizes = $missingThumbs = $excludeSizes = '';
-                    if($extended) {
+                    /*if($extended) {
                         if(isset($data['thumbsToOptimizeList']) && count($data['thumbsToOptimizeList'])) {
                             $todoSizes .= "<br><span style='word-break: break-all;'> <span style='font-weight: bold;'>" . __("To optimize:", 'shortpixel-image-optimiser') . "</span>";
                             foreach($data['thumbsToOptimizeList'] as $todoItem) {
                                 $todoSizes .= "<br> &#8226;&nbsp;" . $todoItem;
                             }
-                            $excludeSizes .= '</span>';
+                            $todoSizes .= '</span>';
                         }
                         if(isset($data['excludeSizes'])) {
                             $excludeSizes .= "<br><span style='word-break: break-all;'> <span style='font-weight: bold;'>" . __("Excluded thumbnails:", 'shortpixel-image-optimiser') . "</span>";
@@ -1747,7 +1757,7 @@ class ShortPixelView {
                                 . ($data['png2jpg'] ? '<br>' . __('Converted from PNG','shortpixel-image-optimiser'): '')
                                 . "<br>" . __("Optimized on", 'shortpixel-image-optimiser') . ": " . $data['date']
                                 . $todoSizes . $excludeSizes . $missingThumbs;
-                    }
+                    } */
                     $this->renderListCell($id, $data['status'], $data['showActions'], $data['thumbsToOptimize'],
                             $data['backup'], $data['type'], $data['invType'], $successText);
 

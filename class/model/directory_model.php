@@ -148,7 +148,7 @@ class DirectoryModel extends ShortPixelModel
   private function constructUsualDirectories($path)
   {
     $pathar = array_values(array_filter(explode('/', $path))); // array value to reset index
-    $test_path = false;
+    $testpath = false;
     if ( ($key = array_search('wp-content', $pathar)) !== false)
     {
         $testpath = implode('/', array_slice($pathar, $key));

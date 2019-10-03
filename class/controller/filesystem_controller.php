@@ -87,19 +87,25 @@ Class FileSystemController extends ShortPixelController
       // stolen from wp_get_attachment_url
       if ( ( $uploads = wp_get_upload_dir() ) && false === $uploads['error'] ) {
             // Check that the upload base exists in the file location.
-            if ( 0 === strpos( $file, $uploads['basedir'] ) ) {
+            if ( 0 === strpos( $filepath, $uploads['basedir'] ) ) {
                 // Replace file location with url location.
                 $url = str_replace( $uploads['basedir'], $uploads['baseurl'], $filepath );
-            } elseif ( false !== strpos( $file, 'wp-content/uploads' ) ) {
+            } elseif ( false !== strpos( $filepath, 'wp-content/uploads' ) ) {
                 // Get the directory name relative to the basedir (back compat for pre-2.7 uploads)
-                $url = trailingslashit( $uploads['baseurl'] . '/' . _wp_get_attachment_relative_path( $file ) ) . wp_basename( $filepath );
+                $url = trailingslashit( $uploads['baseurl'] . '/' . _wp_get_attachment_relative_path( $filepath ) ) . wp_basename( $filepath );
             } else {
                 // It's a newly-uploaded file, therefore $file is relative to the basedir.
                 $url = $uploads['baseurl'] . "/$filepath";
             }
         }
-        return $url;
+
+        if (parse_url($url) !== false)
+          return $url;
+        else {
+          return false;
+        }
     }
+
 
 
 

@@ -479,7 +479,7 @@ class ShortPixelCustomMetaDao {
 
     public function update($meta) {
         $metaClass = get_class($meta);
-        $tableSuffix = "";
+        //$tableSuffix = "";
         $tableSuffix = $metaClass::TABLE_SUFFIX;
         $prefix = $this->db->getPrefix();
 
@@ -507,9 +507,8 @@ class ShortPixelCustomMetaDao {
 
     public function delete($meta) {
         $metaClass = get_class($meta);
-        $tableSuffix = "";
-        // @todo Why O why 
-        eval( '$tableSuffix = ' . $metaClass . '::TABLE_SUFFIX;');
+        $tableSuffix = $metaClass::TABLE_SUFFIX;
+        //eval( '$tableSuffix = ' . $metaClass . '::TABLE_SUFFIX;');
         $sql = "DELETE FROM {$this->db->getPrefix()}shortpixel_" . $tableSuffix . " WHERE id = %d";
         $this->db->query($sql, array($meta->getId()));
     }

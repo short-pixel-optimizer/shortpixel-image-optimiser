@@ -26,6 +26,8 @@ class FileModel extends ShortPixelModel
   protected $exists = false;
   protected $is_writable = false;
   protected $is_readable = false;
+
+
   protected $status;
 
   protected $backupDirectory;
@@ -246,6 +248,7 @@ class FileModel extends ShortPixelModel
   */
   protected function processPath($path)
   {
+
     $original_path = $path;
     $path = trim($path);
 

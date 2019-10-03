@@ -25,7 +25,11 @@ class ShortPixelPng2Jpg {
 
         //WPShortPixel::log("PNG2JPG SHELL EXEC: " . shell_exec('convert ' . $image . ' -format "%[opaque]" info:'));
 
-        if (!file_exists($image) || ord(file_get_contents($image, false, null, 25, 1)) & 4) {
+        if (!file_exists($image)) {
+            WPShortPixel::log("PNG2JPG FILE MISSING:  " . $image);
+            $transparent = 1;
+        } elseif(ord(file_get_contents($image, false, null, 25, 1)) & 4) {
+            WPShortPixel::log("PNG2JPG: 25th byte has thrid bit 1 - transparency");
             $transparent = 1;
         } else {
             $contents = file_get_contents($image);
@@ -110,8 +114,9 @@ class ShortPixelPng2Jpg {
             WPShortPixel::log("PNG2JPG doConvert created JPEG at $newPath");
             $newSize = filesize($newPath);
             $origSize = filesize($image);
-            if($newSize > $origSize * 0.95) {
+            if($newSize > $origSize * 0.95 || $newSize == 0) {
                 //if the image is not 5% smaller, don't bother.
+                //if the size is 0, a conversion (or disk write) problem happened, go on with the PNG
                 WPShortPixel::log("PNG2JPG converted image is larger ($newSize vs. $origSize), keeping the PNG");
                 unlink($newPath);
                 return (object)array("params" => $params, "unlink" => false);
@@ -217,6 +222,8 @@ class ShortPixelPng2Jpg {
 
         $meta = $itemHandler->getRawMeta();
         $ID = $itemHandler->getId();
+        $fs = new \Shortpixel\FileSystemController;
+
         if(!$this->_settings->png2jpg || !isset($meta['file']) || strtolower(substr($meta['file'], -4)) !== '.png') {
             return ;
         }
@@ -224,8 +231,8 @@ class ShortPixelPng2Jpg {
 
         WPShortPixel::log("Send to processing: Convert Media PNG to JPG #{$ID} META: " . json_encode($meta));
 
-        $image = $meta['file'];
-        $imagePath = get_attached_file($ID);
+        $image = $meta['file']; // This is not a full path!
+        $imagePath = get_attached_file($ID); // This is a full path.
         $basePath = trailingslashit(str_replace($image, "", $imagePath));
         $imageUrl = wp_get_attachment_url($ID);
         $baseUrl = self::removeUrlProtocol(trailingslashit(str_replace($image, "", $imageUrl))); //make the base url protocol agnostic if it's not already
@@ -248,7 +255,7 @@ class ShortPixelPng2Jpg {
         if($this->_settings->png2jpg == 2) {
             $doConvert = true;
         } else {
-            $retC = $this->canConvertPng2Jpg($image);
+            $retC = $this->canConvertPng2Jpg($imagePath);
             $doConvert =  $retC['notTransparent'];
         }
         if (!$doConvert) {

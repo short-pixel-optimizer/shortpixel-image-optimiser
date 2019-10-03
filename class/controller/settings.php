@@ -94,6 +94,16 @@ class SettingsController extends shortPixelController
 
       }
 
+      public function action_debug_medialibrary()
+      {
+        $this->loadEnv();
+        $this->loadModel('image');
+
+        \WpShortPixelMediaLbraryAdapter::reCountMediaLibraryItems();
+
+        $this->load();
+      }
+
       public function processSave()
       {
           Log::addDebug('after process postData', $this->postData);

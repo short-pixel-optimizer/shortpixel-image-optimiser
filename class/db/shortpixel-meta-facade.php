@@ -101,7 +101,7 @@ class ShortPixelMetaFacade {
         return $rawMeta;
     }
 
-    // @todo Find out the use of this function. Doesn't update_meta unless it's WPML.
+    //  Update MetaData of Image.
     public function updateMeta($newMeta = null, $replaceThumbs = false) {
         if($newMeta) {
             $this->meta = $newMeta;
@@ -239,17 +239,8 @@ class ShortPixelMetaFacade {
                 unset($rawMeta['ShortPixel']);
                 unset($rawMeta['ShortPixelPng2Jpg']);
             }
-            if (isset($rawMeta['sizes'])) // search for custom sizes set by SP.
-            {
-              foreach($rawMeta['sizes'] as $size => $data)
-              {
-                  if (strpos($size, ShortPixelMeta::FOUND_THUMB_PREFIX) !== false)
-                  {
-                    unset($rawMeta['sizes'][$size]);
-                    Log::addDebug('Unset sp-found- size' . $size);
-                  }
-              }
-            }
+
+            $this->removeSPFoundMeta();
             unset($this->meta);
             update_post_meta($this->ID, '_wp_attachment_metadata', $rawMeta);
             //wp_update_attachment_metadata($this->ID, $rawMeta);
@@ -259,7 +250,7 @@ class ShortPixelMetaFacade {
         }
     }
 
-    /** Checks if there are unlisted files present in system. Save them into sizes
+ /** Checks if there are unlisted files present in system. Save them into sizes
     * @param ShortPixelMetaFacade $itemHandler ShortpixelMetaFacade item handler.
     * @return int Number 'Unlisted' Items in metadta.
     */
@@ -356,13 +347,30 @@ class ShortPixelMetaFacade {
         return $counter;
     }
 
-    /** Checks if the unlisted Files list is still valid and ok */
-    public function checkUnlistedFiles()
+    // remove SPFoudnMeta from image. Dirty. @todo <--
+    public function removeSPFoundMeta()
     {
-
+      if($this->type == ShortPixelMetaFacade::MEDIA_LIBRARY_TYPE) {
+          if(!isset($this->rawMeta)) {
+              $rawMeta = $this->sanitizeMeta(wp_get_attachment_metadata($this->getId()));
+          } else {
+              $rawMeta = $this->rawMeta;
+          }
+          if (isset($rawMeta['sizes'])) // search for custom sizes set by SP.
+          {
+            foreach($rawMeta['sizes'] as $size => $data)
+            {
+                if (strpos($size, ShortPixelMeta::FOUND_THUMB_PREFIX) !== false)
+                {
+                  unset($rawMeta['sizes'][$size]);
+                  Log::addDebug('Unset sp-found- size' . $size);
+                }
+            }
+          }
+          $this->rawMeta = $rawMeta;
+          update_post_meta($this->ID, '_wp_attachment_metadata', $rawMeta);
+      }
     }
-
-
 
     function deleteMeta() {
         if($this->type == self::CUSTOM_TYPE) {
@@ -494,33 +502,28 @@ class ShortPixelMetaFacade {
             $path = get_attached_file($this->ID);//get the full file PATH
             $fsFile = $fs->getFile($path);
             $mainExists = apply_filters('shortpixel_image_exists', file_exists($path), $path, $this->ID);
-            $predownload_url = $url = self::safeGetAttachmentUrl($this->ID);
+            try
+            {
+              $predownload_url = $url = self::safeGetAttachmentUrl($this->ID); // This function *can* return an PHP error.
+              Log::addDebug('Resulting URL -- ' . $url);
+            }
+            catch(Exception $e)
+            {
+              Log::addWarn('Attachment seems corrupted', array($e->getMessage() ));
+              return array("URLs" => array(), "PATHs" => array(), "sizesMissing" => array());
+            }
             $urlList = array(); $filePaths = array();
 
-            Log::addDebug('attached file path: ' . $path );
+            Log::addDebug('attached file path: ' . $path, array( (string) $fsFile->getFileDir() )  );
 
             if(!$mainExists) {
-                //try and download the image from the URL (images present only on CDN)
-                $downloadTimeout = max(SHORTPIXEL_MAX_EXECUTION_TIME - 10, 15);
-                //$tempOriginal = download_url($url, $downloadTimeout);
-                $args_for_get = array(
-                  'stream' => true,
-                  'filename' => $path,
-                );
-                Log::addDebug('Downloading main file ' . $url );
-                $response = wp_remote_get( $url, $args_for_get );
-                if(is_wp_error( $response )) {
-                  Log::addError('Download Mailfile failed', array($response->get_error_messages()));
-                }
-                elseif ($fsFile->exists())
-                {
-                    $mainExists = true;
-                    $fsUrl = $fs->pathToUrl($fsFile);
-                    if ($fsUrl !== false)
-                        $url = $fsUrl; // more secure way of getting url
-
-                    Log::addDebug('FSFILE TO URL -' . $fsUrl);
-                }
+               list($url, $path) = $this->attemptRemoteDownload($url, $path, $this->ID);
+               $downloadFile = $fs->getFile($path);
+               if ($downloadFile->exists()) // check for success.
+               {
+                $mainExists = true;
+                $fsFile = $downloadFile; // overwrite.
+              }
             }
 
             if($mainExists) {
@@ -597,11 +600,15 @@ class ShortPixelMetaFacade {
                     }
 
                     if ( !$file_exists && !file_exists($tPath) ) {
-                        $tPath = SHORTPIXEL_UPLOADS_BASE . substr($origPath, strpos($origPath, $StichString) + strlen($StichString));
+                        $try_path = SHORTPIXEL_UPLOADS_BASE . substr($origPath, strpos($origPath, $StichString) + strlen($StichString));
+                        if (file_exists($try_path))
+                          $tPath = $try_path; // found!
                     }
 
                     if ( !$file_exists && !file_exists($tPath) ) {
-                        $tPath = trailingslashit(SHORTPIXEL_UPLOADS_BASE) . $origPath;
+                        $try_path = trailingslashit(SHORTPIXEL_UPLOADS_BASE) . $origPath;
+                        if (file_exists($try_path))
+                          $tPath = $try_path; // found!
                     }
 
                     if ( !$file_exists && !file_exists($tPath) ) {
@@ -614,23 +621,7 @@ class ShortPixelMetaFacade {
                           'timeout' => max(SHORTPIXEL_MAX_EXECUTION_TIME - 10, 15),
                         );
 
-                        $response = wp_remote_get( $tUrl, $args_for_get );
-                        Log::addDebug('Thumb not found, trying to download: ' . $tUrl);
-
-                        if (is_wp_error($response))
-                        {
-                          Log::addError('Download Thumbnail failed', array($response->get_error_messages()));
-                        }
-                        elseif($origFile->exists())
-                        {
-                            $tPath = $origFile->getFullPath(); // download succesfull
-                            $fsUrl = $fs->pathToUrl($origFile);
-                            if ($fsUrl !== false) // this tranlation to domain url will not always hold to sendToProcessing when dealing w/ CDN and such.
-                              $tUrl = $fsUrl; // more secure way of getting url
-                            else {
-                              Log::addError('Download - Could not tranlate to URL', array($fsUrl, $tPath, $origFile));
-                            }
-                        }
+                        list($tUrl, $tPath) = $this->attemptRemoteDownload($tUrl, $tPath, $this->ID);
 
                         Log::addDebug('New TPath after download', array($tUrl, $tPath, $origPath, filesize($tPath)));
                     }
@@ -664,8 +655,63 @@ class ShortPixelMetaFacade {
         array_walk($urlList, array( &$this, 'replacePlusChar') );
 
         $filePaths = ShortPixelAPI::CheckAndFixImagePaths($filePaths);//check for images to make sure they exist on disk
-
         return array("URLs" => $urlList, "PATHs" => $filePaths, "sizesMissing" => $sizesMissing);
+    }
+
+    private function attemptRemoteDownload($url, $path, $attach_id)
+    {
+        $downloadTimeout = max(SHORTPIXEL_MAX_EXECUTION_TIME - 10, 15);
+        $fs = new \ShortPixel\FileSystemController();
+        $pathFile = $fs->getFile($path);
+
+        $args_for_get = array(
+          'stream' => true,
+          'filename' => $pathFile->getFullPath(),
+        );
+
+        $response = wp_remote_get( $url, $args_for_get );
+
+        if(is_wp_error( $response )) {
+          Log::addError('Download file failed', array($url, $response->get_error_messages(), $response->get_error_codes() ));
+
+          // Try to get it then via this way.
+          $response = download_url($url, $downloadTimeout);
+          if (!is_wp_error($response)) // response when alright is a tmp filepath. But given path can't be trusted since that can be reason for fail.
+          {
+            $tmpFile = $fs->getFile($response);
+            $post = get_post($attach_id);
+            $post_date = get_the_date('Y/m', $post); // get the date for the uploads tree.
+
+            $upload_dir = wp_upload_dir($post_date);
+            $upload_dir = $fs->getDirectory($upload_dir['path']); // get the upload dir.
+
+            $fixedFile = $fs->getFile($upload_dir->getPath() . $pathFile->getFileName() );
+            // try to move
+            $result = $tmpFile->move($fixedFile);
+
+            Log::addDebug('Fixed File', array($post_date, $fixedFile->getFullPath() ));
+
+            if ($result && $fixedFile->exists())
+            {
+              $path = $fixedFile->getFullPath(); // overwrite path with new fixed path.
+              $url = $fs->pathToUrl($fixedFile);
+              $pathFile = $fixedFile;
+            }
+          } // download_url ..
+          else {
+            Log::addError('Secondary download failed', array($url, $response->get_error_messages(), $response->get_error_codes() ));
+          }
+        }
+        else { // success
+            $pathFile = $fs->getFile($response['filename']);
+        }
+
+        $fsUrl = $fs->pathToUrl($pathFile);
+        if ($fsUrl !== false)
+            $url = $fsUrl; // more secure way of getting url
+
+        Log::addDebug('Remote Download attempt result', array($url, $path));
+        return array($url, $path);
     }
 
     protected function replacePlusChar(&$url) {

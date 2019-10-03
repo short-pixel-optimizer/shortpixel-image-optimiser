@@ -63,13 +63,12 @@ var ShortPixel = function() {
         jQuery('#request_key').attr('href', jQuery('#request_key').attr('href').split('?')[0] + '?pluginemail=' + email);
     }
 
-    /* Can be removed.
     function validateKey(button){
       console.log('validate');
         jQuery('#valid').val('validate');
 
         jQuery(button).parents('form').submit();
-    } */
+    }
 
     jQuery("#key").keypress(function(e) {
         if(e.which == 13) {
@@ -794,7 +793,7 @@ var ShortPixel = function() {
         setOptions          : setOptions,
         isEmailValid        : isEmailValid,
         updateSignupEmail   : updateSignupEmail,
-        //validateKey         : validateKey,
+        validateKey         : validateKey,
         enableResize        : enableResize,
         setupGeneralTab     : setupGeneralTab,
         apiKeyChanged       : apiKeyChanged,

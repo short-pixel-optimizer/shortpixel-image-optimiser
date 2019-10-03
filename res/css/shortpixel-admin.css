@@ -109,3 +109,24 @@
   .settings_page_wp-shortpixel-settings section#tab-debug .env .flex span {
     width: 45%;
     padding: 4px; }
+
+.view-edit-media .debugInfo pre {
+  font-size: 11px; }
+.view-edit-media .sp-column-stats {
+  position: relative; }
+  .view-edit-media .sp-column-stats .sp-column-actions {
+    margin-right: 5px;
+    margin-top: 16px; }
+  .view-edit-media .sp-column-stats .edit-media-stats {
+    border: 1px solid #ccc;
+    padding: 16px; }
+    .view-edit-media .sp-column-stats .edit-media-stats li {
+      margin: 0;
+      line-height: 20px; }
+.view-edit-media .main-actions {
+  display: inline-block;
+  width: 100%; }
+  .view-edit-media .main-actions .button.button-smaller {
+    padding: 6px 15px;
+    height: auto;
+    float: none; }

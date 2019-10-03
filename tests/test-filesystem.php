@@ -361,6 +361,10 @@ class FileSystemTest extends  WP_UnitTestCase
       $s3good = '/tmp/wordpress/wp-content/uploads/2019/08/13063326/AEobOR_BgXA.webp';
       $file = $this->fs->getFile($s3path);
 
+      $extpath = 'http://somewhereelse.com/bla/damn/image.jpg';
+      $file = $this->fs->getFile($extpath);
+      $this->assertEquals($file->getFullPath(), $extpath);
+
       // Flaw
       //$this->assertEquals($s3good, $file->getFullPath());
 

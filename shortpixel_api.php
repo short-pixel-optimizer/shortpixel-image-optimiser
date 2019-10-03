@@ -467,6 +467,8 @@ class ShortPixelAPI {
             return array("Status" => self::STATUS_SUCCESS);
         }
 
+        Log::addDebug('Backing The Up', array($mainPath, $PATHs));
+
         //$fullSubDir = str_replace(wp_normalize_path(get_home_path()), "", wp_normalize_path(dirname($itemHandler->getMeta()->getPath()))) . '/';
         //$SubDir = ShortPixelMetaFacade::returnSubDir($itemHandler->getMeta()->getPath(), $itemHandler->getType());
         $fullSubDir = ShortPixelMetaFacade::returnSubDir($mainPath);

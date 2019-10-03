@@ -27,6 +27,7 @@ class WPShortPixel {
     public function __construct() {
         $this->timer = time();
 
+
         if (Log::debugIsActive()) {
             $this->jsSuffix = '.js'; //use unminified versions for easier debugging
         }
@@ -77,7 +78,6 @@ class WPShortPixel {
                 }
         }
 
-
         $this->setDefaultViewModeList();//set default mode as list. only @ first run
 
         //add hook for image upload processing
@@ -94,7 +94,7 @@ class WPShortPixel {
         add_filter( 'request', array( &$this, 'columnOrderFilterBy') );
         add_action('restrict_manage_posts', array( &$this, 'mediaAddFilterDropdown'));
         //Edit media meta box
-        add_action( 'add_meta_boxes', array( &$this, 'shortpixelInfoBox') );
+        add_action( 'add_meta_boxes', array( &$this, 'shortpixelInfoBox') ); // the info box in edit-media
         //for cleaning up the WebP images when an attachment is deleted
         add_action( 'delete_attachment', array( &$this, 'onDeleteImage') );
 
@@ -183,7 +183,10 @@ class WPShortPixel {
         add_action('admin_notices', array( &$this, 'displayAdminNotices'));
 
         $this->migrateBackupFolder();
+
     }
+
+ 
 
     // @hook admin menu
     // @todo move to plugin class
@@ -807,6 +810,7 @@ class WPShortPixel {
             $itemHandler = new ShortPixelMetaFacade($ID);
             $itemHandler->setRawMeta($meta);
             //that's a hack for watermarking plugins, don't send the image right away to processing, only add it in the queue
+            // @todo Unhack the hack
             include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
             if(   !is_plugin_active('image-watermark/image-watermark.php')
                && !is_plugin_active('amazon-s3-and-cloudfront/wordpress-s3.php')
@@ -1508,7 +1512,14 @@ class WPShortPixel {
                                 //$urlPath = implode("/", array_slice($filePath, 0, count($filePath) - 1));
                                 $thumb = $uploadsUrl . $urlPath . $thumb;
                             } else {
+                              try {
                                 $mainUrl = ShortPixelMetaFacade::safeGetAttachmentUrl($itemHandler->getId());
+                              }
+                              catch(Exception $e)
+                              {
+                                  Log::addError('Attachment seems corrupted!', array($e->getMessage() ));
+                                  $mainUrl = null; // error state.
+                              }
                                 $thumb = dirname($mainUrl) . '/' . $thumb;
                             }
                         }
@@ -1658,10 +1669,30 @@ Log::addDebug('Send to PRocessing - URLS -', array($URLsAndPATHs) );
             $meta->setThumbsMissing($URLsAndPATHs['sizesMissing']);
             $itemHandler->updateMeta();
         }
-        //die(var_dump($itemHandler));
+
+        $original_status = $meta->getStatus(); // get the real status, without the override below .
+
         $refresh = $meta->getStatus() === ShortPixelAPI::ERR_INCORRECT_FILE_SIZE;
-        //echo("URLS: "); die(var_dump($URLsAndPATHs));
-        $itemHandler->setWaitingProcessing();
+        $itemHandler->setWaitingProcessing(); // @todo This, for some reason, put status to 'success', before processing.
+
+         // function to fix things if needed.
+        //$meta = $this->getMeta();
+        if ($original_status < 0 && count($URLsAndPATHs['URLs']) == 0)
+        {
+          if (! is_array($meta->getThumbsMissing()) || count($meta->getThumbsMissing()) == 0)
+          {
+              $meta->setStatus(ShortPixelAPI::STATUS_SUCCESS);
+              $meta->setMessage(0);
+              $meta->setThumbsTodo(0);
+              $itemHandler->updateMeta($meta);
+              Log::addWarn('Processing override, no URLS, no jobs, something was incorrect - ');
+              return $URLsAndPATHs;
+          }
+        }
+
+          $thumbObtList = $meta->getThumbsOptList();
+          $missing = $meta->getThumbsMissing();
+
 
         $this->_apiInterface->doRequests($URLsAndPATHs['URLs'], false, $itemHandler,
                 $compressionType === false ? $this->_settings->compressionType : $compressionType, $refresh);//send a request, do NOT wait for response
@@ -1733,7 +1764,6 @@ Log::addDebug('Send to PRocessing - URLS -', array($URLsAndPATHs) );
                     $itemHandler->getMeta();
                     $errCode = $e->getCode() < 0 ? $e->getCode() : ShortPixelAPI::ERR_FILE_NOT_FOUND;
                     $itemHandler->setError($errCode, $e->getMessage());
-
 
                     $ret = array("Status" => ShortPixelAPI::STATUS_FAIL, "Message" => $e->getMessage());
                 }
@@ -1977,6 +2007,11 @@ Log::addDebug('Send to PRocessing - URLS -', array($URLsAndPATHs) );
 
             $baseUrl = str_replace($fsFile->getFileName(), '', $imageUrl); // remove *only* filename from URL
             $baseUrl = ShortPixelPng2Jpg::removeUrlProtocol($baseUrl); // @todo parse_url with a util helper / model should be better here
+            $backupFileDir = $bkFile->getFileDir(); // directory of the backups.
+
+            // find the jpg optimized image in backups, and mark to remove
+            if ($bkFile->exists())
+            $toUnlink['PATHs'][]  = $bkFile->getFullPath();
 
           //  $baseUrl = ShortPixelPng2Jpg::removeUrlProtocol(trailingslashit(str_replace($image, "", $imageUrl))); //make the base url protocol agnostic if it's not already
 
@@ -1988,12 +2023,20 @@ Log::addDebug('Send to PRocessing - URLS -', array($URLsAndPATHs) );
                 if(isset($png2jpgSizes[$key])) {
                     $toReplace[$baseUrl . $baseRelPath . $size['file']] = $baseUrl . $baseRelPath . wp_basename($png2jpgSizes[$key]['file']);
                 }
+
+                $backuppedSize = $fs->getFile($backupFileDir . $size['file'] );
+                Log::addDebug('Find optimized JPGEG backupFile Thing', array( $backuppedSize->getFullPath() ));
+                if ($backuppedSize->exists())
+                {
+                  $toUnlink['PATHs'][] = $backuppedSize ->getFullPath();
+                }
             }
+
             //$file = $png2jpgMain;
-            $fsFile = $fs->getFile($png2jpgMain);
             $sizes = $png2jpgSizes;
 
-            $fsFile = $fs->getFile($png2jpgMain); // original is non-existing at this time.
+            $fsFile = $fs->getFile($png2jpgMain); // original is non-existing at this time. :: Target
+            $bkFile = $fs->getFile($bkFolder->getPath() . $fsFile->getFileName()); // Update this, because of filename (extension)
 
         }
 
@@ -2036,9 +2079,7 @@ Log::addDebug('Send to PRocessing - URLS -', array($URLsAndPATHs) );
                 }
                 $bkCount++;
                 $thumbsPaths[] = array('source' => $source, 'destination' => $destination);
-
             }
-
         }
         if(!$bkCount) {
             $this->throwNotice('generic-err', __("No backup files found. Restore not performed.",'shortpixel-image-optimiser'));
@@ -2144,10 +2185,13 @@ Log::addDebug('Send to PRocessing - URLS -', array($URLsAndPATHs) );
                 $spPng2Jpg = new ShortPixelPng2Jpg($this->_settings);
                 $spPng2Jpg->png2JpgUpdateUrls(array(), $toReplace);
             }
+            Log::addDebug('DoRestore, Unlinking', array($toUnlink) );
             if(isset($toUnlink['PATHs'])) foreach($toUnlink['PATHs'] as $unlink) {
                 if($png2jpgMain) {
                     WPShortPixel::log("PNG2JPG unlink $unlink");
-                    @unlink($unlink);
+                    $unlinkFile = $fs->getFile($unlink);
+                    $unlinkFile->delete();
+//                    @unlink($unlink);
                 }
                 //try also the .webp
                 $unlinkWebpSymlink = trailingslashit(dirname($unlink)) . wp_basename($unlink, '.' . pathinfo($unlink, PATHINFO_EXTENSION)) . '.webp';
@@ -2507,7 +2551,7 @@ Log::addDebug('Send to PRocessing - URLS -', array($URLsAndPATHs) );
         {
             return $this->_settings->currentStats;
         } else {
-            $imageCount = WpShortPixelMediaLbraryAdapter::countAllProcessableFiles($this->_settings);
+            $imageCount = WpShortPixelMediaLbraryAdapter::countAllProcessable($this->_settings);
             $quotaData['time'] = time();
             $quotaData['optimizePdfs'] = $this->_settings->optimizePdfs;
             //$quotaData['quotaData'] = $quotaData;
@@ -2725,7 +2769,7 @@ Log::addDebug('Send to PRocessing - URLS -', array($URLsAndPATHs) );
         }//resume was clicked
 
         //figure out the files that are left to be processed
-        $qry_left = "SELECT count(*) FilesLeftToBeProcessed FROM " . $wpdb->prefix . "postmeta
+        $qry_left = "SELECT count(meta_id) FilesLeftToBeProcessed FROM " . $wpdb->prefix . "postmeta
         WHERE meta_key = '_wp_attached_file' AND post_id <= " . (0 + $this->prioQ->getStartBulkId());
         $filesLeft = $wpdb->get_results($qry_left);
 
@@ -3384,7 +3428,7 @@ Log::addDebug('Send to PRocessing - URLS -', array($URLsAndPATHs) );
     * @todo Move this to custom media controller
     */
     public function generateCustomColumn( $column_name, $id, $extended = false ) {
-        if( 'wp-shortPixel' == $column_name ) {
+          if( 'wp-shortPixel' == $column_name ) {
 
             if(!$this->isProcessable($id)) {
                 $renderData['status'] = 'n/a';
@@ -3394,18 +3438,8 @@ Log::addDebug('Send to PRocessing - URLS -', array($URLsAndPATHs) );
 
             $file = get_attached_file($id);
             $data = ShortPixelMetaFacade::sanitizeMeta(wp_get_attachment_metadata($id));
-
-            if($extended && Log::debugIsActive()) {
-            //  var_dump($data);
-                $sizes = isset($data['sizes']) ? $data['sizes'] : array();
-                echo "<PRE style='font-size:11px; overflow:hidden; white-space:pre-wrap'>";
-                echo "<strong>URL: </strong>"; print_r(wp_get_attachment_url($id));
-                echo('<br><br>' . json_encode(ShortPixelMetaFacade::getWPMLDuplicates($id)));
-                echo('<br><br><span class="array">'); print_r($data);  echo ''; //json_encode($data))
-                echo('</span><br><br>');
-                echo '<strong>Backup File: </strong>' . $this->getBackupFolderAny($file, $sizes);
-                echo "</PRE>";
-            }
+            $itemHandler = new ShortPixelMetaFacade($id);
+            $meta = $itemHandler->getMeta();
 
             $fileExtension = strtolower(pathinfo($file, PATHINFO_EXTENSION));
             $invalidKey = !$this->_settings->verifiedKey;
@@ -3529,55 +3563,10 @@ Log::addDebug('Send to PRocessing - URLS -', array($URLsAndPATHs) );
      * @return array Array of Thumbs to Optimize - only the filename - , and count of sizes not excluded ...
      */
     function getThumbsToOptimize($data, $filepath) {
-        $fs = new \ShortPixel\FileSystemController();
-        $mainfile = $fs->getFile($filepath);
+        // This function moved, but lack of other destination. 
+        return WpShortPixelMediaLbraryAdapter::getThumbsToOptimize($data, $filepath);
 
-        $sizesCount = isset($data['sizes']) ? WpShortPixelMediaLbraryAdapter::countSizesNotExcluded($data['sizes']) : 0;
-        $basedir = $mainfile->getFileDir()->getPath();
-        $thumbsOptList = isset($data['ShortPixel']['thumbsOptList']) ? $data['ShortPixel']['thumbsOptList'] : array();
-        $thumbsToOptimizeList = array(); // is returned, so should be defined before if.
-
-        if($sizesCount && $this->_settings->processThumbnails) {
-
-            // findThumbs returns fullfilepath.
-            $found = $this->_settings->optimizeUnlisted ? WpShortPixelMediaLbraryAdapter::findThumbs($mainfile->getFullPath()) : array();
-
-            $exclude = $this->_settings->excludeSizes;
-            $exclude = is_array($exclude) ? $exclude : array();
-            foreach($data['sizes'] as $size => $sizeData) {
-                unset($found[\array_search($basedir . $sizeData['file'], $found)]); // @todo what is this intended to do?
-
-                // sizeData['file'] is *only* filename *but* can be wrong data, URL due to plugins. So check first, only get filename ( since it is supposed to fail with only a filename path ) and then reload.
-                $sizeFileCheck = $fs->getFile($sizeData['file']);
-                $file = $fs->getFile($basedir . $sizeFileCheck->getFileName());
-
-                if ($file->getExtension() !== $mainfile->getExtension())
-                {
-                  continue;
-                }
-
-
-                if(!in_array($size, $exclude) && !in_array($file->getFileName(), $thumbsOptList)) {
-                    $thumbsToOptimizeList[] = $file->getFileName();
-                }
-            }
-            //$found = array_diff($found, $thumbsOptList); // Wrong comparison. Found is full file path, thumbsOptList is not.
-            foreach($found as $path) {
-                $file = $fs->getFile($path);
-
-                // prevent Webp and what not from showing up.
-                if ($file->getExtension() !== $mainfile->getExtension())
-                {
-                  continue;
-                }
-                // thumbs can already be in findThumbs.
-                if (! in_array($file->getFileName(), $thumbsToOptimizeList) && ! in_array($file->getFileName(), $thumbsOptList) )
-                {
-                  $thumbsToOptimizeList[] =  $file->getFileName();
-                }
-            }
-        }
-        return array($thumbsToOptimizeList, $sizesCount);
+        
     }
 
     /** Make columns sortable in Media Library

@@ -3,6 +3,246 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 class WpShortPixelMediaLbraryAdapter {
 
+    // Testing is this is better / faster than previous function.
+     public static function countAllProcessable($settings, $maxId = PHP_INT_MAX, $minId = 0)
+     {
+       global $wpdb;
+
+        $totalFiles = $mainFiles = $processedMainFiles = $processedTotalFiles = $totalFilesM1 = $totalFilesM2 = $totalFilesM3 = $totalFilesM4 =
+        $procGlossyMainFiles = $procGlossyTotalFiles = $procLossyMainFiles = $procLossyTotalFiles = $procLosslessMainFiles = $procLosslessTotalFiles = $procUndefMainFiles = $procUndefTotalFiles = $mainUnprocessedThumbs = 0;
+        $filesMap = $processedFilesMap = array();
+        $limit = self::getOptimalChunkSize();
+        $pointer = 0;
+        $filesWithErrors = array(); $moreFilesWithErrors = 0;
+        $run = true;
+        $excludePatterns = WPShortPixelSettings::getOpt("excludePatterns");
+        //idInfo = self::getPostIdsChunk($minId, $maxId, $pointer, $limit, true);
+
+        $foundUnlistedThumbs = false;
+        $counter = 0;
+
+        $filesWithErrors = array(); $moreFilesWithErrors = 0;
+        $excludePatterns = WPShortPixelSettings::getOpt("excludePatterns");
+
+        if (version_compare(PHP_VERSION, '5.3.0') >= 0) {
+            $month1 = new DateTime();
+            $month2 = new DateTime();
+            $month3 = new DateTime();
+            $month4 = new DateTime();
+            $mi1 = new DateInterval('P1M');
+            $mi2 = new DateInterval('P2M');
+            $mi3 = new DateInterval('P3M');
+            $mi4 = new DateInterval('P4M');
+            $month1->sub($mi1);
+            $month2->sub($mi2);
+            $month3->sub($mi3);
+            $month4->sub($mi4);
+        }
+
+        while ( $run == true ) {
+            $idInfo = self::getPostIdsChunk($minId, $maxId, $pointer, $limit, true);
+            $minId = isset($idInfo->last_id) ? $idInfo->last_id : -1;
+
+            if($idInfo === null) {
+                break; //we parsed all the results
+            }
+            elseif(count($idInfo->ids) == 0) {
+                //$minId += $limit; // This is a no results case.
+                continue;
+            }
+
+            $filesList= $wpdb->get_results("SELECT post_id, meta_key, meta_value FROM " . $wpdb->prefix . "postmeta
+                                        WHERE post_id IN (" . implode(',', $idInfo->ids) . ")
+                                          AND ( meta_key = '_wp_attached_file' OR meta_key = '_wp_attachment_metadata' )");
+        /*   $filesList= $wpdb->get_results("SELECT post_id, meta_key, meta_value FROM " . $wpdb->prefix . "postmeta
+                                          WHERE post_id >= $minId and post_id <= $maxId
+                                            AND ( meta_key = '_wp_attached_file' OR meta_key = '_wp_attachment_metadata' )"); */
+
+            //$minId = $idInfo->ids[0];
+            //$minId = $idInfo->ids[count($idInfo->ids) - 1];
+
+            //in one case this query returned zero items but if fewer items in the IDs list, it worked so apply this workaround:
+            if($limit > 1000 && count($filesList) == 0) {
+                $limit = 1000;
+                continue;
+            }
+
+            foreach ( $filesList as $file )
+            {
+                $totalFilesThis = $processedFilesThis = 0;
+
+                if ( $file->meta_key == "_wp_attached_file" )
+                {//count pdf files only
+                    $extension = substr($file->meta_value, strrpos($file->meta_value,".") + 1 );
+                    if ( $extension == "pdf" && $settings->optimizePdfs && !isset($filesMap[$file->meta_value]))
+                    {
+                        $totalFiles++;
+                        $totalFilesThis++;
+                        $mainFiles++;
+                        $filesMap[$file->meta_value] = 1;
+                    }
+                }
+                elseif ( $file->meta_key == "_wp_attachment_metadata" ) //_wp_attachment_metadata
+                {
+                    $attachment = maybe_unserialize($file->meta_value);
+                    $sizesCount = isset($attachment['sizes']) ? self::countSizesNotExcluded($attachment['sizes'], $settings->excludeSizes) : 0;
+
+                    // LA FIECARE 100 de imagini facem un test si daca findThumbs da diferit, sa dam o avertizare si eventual optiune
+                    $dismissed = $settings->dismissedNotices ? $settings->dismissedNotices : array();
+                    if( $foundUnlistedThumbs === false && $maxId == PHP_INT_MAX && !isset($dismissed['unlisted'])
+                        && (   in_array($counter, array(2,4,6,8)) || floor($counter/100) == 0 && $counter%10 == 0
+                            || floor($counter/1000) == 0 && $counter%100 == 0 || floor($counter/10000) == 0 && $counter%1000 == 0))
+                    {
+                        $filePath = isset($attachment['file']) ? trailingslashit(SHORTPIXEL_UPLOADS_BASE).$attachment['file'] : false;
+                        if ($filePath && file_exists($filePath) && isset($attachment['sizes']) &&
+                            (   !isset($attachment['ShortPixelImprovement']) || $attachment['ShortPixelImprovement'] === 0
+                             || $attachment['ShortPixelImprovement'] === 0.0 || $attachment['ShortPixelImprovement'] === "0"))
+                        {
+                            $foundThumbs = WpShortPixelMediaLbraryAdapter::findThumbs($filePath);
+
+                            $foundCount = count($foundThumbs);
+
+                            if(count($foundThumbs) > $sizesCount) {
+                                $unlisted = array();
+                                foreach($foundThumbs as $found) {
+                                    $match = ShortPixelTools::findItem(wp_basename($found), $attachment['sizes'], 'file');
+                                    if(!$match) {
+                                        $unlisted[] = wp_basename($found);
+                                    }
+                                }
+                                $foundUnlistedThumbs = (object)array("id" => $file->post_id, "name" => wp_basename($attachment['file']), "unlisted" => $unlisted);
+                            }
+                        } else {
+                            $counter--; // will take the next one
+                            $realSizesCount = $sizesCount;
+                        }
+                    }
+                    //processable
+                    $isProcessable = false;
+                    $isProcessed = isset($attachment['ShortPixelImprovement'])
+                        && ($attachment['ShortPixelImprovement'] > 0 || $attachment['ShortPixelImprovement'] === 0.0 || $attachment['ShortPixelImprovement'] === "0")
+                        //for PDFs there is no file field so just let it pass.
+                        && (!isset($attachment['file']) || !isset($processedFilesMap[$attachment['file']]));
+
+                    if(   isset($attachment['file']) && !isset($filesMap[$attachment['file']])
+                       && WPShortPixel::_isProcessablePath($attachment['file'], array(), $excludePatterns)){
+                        $isProcessable = true;
+                        $totalFiles += $sizesCount;
+                        $totalFilesThis += $sizesCount;
+                        if ( isset($attachment['file']) )
+                        {
+                            $totalFiles++;
+                            $totalFilesThis++;
+                            $mainFiles++;
+                            $filesMap[$attachment['file']] = 1;
+                        }
+                    }
+                    //processed
+                    if ($isProcessed) {
+                        //add main file to counts
+                        $processedMainFiles++;
+                        $processedTotalFiles++;
+                        $processedFilesThis++;
+                        $type = isset($attachment['ShortPixel']['type']) ? $attachment['ShortPixel']['type'] : null;
+                        switch($type) {
+                            case 'lossy' :
+                                $procLossyMainFiles++;
+                                $procLossyTotalFiles++;
+                                break;
+                            case 'glossy':
+                                $procGlossyMainFiles++;
+                                $procGlossyTotalFiles++;
+                                break;
+                            case 'lossless':
+                                $procLosslessMainFiles++;
+                                $procLosslessTotalFiles++;
+                                break;
+                            default:
+                                $procUndefMainFiles++;
+                                $procUndefTotalFiles++;
+                        }
+
+                        //get the thumbs processed for that attachment
+                        $thumbs = $allThumbs = 0;
+                        if ( isset($attachment['ShortPixel']['thumbsOpt']) ) {
+                            $thumbs = $attachment['ShortPixel']['thumbsOpt'];
+                        }
+                        elseif ( isset($attachment['sizes']) ) {
+                            $thumbs = $sizesCount;
+                        }
+                        if(!isset($attachment['file'])) { //for the pdfs that have thumbs, have to add the thumbs too (not added above )
+                            $totalFiles += $thumbs;
+                            $totalFilesThis += $thumbs;
+                        }
+                        $thumbsMissing = isset($attachment['ShortPixel']['thumbsMissing']) ? $attachment['ShortPixel']['thumbsMissing'] : array();
+
+                        if ( isset($attachment['sizes']) && $sizesCount > $thumbs + count($thumbsMissing)) {
+                            $mainUnprocessedThumbs++;
+                        }
+
+                        //increment with thumbs processed
+                        $processedTotalFiles += $thumbs;
+                        $processedFilesThis += $thumbs;
+                        if($type == 'glossy') {
+                           $procGlossyTotalFiles += $thumbs;
+                        } elseif ($type == 'lossy') {
+                           $procLossyTotalFiles += $thumbs;
+                        } else {
+                           $procLosslessTotalFiles += $thumbs;
+                        }
+
+                        if ( isset($attachment['file']) ) {
+                            $processedFilesMap[$attachment['file']] = 1;
+                        }
+                    }
+                    elseif($isProcessable && isset($attachment['ShortPixelImprovement'])) {
+                        if(count($filesWithErrors) < 50) {
+                            $filePath = explode("/", $attachment["file"]);
+                            $name = is_array($filePath)? $filePath[count($filePath) - 1] : $file->post_id;
+                            $filesWithErrors[$file->post_id] = array('Id' => $file->post_id, 'Name' => $name, 'Message' => $attachment['ShortPixelImprovement']);
+                        } else {
+                            $moreFilesWithErrors++;
+                        }
+                    }
+
+                }
+
+                if (version_compare(PHP_VERSION, '5.3.0') >= 0) {
+                    $dt = new DateTime($idInfo->idDates[$file->post_id]);
+                    if ($dt > $month1) {
+                        $totalFilesM1 += $totalFilesThis;
+                    } else if ($dt > $month2) {
+                        $totalFilesM2 += $totalFilesThis;
+                    } else if ($dt > $month3) {
+                        $totalFilesM3 += $totalFilesThis;
+                    } else if ($dt > $month4) {
+                        $totalFilesM4 += $totalFilesThis;
+                    }
+                }
+            }
+            unset($filesList);
+            $pointer += $limit;
+            $counter++;
+        }//end while
+
+        return array("totalFiles" => $totalFiles, "mainFiles" => $mainFiles,
+                     "totalProcessedFiles" => $processedTotalFiles, "mainProcessedFiles" => $processedMainFiles,
+                     "totalProcLossyFiles" => $procLossyTotalFiles, "mainProcLossyFiles" => $procLossyMainFiles,
+                     "totalProcGlossyFiles" => $procGlossyTotalFiles, "mainProcGlossyFiles" => $procGlossyMainFiles,
+                     "totalProcLosslessFiles" => $procLosslessTotalFiles, "mainProcLosslessFiles" => $procLosslessMainFiles,
+                     "totalMlFiles" => $totalFiles, "mainMlFiles" => $mainFiles,
+                     "totalProcessedMlFiles" => $processedTotalFiles, "mainProcessedMlFiles" => $processedMainFiles,
+                     "totalProcLossyMlFiles" => $procLossyTotalFiles, "mainProcLossyMlFiles" => $procLossyMainFiles,
+                     "totalProcGlossyMlFiles" => $procGlossyTotalFiles, "mainProcGlossyMlFiles" => $procGlossyMainFiles,
+                     "totalProcLosslessMlFiles" => $procLosslessTotalFiles, "mainProcLosslessMlFiles" => $procLosslessMainFiles,
+                     "totalProcUndefMlFiles" => $procUndefTotalFiles, "mainProcUndefMlFiles" => $procUndefMainFiles,
+                     "mainUnprocessedThumbs" => $mainUnprocessedThumbs, "totalM1" => $totalFilesM1, "totalM2" => $totalFilesM2, "totalM3" => $totalFilesM3, "totalM4" => $totalFilesM4,
+                     "filesWithErrors" => $filesWithErrors,
+                     "moreFilesWithErrors" => $moreFilesWithErrors,
+                     "foundUnlistedThumbs" => $foundUnlistedThumbs
+                    );
+    }
+
     //count all the processable files in media library (while limiting the results to max 10000)
     public static function countAllProcessableFiles($settings = array(), $maxId = PHP_INT_MAX, $minId = 0){
         global  $wpdb;
@@ -35,6 +275,7 @@ class WpShortPixelMediaLbraryAdapter {
         //count all the files, main and thumbs
         while ( 1 ) {
             $idInfo = self::getPostIdsChunk($minId, $maxId, $pointer, $limit);
+
             if($idInfo === null) {
                 break; //we parsed all the results
             }
@@ -43,9 +284,12 @@ class WpShortPixelMediaLbraryAdapter {
                 continue;
             }
 
-            $filesList= $wpdb->get_results("SELECT * FROM " . $wpdb->prefix . "postmeta
+            $filesList= $wpdb->get_results("SELECT post_id, meta_key, meta_value FROM " . $wpdb->prefix . "postmeta
                                         WHERE post_id IN (" . implode(',', $idInfo->ids) . ")
                                           AND ( meta_key = '_wp_attached_file' OR meta_key = '_wp_attachment_metadata' )");
+        /*   $filesList= $wpdb->get_results("SELECT post_id, meta_key, meta_value FROM " . $wpdb->prefix . "postmeta
+                                          WHERE post_id >= $minId and post_id <= $maxId
+                                            AND ( meta_key = '_wp_attached_file' OR meta_key = '_wp_attachment_metadata' )"); */
 
             //in one case this query returned zero items but if fewer items in the IDs list, it worked so apply this workaround:
             if($limit > 1000 && count($filesList) == 0) {
@@ -70,7 +314,7 @@ class WpShortPixelMediaLbraryAdapter {
                 }
                 elseif ( $file->meta_key == "_wp_attachment_metadata" ) //_wp_attachment_metadata
                 {
-                    $attachment = @unserialize($file->meta_value);
+                    $attachment = maybe_unserialize($file->meta_value);
                     $sizesCount = isset($attachment['sizes']) ? self::countSizesNotExcluded($attachment['sizes'], $settings->excludeSizes) : 0;
 
                     // LA FIECARE 100 de imagini facem un test si daca findThumbs da diferit, sa dam o avertizare si eventual optiune
@@ -230,6 +474,7 @@ class WpShortPixelMediaLbraryAdapter {
                     );
     }
 
+
     public static function getPostMetaSlice($startId, $endId, $limit) {
         global $wpdb;
         $time = microtime(true);
@@ -271,6 +516,62 @@ class WpShortPixelMediaLbraryAdapter {
       return $metaresult;
     }
 */
+
+  public static function getThumbsToOptimize($data, $filepath)
+  {
+          //  @todo weak call. See how in future settings might come via central provider.
+          $settings = new \WPShortPixelSettings();
+
+          $fs = new \ShortPixel\FileSystemController();
+          $mainfile = $fs->getFile($filepath);
+
+          $sizesCount = isset($data['sizes']) ? WpShortPixelMediaLbraryAdapter::countSizesNotExcluded($data['sizes']) : 0;
+          $basedir = $mainfile->getFileDir()->getPath();
+          $thumbsOptList = isset($data['ShortPixel']['thumbsOptList']) ? $data['ShortPixel']['thumbsOptList'] : array();
+          $thumbsToOptimizeList = array(); // is returned, so should be defined before if.
+
+          if($sizesCount && $settings->processThumbnails) {
+
+              // findThumbs returns fullfilepath.
+              $found = $settings->optimizeUnlisted ? WpShortPixelMediaLbraryAdapter::findThumbs($mainfile->getFullPath()) : array();
+
+              $exclude = $settings->excludeSizes;
+              $exclude = is_array($exclude) ? $exclude : array();
+              foreach($data['sizes'] as $size => $sizeData) {
+                  unset($found[\array_search($basedir . $sizeData['file'], $found)]); // @todo what is this intended to do?
+
+                  // sizeData['file'] is *only* filename *but* can be wrong data, URL due to plugins. So check first, only get filename ( since it is supposed to fail with only a filename path ) and then reload.
+                  $sizeFileCheck = $fs->getFile($sizeData['file']);
+                  $file = $fs->getFile($basedir . $sizeFileCheck->getFileName());
+
+                  if ($file->getExtension() !== $mainfile->getExtension())
+                  {
+                    continue;
+                  }
+
+                  if(!in_array($size, $exclude) && !in_array($file->getFileName(), $thumbsOptList)) {
+                      $thumbsToOptimizeList[] = $file->getFileName();
+                  }
+              }
+              //$found = array_diff($found, $thumbsOptList); // Wrong comparison. Found is full file path, thumbsOptList is not.
+              foreach($found as $path) {
+                  $file = $fs->getFile($path);
+
+                  // prevent Webp and what not from showing up.
+                  if ($file->getExtension() !== $mainfile->getExtension())
+                  {
+                    continue;
+                  }
+                  // thumbs can already be in findThumbs.
+                  if (! in_array($file->getFileName(), $thumbsToOptimizeList) && ! in_array($file->getFileName(), $thumbsOptList) )
+                  {
+                    $thumbsToOptimizeList[] =  $file->getFileName();
+                  }
+              }
+          }
+          return array($thumbsToOptimizeList, $sizesCount);
+    }
+
     public static function getPostsJoinLessReverse($startId, $endId, $limit)
     {
       global $wpdb;
@@ -365,7 +666,7 @@ class WpShortPixelMediaLbraryAdapter {
 
         $base = $file->getFileBase();
         $ext = $file->getExtension();
-        $pattern = '/' . preg_quote($base, '/') . '-\d+x\d+\.'. $ext .'/';
+        $pattern = '/^' . preg_quote($base, '/') . '-\d+x\d+\.'. $ext .'/';
 
         $thumbs = array_merge($thumbs, self::getFilesByPattern($dirPath, $pattern));
 
@@ -392,7 +693,7 @@ class WpShortPixelMediaLbraryAdapter {
                 {
                   foreach ($suffixes as $suffix){
 
-                      $pattern = '/' . preg_quote($base, '/') . '-\d+x\d+'. $suffix . '\.'. $ext .'/';
+                      $pattern = '/^' . preg_quote($base, '/') . '-\d+x\d+'. $suffix . '\.'. $ext .'/';
                       $thumbs = array_merge($thumbs, self::getFilesByPattern($dirPath, $pattern));
                       /*foreach($thumbsCandidates as $th) {
                           if(preg_match($pattern, $th)) {
@@ -408,7 +709,7 @@ class WpShortPixelMediaLbraryAdapter {
                 {
                   foreach ($infixes as $infix){
                       //$thumbsCandidates = @glob($base . $infix  . "-*." . $ext);
-                      $pattern = '/' . preg_quote($base, '/') . $infix . '-\d+x\d+' . '\.'. $ext .'/';
+                      $pattern = '/^' . preg_quote($base, '/') . $infix . '-\d+x\d+' . '\.'. $ext .'/';
                       $thumbs = array_merge($thumbs, self::getFilesByPattern($dirPath, $pattern));
 
                       /*foreach($thumbsCandidates as $th) {
@@ -449,7 +750,7 @@ class WpShortPixelMediaLbraryAdapter {
       }
       catch(\Exception $e)
       {
-          Log::addWarn('GetFilesbyPattern issue with directory. ', $e->message());
+          Log::addWarn('GetFilesbyPattern issue with directory. ', $e->getMessage());
           return array();
       }
 
@@ -485,13 +786,27 @@ class WpShortPixelMediaLbraryAdapter {
         }
     }
 
-    protected static function getPostIdsChunk($minId, $maxId, $pointer, $limit) {
+    protected static function getPostIdsChunk($minId, $maxId, $pointer, $limit, $byMinMax = false) {
         global  $wpdb;
 
+        // min/max : the function feeds proper Min and MaxId to function so offset pointer is not needed.
+        if ($byMinMax)
+        {
+          $pointer = 0;
+          $sql = "SELECT ID, post_mime_type, post_date FROM " . $wpdb->prefix . "posts
+                                      WHERE (  ID > $minId )
+                                      and post_mime_type <> ''
+                                      LIMIT $limit";
+        }
+        else {
+          $sql = "SELECT ID, post_mime_type, post_date FROM " . $wpdb->prefix . "posts
+                                      WHERE ( ID <= $maxId AND ID > $minId )
+                                      LIMIT $pointer,$limit";
+        }
+
         $ids = $idDates = array();
-        $idList = $wpdb->get_results("SELECT ID, post_mime_type, post_date FROM " . $wpdb->prefix . "posts
-                                    WHERE ( ID <= $maxId AND ID > $minId )
-                                    LIMIT $pointer,$limit");
+        $idList = $wpdb->get_results($sql);
+
         if ( empty($idList) ) {
             return null;
         }
@@ -501,7 +816,46 @@ class WpShortPixelMediaLbraryAdapter {
                 $idDates[$item->ID] = $item->post_date;
             }
         }
-        return (object)array('ids' => $ids, 'idDates' => $idDates);
+
+        return (object)array('ids' => $ids, 'idDates' => $idDates, 'last_id' => $ids[count($ids)-1] );
+    }
+
+    /* Recount images from the media library when something went wrong badly */
+    public static function reCountMediaLibraryItems()
+    {
+      $limit = self::getOptimalChunkSize();
+      $run = true;
+      $minId = 0;
+      $maxId = -1; // not in use
+      $pointer = -1; // not in use.
+
+      $timeout = get_transient('shortpixel_debug_media');
+      if ($timeout !== false)
+        $minId = $timeout;
+
+      while ( $run == true ) {
+          if ($minId == -1)
+            exit('Hanging Loop Detected');
+          $idInfo = self::getPostIdsChunk($minId, $maxId, $pointer, $limit, true);
+          $minId = isset($idInfo->last_id) ? $idInfo->last_id : -1;
+
+          if($idInfo === null) {
+              break; //we parsed all the results
+          }
+          elseif(count($idInfo->ids) == 0) {
+              //$minId += $limit; // This is a no results case.
+              continue;
+          }
+          foreach($idInfo->ids as $post_id)
+          {
+              $imageModel = new \ShortPixel\ImageModel();
+              $imageModel->setByPostID($post_id);
+              $imageModel->reAcquire();
+              Log::addDebug('Reacquired: ' . $post_id );
+          }
+
+          set_transient('shortpixel_debug_media', $post_id, 20 * MINUTE_IN_SECONDS);
+        }
     }
 
 }
