@@ -312,7 +312,12 @@ class ShortPixelPlugin
     if (! $env->is_nginx)
       \WpShortPixel::alterHtaccess(true);
 
-    @unlink(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
+    // save remove. 
+    $fs = new FileSystemController();
+    $log = $fs->getFile(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
+    if ($log->exists())
+      $log->delete();
+  //  @unlink(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
   }
 
   public static function uninstallPlugin()
