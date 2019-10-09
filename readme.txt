@@ -263,7 +263,7 @@ Release date: 9th October 2019
 * Fixed: notice in filemodel due meta-facade feeding array
 * Fixed: bug in File2Url in filesystemcontroller
 * Fixed: download issue in attempt to remote download
-* Language – 0 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted
+* Language – 0 new strings added, 1 updated, 0 fuzzied, and 0 obsoleted
 
 = 4.14.5 =
 Release date: 29th August 2019
