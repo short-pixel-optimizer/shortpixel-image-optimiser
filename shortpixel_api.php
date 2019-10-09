@@ -113,7 +113,7 @@ class ShortPixelAPI {
         }
 
       //  WpShortPixel::log("DO REQUESTS for META: " . json_encode($itemHandler->getRawMeta()) . " STACK: " . json_encode(debug_backtrace()));
-          $URLs = apply_filters('shortpixel_image_urls', $URLs, $itemHandler->getId()) ;
+        $URLs = apply_filters('shortpixel_image_urls', $URLs, $itemHandler->getId()) ;
 
         $requestParameters = array(
             'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
@@ -135,8 +135,8 @@ class ShortPixelAPI {
         }
 
         //WpShortPixel::log("ShortPixel API Request Settings: " . json_encode($requestParameters));
-        //Log::addDebug('ShortPixel API Request');
         $response = wp_remote_post($this->_apiEndPoint, $this->prepareRequest($requestParameters, $Blocking) );
+        Log::addDebug('ShortPixel API Request sent', $requestParameters);
 
         //WpShortPixel::log('RESPONSE: ' . json_encode($response));
 

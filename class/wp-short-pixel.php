@@ -1739,8 +1739,15 @@ class WPShortPixel {
 
         //WpShortPixelMediaLbraryAdapter::cleanupFoundThumbs($itemHandler);
         $URLsAndPATHs = $this->getURLsAndPATHs($itemHandler, NULL, $onlyThumbs);
-        Log::addDebug('Send to PRocessing - URLS -', array($URLsAndPATHs) );
 
+        // Limit 'send to processing' by URL, see function.
+        $result = WpShortPixelMediaLbraryAdapter::checkRequestLimiter($URLsAndPATHs['URLs']);
+
+        if (! $result)  // already passed onto the processor.
+        {
+          Log::addDebug('Preventing sentToProcessing. Reported as already sent');
+          return $URLsAndPATHs;
+        }
         //find thumbs that are not listed in the metadata and add them in the sizes array
         $this->addUnlistedThumbs($itemHandler);
         $meta = $itemHandler->getMeta();
@@ -1775,9 +1782,10 @@ class WPShortPixel {
           }
         }
 
-          $thumbObtList = $meta->getThumbsOptList();
-          $missing = $meta->getThumbsMissing();
+        $thumbObtList = $meta->getThumbsOptList();
+        $missing = $meta->getThumbsMissing();
 
+        Log::addDebug('Send to PRocessing - doRequests ', array($URLsAndPATHs) );
 
         $this->_apiInterface->doRequests($URLsAndPATHs['URLs'], false, $itemHandler,
                 $compressionType === false ? $this->_settings->compressionType : $compressionType, $refresh);//send a request, do NOT wait for response
@@ -3640,7 +3648,7 @@ class WPShortPixel {
      * @return array Array of Thumbs to Optimize - only the filename - , and count of sizes not excluded ...
      */
     function getThumbsToOptimize($data, $filepath) {
-        // This function moved, but lack of other destination. 
+        // This function moved, but lack of other destination.
         return WpShortPixelMediaLbraryAdapter::getThumbsToOptimize($data, $filepath);
 
     }
