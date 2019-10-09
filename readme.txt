@@ -4,7 +4,7 @@ Tags: compressor, image, compression, optimize, image optimizer, image optimiser
 Requires at least: 3.2.0
 Tested up to: 5.2
 Requires PHP: 5.3
-Stable tag: 4.14.5
+Stable tag: 4.14.6
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -245,6 +245,25 @@ define('SHORTPIXEL_CUSTOM_THUMB_INFIXES', '-uae'); will handle custom thumbnails
 9. Check other optimized images status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 4.14.6 =
+Release date: 9th October 2019
+* Don't convert to <picture> the <img>s with backgrounds.
+* Remove unused eval() call.
+* Restore the validate button next to API Key but change label to "Save and validate"
+* Fixed: PNGtoJPG issue with already uploaded images
+* Fixed: finding wrong unlisted thumbnails due to regex.
+* Fixed: fatal error when trying to delete crashed attachement ( without proper URL )
+* Fix for S3 offload - PNG2JPG , doesn't remove old JPG files
+* Fixed: S3Offload will not offload anymore when 'Copy files to bucket' is off ( and object was not previously offloaded )
+* S3Offload doesn't offload via optimiser anymore if this setting is off
+* Fixed: cutting out initial offload if optimization needs to be done, when autolibrary is on
+* Fix for PNG2JPG - JPG files remained in backupdir.
+* Small fix for remote download thumbnails
+* Fixed: notice in filemodel due meta-facade feeding array
+* Fixed: bug in File2Url in filesystemcontroller
+* Fixed: download issue in attempt to remote download
+* Language – 0 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted
 
 = 4.14.5 =
 Release date: 29th August 2019
