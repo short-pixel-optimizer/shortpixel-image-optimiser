@@ -53,9 +53,7 @@ class WpShortPixelMediaLbraryAdapter {
                 continue;
             }
 
-            $filesList= $wpdb->get_results("SELECT post_id, meta_key, meta_value FROM " . $wpdb->prefix . "postmeta
-                                        WHERE post_id IN (" . implode(',', $idInfo->ids) . ")
-                                          AND ( meta_key = '_wp_attached_file' OR meta_key = '_wp_attachment_metadata' )");
+            $filesList= $wpdb->get_results("SELECT post_id, meta_key, meta_value FROM " . $wpdb->prefix . "postmeta WHERE post_id IN (" . implode(',', $idInfo->ids) . ") AND ( meta_key = '_wp_attached_file' OR meta_key = '_wp_attachment_metadata' )");
         /*   $filesList= $wpdb->get_results("SELECT post_id, meta_key, meta_value FROM " . $wpdb->prefix . "postmeta
                                           WHERE post_id >= $minId and post_id <= $maxId
                                             AND ( meta_key = '_wp_attached_file' OR meta_key = '_wp_attachment_metadata' )"); */
@@ -286,9 +284,8 @@ class WpShortPixelMediaLbraryAdapter {
                 continue;
             }
 
-            $filesList= $wpdb->get_results("SELECT post_id, meta_key, meta_value FROM " . $wpdb->prefix . "postmeta
-                                        WHERE post_id IN (" . implode(',', $idInfo->ids) . ")
-                                          AND ( meta_key = '_wp_attached_file' OR meta_key = '_wp_attachment_metadata' )");
+            $filesList= $wpdb->get_results("SELECT post_id, meta_key, meta_value FROM " . $wpdb->prefix . "postmeta WHERE post_id IN (" . implode(',', $idInfo->ids) . ") AND ( meta_key = '_wp_attached_file' OR meta_key = '_wp_attachment_metadata' )");
+
         /*   $filesList= $wpdb->get_results("SELECT post_id, meta_key, meta_value FROM " . $wpdb->prefix . "postmeta
                                           WHERE post_id >= $minId and post_id <= $maxId
                                             AND ( meta_key = '_wp_attached_file' OR meta_key = '_wp_attachment_metadata' )"); */
@@ -778,17 +775,20 @@ class WpShortPixelMediaLbraryAdapter {
         } else {
             $cnt = $wpdb->get_results("SELECT count(*) posts FROM " . $wpdb->prefix . $table);
         }
-        //json_encode($wpdb->get_results("SHOW VARIABLES LIKE 'max_allowed_packet'"));
+
         $posts = isset($cnt) && count($cnt) > 0 ? $cnt[0]->posts : 0;
         if($posts > 100000) {
-            return 10000;
+            $chunk = 10000;
         } elseif ($posts > 50000) {
-            return 5000;
+            $chunk = 5000;
         } elseif($posts > 10000) {
-            return 2000;
+            $chunk = 2000;
         } else {
-            return 500;
+            $chunk = 500;
         }
+
+        // allow a filter to fine-tune specific sql-engines
+        return apply_filters('shortpixel/db/chunk_size', $chunk);
     }
 
     protected static function getPostIdsChunk($minId, $maxId, $pointer, $limit, $byMinMax = false) {

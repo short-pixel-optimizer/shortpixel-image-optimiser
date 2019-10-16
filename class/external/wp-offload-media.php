@@ -19,8 +19,6 @@ class wpOffload
     public function init($as3cf)
     {
 
-
-
       $this->as3cf = $as3cf;
       $this->active = true;
 

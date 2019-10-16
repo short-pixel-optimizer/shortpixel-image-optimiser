@@ -828,6 +828,7 @@ class ShortPixelAPI {
     /**
      * @param $archive
      * @param $tempFiles
+     * @todo Move to FS-controller
      */
     protected static function cleanupTemporaryFiles($archive, $tempFiles)
     {

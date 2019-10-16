@@ -3692,6 +3692,7 @@ class WPShortPixel {
                 )
             ));
         }
+        Log::addDebug('META QUERY', $vars); 
         return $vars;
     }
 
