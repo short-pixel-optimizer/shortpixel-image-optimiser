@@ -3,6 +3,8 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 class WpShortPixelMediaLbraryAdapter {
 
+    private static $urls_this_run = array();
+
     // Testing is this is better / faster than previous function.
      public static function countAllProcessable($settings, $maxId = PHP_INT_MAX, $minId = 0)
      {
@@ -51,9 +53,7 @@ class WpShortPixelMediaLbraryAdapter {
                 continue;
             }
 
-            $filesList= $wpdb->get_results("SELECT post_id, meta_key, meta_value FROM " . $wpdb->prefix . "postmeta
-                                        WHERE post_id IN (" . implode(',', $idInfo->ids) . ")
-                                          AND ( meta_key = '_wp_attached_file' OR meta_key = '_wp_attachment_metadata' )");
+            $filesList= $wpdb->get_results("SELECT post_id, meta_key, meta_value FROM " . $wpdb->prefix . "postmeta WHERE post_id IN (" . implode(',', $idInfo->ids) . ") AND ( meta_key = '_wp_attached_file' OR meta_key = '_wp_attachment_metadata' )");
         /*   $filesList= $wpdb->get_results("SELECT post_id, meta_key, meta_value FROM " . $wpdb->prefix . "postmeta
                                           WHERE post_id >= $minId and post_id <= $maxId
                                             AND ( meta_key = '_wp_attached_file' OR meta_key = '_wp_attachment_metadata' )"); */
@@ -284,9 +284,8 @@ class WpShortPixelMediaLbraryAdapter {
                 continue;
             }
 
-            $filesList= $wpdb->get_results("SELECT post_id, meta_key, meta_value FROM " . $wpdb->prefix . "postmeta
-                                        WHERE post_id IN (" . implode(',', $idInfo->ids) . ")
-                                          AND ( meta_key = '_wp_attached_file' OR meta_key = '_wp_attachment_metadata' )");
+            $filesList= $wpdb->get_results("SELECT post_id, meta_key, meta_value FROM " . $wpdb->prefix . "postmeta WHERE post_id IN (" . implode(',', $idInfo->ids) . ") AND ( meta_key = '_wp_attached_file' OR meta_key = '_wp_attachment_metadata' )");
+
         /*   $filesList= $wpdb->get_results("SELECT post_id, meta_key, meta_value FROM " . $wpdb->prefix . "postmeta
                                           WHERE post_id >= $minId and post_id <= $maxId
                                             AND ( meta_key = '_wp_attached_file' OR meta_key = '_wp_attachment_metadata' )"); */
@@ -577,6 +576,9 @@ class WpShortPixelMediaLbraryAdapter {
       global $wpdb;
       //$time = microtime(true);
 
+// Current idea for salvation::
+//SELECT DISTINCT post_id, meta_value FROM wp_postmeta where (meta_key = '_wp_attached_file' or meta_key = '_wp_attachment_metadata') and post_id <= 68677 group by meta_value order by post_id DESC  LIMIT 50
+
       $sqlmeta = "SELECT DISTINCT post_id FROM " . $wpdb->prefix . "postmeta where (meta_key = %s or meta_key = %s) and post_id <= %d and post_id >= %d order by post_id DESC LIMIT %d";
       $sqlmeta = $wpdb->prepare($sqlmeta, '_wp_attached_file', '_wp_attachment_metadata', $startId, $endId, $limit);
 
@@ -773,17 +775,20 @@ class WpShortPixelMediaLbraryAdapter {
         } else {
             $cnt = $wpdb->get_results("SELECT count(*) posts FROM " . $wpdb->prefix . $table);
         }
-        //json_encode($wpdb->get_results("SHOW VARIABLES LIKE 'max_allowed_packet'"));
+
         $posts = isset($cnt) && count($cnt) > 0 ? $cnt[0]->posts : 0;
         if($posts > 100000) {
-            return 10000;
+            $chunk = 10000;
         } elseif ($posts > 50000) {
-            return 5000;
+            $chunk = 5000;
         } elseif($posts > 10000) {
-            return 2000;
+            $chunk = 2000;
         } else {
-            return 500;
+            $chunk = 500;
         }
+
+        // allow a filter to fine-tune specific sql-engines
+        return apply_filters('shortpixel/db/chunk_size', $chunk);
     }
 
     protected static function getPostIdsChunk($minId, $maxId, $pointer, $limit, $byMinMax = false) {
@@ -818,6 +823,25 @@ class WpShortPixelMediaLbraryAdapter {
         }
 
         return (object)array('ids' => $ids, 'idDates' => $idDates, 'last_id' => $ids[count($ids)-1] );
+    }
+
+    /** It happens that URLS are multiple times offered in the same run (sendProcessing) to  be processed.
+    * - WPML can have duplicate URL's
+    * - This function prevents sending a URL's twice in a --single run--
+    */
+    public static function checkRequestLimiter($urls)
+    {
+        $hash = md5(serialize($urls));
+        Log::addDebug('New Hash -->' . $hash);
+
+        if (in_array($hash, self::$urls_this_run))
+        {
+          return false; // no!.
+        }
+
+        self::$urls_this_run[] = $hash;
+        Log::addDebug('Hash not found, adding', self::$urls_this_run);
+        return true; // ok, process.
     }
 
     /* Recount images from the media library when something went wrong badly */

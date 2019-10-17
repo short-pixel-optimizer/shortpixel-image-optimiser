@@ -43,7 +43,7 @@ class ShortPixelPng2Jpg {
                 $img = @imagecreatefrompng($image);
                 WPShortPixel::log("PNG2JPG created from png");
                 if(!$img) {
-                    WPShortPixel::log("PNG2JPG not a PNG");
+                    WPShortPixel::log("PNG2JPG not a PNG, imagecreatefrompng failed ");
                     $transparent = true; //it's not a PNG, can't convert it
                 } else {
                     WPShortPixel::log("PNG2JPG is PNG");
@@ -62,7 +62,7 @@ class ShortPixelPng2Jpg {
                     }
                 }
             }
-        }
+        } // non-transparant.
 
         WPShortPixel::log("PNG2JPG is " . (!$transparent && !$transparent_pixel ? " not" : "") . " transparent");
         //pass on the img too, if it was already loaded from PNG, matter of performance
@@ -256,10 +256,11 @@ class ShortPixelPng2Jpg {
             $doConvert = true;
         } else {
             $retC = $this->canConvertPng2Jpg($imagePath);
+
             $doConvert =  $retC['notTransparent'];
         }
         if (!$doConvert) {
-            Log::addDebug("PNG2JPG not a PNG");
+            Log::addDebug("PNG2JPG not a PNG, or transparent when this setting is off - " . $imagePath);
             return $meta; //cannot convert it
         }
 

@@ -70,12 +70,12 @@ class WPShortPixel {
         define('QUOTA_EXCEEDED', $this->view->getQuotaExceededHTML());
 
         if( !defined('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES')) {
-                if(is_plugin_active('envira-gallery/envira-gallery.php') || is_plugin_active('soliloquy-lite/soliloquy-lite.php') || is_plugin_active('soliloquy/soliloquy.php')) {
-                    define('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES', '_c,_tl,_tr,_br,_bl');
-                }
-                elseif(defined('SHORTPIXEL_CUSTOM_THUMB_SUFFIX')) {
-                    define('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES', SHORTPIXEL_CUSTOM_THUMB_SUFFIX);
-                }
+            if(is_plugin_active('envira-gallery/envira-gallery.php') || is_plugin_active('soliloquy-lite/soliloquy-lite.php') || is_plugin_active('soliloquy/soliloquy.php')) {
+                define('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES', '_c,_tl,_tr,_br,_bl');
+            }
+            elseif(defined('SHORTPIXEL_CUSTOM_THUMB_SUFFIX')) {
+                define('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES', SHORTPIXEL_CUSTOM_THUMB_SUFFIX);
+            }
         }
 
         $this->setDefaultViewModeList();//set default mode as list. only @ first run
@@ -183,6 +183,7 @@ class WPShortPixel {
         add_action('admin_notices', array( &$this, 'displayAdminNotices'));
 
         $this->migrateBackupFolder();
+
 
     }
 
@@ -1534,7 +1535,7 @@ class WPShortPixel {
                     $rootUrl = ShortPixelMetaFacade::getHomeUrl();
                     if($customId->id == $itemHandler->getId()) {
                         if('pdf' == strtolower(pathinfo($meta->getName(), PATHINFO_EXTENSION))) {
-                            $result["Thumb"] = wpSPIO()->plugin_url('res/img/logo-pdf.png' );
+                            $result["Thumb"] = plugins_url( 'shortpixel-image-optimiser/res/img/logo-pdf.png' );
                             $result["BkThumb"] = "";
                         } else {
                             $result["Thumb"] = $thumb = $rootUrl . $meta->getWebPath();
@@ -1640,7 +1641,105 @@ class WPShortPixel {
         $result["BulkMsg"] = $this->bulkProgressMessage($deltaBulkPercent, $minutesRemaining);
     }
 
+    /** Check for unlisted thumbsnail settings and checks if this file has unlisted thumbs present.
+    * Will update meta. if any are found.
+    * @param ShortPixelMetaFacade $itemHandler ShortpixelMetaFacade item handler.
+    * @return int Number of additions to the sizes Metadata.
+    * @todo This function should Dis/pear. addUnlistedThumbs is now part of image model, to be called via proper controller.
+    */
+    private function addUnlistedThumbs($itemHandler)
+    {
+      // must be media library, setting must be on.
+      if($itemHandler->getType() != ShortPixelMetaFacade::MEDIA_LIBRARY_TYPE
+         || ! $this->_settings->optimizeUnlisted) {
+        return 0;
+      }
 
+      $itemHandler->removeSPFoundMeta(); // remove all found meta. If will be re-added here every time.
+      $meta = $itemHandler->getMeta();
+
+      Log::addDebug('Finding Thumbs on path' . $meta->getPath());
+      $thumbs = WpShortPixelMediaLbraryAdapter::findThumbs($meta->getPath());
+
+      $fs = new \ShortPixel\FileSystemController();
+      $mainFile = $fs->getFile($meta->getPath());
+
+      // Find Thumbs returns *full file path*
+      $foundThumbs = WpShortPixelMediaLbraryAdapter::findThumbs($mainFile->getFullPath());
+
+        // no thumbs, then done.
+      if (count($foundThumbs) == 0)
+      {
+        return 0;
+      }
+      //first identify which thumbs are not in the sizes
+      $sizes = $meta->getThumbs();
+      $mimeType = false;
+
+      $allSizes = array();
+      $basepath = $mainFile->getFileDir()->getPath();
+
+      foreach($sizes as $size) {
+        // Thumbs should have filename only. This is shortpixel-meta ! Not metadata!
+        // Provided filename can be unexpected (URL, fullpath), so first do check, get filename, then check the full path
+        $sizeFileCheck = $fs->getFile($size['file']);
+        $sizeFilePath = $basepath . $sizeFileCheck->getFileName();
+        $sizeFile = $fs->getFile($sizeFilePath);
+
+        //get the mime-type from one of the thumbs metas
+        if(isset($size['mime-type'])) { //situation from support case #9351 Ramesh Mehay
+            $mimeType = $size['mime-type'];
+        }
+        $allSizes[] = $sizeFile;
+      }
+
+      foreach($foundThumbs as $id => $found) {
+          $foundFile = $fs->getFile($found);
+
+          foreach($allSizes as $sizeFile) {
+              if ($sizeFile->getExtension() !== $foundFile->getExtension())
+              {
+                $foundThumbs[$id] = false;
+              }
+              elseif ($sizeFile->getFileName() === $foundFile->getFileName())
+              {
+                  $foundThumbs[$id] = false;
+              }
+          }
+      }
+          // add the unfound ones to the sizes array
+          $ind = 1;
+          $counter = 0;
+          // Assumption:: there is no point in adding to this array since findThumbs should find *all* thumbs that are relevant to this image.
+          /*while (isset($sizes[ShortPixelMeta::FOUND_THUMB_PREFIX . str_pad("".$start, 2, '0', STR_PAD_LEFT)]))
+          {
+            $start++;
+          } */
+      //    $start = $ind;
+
+          foreach($foundThumbs as $found) {
+              if($found !== false) {
+                  Log::addDebug('Adding File to sizes -> ' . $found);
+                  $size = getimagesize($found);
+                  Log::addDebug('Add Unlisted, add size' . $found );
+
+                  $sizes[ShortPixelMeta::FOUND_THUMB_PREFIX . str_pad("".$ind, 2, '0', STR_PAD_LEFT)]= array( // it's a file that has no corresponding thumb so it's the WEBP for the main file
+                      'file' => ShortPixelAPI::MB_basename($found),
+                      'width' => $size[0],
+                      'height' => $size[1],
+                      'mime-type' => $mimeType
+                  );
+                  $ind++;
+                  $counter++;
+              }
+          }
+          if($ind > 1) { // at least one thumbnail added, update
+              $meta->setThumbs($sizes);
+              $itemHandler->updateMeta($meta);
+          }
+
+        return $counter;
+  } // addUnlistedThumbs
 
     private function sendToProcessing($itemHandler, $compressionType = false, $onlyThumbs = false) {
         //conversion of PNG 2 JPG for existing images
@@ -1654,9 +1753,17 @@ class WPShortPixel {
 
         //WpShortPixelMediaLbraryAdapter::cleanupFoundThumbs($itemHandler);
         $URLsAndPATHs = $this->getURLsAndPATHs($itemHandler, NULL, $onlyThumbs);
-Log::addDebug('Send to PRocessing - URLS -', array($URLsAndPATHs) );
+        Log::addDebug('Send to PRocessing - URLS -', array($URLsAndPATHs) );
 
-        $meta = $itemHandler->getMeta();
+        // Limit 'send to processing' by URL, see function.
+        $result = WpShortPixelMediaLbraryAdapter::checkRequestLimiter($URLsAndPATHs['URLs']);
+
+        if (! $result)  // already passed onto the processor.
+        {
+          Log::addDebug('Preventing sentToProcessing. Reported as already sent');
+          return $URLsAndPATHs;
+        }
+	$meta = $itemHandler->getMeta();
         //find thumbs that are not listed in the metadata and add them in the sizes array
         $item->searchUnlistedFiles(); // $this->addUnlistedThumbs($itemHandler);
 
@@ -1690,8 +1797,8 @@ Log::addDebug('Send to PRocessing - URLS -', array($URLsAndPATHs) );
           }
         }
 
-          $thumbObtList = $meta->getThumbsOptList();
-          $missing = $meta->getThumbsMissing();
+        $thumbObtList = $meta->getThumbsOptList();
+        $missing = $meta->getThumbsMissing();
 
 
         $this->_apiInterface->doRequests($URLsAndPATHs['URLs'], false, $itemHandler,
@@ -1753,6 +1860,7 @@ Log::addDebug('Send to PRocessing - URLS -', array($URLsAndPATHs) );
         if($this->isProcessable($imageId)) {
             $this->prioQ->push($imageId);
             $itemHandler = new ShortPixelMetaFacade($imageId);
+
             $path = get_attached_file($imageId);//get the full file PATH
             if(!$manual && 'pdf' === pathinfo($path, PATHINFO_EXTENSION) && !$this->_settings->optimizePdfs) {
                 $ret = array("Status" => ShortPixelAPI::STATUS_SKIP, "Message" => $imageId);
@@ -2018,6 +2126,7 @@ Log::addDebug('Send to PRocessing - URLS -', array($URLsAndPATHs) );
             // not needed, we don't do this weird remove anymore.
             $baseRelPath = ''; // trailingslashit(dirname($image)); // @todo Replace this (string) $fsFile->getFileDir();
 
+
             $toReplace[ShortPixelPng2Jpg::removeUrlProtocol($imageUrl)] = $baseUrl . $baseRelPath . wp_basename($png2jpgMain);
             foreach($sizes as $key => $size) {
                 if(isset($png2jpgSizes[$key])) {
@@ -2068,7 +2177,6 @@ Log::addDebug('Send to PRocessing - URLS -', array($URLsAndPATHs) );
                 //$dest = $pathInfo['dirname'] . '/' . $imageData['file'];
                 $destination = $fs->getFile($filePath . $imageData['file']);
                 $source = $fs->getFile($bkFolder->getPath() . $imageData['file']); //trailingslashit($bkFolder) . $imageData['file'];
-
                 if(! $source->exists() ) continue; // if thumbs were not optimized, then the backups will not be there.
                 if(! $source->is_readable() || ($destination->exists() && !$destination->is_writable() )) {
                     $failedFile = ($destination->is_writable() ? $source->getFullPath() : $destination->getFullPath());
@@ -2111,9 +2219,6 @@ Log::addDebug('Send to PRocessing - URLS -', array($URLsAndPATHs) );
                         Log::addError('DoRestore failed restoring retina backup', array($retinaBK->getFullPath(), $retinaDest->getFullPath() ));
                       }
                     }
-
-                    //@rename($bkFile, $file);
-                    //@rename($this->retinaName($bkFile), $this->retinaName($file));
                 }
                 //getSize to update meta if image was resized by ShortPixel
                 if($fsFile->exists()) {
@@ -2123,7 +2228,6 @@ Log::addDebug('Send to PRocessing - URLS -', array($URLsAndPATHs) );
                 }
 
                 //overwriting thumbnails
-
                 foreach($thumbsPaths as $index => $data) {
                     $source = $data['source'];
                     $destination = $data['destination'];
@@ -3566,7 +3670,6 @@ Log::addDebug('Send to PRocessing - URLS -', array($URLsAndPATHs) );
         // This function moved, but lack of other destination. 
         return WpShortPixelMediaLbraryAdapter::getThumbsToOptimize($data, $filepath);
 
-        
     }
 
     /** Make columns sortable in Media Library
@@ -3608,6 +3711,7 @@ Log::addDebug('Send to PRocessing - URLS -', array($URLsAndPATHs) );
                 )
             ));
         }
+        Log::addDebug('META QUERY', $vars); 
         return $vars;
     }
 

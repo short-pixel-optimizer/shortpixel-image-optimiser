@@ -350,6 +350,7 @@ class ShortPixelMetaFacade {
     // remove SPFoudnMeta from image. Dirty. @todo <--
     public function removeSPFoundMeta()
     {
+      $unset = false; // something was removed?
       if($this->type == ShortPixelMetaFacade::MEDIA_LIBRARY_TYPE) {
           if(!isset($this->rawMeta)) {
               $rawMeta = $this->sanitizeMeta(wp_get_attachment_metadata($this->getId()));
@@ -363,12 +364,14 @@ class ShortPixelMetaFacade {
                 if (strpos($size, ShortPixelMeta::FOUND_THUMB_PREFIX) !== false)
                 {
                   unset($rawMeta['sizes'][$size]);
+                  $unset = true;
                   Log::addDebug('Unset sp-found- size' . $size);
                 }
             }
           }
           $this->rawMeta = $rawMeta;
-          update_post_meta($this->ID, '_wp_attachment_metadata', $rawMeta);
+          if ($unset) // only update on changes. 
+            update_post_meta($this->ID, '_wp_attachment_metadata', $rawMeta);
       }
     }
 
@@ -732,7 +735,7 @@ class ShortPixelMetaFacade {
         return (substr($baseName, -3) === '@2x');
     }
 
-    // @todo Not clear what this function does.
+    // @todo Function gets duplicated images over WPML. Same image, different language so doesn't need duplication.
     public static function getWPMLDuplicates( $id ) {
         global $wpdb;
 
