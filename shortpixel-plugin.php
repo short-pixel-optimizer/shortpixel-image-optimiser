@@ -52,7 +52,6 @@ class ShortPixelPlugin
       $this->shortPixel = $shortPixelPluginInstance;
 
       $front = new frontController();
-
       $admin = adminController::getInstance();
 
 

@@ -39,7 +39,7 @@ class WPShortPixel {
         $this->_settings = new WPShortPixelSettings();
         $this->_apiInterface = new ShortPixelAPI($this->_settings);
         $this->cloudflareApi = new ShortPixelCloudFlareApi($this->_settings->cloudflareEmail, $this->_settings->cloudflareAuthKey, $this->_settings->cloudflareZoneID);
-        $this->hasNextGen = ShortPixelNextGenAdapter::hasNextGen();
+        $this->hasNextGen = wpSPIO()->env()->has_nextgen; //ShortPixelNextGenAdapter::hasNextGen();
         $this->spMetaDao = new ShortPixelCustomMetaDao(new WpShortPixelDb(), $this->_settings->excludePatterns);
         $this->prioQ = (! defined('SHORTPIXEL_NOFLOCK')) ? new ShortPixelQueue($this, $this->_settings) : new ShortPixelQueueDB($this, $this->_settings);
         $this->view = new ShortPixelView($this);
@@ -3684,7 +3684,6 @@ class WPShortPixel {
     * @param array $columns Array of colums sortable
     * @todo Should be part of media library controller.  ( is request best hook for this?)
     */
-
     function columnOrderFilterBy($vars) {
         if ( isset( $vars['orderby'] ) && 'ShortPixel Compression' == $vars['orderby'] ) {
             $vars = array_merge( $vars, array(
@@ -3694,7 +3693,7 @@ class WPShortPixel {
         }
         if ( 'upload.php' == $GLOBALS['pagenow'] && !empty( $_GET['shortpixel_status'] ) ) {
 
-            $status       = $_GET['shortpixel_status'];
+            $status       = intval($_GET['shortpixel_status']);
             $metaKey = '_shortpixel_status';
             $metaCompare = $status == 0 ? 'NOT EXISTS' : ($status < 0 ? '<' : '=');
 

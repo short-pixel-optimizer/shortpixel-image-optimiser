@@ -142,6 +142,29 @@ class WPShortPixelSettings extends ShortPixel\ShortPixelModel {
         $this->populateOptions();
     }
 
+    /*public function cacheOptions()
+    {
+      global $wpdb;
+
+        $karray = array(); // key array
+      foreach(self::$_optionsMap as $opt)
+      {
+  //      print_r($opt);
+
+        if ($opt['group'] == 'options')
+        {
+          $karray[] = $opt['key'];
+        }
+
+      }
+      $sql = 'SELECT option_key, option_value from ' . $wpdb->options . ' where option_key in (' .
+              implode(',', $karray) . ')';
+      echo $sql;
+      $results = $wpdb->get_results($sql);
+
+      var_dump($results);
+    } */
+
     public function populateOptions() {
 
         $this->_apiKey = self::getOpt('wp-short-pixel-apiKey', '');
@@ -233,7 +256,15 @@ class WPShortPixelSettings extends ShortPixel\ShortPixelModel {
     }
 
     public function setOpt($key, $val) {
-        $ret = update_option($key, $val, 'no');
+        $autoload = true;
+        /*if (isset(self::$_optionsMap[$key]))
+        {
+            if (self::$_optionsMap[$key]['group'] == 'options')
+               $autoload = true;  // add most used to autoload, because performance.
+
+        } */
+
+        $ret = update_option($key, $val, $autoload);
 
         //hack for the situation when the option would just not update....
         if($ret === false && !is_array($val) && $val != get_option($key)) {
@@ -245,7 +276,7 @@ class WPShortPixelSettings extends ShortPixel\ShortPixelModel {
                 wp_cache_delete( $key, 'options' );
             }
             delete_option($key);
-            add_option($key, $val, '', 'no');
+            add_option($key, $val, '', $autoload);
 
             // still not? try the DB way...
             if($ret === false && $val != get_option($key)) {
@@ -254,7 +285,7 @@ class WPShortPixelSettings extends ShortPixel\ShortPixelModel {
                 $rows = $wpdb->get_results($sql);
                 if(count($rows) === 0) {
                     $wpdb->insert($wpdb->prefix.'options',
-                                 array("option_name" => $key, "option_value" => (is_array($val) ? serialize($val) : $val), "autoload" => "no"),
+                                 array("option_name" => $key, "option_value" => (is_array($val) ? serialize($val) : $val), "autoload" => $autoload),
                                  array("option_name" => "%s", "option_value" => (is_numeric($val) ? "%d" : "%s")));
                 } else { //update
                     $sql = "update {$wpdb->prefix}options SET option_value=" .
@@ -268,7 +299,7 @@ class WPShortPixelSettings extends ShortPixel\ShortPixelModel {
                     //tough luck, gonna use the bomb...
                     wp_cache_flush();
                     delete_option($key);
-                    add_option($key, $val, '', 'no');
+                    add_option($key, $val, '', $autoload);
                 }
             }
         }
