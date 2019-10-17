@@ -17,7 +17,7 @@ Class FileSystemController extends ShortPixelController
       $this->loadModel('directory');
     //  $this->loadModel('environment');
 
-      $this->env = wpSPIO()->getEnv(); // new EnvironmentModel();
+      $this->env = wpSPIO()->env(); // new EnvironmentModel();
 
     }
 

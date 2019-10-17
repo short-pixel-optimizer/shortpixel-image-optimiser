@@ -3,7 +3,7 @@ namespace ShortPixel\Notices;
 
 class NoticeModel //extends ShortPixelModel
 {
-  protected $message;
+  public $message;
   public $code;
 
   protected $viewed = false;
@@ -102,12 +102,6 @@ class NoticeModel //extends ShortPixelModel
     return "<div class='$class'>" . $icon . "<p>" . $this->message . "</p></div>";
 
   }
-
-
-
-  // @todo Transient save, since that is used in some parts.
-  // save
-  // load
 
 
 }

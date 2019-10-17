@@ -257,12 +257,14 @@ class ShortPixelMetaFacade {
     public function searchUnlistedFiles()
     {
       // must be media library, setting must be on.
+      $settings = \wpSPIO()->settings();
+
       if($this->getType() != ShortPixelMetaFacade::MEDIA_LIBRARY_TYPE
-         || ! $this->_settings->optimizeUnlisted) {
+         || ! $settings->optimizeUnlisted) {
         return 0;
       }
 
-      exit($this->_settings->optimizeUnlisted);
+      //exit($this->_settings->optimizeUnlisted);
 
       $meta = $itemHandler->getMeta();
       Log::addDebug('Finding Thumbs on path' . $meta->getPath());
@@ -370,7 +372,7 @@ class ShortPixelMetaFacade {
             }
           }
           $this->rawMeta = $rawMeta;
-          if ($unset) // only update on changes. 
+          if ($unset) // only update on changes.
             update_post_meta($this->ID, '_wp_attachment_metadata', $rawMeta);
       }
     }

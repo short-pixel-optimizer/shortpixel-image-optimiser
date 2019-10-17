@@ -111,7 +111,7 @@ class SettingsController extends shortPixelController
 
           if ($this->postData['includeNextGen'] == 1)
           {
-              $nextgen = new NextGen($this->shortPixel);
+              $nextgen = new NextGen();
               $previous = $this->model->includeNextGen;
               $nextgen->nextGenEnabled($previous);
           }
@@ -172,7 +172,7 @@ class SettingsController extends shortPixelController
       /** Checks on things and set them for information. */
       protected function loadEnv()
       {
-          $env = wpSPIO()->getEnv();
+          $env = wpSPIO()->env();
 
           $this->is_nginx = $env->is_nginx;
           $this->is_gd_installed = $env->is_gd_installed;

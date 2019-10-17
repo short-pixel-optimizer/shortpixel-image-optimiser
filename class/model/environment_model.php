@@ -20,16 +20,48 @@ class EnvironmentModel extends ShortPixelModel
     // Integrations
     public $has_nextgen;
 
+    // WordPress
+    public $is_front = false;
+    public $is_admin = false;
+    public $is_ajaxcall = false;
+
+
   public function __construct()
   {
-      $this->is_nginx = strpos(strtolower($_SERVER["SERVER_SOFTWARE"]), 'nginx') !== false ? true : false;
-      $this->is_apache = strpos(strtolower($_SERVER["SERVER_SOFTWARE"]), 'apache') !== false ? true : false;
-      $this->is_gd_installed = function_exists('imagecreatefrompng');
-      $this->is_curl_installed = function_exists('curl_init');
+     $this->setServer();
+     $this->setWordPress();
+     $this->setIntegrations();
+  }
 
-      $this->is_multisite = (function_exists("is_multisite") && is_multisite()) ? true : false;
-      $this->is_mainsite = is_main_site();
+  private function setServer()
+  {
+    $this->is_nginx = strpos(strtolower($_SERVER["SERVER_SOFTWARE"]), 'nginx') !== false ? true : false;
+    $this->is_apache = strpos(strtolower($_SERVER["SERVER_SOFTWARE"]), 'apache') !== false ? true : false;
+    $this->is_gd_installed = function_exists('imagecreatefrompng');
+    $this->is_curl_installed = function_exists('curl_init');
 
-      $this->has_nextgen = \ShortPixelNextGenAdapter::hasNextGen();
+  }
+
+  private function setWordPress()
+  {
+    $this->is_multisite = (function_exists("is_multisite") && is_multisite()) ? true : false;
+    $this->is_mainsite = is_main_site();
+
+    if ( is_admin() )
+      $this->is_admin = true;
+    else
+      $this->is_front = true;
+
+    if (defined('DOING_AJAX') && DOING_AJAX)
+    {
+      $this->is_ajaxcall = true;
+    }
+
+  }
+
+  private function setIntegrations()
+  {
+    $this->has_nextgen = \ShortPixelNextGenAdapter::hasNextGen();
+
   }
 }

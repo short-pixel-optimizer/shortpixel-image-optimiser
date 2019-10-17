@@ -22,6 +22,7 @@ class ShortPixelPlugin
 
   protected $shortPixel; // shortpixel megaclass
   protected $env; // environment.
+  protected $settings; // settings object.
 
   public function __construct()
   {
@@ -31,15 +32,16 @@ class ShortPixelPlugin
       $this->initRuntime(); // require controllers, and other needed classes
       $this->initHooks();
 
-      add_action('init', array($this, 'init'), 5);
+      add_action('plugins_loaded', array($this, 'init'), 5); // early as possible init.
   }
 
-  // This can't be loaded on construct time, because of model Loaders etc, with would result in loop.
+  /*
+  * Init the plugin after plugins_loaded hook. All of WP is there, all plugins.
+  * This can't be loaded on construct time, because of model Loaders etc, with would result in loop.
+  *
+  */
   public function init()
   {
-      $this->loadModel('environment');
-      $this->env = new EnvironmentModel();
-
       if(isset($_REQUEST['noheader'])) {
           $this->is_noheaders = true;
       }
@@ -48,6 +50,67 @@ class ShortPixelPlugin
       global $shortPixelPluginInstance;
       $shortPixelPluginInstance = new \wpShortPixel();
       $this->shortPixel = $shortPixelPluginInstance;
+
+      $front = new frontController();
+
+      $admin = adminController::getInstance();
+
+
+      if ($this->settings()->autoMediaLibrary)
+      {
+          // compat filter to shortcircuit this in cases.  (see external - visualcomposer)
+          if (apply_filters('shortpixel/init/automedialibrary', true))
+          {
+          //  $autoPng2Jpg = get_option('wp-short-pixel-png2jpg');
+            //$autoMediaLibrary = get_option('wp-short-pixel-auto-media-library');
+
+            if($this->settings()->autoMediaLibrary && $this->settings()->png2jpg) {
+                add_action( 'wp_handle_upload', array($admin,'handlePng2JpgHook'));
+                // @todo Document what plugin does mpp
+                add_action( 'mpp_handle_upload', array($admin,'handlePng2JpgHook'));
+            }
+            add_action('wp_handle_replace', array($admin,'handleReplaceHook'));
+
+            if($this->settings()->autoMediaLibrary) {
+
+                add_filter( 'wp_generate_attachment_metadata', array($admin,'handleImageUploadHook'), 10, 2 );
+                // @todo Document what plugin does mpp
+                add_filter( 'mpp_generate_metadata', array($admin,'handleImageUploadHook'), 10, 2 );
+            }
+          }
+      }
+  }
+
+  /** Function to get plugin settings
+  *
+  * @return SettingsModel The settings model object.
+  */
+  public function settings()
+  {
+    if (is_null($this->settings))
+      $this->settings = new \WPShortPixelSettings();
+
+    return $this->settings;
+  }
+
+  /** Function to get all enviromental variables
+  *
+  * @return EnvironmentModel
+  */
+  public function env()
+  {
+    if (is_null($this->env))
+    {
+      $this->loadModel('environment');
+      $this->env = new EnvironmentModel();
+    }
+
+    return $this->env;
+  }
+
+  public function fileSystem()
+  {
+    return new \ShortPixel\FileSystemController();
   }
 
   /** Create instance. This should not be needed to call anywhere else than main plugin file **/
@@ -96,7 +159,6 @@ class ShortPixelPlugin
       add_action('admin_enqueue_scripts', array($this, 'admin_scripts')); // admin scripts
       add_action('admin_notices', array($this, 'admin_notices')); // notices occured before page load
       add_action('admin_footer', array($this, 'admin_notices'));  // called in views.
-
   }
 
   /** Hook in our admin pages */
@@ -188,8 +250,6 @@ class ShortPixelPlugin
   public function route()
   {
       global $plugin_page;
-      //global $shortPixelPluginInstance; //brrr @todo Find better solution for this some day.
-
       $this->initPluginRunTime();
 
       $default_action = 'load'; // generic action on controller.
@@ -263,16 +323,6 @@ class ShortPixelPlugin
     return $plugin_path;
   }
 
-  public function fileSystem()
-  {
-    return new \ShortPixel\FileSystemController();
-  }
-
-  public function getEnv()
-  {
-    return $this->env;
-  }
-
   // Get the ShortPixel Object.
   public function getShortPixel()
   {
@@ -284,15 +334,12 @@ class ShortPixelPlugin
       self::deactivatePlugin();
       if(SHORTPIXEL_RESET_ON_ACTIVATE === true && WP_DEBUG === true) { //force reset plugin counters, only on specific occasions and on test environments
           \WPShortPixelSettings::debugResetOptions();
-
           $settings = new \WPShortPixelSettings();
           $spMetaDao = new \ShortPixelCustomMetaDao(new WpShortPixelDb(), $settings->excludePatterns);
           $spMetaDao->dropTables();
       }
 
-      $env = wpSPIO()->getEnv();
-//      $env = $settingsControl->getEnv();
-
+      $env = wpSPIO()->env();
 
       if(\WPShortPixelSettings::getOpt('deliverWebp') == 3 && ! $env->is_nginx) {
           self::alterHtaccess(); //add the htaccess lines
@@ -307,12 +354,12 @@ class ShortPixelPlugin
     \WPShortPixelSettings::onDeactivate();
 
     //$settingsControl = new \ShortPixel\SettingsController();
-    $env = wpSPIO()->getEnv();
+    $env = wpSPIO()->env();
 
     if (! $env->is_nginx)
       \WpShortPixel::alterHtaccess(true);
 
-    // save remove. 
+    // save remove.
     $fs = new FileSystemController();
     $log = $fs->getFile(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
     if ($log->exists())

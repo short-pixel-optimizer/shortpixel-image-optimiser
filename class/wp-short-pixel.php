@@ -172,22 +172,13 @@ class WPShortPixel {
         add_action( 'admin_footer', array($this, 'admin_footer_js') );
         add_action( 'admin_head', array( $this, 'headCSS') );
 
-        if($this->_settings->frontBootstrap && shortPixelCheckQueue()) {
-            //only if we have something in the queue - usually we never get here if the queue is empty but for some hooks...
-            //also need to have it in the front footer then
-            add_action( 'wp_footer', array( &$this, 'shortPixelJS') );
-            //need to add the nopriv action for when items exist in the queue and no user is logged in
-            add_action( 'wp_ajax_nopriv_shortpixel_image_processing', array( &$this, 'handleImageProcessing') );
-        }
         //register a method to display admin notices if necessary
         add_action('admin_notices', array( &$this, 'displayAdminNotices'));
 
         $this->migrateBackupFolder();
-
-
     }
 
- 
+
 
     // @hook admin menu
     // @todo move to plugin class
@@ -500,7 +491,6 @@ class WPShortPixel {
             $screen = get_current_screen();
 
              if(is_object($screen)) {
-
 
                 wp_enqueue_style('short-pixel-bar.min.css', plugins_url('/res/css/short-pixel-bar.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
                 if( in_array($screen->id, array('attachment', 'upload', 'settings_page_wp-shortpixel', 'media_page_wp-short-pixel-bulk', 'media_page_wp-short-pixel-custom'))) {
@@ -894,7 +884,8 @@ class WPShortPixel {
         return $converter->checkConvertMediaPng2Jpg($itemHandler);
     }
 
-    public function handleGravityFormsImageField($value) {
+// moved to external.
+/*    public function handleGravityFormsImageField($value) {
         if(!($folder = $this->spMetaDao->getFolder(SHORTPIXEL_UPLOADS_BASE . '/gravity_forms'))) {
             return;
         }
@@ -907,7 +898,7 @@ class WPShortPixel {
         $localPath = str_replace($uploadDir['baseurl'], SHORTPIXEL_UPLOADS_BASE, $value);
 
         return $this->addPathToCustomFolder($localPath, $folder->getId(), 0);
-    }
+    } */
 
     /**
      * this is hooked onto the NextGen upload
@@ -1765,7 +1756,7 @@ class WPShortPixel {
         }
 	$meta = $itemHandler->getMeta();
         //find thumbs that are not listed in the metadata and add them in the sizes array
-        $item->searchUnlistedFiles(); // $this->addUnlistedThumbs($itemHandler);
+        $itemHandler->searchUnlistedFiles(); // $this->addUnlistedThumbs($itemHandler);
 
         //find any missing thumbs files and mark them as such
         $miss = $meta->getThumbsMissing();
@@ -2273,9 +2264,15 @@ class WPShortPixel {
                         $crtMeta['sizes'] = $png2jpgSizes;
                     } else {
                         //this was an image converted on upload, regenerate the thumbs using the PNG main image BUT deactivate temporarily the filter!!
-                        remove_filter( 'wp_generate_attachment_metadata', 'shortPixelHandleImageUploadHook');
+                        $admin = \ShortPixel\adminController::getInstance();
+
+                        //@todo Can be removed when test seems working.
+                        $test = remove_filter( 'wp_generate_attachment_metadata', array($admin,'handleImageUploadHook'),10);
+
+                        if (! $test)
+                          Log::addWarn('Wp generate Attachment metadta filter not removed');
                         $crtMeta = wp_generate_attachment_metadata($ID, $png2jpgMain);
-                        add_filter( 'wp_generate_attachment_metadata', 'shortPixelHandleImageUploadHook', 10, 2 );
+                        add_filter( 'wp_generate_attachment_metadata', array($admin,'handleImageUploadHook'), 10, 2 );
                     }
                 }
                 //wp_update_attachment_metadata($ID, $crtMeta);
@@ -3667,7 +3664,7 @@ class WPShortPixel {
      * @return array Array of Thumbs to Optimize - only the filename - , and count of sizes not excluded ...
      */
     function getThumbsToOptimize($data, $filepath) {
-        // This function moved, but lack of other destination. 
+        // This function moved, but lack of other destination.
         return WpShortPixelMediaLbraryAdapter::getThumbsToOptimize($data, $filepath);
 
     }
@@ -3711,7 +3708,7 @@ class WPShortPixel {
                 )
             ));
         }
-        Log::addDebug('META QUERY', $vars); 
+        //Log::addDebug('META QUERY', $vars);
         return $vars;
     }
 
@@ -3833,7 +3830,7 @@ class WPShortPixel {
         return $defaults;
     }
 
-    // todo move NGG specific function to own integration
+    // @todo move NGG specific function to own integration
     public function nggColumns( $defaults ) {
         $this->nggColumnIndex = count($defaults) + 1;
         add_filter( 'ngg_manage_images_column_' . $this->nggColumnIndex . '_header', array( &$this, 'nggColumnHeader' ) );

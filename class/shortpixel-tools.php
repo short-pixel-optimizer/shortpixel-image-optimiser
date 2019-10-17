@@ -12,6 +12,18 @@ class ShortPixelTools {
         return $data;
     }*/
 
+    /** Find if a certain plugin is active
+    * @param String $plugin The name of plugin being searched for
+    * @return Boolean Active or not
+    */ 
+    public static function shortPixelIsPluginActive($plugin) {
+        $activePlugins = apply_filters( 'active_plugins', get_option( 'active_plugins', array()));
+        if ( is_multisite() ) {
+            $activePlugins = array_merge($activePlugins, get_site_option( 'active_sitewide_plugins'));
+        }
+        return in_array( $plugin, $activePlugins);
+    }
+
     public static function snakeToCamel($snake_case) {
         return str_replace(' ', '', ucwords(str_replace('_', ' ', $snake_case)));
     }
