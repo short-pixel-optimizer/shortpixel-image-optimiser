@@ -25,12 +25,28 @@ class EnvironmentModel extends ShortPixelModel
     public $is_admin = false;
     public $is_ajaxcall = false;
 
+    public $is_screen_to_use = false; // where shortpixel loads
+    public $is_our_screen = false;
+
+
+    protected static $instance;
+
 
   public function __construct()
   {
      $this->setServer();
      $this->setWordPress();
      $this->setIntegrations();
+
+     add_action('current_screen', array($this, 'setScreen'));
+  }
+
+  public static function getInstance()
+  {
+    if (is_null(self::$instance))
+        self::$instance = new EnvironmentModel;
+
+    return self::$instance;
   }
 
   private function setServer()
@@ -55,6 +71,25 @@ class EnvironmentModel extends ShortPixelModel
     if (defined('DOING_AJAX') && DOING_AJAX)
     {
       $this->is_ajaxcall = true;
+    }
+
+  }
+
+  public function setScreen()
+  {
+    $screen = get_current_screen();
+
+    // WordPress pages where we'll be active on.
+    if(in_array($screen->id, array('upload', 'edit', 'edit-tags', 'post-new', 'post'))) {
+          $this->is_screen_to_use = true;
+    }
+
+    // Our pages.
+    $pages = \wpSPIO()->get_admin_pages();
+    if (in_array($screen->id, $pages))
+    {
+       $this->is_screen_to_use = true;
+       $this->is_our_screen = true;
     }
 
   }

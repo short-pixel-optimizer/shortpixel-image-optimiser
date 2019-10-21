@@ -24,6 +24,8 @@ class ShortPixelPlugin
   protected $env; // environment.
   protected $settings; // settings object.
 
+  protected $admin_pages;  // admin page hooks.
+
   public function __construct()
   {
       $this->plugin_path = plugin_dir_path(SHORTPIXEL_PLUGIN_FILE);
@@ -163,8 +165,18 @@ class ShortPixelPlugin
   /** Hook in our admin pages */
   public function admin_pages()
   {
+      $admin_pages = array();
       // settings page
-      add_options_page( __('ShortPixel Settings','shortpixel-image-optimiser'), 'ShortPixel', 'manage_options', 'wp-shortpixel-settings', array($this, 'route'));
+      $admin_pages[] = add_options_page( __('ShortPixel Settings','shortpixel-image-optimiser'), 'ShortPixel', 'manage_options', 'wp-shortpixel-settings', array($this, 'route'));
+
+      if($this->shortPixel->getSpMetaDao()->hasFoldersTable() && count($this->shortPixel->getSpMetaDao()->getFolders())) {
+          /*translators: title and menu name for the Other media page*/
+        $admin_pages[] = add_media_page( __('Other Media Optimized by ShortPixel','shortpixel-image-optimiser'), __('Other Media','shortpixel-image-optimiser'), 'edit_others_posts', 'wp-short-pixel-custom', array( $this->shortPixel, 'listCustomMedia' ) );
+      }
+      /*translators: title and menu name for the Bulk Processing page*/
+      $admin_pages[] = add_media_page( __('ShortPixel Bulk Process','shortpixel-image-optimiser'), __('Bulk ShortPixel','shortpixel-image-optimiser'), 'edit_others_posts', 'wp-short-pixel-bulk', array( $this->shortPixel, 'bulkProcess' ) );
+
+      $this->admin_pages = $admin_pages;
   }
 
   /** PluginRunTime. Items that should be initialized *only* when doing our pages and territory. */
@@ -326,6 +338,14 @@ class ShortPixelPlugin
   public function getShortPixel()
   {
     return $this->shortPixel;
+  }
+
+  /** Returns defined admin page hooks. Internal use - check states via environmentmodel
+  * @returns Array
+  */
+  public function get_admin_pages()
+  {
+    return $this->admin_pages;
   }
 
   public static function activatePlugin()

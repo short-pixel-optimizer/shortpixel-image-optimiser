@@ -183,6 +183,7 @@ class WPShortPixel {
     // @hook admin menu
     // @todo move to plugin class
     function registerAdminPage( ) {
+      return; 
         if($this->spMetaDao->hasFoldersTable() && count($this->spMetaDao->getFolders())) {
             /*translators: title and menu name for the Other media page*/
             add_media_page( __('Other Media Optimized by ShortPixel','shortpixel-image-optimiser'), __('Other Media','shortpixel-image-optimiser'), 'edit_others_posts', 'wp-short-pixel-custom', array( &$this, 'listCustomMedia' ) );
@@ -486,6 +487,9 @@ class WPShortPixel {
     /** @todo Plugin init class. Try to get rid of inline JS. Also still loads on all WP pages, prevent that. */
     function shortPixelJS() {
 
+        if (! \wpSPIO()->env()->is_screen_to_use )
+          return; // not ours, don't load JS and such.
+
         //require_once(ABSPATH . 'wp-admin/includes/screen.php');
         if(function_exists('get_current_screen')) {
             $screen = get_current_screen();
@@ -584,6 +588,9 @@ class WPShortPixel {
     * @todo Find a better solution for this */
     public function admin_footer_js()
     {
+      if (! \wpSPIO()->env()->is_screen_to_use )
+        return; // not ours, don't load JS and such.
+
       if(function_exists('get_current_screen')) {
           $screen = get_current_screen();
           if(is_object($screen)) {
