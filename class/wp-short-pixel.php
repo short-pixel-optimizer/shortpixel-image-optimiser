@@ -3382,7 +3382,7 @@ class WPShortPixel {
         if($validate) {
             $args['body']['DomainCheck'] = get_site_url();
             $args['body']['Info'] = get_bloginfo('version') . '|' . phpversion();
-            $imageCount = WpShortPixelMediaLbraryAdapter::countAllProcessableFiles($this->_settings);
+            $imageCount = WpShortPixelMediaLbraryAdapter::countAllProcessable($this->_settings);
             $args['body']['ImagesCount'] = $imageCount['mainFiles'];
             $args['body']['ThumbsCount'] = $imageCount['totalFiles'] - $imageCount['mainFiles'];
             $argsStr .= "&DomainCheck={$args['body']['DomainCheck']}&Info={$args['body']['Info']}&ImagesCount={$imageCount['mainFiles']}&ThumbsCount={$args['body']['ThumbsCount']}";

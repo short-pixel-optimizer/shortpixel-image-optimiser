@@ -142,29 +142,6 @@ class WPShortPixelSettings extends ShortPixel\ShortPixelModel {
         $this->populateOptions();
     }
 
-    /*public function cacheOptions()
-    {
-      global $wpdb;
-
-        $karray = array(); // key array
-      foreach(self::$_optionsMap as $opt)
-      {
-  //      print_r($opt);
-
-        if ($opt['group'] == 'options')
-        {
-          $karray[] = $opt['key'];
-        }
-
-      }
-      $sql = 'SELECT option_key, option_value from ' . $wpdb->options . ' where option_key in (' .
-              implode(',', $karray) . ')';
-      echo $sql;
-      $results = $wpdb->get_results($sql);
-
-      var_dump($results);
-    } */
-
     public function populateOptions() {
 
         $this->_apiKey = self::getOpt('wp-short-pixel-apiKey', '');
