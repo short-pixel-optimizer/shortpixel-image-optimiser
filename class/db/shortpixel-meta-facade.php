@@ -755,7 +755,7 @@ class ShortPixelMetaFacade {
         $moreDuplicates = $wpdb->get_results( $wpdb->prepare( "
             SELECT p.ID, p.guid FROM {$wpdb->posts} p
             INNER JOIN {$wpdb->posts} pbase ON p.guid = pbase.guid
-         WHERE pbase.ID = %s
+         WHERE pbase.ID = %s and p.guid != '' 
         ", $id ) );
         //MySQL is doing a CASE INSENSITIVE join on p.guid!! so double check the results.
         $guid = false;
