@@ -22,6 +22,8 @@ class WpShortPixelMediaLbraryAdapter {
 
         $foundUnlistedThumbs = false;
         $counter = 0;
+        $fs = new \ShortPixel\FileSystemController();
+
 
         $filesWithErrors = array(); $moreFilesWithErrors = 0;
         $excludePatterns = WPShortPixelSettings::getOpt("excludePatterns");
@@ -89,6 +91,7 @@ class WpShortPixelMediaLbraryAdapter {
 
                     // LA FIECARE 100 de imagini facem un test si daca findThumbs da diferit, sa dam o avertizare si eventual optiune
                     $dismissed = $settings->dismissedNotices ? $settings->dismissedNotices : array();
+                    // @ todo Figure out what this is intended to do.
                     if( $foundUnlistedThumbs === false && $maxId == PHP_INT_MAX && !isset($dismissed['unlisted'])
                         && (   in_array($counter, array(2,4,6,8)) || floor($counter/100) == 0 && $counter%10 == 0
                             || floor($counter/1000) == 0 && $counter%100 == 0 || floor($counter/10000) == 0 && $counter%1000 == 0))
@@ -98,8 +101,11 @@ class WpShortPixelMediaLbraryAdapter {
                             (   !isset($attachment['ShortPixelImprovement']) || $attachment['ShortPixelImprovement'] === 0
                              || $attachment['ShortPixelImprovement'] === 0.0 || $attachment['ShortPixelImprovement'] === "0"))
                         {
-                            $foundThumbs = WpShortPixelMediaLbraryAdapter::findThumbs($filePath);
-
+                          //  $foundThumbs = WpShortPixelMediaLbraryAdapter::findThumbs($filePath);
+                            // findThumbs returns fullfilepath.
+                            $foundThumbs = array();
+                            if ($settings->optimizeUnlisted)
+                              $foundThumbs  = WpShortPixelMediaLbraryAdapter::findThumbs($fs->getFile($filePath));
                             $foundCount = count($foundThumbs);
 
                             if(count($foundThumbs) > $sizesCount) {
@@ -758,6 +764,7 @@ class WpShortPixelMediaLbraryAdapter {
 
 
       $images = array();
+      Log::addDebug('getFilesByPattern resulted in X - ' . iterator_count($regExIterator));
       foreach($regExIterator as $fileinfo)
       {
         $images[] = $fs->getFile($fileinfo->getPathname());

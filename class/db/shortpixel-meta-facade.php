@@ -498,9 +498,13 @@ class ShortPixelMetaFacade {
         if($this->type == self::CUSTOM_TYPE) {
             $meta = $this->getMeta();
 
+            $path = $meta->getPath();
+            $fsFile = $fs->getFile($path);
+            $url = $fs->pathToUrl($fsFile);
+
             //fix for situations where site_url is lala.com/en and home_url is lala.com - if using the site_url will get a duplicated /en in the URL
-            $homeUrl = self::getHomeUrl();
-            $urlList[] = self::replaceHomePath($meta->getPath(), $homeUrl);
+      //      $homeUrl = self::getHomeUrl();
+          $urlList[] = $url;  //  self::replaceHomePath($meta->getPath(), $homeUrl);
 
             $filePaths[] = $meta->getPath();
         } else {
@@ -755,7 +759,7 @@ class ShortPixelMetaFacade {
         $moreDuplicates = $wpdb->get_results( $wpdb->prepare( "
             SELECT p.ID, p.guid FROM {$wpdb->posts} p
             INNER JOIN {$wpdb->posts} pbase ON p.guid = pbase.guid
-         WHERE pbase.ID = %s and p.guid != '' 
+         WHERE pbase.ID = %s and p.guid != ''
         ", $id ) );
         //MySQL is doing a CASE INSENSITIVE join on p.guid!! so double check the results.
         $guid = false;

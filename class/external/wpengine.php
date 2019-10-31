@@ -4,9 +4,6 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 if ( class_exists( 'WPE_API', false ) ) {
 
-  //define('')
-
-
   /* WPE has a limit on Query size (16K). After that it won't execute the query. */
   add_filter('shortpixel/db/chunk_size', function ($size)
   {

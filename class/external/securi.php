@@ -16,6 +16,7 @@ class securiVersion
 
   public function timestamp_cache($urls, $id)
   {
+
     //$urls = add_filter('shortpixel_image_urls', );
     // https://developer.wordpress.org/reference/functions/get_post_modified_time/
     $time = get_post_modified_time('U', false, $id );
