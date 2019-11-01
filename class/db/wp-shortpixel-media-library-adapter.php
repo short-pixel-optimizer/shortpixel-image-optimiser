@@ -87,6 +87,10 @@ class WpShortPixelMediaLbraryAdapter {
                 elseif ( $file->meta_key == "_wp_attachment_metadata" ) //_wp_attachment_metadata
                 {
                     $attachment = maybe_unserialize($file->meta_value);
+                    /* Check if array. It's possible to find garbage like WP_Error objects or other random garble in meta_value, so be sure it's an ok thingie. 
+                    */
+                    if (! is_array($attachment))
+                      continue;
                     $sizesCount = isset($attachment['sizes']) ? self::countSizesNotExcluded($attachment['sizes'], $settings->excludeSizes) : 0;
 
                     // LA FIECARE 100 de imagini facem un test si daca findThumbs da diferit, sa dam o avertizare si eventual optiune

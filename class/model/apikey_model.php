@@ -193,6 +193,7 @@ class ApiKeyModel extends ShortPixelModel
     // first, save Auth to satisfy getquotainformation
 
     $quotaData = $this->remoteValidate($key);
+
     $checked_key = ($quotaData['APIKeyValid']) ? true : false;
 
      Log::addDebug('Verify Result', $quotaData);
