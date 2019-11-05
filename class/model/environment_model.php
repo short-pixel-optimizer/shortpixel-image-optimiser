@@ -25,6 +25,7 @@ class EnvironmentModel extends ShortPixelModel
     public $is_admin = false;
     public $is_ajaxcall = false;
 
+    private $screen_is_set = false;
     public $is_screen_to_use = false; // where shortpixel loads
     public $is_our_screen = false;
 
@@ -37,14 +38,16 @@ class EnvironmentModel extends ShortPixelModel
      $this->setServer();
      $this->setWordPress();
      $this->setIntegrations();
-
-     add_action('current_screen', array($this, 'setScreen'));
+     $this->setScreen();  // This might not be set on construct time!
   }
 
   public static function getInstance()
   {
     if (is_null(self::$instance))
-        self::$instance = new EnvironmentModel;
+        self::$instance = new EnvironmentModel();
+
+    if (! self::$instance->screen_is_set)
+      self::$instance->setScreen();
 
     return self::$instance;
   }
@@ -77,21 +80,37 @@ class EnvironmentModel extends ShortPixelModel
 
   public function setScreen()
   {
+    if (! function_exists('get_current_screen')) // way too early.
+      return false;
+
     $screen = get_current_screen();
 
+    if (is_null($screen)) // too early
+      return false;
+
     // WordPress pages where we'll be active on.
-    if(in_array($screen->id, array('upload', 'edit', 'edit-tags', 'post-new', 'post'))) {
+    if(in_array($screen->id, array('upload', 'edit', 'edit-tags', 'post-new', 'post', 'attachment'))) {
           $this->is_screen_to_use = true;
     }
 
     // Our pages.
     $pages = \wpSPIO()->get_admin_pages();
-    if (in_array($screen->id, $pages))
+
+    /* pages can be null in certain cases i.e. plugin activation.
+    * treat those cases as improper screen set.
+    */
+    if (is_null($pages))
+    {
+        return false;
+    }
+
+    if ( in_array($screen->id, $pages))
     {
        $this->is_screen_to_use = true;
        $this->is_our_screen = true;
     }
 
+    $this->screen_is_set = true;
   }
 
   private function setIntegrations()

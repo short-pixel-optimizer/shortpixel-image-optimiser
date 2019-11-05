@@ -21,7 +21,6 @@ class ShortPixelPlugin
   protected $plugin_url;
 
   protected $shortPixel; // shortpixel megaclass
-  protected $env; // environment.
   protected $settings; // settings object.
 
   protected $admin_pages;  // admin page hooks.
@@ -100,13 +99,8 @@ class ShortPixelPlugin
   */
   public function env()
   {
-    if (is_null($this->env))
-    {
-      $this->loadModel('environment');
-      $this->env = new EnvironmentModel();
-    }
-
-    return $this->env;
+    $this->loadModel('environment');
+    return EnvironmentModel::getInstance();
   }
 
   public function fileSystem()
