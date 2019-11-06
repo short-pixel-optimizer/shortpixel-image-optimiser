@@ -8,16 +8,16 @@ Stable tag: 4.14.6
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Speed up your website and boost your SEO by compressing old & new images and PDFs. Compatible with any gallery, slider or ecommerce plugin.
+Speed up your website & boost your SEO by compressing old & new images and PDFs. WebP convert and optimize support.
 
 == Description ==
 
 **A freemium easy to use, comprehensive, stable and frequently updated image compression plugin supported by the friendly team that created it.  :)**
 
 Increase your website's SEO ranking, number of visitors and ultimately your sales by optimizing any image or PDF document on your website.
-ShortPixel is an easy to use, lightweight, install-and-forget-about-it <a href="https://shortpixel.com" target="_blank">image optimization</a> plugin that can compress all your past images and PDF documents with a single click. New images are automatically resized/rescaled and optimized on the fly, in the background.
+ShortPixel is an easy to use, lightweight, install-and-forget-about-it <a href="https://shortpixel.com" target="_blank">image optimization</a> plugin that can compress all your past images and PDF documents with a single click. New images are automatically resized/rescaled and optimized on the fly, in the background. It's also compatible with any gallery, slider or ecommerce plugin.
 
-**Ready for a quick DEMO? Test <a href="https://sandboxwordpress.com/?htmldata=https://shortpixel.com/sp.html&slug=shortpixel-image-optimiser&redirect=plugins.php&title=Test%20SHORTPIXEL%20Now!&ga=UA-55918546-1" target="_blank">here</a>**
+**Ready for a quick DEMO? Test <a href="https://sandboxwordpress.com/?htmldata=https://shortpixel.com/sp.html&slug=shortpixel-image-optimiser&redirect=plugins.php&title=Test%20SHORTPIXEL%20Now!&ga=UA-55918546-1" target="_blank">here</a>.**
 
 Short Pixel uses minimal resources and works well with any shared, cloud, VPS or dedicated web hosting. It can optimize any image you have on your website even the images that aren't listed in Media Library like those in galleries like <a href="https://wordpress.org/plugins/nextgen-gallery/" target="_blank">NextGEN</a>, <a href="https://wordpress.org/plugins/modula-best-grid-gallery/" target="_blank">Modula</a> or added directly via FTP!
 
@@ -29,7 +29,7 @@ Make an instant <a href="http://shortpixel.com/image-compression-test" target="_
 
 **Why is ShortPixel the best choice when it comes to image optimization or PDF compression?**
 
-* popular plugin with over 100,000 active installations according to WordPress
+* popular plugin with over 200,000 active installations according to WordPress
 * compress JPG, PNG, GIF (still or animated) images and also PDF documents
 * option to automatically convert PNG to JPG if that will result in smaller images. Ideal for large images in PNG format.
 * no file size limit
