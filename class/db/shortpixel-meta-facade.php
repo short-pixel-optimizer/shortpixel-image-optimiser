@@ -266,7 +266,7 @@ class ShortPixelMetaFacade {
 
       //exit($this->_settings->optimizeUnlisted);
 
-      $meta = $itemHandler->getMeta();
+      $meta = $this->getMeta();
       Log::addDebug('Finding Thumbs on path' . $meta->getPath());
       $thumbs = WpShortPixelMediaLbraryAdapter::findThumbs($meta->getPath());
 
@@ -343,7 +343,7 @@ class ShortPixelMetaFacade {
           }
           if($ind > 1) { // at least one thumbnail added, update
               $meta->setThumbs($sizes);
-              $itemHandler->updateMeta($meta);
+              $this->updateMeta($meta);
           }
 
         return $counter;
