@@ -251,7 +251,6 @@ class ShortPixelMetaFacade {
     }
 
  /** Checks if there are unlisted files present in system. Save them into sizes
-    * @param ShortPixelMetaFacade $itemHandler ShortpixelMetaFacade item handler.
     * @return int Number 'Unlisted' Items in metadta.
     */
     public function searchUnlistedFiles()
