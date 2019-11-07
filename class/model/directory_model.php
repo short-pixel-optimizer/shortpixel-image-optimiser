@@ -29,7 +29,11 @@ class DirectoryModel extends ShortPixelModel
   */
   public function __construct($path)
   {
-      //$this->new_directory_permission = octdec(06440);
+      /* Check if realpath improves things. We support non-existing paths, which realpath fails on, so only apply on result.
+      */
+      $testpath = realpath($path);
+      if ($testpath)
+        $path = $testpath;
 
       $path = wp_normalize_path($path);
       if (! is_dir($path)) // path is wrong, *or* simply doesn't exist.
@@ -109,7 +113,6 @@ class DirectoryModel extends ShortPixelModel
      }
 
      $install_dir = trailingslashit($install_dir);
-//Log::addDebug('Install Dir - ' . $install_dir);
 
      $path = $this->getPath();
      // try to build relativePath without first slash.
@@ -220,7 +223,8 @@ class DirectoryModel extends ShortPixelModel
   */
   public function getFiles($args = array() )
   {
-      $defaults = array();
+      // @todo Add option to check for files newer than X 
+      $defaults = array('date' => null);
       $fs = \wpSPIO()->fileSystem();
 
       if (! $this->exists() || ! $this->is_readable() )
@@ -264,6 +268,22 @@ class DirectoryModel extends ShortPixelModel
 
     }
     return $dirArray;
+  }
+
+  /** Check if this dir is a subfolder
+  * @param DirectoryModel The directoryObject that is tested as the parent */
+  public function isSubFolderOf(DirectoryModel $dir)
+  {
+    // the same path, is not a subdir of.
+    if ($this->getPath() === $dir->getPath())
+      return false;
+
+    // the main path must be followed from the beginning to be a subfolder.
+    if (strpos($this->getPath(), $dir->getPath() ) === 0)
+    {
+      return true;
+    }
+    return false;
   }
 
 }

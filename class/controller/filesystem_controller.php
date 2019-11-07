@@ -69,6 +69,26 @@ Class FileSystemController extends ShortPixelController
       }
     }
 
+    /** Get the base folder from where custom paths are possible (from WP-base / sitebase)
+
+    */
+    public function getWPFileBase()
+    {
+      if(\wpSPIO()->env()->is_mainsite) {
+          $path = get_home_path();
+
+      } else {
+          $up = wp_upload_dir();
+          $path = realpath($up['basedir']);
+      }
+      $dir = $this->getDirectory($path);
+      if (! $dir->exists())
+        Log::addWarn('getWPFileBase - Base path doesnt exist');
+
+      return $dir;
+
+    }
+
     /** Not in use yet, do not use. Future replacement. */
     public function createBackUpFolder($folder = SHORTPIXEL_BACKUP_FOLDER)
     {
@@ -139,6 +159,27 @@ Class FileSystemController extends ShortPixelController
 
         return $array;
 
+    }
+
+    /** Get all files from a directory tree, starting at given dir. **/
+    public function getFilesRecursive(DirectoryModel $dir)
+    {
+        $fileArray = array();
+
+        if (! $dir->exists())
+          return $fileArray;
+
+        $files = $dir->getFiles();
+        $fileArray = array_merge($fileArray, $files);
+
+        $subdirs = $dir->getSubDirectories();
+
+        foreach($subdirs as $subdir)
+        {
+             $fileArray = array_merge($fileArray, $this->getFilesRecursive($subdir));
+        }
+
+        return $fileArray;
     }
 
 

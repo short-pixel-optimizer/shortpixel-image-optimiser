@@ -3199,13 +3199,10 @@ class WPShortPixel {
 
     // TODO - Part of the folder model.
     public static function getCustomFolderBase() {
-        if(is_main_site()) {
-            $base = get_home_path();
-            return realpath(rtrim($base, '/'));
-        } else {
-            $up = wp_upload_dir();
-            return realpath($up['basedir']);
-        }
+        Log::addDebug('Call to legacy function getCustomFolderBase');
+        $fs = \wpSPIO()->filesystem();
+        $dir = $fs->getWPFileBase();
+        return $dir->getPath();
     }
 
     // TODO - Should be part of folder model
@@ -3217,11 +3214,20 @@ class WPShortPixel {
     // @todo - Should be part of folder model
     public function refreshCustomFolders(&$notice, $ignore = false) {
         $customFolders = array();
+        $fs =  \wpSPIO()->fileSystem();
+
         if($this->_settings->hasCustomFolders) {
             $customFolders = $this->spMetaDao->getFolders();
             foreach($customFolders as $folder) {
-                if($folder->getPath() === $ignore) continue;
+
+              $mt = $folder->getFolderContentsChangeDate();
+              if($mt > strtotime($folder->getTsUpdated())) {
+                $fsFolder = $fs->getDirectory($folder->getPath());
+                $this->spMetaDao->refreshFolder($fsFolder);
+              }
+              /*  if($folder->getPath() === $ignore) continue;
                 try {
+
                     $mt = $folder->getFolderContentsChangeDate();
                     if($mt > strtotime($folder->getTsUpdated())) {
                         $fileList = $folder->getFileList(strtotime($folder->getTsUpdated()));
@@ -3238,8 +3244,8 @@ class WPShortPixel {
                     } else {
                         $notice = array("status" => "error", "msg" => $ex->getMessage());
                     }
-                }
-            }
+                }*/
+            } // folders
         }
         return $customFolders;
     }

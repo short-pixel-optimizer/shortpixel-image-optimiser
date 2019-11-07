@@ -214,6 +214,45 @@ class FileSystemTest extends  WP_UnitTestCase
     //upload_dir
   }
 
+  public function testDirectorySubDirectoryOf()
+  {
+    $dirpath = '/var/www/main';
+    $subpath = '/var/www/main/child/somechild';
+    $randompath = '/var/somewherelse/sub';
+
+    $dir = $this->fs->getDirectory($dirpath);
+    $subdir = $this->fs->getDirectory($subpath);
+    $rdir = $this->fs->getDirectory($randompath);
+
+    $this->assertTrue($subdir->isSubFolderOf($dir));
+    $this->assertFalse($dir->isSubFolderOf($subdir));
+
+    // the same
+    $this->assertFalse($subdir->isSubFolderOf($subdir));
+
+    // some random dir
+    $this->assertFalse($rdir->isSubFolderOf($dir));
+
+    // some random dir reversed.
+    $this->assertFalse($subdir->isSubFolderOf($rdir));
+
+    $subberpath = $subpath . '/deeper/more';
+    $subberdir = $this->fs->getDirectory($subberpath);
+
+    // deeper structure.
+    $this->assertTrue($subberdir->isSubFolderOf($subdir));
+    $this->assertTrue($subberdir->isSubFolderOf($dir));
+    $this->assertFalse($subberdir->isSubFolderOf($rdir));
+
+    $repeatpath = '/otherdrive/so/var/www/main';
+    $repeatdir = $this->fs->getDirectory($repeatpath);
+
+    $this->assertFalse($repeatdir->isSubFolderOf($dir));
+    $this->assertFalse($repeatdir->isSubFolderOf($subdir));
+
+
+  }
+
   public function testFileBasic()
   {
       $filepath = $this->root->url() . '/images/image1.jpg';
@@ -267,6 +306,7 @@ class FileSystemTest extends  WP_UnitTestCase
       $this->assertFileNotExists($file4);
       $this->assertFalse($file4->hasBackup());
       $this->assertNull($file4->getFileDir());
+
   }
 
   public function testFileCopy()
