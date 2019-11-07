@@ -183,7 +183,7 @@ class WPShortPixel {
     // @hook admin menu
     // @todo move to plugin class
     function registerAdminPage( ) {
-      return; 
+      return;
         if($this->spMetaDao->hasFoldersTable() && count($this->spMetaDao->getFolders())) {
             /*translators: title and menu name for the Other media page*/
             add_media_page( __('Other Media Optimized by ShortPixel','shortpixel-image-optimiser'), __('Other Media','shortpixel-image-optimiser'), 'edit_others_posts', 'wp-short-pixel-custom', array( &$this, 'listCustomMedia' ) );
@@ -1105,6 +1105,7 @@ class WPShortPixel {
         $maxTime = min(SHORTPIXEL_MAX_EXECUTION_TIME, 90);
         $timeoutThreshold = 5; // will adapt this with the maximum time needed for one pass
         $passTime = time();
+        // @todo If this fails, the bulk will since no start/stop Id's will change */
         for ($sanityCheck = 0, $crtStartQueryID = $startQueryID;
              ($crtStartQueryID >= $endQueryID) && (count($itemList) < SHORTPIXEL_PRESEND_ITEMS) && ($sanityCheck < 150)
               && (time() - $this->timer < $maxTime - $timeoutThreshold); $sanityCheck++) {
@@ -2998,13 +2999,13 @@ class WPShortPixel {
         die(self::formatBytes(self::folderSize(SHORTPIXEL_BACKUP_FOLDER)));
     }
 
+    // ** Function to get filedata for a directory when adding custom media directory  */
     public function browseContent() {
         if ( !current_user_can( 'manage_options' ) )  {
             wp_die(__('You do not have sufficient permissions to access this page.','shortpixel-image-optimiser'));
         }
-
         $root = self::getCustomFolderBase();
-
+        $fs = \wpSPIO()->filesystem();
 
         $postDir = rawurldecode($root.(isset($_POST['dir']) ? trim($_POST['dir']) : null ));
         // set checkbox if multiSelect set to true
@@ -3014,28 +3015,35 @@ class WPShortPixel {
 
         if( file_exists($postDir) ) {
 
-            $files = scandir($postDir);
+
+            $dir = $fs->getDirectory($postDir);
+            $files = $dir->getFiles();
+            $subdirs = $fs->sortFiles($dir->getSubDirectories()); // runs through FS sort.
+
+//            $files = scandir($postDir);
             $returnDir	= substr($postDir, strlen($root));
 
-            natcasesort($files);
+            //natcasesort($files);
 
-            if( count($files) > 2 ) { // The 2 accounts for . and ..
+            if( count($subdirs) > 0 ) {
                 echo "<ul class='jqueryFileTree'>";
-                foreach( $files as $file ) {
+                foreach($subdirs as $dir ) {
 
-                    if($file == 'ShortpixelBackups' || ShortPixelMetaFacade::isMediaSubfolder($postDir . $file, false)) continue;
+                    $dirpath = $dir->getPath();
+                    $dirname = $dir->getName();
+                    if($dirname == 'ShortpixelBackups' || ShortPixelMetaFacade::isMediaSubfolder($dirname, false)) continue;
 
-                    $htmlRel	= str_replace("'", "&apos;", $returnDir . $file);
-                    $htmlName	= htmlentities($file);
-                    $ext	= preg_replace('/^.*\./', '', $file);
+                    $htmlRel	= str_replace("'", "&apos;", $returnDir . $dirname);
+                    $htmlName	= htmlentities($dirname);
+                    //$ext	= preg_replace('/^.*\./', '', $file);
 
-                    if( file_exists($postDir . $file) && $file != '.' && $file != '..' ) {
+                    if( $dir->exists()  ) {
                         //KEEP the spaces in front of the rel values - it's a trick to make WP Hide not replace the wp-content path
-                        if( is_dir($postDir . $file) && (!$onlyFiles || $onlyFolders) ) {
+                    //    if( is_dir($postDir . $file) && (!$onlyFiles || $onlyFolders) ) {
                             echo "<li class='directory collapsed'>{$checkbox}<a rel=' " .$htmlRel. "/'>" . $htmlName . "</a></li>";
-                        } else if (!$onlyFolders || $onlyFiles) {
+                      /*  } else if (!$onlyFolders || $onlyFiles) {
                             echo "<li class='file ext_{$ext}'>{$checkbox}<a rel=' " . $htmlRel . "'>" . $htmlName . "</a></li>";
-                        }
+                        } */
                     }
                 }
 
@@ -4017,13 +4025,30 @@ class WPShortPixel {
     */
     static public function folderSize($path) {
         $total_size = 0;
-        if(file_exists($path)) {
-            $files = scandir($path); // @todo This gives a warning if directory is not writable.
+        $fs = wpSPIO()->filesystem();
+        $dir = $fs->getDirectory($path);
+
+        if($dir->exists()) {
+            $files = $dir->getFiles(); // @todo This gives a warning if directory is not writable.
+            $subdirs = $dir->getSubDirectories();
+
         } else {
             return $total_size;
         }
-        $cleanPath = rtrim($path, '/'). '/';
-        foreach($files as $t) {
+        //$cleanPath = rtrim($path, '/'). '/';
+        foreach($files as $file)
+        {
+          $total_size += $file->getFileSize();
+        }
+
+        foreach($subdirs as $dir)
+        {
+          $total_size += self::folderSize($dir->getPath());
+        }
+
+        return $total_size;
+
+        /* foreach($files as $t) {
             if ($t<>"." && $t<>"..")
             {
                 $currentFile = $cleanPath . $t;
@@ -4036,7 +4061,7 @@ class WPShortPixel {
                     $total_size += $size;
                 }
             }
-        }
+        } */
         return $total_size;
     }
 

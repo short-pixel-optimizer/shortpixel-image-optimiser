@@ -13,16 +13,19 @@ class DirectoryModel extends ShortPixelModel
 {
   // Directory info
   protected $path;
+  protected $name;
 
   // Directory status
   protected $exists = false;
   protected $is_writable = false;
+  protected $is_readable = false;
 
   protected $new_directory_permission = 0755;
 
   /** Creates a directory model object. DirectoryModel directories don't need to exist on FileSystem
   *
   * When a filepath is given, it  will remove the file part.
+  * @param $path String The Path
   */
   public function __construct($path)
   {
@@ -45,11 +48,13 @@ class DirectoryModel extends ShortPixelModel
       }
 
       $this->path = trailingslashit($path);
+      $this->name = basename($this->path);
 
       if (file_exists($this->path))
       {
         $this->exists();
         $this->is_writable();
+        $this->is_readable();
       }
   }
 
@@ -67,6 +72,12 @@ class DirectoryModel extends ShortPixelModel
     return $this->path;
   }
 
+  /** Get basename of the directory. Without path */
+  public function getName()
+  {
+    return $this->name;
+  }
+
   public function exists()
   {
     $this->exists = file_exists($this->path);
@@ -79,6 +90,11 @@ class DirectoryModel extends ShortPixelModel
     return $this->is_writable;
   }
 
+  public function is_readable()
+  {
+     $this->is_readable = is_readable($this->path);
+     return $this->is_readable;
+  }
   /** Try to obtain the path, minus the installation directory.
   * @return Mixed False if this didn't work, Path as string without basedir if it did. With trailing slash, without starting slash.
   */
@@ -161,8 +177,10 @@ class DirectoryModel extends ShortPixelModel
     return $testpath;
   }
 
-  /** Checks the directory
-  *
+  /** Checks the directory into working order
+  * Tries to create directory if it doesn't exist
+  * Tries to fix file permission if writable is needed
+  * @param $check_writable Boolean Directory should be writable
   */
   public function check($check_writable = false)
   {
@@ -196,5 +214,56 @@ class DirectoryModel extends ShortPixelModel
     return true;
   }
 
+  /* Get files from directory
+  * @todo In future this should accept some basic filters via args.
+  * @returns Array|boolean Returns false if something wrong w/ directory, otherwise a files array of FileModel Object.
+  */
+  public function getFiles($args = array() )
+  {
+      $defaults = array();
+      $fs = \wpSPIO()->fileSystem();
+
+      if (! $this->exists() || ! $this->is_readable() )
+        return false;
+
+      $dirIt = new \DirectoryIterator($this->path);
+      $fileArray = array();
+      foreach($dirIt as $fileInfo)
+      {
+         if ($fileInfo->isFile() && $fileInfo->isReadable() && ! $fileInfo->isDot() )
+         {
+           $file = $fs->getFile($fileInfo->getRealPath());
+           if ($file->exists())
+              $fileArray[] = $file;
+         }
+
+      }
+      return $fileArray;
+  }
+
+  /** Get subdirectories from directory
+  * * @returns Array|boolean Returns false if something wrong w/ directory, otherwise a files array of DirectoryModel Object.
+  */
+  public function getSubDirectories()
+  {
+    $fs = \wpSPIO()->fileSystem();
+
+    if (! $this->exists() || ! $this->is_readable() )
+      return false;
+
+    $dirIt = new \DirectoryIterator($this->path);
+    $dirArray = array();
+    foreach($dirIt as $fileInfo)
+    {
+       if ($fileInfo->isDir() && $fileInfo->isReadable() && ! $fileInfo->isDot() )
+       {
+         $dir = new DirectoryModel($fileInfo->getRealPath());
+         if ($dir->exists())
+            $dirArray[] = $dir;
+       }
+
+    }
+    return $dirArray;
+  }
 
 }

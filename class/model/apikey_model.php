@@ -274,7 +274,8 @@ class ApiKeyModel extends ShortPixelModel
 
   protected function checkRedirect()
   {
-    if(!$this->redirectedSettings && !$this->verifiedKey && (!function_exists("is_multisite") || ! is_multisite())) {
+
+    if(! \SPIO()->env()->is_ajaxcall && !$this->redirectedSettings && !$this->verifiedKey && (!function_exists("is_multisite") || ! is_multisite())) {
       $this->redirectedSettings = 1;
       $this->update();
       wp_redirect(admin_url("options-general.php?page=wp-shortpixel-settings"));

@@ -17,7 +17,7 @@ Class FileSystemController extends ShortPixelController
       $this->loadModel('directory');
     //  $this->loadModel('environment');
 
-      $this->env = wpSPIO()->env(); 
+      $this->env = wpSPIO()->env();
 
     }
 
@@ -99,6 +99,15 @@ Class FileSystemController extends ShortPixelController
             }
         }
 
+        $wp_home_path = trailingslashit(get_home_path());
+        // If the whole WP homepath is still in URL, assume the replace when wrong ( not replaced w/ URL)
+        // This happens when file is outside of wp_uploads_dir
+        if (strpos($url, $wp_home_path) !== false)
+        {
+          $home_url = trailingslashit(get_home_url());
+          $url = str_replace($wp_home_path, $home_url, $filepath);
+        }
+
         if (parse_url($url) !== false)
           return $url;
         else {
@@ -106,9 +115,31 @@ Class FileSystemController extends ShortPixelController
         }
     }
 
+    /** Sort files / directories in a certain way.
+    * Future dev to include options via arg.
+    */
+    public function sortFiles($array, $args = array() )
+    {
+        if (count($array) == 0)
+          return $array;
 
+        // what are we sorting.
+        $class = get_class($array[0]);
+        $is_files = ($class == 'ShortPixel\FileModel') ? true : false; // if not files, then dirs.
 
+        usort($array, function ($a, $b) use ($is_files)
+            {
+              if ($is_files)
+                return strcmp($a->getFileName(), $b->getFileName());
+              else {
+                return strcmp($a->getName(), $b->getName());
+              }
+            }
+        );
 
+        return $array;
+
+    }
 
 
 }

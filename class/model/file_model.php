@@ -64,7 +64,7 @@ class FileModel extends ShortPixelModel
       $this->filename = isset($info['basename']) ? $info['basename'] : null; // filename + extension
       $this->filebase = isset($info['filename']) ? $info['filename'] : null; // only filename
       $this->extension = isset($info['extension']) ? $info['extension'] : null; // only (last) extension
-      $this->directory = isset($info['dirname']) ? new DirectoryModel($info['dirname']) : null;
+      //$this->directory = isset($info['dirname']) ? new DirectoryModel($info['dirname']) : null;
       $this->is_writable();
       $this->is_readable();
     }
@@ -76,8 +76,7 @@ class FileModel extends ShortPixelModel
       if (is_null($this->filename))
         $this->filename = basename($this->fullpath);
 
-      if (is_null($this->directory) && ! is_null($this->filename) && strlen($this->filename) > 0)
-        $this->directory = new DirectoryModel(dirname($this->fullpath));
+
     }
   }
 
@@ -131,8 +130,20 @@ class FileModel extends ShortPixelModel
   * @return DirectoryModel Directorymodel Object
   */
   public function getFileDir()
-  {
+ {
+      // create this only when needed.
+      if (is_null($this->directory) && ! is_null($this->filename) && strlen($this->filename) > 0)
+        $this->directory = new DirectoryModel(dirname($this->fullpath));
+
       return $this->directory;
+  }
+
+  public function getFileSize()
+  {
+    if ($this->exists())
+      return filesize($this->fullpath);
+    else
+      return 0;
   }
 
   /** Copy a file to somewhere

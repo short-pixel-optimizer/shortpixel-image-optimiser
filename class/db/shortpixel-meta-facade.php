@@ -500,7 +500,7 @@ class ShortPixelMetaFacade {
             $path = $meta->getPath();
             $fsFile = $fs->getFile($path);
             $url = $fs->pathToUrl($fsFile);
-
+            
             //fix for situations where site_url is lala.com/en and home_url is lala.com - if using the site_url will get a duplicated /en in the URL
       //      $homeUrl = self::getHomeUrl();
           $urlList[] = $url;  //  self::replaceHomePath($meta->getPath(), $homeUrl);

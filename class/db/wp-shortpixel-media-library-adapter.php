@@ -768,7 +768,7 @@ class WpShortPixelMediaLbraryAdapter {
 
 
       $images = array();
-      Log::addDebug('getFilesByPattern resulted in X - ' . iterator_count($regExIterator));
+      //Log::addDebug('getFilesByPattern resulted in X - ' . iterator_count($regExIterator));
       foreach($regExIterator as $fileinfo)
       {
         $images[] = $fs->getFile($fileinfo->getPathname());

@@ -48,6 +48,9 @@ class ShortPixelFolder extends ShortPixelEntity{
 
     public static function protectDirectoryListing($dirname)
     {
+      if (\wpSPIO()->env()->is_nginx) // nginx has no htaccess support.
+        return;
+
       $rules = "Options -Indexes";
       /* Plugin init is before loading these admin scripts. So it can happen misc.php is not yet loaded */
       if (! function_exists('insert_with_markers'))
