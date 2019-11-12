@@ -1658,7 +1658,7 @@ class WPShortPixel {
       $meta = $itemHandler->getMeta();
 
       Log::addDebug('Finding Thumbs on path' . $meta->getPath());
-      $thumbs = WpShortPixelMediaLbraryAdapter::findThumbs($meta->getPath());
+      //$thumbs = WpShortPixelMediaLbraryAdapter::findThumbs($meta->getPath());
 
       $fs = new \ShortPixel\FileSystemController();
       $mainFile = $fs->getFile($meta->getPath());

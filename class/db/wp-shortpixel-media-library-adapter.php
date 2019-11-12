@@ -24,7 +24,6 @@ class WpShortPixelMediaLbraryAdapter {
         $counter = 0;
         $fs = new \ShortPixel\FileSystemController();
 
-
         $filesWithErrors = array(); $moreFilesWithErrors = 0;
         $excludePatterns = WPShortPixelSettings::getOpt("excludePatterns");
 
@@ -108,6 +107,8 @@ class WpShortPixelMediaLbraryAdapter {
                           //  $foundThumbs = WpShortPixelMediaLbraryAdapter::findThumbs($filePath);
                             // findThumbs returns fullfilepath.
                             $foundThumbs = array();
+
+
                             if ($settings->optimizeUnlisted)
                               $foundThumbs  = WpShortPixelMediaLbraryAdapter::findThumbs($fs->getFile($filePath));
                             $foundCount = count($foundThumbs);
@@ -127,6 +128,8 @@ class WpShortPixelMediaLbraryAdapter {
                             $realSizesCount = $sizesCount;
                         }
                     }
+                    $counter++;
+
                     //processable
                     $isProcessable = false;
                     $isProcessed = isset($attachment['ShortPixelImprovement'])
@@ -229,10 +232,10 @@ class WpShortPixelMediaLbraryAdapter {
                         $totalFilesM4 += $totalFilesThis;
                     }
                 }
-            }
+            } // foreach fileslist
             unset($filesList);
             $pointer += $limit;
-            $counter++;
+          //  $counter++;
         }//end while
 
         return array("totalFiles" => $totalFiles, "mainFiles" => $mainFiles,
