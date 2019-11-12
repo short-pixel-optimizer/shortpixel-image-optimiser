@@ -271,11 +271,15 @@ class ShortPixelCustomMetaDao {
           Notice::addWarning( sprintf(__('Folder %s is not writeable. Please check permissions and try again.','shortpixel-image-optimiser'),$folder->getPath()) );
         }
 
-        $files = $fs->getFilesRecursive($folder);
+
+        $filter = array('date_newer' => strtotime($folderObj->getTsUpdated()));
+
+        $files = $fs->getFilesRecursive($folder, $filter);
         $shortpixel = \wpSPIO()->getShortPixel();
         // check processable by invoking filter, for now processablepath takes only paths, not objects.
         $files = array_filter($files, function($file) use($shortpixel) { return $shortpixel->isProcessablePath($file->getFullPath());  });
 
+        Log::addDebug('Found Files for custom media ' . count($files));
         $folderObj->setTsUpdated(date("Y-m-d H:i:s", $folderObj->getFolderContentsChangeDate()) );
         $folderObj->setFileCount(count($files));
         $this->update($folderObj);
@@ -345,39 +349,43 @@ class ShortPixelCustomMetaDao {
     }
 
     private function batchInsertImages($files, $folderId) {
-
-      //  $pathsFileHandle = fopen($pathsFile, 'r');
         //facem un delete pe cele care nu au shortpixel_folder, pentru curatenie - am mai intalnit situatii in care stergerea s-a agatat (stop monitoring)
+        global $wpdb;
+
         $sqlCleanup = "DELETE FROM {$this->db->getPrefix()}shortpixel_meta WHERE folder_id NOT IN (SELECT id FROM {$this->db->getPrefix()}shortpixel_folders)";
         $this->db->query($sqlCleanup);
 
-        $values = null; $inserted = 0;
+        $values = array();
         $sql = "INSERT IGNORE INTO {$this->db->getPrefix()}shortpixel_meta(folder_id, path, name, path_md5, status) VALUES ";
-        $proto_values = '(%d,%s,%s,%s,0)';
+        $format = '(%d,%s,%s,%s,%d)';
         $i = 0;
+        $count = 0;
+        $placeholders = array();
         foreach($files as $file) {
-            //$pathParts = explode('/', trim($path));
             $filepath = $file->getFullPath();
             $filename = $file->getFileName();
-          //  $namePrep = $this->db->prepare("%s",$pathParts[count($pathParts) - 1]);
-            if (! is_null($values))
-              $values .= ',';
 
-            $values .=  $this->db->prepare($proto_values, array($folderId, $filepath, $filename, md5($filepath))) ;
-            /*$values .= (strlen($values) ? ", ": "") . "(" . $folderId . ", ". $this->db->prepare("%s", trim($path)) . ", ". $namePrep .", '". md5($path) ."', 0)"; */
-            if($i % 1000 == 999) {
-                $id = $this->db->query($sql . $values);
-                $values = null;
-                $inserted++;
+            array_push($values, $folderId, $filepath, $filename, md5($filepath), 0);
+            $placeholders[] = $format;
+            Log::addDebug('Count Count:: ' . strlen($filepath));
+
+            if($i % 500 == 499) {
+                $query = $sql;
+                $query .= implode(', ', $placeholders);
+                $this->db->query( $this->db->prepare("$query ", $values));
+
+                $values = array();
             }
             $i++;
         }
         if($values) {
-            $id = $this->db->query($sql . $values);
+          $query = $sql;
+          $query .= implode(', ', $placeholders);
+          $result = $wpdb->query( $wpdb->prepare("$query ", $values) );
+          Log::addDebug('Q Result', array($result, $wpdb->last_error));
+          //$this->db->query( $this->db->prepare("$query ", $values));
         }
-      //  fclose($pathsFileHandle);
-      //  unlink($pathsFile);
-        return $inserted;
+
     }
 
     public function resetFailed() {

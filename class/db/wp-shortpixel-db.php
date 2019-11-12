@@ -1,9 +1,16 @@
 <?php
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+use ShortPixel\Notices\NoticeController as Notice;
 
 class WpShortPixelDb implements ShortPixelDb {
 
     protected $prefix;
     protected $defaultShowErrors;
+
+    // mostly unimplemented.
+    const QTYPE_INSERT = 1;
+    const QTYPE_DELETE = 2;
+    const QTYPE_UPDATE = 3;
 
     public function __construct($prefix = null) {
         $this->prefix = $prefix;
@@ -62,7 +69,11 @@ class WpShortPixelDb implements ShortPixelDb {
 
     public function insert($table, $params, $format = null) {
         global $wpdb;
-        $wpdb->insert($table, $params, $format);
+
+        $num_inserted = $wpdb->insert($table, $params, $format);
+        if ($num_inserted === false)
+          $this->handleError(self::QTYPE_INSERT);
+
         return $wpdb->insert_id;
     }
 
@@ -77,6 +88,20 @@ class WpShortPixelDb implements ShortPixelDb {
     public function prepare($query, $args) {
         global $wpdb;
         return $wpdb->prepare($query, $args);
+    }
+
+    public function handleError($error_type)
+    {
+        Log::addError('WP Database error: ' . $wpdb->last_error);
+
+        global $wpdb;
+        switch($error_type)
+        {
+            case self::QTYPE_INSERT:
+              Notice::addError('Shortpixel tried to run a database query, but it failed. See the logs for details', 'shortpixel-image-optimiser');
+            break;
+        }
+
     }
 
     public function hideErrors() {

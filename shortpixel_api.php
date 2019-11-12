@@ -836,8 +836,12 @@ class ShortPixelAPI {
             ShortpixelFolder::deleteFolder($archive['Path']);
         } else {
             if (!empty($tempFiles) && is_array($tempFiles)) {
+
                 foreach ($tempFiles as $tmpFile) {
-                    @unlink($tmpFile["Message"]);
+                    $file = \wpSPIO()->filesystem()->getFile($tmpFile['Message']);
+                    if ($file->exists())
+                      $file->delete();
+                    //@unlink($tmpFile["Message"]);
                 }
             }
         }

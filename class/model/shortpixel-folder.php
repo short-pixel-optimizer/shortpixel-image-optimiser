@@ -36,11 +36,16 @@ class ShortPixelFolder extends ShortPixelEntity{
     public static function createBackUpFolder($folder = SHORTPIXEL_BACKUP_FOLDER)
     {
       // create backup folder
-      $result = @mkdir($folder, 0777, true);
+      $fs = \wpSPIO()->filesystem();
+      $dir = $fs->getDirectory($folder);
+      $result = false;
 
-      if ($result)
+      if (! $dir->exists() )
       {
-          self::protectDirectoryListing($folder);
+        $dir->check();
+        //$result = @mkdir($folder, 0777, true);
+        self::protectDirectoryListing($folder);
+        $result = true;
       }
 
       return $result;

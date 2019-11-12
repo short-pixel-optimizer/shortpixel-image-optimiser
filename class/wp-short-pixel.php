@@ -1361,7 +1361,7 @@ class WPShortPixel {
         { //take from custom images if any left to optimize - only if bulk was ever started
             //but first refresh if it wasn't refreshed in the last hour
             if(time() - $this->_settings->hasCustomFolders > 3600) {
-                $notice = null; $this->refreshCustomFolders($notice);
+                $notice = null; $this->refreshCustomFolders();
                 $this->_settings->hasCustomFolders = time();
             }
 
@@ -2729,7 +2729,7 @@ class WPShortPixel {
         }
         if(isset($_REQUEST['refresh']) && esc_attr($_REQUEST['refresh']) == 1) {
             $notice = null;
-            $this->refreshCustomFolders($notice);
+            $this->refreshCustomFolders(true);
         }
         if(isset($_REQUEST['action']) && esc_attr($_REQUEST['action']) == 'optimize' && isset($_REQUEST['image'])) {
             //die(ShortPixelMetaFacade::queuedId(ShortPixelMetaFacade::CUSTOM_TYPE, $_REQUEST['image']));
@@ -2823,6 +2823,12 @@ class WPShortPixel {
             } else {
                 $this->_settings->processThumbnails = 0;
             }
+
+            if ( isset($_POST['createWebp']) )
+              $this->_settings->createWebp = 1;
+            else
+              $this->_settings->createWebp = 0;
+
             //clean the custom files errors in order to process them again
             if($this->_settings->hasCustomFolders) {
                 $this->spMetaDao->resetFailed();
@@ -3205,14 +3211,16 @@ class WPShortPixel {
         return $dir->getPath();
     }
 
-    // TODO - Should be part of folder model
+    // @TODO - Should be part of folder model
+    /* Seems not in use @todo marked for removal.
     protected function fullRefreshCustomFolder($path, &$notice) {
         $folder = $this->spMetaDao->getFolder($path);
         $diff = $folder->checkFolderContents(array('ShortPixelCustomMetaDao', 'getPathFiles'));
-    }
+    } */
 
     // @todo - Should be part of folder model
-    public function refreshCustomFolders(&$notice, $ignore = false) {
+    // @param force boolean Force a recheck.
+    public function refreshCustomFolders($force = false) {
         $customFolders = array();
         $fs =  \wpSPIO()->fileSystem();
 
@@ -3221,7 +3229,15 @@ class WPShortPixel {
             foreach($customFolders as $folder) {
 
               $mt = $folder->getFolderContentsChangeDate();
-              if($mt > strtotime($folder->getTsUpdated())) {
+
+              if($mt > strtotime($folder->getTsUpdated()) || $force) {
+                // when forcing, set to never updated.
+                if ($force)
+                {
+                  $folder->setTsUpdated(date("Y-m-d H:i:s", 0) );
+                  $this->spMetaDao->update($folder);
+                }
+
                 $fsFolder = $fs->getDirectory($folder->getPath());
                 $this->spMetaDao->refreshFolder($fsFolder);
               }

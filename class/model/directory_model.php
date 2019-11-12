@@ -20,6 +20,8 @@ class DirectoryModel extends ShortPixelModel
   protected $is_writable = false;
   protected $is_readable = false;
 
+
+
   protected $new_directory_permission = 0755;
 
   /** Creates a directory model object. DirectoryModel directories don't need to exist on FileSystem
@@ -74,6 +76,11 @@ class DirectoryModel extends ShortPixelModel
   public function getPath()
   {
     return $this->path;
+  }
+
+  public function getModified()
+  {
+    return filemtime($this->path);
   }
 
   /** Get basename of the directory. Without path */
@@ -223,8 +230,11 @@ class DirectoryModel extends ShortPixelModel
   */
   public function getFiles($args = array() )
   {
-      // @todo Add option to check for files newer than X 
-      $defaults = array('date' => null);
+      // @todo Add option to check for files newer than X
+      $defaults = array('date_newer' => null);
+
+      $args = wp_parse_args($args, $defaults);
+
       $fs = \wpSPIO()->fileSystem();
 
       if (! $this->exists() || ! $this->is_readable() )
@@ -237,13 +247,31 @@ class DirectoryModel extends ShortPixelModel
          if ($fileInfo->isFile() && $fileInfo->isReadable() && ! $fileInfo->isDot() )
          {
            $file = $fs->getFile($fileInfo->getRealPath());
-           if ($file->exists())
+           if ($file->exists() &&  ! $this->fileFilter($file, $args))
               $fileArray[] = $file;
          }
 
       }
       return $fileArray;
   }
+
+  private function fileFilter(FileModel $file, $args)
+  {
+     $filter = false;
+
+     if (! is_null($args['date_newer']))
+     {
+       $modified = $file->getModified();
+       if ($modified < $args['date_newer'] )
+          $filter = true;
+     }
+
+     return $filter;
+  }
+
+
+
+
 
   /** Get subdirectories from directory
   * * @returns Array|boolean Returns false if something wrong w/ directory, otherwise a files array of DirectoryModel Object.

@@ -61,6 +61,7 @@ class FileModel extends ShortPixelModel
     {
       $this->exists = true;
       $info = pathinfo($this->fullpath);
+      // Todo, maybe replace this with splFileINfo.
       $this->filename = isset($info['basename']) ? $info['basename'] : null; // filename + extension
       $this->filebase = isset($info['filename']) ? $info['filename'] : null; // only filename
       $this->extension = isset($info['extension']) ? $info['extension'] : null; // only (last) extension
@@ -96,6 +97,11 @@ class FileModel extends ShortPixelModel
   {
     $this->is_readable = is_readable($this->fullpath);
     return $this->is_readable;
+  }
+
+  public function getModified()
+  {
+    return filemtime($this->fullpath);
   }
 
   public function hasBackup()
@@ -194,7 +200,7 @@ class FileModel extends ShortPixelModel
   */
   public function delete()
   {
-      \wp_delete_file($this->fullpath);  // delete file hook via wp_delet_file
+      \wp_delete_file($this->fullpath);  // delete file hook via wp_delete_file
       $this->setFileInfo(); // update info
 
       if (! file_exists($this->fullpath))

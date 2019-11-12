@@ -71,7 +71,7 @@ Check out <a href="https://shortpixel.com/pricing" target="_blank">our prices</a
 > ★★★★★ **The secret sauce for a WordPress website.**  [mark1mark](https://wordpress.org/support/topic/the-secret-sauce-for-a-wordpress-website/)
 > ★★★★★ **A must have plugin, great support!** [ElColo13](https://wordpress.org/support/topic/a-must-have-plugin-great-support/)
 > ★★★★★ **Excellent Plugin! Even Better Customer Service!**  [scaliendo](https://wordpress.org/support/topic/great-plugin-great-support-508/)
-> ★★★★★ **Great image compression, solid plugin, equally great support.** [matters1959](https://wordpress.org/support/topic/support-shortpixel-image-optimiser/)  
+> ★★★★★ **Great image compression, solid plugin, equally great support.** [matters1959](https://wordpress.org/support/topic/support-shortpixel-image-optimiser/)
 > [more testimonials](https://wordpress.org/support/plugin/shortpixel-image-optimiser/reviews/?filter=5)
 
 [youtube https://www.youtube.com/watch?v=5EbX0Hsy6j4]
@@ -214,15 +214,27 @@ The ShortPixel team is here to help. <a href="https://shortpixel.com/contact">Co
 
 The ShortPixel Image Optimiser plugin calls the following actions and filters:
 > do_action( 'shortpixel_image_optimised', $post_id ); //upon successful optimization
+
 > do_action("shortpixel_before_restore_image", $post_id); //before restoring an image from backup
+
 > do_action("shortpixel_after_restore_image", $post_id); //after succesful restore
+
 > apply_filters("shortpixel_backup_folder", $backup_folder, $main_file_path, $sizes); //just before returning the ShortPixel backup folder, usually /wp-content/uploads/ShortpixelBackups. The $sizes are the sizes array from metadata.
+
 > apply_filters('shortpixel_image_exists', file_exists($path), $path, $post_id); //post ID is not always set, only if it's an image from Media Library
+
 > apply_filters('shortpixel_image_urls', $URLs, $post_id) // filters the URLs that will be sent to optimization, $URLs is a plain array
 
 In order to define custom thumbnails to be picked up by the optimization you have two options, both comma separated defines:
+
 define('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES', '_tl,_tr'); will handle custom thumbnails like image-100x100_tl.jpg
+
 define('SHORTPIXEL_CUSTOM_THUMB_INFIXES', '-uae'); will handle custom thumbnails like image-uae-100x100.jpg
+
+define("SHORTPIXEL_NOFLOCK", true); // don't use flock queue, only activate this when you have flock() denied errors on your installation.
+.
+define("SHORTPIXEL_EXPERIMENTAL_SECURICACHE", true);  // adds timestamps to URLS, to prevent hitting the cache. Useful for persistent caches.
+
 
 == Screenshots ==
 

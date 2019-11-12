@@ -104,7 +104,7 @@ class ApiKeyModel extends ShortPixelModel
   */
   public function checkKey($key)
   {
-      //Log::addDebug("Model, checking key ". $key . ' not -' .  $this->apiKeyTried);
+
       if (strlen($key) == 0)
       {
         // first-timers, redirect to nokey screen
@@ -275,7 +275,7 @@ class ApiKeyModel extends ShortPixelModel
   protected function checkRedirect()
   {
 
-    if(! \SPIO()->env()->is_ajaxcall && !$this->redirectedSettings && !$this->verifiedKey && (!function_exists("is_multisite") || ! is_multisite())) {
+    if(! \wpSPIO()->env()->is_ajaxcall && !$this->redirectedSettings && !$this->verifiedKey && (!function_exists("is_multisite") || ! is_multisite())) {
       $this->redirectedSettings = 1;
       $this->update();
       wp_redirect(admin_url("options-general.php?page=wp-shortpixel-settings"));

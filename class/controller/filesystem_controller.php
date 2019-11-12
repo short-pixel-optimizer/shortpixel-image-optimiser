@@ -161,22 +161,26 @@ Class FileSystemController extends ShortPixelController
 
     }
 
-    /** Get all files from a directory tree, starting at given dir. **/
-    public function getFilesRecursive(DirectoryModel $dir)
+    /** Get all files from a directory tree, starting at given dir.
+    * @param DirectoryModel $dir to recursive into
+    * @param Array $filters Collection of optional filters as accepted by FileFilter in directoryModel
+    * @return Array Array of FileModel Objects
+     **/
+    public function getFilesRecursive(DirectoryModel $dir, $filters = array() )
     {
         $fileArray = array();
 
         if (! $dir->exists())
           return $fileArray;
 
-        $files = $dir->getFiles();
+        $files = $dir->getFiles($filters);
         $fileArray = array_merge($fileArray, $files);
 
         $subdirs = $dir->getSubDirectories();
 
         foreach($subdirs as $subdir)
         {
-             $fileArray = array_merge($fileArray, $this->getFilesRecursive($subdir));
+             $fileArray = array_merge($fileArray, $this->getFilesRecursive($subdir, $filters));
         }
 
         return $fileArray;
