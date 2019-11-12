@@ -81,7 +81,7 @@ class SettingsController extends shortPixelController
         if ($this->is_form_submit && isset($this->postData['apiKey']))
         {
             $apiKey = $this->postData['apiKey'];
-            if (strlen(trim($apiKey)) == 0) // display notice when submitting empty API key 
+            if (strlen(trim($apiKey)) == 0) // display notice when submitting empty API key
             {
               Notice::addError(sprintf(__("The key you provided has %s characters. The API key should have 20 characters, letters and numbers only.",'shortpixel-image-optimiser'), strlen($apiKey) ));
             }
@@ -305,7 +305,6 @@ class SettingsController extends shortPixelController
       protected function loadQuotaData()
       {
         // @todo Probably good idea to put this in a 2-5 min transient or so.
-
         if (is_null($this->quotaData))
           $this->quotaData = $this->shortPixel->checkQuotaAndAlert();
 

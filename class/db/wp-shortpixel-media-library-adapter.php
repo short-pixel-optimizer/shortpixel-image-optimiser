@@ -753,7 +753,7 @@ class WpShortPixelMediaLbraryAdapter {
 
     private static function getFilesByPattern($path, $pattern)
     {
-      $fs = new \ShortPixel\FileSystemController();
+      $fs = \wpSPIO()->filesystem();
 
       try
       {

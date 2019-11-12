@@ -3728,11 +3728,35 @@ class WPShortPixel {
                 'orderby' => 'meta_value_num',
             ) );
         }
-        if ( 'upload.php' == $GLOBALS['pagenow'] && !empty( $_GET['shortpixel_status'] ) ) {
+        if ( 'upload.php' == $GLOBALS['pagenow'] && isset( $_GET['shortpixel_status'] ) ) {
 
-            $status       = intval($_GET['shortpixel_status']);
+            $status       = sanitize_text_field($_GET['shortpixel_status']);
             $metaKey = '_shortpixel_status';
-            $metaCompare = $status == 0 ? 'NOT EXISTS' : ($status < 0 ? '<' : '=');
+            //$metaCompare = $status == 0 ? 'NOT EXISTS' : ($status < 0 ? '<' : '=');
+
+            if ($status == 'all')
+              return $vars; // not for us
+
+            switch($status)
+            {
+               case "opt":
+                  $status = ShortPixelMeta::FILE_STATUS_SUCCESS;
+                  $metaCompare = ">="; // somehow this meta stores optimization percentage.
+                break;
+                case "unopt":
+                  $status = ShortPixelMeta::FILE_STATUS_UNPROCESSED;
+                  $metaCompare = "NOT EXISTS";
+                break;
+                case "pending":
+                  $status = ShortPixelMeta::FILE_STATUS_PENDING;
+                  $metaCompare = "=";
+                break;
+                case "error":
+                  $status = -1;
+                  $metaCompare = "<=";
+                break;
+
+            }
 
             $vars = array_merge( $vars, array(
                 'meta_query' => array(
@@ -3744,7 +3768,7 @@ class WPShortPixel {
                 )
             ));
         }
-        //Log::addDebug('META QUERY', $vars);
+        Log::addDebug('META QUERY', $vars);
         return $vars;
     }
 
@@ -3757,21 +3781,36 @@ class WPShortPixel {
         if ( $scr->base !== 'upload' ) return;
 
         $status   = filter_input(INPUT_GET, 'shortpixel_status', FILTER_SANITIZE_STRING );
-        $selected = (int)$status > 0 ? $status : 0;
-        $args = array(
+    //    $selected = (int)$status > 0 ? $status : 0;
+      /*  $args = array(
             'show_option_none'   => 'ShortPixel',
             'name'               => 'shortpixel_status',
             'selected'           => $selected
-        );
+        ); */
 //        wp_dropdown_users( $args );
+        $options = array(
+            'all' => __('All Images', 'shortpixel-image-optimiser'),
+            'opt' => __('Optimized', 'shortpixel-image-optimiser'),
+            'unopt' => __('Unoptimized', 'shortpixel-image-optimiser'),
+            'pending' => __('Pending', 'shortpixel-image-optimiser'),
+            'error' => __('Errors', 'shortpixel-image-optimiser'),
+        );
 
-        echo("<select name='shortpixel_status' id='shortpixel_status'>\n"
+        echo "<select name='shortpixel_status' id='shortpixel_status'>\n";
+        foreach($options as $optname => $optval)
+        {
+            $selected = ($status == $optname) ? 'selected' : '';
+            echo "<option value='". $optname . "' $selected>" . $optval . "</option>\n";
+        }
+        echo "</select>";
+
+        /*echo("<select name='shortpixel_status' id='shortpixel_status'>\n"
                . "\t<option value='0'" . ($status == 0 ? " selected='selected'" : "") . ">All images</option>\n"
                . "\t<option value='2'" . ($status == 2 ? " selected='selected'" : "") . ">Optimized</option>\n"
                . "\t<option value='none'" . ($status == 'none' ? " selected='selected'" : "") . ">Unoptimized</option>\n"
                . "\t<option value='1'" . ($status == 1 ? " selected='selected'" : "") . ">Pending</option>\n"
                . "\t<option value='-1'" . ($status < 0 ? " selected='selected'" : "") . ">Errors</option>\n"
-            . "</select>");
+            . "</select>"); */
     }
 
     /** Calculates Optimization if PNG2Jpg does something
