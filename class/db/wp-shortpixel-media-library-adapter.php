@@ -92,6 +92,7 @@ class WpShortPixelMediaLbraryAdapter {
                       continue;
                     $sizesCount = isset($attachment['sizes']) ? self::countSizesNotExcluded($attachment['sizes'], $settings->excludeSizes) : 0;
 
+
                     // LA FIECARE 100 de imagini facem un test si daca findThumbs da diferit, sa dam o avertizare si eventual optiune
                     $dismissed = $settings->dismissedNotices ? $settings->dismissedNotices : array();
                     // @ todo Figure out what this is intended to do.
@@ -666,7 +667,7 @@ class WpShortPixelMediaLbraryAdapter {
         $pattern = '/' . preg_quote($base, '/') . '-\d+x\d+\.'. $ext .'/'; // tries to match between basename and extension
       */
         $thumbs = array();
-
+        Log::addDebug('Finding Thumbs');
         // New
         $fs = new \ShortPixel\FileSystemController();
         $file = $fs->getFile($mainFile);
@@ -758,23 +759,14 @@ class WpShortPixelMediaLbraryAdapter {
     {
       $fs = \wpSPIO()->filesystem();
 
-      try
-      {
-        $dirIterator = new \DirectoryIterator($path);
-        $regExIterator = new \RegexIterator($dirIterator, $pattern);
-      }
-      catch(\Exception $e)
-      {
-          Log::addWarn('GetFilesbyPattern issue with directory. ', $e->getMessage());
-          return array();
-      }
-
+      $path = trailingslashit($path);
+      $files = scandir($path,  SCANDIR_SORT_NONE);
+      $files = preg_grep($pattern, $files);
 
       $images = array();
-      //Log::addDebug('getFilesByPattern resulted in X - ' . iterator_count($regExIterator));
-      foreach($regExIterator as $fileinfo)
+      foreach ($files as $filepath)
       {
-        $images[] = $fs->getFile($fileinfo->getPathname());
+        $images[] = $fs->getFile($path . $filepath);
       }
 
       return $images;

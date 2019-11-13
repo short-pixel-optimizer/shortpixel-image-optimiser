@@ -228,50 +228,54 @@ class DirectoryModel extends ShortPixelModel
   * @todo In future this should accept some basic filters via args.
   * @returns Array|boolean Returns false if something wrong w/ directory, otherwise a files array of FileModel Object.
   */
-  public function getFiles($args = array() )
+  public function getFiles($args = array())
   {
-      // @todo Add option to check for files newer than X
-      $defaults = array('date_newer' => null);
 
-      $args = wp_parse_args($args, $defaults);
+    $defaults = array(
+        'date_newer' => null,
+    );
+    $args = wp_parse_args($args, $defaults);
 
-      $fs = \wpSPIO()->fileSystem();
+    // if all filters are set to null, so point in checking those.
+    $has_filters = (count(array_filter($args)) > 0) ? true : false;
 
-      if (! $this->exists() || ! $this->is_readable() )
-        return false;
+    if ( ! $this->exists() || ! $this->is_readable() )
+      return false;
 
-      $dirIt = new \DirectoryIterator($this->path);
-      $fileArray = array();
-      foreach($dirIt as $fileInfo)
-      {
-         if ($fileInfo->isFile() && $fileInfo->isReadable() && ! $fileInfo->isDot() )
-         {
-           $file = $fs->getFile($fileInfo->getRealPath());
-           if ($file->exists() &&  ! $this->fileFilter($file, $args))
-              $fileArray[] = $file;
-         }
+    $fileArray = array();
 
-      }
-      return $fileArray;
+    if ($handle = opendir($this->path)) {
+        while (false !== ($entry = readdir($handle))) {
+            if ( ($entry != "." && $entry != "..") && ! is_dir($this->path . $entry) ) {
+                $fileArray[] = new FileModel($this->path . $entry);
+            }
+        }
+        closedir($handle);
+    }
+
+    if ($has_filters)
+    {
+      $fileArray = array_filter($fileArray, function ($file) use ($args) {
+           return $this->fileFilter($file, $args);
+       } );
+    }
+    return $fileArray;
   }
 
+  // @return boolean true if it should be kept in array, false if not.
   private function fileFilter(FileModel $file, $args)
   {
-     $filter = false;
+     $filter = true;
 
      if (! is_null($args['date_newer']))
      {
        $modified = $file->getModified();
        if ($modified < $args['date_newer'] )
-          $filter = true;
+          $filter = false;
      }
 
      return $filter;
   }
-
-
-
-
 
   /** Get subdirectories from directory
   * * @returns Array|boolean Returns false if something wrong w/ directory, otherwise a files array of DirectoryModel Object.
