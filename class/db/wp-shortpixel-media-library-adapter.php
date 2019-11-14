@@ -92,7 +92,6 @@ class WpShortPixelMediaLbraryAdapter {
                       continue;
                     $sizesCount = isset($attachment['sizes']) ? self::countSizesNotExcluded($attachment['sizes'], $settings->excludeSizes) : 0;
 
-
                     // LA FIECARE 100 de imagini facem un test si daca findThumbs da diferit, sa dam o avertizare si eventual optiune
                     $dismissed = $settings->dismissedNotices ? $settings->dismissedNotices : array();
                     // @ todo Figure out what this is intended to do.
@@ -108,7 +107,6 @@ class WpShortPixelMediaLbraryAdapter {
                           //  $foundThumbs = WpShortPixelMediaLbraryAdapter::findThumbs($filePath);
                             // findThumbs returns fullfilepath.
                             $foundThumbs = array();
-
 
                             if ($settings->optimizeUnlisted)
                               $foundThumbs  = WpShortPixelMediaLbraryAdapter::findThumbs($fs->getFile($filePath));
@@ -667,7 +665,7 @@ class WpShortPixelMediaLbraryAdapter {
         $pattern = '/' . preg_quote($base, '/') . '-\d+x\d+\.'. $ext .'/'; // tries to match between basename and extension
       */
         $thumbs = array();
-        Log::addDebug('Finding Thumbs');
+
         // New
         $fs = new \ShortPixel\FileSystemController();
         $file = $fs->getFile($mainFile);
@@ -748,7 +746,7 @@ class WpShortPixelMediaLbraryAdapter {
          if (! $thumbfile->exists()) // thing must exist.
           continue;
 
-        $results[] = $thumbfile->getFullPath();
+        $results[] = (string) $thumbfile;
       }
 
       /* Returns array with full path, as string */

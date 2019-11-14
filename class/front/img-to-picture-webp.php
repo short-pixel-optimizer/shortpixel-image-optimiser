@@ -140,7 +140,6 @@ class ShortPixelImgToPictureWebp
         if(!$id) {
             return $match[0];
         }
-        $imageBase = dirname(get_attached_file($id)) . '/';
         */
 
         /* [BS] $updir = wp_upload_dir();
@@ -267,7 +266,7 @@ class ShortPixelImgToPictureWebp
     }
 
     /** Check and remove elements that should not be in the picture tag. Especially items within attributes. */
-    private function filterForPicture($img)
+    private static function filterForPicture($img)
     {
       if (isset($img['style']))
       {

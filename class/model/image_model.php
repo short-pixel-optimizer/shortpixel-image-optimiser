@@ -33,8 +33,7 @@ class ImageModel extends ShortPixelModel
       $this->facade = new \ShortPixelMetaFacade($post_id);
       $this->meta = $this->facade->getMeta();
 
-      $file = get_attached_file($post_id);
-      $this->file = $fs->getFile($file);
+      $this->file = $fs->getAttachedFile($post_id);
 
     }
 

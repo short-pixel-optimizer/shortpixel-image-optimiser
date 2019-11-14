@@ -770,8 +770,12 @@ class WPShortPixel {
             return $meta;
         }
 
+        $fs = \wpSPIO()->filesystem();
+
         // some plugins (e.g. WP e-Commerce) call the wp_attachment_metadata on just editing the image...
         $dbMeta = wp_get_attachment_metadata($ID);
+        $currentFile = $fs->getAttachedFile($ID);
+
         $refresh = false;
 
         if(isset($dbMeta['ShortPixelImprovement'])) {
@@ -785,11 +789,11 @@ class WPShortPixel {
         self::log("Handle Media Library Image Upload #{$ID}");
         //self::log("STACK: " . json_encode(debug_backtrace()));
 
-        if(!$this->_settings->optimizePdfs && 'pdf' === pathinfo(get_attached_file($ID), PATHINFO_EXTENSION)) {
+        if(!$this->_settings->optimizePdfs && 'pdf' === $currentFile->getExtension() ) {
             //pdf is not optimized automatically as per the option, but can be optimized by button. Nothing to do.
             return $meta;
         }
-        elseif(!get_attached_file($ID) && isset($meta['file']) && in_array(strtolower(pathinfo($meta['file'], PATHINFO_EXTENSION)), self::$PROCESSABLE_EXTENSIONS)) {
+        elseif(! $currentFile->exists() && isset($meta['file']) && in_array(strtolower(pathinfo($meta['file'], PATHINFO_EXTENSION)), self::$PROCESSABLE_EXTENSIONS)) {
             //in some rare cases (images added from the front-end) it's an image but get_attached_file returns null (the record is not yet saved in the DB)
             //in this case add it to the queue nevertheless
             $this->prioQ->push($ID);
@@ -1500,7 +1504,6 @@ class WPShortPixel {
                             //$backupUrl = content_url() . "/" . SHORTPIXEL_UPLOADS_NAME . "/" . SHORTPIXEL_BACKUP . "/";
                             //or even better:
                             $backupUrl = SHORTPIXEL_BACKUP_URL . "/";
-                            //$urlBkPath = $this->_apiInterface->returnSubDir(get_attached_file($ID));
                             $urlBkPath = ShortPixelMetaFacade::returnSubDir($meta->getPath(), ShortPixelMetaFacade::MEDIA_LIBRARY_TYPE);
                             $bkThumb = $backupUrl . $urlBkPath . $thumb;
                         }
@@ -1860,14 +1863,15 @@ class WPShortPixel {
             $this->prioQ->push($imageId);
             $itemHandler = new ShortPixelMetaFacade($imageId);
 
-            $path = get_attached_file($imageId);//get the full file PATH
-            if(!$manual && 'pdf' === pathinfo($path, PATHINFO_EXTENSION) && !$this->_settings->optimizePdfs) {
+            $itemFile = \wpSPIO()->filesystem()->getAttachedFile($imageId);
+
+            if(!$manual && 'pdf' === $itemFile->getExtension() && !$this->_settings->optimizePdfs) {
                 $ret = array("Status" => ShortPixelAPI::STATUS_SKIP, "Message" => $imageId);
             } else {
                 try {
                     $this->sendToProcessing($itemHandler, false, $itemHandler->getMeta()->getThumbsTodo());
                     $ret = array("Status" => ShortPixelAPI::STATUS_SUCCESS, "Message" => "");
-                } catch(Exception $e) { // Exception("Post metadata is corrupt (No attachment URL)")
+                } catch(Exception $e) { //$path Exception("Post metadata is corrupt (No attachment URL)")
                     $itemHandler->getMeta();
                     $errCode = $e->getCode() < 0 ? $e->getCode() : ShortPixelAPI::ERR_FILE_NOT_FOUND;
                     $itemHandler->setError($errCode, $e->getMessage());
@@ -2066,12 +2070,10 @@ class WPShortPixel {
     protected function doRestore($attachmentID, $rawMeta = null) {
         do_action("shortpixel_before_restore_image", $attachmentID);
 
-        $fs = new \ShortPixel\FileSystemController();
-        $origFile = get_attached_file($attachmentID);
-      //  $file = get_attached_file($attachmentID);
+        $fs = \wpSPIO()->filesystem();
 
         // Setup Original File and Data. This is used to determine backup path.
-        $fsFile = $fs->getFile($origFile);
+        $fsFile = $fs->getAttachedFile($attachmentID);
         $filePath = (string) $fsFile->getFileDir();
 
         $itemHandler = new ShortPixelMetaFacade($attachmentID);
@@ -2185,7 +2187,9 @@ class WPShortPixel {
                     return false;
                 }
                 $bkCount++;
-                $thumbsPaths[] = array('source' => $source, 'destination' => $destination);
+                //$thumbsPaths[] = array('source' => $source, 'destination' => $destination);
+                // This is to prevent double attempts on moving. If sizes have same definition, can have multiple same files in sizes, but they will be written to same path.
+                $thumbsPaths[$destination->getFileName()] = array('source' => $source, 'destination' => $destination);
             }
         }
         if(!$bkCount) {
@@ -2306,8 +2310,15 @@ class WPShortPixel {
                 $unlinkWebpSymlink = trailingslashit(dirname($unlink)) . wp_basename($unlink, '.' . pathinfo($unlink, PATHINFO_EXTENSION)) . '.webp';
                 $unlinkWebp = $unlink . '.webp';
                 WPShortPixel::log("PNG2JPG unlink $unlinkWebp");
-                @unlink($unlinkWebpSymlink);
-                @unlink($unlinkWebp);
+                //@unlink($unlinkWebpSymlink);
+                $unlinkFile = $fs->getFile($unlinkWebpSymlink);
+                if ($unlinkFile->exists())
+                  $unlinkFile->delete();
+
+                $unlinkFile = $fs->getFile($unlinkWebp);
+                if ($unlinkFile->exists())
+                    $unlinkFile->delete();
+
             }
         } catch(Exception $e) {
             $this->throwNotice('generic-err', $e->getMessage());
@@ -2494,12 +2505,14 @@ class WPShortPixel {
     public function handleOptimizeThumbs() {
         $ID = intval($_GET['attachment_ID']);
         $meta = wp_get_attachment_metadata($ID);
+        $fs = \wpSPIO()->filesystem();
 
         // default return;
         //$ret = array("Status" => ShortPixelAPI::STATUS_SKIP, "message" => (isset($meta['ShortPixelImprovement']) ? __('No thumbnails to optimize for ID: ','shortpixel-image-optimiser') : __('Please optimize image for ID: ','shortpixel-image-optimiser')) . $ID);
         $error = array('Status' => ShortPixelAPI::STATUS_SKIP, 'message' => __('Unspecified Error on Thumbnails for: ') . $ID);
 
-        list($includedSizes, $thumbsCount) = $this->getThumbsToOptimize($meta, get_attached_file($ID));
+        $optFile = $fs->getAttachedFile($ID);
+        list($includedSizes, $thumbsCount) = $this->getThumbsToOptimize($meta, $optFile->getFullPath());
         //WpShortPixelMediaLbraryAdapter::getSizesNotExcluded($meta['sizes'], $this->_settings->excludeSizes);
         $thumbsCount = count($includedSizes);
 
@@ -2591,8 +2604,10 @@ class WPShortPixel {
         $this->getQuotaInformation();
     }
 
+    // @todo integrate this in a normal way / move @unlinks to proper fs delete.
     public function handleDeleteAttachmentInBackup($ID) {
-        $file = get_attached_file($ID);
+        $fileObj = \wpSPIO()->filesystem()->getAttachedFile($ID);
+        $file = $fileObj->getFullPath();
         $meta = wp_get_attachment_metadata($ID);
 
 
@@ -3234,7 +3249,7 @@ class WPShortPixel {
                 // when forcing, set to never updated.
                 if ($force)
                 {
-                  $folder->setTsUpdated(date("Y-m-d H:i:s", 0) );
+                  $folder->setTsUpdated(date("Y-m-d H:i:s", 0) ); //
                   $this->spMetaDao->update($folder);
                 }
 
@@ -3574,12 +3589,13 @@ class WPShortPixel {
                 return;
             }
 
-            $file = get_attached_file($id);
+            $fs = \wpSPIO()->filesystem();
+            $file =  $fs->getAttachedFile($id);
             $data = ShortPixelMetaFacade::sanitizeMeta(wp_get_attachment_metadata($id));
             $itemHandler = new ShortPixelMetaFacade($id);
             $meta = $itemHandler->getMeta();
 
-            $fileExtension = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+            $fileExtension = strtolower( $file->getExtension() );
             $invalidKey = !$this->_settings->verifiedKey;
             $quotaExceeded = $this->_settings->quotaExceeded;
             $renderData = array("id" => $id, "showActions" => (current_user_can( 'manage_options' ) || current_user_can( 'upload_files' ) || current_user_can( 'edit_posts' )));
@@ -3611,12 +3627,12 @@ class WPShortPixel {
                && !($data['ShortPixelImprovement'] == 0 && isset($data['ShortPixel']['WaitingProcessing'])) //for images that erroneously have ShortPixelImprovement = 0 when WaitingProcessing
               ) { //already optimized
                 $thumbsOptList = isset($data['ShortPixel']['thumbsOptList']) ? $data['ShortPixel']['thumbsOptList'] : array();
-                list($thumbsToOptimizeList, $sizesCount) = $this->getThumbsToOptimize($data, $file);
+                list($thumbsToOptimizeList, $sizesCount) = $this->getThumbsToOptimize($data, $file->getFullPath());
 
                 $renderData['status'] = $fileExtension == "pdf" ? 'pdfOptimized' : 'imgOptimized';
                 $renderData['percent'] = $this->optimizationPercentIfPng2Jpg($data);
                 $renderData['bonus'] = ($data['ShortPixelImprovement'] < 5);
-                $renderData['backup'] = $this->getBackupFolderAny($file, $sizesCount? $data['sizes'] : array());
+                $renderData['backup'] = $this->getBackupFolderAny($file->getFullPath(), $sizesCount? $data['sizes'] : array());
                 $renderData['type'] = isset($data['ShortPixel']['type']) ? $data['ShortPixel']['type'] : '';
                 $renderData['invType'] = ShortPixelAPI::getCompressionTypeName($this->getOtherCompressionTypes(ShortPixelAPI::getCompressionTypeCode($renderData['type'])));
                 $renderData['thumbsTotal'] = $sizesCount;
@@ -3633,14 +3649,14 @@ class WPShortPixel {
                 $renderData['quotaExceeded'] = $quotaExceeded;
                 $webP = 0;
                 if($extended) {
-                    if(file_exists(dirname($file) . '/' . ShortPixelAPI::MB_basename($file, '.'.$fileExtension) . '.webp' )){
+                    if(file_exists(dirname($file->getFullPath()) . '/' . ShortPixelAPI::MB_basename($file->getFullPath(), '.'.$fileExtension) . '.webp' )){
                         $webP++;
                     }
                     if(isset($data['sizes'])) {
                     foreach($data['sizes'] as $key => $size) {
                         if (strpos($key, ShortPixelMeta::WEBP_THUMB_PREFIX) === 0) continue;
                         $sizeName = $size['file'];
-                        if(file_exists(dirname($file) . '/' . ShortPixelAPI::MB_basename($sizeName, '.'.$fileExtension) . '.webp' )){
+                        if(file_exists(dirname($file->getFullPath()) . '/' . ShortPixelAPI::MB_basename($sizeName, '.'.$fileExtension) . '.webp' )){
                             $webP++;
                         }
                     }
@@ -3873,20 +3889,34 @@ class WPShortPixel {
             return;
         }
 
+        $fs = \wpSPIO()->filesystem();
+
         $backupFolder = trailingslashit($this->getBackupFolder($paths[0]));
         foreach($paths as $path) {
             $pos = strrpos($path, ".");
+            $pathFile = $fs->getFile($path);
             if ($pos !== false) {
                 //$webpPath = substr($path, 0, $pos) . ".webp";
                 //echo($webpPath . "<br>");
-                @unlink(substr($path, 0, $pos) . ".webp");
-                @unlink(substr($path, 0, $pos) . "@2x.webp");
+                $file = $fs->getFile(substr($path, 0, $pos) . ".webp");
+                $file->delete();
+                $file = $fs->getFile(substr($path, 0, $pos) . "@2x.webp");
+                $file->delete();
             }
             //delte also the backups for image and retina correspondent
-            $fileName = wp_basename($path);
-            $extension = pathinfo($fileName, PATHINFO_EXTENSION);
-            @unlink($backupFolder . $fileName);
-            @unlink($backupFolder . preg_replace("/\." . $extension . "$/i", '@2x.' . $extension, $fileName));
+            $fileName = $pathFile->getFileName();
+            $extension = $pathFile->getExtension();
+
+            $backupFile = $fs->getFile($backupFolder . $fileName);
+            if ($backupFile->exists())
+              $backupFile->delete();
+            //@unlink($backupFolder . $fileName);
+
+            $backupFile = $fs->getFile($backupFolder . preg_replace("/\." . $extension . "$/i", '@2x.' . $extension, $fileName));
+            if ($backupFile->exists())
+              $backupFile->delete();
+
+//            @unlink($backupFolder . preg_replace("/\." . $extension . "$/i", '@2x.' . $extension, $fileName));
         }
     }
 //
@@ -3996,8 +4026,11 @@ class WPShortPixel {
         return self::_isProcessablePath($path, $excludeExtensions, $excludePatterns);
     }
 
+    /** @todo pretty much every caller of this function already has a path. Check if get/attached/file is really needed -again- */
     static public function _isProcessable($ID, $excludeExtensions = array(), $excludePatterns = array(), $meta = false) {
-        $path = get_attached_file($ID);//get the full file PATH
+        $file = \wpSPIO()->filesystem()->getAttachedFile($ID);
+        $path = $file->getFullPath(); //get the full file PATH
+
         if(isset($excludePatterns) && is_array($excludePatterns)) {
             foreach($excludePatterns as $excludePattern) {
                 $type = $excludePattern["type"];

@@ -1,6 +1,8 @@
 <?php
 namespace ShortPixel;
 
+$path = '/var/www/shortpixel/wp-content/uploads/2019/09/';
+
 ?>
 
 <section id="tab-debug" <?php echo ($this->display_part == 'debug') ? ' class="sel-tab" ' :''; ?>>

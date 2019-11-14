@@ -31,6 +31,25 @@ Class FileSystemController extends ShortPixelController
       return new FileModel($path);
     }
 
+    /** Get FileModel for a mediaLibrary post_id .
+    *
+    * This function exists to put get_attached_file to plugin control
+    * Externals / Interals maybe filter it.
+    *
+    * @param $id Attachement ID for the media library item
+    * @return FileModel returns a FileModel file.
+    * @todo This function will be more at home in a medialibrary_model
+    */
+    public function getAttachedFile($id)
+    {
+        $filepath = get_attached_file($id);
+        // same signature as wordpress' filter. Only for this plugin.
+        $filepath = apply_filters('shortpixel_get_attached_file', $filepath, $id);
+
+        return new FileModel($filepath);
+
+    }
+
     /** Get DirectoryModel for a certain path. This can exist or not
     *
     * @param String $path Full Path to the Directory.

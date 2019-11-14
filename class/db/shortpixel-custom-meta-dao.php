@@ -199,7 +199,6 @@ class ShortPixelCustomMetaDao {
           $this->db->query($sql, array($folderPath));
         }
 
-
         //$this->db->restoreErrors();
     }
 

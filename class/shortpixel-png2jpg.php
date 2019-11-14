@@ -222,7 +222,7 @@ class ShortPixelPng2Jpg {
 
         $meta = $itemHandler->getRawMeta();
         $ID = $itemHandler->getId();
-        $fs = new \Shortpixel\FileSystemController;
+        $fs = \wpSPIO()->filesystem();
 
         if(!$this->_settings->png2jpg || !isset($meta['file']) || strtolower(substr($meta['file'], -4)) !== '.png') {
             return ;
@@ -232,7 +232,8 @@ class ShortPixelPng2Jpg {
         WPShortPixel::log("Send to processing: Convert Media PNG to JPG #{$ID} META: " . json_encode($meta));
 
         $image = $meta['file']; // This is not a full path!
-        $imagePath = get_attached_file($ID); // This is a full path.
+        $imageFile = $fs->getAttachedFile($ID);
+        $imagePath = $imageFile->getFullPath(); // This is a full path.
         $basePath = trailingslashit(str_replace($image, "", $imagePath));
         $imageUrl = wp_get_attachment_url($ID);
         $baseUrl = self::removeUrlProtocol(trailingslashit(str_replace($image, "", $imageUrl))); //make the base url protocol agnostic if it's not already
