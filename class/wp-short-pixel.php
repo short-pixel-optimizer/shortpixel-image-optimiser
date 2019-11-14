@@ -183,7 +183,7 @@ class WPShortPixel {
     // @hook admin menu
     // @todo move to plugin class
     function registerAdminPage( ) {
-      return; 
+      return;
         if($this->spMetaDao->hasFoldersTable() && count($this->spMetaDao->getFolders())) {
             /*translators: title and menu name for the Other media page*/
             add_media_page( __('Other Media Optimized by ShortPixel','shortpixel-image-optimiser'), __('Other Media','shortpixel-image-optimiser'), 'edit_others_posts', 'wp-short-pixel-custom', array( &$this, 'listCustomMedia' ) );
@@ -1105,6 +1105,7 @@ class WPShortPixel {
         $maxTime = min(SHORTPIXEL_MAX_EXECUTION_TIME, 90);
         $timeoutThreshold = 5; // will adapt this with the maximum time needed for one pass
         $passTime = time();
+        // @todo If this fails, the bulk will since no start/stop Id's will change */
         for ($sanityCheck = 0, $crtStartQueryID = $startQueryID;
              ($crtStartQueryID >= $endQueryID) && (count($itemList) < SHORTPIXEL_PRESEND_ITEMS) && ($sanityCheck < 150)
               && (time() - $this->timer < $maxTime - $timeoutThreshold); $sanityCheck++) {
@@ -1360,7 +1361,7 @@ class WPShortPixel {
         { //take from custom images if any left to optimize - only if bulk was ever started
             //but first refresh if it wasn't refreshed in the last hour
             if(time() - $this->_settings->hasCustomFolders > 3600) {
-                $notice = null; $this->refreshCustomFolders($notice);
+                $notice = null; $this->refreshCustomFolders();
                 $this->_settings->hasCustomFolders = time();
             }
 
@@ -1657,7 +1658,7 @@ class WPShortPixel {
       $meta = $itemHandler->getMeta();
 
       Log::addDebug('Finding Thumbs on path' . $meta->getPath());
-      $thumbs = WpShortPixelMediaLbraryAdapter::findThumbs($meta->getPath());
+      //$thumbs = WpShortPixelMediaLbraryAdapter::findThumbs($meta->getPath());
 
       $fs = new \ShortPixel\FileSystemController();
       $mainFile = $fs->getFile($meta->getPath());
@@ -2728,7 +2729,7 @@ class WPShortPixel {
         }
         if(isset($_REQUEST['refresh']) && esc_attr($_REQUEST['refresh']) == 1) {
             $notice = null;
-            $this->refreshCustomFolders($notice);
+            $this->refreshCustomFolders(true);
         }
         if(isset($_REQUEST['action']) && esc_attr($_REQUEST['action']) == 'optimize' && isset($_REQUEST['image'])) {
             //die(ShortPixelMetaFacade::queuedId(ShortPixelMetaFacade::CUSTOM_TYPE, $_REQUEST['image']));
@@ -2822,6 +2823,12 @@ class WPShortPixel {
             } else {
                 $this->_settings->processThumbnails = 0;
             }
+
+            if ( isset($_POST['createWebp']) )
+              $this->_settings->createWebp = 1;
+            else
+              $this->_settings->createWebp = 0;
+
             //clean the custom files errors in order to process them again
             if($this->_settings->hasCustomFolders) {
                 $this->spMetaDao->resetFailed();
@@ -2998,13 +3005,13 @@ class WPShortPixel {
         die(self::formatBytes(self::folderSize(SHORTPIXEL_BACKUP_FOLDER)));
     }
 
+    // ** Function to get filedata for a directory when adding custom media directory  */
     public function browseContent() {
         if ( !current_user_can( 'manage_options' ) )  {
             wp_die(__('You do not have sufficient permissions to access this page.','shortpixel-image-optimiser'));
         }
-
         $root = self::getCustomFolderBase();
-
+        $fs = \wpSPIO()->filesystem();
 
         $postDir = rawurldecode($root.(isset($_POST['dir']) ? trim($_POST['dir']) : null ));
         // set checkbox if multiSelect set to true
@@ -3014,28 +3021,35 @@ class WPShortPixel {
 
         if( file_exists($postDir) ) {
 
-            $files = scandir($postDir);
+
+            $dir = $fs->getDirectory($postDir);
+            $files = $dir->getFiles();
+            $subdirs = $fs->sortFiles($dir->getSubDirectories()); // runs through FS sort.
+
+//            $files = scandir($postDir);
             $returnDir	= substr($postDir, strlen($root));
 
-            natcasesort($files);
+            //natcasesort($files);
 
-            if( count($files) > 2 ) { // The 2 accounts for . and ..
+            if( count($subdirs) > 0 ) {
                 echo "<ul class='jqueryFileTree'>";
-                foreach( $files as $file ) {
+                foreach($subdirs as $dir ) {
 
-                    if($file == 'ShortpixelBackups' || ShortPixelMetaFacade::isMediaSubfolder($postDir . $file, false)) continue;
+                    $dirpath = $dir->getPath();
+                    $dirname = $dir->getName();
+                    if($dirname == 'ShortpixelBackups' || ShortPixelMetaFacade::isMediaSubfolder($dirname, false)) continue;
 
-                    $htmlRel	= str_replace("'", "&apos;", $returnDir . $file);
-                    $htmlName	= htmlentities($file);
-                    $ext	= preg_replace('/^.*\./', '', $file);
+                    $htmlRel	= str_replace("'", "&apos;", $returnDir . $dirname);
+                    $htmlName	= htmlentities($dirname);
+                    //$ext	= preg_replace('/^.*\./', '', $file);
 
-                    if( file_exists($postDir . $file) && $file != '.' && $file != '..' ) {
+                    if( $dir->exists()  ) {
                         //KEEP the spaces in front of the rel values - it's a trick to make WP Hide not replace the wp-content path
-                        if( is_dir($postDir . $file) && (!$onlyFiles || $onlyFolders) ) {
+                    //    if( is_dir($postDir . $file) && (!$onlyFiles || $onlyFolders) ) {
                             echo "<li class='directory collapsed'>{$checkbox}<a rel=' " .$htmlRel. "/'>" . $htmlName . "</a></li>";
-                        } else if (!$onlyFolders || $onlyFiles) {
+                      /*  } else if (!$onlyFolders || $onlyFiles) {
                             echo "<li class='file ext_{$ext}'>{$checkbox}<a rel=' " . $htmlRel . "'>" . $htmlName . "</a></li>";
-                        }
+                        } */
                     }
                 }
 
@@ -3191,29 +3205,45 @@ class WPShortPixel {
 
     // TODO - Part of the folder model.
     public static function getCustomFolderBase() {
-        if(is_main_site()) {
-            $base = get_home_path();
-            return realpath(rtrim($base, '/'));
-        } else {
-            $up = wp_upload_dir();
-            return realpath($up['basedir']);
-        }
+        Log::addDebug('Call to legacy function getCustomFolderBase');
+        $fs = \wpSPIO()->filesystem();
+        $dir = $fs->getWPFileBase();
+        return $dir->getPath();
     }
 
-    // TODO - Should be part of folder model
+    // @TODO - Should be part of folder model
+    /* Seems not in use @todo marked for removal.
     protected function fullRefreshCustomFolder($path, &$notice) {
         $folder = $this->spMetaDao->getFolder($path);
         $diff = $folder->checkFolderContents(array('ShortPixelCustomMetaDao', 'getPathFiles'));
-    }
+    } */
 
     // @todo - Should be part of folder model
-    public function refreshCustomFolders(&$notice, $ignore = false) {
+    // @param force boolean Force a recheck.
+    public function refreshCustomFolders($force = false) {
         $customFolders = array();
+        $fs =  \wpSPIO()->fileSystem();
+
         if($this->_settings->hasCustomFolders) {
             $customFolders = $this->spMetaDao->getFolders();
             foreach($customFolders as $folder) {
-                if($folder->getPath() === $ignore) continue;
+
+              $mt = $folder->getFolderContentsChangeDate();
+
+              if($mt > strtotime($folder->getTsUpdated()) || $force) {
+                // when forcing, set to never updated.
+                if ($force)
+                {
+                  $folder->setTsUpdated(date("Y-m-d H:i:s", 0) );
+                  $this->spMetaDao->update($folder);
+                }
+
+                $fsFolder = $fs->getDirectory($folder->getPath());
+                $this->spMetaDao->refreshFolder($fsFolder);
+              }
+              /*  if($folder->getPath() === $ignore) continue;
                 try {
+
                     $mt = $folder->getFolderContentsChangeDate();
                     if($mt > strtotime($folder->getTsUpdated())) {
                         $fileList = $folder->getFileList(strtotime($folder->getTsUpdated()));
@@ -3230,8 +3260,8 @@ class WPShortPixel {
                     } else {
                         $notice = array("status" => "error", "msg" => $ex->getMessage());
                     }
-                }
-            }
+                }*/
+            } // folders
         }
         return $customFolders;
     }
@@ -3698,11 +3728,35 @@ class WPShortPixel {
                 'orderby' => 'meta_value_num',
             ) );
         }
-        if ( 'upload.php' == $GLOBALS['pagenow'] && !empty( $_GET['shortpixel_status'] ) ) {
+        if ( 'upload.php' == $GLOBALS['pagenow'] && isset( $_GET['shortpixel_status'] ) ) {
 
-            $status       = intval($_GET['shortpixel_status']);
+            $status       = sanitize_text_field($_GET['shortpixel_status']);
             $metaKey = '_shortpixel_status';
-            $metaCompare = $status == 0 ? 'NOT EXISTS' : ($status < 0 ? '<' : '=');
+            //$metaCompare = $status == 0 ? 'NOT EXISTS' : ($status < 0 ? '<' : '=');
+
+            if ($status == 'all')
+              return $vars; // not for us
+
+            switch($status)
+            {
+               case "opt":
+                  $status = ShortPixelMeta::FILE_STATUS_SUCCESS;
+                  $metaCompare = ">="; // somehow this meta stores optimization percentage.
+                break;
+                case "unopt":
+                  $status = ShortPixelMeta::FILE_STATUS_UNPROCESSED;
+                  $metaCompare = "NOT EXISTS";
+                break;
+                case "pending":
+                  $status = ShortPixelMeta::FILE_STATUS_PENDING;
+                  $metaCompare = "=";
+                break;
+                case "error":
+                  $status = -1;
+                  $metaCompare = "<=";
+                break;
+
+            }
 
             $vars = array_merge( $vars, array(
                 'meta_query' => array(
@@ -3714,7 +3768,7 @@ class WPShortPixel {
                 )
             ));
         }
-        //Log::addDebug('META QUERY', $vars);
+        Log::addDebug('META QUERY', $vars);
         return $vars;
     }
 
@@ -3727,21 +3781,36 @@ class WPShortPixel {
         if ( $scr->base !== 'upload' ) return;
 
         $status   = filter_input(INPUT_GET, 'shortpixel_status', FILTER_SANITIZE_STRING );
-        $selected = (int)$status > 0 ? $status : 0;
-        $args = array(
+    //    $selected = (int)$status > 0 ? $status : 0;
+      /*  $args = array(
             'show_option_none'   => 'ShortPixel',
             'name'               => 'shortpixel_status',
             'selected'           => $selected
-        );
+        ); */
 //        wp_dropdown_users( $args );
+        $options = array(
+            'all' => __('All Images', 'shortpixel-image-optimiser'),
+            'opt' => __('Optimized', 'shortpixel-image-optimiser'),
+            'unopt' => __('Unoptimized', 'shortpixel-image-optimiser'),
+            'pending' => __('Pending', 'shortpixel-image-optimiser'),
+            'error' => __('Errors', 'shortpixel-image-optimiser'),
+        );
 
-        echo("<select name='shortpixel_status' id='shortpixel_status'>\n"
+        echo "<select name='shortpixel_status' id='shortpixel_status'>\n";
+        foreach($options as $optname => $optval)
+        {
+            $selected = ($status == $optname) ? 'selected' : '';
+            echo "<option value='". $optname . "' $selected>" . $optval . "</option>\n";
+        }
+        echo "</select>";
+
+        /*echo("<select name='shortpixel_status' id='shortpixel_status'>\n"
                . "\t<option value='0'" . ($status == 0 ? " selected='selected'" : "") . ">All images</option>\n"
                . "\t<option value='2'" . ($status == 2 ? " selected='selected'" : "") . ">Optimized</option>\n"
                . "\t<option value='none'" . ($status == 'none' ? " selected='selected'" : "") . ">Unoptimized</option>\n"
                . "\t<option value='1'" . ($status == 1 ? " selected='selected'" : "") . ">Pending</option>\n"
                . "\t<option value='-1'" . ($status < 0 ? " selected='selected'" : "") . ">Errors</option>\n"
-            . "</select>");
+            . "</select>"); */
     }
 
     /** Calculates Optimization if PNG2Jpg does something
@@ -4017,13 +4086,30 @@ class WPShortPixel {
     */
     static public function folderSize($path) {
         $total_size = 0;
-        if(file_exists($path)) {
-            $files = scandir($path); // @todo This gives a warning if directory is not writable.
+        $fs = wpSPIO()->filesystem();
+        $dir = $fs->getDirectory($path);
+
+        if($dir->exists()) {
+            $files = $dir->getFiles(); // @todo This gives a warning if directory is not writable.
+            $subdirs = $dir->getSubDirectories();
+
         } else {
             return $total_size;
         }
-        $cleanPath = rtrim($path, '/'). '/';
-        foreach($files as $t) {
+        //$cleanPath = rtrim($path, '/'). '/';
+        foreach($files as $file)
+        {
+          $total_size += $file->getFileSize();
+        }
+
+        foreach($subdirs as $dir)
+        {
+          $total_size += self::folderSize($dir->getPath());
+        }
+
+        return $total_size;
+
+        /* foreach($files as $t) {
             if ($t<>"." && $t<>"..")
             {
                 $currentFile = $cleanPath . $t;
@@ -4036,7 +4122,7 @@ class WPShortPixel {
                     $total_size += $size;
                 }
             }
-        }
+        } */
         return $total_size;
     }
 

@@ -13,20 +13,29 @@ class DirectoryModel extends ShortPixelModel
 {
   // Directory info
   protected $path;
+  protected $name;
 
   // Directory status
   protected $exists = false;
   protected $is_writable = false;
+  protected $is_readable = false;
+
+
 
   protected $new_directory_permission = 0755;
 
   /** Creates a directory model object. DirectoryModel directories don't need to exist on FileSystem
   *
   * When a filepath is given, it  will remove the file part.
+  * @param $path String The Path
   */
   public function __construct($path)
   {
-      //$this->new_directory_permission = octdec(06440);
+      /* Check if realpath improves things. We support non-existing paths, which realpath fails on, so only apply on result.
+      */
+      $testpath = realpath($path);
+      if ($testpath)
+        $path = $testpath;
 
       $path = wp_normalize_path($path);
       if (! is_dir($path)) // path is wrong, *or* simply doesn't exist.
@@ -45,11 +54,13 @@ class DirectoryModel extends ShortPixelModel
       }
 
       $this->path = trailingslashit($path);
+      $this->name = basename($this->path);
 
       if (file_exists($this->path))
       {
         $this->exists();
         $this->is_writable();
+        $this->is_readable();
       }
   }
 
@@ -67,6 +78,17 @@ class DirectoryModel extends ShortPixelModel
     return $this->path;
   }
 
+  public function getModified()
+  {
+    return filemtime($this->path);
+  }
+
+  /** Get basename of the directory. Without path */
+  public function getName()
+  {
+    return $this->name;
+  }
+
   public function exists()
   {
     $this->exists = file_exists($this->path);
@@ -79,6 +101,11 @@ class DirectoryModel extends ShortPixelModel
     return $this->is_writable;
   }
 
+  public function is_readable()
+  {
+     $this->is_readable = is_readable($this->path);
+     return $this->is_readable;
+  }
   /** Try to obtain the path, minus the installation directory.
   * @return Mixed False if this didn't work, Path as string without basedir if it did. With trailing slash, without starting slash.
   */
@@ -93,7 +120,6 @@ class DirectoryModel extends ShortPixelModel
      }
 
      $install_dir = trailingslashit($install_dir);
-//Log::addDebug('Install Dir - ' . $install_dir);
 
      $path = $this->getPath();
      // try to build relativePath without first slash.
@@ -161,8 +187,10 @@ class DirectoryModel extends ShortPixelModel
     return $testpath;
   }
 
-  /** Checks the directory
-  *
+  /** Checks the directory into working order
+  * Tries to create directory if it doesn't exist
+  * Tries to fix file permission if writable is needed
+  * @param $check_writable Boolean Directory should be writable
   */
   public function check($check_writable = false)
   {
@@ -196,5 +224,98 @@ class DirectoryModel extends ShortPixelModel
     return true;
   }
 
+  /* Get files from directory
+  * @todo In future this should accept some basic filters via args.
+  * @returns Array|boolean Returns false if something wrong w/ directory, otherwise a files array of FileModel Object.
+  */
+  public function getFiles($args = array())
+  {
+
+    $defaults = array(
+        'date_newer' => null,
+    );
+    $args = wp_parse_args($args, $defaults);
+
+    // if all filters are set to null, so point in checking those.
+    $has_filters = (count(array_filter($args)) > 0) ? true : false;
+
+    if ( ! $this->exists() || ! $this->is_readable() )
+      return false;
+
+    $fileArray = array();
+
+    if ($handle = opendir($this->path)) {
+        while (false !== ($entry = readdir($handle))) {
+            if ( ($entry != "." && $entry != "..") && ! is_dir($this->path . $entry) ) {
+                $fileArray[] = new FileModel($this->path . $entry);
+            }
+        }
+        closedir($handle);
+    }
+
+    if ($has_filters)
+    {
+      $fileArray = array_filter($fileArray, function ($file) use ($args) {
+           return $this->fileFilter($file, $args);
+       } );
+    }
+    return $fileArray;
+  }
+
+  // @return boolean true if it should be kept in array, false if not.
+  private function fileFilter(FileModel $file, $args)
+  {
+     $filter = true;
+
+     if (! is_null($args['date_newer']))
+     {
+       $modified = $file->getModified();
+       if ($modified < $args['date_newer'] )
+          $filter = false;
+     }
+
+     return $filter;
+  }
+
+  /** Get subdirectories from directory
+  * * @returns Array|boolean Returns false if something wrong w/ directory, otherwise a files array of DirectoryModel Object.
+  */
+  public function getSubDirectories()
+  {
+    $fs = \wpSPIO()->fileSystem();
+
+    if (! $this->exists() || ! $this->is_readable() )
+      return false;
+
+    $dirIt = new \DirectoryIterator($this->path);
+    $dirArray = array();
+    foreach($dirIt as $fileInfo)
+    {
+       if ($fileInfo->isDir() && $fileInfo->isReadable() && ! $fileInfo->isDot() )
+       {
+         $dir = new DirectoryModel($fileInfo->getRealPath());
+         if ($dir->exists())
+            $dirArray[] = $dir;
+       }
+
+    }
+    return $dirArray;
+  }
+
+  /** Check if this dir is a subfolder
+  * @param DirectoryModel The directoryObject that is tested as the parent */
+  public function isSubFolderOf(DirectoryModel $dir)
+  {
+    // the same path, is not a subdir of.
+    if ($this->getPath() === $dir->getPath())
+      return false;
+
+    // the main path must be followed from the beginning to be a subfolder.
+    if (strpos($this->getPath(), $dir->getPath() ) === 0)
+    {
+      return true;
+    }
+    return false;
+  }
 
 }

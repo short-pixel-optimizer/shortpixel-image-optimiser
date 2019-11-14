@@ -80,8 +80,16 @@ class SettingsController extends shortPixelController
         Log::addDebug('Settings Action - addkey ', array($this->is_form_submit, $this->postData) );
         if ($this->is_form_submit && isset($this->postData['apiKey']))
         {
-            $this->keyModel->resetTried();
-            $this->keyModel->checkKey($this->postData['apiKey']);
+            $apiKey = $this->postData['apiKey'];
+            if (strlen(trim($apiKey)) == 0) // display notice when submitting empty API key
+            {
+              Notice::addError(sprintf(__("The key you provided has %s characters. The API key should have 20 characters, letters and numbers only.",'shortpixel-image-optimiser'), strlen($apiKey) ));
+            }
+            else
+            {
+              $this->keyModel->resetTried();
+              $this->keyModel->checkKey($this->postData['apiKey']);
+            }
             /*if (isset($this->postData['verifiedKey']) && $this->postData['verifiedKey'])
             {
               $this->model->apiKey = $this->postData['apiKey'];
@@ -297,7 +305,6 @@ class SettingsController extends shortPixelController
       protected function loadQuotaData()
       {
         // @todo Probably good idea to put this in a 2-5 min transient or so.
-
         if (is_null($this->quotaData))
           $this->quotaData = $this->shortPixel->checkQuotaAndAlert();
 
@@ -315,7 +322,7 @@ class SettingsController extends shortPixelController
       protected function loadCustomFolders()
       {
         $notice = null;
-        $customFolders = $this->shortPixel->refreshCustomFolders($notice);
+        $customFolders = $this->shortPixel->refreshCustomFolders();
 
         if (! is_null($notice))
         {
@@ -324,7 +331,6 @@ class SettingsController extends shortPixelController
             Notice::addError($message);
           else
             Notice::addNormal($message);
-
 
         }
 

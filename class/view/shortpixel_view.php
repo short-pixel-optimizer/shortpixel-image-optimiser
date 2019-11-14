@@ -212,7 +212,6 @@ class ShortPixelView {
         //$this->ctrl->outputHSBeacon();
         \ShortPixel\HelpScout::outputBeacon($this->ctrl->getApiKey());
 
-
         $this->bulkType = $this->ctrl->getPrioQ()->getBulkTypeForDisplay(); // adding to the mess
         $hider = ($this->bulkType == ShortPixelQueue::BULK_TYPE_RESTORE) ? 'sp-hidden' : '';
         ?>
@@ -234,6 +233,14 @@ class ShortPixelView {
                         <div style='width:165px; display:inline-block; padding-left: 5px'>
                             <input type='checkbox' id='thumbnails' name='thumbnails' onclick='ShortPixel.checkThumbsUpdTotal(this)' <?php echo($this->ctrl->processThumbnails() ? "checked":"");?>>
                             <?php _e('Include thumbnails','shortpixel-image-optimiser');?>
+                        </div><br><br>
+                        <div>
+
+                          <input name="createWebp" type="checkbox" id="createWebp" value="1" <?php checked( $settings->createWebp, "1" );?> >
+                          <label for="createWebp">
+                              <?php _e('Also create <a href="http://blog.shortpixel.com/how-webp-images-can-speed-up-your-site/" target="_blank">WebP versions</a> of the images, <strong>for free</strong>.','shortpixel-image-optimiser');?>
+                          </label>
+
                         </div><br>
                         <?php if($quotaData["totalProcessedMlFiles"] > 0) { ?>
                         <div class="bulk-label bulk-total"><?php _e('Total images','shortpixel-image-optimiser');?></div>
@@ -555,6 +562,15 @@ class ShortPixelView {
                 <form action='' method='POST' >
                     <input type='checkbox' id='bulk-thumbnails' name='thumbnails' <?php echo($this->ctrl->processThumbnails() ? "checked":"");?>
                            onchange="ShortPixel.onBulkThumbsCheck(this)"> <?php _e('Include thumbnails','shortpixel-image-optimiser');?><br><br>
+
+                     <div>
+
+                       <input name="createWebp" type="checkbox" id="createWebp" value="1" <?php checked( $settings->createWebp, "1" );?> >
+                       <label for="createWebp">
+                           <?php _e('Also create <a href="http://blog.shortpixel.com/how-webp-images-can-speed-up-your-site/" target="_blank">WebP versions</a> of the images, <strong>for free</strong>.','shortpixel-image-optimiser');?>
+                       </label>
+
+                     </div><br>
 
                    <a class='button' style="float: right;" href='<?php echo add_query_arg('part','bulk-restore-all'); ?> '><?php _e('Bulk Restore Images','shortpixel-image-optimiser'); ?></a>
 
