@@ -299,7 +299,7 @@ class ShortPixelQueue {
 
     public function setBulkPreviousPercent() {
         //processable and already processed
-        $res = WpShortPixelMediaLbraryAdapter::countAllProcessableFiles($this->settings, $this->getFlagBulkId(), $this->settings->stopBulkId);
+        $res = $this->settings->currentStats; //this is only called when the bulk is started and the stats are already refreshed in bulkProcess()...
         $this->settings->bulkCount = $res["mainFiles"];
 
         //if compression type changed, add also the images with the other compression type
@@ -355,6 +355,7 @@ class ShortPixelQueue {
     }
 
     public function startBulk($type = self::BULK_TYPE_OPTIMIZE) {
+        Log::addDebug('startBulk 0');
         $this->resetStartBulkId(); //start downwards from the biggest item ID
         $this->resetStopBulkId();
         $this->flagBulkStart(); //we use this to detect new added files while bulk is running

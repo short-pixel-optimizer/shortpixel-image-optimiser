@@ -2673,8 +2673,10 @@ class WPShortPixel {
            && isset($this->_settings->currentStats['time'])
            && (time() - $this->_settings->currentStats['time'] < $time))
         {
+            Log::addDebug("CURRENT STATS FROM CACHE (not older than $time sec., currently " . (time() - $this->_settings->currentStats['time']) . ' sec. old)');
             return $this->_settings->currentStats;
         } else {
+            Log::addDebug("CURRENT STATS (not older than $time) ARE BEING CALCULATED...");
             $imageCount = WpShortPixelMediaLbraryAdapter::countAllProcessable($this->_settings);
             $quotaData['time'] = time();
             $quotaData['optimizePdfs'] = $this->_settings->optimizePdfs;
