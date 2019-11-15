@@ -47,7 +47,9 @@ class ShortPixelMetaFacade {
     }
 
     private static function rawMetaToMeta($ID, $rawMeta) {
-        $path = get_attached_file($ID);
+        $file = \wpSPIO()->filesystem()->getAttachedFile($ID);
+        $path = $file->getFullPath();
+
         return new ShortPixelMeta(array(
                     "id" => $ID,
                     "name" => ShortPixelAPI::MB_basename($path),
@@ -476,6 +478,7 @@ class ShortPixelMetaFacade {
      * @param $id
      * @return false|string
      * @throws Exception
+     * @todo hack the hack to a solid solution.
      */
     public static function safeGetAttachmentUrl($id) {
         $attURL = wp_get_attachment_url($id);
@@ -483,6 +486,13 @@ class ShortPixelMetaFacade {
             throw new Exception("Post metadata is corrupt (No attachment URL for $id)", ShortPixelAPI::ERR_POSTMETA_CORRUPT);
         }
         if ( !parse_url($attURL, PHP_URL_SCHEME) ) {//no absolute URLs used -> we implement a hack
+
+           if (! is_null($attURL, PHP_URL_HOST)) // This is for URL's for // without http or https. hackhack.
+           {
+             $scheme = is_ssl() ? 'https:' : 'http:';
+             return $scheme. $attURL;
+
+           }
            return self::getHomeUrl() . ltrim($attURL,'/');//get the file URL
         }
         else {
@@ -500,16 +510,16 @@ class ShortPixelMetaFacade {
             $path = $meta->getPath();
             $fsFile = $fs->getFile($path);
             $url = $fs->pathToUrl($fsFile);
-            
+
             //fix for situations where site_url is lala.com/en and home_url is lala.com - if using the site_url will get a duplicated /en in the URL
       //      $homeUrl = self::getHomeUrl();
           $urlList[] = $url;  //  self::replaceHomePath($meta->getPath(), $homeUrl);
 
             $filePaths[] = $meta->getPath();
         } else {
-            $path = get_attached_file($this->ID);//get the full file PATH
-            $fsFile = $fs->getFile($path);
-            $mainExists = apply_filters('shortpixel_image_exists', file_exists($path), $path, $this->ID);
+            $fsFile = \wpSPIO()->filesystem()->getAttachedFile($this->ID);//get the full file PATH
+            //$fsFile = $fs->getFile($path);
+            $mainExists = apply_filters('shortpixel_image_exists', $fsFile->exists(), $fsFile->getFullPath(), $this->ID);
             try
             {
               $predownload_url = $url = self::safeGetAttachmentUrl($this->ID); // This function *can* return an PHP error.
@@ -522,10 +532,10 @@ class ShortPixelMetaFacade {
             }
             $urlList = array(); $filePaths = array();
 
-            Log::addDebug('attached file path: ' . $path, array( (string) $fsFile->getFileDir() )  );
+            Log::addDebug('attached file path: ' . (string) $fsFile, array( (string) $fsFile->getFileDir() )  );
 
             if(!$mainExists) {
-               list($url, $path) = $this->attemptRemoteDownload($url, $path, $this->ID);
+               list($url, $path) = $this->attemptRemoteDownload($url, $fsFile->getFullPath(), $this->ID);
                $downloadFile = $fs->getFile($path);
                if ($downloadFile->exists()) // check for success.
                {
@@ -536,13 +546,13 @@ class ShortPixelMetaFacade {
 
             if($mainExists) {
                 $urlList[] = $url;
-                $filePaths[] = $path;
+                $filePaths[] = $fsFile->getFullPath();
                 if($addRetina) {
-                    $this->addRetina($path, $url, $filePaths, $urlList);
+                    $this->addRetina($fsFile->getFullPath(), $url, $filePaths, $urlList);
                 }
             }
 
-            Log::addDebug('Main file turnout - ', array($url, $path));
+            Log::addDebug('Main file turnout - ', array($url, (string) $fsFile));
 
             $meta = $this->getMeta();
             $sizes = $meta->getThumbs();
@@ -583,7 +593,7 @@ class ShortPixelMetaFacade {
                     if($count >= SHORTPIXEL_MAX_THUMBS) break;
                     $count++;
 
-                    $origPath = $tPath = str_replace(ShortPixelAPI::MB_basename($path), $thumbnailInfo['file'], $path);
+                    $origPath = $tPath = str_replace(ShortPixelAPI::MB_basename($fsFile->getFullPath() ), $thumbnailInfo['file'], $fsFile->getFullPath());
                     $origFile = $fs->getFile($origPath);
 
                     if ($origFile->getExtension() == 'webp') // never include any webp extension.
@@ -743,11 +753,12 @@ class ShortPixelMetaFacade {
     // @todo Function gets duplicated images over WPML. Same image, different language so doesn't need duplication.
     public static function getWPMLDuplicates( $id ) {
         global $wpdb;
+        $fs = \wpSPIO()->filesystem();
 
         $parentId = get_post_meta ($id, '_icl_lang_duplicate_of', true );
         if($parentId) $id = $parentId;
 
-        $mainFile = get_attached_file($id);
+        $mainFile = $fs->getAttachedFile($id);
 
         $duplicates = $wpdb->get_col( $wpdb->prepare( "
             SELECT pm.post_id FROM {$wpdb->postmeta} pm
@@ -783,7 +794,8 @@ class ShortPixelMetaFacade {
             if(count($transGroupId)) {
                 $transGroup = $wpdb->get_results("SELECT element_id FROM {$wpdb->prefix}icl_translations WHERE trid = " . $transGroupId[0]->trid);
                 foreach($transGroup as $trans) {
-                    if($mainFile == get_attached_file($trans->element_id)){
+                    $transFile = $fs->getFile($trans->element_id);
+                    if($mainFile->getFullPath() == $transFile->getFullPath() ){
                         $duplicates[] = $trans->element_id;
                     }
                 }

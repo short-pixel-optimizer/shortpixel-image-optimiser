@@ -2,11 +2,13 @@
 namespace ShortPixel;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\FileSystemController as FileSystem;
+use ShortPixel\Notices\NoticeController as Notice;
 
 class wpOffload
 {
     protected $as3cf;
     protected $active = false;
+    private $itemClassName;
 
     protected $settings;
 
@@ -18,6 +20,13 @@ class wpOffload
 
     public function init($as3cf)
     {
+      if (! class_exists('\DeliciousBrains\WP_Offload_Media\Items\Media_Library_Item'))
+      {
+        Notice::addWarning(__('Your S3-Offload plugin version doesn\'t seem to be compatible. Please upgrade the S3-Offload plugin', 'shortpixel-image-optimiser'));
+      }
+      else {
+        $this->itemClassName = '\DeliciousBrains\WP_Offload_Media\Items\Media_Library_Item';
+      }
 
       $this->as3cf = $as3cf;
       $this->active = true;
@@ -34,7 +43,7 @@ class wpOffload
 
       add_filter('as3cf_pre_update_attachment_metadata', array($this, 'preventInitialUpload'), 10,4);
 
-      add_filter('get_attached_file', function($file, $id)
+      add_filter('shortpixel_get_attached_file', function($file, $id)
       {
           $scheme = parse_url($file, PHP_URL_SCHEME);
           if ($scheme !== false && strpos($scheme, 's3') !== false)
@@ -62,24 +71,28 @@ class wpOffload
 
     public function image_restore($id)
     {
-      //$provider_object = $this->as3cf->get_attachment_provider_info($id);
-      //$this->as3cf->remove_attachment_files_from_provider($id, $provider_object);
       $this->remove_remote($id);
-
-      //Log::addDebug('S3Offload - Image restore  - ', array($id, $provider_object, get_attached_file($id)));
-    //  $provider_object['key']  =
-
-    //  add_post_meta( $id, 'amazonS3_info', $provider_object );
-    //  delete_post_meta( $post_id, 'amazonS3_info' );
-
       $this->image_upload($id);
 
     }
 
     public function remove_remote($id)
     {
-      $provider_object = $this->as3cf->get_attachment_provider_info($id);
-      $this->as3cf->remove_attachment_files_from_provider($id, $provider_object);
+      $mediaItem = $this->getItemById($id);
+      if ($mediaItem === false)
+      {
+        Log::addDebug('S3-Offload MediaItem not remote - ' . $id);
+        return false;
+      }
+    //  $provider_object = $this->as3cf->get_attachment_provider_info($id);
+      $this->as3cf->remove_attachment_files_from_provider($id, $mediaItem);
+    }
+
+    /** @return Returns S3Ofload MediaItem, or false when this does not exist */
+    protected function getItemById($id)
+    {
+      $mediaItem = $this->itemClassName::get_by_source_id($id);
+      return $mediaItem;
     }
 
     public function image_converted($id)
@@ -87,35 +100,59 @@ class wpOffload
         $fs = new \ShortPixel\FileSystemController();
 
         // delete the old file.
-        $provider_object = $this->as3cf->get_attachment_provider_info($id);
-  //      $this->as3cf->remove_attachment_files_from_provider($id, $provider_object);
+      //  $provider_object = $this->as3cf->get_attachment_provider_info($id);
 
+  //      $this->as3cf->remove_attachment_files_from_provider($id, $provider_object);
         // get some new ones.
-        $providerFile = $fs->getFile($provider_object['key']);
+
+        // delete the old file
+        $mediaItem = $this->getItemById($id);
+        if ($mediaItem === false) // mediaItem seems not present. Probably not a remote file
+          return;
+
+        $this->as3cf->remove_attachment_files_from_provider($id, $mediaItem);
+        $providerSourcePath = $mediaItem->source_path();
+
+        //$providerFile = $fs->getFile($provider_object['key']);
+        $providerFile = $fs->getFile($providerSourcePath);
         $newFile = $fs->getFile($this->returnOriginalFile(null, $id));
 
         // convert
-        $newfilemeta = $provider_object['key'];
+        //$newfilemeta = $provider_object['key'];
         if ($providerFile->getExtension() !== $newFile->getExtension())
         {
-            $newfilemeta = str_replace($providerFile->getFileName(), $newFile->getFileName(), $newfilemeta);
-            Log::addDebug('S3Offload, replacing image in provider meta', array($newfilemeta));
-        }
-        else {
-           Log::addDebug('ProviderFile and NewFile same extension', array($providerFile->getFullPath(), $newFile->getFullPath()));
+          //  $newfilemeta = str_replace($providerFile->getFileName(), $newFile->getFileName(), $newfilemeta);
+          $data = $mediaItem->key_values(true);
+          $record_id = $data['id'];
+/*          $data['path']
+          $data['original_path']
+          $data['original_source_path']
+          $data['source_path'] */
+
+          $data['path'] = str_replace($providerFile->getFileName(), $newFile->getFileName(), $data['path']);
+          /*$data['original_path'] = str_replace($providerFile->getFileName(), $newFile->getFileName(), $data['original_path']);
+          $data['source_path'] = str_replace($providerFile->getFileName(), $newFile->getFileName(), $data['source_path']);
+          $data['original_source_path'] = str_replace($providerFile->getFileName(), $newFile->getFileName(), $data['original_source_path']);
+*/
+
+
+//$provider, $region, $bucket, $path, $is_private, $source_id, $source_path, $original_filename = null, $private_sizes = array(), $id = null
+          $newItem = new $this->itemClassName($data['provider'], $data['region'], $data['bucket'], $data['path'], $data['is_private'], $data['source_id'], $data['source_path'], $newFile->getFileName(), $data['extra_info'], $record_id );
+
+          $newItem->save();
+
+            Log::addDebug('S3Offload - Uploading converted file ');
         }
 
         // upload
-        $provider_object['key'] = $newfilemeta;
-        update_post_meta( $id, 'amazonS3_info', $provider_object );
-
         $this->image_upload($id); // delete and reupload
     }
 
     public function image_upload($id)
     {
-        //$this->as3cf->get_setting( 'copy-to-s3' )
-        if ( ! ( $old_provider_object = $this->as3cf->get_attachment_provider_info( $id ) ) && ! $this->as3cf->get_setting( 'copy-to-s3' ) ) {
+        $item = $this->getItemById($id);
+
+        if ( $item === false && ! $this->as3cf->get_setting( 'copy-to-s3' ) ) {
           // abort if not already uploaded to provider and the copy setting is off
           Log::addDebug('As3cf image upload is off and object not previously uploaded');
           return false;
@@ -129,8 +166,7 @@ class wpOffload
     * Function will only work when plugin is set to auto-optimize new entries to the media library */
     public function preventInitialUpload($bool, $data, $post_id, $old_provider_object)
     {
-        // @todo weak call. See how in future settings might come via central provider.
-        $settings = new \WPShortPixelSettings();
+        $settings = \wpSPIO()->settings();
 
         if ($settings->autoMediaLibrary)
         {

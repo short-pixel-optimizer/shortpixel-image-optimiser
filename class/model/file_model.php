@@ -41,6 +41,10 @@ class FileModel extends ShortPixelModel
     $this->fullpath = trim($path);
   }
 
+  /* Get a string representation of file, the fullpath
+  *  Note - this might be risky, without processedpath, in cases.
+  * @return String  Full path  processed or unprocessed. 
+  */
   public function __toString()
   {
     return (string) $this->fullpath;
@@ -166,6 +170,12 @@ class FileModel extends ShortPixelModel
         return false;
       }
 
+      if (! $this->exists())
+      {
+        Log::addWarn('Tried to copy non-existing file - '  . $sourcePath);
+        return false;
+      }
+
       $is_new = ($destination->exists()) ? false : true;
       $status = copy($sourcePath, $destinationPath);
 
@@ -201,8 +211,8 @@ class FileModel extends ShortPixelModel
   */
   public function delete()
   {
+     if ($this->exists())
       \wp_delete_file($this->fullpath);  // delete file hook via wp_delete_file
-      $this->setFileInfo(); // update info
 
       if (! file_exists($this->fullpath))
       {

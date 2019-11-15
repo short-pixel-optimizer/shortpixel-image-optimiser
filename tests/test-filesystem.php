@@ -75,7 +75,7 @@ class FileSystemTest extends  WP_UnitTestCase
 
       //vfsStream::newDirectory(SHORTPIXEL_BACKUP_FOLDER, 0755)->at($this->root);
 
-      $file = $this->fs->getFile(get_attached_file($attachment_id));
+      $file = $this->fs->getAttachedFile($attachment_id);
 
       $this->assertTrue($file->exists());
       $this->assertTrue($file->is_writable());
@@ -269,6 +269,12 @@ class FileSystemTest extends  WP_UnitTestCase
       $this->assertEquals($file->getFileBase(), 'image1');
       $this->assertEquals( (string) $file->getFileDir(), $filedir);
 
+      // String Test
+      $file1_2 = $this->fs->getFile($filepath);
+      $this->assertEquals((string) $file1_2, $filepath);
+      $this->assertEquals( (string) $file->getFileDir(), $filedir);
+
+
       $filepath2 = $this->root->url() . '/images/image1.ext.jpg';
       $file2 = $this->fs->getFile($filepath2);
 
@@ -452,6 +458,10 @@ class FileSystemTest extends  WP_UnitTestCase
     $this->assertEquals($fullfilepath, $file2->getFullPath());
     $this->assertEquals($urlpath2, $this->fs->pathToUrl($file2));
 
+    $urlpath5 = '//test.com/wp-content/uploads/2019/07/wpimg1.jpg';
+    $file5 = $this->fs->getFile($urlpath5);
+    $this->assertEquals($fullfilepath, $file2->getFullPath());
+    $this->assertEquals('http:' . $urlpath5, $this->fs->pathToUrl($file5));
 
     $this->urlSetup('http://test.com:8080');
 

@@ -160,7 +160,7 @@ class ShortPixelCustomMetaDao {
         //$sql = "INSERT INTO {$this->db->getPrefix()}shortpixel_folders (path, file_count, ts_created) values (%s, %d, now())";
         //$this->db->query($sql, array($folder, $fileCount));
         return $this->db->insert($this->db->getPrefix().'shortpixel_folders',
-                                 array("path" => $folder, "path_md5" => md5($folder), "file_count" => $fileCount, "ts_updated" => date("Y-m-d H:i:s")),
+                                 array("path" => $folder, "path_md5" => md5($folder), "file_count" => $fileCount, "ts_updated" => date("Y-m-d H:i:s"), "ts_created" => date("Y-m-d H:i:s")),
                                  array("path" => "%s", "path_md5" => "%s", "file_count" => "%d", "ts_updated" => "%s"));
     }
 
@@ -198,7 +198,6 @@ class ShortPixelCustomMetaDao {
           $sql = "DELETE FROM {$this->db->getPrefix()}shortpixel_folders WHERE path = %s";
           $this->db->query($sql, array($folderPath));
         }
-
 
         //$this->db->restoreErrors();
     }
@@ -259,6 +258,7 @@ class ShortPixelCustomMetaDao {
     {
         Log::addDebug('Doing Refresh Folder');
         $folderObj = $this->getFolder($folder->getPath());
+
         $fs = \wpSPIO()->fileSystem();
 
         if (! $folder->exists())
@@ -271,17 +271,16 @@ class ShortPixelCustomMetaDao {
           Notice::addWarning( sprintf(__('Folder %s is not writeable. Please check permissions and try again.','shortpixel-image-optimiser'),$folder->getPath()) );
         }
 
-
         $filter = array('date_newer' => strtotime($folderObj->getTsUpdated()));
-
         $files = $fs->getFilesRecursive($folder, $filter);
+
         $shortpixel = \wpSPIO()->getShortPixel();
         // check processable by invoking filter, for now processablepath takes only paths, not objects.
         $files = array_filter($files, function($file) use($shortpixel) { return $shortpixel->isProcessablePath($file->getFullPath());  });
 
         Log::addDebug('Found Files for custom media ' . count($files));
         $folderObj->setTsUpdated(date("Y-m-d H:i:s", $folderObj->getFolderContentsChangeDate()) );
-        $folderObj->setFileCount(count($files));
+        $folderObj->setFileCount($folderObj->countFiles() );
         $this->update($folderObj);
 
         $this->batchInsertImages($files, $folderObj->getId());
@@ -367,7 +366,7 @@ class ShortPixelCustomMetaDao {
 
             array_push($values, $folderId, $filepath, $filename, md5($filepath), 0);
             $placeholders[] = $format;
-            Log::addDebug('Count Count:: ' . strlen($filepath));
+
 
             if($i % 500 == 499) {
                 $query = $sql;
