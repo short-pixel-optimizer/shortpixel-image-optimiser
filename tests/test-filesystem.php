@@ -386,7 +386,6 @@ class FileSystemTest extends  WP_UnitTestCase
       $uploadDir = wp_upload_dir();
       $basedir = $uploadDir['basedir'];
 
-//      echo "<PRE>"; var_dump($uploadDir); echo "</PRE>";
       $fullfilepath = ABSPATH .  'wp-content/uploads/2019/07/rel_image_virtual.jpg';
 
       // with starting slash

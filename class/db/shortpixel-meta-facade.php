@@ -1,5 +1,6 @@
 <?php
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ImageModel as ImageModel;
 
 class ShortPixelMetaFacade {
     const MEDIA_LIBRARY_TYPE = 1;
@@ -503,6 +504,7 @@ class ShortPixelMetaFacade {
     public function getURLsAndPATHs($processThumbnails, $onlyThumbs = false, $addRetina = true, $excludeSizes = array(), $includeOptimized = false) {
         $sizesMissing = array();
         $fs = new \ShortPixel\FileSystemController();
+        \wpSPIO()->loadModel('image');
 
         if($this->type == self::CUSTOM_TYPE) {
             $meta = $this->getMeta();
@@ -517,7 +519,11 @@ class ShortPixelMetaFacade {
 
             $filePaths[] = $meta->getPath();
         } else {
-            $fsFile = \wpSPIO()->filesystem()->getAttachedFile($this->ID);//get the full file PATH
+            $imageObj = new \ShortPixel\ImageModel();
+            $imageObj->setbyPostID($this->ID);
+
+            $fsFile = $imageObj->getFile(); //\wpSPIO()->filesystem()->getAttachedFile($this->ID);//get the full file PATH
+
             //$fsFile = $fs->getFile($path);
             $mainExists = apply_filters('shortpixel_image_exists', $fsFile->exists(), $fsFile->getFullPath(), $this->ID);
             try
@@ -550,6 +556,31 @@ class ShortPixelMetaFacade {
                 if($addRetina) {
                     $this->addRetina($fsFile->getFullPath(), $url, $filePaths, $urlList);
                 }
+            }
+
+            // new WP 5.3 function, check if file has original ( was scaled )
+            $origFile = $imageObj->has_original();
+            Log::addDebug('Get Paths and such, original', $origFile);
+            if (is_object($origFile))
+            {
+              //$origFile = $imageObj->getOriginalFile();
+              $url = $fs->pathToUrl($origFile);
+              if (! $origFile->exists() )
+              {
+                list($url, $path) = $this->attemptRemoteDownload($url, $origFile->getFullPath(), $this->ID);
+                $downloadFile = $fs->getFile($path);
+                if ($downloadFile->exists())
+                {
+                  $urlList[] = $url;
+                  $filePaths[] = $downloadFile->getFullPath();
+                }
+              }
+              else
+              {
+                $urlList[] = $url;
+                $filePaths[] = $origFile->getFullPath();
+              }
+
             }
 
             Log::addDebug('Main file turnout - ', array($url, (string) $fsFile));
@@ -676,6 +707,8 @@ class ShortPixelMetaFacade {
         return array("URLs" => $urlList, "PATHs" => $filePaths, "sizesMissing" => $sizesMissing);
     }
 
+    /** @todo Separate download try and post / attach_id functions .
+    */
     private function attemptRemoteDownload($url, $path, $attach_id)
     {
         $downloadTimeout = max(SHORTPIXEL_MAX_EXECUTION_TIME - 10, 15);

@@ -398,7 +398,6 @@ class SettingsController extends shortPixelController
             if(!$folderMsg) {
                 //$notice = array("status" => "success", "msg" => __('Folder added successfully.','shortpixel-image-optimiser'));
                 $folderMsg = __('Folder added successfully.','shortpixel-image-optimiser');
-
                 $is_warning = false;
             }
             if ($is_warning)

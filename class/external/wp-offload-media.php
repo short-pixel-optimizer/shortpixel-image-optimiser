@@ -43,15 +43,39 @@ class wpOffload
 
       add_filter('as3cf_pre_update_attachment_metadata', array($this, 'preventInitialUpload'), 10,4);
 
-      add_filter('shortpixel_get_attached_file', function($file, $id)
+      add_filter('shortpixel_get_attached_file', array($this, 'get_raw_attached_file'),10, 2);
+      add_filter('shortpixel_get_original_image_path', array($this, 'get_raw_original_path'), 10, 2);
+    }
+
+    public function get_raw_attached_file($file, $id)
+    {
+      $scheme = parse_url($file, PHP_URL_SCHEME);
+      if ($scheme !== false && strpos($scheme, 's3') !== false)
       {
-          $scheme = parse_url($file, PHP_URL_SCHEME);
-          if ($scheme !== false && strpos($scheme, 's3') !== false)
-          {
-            return get_attached_file($id, true);
-          }
-          return $file;
-      },10, 2);
+        return get_attached_file($id, true);
+      }
+      return $file;
+    }
+
+    // partial copy of the wp_get_original_image_path function. It doesn't support raw filter on get_attached_file
+    public function get_raw_original_path($file, $id)
+    {
+
+      $scheme = parse_url($file, PHP_URL_SCHEME);
+      if ($scheme !== false && strpos($scheme, 's3') !== false)
+      {
+        $image_meta = wp_get_attachment_metadata( $id );
+        $image_file = get_attached_file( $id, true );
+
+        if ( empty( $image_meta['original_image'] ) ) {
+            $original_image = $image_file;
+        } else {
+            $original_image = path_join( dirname( $image_file ), $image_meta['original_image'] );
+        }
+        $file = $original_image;
+      }
+
+      return $file;
     }
 
     public function addURLforDownload($bool, $url, $host)
@@ -170,7 +194,12 @@ class wpOffload
 
         if ($settings->autoMediaLibrary)
         {
-          return true;
+          // Don't prevent whaffever if shortpixel is already done. This can be caused by plugins doing a metadata update, we don't care then.
+          if (! isset($data['ShortPixelImprovement']))
+          {
+            Log::addDebug('Preventing Initial Upload', $data);
+            return true;
+          }
         }
         return $bool;
     }
@@ -219,14 +248,14 @@ class wpOffload
     {
       //  Log::addDebug('Received Paths', array($paths));
         $paths = $this->getWebpPaths($paths, true);
-        Log::addDebug('Webp Path Founder (S3)', array($paths));
+  //      Log::addDebug('Webp Path Founder (S3)', array($paths));
         return $paths;
     }
 
     public function remove_webp_paths($paths)
     {
       $paths = $this->getWebpPaths($paths, false);
-      Log::addDebug('Remove S3 Paths', array($paths));
+    //  Log::addDebug('Remove S3 Paths', array($paths));
       return $paths;
     }
 

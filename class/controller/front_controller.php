@@ -52,9 +52,9 @@ class frontController extends ShortPixelController
     if ($prio && is_array($prio) && count($prio))
     {
       //also need to have it in the front footer then
-      add_action( 'wp_footer', array( $this, 'shortPixelJS') );
+      add_action( 'wp_footer', array( \wpSPIO()->getShortPixel(), 'shortPixelJS') );
       //need to add the nopriv action for when items exist in the queue and no user is logged in
-      add_action( 'wp_ajax_nopriv_shortpixel_image_processing', array( $this, 'handleImageProcessing') );
+      add_action( 'wp_ajax_nopriv_shortpixel_image_processing', array( \wpSPIO()->getShortPixel(), 'handleImageProcessing') );
 
     }
   }

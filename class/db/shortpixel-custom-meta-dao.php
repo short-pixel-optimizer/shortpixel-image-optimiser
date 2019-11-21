@@ -156,11 +156,14 @@ class ShortPixelCustomMetaDao {
         return false;
     }
 
-    public function addFolder($folder, $fileCount = 0) {
-        //$sql = "INSERT INTO {$this->db->getPrefix()}shortpixel_folders (path, file_count, ts_created) values (%s, %d, now())";
-        //$this->db->query($sql, array($folder, $fileCount));
+    /** Folder is ShortPixelFolder object */
+    public function addFolder(ShortPixelFolder $folder, $fileCount = 0) {
+        $path = $folder->getPath();
+        $tsUpdated = date("Y-m-d H:i:s", $folder->getTsUpdated());
+
+
         return $this->db->insert($this->db->getPrefix().'shortpixel_folders',
-                                 array("path" => $folder, "path_md5" => md5($folder), "file_count" => $fileCount, "ts_updated" => date("Y-m-d H:i:s"), "ts_created" => date("Y-m-d H:i:s")),
+                                 array("path" => $path, "path_md5" => md5($path), "file_count" => $fileCount, "ts_updated" => $tsUpdated, "ts_created" => date("Y-m-d H:i:s")),
                                  array("path" => "%s", "path_md5" => "%s", "file_count" => "%d", "ts_updated" => "%s"));
     }
 
@@ -234,6 +237,11 @@ class ShortPixelCustomMetaDao {
         if(ShortPixelMetaFacade::isMediaSubfolder($folder->getPath())) {
             return __('This folder contains Media Library images. To optimize Media Library images please go to <a href="upload.php?mode=list">Media Library list view</a> or to <a href="upload.php?page=wp-short-pixel-bulk">SortPixel Bulk page</a>.','shortpixel-image-optimiser');
         }
+
+        // Set this to 0 on new, not null since mysql will auto-complete that to current TS.
+        $folder->setTSUpdated(0);
+        $folder->setFileCount(0);
+
         $folderMsg = $this->saveFolder($folder);
         if(!$folder->getId()) {
             //try again creating the tables first.
@@ -307,7 +315,7 @@ class ShortPixelCustomMetaDao {
                 if($sub) {
                     $id = $this->updateFolder($sub, $addedPath, 0, $folder->getFileCount());
                 } else {
-                    $id = $this->addFolder($addedPath, $folder->getFileCount());
+                    $id = $this->addFolder($folder, $folder->getFileCount());
                 }
                 $folder->setId($id);
                 return false;

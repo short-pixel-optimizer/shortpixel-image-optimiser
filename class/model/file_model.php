@@ -43,7 +43,7 @@ class FileModel extends ShortPixelModel
 
   /* Get a string representation of file, the fullpath
   *  Note - this might be risky, without processedpath, in cases.
-  * @return String  Full path  processed or unprocessed. 
+  * @return String  Full path  processed or unprocessed.
   */
   public function __toString()
   {
@@ -112,9 +112,9 @@ class FileModel extends ShortPixelModel
       if (! $directory)
         return false;
 
-      $backupFile =  $directory . $this->filename;
+      $backupFile =  $directory . $this->getFileName();
 
-      if (file_exists($backupFile))
+      if (file_exists($backupFile) && ! is_dir($backupFile) ) 
         return true;
       else {
         return false;
@@ -128,7 +128,7 @@ class FileModel extends ShortPixelModel
   public function getBackupFile()
   {
      if ($this->hasBackup())
-        return new FileModel($this->getBackupDirectory() . $this->filename);
+        return new FileModel($this->getBackupDirectory() . $this->getFileName() );
      else
        return false;
   }
@@ -263,7 +263,7 @@ class FileModel extends ShortPixelModel
   */
   private function getBackupDirectory()
   {
-    if (is_null($this->directory))
+    if (is_null($this->getFileDir()))
     {
         return false;
     }

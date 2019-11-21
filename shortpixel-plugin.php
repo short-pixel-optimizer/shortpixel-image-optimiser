@@ -348,7 +348,7 @@ class ShortPixelPlugin
       if(SHORTPIXEL_RESET_ON_ACTIVATE === true && WP_DEBUG === true) { //force reset plugin counters, only on specific occasions and on test environments
           \WPShortPixelSettings::debugResetOptions();
           $settings = new \WPShortPixelSettings();
-          $spMetaDao = new \ShortPixelCustomMetaDao(new WpShortPixelDb(), $settings->excludePatterns);
+          $spMetaDao = new \ShortPixelCustomMetaDao(new \WpShortPixelDb(), $settings->excludePatterns);
           $spMetaDao->dropTables();
       }
 

@@ -50,6 +50,14 @@ Class FileSystemController extends ShortPixelController
 
     }
 
+    /* wp_get_original_image_path with specific ShortPixel filter */
+    public function getOriginalPath($id)
+    {
+      $filepath = \wp_get_original_image_path($id);
+      $filepath = apply_filters('shortpixel_get_original_image_path', $filepath, $id);
+      return new FileModel($filepath);
+    }
+
     /** Get DirectoryModel for a certain path. This can exist or not
     *
     * @param String $path Full Path to the Directory.

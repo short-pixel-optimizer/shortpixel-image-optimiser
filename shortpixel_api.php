@@ -467,12 +467,13 @@ class ShortPixelAPI {
             return array("Status" => self::STATUS_SUCCESS);
         }
 
-        Log::addDebug('Backing The Up', array($mainPath, $PATHs));
+//Log::addDebug('Backing The Up', array($mainPath, $PATHs));
 
         //$fullSubDir = str_replace(wp_normalize_path(get_home_path()), "", wp_normalize_path(dirname($itemHandler->getMeta()->getPath()))) . '/';
         //$SubDir = ShortPixelMetaFacade::returnSubDir($itemHandler->getMeta()->getPath(), $itemHandler->getType());
         $fullSubDir = ShortPixelMetaFacade::returnSubDir($mainPath);
         $source = $PATHs; //array with final paths for these files
+        $fs = \wpSPIO()->filesystem();
 
         if( !file_exists(SHORTPIXEL_BACKUP_FOLDER) && ! ShortPixelFolder::createBackUpFolder() ) {//creates backup folder if it doesn't exist
             Log::addWarn('Backup folder does not exist and it cannot be created');
@@ -489,16 +490,20 @@ class ShortPixelAPI {
         //now that we have original files and where we should back them up we attempt to do just that
         if(is_writable(SHORTPIXEL_BACKUP_FOLDER))
         {
-
             foreach ( $destination as $fileID => $filePATH )
             {
-                if ( !file_exists($filePATH) )
+                $destination_file = $fs->getFile($filePATH);
+
+                if ( ! $destination_file->exists() )
                 {
-                    if ( !@copy($source[$fileID], $filePATH) )
+                    $source_file = $fs->getFile($source[$fileID]);
+                    $result = $source_file->copy($destination_file);
+                    if (  ! $result )
                     {//file couldn't be saved in backup folder
                         $msg = sprintf(__('Cannot save file <i>%s</i> in backup directory','shortpixel-image-optimiser'),self::MB_basename($source[$fileID]));
                         return array("Status" => self::STATUS_FAIL, "Message" => $msg);
                     }
+
                 }
             }
             return array("Status" => self::STATUS_SUCCESS);
@@ -838,10 +843,14 @@ class ShortPixelAPI {
             if (!empty($tempFiles) && is_array($tempFiles)) {
 
                 foreach ($tempFiles as $tmpFile) {
-                    $file = \wpSPIO()->filesystem()->getFile($tmpFile['Message']);
-                    if ($file->exists())
-                      $file->delete();
+                    $filepath = isset($tmpFile['Message']) ? $tmpFile['Message'] : false;
+                    if ($filepath)
+                    {
+                      $file = \wpSPIO()->filesystem()->getFile($filepath);
+                      if ($file->exists())
+                        $file->delete();
                     //@unlink($tmpFile["Message"]);
+                    }
                 }
             }
         }

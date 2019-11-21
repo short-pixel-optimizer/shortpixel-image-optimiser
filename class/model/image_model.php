@@ -19,6 +19,10 @@ class ImageModel extends ShortPixelModel
     private $facade; // ShortPixelMetaFacade
 
     protected $thumbsnails = array(); // thumbnails of this
+    protected $original_file;
+
+    private $post_id;
+    private $is_scaled = false;
 
 
     public function __construct()
@@ -30,11 +34,49 @@ class ImageModel extends ShortPixelModel
     {
       // Set Meta
       $fs = new FileSystemController();
+      $this->post_id = $post_id;
       $this->facade = new \ShortPixelMetaFacade($post_id);
       $this->meta = $this->facade->getMeta();
 
       $this->file = $fs->getAttachedFile($post_id);
 
+      // WP 5.3 and higher. Check for original file.
+      if (function_exists('wp_get_original_image_path'))
+      {
+        $this->setOriginalFile();
+      }
+    }
+
+
+    protected function setOriginalFile()
+    {
+      $fs = new FileSystemController();
+
+      if (is_null($this->post_id))
+        return false;
+
+      $originalFile = $fs->getOriginalPath($this->post_id);
+
+      if ($originalFile->getFullPath() !== $this->file->getfullPath() )
+      {
+        $this->original_file = $originalFile;
+        $this->is_scaled = true;
+      }
+
+    }
+
+    // Not sure if it will work like this.
+    public function is_scaled()
+    {
+       return $this->is_scaled;
+    }
+
+    public function has_original()
+    {
+        if (is_null($this->original_file))
+          return false;
+
+        return $this->original_file;
     }
 
     public function getMeta()
@@ -46,6 +88,19 @@ class ImageModel extends ShortPixelModel
     {
       return $this->file;
     }
+
+    /** Get the facade object.
+    * @todo Ideally, the facade will be an internal thing, separating the custom and media library functions.
+    */
+    public function getFacade()
+    {
+       return $this->facade;
+    }
+
+  /*  public function getOriginalFile()
+    {
+       return $this->origin_file;
+    } */
 
     /* Sanity check in process. Should only be called upon special request, or with single image displays. Should check and recheck stats, thumbs, unlistedthumbs and all assumptions of data that might corrupt or change outside of this plugin */
     public function reAcquire()

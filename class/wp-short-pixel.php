@@ -2073,10 +2073,17 @@ class WPShortPixel {
         $fs = \wpSPIO()->filesystem();
 
         // Setup Original File and Data. This is used to determine backup path.
-        $fsFile = $fs->getAttachedFile($attachmentID);
+        \wpSPIO()->loadModel('image');
+
+        $imageObj = new \ShortPixel\ImageModel();
+        $imageObj->setbyPostID($attachmentID);
+
+        $fsFile = $imageObj->getFile();
+        //$fsFile = $fs->getAttachedFile($attachmentID);
         $filePath = (string) $fsFile->getFileDir();
 
-        $itemHandler = new ShortPixelMetaFacade($attachmentID);
+
+        $itemHandler = $imageObj->getFacade(); //new ShortPixelMetaFacade($attachmentID);
         if($rawMeta) {
             $itemHandler->setRawMeta($rawMeta); //prevent another database trip
         } else {
@@ -2110,6 +2117,7 @@ class WPShortPixel {
             $image = $rawMeta['file']; // relative file
             $imageUrl = wp_get_attachment_url($attachmentID); // URL can be anything.
 
+
             Log::addDebug('OriginFile -- ' . $fsFile->getFullPath() );
 
             $imageName = $fsFile->getFileName();
@@ -2120,13 +2128,12 @@ class WPShortPixel {
 
             // find the jpg optimized image in backups, and mark to remove
             if ($bkFile->exists())
-            $toUnlink['PATHs'][]  = $bkFile->getFullPath();
+              $toUnlink['PATHs'][]  = $bkFile->getFullPath();
 
           //  $baseUrl = ShortPixelPng2Jpg::removeUrlProtocol(trailingslashit(str_replace($image, "", $imageUrl))); //make the base url protocol agnostic if it's not already
 
             // not needed, we don't do this weird remove anymore.
             $baseRelPath = ''; // trailingslashit(dirname($image)); // @todo Replace this (string) $fsFile->getFileDir();
-
 
             $toReplace[ShortPixelPng2Jpg::removeUrlProtocol($imageUrl)] = $baseUrl . $baseRelPath . wp_basename($png2jpgMain);
             foreach($sizes as $key => $size) {
@@ -2208,11 +2215,22 @@ class WPShortPixel {
             if($bkCount) { // backups, if exist
                 //main file
                 if($main) {
+                    // new WP 5.3 feature when image is scaled if big.
+                    $origFile = $imageObj->has_original();
+                    if (is_object($origFile))
+                    {
+                        $bkOrigFile = $origFile->getBackUpFile();
+                        if ($bkOrigFile && $bkOrigFile->exists())
+                          $bkOrigFile->move($origFile);
+
+                        Log::addDebug('Restore result - Backup oringal file', array($bkOrigFile, $origFile));
+                    }
                     //$this->renameWithRetina($bkFile, $file);
                     if (! $bkFile->move($fsFile))
                     {
                       Log::addError('DoRestore failed restoring backup', array($bkFile->getFullPath(), $fsFile->getFullPath() ));
                     }
+
                     $retinaBK = $fs->getFile( $bkFile->getFileDir()->getPath() . $bkFile->getFileBase() . '@2x' . $bkFile->getExtension()  );
                     if ($retinaBK->exists())
                     {
@@ -2616,7 +2634,8 @@ class WPShortPixel {
             try {
                     $SubDir = ShortPixelMetaFacade::returnSubDir($file);
 
-                    @unlink(SHORTPIXEL_BACKUP_FOLDER . '/' . $SubDir . ShortPixelAPI::MB_basename($file));
+                    if (file_exists(SHORTPIXEL_BACKUP_FOLDER . '/' . $SubDir . ShortPixelAPI::MB_basename($file)))
+                      @unlink(SHORTPIXEL_BACKUP_FOLDER . '/' . $SubDir . ShortPixelAPI::MB_basename($file));
 
                     if ( !empty($meta['file']) )
                     {
@@ -2624,7 +2643,8 @@ class WPShortPixel {
                         //remove thumbs thumbnails
                         if(isset($meta["sizes"])) {
                             foreach($meta["sizes"] as $size => $imageData) {
-                                @unlink($filesPath . ShortPixelAPI::MB_basename($imageData['file']));//remove thumbs
+                                if (file_exists($filesPath . ShortPixelAPI::MB_basename($imageData['file'])))
+                                  @unlink($filesPath . ShortPixelAPI::MB_basename($imageData['file']));//remove thumbs
                             }
                         }
                     }
@@ -2738,7 +2758,7 @@ class WPShortPixel {
     }
 
     /** View for Custom media
-    * @todo Move this
+    * @todo Move this to own view.
     */
     public function listCustomMedia() {
         if( ! class_exists( 'ShortPixelListTable' ) ) {
@@ -3997,15 +4017,8 @@ class WPShortPixel {
 
     // @todo Should be utility function
     static public function formatBytes($bytes, $precision = 2) {
-        $units = array('B', 'KB', 'MB', 'GB', 'TB');
+       return \ShortPixelTools::formatBytes($bytes, $precision);
 
-        $bytes = max($bytes, 0);
-        $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
-        $pow = min($pow, count($units) - 1);
-
-        $bytes /= pow(1024, $pow);
-
-        return round($bytes, $precision) . ' ' . $units[$pow];
     }
 
     /** Checks if file can be processed. Mainly against exclusion
