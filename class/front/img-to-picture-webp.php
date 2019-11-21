@@ -268,9 +268,11 @@ class ShortPixelImgToPictureWebp
     /** Check and remove elements that should not be in the picture tag. Especially items within attributes. */
     private static function filterForPicture($img)
     {
+
       if (isset($img['style']))
       {
-         if (strpos($img['style'], 'border') !== false) // don't copy border definitions to picture.
+         $bordercount = substr_count($img['style'], 'border');
+         for ($i = 0; $i <= $bordercount; $i++)
          {
            $offset = strpos($img['style'], 'border');
            $end = strpos($img['style'], ';', $offset);
@@ -278,11 +280,10 @@ class ShortPixelImgToPictureWebp
            $nstyle = substr($img['style'], 0, $offset);
 
            // if end is false, ; terminator does not exist, assume full string is border.
-          if ($end !== false)
-            $nstyle .= substr($img['style'], ($end+1) ); // do not include ;
+           if ($end !== false)
+              $nstyle .= substr($img['style'], ($end+1) ); // do not include ;
 
-           $img['style'] = $nstyle;
-
+              $img['style'] = $nstyle;
          }
       }
 

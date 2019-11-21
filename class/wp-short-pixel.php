@@ -3832,8 +3832,8 @@ class WPShortPixel {
             'all' => __('All Images', 'shortpixel-image-optimiser'),
             'opt' => __('Optimized', 'shortpixel-image-optimiser'),
             'unopt' => __('Unoptimized', 'shortpixel-image-optimiser'),
-            'pending' => __('Pending', 'shortpixel-image-optimiser'),
-            'error' => __('Errors', 'shortpixel-image-optimiser'),
+          //  'pending' => __('Pending', 'shortpixel-image-optimiser'),
+          //  'error' => __('Errors', 'shortpixel-image-optimiser'),
         );
 
         echo "<select name='shortpixel_status' id='shortpixel_status'>\n";
