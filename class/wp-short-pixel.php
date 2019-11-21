@@ -3311,7 +3311,9 @@ class WPShortPixel {
       /* Plugin init is before loading these admin scripts. So it can happen misc.php is not yet loaded */
       if (! function_exists('insert_with_markers'))
       {
-        require_once( ABSPATH . 'wp-admin/includes/misc.php' );
+        Log::addWarn('AlterHtaccess Called before WP init');
+        return;
+        //require_once( ABSPATH . 'wp-admin/includes/misc.php' );
       }
         $upload_dir = wp_upload_dir();
         $upload_base = trailingslashit($upload_dir['basedir']);

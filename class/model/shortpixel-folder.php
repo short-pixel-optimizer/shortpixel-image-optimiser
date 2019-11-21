@@ -53,18 +53,23 @@ class ShortPixelFolder extends ShortPixelEntity{
 
     public static function protectDirectoryListing($dirname)
     {
+      $rules = "Options -Indexes";
+      /* Plugin init is before loading these admin scripts. So it can happen misc.php is not yet loaded */
+      // This crashes at 5.3.
+    /*  if (! function_exists('insert_with_markers'))
+      {
+        //require_once( ABSPATH . 'wp-admin/includes/misc.php' );
+        return; // sadly then no.
+      } */
+
+  //    insert_with_markers( trailingslashit($dirname) . '.htaccess', 'ShortPixel', $rules);
+      // note - this doesn't bring the same protection. Subdirs without files written will still be listable.
+      file_put_contents(trailingslashit($dirname) . 'index.html', chr(0)); // extra - for non-apache
+
       if (\wpSPIO()->env()->is_nginx) // nginx has no htaccess support.
         return;
 
-      $rules = "Options -Indexes";
-      /* Plugin init is before loading these admin scripts. So it can happen misc.php is not yet loaded */
-      if (! function_exists('insert_with_markers'))
-      {
-        require_once( ABSPATH . 'wp-admin/includes/misc.php' );
-      }
-      insert_with_markers( trailingslashit($dirname) . '.htaccess', 'ShortPixel', $rules);
-      // note - this doesn't bring the same protection. Subdirs without files written will still be listable.
-      file_put_contents(trailingslashit($dirname) . 'index.html', chr(0)); // extra - for non-apache
+      file_put_contents(trailingslashit($dirname) . '.htaccess', $rules);
 
     }
 
