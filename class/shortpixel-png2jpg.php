@@ -338,7 +338,9 @@ class ShortPixelPng2Jpg {
             do_action('shortpixel/image/convertpng2jpg_after', $ID, $meta);
         }
 
-        self::png2JpgUpdateUrls(array(), $toReplace);
+        if(count($toReplace)) {
+            self::png2JpgUpdateUrls(array(), $toReplace);
+        }
         $fs = new \ShortPixel\FileSystemController();
 
         foreach($toUnlink as $unlink) {
@@ -414,6 +416,7 @@ class ShortPixelPng2Jpg {
         if(count($options) == 0) {
             $options = array_keys($queries);
         }
+        $startTime = microtime(true);
         foreach($options as $option){
             WPShortPixel::log("PNG2JPG update URLS on $option ");
             if( $option == 'custom' ){
@@ -439,6 +442,16 @@ class ShortPixelPng2Jpg {
                             $fix = $wpdb->query("UPDATE $wpdb->postmeta SET meta_value = '".$edited->data."' WHERE meta_id = ".$item->meta_id );
                             if( $fix )
                                 $n++;
+                        }
+                    }
+                    //check time. This loop could take long because it's scanning all the postmeta table which in some cases becomes huge...
+                    $timeElapsed = microtime(true) - $startTime;
+                    if($timeElapsed > SHORTPIXEL_MAX_EXECUTION_TIME / 2) {
+                        //try to add some time or get out if not
+                        if(set_time_limit(SHORTPIXEL_MAX_EXECUTION_TIME)) {
+                            $startTime += SHORTPIXEL_MAX_EXECUTION_TIME / 2;
+                        } else {
+                            break;
                         }
                     }
                 }
