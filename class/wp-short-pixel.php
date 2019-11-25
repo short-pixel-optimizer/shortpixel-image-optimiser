@@ -1745,6 +1745,7 @@ class WPShortPixel {
 
     private function sendToProcessing($itemHandler, $compressionType = false, $onlyThumbs = false) {
         //conversion of PNG 2 JPG for existing images
+
         if($itemHandler->getType() == ShortPixelMetaFacade::MEDIA_LIBRARY_TYPE) { //currently only for ML
             $rawMeta = $this->checkConvertMediaPng2Jpg($itemHandler);
 
@@ -1765,7 +1766,8 @@ class WPShortPixel {
           Log::addDebug('Preventing sentToProcessing. Reported as already sent');
           return $URLsAndPATHs;
         }
-	$meta = $itemHandler->getMeta();
+
+	      $meta = $itemHandler->getMeta();
         //find thumbs that are not listed in the metadata and add them in the sizes array
         $itemHandler->searchUnlistedFiles(); // $this->addUnlistedThumbs($itemHandler);
 
@@ -2082,7 +2084,6 @@ class WPShortPixel {
         //$fsFile = $fs->getAttachedFile($attachmentID);
         $filePath = (string) $fsFile->getFileDir();
 
-
         $itemHandler = $imageObj->getFacade(); //new ShortPixelMetaFacade($attachmentID);
         if($rawMeta) {
             $itemHandler->setRawMeta($rawMeta); //prevent another database trip
@@ -2117,7 +2118,6 @@ class WPShortPixel {
             $image = $rawMeta['file']; // relative file
             $imageUrl = wp_get_attachment_url($attachmentID); // URL can be anything.
 
-
             Log::addDebug('OriginFile -- ' . $fsFile->getFullPath() );
 
             $imageName = $fsFile->getFileName();
@@ -2142,7 +2142,7 @@ class WPShortPixel {
                 }
 
                 $backuppedSize = $fs->getFile($backupFileDir . $size['file'] );
-                Log::addDebug('Find optimized JPGEG backupFile Thing', array( $backuppedSize->getFullPath() ));
+                Log::addDebug('Checking for PNG Backup at - ',  $backuppedSize->getFullPath() );
                 if ($backuppedSize->exists())
                 {
                   $toUnlink['PATHs'][] = $backuppedSize ->getFullPath();
@@ -2272,7 +2272,14 @@ class WPShortPixel {
             $duplicates = ShortPixelMetaFacade::getWPMLDuplicates($attachmentID);
             foreach($duplicates as $ID) {
                 //Added sanitizeMeta (improved with @unserialize) as per https://secure.helpscout.net/conversation/725053586/11656?folderId=1117588
-                $crtMeta = $attachmentID == $ID ? $rawMeta : ShortPixelMetaFacade::sanitizeMeta(wp_get_attachment_metadata($ID));
+              //  $crtMeta = $attachmentID == $ID ? $rawMeta : ShortPixelMetaFacade::sanitizeMeta(wp_get_attachment_metadata($ID));
+                $facade = new ShortPixelMetaFacade($ID);
+                if ($attachmentID == $ID)
+                  $crtMeta = ShortPixelMetaFacade::sanitizeMeta(wp_get_attachment_metadata($ID));
+                else {
+                  $crtMeta = $rawMeta;
+                }
+
                 if(isset($crtMeta['previous_meta'])) continue;
                 if(   isset($crtMeta["ShortPixelImprovement"]) && is_numeric($crtMeta["ShortPixelImprovement"])
                    && 0 + $crtMeta["ShortPixelImprovement"] < 5 && $this->_settings->under5Percent > 0) {
@@ -2306,10 +2313,15 @@ class WPShortPixel {
                     }
                 }
                 //wp_update_attachment_metadata($ID, $crtMeta);
+                // @todo Should call MetaFacade here!
                 update_post_meta($ID, '_wp_attachment_metadata', $crtMeta);
+
+
+
                 if($attachmentID == $ID) { //copy back the metadata which will be returned.
                     $rawMeta = $crtMeta;
                 }
+
             }
 
             if($png2jpgMain) {
@@ -2345,6 +2357,7 @@ class WPShortPixel {
 
         /** It's being dumped because settings like .webp can be cached */
         $this->maybeDumpFromProcessedOnServer($itemHandler, $toUnlink);
+        $itemHandler->deleteItemCache(); // remove any cache
         do_action("shortpixel_after_restore_image", $attachmentID);
         return $rawMeta;
     }
@@ -2439,7 +2452,7 @@ class WPShortPixel {
           $meta->setStatus(3);
           $this->spMetaDao->update($meta);
 
-
+          $itemHandler->deleteItemCache();
         //}
 
         return $meta;
@@ -3808,7 +3821,7 @@ class WPShortPixel {
                 )
             ));
         }
-        Log::addDebug('META QUERY', $vars);
+
         return $vars;
     }
 

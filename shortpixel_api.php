@@ -247,6 +247,7 @@ class ShortPixelAPI {
         $compressionType = $meta->getCompressionType() !== null ? $meta->getCompressionType() : $this->_settings->compressionType;
         $response = $this->doRequests($URLs, true, $itemHandler, $compressionType);//send requests to API
 
+        
         //die($response['body']);
 
         if($response['response']['code'] != 200) {//response <> 200 -> there was an error apparently?

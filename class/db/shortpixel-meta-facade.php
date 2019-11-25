@@ -1,6 +1,8 @@
 <?php
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\ImageModel as ImageModel;
+use ShortPixel\FileSystemController as FileSystem;
+use ShortPixel\CacheController as Cache;
 
 class ShortPixelMetaFacade {
     const MEDIA_LIBRARY_TYPE = 1;
@@ -106,6 +108,9 @@ class ShortPixelMetaFacade {
 
     //  Update MetaData of Image.
     public function updateMeta($newMeta = null, $replaceThumbs = false) {
+
+        $this->deleteItemCache();
+
         if($newMeta) {
             $this->meta = $newMeta;
         }
@@ -225,6 +230,8 @@ class ShortPixelMetaFacade {
     * This function only hits with images that were optimized, pending or have an error state.
     */
     public function cleanupMeta($fakeOptPending = false) {
+        $this->deleteItemCache(); // remove any caching.
+
         if($this->type == ShortPixelMetaFacade::MEDIA_LIBRARY_TYPE) {
             if(!isset($this->rawMeta)) {
                 $rawMeta = $this->sanitizeMeta(wp_get_attachment_metadata($this->getId()));
@@ -375,11 +382,15 @@ class ShortPixelMetaFacade {
           }
           $this->rawMeta = $rawMeta;
           if ($unset) // only update on changes.
+          {
+            $this->deleteItemCache();
             update_post_meta($this->ID, '_wp_attachment_metadata', $rawMeta);
+          }
       }
     }
 
     function deleteMeta() {
+        $this->deleteItemCache();
         if($this->type == self::CUSTOM_TYPE) {
             throw new Exception("Not implemented 1");
         } else {
@@ -387,9 +398,11 @@ class ShortPixelMetaFacade {
             update_post_meta($this->ID, '_wp_attachment_metadata', $this->rawMeta);
             //wp_update_attachment_metadata($this->ID, $this->rawMeta);
         }
+
     }
 
     function deleteAllSPMeta() {
+        $this->deleteItemCache();
         if($this->type == self::CUSTOM_TYPE) {
             throw new Exception("Not implemented 1");
         } else {
@@ -501,9 +514,34 @@ class ShortPixelMetaFacade {
         }
     }
 
+    /** Get the name for cached items, for now just the URLPATH stuff
+    */
+    protected function getCacheName()
+    {
+          return trim('META_URLPATH_' . $this->getQueuedId());
+    }
+
+    public function deleteItemCache()
+    {
+      // in any update, clear the caching
+      $cacheController = new Cache();
+      Log::adDDebug('Removing Item Cache -> ' . $this->getCacheName() );
+      $cacheController->deleteItem( $this->getCacheName());
+
+    }
+
     public function getURLsAndPATHs($processThumbnails, $onlyThumbs = false, $addRetina = true, $excludeSizes = array(), $includeOptimized = false) {
         $sizesMissing = array();
-        $fs = new \ShortPixel\FileSystemController();
+        $cacheController = new Cache();
+
+        $cacheItem = $cacheController->getItem( $this->getCacheName() );
+        if ($cacheItem->exists())
+        {
+            Log::addDebug('Get Urls / Paths hit cache -> ', $this->getCacheName());
+            return $cacheItem->getValue();
+        }
+
+        $fs = new FileSystem();
         \wpSPIO()->loadModel('image');
 
         if($this->type == self::CUSTOM_TYPE) {
@@ -519,6 +557,7 @@ class ShortPixelMetaFacade {
 
             $filePaths[] = $meta->getPath();
         } else {
+
             $imageObj = new \ShortPixel\ImageModel();
             $imageObj->setbyPostID($this->ID);
 
@@ -564,20 +603,20 @@ class ShortPixelMetaFacade {
             if (is_object($origFile))
             {
               //$origFile = $imageObj->getOriginalFile();
-              $url = $fs->pathToUrl($origFile);
+              $origurl = wp_get_original_image_url($this->ID); //$fs->pathToUrl($origFile);
               if (! $origFile->exists() )
               {
-                list($url, $path) = $this->attemptRemoteDownload($url, $origFile->getFullPath(), $this->ID);
+                list($origurl, $path) = $this->attemptRemoteDownload($origurl, $origFile->getFullPath(), $this->ID);
                 $downloadFile = $fs->getFile($path);
                 if ($downloadFile->exists())
                 {
-                  $urlList[] = $url;
+                  $urlList[] = $origurl;
                   $filePaths[] = $downloadFile->getFullPath();
                 }
               }
               else
               {
-                $urlList[] = $url;
+                $urlList[] = $origurl;
                 $filePaths[] = $origFile->getFullPath();
               }
 
@@ -704,6 +743,12 @@ class ShortPixelMetaFacade {
         array_walk($urlList, array( &$this, 'replacePlusChar') );
 
         $filePaths = ShortPixelAPI::CheckAndFixImagePaths($filePaths);//check for images to make sure they exist on disk
+        $result = array("URLs" => $urlList, "PATHs" => $filePaths, "sizesMissing" => $sizesMissing);
+
+        $cacheItem->setValue($result);
+        $cacheItem->setExpires(5 * MINUTE_IN_SECONDS);
+        $cacheController->storeItemObject($cacheItem);
+
         return array("URLs" => $urlList, "PATHs" => $filePaths, "sizesMissing" => $sizesMissing);
     }
 

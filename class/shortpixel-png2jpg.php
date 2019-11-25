@@ -170,7 +170,7 @@ class ShortPixelPng2Jpg {
 
     /**
      * Convert an uploaded image from PNG to JPG
-     * @param type $params
+     * @param type $params ( file, url, type )  - Connected to https://developer.wordpress.org/reference/hooks/wp_handle_upload/
      * @return string
      */
     public function convertPng2Jpg($params) {
@@ -251,6 +251,7 @@ class ShortPixelPng2Jpg {
         $meta['ShortPixel']['Retries'] = isset($meta['ShortPixel']['Retries']) ? $meta['ShortPixel']['Retries'] + 1 : 1;
         $meta['ShortPixel']['ErrCode'] = ShortPixelAPI::ERR_PNG2JPG_MEMORY;
         //wp_update_attachment_metadata($ID, $meta);
+
         update_post_meta($ID, '_wp_attachment_metadata', $meta);
 
         if($this->_settings->png2jpg == 2) {
@@ -334,6 +335,7 @@ class ShortPixelPng2Jpg {
                 'optimizationPercent' => round(100.0 * (1.00 - $jpgSize / $pngSize)));
             //wp_update_attachment_metadata($ID, $meta);
             update_post_meta($ID, '_wp_attachment_metadata', $meta);
+            $itemHandler->deleteItemCache(); // remove cache since filetype changes.
             Log::addDebug("Updated meta: " . json_encode($meta));
             do_action('shortpixel/image/convertpng2jpg_after', $ID, $meta);
         }

@@ -31,6 +31,12 @@ class wpOffload
       $this->as3cf = $as3cf;
       $this->active = true;
 
+      // if setting to upload to bucket is off, don't hook or do anything really. 
+      if (! $this->as3cf->get_setting( 'copy-to-s3' ))
+      {
+        return;
+      }
+
       add_action('shortpixel_image_optimised', array($this, 'image_upload'));
       add_action('shortpixel_after_restore_image', array($this, 'image_restore')); // hit this when restoring.
       add_action('shortpixel/image/convertpng2jpg_after', array($this, 'image_converted'));
@@ -123,6 +129,7 @@ class wpOffload
     {
         $fs = new \ShortPixel\FileSystemController();
 
+        // Don't offload when setting is off.
         // delete the old file.
       //  $provider_object = $this->as3cf->get_attachment_provider_info($id);
 
@@ -187,7 +194,9 @@ class wpOffload
     }
 
     /** This function will cut out the initial upload to S3Offload and rely solely on the image_upload function provided here, after shortpixel optimize.
-    * Function will only work when plugin is set to auto-optimize new entries to the media library */
+    * Function will only work when plugin is set to auto-optimize new entries to the media library
+    * Since S3-Offload 2.3 this will be called on every thumbnail ( changes in WP 5.3 )
+    */
     public function preventInitialUpload($bool, $data, $post_id, $old_provider_object)
     {
         $settings = \wpSPIO()->settings();
@@ -197,7 +206,7 @@ class wpOffload
           // Don't prevent whaffever if shortpixel is already done. This can be caused by plugins doing a metadata update, we don't care then.
           if (! isset($data['ShortPixelImprovement']))
           {
-            Log::addDebug('Preventing Initial Upload', $data);
+            Log::addDebug('Preventing Initial Upload', $post_id);
             return true;
           }
         }
