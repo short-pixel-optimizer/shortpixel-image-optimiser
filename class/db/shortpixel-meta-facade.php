@@ -530,7 +530,13 @@ class ShortPixelMetaFacade {
 
     }
 
-    public function getURLsAndPATHs($processThumbnails, $onlyThumbs = false, $addRetina = true, $excludeSizes = array(), $includeOptimized = false) {
+    /* Function that gathers URLs' and PATHs of attachment.  When local file does not exist ( offloading, CDN, etc ), try to download it.
+    * This function caches it's result!  use deleteItemCache
+    *
+    * @param $no_exist_check  Don't check if returned file exists. This prevents remote downloading it ( in use for onDeleteImage atm)
+    * @todo This function needs splitting into urls / paths and made to function more clear .
+    */
+    public function getURLsAndPATHs($processThumbnails, $onlyThumbs = false, $addRetina = true, $excludeSizes = array(), $includeOptimized = false, $no_exist_check = false) {
         $sizesMissing = array();
         $cacheController = new Cache();
 
@@ -576,8 +582,9 @@ class ShortPixelMetaFacade {
               return array("URLs" => array(), "PATHs" => array(), "sizesMissing" => array());
             }
             $urlList = array(); $filePaths = array();
-
             Log::addDebug('attached file path: ' . (string) $fsFile, array( (string) $fsFile->getFileDir() )  );
+            if ($no_exist_check)
+              $mainExists = true;
 
             if(!$mainExists) {
                list($url, $path) = $this->attemptRemoteDownload($url, $fsFile->getFullPath(), $this->ID);
@@ -604,7 +611,7 @@ class ShortPixelMetaFacade {
             {
               //$origFile = $imageObj->getOriginalFile();
               $origurl = wp_get_original_image_url($this->ID); //$fs->pathToUrl($origFile);
-              if (! $origFile->exists() )
+              if (! $origFile->exists() && ! $no_exist_check )
               {
                 list($origurl, $path) = $this->attemptRemoteDownload($origurl, $origFile->getFullPath(), $this->ID);
                 $downloadFile = $fs->getFile($path);
@@ -672,6 +679,8 @@ class ShortPixelMetaFacade {
                     $file_exists = apply_filters('shortpixel_image_exists', file_exists($origPath), $origPath, $this->ID);
                     $tUrl = str_replace(ShortPixelAPI::MB_basename($predownload_url), $thumbnailInfo['file'], $predownload_url);
 
+                    if ($no_exist_check)
+                      $file_exists = true;
                     // Working on low-key replacement for path handling via FileSystemController.
                     // This specific fix is related to the possibility of URLs' in metadata
                     if ( !$file_exists && !file_exists($tPath) )
@@ -742,7 +751,9 @@ class ShortPixelMetaFacade {
         //convert the + which are replaced with spaces by wp_remote_post
         array_walk($urlList, array( &$this, 'replacePlusChar') );
 
-        $filePaths = ShortPixelAPI::CheckAndFixImagePaths($filePaths);//check for images to make sure they exist on disk
+        if (! $no_exist_check)
+          $filePaths = ShortPixelAPI::CheckAndFixImagePaths($filePaths);//check for images to make sure they exist on disk
+          
         $result = array("URLs" => $urlList, "PATHs" => $filePaths, "sizesMissing" => $sizesMissing);
 
         $cacheItem->setValue($result);

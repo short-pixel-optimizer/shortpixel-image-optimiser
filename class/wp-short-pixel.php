@@ -3268,6 +3268,7 @@ class WPShortPixel {
         $diff = $folder->checkFolderContents(array('ShortPixelCustomMetaDao', 'getPathFiles'));
     } */
 
+
     // @todo - Should be part of folder model
     // @param force boolean Force a recheck.
     public function refreshCustomFolders($force = false) {
@@ -3289,7 +3290,12 @@ class WPShortPixel {
                 }
 
                 $fsFolder = $fs->getDirectory($folder->getPath());
-                $this->spMetaDao->refreshFolder($fsFolder);
+                if ($fsFolder->exists())
+                  $this->spMetaDao->refreshFolder($fsFolder);
+                else {
+                  Log::addWarn('Custom folder does not exist: ' . $fsFolder->getPath() );
+                }
+
               }
               /*  if($folder->getPath() === $ignore) continue;
                 try {
@@ -3906,11 +3912,12 @@ class WPShortPixel {
     */
     public function onDeleteImage($post_id) {
         $itemHandler = new ShortPixelMetaFacade($post_id);
-        $urlsPaths = $itemHandler->getURLsAndPATHs(true, false, true, array(), true);
+        $urlsPaths = $itemHandler->getURLsAndPATHs(true, false, true, array(), true, true);
         if(count($urlsPaths['PATHs'])) {
             $this->maybeDumpFromProcessedOnServer($itemHandler, $urlsPaths);
             $this->deleteBackupsAndWebPs($urlsPaths['PATHs']);
         }
+        $itemHandler->deleteItemCache();
         return $itemHandler; //return it because we call it also on replace and on replace we need to follow this by deleting SP metadata, on delete it
     }
 
@@ -3925,6 +3932,7 @@ class WPShortPixel {
         if(apply_filters('shortpixel_skip_delete_backups_and_webps', false, $paths)){
             return;
         }
+
 
         $fs = \wpSPIO()->filesystem();
 

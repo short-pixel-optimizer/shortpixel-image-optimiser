@@ -33,7 +33,7 @@ class ImageModel extends ShortPixelModel
     public function setByPostID($post_id)
     {
       // Set Meta
-      $fs = new FileSystemController();
+      $fs = \wpSPIO()->filesystem();
       $this->post_id = $post_id;
       $this->facade = new \ShortPixelMetaFacade($post_id);
       $this->meta = $this->facade->getMeta();
@@ -50,7 +50,7 @@ class ImageModel extends ShortPixelModel
 
     protected function setOriginalFile()
     {
-      $fs = new FileSystemController();
+      $fs = \wpSPIO()->filesystem();
 
       if (is_null($this->post_id))
         return false;
@@ -165,7 +165,7 @@ class ImageModel extends ShortPixelModel
       Log::addDebug('Finding Thumbs on path' . $meta->getPath());
       $thumbs = \WpShortPixelMediaLbraryAdapter::findThumbs($meta->getPath());
 
-      $fs = new FileSystemController();
+      $fs = \wpSPIO()->filesystem();
       $mainFile = $this->file;
 
       // Find Thumbs returns *full file path*

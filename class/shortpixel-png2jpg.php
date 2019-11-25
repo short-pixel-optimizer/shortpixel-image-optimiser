@@ -182,7 +182,7 @@ class ShortPixelPng2Jpg {
         if($this->isExcluded($params)) { return $params; }
 
         $image = $params['file'];
-        WPShortPixel::log("Convert Media PNG to JPG on upload: {$image}");
+        Log::addDebug("Convert Media PNG to JPG on upload: {$image}");
 
         if($this->_settings->png2jpg == 2) {
             $doConvert = true;

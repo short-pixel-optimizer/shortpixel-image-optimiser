@@ -138,7 +138,7 @@ class ShortPixelCustomMetaDao {
     }
 
     public function getFolder($path, $deleted = false) {
-        $sql = "SELECT * FROM {$this->db->getPrefix()}shortpixel_folders" . ($deleted ? "" : " WHERE path = %s AND status <> -1");
+        $sql = "SELECT * FROM {$this->db->getPrefix()}shortpixel_folders" . ($deleted ? "WHERE path = %s " : " WHERE path = %s AND status <> -1");
         $rows = $this->db->query($sql, array($path));
         $folders = array();
         foreach($rows as $row) {
@@ -264,8 +264,15 @@ class ShortPixelCustomMetaDao {
     /** Check files and add what's needed */
     public function refreshFolder(ShortPixel\DirectoryModel $folder)
     {
-        Log::addDebug('Doing Refresh Folder');
+
         $folderObj = $this->getFolder($folder->getPath());
+        Log::addDebug('Doing Refresh Folder for (DirectoryModel / ShortpixelFolder) ', array($folder->getPath(), $folderObj->getPath()) );
+
+        if ($folderObj === false)
+        {
+          Log::addWarn('FolderObj from database is not there, while folder seems ok ' . $folder->getPath() );
+          return false;
+        }
 
         $fs = \wpSPIO()->fileSystem();
 
