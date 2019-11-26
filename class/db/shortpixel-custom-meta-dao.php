@@ -266,13 +266,14 @@ class ShortPixelCustomMetaDao {
     {
 
         $folderObj = $this->getFolder($folder->getPath());
-        Log::addDebug('Doing Refresh Folder for (DirectoryModel / ShortpixelFolder) ', array($folder->getPath(), $folderObj->getPath()) );
 
         if ($folderObj === false)
         {
           Log::addWarn('FolderObj from database is not there, while folder seems ok ' . $folder->getPath() );
           return false;
         }
+        
+        Log::addDebug('Doing Refresh Folder for (DirectoryModel / ShortpixelFolder) ', array($folder->getPath(), $folderObj->getPath()) );
 
         $fs = \wpSPIO()->fileSystem();
 

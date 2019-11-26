@@ -80,6 +80,8 @@ class ShortPixelPng2Jpg {
 
     protected function doConvertPng2Jpg($params, $backup, $suffixRegex = false, $img = false) {
         $image = $params['file'];
+        $fs = \wpSPIO()->filesystem();
+
         WPShortPixel::log("PNG2JPG doConvert $image");
         if(!$img) {
             WPShortPixel::log("PNG2JPG doConvert create from PNG");
@@ -101,15 +103,24 @@ class ShortPixelPng2Jpg {
         imagealphablending($bg, 1);
         imagecopy($bg, $img, 0, 0, 0, 0, $x, $y);
         imagedestroy($img);
-        $newPath = preg_replace("/\.png$/i", ".jpg", $image);
-        $newUrl = preg_replace("/\.png$/i", ".jpg", $params['url']);
-        for ($i = 1; file_exists($newPath); $i++) {
+        //$newPath = preg_replace("/\.png$/i", ".jpg", $image);
+
+        $fsFile = $fs->getFile($image); // the original png file
+        $filename = $fsFile->getFileName();
+        $newFileName = $fsFile->getFileBase() . '.jpg'; // convert extension to .png
+
+        $uniquepath = wp_unique_filename($fsFile->getFullPath(), $newFileName);
+        $newPath = (string) $fsFile->getFileDir() . $uniquepath;
+
+        // check old filename, replace with uniqued filename.
+        $newUrl = str_replace($filename, $uniquepath, $params['url']); //preg_replace("/\.png$/i", ".jpg", $params['url']);
+        /*(for ($i = 1; file_exists($newPath); $i++) {
             if($suffixRegex) {
                 $newPath = preg_replace("/(" . $suffixRegex . ")\.png$/i", $i . '-$1.jpg', $image);
             }else {
                 $newPath = preg_replace("/\.png$/i", "-" . $i . ".jpg", $image);
             }
-        }
+        } */
         if (imagejpeg($bg, $newPath, 90)) {
             WPShortPixel::log("PNG2JPG doConvert created JPEG at $newPath");
             $newSize = filesize($newPath);

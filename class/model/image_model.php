@@ -5,7 +5,7 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 /* ImageModel class.
 *
 *
-* - Represents a -single- image *not file*.
+* - Represents a -single- image entity *not file*.
 * - Can be either MediaLibrary, or Custom .
 * - Not a replacement of Meta, but might be.
 * - Goal: Structural ONE method calls of image related information, and combining information. Same task is now done on many places.

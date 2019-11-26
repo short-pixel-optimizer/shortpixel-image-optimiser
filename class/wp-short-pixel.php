@@ -2328,26 +2328,33 @@ class WPShortPixel {
                 $spPng2Jpg = new ShortPixelPng2Jpg($this->_settings);
                 $spPng2Jpg->png2JpgUpdateUrls(array(), $toReplace);
             }
-            Log::addDebug('DoRestore, Unlinking', array($toUnlink) );
+
             if(isset($toUnlink['PATHs'])) foreach($toUnlink['PATHs'] as $unlink) {
                 if($png2jpgMain) {
                     WPShortPixel::log("PNG2JPG unlink $unlink");
                     $unlinkFile = $fs->getFile($unlink);
                     $unlinkFile->delete();
-//                    @unlink($unlink);
+
                 }
                 //try also the .webp
                 $unlinkWebpSymlink = trailingslashit(dirname($unlink)) . wp_basename($unlink, '.' . pathinfo($unlink, PATHINFO_EXTENSION)) . '.webp';
                 $unlinkWebp = $unlink . '.webp';
-                WPShortPixel::log("PNG2JPG unlink $unlinkWebp");
+                WPShortPixel::log("DoRestore webp unlink $unlinkWebp");
                 //@unlink($unlinkWebpSymlink);
+
                 $unlinkFile = $fs->getFile($unlinkWebpSymlink);
                 if ($unlinkFile->exists())
+                {
+                  Log::addDebug('DoRestore, Deleting - ', $unlinkWebpSymlink );
                   $unlinkFile->delete();
+                }
 
                 $unlinkFile = $fs->getFile($unlinkWebp);
                 if ($unlinkFile->exists())
+                {
+                    Log::addDebug('DoRestore, Deleting - ', $unlinkWebp );
                     $unlinkFile->delete();
+                }
 
             }
         } catch(Exception $e) {
@@ -3279,7 +3286,12 @@ class WPShortPixel {
             $customFolders = $this->spMetaDao->getFolders();
             foreach($customFolders as $folder) {
 
-              $mt = $folder->getFolderContentsChangeDate();
+              try {
+                $mt = $folder->getFolderContentsChangeDate();
+              }
+              catch(ShortPixelFileRightsException $ex) {
+                Notices::addWarning($ex->getMessage());
+              }
 
               if($mt > strtotime($folder->getTsUpdated()) || $force) {
                 // when forcing, set to never updated.
