@@ -2099,6 +2099,9 @@ class WPShortPixel {
             return false;
         }
 
+        // -sigh- to do something after possibly downloading and getting paths, but before any conversions.
+        do_action('shortpixel_restore_after_pathget', $attachmentID);
+
         // Get correct Backup Folder and file. .
         $sizes = isset($rawMeta["sizes"]) ? $rawMeta["sizes"] : array();
         $bkFolder = $fs->getDirectory($this->getBackupFolderAny($fsFile->getFullPath(), $sizes));
@@ -2316,8 +2319,6 @@ class WPShortPixel {
                 // @todo Should call MetaFacade here!
                 update_post_meta($ID, '_wp_attachment_metadata', $crtMeta);
 
-
-
                 if($attachmentID == $ID) { //copy back the metadata which will be returned.
                     $rawMeta = $crtMeta;
                 }
@@ -2365,6 +2366,7 @@ class WPShortPixel {
         /** It's being dumped because settings like .webp can be cached */
         $this->maybeDumpFromProcessedOnServer($itemHandler, $toUnlink);
         $itemHandler->deleteItemCache(); // remove any cache
+        $rawMeta = $itemHandler->getRawMeta();
         do_action("shortpixel_after_restore_image", $attachmentID);
         return $rawMeta;
     }
