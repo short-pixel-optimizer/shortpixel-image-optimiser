@@ -106,7 +106,7 @@ class ShortPixelImgToPictureWebp
     public static function convertImage($match)
     {
         // Do nothing with images that have the 'sp-no-webp' class.
-        if (strpos($match[0], 'sp-no-webp')) {
+        if (strpos($match[0], 'sp-no-webp') || strpos($match[0], 'rev-sildebg')) {
             Log::addInfo('SPDBG convertImage skipped, sp-no-webp found');
             return $match[0]; //. (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG convertImage sp-no-webp -->' : '');
         }
