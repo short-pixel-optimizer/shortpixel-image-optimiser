@@ -753,7 +753,7 @@ class ShortPixelMetaFacade {
 
         if (! $no_exist_check)
           $filePaths = ShortPixelAPI::CheckAndFixImagePaths($filePaths);//check for images to make sure they exist on disk
-          
+
         $result = array("URLs" => $urlList, "PATHs" => $filePaths, "sizesMissing" => $sizesMissing);
 
         $cacheItem->setValue($result);
@@ -764,8 +764,9 @@ class ShortPixelMetaFacade {
     }
 
     /** @todo Separate download try and post / attach_id functions .
+    * Also used by S3-Offload
     */
-    private function attemptRemoteDownload($url, $path, $attach_id)
+    public function attemptRemoteDownload($url, $path, $attach_id)
     {
         $downloadTimeout = max(SHORTPIXEL_MAX_EXECUTION_TIME - 10, 15);
         $fs = new \ShortPixel\FileSystemController();

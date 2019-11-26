@@ -31,7 +31,7 @@ class wpOffload
       $this->as3cf = $as3cf;
       $this->active = true;
 
-      // if setting to upload to bucket is off, don't hook or do anything really. 
+      // if setting to upload to bucket is off, don't hook or do anything really.
       if (! $this->as3cf->get_setting( 'copy-to-s3' ))
       {
         return;
@@ -40,7 +40,7 @@ class wpOffload
       add_action('shortpixel_image_optimised', array($this, 'image_upload'));
       add_action('shortpixel_after_restore_image', array($this, 'image_restore')); // hit this when restoring.
       add_action('shortpixel/image/convertpng2jpg_after', array($this, 'image_converted'));
-      add_action('shortpixel_before_restore_image', array($this, 'remove_remote')); // not optimal, when backup fails this will cause issues.
+      add_action('shortpixel_restore_after_pathget', array($this, 'remove_remote')); // not optimal -> has to do w/ doRestore and when URL/PATH is available when not on server . 
       add_action('shortpixel/image/convertpng2jpg_before', array($this, 'remove_remote'));
       add_filter('as3cf_attachment_file_paths', array($this, 'add_webp_paths'));
       add_filter('as3cf_remove_attachment_paths', array($this, 'remove_webp_paths'));
@@ -101,7 +101,40 @@ class wpOffload
 
     public function image_restore($id)
     {
+      /* voodoo . When images is excluded via S3, it might not exist anymore on server (when option is on). And it will not be in the backups. So before removing remote, and restoring, check this */
+      /*
+      Seems not needed to make it work, for now.
+      $settings = \wpSPIO()->settings();
+      $fs = \wpSPIO()->filesystem();
+      $excludeSizes = $settings->excludeSizes;
+
+      $itemHandler = new \ShortPixelMetaFacade($id);
+      $itemHandler->deleteItemCache();
+
+      // get all paths, without anything excluded.
+      $paths_all = $itemHandler->getURLsAndPATHs(true, false, true, array(), true,true);
+      Log::addDebug('Image Restore, Paths ALL', array($paths_all));
+
+      if (isset($paths_all['PATHs']))
+      {
+        foreach($paths_all['PATHs'] as $index => $path)
+        {
+          $restoredFile = $fs->getFile($path);
+          if (! $restoredFile->exists())
+          {
+            $url = $paths_all['URLs'][$index];
+            Log::addDebug('Missing size on restored image data, doing remote download :' . $path);
+            $itemHandler->attemptRemoteDownload($url, $path, $id);
+          }
+        }
+      } */
+      // sizes without excluded paths
+      //$paths_excludes = $itemHandler->getURLsAndPATHs(true, false, true, $excludeSizes, true,true);
+
+      //$itemHandler->deleteItemCache();
+
       $this->remove_remote($id);
+
       $this->image_upload($id);
 
     }

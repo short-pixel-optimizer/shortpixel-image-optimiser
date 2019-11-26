@@ -2108,6 +2108,9 @@ class WPShortPixel {
             return false;
         }
 
+        // -sigh- to do something after possibly downloading and getting paths, but before any conversions.
+        do_action('shortpixel_restore_after_pathget', $attachmentID);
+
         // Get correct Backup Folder and file. .
         $sizes = isset($rawMeta["sizes"]) ? $rawMeta["sizes"] : array();
         $bkFolder = $fs->getDirectory($this->getBackupFolderAny($fsFile->getFullPath(), $sizes));
@@ -2325,8 +2328,6 @@ class WPShortPixel {
                 // @todo Should call MetaFacade here!
                 update_post_meta($ID, '_wp_attachment_metadata', $crtMeta);
 
-
-
                 if($attachmentID == $ID) { //copy back the metadata which will be returned.
                     $rawMeta = $crtMeta;
                 }
@@ -2337,26 +2338,33 @@ class WPShortPixel {
                 $spPng2Jpg = new ShortPixelPng2Jpg($this->_settings);
                 $spPng2Jpg->png2JpgUpdateUrls(array(), $toReplace);
             }
-            Log::addDebug('DoRestore, Unlinking', array($toUnlink) );
+
             if(isset($toUnlink['PATHs'])) foreach($toUnlink['PATHs'] as $unlink) {
                 if($png2jpgMain) {
                     WPShortPixel::log("PNG2JPG unlink $unlink");
                     $unlinkFile = $fs->getFile($unlink);
                     $unlinkFile->delete();
-//                    @unlink($unlink);
+
                 }
                 //try also the .webp
                 $unlinkWebpSymlink = trailingslashit(dirname($unlink)) . wp_basename($unlink, '.' . pathinfo($unlink, PATHINFO_EXTENSION)) . '.webp';
                 $unlinkWebp = $unlink . '.webp';
-                WPShortPixel::log("PNG2JPG unlink $unlinkWebp");
+                WPShortPixel::log("DoRestore webp unlink $unlinkWebp");
                 //@unlink($unlinkWebpSymlink);
+
                 $unlinkFile = $fs->getFile($unlinkWebpSymlink);
                 if ($unlinkFile->exists())
+                {
+                  Log::addDebug('DoRestore, Deleting - ', $unlinkWebpSymlink );
                   $unlinkFile->delete();
+                }
 
                 $unlinkFile = $fs->getFile($unlinkWebp);
                 if ($unlinkFile->exists())
+                {
+                    Log::addDebug('DoRestore, Deleting - ', $unlinkWebp );
                     $unlinkFile->delete();
+                }
 
             }
         } catch(Exception $e) {
@@ -2367,6 +2375,7 @@ class WPShortPixel {
         /** It's being dumped because settings like .webp can be cached */
         $this->maybeDumpFromProcessedOnServer($itemHandler, $toUnlink);
         $itemHandler->deleteItemCache(); // remove any cache
+        $rawMeta = $itemHandler->getRawMeta();
         do_action("shortpixel_after_restore_image", $attachmentID);
         return $rawMeta;
     }
@@ -3288,7 +3297,12 @@ class WPShortPixel {
             $customFolders = $this->spMetaDao->getFolders();
             foreach($customFolders as $folder) {
 
-              $mt = $folder->getFolderContentsChangeDate();
+              try {
+                $mt = $folder->getFolderContentsChangeDate();
+              }
+              catch(ShortPixelFileRightsException $ex) {
+                Notices::addWarning($ex->getMessage());
+              }
 
               if($mt > strtotime($folder->getTsUpdated()) || $force) {
                 // when forcing, set to never updated.
