@@ -106,16 +106,18 @@ class ShortPixelImgToPictureWebp
     public static function convertImage($match)
     {
         // Do nothing with images that have the 'sp-no-webp' class.
-        if (strpos($match[0], 'sp-no-webp')) {
+        if (strpos($match[0], 'sp-no-webp') || strpos($match[0], 'rev-sildebg')) {
             Log::addInfo('SPDBG convertImage skipped, sp-no-webp found');
             return $match[0]; //. (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG convertImage sp-no-webp -->' : '');
         }
 
         $img = self::get_attributes($match[0]);
+
         if(isset($img['style']) && strpos($img['style'], 'background') !== false) {
             //don't replace for <img>'s that have background
             return $match[0];
         }
+
         // [BS] Can return false in case of Module fail. Escape in that case with unmodified image
         if ($img === false)
           return $match[0];
@@ -138,7 +140,6 @@ class ShortPixelImgToPictureWebp
         if(!$id) {
             return $match[0];
         }
-        $imageBase = dirname(get_attached_file($id)) . '/';
         */
 
         /* [BS] $updir = wp_upload_dir();
@@ -193,6 +194,7 @@ class ShortPixelImgToPictureWebp
         unset($img['data-lazy-src']);
         unset($img['srcset']);
         unset($img['sizes']);
+
         //nor the ones that belong to <img>
         unset($img['alt']);
         unset($img['id']);
@@ -251,12 +253,41 @@ class ShortPixelImgToPictureWebp
         //add the exclude class so if this content is processed again in other filter, the img is not converted again in picture
         $img['class'] = (isset($img['class']) ? $img['class'] . " " : "") . "sp-no-webp";
 
-        return '<picture ' . self::create_attributes($img) . '>'
+        $imgpicture = $img;
+        // remove certain elements for the main picture element.
+        $imgpicture = self::filterForPicture($imgpicture);
+
+        return '<picture ' . self::create_attributes($imgpicture) . '>'
         .'<source ' . $srcsetPrefix . 'srcset="' . $srcsetWebP . '"' . ($sizes ? ' ' . $sizesPrefix . 'sizes="' . $sizes . '"' : '') . ' type="image/webp">'
         .'<source ' . $srcsetPrefix . 'srcset="' . $srcset . '"' . ($sizes ? ' ' . $sizesPrefix . 'sizes="' . $sizes . '"' : '') . '>'
         .'<img ' . $srcPrefix . 'src="' . $src . '" ' . self::create_attributes($img) . $idAttr . $altAttr . $heightAttr . $widthAttr
             . (strlen($srcset) ? ' srcset="' . $srcset . '"': '') . (strlen($sizes) ? ' sizes="' . $sizes . '"': '') . '>'
         .'</picture>';
+    }
+
+    /** Check and remove elements that should not be in the picture tag. Especially items within attributes. */
+    private static function filterForPicture($img)
+    {
+
+      if (isset($img['style']))
+      {
+         $bordercount = substr_count($img['style'], 'border');
+         for ($i = 0; $i <= $bordercount; $i++)
+         {
+           $offset = strpos($img['style'], 'border');
+           $end = strpos($img['style'], ';', $offset);
+
+           $nstyle = substr($img['style'], 0, $offset);
+
+           // if end is false, ; terminator does not exist, assume full string is border.
+           if ($end !== false)
+              $nstyle .= substr($img['style'], ($end+1) ); // do not include ;
+
+              $img['style'] = $nstyle;
+         }
+      }
+
+      return $img;
     }
 
     public static function testInlineStyle($content)
@@ -438,6 +469,7 @@ class ShortPixelImgToPictureWebp
         foreach ($attribute_array as $attribute => $value) {
             $attributes .= $attribute . '="' . $value . '" ';
         }
+
         // Removes the extra space after the last attribute
         return substr($attributes, 0, -1);
     }

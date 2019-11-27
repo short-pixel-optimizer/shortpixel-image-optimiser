@@ -1019,7 +1019,7 @@ function checkBulkProcessingCallApi(){
                         ShortPixel.otherMediaUpdateActions(id, ['quota','view']);
                         break;
                     case ShortPixel.STATUS_FAIL:
-                        setCellMessage(id, data["Message"], "<a class='button button-smaller button-primary' href=\"javascript:manualOptimization('" + id + "', false)\">"
+                        setCellMessage(id, data["Message"], "<a class='button button-smaller button-primary' href=\"javascript:manualOptimization('" + id + "', true)\">"
                                 + _spTr.retry + "</a>");
                         showToolBarAlert(ShortPixel.STATUS_FAIL, data["Message"], id);
                         if(isBulkPage) {

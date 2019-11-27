@@ -15,9 +15,9 @@ Class FileSystemController extends ShortPixelController
     {
       $this->loadModel('file');
       $this->loadModel('directory');
-      $this->loadModel('environment');
+    //  $this->loadModel('environment');
 
-      $this->env = new EnvironmentModel();
+      $this->env = wpSPIO()->env();
 
     }
 
@@ -29,6 +29,33 @@ Class FileSystemController extends ShortPixelController
     public function getFile($path)
     {
       return new FileModel($path);
+    }
+
+    /** Get FileModel for a mediaLibrary post_id .
+    *
+    * This function exists to put get_attached_file to plugin control
+    * Externals / Interals maybe filter it.
+    *
+    * @param $id Attachement ID for the media library item
+    * @return FileModel returns a FileModel file.
+    * @todo This function will be more at home in a medialibrary_model
+    */
+    public function getAttachedFile($id)
+    {
+        $filepath = get_attached_file($id);
+        // same signature as wordpress' filter. Only for this plugin.
+        $filepath = apply_filters('shortpixel_get_attached_file', $filepath, $id);
+
+        return new FileModel($filepath);
+
+    }
+
+    /* wp_get_original_image_path with specific ShortPixel filter */
+    public function getOriginalPath($id)
+    {
+      $filepath = \wp_get_original_image_path($id);
+      $filepath = apply_filters('shortpixel_get_original_image_path', $filepath, $id);
+      return new FileModel($filepath);
     }
 
     /** Get DirectoryModel for a certain path. This can exist or not
@@ -69,6 +96,26 @@ Class FileSystemController extends ShortPixelController
       }
     }
 
+    /** Get the base folder from where custom paths are possible (from WP-base / sitebase)
+
+    */
+    public function getWPFileBase()
+    {
+      if(\wpSPIO()->env()->is_mainsite) {
+          $path = get_home_path();
+
+      } else {
+          $up = wp_upload_dir();
+          $path = realpath($up['basedir']);
+      }
+      $dir = $this->getDirectory($path);
+      if (! $dir->exists())
+        Log::addWarn('getWPFileBase - Base path doesnt exist');
+
+      return $dir;
+
+    }
+
     /** Not in use yet, do not use. Future replacement. */
     public function createBackUpFolder($folder = SHORTPIXEL_BACKUP_FOLDER)
     {
@@ -99,6 +146,15 @@ Class FileSystemController extends ShortPixelController
             }
         }
 
+        $wp_home_path = trailingslashit(get_home_path());
+        // If the whole WP homepath is still in URL, assume the replace when wrong ( not replaced w/ URL)
+        // This happens when file is outside of wp_uploads_dir
+        if (strpos($url, $wp_home_path) !== false)
+        {
+          $home_url = trailingslashit(get_home_url());
+          $url = str_replace($wp_home_path, $home_url, $filepath);
+        }
+
         if (parse_url($url) !== false)
           return $url;
         else {
@@ -106,9 +162,56 @@ Class FileSystemController extends ShortPixelController
         }
     }
 
+    /** Sort files / directories in a certain way.
+    * Future dev to include options via arg.
+    */
+    public function sortFiles($array, $args = array() )
+    {
+        if (count($array) == 0)
+          return $array;
 
+        // what are we sorting.
+        $class = get_class($array[0]);
+        $is_files = ($class == 'ShortPixel\FileModel') ? true : false; // if not files, then dirs.
 
+        usort($array, function ($a, $b) use ($is_files)
+            {
+              if ($is_files)
+                return strcmp($a->getFileName(), $b->getFileName());
+              else {
+                return strcmp($a->getName(), $b->getName());
+              }
+            }
+        );
 
+        return $array;
+
+    }
+
+    /** Get all files from a directory tree, starting at given dir.
+    * @param DirectoryModel $dir to recursive into
+    * @param Array $filters Collection of optional filters as accepted by FileFilter in directoryModel
+    * @return Array Array of FileModel Objects
+     **/
+    public function getFilesRecursive(DirectoryModel $dir, $filters = array() )
+    {
+        $fileArray = array();
+
+        if (! $dir->exists())
+          return $fileArray;
+
+        $files = $dir->getFiles($filters);
+        $fileArray = array_merge($fileArray, $files);
+
+        $subdirs = $dir->getSubDirectories();
+
+        foreach($subdirs as $subdir)
+        {
+             $fileArray = array_merge($fileArray, $this->getFilesRecursive($subdir, $filters));
+        }
+
+        return $fileArray;
+    }
 
 
 }

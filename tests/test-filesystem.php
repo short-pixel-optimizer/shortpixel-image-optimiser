@@ -75,7 +75,7 @@ class FileSystemTest extends  WP_UnitTestCase
 
       //vfsStream::newDirectory(SHORTPIXEL_BACKUP_FOLDER, 0755)->at($this->root);
 
-      $file = $this->fs->getFile(get_attached_file($attachment_id));
+      $file = $this->fs->getAttachedFile($attachment_id);
 
       $this->assertTrue($file->exists());
       $this->assertTrue($file->is_writable());
@@ -112,10 +112,13 @@ class FileSystemTest extends  WP_UnitTestCase
       $this->assertDirectoryExists($dirpath);
       $this->assertDirectoryIsReadable($dirpath);
       $this->assertDirectoryIsWritable($dirpath);
+      $this->assertTrue($directory->is_writable());
+      $this->assertTrue($directory->is_readable());
 
       // Test if cast and return are the same
       $this->assertEquals((String) $directory, $directory->getPath());
       $this->assertEquals($directory->getPath(), $dirpath . '/');
+      $this->assertEquals($directory->getName(), 'basic');
 
       // Test for trailingslash consistency
       $dirpath2 = $this->root->url() . '/basic/';
@@ -132,6 +135,7 @@ class FileSystemTest extends  WP_UnitTestCase
 
       $this->assertTrue($directory3->exists(), $directory3->getPath());
       $this->assertEquals($goodpath3, $directory3->getPath());
+      $this->assertEquals($directory3->getName(), 'basic');
 
       // When feeding a file, existing.
       $dirpath4 = $this->root->url() . '/images/image1.jpg';
@@ -210,6 +214,45 @@ class FileSystemTest extends  WP_UnitTestCase
     //upload_dir
   }
 
+  public function testDirectorySubDirectoryOf()
+  {
+    $dirpath = '/var/www/main';
+    $subpath = '/var/www/main/child/somechild';
+    $randompath = '/var/somewherelse/sub';
+
+    $dir = $this->fs->getDirectory($dirpath);
+    $subdir = $this->fs->getDirectory($subpath);
+    $rdir = $this->fs->getDirectory($randompath);
+
+    $this->assertTrue($subdir->isSubFolderOf($dir));
+    $this->assertFalse($dir->isSubFolderOf($subdir));
+
+    // the same
+    $this->assertFalse($subdir->isSubFolderOf($subdir));
+
+    // some random dir
+    $this->assertFalse($rdir->isSubFolderOf($dir));
+
+    // some random dir reversed.
+    $this->assertFalse($subdir->isSubFolderOf($rdir));
+
+    $subberpath = $subpath . '/deeper/more';
+    $subberdir = $this->fs->getDirectory($subberpath);
+
+    // deeper structure.
+    $this->assertTrue($subberdir->isSubFolderOf($subdir));
+    $this->assertTrue($subberdir->isSubFolderOf($dir));
+    $this->assertFalse($subberdir->isSubFolderOf($rdir));
+
+    $repeatpath = '/otherdrive/so/var/www/main';
+    $repeatdir = $this->fs->getDirectory($repeatpath);
+
+    $this->assertFalse($repeatdir->isSubFolderOf($dir));
+    $this->assertFalse($repeatdir->isSubFolderOf($subdir));
+
+
+  }
+
   public function testFileBasic()
   {
       $filepath = $this->root->url() . '/images/image1.jpg';
@@ -225,6 +268,12 @@ class FileSystemTest extends  WP_UnitTestCase
       $this->assertEquals($file->getFileName(), 'image1.jpg');
       $this->assertEquals($file->getFileBase(), 'image1');
       $this->assertEquals( (string) $file->getFileDir(), $filedir);
+
+      // String Test
+      $file1_2 = $this->fs->getFile($filepath);
+      $this->assertEquals((string) $file1_2, $filepath);
+      $this->assertEquals( (string) $file->getFileDir(), $filedir);
+
 
       $filepath2 = $this->root->url() . '/images/image1.ext.jpg';
       $file2 = $this->fs->getFile($filepath2);
@@ -263,6 +312,7 @@ class FileSystemTest extends  WP_UnitTestCase
       $this->assertFileNotExists($file4);
       $this->assertFalse($file4->hasBackup());
       $this->assertNull($file4->getFileDir());
+
   }
 
   public function testFileCopy()
@@ -336,7 +386,6 @@ class FileSystemTest extends  WP_UnitTestCase
       $uploadDir = wp_upload_dir();
       $basedir = $uploadDir['basedir'];
 
-//      echo "<PRE>"; var_dump($uploadDir); echo "</PRE>";
       $fullfilepath = ABSPATH .  'wp-content/uploads/2019/07/rel_image_virtual.jpg';
 
       // with starting slash
@@ -380,7 +429,7 @@ class FileSystemTest extends  WP_UnitTestCase
   private function urlSetup($url)
   {
     //$home_url = 'https://test.com';
-    update_option('homeurl', $url);
+    update_option('home', $url);
     update_option('siteurl', $url);
     // See - https://developer.wordpress.org/reference/functions/_wp_upload_dir/ . Otherwise constant is used.
     update_option('upload_url_path', $url . '/wp-content/uploads');
@@ -392,6 +441,7 @@ class FileSystemTest extends  WP_UnitTestCase
   {
 
     $this->urlSetup('https://test.com');
+    $this->assertEquals('https://test.com', get_home_url() );
 
     $fullfilepath = ABSPATH . 'wp-content/uploads/2019/07/wpimg1.jpg';
     $urlpath = 'https://test.com/wp-content/uploads/2019/07/wpimg1.jpg';
@@ -407,6 +457,10 @@ class FileSystemTest extends  WP_UnitTestCase
     $this->assertEquals($fullfilepath, $file2->getFullPath());
     $this->assertEquals($urlpath2, $this->fs->pathToUrl($file2));
 
+    $urlpath5 = '//test.com/wp-content/uploads/2019/07/wpimg1.jpg';
+    $file5 = $this->fs->getFile($urlpath5);
+    $this->assertEquals($fullfilepath, $file2->getFullPath());
+    $this->assertEquals('http:' . $urlpath5, $this->fs->pathToUrl($file5));
 
     $this->urlSetup('http://test.com:8080');
 
@@ -414,6 +468,14 @@ class FileSystemTest extends  WP_UnitTestCase
     $file3 = $this->fs->getFile($urlpath3);
     $this->assertEquals($fullfilepath, $file3->getFullPath());
     $this->assertEquals($urlpath3, $this->fs->pathToUrl($file3));
+
+    // path outside of wp_uploads
+    $fullfilepath2 = ABSPATH . 'wp-content/themes/images/wpimg1.jpg';
+    $urlpath4 = 'http://test.com:8080/wp-content/themes/images/wpimg1.jpg';
+    $file4 = $this->fs->getFile($urlpath4);
+    $this->assertEquals($fullfilepath2, $file4->getFullPath());
+    $this->assertEquals($urlpath4, $this->fs->pathToUrl($file4));
+
   }
 
   public function testFileWithCyrillic()

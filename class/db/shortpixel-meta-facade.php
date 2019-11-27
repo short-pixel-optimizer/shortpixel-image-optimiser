@@ -1,5 +1,8 @@
 <?php
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ImageModel as ImageModel;
+use ShortPixel\FileSystemController as FileSystem;
+use ShortPixel\CacheController as Cache;
 
 class ShortPixelMetaFacade {
     const MEDIA_LIBRARY_TYPE = 1;
@@ -47,7 +50,9 @@ class ShortPixelMetaFacade {
     }
 
     private static function rawMetaToMeta($ID, $rawMeta) {
-        $path = get_attached_file($ID);
+        $file = \wpSPIO()->filesystem()->getAttachedFile($ID);
+        $path = $file->getFullPath();
+
         return new ShortPixelMeta(array(
                     "id" => $ID,
                     "name" => ShortPixelAPI::MB_basename($path),
@@ -103,6 +108,9 @@ class ShortPixelMetaFacade {
 
     //  Update MetaData of Image.
     public function updateMeta($newMeta = null, $replaceThumbs = false) {
+
+        $this->deleteItemCache();
+
         if($newMeta) {
             $this->meta = $newMeta;
         }
@@ -222,6 +230,8 @@ class ShortPixelMetaFacade {
     * This function only hits with images that were optimized, pending or have an error state.
     */
     public function cleanupMeta($fakeOptPending = false) {
+        $this->deleteItemCache(); // remove any caching.
+
         if($this->type == ShortPixelMetaFacade::MEDIA_LIBRARY_TYPE) {
             if(!isset($this->rawMeta)) {
                 $rawMeta = $this->sanitizeMeta(wp_get_attachment_metadata($this->getId()));
@@ -250,9 +260,108 @@ class ShortPixelMetaFacade {
         }
     }
 
+ /** Checks if there are unlisted files present in system. Save them into sizes
+    * @return int Number 'Unlisted' Items in metadta.
+    */
+    public function searchUnlistedFiles()
+    {
+      // must be media library, setting must be on.
+      $settings = \wpSPIO()->settings();
+
+      if($this->getType() != ShortPixelMetaFacade::MEDIA_LIBRARY_TYPE
+         || ! $settings->optimizeUnlisted) {
+        return 0;
+      }
+
+      //exit($this->_settings->optimizeUnlisted);
+
+      $meta = $this->getMeta();
+      Log::addDebug('Finding Thumbs on path' . $meta->getPath());
+      $thumbs = WpShortPixelMediaLbraryAdapter::findThumbs($meta->getPath());
+
+      $fs = new \ShortPixel\FileSystemController();
+      $mainFile = $fs->getFile($meta->getPath());
+
+      // Find Thumbs returns *full file path*
+      $foundThumbs = WpShortPixelMediaLbraryAdapter::findThumbs($mainFile->getFullPath());
+
+        // no thumbs, then done.
+      if (count($foundThumbs) == 0)
+        return 0;
+
+      //first identify which thumbs are not in the sizes
+      $sizes = $meta->getThumbs();
+      $mimeType = false;
+
+      $allSizes = array();
+      $basepath = $mainFile->getFileDir()->getPath();
+
+      foreach($sizes as $size) {
+        // Thumbs should have filename only. This is shortpixel-meta ! Not metadata!
+        // Provided filename can be unexpected (URL, fullpath), so first do check, get filename, then check the full path
+        $sizeFileCheck = $fs->getFile($size['file']);
+        $sizeFilePath = $basepath . $sizeFileCheck->getFileName();
+        $sizeFile = $fs->getFile($sizeFilePath);
+
+        //get the mime-type from one of the thumbs metas
+        if(isset($size['mime-type'])) { //situation from support case #9351 Ramesh Mehay
+            $mimeType = $size['mime-type'];
+        }
+        $allSizes[] = $sizeFile;
+      }
+
+      foreach($foundThumbs as $id => $found) {
+          $foundFile = $fs->getFile($found);
+
+          foreach($allSizes as $sizeFile) {
+              if ($sizeFile->getExtension() !== $foundFile->getExtension())
+              {
+                $foundThumbs[$id] = false;
+              }
+              elseif ($sizeFile->getFileName() === $foundFile->getFileName())
+              {
+                  $foundThumbs[$id] = false;
+              }
+          }
+      }
+          // add the unfound ones to the sizes array
+          $ind = 1;
+          $counter = 0;
+          // Assumption:: there is no point in adding to this array since findThumbs should find *all* thumbs that are relevant to this image.
+          /*while (isset($sizes[ShortPixelMeta::FOUND_THUMB_PREFIX . str_pad("".$start, 2, '0', STR_PAD_LEFT)]))
+          {
+            $start++;
+          } */
+      //    $start = $ind;
+
+          foreach($foundThumbs as $found) {
+              if($found !== false) {
+                  Log::addDebug('Adding File to sizes -> ' . $found);
+                  $size = getimagesize($found);
+                  Log::addDebug('Add Unlisted, add size' . $found );
+
+                  $sizes[ShortPixelMeta::FOUND_THUMB_PREFIX . str_pad("".$ind, 2, '0', STR_PAD_LEFT)]= array( // it's a file that has no corresponding thumb so it's the WEBP for the main file
+                      'file' => ShortPixelAPI::MB_basename($found),
+                      'width' => $size[0],
+                      'height' => $size[1],
+                      'mime-type' => $mimeType
+                  );
+                  $ind++;
+                  $counter++;
+              }
+          }
+          if($ind > 1) { // at least one thumbnail added, update
+              $meta->setThumbs($sizes);
+              $this->updateMeta($meta);
+          }
+
+        return $counter;
+    }
+
     // remove SPFoudnMeta from image. Dirty. @todo <--
     public function removeSPFoundMeta()
     {
+      $unset = false; // something was removed?
       if($this->type == ShortPixelMetaFacade::MEDIA_LIBRARY_TYPE) {
           if(!isset($this->rawMeta)) {
               $rawMeta = $this->sanitizeMeta(wp_get_attachment_metadata($this->getId()));
@@ -266,16 +375,22 @@ class ShortPixelMetaFacade {
                 if (strpos($size, ShortPixelMeta::FOUND_THUMB_PREFIX) !== false)
                 {
                   unset($rawMeta['sizes'][$size]);
+                  $unset = true;
                   Log::addDebug('Unset sp-found- size' . $size);
                 }
             }
           }
           $this->rawMeta = $rawMeta;
-          update_post_meta($this->ID, '_wp_attachment_metadata', $rawMeta);
+          if ($unset) // only update on changes.
+          {
+            $this->deleteItemCache();
+            update_post_meta($this->ID, '_wp_attachment_metadata', $rawMeta);
+          }
       }
     }
 
     function deleteMeta() {
+        $this->deleteItemCache();
         if($this->type == self::CUSTOM_TYPE) {
             throw new Exception("Not implemented 1");
         } else {
@@ -283,9 +398,11 @@ class ShortPixelMetaFacade {
             update_post_meta($this->ID, '_wp_attachment_metadata', $this->rawMeta);
             //wp_update_attachment_metadata($this->ID, $this->rawMeta);
         }
+
     }
 
     function deleteAllSPMeta() {
+        $this->deleteItemCache();
         if($this->type == self::CUSTOM_TYPE) {
             throw new Exception("Not implemented 1");
         } else {
@@ -375,14 +492,21 @@ class ShortPixelMetaFacade {
      * @param $id
      * @return false|string
      * @throws Exception
+     * @todo hack the hack to a solid solution.
      */
     public static function safeGetAttachmentUrl($id) {
         $attURL = wp_get_attachment_url($id);
-        Log::addDebug('Attachment URL - safeGotten - ' . $attURL);
         if(!$attURL || !strlen($attURL)) {
             throw new Exception("Post metadata is corrupt (No attachment URL for $id)", ShortPixelAPI::ERR_POSTMETA_CORRUPT);
         }
         if ( !parse_url($attURL, PHP_URL_SCHEME) ) {//no absolute URLs used -> we implement a hack
+
+           if (! is_null($attURL, PHP_URL_HOST)) // This is for URL's for // without http or https. hackhack.
+           {
+             $scheme = is_ssl() ? 'https:' : 'http:';
+             return $scheme. $attURL;
+
+           }
            return self::getHomeUrl() . ltrim($attURL,'/');//get the file URL
         }
         else {
@@ -390,22 +514,63 @@ class ShortPixelMetaFacade {
         }
     }
 
-    public function getURLsAndPATHs($processThumbnails, $onlyThumbs = false, $addRetina = true, $excludeSizes = array(), $includeOptimized = false) {
+    /** Get the name for cached items, for now just the URLPATH stuff
+    */
+    protected function getCacheName()
+    {
+          return trim('META_URLPATH_' . $this->getQueuedId());
+    }
+
+    public function deleteItemCache()
+    {
+      // in any update, clear the caching
+      $cacheController = new Cache();
+      Log::adDDebug('Removing Item Cache -> ' . $this->getCacheName() );
+      $cacheController->deleteItem( $this->getCacheName());
+
+    }
+
+    /* Function that gathers URLs' and PATHs of attachment.  When local file does not exist ( offloading, CDN, etc ), try to download it.
+    * This function caches it's result!  use deleteItemCache
+    *
+    * @param $no_exist_check  Don't check if returned file exists. This prevents remote downloading it ( in use for onDeleteImage atm)
+    * @todo This function needs splitting into urls / paths and made to function more clear .
+    */
+    public function getURLsAndPATHs($processThumbnails, $onlyThumbs = false, $addRetina = true, $excludeSizes = array(), $includeOptimized = false, $no_exist_check = false) {
         $sizesMissing = array();
-        $fs = new \ShortPixel\FileSystemController();
+        $cacheController = new Cache();
+
+        $cacheItem = $cacheController->getItem( $this->getCacheName() );
+        if ($cacheItem->exists())
+        {
+            Log::addDebug('Get Urls / Paths hit cache -> ', $this->getCacheName());
+            return $cacheItem->getValue();
+        }
+
+        $fs = new FileSystem();
+        \wpSPIO()->loadModel('image');
 
         if($this->type == self::CUSTOM_TYPE) {
             $meta = $this->getMeta();
 
+            $path = $meta->getPath();
+            $fsFile = $fs->getFile($path);
+            $url = $fs->pathToUrl($fsFile);
+
             //fix for situations where site_url is lala.com/en and home_url is lala.com - if using the site_url will get a duplicated /en in the URL
-            $homeUrl = self::getHomeUrl();
-            $urlList[] = self::replaceHomePath($meta->getPath(), $homeUrl);
+      //      $homeUrl = self::getHomeUrl();
+          $urlList[] = $url;  //  self::replaceHomePath($meta->getPath(), $homeUrl);
 
             $filePaths[] = $meta->getPath();
         } else {
-            $path = get_attached_file($this->ID);//get the full file PATH
-            $fsFile = $fs->getFile($path);
-            $mainExists = apply_filters('shortpixel_image_exists', file_exists($path), $path, $this->ID);
+
+            $imageObj = new \ShortPixel\ImageModel();
+            $imageObj->setbyPostID($this->ID);
+
+            $fsFile = $imageObj->getFile(); //\wpSPIO()->filesystem()->getAttachedFile($this->ID);//get the full file PATH
+
+            //$fsFile = $fs->getFile($path);
+            $mainExists = apply_filters('shortpixel_image_exists', $fsFile->exists(), $fsFile->getFullPath(), $this->ID);
             try
             {
               $predownload_url = $url = self::safeGetAttachmentUrl($this->ID); // This function *can* return an PHP error.
@@ -417,11 +582,12 @@ class ShortPixelMetaFacade {
               return array("URLs" => array(), "PATHs" => array(), "sizesMissing" => array());
             }
             $urlList = array(); $filePaths = array();
-
-            Log::addDebug('attached file path: ' . $path, array( (string) $fsFile->getFileDir() )  );
+            Log::addDebug('attached file path: ' . (string) $fsFile, array( (string) $fsFile->getFileDir() )  );
+            if ($no_exist_check)
+              $mainExists = true;
 
             if(!$mainExists) {
-               list($url, $path) = $this->attemptRemoteDownload($url, $path, $this->ID);
+               list($url, $path) = $this->attemptRemoteDownload($url, $fsFile->getFullPath(), $this->ID);
                $downloadFile = $fs->getFile($path);
                if ($downloadFile->exists()) // check for success.
                {
@@ -432,13 +598,38 @@ class ShortPixelMetaFacade {
 
             if($mainExists) {
                 $urlList[] = $url;
-                $filePaths[] = $path;
+                $filePaths[] = $fsFile->getFullPath();
                 if($addRetina) {
-                    $this->addRetina($path, $url, $filePaths, $urlList);
+                    $this->addRetina($fsFile->getFullPath(), $url, $filePaths, $urlList);
                 }
             }
 
-            Log::addDebug('Main file turnout - ', array($url, $path));
+            // new WP 5.3 function, check if file has original ( was scaled )
+            $origFile = $imageObj->has_original();
+            Log::addDebug('Get Paths and such, original', $origFile);
+            if (is_object($origFile))
+            {
+              //$origFile = $imageObj->getOriginalFile();
+              $origurl = wp_get_original_image_url($this->ID); //$fs->pathToUrl($origFile);
+              if (! $origFile->exists() && ! $no_exist_check )
+              {
+                list($origurl, $path) = $this->attemptRemoteDownload($origurl, $origFile->getFullPath(), $this->ID);
+                $downloadFile = $fs->getFile($path);
+                if ($downloadFile->exists())
+                {
+                  $urlList[] = $origurl;
+                  $filePaths[] = $downloadFile->getFullPath();
+                }
+              }
+              else
+              {
+                $urlList[] = $origurl;
+                $filePaths[] = $origFile->getFullPath();
+              }
+
+            }
+
+            Log::addDebug('Main file turnout - ', array($url, (string) $fsFile));
 
             $meta = $this->getMeta();
             $sizes = $meta->getThumbs();
@@ -479,7 +670,7 @@ class ShortPixelMetaFacade {
                     if($count >= SHORTPIXEL_MAX_THUMBS) break;
                     $count++;
 
-                    $origPath = $tPath = str_replace(ShortPixelAPI::MB_basename($path), $thumbnailInfo['file'], $path);
+                    $origPath = $tPath = str_replace(ShortPixelAPI::MB_basename($fsFile->getFullPath() ), $thumbnailInfo['file'], $fsFile->getFullPath());
                     $origFile = $fs->getFile($origPath);
 
                     if ($origFile->getExtension() == 'webp') // never include any webp extension.
@@ -488,6 +679,8 @@ class ShortPixelMetaFacade {
                     $file_exists = apply_filters('shortpixel_image_exists', file_exists($origPath), $origPath, $this->ID);
                     $tUrl = str_replace(ShortPixelAPI::MB_basename($predownload_url), $thumbnailInfo['file'], $predownload_url);
 
+                    if ($no_exist_check)
+                      $file_exists = true;
                     // Working on low-key replacement for path handling via FileSystemController.
                     // This specific fix is related to the possibility of URLs' in metadata
                     if ( !$file_exists && !file_exists($tPath) )
@@ -519,6 +712,11 @@ class ShortPixelMetaFacade {
                         //try and download the image from the URL (images present only on CDN)
                       //  Log::addDebug('URLs and Paths - File didnt exists, trying to download', array($tUrl, $origPath));
                       //  $tempThumb = download_url($tUrl, $downloadTimeout);
+                        $args_for_get = array(
+                          'stream' => true,
+                          'filename' => $origFile->getFullPath(),
+                          'timeout' => max(SHORTPIXEL_MAX_EXECUTION_TIME - 10, 15),
+                        );
 
                         list($tUrl, $tPath) = $this->attemptRemoteDownload($tUrl, $tPath, $this->ID);
 
@@ -553,11 +751,22 @@ class ShortPixelMetaFacade {
         //convert the + which are replaced with spaces by wp_remote_post
         array_walk($urlList, array( &$this, 'replacePlusChar') );
 
-        $filePaths = ShortPixelAPI::CheckAndFixImagePaths($filePaths);//check for images to make sure they exist on disk
+        if (! $no_exist_check)
+          $filePaths = ShortPixelAPI::CheckAndFixImagePaths($filePaths);//check for images to make sure they exist on disk
+
+        $result = array("URLs" => $urlList, "PATHs" => $filePaths, "sizesMissing" => $sizesMissing);
+
+        $cacheItem->setValue($result);
+        $cacheItem->setExpires(5 * MINUTE_IN_SECONDS);
+        $cacheController->storeItemObject($cacheItem);
+
         return array("URLs" => $urlList, "PATHs" => $filePaths, "sizesMissing" => $sizesMissing);
     }
 
-    private function attemptRemoteDownload($url, $path, $attach_id)
+    /** @todo Separate download try and post / attach_id functions .
+    * Also used by S3-Offload
+    */
+    public function attemptRemoteDownload($url, $path, $attach_id)
     {
         $downloadTimeout = max(SHORTPIXEL_MAX_EXECUTION_TIME - 10, 15);
         $fs = new \ShortPixel\FileSystemController();
@@ -631,14 +840,15 @@ class ShortPixelMetaFacade {
         return (substr($baseName, -3) === '@2x');
     }
 
-    // @todo Not clear what this function does.
+    // @todo Function gets duplicated images over WPML. Same image, different language so doesn't need duplication.
     public static function getWPMLDuplicates( $id ) {
         global $wpdb;
+        $fs = \wpSPIO()->filesystem();
 
         $parentId = get_post_meta ($id, '_icl_lang_duplicate_of', true );
         if($parentId) $id = $parentId;
 
-        $mainFile = get_attached_file($id);
+        $mainFile = $fs->getAttachedFile($id);
 
         $duplicates = $wpdb->get_col( $wpdb->prepare( "
             SELECT pm.post_id FROM {$wpdb->postmeta} pm
@@ -649,7 +859,7 @@ class ShortPixelMetaFacade {
         $moreDuplicates = $wpdb->get_results( $wpdb->prepare( "
             SELECT p.ID, p.guid FROM {$wpdb->posts} p
             INNER JOIN {$wpdb->posts} pbase ON p.guid = pbase.guid
-         WHERE pbase.ID = %s
+         WHERE pbase.ID = %s and p.guid != ''
         ", $id ) );
         //MySQL is doing a CASE INSENSITIVE join on p.guid!! so double check the results.
         $guid = false;
@@ -674,7 +884,8 @@ class ShortPixelMetaFacade {
             if(count($transGroupId)) {
                 $transGroup = $wpdb->get_results("SELECT element_id FROM {$wpdb->prefix}icl_translations WHERE trid = " . $transGroupId[0]->trid);
                 foreach($transGroup as $trans) {
-                    if($mainFile == get_attached_file($trans->element_id)){
+                    $transFile = $fs->getFile($trans->element_id);
+                    if($mainFile->getFullPath() == $transFile->getFullPath() ){
                         $duplicates[] = $trans->element_id;
                     }
                 }

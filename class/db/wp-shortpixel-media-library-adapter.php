@@ -3,6 +3,8 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 class WpShortPixelMediaLbraryAdapter {
 
+    private static $urls_this_run = array();
+
     // Testing is this is better / faster than previous function.
      public static function countAllProcessable($settings, $maxId = PHP_INT_MAX, $minId = 0)
      {
@@ -20,6 +22,7 @@ class WpShortPixelMediaLbraryAdapter {
 
         $foundUnlistedThumbs = false;
         $counter = 0;
+        $fs = new \ShortPixel\FileSystemController();
 
         $filesWithErrors = array(); $moreFilesWithErrors = 0;
         $excludePatterns = WPShortPixelSettings::getOpt("excludePatterns");
@@ -51,9 +54,7 @@ class WpShortPixelMediaLbraryAdapter {
                 continue;
             }
 
-            $filesList= $wpdb->get_results("SELECT post_id, meta_key, meta_value FROM " . $wpdb->prefix . "postmeta
-                                        WHERE post_id IN (" . implode(',', $idInfo->ids) . ")
-                                          AND ( meta_key = '_wp_attached_file' OR meta_key = '_wp_attachment_metadata' )");
+            $filesList= $wpdb->get_results("SELECT post_id, meta_key, meta_value FROM " . $wpdb->prefix . "postmeta WHERE post_id IN (" . implode(',', $idInfo->ids) . ") AND ( meta_key = '_wp_attached_file' OR meta_key = '_wp_attachment_metadata' )");
         /*   $filesList= $wpdb->get_results("SELECT post_id, meta_key, meta_value FROM " . $wpdb->prefix . "postmeta
                                           WHERE post_id >= $minId and post_id <= $maxId
                                             AND ( meta_key = '_wp_attached_file' OR meta_key = '_wp_attachment_metadata' )"); */
@@ -85,10 +86,15 @@ class WpShortPixelMediaLbraryAdapter {
                 elseif ( $file->meta_key == "_wp_attachment_metadata" ) //_wp_attachment_metadata
                 {
                     $attachment = maybe_unserialize($file->meta_value);
+                    /* Check if array. It's possible to find garbage like WP_Error objects or other random garble in meta_value, so be sure it's an ok thingie.
+                    */
+                    if (! is_array($attachment))
+                      continue;
                     $sizesCount = isset($attachment['sizes']) ? self::countSizesNotExcluded($attachment['sizes'], $settings->excludeSizes) : 0;
 
                     // LA FIECARE 100 de imagini facem un test si daca findThumbs da diferit, sa dam o avertizare si eventual optiune
                     $dismissed = $settings->dismissedNotices ? $settings->dismissedNotices : array();
+                    // @ todo Figure out what this is intended to do.
                     if( $foundUnlistedThumbs === false && $maxId == PHP_INT_MAX && !isset($dismissed['unlisted'])
                         && (   in_array($counter, array(2,4,6,8)) || floor($counter/100) == 0 && $counter%10 == 0
                             || floor($counter/1000) == 0 && $counter%100 == 0 || floor($counter/10000) == 0 && $counter%1000 == 0))
@@ -98,8 +104,12 @@ class WpShortPixelMediaLbraryAdapter {
                             (   !isset($attachment['ShortPixelImprovement']) || $attachment['ShortPixelImprovement'] === 0
                              || $attachment['ShortPixelImprovement'] === 0.0 || $attachment['ShortPixelImprovement'] === "0"))
                         {
-                            $foundThumbs = WpShortPixelMediaLbraryAdapter::findThumbs($filePath);
+                          //  $foundThumbs = WpShortPixelMediaLbraryAdapter::findThumbs($filePath);
+                            // findThumbs returns fullfilepath.
+                            $foundThumbs = array();
 
+                            if ($settings->optimizeUnlisted)
+                              $foundThumbs  = WpShortPixelMediaLbraryAdapter::findThumbs($fs->getFile($filePath));
                             $foundCount = count($foundThumbs);
 
                             if(count($foundThumbs) > $sizesCount) {
@@ -117,6 +127,8 @@ class WpShortPixelMediaLbraryAdapter {
                             $realSizesCount = $sizesCount;
                         }
                     }
+                    $counter++;
+
                     //processable
                     $isProcessable = false;
                     $isProcessed = isset($attachment['ShortPixelImprovement'])
@@ -219,10 +231,10 @@ class WpShortPixelMediaLbraryAdapter {
                         $totalFilesM4 += $totalFilesThis;
                     }
                 }
-            }
+            } // foreach fileslist
             unset($filesList);
             $pointer += $limit;
-            $counter++;
+          //  $counter++;
         }//end while
 
         return array("totalFiles" => $totalFiles, "mainFiles" => $mainFiles,
@@ -284,9 +296,8 @@ class WpShortPixelMediaLbraryAdapter {
                 continue;
             }
 
-            $filesList= $wpdb->get_results("SELECT post_id, meta_key, meta_value FROM " . $wpdb->prefix . "postmeta
-                                        WHERE post_id IN (" . implode(',', $idInfo->ids) . ")
-                                          AND ( meta_key = '_wp_attached_file' OR meta_key = '_wp_attachment_metadata' )");
+            $filesList= $wpdb->get_results("SELECT post_id, meta_key, meta_value FROM " . $wpdb->prefix . "postmeta WHERE post_id IN (" . implode(',', $idInfo->ids) . ") AND ( meta_key = '_wp_attached_file' OR meta_key = '_wp_attachment_metadata' )");
+
         /*   $filesList= $wpdb->get_results("SELECT post_id, meta_key, meta_value FROM " . $wpdb->prefix . "postmeta
                                           WHERE post_id >= $minId and post_id <= $maxId
                                             AND ( meta_key = '_wp_attached_file' OR meta_key = '_wp_attachment_metadata' )"); */
@@ -577,6 +588,9 @@ class WpShortPixelMediaLbraryAdapter {
       global $wpdb;
       //$time = microtime(true);
 
+// Current idea for salvation::
+//SELECT DISTINCT post_id, meta_value FROM wp_postmeta where (meta_key = '_wp_attached_file' or meta_key = '_wp_attachment_metadata') and post_id <= 68677 group by meta_value order by post_id DESC  LIMIT 50
+
       $sqlmeta = "SELECT DISTINCT post_id FROM " . $wpdb->prefix . "postmeta where (meta_key = %s or meta_key = %s) and post_id <= %d and post_id >= %d order by post_id DESC LIMIT %d";
       $sqlmeta = $wpdb->prepare($sqlmeta, '_wp_attached_file', '_wp_attachment_metadata', $startId, $endId, $limit);
 
@@ -732,7 +746,7 @@ class WpShortPixelMediaLbraryAdapter {
          if (! $thumbfile->exists()) // thing must exist.
           continue;
 
-        $results[] = $thumbfile->getFullPath();
+        $results[] = (string) $thumbfile;
       }
 
       /* Returns array with full path, as string */
@@ -741,24 +755,16 @@ class WpShortPixelMediaLbraryAdapter {
 
     private static function getFilesByPattern($path, $pattern)
     {
-      $fs = new \ShortPixel\FileSystemController();
+      $fs = \wpSPIO()->filesystem();
 
-      try
-      {
-        $dirIterator = new \DirectoryIterator($path);
-        $regExIterator = new \RegexIterator($dirIterator, $pattern);
-      }
-      catch(\Exception $e)
-      {
-          Log::addWarn('GetFilesbyPattern issue with directory. ', $e->getMessage());
-          return array();
-      }
-
+      $path = trailingslashit($path);
+      $files = scandir($path,  SCANDIR_SORT_NONE);
+      $files = preg_grep($pattern, $files);
 
       $images = array();
-      foreach($regExIterator as $fileinfo)
+      foreach ($files as $filepath)
       {
-        $images[] = $fs->getFile($fileinfo->getPathname());
+        $images[] = $fs->getFile($path . $filepath);
       }
 
       return $images;
@@ -773,17 +779,20 @@ class WpShortPixelMediaLbraryAdapter {
         } else {
             $cnt = $wpdb->get_results("SELECT count(*) posts FROM " . $wpdb->prefix . $table);
         }
-        //json_encode($wpdb->get_results("SHOW VARIABLES LIKE 'max_allowed_packet'"));
+
         $posts = isset($cnt) && count($cnt) > 0 ? $cnt[0]->posts : 0;
         if($posts > 100000) {
-            return 10000;
+            $chunk = 10000;
         } elseif ($posts > 50000) {
-            return 5000;
+            $chunk = 5000;
         } elseif($posts > 10000) {
-            return 2000;
+            $chunk = 2000;
         } else {
-            return 500;
+            $chunk = 500;
         }
+
+        // allow a filter to fine-tune specific sql-engines
+        return apply_filters('shortpixel/db/chunk_size', $chunk);
     }
 
     protected static function getPostIdsChunk($minId, $maxId, $pointer, $limit, $byMinMax = false) {
@@ -817,7 +826,28 @@ class WpShortPixelMediaLbraryAdapter {
             }
         }
 
-        return (object)array('ids' => $ids, 'idDates' => $idDates, 'last_id' => $ids[count($ids)-1] );
+        $last_id = end($ids);
+        reset($ids); // just in case.
+        return (object)array('ids' => $ids, 'idDates' => $idDates, 'last_id' => $last_id );
+    }
+
+    /** It happens that URLS are multiple times offered in the same run (sendProcessing) to  be processed.
+    * - WPML can have duplicate URL's
+    * - This function prevents sending a URL's twice in a --single run--
+    */
+    public static function checkRequestLimiter($urls)
+    {
+        $hash = md5(serialize($urls));
+        Log::addDebug('New Hash -->' . $hash);
+
+        if (in_array($hash, self::$urls_this_run))
+        {
+          return false; // no!.
+        }
+
+        self::$urls_this_run[] = $hash;
+        Log::addDebug('Hash not found, adding', self::$urls_this_run);
+        return true; // ok, process.
     }
 
     /* Recount images from the media library when something went wrong badly */

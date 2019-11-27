@@ -18,6 +18,7 @@ class editMediaController extends ShortPixelController
       {
 
         $this->loadModel($this->model);
+        $this->loadModel('image');
         parent::__construct();
       }
 
@@ -216,6 +217,10 @@ class editMediaController extends ShortPixelController
             return null;
           }
 
+          $imageObj = new ImageModel();
+          $imageObj->setByPostID($this->post_id);
+          $imageFile = $imageObj->getFile();
+
           $sizes = isset($this->data['sizes']) ? $this->data['sizes'] : array();
 
           $debugInfo = array();
@@ -223,7 +228,23 @@ class editMediaController extends ShortPixelController
           $debugInfo[] = array(__('WPML Duplicates'), json_encode(\ShortPixelMetaFacade::getWPMLDuplicates($this->post_id)) );
           $debugInfo[] = array(__('Data'), $this->data);
           $debugInfo[] = array(__('Meta'), wp_get_attachment_metadata($this->post_id) );
-          $debugInfo[] = array(__('Backup Folder'), $this->shortPixel->getBackupFolderAny($this->imageModel->getFile()->getFullPath(), $sizes));
+          if ($imageFile->hasBackup())
+          {
+            $backupFile = $imageFile->getBackupFile();
+            $debugInfo[] = array(__('Backup Folder'), $this->shortPixel->getBackupFolderAny($this->imageModel->getFile()->getFullPath(), $sizes));
+            $debugInfo[] = array(__('Backup File'), (string) $backupFile . '(' . \ShortPixelTools::formatBytes($backupFile->getFileSize()) . ')' );
+          }
+          else {
+            $debugInfo[] =  array(__("No Backup Available"), '');
+          }
+          if ($or = $imageObj->has_original())
+          {
+             $debugInfo[] = array(__('Original File'), $or->getFullPath()  . '(' . \ShortPixelTools::formatBytes($or->getFileSize()) . ')');
+             $orbackup = $or->getBackupFile();
+             if ($orbackup)
+              $debugInfo[] = array(__('Backup'), $orbackup->getFullPath() . '(' . \ShortPixelTools::formatBytes($orbackup->getFileSize()) . ')');
+          }
+
           $debugInfo[] = array(__('Status'), $this->imageModel->getMeta()->getStatus() );
 
           return $debugInfo;

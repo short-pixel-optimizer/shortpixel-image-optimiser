@@ -80,8 +80,16 @@ class SettingsController extends shortPixelController
         Log::addDebug('Settings Action - addkey ', array($this->is_form_submit, $this->postData) );
         if ($this->is_form_submit && isset($this->postData['apiKey']))
         {
-            $this->keyModel->resetTried();
-            $this->keyModel->checkKey($this->postData['apiKey']);
+            $apiKey = $this->postData['apiKey'];
+            if (strlen(trim($apiKey)) == 0) // display notice when submitting empty API key
+            {
+              Notice::addError(sprintf(__("The key you provided has %s characters. The API key should have 20 characters, letters and numbers only.",'shortpixel-image-optimiser'), strlen($apiKey) ));
+            }
+            else
+            {
+              $this->keyModel->resetTried();
+              $this->keyModel->checkKey($this->postData['apiKey']);
+            }
             /*if (isset($this->postData['verifiedKey']) && $this->postData['verifiedKey'])
             {
               $this->model->apiKey = $this->postData['apiKey'];
@@ -111,7 +119,7 @@ class SettingsController extends shortPixelController
 
           if ($this->postData['includeNextGen'] == 1)
           {
-              $nextgen = new NextGen($this->shortPixel);
+              $nextgen = new NextGen();
               $previous = $this->model->includeNextGen;
               $nextgen->nextGenEnabled($previous);
           }
@@ -172,7 +180,7 @@ class SettingsController extends shortPixelController
       /** Checks on things and set them for information. */
       protected function loadEnv()
       {
-          $env = $this->getEnv();
+          $env = wpSPIO()->env();
 
           $this->is_nginx = $env->is_nginx;
           $this->is_gd_installed = $env->is_gd_installed;
@@ -188,13 +196,6 @@ class SettingsController extends shortPixelController
 
       }
 
-      public function getEnv()
-      {
-        $this->loadModel('environment');
-        $env = new EnvironmentModel();
-
-        return $env;
-      }
 
       /** Check if everything is OK with the Key **/
       /*public function checkKey()
@@ -321,7 +322,7 @@ class SettingsController extends shortPixelController
       protected function loadCustomFolders()
       {
         $notice = null;
-        $customFolders = $this->shortPixel->refreshCustomFolders($notice);
+        $customFolders = $this->shortPixel->refreshCustomFolders();
 
         if (! is_null($notice))
         {
@@ -330,7 +331,6 @@ class SettingsController extends shortPixelController
             Notice::addError($message);
           else
             Notice::addNormal($message);
-
 
         }
 
@@ -398,7 +398,6 @@ class SettingsController extends shortPixelController
             if(!$folderMsg) {
                 //$notice = array("status" => "success", "msg" => __('Folder added successfully.','shortpixel-image-optimiser'));
                 $folderMsg = __('Folder added successfully.','shortpixel-image-optimiser');
-
                 $is_warning = false;
             }
             if ($is_warning)

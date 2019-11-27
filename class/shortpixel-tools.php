@@ -12,6 +12,18 @@ class ShortPixelTools {
         return $data;
     }*/
 
+    /** Find if a certain plugin is active
+    * @param String $plugin The name of plugin being searched for
+    * @return Boolean Active or not
+    */
+    public static function shortPixelIsPluginActive($plugin) {
+        $activePlugins = apply_filters( 'active_plugins', get_option( 'active_plugins', array()));
+        if ( is_multisite() ) {
+            $activePlugins = array_merge($activePlugins, get_site_option( 'active_sitewide_plugins'));
+        }
+        return in_array( $plugin, $activePlugins);
+    }
+
     public static function snakeToCamel($snake_case) {
         return str_replace(' ', '', ucwords(str_replace('_', ' ', $snake_case)));
     }
@@ -73,6 +85,18 @@ class ShortPixelTools {
     }
 
     return $h_time;
+}
+
+static public function formatBytes($bytes, $precision = 2) {
+    $units = array('B', 'KB', 'MB', 'GB', 'TB');
+
+    $bytes = max($bytes, 0);
+    $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+    $pow = min($pow, count($units) - 1);
+
+    $bytes /= pow(1024, $pow);
+
+    return round($bytes, $precision) . ' ' . $units[$pow];
 }
 
     public static function commonPrefix($str1, $str2) {

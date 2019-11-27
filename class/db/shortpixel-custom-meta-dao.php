@@ -1,6 +1,6 @@
 <?php
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
-
+use ShortPixel\Notices\NoticeController as Notice;
 
 class ShortPixelCustomMetaDao {
     const META_VERSION = 1;
@@ -138,7 +138,7 @@ class ShortPixelCustomMetaDao {
     }
 
     public function getFolder($path, $deleted = false) {
-        $sql = "SELECT * FROM {$this->db->getPrefix()}shortpixel_folders" . ($deleted ? "" : " WHERE path = %s AND status <> -1");
+        $sql = "SELECT * FROM {$this->db->getPrefix()}shortpixel_folders" . ($deleted ? "WHERE path = %s " : " WHERE path = %s AND status <> -1");
         $rows = $this->db->query($sql, array($path));
         $folders = array();
         foreach($rows as $row) {
@@ -156,11 +156,14 @@ class ShortPixelCustomMetaDao {
         return false;
     }
 
-    public function addFolder($folder, $fileCount = 0) {
-        //$sql = "INSERT INTO {$this->db->getPrefix()}shortpixel_folders (path, file_count, ts_created) values (%s, %d, now())";
-        //$this->db->query($sql, array($folder, $fileCount));
+    /** Folder is ShortPixelFolder object */
+    public function addFolder(ShortPixelFolder $folder, $fileCount = 0) {
+        $path = $folder->getPath();
+        $tsUpdated = date("Y-m-d H:i:s", $folder->getTsUpdated());
+
+
         return $this->db->insert($this->db->getPrefix().'shortpixel_folders',
-                                 array("path" => $folder, "path_md5" => md5($folder), "file_count" => $fileCount, "ts_updated" => date("Y-m-d H:i:s")),
+                                 array("path" => $path, "path_md5" => md5($path), "file_count" => $fileCount, "ts_updated" => $tsUpdated, "ts_created" => date("Y-m-d H:i:s")),
                                  array("path" => "%s", "path_md5" => "%s", "file_count" => "%d", "ts_updated" => "%s"));
     }
 
@@ -199,37 +202,46 @@ class ShortPixelCustomMetaDao {
           $this->db->query($sql, array($folderPath));
         }
 
-
         //$this->db->restoreErrors();
     }
 
     public function newFolderFromPath($path, $uploadPath, $rootPath) {
         WpShortPixelDb::checkCustomTables(); // check if custom tables are created, if not, create them
-        $addedFolder = ShortPixelFolder::checkFolder($path, $uploadPath);
-        if(!$addedFolder) {
+
+        $fs = \wpSPIO()->filesystem();
+
+        //$addedFolder = ShortPixelFolder::checkFolder($path, $uploadPath);
+        $newfolder = $fs->getDirectory($path);
+        $rootPath = $fs->getWPFileBase();
+
+        if(! $newfolder->exists() ) {
             return __('Folder could not be found: ' . $uploadPath . $path ,'shortpixel-image-optimiser');
         }
-        $addedFolderReal = realpath($addedFolder);
-        $addedFolder = wp_normalize_path($addedFolder); $addedFolderReal = wp_normalize_path($addedFolderReal); $rootPath = wp_normalize_path($rootPath);
-        if(strpos($addedFolder, $rootPath) !== 0) {
-            if(strpos($addedFolderReal, $rootPath) !== 0) {
+
+        if (! $newfolder->isSubFolderOf($rootPath))
+        {
                 return( sprintf(__('The %s folder cannot be processed as it\'s not inside the root path of your website (%s).','shortpixel-image-optimiser'),$addedFolder, $rootPath));
-            } else {
-                $addedFolder = $addedFolderReal; //addedFolder is a symlink inside the root to a folder outside root - addedFolderReal. Use the inside symlink
-            }
         }
-        if($this->getFolder($addedFolder)) {
+
+        if($this->getFolder($newfolder->getPath())) {
             return __('Folder already added.','shortpixel-image-optimiser');
         }
-        $folder = new ShortPixelFolder(array("path" => $addedFolder), $this->excludePatterns);
-        try {
+
+        $folder = new ShortPixelFolder(array("path" => $newfolder->getPath()), $this->excludePatterns);
+      /*  try {
             $folder->setFileCount($folder->countFiles());
         } catch(ShortPixelFileRightsException $ex) {
             return $ex->getMessage();
-        }
+        } */
+
         if(ShortPixelMetaFacade::isMediaSubfolder($folder->getPath())) {
             return __('This folder contains Media Library images. To optimize Media Library images please go to <a href="upload.php?mode=list">Media Library list view</a> or to <a href="upload.php?page=wp-short-pixel-bulk">SortPixel Bulk page</a>.','shortpixel-image-optimiser');
         }
+
+        // Set this to 0 on new, not null since mysql will auto-complete that to current TS.
+        $folder->setTSUpdated(0);
+        $folder->setFileCount(0);
+
         $folderMsg = $this->saveFolder($folder);
         if(!$folder->getId()) {
             //try again creating the tables first.
@@ -242,12 +254,54 @@ class ShortPixelCustomMetaDao {
         }
 
         if(!$folderMsg) {
-            $fileList = $folder->getFileList();
-            $this->batchInsertImages($fileList, $folder->getId());
+            //$fileList = $folder->getFileList();
+            $this->refreshFolder($newfolder);
         }
         return $folderMsg;
 
     }
+
+    /** Check files and add what's needed */
+    public function refreshFolder(ShortPixel\DirectoryModel $folder)
+    {
+
+        $folderObj = $this->getFolder($folder->getPath());
+
+        if ($folderObj === false)
+        {
+          Log::addWarn('FolderObj from database is not there, while folder seems ok ' . $folder->getPath() );
+          return false;
+        }
+        
+        Log::addDebug('Doing Refresh Folder for (DirectoryModel / ShortpixelFolder) ', array($folder->getPath(), $folderObj->getPath()) );
+
+        $fs = \wpSPIO()->fileSystem();
+
+        if (! $folder->exists())
+        {
+          Notice::addError( sprintf(__('Folder %s does not exist! ', 'shortpixel-image-optimiser'), $folder->getPath()) );
+          return false;
+        }
+        if (! $folder->is_writable())
+        {
+          Notice::addWarning( sprintf(__('Folder %s is not writeable. Please check permissions and try again.','shortpixel-image-optimiser'),$folder->getPath()) );
+        }
+
+        $filter = array('date_newer' => strtotime($folderObj->getTsUpdated()));
+        $files = $fs->getFilesRecursive($folder, $filter);
+
+        $shortpixel = \wpSPIO()->getShortPixel();
+        // check processable by invoking filter, for now processablepath takes only paths, not objects.
+        $files = array_filter($files, function($file) use($shortpixel) { return $shortpixel->isProcessablePath($file->getFullPath());  });
+
+        Log::addDebug('Found Files for custom media ' . count($files));
+        $folderObj->setTsUpdated(date("Y-m-d H:i:s", $folderObj->getFolderContentsChangeDate()) );
+        $folderObj->setFileCount($folderObj->countFiles() );
+        $this->update($folderObj);
+
+        $this->batchInsertImages($files, $folderObj->getId());
+    }
+
     /**
      *
      * @param type $path
@@ -269,7 +323,7 @@ class ShortPixelCustomMetaDao {
                 if($sub) {
                     $id = $this->updateFolder($sub, $addedPath, 0, $folder->getFileCount());
                 } else {
-                    $id = $this->addFolder($addedPath, $folder->getFileCount());
+                    $id = $this->addFolder($folder, $folder->getFileCount());
                 }
                 $folder->setId($id);
                 return false;
@@ -309,31 +363,44 @@ class ShortPixelCustomMetaDao {
         return $id;
     }
 
-    public function batchInsertImages($pathsFile, $folderId) {
-        $pathsFileHandle = fopen($pathsFile, 'r');
-
+    private function batchInsertImages($files, $folderId) {
         //facem un delete pe cele care nu au shortpixel_folder, pentru curatenie - am mai intalnit situatii in care stergerea s-a agatat (stop monitoring)
+        global $wpdb;
+
         $sqlCleanup = "DELETE FROM {$this->db->getPrefix()}shortpixel_meta WHERE folder_id NOT IN (SELECT id FROM {$this->db->getPrefix()}shortpixel_folders)";
         $this->db->query($sqlCleanup);
 
-        $values = ''; $inserted = 0;
+        $values = array();
         $sql = "INSERT IGNORE INTO {$this->db->getPrefix()}shortpixel_meta(folder_id, path, name, path_md5, status) VALUES ";
-        for ($i = 0; ($path = fgets($pathsFileHandle)) !== false; $i++) {
-            $pathParts = explode('/', trim($path));
-            $namePrep = $this->db->prepare("%s",$pathParts[count($pathParts) - 1]);
-            $values .= (strlen($values) ? ", ": "") . "(" . $folderId . ", ". $this->db->prepare("%s", trim($path)) . ", ". $namePrep .", '". md5($path) ."', 0)";
-            if($i % 1000 == 999) {
-                $id = $this->db->query($sql . $values);
-                $values = '';
-                $inserted++;
+        $format = '(%d,%s,%s,%s,%d)';
+        $i = 0;
+        $count = 0;
+        $placeholders = array();
+        foreach($files as $file) {
+            $filepath = $file->getFullPath();
+            $filename = $file->getFileName();
+
+            array_push($values, $folderId, $filepath, $filename, md5($filepath), 0);
+            $placeholders[] = $format;
+
+
+            if($i % 500 == 499) {
+                $query = $sql;
+                $query .= implode(', ', $placeholders);
+                $this->db->query( $this->db->prepare("$query ", $values));
+
+                $values = array();
             }
+            $i++;
         }
         if($values) {
-            $id = $this->db->query($sql . $values);
+          $query = $sql;
+          $query .= implode(', ', $placeholders);
+          $result = $wpdb->query( $wpdb->prepare("$query ", $values) );
+          Log::addDebug('Q Result', array($result, $wpdb->last_error));
+          //$this->db->query( $this->db->prepare("$query ", $values));
         }
-        fclose($pathsFileHandle);
-        unlink($pathsFile);
-        return $inserted;
+
     }
 
     public function resetFailed() {

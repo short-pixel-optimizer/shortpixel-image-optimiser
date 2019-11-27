@@ -3,7 +3,7 @@
  * Plugin Name: ShortPixel Image Optimizer
  * Plugin URI: https://shortpixel.com/
  * Description: ShortPixel optimizes images automatically, while guarding the quality of your images. Check your <a href="options-general.php?page=wp-shortpixel-settings" target="_blank">Settings &gt; ShortPixel</a> page on how to start optimizing your image library and make your website load faster.
- * Version: 4.14.6
+ * Version: 4.14.7-DEV13
  * Author: ShortPixel
  * Author URI: https://shortpixel.com
  * Text Domain: shortpixel-image-optimiser
@@ -19,7 +19,7 @@ define('SHORTPIXEL_PLUGIN_DIR', __DIR__);
 
 //define('SHORTPIXEL_AFFILIATE_CODE', '');
 
-define('SHORTPIXEL_IMAGE_OPTIMISER_VERSION', "4.14.6");
+define('SHORTPIXEL_IMAGE_OPTIMISER_VERSION', "4.14.7-DEV13");
 define('SHORTPIXEL_MAX_TIMEOUT', 10);
 define('SHORTPIXEL_VALIDATE_MAX_TIMEOUT', 15);
 define('SHORTPIXEL_BACKUP', 'ShortpixelBackups');
@@ -40,12 +40,13 @@ define('SHORTPIXEL_API', 'api.shortpixel.com');
 $max_exec = intval(ini_get('max_execution_time'));
 if ($max_exec === 0) // max execution time of zero means infinite. Quantify.
   $max_exec = 60;
+elseif($max_exec < 0) // some hosts like to set negative figures on this. Ignore that.
+  $max_exec = 30;
 define('SHORTPIXEL_MAX_EXECUTION_TIME', $max_exec);
 
 // ** @todo For what is this needed? */
 //require_once(ABSPATH . 'wp-admin/includes/file.php');
 require_once(SHORTPIXEL_PLUGIN_DIR . '/build/shortpixel/autoload.php');
-
 
 $sp__uploads = wp_upload_dir();
 define('SHORTPIXEL_UPLOADS_BASE', (file_exists($sp__uploads['basedir']) ? '' : ABSPATH) . $sp__uploads['basedir'] );
@@ -69,203 +70,35 @@ else
 define('SHORTPIXEL_MAX_EXECUTION_TIME2', 2 );
 define("SHORTPIXEL_MAX_RESULTS_QUERY", 30);
 //define("SHORTPIXEL_NOFLOCK", true); // don't use flock queue, can cause instability.
+//define("SHORTPIXEL_EXPERIMENTAL_SECURICACHE", true);  // tries to add timestamps to URLS, to prevent hitting the cache.
 
-function shortpixelInit() {
-    global $shortPixelPluginInstance;
-    //limit to certain admin pages if function available
-    $loadOnThisPage = function_exists('get_current_screen');
-    if($loadOnThisPage) {
-        $screen = get_current_screen();
-        if(is_object($screen) && !in_array($screen->id, array('upload', 'edit', 'edit-tags', 'post-new', 'post'))) {
-            return;
-        }
-    }
-    $isAjaxButNotSP = false; //defined( 'DOING_AJAX' ) && DOING_AJAX && !(isset($_REQUEST['action']) && (strpos($_REQUEST['action'], 'shortpixel_') === 0));
-    if (!isset($shortPixelPluginInstance)
-        && (   (shortPixelCheckQueue() && get_option('wp-short-pixel-front-bootstrap'))
-            || is_admin() && !$isAjaxButNotSP
-               && (function_exists("is_user_logged_in") && is_user_logged_in()) //is admin, is logged in - :) seems funny but it's not, ajax scripts are admin even if no admin is logged in.
-               && (   current_user_can( 'manage_options' )
-                   || current_user_can( 'upload_files' )
-                   || current_user_can( 'edit_posts' )
-                  )
-           )
-       )
-    {
-        require_once('wp-shortpixel-req.php');
-
-        $shortPixelPluginInstance = new WPShortPixel;
-    }
-
-}
-
-
-function shortPixelCheckQueue(){
-    require_once('class/shortpixel_queue.php');
-    require_once('class/external/shortpixel_queue_db.php');
-    $prio = (! defined('SHORTPIXEL_NOFLOCK')) ? ShortPixelQueue::get() : ShortPixelQueueDB::get();
-    return $prio && is_array($prio) && count($prio);
-}
-
-/**
- * this is hooked into wp_generate_attachment_metadata
- * @param $meta
- * @param null $ID
- * @return WPShortPixel the instance
- */
-function shortPixelHandleImageUploadHook($meta, $ID = null) {
-    global $shortPixelPluginInstance;
-    if(!isset($shortPixelPluginInstance)) {
-        require_once('wp-shortpixel-req.php');
-        $shortPixelPluginInstance = new WPShortPixel;
-    }
-    return $shortPixelPluginInstance->handleMediaLibraryImageUpload($meta, $ID);
-}
-
-function shortPixelReplaceHook($params) {
-    if(isset($params['post_id'])) { //integration with EnableMediaReplace - that's an upload for replacing an existing ID
-        global $shortPixelPluginInstance;
-        if (!isset($shortPixelPluginInstance)) {
-            require_once('wp-shortpixel-req.php');
-            $shortPixelPluginInstance = new WPShortPixel;
-        }
-        $itemHandler = $shortPixelPluginInstance->onDeleteImage($params['post_id']);
-        $itemHandler->deleteAllSPMeta();
-    }
-}
-
-function shortPixelPng2JpgHook($params) {
-    global $shortPixelPluginInstance;
-    if(!isset($shortPixelPluginInstance)) {
-        require_once('wp-shortpixel-req.php');
-        $shortPixelPluginInstance = new WPShortPixel;
-    }
-    return $shortPixelPluginInstance->convertPng2Jpg($params);
-}
-
-function shortPixelNggAdd($image) {
-    global $shortPixelPluginInstance;
-    if(!isset($shortPixelPluginInstance)) {
-        require_once('wp-shortpixel-req.php');
-        $shortPixelPluginInstance = new WPShortPixel;
-    }
-    $shortPixelPluginInstance->handleNextGenImageUpload($image);
-}
-
-function shortPixelActivatePlugin () {
-    require_once('wp-shortpixel-req.php');
-    WPShortPixel::shortPixelActivatePlugin();
-}
-
-function shortPixelDeactivatePlugin () {
-    require_once('wp-shortpixel-req.php');
-    WPShortPixel::shortPixelDeactivatePlugin();
-}
-
-function shortPixelUninstallPlugin () {
-    require_once('wp-shortpixel-req.php');
-    WPShortPixel::shortPixelUninstallPlugin();
-}
-
-//Picture generation, hooked on the_content filter
-function shortPixelConvertImgToPictureAddWebp($content) {
-    if(function_exists('is_amp_endpoint') && is_amp_endpoint()) {
-        //for AMP pages the <picture> tag is not allowed
-        return $content . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG is AMP -->' : '');
-    }
-    require_once('wp-shortpixel-req.php');
-    require_once('class/front/img-to-picture-webp.php');
-
-    return ShortPixelImgToPictureWebp::convert($content);// . "<!-- PICTURE TAGS BY SHORTPIXEL -->";
-}
-function shortPixelAddPictureJs() {
-    // Don't do anything with the RSS feed.
-    if ( is_feed() || is_admin() ) { return; }
-
-    echo '<script>'
-       . 'var spPicTest = document.createElement( "picture" );'
-       . 'if(!window.HTMLPictureElement && document.addEventListener) {'
-            . 'window.addEventListener("DOMContentLoaded", function() {'
-                . 'var scriptTag = document.createElement("script");'
-                . 'scriptTag.src = "' . plugins_url('/res/js/picturefill.min.js', __FILE__) . '";'
-                . 'document.body.appendChild(scriptTag);'
-            . '});'
-        . '}'
-       . '</script>';
-}
-
-add_filter( 'gform_save_field_value', 'shortPixelGravityForms', 10, 5 );
-
-function shortPixelGravityForms( $value, $lead, $field, $form ) {
-    global $shortPixelPluginInstance;
-    if($field->type == 'post_image') {
-        require_once('wp-shortpixel-req.php');
-        $shortPixelPluginInstance = new WPShortPixel;
-        $shortPixelPluginInstance->handleGravityFormsImageField($value);
-    }
-    return $value;
-}
-
-function shortPixelInitOB() {
-    if(!is_admin() || (function_exists("wp_doing_ajax") && wp_doing_ajax()) || (defined( 'DOING_AJAX' ) && DOING_AJAX)) {
-        ob_start('shortPixelConvertImgToPictureAddWebp');
-    }
-}
-
-function shortPixelIsPluginActive($plugin) {
-    $activePlugins = apply_filters( 'active_plugins', get_option( 'active_plugins', array()));
-    if ( is_multisite() ) {
-        $activePlugins = array_merge($activePlugins, get_site_option( 'active_sitewide_plugins'));
-    }
-    return in_array( $plugin, $activePlugins);
+/* Function to reach core function of ShortPixel
+* Use to get plugin url, plugin path, or certain core controllers
+*/
+function wpSPIO()
+{
+   return \ShortPixel\ShortPixelPlugin::getInstance();
 }
 
 // [BS] Start runtime here
+require_once(SHORTPIXEL_PLUGIN_DIR . '/wp-shortpixel-req.php'); // @todo should be incorporated here.
+require_once(SHORTPIXEL_PLUGIN_DIR . '/class/controller/controller.php');
+require_once(SHORTPIXEL_PLUGIN_DIR . '/class/shortpixel-model.php');
+require_once(SHORTPIXEL_PLUGIN_DIR . '/shortpixel-plugin.php'); // loads runtime and needed classes.
+
+if (! defined('SHORTPIXEL_DEBUG'))
+{
+    define('SHORTPIXEL_DEBUG', false);
+}
 $log = ShortPixel\ShortPixelLogger\ShortPixelLogger::getInstance();
 $log->setLogPath(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
 
 // Pre-Runtime Checks
 // @todo Better solution for pre-runtime inclusions of externals.
-require_once('class/external/flywheel.php'); // check if SP runs on flywheel
-require_once('class/external/wp-offload-media.php');
+// Should not be required here. wpspio initruntime loads externals
 
+wpSPIO(); // let's go!
 
-$option = get_option('wp-short-pixel-create-webp-markup');
-if ( $option ) {
-    if(shortPixelIsPluginActive('shortpixel-adaptive-images/short-pixel-ai.php')) {
-        set_transient("shortpixel_thrown_notice", array('when' => 'spai', 'extra' => __('Please deactivate the ShortPixel Image Optimizer\'s
-            <a href="options-general.php?page=wp-shortpixel-settings&part=adv-settings">Deliver WebP using PICTURE tag</a>
-            option when the ShortPixel Adaptive Images plugin is active.','shortpixel-image-optimiser')), 1800);
-    }
-    elseif( $option == 1 ){
-        add_action( 'wp_head', 'shortPixelAddPictureJs'); // adds polyfill JS to the header
-        add_action( 'init', 'shortPixelInitOB', 1 ); // start output buffer to capture content
-    } elseif ($option == 2){
-        add_filter( 'the_content', 'shortPixelConvertImgToPictureAddWebp', 10000 ); // priority big, so it will be executed last
-        add_filter( 'the_excerpt', 'shortPixelConvertImgToPictureAddWebp', 10000 );
-        add_filter( 'post_thumbnail_html', 'shortPixelConvertImgToPictureAddWebp');
-    }
-//    add_action( 'wp_enqueue_scripts', 'spAddPicturefillJs' );
-}
-
-if ( !function_exists( 'vc_action' ) || vc_action() !== 'vc_inline' ) { //handle incompatibility with Visual Composer
-    add_action( 'init',  'shortpixelInit');
-    add_action('ngg_added_new_image', 'shortPixelNggAdd');
-
-    $autoPng2Jpg = get_option('wp-short-pixel-png2jpg');
-    $autoMediaLibrary = get_option('wp-short-pixel-auto-media-library');
-    if($autoPng2Jpg && $autoMediaLibrary) {
-        add_action( 'wp_handle_upload', 'shortPixelPng2JpgHook');
-        add_action( 'mpp_handle_upload', 'shortPixelPng2JpgHook');
-    }
-    add_action('wp_handle_replace', 'shortPixelReplaceHook');
-    if($autoMediaLibrary) {
-        add_filter( 'wp_generate_attachment_metadata', 'shortPixelHandleImageUploadHook', 10, 2 );
-        add_filter( 'mpp_generate_metadata', 'shortPixelHandleImageUploadHook', 10, 2 );
-    }
-
-    register_activation_hook( __FILE__, 'shortPixelActivatePlugin' );
-    register_deactivation_hook( __FILE__, 'shortPixelDeactivatePlugin' );
-    register_uninstall_hook(__FILE__, 'shortPixelUninstallPlugin');
-}
-?>
+register_activation_hook( __FILE__, array('\ShortPixel\ShortPixelPlugin','activatePlugin') );
+register_deactivation_hook( __FILE__,  array('\ShortPixel\ShortPixelPlugin','deactivatePlugin') );
+register_uninstall_hook(__FILE__,  array('\ShortPixel\ShortPixelPlugin','uninstallPlugin') );
