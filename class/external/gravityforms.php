@@ -21,7 +21,7 @@ class gravityForms
 
       $shortPixelObj = wpSPIO()->getShortPixel();
 
-      if(!($folder = $shortpixelObj->getSpMetaDao()->getFolder(SHORTPIXEL_UPLOADS_BASE . '/gravity_forms'))) {
+      if(!($folder = $shortPixelObj->getSpMetaDao()->getFolder(SHORTPIXEL_UPLOADS_BASE . '/gravity_forms'))) {
           return;
       }
       if(strpos($value , '|:|')) {
@@ -32,7 +32,7 @@ class gravityForms
       $uploadDir   = wp_upload_dir();
       $localPath = str_replace($uploadDir['baseurl'], SHORTPIXEL_UPLOADS_BASE, $value);
 
-      return $shortpixelObj->addPathToCustomFolder($localPath, $folder->getId(), 0);
+      return $shortPixelObj->addPathToCustomFolder($localPath, $folder->getId(), 0);
   }
 
 } // class
