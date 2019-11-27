@@ -154,8 +154,9 @@ class wpOffload
     /** @return Returns S3Ofload MediaItem, or false when this does not exist */
     protected function getItemById($id)
     {
-      $mediaItem = $this->itemClassName::get_by_source_id($id);
-      return $mediaItem;
+        $clazz = $this->itemClassName;
+        $mediaItem = $clazz::get_by_source_id($id);
+        return $mediaItem;
     }
 
     public function image_converted($id)
