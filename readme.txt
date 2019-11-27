@@ -4,20 +4,20 @@ Tags: compressor, image, compression, optimize, image optimizer, image optimiser
 Requires at least: 3.2.0
 Tested up to: 5.3
 Requires PHP: 5.3
-Stable tag: 4.14.5
+Stable tag: 4.14.6
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Speed up your website and boost your SEO by compressing old & new images and PDFs. Compatible with any gallery, slider or ecommerce plugin.
+Speed up your website & boost your SEO by compressing old & new images and PDFs. WebP convert and optimize support.
 
 == Description ==
 
 **A freemium easy to use, comprehensive, stable and frequently updated image compression plugin supported by the friendly team that created it.  :)**
 
 Increase your website's SEO ranking, number of visitors and ultimately your sales by optimizing any image or PDF document on your website.
-ShortPixel is an easy to use, lightweight, install-and-forget-about-it <a href="https://shortpixel.com" target="_blank">image optimization</a> plugin that can compress all your past images and PDF documents with a single click. New images are automatically resized/rescaled and optimized on the fly, in the background.
+ShortPixel is an easy to use, lightweight, install-and-forget-about-it <a href="https://shortpixel.com" target="_blank">image optimization</a> plugin that can compress all your past images and PDF documents with a single click. New images are automatically resized/rescaled and optimized on the fly, in the background. It's also compatible with any gallery, slider or ecommerce plugin.
 
-**Ready for a quick DEMO? Test <a href="https://sandboxwordpress.com/?htmldata=https://shortpixel.com/sp.html&slug=shortpixel-image-optimiser&redirect=plugins.php&title=Test%20SHORTPIXEL%20Now!&ga=UA-55918546-1" target="_blank">here</a> or <a href="http://poopy.life/create?url=/wp-admin/admin.php?page=sandbox" target="_blank">here</a>.**
+**Ready for a quick DEMO? Test <a href="https://sandboxwordpress.com/?htmldata=https://shortpixel.com/sp.html&slug=shortpixel-image-optimiser&redirect=plugins.php&title=Test%20SHORTPIXEL%20Now!&ga=UA-55918546-1" target="_blank">here</a>.**
 
 Short Pixel uses minimal resources and works well with any shared, cloud, VPS or dedicated web hosting. It can optimize any image you have on your website even the images that aren't listed in Media Library like those in galleries like <a href="https://wordpress.org/plugins/nextgen-gallery/" target="_blank">NextGEN</a>, <a href="https://wordpress.org/plugins/modula-best-grid-gallery/" target="_blank">Modula</a> or added directly via FTP!
 
@@ -29,7 +29,7 @@ Make an instant <a href="http://shortpixel.com/image-compression-test" target="_
 
 **Why is ShortPixel the best choice when it comes to image optimization or PDF compression?**
 
-* popular plugin with over 100,000 active installations according to WordPress
+* popular plugin with over 200,000 active installations according to WordPress
 * compress JPG, PNG, GIF (still or animated) images and also PDF documents
 * option to automatically convert PNG to JPG if that will result in smaller images. Ideal for large images in PNG format.
 * no file size limit
@@ -230,6 +230,7 @@ In order to define custom thumbnails to be picked up by the optimization you hav
 define('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES', '_tl,_tr'); will handle custom thumbnails like image-100x100_tl.jpg
 
 define('SHORTPIXEL_CUSTOM_THUMB_INFIXES', '-uae'); will handle custom thumbnails like image-uae-100x100.jpg
+define('SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION', true); will tell the plugin to create double extensions for the WebP image counterparts, for example image.jpg.webp for image.jpg
 
 define("SHORTPIXEL_NOFLOCK", true); // don't use flock queue, only activate this when you have flock() denied errors on your installation.
 .
@@ -257,6 +258,25 @@ define("SHORTPIXEL_EXPERIMENTAL_SECURICACHE", true);  // adds timestamps to URLS
 9. Check other optimized images status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 4.14.6 =
+Release date: 9th October 2019
+* Don't convert to &lt;picture&gt; the &lt;img&gt;s with backgrounds.
+* Remove unused eval() call.
+* Restore the validate button next to API Key but change label to "Save and validate"
+* Fixed: PNGtoJPG issue with already uploaded images
+* Fixed: finding wrong unlisted thumbnails due to regex.
+* Fixed: fatal error when trying to delete crashed attachement ( without proper URL )
+* Fix for S3 offload - PNG2JPG , doesn't remove old JPG files
+* Fixed: S3Offload will not offload anymore when 'Copy files to bucket' is off ( and object was not previously offloaded )
+* S3Offload doesn't offload via optimiser anymore if this setting is off
+* Fixed: cutting out initial offload if optimization needs to be done, when autolibrary is on
+* Fix for PNG2JPG - JPG files remained in backupdir.
+* Small fix for remote download thumbnails
+* Fixed: notice in filemodel due meta-facade feeding array
+* Fixed: bug in File2Url in filesystemcontroller
+* Fixed: download issue in attempt to remote download
+* Language – 0 new strings added, 1 updated, 0 fuzzied, and 0 obsoleted
 
 = 4.14.5 =
 Release date: 29th August 2019

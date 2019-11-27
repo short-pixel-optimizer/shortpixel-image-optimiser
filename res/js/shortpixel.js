@@ -255,7 +255,7 @@ var ShortPixel = function() {
             ShortPixel.adjustSettingsTabs();
             jQuery(section).find('.wp-shortpixel-tab-content').fadeIn(50);
         }
-        if(typeof HS.beacon.suggest !== 'undefined' ){
+        if(typeof HS !== 'undefined' && typeof HS.beacon.suggest !== 'undefined' ){
             switch(tab){
                 case "settings":
                     beacon = shortpixel_suggestions_settings;

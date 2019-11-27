@@ -747,7 +747,7 @@ class ShortPixelAPI {
 
                     $targetWebPFile = $fs->getFile($targetFile->getFileDir() . $targetFile->getFileBase() . '.webp');
                     //if the Targetfile already exists, it means that there is another file with the same basename but different extension which has its .webP counterpart save it with double extension
-                    if($targetWebPFile->exists()) {
+                    if(SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION || $targetWebPFile->exists()) {
                         $tempWebpFilePATH->move($targetWebPFileCompat);
                     } else {
                         $tempWebpFilePATH->move($targetWebPFile);
