@@ -499,9 +499,10 @@ class ShortPixelMetaFacade {
         if(!$attURL || !strlen($attURL)) {
             throw new Exception("Post metadata is corrupt (No attachment URL for $id)", ShortPixelAPI::ERR_POSTMETA_CORRUPT);
         }
-        if ( !parse_url($attURL, PHP_URL_SCHEME) ) {//no absolute URLs used -> we implement a hack
+        $parsed = parse_url($attURL);
+        if ( !isset($parsed['scheme']) ) {//no absolute URLs used -> we implement a hack
 
-           if (! is_null($attURL, PHP_URL_HOST)) // This is for URL's for // without http or https. hackhack.
+           if (isset($parsed['host'])) // This is for URL's for // without http or https. hackhack.
            {
              $scheme = is_ssl() ? 'https:' : 'http:';
              return $scheme. $attURL;
