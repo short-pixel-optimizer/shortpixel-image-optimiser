@@ -2,6 +2,9 @@
 //use ShortPixel\DebugItem as DebugItem;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
+use ShortPixel\FileModel as FileModel;
+use ShortPixel\Directorymodel as DirectoryModel;
+
 
 class WPShortPixel {
 
@@ -1990,27 +1993,69 @@ class WPShortPixel {
     }
 
     /* Gets backup folder of file
-    * @param string $file  Filepath - probably
+    * @param string $file  Filepath - probably ( or directory )
     * @return string backupFolder
     */
     public function getBackupFolder($file) {
-        if(realpath($file)) {
-            $ret = $this->getBackupFolderInternal(realpath($file)); //found cases when $file contains for example /wp/../wp-content - clean it up
-            if($ret) return $ret;
-        }
+        $fs = \wpSPIO()->filesystem();
+        $fsFile = $fs->getFile($file);
+
+        $directory = $this->getBackupFolderInternal($fsFile);
+        return $directory->getPath();
+        //if(realpath($file)) {
+     //found cases when $file contains for example /wp/../wp-content - clean it up
+        //    if($ret) return $ret;
+      //  }
         //another chance at glory, maybe cleanup was too much? (we tried first the cleaned up version for historical reason, don't disturb the sleeping dragon, right? :))
-        return $this->getBackupFolderInternal($file);
+        //return $this->getBackupFolderInternal($file);
     }
 
     /** Gets backup from file
-    * @param string $file Filename
-    * @return string FolderName
+    * @param FileModel $file Filename
+    * @return DirectoryModel
     */
-    private function getBackupFolderInternal($file) {
-        $fileExtension = strtolower(substr($file,strrpos($file,".")+1));
+    private function getBackupFolderInternal(FileModel $file) {
+      //  $fileExtension = strtolower(substr($file,strrpos($file,".")+1));
+        $fs = \wpSPIO()->filesystem();
         $SubDir = ShortPixelMetaFacade::returnSubDir($file);
         $SubDirOld = ShortPixelMetaFacade::returnSubDirOld($file);
+        //$basename = ShortPixelAPI::MB_basename($file);
+        $basename = $file->getFileName();
 
+    //    $backupFolder = $file->getBackUpDirectory();
+
+        $backupFile = $file->getBackupFile();
+        if ($backupFile)
+        {
+          $backupFolder = $backupFile->getFileDir();
+          return $backupFolder;
+        }
+
+        // Try to unholy old solutions
+        $backupFile = $fs->getFile(SHORTPIXEL_BACKUP_FOLDER . '/'. $SubDir . '/' . $basename);
+        if ($backupFile->exists())
+        {
+          return $backupFile->getFileDir();
+        }
+
+        $backupFile = $fs->getFile(SHORTPIXEL_BACKUP_FOLDER . '/'. $SubDirOld . '/' . $basename);
+        if ($backupFile->exists())
+        {
+          return $backupFile->getFileDir();
+        }
+
+        // and then this abomination.
+        $backupFile = $fs->getFile(SHORTPIXEL_BACKUP_FOLDER . '/'. date("Y") . "/" . date("m") . '/' . $basename);
+        if ($backupFile->exists())
+        {
+          return $backupFile->getFileDir();
+        }
+
+        Log::addError('Backup Directory could not be established! ', array($file->getFullPath()) );
+        return $backupFile->getFileDir(); // if all else fails.
+
+
+        /* Reference:
         if (   !file_exists(SHORTPIXEL_BACKUP_FOLDER . '/' . $SubDir . ShortPixelAPI::MB_basename($file))
             && !file_exists(SHORTPIXEL_BACKUP_FOLDER . '/' . date("Y") . "/" . date("m") . "/" . ShortPixelAPI::MB_basename($file)) ) {
             $SubDir = $SubDirOld; //maybe the folder was saved with the old method that returned the full path if the wp-content was not inside the root of the site.
@@ -2027,6 +2072,7 @@ class WPShortPixel {
             }
         }
         return SHORTPIXEL_BACKUP_FOLDER . '/' . $SubDir;
+        */
     }
 
     /** Gets BackupFolder. If that doesn't work, search thumbs for a backupFolder

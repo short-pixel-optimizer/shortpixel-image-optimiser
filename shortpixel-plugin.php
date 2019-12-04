@@ -108,7 +108,9 @@ class ShortPixelPlugin
     return new \ShortPixel\FileSystemController();
   }
 
-  /** Create instance. This should not be needed to call anywhere else than main plugin file **/
+  /** Create instance. This should not be needed to call anywhere else than main plugin file
+  * This should not be called *after* plugins_loaded action
+  **/
   public static function getInstance()
   {
     if (is_null(self::$instance))

@@ -1024,13 +1024,12 @@ class ShortPixelMetaFacade {
      */
     static public function returnSubDir($file)
     {
-
         // Experimental FS handling for relativePath. Should be able to cope with more exceptions.  See Unit Tests
-        $fs = new ShortPixel\FileSystemController();
+        $fs = \wpSPIO()->filesystem();
         $directory = $fs->getDirectory($file);
-        if ($relpath = $directory->getRelativePath())
+        $relpath = $directory->getRelativePath();
+        if ($relpath !== false)
           return $relpath;
-
 
         $homePath = get_home_path();
         if($homePath == '/') {
