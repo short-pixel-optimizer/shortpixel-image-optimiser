@@ -57,7 +57,7 @@ class ImageModel extends ShortPixelModel
 
       $originalFile = $fs->getOriginalPath($this->post_id);
 
-      if ($originalFile->getFullPath() !== $this->file->getfullPath() )
+      if ($originalFile->exists() && $originalFile->getFullPath() !== $this->file->getfullPath() )
       {
         $this->original_file = $originalFile;
         $this->is_scaled = true;

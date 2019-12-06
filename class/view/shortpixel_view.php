@@ -1685,6 +1685,10 @@ class ShortPixelView {
             $controller->setLegacyView($this);
             $controller->setShortPixel($this->ctrl);
             $controller->load($id);
+            if (\wpSPIO()->env()->is_debug)
+            {
+              \wpSPIO()->load_script('shortpixel-debug');
+            }
             return;
         }
         ?>

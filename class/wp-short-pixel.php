@@ -502,13 +502,17 @@ class WPShortPixel {
         if (! \wpSPIO()->env()->is_screen_to_use )
           return; // not ours, don't load JS and such.
 
+        // load everywhere, because we are inconsistent.
+        wp_enqueue_style('short-pixel-bar.min.css', plugins_url('/res/css/short-pixel-bar.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
+
+
         //require_once(ABSPATH . 'wp-admin/includes/screen.php');
         if(function_exists('get_current_screen')) {
             $screen = get_current_screen();
 
              if(is_object($screen)) {
 
-                wp_enqueue_style('short-pixel-bar.min.css', plugins_url('/res/css/short-pixel-bar.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
+
                 if( in_array($screen->id, array('attachment', 'upload', 'settings_page_wp-shortpixel', 'media_page_wp-short-pixel-bulk', 'media_page_wp-short-pixel-custom'))) {
                     wp_enqueue_style('short-pixel.min.css', plugins_url('/res/css/short-pixel.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
                     //modal - used in settings for selecting folder
@@ -636,6 +640,9 @@ class WPShortPixel {
     *  @param Obj $wp_admin_bar
     */
     function toolbar_shortpixel_processing( $wp_admin_bar ) {
+
+        if (! \wpSPIO()->env()->is_screen_to_use )
+          return; // not ours, don't load JS and such.
 
         $extraClasses = " shortpixel-hide";
         /*translators: toolbar icon tooltip*/

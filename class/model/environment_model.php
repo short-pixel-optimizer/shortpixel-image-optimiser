@@ -1,5 +1,6 @@
 <?php
 namespace ShortPixel;
+use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 /** Loads a few environment variables handy to have nearby
 *
@@ -29,6 +30,8 @@ class EnvironmentModel extends ShortPixelModel
     public $is_screen_to_use = false; // where shortpixel loads
     public $is_our_screen = false;
 
+    // Debug flag
+    public $is_debug = false;
 
     protected static $instance;
 
@@ -75,6 +78,8 @@ class EnvironmentModel extends ShortPixelModel
     {
       $this->is_ajaxcall = true;
     }
+
+    $this->is_debug = Log::debugIsActive();
 
   }
 

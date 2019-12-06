@@ -15,7 +15,7 @@ li.shortpixel-toolbar-processing > a.ab-item > div > img,
     margin-right: 2px;
     margin-top: 6px;
 }
-li.shortpixel-toolbar-processing > a.ab-item > div > span.shp-alert,
+li.shortpixel-toolbar-processing span.shp-alert,
 #wpadminbar li.shortpixel-toolbar-processing > a.ab-item > div > span.shp-alert{
     display:none;
 }
@@ -66,4 +66,3 @@ li.sp-conflict-plugins-list {
 li.sp-conflict-plugins-list a.button {
     margin-left: 10px;
 }
-

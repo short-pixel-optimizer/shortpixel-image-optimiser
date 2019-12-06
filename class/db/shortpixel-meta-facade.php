@@ -607,7 +607,7 @@ class ShortPixelMetaFacade {
 
             // new WP 5.3 function, check if file has original ( was scaled )
             $origFile = $imageObj->has_original();
-            Log::addDebug('Get Paths and such, original', $origFile);
+            Log::addDebug('Get Paths and such, original', (string) $origFile);
             if (is_object($origFile))
             {
               //$origFile = $imageObj->getOriginalFile();

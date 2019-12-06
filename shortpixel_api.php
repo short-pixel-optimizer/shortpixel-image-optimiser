@@ -247,7 +247,7 @@ class ShortPixelAPI {
         $compressionType = $meta->getCompressionType() !== null ? $meta->getCompressionType() : $this->_settings->compressionType;
         $response = $this->doRequests($URLs, true, $itemHandler, $compressionType);//send requests to API
 
-        
+
         //die($response['body']);
 
         if($response['response']['code'] != 200) {//response <> 200 -> there was an error apparently?
@@ -518,14 +518,21 @@ class ShortPixelAPI {
 
     private function createArchiveTempFolder($archiveBasename) {
         $archiveTempDir = get_temp_dir() . '/' . $archiveBasename;
-        if(file_exists($archiveTempDir) && is_dir($archiveTempDir) && (time() - filemtime($archiveTempDir) < max(30, SHORTPIXEL_MAX_EXECUTION_TIME) + 10)) {
+        $fs = \wpSPIO()->filesystem();
+        $tempDir = $fs->getDirectory($archiveTempDir);
+
+        if( $tempDir->exists() && (time() - filemtime($archiveTempDir) < max(30, SHORTPIXEL_MAX_EXECUTION_TIME) + 10)) {
             Log::addWarn("CONFLICT. Folder already exists and is modified in the last minute. Current IP:" . $_SERVER['REMOTE_ADDR']);
             return array("Status" => self::STATUS_RETRY, "Code" => 1, "Message" => "Pending");
         }
-        if( !file_exists($archiveTempDir) && !@mkdir($archiveTempDir) ) {
+
+        // try to create temporary folder
+        $tempDir->check();
+
+        if( ! $tempDir->exists() ) {
             return array("Status" => self::STATUS_ERROR, "Code" => self::ERR_SAVE, "Message" => "Could not create temporary folder.");
         }
-        return array("Status" => self::STATUS_SUCCESS, "Dir" => $archiveTempDir);
+        return array("Status" => self::STATUS_SUCCESS, "Dir" => $tempDir);
     }
 
     private function downloadArchive($archive, $compressionType, $first = true) {

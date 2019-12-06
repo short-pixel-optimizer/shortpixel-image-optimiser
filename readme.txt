@@ -261,6 +261,11 @@ define("SHORTPIXEL_EXPERIMENTAL_SECURICACHE", true);  // adds timestamps to URLS
 
 == Changelog ==
 
+= 4.15.3/DEV01 =
+
+* Fixes for windows specific paths
+* Fixed warning flood when using old version of S3-offload
+
 = 4.15.2 =
 
 Release date: 28th November 2019

@@ -86,6 +86,7 @@ require_once(SHORTPIXEL_PLUGIN_DIR . '/class/controller/controller.php');
 require_once(SHORTPIXEL_PLUGIN_DIR . '/class/shortpixel-model.php');
 require_once(SHORTPIXEL_PLUGIN_DIR . '/shortpixel-plugin.php'); // loads runtime and needed classes.
 
+
 if (! defined('SHORTPIXEL_DEBUG'))
 {
     define('SHORTPIXEL_DEBUG', false);
