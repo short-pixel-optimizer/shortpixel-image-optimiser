@@ -512,7 +512,8 @@ class WPShortPixel {
 
             // if(is_object($screen)) {
 
-
+                if ( \wpSPIO()->env()->is_our_screen )
+                {
                 /*if( in_array($screen->id, array('attachment', 'upload', 'settings_page_wp-shortpixel', 'media_page_wp-short-pixel-bulk', 'media_page_wp-short-pixel-custom'))) { */
                     wp_enqueue_style('short-pixel.min.css', plugins_url('/res/css/short-pixel.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
                     //modal - used in settings for selecting folder
@@ -521,7 +522,7 @@ class WPShortPixel {
                     // @todo Might need to be removed later on
                     wp_register_style('shortpixel-admin', plugins_url('/res/css/shortpixel-admin.css', SHORTPIXEL_PLUGIN_FILE),array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
                     wp_enqueue_style('shortpixel-admin');
-              //  }
+                }
           //  }
       //  }
 
