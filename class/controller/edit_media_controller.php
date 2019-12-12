@@ -253,7 +253,7 @@ class editMediaController extends ShortPixelController
 
 
           if (! isset($meta['sizes']) )
-          {  echo __('Thumbnails were not generated', 'enable-media-replace');
+          {  echo __('Thumbnails were not generated', 'shortpixel-image-optimiser');
             return false;
           }
 
