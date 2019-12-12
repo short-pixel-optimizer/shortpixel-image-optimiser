@@ -27,8 +27,8 @@ class EnvironmentModel extends ShortPixelModel
     public $is_ajaxcall = false;
 
     private $screen_is_set = false;
-    public $is_screen_to_use = false; // where shortpixel loads
-    public $is_our_screen = false;
+    public $is_screen_to_use = false; // where shortpixel optimizer loads
+    public $is_our_screen = false; // where shortpixel hooks in more complicated functions.
 
     // Debug flag
     public $is_debug = false;
@@ -112,6 +112,9 @@ class EnvironmentModel extends ShortPixelModel
 
     // Our pages.
     $pages = \wpSPIO()->get_admin_pages();
+    // the main WP pages where SPIO hooks a lot of functions into, our operating area.
+    $wp_pages = array('upload', 'attachment');
+    $pages = array_merge($pages, $wp_pages);
 
     /* pages can be null in certain cases i.e. plugin activation.
     * treat those cases as improper screen set.
