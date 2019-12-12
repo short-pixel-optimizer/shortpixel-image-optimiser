@@ -18,7 +18,7 @@ class editMediaController extends ShortPixelController
       {
 
         $this->loadModel($this->model);
-        $this->loadModel('image');
+      //  $this->loadModel('image');
         parent::__construct();
       }
 

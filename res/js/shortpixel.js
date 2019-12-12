@@ -8,6 +8,7 @@ jQuery(document).ready(function(){ShortPixel.init();});
 var ShortPixel = function() {
 
     function init() {
+
         if (typeof ShortPixel.API_KEY !== 'undefined') return; //was initialized by the 10 sec. setTimeout, rare but who knows, might happen on very slow connections...
         //are we on media list?
         if( jQuery('table.wp-list-table.media').length > 0) {
@@ -934,6 +935,7 @@ function checkBulkProgress() {
         adminUrl = ShortPixel.convertPunycode(adminUrl);
     }
 
+    /* NO. If it shouldn't go, this JS file shouldn't load. 
     if(   url.search(adminUrl + "upload.php") < 0
        && url.search(adminUrl + "edit.php") < 0
        && url.search(adminUrl + "edit-tags.php") < 0
@@ -944,7 +946,7 @@ function checkBulkProgress() {
        ) {
         hideToolBarAlert();
         return;
-    }
+    } */
 
     //if i'm the bulk processor and i'm not the bulk page and a bulk page comes around, leave the bulk processor role
     if(ShortPixel.bulkProcessor == true && window.location.href.search("wp-short-pixel-bulk") < 0

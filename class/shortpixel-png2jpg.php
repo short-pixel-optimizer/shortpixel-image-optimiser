@@ -341,7 +341,7 @@ class ShortPixelPng2Jpg {
                     $filesConverted[$info['file']] = false;
                 }
             }
-            $meta['ShortPixelPng2Jpg'] = array('originalFile' => $imagePath, 'originalSizes' => $originalSizes, 'originalSizes2' => $originalSizes,
+            $meta['ShortPixelPng2Jpg'] = array('originalFile' => $imagePath, 'originalSizes' => $originalSizes,
                 'backup' => $this->_settings->backupImages,
                 'optimizationPercent' => round(100.0 * (1.00 - $jpgSize / $pngSize)));
             //wp_update_attachment_metadata($ID, $meta);

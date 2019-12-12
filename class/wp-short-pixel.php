@@ -506,15 +506,14 @@ class WPShortPixel {
         // load everywhere, because we are inconsistent.
         wp_enqueue_style('short-pixel-bar.min.css', plugins_url('/res/css/short-pixel-bar.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
 
-
         //require_once(ABSPATH . 'wp-admin/includes/screen.php');
-        if(function_exists('get_current_screen')) {
-            $screen = get_current_screen();
+        //if(function_exists('get_current_screen')) {
+        //    $screen = get_current_screen();
 
-             if(is_object($screen)) {
+            // if(is_object($screen)) {
 
 
-                if( in_array($screen->id, array('attachment', 'upload', 'settings_page_wp-shortpixel', 'media_page_wp-short-pixel-bulk', 'media_page_wp-short-pixel-custom'))) {
+                /*if( in_array($screen->id, array('attachment', 'upload', 'settings_page_wp-shortpixel', 'media_page_wp-short-pixel-bulk', 'media_page_wp-short-pixel-custom'))) { */
                     wp_enqueue_style('short-pixel.min.css', plugins_url('/res/css/short-pixel.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
                     //modal - used in settings for selecting folder
                     wp_enqueue_style('short-pixel-modal.min.css', plugins_url('/res/css/short-pixel-modal.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
@@ -522,9 +521,9 @@ class WPShortPixel {
                     // @todo Might need to be removed later on
                     wp_register_style('shortpixel-admin', plugins_url('/res/css/shortpixel-admin.css', SHORTPIXEL_PLUGIN_FILE),array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
                     wp_enqueue_style('shortpixel-admin');
-                }
-            }
-        }
+              //  }
+          //  }
+      //  }
 
 
         wp_register_script('shortpixel' . $this->jsSuffix, plugins_url('/res/js/shortpixel' . $this->jsSuffix,SHORTPIXEL_PLUGIN_FILE), array('jquery'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
@@ -2002,14 +2001,17 @@ class WPShortPixel {
 
     /* Gets backup folder of file
     * @param string $file  Filepath - probably ( or directory )
-    * @return string backupFolder
+    * @return string | boolean backupFolder or false.
     */
     public function getBackupFolder($file) {
         $fs = \wpSPIO()->filesystem();
         $fsFile = $fs->getFile($file);
 
         $directory = $this->getBackupFolderInternal($fsFile);
-        return $directory->getPath();
+        if ($directory !== false)
+          return $directory->getPath();
+        else
+          return false;
         //if(realpath($file)) {
      //found cases when $file contains for example /wp/../wp-content - clean it up
         //    if($ret) return $ret;
@@ -2060,7 +2062,7 @@ class WPShortPixel {
         }
 
         Log::addError('Backup Directory could not be established! ', array($file->getFullPath()) );
-        return $backupFile->getFileDir(); // if all else fails.
+        return false; // $backupFile->getFileDir(); // if all else fails.
 
 
         /* Reference:

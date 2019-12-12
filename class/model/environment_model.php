@@ -94,7 +94,19 @@ class EnvironmentModel extends ShortPixelModel
       return false;
 
     // WordPress pages where we'll be active on.
-    if(in_array($screen->id, array('upload', 'edit', 'edit-tags', 'post-new', 'post', 'attachment'))) {
+    // https://codex.wordpress.org/Plugin_API/Admin_Screen_Reference
+    $use_screens = array(
+        'edit-post_tag', // edit tags
+        'upload', // media library
+        'attachment', // edit media
+        'post', // post screen
+        'edit-post', // edit post
+        'new-post',  // new post
+        'edit-page', // all pages
+    );
+    $use_screens = apply_filters('shortpixel/init/optimize_on_screens', $use_screens);
+
+    if(in_array($screen->id, $use_screens)) {
           $this->is_screen_to_use = true;
     }
 
