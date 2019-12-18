@@ -4,7 +4,7 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 use ShortPixel\FileModel as FileModel;
 use ShortPixel\Directorymodel as DirectoryModel;
-
+use ShortPixel\ImageModel as ImageModel;
 
 class WPShortPixel {
 
@@ -314,6 +314,11 @@ class WPShortPixel {
                         'action'=>'Deactivate',
                         'data'=>'simple-image-sizes/simple_image_sizes.php'
                 ),
+            'Regenerate Thumbnails and Delete Unused'
+              => array(
+                      'action' => 'Deactivate',
+                      'data' => 'regenerate-thumbnails-and-delete-unused/regenerate_wpregenerate.php',
+              ),
                //DEACTIVATED TEMPORARILY - it seems that the customers get scared.
             /* 'Jetpack by WordPress.com - The Speed up image load times Option'
                 => array(
@@ -1836,9 +1841,9 @@ class WPShortPixel {
     /** Manual optimization request. This is only called from the Media Library, never from the Custom media */
     public function handleManualOptimization() {
         $imageId = intval($_GET['image_id']);
-        $cleanup = $_GET['cleanup'];
+      //  $cleanup = isset($_GET['cleanup']) ? ; // seems not in use anymore at all.
 
-        Log::addInfo("Handle Manual Optimization #{$imageId}");
+      Log::addInfo("Handle Manual Optimization #{$imageId}");
 
         switch(substr($imageId, 0, 2)) {
             case "N-":
@@ -1886,6 +1891,15 @@ class WPShortPixel {
             $itemHandler = new ShortPixelMetaFacade($imageId);
 
             $itemFile = \wpSPIO()->filesystem()->getAttachedFile($imageId);
+
+            /* when doing manual optimizations, reset retries every time, since you wouldn't want to deny users their button interaction. If a user should not be allowed to run this function, the button / option should not be there. */
+            if ($manual)
+            {
+              $meta = $itemHandler->getMeta();
+              $meta->setRetries(0);
+              $meta->setStatus(\ShortPixelMeta::FILE_STATUS_PENDING);
+            }
+
 
             if(!$manual && 'pdf' === $itemFile->getExtension() && !$this->_settings->optimizePdfs) {
                 $ret = array("Status" => ShortPixelAPI::STATUS_SKIP, "Message" => $imageId);
@@ -2187,7 +2201,7 @@ class WPShortPixel {
             $image = $rawMeta['file']; // relative file
             $imageUrl = wp_get_attachment_url($attachmentID); // URL can be anything.
 
-            Log::addDebug('OriginFile -- ' . $fsFile->getFullPath() );
+            Log::addDebug('PHP2JPG - OriginFile -- ' . $fsFile->getFullPath() );
 
             $imageName = $fsFile->getFileName();
 
@@ -2292,7 +2306,7 @@ class WPShortPixel {
                         if ($bkOrigFile && $bkOrigFile->exists())
                           $bkOrigFile->move($origFile);
 
-                        Log::addDebug('Restore result - Backup oringal file', array($bkOrigFile, $origFile));
+                        Log::addDebug('Restore result - Backup original file', array($bkOrigFile, $origFile));
                     }
                     //$this->renameWithRetina($bkFile, $file);
                     if (! $bkFile->move($fsFile))
@@ -2366,6 +2380,7 @@ class WPShortPixel {
                 if($png2jpgMain) {
                     $crtMeta['file'] = trailingslashit(dirname($crtMeta['file'])) . $fsFile->getFileName();
                     update_attached_file($ID, $crtMeta['file']);
+
                     if($png2jpgSizes && count($png2jpgSizes)) {
                         $crtMeta['sizes'] = $png2jpgSizes;
                     } else {
@@ -2549,9 +2564,10 @@ class WPShortPixel {
     }
 
     public function handleRedo() {
-        self::log("Handle Redo #{$_GET['attachment_ID']} type {$_GET['type']}");
-
-        die(json_encode($this->redo($_GET['attachment_ID'], $_GET['type'])));
+        Log::addDebug("Handle Redo #{$_GET['attachment_ID']} type {$_GET['type']}");
+        $attach_id = intval($_GET['attachment_ID']);
+        $type = sanitize_text_field($_GET['type']);
+        die(json_encode($this->redo($attach_id, $type)));
     }
 
     public function redo($qID, $type = false) {
@@ -3991,14 +4007,14 @@ class WPShortPixel {
     * @return itemHandler ItemHandler object.
     */
     public function onDeleteImage($post_id) {
-        $itemHandler = new ShortPixelMetaFacade($post_id);
-        $urlsPaths = $itemHandler->getURLsAndPATHs(true, false, true, array(), true, true);
-        if(count($urlsPaths['PATHs'])) {
-            $this->maybeDumpFromProcessedOnServer($itemHandler, $urlsPaths);
-            $this->deleteBackupsAndWebPs($urlsPaths['PATHs']);
-        }
-        $itemHandler->deleteItemCache();
-        return $itemHandler; //return it because we call it also on replace and on replace we need to follow this by deleting SP metadata, on delete it
+        Log::addDebug('onDeleteImage - Image Removal Detected ' . $post_id);
+        \wpSPIO()->loadModel('image');
+
+        $imageObj = new ImageModel();
+        $imageObj->setbyPostID($post_id);
+
+        return $imageObj->delete();
+
     }
 
     /** Removes webp and backup from specified paths
@@ -4013,10 +4029,10 @@ class WPShortPixel {
             return;
         }
 
-
         $fs = \wpSPIO()->filesystem();
 
         $backupFolder = trailingslashit($this->getBackupFolder($paths[0]));
+        Log::addDebug('Removing from Backup Folder - ' . $backupFolder);
         foreach($paths as $path) {
             $pos = strrpos($path, ".");
             $pathFile = $fs->getFile($path);
@@ -4035,10 +4051,11 @@ class WPShortPixel {
             $backupFile = $fs->getFile($backupFolder . $fileName);
             if ($backupFile->exists())
               $backupFile->delete();
+
             //@unlink($backupFolder . $fileName);
 
             $backupFile = $fs->getFile($backupFolder . preg_replace("/\." . $extension . "$/i", '@2x.' . $extension, $fileName));
-            if ($backupFile->exists())
+            if ($backupFile->exists() && $backupFile->is_file())
               $backupFile->delete();
 
 //            @unlink($backupFolder . preg_replace("/\." . $extension . "$/i", '@2x.' . $extension, $fileName));

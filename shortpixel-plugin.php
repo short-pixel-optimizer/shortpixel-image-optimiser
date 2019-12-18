@@ -23,7 +23,7 @@ class ShortPixelPlugin
   protected $shortPixel; // shortpixel megaclass
   protected $settings; // settings object.
 
-  protected $admin_pages;  // admin page hooks.
+  protected $admin_pages = array();  // admin page hooks.
 
   public function __construct()
   {

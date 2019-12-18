@@ -528,6 +528,7 @@ class ShortPixelMetaFacade {
       $cacheController = new Cache();
       Log::adDDebug('Removing Item Cache -> ' . $this->getCacheName() );
       $cacheController->deleteItem( $this->getCacheName());
+      $this->getMeta(true);  // reload the meta. 
 
     }
 
