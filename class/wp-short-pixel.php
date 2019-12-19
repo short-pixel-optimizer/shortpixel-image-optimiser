@@ -680,7 +680,7 @@ class WPShortPixel {
 
         $args = array(
                 'id'    => 'shortpixel_processing',
-                'title' => '<div id="' . $id . '" title="' . $tooltip . '" ><img src="'
+                'title' => '<div id="' . $id . '" title="' . $tooltip . '" ><img alt="ShortPixel" src="'
                          . plugins_url( 'res/img/'.$icon, SHORTPIXEL_PLUGIN_FILE ) . '" success-url="' . $successLink . '"><span class="shp-alert">!</span>'
                          .'<div class="cssload-container"><div class="cssload-speeding-wheel"></div></div></div>',
                 'href'  => $link,
