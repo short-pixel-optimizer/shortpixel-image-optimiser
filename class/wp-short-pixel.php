@@ -594,7 +594,11 @@ class WPShortPixel {
                 'confirmBulkCleanupPending' => __( "Are you sure you want to cleanup the pending metadata?", 'shortpixel-image-optimiser' ),
                 'alertDeliverWebPAltered' => __( "Warning: Using this method alters the structure of the rendered HTML code (IMG tags get included in PICTURE tags),\nwhich in some rare cases can lead to CSS/JS inconsistencies.\n\nPlease test this functionality thoroughly after activating!\n\nIf you notice any issue, just deactivate it and the HTML will will revert to the previous state.", 'shortpixel-image-optimiser' ),
                 'alertDeliverWebPUnaltered' => __('This option will serve both WebP and the original image using the same URL, based on the web browser capabilities, please make sure you\'re serving the images from your server and not using a CDN which caches the images.', 'shortpixel-image-optimiser' ),
-                );
+                'originalImage' => __('Original image', 'shortpixel-image-optimiser' ),
+                'optimizedImage' => __('Optimized image', 'shortpixel-image-optimiser' ),
+                'loading' => __('Loading...', 'shortpixel-image-optimiser' ),
+                //'' => __('', 'shortpixel-image-optimiser' ),
+        );
         wp_localize_script( 'shortpixel' . $this->jsSuffix, '_spTr', $jsTranslation );
         wp_localize_script( 'shortpixel' . $this->jsSuffix, 'ShortPixelConstants', $ShortPixelConstants );
         wp_enqueue_script('shortpixel' . $this->jsSuffix);
@@ -680,7 +684,7 @@ class WPShortPixel {
 
         $args = array(
                 'id'    => 'shortpixel_processing',
-                'title' => '<div id="' . $id . '" title="' . $tooltip . '" ><img alt="ShortPixel" src="'
+                'title' => '<div id="' . $id . '" title="' . $tooltip . '" ><img alt="' . __('ShortPixel icon','shortpixel-image-optimiser') . '" src="'
                          . plugins_url( 'res/img/'.$icon, SHORTPIXEL_PLUGIN_FILE ) . '" success-url="' . $successLink . '"><span class="shp-alert">!</span>'
                          .'<div class="cssload-container"><div class="cssload-speeding-wheel"></div></div></div>',
                 'href'  => $link,

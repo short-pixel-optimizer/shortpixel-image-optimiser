@@ -730,7 +730,7 @@ var ShortPixel = function() {
         var modalShade = jQuery('.sp-modal-shade');
 
         if(!sideBySide) {
-            jQuery("#spCompareSlider").html('<img class="spUploadCompareOriginal"/><img class="spUploadCompareOptimized"/>');
+            jQuery("#spCompareSlider").html('<img alt="' +  _spTr.originalImage + '" class="spUploadCompareOriginal"/><img alt="' +  _spTr.optimizedImage + '" class="spUploadCompareOptimized"/>');
         }
         //calculate the modal size
         width = Math.max(350, Math.min(800, (width < 350 ? (width + 25) * 2 : (height < 150 ? width + 25 : width))));
@@ -1180,7 +1180,7 @@ function setCellMessage(id, message, actions){
 }
 
 function manualOptimization(id, cleanup) {
-    setCellMessage(id, "<img src='" + ShortPixel.WP_PLUGIN_URL + "/res/img/loading.gif' class='sp-loading-small'>Image waiting to be processed", "");
+    setCellMessage(id, "<img src='" + ShortPixel.WP_PLUGIN_URL + "/res/img/loading.gif' alt='" +  _spTr.loading + "' class='sp-loading-small'>Image waiting to be processed", "");
     jQuery("li.shortpixel-toolbar-processing").removeClass("shortpixel-hide");
     jQuery("li.shortpixel-toolbar-processing").removeClass("shortpixel-alert");
     jQuery("li.shortpixel-toolbar-processing").addClass("shortpixel-processing");
@@ -1220,7 +1220,7 @@ function manualOptimization(id, cleanup) {
 }
 
 function reoptimize(id, type) {
-    setCellMessage(id, "<img src='" + ShortPixel.WP_PLUGIN_URL + "/res/img/loading.gif' class='sp-loading-small'>Image waiting to be reprocessed", "");
+    setCellMessage(id, "<img src='" + ShortPixel.WP_PLUGIN_URL + "/res/img/loading.gif' alt='" +  _spTr.loading + "' class='sp-loading-small'>Image waiting to be reprocessed", "");
     jQuery("li.shortpixel-toolbar-processing").removeClass("shortpixel-hide");
     jQuery("li.shortpixel-toolbar-processing").addClass("shortpixel-processing");
     var data = { action  : 'shortpixel_redo',
@@ -1239,7 +1239,7 @@ function reoptimize(id, type) {
 }
 
 function optimizeThumbs(id) {
-    setCellMessage(id, "<img src='" + ShortPixel.WP_PLUGIN_URL + "/res/img/loading.gif' class='sp-loading-small'>" + _spTr.imageWaitOptThumbs, "");
+    setCellMessage(id, "<img src='" + ShortPixel.WP_PLUGIN_URL + "/res/img/loading.gif' alt='" +  _spTr.loading + "' class='sp-loading-small'>" + _spTr.imageWaitOptThumbs, "");
     jQuery("li.shortpixel-toolbar-processing").removeClass("shortpixel-hide");
     jQuery("li.shortpixel-toolbar-processing").addClass("shortpixel-processing");
     var data = { action  : 'shortpixel_optimize_thumbs',
