@@ -506,8 +506,10 @@ class WPShortPixel {
     function shortPixelJS() {
 
         if (! \wpSPIO()->env()->is_screen_to_use )
-          return; // not ours, don't load JS and such.
-
+        {
+          if (! wpSPIO()->env()->is_front) // exeception if this is called to load from your frontie. 
+             return; // not ours, don't load JS and such.
+        }
         // load everywhere, because we are inconsistent.
         wp_enqueue_style('short-pixel-bar.min.css', plugins_url('/res/css/short-pixel-bar.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
 

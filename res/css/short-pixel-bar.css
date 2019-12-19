@@ -14,6 +14,7 @@ li.shortpixel-toolbar-processing > a.ab-item > div > img,
 #wpadminbar li.shortpixel-toolbar-processing > a.ab-item > div > img{
     margin-right: 2px;
     margin-top: 6px;
+    vertical-align: top;
 }
 li.shortpixel-toolbar-processing span.shp-alert,
 #wpadminbar li.shortpixel-toolbar-processing > a.ab-item > div > span.shp-alert{
@@ -23,9 +24,10 @@ li.shortpixel-toolbar-processing.shortpixel-alert > a.ab-item > div > span.shp-a
 #wpadminbar li.shortpixel-toolbar-processing.shortpixel-alert > a.ab-item > div > span.shp-alert{
     display: inline;
     font-size: 26px;
+    line-height: 26px;
     color: red;
     font-weight: bold;
-    vertical-align: top;
+    vertical-align: middle;
 }
 li.shortpixel-toolbar-processing.shortpixel-alert > a.ab-item > div,
 #wpadminbar li.shortpixel-toolbar-processing.shortpixel-alert > a.ab-item > div{

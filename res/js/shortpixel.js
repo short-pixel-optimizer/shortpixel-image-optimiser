@@ -65,7 +65,7 @@ var ShortPixel = function() {
     }
 
     function validateKey(button){
-      console.log('validate');
+    //  console.log('validate');
         jQuery('#valid').val('validate');
 
         jQuery(button).parents('form').submit();
@@ -892,8 +892,18 @@ function showToolBarAlert($status, $message, id) {
     }
     robo.removeClass("shortpixel-hide");
 }
-function hideToolBarAlert () {
-    jQuery("li.shortpixel-toolbar-processing.shortpixel-processing").addClass("shortpixel-hide");
+function hideToolBarAlert (status) {
+  var $toolbar = jQuery("li.shortpixel-toolbar-processing.shortpixel-processing");
+
+    // When Queue is empty, but we have errors, don't hide the toolbar.
+    if (ShortPixel.STATUS_EMPTY_QUEUE == status)
+    {
+      if ($toolbar.hasClass("shortpixel-alert") || $toolbar.hasClass("shortpixel-quota-exceeded") )
+      {
+        return;
+      }
+    }
+    $toolbar.addClass("shortpixel-hide");
 }
 
 function hideQuotaExceededToolBarAlert () {
@@ -935,7 +945,7 @@ function checkBulkProgress() {
         adminUrl = ShortPixel.convertPunycode(adminUrl);
     }
 
-    /* NO. If it shouldn't go, this JS file shouldn't load. 
+    /* NO. If it shouldn't go, this JS file shouldn't load.
     if(   url.search(adminUrl + "upload.php") < 0
        && url.search(adminUrl + "edit.php") < 0
        && url.search(adminUrl + "edit-tags.php") < 0
@@ -1038,7 +1048,8 @@ function checkBulkProcessingCallApi(){
                     case ShortPixel.STATUS_EMPTY_QUEUE:
                         console.log(data["Message"]);
                         clearBulkProcessor(); //nothing to process, leave the role. Next page load will check again
-                        hideToolBarAlert();
+
+                        hideToolBarAlert(data["Status"]);
                         var progress = jQuery("#bulk-progress");
                         if(isBulkPage && progress.length && data["BulkStatus"] != '2') {
                             progressUpdate(100, "Bulk finished!");

@@ -69,10 +69,8 @@ class EnvironmentModel extends ShortPixelModel
     $this->is_multisite = (function_exists("is_multisite") && is_multisite()) ? true : false;
     $this->is_mainsite = is_main_site();
 
-    if ( is_admin() )
-      $this->is_admin = true;
-    else
-      $this->is_front = true;
+    $this->determineFrontBack();
+
 
     if (defined('DOING_AJAX') && DOING_AJAX)
     {
@@ -80,6 +78,16 @@ class EnvironmentModel extends ShortPixelModel
     }
 
     $this->is_debug = Log::debugIsActive();
+
+  }
+
+  // check if this request is front or back.
+  protected function determineFrontBack()
+  {
+    if ( is_admin() )
+      $this->is_admin = true;
+    else
+      $this->is_front = true;
 
   }
 

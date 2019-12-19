@@ -214,7 +214,7 @@ class editMediaController extends ShortPixelController
       {
           if(! \wpSPIO()->env()->is_debug )
           {
-            return null;
+            return array();
           }
 
           $meta = \wp_get_attachment_metadata($this->post_id);
@@ -253,18 +253,19 @@ class editMediaController extends ShortPixelController
 
 
           if (! isset($meta['sizes']) )
-          {  echo __('Thumbnails were not generated', 'shortpixel-image-optimiser');
-            return false;
-          }
-
-          foreach($meta['sizes'] as $size => $data)
           {
-            $display_size = ucfirst(str_replace("_", " ", $size));
-            $img = wp_get_attachment_image_src($this->post_id, $size);
-            //var_dump($img);
-            $debugInfo[] = array('', "<div class='$size previewwrapper'><img src='" . $img[0] . "'><span class='label'>$img[0] ( $display_size )</span></div>");
+             $debugInfo[] = array('',  __('Thumbnails were not generated', 'shortpixel-image-optimiser'));
           }
-
+          else
+          {   
+            foreach($meta['sizes'] as $size => $data)
+            {
+              $display_size = ucfirst(str_replace("_", " ", $size));
+              $img = wp_get_attachment_image_src($this->post_id, $size);
+              //var_dump($img);
+              $debugInfo[] = array('', "<div class='$size previewwrapper'><img src='" . $img[0] . "'><span class='label'>$img[0] ( $display_size )</span></div>");
+            }
+          }
           return $debugInfo;
       }
 

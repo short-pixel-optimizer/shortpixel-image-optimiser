@@ -47,6 +47,7 @@ class ShortPixelPlugin
           $this->is_noheaders = true;
       }
 
+
       // @todo Transitionary init for the time being, since plugin init functionality is still split between.
       global $shortPixelPluginInstance;
       $shortPixelPluginInstance = new \wpShortPixel();
@@ -78,6 +79,11 @@ class ShortPixelPlugin
                 add_filter( 'mpp_generate_metadata', array($admin,'handleImageUploadHook'), 10, 2 );
             }
           }
+      }
+      elseif($this->settings()->frontBootstrap && $this->env()->is_front)
+      {
+        // if automedialibrary is off, but we do want to auto-optimize on the front, still load the hook.
+        add_filter( 'wp_generate_attachment_metadata', array($admin,'handleImageUploadHook'), 10, 2 );
       }
   }
 

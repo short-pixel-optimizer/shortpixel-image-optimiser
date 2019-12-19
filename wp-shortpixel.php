@@ -92,7 +92,8 @@ if (! defined('SHORTPIXEL_DEBUG'))
     define('SHORTPIXEL_DEBUG', false);
 }
 $log = ShortPixel\ShortPixelLogger\ShortPixelLogger::getInstance();
-$log->setLogPath(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
+if (ShortPixel\ShortPixelLogger\ShortPixelLogger::debugIsActive())
+  $log->setLogPath(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
 
 // Pre-Runtime Checks
 // @todo Better solution for pre-runtime inclusions of externals.
