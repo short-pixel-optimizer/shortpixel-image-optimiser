@@ -27,7 +27,7 @@ namespace ShortPixel;
         } elseif (strpos($_SERVER['HTTP_USER_AGENT'], 'Chrome') !== false) {
             // Show a message about the risks and caveats of serving WEBP images via .htaccess
             $deliverWebpUnalteredLabel = '<span style="color: initial;">'.__('Based on testing your particular hosting configuration, we determined that your server','shortpixel-image-optimiser').
-                '&nbsp;<img src="'. plugins_url( 'res/img/test.jpg' , SHORTPIXEL_PLUGIN_FILE) .'">&nbsp;'.
+                '&nbsp;<img alt="can or can not" src="'. plugins_url( 'res/img/test.jpg' , SHORTPIXEL_PLUGIN_FILE) .'">&nbsp;'.
                 __('serve the WEBP versions of the JPEG files seamlessly, via .htaccess.','shortpixel-image-optimiser').' <a href="javascript:void(0)" data-beacon-article="5c1d050e04286304a71d9ce4">Open article to read more about this.</a></span>';
         }
     }
@@ -85,7 +85,7 @@ namespace ShortPixel;
                                 <td>
                                     <?php if(!($st == "Empty")) { ?>
                                     <a href="javascript:none();"  title="<?php echo $fullStat; ?>" style="text-decoration: none;">
-                                        <img src='<?php echo( wpSPIO()->plugin_url('res/img/info-icon.png' ));?>' style="margin-bottom: -2px;"/>
+                                        <img alt='Info icon' src='<?php echo( wpSPIO()->plugin_url('res/img/info-icon.png' ));?>' style="margin-bottom: -2px;"/>
                                     </a>&nbsp;<?php  } echo($typ.$st.$err); ?>
 
                                 </td>
