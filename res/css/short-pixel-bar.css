@@ -23,6 +23,7 @@ li.shortpixel-toolbar-processing.shortpixel-alert > a.ab-item > div > span.shp-a
 #wpadminbar li.shortpixel-toolbar-processing.shortpixel-alert > a.ab-item > div > span.shp-alert{
     display: inline;
     font-size: 26px;
+    line-height: 38px;
     color: red;
     font-weight: bold;
     vertical-align: top;
