@@ -671,6 +671,11 @@ class WpShortPixelMediaLbraryAdapter {
         $file = $fs->getFile($mainFile);
 
         $directory = $file->getFileDir();
+        if (is_null($directory)) // means filepath might be empty and could not resolve directory.
+        {
+          Log::addWarn('FindThumbs - Given FileDirectory failed ' . $mainFile);
+          return array();
+        }
         /* Directory could not exist if, for instance, the request path is URL, S3 or some external exotic. */
         if (! $directory->check())
         {

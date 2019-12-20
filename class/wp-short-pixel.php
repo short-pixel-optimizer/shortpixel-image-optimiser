@@ -2,6 +2,9 @@
 //use ShortPixel\DebugItem as DebugItem;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
+use ShortPixel\FileModel as FileModel;
+use ShortPixel\Directorymodel as DirectoryModel;
+use ShortPixel\ImageModel as ImageModel;
 
 class WPShortPixel {
 
@@ -144,6 +147,7 @@ class WPShortPixel {
 
             //toolbar notifications
             add_action( 'admin_bar_menu', array( &$this, 'toolbar_shortpixel_processing'), 999 );
+            add_action( 'wp_head', array( $this, 'headCSS')); // for the front-end
             //deactivate plugin
             add_action( 'admin_post_shortpixel_deactivate_plugin', array(&$this, 'deactivatePlugin'));
             //only if the key is not yet valid or the user hasn't bought any credits.
@@ -310,6 +314,11 @@ class WPShortPixel {
                         'action'=>'Deactivate',
                         'data'=>'simple-image-sizes/simple_image_sizes.php'
                 ),
+            'Regenerate Thumbnails and Delete Unused'
+              => array(
+                      'action' => 'Deactivate',
+                      'data' => 'regenerate-thumbnails-and-delete-unused/regenerate_wpregenerate.php',
+              ),
                //DEACTIVATED TEMPORARILY - it seems that the customers get scared.
             /* 'Jetpack by WordPress.com - The Speed up image load times Option'
                 => array(
@@ -497,16 +506,22 @@ class WPShortPixel {
     function shortPixelJS() {
 
         if (! \wpSPIO()->env()->is_screen_to_use )
-          return; // not ours, don't load JS and such.
+        {
+          if (! wpSPIO()->env()->is_front) // exeception if this is called to load from your frontie. 
+             return; // not ours, don't load JS and such.
+        }
+        // load everywhere, because we are inconsistent.
+        wp_enqueue_style('short-pixel-bar.min.css', plugins_url('/res/css/short-pixel-bar.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
 
         //require_once(ABSPATH . 'wp-admin/includes/screen.php');
-        if(function_exists('get_current_screen')) {
-            $screen = get_current_screen();
+        //if(function_exists('get_current_screen')) {
+        //    $screen = get_current_screen();
 
-             if(is_object($screen)) {
+            // if(is_object($screen)) {
 
-                wp_enqueue_style('short-pixel-bar.min.css', plugins_url('/res/css/short-pixel-bar.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
-                if( in_array($screen->id, array('attachment', 'upload', 'settings_page_wp-shortpixel', 'media_page_wp-short-pixel-bulk', 'media_page_wp-short-pixel-custom'))) {
+                if ( \wpSPIO()->env()->is_our_screen )
+                {
+                /*if( in_array($screen->id, array('attachment', 'upload', 'settings_page_wp-shortpixel', 'media_page_wp-short-pixel-bulk', 'media_page_wp-short-pixel-custom'))) { */
                     wp_enqueue_style('short-pixel.min.css', plugins_url('/res/css/short-pixel.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
                     //modal - used in settings for selecting folder
                     wp_enqueue_style('short-pixel-modal.min.css', plugins_url('/res/css/short-pixel-modal.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
@@ -515,8 +530,8 @@ class WPShortPixel {
                     wp_register_style('shortpixel-admin', plugins_url('/res/css/shortpixel-admin.css', SHORTPIXEL_PLUGIN_FILE),array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
                     wp_enqueue_style('shortpixel-admin');
                 }
-            }
-        }
+          //  }
+      //  }
 
 
         wp_register_script('shortpixel' . $this->jsSuffix, plugins_url('/res/js/shortpixel' . $this->jsSuffix,SHORTPIXEL_PLUGIN_FILE), array('jquery'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
@@ -581,7 +596,11 @@ class WPShortPixel {
                 'confirmBulkCleanupPending' => __( "Are you sure you want to cleanup the pending metadata?", 'shortpixel-image-optimiser' ),
                 'alertDeliverWebPAltered' => __( "Warning: Using this method alters the structure of the rendered HTML code (IMG tags get included in PICTURE tags),\nwhich in some rare cases can lead to CSS/JS inconsistencies.\n\nPlease test this functionality thoroughly after activating!\n\nIf you notice any issue, just deactivate it and the HTML will will revert to the previous state.", 'shortpixel-image-optimiser' ),
                 'alertDeliverWebPUnaltered' => __('This option will serve both WebP and the original image using the same URL, based on the web browser capabilities, please make sure you\'re serving the images from your server and not using a CDN which caches the images.', 'shortpixel-image-optimiser' ),
-                );
+                'originalImage' => __('Original image', 'shortpixel-image-optimiser' ),
+                'optimizedImage' => __('Optimized image', 'shortpixel-image-optimiser' ),
+                'loading' => __('Loading...', 'shortpixel-image-optimiser' ),
+                //'' => __('', 'shortpixel-image-optimiser' ),
+        );
         wp_localize_script( 'shortpixel' . $this->jsSuffix, '_spTr', $jsTranslation );
         wp_localize_script( 'shortpixel' . $this->jsSuffix, 'ShortPixelConstants', $ShortPixelConstants );
         wp_enqueue_script('shortpixel' . $this->jsSuffix);
@@ -634,6 +653,9 @@ class WPShortPixel {
     */
     function toolbar_shortpixel_processing( $wp_admin_bar ) {
 
+        if (! \wpSPIO()->env()->is_screen_to_use )
+          return; // not ours, don't load JS and such.
+
         $extraClasses = " shortpixel-hide";
         /*translators: toolbar icon tooltip*/
         $id = 'short-pixel-notice-toolbar';
@@ -664,7 +686,7 @@ class WPShortPixel {
 
         $args = array(
                 'id'    => 'shortpixel_processing',
-                'title' => '<div id="' . $id . '" title="' . $tooltip . '" ><img src="'
+                'title' => '<div id="' . $id . '" title="' . $tooltip . '" ><img alt="' . __('ShortPixel icon','shortpixel-image-optimiser') . '" src="'
                          . plugins_url( 'res/img/'.$icon, SHORTPIXEL_PLUGIN_FILE ) . '" success-url="' . $successLink . '"><span class="shp-alert">!</span>'
                          .'<div class="cssload-container"><div class="cssload-speeding-wheel"></div></div></div>',
                 'href'  => $link,
@@ -1825,9 +1847,9 @@ class WPShortPixel {
     /** Manual optimization request. This is only called from the Media Library, never from the Custom media */
     public function handleManualOptimization() {
         $imageId = intval($_GET['image_id']);
-        $cleanup = $_GET['cleanup'];
+      //  $cleanup = isset($_GET['cleanup']) ? ; // seems not in use anymore at all.
 
-        Log::addInfo("Handle Manual Optimization #{$imageId}");
+      Log::addInfo("Handle Manual Optimization #{$imageId}");
 
         switch(substr($imageId, 0, 2)) {
             case "N-":
@@ -1875,6 +1897,15 @@ class WPShortPixel {
             $itemHandler = new ShortPixelMetaFacade($imageId);
 
             $itemFile = \wpSPIO()->filesystem()->getAttachedFile($imageId);
+
+            /* when doing manual optimizations, reset retries every time, since you wouldn't want to deny users their button interaction. If a user should not be allowed to run this function, the button / option should not be there. */
+            if ($manual)
+            {
+              $meta = $itemHandler->getMeta();
+              $meta->setRetries(0);
+              $meta->setStatus(\ShortPixelMeta::FILE_STATUS_PENDING);
+            }
+
 
             if(!$manual && 'pdf' === $itemFile->getExtension() && !$this->_settings->optimizePdfs) {
                 $ret = array("Status" => ShortPixelAPI::STATUS_SKIP, "Message" => $imageId);
@@ -1990,27 +2021,72 @@ class WPShortPixel {
     }
 
     /* Gets backup folder of file
-    * @param string $file  Filepath - probably
-    * @return string backupFolder
+    * @param string $file  Filepath - probably ( or directory )
+    * @return string | boolean backupFolder or false.
     */
     public function getBackupFolder($file) {
-        if(realpath($file)) {
-            $ret = $this->getBackupFolderInternal(realpath($file)); //found cases when $file contains for example /wp/../wp-content - clean it up
-            if($ret) return $ret;
-        }
+        $fs = \wpSPIO()->filesystem();
+        $fsFile = $fs->getFile($file);
+
+        $directory = $this->getBackupFolderInternal($fsFile);
+        if ($directory !== false)
+          return $directory->getPath();
+        else
+          return false;
+        //if(realpath($file)) {
+     //found cases when $file contains for example /wp/../wp-content - clean it up
+        //    if($ret) return $ret;
+      //  }
         //another chance at glory, maybe cleanup was too much? (we tried first the cleaned up version for historical reason, don't disturb the sleeping dragon, right? :))
-        return $this->getBackupFolderInternal($file);
+        //return $this->getBackupFolderInternal($file);
     }
 
     /** Gets backup from file
-    * @param string $file Filename
-    * @return string FolderName
+    * @param FileModel $file Filename
+    * @return DirectoryModel
     */
-    private function getBackupFolderInternal($file) {
-        $fileExtension = strtolower(substr($file,strrpos($file,".")+1));
+    private function getBackupFolderInternal(FileModel $file) {
+      //  $fileExtension = strtolower(substr($file,strrpos($file,".")+1));
+        $fs = \wpSPIO()->filesystem();
         $SubDir = ShortPixelMetaFacade::returnSubDir($file);
         $SubDirOld = ShortPixelMetaFacade::returnSubDirOld($file);
+        //$basename = ShortPixelAPI::MB_basename($file);
+        $basename = $file->getFileName();
 
+    //    $backupFolder = $file->getBackUpDirectory();
+
+        $backupFile = $file->getBackupFile();
+        if ($backupFile)
+        {
+          $backupFolder = $backupFile->getFileDir();
+          return $backupFolder;
+        }
+
+        // Try to unholy old solutions
+        $backupFile = $fs->getFile(SHORTPIXEL_BACKUP_FOLDER . '/'. $SubDir . '/' . $basename);
+        if ($backupFile->exists())
+        {
+          return $backupFile->getFileDir();
+        }
+
+        $backupFile = $fs->getFile(SHORTPIXEL_BACKUP_FOLDER . '/'. $SubDirOld . '/' . $basename);
+        if ($backupFile->exists())
+        {
+          return $backupFile->getFileDir();
+        }
+
+        // and then this abomination.
+        $backupFile = $fs->getFile(SHORTPIXEL_BACKUP_FOLDER . '/'. date("Y") . "/" . date("m") . '/' . $basename);
+        if ($backupFile->exists())
+        {
+          return $backupFile->getFileDir();
+        }
+
+        Log::addError('Backup Directory could not be established! ', array($file->getFullPath()) );
+        return false; // $backupFile->getFileDir(); // if all else fails.
+
+
+        /* Reference:
         if (   !file_exists(SHORTPIXEL_BACKUP_FOLDER . '/' . $SubDir . ShortPixelAPI::MB_basename($file))
             && !file_exists(SHORTPIXEL_BACKUP_FOLDER . '/' . date("Y") . "/" . date("m") . "/" . ShortPixelAPI::MB_basename($file)) ) {
             $SubDir = $SubDirOld; //maybe the folder was saved with the old method that returned the full path if the wp-content was not inside the root of the site.
@@ -2027,6 +2103,7 @@ class WPShortPixel {
             }
         }
         return SHORTPIXEL_BACKUP_FOLDER . '/' . $SubDir;
+        */
     }
 
     /** Gets BackupFolder. If that doesn't work, search thumbs for a backupFolder
@@ -2130,7 +2207,7 @@ class WPShortPixel {
             $image = $rawMeta['file']; // relative file
             $imageUrl = wp_get_attachment_url($attachmentID); // URL can be anything.
 
-            Log::addDebug('OriginFile -- ' . $fsFile->getFullPath() );
+            Log::addDebug('PHP2JPG - OriginFile -- ' . $fsFile->getFullPath() );
 
             $imageName = $fsFile->getFileName();
 
@@ -2235,7 +2312,7 @@ class WPShortPixel {
                         if ($bkOrigFile && $bkOrigFile->exists())
                           $bkOrigFile->move($origFile);
 
-                        Log::addDebug('Restore result - Backup oringal file', array($bkOrigFile, $origFile));
+                        Log::addDebug('Restore result - Backup original file', array($bkOrigFile, $origFile));
                     }
                     //$this->renameWithRetina($bkFile, $file);
                     if (! $bkFile->move($fsFile))
@@ -2309,6 +2386,7 @@ class WPShortPixel {
                 if($png2jpgMain) {
                     $crtMeta['file'] = trailingslashit(dirname($crtMeta['file'])) . $fsFile->getFileName();
                     update_attached_file($ID, $crtMeta['file']);
+
                     if($png2jpgSizes && count($png2jpgSizes)) {
                         $crtMeta['sizes'] = $png2jpgSizes;
                     } else {
@@ -2492,9 +2570,10 @@ class WPShortPixel {
     }
 
     public function handleRedo() {
-        self::log("Handle Redo #{$_GET['attachment_ID']} type {$_GET['type']}");
-
-        die(json_encode($this->redo($_GET['attachment_ID'], $_GET['type'])));
+        Log::addDebug("Handle Redo #{$_GET['attachment_ID']} type {$_GET['type']}");
+        $attach_id = intval($_GET['attachment_ID']);
+        $type = sanitize_text_field($_GET['type']);
+        die(json_encode($this->redo($attach_id, $type)));
     }
 
     public function redo($qID, $type = false) {
@@ -3934,14 +4013,14 @@ class WPShortPixel {
     * @return itemHandler ItemHandler object.
     */
     public function onDeleteImage($post_id) {
-        $itemHandler = new ShortPixelMetaFacade($post_id);
-        $urlsPaths = $itemHandler->getURLsAndPATHs(true, false, true, array(), true, true);
-        if(count($urlsPaths['PATHs'])) {
-            $this->maybeDumpFromProcessedOnServer($itemHandler, $urlsPaths);
-            $this->deleteBackupsAndWebPs($urlsPaths['PATHs']);
-        }
-        $itemHandler->deleteItemCache();
-        return $itemHandler; //return it because we call it also on replace and on replace we need to follow this by deleting SP metadata, on delete it
+        Log::addDebug('onDeleteImage - Image Removal Detected ' . $post_id);
+        \wpSPIO()->loadModel('image');
+
+        $imageObj = new ImageModel();
+        $imageObj->setbyPostID($post_id);
+
+        return $imageObj->delete();
+
     }
 
     /** Removes webp and backup from specified paths
@@ -3956,10 +4035,10 @@ class WPShortPixel {
             return;
         }
 
-
         $fs = \wpSPIO()->filesystem();
 
         $backupFolder = trailingslashit($this->getBackupFolder($paths[0]));
+        Log::addDebug('Removing from Backup Folder - ' . $backupFolder);
         foreach($paths as $path) {
             $pos = strrpos($path, ".");
             $pathFile = $fs->getFile($path);
@@ -3978,10 +4057,11 @@ class WPShortPixel {
             $backupFile = $fs->getFile($backupFolder . $fileName);
             if ($backupFile->exists())
               $backupFile->delete();
+
             //@unlink($backupFolder . $fileName);
 
             $backupFile = $fs->getFile($backupFolder . preg_replace("/\." . $extension . "$/i", '@2x.' . $extension, $fileName));
-            if ($backupFile->exists())
+            if ($backupFile->exists() && $backupFile->is_file())
               $backupFile->delete();
 
 //            @unlink($backupFolder . preg_replace("/\." . $extension . "$/i", '@2x.' . $extension, $fileName));

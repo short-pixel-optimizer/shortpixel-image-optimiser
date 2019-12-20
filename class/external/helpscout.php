@@ -90,7 +90,7 @@ class HelpScout
        <div id="shortpixel-hs-button-blind" class="shortpixel-hs-button-blind"></div>
        <div id="shortpixel-hs-tools" class="shortpixel-hs-tools">
            <a href="javascript:shortpixelToggleHS();" class="shortpixel-hs-tools-docs" title="<?php _e('Search through our online documentation.', 'shortpixel-image-optimiser'); ?>">
-               <img src="<?php echo( wpSPIO()->plugin_url('res/img/notes-sp.png') );?>" style="margin-bottom: 2px;width: 36px;">
+               <img alt="<?php _e('ShortPixel document icon', 'shortpixel-image-optimiser'); ?>" src="<?php echo( wpSPIO()->plugin_url('res/img/notes-sp.png') );?>" style="margin-bottom: 2px;width: 36px;">
            </a>
        </div>
        <script>

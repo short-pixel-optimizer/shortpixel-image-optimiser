@@ -19,11 +19,13 @@ class ImageModel extends ShortPixelModel
     private $facade; // ShortPixelMetaFacade
 
     protected $thumbsnails = array(); // thumbnails of this
-    protected $original_file;
+    protected $original_file; // the original instead of the possibly _scaled one created by WP 5.3 >
 
-    private $post_id;
-    private $is_scaled = false;
+    private $post_id; // attachment id
 
+    private $is_scaled = false; // if this is WP 5.3 scaled
+    private $is_optimized = false; // if this is optimized
+    private $is_png2jpg = false; // todo implement.
 
     public function __construct()
     {
@@ -38,6 +40,7 @@ class ImageModel extends ShortPixelModel
       $this->facade = new \ShortPixelMetaFacade($post_id);
       $this->meta = $this->facade->getMeta();
 
+      $this->setImageStatus();
       $this->file = $fs->getAttachedFile($post_id);
 
       // WP 5.3 and higher. Check for original file.
@@ -47,6 +50,21 @@ class ImageModel extends ShortPixelModel
       }
     }
 
+    /** This function sets various status attributes for imageModel.
+    * Goal is to make the status of images more consistent and don't have to rely constantly on getting and ready the whole meta
+    * with it's various marks. */
+    protected function setImageStatus()
+    {
+      $status = $this->meta->getStatus();
+      if ($status == \ShortPixelMeta::FILE_STATUS_SUCCESS)
+        $this->is_optimized = true;
+
+      $png2jpg = $this->meta->getPng2Jpg();
+      if(is_array($png2jpg))
+      {
+        $this->is_png2jpg = true;
+      }
+    }
 
     protected function setOriginalFile()
     {
@@ -57,7 +75,7 @@ class ImageModel extends ShortPixelModel
 
       $originalFile = $fs->getOriginalPath($this->post_id);
 
-      if ($originalFile->getFullPath() !== $this->file->getfullPath() )
+      if ($originalFile->exists() && $originalFile->getFullPath() !== $this->file->getfullPath() )
       {
         $this->original_file = $originalFile;
         $this->is_scaled = true;
@@ -111,12 +129,56 @@ class ImageModel extends ShortPixelModel
         // $this->recount();
     }
 
+    /** Removed the current attachment, with hopefully removing everything we set.
+    * @return ShortPixelFacade  Legacy return, to do something with replacing
+    */
+    public function delete()
+    {
+      $itemHandler = $this->facade;
+      //$itemHandler = new ShortPixelMetaFacade($post_id);
+      $urlsPaths = $itemHandler->getURLsAndPATHs(true, false, true, array(), true, true);
+
+      // @todo move this to some better permanent structure w/ png2jpg class.
+      if ($this->is_png2jpg)
+      {
+        $png2jpg = $this->meta->getPng2Jpg();
+        if (isset($png2jpg['originalFile']))
+        {
+          $urlsPaths['PATHs'][] = $png2jpg['originalFile'];
+        }
+        if (isset($png2jpg['originalSizes']))
+        {
+              foreach($png2jpg['originalSizes'] as $size => $data)
+              {
+                if (isset($data['file']))
+                {
+                  $filedir = (string) $this->file->getFileDir();
+                  $urlsPaths['PATHs'][] = $filedir . $data['file'];
+                }
+              }
+        }
+      }
+      if(count($urlsPaths['PATHs'])) {
+          Log::addDebug('Removing Backups and Webps', $urlsPaths);
+          \wpSPIO()->getShortPixel()->maybeDumpFromProcessedOnServer($itemHandler, $urlsPaths);
+          \wpSPIO()->getShortPixel()->deleteBackupsAndWebPs($urlsPaths['PATHs']);
+      }
+
+      $itemHandler->deleteItemCache();
+      return $itemHandler; //return it because we call it also on replace and on replace we need to follow this by deleting SP metadata, on delete it
+    }
+
     // Rebuild the ThumbsOptList and others to fix old info, wrong builds.
     private function reCheckThumbnails()
     {
        // Redo only on non-processed images.
        if ($this->meta->getStatus() != \ShortPixelMeta::FILE_STATUS_SUCCESS)
        {
+         return;
+       }
+       if (! $this->file->exists())
+       {
+         Log::addInfo('Checking thumbnails for non-existing file', array($this->file));
          return;
        }
        $data = $this->facade->getRawMeta();

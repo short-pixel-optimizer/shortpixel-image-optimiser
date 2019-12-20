@@ -8,6 +8,7 @@ jQuery(document).ready(function(){ShortPixel.init();});
 var ShortPixel = function() {
 
     function init() {
+
         if (typeof ShortPixel.API_KEY !== 'undefined') return; //was initialized by the 10 sec. setTimeout, rare but who knows, might happen on very slow connections...
         //are we on media list?
         if( jQuery('table.wp-list-table.media').length > 0) {
@@ -64,7 +65,7 @@ var ShortPixel = function() {
     }
 
     function validateKey(button){
-      console.log('validate');
+    //  console.log('validate');
         jQuery('#valid').val('validate');
 
         jQuery(button).parents('form').submit();
@@ -729,7 +730,7 @@ var ShortPixel = function() {
         var modalShade = jQuery('.sp-modal-shade');
 
         if(!sideBySide) {
-            jQuery("#spCompareSlider").html('<img class="spUploadCompareOriginal"/><img class="spUploadCompareOptimized"/>');
+            jQuery("#spCompareSlider").html('<img alt="' +  _spTr.originalImage + '" class="spUploadCompareOriginal"/><img alt="' +  _spTr.optimizedImage + '" class="spUploadCompareOptimized"/>');
         }
         //calculate the modal size
         width = Math.max(350, Math.min(800, (width < 350 ? (width + 25) * 2 : (height < 150 ? width + 25 : width))));
@@ -852,6 +853,7 @@ var ShortPixel = function() {
 
 function showToolBarAlert($status, $message, id) {
     var robo = jQuery("li.shortpixel-toolbar-processing");
+
     switch($status) {
         case ShortPixel.STATUS_QUOTA_EXCEEDED:
             if(  window.location.href.search("wp-short-pixel-bulk") > 0
@@ -890,8 +892,18 @@ function showToolBarAlert($status, $message, id) {
     }
     robo.removeClass("shortpixel-hide");
 }
-function hideToolBarAlert () {
-    jQuery("li.shortpixel-toolbar-processing.shortpixel-processing").addClass("shortpixel-hide");
+function hideToolBarAlert (status) {
+  var $toolbar = jQuery("li.shortpixel-toolbar-processing.shortpixel-processing");
+
+    // When Queue is empty, but we have errors, don't hide the toolbar.
+    if (ShortPixel.STATUS_EMPTY_QUEUE == status)
+    {
+      if ($toolbar.hasClass("shortpixel-alert") || $toolbar.hasClass("shortpixel-quota-exceeded") )
+      {
+        return;
+      }
+    }
+    $toolbar.addClass("shortpixel-hide");
 }
 
 function hideQuotaExceededToolBarAlert () {
@@ -933,6 +945,7 @@ function checkBulkProgress() {
         adminUrl = ShortPixel.convertPunycode(adminUrl);
     }
 
+    /* NO. If it shouldn't go, this JS file shouldn't load.
     if(   url.search(adminUrl + "upload.php") < 0
        && url.search(adminUrl + "edit.php") < 0
        && url.search(adminUrl + "edit-tags.php") < 0
@@ -943,7 +956,7 @@ function checkBulkProgress() {
        ) {
         hideToolBarAlert();
         return;
-    }
+    } */
 
     //if i'm the bulk processor and i'm not the bulk page and a bulk page comes around, leave the bulk processor role
     if(ShortPixel.bulkProcessor == true && window.location.href.search("wp-short-pixel-bulk") < 0
@@ -1035,7 +1048,8 @@ function checkBulkProcessingCallApi(){
                     case ShortPixel.STATUS_EMPTY_QUEUE:
                         console.log(data["Message"]);
                         clearBulkProcessor(); //nothing to process, leave the role. Next page load will check again
-                        hideToolBarAlert();
+
+                        hideToolBarAlert(data["Status"]);
                         var progress = jQuery("#bulk-progress");
                         if(isBulkPage && progress.length && data["BulkStatus"] != '2') {
                             progressUpdate(100, "Bulk finished!");
@@ -1177,7 +1191,7 @@ function setCellMessage(id, message, actions){
 }
 
 function manualOptimization(id, cleanup) {
-    setCellMessage(id, "<img src='" + ShortPixel.WP_PLUGIN_URL + "/res/img/loading.gif' class='sp-loading-small'>Image waiting to be processed", "");
+    setCellMessage(id, "<img src='" + ShortPixel.WP_PLUGIN_URL + "/res/img/loading.gif' alt='" +  _spTr.loading + "' class='sp-loading-small'>Image waiting to be processed", "");
     jQuery("li.shortpixel-toolbar-processing").removeClass("shortpixel-hide");
     jQuery("li.shortpixel-toolbar-processing").removeClass("shortpixel-alert");
     jQuery("li.shortpixel-toolbar-processing").addClass("shortpixel-processing");
@@ -1217,7 +1231,7 @@ function manualOptimization(id, cleanup) {
 }
 
 function reoptimize(id, type) {
-    setCellMessage(id, "<img src='" + ShortPixel.WP_PLUGIN_URL + "/res/img/loading.gif' class='sp-loading-small'>Image waiting to be reprocessed", "");
+    setCellMessage(id, "<img src='" + ShortPixel.WP_PLUGIN_URL + "/res/img/loading.gif' alt='" +  _spTr.loading + "' class='sp-loading-small'>Image waiting to be reprocessed", "");
     jQuery("li.shortpixel-toolbar-processing").removeClass("shortpixel-hide");
     jQuery("li.shortpixel-toolbar-processing").addClass("shortpixel-processing");
     var data = { action  : 'shortpixel_redo',
@@ -1236,7 +1250,7 @@ function reoptimize(id, type) {
 }
 
 function optimizeThumbs(id) {
-    setCellMessage(id, "<img src='" + ShortPixel.WP_PLUGIN_URL + "/res/img/loading.gif' class='sp-loading-small'>" + _spTr.imageWaitOptThumbs, "");
+    setCellMessage(id, "<img src='" + ShortPixel.WP_PLUGIN_URL + "/res/img/loading.gif' alt='" +  _spTr.loading + "' class='sp-loading-small'>" + _spTr.imageWaitOptThumbs, "");
     jQuery("li.shortpixel-toolbar-processing").removeClass("shortpixel-hide");
     jQuery("li.shortpixel-toolbar-processing").addClass("shortpixel-processing");
     var data = { action  : 'shortpixel_optimize_thumbs',

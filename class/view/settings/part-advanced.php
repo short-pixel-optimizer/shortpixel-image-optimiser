@@ -27,7 +27,7 @@ namespace ShortPixel;
         } elseif (strpos($_SERVER['HTTP_USER_AGENT'], 'Chrome') !== false) {
             // Show a message about the risks and caveats of serving WEBP images via .htaccess
             $deliverWebpUnalteredLabel = '<span style="color: initial;">'.__('Based on testing your particular hosting configuration, we determined that your server','shortpixel-image-optimiser').
-                '&nbsp;<img src="'. plugins_url( 'res/img/test.jpg' , SHORTPIXEL_PLUGIN_FILE) .'">&nbsp;'.
+                '&nbsp;<img alt="can or can not" src="'. plugins_url( 'res/img/test.jpg' , SHORTPIXEL_PLUGIN_FILE) .'">&nbsp;'.
                 __('serve the WEBP versions of the JPEG files seamlessly, via .htaccess.','shortpixel-image-optimiser').' <a href="javascript:void(0)" data-beacon-article="5c1d050e04286304a71d9ce4">Open article to read more about this.</a></span>';
         }
     }
@@ -85,7 +85,7 @@ namespace ShortPixel;
                                 <td>
                                     <?php if(!($st == "Empty")) { ?>
                                     <a href="javascript:none();"  title="<?php echo $fullStat; ?>" style="text-decoration: none;">
-                                        <img src='<?php echo( wpSPIO()->plugin_url('res/img/info-icon.png' ));?>' style="margin-bottom: -2px;"/>
+                                        <img alt='Info icon' src='<?php echo( wpSPIO()->plugin_url('res/img/info-icon.png' ));?>' style="margin-bottom: -2px;"/>
                                     </a>&nbsp;<?php  } echo($typ.$st.$err); ?>
 
                                 </td>
@@ -311,16 +311,6 @@ namespace ShortPixel;
                 </td>
             </tr>
             <tr>
-                <th scope="row"><?php _e('Process in front-end','shortpixel-image-optimiser');?></th>
-                <td>
-                    <input name="frontBootstrap" type="checkbox" id="frontBootstrap" value="1" <?php checked( $view->data->frontBootstrap, '1' );?>>
-                    <label for="frontBootstrap"><?php _e('Automatically optimize images added by users in front end.','shortpixel-image-optimiser');?></label>
-                    <p class="settings-info">
-                        <?php _e('Check this if you have users that add images or PDF documents from custom forms in the front-end. This could increase the load on your server if you have a lot of users simultaneously connected.','shortpixel-image-optimiser');?>
-                    </p>
-                </td>
-            </tr>
-            <tr>
                 <th scope="row"><?php _e('Optimize media on upload','shortpixel-image-optimiser');?></th>
                 <td>
                     <input name="autoMediaLibrary" type="checkbox" id="autoMediaLibrary" value="1" <?php checked( $view->data->autoMediaLibrary, "1" );?>>
@@ -329,6 +319,29 @@ namespace ShortPixel;
                         <?php _e('By default, ShortPixel will automatically optimize all the freshly uploaded image and PDF files. If you uncheck this you\'ll need to either run Bulk ShortPixel or go to Media Library (in list view) and click on the right side "Optimize now" button(s).','shortpixel-image-optimiser');?>
                     </p>
                 </td>
+            </tr>
+            <tr id="frontBootstrapRow">
+                <th scope="row"><?php _e('Process in front-end','shortpixel-image-optimiser');?></th>
+                <td>
+                    <input name="frontBootstrap" type="checkbox" id="frontBootstrap" value="1" <?php checked( $view->data->frontBootstrap, '1' );?>>
+                    <label for="frontBootstrap"><?php _e('Automatically optimize images added by users in front end.','shortpixel-image-optimiser');?></label>
+                    <p class="settings-info">
+                        <?php _e('Check this if you have users that add images or PDF documents from custom forms in the front-end. This could increase the load on your server if you have a lot of users simultaneously connected.','shortpixel-image-optimiser');?>
+                    </p>
+                </td>
+                <script>
+                    var spaiAML = document.getElementById('autoMediaLibrary');
+                    document.getElementById('frontBootstrapRow').setAttribute('style', spaiAML.checked ? '' : 'display:none;');
+                    spaiAML.addEventListener('change', function() {
+                        if(this.checked) {
+                            jQuery('#frontBootstrapRow').show(500);
+                        } else {
+                            jQuery('#frontBootstrapRow').hide(500);
+                        }
+                    });
+
+
+                </script>
             </tr>
             <tr>
                 <th scope="row"><label for="excludeSizes"><?php _e('Exclude thumbnail sizes','shortpixel-image-optimiser');?></label></th>

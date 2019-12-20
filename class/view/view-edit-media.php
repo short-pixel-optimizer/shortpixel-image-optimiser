@@ -7,20 +7,24 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 <div id='sp-msg-<?php echo($view->id);?>' class='column-wp-shortPixel view-edit-media'>
 <?php // Debug Data
 if (! is_null($view->debugInfo)):  ?>
-      <div class='debugInfo'>
-        <ul>
-        <?php foreach($view->debugInfo as $item): ?>
-          <li><strong><?php echo $item[0]; ?></strong>
-            <?php
-            if (is_array($item[1]) || is_object($item[1]))
-              echo "<PRE>" . print_r($item[1], true) . "</PRE>";
-            else
-              echo $item[1];
-            ?>
-          </li>
-        <?php endforeach; ?>
-        </ul>
-
+      <div class='debugInfo' id='debugInfo'>
+        <a class='debugModal' data-modal="debugInfo" ><?php _e('Debug Window', 'shortpixel-image-optimiser') ?></a>
+        <div class='content wrapper'>
+          <?php foreach($view->debugInfo as $index => $item): ?>
+          <ul class="debug-<?php echo $index ?>">
+            <li><strong><?php echo $item[0]; ?></strong>
+              <?php
+              if (is_array($item[1]) || is_object($item[1]))
+                echo "<PRE>" . print_r($item[1], true) . "</PRE>";
+              else
+                echo $item[1];
+              ?>
+            </li>
+          </ul>
+          <?php endforeach; ?>
+          <p>&nbsp;</p>
+          <p>&nbsp;</p>
+       </div>
     </div>
   <?php endif; ?>
 

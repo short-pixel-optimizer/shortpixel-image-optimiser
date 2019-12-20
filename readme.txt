@@ -4,7 +4,7 @@ Tags: compressor, image, compression, optimize, image optimizer, image optimiser
 Requires at least: 3.2.0
 Tested up to: 5.3
 Requires PHP: 5.3
-Stable tag: 4.15.2
+Stable tag: 4.15.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -260,6 +260,19 @@ define("SHORTPIXEL_EXPERIMENTAL_SECURICACHE", true);  // adds timestamps to URLS
 9. Check other optimized images status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 4.15.3 =
+
+Release date: 20th December 2019
+* Hide the "Process in front-end" option if "Optimize media on upload" unchecked
+* Add ALT text for plugin images in Admin
+* Moved CSS for the admin bar to the actual admin bar stylesheet, other css no longer loading on those pages
+* Fixes for windows specific paths
+* Fixed: warning flood when using old version of S3-offload
+* Fix for frontend and error shortpixel in top toolbar
+* Fixed: Pancake menu now showing proper actions ( none ) if backup is not there.
+* Fixed: Windows paths in wp-short-pixel  getBackupFolderInternal
+* Language – 4 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted
 
 = 4.15.2 =
 

@@ -43,7 +43,6 @@ class ShortPixelFolder extends ShortPixelEntity{
       if (! $dir->exists() )
       {
         $dir->check();
-        //$result = @mkdir($folder, 0777, true);
         self::protectDirectoryListing($folder);
         $result = true;
       }

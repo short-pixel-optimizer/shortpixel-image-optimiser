@@ -1685,8 +1685,13 @@ class ShortPixelView {
             $controller->setLegacyView($this);
             $controller->setShortPixel($this->ctrl);
             $controller->load($id);
+            if (\wpSPIO()->env()->is_debug)
+            {
+              \wpSPIO()->load_script('shortpixel-debug');
+            }
             return;
         }
+        
         ?>
         <div id='sp-msg-<?php echo($id);?>' class='column-wp-shortPixel'>
 
@@ -1746,34 +1751,7 @@ class ShortPixelView {
                     $excluded = (isset($data['excludeSizes']) ? count($data['excludeSizes']) : 0);
                     $successText = $this->getSuccessText($data['percent'],$data['bonus'],$data['type'],$data['thumbsOpt'],$data['thumbsTotal'], $data['retinasOpt'], $data['excludeSizes']);
                     $todoSizes = $missingThumbs = $excludeSizes = '';
-                    /*if($extended) {
-                        if(isset($data['thumbsToOptimizeList']) && count($data['thumbsToOptimizeList'])) {
-                            $todoSizes .= "<br><span style='word-break: break-all;'> <span style='font-weight: bold;'>" . __("To optimize:", 'shortpixel-image-optimiser') . "</span>";
-                            foreach($data['thumbsToOptimizeList'] as $todoItem) {
-                                $todoSizes .= "<br> &#8226;&nbsp;" . $todoItem;
-                            }
-                            $todoSizes .= '</span>';
-                        }
-                        if(isset($data['excludeSizes'])) {
-                            $excludeSizes .= "<br><span style='word-break: break-all;'> <span style='font-weight: bold;'>" . __("Excluded thumbnails:", 'shortpixel-image-optimiser') . "</span>";
-                            foreach($data['excludeSizes'] as $excludedItem) {
-                                $excludeSizes .= "<br> &#8226;&nbsp;" . $excludedItem;
-                            }
-                            $excludeSizes .= '</span>';
-                        }
-                        if(count($data['thumbsMissing'])) {
-                            $missingThumbs .= "<br><span style='word-break: break-all;'> <span style='font-weight: bold;'>" . __("Missing thumbnails:", 'shortpixel-image-optimiser') . "</span>";
-                            foreach($data['thumbsMissing'] as $miss) {
-                                $missingThumbs .= "<br> &#8226&nbsp;" . $miss;
-                            }
-                            $missingThumbs .= '</span>';
-                        }
-                        $successText .= ($data['webpCount'] ? "<br>+" . $data['webpCount'] . __(" WebP images", 'shortpixel-image-optimiser') : "")
-                                . "<br>EXIF: " . ($data['exifKept'] ? __('kept','shortpixel-image-optimiser') :  __('removed','shortpixel-image-optimiser'))
-                                . ($data['png2jpg'] ? '<br>' . __('Converted from PNG','shortpixel-image-optimiser'): '')
-                                . "<br>" . __("Optimized on", 'shortpixel-image-optimiser') . ": " . $data['date']
-                                . $todoSizes . $excludeSizes . $missingThumbs;
-                    } */
+
                     $this->renderListCell($id, $data['status'], $data['showActions'], $data['thumbsToOptimize'],
                             $data['backup'], $data['type'], $data['invType'], $successText);
 

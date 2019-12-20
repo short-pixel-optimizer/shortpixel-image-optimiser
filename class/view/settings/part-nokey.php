@@ -64,8 +64,10 @@ if($adminEmail == 'noreply@addendio.com') $adminEmail = false; //hack for the ad
                     }
                     ?><br><span style="position:relative;">
                         <input name="tos" type="checkbox" id="tos">
-                        <img id="tos-robo" src="<?php echo(wpSPIO()->plugin_url('res/img/slider.png' ));?>" style="position: absolute;left: -95px;bottom: -26px;display:none;">
-                        <img id="tos-hand" src="<?php echo(wpSPIO()->plugin_url('res/img/point.png' ));?>" style="position: absolute;left: -39px;bottom: -9px;display:none;">
+                        <img id="tos-robo" alt="<?php _e('ShortPixel logo', 'shortpixel-image-optimiser'); ?>"
+                             src="<?php echo(wpSPIO()->plugin_url('res/img/slider.png' ));?>" style="position: absolute;left: -95px;bottom: -26px;display:none;">
+                        <img id="tos-hand" alt="<?php _e('Hand pointing', 'shortpixel-image-optimiser'); ?>"
+                             src="<?php echo(wpSPIO()->plugin_url('res/img/point.png' ));?>" style="position: absolute;left: -39px;bottom: -9px;display:none;">
                     </span>
                     <?php _e('I have read and I agree to the <a href="https://shortpixel.com/tos" target="_blank">Terms of Service</a> and the <a href="https://shortpixel.com/privacy" target="_blank">Privacy Policy</a> (<a href="https://shortpixel.com/privacy#gdpr" target="_blank">GDPR compliant</a>).','shortpixel-image-optimiser');
                     ?>

@@ -23,7 +23,7 @@ class ShortPixelPlugin
   protected $shortPixel; // shortpixel megaclass
   protected $settings; // settings object.
 
-  protected $admin_pages;  // admin page hooks.
+  protected $admin_pages = array();  // admin page hooks.
 
   public function __construct()
   {
@@ -46,6 +46,7 @@ class ShortPixelPlugin
       if(isset($_REQUEST['noheader'])) {
           $this->is_noheaders = true;
       }
+
 
       // @todo Transitionary init for the time being, since plugin init functionality is still split between.
       global $shortPixelPluginInstance;
@@ -79,6 +80,11 @@ class ShortPixelPlugin
             }
           }
       }
+      elseif($this->settings()->frontBootstrap && $this->env()->is_front)
+      {
+        // if automedialibrary is off, but we do want to auto-optimize on the front, still load the hook.
+        add_filter( 'wp_generate_attachment_metadata', array($admin,'handleImageUploadHook'), 10, 2 );
+      }
   }
 
   /** Function to get plugin settings
@@ -108,7 +114,9 @@ class ShortPixelPlugin
     return new \ShortPixel\FileSystemController();
   }
 
-  /** Create instance. This should not be needed to call anywhere else than main plugin file **/
+  /** Create instance. This should not be needed to call anywhere else than main plugin file
+  * This should not be called *after* plugins_loaded action
+  **/
   public static function getInstance()
   {
     if (is_null(self::$instance))
@@ -192,8 +200,12 @@ class ShortPixelPlugin
     wp_register_style('shortpixel-admin', plugins_url('/res/css/shortpixel-admin.css', SHORTPIXEL_PLUGIN_FILE),array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
 
     wp_register_style('shortpixel', plugins_url('/res/css/short-pixel.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
+
     //modal - used in settings for selecting folder
     wp_register_style('shortpixel-modal', plugins_url('/res/css/short-pixel-modal.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
+
+
+    wp_register_script('shortpixel-debug', plugins_url('/res/js/debug.js',SHORTPIXEL_PLUGIN_FILE), array('jquery', 'jquery-ui-draggable'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
 
   }
 
@@ -261,6 +273,11 @@ class ShortPixelPlugin
       $action = isset($_REQUEST['sp-action']) ? sanitize_text_field($_REQUEST['sp-action']) : $default_action;
       Log::addDebug('Request', $_REQUEST);
       $controller = false;
+
+      if ($this->env()->is_debug)
+      {
+         $this->load_script('shortpixel-debug');
+      }
 
       switch($plugin_page)
       {
@@ -383,9 +400,15 @@ class ShortPixelPlugin
   public static function uninstallPlugin()
   {
     $settings = new \WPShortPixelSettings();
+    $env = \wpSPIO()->env();
+
     if($settings->removeSettingsOnDeletePlugin == 1) {
         \WPShortPixelSettings::debugResetOptions();
-        insert_with_markers( get_home_path() . '.htaccess', 'ShortPixelWebp', '');
+        if (! $env->is_nginx)
+          insert_with_markers( get_home_path() . '.htaccess', 'ShortPixelWebp', '');
+
+        $spMetaDao = new \ShortPixelCustomMetaDao(new \WpShortPixelDb());
+        $spMetaDao->dropTables();
     }
   }
 

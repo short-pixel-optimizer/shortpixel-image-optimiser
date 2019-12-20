@@ -7,9 +7,11 @@ class FileSystemTest extends  WP_UnitTestCase
   protected $fs;
   protected $root;
 
+  protected $upload_dir;
+
   public function setUp()
   {
-    $this->fs = new ShortPixel\FileSystemController();
+    $this->fs = \wpSPIO()->filesystem(); //new ShortPixel\FileSystemController();
     $this->root = vfsStream::setup('root', null, $this->getTestFiles() );
   }
 
@@ -65,15 +67,13 @@ class FileSystemTest extends  WP_UnitTestCase
   /** Not testable on VFS due to home-path checks
    * This test is done first since it erares to log file needed to read other tests.
    */
-  public function testsetAndGetBackup()
+  public function testSetAndGetBackup()
   {
       $this->finishBackups(); // removes directory.
       $this->setupBackUps();
-      //$filepath = $this->root->url() . '/images/image3.png';
+
       $post = $this->factory->post->create_and_get();
       $attachment_id = $this->factory->attachment->create_upload_object( __DIR__ . '/assets/test-image.jpg', $post->ID );
-
-      //vfsStream::newDirectory(SHORTPIXEL_BACKUP_FOLDER, 0755)->at($this->root);
 
       $file = $this->fs->getAttachedFile($attachment_id);
 
@@ -81,7 +81,6 @@ class FileSystemTest extends  WP_UnitTestCase
       $this->assertTrue($file->is_writable());
 
       $backupFile = $file->getBackUpFile();
-
       $this->assertFalse($backupFile);
 
       $directory = $this->fs->getBackupDirectory($file);
@@ -90,9 +89,16 @@ class FileSystemTest extends  WP_UnitTestCase
       $this->assertDirectoryExists((string) $directory);
 
       \ShortPixelApi::backupImage($file, array($file));
-
       $this->assertFileExists( $directory->getPath() . '/' . $file->getFileName()) ;
 
+      // Try certain old shortpixel functions.
+      $shortpixel = new \WPShortPixel(); // plugins_loaded doesn't work? -- \wpSPIO()->getShortPixel();
+      $resultpath  = $shortpixel->getBackupFolder($file);
+
+      $backupFile2 = $this->fs->getBackupDirectory($file);
+
+      $this->assertEquals($resultpath, (string) $backupFile2->getPath());
+      //
     //$URLsAndPATHs = $itemHandler->getURLsAndPATHs(false);
   }
 
@@ -258,10 +264,12 @@ class FileSystemTest extends  WP_UnitTestCase
       $filepath = $this->root->url() . '/images/image1.jpg';
       $filedir = $this->root->url() . '/images/';
 
+      // basic test, file exists.
       $this->assertFileExists($filepath);
 
       $file = $this->fs->getFile($filepath);
 
+      // Tests to check if file is constructed properly.
       $this->assertTrue($file->exists(), $file->getFullPath());
       $this->assertEquals($file->getFullPath(), $filepath);
       $this->assertEquals($file->getExtension(), 'jpg');
@@ -269,12 +277,12 @@ class FileSystemTest extends  WP_UnitTestCase
       $this->assertEquals($file->getFileBase(), 'image1');
       $this->assertEquals( (string) $file->getFileDir(), $filedir);
 
-      // String Test
+      // ToString Test
       $file1_2 = $this->fs->getFile($filepath);
       $this->assertEquals((string) $file1_2, $filepath);
       $this->assertEquals( (string) $file->getFileDir(), $filedir);
 
-
+      // Test double extension.
       $filepath2 = $this->root->url() . '/images/image1.ext.jpg';
       $file2 = $this->fs->getFile($filepath2);
 
@@ -286,7 +294,7 @@ class FileSystemTest extends  WP_UnitTestCase
       $this->assertEquals( (string) $file2->getFileDir(), $filedir);
 
 
-      // Empty
+      // Test Empty Non existing file
       $file3 = $this->fs->getFile('');
       $this->assertFileNotExists($file3);
       $this->assertFalse($file3->exists(), $file3->getFullPath());
@@ -312,6 +320,22 @@ class FileSystemTest extends  WP_UnitTestCase
       $this->assertFileNotExists($file4);
       $this->assertFalse($file4->hasBackup());
       $this->assertNull($file4->getFileDir());
+
+      // Test creating filemodel with a directory.
+      $file5 = $this->fs->getFile($filedir);
+      $this->assertEquals($filedir, $file5->getFullPath());
+      $this->assertTrue($file5->exists());
+      $this->assertEquals($filedir, (string) $file5->getFileDir());
+      $this->assertNull($file5->getFileBase());
+      $this->assertNull($file5->getFileName());
+      $this->assertNull($file5->getExtension());
+
+      // test if a non-existing .. is still seen as file.
+      //$this->root->url() . '/nonexisting/..' // VFS Stream fails on this, returning a file_exists on this.
+      $file6 = $this->fs->getFile('/no/no/nothere/..');
+      $this->assertFalse($file6->exists(), $file6->getFullPath() );
+      $this->assertTrue($file6->is_file());
+      $this->assertEquals('..', $file6->getFileName());
 
   }
 
@@ -505,8 +529,52 @@ class FileSystemTest extends  WP_UnitTestCase
 
   public function testWithWindowsPath()
   {
+    $wpath = 'C:\Inetpub\vhosts\example.com/wp-content/uploads/'; // windows path as encountered.
+    $wfile = $wpath . 'bla.jpg';
+    $filename = 'bla.jpg';
 
-    $this->markTestSkipped('Not yet implemented');
+    $this->upload_dir = $wpath;
+    add_filter('upload_dir', array($this, 'filterUploadDir')); // set upload dir to enable proper processPath.
+
+    $upload_dir = wp_upload_dir(null, false, true);
+    $basedir = $upload_dir['path'];
+
+    $file = $this->fs->getFile($wfile);
+    $this->assertEquals($wpath, $basedir); //  test if upload dir filter goes well.
+
+    $this->assertEquals(wp_normalize_path($wfile), $file->getFullPath());
+    $this->assertEquals($filename, $file->getFileName());
+    //$this->markTestSkipped('Not yet implemented');
+
+    // With windows Relative
+    $wpath_rel = '/wp-content/uploads/';
+    $wfile_rel = $wpath . 'test2.jpg';
+    $wfile2 = $wpath . 'test2.jpg';
+
+    $file2 = $this->fs->getFile($wfile_rel);
+    $this->assertEquals(wp_normalize_path($wfile2), $file2->getFullPath());
+
+    remove_filter('upload_dir', array($this, 'filterUploadDir'));
+  }
+
+  public function filterUploadDir($path)
+  {
+/*    *     @type string       $path    Base directory and subdirectory or full path to upload directory.
+*     @type string       $url     Base URL and subdirectory or absolute URL to upload directory.
+*     @type string       $subdir  Subdirectory if uploads use year/month folders option is on.
+*     @type string       $basedir Path without subdir.
+*     @type string       $baseurl URL path without subdir.
+*     @type string|false $error   False or error message. */
+      $array = array('path' => $this->upload_dir,
+                     'url' => get_home_url() . '',
+                     'subdir' => '',
+                     'basedir' => $this->upload_dir,
+                     'baseurl' => get_home_url(),
+                     'error' => false,
+
+      );
+      return $array;
+
   }
 
   public function testNoBackUp()
@@ -525,5 +593,6 @@ class FileSystemTest extends  WP_UnitTestCase
       $this->assertEquals($file->getFullPath(), $filepath);
       $this->assertEquals($file->getFileDir(), $directory);
   }
+
 
 }

@@ -528,6 +528,7 @@ class ShortPixelMetaFacade {
       $cacheController = new Cache();
       Log::adDDebug('Removing Item Cache -> ' . $this->getCacheName() );
       $cacheController->deleteItem( $this->getCacheName());
+      $this->getMeta(true);  // reload the meta. 
 
     }
 
@@ -607,7 +608,7 @@ class ShortPixelMetaFacade {
 
             // new WP 5.3 function, check if file has original ( was scaled )
             $origFile = $imageObj->has_original();
-            Log::addDebug('Get Paths and such, original', $origFile);
+            Log::addDebug('Get Paths and such, original', (string) $origFile);
             if (is_object($origFile))
             {
               //$origFile = $imageObj->getOriginalFile();
@@ -1024,13 +1025,12 @@ class ShortPixelMetaFacade {
      */
     static public function returnSubDir($file)
     {
-
         // Experimental FS handling for relativePath. Should be able to cope with more exceptions.  See Unit Tests
-        $fs = new ShortPixel\FileSystemController();
+        $fs = \wpSPIO()->filesystem();
         $directory = $fs->getDirectory($file);
-        if ($relpath = $directory->getRelativePath())
+        $relpath = $directory->getRelativePath();
+        if ($relpath !== false)
           return $relpath;
-
 
         $homePath = get_home_path();
         if($homePath == '/') {

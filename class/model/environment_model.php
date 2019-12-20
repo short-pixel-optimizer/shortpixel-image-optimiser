@@ -1,5 +1,6 @@
 <?php
 namespace ShortPixel;
+use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 /** Loads a few environment variables handy to have nearby
 *
@@ -26,9 +27,11 @@ class EnvironmentModel extends ShortPixelModel
     public $is_ajaxcall = false;
 
     private $screen_is_set = false;
-    public $is_screen_to_use = false; // where shortpixel loads
-    public $is_our_screen = false;
+    public $is_screen_to_use = false; // where shortpixel optimizer loads
+    public $is_our_screen = false; // where shortpixel hooks in more complicated functions.
 
+    // Debug flag
+    public $is_debug = false;
 
     protected static $instance;
 
@@ -66,15 +69,25 @@ class EnvironmentModel extends ShortPixelModel
     $this->is_multisite = (function_exists("is_multisite") && is_multisite()) ? true : false;
     $this->is_mainsite = is_main_site();
 
-    if ( is_admin() )
-      $this->is_admin = true;
-    else
-      $this->is_front = true;
+    $this->determineFrontBack();
+
 
     if (defined('DOING_AJAX') && DOING_AJAX)
     {
       $this->is_ajaxcall = true;
     }
+
+    $this->is_debug = Log::debugIsActive();
+
+  }
+
+  // check if this request is front or back.
+  protected function determineFrontBack()
+  {
+    if ( is_admin() )
+      $this->is_admin = true;
+    else
+      $this->is_front = true;
 
   }
 
@@ -89,12 +102,27 @@ class EnvironmentModel extends ShortPixelModel
       return false;
 
     // WordPress pages where we'll be active on.
-    if(in_array($screen->id, array('upload', 'edit', 'edit-tags', 'post-new', 'post', 'attachment'))) {
+    // https://codex.wordpress.org/Plugin_API/Admin_Screen_Reference
+    $use_screens = array(
+        'edit-post_tag', // edit tags
+        'upload', // media library
+        'attachment', // edit media
+        'post', // post screen
+        'edit-post', // edit post
+        'new-post',  // new post
+        'edit-page', // all pages
+    );
+    $use_screens = apply_filters('shortpixel/init/optimize_on_screens', $use_screens);
+
+    if(in_array($screen->id, $use_screens)) {
           $this->is_screen_to_use = true;
     }
 
     // Our pages.
     $pages = \wpSPIO()->get_admin_pages();
+    // the main WP pages where SPIO hooks a lot of functions into, our operating area.
+    $wp_pages = array('upload', 'attachment');
+    $pages = array_merge($pages, $wp_pages);
 
     /* pages can be null in certain cases i.e. plugin activation.
     * treat those cases as improper screen set.

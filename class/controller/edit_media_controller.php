@@ -18,7 +18,7 @@ class editMediaController extends ShortPixelController
       {
 
         $this->loadModel($this->model);
-        $this->loadModel('image');
+      //  $this->loadModel('image');
         parent::__construct();
       }
 
@@ -212,10 +212,12 @@ class editMediaController extends ShortPixelController
 
       protected function getDebugInfo()
       {
-          if(! Log::debugIsActive())
+          if(! \wpSPIO()->env()->is_debug )
           {
-            return null;
+            return array();
           }
+
+          $meta = \wp_get_attachment_metadata($this->post_id);
 
           $imageObj = new ImageModel();
           $imageObj->setByPostID($this->post_id);
@@ -225,9 +227,12 @@ class editMediaController extends ShortPixelController
 
           $debugInfo = array();
           $debugInfo[] = array(__('URL', 'shortpixel_image_optiser'), wp_get_attachment_url($this->post_id));
+          $debugInfo[] = array(__('File'), get_attached_file($this->post_id));
+          $debugInfo[] = array(__('Status'), $this->imageModel->getMeta()->getStatus() );
+
           $debugInfo[] = array(__('WPML Duplicates'), json_encode(\ShortPixelMetaFacade::getWPMLDuplicates($this->post_id)) );
-          $debugInfo[] = array(__('Data'), $this->data);
-          $debugInfo[] = array(__('Meta'), wp_get_attachment_metadata($this->post_id) );
+          $debugInfo['shortpixeldata'] = array(__('Data'), $this->data);
+          $debugInfo['wpmetadata'] = array(__('Meta'), $meta );
           if ($imageFile->hasBackup())
           {
             $backupFile = $imageFile->getBackupFile();
@@ -245,8 +250,22 @@ class editMediaController extends ShortPixelController
               $debugInfo[] = array(__('Backup'), $orbackup->getFullPath() . '(' . \ShortPixelTools::formatBytes($orbackup->getFileSize()) . ')');
           }
 
-          $debugInfo[] = array(__('Status'), $this->imageModel->getMeta()->getStatus() );
 
+
+          if (! isset($meta['sizes']) )
+          {
+             $debugInfo[] = array('',  __('Thumbnails were not generated', 'shortpixel-image-optimiser'));
+          }
+          else
+          {   
+            foreach($meta['sizes'] as $size => $data)
+            {
+              $display_size = ucfirst(str_replace("_", " ", $size));
+              $img = wp_get_attachment_image_src($this->post_id, $size);
+              //var_dump($img);
+              $debugInfo[] = array('', "<div class='$size previewwrapper'><img src='" . $img[0] . "'><span class='label'>$img[0] ( $display_size )</span></div>");
+            }
+          }
           return $debugInfo;
       }
 

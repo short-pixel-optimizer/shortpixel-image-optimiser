@@ -6,7 +6,8 @@
  */
 
  use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-
+ use ShortPixel\FileModel as FileModel;
+ use ShortPixel\Directorymodel as DirectoryModel;
 
 //TODO decouple from directly using WP metadata, in order to be able to use it for custom images
 class ShortPixelPng2Jpg {
@@ -92,12 +93,12 @@ class ShortPixelPng2Jpg {
             }
         }
 
-        WPShortPixel::log("PNG2JPG doConvert img ready");
+      //  WPShortPixel::log("PNG2JPG doConvert img ready");
         $x = imagesx($img);
         $y = imagesy($img);
         WPShortPixel::log("PNG2JPG doConvert width $x height $y");
         $bg = imagecreatetruecolor($x, $y);
-        WPShortPixel::log("PNG2JPG doConvert img created truecolor");
+    //    WPShortPixel::log("PNG2JPG doConvert img created truecolor");
         if(!$bg) return (object)array("params" => $params, "unlink" => false);
         imagefill($bg, 0, 0, imagecolorallocate($bg, 255, 255, 255));
         imagealphablending($bg, 1);
@@ -109,18 +110,14 @@ class ShortPixelPng2Jpg {
         $filename = $fsFile->getFileName();
         $newFileName = $fsFile->getFileBase() . '.jpg'; // convert extension to .png
 
-        $uniquepath = wp_unique_filename($fsFile->getFullPath(), $newFileName);
-        $newPath = (string) $fsFile->getFileDir() . $uniquepath;
+        $fsNewFile = $fs->getFile($fsFile->getFileDir() . $newFileName);
+
+        $uniquefile = $this->unique_file( $fsFile->getFileDir(), $fsNewFile);
+        $newPath =  $uniquefile->getFullPath(); //(string) $fsFile->getFileDir() . $uniquepath;
 
         // check old filename, replace with uniqued filename.
-        $newUrl = str_replace($filename, $uniquepath, $params['url']); //preg_replace("/\.png$/i", ".jpg", $params['url']);
-        /*(for ($i = 1; file_exists($newPath); $i++) {
-            if($suffixRegex) {
-                $newPath = preg_replace("/(" . $suffixRegex . ")\.png$/i", $i . '-$1.jpg', $image);
-            }else {
-                $newPath = preg_replace("/\.png$/i", "-" . $i . ".jpg", $image);
-            }
-        } */
+        $newUrl = str_replace($filename, $uniquefile->getFileName(), $params['url']); //preg_replace("/\.png$/i", ".jpg", $params['url']);
+
         if (imagejpeg($bg, $newPath, 90)) {
             WPShortPixel::log("PNG2JPG doConvert created JPEG at $newPath");
             $newSize = filesize($newPath);
@@ -162,6 +159,30 @@ class ShortPixelPng2Jpg {
             $params['jpg_size'] = $newSize;
         }
         return (object)array("params" => $params, "unlink" => $image);
+    }
+
+    /** Own function to get a unique filename since the WordPress wp_unique_filename seems to not function properly w/ thumbnails */
+    private function unique_file(DirectoryModel $dir, FileModel $file, $number = 0)
+    {
+      if (! $file->exists())
+        return $file;
+
+      $number = 0;
+      $fs = \wpSPIO()->filesystem();
+
+      $base = $file->getFileBase();
+      $ext = $file->getExtension();
+
+      while($file->exists())
+      {
+        $number++;
+        $numberbase = $base . '-' . $number;
+        Log::addDebug('check for unique file -- ' . $dir->getPath() . $numberbase . '.' . $ext);
+        $file = $fs->getFile($dir->getPath() . $numberbase . '.' . $ext);
+      }
+
+      return $file;
+
     }
 
     protected function isExcluded($params) {
@@ -341,7 +362,7 @@ class ShortPixelPng2Jpg {
                     $filesConverted[$info['file']] = false;
                 }
             }
-            $meta['ShortPixelPng2Jpg'] = array('originalFile' => $imagePath, 'originalSizes' => $originalSizes, 'originalSizes2' => $originalSizes,
+            $meta['ShortPixelPng2Jpg'] = array('originalFile' => $imagePath, 'originalSizes' => $originalSizes,
                 'backup' => $this->_settings->backupImages,
                 'optimizationPercent' => round(100.0 * (1.00 - $jpgSize / $pngSize)));
             //wp_update_attachment_metadata($ID, $meta);
@@ -354,7 +375,7 @@ class ShortPixelPng2Jpg {
         if(count($toReplace)) {
             self::png2JpgUpdateUrls(array(), $toReplace);
         }
-        $fs = new \ShortPixel\FileSystemController();
+        $fs = \wpSPIO()->filesystem();
 
         foreach($toUnlink as $unlink) {
             if($unlink) {
@@ -416,7 +437,7 @@ class ShortPixelPng2Jpg {
      */
     public static function png2JpgUpdateUrls($options, $map){
         global $wpdb;
-        WPShortPixel::log("PNG2JPG update URLS " . json_encode($map));
+        Log::addDebug("PNG2JPG update URLS " . json_encode($map));
         $results = array();
         $queries = array(
             'content' =>		array("UPDATE $wpdb->posts SET post_content = replace(post_content, %s, %s)",  __('Content Items (Posts, Pages, Custom Post Types, Revisions)','shortpixel-image-optimiser') ),
@@ -431,7 +452,7 @@ class ShortPixelPng2Jpg {
         }
         $startTime = microtime(true);
         foreach($options as $option){
-            WPShortPixel::log("PNG2JPG update URLS on $option ");
+          //  WPShortPixel::log("PNG2JPG update URLS on $option ");
             if( $option == 'custom' ){
                 $n = 0;
                 $page_size = WpShortPixelMediaLbraryAdapter::getOptimalChunkSize('postmeta');

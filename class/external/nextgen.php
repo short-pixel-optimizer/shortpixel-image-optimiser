@@ -9,8 +9,18 @@ class NextGen
   public function __construct()
   {
     add_action('ngg_added_new_image', array($this,'new_image'));
+    add_filter('shortpixel/init/optimize_on_screens', array($this, 'add_screen_loads'));
   }
 
+  public function add_screen_loads($use_screens)
+  {
+    $use_screens[] = 'toplevel_page_nextgen-gallery'; // toplevel
+    $use_screens[] = 'gallery_page_ngg_addgallery';  // add gallery
+    $use_screens[] = 'nggallery-manage-gallery'; // manage gallery
+    $use_screens[] = 'gallery_page_nggallery-manage-album'; // manage album
+
+    return $use_screens;
+  }
 
   public static function getInstance()
   {
