@@ -6,7 +6,7 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 <div id='sp-msg-<?php echo($view->id);?>' class='column-wp-shortPixel view-edit-media'>
 <?php // Debug Data
-if (! is_null($view->debugInfo)):  ?>
+if (! is_null($view->debugInfo) && is_array($view->debugInfo) && count($view->debugInfo) > 0 ):  ?>
       <div class='debugInfo' id='debugInfo'>
         <a class='debugModal' data-modal="debugInfo" ><?php _e('Debug Window', 'shortpixel-image-optimiser') ?></a>
         <div class='content wrapper'>
