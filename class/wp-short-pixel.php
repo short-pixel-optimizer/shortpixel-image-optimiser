@@ -507,7 +507,7 @@ class WPShortPixel {
 
         if (! \wpSPIO()->env()->is_screen_to_use )
         {
-          if (! wpSPIO()->env()->is_front) // exeception if this is called to load from your frontie. 
+          if (! wpSPIO()->env()->is_front) // exeception if this is called to load from your frontie.
              return; // not ours, don't load JS and such.
         }
         // load everywhere, because we are inconsistent.
@@ -4015,12 +4015,20 @@ class WPShortPixel {
     public function onDeleteImage($post_id) {
         Log::addDebug('onDeleteImage - Image Removal Detected ' . $post_id);
         \wpSPIO()->loadModel('image');
+        $result = null;
 
-        $imageObj = new ImageModel();
-        $imageObj->setbyPostID($post_id);
+        try
+        {
+          $imageObj = new ImageModel();
+          $imageObj->setbyPostID($post_id);
+          $result = $imageObj->delete();
+        }
+        catch(Exception $e)
+        {
+          Log::addError('OndeleteImage triggered an error. ' . $e->getMessage(), $e);
+        }
 
-        return $imageObj->delete();
-
+        return $result;
     }
 
     /** Removes webp and backup from specified paths
