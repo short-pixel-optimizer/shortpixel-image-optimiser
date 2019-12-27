@@ -51,6 +51,10 @@ class wpOffload
 
       add_filter('shortpixel_get_attached_file', array($this, 'get_raw_attached_file'),10, 2);
       add_filter('shortpixel_get_original_image_path', array($this, 'get_raw_original_path'), 10, 2);
+
+      // for webp picture paths rendered via output
+      add_filter('shortpixel_webp_image_base', array($this, 'checkWebpRemotePath'), 10, 2);
+      add_filter('shortpixel/front/webp_notfound', array($this, 'fixWebpRemotePath'), 10, 4);
     }
 
     public function get_raw_attached_file($file, $id)
@@ -101,42 +105,8 @@ class wpOffload
 
     public function image_restore($id)
     {
-      /* voodoo . When images is excluded via S3, it might not exist anymore on server (when option is on). And it will not be in the backups. So before removing remote, and restoring, check this */
-      /*
-      Seems not needed to make it work, for now.
-      $settings = \wpSPIO()->settings();
-      $fs = \wpSPIO()->filesystem();
-      $excludeSizes = $settings->excludeSizes;
-
-      $itemHandler = new \ShortPixelMetaFacade($id);
-      $itemHandler->deleteItemCache();
-
-      // get all paths, without anything excluded.
-      $paths_all = $itemHandler->getURLsAndPATHs(true, false, true, array(), true,true);
-      Log::addDebug('Image Restore, Paths ALL', array($paths_all));
-
-      if (isset($paths_all['PATHs']))
-      {
-        foreach($paths_all['PATHs'] as $index => $path)
-        {
-          $restoredFile = $fs->getFile($path);
-          if (! $restoredFile->exists())
-          {
-            $url = $paths_all['URLs'][$index];
-            Log::addDebug('Missing size on restored image data, doing remote download :' . $path);
-            $itemHandler->attemptRemoteDownload($url, $path, $id);
-          }
-        }
-      } */
-      // sizes without excluded paths
-      //$paths_excludes = $itemHandler->getURLsAndPATHs(true, false, true, $excludeSizes, true,true);
-
-      //$itemHandler->deleteItemCache();
-
       $this->remove_remote($id);
-
       $this->image_upload($id);
-
     }
 
     public function remove_remote($id)
@@ -157,6 +127,17 @@ class wpOffload
         $clazz = $this->itemClassName;
         $mediaItem = $clazz::get_by_source_id($id);
         return $mediaItem;
+    }
+
+    protected function getByURL($url)
+    {
+      $class = $this->itemClassName;
+      $source_id = $class::get_source_id_by_remote_url($url);
+
+      if ($source_id !== false)
+        return $this->getItemById($source_id);
+      else
+        return false;
     }
 
     public function image_converted($id)
@@ -300,6 +281,56 @@ class wpOffload
       $paths = $this->getWebpPaths($paths, false);
     //  Log::addDebug('Remove S3 Paths', array($paths));
       return $paths;
+    }
+
+    public function checkWebpRemotePath($url, $original)
+    {
+      if ($url === false)
+      {
+          $mediaItem = $this->getByURL($original); // test if exists remote.
+          Log::addDebug('ImageBaseName check for S3 - ', array($original, $mediaItem));
+
+          if ($mediaItem === false)
+          {
+            $pattern = '/-\d+x\d*/i';
+            $replaced_url = preg_replace($pattern, '', $original);
+            $mediaItem = $this->getByURL($replaced_url);
+          }
+
+          if ($mediaItem === false)
+          {
+             return $url;
+          }
+          $parsed = parse_url($original);
+          $url = str_replace($parsed['scheme'], '', $original);
+          $url = str_replace(basename($url), '',  $url);
+          Log::addDebug('New BasePath, External' . $url);
+        //  return $url;
+      }
+
+        return $url;
+
+    }
+
+    // GetbyURL can't find thumbnails, only the main image. We are going to assume, if imagebase is ok, the webp might be there.
+    public function fixWebpRemotePath($bool, $file, $url, $imagebase)
+    {
+        if (strpos($url, $imagebase) !== false)
+          return $file;
+        else
+          return $bool;
+
+      /*  $mediaItem = $this->getByURL($url);
+        if ($mediaItem !== false)
+        {
+          return $file;
+        }
+        else
+        {
+        //  Log::addDebug('Fixing Remote Path failed', array($file->getFullPath(), $url));
+        }
+        return false; */
+
     }
 
 }

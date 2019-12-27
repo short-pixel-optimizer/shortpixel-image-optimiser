@@ -70,7 +70,10 @@ class frontController extends ShortPixelController
           return $content . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG is AMP -->' : '');
       }
       require_once(\ShortPixelTools::getPluginPath() . 'class/front/img-to-picture-webp.php');
-      return \ShortPixelImgToPictureWebp::convert($content);// . "<!-- PICTURE TAGS BY SHORTPIXEL -->";
+
+      $webpObj = new ShortPixelImgToPictureWebp();
+      return $webpObj->convert($content);
+    //  return \::convert($content);// . "<!-- PICTURE TAGS BY SHORTPIXEL -->";
   }
 
   public function addPictureJs() {
