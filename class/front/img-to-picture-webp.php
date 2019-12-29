@@ -52,7 +52,7 @@ class ShortPixelImgToPictureWebp
        if (isset($img['data-lazy-' . $type]) && strlen($img['data-lazy-' . $type]) > 0)
        {
            $value = $img['data-lazy-' . $type];
-           $prefix = 'data-lazy';
+           $prefix = 'data-lazy-';
        }
        elseif( isset($img['data-' . $type]) && strlen($img['data-' . $type]) > 0)
        {
@@ -171,7 +171,9 @@ class ShortPixelImgToPictureWebp
         unset($img['data-src']);
         unset($img['data-lazy-src']);
         unset($img['srcset']);
+      //  unset($img['data-srcset']); // lazyload - don't know if this solves anything.
         unset($img['sizes']);
+
 
         //nor the ones that belong to <img>
         unset($img['alt']);
@@ -452,7 +454,6 @@ class ShortPixelImgToPictureWebp
 
           if ($srcHost[0] == $baseurlHost[0] && $srcHost[1] == $baseurlHost[1]
               && (strlen($srcHost[1]) > 3 || isset($srcHost[2]) && isset($srcHost[2]) && $srcHost[2] == $baseurlHost[2])) {
-
               $baseurl = str_replace($baseParsed['scheme'] . '://' . $baseParsed['host'], $urlParsed['scheme'] . '://' . $urlParsed['host'], $updir['baseurl']);
               $imageBase = str_replace($baseurl, SHORTPIXEL_UPLOADS_BASE, $src);
           }

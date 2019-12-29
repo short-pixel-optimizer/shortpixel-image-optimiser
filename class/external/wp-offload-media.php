@@ -12,6 +12,9 @@ class wpOffload
 
     protected $settings;
 
+    protected $is_cname = false;
+    protected $cname;
+
     public function __construct()
     {
        // This must be called before WordPress' init.
@@ -35,6 +38,12 @@ class wpOffload
       if (! $this->as3cf->get_setting( 'copy-to-s3' ))
       {
         return;
+      }
+
+      if ('cloudfront' === $this->as3cf->get_setting( 'domain' ))
+      {
+        $this->is_cname = true;
+        $this->cname = $this->as3cf->get_setting( 'cloudfront' );
       }
 
       add_action('shortpixel_image_optimised', array($this, 'image_upload'));
@@ -287,29 +296,42 @@ class wpOffload
     {
       if ($url === false)
       {
-          $mediaItem = $this->getByURL($original); // test if exists remote.
-          Log::addDebug('ImageBaseName check for S3 - ', array($original, $mediaItem));
-
-          if ($mediaItem === false)
-          {
-            $pattern = '/-\d+x\d*/i';
-            $replaced_url = preg_replace($pattern, '', $original);
-            $mediaItem = $this->getByURL($replaced_url);
-          }
-
-          if ($mediaItem === false)
-          {
-             return $url;
-          }
-          $parsed = parse_url($original);
-          $url = str_replace($parsed['scheme'], '', $original);
-          $url = str_replace(basename($url), '',  $url);
-          Log::addDebug('New BasePath, External' . $url);
+        return $this->convertWebPRemotePath($url, $original);
         //  return $url;
       }
+      elseif($this->is_cname) // check this. the webp to picture will convert subdomains with CNAME to some local path when offloaded.
+      {
+          Log::addDebug('S3 active, checking on CNAME for path' . $this->cname);
+          if (strpos($original, $this->cname) !== false)
+            return $this->convertWebPRemotePath($url, $original);
+      }
 
-        return $url;
+      return $url;
 
+    }
+
+    private function convertWebPRemotePath($url, $original)
+    {
+      $mediaItem = $this->getByURL($original); // test if exists remote.
+      Log::addDebug('ImageBaseName check for S3 - ', array($original, $mediaItem));
+
+      if ($mediaItem === false)
+      {
+        $pattern = '/-\d+x\d*/i';
+        $replaced_url = preg_replace($pattern, '', $original);
+        $mediaItem = $this->getByURL($replaced_url);
+      }
+
+      if ($mediaItem === false)
+      {
+         return $url;
+      }
+      $parsed = parse_url($original);
+      $url = str_replace($parsed['scheme'], '', $original);
+      $url = str_replace(basename($url), '',  $url);
+      Log::addDebug('New BasePath, External' . $url);
+
+      return $url;
     }
 
     // GetbyURL can't find thumbnails, only the main image. We are going to assume, if imagebase is ok, the webp might be there.
