@@ -68,6 +68,7 @@ class ShortPixelView {
         </div> <?php self::includeProposeUpgradePopup();
     }
 
+/*
     public static function displayApiKeyAlert()
     { ?>
         <p><?php _e('In order to start the optimization process, you need to validate your API Key in the '
@@ -129,7 +130,7 @@ class ShortPixelView {
             ?></h3> <?php
             switch($when) {
                 case '2h' :
-                    _e("Action needed. Please <a href='https://shortpixel.com/wp-apikey' target='_blank'>get your API key</a> to activate your ShortPixel plugin.",'shortpixel-image-optimiser') . "<BR><BR>";
+                    _e("Action needed. Please <a href='https://shortpixel.com/wp-apikey' target='_blank'>get your API key</a> to activate your ShortPixel plugin.",'shortpixel-image-optimiser');
                     break;
                 case '3d':
                     _e("Your image gallery is not optimized. It takes 2 minutes to <a href='https://shortpixel.com/wp-apikey' target='_blank'>get your API key</a> and activate your ShortPixel plugin.",'shortpixel-image-optimiser') . "<BR><BR>";
@@ -190,6 +191,9 @@ class ShortPixelView {
         </div>
     <?php
     }
+    */
+    
+    /*
     protected static function includeProposeUpgradePopup() {
         wp_enqueue_style('short-pixel-modal.min.css', plugins_url('/res/css/short-pixel-modal.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
         ?>
@@ -205,6 +209,7 @@ class ShortPixelView {
             </div>
         </div>
     <?php }
+    */
 
     public function displayBulkProcessingForm($quotaData,  $thumbsProcessedCount, $under5PercentCount, $bulkRan,
                                               $averageCompression, $filesOptimized, $savedSpace, $percent, $customCount) {
@@ -1691,7 +1696,7 @@ class ShortPixelView {
             }
             return;
         }
-        
+
         ?>
         <div id='sp-msg-<?php echo($id);?>' class='column-wp-shortPixel'>
 

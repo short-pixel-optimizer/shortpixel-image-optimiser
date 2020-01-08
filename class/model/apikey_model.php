@@ -76,7 +76,10 @@ class ApiKeyModel extends ShortPixelModel
       update_option($this->model['verifiedKey']['key'], $this->verifiedKey);
       update_option($this->model['redirectedSettings']['key'], $this->redirectedSettings);
       update_option($this->model['apiKeyTried']['key'], $this->apiKeyTried);
+
+
       Log::addDebug('Update Verified', array($this->apiKey, $this->verifiedKey));
+
   }
 
   /** Resets the last APIkey that was attempted with validation
@@ -218,6 +221,7 @@ class ApiKeyModel extends ShortPixelModel
   {
     $settingsObj = $this->shortPixel->getSettings();
     $lastStatus = $settingsObj->bulkLastStatus;
+
     if(isset($lastStatus['Status']) && $lastStatus['Status'] == \ShortPixelAPI::STATUS_NO_KEY) {
         $settingsObj->bulkLastStatus = null;
     }
@@ -243,6 +247,8 @@ class ApiKeyModel extends ShortPixelModel
                              WP_CONTENT_DIR . '/' . SHORTPIXEL_UPLOADS_NAME );
        Notice::addError($notice);
     }
+
+    adminNoticesController::resetAPINotices();
   }
 
 

@@ -245,8 +245,13 @@ class ShortPixelAPI {
         //#$compressionType = isset($meta['ShortPixel']['type']) ? ($meta['ShortPixel']['type'] == 'lossy' ? 1 : 0) : $this->_settings->compressionType;
         $meta = $itemHandler->getMeta();
         $compressionType = $meta->getCompressionType() !== null ? $meta->getCompressionType() : $this->_settings->compressionType;
-        $response = $this->doRequests($URLs, true, $itemHandler, $compressionType);//send requests to API
 
+        try {
+          $response = $this->doRequests($URLs, true, $itemHandler, $compressionType);//send requests to API
+        }
+        catch(Exception $e) {
+          Log::addError('Api DoRequest Thrown ' . $e->getMessage());
+        }
 
         //die($response['body']);
 

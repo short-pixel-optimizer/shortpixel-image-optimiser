@@ -261,6 +261,15 @@ define("SHORTPIXEL_EXPERIMENTAL_SECURICACHE", true);  // adds timestamps to URLS
 
 == Changelog ==
 
+= 4.15.4-DEV02 =
+
+
+* Fixes for multibyte filenames with mixed locales.
+* Fixes for combination of S3-offload, webp pictures and cnames.
+* Reworked Notifications
+* Fixed - Thrown exception in API with corrupted images now caught.
+* Fixed - Debug window link was visible when it should not
+
 = 4.15.3 =
 
 Release date: 20th December 2019

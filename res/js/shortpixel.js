@@ -309,7 +309,7 @@ var ShortPixel = function() {
     }
 
     function checkQuota() {
-        var data = { action  : 'shortpixel_check_quota'};
+        var data = {action:'shortpixel_check_quota'};
         jQuery.get(ShortPixel.AJAX_URL, data, function() {
             console.log("quota refreshed");
         });

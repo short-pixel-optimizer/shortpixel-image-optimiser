@@ -1,4 +1,5 @@
 <?php
+
 /** Settings Model **/
 class WPShortPixelSettings extends ShortPixel\ShortPixelModel {
     private $_apiKey = '';
@@ -179,11 +180,13 @@ class WPShortPixelSettings extends ShortPixel\ShortPixelModel {
         delete_option( 'wp-short-pixel-bulk-last-status');
         delete_option( 'wp-short-pixel-current-total-files');
         delete_option(self::$_optionsMap['removeSettingsOnDeletePlugin']['key']);
-        $dismissed = get_option('wp-short-pixel-dismissed-notices', array());
+        // Dismissed now via Notices Controller.
+      /*  $dismissed = get_option('wp-short-pixel-dismissed-notices', array());
         if(isset($dismissed['compat'])) {
             unset($dismissed['compat']);
             update_option('wp-short-pixel-dismissed-notices', $dismissed, 'no');
-        }
+        } */
+
         $formerPrio = get_option('wp-short-pixel-priorityQueue');
         $qGet = (! defined('SHORTPIXEL_NOFLOCK')) ?  ShortPixelQueue::get() : ShortPixelQueueDB::get();
         if(is_array($formerPrio) && !count($qGet)) {
