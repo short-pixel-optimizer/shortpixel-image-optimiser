@@ -1771,6 +1771,7 @@ class WPShortPixel {
               $meta = $itemHandler->getMeta();
               $meta->setRetries(0);
               $meta->setStatus(\ShortPixelMeta::FILE_STATUS_PENDING);
+              $itemHandler->updateMeta($meta);
             }
 
 

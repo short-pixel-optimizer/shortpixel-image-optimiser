@@ -515,7 +515,7 @@ class ShortPixelPng2Jpg {
      * @param bool|false $serialised
      * @return array|mixed|string
      */
-    static function png2JpgUnserializeReplace( $from = '', $to = '', $data = '', $serialised = false ) {
+    public static function png2JpgUnserializeReplace( $from = '', $to = '', $data = '', $serialised = false ) {
         $replaced = false;
         try {
             if ( false !== is_serialized( $data ) ) {
