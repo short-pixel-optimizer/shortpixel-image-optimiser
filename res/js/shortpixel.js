@@ -97,6 +97,17 @@ var ShortPixel = function() {
       }
     }
 
+    function checkBackUpWarning()
+    {
+      if (! jQuery('input[name="backupImages"]').is(':checked') )
+      {
+        jQuery('.backup_warning').fadeIn();
+      }
+      else {
+        jQuery('.backup_warning').fadeOut();
+      }
+    }
+
     function setupGeneralTab() {
         var rad = 0;
         if (typeof document.wp_shortpixel_options !== 'undefined')
@@ -162,6 +173,12 @@ var ShortPixel = function() {
             ShortPixel.checkExifWarning();
         });
         ShortPixel.checkExifWarning();
+
+        jQuery('input[name="backupImages"]').on('change', function()
+        {
+           ShortPixel.checkBackUpWarning();
+        });
+        ShortPixel.checkBackUpWarning();
 
     }
 
@@ -837,6 +854,7 @@ var ShortPixel = function() {
         closeComparerPopup  : closeComparerPopup,
         convertPunycode     : convertPunycode,
         checkExifWarning    : checkExifWarning,
+        checkBackUpWarning  : checkBackUpWarning,
         comparerData        : {
             cssLoaded   : false,
             jsLoaded    : false,

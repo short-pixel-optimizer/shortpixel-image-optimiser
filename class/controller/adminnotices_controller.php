@@ -171,7 +171,6 @@ class adminNoticesController extends ShortPixelController
         return;
 
       if(isset($settings->currentStats['foundUnlistedThumbs']) && is_array($settings->currentStats['foundUnlistedThumbs'])) {
-          //ShortPixelView::displayActivationNotice('unlisted', $this->_settings->currentStats['foundUnlistedThumbs']);
           $notice = Notices::addNormal($this->getUnlistedMessage($settings->currentStats['foundUnlistedThumbs']));
           Notices::makePersistent($notice, self::MSG_UNLISTED_FOUND, YEAR_IN_SECONDS);
       }
@@ -221,7 +220,7 @@ class adminNoticesController extends ShortPixelController
           //consider the monthly plus 1/6 of the available one-time credits.
           elseif( $this->monthlyUpgradeNeeded($stats)) {
               //looks like the user hasn't got enough credits to process the monthly images, display a notice telling this
-              $message = $this->getMontlyUpgradeMessage(array('monthAvg' => $this->getMonthAvg($stats), 'monthlyQuota' => $quotaData['APICallsQuotaNumeric']));
+              $message = $this->getMonthlyUpgradeMessage(array('monthAvg' => $this->getMonthAvg($stats), 'monthlyQuota' => $quotaData['APICallsQuotaNumeric']));
               //ShortPixelView::displayActivationNotice('upgmonth', );
               $notice = Notices::addNormal($message);
               Notices::makePersistent($notice, self::MSG_UPGRADE_MONTH, YEAR_IN_SECONDS);
