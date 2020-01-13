@@ -269,6 +269,8 @@ define("SHORTPIXEL_EXPERIMENTAL_SECURICACHE", true);  // adds timestamps to URLS
 * Reworked Notifications
 * Fixed - Thrown exception in API with corrupted images now caught.
 * Fixed - Debug window link was visible when it should not
+* Fixed - ExcludePattern without value would result in notices
+* Fixed - Shortpixel on front now loads scripts with 'defer'
 
 = 4.15.3 =
 
