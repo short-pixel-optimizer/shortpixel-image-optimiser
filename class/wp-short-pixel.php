@@ -1892,7 +1892,7 @@ class WPShortPixel {
         $fs = \wpSPIO()->filesystem();
         $fsFile = $fs->getFile($file);
 
-      //  Log::addDebug('Get BackUp Folder', array($fsFile->getFileName(), pathinfo($fsFile->getFullPath()))); 
+      //  Log::addDebug('Get BackUp Folder', array($fsFile->getFileName(), pathinfo($fsFile->getFullPath())));
         $directory = $this->getBackupFolderInternal($fsFile);
         if ($directory !== false)
           return $directory->getPath();
@@ -4099,9 +4099,32 @@ class WPShortPixel {
     }
 
     static public function matchExcludePattern($target, $pattern) {
-        return (
+        if(strlen($pattern) == 0)  // can happen on faulty input in settings.
+          return false;
+
+        $first = substr($pattern, 0,1);
+
+        if ($first == '/')
+        {
+          if (@preg_match($pattern, false) !== false)
+          {
+            $m = preg_match($pattern,  $target);
+            if ($m !== false)
+              return true;
+          }
+        }
+        else
+        {
+          if (strpos($target, $pattern) !== false)
+          {
+            return true;
+          }
+        }
+        return false;
+
+        /*return (
             $pattern[0] == '/' && @preg_match($pattern, false) !== false && preg_match($pattern,  $target) //search as regex pattern if starts with a / and regex is valid
-            || $pattern[0] != '/' && strpos($target, $pattern) !== false ); //search as a substring if not
+            || $pattern[0] != '/' && strpos($target, $pattern) !== false ); //search as a substring if not */
     }
 
     //return an array with URL(s) and PATH(s) for this file
