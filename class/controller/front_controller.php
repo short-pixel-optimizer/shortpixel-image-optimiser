@@ -58,6 +58,7 @@ class frontController extends ShortPixelController
 
       //need to add the nopriv action for when items exist in the queue and no user is logged in
       add_action( 'wp_ajax_nopriv_shortpixel_image_processing', array( \wpSPIO()->getShortPixel(), 'handleImageProcessing') );
+      add_action( 'wp_ajax_shortpixel_image_processing', array( \wpSPIO()->getShortPixel(), 'handleImageProcessing') );
 
     }
   }
