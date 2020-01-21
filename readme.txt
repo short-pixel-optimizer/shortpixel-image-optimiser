@@ -261,13 +261,14 @@ define("SHORTPIXEL_EXPERIMENTAL_SECURICACHE", true);  // adds timestamps to URLS
 
 == Changelog ==
 
-= 4.15.4-DEV02 =
+= 4.15.4-DEV04 =
 
 
 * Fixes for multibyte filenames with mixed locales.
 * Fixes for combination of S3-offload, webp pictures and cnames.
 * Reworked Notifications
-* Fixed - PNG2JPG Retry button didn't work, now properly resets retry counter. 
+* Fixed - PNG2JPG Retry button didn't work, now properly resets retry counter.
+* Fixed - Realpath in directory model throws off installations with symlinks
 * Fixed - Thrown Exception in API with corrupted images now caught.
 * Fixed - Debug window link was visible when it should not
 * Fixed - ExcludePattern without value would result in notices
