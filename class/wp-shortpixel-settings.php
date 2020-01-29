@@ -47,6 +47,7 @@ class WPShortPixelSettings extends ShortPixel\ShortPixelModel {
         'cloudflareEmail'   => array( 'key' => 'wp-short-pixel-cloudflareAPIEmail', 'default' => '', 'group' => 'options'),
         'cloudflareAuthKey' => array( 'key' => 'wp-short-pixel-cloudflareAuthKey', 'default' => '', 'group' => 'options'),
         'cloudflareZoneID'  => array( 'key' => 'wp-short-pixel-cloudflareAPIZoneID', 'default' => '', 'group' => 'options'),
+        'cloudflareToken'   => array( 'key' => 'wp-short-pixel-cloudflareToken', 'default' => '', 'group' => 'options'),
 
         //optimize other images than the ones in Media Library
         'includeNextGen' => array('key' => 'wp-short-pixel-include-next-gen', 'default' => null, 'group' => 'options'),
@@ -133,6 +134,7 @@ class WPShortPixelSettings extends ShortPixel\ShortPixelModel {
         'cloudflareEmail' => array('s' => 'string'), // string
         'cloudflareAuthKey' => array('s' => 'string'), // string
         'cloudflareZoneID' => array('s' => 'string'), // string
+        'cloudflareToken' => array('s' => 'string'),
         'savedSpace' => array('s' => 'skip'),
         'fileCount' => array('s' => 'skip'), // int
         'under5Percent' => array('s' => 'skip'), // int

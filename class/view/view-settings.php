@@ -34,7 +34,10 @@ HelpScout::outputBeacon($this->hide_api_key ? '' : $view->data->apiKey);
         <?php
         $this->loadView('settings/part-general');
         $this->loadView('settings/part-advanced');
-        $this->loadView('settings/part-cloudflare');
+        if (! $this->view->cloudflare_constant)
+        {
+          $this->loadView('settings/part-cloudflare');
+        }
         if ($view->averageCompression !== null)
         {
           $this->loadView('settings/part-statistics');

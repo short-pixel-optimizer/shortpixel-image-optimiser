@@ -41,7 +41,7 @@ class WPShortPixel {
 
         $this->_settings = new WPShortPixelSettings();
         $this->_apiInterface = new ShortPixelAPI($this->_settings);
-        $this->cloudflareApi = new ShortPixelCloudFlareApi($this->_settings->cloudflareEmail, $this->_settings->cloudflareAuthKey, $this->_settings->cloudflareZoneID);
+      //  $this->cloudflareApi = new ShortPixelCloudFlareApi($this->_settings->cloudflareEmail, $this->_settings->cloudflareAuthKey, $this->_settings->cloudflareZoneID);
         $this->hasNextGen = wpSPIO()->env()->has_nextgen; //ShortPixelNextGenAdapter::hasNextGen();
         $this->spMetaDao = new ShortPixelCustomMetaDao(new WpShortPixelDb(), $this->_settings->excludePatterns);
         $this->prioQ = (! defined('SHORTPIXEL_NOFLOCK')) ? new ShortPixelQueue($this, $this->_settings) : new ShortPixelQueueDB($this, $this->_settings);
@@ -3554,7 +3554,7 @@ class WPShortPixel {
             $this->_settings->quotaExceeded = 1;//activate quota limiting
 
         //if a non-valid status exists, delete it
-        // @todo Clarify the reason for this statement 
+        // @todo Clarify the reason for this statement
         $lastStatus = $this->_settings->bulkLastStatus;
         if($lastStatus && $lastStatus['Status'] == ShortPixelAPI::STATUS_NO_KEY) {
             $this->_settings->bulkLastStatus = null;

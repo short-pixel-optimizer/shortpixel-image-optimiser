@@ -1,5 +1,6 @@
 <?php
 namespace ShortPixel;
+
 ?>
 
     <section id="tab-cloudflare" <?php echo ($this->display_part == 'cloudflare') ? ' class="sel-tab" ' :''; ?>>
@@ -18,6 +19,34 @@ namespace ShortPixel;
 
             <table class="form-table">
                 <tbody>
+                  <tr>
+                      <th scope="row"><label
+                                  for="cloudflare-zone-id"><?php _e('Zone ID:', 'shortpixel-image-optimiser'); ?></label>
+                      </th>
+                      <td>
+                          <input name="cloudflareZoneID" type="text" id="cloudflare-zone-id" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>
+                                 value="<?php echo(stripslashes(esc_html($view->data->cloudflareZoneID))); ?>" class="regular-text">
+                          <p class="settings-info">
+                              <?php _e('This can be found in your Cloudflare account in the "Overview" section for your domain.','shortpixel-image-optimiser');?>
+                          </p>
+                      </td>
+                  </tr>
+
+                <tr>
+                    <th scope="row">&nbsp;</th>
+                    <td><h3><?php _e('Cloudflare Authentication', 'shortpixel-image-optimiser'); ?></h3></td>
+                </tr>
+
+                <tr>
+                    <th scope="row">
+                        <label for='cloudflare-token'><?php _e('Cloudflare Token:', 'shortpixel-image-optimiser'); ?></label>
+                    </th>
+                    <td>
+                      <input name="cloudflareToken" type="text"  id="cloudflare-token" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>  value="<?php echo $view->data->cloudflareToken ?>" class='regular-text'>
+                      <p class='settings-info'><?php printf(__('%s Preferred Method %s. Enter your %s site token %s for authentication. This token needs Cache Purge permission! ', 'shortpixel-image-optimiser'), '<b>', '</b>', '<a href="https://dash.cloudflare.com/profile/api-tokens" target="_blaink">', '</a>'); ?></p>
+                      <p class='settings-info'><?php _e('When using a token, leave the email and global API key fields empty', 'shortpixel-image-optimiser'); ?></p>
+                    </td>
+                </tr>
                 <tr>
                     <th scope="row">
                         <label for="cloudflare-email"><?php _e('Cloudflare E-mail:', 'shortpixel-image-optimiser'); ?></label>
@@ -42,18 +71,7 @@ namespace ShortPixel;
                         </p>
                     </td>
                 </tr>
-                <tr>
-                    <th scope="row"><label
-                                for="cloudflare-zone-id"><?php _e('Zone ID:', 'shortpixel-image-optimiser'); ?></label>
-                    </th>
-                    <td>
-                        <input name="cloudflareZoneID" type="text" id="cloudflare-zone-id" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>
-                               value="<?php echo(stripslashes(esc_html($view->data->cloudflareZoneID))); ?>" class="regular-text">
-                        <p class="settings-info">
-                            <?php _e('This can be found in your Cloudflare account in the "Overview" section for your domain.','shortpixel-image-optimiser');?>
-                        </p>
-                    </td>
-                </tr>
+
                 </tbody>
             </table>
             <p class="submit">

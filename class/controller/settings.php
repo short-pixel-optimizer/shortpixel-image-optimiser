@@ -171,6 +171,8 @@ class SettingsController extends shortPixelController
          if (is_wp_error($this->view->resources))
             $this->view->resources = null;
 
+         $this->view->cloudflare_constant = defined('SHORTPIXEL_CFTOKEN') ? true : false;
+
          $settings = $this->shortPixel->getSettings();
          $this->view->dismissedNotices = $settings->dismissedNotices;
 
@@ -195,68 +197,6 @@ class SettingsController extends shortPixelController
           $this->display_part = isset($_GET['part']) ? sanitize_text_field($_GET['part']) : 'settings';
 
       }
-
-
-      /** Check if everything is OK with the Key **/
-      /*public function checkKey()
-      {
-          //$this->is_constant_key = (defined("SHORTPIXEL_API_KEY")) ? true : false;
-        //  $this->hide_api_key = (defined("SHORTPIXEL_HIDE_API_KEY")) ? SHORTPIXEL_HIDE_API_KEY : false;
-
-          $verified_key = $this->model->verifiedKey;
-          $this->is_verifiedkey = ($verified_key) ? true : false;
-
-          $key_in_db = $this->model->apiKey;
-
-          // if form submit, but no validation already pushed, check if api key was changed.
-          if ($this->is_form_submit && ! $this->postkey_needs_validation)
-          {
-             // api key was changed on the form.
-             if ($this->postData['apiKey'] != $key_in_db)
-             {
-                $this->postkey_needs_validation = true;
-             }
-          }
-
-          if($this->is_constant_key)
-          {
-              if ($key_in_db != SHORTPIXEL_API_KEY)
-              {
-                $this->validateKey(SHORTPIXEL_API_KEY);
-              }
-          }
-          elseif ($this->postkey_needs_validation)
-          {
-              $key = isset($this->postData['apiKey']) ? $this->postData['apiKey'] : $this->model->apiKey;
-              $this->validateKey($key);
-
-          } // postkey_needs_validation
-      } */
-
-      /** Check remotely if key is alright **/
-      /*public function validateKey($key)
-      {
-        Log::addDebug('Validating Key ' . $key);
-        // first, save Auth to satisfy getquotainformation
-        if ($this->is_form_submit)
-        {
-          if (strlen($this->postData['siteAuthUser']) > 0 || strlen($this->postData['siteAuthPass']) > 0)
-          {
-            $this->model->siteAuthUser = $this->postData['siteAuthUser'];
-            $this->model->siteAuthPass = $this->postData['siteAuthPass'];
-          }
-        }
-
-         /*if (! $this->is_verifiedkey)
-         {
-            Notice::addError(sprintf(__('Error during verifying API key: %s','shortpixel-image-optimiser'), $this->quotaData['Message'] ));
-         }
-         elseif ($this->is_form_submit) {
-           $this->processNewKey();
-         }
-
-      } */
-
 
 
       /* Temporary function to check if HTaccess is writable.

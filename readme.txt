@@ -261,9 +261,9 @@ define("SHORTPIXEL_EXPERIMENTAL_SECURICACHE", true);  // adds timestamps to URLS
 
 == Changelog ==
 
-= 4.15.4-DEV04 =
+= 4.15.4-DEV05 =
 
-
+* New - Token support for Cloudflare via config constant or settings
 * Fixes for multibyte filenames with mixed locales.
 * Fixes for combination of S3-offload, webp pictures and cnames.
 * Reworked Notifications
