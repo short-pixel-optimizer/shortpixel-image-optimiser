@@ -1192,11 +1192,7 @@ class WPShortPixel {
     * @param String $ID ApiKey
     */
     public function handleImageProcessing($ID = null) {
-        //if(rand(1,2) == 2) {
-        //    header($_SERVER['SERVER_PROTOCOL'] . ' 500 Internal Server Error', true, 500);
-        //    die("za stop");
-        //}
-        //0: check key
+
         $this->checkKey($ID);
 
         if($this->_settings->frontBootstrap && is_admin() && !ShortPixelTools::requestIsFrontendAjax()) {
@@ -2806,6 +2802,7 @@ class WPShortPixel {
     public function bulkProcess() {
         global $wpdb;
 
+
         if( $this->_settings->verifiedKey == false ) {//invalid API Key
             //ShortPixelView::displayActivationNotice();
             return;
@@ -2815,6 +2812,8 @@ class WPShortPixel {
         //if($this->_settings->quotaExceeded != 0) {
             //return;
         //}
+
+
 
         if(isset($_POST['bulkProcessPause']))
         {//pause an ongoing bulk processing, it might be needed sometimes
@@ -2851,7 +2850,6 @@ class WPShortPixel {
             if($this->_settings->hasCustomFolders) {
                 $this->spMetaDao->resetFailed();
                 $this->spMetaDao->resetRestored();
-
             }
 
             $this->prioQ->startBulk(ShortPixelQueue::BULK_TYPE_OPTIMIZE);
@@ -3556,7 +3554,8 @@ class WPShortPixel {
             $this->_settings->quotaExceeded = 1;//activate quota limiting
 
         //if a non-valid status exists, delete it
-        $lastStatus = $this->_settings->bulkLastStatus = null;
+        // @todo Clarify the reason for this statement 
+        $lastStatus = $this->_settings->bulkLastStatus;
         if($lastStatus && $lastStatus['Status'] == ShortPixelAPI::STATUS_NO_KEY) {
             $this->_settings->bulkLastStatus = null;
         }
