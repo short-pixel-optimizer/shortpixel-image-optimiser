@@ -27,7 +27,7 @@ class adminNoticesController extends ShortPixelController
 
     public function __construct()
     {
-        add_action('admin_notices', array($this, 'check_admin_notices'));
+        add_action('admin_notices', array($this, 'check_admin_notices'), 5); // run before the plugin admin notices
     }
 
     public static function getInstance()
@@ -157,8 +157,9 @@ class adminNoticesController extends ShortPixelController
       }
 
       // If this notice is not already out there, and there are conflicting plugins, go for display.
-      if (! $notice && count($conflictPlugins) > 0)
+      if (count($conflictPlugins) > 0)
       {
+      //  var_dump($this->getConflictMessage($conflictPlugins));
           $notice = Notices::addWarning($this->getConflictMessage($conflictPlugins));
           Notices::makePersistent($notice, self::MSG_COMPAT, YEAR_IN_SECONDS);
       }
@@ -226,6 +227,14 @@ class adminNoticesController extends ShortPixelController
               Notices::makePersistent($notice, self::MSG_UPGRADE_MONTH, YEAR_IN_SECONDS);
           }
       }
+      elseif ($settings->quotaExceeded && \wpSPIO()->env()->is_screen_to_use)
+      {
+         $stats = $shortpixel->countAllIfNeeded($settings->currentStats, 86400);
+         $quotaData = $stats;
+
+         $message = $this->getQuotaExceededMessage($quotaData);
+         $notice = Notices::addError($message);
+      }
 
     }
 
@@ -288,6 +297,83 @@ class adminNoticesController extends ShortPixelController
             . " You might need to upgrade your plan in order to have all your images optimized.", 'shortpixel-image-optimiser'), $extra['monthAvg'], $extra['monthlyQuota']) . '</p>';
       $message .= $this->proposeUpgradePopup();
       return $message;
+    }
+
+    protected function getQuotaExceededMessage($quotaData)
+    {
+      $averageCompression = \wpSPIO()->getShortPixel()->getAverageCompression();
+      $recheck = isset($_GET['checkquota']) ? true : false;
+      \wpSPIO()->loadModel('apikey');
+
+      $keyModel = new apiKeyModel();
+      $keyModel->loadKey();
+
+
+      $login_url = 'https://shortpixel.com/login/';
+      $friend_url = $login_url;
+      if (! $keyModel->is_hidden())
+      {
+        $login_url .= $keyModel->getkey() . '/';
+        $friend_url = $login_url . 'tellafriend';
+      }
+
+     $message = '<div class="wrap sp-quota-exceeded-alert"  id="short-pixel-notice-exceed">';
+
+     if($averageCompression) {
+
+          $message .= '<div style="float:right; margin-top: 10px">
+              <div class="bulk-progress-indicator" style="height: 110px">
+                  <div style="margin-bottom:5px">' . __('Average image<br>reduction so far:','shortpixel-image-optimiser') . '</div>
+                  <div id="sp-avg-optimization"><input type="text" id="sp-avg-optimization-dial" value="' . round($averageCompression) . '" class="dial"></div>
+                  <script>
+                      jQuery(function() {
+                          ShortPixel.percentDial("#sp-avg-optimization-dial", 60);
+                      });
+                  </script>
+              </div>
+          </div>';
+
+    }
+
+      /*    <img src="<?php echo(wpSPIO()->plugin_url('res/img/robo-scared.png'));?>"
+               srcset='<?php echo(wpSPIO()->plugin_url('res/img/robo-scared.png' ));?> 1x, <?php echo(wpSPIO()->plugin_url('res/img/robo-scared@2x.png' ));?> 2x'
+               class='short-pixel-notice-icon'> */
+
+        $message .= '<h3>' . __('Quota Exceeded','shortpixel-image-optimiser') . '</h3>';
+
+        if($recheck) {
+             $message .= '<p style="color: red">' . __('You have no available image credits. If you just bought a package, please note that sometimes it takes a few minutes for the payment confirmation to be sent to us by the payment processor.','shortpixel-image-optimiser') . '</p>';
+        }
+
+        $message .= '<p>' . sprintf(__('The plugin has optimized <strong>%s images</strong> and stopped because it reached the available quota limit.','shortpixel-image-optimiser'),
+              number_format(max(0, $quotaData['APICallsMadeNumeric'] + $quotaData['APICallsMadeOneTimeNumeric'])));
+
+        if($quotaData['totalProcessedFiles'] < $quotaData['totalFiles']) {
+
+              $message .= sprintf(__('<strong> %s images and %s thumbnails</strong> are not yet optimized by ShortPixel.','shortpixel-image-optimiser'),
+                      number_format(max(0, $quotaData['mainFiles'] - $quotaData['mainProcessedFiles'])),
+                      number_format(max(0, ($quotaData['totalFiles'] - $quotaData['mainFiles']) - ($quotaData['totalProcessedFiles'] - $quotaData['mainProcessedFiles']))));
+          }
+
+         $message .= '</p>
+            <div>
+              <button class="button button-primary" id="shortpixel-upgrade-advice" onclick="ShortPixel.proposeUpgrade()" style="margin-right:10px;"><strong>' .  __('Show me the best available options', 'shortpixel-image-optimiser') . '</strong></button>
+              <a class="button button-primary" href="' . $login_url . '"
+                 title="' . __('Go to my account and select a plan','shortpixel-image-optimiser') . '" target="_blank" style="margin-right:10px;">
+                  <strong>' . __('Upgrade','shortpixel-image-optimiser') . '</strong>
+              </a>
+              <input type="button" name="checkQuota" class="button" value="'.  __('Confirm New Credits','shortpixel-image-optimiser') . '"
+                     onclick="ShortPixel.recheckQuota()">
+          </div>';
+
+          $message .= '<p>' . __('Get more image credits by referring ShortPixel to your friends!','shortpixel-image-optimiser') . '
+              <a href="' . $friend_url . '" target="_blank">' . __('Check your account','shortpixel-image-optimiser') .
+              '</a> ' . __('for your unique referral link. For each user that joins, you will receive +100 additional image credits/month.','shortpixel-image-optimiser') . '
+          </p>
+          </div>';
+
+        $message .= $this->proposeUpgradePopup();
+        return $message;
     }
 
     protected function proposeUpgradePopup() {

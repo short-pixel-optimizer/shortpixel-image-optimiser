@@ -61,7 +61,11 @@ class PackageLoader
                     if ($psr4) {
                         $classname = str_replace($namespace, "", $classname);
                     }
-                    $filename = preg_replace("#\\\\#", "", $classname).".php";
+
+                    //  $filename = preg_replace("#\\\\#", "", $classname).".php";
+                    // This is fix for nested classes which were losing a /
+                    $filename = ltrim($classname .'.php', '\\');
+                    $filename = str_replace('\\','/', $filename);
 
                     foreach ($classpaths as $classpath) {
                       $fullpath = trailingslashit($dir) . trailingslashit($classpath) .$filename;

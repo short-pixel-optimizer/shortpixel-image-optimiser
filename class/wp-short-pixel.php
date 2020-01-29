@@ -2720,7 +2720,7 @@ class WPShortPixel {
             ?><script>var shortPixelQuotaExceeded = 0;</script><?php
         }
         else {
-            $this->view->displayQuotaExceededAlert($quotaData, self::getAverageCompression(), $recheck);
+          //  $this->view->displayQuotaExceededAlert($quotaData, self::getAverageCompression(), $recheck);
             ?><script>var shortPixelQuotaExceeded = 1;</script><?php
         }
         return $quotaData;
@@ -4163,6 +4163,7 @@ class WPShortPixel {
         $total_size = 0;
         $fs = wpSPIO()->filesystem();
         $dir = $fs->getDirectory($path);
+        $files = $subdirs = array();
 
         if($dir->exists()) {
             $files = $dir->getFiles(); // @todo This gives a warning if directory is not writable.
@@ -4172,16 +4173,21 @@ class WPShortPixel {
             return $total_size;
         }
         //$cleanPath = rtrim($path, '/'). '/';
-        foreach($files as $file)
+        if ($files)
         {
-          $total_size += $file->getFileSize();
+          foreach($files as $file)
+          {
+            $total_size += $file->getFileSize();
+          }
         }
 
-        foreach($subdirs as $dir)
+        if ($subdirs)
         {
-          $total_size += self::folderSize($dir->getPath());
+          foreach($subdirs as $dir)
+          {
+            $total_size += self::folderSize($dir->getPath());
+          }
         }
-
         return $total_size;
 
         /* foreach($files as $t) {

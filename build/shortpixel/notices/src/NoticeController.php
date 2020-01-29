@@ -275,13 +275,20 @@ class NoticeController //extends ShortPixelController
      // if this key already exists, don't allow the new notice to be entered into the array. Remove it since it's already created.
      if ($existing)
      {
-        for($i = 0; $i < count(self::$notices); $i++)
-        {
-          $item = self::$notices[$i];
-          if ($item->message == $notice->message && $item->getID() == null)
-            unset(self::$notices[$i]);
-          //if ($notice_item )
-        }
+       for($i = 0; $i < count(self::$notices); $i++)
+       {
+         $item = self::$notices[$i];
+
+         if ($item->message == $notice->message && $item->getID() == null)
+         {
+           if ($item->message != $existing->message) // allow the persistent message to be updated, if something else is served on this ID
+           {
+              $existing->message = $item->message;
+           }
+           unset(self::$notices[$i]);
+         }
+         //if ($notice_item )
+       }
      }
      else
      {

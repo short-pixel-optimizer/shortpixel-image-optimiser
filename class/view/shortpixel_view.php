@@ -16,8 +16,11 @@ class ShortPixelView {
         $this->__construct($controller);
     }
 
+/** @todo REMOVE this from this view. Moved to adminnotices controller */
     public function displayQuotaExceededAlert($quotaData, $averageCompression = false, $recheck = false)
-    { ?>
+    {
+      return; // no longer active.
+      ?>
         <br/>
         <div class="wrap sp-quota-exceeded-alert"  id="short-pixel-notice-exceed">
             <?php if($averageCompression) { ?>
@@ -192,7 +195,7 @@ class ShortPixelView {
     <?php
     }
     */
-    
+
     /*
     protected static function includeProposeUpgradePopup() {
         wp_enqueue_style('short-pixel-modal.min.css', plugins_url('/res/css/short-pixel-modal.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);

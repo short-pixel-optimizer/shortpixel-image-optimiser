@@ -84,10 +84,7 @@ li.shortpixel-toolbar-processing.shortpixel-alert > a.ab-item > div,
 
 
 .sp-quota-exceeded-alert {
-    background-color: #fff;
-    border-left: 4px solid #ff0000;
-    box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.1);
-    padding: 1px 12px;
+    
 }
 .shortpixel-clearfix {
     width:100%;
