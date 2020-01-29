@@ -261,7 +261,7 @@ define("SHORTPIXEL_EXPERIMENTAL_SECURICACHE", true);  // adds timestamps to URLS
 
 == Changelog ==
 
-= 4.15.4-DEV04 =
+= 4.15.5-DEV04 =
 
 
 * Fixes for multibyte filenames with mixed locales.
@@ -273,6 +273,12 @@ define("SHORTPIXEL_EXPERIMENTAL_SECURICACHE", true);  // adds timestamps to URLS
 * Fixed - Debug window link was visible when it should not
 * Fixed - ExcludePattern without value would result in notices
 * Fixed - Shortpixel on front now loads scripts with 'defer'
+
+= 4.15.4 =
+
+Release date: 29th January 2020
+* Change the Help beacon to V2.
+* Language – 0 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted
 
 = 4.15.3 =
 
