@@ -238,6 +238,9 @@ define("SHORTPIXEL_NOFLOCK", true); // don't use flock queue, only activate this
 .
 define("SHORTPIXEL_EXPERIMENTAL_SECURICACHE", true);  // adds timestamps to URLS, to prevent hitting the cache. Useful for persistent caches.
 
+//Hide the Cloudflare settings by defining these constants in wp-config.php
+define('SHORTPIXEL_CFTOKEN', 'the Cloudflare API token that has Purge Cache right');
+define('SHORTPIXEL_CFZONE', 'The Zone ID from the domain settings in Cloudflare');
 
 == Screenshots ==
 
