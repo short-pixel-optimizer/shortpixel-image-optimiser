@@ -187,11 +187,11 @@ class CloudFlareAPI {
       $result           = json_decode( $request_response, true );
       curl_close( $curl_connection );
 
-      if ( ! is_array( $request_response ) ) {
-          Log::addWarn( 'Shortpixel - CloudFlare: The CloudFlare API is not responding correctly', $request_response);
-      } elseif ( isset( $request_response['success'] ) && isset( $request_response['errors'] ) && false === (bool) $request_response['success'] ) {
+      if ( ! is_array( $result ) ) {
+          Log::addWarn( 'Shortpixel - CloudFlare: The CloudFlare API is not responding correctly', $result);
+      } elseif ( isset( $result['success'] ) && isset( $result['errors'] ) && false === (bool) $result['success'] ) {
           Log::addWarn( 'Shortpixel - CloudFlare, Error messages: '
-              . (isset($request_response['errors']['message']) ? $request_response['errors']['message'] : json_encode($request_response['errors'])) );
+              . (isset($result['errors']['message']) ? $result['errors']['message'] : json_encode($result['errors'])) );
       } else {
           Log::addInfo('Shortpixel - CloudFlare successfully requested clear cache for: ', array($postfields));
       }

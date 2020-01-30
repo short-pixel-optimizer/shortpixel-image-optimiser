@@ -354,7 +354,7 @@ div.shortpixel-rate-us > a:focus {
     font-size: 13px;
     padding:0px 5px;
     margin-bottom: 4px;
-    height:20px;
+    min-height:30px;
 
     float:right;
 }
