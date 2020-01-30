@@ -139,6 +139,7 @@ class adminNoticesController extends ShortPixelController
        $message = sprintf(__("ShortPixel is not able to write to the uploads folder so it cannot optimize images, please check permissions (tried to create the file %s/.shortpixel-q-1).",'shortpixel-image-optimiser'),
                                SHORTPIXEL_UPLOADS_BASE);
        Notices::addError($message, true);
+
     }
 
     protected function doCompatNotices()

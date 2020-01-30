@@ -37,6 +37,21 @@
   #shortpixel-settings-tabs #tab-adv-settings .addCustomFolder input[name="saveAdv"] {
     margin-left: 8px; }
 
+.cf_switch label {
+  width: 100%;
+  margin: 0 -2px;
+  background-color: #e2faff;
+  display: inline-block; }
+  .cf_switch label span {
+    padding: 8px 0px 8px 15px;
+    display: block;
+    font-size: 13px; }
+  .cf_switch label input {
+    display: none; }
+  .cf_switch label input:checked + span {
+    background-color: #0085ba;
+    color: #F7F7F7; }
+
 .settings_page_wp-shortpixel-settings {
   /* In-view notice ( not on top, between the options ) - styled after WP notice */ }
   .settings_page_wp-shortpixel-settings .top-menu {

@@ -366,6 +366,7 @@ class SettingsController extends shortPixelController
 
           $post = $this->processWebp($post);
           $post = $this->processExcludeFolders($post);
+          $post = $this->processCloudFlare($post);
 
           parent::processPostData($post);
 
@@ -445,6 +446,26 @@ class SettingsController extends shortPixelController
 
         }
         $post['excludePatterns'] = $patterns;
+        return $post;
+      }
+
+      protected function processCloudFlare($post)
+      {
+        if (isset($post['cloudflareToken']) && strlen($post['cloudflareToken']) > 0)
+        {
+            if (isset($post['cloudflareAuthKey']))
+              unset($post['cloudflareAuthKey']);
+
+            if (isset($post['cloudflareEmail']))
+              unset($post['cloudflareEmail']);
+
+        }
+        elseif (isset($post['cloudflareAuthKey']) && strlen($post['cloudflareAuthKey']) > 0)
+        {
+            if (isset($post['cloudflareToken']))
+               unset($post['cloudflareToken']);
+        }
+
         return $post;
       }
 

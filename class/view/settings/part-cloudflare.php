@@ -38,16 +38,32 @@ namespace ShortPixel;
                 </tr>
 
                 <tr>
-                    <th scope="row">
-                        <label for='cloudflare-token'><?php _e('Cloudflare Token:', 'shortpixel-image-optimiser'); ?></label>
+                    <th scope="row" class='cf_switch'>
+                      <?php
+                        $token_checked =   (strlen($view->data->cloudflareToken) > 0) ? 'checked' : '';
+                        $global_checked =  (strlen($view->data->cloudflareAuthKey) > 0) ? 'checked' : '';
+
+                        if ($token_checked == '' && $global_checked == '')
+                           $token_checked = 'checked'; // default.
+
+
+                      ?>
+                          <label><input type='radio' name='cf_auth_switch' value='token' <?php echo $token_checked ?> ><span><?php _e('Cloudflare Token', 'shortpixel-image-optimiser'); ?></span></label>
+                          <label><input type='radio' name='cf_auth_switch' value='global' <?php echo $global_checked ?> ><span><?php _e('Global API Key', 'shortpixel-image-optimiser') ?></span></label>
                     </th>
-                    <td>
+                    <td class='token-cell'>
                       <input name="cloudflareToken" type="text"  id="cloudflare-token" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>  value="<?php echo $view->data->cloudflareToken ?>" class='regular-text' autocomplete="off">
                       <p class='settings-info'><?php printf(__('%s Preferred Method %s. Enter your %s site token %s for authentication. This token needs Cache Purge permission! ', 'shortpixel-image-optimiser'), '<b>', '</b>', '<a href="https://dash.cloudflare.com/profile/api-tokens" target="_blaink">', '</a>'); ?></p>
                       <p class='settings-info'><?php _e('When using a token, leave the email and global API key fields empty', 'shortpixel-image-optimiser'); ?></p>
                     </td>
+                    <td class='authkey-cell'>
+                        <input name="cloudflareAuthKey" type="text" id="cloudflare-auth-key" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?> value="<?php echo(stripslashes(esc_html($view->data->cloudflareAuthKey))); ?>" class="regular-text" autocomplete="off">
+                        <p class="settings-info">
+                            <?php _e("This can be found when you're logged into your account, on the My Profile page:",'shortpixel-image-optimiser');?> <a href='https://www.cloudflare.com/a/profile' target='_blank'>https://www.cloudflare.com/a/profile</a>
+                        </p>
+                    </td>
                 </tr>
-                <tr>
+                <tr class='email-cell'>
                     <th scope="row">
                         <label for="cloudflare-email"><?php _e('Cloudflare E-mail:', 'shortpixel-image-optimiser'); ?></label>
                     </th>
@@ -56,17 +72,6 @@ namespace ShortPixel;
                                value="<?php echo( stripslashes(esc_html($view->data->cloudflareEmail))); ?>" class="regular-text">
                         <p class="settings-info">
                             <?php _e('The e-mail address you use to login to CloudFlare.','shortpixel-image-optimiser');?>
-                        </p>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row"><label
-                                for="cloudflare-auth-key"><?php _e('Global API Key:', 'shortpixel-image-optimiser'); ?></label>
-                    </th>
-                    <td>
-                        <input name="cloudflareAuthKey" type="text" id="cloudflare-auth-key" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?> value="<?php echo(stripslashes(esc_html($view->data->cloudflareAuthKey))); ?>" class="regular-text" autocomplete="off">
-                        <p class="settings-info">
-                            <?php _e("This can be found when you're logged into your account, on the My Profile page:",'shortpixel-image-optimiser');?> <a href='https://www.cloudflare.com/a/profile' target='_blank'>https://www.cloudflare.com/a/profile</a>
                         </p>
                     </td>
                 </tr>
@@ -79,5 +84,23 @@ namespace ShortPixel;
                        value="<?php _e('Save Changes', 'shortpixel-image-optimiser'); ?>"> &nbsp;
             </p>
         </div>
-
     </section>
+
+  <script language="javascript">
+
+      function switchCF()
+      {
+          if ( jQuery('input[name="cf_auth_switch"]:checked').val() == 'token')
+          {
+              jQuery('.authkey-cell, .email-cell').hide();
+              jQuery('.token-cell').show();
+          }
+          else
+          {
+              jQuery('.token-cell').hide();
+              jQuery('.authkey-cell, .email-cell').show();
+          }
+      }
+      switchCF();
+      jQuery('input[name="cf_auth_switch"]').on('change', switchCF);
+  </script>

@@ -166,8 +166,12 @@ class WPShortPixel {
         //check status
         add_action( 'wp_ajax_shortpixel_check_status', array(&$this, 'checkStatus'));
         //dismiss notices
-        add_action( 'wp_ajax_shortpixel_dismiss_notice', array(&$this, 'dismissAdminNotice'));
-        add_action( 'wp_ajax_shortpixel_dismiss_media_alert', array(&$this, 'dismissMediaAlert'));
+
+        // deprecated - dismissAdminNotice should not be called no longer.
+      //  add_action( 'wp_ajax_shortpixel_dismiss_notice', array(&$this, 'dismissAdminNotice'));
+        add_action( 'wp_ajax_shortpixel_dismiss_media_alert', array($this, 'dismissMediaAlert'));
+        add_action( 'wp_ajax_shortpixel_dismissFileError', array($this, 'dismissFileError'));
+
         //check quota
         add_action('wp_ajax_shortpixel_check_quota', array(&$this, 'handleCheckQuota'));
         add_action('admin_action_shortpixel_check_quota', array(&$this, 'handleCheckQuota'));
@@ -319,12 +323,19 @@ class WPShortPixel {
         die(json_encode(array("Status" => 'success', "Message" => 'Notice ID: ' . $noticeId . ' dismissed')));
     }
 
+
+    */
+
+    // This probably displays an alert when requesting the user to switch from grid to list in media library
     public function dismissMediaAlert() {
         $this->_settings->mediaAlert = 1;
         die(json_encode(array("Status" => 'success', "Message" => __('Media alert dismissed','shortpixel-image-optimiser'))));
     }
-    */
 
+    public function dismissFileError() {
+        $this->_settings->bulkLastStatus = null;
+        die(json_encode(array("Status" => 'success', "Message" => __('Error dismissed','shortpixel-image-optimiser'))));
+    }
 
 
     //set default move as "list". only set once, it won't try to set the default mode again.
@@ -535,11 +546,24 @@ class WPShortPixel {
             //$icon = "shortpixel-alert.png";
         }
         $lastStatus = $this->_settings->bulkLastStatus;
-
         if($lastStatus && $lastStatus['Status'] !== ShortPixelAPI::STATUS_SUCCESS) {
             $extraClasses = " shortpixel-alert shortpixel-processing";
-            $tooltip = $lastStatus['Message'];
+            $tooltip = '';
             $successLink = $link = admin_url(current_user_can( 'edit_others_posts')? 'post.php?post=' . $lastStatus['ImageID'] . '&action=edit' : 'upload.php');
+
+            $wp_admin_bar->add_node( array(
+                'id'    => 'shortpixel_processing-title',
+                'parent' => 'shortpixel_processing',
+                'title' => $lastStatus['Message'],
+                'href'  => $successLink
+            ));
+            $wp_admin_bar->add_node( array(
+                'id'    => 'shortpixel_processing-dismiss',
+                'parent' => 'shortpixel_processing',
+                'title' => '<div style="text-align: right;">Dismiss</div>',
+                'href'  => "#",
+                'meta'  => array('onclick'=> 'dismissFileError(event)')
+            ));
         }
 
         $args = array(
@@ -551,6 +575,7 @@ class WPShortPixel {
                 'meta'  => array('target'=> $blank, 'class' => 'shortpixel-toolbar-processing' . $extraClasses)
         );
         $wp_admin_bar->add_node( $args );
+
         if($this->_settings->quotaExceeded && !isset($this->_settings->dismissedNotices['exceed'])) {
             $wp_admin_bar->add_node( array(
                 'id'    => 'shortpixel_processing-title',
@@ -558,13 +583,13 @@ class WPShortPixel {
                 'title' => $exceedTooltip,
                 'href'  => $link
             ));
-            $wp_admin_bar->add_node( array(
+            /*$wp_admin_bar->add_node( array(
                 'id'    => 'shortpixel_processing-dismiss',
                 'parent' => 'shortpixel_processing',
                 'title' => '<div style="text-align: right;">Dismiss</div>',
                 'href'  => "#",
                 'meta'  => array('onclick'=> 'dismissShortPixelNoticeExceed(event)')
-            ));
+            )); */
         }
     }
 

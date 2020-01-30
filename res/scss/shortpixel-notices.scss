@@ -2,8 +2,10 @@
 .shortpixel.notice
 {
    //padding: 18px;
-   min-height: 50px;
+   min-height: 75px;
    padding: 8px;
+   display: flex;
+   align-items: center;
 
    img
    {
@@ -15,17 +17,20 @@
    }
    span
    {
-     display: inline-block;
      vertical-align: middle;
      &.icon {
-
+       //float: left;
        margin: 0 25px 0 0;
+      // display: inline-block;
+     }
+     &.content
+     {
+    //j   display: inline-block;
+//max-width: 600px;
      }
 
    }
 }
-
-
 
 // compat list if.
 .shortpixel.notice
