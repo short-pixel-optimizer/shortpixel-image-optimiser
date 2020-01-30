@@ -53,7 +53,7 @@ namespace ShortPixel;
                     </th>
                     <td class='token-cell'>
                       <input name="cloudflareToken" type="text"  id="cloudflare-token" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>  value="<?php echo $view->data->cloudflareToken ?>" class='regular-text' autocomplete="off">
-                      <p class='settings-info'><?php printf(__('%s Preferred Method %s. Enter your %s site token %s for authentication. This token needs Cache Purge permission! ', 'shortpixel-image-optimiser'), '<b>', '</b>', '<a href="https://dash.cloudflare.com/profile/api-tokens" target="_blaink">', '</a>'); ?></p>
+                      <p class='settings-info'><?php printf(__('%s Preferred Method %s. Enter your %s site token %s for authentication. This token needs %s Cache Purge permission %s! ', 'shortpixel-image-optimiser'), '<b>', '</b>', '<a href="https://dash.cloudflare.com/profile/api-tokens" target="_blank">', '</a>', '<a href="https://shortpixel.helpscoutdocs.com/article/325-using-shortpixel-image-optimizer-with-cloudflare-api-token" target="_blank">', '</a>'); ?></p>
                       <p class='settings-info'><?php _e('When using a token, leave the email and global API key fields empty', 'shortpixel-image-optimiser'); ?></p>
                     </td>
                     <td class='authkey-cell'>
