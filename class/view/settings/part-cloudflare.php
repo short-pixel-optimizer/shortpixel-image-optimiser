@@ -42,7 +42,7 @@ namespace ShortPixel;
                         <label for='cloudflare-token'><?php _e('Cloudflare Token:', 'shortpixel-image-optimiser'); ?></label>
                     </th>
                     <td>
-                      <input name="cloudflareToken" type="text"  id="cloudflare-token" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>  value="<?php echo $view->data->cloudflareToken ?>" class='regular-text'>
+                      <input name="cloudflareToken" type="text"  id="cloudflare-token" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>  value="<?php echo $view->data->cloudflareToken ?>" class='regular-text' autocomplete="off">
                       <p class='settings-info'><?php printf(__('%s Preferred Method %s. Enter your %s site token %s for authentication. This token needs Cache Purge permission! ', 'shortpixel-image-optimiser'), '<b>', '</b>', '<a href="https://dash.cloudflare.com/profile/api-tokens" target="_blaink">', '</a>'); ?></p>
                       <p class='settings-info'><?php _e('When using a token, leave the email and global API key fields empty', 'shortpixel-image-optimiser'); ?></p>
                     </td>
@@ -64,8 +64,7 @@ namespace ShortPixel;
                                 for="cloudflare-auth-key"><?php _e('Global API Key:', 'shortpixel-image-optimiser'); ?></label>
                     </th>
                     <td>
-                        <input name="cloudflareAuthKey" type="text" id="cloudflare-auth-key" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>
-                               value="<?php echo(stripslashes(esc_html($view->data->cloudflareAuthKey))); ?>" class="regular-text">
+                        <input name="cloudflareAuthKey" type="text" id="cloudflare-auth-key" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?> value="<?php echo(stripslashes(esc_html($view->data->cloudflareAuthKey))); ?>" class="regular-text" autocomplete="off">
                         <p class="settings-info">
                             <?php _e("This can be found when you're logged into your account, on the My Profile page:",'shortpixel-image-optimiser');?> <a href='https://www.cloudflare.com/a/profile' target='_blank'>https://www.cloudflare.com/a/profile</a>
                         </p>
