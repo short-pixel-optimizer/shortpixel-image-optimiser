@@ -84,23 +84,22 @@ namespace ShortPixel;
                        value="<?php _e('Save Changes', 'shortpixel-image-optimiser'); ?>"> &nbsp;
             </p>
         </div>
+        <script language="javascript">
+
+            function switchCF()
+            {
+                if ( jQuery('input[name="cf_auth_switch"]:checked').val() == 'token')
+                {
+                    jQuery('.authkey-cell, .email-cell').hide();
+                    jQuery('.token-cell').show();
+                }
+                else
+                {
+                    jQuery('.token-cell').hide();
+                    jQuery('.authkey-cell, .email-cell').show();
+                }
+            }
+            switchCF();
+            jQuery('input[name="cf_auth_switch"]').on('change', switchCF);
+        </script>
     </section>
-
-  <script language="javascript">
-
-      function switchCF()
-      {
-          if ( jQuery('input[name="cf_auth_switch"]:checked').val() == 'token')
-          {
-              jQuery('.authkey-cell, .email-cell').hide();
-              jQuery('.token-cell').show();
-          }
-          else
-          {
-              jQuery('.token-cell').hide();
-              jQuery('.authkey-cell, .email-cell').show();
-          }
-      }
-      switchCF();
-      jQuery('input[name="cf_auth_switch"]').on('change', switchCF);
-  </script>

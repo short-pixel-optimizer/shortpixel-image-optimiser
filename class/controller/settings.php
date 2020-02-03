@@ -451,7 +451,7 @@ class SettingsController extends shortPixelController
 
       protected function processCloudFlare($post)
       {
-        if (isset($post['cloudflareToken']) && strlen($post['cloudflareToken']) > 0)
+        if (isset($post['cf_auth_switch']) && $post['cf_auth_switch'] == 'token')
         {
             if (isset($post['cloudflareAuthKey']))
               unset($post['cloudflareAuthKey']);
@@ -460,7 +460,7 @@ class SettingsController extends shortPixelController
               unset($post['cloudflareEmail']);
 
         }
-        elseif (isset($post['cloudflareAuthKey']) && strlen($post['cloudflareAuthKey']) > 0)
+        elseif (isset($post['cloudflareAuthKey']) && $post['cf_auth_switch'] == 'global')
         {
             if (isset($post['cloudflareToken']))
                unset($post['cloudflareToken']);
