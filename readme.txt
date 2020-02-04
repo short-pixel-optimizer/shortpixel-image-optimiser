@@ -4,7 +4,7 @@ Tags: compressor, image, compression, optimize, image optimizer, image optimiser
 Requires at least: 3.2.0
 Tested up to: 5.3
 Requires PHP: 5.3
-Stable tag: 4.15.3
+Stable tag: 4.16.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -265,18 +265,23 @@ define('SHORTPIXEL_CFZONE', 'The Zone ID from the domain settings in Cloudflare'
 == Changelog ==
 
 
-= 4.15.5-DEV05 =
+= 4.16.0 =
 
-* New - Token support for Cloudflare via config constant or settings
+* New - Token support for Cloudflare via config constant or settings.
+* Backup setting - add orange warning when backups are off.
+* Button to dismiss the top bar notification of missing files.
+* Shortpixel now loads scripts with 'defer' on front site, if it's configured to be loaded there.
+* Hiding Cloudflare details via wp-config.php.
+* Hide the option "Process in front-end" when "Optimize media on upload" is not checked.
 * Fixes for multibyte filenames with mixed locales.
 * Fixes for combination of S3-offload, webp pictures and cnames.
-* Reworked Notifications
+* Reworked Notifications.
 * Fixed - PNG2JPG Retry button didn't work, now properly resets retry counter.
-* Fixed - Realpath in directory model throws off installations with symlinks
+* Fixed - Realpath in directory model throws off installations with symlinks.
 * Fixed - Thrown Exception in API with corrupted images now caught.
-* Fixed - Debug window link was visible when it should not
-* Fixed - ExcludePattern without value would result in notices
-* Fixed - Shortpixel on front now loads scripts with 'defer'
+* Fixed - Debug window link was visible when it should not.
+* Fixed - ExcludePattern without value would result in notices.
+* Language – 7 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted
 
 = 4.15.4 =
 
