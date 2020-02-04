@@ -528,7 +528,7 @@ class ShortPixelMetaFacade {
       $cacheController = new Cache();
       Log::adDDebug('Removing Item Cache -> ' . $this->getCacheName() );
       $cacheController->deleteItem( $this->getCacheName());
-      $this->getMeta(true);  // reload the meta. 
+      $this->getMeta(true);  // reload the meta.
 
     }
 
@@ -584,7 +584,7 @@ class ShortPixelMetaFacade {
               return array("URLs" => array(), "PATHs" => array(), "sizesMissing" => array());
             }
             $urlList = array(); $filePaths = array();
-            Log::addDebug('attached file path: ' . (string) $fsFile, array( (string) $fsFile->getFileDir() )  );
+            Log::addDebug('attached file path: ' . (string) $fsFile);
             if ($no_exist_check)
               $mainExists = true;
 

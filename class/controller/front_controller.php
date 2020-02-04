@@ -49,14 +49,31 @@ class frontController extends ShortPixelController
 
     $prio = (! defined('SHORTPIXEL_NOFLOCK')) ? \ShortPixelQueue::get() : \ShortPixelQueueDB::get();
 
-    if ($prio && is_array($prio) && count($prio))
+    if ($prio && is_array($prio) && count($prio) > 0)
     {
       //also need to have it in the front footer then
       add_action( 'wp_footer', array( \wpSPIO()->getShortPixel(), 'shortPixelJS') );
+      add_filter('script_loader_tag', array($this, 'load_sp_async'), 10, 3);
+
+
       //need to add the nopriv action for when items exist in the queue and no user is logged in
       add_action( 'wp_ajax_nopriv_shortpixel_image_processing', array( \wpSPIO()->getShortPixel(), 'handleImageProcessing') );
+      add_action( 'wp_ajax_shortpixel_image_processing', array( \wpSPIO()->getShortPixel(), 'handleImageProcessing') );
 
     }
+  }
+
+  /* When loading on front, asynd defer ourselves */
+  public function load_sp_async($tag, $handle, $src)
+  {
+    $defer = array('shortpixel.js','shortpixel.min.js', 'jquery.knob.min.js', 'jquery.tooltip.min.js', 'punycode.min.js');
+
+    if (in_array($handle, $defer))
+    {
+          return '<script src="' . $src . '" defer="defer" type="text/javascript"></script>' . "\n";
+    }
+
+    return $tag;
   }
 
   /* Picture generation, hooked on the_content filter
@@ -70,7 +87,10 @@ class frontController extends ShortPixelController
           return $content . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG is AMP -->' : '');
       }
       require_once(\ShortPixelTools::getPluginPath() . 'class/front/img-to-picture-webp.php');
-      return \ShortPixelImgToPictureWebp::convert($content);// . "<!-- PICTURE TAGS BY SHORTPIXEL -->";
+
+      $webpObj = new ShortPixelImgToPictureWebp();
+      return $webpObj->convert($content);
+    //  return \::convert($content);// . "<!-- PICTURE TAGS BY SHORTPIXEL -->";
   }
 
   public function addPictureJs() {

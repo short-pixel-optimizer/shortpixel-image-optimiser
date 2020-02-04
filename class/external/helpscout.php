@@ -15,12 +15,12 @@ class HelpScout
     <style>
            .shortpixel-hs-blind {
                position: fixed;
-               bottom: 18px;
+               bottom: 4px;
                right: 0;
                z-index: 20003;
                background-color: white;
                width: 87px;
-               height: 174px;
+               height: 188px;
                border-radius: 20px 0 0 20px;
                text-align: right;
                padding-right: 15px;
@@ -28,6 +28,9 @@ class HelpScout
            .shortpixel-hs-blind a {
                color: lightgray;
                text-decoration: none;
+           }
+           .shortpixel-hs-blind i.dashicons {
+               margin-top: -8px;
            }
            .shortpixel-hs-blind .dashicons-minus {
                border: 3px solid;
@@ -87,25 +90,33 @@ class HelpScout
               <i class="dashicons dashicons-dismiss" title="<?php _e('Never display again', 'shortpixel-image-optimiser'); ?>"></i>
           </a>
       </div>
-       <div id="shortpixel-hs-button-blind" class="shortpixel-hs-button-blind"></div>
+       <!--<div id="shortpixel-hs-button-blind" class="shortpixel-hs-button-blind"></div>-->
        <div id="shortpixel-hs-tools" class="shortpixel-hs-tools">
            <a href="javascript:shortpixelToggleHS();" class="shortpixel-hs-tools-docs" title="<?php _e('Search through our online documentation.', 'shortpixel-image-optimiser'); ?>">
                <img alt="<?php _e('ShortPixel document icon', 'shortpixel-image-optimiser'); ?>" src="<?php echo( wpSPIO()->plugin_url('res/img/notes-sp.png') );?>" style="margin-bottom: 2px;width: 36px;">
            </a>
        </div>
        <script>
-           window.shortpixelHSOpen = -1;
+           window.shortpixelHSOpen = 0;//-1;
            function shortpixelToggleHS() {
-               if(window.shortpixelHSOpen == -1) {
-                   HS.beacon.init();
-               }
+               //if(window.shortpixelHSOpen == -1) {
+               //    HS.beacon.init();
+               //}
                if(window.shortpixelHSOpen == 1) {
-                   HS.beacon.close();
-                   jQuery("#shortpixel-hs-button-blind").css('display', 'none');
+                   window.Beacon('close');
+                   jQuery('#botbutton').addClass('show');
+                   jQuery('div.shortpixel-hs-tools').css('bottom', '116px');
+                   jQuery('div.shortpixel-hs-blind').css('height', '188px');
+                   jQuery('div.shortpixel-hs-blind').css('border-radius', '20px 0 0 20px');
+                   jQuery('div.shortpixel-hs-blind a').css('display', 'inline');
                    window.shortpixelHSOpen = 0;
                } else {
-                   HS.beacon.open();
-                   jQuery("#shortpixel-hs-button-blind").css('display', 'block');
+                   window.Beacon('open');
+                   jQuery('#botbutton').removeClass('show');
+                   jQuery('div.shortpixel-hs-tools').css('bottom', '40px');
+                   jQuery('div.shortpixel-hs-blind').css('height', '93px');
+                   jQuery('div.shortpixel-hs-blind').css('border-radius', '0 0 0 20px');
+                   jQuery('div.shortpixel-hs-blind a').css('display', 'none');
                    window.shortpixelHSOpen = 1;
                }
            }
@@ -134,31 +145,22 @@ class HelpScout
             }
         }
         ?>
-        !function(e,o,n){ window.HSCW=o,window.HS=n,n.beacon=n.beacon||{};var t=n.beacon;t.userConfig={
-            color: "#1CBECB",
-            icon: "question",
-            instructions: "Send ShortPixel a message",
-            topArticles: true,
-            poweredBy: false,
-            showContactFields: true,
-            showName: false,
-            showSubject: true,
-            translation: {
-                searchLabel: "What can ShortPixel help you with?",
-                contactSuccessDescription: "Thanks for reaching out! Someone from our team will get back to you in 24h max."
+        !function(e,t,n){
+            function a(){
+                var e=t.getElementsByTagName("script")[0],n=t.createElement("script");n.type="text/javascript",n.async=!0,n.src="https://beacon-v2.helpscout.net",e.parentNode.insertBefore(n,e)
             }
+            if(e.Beacon=n=function(t,n,a){
+                e.Beacon.readyQueue.push({method:t,options:n,data:a})
+            },n.readyQueue=[],"complete"===t.readyState) return a();
+            e.attachEvent?e.attachEvent("onload",a):e.addEventListener("load",a,!1)
+        }(window,document,window.Beacon||function(){});
+        window.Beacon('init', 'e41d21e0-f3c4-4399-bcfe-358e59a860de');
 
-        },t.readyQueue=[],t.config=function(e){this.userConfig=e},t.ready=function(e){this.readyQueue.push(e)},o.config={docs:{enabled:!0,baseUrl:"//shortpixel.helpscoutdocs.com/"},contact:{enabled:!0,formId:"278a7825-fce0-11e7-b466-0ec85169275a"}};var r=e.getElementsByTagName("script")[0],c=e.createElement("script");
-            c.type="text/javascript",c.async=!0,c.src="https://djtflbt20bdde.cloudfront.net/",r.parentNode.insertBefore(c,r);
-        }(document,window.HSCW||{},window.HS||{});
-
-        window.HS.beacon.ready(function(){
-            HS.beacon.identify({
-                email: "<?php $u = wp_get_current_user(); echo($u->user_email); ?>",
+        window.Beacon('identify', {
+            email: "<?php $u = wp_get_current_user(); echo($u->user_email); ?>",
                 apiKey: "<?php echo($apiKey);?>"
-            });
-            HS.beacon.suggest( <?php echo( $suggestions ) ?> );
         });
+        window.Beacon('suggest', <?php echo( $suggestions ) ?>);
     </script>
     <?php
   }

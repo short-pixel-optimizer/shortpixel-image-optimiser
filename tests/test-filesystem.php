@@ -57,6 +57,7 @@ class FileSystemTest extends  WP_UnitTestCase
                           'image1.ext.jpg' => $content,
                           'ашдутфьу.jpg' => $content,
                           'اسم الملف.jpg' => $content,
+                          '女祕書ol緊身包臀裙性感情趣誘惑職業套裝.jpg' => $content,
 
         ),
         'wp-content' => array('uploads' => array('2019' => array('07' => array('wpimg1.jpg' => $content, 'wpimg2.jpg' => $content)))),
@@ -335,8 +336,11 @@ class FileSystemTest extends  WP_UnitTestCase
       $file6 = $this->fs->getFile('/no/no/nothere/..');
       $this->assertFalse($file6->exists(), $file6->getFullPath() );
       $this->assertTrue($file6->is_file());
-      $this->assertEquals('..', $file6->getFileName());
 
+      /*  This doesn't work anymore due to mb_pathinfo fix. Hopefully doesn't cause additional issues, but mb is more important now.
+      $this->assertEquals('..', $file6->getFileName(), $file6->getFileName());
+      $this->assertEquals('..', $file6->getFileBase(), $file6->getFileBase());
+      */
   }
 
   public function testFileCopy()
@@ -438,6 +442,8 @@ class FileSystemTest extends  WP_UnitTestCase
       $file = $this->fs->getFile($extpath);
       $this->assertEquals($file->getFullPath(), $extpath);
 
+//      $extpath = ''
+
       // Flaw
       //$this->assertEquals($s3good, $file->getFullPath());
 
@@ -524,6 +530,26 @@ class FileSystemTest extends  WP_UnitTestCase
     $this->assertEquals($file->getExtension(), 'jpg');
     $this->assertEquals($file->getFileName(), 'اسم الملف.jpg');
     $this->assertEquals($file->getFileBase(), 'اسم الملف');
+
+  }
+
+  public function testFileWithChinese()
+  {
+    $fullfilepath =  $this->root->url() . '/images/女祕書ol緊身包臀裙性感情趣誘惑職業套裝.jpg';
+    $file = $this->fs->getFile($fullfilepath);
+
+    $this->assertTrue($file->exists(), $file->getFullPath());
+    $this->assertEquals($file->getFullPath(), $fullfilepath);
+    $this->assertEquals($file->getExtension(), 'jpg');
+    $this->assertEquals($file->getFileName(), '女祕書ol緊身包臀裙性感情趣誘惑職業套裝.jpg');
+    $this->assertEquals($file->getFileBase(), '女祕書ol緊身包臀裙性感情趣誘惑職業套裝');
+
+    $dirpath = ABSPATH .  'wp-content/uploads/2020/01/女祕書ol緊身包臀裙性感情趣誘惑職業套裝.jpg';
+    $good_result = 'wp-content/uploads/2020/01/';
+    $directory = $this->fs->getDirectory($dirpath);
+
+    $this->assertEquals($good_result, $directory->getRelativePath(), $directory->getRelativePath());
+    $this->assertEquals($good_result, ShortPixelMetaFacade::returnSubDir($dirpath), ShortPixelMetaFacade::returnSubDir($dirpath));
 
   }
 

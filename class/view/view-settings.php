@@ -13,7 +13,7 @@ HelpScout::outputBeacon($this->hide_api_key ? '' : $view->data->apiKey);
     echo(($view->data->apiKey ? "login/".( $this->hide_api_key ? '' : $view->data->apiKey) : "pricing"));
     ?>" target="_blank">
         <?php _e('Upgrade now','shortpixel-image-optimiser');?>
-    </a> | <a href="https://shortpixel.com/pricing>#faq" target="_blank"><?php _e('FAQ','shortpixel-image-optimiser');?> </a> |
+    </a> | <a href="https://shortpixel.com/pricing#faq" target="_blank"><?php _e('FAQ','shortpixel-image-optimiser');?> </a> |
     <a href="https://shortpixel.com/contact" target="_blank"><?php _e('Support','shortpixel-image-optimiser');?> </a>
 </p>
 
@@ -34,7 +34,10 @@ HelpScout::outputBeacon($this->hide_api_key ? '' : $view->data->apiKey);
         <?php
         $this->loadView('settings/part-general');
         $this->loadView('settings/part-advanced');
-        $this->loadView('settings/part-cloudflare');
+        if (! $this->view->cloudflare_constant)
+        {
+          $this->loadView('settings/part-cloudflare');
+        }
         if ($view->averageCompression !== null)
         {
           $this->loadView('settings/part-statistics');

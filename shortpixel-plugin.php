@@ -55,7 +55,8 @@ class ShortPixelPlugin
 
       $front = new frontController();
       $admin = adminController::getInstance();
-
+      $adminNotices = adminNoticesController::getInstance(); // Hook in the admin notices.
+      $notices = Notices::getInstance(); // This hooks the ajax listener
 
       if ($this->settings()->autoMediaLibrary)
       {
@@ -160,7 +161,8 @@ class ShortPixelPlugin
   {
       add_action('admin_menu', array($this,'admin_pages'));
       add_action('admin_enqueue_scripts', array($this, 'admin_scripts')); // admin scripts
-      add_action('admin_notices', array($this, 'admin_notices')); // notices occured before page load
+      // defer notices a little to allow other hooks ( notable adminnotices )
+      add_action('admin_notices', array($this, 'admin_notices'), 50); // notices occured before page load
       add_action('admin_footer', array($this, 'admin_notices'));  // called in views.
   }
 
@@ -204,6 +206,9 @@ class ShortPixelPlugin
     //modal - used in settings for selecting folder
     wp_register_style('shortpixel-modal', plugins_url('/res/css/short-pixel-modal.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
 
+    // notices. additional styles for SPIO.
+    wp_register_style('shortpixel-notices', plugins_url('/res/css/shortpixel-notices.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
+
 
     wp_register_script('shortpixel-debug', plugins_url('/res/js/debug.js',SHORTPIXEL_PLUGIN_FILE), array('jquery', 'jquery-ui-draggable'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
 
@@ -213,7 +218,7 @@ class ShortPixelPlugin
   {
       $noticeControl = Notices::getInstance();
       $noticeControl->loadIcons(array(
-          'normal' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/robo-cool.png', SHORTPIXEL_PLUGIN_FILE) . '">',
+          'normal' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/slider.png', SHORTPIXEL_PLUGIN_FILE) . '">',
           'success' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/robo-cool.png', SHORTPIXEL_PLUGIN_FILE) . '">',
           'warning' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/robo-scared.png', SHORTPIXEL_PLUGIN_FILE) . '">',
           'error' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/robo-scared.png', SHORTPIXEL_PLUGIN_FILE) . '">',
@@ -221,11 +226,17 @@ class ShortPixelPlugin
 
       if ($noticeControl->countNotices() > 0)
       {
-          wp_enqueue_style('shortpixel-admin'); // queue on places when it's not our runtime.
-          foreach($noticeControl->getNotices() as $notice)
+        $notices = $noticeControl->getNoticesForDisplay();
+
+        if (count($notices) > 0)
+        {
+          wp_enqueue_style('shortpixel-notices');
+
+          foreach($notices as $notice)
           {
             echo $notice->getForDisplay();
           }
+        }
       }
       $noticeControl->update(); // puts views, and updates
   }
@@ -374,7 +385,13 @@ class ShortPixelPlugin
       if(\WPShortPixelSettings::getOpt('deliverWebp') == 3 && ! $env->is_nginx) {
           \WpShortPixel::alterHtaccess(); //add the htaccess lines
       }
+
+      adminNoticesController::resetCompatNotice();
+      adminNoticesController::resetAPINotices();
+      adminNoticesController::resetQuotaNotices();
+
       \WPShortPixelSettings::onActivate();
+
   }
 
   public static function deactivatePlugin()

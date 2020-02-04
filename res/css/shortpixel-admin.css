@@ -1,26 +1,3 @@
-.shortpixel.notice {
-  min-height: 50px;
-  padding: 8px; }
-  .shortpixel.notice img {
-    display: inline-block;
-    margin: 0 25px 0 0;
-    max-height: 50px; }
-  .shortpixel.notice .notice-dismiss {
-    margin-top: 10px; }
-
-/* In-view notice ( not on top, between the options ) - styled after WP notice */
-.view-notice {
-  box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.1);
-  border: 4px solid #fff;
-  padding: 1px 12px; }
-  .view-notice p {
-    margin: 1em 0 !important; }
-  .view-notice.warning {
-    border-left-color: #ffb900; }
-
-.view-notice-row {
-  display: none; }
-
 .short-pixel-bulk-page.bulk-restore-all ol li {
   font-weight: 700; }
 .short-pixel-bulk-page.bulk-restore-all section.select_folders {
@@ -60,55 +37,82 @@
   #shortpixel-settings-tabs #tab-adv-settings .addCustomFolder input[name="saveAdv"] {
     margin-left: 8px; }
 
-.settings_page_wp-shortpixel-settings .top-menu {
-  font-size: 18px; }
-  .settings_page_wp-shortpixel-settings .top-menu a {
-    font-size: 18px; }
-.settings_page_wp-shortpixel-settings .wp-shortpixel-tab-content {
-  transition: all 1000ms linear; }
-.settings_page_wp-shortpixel-settings article.sp-tabs section .wp-shortpixel-tab-content {
-  opacity: 0; }
-.settings_page_wp-shortpixel-settings article.sp-tabs section.sel-tab .wp-shortpixel-tab-content {
-  opacity: 1; }
-.settings_page_wp-shortpixel-settings article.sp-tabs section h2 {
-  position: absolute;
-  font-size: 1.3em;
-  font-weight: normal;
-  width: 180px;
-  height: 1.8em;
-  top: -1.8em;
-  left: 10px;
-  padding: 0;
-  margin: 0;
-  color: #999;
-  background-color: #ddd;
-  /* border-radius: 5px 5px 0 0; */ }
-  .settings_page_wp-shortpixel-settings article.sp-tabs section h2 a {
+.cf_switch label {
+  width: 100%;
+  margin: 0 -2px;
+  background-color: #e2faff;
+  display: inline-block; }
+  .cf_switch label span {
+    padding: 8px 0px 8px 15px;
     display: block;
-    width: 100%;
-    line-height: 1.8em;
-    text-align: center;
-    text-decoration: none;
-    color: #23282d;
-    outline: 0 none; }
-.settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(2) h2 {
-  left: 192px; }
-.settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(3) h2 {
-  left: 374px; }
-.settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(4) h2 {
-  left: 556px; }
-.settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(5) h2 {
-  left: 738px; }
-.settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(6) h2 {
-  left: 920px; }
-.settings_page_wp-shortpixel-settings section#tab-debug .flex {
-  display: flex; }
-.settings_page_wp-shortpixel-settings section#tab-debug .env .flex {
-  flex-wrap: wrap;
-  max-width: 450px; }
-  .settings_page_wp-shortpixel-settings section#tab-debug .env .flex span {
-    width: 45%;
-    padding: 4px; }
+    font-size: 13px; }
+  .cf_switch label input {
+    display: none; }
+  .cf_switch label input:checked + span {
+    background-color: #0085ba;
+    color: #F7F7F7; }
+
+.settings_page_wp-shortpixel-settings {
+  /* In-view notice ( not on top, between the options ) - styled after WP notice */ }
+  .settings_page_wp-shortpixel-settings .top-menu {
+    font-size: 18px; }
+    .settings_page_wp-shortpixel-settings .top-menu a {
+      font-size: 18px; }
+  .settings_page_wp-shortpixel-settings .wp-shortpixel-tab-content {
+    transition: all 1000ms linear; }
+  .settings_page_wp-shortpixel-settings article.sp-tabs section .wp-shortpixel-tab-content {
+    opacity: 0; }
+  .settings_page_wp-shortpixel-settings article.sp-tabs section.sel-tab .wp-shortpixel-tab-content {
+    opacity: 1; }
+  .settings_page_wp-shortpixel-settings article.sp-tabs section h2 {
+    position: absolute;
+    font-size: 1.3em;
+    font-weight: normal;
+    width: 180px;
+    height: 1.8em;
+    top: -1.8em;
+    left: 10px;
+    padding: 0;
+    margin: 0;
+    color: #999;
+    background-color: #ddd;
+    /* border-radius: 5px 5px 0 0; */ }
+    .settings_page_wp-shortpixel-settings article.sp-tabs section h2 a {
+      display: block;
+      width: 100%;
+      line-height: 1.8em;
+      text-align: center;
+      text-decoration: none;
+      color: #23282d;
+      outline: 0 none; }
+  .settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(2) h2 {
+    left: 192px; }
+  .settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(3) h2 {
+    left: 374px; }
+  .settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(4) h2 {
+    left: 556px; }
+  .settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(5) h2 {
+    left: 738px; }
+  .settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(6) h2 {
+    left: 920px; }
+  .settings_page_wp-shortpixel-settings section#tab-debug .flex {
+    display: flex; }
+  .settings_page_wp-shortpixel-settings section#tab-debug .env .flex {
+    flex-wrap: wrap;
+    max-width: 450px; }
+    .settings_page_wp-shortpixel-settings section#tab-debug .env .flex span {
+      width: 45%;
+      padding: 4px; }
+  .settings_page_wp-shortpixel-settings .view-notice {
+    box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.1);
+    border: 4px solid #fff;
+    padding: 1px 12px; }
+    .settings_page_wp-shortpixel-settings .view-notice p {
+      margin: 1em 0 !important; }
+    .settings_page_wp-shortpixel-settings .view-notice.warning {
+      border-left-color: #ffb900; }
+  .settings_page_wp-shortpixel-settings .view-notice-row {
+    display: none; }
 
 .view-edit-media .debugInfo pre {
   font-size: 11px; }

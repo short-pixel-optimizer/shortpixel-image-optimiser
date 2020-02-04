@@ -10,11 +10,11 @@
         }
     ],
     "require": {
-        "shortpixel/notices":"@dev",
+        "shortpixel/notices":">=1.3",
         "shortpixel/build" : "@dev"
     },
     "require-dev": {
-	"phpunit/phpunit": "^8",
+	"phpunit/phpunit": "^7",
 	"mikey179/vfsstream": "^1"
    },
 

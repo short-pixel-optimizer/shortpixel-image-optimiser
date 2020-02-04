@@ -29,6 +29,7 @@ class EnvironmentModel extends ShortPixelModel
     private $screen_is_set = false;
     public $is_screen_to_use = false; // where shortpixel optimizer loads
     public $is_our_screen = false; // where shortpixel hooks in more complicated functions.
+    public $is_bulk_page = false; // Shortpixel bulk screen.
 
     // Debug flag
     public $is_debug = false;
@@ -136,7 +137,12 @@ class EnvironmentModel extends ShortPixelModel
     {
        $this->is_screen_to_use = true;
        $this->is_our_screen = true;
+
+       if ($screen->id == 'media_page_wp-short-pixel-bulk')
+        $this->is_bulk_page = true;
     }
+
+
 
     $this->screen_is_set = true;
   }

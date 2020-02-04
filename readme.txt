@@ -238,6 +238,9 @@ define("SHORTPIXEL_NOFLOCK", true); // don't use flock queue, only activate this
 .
 define("SHORTPIXEL_EXPERIMENTAL_SECURICACHE", true);  // adds timestamps to URLS, to prevent hitting the cache. Useful for persistent caches.
 
+//Hide the Cloudflare settings by defining these constants in wp-config.php
+define('SHORTPIXEL_CFTOKEN', 'the Cloudflare API token that has Purge Cache right');
+define('SHORTPIXEL_CFZONE', 'The Zone ID from the domain settings in Cloudflare');
 
 == Screenshots ==
 
@@ -260,6 +263,26 @@ define("SHORTPIXEL_EXPERIMENTAL_SECURICACHE", true);  // adds timestamps to URLS
 9. Check other optimized images status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+
+= 4.15.5-DEV05 =
+
+* New - Token support for Cloudflare via config constant or settings
+* Fixes for multibyte filenames with mixed locales.
+* Fixes for combination of S3-offload, webp pictures and cnames.
+* Reworked Notifications
+* Fixed - PNG2JPG Retry button didn't work, now properly resets retry counter.
+* Fixed - Realpath in directory model throws off installations with symlinks
+* Fixed - Thrown Exception in API with corrupted images now caught.
+* Fixed - Debug window link was visible when it should not
+* Fixed - ExcludePattern without value would result in notices
+* Fixed - Shortpixel on front now loads scripts with 'defer'
+
+= 4.15.4 =
+
+Release date: 29th January 2020
+* Change the Help beacon to V2.
+* Language – 0 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted
 
 = 4.15.3 =
 

@@ -53,16 +53,13 @@ class FileModel extends ShortPixelModel
 
   protected function setFileInfo()
   {
-
       $processed_path = $this->processPath($this->fullpath);
       if ($processed_path !== false)
         $this->fullpath = $processed_path; // set processed path if that went alright
 
-    /*  else {
-        $this->fullpath = $path;  // fallback, but there should be error state
-      } */
 
-      $info = pathinfo($this->fullpath);
+      $info = $this->mb_pathinfo($this->fullpath);
+
       // Todo, maybe replace this with splFileINfo.
       if ($this->is_file()) // only set fileinfo when it's an actual file.
       {
@@ -118,7 +115,7 @@ class FileModel extends ShortPixelModel
          //$pathinfo = pathinfo($this->fullpath);
          //if (isset($pathinfo['extension'])) // extension means file.
 
-         //  if file does not exist on disk, anything can become a file ( with/ without extension, etc). Meaning everything non-existing is a potential file ( or directory ) until created. 
+         //  if file does not exist on disk, anything can become a file ( with/ without extension, etc). Meaning everything non-existing is a potential file ( or directory ) until created.
          $this->is_file = true;
 
       }
@@ -292,6 +289,7 @@ class FileModel extends ShortPixelModel
   {
     if (is_null($this->getFileDir()))
     {
+        Log::addWarn('Could not establish FileDir ' . $this->fullpath);
         return false;
     }
     if (is_null($this->backupDirectory))
@@ -301,8 +299,10 @@ class FileModel extends ShortPixelModel
       $directory = new DirectoryModel($backupDirectory);
 
       if (! $directory->exists()) // check if exists. FileModel should not attempt to create.
+      {
+        Log::addWarn('Backup Directory not existing ' . $backupDirectory);
         return false;
-
+      }
       $this->backupDirectory = $directory;
     }
 
@@ -333,7 +333,6 @@ class FileModel extends ShortPixelModel
     $uploadPath = wp_normalize_path($this->getUploadPath()); // mixed slashes and dashes can also be a config-error in WP.
     if (strpos($path, ABSPATH) === false && strpos($path, $uploadPath) === false)
       $path = $this->relativeToFullPath($path);
-
 
     $path = apply_filters('shortpixel/filesystem/processFilePath', $path, $original_path);
     /* This needs some check here on malformed path's, but can't be test for existing since that's not a requirement.
@@ -432,6 +431,46 @@ class FileModel extends ShortPixelModel
 
     return $basedir;
   }
+
+  /** Fix for multibyte pathnames and pathinfo which doesn't take into regard the locale.
+  * This snippet taken from PHPMailer.
+  */
+  private function mb_pathinfo($path, $options = null)
+  {
+        $ret = ['dirname' => '', 'basename' => '', 'extension' => '', 'filename' => ''];
+        $pathinfo = [];
+        if (preg_match('#^(.*?)[\\\\/]*(([^/\\\\]*?)(\.([^.\\\\/]+?)|))[\\\\/.]*$#m', $path, $pathinfo)) {
+            if (array_key_exists(1, $pathinfo)) {
+                $ret['dirname'] = $pathinfo[1];
+            }
+            if (array_key_exists(2, $pathinfo)) {
+                $ret['basename'] = $pathinfo[2];
+            }
+            if (array_key_exists(5, $pathinfo)) {
+                $ret['extension'] = $pathinfo[5];
+            }
+            if (array_key_exists(3, $pathinfo)) {
+                $ret['filename'] = $pathinfo[3];
+            }
+        }
+        switch ($options) {
+            case PATHINFO_DIRNAME:
+            case 'dirname':
+                return $ret['dirname'];
+            case PATHINFO_BASENAME:
+            case 'basename':
+                return $ret['basename'];
+            case PATHINFO_EXTENSION:
+            case 'extension':
+                return $ret['extension'];
+            case PATHINFO_FILENAME:
+            case 'filename':
+                return $ret['filename'];
+            default:
+                return $ret;
+        }
+    }
+
 
 } // FileModel Class
 

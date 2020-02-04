@@ -20,8 +20,6 @@ class DirectoryModel extends ShortPixelModel
   protected $is_writable = false;
   protected $is_readable = false;
 
-
-
   protected $new_directory_permission = 0755;
 
   /** Creates a directory model object. DirectoryModel directories don't need to exist on FileSystem
@@ -31,11 +29,7 @@ class DirectoryModel extends ShortPixelModel
   */
   public function __construct($path)
   {
-      /* Check if realpath improves things. We support non-existing paths, which realpath fails on, so only apply on result.
-      */
-      $testpath = realpath($path);
-      if ($testpath)
-        $path = $testpath;
+
 
       $path = wp_normalize_path($path);
       if (! is_dir($path)) // path is wrong, *or* simply doesn't exist.
@@ -51,6 +45,16 @@ class DirectoryModel extends ShortPixelModel
         }
         elseif (is_file($path))
           $path = dirname($path);
+      }
+
+      if (! is_dir($path))
+      {
+        /* Check if realpath improves things. We support non-existing paths, which realpath fails on, so only apply on result.
+        Moved realpath to check after main pathinfo is set. Reason is that symlinked directories which don't include the WordPress upload dir will start to fail in file_model on processpath ( doesn't see it as a wp path, starts to try relative path). Not sure if realpath should be used anyhow in this model /BS
+        */
+        $testpath = realpath($path);
+        if ($testpath)
+          $path = $testpath;
       }
 
       $this->path = trailingslashit($path);

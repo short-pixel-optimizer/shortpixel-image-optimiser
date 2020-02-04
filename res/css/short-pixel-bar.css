@@ -84,37 +84,9 @@ li.shortpixel-toolbar-processing.shortpixel-alert > a.ab-item > div,
 
 
 .sp-quota-exceeded-alert {
-    background-color: #fff;
-    border-left: 4px solid #ff0000;
-    box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.1);
-    padding: 1px 12px;
+    
 }
 .shortpixel-clearfix {
     width:100%;
     float:left;
-}
-.short-pixel-notice-icon {
-    float:left;
-    margin: 10px 10px 10px 0;
-}
-
-.sp-conflict-plugins {
-    display: table;
-    border-spacing: 10px;
-    border-collapse: separate;
-}
-.sp-conflict-plugins li {
-    display: table-row;
-}
-.sp-conflict-plugins li > * {
-    display: table-cell;
-}
-
-li.sp-conflict-plugins-list {
-    line-height: 28px;
-    list-style: disc;
-    margin-left: 80px;
-}
-li.sp-conflict-plugins-list a.button {
-    margin-left: 10px;
 }

@@ -41,7 +41,7 @@ class WPShortPixel {
 
         $this->_settings = new WPShortPixelSettings();
         $this->_apiInterface = new ShortPixelAPI($this->_settings);
-        $this->cloudflareApi = new ShortPixelCloudFlareApi($this->_settings->cloudflareEmail, $this->_settings->cloudflareAuthKey, $this->_settings->cloudflareZoneID);
+      //  $this->cloudflareApi = new ShortPixelCloudFlareApi($this->_settings->cloudflareEmail, $this->_settings->cloudflareAuthKey, $this->_settings->cloudflareZoneID);
         $this->hasNextGen = wpSPIO()->env()->has_nextgen; //ShortPixelNextGenAdapter::hasNextGen();
         $this->spMetaDao = new ShortPixelCustomMetaDao(new WpShortPixelDb(), $this->_settings->excludePatterns);
         $this->prioQ = (! defined('SHORTPIXEL_NOFLOCK')) ? new ShortPixelQueue($this, $this->_settings) : new ShortPixelQueueDB($this, $this->_settings);
@@ -166,8 +166,12 @@ class WPShortPixel {
         //check status
         add_action( 'wp_ajax_shortpixel_check_status', array(&$this, 'checkStatus'));
         //dismiss notices
-        add_action( 'wp_ajax_shortpixel_dismiss_notice', array(&$this, 'dismissAdminNotice'));
-        add_action( 'wp_ajax_shortpixel_dismiss_media_alert', array(&$this, 'dismissMediaAlert'));
+
+        // deprecated - dismissAdminNotice should not be called no longer.
+      //  add_action( 'wp_ajax_shortpixel_dismiss_notice', array(&$this, 'dismissAdminNotice'));
+        add_action( 'wp_ajax_shortpixel_dismiss_media_alert', array($this, 'dismissMediaAlert'));
+        add_action( 'wp_ajax_shortpixel_dismissFileError', array($this, 'dismissFileError'));
+
         //check quota
         add_action('wp_ajax_shortpixel_check_quota', array(&$this, 'handleCheckQuota'));
         add_action('admin_action_shortpixel_check_quota', array(&$this, 'handleCheckQuota'));
@@ -241,155 +245,22 @@ class WPShortPixel {
         }
     } */
 
-    public function getConflictingPlugins() {
-        $conflictPlugins = array(
-            'WP Smush - Image Optimization'
-                => array(
-                        'action'=>'Deactivate',
-                        'data'=>'wp-smushit/wp-smush.php',
-                        'page'=>'wp-smush-bulk'
-                ),
-            'Imagify Image Optimizer'
-                => array(
-                        'action'=>'Deactivate',
-                        'data'=>'imagify/imagify.php',
-                        'page'=>'imagify'
-                ),
-            'Compress JPEG & PNG images (TinyPNG)'
-                => array(
-                        'action'=>'Deactivate',
-                        'data'=>'tiny-compress-images/tiny-compress-images.php',
-                        'page'=>'tinify'
-                ),
-            'Kraken.io Image Optimizer'
-                => array(
-                        'action'=>'Deactivate',
-                        'data'=>'kraken-image-optimizer/kraken.php',
-                        'page'=>'wp-krakenio'
-                ),
-            'Optimus - WordPress Image Optimizer'
-                => array(
-                        'action'=>'Deactivate',
-                        'data'=>'optimus/optimus.php',
-                        'page'=>'optimus'
-                ),
-            'EWWW Image Optimizer'
-                => array(
-                        'action'=>'Deactivate',
-                        'data'=>'ewww-image-optimizer/ewww-image-optimizer.php',
-                        'page'=>'ewww-image-optimizer%2F'
-                ),
-            'EWWW Image Optimizer Cloud'
-                => array(
-                        'action'=>'Deactivate',
-                        'data'=>'ewww-image-optimizer-cloud/ewww-image-optimizer-cloud.php',
-                        'page'=>'ewww-image-optimizer-cloud%2F'
-                ),
-            'ImageRecycle pdf & image compression'
-                => array(
-                        'action'=>'Deactivate',
-                        'data'=>'imagerecycle-pdf-image-compression/wp-image-recycle.php',
-                        'page'=>'option-image-recycle'
-                ),
-            'CheetahO Image Optimizer'
-                => array(
-                        'action'=>'Deactivate',
-                        'data'=>'cheetaho-image-optimizer/cheetaho.php',
-                        'page'=>'cheetaho'
-                ),
-            'Zara 4 Image Compression'
-                => array(
-                        'action'=>'Deactivate',
-                        'data'=>'zara-4/zara-4.php',
-                        'page'=>'zara-4'
-                ),
-            'CW Image Optimizer'
-                => array(
-                        'action'=>'Deactivate',
-                        'data'=>'cw-image-optimizer/cw-image-optimizer.php',
-                        'page'=>'cw-image-optimizer'
-                ),
-            'Simple Image Sizes'
-                => array(
-                        'action'=>'Deactivate',
-                        'data'=>'simple-image-sizes/simple_image_sizes.php'
-                ),
-            'Regenerate Thumbnails and Delete Unused'
-              => array(
-                      'action' => 'Deactivate',
-                      'data' => 'regenerate-thumbnails-and-delete-unused/regenerate_wpregenerate.php',
-              ),
-               //DEACTIVATED TEMPORARILY - it seems that the customers get scared.
-            /* 'Jetpack by WordPress.com - The Speed up image load times Option'
-                => array(
-                        'action'=>'Change Setting',
-                        'data'=>'jetpack/jetpack.php',
-                        'href'=>'admin.php?page=jetpack#/settings'
-                )
-            */
-        );
-        if($this->_settings->processThumbnails) {
-            $details = __('Details: recreating image files may require re-optimization of the resulting thumbnails, even if they were previously optimized. Please use <a href="https://wordpress.org/plugins/regenerate-thumbnails-advanced/" target="_blank">reGenerate Thumbnails Advanced</a> instead.','shortpixel-image-optimiser');
-
-            $conflictPlugins = array_merge($conflictPlugins, array(
-                'Regenerate Thumbnails'
-                    => array(
-                            'action'=>'Deactivate',
-                            'data'=>'regenerate-thumbnails/regenerate-thumbnails.php',
-                            'page'=>'regenerate-thumbnails',
-                            'details' => $details
-                    ),
-                'Force Regenerate Thumbnails'
-                    => array(
-                            'action'=>'Deactivate',
-                            'data'=>'force-regenerate-thumbnails/force-regenerate-thumbnails.php',
-                            'page'=>'force-regenerate-thumbnails',
-                            'details' => $details
-                    )
-            ));
-        }
-        if(!$this->_settings->frontBootstrap){
-            $conflictPlugins['Bulk Images to Posts Frontend'] = array (
-                'action'=>'Change Setting',
-                'data'=>'bulk-images-to-posts-front/bulk-images-to-posts.php',
-                'href'=>'options-general.php?page=wp-shortpixel-settings&part=adv-settings#siteAuthUser',
-                'details' => __('This plugin is uploading images in front-end so please activate the "Process in front-end" advanced option in ShortPixel in order to have your images optimized.','shortpixel-image-optimiser')
-            );
-        }
-
-        $found = array();
-        foreach($conflictPlugins as $name => $path) {
-            $action = ( isset($path['action']) ) ? $path['action'] : null;
-            $data = ( isset($path['data']) ) ? $path['data'] : null;
-            $href = ( isset($path['href']) ) ? $path['href'] : null;
-            $page = ( isset($path['page']) ) ? $path['page'] : null;
-            $details = ( isset($path['details']) ) ? $path['details'] : null;
-            if(is_plugin_active($data)) {
-                if( $data == 'jetpack/jetpack.php' ){
-                    $jetPackPhoton = get_option('jetpack_active_modules') ? in_array('photon', get_option('jetpack_active_modules')) : false;
-                    if( !$jetPackPhoton ){ continue; }
-                }
-                $found[] = array( 'name' => $name, 'action'=> $action, 'path' => $data, 'href' => $href , 'page' => $page, 'details' => $details);
-            }
-        }
-        return $found;
-    }
 
     /** Displays notices to admin, if there are any
     * TODO - Probably should be a controller
     */
     public function displayAdminNotices() {
-        $testQ = (! defined('SHORTPIXEL_NOFLOCK')) ? ShortPixelQueue::testQ() : ShortPixelQueueDB::testQ();
+      /*  $testQ = (! defined('SHORTPIXEL_NOFLOCK')) ? ShortPixelQueue::testQ() : ShortPixelQueueDB::testQ();
         if(! $testQ) {
             ShortPixelView::displayActivationNotice('fileperms');
-        }
-        if($this->catchNotice()) { //notices for errors like for example a failed restore notice - these are one time so display them with priority.
-            return;
-        }
-        $dismissed = $this->_settings->dismissedNotices ? $this->_settings->dismissedNotices : array();
-        $this->_settings->dismissedNotices = $dismissed;
+        } */
+      //  if($this->catchNotice()) { //notices for errors like for example a failed restore notice - these are one time so display them with priority.
+          //  return;
+      //  }
+      //  $dismissed = $this->_settings->dismissedNotices ? $this->_settings->dismissedNotices : array();
+      //  $this->_settings->dismissedNotices = $dismissed;
 
-        if(!$this->_settings->verifiedKey) {
+        /*if(!$this->_settings->verifiedKey) {
             $now = time();
             $act = $this->_settings->activationDate ? $this->_settings->activationDate : $now;
             if($this->_settings->activationNotice && $this->_settings->redirectedSettings >= 2) {
@@ -401,21 +272,21 @@ class WPShortPixel {
             } else if( ($now > $act + 72 * 3600) && !isset($dismissed['3d'])) {
                 ShortPixelView::displayActivationNotice('3d');
             }
-        }
-        if(!isset($dismissed['compat'])) {
+        } */
+        /*if(!isset($dismissed['compat'])) {
             $conflictPlugins = $this->getConflictingPlugins();
             if(count($conflictPlugins)) {
                 ShortPixelView::displayActivationNotice('compat', $conflictPlugins);
                 return;
             }
-        }
-        if(   !isset($dismissed['unlisted']) && !$this->_settings->optimizeUnlisted
+        } */
+    /*    if(   !isset($dismissed['unlisted']) && !$this->_settings->optimizeUnlisted
            && isset($this->_settings->currentStats['foundUnlistedThumbs']) && is_array($this->_settings->currentStats['foundUnlistedThumbs'])) {
             ShortPixelView::displayActivationNotice('unlisted', $this->_settings->currentStats['foundUnlistedThumbs']);
             return;
-        }
+        } */
         //if(false)
-        $currentStats = $this->_settings->currentStats;
+      /*  $currentStats = $this->_settings->currentStats;
         if(!is_array($currentStats) || isset($_GET['checkquota']) || isset($currentStats["quotaData"])) {
             $this->getQuotaInformation();
         }
@@ -437,9 +308,10 @@ class WPShortPixel {
                 //looks like the user hasn't got enough credits to process the monthly images, display a notice telling this
                 ShortPixelView::displayActivationNotice('upgmonth', array('monthAvg' => $this->getMonthAvg($stats), 'monthlyQuota' => $quotaData['APICallsQuotaNumeric']));
             }
-        }
+        } */
     }
 
+/* Deprecated in favor of NoticeController.
     public function dismissAdminNotice() {
         $noticeId = preg_replace('|[^a-z0-9]|i', '', $_GET['notice_id']);
         $dismissed = $this->_settings->dismissedNotices ? $this->_settings->dismissedNotices : array();
@@ -451,27 +323,20 @@ class WPShortPixel {
         die(json_encode(array("Status" => 'success', "Message" => 'Notice ID: ' . $noticeId . ' dismissed')));
     }
 
+
+    */
+
+    // This probably displays an alert when requesting the user to switch from grid to list in media library
     public function dismissMediaAlert() {
         $this->_settings->mediaAlert = 1;
         die(json_encode(array("Status" => 'success', "Message" => __('Media alert dismissed','shortpixel-image-optimiser'))));
     }
 
-    protected function getMonthAvg($stats) {
-        for($i = 4, $count = 0; $i>=1; $i--) {
-            if($count == 0 && $stats['totalM' . $i] == 0) continue;
-            $count++;
-        }
-        return ($stats['totalM1'] + $stats['totalM2'] + $stats['totalM3'] + $stats['totalM4']) / max(1,$count);
+    public function dismissFileError() {
+        $this->_settings->bulkLastStatus = null;
+        die(json_encode(array("Status" => 'success', "Message" => __('Error dismissed','shortpixel-image-optimiser'))));
     }
 
-    protected function monthlyUpgradeNeeded($quotaData) {
-        return isset($quotaData['APICallsQuotaNumeric']) && $this->getMonthAvg($quotaData) > $quotaData['APICallsQuotaNumeric'] + ($quotaData['APICallsQuotaOneTimeNumeric'] - $quotaData['APICallsMadeOneTimeNumeric'])/6 + 20;
-    }
-
-    protected function bulkUpgradeNeeded($stats) {
-        $quotaData = $stats;
-        return $stats['totalFiles'] - $stats['totalProcessedFiles'] > $quotaData['APICallsQuotaNumeric'] + $quotaData['APICallsQuotaOneTimeNumeric'] - $quotaData['APICallsMadeNumeric'] - $quotaData['APICallsMadeOneTimeNumeric'];
-    }
 
     //set default move as "list". only set once, it won't try to set the default mode again.
     public function setDefaultViewModeList()
@@ -507,9 +372,12 @@ class WPShortPixel {
 
         if (! \wpSPIO()->env()->is_screen_to_use )
         {
-          if (! wpSPIO()->env()->is_front) // exeception if this is called to load from your frontie. 
+          if (! wpSPIO()->env()->is_front) // exeception if this is called to load from your frontie.
              return; // not ours, don't load JS and such.
         }
+
+        $is_front = (wpSPIO()->env()->is_front) ? true : false;
+
         // load everywhere, because we are inconsistent.
         wp_enqueue_style('short-pixel-bar.min.css', plugins_url('/res/css/short-pixel-bar.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
 
@@ -678,10 +546,24 @@ class WPShortPixel {
             //$icon = "shortpixel-alert.png";
         }
         $lastStatus = $this->_settings->bulkLastStatus;
-        if($lastStatus && $lastStatus['Status'] != ShortPixelAPI::STATUS_SUCCESS) {
+        if($lastStatus && $lastStatus['Status'] !== ShortPixelAPI::STATUS_SUCCESS) {
             $extraClasses = " shortpixel-alert shortpixel-processing";
-            $tooltip = $lastStatus['Message'];
+            $tooltip = '';
             $successLink = $link = admin_url(current_user_can( 'edit_others_posts')? 'post.php?post=' . $lastStatus['ImageID'] . '&action=edit' : 'upload.php');
+
+            $wp_admin_bar->add_node( array(
+                'id'    => 'shortpixel_processing-title',
+                'parent' => 'shortpixel_processing',
+                'title' => $lastStatus['Message'],
+                'href'  => $successLink
+            ));
+            $wp_admin_bar->add_node( array(
+                'id'    => 'shortpixel_processing-dismiss',
+                'parent' => 'shortpixel_processing',
+                'title' => '<div style="text-align: right;">Dismiss</div>',
+                'href'  => "#",
+                'meta'  => array('onclick'=> 'dismissFileError(event)')
+            ));
         }
 
         $args = array(
@@ -693,6 +575,7 @@ class WPShortPixel {
                 'meta'  => array('target'=> $blank, 'class' => 'shortpixel-toolbar-processing' . $extraClasses)
         );
         $wp_admin_bar->add_node( $args );
+
         if($this->_settings->quotaExceeded && !isset($this->_settings->dismissedNotices['exceed'])) {
             $wp_admin_bar->add_node( array(
                 'id'    => 'shortpixel_processing-title',
@@ -700,13 +583,13 @@ class WPShortPixel {
                 'title' => $exceedTooltip,
                 'href'  => $link
             ));
-            $wp_admin_bar->add_node( array(
+            /*$wp_admin_bar->add_node( array(
                 'id'    => 'shortpixel_processing-dismiss',
                 'parent' => 'shortpixel_processing',
                 'title' => '<div style="text-align: right;">Dismiss</div>',
                 'href'  => "#",
                 'meta'  => array('onclick'=> 'dismissShortPixelNoticeExceed(event)')
-            ));
+            )); */
         }
     }
 
@@ -1334,11 +1217,7 @@ class WPShortPixel {
     * @param String $ID ApiKey
     */
     public function handleImageProcessing($ID = null) {
-        //if(rand(1,2) == 2) {
-        //    header($_SERVER['SERVER_PROTOCOL'] . ' 500 Internal Server Error', true, 500);
-        //    die("za stop");
-        //}
-        //0: check key
+
         $this->checkKey($ID);
 
         if($this->_settings->frontBootstrap && is_admin() && !ShortPixelTools::requestIsFrontendAjax()) {
@@ -1643,8 +1522,10 @@ class WPShortPixel {
         }
 
         if($result["Status"] !== ShortPixelAPI::STATUS_RETRY) {
+            $this->_settings->bulkLastStatus = null;
             $this->_settings->bulkLastStatus = $result;
         }
+
         $ret = json_encode($result);
         self::log("HIP RET " . $ret);
         die($ret);
@@ -1835,9 +1716,16 @@ class WPShortPixel {
         $thumbObtList = $meta->getThumbsOptList();
         $missing = $meta->getThumbsMissing();
 
-
+        try
+        {
         $this->_apiInterface->doRequests($URLsAndPATHs['URLs'], false, $itemHandler,
                 $compressionType === false ? $this->_settings->compressionType : $compressionType, $refresh);//send a request, do NOT wait for response
+        }
+        catch(Exception $e) {
+          Log::addError('Api DoRequest Thrown ' . $e->getMessage());
+          //$meta['ShortPixelImprovement'] = $e->getMessage();
+          //return $meta;
+        }
         //$meta = wp_get_attachment_metadata($ID);
         //$meta['ShortPixel']['WaitingProcessing'] = true;
         //wp_update_attachment_metadata($ID, $meta);
@@ -1904,6 +1792,7 @@ class WPShortPixel {
               $meta = $itemHandler->getMeta();
               $meta->setRetries(0);
               $meta->setStatus(\ShortPixelMeta::FILE_STATUS_PENDING);
+              $itemHandler->updateMeta($meta);
             }
 
 
@@ -2020,7 +1909,7 @@ class WPShortPixel {
         update_post_meta($ID, '_wp_attachment_metadata', $meta);
     }
 
-    /* Gets backup folder of file
+    /* Gets backup folder of file. This backup must exist already, or false is given.
     * @param string $file  Filepath - probably ( or directory )
     * @return string | boolean backupFolder or false.
     */
@@ -2028,6 +1917,7 @@ class WPShortPixel {
         $fs = \wpSPIO()->filesystem();
         $fsFile = $fs->getFile($file);
 
+      //  Log::addDebug('Get BackUp Folder', array($fsFile->getFileName(), pathinfo($fsFile->getFullPath())));
         $directory = $this->getBackupFolderInternal($fsFile);
         if ($directory !== false)
           return $directory->getPath();
@@ -2055,6 +1945,7 @@ class WPShortPixel {
 
     //    $backupFolder = $file->getBackUpDirectory();
 
+        // returns true only if a backup-file already exists.
         $backupFile = $file->getBackupFile();
         if ($backupFile)
         {
@@ -2082,7 +1973,7 @@ class WPShortPixel {
           return $backupFile->getFileDir();
         }
 
-        Log::addError('Backup Directory could not be established! ', array($file->getFullPath()) );
+        Log::addError('Backup Directory could not be established! ', array($file->getFullPath(), $SubDir, $SubDirOld, $basename) );
         return false; // $backupFile->getFileDir(); // if all else fails.
 
 
@@ -2465,12 +2356,13 @@ class WPShortPixel {
      * @param string $extra
      */
     public function throwNotice($when = 'activate', $extra = '') {
-        set_transient("shortpixel_thrown_notice", array('when' => $when, 'extra' => $extra), 120);
+      //  set_transient("shortpixel_thrown_notice", array('when' => $when, 'extra' => $extra), 120);
+      Notices::addError($extra);  // whatever error is in the extra. Seems that normal messages don't pass here.
     }
 
-    /** Checks if a notice was thrown
+    /** Checks if a notice was thrown || Deprecated in favor or Notices.
     * @return boolean true, if there are notices */
-    protected function catchNotice() {
+  /*  protected function catchNotice() {
         $notice = get_transient("shortpixel_thrown_notice");
         if(isset($notice['when'])) {
             if($notice['when'] == 'spai' && ($this->_settings->deliverWebp == 0 || $this->_settings->deliverWebp == 3)) {
@@ -2482,7 +2374,7 @@ class WPShortPixel {
             return true;
         }
         return false;
-    }
+    } */
 
     /** Restores a non-media-library image
     * @param int $ID image_id, without any prefixes
@@ -2774,7 +2666,7 @@ class WPShortPixel {
         }
 
         $referrer_url = wp_get_referer();
-        $conflict = $this->getConflictingPlugins();
+        $conflict = \ShortPixelTools::getConflictingPlugins();
         foreach($conflict as $c => $value) {
             $conflictingString = $value['page'];
             if($conflictingString != null && strpos($referrer_url, $conflictingString) !== false){
@@ -2853,7 +2745,7 @@ class WPShortPixel {
             ?><script>var shortPixelQuotaExceeded = 0;</script><?php
         }
         else {
-            $this->view->displayQuotaExceededAlert($quotaData, self::getAverageCompression(), $recheck);
+          //  $this->view->displayQuotaExceededAlert($quotaData, self::getAverageCompression(), $recheck);
             ?><script>var shortPixelQuotaExceeded = 1;</script><?php
         }
         return $quotaData;
@@ -2935,8 +2827,9 @@ class WPShortPixel {
     public function bulkProcess() {
         global $wpdb;
 
+
         if( $this->_settings->verifiedKey == false ) {//invalid API Key
-            ShortPixelView::displayActivationNotice();
+            //ShortPixelView::displayActivationNotice();
             return;
         }
 
@@ -2944,6 +2837,8 @@ class WPShortPixel {
         //if($this->_settings->quotaExceeded != 0) {
             //return;
         //}
+
+
 
         if(isset($_POST['bulkProcessPause']))
         {//pause an ongoing bulk processing, it might be needed sometimes
@@ -2980,7 +2875,6 @@ class WPShortPixel {
             if($this->_settings->hasCustomFolders) {
                 $this->spMetaDao->resetFailed();
                 $this->spMetaDao->resetRestored();
-
             }
 
             $this->prioQ->startBulk(ShortPixelQueue::BULK_TYPE_OPTIMIZE);
@@ -3685,7 +3579,8 @@ class WPShortPixel {
             $this->_settings->quotaExceeded = 1;//activate quota limiting
 
         //if a non-valid status exists, delete it
-        $lastStatus = $this->_settings->bulkLastStatus = null;
+        // @todo Clarify the reason for this statement
+        $lastStatus = $this->_settings->bulkLastStatus;
         if($lastStatus && $lastStatus['Status'] == ShortPixelAPI::STATUS_NO_KEY) {
             $this->_settings->bulkLastStatus = null;
         }
@@ -4015,12 +3910,20 @@ class WPShortPixel {
     public function onDeleteImage($post_id) {
         Log::addDebug('onDeleteImage - Image Removal Detected ' . $post_id);
         \wpSPIO()->loadModel('image');
+        $result = null;
 
-        $imageObj = new ImageModel();
-        $imageObj->setbyPostID($post_id);
+        try
+        {
+          $imageObj = new ImageModel();
+          $imageObj->setbyPostID($post_id);
+          $result = $imageObj->delete();
+        }
+        catch(Exception $e)
+        {
+          Log::addError('OndeleteImage triggered an error. ' . $e->getMessage(), $e);
+        }
 
-        return $imageObj->delete();
-
+        return $result;
     }
 
     /** Removes webp and backup from specified paths
@@ -4224,9 +4127,32 @@ class WPShortPixel {
     }
 
     static public function matchExcludePattern($target, $pattern) {
-        return (
+        if(strlen($pattern) == 0)  // can happen on faulty input in settings.
+          return false;
+
+        $first = substr($pattern, 0,1);
+
+        if ($first == '/')
+        {
+          if (@preg_match($pattern, false) !== false)
+          {
+            $m = preg_match($pattern,  $target);
+            if ($m !== false)
+              return true;
+          }
+        }
+        else
+        {
+          if (strpos($target, $pattern) !== false)
+          {
+            return true;
+          }
+        }
+        return false;
+
+        /*return (
             $pattern[0] == '/' && @preg_match($pattern, false) !== false && preg_match($pattern,  $target) //search as regex pattern if starts with a / and regex is valid
-            || $pattern[0] != '/' && strpos($target, $pattern) !== false ); //search as a substring if not
+            || $pattern[0] != '/' && strpos($target, $pattern) !== false ); //search as a substring if not */
     }
 
     //return an array with URL(s) and PATH(s) for this file
@@ -4262,6 +4188,7 @@ class WPShortPixel {
         $total_size = 0;
         $fs = wpSPIO()->filesystem();
         $dir = $fs->getDirectory($path);
+        $files = $subdirs = array();
 
         if($dir->exists()) {
             $files = $dir->getFiles(); // @todo This gives a warning if directory is not writable.
@@ -4271,16 +4198,21 @@ class WPShortPixel {
             return $total_size;
         }
         //$cleanPath = rtrim($path, '/'). '/';
-        foreach($files as $file)
+        if ($files)
         {
-          $total_size += $file->getFileSize();
+          foreach($files as $file)
+          {
+            $total_size += $file->getFileSize();
+          }
         }
 
-        foreach($subdirs as $dir)
+        if ($subdirs)
         {
-          $total_size += self::folderSize($dir->getPath());
+          foreach($subdirs as $dir)
+          {
+            $total_size += self::folderSize($dir->getPath());
+          }
         }
-
         return $total_size;
 
         /* foreach($files as $t) {
