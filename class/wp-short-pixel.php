@@ -16,7 +16,7 @@ class WPShortPixel {
     private $view = null;
     private $thumbnailsRegenerating = array();
 
-    private $hasNextGen = false;
+//    private $hasNextGen = false;
     private $spMetaDao = null;
 
     private $jsSuffix = '.min.js';
@@ -42,7 +42,7 @@ class WPShortPixel {
         $this->_settings = new WPShortPixelSettings();
         $this->_apiInterface = new ShortPixelAPI($this->_settings);
       //  $this->cloudflareApi = new ShortPixelCloudFlareApi($this->_settings->cloudflareEmail, $this->_settings->cloudflareAuthKey, $this->_settings->cloudflareZoneID);
-        $this->hasNextGen = wpSPIO()->env()->has_nextgen; //ShortPixelNextGenAdapter::hasNextGen();
+      //  $this->hasNextGen = wpSPIO()->env()->has_nextgen; //ShortPixelNextGenAdapter::hasNextGen();
         $this->spMetaDao = new ShortPixelCustomMetaDao(new WpShortPixelDb(), $this->_settings->excludePatterns);
         $this->prioQ = (! defined('SHORTPIXEL_NOFLOCK')) ? new ShortPixelQueue($this, $this->_settings) : new ShortPixelQueueDB($this, $this->_settings);
         $this->view = new ShortPixelView($this);
@@ -829,7 +829,7 @@ class WPShortPixel {
      * this is hooked onto the NextGen upload
      * @param type $image
      */
-    public function handleNextGenImageUpload($image)
+  /*  public function handleNextGenImageUpload($image)
     {
         if ($this->_settings->includeNextGen == 1) {
             $imageFsPath = ShortPixelNextGenAdapter::getImageAbspath($image);
@@ -853,7 +853,7 @@ class WPShortPixel {
 
             return $this->addPathToCustomFolder($imageFsPath, $folderId, $image->pid);
         }
-    }
+    } */
 
     protected function addPathToCustomFolder($imageFsPath, $folderId, $pid) {
         //prevent adding it multiple times if the action is called repeatedly (Gravity Forms does that)
@@ -1280,14 +1280,12 @@ class WPShortPixel {
             }
 
             $customIds = $this->spMetaDao->getPendingMetas( SHORTPIXEL_PRESEND_ITEMS - count($ids));
+
             if(is_array($customIds)) {
                 $ids = array_merge($ids, array_map(array('ShortPixelMetaFacade', 'getNewFromRow'), $customIds));
             }
         }
-        //var_dump($ids);
-        //die("za stop 2");
 
-        //self::log("HIP: 1 Ids: ".json_encode($ids));
         if(count($ids)) {$idl='';foreach($ids as $i){$idl.=$i->getId().' ';}
             Log::addInfo("HIP: 1 Selected IDs: $idl");}
 
@@ -2775,7 +2773,7 @@ class WPShortPixel {
             $this->prioQ->push(ShortPixelMetaFacade::queuedId(ShortPixelMetaFacade::CUSTOM_TYPE, $_REQUEST['image']));
         }
 
-        $customMediaListTable = new ShortPixelListTable($this, $this->spMetaDao, $this->hasNextGen);
+        $customMediaListTable = new ShortPixelListTable($this, $this->spMetaDao, \wpSPIO()->env()->has_nextgen);
         $items = $customMediaListTable->prepare_items();
         if ( isset($_GET['noheader']) ) {
             require_once(ABSPATH . 'wp-admin/admin-header.php');
@@ -3392,32 +3390,6 @@ class WPShortPixel {
             insert_with_markers( trailingslashit(WP_CONTENT_DIR) . '.htaccess', 'ShortPixelWebp', $rules);
 
         }
-    }
-
-
-
-    /** Adds NextGenGalleries to Custom Images Library
-    * @param boolean $silent Will not return messages if silent
-    * @return array Array for information
-    * @todo Move to a integration class || This can be removed after nextgen.php in externals is released.
-    */
-    public function addNextGenGalleriesToCustom($silent) {
-        $customFolders = array();
-        $folderMsg = "";
-        if($this->_settings->includeNextGen) {
-            //add the NextGen galleries to custom folders
-            $ngGalleries = ShortPixelNextGenAdapter::getGalleries();
-            foreach($ngGalleries as $gallery) {
-                $msg = $this->spMetaDao->newFolderFromPath($gallery, get_home_path(), self::getCustomFolderBase());
-                if($msg) { //try again with ABSPATH as maybe WP is in a subdir
-                    $msg = $this->spMetaDao->newFolderFromPath($gallery, ABSPATH, self::getCustomFolderBase());
-                }
-                $folderMsg .= $msg;
-                $this->_settings->hasCustomFolders = time();
-            }
-            $customFolders = $this->spMetaDao->getFolders();
-        }
-        return array("message" => $silent? "" : $folderMsg, "customFolders" => $customFolders);
     }
 
     /** Gets the average compression
@@ -4554,9 +4526,7 @@ class WPShortPixel {
     public function getCompressionType() {
         return $this->_settings->compressionType;
     }
-    public function hasNextGen() {
-        return $this->hasNextGen;
-    }
+
 
     public function getSpMetaDao() {
         return $this->spMetaDao;

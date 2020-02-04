@@ -90,16 +90,9 @@ class SettingsController extends shortPixelController
               $this->keyModel->resetTried();
               $this->keyModel->checkKey($this->postData['apiKey']);
             }
-            /*if (isset($this->postData['verifiedKey']) && $this->postData['verifiedKey'])
-            {
-              $this->model->apiKey = $this->postData['apiKey'];
-              $this->model->verifiedKey = $this->postData['verifiedKey'];
-            } */
         }
 
         $this->doRedirect();
-        //exit();
-
       }
 
       public function action_debug_medialibrary()
@@ -195,9 +188,7 @@ class SettingsController extends shortPixelController
           $this->has_nextgen = $env->has_nextgen;
 
           $this->display_part = isset($_GET['part']) ? sanitize_text_field($_GET['part']) : 'settings';
-
       }
-
 
       /* Temporary function to check if HTaccess is writable.
       * HTaccess is writable if it exists *and* is_writable, or can be written if directory is writable.
@@ -276,10 +267,18 @@ class SettingsController extends shortPixelController
 
         if ($this->has_nextgen)
         {
-          $ngg = array_map(array('ShortPixelNextGenAdapter','pathToAbsolute'), \ShortPixelNextGenAdapter::getGalleries());
+    //      $ngg = array_map(array('ShortPixelNextGenAdapter','pathToAbsolute'), \ShortPixelNextGenAdapter::getGalleries());
+          $ng = NextGen::getInstance();
+          $folders = $ng->getGalleries();
+          $foldersArray = array();
+          foreach($folders as $dirObj)
+          {
+             $foldersArray[] = $dirObj->getPath();
+          }
+
           for($i = 0; $i < count($customFolders); $i++) {
-              if(in_array($customFolders[$i]->getPath(), $ngg )) {
-                  $customFolders[$i]->setType("NextGen");
+              if(in_array($customFolders[$i]->getPath(), $foldersArray )) {
+                  $customFolders[$i]->setType("nextgen");
                 }
               }
         }
@@ -487,19 +486,5 @@ class SettingsController extends shortPixelController
         exit();
       }
 
-      /*
-      protected function NoticeApiKeyLength($key)
-      {
-        $KeyLength = strlen($key);
 
-        $notice =  sprintf(__("The key you provided has %s characters. The API key should have 20 characters, letters and numbers only.",'shortpixel-image-optimiser'), $KeyLength)
-                   . "<BR> <b>"
-                   . __('Please check that the API key is the same as the one you received in your confirmation email.','shortpixel-image-optimiser')
-                   . "</b><BR> "
-                   . __('If this problem persists, please contact us at ','shortpixel-image-optimiser')
-                   . "<a href='mailto:help@shortpixel.com?Subject=API Key issues' target='_top'>help@shortpixel.com</a>"
-                   . __(' or ','shortpixel-image-optimiser')
-                   . "<a href='https://shortpixel.com/contact' target='_blank'>" . __('here','shortpixel-image-optimiser') . "</a>.";
-        Notice::addError($notice);
-      } */
 }

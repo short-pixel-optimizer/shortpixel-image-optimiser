@@ -65,12 +65,12 @@ class ShortPixelCustomMetaDao {
             path_md5 char(32),
             compressed_size int(10) NOT NULL DEFAULT 0,
             compression_type tinyint,
-            keep_exif tinyint,
-            cmyk2rgb tinyint,
+            keep_exif tinyint DEFAULT 0,
+            cmyk2rgb tinyint DEFAULT 0,
             resize tinyint,
             resize_width smallint,
             resize_height smallint,
-            backup tinyint,
+            backup tinyint DEFAULT 0,
             status SMALLINT NOT NULL DEFAULT 0,
             retries tinyint NOT NULL DEFAULT 0,
             message varchar(255),
@@ -272,7 +272,7 @@ class ShortPixelCustomMetaDao {
           Log::addWarn('FolderObj from database is not there, while folder seems ok ' . $folder->getPath() );
           return false;
         }
-        
+
         Log::addDebug('Doing Refresh Folder for (DirectoryModel / ShortpixelFolder) ', array($folder->getPath(), $folderObj->getPath()) );
 
         $fs = \wpSPIO()->fileSystem();
@@ -334,7 +334,6 @@ class ShortPixelCustomMetaDao {
                         $folder->setId($fld->getId());
                     }
                 }
-                //var_dump($allFolders);
                 return sprintf(__('Folder already included in %s.','shortpixel-image-optimiser'),$parent);
             }
         } else {
@@ -376,13 +375,14 @@ class ShortPixelCustomMetaDao {
         $i = 0;
         $count = 0;
         $placeholders = array();
+        $status = (\wpSPIO()->settings()->autoMediaLibrary == 1) ? ShortPixelMeta::FILE_STATUS_PENDING : ShortPixelMeta::FILE_STATUS_UNPROCESSED;
+
         foreach($files as $file) {
             $filepath = $file->getFullPath();
             $filename = $file->getFileName();
 
-            array_push($values, $folderId, $filepath, $filename, md5($filepath), 0);
+            array_push($values, $folderId, $filepath, $filename, md5($filepath), $status);
             $placeholders[] = $format;
-
 
             if($i % 500 == 499) {
                 $query = $sql;

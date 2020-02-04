@@ -36,6 +36,9 @@
     max-width: 70%; }
   #shortpixel-settings-tabs #tab-adv-settings .addCustomFolder input[name="saveAdv"] {
     margin-left: 8px; }
+#shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list th {
+  width: auto;
+  padding: 12px 16px 12px 12px; }
 
 .cf_switch label {
   width: 100%;
