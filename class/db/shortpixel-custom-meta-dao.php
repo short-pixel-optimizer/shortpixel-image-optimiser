@@ -390,10 +390,11 @@ class ShortPixelCustomMetaDao {
                 $this->db->query( $this->db->prepare("$query ", $values));
 
                 $values = array();
+                $placeholders = array();
             }
             $i++;
         }
-        if($values) {
+        if(count($values) > 0) {
           $query = $sql;
           $query .= implode(', ', $placeholders);
           $result = $wpdb->query( $wpdb->prepare("$query ", $values) );
