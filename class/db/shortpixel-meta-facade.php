@@ -109,8 +109,6 @@ class ShortPixelMetaFacade {
     //  Update MetaData of Image.
     public function updateMeta($newMeta = null, $replaceThumbs = false) {
 
-        $this->deleteItemCache();
-
         if($newMeta) {
             $this->meta = $newMeta;
         }
@@ -224,6 +222,8 @@ class ShortPixelMetaFacade {
                 }
             } // duplicates loop
         }
+
+        $this->deleteItemCache();
     }
 
 
