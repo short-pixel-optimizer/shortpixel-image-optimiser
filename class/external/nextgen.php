@@ -5,16 +5,27 @@ use ShortPixel\Notices\NoticeController as Notice;
 class NextGen
 {
   protected static $instance;
+  protected $view;
 
 // ngg_created_new_gallery
 
-//NGG_PLUGIN (constant) ?
-
   public function __construct()
   {
-    add_action('ngg_added_new_image', array($this,'handleImageUpload'));
     add_filter('shortpixel/init/optimize_on_screens', array($this, 'add_screen_loads'));
-//    add_action('plugins_loaded', array($this, 'has_nextgen'));
+    $this->view = new nextGenView();
+
+
+    add_action('plugins_loaded', array($this, 'hooks'));
+  }
+
+  public function hooks()
+  {
+    if ($this->optimizeNextGen()) // if optimization is on, hook.
+    {
+      add_action('ngg_update_addgallery_page', array( &$this, 'addNextGenGalleriesToCustom'));
+      add_action('ngg_added_new_image', array($this,'handleImageUpload'));
+    }
+
   }
 
   // Use GetInstance, don't use the construct.
@@ -32,6 +43,14 @@ class NextGen
       return true;
      else
        return false;
+  }
+
+  public function optimizeNextGen()
+  {
+     if (\wpSPIO()->settings()->includeNextGen == 1)
+       return true;
+    else
+      return false;
   }
 
 
@@ -159,5 +178,84 @@ class NextGen
   }
 
 } // class .
+
+class nextGenView
+{
+  protected $nggColumnIndex = 0;
+
+  public function __construct()
+  {
+    $this->hooks();
+  }
+
+   protected function hooks()
+   {
+     add_filter( 'ngg_manage_images_columns', array( $this, 'nggColumns' ) );
+     add_filter( 'ngg_manage_images_number_of_columns', array( $this, 'nggCountColumns' ) );
+     add_filter( 'ngg_manage_images_column_7_header', array( $this, 'nggColumnHeader' ) );
+     add_filter( 'ngg_manage_images_column_7_content', array( $this, 'nggColumnContent' ) );
+   }
+
+   // @todo move NGG specific function to own integration
+   public function nggColumns( $defaults ) {
+       $this->nggColumnIndex = count($defaults) + 1;
+       add_filter( 'ngg_manage_images_column_' . $this->nggColumnIndex . '_header', array( &$this, 'nggColumnHeader' ) );
+       add_filter( 'ngg_manage_images_column_' . $this->nggColumnIndex . '_content', array( &$this, 'nggColumnContent' ), 10, 2 );
+       $defaults['wp-shortPixelNgg'] = 'ShortPixel Compression';
+       return $defaults;
+   }
+
+   public function nggCountColumns( $count ) {
+       return $count + 1;
+   }
+
+   public function nggColumnHeader( $default ) {
+       return __('ShortPixel Compression','shortpixel-image-optimiser');
+   }
+
+   public function nggColumnContent( $unknown, $picture ) {
+       $shortPixel = \wpSPIO()->getShortPixel();
+       $metadao = $shortPixel->getSpMetaDao();
+       $view = new \ShortPixelView($shortPixel);
+
+       $meta = $metadao->getMetaForPath($picture->imagePath);
+       if($meta) {
+           switch($meta->getStatus()) {
+               case "0": echo("<div id='sp-msg-C-{$meta->getId()}' class='column-wp-shortPixel' style='color: #000'>Waiting</div>"); break;
+               case "1": echo("<div id='sp-msg-C-{$meta->getId()}' class='column-wp-shortPixel' style='color: #000'>Pending</div>"); break;
+               case "2": $view->renderCustomColumn("C-" . $meta->getId(), array(
+                   'showActions' => false && current_user_can( 'manage_options' ),
+                   'status' => 'imgOptimized',
+                   'type' => \ShortPixelAPI::getCompressionTypeName($meta->getCompressionType()),
+                   'percent' => $meta->getImprovementPercent(),
+                   'bonus' => $meta->getImprovementPercent() < 5,
+                   'thumbsOpt' => 0,
+                   'thumbsOptList' => array(),
+                   'thumbsTotal' => 0,
+                   'retinasOpt' => 0,
+                   'backup' => true,
+                   'excludeSizes' => \wpSPIO()->settings()->excludeSizes,
+                   'thumbsToOptimize' => array(),
+                   'invType' => array(),
+
+               ));
+               break;
+           }
+       } else {
+           $view->renderCustomColumn($meta ? "C-" . $meta->getId() : "N-" . $picture->pid, array(
+                   'showActions' => false && current_user_can( 'manage_options' ),
+                   'status' => 'optimizeNow',
+                   'thumbsOpt' => 0,
+                   'thumbsOptList' => array(),
+                   'thumbsTotal' => 0,
+                   'retinasOpt' => 0,
+                   'message' => "Not optimized"
+               ));
+       }
+//        return var_dump($meta);
+   }
+
+} // class
+
 
 $ng = NextGen::getInstance();

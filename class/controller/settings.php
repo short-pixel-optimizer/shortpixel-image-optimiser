@@ -276,11 +276,12 @@ class SettingsController extends shortPixelController
              $foldersArray[] = $dirObj->getPath();
           }
 
-          for($i = 0; $i < count($customFolders); $i++) {
-              if(in_array($customFolders[$i]->getPath(), $foldersArray )) {
-                  $customFolders[$i]->setType("nextgen");
-                }
+          foreach($customFolders as $id => $folder)
+          {
+            if(in_array($folder->getPath(), $foldersArray )) {
+                $folder->setType("nextgen");
               }
+          }
         }
         return $customFolders;
       }

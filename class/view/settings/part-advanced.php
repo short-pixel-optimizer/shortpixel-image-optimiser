@@ -59,12 +59,13 @@ namespace ShortPixel;
                                 <th><?php _e('Last change','shortpixel-image-optimiser');?></th>
                                 <td>&nbsp;</td>
                             </tr>
-                        <?php foreach($view->customFolders as $folder) {
+                        <?php foreach($view->customFolders as $folder_id => $folder) {
                             $folder_type = $folder->getType();
 
-                            $type_display = ($folder_type) ? $folder_type . "<br>" : "";
+                            $type_display = ($folder_type) ? ucfirst($folder_type) . "<br>" : "";
                             $stat = $this->shortPixel->getSpMetaDao()->getFolderOptimizationStatus($folder->getId());
                             $cnt = $folder->getFileCount();
+
                             $st = ($cnt == 0
                                 ? __("Empty",'shortpixel-image-optimiser')
                                 : ($stat->Total == $stat->Optimized
@@ -83,7 +84,7 @@ namespace ShortPixel;
                                     . __("Failed",'shortpixel-image-optimiser') . ": " . $stat->Failed;
                             ?>
                             <tr>
-                                <td>
+                                <td class='folder folder-<?php echo $folder_id ?>'>
                                     <?php echo($folder->getPath()); ?>
                                 </td>
                                 <td>

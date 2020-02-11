@@ -132,7 +132,7 @@ class ShortPixelCustomMetaDao {
         $rows = $this->db->query($sql);
         $folders = array();
         foreach($rows as $row) {
-            $folders[] = new ShortPixelFolder($row, $this->excludePatterns);
+            $folders[$row->id] = new ShortPixelFolder($row, $this->excludePatterns);
         }
         return $folders;
     }

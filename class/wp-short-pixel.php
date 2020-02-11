@@ -103,16 +103,6 @@ class WPShortPixel {
 
         add_action('mime_types', array($this, 'addWebpMime'));
 
-        //for NextGen
-        if($this->_settings->hasCustomFolders) {
-            add_filter( 'ngg_manage_images_columns', array( &$this, 'nggColumns' ) );
-            add_filter( 'ngg_manage_images_number_of_columns', array( &$this, 'nggCountColumns' ) );
-            add_filter( 'ngg_manage_images_column_7_header', array( &$this, 'nggColumnHeader' ) );
-            add_filter( 'ngg_manage_images_column_7_content', array( &$this, 'nggColumnContent' ) );
-            // hook on the NextGen gallery list update
-            add_action('ngg_update_addgallery_page', array( &$this, 'addNextGenGalleriesToCustom'));
-        }
-
         // integration with WP/LR Sync plugin
         add_action( 'wplr_update_media', array( &$this, 'onWpLrUpdateMedia' ), 10, 2);
 
@@ -1304,6 +1294,7 @@ class WPShortPixel {
                     $itemHandler = $ids[$i];
                     $firstUrlAndPaths = $URLsAndPATHs;
                 }
+            /* @todo This catch will never hit. See sendToProcessing. Any ApiRequest is caught this. This was added because in other places errors would occur */
             } catch(Exception $e) { // Exception("Post metadata is corrupt (No attachment URL)") or Exception("Image files are missing.")
                 if($tmpMeta->getStatus() != 2) {
                     $crtItemHandler->incrementRetries(1, ($e->getCode() < 0 ? $e->getCode() : ShortPixelAPI::ERR_FILE_NOT_FOUND), $e->getMessage());
@@ -1491,6 +1482,13 @@ class WPShortPixel {
                 //put this one in the failed images list - to show the user at the end
                 $prio = $this->prioQ->addToFailed($itemHandler->getQueuedId());
             }
+            //** @todo Provisory code, testing */
+            if(isset($result['Code'])) {
+                $itemHandler->incrementRetries(1, $result['Code'], $result["Message"]);
+            } else {
+                $itemHandler->incrementRetries(1, ShortPixelAPI::ERR_UNKNOWN, "Connection error (" . $result["Message"] . ")" );
+            }
+
             self::log("HIP RES: skipping $itemId");
             $this->advanceBulk($meta->getId());
             if($itemHandler->getType() == ShortPixelMetaFacade::CUSTOM_TYPE) {
@@ -1899,13 +1897,14 @@ class WPShortPixel {
     * @param int $ID image_id
     * @param string $result - Error String
     */
+    /* Seems not in use
     public function handleError($ID, $result)
     {
         $meta = wp_get_attachment_metadata($ID);
         $meta['ShortPixelImprovement'] = $result;
         //wp_update_attachment_metadata($ID, $meta);
         update_post_meta($ID, '_wp_attachment_metadata', $meta);
-    }
+    } */
 
     /* Gets backup folder of file. This backup must exist already, or false is given.
     * @param string $file  Filepath - probably ( or directory )
@@ -3958,57 +3957,8 @@ class WPShortPixel {
         return $defaults;
     }
 
-    // @todo move NGG specific function to own integration
-    public function nggColumns( $defaults ) {
-        $this->nggColumnIndex = count($defaults) + 1;
-        add_filter( 'ngg_manage_images_column_' . $this->nggColumnIndex . '_header', array( &$this, 'nggColumnHeader' ) );
-        add_filter( 'ngg_manage_images_column_' . $this->nggColumnIndex . '_content', array( &$this, 'nggColumnContent' ), 10, 2 );
-        $defaults['wp-shortPixelNgg'] = 'ShortPixel Compression';
-        return $defaults;
-    }
 
-    public function nggCountColumns( $count ) {
-        return $count + 1;
-    }
 
-    public function nggColumnHeader( $default ) {
-        return __('ShortPixel Compression','shortpixel-image-optimiser');
-    }
-
-    public function nggColumnContent( $unknown, $picture ) {
-
-        $meta = $this->spMetaDao->getMetaForPath($picture->imagePath);
-        if($meta) {
-            switch($meta->getStatus()) {
-                case "0": echo("<div id='sp-msg-C-{$meta->getId()}' class='column-wp-shortPixel' style='color: #928B1E'>Waiting</div>"); break;
-                case "1": echo("<div id='sp-msg-C-{$meta->getId()}' class='column-wp-shortPixel' style='color: #1919E2'>Pending</div>"); break;
-                case "2": $this->view->renderCustomColumn("C-" . $meta->getId(), array(
-                    'showActions' => false && current_user_can( 'manage_options' ),
-                    'status' => 'imgOptimized',
-                    'type' => ShortPixelAPI::getCompressionTypeName($meta->getCompressionType()),
-                    'percent' => $meta->getImprovementPercent(),
-                    'bonus' => $meta->getImprovementPercent() < 5,
-                    'thumbsOpt' => 0,
-                    'thumbsOptList' => array(),
-                    'thumbsTotal' => 0,
-                    'retinasOpt' => 0,
-                    'backup' => true
-                ));
-                break;
-            }
-        } else {
-            $this->view->renderCustomColumn($meta ? "C-" . $meta->getId() : "N-" . $picture->pid, array(
-                    'showActions' => false && current_user_can( 'manage_options' ),
-                    'status' => 'optimizeNow',
-                    'thumbsOpt' => 0,
-                    'thumbsOptList' => array(),
-                    'thumbsTotal' => 0,
-                    'retinasOpt' => 0,
-                    'message' => "Not optimized"
-                ));
-        }
-//        return var_dump($meta);
-    }
 
     public function generatePluginLinks($links) {
         $in = '<a href="options-general.php?page=wp-shortpixel-settings">Settings</a>';
@@ -4520,6 +4470,8 @@ class WPShortPixel {
 //            : (defined("SHORTPIXEL_AFFILIATE_CODE") && strlen(SHORTPIXEL_AFFILIATE_CODE) ? "/affiliate/" . SHORTPIXEL_AFFILIATE_CODE : "");
         return "";
     }
+
+    /** @todo Deprecate in favor of apikeyModel */
     public function getVerifiedKey() {
         return $this->_settings->verifiedKey;
     }
