@@ -54,7 +54,7 @@ require_once('class/model/sp-file-rights-exception.php');
 require_once('class/db/shortpixel-db.php');
 require_once('class/db/wp-shortpixel-db.php');
 require_once('class/db/shortpixel-custom-meta-dao.php');
-require_once('class/db/shortpixel-nextgen-adapter.php');
+
 require_once('class/db/wp-shortpixel-media-library-adapter.php');
 require_once('class/db/shortpixel-meta-facade.php');
 //view

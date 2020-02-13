@@ -32,7 +32,6 @@ class ShortPixelPlugin
 
       $this->initRuntime(); // require controllers, and other needed classes
       $this->initHooks();
-
       add_action('plugins_loaded', array($this, 'init'), 5); // early as possible init.
   }
 
@@ -46,7 +45,6 @@ class ShortPixelPlugin
       if(isset($_REQUEST['noheader'])) {
           $this->is_noheaders = true;
       }
-
 
       // @todo Transitionary init for the time being, since plugin init functionality is still split between.
       global $shortPixelPluginInstance;

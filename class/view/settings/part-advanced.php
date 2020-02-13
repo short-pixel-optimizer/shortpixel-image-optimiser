@@ -53,17 +53,19 @@ namespace ShortPixel;
                     <?php if($view->customFolders) { ?>
                         <table class="shortpixel-folders-list">
                             <tr style="font-weight: bold;">
-                                <td><?php _e('Folder name','shortpixel-image-optimiser');?></td>
-                                <td><?php _e('Type &amp;<br>Status','shortpixel-image-optimiser');?></td>
-                                <td><?php _e('Files','shortpixel-image-optimiser');?></td>
-                                <td><?php _e('Last change','shortpixel-image-optimiser');?></td>
-                                <td></td>
+                                <th><?php _e('Folder name','shortpixel-image-optimiser');?></th>
+                                <th><?php _e('Type &amp; Status','shortpixel-image-optimiser');?></th>
+                                <th><?php _e('Files','shortpixel-image-optimiser');?></th>
+                                <th><?php _e('Last change','shortpixel-image-optimiser');?></th>
+                                <td>&nbsp;</td>
                             </tr>
-                        <?php foreach($view->customFolders as $folder) {
-                            $typ = $folder->getType();
-                            $typ = $typ ? $typ . "<br>" : "";
+                        <?php foreach($view->customFolders as $folder_id => $folder) {
+                            $folder_type = $folder->getType();
+
+                            $type_display = ($folder_type) ? ucfirst($folder_type) . "<br>" : "";
                             $stat = $this->shortPixel->getSpMetaDao()->getFolderOptimizationStatus($folder->getId());
                             $cnt = $folder->getFileCount();
+
                             $st = ($cnt == 0
                                 ? __("Empty",'shortpixel-image-optimiser')
                                 : ($stat->Total == $stat->Optimized
@@ -74,19 +76,22 @@ namespace ShortPixel;
 
                             $action = ($st == __("Optimized",'shortpixel-image-optimiser') || $st == __("Empty",'shortpixel-image-optimiser') ? __("Stop monitoring",'shortpixel-image-optimiser') : __("Stop optimizing",'shortpixel-image-optimiser'));
 
+                            if ($folder_type == 'nextgen' && $view->data->includeNextGen == 1)
+                              $action = false;
+
                             $fullStat = $st == __("Empty",'shortpixel-image-optimiser') ? "" : __("Optimized",'shortpixel-image-optimiser') . ": " . $stat->Optimized . ", "
                                     . __("Pending",'shortpixel-image-optimiser') . ": " . $stat->Pending . ", " . __("Waiting",'shortpixel-image-optimiser') . ": " . $stat->Waiting . ", "
                                     . __("Failed",'shortpixel-image-optimiser') . ": " . $stat->Failed;
                             ?>
                             <tr>
-                                <td>
+                                <td class='folder folder-<?php echo $folder_id ?>'>
                                     <?php echo($folder->getPath()); ?>
                                 </td>
                                 <td>
                                     <?php if(!($st == "Empty")) { ?>
                                     <a href="javascript:none();"  title="<?php echo $fullStat; ?>" style="text-decoration: none;">
                                         <img alt='Info icon' src='<?php echo( wpSPIO()->plugin_url('res/img/info-icon.png' ));?>' style="margin-bottom: -2px;"/>
-                                    </a>&nbsp;<?php  } echo($typ.$st.$err); ?>
+                                    </a>&nbsp;<?php  } echo($type_display.$st.$err); ?>
 
                                 </td>
                                 <td>
@@ -96,7 +101,9 @@ namespace ShortPixel;
                                     <?php echo($folder->getTsUpdated()); ?>
                                 </td>
                                 <td>
+                                  <?php if ($action): ?>
                                     <input type="button" class="button remove-folder-button" data-value="<?php echo($folder->getPath()); ?>" title="<?php echo($action . " " . $folder->getPath()); ?>" value="<?php echo $action;?>">
+                                 <?php endif; ?>
                                     <input type="button" style="display:none;" class="button button-alert recheck-folder-button" data-value="<?php echo($folder->getPath()); ?>"
                                            title="<?php _e('Full folder refresh, check each file of the folder if it changed since it was optimized. Might take up to 1 min. for big folders.','shortpixel-image-optimiser');?>"
                                            value="<?php _e('Refresh','shortpixel-image-optimiser');?>">
