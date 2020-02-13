@@ -158,7 +158,7 @@ class WPShortPixel {
         //dismiss notices
 
         // deprecated - dismissAdminNotice should not be called no longer.
-      //  add_action( 'wp_ajax_shortpixel_dismiss_notice', array(&$this, 'dismissAdminNotice'));
+        add_action( 'wp_ajax_shortpixel_dismiss_notice', array(&$this, 'dismissAdminNotice'));
         add_action( 'wp_ajax_shortpixel_dismiss_media_alert', array($this, 'dismissMediaAlert'));
         add_action( 'wp_ajax_shortpixel_dismissFileError', array($this, 'dismissFileError'));
 
@@ -301,7 +301,7 @@ class WPShortPixel {
         } */
     }
 
-/* Deprecated in favor of NoticeController.
+/* Deprecated in favor of NoticeController.  @todo Must go, sadly still in use. */
     public function dismissAdminNotice() {
         $noticeId = preg_replace('|[^a-z0-9]|i', '', $_GET['notice_id']);
         $dismissed = $this->_settings->dismissedNotices ? $this->_settings->dismissedNotices : array();
@@ -312,9 +312,6 @@ class WPShortPixel {
         }
         die(json_encode(array("Status" => 'success', "Message" => 'Notice ID: ' . $noticeId . ' dismissed')));
     }
-
-
-    */
 
     // This probably displays an alert when requesting the user to switch from grid to list in media library
     public function dismissMediaAlert() {
@@ -2759,6 +2756,7 @@ class WPShortPixel {
     /** View for Custom media
     * @todo Move this to own view.
     */
+    /* Gone! @todo Must go when new ListCMedia is done */
     public function listCustomMedia() {
         if( ! class_exists( 'ShortPixelListTable' ) ) {
             require_once('view/shortpixel-list-table.php');
@@ -2817,6 +2815,7 @@ class WPShortPixel {
             </div>
 	</div> <?php
     }
+    
 
     /** Front End function that controls bulk processes.
     * TODO This is a Bulk controller

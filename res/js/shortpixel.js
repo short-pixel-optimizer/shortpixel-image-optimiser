@@ -1297,7 +1297,7 @@ function dismissShortPixelNoticeExceed(e) {
     e.preventDefault();
 } */
 
-/*
+/* @todo Must go, still in use in some parts */ 
 function dismissShortPixelNotice(id) {
     jQuery("#short-pixel-notice-" + id).hide();
     var data = { action  : 'shortpixel_dismiss_notice',
@@ -1308,7 +1308,7 @@ function dismissShortPixelNotice(id) {
             console.log("dismissed");
         }
     });
-} */
+}
 
 function dismissFileError() {
     jQuery('.shortpixel-alert').hide();
