@@ -268,6 +268,7 @@ define('SHORTPIXEL_CFZONE', 'The Zone ID from the domain settings in Cloudflare'
 
 Release date: 13th February 2020
 * Reference to the Website Speed Optimization service.
+* Fixed: deleteItemCache in wrong place ( before save ) thus resetting data
 * Language – 2 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted
 
 = 4.16.0 =
