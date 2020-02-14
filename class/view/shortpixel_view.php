@@ -607,9 +607,9 @@ class ShortPixelView {
             <h1><?php _e('Bulk Image Optimization by ShortPixel','shortpixel-image-optimiser');?></h1>
             <?php $this->displayBulkProgressBar(true, $percent, $message, $remainingQuota, $averageCompression, $type);?>
 
-            <!-- Partners: SP! -->
+            <!-- Partners: WSO Website Speed Optimization -->
             <?php
-              if(!isset($dismissed['squirrly']) && $quotaData['APICallsQuotaOneTimeNumeric']<10000 && $quotaData['APICallsQuotaNumeric']<5000 && true === false) // this is offline for now to be patched in, on the boolean. 
+              if(!isset($dismissed['squirrly'])) // keep the same dismiss option
               {
             ?>
             <div id="short-pixel-notice-squirrly" class="sp-notice sp-notice-info bulk-progress bulk-progress-partners sp-floating-block sp-full-width">
@@ -622,6 +622,18 @@ class ShortPixelView {
                       </span>
                   </div>
             </div>
+            <?php } ?>
+            <?php
+            // deactivated for the moment, because of the WSO notice above
+            if(false && !isset($dismissed['squirrly']) && $quotaData['APICallsQuotaOneTimeNumeric']<10000 && $quotaData['APICallsQuotaNumeric']<5000) { ?>
+                <!-- Partners: SQUIRLY -->
+                <div id="short-pixel-notice-squirrly" class="sp-notice sp-notice-info bulk-progress bulk-progress-partners sp-floating-block sp-full-width">
+                    <div style="float:right"><a href="javascript:dismissShortPixelNotice('squirrly')"><?php _e('Dismiss','shortpixel-image-optimiser');?></a></div>
+                    <a href="https://my.squirrly.co/go120073/squirrly.co/short-pixel-seo" target="_blank">
+                        <img src="<?php echo(wpSPIO()->plugin_url('res/img/squirrly.png' ));?>" height="50">
+                        <div><?php _e('While you wait for your images to optimize, check out Squirrly, a great plugin for further boosting your SEO.','shortpixel-image-optimiser');?></div>
+                    </a>
+                </div>
             <?php } ?>
 
             <div class="sp-floating-block sp-notice bulk-notices-parent">
