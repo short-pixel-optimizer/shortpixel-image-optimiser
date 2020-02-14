@@ -56,6 +56,17 @@ class adminNoticesController extends ShortPixelController
     {
       Notices::removeNoticeByID(self::MSG_UPGRADE_MONTH);
       Notices::removeNoticeByID(self::MSG_UPGRADE_BULK);
+      Notices::removeNoticeBYID(self::MSG_QUOTA_REACHED);
+    }
+
+    /** ReInstates A Persistent Notice manually */
+    public static function reInstateQuotaExceeded()
+    {
+      $noticeControl = Notices::getInstance();
+      $notice = $noticeControl->getNoticeByID(self::MSG_QUOTA_REACHED);
+      $notice->unDismiss();
+
+      $noticeControl->update();
     }
 
     /* General function to check on Hook for admin notices if there is something to show globally */
