@@ -842,7 +842,7 @@ class WPShortPixel {
         }
     } */
 
-    protected function addPathToCustomFolder($imageFsPath, $folderId, $pid) {
+    public function addPathToCustomFolder($imageFsPath, $folderId, $pid) {
         //prevent adding it multiple times if the action is called repeatedly (Gravity Forms does that)
         $existing = $this->spMetaDao->getMetaForPath($imageFsPath);
         if($existing) {
