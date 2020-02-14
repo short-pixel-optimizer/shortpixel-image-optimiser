@@ -897,7 +897,7 @@ class ShortPixelMetaFacade {
         return array_unique($duplicates);
     }
 
-/*  @todo . Was only in use by now defunct shortpixel-list-table
+/*  @todo . Was only in use by now defunct shortpixel-list-table */
     public static function pathToWebPath($path) {
         //$upl = wp_upload_dir();
         //return str_replace($upl["basedir"], $upl["baseurl"], $path);
@@ -911,7 +911,7 @@ class ShortPixelMetaFacade {
         $path = implode('/', $pathParts);
         return self::filenameToRootRelative($path);
     }
-*/
+
 
     public static function filenameToRootRelative($path) {
         return self::replaceHomePath($path, "");
