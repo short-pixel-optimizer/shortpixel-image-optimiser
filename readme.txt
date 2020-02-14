@@ -266,10 +266,12 @@ define('SHORTPIXEL_CFZONE', 'The Zone ID from the domain settings in Cloudflare'
 
 = 4.16.1 =
 
-Release date: 13th February 2020
+Release date: 14th February 2020
+* Fix non-dismissable alerts.
 * Reference to the Website Speed Optimization service.
 * Fixed: deleteItemCache in wrong place ( before save ) thus resetting data
-* Language – 2 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted
+* Fixed: NextGen integration
+* Language – 3 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted
 
 = 4.16.0 =
 
