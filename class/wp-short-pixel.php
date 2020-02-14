@@ -3187,6 +3187,8 @@ class WPShortPixel {
             if($validityData['APIKeyValid']) {
                 $this->_settings->apiKey = $key;
                 $this->_settings->verifiedKey = true;
+                \ShortPixel\adminNoticesController::resetAPINotices();
+                \ShortPixel\Notices\NoticeController::addSuccess(__('Great, you successfully claimed your API Key! Please take a few moments to review the plugin settings below before starting to optimize your images.','shortpixel-image-optimiser'));
             }
         }
         die(json_encode($body));
