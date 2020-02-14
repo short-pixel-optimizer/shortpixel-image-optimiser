@@ -18,6 +18,7 @@ class adminNoticesController extends ShortPixelController
     const MSG_UNLISTED_FOUND = 'Error102'; // SPIO found unlisted images, but this setting is not on
 
     //const MSG_NO_
+    const MSG_QUOTA_REACHED = 'QuotaReached100';
     const MSG_UPGRADE_MONTH = 'UpgradeNotice200';  // When processing more than the subscription allows on average..
     const MSG_UPGRADE_BULK = 'UpgradeNotice201'; // when there is no enough for a bulk run.
 
@@ -235,6 +236,7 @@ class adminNoticesController extends ShortPixelController
 
          $message = $this->getQuotaExceededMessage($quotaData);
          $notice = Notices::addError($message);
+         Notices::makePersistent($notice, self::MSG_QUOTA_REACHED, WEEK_IN_SECONDS);
       }
 
     }
