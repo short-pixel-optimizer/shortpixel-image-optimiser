@@ -115,7 +115,7 @@ class ShortPixelMetaFacade {
         if($this->type == self::CUSTOM_TYPE) {
             $this->spMetaDao->update($this->meta);
             if($this->meta->getExtMetaId()) {
-                $ng = NextGen::getInstance();
+                $ng = \ShortPixel\NextGen::getInstance();
                 $ng->updateImageSize($this->meta->getExtMetaId(), $this->meta->getPath());
             }
         }
@@ -897,6 +897,7 @@ class ShortPixelMetaFacade {
         return array_unique($duplicates);
     }
 
+/*  @todo . Was only in use by now defunct shortpixel-list-table */
     public static function pathToWebPath($path) {
         //$upl = wp_upload_dir();
         //return str_replace($upl["basedir"], $upl["baseurl"], $path);
@@ -910,6 +911,7 @@ class ShortPixelMetaFacade {
         $path = implode('/', $pathParts);
         return self::filenameToRootRelative($path);
     }
+
 
     public static function filenameToRootRelative($path) {
         return self::replaceHomePath($path, "");

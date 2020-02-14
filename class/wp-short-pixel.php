@@ -842,7 +842,7 @@ class WPShortPixel {
         }
     } */
 
-    protected function addPathToCustomFolder($imageFsPath, $folderId, $pid) {
+    public function addPathToCustomFolder($imageFsPath, $folderId, $pid) {
         //prevent adding it multiple times if the action is called repeatedly (Gravity Forms does that)
         $existing = $this->spMetaDao->getMetaForPath($imageFsPath);
         if($existing) {
@@ -2815,7 +2815,7 @@ class WPShortPixel {
             </div>
 	</div> <?php
     }
-    
+
 
     /** Front End function that controls bulk processes.
     * TODO This is a Bulk controller
@@ -2823,17 +2823,17 @@ class WPShortPixel {
     public function bulkProcess() {
         global $wpdb;
 
-
         if( $this->_settings->verifiedKey == false ) {//invalid API Key
             //ShortPixelView::displayActivationNotice();
             return;
         }
 
         $quotaData = $this->checkQuotaAndAlert(null, isset($_GET['checkquota']), 0);
-        //if($this->_settings->quotaExceeded != 0) {
+        if($this->_settings->quotaExceeded == 1) {
+            \ShortPixel\adminNoticesController::reInstateQuotaExceeded();
+        }
             //return;
         //}
-
 
 
         if(isset($_POST['bulkProcessPause']))
@@ -3188,7 +3188,7 @@ class WPShortPixel {
                 $this->_settings->apiKey = $key;
                 $this->_settings->verifiedKey = true;
                 \ShortPixel\adminNoticesController::resetAPINotices();
-                \ShortPixel\Notices\NoticeController::addSuccess(__('Great, you successfully claimed your API Key! Please take a few moments to review the plugin settings below before starting to optimize your images.','shortpixel-image-optimiser'));
+                Notices::addSuccess(__('Great, you successfully claimed your API Key! Please take a few moments to review the plugin settings below before starting to optimize your images.','shortpixel-image-optimiser'));
             }
         }
         die(json_encode($body));

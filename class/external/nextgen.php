@@ -32,7 +32,7 @@ class NextGen
   public static function getInstance()
   {
     if (is_null(self::$instance))
-      self::$instance = new nextGen();
+      self::$instance = new NextGen();
 
      return self::$instance;
   }
@@ -114,7 +114,8 @@ class NextGen
         //  if($msg) { //try again with ABSPATH as maybe WP is in a subdir
           //    $msg = $meta->newFolderFromPath($gallery, ABSPATH, \WPShortPixel::getCustomFolderBase());
         //  }
-          $folderMsg .= $msg;
+          if ($msg)
+            $folderMsg .= $msg . '(' . $gallery .  ') <br>';
           //$this->_settings->hasCustomFolders = time();
       }
 
@@ -125,7 +126,7 @@ class NextGen
         $settings->hasCustomFolders = time();
 
       }
-      if (! $silent)
+      if (! $silent && (strlen(trim($folderMsg)) > 0 && $folderMsg !== false))
       {
           Notice::addNormal($folderMsg);
       }

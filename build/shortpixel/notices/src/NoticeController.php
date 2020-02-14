@@ -256,7 +256,6 @@ class NoticeController //extends ShortPixelController
     $noticeController = self::getInstance();
     $notice = $noticeController->addNotice($message, NoticeModel::NOTICE_WARNING, $unique);
     return $notice;
-
   }
 
   public static function addSuccess($message, $unique = false)
