@@ -680,6 +680,7 @@ var ShortPixel = function() {
 
     function recheckQuota() {
         var parts = window.location.href.split('#');
+
         window.location.href=parts[0]+(parts[0].indexOf('?')>0?'&':'?')+'checkquota=1' + (typeof parts[1] === 'undefined' ? '' : '#' + parts[1]);
     }
 
@@ -876,7 +877,7 @@ function showToolBarAlert($status, $message, id) {
         case ShortPixel.STATUS_QUOTA_EXCEEDED:
             if(  window.location.href.search("wp-short-pixel-bulk") > 0
               && jQuery(".sp-quota-exceeded-alert").length == 0) { //if we're in bulk and the alert is not displayed reload to see all options
-                location.reload();
+              //  location.reload();
                 return;
             }
             robo.addClass("shortpixel-alert");
@@ -1074,6 +1075,7 @@ function checkBulkProcessingCallApi(){
                             jQuery("a.bulk-cancel").attr("disabled", "disabled");
                             hideSlider();
                             //showStats();
+
                             setTimeout(function(){
                                 window.location.reload();
                             }, 3000);
@@ -1297,7 +1299,7 @@ function dismissShortPixelNoticeExceed(e) {
     e.preventDefault();
 } */
 
-/* @todo Must go, still in use in some parts */ 
+/* @todo Must go, still in use in some parts */
 function dismissShortPixelNotice(id) {
     jQuery("#short-pixel-notice-" + id).hide();
     var data = { action  : 'shortpixel_dismiss_notice',
