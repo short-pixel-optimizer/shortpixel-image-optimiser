@@ -162,7 +162,7 @@ class NextGen
 
   public function updateImageSize($nggId, $path) {
 
-      $mapper = C_Image_Mapper::get_instance();
+      $mapper = \C_Image_Mapper::get_instance();
       $image = $mapper->find($nggId);
 
       $dimensions = getimagesize($this->getImageAbspath($image));
@@ -173,7 +173,7 @@ class NextGen
   }
 
   public function getImageAbspath($image) {
-      $storage = C_Gallery_Storage::get_instance();
+      $storage = \C_Gallery_Storage::get_instance();
       return $storage->get_image_abspath($image);
   }
 
