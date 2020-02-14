@@ -32,7 +32,7 @@ class NextGen
   public static function getInstance()
   {
     if (is_null(self::$instance))
-      self::$instance = new nextGen();
+      self::$instance = new NextGen();
 
      return self::$instance;
   }
@@ -114,7 +114,8 @@ class NextGen
         //  if($msg) { //try again with ABSPATH as maybe WP is in a subdir
           //    $msg = $meta->newFolderFromPath($gallery, ABSPATH, \WPShortPixel::getCustomFolderBase());
         //  }
-          $folderMsg .= $msg;
+          if ($msg)
+            $folderMsg .= $msg . '(' . $gallery .  ') <br>';
           //$this->_settings->hasCustomFolders = time();
       }
 
@@ -125,7 +126,7 @@ class NextGen
         $settings->hasCustomFolders = time();
 
       }
-      if (! $silent)
+      if (! $silent && (strlen(trim($folderMsg)) > 0 && $folderMsg !== false))
       {
           Notice::addNormal($folderMsg);
       }
@@ -162,7 +163,7 @@ class NextGen
 
   public function updateImageSize($nggId, $path) {
 
-      $mapper = \C_Image_Mapper::get_instance();
+      $mapper = C_Image_Mapper::get_instance();
       $image = $mapper->find($nggId);
 
       $dimensions = getimagesize($this->getImageAbspath($image));
@@ -173,7 +174,7 @@ class NextGen
   }
 
   public function getImageAbspath($image) {
-      $storage = \C_Gallery_Storage::get_instance();
+      $storage = C_Gallery_Storage::get_instance();
       return $storage->get_image_abspath($image);
   }
 

@@ -72,6 +72,17 @@ class NoticeModel //extends ShortPixelModel
      $this->suppress_until = time() + $this->suppress_period;
   }
 
+  public function unDismiss()
+  {
+    $this->is_dismissed = false;
+  }
+
+  public function setDismissedUntil($timestamp)
+  {
+    $this->suppress_until = $timestamp;
+  }
+
+
   /** Set a notice persistent. Meaning it shows every page load until dismissed.
   * @param $key Unique Key of this message. Required
   * @param $suppress When dismissed do not show this message again for X amount of time. When -1 it will just be dropped from the Notices and not suppressed
