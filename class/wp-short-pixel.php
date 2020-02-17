@@ -3582,9 +3582,10 @@ class WPShortPixel {
     public function resetQuotaExceeded() {
         if( $this->_settings->quotaExceeded == 1) {
             $dismissed = $this->_settings->dismissedNotices ? $this->_settings->dismissedNotices : array();
-            unset($dismissed['exceed']);
+            //unset($dismissed['exceed']);
             $this->_settings->prioritySkip = array();
             $this->_settings->dismissedNotices = $dismissed;
+            \ShortPixel\adminNoticesController::resetAPINotices();
         }
         $this->_settings->quotaExceeded = 0;
     }
