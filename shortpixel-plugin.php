@@ -233,6 +233,14 @@ class ShortPixelPlugin
           foreach($notices as $notice)
           {
             echo $notice->getForDisplay();
+
+            if ($notice->getID() == adminNoticesController::MSG_QUOTA_REACHED)
+            {
+              wp_enqueue_script('jquery.knob.min.js');
+              wp_enqueue_script('jquery.tooltip.min.js');
+              wp_enqueue_script('shortpixel');
+
+            }
           }
         }
       }

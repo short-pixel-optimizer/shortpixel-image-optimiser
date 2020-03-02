@@ -357,11 +357,7 @@ class WPShortPixel {
     /** @todo Plugin init class. Try to get rid of inline JS. Also still loads on all WP pages, prevent that. */
     function shortPixelJS() {
 
-        if (! \wpSPIO()->env()->is_screen_to_use )
-        {
-          if (! wpSPIO()->env()->is_front) // exeception if this is called to load from your frontie.
-             return; // not ours, don't load JS and such.
-        }
+
 
         $is_front = (wpSPIO()->env()->is_front) ? true : false;
 
@@ -389,7 +385,7 @@ class WPShortPixel {
       //  }
 
 
-        wp_register_script('shortpixel' . $this->jsSuffix, plugins_url('/res/js/shortpixel' . $this->jsSuffix,SHORTPIXEL_PLUGIN_FILE), array('jquery'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
+        wp_register_script('shortpixel', plugins_url('/res/js/shortpixel' . $this->jsSuffix,SHORTPIXEL_PLUGIN_FILE), array('jquery', 'jquery.knob.min.js'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
 
         // Using an Array within another Array to protect the primitive values from being cast to strings
@@ -456,13 +452,22 @@ class WPShortPixel {
                 'loading' => __('Loading...', 'shortpixel-image-optimiser' ),
                 //'' => __('', 'shortpixel-image-optimiser' ),
         );
-        wp_localize_script( 'shortpixel' . $this->jsSuffix, '_spTr', $jsTranslation );
-        wp_localize_script( 'shortpixel' . $this->jsSuffix, 'ShortPixelConstants', $ShortPixelConstants );
-        wp_enqueue_script('shortpixel' . $this->jsSuffix);
+        wp_localize_script( 'shortpixel', '_spTr', $jsTranslation );
+        wp_localize_script( 'shortpixel', 'ShortPixelConstants', $ShortPixelConstants );
 
-        wp_enqueue_script('jquery.knob.min.js', plugins_url('/res/js/jquery.knob.min.js',SHORTPIXEL_PLUGIN_FILE) );
-        wp_enqueue_script('jquery.tooltip.min.js', plugins_url('/res/js/jquery.tooltip.min.js',SHORTPIXEL_PLUGIN_FILE) );
+        wp_register_script('jquery.knob.min.js', plugins_url('/res/js/jquery.knob.min.js',SHORTPIXEL_PLUGIN_FILE) );
+        wp_register_script('jquery.tooltip.min.js', plugins_url('/res/js/jquery.tooltip.min.js',SHORTPIXEL_PLUGIN_FILE) );
 
+
+        if (! \wpSPIO()->env()->is_screen_to_use )
+        {
+          if (! wpSPIO()->env()->is_front) // exeception if this is called to load from your frontie.
+             return; // not ours, don't load JS and such.
+        }
+
+        wp_enqueue_script('shortpixel');
+        wp_enqueue_script('jquery.knob.min.js');
+        wp_enqueue_script('jquery.tooltip.min.js');
 
         wp_enqueue_script('punycode.min.js', plugins_url('/res/js/punycode.min.js',SHORTPIXEL_PLUGIN_FILE) );
     }
@@ -3258,7 +3263,7 @@ class WPShortPixel {
     } */
 
 
-    // @todo - Should be part of folder model
+    // @todo - Should be part of folder model or something else . 
     // @param force boolean Force a recheck.
     public function refreshCustomFolders($force = false) {
         $customFolders = array();
