@@ -294,8 +294,8 @@ class DirectoryModel extends ShortPixelModel
     $dirIt = new \DirectoryIterator($this->path);
     $dirArray = array();
     foreach($dirIt as $fileInfo)
-    {
-       if ($fileInfo->isDir() && $fileInfo->isReadable() && ! $fileInfo->isDot() )
+    { // IsDot must go first here, or there is possiblity to run into openbasedir restrictions.
+       if (! $fileInfo->isDot() && $fileInfo->isDir() && $fileInfo->isReadable()  )
        {
          $dir = new DirectoryModel($fileInfo->getRealPath());
          if ($dir->exists())

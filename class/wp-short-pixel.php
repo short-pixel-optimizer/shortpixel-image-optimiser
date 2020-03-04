@@ -1524,6 +1524,14 @@ class WPShortPixel {
             $this->_settings->bulkLastStatus = $result;
         }
 
+        // Generate new actions after doing something for custom type (for now)
+        if($itemHandler->getType() == ShortPixelMetaFacade::CUSTOM_TYPE)
+        {
+          $othermedia = new \ShortPixel\OtherMediaController();
+          $othermedia->setShortPixel($this);
+          $result['actions'] = $othermedia->renderNewActions(substr($itemId, 2));
+        }
+
         $ret = json_encode($result);
         self::log("HIP RET " . $ret);
         die($ret);
@@ -2482,8 +2490,9 @@ class WPShortPixel {
             $folder_id = $meta->getFolderId();
             $this->doCustomRestore($ID);
 
-            $this->spMetaDao->delete($meta);
-            $meta = $this->addPathToCustomFolder($path, $folder_id, NULL);
+            // Commented, this is creating weird issues. Seems unneeded as well.
+            //$this->spMetaDao->delete($meta);
+            // $meta = $this->addPathToCustomFolder($path, $folder_id, NULL);
 
             if($meta) {
                 $meta->setCompressionType(ShortPixelAPI::getCompressionTypeCode($compressionType));
@@ -3263,7 +3272,7 @@ class WPShortPixel {
     } */
 
 
-    // @todo - Should be part of folder model or something else . 
+    // @todo - Should be part of folder model or something else .
     // @param force boolean Force a recheck.
     public function refreshCustomFolders($force = false) {
         $customFolders = array();

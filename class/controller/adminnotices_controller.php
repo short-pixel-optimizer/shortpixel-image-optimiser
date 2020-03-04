@@ -26,6 +26,8 @@ class adminNoticesController extends ShortPixelController
     const MSG_NO_APIKEY_REPEAT = 'ApiNotice301';  // First Repeat.
     const MSG_NO_APIKEY_REPEAT_LONG = 'ApiNotice302'; // Last Repeat.
 
+    const MSG_INTEGRATION_NGGALLERY = 'IntNotice400'; 
+
     public function __construct()
     {
         add_action('admin_notices', array($this, 'check_admin_notices'), 5); // run before the plugin admin notices
@@ -77,7 +79,20 @@ class adminNoticesController extends ShortPixelController
        $this->doCompatNotices();
        $this->doUnlistedNotices();
        $this->doQuotaNotices();
+       $this->doIntegrationNotices(); 
     }
+
+
+    protected function doIntegrationNotices() 
+    {
+        $settings= \wpSPIO()->settings(); 
+        if (\wpSPIO()->env()->has_nextgen && $settings->includeNextGen  ) 
+        {
+            $message = __('It seems you are using NextGen Gallery. You can optimize your galleries with ShortPixel, but this is currently not enabled. To enable, go to settings and enabled', 'shortpixel_image_optimiser');
+            $notice = Notices::addNormal($message); 
+            Notices::makePersistent($notice, self::MSG_INTEGRATION_NGGALLERY, YEAR_IN_SECONDS);
+        }
+    }   
 
     /** Load the various messages about the lack of API-keys in the plugin */
     protected function doAPINotices()

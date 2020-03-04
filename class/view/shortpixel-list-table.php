@@ -1,4 +1,5 @@
 <?php
+return; // not in use
 use ShortPixel\Notices\NoticeController as Notices;
 
 
@@ -86,29 +87,6 @@ class ShortPixelListTable extends WP_List_Table {
                 );
 
 
-                /*'optimize' => sprintf( '<a href="?page=%s&action=%s&image=%s&_wpnonce=%s&noheader=true">%s</a>',
-                        esc_attr( $_REQUEST['page'] ), 'optimize', absint( $item->id ), wp_create_nonce( 'sp_optimize_image' ),
-                        __('Optimize','shortpixel-image-optimiser')), */
-                /*'retry' => sprintf( '<a href="?page=%s&action=%s&image=%s&_wpnonce=%s&noheader=true">%s</a>',
-                        esc_attr( $_REQUEST['page'] ), 'optimize', absint( $item->id ), wp_create_nonce( 'sp_optimize_image' ),
-                        __('Retry','shortpixel-image-optimiser')), */
-
-                /*  'redolossless' => sprintf( '<a href="?page=%s&action=%s&type=%s&image=%s&_wpnonce=%s&noheader=true">%s</a>',
-                        esc_attr( $_REQUEST['page'] ), 'redo', 'lossless', absint( $item->id ), wp_create_nonce( 'sp_redo_image' ),
-                        __('Re-optimize lossless','shortpixel-image-optimiser')), */
-                /*  'redolossy' => sprintf( '<a href="?page=%s&action=%s&type=%s&image=%s&_wpnonce=%s&noheader=true">%s</a>',
-                        esc_attr( $_REQUEST['page'] ), 'redo', 'lossy', absint( $item->id ), wp_create_nonce( 'sp_redo_image' ),
-                        __('Re-optimize lossy','shortpixel-image-optimiser')), */
-                /*'redoglossy' => sprintf( '<a href="?page=%s&action=%s&type=%s&image=%s&_wpnonce=%s&noheader=true">%s</a>',
-                        esc_attr( $_REQUEST['page'] ), 'redo', 'glossy', absint( $item->id ), wp_create_nonce( 'sp_redo_image' ),
-                        __('Re-optimize glossy','shortpixel-image-optimiser')), */
-                /*'quota' => sprintf( '<a href="?page=%s&action=%s&image=%s&_wpnonce=%s&noheader=true">%s</a>',
-                            esc_attr( $_REQUEST['page'] ), 'quota', absint( $item->id ), wp_create_nonce( 'sp_check_quota' ),
-                            __('Check quota','shortpixel-image-optimiser')), */
-                /*'restore' => sprintf( '<a href="?page=%s&action=%s&image=%s&_wpnonce=%s&noheader=true">%s</a>',
-                              esc_attr( $_REQUEST['page'] ), 'restore', absint( $item->id ), wp_create_nonce( 'sp_restore_image' ),
-                            __('Restore','shortpixel-image-optimiser')), */
-
                 $has_backup = $this->ctrl->getBackupFolderAny($item->folder, array());
 
                 $settings = $this->ctrl->getSettings();
@@ -134,7 +112,7 @@ class ShortPixelListTable extends WP_List_Table {
                     }
                     //$actionsEnabled['redo'.($item->compression_type == 1 ? "lossless" : "lossy")] = true;
                 } elseif($item->status == ShortPixelMeta::FILE_STATUS_RESTORED || $item->status < ShortPixelMeta::FILE_STATUS_UNPROCESSED) {
-                    $actionsEnabled['retry'] = true;
+                    $actionsEnabled['retry'] = true; // This one can never hit on Status restored
                 }
                 $actionsEnabled['view'] = true;
                 $title = $title . $this->row_actions($actions, false, $item->id, $actionsEnabled );

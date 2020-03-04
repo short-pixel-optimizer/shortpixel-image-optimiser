@@ -283,6 +283,7 @@ class SettingsController extends shortPixelController
               }
           }
         }
+
         return $customFolders;
       }
 
