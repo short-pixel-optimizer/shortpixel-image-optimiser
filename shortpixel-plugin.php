@@ -219,7 +219,6 @@ class ShortPixelPlugin
 
   public function admin_notices()
   {
-
       $noticeControl = Notices::getInstance();
       $noticeControl->loadIcons(array(
           'normal' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/slider.png', SHORTPIXEL_PLUGIN_FILE) . '">',
