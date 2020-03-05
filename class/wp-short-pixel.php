@@ -3284,7 +3284,7 @@ class WPShortPixel {
         if($this->_settings->hasCustomFolders) {
             $customFolders = $this->spMetaDao->getFolders();
 
-            if ($refreshDelay->exists())
+            if ($refreshDelay->exists() && ! $force)
             {
               return $customFolders;
             }
