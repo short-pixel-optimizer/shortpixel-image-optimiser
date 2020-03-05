@@ -877,7 +877,7 @@ function showToolBarAlert($status, $message, id) {
         case ShortPixel.STATUS_QUOTA_EXCEEDED:
             if(  window.location.href.search("wp-short-pixel-bulk") > 0
               && jQuery(".sp-quota-exceeded-alert").length == 0) { //if we're in bulk and the alert is not displayed reload to see all options
-              //  location.reload();
+
                 return;
             }
             robo.addClass("shortpixel-alert");
@@ -1109,7 +1109,14 @@ function checkBulkProcessingCallApi(){
                         if (ShortPixel.isCustomImageId(id) && data['TsOptimized'] && data['TsOptimized'].length > 0)
                         {
                           console.log(id);
-                          jQuery('.date-' + id).text(data['TsOptimized']);
+                          var row = jQuery('.list-overview .item-' + id);
+
+                          jQuery(row).children('.date').text(data['TsOptimized']);
+                          jQuery(row).find('.row-actions .action-optimize').remove(); // gets complicated
+                          if (data['actions'])
+                          {
+                            jQuery(row).children('.actions').html(data['actions']);
+                          }
                         }
 
 

@@ -128,7 +128,7 @@ class ShortPixelCustomMetaDao {
     }
 
     public function getFolders($deleted = false) {
-        $sql = "SELECT * FROM {$this->db->getPrefix()}shortpixel_folders" . ($deleted ? "" : " WHERE status <> -1");
+        $sql = "SELECT * FROM {$this->db->getPrefix()}shortpixel_folders" . ($deleted ? "" : " WHERE status <> -1 order by path");
         $rows = $this->db->query($sql);
         $folders = array();
         foreach($rows as $row) {
@@ -420,25 +420,37 @@ class ShortPixelCustomMetaDao {
 
     public function getPaginatedMetas($hasNextGen, $filters, $count, $page, $orderby = false, $order = false) {
         // [BS] Remove exclusion for sm.status <> 3. Status 3 is 'restored, perform no action'
-        $sql = "SELECT sm.id, sm.name, sm.path folder, "
+        if ($page <= 0)
+          $page = 1; // first page on invalid input
+
+          // Not sure why the NGgallery is joined on this. IF          */
+       $sql = "SELECT sm.id, sm.name, sm.path, "
                 . ($hasNextGen ? "CASE WHEN ng.gid IS NOT NULL THEN 'NextGen' ELSE 'Custom' END media_type, " : "'Custom' media_type, ")
                 . "sm.status, sm.compression_type, sm.keep_exif, sm.cmyk2rgb, sm.resize, sm.resize_width, sm.resize_height, sm.message, sm.ts_added, sm.ts_optimized "
                 . "FROM {$this->db->getPrefix()}shortpixel_meta sm "
                 . "INNER JOIN  {$this->db->getPrefix()}shortpixel_folders sf on sm.folder_id = sf.id "
                 . ($hasNextGen ? "LEFT JOIN {$this->db->getPrefix()}ngg_gallery ng on sf.path = ng.path " : " ")
                 . "WHERE sf.status <> -1"; //  AND sm.status <> 3
+
+    /*    $sql = 'SELECT sm.* FROM ' . $this->db->getPrefix() . 'shortpixel_meta sm
+               INNER JOIN ' . $this->db->getPrefix() . 'shortpixel_folders sf on sm.folder_id = sf.id
+               where sf.status <> -1 '; */
+
+
         foreach($filters as $field => $value) {
             $sql .= " AND sm.$field " . $value->operator . " ". $value->value . " ";
         }
-        $sql  .= ($orderby ? " ORDER BY $orderby $order " : "")
+        $sql  .= ($orderby ? " ORDER BY sm.$orderby $order " : "")
                 . " LIMIT $count OFFSET " . ($page - 1) * $count;
-        return $this->db->query($sql);
+        $result =  $this->db->query($sql);
+
+        return $result;
     }
 
     public function getPendingMetas($count) {
         return $this->db->query("SELECT sm.id from {$this->db->getPrefix()}shortpixel_meta sm "
             . "INNER JOIN  {$this->db->getPrefix()}shortpixel_folders sf on sm.folder_id = sf.id "
-            . "WHERE sf.status <> -1 AND sm.status <> 3 AND ( sm.status = 0 OR sm.status = 1 OR (sm.status < 0 AND sm.retries < 3)) "
+            . "WHERE sf.status <> -1 AND sm.status <> 3 AND ( sm.status = 1 OR (sm.status < 0 AND sm.retries < 3)) "
             . "ORDER BY sm.id DESC LIMIT $count");
     }
 
@@ -492,7 +504,7 @@ class ShortPixelCustomMetaDao {
         }
 
         $res = $this->db->query($sql);
-        return isset($res[0]->recCount) ? $res[0]->recCount : 0;
+        return isset($res[0]->recCount) ? intval($res[0]->recCount) : 0;
     }
 
     public function getMeta($id, $deleted = false) {
