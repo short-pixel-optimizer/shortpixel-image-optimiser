@@ -214,6 +214,10 @@ class ShortPixelPlugin
 
   public function admin_notices()
   {
+      if (! \wpSPIO()->env()->is_screen_to_use )
+      {
+          return;
+      }
       $noticeControl = Notices::getInstance();
       $noticeControl->loadIcons(array(
           'normal' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/slider.png', SHORTPIXEL_PLUGIN_FILE) . '">',
