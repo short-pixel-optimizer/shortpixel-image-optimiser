@@ -58,7 +58,7 @@ Make an instant <a href="http://shortpixel.com/image-compression-test" target="_
 * option to deactivate auto-optimizing images on upload
 * images that are optimized less that 5% are bonus
 * WooCommerce, WP offload S3 and WP Stateless compatible
-* 40 days optimization report with all image details and overall statistics
+* 30 days optimization report with all image details and overall statistics
 * We are GDPR compliant! <a href="https://shortpixel.com/privacy#gdpr" target="_blank">Read more.</a>
 * **free optimization credits for non-profits**, <a href="https://shortpixel.com/contact" target="_blank">contact us</a> for details
 

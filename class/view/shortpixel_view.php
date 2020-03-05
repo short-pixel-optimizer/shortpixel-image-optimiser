@@ -446,7 +446,7 @@ class ShortPixelView {
             </div>
             <p><?php printf(__('Go to the ShortPixel <a href="%soptions-general.php?page=wp-shortpixel-settings&part=stats">Stats</a>
                                and see all your websites\' optimized stats. Download your detailed <a href="https://%s/v2/report.php?key=%s">Optimization Report</a>
-                               to check your image optimization statistics for the last 40 days.','shortpixel-image-optimiser'),
+                               to check your image optimization statistics for the last 30 days.','shortpixel-image-optimiser'),
                               get_admin_url(), SHORTPIXEL_API, (defined("SHORTPIXEL_HIDE_API_KEY") ? '' : $this->ctrl->getApiKey()) );?></p>
             <?php
             $failed = $this->ctrl->getPrioQ()->getFailed();
@@ -1659,7 +1659,7 @@ class ShortPixelView {
                     </tr>
                     <tr>
                         <th><a href="https://<?php echo(SHORTPIXEL_API);?>/v2/report.php?key=<?php echo(defined("SHORTPIXEL_HIDE_API_KEY") ? '' : $this->ctrl->getApiKey());?>" target="_blank">
-                                <?php _e('See report (last 40 days)','shortpixel-image-optimiser');?>
+                                <?php _e('See report (last 30 days)','shortpixel-image-optimiser');?>
                             </a></th>
                         <td>&nbsp;</td>
                     </tr>

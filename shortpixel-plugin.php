@@ -245,7 +245,6 @@ class ShortPixelPlugin
               wp_enqueue_script('jquery.knob.min.js');
               wp_enqueue_script('jquery.tooltip.min.js');
               wp_enqueue_script('shortpixel');
-
             }
           }
         }

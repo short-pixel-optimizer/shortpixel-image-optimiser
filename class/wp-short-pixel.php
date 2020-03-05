@@ -3277,9 +3277,21 @@ class WPShortPixel {
     public function refreshCustomFolders($force = false) {
         $customFolders = array();
         $fs =  \wpSPIO()->fileSystem();
+        $cache = new \ShortPixel\CacheController();
+
+        $refreshDelay = $cache->getItem('custom_folder_cache_delay');
 
         if($this->_settings->hasCustomFolders) {
             $customFolders = $this->spMetaDao->getFolders();
+
+            if ($refreshDelay->exists())
+            {
+              return $customFolders;
+            }
+
+            $refreshDelay->setExpires(5 * MINUTE_IN_SECONDS);
+            $refreshDelay->save();
+
             foreach($customFolders as $folder) {
 
               try {
@@ -3295,14 +3307,19 @@ class WPShortPixel {
                 {
                   $folder->setTsUpdated(date("Y-m-d H:i:s", 0) ); //
                   $this->spMetaDao->update($folder);
+                  $cache->deleteItemObject($refreshDelay);
                 }
 
                 $fsFolder = $fs->getDirectory($folder->getPath());
-                if ($fsFolder->exists())
+
+                if ($fsFolder->exists() )
+                {
                   $this->spMetaDao->refreshFolder($fsFolder);
+                }
                 else {
                   Log::addWarn('Custom folder does not exist: ' . $fsFolder->getPath() );
                 }
+
 
               }
               /*  if($folder->getPath() === $ignore) continue;

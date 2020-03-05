@@ -58,8 +58,11 @@ class CacheController extends ShortPixelController
     {
       $cache->delete();
     }
+  }
 
-
+  public function deleteItemObject(CacheModel $cache)
+  {
+    $cache->delete();
   }
 
 }

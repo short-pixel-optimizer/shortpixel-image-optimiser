@@ -262,7 +262,6 @@ class SettingsController extends shortPixelController
             Notice::addError($message);
           else
             Notice::addNormal($message);
-
         }
 
         if ($this->has_nextgen)

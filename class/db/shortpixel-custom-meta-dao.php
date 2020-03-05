@@ -296,7 +296,7 @@ class ShortPixelCustomMetaDao {
 
         Log::addDebug('Found Files for custom media ' . count($files));
         $folderObj->setTsUpdated(date("Y-m-d H:i:s", $folderObj->getFolderContentsChangeDate()) );
-        $folderObj->setFileCount($folderObj->countFiles() );
+        $folderObj->setFileCount( count($files) );
         $this->update($folderObj);
 
         $this->batchInsertImages($files, $folderObj->getId());
