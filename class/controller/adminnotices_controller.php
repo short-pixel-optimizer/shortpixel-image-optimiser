@@ -80,7 +80,7 @@ class adminNoticesController extends ShortPixelController
        $this->doUnlistedNotices();
        $this->doQuotaNotices();
 
-       $this->doIntegrationNotices();
+      $this->doIntegrationNotices();
     }
 
 
@@ -93,7 +93,9 @@ class adminNoticesController extends ShortPixelController
             $notice = Notices::addNormal($message);
             Notices::makePersistent($notice, self::MSG_INTEGRATION_NGGALLERY, YEAR_IN_SECONDS);
         }
+
     }
+
 
     /** Load the various messages about the lack of API-keys in the plugin */
     protected function doAPINotices()
