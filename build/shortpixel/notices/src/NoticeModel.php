@@ -179,7 +179,7 @@ class NoticeModel //extends ShortPixelModel
 
   //  $data_string = "{action:'$this->notice_action'}";
 
-      $js = "jQuery(document).on('click','#$this->id button',
+      $js = "jQuery(document).on('click','#$this->id button .notice-dismiss',
          function() {
            var data = $data;
            var url = $url;

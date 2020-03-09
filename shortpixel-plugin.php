@@ -239,7 +239,8 @@ class ShortPixelPlugin
           {
             echo $notice->getForDisplay();
 
-            if ($notice->getID() == adminNoticesController::MSG_QUOTA_REACHED)
+            if ($notice->getID() == adminNoticesController::MSG_QUOTA_REACHED || $notice->getID() == adminNoticesController::MSG_UPGRADE_MONTH
+            || $notice->getID() == adminNoticesController::MSG_UPGRADE_BULK)
             {
               wp_enqueue_script('jquery.knob.min.js');
               wp_enqueue_script('jquery.tooltip.min.js');
