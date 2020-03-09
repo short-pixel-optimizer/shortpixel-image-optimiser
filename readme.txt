@@ -264,6 +264,12 @@ define('SHORTPIXEL_CFZONE', 'The Zone ID from the domain settings in Cloudflare'
 
 == Changelog ==
 
+= 4.16.3 =
+
+Release date: 9th March 2020
+* Fix missing button to choose a plan when running out of credits.
+* Language – 0 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted
+
 = 4.16.2 =
 
 Release date: 27th February 2020
