@@ -80,7 +80,7 @@ class adminNoticesController extends ShortPixelController
        $this->doUnlistedNotices();
        $this->doQuotaNotices();
 
-      $this->doIntegrationNotices();
+       $this->doIntegrationNotices(); 
     }
 
 
@@ -95,7 +95,6 @@ class adminNoticesController extends ShortPixelController
         }
 
     }
-
 
     /** Load the various messages about the lack of API-keys in the plugin */
     protected function doAPINotices()
