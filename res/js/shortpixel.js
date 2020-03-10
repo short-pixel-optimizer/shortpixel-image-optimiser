@@ -3,7 +3,7 @@
  */
 
 // init checks bulkProcess on each page. initSettings is when the settings View is being loaded.
-jQuery(document).ready(function(){ShortPixel.init();});
+jQuery(document).ready(function(){ShortPixel.init(); });
 
 var ShortPixel = function() {
 

@@ -61,6 +61,7 @@ class NextGen
     $use_screens[] = 'gallery_page_ngg_addgallery';  // add gallery
     $use_screens[] = 'nggallery-manage-gallery'; // manage gallery
     $use_screens[] = 'gallery_page_nggallery-manage-album'; // manage album
+    $use_screens[] = 'nggallery-manage-images'; // images in gallery overview
 
     return $use_screens;
   }
