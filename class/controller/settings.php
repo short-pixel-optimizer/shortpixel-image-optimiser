@@ -115,6 +115,9 @@ class SettingsController extends shortPixelController
               $nextgen = new NextGen();
               $previous = $this->model->includeNextGen;
               $nextgen->nextGenEnabled($previous);
+
+              // Reset any integration notices when updating settings.
+              adminNoticesController::resetIntegrationNotices();
           }
 
           $check_key = false;

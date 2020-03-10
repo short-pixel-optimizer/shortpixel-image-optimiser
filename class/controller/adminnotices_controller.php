@@ -61,6 +61,11 @@ class adminNoticesController extends ShortPixelController
       Notices::removeNoticeBYID(self::MSG_QUOTA_REACHED);
     }
 
+    public static function resetIntegrationNotices()
+    {
+      Notices::removeNoticeByID(self::MSG_INTEGRATION_NGGALLERY);
+    }
+
     /** ReInstates A Persistent Notice manually */
     public static function reInstateQuotaExceeded()
     {
@@ -80,16 +85,18 @@ class adminNoticesController extends ShortPixelController
        $this->doUnlistedNotices();
        $this->doQuotaNotices();
 
-       $this->doIntegrationNotices(); 
+       $this->doIntegrationNotices();
     }
 
 
     protected function doIntegrationNotices()
     {
         $settings= \wpSPIO()->settings();
-        if (\wpSPIO()->env()->has_nextgen && $settings->includeNextGen  )
+
+        if (\wpSPIO()->env()->has_nextgen && ! $settings->includeNextGen  )
         {
-            $message = __('It seems you are using NextGen Gallery. You can optimize your galleries with ShortPixel, but this is currently not enabled. To enable, go to settings and enabled', 'shortpixel_image_optimiser');
+            $url = admin_url('wp-admin/options-general.php?page=wp-shortpixel-settings&part=adv-settings');
+            $message = sprintf(__('It seems you are using NextGen Gallery. You can optimize your galleries with ShortPixel, but this is currently not enabled. To enable, %sgo to settings and enable%s it!', 'shortpixel_image_optimiser'), '<a href="' . $url . '">', '</a>');
             $notice = Notices::addNormal($message);
             Notices::makePersistent($notice, self::MSG_INTEGRATION_NGGALLERY, YEAR_IN_SECONDS);
         }
