@@ -34,7 +34,7 @@ Make an instant <a href="http://shortpixel.com/image-compression-test" target="_
 * option to automatically convert PNG to JPG if that will result in smaller images. Ideal for large images in PNG format.
 * no file size limit
 * option to freely convert any JPEG, PNG or GIF (even animated ones!) to **WebP** for more Google love. <a href="http://blog.shortpixel.com/how-webp-images-can-speed-up-your-site/" target="_blank">How to enable WebP?</a>
-* option to include the generated WebP images into the front-end pages by using the &lt;picture&gt; tag instead of &lt;img&gt;
+* option to include the generated WebP images into the front-end pages by using the `<picture>` tag instead of `<img>`
 * compatible with WP Retina 2x - all **retina images** are automatically compressed. <a href="http://blog.shortpixel.com/how-to-use-optimized-retina-images-on-your-wordpress-site-for-best-user-experience-on-apple-devices/" target="_blank">How to benefit from Retina displays?</a>
 * optimize thumbnails as well as featured images. You can also **select individual thumbnails to exclude** from optimization.
 * ability to optimize any image on your site including images in **NextGEN Gallery** and any other image galleries or sliders
@@ -91,7 +91,7 @@ Help us spread the word by recommending ShortPixel to your friends and collect *
 Let's get ShortPixel plugin running on your WordPress website:
 
 
-1. Sign up using your email at https://shortpixel.com/wp-apikey
+1. Sign up using your email at <a href="https://shortpixel.com/wp-apikey" target="_blank">https://shortpixel.com/wp-apikey</a>.
 2. You will receive your personal API key in a confirmation email, to the address you provided.
 3. Upload the ShortPixel plugin to the /wp-content/plugins/ directory
 4. Use your unique API key to activate ShortPixel plugin in the 'Plugins' menu in WordPress.
@@ -151,15 +151,17 @@ Let's get ShortPixel plugin running on your WordPress website:
 
 = How do I activate the API key on a multisite? =
     You have to activate the plugin in the network admin and then activate it manually on each individual site in the multisite. Once you have done that, the Settings menu appears and you can add the API key for each individual site.
-    As an alternative, you can edit wp-config.php and add this line
-    define(‘SHORTPIXEL_API_KEY’, ‘APIKEY’)
-    where ‘APIKEY’ is the API Key received upon sign up.
+    As an alternative, you can edit wp-config.php and add this line:
+
+`define('SHORTPIXEL_API_KEY', 'APIKEY');`
+where `APIKEY` is the API Key received upon sign up.
     If configured that way, the API key will be used for all the sites of the multisite but will only be visible on the main site’s Settings page, being hidden for the rest of the sites.
 
 = I am not the only one working in the WordPress Dashboard. How can I hide my API key? =
     There is a simple way to hide the API key, all you need to do is to add these two lines in your wp-config.php:
-    define('SHORTPIXEL_API_KEY', '<<your api key here>>');
-    define('SHORTPIXEL_HIDE_API_KEY', true);
+
+`define('SHORTPIXEL_API_KEY', '<<your api key here>>');`
+`define('SHORTPIXEL_HIDE_API_KEY', true);`
 
 = How much is a credit? =
     A credit is used each time ShortPixel optimizes an image or thumbnail by at least 5%. If we're not able to optimize an image or thumbnail by at least 5% then no credit will be used :-)
@@ -213,34 +215,49 @@ The ShortPixel team is here to help. <a href="https://shortpixel.com/contact">Co
 == Actions and Filters for Developers ==
 
 The ShortPixel Image Optimiser plugin calls the following actions and filters:
-> do_action( 'shortpixel_image_optimised', $post_id ); //upon successful optimization
 
-> do_action("shortpixel_before_restore_image", $post_id); //before restoring an image from backup
+`do_action( 'shortpixel_image_optimised', $post_id );`
+upon successful optimization;
 
-> do_action("shortpixel_after_restore_image", $post_id); //after succesful restore
+`do_action("shortpixel_before_restore_image", $post_id);`
+before restoring an image from backup;
 
-> apply_filters("shortpixel_backup_folder", $backup_folder, $main_file_path, $sizes); //just before returning the ShortPixel backup folder, usually /wp-content/uploads/ShortpixelBackups. The $sizes are the sizes array from metadata.
+`do_action("shortpixel_after_restore_image", $post_id);`
+after succesful restore;
 
-> apply_filters('shortpixel_image_exists', file_exists($path), $path, $post_id); //post ID is not always set, only if it's an image from Media Library
+`apply_filters("shortpixel_backup_folder", $backup_folder, $main_file_path, $sizes);`
+just before returning the ShortPixel backup folder, usually /wp-content/uploads/ShortpixelBackups. The `$sizes` are the sizes array from metadata;
 
-> apply_filters('shortpixel_image_urls', $URLs, $post_id) // filters the URLs that will be sent to optimization, $URLs is a plain array
+`apply_filters('shortpixel_image_exists', file_exists($path), $path, $post_id);`
+post ID is not always set, only if it's an image from Media Library;
 
-> apply_filters('shortpixel/db/chunk_size', $chunk); //the $chunk is the value ShortPixel chooses to use as number of selected records in one query (based on total table size), some hosts work better with a different value
+`apply_filters('shortpixel_image_urls', $URLs, $post_id);`
+filters the URLs that will be sent to optimization, `$URLs` is a plain array;
+
+`apply_filters('shortpixel/db/chunk_size', $chunk);`
+the `$chunk` is the value ShortPixel chooses to use as number of selected records in one query (based on total table size), some hosts work better with a different value;
 
 In order to define custom thumbnails to be picked up by the optimization you have two options, both comma separated defines:
 
-define('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES', '_tl,_tr'); will handle custom thumbnails like image-100x100_tl.jpg
+`define('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES', '_tl,_tr');`
+will handle custom thumbnails like image-100x100_tl.jpg;
 
-define('SHORTPIXEL_CUSTOM_THUMB_INFIXES', '-uae'); will handle custom thumbnails like image-uae-100x100.jpg
-define('SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION', true); will tell the plugin to create double extensions for the WebP image counterparts, for example image.jpg.webp for image.jpg
+`define('SHORTPIXEL_CUSTOM_THUMB_INFIXES', '-uae');`
+ will handle custom thumbnails like image-uae-100x100.jpg;
 
-define("SHORTPIXEL_NOFLOCK", true); // don't use flock queue, only activate this when you have flock() denied errors on your installation.
-.
-define("SHORTPIXEL_EXPERIMENTAL_SECURICACHE", true);  // adds timestamps to URLS, to prevent hitting the cache. Useful for persistent caches.
+`define('SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION', true);` 
+will tell the plugin to create double extensions for the WebP image counterparts, for example image.jpg.webp for image.jpg;
 
-//Hide the Cloudflare settings by defining these constants in wp-config.php
-define('SHORTPIXEL_CFTOKEN', 'the Cloudflare API token that has Purge Cache right');
-define('SHORTPIXEL_CFZONE', 'The Zone ID from the domain settings in Cloudflare');
+`define("SHORTPIXEL_NOFLOCK", true);`
+don't use flock queue, only activate this when you have `flock()` denied errors on your installation;
+
+`define("SHORTPIXEL_EXPERIMENTAL_SECURICACHE", true);`
+adds timestamps to URLS, to prevent hitting the cache. Useful for persistent caches.
+
+Hide the Cloudflare settings by defining these constants in wp-config.php:
+
+`define('SHORTPIXEL_CFTOKEN', 'the Cloudflare API token that has Purge Cache right');`
+`define('SHORTPIXEL_CFZONE', 'The Zone ID from the domain settings in Cloudflare');`
 
 == Screenshots ==
 
@@ -370,7 +387,7 @@ Release date: 27th November 2019
 = 4.14.6 =
 
 Release date: 9th October 2019
-* Don't convert to &lt;picture&gt; the &lt;img&gt;s with backgrounds.
+* Don't convert to <picture> the <img>s with backgrounds.
 * Remove unused eval() call.
 * Restore the validate button next to API Key but change label to "Save and validate"
 * Fixed: PNGtoJPG issue with already uploaded images
@@ -407,11 +424,11 @@ Release date: 19th August 2019
 * Fixed: Warning: count() Parameter must be an array.
 * Language – 0 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted
 
-== 4.14.3 ==
+= 4.14.3 =
 
 Release date: 22nd July 2019
 * Compatibility with Flywheel hosting by not using flock if Flywheel detected
-* When using the PICTURE tag to deliver WebP, keep the width and height at <IMG> level
+* When using the PICTURE tag to deliver WebP, keep the width and height at `<IMG>` level
 * Refactoring of the API Key settings page, refactoring of Other media
 * Performance improvements for selecting from large wp_posts and wp_postmeta tables when doing bulk optimization
 * Display a message when bulk is skipping many processed images, if bulk processing is ran again.
@@ -420,17 +437,17 @@ Release date: 22nd July 2019
 * Conflict message: align the text vertically and provide space between text and button when displayed on any admin page
 * Fixed: Other media Restore fails when original file is readable, not writable
 
-== 4.14.2 ==
+= 4.14.2 =
 
 Release date: 1st July 2019
 * add the possibility to define custom infixes for thumbnails (like image-uai-150x150.jpg for image.jpg) - comma separated define SHORTPIXEL_CUSTOM_THUMB_INFIXES
 
-== 4.14.1 ==
+= 4.14.1 =
 
 Release date: 17th June 2019
 * Fix errors when DOMDocument not present
 
-== 4.14.0 ==
+= 4.14.0 =
 
 Release date: 17th June 2019
 * Add new filters proposed by WP Stateless: shortpixel_backup_folder, shortpixel_image_exists, shortpixel_image_urls
