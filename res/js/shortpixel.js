@@ -189,10 +189,11 @@ var ShortPixel = function() {
 
     function setupAdvancedTab() {
         jQuery("input.remove-folder-button").click(function(){
-            var path = jQuery(this).data("value");
+            var id = jQuery(this).data("value");
+            var path = jQuery(this).data('name');
             var r = confirm( SPstringFormat(_spTr.areYouSureStopOptimizing, path) );
             if (r == true) {
-                jQuery("#removeFolder").val(path);
+                jQuery("#removeFolder").val(id);
                 jQuery('#wp_shortpixel_options').submit();
             }
         });
@@ -1109,15 +1110,10 @@ function checkBulkProcessingCallApi(){
                         // [BS] Only update date on Custom Media Page.
                         if (ShortPixel.isCustomImageId(id) && data['TsOptimized'] && data['TsOptimized'].length > 0)
                         {
-                          console.log(id);
                           var row = jQuery('.list-overview .item-' + id);
 
                           jQuery(row).children('.date').text(data['TsOptimized']);
                           jQuery(row).find('.row-actions .action-optimize').remove(); // gets complicated
-                          if (data['actions'])
-                          {
-                            jQuery(row).children('.actions').html(data['actions']);
-                          }
                         }
 
 
@@ -1188,7 +1184,19 @@ function checkBulkProcessingCallApi(){
                     default:
                         ShortPixel.retry("Unknown status " + data["Status"] + ". Retrying...");
                         break;
+                } // switch
+
+                // If custom, if has ID ( returned something about image )
+                if (typeof id != 'undefined' && ShortPixel.isCustomImageId(id))
+                {
+                  var row = jQuery('.list-overview .item-' + id);
+                  jQuery(row).find('.row-actions .action-optimize').remove(); // gets complicated
+                  if (data['actions'])
+                  {
+                    jQuery(row).children('.actions').html(data['actions']);
+                  }
                 }
+
             }
         },
         error: function(response){

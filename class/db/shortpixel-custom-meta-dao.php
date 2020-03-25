@@ -127,8 +127,8 @@ class ShortPixelCustomMetaDao {
                                            $this->db->getPrefix()."shortpixel_folders", "id");
     }
 
-    public function getFolders($deleted = false) {
-        $sql = "SELECT * FROM {$this->db->getPrefix()}shortpixel_folders" . ($deleted ? "" : " WHERE status <> -1 order by path");
+    public function getFolders() {
+        $sql = "SELECT * FROM {$this->db->getPrefix()}shortpixel_folders order by path";
         $rows = $this->db->query($sql);
         $folders = array();
         foreach($rows as $row) {
@@ -137,8 +137,8 @@ class ShortPixelCustomMetaDao {
         return $folders;
     }
 
-    public function getFolder($path, $deleted = false) {
-        $sql = "SELECT * FROM {$this->db->getPrefix()}shortpixel_folders" . ($deleted ? "WHERE path = %s " : " WHERE path = %s AND status <> -1");
+    public function getFolder($path) {
+        $sql = "SELECT * FROM {$this->db->getPrefix()}shortpixel_folders WHERE path = %s ";
         $rows = $this->db->query($sql, array($path));
         $folders = array();
         foreach($rows as $row) {
@@ -195,12 +195,12 @@ class ShortPixelCustomMetaDao {
         else return -1;
     }
 
-    public function removeFolder($folderPath) {
-        $sql = "SELECT id FROM {$this->db->getPrefix()}shortpixel_folders WHERE path = %s";
-        $row = $this->db->query($sql, array(stripslashes($folderPath)));
+    public function removeFolder($id) {
+        //$sql = "SELECT id FROM {$this->db->getPrefix()}shortpixel_folders WHERE path = %s";
+        //$row = $this->db->query($sql, array(stripslashes($folderPath)));
 
-        if(!isset($row[0]->id)) return false;
-        $id = $row[0]->id;
+        //if(!isset($row[0]->id)) return false;
+        //$id = $row[0]->id;
         $sql = "UPDATE {$this->db->getPrefix()}shortpixel_folders SET status = -1 WHERE id = %d";
         $this->db->query($sql, array($id));
 
@@ -209,14 +209,14 @@ class ShortPixelCustomMetaDao {
         $sql = "DELETE FROM {$this->db->getPrefix()}shortpixel_meta WHERE folder_id = %d AND status <> %d AND status <> %d";
         $this->db->query($sql, array($id, ShortPixelMeta::FILE_STATUS_PENDING, ShortPixelMeta::FILE_STATUS_SUCCESS));
 
-        $sql = "SELECT FROM {$this->db->getPrefix()}shortpixel_meta WHERE folder_id = %d ";
+        $sql = "SELECT * FROM {$this->db->getPrefix()}shortpixel_meta WHERE folder_id = %d ";
         $still_has_images = $this->db->query($sql, array($id));
 
         // if there are no images left, remove the folder. Otherwise keep it at -1.
         if (count($still_has_images) == 0)
         {
-          $sql = "DELETE FROM {$this->db->getPrefix()}shortpixel_folders WHERE path = %s";
-          $this->db->query($sql, array($folderPath));
+          $sql = "DELETE FROM {$this->db->getPrefix()}shortpixel_folders WHERE id = %d";
+          $this->db->query($sql, array($id));
         }
 
         //$this->db->restoreErrors();

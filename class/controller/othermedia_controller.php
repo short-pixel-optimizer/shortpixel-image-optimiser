@@ -27,7 +27,7 @@ class OtherMediaController extends ShortPixelController
         return $folders;
     }
 
-    public function getFolder($id)
+    public function getFolderByID($id)
     {
         $folders = DirectoryOtherMediaModel::get(array('id' => $id));
 
@@ -43,7 +43,6 @@ class OtherMediaController extends ShortPixelController
        $directory = new DirectoryOtherMediaModel($path);
        $rootDir = $fs->getWPFileBase();
        $backupDir = $fs->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
-
 
        if (! $directory->exists())
        {
@@ -63,12 +62,18 @@ class OtherMediaController extends ShortPixelController
 
        if (! $directory->hasDBEntry())
        {
-          Log::addDebug('Has DB ENTry, on addDirectory');
+          Log::addDebug('Has no DB ENTry, on addDirectory', $directory);
          if ($directory->save())
           $directory->refreshFolder(0);
+          exit();
        }
        else // if directory is already added, fail silently, but still refresh it.
        {
+         if ($directory->isRemoved())
+         {
+            $directory->setStatus(DirectoryOtherMediaModel::DIRECTORY_STATUS_NORMAL);
+            $directory->updateFileContentChange(); // does a save. Dunno if that's wise.
+         }
          $directory->refreshFolder();
        }
 
@@ -78,7 +83,7 @@ class OtherMediaController extends ShortPixelController
       return false;
     }
 
-    public function refreshFolder($directory, $force = false)
+    public function refreshFolder(DirectoryOtherMediaModel $directory, $force = false)
     {
 
       $updated = $directory->updateFileContentChange();

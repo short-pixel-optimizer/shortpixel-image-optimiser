@@ -110,7 +110,9 @@ echo $this->view->rewriteHREF;
             <span><?php echo (string) $itemFile->getFileDir(); ?></span>
             <span><?php echo $item->media_type ?></span>
             <span class="date"><?php echo $display_date ?></span>
-            <span id='sp-cust-msg-C-<?php echo $item->id ?>'><?php echo $this->getDisplayStatus($item); ?></span>
+            <span id='sp-cust-msg-C-<?php echo $item->id ?>'>
+              <span class='sp-column-info'><?php echo $this->getDisplayStatus($item); ?></span>
+            </span>
             <span class='actions'>
               <?php echo $this->getDisplayActions($this->getActions($item, $itemFile))
             ?></span>

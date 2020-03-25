@@ -67,6 +67,9 @@
     .shortpixel-other-media .list-overview .item .single-action.button-primary a {
       color: #fff;
       text-decoration: none; }
+    .shortpixel-other-media .list-overview .item .sp-column-info {
+      width: 400px;
+      display: inline-block; }
     .shortpixel-other-media .list-overview .no-items {
       padding: 10px; }
       .shortpixel-other-media .list-overview .no-items p {

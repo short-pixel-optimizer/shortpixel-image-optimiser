@@ -103,7 +103,7 @@ class SettingsController extends shortPixelController
          if ($folder_id)
          {
             $otherMediaController = new OtherMediaController();
-            $folder = $otherMediaController->getFolder($folder_id);
+            $folder = $otherMediaController->getFolderByID($folder_id);
 
             if ($folder)
             {
@@ -128,7 +128,6 @@ class SettingsController extends shortPixelController
       public function processSave()
       {
           // Split this in the several screens. I.e. settings, advanced, Key Request IF etc.
-
           if ($this->postData['includeNextGen'] == 1)
           {
               $nextgen = new NextGen();
@@ -281,18 +280,8 @@ class SettingsController extends shortPixelController
         $customFolders = $otherMedia->getFolders();
         $fs = \wpSPIO()->filesystem();
 
-
         $customFolderBase = $fs->getWPFileBase();
         $this->view->customFolderBase = $customFolderBase->getPath();
-
-    /*    if (! is_null($notice))
-        {
-          $message = $notice['msg'];
-          if ($notice['status'] == 'error')
-            Notice::addError($message);
-          else
-            Notice::addNormal($message);
-        } */
 
         if ($this->has_nextgen)
         {
@@ -386,10 +375,15 @@ class SettingsController extends shortPixelController
           }
           unset($post['addCustomFolder']);
 
-          if(isset($post['removeFolder']) && strlen( trim($post['removeFolder'])) > 0) {
-              $metaDao = $this->shortPixel->getSpMetaDao();
-              Log::addDebug('Removing folder ' . $post['removeFolder']);
-              $metaDao->removeFolder( sanitize_text_field($post['removeFolder']) );
+          if(isset($post['removeFolder']) && intval($post['removeFolder']) > 0) {
+              //$metaDao = $this->shortPixel->getSpMetaDao();
+              $folder_id = intval($post['removeFolder']);
+              $otherMedia = new OtherMediaController();
+              $folder = $otherMedia->getFolderByID($folder_id);
+
+            //  Log::addDebug('Removing folder ' . $post['removeFolder']);
+              $folder->delete();
+              //$metaDao->removeFolder( sanitize_text_field($post['removeFolder']) );
 
           }
           unset($post['removeFolder']);

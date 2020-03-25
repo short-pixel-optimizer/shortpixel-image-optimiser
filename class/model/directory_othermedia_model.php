@@ -17,14 +17,19 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
   protected $is_nextgen;
   protected $in_db = false;
-
+  protected $is_removed = false;
 
   protected $stats;
 
-  /** Path or Folder Object, from SpMetaDao */
+  const DIRECTORY_STATUS_REMOVED = -1;
+  const DIRECTORY_STATUS_NORMAL = 0;
+  const DIRECTORY_STATUS_NEXTGEN = 1;
+
+  /** Path or Folder Object, from SpMetaDao
+  *
+  */
   public function __construct($path)
   {
-    //$this->spMetaDao =
 
     if (is_object($path))
     {
@@ -43,7 +48,14 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
   private function loadFolderByPath($path)
   {
-      $folder = \wpSPIO()->getShortPixel()->getSpMetaDao()->getFolder($path);
+      $folders = self::get(array('path' => $path)); //s\wpSPIO()->getShortPixel()->getSpMetaDao()->getFolder($path);
+      $folder = false;
+
+      if (count($folders) > 0)
+        $folder = $folders[0];
+
+      return $this->loadFolder($folder);
+
   }
 
   /** Loads from database into model, the extra data of this model. */
@@ -52,10 +64,17 @@ class DirectoryOtherMediaModel extends DirectoryModel
     if ($folder)
     {
       $this->id = $folder->id;
+
       if ($this->id > 0)
        $this->in_db = true;
-      $this->updated = $folder->ts_updated;
+
+      $this->updated = $this->DBtoTimestamp($folder->ts_updated);
+      $this->created = $this->DBtoTimestamp($folder->ts_created);
+
       $this->status = $folder->status;
+      if ($this->status == -1)
+        $this->is_removed = true;
+
       $this->fileCount = $folder->file_count;
     }
   }
@@ -63,6 +82,11 @@ class DirectoryOtherMediaModel extends DirectoryModel
   public function getStatus()
   {
       return $this->status;
+  }
+
+  public function setStatus($status)
+  {
+     $this->status = $status;
   }
 
   public function getFileCount()
@@ -100,6 +124,11 @@ class DirectoryOtherMediaModel extends DirectoryModel
     return $this->in_db;
   }
 
+  public function isRemoved()
+  {
+     return $this->is_removed;
+  }
+
   public function getStats()
   {
     if (is_null($this->stats))
@@ -125,6 +154,18 @@ class DirectoryOtherMediaModel extends DirectoryModel
           $this->loadFolder($this->getPath());
 
         return $result;
+  }
+
+  public function delete()
+  {
+      $id = $this->id;
+      if (! $in_db)
+      {
+         Log::addError('Trying to remove Folder without ID ' . $id, $this->getPath());
+      }
+
+      return \wpSPIO()->getShortPixel()->getSpMetaDao()->removeFolder($id);
+
   }
 
   /** Updates the updated variable on folder to indicating when the last file change was made
@@ -231,6 +272,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
     $defaults = array(
         'id' => false,  // Get folder by Id
         'status' => false, // not yet implemented.
+        'path' => false,
     );
 
     $args = wp_parse_args($args, $defaults);
@@ -244,9 +286,12 @@ class DirectoryOtherMediaModel extends DirectoryModel
     {
         $folders = $spMetaDao->getFolderByID($args['id']);
     }
+    elseif($args['path'] !== false && strlen($args['path']) > 0)
+    {
+        $folders = $spMetaDao->getFolder($args['path']);
+    }
     else
     {
-
       $folders = $spMetaDao->getFolders();
     }
 
@@ -256,11 +301,11 @@ class DirectoryOtherMediaModel extends DirectoryModel
     {
 
       $dirObj = new DirectoryOtherMediaModel($folder);
-      $dirObj->status = $folder->status;
+      /*$dirObj->status = $folder->status;
       $dirObj->updated = $dirObj->DBtoTimestamp($folder->ts_updated);
       $dirObj->created = $dirObj->DBtoTimestamp($folder->ts_created);
       $dirObj->id = $folder->id;
-
+*/
       $newfolders[$i] = $dirObj; // $index is dbase id, we just want an array
       $i++;
     }

@@ -65,6 +65,8 @@ namespace ShortPixel;
                         <?php
                         foreach($view->customFolders as $index => $dirObj) {
                             $folder_id = $dirObj->getID();
+                            if ($dirObj->isRemoved())
+                              continue;
 
                             $type_display = ($dirObj->isNextGen() ) ? __('Nextgen', 'shortpixel-image-optimiser') . "<br>" : "";
                         //    $stat = $this->shortPixel->getSpMetaDao()->getFolderOptimizationStatus($folder->getId());
@@ -111,7 +113,7 @@ namespace ShortPixel;
                                 </span>
                                 <span>
                                   <?php if ($action): ?>
-                                    <input type="button" class="button remove-folder-button" data-value="<?php echo($dirObj->getPath()); ?>" title="<?php echo($action . " " . $dirObj->getPath()); ?>" value="<?php echo $action;?>">
+                                    <input type="button" class="button remove-folder-button" data-value="<?php echo($dirObj->getID()); ?>" data-name="<?php echo $dirObj->getPath() ?>" title="<?php echo($action . " " . $dirObj->getPath()); ?>" value="<?php echo $action;?>">
                                  <?php endif; ?>
                                 </span>
                             </div>
