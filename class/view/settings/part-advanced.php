@@ -51,20 +51,26 @@ namespace ShortPixel;
                 <td>
                     <span style="display:none;">Current PHP version: <?php echo(phpversion()) ?></span>
                     <?php if($view->customFolders) { ?>
-                        <table class="shortpixel-folders-list">
-                            <tr style="font-weight: bold;">
-                                <th><?php _e('Folder name','shortpixel-image-optimiser');?></th>
-                                <th><?php _e('Type &amp; Status','shortpixel-image-optimiser');?></th>
-                                <th><?php _e('Files','shortpixel-image-optimiser');?></th>
-                                <th><?php _e('Last change','shortpixel-image-optimiser');?></th>
-                                <td>&nbsp;</td>
-                            </tr>
-                        <?php foreach($view->customFolders as $folder_id => $folder) {
-                            $folder_type = $folder->getType();
 
-                            $type_display = ($folder_type) ? ucfirst($folder_type) . "<br>" : "";
-                            $stat = $this->shortPixel->getSpMetaDao()->getFolderOptimizationStatus($folder->getId());
-                            $cnt = $folder->getFileCount();
+                        <div class="shortpixel-folders-list">
+                            <div class='heading'>
+                                <span><?php _e('Folder name','shortpixel-image-optimiser');?></span>
+                                <span><?php _e('Type &amp; Status','shortpixel-image-optimiser');?></span>
+                                <span><?php _e('Files','shortpixel-image-optimiser');?></span>
+                                <span><?php _e('Last change','shortpixel-image-optimiser');?></span>
+                                <span>&nbsp;</span>
+                                <span>&nbsp;</span>
+                            </div>
+
+                        <?php
+                        foreach($view->customFolders as $index => $dirObj) {
+                            $folder_id = $dirObj->getID();
+
+                            $type_display = ($dirObj->isNextGen() ) ? __('Nextgen', 'shortpixel-image-optimiser') . "<br>" : "";
+                        //    $stat = $this->shortPixel->getSpMetaDao()->getFolderOptimizationStatus($folder->getId());
+                            $stat = $dirObj->getStats();
+
+                            $cnt = intval($dirObj->getFileCount());
 
                             $st = ($cnt == 0
                                 ? __("Empty",'shortpixel-image-optimiser')
@@ -76,41 +82,41 @@ namespace ShortPixel;
 
                             $action = ($st == __("Optimized",'shortpixel-image-optimiser') || $st == __("Empty",'shortpixel-image-optimiser') ? __("Stop monitoring",'shortpixel-image-optimiser') : __("Stop optimizing",'shortpixel-image-optimiser'));
 
-                            if ($folder_type == 'nextgen' && $view->data->includeNextGen == 1)
+                            if ($dirObj->isNextGen() && $view->data->includeNextGen == 1)
                               $action = false;
 
                             $fullStat = $st == __("Empty",'shortpixel-image-optimiser') ? "" : __("Optimized",'shortpixel-image-optimiser') . ": " . $stat->Optimized . ", "
                                     . __("Pending",'shortpixel-image-optimiser') . ": " . $stat->Pending . ", " . __("Waiting",'shortpixel-image-optimiser') . ": " . $stat->Waiting . ", "
                                     . __("Failed",'shortpixel-image-optimiser') . ": " . $stat->Failed;
+
+                              $refreshUrl = add_query_arg(array('sp-action' => 'action_refreshfolder', 'folder_id' => $folder_id, 'part' => 'adv-settings'), $this->url);
                             ?>
-                            <tr>
-                                <td class='folder folder-<?php echo $folder_id ?>'>
-                                    <?php echo($folder->getPath()); ?>
-                                </td>
-                                <td>
+                            <div>
+                                <span class='folder folder-<?php echo $dirObj->getId() ?>'><?php echo($dirObj->getPath()); ?></span>
+                                <span>
                                     <?php if(!($st == "Empty")) { ?>
                                     <a href="javascript:none();"  title="<?php echo $fullStat; ?>" style="text-decoration: none;">
                                         <img alt='Info icon' src='<?php echo( wpSPIO()->plugin_url('res/img/info-icon.png' ));?>' style="margin-bottom: -2px;"/>
                                     </a>&nbsp;<?php  } echo($type_display.$st.$err); ?>
 
-                                </td>
-                                <td>
+                                </span>
+                                <span>
                                     <?php echo($cnt); ?> files
-                                </td>
-                                <td>
-                                    <?php echo($folder->getTsUpdated()); ?>
-                                </td>
-                                <td>
+                                </span>
+                                <span>
+                                    <?php echo( date_i18n(  get_option('date_format') . ' H:i', $dirObj->getUpdated() )); ?>
+                                </span>
+                                <span>
+                                  <a href='<?php echo $refreshUrl ?>' title="<?php _e('Recheck for new images', 'shortpixel-image-optimiser'); ?>" class='refresh-folder'><i class='dashicons dashicons-update'>&nbsp;</i></a>
+                                </span>
+                                <span>
                                   <?php if ($action): ?>
-                                    <input type="button" class="button remove-folder-button" data-value="<?php echo($folder->getPath()); ?>" title="<?php echo($action . " " . $folder->getPath()); ?>" value="<?php echo $action;?>">
+                                    <input type="button" class="button remove-folder-button" data-value="<?php echo($dirObj->getPath()); ?>" title="<?php echo($action . " " . $dirObj->getPath()); ?>" value="<?php echo $action;?>">
                                  <?php endif; ?>
-                                    <input type="button" style="display:none;" class="button button-alert recheck-folder-button" data-value="<?php echo($folder->getPath()); ?>"
-                                           title="<?php _e('Full folder refresh, check each file of the folder if it changed since it was optimized. Might take up to 1 min. for big folders.','shortpixel-image-optimiser');?>"
-                                           value="<?php _e('Refresh','shortpixel-image-optimiser');?>">
-                                </td>
-                            </tr>
+                                </span>
+                            </div>
                         <?php }?>
-                        </table>
+                      </div> <!-- shortpixel-folders-list -->
                     <?php } ?>
 
                     <div class='addCustomFolder'>
@@ -119,7 +125,7 @@ namespace ShortPixel;
                       <p class='add-folder-text'><strong><?php _e('Add a custom folder', 'shortpixel-image-optimiser'); ?></strong></p>
                       <input type="text" name="addCustomFolderView" id="addCustomFolderView" class="regular-text" value="" disabled style="">&nbsp;
                       <input type="hidden" name="addCustomFolder" id="addCustomFolder" value=""/>
-                      <input type="hidden" id="customFolderBase" value="<?php echo $this->shortPixel->getCustomFolderBase(); ?>">
+                      <input type="hidden" id="customFolderBase" value="<?php echo $this->view->customFolderBase; ?>">
 
                       <a class="button select-folder-button" title="<?php _e('Select the images folder on your server.','shortpixel-image-optimiser');?>" href="javascript:void(0);">
                           <?php _e('Select ...','shortpixel-image-optimiser');?>

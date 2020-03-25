@@ -13,7 +13,7 @@ class ShortPixelPlugin
   private static $instance;
   protected static $modelsLoaded = array(); // don't require twice, limit amount of require looksups..
 
-  private $paths = array('class', 'class/controller', 'class/external'); // classes that are autoloaded
+  private $paths = array('class', 'class/controller', 'class/external', 'class/controller/views'); // classes that are autoloaded
 
   protected $is_noheaders = false;
 
@@ -315,7 +315,6 @@ class ShortPixelPlugin
 
       $default_action = 'load'; // generic action on controller.
       $action = isset($_REQUEST['sp-action']) ? sanitize_text_field($_REQUEST['sp-action']) : $default_action;
-      Log::addDebug('Request', $_REQUEST);
       $controller = false;
 
       if ($this->env()->is_debug)
@@ -336,7 +335,7 @@ class ShortPixelPlugin
           break;
           case 'wp-short-pixel-custom': // other media
           /*  $this->load_style('shortpixel-othermedia'); */
-            $controller = \shortPixelTools::namespaceit('OtherMediaController');
+            $controller = \shortPixelTools::namespaceit('OtherMediaViewController');
             $url = menu_page_url($plugin_page, false);
           break;
       }

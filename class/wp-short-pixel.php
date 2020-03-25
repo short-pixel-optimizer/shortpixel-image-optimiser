@@ -116,7 +116,7 @@ class WPShortPixel {
         if($isAdminUser) {
             //add settings page
             //add_action( 'admin_menu', array( &$this, 'registerSettingsPage' ) );//display SP in Settings menu
-            add_action( 'admin_menu', array( &$this, 'registerAdminPage' ) );
+          //   add_action( 'admin_menu', array( &$this, 'registerAdminPage' ) ); // removed
 
             add_action('wp_ajax_shortpixel_browse_content', array(&$this, 'browseContent'));
             add_action('wp_ajax_shortpixel_get_backup_size', array(&$this, 'getBackupSize'));
@@ -180,15 +180,16 @@ class WPShortPixel {
 
     // @hook admin menu
     // @todo move to plugin class
+    /*  Gone. Both pages moved elsewhere ( plugin class )
     function registerAdminPage( ) {
       return;
         if($this->spMetaDao->hasFoldersTable() && count($this->spMetaDao->getFolders())) {
-            /*translators: title and menu name for the Other media page*/
+
             add_media_page( __('Other Media Optimized by ShortPixel','shortpixel-image-optimiser'), __('Other Media','shortpixel-image-optimiser'), 'edit_others_posts', 'wp-short-pixel-custom', array( &$this, 'listCustomMedia' ) );
         }
-        /*translators: title and menu name for the Bulk Processing page*/
+
         add_media_page( __('ShortPixel Bulk Process','shortpixel-image-optimiser'), __('Bulk ShortPixel','shortpixel-image-optimiser'), 'edit_others_posts', 'wp-short-pixel-bulk', array( &$this, 'bulkProcess' ) );
-    }
+    } */
 
     /*public static function shortPixelActivatePlugin()//reset some params to avoid trouble for plugins that were activated/deactivated/activated
     {
@@ -692,8 +693,7 @@ class WPShortPixel {
             return $meta;
         }
 
-        self::log("Handle Media Library Image Upload #{$ID}");
-        //self::log("STACK: " . json_encode(debug_backtrace()));
+        Log::addDebug("Handle Media Library Image Upload #{$ID}", $currentFile->exists());
 
         if(!$this->_settings->optimizePdfs && 'pdf' === $currentFile->getExtension() ) {
             //pdf is not optimized automatically as per the option, but can be optimized by button. Nothing to do.
@@ -729,6 +729,7 @@ class WPShortPixel {
                     //send a processing request right after a file was uploaded, do NOT wait for response
                     $this->_apiInterface->doRequests($URLsAndPATHs['URLs'], false, $itemHandler, false, $refresh);
                 } catch(Exception $e) {
+                    Log::addWarning('Handle Media Library Image Exceptions', $e);
                     $meta['ShortPixelImprovement'] = $e->getMessage();
                     return $meta;
                 }
@@ -1265,11 +1266,13 @@ class WPShortPixel {
            && (!$this->_settings->cancelPointer || $this->_settings->skipToCustom)
            && !$this->_settings->customBulkPaused)
         { //take from custom images if any left to optimize - only if bulk was ever started
-            //but first refresh if it wasn't refreshed in the last hour
-            if(time() - $this->_settings->hasCustomFolders > 3600) {
+            //but first refresh. Refresh interval is handled by controller.
+            $otherMedia = new \ShortPixel\OtherMediaController();
+            $otherMedia->refreshFolders();
+            /*if(time() - $this->_settings->hasCustomFolders > 3600) {
                 $notice = null; $this->refreshCustomFolders();
                 $this->_settings->hasCustomFolders = time();
-            }
+            } */
 
             $customIds = $this->spMetaDao->getPendingMetas( SHORTPIXEL_PRESEND_ITEMS - count($ids));
 
@@ -1527,9 +1530,9 @@ class WPShortPixel {
         // Generate new actions after doing something for custom type (for now)
         if($itemHandler->getType() == ShortPixelMetaFacade::CUSTOM_TYPE)
         {
-          $othermedia = new \ShortPixel\OtherMediaController();
-          $othermedia->setShortPixel($this);
-          $result['actions'] = $othermedia->renderNewActions(substr($itemId, 2));
+          $othermediaView = new \ShortPixel\OtherMediaViewController();
+          $othermediaView->setShortPixel($this);
+          $result['actions'] = $othermediaView->renderNewActions(substr($itemId, 2));
         }
 
         $ret = json_encode($result);
@@ -2364,6 +2367,7 @@ class WPShortPixel {
      */
     public function throwNotice($when = 'activate', $extra = '') {
       //  set_transient("shortpixel_thrown_notice", array('when' => $when, 'extra' => $extra), 120);
+    
       Notices::addError($extra);  // whatever error is in the extra. Seems that normal messages don't pass here.
     }
 
@@ -2771,6 +2775,7 @@ class WPShortPixel {
     * @todo Move this to own view.
     */
     /* Gone! @todo Must go when new ListCMedia is done */
+    /*
     public function listCustomMedia() {
         if( ! class_exists( 'ShortPixelListTable' ) ) {
             require_once('view/shortpixel-list-table.php');
@@ -2828,7 +2833,7 @@ class WPShortPixel {
                 <br class="clear">
             </div>
 	</div> <?php
-    }
+} */
 
 
     /** Front End function that controls bulk processes.
@@ -3271,81 +3276,6 @@ class WPShortPixel {
         $diff = $folder->checkFolderContents(array('ShortPixelCustomMetaDao', 'getPathFiles'));
     } */
 
-
-    // @todo - Should be part of folder model or something else .
-    // @param force boolean Force a recheck.
-    public function refreshCustomFolders($force = false) {
-        $customFolders = array();
-        $fs =  \wpSPIO()->fileSystem();
-        $cache = new \ShortPixel\CacheController();
-
-        $refreshDelay = $cache->getItem('custom_folder_cache_delay');
-
-        if($this->_settings->hasCustomFolders) {
-            $customFolders = $this->spMetaDao->getFolders();
-
-            if ($refreshDelay->exists() && ! $force)
-            {
-              return $customFolders;
-            }
-
-            $refreshDelay->setExpires(5 * MINUTE_IN_SECONDS);
-            $refreshDelay->save();
-
-            foreach($customFolders as $folder) {
-
-              try {
-                $mt = $folder->getFolderContentsChangeDate();
-              }
-              catch(ShortPixelFileRightsException $ex) {
-                Notices::addWarning($ex->getMessage());
-              }
-
-              if($mt > strtotime($folder->getTsUpdated()) || $force) {
-                // when forcing, set to never updated.
-                if ($force)
-                {
-                  $folder->setTsUpdated(date("Y-m-d H:i:s", 0) ); //
-                  $this->spMetaDao->update($folder);
-                  $cache->deleteItemObject($refreshDelay);
-                }
-
-                $fsFolder = $fs->getDirectory($folder->getPath());
-
-                if ($fsFolder->exists() )
-                {
-                  $this->spMetaDao->refreshFolder($fsFolder);
-                }
-                else {
-                  Log::addWarn('Custom folder does not exist: ' . $fsFolder->getPath() );
-                }
-
-
-              }
-              /*  if($folder->getPath() === $ignore) continue;
-                try {
-
-                    $mt = $folder->getFolderContentsChangeDate();
-                    if($mt > strtotime($folder->getTsUpdated())) {
-                        $fileList = $folder->getFileList(strtotime($folder->getTsUpdated()));
-                        $this->spMetaDao->batchInsertImages($fileList, $folder->getId());
-                        $folder->setTsUpdated(date("Y-m-d H:i:s", $mt));
-                        $folder->setFileCount($folder->countFiles());
-                        $this->spMetaDao->update($folder);
-                    }
-                } catch(ShortPixelFileRightsException $ex) {
-                    if(is_array($notice)) {
-                        if($notice['status'] == 'error') {
-                            $notice['msg'] .= " " . $ex->getMessage();
-                        }
-                    } else {
-                        $notice = array("status" => "error", "msg" => $ex->getMessage());
-                    }
-                }*/
-            } // folders
-        }
-        return $customFolders;
-    }
 
     /** Updates HTAccess files for Webp
     * @param boolean $clear Clear removes all statements from htaccess. For disabling webp.
@@ -4092,8 +4022,10 @@ class WPShortPixel {
           if (@preg_match($pattern, false) !== false)
           {
             $m = preg_match($pattern,  $target);
-            if ($m !== false)
+            if ($m !== false && $m > 0) // valid regex, more hits than zero
+            {
               return true;
+            }
           }
         }
         else

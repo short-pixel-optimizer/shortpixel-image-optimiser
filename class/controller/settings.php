@@ -95,6 +95,26 @@ class SettingsController extends shortPixelController
         $this->doRedirect();
       }
 
+      /* Custom Media, refresh a single Folder */
+      public function action_refreshfolder()
+      {
+         $folder_id = isset($_REQUEST['folder_id']) ? intval($_REQUEST['folder_id']) : false;
+
+         if ($folder_id)
+         {
+            $otherMediaController = new OtherMediaController();
+            $folder = $otherMediaController->getFolder($folder_id);
+
+            if ($folder)
+            {
+               $otherMediaController->refreshFolder($folder, true);
+            }
+
+         }
+
+         $this->load();
+      }
+
       public function action_debug_medialibrary()
       {
         $this->loadEnv();
@@ -107,7 +127,6 @@ class SettingsController extends shortPixelController
 
       public function processSave()
       {
-          Log::addDebug('after process postData', $this->postData);
           // Split this in the several screens. I.e. settings, advanced, Key Request IF etc.
 
           if ($this->postData['includeNextGen'] == 1)
@@ -256,33 +275,45 @@ class SettingsController extends shortPixelController
       protected function loadCustomFolders()
       {
         $notice = null;
-        $customFolders = $this->shortPixel->refreshCustomFolders();
+        $otherMedia = new OtherMediaController();
 
-        if (! is_null($notice))
+        $otherMedia->refreshFolders();
+        $customFolders = $otherMedia->getFolders();
+        $fs = \wpSPIO()->filesystem();
+
+
+        $customFolderBase = $fs->getWPFileBase();
+        $this->view->customFolderBase = $customFolderBase->getPath();
+
+    /*    if (! is_null($notice))
         {
           $message = $notice['msg'];
           if ($notice['status'] == 'error')
             Notice::addError($message);
           else
             Notice::addNormal($message);
-        }
+        } */
 
         if ($this->has_nextgen)
         {
-    //      $ngg = array_map(array('ShortPixelNextGenAdapter','pathToAbsolute'), \ShortPixelNextGenAdapter::getGalleries());
           $ng = NextGen::getInstance();
-          $folders = $ng->getGalleries();
+          $NGfolders = $ng->getGalleries();
           $foldersArray = array();
-          foreach($folders as $dirObj)
+
+          foreach($NGfolders as $folder)
           {
-             $foldersArray[] = $dirObj->getPath();
+            $fsFolder = $fs->getDirectory($folder->getPath());
+            $foldersArray[] = $fsFolder->getPath();
           }
 
           foreach($customFolders as $id => $folder)
           {
             if(in_array($folder->getPath(), $foldersArray )) {
-                $folder->setType("nextgen");
+                $folder->setNextGen(true);
               }
+          //  $folder->directoryObj = $fs->getDirectory($folder->getPath());
+            //$folder->status = $this->shortPixel->getSpMetaDao()->getFolderOptimizationStatus($folder->getId());
+
           }
         }
 
@@ -330,14 +361,17 @@ class SettingsController extends shortPixelController
             unset($post['validate']);
           }
 
+          // when adding a new custom folder
           if (isset($post['addCustomFolder']) && strlen($post['addCustomFolder']) > 0)
           {
-            $folder = sanitize_text_field(stripslashes($post['addCustomFolder']));
-            $uploadPath = realpath(SHORTPIXEL_UPLOADS_BASE);
+            $folderpath = sanitize_text_field(stripslashes($post['addCustomFolder']));
 
-            $metaDao = $this->shortPixel->getSpMetaDao();
-            $folderMsg = $metaDao->newFolderFromPath($folder, $uploadPath, \WPShortPixel::getCustomFolderBase());
-            $is_warning = true;
+            $otherMedia = new OtherMediaController();
+            $result = $otherMedia->addDirectory($folderpath);
+            if ($result)
+              Notice::addSuccess(__('Folder added successfully.','shortpixel-image-optimiser'));
+
+            /*$is_warning = true;
             if(!$folderMsg) {
                 //$notice = array("status" => "success", "msg" => __('Folder added successfully.','shortpixel-image-optimiser'));
                 $folderMsg = __('Folder added successfully.','shortpixel-image-optimiser');
@@ -347,8 +381,8 @@ class SettingsController extends shortPixelController
               Notice::addWarning($folderMsg);
             else
               Notice::addNormal($folderMsg);
-
-            $this->model->hasCustomFolders = time();
+*/
+        //    $this->model->hasCustomFolders = time();
           }
           unset($post['addCustomFolder']);
 

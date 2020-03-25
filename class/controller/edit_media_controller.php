@@ -271,7 +271,6 @@ class editMediaController extends ShortPixelController
 
       protected function renderLegacyCell()
       {
-
         $data = $this->data;
 
         if ( $data['status'] != 'pdfOptimized' && $data['status'] != 'imgOptimized')

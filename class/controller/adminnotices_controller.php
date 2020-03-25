@@ -95,7 +95,7 @@ class adminNoticesController extends ShortPixelController
 
         if (\wpSPIO()->env()->has_nextgen && ! $settings->includeNextGen  )
         {
-            $url = admin_url('wp-admin/options-general.php?page=wp-shortpixel-settings&part=adv-settings');
+            $url = admin_url('options-general.php?page=wp-shortpixel-settings&part=adv-settings');
             $message = sprintf(__('It seems you are using NextGen Gallery. You can optimize your galleries with ShortPixel, but this is currently not enabled. To enable, %sgo to settings and enable%s it!', 'shortpixel_image_optimiser'), '<a href="' . $url . '">', '</a>');
             $notice = Notices::addNormal($message);
             Notices::makePersistent($notice, self::MSG_INTEGRATION_NGGALLERY, YEAR_IN_SECONDS);

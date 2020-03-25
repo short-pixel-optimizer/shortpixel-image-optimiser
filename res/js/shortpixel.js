@@ -577,7 +577,8 @@ var ShortPixel = function() {
 
             if(subPath) {
                 var fullPath = jQuery("#customFolderBase").val() + subPath;
-                if(fullPath.slice(-1) == '/') fullPath = fullPath.slice(0, -1);
+                fullPath = fullPath.replace(/\/\//,'/');
+                console.debug('FullPath' + fullPath);
                 jQuery("#addCustomFolder").val(fullPath);
                 jQuery("#addCustomFolderView").val(fullPath);
                 jQuery(".sp-folder-picker-shade").fadeOut(100);

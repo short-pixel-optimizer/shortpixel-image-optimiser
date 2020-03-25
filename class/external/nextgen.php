@@ -1,6 +1,8 @@
 <?php
 namespace ShortPixel;
 use ShortPixel\Notices\NoticeController as Notice;
+use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+
 
 class NextGen
 {
@@ -70,10 +72,9 @@ class NextGen
   */
   public function nextGenEnabled($silent)
   {
+    
     \WpShortPixelDb::checkCustomTables(); // check if custom tables are created, if not, create them
-
     $this->addNextGenGalleriesToCustom($silent);
-
   }
 
   /* @return DirectoryModel */
@@ -106,18 +107,17 @@ class NextGen
       $homepath = $fs->getWPFileBase();
       $folderMsg = "";
       //add the NextGen galleries to custom folders
-      $ngGalleries = $this->getGalleries();
+      $ngGalleries = $this->getGalleries(); // DirectoryModel return.
+
+      $otherMedia = new otherMediaController();
 
 
       $meta = $shortPixel->getSpMetaDao();
+
       foreach($ngGalleries as $gallery) {
-          $msg = $meta->newFolderFromPath($gallery, $homepath->getPath(), \WPShortPixel::getCustomFolderBase());
-        //  if($msg) { //try again with ABSPATH as maybe WP is in a subdir
-          //    $msg = $meta->newFolderFromPath($gallery, ABSPATH, \WPShortPixel::getCustomFolderBase());
-        //  }
-          if ($msg)
-            $folderMsg .= $msg . '(' . $gallery .  ') <br>';
-          //$this->_settings->hasCustomFolders = time();
+          $result = $otherMedia->addDirectory($gallery->getPath());
+          if (! $result)
+            Log::addWarn('Could not add this directory' . $gallery->getPath() );
       }
 
       if (count($ngGalleries) > 0)

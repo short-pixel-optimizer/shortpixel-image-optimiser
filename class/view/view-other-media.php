@@ -12,6 +12,7 @@ if ( isset($_GET['noheader']) ) {
 \ShortPixel\HelpScout::outputBeacon(\wpSPIO()->getShortPixel()->getApiKey());
 
 echo $this->view->rewriteHREF;
+
 ?>
 <div class="wrap shortpixel-other-media">
     <h2>

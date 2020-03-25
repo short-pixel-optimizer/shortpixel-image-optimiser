@@ -132,7 +132,7 @@ class ShortPixelCustomMetaDao {
         $rows = $this->db->query($sql);
         $folders = array();
         foreach($rows as $row) {
-            $folders[$row->id] = new ShortPixelFolder($row, $this->excludePatterns);
+            $folders[$row->id] = $row; //new ShortPixelFolder($row, $this->excludePatterns);
         }
         return $folders;
     }
@@ -142,9 +142,26 @@ class ShortPixelCustomMetaDao {
         $rows = $this->db->query($sql, array($path));
         $folders = array();
         foreach($rows as $row) {
-            return new ShortPixelFolder($row, $this->excludePatterns);
+        //    return new ShortPixelFolder($row, $this->excludePatterns);
+          $folders[$row->id] = $row;
+          return $folders;
         }
         return false;
+    }
+
+    public function getFolderByID($id)
+    {
+      $sql = "SELECT * FROM {$this->db->getPrefix()}shortpixel_folders WHERE id = %d ";
+      $rows = $this->db->query($sql, array($id));
+      $folders = array();
+
+      foreach($rows as $row) {
+      //    return new ShortPixelFolder($row, $this->excludePatterns);
+          $folders[$row->id] = $row;
+          return $folders;
+      }
+      return false;
+
     }
 
     public function hasFoldersTable() {
@@ -161,10 +178,10 @@ class ShortPixelCustomMetaDao {
         $path = $folder->getPath();
         $tsUpdated = date("Y-m-d H:i:s", $folder->getTsUpdated());
 
-
         return $this->db->insert($this->db->getPrefix().'shortpixel_folders',
                                  array("path" => $path, "path_md5" => md5($path), "file_count" => $fileCount, "ts_updated" => $tsUpdated, "ts_created" => date("Y-m-d H:i:s")),
                                  array("path" => "%s", "path_md5" => "%s", "file_count" => "%d", "ts_updated" => "%s"));
+
     }
 
     public function updateFolder($folder, $newPath, $status = 0, $fileCount = 0) {
@@ -205,102 +222,16 @@ class ShortPixelCustomMetaDao {
         //$this->db->restoreErrors();
     }
 
-    public function newFolderFromPath($path, $uploadPath, $rootPath) {
-        WpShortPixelDb::checkCustomTables(); // check if custom tables are created, if not, create them
 
-        $fs = \wpSPIO()->filesystem();
 
-        //$addedFolder = ShortPixelFolder::checkFolder($path, $uploadPath);
-        $newfolder = $fs->getDirectory($path);
-        $rootPath = $fs->getWPFileBase();
-
-        if(! $newfolder->exists() ) {
-            return __('Folder could not be found: ' . $uploadPath . $path ,'shortpixel-image-optimiser');
-        }
-
-        if (! $newfolder->isSubFolderOf($rootPath))
-        {
-                return( sprintf(__('The %s folder cannot be processed as it\'s not inside the root path of your website (%s).','shortpixel-image-optimiser'),$addedFolder, $rootPath));
-        }
-
-        if($this->getFolder($newfolder->getPath())) {
-            return __('Folder already added.','shortpixel-image-optimiser');
-        }
-
-        $folder = new ShortPixelFolder(array("path" => $newfolder->getPath()), $this->excludePatterns);
-      /*  try {
-            $folder->setFileCount($folder->countFiles());
-        } catch(ShortPixelFileRightsException $ex) {
-            return $ex->getMessage();
-        } */
-
-        if(ShortPixelMetaFacade::isMediaSubfolder($folder->getPath())) {
-            return __('This folder contains Media Library images. To optimize Media Library images please go to <a href="upload.php?mode=list">Media Library list view</a> or to <a href="upload.php?page=wp-short-pixel-bulk">SortPixel Bulk page</a>.','shortpixel-image-optimiser');
-        }
-
-        // Set this to 0 on new, not null since mysql will auto-complete that to current TS.
-        $folder->setTSUpdated(0);
-        $folder->setFileCount(0);
-
-        $folderMsg = $this->saveFolder($folder);
-        if(!$folder->getId()) {
-            //try again creating the tables first.
-            $this->createUpdateShortPixelTables();
-            $folderMsg = $this->saveFolder($folder);
-            //still no luck - complain... :)
-            if(!$folder->getId()) {
-                return __('The folder could not be saved to the database. Please check that the plugin can create its database tables.', 'shortpixel-image-optimiser') . $folderMsg;
-            }
-        }
-
-        if(!$folderMsg) {
-            //$fileList = $folder->getFileList();
-            $this->refreshFolder($newfolder);
-        }
-        return $folderMsg;
-
-    }
-
-    /** Check files and add what's needed */
+    /* Check files and add what's needed
+    * Moved for directory Other Media Model
     public function refreshFolder(ShortPixel\DirectoryModel $folder)
     {
 
-        $folderObj = $this->getFolder($folder->getPath());
 
-        if ($folderObj === false)
-        {
-          Log::addWarn('FolderObj from database is not there, while folder seems ok ' . $folder->getPath() );
-          return false;
-        }
-
-        Log::addDebug('Doing Refresh Folder for (DirectoryModel / ShortpixelFolder) ', array($folder->getPath(), $folderObj->getPath()) );
-
-        $fs = \wpSPIO()->fileSystem();
-
-        if (! $folder->exists())
-        {
-          Notice::addError( sprintf(__('Folder %s does not exist! ', 'shortpixel-image-optimiser'), $folder->getPath()) );
-          return false;
-        }
-        if (! $folder->is_writable())
-        {
-          Notice::addWarning( sprintf(__('Folder %s is not writeable. Please check permissions and try again.','shortpixel-image-optimiser'),$folder->getPath()) );
-        }
-
-        $filter = array('date_newer' => strtotime($folderObj->getTsUpdated()));
-        $files = $fs->getFilesRecursive($folder, $filter);
-
-        $shortpixel = \wpSPIO()->getShortPixel();
-        // check processable by invoking filter, for now processablepath takes only paths, not objects.
-        $files = array_filter($files, function($file) use($shortpixel) { return $shortpixel->isProcessablePath($file->getFullPath());  });
-
-        Log::addDebug('Found Files for custom media ' . count($files));
-        $folderObj->setTsUpdated(date("Y-m-d H:i:s", $folderObj->getFolderContentsChangeDate()) );
-        $folderObj->setFileCount( count($files) );
-        $this->update($folderObj);
-
-        $this->batchInsertImages($files, $folderObj->getId());
     }
+    */
 
     /**
      *
@@ -362,7 +293,10 @@ class ShortPixelCustomMetaDao {
         return $id;
     }
 
-    private function batchInsertImages($files, $folderId) {
+    /** This function is called by OtherMediaController / RefreshFolders. Other scripts should not call it
+    * @private
+    */
+    public function batchInsertImages($files, $folderId) {
         //facem un delete pe cele care nu au shortpixel_folder, pentru curatenie - am mai intalnit situatii in care stergerea s-a agatat (stop monitoring)
         global $wpdb;
 
@@ -584,6 +518,108 @@ class ShortPixelCustomMetaDao {
         Log::addDebug('Update Custom Meta' . $sql, $params);
         $this->db->query($sql, $params);
     }
+
+    /** Replacement function for using with MVC structure.
+    * - This should be the only save function for folder (add or update).
+    * - The DB class should be only worrying about the database part.
+    */
+    public function saveDirectory($fields)
+    {
+        $result = false;
+        $folder_id = -1;
+
+        if (isset($fields['id']))
+        {
+          $folder_id = $fields['id'];
+          unset($fields['id']);
+        }
+
+        if ($folder_id > 0 && $folder_id !== false)
+        {
+           $result = $this->updateDirectory($folder_id, $fields);
+        }
+        else
+        {
+          if (isset($fields['ts_updated']))
+            unset($fields['ts_updated']);
+
+           $result = $this->addDirectory($fields);
+        }
+
+        return $result;
+    }
+
+    private function addDirectory($fields)
+    {
+      $prefix = $this->db->getPrefix();
+
+      $defaults = array(
+          'file_count' => 0,
+          'ts_created' => date("Y-m-d H:i:s"),
+      );
+      $fields = wp_parse_args($fields, $defaults);
+
+
+      $prepared_fields = $this->prepareFields($fields);
+      Log::addTemp('Inserting new into Custom Folders', array_values($prepared_fields['fields']));
+      Log::addTemp($fields);
+      $result = $this->db->insert($prefix .'shortpixel_folders',
+                              $fields,
+                              array_values($prepared_fields['fields'])
+                            );
+
+       return $result;
+    }
+
+    private function updateDirectory($id, $fields)
+    {
+      $prefix = $this->db->getPrefix();
+
+      $sql = 'UPDATE ' . $prefix . 'shortpixel_folders SET ';
+
+      $setline = array();
+      $prepared_fields = $this->prepareFields($fields);
+
+      $fields = $prepared_fields["fields"];
+      $prepared = $prepared_fields['prepared'];
+
+      foreach($fields as $name => $mask)
+      {
+        $setline[] = $name . ' = ' . $mask . ' ';
+      }
+
+      $sql .= implode(',', $setline);
+      $sql .= ' WHERE id = %d';
+      $prepared[] = $id;
+
+      $sql = $this->db->prepare($sql, $prepared);
+    //  Log::addTemp('Update Dir SQL ' . $sql);
+      $this->db->query($sql);
+
+    }
+
+    /* prepare fields for update or insert. Replaces values with a proper mask for preparing
+    * @param Array Array of fields
+    * @return Array Assoc array of fields replaced with masked and an array with prepared values
+    */
+    private function prepareFields($fields)
+    {
+        $result = array();
+        $masks = array('status' => '%d', 'file_count' => '%d', 'ts_updated' => '%s', 'ts_created' => "%s" );
+
+        foreach($fields as $name => $value)
+        {
+          $mask = isset($masks[$name]) ? $masks[$name] : '%s';
+          $fields[$name] = $mask;
+          $prepared[] = $value;
+        }
+
+        $result['fields'] = $fields;
+        $result['prepared'] = $prepared;
+        return $result;
+    }
+
+
 
     public function delete($meta) {
         $metaClass = get_class($meta);

@@ -65,8 +65,7 @@ class NoticeController //extends ShortPixelController
   {
     $notices = get_option($this->notice_option, false);
     $cnotice = (is_array($notices)) ? count($notices) : 0;
-    if ($cnotice > 0)
-      Log::addDebug('Notice Control - #num notices' . $cnotice);
+
 
     if ($notices !== false && is_array($notices))
     {

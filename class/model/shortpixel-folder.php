@@ -243,7 +243,7 @@ class ShortPixelFolder extends ShortPixelEntity{
     }
 
     function setPath($path) {
-        $this->path = $path;
+        $this->path = trailingslashit($path);
     }
 
     function getType() {
