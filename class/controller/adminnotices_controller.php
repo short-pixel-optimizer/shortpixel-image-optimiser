@@ -229,6 +229,7 @@ class adminNoticesController extends ShortPixelController
           $shortpixel->getQuotaInformation();
       }
 
+
       /**  Comment for historical reasons, this seems strange in the original, excluding.
       * isset($this->_settings->currentStats['optimizePdfs'])
       * && $this->_settings->currentStats['optimizePdfs'] == $this->_settings->optimizePdfs )
@@ -342,7 +343,6 @@ class adminNoticesController extends ShortPixelController
     protected function getQuotaExceededMessage($quotaData)
     {
       $averageCompression = \wpSPIO()->getShortPixel()->getAverageCompression();
-      $recheck = isset($_GET['checkquota']) ? true : false;
       \wpSPIO()->loadModel('apikey');
 
       $keyModel = new apiKeyModel();

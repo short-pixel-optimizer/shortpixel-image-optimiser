@@ -848,7 +848,7 @@ class WPShortPixel {
         }
     } */
 
-    // needs moving. Used by Nextgen ( and others ) 
+    // needs moving. Used by Nextgen ( and others )
     public function addPathToCustomFolder($imageFsPath, $folderId, $pid) {
         //prevent adding it multiple times if the action is called repeatedly (Gravity Forms does that)
         $existing = $this->spMetaDao->getMetaForPath($imageFsPath);
@@ -3548,6 +3548,7 @@ class WPShortPixel {
             $this->_settings->prioritySkip = array();
             $this->_settings->dismissedNotices = $dismissed;
             \ShortPixel\adminNoticesController::resetAPINotices();
+            \ShortPixel\adminNoticesController::resetQuotaNotices();
         }
         $this->_settings->quotaExceeded = 0;
     }
