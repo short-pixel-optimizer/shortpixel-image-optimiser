@@ -52,7 +52,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
       $folders = self::get(array('path' => $path)); //s\wpSPIO()->getShortPixel()->getSpMetaDao()->getFolder($path);
       $folder = false;
 
-      if (count($folders) > 0)
+      if ($folders && count($folders) > 0)
         $folder = $folders[0];
 
       return $this->loadFolder($folder);
@@ -159,7 +159,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
         );
         $result = \wpSPIO()->getShortPixel()->getSpMetaDao()->saveDirectory($args);
         if ($result) // reloading because action can create a new DB-entry, which will not be reflected (in id )
-          $this->loadFolder($this->getPath());
+          $this->loadFolderByPath($this->getPath());
 
         return $result;
   }

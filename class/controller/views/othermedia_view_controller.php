@@ -522,7 +522,6 @@ class OtherMediaViewController extends ShortPixelController
           break;
         }
 
-        var_dump($item);
         if ($item->resize)
         {
            $msg .= '<br>' . sprintf(__('Resized to %s x %s', 'shortpixel-image-optimiser'), $item->resize_width, $item->resize_height);

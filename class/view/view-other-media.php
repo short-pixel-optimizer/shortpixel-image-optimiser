@@ -107,8 +107,8 @@ echo $this->view->rewriteHREF;
                 }
                 ?></div>
             </span>
-            <span><?php echo (string) $itemFile->getFileDir(); ?></span>
-            <span><?php echo $item->media_type ?></span>
+            <span class='folderpath'><?php echo (string) $itemFile->getFileDir(); ?></span>
+            <span class='mediatype'><?php echo $item->media_type ?></span>
             <span class="date"><?php echo $display_date ?></span>
             <span id='sp-cust-msg-C-<?php echo $item->id ?>'>
               <span class='sp-column-info'><?php echo $this->getDisplayStatus($item); ?></span>

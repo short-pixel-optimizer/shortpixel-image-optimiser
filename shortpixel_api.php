@@ -835,13 +835,15 @@ class ShortPixelAPI {
 
           $resizeWidth = $settings->resizeWidth;
           $resizeHeight = $settings->resizeHeight;
-          if ($resizeWidth != $width || $resizeHeight != $height)  // resized.
+
+          if ($resizeWidth == $width || $resizeHeight == $height)  // resized.
           {
               $meta->setResizeWidth($width);
               $meta->setResizeHeight($height);
               $meta->setResize(true);
           }
-
+          else
+            $meta->setResize(false);
         }
 
         $itemHandler->updateMeta($meta);

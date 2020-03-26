@@ -126,7 +126,21 @@
          .sp-column-info {
            width: 400px;
            display: inline-block;
+           @media(max-width: 1550px) {
+               width: auto;
+           }
          }
+      }
+      @media(max-width: 1250px)
+      {
+         .heading
+         {
+          .type { display: none; }   
+         }
+         .item {
+           .mediatype { display: none; }
+         }
+
       }
       .no-items
       {

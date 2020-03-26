@@ -531,6 +531,7 @@ class ShortPixelCustomMetaDao {
         $result = false;
         $folder_id = -1;
 
+        Log::addTemp('Save Directory', $fields);
         if (isset($fields['id']))
         {
           $folder_id = $fields['id'];
@@ -557,6 +558,7 @@ class ShortPixelCustomMetaDao {
       $prefix = $this->db->getPrefix();
 
       $defaults = array(
+          'status' => 0,
           'file_count' => 0,
           'ts_created' => date("Y-m-d H:i:s"),
       );

@@ -70,6 +70,14 @@
     .shortpixel-other-media .list-overview .item .sp-column-info {
       width: 400px;
       display: inline-block; }
+      @media (max-width: 1550px) {
+        .shortpixel-other-media .list-overview .item .sp-column-info {
+          width: auto; } }
+    @media (max-width: 1250px) {
+      .shortpixel-other-media .list-overview .heading .type {
+        display: none; }
+      .shortpixel-other-media .list-overview .item .mediatype {
+        display: none; } }
     .shortpixel-other-media .list-overview .no-items {
       padding: 10px; }
       .shortpixel-other-media .list-overview .no-items p {
