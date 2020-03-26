@@ -26,6 +26,8 @@ class adminNoticesController extends ShortPixelController
     const MSG_NO_APIKEY_REPEAT = 'ApiNotice301';  // First Repeat.
     const MSG_NO_APIKEY_REPEAT_LONG = 'ApiNotice302'; // Last Repeat.
 
+    const MSG_INTEGRATION_NGGALLERY = 'IntNotice400';
+
     public function __construct()
     {
         add_action('admin_notices', array($this, 'check_admin_notices'), 5); // run before the plugin admin notices
@@ -59,6 +61,11 @@ class adminNoticesController extends ShortPixelController
       Notices::removeNoticeBYID(self::MSG_QUOTA_REACHED);
     }
 
+    public static function resetIntegrationNotices()
+    {
+      Notices::removeNoticeByID(self::MSG_INTEGRATION_NGGALLERY);
+    }
+
     /** ReInstates A Persistent Notice manually */
     public static function reInstateQuotaExceeded()
     {
@@ -78,8 +85,23 @@ class adminNoticesController extends ShortPixelController
        $this->doUnlistedNotices();
        $this->doQuotaNotices();
 
+       //$this->doIntegrationNotices();
     }
 
+
+    protected function doIntegrationNotices()
+    {
+        $settings= \wpSPIO()->settings();
+
+        if (\wpSPIO()->env()->has_nextgen && ! $settings->includeNextGen  )
+        {
+            $url = admin_url('options-general.php?page=wp-shortpixel-settings&part=adv-settings');
+            $message = sprintf(__('It seems you are using NextGen Gallery. You can optimize your galleries with ShortPixel, but this is currently not enabled. To enable, %sgo to settings and enable%s it!', 'shortpixel_image_optimiser'), '<a href="' . $url . '">', '</a>');
+            $notice = Notices::addNormal($message);
+            Notices::makePersistent($notice, self::MSG_INTEGRATION_NGGALLERY, YEAR_IN_SECONDS);
+        }
+
+    }
 
     /** Load the various messages about the lack of API-keys in the plugin */
     protected function doAPINotices()
