@@ -504,6 +504,7 @@ class ShortPixelCustomMetaDao {
         foreach(self::$fields[$tableSuffix] as $field => $type) {
             $getter = "get" . ShortPixelTools::snakeToCamel($field);
             $val = $meta->$getter();
+
             if($meta->$getter() !== null) {
                 $sql .= " {$field} = %{$type},";
                 $params[] = $val;
@@ -563,8 +564,7 @@ class ShortPixelCustomMetaDao {
 
 
       $prepared_fields = $this->prepareFields($fields);
-      Log::addTemp('Inserting new into Custom Folders', array_values($prepared_fields['fields']));
-      Log::addTemp($fields);
+
       $result = $this->db->insert($prefix .'shortpixel_folders',
                               $fields,
                               array_values($prepared_fields['fields'])
@@ -595,7 +595,6 @@ class ShortPixelCustomMetaDao {
       $prepared[] = $id;
 
       $sql = $this->db->prepare($sql, $prepared);
-    //  Log::addTemp('Update Dir SQL ' . $sql);
       $this->db->query($sql);
 
     }

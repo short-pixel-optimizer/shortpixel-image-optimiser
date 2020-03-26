@@ -45,6 +45,10 @@ class ShortPixelMeta extends ShortPixelEntity{
     const FILE_STATUS_RESTORED = 3;
     const FILE_STATUS_TORESTORE = 4; // Used for Bulk Restore
 
+    const COMPRESSION_LOSSLESSS = 0;
+    const COMPRESSION_LOSSY = 1;
+    const COMPRESSION_GLOSSY = 2;
+
     public function __construct($data = array()) {
         parent::__construct($data);
     }

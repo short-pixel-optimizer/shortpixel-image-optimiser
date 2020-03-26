@@ -904,7 +904,6 @@ class WPShortPixel {
         }
         if($meta->getStatus() != ShortPixelMeta::FILE_STATUS_SUCCESS) {
 
-
             $meta->setStatus(ShortPixelMeta::FILE_STATUS_PENDING);
             $meta->setRetries(0);
             /* [BS] This is being set because meta in other states does not keep previous values. The value 0 is problematic

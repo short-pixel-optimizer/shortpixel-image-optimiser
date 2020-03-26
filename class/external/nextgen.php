@@ -117,7 +117,6 @@ class NextGen
           $folder = $otherMedia->getFolderByPath($gallery->getPath());
           if ($folder->hasDBEntry())
           {
-            Log::addTemp('Adding NextGen, Directory already exists - skipping' . $folder->getPath());
             continue;
           }
 

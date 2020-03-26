@@ -481,11 +481,8 @@ class OtherMediaViewController extends ShortPixelController
               $msg = __('Restore Pending','shortpixel-image-optimiser');
             break;
             case \ShortPixelMeta::FILE_STATUS_SUCCESS:
-                $msg = 0 + intval($item->message)  == 0
-                    ? __('Bonus processing','shortpixel-image-optimiser')
-                    : __('Reduced by','shortpixel-image-optimiser') . " <strong>" . $item->message . "%</strong>"
-                      . (0 + intval($item->message) < 5 ? "<br>" . __('Bonus processing','shortpixel-image-optimiser') . "." : "");
-                break;
+                $msg = $this->getSuccessMessage($item);
+            break;
             case 1: $msg = "<img src=\"" . wpSPIO()->plugin_url('res/img/loading.gif') . "\" class='sp-loading-small'>&nbsp;"
                            . __('Pending','shortpixel-image-optimiser');
                 break;
@@ -499,6 +496,38 @@ class OtherMediaViewController extends ShortPixelController
                 }
         }
         return  $msg;
+
+      }
+
+      protected function getSuccessMessage($item)
+      {
+        $msg = '';
+
+        $amount = intval($item->message);
+        if (0 + $amount == 0 || 0 + $amount < 5)
+            $msg .= __('Bonus processing','shortpixel-image-optimiser') .  ' ';
+        else
+            $msg .= __('Reduced by','shortpixel-image-optimiser') . " <strong>" . $item->message . "%</strong> ";
+
+        switch($item->compression_type)
+        {
+          case \ShortPixelMeta::COMPRESSION_LOSSY:
+             $msg .= '(' . __('Lossy', 'shortpixel-image-optimiser') . ')';
+          break;
+          case \ShortPixelMeta::COMPRESSION_GLOSSY:
+              $msg .= '(' . __('Glossy', 'shortpixel-image-optimiser') . ')';
+          break;
+          case \ShortPixelMeta::COMPRESSION_LOSSLESSS:
+              $msg .= '(' . __('Lossless', 'shortpixel-image-optimiser') . ')';
+          break;
+        }
+
+        var_dump($item);
+        if ($item->resize)
+        {
+           $msg .= '<br>' . sprintf(__('Resized to %s x %s', 'shortpixel-image-optimiser'), $item->resize_width, $item->resize_height);
+        }
+        return $msg;
 
       }
 

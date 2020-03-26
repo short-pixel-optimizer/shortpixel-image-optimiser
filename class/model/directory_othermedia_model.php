@@ -72,7 +72,11 @@ class DirectoryOtherMediaModel extends DirectoryModel
       $this->updated = $this->DBtoTimestamp($folder->ts_updated);
       $this->created = $this->DBtoTimestamp($folder->ts_created);
 
-      $this->name = $folder->name;
+      if (strlen($folder->name) == 0)
+        $this->name = basename($folder->path);
+      else
+        $this->name = $folder->name;
+
       $this->status = $folder->status;
 
       if ($this->status == -1)
@@ -150,6 +154,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
             'status' => $this->status,
             'file_count' => $this->fileCount,
             'ts_updated' => $this->timestampToDB($this->updated),
+            'name' => $this->name,
             'path' => $this->getPath(),
         );
         $result = \wpSPIO()->getShortPixel()->getSpMetaDao()->saveDirectory($args);
@@ -298,9 +303,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
       $folders = $spMetaDao->getFolders();
     }
 
-    echo "<PRE>"; print_r(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,5)); echo "</PRE>";
-    var_dump($folders);
-    if ($folders === false)  // no folders. 
+    if ($folders === false)  // no folders.
       return $folders;
 
     $i = 0;
