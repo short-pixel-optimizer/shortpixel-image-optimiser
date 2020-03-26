@@ -21,10 +21,17 @@ class OtherMediaController extends ShortPixelController
     }
 
     // Get CustomFolder for usage.
-    public function getFolders()
+    public function getAllFolders()
     {
         $folders = DirectoryOtherMediaModel::get();
         return $folders;
+    }
+
+    public function getActiveFolders()
+    {
+      $folders = DirectoryOtherMediaModel::get(array('remove_hidden' => true));
+      return $folders;
+
     }
 
     public function getFolderByID($id)
@@ -35,6 +42,12 @@ class OtherMediaController extends ShortPixelController
           return $folders[0];
 
         return false;
+    }
+
+    public function getFolderByPath($path)
+    {
+       $folder = new DirectoryOtherMediaModel($path);
+       return $folder;
     }
 
     public function addDirectory($path)
@@ -62,10 +75,12 @@ class OtherMediaController extends ShortPixelController
 
        if (! $directory->hasDBEntry())
        {
-          Log::addDebug('Has no DB ENTry, on addDirectory', $directory);
+         Log::addDebug('Has no DB entry, on addDirectory', $directory);
          if ($directory->save())
+         {
+          $directory->updateFileContentChange();
           $directory->refreshFolder(0);
-          exit();
+         }
        }
        else // if directory is already added, fail silently, but still refresh it.
        {
@@ -73,19 +88,20 @@ class OtherMediaController extends ShortPixelController
          {
             $directory->setStatus(DirectoryOtherMediaModel::DIRECTORY_STATUS_NORMAL);
             $directory->updateFileContentChange(); // does a save. Dunno if that's wise.
+            $directory->refreshFolder(0);
          }
-         $directory->refreshFolder();
+         else
+          $directory->refreshFolder();
        }
 
-       if ($directory->exists() && $directory->getID() > 0)
+      if ($directory->exists() && $directory->getID() > 0)
         return true;
-
-      return false;
+      else
+        return false;
     }
 
     public function refreshFolder(DirectoryOtherMediaModel $directory, $force = false)
     {
-
       $updated = $directory->updateFileContentChange();
       $update_time = $directory->getUpdated();
       if ($updated || $force)
@@ -112,7 +128,7 @@ class OtherMediaController extends ShortPixelController
     /** Check directory structure for new files */
     public function refreshFolders($force = false, $expires = 5 * MINUTE_IN_SECONDS)
     {
-      $customFolders = $this->getFolders();
+      $customFolders = $this->getActiveFolders();
 
       $cache = new CacheController();
       $refreshDelay = $cache->getItem('othermedia_refresh_folder_delay');

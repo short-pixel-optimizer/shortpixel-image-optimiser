@@ -848,6 +848,7 @@ class WPShortPixel {
         }
     } */
 
+    // needs moving. Used by Nextgen ( and others ) 
     public function addPathToCustomFolder($imageFsPath, $folderId, $pid) {
         //prevent adding it multiple times if the action is called repeatedly (Gravity Forms does that)
         $existing = $this->spMetaDao->getMetaForPath($imageFsPath);
@@ -2367,7 +2368,7 @@ class WPShortPixel {
      */
     public function throwNotice($when = 'activate', $extra = '') {
       //  set_transient("shortpixel_thrown_notice", array('when' => $when, 'extra' => $extra), 120);
-    
+
       Notices::addError($extra);  // whatever error is in the extra. Seems that normal messages don't pass here.
     }
 

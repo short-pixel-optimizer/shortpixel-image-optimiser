@@ -10,6 +10,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
   protected $id = -1; // if -1, this might not exist yet in Dbase. Null is not used, because that messes with isset
 
+  protected $name;
   protected $status = 0;
   protected $fileCount = 0;
   protected $updated = 0;
@@ -71,7 +72,9 @@ class DirectoryOtherMediaModel extends DirectoryModel
       $this->updated = $this->DBtoTimestamp($folder->ts_updated);
       $this->created = $this->DBtoTimestamp($folder->ts_created);
 
+      $this->name = $folder->name;
       $this->status = $folder->status;
+
       if ($this->status == -1)
         $this->is_removed = true;
 
@@ -271,7 +274,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
   {
     $defaults = array(
         'id' => false,  // Get folder by Id
-        'status' => false, // not yet implemented.
+        'remove_hidden' => false, // not yet implemented.
         'path' => false,
     );
 
@@ -295,6 +298,11 @@ class DirectoryOtherMediaModel extends DirectoryModel
       $folders = $spMetaDao->getFolders();
     }
 
+    echo "<PRE>"; print_r(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,5)); echo "</PRE>";
+    var_dump($folders);
+    if ($folders === false)  // no folders. 
+      return $folders;
+
     $i = 0;
     $newfolders = array();
     foreach($folders as $index => $folder)
@@ -306,6 +314,11 @@ class DirectoryOtherMediaModel extends DirectoryModel
       $dirObj->created = $dirObj->DBtoTimestamp($folder->ts_created);
       $dirObj->id = $folder->id;
 */
+      if ($args['remove_hidden'])
+      {
+         if ($dirObj->is_removed)
+          continue;
+      }
       $newfolders[$i] = $dirObj; // $index is dbase id, we just want an array
       $i++;
     }

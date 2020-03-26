@@ -65,8 +65,7 @@ namespace ShortPixel;
                         <?php
                         foreach($view->customFolders as $index => $dirObj) {
                             $folder_id = $dirObj->getID();
-                            if ($dirObj->isRemoved())
-                              continue;
+
 
                             $type_display = ($dirObj->isNextGen() ) ? __('Nextgen', 'shortpixel-image-optimiser') . "<br>" : "";
                         //    $stat = $this->shortPixel->getSpMetaDao()->getFolderOptimizationStatus($folder->getId());

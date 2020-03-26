@@ -277,7 +277,7 @@ class SettingsController extends shortPixelController
         $otherMedia = new OtherMediaController();
 
         $otherMedia->refreshFolders();
-        $customFolders = $otherMedia->getFolders();
+        $customFolders = $otherMedia->getActiveFolders();
         $fs = \wpSPIO()->filesystem();
 
         $customFolderBase = $fs->getWPFileBase();
@@ -295,14 +295,11 @@ class SettingsController extends shortPixelController
             $foldersArray[] = $fsFolder->getPath();
           }
 
-          foreach($customFolders as $id => $folder)
+          foreach($customFolders as $index => $folder)
           {
             if(in_array($folder->getPath(), $foldersArray )) {
                 $folder->setNextGen(true);
               }
-          //  $folder->directoryObj = $fs->getDirectory($folder->getPath());
-            //$folder->status = $this->shortPixel->getSpMetaDao()->getFolderOptimizationStatus($folder->getId());
-
           }
         }
 
@@ -358,20 +355,9 @@ class SettingsController extends shortPixelController
             $otherMedia = new OtherMediaController();
             $result = $otherMedia->addDirectory($folderpath);
             if ($result)
+            {
               Notice::addSuccess(__('Folder added successfully.','shortpixel-image-optimiser'));
-
-            /*$is_warning = true;
-            if(!$folderMsg) {
-                //$notice = array("status" => "success", "msg" => __('Folder added successfully.','shortpixel-image-optimiser'));
-                $folderMsg = __('Folder added successfully.','shortpixel-image-optimiser');
-                $is_warning = false;
             }
-            if ($is_warning)
-              Notice::addWarning($folderMsg);
-            else
-              Notice::addNormal($folderMsg);
-*/
-        //    $this->model->hasCustomFolders = time();
           }
           unset($post['addCustomFolder']);
 

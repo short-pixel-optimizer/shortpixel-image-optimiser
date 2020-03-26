@@ -72,7 +72,7 @@ class NextGen
   */
   public function nextGenEnabled($silent)
   {
-    
+
     \WpShortPixelDb::checkCustomTables(); // check if custom tables are created, if not, create them
     $this->addNextGenGalleriesToCustom($silent);
   }
@@ -111,10 +111,16 @@ class NextGen
 
       $otherMedia = new otherMediaController();
 
-
       $meta = $shortPixel->getSpMetaDao();
 
       foreach($ngGalleries as $gallery) {
+          $folder = $otherMedia->getFolderByPath($gallery->getPath());
+          if ($folder->hasDBEntry())
+          {
+            Log::addTemp('Adding NextGen, Directory already exists - skipping' . $folder->getPath());
+            continue;
+          }
+
           $result = $otherMedia->addDirectory($gallery->getPath());
           if (! $result)
             Log::addWarn('Could not add this directory' . $gallery->getPath() );
@@ -125,7 +131,6 @@ class NextGen
         // put timestamp to this setting.
         $settings = \wpSPIO()->settings();
         $settings->hasCustomFolders = time();
-
       }
       if (! $silent && (strlen(trim($folderMsg)) > 0 && $folderMsg !== false))
       {
@@ -138,10 +143,11 @@ class NextGen
   {
     $shortPixel = \wpSPIO()->getShortPixel();
     $metadao = $shortPixel->getSpMetaDao();
+    $otherMedia = new OtherMediaController();
 
-      if (\wpSPIO()->settings()->includeNextGen == 1) {
+    if (\wpSPIO()->settings()->includeNextGen == 1) {
           $imageFsPath = $this->getImageAbspath($image);
-          $customFolders = $metadao->getFolders();
+          $customFolders = $otherMedia->getActiveFolders();
 
           $folderId = -1;
           foreach ($customFolders as $folder) {
@@ -152,8 +158,9 @@ class NextGen
           }
           if ($folderId == -1) { //if not found, create
               $galleryPath = dirname($imageFsPath);
-              $folder = new \ShortPixelFolder(array("path" => $galleryPath), $this->_settings->excludePatterns);
-              $folderMsg = $metadao->saveFolder($folder);
+              $otherMedia->addDirectory($galleryPath);
+            //  $folder = new \ShortPixelFolder(array("path" => $galleryPath), $this->_settings->excludePatterns);
+          //    $folderMsg = $metadao->saveFolder($folder);
               $folderId = $folder->getId();
               //self::log("NG Image Upload: created folder from path $galleryPath : Folder info: " .  json_encode($folder));
           }
