@@ -381,7 +381,7 @@ Release date: 27th November 2019
 * Fixed: check for DOING_AJAX on redirect to settings.
 * Fixed: Shortpixel icon + exclamation mark in  toolbar showing on every page load.
 * Fixed: Add Custom media browser doesn't display files anymore
-* Fixed: WebP option adds an extra border if image already has a border -> borders will not be replicated to <picture> tags.
+* Fixed: WebP option adds an extra border if image already has a border -> borders will not be replicated to `<picture>` tags.
 * Fixed: Validating empty key doesn't show any message.
 * Fixed: on Nginx writes .htaccess files.
 * Fixed: Bug with safeGetAttachmentUrl for URLs that start with //.
@@ -394,7 +394,7 @@ Release date: 27th November 2019
 = 4.14.6 =
 
 Release date: 9th October 2019
-* Don't convert to <picture> the <img>s with backgrounds.
+* Don't convert to `<picture>` the `<img>`s with backgrounds.
 * Remove unused eval() call.
 * Restore the validate button next to API Key but change label to "Save and validate"
 * Fixed: PNGtoJPG issue with already uploaded images
@@ -466,7 +466,7 @@ Release date: 17th June 2019
 * Adaptive Max execution time and capped to 90 sec. for the bulk background AJAX calls. (Kinsta has a max_execution_time of 300 sec. in PHP but the HTTP connection is cut after 180 sec.)
 * Fix custom 404 page for missing images not working when using .htaccess for WebP
 * Fix WebP picture tag with relative URLs not working in some circumstances
-* Fix replacing the <img> inside an existing <picture> tag with another <picture> tag.
+* Fix replacing the `<img>` inside an existing `<picture>` tag with another `<picture>` tag.
 * Clear SP optimization cache in order to be able to optimize an image which initially had permissions error, after changing the permissions.
 * Fix being able to list the contents of ShortpixelBackups on some badly configured servers.
 * Fix error when inputting D'Artagnan in the AUTH pass field of settings.
@@ -491,7 +491,7 @@ Release date: 10th April 2019
 * resolve the Settings inconsistency in Other Media (settings displayed were from when adding the folder not from when actually optimizing)
 * Make pressing Escape or clicking outside of any popup close it.
 * Fixed: Restoring an Other Media item and then Optimizing it again optimizes it Lossless
-* fix generating the WebP <picture> tags when the images are either on a subdomain or on a CDN domain having the same root domain as the main site.
+* fix generating the WebP `<picture>` tags when the images are either on a subdomain or on a CDN domain having the same root domain as the main site.
 
 = EARLIER VERSIONS =
 * please refer to the changelog.txt file inside the plugin archive.
