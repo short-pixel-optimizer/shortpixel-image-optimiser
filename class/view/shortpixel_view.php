@@ -618,7 +618,7 @@ class ShortPixelView {
                       <span class='icon' style="margin-right: 25px;"><img src="<?php echo(wpSPIO()->plugin_url('res/img/robo-winky.png' ));?>" ></span>
                       <span class='content'>
                        <p><?php _e('After you optimized all your images your site speed might still be improved. Allow ShortPixel Specialists to tell you how.', 'shortpixel-image-optimiser');  ?><p>
-                        <p style='font-size: 16px;'><a href="https://shortpixel.com/lp/wso/" target="_blank" style='font-weight: 700;'><?php _e('Get Your Site Assessment','shortpixel-image-optimiser'); ?></a></p>
+                        <p style='font-size: 16px;'><a href="https://shortpixel.com/lp/wso/?utm_source=SPIO" target="_blank" style='font-weight: 700;'><?php _e('Get Your Site Assessment','shortpixel-image-optimiser'); ?></a></p>
                       </span>
                   </div>
             </div>
