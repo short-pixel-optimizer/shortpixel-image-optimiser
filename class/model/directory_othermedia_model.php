@@ -63,16 +63,29 @@ class DirectoryOtherMediaModel extends DirectoryModel
   /** Loads from database into model, the extra data of this model. */
   private function loadFolder($folder)
   {
-    if ($folder)
+
+    if (is_object($folder))
     {
+      // suboptimally, this function needs to work both with database record output and instances of itself
+      $class = get_class($folder);
+
       $this->id = $folder->id;
 
       if ($this->id > 0)
        $this->in_db = true;
 
-      $this->updated = $this->DBtoTimestamp($folder->ts_updated);
-      $this->created = $this->DBtoTimestamp($folder->ts_created);
-
+      if ($class == 'ShortPixel\DirectoryOtherMediaModel')
+      {
+        $this->updated = $folder->updated;
+        $this->create = $folder->created;
+        $this->fileCount = $folder->fileCount;
+      }
+      else
+      {
+        $this->updated = $this->DBtoTimestamp($folder->ts_updated);
+        $this->created = $this->DBtoTimestamp($folder->ts_created);
+        $this->fileCount = $folder->file_count;
+      }
       if (strlen($folder->name) == 0)
         $this->name = basename($folder->path);
       else
@@ -83,7 +96,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
       if ($this->status == -1)
         $this->is_removed = true;
 
-      $this->fileCount = $folder->file_count;
+
 
       do_action('shortpixel/othermedia/folder/load', $this->id, $this);
 
@@ -321,11 +334,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
     {
 
       $dirObj = new DirectoryOtherMediaModel($folder);
-      /*$dirObj->status = $folder->status;
-      $dirObj->updated = $dirObj->DBtoTimestamp($folder->ts_updated);
-      $dirObj->created = $dirObj->DBtoTimestamp($folder->ts_created);
-      $dirObj->id = $folder->id;
-*/
+
       if ($args['remove_hidden'])
       {
          if ($dirObj->is_removed)

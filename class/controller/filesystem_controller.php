@@ -103,7 +103,6 @@ Class FileSystemController extends ShortPixelController
     {
       if(\wpSPIO()->env()->is_mainsite) {
           $path = get_home_path();
-
       } else {
           $up = wp_upload_dir();
           $path = realpath($up['basedir']);
@@ -113,6 +112,14 @@ Class FileSystemController extends ShortPixelController
         Log::addWarn('getWPFileBase - Base path doesnt exist');
 
       return $dir;
+
+    }
+
+    public function getWPUploadBase()
+    {
+      $upload_dir = wp_upload_dir(null, false);
+
+      return $this->getDirectory($upload_dir['basedir']);
 
     }
 

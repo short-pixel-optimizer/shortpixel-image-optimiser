@@ -56,14 +56,19 @@ class OtherMediaController extends ShortPixelController
        $fs = \wpSPIO()->filesystem();
        $directory = new DirectoryOtherMediaModel($path);
        $rootDir = $fs->getWPFileBase();
+       $uploadDir = $fs->getWPUploadBase();
        $backupDir = $fs->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
+
+      /* if(ShortPixelMetaFacade::isMediaSubfolder($folder->getPath())) {
+                  return
+              } */
 
        if (! $directory->exists())
        {
           Notices::addError(__('Could not be added, directory not found: ' . $path ,'shortpixel-image-optimiser'));
           return false;
        }
-       elseif (! $directory->isSubFolderOf($rootDir))
+       elseif (! $directory->isSubFolderOf($rootDir) && $directory->getPath() != $rootDir->getPath() )
        {
           Notices::addError( sprintf(__('The %s folder cannot be processed as it\'s not inside the root path of your website (%s).','shortpixel-image-optimiser'),$addedFolder, $rootDir->getPath()));
           return false;
@@ -73,9 +78,14 @@ class OtherMediaController extends ShortPixelController
           Notices::addError( __('This folder contains the ShortPixel Backups. Please select a different folder.','shortpixel-image-optimiser'));
           return false;
        }
+       elseif($directory->isSubFolderOf($uploadDir) || $directory->getPath() == $uploadDir->getPath() )
+       { // ShortPixelMetaFacade::isMediaSubfolder
+          Notices::addError(__('This folder contains Media Library images. To optimize Media Library images please go to <a href="upload.php?mode=list">Media Library list view</a> or to <a href="upload.php?page=wp-short-pixel-bulk">ShortPixel Bulk page</a>.','shortpixel-image-optimiser'));
+          return false;
+       }
        elseif (! $directory->is_writable())
        {
-         Notices::addWarning( sprintf(__('Folder %s is not writeable. Please check permissions and try again.','shortpixel-image-optimiser'),$directory->getPath()) );
+         Notices::addError( sprintf(__('Folder %s is not writeable. Please check permissions and try again.','shortpixel-image-optimiser'),$directory->getPath()) );
          return false;
        }
 
