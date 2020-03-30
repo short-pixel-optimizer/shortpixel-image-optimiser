@@ -101,7 +101,7 @@ class OtherMediaViewController extends ShortPixelController
 
             'quota' => array('action' => 'quota', '_wpnonce' => $nonce, 'text' =>__('Check quota','shortpixel-image-optimiser')),
 
-            'restore' => array('action' => 'restore', '_wpnonce' => $nonce, 'text' => __('Restore','shortpixel-image-optimiser')),
+            'restore' => array('action' => 'restore', '_wpnonce' => $nonce, 'text' => __('Restore Backup','shortpixel-image-optimiser')),
 
             'compare' => array('link' => '<a href="javascript:ShortPixel.loadComparer(\'C-%%item_id%%\');">%%text%%</a>"',
                       'text' => __('Compare', 'shortpixel-image-optimiser')),
@@ -460,7 +460,6 @@ class OtherMediaViewController extends ShortPixelController
          elseif ( intval($item->status) == \ShortPixelMeta::FILE_STATUS_SUCCESS && $file->hasBackup() )
          {
 
-           $thisActions[] = $this->actions['restore'];
            switch($item->compression_type) {
                case 2:
                    $actionsEnabled['redolossy'] = $actionsEnabled['redolossless'] = true;
@@ -477,6 +476,8 @@ class OtherMediaViewController extends ShortPixelController
                    $thisActions[] = $this->actions['redoglossy'];
                break;
            }
+           $thisActions[] = $this->actions['restore'];
+
          }
 
          return $this->renderActions($thisActions, $item, $file);
