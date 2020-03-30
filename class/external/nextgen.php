@@ -16,6 +16,7 @@ class NextGen
     $this->view = new nextGenView();
 
     add_action('plugins_loaded', array($this, 'hooks'));
+    add_action('deactivate_nextgen-gallery/nggallery.php', array($this, 'resetNotification'));
   }
 
   public function hooks()
@@ -193,6 +194,11 @@ class NextGen
 
           return $shortPixel->addPathToCustomFolder($imageFsPath, $folderId, $image->pid);
       }
+  }
+
+  public function resetNotification()
+  {
+    Notice::removeNoticeByID(adminNoticesController::MSG_INTEGRATION_NGGALLERY);
   }
 
   public function onDeleteImage($nggId, $size)
