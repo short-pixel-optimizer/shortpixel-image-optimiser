@@ -79,15 +79,23 @@ echo $this->view->rewriteHREF;
 
         <?php endif; ?>
 
-        <?php foreach($this->view->items as $item): ?>
+        <?php
+        $folders = $this->view->folders;
+
+        foreach($this->view->items as $item): ?>
         <div class='item item-C-<?php echo $item->id ?>'>
             <?php
               $itemFile = $fs->getFile($item->path);
               $filesize = $itemFile->getFileSize();
               $display_date = $this->getDisplayDate($item);
+              $folder_id = $item->folder_id;
 
               $rowActions = $this->getRowActions($item, $itemFile);
               $actions = $this->getActions($item, $itemFile);
+
+              $folder = isset($folders[$folder_id]) ? $folders[$folder_id] : false;
+              $media_type = ($folder && $folder->isNextGen()) ? __('Nextgen', 'shortpixel-image-optimiser') : __('Custom', 'shortpixel_image_optimiser');
+
             ?>
             <span><div class='thumb'>
               <?php if ($filesize <= 500000 && $filesize > 0):
@@ -108,7 +116,7 @@ echo $this->view->rewriteHREF;
                 ?></div>
             </span>
             <span class='folderpath'><?php echo (string) $itemFile->getFileDir(); ?></span>
-            <span class='mediatype'><?php echo $item->media_type ?></span>
+            <span class='mediatype'><?php echo $media_type ?></span>
             <span class="date"><?php echo $display_date ?></span>
             <span id='sp-cust-msg-C-<?php echo $item->id ?>'>
               <span class='sp-column-info'><?php echo $this->getDisplayStatus($item); ?></span>

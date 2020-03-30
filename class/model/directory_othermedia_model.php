@@ -36,16 +36,17 @@ class DirectoryOtherMediaModel extends DirectoryModel
     {
        $folder = $path;
        $path = $folder->path;
+
+       parent::__construct($path);
        $this->loadFolder($folder);
     }
     else
     {
+      parent::__construct($path);
       $this->loadFolderbyPath($path);
     }
-
-     parent::__construct($path);
-
   }
+
 
   private function loadFolderByPath($path)
   {
@@ -83,6 +84,9 @@ class DirectoryOtherMediaModel extends DirectoryModel
         $this->is_removed = true;
 
       $this->fileCount = $folder->file_count;
+
+      do_action('shortpixel/othermedia/folder/load', $this->id, $this);
+
     }
   }
 

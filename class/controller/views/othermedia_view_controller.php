@@ -42,6 +42,7 @@ class OtherMediaViewController extends ShortPixelController
           $this->process_actions();
 
           $this->view->items = $this->getItems();
+          $this->view->folders = $this->getItemFolders($this->view->items);
           $this->view->headings = $this->getHeadings();
           $this->view->pagination = $this->getPagination();
           $this->view->filter = $this->getFilter();
@@ -145,12 +146,70 @@ class OtherMediaViewController extends ShortPixelController
       protected function getItems()
       {
           $spMetaDao = \wpSPIO()->getShortPixel()->getSpMetaDao();
+          $fs = \wpSPIO()->filesystem();
           //$total_items  =
 
           // [BS] Moving this from ts_added since often images get added at the same time, resulting in unpredictable sorting
           $items = $spMetaDao->getPaginatedMetas(\wpSPIO()->env()->has_nextgen, $this->getFilter(), $this->items_per_page, $this->currentPage, $this->orderby, $this->order);
 
+          $removed = array();
+          foreach($items as $index => $item)
+          {
+             $fsFile = $fs->getFile($item->path);
+             if (! $fsFile->exists()) // remove image if it doesn't exist.
+             {
+                $meta = new \ShortPixelMeta($item);
+                $spMetaDao->delete($meta);
+                $removed[] = $item->path;
+
+                unset($items[$index]);
+
+             }
+          }
+
+          if (count($removed) > 0)
+          {
+            Notices::addWarning(sprintf(__('Some images were missing. They have been removed from the Custom Media overview : %s %s'),
+                '<BR>', implode('<BR>', $removed)));
+          }
+
           return $items;
+      }
+
+      protected function getItemFolders($items)
+      {
+         $folderArray = array();
+         $otherMedia = new OtherMediaController();
+
+         foreach ($items as $item)
+         {
+            $folder_id = $item->folder_id;
+            if (! isset($folderArray[$folder_id]))
+            {
+              $folderArray[$folder_id] = $otherMedia->getFolderByID($folder_id);
+            }
+         }
+
+         return $folderArray;
+      }
+
+      /* Check which folders are in result, and load them. */
+      protected function loadFolders($items)
+      {
+         $folderArray = array();
+         $otherMedia = new OtherMediaController();
+
+         foreach($items as $item)
+         {
+            $folder_id = $item->folder_id;
+            if (! isset($folderArray[$folder_id]))
+            {
+                $folderArray[$folder_id]  = $otherMedia->getFolderByID($folder_id);
+            }
+         }
+
+         return $folderArray;
+
       }
 
       protected function getFilter() {

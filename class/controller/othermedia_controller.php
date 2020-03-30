@@ -50,6 +50,7 @@ class OtherMediaController extends ShortPixelController
        return $folder;
     }
 
+
     public function addDirectory($path)
     {
        $fs = \wpSPIO()->filesystem();

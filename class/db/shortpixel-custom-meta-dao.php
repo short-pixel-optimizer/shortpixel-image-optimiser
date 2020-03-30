@@ -359,13 +359,11 @@ class ShortPixelCustomMetaDao {
         if ($page <= 0)
           $page = 1; // first page on invalid input
 
-          // Not sure why the NGgallery is joined on this. IF          */
+          // Not sure why the NGgallery is joined on this.    */
        $sql = "SELECT sm.id, sm.name, sm.path, "
-                . ($hasNextGen ? "CASE WHEN ng.gid IS NOT NULL THEN 'NextGen' ELSE 'Custom' END media_type, " : "'Custom' media_type, ")
-                . "sm.status, sm.compression_type, sm.keep_exif, sm.cmyk2rgb, sm.resize, sm.resize_width, sm.resize_height, sm.message, sm.ts_added, sm.ts_optimized "
+                . "sm.status, sm.folder_id, sm.compression_type, sm.keep_exif, sm.cmyk2rgb, sm.resize, sm.resize_width, sm.resize_height, sm.message, sm.ts_added, sm.ts_optimized "
                 . "FROM {$this->db->getPrefix()}shortpixel_meta sm "
                 . "INNER JOIN  {$this->db->getPrefix()}shortpixel_folders sf on sm.folder_id = sf.id "
-                . ($hasNextGen ? "LEFT JOIN {$this->db->getPrefix()}ngg_gallery ng on sf.path = ng.path " : " ")
                 . "WHERE sf.status <> -1"; //  AND sm.status <> 3
 
     /*    $sql = 'SELECT sm.* FROM ' . $this->db->getPrefix() . 'shortpixel_meta sm
