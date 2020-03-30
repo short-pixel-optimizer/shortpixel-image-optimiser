@@ -79,7 +79,9 @@ namespace ShortPixel;
                                     ? __("Optimized",'shortpixel-image-optimiser')
                                     : ($stat->Optimized + $stat->Pending > 0 ? __("Pending",'shortpixel-image-optimiser') : __("Waiting",'shortpixel-image-optimiser'))));
 
-                            $err = $stat->Failed > 0 && !$st == __("Empty",'shortpixel-image-optimiser') ? " ({$stat->Failed} failed)" : "";
+                            $err = $stat->Failed > 0 && !$st == __("Empty",'shortpixel-image-optimiser') ? " ({$stat->Failed} failed)" : false;
+                            if (! $dirObj->exists() && ! $err)
+                              $err = __('Directory does not exist', 'shortpixel-image-optimiser');
 
                             $action = ($st == __("Optimized",'shortpixel-image-optimiser') || $st == __("Empty",'shortpixel-image-optimiser') ? __("Stop monitoring",'shortpixel-image-optimiser') : __("Stop optimizing",'shortpixel-image-optimiser'));
 
@@ -96,10 +98,11 @@ namespace ShortPixel;
                                 <span class='folder folder-<?php echo $dirObj->getId() ?>'><?php echo($dirObj->getPath()); ?></span>
                                 <span>
                                     <?php if(!($st == "Empty")) { ?>
-                                    <a href="javascript:none();"  title="<?php echo $fullStat; ?>" style="text-decoration: none;">
-                                        <img alt='Info icon' src='<?php echo( wpSPIO()->plugin_url('res/img/info-icon.png' ));?>' style="margin-bottom: -2px;"/>
-                                    </a>&nbsp;<?php  } echo($type_display.$st.$err); ?>
-
+                                    <span title="<?php echo $fullStat; ?>" class='info-icon'>
+                                        <img alt='<?php _e('Info Icon', 'shortpixel-image-optimiser') ?>' src='<?php echo( wpSPIO()->plugin_url('res/img/info-icon.png' ));?>' style="margin-bottom: -2px;"/>
+                                    </span>&nbsp;<?php  }
+                                    echo($type_display. ' ' . $st . '<br>' . $err); 
+                                    ?>
                                 </span>
                                 <span>
                                     <?php echo($cnt); ?> files

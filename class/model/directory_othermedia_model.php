@@ -1,7 +1,7 @@
 <?php
 namespace ShortPixel;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
-
+use ShortPixel\Notices\NoticeController as Notice;
 
 // extends DirectoryModel. Handles Shortpixel_meta database table
 // Replacing main parts of shortpixel-folder
@@ -185,6 +185,9 @@ class DirectoryOtherMediaModel extends DirectoryModel
   */
   public function updateFileContentChange()
   {
+      if (! $this->exists() )
+        return false;
+
       $old_time = $this->updated;
 
       $time = $this->recurseLastChangeFile();
@@ -233,6 +236,8 @@ class DirectoryOtherMediaModel extends DirectoryModel
       return strtotime($date);
   }
 
+
+
   /** Crawls the folder and check for files that are newer than param time, or folder updated
   * Note - last update timestamp is not updated here, needs to be done separately.
   */
@@ -246,15 +251,15 @@ class DirectoryOtherMediaModel extends DirectoryModel
         Log::addWarn('FolderObj from database is not there, while folder seems ok ' . $this->getPath() );
         return false;
       }
-
-      if (! $this->exists())
+      elseif (! $this->exists())
       {
         Notice::addError( sprintf(__('Folder %s does not exist! ', 'shortpixel-image-optimiser'), $this->getPath()) );
         return false;
       }
-      if (! $this->is_writable())
+      elseif (! $this->is_writable())
       {
         Notice::addWarning( sprintf(__('Folder %s is not writeable. Please check permissions and try again.','shortpixel-image-optimiser'),$this->getPath()) );
+        return false;
       }
 
       $fs = \wpSPIO()->filesystem();

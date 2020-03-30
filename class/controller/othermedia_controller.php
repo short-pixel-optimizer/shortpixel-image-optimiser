@@ -73,6 +73,12 @@ class OtherMediaController extends ShortPixelController
           Notices::addError( __('This folder contains the ShortPixel Backups. Please select a different folder.','shortpixel-image-optimiser'));
           return false;
        }
+       elseif (! $directory->is_writable())
+       {
+         Notices::addWarning( sprintf(__('Folder %s is not writeable. Please check permissions and try again.','shortpixel-image-optimiser'),$directory->getPath()) );
+         return false;
+       }
+
 
        if (! $directory->hasDBEntry())
        {

@@ -55,6 +55,8 @@
       vertical-align: middle; }
   #shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list .refresh-folder {
     text-decoration: none; }
+  #shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list .info-icon {
+    cursor: pointer; }
 
 .cf_switch label {
   width: 100%;

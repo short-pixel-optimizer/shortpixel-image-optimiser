@@ -273,7 +273,7 @@ class SettingsController extends shortPixelController
 
       protected function loadCustomFolders()
       {
-        $notice = null;
+      
         $otherMedia = new OtherMediaController();
 
         $otherMedia->refreshFolders();

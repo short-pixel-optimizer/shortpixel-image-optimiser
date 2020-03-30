@@ -161,9 +161,7 @@ class OtherMediaViewController extends ShortPixelController
                 $meta = new \ShortPixelMeta($item);
                 $spMetaDao->delete($meta);
                 $removed[] = $item->path;
-
                 unset($items[$index]);
-
              }
           }
 
