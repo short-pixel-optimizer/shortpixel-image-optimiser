@@ -3093,7 +3093,7 @@ class WPShortPixel {
 
                     $dirpath = $dir->getPath();
                     $dirname = $dir->getName();
-                    // @todo Should in time be moved to othermedia_controller / check if media library 
+                    // @todo Should in time be moved to othermedia_controller / check if media library
                     if($dirname == 'ShortpixelBackups' || ShortPixelMetaFacade::isMediaSubfolder($dirname, false)) continue;
 
                     $htmlRel	= str_replace("'", "&apos;", $returnDir . $dirname);
@@ -4478,4 +4478,4 @@ class WPShortPixel {
 		return $this->_settings->cloudflareZoneID;
 	}
 
-}
+} // class

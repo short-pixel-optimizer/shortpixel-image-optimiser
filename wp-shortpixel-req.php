@@ -49,7 +49,7 @@ require_once('class/model/shortpixel-entity.php');
 require_once('class/model/shortpixel-meta.php');
 require_once('class/model/shortpixel-folder.php');
 //exceptions
-require_once('class/model/sp-file-rights-exception.php');
+//require_once('class/model/sp-file-rights-exception.php');
 //database access
 require_once('class/db/shortpixel-db.php');
 require_once('class/db/wp-shortpixel-db.php');

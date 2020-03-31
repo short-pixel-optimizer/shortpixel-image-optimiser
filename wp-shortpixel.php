@@ -91,15 +91,17 @@ if (! defined('SHORTPIXEL_DEBUG'))
 {
     define('SHORTPIXEL_DEBUG', false);
 }
-$log = ShortPixel\ShortPixelLogger\ShortPixelLogger::getInstance();
-if (ShortPixel\ShortPixelLogger\ShortPixelLogger::debugIsActive())
+$log = \ShortPixel\ShortPixelLogger\ShortPixelLogger::getInstance();
+if (\ShortPixel\ShortPixelLogger\ShortPixelLogger::debugIsActive())
   $log->setLogPath(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
 
 // Pre-Runtime Checks
 // @todo Better solution for pre-runtime inclusions of externals.
 // Should not be required here. wpspio initruntime loads externals
 
-wpSPIO(); // let's go!
+  wpSPIO(); // let's go!
+
+
 
 register_activation_hook( __FILE__, array('\ShortPixel\ShortPixelPlugin','activatePlugin') );
 register_deactivation_hook( __FILE__,  array('\ShortPixel\ShortPixelPlugin','deactivatePlugin') );

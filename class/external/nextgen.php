@@ -44,7 +44,7 @@ class NextGen
      return self::$instance;
   }
 
-    public function has_nextgen()
+  public function has_nextgen()
   {
      if (defined('NGG_PLUGIN'))
       return true;
@@ -220,15 +220,21 @@ class NextGen
       $size_meta = array('width' => $dimensions[0], 'height' => $dimensions[1]);
       $image->meta_data = array_merge($image->meta_data, $size_meta);
       $image->meta_data['full'] = $size_meta;
-      $mapper->save($image);
+      $this->saveToNextGen($image);
   }
 
   protected function getNGImageByID($nggId)
   {
     $mapper = \C_Image_Mapper::get_instance();
     $image = $mapper->find($nggId);
-
     return $image;
+  }
+
+  /* @param NextGen Image */
+  protected function saveToNextGen($image)
+  {
+    $mapper = \C_Image_Mapper::get_instance();
+    $mapper->save($image);
   }
 
   protected function getImageAbspath($image, $size = 'full') {
@@ -236,7 +242,7 @@ class NextGen
       return $storage->get_image_abspath($image);
   }
 
-} // class .
+} // class.
 
 /* Class for View integration in the Nextgen gallery */
 class nextGenView

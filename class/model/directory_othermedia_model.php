@@ -96,8 +96,6 @@ class DirectoryOtherMediaModel extends DirectoryModel
       if ($this->status == -1)
         $this->is_removed = true;
 
-
-
       do_action('shortpixel/othermedia/folder/load', $this->id, $this);
 
     }

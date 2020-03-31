@@ -115,8 +115,9 @@ class ShortPixelMetaFacade {
         if($this->type == self::CUSTOM_TYPE) {
             $this->spMetaDao->update($this->meta);
             if($this->meta->getExtMetaId()) {
-                $ng = \ShortPixel\NextGen::getInstance();
-                $ng->updateImageSize($this->meta->getExtMetaId(), $this->meta->getPath());
+                $ng = \ShortPixel\NextGen::getInstance(); // @todo This needs reversing. Nextgen should listen to a filter to be implemented here.
+                if ($ng->has_nextGen()) // prevent fatal error when Nextgen is not activated
+                  $ng->updateImageSize($this->meta->getExtMetaId(), $this->meta->getPath());
             }
         }
         elseif($this->type == ShortPixelMetaFacade::MEDIA_LIBRARY_TYPE) {
