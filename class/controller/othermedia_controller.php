@@ -56,7 +56,6 @@ class OtherMediaController extends ShortPixelController
        $fs = \wpSPIO()->filesystem();
        $directory = new DirectoryOtherMediaModel($path);
        $rootDir = $fs->getWPFileBase();
-       $uploadDir = $fs->getWPUploadBase();
        $backupDir = $fs->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
 
       /* if(ShortPixelMetaFacade::isMediaSubfolder($folder->getPath())) {
@@ -78,7 +77,7 @@ class OtherMediaController extends ShortPixelController
           Notices::addError( __('This folder contains the ShortPixel Backups. Please select a different folder.','shortpixel-image-optimiser'));
           return false;
        }
-       elseif($directory->isSubFolderOf($uploadDir) || $directory->getPath() == $uploadDir->getPath() )
+       elseif( $this->checkIfMediaLibrary($directory) )
        { // ShortPixelMetaFacade::isMediaSubfolder
           Notices::addError(__('This folder contains Media Library images. To optimize Media Library images please go to <a href="upload.php?mode=list">Media Library list view</a> or to <a href="upload.php?page=wp-short-pixel-bulk">ShortPixel Bulk page</a>.','shortpixel-image-optimiser'));
           return false;
@@ -170,6 +169,23 @@ class OtherMediaController extends ShortPixelController
       } // folders
 
       return true;
+    }
+
+    /* Check if this directory is part of the MediaLibrary */
+    protected function checkifMediaLibrary(DirectoryModel $directory)
+    {
+      $fs = \wpSPIO()->filesystem();
+      $uploadDir = $fs->getWPUploadBase();
+
+        // if it's the uploads base dir, the media library would be included, so don't allow.
+      if ($directory->getPath() == $uploadDir->getPath() )
+         return true;
+      elseif (! $directory->isSubFolderOf($uploadDir))// The easy check. No subdir, no problem.
+           return false;
+      elseif (is_numeric($directory->getName() )) // upload subdirs come in variation of year or month, both numeric.
+          return true;
+
+
     }
 
 
