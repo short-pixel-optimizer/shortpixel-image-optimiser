@@ -59,7 +59,7 @@ namespace ShortPixel;
                                 <span><?php _e('Files','shortpixel-image-optimiser');?></span>
                                 <span><?php _e('Last change','shortpixel-image-optimiser');?></span>
                                 <span>&nbsp;</span>
-                                <span>&nbsp;</span>
+                                <span class='action'>&nbsp;</span>
                             </div>
 
                         <?php
@@ -101,7 +101,7 @@ namespace ShortPixel;
                                     <span title="<?php echo $fullStat; ?>" class='info-icon'>
                                         <img alt='<?php _e('Info Icon', 'shortpixel-image-optimiser') ?>' src='<?php echo( wpSPIO()->plugin_url('res/img/info-icon.png' ));?>' style="margin-bottom: -2px;"/>
                                     </span>&nbsp;<?php  }
-                                    echo($type_display. ' ' . $st . '<br>' . $err); 
+                                    echo($type_display. ' ' . $st . '<br>' . $err);
                                     ?>
                                 </span>
                                 <span>
@@ -113,7 +113,7 @@ namespace ShortPixel;
                                 <span>
                                   <a href='<?php echo $refreshUrl ?>' title="<?php _e('Recheck for new images', 'shortpixel-image-optimiser'); ?>" class='refresh-folder'><i class='dashicons dashicons-update'>&nbsp;</i></a>
                                 </span>
-                                <span>
+                                <span class='action'>
                                   <?php if ($action): ?>
                                     <input type="button" class="button remove-folder-button" data-value="<?php echo($dirObj->getID()); ?>" data-name="<?php echo $dirObj->getPath() ?>" title="<?php echo($action . " " . $dirObj->getPath()); ?>" value="<?php echo $action;?>">
                                  <?php endif; ?>

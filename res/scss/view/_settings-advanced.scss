@@ -40,15 +40,20 @@
       }
       div
       {
-        background-color: #eee;
+
         display: table-row;
         &> span
         {
           display: table-cell;
           padding: 5px 10px;
           vertical-align: middle;
+          background-color: #eee;
+          &.action { background-color: unset; }
         }
+
       }
+
+
       .refresh-folder { text-decoration: none; }
       .info-icon { cursor: pointer; }
   }

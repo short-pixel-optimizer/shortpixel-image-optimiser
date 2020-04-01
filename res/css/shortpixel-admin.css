@@ -47,12 +47,14 @@
       font-weight: 600;
       font-size: 14px; }
   #shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list div {
-    background-color: #eee;
     display: table-row; }
     #shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list div > span {
       display: table-cell;
       padding: 5px 10px;
-      vertical-align: middle; }
+      vertical-align: middle;
+      background-color: #eee; }
+      #shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list div > span.action {
+        background-color: unset; }
   #shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list .refresh-folder {
     text-decoration: none; }
   #shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list .info-icon {
