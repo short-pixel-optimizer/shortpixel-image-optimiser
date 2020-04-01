@@ -273,6 +273,9 @@ class adminNoticesController extends ShortPixelController
          $message = $this->getQuotaExceededMessage($quotaData);
          $notice = Notices::addError($message);
          Notices::makePersistent($notice, self::MSG_QUOTA_REACHED, WEEK_IN_SECONDS);
+
+         Notices::removeNoticeByID(self::MSG_UPGRADE_MONTH); // get rid of doubles. reset
+         Notices::removeNoticeByID(self::MSG_UPGRADE_BULK);
       }
 
     }
@@ -380,6 +383,8 @@ class adminNoticesController extends ShortPixelController
                class='short-pixel-notice-icon'> */
 
         $message .= '<h3>' . __('Quota Exceeded','shortpixel-image-optimiser') . '</h3>';
+
+        $recheck = isset($_GET['checkquota']) ? true : false;
 
         if($recheck) {
              $message .= '<p style="color: red">' . __('You have no available image credits. If you just bought a package, please note that sometimes it takes a few minutes for the payment confirmation to be sent to us by the payment processor.','shortpixel-image-optimiser') . '</p>';

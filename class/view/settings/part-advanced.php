@@ -71,8 +71,8 @@ namespace ShortPixel;
                         //    $stat = $this->shortPixel->getSpMetaDao()->getFolderOptimizationStatus($folder->getId());
                             $stat = $dirObj->getStats();
 
-                            $cnt = intval($dirObj->getFileCount());
-
+                            $cnt = $stat->Total;
+                            
                             $st = ($cnt == 0
                                 ? __("Empty",'shortpixel-image-optimiser')
                                 : ($stat->Total == $stat->Optimized

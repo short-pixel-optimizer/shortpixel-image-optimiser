@@ -12,7 +12,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
   protected $name;
   protected $status = 0;
-  protected $fileCount = 0;
+  protected $fileCount = 0; // inherent onreliable statistic in dbase. When insert / batch insert the folder count could not be updated, only on refreshFolder which is a relative heavy function to use on every file upload. Totals are better gotten from a stat-query, on request. 
   protected $updated = 0;
   protected $created = 0;
 
@@ -285,10 +285,13 @@ class DirectoryOtherMediaModel extends DirectoryModel
       Log::addDebug('Refreshing from ' . $time . ', found Files for custom media ID ' . $this-> id . ' -> ' . count($files));
 
     //  $folderObj->setFileCount( count($files) );
-      $this->fileCount = count($files);
-      $this->save();
 
       \wpSPIO()->getShortPixel()->getSpMetaDao()->batchInsertImages($files, $this->id);
+
+      $stats = $this->getStats();
+      $this->fileCount = $stats->Total;
+      $this->save();
+
   }
 
 

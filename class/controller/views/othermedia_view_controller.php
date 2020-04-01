@@ -30,7 +30,7 @@ class OtherMediaViewController extends ShortPixelController
 
         $this->currentPage = isset($_GET['paged']) ? intval($_GET['paged']) : 1;
         $this->total_items = intval($this->record_count());
-        $this->orderby = ( ! empty( $_GET['orderby'] ) ) ? sanitize_text_field($_GET['orderby']) : 'id';
+        $this->orderby = ( ! empty( $_GET['orderby'] ) ) ? $this->filterAllowedOrderBy(sanitize_text_field($_GET['orderby'])) : 'id';
         $this->order = ( ! empty($_GET['order'] ) ) ? sanitize_text_field($_GET['order']) : 'desc'; // If no order, default to asc
         $this->search =  (isset($_GET["s"]) && strlen($_GET["s"]))  ? sanitize_text_field($_GET['s']) : false;
 
@@ -103,7 +103,7 @@ class OtherMediaViewController extends ShortPixelController
 
             'restore' => array('action' => 'restore', '_wpnonce' => $nonce, 'text' => __('Restore Backup','shortpixel-image-optimiser')),
 
-            'compare' => array('link' => '<a href="javascript:ShortPixel.loadComparer(\'C-%%item_id%%\');">%%text%%</a>"',
+            'compare' => array('link' => '<a href="javascript:ShortPixel.loadComparer(\'C-%%item_id%%\');">%%text%%</a>',
                       'text' => __('Compare', 'shortpixel-image-optimiser')),
             'view' => array('link' => '<a href="%%item_url%%" target="_blank">%%text%%</a>', 'text' => __('View','shortpixel-image-optimiser')),
         );
@@ -310,6 +310,24 @@ class OtherMediaViewController extends ShortPixelController
 
       }
 
+      protected function filterAllowedOrderBy($orderby)
+      {
+          $headings = $this->getHeadings() ;
+          $filters = array();
+          foreach ($headings as $heading)
+          {
+              if (isset($heading['orderby']))
+              {
+                $filters[]= $heading['orderby'];
+              }
+          }
+
+          if (! in_array($orderby, $filters))
+            return '';
+
+          return $orderby;
+      }
+
       protected function getPagination()
       {
           $parray = array();
@@ -457,27 +475,30 @@ class OtherMediaViewController extends ShortPixelController
          {
            $thisActions[] = $this->actions['optimize'];
          }
-         elseif ( intval($item->status) == \ShortPixelMeta::FILE_STATUS_SUCCESS && $file->hasBackup() )
+         elseif ( intval($item->status) == \ShortPixelMeta::FILE_STATUS_SUCCESS)
          {
+           $thisActions[] = $this->actions['compare'];
 
-           switch($item->compression_type) {
-               case 2:
-                   $actionsEnabled['redolossy'] = $actionsEnabled['redolossless'] = true;
-                   $thisActions[] = $this->actions['redolossy'];
-                   $thisActions[] = $this->actions['redolossless'];
-                   break;
-               case 1:
-                   $actionsEnabled['redoglossy'] = $actionsEnabled['redolossless'] = true;
-                   $thisActions[] = $this->actions['redoglossy'];
-                   $thisActions[] = $this->actions['redolossless'];
-                   break;
-               default:
-                   $thisActions[] = $this->actions['redolossy'];
-                   $thisActions[] = $this->actions['redoglossy'];
-               break;
+           if ($file->hasBackup())
+           {
+             switch($item->compression_type) {
+                 case 2:
+                     $actionsEnabled['redolossy'] = $actionsEnabled['redolossless'] = true;
+                     $thisActions[] = $this->actions['redolossy'];
+                     $thisActions[] = $this->actions['redolossless'];
+                     break;
+                 case 1:
+                     $actionsEnabled['redoglossy'] = $actionsEnabled['redolossless'] = true;
+                     $thisActions[] = $this->actions['redoglossy'];
+                     $thisActions[] = $this->actions['redolossless'];
+                     break;
+                 default:
+                     $thisActions[] = $this->actions['redolossy'];
+                     $thisActions[] = $this->actions['redoglossy'];
+                 break;
+             }
+             $thisActions[] = $this->actions['restore'];
            }
-           $thisActions[] = $this->actions['restore'];
-
          }
 
          return $this->renderActions($thisActions, $item, $file);
