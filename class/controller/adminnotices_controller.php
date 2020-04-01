@@ -92,6 +92,10 @@ class adminNoticesController extends ShortPixelController
     protected function doIntegrationNotices()
     {
         $settings= \wpSPIO()->settings();
+        if (! \wpSPIO()->settings()->verifiedKey)
+        {
+          return; // no key, no integrations.
+        }
 
         if (\wpSPIO()->env()->has_nextgen && ! $settings->includeNextGen  )
         {

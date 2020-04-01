@@ -426,6 +426,7 @@ class ShortPixelPlugin
       adminNoticesController::resetCompatNotice();
       adminNoticesController::resetAPINotices();
       adminNoticesController::resetQuotaNotices();
+      adminNoticesController::resetIntegrationNotices();
 
       \WPShortPixelSettings::onActivate();
 
