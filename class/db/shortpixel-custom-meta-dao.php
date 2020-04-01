@@ -128,6 +128,8 @@ class ShortPixelCustomMetaDao {
         $this->addIfMissing("UNIQUE INDEX", $this->db->getPrefix()."shortpixel_meta", "sp_path", "path");
         $this->addIfMissing("FOREIGN KEY", $this->db->getPrefix()."shortpixel_meta", "fk_shortpixel_meta_folder", "folder_id",
                                            $this->db->getPrefix()."shortpixel_folders", "id");
+
+        
     }
 
     public function getFolders() {
@@ -517,7 +519,7 @@ class ShortPixelCustomMetaDao {
         $sql = rtrim($sql, ",");
         $sql .= " WHERE id = %d";
         $params[] = $meta->getId();
-        
+
         $this->db->query($sql, $params);
     }
 
