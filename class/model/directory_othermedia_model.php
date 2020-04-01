@@ -299,7 +299,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
   {
     $defaults = array(
         'id' => false,  // Get folder by Id
-        'remove_hidden' => false, // not yet implemented.
+        'remove_hidden' => false,
         'path' => false,
     );
 

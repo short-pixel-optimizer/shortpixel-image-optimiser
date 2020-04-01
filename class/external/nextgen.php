@@ -185,10 +185,12 @@ class NextGen
           }
           if ($folderId == -1) { //if not found, create
               $galleryPath = dirname($imageFsPath);
-              $otherMedia->addDirectory($galleryPath);
+              $folder = $otherMedia->addDirectory($galleryPath);
+
             //  $folder = new \ShortPixelFolder(array("path" => $galleryPath), $this->_settings->excludePatterns);
           //    $folderMsg = $metadao->saveFolder($folder);
-              $folderId = $folder->getId();
+              if ($folder)
+                $folderId = $folder->getId();
               //self::log("NG Image Upload: created folder from path $galleryPath : Folder info: " .  json_encode($folder));
           }
 

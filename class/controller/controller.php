@@ -70,7 +70,7 @@ class ShortPixelController
 
     if (! isset($_POST['sp-nonce']) || ! wp_verify_nonce( $_POST['sp-nonce'], $this->form_action))
     {
-      Log::addInfo('Check Post fails nonce check' . $this->form_action, array($_POST) );
+      Log::addInfo('Check Post fails nonce check, action : ' . $this->form_action, array($_POST) );
       return false;
     }
     else if (isset($_POST) && count($_POST) > 0)

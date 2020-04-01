@@ -111,7 +111,7 @@ class OtherMediaController extends ShortPixelController
        }
 
       if ($directory->exists() && $directory->getID() > 0)
-        return true;
+        return $directory;
       else
         return false;
     }

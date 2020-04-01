@@ -4,6 +4,7 @@ namespace ShortPixel\Notices;
 class NoticeModel //extends ShortPixelModel
 {
   public $message; // The message we want to convey.
+  public $details = array(); // extra details, like the files involved. Something could be hideable in the future.
   public $code;
 
   private $id = null; // used for persistent messages.
@@ -81,6 +82,18 @@ class NoticeModel //extends ShortPixelModel
   {
     $this->suppress_until = $timestamp;
   }
+
+  /** Support for extra information beyond the message.
+  * Can help to not overwhelm users w/ the same message but different file /circumstances.
+   */
+  public function addDetail($detail, $clean = false)
+  {
+      if (! $clean)
+        $this->details[] = $detail;
+      else
+        $this->details = array($detail);
+  }
+
 
 
   /** Set a notice persistent. Meaning it shows every page load until dismissed.
@@ -160,13 +173,30 @@ class NoticeModel //extends ShortPixelModel
 
       $id = ! is_null($this->id) ? 'id="' . $this->id . '"' : '';
 
-    $output = "<div $id class='$class'><span class='icon'> " . $icon . "</span> <span class='content'>" . $this->message . "</span></div>";
+    $output = "<div $id class='$class'><span class='icon'> " . $icon . "</span> <span class='content'>" . $this->message;
+    if ($this->hasDetails())
+      $output .= "<p class='details'>" . $this->parseDetails() . "</p>";
+    $output .= "</span></div>";
+
     if ($this->is_persistent && $this->is_removable)
     {
         $output .= "<script type='text/javascript'>\n" . $this->getDismissJS() . "\n</script>";
     }
     return $output;
 
+  }
+
+  protected function hasDetails()
+  {
+     if (is_array($this->details) && count($this->details) > 0)
+      return true;
+    else
+      return false;
+  }
+
+  protected function parseDetails()
+  {
+      return implode('<BR>', $this->details);
   }
 
   private function getDismissJS()

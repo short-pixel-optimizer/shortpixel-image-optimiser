@@ -517,7 +517,7 @@ class ShortPixelCustomMetaDao {
         $sql = rtrim($sql, ",");
         $sql .= " WHERE id = %d";
         $params[] = $meta->getId();
-        Log::addDebug('Update Custom Meta' . $sql, $params);
+        
         $this->db->query($sql, $params);
     }
 

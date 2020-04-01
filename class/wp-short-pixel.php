@@ -2068,7 +2068,6 @@ class WPShortPixel {
         $imageObj->setbyPostID($attachmentID);
 
         $fsFile = $imageObj->getFile();
-        //$fsFile = $fs->getAttachedFile($attachmentID);
         $filePath = (string) $fsFile->getFileDir();
 
         $itemHandler = $imageObj->getFacade(); //new ShortPixelMetaFacade($attachmentID);
@@ -2190,8 +2189,11 @@ class WPShortPixel {
             }
         }
         if(!$bkCount) {
-            $this->throwNotice('generic-err', __("No backup files found. Restore not performed.",'shortpixel-image-optimiser'));
-            Log::addError('No Backup Files Found. ', array($bkFile));
+            //$this->throwNotice('generic-err', __("No backup files found. Restore not performed.",'shortpixel-image-optimiser'));
+            $notice = Notices::addWarning(__("Not all backup files found. Restore not performed on these files ",'shortpixel-image-optimiser'), true);
+            Notices::addDetail($notice, (string) $bkFile);
+
+            Log::addError('No Backup Files Found: ' . $bkFile);
             return false;
         }
 
@@ -2419,19 +2421,20 @@ class WPShortPixel {
         if($backupFile === false)
         {
           Log::addWarn("Custom File $ID - $file does not have a backup");
-          Notices::addWarning(sprintf(__('Not able to restore file %s. Could not find backup', 'shortpixel-image-optimiser'), $file));
+          $notice = Notices::addWarning(__('Not able to restore file. Could not find backup', 'shortpixel-image-optimiser'), true);
+          Notices::addDetail($notice, (string) $file);
+
           return false;
         }
-
-          if ($backupFile->copy($fileObj))
-          {
+        elseif ($backupFile->copy($fileObj))
+        {
             $backupFile->delete();
-          }
-          else {
-            Log::addError('Could not restore back to source' .  $backupFile->getFullPath() );
-            Notices::addError('The file could not be restored from backup. Plugin could not copy backup back to original location. Check file permissions. ', 'shortpixel-image-optimiser');
-            return false;
-          }
+        }
+        else {
+          Log::addError('Could not restore back to source' .  $backupFile->getFullPath() );
+          Notices::addError('The file could not be restored from backup. Plugin could not copy backup back to original location. Check file permissions. ', 'shortpixel-image-optimiser');
+          return false;
+        }
 
           /* [BS] Reset all generated image meta. Bring back to start state.
           * Since Wpdb->prepare doesn't support 'null', zero values in this table should not be trusted */
@@ -2903,7 +2906,6 @@ class WPShortPixel {
             Log::addInfo('Bulk Process - Bulk Restore');
 
             $bulkRestore = new \ShortPixel\BulkRestoreAll(); // controller
-            $bulkRestore->setShortPixel($this);
             $bulkRestore->setupBulk();
 
             $this->prioQ->startBulk(ShortPixelQueue::BULK_TYPE_RESTORE);
@@ -2948,6 +2950,7 @@ class WPShortPixel {
         $pendingMeta = $this->_settings->hasCustomFolders ? $this->spMetaDao->getPendingMetaCount() : 0;
         Log::addInfo('Bulk Process - Pending Meta Count ' . $pendingMeta);
         Log::addInfo('Bulk Process - File left ' . $filesLeft[0]->FilesLeftToBeProcessed );
+
 
         if (   ($filesLeft[0]->FilesLeftToBeProcessed > 0 && $this->prioQ->bulkRunning())
             || (0 + $pendingMeta > 0 && !$this->_settings->customBulkPaused && $this->prioQ->bulkRan())//bulk processing was started

@@ -66,7 +66,6 @@ class NoticeController //extends ShortPixelController
     $notices = get_option($this->notice_option, false);
     $cnotice = (is_array($notices)) ? count($notices) : 0;
 
-
     if ($notices !== false && is_array($notices))
     {
       self::$notices = $notices;
@@ -89,7 +88,7 @@ class NoticeController //extends ShortPixelController
         foreach(self::$notices as $nitem)
         {
           if ($nitem->message == $notice->message && $nitem->code == $notice->code) // same message.
-            return $notice; // return the notice with the same message.
+            return $nitem; // return the notice with the same message.
         }
       }
       self::$notices[] = $notice;
@@ -263,6 +262,16 @@ class NoticeController //extends ShortPixelController
     $notice = $noticeController->addNotice($message, NoticeModel::NOTICE_SUCCESS, $unique);
     return $notice;
 
+  }
+
+  public static function addDetail($notice, $detail)
+  {
+    $noticeController = self::getInstance();
+    $notice->addDetail($detail);
+
+//   $notice_id = spl_object_id($notice);
+
+    $noticeController->update();
   }
 
   public static function makePersistent($notice, $key, $suppress = -1)
