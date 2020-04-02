@@ -122,29 +122,51 @@ class ShortPixelCustomMetaDao {
             ));
         // Set up indexes, not handled well by WP DBDelta
         $this->addIfMissing("UNIQUE INDEX", $this->db->getPrefix()."shortpixel_folders", "spf_path_md5", "path_md5");
+        $this->addIfMissing("UNIQUE INDEX", $this->db->getPrefix()."shortpixel_folders", "spf_path", "path");
+
         $this->addIfMissing("UNIQUE INDEX", $this->db->getPrefix()."shortpixel_meta", "sp_path_md5", "path_md5");
+        $this->addIfMissing("UNIQUE INDEX", $this->db->getPrefix()."shortpixel_meta", "sp_path", "path");
         $this->addIfMissing("FOREIGN KEY", $this->db->getPrefix()."shortpixel_meta", "fk_shortpixel_meta_folder", "folder_id",
                                            $this->db->getPrefix()."shortpixel_folders", "id");
+
+
     }
 
-    public function getFolders($deleted = false) {
-        $sql = "SELECT * FROM {$this->db->getPrefix()}shortpixel_folders" . ($deleted ? "" : " WHERE status <> -1");
+    public function getFolders() {
+        $sql = "SELECT * FROM {$this->db->getPrefix()}shortpixel_folders order by path";
         $rows = $this->db->query($sql);
         $folders = array();
         foreach($rows as $row) {
-            $folders[$row->id] = new ShortPixelFolder($row, $this->excludePatterns);
+            $folders[$row->id] = $row; //new ShortPixelFolder($row, $this->excludePatterns);
         }
         return $folders;
     }
 
-    public function getFolder($path, $deleted = false) {
-        $sql = "SELECT * FROM {$this->db->getPrefix()}shortpixel_folders" . ($deleted ? "WHERE path = %s " : " WHERE path = %s AND status <> -1");
+    public function getFolder($path) {
+        $sql = "SELECT * FROM {$this->db->getPrefix()}shortpixel_folders WHERE path = %s ";
         $rows = $this->db->query($sql, array($path));
         $folders = array();
         foreach($rows as $row) {
-            return new ShortPixelFolder($row, $this->excludePatterns);
+        //    return new ShortPixelFolder($row, $this->excludePatterns);
+          $folders[$row->id] = $row;
+          return $folders;
         }
         return false;
+    }
+
+    public function getFolderByID($id)
+    {
+      $sql = "SELECT * FROM {$this->db->getPrefix()}shortpixel_folders WHERE id = %d ";
+      $rows = $this->db->query($sql, array($id));
+      $folders = array();
+
+      foreach($rows as $row) {
+      //    return new ShortPixelFolder($row, $this->excludePatterns);
+          $folders[$row->id] = $row;
+          return $folders;
+      }
+      return false;
+
     }
 
     public function hasFoldersTable() {
@@ -161,10 +183,10 @@ class ShortPixelCustomMetaDao {
         $path = $folder->getPath();
         $tsUpdated = date("Y-m-d H:i:s", $folder->getTsUpdated());
 
-
         return $this->db->insert($this->db->getPrefix().'shortpixel_folders',
                                  array("path" => $path, "path_md5" => md5($path), "file_count" => $fileCount, "ts_updated" => $tsUpdated, "ts_created" => date("Y-m-d H:i:s")),
                                  array("path" => "%s", "path_md5" => "%s", "file_count" => "%d", "ts_updated" => "%s"));
+
     }
 
     public function updateFolder($folder, $newPath, $status = 0, $fileCount = 0) {
@@ -178,12 +200,12 @@ class ShortPixelCustomMetaDao {
         else return -1;
     }
 
-    public function removeFolder($folderPath) {
-        $sql = "SELECT id FROM {$this->db->getPrefix()}shortpixel_folders WHERE path = %s";
-        $row = $this->db->query($sql, array(stripslashes($folderPath)));
+    public function removeFolder($id) {
+        //$sql = "SELECT id FROM {$this->db->getPrefix()}shortpixel_folders WHERE path = %s";
+        //$row = $this->db->query($sql, array(stripslashes($folderPath)));
 
-        if(!isset($row[0]->id)) return false;
-        $id = $row[0]->id;
+        //if(!isset($row[0]->id)) return false;
+        //$id = $row[0]->id;
         $sql = "UPDATE {$this->db->getPrefix()}shortpixel_folders SET status = -1 WHERE id = %d";
         $this->db->query($sql, array($id));
 
@@ -192,115 +214,29 @@ class ShortPixelCustomMetaDao {
         $sql = "DELETE FROM {$this->db->getPrefix()}shortpixel_meta WHERE folder_id = %d AND status <> %d AND status <> %d";
         $this->db->query($sql, array($id, ShortPixelMeta::FILE_STATUS_PENDING, ShortPixelMeta::FILE_STATUS_SUCCESS));
 
-        $sql = "SELECT FROM {$this->db->getPrefix()}shortpixel_meta WHERE folder_id = %d ";
+        $sql = "SELECT * FROM {$this->db->getPrefix()}shortpixel_meta WHERE folder_id = %d ";
         $still_has_images = $this->db->query($sql, array($id));
 
         // if there are no images left, remove the folder. Otherwise keep it at -1.
         if (count($still_has_images) == 0)
         {
-          $sql = "DELETE FROM {$this->db->getPrefix()}shortpixel_folders WHERE path = %s";
-          $this->db->query($sql, array($folderPath));
+          $sql = "DELETE FROM {$this->db->getPrefix()}shortpixel_folders WHERE id = %d";
+          $this->db->query($sql, array($id));
         }
 
         //$this->db->restoreErrors();
     }
 
-    public function newFolderFromPath($path, $uploadPath, $rootPath) {
-        WpShortPixelDb::checkCustomTables(); // check if custom tables are created, if not, create them
 
-        $fs = \wpSPIO()->filesystem();
 
-        //$addedFolder = ShortPixelFolder::checkFolder($path, $uploadPath);
-        $newfolder = $fs->getDirectory($path);
-        $rootPath = $fs->getWPFileBase();
-
-        if(! $newfolder->exists() ) {
-            return __('Folder could not be found: ' . $uploadPath . $path ,'shortpixel-image-optimiser');
-        }
-
-        if (! $newfolder->isSubFolderOf($rootPath))
-        {
-                return( sprintf(__('The %s folder cannot be processed as it\'s not inside the root path of your website (%s).','shortpixel-image-optimiser'),$addedFolder, $rootPath));
-        }
-
-        if($this->getFolder($newfolder->getPath())) {
-            return __('Folder already added.','shortpixel-image-optimiser');
-        }
-
-        $folder = new ShortPixelFolder(array("path" => $newfolder->getPath()), $this->excludePatterns);
-      /*  try {
-            $folder->setFileCount($folder->countFiles());
-        } catch(ShortPixelFileRightsException $ex) {
-            return $ex->getMessage();
-        } */
-
-        if(ShortPixelMetaFacade::isMediaSubfolder($folder->getPath())) {
-            return __('This folder contains Media Library images. To optimize Media Library images please go to <a href="upload.php?mode=list">Media Library list view</a> or to <a href="upload.php?page=wp-short-pixel-bulk">SortPixel Bulk page</a>.','shortpixel-image-optimiser');
-        }
-
-        // Set this to 0 on new, not null since mysql will auto-complete that to current TS.
-        $folder->setTSUpdated(0);
-        $folder->setFileCount(0);
-
-        $folderMsg = $this->saveFolder($folder);
-        if(!$folder->getId()) {
-            //try again creating the tables first.
-            $this->createUpdateShortPixelTables();
-            $folderMsg = $this->saveFolder($folder);
-            //still no luck - complain... :)
-            if(!$folder->getId()) {
-                return __('The folder could not be saved to the database. Please check that the plugin can create its database tables.', 'shortpixel-image-optimiser') . $folderMsg;
-            }
-        }
-
-        if(!$folderMsg) {
-            //$fileList = $folder->getFileList();
-            $this->refreshFolder($newfolder);
-        }
-        return $folderMsg;
-
-    }
-
-    /** Check files and add what's needed */
+    /* Check files and add what's needed
+    * Moved for directory Other Media Model
     public function refreshFolder(ShortPixel\DirectoryModel $folder)
     {
 
-        $folderObj = $this->getFolder($folder->getPath());
 
-        if ($folderObj === false)
-        {
-          Log::addWarn('FolderObj from database is not there, while folder seems ok ' . $folder->getPath() );
-          return false;
-        }
-
-        Log::addDebug('Doing Refresh Folder for (DirectoryModel / ShortpixelFolder) ', array($folder->getPath(), $folderObj->getPath()) );
-
-        $fs = \wpSPIO()->fileSystem();
-
-        if (! $folder->exists())
-        {
-          Notice::addError( sprintf(__('Folder %s does not exist! ', 'shortpixel-image-optimiser'), $folder->getPath()) );
-          return false;
-        }
-        if (! $folder->is_writable())
-        {
-          Notice::addWarning( sprintf(__('Folder %s is not writeable. Please check permissions and try again.','shortpixel-image-optimiser'),$folder->getPath()) );
-        }
-
-        $filter = array('date_newer' => strtotime($folderObj->getTsUpdated()));
-        $files = $fs->getFilesRecursive($folder, $filter);
-
-        $shortpixel = \wpSPIO()->getShortPixel();
-        // check processable by invoking filter, for now processablepath takes only paths, not objects.
-        $files = array_filter($files, function($file) use($shortpixel) { return $shortpixel->isProcessablePath($file->getFullPath());  });
-
-        Log::addDebug('Found Files for custom media ' . count($files));
-        $folderObj->setTsUpdated(date("Y-m-d H:i:s", $folderObj->getFolderContentsChangeDate()) );
-        $folderObj->setFileCount($folderObj->countFiles() );
-        $this->update($folderObj);
-
-        $this->batchInsertImages($files, $folderObj->getId());
     }
+    */
 
     /**
      *
@@ -362,7 +298,10 @@ class ShortPixelCustomMetaDao {
         return $id;
     }
 
-    private function batchInsertImages($files, $folderId) {
+    /** This function is called by OtherMediaController / RefreshFolders. Other scripts should not call it
+    * @private
+    */
+    public function batchInsertImages($files, $folderId) {
         //facem un delete pe cele care nu au shortpixel_folder, pentru curatenie - am mai intalnit situatii in care stergerea s-a agatat (stop monitoring)
         global $wpdb;
 
@@ -420,26 +359,37 @@ class ShortPixelCustomMetaDao {
 
     public function getPaginatedMetas($hasNextGen, $filters, $count, $page, $orderby = false, $order = false) {
         // [BS] Remove exclusion for sm.status <> 3. Status 3 is 'restored, perform no action'
-        $sql = "SELECT sm.id, sm.name, sm.path folder, "
-                . ($hasNextGen ? "CASE WHEN ng.gid IS NOT NULL THEN 'NextGen' ELSE 'Custom' END media_type, " : "'Custom' media_type, ")
-                . "sm.status, sm.compression_type, sm.keep_exif, sm.cmyk2rgb, sm.resize, sm.resize_width, sm.resize_height, sm.message, sm.ts_added, sm.ts_optimized "
+        if ($page <= 0)
+          $page = 1; // first page on invalid input
+
+          // Not sure why the NGgallery is joined on this.    */
+       $sql = "SELECT sm.id, sm.name, sm.path, "
+                . "sm.status, sm.folder_id, sm.compression_type, sm.keep_exif, sm.cmyk2rgb, sm.resize, sm.resize_width, sm.resize_height, sm.message, sm.ts_added, sm.ts_optimized "
                 . "FROM {$this->db->getPrefix()}shortpixel_meta sm "
                 . "INNER JOIN  {$this->db->getPrefix()}shortpixel_folders sf on sm.folder_id = sf.id "
-                . ($hasNextGen ? "LEFT JOIN {$this->db->getPrefix()}ngg_gallery ng on sf.path = ng.path " : " ")
                 . "WHERE sf.status <> -1"; //  AND sm.status <> 3
+
+    /*    $sql = 'SELECT sm.* FROM ' . $this->db->getPrefix() . 'shortpixel_meta sm
+               INNER JOIN ' . $this->db->getPrefix() . 'shortpixel_folders sf on sm.folder_id = sf.id
+               where sf.status <> -1 '; */
+
+
         foreach($filters as $field => $value) {
             $sql .= " AND sm.$field " . $value->operator . " ". $value->value . " ";
         }
-        $sql  .= ($orderby ? " ORDER BY $orderby $order " : "")
+        $sql  .= ($orderby ? " ORDER BY sm.$orderby $order " : "")
                 . " LIMIT $count OFFSET " . ($page - 1) * $count;
-        return $this->db->query($sql);
+        $result =  $this->db->query($sql);
+
+        return $result;
     }
 
     public function getPendingMetas($count) {
-        return $this->db->query("SELECT sm.id from {$this->db->getPrefix()}shortpixel_meta sm "
-            . "INNER JOIN  {$this->db->getPrefix()}shortpixel_folders sf on sm.folder_id = sf.id "
-            . "WHERE sf.status <> -1 AND sm.status <> 3 AND ( sm.status = 0 OR sm.status = 1 OR (sm.status < 0 AND sm.retries < 3)) "
-            . "ORDER BY sm.id DESC LIMIT $count");
+       $sql = "SELECT sm.id from {$this->db->getPrefix()}shortpixel_meta sm "
+           . "INNER JOIN  {$this->db->getPrefix()}shortpixel_folders sf on sm.folder_id = sf.id "
+           . "WHERE sf.status <> -1 AND sm.status <> 3 AND ( sm.status = 1 OR (sm.status < 0 AND sm.retries < 3)) "
+           . "ORDER BY sm.id DESC LIMIT $count";
+        return $this->db->query($sql);
     }
 
     public function getFolderOptimizationStatus($folderId) {
@@ -492,7 +442,7 @@ class ShortPixelCustomMetaDao {
         }
 
         $res = $this->db->query($sql);
-        return isset($res[0]->recCount) ? $res[0]->recCount : 0;
+        return isset($res[0]->recCount) ? intval($res[0]->recCount) : 0;
     }
 
     public function getMeta($id, $deleted = false) {
@@ -556,6 +506,7 @@ class ShortPixelCustomMetaDao {
         foreach(self::$fields[$tableSuffix] as $field => $type) {
             $getter = "get" . ShortPixelTools::snakeToCamel($field);
             $val = $meta->$getter();
+
             if($meta->$getter() !== null) {
                 $sql .= " {$field} = %{$type},";
                 $params[] = $val;
@@ -569,9 +520,110 @@ class ShortPixelCustomMetaDao {
         $sql = rtrim($sql, ",");
         $sql .= " WHERE id = %d";
         $params[] = $meta->getId();
-        Log::addDebug('Update Custom Meta' . $sql, $params);
+
         $this->db->query($sql, $params);
     }
+
+    /** Replacement function for using with MVC structure.
+    * - This should be the only save function for folder (add or update).
+    * - The DB class should be only worrying about the database part.
+    */
+    public function saveDirectory($fields)
+    {
+        $result = false;
+        $folder_id = -1;
+
+        if (isset($fields['id']))
+        {
+          $folder_id = $fields['id'];
+          unset($fields['id']);
+        }
+
+        if ($folder_id > 0 && $folder_id !== false)
+        {
+           $result = $this->updateDirectory($folder_id, $fields);
+        }
+        else
+        {
+          if (isset($fields['ts_updated']))
+            unset($fields['ts_updated']);
+
+           $result = $this->addDirectory($fields);
+        }
+
+        return $result;
+    }
+
+    private function addDirectory($fields)
+    {
+      $prefix = $this->db->getPrefix();
+
+      $defaults = array(
+          'status' => 0,
+          'file_count' => 0,
+          'ts_created' => date("Y-m-d H:i:s"),
+      );
+      $fields = wp_parse_args($fields, $defaults);
+
+
+      $prepared_fields = $this->prepareFields($fields);
+
+      $result = $this->db->insert($prefix .'shortpixel_folders',
+                              $fields,
+                              array_values($prepared_fields['fields'])
+                            );
+
+       return $result;
+    }
+
+    private function updateDirectory($id, $fields)
+    {
+      $prefix = $this->db->getPrefix();
+
+      $sql = 'UPDATE ' . $prefix . 'shortpixel_folders SET ';
+
+      $setline = array();
+      $prepared_fields = $this->prepareFields($fields);
+
+      $fields = $prepared_fields["fields"];
+      $prepared = $prepared_fields['prepared'];
+
+      foreach($fields as $name => $mask)
+      {
+        $setline[] = $name . ' = ' . $mask . ' ';
+      }
+
+      $sql .= implode(',', $setline);
+      $sql .= ' WHERE id = %d';
+      $prepared[] = $id;
+
+      $sql = $this->db->prepare($sql, $prepared);
+      $this->db->query($sql);
+
+    }
+
+    /* prepare fields for update or insert. Replaces values with a proper mask for preparing
+    * @param Array Array of fields
+    * @return Array Assoc array of fields replaced with masked and an array with prepared values
+    */
+    private function prepareFields($fields)
+    {
+        $result = array();
+        $masks = array('status' => '%d', 'file_count' => '%d', 'ts_updated' => '%s', 'ts_created' => "%s" );
+
+        foreach($fields as $name => $value)
+        {
+          $mask = isset($masks[$name]) ? $masks[$name] : '%s';
+          $fields[$name] = $mask;
+          $prepared[] = $value;
+        }
+
+        $result['fields'] = $fields;
+        $result['prepared'] = $prepared;
+        return $result;
+    }
+
+
 
     public function delete($meta) {
         $metaClass = get_class($meta);

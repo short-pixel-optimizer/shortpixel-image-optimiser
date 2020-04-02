@@ -12,15 +12,14 @@ class CacheModel
 
   protected $name;
   protected $value;
-  protected $expires = HOUR_IN_SECONDS;
-
+  protected $expires = HOUR_IN_SECONDS;  // This is the expires, when saved without SetExpires! This value is not a representation of any expire time when loading something cache!
   protected $exists = false;
 
 
   public function __construct($name)
   {
      $this->name = $name;
-     $this->load($name);
+     $this->load();
   }
 
   /** Set the expiration of this item. In seconds
@@ -65,8 +64,7 @@ class CacheModel
   protected function load()
   {
     $item = get_transient($this->name);
-
-    if ($item)
+    if ($item !== false)
     {
       $this->value = $item;
       $this->exists = true;

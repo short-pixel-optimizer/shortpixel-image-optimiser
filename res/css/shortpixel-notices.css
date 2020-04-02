@@ -18,6 +18,8 @@
     display: table-row; }
   .shortpixel.notice .sp-conflict-plugins li > * {
     display: table-cell; }
+.shortpixel.notice .content button {
+  background-color: #007cba; }
 .shortpixel.notice li.sp-conflict-plugins-list {
   line-height: 28px;
   list-style: disc;

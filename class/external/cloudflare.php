@@ -181,6 +181,8 @@ class CloudFlareAPI {
       curl_setopt( $curl_connection, CURLOPT_POSTFIELDS, $postfields);
       curl_setopt( $curl_connection, CURLOPT_RETURNTRANSFER, true );
       curl_setopt( $curl_connection, CURLOPT_HTTPHEADER, $headers );
+      curl_setopt( $curl_connection, CURLOPT_CONNECTTIMEOUT, 5);  // in seconds!
+      curl_setopt( $curl_connection, CURLOPT_TIMEOUT, 10); // in seconds!
       curl_setopt( $curl_connection, CURLOPT_USERAGENT, '"User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.87 Safari/537.36"' );
 
       $request_response = curl_exec( $curl_connection );

@@ -2,9 +2,9 @@
 Contributors: ShortPixel
 Tags: compressor, image, compression, optimize, image optimizer, image optimiser, image compression, resize, compress pdf, compress jpg, compress png, image compression
 Requires at least: 3.2.0
-Tested up to: 5.3
+Tested up to: 5.4
 Requires PHP: 5.3
-Stable tag: 4.16.4
+Stable tag: 4.17.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -58,7 +58,7 @@ Make an instant <a href="http://shortpixel.com/image-compression-test" target="_
 * option to deactivate auto-optimizing images on upload
 * images that are optimized less that 5% are bonus
 * WooCommerce, WP offload S3 and WP Stateless compatible
-* 40 days optimization report with all image details and overall statistics
+* 30 days optimization report with all image details and overall statistics
 * We are GDPR compliant! <a href="https://shortpixel.com/privacy#gdpr" target="_blank">Read more.</a>
 * **free optimization credits for non-profits**, <a href="https://shortpixel.com/contact" target="_blank">contact us</a> for details
 
@@ -281,6 +281,22 @@ Hide the Cloudflare settings by defining these constants in wp-config.php:
 
 == Changelog ==
 
+= 4.17.0 =
+
+Release date: 2nd April 2020
+* Complete rewrite of the Other Media part of the plugin. It now looks closer to the standard Media Library, having thumbnails and actions like Compare, Re-optimize and Restore from backup for all images when you have Backups activated;
+* Added notification to activate the integration with NextGen Gallery, when the plugin is active and the integration is not activated;
+* Improved the way Other Media folders are added and it should not crash anymore for folders with a very large number of images;
+* Fix for the extra information (i) next to each Other Media folder in the Advanced Settings;
+* Fixes for multiple issues reagrding the NextGen Gallery plugin integration;
+* Fix for notififcations showing up when they're not supposed to show up;
+* Fix for multiple notifications when backup files are not found. These are now merged together;
+* Fix for notifications that were crashing outside ShortPixel screens;
+* Fix for the report that was wrongly stating 40 days, when actually the report is only for 30 days;
+* Fix for the exclude regex section that was returning true even if no matches were found;
+* Removed from the plugin the files that are not used anymore;
+* Language – 15 new strings added, 0 updated, 0 fuzzied, and 8 obsoleted.
+
 = 4.16.4 =
 
 Release date: 26th March 2020
@@ -381,7 +397,7 @@ Release date: 27th November 2019
 * Fixed: check for DOING_AJAX on redirect to settings.
 * Fixed: Shortpixel icon + exclamation mark in  toolbar showing on every page load.
 * Fixed: Add Custom media browser doesn't display files anymore
-* Fixed: WebP option adds an extra border if image already has a border -> borders will not be replicated to <picture> tags.
+* Fixed: WebP option adds an extra border if image already has a border -> borders will not be replicated to `<picture>` tags.
 * Fixed: Validating empty key doesn't show any message.
 * Fixed: on Nginx writes .htaccess files.
 * Fixed: Bug with safeGetAttachmentUrl for URLs that start with //.
@@ -394,7 +410,7 @@ Release date: 27th November 2019
 = 4.14.6 =
 
 Release date: 9th October 2019
-* Don't convert to <picture> the <img>s with backgrounds.
+* Don't convert to `<picture>` the `<img>`s with backgrounds.
 * Remove unused eval() call.
 * Restore the validate button next to API Key but change label to "Save and validate"
 * Fixed: PNGtoJPG issue with already uploaded images
@@ -466,7 +482,7 @@ Release date: 17th June 2019
 * Adaptive Max execution time and capped to 90 sec. for the bulk background AJAX calls. (Kinsta has a max_execution_time of 300 sec. in PHP but the HTTP connection is cut after 180 sec.)
 * Fix custom 404 page for missing images not working when using .htaccess for WebP
 * Fix WebP picture tag with relative URLs not working in some circumstances
-* Fix replacing the <img> inside an existing <picture> tag with another <picture> tag.
+* Fix replacing the `<img>` inside an existing `<picture>` tag with another `<picture>` tag.
 * Clear SP optimization cache in order to be able to optimize an image which initially had permissions error, after changing the permissions.
 * Fix being able to list the contents of ShortpixelBackups on some badly configured servers.
 * Fix error when inputting D'Artagnan in the AUTH pass field of settings.
@@ -491,7 +507,7 @@ Release date: 10th April 2019
 * resolve the Settings inconsistency in Other Media (settings displayed were from when adding the folder not from when actually optimizing)
 * Make pressing Escape or clicking outside of any popup close it.
 * Fixed: Restoring an Other Media item and then Optimizing it again optimizes it Lossless
-* fix generating the WebP <picture> tags when the images are either on a subdomain or on a CDN domain having the same root domain as the main site.
+* fix generating the WebP `<picture>` tags when the images are either on a subdomain or on a CDN domain having the same root domain as the main site.
 
 = EARLIER VERSIONS =
 * please refer to the changelog.txt file inside the plugin archive.

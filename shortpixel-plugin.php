@@ -13,7 +13,7 @@ class ShortPixelPlugin
   private static $instance;
   protected static $modelsLoaded = array(); // don't require twice, limit amount of require looksups..
 
-  private $paths = array('class', 'class/controller', 'class/external'); // classes that are autoloaded
+  private $paths = array('class', 'class/controller', 'class/external', 'class/controller/views'); // classes that are autoloaded
 
   protected $is_noheaders = false;
 
@@ -159,9 +159,11 @@ class ShortPixelPlugin
   {
       add_action('admin_menu', array($this,'admin_pages'));
       add_action('admin_enqueue_scripts', array($this, 'admin_scripts')); // admin scripts
+      add_action('admin_enqueue_scripts', array($this, 'load_admin_scripts'), 90); // loader via route.
       // defer notices a little to allow other hooks ( notable adminnotices )
       add_action('admin_notices', array($this, 'admin_notices'), 50); // notices occured before page load
       add_action('admin_footer', array($this, 'admin_notices'));  // called in views.
+
   }
 
   /** Hook in our admin pages */
@@ -173,7 +175,7 @@ class ShortPixelPlugin
 
       if($this->shortPixel->getSpMetaDao()->hasFoldersTable() && count($this->shortPixel->getSpMetaDao()->getFolders())) {
           /*translators: title and menu name for the Other media page*/
-        $admin_pages[] = add_media_page( __('Other Media Optimized by ShortPixel','shortpixel-image-optimiser'), __('Other Media','shortpixel-image-optimiser'), 'edit_others_posts', 'wp-short-pixel-custom', array( $this->shortPixel, 'listCustomMedia' ) );
+        $admin_pages[] = add_media_page( __('Other Media Optimized by ShortPixel','shortpixel-image-optimiser'), __('Other Media','shortpixel-image-optimiser'), 'edit_others_posts', 'wp-short-pixel-custom', array( $this, 'route' ) );
       }
       /*translators: title and menu name for the Bulk Processing page*/
       $admin_pages[] = add_media_page( __('ShortPixel Bulk Process','shortpixel-image-optimiser'), __('Bulk ShortPixel','shortpixel-image-optimiser'), 'edit_others_posts', 'wp-short-pixel-bulk', array( $this->shortPixel, 'bulkProcess' ) );
@@ -207,6 +209,9 @@ class ShortPixelPlugin
     // notices. additional styles for SPIO.
     wp_register_style('shortpixel-notices', plugins_url('/res/css/shortpixel-notices.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
 
+    // other media screen
+    wp_register_style('shortpixel-othermedia', plugins_url('/res/css/shortpixel-othermedia.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
+
 
     wp_register_script('shortpixel-debug', plugins_url('/res/js/debug.js',SHORTPIXEL_PLUGIN_FILE), array('jquery', 'jquery-ui-draggable'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
 
@@ -214,10 +219,6 @@ class ShortPixelPlugin
 
   public function admin_notices()
   {
-      if (! \wpSPIO()->env()->is_screen_to_use )
-      {
-          return;
-      }
       $noticeControl = Notices::getInstance();
       $noticeControl->loadIcons(array(
           'normal' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/slider.png', SHORTPIXEL_PLUGIN_FILE) . '">',
@@ -244,6 +245,7 @@ class ShortPixelPlugin
               wp_enqueue_script('jquery.knob.min.js');
               wp_enqueue_script('jquery.tooltip.min.js');
               wp_enqueue_script('shortpixel');
+              $this->load_style('shortpixel-modal');
             }
           }
         }
@@ -281,6 +283,27 @@ class ShortPixelPlugin
     }
   }
 
+  /** This is separated from route to load in head, preventing unstyled content all the time */
+  public function load_admin_scripts()
+  {
+    global $plugin_page;
+
+    switch($plugin_page)
+    {
+        case 'wp-shortpixel-settings': // settings
+          $this->load_style('shortpixel-admin');
+          $this->load_style('shortpixel');
+          $this->load_style('shortpixel-modal');
+          $this->load_style('sp-file-tree');
+          $this->load_script('sp-file-tree');
+
+        break;
+        case 'wp-short-pixel-custom': // other media
+          $this->load_style('shortpixel-othermedia');
+        break;
+    }
+  }
+
   /** Route, based on the page slug
   *
   * Principially all page controller should be routed from here.
@@ -292,7 +315,6 @@ class ShortPixelPlugin
 
       $default_action = 'load'; // generic action on controller.
       $action = isset($_REQUEST['sp-action']) ? sanitize_text_field($_REQUEST['sp-action']) : $default_action;
-      Log::addDebug('Request', $_REQUEST);
       $controller = false;
 
       if ($this->env()->is_debug)
@@ -302,13 +324,18 @@ class ShortPixelPlugin
 
       switch($plugin_page)
       {
-          case 'wp-shortpixel-settings':
-            $this->load_style('shortpixel-admin');
+          case 'wp-shortpixel-settings': // settings
+        /*  $this->load_style('shortpixel-admin');
             $this->load_style('shortpixel');
             $this->load_style('shortpixel-modal');
             $this->load_style('sp-file-tree');
-            $this->load_script('sp-file-tree');
+            $this->load_script('sp-file-tree'); */
             $controller = \shortPixelTools::namespaceit("SettingsController");
+            $url = menu_page_url($plugin_page, false);
+          break;
+          case 'wp-short-pixel-custom': // other media
+          /*  $this->load_style('shortpixel-othermedia'); */
+            $controller = \shortPixelTools::namespaceit('OtherMediaViewController');
             $url = menu_page_url($plugin_page, false);
           break;
       }
@@ -399,6 +426,7 @@ class ShortPixelPlugin
       adminNoticesController::resetCompatNotice();
       adminNoticesController::resetAPINotices();
       adminNoticesController::resetQuotaNotices();
+      adminNoticesController::resetIntegrationNotices();
 
       \WPShortPixelSettings::onActivate();
 

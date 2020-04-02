@@ -684,10 +684,12 @@ class ShortPixelAPI {
 
         $writeFailed = 0;
         $width = $height = null;
-        $resize = $this->_settings->resizeImages;
+        $do_resize = $this->_settings->resizeImages;
         $retinas = 0;
         $thumbsOpt = 0;
         $thumbsOptList = array();
+        // The settings model.
+        $settings = \wpSPIO()->settings();
 
         $fs = new \ShortPixel\FileSystemController();
 
@@ -720,7 +722,7 @@ class ShortPixelAPI {
                         if(ShortPixelMetaFacade::isRetina($targetFile->getFullPath())) {
                             $retinas ++;
                         }
-                        if($resize && $itemHandler->getMeta()->getPath() == $targetFile->getFullPath() ) { //this is the main image
+                        if($do_resize && $itemHandler->getMeta()->getPath() == $targetFile->getFullPath() ) { //this is the main image
                             $size = getimagesize($PATHs[$tempFileID]);
                             $width = $size[0];
                             $height = $size[1];
@@ -823,9 +825,26 @@ class ShortPixelAPI {
             $meta->setActualWidth($width);
             $meta->setActualHeight($height);
         }
+
         $meta->setRetries($meta->getRetries() + 1);
         $meta->setBackup(!$NoBackup);
         $meta->setStatus(2);
+
+        if ($do_resize)
+        {
+
+          $resizeWidth = $settings->resizeWidth;
+          $resizeHeight = $settings->resizeHeight;
+
+          if ($resizeWidth == $width || $resizeHeight == $height)  // resized.
+          {
+              $meta->setResizeWidth($width);
+              $meta->setResizeHeight($height);
+              $meta->setResize(true);
+          }
+          else
+            $meta->setResize(false);
+        }
 
         $itemHandler->updateMeta($meta);
         $itemHandler->optimizationSucceeded();

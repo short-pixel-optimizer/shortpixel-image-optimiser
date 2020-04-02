@@ -8,16 +8,20 @@ class ShortPixelController
 
   protected $shortPixel;
 
-  protected $model;
+  protected $model; // connected model to load.
   protected $template = null; // template name to include when loading.
+
   protected $data = array(); // data array for usage with databases data and such
   protected $postData = array(); // data coming from form posts.
+
   protected $mapper; // Mapper is array of View Name => Model Name. Convert between the two
-  protected $is_form_submit = false;
+  protected $is_form_submit = false; // Was the form submitted?
+
   protected $view; // object to use in the view.
   protected $url; // if controller is home to a page, sets the URL here. For redirects and what not.
 
   protected $form_action = 'sp-action';
+  protected $userIsAllowed = false;
 
   public static function init()
   {
@@ -52,6 +56,7 @@ class ShortPixelController
     $this->view->notices =  null; // Notices of class notice, for everything noticable
     $this->view->data = null;  // Data(base), to separate from regular view data
 
+    $this->userisAllowed = $this->checkUserPrivileges();
 
   }
 
@@ -65,7 +70,7 @@ class ShortPixelController
 
     if (! isset($_POST['sp-nonce']) || ! wp_verify_nonce( $_POST['sp-nonce'], $this->form_action))
     {
-      Log::addInfo('Check Post fails nonce check' . $this->form_action, array($_POST) );
+      Log::addInfo('Check Post fails nonce check, action : ' . $this->form_action, array($_POST) );
       return false;
     }
     else if (isset($_POST) && count($_POST) > 0)
@@ -90,7 +95,7 @@ class ShortPixelController
 
   /** Loads a view
   *
-  *
+  * @param String View Template in view directory to load. When empty will search for class attribute
   */
   public function loadView($template = null)
   {
@@ -125,7 +130,7 @@ class ShortPixelController
   * @param string $name Name of the model
   */
   protected function loadModel($name){
-     return wpSPIO()->loadModel($name);
+     return \wpSPIO()->loadModel($name);
   }
 
 
@@ -166,9 +171,18 @@ class ShortPixelController
 
   }
 
+  /** Sets the URL of the admin page */
   public function setControllerURL($url)
   {
     $this->url = $url;
+  }
+
+  protected function checkUserPrivileges()
+  {
+    if ((current_user_can( 'manage_options' ) || current_user_can( 'upload_files' ) || current_user_can( 'edit_posts' )))
+      return true;
+
+    return false;
   }
 
 } // controller

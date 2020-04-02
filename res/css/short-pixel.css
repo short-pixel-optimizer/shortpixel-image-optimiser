@@ -226,12 +226,7 @@ input.dial {
 .form-table td {
     position: relative;
 }
-.form-table table.shortpixel-folders-list tr {
-   background-color: #eee;
-}
-.form-table table.shortpixel-folders-list td {
-    padding: 5px 10px;
-}
+
 div.shortpixel-rate-us {
     display:inline-block;
     margin-left: 10px;

@@ -20,6 +20,8 @@ class DirectoryModel extends ShortPixelModel
   protected $is_writable = false;
   protected $is_readable = false;
 
+  protected $fields = array();
+
   protected $new_directory_permission = 0755;
 
   /** Creates a directory model object. DirectoryModel directories don't need to exist on FileSystem
@@ -29,8 +31,6 @@ class DirectoryModel extends ShortPixelModel
   */
   public function __construct($path)
   {
-
-
       $path = wp_normalize_path($path);
       if (! is_dir($path)) // path is wrong, *or* simply doesn't exist.
       {
@@ -294,8 +294,8 @@ class DirectoryModel extends ShortPixelModel
     $dirIt = new \DirectoryIterator($this->path);
     $dirArray = array();
     foreach($dirIt as $fileInfo)
-    {
-       if ($fileInfo->isDir() && $fileInfo->isReadable() && ! $fileInfo->isDot() )
+    { // IsDot must go first here, or there is possiblity to run into openbasedir restrictions.
+       if (! $fileInfo->isDot() && $fileInfo->isDir() && $fileInfo->isReadable()  )
        {
          $dir = new DirectoryModel($fileInfo->getRealPath());
          if ($dir->exists())

@@ -134,10 +134,11 @@ class ShortPixelQueue {
     }
 
     protected function pushCallback($priorityQueue, $ID) {
-        WPShortPixel::log("PUSH: Push ID $ID into queue " . json_encode($priorityQueue));
+        Log::addDebug("PUSH: Push ID $ID into queue " . json_encode($priorityQueue));
+
         array_push($priorityQueue, $ID);
         $prioQ = array_unique($priorityQueue);
-        WPShortPixel::log("PUSH: Updated: " . json_encode($prioQ));//get_option("wp-short-pixel-priorityQueue")));
+
         return $prioQ;
     }
 

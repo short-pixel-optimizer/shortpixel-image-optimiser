@@ -21,6 +21,7 @@ class CacheController extends ShortPixelController
      $cache = $this->getItem($name);
      $cache->setValue($value);
      $cache->setExpires($expires);
+
      $cache->save();
      $cache = apply_filters('shortpixel/cache/save', $cache, $name);
      self::$cached_items[$name] = $cache;
@@ -34,8 +35,9 @@ class CacheController extends ShortPixelController
   */
   public function storeItemObject(CacheModel $cache)
   {
-     self::$cached_items[$cache->getName()] = $cache;
-     $cache->save();
+       self::$cached_items[$cache->getName()] = $cache;
+       $cache->save();
+   
   }
 
   public function getItem($name)
@@ -58,8 +60,11 @@ class CacheController extends ShortPixelController
     {
       $cache->delete();
     }
+  }
 
-
+  public function deleteItemObject(CacheModel $cache)
+  {
+    $cache->delete();
   }
 
 }

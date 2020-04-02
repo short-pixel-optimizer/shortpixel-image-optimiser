@@ -45,6 +45,12 @@
       li > * {
           display: table-cell;
       }
+
+  }
+
+  .content button
+  { // gets overwritten in NGG.
+    background-color: #007cba;
   }
 
   li.sp-conflict-plugins-list {

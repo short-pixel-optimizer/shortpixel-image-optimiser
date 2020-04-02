@@ -186,6 +186,10 @@ class ApiKeyModel extends ShortPixelModel
     $this->key_is_verified = false;
     Log::addDebug('Clearing API Key');
 
+    adminNoticesController::resetAPINotices();
+    adminNoticesController::resetQuotaNotices();
+    adminNoticesController::resetIntegrationNotices();
+    
     $this->update();
 
   }

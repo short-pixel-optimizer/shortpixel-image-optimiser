@@ -116,7 +116,7 @@ class WPShortPixel {
         if($isAdminUser) {
             //add settings page
             //add_action( 'admin_menu', array( &$this, 'registerSettingsPage' ) );//display SP in Settings menu
-            add_action( 'admin_menu', array( &$this, 'registerAdminPage' ) );
+          //   add_action( 'admin_menu', array( &$this, 'registerAdminPage' ) ); // removed
 
             add_action('wp_ajax_shortpixel_browse_content', array(&$this, 'browseContent'));
             add_action('wp_ajax_shortpixel_get_backup_size', array(&$this, 'getBackupSize'));
@@ -180,15 +180,16 @@ class WPShortPixel {
 
     // @hook admin menu
     // @todo move to plugin class
+    /*  Gone. Both pages moved elsewhere ( plugin class )
     function registerAdminPage( ) {
       return;
         if($this->spMetaDao->hasFoldersTable() && count($this->spMetaDao->getFolders())) {
-            /*translators: title and menu name for the Other media page*/
+
             add_media_page( __('Other Media Optimized by ShortPixel','shortpixel-image-optimiser'), __('Other Media','shortpixel-image-optimiser'), 'edit_others_posts', 'wp-short-pixel-custom', array( &$this, 'listCustomMedia' ) );
         }
-        /*translators: title and menu name for the Bulk Processing page*/
+
         add_media_page( __('ShortPixel Bulk Process','shortpixel-image-optimiser'), __('Bulk ShortPixel','shortpixel-image-optimiser'), 'edit_others_posts', 'wp-short-pixel-bulk', array( &$this, 'bulkProcess' ) );
-    }
+    } */
 
     /*public static function shortPixelActivatePlugin()//reset some params to avoid trouble for plugins that were activated/deactivated/activated
     {
@@ -357,11 +358,7 @@ class WPShortPixel {
     /** @todo Plugin init class. Try to get rid of inline JS. Also still loads on all WP pages, prevent that. */
     function shortPixelJS() {
 
-        if (! \wpSPIO()->env()->is_screen_to_use )
-        {
-          if (! wpSPIO()->env()->is_front) // exeception if this is called to load from your frontie.
-             return; // not ours, don't load JS and such.
-        }
+
 
         $is_front = (wpSPIO()->env()->is_front) ? true : false;
 
@@ -389,7 +386,7 @@ class WPShortPixel {
       //  }
 
 
-        wp_register_script('shortpixel' . $this->jsSuffix, plugins_url('/res/js/shortpixel' . $this->jsSuffix,SHORTPIXEL_PLUGIN_FILE), array('jquery'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
+        wp_register_script('shortpixel', plugins_url('/res/js/shortpixel' . $this->jsSuffix,SHORTPIXEL_PLUGIN_FILE), array('jquery', 'jquery.knob.min.js'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
 
         // Using an Array within another Array to protect the primitive values from being cast to strings
@@ -456,13 +453,22 @@ class WPShortPixel {
                 'loading' => __('Loading...', 'shortpixel-image-optimiser' ),
                 //'' => __('', 'shortpixel-image-optimiser' ),
         );
-        wp_localize_script( 'shortpixel' . $this->jsSuffix, '_spTr', $jsTranslation );
-        wp_localize_script( 'shortpixel' . $this->jsSuffix, 'ShortPixelConstants', $ShortPixelConstants );
-        wp_enqueue_script('shortpixel' . $this->jsSuffix);
+        wp_localize_script( 'shortpixel', '_spTr', $jsTranslation );
+        wp_localize_script( 'shortpixel', 'ShortPixelConstants', $ShortPixelConstants );
 
-        wp_enqueue_script('jquery.knob.min.js', plugins_url('/res/js/jquery.knob.min.js',SHORTPIXEL_PLUGIN_FILE) );
-        wp_enqueue_script('jquery.tooltip.min.js', plugins_url('/res/js/jquery.tooltip.min.js',SHORTPIXEL_PLUGIN_FILE) );
+        wp_register_script('jquery.knob.min.js', plugins_url('/res/js/jquery.knob.min.js',SHORTPIXEL_PLUGIN_FILE) );
+        wp_register_script('jquery.tooltip.min.js', plugins_url('/res/js/jquery.tooltip.min.js',SHORTPIXEL_PLUGIN_FILE) );
 
+
+        if (! \wpSPIO()->env()->is_screen_to_use )
+        {
+          if (! wpSPIO()->env()->is_front) // exeception if this is called to load from your frontie.
+             return; // not ours, don't load JS and such.
+        }
+
+        wp_enqueue_script('shortpixel');
+        wp_enqueue_script('jquery.knob.min.js');
+        wp_enqueue_script('jquery.tooltip.min.js');
 
         wp_enqueue_script('punycode.min.js', plugins_url('/res/js/punycode.min.js',SHORTPIXEL_PLUGIN_FILE) );
     }
@@ -687,8 +693,7 @@ class WPShortPixel {
             return $meta;
         }
 
-        self::log("Handle Media Library Image Upload #{$ID}");
-        //self::log("STACK: " . json_encode(debug_backtrace()));
+        Log::addDebug("Handle Media Library Image Upload #{$ID}", $currentFile->exists());
 
         if(!$this->_settings->optimizePdfs && 'pdf' === $currentFile->getExtension() ) {
             //pdf is not optimized automatically as per the option, but can be optimized by button. Nothing to do.
@@ -724,6 +729,7 @@ class WPShortPixel {
                     //send a processing request right after a file was uploaded, do NOT wait for response
                     $this->_apiInterface->doRequests($URLsAndPATHs['URLs'], false, $itemHandler, false, $refresh);
                 } catch(Exception $e) {
+                    Log::addWarning('Handle Media Library Image Exceptions', $e);
                     $meta['ShortPixelImprovement'] = $e->getMessage();
                     return $meta;
                 }
@@ -796,52 +802,8 @@ class WPShortPixel {
         return $converter->checkConvertMediaPng2Jpg($itemHandler);
     }
 
-// moved to external.
-/*    public function handleGravityFormsImageField($value) {
-        if(!($folder = $this->spMetaDao->getFolder(SHORTPIXEL_UPLOADS_BASE . '/gravity_forms'))) {
-            return;
-        }
-        if(strpos($value , '|:|')) {
-            $cleanup = explode('|:|', $value);
-            $value = $cleanup[0];
-        }
-        //ShortPixel is monitoring the gravity forms folder, add the image to queue
-        $uploadDir   = wp_upload_dir();
-        $localPath = str_replace($uploadDir['baseurl'], SHORTPIXEL_UPLOADS_BASE, $value);
 
-        return $this->addPathToCustomFolder($localPath, $folder->getId(), 0);
-    } */
-
-    /**
-     * this is hooked onto the NextGen upload
-     * @param type $image
-     */
-  /*  public function handleNextGenImageUpload($image)
-    {
-        if ($this->_settings->includeNextGen == 1) {
-            $imageFsPath = ShortPixelNextGenAdapter::getImageAbspath($image);
-
-            $customFolders = $this->spMetaDao->getFolders();
-
-            $folderId = -1;
-            foreach ($customFolders as $folder) {
-                if (strpos($imageFsPath, $folder->getPath()) === 0) {
-                    $folderId = $folder->getId();
-                    break;
-                }
-            }
-            if ($folderId == -1) { //if not found, create
-                $galleryPath = dirname($imageFsPath);
-                $folder = new ShortPixelFolder(array("path" => $galleryPath), $this->_settings->excludePatterns);
-                $folderMsg = $this->spMetaDao->saveFolder($folder);
-                $folderId = $folder->getId();
-                //self::log("NG Image Upload: created folder from path $galleryPath : Folder info: " .  json_encode($folder));
-            }
-
-            return $this->addPathToCustomFolder($imageFsPath, $folderId, $image->pid);
-        }
-    } */
-
+    // needs moving. Used by Nextgen ( and others )
     public function addPathToCustomFolder($imageFsPath, $folderId, $pid) {
         //prevent adding it multiple times if the action is called repeatedly (Gravity Forms does that)
         $existing = $this->spMetaDao->getMetaForPath($imageFsPath);
@@ -863,7 +825,10 @@ class WPShortPixel {
         $meta->setResizeHeight($this->_settings->resizeHeight);
         $ID = $this->spMetaDao->addImage($meta);
         $meta->setId($ID);
-        $this->prioQ->push('C-' . $ID);
+
+        if ($this->_settings->autoMediaLibrary)
+          $this->prioQ->push('C-' . $ID); // should not blindly push to optimize!
+
         //add the thumb image if exists
         $pathParts[] = "thumbs_" . $pathParts[count($pathParts) - 1];
         $pathParts[count($pathParts) - 2] = "thumbs";
@@ -881,7 +846,9 @@ class WPShortPixel {
             $metaThumb->setResizeHeight($this->_settings->resizeHeight);
             $ID = $this->spMetaDao->addImage($metaThumb);
             $metaThumb->setId($ID);
-            $this->prioQ->push('C-' . $ID);
+
+            if ($this->_settings->autoMediaLibrary)
+              $this->prioQ->push('C-' . $ID);
         }
         return $meta;
     }
@@ -896,7 +863,6 @@ class WPShortPixel {
           $this->maybeDumpFromProcessedOnServer($itemHandler, $URLsAndPATHs);
         }
         if($meta->getStatus() != ShortPixelMeta::FILE_STATUS_SUCCESS) {
-
 
             $meta->setStatus(ShortPixelMeta::FILE_STATUS_PENDING);
             $meta->setRetries(0);
@@ -1256,15 +1222,18 @@ class WPShortPixel {
 
         //self::log("HIP: 0 Bulk ran: " . $this->prioQ->bulkRan());
         $customIds = false;
+        //@todo Unreadable statement. This will never run outside of bulk.
         if(count($ids) < SHORTPIXEL_PRESEND_ITEMS && $this->prioQ->bulkRan() && $this->_settings->hasCustomFolders
            && (!$this->_settings->cancelPointer || $this->_settings->skipToCustom)
            && !$this->_settings->customBulkPaused)
         { //take from custom images if any left to optimize - only if bulk was ever started
-            //but first refresh if it wasn't refreshed in the last hour
-            if(time() - $this->_settings->hasCustomFolders > 3600) {
+            //but first refresh. Refresh interval is handled by controller.
+            $otherMedia = new \ShortPixel\OtherMediaController();
+            $otherMedia->refreshFolders();
+            /*if(time() - $this->_settings->hasCustomFolders > 3600) {
                 $notice = null; $this->refreshCustomFolders();
                 $this->_settings->hasCustomFolders = time();
-            }
+            } */
 
             $customIds = $this->spMetaDao->getPendingMetas( SHORTPIXEL_PRESEND_ITEMS - count($ids));
 
@@ -1272,6 +1241,9 @@ class WPShortPixel {
                 $ids = array_merge($ids, array_map(array('ShortPixelMetaFacade', 'getNewFromRow'), $customIds));
             }
         }
+
+
+
 
         if(count($ids)) {$idl='';foreach($ids as $i){$idl.=$i->getId().' ';}
             Log::addInfo("HIP: 1 Selected IDs: $idl");}
@@ -1517,6 +1489,14 @@ class WPShortPixel {
         if($result["Status"] !== ShortPixelAPI::STATUS_RETRY) {
             $this->_settings->bulkLastStatus = null;
             $this->_settings->bulkLastStatus = $result;
+        }
+
+        // Generate new actions after doing something for custom type (for now)
+        if($itemHandler->getType() == ShortPixelMetaFacade::CUSTOM_TYPE)
+        {
+          $othermediaView = new \ShortPixel\OtherMediaViewController();
+          $othermediaView->setShortPixel($this);
+          $result['actions'] = $othermediaView->renderNewActions(substr($itemId, 2));
         }
 
         $ret = json_encode($result);
@@ -2052,7 +2032,6 @@ class WPShortPixel {
         $imageObj->setbyPostID($attachmentID);
 
         $fsFile = $imageObj->getFile();
-        //$fsFile = $fs->getAttachedFile($attachmentID);
         $filePath = (string) $fsFile->getFileDir();
 
         $itemHandler = $imageObj->getFacade(); //new ShortPixelMetaFacade($attachmentID);
@@ -2174,8 +2153,11 @@ class WPShortPixel {
             }
         }
         if(!$bkCount) {
-            $this->throwNotice('generic-err', __("No backup files found. Restore not performed.",'shortpixel-image-optimiser'));
-            Log::addError('No Backup Files Found. ', array($bkFile));
+            //$this->throwNotice('generic-err', __("No backup files found. Restore not performed.",'shortpixel-image-optimiser'));
+            $notice = Notices::addWarning(__("Not all backup files found. Restore not performed on these files ",'shortpixel-image-optimiser'), true);
+            Notices::addDetail($notice, (string) $bkFile);
+
+            Log::addError('No Backup Files Found: ' . $bkFile);
             return false;
         }
 
@@ -2351,6 +2333,7 @@ class WPShortPixel {
      */
     public function throwNotice($when = 'activate', $extra = '') {
       //  set_transient("shortpixel_thrown_notice", array('when' => $when, 'extra' => $extra), 120);
+
       Notices::addError($extra);  // whatever error is in the extra. Seems that normal messages don't pass here.
     }
 
@@ -2402,19 +2385,20 @@ class WPShortPixel {
         if($backupFile === false)
         {
           Log::addWarn("Custom File $ID - $file does not have a backup");
-          Notices::addWarning(sprintf(__('Not able to restore file %s. Could not find backup', 'shortpixel-image-optimiser'), $file));
+          $notice = Notices::addWarning(__('Not able to restore file. Could not find backup', 'shortpixel-image-optimiser'), true);
+          Notices::addDetail($notice, (string) $file);
+
           return false;
         }
-
-          if ($backupFile->copy($fileObj))
-          {
+        elseif ($backupFile->copy($fileObj))
+        {
             $backupFile->delete();
-          }
-          else {
-            Log::addError('Could not restore back to source' .  $backupFile->getFullPath() );
-            Notices::addError('The file could not be restored from backup. Plugin could not copy backup back to original location. Check file permissions. ', 'shortpixel-image-optimiser');
-            return false;
-          }
+        }
+        else {
+          Log::addError('Could not restore back to source' .  $backupFile->getFullPath() );
+          Notices::addError('The file could not be restored from backup. Plugin could not copy backup back to original location. Check file permissions. ', 'shortpixel-image-optimiser');
+          return false;
+        }
 
           /* [BS] Reset all generated image meta. Bring back to start state.
           * Since Wpdb->prepare doesn't support 'null', zero values in this table should not be trusted */
@@ -2477,8 +2461,9 @@ class WPShortPixel {
             $folder_id = $meta->getFolderId();
             $this->doCustomRestore($ID);
 
-            $this->spMetaDao->delete($meta);
-            $meta = $this->addPathToCustomFolder($path, $folder_id, NULL);
+            // Commented, this is creating weird issues. Seems unneeded as well.
+            //$this->spMetaDao->delete($meta);
+            // $meta = $this->addPathToCustomFolder($path, $folder_id, NULL);
 
             if($meta) {
                 $meta->setCompressionType(ShortPixelAPI::getCompressionTypeCode($compressionType));
@@ -2757,6 +2742,7 @@ class WPShortPixel {
     * @todo Move this to own view.
     */
     /* Gone! @todo Must go when new ListCMedia is done */
+    /*
     public function listCustomMedia() {
         if( ! class_exists( 'ShortPixelListTable' ) ) {
             require_once('view/shortpixel-list-table.php');
@@ -2814,7 +2800,7 @@ class WPShortPixel {
                 <br class="clear">
             </div>
 	</div> <?php
-    }
+} */
 
 
     /** Front End function that controls bulk processes.
@@ -2884,7 +2870,6 @@ class WPShortPixel {
             Log::addInfo('Bulk Process - Bulk Restore');
 
             $bulkRestore = new \ShortPixel\BulkRestoreAll(); // controller
-            $bulkRestore->setShortPixel($this);
             $bulkRestore->setupBulk();
 
             $this->prioQ->startBulk(ShortPixelQueue::BULK_TYPE_RESTORE);
@@ -2929,6 +2914,7 @@ class WPShortPixel {
         $pendingMeta = $this->_settings->hasCustomFolders ? $this->spMetaDao->getPendingMetaCount() : 0;
         Log::addInfo('Bulk Process - Pending Meta Count ' . $pendingMeta);
         Log::addInfo('Bulk Process - File left ' . $filesLeft[0]->FilesLeftToBeProcessed );
+
 
         if (   ($filesLeft[0]->FilesLeftToBeProcessed > 0 && $this->prioQ->bulkRunning())
             || (0 + $pendingMeta > 0 && !$this->_settings->customBulkPaused && $this->prioQ->bulkRan())//bulk processing was started
@@ -3074,6 +3060,7 @@ class WPShortPixel {
 
                     $dirpath = $dir->getPath();
                     $dirname = $dir->getName();
+                    // @todo Should in time be moved to othermedia_controller / check if media library
                     if($dirname == 'ShortpixelBackups' || ShortPixelMetaFacade::isMediaSubfolder($dirname, false)) continue;
 
                     $htmlRel	= str_replace("'", "&apos;", $returnDir . $dirname);
@@ -3257,64 +3244,6 @@ class WPShortPixel {
         $diff = $folder->checkFolderContents(array('ShortPixelCustomMetaDao', 'getPathFiles'));
     } */
 
-
-    // @todo - Should be part of folder model
-    // @param force boolean Force a recheck.
-    public function refreshCustomFolders($force = false) {
-        $customFolders = array();
-        $fs =  \wpSPIO()->fileSystem();
-
-        if($this->_settings->hasCustomFolders) {
-            $customFolders = $this->spMetaDao->getFolders();
-            foreach($customFolders as $folder) {
-
-              try {
-                $mt = $folder->getFolderContentsChangeDate();
-              }
-              catch(ShortPixelFileRightsException $ex) {
-                Notices::addWarning($ex->getMessage());
-              }
-
-              if($mt > strtotime($folder->getTsUpdated()) || $force) {
-                // when forcing, set to never updated.
-                if ($force)
-                {
-                  $folder->setTsUpdated(date("Y-m-d H:i:s", 0) ); //
-                  $this->spMetaDao->update($folder);
-                }
-
-                $fsFolder = $fs->getDirectory($folder->getPath());
-                if ($fsFolder->exists())
-                  $this->spMetaDao->refreshFolder($fsFolder);
-                else {
-                  Log::addWarn('Custom folder does not exist: ' . $fsFolder->getPath() );
-                }
-
-              }
-              /*  if($folder->getPath() === $ignore) continue;
-                try {
-
-                    $mt = $folder->getFolderContentsChangeDate();
-                    if($mt > strtotime($folder->getTsUpdated())) {
-                        $fileList = $folder->getFileList(strtotime($folder->getTsUpdated()));
-                        $this->spMetaDao->batchInsertImages($fileList, $folder->getId());
-                        $folder->setTsUpdated(date("Y-m-d H:i:s", $mt));
-                        $folder->setFileCount($folder->countFiles());
-                        $this->spMetaDao->update($folder);
-                    }
-                } catch(ShortPixelFileRightsException $ex) {
-                    if(is_array($notice)) {
-                        if($notice['status'] == 'error') {
-                            $notice['msg'] .= " " . $ex->getMessage();
-                        }
-                    } else {
-                        $notice = array("status" => "error", "msg" => $ex->getMessage());
-                    }
-                }*/
-            } // folders
-        }
-        return $customFolders;
-    }
 
     /** Updates HTAccess files for Webp
     * @param boolean $clear Clear removes all statements from htaccess. For disabling webp.
@@ -3582,11 +3511,11 @@ class WPShortPixel {
     public function resetQuotaExceeded() {
         if( $this->_settings->quotaExceeded == 1) {
             $dismissed = $this->_settings->dismissedNotices ? $this->_settings->dismissedNotices : array();
-            ShortPixel\adminNoticesController::resetAPINotices();
-            ShortPixel\adminNoticesController::resetQuotaNotices();
-            unset($dismissed['exceed']);
+            //unset($dismissed['exceed']);
             $this->_settings->prioritySkip = array();
             $this->_settings->dismissedNotices = $dismissed;
+            \ShortPixel\adminNoticesController::resetAPINotices();
+            \ShortPixel\adminNoticesController::resetQuotaNotices();
         }
         $this->_settings->quotaExceeded = 0;
     }
@@ -4062,8 +3991,10 @@ class WPShortPixel {
           if (@preg_match($pattern, false) !== false)
           {
             $m = preg_match($pattern,  $target);
-            if ($m !== false)
+            if ($m !== false && $m > 0) // valid regex, more hits than zero
+            {
               return true;
+            }
           }
         }
         else
@@ -4250,157 +4181,6 @@ class WPShortPixel {
         return array_values(array_diff(array(0, 1, 2), array(0 + $compressionType)));
     }
 
-    function outputHSBeacon() {
-        Log::addWarn('OutputHSBeacon called on old function');
-	?>
-        <style>
-            .shortpixel-hs-blind {
-                position: fixed;
-                bottom: 18px;
-                right: 0;
-                z-index: 20003;
-                background-color: white;
-                width: 87px;
-                height: 174px;
-                border-radius: 20px 0 0 20px;
-                text-align: right;
-                padding-right: 15px;
-            }
-            .shortpixel-hs-blind a {
-                color: lightgray;
-                text-decoration: none;
-            }
-            .shortpixel-hs-blind .dashicons-minus {
-                border: 3px solid;
-                border-radius: 12px;
-                font-size: 12px;
-                font-weight: bold;
-                line-height: 15px;
-                height: 13px;
-                width: 13px;
-                display:none;
-            }
-            .shortpixel-hs-blind .dashicons-dismiss {
-                font-size: 23px;
-                line-height: 19px;
-                display: none;
-            }
-            .shortpixel-hs-blind:hover .dashicons-minus,
-            .shortpixel-hs-blind:hover .dashicons-dismiss {
-                display: inline-block;
-            }
-            .shortpixel-hs-button-blind {
-                display:none;
-                position: fixed;
-                bottom: 115px;right: 0;
-                z-index: 20003;
-                background-color: white;
-                width: 237px;
-                height: 54px;
-            }
-            .shortpixel-hs-tools {
-                position: fixed;
-                bottom: 116px;
-                right: 0px;
-                z-index: 20003;
-                background-color: #ecf9fc;
-                padding: 8px 18px 3px 12px;
-                border-radius: 26px 0 0 26px;
-                -webkit-box-shadow: 1px 1px 5px 0px rgba(6,109,117,1);
-                -moz-box-shadow: 1px 1px 5px 0px rgba(6,109,117,1);
-                box-shadow: 1px 1px 10px 0px rgb(172, 173, 173);
-            }
-            @media (max-width: 767px) {
-                .shortpixel-hs-blind {
-                    bottom: 8px;
-                    height: 194px;
-                }
-                .shortpixel-hs-button-blind {
-                    bottom: 100px;
-                }
-            }
-        </style>
-        <div id="shortpixel-hs-blind" class="shortpixel-hs-blind">
-            <a href="javascript:ShortPixel.closeHelpPane();">
-                <i class="dashicons dashicons-minus" title="<?php _e('Dismiss for now', 'shortpixel-image-optimiser'); ?>   "></i>
-            </a>
-            <a href="javascript:ShortPixel.dismissHelpPane();">
-                <i class="dashicons dashicons-dismiss" title="<?php _e('Never display again', 'shortpixel-image-optimiser'); ?>"></i>
-            </a>
-        </div>
-        <div id="shortpixel-hs-button-blind" class="shortpixel-hs-button-blind"></div>
-        <div id="shortpixel-hs-tools" class="shortpixel-hs-tools">
-            <a href="javascript:shortpixelToggleHS();" class="shortpixel-hs-tools-docs" title="<?php _e('Search through our online documentation.', 'shortpixel-image-optimiser'); ?>">
-                <img src="<?php echo(wpSPIO()->plugin_url('res/img/notes-sp.png'));?>" style="margin-bottom: 2px;width: 36px;">
-            </a>
-        </div>
-        <script>
-            window.shortpixelHSOpen = -1;
-            function shortpixelToggleHS() {
-                if(window.shortpixelHSOpen == -1) {
-                    HS.beacon.init();
-                }
-                if(window.shortpixelHSOpen == 1) {
-                    HS.beacon.close();
-                    jQuery("#shortpixel-hs-button-blind").css('display', 'none');
-                    window.shortpixelHSOpen = 0;
-                } else {
-                    HS.beacon.open();
-                    jQuery("#shortpixel-hs-button-blind").css('display', 'block');
-                    window.shortpixelHSOpen = 1;
-                }
-            }
-        </script>
-        <script type="text/javascript" src="https://quriobot.com/qb/widget/KoPqxmzqzjbg5eNl/V895xbyndnmeqZYd" async defer></script>
-        <script>
-            <?php
-            $screen = get_current_screen();
-            if($screen) {
-                switch($screen->id) {
-                    case 'media_page_wp-short-pixel-bulk':
-                        echo("var shortpixel_suggestions =              [ '5a5de2782c7d3a19436843af', '5a5de6902c7d3a19436843e9', '5a5de5c42c7d3a19436843d0', '5a9945e42c7d3a75495145d0', '5a5de1c2042863193801047c', '5a5de66f2c7d3a19436843e0', '5a9946e62c7d3a75495145d8', '5a5de4f02c7d3a19436843c8', '5a5de65f042863193801049f', '5a5de2df0428631938010485' ]; ");
-                        $suggestions = "shortpixel_suggestions";
-                        break;
-                    case 'settings_page_wp-shortpixel':
-                        echo("var shortpixel_suggestions_settings =     [ '5a5de1de2c7d3a19436843a8', '5a6612032c7d3a39e6263a1d', '5a5de1c2042863193801047c', '5a5de2782c7d3a19436843af', '5a6610c62c7d3a39e6263a02', '5a9945e42c7d3a75495145d0', '5a5de66f2c7d3a19436843e0', '5a6597e80428632faf620487', '5a5de5c42c7d3a19436843d0', '5a5de5642c7d3a19436843cc' ]; ");
-                        echo("var shortpixel_suggestions_adv_settings = [ '5a5de4f02c7d3a19436843c8', '5a8431f00428634376d01dc4', '5a5de58b0428631938010497', '5a5de65f042863193801049f', '5a9945e42c7d3a75495145d0', '5a9946e62c7d3a75495145d8', '5a5de57c0428631938010495', '5a5de2d22c7d3a19436843b1', '5a5de5c42c7d3a19436843d0', '5a5de5642c7d3a19436843cc' ]; ");
-                        echo("var shortpixel_suggestions_cloudflare =   [ '5a5de1f62c7d3a19436843a9', '5a5de58b0428631938010497', '5a5de66f2c7d3a19436843e0', '5a5de5c42c7d3a19436843d0', '5a5de6902c7d3a19436843e9', '5a5de51a2c7d3a19436843c9', '5a9946e62c7d3a75495145d8', '5a5de46c2c7d3a19436843c1', '5a5de1de2c7d3a19436843a8', '5a6597e80428632faf620487' ]; ");
-                        $suggestions = "shortpixel_suggestions_settings";
-                        break;
-                    case 'media_page_wp-short-pixel-custom':
-                        echo("var shortpixel_suggestions =              [ '5a9946e62c7d3a75495145d8', '5a5de1c2042863193801047c', '5a5de2782c7d3a19436843af', '5a5de6902c7d3a19436843e9', '5a5de4f02c7d3a19436843c8', '5a6610c62c7d3a39e6263a02', '5a9945e42c7d3a75495145d0', '5a5de46c2c7d3a19436843c1', '5a5de1de2c7d3a19436843a8', '5a5de25c2c7d3a19436843ad' ]; ");
-                        $suggestions = "shortpixel_suggestions";
-                        break;
-                }
-            }
-            ?>
-            !function(e,o,n){ window.HSCW=o,window.HS=n,n.beacon=n.beacon||{};var t=n.beacon;t.userConfig={
-                color: "#1CBECB",
-                icon: "question",
-                instructions: "Send ShortPixel a message",
-                topArticles: true,
-                poweredBy: false,
-                showContactFields: true,
-                showName: false,
-                showSubject: true,
-                translation: {
-                    searchLabel: "What can ShortPixel help you with?",
-                    contactSuccessDescription: "Thanks for reaching out! Someone from our team will get back to you in 24h max."
-                }
-
-            },t.readyQueue=[],t.config=function(e){this.userConfig=e},t.ready=function(e){this.readyQueue.push(e)},o.config={docs:{enabled:!0,baseUrl:"//shortpixel.helpscoutdocs.com/"},contact:{enabled:!0,formId:"278a7825-fce0-11e7-b466-0ec85169275a"}};var r=e.getElementsByTagName("script")[0],c=e.createElement("script");
-                c.type="text/javascript",c.async=!0,c.src="https://djtflbt20bdde.cloudfront.net/",r.parentNode.insertBefore(c,r);
-            }(document,window.HSCW||{},window.HS||{});
-
-            window.HS.beacon.ready(function(){
-                HS.beacon.identify({
-                    email: "<?php $u = wp_get_current_user(); echo($u->user_email); ?>",
-                    apiKey: "<?php echo($this->getApiKey());?>"
-                });
-                HS.beacon.suggest( <?php echo( $suggestions ) ?> );
-            });
-        </script><?php
-    }
 
     public function validateFeedback($params) {
         if(isset($params['keep-settings'])) {
@@ -4409,26 +4189,6 @@ class WPShortPixel {
         return $params;
     }
 
-
-    /*    public function getEncryptedData() {
-            return base64_encode(self::encrypt($this->getApiKey() . "|" . get_site_url(), "sh0r+Pix3l8im1N3r"));
-        }
-    */
-
-    /**
-     * Returns an encrypted & utf8-encoded
-     */
-/*    public static function encrypt($pure_string, $encryption_key)
-    {
-        if(!function_exists("mcrypt_get_iv_size") || !function_exists('utf8_encode')) {
-            return "";
-        }
-        $iv_size = \mcrypt_get_iv_size(MCRYPT_BLOWFISH, MCRYPT_MODE_ECB);
-        $iv = \mcrypt_create_iv($iv_size, MCRYPT_RAND);
-        $encrypted_string = \mcrypt_encrypt(MCRYPT_BLOWFISH, $encryption_key, utf8_encode($pure_string), MCRYPT_MODE_ECB, $iv);
-        return $encrypted_string;
-    }
-*/
 
     public function getApiKey() {
         return $this->_settings->apiKey;
@@ -4514,4 +4274,4 @@ class WPShortPixel {
 		return $this->_settings->cloudflareZoneID;
 	}
 
-}
+} // class

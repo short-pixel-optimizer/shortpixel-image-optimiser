@@ -127,7 +127,9 @@ class ShortPixelFolder extends ShortPixelEntity{
         return false;
     }
 
+/*
     public function countFiles($path = null) {
+
         $size = 0;
         $path = $path ? $path : $this->getPath();
         if($path == null) {
@@ -148,7 +150,7 @@ class ShortPixelFolder extends ShortPixelEntity{
             }
         }
         return $size;
-    }
+    } */
 
     public function getFileList($onlyNewerThan = 0) {
         $fileListPath = tempnam(SHORTPIXEL_UPLOADS_BASE . '/', 'sp_');
@@ -200,10 +202,12 @@ class ShortPixelFolder extends ShortPixelEntity{
         }
     }
 
+/*
     public function getFolderContentsChangeDate() {
         return self::getFolderContentsChangeDateRecursive($this->getPath(), 0, strtotime($this->getTsUpdated()));
     }
-
+*/
+/*
     protected static function getFolderContentsChangeDateRecursive($path, $mtime, $refMtime) {
         $ignore = array('.','..');
         if(!is_writable($path)) {
@@ -220,7 +224,7 @@ class ShortPixelFolder extends ShortPixelEntity{
             }
         }
         return $mtime;
-    }
+    } */
 
     function getId() {
         return $this->id;
@@ -243,7 +247,7 @@ class ShortPixelFolder extends ShortPixelEntity{
     }
 
     function setPath($path) {
-        $this->path = $path;
+        $this->path = trailingslashit($path);
     }
 
     function getType() {

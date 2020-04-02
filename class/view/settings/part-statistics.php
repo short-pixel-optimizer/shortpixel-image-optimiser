@@ -122,7 +122,7 @@ $quotaData = $this->quotaData;
                   }
                 ?>
                     <th><a href="<?php echo $link ?>" target="_blank">
-                            <?php _e('See report (last 40 days)','shortpixel-image-optimiser');?>
+                            <?php _e('See report (last 30 days)','shortpixel-image-optimiser');?>
                         </a></th>
                     <td>&nbsp;</td>
                 </tr>

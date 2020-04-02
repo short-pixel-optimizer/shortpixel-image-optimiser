@@ -5,6 +5,7 @@ class BulkRestoreAll extends ShortPixelController
 {
     protected static $slug = 'bulk-restore-all';
     protected $template = 'view-restore-all';
+    protected $form_action = 'bulk-restore-all';
 
     protected $selected_folders = array();
 
@@ -37,10 +38,11 @@ class BulkRestoreAll extends ShortPixelController
     public function getCustomFolders()
     {
       //wpshortPixel::refreshCustomFolders();
-      $spMetaDao = $this->shortPixel->getSpMetaDao();
-      $customFolders = $spMetaDao->getFolders();
+      //$spMetaDao = $this->shortPixel->getSpMetaDao();
+      //$customFolders = $spMetaDao->getFolders();
+      $otherMedia = new OtherMediaController();
 
-      return $customFolders;
+      return $otherMedia->getAllFolders();
 
     }
 
@@ -49,7 +51,6 @@ class BulkRestoreAll extends ShortPixelController
         if (isset($post['selected_folders']))
         {
             $folders = array_filter($post['selected_folders'], 'intval');
-            //  var_dump($post['selected_folders']);
             if (count($folders) > 0)
             {
               $this->selected_folders = $folders;
@@ -68,7 +69,7 @@ class BulkRestoreAll extends ShortPixelController
       // handle the custom folders if there are any.
       if (count($this->selected_folders) > 0)
       {
-          $spMetaDao = $this->shortPixel->getSpMetaDao();
+          $spMetaDao = \wpSPIO()->getShortPixel()->getSpMetaDao();
 
           foreach($this->selected_folders as $folder_id)
           {
