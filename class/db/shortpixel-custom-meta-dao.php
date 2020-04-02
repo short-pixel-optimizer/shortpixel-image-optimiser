@@ -385,10 +385,11 @@ class ShortPixelCustomMetaDao {
     }
 
     public function getPendingMetas($count) {
-        return $this->db->query("SELECT sm.id from {$this->db->getPrefix()}shortpixel_meta sm "
-            . "INNER JOIN  {$this->db->getPrefix()}shortpixel_folders sf on sm.folder_id = sf.id "
-            . "WHERE sf.status <> -1 AND sm.status <> 3 AND ( sm.status = 1 OR (sm.status < 0 AND sm.retries < 3)) "
-            . "ORDER BY sm.id DESC LIMIT $count");
+       $sql = "SELECT sm.id from {$this->db->getPrefix()}shortpixel_meta sm "
+           . "INNER JOIN  {$this->db->getPrefix()}shortpixel_folders sf on sm.folder_id = sf.id "
+           . "WHERE sf.status <> -1 AND sm.status <> 3 AND ( sm.status = 1 OR (sm.status < 0 AND sm.retries < 3)) "
+           . "ORDER BY sm.id DESC LIMIT $count";
+        return $this->db->query($sql);
     }
 
     public function getFolderOptimizationStatus($folderId) {

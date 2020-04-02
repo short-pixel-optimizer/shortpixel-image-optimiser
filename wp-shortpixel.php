@@ -75,11 +75,13 @@ define("SHORTPIXEL_MAX_RESULTS_QUERY", 30);
 /* Function to reach core function of ShortPixel
 * Use to get plugin url, plugin path, or certain core controllers
 */
-function wpSPIO()
+if (! function_exists('wpSPIO'))
 {
-   return \ShortPixel\ShortPixelPlugin::getInstance();
+  function wpSPIO()
+  {
+     return \ShortPixel\ShortPixelPlugin::getInstance();
+  }
 }
-
 // [BS] Start runtime here
 require_once(SHORTPIXEL_PLUGIN_DIR . '/wp-shortpixel-req.php'); // @todo should be incorporated here.
 require_once(SHORTPIXEL_PLUGIN_DIR . '/class/controller/controller.php');

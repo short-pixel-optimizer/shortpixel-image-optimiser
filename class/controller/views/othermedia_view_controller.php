@@ -115,6 +115,7 @@ class OtherMediaViewController extends ShortPixelController
          $headings = array(
               'thumbnails' => array('title' => __('Thumbnails', 'shortpixel-image-optimiser'),
                               'sortable' => false,
+                              'orderby' => 'id',  // placeholder to allow sort on this.
                             ),
                'name' =>  array('title' => __('Name', 'shortpixel-image-optimiser'),
                                 'sortable' => true,
