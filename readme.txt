@@ -292,8 +292,9 @@ Release date: 2nd April 2020
 * Fix for notififcations showing up when they're not supposed to show up;
 * Fix for multiple notifications when backup files are not found. These are now merged together;
 * Fix for notifications that were crashing outside ShortPixel screens;
-* Fix for the report that was wrongly showing 40 days, when actually it was only for 30 days;
+* Fix for the report that was wrongly stating 40 days, when actually the report is only for 30 days;
 * Fix for the exclude regex section that was returning true even if no matches were found;
+* Removed from the plugin the files that are not used anymore;
 * Language – 15 new strings added, 0 updated, 0 fuzzied, and 8 obsoleted.
 
 = 4.16.4 =
