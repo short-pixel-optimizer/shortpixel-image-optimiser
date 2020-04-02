@@ -129,7 +129,7 @@ class ShortPixelCustomMetaDao {
         $this->addIfMissing("FOREIGN KEY", $this->db->getPrefix()."shortpixel_meta", "fk_shortpixel_meta_folder", "folder_id",
                                            $this->db->getPrefix()."shortpixel_folders", "id");
 
-        
+
     }
 
     public function getFolders() {
@@ -385,10 +385,11 @@ class ShortPixelCustomMetaDao {
     }
 
     public function getPendingMetas($count) {
-        return $this->db->query("SELECT sm.id from {$this->db->getPrefix()}shortpixel_meta sm "
-            . "INNER JOIN  {$this->db->getPrefix()}shortpixel_folders sf on sm.folder_id = sf.id "
-            . "WHERE sf.status <> -1 AND sm.status <> 3 AND ( sm.status = 1 OR (sm.status < 0 AND sm.retries < 3)) "
-            . "ORDER BY sm.id DESC LIMIT $count");
+       $sql = "SELECT sm.id from {$this->db->getPrefix()}shortpixel_meta sm "
+           . "INNER JOIN  {$this->db->getPrefix()}shortpixel_folders sf on sm.folder_id = sf.id "
+           . "WHERE sf.status <> -1 AND sm.status <> 3 AND ( sm.status = 1 OR (sm.status < 0 AND sm.retries < 3)) "
+           . "ORDER BY sm.id DESC LIMIT $count";
+        return $this->db->query($sql);
     }
 
     public function getFolderOptimizationStatus($folderId) {
@@ -532,7 +533,6 @@ class ShortPixelCustomMetaDao {
         $result = false;
         $folder_id = -1;
 
-        Log::addTemp('Save Directory', $fields);
         if (isset($fields['id']))
         {
           $folder_id = $fields['id'];

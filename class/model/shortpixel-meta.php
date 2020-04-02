@@ -26,7 +26,7 @@ class ShortPixelMeta extends ShortPixelEntity{
     protected $actualWidth;
     protected $actualHeight;
     protected $backup;
-    protected $status; //0 waiting, 1 pending, 2 success, -x errors
+    protected $status; //0 not-optimized, 1 pending, 2 success, -x errors
     protected $retries;
     protected $message;
     protected $tsAdded;
