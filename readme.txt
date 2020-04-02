@@ -2,9 +2,9 @@
 Contributors: ShortPixel
 Tags: compressor, image, compression, optimize, image optimizer, image optimiser, image compression, resize, compress pdf, compress jpg, compress png, image compression
 Requires at least: 3.2.0
-Tested up to: 5.3
+Tested up to: 5.4
 Requires PHP: 5.3
-Stable tag: 4.16.4
+Stable tag: 4.17.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -280,6 +280,21 @@ Hide the Cloudflare settings by defining these constants in wp-config.php:
 9. Check other optimized images status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 4.17.0 =
+
+Release date: 2nd April 2020
+* Complete rewrite of the Other Media part of the plugin. It now looks closer to the standard Media Library, having thumbnails and actions like Compare, Re-optimize and Restore from backup for all images when you have Backups activated;
+* Added notification to activate the integration with NextGen Gallery, when the plugin is active and the integration is not activated;
+* Improved the way Other Media folders are added and it should not crash anymore for folders with a very large number of images;
+* Fix for the extra information (i) next to each Other Media folder in the Advanced Settings;
+* Fixes for multiple issues reagrding the NextGen Gallery plugin integration;
+* Fix for notififcations showing up when they're not supposed to show up;
+* Fix for multiple notifications when backup files are not found. These are now merged together;
+* Fix for notifications that were crashing outside ShortPixel screens;
+* Fix for the report that was wrongly showing 40 days, when actually it was only for 30 days;
+* Fix for the exclude regex section that was returning true even if no matches were found;
+* Language – 15 new strings added, 0 updated, 0 fuzzied, and 8 obsoleted.
 
 = 4.16.4 =
 
