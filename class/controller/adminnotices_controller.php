@@ -85,6 +85,7 @@ class adminNoticesController extends ShortPixelController
        $this->doUnlistedNotices();
        $this->doQuotaNotices();
 
+
        $this->doIntegrationNotices();
     }
 
