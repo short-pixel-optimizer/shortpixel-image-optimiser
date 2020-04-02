@@ -129,7 +129,7 @@ class ShortPixelCustomMetaDao {
         $this->addIfMissing("FOREIGN KEY", $this->db->getPrefix()."shortpixel_meta", "fk_shortpixel_meta_folder", "folder_id",
                                            $this->db->getPrefix()."shortpixel_folders", "id");
 
-        
+
     }
 
     public function getFolders() {
@@ -532,7 +532,6 @@ class ShortPixelCustomMetaDao {
         $result = false;
         $folder_id = -1;
 
-        Log::addTemp('Save Directory', $fields);
         if (isset($fields['id']))
         {
           $folder_id = $fields['id'];
