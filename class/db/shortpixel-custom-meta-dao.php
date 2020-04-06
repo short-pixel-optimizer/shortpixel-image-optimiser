@@ -122,10 +122,10 @@ class ShortPixelCustomMetaDao {
             ));
         // Set up indexes, not handled well by WP DBDelta
         $this->addIfMissing("UNIQUE INDEX", $this->db->getPrefix()."shortpixel_folders", "spf_path_md5", "path_md5");
-        $this->addIfMissing("UNIQUE INDEX", $this->db->getPrefix()."shortpixel_folders", "spf_path", "path");
+//        $this->addIfMissing("UNIQUE INDEX", $this->db->getPrefix()."shortpixel_folders", "spf_path", "path");
 
         $this->addIfMissing("UNIQUE INDEX", $this->db->getPrefix()."shortpixel_meta", "sp_path_md5", "path_md5");
-        $this->addIfMissing("UNIQUE INDEX", $this->db->getPrefix()."shortpixel_meta", "sp_path", "path");
+//        $this->addIfMissing("UNIQUE INDEX", $this->db->getPrefix()."shortpixel_meta", "sp_path", "path");
         $this->addIfMissing("FOREIGN KEY", $this->db->getPrefix()."shortpixel_meta", "fk_shortpixel_meta_folder", "folder_id",
                                            $this->db->getPrefix()."shortpixel_folders", "id");
 
