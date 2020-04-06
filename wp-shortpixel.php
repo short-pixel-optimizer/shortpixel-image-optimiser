@@ -58,6 +58,7 @@ elseif($max_exec < 0) // some hosts like to set negative figures on this. Ignore
 define('SHORTPIXEL_MAX_EXECUTION_TIME', $max_exec);
 
 // ** @todo For what is this needed? */
+//require_once(ABSPATH . 'wp-admin/includes/file.php');
 require_once(SHORTPIXEL_PLUGIN_DIR . '/build/shortpixel/autoload.php');
 
 $sp__uploads = wp_upload_dir();
@@ -71,6 +72,13 @@ define('SHORTPIXEL_BACKUP_URL',
         ? $sp__uploads['baseurl']
         : dirname(dirname($sp__uploads['baseurl'])))
     . '/' . SHORTPIXEL_BACKUP);
+
+/*
+ if ( is_numeric(SHORTPIXEL_MAX_EXECUTION_TIME)  && SHORTPIXEL_MAX_EXECUTION_TIME > 10 )
+    define('SHORTPIXEL_MAX_EXECUTION_TIME', SHORTPIXEL_MAX_EXECUTION_TIME - 5 );   //in seconds
+else
+    define('SHORTPIXEL_MAX_EXECUTION_TIME', 25 );
+*/
 
 define('SHORTPIXEL_MAX_EXECUTION_TIME2', 2 );
 define("SHORTPIXEL_MAX_RESULTS_QUERY", 30);
@@ -89,6 +97,7 @@ if (! function_exists("wpSPIO"))	{
      return \ShortPixel\ShortPixelPlugin::getInstance();
   }
 }
+
 // [BS] Start runtime here
 require_once(SHORTPIXEL_PLUGIN_DIR . '/wp-shortpixel-req.php'); // @todo should be incorporated here.
 require_once(SHORTPIXEL_PLUGIN_DIR . '/class/controller/controller.php');
@@ -109,7 +118,6 @@ if (\ShortPixel\ShortPixelLogger\ShortPixelLogger::debugIsActive())
 // Should not be required here. wpspio initruntime loads externals
 
 wpSPIO(); // let's go!
-
 
 register_activation_hook( __FILE__, array('\ShortPixel\ShortPixelPlugin','activatePlugin') );
 register_deactivation_hook( __FILE__,  array('\ShortPixel\ShortPixelPlugin','deactivatePlugin') );

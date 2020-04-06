@@ -122,14 +122,12 @@ class ShortPixelCustomMetaDao {
             ));
         // Set up indexes, not handled well by WP DBDelta
         $this->addIfMissing("UNIQUE INDEX", $this->db->getPrefix()."shortpixel_folders", "spf_path_md5", "path_md5");
-        $this->addIfMissing("UNIQUE INDEX", $this->db->getPrefix()."shortpixel_folders", "spf_path", "path");
+//        $this->addIfMissing("UNIQUE INDEX", $this->db->getPrefix()."shortpixel_folders", "spf_path", "path");
 
         $this->addIfMissing("UNIQUE INDEX", $this->db->getPrefix()."shortpixel_meta", "sp_path_md5", "path_md5");
-        $this->addIfMissing("UNIQUE INDEX", $this->db->getPrefix()."shortpixel_meta", "sp_path", "path");
+//        $this->addIfMissing("UNIQUE INDEX", $this->db->getPrefix()."shortpixel_meta", "sp_path", "path");
         $this->addIfMissing("FOREIGN KEY", $this->db->getPrefix()."shortpixel_meta", "fk_shortpixel_meta_folder", "folder_id",
                                            $this->db->getPrefix()."shortpixel_folders", "id");
-
-
     }
 
     public function getFolders() {
@@ -183,6 +181,7 @@ class ShortPixelCustomMetaDao {
         $path = $folder->getPath();
         $tsUpdated = date("Y-m-d H:i:s", $folder->getTsUpdated());
 
+
         return $this->db->insert($this->db->getPrefix().'shortpixel_folders',
                                  array("path" => $path, "path_md5" => md5($path), "file_count" => $fileCount, "ts_updated" => $tsUpdated, "ts_created" => date("Y-m-d H:i:s")),
                                  array("path" => "%s", "path_md5" => "%s", "file_count" => "%d", "ts_updated" => "%s"));
@@ -227,16 +226,7 @@ class ShortPixelCustomMetaDao {
         //$this->db->restoreErrors();
     }
 
-
-
-    /* Check files and add what's needed
-    * Moved for directory Other Media Model
-    public function refreshFolder(ShortPixel\DirectoryModel $folder)
-    {
-
-
-    }
-    */
+    
 
     /**
      *
