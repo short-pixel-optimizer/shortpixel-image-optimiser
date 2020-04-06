@@ -30,7 +30,11 @@ class adminNoticesController extends ShortPixelController
 
     public function __construct()
     {
-        add_action('admin_notices', array($this, 'check_admin_notices'), 5); // run before the plugin admin notices
+      // no notifications with this flag set.
+      if (defined('SHORTPIXEL_SILENT_MODE') && SHORTPIXEL_SILENT_MODE === true)
+        return;
+
+      add_action('admin_notices', array($this, 'check_admin_notices'), 5); // run before the plugin admin notices
     }
 
     public static function getInstance()
@@ -84,7 +88,6 @@ class adminNoticesController extends ShortPixelController
        $this->doCompatNotices();
        $this->doUnlistedNotices();
        $this->doQuotaNotices();
-
 
        $this->doIntegrationNotices();
     }
@@ -276,6 +279,7 @@ class adminNoticesController extends ShortPixelController
          $quotaData = $stats;
 
          $message = $this->getQuotaExceededMessage($quotaData);
+         Log::addtemp('Quota Exceeded message',  $message);
          $notice = Notices::addError($message);
          Notices::makePersistent($notice, self::MSG_QUOTA_REACHED, WEEK_IN_SECONDS);
 
