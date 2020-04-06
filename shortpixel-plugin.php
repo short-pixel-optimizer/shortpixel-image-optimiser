@@ -46,6 +46,14 @@ class ShortPixelPlugin
           $this->is_noheaders = true;
       }
 
+      /* Filter to prevent SPIO from starting. This can be used by third-parties to prevent init when needed for a particular situation.
+      * Hook into plugins_loaded with priority lower than 5 */
+      $init = apply_filters('shortpixel/plugin/init', true);
+
+      if (! $init)
+        return;
+
+
       // @todo Transitionary init for the time being, since plugin init functionality is still split between.
       global $shortPixelPluginInstance;
       $shortPixelPluginInstance = new \wpShortPixel();

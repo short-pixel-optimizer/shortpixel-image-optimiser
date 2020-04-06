@@ -45,7 +45,6 @@ elseif($max_exec < 0) // some hosts like to set negative figures on this. Ignore
 define('SHORTPIXEL_MAX_EXECUTION_TIME', $max_exec);
 
 // ** @todo For what is this needed? */
-//require_once(ABSPATH . 'wp-admin/includes/file.php');
 require_once(SHORTPIXEL_PLUGIN_DIR . '/build/shortpixel/autoload.php');
 
 $sp__uploads = wp_upload_dir();
@@ -60,17 +59,11 @@ define('SHORTPIXEL_BACKUP_URL',
         : dirname(dirname($sp__uploads['baseurl'])))
     . '/' . SHORTPIXEL_BACKUP);
 
-/*
- if ( is_numeric(SHORTPIXEL_MAX_EXECUTION_TIME)  && SHORTPIXEL_MAX_EXECUTION_TIME > 10 )
-    define('SHORTPIXEL_MAX_EXECUTION_TIME', SHORTPIXEL_MAX_EXECUTION_TIME - 5 );   //in seconds
-else
-    define('SHORTPIXEL_MAX_EXECUTION_TIME', 25 );
-*/
-
 define('SHORTPIXEL_MAX_EXECUTION_TIME2', 2 );
 define("SHORTPIXEL_MAX_RESULTS_QUERY", 30);
 //define("SHORTPIXEL_NOFLOCK", true); // don't use flock queue, can cause instability.
 //define("SHORTPIXEL_EXPERIMENTAL_SECURICACHE", true);  // tries to add timestamps to URLS, to prevent hitting the cache.
+//define('SHORTPIXEL_SILENT_MODE', true); // no global notifications. Can lead to data damage.
 
 /* Function to reach core function of ShortPixel
 * Use to get plugin url, plugin path, or certain core controllers
@@ -102,6 +95,7 @@ if (\ShortPixel\ShortPixelLogger\ShortPixelLogger::debugIsActive())
 // Should not be required here. wpspio initruntime loads externals
 
   wpSPIO(); // let's go!
+
 
 
 
