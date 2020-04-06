@@ -55,9 +55,7 @@ class WPShortPixel {
         // only load backed, or when frontend processing is enabled.
         if (is_admin() || $this->_settings->frontBootstrap )
         {
-          $keyControl = new \ShortPixel\apiKeyController();
-          $keyControl->setShortPixel($this);
-          $keyControl->load();
+          $keyControl = \ShortPixel\ApiKeyController::getInstance();
         }
 
     }
@@ -329,6 +327,8 @@ class WPShortPixel {
 
         wp_register_script('shortpixel', plugins_url('/res/js/shortpixel' . $this->jsSuffix,SHORTPIXEL_PLUGIN_FILE), array('jquery', 'jquery.knob.min.js'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
+        $keyControl = \ShortPixel\ApiKeyController::getInstance();
+        $apikey = $keyControl->getKeyForDisplay();
 
         // Using an Array within another Array to protect the primitive values from being cast to strings
         $ShortPixelConstants = array(array(
@@ -345,7 +345,7 @@ class WPShortPixel {
             'STATUS_SEARCHING' => ShortPixelAPI::STATUS_SEARCHING,
             'WP_PLUGIN_URL'=>plugins_url( '', SHORTPIXEL_PLUGIN_FILE ),
             'WP_ADMIN_URL'=>admin_url(),
-            'API_KEY'=> (defined("SHORTPIXEL_HIDE_API_KEY" )  || !is_admin() ) ? '' : $this->_settings->apiKey,
+            'API_KEY'=> $apikey,
             'DEFAULT_COMPRESSION'=>0 + intval($this->_settings->compressionType), // no int can happen when settings are empty still
             'MEDIA_ALERT'=>$this->_settings->mediaAlert ? "done" : "todo",
             'FRONT_BOOTSTRAP'=>$this->_settings->frontBootstrap && (!isset($this->_settings->lastBackAction) || (time() - $this->_settings->lastBackAction > 600)) ? 1 : 0,
@@ -2702,8 +2702,7 @@ class WPShortPixel {
         if ( isset($_GET['noheader']) ) {
             require_once(ABSPATH . 'wp-admin/admin-header.php');
         }
-        //$this->outputHSBeacon();
-        \ShortPixel\HelpScout::outputBeacon($this->getApiKey());
+
         ?>
 	    <div class="wrap shortpixel-other-media">
             <h2>
