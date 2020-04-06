@@ -9,6 +9,19 @@
  * Text Domain: shortpixel-image-optimiser
  * Domain Path: /lang
  */
+
+
+// Preventing double load crash.
+if (function_exists('wpSPIO'))
+{
+    add_action('admin_notices', function () {
+      echo '<div class="error"><h4>';
+      printf(__('Shortpixel plugin already loaded. You might have two versions active. Not loaded: %s', 'shortpixel-image-optimiser'), __FILE__);
+      echo '</h4></div>';
+    });
+    return;
+}
+
 if (! defined('SHORTPIXEL_RESET_ON_ACTIVATE'))
   define('SHORTPIXEL_RESET_ON_ACTIVATE', false); //if true TODO set false
 //define('SHORTPIXEL_DEBUG', true);
@@ -45,7 +58,6 @@ elseif($max_exec < 0) // some hosts like to set negative figures on this. Ignore
 define('SHORTPIXEL_MAX_EXECUTION_TIME', $max_exec);
 
 // ** @todo For what is this needed? */
-//require_once(ABSPATH . 'wp-admin/includes/file.php');
 require_once(SHORTPIXEL_PLUGIN_DIR . '/build/shortpixel/autoload.php');
 
 $sp__uploads = wp_upload_dir();
@@ -60,23 +72,18 @@ define('SHORTPIXEL_BACKUP_URL',
         : dirname(dirname($sp__uploads['baseurl'])))
     . '/' . SHORTPIXEL_BACKUP);
 
-/*
- if ( is_numeric(SHORTPIXEL_MAX_EXECUTION_TIME)  && SHORTPIXEL_MAX_EXECUTION_TIME > 10 )
-    define('SHORTPIXEL_MAX_EXECUTION_TIME', SHORTPIXEL_MAX_EXECUTION_TIME - 5 );   //in seconds
-else
-    define('SHORTPIXEL_MAX_EXECUTION_TIME', 25 );
-*/
-
 define('SHORTPIXEL_MAX_EXECUTION_TIME2', 2 );
 define("SHORTPIXEL_MAX_RESULTS_QUERY", 30);
+
 //define("SHORTPIXEL_NOFLOCK", true); // don't use flock queue, can cause instability.
 //define("SHORTPIXEL_EXPERIMENTAL_SECURICACHE", true);  // tries to add timestamps to URLS, to prevent hitting the cache.
+//define('SHORTPIXEL_NO_STICKYWARNING', true);
 
 /* Function to reach core function of ShortPixel
 * Use to get plugin url, plugin path, or certain core controllers
 */
-if (! function_exists('wpSPIO'))
-{
+
+if (! function_exists("wpSPIO"))	{
   function wpSPIO()
   {
      return \ShortPixel\ShortPixelPlugin::getInstance();
@@ -101,8 +108,7 @@ if (\ShortPixel\ShortPixelLogger\ShortPixelLogger::debugIsActive())
 // @todo Better solution for pre-runtime inclusions of externals.
 // Should not be required here. wpspio initruntime loads externals
 
-  wpSPIO(); // let's go!
-
+wpSPIO(); // let's go!
 
 
 register_activation_hook( __FILE__, array('\ShortPixel\ShortPixelPlugin','activatePlugin') );
