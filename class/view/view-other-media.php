@@ -13,6 +13,7 @@ if ( isset($_GET['noheader']) ) {
 
 echo $this->view->rewriteHREF;
 
+
 ?>
 <div class="wrap shortpixel-other-media">
     <h2>

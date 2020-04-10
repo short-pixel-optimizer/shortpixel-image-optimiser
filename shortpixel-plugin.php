@@ -46,6 +46,14 @@ class ShortPixelPlugin
           $this->is_noheaders = true;
       }
 
+      /* Filter to prevent SPIO from starting. This can be used by third-parties to prevent init when needed for a particular situation.
+      * Hook into plugins_loaded with priority lower than 5 */
+      $init = apply_filters('shortpixel/plugin/init', true);
+
+      if (! $init)
+        return;
+
+
       // @todo Transitionary init for the time being, since plugin init functionality is still split between.
       global $shortPixelPluginInstance;
       $shortPixelPluginInstance = new \wpShortPixel();
@@ -161,9 +169,6 @@ class ShortPixelPlugin
       add_action('admin_enqueue_scripts', array($this, 'admin_scripts')); // admin scripts
       add_action('admin_enqueue_scripts', array($this, 'load_admin_scripts'), 90); // loader via route.
       // defer notices a little to allow other hooks ( notable adminnotices )
-      add_action('admin_notices', array($this, 'admin_notices'), 50); // notices occured before page load
-      add_action('admin_footer', array($this, 'admin_notices'));  // called in views.
-
   }
 
   /** Hook in our admin pages */
@@ -217,41 +222,6 @@ class ShortPixelPlugin
 
   }
 
-  public function admin_notices()
-  {
-      $noticeControl = Notices::getInstance();
-      $noticeControl->loadIcons(array(
-          'normal' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/slider.png', SHORTPIXEL_PLUGIN_FILE) . '">',
-          'success' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/robo-cool.png', SHORTPIXEL_PLUGIN_FILE) . '">',
-          'warning' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/robo-scared.png', SHORTPIXEL_PLUGIN_FILE) . '">',
-          'error' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/robo-scared.png', SHORTPIXEL_PLUGIN_FILE) . '">',
-      ));
-
-      if ($noticeControl->countNotices() > 0)
-      {
-        $notices = $noticeControl->getNoticesForDisplay();
-
-        if (count($notices) > 0)
-        {
-          wp_enqueue_style('shortpixel-notices');
-
-          foreach($notices as $notice)
-          {
-            echo $notice->getForDisplay();
-
-            if ($notice->getID() == adminNoticesController::MSG_QUOTA_REACHED || $notice->getID() == adminNoticesController::MSG_UPGRADE_MONTH
-            || $notice->getID() == adminNoticesController::MSG_UPGRADE_BULK)
-            {
-              wp_enqueue_script('jquery.knob.min.js');
-              wp_enqueue_script('jquery.tooltip.min.js');
-              wp_enqueue_script('shortpixel');
-              $this->load_style('shortpixel-modal');
-            }
-          }
-        }
-      }
-      $noticeControl->update(); // puts views, and updates
-  }
 
   /** Load Style via Route, on demand */
   public function load_style($name)

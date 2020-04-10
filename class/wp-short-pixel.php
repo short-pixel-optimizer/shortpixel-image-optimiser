@@ -178,65 +178,6 @@ class WPShortPixel {
 
 
 
-    // @hook admin menu
-    // @todo move to plugin class
-    /*  Gone. Both pages moved elsewhere ( plugin class )
-    function registerAdminPage( ) {
-      return;
-        if($this->spMetaDao->hasFoldersTable() && count($this->spMetaDao->getFolders())) {
-
-            add_media_page( __('Other Media Optimized by ShortPixel','shortpixel-image-optimiser'), __('Other Media','shortpixel-image-optimiser'), 'edit_others_posts', 'wp-short-pixel-custom', array( &$this, 'listCustomMedia' ) );
-        }
-
-        add_media_page( __('ShortPixel Bulk Process','shortpixel-image-optimiser'), __('Bulk ShortPixel','shortpixel-image-optimiser'), 'edit_others_posts', 'wp-short-pixel-bulk', array( &$this, 'bulkProcess' ) );
-    } */
-
-    /*public static function shortPixelActivatePlugin()//reset some params to avoid trouble for plugins that were activated/deactivated/activated
-    {
-        self::shortPixelDeactivatePlugin();
-        if(SHORTPIXEL_RESET_ON_ACTIVATE === true && WP_DEBUG === true) { //force reset plugin counters, only on specific occasions and on test environments
-            WPShortPixelSettings::debugResetOptions();
-
-            $settings = new WPShortPixelSettings();
-            $spMetaDao = new ShortPixelCustomMetaDao(new WpShortPixelDb(), $settings->excludePatterns);
-            $spMetaDao->dropTables();
-        }
-
-        $settingsControl = new \ShortPixel\SettingsController();
-        $env = $settingsControl->getEnv();
-
-
-        if(WPShortPixelSettings::getOpt('deliverWebp') == 3 && ! $env->is_nginx) {
-            self::alterHtaccess(); //add the htaccess lines
-        }
-        WPShortPixelSettings::onActivate();
-    } */
-
-/*    public static function shortPixelDeactivatePlugin()//reset some params to avoid trouble for plugins that were activated/deactivated/activated
-    {
-        ShortPixelQueue::resetBulk();
-        (! defined('SHORTPIXEL_NOFLOCK')) ? ShortPixelQueue::resetPrio() : ShortPixelQueueDB::resetPrio();
-        WPShortPixelSettings::onDeactivate();
-
-        $settingsControl = new \ShortPixel\SettingsController();
-        $env = $settingsControl->getEnv();
-
-        if (! $env->is_nginx)
-          self::alterHtaccess(true);
-
-        @unlink(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
-    } */
-
-    /* public static function shortPixelUninstallPlugin()//reset some params to avoid trouble for plugins that were activated/deactivated/activated
-    {
-        $settings = new WPShortPixelSettings();
-        if($settings->removeSettingsOnDeletePlugin == 1) {
-            WPShortPixelSettings::debugResetOptions();
-            insert_with_markers( get_home_path() . '.htaccess', 'ShortPixelWebp', '');
-        }
-    } */
-
-
     /** Displays notices to admin, if there are any
     * TODO - Probably should be a controller
     */
