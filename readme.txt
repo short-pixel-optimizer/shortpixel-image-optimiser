@@ -4,7 +4,7 @@ Tags: compressor, image, compression, optimize, image optimizer, image optimiser
 Requires at least: 3.2.0
 Tested up to: 5.4
 Requires PHP: 5.3
-Stable tag: 4.17.1
+Stable tag: 4.17.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -281,12 +281,19 @@ Hide the Cloudflare settings by defining these constants in wp-config.php:
 
 == Changelog ==
 
+= 4.17.2 =
+
+Release date: 10th April 2020
+* Fix for Over Quota notification that didn't go away even if there were enough credits;
+* From now on other ShortPixel notifications will only show up on ShortPixel related pages (Media Library, ShortPixel settings, Other Media page, Bulk Optimize page);
+* Added a constant which can be used to completely disable all ShortPixel notifications. To be used with care as in certain cases it can hide important notifications;
+* Language – 0 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted.
+
 = 4.17.1 =
 
 Release date: 6th April 2020
 * Fix for MySQL index errors for MySQL 5.6;
 * Language – 0 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted.
-
 
 = 4.17.0 =
 
