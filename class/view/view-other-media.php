@@ -9,7 +9,7 @@ if ( isset($_GET['noheader']) ) {
     require_once(ABSPATH . 'wp-admin/admin-header.php');
 }
 //$this->outputHSBeacon();
-\ShortPixel\HelpScout::outputBeacon(\wpSPIO()->getShortPixel()->getApiKey());
+\ShortPixel\HelpScout::outputBeacon();
 
 echo $this->view->rewriteHREF;
 

@@ -3,12 +3,25 @@
  * Plugin Name: ShortPixel Image Optimizer
  * Plugin URI: https://shortpixel.com/
  * Description: ShortPixel optimizes images automatically, while guarding the quality of your images. Check your <a href="options-general.php?page=wp-shortpixel-settings" target="_blank">Settings &gt; ShortPixel</a> page on how to start optimizing your image library and make your website load faster.
- * Version: 4.17.2
+ * Version: 4.17.3-DEV01
  * Author: ShortPixel
  * Author URI: https://shortpixel.com
  * Text Domain: shortpixel-image-optimiser
  * Domain Path: /lang
  */
+
+
+// Preventing double load crash.
+if (function_exists('wpSPIO'))
+{
+    add_action('admin_notices', function () {
+      echo '<div class="error"><h4>';
+      printf(__('Shortpixel plugin already loaded. You might have two versions active. Not loaded: %s', 'shortpixel-image-optimiser'), __FILE__);
+      echo '</h4></div>';
+    });
+    return;
+}
+
 if (! defined('SHORTPIXEL_RESET_ON_ACTIVATE'))
   define('SHORTPIXEL_RESET_ON_ACTIVATE', false); //if true TODO set false
 //define('SHORTPIXEL_DEBUG', true);
@@ -19,7 +32,7 @@ define('SHORTPIXEL_PLUGIN_DIR', __DIR__);
 
 //define('SHORTPIXEL_AFFILIATE_CODE', '');
 
-define('SHORTPIXEL_IMAGE_OPTIMISER_VERSION', "4.17.2");
+define('SHORTPIXEL_IMAGE_OPTIMISER_VERSION', "4.17.3-DEV01");
 define('SHORTPIXEL_MAX_TIMEOUT', 10);
 define('SHORTPIXEL_VALIDATE_MAX_TIMEOUT', 15);
 define('SHORTPIXEL_BACKUP', 'ShortpixelBackups');
@@ -68,8 +81,8 @@ define("SHORTPIXEL_MAX_RESULTS_QUERY", 30);
 /* Function to reach core function of ShortPixel
 * Use to get plugin url, plugin path, or certain core controllers
 */
-if (! function_exists('wpSPIO'))
-{
+
+if (! function_exists("wpSPIO"))	{
   function wpSPIO()
   {
      return \ShortPixel\ShortPixelPlugin::getInstance();
@@ -94,8 +107,7 @@ if (\ShortPixel\ShortPixelLogger\ShortPixelLogger::debugIsActive())
 // @todo Better solution for pre-runtime inclusions of externals.
 // Should not be required here. wpspio initruntime loads externals
 
-  wpSPIO(); // let's go!
-
+wpSPIO(); // let's go!
 
 
 
