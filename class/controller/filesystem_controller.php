@@ -162,11 +162,16 @@ Class FileSystemController extends ShortPixelController
           $url = str_replace($wp_home_path, $home_url, $filepath);
         }
 
-        if (parse_url($url) !== false)
-          return $url;
-        else {
+        // can happen if there are WP path errors.
+        if (is_null($url))
           return false;
-        }
+
+        $parsed = parse_url($url); // returns array, null, or false. 
+
+        if (! is_null($parsed) && $parsed !== false)
+          return $url;
+
+        return false;
     }
 
     /** Sort files / directories in a certain way.

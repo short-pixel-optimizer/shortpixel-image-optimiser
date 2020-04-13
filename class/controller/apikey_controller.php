@@ -46,4 +46,9 @@ class ApiKeyController extends shortPixelController
          return false;
     }
 
+    public function keyIsVerified()
+    {
+       return $this->model->is_verified();
+    }
+
 }

@@ -53,7 +53,6 @@ class ShortPixelPlugin
       if (! $init)
         return;
 
-
       // @todo Transitionary init for the time being, since plugin init functionality is still split between.
       global $shortPixelPluginInstance;
       $shortPixelPluginInstance = new \wpShortPixel();

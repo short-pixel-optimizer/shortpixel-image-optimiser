@@ -816,6 +816,8 @@ class ShortPixelMetaFacade {
         }
         else { // success
             $pathFile = $fs->getFile($response['filename']);
+            if ($pathFile->exists())
+                $path = $pathFile->getFullPath();
         }
 
         $fsUrl = $fs->pathToUrl($pathFile);

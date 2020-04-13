@@ -189,7 +189,7 @@ class ApiKeyModel extends ShortPixelModel
     adminNoticesController::resetAPINotices();
     adminNoticesController::resetQuotaNotices();
     adminNoticesController::resetIntegrationNotices();
-    
+
     $this->update();
 
   }
@@ -223,7 +223,7 @@ class ApiKeyModel extends ShortPixelModel
   /** Process some things when key has been added. This is from original wp-short-pixel.php */
   protected function processNewKey($quotaData)
   {
-    $settingsObj = $this->shortPixel->getSettings();
+    $settingsObj = \wpSPIO()->settings();
     $lastStatus = $settingsObj->bulkLastStatus;
 
     if(isset($lastStatus['Status']) && $lastStatus['Status'] == \ShortPixelAPI::STATUS_NO_KEY) {
@@ -278,8 +278,7 @@ class ApiKeyModel extends ShortPixelModel
   // Does remote Validation of key. In due time should be replaced with something more lean.
   private function remoteValidate($key)
   {
-
-    return $this->shortPixel->getQuotaInformation($key, true, true);
+    return \wpSPIO()->getShortPixel()->getQuotaInformation($key, true, true);
   }
 
   protected function checkRedirect()

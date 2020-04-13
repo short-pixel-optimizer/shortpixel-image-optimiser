@@ -30,7 +30,6 @@ class WPShortPixel {
     public function __construct() {
         $this->timer = time();
 
-
         if (Log::debugIsActive()) {
             $this->jsSuffix = '.js'; //use unminified versions for easier debugging
         }
@@ -53,10 +52,10 @@ class WPShortPixel {
         }
 
         // only load backed, or when frontend processing is enabled.
-        if (is_admin() || $this->_settings->frontBootstrap )
+        /*if (is_admin() || $this->_settings->frontBootstrap )
         {
           $keyControl = \ShortPixel\ApiKeyController::getInstance();
-        }
+        } */
 
     }
 
@@ -297,8 +296,6 @@ class WPShortPixel {
     /** @todo Plugin init class. Try to get rid of inline JS. Also still loads on all WP pages, prevent that. */
     function shortPixelJS() {
 
-
-
         $is_front = (wpSPIO()->env()->is_front) ? true : false;
 
         // load everywhere, because we are inconsistent.
@@ -345,7 +342,8 @@ class WPShortPixel {
             'STATUS_SEARCHING' => ShortPixelAPI::STATUS_SEARCHING,
             'WP_PLUGIN_URL'=>plugins_url( '', SHORTPIXEL_PLUGIN_FILE ),
             'WP_ADMIN_URL'=>admin_url(),
-            'API_KEY'=> $apikey,
+        //    'API_KEY'=> $apikey,
+            'API_IS_ACTIVE' => $keyControl->keyIsVerified(),
             'DEFAULT_COMPRESSION'=>0 + intval($this->_settings->compressionType), // no int can happen when settings are empty still
             'MEDIA_ALERT'=>$this->_settings->mediaAlert ? "done" : "todo",
             'FRONT_BOOTSTRAP'=>$this->_settings->frontBootstrap && (!isset($this->_settings->lastBackAction) || (time() - $this->_settings->lastBackAction > 600)) ? 1 : 0,
@@ -483,7 +481,17 @@ class WPShortPixel {
         if($lastStatus && $lastStatus['Status'] !== ShortPixelAPI::STATUS_SUCCESS) {
             $extraClasses = " shortpixel-alert shortpixel-processing";
             $tooltip = '';
-            $successLink = $link = admin_url(current_user_can( 'edit_others_posts')? 'post.php?post=' . $lastStatus['ImageID'] . '&action=edit' : 'upload.php');
+
+            $link = '';
+            if (admin_url(current_user_can( 'edit_others_posts')))
+            {
+              $link = 'post.php?post=' . $lastStatus['ImageID'] . '&action=edit';
+            }
+            else
+            {
+              $link = 'upload.php';
+            }
+            $successLink = $link;
 
             $wp_admin_bar->add_node( array(
                 'id'    => 'shortpixel_processing-title',
@@ -1067,7 +1075,9 @@ class WPShortPixel {
         return $items;
     }
 
-    /** Checks the API key **/
+    /** Checks the API key
+    * @todo This function should be moved to Apikey Controller.
+    **/
     private function checkKey($ID) {
       if( $this->_settings->verifiedKey == false) {
             if($ID == null){
