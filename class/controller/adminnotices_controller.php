@@ -128,7 +128,7 @@ class adminNoticesController extends ShortPixelController
     {
       if (! \wpSPIO()->env()->is_screen_to_use)
         return; // suppress all when not our screen.
-        
+
        $this->doFilePermNotice();
        $this->doAPINotices();
        $this->doCompatNotices();
@@ -307,7 +307,7 @@ class adminNoticesController extends ShortPixelController
               $message = $this->getBulkUpgradeMessage(array('filesTodo' => $stats['totalFiles'] - $stats['totalProcessedFiles'],
                                                       'quotaAvailable' => max(0, $quotaData['APICallsQuotaNumeric'] + $quotaData['APICallsQuotaOneTimeNumeric'] - $quotaData['APICallsMadeNumeric'] - $quotaData['APICallsMadeOneTimeNumeric'])));
               $notice = Notices::addNormal($message);
-              Notices::makePersistent($notice, self::MSG_UPGRADE_BULK, YEAR_IN_SECONDS);
+              Notices::makePersistent($notice, self::MSG_UPGRADE_BULK, YEAR_IN_SECONDS, array($this, 'upgradeBulkCallback'));
               //ShortPixelView::displayActivationNotice('upgbulk', );
           }
           //consider the monthly plus 1/6 of the available one-time credits.
@@ -333,6 +333,13 @@ class adminNoticesController extends ShortPixelController
          Notices::removeNoticeByID(self::MSG_UPGRADE_BULK);
       }
 
+    }
+
+    // Callback to check if we are on the correct page.
+    public function upgradeBulkCallback($notice)
+    {
+      if (! \wpSPIO()->env()->is_bulk_page)
+        return false;
     }
 
     protected function getActivationNotice()

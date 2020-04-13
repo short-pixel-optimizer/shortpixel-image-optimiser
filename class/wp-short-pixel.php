@@ -2336,9 +2336,8 @@ class WPShortPixel {
         if($backupFile === false)
         {
           Log::addWarn("Custom File $ID - $file does not have a backup");
-          $notice = Notices::addWarning(__('Not able to restore file. Could not find backup', 'shortpixel-image-optimiser'), true);
+          $notice = Notices::addWarning(__('Not able to restore file(s). Could not find backup', 'shortpixel-image-optimiser'), true);
           Notices::addDetail($notice, (string) $file);
-
           return false;
         }
         elseif ($backupFile->copy($fileObj))
@@ -2347,7 +2346,8 @@ class WPShortPixel {
         }
         else {
           Log::addError('Could not restore back to source' .  $backupFile->getFullPath() );
-          Notices::addError('The file could not be restored from backup. Plugin could not copy backup back to original location. Check file permissions. ', 'shortpixel-image-optimiser');
+          $notice = Notices::addError('These file(s) could not be restored from backup. Plugin could not copy backup back to original location. Check file permissions. ', 'shortpixel-image-optimiser');
+          Notices::addDetail($notice, (string) $backupFile);
           return false;
         }
 
