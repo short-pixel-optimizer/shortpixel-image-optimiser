@@ -482,7 +482,7 @@ class ShortPixelPng2Jpg {
                     $timeElapsed = microtime(true) - $startTime;
                     if($timeElapsed > SHORTPIXEL_MAX_EXECUTION_TIME / 2) {
                         //try to add some time or get out if not
-                        if(set_time_limit(SHORTPIXEL_MAX_EXECUTION_TIME)) {
+                        if(\wpSPIO()->env()->is_function_usable('set_time_limit') && set_time_limit(SHORTPIXEL_MAX_EXECUTION_TIME)) {
                             $startTime += SHORTPIXEL_MAX_EXECUTION_TIME / 2;
                         } else {
                             break;

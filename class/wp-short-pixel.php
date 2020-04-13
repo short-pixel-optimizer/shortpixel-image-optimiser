@@ -974,7 +974,7 @@ class WPShortPixel {
                 $crtStartQueryID = $post_id; // $itemMetaData->post_id;
                 if(time() - $this->timer >= 60) Log::addInfo("GETDB is SO SLOW. Check processable for $crtStartQueryID.");
                 if(time() - $this->timer >= $maxTime - $timeoutThreshold){
-                    if($counter == 0 && set_time_limit(30)) {
+                    if($counter == 0 && \wpSPIO()->env()->is_function_usable('set_time_limit') && set_time_limit(30)) {
                         self::log("GETDB is SO SLOW. Increasing time limit by 30 sec succeeded.");
                         $maxTime += 30 - $timeoutThreshold;
                     } else {
