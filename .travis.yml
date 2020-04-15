@@ -3,5 +3,5 @@ language: php
 php:
   - 7.3
 
-script: test.sh
+script: bash test.sh
     
