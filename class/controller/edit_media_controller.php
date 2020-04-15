@@ -5,21 +5,16 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 // Future contoller for the edit media metabox view.
 class editMediaController extends ShortPixelController
 {
-      //$this->model = new
       protected $template = 'view-edit-media';
       protected $model = 'image';
 
-      private $post_id;
-  //    private $actions_allowed;
-
-      private $legacyViewObj;
+      protected $post_id;
+      protected $legacyViewObj;
 
       public function __construct()
       {
-
-        $this->loadModel($this->model);
-      //  $this->loadModel('image');
         parent::__construct();
+        $this->loadModel($this->model);
       }
 
       // This data should be rendered by Image Model in the future.

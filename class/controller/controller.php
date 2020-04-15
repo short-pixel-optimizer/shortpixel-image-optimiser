@@ -56,7 +56,7 @@ class ShortPixelController
     $this->view->notices =  null; // Notices of class notice, for everything noticable
     $this->view->data = null;  // Data(base), to separate from regular view data
 
-    $this->userisAllowed = $this->checkUserPrivileges();
+    $this->userIsAllowed = $this->checkUserPrivileges();
 
   }
 
