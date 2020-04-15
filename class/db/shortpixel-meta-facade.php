@@ -639,8 +639,7 @@ class ShortPixelMetaFacade {
             $sizes = $meta->getThumbs();
 
             //it is NOT a PDF file and thumbs are processable
-            if (  /*  strtolower(substr($path,strrpos($path, ".")+1)) != "pdf"
-                 &&*/ ($processThumbnails || $onlyThumbs)
+            if (  $mainExists &&  ($processThumbnails || $onlyThumbs)
                  && count($sizes))
             {
                 $Tmp = explode("/", SHORTPIXEL_UPLOADS_BASE);
@@ -814,10 +813,18 @@ class ShortPixelMetaFacade {
             Log::addError('Secondary download failed', array($url, $response->get_error_messages(), $response->get_error_codes() ));
           }
         }
-        else { // success
+        else { // success, at least the download.
             $pathFile = $fs->getFile($response['filename']);
+
             if ($pathFile->exists())
-                $path = $pathFile->getFullPath();
+            {
+                // It seems it can happen that remote_get returns a 0-byte response. That's not valid and should not remain on disk.
+                if ($pathFile->getFileSize() == 0)
+                  $pathFile->delete();
+                else
+                  $path = $pathFile->getFullPath();
+
+            }
         }
 
         $fsUrl = $fs->pathToUrl($pathFile);
