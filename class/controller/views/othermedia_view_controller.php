@@ -84,7 +84,7 @@ class OtherMediaViewController extends ShortPixelController
           }
       }
 
-
+      /** Sets all possible actions and it's links. Doesn't check what can be loaded per individual case. */
       protected function setActions()
       {
         $nonce = wp_create_nonce( 'sp_custom_action' );
@@ -106,6 +106,7 @@ class OtherMediaViewController extends ShortPixelController
             'compare' => array('link' => '<a href="javascript:ShortPixel.loadComparer(\'C-%%item_id%%\');">%%text%%</a>',
                       'text' => __('Compare', 'shortpixel-image-optimiser')),
             'view' => array('link' => '<a href="%%item_url%%" target="_blank">%%text%%</a>', 'text' => __('View','shortpixel-image-optimiser')),
+            'no-key' => array('link' => '<a href="options-general.php?page=wp-shortpixel-settings">%%text%%</a>', 'text' => __('Invalid API Key. Check your Settings','shortpixel-image-optimiser') ),
         );
         $this->actions = $actions;
       }
@@ -441,7 +442,10 @@ class OtherMediaViewController extends ShortPixelController
           $thisActions[] = $this->actions['view']; // always .
           $settings = \wpSPIO()->settings();
 
-          if ($settings->quotaExceeded)
+          $keyControl = ApiKeyController::getInstance();
+
+
+          if ($settings->quotaExceeded || ! $keyControl->keyIsVerified() )
           {
             return $this->renderActions($thisActions, $item, $file); // nothing more.
           }
@@ -463,8 +467,13 @@ class OtherMediaViewController extends ShortPixelController
       {
          $thisActions = array();
          $settings = \wpSPIO()->settings();
+         $keyControl = ApiKeyController::getInstance();
 
-         if ($settings->quotaExceeded)
+         if (! $keyControl->keyIsVerified())
+         {
+           $thisActions[] = $this->actions['no-key'];
+         }
+         elseif ($settings->quotaExceeded)
          {
            $thisActions[] = $this->actions['quota'];
          }
@@ -510,7 +519,7 @@ class OtherMediaViewController extends ShortPixelController
 
         foreach($actions as $index => $action)
         {
-          $text = $action['text'];
+          $text = isset($action['text']) ? $action['text'] : '';
 
           if (isset($action['link']))
           {
