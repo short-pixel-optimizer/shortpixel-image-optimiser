@@ -772,6 +772,7 @@ class WPShortPixel {
         $meta->setResize($this->_settings->resizeImages);
         $meta->setResizeWidth($this->_settings->resizeWidth);
         $meta->setResizeHeight($this->_settings->resizeHeight);
+        $meta->setTsAdded(date("Y-m-d H:i:s"));
         $ID = $this->spMetaDao->addImage($meta);
         $meta->setId($ID);
 
@@ -793,6 +794,7 @@ class WPShortPixel {
             $metaThumb->setResize($this->_settings->resizeImages);
             $metaThumb->setResizeWidth($this->_settings->resizeWidth);
             $metaThumb->setResizeHeight($this->_settings->resizeHeight);
+            $metaThumb->setTsAdded(date("Y-m-d H:i:s"));
             $ID = $this->spMetaDao->addImage($metaThumb);
             $metaThumb->setId($ID);
 

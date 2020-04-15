@@ -299,18 +299,19 @@ class ShortPixelCustomMetaDao {
         $this->db->query($sqlCleanup);
 
         $values = array();
-        $sql = "INSERT IGNORE INTO {$this->db->getPrefix()}shortpixel_meta(folder_id, path, name, path_md5, status) VALUES ";
-        $format = '(%d,%s,%s,%s,%d)';
+        $sql = "INSERT IGNORE INTO {$this->db->getPrefix()}shortpixel_meta(folder_id, path, name, path_md5, status, ts_added) VALUES ";
+        $format = '(%d,%s,%s,%s,%d,%s)';
         $i = 0;
         $count = 0;
         $placeholders = array();
         $status = (\wpSPIO()->settings()->autoMediaLibrary == 1) ? ShortPixelMeta::FILE_STATUS_PENDING : ShortPixelMeta::FILE_STATUS_UNPROCESSED;
-
+        $created = date("Y-m-d H:i:s");
+        
         foreach($files as $file) {
             $filepath = $file->getFullPath();
             $filename = $file->getFileName();
 
-            array_push($values, $folderId, $filepath, $filename, md5($filepath), $status);
+            array_push($values, $folderId, $filepath, $filename, md5($filepath), $status, $created);
             $placeholders[] = $format;
 
             if($i % 500 == 499) {
