@@ -274,7 +274,7 @@ class ShortPixelAPI {
             $firstImage = $APIresponse[0];//extract as object first image
             switch($firstImage->Status->Code)
             {
-            case self::STATUS_SUCCESS: // success
+            case 2: //self::STATUS_SUCCESS: <- @todo Success in this constant is 1 ,but appears to be 2? // success 
                 //handle image has been processed
                 if(!isset($firstImage->Status->QuotaExceeded)) {
                     $this->_settings->quotaExceeded = 0;//reset the quota exceeded flag

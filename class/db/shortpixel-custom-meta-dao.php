@@ -226,7 +226,7 @@ class ShortPixelCustomMetaDao {
         //$this->db->restoreErrors();
     }
 
-    
+
 
     /**
      *
@@ -418,7 +418,7 @@ class ShortPixelCustomMetaDao {
 
         $table = $this->db->getPrefix() . 'shortpixel_meta';
         //$sql = "UPDATE status on "; ShortPixelMeta::FILE_STATUS_TORESTORE
-        $this->db->update($table, array('status' => ShortPixelMeta::FILE_STATUS_TORESTORE), array('folder_id' => $folder_id), '%d', '%d' );
+        $this->db->update($table, array('status' => ShortPixelMeta::FILE_STATUS_TORESTORE), array('folder_id' => $folder_id, 'status' => ShortPixelMeta::FILE_STATUS_SUCCESS), '%d', '%d' );
     }
 
 
