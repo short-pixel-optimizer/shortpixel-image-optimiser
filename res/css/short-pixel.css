@@ -16,9 +16,10 @@
 
 /* Dropdown Button */
 .sp-dropbtn.button {
-    padding: 1px 24px 20px 5px;
+    box-sizing: content-box;
+    padding: 0 5px;
     font-size: 20px;
-    line-height: 28px;
+    line-height: 20px;
     /*background-color: #4CAF50;
     color: white;
     border: none;*/
