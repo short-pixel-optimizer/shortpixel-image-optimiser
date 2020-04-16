@@ -23,12 +23,52 @@
        margin: 0 25px 0 0;
       // display: inline-block;
      }
-     &.content
-     {
-    //j   display: inline-block;
-//max-width: 600px;
-     }
+   }
+   .details-wrapper // open close mechanic.
+   {
+      margin: 8px 0 4px 0;
+      .detail-content-wrapper
+      {
+        max-height: 0;
+        overflow: hidden;
 
+        .detail-content {
+          opacity: 0;
+          transition: opacity 750ms linear;
+        }
+      }
+      label
+      {
+        opacity: 100;
+        transition: opacity 250ms ease-in;
+        span
+        {
+          cursor: pointer;
+          font-size: 14px;
+          color: #0085ba;
+          font-weight: 500;
+        }
+      }
+      input[name="detailhider"] { display: none; } // hidden checkbox
+      input[name="detailhider"]:checked ~ .detail-content-wrapper
+      {
+          max-height: none;
+      }
+      input[name="detailhider"]:checked ~ .detail-content-wrapper .detail-content
+      {
+          opacity: 100;
+
+      }
+      input[name="detailhider"]:checked ~ .show-details
+      {
+         opacity: 0;
+        transition: opacity 50ms ease-out;
+      }
+      input[name='detailhider']:not(:checked) ~ .hide-details
+      {
+         opacity: 0;
+         transition: opacity 50ms ease-out;
+      }
    }
 }
 

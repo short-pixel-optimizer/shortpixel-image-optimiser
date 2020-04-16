@@ -30,7 +30,6 @@ class WPShortPixel {
     public function __construct() {
         $this->timer = time();
 
-
         if (Log::debugIsActive()) {
             $this->jsSuffix = '.js'; //use unminified versions for easier debugging
         }
@@ -53,12 +52,10 @@ class WPShortPixel {
         }
 
         // only load backed, or when frontend processing is enabled.
-        if (is_admin() || $this->_settings->frontBootstrap )
+        /*if (is_admin() || $this->_settings->frontBootstrap )
         {
-          $keyControl = new \ShortPixel\apiKeyController();
-          $keyControl->setShortPixel($this);
-          $keyControl->load();
-        }
+          $keyControl = \ShortPixel\ApiKeyController::getInstance();
+        } */
 
     }
 
@@ -299,8 +296,6 @@ class WPShortPixel {
     /** @todo Plugin init class. Try to get rid of inline JS. Also still loads on all WP pages, prevent that. */
     function shortPixelJS() {
 
-
-
         $is_front = (wpSPIO()->env()->is_front) ? true : false;
 
         // load everywhere, because we are inconsistent.
@@ -329,6 +324,8 @@ class WPShortPixel {
 
         wp_register_script('shortpixel', plugins_url('/res/js/shortpixel' . $this->jsSuffix,SHORTPIXEL_PLUGIN_FILE), array('jquery', 'jquery.knob.min.js'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
+        $keyControl = \ShortPixel\ApiKeyController::getInstance();
+        $apikey = $keyControl->getKeyForDisplay();
 
         // Using an Array within another Array to protect the primitive values from being cast to strings
         $ShortPixelConstants = array(array(
@@ -345,7 +342,8 @@ class WPShortPixel {
             'STATUS_SEARCHING' => ShortPixelAPI::STATUS_SEARCHING,
             'WP_PLUGIN_URL'=>plugins_url( '', SHORTPIXEL_PLUGIN_FILE ),
             'WP_ADMIN_URL'=>admin_url(),
-            'API_KEY'=> (defined("SHORTPIXEL_HIDE_API_KEY" )  || !is_admin() ) ? '' : $this->_settings->apiKey,
+        //    'API_KEY'=> $apikey,
+            'API_IS_ACTIVE' => $keyControl->keyIsVerified(),
             'DEFAULT_COMPRESSION'=>0 + intval($this->_settings->compressionType), // no int can happen when settings are empty still
             'MEDIA_ALERT'=>$this->_settings->mediaAlert ? "done" : "todo",
             'FRONT_BOOTSTRAP'=>$this->_settings->frontBootstrap && (!isset($this->_settings->lastBackAction) || (time() - $this->_settings->lastBackAction > 600)) ? 1 : 0,
@@ -483,7 +481,17 @@ class WPShortPixel {
         if($lastStatus && $lastStatus['Status'] !== ShortPixelAPI::STATUS_SUCCESS) {
             $extraClasses = " shortpixel-alert shortpixel-processing";
             $tooltip = '';
-            $successLink = $link = admin_url(current_user_can( 'edit_others_posts')? 'post.php?post=' . $lastStatus['ImageID'] . '&action=edit' : 'upload.php');
+
+            $link = '';
+            if (admin_url(current_user_can( 'edit_others_posts')))
+            {
+              $link = 'post.php?post=' . $lastStatus['ImageID'] . '&action=edit';
+            }
+            else
+            {
+              $link = 'upload.php';
+            }
+            $successLink = $link;
 
             $wp_admin_bar->add_node( array(
                 'id'    => 'shortpixel_processing-title',
@@ -764,6 +772,7 @@ class WPShortPixel {
         $meta->setResize($this->_settings->resizeImages);
         $meta->setResizeWidth($this->_settings->resizeWidth);
         $meta->setResizeHeight($this->_settings->resizeHeight);
+        $meta->setTsAdded(date("Y-m-d H:i:s"));
         $ID = $this->spMetaDao->addImage($meta);
         $meta->setId($ID);
 
@@ -785,6 +794,7 @@ class WPShortPixel {
             $metaThumb->setResize($this->_settings->resizeImages);
             $metaThumb->setResizeWidth($this->_settings->resizeWidth);
             $metaThumb->setResizeHeight($this->_settings->resizeHeight);
+            $metaThumb->setTsAdded(date("Y-m-d H:i:s"));
             $ID = $this->spMetaDao->addImage($metaThumb);
             $metaThumb->setId($ID);
 
@@ -966,7 +976,7 @@ class WPShortPixel {
                 $crtStartQueryID = $post_id; // $itemMetaData->post_id;
                 if(time() - $this->timer >= 60) Log::addInfo("GETDB is SO SLOW. Check processable for $crtStartQueryID.");
                 if(time() - $this->timer >= $maxTime - $timeoutThreshold){
-                    if($counter == 0 && set_time_limit(30)) {
+                    if($counter == 0 && \wpSPIO()->env()->is_function_usable('set_time_limit') && set_time_limit(30)) {
                         self::log("GETDB is SO SLOW. Increasing time limit by 30 sec succeeded.");
                         $maxTime += 30 - $timeoutThreshold;
                     } else {
@@ -1067,7 +1077,9 @@ class WPShortPixel {
         return $items;
     }
 
-    /** Checks the API key **/
+    /** Checks the API key
+    * @todo This function should be moved to Apikey Controller.
+    **/
     private function checkKey($ID) {
       if( $this->_settings->verifiedKey == false) {
             if($ID == null){
@@ -2326,9 +2338,8 @@ class WPShortPixel {
         if($backupFile === false)
         {
           Log::addWarn("Custom File $ID - $file does not have a backup");
-          $notice = Notices::addWarning(__('Not able to restore file. Could not find backup', 'shortpixel-image-optimiser'), true);
+          $notice = Notices::addWarning(__('Not able to restore file(s). Could not find backup', 'shortpixel-image-optimiser'), true);
           Notices::addDetail($notice, (string) $file);
-
           return false;
         }
         elseif ($backupFile->copy($fileObj))
@@ -2337,7 +2348,8 @@ class WPShortPixel {
         }
         else {
           Log::addError('Could not restore back to source' .  $backupFile->getFullPath() );
-          Notices::addError('The file could not be restored from backup. Plugin could not copy backup back to original location. Check file permissions. ', 'shortpixel-image-optimiser');
+          $notice = Notices::addError('These file(s) could not be restored from backup. Plugin could not copy backup back to original location. Check file permissions. ', 'shortpixel-image-optimiser');
+          Notices::addDetail($notice, (string) $backupFile);
           return false;
         }
 
@@ -2702,8 +2714,7 @@ class WPShortPixel {
         if ( isset($_GET['noheader']) ) {
             require_once(ABSPATH . 'wp-admin/admin-header.php');
         }
-        //$this->outputHSBeacon();
-        \ShortPixel\HelpScout::outputBeacon($this->getApiKey());
+
         ?>
 	    <div class="wrap shortpixel-other-media">
             <h2>

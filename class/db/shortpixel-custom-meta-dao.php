@@ -128,8 +128,6 @@ class ShortPixelCustomMetaDao {
 //        $this->addIfMissing("UNIQUE INDEX", $this->db->getPrefix()."shortpixel_meta", "sp_path", "path");
         $this->addIfMissing("FOREIGN KEY", $this->db->getPrefix()."shortpixel_meta", "fk_shortpixel_meta_folder", "folder_id",
                                            $this->db->getPrefix()."shortpixel_folders", "id");
-
-
     }
 
     public function getFolders() {
@@ -183,6 +181,7 @@ class ShortPixelCustomMetaDao {
         $path = $folder->getPath();
         $tsUpdated = date("Y-m-d H:i:s", $folder->getTsUpdated());
 
+
         return $this->db->insert($this->db->getPrefix().'shortpixel_folders',
                                  array("path" => $path, "path_md5" => md5($path), "file_count" => $fileCount, "ts_updated" => $tsUpdated, "ts_created" => date("Y-m-d H:i:s")),
                                  array("path" => "%s", "path_md5" => "%s", "file_count" => "%d", "ts_updated" => "%s"));
@@ -228,15 +227,6 @@ class ShortPixelCustomMetaDao {
     }
 
 
-
-    /* Check files and add what's needed
-    * Moved for directory Other Media Model
-    public function refreshFolder(ShortPixel\DirectoryModel $folder)
-    {
-
-
-    }
-    */
 
     /**
      *
@@ -309,18 +299,19 @@ class ShortPixelCustomMetaDao {
         $this->db->query($sqlCleanup);
 
         $values = array();
-        $sql = "INSERT IGNORE INTO {$this->db->getPrefix()}shortpixel_meta(folder_id, path, name, path_md5, status) VALUES ";
-        $format = '(%d,%s,%s,%s,%d)';
+        $sql = "INSERT IGNORE INTO {$this->db->getPrefix()}shortpixel_meta(folder_id, path, name, path_md5, status, ts_added) VALUES ";
+        $format = '(%d,%s,%s,%s,%d,%s)';
         $i = 0;
         $count = 0;
         $placeholders = array();
         $status = (\wpSPIO()->settings()->autoMediaLibrary == 1) ? ShortPixelMeta::FILE_STATUS_PENDING : ShortPixelMeta::FILE_STATUS_UNPROCESSED;
-
+        $created = date("Y-m-d H:i:s");
+        
         foreach($files as $file) {
             $filepath = $file->getFullPath();
             $filename = $file->getFileName();
 
-            array_push($values, $folderId, $filepath, $filename, md5($filepath), $status);
+            array_push($values, $folderId, $filepath, $filename, md5($filepath), $status, $created);
             $placeholders[] = $format;
 
             if($i % 500 == 499) {
@@ -428,7 +419,7 @@ class ShortPixelCustomMetaDao {
 
         $table = $this->db->getPrefix() . 'shortpixel_meta';
         //$sql = "UPDATE status on "; ShortPixelMeta::FILE_STATUS_TORESTORE
-        $this->db->update($table, array('status' => ShortPixelMeta::FILE_STATUS_TORESTORE), array('folder_id' => $folder_id), '%d', '%d' );
+        $this->db->update($table, array('status' => ShortPixelMeta::FILE_STATUS_TORESTORE), array('folder_id' => $folder_id, 'status' => ShortPixelMeta::FILE_STATUS_SUCCESS), '%d', '%d' );
     }
 
 

@@ -12,7 +12,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
   protected $name;
   protected $status = 0;
-  protected $fileCount = 0; // inherent onreliable statistic in dbase. When insert / batch insert the folder count could not be updated, only on refreshFolder which is a relative heavy function to use on every file upload. Totals are better gotten from a stat-query, on request. 
+  protected $fileCount = 0; // inherent onreliable statistic in dbase. When insert / batch insert the folder count could not be updated, only on refreshFolder which is a relative heavy function to use on every file upload. Totals are better gotten from a stat-query, on request.
   protected $updated = 0;
   protected $created = 0;
 
@@ -182,7 +182,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
   public function delete()
   {
       $id = $this->id;
-      if (! $in_db)
+      if (! $this->in_db)
       {
          Log::addError('Trying to remove Folder without ID ' . $id, $this->getPath());
       }

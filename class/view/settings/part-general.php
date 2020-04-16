@@ -6,7 +6,6 @@
 
     <div class="wp-shortpixel-options wp-shortpixel-tab-content" style="visibility: hidden">
 
-
     <table class="form-table">
         <tbody>
             <tr>

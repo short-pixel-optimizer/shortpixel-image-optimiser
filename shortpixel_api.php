@@ -274,7 +274,7 @@ class ShortPixelAPI {
             $firstImage = $APIresponse[0];//extract as object first image
             switch($firstImage->Status->Code)
             {
-            case 2:
+            case 2: //self::STATUS_SUCCESS: <- @todo Success in this constant is 1 ,but appears to be 2? // success 
                 //handle image has been processed
                 if(!isset($firstImage->Status->QuotaExceeded)) {
                     $this->_settings->quotaExceeded = 0;//reset the quota exceeded flag
@@ -291,6 +291,7 @@ class ShortPixelAPI {
                 }
                 elseif ( isset($APIresponse[0]->Status->Message) ) {
                     //return array("Status" => self::STATUS_FAIL, "Message" => "There was an error and your request was not processed (" . $APIresponse[0]->Status->Message . "). REQ: " . json_encode($URLs));
+                    Log::addTemp("Failed API REquest", $APIresponse);
                     $err = array("Status" => self::STATUS_FAIL, "Code" => (isset($APIresponse[0]->Status->Code) ? $APIresponse[0]->Status->Code : self::ERR_UNKNOWN),
                                  "Message" => __('There was an error and your request was not processed.','shortpixel-image-optimiser')
                                               . " (" . wp_basename($APIresponse[0]->OriginalURL) . ": " . $APIresponse[0]->Status->Message . ")");

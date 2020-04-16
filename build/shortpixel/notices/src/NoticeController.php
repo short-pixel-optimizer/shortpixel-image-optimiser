@@ -139,6 +139,7 @@ class NoticeController //extends ShortPixelController
   public function getNoticesForDisplay()
   {
       $newNotices = array();
+
       foreach(self::$notices as $notice)
       {
           if ($notice->isDismissed()) // dismissed never displays.
@@ -274,7 +275,13 @@ class NoticeController //extends ShortPixelController
     $noticeController->update();
   }
 
-  public static function makePersistent($notice, $key, $suppress = -1)
+  /** Make a regular notice persistent across multiple page loads
+  * @param $notice NoticeModel The Notice to make Persistent
+  * @param $key String Identifier of the persistent notice.
+  * @param $suppress Int  When dismissed, time to stay dismissed
+  * @param $callback Function Callable function
+  */
+  public static function makePersistent($notice, $key, $suppress = -1, $callback = null)
   {
      $noticeController = self::getInstance();
      $existing = $noticeController->getNoticeByID($key);
@@ -299,7 +306,7 @@ class NoticeController //extends ShortPixelController
      }
      else
      {
-       $notice->setPersistent($key, $suppress); // set this notice persistent.
+       $notice->setPersistent($key, $suppress, $callback); // set this notice persistent.
      }
 
      $noticeController->update();

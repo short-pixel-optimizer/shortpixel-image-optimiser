@@ -13,6 +13,7 @@ class EnvironmentModel extends ShortPixelModel
     public $is_apache;
     public $is_gd_installed;
     public $is_curl_installed;
+    private $disabled_functions = array();
 
     // MultiSite
     public $is_multisite;
@@ -56,6 +57,28 @@ class EnvironmentModel extends ShortPixelModel
     return self::$instance;
   }
 
+  /** Check ENV is a specific function is allowed. Use this with functions that might be turned off on configurations
+  * @param $function String  The name of the function being tested
+  * Note: In future this function can be extended with other function edge cases. 
+  */
+  public function is_function_usable($function)
+  {
+    if (count($this->disabled_functions) == 0)
+    {
+      $disabled = ini_get('disable_functions');
+      $this->disabled_functions = explode($disabled, ',');
+    }
+
+    if (isset($this->disabled_functions[$function]))
+      return false;
+
+    if (function_exists($function))
+      return true;
+
+    return false;
+
+  }
+
   private function setServer()
   {
     $this->is_nginx = strpos(strtolower($_SERVER["SERVER_SOFTWARE"]), 'nginx') !== false ? true : false;
@@ -94,15 +117,6 @@ class EnvironmentModel extends ShortPixelModel
 
   public function setScreen($screen)
   {
-    /*if (! function_exists('get_current_screen')) // way too early.
-      return false;
-
-    $screen = get_current_screen();
-    */
-
-    /*if (is_null($screen)) //
-      return false; */
-
     // WordPress pages where we'll be active on.
     // https://codex.wordpress.org/Plugin_API/Admin_Screen_Reference
     $use_screens = array(

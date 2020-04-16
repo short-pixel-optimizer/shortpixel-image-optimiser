@@ -218,7 +218,7 @@ class ShortPixelView {
                                               $averageCompression, $filesOptimized, $savedSpace, $percent, $customCount) {
         $settings = $this->ctrl->getSettings();
         //$this->ctrl->outputHSBeacon();
-        \ShortPixel\HelpScout::outputBeacon($this->ctrl->getApiKey());
+        \ShortPixel\HelpScout::outputBeacon();
 
         $this->bulkType = $this->ctrl->getPrioQ()->getBulkTypeForDisplay(); // adding to the mess
         $hider = ($this->bulkType == ShortPixelQueue::BULK_TYPE_RESTORE) ? 'sp-hidden' : '';

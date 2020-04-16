@@ -7,11 +7,21 @@ This should probably in future incorporate some apikey checking functions that s
 */
 class ApiKeyController extends shortPixelController
 {
+    private static $instance;
 
     public function __construct()
     {
       $this->loadModel('apikey');
       $this->model = new apiKeyModel();
+      $this->load();
+    }
+
+    public static function getInstance()
+    {
+        if (is_null(self::$instance))
+           self::$instance = new ApiKeyController();
+
+        return self::$instance;
     }
 
     // glue method.
@@ -26,5 +36,19 @@ class ApiKeyController extends shortPixelController
       $this->model->loadKey();
     }
 
+    public function getKeyForDisplay()
+    {
+       if (! $this->model->is_hidden())
+       {
+          return $this->model->getKey();
+       }
+       else
+         return false;
+    }
+
+    public function keyIsVerified()
+    {
+       return $this->model->is_verified();
+    }
 
 }

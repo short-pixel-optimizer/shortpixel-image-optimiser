@@ -4,7 +4,7 @@ Tags: compressor, image, compression, optimize, image optimizer, image optimiser
 Requires at least: 3.2.0
 Tested up to: 5.4
 Requires PHP: 5.3
-Stable tag: 4.17.2
+Stable tag: 4.17.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -281,6 +281,23 @@ Hide the Cloudflare settings by defining these constants in wp-config.php:
 
 == Changelog ==
 
+= 4.17.3 =
+
+Release date: 16th April 2020
+* Added a collapsable details feature to notifications, in order to avoid filling up the screen with them;
+* Added a filter to completely disable the plugin, when necessary (for certain user roles for example);
+* Hide the API key from the support chat module in settings, when the API key is entered via wp-config.php;
+* Prevent fatal errors if multiple versions of the plugin are active simultaneously;
+* Fix for API key that could be leaked in the frontend through JS;
+* Fix for situations where the plugin was crashing if the API key was added via wp-config.php;
+* Fix missing optimize button on Edit Media screen;
+* Fix for time stamp in Other Media screen when the server is set on another time zone than UTC;
+* Fix for JSON parsing errors when `set_time_limit` function is forbidden;
+* Fix for notifications not showing correctly the number of credits available;
+* Fix for images stuck in "Pending Restore" in Other Media, when there was no backup for them;
+* Fix for hamburger menu in Other Media not displaying options centered;
+* Language – 4 new strings added, 2 updated, 0 fuzzied, and 4 obsoleted.
+
 = 4.17.2 =
 
 Release date: 10th April 2020
@@ -411,7 +428,7 @@ Release date: 27th November 2019
 * Fixed: check for DOING_AJAX on redirect to settings.
 * Fixed: Shortpixel icon + exclamation mark in  toolbar showing on every page load.
 * Fixed: Add Custom media browser doesn't display files anymore
-* Fixed: WebP option adds an extra border if image already has a border -> borders will not be replicated to `<picture>` tags.
+* Fixed: WebP option adds an extra border if image already has a border -> borders will not be replicated to <picture> tags.
 * Fixed: Validating empty key doesn't show any message.
 * Fixed: on Nginx writes .htaccess files.
 * Fixed: Bug with safeGetAttachmentUrl for URLs that start with //.

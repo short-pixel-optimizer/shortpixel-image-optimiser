@@ -17,6 +17,7 @@ class NoticeModel //extends ShortPixelModel
   public $messageType = self::NOTICE_NORMAL;
 
   public $notice_action; // empty unless for display. Ajax action to talk back to controller.
+  protected $callback; // empty unless callback is needed
 
   public static $icons = array();
 
@@ -100,11 +101,15 @@ class NoticeModel //extends ShortPixelModel
   * @param $key Unique Key of this message. Required
   * @param $suppress When dismissed do not show this message again for X amount of time. When -1 it will just be dropped from the Notices and not suppressed
   */
-  public function setPersistent($key, $suppress = -1)
+  public function setPersistent($key, $suppress = -1, $callback = null)
   {
       $this->id = $key;
       $this->is_persistent = true;
       $this->suppress_period = $suppress;
+      if ( ! is_null($callback) && is_callable($callback))
+      {
+        $this->callback = $callback;
+      }
   }
 
   public static function setIcon($notice_type, $icon)
@@ -134,6 +139,13 @@ class NoticeModel //extends ShortPixelModel
     $class = 'shortpixel notice ';
 
     $icon = '';
+
+    if ($this->callback)
+    {
+       $return = call_user_func($this->callback, $this);
+       if ($return === false) // don't display is callback returns false explicitly.
+        return;
+    }
 
     switch($this->messageType)
     {
@@ -171,11 +183,22 @@ class NoticeModel //extends ShortPixelModel
       $class .= 'is-persistent ';
     }
 
-      $id = ! is_null($this->id) ? 'id="' . $this->id . '"' : '';
-
-    $output = "<div $id class='$class'><span class='icon'> " . $icon . "</span> <span class='content'>" . $this->message;
+    $id = ! is_null($this->id) ?  $this->id : uniqid();
+    //'id="' . $this->id . '"'
+    $output = "<div id='$id' class='$class'><span class='icon'> " . $icon . "</span> <span class='content'>" . $this->message;
     if ($this->hasDetails())
-      $output .= "<p class='details'>" . $this->parseDetails() . "</p>";
+    {
+      $output .= '<div class="details-wrapper">
+      <input type="checkbox" name="detailhider" id="check-' . $id .'">
+      <label for="check-' . $id . '"  class="show-details"><span>' . __('See Details', 'shortpixel-image-optimiser')   . '</span>
+      </label>';
+
+      $output .= "<div class='detail-content-wrapper'><p class='detail-content'>" . $this->parseDetails() . "</p></div>";
+      $output .= '<label for="check-' . $id . '" class="hide-details"><span>' . __('Hide Details', 'shortpixel-image-optimiser') . '</span></label>';
+
+      $output .= '</div>'; // detail rapper
+
+    }
     $output .= "</span></div>";
 
     if ($this->is_persistent && $this->is_removable)

@@ -4,13 +4,17 @@ namespace ShortPixel;
 // Integration class for HelpScout
 class HelpScout
 {
-  public static function outputBeacon($apiKey)
+  public static function outputBeacon()
   {
       global $shortPixelPluginInstance;
       $dismissed = $shortPixelPluginInstance->getSettings()->dismissedNotices ? $shortPixelPluginInstance->getSettings()->dismissedNotices : array();
       if(isset($dismissed['help'])) {
           return;
       }
+
+      $keyControl = ApiKeyController::getInstance();
+      $apikey = $keyControl->getKeyForDisplay();
+
     ?>
     <style>
            .shortpixel-hs-blind {
@@ -158,7 +162,7 @@ class HelpScout
 
         window.Beacon('identify', {
             email: "<?php $u = wp_get_current_user(); echo($u->user_email); ?>",
-                apiKey: "<?php echo($apiKey);?>"
+                apiKey: "<?php echo($apikey);?>"
         });
         window.Beacon('suggest', <?php echo( $suggestions ) ?>);
     </script>

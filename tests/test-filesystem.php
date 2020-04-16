@@ -492,6 +492,18 @@ class FileSystemTest extends  WP_UnitTestCase
     $this->assertEquals($fullfilepath, $file2->getFullPath());
     $this->assertEquals('http:' . $urlpath5, $this->fs->pathToUrl($file5));
 
+    // test file direct on the uploads
+    $fullfilepath5 = ABSPATH . 'wp-content/uploads/wpimg1.jpg';
+    $urlpath5 = 'http://test.com/wp-content/uploads/wpimg1.jpg';
+    $file5 = $this->fs->getFile($fullfilepath5);
+    $this->assertEquals($urlpath5, $this->fs->pathToUrl($file5));
+
+    $fullfilepath5 = ABSPATH . 'wpimg1.jpg';
+    $urlpath5 = 'http://test.com/wpimg1.jpg';
+    $file5 = $this->fs->getFile($fullfilepath5);
+    $this->assertEquals($urlpath5, $this->fs->pathToUrl($file5)); 
+
+
     $this->urlSetup('http://test.com:8080');
 
     $urlpath3 = 'http://test.com:8080/wp-content/uploads/2019/07/wpimg1.jpg';
@@ -505,6 +517,8 @@ class FileSystemTest extends  WP_UnitTestCase
     $file4 = $this->fs->getFile($urlpath4);
     $this->assertEquals($fullfilepath2, $file4->getFullPath());
     $this->assertEquals($urlpath4, $this->fs->pathToUrl($file4));
+
+
 
   }
 

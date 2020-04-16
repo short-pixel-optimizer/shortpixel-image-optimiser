@@ -2,7 +2,7 @@
 namespace ShortPixel;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
-HelpScout::outputBeacon($this->hide_api_key ? '' : $view->data->apiKey);
+HelpScout::outputBeacon();
 
 ?>
 <div class="wrap">
