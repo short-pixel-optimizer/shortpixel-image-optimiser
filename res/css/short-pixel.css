@@ -48,6 +48,10 @@
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
     z-index: 1;
 }
+.rtl .sp-dropdown-content {
+    right:auto;
+    left: 0;
+}
 
 /* Links inside the dropdown */
 .sp-dropdown-content a {
@@ -353,6 +357,10 @@ div.shortpixel-rate-us > a:focus {
     min-height:30px;
 
     float:right;
+}
+.wp-core-ui.rtl .column-wp-shortPixel .sp-column-actions,
+.wp-core-ui.rtl .column-wp-shortPixel .button.button-smaller{
+    float:left;
 }
 
 th.sortable.column-wp-shortPixel a,
