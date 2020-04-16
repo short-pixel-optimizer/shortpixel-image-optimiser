@@ -1,7 +1,7 @@
 language: php
-
 php:
   - 7.3
-
-script: bash test.sh
-    
+  - 7.2
+services: mysql # Credentials for mysql based on the documentation https://docs.travis-ci.com/user/database-setup/#mysql
+script: 
+  - install-wp-tests.sh  sptestdatabase root ''
