@@ -1,7 +1,7 @@
 
     <div class="wrap short-pixel-bulk-page bulk-restore-all">
         <form action='<?php echo remove_query_arg('part'); ?>' method='POST' >
-        <?php wp_nonce_field('bulk-restore-all', 'sp-nonce'); ?>
+        <?php wp_nonce_field('sp-bulk', 'sp-nonce'); ?>
         <h1><?php _e('Bulk Image Optimization by ShortPixel','shortpixel-image-optimiser');?></h1>
 
         <div class="sp-notice sp-notice-info sp-floating-block sp-full-width">

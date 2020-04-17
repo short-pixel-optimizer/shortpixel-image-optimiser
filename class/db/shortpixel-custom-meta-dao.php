@@ -306,7 +306,7 @@ class ShortPixelCustomMetaDao {
         $placeholders = array();
         $status = (\wpSPIO()->settings()->autoMediaLibrary == 1) ? ShortPixelMeta::FILE_STATUS_PENDING : ShortPixelMeta::FILE_STATUS_UNPROCESSED;
         $created = date("Y-m-d H:i:s");
-        
+
         foreach($files as $file) {
             $filepath = $file->getFullPath();
             $filename = $file->getFileName();
@@ -346,6 +346,13 @@ class ShortPixelCustomMetaDao {
     public function resetRestored() {
         $sql = "UPDATE {$this->db->getPrefix()}shortpixel_meta SET status = 0, retries = 0 WHERE status = 3";
         $this->db->query($sql);
+    }
+
+    /** When auto-optimize is off, the status is 0 ( not processed ), so that the usuals SPIO JS doesn't pick it up. Put custom to pending when starting bulk */
+    public function setPending()
+    {
+      $sql = "UPDATE {$this->db->getPrefix()}shortpixel_meta SET status = 1, retries = 0 WHERE status = 0";
+      $this->db->query($sql);
     }
 
     public function getPaginatedMetas($hasNextGen, $filters, $count, $page, $orderby = false, $order = false) {
@@ -395,7 +402,7 @@ class ShortPixelCustomMetaDao {
     public function getPendingMetaCount() {
         $res = $this->db->query("SELECT COUNT(sm.id) recCount from  {$this->db->getPrefix()}shortpixel_meta sm "
             . "INNER JOIN  {$this->db->getPrefix()}shortpixel_folders sf on sm.folder_id = sf.id "
-            . "WHERE sf.status <> -1 AND sm.status <> 3 AND ( sm.status = 0 OR sm.status = 1 OR (sm.status < 0 AND sm.retries < 3))");
+            . "WHERE sf.status <> -1 AND sm.status <> 3 AND ( sm.status = 1 OR (sm.status < 0 AND sm.retries < 3))");
         return isset($res[0]->recCount) ? $res[0]->recCount : null;
     }
 

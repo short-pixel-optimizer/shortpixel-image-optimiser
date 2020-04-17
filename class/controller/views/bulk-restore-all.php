@@ -1,11 +1,13 @@
 <?php
 namespace ShortPixel;
+use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+
 
 class BulkRestoreAll extends ShortPixelController
 {
     protected static $slug = 'bulk-restore-all';
     protected $template = 'view-restore-all';
-    protected $form_action = 'bulk-restore-all';
+    protected $form_action = 'sp-bulk';
 
     protected $selected_folders = array();
 
@@ -13,6 +15,11 @@ class BulkRestoreAll extends ShortPixelController
     {
         parent::__construct();
 
+    }
+
+    public function load()
+    {
+       $this->loadView();
     }
 
     public function randomCheck()
@@ -64,14 +71,16 @@ class BulkRestoreAll extends ShortPixelController
 
     public function setupBulk()
     {
-      $this->checkPost(); // check if any POST vars are there ( which should be if custom restore is on )
-
+        // Not doing this, since it's deliverd from bulk_view_controller. Yes, this is hacky. Prob. controller should merge.
+      //  $this->checkPost(); // check if any POST vars are there ( which should be if custom restore is on )
+      $selected_folders = isset($_POST['selected_folders']) ? $_POST['selected_folders'] : array();
+      
       // handle the custom folders if there are any.
-      if (count($this->selected_folders) > 0)
+      if (count($selected_folders) > 0)
       {
           $spMetaDao = \wpSPIO()->getShortPixel()->getSpMetaDao();
 
-          foreach($this->selected_folders as $folder_id)
+          foreach($selected_folders as $folder_id)
           {
             $spMetaDao->setBulkRestore($folder_id);
           }

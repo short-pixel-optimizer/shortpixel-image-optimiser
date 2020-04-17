@@ -47,6 +47,8 @@ class ShortPixelController
           return $className; // found!
         }
       }
+
+      return false;
   }
 
   public function __construct()
