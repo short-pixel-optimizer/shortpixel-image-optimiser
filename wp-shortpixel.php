@@ -111,6 +111,7 @@ wpSPIO(); // let's go!
 
 
 
+
 register_activation_hook( __FILE__, array('\ShortPixel\ShortPixelPlugin','activatePlugin') );
 register_deactivation_hook( __FILE__,  array('\ShortPixel\ShortPixelPlugin','deactivatePlugin') );
 register_uninstall_hook(__FILE__,  array('\ShortPixel\ShortPixelPlugin','uninstallPlugin') );
