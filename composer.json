@@ -3,7 +3,7 @@
         {
             "packagist.org": false,
             "type": "path",
-            "url": "../modules/*",
+            "url": "./modules/*",
 	    "options": {
                 "symlink": true
             }
