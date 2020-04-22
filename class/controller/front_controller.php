@@ -14,14 +14,22 @@ class frontController extends ShortPixelController
 
   public function __construct()
   {
+    $do_front =  \wpSPIO()->settings()->frontBootstrap;
+
     if (wpSPIO()->env()->is_front) // if is front.
     {
       $this->initWebpHooks();
-      $this->hookFrontProcessing();
+      if ($do_front)
+        $this->hookFrontProcessing();
+    }
+    // Ajax call is not front, but backend. Hook nopriv if ajax is incoming and front process is on.
+    if (wpSPIO()->env()->is_ajaxcall && $do_front)
+    {
+        $this->hookFrontImageProcessing();
     }
   }
 
-  public function initWebpHooks()
+  protected function initWebpHooks()
   {
     $webp_option = \wpSPIO()->settings()->deliverWebp;
 
@@ -42,11 +50,8 @@ class frontController extends ShortPixelController
     }
   }
 
-  public function hookFrontProcessing()
+  protected function hookFrontProcessing()
   {
-    if (!  \wpSPIO()->settings()->frontBootstrap)
-      return;
-
     $prio = (! defined('SHORTPIXEL_NOFLOCK')) ? \ShortPixelQueue::get() : \ShortPixelQueueDB::get();
 
     if ($prio && is_array($prio) && count($prio) > 0)
@@ -55,12 +60,18 @@ class frontController extends ShortPixelController
       add_action( 'wp_footer', array( \wpSPIO()->getShortPixel(), 'shortPixelJS') );
       add_filter('script_loader_tag', array($this, 'load_sp_async'), 10, 3);
 
-
       //need to add the nopriv action for when items exist in the queue and no user is logged in
-      add_action( 'wp_ajax_nopriv_shortpixel_image_processing', array( \wpSPIO()->getShortPixel(), 'handleImageProcessing') );
-      add_action( 'wp_ajax_shortpixel_image_processing', array( \wpSPIO()->getShortPixel(), 'handleImageProcessing') );
+      //add_action( 'wp_ajax_shortpixel_image_processing', array( \wpSPIO()->getShortPixel(), 'handleImageProcessing') );
 
     }
+  }
+
+  /** Add nopriv to ajax call to allow non-logged in users to optimize on the frontend.
+  *
+  */
+  protected function hookFrontImageProcessing()
+  {
+    add_action( 'wp_ajax_nopriv_shortpixel_image_processing', array( \wpSPIO()->getShortPixel(), 'handleImageProcessing') );
   }
 
   /* When loading on front, asynd defer ourselves */
