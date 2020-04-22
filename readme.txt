@@ -428,7 +428,7 @@ Release date: 27th November 2019
 * Fixed: check for DOING_AJAX on redirect to settings.
 * Fixed: Shortpixel icon + exclamation mark in  toolbar showing on every page load.
 * Fixed: Add Custom media browser doesn't display files anymore
-* Fixed: WebP option adds an extra border if image already has a border -> borders will not be replicated to `<picture>` tags.
+* Fixed: WebP option adds an extra border if image already has a border -> borders will not be replicated to <picture> tags.
 * Fixed: Validating empty key doesn't show any message.
 * Fixed: on Nginx writes .htaccess files.
 * Fixed: Bug with safeGetAttachmentUrl for URLs that start with //.
