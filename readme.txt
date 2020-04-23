@@ -4,7 +4,7 @@ Tags: compressor, image, compression, optimize, image optimizer, image optimiser
 Requires at least: 3.2.0
 Tested up to: 5.4
 Requires PHP: 5.3
-Stable tag: 4.17.3
+Stable tag: 4.17.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -281,6 +281,12 @@ Hide the Cloudflare settings by defining these constants in wp-config.php:
 
 == Changelog ==
 
+= 4.17.4 =
+
+Release date: 22nd April 2020
+* Fix 400 errors response on admin-ajax.php when using a fontend uploader plugin;
+* Language – 0 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted.
+
 = 4.17.3 =
 
 Release date: 16th April 2020
@@ -428,7 +434,7 @@ Release date: 27th November 2019
 * Fixed: check for DOING_AJAX on redirect to settings.
 * Fixed: Shortpixel icon + exclamation mark in  toolbar showing on every page load.
 * Fixed: Add Custom media browser doesn't display files anymore
-* Fixed: WebP option adds an extra border if image already has a border -> borders will not be replicated to `<picture>` tags.
+* Fixed: WebP option adds an extra border if image already has a border -> borders will not be replicated to <picture> tags.
 * Fixed: Validating empty key doesn't show any message.
 * Fixed: on Nginx writes .htaccess files.
 * Fixed: Bug with safeGetAttachmentUrl for URLs that start with //.
