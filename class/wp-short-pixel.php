@@ -837,6 +837,8 @@ class WPShortPixel {
         $startQueryID = $crtStartQueryID = $this->prioQ->getStartBulkId();
         $endQueryID = $this->prioQ->getStopBulkId();
 
+        Log::addDebug('Bulk Restore' . $startQueryID . ' ' . $endQueryID);
+
         if ( $startQueryID <= $endQueryID ) {
             return false;
         }
@@ -850,6 +852,7 @@ class WPShortPixel {
             $maxResults *= 20;
         }
         $restored = array();
+
 
         //$ind = 0;
         while( $crtStartQueryID >= $endQueryID && time() - $startTime < $maxTime) {
@@ -1135,6 +1138,8 @@ class WPShortPixel {
         if(count($rawPrioQ)) { Log::addInfo("HIP: 0 Priority Queue: ".json_encode($rawPrioQ)); }
         Log::addInfo("HIP: 0 Bulk running? " . $this->prioQ->bulkRunning() . " START " . $this->_settings->startBulkId . " STOP " . $this->_settings->stopBulkId . " MaxTime: " . SHORTPIXEL_MAX_EXECUTION_TIME);
 
+        Log::addDebug('Bulk Running', array($this->prioQ->bulkRunning()) );
+
         //handle the bulk restore and cleanup first - these are fast operations taking precedece over optimization
         if(   $this->prioQ->bulkRunning()
            && (   $this->prioQ->getBulkType() == ShortPixelQueue::BULK_TYPE_RESTORE
@@ -1149,7 +1154,6 @@ class WPShortPixel {
                                      "BulkPercent" => $this->prioQ->getBulkPercent(),
                                      "Restored" => $res )));
             }
-
         }
 
         //1: get 3 ids to process. Take them with priority from the queue
@@ -1189,13 +1193,10 @@ class WPShortPixel {
             } */
 
             $customIds = $this->spMetaDao->getPendingMetas( SHORTPIXEL_PRESEND_ITEMS - count($ids));
-
             if(is_array($customIds)) {
                 $ids = array_merge($ids, array_map(array('ShortPixelMetaFacade', 'getNewFromRow'), $customIds));
             }
         }
-
-
 
 
         if(count($ids)) {$idl='';foreach($ids as $i){$idl.=$i->getId().' ';}
@@ -1235,7 +1236,7 @@ class WPShortPixel {
                                           "Message" => __('Searching images to optimize...  ','shortpixel-image-optimiser') . $this->prioQ->getStartBulkId() . '->' . $this->prioQ->getStopBulkId() )));
             }
             //in this case the queue is really empty
-            self::log("HIP: 1 STOP BULK");
+            Log::addDebug("HIP: 1 STOP BULK");
             $bulkEverRan = $this->prioQ->stopBulk();
             $this->sendEmptyQueue();
         }
@@ -2755,174 +2756,6 @@ class WPShortPixel {
 } */
 
 
-    /** Front End function that controls bulk processes.
-    * TODO This is a Bulk controller
-    */
-    public function bulkProcess() {
-        global $wpdb;
-
-        if( $this->_settings->verifiedKey == false ) {//invalid API Key
-            //ShortPixelView::displayActivationNotice();
-            return;
-        }
-
-        $quotaData = $this->checkQuotaAndAlert(null, isset($_GET['checkquota']), 0);
-        if($this->_settings->quotaExceeded == 1) {
-            \ShortPixel\adminNoticesController::reInstateQuotaExceeded();
-        }
-            //return;
-        //}
-
-
-        if(isset($_POST['bulkProcessPause']))
-        {//pause an ongoing bulk processing, it might be needed sometimes
-            $this->prioQ->pauseBulk();
-            if($this->_settings->hasCustomFolders && $this->spMetaDao->getPendingMetaCount()) {
-                $this->_settings->customBulkPaused = 1;
-            }
-        }
-
-        if(isset($_POST['bulkProcessStop']))
-        {//stop an ongoing bulk processing
-            $this->prioQ->stopBulk();
-            if($this->_settings->hasCustomFolders && $this->spMetaDao->getPendingMetaCount()) {
-                $this->_settings->customBulkPaused = 1;
-            }
-            $this->_settings->cancelPointer = NULL;
-        }
-
-        if(isset($_POST["bulkProcess"]))
-        {
-            //set the thumbnails option
-            if ( isset($_POST['thumbnails']) ) {
-                $this->_settings->processThumbnails = 1;
-            } else {
-                $this->_settings->processThumbnails = 0;
-            }
-
-            if ( isset($_POST['createWebp']) )
-              $this->_settings->createWebp = 1;
-            else
-              $this->_settings->createWebp = 0;
-
-            //clean the custom files errors in order to process them again
-            if($this->_settings->hasCustomFolders) {
-                $this->spMetaDao->resetFailed();
-                $this->spMetaDao->resetRestored();
-            }
-
-            $this->prioQ->startBulk(ShortPixelQueue::BULK_TYPE_OPTIMIZE);
-            $this->_settings->customBulkPaused = 0;
-            self::log("BULK:  Start:  " . $this->prioQ->getStartBulkId() . ", stop: " . $this->prioQ->getStopBulkId() . " PrioQ: "
-                 .json_encode($this->prioQ->get()));
-        }//end bulk process  was clicked
-
-        if(isset($_POST["bulkRestore"]))
-        {
-            Log::addInfo('Bulk Process - Bulk Restore');
-
-            $bulkRestore = new \ShortPixel\BulkRestoreAll(); // controller
-            $bulkRestore->setupBulk();
-
-            $this->prioQ->startBulk(ShortPixelQueue::BULK_TYPE_RESTORE);
-            $this->_settings->customBulkPaused = 0;
-        }//end bulk restore  was clicked
-
-        if(isset($_POST["bulkCleanup"]))
-        {
-            Log::addInfo('Bulk Process - Bulk Cleanup ');
-            $this->prioQ->startBulk(ShortPixelQueue::BULK_TYPE_CLEANUP);
-            $this->_settings->customBulkPaused = 0;
-        }//end bulk restore  was clicked
-
-        if(isset($_POST["bulkCleanupPending"]))
-        {
-            Log::addInfo('Bulk Process - Clean Pending');
-            $this->prioQ->startBulk(ShortPixelQueue::BULK_TYPE_CLEANUP_PENDING);
-            $this->_settings->customBulkPaused = 0;
-        }//end bulk restore  was clicked
-
-        if(isset($_POST["bulkProcessResume"]))
-        {
-            Log::addInfo('Bulk Process - Bulk Resume');
-            $this->prioQ->resumeBulk();
-            $this->_settings->customBulkPaused = 0;
-        }//resume was clicked
-
-        if(isset($_POST["skipToCustom"]))
-        {
-            Log::addInfo('Bulk Process - Skipping to Custom Media Process');
-            $this->_settings->skipToCustom = true;
-            $this->_settings->customBulkPaused = 0;
-
-        }//resume was clicked
-
-        //figure out the files that are left to be processed
-        $qry_left = "SELECT count(meta_id) FilesLeftToBeProcessed FROM " . $wpdb->prefix . "postmeta
-        WHERE meta_key = '_wp_attached_file' AND post_id <= " . (0 + $this->prioQ->getStartBulkId());
-        $filesLeft = $wpdb->get_results($qry_left);
-
-        //check the custom bulk
-        $pendingMeta = $this->_settings->hasCustomFolders ? $this->spMetaDao->getPendingMetaCount() : 0;
-        Log::addInfo('Bulk Process - Pending Meta Count ' . $pendingMeta);
-        Log::addInfo('Bulk Process - File left ' . $filesLeft[0]->FilesLeftToBeProcessed );
-
-
-        if (   ($filesLeft[0]->FilesLeftToBeProcessed > 0 && $this->prioQ->bulkRunning())
-            || (0 + $pendingMeta > 0 && !$this->_settings->customBulkPaused && $this->prioQ->bulkRan())//bulk processing was started
-                && (!$this->prioQ->bulkPaused() || $this->_settings->skipToCustom)) //bulk not paused or if paused, user pressed Process Custom button
-        {
-            $msg = $this->bulkProgressMessage($this->prioQ->getDeltaBulkPercent(), $this->prioQ->getTimeRemaining());
-
-            $this->view->displayBulkProcessingRunning($this->getPercent($quotaData), $msg, $quotaData['APICallsRemaining'], $this->getAverageCompression(),
-                     $this->prioQ->getBulkType() == ShortPixelQueue::BULK_TYPE_RESTORE ? 0 :
-                    (   $this->prioQ->getBulkType() == ShortPixelQueue::BULK_TYPE_CLEANUP
-                     || $this->prioQ->getBulkType() == ShortPixelQueue::BULK_TYPE_CLEANUP_PENDING ? -1 : ($pendingMeta !== null ? ($this->prioQ->bulkRunning() ? 3 : 2) : 1)), $quotaData);
-
-        } else
-        {
-            if($this->prioQ->bulkRan() && !$this->prioQ->bulkPaused()) {
-                $this->prioQ->markBulkComplete();
-                Log::addInfo("Bulk Process - Marked Bulk Complete");
-            }
-
-            //image count
-            $thumbsProcessedCount = $this->_settings->thumbsCount;//amount of optimized thumbnails
-            $under5PercentCount =  $this->_settings->under5Percent;//amount of under 5% optimized imgs.
-
-            //average compression
-            $averageCompression = self::getAverageCompression();
-            $percent = $this->prioQ->bulkPaused() ? $this->getPercent($quotaData) : false;
-
-            // [BS] If some template part is around, use it and find the controller.
-            $template_part = isset($_GET['part']) ? sanitize_text_field($_GET['part']) : false;
-            $controller = ShortPixelTools::namespaceit('ShortPixelController');
-            $partControl = $controller::findControllerbySlug($template_part);
-
-            if ($partControl)
-            {
-              $viewObj = new $partControl();
-              $viewObj->setShortPixel($this);
-              $viewObj->loadView(); // TODO [BS] This should call load, which should init and call view inside controller.
-            }
-
-            if (! $template_part)
-            {
-              $this->view->displayBulkProcessingForm($quotaData, $thumbsProcessedCount, $under5PercentCount,
-                    $this->prioQ->bulkRan(), $averageCompression, $this->_settings->fileCount,
-                    self::formatBytes($this->_settings->savedSpace), $percent, $pendingMeta);
-            }
-        }
-    }
-    //end bulk processing
-
-    public function getPercent($quotaData) {
-            if($this->_settings->processThumbnails) {
-                return $quotaData["totalFiles"] ? min(99, round($quotaData["totalProcessedFiles"]  *100.0 / $quotaData["totalFiles"])) : 0;
-            } else {
-                return $quotaData["mainFiles"] ? min(99, round($quotaData["mainProcessedFiles"]  *100.0 / $quotaData["mainFiles"])) : 0;
-            }
-    }
 
     // TODO - Calculate time left Utility function -Called in bulkProcess.
     public function bulkProgressMessage($percent, $minutes) {
@@ -3852,6 +3685,7 @@ class WPShortPixel {
 
     // @todo Should be utility function
     static public function formatBytes($bytes, $precision = 2) {
+       Log::addDebug('Deprecated function called: formatBytes');
        return \ShortPixelTools::formatBytes($bytes, $precision);
 
     }

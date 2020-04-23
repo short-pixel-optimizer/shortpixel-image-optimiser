@@ -187,7 +187,7 @@ class ShortPixelPlugin
         $admin_pages[] = add_media_page( __('Other Media Optimized by ShortPixel','shortpixel-image-optimiser'), __('Other Media','shortpixel-image-optimiser'), 'edit_others_posts', 'wp-short-pixel-custom', array( $this, 'route' ) );
       }
       /*translators: title and menu name for the Bulk Processing page*/
-      $admin_pages[] = add_media_page( __('ShortPixel Bulk Process','shortpixel-image-optimiser'), __('Bulk ShortPixel','shortpixel-image-optimiser'), 'edit_others_posts', 'wp-short-pixel-bulk', array( $this->shortPixel, 'bulkProcess' ) );
+      $admin_pages[] = add_media_page( __('ShortPixel Bulk Process','shortpixel-image-optimiser'), __('Bulk ShortPixel','shortpixel-image-optimiser'), 'edit_others_posts', 'wp-short-pixel-bulk', array( $this, 'route' ) );
 
       $this->admin_pages = $admin_pages;
   }
@@ -289,6 +289,8 @@ class ShortPixelPlugin
 
       $default_action = 'load'; // generic action on controller.
       $action = isset($_REQUEST['sp-action']) ? sanitize_text_field($_REQUEST['sp-action']) : $default_action;
+      $template_part = isset($_GET['part']) ? sanitize_text_field($_GET['part']) : false;
+
       $controller = false;
 
       if ($this->env()->is_debug)
@@ -296,21 +298,27 @@ class ShortPixelPlugin
          $this->load_script('shortpixel-debug');
       }
 
+      $url = menu_page_url($plugin_page, false);
+
+
       switch($plugin_page)
       {
           case 'wp-shortpixel-settings': // settings
-        /*  $this->load_style('shortpixel-admin');
-            $this->load_style('shortpixel');
-            $this->load_style('shortpixel-modal');
-            $this->load_style('sp-file-tree');
-            $this->load_script('sp-file-tree'); */
             $controller = \shortPixelTools::namespaceit("SettingsController");
-            $url = menu_page_url($plugin_page, false);
           break;
           case 'wp-short-pixel-custom': // other media
           /*  $this->load_style('shortpixel-othermedia'); */
             $controller = \shortPixelTools::namespaceit('OtherMediaViewController');
-            $url = menu_page_url($plugin_page, false);
+          break;
+          case 'wp-short-pixel-bulk':
+            if ($template_part)
+            {
+              $partControl = ShortPixelController::findControllerbySlug($template_part);
+              if ($partControl)
+                $controller = $partControl;
+            }
+            else
+              $controller = \shortPixelTools::namespaceit('BulkViewController');
           break;
       }
 
@@ -396,6 +404,8 @@ class ShortPixelPlugin
       if(\WPShortPixelSettings::getOpt('deliverWebp') == 3 && ! $env->is_nginx) {
           \WpShortPixel::alterHtaccess(); //add the htaccess lines
       }
+
+      \WpShortPixelDb::checkCustomTables();
 
       adminNoticesController::resetCompatNotice();
       adminNoticesController::resetAPINotices();

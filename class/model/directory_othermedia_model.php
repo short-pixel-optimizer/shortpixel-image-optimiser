@@ -286,6 +286,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
     //  $folderObj->setFileCount( count($files) );
 
+      \wpSPIO()->settings()->hasCustomFolders = time(); // note, check this against bulk when removing. Custom Media Bulk depends on having a setting.
       \wpSPIO()->getShortPixel()->getSpMetaDao()->batchInsertImages($files, $this->id);
 
       $stats = $this->getStats();
