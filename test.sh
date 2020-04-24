@@ -1,3 +1,3 @@
-#!/usr/bin/env bash 
+#!/usr/bin/env bash
 
-phpunit --verbose --testdox
+./vendor/bin/phpunit --verbose  
