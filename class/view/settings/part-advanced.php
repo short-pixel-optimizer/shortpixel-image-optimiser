@@ -41,6 +41,7 @@ namespace ShortPixel;
         }
         $excludePatterns = substr($excludePatterns, 0, -2);
     }
+
     ?>
 
     <div class="wp-shortpixel-options wp-shortpixel-tab-content" style='visibility: hidden'>
@@ -72,7 +73,7 @@ namespace ShortPixel;
                             $stat = $dirObj->getStats();
 
                             $cnt = $stat->Total;
-                            
+
                             $st = ($cnt == 0
                                 ? __("Empty",'shortpixel-image-optimiser')
                                 : ($stat->Total == $stat->Optimized

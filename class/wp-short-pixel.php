@@ -2692,70 +2692,14 @@ class WPShortPixel {
         return substr($id, 0, 2 ) == "C-" ? $this->spMetaDao->getMeta(substr($id, 2)) : wp_get_attachment_url($id);
     }
 
-    /** View for Custom media
-    * @todo Move this to own view.
-    */
-    /* Gone! @todo Must go when new ListCMedia is done */
-    /*
-    public function listCustomMedia() {
-        if( ! class_exists( 'ShortPixelListTable' ) ) {
-            require_once('view/shortpixel-list-table.php');
-        }
-        if(isset($_REQUEST['refresh']) && esc_attr($_REQUEST['refresh']) == 1) {
-            $notice = null;
-            $this->refreshCustomFolders(true);
-        }
-        if(isset($_REQUEST['action']) && esc_attr($_REQUEST['action']) == 'optimize' && isset($_REQUEST['image'])) {
-            //die(ShortPixelMetaFacade::queuedId(ShortPixelMetaFacade::CUSTOM_TYPE, $_REQUEST['image']));
-            $this->prioQ->push(ShortPixelMetaFacade::queuedId(ShortPixelMetaFacade::CUSTOM_TYPE, $_REQUEST['image']));
-        }
 
-        $customMediaListTable = new ShortPixelListTable($this, $this->spMetaDao, \wpSPIO()->env()->has_nextgen);
-        $items = $customMediaListTable->prepare_items();
-        if ( isset($_GET['noheader']) ) {
-            require_once(ABSPATH . 'wp-admin/admin-header.php');
-        }
-
-        ?>
-	    <div class="wrap shortpixel-other-media">
-            <h2>
-                <?php _e('Other Media optimized by ShortPixel','shortpixel-image-optimiser');?>
-            </h2>
-
-            <div id="legacy">
-                <div id="legacy" class="metabox-holder">
-                    <div id="legacy">
-                      <div style="float:left;">
-                          <a href="upload.php?page=wp-short-pixel-custom&refresh=1" id="refresh" class="button button-primary" title="<?php _e('Refresh custom folders content','shortpixel-image-optimiser');?>">
-                              <?php _e('Refresh folders','shortpixel-image-optimiser');?>
-                          </a>
-                      </div>
-                        <div class="meta-box-sortables ui-sortable">
-                            <form method="get">
-                                <input type="hidden" name="page" value="wp-short-pixel-custom" />
-                                <?php $customMediaListTable->search_box("Search", "sp_search_file"); ?>
-                            </form>
-                            <form method="post" class="shortpixel-table">
-                                <?php
-                                $customMediaListTable->display();
-                                //push to the processing list the pending ones, just in case
-                                //$count = $this->spMetaDao->getCustomMetaCount();
-                                if($this->_settings->autoMediaLibrary) foreach ($items as $item) {
-                                    if($item->status == 1){
-                                        $this->prioQ->push(ShortPixelMetaFacade::queuedId(ShortPixelMetaFacade::CUSTOM_TYPE, $item->id));
-                                    }
-                                }
-                                ?>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                <br class="clear">
-            </div>
-	</div> <?php
-} */
-
-
+    public function getPercent($quotaData) {
+            if($this->_settings->processThumbnails) {
+                return $quotaData["totalFiles"] ? min(99, round($quotaData["totalProcessedFiles"]  *100.0 / $quotaData["totalFiles"])) : 0;
+            } else {
+                return $quotaData["mainFiles"] ? min(99, round($quotaData["mainProcessedFiles"]  *100.0 / $quotaData["mainFiles"])) : 0;
+            }
+    }
 
     // TODO - Calculate time left Utility function -Called in bulkProcess.
     public function bulkProgressMessage($percent, $minutes) {
@@ -2829,15 +2773,11 @@ class WPShortPixel {
 
         if( file_exists($postDir) ) {
 
-
             $dir = $fs->getDirectory($postDir);
             $files = $dir->getFiles();
             $subdirs = $fs->sortFiles($dir->getSubDirectories()); // runs through FS sort.
 
-//            $files = scandir($postDir);
             $returnDir	= substr($postDir, strlen($root));
-
-            //natcasesort($files);
 
             if( count($subdirs) > 0 ) {
                 echo "<ul class='jqueryFileTree'>";

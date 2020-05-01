@@ -326,7 +326,6 @@ class nextGenView
                    'message' => "Not optimized"
                ));
        }
-//        return var_dump($meta);
    }
 
 } // class
