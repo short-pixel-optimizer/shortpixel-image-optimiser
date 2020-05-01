@@ -89,12 +89,15 @@ var ShortPixel = function() {
     function checkExifWarning()
     {
       if (! jQuery('input[name="removeExif"]').is(':checked') && jQuery('input[name="png2jpg"]').is(':checked') )
-      {
         jQuery('.exif_warning').fadeIn();
-      }
-      else {
+      else
         jQuery('.exif_warning').fadeOut();
-      }
+
+      if (! jQuery('input[name="removeExif"]').is(':checked') && jQuery('.exif_imagick_warning').data('imagick') <= 0)
+        jQuery('.exif_imagick_warning').fadeIn();
+      else
+        jQuery('.exif_imagick_warning').fadeOut();
+
     }
 
     function checkBackUpWarning()

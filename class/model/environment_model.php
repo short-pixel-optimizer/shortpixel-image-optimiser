@@ -59,7 +59,7 @@ class EnvironmentModel extends ShortPixelModel
 
   /** Check ENV is a specific function is allowed. Use this with functions that might be turned off on configurations
   * @param $function String  The name of the function being tested
-  * Note: In future this function can be extended with other function edge cases. 
+  * Note: In future this function can be extended with other function edge cases.
   */
   public function is_function_usable($function)
   {
@@ -77,6 +77,17 @@ class EnvironmentModel extends ShortPixelModel
 
     return false;
 
+  }
+
+  public function hasImagick()
+  {
+    $editor = wp_get_image_editor(\wpSPIO()->plugin_path('res/img/test.jpg'));
+    $className = get_class($editor);
+
+    if ($className == 'WP_Image_Editor_Imagick')
+      return true;
+    else
+      return false;
   }
 
   private function setServer()
