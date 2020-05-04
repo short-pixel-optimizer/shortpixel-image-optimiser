@@ -417,7 +417,7 @@ var ShortPixel = function() {
         if(isNaN(ShortPixel.retries)) ShortPixel.retries = 1;
         if(ShortPixel.retries < 6) {
             console.log("Invalid response from server (Error: " + msg + "). Retrying pass " + (ShortPixel.retries + 1) +  "...");
-            setTimeout(checkBulkProgress, 5000);
+            setBulkTimer(5000);
         } else {
             ShortPixel.bulkShowError(-1,"Invalid response from server received 6 times. Please retry later by reloading this page, or <a href='https://shortpixel.com/contact' target='_blank'>contact support</a>. (Error: " + msg + ")", "");
             console.log("Invalid response from server 6 times. Giving up.");
@@ -958,6 +958,8 @@ function checkBulkProgress() {
         return '/';
     };
 
+    console.debug('CheckBulkProgress');
+
     var first = false; //arm replacer
     var url = window.location.href.toLowerCase().replace(/\/\//g , replacer);
 
@@ -991,24 +993,54 @@ function checkBulkProgress() {
     //if i'm the bulk page, steal the bulk processor
     if( window.location.href.search("wp-short-pixel-bulk") >= 0 ) {
         ShortPixel.bulkProcessor = true;
-        localStorage.bulkTime = Math.floor(Date.now() / 1000);
+        localStorage.bulkTime = Date.now();
         localStorage.bulkPage = 1;
+        ShortPixel.BULK_SECRET = false;
+    }
+
+    console.log('Secret : '  + ShortPixel.BULK_SECRET + ' Local: ' + localStorage.bulkSecret);
+    console.log('BulkTime: ' + localStorage.bulkTime + ' ' + Date.now());
+    if (ShortPixel.BULK_SECRET !== false)
+    {
+      if (ShortPixel.BULK_SECRET != localStorage.bulkSecret)
+      {
+        console.log('Cancelled Processing. Bulk Processor in use');
+        clearBulkProcessor();
+        return;
+      }
     }
 
     //if I'm not the bulk processor, check every 20 sec. if the bulk processor is running, otherwise take the role
-    if(ShortPixel.bulkProcessor == true || typeof localStorage.bulkTime == 'undefined' || Math.floor(Date.now() / 1000) -  localStorage.bulkTime > 90) {
+    if(ShortPixel.bulkProcessor == true || typeof localStorage.bulkTime == 'undefined' || Date.now() - localStorage.bulkTime > 10000) {
         ShortPixel.bulkProcessor = true;
         localStorage.bulkPage = (window.location.href.search("wp-short-pixel-bulk") >= 0 ? 1 : 0);
-        localStorage.bulkTime = Math.floor(Date.now() / 1000);
-        console.log(localStorage.bulkTime);
+        localStorage.bulkTime = Date.now();
+        if (localStorage.getItem('bulkSecret') == null)
+          localStorage.bulkSecret = Math.random().toString(36).substring(7);
+        //console.log(localStorage.bulkTime);
         checkBulkProcessingCallApi();
+        setBulkTimer(5000);
     } else {
-        setTimeout(checkBulkProgress, 5000);
+        setBulkTimer(20000);
     }
 }
 
+var bulkTimer; // scope
+function setBulkTimer(time)
+{
+   window.clearTimeout(bulkTimer);
+   console.log('Clearing TimeOut');
+
+   if (time > 0)
+   {
+    bulkTimer = window.setTimeout(checkBulkProgress, time);
+    console.log('Set Timeout ' + time + ' ms');
+  }
+}
+
 function checkBulkProcessingCallApi(){
-    var data = { 'action': 'shortpixel_image_processing' };
+    console.log('CheckBulkProcessingAPI');
+    var data = { 'action': 'shortpixel_image_processing', 'bulk-secret': localStorage.bulkSecret };
     // since WP 2.8 ajaxurl is always defined in the admin header and points to admin-ajax.php
     jQuery.ajax({
         type: "POST",
@@ -1051,7 +1083,7 @@ function checkBulkProcessingCallApi(){
                                        + "<a class='button button-smaller' href='admin.php?action=shortpixel_check_quota'>" + _spTr.check__Quota + "</a>");
                         showToolBarAlert(ShortPixel.STATUS_QUOTA_EXCEEDED);
                         if(data['Stop'] == false) { //there are other items in the priority list, maybe processed, try those
-                            setTimeout(checkBulkProgress, 5000);
+                            setBulkTimer(5000);
                         }
                         ShortPixel.otherMediaUpdateActions(id, ['quota','view']);
                         break;
@@ -1067,7 +1099,7 @@ function checkBulkProcessingCallApi(){
                             ShortPixel.otherMediaUpdateActions(id, ['retry','view']);
                         }
                         console.log(data["Message"]);
-                        setTimeout(checkBulkProgress, 5000);
+                        setBulkTimer(5000);
                         break;
                     case ShortPixel.STATUS_EMPTY_QUEUE:
                         console.log(data["Message"]);
@@ -1141,7 +1173,7 @@ function checkBulkProcessingCallApi(){
                         if(isBulkPage && typeof data["BulkPercent"] !== 'undefined') {
                             progressUpdate(data["BulkPercent"], data["BulkMsg"]);
                         }
-                        setTimeout(checkBulkProgress, 5000);
+                        setBulkTimer(5000);
                         break;
 
                     case ShortPixel.STATUS_SKIP:
@@ -1165,7 +1197,7 @@ function checkBulkProcessingCallApi(){
                         if(isBulkPage && data["Count"] > 3) {
                             ShortPixel.bulkShowLengthyMsg(id, data["Filename"], data["CustomImageLink"]);
                         }
-                        setTimeout(checkBulkProgress, 5000);
+                        setBulkTimer(5000);
                         break;
                     case ShortPixel.STATUS_SEARCHING:
                         console.log('Server response: ' + response);
@@ -1174,15 +1206,15 @@ function checkBulkProcessingCallApi(){
                         {
                           jQuery('.bulk-notice-msg.bulk-searching').show();
                         }
-                        setTimeout(checkBulkProgress, 2500);
+                        setBulkTimer(2500);
                     break;
                     case ShortPixel.STATUS_MAINTENANCE:
                         ShortPixel.bulkShowMaintenanceMsg('maintenance');
-                        setTimeout(checkBulkProgress, 60000);
+                        setBulkTimer(60000);
                         break;
                     case ShortPixel.STATUS_QUEUE_FULL:
                         ShortPixel.bulkShowMaintenanceMsg('queue-full');
-                        setTimeout(checkBulkProgress, 60000);
+                        setBulkTimer(60000);
                         break;
                     default:
                         ShortPixel.retry("Unknown status " + data["Status"] + ". Retrying...");
@@ -1210,7 +1242,9 @@ function checkBulkProcessingCallApi(){
 
 function clearBulkProcessor(){
     ShortPixel.bulkProcessor = false; //nothing to process, leave the role. Next page load will check again
-    localStorage.bulkTime = 0;
+    localStorage.bulkTime = Date.now();
+    setBulkTimer(0); // stop checking.
+
     if(window.location.href.search("wp-short-pixel-bulk") >= 0) {
         localStorage.bulkPage = 0;
     }
@@ -1244,7 +1278,8 @@ function manualOptimization(id, cleanup) {
             var resp = JSON.parse(response);
             if(resp["Status"] == ShortPixel.STATUS_SUCCESS) {
                 //TODO - when calling several manual optimizations, the checkBulkProgress gets scheduled several times so several loops run in || - make only one.
-                setTimeout(checkBulkProgress, 2000);
+                setBulkTimer(2000);
+                ShortPixel.BULK_SECRET = false;
             } else {
                 setCellMessage(id, typeof resp["Message"] !== "undefined" ? resp["Message"] : _spTr.thisContentNotProcessable, "");
             }
@@ -1279,7 +1314,8 @@ function reoptimize(id, type) {
     jQuery.get(ShortPixel.AJAX_URL, data, function(response) {
         data = JSON.parse(response);
         if(data["Status"] == ShortPixel.STATUS_SUCCESS) {
-            setTimeout(checkBulkProgress, 2000);
+            setBulkTimer(2000);
+            ShortPixel.BULK_SECRET = false;
         } else {
             $msg = typeof data["Message"] !== "undefined" ? data["Message"] : _spTr.thisContentNotProcessable;
             setCellMessage(id, $msg, "");
@@ -1297,7 +1333,8 @@ function optimizeThumbs(id) {
     jQuery.get(ShortPixel.AJAX_URL, data, function(response) {
         data = JSON.parse(response);
         if(data["Status"] == ShortPixel.STATUS_SUCCESS) {
-            setTimeout(checkBulkProgress, 2000);
+            setBulkTimer(2000);
+            ShortPixel.BULK_SECRET = false;
         } else {
             setCellMessage(id, typeof data["Message"] !== "undefined" ? data["Message"] : _spTr.thisContentNotProcessable, "");
         }

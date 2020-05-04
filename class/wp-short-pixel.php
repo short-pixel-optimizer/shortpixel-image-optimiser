@@ -327,6 +327,12 @@ class WPShortPixel {
         $keyControl = \ShortPixel\ApiKeyController::getInstance();
         $apikey = $keyControl->getKeyForDisplay();
 
+        // Get a Secret Key.
+        $cacheControl = new \ShortPixel\CacheController();
+        $bulkSecret = $cacheControl->getItem('bulk-secret');
+        $secretKey = (! is_null($bulkSecret->getValue() )) ? $bulkSecret->getValue() : false;
+
+
         // Using an Array within another Array to protect the primitive values from being cast to strings
         $ShortPixelConstants = array(array(
             'STATUS_SUCCESS'=>ShortPixelAPI::STATUS_SUCCESS,
@@ -348,7 +354,8 @@ class WPShortPixel {
             'MEDIA_ALERT'=>$this->_settings->mediaAlert ? "done" : "todo",
             'FRONT_BOOTSTRAP'=>$this->_settings->frontBootstrap && (!isset($this->_settings->lastBackAction) || (time() - $this->_settings->lastBackAction > 600)) ? 1 : 0,
             'AJAX_URL'=>admin_url('admin-ajax.php'),
-            'AFFILIATE'=>false
+            'AFFILIATE'=>false,
+            'BULK_SECRET' => $secretKey,
         ));
 
         if (Log::isManualDebug() )
@@ -1133,6 +1140,22 @@ class WPShortPixel {
             //if in backend, and front-end is activated, mark processing from backend to shut off the front-end for 10 min.
             $this->_settings->lastBackAction = time();
         }
+
+        if (isset($_POST['bulk-secret']))
+        {
+          $secret = sanitize_text_field($_POST['bulk-secret']);
+          $cacheControl = new \ShortPixel\CacheController();
+          $cachedObj = $cacheControl->getItem('bulk-secret');
+
+          if (! $cachedObj->exists())
+          {
+             $cachedObj->setValue($secret);
+             $cachedObj->setExpires(3 * MINUTE_IN_SECONDS);
+             $cacheControl->storeItemObject($cachedObj);
+          }
+
+        }
+
 
         $rawPrioQ = $this->prioQ->get();
         if(count($rawPrioQ)) { Log::addInfo("HIP: 0 Priority Queue: ".json_encode($rawPrioQ)); }
