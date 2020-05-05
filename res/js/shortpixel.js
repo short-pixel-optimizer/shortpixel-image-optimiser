@@ -1006,6 +1006,8 @@ function checkBulkProgress() {
       {
         console.log('Cancelled Processing. Bulk Processor in use');
         clearBulkProcessor();
+        jQuery("li.shortpixel-toolbar-processing").removeClass("shortpixel-processing");
+        jQuery("li.shortpixel-toolbar-processing").addClass("shortpixel-hide");
         return;
       }
     }

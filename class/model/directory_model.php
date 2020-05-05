@@ -66,8 +66,6 @@ class DirectoryModel extends ShortPixelModel
       //basename($this->path);
       $this->name = $dir->getFileName();
 
-      Log::addTemp(basename($this->path));
-
       if (file_exists($this->path))
       {
         $this->exists();

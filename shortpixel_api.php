@@ -112,7 +112,6 @@ class ShortPixelAPI {
             throw new Exception(__('Invalid API Key', 'shortpixel-image-optimiser'));
         }
 
-      //  WpShortPixel::log("DO REQUESTS for META: " . json_encode($itemHandler->getRawMeta()) . " STACK: " . json_encode(debug_backtrace()));
         $URLs = apply_filters('shortpixel_image_urls', $URLs, $itemHandler->getId()) ;
 
         $requestParameters = array(
