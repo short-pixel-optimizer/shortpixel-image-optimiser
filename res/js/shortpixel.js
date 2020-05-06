@@ -426,6 +426,7 @@ var ShortPixel = function() {
 
     function browseContent(browseData) {
         browseData.action = 'shortpixel_browse_content';
+
         var browseResponse = "";
         jQuery.ajax({
             type: "POST",
@@ -541,8 +542,6 @@ var ShortPixel = function() {
         }
     });
 } */
-
-
     function initFolderSelector() {
         jQuery(".select-folder-button").click(function(){
             jQuery(".sp-folder-picker-shade").fadeIn(100); //.css("display", "block");
@@ -552,9 +551,7 @@ var ShortPixel = function() {
             picker.parent().css('margin-left', -picker.width() / 2);
             picker.fileTree({
                 script: ShortPixel.browseContent,
-                //folderEvent: 'dblclick',
-                multiFolder: false
-                //onlyFolders: true
+                multiFolder: false,
             });
         });
         jQuery(".shortpixel-modal input.select-folder-cancel, .sp-folder-picker-shade").click(function(){
@@ -563,6 +560,8 @@ var ShortPixel = function() {
         });
         jQuery(".shortpixel-modal input.select-folder").click(function(e){
             //var subPath = jQuery("UL.jqueryFileTree LI.directory.selected A").attr("rel").trim();
+
+            // @todo This whole thing might go, since we don't display files anymore in folderTree.
 
             // check if selected item is a directory. If so, we are good.
             var selected = jQuery('UL.jqueryFileTree LI.directory.selected');

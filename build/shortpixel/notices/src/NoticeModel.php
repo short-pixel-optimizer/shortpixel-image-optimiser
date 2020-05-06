@@ -89,10 +89,11 @@ class NoticeModel //extends ShortPixelModel
    */
   public function addDetail($detail, $clean = false)
   {
-      if (! $clean)
-        $this->details[] = $detail;
-      else
-        $this->details = array($detail);
+    if ($clean)
+      $this->details = array();
+
+    if (! in_array($detail, $this->details) )
+      $this->details[] = $detail;
   }
 
 

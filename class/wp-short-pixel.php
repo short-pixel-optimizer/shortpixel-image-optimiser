@@ -2363,6 +2363,7 @@ class WPShortPixel {
         {
           Log::addWarn("Custom File $ID - $file does not have a backup");
           $notice = Notices::addWarning(__('Not able to restore file(s). Could not find backup', 'shortpixel-image-optimiser'), true);
+          Log::addTemp('BackupFILe Notice', $notice);
           Notices::addDetail($notice, (string) $file);
           return false;
         }
