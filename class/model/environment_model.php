@@ -79,6 +79,7 @@ class EnvironmentModel extends ShortPixelModel
 
   }
 
+  /* https://github.com/WordPress/WordPress/blob/master/wp-includes/class-wp-image-editor-imagick.php */
   public function hasImagick()
   {
     $editor = wp_get_image_editor(\wpSPIO()->plugin_path('res/img/test.jpg'));
@@ -175,6 +176,21 @@ class EnvironmentModel extends ShortPixelModel
   {
     $ng = NextGen::getInstance();
     $this->has_nextgen = $ng->has_nextgen();
+
+  }
+
+  public function getRelativePluginSlug()
+  {
+      $dir = SHORTPIXEL_PLUGIN_DIR;
+      $file = SHORTPIXEL_PLUGIN_FILE;
+
+      $fs = \wpSPIO()->filesystem();
+
+      $plugins_dir = $fs->getDirectory($dir)->getParent();
+
+      $slug = str_replace($plugins_dir->getPath(), '', $file);
+
+      return $slug;
 
   }
 }

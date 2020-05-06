@@ -998,13 +998,11 @@ function checkBulkProgress() {
         ShortPixel.BULK_SECRET = false;
     }
 
-    console.log('Secret : '  + ShortPixel.BULK_SECRET + ' Local: ' + localStorage.bulkSecret);
-    console.log('BulkTime: ' + localStorage.bulkTime + ' ' + Date.now());
     if (ShortPixel.BULK_SECRET !== false)
     {
       if (ShortPixel.BULK_SECRET != localStorage.bulkSecret)
       {
-        console.log('Cancelled Processing. Bulk Processor in use');
+    //    console.log('Cancelled Processing. Bulk Processor in use');
         clearBulkProcessor();
         jQuery("li.shortpixel-toolbar-processing").removeClass("shortpixel-processing");
         jQuery("li.shortpixel-toolbar-processing").addClass("shortpixel-hide");
@@ -1019,7 +1017,7 @@ function checkBulkProgress() {
         localStorage.bulkTime = Date.now();
         if (localStorage.getItem('bulkSecret') == null)
           localStorage.bulkSecret = Math.random().toString(36).substring(7);
-        //console.log(localStorage.bulkTime);
+
         checkBulkProcessingCallApi();
         setBulkTimer(5000);
     } else {
@@ -1031,17 +1029,17 @@ var bulkTimer; // scope
 function setBulkTimer(time)
 {
    window.clearTimeout(bulkTimer);
-   console.log('Clearing TimeOut');
+   //console.log('Clearing TimeOut');
 
    if (time > 0)
    {
     bulkTimer = window.setTimeout(checkBulkProgress, time);
-    console.log('Set Timeout ' + time + ' ms');
+    //console.log('Set Timeout ' + time + ' ms');
   }
 }
 
 function checkBulkProcessingCallApi(){
-    console.log('CheckBulkProcessingAPI');
+  //  console.log('CheckBulkProcessingAPI');
     var data = { 'action': 'shortpixel_image_processing', 'bulk-secret': localStorage.bulkSecret };
     // since WP 2.8 ajaxurl is always defined in the admin header and points to admin-ajax.php
     jQuery.ajax({

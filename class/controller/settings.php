@@ -171,6 +171,9 @@ class SettingsController extends shortPixelController
       {
          if ($this->is_verifiedkey) // supress quotaData alerts when handing unset API's.
           $this->loadQuotaData();
+        else
+          \WpShortPixelDb::checkCustomTables();
+
 
          $this->view->data = (Object) $this->model->getData();
          if (($this->is_constant_key))
@@ -273,7 +276,7 @@ class SettingsController extends shortPixelController
 
       protected function loadCustomFolders()
       {
-      
+
         $otherMedia = new OtherMediaController();
 
         $otherMedia->refreshFolders();

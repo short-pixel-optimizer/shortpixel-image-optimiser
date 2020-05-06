@@ -116,6 +116,7 @@ class ShortPixelCustomMetaDao {
     }
 
     public function createUpdateShortPixelTables() {
+
         $res = $this->db->createUpdateSchema(array(
                 self::getCreateFolderTableSQL($this->db->getPrefix(), $this->db->getCharsetCollate()),
                 self::getCreateMetaTableSQL($this->db->getPrefix(), $this->db->getCharsetCollate())

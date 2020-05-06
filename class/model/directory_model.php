@@ -328,4 +328,15 @@ class DirectoryModel extends ShortPixelModel
     return false;
   }
 
+  /** Get this paths parent */
+  public function getParent()
+  {
+      $path = $this->getPath();
+      $parentPath = dirname($path);
+
+      $parentDir = new DirectoryModel($parentPath);
+
+      return $parentDir;
+  }
+
 }
