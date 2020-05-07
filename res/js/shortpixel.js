@@ -957,8 +957,6 @@ function checkBulkProgress() {
         return '/';
     };
 
-    console.debug('CheckBulkProgress');
-
     var first = false; //arm replacer
     var url = window.location.href.toLowerCase().replace(/\/\//g , replacer);
 
