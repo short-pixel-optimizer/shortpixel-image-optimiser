@@ -12,6 +12,7 @@ define('SHORTPIXEL_API_KEY', '77O4S9VttKCljaDha8fW');
 require_once( dirname( dirname( __FILE__ ) ) . '/vendor/autoload.php');
 
 $_tests_dir = getenv( 'WP_TESTS_DIR' );
+$_tests_dir = false;
 
 if ( ! $_tests_dir ) {
 	$_tests_dir = rtrim( sys_get_temp_dir(), '/\\' ) . '/wordpress-tests-lib';

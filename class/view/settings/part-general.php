@@ -130,6 +130,7 @@
                     <label for="removeExif"><?php _e('Remove the EXIF tag of the image (recommended).','shortpixel-image-optimiser');?></label>
                     <p class="settings-info"> <?php _e('EXIF is a set of various pieces of information that are automatically embedded into the image upon creation. This can include GPS position, camera manufacturer, date and time, etc.
                         Unless you really need that data to be preserved, we recommend removing it as it can lead to <a href="http://blog.shortpixel.com/how-much-smaller-can-be-images-without-exif-icc" target="_blank">better compression rates</a>.','shortpixel-image-optimiser');?></p>
+
                 </td>
             </tr>
             <tr class='exif_warning view-notice-row'>
@@ -138,6 +139,15 @@
                   <div class='view-notice warning'><p><?php printf(__('Warning - Converting from PNG to JPG will %s not %s keep the EXIF-information!'), "<strong>","</strong>"); ?></p></div>
                 </td>
             </tr>
+
+            <?php $imagick = (\wpSPIO()->env()->hasImagick()) ? 1 : 0; ?>
+            <tr class='exif_imagick_warning view-notice-row' data-imagick="<?php echo $imagick ?>">
+                  <th scope="row">&nbsp;</th>
+                  <td>
+                    <div class='view-notice warning'><p><?php printf(__('Warning - Imagick library not detected on server. WordPress will use another library to resize images, which may result in loss of EXIF-information'), "<strong>","</strong>"); ?></p></div>
+                  </td>
+            </tr>
+
             <tr>
               <?php  $resizeDisabled = (! $this->view->data->resizeImages) ? 'disabled' : '';
                  // @todo Inline styling here can be decluttered.

@@ -59,7 +59,7 @@ class EnvironmentModel extends ShortPixelModel
 
   /** Check ENV is a specific function is allowed. Use this with functions that might be turned off on configurations
   * @param $function String  The name of the function being tested
-  * Note: In future this function can be extended with other function edge cases. 
+  * Note: In future this function can be extended with other function edge cases.
   */
   public function is_function_usable($function)
   {
@@ -77,6 +77,18 @@ class EnvironmentModel extends ShortPixelModel
 
     return false;
 
+  }
+
+  /* https://github.com/WordPress/WordPress/blob/master/wp-includes/class-wp-image-editor-imagick.php */
+  public function hasImagick()
+  {
+    $editor = wp_get_image_editor(\wpSPIO()->plugin_path('res/img/test.jpg'));
+    $className = get_class($editor);
+
+    if ($className == 'WP_Image_Editor_Imagick')
+      return true;
+    else
+      return false;
   }
 
   private function setServer()
@@ -164,6 +176,21 @@ class EnvironmentModel extends ShortPixelModel
   {
     $ng = NextGen::getInstance();
     $this->has_nextgen = $ng->has_nextgen();
+
+  }
+
+  public function getRelativePluginSlug()
+  {
+      $dir = SHORTPIXEL_PLUGIN_DIR;
+      $file = SHORTPIXEL_PLUGIN_FILE;
+
+      $fs = \wpSPIO()->filesystem();
+
+      $plugins_dir = $fs->getDirectory($dir)->getParent();
+
+      $slug = str_replace($plugins_dir->getPath(), '', $file);
+
+      return $slug;
 
   }
 }

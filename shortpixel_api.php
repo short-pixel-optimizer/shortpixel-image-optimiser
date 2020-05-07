@@ -112,7 +112,6 @@ class ShortPixelAPI {
             throw new Exception(__('Invalid API Key', 'shortpixel-image-optimiser'));
         }
 
-      //  WpShortPixel::log("DO REQUESTS for META: " . json_encode($itemHandler->getRawMeta()) . " STACK: " . json_encode(debug_backtrace()));
         $URLs = apply_filters('shortpixel_image_urls', $URLs, $itemHandler->getId()) ;
 
         $requestParameters = array(
@@ -143,10 +142,6 @@ class ShortPixelAPI {
         //only if $Blocking is true analyze the response
         if ( $Blocking )
         {
-            //WpShortPixel::log("API response : " . json_encode($response));
-
-            //die(var_dump(array('URL: ' => $this->_apiEndPoint, '<br><br>REQUEST:' => $requestParameters, '<br><br>RESPONSE: ' => $response, '<br><br>BODY: ' => isset($response['body']) ? $response['body'] : '' )));
-            //there was an error, save this error inside file's SP optimization field
             if ( is_object($response) && get_class($response) == 'WP_Error' )
             {
                 $errorMessage = $response->errors['http_request_failed'][0];
@@ -251,6 +246,7 @@ class ShortPixelAPI {
         }
         catch(Exception $e) {
           Log::addError('Api DoRequest Thrown ' . $e->getMessage());
+          $response = array(); // otherwise not set.
         }
 
         //die($response['body']);
@@ -274,7 +270,7 @@ class ShortPixelAPI {
             $firstImage = $APIresponse[0];//extract as object first image
             switch($firstImage->Status->Code)
             {
-            case 2: //self::STATUS_SUCCESS: <- @todo Success in this constant is 1 ,but appears to be 2? // success 
+            case 2: //self::STATUS_SUCCESS: <- @todo Success in this constant is 1 ,but appears to be 2? // success
                 //handle image has been processed
                 if(!isset($firstImage->Status->QuotaExceeded)) {
                     $this->_settings->quotaExceeded = 0;//reset the quota exceeded flag

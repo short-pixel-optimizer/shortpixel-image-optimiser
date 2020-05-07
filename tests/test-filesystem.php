@@ -501,7 +501,7 @@ class FileSystemTest extends  WP_UnitTestCase
     $fullfilepath5 = ABSPATH . 'wpimg1.jpg';
     $urlpath5 = 'http://test.com/wpimg1.jpg';
     $file5 = $this->fs->getFile($fullfilepath5);
-    $this->assertEquals($urlpath5, $this->fs->pathToUrl($file5)); 
+    $this->assertEquals($urlpath5, $this->fs->pathToUrl($file5));
 
 
     $this->urlSetup('http://test.com:8080');
@@ -532,6 +532,11 @@ class FileSystemTest extends  WP_UnitTestCase
     $this->assertEquals($file->getExtension(), 'jpg');
     $this->assertEquals($file->getFileName(), 'ашдутфьу.jpg');
     $this->assertEquals($file->getFileBase(), 'ашдутфьу');
+
+    $fullfilepath = $this->root->url() . 'ашдутфьу/image.jpg';
+    $file = $this->fs->getFile($fullfilepath);
+
+    $this->assertEquals($file->getFullPath(), $fullfilepath);
   }
 
   public function testFileWithArabic()
@@ -595,6 +600,33 @@ class FileSystemTest extends  WP_UnitTestCase
     $this->assertEquals(wp_normalize_path($wfile2), $file2->getFullPath());
 
     remove_filter('upload_dir', array($this, 'filterUploadDir'));
+  }
+
+  public function testDirectoryWithNonLatin()
+  {
+
+    $dirpath = $this->root->url() . '/багет';
+    $directory = $this->fs->getDirectory($dirpath);
+    $directory->check();
+
+    $directory = $this->fs->getDirectory($dirpath);
+    $this->assertEquals('багет', $directory->getName());
+    $this->assertTrue($directory->exists());
+    $this->assertDirectoryExists($dirpath);
+    $this->assertDirectoryIsReadable($dirpath);
+    $this->assertDirectoryIsWritable($dirpath);
+
+    $dirpath = $this->root->url() . '/μπαγκέτα/';
+    $directory = $this->fs->getDirectory($dirpath);
+    $directory->check();
+
+    $directory = $this->fs->getDirectory($dirpath);
+    $this->assertEquals('μπαγκέτα', $directory->getName());
+    $this->assertTrue($directory->exists());
+    $this->assertDirectoryExists($dirpath);
+    $this->assertDirectoryIsReadable($dirpath);
+    $this->assertDirectoryIsWritable($dirpath);
+
   }
 
   public function filterUploadDir($path)

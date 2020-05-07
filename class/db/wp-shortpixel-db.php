@@ -28,21 +28,52 @@ class WpShortPixelDb implements ShortPixelDb {
 
     public static function checkCustomTables() {
         global $wpdb;
-        if(function_exists("is_multisite") && is_multisite()) {
-            $sites = function_exists("get_sites") ? get_sites() : wp_get_sites();
+
+        /*$slug = \wpSPIO()->env()->getRelativePluginSlug();
+        $network_active = \wpSPIO()->env()->is_multisite && function_exists('is_plugin_active_for_network') && is_plugin_active_for_network($slug) ? true : false;
+
+        if($network_active)
+        {
+          if (! function_exists("get_sites") )
+          { exit('get_sites fail'); return null;  }
+
+            $sites = get_sites();
             foreach($sites as $site) {
-                if(!is_array($site)) {
-                    $site = (array)$site;
-                }
-                $prefix = $wpdb->get_blog_prefix($site['blog_id']);
-                $spMetaDao = new ShortPixelCustomMetaDao(new WpShortPixelDb($prefix));
-                $spMetaDao->createUpdateShortPixelTables();
+                  $site_id = $site->blog_id;
+                  $prefix = $wpdb->get_blog_prefix($site_id);
+
+
+                  $spMetaDao = new ShortPixelCustomMetaDao(new WpShortPixelDb($prefix));
+                  $spMetaDao->createUpdateShortPixelTables();
             }
 
-        } else {
-            $spMetaDao = new ShortPixelCustomMetaDao(new WpShortPixelDb());
-            $spMetaDao->createUpdateShortPixelTables();
-        }
+        } else { */
+
+      /*  if (! $spMetaDao->tablesExist())
+        {
+
+        } */
+        /* **** **** **** **** **** **** **** **** **** ***** **** **** **** ****
+        * Check why database is not created like this.
+        */
+        $spMetaDao = new ShortPixelCustomMetaDao(new WpShortPixelDb());
+
+        $spMetaDao->createUpdateShortPixelTables();
+        //}
+    }
+
+    private static function activeOnBlog($site, $slug)
+    {
+      $option = get_blog_option($site, 'active_plugins');
+
+      var_dump($option);
+      foreach($option as $active_slug)
+      {
+         if ($active_slug == $slug)
+          return true;
+      }
+
+      return false;
     }
 
     public function getCharsetCollate() {
@@ -52,7 +83,8 @@ class WpShortPixelDb implements ShortPixelDb {
 
     public function getPrefix() {
         global $wpdb;
-        return $this->prefix ? $this->prefix : $wpdb->prefix;
+      //  return $this->prefix ? $this->prefix : $wpdb->prefix;
+       return $wpdb->prefix;
     }
 
     public function getDbName() {

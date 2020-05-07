@@ -37,7 +37,6 @@ class CacheController extends ShortPixelController
   {
        self::$cached_items[$cache->getName()] = $cache;
        $cache->save();
-   
   }
 
   public function getItem($name)

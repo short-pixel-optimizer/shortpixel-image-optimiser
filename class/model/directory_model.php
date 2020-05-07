@@ -32,13 +32,15 @@ class DirectoryModel extends ShortPixelModel
   public function __construct($path)
   {
       $path = wp_normalize_path($path);
-      if (! is_dir($path)) // path is wrong, *or* simply doesn't exist.
+
+      if (! is_dir($path) ) // path is wrong, *or* simply doesn't exist.
       {
         /* Test for file input.
         * If pathinfo is fed a fullpath, it rips of last entry without setting extension, don't further trust.
         * If it's a file extension is set, then trust.
         */
         $pathinfo = pathinfo($path);
+
         if (isset($pathinfo['extension']))
         {
           $path = $pathinfo['dirname'];
@@ -58,7 +60,11 @@ class DirectoryModel extends ShortPixelModel
       }
 
       $this->path = trailingslashit($path);
-      $this->name = basename($this->path);
+
+      // Basename doesn't work properly on non-latin ( cyrillic, greek etc )  directory names, returning the parent path instead.
+      $dir = new \SplFileInfo($path);
+      //basename($this->path);
+      $this->name = $dir->getFileName();
 
       if (file_exists($this->path))
       {
@@ -320,6 +326,17 @@ class DirectoryModel extends ShortPixelModel
       return true;
     }
     return false;
+  }
+
+  /** Get this paths parent */
+  public function getParent()
+  {
+      $path = $this->getPath();
+      $parentPath = dirname($path);
+
+      $parentDir = new DirectoryModel($parentPath);
+
+      return $parentDir;
   }
 
 }

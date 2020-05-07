@@ -325,7 +325,7 @@ class adminNoticesController extends ShortPixelController
          $quotaData = $stats;
 
          $message = $this->getQuotaExceededMessage($quotaData);
-         Log::addtemp('Quota Exceeded message',  $message);
+
          $notice = Notices::addError($message);
          Notices::makePersistent($notice, self::MSG_QUOTA_REACHED, WEEK_IN_SECONDS);
 
