@@ -2,9 +2,9 @@
 Contributors: ShortPixel
 Tags: compressor, image, compression, optimize, image optimizer, image optimiser, image compression, resize, compress pdf, compress jpg, compress png, image compression
 Requires at least: 3.2.0
-Tested up to: 5.4
+Tested up to: 5.4.1
 Requires PHP: 5.3
-Stable tag: 4.17.4
+Stable tag: 4.18.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -280,6 +280,16 @@ Hide the Cloudflare settings by defining these constants in wp-config.php:
 9. Check other optimized images status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 4.18.0 =
+
+Release date 7th May 2020
+* Added a warning for the case when Imagik library isn't available and "Keep EXIF data is enabled";
+* Added a check to prevent the bulk process to be called in multiple browsers in order to decrease the load on admin-heavy sites;
+* Fix for the situation when the bulk process would enter a loop in certain situations;
+* Fix for the notices after bulk restore that would duplicate the files missing form backups;
+* Fix for multisite when DB tables were created even for sub-sites without the plugin being active;
+* Language – 1 new strings added, 0 updated, 0 fuzzied, and 5 obsoleted.
 
 = 4.17.4 =
 
