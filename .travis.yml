@@ -2,7 +2,8 @@ language: php
 php:
   - 7.3
 services: mysql # Credentials for mysql based on the documentation https://docs.travis-ci.com/user/database-setup/#mysql
-script: 
+script:
+  - git clone https://github.com/short-pixel-optimizer/plugin-modules modules 
   - bash bin/install-wp-tests.sh  sptestdatabase root ''
   - composer update
   - bash test.sh
