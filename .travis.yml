@@ -3,7 +3,7 @@ php:
   - 7.3
 services: mysql # Credentials for mysql based on the documentation https://docs.travis-ci.com/user/database-setup/#mysql
 script:
-  - git clone https://github.com/short-pixel-optimizer/plugin-modules modules 
+  - git clone git@github.com:short-pixel-optimizer/plugin-modules.git modules
   - bash bin/install-wp-tests.sh  sptestdatabase root ''
   - composer update
   - bash test.sh
