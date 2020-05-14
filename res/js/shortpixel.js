@@ -1016,7 +1016,6 @@ function checkBulkProgress() {
           localStorage.bulkSecret = Math.random().toString(36).substring(7);
 
         checkBulkProcessingCallApi();
-        setBulkTimer(5000);
     } else {
         setBulkTimer(20000);
     }
