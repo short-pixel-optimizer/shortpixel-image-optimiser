@@ -957,8 +957,6 @@ function checkBulkProgress() {
         return '/';
     };
 
-    console.debug('CheckBulkProgress');
-
     var first = false; //arm replacer
     var url = window.location.href.toLowerCase().replace(/\/\//g , replacer);
 
@@ -1018,7 +1016,6 @@ function checkBulkProgress() {
           localStorage.bulkSecret = Math.random().toString(36).substring(7);
 
         checkBulkProcessingCallApi();
-        setBulkTimer(5000);
     } else {
         setBulkTimer(20000);
     }
