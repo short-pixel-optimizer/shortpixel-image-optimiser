@@ -1,15 +1,16 @@
 <?php
-namespace ShortPixel;
+namespace ShortPixel\Controller;
 use ShortPixel\Notices\NoticeController as Notices;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
+use ShortPixel\Model\ApiKeyModel as ApiKeyModel;
 
 /* Controller for automatic Notices about status of the plugin.
 * This controller is bound for automatic fire. Regular procedural notices should just be queued using the Notices modules.
 * Called in admin_notices.
 */
 
-class adminNoticesController extends ShortPixelController
+class AdminNoticesController extends \ShortPixel\Controller
 {
     protected static $instance;
 
@@ -44,7 +45,7 @@ class adminNoticesController extends ShortPixelController
     public static function getInstance()
     {
       if (is_null(self::$instance))
-          self::$instance = new adminNoticesController();
+          self::$instance = new AdminNoticesController();
 
       return self::$instance;
     }
@@ -109,8 +110,8 @@ class adminNoticesController extends ShortPixelController
           {
             echo $notice->getForDisplay();
 
-            if ($notice->getID() == adminNoticesController::MSG_QUOTA_REACHED || $notice->getID() == adminNoticesController::MSG_UPGRADE_MONTH
-            || $notice->getID() == adminNoticesController::MSG_UPGRADE_BULK)
+            if ($notice->getID() == AdminNoticesController::MSG_QUOTA_REACHED || $notice->getID() == AdminNoticesController::MSG_UPGRADE_MONTH
+            || $notice->getID() == AdminNoticesController::MSG_UPGRADE_BULK)
             {
               wp_enqueue_script('jquery.knob.min.js');
               wp_enqueue_script('jquery.tooltip.min.js');
@@ -408,7 +409,6 @@ class adminNoticesController extends ShortPixelController
     protected function getQuotaExceededMessage($quotaData)
     {
       $averageCompression = \wpSPIO()->getShortPixel()->getAverageCompression();
-      \wpSPIO()->loadModel('apikey');
 
       $keyModel = new apiKeyModel();
       $keyModel->loadKey();

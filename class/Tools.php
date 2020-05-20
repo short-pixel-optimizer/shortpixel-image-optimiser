@@ -33,10 +33,6 @@ class ShortPixelTools {
        return plugin_dir_path(SHORTPIXEL_PLUGIN_FILE);
     }
 
-    public static function namespaceit($name)
-    {
-      return '\ShortPixel\\'  . $name;
-    }
 
     public static function requestIsFrontendAjax()
     {

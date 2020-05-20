@@ -17,10 +17,13 @@
 	"phpunit/phpunit": "^7",
 	"mikey179/vfsstream": "^1"
    },
-
+   "autoload": {
+       "psr-4": { "ShortPixel\\" : "class" }
+   },
     "scripts": {
         "post-update-cmd" : "\\ShortPixel\\Build\\Build::BuildIt",
-        "buildSP" : "\\ShortPixel\\Build\\Build::BuildIt"
+        "buildSP" : "\\ShortPixel\\Build\\Build::BuildIt",
+        "buildLoader": "\\ShortPixel\\BuildAutoLoader::buildJSON"
     },
     "extra": {
          "targetNamespace" : "ShortPixel"

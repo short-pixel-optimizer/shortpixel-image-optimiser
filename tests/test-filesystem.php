@@ -11,7 +11,7 @@ class FileSystemTest extends  WP_UnitTestCase
 
   public function setUp()
   {
-    $this->fs = \wpSPIO()->filesystem(); //new ShortPixel\FileSystemController();
+    $this->fs = \wpSPIO()->filesystem(); 
     $this->root = vfsStream::setup('root', null, $this->getTestFiles() );
   }
 

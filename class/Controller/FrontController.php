@@ -1,11 +1,11 @@
 <?php
-namespace ShortPixel;
+namespace ShortPixel\Controller;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 
 
 /** Handle everything that SP is doing front-wise */
-class frontController extends ShortPixelController
+class FrontController extends \ShortPixel\Controller
 {
   // DeliverWebp option settings for front-end delivery of webp
   const WEBP_GLOBAL = 1;
@@ -16,7 +16,7 @@ class frontController extends ShortPixelController
   {
     $do_front =  \wpSPIO()->settings()->frontBootstrap;
 
-    if (wpSPIO()->env()->is_front) // if is front.
+    if (\wpSPIO()->env()->is_front) // if is front.
     {
       $this->initWebpHooks();
       if ($do_front)

@@ -1,23 +1,17 @@
 <?php
-
-namespace ShortPixel;
+namespace ShortPixel\Controller;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 
+use ShortPixel\Model\DirectoryOtherMediaModel as DirectoryOtherMediaModel;
+use ShortPixel\Model\DirectoryModel as DirectoryModel;
+
 // Future contoller for the edit media metabox view.
-class OtherMediaController extends ShortPixelController
+class OtherMediaController extends \ShortPixel\Controller
 {
-
-  //  protected $dataProvider; // spmetadao
-
     public function __construct()
     {
         parent::__construct();
-      //  $this->dataProvider = \wpSPIO()->getShortPixel()->getSpMetaDao();
-
-        $this->loadModel('directory');
-        $this->loadModel('directory_othermedia');
-
     }
 
     // Get CustomFolder for usage.

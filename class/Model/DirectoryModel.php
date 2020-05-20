@@ -1,5 +1,5 @@
 <?php
-namespace ShortPixel;
+namespace ShortPixel\Model;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 /* Model for Directories
@@ -9,7 +9,7 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 *
 */
 
-class DirectoryModel extends ShortPixelModel
+class DirectoryModel extends \ShortPixel\Model
 {
   // Directory info
   protected $path;

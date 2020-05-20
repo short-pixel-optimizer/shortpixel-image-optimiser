@@ -1,7 +1,9 @@
 <?php
-namespace ShortPixel;
+namespace ShortPixel\Model;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notice;
+
+use \ShortPixel\Model\DirectoryModel as DirectoryModel;
 
 // extends DirectoryModel. Handles Shortpixel_meta database table
 // Replacing main parts of shortpixel-folder
@@ -310,7 +312,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
     $args = wp_parse_args($args, $defaults);
 
     $fs =  \wpSPIO()->fileSystem();
-    $cache = new \ShortPixel\CacheController();
+    $cache = new \ShortPixel\Controller\CacheController();
 
     $spMetaDao = \wpSPIO()->getShortPixel()->getSpMetaDao();
 

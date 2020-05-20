@@ -2,7 +2,7 @@
 namespace ShortPixel;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
-abstract class ShortPixelModel
+abstract class Model
 {
   protected $model = array();
 

@@ -1,15 +1,16 @@
 <?php
-namespace ShortPixel;
+namespace ShortPixel\Controller\View;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 
+use ShortPixel\Controller\ApiKeyController as ApiKeyController;
+use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 
 // Future contoller for the edit media metabox view.
-class OtherMediaViewController extends ShortPixelController
+class OtherMediaViewController extends \ShortPixel\Controller
 {
       //$this->model = new
       protected $template = 'view-other-media';
-      protected $model = 'image';
 
       // Pagination .
       protected $items_per_page = 20;
@@ -23,8 +24,6 @@ class OtherMediaViewController extends ShortPixelController
 
       public function __construct()
       {
-        $this->loadModel($this->model);
-      //  $this->loadModel('image');
         parent::__construct();
         $this->setActions(); // possible actions.
 

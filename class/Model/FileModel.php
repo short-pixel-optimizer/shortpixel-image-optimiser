@@ -1,5 +1,5 @@
 <?php
-namespace ShortPixel;
+namespace ShortPixel\Model;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 /* FileModel class.
@@ -12,7 +12,7 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 * - Every file can have a backup counterpart.
 *
 */
-class FileModel extends ShortPixelModel
+class FileModel extends \ShortPixel\Model
 {
 
   // File info

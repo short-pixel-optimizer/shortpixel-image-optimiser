@@ -1,9 +1,11 @@
 <?php
-namespace ShortPixel;
+namespace ShortPixel\Controller;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
+use ShortPixel\Model\ImageModel as ImageModel;
+
 // Future contoller for the edit media metabox view.
-class editMediaController extends ShortPixelController
+class EditMediaController extends \ShortPixel\Controller
 {
       protected $template = 'view-edit-media';
       protected $model = 'image';
@@ -14,7 +16,6 @@ class editMediaController extends ShortPixelController
       public function __construct()
       {
         parent::__construct();
-        $this->loadModel($this->model);
       }
 
       // This data should be rendered by Image Model in the future.

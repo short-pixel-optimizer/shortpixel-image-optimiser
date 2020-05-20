@@ -1,9 +1,12 @@
 <?php
-namespace ShortPixel;
+namespace ShortPixel\Controller\View;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 
-class BulkViewController extends ShortPixelController
+use \ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
+
+
+class BulkViewController extends \ShortPixel\Controller
 {
 
   protected $form_action = 'sp-bulk';
@@ -109,7 +112,7 @@ protected $selected_folders = array();
       if(isset($_POST["bulkRestore"]))
       {
           Log::addInfo('Bulk Process - Bulk Restore');
-          $bulkRestore = new \ShortPixel\BulkRestoreAll(); // controller
+          $bulkRestore = new BulkRestoreAll(); // controller
           $bulkRestore->setupBulk();
 
           $prioQ->startBulk(\ShortPixelQueue::BULK_TYPE_RESTORE);
@@ -151,31 +154,17 @@ protected $selected_folders = array();
   {
     $settings = \wpSPIO()->settings();
     $prioQ = \wpSPIO()->getShortPixel()->getPrioQ();
-/*
-    $template_part = isset($_GET['part']) ? sanitize_text_field($_GET['part']) : false;
-    $controller = \ShortPixelTools::namespaceit('ShortPixelController');
-    $partControl = $controller::findControllerbySlug($template_part);
 
-    if ($partControl)
-    {
-      $viewObj = new $partControl();
-      $viewObj->setShortPixel($this);
-      $viewObj->loadView(); // TODO [BS] This should call load, which should init and call view inside controller.
-    }
+    $averageCompression = \wpSPIO()->getShortPixel()->getAverageCompression();
+    $thumbsProcessedCount = $settings->thumbsCount;//amount of optimized thumbnails
+    $under5PercentCount =  $settings->under5Percent;//amount of under 5% optimized imgs.
+    $quotaData = $this->quotaData;
+    $percent = $prioQ->bulkPaused() ? \wpSPIO()->getShortPixel()->getPercent($quotaData) : false;
 
-    if (! $template_part)
-    { */
-      $averageCompression = \wpSPIO()->getShortPixel()->getAverageCompression();
-      $thumbsProcessedCount = $settings->thumbsCount;//amount of optimized thumbnails
-      $under5PercentCount =  $settings->under5Percent;//amount of under 5% optimized imgs.
-      $quotaData = $this->quotaData;
-      $percent = $prioQ->bulkPaused() ? \wpSPIO()->getShortPixel()->getPercent($quotaData) : false;
-
-      $view = new \ShortPixelView(\wpSPIO()->getShortPixel());
-      $view->displayBulkProcessingForm($quotaData, $thumbsProcessedCount, $under5PercentCount,
-            $prioQ->bulkRan(), $averageCompression, $settings->fileCount,
-            \ShortPixelTools::formatBytes($settings->savedSpace), $percent, $this->pendingMeta);
-//    }
+    $view = new \ShortPixelView(\wpSPIO()->getShortPixel());
+    $view->displayBulkProcessingForm($quotaData, $thumbsProcessedCount, $under5PercentCount,
+          $prioQ->bulkRan(), $averageCompression, $settings->fileCount,
+          \ShortPixelTools::formatBytes($settings->savedSpace), $percent, $this->pendingMeta);
   }
 
   public function loadViewProgress()
@@ -184,7 +173,7 @@ protected $selected_folders = array();
     $prioQ = \wpSPIO()->getShortPixel()->getPrioQ();
 
     if($settings->quotaExceeded == 1) {
-        \ShortPixel\adminNoticesController::reInstateQuotaExceeded();
+        AdminNoticesController::reInstateQuotaExceeded();
         return false;
     }
 

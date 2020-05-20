@@ -1,6 +1,8 @@
 <?php
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
+use ShortPixel\Model\ImageModel as ImageModel;
+
 class WpShortPixelMediaLbraryAdapter {
 
     private static $urls_this_run = array();
@@ -22,7 +24,7 @@ class WpShortPixelMediaLbraryAdapter {
 
         $foundUnlistedThumbs = false;
         $counter = 0;
-        $fs = new \ShortPixel\FileSystemController();
+        $fs = \wpSPIO()->fileSystem();
 
         $filesWithErrors = array(); $moreFilesWithErrors = 0;
         $excludePatterns = WPShortPixelSettings::getOpt("excludePatterns");
@@ -533,7 +535,7 @@ class WpShortPixelMediaLbraryAdapter {
           //  @todo weak call. See how in future settings might come via central provider.
           $settings = new \WPShortPixelSettings();
 
-          $fs = new \ShortPixel\FileSystemController();
+          $fs = \wpSPIO()->fileSystem();
           $mainfile = $fs->getFile($filepath);
 
           $sizesCount = isset($data['sizes']) ? WpShortPixelMediaLbraryAdapter::countSizesNotExcluded($data['sizes']) : 0;
@@ -667,7 +669,7 @@ class WpShortPixelMediaLbraryAdapter {
         $thumbs = array();
 
         // New
-        $fs = new \ShortPixel\FileSystemController();
+        $fs = \wpSPIO()->fileSystem();
         $file = $fs->getFile($mainFile);
 
         $directory = $file->getFileDir();
@@ -883,7 +885,7 @@ class WpShortPixelMediaLbraryAdapter {
           }
           foreach($idInfo->ids as $post_id)
           {
-              $imageModel = new \ShortPixel\ImageModel();
+              $imageModel = new ImageModel();
               $imageModel->setByPostID($post_id);
               $imageModel->reAcquire();
               Log::addDebug('Reacquired: ' . $post_id );

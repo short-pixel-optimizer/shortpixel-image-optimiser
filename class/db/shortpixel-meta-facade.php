@@ -1,8 +1,7 @@
 <?php
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-use ShortPixel\ImageModel as ImageModel;
-use ShortPixel\FileSystemController as FileSystem;
-use ShortPixel\CacheController as Cache;
+use ShortPixel\Model\ImageModel as ImageModel;
+use ShortPixel\Controller\CacheController as Cache;
 
 class ShortPixelMetaFacade {
     const MEDIA_LIBRARY_TYPE = 1;
@@ -50,7 +49,7 @@ class ShortPixelMetaFacade {
     }
 
     private static function rawMetaToMeta($ID, $rawMeta) {
-        $file = \wpSPIO()->filesystem()->getAttachedFile($ID);
+        $file = \wpSPIO()->fileSystem()->getAttachedFile($ID);
         $path = $file->getFullPath();
 
         return new ShortPixelMeta(array(
@@ -281,7 +280,7 @@ class ShortPixelMetaFacade {
       Log::addDebug('Finding Thumbs on path' . $meta->getPath());
       $thumbs = WpShortPixelMediaLbraryAdapter::findThumbs($meta->getPath());
 
-      $fs = new \ShortPixel\FileSystemController();
+      $fs = \wpSPIO()->fileSystem();
       $mainFile = $fs->getFile($meta->getPath());
 
       // Find Thumbs returns *full file path*
@@ -551,8 +550,7 @@ class ShortPixelMetaFacade {
             return $cacheItem->getValue();
         }
 
-        $fs = new FileSystem();
-        \wpSPIO()->loadModel('image');
+        $fs = \wpSPIO()->fileSystem();
 
         if($this->type == self::CUSTOM_TYPE) {
             $meta = $this->getMeta();
@@ -568,10 +566,10 @@ class ShortPixelMetaFacade {
             $filePaths[] = $meta->getPath();
         } else {
 
-            $imageObj = new \ShortPixel\ImageModel();
+            $imageObj = new ImageModel();
             $imageObj->setbyPostID($this->ID);
 
-            $fsFile = $imageObj->getFile(); //\wpSPIO()->filesystem()->getAttachedFile($this->ID);//get the full file PATH
+            $fsFile = $imageObj->getFile();
 
             //$fsFile = $fs->getFile($path);
             $mainExists = apply_filters('shortpixel_image_exists', $fsFile->exists(), $fsFile->getFullPath(), $this->ID);
@@ -772,7 +770,7 @@ class ShortPixelMetaFacade {
     public function attemptRemoteDownload($url, $path, $attach_id)
     {
         $downloadTimeout = max(SHORTPIXEL_MAX_EXECUTION_TIME - 10, 15);
-        $fs = new \ShortPixel\FileSystemController();
+        $fs = \wpSPIO()->fileSystem();
         $pathFile = $fs->getFile($path);
 
         $args_for_get = array(

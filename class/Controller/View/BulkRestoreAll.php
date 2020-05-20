@@ -1,9 +1,10 @@
 <?php
-namespace ShortPixel;
+namespace ShortPixel\Controller\View;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
+use \ShortPixel\Controller\OtherMediaController as OtherMediaController;
 
-class BulkRestoreAll extends ShortPixelController
+class BulkRestoreAll extends \ShortPixel\Controller
 {
     protected static $slug = 'bulk-restore-all';
     protected $template = 'view-restore-all';
@@ -74,7 +75,7 @@ class BulkRestoreAll extends ShortPixelController
         // Not doing this, since it's deliverd from bulk_view_controller. Yes, this is hacky. Prob. controller should merge.
       //  $this->checkPost(); // check if any POST vars are there ( which should be if custom restore is on )
       $selected_folders = isset($_POST['selected_folders']) ? $_POST['selected_folders'] : array();
-      
+
       // handle the custom folders if there are any.
       if (count($selected_folders) > 0)
       {

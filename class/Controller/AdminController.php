@@ -1,5 +1,5 @@
 <?php
-namespace ShortPixel;
+namespace ShortPixel\Controller;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 
@@ -7,7 +7,7 @@ use ShortPixel\Notices\NoticeController as Notices;
 *
 * This should be a delegation class connection global hooks and such to the best shortpixel handler.
 */
-class adminController extends ShortPixelController
+class AdminController extends \ShortPixel\Controller
 {
     protected static $instance;
 
@@ -19,7 +19,7 @@ class adminController extends ShortPixelController
     public static function getInstance()
     {
       if (is_null(self::$instance))
-          self::$instance = new adminController();
+          self::$instance = new AdminController();
 
       return self::$instance;
     }

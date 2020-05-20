@@ -1,7 +1,6 @@
 <?php
 namespace ShortPixel;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-use ShortPixel\FileSystemController as FileSystem;
 use ShortPixel\Notices\NoticeController as Notice;
 
 class wpOffload
@@ -151,7 +150,7 @@ class wpOffload
 
     public function image_converted($id)
     {
-        $fs = new \ShortPixel\FileSystemController();
+        $fs = \wpSPIO()->fileSystem();
 
         // Don't offload when setting is off.
         // delete the old file.
@@ -240,7 +239,7 @@ class wpOffload
     private function getWebpPaths($paths, $check_exists = true)
     {
       $newPaths = array();
-      $fs = new FileSystem();
+      $fs = \wpSPIO()->fileSystem();
 
       foreach($paths as $size => $path)
       {

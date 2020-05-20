@@ -1,6 +1,8 @@
 <?php
 namespace ShortPixel;
 
+use ShortPixel\Controller\ApiKeyController as ApiKeyController;
+
 // Integration class for HelpScout
 class HelpScout
 {

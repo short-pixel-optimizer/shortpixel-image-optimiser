@@ -14,6 +14,7 @@ class PackageLoader
   public function setComposerFile($filePath)
   {
     $this->composerFile = json_decode(file_get_contents($filePath),1);
+
   }
 
   public function getComposerFile($filePath = false )
@@ -28,7 +29,6 @@ class PackageLoader
     {
         $this->dir = $dir;
         $composer = $this->getComposerFile();
-
 
         if(isset($composer["autoload"]["psr-4"])){
             $this->loadPSR4($composer['autoload']['psr-4']);
@@ -47,6 +47,7 @@ class PackageLoader
             if(file_exists($fullpath)){
                 include_once($fullpath);
             }
+
         }
     }
 
@@ -68,6 +69,7 @@ class PackageLoader
             if (!is_array($classpaths)) {
                 $classpaths = array($classpaths);
             }
+
             spl_autoload_register(function ($classname) use ($namespace, $classpaths, $dir, $psr4) {
                 // Check if the namespace matches the class we are looking for
                 if (preg_match("#^".preg_quote($namespace)."#", $classname)) {
@@ -75,6 +77,10 @@ class PackageLoader
                     if ($psr4) {
                         $classname = str_replace($namespace, "", $classname);
                     }
+$output =  '<hr>'; $output .= print_r($classpaths, true);
+$output .= "<PRE>Searching $classname in $namespace <br>";
+$output .= print_r(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 4), true);
+$output .= "</PRE>";
 
                     //  $filename = preg_replace("#\\\\#", "", $classname).".php";
                     // This is fix for nested classes which were losing a /
@@ -86,6 +92,12 @@ class PackageLoader
                         if (file_exists($fullpath)) {
                             include_once $fullpath;
                         }
+                        else
+                        {
+                          //Log::addTemp("Remove Debug Data here");
+                          echo $output;
+                          echo '<b style="color:red">Class not found ' . $fullpath . '</b>';
+                         }
                     }
                 }
             });

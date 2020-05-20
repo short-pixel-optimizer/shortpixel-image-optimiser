@@ -2,9 +2,9 @@
 //use ShortPixel\DebugItem as DebugItem;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
-use ShortPixel\FileModel as FileModel;
-use ShortPixel\Directorymodel as DirectoryModel;
-use ShortPixel\ImageModel as ImageModel;
+use ShortPixel\Model\FileModel as FileModel;
+use ShortPixel\Model\Directorymodel as DirectoryModel;
+use ShortPixel\Model\ImageModel as ImageModel;
 
 class WPShortPixel {
 
@@ -46,21 +46,16 @@ class WPShortPixel {
         $this->prioQ = (! defined('SHORTPIXEL_NOFLOCK')) ? new ShortPixelQueue($this, $this->_settings) : new ShortPixelQueueDB($this, $this->_settings);
         $this->view = new ShortPixelView($this);
 
-        if (self::$first_run === false)
+/*        if (self::$first_run === false)
         {
           $this->loadHooks();
         }
-
-        // only load backed, or when frontend processing is enabled.
-        /*if (is_admin() || $this->_settings->frontBootstrap )
-        {
-          $keyControl = \ShortPixel\ApiKeyController::getInstance();
-        } */
+*/
 
     }
 
     /** Fire only once hooks. In time these function mostly should be divided between controllers / hook itself moved to ShortPixel Plugin */
-    protected function loadHooks()
+    public function loadHooks()
     {
         self::$first_run = true;
         load_plugin_textdomain('shortpixel-image-optimiser', false, plugin_basename(dirname( SHORTPIXEL_PLUGIN_FILE )).'/lang');
@@ -324,14 +319,13 @@ class WPShortPixel {
 
         wp_register_script('shortpixel', plugins_url('/res/js/shortpixel' . $this->jsSuffix,SHORTPIXEL_PLUGIN_FILE), array('jquery', 'jquery.knob.min.js'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
-        $keyControl = \ShortPixel\ApiKeyController::getInstance();
-        $apikey = $keyControl->getKeyForDisplay();
-
         // Get a Secret Key.
-        $cacheControl = new \ShortPixel\CacheController();
+        $cacheControl = new \ShortPixel\Controller\CacheController();
         $bulkSecret = $cacheControl->getItem('bulk-secret');
         $secretKey = (! is_null($bulkSecret->getValue() )) ? $bulkSecret->getValue() : false;
 
+        $keyControl = \ShortPixel\Controller\ApiKeyController::getInstance();
+        $apikey = $keyControl->getKeyForDisplay();
 
         // Using an Array within another Array to protect the primitive values from being cast to strings
         $ShortPixelConstants = array(array(
@@ -348,7 +342,6 @@ class WPShortPixel {
             'STATUS_SEARCHING' => ShortPixelAPI::STATUS_SEARCHING,
             'WP_PLUGIN_URL'=>plugins_url( '', SHORTPIXEL_PLUGIN_FILE ),
             'WP_ADMIN_URL'=>admin_url(),
-        //    'API_KEY'=> $apikey,
             'API_IS_ACTIVE' => $keyControl->keyIsVerified(),
             'DEFAULT_COMPRESSION'=>0 + intval($this->_settings->compressionType), // no int can happen when settings are empty still
             'MEDIA_ALERT'=>$this->_settings->mediaAlert ? "done" : "todo",
@@ -1144,7 +1137,7 @@ class WPShortPixel {
         if (isset($_POST['bulk-secret']))
         {
           $secret = sanitize_text_field($_POST['bulk-secret']);
-          $cacheControl = new \ShortPixel\CacheController();
+          $cacheControl = new \ShortPixel\Controller\CacheController();
           $cachedObj = $cacheControl->getItem('bulk-secret');
 
           if (! $cachedObj->exists())
@@ -1208,7 +1201,7 @@ class WPShortPixel {
            && !$this->_settings->customBulkPaused)
         { //take from custom images if any left to optimize - only if bulk was ever started
             //but first refresh. Refresh interval is handled by controller.
-            $otherMedia = new \ShortPixel\OtherMediaController();
+            $otherMedia = new \ShortPixel\Controller\OtherMediaController();
             $otherMedia->refreshFolders();
             /*if(time() - $this->_settings->hasCustomFolders > 3600) {
                 $notice = null; $this->refreshCustomFolders();
@@ -1471,7 +1464,7 @@ class WPShortPixel {
         // Generate new actions after doing something for custom type (for now)
         if($itemHandler->getType() == ShortPixelMetaFacade::CUSTOM_TYPE)
         {
-          $othermediaView = new \ShortPixel\OtherMediaViewController();
+          $othermediaView = new \ShortPixel\Controller\View\OtherMediaViewController();
           $othermediaView->setShortPixel($this);
           $result['actions'] = $othermediaView->renderNewActions(substr($itemId, 2));
         }
@@ -1525,7 +1518,7 @@ class WPShortPixel {
       Log::addDebug('Finding Thumbs on path' . $meta->getPath());
       //$thumbs = WpShortPixelMediaLbraryAdapter::findThumbs($meta->getPath());
 
-      $fs = new \ShortPixel\FileSystemController();
+      $fs = \wpSPIO()->fileSystem();
       $mainFile = $fs->getFile($meta->getPath());
 
       // Find Thumbs returns *full file path*
@@ -2003,9 +1996,8 @@ class WPShortPixel {
         $fs = \wpSPIO()->filesystem();
 
         // Setup Original File and Data. This is used to determine backup path.
-        \wpSPIO()->loadModel('image');
 
-        $imageObj = new \ShortPixel\ImageModel();
+        $imageObj = new ImageModel();
         $imageObj->setbyPostID($attachmentID);
 
         $fsFile = $imageObj->getFile();
@@ -2031,8 +2023,22 @@ class WPShortPixel {
 
         // Get correct Backup Folder and file. .
         $sizes = isset($rawMeta["sizes"]) ? $rawMeta["sizes"] : array();
-        $bkFolder = $fs->getDirectory($this->getBackupFolderAny($fsFile->getFullPath(), $sizes));
-        $bkFile = $fs->getFile($bkFolder->getPath() . $fsFile->getFileName());
+        $oldBackupFolder = $this->getBackupFolderAny($fsFile->getFullPath(), $sizes);
+
+        // This is a bad patch. Just return if the backupFolder is hopeless, don't waste resources. 
+        if (!$oldBackupFolder)
+        {
+          $notice = Notices::addWarning(__("Not all backup files found. Restore not performed on these files ",'shortpixel-image-optimiser'), true);
+          Notices::addDetail($notice, (string) $bkFile);
+
+          Log::addError('No Backup Files Found: ' . $bkFile);
+          return false;
+        }
+          else
+        {
+          $bkFolder = $fs->getDirectory($oldBackupFolder);
+          $bkFile = $fs->getFile($bkFolder->getPath() . $fsFile->getFileName());
+        }
 
         Log::addDebug('Restore, Backup File -- ', array($bkFile->getFullPath(), $fsFile->getFullPath() ) );
     //    $pathInfo = pathinfo($file);
@@ -2235,7 +2241,7 @@ class WPShortPixel {
                         $crtMeta['sizes'] = $png2jpgSizes;
                     } else {
                         //this was an image converted on upload, regenerate the thumbs using the PNG main image BUT deactivate temporarily the filter!!
-                        $admin = \ShortPixel\adminController::getInstance();
+                        $admin = \ShortPixel\Controller\AdminController::getInstance();
 
                         //@todo Can be removed when test seems working.
                         $test = remove_filter( 'wp_generate_attachment_metadata', array($admin,'handleImageUploadHook'),10);
@@ -2354,7 +2360,7 @@ class WPShortPixel {
         $fullSubDir = str_replace(get_home_path(), "", dirname($file)) . '/';
         $bkFile = SHORTPIXEL_BACKUP_FOLDER . '/' . $fullSubDir . ShortPixelAPI::MB_basename($file);
 
-        $fs = new \ShortPixel\FileSystemController();
+        $fs = \wpSPIO()->fileSystem();
 
         $fileObj = $fs->getFile($file);
         $backupFile = $fileObj->getBackupFile(); // returns FileModel
@@ -2923,7 +2929,7 @@ class WPShortPixel {
             if($validityData['APIKeyValid']) {
                 $this->_settings->apiKey = $key;
                 $this->_settings->verifiedKey = true;
-                \ShortPixel\adminNoticesController::resetAPINotices();
+                \ShortPixel\Controller\AdminNoticesController::resetAPINotices();
                 Notices::addSuccess(__('Great, you successfully claimed your API Key! Please take a few moments to review the plugin settings below before starting to optimize your images.','shortpixel-image-optimiser'));
             }
         }
@@ -3263,8 +3269,8 @@ class WPShortPixel {
             //unset($dismissed['exceed']);
             $this->_settings->prioritySkip = array();
             $this->_settings->dismissedNotices = $dismissed;
-            \ShortPixel\adminNoticesController::resetAPINotices();
-            \ShortPixel\adminNoticesController::resetQuotaNotices();
+            \ShortPixel\Controller\adminNoticesController::resetAPINotices();
+            \ShortPixel\Controller\adminNoticesController::resetQuotaNotices();
         }
         $this->_settings->quotaExceeded = 0;
     }
@@ -3561,7 +3567,6 @@ class WPShortPixel {
     */
     public function onDeleteImage($post_id) {
         Log::addDebug('onDeleteImage - Image Removal Detected ' . $post_id);
-        \wpSPIO()->loadModel('image');
         $result = null;
 
         try

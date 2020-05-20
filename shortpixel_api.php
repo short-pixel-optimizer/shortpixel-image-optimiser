@@ -688,7 +688,7 @@ class ShortPixelAPI {
         // The settings model.
         $settings = \wpSPIO()->settings();
 
-        $fs = new \ShortPixel\FileSystemController();
+        $fs = \wpSPIO()->fileSystem();
 
         //Log::addDebug($tempFiles);
         // Check and Run all tempfiles. Move it to appropiate places.

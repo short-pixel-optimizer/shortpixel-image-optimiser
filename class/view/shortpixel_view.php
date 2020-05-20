@@ -1569,7 +1569,7 @@ class ShortPixelView {
     public function renderCustomColumn($id, $data, $extended = false){ ?>
         <?php if ($extended) // extended ( edit-media ) moved to it's own view.
         {
-            $controller = new \ShortPixel\editMediaController();
+            $controller = new \ShortPixel\Controller\EditMediaController();
             $controller->setTempData($data);
             $controller->setLegacyView($this);
             $controller->setShortPixel($this->ctrl);
