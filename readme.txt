@@ -4,7 +4,7 @@ Tags: compressor, image, compression, optimize, image optimizer, image optimiser
 Requires at least: 3.2.0
 Tested up to: 5.4.1
 Requires PHP: 5.3
-Stable tag: 4.18.0
+Stable tag: 4.18.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -280,6 +280,13 @@ Hide the Cloudflare settings by defining these constants in wp-config.php:
 9. Check other optimized images status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 4.18.1 =
+
+Release date 20th May 2020
+* Fix for a situation when running the bulk could result in duplicate images;
+* Updated some old docs links;
+* Language – 0 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted.    
 
 = 4.18.0 =
 
