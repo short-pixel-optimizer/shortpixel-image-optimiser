@@ -3,12 +3,26 @@ namespace ShortPixel\Build;
 
 class PackageLoader
 {
-    public $dir;
+  public $dir;
+  public $composerFile  = false;
 
-    public function getComposerFile()
-    {
-        return json_decode(file_get_contents($this->dir."/composer.json"), 1);
-    }
+  public function __construct()
+  {
+
+  }
+
+  public function setComposerFile($filePath)
+  {
+    $this->composerFile = json_decode(file_get_contents($filePath),1);
+  }
+
+  public function getComposerFile($filePath = false )
+  {
+    if (! $this->composerFile)
+      $this->composerFile = json_decode(file_get_contents($this->dir."/composer.json"), 1);
+
+      return $this->composerFile;
+  }
 
     public function load($dir)
     {
