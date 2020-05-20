@@ -77,8 +77,7 @@ class NextGen
   */
   public function nextGenEnabled($silent)
   {
-
-    \WpShortPixelDb::checkCustomTables(); // check if custom tables are created, if not, create them
+      
     $this->addNextGenGalleriesToCustom($silent);
   }
 
