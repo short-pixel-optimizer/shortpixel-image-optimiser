@@ -72,6 +72,7 @@ class ShortPixelPlugin
   public function init()
   {
       $this->shortPixel->loadHooks();
+      $admin = Controller\AdminController::getInstance();
 
       if ($this->settings()->autoMediaLibrary)
       {

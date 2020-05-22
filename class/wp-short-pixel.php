@@ -678,7 +678,7 @@ class WPShortPixel {
                     //send a processing request right after a file was uploaded, do NOT wait for response
                     $this->_apiInterface->doRequests($URLsAndPATHs['URLs'], false, $itemHandler, false, $refresh);
                 } catch(Exception $e) {
-                    Log::addWarning('Handle Media Library Image Exceptions', $e);
+                    Log::addWarn('Handle Media Library Image Exceptions', $e);
                     $meta['ShortPixelImprovement'] = $e->getMessage();
                     return $meta;
                 }
@@ -2025,7 +2025,7 @@ class WPShortPixel {
         $sizes = isset($rawMeta["sizes"]) ? $rawMeta["sizes"] : array();
         $oldBackupFolder = $this->getBackupFolderAny($fsFile->getFullPath(), $sizes);
 
-        // This is a bad patch. Just return if the backupFolder is hopeless, don't waste resources. 
+        // This is a bad patch. Just return if the backupFolder is hopeless, don't waste resources.
         if (!$oldBackupFolder)
         {
           $notice = Notices::addWarning(__("Not all backup files found. Restore not performed on these files ",'shortpixel-image-optimiser'), true);
