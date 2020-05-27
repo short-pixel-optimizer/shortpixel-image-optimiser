@@ -446,11 +446,11 @@ class AdminNoticesController extends \ShortPixel\Controller
 
         $message .= '<h3>' . __('Quota Exceeded','shortpixel-image-optimiser') . '</h3>';
 
-        $recheck = isset($_GET['checkquota']) ? true : false;
+    //    $recheck = isset($_GET['checkquota']) ? true : false;
 
-        if($recheck) {
+    /*    if($recheck) {
              $message .= '<p style="color: red">' . __('You have no available image credits. If you just bought a package, please note that sometimes it takes a few minutes for the payment confirmation to be sent to us by the payment processor.','shortpixel-image-optimiser') . '</p>';
-        }
+        } */
 
         $message .= '<p>' . sprintf(__('The plugin has optimized <strong>%s images</strong> and stopped because it reached the available quota limit.','shortpixel-image-optimiser'),
               number_format(max(0, $quotaData['APICallsMadeNumeric'] + $quotaData['APICallsMadeOneTimeNumeric'])));
@@ -470,7 +470,7 @@ class AdminNoticesController extends \ShortPixel\Controller
                   <strong>' . __('Upgrade','shortpixel-image-optimiser') . '</strong>
               </a>
               <input type="button" name="checkQuota" class="button" value="'.  __('Confirm New Credits','shortpixel-image-optimiser') . '"
-                     onclick="ShortPixel.recheckQuota()">
+                     onclick="ShortPixel.checkQuota()">
           </div>';
 
           $message .= '<p>' . __('Get more image credits by referring ShortPixel to your friends!','shortpixel-image-optimiser') . '

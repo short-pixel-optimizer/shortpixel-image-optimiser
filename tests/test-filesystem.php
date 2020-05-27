@@ -11,7 +11,7 @@ class FileSystemTest extends  WP_UnitTestCase
 
   public function setUp()
   {
-    $this->fs = \wpSPIO()->filesystem(); 
+    $this->fs = \wpSPIO()->filesystem();
     $this->root = vfsStream::setup('root', null, $this->getTestFiles() );
   }
 
@@ -27,7 +27,7 @@ class FileSystemTest extends  WP_UnitTestCase
     $result = $backup->check(true);
 
     //$this->assertTrue($result);
-  //  $this->assertDirectoryExists(SHORTPIXEL_BACKUP_FOLDER);
+  //  $this->assertDirectoryExiHelpscout issuessts(SHORTPIXEL_BACKUP_FOLDER);
   }
 
   public function finishBackups()

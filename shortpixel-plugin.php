@@ -64,6 +64,7 @@ class ShortPixelPlugin
 
     $this->initHooks();
 
+
     add_action('admin_init', array($this, 'init'));
   }
 
@@ -142,6 +143,7 @@ class ShortPixelPlugin
 
 
   /** Hooks for all WordPress related hooks
+  * For now hooks in the lowInit, asap.
   */
   public function initHooks()
   {
@@ -149,6 +151,9 @@ class ShortPixelPlugin
       add_action('admin_enqueue_scripts', array($this, 'admin_scripts')); // admin scripts
       add_action('admin_enqueue_scripts', array($this, 'load_admin_scripts'), 90); // loader via route.
       // defer notices a little to allow other hooks ( notable adminnotices )
+
+      add_action( 'shortpixel-thumbnails-before-regenerate', array( $this->shortPixel, 'thumbnailsBeforeRegenerateHook' ), 10, 1);
+      add_action( 'shortpixel-thumbnails-regenerated', array( $this->shortPixel, 'thumbnailsRegeneratedHook' ), 10, 4);
   }
 
   /** Hook in our admin pages */

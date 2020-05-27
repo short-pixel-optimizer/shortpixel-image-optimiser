@@ -101,8 +101,7 @@ class WPShortPixel {
         //custom hook
         add_action( 'shortpixel-optimize-now', array( &$this, 'optimizeNowHook' ), 10, 1);
 
-        add_action( 'shortpixel-thumbnails-before-regenerate', array( &$this, 'thumbnailsBeforeRegenerateHook' ), 10, 1);
-        add_action( 'shortpixel-thumbnails-regenerated', array( &$this, 'thumbnailsRegeneratedHook' ), 10, 4);
+
         add_filter( 'shortpixel_get_backup', array( &$this, 'shortpixelGetBackupFilter' ), 10, 1 );
 
         if($isAdminUser) {
@@ -347,7 +346,6 @@ class WPShortPixel {
             'MEDIA_ALERT'=>$this->_settings->mediaAlert ? "done" : "todo",
             'FRONT_BOOTSTRAP'=>$this->_settings->frontBootstrap && (!isset($this->_settings->lastBackAction) || (time() - $this->_settings->lastBackAction > 600)) ? 1 : 0,
             'AJAX_URL'=>admin_url('admin-ajax.php'),
-            'AFFILIATE'=>false,
             'BULK_SECRET' => $secretKey,
         ));
 
@@ -392,8 +390,13 @@ class WPShortPixel {
                 'loading' => __('Loading...', 'shortpixel-image-optimiser' ),
                 //'' => __('', 'shortpixel-image-optimiser' ),
         );
+
+        $actions = array(
+            'nonce_check_quota' => wp_create_nonce('check_quota')
+        );
         wp_localize_script( 'shortpixel', '_spTr', $jsTranslation );
         wp_localize_script( 'shortpixel', 'ShortPixelConstants', $ShortPixelConstants );
+        wp_localize_script('shortpixel', 'ShortPixelActions', $actions);
 
         wp_register_script('jquery.knob.min.js', plugins_url('/res/js/jquery.knob.min.js',SHORTPIXEL_PLUGIN_FILE) );
         wp_register_script('jquery.tooltip.min.js', plugins_url('/res/js/jquery.tooltip.min.js',SHORTPIXEL_PLUGIN_FILE) );
@@ -1780,6 +1783,8 @@ class WPShortPixel {
      */
     public function thumbnailsRegeneratedHook($postId, $originalMeta, $regeneratedSizes = array(), $bulk = false) {
 
+      Log::addTemp('Generated Size needing restore and what not: ', $regeneratedSizes);
+
         if(isset($originalMeta["ShortPixelImprovement"]) && is_numeric($originalMeta["ShortPixelImprovement"])) {
             $shortPixelMeta = $originalMeta["ShortPixel"];
             unset($shortPixelMeta['thumbsMissing']);
@@ -1805,6 +1810,8 @@ class WPShortPixel {
             if(isset($originalMeta["ShortPixelPng2Jpg"])) {
                 $meta["ShortPixelPng2Jpg"] = $originalMeta["ShortPixelPng2Jpg"];
             }
+
+            Log::addTemp('Resulting Meta', $meta);
             //wp_update_attachment_metadata($postId, $meta);
             update_post_meta($postId, '_wp_attachment_metadata', $meta);
 
@@ -2572,20 +2579,45 @@ class WPShortPixel {
         die(json_encode($ret));
     }
 
-    public function handleCheckQuota() {
-        $this->getQuotaInformation();
+    public function handleCheckQuota()
+    {
+
+        $return_json = isset($_POST['return_json']) ? true : false;
+        Log::addTemp('HandleCheckQ', debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,4));
+        if ( ! wp_verify_nonce($_POST['nonce'], 'check_quota'))
+        {
+          Log::addError('Handle Check Quota, No nonce');
+          exit('no nonce');
+        }
+
+        $result = $this->getQuotaInformation();
         // store the referring webpage location
         $sendback = wp_get_referer();
         // sanitize the referring webpage location
         $sendback = preg_replace('|[^a-z0-9-~+_.?#=&;,/:]|i', '', $sendback);
         // send the user back where they came from
-        wp_redirect($sendback);
+        Log::addTemp('HandleCheckQuota ran' . $sendback);
+        if ($return_json)
+        {
+           $result = array('status' => 'no-quota', 'redirect' => $sendback);
+           //$has_quota = isset($result['APICallsRemaining']) && (intval($result['APICallsRemaining']) > 0) ? true : false;
+           if (! $this->_settings->quotaExceeded)
+           {
+              $result['status'] = 'has-quota';
+            //  $result['quota'] = $result['APICallsRemaining'];
+           }
+           else
+           {
+              Notices::addWarning( __('You have no available image credits. If you just bought a package, please note that sometimes it takes a few minutes for the payment confirmation to be sent to us by the payment processor.','shortpixel-image-optimiser') );
+           }
+
+           wp_send_json($result);
+        }
+        else
+          wp_redirect($sendback);
         // we are done
     }
 
-    public function handleCheckQuotaAjax() {
-        $this->getQuotaInformation();
-    }
 
     // @todo integrate this in a normal way / move @unlinks to proper fs delete.
     public function handleDeleteAttachmentInBackup($ID) {
@@ -3174,9 +3206,7 @@ class WPShortPixel {
 
             if(!is_wp_error( $response )){
                 $this->_settings->httpProto = ($this->_settings->httpProto == 'https' ? 'http' : 'https');
-                //echo("protocol " . $this->_settings->httpProto . " succeeded");
             } else {
-                //echo("protocol " . $this->_settings->httpProto . " failed too");
             }
         }
         //Second fallback to HTTP get
@@ -3215,8 +3245,7 @@ class WPShortPixel {
         }
 
         if($response['response']['code'] != 200) {
-            //$defaultData['Message'] .= "<BR><i>Debug info: response code {$response['response']['code']} URL $requestURL , Response ".json_encode($response)."</i>";
-            return $defaultData;
+           return $defaultData;
         }
 
         $data = $response['body'];
@@ -3260,6 +3289,7 @@ class WPShortPixel {
         $crtStats['optimizePdfs'] = $this->_settings->optimizePdfs;
         $this->_settings->currentStats = $crtStats;
 
+Log::addDebug('GetQuotaInformation Result ', $dataArray);
         return $dataArray;
     }
 

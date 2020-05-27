@@ -1,6 +1,8 @@
 <?php
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
+use ShortPixel\Controller\ApiKeyController as ApiKeyController;
+
 class ShortPixelView {
 
     private $ctrl;
@@ -1708,8 +1710,9 @@ class ShortPixelView {
     }
 
     public function getQuotaExceededHTML($message = '') {
+      $keyControl = ApiKeyController::getInstance();
         return "<div class='sp-column-actions' style='width:110px;'>
-        <a class='button button-smaller button-primary' href='https://shortpixel.com/login/". (defined("SHORTPIXEL_HIDE_API_KEY") ? '' : $this->ctrl->getApiKey()) . "' target='_blank'>"
+        <a class='button button-smaller button-primary' href='https://shortpixel.com/login/". $keyControl->getKeyForDisplay() . "' target='_blank'>"
             . __('Extend Quota','shortpixel-image-optimiser') .
         "</a>
         <a class='button button-smaller' href='admin.php?action=shortpixel_check_quota'>"

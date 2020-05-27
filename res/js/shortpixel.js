@@ -330,9 +330,15 @@ var ShortPixel = function() {
     }
 
     function checkQuota() {
-        var data = {action:'shortpixel_check_quota'};
-        jQuery.get(ShortPixel.AJAX_URL, data, function() {
+        var data = {
+          action:'shortpixel_check_quota',
+          nonce: ShortPixelActions.nonce_check_quota,
+          return_json: true
+        };
+        jQuery.post(ShortPixel.AJAX_URL, data, function(result) {
             console.log("quota refreshed");
+            console.log(result);
+            window.location.href = result.redirect;
         });
     }
 
@@ -525,7 +531,7 @@ var ShortPixel = function() {
         jQuery("#shortPixelProposeUpgradeShade").css("display", "none");
         jQuery("#shortPixelProposeUpgrade").addClass('shortpixel-hide');
         if(ShortPixel.toRefresh) {
-            ShortPixel.recheckQuota();
+            ShortPixel.checkQuota();
         }
     }
 
@@ -682,11 +688,7 @@ var ShortPixel = function() {
         return id.substring(0,2) == "C-";
     }
 
-    function recheckQuota() {
-        var parts = window.location.href.split('#');
 
-        window.location.href=parts[0]+(parts[0].indexOf('?')>0?'&':'?')+'checkquota=1' + (typeof parts[1] === 'undefined' ? '' : '#' + parts[1]);
-    }
 
     function openImageMenu(e) {
             e.preventDefault();
@@ -851,7 +853,7 @@ var ShortPixel = function() {
         checkRandomAnswer : checkRandomAnswer,
         removeBulkMsg       : removeBulkMsg,
         isCustomImageId     : isCustomImageId,
-        recheckQuota        : recheckQuota,
+      //  recheckQuota        : recheckQuota,
         openImageMenu       : openImageMenu,
         menuCloseEvent      : false,
         loadComparer        : loadComparer,

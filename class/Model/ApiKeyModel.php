@@ -3,6 +3,8 @@ namespace ShortPixel\Model;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notice;
 
+use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
+
 class ApiKeyModel extends \ShortPixel\Model
 {
 
@@ -252,7 +254,7 @@ class ApiKeyModel extends \ShortPixel\Model
        Notice::addError($notice);
     }
 
-    adminNoticesController::resetAPINotices();
+    AdminNoticesController::resetAPINotices();
   }
 
 
