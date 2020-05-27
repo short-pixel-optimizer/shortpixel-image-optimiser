@@ -178,6 +178,7 @@ class FileModel extends \ShortPixel\Model
       return 0;
   }
 
+
   /** Copy a file to somewhere
   *
   * @param $destination String Full Path to new file.
