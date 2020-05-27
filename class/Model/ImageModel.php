@@ -38,7 +38,6 @@ class ImageModel extends \ShortPixel\Model
       $fs = \wpSPIO()->filesystem();
       $this->post_id = $post_id;
       $this->facade = new \ShortPixelMetaFacade($post_id);
-      Log::addTemp('SetbyPostID META', $this->facade->getMeta());
       $this->meta = $this->facade->getMeta();
 
       $this->setImageStatus();

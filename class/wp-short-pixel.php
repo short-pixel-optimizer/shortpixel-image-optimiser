@@ -1785,7 +1785,6 @@ class WPShortPixel {
      */
     public function thumbnailsRegeneratedHook($postId, $originalMeta, $regeneratedSizes = array(), $bulk = false) {
 
-      Log::addTemp('Generated Size needing restore and what not: ', $regeneratedSizes);
 
         if(isset($originalMeta["ShortPixelImprovement"]) && is_numeric($originalMeta["ShortPixelImprovement"])) {
             $shortPixelMeta = $originalMeta["ShortPixel"];
@@ -1813,7 +1812,6 @@ class WPShortPixel {
                 $meta["ShortPixelPng2Jpg"] = $originalMeta["ShortPixelPng2Jpg"];
             }
 
-            Log::addTemp('Resulting Meta', $meta);
             //wp_update_attachment_metadata($postId, $meta);
             update_post_meta($postId, '_wp_attachment_metadata', $meta);
 
@@ -2378,7 +2376,6 @@ class WPShortPixel {
         {
           Log::addWarn("Custom File $ID - $file does not have a backup");
           $notice = Notices::addWarning(__('Not able to restore file(s). Could not find backup', 'shortpixel-image-optimiser'), true);
-          Log::addTemp('BackupFILe Notice', $notice);
           Notices::addDetail($notice, (string) $file);
           return false;
         }
@@ -2584,7 +2581,6 @@ class WPShortPixel {
     public function handleCheckQuota()
     {
         $return_json = isset($_POST['return_json']) ? true : false;
-        Log::addTemp('HandleCheckQ', debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,4));
         if (! isset($_POST['nonce']) || ! wp_verify_nonce($_POST['nonce'], 'check_quota'))
         {
           Log::addError('Handle Check Quota, No nonce');
@@ -2601,7 +2597,6 @@ class WPShortPixel {
         // sanitize the referring webpage location
         $sendback = preg_replace('|[^a-z0-9-~+_.?#=&;,/:]|i', '', $sendback);
         // send the user back where they came from
-        Log::addTemp('HandleCheckQuota ran' . $sendback);
         if ($return_json)
         {
            $result = array('status' => 'no-quota', 'redirect' => $sendback);
@@ -2843,8 +2838,16 @@ class WPShortPixel {
             $dir = $fs->getDirectory($postDir);
             $files = $dir->getFiles();
             $subdirs = $fs->sortFiles($dir->getSubDirectories()); // runs through FS sort.
-
             $returnDir	= substr($postDir, strlen($root));
+
+            foreach($subdirs as $index => $dir) // weed out the media library subdirectories.
+            {
+              $dirname = $dir->getName();
+              if($dirname == 'ShortpixelBackups' || ShortPixelMetaFacade::isMediaSubfolder($dirname, false))
+              {
+                 unset($subdirs[$index]);
+              }
+            }
 
             if( count($subdirs) > 0 ) {
                 echo "<ul class='jqueryFileTree'>";
@@ -2853,7 +2856,6 @@ class WPShortPixel {
                     $dirpath = $dir->getPath();
                     $dirname = $dir->getName();
                     // @todo Should in time be moved to othermedia_controller / check if media library
-                    if($dirname == 'ShortpixelBackups' || ShortPixelMetaFacade::isMediaSubfolder($dirname, false)) continue;
 
                     $htmlRel	= str_replace("'", "&apos;", $returnDir . $dirname);
                     $htmlName	= htmlentities($dirname);
@@ -2861,17 +2863,21 @@ class WPShortPixel {
 
                     if( $dir->exists()  ) {
                         //KEEP the spaces in front of the rel values - it's a trick to make WP Hide not replace the wp-content path
-                    //    if( is_dir($postDir . $file) && (!$onlyFiles || $onlyFolders) ) {
                             echo "<li class='directory collapsed'>{$checkbox}<a rel=' " .$htmlRel. "/'>" . $htmlName . "</a></li>";
-                      /*  } else if (!$onlyFolders || $onlyFiles) {
-                            echo "<li class='file ext_{$ext}'>{$checkbox}<a rel=' " . $htmlRel . "'>" . $htmlName . "</a></li>";
-                        } */
                     }
+
                 }
 
                 echo "</ul>";
             }
+            elseif ($_POST['dir'] == '/')
+            {
+              echo "<ul class='jqueryFileTree'>";
+              _e('No Directories found that can be added to Custom Folders', 'shortpixel-image-optimiser');
+              echo "</ul>";
+            }
         }
+
         die();
     }
 
