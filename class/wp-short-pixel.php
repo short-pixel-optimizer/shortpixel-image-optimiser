@@ -6,6 +6,8 @@ use ShortPixel\Model\FileModel as FileModel;
 use ShortPixel\Model\Directorymodel as DirectoryModel;
 use ShortPixel\Model\ImageModel as ImageModel;
 
+use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
+
 class WPShortPixel {
 
     const BULK_EMPTY_QUEUE = 0;
@@ -2581,16 +2583,19 @@ class WPShortPixel {
 
     public function handleCheckQuota()
     {
-
         $return_json = isset($_POST['return_json']) ? true : false;
         Log::addTemp('HandleCheckQ', debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,4));
-        if ( ! wp_verify_nonce($_POST['nonce'], 'check_quota'))
+        if (! isset($_POST['nonce']) || ! wp_verify_nonce($_POST['nonce'], 'check_quota'))
         {
           Log::addError('Handle Check Quota, No nonce');
           exit('no nonce');
         }
 
         $result = $this->getQuotaInformation();
+
+        // If quota still exceeds, and manual check is requests, reset notices to update on situation.
+        if ($this->_settings->quotaExceeded)
+          AdminNoticesController::resetQuotaNotices();
         // store the referring webpage location
         $sendback = wp_get_referer();
         // sanitize the referring webpage location

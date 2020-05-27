@@ -1078,7 +1078,7 @@ function checkBulkProcessingCallApi(){
                     case ShortPixel.STATUS_QUOTA_EXCEEDED:
                         setCellMessage(id, data["Message"], "<a class='button button-smaller button-primary' href=\"https://shortpixel.com/login/"
                                        + "\" target=\"_blank\">" + _spTr.extendQuota + "</a>"
-                                       + "<a class='button button-smaller' href='admin.php?action=shortpixel_check_quota'>" + _spTr.check__Quota + "</a>");
+                                       + "<a class='button button-smaller' href='javascript:ShortPixel.checkQuota()'>" + _spTr.check__Quota + "</a>");
                         showToolBarAlert(ShortPixel.STATUS_QUOTA_EXCEEDED);
                         if(data['Stop'] == false) { //there are other items in the priority list, maybe processed, try those
                             setBulkTimer(5000);

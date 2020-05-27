@@ -1715,7 +1715,7 @@ class ShortPixelView {
         <a class='button button-smaller button-primary' href='https://shortpixel.com/login/". $keyControl->getKeyForDisplay() . "' target='_blank'>"
             . __('Extend Quota','shortpixel-image-optimiser') .
         "</a>
-        <a class='button button-smaller' href='admin.php?action=shortpixel_check_quota'>"
+        <a class='button button-smaller' href='javascript:ShortPixel.checkQuota();'>"
             . __('Check&nbsp;&nbsp;Quota','shortpixel-image-optimiser') .
         "</a></div>
         <div class='sp-column-info'>" . $message . " " . __('Quota Exceeded','shortpixel-image-optimiser') . "</div>";
