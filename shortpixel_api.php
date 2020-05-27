@@ -473,6 +473,7 @@ class ShortPixelAPI {
         //$SubDir = ShortPixelMetaFacade::returnSubDir($itemHandler->getMeta()->getPath(), $itemHandler->getType());
         $fullSubDir = ShortPixelMetaFacade::returnSubDir($mainPath);
         $source = $PATHs; //array with final paths for these files
+
         $fs = \wpSPIO()->filesystem();
 
         if( !file_exists(SHORTPIXEL_BACKUP_FOLDER) && ! ShortPixelFolder::createBackUpFolder() ) {//creates backup folder if it doesn't exist
@@ -484,15 +485,19 @@ class ShortPixelAPI {
 
         foreach ( $source as $fileID => $filePATH )//create destination files array
         {
-            $destination[$fileID] = SHORTPIXEL_BACKUP_FOLDER . '/' . $fullSubDir . self::MB_basename($source[$fileID]);
+            $file = $fs->getFile($filePATH);
+            $bkFilePath = $fs->getBackupDirectory($file);
+            $bkFile = $fs->getFile($bkFilePath . $file->getFileName() );
+
+            $destination[$fileID] = $bkFile; //SHORTPIXEL_BACKUP_FOLDER . '/' . $fullSubDir . self::MB_basename($source[$fileID]);
         }
 
         //now that we have original files and where we should back them up we attempt to do just that
         if(is_writable(SHORTPIXEL_BACKUP_FOLDER))
         {
-            foreach ( $destination as $fileID => $filePATH )
+            foreach ( $destination as $fileID => $destination_file )
             {
-                $destination_file = $fs->getFile($filePATH);
+                //$destination_file = $fs->getFile($filePATH);
 
                 if ( ! $destination_file->exists() )
                 {
@@ -500,7 +505,7 @@ class ShortPixelAPI {
                     $result = $source_file->copy($destination_file);
                     if (  ! $result )
                     {//file couldn't be saved in backup folder
-                        $msg = sprintf(__('Cannot save file <i>%s</i> in backup directory','shortpixel-image-optimiser'),self::MB_basename($source[$fileID]));
+                        $msg = sprintf(__('Cannot save file <i>%s</i> in backup directory','shortpixel-image-optimiser'),$destination_file->getFullPath() );
                         return array("Status" => self::STATUS_FAIL, "Message" => $msg);
                     }
 

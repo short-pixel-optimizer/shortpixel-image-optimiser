@@ -330,9 +330,11 @@ class FileModel extends \ShortPixel\Model
 
     $path = wp_normalize_path($path);
 
+
     // if path does not contain basepath.
     $uploadPath = wp_normalize_path($this->getUploadPath()); // mixed slashes and dashes can also be a config-error in WP.
-    if (strpos($path, ABSPATH) === false && strpos($path, $uploadPath) === false)
+    $abspath = wp_normalize_path(ABSPATH); // yup, can also be wrong.
+    if (strpos($path, $abspath) === false && strpos($path, $uploadPath) === false)
       $path = $this->relativeToFullPath($path);
 
     $path = apply_filters('shortpixel/filesystem/processFilePath', $path, $original_path);
