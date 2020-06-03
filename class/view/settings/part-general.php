@@ -245,7 +245,8 @@
                         ?>
                         <div class="presentation-wrap">
                             <div class="spai-resize-frame"></div>
-                            <img class="spai-resize-img" src="http://single.shortpixel.com/app/plugins/shortpixel-image-optimiser/res/img/resize-type.png" data-width="300" data-height="160" srcset="http://single.shortpixel.com/app/plugins/shortpixel-image-optimiser/res/img/resize-type@2x.png 2x" alt="">
+                            <img class="spai-resize-img" src="<?php echo(wpSPIO()->plugin_url('res/img/resize-type.png'));?>" data-width="300" data-height="160"
+                                 srcset="<?php echo(wpSPIO()->plugin_url('res/img/resize-type@2x.png'));?> 2x" alt="">
                         </div>
 
                         <!--
