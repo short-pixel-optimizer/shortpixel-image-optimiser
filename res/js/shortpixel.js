@@ -80,8 +80,11 @@ var ShortPixel = function() {
     function enableResize(elm) {
         if(jQuery(elm).is(':checked')) {
             jQuery("#width,#height").removeAttr("disabled");
+            jQuery(".resize-type-wrap").show(800, window.Resize.run);
         } else {
             jQuery("#width,#height").attr("disabled", "disabled");
+            window.Resize.hide();
+            jQuery(".resize-type-wrap").hide(800);
         }
     }
 
@@ -1498,3 +1501,191 @@ function SPstringFormat() {
 /*if (!(typeof String.prototype.format == 'function')) {
     String.prototype.format = stringFormat;
 } */
+
+
+( function( $, w, d ) {
+    w.Resize = {
+        image : {
+            width  : 0,
+            height : 0
+        },
+        lag: 2000,
+        step1: false,
+        step2: false,
+        step3: false,
+        sizeRule: null,
+        initialized: false,
+    };
+
+    Resize.hide = function() {
+        $('.presentation-wrap').css('opacity', 0);
+    }
+
+    Resize.animate = function(img, step1, frame, step2, rule) {
+        img.animate( step1, 1000, 'swing', function(){
+            Resize.step3 = setTimeout(function(){
+                document.styleSheets[0].deleteRule(Resize.sizeRule);
+                frame.animate(step2, 1000, 'swing', function() {
+                    Resize.sizeRule = document.styleSheets[0].insertRule(rule);
+                })
+            }, 600);
+        });
+
+    }
+
+    Resize.run = function() {
+        if(!Resize.initialized) {
+            var $document = $( d );
+            $document.on( 'input change', 'input[name="resizeWidth"], input[name="resizeHeight"]', function(e) {
+                clearTimeout(Resize.change);
+                Resize.changeDone = true;
+                Resize.changeFired = false;
+                Resize.change = setTimeout( function() {
+                    Resize.changeFired = true;
+                    Resize.hide();
+                    Resize.run();
+                }, 1500 );
+            } );
+            $document.on( 'blur', 'input[name="resizeWidth"], input[name="resizeHeight"]', function(e) {
+                if(Resize.changeFired) {
+                    return;
+                }
+                clearTimeout(Resize.change);
+                Resize.change = setTimeout( function() {
+                    Resize.hide();
+                    Resize.run();
+                }, 1500 );
+            } );
+            $document.on( 'change', 'input[name="resizeType"]', function(e) {
+                Resize.hide();
+                Resize.run();
+            });
+            Resize.initialized = true;
+        }
+
+        var w = $('#width').val();
+        var h = $('#height').val();
+        if(!w || !h) return;
+
+        var frame1W = Math.round(120 * Math.sqrt(w / h));
+        var frame1H = Math.round(120 * Math.sqrt(h / w));
+        var frameAR = frame1W / frame1H;
+        if(frame1W > 280) {
+            frame1W = 280; frame1H = Math.round(280 / frameAR);
+        }
+        if(frame1H > 150) {
+            frame1H = 150; frame1W = Math.round(150 * frameAR);
+        }
+        var type = ($('#resize_type_outer').is(':checked') ? 'outer' : 'inner');
+        var imgAR = 15 / 8;
+        var img = $('img.spai-resize-img');
+        img.css('width', '');
+        img.css('height', '');
+        img.css('margin', '0px');
+        var frame = $('div.spai-resize-frame');
+        frame.css('display', 'none');
+        frame.css('width', frame1W + 'px');
+        frame.css('height', frame1H + 'px');
+        frame.css('margin', Math.round((156 - frame1H ) / 2) + 'px auto 0');
+
+        clearTimeout(Resize.step1); clearTimeout(Resize.step2); clearTimeout(Resize.step3);
+        img.stop(); frame.stop();
+
+        if(Resize.sizeRule !== null) {
+            document.styleSheets[0].deleteRule(Resize.sizeRule);
+            Resize.sizeRule = null;
+        }
+        Resize.sizeRule = document.styleSheets[0].insertRule('.spai-resize-frame:after { content: "' + w + ' × ' + h + '"; }');
+        frame.addClass('spai-resize-frame');
+
+        $('.presentation-wrap').animate( {opacity: 1}, 500, 'swing', function(){
+            //because damn chrome is not repainting the frame after we change the sizes otherwise... :(
+            frame.css('display', 'block');
+
+            Resize.step2 = setTimeout(function(){
+                if(type == 'outer') {
+                    if(imgAR > frameAR) {
+                        var step1 = {
+                            height: frame1H + 'px',
+                            margin: Math.round((160 - frame1H) / 2) + 'px 0px'
+                        };
+                        var frameNewW = frame1H * imgAR;
+                        var step2 = { width: Math.round(frameNewW) + 'px' };
+                        var rule = '.spai-resize-frame:after { content: "' + Math.round(frameNewW * w / frame1W) + ' × ' + h + '"; }';
+                    } else {
+                        var step1 = {
+                            width: frame1W + 'px',
+                            margin: Math.round((160 - frame1W / imgAR) / 2) + 'px 0px'
+                        };
+                        var frameNewH = frame1W / imgAR;
+                        var step2 = {
+                            height: Math.round(frameNewH) + 'px',
+                            margin: Math.round((156 - frameNewH) / 2) + 'px auto 0'
+                        };
+                        var rule = '.spai-resize-frame:after { content: "' + w + ' × ' + Math.round(frameNewH * w / frame1W) + '"; }';
+
+                    }
+                } else {
+                    if(imgAR > frameAR) {
+                        var step1 = {
+                            width: frame1W,
+                            margin: Math.round((160 - frame1W / imgAR) / 2) + 'px 0px'
+                        };
+                        var frameNewH = frame1W / imgAR;
+                        var step2 = {
+                            height: Math.round(frameNewH) + 'px',
+                            margin: Math.round((156 - frameNewH) / 2) + 'px auto 0'
+                        };
+                        var rule = '.spai-resize-frame:after { content: "' + w + ' × ' + Math.round(frameNewH * w / frame1W) + '"; }';
+                    } else {
+                        var step1 = {
+                            height: frame1H,
+                            margin: Math.round((160 - frame1H) / 2) + 'px 0px'
+                        };
+                        var frameNewW = frame1H * imgAR;
+                        var step2 = {
+                            width: Math.round(frameNewW) + 'px'
+                        };
+                        var rule = '.spai-resize-frame:after { content: "' + Math.round(frameNewW * w / frame1W) + ' × ' + h + '"; }';
+                    }
+                }
+                Resize.animate(img, step1, frame, step2, rule);
+            }, 1000);
+        });
+
+
+        /*
+        Resize.setImageSizes();
+
+        var $document         = $( d ),
+            $presentationWrap = $( '.resize-type-wrap .presentation-wrapper' );
+
+        $document.on( 'input change blur', 'input[name="resizeWidth"], input[name="resizeHeight"]', function() {
+            setTimeout( function() {
+                Resize.animateFrame( Resize.animateImage );
+            }, 1000 );
+        } );
+
+        $document.on( 'change', 'input[name="resizeType"]', function() {
+            var $this = $( this );
+
+            var value = $this.val();
+
+            if ( typeof value === 'string' && value !== '' ) {
+                $presentationWrap.attr( 'data-type', value );
+            }
+
+            Resize.animateImage( Resize.calculateLeftPadding );
+        } );
+
+        $presentationWrap.removeClass( 'hidden' );
+        Resize.calculateLeftPadding();
+        */
+    }
+
+    $( function() {
+        if($('#resize').is('checked')) {
+            Resize.run();
+        }
+    } );
+} )( jQuery, window, document );

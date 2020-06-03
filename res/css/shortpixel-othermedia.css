@@ -65,7 +65,9 @@
       min-width: 60px;
       min-height: 60px;
       display: inline-block;
-      border: 1px solid #ccc; }
+      border: 1px solid #ccc;
+      background-size: cover;
+      background-position: center;}
       .shortpixel-other-media .list-overview .item .thumb img {
         max-width: 60px;
         max-height: 60px;
