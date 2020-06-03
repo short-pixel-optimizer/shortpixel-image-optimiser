@@ -187,13 +187,22 @@
                     <?php } ?>
 
                     <style>
-
                         .presentation-wrap {
                             padding: 10px;
                             text-align: center;
                             display: flex;
                             justify-content: center;
                             width: 600px;
+                        }
+                        @media(max-width: 1280px) {
+                            .presentation-wrap {
+                                width: 460px;
+                            }
+                        }
+                        @media(max-width: 1140px) {
+                            .presentation-wrap {
+                                width: 320px;
+                            }
                         }
                         .presentation-wrap img {
                             margin-auto;
