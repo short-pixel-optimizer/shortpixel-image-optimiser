@@ -1,18 +1,19 @@
 <?php
-namespace ShortPixel;
+namespace ShortPixel\Controller;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+
+use ShortPixel\Model\ApiKeyModel as ApiKeyModel;
 
 /* Main function of this controller is to load key on runtime
 This should probably in future incorporate some apikey checking functions that shouldn't be in model.
 */
-class ApiKeyController extends shortPixelController
+class ApiKeyController extends \ShortPixel\Controller
 {
     private static $instance;
 
     public function __construct()
     {
-      $this->loadModel('apikey');
-      $this->model = new apiKeyModel();
+      $this->model = new ApiKeyModel();
       $this->load();
     }
 

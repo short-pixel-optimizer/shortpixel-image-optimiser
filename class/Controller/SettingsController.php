@@ -1,9 +1,13 @@
 <?php
-namespace ShortPixel;
+namespace ShortPixel\Controller;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notice;
 
-class SettingsController extends shortPixelController
+use ShortPixel\Model\ApiKeyModel as ApiKeyModel;
+
+use ShortPixel\NextGen as NextGen;
+
+class SettingsController extends \ShortPixel\Controller
 {
 
      //env
@@ -35,7 +39,6 @@ class SettingsController extends shortPixelController
           // @todo Remove Debug Call
           $this->model = new \WPShortPixelSettings();
 
-          $this->loadModel('apikey');
           $this->keyModel = new ApiKeyModel();
 
           parent::__construct();
@@ -118,7 +121,6 @@ class SettingsController extends shortPixelController
       public function action_debug_medialibrary()
       {
         $this->loadEnv();
-        $this->loadModel('image');
 
         \WpShortPixelMediaLbraryAdapter::reCountMediaLibraryItems();
 
@@ -135,7 +137,7 @@ class SettingsController extends shortPixelController
               $nextgen->nextGenEnabled($previous);
 
               // Reset any integration notices when updating settings.
-              adminNoticesController::resetIntegrationNotices();
+              AdminNoticesController::resetIntegrationNotices();
           }
 
           $check_key = false;

@@ -287,7 +287,6 @@ class ShortPixelAPI {
                 }
                 elseif ( isset($APIresponse[0]->Status->Message) ) {
                     //return array("Status" => self::STATUS_FAIL, "Message" => "There was an error and your request was not processed (" . $APIresponse[0]->Status->Message . "). REQ: " . json_encode($URLs));
-                    Log::addTemp("Failed API REquest", $APIresponse);
                     $err = array("Status" => self::STATUS_FAIL, "Code" => (isset($APIresponse[0]->Status->Code) ? $APIresponse[0]->Status->Code : self::ERR_UNKNOWN),
                                  "Message" => __('There was an error and your request was not processed.','shortpixel-image-optimiser')
                                               . " (" . wp_basename($APIresponse[0]->OriginalURL) . ": " . $APIresponse[0]->Status->Message . ")");
@@ -470,12 +469,11 @@ class ShortPixelAPI {
             return array("Status" => self::STATUS_SUCCESS);
         }
 
-//Log::addDebug('Backing The Up', array($mainPath, $PATHs));
-
         //$fullSubDir = str_replace(wp_normalize_path(get_home_path()), "", wp_normalize_path(dirname($itemHandler->getMeta()->getPath()))) . '/';
         //$SubDir = ShortPixelMetaFacade::returnSubDir($itemHandler->getMeta()->getPath(), $itemHandler->getType());
         $fullSubDir = ShortPixelMetaFacade::returnSubDir($mainPath);
         $source = $PATHs; //array with final paths for these files
+
         $fs = \wpSPIO()->filesystem();
 
         if( !file_exists(SHORTPIXEL_BACKUP_FOLDER) && ! ShortPixelFolder::createBackUpFolder() ) {//creates backup folder if it doesn't exist
@@ -487,15 +485,19 @@ class ShortPixelAPI {
 
         foreach ( $source as $fileID => $filePATH )//create destination files array
         {
-            $destination[$fileID] = SHORTPIXEL_BACKUP_FOLDER . '/' . $fullSubDir . self::MB_basename($source[$fileID]);
+            $file = $fs->getFile($filePATH);
+            $bkFilePath = $fs->getBackupDirectory($file);
+            $bkFile = $fs->getFile($bkFilePath . $file->getFileName() );
+
+            $destination[$fileID] = $bkFile; //SHORTPIXEL_BACKUP_FOLDER . '/' . $fullSubDir . self::MB_basename($source[$fileID]);
         }
 
         //now that we have original files and where we should back them up we attempt to do just that
         if(is_writable(SHORTPIXEL_BACKUP_FOLDER))
         {
-            foreach ( $destination as $fileID => $filePATH )
+            foreach ( $destination as $fileID => $destination_file )
             {
-                $destination_file = $fs->getFile($filePATH);
+                //$destination_file = $fs->getFile($filePATH);
 
                 if ( ! $destination_file->exists() )
                 {
@@ -503,7 +505,7 @@ class ShortPixelAPI {
                     $result = $source_file->copy($destination_file);
                     if (  ! $result )
                     {//file couldn't be saved in backup folder
-                        $msg = sprintf(__('Cannot save file <i>%s</i> in backup directory','shortpixel-image-optimiser'),self::MB_basename($source[$fileID]));
+                        $msg = sprintf(__('Cannot save file <i>%s</i> in backup directory','shortpixel-image-optimiser'),$destination_file->getFullPath() );
                         return array("Status" => self::STATUS_FAIL, "Message" => $msg);
                     }
 
@@ -688,7 +690,7 @@ class ShortPixelAPI {
         // The settings model.
         $settings = \wpSPIO()->settings();
 
-        $fs = new \ShortPixel\FileSystemController();
+        $fs = \wpSPIO()->fileSystem();
 
         //Log::addDebug($tempFiles);
         // Check and Run all tempfiles. Move it to appropiate places.

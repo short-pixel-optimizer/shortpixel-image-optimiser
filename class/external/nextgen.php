@@ -3,6 +3,8 @@ namespace ShortPixel;
 use ShortPixel\Notices\NoticeController as Notice;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
+use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
+use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 
 class NextGen
 {
@@ -78,7 +80,6 @@ class NextGen
   public function nextGenEnabled($silent)
   {
 
-    \WpShortPixelDb::checkCustomTables(); // check if custom tables are created, if not, create them
     $this->addNextGenGalleriesToCustom($silent);
   }
 
@@ -200,7 +201,7 @@ class NextGen
 
   public function resetNotification()
   {
-    Notice::removeNoticeByID(adminNoticesController::MSG_INTEGRATION_NGGALLERY);
+    Notice::removeNoticeByID(AdminNoticesController::MSG_INTEGRATION_NGGALLERY);
   }
 
   public function onDeleteImage($nggId, $size)

@@ -1,15 +1,16 @@
 <?php
-namespace ShortPixel;
+namespace ShortPixel\Controller;
 use ShortPixel\Notices\NoticeController as Notices;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
+use ShortPixel\Model\ApiKeyModel as ApiKeyModel;
 
 /* Controller for automatic Notices about status of the plugin.
 * This controller is bound for automatic fire. Regular procedural notices should just be queued using the Notices modules.
 * Called in admin_notices.
 */
 
-class adminNoticesController extends ShortPixelController
+class AdminNoticesController extends \ShortPixel\Controller
 {
     protected static $instance;
 
@@ -44,7 +45,7 @@ class adminNoticesController extends ShortPixelController
     public static function getInstance()
     {
       if (is_null(self::$instance))
-          self::$instance = new adminNoticesController();
+          self::$instance = new AdminNoticesController();
 
       return self::$instance;
     }
@@ -109,8 +110,8 @@ class adminNoticesController extends ShortPixelController
           {
             echo $notice->getForDisplay();
 
-            if ($notice->getID() == adminNoticesController::MSG_QUOTA_REACHED || $notice->getID() == adminNoticesController::MSG_UPGRADE_MONTH
-            || $notice->getID() == adminNoticesController::MSG_UPGRADE_BULK)
+            if ($notice->getID() == AdminNoticesController::MSG_QUOTA_REACHED || $notice->getID() == AdminNoticesController::MSG_UPGRADE_MONTH
+            || $notice->getID() == AdminNoticesController::MSG_UPGRADE_BULK)
             {
               wp_enqueue_script('jquery.knob.min.js');
               wp_enqueue_script('jquery.tooltip.min.js');
@@ -408,7 +409,6 @@ class adminNoticesController extends ShortPixelController
     protected function getQuotaExceededMessage($quotaData)
     {
       $averageCompression = \wpSPIO()->getShortPixel()->getAverageCompression();
-      \wpSPIO()->loadModel('apikey');
 
       $keyModel = new apiKeyModel();
       $keyModel->loadKey();
@@ -446,11 +446,11 @@ class adminNoticesController extends ShortPixelController
 
         $message .= '<h3>' . __('Quota Exceeded','shortpixel-image-optimiser') . '</h3>';
 
-        $recheck = isset($_GET['checkquota']) ? true : false;
+    //    $recheck = isset($_GET['checkquota']) ? true : false;
 
-        if($recheck) {
+    /*    if($recheck) {
              $message .= '<p style="color: red">' . __('You have no available image credits. If you just bought a package, please note that sometimes it takes a few minutes for the payment confirmation to be sent to us by the payment processor.','shortpixel-image-optimiser') . '</p>';
-        }
+        } */
 
         $message .= '<p>' . sprintf(__('The plugin has optimized <strong>%s images</strong> and stopped because it reached the available quota limit.','shortpixel-image-optimiser'),
               number_format(max(0, $quotaData['APICallsMadeNumeric'] + $quotaData['APICallsMadeOneTimeNumeric'])));
@@ -470,7 +470,7 @@ class adminNoticesController extends ShortPixelController
                   <strong>' . __('Upgrade','shortpixel-image-optimiser') . '</strong>
               </a>
               <input type="button" name="checkQuota" class="button" value="'.  __('Confirm New Credits','shortpixel-image-optimiser') . '"
-                     onclick="ShortPixel.recheckQuota()">
+                     onclick="ShortPixel.checkQuota()">
           </div>';
 
           $message .= '<p>' . __('Get more image credits by referring ShortPixel to your friends!','shortpixel-image-optimiser') . '

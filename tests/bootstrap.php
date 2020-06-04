@@ -33,7 +33,7 @@ require_once $_tests_dir . '/includes/functions.php';
 function _manually_load_plugin() {
 	global $shortPixelPluginInstance;
 	require_once( dirname( dirname( __FILE__ ) ) . '/wp-shortpixel.php');
-	require_once( dirname( dirname( __FILE__ ) ) . '/wp-shortpixel-req.php');
+	//require_once( dirname( dirname( __FILE__ ) ) . '/wp-shortpixel-req.php');
 
 	$shortPixelPluginInstance = new WPShortPixel;
 

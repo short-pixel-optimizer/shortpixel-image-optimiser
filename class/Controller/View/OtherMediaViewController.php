@@ -1,15 +1,16 @@
 <?php
-namespace ShortPixel;
+namespace ShortPixel\Controller\View;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 
+use ShortPixel\Controller\ApiKeyController as ApiKeyController;
+use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 
 // Future contoller for the edit media metabox view.
-class OtherMediaViewController extends ShortPixelController
+class OtherMediaViewController extends \ShortPixel\Controller
 {
       //$this->model = new
       protected $template = 'view-other-media';
-      protected $model = 'image';
 
       // Pagination .
       protected $items_per_page = 20;
@@ -23,8 +24,6 @@ class OtherMediaViewController extends ShortPixelController
 
       public function __construct()
       {
-        $this->loadModel($this->model);
-      //  $this->loadModel('image');
         parent::__construct();
         $this->setActions(); // possible actions.
 
@@ -88,8 +87,10 @@ class OtherMediaViewController extends ShortPixelController
       protected function setActions()
       {
         $nonce = wp_create_nonce( 'sp_custom_action' );
+        $keyControl = ApiKeyController::getInstance();
+
         $actions = array(
-            'optimize' => array('action' => 'optimize', '_wpnonce' => $nonce , 'text' => __('Optimize now','shortpixel-image-optimiser')),
+            'optimize' => array('action' => 'optimize', '_wpnonce' => $nonce , 'text' => __('Optimize now','shortpixel-image-optimiser'), 'class' => ''),
 
             'retry' => array('action' => 'optimize', '_wpnonce' => $nonce, 'text' =>  __('Retry','shortpixel-image-optimiser')),
 
@@ -99,14 +100,21 @@ class OtherMediaViewController extends ShortPixelController
 
             'redoglossy' => array('action' => 'redo', '_wpnonce' => $nonce, 'type' => 'glossy', 'text' => __('Re-optimize glossy','shortpixel-image-optimiser')),
 
-            'quota' => array('action' => 'quota', '_wpnonce' => $nonce, 'text' =>__('Check quota','shortpixel-image-optimiser')),
+            'quota' => array('action' => 'check-quota', '_wpnonce' => $nonce, 'text' =>__('Check quota','shortpixel-image-optimiser'), 'class' => 'button button-smaller'),
+            'extend-quota' => array('link' => '<a href="https://shortpixel.com/login/' . $keyControl->getKeyForDisplay() . '" target="_blank" class="button-primary button-smaller">' . __('Extend Quota','shortpixel-image-optimiser') . '</a>'),
+
+          /*  <a class='button button-smaller button-primary' href='". (defined("SHORTPIXEL_HIDE_API_KEY") ? '' : $this->ctrl->getApiKey()) . "' target='_blank'>"
+                . __('Extend Quota','shortpixel-image-optimiser') .
+            "</a> */
 
             'restore' => array('action' => 'restore', '_wpnonce' => $nonce, 'text' => __('Restore Backup','shortpixel-image-optimiser')),
 
             'compare' => array('link' => '<a href="javascript:ShortPixel.loadComparer(\'C-%%item_id%%\');">%%text%%</a>',
                       'text' => __('Compare', 'shortpixel-image-optimiser')),
             'view' => array('link' => '<a href="%%item_url%%" target="_blank">%%text%%</a>', 'text' => __('View','shortpixel-image-optimiser')),
-            'no-key' => array('link' => '<a href="options-general.php?page=wp-shortpixel-settings">%%text%%</a>', 'text' => __('Invalid API Key. Check your Settings','shortpixel-image-optimiser') ),
+            /*'no-key' => array('link' => __('Invalid API Key', 'shortpixel-image-optimiser') . ' <a href="options-general.php?page=wp-shortpixel-settings" class="text-link">%%text%%</a>', 'text' => __('Check your Settings','shortpixel-image-optimiser')           ), */
+
+
         );
         $this->actions = $actions;
       }
@@ -141,6 +149,12 @@ class OtherMediaViewController extends ShortPixelController
                                  'sortable' => false,
                             ),
         );
+
+        $keyControl = ApiKeyController::getInstance();
+        if (! $keyControl->keyIsVerified())
+        {
+            $headings['actions']['title']  = '';
+        }
 
         return $headings;
       }
@@ -235,6 +249,7 @@ class OtherMediaViewController extends ShortPixelController
         $this->view->rewriteHREF = '';
 
         $otherMediaController = new OtherMediaController();
+        $shortpixel = \wpSPIO()->getShortPixel();
 
         if (! $action)
          return; // no action this view.
@@ -252,19 +267,19 @@ class OtherMediaViewController extends ShortPixelController
         switch ($action)
         {
             case 'optimize':
-                $this->shortPixel->optimizeCustomImage($item_id);
+                $shortpixel->optimizeCustomImage($item_id);
                 $this->rewriteHREF();
 
             break;
             case 'restore':
-                if($this->shortPixel->doCustomRestore($item_id))
+                if($shortpixel->doCustomRestore($item_id))
                 {
                   Notices::addSuccess(__('File Successfully restored', 'shortpixel-image-optimiser'));
                 }
                 $this->rewriteHREF();
             break;
             case 'redo':
-              $this->shortPixel->redo('C-' . $item_id, sanitize_text_field($_GET['type']));
+              $shortpixel->redo('C-' . $item_id, sanitize_text_field($_GET['type']));
               $this->rewriteHREF();
 
             break;
@@ -279,9 +294,17 @@ class OtherMediaViewController extends ShortPixelController
             case 'bulk-optimize': // bulk action checkboxes
               $optimize_ids = esc_sql($_POST['bulk-optimize']);
               foreach ($optimize_ids as $id) {
-                 $this->shortPixel->optimizeCustomImage($id);
+                 $shortpixel->optimizeCustomImage($id);
               }
               $this->rewriteHREF();
+            break;
+            case 'check-quota':
+              $shortpixel->getQuotaInformation();
+
+              $this->rewriteHREF();
+            break;
+            default:
+              Log::addWarn('Action hit OtherMediaViewController but was not caught' . $action . ' on '. $item_id);
             break;
         }
       }
@@ -468,14 +491,18 @@ class OtherMediaViewController extends ShortPixelController
          $thisActions = array();
          $settings = \wpSPIO()->settings();
          $keyControl = ApiKeyController::getInstance();
+         $forceSingular = false; // force view to show all actions separate, not in clickdown
 
          if (! $keyControl->keyIsVerified())
          {
-           $thisActions[] = $this->actions['no-key'];
+           //$thisActions[] = $this->actions['no-key'];
+
          }
          elseif ($settings->quotaExceeded)
          {
+           $thisActions[] = $this->actions['extend-quota'];
            $thisActions[] = $this->actions['quota'];
+           $forceSingular = true;
          }
          elseif ($item->status < \ShortPixelMeta::FILE_STATUS_UNPROCESSED)
          {
@@ -511,10 +538,10 @@ class OtherMediaViewController extends ShortPixelController
            }
          }
 
-         return $this->renderActions($thisActions, $item, $file);
+         return $this->renderActions($thisActions, $item, $file, $forceSingular);
       }
 
-      protected function renderActions($actions, $item, $file)
+      protected function renderActions($actions, $item, $file, $forceSingular = false)
       {
 
         foreach($actions as $index => $action)
@@ -538,13 +565,19 @@ class OtherMediaViewController extends ShortPixelController
               $url = $this->getPageURL(array('action' => $action_arg, '_wpnonce' => $nonce, 'item_id' => $item->id));
               if (isset($action['type']))
                 $url = add_query_arg('type', $action['type'], $url);
+              $class = (isset($action['class'])) ? $action['class'] : '';
 
-              $link = '<a href="' . $url . '" class="action-' . $action_arg . '">' . $text . '</a>';
+
+              $link = '<a href="' . $url . '" class="action-' . $action_arg . ' ' . $class . '">' . $text . '</a>';
           }
 
           $actions[$index] = $link;
         }
 
+        if ($forceSingular)
+        {
+          array_unshift($actions, 'render-loose');
+        }
         return $actions;
       }
 
@@ -562,6 +595,15 @@ class OtherMediaViewController extends ShortPixelController
 
       protected function getDisplayStatus($item)
       {
+        $keyControl = ApiKeyController::getInstance();
+
+
+        if (! $keyControl->keyIsVerified())
+        {
+            $msg = __('Invalid API Key', 'shortpixel-image-optimiser') . ' <a href="options-general.php?page=wp-shortpixel-settings" class="text-link">' . __('Check your Settings','shortpixel-image-optimiser') . '</a>';
+            return $msg;
+        }
+
         switch($item->status) {
             case \ShortPixelMeta::FILE_STATUS_RESTORED:
               $msg = __('Restored','shortpixel-image-optimiser');
@@ -573,7 +615,7 @@ class OtherMediaViewController extends ShortPixelController
                 $msg = $this->getSuccessMessage($item);
             break;
             case 1: $msg = "<img src=\"" . wpSPIO()->plugin_url('res/img/loading.gif') . "\" class='sp-loading-small'>&nbsp;"
-                           . __('Pending','shortpixel-image-optimiser');
+                           . __('Image waiting to be processed','shortpixel-image-optimiser');
                 break;
             case 0: $msg = __('Image not processed.','shortpixel-image-optimiser');
                 break;
@@ -678,14 +720,26 @@ class OtherMediaViewController extends ShortPixelController
 
       protected function getDisplayActions($actions)
       {
+
            if (count($actions) == 0)
            {
              return '';
            }
            elseif (count($actions) == 1)
             {
-              return "<div class='single-action button-primary'>" . $actions[0] . "</div>";
+              return "<div class='single-action'>" . $actions[0] . "</div>";
             }
+           elseif($actions[0] == 'render-loose')
+           {
+             array_shift($actions);
+             $output = '<div class="multi-action-wrapper">';
+             foreach($actions as $action )
+             {
+               $output .= "<div class='single-action'>" . $action. "</div>";
+             }
+             $output .= "</div>";
+             return $output;
+           }
             else{
 
             $output = "<div class='sp-dropdown'>

@@ -1,22 +1,21 @@
 <?php
-namespace ShortPixel;
+namespace ShortPixel\Controller;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+
+use ShortPixel\Model\DirectoryModel as DirectoryModel;
+use ShortPixel\Model\FileModel as FileModel;
 
 
 /** Controller for FileSystem operations
 *
 * This controller is used for -compound- ( complex ) FS operations, using the provided models File en Directory.
 */
-Class FileSystemController extends ShortPixelController
+Class FileSystemController extends \ShortPixel\Controller
 {
     protected $env;
 
     public function __construct()
     {
-      $this->loadModel('file');
-      $this->loadModel('directory');
-    //  $this->loadModel('environment');
-
       $this->env = wpSPIO()->env();
 
     }
@@ -166,7 +165,7 @@ Class FileSystemController extends ShortPixelController
         if (is_null($url))
           return false;
 
-        $parsed = parse_url($url); // returns array, null, or false. 
+        $parsed = parse_url($url); // returns array, null, or false.
 
         if (! is_null($parsed) && $parsed !== false)
           return $url;

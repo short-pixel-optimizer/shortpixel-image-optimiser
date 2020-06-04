@@ -1,5 +1,5 @@
 <?php
-namespace ShortPixel;
+namespace ShortPixel\Model;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 /* ImageModel class.
@@ -11,7 +11,7 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 * - Goal: Structural ONE method calls of image related information, and combining information. Same task is now done on many places.
 * -- Shortpixel Class should be able to blindly call model for information, correct metadata and such.
 */
-class ImageModel extends ShortPixelModel
+class ImageModel extends \ShortPixel\Model
 {
 
     private $file;  // the file representation
@@ -41,7 +41,7 @@ class ImageModel extends ShortPixelModel
       $this->meta = $this->facade->getMeta();
 
       $this->setImageStatus();
-      $this->file = $fs->getAttachedFile($post_id);
+      $this->file = $fs->getFile($this->meta->getPath() ); //$fs->getAttachedFile($post_id);
 
       // WP 5.3 and higher. Check for original file.
       if (function_exists('wp_get_original_image_path'))

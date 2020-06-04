@@ -1,9 +1,11 @@
 <?php
-namespace ShortPixel;
+namespace ShortPixel\Model;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notice;
 
-class ApiKeyModel extends ShortPixelModel
+use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
+
+class ApiKeyModel extends \ShortPixel\Model
 {
 
   // variables
@@ -186,9 +188,9 @@ class ApiKeyModel extends ShortPixelModel
     $this->key_is_verified = false;
     Log::addDebug('Clearing API Key');
 
-    adminNoticesController::resetAPINotices();
-    adminNoticesController::resetQuotaNotices();
-    adminNoticesController::resetIntegrationNotices();
+    AdminNoticesController::resetAPINotices();
+    AdminNoticesController::resetQuotaNotices();
+    AdminNoticesController::resetIntegrationNotices();
 
     $this->update();
 
@@ -252,7 +254,7 @@ class ApiKeyModel extends ShortPixelModel
        Notice::addError($notice);
     }
 
-    adminNoticesController::resetAPINotices();
+    AdminNoticesController::resetAPINotices();
   }
 
 
@@ -290,13 +292,7 @@ class ApiKeyModel extends ShortPixelModel
       wp_redirect(admin_url("options-general.php?page=wp-shortpixel-settings"));
       exit();
     }
-    /*elseif (function_exists('is_multisite') && is_multisite() && !$this->_settings->verifiedKey)
-    { // @todo not optimal, License key needs it's own model to do checks upon.
-      $scontrolname = \shortPixelTools::namespaceit("SettingsController");
-      $scontrol = new $scontrolname();
-      $scontrol->setShortPixel($this);
-      $scontrol->checkKey();
-    } */
+
 }
 
 

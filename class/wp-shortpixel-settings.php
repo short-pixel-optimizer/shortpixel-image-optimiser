@@ -1,7 +1,7 @@
 <?php
 
 /** Settings Model **/
-class WPShortPixelSettings extends ShortPixel\ShortPixelModel {
+class WPShortPixelSettings extends \ShortPixel\Model {
     private $_apiKey = '';
     private $_compressionType = 1;
     private $_keepExif = 0;

@@ -80,8 +80,12 @@ var ShortPixel = function() {
     function enableResize(elm) {
         if(jQuery(elm).is(':checked')) {
             jQuery("#width,#height").removeAttr("disabled");
+            SpioResize.lastW = false; //to trigger the animation
+            jQuery(".resize-type-wrap").show(800, window.SpioResize.run);
         } else {
             jQuery("#width,#height").attr("disabled", "disabled");
+            window.SpioResize.hide();
+            jQuery(".resize-type-wrap").hide(800);
         }
     }
 
@@ -330,9 +334,15 @@ var ShortPixel = function() {
     }
 
     function checkQuota() {
-        var data = {action:'shortpixel_check_quota'};
-        jQuery.get(ShortPixel.AJAX_URL, data, function() {
+        var data = {
+          action:'shortpixel_check_quota',
+          nonce: ShortPixelActions.nonce_check_quota,
+          return_json: true
+        };
+        jQuery.post(ShortPixel.AJAX_URL, data, function(result) {
             console.log("quota refreshed");
+            console.log(result);
+            window.location.href = result.redirect;
         });
     }
 
@@ -525,7 +535,7 @@ var ShortPixel = function() {
         jQuery("#shortPixelProposeUpgradeShade").css("display", "none");
         jQuery("#shortPixelProposeUpgrade").addClass('shortpixel-hide');
         if(ShortPixel.toRefresh) {
-            ShortPixel.recheckQuota();
+            ShortPixel.checkQuota();
         }
     }
 
@@ -682,11 +692,7 @@ var ShortPixel = function() {
         return id.substring(0,2) == "C-";
     }
 
-    function recheckQuota() {
-        var parts = window.location.href.split('#');
 
-        window.location.href=parts[0]+(parts[0].indexOf('?')>0?'&':'?')+'checkquota=1' + (typeof parts[1] === 'undefined' ? '' : '#' + parts[1]);
-    }
 
     function openImageMenu(e) {
             e.preventDefault();
@@ -851,7 +857,7 @@ var ShortPixel = function() {
         checkRandomAnswer : checkRandomAnswer,
         removeBulkMsg       : removeBulkMsg,
         isCustomImageId     : isCustomImageId,
-        recheckQuota        : recheckQuota,
+      //  recheckQuota        : recheckQuota,
         openImageMenu       : openImageMenu,
         menuCloseEvent      : false,
         loadComparer        : loadComparer,
@@ -1076,7 +1082,7 @@ function checkBulkProcessingCallApi(){
                     case ShortPixel.STATUS_QUOTA_EXCEEDED:
                         setCellMessage(id, data["Message"], "<a class='button button-smaller button-primary' href=\"https://shortpixel.com/login/"
                                        + "\" target=\"_blank\">" + _spTr.extendQuota + "</a>"
-                                       + "<a class='button button-smaller' href='admin.php?action=shortpixel_check_quota'>" + _spTr.check__Quota + "</a>");
+                                       + "<a class='button button-smaller' href='javascript:ShortPixel.checkQuota()'>" + _spTr.check__Quota + "</a>");
                         showToolBarAlert(ShortPixel.STATUS_QUOTA_EXCEEDED);
                         if(data['Stop'] == false) { //there are other items in the priority list, maybe processed, try those
                             setBulkTimer(5000);
@@ -1496,3 +1502,169 @@ function SPstringFormat() {
 /*if (!(typeof String.prototype.format == 'function')) {
     String.prototype.format = stringFormat;
 } */
+
+
+( function( $, w, d ) {
+    w.SpioResize = {
+        image : {
+            width  : 0,
+            height : 0
+        },
+        lag: 2000,
+        step1: false,
+        step2: false,
+        step3: false,
+        sizeRule: null,
+        initialized: false,
+        lastW: false,
+        lastH: false,
+        lastType: false,
+    };
+
+    SpioResize.hide = function() {
+        $('.presentation-wrap').css('opacity', 0);
+    }
+
+    SpioResize.animate = function(img, step1, frame, step2, rule) {
+        img.animate( step1, 1000, 'swing', function(){
+            SpioResize.step3 = setTimeout(function(){
+                document.styleSheets[0].deleteRule(SpioResize.sizeRule);
+                frame.animate(step2, 1000, 'swing', function() {
+                    SpioResize.sizeRule = document.styleSheets[0].insertRule(rule);
+                })
+            }, 600);
+        });
+
+    }
+
+    SpioResize.run = function() {
+        if(!SpioResize.initialized) {
+            var $document = $( d );
+            $document.on( 'input change', 'input[name="resizeWidth"], input[name="resizeHeight"]', function(e) {
+                clearTimeout(SpioResize.change);
+                SpioResize.changeDone = true;
+                SpioResize.changeFired = false;
+                SpioResize.change = setTimeout( function() {
+                    SpioResize.changeFired = true;
+                    SpioResize.run();
+                }, 1500 );
+            } );
+            $document.on( 'blur', 'input[name="resizeWidth"], input[name="resizeHeight"]', function(e) {
+                if(SpioResize.changeFired) {
+                    return;
+                }
+                clearTimeout(SpioResize.change);
+                SpioResize.change = setTimeout( function() {
+                    SpioResize.run();
+                }, 1500 );
+            } );
+            $document.on( 'change', 'input[name="resizeType"]', function(e) {
+                SpioResize.run();
+            });
+            SpioResize.initialized = true;
+        }
+
+        var w = $('#width').val();
+        var h = $('#height').val();
+        if(!w || !h) return;
+        var type = ($('#resize_type_outer').is(':checked') ? 'outer' : 'inner');
+        if(w === SpioResize.lastW && h === SpioResize.lastH && type === SpioResize.lastType) {
+            return;
+        }
+        SpioResize.hide();
+        SpioResize.lastW = w;
+        SpioResize.lastH = h;
+        SpioResize.lastType = type;
+
+        var frame1W = Math.round(120 * Math.sqrt(w / h));
+        var frame1H = Math.round(120 * Math.sqrt(h / w));
+        var frameAR = frame1W / frame1H;
+        if(frame1W > 280) {
+            frame1W = 280; frame1H = Math.round(280 / frameAR);
+        }
+        if(frame1H > 150) {
+            frame1H = 150; frame1W = Math.round(150 * frameAR);
+        }
+        var imgAR = 15 / 8;
+        var img = $('img.spai-resize-img');
+        img.css('width', '');
+        img.css('height', '');
+        img.css('margin', '0px');
+        var frame = $('div.spai-resize-frame');
+        frame.css('display', 'none');
+        frame.css('width', frame1W + 'px');
+        frame.css('height', frame1H + 'px');
+        frame.css('margin', Math.round((156 - frame1H ) / 2) + 'px auto 0');
+
+        clearTimeout(SpioResize.step1); clearTimeout(SpioResize.step2); clearTimeout(SpioResize.step3);
+        img.stop(); frame.stop();
+
+        if(SpioResize.sizeRule !== null) {
+            document.styleSheets[0].deleteRule(SpioResize.sizeRule);
+            SpioResize.sizeRule = null;
+        }
+        SpioResize.sizeRule = document.styleSheets[0].insertRule('.spai-resize-frame:after { content: "' + w + ' × ' + h + '"; }');
+        frame.addClass('spai-resize-frame');
+
+        $('.presentation-wrap').animate( {opacity: 1}, 500, 'swing', function(){
+            //because damn chrome is not repainting the frame after we change the sizes otherwise... :(
+            frame.css('display', 'block');
+
+            SpioResize.step2 = setTimeout(function(){
+                if(type == 'outer') {
+                    if(imgAR > frameAR) {
+                        var step1 = {
+                            height: frame1H + 'px',
+                            margin: Math.round((160 - frame1H) / 2) + 'px 0px'
+                        };
+                        var frameNewW = frame1H * imgAR;
+                        var step2 = { width: Math.round(frameNewW) + 'px' };
+                        var rule = '.spai-resize-frame:after { content: "' + Math.round(frameNewW * w / frame1W) + ' × ' + h + '"; }';
+                    } else {
+                        var step1 = {
+                            width: frame1W + 'px',
+                            margin: Math.round((160 - frame1W / imgAR) / 2) + 'px 0px'
+                        };
+                        var frameNewH = frame1W / imgAR;
+                        var step2 = {
+                            height: Math.round(frameNewH) + 'px',
+                            margin: Math.round((156 - frameNewH) / 2) + 'px auto 0'
+                        };
+                        var rule = '.spai-resize-frame:after { content: "' + w + ' × ' + Math.round(frameNewH * w / frame1W) + '"; }';
+
+                    }
+                } else {
+                    if(imgAR > frameAR) {
+                        var step1 = {
+                            width: frame1W,
+                            margin: Math.round((160 - frame1W / imgAR) / 2) + 'px 0px'
+                        };
+                        var frameNewH = frame1W / imgAR;
+                        var step2 = {
+                            height: Math.round(frameNewH) + 'px',
+                            margin: Math.round((156 - frameNewH) / 2) + 'px auto 0'
+                        };
+                        var rule = '.spai-resize-frame:after { content: "' + w + ' × ' + Math.round(frameNewH * w / frame1W) + '"; }';
+                    } else {
+                        var step1 = {
+                            height: frame1H,
+                            margin: Math.round((160 - frame1H) / 2) + 'px 0px'
+                        };
+                        var frameNewW = frame1H * imgAR;
+                        var step2 = {
+                            width: Math.round(frameNewW) + 'px'
+                        };
+                        var rule = '.spai-resize-frame:after { content: "' + Math.round(frameNewW * w / frame1W) + ' × ' + h + '"; }';
+                    }
+                }
+                SpioResize.animate(img, step1, frame, step2, rule);
+            }, 1000);
+        });
+    }
+
+    $( function() {
+        if($('#resize').is('checked')) {
+            SpioResize.run();
+        }
+    } );
+} )( jQuery, window, document );

@@ -2,7 +2,7 @@
 namespace ShortPixel;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
-class ShortPixelController
+class Controller
 {
   protected static $controllers = array();
 
@@ -26,29 +26,9 @@ class ShortPixelController
   public static function init()
   {
     foreach (get_declared_classes() as $class) {
-      if (is_subclass_of($class, \ShortPixelTools::namespaceit('shortPixelController') ))
+      if (is_subclass_of($class, 'ShortPixel\Controller') )
         self::$controllers[] = $class;
     }
-  }
-
-  /* Static function to use for finding a associated controller within the WP page ecosystem
-  *
-  *  e.g. My page path in Wp-admin is bulk-restore-all, it can autofind needed controller ( and view )
-  */
-  public static function findControllerbySlug($name)
-  {
-      foreach(self::$controllers as $className)
-      {
-        if (! isset($className::$slug)) // controllers not connected by slugs
-          continue;
-
-        if ($className::$slug == $name)
-        {
-          return $className; // found!
-        }
-      }
-
-      return false;
   }
 
   public function __construct()
@@ -126,15 +106,6 @@ class ShortPixelController
       }
 
   }
-
-  /** Loads the Model Data Structure upon request
-  *
-  * @param string $name Name of the model
-  */
-  protected function loadModel($name){
-     return \wpSPIO()->loadModel($name);
-  }
-
 
   /** Accepts POST data, maps, checks missing fields, and applies sanitization to it.
   * @param array $post POST data

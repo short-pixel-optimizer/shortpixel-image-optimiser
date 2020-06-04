@@ -1,6 +1,8 @@
 <?php
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
+use ShortPixel\Controller\ApiKeyController as ApiKeyController;
+
 class ShortPixelView {
 
     private $ctrl;
@@ -1569,7 +1571,7 @@ class ShortPixelView {
     public function renderCustomColumn($id, $data, $extended = false){ ?>
         <?php if ($extended) // extended ( edit-media ) moved to it's own view.
         {
-            $controller = new \ShortPixel\editMediaController();
+            $controller = new \ShortPixel\Controller\EditMediaController();
             $controller->setTempData($data);
             $controller->setLegacyView($this);
             $controller->setShortPixel($this->ctrl);
@@ -1708,11 +1710,12 @@ class ShortPixelView {
     }
 
     public function getQuotaExceededHTML($message = '') {
+      $keyControl = ApiKeyController::getInstance();
         return "<div class='sp-column-actions' style='width:110px;'>
-        <a class='button button-smaller button-primary' href='https://shortpixel.com/login/". (defined("SHORTPIXEL_HIDE_API_KEY") ? '' : $this->ctrl->getApiKey()) . "' target='_blank'>"
+        <a class='button button-smaller button-primary' href='https://shortpixel.com/login/". $keyControl->getKeyForDisplay() . "' target='_blank'>"
             . __('Extend Quota','shortpixel-image-optimiser') .
         "</a>
-        <a class='button button-smaller' href='admin.php?action=shortpixel_check_quota'>"
+        <a class='button button-smaller' href='javascript:ShortPixel.checkQuota();'>"
             . __('Check&nbsp;&nbsp;Quota','shortpixel-image-optimiser') .
         "</a></div>
         <div class='sp-column-info'>" . $message . " " . __('Quota Exceeded','shortpixel-image-optimiser') . "</div>";

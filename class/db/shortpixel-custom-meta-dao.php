@@ -85,13 +85,14 @@ class ShortPixelCustomMetaDao {
     private function addIfMissing($type, $table, $key, $field, $fkTable = null, $fkField = null) {
         $hasIndexSql = "select count(*) hasIndex from information_schema.statistics where table_name = '%s' and index_name = '%s' and table_schema = database()";
         $createIndexSql = "ALTER TABLE %s ADD UNIQUE INDEX %s (%s)";
-        $createFkSql = "ALTER TABLE %s ADD FOREIGN KEY %s(%s) REFERENCES %s(%s)";
+        //$createFkSql = "ALTER TABLE %s ADD FOREIGN KEY %s(%s) REFERENCES %s(%s)";
         $hasIndex = $this->db->query(sprintf($hasIndexSql, $table, $key));
         if($hasIndex[0]->hasIndex == 0){
             if($type == "UNIQUE INDEX"){
                 $this->db->query(sprintf($createIndexSql, $table, $key, $field));
-            } else {
+        /*    } else {
                 $this->db->query(sprintf($createFkSql, $table, $key, $field, $fkTable, $fkField));
+                */
             }
             return true;
         }
@@ -127,8 +128,8 @@ class ShortPixelCustomMetaDao {
 
         $this->addIfMissing("UNIQUE INDEX", $this->db->getPrefix()."shortpixel_meta", "sp_path_md5", "path_md5");
 //        $this->addIfMissing("UNIQUE INDEX", $this->db->getPrefix()."shortpixel_meta", "sp_path", "path");
-        $this->addIfMissing("FOREIGN KEY", $this->db->getPrefix()."shortpixel_meta", "fk_shortpixel_meta_folder", "folder_id",
-                                           $this->db->getPrefix()."shortpixel_folders", "id");
+        /* $this->addIfMissing("FOREIGN KEY", $this->db->getPrefix()."shortpixel_meta", "fk_shortpixel_meta_folder", "folder_id",
+                                           $this->db->getPrefix()."shortpixel_folders", "id"); */
     }
 
     public function getFolders() {

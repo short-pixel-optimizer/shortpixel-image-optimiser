@@ -1,5 +1,5 @@
 <?php
-namespace ShortPixel;
+namespace ShortPixel\Model;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 /* FileModel class.
@@ -12,7 +12,7 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 * - Every file can have a backup counterpart.
 *
 */
-class FileModel extends ShortPixelModel
+class FileModel extends \ShortPixel\Model
 {
 
   // File info
@@ -178,6 +178,7 @@ class FileModel extends ShortPixelModel
       return 0;
   }
 
+
   /** Copy a file to somewhere
   *
   * @param $destination String Full Path to new file.
@@ -329,9 +330,11 @@ class FileModel extends ShortPixelModel
 
     $path = wp_normalize_path($path);
 
+
     // if path does not contain basepath.
     $uploadPath = wp_normalize_path($this->getUploadPath()); // mixed slashes and dashes can also be a config-error in WP.
-    if (strpos($path, ABSPATH) === false && strpos($path, $uploadPath) === false)
+    $abspath = wp_normalize_path(ABSPATH); // yup, can also be wrong.
+    if (strpos($path, $abspath) === false && strpos($path, $uploadPath) === false)
       $path = $this->relativeToFullPath($path);
 
     $path = apply_filters('shortpixel/filesystem/processFilePath', $path, $original_path);

@@ -1,19 +1,19 @@
 <?php
-namespace ShortPixel;
+namespace ShortPixel\Controller;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
+use ShortPixel\Model\CacheModel as CacheModel;
 // Future replacement for everything that needs temporary storage
 // Storage agnostic -> called function should not need to know what is stored where, this is job of controller.
 // Works with cache-model, which handles the data representation and storage.
 //
 
-class CacheController extends ShortPixelController
+class CacheController extends \ShortPixel\Controller
 {
   protected static $cached_items = array();
 
   public function __construct()
   {
-    $this->loadModel('cache');
   }
 
   public function storeItem($name, $value, $expires = HOUR_IN_SECONDS)
@@ -44,7 +44,7 @@ class CacheController extends ShortPixelController
      if (isset(self::$cached_items[$name]))
       return self::$cached_items[$name];
 
-     $cache = new cacheModel($name);
+     $cache = new CacheModel($name);
      $cache = apply_filters('shortpixel/cache/get', $cache, $name);
      self::$cached_items[$name] = $cache;
 
