@@ -294,7 +294,7 @@ Release date June 4th 2020
 * Fix for backup getting broken on IIS/Windows servers, because of the way Windows handles the paths;
 * Compability fix for WooCommerce germanized PRO plugin, where the cart page was throwing a fatal error because of the PDF that ShortPixel was trying to optimize;
 * Various fixes for other media screen, to make it more consistent with the Media Library;
-* Language – 0 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted.    
+* Language – 5 new strings added, 1 updated, 1 fuzzied, and 0 obsoleted.    
 
 = 4.18.1 =
 
