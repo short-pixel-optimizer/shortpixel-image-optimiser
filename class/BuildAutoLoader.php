@@ -6,6 +6,7 @@ class BuildAutoLoader
 
   public static function buildJSON()
   {
+    echo 'Building Plugin.JSON';
     $plugin = array(
         'name' => 'ShortPixel/Plugin',
         'description' => 'ShortPixel AutoLoader',
@@ -16,7 +17,11 @@ class BuildAutoLoader
       );
 
     $f = fopen('class/plugin.json', 'w');
-    fwrite($f, json_encode($plugin));
+    $result = fwrite($f, json_encode($plugin));
+
+    if ($result === false)
+      echo "!!! Error !!! Could not write Plugin.json";
+
     fclose($f);
   }
 
@@ -28,6 +33,7 @@ class BuildAutoLoader
        'class/wp-shortpixel-settings.php',
        'class/view/shortpixel_view.php',
        'class/shortpixel-png2jpg.php',
+       'class/front/img-to-picture-webp.php',
     );
 
     $models = array(
@@ -58,7 +64,7 @@ class BuildAutoLoader
       'class/external/wpengine.php',
     );
 
-
+    echo "Build Plugin.JSON ";
     return array_merge($main,$models,$db,$externals);
   }
 

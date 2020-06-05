@@ -3,6 +3,7 @@ namespace ShortPixel\Controller;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 
+use ShortPixel\ShortPixelImgToPictureWebp as ShortPixelImgToPictureWebp;
 
 /** Handle everything that SP is doing front-wise */
 class FrontController extends \ShortPixel\Controller
