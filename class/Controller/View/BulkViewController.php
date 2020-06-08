@@ -174,6 +174,7 @@ protected $selected_folders = array();
 
     if($settings->quotaExceeded == 1) {
         AdminNoticesController::reInstateQuotaExceeded();
+        $this->loadView();
         return false;
     }
 

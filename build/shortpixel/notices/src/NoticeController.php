@@ -182,7 +182,7 @@ class NoticeController //extends ShortPixelController
     for($i = 0; $i < count(self::$notices); $i++)
     {
       $item = self::$notices[$i];
-      if ($item->getID() == $id)
+      if (is_object($item) && $item->getID() == $id)
       {
         Log::addDebug('Removing notice with ID ' . $id);
         unset(self::$notices[$i]);
