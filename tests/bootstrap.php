@@ -5,8 +5,8 @@
  * @package Shortpixel_Image_Optimiser
  */
 //define('WP_TESTS_SKIP_INSTALL', '1');
-define('SHORTPIXEL_DEBUG', 4); // Note - debug logs will go into /tmp/
-define('SHORTPIXEL_DEBUG_TARGET', true);
+define('SHORTPIXEL_DEBUG', false); // Note - debug logs will go into /tmp/
+//define('SHORTPIXEL_DEBUG_TARGET', true);
 define('SHORTPIXEL_API_KEY', '77O4S9VttKCljaDha8fW');
 
 require_once( dirname( dirname( __FILE__ ) ) . '/vendor/autoload.php');
@@ -15,7 +15,7 @@ $_tests_dir = getenv( 'WP_TESTS_DIR' );
 $_tests_dir = false;
 
 if ( ! $_tests_dir ) {
-	$_tests_dir = rtrim( sys_get_temp_dir(), '/\\' ) . '/wordpress-tests-lib';
+	$_tests_dir = rtrim( sys_get_temp_dir(), '/\\' ) . '/wordpress-tests-lib/includes';
 }
 
 if ( ! file_exists( $_tests_dir . '/includes/functions.php' ) ) {
