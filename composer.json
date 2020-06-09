@@ -11,7 +11,8 @@
     ],
     "require": {
         "shortpixel/notices":">=1.3",
-        "shortpixel/build" : "@dev"
+        "shortpixel/build" : "@dev",
+        "lucatume/function-mocker-le": "^1.0"
     },
     "require-dev": {
 	"phpunit/phpunit": "^7",
