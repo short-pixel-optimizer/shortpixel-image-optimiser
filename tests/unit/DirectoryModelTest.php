@@ -1,6 +1,7 @@
 <?php
 
 use ShortPixel\Model\DirectoryModel as DirectoryModel;
+use function tad\FunctionMockerLe\define as defineFunction;
 use function tad\FunctionMockerLe\defineAll;
 use function tad\FunctionMockerLe\undefineAll as undefineAll;
 
@@ -14,9 +15,10 @@ class DirectoryModelTest extends \Codeception\Test\Unit {
 	}
 
 	protected function _before() {
+		parent::_before();
+
 		// Undefined Wordpress functions during unit tests
 		undefineAll();
-		parent::_before();
 
 		// Mocking Wordpress included functions
 		defineAll(['wp_normalize_path', 'trailingslashit'], function($path) {
@@ -29,7 +31,12 @@ class DirectoryModelTest extends \Codeception\Test\Unit {
 		$this->assertEquals($directory->getPath(), "/path/to/directory");
 	}
 
-	public function testGetNameWindow() {
+	public function testGetNameWindows() {
+		defineFunction( 'wp_normalize_path', function ( $path ) {
+			return "C:/xampp/htdocs/boot_strap/wp-content/themes/boot_Strap/inc";
+		} );
+		$directory = new DirectoryModel("C:\\xampp\\htdocs\\boot_strap/wp-content/themes/boot_Strap/inc");
+		$this->assertEquals($directory->getPath(), "C:/xampp/htdocs/boot_strap/wp-content/themes/boot_Strap/inc");
 	}
 
 	public function test__construct() {
