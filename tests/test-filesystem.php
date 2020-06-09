@@ -70,7 +70,6 @@ class FileSystemTest extends  WP_UnitTestCase
    */
   public function testSetAndGetBackup()
   {
-      $this->finishBackups(); // removes directory.
       $this->setupBackUps();
 
       $post = $this->factory->post->create_and_get();
@@ -101,6 +100,8 @@ class FileSystemTest extends  WP_UnitTestCase
       $this->assertEquals($resultpath, (string) $backupFile2->getPath());
       //
     //$URLsAndPATHs = $itemHandler->getURLsAndPATHs(false);
+      $this->finishBackups(); // removes directory.
+
   }
 
   public function testBasicDirectory()

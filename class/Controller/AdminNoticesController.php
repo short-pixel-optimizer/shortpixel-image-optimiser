@@ -78,11 +78,11 @@ class AdminNoticesController extends \ShortPixel\Controller
     /** ReInstates A Persistent Notice manually */
     public static function reInstateQuotaExceeded()
     {
-      $noticeControl = Notices::getInstance();
-      $notice = $noticeControl->getNoticeByID(self::MSG_QUOTA_REACHED);
-      $notice->unDismiss();
-
-      $noticeControl->update();
+      //$noticeControl = Notices::getInstance();
+      //$notice = $noticeControl->getNoticeByID(self::MSG_QUOTA_REACHED);
+      Notices::removeNoticeByID(self::MSG_QUOTA_REACHED);
+      //$notice->unDismiss();
+      //$noticeControl->update();
     }
 
     public function displayNotices()
