@@ -2,9 +2,10 @@
 //use ShortPixel\DebugItem as DebugItem;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
-use ShortPixel\Model\FileModel as FileModel;
-use ShortPixel\Model\Directorymodel as DirectoryModel;
-use ShortPixel\Model\ImageModel as ImageModel;
+
+use ShortPixel\Model\File\FileModel as FileModel;
+use ShortPixel\Model\File\Directorymodel as DirectoryModel;
+use ShortPixel\Model\Image\ImageModel as ImageModel;
 
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
 
@@ -3335,25 +3336,30 @@ Log::addDebug('GetQuotaInformation Result ', $dataArray);
         $this->_settings->quotaExceeded = 0;
     }
 
-    /** Generates column for custom media library
+    /** Generates column for media library
     * @todo Move this to custom media controller
     */
     public function generateCustomColumn( $column_name, $id, $extended = false ) {
           if( 'wp-shortPixel' == $column_name ) {
 
-            if(!$this->isProcessable($id)) {
+
+            $fs = \wpSPIO()->filesystem();
+            $imageObj = $fs->getMediaImage($id);
+
+
+            if(!$imageObj->isProcessable() ) {
                 $renderData['status'] = 'n/a';
                 $this->view->renderCustomColumn($id, $renderData, $extended);
                 return;
             }
 
-            $fs = \wpSPIO()->filesystem();
-            $file =  $fs->getAttachedFile($id);
-            $data = ShortPixelMetaFacade::sanitizeMeta(wp_get_attachment_metadata($id));
-            $itemHandler = new ShortPixelMetaFacade($id);
-            $meta = $itemHandler->getMeta();
+        //    $file =  $fs->getAttachedFile($id);
 
-            $fileExtension = strtolower( $file->getExtension() );
+      //      $data = ShortPixelMetaFacade::sanitizeMeta(wp_get_attachment_metadata($id));
+      //      $itemHandler = new ShortPixelMetaFacade($id);
+        //    $meta = $itemHandler->getMeta();
+
+            $fileExtension = strtolower( $imageObj->getExtension() );
             $invalidKey = !$this->_settings->verifiedKey;
             $quotaExceeded = $this->_settings->quotaExceeded;
             $renderData = array("id" => $id, "showActions" => (current_user_can( 'manage_options' ) || current_user_can( 'upload_files' ) || current_user_can( 'edit_posts' )));

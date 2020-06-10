@@ -2,9 +2,11 @@
 namespace ShortPixel\Controller;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
-use ShortPixel\Model\DirectoryModel as DirectoryModel;
-use ShortPixel\Model\FileModel as FileModel;
+use ShortPixel\Model\File\DirectoryModel as DirectoryModel;
+use ShortPixel\Model\File\FileModel as FileModel;
 
+use ShortPixel\Model\Image\MediaLibraryModel as MediaLibraryModel;
+use ShortPixel\Model\Image\CustomImageModel as CustomImageModel;
 
 /** Controller for FileSystem operations
 *
@@ -30,6 +32,17 @@ Class FileSystemController extends \ShortPixel\Controller
       return new FileModel($path);
     }
 
+    /** Get MediaLibraryModel for a Post_id */
+    public function getMediaImage($id)
+    {
+        $filepath = get_attached_file($id);
+        $filepath = apply_filters('shortpixel_get_attached_file', $filepath, $id);
+
+        $imageObj = new MediaLibraryModel($id, $filepath);
+
+        return $imageObj;
+    }
+
     /** Get FileModel for a mediaLibrary post_id .
     *
     * This function exists to put get_attached_file to plugin control
@@ -37,9 +50,9 @@ Class FileSystemController extends \ShortPixel\Controller
     *
     * @param $id Attachement ID for the media library item
     * @return FileModel returns a FileModel file.
-    * @todo This function will be more at home in a medialibrary_model
+    * @todo This function will be more at home in a medialibrary_model <---- !!!!
     */
-    public function getAttachedFile($id)
+  /*  public function getAttachedFile($id)
     {
         $filepath = get_attached_file($id);
         // same signature as wordpress' filter. Only for this plugin.
@@ -47,9 +60,10 @@ Class FileSystemController extends \ShortPixel\Controller
 
         return new FileModel($filepath);
 
-    }
+    } */
 
-    /* wp_get_original_image_path with specific ShortPixel filter */
+    /* wp_get_original_image_path with specific ShortPixel filter
+     */
     public function getOriginalPath($id)
     {
       $filepath = \wp_get_original_image_path($id);
@@ -119,7 +133,6 @@ Class FileSystemController extends \ShortPixel\Controller
       $upload_dir = wp_upload_dir(null, false);
 
       return $this->getDirectory($upload_dir['basedir']);
-
     }
 
     /** Not in use yet, do not use. Future replacement. */

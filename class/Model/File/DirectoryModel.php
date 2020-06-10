@@ -1,5 +1,5 @@
 <?php
-namespace ShortPixel\Model;
+namespace ShortPixel\Model\File;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 /* Model for Directories

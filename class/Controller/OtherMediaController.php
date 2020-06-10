@@ -3,8 +3,8 @@ namespace ShortPixel\Controller;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 
-use ShortPixel\Model\DirectoryOtherMediaModel as DirectoryOtherMediaModel;
-use ShortPixel\Model\DirectoryModel as DirectoryModel;
+use ShortPixel\Model\File\DirectoryOtherMediaModel as DirectoryOtherMediaModel;
+use ShortPixel\Model\File\DirectoryModel as DirectoryModel;
 
 // Future contoller for the edit media metabox view.
 class OtherMediaController extends \ShortPixel\Controller

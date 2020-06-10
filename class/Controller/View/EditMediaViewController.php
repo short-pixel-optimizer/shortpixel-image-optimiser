@@ -1,11 +1,11 @@
 <?php
-namespace ShortPixel\Controller;
+namespace ShortPixel\Controller\View;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
-use ShortPixel\Model\ImageModel as ImageModel;
+//use ShortPixel\Model\ImageModel as ImageModel;
 
 // Future contoller for the edit media metabox view.
-class EditMediaController extends \ShortPixel\Controller
+class EditMediaViewController extends \ShortPixel\Controller
 {
       protected $template = 'view-edit-media';
       protected $model = 'image';
@@ -28,8 +28,9 @@ class EditMediaController extends \ShortPixel\Controller
       {
           $this->post_id = $post_id;
 
-          $this->imageModel = new ImageModel();
-          $this->imageModel->setByPostID($post_id);
+          $fs = \wpSPIO()->filesystem();
+          $this->imageModel = $fs->getMediaImage($post_id);
+        //  $this->imageModel->setByPostID($post_id);
           $this->imageModel->reAcquire(); // single display mode - reset things.
 
           $this->view->id = $post_id;

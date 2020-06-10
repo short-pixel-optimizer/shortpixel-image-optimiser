@@ -1,9 +1,9 @@
 <?php
-namespace ShortPixel\Model;
+namespace ShortPixel\Model\File;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notice;
 
-use \ShortPixel\Model\DirectoryModel as DirectoryModel;
+use \ShortPixel\Model\File\DirectoryModel as DirectoryModel;
 
 // extends DirectoryModel. Handles Shortpixel_meta database table
 // Replacing main parts of shortpixel-folder

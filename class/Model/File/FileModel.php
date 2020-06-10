@@ -1,5 +1,5 @@
 <?php
-namespace ShortPixel\Model;
+namespace ShortPixel\Model\File;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 /* FileModel class.
@@ -65,7 +65,7 @@ class FileModel extends \ShortPixel\Model
       {
         $this->filename = isset($info['basename']) ? $info['basename'] : null; // filename + extension
         $this->filebase = isset($info['filename']) ? $info['filename'] : null; // only filename
-        $this->extension = isset($info['extension']) ? $info['extension'] : null; // only (last) extension
+        $this->extension = isset($info['extension']) ? strtolower($info['extension']) : null; // only (last) extension
       }
 
   }

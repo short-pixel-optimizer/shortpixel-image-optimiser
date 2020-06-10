@@ -6,8 +6,8 @@
  */
 
  use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
- use ShortPixel\Model\FileModel as FileModel;
- use ShortPixel\Model\Directorymodel as DirectoryModel;
+ //use ShortPixel\Model\FileModel as FileModel;
+ //use ShortPixel\Model\Directorymodel as DirectoryModel;
 
 //TODO decouple from directly using WP metadata, in order to be able to use it for custom images
 class ShortPixelPng2Jpg {

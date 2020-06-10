@@ -75,7 +75,7 @@ class FileSystemTest extends  WP_UnitTestCase
       $post = $this->factory->post->create_and_get();
       $attachment_id = $this->factory->attachment->create_upload_object( __DIR__ . '/assets/test-image.jpg', $post->ID );
 
-      $file = $this->fs->getAttachedFile($attachment_id);
+      $file = $this->fs->getMediaImage($attachment_id);
 
       $this->assertTrue($file->exists());
       $this->assertTrue($file->is_writable());

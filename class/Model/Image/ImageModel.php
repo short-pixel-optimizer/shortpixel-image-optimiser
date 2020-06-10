@@ -1,5 +1,5 @@
 <?php
-namespace ShortPixel\Model;
+namespace ShortPixel\Model\Image;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 /* ImageModel class.
@@ -11,109 +11,125 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 * - Goal: Structural ONE method calls of image related information, and combining information. Same task is now done on many places.
 * -- Shortpixel Class should be able to blindly call model for information, correct metadata and such.
 */
-class ImageModel extends \ShortPixel\Model
+
+abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 {
 
-    private $file;  // the file representation
-    private $meta; // metadata of the image.
-    private $facade; // ShortPixelMetaFacade
+    const FILE_STATUS_UNPROCESSED = 0;
+    const FILE_STATUS_PENDING = 1;
+    const FILE_STATUS_SUCCESS = 2;
+    const FILE_STATUS_RESTORED = 3;
+    const FILE_STATUS_TORESTORE = 4; // Used for Bulk Restore
 
-    protected $thumbsnails = array(); // thumbnails of this
-    protected $original_file; // the original instead of the possibly _scaled one created by WP 5.3 >
+    const COMPRESSION_LOSSLESSS = 0;
+    const COMPRESSION_LOSSY = 1;
+    const COMPRESSION_GLOSSY = 2;
 
-    private $post_id; // attachment id
+    const PROCESSABLE_EXTENSIONS = array('jpg', 'jpeg', 'gif', 'png', 'pdf');
 
-    private $is_scaled = false; // if this is WP 5.3 scaled
-    private $is_optimized = false; // if this is optimized
-    private $is_png2jpg = false; // todo implement.
+    protected $meta; // metadata Object of the image.
 
-    public function __construct()
+    protected $width;
+    protected $height;
+    protected $url;
+
+    protected $is_optimized;
+    protected $is_image;
+
+    abstract public function getOptimizePaths();
+    abstract public function getOptimizeUrls();
+    abstract protected function saveMeta();
+    abstract protected function loadMeta();
+    abstract protected function isSizeExcluded();
+
+
+
+    public function isProcessable()
     {
+        if ($this->isPathExcluded() || $this->isExtensionExcluded() || $this->isSizeExcluded() )
+          return false;
+        else
+          return true;
+    }
+
+    protected function isPathExcluded()
+    {
+        $excludePatterns = \wpSPIO()->settings()->excludePatterns;
+
+        if(!$excludePatterns || !is_array($excludePatterns)) { return false; }
+
+        foreach($excludePatterns as $item) {
+            $type = trim($item["type"]);
+            if(in_array($type, array("name", "path"))) {
+                $pattern = trim($item["value"]);
+                $target = $type == "name" ? $this->getFileName() : $this->getFullPath();
+                if( self::matchExcludePattern($target, $pattern) ) { //search as a substring if not
+                    return true;
+                }
+            }
+        }
 
     }
 
-    public function setByPostID($post_id)
+    protected function isExtensionExcluded()
     {
-      // Set Meta
-      $fs = \wpSPIO()->filesystem();
-      $this->post_id = $post_id;
-      $this->facade = new \ShortPixelMetaFacade($post_id);
-      $this->meta = $this->facade->getMeta();
-
-      $this->setImageStatus();
-      $this->file = $fs->getFile($this->meta->getPath() ); //$fs->getAttachedFile($post_id);
-
-      // WP 5.3 and higher. Check for original file.
-      if (function_exists('wp_get_original_image_path'))
-      {
-        $this->setOriginalFile();
-      }
+        if (in_array($this->getExtension(), self::PROCESSABLE_EXTENSIONS))
+        {
+            return false;
+        }
+        return true;
     }
 
-    /** This function sets various status attributes for imageModel.
-    * Goal is to make the status of images more consistent and don't have to rely constantly on getting and ready the whole meta
-    * with it's various marks. */
-    protected function setImageStatus()
-    {
-      $status = $this->meta->getStatus();
-      if ($status == \ShortPixelMeta::FILE_STATUS_SUCCESS)
-        $this->is_optimized = true;
-
-      $png2jpg = $this->meta->getPng2Jpg();
-      if(is_array($png2jpg))
-      {
-        $this->is_png2jpg = true;
-      }
-    }
-
-    protected function setOriginalFile()
-    {
-      $fs = \wpSPIO()->filesystem();
-
-      if (is_null($this->post_id))
-        return false;
-
-      $originalFile = $fs->getOriginalPath($this->post_id);
-
-      if ($originalFile->exists() && $originalFile->getFullPath() !== $this->file->getfullPath() )
-      {
-        $this->original_file = $originalFile;
-        $this->is_scaled = true;
-      }
-
-    }
-
-    // Not sure if it will work like this.
-    public function is_scaled()
-    {
-       return $this->is_scaled;
-    }
-
-    public function has_original()
-    {
-        if (is_null($this->original_file))
+    protected function matchExcludePattern($target, $pattern) {
+        if(strlen($pattern) == 0)  // can happen on faulty input in settings.
           return false;
 
-        return $this->original_file;
+        $first = substr($pattern, 0,1);
+
+        if ($first == '/')
+        {
+          if (@preg_match($pattern, false) !== false)
+          {
+            $m = preg_match($pattern,  $target);
+            if ($m !== false && $m > 0) // valid regex, more hits than zero
+            {
+              return true;
+            }
+          }
+        }
+        else
+        {
+          if (strpos($target, $pattern) !== false)
+          {
+            return true;
+          }
+        }
+        return false;
     }
 
-    public function getMeta()
+    public function getMeta($name)
     {
-      return $this->meta;
+      if (! isset($this->meta->$name))
+      {
+         $this->loadMeta();
+      }
+        return $this->meta->$name;
     }
 
-    public function getFile()
+
+
+    /*public function getFile()
     {
       return $this->file;
-    }
+    } */
 
     /** Get the facade object.
     * @todo Ideally, the facade will be an internal thing, separating the custom and media library functions.
     */
-    public function getFacade()
+  /*  public function getFacade()
     {
        return $this->facade;
-    }
+    } */
 
   /*  public function getOriginalFile()
     {

@@ -1,6 +1,6 @@
 <?php
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-use ShortPixel\Model\ImageModel as ImageModel;
+//use ShortPixel\Model\ImageModel as ImageModel;
 use ShortPixel\Controller\CacheController as Cache;
 
 class ShortPixelMetaFacade {
@@ -46,6 +46,11 @@ class ShortPixelMetaFacade {
             }
         }
         return $this->meta;
+    }
+
+    function getLegacyMeta($path)
+    {
+
     }
 
     private static function rawMetaToMeta($ID, $rawMeta) {

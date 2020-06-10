@@ -3,21 +3,21 @@
 class ShortPixelMeta extends ShortPixelEntity{
     const META_VERSION = 1;
 
-    protected $id;
-    protected $folderId;
-    protected $extMetaId;
-    protected $path;
-    protected $name;
-    protected $webPath;
+    //protected $id;
+    //protected $folderId;
+    //protected $extMetaId;
+    //protected $path;
+    //protected $name;
+  //  protected $webPath;
     protected $compressionType;
     protected $compressedSize;
-    protected $png2Jpg;
-    protected $thumbsOpt;
-    protected $thumbsOptList;
-    protected $excludeSizes;
-    protected $thumbsMissing;
-    protected $retinasOpt;
-    protected $thumbsTodo;
+//    protected $png2Jpg;
+//    protected $thumbsOpt;
+//    protected $thumbsOptList;
+//    protected $excludeSizes;
+//    protected $thumbsMissing;
+    protected $retinasOpt; // ??
+    //protected $thumbsTodo;
     protected $keepExif;
     protected $cmyk2rgb;
     protected $resize;
