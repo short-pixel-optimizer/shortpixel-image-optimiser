@@ -1,3 +1,215 @@
+= 4.16.4 =
+
+Release date: 26th March 2020
+* Fix for some notices that could not be dismissed
+* Fix for "Confirm new credits" notification
+* Language – 0 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted
+
+= 4.16.3 =
+
+Release date: 9th March 2020
+* Fix missing button to choose a plan when running out of credits.
+* Language – 0 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted
+
+= 4.16.2 =
+
+Release date: 27th February 2020
+* Fix notices javascript.
+* Language – 0 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted
+
+= 4.16.1 =
+
+Release date: 14th February 2020
+* Fix non-dismissable alerts.
+* Reference to the Website Speed Optimization service.
+* Fixed: deleteItemCache in wrong place ( before save ) thus resetting data
+* Fixed: NextGen integration
+* Language – 3 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted
+
+= 4.16.0 =
+
+Release date: 4th February 2020
+* New - Token support for Cloudflare via config constant or settings.
+* Backup setting - add orange warning when backups are off.
+* Button to dismiss the top bar notification of missing files.
+* Shortpixel now loads scripts with 'defer' on front site, if it's configured to be loaded there.
+* Hiding Cloudflare details via wp-config.php.
+* Hide the option "Process in front-end" when "Optimize media on upload" is not checked.
+* Fixes for multibyte filenames with mixed locales.
+* Fixes for combination of S3-offload, webp pictures and cnames.
+* Reworked Notifications.
+* Fixed - PNG2JPG Retry button didn't work, now properly resets retry counter.
+* Fixed - Realpath in directory model throws off installations with symlinks.
+* Fixed - Thrown Exception in API with corrupted images now caught.
+* Fixed - Debug window link was visible when it should not.
+* Fixed - ExcludePattern without value would result in notices.
+* Language – 7 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted
+
+= 4.15.4 =
+
+Release date: 29th January 2020
+* Change the Help beacon to V2.
+* Language – 0 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted
+
+= 4.15.3 =
+
+Release date: 20th December 2019
+* Hide the "Process in front-end" option if "Optimize media on upload" unchecked
+* Add ALT text for plugin images in Admin
+* Moved CSS for the admin bar to the actual admin bar stylesheet, other css no longer loading on those pages
+* Fixes for windows specific paths
+* Fixed: warning flood when using old version of S3-offload
+* Fix for frontend and error shortpixel in top toolbar
+* Fixed: Pancake menu now showing proper actions ( none ) if backup is not there.
+* Fixed: Windows paths in wp-short-pixel  getBackupFolderInternal
+* Language – 4 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted
+
+= 4.15.2 =
+
+Release date: 28th November 2019
+* Fix for is_null error and "Call to undefined method ShortPixel\ShortPixelPlugin::alterHtaccess" in some cases.
+* Language – 0 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted
+
+= 4.15.1 =
+
+Release date: 27th November 2019
+* Fix the infamous T_PAAMAYIM_NEKUDOTAYIM error on PHP 5.3 with WP Offload Media compat. module.
+* Language – 0 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted
+
+= 4.15.0 =
+
+Release date: 27th November 2019
+* Ask if WebP files should be created before bulk optimization : checkbox added in Bulk page.
+* Added filters for optimal chunk size when selecting records from wp_postmeta while bulk processing: 'shortpixel/db/chunk_size'.
+* Optimize images also on edit-media screen.
+* Experimental support for static cache firewalls, and sending images w/ timestamp: SHORTPIXEL_EXPERIMENTAL_SECURICACHE.
+* Limit loading of JS / CSS to pages we do work on.
+* Refactoring & speed optimizations: - new external class for gravity forms, nextgen and visual composer, new controller for global admin hooks, new front controller, updated plugin init, clean(ish) root file, database optimization(reduced number of queries), unlistedThumbs checker only fires when the optimize unlisted check is active, optimizations for filesystem and findFileByPattern.
+* WPML Duplicates - Don't mark empty GUID's as duplicate.
+* Fix broken styles on WP 5.3.
+* Fix in case meta_value in processCountable has a WP_Error object instead of normal metadata.
+* Fix on WP Engine when large wp_postmeta table: limit to 16K the size of the query with ID list.
+* Fixed: error when log path is not writeable
+* Fixed: double sends within the same images, can happen with something like WPML and it's duplicated media.
+* Fixed: bug when searching unlisted images, in some circumstances.
+* Fixed: max_execution_time when time is set lower than 0.
+* Fixed: directories with no permission would give PHP error
+* Fixed: pathToUrl now also works for paths outside wp uploads
+* Fixed: check for DOING_AJAX on redirect to settings.
+* Fixed: Shortpixel icon + exclamation mark in  toolbar showing on every page load.
+* Fixed: Add Custom media browser doesn't display files anymore
+* Fixed: WebP option adds an extra border if image already has a border -> borders will not be replicated to <picture> tags.
+* Fixed: Validating empty key doesn't show any message.
+* Fixed: on Nginx writes .htaccess files.
+* Fixed: Bug with safeGetAttachmentUrl for URLs that start with //.
+* Fixed: New S3-Offload version breaks Shortpixel and offloading.
+* Fixed: get_attached_file when S3-Offload is active, breaks other plugins.
+* Fixed: crash when doing .htaccess files ( WP 5.3 specific ).
+* Fixed: double file occurences on png2jpg in conjunction with s3offload.
+* Language – 1 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted
+
+= 4.14.6 =
+
+Release date: 9th October 2019
+* Don't convert to `<picture>` the `<img>`s with backgrounds.
+* Remove unused eval() call.
+* Restore the validate button next to API Key but change label to "Save and validate"
+* Fixed: PNGtoJPG issue with already uploaded images
+* Fixed: finding wrong unlisted thumbnails due to regex.
+* Fixed: fatal error when trying to delete crashed attachement ( without proper URL )
+* Fix for S3 offload - PNG2JPG , doesn't remove old JPG files
+* Fixed: S3Offload will not offload anymore when 'Copy files to bucket' is off ( and object was not previously offloaded )
+* S3Offload doesn't offload via optimiser anymore if this setting is off
+* Fixed: cutting out initial offload if optimization needs to be done, when autolibrary is on
+* Fix for PNG2JPG - JPG files remained in backupdir.
+* Small fix for remote download thumbnails
+* Fixed: notice in filemodel due meta-facade feeding array
+* Fixed: bug in File2Url in filesystemcontroller
+* Fixed: download issue in attempt to remote download
+* Language – 0 new strings added, 1 updated, 0 fuzzied, and 0 obsoleted
+
+= 4.14.5 =
+
+Release date: 29th August 2019
+* If constant SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION is defined as true, use double extension for WebP (.jpg.webp)
+* Fixed: Javascript - String.prototype causes errors on React apps
+* Fixed: Undefined page load when using ShortPixel and Divi preloaded images
+* Fixed: Offload Media - When removing PNG2JPG converted file, the files / folder are not removed.
+* Fixed: When the constant that enables using double extensions for WebP (.jpg.webp) is active, the webp's are found as unlisted thumbnails and sent to optimization.
+* Fixed: missing call to apply_filters('shortpixel_image_exists'...) on a particular case.
+* Language – 0 new strings added, 1 updated, 0 fuzzied, and 0 obsoleted
+
+= 4.14.4 =
+
+Release date: 19th August 2019
+* Check if unlisted thumbnails present for already optimized images (in case the thumbnails were added later) in Media Library list and when doing bulk. This also integrates with the Unicode plugin.
+* If JSON PHP module not present, add a proper error
+* Fixed: bulk error "WordPress database error You have an error in your SQL syntax" on some installs
+* Fixed: Warning: count() Parameter must be an array.
+* Language – 0 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted
+
+= 4.14.3 =
+
+Release date: 22nd July 2019
+* Compatibility with Flywheel hosting by not using flock if Flywheel detected
+* When using the PICTURE tag to deliver WebP, keep the width and height at `<IMG>` level
+* Refactoring of the API Key settings page, refactoring of Other media
+* Performance improvements for selecting from large wp_posts and wp_postmeta tables when doing bulk optimization
+* Display a message when bulk is skipping many processed images, if bulk processing is ran again.
+* Fixed: Other media - Recompress adds "Preserve CMYK"
+* Fixed: duplicate error message when validating wrong API key
+* Conflict message: align the text vertically and provide space between text and button when displayed on any admin page
+* Fixed: Other media Restore fails when original file is readable, not writable
+
+= 4.14.2 =
+
+Release date: 1st July 2019
+* add the possibility to define custom infixes for thumbnails (like image-uai-150x150.jpg for image.jpg) - comma separated define SHORTPIXEL_CUSTOM_THUMB_INFIXES
+
+= 4.14.1 =
+
+Release date: 17th June 2019
+* Fix errors when DOMDocument not present
+
+= 4.14.0 =
+
+Release date: 17th June 2019
+* Add new filters proposed by WP Stateless: shortpixel_backup_folder, shortpixel_image_exists, shortpixel_image_urls
+* Better placement of the elements on the Other Media page
+* Fix custom bulk for PDFs when the pdf thumbnails are not activated
+* Fix selecting items from DB twice for bulk in some circumstances
+* Warn user that converting PNG to JPG while keeping EXIF in options doesn't keep it (no EXIF for PNGs).
+* When SHORTPIXEL_DEBUG=x get parameter is provided, display a floating link to the shortpixel_log file
+* Adaptive Max execution time and capped to 90 sec. for the bulk background AJAX calls. (Kinsta has a max_execution_time of 300 sec. in PHP but the HTTP connection is cut after 180 sec.)
+* Fix custom 404 page for missing images not working when using .htaccess for WebP
+* Fix WebP picture tag with relative URLs not working in some circumstances
+* Fix replacing the `<img>` inside an existing `<picture>` tag with another `<picture>` tag.
+* Clear SP optimization cache in order to be able to optimize an image which initially had permissions error, after changing the permissions.
+* Fix being able to list the contents of ShortpixelBackups on some badly configured servers.
+* Fix error when inputting D'Artagnan in the AUTH pass field of settings.
+* Add the Quriobot for support.
+
+= 4.13.1 =
+
+Release date: 16th April 2019
+* fix thumbnail optimization when a thumbnail was replaced with another one
+* better integration with Regenerate Thumbnails Advanced
+
+= 4.13.0 =
+
+Release date: 10th April 2019
+* Bulk restore for the Other Media
+* make the filename extension be updated when manually optimizing a PNG from Media Library, if the convert to JPG is active, without refreshing the page
+* Integration with Regenerate Thumbnails Advanced new 2.0 beta version
+* Add the rules for WebP in the WP-CONTENT .htaccess
+* ShortPixel Other Media - display the time of optimization in the grid and offer option to sort by it
+* Keep sort order when optimizing / refreshing page on Other Media
+* offer the visual comparer for Other Media too
+* resolve the Settings inconsistency in Other Media (settings displayed were from when adding the folder not from when actually optimizing)
+* Make pressing Escape or clicking outside of any popup close it.
+* Fixed: Restoring an Other Media item and then Optimizing it again optimizes it Lossless
+* fix generating the WebP `<picture>` tags when the images are either on a subdomain or on a CDN domain having the same root domain as the main site.
+
 = 4.12.8 =
 
 Release date: 25th February 2019
