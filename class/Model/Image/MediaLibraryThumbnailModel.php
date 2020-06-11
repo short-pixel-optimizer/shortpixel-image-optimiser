@@ -9,7 +9,18 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 {
   //abstract protected function saveMeta();
   //abstract protected function loadMeta();
-  protected $sizeName;
+
+  public $name;
+  public $width;
+  public $height;
+  public $mime;
+
+  public function __construct($path)
+  {
+        parent::__construct($path);
+        $this->image_meta = new ImageThumbnailMeta();
+  }
+
 
   protected function loadMeta()
   {
@@ -21,19 +32,20 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
   }
 
-  public function __construct($path)
+  /** Set the meta name of thumbnail. */
+  public function setName($name)
   {
-      parent::__construct($path);
+     $this->sizeName = $name;
   }
 
   protected function setMetaObj($metaObj)
   {
-     $this->meta = $metaObj;
+     $this->image_meta = $metaObj;
   }
 
   protected function getMetaObj()
   {
-    return $this->meta;
+    return $this->image_meta;
   }
 
   public function getOptimizePaths()

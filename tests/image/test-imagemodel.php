@@ -10,6 +10,7 @@ class ImageModelTest extends  WP_UnitTestCase
   public function setUp()
   {
     $this->fs = \wpSPIO()->filesystem();
+    WPShortPixelSettings::debugResetOptions();
   //  $this->root = vfsStream::setup('root', null, $this->getTestFiles() );
     // Need an function to empty uploads
   }
@@ -30,7 +31,7 @@ class ImageModelTest extends  WP_UnitTestCase
 
   }
 
-  public function testLargeImage()
+  public function LargeImage()
   {
     $post = $this->factory->post->create_and_get();
     $attachment_id = $this->factory->attachment->create_upload_object( __DIR__ . '/assets/scaled.jpg', $post->ID );
@@ -48,6 +49,9 @@ class ImageModelTest extends  WP_UnitTestCase
     $attachment_id = $this->factory->attachment->create_upload_object( __DIR__ . '/assets/pdf.pdf', $post->ID );
 
     $imageObj = $this->fs->getMediaImage($attachment_id);
+
+    $this->assertTrue($imageObj->isProcessable());
+    
   }
 
   public function testNonImage()

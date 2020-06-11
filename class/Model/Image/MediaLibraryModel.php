@@ -30,7 +30,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         $this->setOriginalFile();
       }
 
-      $this->loadMeta();
+      if (! $this->isExtensionExcluded())
+        $this->loadMeta();
 
   }
 
@@ -74,39 +75,74 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       return $this->wp_metadata;
   }
 
-  protected function loadThumbnails()
+  protected function loadThumbnailsFromWP()
   {
     $wpmeta = $this->getWPMetaData();
 echo "<PRE>"; print_r($wpmeta); echo "</PRE>";
-    return array();
+    $thumbnails = array();
+    if (isset($wpmeta['sizes']))
+    {
+          foreach($wpmeta['sizes'] as $name => $data)
+          {
+             if (isset($data['file']))
+             {
+               $thumbObj = $this->getThumbnailModel($data['file']);
+               $meta = new ImageThumbnailMeta();
+               $thumbObj->name = $name;
+               $thumbObj->width = (isset($data['width'])) ? $data['width'] : false;
+               $thumbObj->height = (isset($data['height'])) ? $data['height'] : false;
+               $thumbObj->setMetaObj($meta);
+               $thumbnails[$name] = $thumbObj;
+             }
+          }
+    }
+    //echo "<PRE>"; print_r($thumbnails); echo "</PRE>";
+    return $thumbnails;
+  }
 
+  private function getThumbnailModel($fileName)
+  {
+      $path = (string) $this->getFileDir();
+      $path = $path . $fileName;
+
+      $thumbObj = new MediaLibraryThumbnailModel($path);
+      return $thumbObj;
   }
 
   protected function loadMeta()
   {
-      $meta = get_post_meta($this->post_id, 'shortpixel_meta', true);
+      $metadata = get_post_meta($this->post_id, 'shortpixel_meta', true);
 
-      if (! $meta)
+      $this->image_meta = new ImageMeta();
+
+      if (! $metadata)
       {
-          $meta = $this->checkLegacy();
-          if (! $meta)
-          {
-            $meta = new \stdClass;
-            $meta->image_meta = new ImageMeta();
-            $meta->thumbnails = $this->loadThumbnails();
-          }
-          //$facade = new \ShortPixelMetaFacade($this->post_id);
+        //  $meta = new ImageMeta();
+            $this->thumbnails = $this->loadThumbnailsFromWP();
+
+            $meta = $this->checkLegacy();
+            if ($meta)
+              $this->image_meta = $meta;
       }
 
-      if (is_object($meta))
+      if (is_object($metadata) )
       {
-        $this->image_meta = $meta;
-        foreach($meta->thumbnails as $thumbName => $thumbObj)
-        {
-            $this->thumbnails[$thumbName] = $thumbObj;
-        }
-
-        return true;
+          $this->image_meta = $this->meta->fromClass($metadata->image_meta);
+          if (isset($metadata->thumbnails))
+          {
+              $thumbnails = $this->loadThumbnailsFromWP();
+              foreach($thumbnails as $name => $thumbObj)
+              {
+                 if (isset($metadata->$thumbnails[$name]))
+                 {
+                    $thumbMeta = new ImageThumbnailMeta();
+                    $thumbMeta->fromClass($thumbObj);
+                    //$thumbMeta->set('name', $thumbName);
+                    $thumbnails[$name]->setMetaObj($thumbMeta);
+                 }
+              }
+                $this->thumbnails = $thumbnails;
+          }
       }
 
       return false;
@@ -114,6 +150,12 @@ echo "<PRE>"; print_r($wpmeta); echo "</PRE>";
 
   protected function saveMeta()
   {
+      $meta = $this->meta->toClass();
+
+      foreach($this->meta->thumbnails as $thumbName => $thumbObj)
+      {
+         $meta->thumbnails[$thumbName] = $thumbObj->toClass();
+      }
 
       $result = update_post_meta($this->post_id, 'shortpixel_meta', $this->meta);
 
@@ -132,7 +174,11 @@ echo "<PRE>"; print_r($wpmeta); echo "</PRE>";
       {
          echo " I MUST CONVERT THIS ";
          $data = $metadata['ShortPixel'];
-         $meta = new ImageMeta();
+
+
+      //   $is_png2jpg = isset($data[''])
+
+        // $meta = new ImageMeta();
       //   $meta->
          /*"thumbs" => (isset($rawMeta["sizes"]) ? $rawMeta["sizes"] : array()),
          "message" =>(isset($rawMeta["ShortPixelImprovement"]) ? $rawMeta["ShortPixelImprovement"] : null),
@@ -158,6 +204,14 @@ echo "<PRE>"; print_r($wpmeta); echo "</PRE>";
          "retries" =>(isset($rawMeta["ShortPixel"]["Retries"]) ? $rawMeta["ShortPixel"]["Retries"] : 0),
  */
       }
+  }
+
+  protected function getThumbNail($name)
+  {
+     if (isset($this->thumbnails[$name]))
+        return $this->thumbnails[$name];
+
+      return false;
   }
 
   private function safeGetUrl() {

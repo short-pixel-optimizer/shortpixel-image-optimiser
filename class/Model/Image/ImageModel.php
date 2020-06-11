@@ -27,7 +27,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
     const PROCESSABLE_EXTENSIONS = array('jpg', 'jpeg', 'gif', 'png', 'pdf');
 
-    protected $meta; // metadata Object of the image.
+    protected $image_meta; // metadata Object of the image.
 
     protected $width;
     protected $height;
