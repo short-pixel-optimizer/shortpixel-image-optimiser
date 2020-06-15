@@ -109,11 +109,11 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
     public function getMeta($name)
     {
-      if (! isset($this->meta->$name))
+      if (! isset($this->image_meta->$name))
       {
          $this->loadMeta();
       }
-        return $this->meta->$name;
+        return $this->image_meta->$name;
     }
 
 
