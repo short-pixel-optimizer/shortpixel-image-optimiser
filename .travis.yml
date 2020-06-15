@@ -7,6 +7,7 @@ php:
 #  - 5.6
 services: mysql # Credentials for mysql based on the documentation https://docs.travis-ci.com/user/database-setup/#mysql
 script:
+  - mkdir ../modules
   - curl -sL -H "Authorization: token 83fa93b864843c9b5b544579352b1d116a8851a7" https://api.github.com/repos/short-pixel-optimizer/plugin-modules/tarball | tar -xzf - && cp -r short-pixel-optimizer-plugin-modules*/ ../modules 
   - bash bin/install-wp-tests.sh  sptestdatabase root ''
   - composer update
