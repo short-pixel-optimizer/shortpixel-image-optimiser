@@ -60,7 +60,6 @@ class ShortPixelPlugin
     $front = new Controller\FrontController();
     $admin = Controller\AdminController::getInstance();
     $adminNotices = Controller\AdminNoticesController::getInstance(); // Hook in the admin notices.
-    $notices = Notices::getInstance(); // This hooks the ajax listener
 
     $this->initHooks();
 
@@ -74,6 +73,7 @@ class ShortPixelPlugin
   {
       $this->shortPixel->loadHooks();
       $admin = Controller\AdminController::getInstance();
+      $notices = Notices::getInstance(); // This hooks the ajax listener
 
       if ($this->settings()->autoMediaLibrary)
       {
@@ -373,11 +373,13 @@ class ShortPixelPlugin
 
       \WpShortPixelDb::checkCustomTables();
 
-      Controller\AdminNoticesController::resetCompatNotice();
+      Controller\AdminNoticesController::resetAllNotices();
+
+    /*  Controller\AdminNoticesController::resetCompatNotice();
       Controller\AdminNoticesController::resetAPINotices();
       Controller\AdminNoticesController::resetQuotaNotices();
       Controller\AdminNoticesController::resetIntegrationNotices();
-
+*/
       \WPShortPixelSettings::onActivate();
 
   }
@@ -398,7 +400,6 @@ class ShortPixelPlugin
     $log = $fs->getFile(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
     if ($log->exists())
       $log->delete();
-  //  @unlink(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
   }
 
   public static function uninstallPlugin()
