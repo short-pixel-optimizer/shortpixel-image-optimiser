@@ -50,6 +50,11 @@ class AdminNoticesController extends \ShortPixel\Controller
       return self::$instance;
     }
 
+    public static function resetAllNotices()
+    {
+       Notices::resetNotices();
+    }
+
     /** Triggered when plugin is activated */
     public static function resetCompatNotice()
     {
