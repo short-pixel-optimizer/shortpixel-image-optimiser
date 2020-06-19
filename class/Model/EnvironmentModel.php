@@ -191,6 +191,13 @@ class EnvironmentModel extends \ShortPixel\Model
       $slug = str_replace($plugins_dir->getPath(), '', $file);
 
       return $slug;
+  }
 
+  public function useDoubleWebpExtension()
+  {
+      if (defined('SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION') && SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION)
+        return true;
+
+      return false;
   }
 }

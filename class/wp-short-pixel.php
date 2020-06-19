@@ -85,11 +85,11 @@ class WPShortPixel {
         //add_action( 'admin_footer', array(&$this, 'handleImageProcessing'));
 
         //Media custom column
-        add_filter( 'manage_media_columns', array( &$this, 'columns' ) );//add media library column header
-        add_action( 'manage_media_custom_column', array( &$this, 'generateCustomColumn' ), 10, 2 );//generate the media library column
-        //Sort and filter on ShortPixel Compression column
-        add_filter( 'manage_upload_sortable_columns', array( &$this, 'columnRegisterSortable') );
-        add_filter( 'request', array( &$this, 'columnOrderFilterBy') );
+      //  add_filter( 'manage_media_columns', array( &$this, 'columns' ) );//add media library column header
+        //add_action( 'manage_media_custom_column', array( &$this, 'generateCustomColumn' ), 10, 2 );//generate the media library column
+       //Sort and filter on ShortPixel Compression column
+      ///  add_filter( 'manage_upload_sortable_columns', array( &$this, 'columnRegisterSortable') );
+      //  add_filter( 'request', array( &$this, 'columnOrderFilterBy') );
         add_action('restrict_manage_posts', array( &$this, 'mediaAddFilterDropdown'));
         //Edit media meta box
         add_action( 'add_meta_boxes', array( &$this, 'shortpixelInfoBox') ); // the info box in edit-media
@@ -3492,6 +3492,7 @@ Log::addDebug('GetQuotaInformation Result ', $dataArray);
     * @todo Should be part of media library controller.
     */
     function columnRegisterSortable($columns) {
+
         $columns['wp-shortPixel'] = 'ShortPixel Compression';
         return $columns;
     }

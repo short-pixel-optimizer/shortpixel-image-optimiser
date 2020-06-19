@@ -8,7 +8,7 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 class EditMediaViewController extends \ShortPixel\Controller
 {
       protected $template = 'view-edit-media';
-      protected $model = 'image';
+  //    protected $model = 'image';
 
       protected $post_id;
       protected $legacyViewObj;
@@ -216,30 +216,32 @@ class EditMediaViewController extends \ShortPixel\Controller
 
           $meta = \wp_get_attachment_metadata($this->post_id);
 
-          $imageObj = new ImageModel();
-          $imageObj->setByPostID($this->post_id);
-          $imageFile = $imageObj->getFile();
+          $fs = \wpSPIO()->filesystem();
+          $imageObj = $fs->getMediaImage($this->post_id);
+          /*$imageObj = new ImageModel();
+          $imageObj->setByPostID($this->post_id); */
+        //  $imageFile = //$imageObj->getFile();
 
           $sizes = isset($this->data['sizes']) ? $this->data['sizes'] : array();
 
           $debugInfo = array();
           $debugInfo[] = array(__('URL', 'shortpixel_image_optiser'), wp_get_attachment_url($this->post_id));
           $debugInfo[] = array(__('File'), get_attached_file($this->post_id));
-          $debugInfo[] = array(__('Status'), $this->imageModel->getMeta()->getStatus() );
+          $debugInfo[] = array(__('Status'), $this->imageModel->getMeta('status')  );
 
-          $debugInfo[] = array(__('WPML Duplicates'), json_encode(\ShortPixelMetaFacade::getWPMLDuplicates($this->post_id)) );
+          $debugInfo[] = array(__('WPML Duplicates'), json_encode($imageObj->getWPMLDuplicates()) );
           $debugInfo['shortpixeldata'] = array(__('Data'), $this->data);
           $debugInfo['wpmetadata'] = array(__('Meta'), $meta );
-          if ($imageFile->hasBackup())
+          if ($imageObj->hasBackup())
           {
-            $backupFile = $imageFile->getBackupFile();
-            $debugInfo[] = array(__('Backup Folder'), $this->shortPixel->getBackupFolderAny($this->imageModel->getFile()->getFullPath(), $sizes));
+            $backupFile = $imageObj->getBackupFile();
+            $debugInfo[] = array(__('Backup Folder'), $this->shortPixel->getBackupFolderAny($this->imageModel->getFullPath(), $sizes));
             $debugInfo[] = array(__('Backup File'), (string) $backupFile . '(' . \ShortPixelTools::formatBytes($backupFile->getFileSize()) . ')' );
           }
           else {
             $debugInfo[] =  array(__("No Backup Available"), '');
           }
-          if ($or = $imageObj->has_original())
+          if ($or = $imageObj->hasOriginal())
           {
              $debugInfo[] = array(__('Original File'), $or->getFullPath()  . '(' . \ShortPixelTools::formatBytes($or->getFileSize()) . ')');
              $orbackup = $or->getBackupFile();

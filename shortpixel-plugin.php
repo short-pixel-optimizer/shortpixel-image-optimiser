@@ -154,6 +154,11 @@ class ShortPixelPlugin
 
       add_action( 'shortpixel-thumbnails-before-regenerate', array( $this->shortPixel, 'thumbnailsBeforeRegenerateHook' ), 10, 1);
       add_action( 'shortpixel-thumbnails-regenerated', array( $this->shortPixel, 'thumbnailsRegeneratedHook' ), 10, 4);
+
+      // Media Library
+      add_action('load-upload.php', function() { new \ShortPixel\Controller\View\ListMediaViewController(); });
+      
+
   }
 
   /** Hook in our admin pages */

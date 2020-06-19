@@ -17,6 +17,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
   public function __construct($path)
   {
+
         parent::__construct($path);
         $this->image_meta = new ImageThumbnailMeta();
   }
@@ -32,14 +33,56 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
   }
 
+  public function __debugInfo() {
+     return array(
+      'image_meta' => $this->image_meta,
+      'name' => $this->name,
+
+    );
+  }
+
+
   /** Set the meta name of thumbnail. */
   public function setName($name)
   {
      $this->sizeName = $name;
   }
 
+  public function getRetina()
+  {
+      $filebase = $this->getFileBase();
+      $filepath = (string) $this->getFileDir();
+      $extension = $this->getExtension();
+
+      $retina = new MediaLibraryThumbnailModel($filepath . $filebase . '@2x' . $extension);
+      if ($retina->exists())
+        return $retina;
+
+      return false;
+  }
+
+  public function getWebp()
+  {
+    $double_webp = \wpSPIO()->env()->useDoubleWebpExtension();
+    $fs = \wpSPIO()->filesystem();
+
+    if ($double_webp)
+      $filename = $this->getFileName();
+    else
+      $filename = $this->getFileBase();
+
+    $filename .= '.webp';
+
+    $webp = $fs->getFile($filename);
+    if ($webp->exists())
+      return $webp;
+
+    return false;
+  }
+
   protected function setMetaObj($metaObj)
   {
+  //  echo 'model setmetaObject <PRE>'; print_r($metaObj); echo "</PRE>";
      $this->image_meta = $metaObj;
   }
 
@@ -50,6 +93,9 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
   public function getOptimizePaths()
   {
+    if ($this->image_meta->status == self::FILE_STATUS_SUCCESS)
+      return array();
+
     return array($this->getFullPath());
   }
 

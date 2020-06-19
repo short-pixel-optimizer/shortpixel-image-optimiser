@@ -14,14 +14,13 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 {
-
     const FILE_STATUS_UNPROCESSED = 0;
     const FILE_STATUS_PENDING = 1;
     const FILE_STATUS_SUCCESS = 2;
     const FILE_STATUS_RESTORED = 3;
     const FILE_STATUS_TORESTORE = 4; // Used for Bulk Restore
 
-    const COMPRESSION_LOSSLESSS = 0;
+    const COMPRESSION_LOSSLESS = 0;
     const COMPRESSION_LOSSY = 1;
     const COMPRESSION_GLOSSY = 2;
 
@@ -33,8 +32,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     protected $height;
     protected $url;
 
-    protected $is_optimized;
-    protected $is_image;
+    //protected $is_optimized = false;
+  //  protected $is_image = false;
 
     abstract public function getOptimizePaths();
     abstract public function getOptimizeUrls();
@@ -42,14 +41,50 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     abstract protected function loadMeta();
     abstract protected function isSizeExcluded();
 
-
-
+    /* Check if an image in theory could be processed. Check only exclusions, don't check status etc */
     public function isProcessable()
     {
         if ($this->isPathExcluded() || $this->isExtensionExcluded() || $this->isSizeExcluded() )
           return false;
         else
           return true;
+    }
+
+    public function get($name)
+    {
+       if ( isset($this->$name))
+        return $this->$name;
+
+       return null;
+    }
+
+    public function getMeta($name = false)
+    {
+      if (! isset($this->image_meta->$name))
+      {
+         $this->loadMeta();
+      }
+  //    echo "<PRE> ImagemOdel " ; print_r($this); //print_r(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,4)); 
+  //    echo "</PRE>";
+        return $this->image_meta->$name;
+    }
+
+    public function setMeta($name, $value)
+    {
+      if (! property_exists($this->image_meta, $name))
+      {
+          return false;
+      }
+      else
+        $this->image_meta->$name = $value;
+    }
+
+    public function isOptimized()
+    {
+      if ($this->getMeta('status') == self::FILE_STATUS_SUCCESS)
+          return true;
+
+      return false;
     }
 
     protected function isPathExcluded()
@@ -107,17 +142,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         return false;
     }
 
-    public function getMeta($name)
-    {
-      if (! isset($this->image_meta->$name))
-      {
-         $this->loadMeta();
-      }
-        return $this->image_meta->$name;
-    }
-
-
-
     /*public function getFile()
     {
       return $this->file;
@@ -136,14 +160,13 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
        return $this->origin_file;
     } */
 
-    /* Sanity check in process. Should only be called upon special request, or with single image displays. Should check and recheck stats, thumbs, unlistedthumbs and all assumptions of data that might corrupt or change outside of this plugin */
-    public function reAcquire()
-    {
-        $this->addUnlistedThumbs();
-        $this->reCheckThumbnails();
 
-        // $this->recount();
+    /** Convert Image Meta to A Class */
+    protected function toClass()
+    {
+        return $this->image_meta->toClass();
     }
+
 
     /** Removed the current attachment, with hopefully removing everything we set.
     * @return ShortPixelFacade  Legacy return, to do something with replacing
@@ -185,6 +208,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     }
 
     // Rebuild the ThumbsOptList and others to fix old info, wrong builds.
+    /*
     private function reCheckThumbnails()
     {
        // Redo only on non-processed images.
@@ -224,7 +248,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
        $this->meta->setThumbsOptList($newList);
        $this->facade->updateMeta($this->meta);
 
-    }
+    } */
 
     private function addUnlistedThumbs()
     {

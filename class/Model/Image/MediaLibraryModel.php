@@ -5,12 +5,12 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailModel
 {
-  protected $thumbsnails = array(); // thumbnails of this // MediaLibraryThumbnailModel .
+  protected $thumbnails = array(); // thumbnails of this // MediaLibraryThumbnailModel .
   protected $retinas = array(); // retina files - MediaLibraryThumbnailModel (or retina / webp and move to thumbnail? )
   protected $webps = array(); // webp files - MediaLibraryThumbnailModel
-  protected $original_file; // the original instead of the possibly _scaled one created by WP 5.3 >
+  protected $original_file = false; // the original instead of the possibly _scaled one created by WP 5.3 >
 
-  protected $post_id; // attachment id
+  protected $id; // attachment id
 
   protected $is_scaled = false; // if this is WP 5.3 scaled
 
@@ -18,7 +18,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
   public function __construct($post_id, $path)
   {
-      $this->post_id = $post_id;
+      $this->id = $post_id;
 
       parent::__construct($path);
 
@@ -64,26 +64,37 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
      {
         $urls = array_merge($urls, $thumbObj->getOptimizeUrls());
      }
+     // @todo Check Unlisted
+
+     // @todo Check Retina's
      return $urls;
   }
 
   public function getWPMetaData()
   {
       if (is_null($this->wp_metadata))
-        $this->wp_metadata = wp_get_attachment_metadata($this->post_id);
+        $this->wp_metadata = wp_get_attachment_metadata($this->id);
 
       return $this->wp_metadata;
   }
 
+  // Not sure if it will work like this.
+  public function is_scaled()
+  {
+     return $this->is_scaled;
+  }
+
+
   protected function loadThumbnailsFromWP()
   {
     $wpmeta = $this->getWPMetaData();
-echo "<PRE>"; print_r($wpmeta); echo "</PRE>";
+//echo "<PRE>"; print_r($wpmeta); echo "</PRE>";
     $thumbnails = array();
     if (isset($wpmeta['sizes']))
     {
           foreach($wpmeta['sizes'] as $name => $data)
           {
+
              if (isset($data['file']))
              {
                $thumbObj = $this->getThumbnailModel($data['file']);
@@ -96,9 +107,62 @@ echo "<PRE>"; print_r($wpmeta); echo "</PRE>";
              }
           }
     }
-    //echo "<PRE>"; print_r($thumbnails); echo "</PRE>";
+
     return $thumbnails;
   }
+
+  protected function getRetinas()
+  {
+      $retinas = array();
+      $main = $this->getRetina();
+
+      if ($main)
+        $retinas[0] = $main; // on purpose not a string, but number to prevent any custom image sizes to get overwritten.
+
+      foreach ($this->thumbnails as $thumbname => $thumbObj)
+      {
+        $retinaObj = $thumbObj->getRetina();
+        if ($retinaObj)
+           $retinas[$thumbname] = $retinaObj;
+      }
+
+      return $retinas;
+  }
+
+
+  protected function getWebps()
+  {
+      $webps = array();
+
+      $main = $this->getWebp();
+      if ($main)
+        $webps[0] = $main;  // on purpose not a string, but number to prevent any custom image sizes to get overwritten.
+
+      foreach($this->thumbnails as $thumbname => $thumbObj)
+      {
+         $webp = $thumbObj->getWebp();
+         if ($webp)
+          $webps[$thumbname] = $webp;
+      }
+
+      return $webps;
+  }
+
+  /* Sanity check in process. Should only be called upon special request, or with single image displays. Should check and recheck stats, thumbs, unlistedthumbs and all assumptions of data that might corrupt or change outside of this plugin */
+  public function reAcquire()
+  {
+    //  $this->addUnlistedThumbs();
+      //$this->reCheckThumbnails();
+      if (\wpSPIO()->settings()->optimizeRetina)
+        $this->retinas = $this->getRetinas();
+
+      if (\wpSPIO()->settings()->createWebp)
+        $this->webps = $this->getWebps();
+
+
+      // $this->recount();
+  }
+
 
   private function getThumbnailModel($fileName)
   {
@@ -111,99 +175,105 @@ echo "<PRE>"; print_r($wpmeta); echo "</PRE>";
 
   protected function loadMeta()
   {
-      $metadata = get_post_meta($this->post_id, 'shortpixel_meta', true);
+      $metadata = get_post_meta($this->id, '_shortpixel_meta', true);
 
       $this->image_meta = new ImageMeta();
+      $fs = \wpSPIO()->fileSystem();
 
       if (! $metadata)
       {
-        //  $meta = new ImageMeta();
             $this->thumbnails = $this->loadThumbnailsFromWP();
 
-            $meta = $this->checkLegacy();
-            if ($meta)
-              $this->image_meta = $meta;
+            $result = $this->checkLegacy();
+            if ($result)
+            {
+              $metadata = $this->createSave(); // after convert, pretent it's loaded as save ( and save! ) @todo
+              echo "metadata from createSave <PRE>";
+              //print_r($metadata);
+              echo "</PRE>";
+            }
       }
+
 
       if (is_object($metadata) )
       {
-          $this->image_meta = $this->meta->fromClass($metadata->image_meta);
-          if (isset($metadata->thumbnails))
+          $this->image_meta->fromClass($metadata->image_meta);
+        //  echo "<PRE>IMAGE META"; print_r($this->image_meta); echo "</PRE>";
+          $thumbnails = $this->loadThumbnailsFromWP();
+          foreach($thumbnails as $name => $thumbObj)
           {
-              $thumbnails = $this->loadThumbnailsFromWP();
-              foreach($thumbnails as $name => $thumbObj)
+             if (isset($metadata->thumbnails[$name]))
+             {
+                $thumbMeta = new ImageThumbnailMeta();
+                $thumbMeta->fromClass($metadata->thumbnails[$name]);
+                //$thumbMeta->set('name', $thumbName);
+                $thumbnails[$name]->setMetaObj($thumbMeta);
+             }
+          }
+          $this->thumbnails = $thumbnails;
+
+          if (isset($metadata->retinas))
+          {
+              foreach($metadata->retinas as $retinaObj)
               {
-                 if (isset($metadata->$thumbnails[$name]))
-                 {
-                    $thumbMeta = new ImageThumbnailMeta();
-                    $thumbMeta->fromClass($thumbObj);
-                    //$thumbMeta->set('name', $thumbName);
-                    $thumbnails[$name]->setMetaObj($thumbMeta);
-                 }
+                  $retMeta = new ImageThumbnailMeta();
+                  $retMeta->fromClass($retinaObj);
+                  $this->retinas[] = $retMeta;
               }
-                $this->thumbnails = $thumbnails;
+          }
+          if (isset($metadata->webps))
+          {
+             foreach($metadata->webps as $webp)
+             {
+                $this->webps[] = $fs->getFile($webp);
+             }
           }
       }
 
       return false;
   }
 
-  protected function saveMeta()
+  private function createSave()
   {
-      $meta = $this->meta->toClass();
+      $metadata = new \stdClass; // $this->image_meta->toClass();
+      $metadata->image_meta = $this->image_meta->toClass();
+      $thumbnails = array();
+      $retinas = array();
+      $webps = array();
 
-      foreach($this->meta->thumbnails as $thumbName => $thumbObj)
+      foreach($this->thumbnails as $thumbName => $thumbObj)
       {
-         $meta->thumbnails[$thumbName] = $thumbObj->toClass();
+         $thumbnails[$thumbName] = $thumbObj->toClass();
+      }
+      foreach($this->retinas as $index => $retinaObj)
+      {
+         $retinas[$index] = $retinaObj->toClass();
+      }
+      foreach($this->webps as $index => $webp)
+      {
+        $webps[$index] = $webp->getFullPath();
       }
 
-      $result = update_post_meta($this->post_id, 'shortpixel_meta', $this->meta);
+      if (count($thumbnails) > 0)
+        $metadata->thumbnails = $thumbnails;
+      if (count($retinas) > 0)
+        $metadata->retinas = $retinas;
+      if (count($webps) > 0)
+        $metadata->webps = $webps;
+
+      return $metadata;
+ }
+
+ public function saveMeta()
+ {
+     $metadata = $this->createSave();
+      $result = update_post_meta($this->id, '_shortpixel_meta', $metadata);
 
       if ($result === false)
       {
-        Log::addError('Saving Metadata of ' . $this->post_id . ' failed!');
+        Log::addError('Saving Metadata of ' . $this->id . ' failed!');
       }
 
-  }
-
-  private function checkLegacy()
-  {
-      $metadata = $this->wp_metadata;
-
-      if ( isset($metadata['ShortPixel']))
-      {
-         echo " I MUST CONVERT THIS ";
-         $data = $metadata['ShortPixel'];
-
-
-      //   $is_png2jpg = isset($data[''])
-
-        // $meta = new ImageMeta();
-      //   $meta->
-         /*"thumbs" => (isset($rawMeta["sizes"]) ? $rawMeta["sizes"] : array()),
-         "message" =>(isset($rawMeta["ShortPixelImprovement"]) ? $rawMeta["ShortPixelImprovement"] : null),
-         "png2jpg" => (isset($rawMeta["ShortPixelPng2Jpg"]) ? $rawMeta["ShortPixelPng2Jpg"] : false),
-         "compressionType" =>(isset($rawMeta["ShortPixel"]["type"])
-                 ? ($rawMeta["ShortPixel"]["type"] == 'glossy' ? 2 : ($rawMeta["ShortPixel"]["type"] == "lossy" ? 1 : 0) )
-                 : null),
-         "thumbsOpt" =>(isset($rawMeta["ShortPixel"]["thumbsOpt"]) ? $rawMeta["ShortPixel"]["thumbsOpt"] : null),
-         "thumbsOptList" =>(isset($rawMeta["ShortPixel"]["thumbsOptList"]) ? $rawMeta["ShortPixel"]["thumbsOptList"] : array()),
-         'excludeSizes' =>(isset($rawMeta["ShortPixel"]["excludeSizes"]) ? $rawMeta["ShortPixel"]["excludeSizes"] : null),
-         "thumbsMissing" =>(isset($rawMeta["ShortPixel"]["thumbsMissing"]) ? $rawMeta["ShortPixel"]["thumbsMissing"] : null),
-         "retinasOpt" =>(isset($rawMeta["ShortPixel"]["retinasOpt"]) ? $rawMeta["ShortPixel"]["retinasOpt"] : null),
-         "thumbsTodo" =>(isset($rawMeta["ShortPixel"]["thumbsTodo"]) ? $rawMeta["ShortPixel"]["thumbsTodo"] : false),
-         "tsOptimized" => (isset($rawMeta["ShortPixel"]["date"]) ? $rawMeta["ShortPixel"]["date"] : false),
-         "backup" => !isset($rawMeta['ShortPixel']['NoBackup']),
-         "status" => (!isset($rawMeta["ShortPixel"]) ? 0
-                      : (isset($rawMeta["ShortPixelImprovement"]) && is_numeric($rawMeta["ShortPixelImprovement"])
-                        && !(   $rawMeta['ShortPixelImprovement'] == 0
-                             && (   isset($rawMeta['ShortPixel']['WaitingProcessing'])
-                                 || isset($rawMeta['ShortPixel']['date']) && $rawMeta['ShortPixel']['date'] == '1970-01-01')) ? 2
-                         : (isset($rawMeta["ShortPixel"]["WaitingProcessing"]) ? 1
-                            : (isset($rawMeta["ShortPixel"]['ErrCode']) ? $rawMeta["ShortPixel"]['ErrCode'] : -500)))),
-         "retries" =>(isset($rawMeta["ShortPixel"]["Retries"]) ? $rawMeta["ShortPixel"]["Retries"] : 0),
- */
-      }
   }
 
   protected function getThumbNail($name)
@@ -214,11 +284,12 @@ echo "<PRE>"; print_r($wpmeta); echo "</PRE>";
       return false;
   }
 
+
   private function safeGetUrl() {
-      $attURL = wp_get_attachment_url($this->post_id);
+      $attURL = wp_get_attachment_url($this->id);
       if(!$attURL || !strlen($attURL)) {
         //  throw new Exception("Post metadata is corrupt (No attachment URL for $id)", ShortPixelAPI::ERR_POSTMETA_CORRUPT);
-        Log::addError('Post metadata is corrupt (No attachment URL for ' . $this->post_id .')');
+        Log::addError('Post metadata is corrupt (No attachment URL for ' . $this->id .')');
         return false;
       }
 
@@ -275,10 +346,10 @@ echo "<PRE>"; print_r($wpmeta); echo "</PRE>";
   {
     $fs = \wpSPIO()->filesystem();
 
-    if (is_null($this->post_id))
+    if (is_null($this->id))
       return false;
 
-    $originalFile = $fs->getOriginalPath($this->post_id);
+    $originalFile = $fs->getOriginalPath($this->id);
 
     if ($originalFile->exists() && $originalFile->getFullPath() !== $this->getfullPath() )
     {
@@ -288,15 +359,278 @@ echo "<PRE>"; print_r($wpmeta); echo "</PRE>";
 
   }
 
-
-  // Not sure if it will work like this.
-  public function is_scaled()
+  public function hasOriginal()
   {
-     return $this->is_scaled;
+     if ($this->original_file)
+      return true;
+    else
+      return false;
   }
 
+  public function getWPMLDuplicates()
+  {
+    global $wpdb;
+    $fs = \wpSPIO()->filesystem();
+
+    $parentId = get_post_meta ($this->id, '_icl_lang_duplicate_of', true );
+    if($parentId) $id = $parentId;
+
+  //  $mainFile = $fs->getAttachedFile($id);
+
+    $duplicates = $wpdb->get_col( $wpdb->prepare( "
+        SELECT pm.post_id FROM {$wpdb->postmeta} pm
+        WHERE pm.meta_value = %s AND pm.meta_key = '_icl_lang_duplicate_of'
+    ", $this->id ) );
+
+    //Polylang
+    $moreDuplicates = $wpdb->get_results( $wpdb->prepare( "
+        SELECT p.ID, p.guid FROM {$wpdb->posts} p
+        INNER JOIN {$wpdb->posts} pbase ON p.guid = pbase.guid
+     WHERE pbase.ID = %s and p.guid != ''
+    ", $this->id ) );
+
+    //MySQL is doing a CASE INSENSITIVE join on p.guid!! so double check the results.
+    $guid = false;
+    foreach($moreDuplicates as $duplicate) {
+        if($duplicate->ID == $this->id) {
+            $guid = $duplicate->guid;
+        }
+    }
+    foreach($moreDuplicates as $duplicate) {
+        if($duplicate->guid == $guid) {
+            $duplicates[] = $duplicate->ID;
+        }
+    }
+
+    $duplicates = array_unique($duplicates);
+
+    if(!in_array($this->id, $duplicates)) $duplicates[] = $this->id;
+
+    $transTable = $wpdb->get_results("SELECT COUNT(1) hasTransTable FROM information_schema.tables WHERE table_schema='{$wpdb->dbname}' AND table_name='{$wpdb->prefix}icl_translations'");
+    if(isset($transTable[0]->hasTransTable) && $transTable[0]->hasTransTable > 0) {
+        $transGroupId = $wpdb->get_results("SELECT trid FROM {$wpdb->prefix}icl_translations WHERE element_id = " . $this->id . "");
+        if(count($transGroupId)) {
+            $transGroup = $wpdb->get_results("SELECT element_id FROM {$wpdb->prefix}icl_translations WHERE trid = " . $transGroupId[0]->trid);
+            foreach($transGroup as $trans) {
+                $transFile = $fs->getFile($trans->element_id);
+                if($mainFile->getFullPath() == $transFile->getFullPath() ){
+                    $duplicates[] = $trans->element_id;
+                }
+            }
+        }
+    }
+    return array_unique($duplicates);
+  }
+
+  // Convert from old metadata if needed.
+  private function checkLegacy()
+  {
+      $metadata = $this->wp_metadata;
+
+      if (! isset($metadata['ShortPixel']))
+      {
+        return false;
+      }
+
+      $data = $metadata['ShortPixel'];
+      echo " I MUST CONVERT THIS <PRE>";  print_r($metadata); echo "</PRE>";
 
 
+       $type = isset($data['type']) ? $this->legacyConvertType($data['type']) : '';
+       $status = $this->legacyConvertStatus($data);
 
+       $improvement = (isset($metadata['ShortPixelImprovement']) && is_numeric($metadata['ShortPixelImprovement']) && $metadata['ShortPixelImprovement'] > 0) ? $metadata['ShortPixelImprovement'] : 0;
+
+       $message = isset($metadata['ShortPixelImprovement']) && ! is_numeric($metadata['ShortPixelImprovement']) ? $metadata['ShortPixelImprovement'] : '';
+
+       $retries = isset($data['Retries']) ? intval($data['Retries']) : 0;
+
+       $optimized_thumbnails = (isset($data['thumbsOptList']) && is_array($data['thumbsOptList'])) ? $data['thumbsOptList'] : array();
+
+       $exifkept = (isset($data['exifKept']) && $data['exifKept']  == 1) ? true : false;
+
+       $tsOptimized = $tsAdded = time();
+       if ($status == self::FILE_STATUS_SUCCESS)
+       {
+         //strtotime($tsOptimized)
+         $newdate = \DateTime::createFromFormat('Y-m-d H:i:s', $data['date']);
+         $newdate = $newdate->getTimestamp();
+
+        $tsOptimized = $newdate;
+        $this->image_meta->tsOptimized = $tsOptimized;
+       }
+
+       $this->image_meta->status = $status;
+       $this->image_meta->type = $type;
+       $this->image_meta->improvement = $improvement;
+       $this->image_meta->compressionType = $type;
+       $this->image_meta->compressedSize = $this->getFileSize();
+       $this->image_meta->retries = $retries;
+       $this->image_meta->tsAdded = $tsAdded;
+       $this->image_meta->has_backup = $this->hasBackup();
+       $this->image_meta->message = $message;
+
+       $this->image_meta->did_keepExif = $exifkept;
+    //   $this->image_meta->did_cmyk2rgb = $exifkept;
+      // $this->image_meta->tsOptimized =
+
+       foreach($this->thumbnails as $thumbname => $thumbnailObj) // ThumbnailModel
+       {
+          if (in_array($thumbnailObj->getFileName(), $optimized_thumbnails))
+          {
+              $thumbnailObj->image_meta->status = $status;
+              $thumbnailObj->image_meta->compressionType = $type;
+              $thumbnailObj->image_meta->compressedSize = $thumbnailObj->getFileSize();
+              $thumbnailObj->image_meta->improvement = -1; // n/a
+              $thumbnailObj->image_meta->tsAdded = $tsAdded;
+              $thumbnailObj->image_meta->tsOptimized = $tsOptimized;
+              $thumbnailObj->has_backup = $thumbnailObj->hasBackup();
+
+              $this->thumbnails[$thumbname] = $thumbnailObj;
+          }
+       }
+
+       if (isset($data['retinasOpt']))
+       {
+           $count = $data['retinasOpt'];
+           $retinas = $this->getRetinas();
+           foreach($retinas as $index => $retinaObj) // Thumbnail Model
+           {
+              $retinaObj->image_meta->status = $status;
+              $retinaObj->image_meta->compressionType = $type;
+              $retinaObj->image_meta->compressedSize = $retinaObj->getFileSize();
+              $retinaObj->image_meta->improvement = -1; // n/a
+              $retinaObj->image_meta->tsAdded = $tsAdded;
+              $retinaObj->image_meta->tsOptimized = $tsOptimized;
+              $retinaObj->has_backup = $retinaObj->hasBackup();
+
+              $retinas[$index] = $retinaObj;
+           }
+           $this->retinas = $retinas;
+       }
+
+      if (isset($data['webpCount']))
+      {
+          $count = $data['webpCount'];
+          $webps = $this->getWebps(); // Simple FileModel objects.
+          $this->webps = $webps;
+      }
+
+//echo "<PRE>"; var_dump($this->createSave());echo "</PRE>";
+
+      //   $is_png2jpg = isset($data[''])
+
+        // $meta = new ImageMeta();
+      //   $meta->
+         /*"thumbs" => (isset($rawMeta["sizes"]) ? $rawMeta["sizes"] : array()),
+         "message" =>(isset($rawMeta["ShortPixelImprovement"]) ? $rawMeta["ShortPixelImprovement"] : null),
+         "png2jpg" => (isset($rawMeta["ShortPixelPng2Jpg"]) ? $rawMeta["ShortPixelPng2Jpg"] : false),
+         "compressionType" =>(isset($rawMeta["ShortPixel"]["type"])
+                 ? ($rawMeta["ShortPixel"]["type"] == 'glossy' ? 2 : ($rawMeta["ShortPixel"]["type"] == "lossy" ? 1 : 0) )
+                 : null),
+         "thumbsOpt" =>(isset($rawMeta["ShortPixel"]["thumbsOpt"]) ? $rawMeta["ShortPixel"]["thumbsOpt"] : null),
+         "thumbsOptList" =>(isset($rawMeta["ShortPixel"]["thumbsOptList"]) ? $rawMeta["ShortPixel"]["thumbsOptList"] : array()),
+         'excludeSizes' =>(isset($rawMeta["ShortPixel"]["excludeSizes"]) ? $rawMeta["ShortPixel"]["excludeSizes"] : null),
+         "thumbsMissing" =>(isset($rawMeta["ShortPixel"]["thumbsMissing"]) ? $rawMeta["ShortPixel"]["thumbsMissing"] : null),
+         //[retinasOpt] => 5
+         "retinasOpt" =>(isset($rawMeta["ShortPixel"]["retinasOpt"]) ? $rawMeta["ShortPixel"]["retinasOpt"] : null),
+         "thumbsTodo" =>(isset($rawMeta["ShortPixel"]["thumbsTodo"]) ? $rawMeta["ShortPixel"]["thumbsTodo"] : false),
+         "tsOptimized" => (isset($rawMeta["ShortPixel"]["date"]) ? $rawMeta["ShortPixel"]["date"] : false),
+         "backup" => !isset($rawMeta['ShortPixel']['NoBackup']),
+         "status" => (!isset($rawMeta["ShortPixel"]) ? 0
+                      : (isset($rawMeta["ShortPixelImprovement"]) && is_numeric($rawMeta["ShortPixelImprovement"])
+                        && !(   $rawMeta['ShortPixelImprovement'] == 0
+                             && (   isset($rawMeta['ShortPixel']['WaitingProcessing'])
+                                 || isset($rawMeta['ShortPixel']['date']) && $rawMeta['ShortPixel']['date'] == '1970-01-01')) ? 2
+                         : (isset($rawMeta["ShortPixel"]["WaitingProcessing"]) ? 1
+                            : (isset($rawMeta["ShortPixel"]['ErrCode']) ? $rawMeta["ShortPixel"]['ErrCode'] : -500)))),
+         "retries" =>(isset($rawMeta["ShortPixel"]["Retries"]) ? $rawMeta["ShortPixel"]["Retries"] : 0),
+  */
+
+  /* NEEDS TO BE SET:
+  public $status = 0;
+  public $compressionType;
+  public $compressedSize;
+  public $improvement;
+
+  public $tsAdded;
+  public $tsOptimized;
+
+  public $has_backup;
+
+  public $did_keepExif = false;
+  public $did_cmyk2rgb = false;
+  public $did_png2Jpg = false;
+  public $is_optimized = false; // if this is optimized
+  public $is_png2jpg = false; // todo implement.
+
+  public $resize;
+  public $resizeWidth;
+  public $resizeHeight;
+  public $actualWidth;
+  public $actualHeight;
+
+  */
+      return true;
+  }
+
+  private function legacyConvertType($string_type)
+  {
+    switch($string_type)
+    {
+        case 'lossy':
+          $type = self::COMPRESSION_LOSSY;
+        break;
+        case 'lossless':
+           $type = self::COMPRESSION_LOSSLESS;
+        break;
+        case 'glossy':
+           $type = self::COMPRESSION_GLOSSY;
+        break;
+        default:
+            $type = -1; //unknown state.
+        break;
+    }
+    return $type;
+  }
+
+  /** Old Status can be anything*/
+  private function legacyConvertStatus($data)
+  {
+  /*  const FILE_STATUS_UNPROCESSED = 0;
+    const FILE_STATUS_PENDING = 1;
+    const FILE_STATUS_SUCCESS = 2;
+    const FILE_STATUS_RESTORED = 3;
+    const FILE_STATUS_TORESTORE = 4; // Used for Bulk Restore */
+
+    // Most Likely Status not saved in metadata, but must be generated from type / lossy and ShortpixelImprovement Metadata.
+    echo "<PRE> LEGACY CONVERT STATUS"; var_dump($data); echo "</PRE>";
+    $old_status = isset($data['status']) ? $data['status'] : 0;
+    $waiting = isset($data['WaitingProcessing']) ? true : false;
+    $error = isset($data['ErrCode']) ? $data['ErrCode'] : 0;
+    if ($waiting)
+       $status = self::FILE_STATUS_PENDING;
+    elseif (is_numeric($old_status) && $old_status > 0)
+       $status = self::FILE_STATUS_SUCCESS;
+    elseif($error < 0)
+    {
+        $status = $error;
+    }
+    echo $status;
+
+    return $status;
+  }
+
+  public function __debugInfo() {
+      return array(
+        'image_meta' => $this->image_meta,
+        'thumbnails' => $this->thumbnails,
+        'retinas' => $this->retinas,
+        'webps' => $this->webps,
+        'original_file' => $this->original_file,
+        'is_scaled' => $this->is_scaled,
+      );
+
+  }
 
 } // class

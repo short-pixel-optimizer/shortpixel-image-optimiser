@@ -35,11 +35,12 @@ class ImageThumbnailMeta
   {
      $class = new \stdClass;
      $vars = get_object_vars($this);
-     foreach($vars as $property)
+
+     foreach($vars as $property => $value)
      {
        $class->$property = $this->$property;
      }
 
-     return $this;
+     return $class;
   }
 }

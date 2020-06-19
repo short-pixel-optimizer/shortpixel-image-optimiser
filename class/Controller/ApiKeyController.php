@@ -47,6 +47,12 @@ class ApiKeyController extends \ShortPixel\Controller
          return false;
     }
 
+    /** Warning: NEVER use this for displaying API keys. Only for internal functions */
+    public function forceGetApiKey()
+    {
+      return $this->model->getKey();
+    }
+
     public function keyIsVerified()
     {
        return $this->model->is_verified();
