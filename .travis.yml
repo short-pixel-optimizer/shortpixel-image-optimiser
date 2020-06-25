@@ -6,8 +6,8 @@ php:
   - 7.4
 services: mysql
 script:
- - git clone --depth=50 --branch=master $UGAN  ../modules
- - bash bin/install-wp-tests.sh  sptestdatabase root ''
+ - git clone --depth=50 --branch=master $UGAN ../modules
+ - bash bin/install-wp-tests.sh sptestdatabase root '' localhost latest
  - composer update
  - bash test.sh
 env:
