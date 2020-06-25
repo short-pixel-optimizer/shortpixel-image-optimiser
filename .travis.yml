@@ -1,16 +1,16 @@
 language: php
 php:
-  - 7.1
-  - 7.2
-  - 7.3
-  - 7.4
-#  - 5.6 No support for 5.6. PHPUnit 5.6 is not found on Travis machines. PHPUnit5 is no longer supported TODO Remove this line
-services: mysql # Credentials for mysql based on the documentation https://docs.travis-ci.com/user/database-setup/#mysql
+- 7.1
+- 7.2
+- 7.3
+- 7.4
+services: mysql
 script:
- - git clone --depth=50 --branch=master $UGAN  ../modules
- - bash bin/install-wp-tests.sh  sptestdatabase root ''
- - composer update
- - bash test.sh
+- git clone --depth=50 --branch=master $UGAN  ../modules
+- bash bin/install-wp-tests.sh  sptestdatabase root ''
+- composer update
+- bash test.sh
 env:
   global:
-    - secure: bJlncQ8No+gINxXsO+wko/GDZauTBvWE/OegBh4PGZ7Ak5+8+NANIbrH+l/nQk45QPo6dWAeS9hjoxjja1kI9UHgMV8Ib/o5IZQ1BQM6C27rAC8ux4nKKl8uDB02BfZLLPEm4m12QtHnoWMRNhm6pOKXumliE/xyYqVFcHMF0qsCYvt9lztILeDdEv/AvHWLCcrtBYlnv988eReQs/U+Lu4mwE9LH/6Rr0F9+wyvDpBWuB44LBJAvmjcfMsjcBHd35w6TqyqaCyeq/ID2HUWugDaH4c/g4hNusA3O8nF4yOFDaPLXeJwR4xG4yy8mrewFZquNECKDWgxzw+tAOKXoto+hjP/Q0ZI9bsMYLaJmKC67/BZVG1CMQIWH9wYuR8YrYDpz3fiXPd57qp0GaySjZGyN7sSpSj8p2CkqNZCYKqqMzX9SDnnIveRz3fxx21QVQgFRsHQeTsWdItRsLkSA+hqXh/ryunQHo50C3ko1LhQCwylqWMimYAbINMSK4kNT4vcHcLslXQFP/zxstMcutZTWhBfhvhte0BVjsyThQdnvcT7D4bQg+E0ocnxRxyBTgrf3ULSdJ5Jiy7YY7hyYOv5fQdh3qTQHWQRcWmwy8MqCdZKVkDSZVXWjantGTCHTwJ90IBjKiDuMwuEI0TIwZRuEazKVVSvr2xzB9w6qXw=
+  - secure: bJlncQ8No+gINxXsO+wko/GDZauTBvWE/OegBh4PGZ7Ak5+8+NANIbrH+l/nQk45QPo6dWAeS9hjoxjja1kI9UHgMV8Ib/o5IZQ1BQM6C27rAC8ux4nKKl8uDB02BfZLLPEm4m12QtHnoWMRNhm6pOKXumliE/xyYqVFcHMF0qsCYvt9lztILeDdEv/AvHWLCcrtBYlnv988eReQs/U+Lu4mwE9LH/6Rr0F9+wyvDpBWuB44LBJAvmjcfMsjcBHd35w6TqyqaCyeq/ID2HUWugDaH4c/g4hNusA3O8nF4yOFDaPLXeJwR4xG4yy8mrewFZquNECKDWgxzw+tAOKXoto+hjP/Q0ZI9bsMYLaJmKC67/BZVG1CMQIWH9wYuR8YrYDpz3fiXPd57qp0GaySjZGyN7sSpSj8p2CkqNZCYKqqMzX9SDnnIveRz3fxx21QVQgFRsHQeTsWdItRsLkSA+hqXh/ryunQHo50C3ko1LhQCwylqWMimYAbINMSK4kNT4vcHcLslXQFP/zxstMcutZTWhBfhvhte0BVjsyThQdnvcT7D4bQg+E0ocnxRxyBTgrf3ULSdJ5Jiy7YY7hyYOv5fQdh3qTQHWQRcWmwy8MqCdZKVkDSZVXWjantGTCHTwJ90IBjKiDuMwuEI0TIwZRuEazKVVSvr2xzB9w6qXw=
+  - secure: mPr7SGUfzLHsviAzqpybWD/lOAR35NVhlfL4ADTKnwDA8oKWqWEigKOevw/Vc899b6A/BBfa/2FQwxMY9XpYTK9SqJG4EIz4KnN91lVuHerTIu7jYirNYZz1wPbJ5CLqs+auuGwZbXBHk0ArDDczt/3Z6EqPBDqCVzR+sBsFFHKYvv+oHnjUV/1+jQH93jwzSJfvfUZB+xPafjrnRfsWzz6WcYipN4duyNIIXxUY4KPZY5OfJXgul8iX2w1dv0tn6B7fhAxwQbTHX8jnxVaz1l3CU3Bbf7RvDpmlmntFmU3sud5lCztD+7ZV85ph+qATXCeUCcYd6F8Q3BBGaDYCVxLb1e9O8ggzMYVMUtcx1LGf8URqPtz8RrPMTAprVb7zWKV3zC3S985Ko500ILQJDm6GEONyqI70Wts2yE4w61BW0sNepXGlYbbdfmRVQetQRenWjEc+M75jn4KHQuL1ZYu2z//HiDpgP4qZm7eemBWtQMEqRzhuG7TFUfrnJ0Ze+iNmHLS2N7Y9Yt4trNEHH9Uaz/ehddgGtxxX4CfVf0lvnji42qzVIo5GsdewJ2TxDp3aIvA52i8PYDmtbhYM1s4Vha3R91qc08ZUdzxEU8cOKM3iuHBJ5ujaAHA7E3202NRl7Xy8wRMhynMOgN4zGvtGdLiA9Dg/aLyAO/L+rUo=
