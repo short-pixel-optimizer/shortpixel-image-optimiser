@@ -4,13 +4,16 @@ php:
   - 7.2
   - 7.3
   - 7.4
-#  - 5.6 No support for 5.6. PHPUnit 5.6 is not found on Travis machines. PHPUnit5 is no longer supported TODO Remove this line
-services: mysql # Credentials for mysql based on the documentation https://docs.travis-ci.com/user/database-setup/#mysql
+services: docker
 script:
- - git clone --depth=50 --branch=master $UGAN  ../modules
- - bash bin/install-wp-tests.sh  sptestdatabase root ''
- - composer update
- - bash test.sh
+  - docker run -h localhost -P 3306 --protocol=tcp -u root -e MYSQL_ROOT_PASSWORD=Password_2019 -e MYSQL_DATABASE=wordpress --name wordpressdbsocket -v "/root/wordpress/database-4":/var/lib/mysql -d  mariadb
+  - docker run -e WORDPRESS_DB_PASSWORD=Password_2019 --name wordpress --link wordpressdb:mysql -p 80:80 -v "/root/wordpress/html":/var/www/html -d wordpress
+  - bash bin/install-wp-tests.sh  wordpress_test root 'Password_2019' 127.0.0.1
+  - git clone --depth=50 --branch=master $UGAN  ../modules
+  - bash bin/install-wp-tests.sh  sptestdatabase root 'Password_2019'
+  - composer update
+  - bash test.sh
+  - vendor/bin/codecept run
 env:
   global:
     - secure: sShwef3zUjI2uzTxKgji9+w9cL8brHShr9YPGDfRbW4uT6dDVLT0tTNUkOm0XPrcdNN0BrO5XdhG763U0jawydDockycNP2dcVZK6KgoW6+6wb/AOaqaTet0t8Fw1QhX/nkY9c61FImvSaA6GwDEDz2msgpbPryph4U6vCN0IOGlGsVUdl9rkzxAPEl3sZP3VWBHOT23k/ScNo6wcl+YSFoC/3r+7K+H+sp+PjZJ7JVmApO5lupV44wpP8lq7MWgt37+prGkkD8X3uWwObvi14/qFqPcxPmbiaCOdrdtNeAS3Hkc1kOkx7V9yrwYeBNezio6WSj9/I+5hiho5ecw3S+a7uQ3DKRX82PCNnxQ1WV8ti+XTzPExCMDCs8G2yPHWtlpR+oSdKPAxGfhu0o7N9DCSe7bjoJUD6nIX9RM24pdFd5IiOEUSKvOJ8k6x+HCvLQlxC1BaWoqQ9v3EsywpzYDb/ePzSDfAAiTG8VdWWzbIBX6iEfiNSiuxtG95S+2j9OWV0QivzESgRoKwhviPnJMH/p117O/I+Q/XGT248dp+Ui7IgCWlwlatXjDJAgynkJ3HFJGESTEDO30g0lc5J/1W+0K51ZjPnTAobffIiLU1KUva8ZVyzv3VGnqiliUQ2t7BELqBn8su+Y3zJ3wqp5KMW49LyeqSyVJLNKtIQg=
