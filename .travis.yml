@@ -1,3 +1,5 @@
+os: linu
+dist: bionic
 language: php
 php:
 #  - 7.1
@@ -7,9 +9,9 @@ php:
 services: docker
 script:
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-  - mkdir ~/wordpress/database ~/wordpress/html -p
-  - docker run -e MYSQL_ROOT_PASSWORD=$DOCKER_DB_PASSWORD -e MYSQL_DATABASE=wordpress --name wordpressdb -v "~/wordpress/database":/var/lib/mysql -d  mariadb
-  - docker run -e WORDPRESS_DB_PASSWORD=$DOCKER_DB_PASSWORD --name wordpress --link wordpressdb:mysql -p 80:80 -v "~/wordpress/html":/var/www/html -d wordpress
+  - mkdir /tmp/wordpress/database /tmp/wordpress/html -p
+  - docker run -e MYSQL_ROOT_PASSWORD=$DOCKER_DB_PASSWORD -e MYSQL_DATABASE=wordpress --name wordpressdb -v "/tmp/wordpress/database":/var/lib/mysql -d  mariadb
+  - docker run -e WORDPRESS_DB_PASSWORD=$DOCKER_DB_PASSWORD --name wordpress --link wordpressdb:mysql -p 80:80 -v "/tmp/wordpress/html":/var/www/html -d wordpress
   - git clone --depth=50 --branch=master $UGAN  ../modules
   - composer update
   - vendor/bin/codecept run
