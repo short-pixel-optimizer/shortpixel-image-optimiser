@@ -10,7 +10,7 @@ services: docker
 script:
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
   - mkdir /tmp/wordpress/database /tmp/wordpress/html -p
-  - docker run -e MYSQL_ROOT_PASSWORD=$DOCKER_DB_PASSWORD -e MYSQL_DATABASE=wordpress --name wordpressdb -v "/tmp/wordpress/database":/var/lib/mysql -d  mariadb
+  - docker run -h 127.0.0.1 -e MYSQL_ROOT_PASSWORD=$DOCKER_DB_PASSWORD -e MYSQL_DATABASE=wordpress --name wordpressdb -v "/tmp/wordpress/database":/var/lib/mysql -d  mariadb
   - docker run -e WORDPRESS_DB_PASSWORD=$DOCKER_DB_PASSWORD --name wordpress --link wordpressdb:mysql -p 80:80 -v "/tmp/wordpress/html":/var/www/html -d wordpress
   - git clone --depth=50 --branch=master $UGAN  ../modules
   - composer update
@@ -19,21 +19,3 @@ env:
   global:
       - secure: x2Ru/bb/NWVHtXcTrNbFBh4efUatkrjnkCPh9UdjHqPflq9XjR776F41vzi9xSk9qiHO1wnqmmrv+9rd19SqHQc1iwUIOz0CUhthvjb117QYYKHC1P2xnsc7M+egkUMQlApVfjGsfpZ4dfY19ANiGxpgiWuxfz2vecGcZXS8BAo3YEg6GG32lN+t9MKzwmkNFSLdAQ8anitNZ4A92AqnyeGWyb2ckKyXoJQDI3XaVTG+EPleB+Py45dMlK0mksm7UGzb3pP/YDbApv1ftQJZB9aB9XInBtVOOSjf1iwO/lXcsSjqXl/STQ6qCzqbdz8W2v8kvcmq3x/PhWwfeIa7wtkizdhN8d8H+zWt+uHgrHjVaAAh6QM4M6oBFwlTh4UqW7wCASHcXAJEhs8LA5HVv6jMSNNJcHMYYbPSZhl4A69PCPjeRol+/vJwP2pnbyQlZuIhDGTiSPo3Zp0FEt0q7+NcfKIPTaI8KGozwHPnUNxePB/kOwVZRBa26cVerv7GgiZTaAjoQpjGFVaJR7igB/S1oRs+VINqj2ABwFOrRwdiqbhGQ0pvn5IcoGaqgvHCHs2NERbos1x1BXj0dxPjq+2IAvIxBrK26A17M3YWp5wmMHb8EpZAO6d75zjZhheT8KObjoSTYZ1PwoSsWyHBVqM3A46RCGWddZ5NNcH9bpA=
       - secure: cV4+gUT8r+7esOnBrB1e+xAG8HHQLGXubH938HzJwOPPi2xFE/TOQbQCUCzardpJ/LQJ5QM8kwMWl29R4crJqLu05sgPMFmGSRsTSzeHWM5HpLYJulkjSQVSwopQGcRgZuj4wrUivooM6fYSt2V/29U0+dmwGtSEwuib4dDX1VRx/WSW1jNMVoJBC2/MdQn1zEwIW7+URjSrRbItJl2iRAu+zdV738ofky7psaGpY1B/lCNf9e2n0NSGIXU99mA8IPAf59POioWTn8Ev0ABOgYEyvjtOZpV1th5a1nW4BB23AUNexMuJc174sY0XOE793OZ1x4kFTGkKnsGPKjXIAR/jelWpABugR7aIQeChZmSFs9pgBaGoojMMocBJuCJPxsRaGYXtNktZ4Bsntk1Q5eW8NR/yEIzUeonowiMLwlsn+yW1ROSXEfbRPXp35gHc0tcLosJPaLIX4dXnz5SKTw3H/QiSsvyU2iEjJbap0Vxg4KXTKb+Wg8NgIuFvQNgHiG5r1zS+OzoKUe8Uy9zw0ozWA5esSZJnyzYYgwGY0RlXJfrAh7iy4pAEEfUyymjckkcP5SR9fMp28LAd2lAAs7PHHRnwrI6Nh4gOqlAuic5JejIVQ30YFJJeQ+yTNFoEDI/tEpHxtqctyicWEuLxbsqIvEaR9wR2NtwbbONMHmM=
-      - TEST_SITE_DB_DSN=mysql:host=127.0.0.1;dbname=wordpress;port=3306
-      - TEST_SITE_DB_HOST=127.0.0.1:3306
-      - TEST_SITE_DB_NAME=wordpress
-      - TEST_SITE_DB_USER=root
-      - TEST_SITE_DB_PASSWORD=$DOCKER_DB_PASSWORD
-      - TEST_SITE_TABLE_PREFIX=wp_
-      - TEST_SITE_ADMIN_USERNAME=farterazvan
-      - TEST_SITE_ADMIN_PASSWORD=$DOCKER_WP_ADMIN_PASSWORD
-      - TEST_SITE_WP_ADMIN_PATH=/wp-admin
-      - WP_ROOT_FOLDER=/home/razvan/wordpress/html
-      - TEST_DB_NAME=test
-      - TEST_DB_HOST=127.0.0.1:3306
-      - TEST_DB_USER=root
-      - TEST_DB_PASSWORD=$DOCKER_DB_PASSWORD
-      - TEST_TABLE_PREFIX=wp_
-      - TEST_SITE_WP_URL=http://localhost:80
-      - TEST_SITE_WP_DOMAIN=http://localhost:80
-      - TEST_SITE_ADMIN_EMAIL=farterazvan@gmail.com
