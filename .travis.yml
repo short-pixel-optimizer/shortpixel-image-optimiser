@@ -2,9 +2,9 @@ os: linux
 dist: bionic
 language: php
 php:
-#  - 7.1
-#  - 7.2
-#  - 7.3
+  - 7.1
+  - 7.2
+  - 7.3
   - 7.4
 services: docker
 script:
@@ -14,8 +14,12 @@ script:
   - docker run -e WORDPRESS_DB_PASSWORD=$DOCKER_DB_PASSWORD --name wordpress --link wordpressdb:mysql -p 80:80 -v "/tmp/wordpress/html":/var/www/html -d wordpress
   - git clone --depth=50 --branch=master $UGAN  ../modules
   - composer update
-  - vendor/bin/codecept run
+  - vendor/bin/codecept run acceptance
+  - vendor/bin/codecept run functional
+  - vendor/bin/codecept run unit
+#  - vendor/bin/codecept run wpunit TODO Needs fixing. "Test" db install, "PHP Warning:  Cannot modify header information - headers already sent by"
 env:
   global:
+      - secure: sShwef3zUjI2uzTxKgji9+w9cL8brHShr9YPGDfRbW4uT6dDVLT0tTNUkOm0XPrcdNN0BrO5XdhG763U0jawydDockycNP2dcVZK6KgoW6+6wb/AOaqaTet0t8Fw1QhX/nkY9c61FImvSaA6GwDEDz2msgpbPryph4U6vCN0IOGlGsVUdl9rkzxAPEl3sZP3VWBHOT23k/ScNo6wcl+YSFoC/3r+7K+H+sp+PjZJ7JVmApO5lupV44wpP8lq7MWgt37+prGkkD8X3uWwObvi14/qFqPcxPmbiaCOdrdtNeAS3Hkc1kOkx7V9yrwYeBNezio6WSj9/I+5hiho5ecw3S+a7uQ3DKRX82PCNnxQ1WV8ti+XTzPExCMDCs8G2yPHWtlpR+oSdKPAxGfhu0o7N9DCSe7bjoJUD6nIX9RM24pdFd5IiOEUSKvOJ8k6x+HCvLQlxC1BaWoqQ9v3EsywpzYDb/ePzSDfAAiTG8VdWWzbIBX6iEfiNSiuxtG95S+2j9OWV0QivzESgRoKwhviPnJMH/p117O/I+Q/XGT248dp+Ui7IgCWlwlatXjDJAgynkJ3HFJGESTEDO30g0lc5J/1W+0K51ZjPnTAobffIiLU1KUva8ZVyzv3VGnqiliUQ2t7BELqBn8su+Y3zJ3wqp5KMW49LyeqSyVJLNKtIQg=
       - secure: x2Ru/bb/NWVHtXcTrNbFBh4efUatkrjnkCPh9UdjHqPflq9XjR776F41vzi9xSk9qiHO1wnqmmrv+9rd19SqHQc1iwUIOz0CUhthvjb117QYYKHC1P2xnsc7M+egkUMQlApVfjGsfpZ4dfY19ANiGxpgiWuxfz2vecGcZXS8BAo3YEg6GG32lN+t9MKzwmkNFSLdAQ8anitNZ4A92AqnyeGWyb2ckKyXoJQDI3XaVTG+EPleB+Py45dMlK0mksm7UGzb3pP/YDbApv1ftQJZB9aB9XInBtVOOSjf1iwO/lXcsSjqXl/STQ6qCzqbdz8W2v8kvcmq3x/PhWwfeIa7wtkizdhN8d8H+zWt+uHgrHjVaAAh6QM4M6oBFwlTh4UqW7wCASHcXAJEhs8LA5HVv6jMSNNJcHMYYbPSZhl4A69PCPjeRol+/vJwP2pnbyQlZuIhDGTiSPo3Zp0FEt0q7+NcfKIPTaI8KGozwHPnUNxePB/kOwVZRBa26cVerv7GgiZTaAjoQpjGFVaJR7igB/S1oRs+VINqj2ABwFOrRwdiqbhGQ0pvn5IcoGaqgvHCHs2NERbos1x1BXj0dxPjq+2IAvIxBrK26A17M3YWp5wmMHb8EpZAO6d75zjZhheT8KObjoSTYZ1PwoSsWyHBVqM3A46RCGWddZ5NNcH9bpA=
       - secure: cV4+gUT8r+7esOnBrB1e+xAG8HHQLGXubH938HzJwOPPi2xFE/TOQbQCUCzardpJ/LQJ5QM8kwMWl29R4crJqLu05sgPMFmGSRsTSzeHWM5HpLYJulkjSQVSwopQGcRgZuj4wrUivooM6fYSt2V/29U0+dmwGtSEwuib4dDX1VRx/WSW1jNMVoJBC2/MdQn1zEwIW7+URjSrRbItJl2iRAu+zdV738ofky7psaGpY1B/lCNf9e2n0NSGIXU99mA8IPAf59POioWTn8Ev0ABOgYEyvjtOZpV1th5a1nW4BB23AUNexMuJc174sY0XOE793OZ1x4kFTGkKnsGPKjXIAR/jelWpABugR7aIQeChZmSFs9pgBaGoojMMocBJuCJPxsRaGYXtNktZ4Bsntk1Q5eW8NR/yEIzUeonowiMLwlsn+yW1ROSXEfbRPXp35gHc0tcLosJPaLIX4dXnz5SKTw3H/QiSsvyU2iEjJbap0Vxg4KXTKb+Wg8NgIuFvQNgHiG5r1zS+OzoKUe8Uy9zw0ozWA5esSZJnyzYYgwGY0RlXJfrAh7iy4pAEEfUyymjckkcP5SR9fMp28LAd2lAAs7PHHRnwrI6Nh4gOqlAuic5JejIVQ30YFJJeQ+yTNFoEDI/tEpHxtqctyicWEuLxbsqIvEaR9wR2NtwbbONMHmM=
