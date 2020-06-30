@@ -1572,8 +1572,8 @@ class ShortPixelView {
         <?php if ($extended) // extended ( edit-media ) moved to it's own view.
         {
             $controller = new \ShortPixel\Controller\View\EditMediaViewController();
-            $controller->setTempData($data);
-            $controller->setLegacyView($this);
+        //    $controller->setTempData($data);
+        //    $controller->setLegacyView($this);
         //    $controller->setShortPixel($this->ctrl);
             $controller->load($id);
             if (\wpSPIO()->env()->is_debug)

@@ -31,15 +31,18 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     protected $width;
     protected $height;
     protected $url;
+    protected $error_message;
 
     //protected $is_optimized = false;
   //  protected $is_image = false;
 
     abstract public function getOptimizePaths();
     abstract public function getOptimizeUrls();
+
     abstract protected function saveMeta();
     abstract protected function loadMeta();
     abstract protected function isSizeExcluded();
+
 
     /* Check if an image in theory could be processed. Check only exclusions, don't check status etc */
     public function isProcessable()
@@ -60,13 +63,13 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
     public function getMeta($name = false)
     {
-      if (! isset($this->image_meta->$name))
+      if (! property_exists($this->image_meta, $name))
       {
-         $this->loadMeta();
+          return false;
+          Log::addWarn('GetMeta on Undefined Property' . $name);
       }
-  //    echo "<PRE> ImagemOdel " ; print_r($this); //print_r(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,4)); 
-  //    echo "</PRE>";
-        return $this->image_meta->$name;
+
+      return $this->image_meta->$name;
     }
 
     public function setMeta($name, $value)

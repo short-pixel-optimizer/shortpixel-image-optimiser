@@ -58,8 +58,6 @@ class ListMediaViewController extends \ShortPixel\Controller
      }
   }
 
-
-
   public function loadItem($id)
   {
      $fs = \wpSPIO()->filesystem();
@@ -72,73 +70,23 @@ class ListMediaViewController extends \ShortPixel\Controller
      $actions = array();
      $list_actions = array();
 
-     $is_processable = $mediaItem->isProcessable();
+  //   $is_processable = $mediaItem->isProcessable();
 
-     if (! $keyControl->keyIsVerified())
-     {
-       $this->view->text = __('Invalid API Key. <a href="options-general.php?page=wp-shortpixel-settings">Check your Settings</a>','shortpixel-image-optimiser');
-     }
-     elseif(! $quotaControl->hasQuota())
-     {
-        $actions['extendquota'] = $this->getAction('extendquota', $id);
-        $actions['checkquota'] = $this->getAction('checkquota', $id);
-     }
-     elseif (! $is_processable)
-     {
-        $this->view->text = __('n/a','shortpixel_image_optimiser');
-     }
-     elseif (! $mediaItem->exists())
-     {
-        $this->view->text = __('Image does not exist.','shortpixel-image-optimiser');
-     }
-     elseif ($mediaItem->isOptimized())
-     {
-        $this->view->text = UiHelper::renderSuccessText($mediaItem);
+    $this->view->text = UiHelper::getStatusText($mediaItem);
+    $this->view->list_actions = UiHelper::getListActions($mediaItem);
+    if ( count($this->view->list_actions) > 0)
+      $this->view->list_actions = UiHelper::renderBurgerList($this->view->list_actions, $mediaItem);
+    else
+      $this->view->list_actions = '';
 
-        if ($mediaItem->hasBackup())
-        {
-            $optimizable = $mediaItem->getOptimizePaths();
-          //  var_dump($optimizable);
-            if (count($optimizable) > 0)
-            {
-              $action = $this->getAction('optimizethumbs', $id);
-              $action['text']  = sprintf(__('Optimize %s  thumbnails','shortpixel-image-optimiser'),count($optimizable));
-              $list_actions['optimizethumbs'] = $action;
+    $this->view->actions = UiHelper::getActions($mediaItem);
+    //$this->view->actions = $actions;
 
-            }
-            $list_actions[] = $this->getAction('compare', $id);
-
-            switch($mediaItem->getMeta('type'))
-            {
-                case ImageModel::COMPRESSION_LOSSLESS:
-                  $list_actions['reoptimize-lossy'] = $this->getAction('reoptimize-lossy', $id);
-                  $list_actions['reoptimize-glossy'] = $this->getAction('reoptimize-glossy', $id);
-                break;
-                case ImageModel::COMPRESSION_LOSSY:
-                  $list_actions['reoptimize-lossless'] = $this->getAction('reoptimize-lossless', $id);
-                  $list_actions['reoptimize-glossy'] = $this->getAction('reoptimize-glossy', $id);
-                break;
-                case ImageModel::COMPRESSION_GLOSSY:
-                  $list_actions['reoptimize-lossy'] = $this->getAction('reoptimize-lossy', $id);
-                  $list_actions['reoptimize-lossless'] = $this->getAction('reoptimize-lossless', $id);
-                break;
-            }
-
-           $list_actions['restore'] = $this->getAction('restore', $id);
-        }
-     }
-     elseif($is_processable)
-     {
-        $this->actions['optimize'] = $this->getAction('optimize', $id);
-     }
-
-
-     if (count($list_actions) > 0)
-     {
-       $this->view->list_actions = UiHelper::renderBurgerList($list_actions, $mediaItem);
-     }
-
-     $this->view->actions = $actions;
+    if (! $this->userIsAllowed)
+    {
+      $this->view->actions = array();
+      $this->view->list_actions = '';
+    }
   }
 
   public function registerSortable($columns)
@@ -200,86 +148,7 @@ class ListMediaViewController extends \ShortPixel\Controller
   }
 
 
-  protected function getAction($name, $id)
-  {
-     $action = array('function' => '', 'type' => '', 'text' => '', 'display' => '');
-     $keyControl = ApiKeyController::getInstance();
 
-    // @todo Needs Nonces on Links
-    switch($name)
-    {
-      case 'optimize':
-         $action['function'] = 'manualOptimization(' . $id . ')';
-         $action['type']  = 'js';
-         $action['text'] = __('Optimize Now', 'shortpixel-image-optimiser');
-         $action['display'] = 'button';
-      break;
-      case 'optimizethumbs':
-          $action['function'] = 'optimizeThumbs(' . $id . ')';
-          $action['type'] = 'js';
-          $action['text']  = '';
-          $action['display'] = 'inline';
-      break;
-
-      case 'retry':
-         $action['function'] = 'manualOptimization(' . $id .', false)';
-         $action['type']  = 'js';
-         $action['text'] = __('Retry', 'shortpixel-image-optimiser') ;
-         $action['display'] = 'button';
-     break;
-
-     case 'restore':
-         $action['function'] = 'admin.php?action=shortpixel_restore_backup&attachment_ID=' . $id;
-         $action['type'] = 'link';
-         $action['text'] = __('Restore backup','shortpixel-image-optimiser');
-         $action['display'] = 'inline';
-     break;
-
-     case 'compare':
-        $action['function'] = 'ShortPixel.loadComparer(' . $id . ')';
-        $action['type'] = 'js';
-        $action['text'] = __('Compare', 'shortpixel-image-optimiser');
-        $action['display'] = 'inline';
-     break;
-     case 'reoptimize-glossy':
-        $action['function'] = 'reoptimize(' . $id . ', glossy)';
-        $action['type'] = 'js';
-        $action['text'] = __('Re-optimize Glossy','shortpixel-image-optimiser') ;
-        $action['display'] = 'inline';
-     break;
-     case 'reoptimize-lossy':
-        $action['function'] = 'reoptimize(' . $id . ', lossy)';
-        $action['type'] = 'js';
-        $action['text'] = __('Re-optimize Lossy','shortpixel-image-optimiser');
-        $action['display'] = 'inline';
-     break;
-
-     case 'reoptimize-lossless':
-        $action['function'] = 'reoptimize(' . $id . ', lossless)';
-        $action['type'] = 'js';
-        $action['text'] = __('Re-optimize Lossless','shortpixel-image-optimiser');
-        $action['display'] = 'inline';
-     break;
-
-     case 'extendquota':
-        $action['function'] = 'https://shortpixel.com/login'. $keyControl->getKeyForDisplay();
-        $action['type'] = 'button';
-        $action['text'] = __('Extend Quota','shortpixel-image-optimiser');
-        $action['display'] = 'button';
-     break;
-     case 'checkquota':
-        $action['function'] = 'ShortPixel.checkQuota()';
-        $action['type'] = 'js';
-        $action['display'] = 'button';
-        $action['text'] = __('Check&nbsp;&nbsp;Quota','shortpixel-image-optimiser');
-
-     break;
-
-
-   }
-
-   return $action;
-  }
 
 
 }

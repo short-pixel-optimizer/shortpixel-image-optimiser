@@ -3,6 +3,9 @@ namespace ShortPixel;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 
+use ShortPixel\Helper\UiHelper as UiHelper;
+
+
 $fs = \wpSPIO()->filesystem();
 
 if ( isset($_GET['noheader']) ) {
@@ -86,25 +89,29 @@ echo $this->view->rewriteHREF;
         foreach($this->view->items as $item): ?>
         <div class='item item-C-<?php echo $item->id ?>'>
             <?php
-              $itemFile = $fs->getFile($item->path);
-              $filesize = $itemFile->getFileSize();
+            //  $itemFile = $fs->getFile($item->path);
+              $filesize = $item->getFileSize();
               $display_date = $this->getDisplayDate($item);
-              $folder_id = $item->folder_id;
+              $folder_id = $item->get('folder_id');
 
-              $rowActions = $this->getRowActions($item, $itemFile);
-              $actions = $this->getActions($item, $itemFile);
+              $rowActions = $this->getRowActions($item);
+              $actions = UiHelper::getActions($item); // $this->getActions($item, $itemFile);
+
+              $list_actions = UiHelper::getListActions($item);
+              if (count($list_actions) > 0)
+                $list_actions = UiHelper::renderBurgerList($list_actions, $item);
 
               $folder = isset($folders[$folder_id]) ? $folders[$folder_id] : false;
               $media_type = ($folder && $folder->isNextGen()) ? __('Nextgen', 'shortpixel-image-optimiser') : __('Custom', 'shortpixel_image_optimiser');
-              $img_url = $fs->pathToUrl($itemFile);
-              $heavy = ($filesize <= 500000 && $filesize > 0);
+              $img_url = $fs->pathToUrl($item);
+              $is_heavy = ($filesize <= 500000 && $filesize > 0);
 
             ?>
             <span><a href="<?php echo($img_url);?>" target="_blank">
-                <div class='thumb' <?php if($heavy) echo('title="' . __('This image is heavy and it would slow this page down if displayed here. Click to open it in a new browser tab.', 'shortpixel-image-optimiser') . '"');
-                ?> style="background-image:url('<?php echo($heavy ? $img_url : wpSPIO()->plugin_url('res/img/heavy-image@2x.png' )) ?>')"></div>
+                <div class='thumb' <?php if($is_heavy) echo('title="' . __('This image is heavy and it would slow this page down if displayed here. Click to open it in a new browser tab.', 'shortpixel-image-optimiser') . '"');
+                ?> style="background-image:url('<?php echo($is_heavy ? $img_url : wpSPIO()->plugin_url('res/img/heavy-image@2x.png' )) ?>')"></div>
                 </a></span>
-            <span class='filename'><?php echo $itemFile->getFileName() ?>
+            <span class='filename'><?php echo $item->getFileName() ?>
                 <div class="row-actions"><?php
                 $numberActions = count($rowActions);
                 for ($i = 0; $i < $numberActions; $i++)
@@ -115,14 +122,26 @@ echo $this->view->rewriteHREF;
                 }
                 ?></div>
             </span>
-            <span class='folderpath'><?php echo (string) $itemFile->getFileDir(); ?></span>
+            <span class='folderpath'><?php echo (string) $item->getFileDir(); ?></span>
             <span class='mediatype'><?php echo $media_type ?></span>
             <span class="date"><?php echo $display_date ?></span>
-            <span id='sp-cust-msg-C-<?php echo $item->id ?>'>
-              <span class='sp-column-info'><?php echo $this->getDisplayStatus($item); ?></span>
+            <span id='sp-cust-msg-C-<?php echo $item->get('id') ?>'>
+              <span class='sp-column-info'><?php
+              echo UiHelper::getStatusText($item);
+              //echo $this->getDisplayStatus($item);
+               ?></span>
             </span>
             <span class='actions'>
-              <?php echo $this->getDisplayActions($this->getActions($item, $itemFile))
+              <?php
+              if (count($actions) > 0)
+              {
+                foreach ($action as $action)
+                  echo $action;
+              }
+              echo $list_actions;
+
+               ?>
+              <?php //echo $this->getDisplayActions($this->getActions($item, $itemFile))
             ?></span>
         </div>
         <?php endforeach; ?>

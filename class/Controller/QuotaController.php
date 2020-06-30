@@ -21,11 +21,12 @@ class QuotaController
     public function hasQuota()
     {
       $settings = \wpSPIO()->settings();
+      
       if ($settings->quotaExceeded)
         return false;
 
       return true;
-      
+
     }
 
     public function forceCheckRemoteQuota()

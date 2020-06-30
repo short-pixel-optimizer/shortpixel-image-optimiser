@@ -32,11 +32,15 @@ if (! is_null($view->debugInfo) && is_array($view->debugInfo) && count($view->de
     <h5><?php echo $view->status_message; ?></h5>
   <?php endif; ?>
 
-  <p><?php echo $view->message; ?></p>
+  <?php if (isset($this->view->text)): ?>
+  <div class='sp-column-info'><?php  echo $this->view->text;  ?></div>
+<?php endif; ?>
 
   <?php if (count($view->stats) > 0): ?>
   <div class='sp-column-stats'>
-    <?php $this->renderLegacyCell(); ?>
+    <?php //$this->renderLegacyCell();
+    echo $this->view->list_actions;
+    ?>
     <ul class='edit-media-stats'>
     <?php foreach($view->stats as $index => $data)
     { ?>
@@ -46,13 +50,14 @@ if (! is_null($view->debugInfo) && is_array($view->debugInfo) && count($view->de
   </div>
 <?php endif; ?>
 
-  <?php foreach($view->todo as $item)
-  echo $item ;
+  <?php // defunct  foreach($view->todo as $item)
+  //echo $item ;
   ?>
 
   <div class='main-actions'>
-    <?php foreach($view->actions as $action)
-    echo $action;
+    <?php  // defunct
+    //foreach($view->actions as $action)
+  //  echo $action;
     ?>
   </div>
 

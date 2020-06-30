@@ -6,6 +6,8 @@ use ShortPixel\Notices\NoticeController as Notices;
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 
+use ShortPixel\Controller\Queue\CustomQueue as CustomQueue;
+
 // Future contoller for the edit media metabox view.
 class OtherMediaViewController extends \ShortPixel\Controller
 {
@@ -76,9 +78,11 @@ class OtherMediaViewController extends \ShortPixel\Controller
       {
           $sp = \wpSPIO()->getShortPixel();
           foreach ($this->view->items as $item) {
-              if($item->status == \ShortPixelMeta::FILE_STATUS_PENDING ){
-                  Log::addDebug('Adding pending files to processing - ' . $item->id);
-                  $sp->getPrioQ()->push(\ShortPixelMetaFacade::queuedId(\ShortPixelMetaFacade::CUSTOM_TYPE, $item->id));
+              if($item->getMeta('status') == \ShortPixelMeta::FILE_STATUS_PENDING ){
+                  Log::addDebug('Adding pending files to processing - ' . $item->get('id') );
+                  //$sp->getPrioQ()->push(\ShortPixelMetaFacade::queuedId(\ShortPixelMetaFacade::CUSTOM_TYPE, $item->id));
+                  $customQueue = CustomQueue::getInstance();
+                  $customQueue->addSingleItem($item);
               }
           }
       }
@@ -122,7 +126,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
       protected function getHeadings()
       {
          $headings = array(
-              'thumbnails' => array('title' => __('Thumbnails', 'shortpixel-image-optimiser'),
+              'thumbnails' => array('title' => __('Thumbnail', 'shortpixel-image-optimiser'),
                               'sortable' => false,
                               'orderby' => 'id',  // placeholder to allow sort on this.
                             ),
@@ -171,14 +175,15 @@ class OtherMediaViewController extends \ShortPixel\Controller
           $removed = array();
           foreach($items as $index => $item)
           {
-             $fsFile = $fs->getFile($item->path);
-             if (! $fsFile->exists()) // remove image if it doesn't exist.
+             $mediaItem = $fs->getCustomImage($item->id);
+
+             if (! $mediaItem->exists()) // remove image if it doesn't exist.
              {
-                $meta = new \ShortPixelMeta($item);
-                $spMetaDao->delete($meta);
+                  $spMetaDao->deleteByID($item->id);
                 $removed[] = $item->path;
                 unset($items[$index]);
              }
+             $items[$index] = $mediaItem;
           }
 
           if (count($removed) > 0)
@@ -195,9 +200,9 @@ class OtherMediaViewController extends \ShortPixel\Controller
          $folderArray = array();
          $otherMedia = new OtherMediaController();
 
-         foreach ($items as $item)
+         foreach ($items as $item) // mediaItem;
          {
-            $folder_id = $item->folder_id;
+            $folder_id = $item->get('folder_id');
             if (! isset($folderArray[$folder_id]))
             {
               $folderArray[$folder_id] = $otherMedia->getFolderByID($folder_id);
@@ -215,7 +220,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
 
          foreach($items as $item)
          {
-            $folder_id = $item->folder_id;
+            $folder_id = $item->get('folder_id');
             if (! isset($folderArray[$folder_id]))
             {
                 $folderArray[$folder_id]  = $otherMedia->getFolderByID($folder_id);
@@ -458,8 +463,10 @@ class OtherMediaViewController extends \ShortPixel\Controller
           return $output;
       }
 
-      /** Actions to list under the Image row */
-      protected function getRowActions($item, $file)
+      /** Actions to list under the Image row
+      * @param $item CustomImageModel
+      */
+      protected function getRowActions($item)
       {
           $thisActions = array();
           $thisActions[] = $this->actions['view']; // always .
@@ -467,22 +474,21 @@ class OtherMediaViewController extends \ShortPixel\Controller
 
           $keyControl = ApiKeyController::getInstance();
 
-
           if ($settings->quotaExceeded || ! $keyControl->keyIsVerified() )
           {
-            return $this->renderActions($thisActions, $item, $file); // nothing more.
+            return $this->renderActions($thisActions, $item); // nothing more.
           }
 
-          if ($item->status < \ShortPixelMeta::FILE_STATUS_UNPROCESSED)
+          if ($item->getMeta('status') < \ShortPixelMeta::FILE_STATUS_UNPROCESSED)
           {
             $thisActions[] = $this->actions['retry'];
           }
-          elseif ($item->status == \ShortPixelMeta::FILE_STATUS_UNPROCESSED || $item->status == \ShortPixelMeta::FILE_STATUS_RESTORED)
+          elseif ($item->getMeta('status') == \ShortPixelMeta::FILE_STATUS_UNPROCESSED || $item->getMeta('status') == \ShortPixelMeta::FILE_STATUS_RESTORED)
           {
             $thisActions[] = $this->actions['optimize'];
           }
 
-          return $this->renderActions($thisActions, $item, $file);
+          return $this->renderActions($thisActions, $item);
       }
 
       /* Actions to list in the action menu */
@@ -541,7 +547,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
          return $this->renderActions($thisActions, $item, $file, $forceSingular);
       }
 
-      protected function renderActions($actions, $item, $file, $forceSingular = false)
+      protected function renderActions($actions, $item, $forceSingular = false)
       {
 
         foreach($actions as $index => $action)
@@ -551,10 +557,10 @@ class OtherMediaViewController extends \ShortPixel\Controller
           if (isset($action['link']))
           {
              $fs = \wpSPIO()->filesystem();
-             $item_url = $fs->pathToUrl($file);
+             $item_url = $fs->pathToUrl($item);
 
              $link = $action['link'];
-             $link = str_replace('%%item_id%%', $item->id, $link);
+             $link = str_replace('%%item_id%%', $item->get('id'), $link);
              $link = str_replace('%%text%%', $text, $link);
              $link = str_replace('%%item_url%%', $item_url, $link);
           }
@@ -562,7 +568,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
           {
               $action_arg = $action['action']; //
               $nonce = $action['_wpnonce'];
-              $url = $this->getPageURL(array('action' => $action_arg, '_wpnonce' => $nonce, 'item_id' => $item->id));
+              $url = $this->getPageURL(array('action' => $action_arg, '_wpnonce' => $nonce, 'item_id' => $item->get('id') ));
               if (isset($action['type']))
                 $url = add_query_arg('type', $action['type'], $url);
               $class = (isset($action['class'])) ? $action['class'] : '';
@@ -581,7 +587,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
         return $actions;
       }
 
-      protected function renderLegacyCell()
+  /*    protected function renderLegacyCell()
       {
 
         $data = $this->data;
@@ -591,9 +597,9 @@ class OtherMediaViewController extends \ShortPixel\Controller
 
         $this->legacyViewObj->renderListCell($this->post_id, $data['status'], $data['showActions'], $data['thumbsToOptimize'],
                 $data['backup'], $data['type'], $data['invType'], '');
-      }
+      } */
 
-      protected function getDisplayStatus($item)
+    /*  protected function getDisplayStatus($item)
       {
         $keyControl = ApiKeyController::getInstance();
 
@@ -628,9 +634,9 @@ class OtherMediaViewController extends \ShortPixel\Controller
         }
         return  $msg;
 
-      }
+      } */
 
-      protected function getSuccessMessage($item)
+  /*    protected function getSuccessMessage($item)
       {
         $msg = '';
 
@@ -640,7 +646,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
         else
             $msg .= __('Reduced by','shortpixel-image-optimiser') . " <strong>" . $item->message . "%</strong> ";
 
-        switch($item->compression_type)
+        switch($item->getMeta('compressionType') )
         {
           case \ShortPixelMeta::COMPRESSION_LOSSY:
              $msg .= '(' . __('Lossy', 'shortpixel-image-optimiser') . ')';
@@ -653,13 +659,13 @@ class OtherMediaViewController extends \ShortPixel\Controller
           break;
         }
 
-        if ($item->resize)
+        if ($item->getMeta('resize') )
         {
            $msg .= '<br>' . sprintf(__('Resized to %s x %s', 'shortpixel-image-optimiser'), $item->resize_width, $item->resize_height);
         }
         return $msg;
 
-      }
+      } */
 
       protected function getDisplayHeading($heading)
       {
@@ -706,12 +712,13 @@ class OtherMediaViewController extends \ShortPixel\Controller
 
       protected function getDisplayDate($item)
       {
-        if ($item->ts_optimized > 0)
-          $date_string = $item->ts_optimized;
+        if ($item->getMeta('tsOptimized') > 0)
+          $timestamp = $item->getMeta('tsOptimized');
         else
-          $date_string = $item->ts_added;
+          $timestamp = $item->getMeta('tsAdded');
 
-        $date = new \DateTime($date_string);
+        $date = new \DateTime();
+        $date->setTimestamp($timestamp);
 
         $display_date = \ShortPixelTools::format_nice_date($date);
 

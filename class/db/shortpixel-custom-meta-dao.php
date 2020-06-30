@@ -463,6 +463,22 @@ class ShortPixelCustomMetaDao {
         return null;
     }
 
+    /** new function to just get a record item to be used for CustomImageModel */
+    public function getItem($id)
+    {
+       $sql = "SELECT * FROM {$this->db->getPrefix()}shortpixel_meta WHERE id = %d AND status <> -1";
+       $row = $this->db->query($sql, array($id));
+
+       return $row;
+    }
+
+    public function deleteByID($id)
+    {
+      $id = intval($id);
+      $sql = "DELETE FROM {$this->db->getPrefix()}shortpixel_" . $tableSuffix . " WHERE id = %d";
+      return $this->db->query($sql, array($id));
+    }
+
     /** If File is not yet processed, don't use empty default meta, but use the global settings
     *
     * @param $meta ShortPixelMeta object

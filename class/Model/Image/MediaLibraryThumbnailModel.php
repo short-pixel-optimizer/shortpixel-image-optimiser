@@ -93,7 +93,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
   public function getOptimizePaths()
   {
-    if ($this->image_meta->status == self::FILE_STATUS_SUCCESS)
+    if ($this->image_meta->status == self::FILE_STATUS_SUCCESS || $this->excludeThumbnails() )
       return array();
 
     return array($this->getFullPath());
@@ -102,12 +102,21 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
   public function getOptimizeUrls()
   {
     // return $url
+    if ($this->image_meta->status == self::FILE_STATUS_SUCCESS || $this->excludeThumbnails() )
+      return array();
+
   }
+
 
   // !Important . This doubles as  checking excluded image sizes.
   protected function isSizeExcluded()
   {
     return false;
+  }
+
+  protected function excludeThumbnails()
+  {
+    return \wpSPIO()->settings()->processThumbnails;
   }
 
 

@@ -34,11 +34,20 @@ class ShortPixelAPI {
     private $_apiEndPoint;
     private $_apiDumpEndPoint;
 
+    protected $instance;
 
     public function __construct($settings) {
         $this->_settings = $settings;
         $this->_apiEndPoint = $this->_settings->httpProto . '://' . SHORTPIXEL_API . '/v2/reducer.php';
         $this->_apiDumpEndPoint = $this->_settings->httpProto . '://' . SHORTPIXEL_API . '/v2/cleanup.php';
+    }
+
+    public static function getInstance()
+    {
+       if (is_null(self::$instance))
+         self::$instance = new ShortPixelAPI(\wpSPIO()->settings());
+
+        return self::$instance;
     }
 
     protected function prepareRequest($requestParameters, $Blocking = false) {
@@ -86,7 +95,7 @@ class ShortPixelAPI {
      */
     public function doRequests($URLs, $Blocking, $itemHandler, $compressionType = false, $refresh = false) {
 
-        if(!count($URLs)) {
+      /*  if(!count($URLs)) {
             $meta = $itemHandler->getMeta();
             $thumbsMissing = $meta->getThumbsMissing();
             if(is_array($thumbsMissing) && count($thumbsMissing)) {
@@ -103,14 +112,14 @@ class ShortPixelAPI {
                 throw new Exception(__('Image files are missing.', 'shortpixel-image-optimiser') . (strlen($files) > 1 ? $files : ''));
             }
             else throw new Exception(__('Image files are missing.', 'shortpixel-image-optimiser'));
-        }
+        } */
 
-        $apiKey = $this->_settings->apiKey;
+/*        $apiKey = $this->_settings->apiKey;
         if(strlen($apiKey) < 20) { //found in the logs many cases when the API Key is '', probably deleted from the DB but the verifiedKey setting is not changed
             $this->_settings->verifiedKey = false;
             Log::addWarn('Invalid API Key');
             throw new Exception(__('Invalid API Key', 'shortpixel-image-optimiser'));
-        }
+        } */
 
         $URLs = apply_filters('shortpixel_image_urls', $URLs, $itemHandler->getId()) ;
 

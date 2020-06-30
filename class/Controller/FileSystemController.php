@@ -43,6 +43,12 @@ Class FileSystemController extends \ShortPixel\Controller
         return $imageObj;
     }
 
+    public function getCustomImage($id)
+    {
+        $imageObj = new CustomImageModel($id);
+        return $imageObj;
+    }
+
     /** Get FileModel for a mediaLibrary post_id .
     *
     * This function exists to put get_attached_file to plugin control

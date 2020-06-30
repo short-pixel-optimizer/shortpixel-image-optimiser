@@ -2,6 +2,8 @@
 namespace ShortPixel\Controller\View;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
+use ShortPixel\Helper\UiHelper as UiHelper;
+
 //use ShortPixel\Model\ImageModel as ImageModel;
 
 // Future contoller for the edit media metabox view.
@@ -13,15 +15,11 @@ class EditMediaViewController extends \ShortPixel\Controller
       protected $post_id;
       protected $legacyViewObj;
 
+      protected $imageModel;
+
       public function __construct()
       {
         parent::__construct();
-      }
-
-      // This data should be rendered by Image Model in the future.
-      public function setTempData($data)
-      {
-          $this->data = $data;
       }
 
       public function load($post_id)
@@ -38,27 +36,40 @@ class EditMediaViewController extends \ShortPixel\Controller
 
         //  $this->actions_allowed = $this->checkUserPrivileges();
 
-          $this->view->status_message = $this->getStatusMessage();
-          $this->view->actions = $this->getActions();
+        //  $this->view->status_message = UiModel::getStatusMessage($imageModel); // $this->getStatusMessage();
+          /*$this->view->actions = $this->getActions();
+
+          $this->view->todo = $this->getTodo(); */
+
+          $this->view->text = UiHelper::getStatusText($this->imageModel);
+          $this->view->list_actions = UiHelper::getListActions($this->imageModel);
+          if ( count($this->view->list_actions) > 0)
+            $this->view->list_actions = UiHelper::renderBurgerList($this->view->list_actions, $this->imageModel);
+          else
+            $this->view->list_actions = '';
+
+          $this->view->actions = UiHelper::getActions($this->imageModel);
+          // $this->view->actions = $actions;
           $this->view->stats = $this->getStatistics();
-          $this->view->todo = $this->getTodo();
+
+          if (! $this->userIsAllowed)
+          {
+            $this->view->actions = array();
+            $this->view->list_actions = '';
+          }
+
           $this->view->debugInfo = $this->getDebugInfo();
 
-          $this->view->message = isset($this->data['message']) ? $this->data['message'] : '';
+        //  $this->view->message = isset($this->data['message']) ? $this->data['message'] : '';
           //$this->view->r
           $this->loadView();
 
       }
 
-
-      // The old view, we are trying to get rid of.
-      public function setLegacyView($legacyView)
-      {
-          $this->legacyViewObj = $legacyView;
-      }
-
       protected function getStatusMessage()
       {
+          return UIHelper::renderSuccessText($this->imageModel);
+
           if (! isset($this->data['status']))
             return;
 
@@ -118,50 +129,20 @@ class EditMediaViewController extends \ShortPixel\Controller
 
       protected function getStatistics()
       {
-        $data = $this->data;
-
-        if ( $data['status'] != 'pdfOptimized' && $data['status'] != 'imgOptimized')
-          return array();
-
-        $stats = array();
-        if ($data['percent'] && $data['percent'] > 0)
-        {
-          $stats[] = array(__('Reduced by','shortpixel-image-optimiser'), '<strong>' . $data['percent'] . '% </strong>');
-        }
-
-        $stats[] = array(__('Type: ', 'shortpixel-image-optimiser'), $data['type']);
-        if ($data['bonus'])
-          $stats[] = array(__('Bonus processing','shortpixel-image-optimiser'), '');
-
-        if ($data['thumbsOpt'])
-        {
-           if ($data['thumbsTotal'] > $data['thumbsOpt'] )
-              $stats[] = array(sprintf(__('+%s of %s thumbnails optimized','shortpixel-image-optimiser'),$data['thumbsOpt'],$data['thumbsTotal']), '');
-           else
-              $stats[] = array(sprintf(__('+ %s thumbnails optimized','shortpixel-image-optimiser'),$data['thumbsOpt']), '');
-        }
-
-        if ($data['retinasOpt'])
-        {
-            $stats[] = array(sprintf(__('+%s Retina images optimized','shortpixel-image-optimiser') , $data['retinasOpt']), '');
-        }
-
-        if ($data['webpCount'])
-        {
-          $stats[] = array(__(" WebP images", 'shortpixel-image-optimiser'), $data['webpCount']);
-        }
-        if ($data['exifKept'])
+        //$data = $this->data;
+        $imageObj = $this->imageModel;
+        if ($imageObj->getMeta('did_keepExif') )
           $stats[] = array(__('EXIF kept', 'shortpixel-image-optimiser'), '');
         else {
           $stats[] = array(__('EXIF removed', 'shortpixel-image-optimiser'), '');
         }
 
-        if ($data['png2jpg'])
+        if ($imageObj->getMeta('did_png2Jpg'));
         {
           $stats[] = array(  __('Converted from PNG','shortpixel-image-optimiser'), '');
         }
 
-        $stats[] = array(__("Optimized on", 'shortpixel-image-optimiser') . ": " . $data['date'], '');
+        $stats[] = array(__("Optimized on", 'shortpixel-image-optimiser') . ": " . $imageObj->getMeta('tsOptimized'), '');
 
 
       /*  $successText .= ($data['webpCount'] ? "<br>+" . $data['webpCount'] . __(" WebP images", 'shortpixel-image-optimiser') : "")
@@ -235,7 +216,7 @@ class EditMediaViewController extends \ShortPixel\Controller
           if ($imageObj->hasBackup())
           {
             $backupFile = $imageObj->getBackupFile();
-            $debugInfo[] = array(__('Backup Folder'), $this->shortPixel->getBackupFolderAny($this->imageModel->getFullPath(), $sizes));
+            $debugInfo[] = array(__('Backup Folder'), (string) $backupFile->getFileDir() );
             $debugInfo[] = array(__('Backup File'), (string) $backupFile . '(' . \ShortPixelTools::formatBytes($backupFile->getFileSize()) . ')' );
           }
           else {

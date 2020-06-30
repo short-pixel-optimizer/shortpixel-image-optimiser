@@ -40,7 +40,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
      if (! $this->isProcessable())
        return;
 
-     $paths = array($this->getFullPath());
+     $paths = array();
+
+     if (! $this->image_meta->status == self::FILE_STATUS_SUCCESS)
+        $paths = array($this->getFullPath());
 
      foreach($this->thumbnails as $thumbObj)
      {
@@ -433,15 +436,16 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       }
 
       $data = $metadata['ShortPixel'];
-      echo " I MUST CONVERT THIS <PRE>";  print_r($metadata); echo "</PRE>";
-
+    //  echo " I MUST CONVERT THIS <PRE>";  print_r($metadata); echo "</PRE>";
 
        $type = isset($data['type']) ? $this->legacyConvertType($data['type']) : '';
-       $status = $this->legacyConvertStatus($data);
+
 
        $improvement = (isset($metadata['ShortPixelImprovement']) && is_numeric($metadata['ShortPixelImprovement']) && $metadata['ShortPixelImprovement'] > 0) ? $metadata['ShortPixelImprovement'] : 0;
 
-       $message = isset($metadata['ShortPixelImprovement']) && ! is_numeric($metadata['ShortPixelImprovement']) ? $metadata['ShortPixelImprovement'] : '';
+       $status = $this->legacyConvertStatus($data, $metadata);
+
+       $error_message = isset($metadata['ShortPixelImprovement']) && ! is_numeric($metadata['ShortPixelImprovement']) ? $metadata['ShortPixelImprovement'] : '';
 
        $retries = isset($data['Retries']) ? intval($data['Retries']) : 0;
 
@@ -461,14 +465,14 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        }
 
        $this->image_meta->status = $status;
-       $this->image_meta->type = $type;
+       //$this->image_meta->type = $type;
        $this->image_meta->improvement = $improvement;
        $this->image_meta->compressionType = $type;
        $this->image_meta->compressedSize = $this->getFileSize();
        $this->image_meta->retries = $retries;
        $this->image_meta->tsAdded = $tsAdded;
        $this->image_meta->has_backup = $this->hasBackup();
-       $this->image_meta->message = $message;
+       $this->image_meta->errorMessage = $error_message;
 
        $this->image_meta->did_keepExif = $exifkept;
     //   $this->image_meta->did_cmyk2rgb = $exifkept;
@@ -595,7 +599,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   }
 
   /** Old Status can be anything*/
-  private function legacyConvertStatus($data)
+  private function legacyConvertStatus($data, $metadata)
   {
   /*  const FILE_STATUS_UNPROCESSED = 0;
     const FILE_STATUS_PENDING = 1;
@@ -604,19 +608,33 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
     const FILE_STATUS_TORESTORE = 4; // Used for Bulk Restore */
 
     // Most Likely Status not saved in metadata, but must be generated from type / lossy and ShortpixelImprovement Metadata.
-    echo "<PRE> LEGACY CONVERT STATUS"; var_dump($data); echo "</PRE>";
-    $old_status = isset($data['status']) ? $data['status'] : 0;
+//    echo "<PRE> LEGACY CONVERT STATUS"; var_dump($data); echo "</PRE>";
+
+  /*  "status" => (!isset($rawMeta["ShortPixel"]) ? 0
+                 : (isset($rawMeta["ShortPixelImprovement"]) && is_numeric($rawMeta["ShortPixelImprovement"])
+                   && !(   $rawMeta['ShortPixelImprovement'] == 0
+                        && (   isset($rawMeta['ShortPixel']['WaitingProcessing'])
+                            || isset($rawMeta['ShortPixel']['date']) && $rawMeta['ShortPixel']['date'] == '1970-01-01')) ? 2
+                    : (isset($rawMeta["ShortPixel"]["WaitingProcessing"]) ? 1
+                       : (isset($rawMeta["ShortPixel"]['ErrCode']) ? $rawMeta["ShortPixel"]['ErrCode'] : -500)))),
+*/
     $waiting = isset($data['WaitingProcessing']) ? true : false;
-    $error = isset($data['ErrCode']) ? $data['ErrCode'] : 0;
-    if ($waiting)
-       $status = self::FILE_STATUS_PENDING;
-    elseif (is_numeric($old_status) && $old_status > 0)
-       $status = self::FILE_STATUS_SUCCESS;
-    elseif($error < 0)
+    $error = isset($data['ErrCode']) ? $data['ErrCode'] : -500;
+
+    if (isset($metadata['ShortPixelImprovement']) &&
+        is_numeric($metadata["ShortPixelImprovement"]) &&
+        is_numeric($metadata["ShortPixelImprovement"]) > 0)
     {
-        $status = $error;
+      $status = self::FILE_STATUS_SUCCESS;
     }
-    echo $status;
+    elseif($waiting)
+    {
+       $status = self::FILE_STATUS_PENDING;
+    }
+    elseif ($error < 0)
+    {
+      $status = $error;
+    }
 
     return $status;
   }

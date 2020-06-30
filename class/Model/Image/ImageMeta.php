@@ -16,5 +16,5 @@ class ImageMeta extends ImageThumbnailMeta
   public $actualWidth;
   public $actualHeight;
 
-  public $message; 
+  public $errorMessage; 
 } // class
