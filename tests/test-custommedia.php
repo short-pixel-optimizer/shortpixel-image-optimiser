@@ -8,7 +8,6 @@ class CustomMediaTest extends WP_UnitTestCase
         $settings = new WPShortPixelSettings();
         $settings->backupImages = 1;
 
-
   }
 
   public function setUp()

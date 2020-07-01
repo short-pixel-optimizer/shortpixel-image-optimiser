@@ -612,7 +612,10 @@ class ShortPixelMetaFacade {
             if (is_object($origFile))
             {
               //$origFile = $imageObj->getOriginalFile();
-              $origurl = wp_get_original_image_url($this->ID); //$fs->pathToUrl($origFile);
+          //    $origurl = wp_get_original_image_url($this->ID);
+              $origurl = $fs->pathToUrl($origFile); // We use path to URL because it should be more reliable than core WP ( exceptions etc )
+
+
               if (! $origFile->exists() && ! $no_exist_check )
               {
                 list($origurl, $path) = $this->attemptRemoteDownload($origurl, $origFile->getFullPath(), $this->ID);
