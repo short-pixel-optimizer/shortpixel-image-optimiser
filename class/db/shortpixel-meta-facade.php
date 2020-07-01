@@ -758,6 +758,8 @@ class ShortPixelMetaFacade {
         if (! $no_exist_check)
           $filePaths = ShortPixelAPI::CheckAndFixImagePaths($filePaths);//check for images to make sure they exist on disk
 
+        // Apply any changes to URL before cache.
+        $urlList = apply_filters('shortpixel_image_urls', $urlList, $this->ID);
         $result = array("URLs" => $urlList, "PATHs" => $filePaths, "sizesMissing" => $sizesMissing);
 
         $cacheItem->setValue($result);
