@@ -44,7 +44,7 @@ class InstallSPIOCest
     }
 */
 
-    public function activateSPIO(FunctionalTester $I) {
+    public function activateAPIKey(FunctionalTester $I) {
         $I->loginAsAdmin();
         $I->amOnPluginsPage();
         $I->click("Activate");
