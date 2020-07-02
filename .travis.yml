@@ -15,12 +15,9 @@ script:
   - git clone --depth=50 --branch=master $UGAN  ../modules
   - composer update
   - sudo cp . /tmp/wordpress/wp-content/plugins/shortpixel-image-optimiser/ -r
-#  - vendor/bin/codecept run acceptance #TODO No tests defined. Acceptance folder is not visible on remote git
   - vendor/bin/codecept run functional
-  - vendor/bin/codecept run unit
-#  - vendor/bin/codecept run wpunit TODO Needs fixing. "Test" db install, "PHP Warning:  Cannot modify header information - headers already sent by"
-  - bash bin/install-wp-tests.sh $WP_DB root $DOCKER_DB_PASSWORD 127.0.0.1 latest true # TODO Install in  a new folder /tmp/wordpress or in docker-wordpress volume; Configure wp-config
-  - ./vendor/bin/phpunit --verbose
+  - bash bin/install-wp-tests.sh $WP_DB root $DOCKER_DB_PASSWORD 127.0.0.1 latest true
+  - sudo ./vendor/bin/phpunit --verbose
 env:
   global:
     - WP_PATH=/tmp/wordpress
