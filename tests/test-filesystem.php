@@ -429,7 +429,7 @@ class FileSystemTest extends  WP_UnitTestCase
       $file = $this->fs->getFile($relpath2);
       $this->assertEquals($file->getFullPath(), $fullfilepath);
 
-      $fulltemppath = '/tmp/3d9c0ec965c7d3f5956bf0ff64a1e657-lossy-nG9hMf.tmp';
+      $fulltemppath = '/home/travis/wordpress/wordpress/tmp/3d9c0ec965c7d3f5956bf0ff64a1e657-lossy-nG9hMf.tmp';
 
       $file = $this->fs->getFile($fulltemppath);
 

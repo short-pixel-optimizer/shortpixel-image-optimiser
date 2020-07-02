@@ -17,7 +17,7 @@ script:
   - sudo cp . $WP_PATH/wp-content/plugins/shortpixel-image-optimiser/ -r
   - vendor/bin/codecept run functional
   - bash bin/install-wp-tests.sh $WP_DB root $DOCKER_DB_PASSWORD 127.0.0.1 latest true
-  - sudo ./vendor/bin/phpunit --verbose
+  - ./vendor/bin/phpunit --verbose
 env:
   global:
     - WP_PATH=/home/travis/wordpress
