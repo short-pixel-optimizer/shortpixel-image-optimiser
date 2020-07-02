@@ -32,7 +32,7 @@ class FileSystemTest extends  WP_UnitTestCase
 
   public function finishBackups()
   {
-    $this->removeDir('/tmp/wordpress/wp-content/uploads/ShortpixelBackups/');
+    $this->removeDir('/home/travis/wordpress/wp-content/uploads/ShortpixelBackups/');
   }
 
   private function removeDir($path)
@@ -436,7 +436,7 @@ class FileSystemTest extends  WP_UnitTestCase
       $this->assertEquals($fulltemppath, $file->getFullPath() );
 
       $s3path = 's3:/localbucket/wp-content/uploads/2019/08/13063326/AEobOR_BgXA.webp';
-      $s3good = '/tmp/wordpress/wp-content/uploads/2019/08/13063326/AEobOR_BgXA.webp';
+      $s3good = '/home/travis/wordpress/wp-content/uploads/2019/08/13063326/AEobOR_BgXA.webp';
       $file = $this->fs->getFile($s3path);
 
       $extpath = 'http://somewhereelse.com/bla/damn/image.jpg';
