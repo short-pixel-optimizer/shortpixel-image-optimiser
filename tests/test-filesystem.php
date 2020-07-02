@@ -68,7 +68,7 @@ class FileSystemTest extends  WP_UnitTestCase
   /** Not testable on VFS due to home-path checks
    * This test is done first since it erares to log file needed to read other tests.
    */
-  public function testSetAndGetBackup()
+/*  public function testSetAndGetBackup()
   {
       $this->setupBackUps();
 
@@ -103,7 +103,7 @@ class FileSystemTest extends  WP_UnitTestCase
       $this->finishBackups(); // removes directory.
 
   }
-
+*/
   public function testBasicDirectory()
   {
       $dirpath = $this->root->url() . '/basic';
