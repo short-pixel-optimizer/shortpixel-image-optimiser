@@ -19,5 +19,5 @@ script:
   - vendor/bin/codecept run functional
   - vendor/bin/codecept run unit
 #  - vendor/bin/codecept run wpunit TODO Needs fixing. "Test" db install, "PHP Warning:  Cannot modify header information - headers already sent by"
-  - bash bin/install-wp-tests.sh wordpress root $DOCKER_DB_PASSWORD localhost latest true # TODO Install in  a new folder /tmp/wordpress or in docker-wordpress volume; Configure wp-config
+  - bash bin/install-wp-tests.sh wordpress root $DOCKER_DB_PASSWORD 127.0.0.1 latest true # TODO Install in  a new folder /tmp/wordpress or in docker-wordpress volume; Configure wp-config
   - ./vendor/bin/phpunit --verbose
