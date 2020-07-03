@@ -44,12 +44,37 @@ class InstallSPIOCest
     }
 */
 
-    public function activateAPIKey(FunctionalTester $I) {
+    public function assumeAPIKeyIsActive(FunctionalTester $I) {
+        $this->amOnSPIOSettingsPage($I);
+        $I->canSeeInField("#key", "PfcGjgmofkDpSuodzYHJ"); //TODO remove api key from here
+    }
+
+    public function installFackerPress(FunctionalTester $I) {
+        $I->loginAsAdmin();
+        $I->amOnAdminPage("plugin-install.php?s=fakerpress&tab=search&type=term");
+        $I->click("Install Now");
+        $I->click("Activate");
+        $I->amOnAdminPage("admin.php?page=fakerpress&view=posts");
+        $I->fillField("fakerpress-field-qty-min", 5);
+        $I->click("Generate");
+    }
+
+
+
+    public function startOptimizingImage() {
+
+    }
+
+    /**
+     * @param FunctionalTester $I
+     */
+    private function amOnSPIOSettingsPage(FunctionalTester $I): void
+    {
         $I->loginAsAdmin();
         $I->amOnPluginsPage();
         $I->click("Activate");
         $I->amOnAdminPage("options-general.php?page=wp-shortpixel-settings");
-        $I->canSeeInField("#key", "PfcGjgmofkDpSuodzYHJ"); //TODO remove api key from here
     }
+
 
 }
