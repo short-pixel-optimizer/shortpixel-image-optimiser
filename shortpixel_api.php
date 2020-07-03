@@ -209,7 +209,7 @@ class ShortPixelAPI {
     {
         //WPShortPixel::log("processImageRecursive ID: " . $itemHandler->getId() . " PATHs: " . json_encode($PATHs));
 
-        $PATHs = self::CheckAndFixImagePaths($PATHs);//check for images to make sure they exist on disk
+      /*  $PATHs = self::CheckAndFixImagePaths($PATHs);//check for images to make sure they exist on disk
         if ( $PATHs === false  || isset($PATHs['error'])) {
             $missingFiles = '';
             if(isset($PATHs['error'])) {
@@ -219,8 +219,7 @@ class ShortPixelAPI {
             }
             $msg = __('The file(s) do not exist on disk: ','shortpixel-image-optimiser') . $missingFiles;
             $itemHandler->setError(self::ERR_FILE_NOT_FOUND, $msg );
-            return array("Status" => self::STATUS_SKIP, "Message" => $msg, "Silent" => $itemHandler->getType() == ShortPixelMetaFacade::CUSTOM_TYPE ? 1 : 0);
-        }
+            return array("Status" => self::STATUS_SKIP, "Message" => $msg, "Silent" => $itemHandler->getType() == ShortPixelMetaFacade::CUSTOM_TYPE ? 1 : 0); */
 
         //tries multiple times (till timeout almost reached) to fetch images.
         if($startTime == 0) {
@@ -272,7 +271,7 @@ class ShortPixelAPI {
         {
             foreach ( $APIresponse as $imageObject ) {//this part makes sure that all the sizes were processed and ready to be downloaded
                 if ( isset($imageObject->Status) && ( $imageObject->Status->Code == 0 || $imageObject->Status->Code == 1 ) ) {
-                    sleep(1);
+                    sleep(1); // @todo ??
                     return $this->processImageRecursive($URLs, $PATHs, $itemHandler, $startTime);
                 }
             }
@@ -341,6 +340,11 @@ class ShortPixelAPI {
                 return array("Status" => self::STATUS_FAIL, "Message" => $APIresponse[0]->Status->Message);
             }
         }
+    }
+
+    public function processMediaItem()
+    {
+
     }
 
     /**

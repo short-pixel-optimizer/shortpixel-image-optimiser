@@ -79,8 +79,10 @@ class Item
          case 'created':
          case 'updated':
             if (! is_numeric($value))
-               $value = strtotime($value);
-
+             {
+               $dateObj = \DateTime::createFromFormat('Y-m-d H:i:s', $value);
+               $value = $dateObj->format('U');
+             }
             $this->$name = $value;
          break;
          case 'value':

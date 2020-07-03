@@ -72,7 +72,7 @@ define('SHORTPIXEL_BACKUP_URL',
         : dirname(dirname($sp__uploads['baseurl'])))
     . '/' . SHORTPIXEL_BACKUP);
 
-define('SHORTPIXEL_MAX_EXECUTION_TIME2', 2 );
+define('SHORTPIXEL_MAX_EXECUTION_TIME2', 2 ); // @todo 2, 2 what?
 define("SHORTPIXEL_MAX_RESULTS_QUERY", 30);
 
 //define("SHORTPIXEL_NOFLOCK", true); // don't use flock queue, can cause instability.

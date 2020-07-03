@@ -11,8 +11,6 @@ class OptimizeController
 {
     protected static $instance;
 
-
-
     public function __construct()
     {
 
@@ -43,7 +41,8 @@ class OptimizeController
           $queue = CustomQueue::getInstance();
         }
 
-        $result = $queue->addSingleItem($id);
+        $mediaItem = $fs->getMediaItem($id);
+        $result = $queue->addSingleItem($mediaItem);
 
         return $result;
     }
@@ -63,15 +62,14 @@ class OptimizeController
 
     public function createBulk()
     {
-       $mediaQ = MediaLibraryQueue::getInstance();
-       $mediaQ->createNewBulk();
+       //$mediaQ = MediaLibraryQueue::getInstance();
+       //$mediaQ->createNewBulk();
     }
 
     public function ajaxCreateBulk()
     {
 
     }
-
 
     // Processing Part
 
@@ -98,9 +96,9 @@ class OptimizeController
           return $json;
         }
 
-
         $mediaQ = MediaLibraryQueue::getInstance();
-        $items = $mediaQ->deQueue();
+
+        $result = $mediaQ->run();
         $api = $this->getAPI();
 
         foreach($items as $item)
@@ -111,11 +109,11 @@ class OptimizeController
                 $blocking = false; // first time, don't block.
             }
 
-            $api->doRequests($urls, $blocking);
+          //  $result = $api->doRequests($urls, $blocking);
+            $result = $api->processMediaItem($item);
         }
 
         $customQ = CustomQueue::getInstance();
-
     }
 
     public function ajaxProcessQueue()

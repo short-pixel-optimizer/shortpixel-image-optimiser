@@ -483,7 +483,7 @@ class ShortPixelMetaFacade {
             //wp_update_attachment_metadata($this->ID, $this->rawMeta);
         }
     }
-
+/* Incorporated in FileSystemController
     public static function getHomeUrl() {
         //trim is because we found a site set up with a tab, like this: https://modernpeasantcooking.com\t
         return trailingslashit((function_exists("is_multisite") && is_multisite()) ? trim(network_site_url("/")) : trim(home_url()));
@@ -493,13 +493,14 @@ class ShortPixelMetaFacade {
     public static function getHomeUrl2() {
         return trailingslashit(ShortPixelTools::commonPrefix(self::getHomeUrl(), content_url()));
     }
-
+*/
     /**
      * @param $id
      * @return false|string
      * @throws Exception
      * @todo hack the hack to a solid solution.
      */
+     /* Incorporated in FileSystemController
     public static function safeGetAttachmentUrl($id) {
         $attURL = wp_get_attachment_url($id);
         if(!$attURL || !strlen($attURL)) {
@@ -519,7 +520,7 @@ class ShortPixelMetaFacade {
         else {
             return $attURL;//get the file URL
         }
-    }
+    } */
 
     /** Get the name for cached items, for now just the URLPATH stuff
     */

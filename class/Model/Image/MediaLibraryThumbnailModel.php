@@ -11,9 +11,9 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
   //abstract protected function loadMeta();
 
   public $name;
-  public $width;
+/*  public $width;
   public $height;
-  public $mime;
+  public $mime; */
 
   public function __construct($path)
   {
@@ -61,6 +61,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
       return false;
   }
 
+  /** @todo Might be moved to ImageModel, if customImage also has Webp */
   public function getWebp()
   {
     $double_webp = \wpSPIO()->env()->useDoubleWebpExtension();
@@ -101,9 +102,13 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
   public function getOptimizeUrls()
   {
+    $fs = \wpSPIO()->filesystem();
     // return $url
     if ($this->image_meta->status == self::FILE_STATUS_SUCCESS || $this->excludeThumbnails() )
       return array();
+
+    return array($fs->pathToUrl($this));
+
 
   }
 

@@ -49,6 +49,7 @@ class WPQ implements Queue
     $this->options->timeout_recount = 20000; // Time to recount and check stuff from datasource in MS
     $this->options->is_debug = false;
 
+    $this->inProcessTimeout();
   }
 
   public function setOptions($options)
@@ -176,6 +177,8 @@ class WPQ implements Queue
   // Dequeue a record, put it on done in queue.
   public function dequeue()
   {
+    // Check if anything has a timeout, do that first.
+    $this->inProcessTimeout();
 
     if ($this->currentStatus()->get('items') <= 0)
     {
@@ -219,6 +222,46 @@ class WPQ implements Queue
         $this->checkQueue(); // possible need to end it.
 
      return $items;
+  }
+
+
+
+  /* Handles in processTimeOuts
+    if TimeOut is reached:
+    - Reset the status back to waiting
+    - Increment Retries by 1
+    -
+  */
+  public function inProcessTimeout()
+  {
+     // Not waiting for anything.
+     if (! $this->options->mode == 'wait')
+      return;
+
+  /*  $fields = array('status' => ShortQ::QSTATUS_WAITING, 'tries' => 'tries + 1');
+    $where = array('updated' => time() - $this->options->process_timeout,
+                  'status' => ShortQ::QSTATUS_INPROCESS);
+
+    $operators = array('updated' => '<=');
+*/
+    $args = array('status' => ShortQ::QSTATUS_INPROCESS, 'updated' => array('value' => time() - ($this->options->process_timeout/1000), 'operator' => '<='));
+
+    $items = $this->DataProvider->getItems($args);
+    $updated = 0;
+
+    foreach($items as $item)
+    {
+       $item->tries++;
+       $updated += $this->DataProvider->itemUpdate($item, array('status' => ShortQ::QSTATUS_WAITING, 'tries' => $item->tries));
+    }
+
+
+    return $updated;
+  /*  if ($result >= 0)
+    {
+      $this->resetInternalCounts();
+    } */
+
   }
 
   public function itemDone(Item $item)
@@ -341,7 +384,6 @@ class WPQ implements Queue
       $this->createQueue();
 
       $this->DataProvider->install();
-
   }
 
   /** Get the current status of this slug / queue */
@@ -449,7 +491,7 @@ class WPQ implements Queue
 
   //  $this->saveStatus(); // save result to DB.
 
-    if ($tasks_open > 0)
+    if ($tasks_open > 0 || $tasks_inprocess > 0)
       return true;
     else {
       $this->finishQueue();

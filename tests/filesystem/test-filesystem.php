@@ -11,6 +11,7 @@ class FileSystemTest extends  WP_UnitTestCase
 
   public function setUp()
   {
+    parent::setUp();
     $this->fs = \wpSPIO()->filesystem();
     $this->root = vfsStream::setup('root', null, $this->getTestFiles() );
   }
@@ -19,6 +20,7 @@ class FileSystemTest extends  WP_UnitTestCase
   {
       $uploaddir = wp_upload_dir();
       $dir = $uploaddir['basedir'];
+      parent::tearDown();
   }
 
   public function setupBackUps()

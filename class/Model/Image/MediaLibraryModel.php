@@ -10,8 +10,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   protected $webps = array(); // webp files - MediaLibraryThumbnailModel
   protected $original_file = false; // the original instead of the possibly _scaled one created by WP 5.3 >
 
-  protected $id; // attachment id
-
   protected $is_scaled = false; // if this is WP 5.3 scaled
 
   protected $wp_metadata;
@@ -57,12 +55,20 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
   public function getOptimizeUrls()
   {
-     $url = $this->safeGetURL();
+     $fs = \wpSPIO()->filesystem();
+     $url = $fs->pathToUrl($this);
      if (! $url)
      {
       return false;
      }
+
      $urls = array($url);
+
+     if ($this->isScaled())
+     {
+        $urls = array_merge($urls, $this->original_file->getOptimizeUrls());
+     }
+
      foreach($this->thumbnails as $thumbObj)
      {
         $urls = array_merge($urls, $thumbObj->getOptimizeUrls());
@@ -82,7 +88,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   }
 
   // Not sure if it will work like this.
-  public function is_scaled()
+  public function isScaled()
   {
      return $this->is_scaled;
   }
@@ -103,8 +109,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
                $thumbObj = $this->getThumbnailModel($data['file']);
                $meta = new ImageThumbnailMeta();
                $thumbObj->name = $name;
-               $thumbObj->width = (isset($data['width'])) ? $data['width'] : false;
-               $thumbObj->height = (isset($data['height'])) ? $data['height'] : false;
+               $meta->width = (isset($data['width'])) ? $data['width'] : false;
+               $meta->height = (isset($data['height'])) ? $data['height'] : false;
                $thumbObj->setMetaObj($meta);
                $thumbnails[$name] = $thumbObj;
              }
@@ -279,7 +285,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
   }
 
-  protected function getThumbNail($name)
+  public function getThumbNail($name)
   {
      if (isset($this->thumbnails[$name]))
         return $this->thumbnails[$name];
@@ -288,57 +294,47 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   }
 
 
-  private function safeGetUrl() {
-      $attURL = wp_get_attachment_url($this->id);
-      if(!$attURL || !strlen($attURL)) {
-        //  throw new Exception("Post metadata is corrupt (No attachment URL for $id)", ShortPixelAPI::ERR_POSTMETA_CORRUPT);
-        Log::addError('Post metadata is corrupt (No attachment URL for ' . $this->id .')');
-        return false;
-      }
-
-      $parsed = parse_url($attURL);
-      if ( !isset($parsed['scheme']) ) {//no absolute URLs used -> we implement a hack
-
-         if (isset($parsed['host'])) // This is for URL's for // without http or https. hackhack.
-         {
-           $scheme = is_ssl() ? 'https:' : 'http:';
-           return $scheme. $attURL;
-
-         }
-         return self::getHomeUrl() . ltrim($attURL,'/');//get the file URL
-      }
-      else {
-          return $attURL;//get the file URL
-      }
-  }
-
   protected function isSizeExcluded()
   {
     $excludePatterns = \wpSPIO()->settings()->excludePatterns;
+
+    if (! $excludePatterns || ! is_array($excludePatterns) ) // no patterns, nothing excluded
+      return false;
+
     foreach($excludePatterns as $item) {
         $type = trim($item["type"]);
         if($type == "size") {
-            $meta = $meta? $meta : wp_get_attachment_metadata($ID);
-            if(   isset($meta["width"]) && isset($meta["height"])
-                 && $this->isProcessableSize($meta["width"], $meta["height"], $excludePattern["value"]) === false){
-                  return false;
+            //$meta = $meta? $meta : wp_get_attachment_metadata($ID);
+            if( $this->width && $this->height
+                 && $this->isProcessableSize($this->width, $this->height, $item["value"]) === false){
+                  return true;
               }
             else
-                return true;
+                return false;
           }
      }
 
   }
 
   private function isProcessableSize($width, $height, $excludePattern) {
-      $ranges = preg_split("/(x|×)/",$excludePattern);
+
+      $ranges = preg_split("/(x|×|X)/",$excludePattern);
+
       $widthBounds = explode("-", $ranges[0]);
-      if(!isset($widthBounds[1])) $widthBounds[1] = $widthBounds[0];
+      $minWidth = intval($widthBounds[0]);
+      $maxWidth = (!isset($widthBounds[1])) ? intval($widthBounds[0]) : intval($widthBounds[1]);
+
       $heightBounds = isset($ranges[1]) ? explode("-", $ranges[1]) : false;
-      if(!isset($heightBounds[1])) $heightBounds[1] = $heightBounds[0];
-      if(   $width >= 0 + $widthBounds[0] && $width <= 0 + $widthBounds[1]
-         && (   $heightBounds === false
-             || ($height >= 0 + $heightBounds[0] && $height <= 0 + $heightBounds[1]))) {
+      $minHeight = $maxHeight = 0;
+      if ($heightBounds)
+      {
+        $minHeight = intval($heightBounds[0]);
+        $maxHeight = (!isset($heightBounds[1])) ? intval($heightBounds[0]) : intval($heightBounds[1]);
+      }
+
+      if(   $width >= $minWidth && $width <= $maxWidth
+         && ( $heightBounds === false
+             || ($height >= $minHeight && $height <= $maxHeight) )) {
           return false;
       }
       return true;
@@ -352,7 +348,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
     if (is_null($this->id))
       return false;
 
-    $originalFile = $fs->getOriginalPath($this->id);
+    $originalFile = $fs->getOriginalImage($this->id);
 
     if ($originalFile->exists() && $originalFile->getFullPath() !== $this->getfullPath() )
     {
@@ -425,6 +421,68 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
     return array_unique($duplicates);
   }
 
+  /** Removed the current attachment, with hopefully removing everything we set.
+  * @todo Should probably not delete files ( SPIO never deletes files ) , other than our backups / webps during restore.
+  */
+  public function restore()
+  {
+    //$itemHandler = $this->facade;
+    //$itemHandler = new ShortPixelMetaFacade($post_id);
+    //$urlsPaths = $itemHandler->getURLsAndPATHs(true, false, true, array(), true, true);
+    if ($this->isOptimized())
+    {
+        if ($backup = $this->hasBackup())
+        {
+           $backup->move($this);
+           foreach($this->thumbnails as $thumbObj)
+           {
+               if($backup = $thumbObj->hasBackup())
+               {
+                  $backup->move($thumbObj);
+               }
+           }
+        }
+        // @todo move this to some better permanent structure w/ png2jpg class.
+        if ($this->getMeta('did_png2Jpg'))
+        {
+          $png2jpg = $this->meta->getPng2Jpg();
+          if (isset($png2jpg['originalFile']))
+          {
+            $urlsPaths['PATHs'][] = $png2jpg['originalFile'];
+          }
+          if (isset($png2jpg['originalSizes']))
+          {
+                foreach($png2jpg['originalSizes'] as $size => $data)
+                {
+                  if (isset($data['file']))
+                  {
+                    $filedir = (string) $this->file->getFileDir();
+                    $urlsPaths['PATHs'][] = $filedir . $data['file'];
+                  }
+                }
+          }
+        }
+        if(count($urlsPaths['PATHs'])) {
+            Log::addDebug('Removing Backups and Webps', $urlsPaths);
+            /* @todo */
+          //  \wpSPIO()->getShortPixel()->maybeDumpFromProcessedOnServer($itemHandler, $urlsPaths);
+          $webps = $this->getWebps();
+          foreach($webps as $webpFile)
+              $webpFile->delete();
+
+          //  \wpSPIO()->getShortPixel()->deleteBackupsAndWebPs($urlsPaths['PATHs']);
+        }
+
+    } // isOptimized();
+
+    delete_post_meta($this->id, '_shortpixel_meta', true);
+  //  wp_delete_attachment($this->id);
+    return parent::delete();
+
+  //  $itemHandler->deleteItemCache();
+  //  return $itemHandler; //return it because we call it also on replace and on replace we need to follow this by deleting SP metadata, on delete it
+  }
+
   // Convert from old metadata if needed.
   private function checkLegacy()
   {
@@ -439,7 +497,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
     //  echo " I MUST CONVERT THIS <PRE>";  print_r($metadata); echo "</PRE>";
 
        $type = isset($data['type']) ? $this->legacyConvertType($data['type']) : '';
-
 
        $improvement = (isset($metadata['ShortPixelImprovement']) && is_numeric($metadata['ShortPixelImprovement']) && $metadata['ShortPixelImprovement'] > 0) ? $metadata['ShortPixelImprovement'] : 0;
 
@@ -475,6 +532,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        $this->image_meta->errorMessage = $error_message;
 
        $this->image_meta->did_keepExif = $exifkept;
+
+       $this->width = isset($metadata['width']) ? $metadata['width'] : false;
+       $this->height = isset($metadata['height']) ? $metadata['height'] : false;
+
+
     //   $this->image_meta->did_cmyk2rgb = $exifkept;
       // $this->image_meta->tsOptimized =
 

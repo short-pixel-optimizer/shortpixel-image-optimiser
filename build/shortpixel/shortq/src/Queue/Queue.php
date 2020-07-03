@@ -48,6 +48,9 @@ interface Queue
   public function hasItems();
   public function itemCount();
 
+  // reset, start fresh
+  public function resetQueue();
+  
   //public function setDataProvider($DataProvider); // DataProvider Object
   public function uninstall();
 

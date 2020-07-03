@@ -30,8 +30,11 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
     protected $width;
     protected $height;
+    protected $mime;
     protected $url;
     protected $error_message;
+
+    protected $id;
 
     //protected $is_optimized = false;
   //  protected $is_image = false;
@@ -43,6 +46,20 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     abstract protected function loadMeta();
     abstract protected function isSizeExcluded();
 
+    // Construct
+    public function __construct($path)
+    {
+      parent::__construct($path);
+
+      if (! $this->isExtensionExcluded() && $this->isImage())
+      {
+         list($width, $height) = @getimagesize($this->getFullPath());
+         if ($width)
+          $this->width = $width;
+         if ($height)
+          $this->height = $height;
+      }
+    }
 
     /* Check if an image in theory could be processed. Check only exclusions, don't check status etc */
     public function isProcessable()
@@ -51,6 +68,15 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
           return false;
         else
           return true;
+    }
+
+    public function isImage()
+    {
+        $this->mime = mime_content_type($this->getFullPath());
+        if (strpos($this->mime, 'image') >= 0)
+           return true;
+        else
+          return false;
     }
 
     public function get($name)
@@ -88,6 +114,11 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
           return true;
 
       return false;
+    }
+
+    public function debugGetImageMeta()
+    {
+       return $this->image_meta;
     }
 
     protected function isPathExcluded()
@@ -171,44 +202,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     }
 
 
-    /** Removed the current attachment, with hopefully removing everything we set.
-    * @return ShortPixelFacade  Legacy return, to do something with replacing
-    */
-    public function delete()
-    {
-      $itemHandler = $this->facade;
-      //$itemHandler = new ShortPixelMetaFacade($post_id);
-      $urlsPaths = $itemHandler->getURLsAndPATHs(true, false, true, array(), true, true);
 
-      // @todo move this to some better permanent structure w/ png2jpg class.
-      if ($this->is_png2jpg)
-      {
-        $png2jpg = $this->meta->getPng2Jpg();
-        if (isset($png2jpg['originalFile']))
-        {
-          $urlsPaths['PATHs'][] = $png2jpg['originalFile'];
-        }
-        if (isset($png2jpg['originalSizes']))
-        {
-              foreach($png2jpg['originalSizes'] as $size => $data)
-              {
-                if (isset($data['file']))
-                {
-                  $filedir = (string) $this->file->getFileDir();
-                  $urlsPaths['PATHs'][] = $filedir . $data['file'];
-                }
-              }
-        }
-      }
-      if(count($urlsPaths['PATHs'])) {
-          Log::addDebug('Removing Backups and Webps', $urlsPaths);
-          \wpSPIO()->getShortPixel()->maybeDumpFromProcessedOnServer($itemHandler, $urlsPaths);
-          \wpSPIO()->getShortPixel()->deleteBackupsAndWebPs($urlsPaths['PATHs']);
-      }
-
-      $itemHandler->deleteItemCache();
-      return $itemHandler; //return it because we call it also on replace and on replace we need to follow this by deleting SP metadata, on delete it
-    }
 
     // Rebuild the ThumbsOptList and others to fix old info, wrong builds.
     /*

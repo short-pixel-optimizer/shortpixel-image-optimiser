@@ -9,6 +9,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
     protected $folder_id;
     protected $path_md5;
 
+
     public function __construct($id)
     {
         $this->id = $id;

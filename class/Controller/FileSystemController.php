@@ -6,6 +6,7 @@ use ShortPixel\Model\File\DirectoryModel as DirectoryModel;
 use ShortPixel\Model\File\FileModel as FileModel;
 
 use ShortPixel\Model\Image\MediaLibraryModel as MediaLibraryModel;
+use ShortPixel\Model\Image\MediaLibraryThumbnailModel as MediaLibraryThumbnailModel;
 use ShortPixel\Model\Image\CustomImageModel as CustomImageModel;
 
 /** Controller for FileSystem operations
@@ -70,11 +71,11 @@ Class FileSystemController extends \ShortPixel\Controller
 
     /* wp_get_original_image_path with specific ShortPixel filter
      */
-    public function getOriginalPath($id)
+    public function getOriginalImage($id)
     {
       $filepath = \wp_get_original_image_path($id);
       $filepath = apply_filters('shortpixel_get_original_image_path', $filepath, $id);
-      return new FileModel($filepath);
+      return new MediaLibraryThumbnailModel($filepath);
     }
 
     /** Get DirectoryModel for a certain path. This can exist or not

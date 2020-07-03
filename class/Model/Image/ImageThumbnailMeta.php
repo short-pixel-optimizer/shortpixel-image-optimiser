@@ -13,9 +13,10 @@ class ImageThumbnailMeta
 
   public $has_backup;
 
-  //public $width;
-  //public $height;
-
+/* WIDTH AND HEIGHT ARE IN IMAGEMODEL!
+  public $width;
+  public $height;
+*/
   //public $name;
 
   /** Load data from basic class to prevent issues when class definitions changes over time */
