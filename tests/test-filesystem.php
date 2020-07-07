@@ -65,6 +65,18 @@ class FileSystemTest extends  WP_UnitTestCase
     return $ar;
   }
 
+  public function testPathToURL() {
+      $url1 = $this->fs->pathToUrl(new \ShortPixel\Model\FileModel('./wp-content/uploads/2020/07/file'));
+      $url2 = $this->fs->pathToUrl(new \ShortPixel\Model\FileModel('wp-content/uploads/2020/07/file'));
+      $url3 = $this->fs->pathToUrl(new \ShortPixel\Model\FileModel('../wp-content/uploads/2020/07/file'));
+      $url4 = $this->fs->pathToUrl(new \ShortPixel\Model\FileModel('../../wp-content/uploads/2020/07/file'));
+
+      $this->assertEquals("http://example.org/wp-content/uploads/2020/07/file", $url1);
+      $this->assertEquals("http://example.org/wp-content/uploads/2020/07/file", $url2);
+      $this->assertEquals("http://example.org/wp-content/uploads/2020/07/file", $url3);
+      $this->assertEquals("http://example.org/wp-content/uploads/2020/07/file", $url4);
+  }
+
   /** Not testable on VFS due to home-path checks
    * This test is done first since it erares to log file needed to read other tests.
    */
