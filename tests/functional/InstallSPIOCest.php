@@ -49,7 +49,7 @@ class InstallSPIOCest
         $I->canSeeInField("#key", "PfcGjgmofkDpSuodzYHJ"); //TODO remove api key from here
     }
 
-    public function installFackerPress(FunctionalTester $I) {
+/*    public function installFackerPress(FunctionalTester $I) {
         $I->loginAsAdmin();
         $I->amOnAdminPage("plugin-install.php?s=fakerpress&tab=search&type=term");
         $I->click("Install Now");
@@ -57,8 +57,8 @@ class InstallSPIOCest
         $I->amOnAdminPage("admin.php?page=fakerpress&view=posts");
         $I->fillField("fakerpress-field-qty-min", 5);
         $I->click("Generate");
-    }
-
+     }
+ */
 
 
     public function startOptimizingImage() {
