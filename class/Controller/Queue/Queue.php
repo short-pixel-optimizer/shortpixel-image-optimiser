@@ -10,6 +10,8 @@ abstract class Queue
     const RESULT_ITEMS = 1;
     const RESULT_PREPARING = 2;
     const RESULT_EMPTY = 3;
+    const RESULT_ERROR = -1;
+    const RESULT_UNKNOWN = -10;
 
 
     public static function getInstance()
@@ -28,17 +30,34 @@ abstract class Queue
     //abstract public function hasItems();
     abstract public function addSingleItem(ImageModel $mediaItem);
 
-    abstract function createNewBulk($args);
+    abstract protected function createNewBulk($args);
 
-    abstract function isBulking();
-    abstract function prepare();
+    abstract protected function prepare();
 
-    abstract function run()
+    public function run()
     {
+       $items = array();
+
+       $result = \stdClass;
+       $result->status = RESULT_UNKNOWN;
+       $result->message = '';
+       $result->items = null;
+
 
        if ( $this->getStatus('preparing'))
        {
           $this->prepare();
+       }
+       elseif ($this->getStatus('bulk_running'))
+       {
+            $items = $this->dequeue();
+       }
+       elseif ($this->getStatus('run'))
+       {
+         if ($this->getStatus('items') > 0)
+         {
+            $this->q->dequeuePriority();
+         }
        }
 
     }
@@ -60,6 +79,13 @@ abstract class Queue
     {
        $items = $this->q->deQueue();
        return $items;
+    }
+
+    public function deQueuePriority()
+    {
+      $items = $this->q->deQueue(array('onlypriority' => true));
+      return $items;
+
     }
 
     // This might be a general implementation

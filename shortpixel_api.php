@@ -347,6 +347,11 @@ class ShortPixelAPI {
 
     }
 
+    public function processCustomItem()
+    {
+
+    }
+
     /**
      * sets the preferred protocol of URL using the globally set preferred protocol.
      * If  global protocol not set, sets it by testing the download of a http test image from ShortPixel site.
