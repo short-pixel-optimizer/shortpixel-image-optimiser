@@ -245,7 +245,7 @@ will handle custom thumbnails like image-100x100_tl.jpg;
 `define('SHORTPIXEL_CUSTOM_THUMB_INFIXES', '-uae');`
  will handle custom thumbnails like image-uae-100x100.jpg;
 
-`define('SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION', true);` 
+`define('SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION', true);`
 will tell the plugin to create double extensions for the WebP image counterparts, for example image.jpg.webp for image.jpg;
 
 `define("SHORTPIXEL_NOFLOCK", true);`
@@ -281,6 +281,11 @@ Hide the Cloudflare settings by defining these constants in wp-config.php:
 
 == Changelog ==
 
+= 4.20-DEV02 =
+
+* Scaled images when using relative paths now don't fail on domain issues
+* Drop any notices that don't have ShortPixel Notice as SubClass
+
 = 4.19.2 =
 
 Release date June 10th 2020
@@ -307,14 +312,14 @@ Release date June 4th 2020
 * Fix for backup getting broken on IIS/Windows servers, because of the way Windows handles the paths;
 * Compability fix for WooCommerce germanized PRO plugin, where the cart page was throwing a fatal error because of the PDF that ShortPixel was trying to optimize;
 * Various fixes for other media screen, to make it more consistent with the Media Library;
-* Language – 5 new strings added, 1 updated, 1 fuzzied, and 0 obsoleted.    
+* Language – 5 new strings added, 1 updated, 1 fuzzied, and 0 obsoleted.
 
 = 4.18.1 =
 
 Release date 20th May 2020
 * Fix for a situation when running the bulk could result in duplicate images;
 * Updated some old docs links;
-* Language – 0 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted.    
+* Language – 0 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted.
 
 = 4.18.0 =
 
