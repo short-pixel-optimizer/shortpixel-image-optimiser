@@ -67,7 +67,7 @@
       display: inline-block;
       border: 1px solid #ccc;
       background-size: cover;
-      background-position: center;}
+      background-position: center; }
       .shortpixel-other-media .list-overview .item .thumb img {
         max-width: 60px;
         max-height: 60px;
@@ -76,10 +76,11 @@
     .shortpixel-other-media .list-overview .item .actions {
       min-width: 105px; }
     .shortpixel-other-media .list-overview .item .single-action {
-      text-align: center; }
-      .shortpixel-other-media .list-overview .item .single-action .button-primary a {
+      text-align: left; }
+      .shortpixel-other-media .list-overview .item .single-action a {
         color: #fff;
-        text-decoration: none; }
+        text-decoration: none;
+        text-align: center; }
       .shortpixel-other-media .list-overview .item .single-action .button-smaller {
         width: 110px; }
     .shortpixel-other-media .list-overview .item .multi-action-wrapper {
