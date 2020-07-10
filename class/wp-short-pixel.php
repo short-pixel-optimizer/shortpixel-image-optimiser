@@ -2694,12 +2694,15 @@ class WPShortPixel {
             return $this->_settings->currentStats;
         } else {
             Log::addDebug("CURRENT STATS (not older than $time) ARE BEING CALCULATED...");
+            if (! is_array($quotaData))
+              $quotaData = array(); // quality control, we had issues here.
+              
             $imageCount = WpShortPixelMediaLbraryAdapter::countAllProcessable($this->_settings);
             $quotaData['time'] = time();
             $quotaData['optimizePdfs'] = $this->_settings->optimizePdfs;
             //$quotaData['quotaData'] = $quotaData;
             foreach($imageCount as $key => $val) {
-                $quotaData[$key] = $val;
+                  $quotaData[$key] = $val;
             }
 
             if($this->_settings->hasCustomFolders) {
