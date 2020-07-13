@@ -225,16 +225,15 @@ class SettingsController extends \ShortPixel\Controller
           if ($this->is_nginx)
             return false;
 
-          if (file_exists(get_home_path() . 'htaccess') && is_writable(get_home_path() . 'htaccess'))
+          if (file_exists(get_home_path() . '.htaccess') && is_writable(get_home_path() . '.htaccess'))
           {
             return true;
           }
-          if (file_exists(get_home_path()) && is_writable(get_home_path()))
+          elseif (! file_exists(get_home_path() . '.htaccess') && file_exists(get_home_path()) && is_writable(get_home_path()))
           {
             return true;
           }
           return false;
-          //  (is_writable(get_home_path() . 'htaccess')) ? true : false;
       }
 
       protected function getMaxIntermediateImageSize() {

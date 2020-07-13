@@ -137,14 +137,21 @@
          .actions
          {
            min-width: 105px;
+
+           div
+           {
+            //float: right;
+           }
          }
          .single-action
          {
-           text-align: center;
-           .button-primary a
+           text-align: left;
+           a
            {
              color: #fff;
              text-decoration: none;
+             text-align: center;
+             
            }
            .button-smaller
            {

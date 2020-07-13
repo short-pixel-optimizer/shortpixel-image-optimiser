@@ -298,7 +298,10 @@ class AdminNoticesController extends \ShortPixel\Controller
       {
       //    $screen = get_current_screen();
           $env = \wpSPIO()->env();
-          $stats = $shortpixel->countAllIfNeeded($settings->currentStats, 86400);
+
+          $statsSetting = is_array($settings->currentStats) ? $settings->currentStats : array();
+          $stats = $shortpixel->countAllIfNeeded($statsSetting, 86400);
+          
           $quotaData = $stats;
           $noticeController = Notices::getInstance();
 

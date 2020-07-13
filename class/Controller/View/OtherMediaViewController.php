@@ -544,6 +544,10 @@ class OtherMediaViewController extends \ShortPixel\Controller
            }
          }
 
+         
+        if (count($thisActions) == 1)
+          $thisActions[0]['class'] .= 'button-smaller button button-primary';
+
          return $this->renderActions($thisActions, $item, $file, $forceSingular);
       }
 
