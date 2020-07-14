@@ -1,0 +1,16 @@
+language: php
+php:
+  - 7.1
+  - 7.2
+  - 7.3
+  - 7.4
+
+services: mysql
+script:
+  - git clone --depth=50 --branch=master $UGAN ../modules
+  - bash bin/install-wp-tests.sh sptestdatabase root '' localhost latest
+  - composer update
+  - bash test.sh
+env:
+  global:
+    - secure: rTe2RXNhWT9bJgUpKYtRriCZStx7z8gCXy3EQSR5OeyIPbAqprGnWVvYjV7ZgvE/LrQdmb/dnK6w8kt1NyY2m++A9Eeusc9GYB29w9cc+myGT2NBWGyNblT81KpVmejAFBULhaW0exOXKz232gCgBxP9LVfQCEHLZe33m8fO52ROXT2KpOXntHzhQGIQfJqZaW1SH/oUxdus5LobpQPkQZLTv8+olcs/GQvuvB3V1NLeGoPL73IXwhBrk42ebfNhpcwMYJwM5MltNKVufOAwRWU53ZwJdQKTN9KHbJ2zVl3gCPh9LTkyp/Ux1Dpd06pP8fiTfMBC3foTcJtkAgubUhYMUB4DCqIdKv2Q+XvOIEaq7jg6sOr5lil9r7bFEiwYiMywTbUMUa5fP9tEsEg5YKzNVJBNDIQHzyeDVVa/wbF59a72myXf7dxiq6yh7JOzJRjU9K8+k1v4pqOeGwFYUHvJ7LYIRiuioMNzXSBZyXaRv6dXmThM3enmq4mzNycOQzjks7c64nSeGLda7yTVkD6RfKn9UaKNpuUgoqokXdHw1TlQzrbycuvLAbvle405hv9gbOqovmybeIIRkmozi+gwt6VPP6kiJwwC/tDiHCcp2r5xO/b5CuGY1nl57UqAoNCEet29dmLMa/VO5LHeZ580i5LVDUWD56miCaUo1Kk=

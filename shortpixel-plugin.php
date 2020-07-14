@@ -60,7 +60,6 @@ class ShortPixelPlugin
     $front = new Controller\FrontController();
     $admin = Controller\AdminController::getInstance();
     $adminNotices = Controller\AdminNoticesController::getInstance(); // Hook in the admin notices.
-    $notices = Notices::getInstance(); // This hooks the ajax listener
 
     $this->initHooks();
 
@@ -73,33 +72,9 @@ class ShortPixelPlugin
   public function init()
   {
       $this->shortPixel->loadHooks();
-      $admin = Controller\AdminController::getInstance();
 
-      if ($this->settings()->autoMediaLibrary)
-      {
-          // compat filter to shortcircuit this in cases.  (see external - visualcomposer)
-          if (apply_filters('shortpixel/init/automedialibrary', true))
-          {
-            if($this->settings()->autoMediaLibrary && $this->settings()->png2jpg) {
-                add_action( 'wp_handle_upload', array($admin,'handlePng2JpgHook'));
-                // @todo Document what plugin does mpp
-                add_action( 'mpp_handle_upload', array($admin,'handlePng2JpgHook'));
-            }
-            add_action('wp_handle_replace', array($admin,'handleReplaceHook'));
+      $notices = Notices::getInstance(); // This hooks the ajax listener
 
-            if($this->settings()->autoMediaLibrary) {
-
-                add_filter( 'wp_generate_attachment_metadata', array($admin,'handleImageUploadHook'), 10, 2 );
-                // @todo Document what plugin does mpp
-                add_filter( 'mpp_generate_metadata', array($admin,'handleImageUploadHook'), 10, 2 );
-            }
-          }
-      }
-      elseif($this->settings()->frontBootstrap && $this->env()->is_front)
-      {
-        // if automedialibrary is off, but we do want to auto-optimize on the front, still load the hook.
-        add_filter( 'wp_generate_attachment_metadata', array($admin,'handleImageUploadHook'), 10, 2 );
-      }
   }
 
   /** Function to get plugin settings
@@ -154,6 +129,34 @@ class ShortPixelPlugin
 
       add_action( 'shortpixel-thumbnails-before-regenerate', array( $this->shortPixel, 'thumbnailsBeforeRegenerateHook' ), 10, 1);
       add_action( 'shortpixel-thumbnails-regenerated', array( $this->shortPixel, 'thumbnailsRegeneratedHook' ), 10, 4);
+
+      $admin = Controller\AdminController::getInstance();
+
+      if ($this->settings()->autoMediaLibrary)
+      {
+          // compat filter to shortcircuit this in cases.  (see external - visualcomposer)
+          if (apply_filters('shortpixel/init/automedialibrary', true))
+          {
+            if($this->settings()->autoMediaLibrary && $this->settings()->png2jpg) {
+                add_action( 'wp_handle_upload', array($admin,'handlePng2JpgHook'));
+                // @todo Document what plugin does mpp
+                add_action( 'mpp_handle_upload', array($admin,'handlePng2JpgHook'));
+            }
+            add_action('wp_handle_replace', array($admin,'handleReplaceHook'));
+
+            if($this->settings()->autoMediaLibrary) {
+
+                add_filter( 'wp_generate_attachment_metadata', array($admin,'handleImageUploadHook'), 10, 2 );
+                // @todo Document what plugin does mpp
+                add_filter( 'mpp_generate_metadata', array($admin,'handleImageUploadHook'), 10, 2 );
+            }
+          }
+      }
+      elseif($this->settings()->frontBootstrap && $this->env()->is_front)
+      {
+        // if automedialibrary is off, but we do want to auto-optimize on the front, still load the hook.
+        add_filter( 'wp_generate_attachment_metadata', array($admin,'handleImageUploadHook'), 10, 2 );
+      }
   }
 
   /** Hook in our admin pages */
@@ -373,11 +376,13 @@ class ShortPixelPlugin
 
       \WpShortPixelDb::checkCustomTables();
 
-      Controller\AdminNoticesController::resetCompatNotice();
+      Controller\AdminNoticesController::resetAllNotices();
+
+    /*  Controller\AdminNoticesController::resetCompatNotice();
       Controller\AdminNoticesController::resetAPINotices();
       Controller\AdminNoticesController::resetQuotaNotices();
       Controller\AdminNoticesController::resetIntegrationNotices();
-
+*/
       \WPShortPixelSettings::onActivate();
 
   }
@@ -398,7 +403,6 @@ class ShortPixelPlugin
     $log = $fs->getFile(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
     if ($log->exists())
       $log->delete();
-  //  @unlink(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
   }
 
   public static function uninstallPlugin()

@@ -112,7 +112,8 @@ class ShortPixelAPI {
             throw new Exception(__('Invalid API Key', 'shortpixel-image-optimiser'));
         }
 
-        $URLs = apply_filters('shortpixel_image_urls', $URLs, $itemHandler->getId()) ;
+      // This filter, moved to facade GetuRls/Paths
+      //  $URLs = apply_filters('shortpixel_image_urls', $URLs, $itemHandler->getId()) ;
 
         $requestParameters = array(
             'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,

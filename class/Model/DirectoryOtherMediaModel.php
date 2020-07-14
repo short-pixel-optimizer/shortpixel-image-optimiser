@@ -84,9 +84,9 @@ class DirectoryOtherMediaModel extends DirectoryModel
       }
       else
       {
-        $this->updated = $this->DBtoTimestamp($folder->ts_updated);
-        $this->created = $this->DBtoTimestamp($folder->ts_created);
-        $this->fileCount = $folder->file_count;
+        $this->updated = isset($folder->ts_updated) ? $this->DBtoTimestamp($folder->ts_updated) : time();
+        $this->created = isset($folder->ts_created) ? $this->DBtoTimestamp($folder->ts_created) : time();
+        $this->fileCount = isset($folder->file_count) ? $folder->file_count : 0;
       }
       if (strlen($folder->name) == 0)
         $this->name = basename($folder->path);

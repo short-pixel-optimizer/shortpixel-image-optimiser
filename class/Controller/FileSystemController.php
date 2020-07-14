@@ -167,6 +167,22 @@ Class FileSystemController extends \ShortPixel\Controller
 
         $parsed = parse_url($url); // returns array, null, or false.
 
+        // Some hosts set the content dir to a relative path instead of a full URL. Api can't handle that, so add domain and such if this is the case.
+        if ( !isset($parsed['scheme']) ) {//no absolute URLs used -> we implement a hack
+
+           if (isset($parsed['host'])) // This is for URL's for // without http or https. hackhack.
+           {
+             $scheme = is_ssl() ? 'https:' : 'http:';
+             return $scheme. $url;
+           }
+           else
+           {
+           // From Metafacade. Multiple solutions /hacks.
+              $home_url = trailingslashit((function_exists("is_multisite") && is_multisite()) ? trim(network_site_url("/")) : trim(home_url()));
+              return $home_url . ltrim($url,'/');//get the file URL
+           }
+        }
+
         if (! is_null($parsed) && $parsed !== false)
           return $url;
 

@@ -136,6 +136,7 @@ class EnvironmentModel extends \ShortPixel\Model
         'upload', // media library
         'attachment', // edit media
         'post', // post screen
+        'page', // page editor
         'edit-post', // edit post
         'new-post',  // new post
         'edit-page', // all pages

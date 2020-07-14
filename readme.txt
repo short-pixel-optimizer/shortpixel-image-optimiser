@@ -2,9 +2,9 @@
 Contributors: ShortPixel
 Tags: compressor, image, compression, optimize, image optimizer, image optimiser, image compression, resize, compress pdf, compress jpg, compress png, image compression
 Requires at least: 3.2.0
-Tested up to: 5.4.1
+Tested up to: 5.4.2
 Requires PHP: 5.3
-Stable tag: 4.19.2
+Stable tag: 4.19.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -245,7 +245,7 @@ will handle custom thumbnails like image-100x100_tl.jpg;
 `define('SHORTPIXEL_CUSTOM_THUMB_INFIXES', '-uae');`
  will handle custom thumbnails like image-uae-100x100.jpg;
 
-`define('SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION', true);` 
+`define('SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION', true);`
 will tell the plugin to create double extensions for the WebP image counterparts, for example image.jpg.webp for image.jpg;
 
 `define("SHORTPIXEL_NOFLOCK", true);`
@@ -281,6 +281,19 @@ Hide the Cloudflare settings by defining these constants in wp-config.php:
 
 == Changelog ==
 
+= 4.19.3 =
+
+Release date July 14th 2020
+* Fix: Images weren't optimized when they were added from the Upload function of the Gutenberg image block;
+* Fix: Scaled images when using relative paths now don't fail on domain issues;
+* Fix: Drop any notices that don't have ShortPixel Notice as SubClass;
+* Fix: Properly handle some situations when the .htaccess file is read-only;
+* Fix: Avoid the plugin crash in some specific situations when an invalid API Key was provided;
+* Fix: Notices were being displayed for the first time custom folders were added on a multisite install;
+* Fix: Optimize now wasn't displayed anymore as a button in Other Media for multisite installs;
+* Fix: In certain situations, when the image timestamp changed, the optimization was counting 2 credits;
+* Language: 0 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted.
+
 = 4.19.2 =
 
 Release date June 10th 2020
@@ -307,14 +320,14 @@ Release date June 4th 2020
 * Fix for backup getting broken on IIS/Windows servers, because of the way Windows handles the paths;
 * Compability fix for WooCommerce germanized PRO plugin, where the cart page was throwing a fatal error because of the PDF that ShortPixel was trying to optimize;
 * Various fixes for other media screen, to make it more consistent with the Media Library;
-* Language – 5 new strings added, 1 updated, 1 fuzzied, and 0 obsoleted.    
+* Language – 5 new strings added, 1 updated, 1 fuzzied, and 0 obsoleted.
 
 = 4.18.1 =
 
 Release date 20th May 2020
 * Fix for a situation when running the bulk could result in duplicate images;
 * Updated some old docs links;
-* Language – 0 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted.    
+* Language – 0 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted.
 
 = 4.18.0 =
 

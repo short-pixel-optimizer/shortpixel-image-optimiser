@@ -18,9 +18,9 @@ namespace ShortPixel;
     } else {
         if( !$this->is_htaccess_writable ){
             $deliverWebpUnalteredDisabled = 'disabled';     // Disable
-            if( $deliverWebp == 3 ){
+            if( $view->data->deliverWebp == 3 ){
                 $deliverWebpAlteredDisabled = 'disabled';   // Disable
-                $deliverWebpUnalteredLabel = __('It looks like you recently moved from an Apache server to an NGINX server, while the option to use .htacces was in use. Please follow this tutorial to see how you could implement by yourself this functionality, outside of the WP plugin. ','shortpixel-image-optimiser');
+                $deliverWebpUnalteredLabel = __('It looks like you recently moved from an Apache server to an NGINX server, while the option to use .htacces was in use. Please follow this tutorial to see how you could implement by yourself this functionality, outside of the WP plugin: ','shortpixel-image-optimiser') . '<a href="javascript:void(0)" data-beacon-article="5bfeb9de2c7d3a31944e78ee">Open article</a>';
             } else {
                 $deliverWebpUnalteredLabel = __('It looks like your .htaccess file cannot be written. Please fix this and then return to refresh this page to enable this option.','shortpixel-image-optimiser');
             }
