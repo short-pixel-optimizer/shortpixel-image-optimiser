@@ -2,9 +2,9 @@
 Contributors: ShortPixel
 Tags: compressor, image, compression, optimize, image optimizer, image optimiser, image compression, resize, compress pdf, compress jpg, compress png, image compression
 Requires at least: 3.2.0
-Tested up to: 5.4.1
+Tested up to: 5.4.2
 Requires PHP: 5.3
-Stable tag: 4.19.2
+Stable tag: 4.19.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -281,10 +281,18 @@ Hide the Cloudflare settings by defining these constants in wp-config.php:
 
 == Changelog ==
 
-= 4.20-DEV02 =
+= 4.19.3 =
 
-* Scaled images when using relative paths now don't fail on domain issues
-* Drop any notices that don't have ShortPixel Notice as SubClass
+Release date July 14th 2020
+* Fix: Images weren't optimized when they were added from the Upload function of the Gutenberg image block;
+* Fix: Scaled images when using relative paths now don't fail on domain issues;
+* Fix: Drop any notices that don't have ShortPixel Notice as SubClass;
+* Fix: Properly handle some situations when the .htaccess file is read-only;
+* Fix: Avoid the plugin crash in some specific situations when an invalid API Key was provided;
+* Fix: Notices were being displayed for the first time custom folders were added on a multisite install;
+* Fix: Optimize now wasn't displayed anymore as a button in Other Media for multisite installs;
+* Fix: In certain situations, when the image timestamp changed, the optimization was counting 2 credits;
+* Language: 0 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted.
 
 = 4.19.2 =
 
