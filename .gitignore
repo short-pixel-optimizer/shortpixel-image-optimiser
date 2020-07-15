@@ -9,3 +9,4 @@ composer.lock
 .idea/spio2.iml
 .idea/vcs.xml
 .idea/phpunit.xml
+/bin/.env
