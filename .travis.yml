@@ -1,16 +1,26 @@
+os: linux
+dist: bionic
 language: php
 php:
   - 7.1
   - 7.2
   - 7.3
   - 7.4
-
-services: mysql
+services: docker
 script:
-  - git clone --depth=50 --branch=master $UGAN ../modules
-  - bash bin/install-wp-tests.sh sptestdatabase root '' localhost latest
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  - mkdir $WP_PATH $WP_PATH/database -p
+  - docker run -h 127.0.0.1 -p 3306:3306 -e MYSQL_ROOT_PASSWORD=$DOCKER_DB_PASSWORD -e MYSQL_DATABASE=$WP_DB --name $DOCKER_DB_NAME -v $WP_PATH/database:/var/lib/mysql -d  mariadb
+  - docker run -e WORDPRESS_DB_PASSWORD=$DOCKER_DB_PASSWORD --name wordpress --link $DOCKER_DB_NAME:mysql -p 80:80 -v $WP_PATH:/var/www/html -d wordpress
+  - git clone --depth=50 --branch=master $UGAN  ../modules
   - composer update
-  - bash test.sh
+  - sudo cp . $WP_PATH/wp-content/plugins/shortpixel-image-optimiser/ -r
+  - vendor/bin/codecept run functional
+  - bash bin/install-wp-tests.sh $WP_DB root $DOCKER_DB_PASSWORD 127.0.0.1 latest true
+  - ./vendor/bin/phpunit --verbose
 env:
   global:
-    - secure: rTe2RXNhWT9bJgUpKYtRriCZStx7z8gCXy3EQSR5OeyIPbAqprGnWVvYjV7ZgvE/LrQdmb/dnK6w8kt1NyY2m++A9Eeusc9GYB29w9cc+myGT2NBWGyNblT81KpVmejAFBULhaW0exOXKz232gCgBxP9LVfQCEHLZe33m8fO52ROXT2KpOXntHzhQGIQfJqZaW1SH/oUxdus5LobpQPkQZLTv8+olcs/GQvuvB3V1NLeGoPL73IXwhBrk42ebfNhpcwMYJwM5MltNKVufOAwRWU53ZwJdQKTN9KHbJ2zVl3gCPh9LTkyp/Ux1Dpd06pP8fiTfMBC3foTcJtkAgubUhYMUB4DCqIdKv2Q+XvOIEaq7jg6sOr5lil9r7bFEiwYiMywTbUMUa5fP9tEsEg5YKzNVJBNDIQHzyeDVVa/wbF59a72myXf7dxiq6yh7JOzJRjU9K8+k1v4pqOeGwFYUHvJ7LYIRiuioMNzXSBZyXaRv6dXmThM3enmq4mzNycOQzjks7c64nSeGLda7yTVkD6RfKn9UaKNpuUgoqokXdHw1TlQzrbycuvLAbvle405hv9gbOqovmybeIIRkmozi+gwt6VPP6kiJwwC/tDiHCcp2r5xO/b5CuGY1nl57UqAoNCEet29dmLMa/VO5LHeZ580i5LVDUWD56miCaUo1Kk=
+    - WP_PATH=/home/travis/wordpress
+    - WP_DB=wordpress
+    - DOCKER_DB_NAME=wordpressdb
+    - TMPDIR=$WP_PATH

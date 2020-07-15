@@ -1,2 +1,12 @@
 vendor
 composer.lock
+
+.env.testing
+.idea/.gitignore
+.idea/misc.xml
+.idea/modules.xml
+.idea/php.xml
+.idea/spio2.iml
+.idea/vcs.xml
+.idea/phpunit.xml
+/bin/.env
