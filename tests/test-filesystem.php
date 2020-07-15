@@ -426,14 +426,18 @@ class FileSystemTest extends  WP_UnitTestCase
   {
       $uploadDir = wp_upload_dir();
       $basedir = $uploadDir['basedir'];
+      $baseurl = $uploadDir['baseurl'];
 
       $fullfilepath = ABSPATH .  'wp-content/uploads/2019/07/rel_image_virtual.jpg';
+      $fullurl = $baseurl .= '/2019/07/rel_image_virtual.jpg';
 
       // with starting slash
       $relpath =   '/wp-content/uploads/2019/07/rel_image_virtual.jpg';
 
       $file = $this->fs->getFile($relpath);
       $this->assertEquals($file->getFullPath(), $fullfilepath);
+
+      $this->assertEquals($fullurl, $this->fs->pathToUrl($file));
 
       // without starting slash
       $relpath2 = 'wp-content/uploads/2019/07/rel_image_virtual.jpg';

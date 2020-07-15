@@ -612,7 +612,10 @@ class ShortPixelMetaFacade {
             if (is_object($origFile))
             {
               //$origFile = $imageObj->getOriginalFile();
-              $origurl = wp_get_original_image_url($this->ID); //$fs->pathToUrl($origFile);
+          //    $origurl = wp_get_original_image_url($this->ID);
+              $origurl = $fs->pathToUrl($origFile); // We use path to URL because it should be more reliable than core WP ( exceptions etc )
+
+
               if (! $origFile->exists() && ! $no_exist_check )
               {
                 list($origurl, $path) = $this->attemptRemoteDownload($origurl, $origFile->getFullPath(), $this->ID);
@@ -755,6 +758,8 @@ class ShortPixelMetaFacade {
         if (! $no_exist_check)
           $filePaths = ShortPixelAPI::CheckAndFixImagePaths($filePaths);//check for images to make sure they exist on disk
 
+        // Apply any changes to URL before cache.
+        $urlList = apply_filters('shortpixel_image_urls', $urlList, $this->ID);
         $result = array("URLs" => $urlList, "PATHs" => $filePaths, "sizesMissing" => $sizesMissing);
 
         $cacheItem->setValue($result);
