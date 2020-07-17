@@ -4,7 +4,10 @@ namespace ShortPixel\Controller;
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 use ShortPixel\Controller\Queue\MediaLibraryQueue as MediaLibraryQueue;
 use ShortPixel\Controller\Queue\CustomQueue as CustomQueue;
+use ShortPixel\Controller\Queue\Queue as Queue;
+
 use ShortPixel\Controller\QuotaController as QuotaController;
+
 
 
 class OptimizeController
@@ -24,7 +27,6 @@ class OptimizeController
       return self::$instance;
     }
 
-
     // Queuing Part
 
     /* Add Item to Queue should be used for starting manual Optimization
@@ -35,15 +37,16 @@ class OptimizeController
         if ($type == 'media')
         {
           $queue = MediaLibraryQueue::getInstance();
+          $mediaItem = $fs->getMediaItem($id);
+
         }
         elseif($type == 'custom')
         {
           $queue = CustomQueue::getInstance();
+          $mediaItem = $fs->getCustomImage($id);
         }
 
-        $mediaItem = $fs->getMediaItem($id);
         $result = $queue->addSingleItem($mediaItem);
-
         return $result;
     }
 
@@ -53,6 +56,7 @@ class OptimizeController
           $type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';
 
           $result = $this->addItemToQueue($id, $type);
+          $json = $this->getJsonResponse();
           $json->status = $result;
           $json->message = __('Item added to Queue', 'shortpixel-image-optimiser');
 
@@ -97,8 +101,9 @@ class OptimizeController
         }
 
         $mediaQ = MediaLibraryQueue::getInstance();
-
         $result = $mediaQ->run();
+        $items = (isset($result->items) && is_array($result->items)) ? $result->items : array();
+        $json = $this->queueToJson($result);
         $api = $this->getAPI();
 
         foreach($items as $item)
@@ -114,6 +119,8 @@ class OptimizeController
         }
 
         $customQ = CustomQueue::getInstance();
+
+        return $result;
     }
 
     public function ajaxProcessQueue()
@@ -139,6 +146,29 @@ class OptimizeController
     protected function getAPI()
     {
        return \ShortPixelAPI::getInstance();
+    }
+
+    /** Convert a result Queue Stdclass to a JSON send Object */
+    protected function queueToJson($result, $json = false)
+    {
+        if (! $json)
+          $json = $this->getJsonResponse();
+
+        if (Queue::RESULT_PREPARING)
+        {
+          $json->message = sprintf(__('Prepared %s items', 'shortpixel-image-optimiser'), $result->items);
+        }
+        if (Queue::RESULT_EMPTY)
+        {
+          $json->message  = __('Empty Queue', 'shortpixel-image-optimiser');
+        }
+        if (Queue::ITEMS)
+        {
+          $json->message = sprintf(__("Fetched %d items",  'shortpixel-image-optimiser'), count($result->items));
+        }
+        $json->status = $result->status;
+
+
     }
 
     // Communication Part

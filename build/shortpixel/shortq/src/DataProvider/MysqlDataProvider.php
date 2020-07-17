@@ -151,7 +151,8 @@ class MysqlDataProvider implements DataProvider
        'order' => 'ASC',
        'numitems' => -1,
        'item_id' => false,
-       'updated' => false,
+       'updated' => false, // updated since (Unix Timestamp) ( or array with operator)
+       'priority' => false, // number (or array with operator)
      );
 
      $args = wp_parse_args($args, $defaults);
@@ -191,6 +192,24 @@ class MysqlDataProvider implements DataProvider
 
        $sql .= 'and updated ' . $operator . ' %s ';
        $prepare[] = $this->timestamptoSQL($value);
+     }
+
+     if ($args['priority'])
+     {
+        $operator = '=';
+
+        if (is_array($args['priority']))
+        {
+            $operator = isset($args['priority']['operator']) ? ($args['priority']['operator']) : $operator;
+            $value = isset($args['priority']['value']) ? $args['priority']['value'] : false;
+        }
+        else
+        {
+            $value = $args['priority'];
+        }
+
+        $sql .= 'and priority ' . $operator . ' %d ';
+        $prepare[] = $value;
      }
 
      if ($args['orderby'])
@@ -458,11 +477,11 @@ class MysqlDataProvider implements DataProvider
                 created timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 updated timestamp NULL DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY (id),
-                INDEX queue_name (queue_name),
-                INDEX plugin_slug (plugin_slug),
-                INDEX status (status),
-                INDEX item_id (item_id),
-                INDEX list_order (list_order)
+                KEY queue_name (queue_name),
+                KEY plugin_slug (plugin_slug),
+                KEY status (status),
+                KEY item_id (item_id),
+                KEY list_order (list_order)
                 ) $charset; ";
 
       $result = dbDelta($sql);

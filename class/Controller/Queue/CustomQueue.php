@@ -1,5 +1,5 @@
 <?php
-namespace ShortPixel\Queue;
+namespace ShortPixel\Controller\Queue;
 
 use ShortPixel\ShortQ\ShortQ as ShortQ;
 
@@ -19,7 +19,7 @@ class CustomQueue extends Queue
      $this->q->setOption('retry_limit', 20);
    }
 
-
+  
 
 
 

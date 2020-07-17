@@ -1,10 +1,10 @@
 <?php
-namespace ShortPixel\Queue;
+namespace ShortPixel\Controller\Queue;
 
 abstract class Queue
 {
     protected $q;
-    protected $instance;
+    protected static $instance;
     const PLUGIN_SLUG = 'SPIO';
 
     const RESULT_ITEMS = 1;
@@ -13,79 +13,90 @@ abstract class Queue
     const RESULT_ERROR = -1;
     const RESULT_UNKNOWN = -10;
 
+    abstract protected function createNewBulk($args);
+    abstract protected function prepare();
 
     public static function getInstance()
     {
        if (is_null(self::$instance))
        {
-          $class = get_class(self);
+          $class = get_called_class();
           self::$instance = new $class();
        }
 
        return self::$instance;
     }
 
-    //abstract public function processingIsAllowed();
+    public function addSingleItem($mediaItem)
+    {
+       if (! $mediaItem->isProcessable())
+        return false;
+       $preparing = $this->getStatus('preparing');
 
-    //abstract public function hasItems();
-    abstract public function addSingleItem(ImageModel $mediaItem);
 
-    abstract protected function createNewBulk($args);
+       $qItem = $this->mediaItemToQueue($mediaItem);
+       $item = array('id' => $mediaItem->get('id'), 'qItem' => $qItem);
+       $result = $this->q->withOrder(array($item), 5)->enqueue();
 
-    abstract protected function prepare();
+       $this->q->setStatus('preparing', $preparing); // add single should not influence preparing status. 
+       return $result;
+    }
+
 
     public function run()
     {
-       $items = array();
 
-       $result = \stdClass;
-       $result->status = RESULT_UNKNOWN;
-       $result->message = '';
+       $result = new \stdClass();
+       $result->status = self::RESULT_UNKNOWN;
        $result->items = null;
-
 
        if ( $this->getStatus('preparing'))
        {
-          $this->prepare();
+            $prepared = $this->prepare();
+            $result->status = self::STATUS_PREPARING;
+            $result->items = $prepared; // number of items.
        }
        elseif ($this->getStatus('bulk_running'))
        {
-            $items = $this->dequeue();
+            $items = $this->deQueue();
        }
-       elseif ($this->getStatus('run'))
+       else
        {
-         if ($this->getStatus('items') > 0)
-         {
-            $this->q->dequeuePriority();
-         }
+            $items = $this->deQueuePriority();
        }
 
+       if (isset($items)) // did a dequeue.
+       {
+         if (count($items) == 0)
+         {
+           $result->status = self::RESULT_EMPTY;
+         }
+         else
+         {
+           $result->status = self::RESULT_ITEMS;
+         }
+          $result->items = $items;
+
+       }
+
+       return $result;
     }
 
     protected function getStatus($name = false)
     {
         return $this->q->getStatus($name);
     }
-    //abstract function
-  //  abstract function
-    //abstract protected function queuetoMediaItem();
-  /*  public function processingIsAllowed()
-    {
-        if ($this->q->getStatus('preparing') == false && )
-    } */
 
-
-    public function deQueue()
+    protected function deQueue()
     {
        $items = $this->q->deQueue();
        return $items;
     }
 
-    public function deQueuePriority()
+    protected function deQueuePriority()
     {
       $items = $this->q->deQueue(array('onlypriority' => true));
       return $items;
-
     }
 
     // This might be a general implementation
@@ -102,11 +113,6 @@ abstract class Queue
     {
         return $this->q;
     }
-
-
-
-
-
 
 
 } // class

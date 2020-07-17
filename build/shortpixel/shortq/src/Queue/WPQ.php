@@ -151,7 +151,7 @@ class WPQ implements Queue
       return $this;
   }
 
-  /* Remove from Queue possible duplicates
+    /* Remove from Queue possible duplicates
   *  Chained function. Removed items from queue
   *  *Note* This should be used with small selections of items, not by default. Only when changes to item are needed, or to status.
   */
@@ -175,7 +175,7 @@ class WPQ implements Queue
 
 
   // Dequeue a record, put it on done in queue.
-  public function dequeue()
+  public function dequeue($args = array())
   {
     // Check if anything has a timeout, do that first.
     $this->inProcessTimeout();
@@ -185,15 +185,24 @@ class WPQ implements Queue
       $still_here = $this->checkQueue();
        // @todo if there is queue todo, update items, and go.
       if (! $still_here)
-        return false;
+        return array();
     }
 
     $newstatus = ($this->options->mode == 'wait') ? ShortQ::QSTATUS_INPROCESS : ShortQ::QSTATUS_DONE;
 
-    $args = array(
+    $defaults = array(
       'numitems' => $this->options->numitems,
       'newstatus' => $newstatus,
+      'onlypriority' => false,
     );
+
+    $args = wp_parse_args($args, $defaults);
+
+    if ($args['onlypriority'])
+    {
+       $args['priority'] = array('operator' => '<', 'value' => 10);
+       unset($args['onlypriority']);
+    }
 
     $items = $this->DataProvider->dequeue($args);
 
@@ -215,7 +224,8 @@ class WPQ implements Queue
      //$queue['average_ask'] = $this->calcAverageAsk($queue['average_ask']);
      //$this->updateQueue($queue);
      $this->setStatus('last_run', time(), false);
-     $this->setStatus('running', true, false);
+     if (! $args['onlypriority'])
+      $this->setStatus('running', true, false);
      $this->saveStatus();
 
      if ($items_left == 0)

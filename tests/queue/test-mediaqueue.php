@@ -1,5 +1,7 @@
 <?php
-
+  use ShortPixel\Controller\Queue\MediaLibraryQueue as MediaLibraryQueue;
+  use ShortPixel\Controller\Queue\CustomQueue as CustomQueue;
+  use ShortPixel\Controller\Queue\Queue as Queue;
 
 class MediaLibraryQueueTest extends  WP_UnitTestCase
 {
@@ -7,6 +9,8 @@ class MediaLibraryQueueTest extends  WP_UnitTestCase
   private static $q;
   private static $id;
   private static $image;
+  private static $fs;
+
 
   public static function wpSetUpBeforeClass($factory)
   {
@@ -38,20 +42,45 @@ class MediaLibraryQueueTest extends  WP_UnitTestCase
   {
     $q = $this->getQ();
 
-    $this->assertObject($q);
-
+    $this->assertIsObject($q);
   }
 
-  public function addSingleItem()
+  public function testEmptyQueue()
   {
-      $result = $this->q->addSingleItem(self::$id);
+      $q = $this->getQ();
+      $result = $q->run();
+
+      $this->assertEquals(Queue::RESULT_EMPTY, $result->status);
+  }
+
+  public function testAddSingleItem()
+  {
+      $refWPQ = new ReflectionClass('\ShortPixel\Controller\Queue\Queue');
+      $getStatusMethod = $refWPQ->getMethod('getStatus');
+      $getStatusMethod->setAccessible(true);
+
+      $q = $this->getQ();
+
+      // Test the start premise.
+      $this->assertFalse($getStatusMethod->invoke($q, 'preparing'));
+      $this->assertFalse($getStatusMethod->invoke($q, 'running'));
+
+      $result = $q->addSingleItem(self::$image);
 
       $this->assertEquals(1, $result);
+      $this->assertFalse($getStatusMethod->invoke($q, 'preparing'));
+      $this->assertFalse($getStatusMethod->invoke($q, 'running'));
 
-      $items = $this->q->deQueue();
+      $result = $q->run();
+      $items = $result->items;
+      $item = $items[0];
 
+      $this->assertFalse($getStatusMethod->invoke($q, 'preparing'));
+      $this->assertFalse($getStatusMethod->invoke($q, 'running'));
+      $this->assertEquals(Queue::RESULT_ITEMS, $result->status);
       $this->assertCount(1, $items);
-      
+
+
   }
 
   //public function test
