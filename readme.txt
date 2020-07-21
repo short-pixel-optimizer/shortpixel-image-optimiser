@@ -1,6 +1,6 @@
 === ShortPixel Image Optimizer ===
 Contributors: ShortPixel
-Tags: compressor, image, compression, optimize, image optimizer, image optimiser, image compression, resize, compress pdf, compress jpg, compress png, image compression, webp, convert webp, performance, optimisation, optimization, photography, optimizeri, speed, smush, smushing, lossless, glossy, lossy, seo, scale, images, optimise, picture, pictures, optimize images
+Tags: compressor, image, compression, optimize, optimize images, image optimiser, image compression, resize, compress pdf, compress jpg, compress png, performance, photography, smush, scale, pictures
 Requires at least: 3.2.0
 Tested up to: 5.4.2
 Requires PHP: 5.3
@@ -22,7 +22,7 @@ ShortPixel is an easy to use, lightweight, install-and-forget-about-it <a href="
 Short Pixel uses minimal resources and works well with any shared, cloud, VPS or dedicated web hosting. It can optimize any image you have on your website even the images that aren't listed in Media Library like those in galleries like <a href="https://wordpress.org/plugins/nextgen-gallery/" target="_blank">NextGEN</a>, <a href="https://wordpress.org/plugins/modula-best-grid-gallery/" target="_blank">Modula</a> or added directly via FTP!
 
 Both lossy and lossless image compression are available for the most common image types (JPG, PNG, GIF and WebP) plus PDF files.
-We also offer **glossy** JPEG compression which is a very high quality lossy optimisation algorithm. Specially designed for photographers!
+We also offer **glossy** JPEG compression which is a very high quality lossy optimization algorithm. Specially designed for photographers!
 Optimised images mean better user experience, better PageSpeed Insights or GTmetrix results, better Google PageRank and more visitors.
 
 Make an instant <a href="http://shortpixel.com/image-compression-test" target="_blank">image compression test</a> on your site or <a href="http://shortpixel.com/online-image-compression" target="_blank">compress some images</a> to make sure they are to your liking.
@@ -30,13 +30,13 @@ Make an instant <a href="http://shortpixel.com/image-compression-test" target="_
 **Why is ShortPixel the best choice when it comes to image optimization or PDF compression?**
 
 * popular plugin with over 200,000 active installations according to WordPress
-* compress JPG, PNG, GIF (still or animated) images and also PDF documents
+* compress JPG (and its variations JPEG, JPEG 2000, JPEG XR), PNG, GIF (still or animated) images and also PDF documents
 * option to automatically convert PNG to JPG if that will result in smaller images. Ideal for large images in PNG format.
 * no file size limit
 * option to freely convert any JPEG, PNG or GIF (even animated ones!) to **WebP** for more Google love. <a href="http://blog.shortpixel.com/how-webp-images-can-speed-up-your-site/" target="_blank">How to enable WebP?</a>
 * option to include the generated WebP images into the front-end pages by using the `<picture>` tag instead of `<img>`
 * compatible with WP Retina 2x - all **retina images** are automatically compressed. <a href="http://blog.shortpixel.com/how-to-use-optimized-retina-images-on-your-wordpress-site-for-best-user-experience-on-apple-devices/" target="_blank">How to benefit from Retina displays?</a>
-* optimise thumbnails as well as featured images. You can also **select individual thumbnails to exclude** from optimization.
+* optimize thumbnails as well as featured images. You can also **select individual thumbnails to exclude** from optimization.
 * ability to optimize any image on your site including images in **NextGEN Gallery** and any other image galleries or sliders
 * integrates with Gravity Forms post_image field type optimizing the images upon upload
 * option to scale images down, with 2 different options, which is very useful to automatically resize large images. This applies to the featured images and there is no need for additional plugins like Imsanity
@@ -60,7 +60,7 @@ Make an instant <a href="http://shortpixel.com/image-compression-test" target="_
 * WooCommerce, WP offload S3 and WP Stateless compatible
 * 30 days optimization report with all image details and overall statistics
 * We are GDPR compliant! <a href="https://shortpixel.com/privacy#gdpr" target="_blank">Read more.</a>
-* **free optimisation credits for non-profits**, <a href="https://shortpixel.com/contact" target="_blank">contact us</a> for details
+* **free optimization credits for non-profits**, <a href="https://shortpixel.com/contact" target="_blank">contact us</a> for details
 
 **How much does it cost?**
 ShortPixel comes with 100 free credits/month and additional credits can be bought for as little as $4.99 for 5,000 image credits.
@@ -113,9 +113,9 @@ Let's get ShortPixel plugin running on your WordPress website:
     Yes you can.
     We offer 100 free image optimization credits each month. Exceeding the monthly free quota will pause the optimization process till the quota is reset or extended by buying one of our plans.
 
-= Can I optimise images that aren't in Media Library? =
+= Can I optimize images that aren't in Media Library? =
     Absolutely.
-    You can actually optimize any image you have on your site regardless of its place. You just need to add - in the Advanced section of the ShortPixel Settings - the folders where the images you want to optimise are located and ShortPixel will work its magic and do the rest.
+    You can actually optimize any image you have on your site regardless of its place. You just need to add - in the Advanced section of the ShortPixel Settings - the folders where the images you want to optimize are located and ShortPixel will work its magic and do the rest.
 
 = Can I optimize images that are both past and new? =
     Sure!
@@ -130,7 +130,7 @@ Let's get ShortPixel plugin running on your WordPress website:
     The original image is needed if you want to restore an image or if you want to convert an image from lossy/glossy to lossless or viceversa.
 
 = What types of formats can be optimized? =
-    ShortPixel optimises JPEG, PNG, GIF and PDF type of files.
+    ShortPixel optimises JPEG (JPG, JPEG, JPEG 2000, JPEG XR), PNG, GIF (animated and still) and PDF type of files.
 
 = Do you have one-time plans? =
     Yes we do.
@@ -165,14 +165,14 @@ where `APIKEY` is the API Key received upon sign up.
 
 = How much is a credit? =
     A credit is used each time ShortPixel optimizes an image or thumbnail by at least 5%. If we're not able to optimize an image or thumbnail by at least 5% then no credit will be used :-)
-    Please also note that usually images in your Media Library have 3-5 thumbs associated and a credit will be used for each featured image or associated thumbnail that is optimised.
+    Please also note that usually images in your Media Library have 3-5 thumbs associated and a credit will be used for each featured image or associated thumbnail that is optimized.
 
 = Why shall I use a wordpress plugin and not an offline tool? =
     Because ShortPixel algorithms were perfected while optimizing over a hundred million real-life images.
     ShortPixel not only offers the best compression for JPEG, PNG, GIF and PDF files but it also saves you a lot of time. You just install it on your site and then ShortPixel will take care that all the images on your site are immediately optimized after upload.
 
 = Does optimizing images affect my ALT tags? =
-    No, ShortPixel only optimises images, it won't touch anything else like your HTML/CSS.
+    No, ShortPixel only optimizes images, it won't touch anything else like your HTML/CSS.
 
 = If I stop using ShortPixel will my images remain optimized? =
     Absolutely!
