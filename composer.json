@@ -24,7 +24,8 @@
     "codeception/module-db": "^1.0",
     "codeception/module-filesystem": "^1.0",
     "codeception/module-cli": "^1.0",
-    "codeception/util-universalframework": "^1.0"
+    "codeception/util-universalframework": "^1.0",
+        "gumlet/php-image-resize": "^1.6"
     },
    "autoload": {
        "psr-4": { "ShortPixel\\" : "class" }
