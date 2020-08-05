@@ -417,12 +417,14 @@ class FileSystemTest extends  WP_UnitTestCase
       $baseurl = $uploadDir['baseurl'];
 
       $fullfilepath = ABSPATH .  'wp-content/uploads/2019/07/rel_image_virtual.jpg';
+      $dirpath = ABSPATH .  'wp-content/uploads/2019/07/';
       $fullurl = $baseurl .= '/2019/07/rel_image_virtual.jpg';
 
       // with starting slash
       $relpath =   '/wp-content/uploads/2019/07/rel_image_virtual.jpg';
 
       $file = $this->fs->getFile($relpath);
+      $this->assertEquals($dirpath, (string) $file->getFileDir());
       $this->assertEquals($file->getFullPath(), $fullfilepath);
 
       $this->assertEquals($fullurl, $this->fs->pathToUrl($file));
@@ -508,7 +510,15 @@ class FileSystemTest extends  WP_UnitTestCase
     $file5 = $this->fs->getFile($fullfilepath5);
     $this->assertEquals($urlpath5, $this->fs->pathToUrl($file5));
 
+    // Test URL without scheme.
+    $fullfilepath6 = ABSPATH . 'wp-content/uploads/2019/07/wpimg1.jpg';
+    $urlpath6 = '//test.com/wp-content/uploads/2019/07/wpimg1.jpg';
+    $file6 = $this->fs->getFile($urlpath6);
 
+    $this->assertEquals($fullfilepath6, $file6->getFullPath());
+    $this->assertEquals('http:' . $urlpath6, $this->fs->pathToURL($file6) );
+
+    /* ***** NOTICE CHANGING URL ****/
     $this->urlSetup('http://test.com:8080');
 
     $urlpath3 = 'http://test.com:8080/wp-content/uploads/2019/07/wpimg1.jpg';

@@ -126,7 +126,7 @@ class DirectoryModel extends \ShortPixel\Model
 
      $install_dir = get_home_path();
      if($install_dir == '/') {
-         $install_dir = ABSPATH;
+         $install_dir = \wpSPIO()->filesystem()->getWPAbsPath();
      }
 
      $install_dir = trailingslashit($install_dir);
