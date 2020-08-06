@@ -57,7 +57,7 @@ Class FileSystemController extends \ShortPixel\Controller
     *
     * @param $id Attachement ID for the media library item
     * @return FileModel returns a FileModel file.
-    * @todo This function will be more at home in a medialibrary_model <---- !!!!
+    * @todo This function will be more at home in a medialibrary_model
     */
   /*  public function getAttachedFile($id)
     {
@@ -135,12 +135,35 @@ Class FileSystemController extends \ShortPixel\Controller
 
     }
 
+    /** This function returns the WordPress Basedir for uploads ( without date and such )
+    * Normally this would point to /wp-content/uploads.
+    * @returns DirectoryModel
+    */
     public function getWPUploadBase()
     {
       $upload_dir = wp_upload_dir(null, false);
 
       return $this->getDirectory($upload_dir['basedir']);
     }
+
+    /** This function returns the Absolute Path of the WordPress installation
+    * Normally this would be the same as ABSPATH, but there are installations out there with -cough- alternative approaches
+    * @returns DirectoryModel
+    */
+    public function getWPAbsPath()
+    {
+        $wpContentAbs = str_replace( 'wp-content', '', WP_CONTENT_DIR);
+        if (ABSPATH == $wpContentAbs)
+          $abspath = ABSPATH;
+        else
+          $abspath = $wpContentAbs;
+
+        $abspath = apply_filters('shortpixel/filesystem/abspath', $abspath );
+
+        return $this->getDirectory($abspath);
+    }
+
+
 
     /** Not in use yet, do not use. Future replacement. */
     public function createBackUpFolder($folder = SHORTPIXEL_BACKUP_FOLDER)

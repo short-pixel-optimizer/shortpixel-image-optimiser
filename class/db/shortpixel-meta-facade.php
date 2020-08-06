@@ -1056,7 +1056,7 @@ class ShortPixelMetaFacade {
 
         $homePath = get_home_path();
         if($homePath == '/') {
-            $homePath = ABSPATH;
+            $homePath = \wpSPIO()->filesystem()->getWPAbsPath();
         }
         $hp = wp_normalize_path($homePath);
         $file = wp_normalize_path($file);

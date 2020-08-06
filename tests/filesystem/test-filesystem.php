@@ -34,7 +34,7 @@ class FileSystemTest extends  WP_UnitTestCase
 
   public function finishBackups()
   {
-    $this->removeDir('/tmp/wordpress/wp-content/uploads/ShortpixelBackups/');
+    $this->removeDir('/home/travis/wordpress/wp-content/uploads/ShortpixelBackups/');
   }
 
   private function removeDir($path)
@@ -67,10 +67,22 @@ class FileSystemTest extends  WP_UnitTestCase
     return $ar;
   }
 
+  public function testPathToURL() {
+      $url1 = $this->fs->pathToUrl(new \ShortPixel\Model\FileModel('./wp-content/uploads/2020/07/file'));
+      $url2 = $this->fs->pathToUrl(new \ShortPixel\Model\FileModel('wp-content/uploads/2020/07/file'));
+      $url3 = $this->fs->pathToUrl(new \ShortPixel\Model\FileModel('../wp-content/uploads/2020/07/file'));
+      $url4 = $this->fs->pathToUrl(new \ShortPixel\Model\FileModel('../../wp-content/uploads/2020/07/file'));
+
+      $this->assertEquals("http://example.org/wp-content/uploads/2020/07/file", $url1);
+      $this->assertEquals("http://example.org/wp-content/uploads/2020/07/file", $url2);
+      $this->assertEquals("http://example.org/wp-content/uploads/2020/07/file", $url3);
+      $this->assertEquals("http://example.org/wp-content/uploads/2020/07/file", $url4);
+  }
+
   /** Not testable on VFS due to home-path checks
    * This test is done first since it erares to log file needed to read other tests.
    */
-  public function testSetAndGetBackup()
+/*  public function testSetAndGetBackup()
   {
       $this->setupBackUps();
 
@@ -105,7 +117,7 @@ class FileSystemTest extends  WP_UnitTestCase
       $this->finishBackups(); // removes directory.
 
   }
-
+*/
   public function testBasicDirectory()
   {
       $dirpath = $this->root->url() . '/basic';
@@ -419,12 +431,14 @@ class FileSystemTest extends  WP_UnitTestCase
       $baseurl = $uploadDir['baseurl'];
 
       $fullfilepath = ABSPATH .  'wp-content/uploads/2019/07/rel_image_virtual.jpg';
+      $dirpath = ABSPATH .  'wp-content/uploads/2019/07/';
       $fullurl = $baseurl .= '/2019/07/rel_image_virtual.jpg';
 
       // with starting slash
       $relpath =   '/wp-content/uploads/2019/07/rel_image_virtual.jpg';
 
       $file = $this->fs->getFile($relpath);
+      $this->assertEquals($dirpath, (string) $file->getFileDir());
       $this->assertEquals($file->getFullPath(), $fullfilepath);
 
       $this->assertEquals($fullurl, $this->fs->pathToUrl($file));
@@ -435,14 +449,14 @@ class FileSystemTest extends  WP_UnitTestCase
       $file = $this->fs->getFile($relpath2);
       $this->assertEquals($file->getFullPath(), $fullfilepath);
 
-      $fulltemppath = '/tmp/3d9c0ec965c7d3f5956bf0ff64a1e657-lossy-nG9hMf.tmp';
+      $fulltemppath = '/home/travis/wordpress/wordpress/tmp/3d9c0ec965c7d3f5956bf0ff64a1e657-lossy-nG9hMf.tmp';
 
       $file = $this->fs->getFile($fulltemppath);
 
       $this->assertEquals($fulltemppath, $file->getFullPath() );
 
       $s3path = 's3:/localbucket/wp-content/uploads/2019/08/13063326/AEobOR_BgXA.webp';
-      $s3good = '/tmp/wordpress/wp-content/uploads/2019/08/13063326/AEobOR_BgXA.webp';
+      $s3good = '/home/travis/wordpress/wp-content/uploads/2019/08/13063326/AEobOR_BgXA.webp';
       $file = $this->fs->getFile($s3path);
 
       $extpath = 'http://somewhereelse.com/bla/damn/image.jpg';
@@ -510,7 +524,15 @@ class FileSystemTest extends  WP_UnitTestCase
     $file5 = $this->fs->getFile($fullfilepath5);
     $this->assertEquals($urlpath5, $this->fs->pathToUrl($file5));
 
+    // Test URL without scheme.
+    $fullfilepath6 = ABSPATH . 'wp-content/uploads/2019/07/wpimg1.jpg';
+    $urlpath6 = '//test.com/wp-content/uploads/2019/07/wpimg1.jpg';
+    $file6 = $this->fs->getFile($urlpath6);
 
+    $this->assertEquals($fullfilepath6, $file6->getFullPath());
+    $this->assertEquals('http:' . $urlpath6, $this->fs->pathToURL($file6) );
+
+    /* ***** NOTICE CHANGING URL ****/
     $this->urlSetup('http://test.com:8080');
 
     $urlpath3 = 'http://test.com:8080/wp-content/uploads/2019/07/wpimg1.jpg';
