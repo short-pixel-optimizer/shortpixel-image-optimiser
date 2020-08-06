@@ -342,7 +342,7 @@ class ShortPixelAPI {
         }
     }
 
-    public function processMediaItem()
+    public function processMediaItem($item, $blocking = true)
     {
 
     }

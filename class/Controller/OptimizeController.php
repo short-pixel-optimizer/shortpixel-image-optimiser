@@ -8,8 +8,6 @@ use ShortPixel\Controller\Queue\Queue as Queue;
 
 use ShortPixel\Controller\QuotaController as QuotaController;
 
-
-
 class OptimizeController
 {
     protected static $instance;
@@ -109,18 +107,28 @@ class OptimizeController
         foreach($items as $item)
         {
             $urls = $item->urls;
-            if ($item->tries == 0)
-            {
-                $blocking = false; // first time, don't block.
-            }
-
+            $this->sendToProcessing($item);
           //  $result = $api->doRequests($urls, $blocking);
-            $result = $api->processMediaItem($item);
+
         }
 
         $customQ = CustomQueue::getInstance();
 
         return $result;
+    }
+
+    /** Checks and sends the item to processing
+    * @todo Check if PNG2JPG Processing is needed.  
+    */
+    public function sendToProcessing(Object $item)
+    {
+      if ($item->tries == 0)
+      {
+          $blocking = false; // first time, don't block.
+      }
+      $result = $api->processMediaItem($item, $blocking);
+
+      return $result;
     }
 
     public function ajaxProcessQueue()
