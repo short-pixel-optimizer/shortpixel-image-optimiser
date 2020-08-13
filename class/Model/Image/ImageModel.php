@@ -14,17 +14,28 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 {
+    // File Status Constants
     const FILE_STATUS_UNPROCESSED = 0;
     const FILE_STATUS_PENDING = 1;
     const FILE_STATUS_SUCCESS = 2;
     const FILE_STATUS_RESTORED = 3;
     const FILE_STATUS_TORESTORE = 4; // Used for Bulk Restore
 
+    // Compression Option Consts
     const COMPRESSION_LOSSLESS = 0;
     const COMPRESSION_LOSSY = 1;
     const COMPRESSION_GLOSSY = 2;
 
+    // Extension that we process
     const PROCESSABLE_EXTENSIONS = array('jpg', 'jpeg', 'gif', 'png', 'pdf');
+
+    //
+    const P_PROCESSABLE = 0;
+    const P_FILE_NOT_EXIST  = 1;
+    const P_EXCLUDE_EXTENSION = 2;
+    const P_EXCLUDE_SIZE  = 3;
+    const P_EXCLUDE_PATH  = 4;
+    const P_IS_OPTIMIZED = 5;
 
     protected $image_meta; // metadata Object of the image.
 
@@ -35,6 +46,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     protected $error_message;
 
     protected $id;
+
+    protected $processable_status = 0;
 
     //protected $is_optimized = false;
   //  protected $is_image = false;
@@ -64,10 +77,49 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     /* Check if an image in theory could be processed. Check only exclusions, don't check status etc */
     public function isProcessable()
     {
-        if ($this->isPathExcluded() || $this->isExtensionExcluded() || $this->isSizeExcluded() )
+        if ( $this->isOptimized() || ! $this->exists()  || $this->isPathExcluded() || $this->isExtensionExcluded() || $this->isSizeExcluded()
+        )
           return false;
         else
           return true;
+    }
+
+    public function exists()
+    {
+       $result = parent::exists();
+       if ($result === false)
+       {
+          $this->processable_status = self::P_FILE_NOT_EXIST;
+       }
+       return $result;
+    }
+
+    public function getProcessableReason()
+    {
+      $message = false;
+      switch($this->processable_status)
+      {
+         case self::P_PROCESSABLE:
+            $message = __('Image Processable', 'shortpixel-image-optimiser');
+         break;
+         case self::P_FILE_NOT_EXIST:
+            $message = __('File does not exist', 'shortpixel-image-optimiser');
+         break;
+         case self::P_EXCLUDE_EXTENSION:
+            $message = __('Image Extension Excluded', 'shortpixel-image-optimiser');
+         break;
+         case self::P_EXCLUDE_SIZE:
+            $message = __('Image Size Excluded', 'shortpixel-image-optimiser');
+         break;
+         case self::P_EXCLUDE_PATH:
+            $message = __('Image Path Excluded', 'shortpixel-image-optimiser');
+         break;
+         case self::P_IS_OPTIMIZED:
+            $message = __('Image is already optimized', 'shortpixel-image-optimiser');
+         break;
+      }
+
+      return $message;
     }
 
     public function isImage()
@@ -111,7 +163,10 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     public function isOptimized()
     {
       if ($this->getMeta('status') == self::FILE_STATUS_SUCCESS)
+      {
+          $this->processable_status = self::P_IS_OPTIMIZED;
           return true;
+      }
 
       return false;
     }
@@ -133,11 +188,12 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                 $pattern = trim($item["value"]);
                 $target = $type == "name" ? $this->getFileName() : $this->getFullPath();
                 if( self::matchExcludePattern($target, $pattern) ) { //search as a substring if not
+                    $this->processable_status = self::P_EXCLUDE_PATH;
                     return true;
                 }
             }
         }
-
+        return false;
     }
 
     protected function isExtensionExcluded()
@@ -146,6 +202,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         {
             return false;
         }
+
+        $this->processable_status = self::P_EXCLUDE_EXTENSION;
         return true;
     }
 

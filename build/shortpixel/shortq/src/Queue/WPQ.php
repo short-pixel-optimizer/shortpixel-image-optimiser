@@ -224,7 +224,7 @@ class WPQ implements Queue
      //$queue['average_ask'] = $this->calcAverageAsk($queue['average_ask']);
      //$this->updateQueue($queue);
      $this->setStatus('last_run', time(), false);
-     if (! $args['onlypriority'])
+     if (! isset($args['onlypriority']) || ! $args['onlypriority'])
       $this->setStatus('running', true, false);
      $this->saveStatus();
 

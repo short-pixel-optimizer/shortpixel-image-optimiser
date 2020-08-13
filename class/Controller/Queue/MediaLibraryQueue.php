@@ -37,16 +37,15 @@ class MediaLibraryQueue extends Queue
       $fs = \wpSPIO()->filesystem();
 
       $queue = array();
- // maybe while on the whole function, until certain time has elapsed?
+      // maybe while on the whole function, until certain time has elapsed?
       foreach($items as $item)
       {
             $mediaItem= $fs->getMediaImage($item);
-            if ($mediaItem->is_processable())
+            if ($mediaItem->is_processable()) // Checking will be done when processing queue.
             {
                 $queue[] = $this->mediaItemToQueue($item); // array('id' => $mediaItem->get('id'), 'value' => $mediaItem->getOptimizeURLS() );
             }
       }
-
 
       $this->q->additems($queue)->enqueue();
       $numitems = $this->q->enqueue();

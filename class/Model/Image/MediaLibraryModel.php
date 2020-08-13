@@ -20,8 +20,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
       parent::__construct($path);
 
-      //$this->file = $fs->getFile($this->meta->getPath() ); //$fs->getAttachedFile($post_id);
-
       // WP 5.3 and higher. Check for original file.
       if (function_exists('wp_get_original_image_path'))
       {
@@ -35,12 +33,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
   public function getOptimizePaths()
   {
-     if (! $this->isProcessable())
-       return;
 
      $paths = array();
 
-     if (! $this->image_meta->status == self::FILE_STATUS_SUCCESS)
+     if ($this->isProcessable())
         $paths = array($this->getFullPath());
 
      foreach($this->thumbnails as $thumbObj)
@@ -57,12 +53,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   {
      $fs = \wpSPIO()->filesystem();
      $url = $fs->pathToUrl($this);
+
      if (! $url)
      {
       return false;
      }
 
-     $urls = array($url);
+     $urls = array();
+     if ($this->isProcessable())
+      $urls = array($url);
 
      if ($this->isScaled())
      {
@@ -307,6 +306,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
             //$meta = $meta? $meta : wp_get_attachment_metadata($ID);
             if( $this->width && $this->height
                  && $this->isProcessableSize($this->width, $this->height, $item["value"]) === false){
+                   $this->$processable_status = self::P_EXCLUDE_SIZE;
                   return true;
               }
             else

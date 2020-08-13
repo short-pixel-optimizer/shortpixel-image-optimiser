@@ -12,12 +12,14 @@ class OptimizeController
 {
     protected static $instance;
 
+    protected static $results;
+
     public function __construct()
     {
 
     }
 
-    public function getInstance()
+    public static function getInstance()
     {
        if ( is_null(self::$instance))
           self::$instance = new OptimizeController();
@@ -29,13 +31,16 @@ class OptimizeController
 
     /* Add Item to Queue should be used for starting manual Optimization
     * Enqueue a single item, put it to front, remove duplicates.
+    @return int Number of Items added
     */
     public function addItemToQueue($id, $type = 'media')
     {
+        $fs = \wpSPIO()->filesystem();
+
         if ($type == 'media')
         {
           $queue = MediaLibraryQueue::getInstance();
-          $mediaItem = $fs->getMediaItem($id);
+          $mediaItem = $fs->getMediaImage($id);
 
         }
         elseif($type == 'custom')
@@ -44,8 +49,26 @@ class OptimizeController
           $mediaItem = $fs->getCustomImage($id);
         }
 
-        $result = $queue->addSingleItem($mediaItem);
-        return $result;
+        $json = $this->getJsonResponse();
+        $json->status = 0;
+
+        if (! $mediaItem->isProcessable())
+        {
+          $json->message = $mediaItem->getProcessableReason();
+          $json->has_error = true;
+        }
+        else
+        {
+          $numitems = $queue->addSingleItem($mediaItem); // 1 if ok, 0 if not found, false is not processable
+          if ($numitems > 0)
+          {
+
+            $json->message = sprintf(__('Item added to Queue. %d items in Queue', 'shortpixel-image-optimiser'), $numitems);
+            $json->status = 1;
+          }
+        }
+
+        return $json;
     }
 
     public function ajaxAddItem()
@@ -53,10 +76,7 @@ class OptimizeController
           $id = intval($_POST['id']);
           $type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';
 
-          $result = $this->addItemToQueue($id, $type);
-          $json = $this->getJsonResponse();
-          $json->status = $result;
-          $json->message = __('Item added to Queue', 'shortpixel-image-optimiser');
+          $json = $this->addItemToQueue($id, $type);
 
           $this->jsonResponse($json);
     }
@@ -72,6 +92,7 @@ class OptimizeController
     {
 
     }
+
 
     // Processing Part
 
@@ -118,15 +139,19 @@ class OptimizeController
     }
 
     /** Checks and sends the item to processing
-    * @todo Check if PNG2JPG Processing is needed.  
+    * @todo Check if PNG2JPG Processing is needed.
     */
     public function sendToProcessing(Object $item)
     {
       if ($item->tries == 0)
       {
-          $blocking = false; // first time, don't block.
+          $item->blocking = false; // first time, don't block.
       }
-      $result = $api->processMediaItem($item, $blocking);
+      else
+      {
+         $item->blocking = true;
+      }
+      $result = $api->processMediaItem($item);
 
       return $result;
     }
@@ -153,7 +178,7 @@ class OptimizeController
 
     protected function getAPI()
     {
-       return \ShortPixelAPI::getInstance();
+       return ApiController::getInstance();
     }
 
     /** Convert a result Queue Stdclass to a JSON send Object */
@@ -170,7 +195,7 @@ class OptimizeController
         {
           $json->message  = __('Empty Queue', 'shortpixel-image-optimiser');
         }
-        if (Queue::ITEMS)
+        if (Queue::RESULT_ITEMS)
         {
           $json->message = sprintf(__("Fetched %d items",  'shortpixel-image-optimiser'), count($result->items));
         }
@@ -182,11 +207,12 @@ class OptimizeController
     // Communication Part
     protected function getJsonResponse()
     {
-      $json = new \stcdClass;
+      $json = new \stdClass;
       $json->status = null;
       $json->result = null;
+      $json->results = null;
       $json->actions = null;
-      $json->error = false;
+      $json->has_error = false;
       $json->message = null;
 
       return $json;

@@ -1,17 +1,29 @@
 <?php
 namespace ShortPixel\Controller\Queue;
 
+use ShortPixel\Model\Image\ImageModel as ImageModel;
+
 abstract class Queue
 {
     protected $q;
     protected static $instance;
+    protected static $results;
+
     const PLUGIN_SLUG = 'SPIO';
 
+    // Result status for Run function
     const RESULT_ITEMS = 1;
     const RESULT_PREPARING = 2;
     const RESULT_EMPTY = 3;
     const RESULT_ERROR = -1;
     const RESULT_UNKNOWN = -10;
+
+    /* Result status (per item) to communicate back to frontend */
+/*    const FILE_NOTEXISTS = -1;
+    const FILE_ALREADYOPTIMIZED = -2;
+    const FILE_OK = 1;
+    const FILE_SUCCESS = 2;
+    const FILE_WAIT = 3; */
 
     abstract protected function createNewBulk($args);
     abstract protected function prepare();
@@ -27,19 +39,23 @@ abstract class Queue
        return self::$instance;
     }
 
-    public function addSingleItem($mediaItem)
+    /** Enqueues a single items into the urgent queue list
+    *   - Should not be used for bulk images
+    * @param ImageModel $mediaItem An ImageModel (CustomImageModel or MediaLibraryModel) object
+    * @return mixed
+    */
+    public function addSingleItem(ImageModel $mediaItem)
     {
-       if (! $mediaItem->isProcessable())
-        return false;
+       //if (! $mediaItem->isProcessable())
+      //  return false;
        $preparing = $this->getStatus('preparing');
-
 
        $qItem = $this->mediaItemToQueue($mediaItem);
        $item = array('id' => $mediaItem->get('id'), 'qItem' => $qItem);
-       $result = $this->q->withOrder(array($item), 5)->enqueue();
+       $numitems = $this->q->withOrder(array($item), 5)->enqueue(); // enqueue returns numitems
 
-       $this->q->setStatus('preparing', $preparing); // add single should not influence preparing status. 
-       return $result;
+       $this->q->setStatus('preparing', $preparing); // add single should not influence preparing status.
+       return $numitems;
     }
 
 
@@ -102,8 +118,15 @@ abstract class Queue
     // This might be a general implementation
     protected function mediaItemToQueue($mediaItem)
     {
+
         $item = new \stdClass;
+        $item->compressionType = false;
+
         $urls = $mediaItem->getOptimizeUrls();
+
+        if ($mediaItem->getMeta('compressionType'))
+          $item->compressionType = $mediaItem->getMeta('compressionType');
+
         $item->urls = apply_filters('shortpixel_image_urls', $urls, $mediaItem->get('id'));
 
         return $item;
