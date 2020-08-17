@@ -2,9 +2,9 @@
 Contributors: ShortPixel
 Tags: compressor, image, compression, optimize, image optimizer, image optimiser, image compression, resize, compress pdf, compress jpg, compress png, image compression
 Requires at least: 3.2.0
-Tested up to: 5.4.2
+Tested up to: 5.5
 Requires PHP: 5.3
-Stable tag: 4.19.3
+Stable tag: 4.20.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -280,6 +280,14 @@ Hide the Cloudflare settings by defining these constants in wp-config.php:
 9. Check other optimized images status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+= 4.20.0 =
+
+Release date August 17th 2020
+* New: Small refactor of the way to handle ABSPATH;
+* Fix: jQuery browser ( IE 6.0 support removed ) for WordPress 5.5;
+* Fix: Always reset quota when doing check notice, to prevent hanging notices;
+* Compat: Addded Phoenix Media Rename plugin to the conflicting plugins list, because of the way they treat the ShortPixel metadata;
+* Language: 0 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted.
 
 = 4.19.3 =
 
