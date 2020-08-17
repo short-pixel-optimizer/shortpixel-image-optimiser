@@ -5,6 +5,14 @@ if [ $# -lt 3 ]; then
 	exit 1
 fi
 
+BASE_DIRECTORY=$(dirname "$0")
+ENV_VARIABLES=$BASE_DIRECTORY/.env
+if [ ! -f $ENV_VARIABLES ]; then
+  cp $BASE_DIRECTORY/.env.sample $BASE_DIRECTORY/.env
+fi
+source $ENV_VARIABLES
+
+
 DB_NAME=$1
 DB_USER=$2
 DB_PASS=$3

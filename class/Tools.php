@@ -164,6 +164,10 @@ static public function formatBytes($bytes, $precision = 2) {
                         'data'=>'optimus/optimus.php',
                         'page'=>'optimus'
                 ),
+            'Phoenix Media Rename' => array(
+                        'action' => 'Deactivate',
+                        'data' => 'phoenix-media-rename/phoenix-media-rename.php',
+            ),
             'EWWW Image Optimizer'
                 => array(
                         'action'=>'Deactivate',

@@ -101,7 +101,7 @@ Class FileSystemController extends \ShortPixel\Controller
     public function getWPFileBase()
     {
       if(\wpSPIO()->env()->is_mainsite) {
-          $path = get_home_path();
+          $path = (string) $this->getWPAbsPath();
       } else {
           $up = wp_upload_dir();
           $path = realpath($up['basedir']);
@@ -114,13 +114,35 @@ Class FileSystemController extends \ShortPixel\Controller
 
     }
 
+    /** This function returns the WordPress Basedir for uploads ( without date and such )
+    * Normally this would point to /wp-content/uploads.
+    * @returns DirectoryModel
+    */
     public function getWPUploadBase()
     {
       $upload_dir = wp_upload_dir(null, false);
 
       return $this->getDirectory($upload_dir['basedir']);
-
     }
+
+    /** This function returns the Absolute Path of the WordPress installation
+    * Normally this would be the same as ABSPATH, but there are installations out there with -cough- alternative approaches
+    * @returns DirectoryModel
+    */
+    public function getWPAbsPath()
+    {
+        $wpContentAbs = str_replace( 'wp-content', '', WP_CONTENT_DIR);
+        if (ABSPATH == $wpContentAbs)
+          $abspath = ABSPATH;
+        else
+          $abspath = $wpContentAbs;
+
+        $abspath = apply_filters('shortpixel/filesystem/abspath', $abspath );
+
+        return $this->getDirectory($abspath);
+    }
+
+
 
     /** Not in use yet, do not use. Future replacement. */
     public function createBackUpFolder($folder = SHORTPIXEL_BACKUP_FOLDER)
@@ -152,7 +174,7 @@ Class FileSystemController extends \ShortPixel\Controller
             }
         }
 
-        $wp_home_path = trailingslashit(get_home_path());
+        $wp_home_path = (string) $this->getWPAbsPath();
         // If the whole WP homepath is still in URL, assume the replace when wrong ( not replaced w/ URL)
         // This happens when file is outside of wp_uploads_dir
         if (strpos($url, $wp_home_path) !== false)

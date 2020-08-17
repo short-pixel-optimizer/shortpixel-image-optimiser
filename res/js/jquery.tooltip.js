@@ -78,9 +78,7 @@
 
 			$('#'+s.tooltipID+' #tooltipContent').show();
 
-			if($.browser.version == '6.0'){//IE6 only
-				$('#'+s.tooltipID).append('<iframe id="tooltipIE6FixIframe" style="width:'+($('#'+s.tooltipID).width()+parseFloat(s.borderSize)+parseFloat(s.borderSize)+20)+'px;height:'+($('#'+s.tooltipID).height()+parseFloat(s.borderSize)+parseFloat(s.borderSize)+20)+'px;position:absolute;top:-'+s.borderSize+'px;left:-'+s.borderSize+'px;filter:alpha(opacity=0);"src="blank.html"></iframe>');
-			};
+
 		}
 
 		var hideTooltip = function(valueOfThis){
@@ -147,9 +145,6 @@
 				//get values from element clicked, or assume its passed as an option
 				s.tooltipSourceID = $(this).attr('href') || s.tooltipSourceID;
 				s.tooltipSourceURL = $(this).attr('href') || s.tooltipSourceURL;
-
-				console.log(s.tooltipSourceID);
-				console.log(s.tooltipSourceURL);
 
 				switch(s.tooltipSource){
 					case 'attribute':/*/////////////////////////////// attribute //////////////////////////////////////////*/
