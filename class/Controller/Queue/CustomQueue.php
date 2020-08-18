@@ -19,7 +19,17 @@ class CustomQueue extends Queue
      $this->q->setOption('retry_limit', 20);
    }
 
-  
+   public function createNewBulk($args)
+   {
+
+   }
+
+   public function prepare()
+   {
+
+   }
+
+
 
 
 

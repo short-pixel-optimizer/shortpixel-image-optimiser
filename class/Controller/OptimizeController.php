@@ -123,7 +123,7 @@ class OptimizeController
         $result = $mediaQ->run();
         $items = (isset($result->items) && is_array($result->items)) ? $result->items : array();
         $json = $this->queueToJson($result);
-        $api = $this->getAPI();
+
 
         foreach($items as $item)
         {
@@ -151,6 +151,7 @@ class OptimizeController
       {
          $item->blocking = true;
       }
+      $api = $this->getAPI();
       $result = $api->processMediaItem($item);
 
       return $result;
@@ -189,7 +190,7 @@ class OptimizeController
 
         if (Queue::RESULT_PREPARING)
         {
-          $json->message = sprintf(__('Prepared %s items', 'shortpixel-image-optimiser'), $result->items);
+          $json->message = sprintf(__('Prepared %s items', 'shortpixel-image-optimiser'), count($result->items) );
         }
         if (Queue::RESULT_EMPTY)
         {
