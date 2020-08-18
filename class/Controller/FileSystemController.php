@@ -2,8 +2,8 @@
 namespace ShortPixel\Controller;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
-use ShortPixel\Model\File\DirectoryModel as DirectoryModel;
-use ShortPixel\Model\File\FileModel as FileModel;
+use ShortPixel\Model\DirectoryModel as DirectoryModel;
+use ShortPixel\Model\FileModel as FileModel;
 
 use ShortPixel\Model\Image\MediaLibraryModel as MediaLibraryModel;
 use ShortPixel\Model\Image\MediaLibraryThumbnailModel as MediaLibraryThumbnailModel;
@@ -181,7 +181,7 @@ Class FileSystemController extends \ShortPixel\Controller
       $directory = $file->getFileDir();
 
       // stolen from wp_get_attachment_url
-      if ( ( $uploads = wp_get_upload_dir() ) && false === $uploads['error'] ) {
+      if ( ( $uploads = wp_get_upload_dir() ) && (false === $uploads['error'] || strlen(trim($uploads['error'])) == 0  )  ) {
             // Check that the upload base exists in the file location.
             if ( 0 === strpos( $filepath, $uploads['basedir'] ) ) {
                 // Replace file location with url location.

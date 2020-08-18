@@ -2591,7 +2591,7 @@ class WPShortPixel {
         $result = $this->getQuotaInformation();
 
         // If quota still exceeds, and manual check is requests, reset notices to update on situation.
-        if ($this->_settings->quotaExceeded)
+        //if ($this->_settings->quotaExceeded) /// always do this. In case quota was exceeded, but not anymore, notices get stuck
           AdminNoticesController::resetQuotaNotices();
         // store the referring webpage location
         $sendback = wp_get_referer();
@@ -2697,7 +2697,7 @@ class WPShortPixel {
             Log::addDebug("CURRENT STATS (not older than $time) ARE BEING CALCULATED...");
             if (! is_array($quotaData))
               $quotaData = array(); // quality control, we had issues here.
-              
+
             $imageCount = WpShortPixelMediaLbraryAdapter::countAllProcessable($this->_settings);
             $quotaData['time'] = time();
             $quotaData['optimizePdfs'] = $this->_settings->optimizePdfs;

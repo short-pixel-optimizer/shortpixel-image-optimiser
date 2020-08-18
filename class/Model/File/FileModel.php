@@ -340,9 +340,10 @@ class FileModel extends \ShortPixel\Model
     $uploadDir = $fs->getWPUploadBase();
     $abspath = $fs->getWPAbsPath();
 
-    if (strpos($path, $abspath->getPath()) === false && strpos($path, $uploadDir->getPath()) === false)
+    if (strpos($path, $abspath->getPath()) === false)
+    {
       $path = $this->relativeToFullPath($path);
-
+    }
     $path = apply_filters('shortpixel/filesystem/processFilePath', $path, $original_path);
     /* This needs some check here on malformed path's, but can't be test for existing since that's not a requirement.
     if (file_exists($path) === false) // failed to process path to something workable.
@@ -427,11 +428,19 @@ class FileModel extends \ShortPixel\Model
       $fs = \wpSPIO()->filesystem();
       $uploadDir = $fs->getWPUploadBase();
       $abspath = $fs->getWPAbsPath();
-      if (strpos($path, $uploadDir->getPath()) !== false)
+
+      if (strpos($path, $uploadDir->getPath()) !== false) // If upload Dir is feature in path, consider it ok.
       {
         return $path;
       }
-
+      elseif (file_exists($abspath->getPath() . $path)) // If upload dir is abspath plus return path. Exceptions.
+      {
+        return $abspath->getPath() . $path;
+      }
+      elseif(file_exists($uploadDir->getPath() . $path)) // This happens when upload_dir is not properly prepended in get_attachment_file due to WP errors
+      {
+          return $uploadDir->getPath() . $path;
+      }
 
       // this is probably a bit of a sharp corner to take.
       // if path starts with / remove it due to trailingslashing ABSPATH
