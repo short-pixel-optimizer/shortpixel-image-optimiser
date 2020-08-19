@@ -128,7 +128,8 @@ class OptimizeController
         foreach($items as $item)
         {
             $urls = $item->urls;
-            $this->sendToProcessing($item);
+            $result = $this->sendToProcessing($item);
+            $this->handleResult($result, $item, $mediaQ);
           //  $result = $api->doRequests($urls, $blocking);
 
         }
@@ -154,7 +155,29 @@ class OptimizeController
       $api = $this->getAPI();
       $result = $api->processMediaItem($item);
 
+
       return $result;
+    }
+
+    // This is everything sub-efficient.
+    protected function handleResult($result, $item, $q)
+    {
+      $fs = \wpSPIO()->filesystem();
+var_dump($result);
+      if ($result->is_error)
+      {
+          if ($result->is_done)
+          {
+             $q->getShortQ()->itemFailed($item, true);
+          }
+          else
+            $q->getShortQ()->itemFailed($item, false);
+      }
+      elseif ($result->is_done)
+      {
+         $q->getShortQ()->itemDone($item);
+         return $result;
+      }
     }
 
     public function ajaxProcessQueue()

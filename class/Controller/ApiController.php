@@ -31,9 +31,14 @@ class ApiController
 
   private static $instance;
 
+  private $apiEndPoint;
+  private $apiDumpEndPoint;
+
   public function __construct()
   {
 
+    $this->apiEndPoint = $this->_settings->httpProto . '://' . SHORTPIXEL_API . '/v2/reducer.php';
+    $this->apiDumpEndPoint = $this->_settings->httpProto . '://' . SHORTPIXEL_API . '/v2/cleanup.php';
   }
 
 
@@ -51,37 +56,51 @@ class ApiController
       var_dump($item);
       $requestArgs = array('urls' => $item->urls); // obligatory
       if (isset($item->compressionType))
-        $requestArgs['compressionsType'] = $item->compressionType;
+        $requestArgs['compressionType'] = $item->compressionType;
+      $requestArgs['blocking'] =  (isset($item->blocking) && $item->blocking) ? true : false;
+      $requestArgs['item_id'] = $item->id;
 
       $request = $this->getRequest($requestArgs);
+      $result = $this->doRequest($request);
 
+      // @todo Might be interesting to put the result to Item for furter return processing.
+      $item->result = $this->getResult($result);
 
 
   }
 
   /** Former, prepare Request in API */
-  private function prepareRequest($args = array())
+  private function getRequest($args = array())
   {
     $settings = \wpSPIO()->settings();
     $keyControl = ApiKeyController::getInstance();
 
+    $defaults = array(
+          'urls' => null,
+          'compressionType' => $settings->compressionType,
+          'blocking' => true,
+          'item_id' => null,
+    );
+
+    $args = wp_parse_args($args, $defaults);
+
     $requestParameters = array(
         'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
         'key' => $keyControl->forceGetApiKey(),
-        'lossy' => $compressionType === false ? $settings->compressionType : $compressionType,
-        'cmyk2rgb' => $this->_settings->CMYKtoRGBconversion,
+        'lossy' => $args['compressionType'],
+        'cmyk2rgb' => $settings->CMYKtoRGBconversion,
         'keep_exif' => ($settings->keepExif ? "1" : "0"),
         'convertto' => ($settings->createWebp ? urlencode("+webp") : ""),
         'resize' => $settings->resizeImages ? 1 + 2 * ($settings->resizeType == 'inner' ? 1 : 0) : 0,
         'resize_width' => $settings->resizeWidth,
         'resize_height' => $settings->resizeHeight,
-        'urllist' => $URLs,
+        'urllist' => $args['urls'],
     );
 
-    if(/*false &&*/ $this->_settings->downloadArchive == 7 && class_exists('PharData')) {
-        $requestParameters['group'] = $itemHandler->getId();
+    if(/*false &&*/ $settings->downloadArchive == 7 && class_exists('PharData')) {
+        $requestParameters['group'] = $args['item_id'];
     }
-    if($refresh) {
+    if($refresh) { // @todo if previous status was ShortPixelAPI::ERR_INCORRECT_FILE_SIZE; then refresh.
         $requestParameters['refresh'] = 1;
     }
 
@@ -91,7 +110,7 @@ class ApiController
         'redirection' => 3,
         'sslverify' => false,
         'httpversion' => '1.0',
-        'blocking' => $Blocking,
+        'blocking' => $args['blocking'],
         'headers' => array(),
         'body' => json_encode($requestParameters),
         'cookies' => array()
@@ -102,18 +121,17 @@ class ApiController
     }
   }
 
-  protected function doRequest()
+  protected function doRequest($requestParameters)
   {
 
-
     //WpShortPixel::log("ShortPixel API Request Settings: " . json_encode($requestParameters));
-    $response = wp_remote_post($this->_apiEndPoint, $this->prepareRequest($requestParameters, $Blocking) );
+    $response = wp_remote_post($this->apiEndPoint, $requestParameters );
     Log::addDebug('ShortPixel API Request sent', $requestParameters);
 
     //WpShortPixel::log('RESPONSE: ' . json_encode($response));
 
     //only if $Blocking is true analyze the response
-    if ( $Blocking )
+    if ( $requestParameters['blocking'] )
     {
         if ( is_object($response) && get_class($response) == 'WP_Error' )
         {
@@ -128,8 +146,9 @@ class ApiController
 
         if ( isset($errorMessage) )
         {//set details inside file so user can know what happened
-            $itemHandler->incrementRetries(1, $errorCode, $errorMessage);
-            return array("response" => array("code" => $errorCode, "message" => $errorMessage ));
+          //  $itemHandler->incrementRetries(1, $errorCode, $errorMessage);
+          return self::STATUS_FAIL;
+            //return array("response" => array("code" => $errorCode, "message" => $errorMessage ));
         }
 
         return $response;//this can be an error or a good response
@@ -145,6 +164,47 @@ class ApiController
 
   }
 
+  private function getResult()
+  {
+        $result = new \stdClass;
+        $result->status = null;
+        $result->message = '';
+        $result->is_error = false;
+        $result->is_done = false;
+
+        return $result;
+  }
+
+  private function returnFailure($status, $message)
+  {
+        $result = $this->getResult();
+        $result->status = $status;
+        $result->message = $message;
+        $result->is_error = true;
+        $result->is_done = true;
+
+        return $result;  // fatal.
+
+        /*switch ($status)
+        {
+            default:
+                $message = __()
+            break;
+        } */
+  }
+
+  private function returnOK()
+  {
+      $result = $this->getResult();
+      $result->status = self::STATUS_UNCHANGED;
+
+      return $result;
+  }
+
+  private function returnSuccess()
+  {
+
+  }
 
 
 
