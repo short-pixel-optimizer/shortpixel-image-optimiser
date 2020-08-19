@@ -142,6 +142,8 @@ class AdminNoticesController extends \ShortPixel\Controller
        $this->doQuotaNotices();
 
        $this->doIntegrationNotices();
+
+       $this->doHelpOptInNotices();
     }
 
 
@@ -301,7 +303,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 
           $statsSetting = is_array($settings->currentStats) ? $settings->currentStats : array();
           $stats = $shortpixel->countAllIfNeeded($statsSetting, 86400);
-          
+
           $quotaData = $stats;
           $noticeController = Notices::getInstance();
 
@@ -342,6 +344,20 @@ class AdminNoticesController extends \ShortPixel\Controller
          Notices::removeNoticeByID(self::MSG_UPGRADE_BULK);
       }
 
+    }
+
+
+    protected function doHelpOptInNotices()
+    {
+       return; // this is disabled pending review.
+        $settings = \wpSPIO()->settings();
+        $optin = $settings->helpscoutOptin;
+
+        if ($optin == -1)
+        {
+            $message = $this->getHelpOptinMessage();
+            Notices::addNormal($message);
+        }
     }
 
     // Callback to check if we are on the correct page.
@@ -505,6 +521,25 @@ class AdminNoticesController extends \ShortPixel\Controller
             </div>
         </div>';
         return $message;
+    }
+
+    protected function getHelpOptinMessage()
+    {
+
+      //onclick='ShortPixel.optInHelp(0)'
+       $message = __('Shortpixel needs to ask permission to load the help functionality');
+       $message .= "<div><button type='button' id='sp-helpscout-disallow' class='button button-primary' >" . __('No, I don\'t need help', 'shortpixel-image-optimiser') . "</button> &nbsp;&nbsp;";
+       $message .= "<button type='button' id='sp-helpscout-allow' class='button button-primary'>" . __('Yes, load the help widget', 'shortpixel-image-optimiser') . "</button></div>";
+
+       $message .= "<p>" . __('Shortpixel uses third party services Helpscout and Quriobot to access our help easier. By giving permission you agree to opt-in and load these service on ShortPixel related pages', 'shortpixel-image-optimiser');
+
+       $message .= "<script>window.addEventListener('load', function(){
+            document.getElementById('sp-helpscout-allow').addEventListener('click', ShortPixel.optInHelp, {once: true} );
+            document.getElementById('sp-helpscout-allow').toggleParam = 'on';
+            document.getElementById('sp-helpscout-disallow').addEventListener('click', ShortPixel.optInHelp, {once: true} );
+            document.getElementById('sp-helpscout-disallow').toggleParam = 'off';
+       }); </script>";
+       return $message;
     }
 
     protected function monthlyUpgradeNeeded($quotaData) {
