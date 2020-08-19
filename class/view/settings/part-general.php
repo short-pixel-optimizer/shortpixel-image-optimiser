@@ -140,6 +140,16 @@
                 </td>
             </tr>
 
+<?php /* Disabled, pending review           <tr>
+                <th scope="row"><?php _e('OptIn for Help Services','shortpixel-image-optimiser');?></th>
+                <td>
+                    <input name="helpscoutOptin" type="checkbox" id="helpscoutOptin" value="1" <?php checked($view->data->helpscoutOptin, 1);?>>
+                    <label for="helpscoutOptin"><?php _e('Show me InAdmin Help','shortpixel-image-optimiser');?></label>
+                    <p class="settings-info"> <?php _e('We use HelpScout and QuriOBot to better serve your questions. You have give permission  so we can answer your questions straight in your admin panel','shortpixel-image-optimiser');?></p>
+
+                </td>
+            </tr> */ ?>
+
             <?php $imagick = (\wpSPIO()->env()->hasImagick()) ? 1 : 0; ?>
             <tr class='exif_imagick_warning view-notice-row' data-imagick="<?php echo $imagick ?>">
                   <th scope="row">&nbsp;</th>

@@ -63,7 +63,7 @@ class WPShortPixel {
         self::$first_run = true;
         load_plugin_textdomain('shortpixel-image-optimiser', false, plugin_basename(dirname( SHORTPIXEL_PLUGIN_FILE )).'/lang');
 
-        $isAdminUser = current_user_can( 'manage_options' );
+        $isAdminUser = current_user_can( 'manage_options' ); // @todo This should be in env
 
         define('QUOTA_EXCEEDED', $this->view->getQuotaExceededHTML());
 
