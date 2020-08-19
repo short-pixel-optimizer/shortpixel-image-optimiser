@@ -5,7 +5,7 @@ Tags: convert webp, optimize images, image optimization, resize, compressor, ima
 Requires at least: 3.2.0
 Tested up to: 5.5
 Requires PHP: 5.3
-Stable tag: 4.20.0
+Stable tag: 4.20.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -33,7 +33,7 @@ Make an instant <a href="http://shortpixel.com/image-compression-test" target="_
 * popular plugin with over 200,000 active installations - according to WordPress
 * compress JPG (and its variations JPEG, JPEG 2000, JPEG XR), PNG, GIF (still or animated) images and also PDF documents
 * option to freely convert any JPEG, PNG or GIF (even animated ones!) to **WebP** for more Google love. <a href="http://blog.shortpixel.com/how-webp-images-can-speed-up-your-site/" target="_blank">How to enable WebP?</a>
-* option to automatically convert PNG to JPG if that will result in smaller images. Ideal for large images in PNG format	
+* option to automatically convert PNG to JPG if that will result in smaller images. Ideal for large images in PNG format
 * option to include the generated WebP images into the front-end pages by using the `<picture>` tag instead of `<img>`
 * compatible with WP Retina 2x - all **retina images** are automatically compressed. <a href="http://blog.shortpixel.com/how-to-use-optimized-retina-images-on-your-wordpress-site-for-best-user-experience-on-apple-devices/" target="_blank">How to benefit from Retina displays?</a>
 * optimize thumbnails as well as featured images. You can also **select individual thumbnails to exclude** from optimization
@@ -80,7 +80,7 @@ Check out <a href="https://shortpixel.com/pricing" target="_blank">our prices</a
 Help us spread the word by recommending ShortPixel to your friends and collect **100 lifetime monthly additional image credits for each referred active user**. Make money by promoting a great plugin with our <a href="https://shortpixel.com/free-sign-up-affiliate" target="_blank">50/50 affiliate program</a>.
 
 ** Other plugins by ShortPixel **
-* Image optimization & CDN on the fly - <a href="https://wordpress.org/plugins/shortpixel-adaptive-images/" target="_blank">ShortPixel Adaptive Images</a> 
+* Image optimization & CDN on the fly - <a href="https://wordpress.org/plugins/shortpixel-adaptive-images/" target="_blank">ShortPixel Adaptive Images</a>
 * Easily replace images or files in Media Library - <a href="https://wordpress.org/plugins/enable-media-replace/" target="_blank">Enable Media Replace</a>
 * Regenerate thumbnails plugin compatible with the other ShortPixel plugins - <a href="https://wordpress.org/plugins/regenerate-thumbnails-advanced/" target="_blank">reGenerate Thumbnails Advanced</a>
 * Make sure you don't have huge images in your Media Library - <a href="https://wordpress.org/plugins/resize-image-after-upload/" target="_blank">Resize Image After Upload</a>
@@ -118,14 +118,14 @@ Let's get ShortPixel plugin running on your WordPress website:
 = Can I use the same API Key on multiple web sites? =
     Yes, you can.
     As long as you have available credits, you can use a single API Key on as many websites as you wish!
-    
+
 = What plan is better for me? What do you recommend? =
 	Everyone has different needs, but generally, we recommend getting a One-Time plan to optimize your whole Media Library and then get a Monthly plan to optimize your future uploads. To learn more, have a look at <a href="https://help.shortpixel.com/article/30-monthly-plans-vs-one-time-plans" target="_blank">this comparison</a>
 
 = I don't know how many thumbnails do I have, what plan should I take?
 	To know how many thumbnails you have, just install the plugin and go to Media > Bulk ShortPixel. The plugin will tell you how many thumbnails you've got. Based on this, have a look at <a href="https://shortpixel.com/pricing" target="_blank">our plans</a>
 
-= Can I upgrade/downgrade easily my plan? = 
+= Can I upgrade/downgrade easily my plan? =
 	Of course. You can upgrade or downgrade your plans in a couple of clicks from your account on shortpixel.com.
 
 = Can I test/use the plugin for free? =
@@ -299,6 +299,13 @@ Hide the Cloudflare settings by defining these constants in wp-config.php:
 9. Check other optimized images status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 4.20.1 =
+
+Release date August 19th 2020
+* HelpScout and Quirobot widgets are now disabled
+* Language: 0 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted.
+
 = 4.20.0 =
 
 Release date August 17th 2020

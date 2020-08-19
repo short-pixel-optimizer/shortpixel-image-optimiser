@@ -8,6 +8,9 @@ class HelpScout
 {
   public static function outputBeacon()
   {
+      // this all, disabled.
+      return;
+
       global $shortPixelPluginInstance;
       $dismissed = $shortPixelPluginInstance->getSettings()->dismissedNotices ? $shortPixelPluginInstance->getSettings()->dismissedNotices : array();
       if(isset($dismissed['help'])) {
