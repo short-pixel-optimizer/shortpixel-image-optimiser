@@ -128,14 +128,13 @@ class OptimizeController
         foreach($items as $item)
         {
             $urls = $item->urls;
-            $result = $this->sendToProcessing($item);
-            $this->handleResult($result, $item, $mediaQ);
+            $item = $this->sendToProcessing($item);
+            $this->handleResult($item, $mediaQ);
           //  $result = $api->doRequests($urls, $blocking);
 
         }
 
         $customQ = CustomQueue::getInstance();
-
         return $result;
     }
 
@@ -144,26 +143,20 @@ class OptimizeController
     */
     public function sendToProcessing(Object $item)
     {
-      if ($item->tries == 0)
-      {
-          $item->blocking = false; // first time, don't block.
-      }
-      else
-      {
-         $item->blocking = true;
-      }
+
       $api = $this->getAPI();
-      $result = $api->processMediaItem($item);
+      $item = $api->processMediaItem($item);
 
 
-      return $result;
+      return $item;
     }
 
     // This is everything sub-efficient.
-    protected function handleResult($result, $item, $q)
+    protected function handleResult($item, $q)
     {
       $fs = \wpSPIO()->filesystem();
-var_dump($result);
+echo "OPTIMIZECONTROL RESULT"; var_dump($item);
+      $result = $item->result;
       if ($result->is_error)
       {
           if ($result->is_done)

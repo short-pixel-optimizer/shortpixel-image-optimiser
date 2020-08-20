@@ -36,9 +36,9 @@ class ApiController
 
   public function __construct()
   {
-
-    $this->apiEndPoint = $this->_settings->httpProto . '://' . SHORTPIXEL_API . '/v2/reducer.php';
-    $this->apiDumpEndPoint = $this->_settings->httpProto . '://' . SHORTPIXEL_API . '/v2/cleanup.php';
+    $settings = \wpSPIO()->settings();
+    $this->apiEndPoint = $settings->httpProto . '://' . SHORTPIXEL_API . '/v2/reducer.php';
+    $this->apiDumpEndPoint = $settings->httpProto . '://' . SHORTPIXEL_API . '/v2/cleanup.php';
   }
 
 
@@ -53,20 +53,27 @@ class ApiController
 
   public function processMediaItem($item)
   {
-      var_dump($item);
+      if (count($items->urls) == 0)
+      {
+          $item->result = $this->returnFailure(STATUS_FAIL, __('No Urls given for this Item', 'shortpixel-image-optimiser'));
+          return $item;
+      }
+
       $requestArgs = array('urls' => $item->urls); // obligatory
       if (isset($item->compressionType))
         $requestArgs['compressionType'] = $item->compressionType;
-      $requestArgs['blocking'] =  (isset($item->blocking) && $item->blocking) ? true : false;
+      $requestArgs['blocking'] =  ($item->tries == 0) ? false : true;
       $requestArgs['item_id'] = $item->id;
+      $requestArgs['refresh'] = (isset($item->refresh) && $item->refresh) ? true : false;
+
 
       $request = $this->getRequest($requestArgs);
-      $result = $this->doRequest($request);
+      $item = $this->doRequest($item, $request);
 
       // @todo Might be interesting to put the result to Item for furter return processing.
-      $item->result = $this->getResult($result);
+      //$item->result = $this->getResult($result);
 
-
+      return $item;
   }
 
   /** Former, prepare Request in API */
@@ -80,10 +87,11 @@ class ApiController
           'compressionType' => $settings->compressionType,
           'blocking' => true,
           'item_id' => null,
+          'refresh' => false,
     );
 
     $args = wp_parse_args($args, $defaults);
-
+var_dump($args);
     $requestParameters = array(
         'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
         'key' => $keyControl->forceGetApiKey(),
@@ -100,7 +108,7 @@ class ApiController
     if(/*false &&*/ $settings->downloadArchive == 7 && class_exists('PharData')) {
         $requestParameters['group'] = $args['item_id'];
     }
-    if($refresh) { // @todo if previous status was ShortPixelAPI::ERR_INCORRECT_FILE_SIZE; then refresh.
+    if($args['refresh']) { // @todo if previous status was ShortPixelAPI::ERR_INCORRECT_FILE_SIZE; then refresh.
         $requestParameters['refresh'] = 1;
     }
 
@@ -119,9 +127,11 @@ class ApiController
     if($settings->httpProto !== 'https') {
         unset($arguments['sslverify']);
     }
+
+    return $arguments;
   }
 
-  protected function doRequest($requestParameters)
+  protected function doRequest($item, $requestParameters)
   {
 
     //WpShortPixel::log("ShortPixel API Request Settings: " . json_encode($requestParameters));
@@ -137,24 +147,43 @@ class ApiController
         {
             $errorMessage = $response->errors['http_request_failed'][0];
             $errorCode = 503;
+            $item->result = $this->returnFailure($errorCode, $errorMessage);
         }
         elseif ( isset($response['response']['code']) && $response['response']['code'] <> 200 )
         {
             $errorMessage = $response['response']['code'] . " - " . $response['response']['message'];
             $errorCode = $response['response']['code'];
+            $item->result = $this->returnFailure($errorCode, $errorMessage);
         }
-
-        if ( isset($errorMessage) )
+        else
+        {
+           $item = $this->handleResponse($response, $item);
+        }
+  /*      if ( isset($errorMessage) )
         {//set details inside file so user can know what happened
           //  $itemHandler->incrementRetries(1, $errorCode, $errorMessage);
           return self::STATUS_FAIL;
             //return array("response" => array("code" => $errorCode, "message" => $errorMessage ));
-        }
+        } */
 
-        return $response;//this can be an error or a good response
+        //return $response;//this can be an error or a good response
     }
+    else
+    {
+       $item->result = $item->returnoK(STATUS_OK);
+    }
+    //return $response;
 
-    return $response;
+    return $item;
+  }
+
+  private function handleResponse($response, $item)
+  {
+    $data = $response['body'];
+    $data = json_decode($data);
+    return (array)$data;
+
+    
   }
 
 
@@ -164,7 +193,7 @@ class ApiController
 
   }
 
-  private function getResult()
+  private function getResultObject($result)
   {
         $result = new \stdClass;
         $result->status = null;
@@ -177,7 +206,7 @@ class ApiController
 
   private function returnFailure($status, $message)
   {
-        $result = $this->getResult();
+        $result = $this->getResultObject();
         $result->status = $status;
         $result->message = $message;
         $result->is_error = true;
@@ -195,7 +224,7 @@ class ApiController
 
   private function returnOK()
   {
-      $result = $this->getResult();
+      $result = $this->getResultObj();
       $result->status = self::STATUS_UNCHANGED;
 
       return $result;
