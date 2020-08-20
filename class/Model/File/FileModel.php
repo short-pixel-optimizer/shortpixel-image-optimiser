@@ -21,6 +21,7 @@ class FileModel extends \ShortPixel\Model
   protected $filebase = null; // filename without extension
   protected $directory = null;
   protected $extension = null;
+  protected $mime = null;
 
   // File Status
   protected $exists = null;
@@ -286,7 +287,17 @@ class FileModel extends \ShortPixel\Model
 
   public function getMime()
   {
-    return wp_get_image_mime($this->fullpath);
+    if (is_null($this->mime))
+        $this->setFileInfo();
+
+    if ($this->exists())
+    {
+        $this->mime = wp_get_image_mime($this->fullpath);
+    }
+    else
+       $this->mime = false; 
+
+    return $this->mime;
   }
   /* Util function to get location of backup Directory.
   * @return Boolean | DirectModel  Returns false if directory is not properly set, otherwhise with a new directoryModel
