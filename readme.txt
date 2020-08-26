@@ -298,7 +298,7 @@ Hide the Cloudflare settings by defining these constants in wp-config.php:
 
 9. Check other optimized images status - themes or other plugins' images. (Media>Other Media)
 
-== Changelog ==
+== Changelog == [](http://coderisk.com/wp/plugin/shortpixel-image-optimiser/RIPS-lIfvCIUilF)
 = 4.20.0 =
 
 Release date August 17th 2020
