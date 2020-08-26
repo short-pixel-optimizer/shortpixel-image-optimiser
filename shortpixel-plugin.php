@@ -157,6 +157,9 @@ class ShortPixelPlugin
         // if automedialibrary is off, but we do want to auto-optimize on the front, still load the hook.
         add_filter( 'wp_generate_attachment_metadata', array($admin,'handleImageUploadHook'), 10, 2 );
       }
+
+      // *** AJAX HOOKS  @todo These must be moved from wp-short-pixel in future */
+      add_action('wp_ajax_shortpixel_helpscoutOptin', array(\wpSPIO()->settings(), 'ajax_helpscoutOptin'));
   }
 
   /** Hook in our admin pages */

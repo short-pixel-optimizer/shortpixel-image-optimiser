@@ -1,11 +1,10 @@
 === ShortPixel Image Optimizer ===
 Contributors: ShortPixel
 Tags: convert webp, optimize images, image optimization, resize, compressor, image, compression, optimize, image optimiser, image compression, compress pdf, compress jpg, compress png, performance, photography, smush, scale, pictures
-
 Requires at least: 3.2.0
 Tested up to: 5.5
 Requires PHP: 5.3
-Stable tag: 4.20.1
+Stable tag: 4.20.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -79,8 +78,9 @@ Check out <a href="https://shortpixel.com/pricing" target="_blank">our prices</a
 
 Help us spread the word by recommending ShortPixel to your friends and collect **100 lifetime monthly additional image credits for each referred active user**. Make money by promoting a great plugin with our <a href="https://shortpixel.com/free-sign-up-affiliate" target="_blank">50/50 affiliate program</a>.
 
-** Other plugins by ShortPixel **
-* Image optimization & CDN on the fly - <a href="https://wordpress.org/plugins/shortpixel-adaptive-images/" target="_blank">ShortPixel Adaptive Images</a>
+**Other plugins by ShortPixel**
+
+* Image optimization & CDN on the fly - <a href="https://wordpress.org/plugins/shortpixel-adaptive-images/" target="_blank">ShortPixel Adaptive Images</a> 
 * Easily replace images or files in Media Library - <a href="https://wordpress.org/plugins/enable-media-replace/" target="_blank">Enable Media Replace</a>
 * Regenerate thumbnails plugin compatible with the other ShortPixel plugins - <a href="https://wordpress.org/plugins/regenerate-thumbnails-advanced/" target="_blank">reGenerate Thumbnails Advanced</a>
 * Make sure you don't have huge images in your Media Library - <a href="https://wordpress.org/plugins/resize-image-after-upload/" target="_blank">Resize Image After Upload</a>
@@ -299,6 +299,12 @@ Hide the Cloudflare settings by defining these constants in wp-config.php:
 9. Check other optimized images status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+= 4.20.2 =
+
+Release date August 26th 2020
+* Fix: there was a PHP warning when using the `PICTURE` method to deliver WebP images, which is now fixed;
+* Fix: in some cases the image URL's were relative and the optimization could not be done;
+* Language: 4 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted.
 
 = 4.20.1 =
 

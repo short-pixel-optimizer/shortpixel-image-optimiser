@@ -200,12 +200,16 @@ class ShortPixelImgToPictureWebp
                 $parts = preg_split('/\s+/', trim($item));
 
                 $fileurl = $parts[0];
+                // A source that starts with data:, will not need processing.
+                if (strpos($fileurl, 'data:') === 0)
+                  continue;
                 $condition = isset($parts[1]) ? ' ' . $parts[1] : '';
 
                 Log::addDebug('Running item - ' . $item, $fileurl);
 
                 $fsFile = $fs->getFile($fileurl);
                 $extension = $fsFile->getExtension(); // trigger setFileinfo, which will resolve URL -> Path
+
                 $mime = $fsFile->getMime();
 
                 $fileWebp = $fs->getFile($imageBase . $fsFile->getFileBase() . '.webp');

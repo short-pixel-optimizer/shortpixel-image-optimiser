@@ -38,7 +38,6 @@ class SettingsController extends \ShortPixel\Controller
       {
           // @todo Remove Debug Call
           $this->model = new \WPShortPixelSettings();
-
           $this->keyModel = new ApiKeyModel();
 
           parent::__construct();
@@ -64,7 +63,7 @@ class SettingsController extends \ShortPixel\Controller
         $this->loadEnv();
         $this->checkPost(); // sets up post data
 
-        $this->model->redirectedSettings = 2; // Prevents any redirects after loading settings
+        $this->model->redirectedSe_settingsttings = 2; // Prevents any redirects after loading settings
 
         if ($this->is_form_submit)
         {
@@ -118,6 +117,7 @@ class SettingsController extends \ShortPixel\Controller
          $this->load();
       }
 
+
       public function action_debug_medialibrary()
       {
         $this->loadEnv();
@@ -126,6 +126,8 @@ class SettingsController extends \ShortPixel\Controller
 
         $this->load();
       }
+
+
 
       public function processSave()
       {
@@ -176,7 +178,6 @@ class SettingsController extends \ShortPixel\Controller
         else
           \WpShortPixelDb::checkCustomTables();
 
-
          $this->view->data = (Object) $this->model->getData();
          if (($this->is_constant_key))
              $this->view->data->apiKey = SHORTPIXEL_API_KEY;
@@ -192,7 +193,7 @@ class SettingsController extends \ShortPixel\Controller
 
          $this->view->cloudflare_constant = defined('SHORTPIXEL_CFTOKEN') ? true : false;
 
-         $settings = $this->shortPixel->getSettings();
+         $settings = \wpSPIO()->settings();
          $this->view->dismissedNotices = $settings->dismissedNotices;
 
          $this->loadView('view-settings');

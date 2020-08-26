@@ -8,14 +8,17 @@ class HelpScout
 {
   public static function outputBeacon()
   {
-      // this all, disabled.
-      return;
+      return; // this is disabled. 
 
       global $shortPixelPluginInstance;
-      $dismissed = $shortPixelPluginInstance->getSettings()->dismissedNotices ? $shortPixelPluginInstance->getSettings()->dismissedNotices : array();
+      $settings = \wpSPIO()->settings();
+      $dismissed = $settings->dismissedNotices ? $settings->dismissedNotices : array();
       if(isset($dismissed['help'])) {
           return;
       }
+
+  //    if ($settings->helpscoutOptin <> 1)
+
 
       $keyControl = ApiKeyController::getInstance();
       $apikey = $keyControl->getKeyForDisplay();

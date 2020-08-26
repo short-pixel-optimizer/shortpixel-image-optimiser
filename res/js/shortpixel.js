@@ -817,6 +817,25 @@ var ShortPixel = function() {
         return url.replace(parser.protocol + '//' + parser.hostname,  parser.protocol + '//' + parser.hostname.split('.').map(function(part) {return sp_punycode.toASCII(part)}).join('.'));
     }
 
+    function optInHelp(e,toggle)
+    {
+      var toggle = e.currentTarget.toggleParam;
+
+      var data = {
+          action: 'shortpixel_helpscoutOptin',
+          toggle: toggle,
+        };
+      var $target = jQuery(e.target);
+
+      jQuery.post(ShortPixel.AJAX_URL, data, function(response) {
+          //data = JSON.parse(response);
+          if(response.Status == 'success') {
+              $target.parents('.shortpixel.notice').fadeOut();
+              //console.log("dismissed");
+          }
+      });
+    }
+
     return {
         init                : init,
         setOptions          : setOptions,
@@ -877,6 +896,7 @@ var ShortPixel = function() {
         toRefresh       : false,
         resizeSizesAlert: false,
         returnedStatusSearching: 0, // How often this status has come back in a row from server.
+        optInHelp: optInHelp, // Optin for Helpscout cs
     }
 }();
 

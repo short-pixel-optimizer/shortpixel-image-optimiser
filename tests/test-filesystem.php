@@ -1,5 +1,6 @@
 <?php
 use \org\bovigo\vfs\vfsStream;
+use \ShortPixel\Model\ImageModel as ImageModel;
 
 class FileSystemTest extends  WP_UnitTestCase
 {
@@ -474,6 +475,39 @@ class FileSystemTest extends  WP_UnitTestCase
       */
   }
 
+  // If happens that wp_upload_dir error variable has an empty space / string, without any error messages.
+  // This causes get_attached_file to return a relative path, which in turn causes multiple issues with the full path
+  public function testWithWpUploadDirError()
+  {
+    // Setup a test file.
+    $post = $this->factory->post->create_and_get();
+    $attachment_id = $this->factory->attachment->create_upload_object( __DIR__ . '/assets/test-image.jpg', $post->ID );
+
+    $fullfilepath = get_attached_file($attachment_id);
+    $abspath = $this->fs->getWPUploadBase();
+
+    $image = new ImageModel($attachment_id);
+    $image->setByPostID($attachment_id);
+
+    $this->assertStringContainsString($abspath, $image->getFile()->getFullPath());
+    $this->assertEquals($fullfilepath, $image->getFile()->getFullPath());
+
+
+    add_filter('upload_dir', array($this, 'filterUploadDirWithError')); // set upload dir to enable error.
+
+    $uploadDir = wp_upload_dir();
+    $basedir = $uploadDir['basedir'];
+    $baseurl = $uploadDir['baseurl'];
+
+    $image2 = new ImageModel($attachment_id);
+    $image2->setByPostID($attachment_id);
+
+    $this->assertStringContainsString($abspath, $image2->getFile()->getFullPath());
+    $this->assertEquals($image->getFile()->getFullPath(), $image2->getFile()->getFullPath());
+
+    remove_filter('upload_dir', array($this, 'filterUploadDirWithError')); // set upload dir to enable error.
+  }
+
   // for URL Test - setup env.
   private function urlSetup($url)
   {
@@ -673,7 +707,12 @@ class FileSystemTest extends  WP_UnitTestCase
 
       );
       return $array;
+  }
 
+  public function filterUploadDirWithError($path)
+  {
+      $path['error'] = ' ';
+      return $path;
   }
 
   public function testNoBackUp()

@@ -44,10 +44,10 @@ class InstallSPIOCest
     }
 */
 
-    public function assumeAPIKeyIsActive(FunctionalTester $I) {
+/*    public function assumeAPIKeyIsActive(FunctionalTester $I) {
         $this->amOnSPIOSettingsPage($I);
-        $I->canSeeInField("#key", "PfcGjgmofkDpSuodzYHJ"); //TODO remove api key from here
-    }
+        $I->canSeeInField("#key", "API_KEY"); //TODO remove api key from here
+    }*/
 
 /*    public function installFackerPress(FunctionalTester $I) {
         $I->loginAsAdmin();

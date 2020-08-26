@@ -44,9 +44,7 @@ Class FileSystemController extends \ShortPixel\Controller
         $filepath = get_attached_file($id);
         // same signature as wordpress' filter. Only for this plugin.
         $filepath = apply_filters('shortpixel_get_attached_file', $filepath, $id);
-
         return new FileModel($filepath);
-
     }
 
     /* wp_get_original_image_path with specific ShortPixel filter */
@@ -121,7 +119,6 @@ Class FileSystemController extends \ShortPixel\Controller
     public function getWPUploadBase()
     {
       $upload_dir = wp_upload_dir(null, false);
-
       return $this->getDirectory($upload_dir['basedir']);
     }
 
@@ -160,7 +157,7 @@ Class FileSystemController extends \ShortPixel\Controller
       $directory = $file->getFileDir();
 
       // stolen from wp_get_attachment_url
-      if ( ( $uploads = wp_get_upload_dir() ) && false === $uploads['error'] ) {
+      if ( ( $uploads = wp_get_upload_dir() ) && (false === $uploads['error'] || strlen(trim($uploads['error'])) == 0  )  ) {
             // Check that the upload base exists in the file location.
             if ( 0 === strpos( $filepath, $uploads['basedir'] ) ) {
                 // Replace file location with url location.
