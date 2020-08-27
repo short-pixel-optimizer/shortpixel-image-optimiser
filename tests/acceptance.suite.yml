@@ -10,6 +10,8 @@ modules:
     enabled:
         - WPDb
         - WPBrowser
+        - WPFilesystem
+        - Asserts
         - \Helper\Acceptance
     config:
         WPDb:
@@ -34,3 +36,9 @@ modules:
             headers:
                 X_TEST_REQUEST: 1
                 X_WPBROWSER_REQUEST: 1
+        WPFilesystem:
+            wpRootFolder: '%WP_ROOT_FOLDER%'
+            plugins: '/wp-content/plugins'
+            mu-plugins: '/wp-content/mu-plugins'
+            themes: '/wp-content/themes'
+            uploads: '/wp-content/uploads'
