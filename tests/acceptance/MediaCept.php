@@ -15,6 +15,8 @@ class MediaCept
         $I->waitForElement('.edit-attachment', 20);
         $I->seeElement('.edit-attachment');
         $I->click('.edit-attachment');
+
+        $I->seeUploadedFileFound('team.jpg','today');
     }
 
 }
