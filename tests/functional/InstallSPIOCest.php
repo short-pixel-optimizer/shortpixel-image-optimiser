@@ -76,25 +76,5 @@ class InstallSPIOCest
         $I->amOnAdminPage("options-general.php?page=wp-shortpixel-settings");
     }
 
-	public function optimizeNewImage(AcceptanceTester $I) {
-    	$I->amGoingTo("Check a newly uploaded image is being optimized");
-
-    	$file = codecept_data_dir("../assets/test-image.jpg");
-    	$I->haveAttachmentInDatabase($file);
-    	$I->seeAttachmentInDatabase(['guid' => "http://localhost:80/wp-content/uploads/2020/07/test-image.jpg"]);
-
-//		$image_name = 'Test Quiz - ' . uniqid();
-
-//		$I->click(['id' => 'new_quiz_button']);
-//		$I->fillField('quiz_name', $image_name);
-//		$I->wait(1);
-//		$I->click('button[id="create-quiz-button"]');
-//		$I->see($image_name);
-//		$quiz_slug = strtolower($image_name);
-//		$quiz_slug = str_replace(" ", "-", $quiz_slug);
-//
-//		return [$image_name, $quiz_slug];
-	}
-
 
 }
