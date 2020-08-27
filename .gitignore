@@ -9,4 +9,8 @@ composer.lock
 .idea/spio2.iml
 .idea/vcs.xml
 .idea/phpunit.xml
+/.idea/deployment.xml
+/.idea/shortpixel-image-optimiser.iml
+/.idea/workspace.xml
 /bin/.env
+/composer.phar
