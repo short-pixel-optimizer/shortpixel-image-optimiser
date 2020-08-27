@@ -5,9 +5,9 @@ dist: bionic
 language: php
 
 php:
-#  - 7.1
-#  - 7.2
-#  - 7.3
+  - 7.1
+  - 7.2
+  - 7.3
   - 7.4
 
 services:
@@ -36,8 +36,7 @@ before_script:
   - sleep 10s
 
 script:
-  - vendor/bin/codecept run --verbose functional
-  - vendor/bin/codecept run --verbose acceptance
+  - vendor/bin/codecept run functional
 #  - bash bin/install-wp-tests.sh $WP_DB root $DOCKER_DB_PASSWORD 127.0.0.1 latest true #TODO This might be broken because of &> /dev/null
 #  - ./vendor/bin/phpunit --verbose
 
@@ -56,8 +55,4 @@ env:
     - WP_PATH=/home/travis/wordpress
     - WP_DB=wordpress
     - DOCKER_DB_NAME=wordpressdb
-    - TMPDIR=$WP_PATHx
-
-#deploy:/after_success:
-#    - export SSHPASS=$DEPLOY_PASS
-#    - sshpass -e scp package.tgz $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH
+    - TMPDIR=$WP_PATH

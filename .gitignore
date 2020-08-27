@@ -2,8 +2,18 @@ vendor
 composer.lock
 
 .env.testing
+.idea/.gitignore
+.idea/misc.xml
+.idea/modules.xml
+.idea/php.xml
+.idea/spio2.iml
+.idea/vcs.xml
+.idea/phpunit.xml
+/.idea/deployment.xml
+/.idea/shortpixel-image-optimiser.iml
+/.idea/workspace.xml
 /.idea
-/bin/.env
+/bin/.
 /composer.phar
 .env.local
 /build/
