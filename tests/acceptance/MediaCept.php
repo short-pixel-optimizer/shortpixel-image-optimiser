@@ -27,6 +27,7 @@ class MediaCept
         $I->seePostMetaInDatabase(['post_id' => $id, 'meta_key' => '_wp_attached_file', 'meta_value' => "{$year}/{$month}/team.jpg"]);
     }
 
+    //TODO This test should fail in pipeline, but doesn't seem to be run at all.
     public function uploadNewMediaWrongNameShouldFail(AcceptanceTester $I)
     {
         $I->loginAsAdmin();

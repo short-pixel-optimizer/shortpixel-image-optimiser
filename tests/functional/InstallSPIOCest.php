@@ -55,22 +55,6 @@ class InstallSPIOCest
          }
      */
 
-        public function assumeISeeActivateButton(FunctionalTester $I, $scenario) {
-            //TODO After installed, the button should be deactivated
-            //This seems like a test on wordpress, so maybe drop it
-            $scenario->skip("Work in progress");
-        }
-
-    public function startOptimizingImage() {
-
-    }
-
-    public function failTest(FunctionalTester $I) {
-        $I->amGoingTo("Fail for the purpose of testing pipeline");
-        $I->expect("Pipeline will fail");
-        $I->fail("Just for this test");
-    }
-
     /**
      * @param FunctionalTester $I
      */
