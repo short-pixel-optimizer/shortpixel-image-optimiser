@@ -5,3 +5,5 @@ composer.lock
 /.idea
 /bin/.env
 /composer.phar
+/.env
+/build/
