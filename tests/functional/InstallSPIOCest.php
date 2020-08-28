@@ -65,9 +65,10 @@ class InstallSPIOCest
 
     }
 
-    public function fail(FunctionalTester $I) {
+    public function failTest(FunctionalTester $I) {
         $I->amGoingTo("Fail for the purpose of testing pipeline");
         $I->expect("Pipeline will fail");
+        $I->fail("Just for this test");
     }
 
     /**

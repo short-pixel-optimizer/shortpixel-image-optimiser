@@ -15,8 +15,8 @@ script:
   - git clone --depth=50 --branch=master $UGAN  ../modules
   - COMPOSER=composer-testing.json composer update
   - sudo cp . $WP_PATH/wp-content/plugins/shortpixel-image-optimiser/ -r
-  - vendor/bin/codecept run functional
-  - vendor/bin/codecept run acceptance
+  - vendor/bin/codecept run -v functional
+  - vendor/bin/codecept run -v acceptance
 #  - bash bin/install-wp-tests.sh $WP_DB root $DOCKER_DB_PASSWORD 127.0.0.1 latest true
 #  - ./vendor/bin/phpunit --verbose
 env:
