@@ -25,11 +25,18 @@ class MediaCept
         $id = $I->grabAllFromDatabase($postTable, 'post_id', ['meta_value', '{$year}/{$month}/team.jpg']);
 
         $I->seePostMetaInDatabase(['post_id' => $id, 'meta_key' => '_wp_attached_file', 'meta_value' => "{$year}/{$month}/team.jpg"]);
+
+        $idFrontEnd = $I->grabAttributeFrom("#post_ID", "value");
+
+        assertEquals($id, $idFrontEnd);
     }
 
     //TODO This test should fail in pipeline, but doesn't seem to be run at all.
     public function uploadNewMediaWrongNameShouldFail(AcceptanceTester $I)
     {
+        $year  = date('Y');
+        $month = date('m');
+
         $I->loginAsAdmin();
 
         $I->amOnPage('/wp-admin/media-new.php');
@@ -41,7 +48,17 @@ class MediaCept
         $I->seeElement('.edit-attachment');
         $I->click('.edit-attachment');
 
+        $postTable = $I->grabPrefixedTableNameFor('postmeta');
+        $id = $I->grabAllFromDatabase($postTable, 'post_id', ['meta_value', '{$year}/{$month}/team.jpg']);
+
         $I->seeUploadedFileFound('team-wrong.jpg','today');
+        $I->seePostMetaInDatabase(['post_id' => $id, 'meta_key' => '_wp_attached_file', 'meta_value' => "{$year}/{$month}/team-wrong.jpg"]);
+
+        $idFrontEnd = $I->grabAttributeFrom("#post_ID", "value");
+
+        assertEquals($id, $idFrontEnd);
+
+        $I->fail("The previous statement should fail, no team-wrong.jpg should be available");
     }
 
 }
