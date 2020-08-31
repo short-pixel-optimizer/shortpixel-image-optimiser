@@ -25,7 +25,7 @@ script:
   - sudo cp . $WP_PATH/wp-content/plugins/shortpixel-image-optimiser/ -r
   - vendor/bin/codecept run --verbose functional
   - wget https://selenium-release.storage.googleapis.com/3.141/selenium-server-standalone-3.141.59.jar
-  - java -jar selenium-server-standalone-3.141.59.jar
+  - java -jar selenium-server-standalone-3.141.59.jar &
   - vendor/bin/codecept run --verbose acceptance
 #  - bash bin/install-wp-tests.sh $WP_DB root $DOCKER_DB_PASSWORD 127.0.0.1 latest true #TODO This might be broken because of &> /dev/null
 #  - ./vendor/bin/phpunit --verbose
