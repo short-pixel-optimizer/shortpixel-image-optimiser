@@ -9,9 +9,8 @@ actor: AcceptanceTester
 modules:
     enabled:
         - WPDb
-        - WPBrowser
         - WPFilesystem
-#        - WPWebDriver #TODO Needs selenium server installed - Cannot use both WPBrowser and WPWebDriver at same time, need different suite
+        - WPWebDriver #TODO Needs selenium server installed on Travis; composer should have different .json files for each diff test suite to reduce redundant dependencies? or would get too complicated
         - Asserts
         - \Helper\Acceptance
     config:
@@ -29,14 +28,6 @@ modules:
 #            originalURL: '%TEST_SITE_WP_URL%'
             urlReplacement: true #replace the hardcoded dump URL with the one above
             tablePrefix: '%TEST_SITE_TABLE_PREFIX%'
-        WPBrowser:
-            url: '%TEST_SITE_WP_URL%'
-            adminUsername: '%TEST_SITE_ADMIN_USERNAME%'
-            adminPassword: '%TEST_SITE_ADMIN_PASSWORD%'
-            adminPath: '%TEST_SITE_WP_ADMIN_PATH%'
-            headers:
-                X_TEST_REQUEST: 1
-                X_WPBROWSER_REQUEST: 1
         WPWebDriver:
             url: '%TEST_SITE_WP_URL%'
             adminUsername: '%TEST_SITE_ADMIN_USERNAME%'
@@ -45,10 +36,10 @@ modules:
             browser: chrome
             host: localhost
             port: 4444
-            window_size: false #disabled for Chrome driver
-            capabilities:
-              chromeOptions:
-                args: ["--headless", "--disable-gpu", "--proxy-server='direct://'", "--proxy-bypass-list=*"]
+#            window_size: false #disabled for Chrome driver
+#            capabilities:
+#              chromeOptions:
+#                args: ["--headless", "--disable-gpu", "--proxy-server='direct://'", "--proxy-bypass-list=*"]
         WPFilesystem:
             wpRootFolder: '%WP_ROOT_FOLDER%'
             plugins: '/wp-content/plugins'

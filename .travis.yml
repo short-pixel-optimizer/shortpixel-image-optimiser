@@ -1,12 +1,16 @@
 os: linux
+
 dist: bionic
+
 language: php
+
 php:
 #  - 7.1
 #  - 7.2
 #  - 7.3
   - 7.4
 services: docker
+
 script:
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
   - mkdir $WP_PATH $WP_PATH/database $WP_PATH/wp-content/uploads -p
@@ -19,6 +23,11 @@ script:
   - vendor/bin/codecept run --verbose acceptance
 #  - bash bin/install-wp-tests.sh $WP_DB root $DOCKER_DB_PASSWORD 127.0.0.1 latest true #TODO This might be broken because of &> /dev/null
 #  - ./vendor/bin/phpunit --verbose
+
+cache:
+  - vendor
+  - $HOME/.composer/cache
+
 env:
   global:
     - WP_PATH=/home/travis/wordpress
