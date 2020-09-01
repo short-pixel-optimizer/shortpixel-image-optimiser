@@ -35,4 +35,31 @@ class MediaCest
         $I->comment("The test passed successfully. SPIO started optimizing image on upload.");
     }
 
+    public function startBulkOptimization(\AcceptanceTester $I) {
+        $I->wantTo('Have many images in the media library to optimize');
+        //TODO dump sql with couple of images in media library
+
+        $I->amOnPage('/wp-admin/upload.php?page=wp-short-pixel-bulk');
+        $I->waitForText('Bulk Media');
+        $I->see('13  images to optimize');
+        $I->see('Optimize', '.button');
+
+        $I->click('Optimize now');
+        $I->seeNewPageURL('/bulk-in-progress');
+
+        $I->seeProgressBar('0%');
+        $I->wait('10s');
+        $I->seeProgressBar('>30%');
+        $I->wait('30s');
+        $I->see('Analytics improvement 50%');
+
+        $I->expectTo("Finish the optimization of 5 images in 1 minute");
+
+        $I->amOnPage('/wp-admin/upload.php?mode=list');
+        $I->see('Image Optimized 30%');
+        $I->dontSee('Waiting to be optimized');
+        $I->dontSee('Malformed URL');
+        $I->dontSee('Error in image');
+    }
+
 }
