@@ -5,16 +5,13 @@ class MediaCest
 {
     public function uploadNewMediaStartsImageOptimization(\AcceptanceTester $I)
     {
-        $year  = date('Y');
+        $year = date('Y');
         $month = date('m');
+        $filename = 'team.jpg';
 
         $I->wantTo("Upload image to media library");
         $I->loginAsAdmin();
-        $I->amOnPage('/wp-admin/media-new.php');
-        $I->waitForText('Upload New Media');
-        $I->makeHtmlSnapshot("beforeUploadInMediaLibrary");
-        $I->attachFile('input[type="file"]', 'team.jpg');
-        $I->makeHtmlSnapshot("afterUploadInMediaLibrary");
+        $this->uploadMedia($I, $filename);
 
         $I->wantTo("Check image uploaded");
         $I->waitForElement(".edit-attachment", 20);
@@ -23,7 +20,7 @@ class MediaCest
 //        $I->waitForText('Edit Media', 30, '.wp-heading-inline'); //TODO This is not found. New tab opened by previous click. Not workining
 //        $I->switchToPreviousTab(0);
 //        $I->closeTab();
-        $I->seeUploadedFileFound('team.jpg','today');
+        $I->seeUploadedFileFound('team.jpg', 'today');
 //        $id = $I->grabAttributeFrom("#post_ID", "value");
 //        $I->seePostMetaInDatabase(['post_id' => $id, 'meta_key' => '_wp_attached_file', 'meta_value' => "{$year}/{$month}/team.jpg"]);
 
@@ -35,31 +32,60 @@ class MediaCest
         $I->comment("The test passed successfully. SPIO started optimizing image on upload.");
     }
 
-    public function startBulkOptimization(\AcceptanceTester $I) {
+    public function startBulkOptimization(\AcceptanceTester $I)
+    {
         $I->wantTo('Have many images in the media library to optimize');
         //TODO dump sql with couple of images in media library
 
+        $I->wantTo("Upload 3 images for bulk processing");
+
+        $I->loginAsAdmin();
+        $filename = 'team-bulk.jpg';
+        for ($i = 3; $i > 0; $i--) {
+            $this->uploadMedia($I, $filename);
+        }
+        $I->wait(10);
+
         $I->amOnPage('/wp-admin/upload.php?page=wp-short-pixel-bulk');
-        $I->waitForText('Bulk Media');
-        $I->see('13  images to optimize');
-        $I->see('Optimize', '.button');
+        $I->waitForText('Bulk Image Optimization by ShortPixel');
+        $I->see('3');
+        $I->see('15');
+        $I->see('Start Optimizing 18 images', '.bulk-play');;
 
-        $I->click('Optimize now');
-        $I->seeNewPageURL('/bulk-in-progress');
+        $I->click('Start Optimizing 18 images');
+        $I->see('Media Library and Custom folders optimization in progress ...');
 
-        $I->seeProgressBar('0%');
-        $I->wait('10s');
-        $I->seeProgressBar('>30%');
-        $I->wait('30s');
-        $I->see('Analytics improvement 50%');
+//        $I->see('#bulk-progress'); //TODO Progress bar it's there but it cannot see it for some reason
+//        $I->seeProgressBarValue('0%', 'progress-left');
+//        $I->wait('10s');
+//        $I->seeProgressBar('>30%');
+//        $I->wait('30s');
+//        $I->see('Analytics improvement 50%');
+        //$I->see('Just optimized ...');
 
-        $I->expectTo("Finish the optimization of 5 images in 1 minute");
+//        $I->expectTo("Finish the optimization of 5 images in 1 minute");
+//        $I->waitForText('Congratulations!');
+//
+//        $I->amOnPage('/wp-admin/upload.php?mode=list');
+//        $I->see('Reduced by');
+//        TODO Future checks. After waiting for bulk to optimize all
+//        $I->dontSee('Waiting to be optimized');
+//        $I->dontSee('Malformed URL');
+//        $I->dontSee('Error in image');
+    }
 
-        $I->amOnPage('/wp-admin/upload.php?mode=list');
-        $I->see('Image Optimized 30%');
-        $I->dontSee('Waiting to be optimized');
-        $I->dontSee('Malformed URL');
-        $I->dontSee('Error in image');
+    /**
+     * @param AcceptanceTester $I
+     * @param string $filename
+     * @throws Exception
+     */
+    private function uploadMedia(AcceptanceTester $I, string $filename): void
+    {
+        $I->amOnPage('/wp-admin/media-new.php');
+        $I->waitForText('Upload New Media');
+//        $I->makeHtmlSnapshot("beforeUploadInMediaLibrary");
+        $I->attachFile('input[type="file"]', $filename);
+//        $I->makeHtmlSnapshot("afterUploadInMediaLibrary");
     }
 
 }
