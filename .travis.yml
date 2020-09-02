@@ -29,7 +29,7 @@ script:
   - vendor/bin/codecept run --verbose functional
   - wget https://selenium-release.storage.googleapis.com/3.141/selenium-server-standalone-3.141.59.jar &> /dev/null
   - wget https://chromedriver.storage.googleapis.com/85.0.4183.87/chromedriver_win32.zip && unzip chromedriver_win32.zip
-  - java -jar selenium-server-standalone-3.141.59.jar -Dwebdriver.chrome.driver=./chromedriver.exe &
+  - java -jar selenium-server-standalone-3.141.59.jar &
   - sleep 20s
   - vendor/bin/codecept run --verbose acceptance
 #  - bash bin/install-wp-tests.sh $WP_DB root $DOCKER_DB_PASSWORD 127.0.0.1 latest true #TODO This might be broken because of &> /dev/null
