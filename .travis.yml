@@ -15,6 +15,9 @@ services: docker
 addons:
   chrome: stable
 
+before_script:
+  - phpenv config-rm xdebug.ini
+
 script:
   - mkdir $WP_PATH $WP_PATH/database $WP_PATH/wp-content/uploads -p
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
@@ -24,7 +27,7 @@ script:
   - COMPOSER=composer-testing.json composer update &> /dev/null
   - sudo cp . $WP_PATH/wp-content/plugins/shortpixel-image-optimiser/ -r
   - vendor/bin/codecept run --verbose functional
-  - wget https://selenium-release.storage.googleapis.com/3.141/selenium-server-standalone-3.141.59.jar
+  - wget https://selenium-release.storage.googleapis.com/3.141/selenium-server-standalone-3.141.59.jar &> /dev/null
   - java -jar selenium-server-standalone-3.141.59.jar &
   - sleep 20s
   - vendor/bin/codecept run --verbose acceptance
