@@ -26,6 +26,7 @@ before_script:
   - docker run -e WORDPRESS_DB_PASSWORD=$DOCKER_DB_PASSWORD --name wordpress --link $DOCKER_DB_NAME:mysql -p 80:80 -v $WP_PATH:/var/www/html -d wordpress
   - git clone --depth=50 --branch=master $UGAN  ../modules
   - COMPOSER=composer-testing.json composer update &> /dev/null
+  - sudo cp . $WP_PATH/wp-content/plugins/shortpixel-image-optimiser/ -r
   - wget https://selenium-release.storage.googleapis.com/3.141/selenium-server-standalone-3.141.59.jar
   - wget https://chromedriver.storage.googleapis.com/85.0.4183.87/chromedriver_linux64.zip && unzip chromedriver_linux64.zip && export CHROME_BIN=chromium-browser
   - java -jar selenium-server-standalone-3.141.59.jar &
