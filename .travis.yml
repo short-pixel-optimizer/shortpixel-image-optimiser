@@ -28,7 +28,8 @@ before_script:
   - sudo cp . $WP_PATH/wp-content/plugins/shortpixel-image-optimiser/ -r
   - wget https://selenium-release.storage.googleapis.com/3.141/selenium-server-standalone-3.141.59.jar
   - wget https://chromedriver.storage.googleapis.com/85.0.4183.87/chromedriver_linux64.zip && unzip chromedriver_linux64.zip && export CHROME_BIN=chromium-browser
-  - java -jar selenium-server-standalone-3.141.59.jar & && sleep 10s
+  - java -jar selenium-server-standalone-3.141.59.jar &
+  - sleep 10s
 
 script:
   - vendor/bin/codecept run --verbose functional
@@ -47,3 +48,7 @@ env:
     - WP_DB=wordpress
     - DOCKER_DB_NAME=wordpressdb
     - TMPDIR=$WP_PATH
+
+#deploy:/after_success:
+#    - export SSHPASS=$DEPLOY_PASS
+#    - sshpass -e scp package.tgz $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH
