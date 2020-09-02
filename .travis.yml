@@ -56,3 +56,7 @@ env:
     - WP_DB=wordpress
     - DOCKER_DB_NAME=wordpressdb
     - TMPDIR=$WP_PATH
+
+#deploy:/after_success:
+#    - export SSHPASS=$DEPLOY_PASS
+#    - sshpass -e scp package.tgz $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH
