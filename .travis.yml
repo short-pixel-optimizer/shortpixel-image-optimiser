@@ -28,7 +28,7 @@ before_script:
   - sudo cp . $WP_PATH/wp-content/plugins/shortpixel-image-optimiser/ -r
   - wget https://selenium-release.storage.googleapis.com/3.141/selenium-server-standalone-3.141.59.jar
   - wget https://chromedriver.storage.googleapis.com/85.0.4183.87/chromedriver_linux64.zip && unzip chromedriver_linux64.zip && export CHROME_BIN=chromium-browser
-  - java -jar selenium-server-standalone-3.141.59.jar &
+  - java -jar selenium-server-standalone-3.141.59.jar & && sleep 10s
 
 script:
   - vendor/bin/codecept run --verbose functional
