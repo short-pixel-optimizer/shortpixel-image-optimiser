@@ -23,6 +23,8 @@ addons:
 before_script:
   - phpenv config-rm xdebug.ini
   - mkdir $WP_PATH $WP_PATH/database $WP_PATH/wp-content/uploads -p
+  - chmod 664 $WP_PATH -R
+#  - chomd 664 $WP_PATH/wp-contents/uploads -R TODO improvement chmod only on uploads folder
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
   - docker run -h 127.0.0.1 -p 3306:3306 -e MYSQL_ROOT_PASSWORD=$DOCKER_DB_PASSWORD -e MYSQL_DATABASE=$WP_DB --name $DOCKER_DB_NAME -v $WP_PATH/database:/var/lib/mysql -d  mariadb
   - docker run -e WORDPRESS_DB_PASSWORD=$DOCKER_DB_PASSWORD --name wordpress --link $DOCKER_DB_NAME:mysql -p 80:80 -v $WP_PATH:/var/www/html -d wordpress
@@ -55,7 +57,7 @@ env:
     - WP_PATH=/home/travis/wordpress
     - WP_DB=wordpress
     - DOCKER_DB_NAME=wordpressdb
-    - TMPDIR=$WP_PATHx
+    - TMPDIR=$WP_PATH
 
 #deploy:/after_success:
 #    - export SSHPASS=$DEPLOY_PASS
