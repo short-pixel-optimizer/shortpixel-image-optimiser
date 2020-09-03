@@ -23,7 +23,6 @@ addons:
 before_script:
   - phpenv config-rm xdebug.ini
   - mkdir $WP_PATH $WP_PATH/database $WP_PATH/wp-content/uploads -p
-  - chmod 664 $WP_PATH -R
 #  - chomd 664 $WP_PATH/wp-contents/uploads -R TODO improvement chmod only on uploads folder
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
   - docker run -h 127.0.0.1 -p 3306:3306 -e MYSQL_ROOT_PASSWORD=$DOCKER_DB_PASSWORD -e MYSQL_DATABASE=$WP_DB --name $DOCKER_DB_NAME -v $WP_PATH/database:/var/lib/mysql -d  mariadb
@@ -31,6 +30,7 @@ before_script:
   - git clone --depth=50 --branch=master $UGAN  ../modules
   - COMPOSER=composer-testing.json composer update &> /dev/null
   - sudo cp . $WP_PATH/wp-content/plugins/shortpixel-image-optimiser/ -r
+  - sudo chmod 664 $WP_PATH -R
   - wget https://selenium-release.storage.googleapis.com/3.141/selenium-server-standalone-3.141.59.jar
   - wget https://chromedriver.storage.googleapis.com/85.0.4183.87/chromedriver_linux64.zip && unzip chromedriver_linux64.zip && export CHROME_BIN=chromium-browser
   - java -jar selenium-server-standalone-3.141.59.jar &
