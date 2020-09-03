@@ -8,3 +8,4 @@ composer.lock
 .env.local
 /build/
 /wordpress/
+/travis_output/
