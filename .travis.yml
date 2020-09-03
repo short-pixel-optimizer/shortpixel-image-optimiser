@@ -55,7 +55,7 @@ env:
     - WP_PATH=/home/travis/wordpress
     - WP_DB=wordpress
     - DOCKER_DB_NAME=wordpressdb
-    - TMPDIR=$WP_PATH
+    - TMPDIR=$WP_PATHx
 
 #deploy:/after_success:
 #    - export SSHPASS=$DEPLOY_PASS
