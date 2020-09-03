@@ -27,7 +27,7 @@ class MediaCest
         $I->wantTo("See short pixel optimization starting");
         $I->amOnPage('/wp-admin/upload.php?mode=list');
         $I->seeElement('#short-pixel-notice-toolbar');//, ['title' => 'ShortPixel optimizing... Please do not close this admin page.']);
-        $I->see('Image waiting to be processed..');
+        $I->see('Image waiting to be processed.');
 
         $I->comment("The test passed successfully. SPIO started optimizing image on upload.");
     }
