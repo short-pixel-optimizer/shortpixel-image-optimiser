@@ -16,6 +16,9 @@ services:
 
 addons:
   chrome: stable
+  apt:
+    packages:
+      - sshpass
 
 before_script:
   - phpenv config-rm xdebug.ini
@@ -42,12 +45,17 @@ cache:
       - vendor
       - $HOME/.composer/cache
 
+after_failure:
+  - tar -cvf test-output.tar.gz tests/_output/
+  - export SSHPASS=$DEPLOY_PASS
+  - sshpass -e scp -o stricthostkeychecking=no test-output.tar.gz $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH
+
 env:
   global:
     - WP_PATH=/home/travis/wordpress
     - WP_DB=wordpress
     - DOCKER_DB_NAME=wordpressdb
-    - TMPDIR=$WP_PATH
+    - TMPDIR=$WP_PATHx
 
 #deploy:/after_success:
 #    - export SSHPASS=$DEPLOY_PASS
