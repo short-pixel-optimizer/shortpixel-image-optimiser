@@ -38,7 +38,8 @@ before_script:
   - sleep 10s
 
 script:
-  - vendor/bin/codecept run functional
+  - vendor/bin/codecept run --verbose functional
+  - vendor/bin/codecept run --verbose acceptance
 #  - bash bin/install-wp-tests.sh $WP_DB root $DOCKER_DB_PASSWORD 127.0.0.1 latest true #TODO This might be broken because of &> /dev/null
 #  - ./vendor/bin/phpunit --verbose
 
