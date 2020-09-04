@@ -1,6 +1,7 @@
 <?php
 use \org\bovigo\vfs\vfsStream;
-use \ShortPixel\Model\ImageModel as ImageModel;
+use \ShortPixel\Model\Image\ImageModel as ImageModel;
+use \ShortPixel\Model\File\FileModel as FileModel;
 
 class FileSystemTest extends  WP_UnitTestCase
 {
@@ -69,10 +70,10 @@ class FileSystemTest extends  WP_UnitTestCase
   }
 
   public function testPathToURL() {
-      $url1 = $this->fs->pathToUrl(new \ShortPixel\Model\FileModel('./wp-content/uploads/2020/07/file'));
-      $url2 = $this->fs->pathToUrl(new \ShortPixel\Model\FileModel('wp-content/uploads/2020/07/file'));
-      $url3 = $this->fs->pathToUrl(new \ShortPixel\Model\FileModel('../wp-content/uploads/2020/07/file'));
-      $url4 = $this->fs->pathToUrl(new \ShortPixel\Model\FileModel('../../wp-content/uploads/2020/07/file'));
+      $url1 = $this->fs->pathToUrl(new FileModel('./wp-content/uploads/2020/07/file'));
+      $url2 = $this->fs->pathToUrl(new FileModel('wp-content/uploads/2020/07/file'));
+      $url3 = $this->fs->pathToUrl(new FileModel('../wp-content/uploads/2020/07/file'));
+      $url4 = $this->fs->pathToUrl(new FileModel('../../wp-content/uploads/2020/07/file'));
 
       $this->assertEquals("http://example.org/wp-content/uploads/2020/07/file", $url1);
       $this->assertEquals("http://example.org/wp-content/uploads/2020/07/file", $url2);

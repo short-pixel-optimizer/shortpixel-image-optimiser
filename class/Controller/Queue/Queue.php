@@ -10,6 +10,7 @@ abstract class Queue
     protected static $results;
 
     const PLUGIN_SLUG = 'SPIO';
+    const QUEUE_NAME = 'base';
 
     // Result status for Run function
     const RESULT_ITEMS = 1;
@@ -44,15 +45,15 @@ abstract class Queue
     * @param ImageModel $mediaItem An ImageModel (CustomImageModel or MediaLibraryModel) object
     * @return mixed
     */
-    public function addSingleItem(ImageModel $mediaItem)
+    public function addSingleItem(ImageModel $imageModel)
     {
        //if (! $mediaItem->isProcessable())
       //  return false;
        $preparing = $this->getStatus('preparing');
 
-       $qItem = $this->mediaItemToQueue($mediaItem);
-       $item = array('id' => $mediaItem->get('id'), 'qItem' => $qItem);
-       $numitems = $this->q->withOrder(array($item), 5)->enqueue(); // enqueue returns numitems
+       $qItem = $this->imageModelToQueue($imageModel);
+       $item = array('id' => $imageModel->get('id'), 'value' => $qItem);
+       $numitems = $this->q->withOrder(array($item), 5)->withRemoveDuplicates()->enqueue(); // enqueue returns numitems
 
        $this->q->setStatus('preparing', $preparing); // add single should not influence preparing status.
        return $numitems;
@@ -62,13 +63,13 @@ abstract class Queue
     {
 
        $result = new \stdClass();
-       $result->status = self::RESULT_UNKNOWN;
+       $result->qstatus = self::RESULT_UNKNOWN;
        $result->items = null;
 
        if ( $this->getStatus('preparing'))
        {
             $prepared = $this->prepare();
-            $result->status = self::STATUS_PREPARING;
+            $result->qstatus = self::STATUS_PREPARING;
             $result->items = $prepared; // number of items.
        }
        elseif ($this->getStatus('bulk_running'))
@@ -84,17 +85,22 @@ abstract class Queue
        {
          if (count($items) == 0)
          {
-           $result->status = self::RESULT_EMPTY;
+           $result->qstatus = self::RESULT_EMPTY;
          }
          else
          {
-           $result->status = self::RESULT_ITEMS;
+           $result->qstatus = self::RESULT_ITEMS;
          }
           $result->items = $items;
 
        }
 
        return $result;
+    }
+
+    public function getQueueName()
+    {
+       return self::QUEUE_NAME;
     }
 
     protected function getStatus($name = false)
@@ -105,30 +111,78 @@ abstract class Queue
     protected function deQueue()
     {
        $items = $this->q->deQueue();
+       $items = array_map(array($this, 'queueToMediaItem'), $items);
        return $items;
     }
 
     protected function deQueuePriority()
     {
       $items = $this->q->deQueue(array('onlypriority' => true));
+    //  echo "R/A/W : "; var_dump($items);
+    //echo "DQPRIO - BEFORE "; var_dump($items);
+      $items = array_map(array($this, 'queueToMediaItem'), $items);
+//  echo "DQPRIO - AFTER "; var_dump($items);
       return $items;
     }
 
-    // This might be a general implementation
+
+    protected function queueToMediaItem($qItem)
+    {
+        $item = new \stdClass;
+
+        $item = $qItem->value;
+        $item->_queueItem = $qItem;
+
+        $item->item_id = $qItem->item_id;
+        $item->tries = $qItem->tries;
+
+        return $item;
+    }
+
     protected function mediaItemToQueue($mediaItem)
+    {
+        unset($mediaItem->item_id);
+        unset($mediaItem->tries);
+
+        $qItem = $mediaItem->_queueItem;
+
+        unset($mediaItem->_queueItem);
+
+        $qItem->value = $mediaItem;
+        return $qItem;
+    }
+
+
+    // This might be a general implementation - This should be done only once!
+    protected function imageModelToQueue(ImageModel $imageModel)
     {
 
         $item = new \stdClass;
         $item->compressionType = false;
 
-        $urls = $mediaItem->getOptimizeUrls();
+        $urls = $imageModel->getOptimizeUrls();
 
-        if ($mediaItem->getMeta('compressionType'))
-          $item->compressionType = $mediaItem->getMeta('compressionType');
+        if ($imageModel->getMeta('compressionType'))
+          $item->compressionType = $imageModel->getMeta('compressionType');
 
-        $item->urls = apply_filters('shortpixel_image_urls', $urls, $mediaItem->get('id'));
+        $item->urls = apply_filters('shortpixel_image_urls', $urls, $imageModel->get('id'));
 
         return $item;
+    }
+
+    public function itemFailed($item, $fatal = false)
+    {
+        $qItem = $this->mediaItemToQueue($item); // convert again
+        $this->q->itemFailed($qItem, $fatal);
+        $this->q->updateItemValue($qItem);
+    }
+
+    public function itemDone ($item)
+    {
+      $qItem = $this->mediaItemToQueue($item); // convert again
+      $this->q->itemDone($qItem);
+
+
     }
 
     public function getShortQ()

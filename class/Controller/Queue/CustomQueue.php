@@ -6,7 +6,7 @@ use ShortPixel\ShortQ\ShortQ as ShortQ;
 class CustomQueue extends Queue
 {
 
-   const QUEUE_NAME = 'Media';
+   const QUEUE_NAME = 'Custom';
 
    public function __construct()
    {
@@ -29,7 +29,10 @@ class CustomQueue extends Queue
 
    }
 
-
+   public function getQueueName()
+   {
+      return self::QUEUE_NAME;
+   }
 
 
 

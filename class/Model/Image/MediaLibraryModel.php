@@ -13,6 +13,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   protected $is_scaled = false; // if this is WP 5.3 scaled
 
   protected $wp_metadata;
+  protected $id;
 
   public function __construct($post_id, $path)
   {
@@ -171,6 +172,23 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       // $this->recount();
   }
 
+  public function handleOptimized($tempFiles)
+  {
+      $result = parent::handleOptimized($tempFiles);
+      if (! $result)
+      {
+         $this->setMeta('errorMessage', __('Unable to Optimize this Image', 'shortpixel-image-optimizer'));
+         $this->saveMeta();
+         return false;
+      }
+
+      // If thumbnails should not be optimized, they should not be in result Array.
+      foreach($this->thumbnails as $thumbnail)
+      {
+         $thumbnail->handleOptimized($tempFiles);
+      }
+
+  }
 
   private function getThumbnailModel($fileName)
   {
@@ -196,9 +214,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
             if ($result)
             {
               $metadata = $this->createSave(); // after convert, pretent it's loaded as save ( and save! ) @todo
-              echo "metadata from createSave <PRE>";
-              //print_r($metadata);
-              echo "</PRE>";
+            /*  echo "metadata from createSave <PRE>";
+              print_r($this->getOptimizeUrls());
+              echo "</PRE>"; */
             }
       }
 
@@ -279,7 +297,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
       if ($result === false)
       {
-        Log::addError('Saving Metadata of ' . $this->id . ' failed!');
+        Log::addError('Saving Metadata of ' . $this->id . ' failed!', $metadata);
       }
 
   }

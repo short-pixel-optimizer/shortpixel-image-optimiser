@@ -62,9 +62,13 @@ class OptimizeController
           $numitems = $queue->addSingleItem($mediaItem); // 1 if ok, 0 if not found, false is not processable
           if ($numitems > 0)
           {
-
             $json->message = sprintf(__('Item added to Queue. %d items in Queue', 'shortpixel-image-optimiser'), $numitems);
             $json->status = 1;
+          }
+          else
+          {
+            $json->message = __('No items added to queue', 'shortpixel-image-optimiser');
+            $json->status = 0;
           }
         }
 
@@ -98,6 +102,10 @@ class OptimizeController
 
     // next tick of items to do.
     // @todo Implement a switch to toggle all processing off.
+    /* Processes one tick of the queue
+    *
+    * @return Object JSON object detailing results of run
+    */
     public function processQueue()
     {
 
@@ -121,24 +129,35 @@ class OptimizeController
 
         $mediaQ = MediaLibraryQueue::getInstance();
         $result = $mediaQ->run();
+        $results = array();
+        echo "RESULT ---> "; var_dump($result);
+
         $items = (isset($result->items) && is_array($result->items)) ? $result->items : array();
-        $json = $this->queueToJson($result);
+      //  $json = $this->queueToJson($result);
 
 
-        foreach($items as $item)
+        foreach($items as $index => $item)
         {
             $urls = $item->urls;
             $item = $this->sendToProcessing($item);
-            $this->handleResult($item, $mediaQ);
-          //  $result = $api->doRequests($urls, $blocking);
+            $item = $this->handleAPIResult($item, $mediaQ);
+            $result->items[$index] = $item; // replace processed item, should have result now.
 
+
+          //  $result = $api->doRequests($urls, $blocking);
         }
+        $json = $this->queueToJson($result);
+        $results['media'] = $json;
+
 
         $customQ = CustomQueue::getInstance();
-        return $result;
+        $results['custom'] = array(); // @otodo Implement
+
+        return $results;
     }
 
     /** Checks and sends the item to processing
+    * @param Object $item Item is a stdClass object from Queue. This is not a model, nor a ShortQ Item.
     * @todo Check if PNG2JPG Processing is needed.
     */
     public function sendToProcessing(Object $item)
@@ -147,30 +166,68 @@ class OptimizeController
       $api = $this->getAPI();
       $item = $api->processMediaItem($item);
 
-
       return $item;
     }
 
     // This is everything sub-efficient.
-    protected function handleResult($item, $q)
+    protected function handleAPIResult($item, $q)
     {
       $fs = \wpSPIO()->filesystem();
 echo "OPTIMIZECONTROL RESULT"; var_dump($item);
       $result = $item->result;
       if ($result->is_error)
       {
-          if ($result->is_done)
+          if (! property_exists($item, 'errors'))
+            $item->errors = array();
+
+          $item->errors[] = $result;
+
+          if ($result->is_done || count($result->errors) >= SHORTPIXEL_MAX_FAIL_RETRIES )
           {
-             $q->getShortQ()->itemFailed($item, true);
+             $q->itemFailed($item, true);
           }
           else
-            $q->getShortQ()->itemFailed($item, false);
+          {
+              $q->itemFailed($item, false);
+          }
       }
       elseif ($result->is_done)
       {
-         $q->getShortQ()->itemDone($item);
-         return $result;
+         if ($result->status == ApiController::STATUS_SUCCESS )
+         {
+           $queue_name = $q->getQueueName();
+           if ($queue_name == 'Media')
+           {
+              $imageItem = $fs->getMediaImage($item->item_id);
+           }
+           elseif ($queue_name == 'Custom')
+           {
+             $imageItem = $fs->getCustomImage($item->item_id);
+           }
+
+           $tempFiles = array();
+
+           foreach($result->files as $fileResult)
+           {
+              $tempFiles[] = $fileResult->file;
+           }
+           if (count($tempFiles) > 0 )
+              $optimizeResult = $imageItem->handleOptimized($tempFiles);
+           else
+           {
+              Log::addWarn('Api returns Success, but result has no files', $result);
+              $item->result->status = ApiController::STATUS_FAIL;
+
+              return false;
+           }
+
+         }
+         $q->itemDone($item);
+      //   return $result;
       }
+
+      return $item;
+
     }
 
     public function ajaxProcessQueue()
@@ -204,21 +261,23 @@ echo "OPTIMIZECONTROL RESULT"; var_dump($item);
         if (! $json)
           $json = $this->getJsonResponse();
 
-        if (Queue::RESULT_PREPARING)
+        switch($result->qstatus)
         {
-          $json->message = sprintf(__('Prepared %s items', 'shortpixel-image-optimiser'), count($result->items) );
-        }
-        if (Queue::RESULT_EMPTY)
-        {
-          $json->message  = __('Empty Queue', 'shortpixel-image-optimiser');
-        }
-        if (Queue::RESULT_ITEMS)
-        {
-          $json->message = sprintf(__("Fetched %d items",  'shortpixel-image-optimiser'), count($result->items));
-        }
-        $json->status = $result->status;
+          case Queue::RESULT_PREPARING:
+            $json->message = sprintf(__('Prepared %s items', 'shortpixel-image-optimiser'), count($result->items) );
+          break;
+          case Queue::RESULT_EMPTY:
+              $json->message  = __('Empty Queue', 'shortpixel-image-optimiser');
+          break;
+          case Queue::RESULT_ITEMS:
+            $json->message = sprintf(__("Fetched %d items",  'shortpixel-image-optimiser'), count($result->items));
+            $json->results = $result->items;
 
+          break;
+        }
+        $json->status = $result->qstatus;
 
+        return $json;
     }
 
     // Communication Part

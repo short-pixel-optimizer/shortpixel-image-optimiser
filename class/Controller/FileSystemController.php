@@ -2,8 +2,8 @@
 namespace ShortPixel\Controller;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
-use ShortPixel\Model\DirectoryModel as DirectoryModel;
-use ShortPixel\Model\FileModel as FileModel;
+use ShortPixel\Model\File\DirectoryModel as DirectoryModel;
+use ShortPixel\Model\File\FileModel as FileModel;
 
 use ShortPixel\Model\Image\MediaLibraryModel as MediaLibraryModel;
 use ShortPixel\Model\Image\MediaLibraryThumbnailModel as MediaLibraryThumbnailModel;
@@ -146,9 +146,9 @@ Class FileSystemController extends \ShortPixel\Controller
       return $this->getDirectory($upload_dir['basedir']);
     }
 
-    /** This function returns the Absolute Path of the WordPress installation
+    /** This function returns the Absolute Path of the WordPress installation where the content directory is located.
     * Normally this would be the same as ABSPATH, but there are installations out there with -cough- alternative approaches
-    * @returns DirectoryModel
+    * @returns DirectoryModel  Either the ABSPATH or where the WP_CONTENT_DIR is located
     */
     public function getWPAbsPath()
     {

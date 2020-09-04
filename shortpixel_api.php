@@ -342,15 +342,6 @@ class ShortPixelAPI {
         }
     }
 
-    public function processMediaItem($item, $blocking = true)
-    {
-
-    }
-
-    public function processCustomItem()
-    {
-
-    }
 
     /**
      * sets the preferred protocol of URL using the globally set preferred protocol.
@@ -371,8 +362,6 @@ class ShortPixelAPI {
         return $this->_settings->downloadProto == 'http' ?
                 str_replace('https://', 'http://', $url) :
                 str_replace('http://', 'https://', $url);
-
-
     }
 
     function fromArchive($path, $optimizedUrl, $optimizedSize, $originalSize, $webpUrl) {

@@ -23,6 +23,11 @@ class MediaLibraryQueue extends Queue
        $this->q->resetQueue();
    }
 
+   public function getQueueName()
+   {
+      return self::QUEUE_NAME;
+   }
+   
    protected function prepare()
    {
       $this->q->setStatus('preparing', true);

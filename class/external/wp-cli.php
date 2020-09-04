@@ -3,6 +3,9 @@ namespace ShortPixel;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
 
+use ShortPixel\Controller\Queue\Queue as Queue;
+use ShortPixel\Controller\ApiController as ApiController;
+
 class WpCliController
 {
     public static $instance;
@@ -41,6 +44,8 @@ class WpCliController
 */
 class SpioCommand
 {
+
+     protected static $runs = 0;
       /**
      * Adds item to the queue.
      *
@@ -74,7 +79,7 @@ class SpioCommand
         $id = intval($args[0]);
 
         $result = $controller->addItemtoQueue($id);
-
+var_dump($result);
         if ($result->status == 1)
           \WP_CLI::Success($result->message);
         elseif ($result->status == 0)
@@ -84,7 +89,13 @@ class SpioCommand
     /**
    * Runs the queue.
    *
+   * ## OPTIONS
    *
+   * [--ticks=<20>]
+   * : How much times the queue runs
+   *
+   * [--wait=<3>]
+   * : How much seconds to wait for next tick.
    *
    * ---
    * default: success
@@ -95,16 +106,45 @@ class SpioCommand
    *
    * ## EXAMPLES
    *
-   *   wp spio runqueue
+   *   wp spio runqueue <clicks=20> <wait=3>
+   *
    *
    * @when after_wp_load
    */
-    public function runqueue()
+    public function runqueue($args, $assoc)
     {
-        $controller = OptimizeController::getInstance();
-        $result = $controller->processQueue();
+        if ( isset($assoc['ticks']))
+          $ticks = $assoc['ticks'];
+        //else
+        //  $clicked = 20;
+        var_dump($assoc);
 
-        var_dump($result);
+        $controller = OptimizeController::getInstance();
+        $results = $controller->processQueue();
+
+        echo "** RUNQUEUE RESULT: **"; var_dump($results);
+        $mediaResult = $results['media'];
+
+        if (! is_null($mediaResult->message))
+        {
+          \WP_CLI::Log($mediaResult->message);
+        }
+
+      /*  switch($mediaResult->status)
+        {
+           case Queue::
+        } */
+
+        if (isset($mediaResult->results))
+        {
+           foreach($mediaResult->results as $item)
+           {
+            //  if ($item->result->status == ApiController::STATUS_ENQUEUED)
+                 \WP_CLI::log($item->result->message);
+           }
+        }
+
+      //  if ($mediaResult->status !==)
     }
 
 

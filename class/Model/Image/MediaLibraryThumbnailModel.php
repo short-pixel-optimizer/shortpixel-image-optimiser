@@ -84,6 +84,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
   protected function setMetaObj($metaObj)
   {
   //  echo 'model setmetaObject <PRE>'; print_r($metaObj); echo "</PRE>";
+
      $this->image_meta = $metaObj;
   }
 
@@ -106,7 +107,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
     // return $url
     if ($this->image_meta->status == self::FILE_STATUS_SUCCESS || $this->excludeThumbnails() )
       return array();
-
     return array($fs->pathToUrl($this));
 
 
@@ -121,7 +121,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
   protected function excludeThumbnails()
   {
-    return \wpSPIO()->settings()->processThumbnails;
+    return (! \wpSPIO()->settings()->processThumbnails);
   }
 
 

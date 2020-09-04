@@ -53,35 +53,7 @@ class MediaLibraryQueueTest extends  WP_UnitTestCase
       $this->assertEquals(Queue::RESULT_EMPTY, $result->status);
   }
 
-  public function testAddSingleItem()
-  {
-      $refWPQ = new ReflectionClass('\ShortPixel\Controller\Queue\Queue');
-      $getStatusMethod = $refWPQ->getMethod('getStatus');
-      $getStatusMethod->setAccessible(true);
 
-      $q = $this->getQ();
-
-      // Test the start premise.
-      $this->assertFalse($getStatusMethod->invoke($q, 'preparing'));
-      $this->assertFalse($getStatusMethod->invoke($q, 'running'));
-
-      $result = $q->addSingleItem(self::$image);
-
-      $this->assertEquals(1, $result);
-      $this->assertFalse($getStatusMethod->invoke($q, 'preparing'));
-      $this->assertFalse($getStatusMethod->invoke($q, 'running'));
-
-      $result = $q->run();
-      $items = $result->items;
-      $item = $items[0];
-
-      $this->assertFalse($getStatusMethod->invoke($q, 'preparing'));
-      $this->assertFalse($getStatusMethod->invoke($q, 'running'));
-      $this->assertEquals(Queue::RESULT_ITEMS, $result->status);
-      $this->assertCount(1, $items);
-
-
-  }
 
   //public function test
 

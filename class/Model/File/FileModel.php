@@ -203,7 +203,7 @@ class FileModel extends \ShortPixel\Model
       }
 
       $is_new = ($destination->exists()) ? false : true;
-      $status = copy($sourcePath, $destinationPath);
+      $status = @copy($sourcePath, $destinationPath);
 
       if (! $status)
         Log::addWarn('Could not copy file ' . $sourcePath . ' to' . $destinationPath);
@@ -295,25 +295,35 @@ class FileModel extends \ShortPixel\Model
         $this->mime = wp_get_image_mime($this->fullpath);
     }
     else
-       $this->mime = false; 
+       $this->mime = false;
 
     return $this->mime;
   }
   /* Util function to get location of backup Directory.
   * @return Boolean | DirectModel  Returns false if directory is not properly set, otherwhise with a new directoryModel
   */
-  private function getBackupDirectory()
+  protected function getBackupDirectory($create = false)
   {
+
     if (is_null($this->getFileDir()))
     {
         Log::addWarn('Could not establish FileDir ' . $this->fullpath);
         return false;
     }
+    $fs = \wpSPIO()->filesystem();
+
+
+
     if (is_null($this->backupDirectory))
     {
-      $backup_dir = str_replace(get_home_path(), "", $this->directory->getPath());
+      $backup_dir = str_replace($fs->getWPAbsPath(), "", $this->directory->getPath());
       $backupDirectory = SHORTPIXEL_BACKUP_FOLDER . '/' . $backup_dir;
       $directory = new DirectoryModel($backupDirectory);
+
+      if ($create) // This is used for creating of backups. Create dir if not there.
+      {
+         $directory->check();
+      }
 
       if (! $directory->exists()) // check if exists. FileModel should not attempt to create.
       {

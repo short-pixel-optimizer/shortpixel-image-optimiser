@@ -15,6 +15,7 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 {
     // File Status Constants
+    const FILE_STATUS_ERROR = -1;
     const FILE_STATUS_UNPROCESSED = 0;
     const FILE_STATUS_PENDING = 1;
     const FILE_STATUS_SUCCESS = 2;
@@ -58,6 +59,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     abstract protected function saveMeta();
     abstract protected function loadMeta();
     abstract protected function isSizeExcluded();
+
+    //abstract public function handleOptimized($tempFiles);
 
     // Construct
     public function __construct($path)
@@ -116,6 +119,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
          break;
          case self::P_IS_OPTIMIZED:
             $message = __('Image is already optimized', 'shortpixel-image-optimiser');
+         break;
+         default:
+            $message = __(sprintf('Unknown Issue, Code %s',  $this->processable_status), 'shortpixel-image-optimiser');
          break;
       }
 
@@ -176,6 +182,69 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
        return $this->image_meta;
     }
 
+    public function handleOptimized($tempFiles)
+    {
+        $settings = \wpSPIO()->settings();
+
+        if ($settings->backupImages)
+        {
+            $backupok = $this->createBackup();
+            if (! $backupok)
+              return false;
+        }
+
+        $originalSize = $this->getFileSize();
+
+        foreach($tempFiles as $tempFile)
+        {
+            // Check for same filename.
+            if ($tempFile->getFileName() == $this->getFileName())
+            {
+                $copyok = $tempFile->copy($this);
+
+                if ($copyok)
+                {
+                   $this->handleWebp($tempFile);
+                   $optimizedSize  = $tempFile->getFileSize();
+                   $tempFile->delete(); // cleanup
+
+                   $this->setMeta('status', self::FILE_STATUS_SUCCESS);
+                   $this->setMeta('tsOptimized', time());
+                   $this->setMeta('compressedSize', $optimizedSize);
+                   $this->setMeta('originalSize', $originalSize);
+                   $this->setMeta('improvement', $originalSize - $optimizedSize);
+                   $this->setMeta('did_keepExif', $settings->keepExif);
+                   $this->setMeta('did_cmyk2rgb', $settings->CMYKtoRGBconversion);
+
+                   $this->saveMeta();
+                }
+                return true;
+                break;
+            }
+        }
+
+    }
+
+    protected function handleWebp($tempFile)
+    {
+         $fs = \wpSPIO()->filesystem();
+         $webP = $fs->getFile( (string) $tempFile->getFileDir() . $tempFile->getFileBase() . '.webp');
+         if ($webp->exists())
+         {
+            $target = $fs->getFile( (string) $this->getFileDir() . $tempFile->getFileBase() . '.webp');
+            if( (defined('SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION') && SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION) || $target->exists()) {
+                 $target = $fs->getFile((string) $this->getFileDir() . $tempFile->getFileName() . '.webp'); // double extension, if exists.
+            }
+            $result = $webp->copy($target);
+            if (! $result)
+              Log::addWarn('Could not copy Webp to destination ' . $target->getFullPath() );
+            return $result;
+         }
+
+         return false;
+    }
+
+
     protected function isPathExcluded()
     {
         $excludePatterns = \wpSPIO()->settings()->excludePatterns;
@@ -234,25 +303,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         return false;
     }
 
-    /*public function getFile()
-    {
-      return $this->file;
-    } */
-
-    /** Get the facade object.
-    * @todo Ideally, the facade will be an internal thing, separating the custom and media library functions.
-    */
-  /*  public function getFacade()
-    {
-       return $this->facade;
-    } */
-
-  /*  public function getOriginalFile()
-    {
-       return $this->origin_file;
-    } */
-
-
     /** Convert Image Meta to A Class */
     protected function toClass()
     {
@@ -260,50 +310,38 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     }
 
 
-
-
-    // Rebuild the ThumbsOptList and others to fix old info, wrong builds.
-    /*
-    private function reCheckThumbnails()
+    protected function createBackup()
     {
-       // Redo only on non-processed images.
-       if ($this->meta->getStatus() != \ShortPixelMeta::FILE_STATUS_SUCCESS)
-       {
-         return;
-       }
-       if (! $this->file->exists())
-       {
-         Log::addInfo('Checking thumbnails for non-existing file', array($this->file));
-         return;
-       }
-       $data = $this->facade->getRawMeta();
-       $oldList = array();
-       if (isset($data['ShortPixel']['thumbsOptList']))
-       {
-        $oldList = $data['ShortPixel']['thumbsOptList'];
-        unset($data['ShortPixel']['thumbsOptList']); // reset the thumbsOptList, so unset to get what the function thinks should be there.
-       }
-       list($includedSizes, $thumbsCount)  = \WpShortPixelMediaLbraryAdapter::getThumbsToOptimize($data, $this->file->getFullPath() );
+       $directory = $this->getBackupDirectory(true);
+       $fs = \wpSPIO()->filesystem();
 
-       // When identical, save the check and the Dbase update.
-       if ($oldList === $includedSizes)
-       {
-          return;
+       if(apply_filters('shortpixel_skip_backup', false, $this->getFullPath())){
+           return true;
        }
 
-       $newList = array();
-       foreach($this->meta->getThumbsOptList() as $index => $item)
+       if (! $directory)
        {
-         if ( in_array($item, $includedSizes))
-         {
-            $newList[] = $item;
-         }
+          Log::addWarn('Could not create Backup Directory for ' . $this->getFullPath());
+          return false;
        }
 
-       $this->meta->setThumbsOptList($newList);
-       $this->facade->updateMeta($this->meta);
+       $backupFile = $fs->getFile($directory . $this->getFileName());
 
-    } */
+       $result = $this->copy($backupFile);
+       if (! $result)
+       {
+          Log::addWarn('Creating Backup File failed for ' . $this->getFullPath());
+          return false;
+       }
+
+       if ($this->hasBackup())
+         return true;
+       else
+       {
+          Log::addWarn('FileModel returns no Backup File for (failed) ' . $this->getFullPath());
+          return false;
+       }
+    }
 
     private function addUnlistedThumbs()
     {

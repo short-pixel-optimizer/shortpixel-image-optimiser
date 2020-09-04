@@ -93,6 +93,7 @@ class MysqlDataProvider implements DataProvider
           'newstatus' => ShortQ::QSTATUS_DONE,
           'orderby' => 'list_order',
           'order' => 'ASC',
+          'priority' => false,  // array('operator' => '<', 'value' => 10);
       );
 
       $args = wp_parse_args($args, $defaults);
@@ -105,6 +106,7 @@ class MysqlDataProvider implements DataProvider
         'status' => $args['status'],
         'orderby' => $args['orderby'],
         'order' => $args['order'],
+        'priority' => $args['priority'],
       ));
 
       $id_array = array_keys($items);
@@ -208,7 +210,7 @@ class MysqlDataProvider implements DataProvider
             $value = $args['priority'];
         }
 
-        $sql .= 'and priority ' . $operator . ' %d ';
+        $sql .= 'and list_order ' . $operator . ' %d ';
         $prepare[] = $value;
      }
 
@@ -416,7 +418,7 @@ class MysqlDataProvider implements DataProvider
      elseif(! is_null($args['items']) && count($args['items']) > 0)
      {
        $items = $args['items'];
-       $vals = implode( ', ', array_fill( 0, count( $items ), '%s' ));
+       $vals = implode( ', ', array_fill( 0, count( $items ), '%d' ));
        $delete_sql .= ' AND item_id in (' . $vals .  ' ) ';
        $data = array_merge($data, $items);
      }
@@ -428,8 +430,8 @@ class MysqlDataProvider implements DataProvider
        return false; // prevent accidents if all is not set explicitly.
      }
 
-     $result = $wpdb->query($wpdb->prepare($delete_sql, $data));
-
+     $delete_sql = $wpdb->prepare($delete_sql, $data);
+     $result = $wpdb->query($delete_sql);
      return $result;
    }
 

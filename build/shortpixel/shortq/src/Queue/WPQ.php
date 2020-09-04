@@ -121,16 +121,15 @@ class WPQ implements Queue
       {
         $numitems += $this->DataProvider->enqueue($objItems);
 
-        //$last_id = $objItems[count($objItems)-1]->item_id;
         $last_id = end($objItems)->item_id;
 
-        //var_dump(end($objItems)); var_dump($last_id);
         $this->setStatus('last_item_id', $last_id); // save this, as a script termination safeguard.
       }
 
       $this->items = array(); // empty the item cache after inserting
       $this->setStatus('items', $numitems, false);
       $this->saveStatus();
+
       return $numitems;
   }
 
@@ -169,6 +168,12 @@ class WPQ implements Queue
 
      if ($count > 0)
         $this->setStatusCount('items', -$count );
+
+      // Probabably not the full solution, but this can happen if deleted items were already Dequeued with status Done.
+      if ($this->getStatus('items') <= 0)
+      {
+        $this->resetInternalCounts();
+      }
 
      return $this;
   }
@@ -224,7 +229,7 @@ class WPQ implements Queue
      //$queue['average_ask'] = $this->calcAverageAsk($queue['average_ask']);
      //$this->updateQueue($queue);
      $this->setStatus('last_run', time(), false);
-     if (! isset($args['onlypriority']) || ! $args['onlypriority'])
+     if (! isset($args['priority']))
       $this->setStatus('running', true, false);
      $this->saveStatus();
 
@@ -310,6 +315,16 @@ class WPQ implements Queue
     $item->tries++;
     $this->DataProvider->itemUpdate($item, array('status' => $status, 'tries' => $item->tries));
 
+  }
+
+  public function updateItemValue(Item $item)
+  {
+      if (!property_exists($item, 'value'))
+      {
+          return false;
+      }
+
+      return $this->DataProvider->itemUpdate($item, array('value' => $item->getRaw('value') ));
   }
 
   public function getItem($item_id)

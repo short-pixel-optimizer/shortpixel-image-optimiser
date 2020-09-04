@@ -6,6 +6,7 @@ class ImageThumbnailMeta
   public $status = 0;
   public $compressionType;
   public $compressedSize;
+  public $originalSize;
   public $improvement;
 
   public $tsAdded;
