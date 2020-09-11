@@ -55,7 +55,7 @@ class MediaCest
         $I->click('Start Optimizing 18 images');
         $I->see('Media Library and Custom folders optimization in progress ...');
 
-//        $I->see('#bulk-progress'); //TODO Progress bar it's there but it cannot see it for some reason
+        $I->see('0%','#bulk-progress'); //TODO Progress bar it's there but it cannot see it for some reason
 //        $I->seeProgressBarValue('0%', 'progress-left');
 //        $I->wait('10s');
 //        $I->seeProgressBar('>30%');
