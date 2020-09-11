@@ -13,6 +13,7 @@ class APIKeyCest
         $I->amOnAdminPage('/options-general.php?page=wp-shortpixel-settings&part=settings');
 
         $I->fillField('#key', '');
+        $I->wait(5);
         $I->click('Save settings & validate');
 
         $I->see('', '#key');
@@ -46,7 +47,7 @@ class APIKeyCest
     public function fillWrongAPIKeyAfterRemovingCorrectOneFromBefore(AcceptanceTester $I) {
         $I->wantToTest('That an error message is displayed and no other previous API key is filled in after error');
 
-        $this->removeAPIKey();
+        $this->removeAPIKey($I);
         $I->see('', '#key');
 
         $I->fillField('#key', 'wrongAPIKeySPIOdzYHj');
