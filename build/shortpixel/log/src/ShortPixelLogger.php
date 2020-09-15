@@ -237,7 +237,7 @@ namespace ShortPixel\ShortPixelLogger;
      $log = self::getInstance();
      $log->addLog($message, $level, $args);
    }
-   // Alias, since it goes wrong so often. 
+   // Alias, since it goes wrong so often.
    public static function addWarning($message, $args = array())
    {
       self::addWarn($message, $args);

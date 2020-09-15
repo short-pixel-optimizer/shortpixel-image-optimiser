@@ -175,19 +175,56 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   public function handleOptimized($tempFiles)
   {
       $result = parent::handleOptimized($tempFiles);
-      if (! $result)
+    //  Log::addTemp('TempFiles', $tempFiles);
+
+      /*if (! $result)
       {
-         $this->setMeta('errorMessage', __('Unable to Optimize this Image', 'shortpixel-image-optimizer'));
-         $this->saveMeta();
+         //$this->setMeta('errorMessage', __('Unable to Optimize this Image', 'shortpixel-image-optimizer'));
+         //$this->saveMeta();
          return false;
-      }
+      } */
 
       // If thumbnails should not be optimized, they should not be in result Array.
       foreach($this->thumbnails as $thumbnail)
       {
-         $thumbnail->handleOptimized($tempFiles);
+         // @todo Find here which one is handles, since sizes can have duplicate files ( ie multiple size pointing to same filename, make local array if duplicate comes up / don't reprocess ). Same needed in restore.
+         $optimized = array();
+         $filebase = $thumbnail->getFileBase();
+         if (isset($optimized[$filebase]))
+           $thumbnail->setMetaObj($optimized[$filebase]);
+         else
+          $result = $thumbnail->handleOptimized($tempFiles);
+
+         if ($result)
+         {
+            $optimized[$filebase]  = getMetaObj();
+         }
       }
 
+      // @todo Check for WPML Duplicates
+
+
+      $this->saveMeta();
+
+      return true;
+  }
+
+  protected function createBackup()
+  {
+      $bool = parent::createbackup();
+
+      if ($bool)
+      {
+         foreach($this->thumbnails as $thumbnail)
+        {
+           $bool = $thumbnail->createBackup();
+           if (! $bool) // if something goes wrong, abort.
+             return $bool;
+        }
+
+      }
+
+      return $bool;
   }
 
   private function getThumbnailModel($fileName)
@@ -293,13 +330,26 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
  public function saveMeta()
  {
      $metadata = $this->createSave();
-      $result = update_post_meta($this->id, '_shortpixel_meta', $metadata);
+     // There is no point checking for errors since false is returned on both failure and no field changed.
+     update_post_meta($this->id, '_shortpixel_meta', $metadata);
+  }
 
-      if ($result === false)
+  /** Delete the Shortpixel Meta */
+  public function deleteMeta()
+  {
+     delete_post_meta($this->id, '_shortpixel_meta');
+  }
+
+  public function onDelete()
+  {
+      parent::onDelete();
+
+      foreach($this->thumbnails as $thumbObj)
       {
-        Log::addError('Saving Metadata of ' . $this->id . ' failed!', $metadata);
+        $thumbObj->onDelete();
       }
 
+      $this->deleteMeta();
   }
 
   public function getThumbNail($name)
@@ -309,6 +359,46 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
       return false;
   }
+
+  /* Check if an image in theory could be processed. Check only exclusions, don't check status etc */
+  public function isProcessable()
+  {
+      $bool = true;
+      $bool = parent::isProcessable();
+//var_dump($bool);
+      if (! $bool) // if parent is not processable, check if thumbnails are, can still have a work to do.
+      {
+          foreach($this->thumbnails as $thumbnail)
+          {
+
+            $bool = $thumbnail->isThumbnailProcessable();
+        //    var_dump($thumbnail); var_dump($bool);
+            if ($bool === true) // Is Processable just needs one job
+              return true;
+          }
+      }
+
+      return $bool;
+  }
+
+  public function isRestorable()
+  {
+      $bool = true;
+      $bool = parent::isRestorable();
+
+      if (! $bool) // if parent is not processable, check if thumbnails are, can still have a work to do.
+      {
+          foreach($this->thumbnails as $thumbnail)
+          {
+            $bool = $thumbnail->isRestorable();
+            if ($bool === true) // Is Processable just needs one job
+              return true;
+          }
+      }
+
+      return $bool;
+  }
+
 
 
   protected function isSizeExcluded()
@@ -324,7 +414,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
             //$meta = $meta? $meta : wp_get_attachment_metadata($ID);
             if( $this->width && $this->height
                  && $this->isProcessableSize($this->width, $this->height, $item["value"]) === false){
-                   $this->$processable_status = self::P_EXCLUDE_SIZE;
+                   $this->processable_status = self::P_EXCLUDE_SIZE;
                   return true;
               }
             else
@@ -382,6 +472,14 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       return true;
     else
       return false;
+  }
+
+  public function getOriginalFile()
+  {
+      if ($this->hasOriginal())
+        return $this->original_file;
+      else
+        return false;
   }
 
   public function getWPMLDuplicates()
@@ -447,19 +545,25 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
     //$itemHandler = $this->facade;
     //$itemHandler = new ShortPixelMetaFacade($post_id);
     //$urlsPaths = $itemHandler->getURLsAndPATHs(true, false, true, array(), true, true);
-    if ($this->isOptimized())
+    $cleanRestore = true;
+    $bool = parent::restore();
+
+
+    if (! $bool)
     {
-        if ($backup = $this->hasBackup())
-        {
-           $backup->move($this);
-           foreach($this->thumbnails as $thumbObj)
-           {
-               if($backup = $thumbObj->hasBackup())
-               {
-                  $backup->move($thumbObj);
-               }
-           }
-        }
+       Log::addTemp('Restoring main file failed ');
+       $cleanRestore = false;
+    }
+    foreach($this->thumbnails as $thumbObj)
+    {
+          if ($thumbObj->isOptimized())
+          {
+            $bool = $thumbObj->restore();
+            if (! $bool)
+              $cleanRestore = false;
+          }
+    }
+
         // @todo move this to some better permanent structure w/ png2jpg class.
         if ($this->getMeta('did_png2Jpg'))
         {
@@ -480,25 +584,18 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
                 }
           }
         }
-        if(count($urlsPaths['PATHs'])) {
-            Log::addDebug('Removing Backups and Webps', $urlsPaths);
-            /* @todo */
-          //  \wpSPIO()->getShortPixel()->maybeDumpFromProcessedOnServer($itemHandler, $urlsPaths);
-          $webps = $this->getWebps();
-          foreach($webps as $webpFile)
-              $webpFile->delete();
 
-          //  \wpSPIO()->getShortPixel()->deleteBackupsAndWebPs($urlsPaths['PATHs']);
+        $webps = $this->getWebps();
+        foreach($webps as $webpFile)
+            $webpFile->delete();
+
+        if ($cleanRestore)
+        {
+            Log::addTemp('Restore clean : Deleting metadata');
+            $this->deleteMeta();
         }
-
-    } // isOptimized();
-
-    delete_post_meta($this->id, '_shortpixel_meta', true);
-  //  wp_delete_attachment($this->id);
-    return parent::delete();
-
-  //  $itemHandler->deleteItemCache();
-  //  return $itemHandler; //return it because we call it also on replace and on replace we need to follow this by deleting SP metadata, on delete it
+        $this->saveMeta();
+        return $bool;
   }
 
   // Convert from old metadata if needed.

@@ -2,6 +2,9 @@
 namespace ShortPixel\Model\Image;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
+use ShortPixel\Controller\ResponseController as ResponseController;
+use ShortPixel\Controller\ApiController as API;
+
 /* ImageModel class.
 *
 *
@@ -59,6 +62,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     abstract protected function saveMeta();
     abstract protected function loadMeta();
     abstract protected function isSizeExcluded();
+
+
 
     //abstract public function handleOptimized($tempFiles);
 
@@ -177,58 +182,168 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
       return false;
     }
 
-    public function debugGetImageMeta()
-    {
-       return $this->image_meta;
-    }
 
-    public function handleOptimized($tempFiles)
+    /** Handles an Optimized Image in a general way
+    *
+    * - This function doesn't handle any specifics like custom / thumbnails or anything else, just for a general image
+    * - This function doesn't save metadata, that's job of subclass
+    *
+    * @param Array TemporaryFiles . Files from API optimizer with KEY of filename and FileModel Temporary File
+    */
+    public function handleOptimized($downloadResults)
     {
         $settings = \wpSPIO()->settings();
+      //  echo "IMAGEMODEL DownloadResults :: "; var_dump($downloadResults);
 
-        if ($settings->backupImages)
+        foreach($downloadResults as $urlName => $resultObj)
         {
-            $backupok = $this->createBackup();
-            if (! $backupok)
-              return false;
+            if ($urlName != $this->getFileName())
+              continue;
+            // Check for same filename.
+          //  echo " $urlName " . $this->getFileName();
+            Log::addTemp(" $urlName searching " . $this->getFileName() );
+
+              if ($settings->backupImages)
+              {
+                  $backupok = $this->createBackup();
+                  if (! $backupok)
+                  {
+                    ResponseController::add()->withMessage(__('Could not create backup, optimization failed. Please check file permissions', 'shortpixel-image-optimiser'))->asImportant()->asError();
+                    return false;
+                  }
+              }
+
+              $originalSize = $this->getFileSize();
+
+              if ($resultObj->status == API::STATUS_UNCHANGED)
+              {
+                $copyok = true;
+                $optimizedSize = $this->getFileSize();
+                $tempFile = null;
+              }
+              else
+              {
+                $tempFile = $resultObj->file;
+                $copyok = $tempFile->copy($this);
+                $optimizedSize  = $tempFile->getFileSize();
+              }
+
+              if ($copyok)
+              {
+            //
+                 $webpFile = $this->getFileBase() . '.webp';
+                 if (isset($tempFiles[$webpFile])) // check if there is webp with same filename
+                   $this->handleWebp($tempFiles[$webpFile]);
+
+                 $this->setMeta('status', self::FILE_STATUS_SUCCESS);
+                 $this->setMeta('tsOptimized', time());
+                 $this->setMeta('compressedSize', $optimizedSize);
+                 $this->setMeta('originalSize', $originalSize);
+                 $this->setMeta('improvement', $originalSize - $optimizedSize);
+                 $this->setMeta('did_keepExif', $settings->keepExif);
+                 $this->setMeta('did_cmyk2rgb', $settings->CMYKtoRGBconversion);
+
+                 // Not set before in this case.
+                 if (is_null($this->getMeta('compressionType')))
+                 {
+                    $this->setMeta('compressionType', $settings->compressionType);
+                 }
+
+              }
+              else
+              {
+                ResponseController::add()->withMessage(__('Could not copy optimized image from temporary files. Please check file permissions', 'shortpixel-image-optimiser'))->asImportant()->asError();
+                return false;
+              }
+              return true;
+              break;
+
         }
 
-        $originalSize = $this->getFileSize();
 
-        foreach($tempFiles as $tempFile)
+        foreach($downloadResults as $resultObj)
         {
-            // Check for same filename.
-            if ($tempFile->getFileName() == $this->getFileName())
+            if (property_exists($resultObj, 'file'))
             {
-                $copyok = $tempFile->copy($this);
-
-                if ($copyok)
-                {
-                   $this->handleWebp($tempFile);
-                   $optimizedSize  = $tempFile->getFileSize();
-                   $tempFile->delete(); // cleanup
-
-                   $this->setMeta('status', self::FILE_STATUS_SUCCESS);
-                   $this->setMeta('tsOptimized', time());
-                   $this->setMeta('compressedSize', $optimizedSize);
-                   $this->setMeta('originalSize', $originalSize);
-                   $this->setMeta('improvement', $originalSize - $optimizedSize);
-                   $this->setMeta('did_keepExif', $settings->keepExif);
-                   $this->setMeta('did_cmyk2rgb', $settings->CMYKtoRGBconversion);
-
-                   $this->saveMeta();
-                }
-                return true;
-                break;
+              $tempFile = $resultObj->file;
+              if (! is_null($tempFile))
+               $tempFile->delete(); // cleanup
             }
         }
 
+        Log::addWarn('Could not find images of this item in tempfile -' . $this->id . '(' . $this->getFullPath() . ')', $downloadResults);
+        return null;
     }
 
-    protected function handleWebp($tempFile)
+    public function isRestorable()
+    {
+        if ($this->hasBackup() && $this->is_writable() && $this->isOptimized() )
+        {
+          return true;
+        }
+        else
+        {
+          if (! $this->is_writable())
+          {
+              ResponseController::add()->withMessage(__('This file cannot be restored due to file permissions - not writable', 'shortpixel-image-optimiser'))->asError();
+          }
+          if (! $this->hasBackup())
+            Log::addTemp('Backup not found for file: ', $this);
+          if (! $this->isOptimized())
+            Log::addTemp('Images seems not optimized', $this);
+           return false;
+        }
+    }
+
+    public function restore()
+    {
+        if (! $this->isRestorable())
+        {
+            return false; // no backup / everything not writable.
+        }
+
+        $backupFile = $this->getBackupFile();
+
+        if (! $backupFile)
+        {
+          Log::addWarn('Issue with restoring BackupFile, probably missing - ', $backupFile);
+          return false; //error
+        }
+
+        if (! $backupFile->is_readable())
+        {
+            ResponseController::add()->withMessage(__('BackupFile not readable. Check file and/or file permissions', 'shortpixel-image-optimiser'));
+           return false; //error
+         }
+        $bool = $backupFile->move($this);
+
+        if ($bool)
+          $this->image_meta = new ImageMeta(); // wipe metadata for this image.
+        else
+        {
+          ResponseController::add()->withMessage(__('Moving Backupfile failed' , 'shortpixel-image-optimiser'));
+          Log::addTemp('moving file failed'); // @todo Proper error here.
+        }
+        return $bool;
+    }
+
+    /** When an image is deleted
+    *
+    *  Handle an image delete i.e. by WordPress or elsehow.
+    */
+    public function onDelete()
+    {
+       if ($this->hasBackup())
+        $this->restore();
+
+//       $this->deleteMeta();
+
+    }
+
+    protected function handleWebp(FileModel $tempFile)
     {
          $fs = \wpSPIO()->filesystem();
-         $webP = $fs->getFile( (string) $tempFile->getFileDir() . $tempFile->getFileBase() . '.webp');
+         $webp = $fs->getFile( (string) $tempFile->getFileDir() . $tempFile->getFileBase() . '.webp');
          if ($webp->exists())
          {
             $target = $fs->getFile( (string) $this->getFileDir() . $tempFile->getFileBase() . '.webp');
@@ -255,7 +370,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
             $type = trim($item["type"]);
             if(in_array($type, array("name", "path"))) {
                 $pattern = trim($item["value"]);
-                $target = $type == "name" ? $this->getFileName() : $this->getFullPath();
+                $target = ($type == "name") ? $this->getFileName() : $this->getFullPath();
                 if( self::matchExcludePattern($target, $pattern) ) { //search as a substring if not
                     $this->processable_status = self::P_EXCLUDE_PATH;
                     return true;
@@ -312,6 +427,15 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
     protected function createBackup()
     {
+        // Safety: It should absolutely not be possible to overwrite a backup file.
+       if ($this->hasBackup())
+       {
+          $backupFile = $this->getBackupFile();
+          if ($backupFile->getFileSize() == $this->getFileSize())
+            return true;
+          else
+          return false;
+       }
        $directory = $this->getBackupDirectory(true);
        $fs = \wpSPIO()->filesystem();
 
@@ -327,7 +451,16 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
        $backupFile = $fs->getFile($directory . $this->getFileName());
 
-       $result = $this->copy($backupFile);
+       // Same file exists as backup already, don't overwrite in that case.
+       if ($backupFile->exists() && $this->hasBackup() && $backupFile->getFileSize() == $this->getFileSize())
+       {
+          $result = true;
+       }
+       else
+       {
+         $result = $this->copy($backupFile);
+       }
+
        if (! $result)
        {
           Log::addWarn('Creating Backup File failed for ' . $this->getFullPath());

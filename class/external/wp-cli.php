@@ -5,6 +5,7 @@ use ShortPixel\Controller\OptimizeController as OptimizeController;
 
 use ShortPixel\Controller\Queue\Queue as Queue;
 use ShortPixel\Controller\ApiController as ApiController;
+use ShortPixel\Controller\ResponseController as ResponseController;
 
 class WpCliController
 {
@@ -86,6 +87,48 @@ var_dump($result);
           \WP_CLI::Error(sprintf(__("Adding this item: %s", 'shortpixel_image_optimiser'), $result->message) );
     }
 
+
+    /**
+   * Restores optimized item to original ( if backups are active )
+   *
+   * ## OPTIONS
+   *
+   * <id>
+   * : MediaLibrary ID
+   *
+   *
+   * ---
+   * default: success
+   * options:
+   *   - success
+   *   - error
+   * ---
+   *
+   * ## EXAMPLES
+   *
+   *   wp spio restore 1
+   *
+   * @when after_wp_load
+   */
+  public function restore($args)
+  {
+      $controller = OptimizeController::getInstance();
+      if (! isset($args[0]))
+      {
+        \WP_CLI::Error(__('Specify an Media Library Item ID', 'shortpixel_image_optimiser'));
+        return;
+      }
+      $id = intval($args[0]);
+
+      $result = $controller->restoreItem($id);
+var_dump($result);
+var_dump(ResponseController::getAll());
+      if ($result->status == 1)
+        \WP_CLI::Success($result->message);
+      elseif ($result->status == 0)
+        \WP_CLI::Error(sprintf(__("Restored Item: %s", 'shortpixel_image_optimiser'), $result->message) );
+  }
+
     /**
    * Runs the queue.
    *
@@ -117,7 +160,7 @@ var_dump($result);
           $ticks = $assoc['ticks'];
         //else
         //  $clicked = 20;
-        var_dump($assoc);
+      //  var_dump($assoc);
 
         $controller = OptimizeController::getInstance();
         $results = $controller->processQueue();
@@ -135,13 +178,27 @@ var_dump($result);
            case Queue::
         } */
 
+        //var_dump(ResponseController::getAll());
+
         if (isset($mediaResult->results))
         {
            foreach($mediaResult->results as $item)
            {
             //  if ($item->result->status == ApiController::STATUS_ENQUEUED)
-                 \WP_CLI::log($item->result->message);
+                 \WP_CLI::Log($item->result->message);
            }
+        }
+
+        $responses = ResponseController::getAll();
+
+        foreach ($responses as $response)
+        {
+            if ($response->is('error'))
+               \WP_CLI::Error($response->message);
+            elseif ($response->is('success'))
+               \WP_CLI::Success($response->message);
+            else
+              \WP_CLI::Log($response->message);
         }
 
       //  if ($mediaResult->status !==)

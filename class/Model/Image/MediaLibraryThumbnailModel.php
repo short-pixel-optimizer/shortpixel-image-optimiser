@@ -108,7 +108,20 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
     if ($this->image_meta->status == self::FILE_STATUS_SUCCESS || $this->excludeThumbnails() )
       return array();
     return array($fs->pathToUrl($this));
+  }
 
+
+  protected function isThumbnailProcessable()
+  {
+      if ( $this->excludeThumbnails()) // if thumbnail processing is off, thumbs are never processable.
+        return false;
+      else
+      {
+        //echo "EXIST" . $this->getFullPath(); var_dump($this->exists());
+        //echo "OPtimized"; var_dump($this->isOptimized());
+        return parent::isProcessable();
+
+      }
 
   }
 

@@ -519,5 +519,17 @@ class FileModel extends \ShortPixel\Model
         }
     }
 
+    public function __debuginfo()
+    {
+       return [
+          'fullpath' => $this->fullpath,
+          'filename' => $this->filename,
+          'filebase' => $this->filebase,
+          'exists' => $this->exists,
+          'is_writable' => $this->is_writable,
+          'is_readable' => $this->is_readable,
+       ];
+    }
+
 
 } // FileModel Class

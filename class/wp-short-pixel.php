@@ -119,7 +119,7 @@ class WPShortPixel {
             add_action('wp_ajax_shortpixel_new_api_key', array(&$this, 'newApiKey'));
             add_action('wp_ajax_shortpixel_propose_upgrade', array(&$this, 'proposeUpgrade'));
 
-            add_action( 'delete_attachment', array( &$this, 'handleDeleteAttachmentInBackup' ) );
+        //    add_action( 'delete_attachment', array( &$this, 'handleDeleteAttachmentInBackup' ) );
             add_action( 'load-upload.php', array( &$this, 'handleCustomBulk'));
 
             //backup restore
@@ -2621,7 +2621,7 @@ class WPShortPixel {
 
 
     // @todo integrate this in a normal way / move @unlinks to proper fs delete.
-    public function handleDeleteAttachmentInBackup($ID) {
+    /*public function handleDeleteAttachmentInBackup($ID) {
         $fileObj = \wpSPIO()->filesystem()->getAttachedFile($ID);
         $file = $fileObj->getFullPath();
         $meta = wp_get_attachment_metadata($ID);
@@ -2651,7 +2651,7 @@ class WPShortPixel {
                 //what to do, what to do?
             }
         }
-    }
+    } */
 
     /** Runs on plugin deactivation
     * @hook admin_post_shortpixel_deactivate_plugin
@@ -3638,12 +3638,12 @@ Log::addDebug('GetQuotaInformation Result ', $dataArray);
     public function onDeleteImage($post_id) {
         Log::addDebug('onDeleteImage - Image Removal Detected ' . $post_id);
         $result = null;
+        $fs = \wpSPIO()->filesystem();
 
         try
         {
-          $imageObj = new ImageModel();
-          $imageObj->setbyPostID($post_id);
-          $result = $imageObj->delete();
+          $imageObj = $fs->getMediaImage($post_id);
+          $result = $imageObj->onDelete();
         }
         catch(Exception $e)
         {

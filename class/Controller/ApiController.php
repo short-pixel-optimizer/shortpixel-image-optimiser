@@ -102,7 +102,7 @@ class ApiController
     );
 
     $args = wp_parse_args($args, $defaults);
-var_dump($args);
+
     $requestParameters = array(
         'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
         'key' => $keyControl->forceGetApiKey(),
@@ -199,7 +199,7 @@ var_dump($args);
   {
 
     $APIresponse = $this->parseResponse($response);//get the actual response from API, its an array
-echo "APIRESP"; var_dump($APIresponse); echo "<BR>";
+//echo "APIRESP"; var_dump($APIresponse); echo "<BR>";
 
     // This is only set if something is up, otherwise, ApiResponise returns array
     if ( isset($APIresponse['Status']))
@@ -303,10 +303,10 @@ echo "APIRESP"; var_dump($APIresponse); echo "<BR>";
   *
   * @param Object $item MediaItem that has been optimized
   * @param Object $response The API Response with opt. info.
-  * @return Object $result The Result of the optimization
+  * @return ObjectArray $results The Result of the optimization
   */
   private function handleSuccess($item, $response) {
-      Log::addDebug('Shortpixel API : Handling Success!');
+      Log::addDebug('Shortpixel API : Handling Success!', $response);
       $settings = \wpSPIO()->settings();
       $fs = \wpSPIO()->fileSystem();
 
@@ -323,8 +323,6 @@ echo "APIRESP"; var_dump($APIresponse); echo "<BR>";
           $fileSize = "LoselessSize";
       }
       $webpType = "WebP" . $fileType;
-
-
 
       /** @todo - What does this mean?  */
       $archive = /*false &&*/
@@ -354,25 +352,44 @@ echo "APIRESP"; var_dump($APIresponse); echo "<BR>";
               //TODO la sfarsit sa faca fallback la handleDownload
               if($archive) {
                   $downloadResult = $this->fromArchive($archive['Path'], $fileData->$fileType, $fileData->$fileSize, $fileData->OriginalSize,
-                  //isset($fileData->$webpType) ? $fileData->$webpType : 'NA'
                 );
 
               } else {
                   $downloadResult = $this->handleDownload($fileData->$fileType, $fileData->$fileSize, $fileData->OriginalSize, //isset($fileData->$webpType) ? $fileData->$webpType : 'NA'
                 );
               }
+Log::addTemp('DownloadRes', $downloadResult);
+              if ( $downloadResult->status == self::STATUS_SUCCESS) {
+                  // Removes any query ?strings and returns just filename of originalURL
+                  $originalName = basename(parse_url($fileData->OriginalURL, PHP_URL_PATH));
+                  $results[$originalName] = $downloadResult;
 
-echo "DOWNLOAD RESULT:: "; var_dump($downloadResult);
-              if ( $downloadResult->status == self::STATUS_SUCCESS ) {
-              //nothing to do
-                  $results[] = $downloadResult;
+                  if (isset($fileData->$webpType))
+                  {
+                    $webpName = basename(parse_url($fileData->$webpType, PHP_URL_PATH));
+
+                    if($archive) { // swallow pride here, or fix this.
+                        $downloadResult = $this->fromArchive($archive['Path'], $fileData->$webpType, false,false,
+                      );
+                    } else {
+                        $downloadResult = $this->handleDownload($fileData->$webpType, false, false);
+                    }
+
+                    if ( $downloadResult->status == self::STATUS_SUCCESS)
+                       $results[$webpName] = $downloadResult;
+                  }
+              }
+              elseif ($downloadResult->status == self::STATUS_UNCHANGED)
+              {
+                  // Do nothing.
               }
               //when the status is STATUS_UNCHANGED we just skip the array line for that one
-              elseif( $downloadResult->status == self::STATUS_UNCHANGED ) {
+              /*elseif( $downloadResult->status == self::STATUS_UNCHANGED ) {
                   //this image is unchanged so won't be copied below, only the optimization stats need to be computed
                   $originalSpace += $fileData->OriginalSize;
                   $optimizedSpace += $fileData->$fileSize;
-              }
+
+              } */
               else {
                   self::cleanupTemporaryFiles($archive, $tempFiles);
                   //return array("Status" => $downloadResult->status, "Code" => $downloadResult['Code'], "Message" => $downloadResult['Message']);
@@ -386,7 +403,7 @@ echo "DOWNLOAD RESULT:: "; var_dump($downloadResult);
 
         //  $results[$counter] = array('file' => $fileData->$fileType, 'optimizedSize' => $fileData->$fileSize, 'originalSize' => $fileData->OriginalSize, 'originalURL' => $fileData->OriginalURL);
 
-          if (isset($fileData->$webpType))
+        /*  if (isset($fileData->$webpType))
           {
               //$webpDownload = $this->h
               if($archive) { // swallow pride here, or fix this.
@@ -398,12 +415,13 @@ echo "DOWNLOAD RESULT:: "; var_dump($downloadResult);
               }
 
               if ( $downloadResult->status == self::STATUS_SUCCESS)
-                 $results[] = $downloadResult; 
-          }
+                 $results[$originalName] = $downloadResult;
+          } */
 
           $counter++;
       }
 
+Log::addTemp('results', $results);
       // *******************************
       return $this->returnSuccess($results, self::STATUS_SUCCESS, false);
 
@@ -691,7 +709,7 @@ echo "DOWNLOAD RESULT:: "; var_dump($downloadResult);
    */
   private function handleDownload($optimizedUrl, $optimizedSize = false, $originalSize = false){
 
-    Log::addTemp('Handle Download: ', array($optimizedUrl, $optimizedSize, $originalSize));
+    Log::addTemp('Handle Download: ' , $optimizedUrl . ' ( ' . $optimizedSize . ' '  . $originalSize);
       $downloadTimeout = max(ini_get('max_execution_time') - 10, 15);
       $fs = \wpSPIO()->filesystem();
 
@@ -705,7 +723,7 @@ echo "DOWNLOAD RESULT:: "; var_dump($downloadResult);
       //if there is no improvement in size then we do not download this file
       if ( $originalSize == $optimizedSize )
       {
-          return $this->returnRetry(self::STATUS_UNCHANGED, __("File wasn't optimized so we do not download it. Retry", 'shortpixel-image-optimiser'));
+          return $this->returnRetry(self::STATUS_UNCHANGED, __("File wasn't optimized so we do not download it.", 'shortpixel-image-optimiser'));
           //return array("Status" => self::STATUS_UNCHANGED, "Message" => "File wasn't optimized so we do not download it.", "WebP" => $webpTempFile);
 
       }
@@ -713,7 +731,7 @@ echo "DOWNLOAD RESULT:: "; var_dump($downloadResult);
       $fileURL = $this->setPreferredProtocol(urldecode($optimizedUrl));
 
       $tempFile = download_url($fileURL, $downloadTimeout);
-      Log::addInfo('Downloading file: '.json_encode($tempFile));
+      Log::addInfo('Downloading ' . $fileURL . ' to : '.json_encode($tempFile));
       if(is_wp_error( $tempFile ))
       { //try to switch the default protocol
           $fileURL = $this->setPreferredProtocol(urldecode($optimizedUrl), true); //force recheck of the protocol

@@ -6,7 +6,7 @@
  */
 //define('WP_TESTS_SKIP_INSTALL', '1');
 define('SHORTPIXEL_DEBUG', 4); // Note - debug logs will go into /tmp/
-//define('SHORTPIXEL_DEBUG_TARGET', true);
+define('SHORTPIXEL_DEBUG_TARGET', '/tmp/wordpress/');
 define('SHORTPIXEL_API_KEY', '77O4S9VttKCljaDha8fW');
 
 require_once( dirname( dirname( __FILE__ ) ) . '/vendor/autoload.php');
@@ -39,6 +39,7 @@ function _manually_load_plugin() {
 
 }
 tests_add_filter( 'plugins_loaded', '_manually_load_plugin' );
+
 
 // Start up the WP testing environment.
 require $_tests_dir . '/includes/bootstrap.php';

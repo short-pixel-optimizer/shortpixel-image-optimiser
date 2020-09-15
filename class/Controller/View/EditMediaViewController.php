@@ -205,17 +205,19 @@ class EditMediaViewController extends \ShortPixel\Controller
 
           $sizes = isset($this->data['sizes']) ? $this->data['sizes'] : array();
 
+          //$debugMeta = $imageObj->debugGetImageMeta();
+
           $debugInfo = array();
           $debugInfo[] = array(__('URL', 'shortpixel_image_optiser'), wp_get_attachment_url($this->post_id));
           $debugInfo[] = array(__('File'), get_attached_file($this->post_id));
           $debugInfo[] = array(__('Size and Mime'), $imageObj->get('width') . 'x' . $imageObj->get('height'). '(' . $imageObj->get('mime') . ')');
           $debugInfo[] = array(__('Status'), $this->imageModel->getMeta('status')  );
 
-
           $debugInfo[] = array(__('WPML Duplicates'), json_encode($imageObj->getWPMLDuplicates()) );
+          $debugInfo['imagemetadata'] = array(__('ImageModel Metadata'), $imageObj);
+
           $debugInfo['shortpixeldata'] = array(__('Data'), $this->data);
           $debugInfo['wpmetadata'] = array(__('WP Get Attachment Metadata'), $meta );
-          $debugInfo['imagemetadata'] = array(__('ImageModel Metadata'), print_r($imageObj->debugGetImageMeta(), true));
           if ($imageObj->hasBackup())
           {
             $backupFile = $imageObj->getBackupFile();
@@ -225,15 +227,15 @@ class EditMediaViewController extends \ShortPixel\Controller
           else {
             $debugInfo[] =  array(__("No Backup Available"), '');
           }
+
           if ($or = $imageObj->hasOriginal())
           {
-             $debugInfo[] = array(__('Original File'), $or->getFullPath()  . '(' . \ShortPixelTools::formatBytes($or->getFileSize()) . ')');
-             $orbackup = $or->getBackupFile();
+             $original = $imageObj->getOriginalFile();
+             $debugInfo[] = array(__('Original File'), $original->getFullPath()  . '(' . \ShortPixelTools::formatBytes($original->getFileSize()) . ')');
+             $orbackup = $original->getBackupFile();
              if ($orbackup)
               $debugInfo[] = array(__('Backup'), $orbackup->getFullPath() . '(' . \ShortPixelTools::formatBytes($orbackup->getFileSize()) . ')');
           }
-
-
 
           if (! isset($meta['sizes']) )
           {
@@ -248,11 +250,11 @@ class EditMediaViewController extends \ShortPixel\Controller
 
               $url = $fs->pathToURL($thumbObj); //wp_get_attachment_image_src($this->post_id, $size);
               $filename = $thumbObj->getFullPath();
-              $debugMeta = print_r($thumbObj->debugGetImageMeta(), true);
+            //  $debugMeta =// print_r($thumbObj->debugGetImageMeta(), true);
               $width = $thumbObj->get('width');
               $height = $thumbObj->get('height');
 
-              $debugInfo[] = array('', "<div class='$size previewwrapper'><img src='" . $url . "'><p class='label'>$url ( $display_size - $width X $height ) <br> $filename</p><p>$debugMeta</p></div>");
+              $debugInfo[] = array('', "<div class='$size previewwrapper'><img src='" . $url . "'><p class='label'>$url ( $display_size - $width X $height ) <br> $filename</p><p>&nbsp;</p></div>");
             }
           }
           return $debugInfo;

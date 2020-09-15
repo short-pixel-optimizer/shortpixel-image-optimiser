@@ -12,7 +12,7 @@ class ImageThumbnailMeta
   public $tsAdded;
   public $tsOptimized;
 
-  public $has_backup;
+//  public $has_backup;
 
 /* WIDTH AND HEIGHT ARE IN IMAGEMODEL!
   public $width;

@@ -1,6 +1,6 @@
 <?php
 use \org\bovigo\vfs\vfsStream;
-use \ShortPixel\Model\Image\ImageModel as ImageModel;
+//use \ShortPixel\Model\Image\ImageModel as ImageModel;
 use \ShortPixel\Model\File\FileModel as FileModel;
 
 class FileSystemTest extends  WP_UnitTestCase
@@ -483,17 +483,19 @@ class FileSystemTest extends  WP_UnitTestCase
   public function testWithWpUploadDirError()
   {
     // Setup a test file.
+    $fs = \wpSPIO()->filesystem();
+
     $post = $this->factory->post->create_and_get();
     $attachment_id = $this->factory->attachment->create_upload_object( __DIR__ . '/assets/test-image.jpg', $post->ID );
 
     $fullfilepath = get_attached_file($attachment_id);
     $abspath = $this->fs->getWPUploadBase();
 
-    $image = new ImageModel($attachment_id);
-    $image->setByPostID($attachment_id);
+    $image = $fs->getMediaImage($attachment_id);
+    ///$image->setByPostID($attachment_id);
 
-    $this->assertStringContainsString($abspath, $image->getFile()->getFullPath());
-    $this->assertEquals($fullfilepath, $image->getFile()->getFullPath());
+    $this->assertStringContainsString($abspath, $image->getFullPath());
+    $this->assertEquals($fullfilepath, $image->getFullPath());
 
 
     add_filter('upload_dir', array($this, 'filterUploadDirWithError')); // set upload dir to enable error.
@@ -502,11 +504,11 @@ class FileSystemTest extends  WP_UnitTestCase
     $basedir = $uploadDir['basedir'];
     $baseurl = $uploadDir['baseurl'];
 
-    $image2 = new ImageModel($attachment_id);
-    $image2->setByPostID($attachment_id);
+    $image2 = $fs->getMediaImage($attachment_id);
+//    $image2->setByPostID($attachment_id);
 
-    $this->assertStringContainsString($abspath, $image2->getFile()->getFullPath());
-    $this->assertEquals($image->getFile()->getFullPath(), $image2->getFile()->getFullPath());
+    $this->assertStringContainsString($abspath, $image2->getFullPath());
+    $this->assertEquals($image->getFullPath(), $image2->getFullPath());
 
     remove_filter('upload_dir', array($this, 'filterUploadDirWithError')); // set upload dir to enable error.
   }

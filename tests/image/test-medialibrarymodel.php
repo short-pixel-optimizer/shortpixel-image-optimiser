@@ -1,4 +1,7 @@
 <?php
+use ShortPixel\Controller\ResponseController as ResponseController;
+use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+
 
 class  MediaLibraryModelTest extends  WP_UnitTestCase
 {
@@ -28,11 +31,27 @@ class  MediaLibraryModelTest extends  WP_UnitTestCase
     $imageObj = self::$fs->getMediaImage($attachment_id);
     self::$id = $attachment_id;
     self::$image = $imageObj; // for testing more specific functions.
+
+    add_filter( 'upload_mimes', function ( $mime_types ) {
+        $mime_types['json'] = 'application/json'; // Adding .json extension
+        return $mime_types;
+      });
+
+      Log::getInstance()->setLogPath('/tmp/wordpress/shortpixel_log');
+
   }
 
   public static function wpTearDownAfterClass()
   {
-    wp_delete_attachment(self::$id); 
+    $path = (string) self::$image->getFileDir();
+    // wipe the dir.
+    foreach (new DirectoryIterator($path) as $fileInfo) {
+    if(!$fileInfo->isDot()) {
+        unlink($fileInfo->getPathname());
+    }
+    wp_delete_attachment(self::$id);
+
+}
     //self::$image->delete();
   }
 
@@ -131,13 +150,98 @@ class  MediaLibraryModelTest extends  WP_UnitTestCase
     $settings->excludePatterns = $pattern;
 
     $this->assertFalse($sizeMethod->invoke($imageObj));
+
+
   }
 
   public function testExcludedPatterns()
   {
-      $imageObj = $this->image;
+      $imageObj = self::$image;
+
+      $settings = \wpSPIO()->settings();
+
+      $refWPQ = new ReflectionClass('\ShortPixel\Model\Image\MediaLibraryModel');
+      $pathMethod = $refWPQ->getMethod('isPathExcluded');
+      $pathMethod->setAccessible(true);
+
+      $pattern = array();
+      $settings->excludePatterns = false;
+      $settings->excludePatterns = array();
+
+      $this->assertEquals(array(), $settings->excludePatterns);
+      $this->assertFalse($pathMethod->invoke($imageObj));
+
+      // Test Path Exclude
+      $pattern = array(0 => array('type' => 'path', 'value' => 'uploads'));
+      $settings->excludePatterns = $pattern;
+
+      $this->assertEquals($pattern, $settings->excludePatterns);
+      $this->assertTrue($pathMethod->invoke($imageObj), $imageObj->getFullPath());
+
+      // Test Path Not Exclude
+      $pattern = array(0 => array('type' => 'path', 'value' => 'nomatch'));
+      $settings->excludePatterns = $pattern;
+      $this->assertFalse($pathMethod->invoke($imageObj), $imageObj->getFullPath());
+
+      // Test FileName exclude
+      $pattern = array(0 => array('type' => 'name', 'value' => 'image'));
+      $settings->excludePatterns = $pattern;
+      $this->assertTrue($pathMethod->invoke($imageObj),  $imageObj->getFullPath());
+
+      // Test Filename not exclude
+      $pattern = array(0 => array('type' => 'name', 'value' => 'uploads'));
+      $settings->excludePatterns = $pattern;
+      $this->assertFalse($pathMethod->invoke($imageObj),  $imageObj->getFullPath());
 
 
+  }
+
+  public function testMetaData()
+  {
+      $imageObj = self::$image;
+
+      // Verify a few defaults.
+      $this->assertEquals(0, $imageObj->getMeta('status'));
+      $this->assertNull($imageObj->getMeta('compressionType'));
+
+      $imageObj->setMeta('status', 1);
+      $imageObj->setMeta('compressionType', 'lossy');
+
+      $imageObj->saveMeta();
+
+
+      // Reload
+      $imageObj = self::$fs->getMediaImage(self::$id);
+
+      $this->assertEquals(1, $imageObj->getMeta('status'));
+      $this->assertEquals('lossy', $imageObj->getMeta('compressionType'));
+
+
+  }
+
+
+  public function testHandleOptimize()
+  {
+        $tempDir = get_temp_dir();
+        $settings = \wpSPIO()->settings();
+        $fs = \wpSPIO()->filesystem();
+
+        $optfile = $tempDir . '/dfsklkldsklfs.tmp';
+        copy(__DIR__ . '/assets/image1_optimized.jpg', $optfile); // simulate Tempfile
+        $optfilesize = filesize($optfile);
+
+        $image = self::$image;
+
+        $tempFiles = array('image1-scaled.jpg' => $fs->getFile($optfile), 'image1.jpg' => $fs->getFile($optfile));
+
+        $result = $image->handleOptimized($tempFiles);
+
+        $this->assertTrue($result);
+
+        $this->assertEquals(2, $image->getMeta('status'));
+        $this->assertEquals($settings->compressionType, $image->getMeta('compressionType'));
+        $this->assertEquals($optfilesize, filesize($image->getFullPath()));
+        $this->assertFalse(file_exists($optfile));
   }
 
   //public function test

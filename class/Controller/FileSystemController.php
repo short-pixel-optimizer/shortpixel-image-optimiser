@@ -12,6 +12,7 @@ use ShortPixel\Model\Image\CustomImageModel as CustomImageModel;
 /** Controller for FileSystem operations
 *
 * This controller is used for -compound- ( complex ) FS operations, using the provided models File en Directory.
+* USE via \wpSPIO()->filesystem();
 */
 Class FileSystemController extends \ShortPixel\Controller
 {

@@ -8,6 +8,9 @@ use ShortPixel\Controller\Queue\Queue as Queue;
 
 use ShortPixel\Controller\QuotaController as QuotaController;
 
+use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+
+
 class OptimizeController
 {
     protected static $instance;
@@ -83,6 +86,46 @@ class OptimizeController
           $json = $this->addItemToQueue($id, $type);
 
           $this->jsonResponse($json);
+    }
+
+    public function ajaxRestoreItem()
+    {
+      $id = intval($_POST['id']);
+      $type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';
+
+      $json = $this->restoreItem($id, $type);
+
+      $this->jsonResponse($json);
+    }
+
+    public function restoreItem($id, $type = 'media')
+    {
+        $fs = \wpSPIO()->filesystem();
+
+        if ($type == 'media')
+        {
+          $mediaItem = $fs->getMediaImage($id);
+        }
+        elseif($type == 'custom')
+        {
+          $mediaItem = $fs->getCustomImage($id);
+        }
+
+        $json = $this->getJsonResponse();
+        $json->status = 0;
+
+        $result = $mediaItem->restore();
+
+        if ($result)
+        {
+           $json->status = 1;
+           $json->message = __('Item restored', 'shortpixel-image-optimiser');
+        }
+        else
+        {
+           $json->message = __('Item not restorable', 'shortpixel-image-optimiser');
+        }
+        return $json;
     }
 
 
@@ -173,6 +216,7 @@ class OptimizeController
     protected function handleAPIResult($item, $q)
     {
       $fs = \wpSPIO()->filesystem();
+      $responseControl = new ResponseController();
 echo "OPTIMIZECONTROL RESULT"; var_dump($item);
       $result = $item->result;
       if ($result->is_error)
@@ -182,9 +226,10 @@ echo "OPTIMIZECONTROL RESULT"; var_dump($item);
 
           $item->errors[] = $result;
 
-          if ($result->is_done || count($result->errors) >= SHORTPIXEL_MAX_FAIL_RETRIES )
+          if ($result->is_done || count($item->errors) >= SHORTPIXEL_MAX_FAIL_RETRIES )
           {
              $q->itemFailed($item, true);
+             $responseController->withMessage($result->message)->asError();
           }
           else
           {
@@ -207,12 +252,17 @@ echo "OPTIMIZECONTROL RESULT"; var_dump($item);
 
            $tempFiles = array();
 
-           foreach($result->files as $fileResult)
+           // Set the metadata decided on APItime.
+           if (isset($item->compressionType))
+             $imageItem->setMeta('compressionType', $item->compressionType);
+
+
+           /*foreach($result->files as $index => $fileResult)
            {
-              $tempFiles[] = $fileResult->file;
-           }
-           if (count($tempFiles) > 0 )
-              $optimizeResult = $imageItem->handleOptimized($tempFiles);
+              $tempFiles[$index] = $fileResult->file;
+           } */
+           if (count($result->files) > 0 )
+              $optimizeResult = $imageItem->handleOptimized($result->files);
            else
            {
               Log::addWarn('Api returns Success, but result has no files', $result);
@@ -272,7 +322,9 @@ echo "OPTIMIZECONTROL RESULT"; var_dump($item);
           case Queue::RESULT_ITEMS:
             $json->message = sprintf(__("Fetched %d items",  'shortpixel-image-optimiser'), count($result->items));
             $json->results = $result->items;
-
+          break;
+          default:
+             $json->message = __('Unknown Status', 'shortpixel-image-optimiser');
           break;
         }
         $json->status = $result->qstatus;
