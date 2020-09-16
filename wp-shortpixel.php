@@ -6,6 +6,7 @@
  * Version: 4.20.2
  * Author: ShortPixel
  * Author URI: https://shortpixel.com
+ * GitHub Plugin URI: https://github.com/short-pixel-optimizer/shortpixel-image-optimiser
  * Text Domain: shortpixel-image-optimiser
  * Domain Path: /lang
  */
