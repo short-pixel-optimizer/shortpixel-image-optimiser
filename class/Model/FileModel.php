@@ -295,7 +295,7 @@ class FileModel extends \ShortPixel\Model
         $this->mime = wp_get_image_mime($this->fullpath);
     }
     else
-       $this->mime = false; 
+       $this->mime = false;
 
     return $this->mime;
   }
@@ -385,7 +385,7 @@ class FileModel extends \ShortPixel\Model
   {
      //$uploadDir = wp_upload_dir();
 
-     $site_url = str_replace('http:', '', get_site_url(null, '', 'http'));
+     $site_url = str_replace('http:', '', home_url('', 'http'));
      $url = str_replace(array('http:', 'https:'), '', $url);
 
      if (strpos($url, $site_url) !== false)
