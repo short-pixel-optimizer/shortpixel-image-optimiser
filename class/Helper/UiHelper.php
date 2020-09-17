@@ -34,7 +34,11 @@ class UiHelper
   public static function renderSuccessText($imageObj)
   {
     $output = '';
-    $percent = $imageObj->getMeta('improvement');
+    //$percent = $imageObj->getMeta('improvement');
+    $percent = $imageObj->getImprovement();
+
+//  var_dump($improvements);
+
 
     if($percent == 999) return ;
 
@@ -60,7 +64,7 @@ class UiHelper
 
     $webpsTotal = (is_array($webps)) ? count($webps) : 0;
 
-    if ($thumbs)
+  /*  if ($thumbs)
     {
       foreach($thumbs as $thumbObj)
       {
@@ -69,7 +73,7 @@ class UiHelper
           $thumbsDone++;
         }
       }
-    }
+    } */
     if($retinas)
     {
       foreach($retinas as $retinaObj)
@@ -81,10 +85,22 @@ class UiHelper
       }
     }
 
+    $improvements = $imageObj->getImprovements();
+    $thumbsTotal = count($imageObj->get('thumbnails'));  //
+    $thumbsDone =  (isset($improvements['thumbnails'])) ? count($improvements['thumbnails']) : 0;
+
     if ($thumbsTotal > $thumbsDone)
       $output .= '<br>' . sprintf(__('+%s of %s thumbnails optimized','shortpixel-image-optimiser'),$thumbsDone,$thumbsTotal);
     elseif ($thumbsDone > 0)
       $output .= '<br>' . sprintf(__('+%s thumbnails optimized','shortpixel-image-optimiser'),$thumbsDone);
+
+    if (isset($improvements['thumbnails']))
+    {
+       foreach($improvements['thumbnails'] as $thumbName => $thumbStat)
+       {
+           $output .= "<br>"  . sprintf(__('%s %s %s : %s ', 'shortpixel-image-optimiser'),'<b>', $thumbName, ' </b>', $thumbStat[0] . '%');
+       }
+    }
 
     if ($retinasDone > 0)
       $output .= '<br>' . sprintf(__('+%s Retina images optimized','shortpixel-image-optimiser') , $retinasDone);
@@ -196,7 +212,11 @@ class UiHelper
        $text = __('Quota Exceeded','shortpixel-image-optimiser');
 
     }
-    elseif (! $mediaItem->isProcessable())
+    elseif ($mediaItem->isOptimized())
+    {
+       $text = UiHelper::renderSuccessText($mediaItem);
+    }
+    elseif (! $mediaItem->isProcessable() && ! $mediaItem->isOptimized())
     {
        $text = __('n/a','shortpixel_image_optimiser');
     }
@@ -208,10 +228,7 @@ class UiHelper
     {
       $text = $mediaItem->getMeta('errorMessage');
     }
-    elseif ($mediaItem->isOptimized())
-    {
-       $text = UiHelper::renderSuccessText($mediaItem);
-    }
+
     return $text;
   }
 

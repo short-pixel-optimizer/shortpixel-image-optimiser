@@ -5,6 +5,7 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\ResponseController as ResponseController;
 use ShortPixel\Controller\ApiController as API;
 
+use \Shortpixel\Model\File\FileModel as FileModel;
 /* ImageModel class.
 *
 *
@@ -62,8 +63,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     abstract protected function saveMeta();
     abstract protected function loadMeta();
     abstract protected function isSizeExcluded();
-
-
 
     //abstract public function handleOptimized($tempFiles);
 
@@ -135,6 +134,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
     public function isImage()
     {
+        if (! $this->exists())
+          return false;
+
         $this->mime = mime_content_type($this->getFullPath());
         if (strpos($this->mime, 'image') >= 0)
            return true;
@@ -154,8 +156,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     {
       if (! property_exists($this->image_meta, $name))
       {
-          return false;
           Log::addWarn('GetMeta on Undefined Property' . $name);
+          return false;
       }
 
       return $this->image_meta->$name;
@@ -193,7 +195,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     public function handleOptimized($downloadResults)
     {
         $settings = \wpSPIO()->settings();
-      //  echo "IMAGEMODEL DownloadResults :: "; var_dump($downloadResults);
 
         foreach($downloadResults as $urlName => $resultObj)
         {
@@ -208,7 +209,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                   $backupok = $this->createBackup();
                   if (! $backupok)
                   {
-                    ResponseController::add()->withMessage(__('Could not create backup, optimization failed. Please check file permissions', 'shortpixel-image-optimiser'))->asImportant()->asError();
+                    ResponseController::add()->withMessage(sprintf(__('Could not create backup for %s, optimization failed. Please check file permissions - %s', 'shortpixel-image-optimiser'), $this->getFileName(), $this->getFullPath() ))->asImportant()->asError();
                     return false;
                   }
               }
@@ -232,27 +233,36 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
               {
             //
                  $webpFile = $this->getFileBase() . '.webp';
-                 if (isset($tempFiles[$webpFile])) // check if there is webp with same filename
-                   $this->handleWebp($tempFiles[$webpFile]);
+                 Log::addTemp('Checking Webp as ' . $webpFile);
+                 if (isset($downloadResults[$webpFile]) && isset($downloadResults[$webpFile]->file)) // check if there is webp with same filename
+                 {
+                    $bool = $this->handleWebp($downloadResults[$webpFile]->file);
+                     if (! $bool)
+                       Log::addWarn('Webps available, but copy failed ' . $downloadResults[$webpFile]->file->getFullPath());
+                 }
 
                  $this->setMeta('status', self::FILE_STATUS_SUCCESS);
                  $this->setMeta('tsOptimized', time());
                  $this->setMeta('compressedSize', $optimizedSize);
                  $this->setMeta('originalSize', $originalSize);
-                 $this->setMeta('improvement', $originalSize - $optimizedSize);
+              //   $this->setMeta('improvement', $originalSize - $optimizedSize);
                  $this->setMeta('did_keepExif', $settings->keepExif);
                  $this->setMeta('did_cmyk2rgb', $settings->CMYKtoRGBconversion);
 
                  // Not set before in this case.
-                 if (is_null($this->getMeta('compressionType')))
+                 if (is_null($this->getMeta('compressionType')) || $this->getMeta('compressionType') === false)
                  {
                     $this->setMeta('compressionType', $settings->compressionType);
                  }
 
+                 if ( $tempFile)
+                  $tempFile->delete();
+
               }
               else
               {
-                ResponseController::add()->withMessage(__('Could not copy optimized image from temporary files. Please check file permissions', 'shortpixel-image-optimiser'))->asImportant()->asError();
+                Log::addError('Copy failed for  ' . $this->getFullPath() );
+                ResponseController::add()->withMessage( sprintf(__('Could not copy optimized image %s from temporary files. Please check file permissions  %s' , 'shortpixel-image-optimiser'), $this->getFileName(), $this->getFullPath()))->asImportant()->asError();
                 return false;
               }
               return true;
@@ -260,18 +270,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
         }
 
-
-        foreach($downloadResults as $resultObj)
-        {
-            if (property_exists($resultObj, 'file'))
-            {
-              $tempFile = $resultObj->file;
-              if (! is_null($tempFile))
-               $tempFile->delete(); // cleanup
-            }
-        }
-
-        Log::addWarn('Could not find images of this item in tempfile -' . $this->id . '(' . $this->getFullPath() . ')', $downloadResults);
+        Log::addWarn('Could not find images of this item in tempfile -' . $this->id . '(' . $this->getFullPath() . ')', array_keys($downloadResults) );
         return null;
     }
 
@@ -285,7 +284,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         {
           if (! $this->is_writable())
           {
-              ResponseController::add()->withMessage(__('This file cannot be restored due to file permissions - not writable', 'shortpixel-image-optimiser'))->asError();
+              ResponseController::add()->withMessage(__('This file cannot be restored due to file permissions - not writable : ' . $this->getFullPath(), 'shortpixel-image-optimiser'))->asError();
+              Log::addTemp('Restore - Not Writable ' . $this->getFullPath() );
           }
           if (! $this->hasBackup())
             Log::addTemp('Backup not found for file: ', $this);
@@ -343,18 +343,19 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     protected function handleWebp(FileModel $tempFile)
     {
          $fs = \wpSPIO()->filesystem();
-         $webp = $fs->getFile( (string) $tempFile->getFileDir() . $tempFile->getFileBase() . '.webp');
-         if ($webp->exists())
-         {
-            $target = $fs->getFile( (string) $this->getFileDir() . $tempFile->getFileBase() . '.webp');
+
+      //   $webp = $fs->getFile( (string) $tempFile->getFileDir() . $tempFile->getFileBase() . '.webp');
+
+            $target = $fs->getFile( (string) $this->getFileDir() . $this->getFileBase() . '.webp');
+        Log::addTemp('handle Webp for ' . $this->getFullPath() . ' Target ' . $target->getFullPath() );
             if( (defined('SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION') && SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION) || $target->exists()) {
-                 $target = $fs->getFile((string) $this->getFileDir() . $tempFile->getFileName() . '.webp'); // double extension, if exists.
+                 $target = $fs->getFile((string) $this->getFileDir() . $this->getFileName() . '.webp'); // double extension, if exists.
             }
-            $result = $webp->copy($target);
+            $result = $tempFile->copy($target);
             if (! $result)
               Log::addWarn('Could not copy Webp to destination ' . $target->getFullPath() );
             return $result;
-         }
+      //   }
 
          return false;
     }
@@ -431,10 +432,11 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
        if ($this->hasBackup())
        {
           $backupFile = $this->getBackupFile();
+          Log::addTemp('BackupFile Size ' . $backupFile->getFileSize() . ' This Filesize' . $this->getFileSize());
           if ($backupFile->getFileSize() == $this->getFileSize())
-            return true;
+          {   return true; }
           else
-          return false;
+          { return false; }
        }
        $directory = $this->getBackupDirectory(true);
        $fs = \wpSPIO()->filesystem();

@@ -11,6 +11,10 @@ class WpCliController
 {
     public static $instance;
 
+
+    protected static $ticks = 0;
+    protected static $emptyq = 0;
+
     public function __construct()
     {
         $this->initCommands();
@@ -80,7 +84,7 @@ class SpioCommand
         $id = intval($args[0]);
 
         $result = $controller->addItemtoQueue($id);
-var_dump($result);
+//var_dump($result);
         if ($result->status == 1)
           \WP_CLI::Success($result->message);
         elseif ($result->status == 0)
@@ -149,7 +153,7 @@ var_dump(ResponseController::getAll());
    *
    * ## EXAMPLES
    *
-   *   wp spio runqueue <clicks=20> <wait=3>
+   *   wp spio runqueue <ticks=20> <wait=3>
    *
    *
    * @when after_wp_load
@@ -158,14 +162,12 @@ var_dump(ResponseController::getAll());
     {
         if ( isset($assoc['ticks']))
           $ticks = $assoc['ticks'];
-        //else
-        //  $clicked = 20;
-      //  var_dump($assoc);
 
         $controller = OptimizeController::getInstance();
         $results = $controller->processQueue();
 
-        echo "** RUNQUEUE RESULT: **"; var_dump($results);
+      //  echo "** RUNQUEUE RESULT: **"; var_dump($results);
+
         $mediaResult = $results['media'];
 
         if (! is_null($mediaResult->message))
@@ -184,8 +186,24 @@ var_dump(ResponseController::getAll());
         {
            foreach($mediaResult->results as $item)
            {
+               $result = $item->result;
             //  if ($item->result->status == ApiController::STATUS_ENQUEUED)
-                 \WP_CLI::Log($item->result->message);
+                 \WP_CLI::Log($result->message);
+                 if (property_exists($result, 'improvements'))
+                 {
+                    $improvements = $result->improvements;
+                    if (isset($improvements['main']))
+                       \WP_CLI::Success( sprintf(__('Image optimized by %d %% ', 'shortpixel-image-optimiser'), $improvements['main'][0]));
+
+                    if (isset($improvements['thumbnails']))
+                    {
+                      foreach($improvements['thumbnails'] as $thumbName => $optData)
+                      {
+                         \WP_CLI::Success( sprintf(__('%s optimized by %d %% ', 'shortpixel-image-optimiser'), $thumbName, $optData[0]));
+                      }
+                    }
+                 }
+
            }
         }
 

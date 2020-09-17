@@ -199,10 +199,13 @@ class  MediaLibraryModelTest extends  WP_UnitTestCase
   public function testMetaData()
   {
       $imageObj = self::$image;
+      $id = self::$id;
 
       // Verify a few defaults.
       $this->assertEquals(0, $imageObj->getMeta('status'));
       $this->assertNull($imageObj->getMeta('compressionType'));
+      $this->assertNull($imageObj->getMeta('did_png2Jpg'));
+      $this->assertFalse($imageObj->getMeta('did_png2Jpg'));
 
       $imageObj->setMeta('status', 1);
       $imageObj->setMeta('compressionType', 'lossy');
@@ -215,6 +218,18 @@ class  MediaLibraryModelTest extends  WP_UnitTestCase
 
       $this->assertEquals(1, $imageObj->getMeta('status'));
       $this->assertEquals('lossy', $imageObj->getMeta('compressionType'));
+
+      $meta = get_post_meta($id, '_shortpixel_meta', true);
+
+      $this->assertIsObject($meta);
+      $this->assertEquals($meta->image_meta->status, $imageObj->getMeta('status'));
+
+      // Deleting
+      $bool = $imageObj->deleteMeta();
+      $this->assertTrue($bool);
+
+      $meta = get_post_meta($id, '_shortpixel_meta', true);
+      $this->assertEquals('', $meta);
 
 
   }

@@ -9,7 +9,7 @@ use ShortPixel\Controller\Queue\Queue as Queue;
 use ShortPixel\Controller\QuotaController as QuotaController;
 
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
-
+use ShortPixel\Controller\ResponseController as ResponseController;
 
 class OptimizeController
 {
@@ -65,7 +65,7 @@ class OptimizeController
           $numitems = $queue->addSingleItem($mediaItem); // 1 if ok, 0 if not found, false is not processable
           if ($numitems > 0)
           {
-            $json->message = sprintf(__('Item added to Queue. %d items in Queue', 'shortpixel-image-optimiser'), $numitems);
+            $json->message = sprintf(__('Item %d added to Queue. %d items in Queue', 'shortpixel-image-optimiser'), $id, $numitems);
             $json->status = 1;
           }
           else
@@ -256,13 +256,28 @@ echo "OPTIMIZECONTROL RESULT"; var_dump($item);
            if (isset($item->compressionType))
              $imageItem->setMeta('compressionType', $item->compressionType);
 
-
            /*foreach($result->files as $index => $fileResult)
            {
               $tempFiles[$index] = $fileResult->file;
            } */
+           Log::addTemp('Going to Handle Optimize --> ', array_keys($result->files));
            if (count($result->files) > 0 )
+           {
               $optimizeResult = $imageItem->handleOptimized($result->files);
+              $item->result->improvements = $imageItem->getImprovements();
+
+              if ($optimizeResult)
+              {
+                 $item->result->status = ApiController::STATUS_SUCCESS;
+                 $item->result->message = sprintf(__('Image %s optimized', 'shortpixel-image-optimiser'), $item->item_id);
+               }
+               else
+              {
+                 $item->result->status = ApiController::STATUS_ERROR;
+                 $item->result->message = sprintf(__('Image %s optimized with errors', 'shortpixel-image-optimiser'), $item->item_id);
+              }
+              //$item->results =// $imageItem->getImprovements();
+           }
            else
            {
               Log::addWarn('Api returns Success, but result has no files', $result);

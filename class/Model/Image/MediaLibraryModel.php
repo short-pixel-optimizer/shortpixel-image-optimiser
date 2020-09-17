@@ -175,20 +175,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   public function handleOptimized($tempFiles)
   {
       $result = parent::handleOptimized($tempFiles);
-    //  Log::addTemp('TempFiles', $tempFiles);
-
-      /*if (! $result)
-      {
-         //$this->setMeta('errorMessage', __('Unable to Optimize this Image', 'shortpixel-image-optimizer'));
-         //$this->saveMeta();
-         return false;
-      } */
+      $optimized = array();
 
       // If thumbnails should not be optimized, they should not be in result Array.
       foreach($this->thumbnails as $thumbnail)
       {
+         if ($thumbnail->isOptimized())
+          continue;
          // @todo Find here which one is handles, since sizes can have duplicate files ( ie multiple size pointing to same filename, make local array if duplicate comes up / don't reprocess ). Same needed in restore.
-         $optimized = array();
+
          $filebase = $thumbnail->getFileBase();
          if (isset($optimized[$filebase]))
            $thumbnail->setMetaObj($optimized[$filebase]);
@@ -197,7 +192,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
          if ($result)
          {
-            $optimized[$filebase]  = getMetaObj();
+            $optimized[$filebase]  = $thumbnail->getMetaObj();
          }
       }
 
@@ -207,6 +202,42 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       $this->saveMeta();
 
       return true;
+  }
+
+  public function getImprovements()
+  {
+        $improvements = array();
+        $count = 0;
+        $totalsize = 0;
+        $totalperc = 0;
+
+        if ($this->isOptimized())
+        {
+           $perc = $this->getImprovement();
+           $size = $this->getImprovement(true);
+           $totalsize += $size;
+           $totalperc += $perc;
+           $improvements['main'] = array($perc, $size);
+           $count++;
+        }
+        foreach($this->thumbnails as $thumbObj)
+        {
+           if (! $thumbObj->isOptimized())
+             continue;
+
+           if (! isset($improvements['thumbnails']))
+           {
+                $improvements['thumbnails'] = array();
+           }
+           $perc = $thumbObj->getImprovement();
+           $size = $thumbObj->getImprovement(true);
+           $totalsize += $size;
+           $totalperc += $perc;
+           $improvements['thumbnails'][$thumbObj->name] = array($perc, $size);
+
+        }
+
+        return $improvements; 
   }
 
   protected function createBackup()
@@ -337,7 +368,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   /** Delete the Shortpixel Meta */
   public function deleteMeta()
   {
-     delete_post_meta($this->id, '_shortpixel_meta');
+     Log::addTemp('Deleting ShortPixel Meta ' . $this->id);
+     $bool = delete_post_meta($this->id, '_shortpixel_meta');
+     if (! $bool)
+      Log::addWarn('Delete Post Meta failed');
+
+     return $bool;
   }
 
   public function onDelete()
@@ -548,19 +584,32 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
     $cleanRestore = true;
     $bool = parent::restore();
 
-
     if (! $bool)
     {
-       Log::addTemp('Restoring main file failed ');
+       Log::addTemp('Restoring main file failed ' . $this->getFullPath());
        $cleanRestore = false;
     }
+
+    $restored = array();
+
     foreach($this->thumbnails as $thumbObj)
     {
           if ($thumbObj->isOptimized())
           {
-            $bool = $thumbObj->restore();
+            $filebase = $thumbObj->getFileBase();
+
+            if (isset($restored[$filebase]))
+            {
+              $bool = true;  // this filebase already restored. In case of duplicate sizes.
+              $thumbObj->imageMeta = new ImageMeta();
+            }
+            else
+              $bool = $thumbObj->restore();
+
             if (! $bool)
               $cleanRestore = false;
+            else
+               $restored[$filebase] = true;
           }
     }
 
@@ -594,7 +643,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
             Log::addTemp('Restore clean : Deleting metadata');
             $this->deleteMeta();
         }
-        $this->saveMeta();
+        else
+          $this->saveMeta(); // Save if something is not restored.
+
         return $bool;
   }
 

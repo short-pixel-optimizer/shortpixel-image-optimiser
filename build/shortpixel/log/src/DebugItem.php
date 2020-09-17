@@ -39,7 +39,7 @@ class DebugItem
           $dataType = $this->getDataType($data);
           if ($dataType == 1)  // singular
           {
-              $this->data[] = print_r($data, true);
+              $this->data[] = var_export($data, true);
           }
           if ($dataType == 2) //array
           {
@@ -47,7 +47,7 @@ class DebugItem
             {
               if (is_object($item) || is_array($item))
               {
-                $this->data[] = print_r($item, true);
+                $this->data[] = var_export($item, true);
               }
             }
           }

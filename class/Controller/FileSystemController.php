@@ -40,8 +40,10 @@ Class FileSystemController extends \ShortPixel\Controller
         $filepath = get_attached_file($id);
         $filepath = apply_filters('shortpixel_get_attached_file', $filepath, $id);
 
-        $imageObj = new MediaLibraryModel($id, $filepath);
+        if ($filepath === false)
+          return false;
 
+        $imageObj = new MediaLibraryModel($id, $filepath);
         return $imageObj;
     }
 

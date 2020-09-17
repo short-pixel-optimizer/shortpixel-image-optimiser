@@ -158,7 +158,7 @@ abstract class Queue
     {
 
         $item = new \stdClass;
-        $item->compressionType = false;
+        $item->compressionType = null;
 
         $urls = $imageModel->getOptimizeUrls();
 

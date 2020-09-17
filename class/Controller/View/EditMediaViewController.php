@@ -48,6 +48,7 @@ class EditMediaViewController extends \ShortPixel\Controller
           else
             $this->view->list_actions = '';
 
+
           $this->view->actions = UiHelper::getActions($this->imageModel);
           // $this->view->actions = $actions;
           $this->view->stats = $this->getStatistics();
@@ -70,7 +71,7 @@ class EditMediaViewController extends \ShortPixel\Controller
       {
           return UIHelper::renderSuccessText($this->imageModel);
 
-          if (! isset($this->data['status']))
+        /*  if (! isset($this->data['status']))
             return;
 
           switch($this->data['status'])
@@ -87,7 +88,7 @@ class EditMediaViewController extends \ShortPixel\Controller
             case 'quotaExceeded':
                 return __('Quota Exceeded','shortpixel-image-optimiser');
             break;
-          }
+          } */
       }
 
       protected function getActions()
@@ -137,7 +138,7 @@ class EditMediaViewController extends \ShortPixel\Controller
           $stats[] = array(__('EXIF removed', 'shortpixel-image-optimiser'), '');
         }
 
-        if ($imageObj->getMeta('did_png2Jpg'));
+        if ($imageObj->getMeta('did_png2Jpg') == true);
         {
           $stats[] = array(  __('Converted from PNG','shortpixel-image-optimiser'), '');
         }
@@ -154,7 +155,7 @@ class EditMediaViewController extends \ShortPixel\Controller
         return $stats;
       }
 
-      protected function getTodo()
+      protected function getTodo() // @todo Completely fix this.
       {
         $data = $this->data;
         if ( $data['status'] != 'pdfOptimized' && $data['status'] != 'imgOptimized')

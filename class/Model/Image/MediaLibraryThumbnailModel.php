@@ -37,10 +37,10 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
      return array(
       'image_meta' => $this->image_meta,
       'name' => $this->name,
+      'path' => $this->getFullPath(),
 
     );
   }
-
 
   /** Set the meta name of thumbnail. */
   public function setName($name)
@@ -83,8 +83,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
   protected function setMetaObj($metaObj)
   {
-  //  echo 'model setmetaObject <PRE>'; print_r($metaObj); echo "</PRE>";
-
      $this->image_meta = $metaObj;
   }
 
@@ -111,6 +109,27 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
   }
 
 
+  public function getImprovement($int = false)
+  {
+      if ($this->isOptimized())
+      {
+          $original = $this->getMeta('originalSize');
+          $optimized = $this->getMeta('compressedSize');
+
+          //$diff = $original - $optimized;
+          if ($original == 0 || $optimized == 0)
+            return null;
+
+          if (! $int)
+            return number_format(100.0 * (1.0 - $optimized / $original), 2);
+          else
+            return $original - $optimized;
+
+      }
+      else
+        return null;
+  }
+
   protected function isThumbnailProcessable()
   {
       if ( $this->excludeThumbnails()) // if thumbnail processing is off, thumbs are never processable.
@@ -122,8 +141,8 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
         return parent::isProcessable();
 
       }
-
   }
+
 
 
   // !Important . This doubles as  checking excluded image sizes.

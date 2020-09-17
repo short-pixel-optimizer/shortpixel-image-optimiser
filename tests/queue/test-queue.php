@@ -97,6 +97,7 @@ class QueueTest extends WP_UnitTestCase
       $testMediaItem = clone $mediaItem;  // pass by reference in the reflected methods change the $mediaItem var here too.
 
       $this->assertObjectHasAttribute('compressionType', $mediaItem);
+      $this->assertNull($mediaItem->compressionType);
       $this->assertObjectHasAttribute('urls', $mediaItem);
       $this->assertObjectHasAttribute('item_id', $mediaItem);
       $this->assertObjectHasAttribute('tries', $mediaItem);

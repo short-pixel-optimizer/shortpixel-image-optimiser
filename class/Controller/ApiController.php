@@ -181,7 +181,7 @@ class ApiController
     }
     else
     {
-       $item->result = $this->returnOK(self::STATUS_ENQUEUED, __('Item is Enqueued', 'shortpixel-image-optimiser'));
+       $item->result = $this->returnOK(self::STATUS_ENQUEUED, __('Item is waiting for results', 'shortpixel-image-optimiser'));
     }
     //return $response;
 
@@ -358,25 +358,33 @@ class ApiController
                   $downloadResult = $this->handleDownload($fileData->$fileType, $fileData->$fileSize, $fileData->OriginalSize, //isset($fileData->$webpType) ? $fileData->$webpType : 'NA'
                 );
               }
-Log::addTemp('DownloadRes', $downloadResult);
+//Log::addTemp('DownloadRes', $downloadResult);
               if ( $downloadResult->status == self::STATUS_SUCCESS) {
                   // Removes any query ?strings and returns just filename of originalURL
-                  $originalName = basename(parse_url($fileData->OriginalURL, PHP_URL_PATH));
+                  $originalURL = substr($fileData->OriginalURL, 0, (strpos($fileData->OriginalURL, '?'))  ); // Strip Query String from URL.
+                  $originalFile = $fs->getFile($originalURL); //basename(parse_url($fileData->OriginalURL, PHP_URL_PATH));
+                  $originalName = $originalFile->getFileName();
                   $results[$originalName] = $downloadResult;
+
+                  Log::addDebug('Downloaded' . $fileData->OriginalURL);
+
 
                   if (isset($fileData->$webpType))
                   {
-                    $webpName = basename(parse_url($fileData->$webpType, PHP_URL_PATH));
+                    $webpName = $originalFile->getFileBase() . '.webp'; //basename(parse_url($fileData->$webpType, PHP_URL_PATH));
 
                     if($archive) { // swallow pride here, or fix this.
-                        $downloadResult = $this->fromArchive($archive['Path'], $fileData->$webpType, false,false,
+                        $webpDownloadResult = $this->fromArchive($archive['Path'], $fileData->$webpType, false,false,
                       );
                     } else {
-                        $downloadResult = $this->handleDownload($fileData->$webpType, false, false);
+                        $webpDownloadResult = $this->handleDownload($fileData->$webpType, false, false);
                     }
 
-                    if ( $downloadResult->status == self::STATUS_SUCCESS)
+                    if ( $webpDownloadResult->status == self::STATUS_SUCCESS)
+                    {
+                       Log::addDebug('Downloaded Webp : ' . $fileData->$webpType);
                        $results[$webpName] = $downloadResult;
+                    }
                   }
               }
               elseif ($downloadResult->status == self::STATUS_UNCHANGED)
@@ -421,7 +429,7 @@ Log::addTemp('DownloadRes', $downloadResult);
           $counter++;
       }
 
-Log::addTemp('results', $results);
+//Log::addTemp('results', $results);
       // *******************************
       return $this->returnSuccess($results, self::STATUS_SUCCESS, false);
 
@@ -709,7 +717,7 @@ Log::addTemp('results', $results);
    */
   private function handleDownload($optimizedUrl, $optimizedSize = false, $originalSize = false){
 
-    Log::addTemp('Handle Download: ' , $optimizedUrl . ' ( ' . $optimizedSize . ' '  . $originalSize);
+    Log::addTemp('Handle Download: ' . $optimizedUrl . ' ( ' . $optimizedSize . ' '  . $originalSize);
       $downloadTimeout = max(ini_get('max_execution_time') - 10, 15);
       $fs = \wpSPIO()->filesystem();
 
@@ -721,7 +729,7 @@ Log::addTemp('results', $results);
       } */
 
       //if there is no improvement in size then we do not download this file
-      if ( $originalSize == $optimizedSize )
+      if (($optimizedSize !== false && $originalSize !== false) && $originalSize == $optimizedSize )
       {
           return $this->returnRetry(self::STATUS_UNCHANGED, __("File wasn't optimized so we do not download it.", 'shortpixel-image-optimiser'));
           //return array("Status" => self::STATUS_UNCHANGED, "Message" => "File wasn't optimized so we do not download it.", "WebP" => $webpTempFile);
@@ -761,12 +769,12 @@ Log::addTemp('results', $results);
               "Code" => self::ERR_FILE_NOT_FOUND,
               "Message" => __('Unable to locate downloaded file','shortpixel-image-optimiser') . " " . $tempFile); */
       }
-      elseif( $tempFile->getFileSize() != $correctFileSize) {
+      elseif($correctFileSize !== false &&  $tempFile->getFileSize() != $correctFileSize) {
           //$size = filesize($tempFile);
         //  @unlink($tempFile);
           $tempFile->delete();
           //@unlink($webpTempFile);
-          Log::addWarn('Incorrect file size: ' . $tempFile->getFullPath() . '(' . $correctFilesize . ')');
+          Log::addWarn('Incorrect file size: ' . $tempFile->getFullPath() . '(' . $correctFileSize . ')');
           return $this->returnFailure(self::ERR_INCORRECT_FILE_SIZE, sprintf(__('Error downloading file - incorrect file size (downloaded: %s, correct: %s )','shortpixel-image-optimiser'),$tempFile->getFileSize(), $correctFileSize));
           /*$returnMessage = array(
               "Status" => self::STATUS_ERROR,
