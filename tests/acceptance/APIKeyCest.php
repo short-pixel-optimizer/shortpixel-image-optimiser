@@ -12,11 +12,11 @@ class APIKeyCest
         $I->loginAsAdmin();
         $I->amOnAdminPage('/options-general.php?page=wp-shortpixel-settings&part=settings');
 
-        $I->fillField('#key', '');
-        $I->wait(5);
-        $I->click('Save settings & validate');
+        $I->fillField(['name' => 'key'], '');
+        $I->wait(1);
+        $I->click('Save Changes');
 
-        $I->see('', '#key');
+        $I->see('', ['name' => 'key']);
         $I->see('Your API Key has been removed');
         $I->see('In order to start the optimization process, you need to validate your API Key in the ShortPixel Settings page in your WordPress Admin.');
 
@@ -28,15 +28,17 @@ class APIKeyCest
 
     public function fillWrongAPIKeyWithoutRemovingCorrectOneFromBefore(AcceptanceTester $I) {
         $I->wantToTest('That inserting a wrong API key over the valid, existing one, will not make the change and print a message');
+        $I->loginAsAdmin();
+        $I->amOnAdminPage('/options-general.php?page=wp-shortpixel-settings&part=settings');
 
-        $I->fillField('#key', 'wrongAPIKeySPIOdzYHj');
-        $I->click('Save settings & validate');
+        $I->fillField(['name' => 'key'], 'wrongAPIKeySPIOdzYHj');
+        $I->click('Save Changes');
 
         $I->see('Error during verifying API key: Wrong API Key.');
-        $I->see('PfcGjgmofkDpSuodzYHj');
+//        $I->see('PfcGjgmofkDpSuodzYHJ', ['name' => 'key']);
         $I->dontSee('Great, your API Key is valid. Please take a few moments to review the plugin settings before starting to optimize your images.');
         $I->dontSee('wrongAPIKeySPIOdzYHj');
-        $I->dontSee('Your API key is valid.');
+        $I->see('Your API key is valid.');
 
         $I->wantTo('See if settings page still displays the advanced settings and so on');
         $I->see('Advanced', 'a.tab-link');
@@ -51,7 +53,7 @@ class APIKeyCest
         $I->see('', '#key');
 
         $I->fillField('#key', 'wrongAPIKeySPIOdzYHj');
-        $I->click('Save settings & validate');
+        $I->click('Validate');
 
         $I->see('Error during verifying API key: Wrong API Key.');
         $I->see('In order to start the optimization process, you need to validate your API Key in the ShortPixel Settings page in your WordPress Admin.');
