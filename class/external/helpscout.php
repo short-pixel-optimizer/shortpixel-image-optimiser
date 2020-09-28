@@ -10,7 +10,6 @@ class HelpScout
   {
       return; // this is disabled. 
 
-
       global $shortPixelPluginInstance;
       $settings = \wpSPIO()->settings();
       $dismissed = $settings->dismissedNotices ? $settings->dismissedNotices : array();
