@@ -161,10 +161,15 @@ abstract class Queue
         $item->compressionType = null;
 
         $urls = $imageModel->getOptimizeUrls();
+      //  $paths = $imageModel->getOptimizePaths();
+
+        if ($imageModel->getMeta('is_png2jpg'))
+          $item->png2jpg = $imageModel->getMeta('is_png2jpg');
 
         if ($imageModel->getMeta('compressionType'))
           $item->compressionType = $imageModel->getMeta('compressionType');
 
+        //$item->paths = apply_filters('shortpixel/queue/paths', $paths, $imageModel->get('id'));
         $item->urls = apply_filters('shortpixel_image_urls', $urls, $imageModel->get('id'));
 
         return $item;

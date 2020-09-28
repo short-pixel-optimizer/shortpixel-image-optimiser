@@ -49,9 +49,9 @@ class  MediaLibraryModelTest extends  WP_UnitTestCase
     if(!$fileInfo->isDot()) {
         unlink($fileInfo->getPathname());
     }
-    wp_delete_attachment(self::$id);
+      wp_delete_attachment(self::$id);
 
-}
+    }
     //self::$image->delete();
   }
 

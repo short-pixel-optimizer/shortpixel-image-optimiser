@@ -183,6 +183,9 @@ class OptimizeController
         {
             $urls = $item->urls;
             $item = $this->sendToProcessing($item);
+            if (property_exists($item, 'png2jpg'))
+              $item = $this->convertPNG($item, $mediaQ);
+
             $item = $this->handleAPIResult($item, $mediaQ);
             $result->items[$index] = $item; // replace processed item, should have result now.
 
@@ -212,8 +215,26 @@ class OptimizeController
       return $item;
     }
 
+    protected function convertPNG(Object $item, $mediaQ)
+    {
+      $settings = \wpSPIO()->settings();
+      $fs = \wpSPIO()->filesystem();
+
+      $imageObj = $fs->getMediaItem($item->item_id);
+
+      $result = $imageObj->convertPNG();
+      if ($result !== false)
+        $imageObj = $result; // returns ImageObj.
+      
+      $item->urls = $imageObj->getOptimizeURLS();
+
+      return $item;
+    }
+
+
+
     // This is everything sub-efficient.
-    protected function handleAPIResult($item, $q)
+    protected function handleAPIResult(Object $item, $q)
     {
       $fs = \wpSPIO()->filesystem();
       $responseControl = new ResponseController();

@@ -32,6 +32,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
   }
 
+
   public function getOptimizePaths()
   {
 
@@ -237,7 +238,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
         }
 
-        return $improvements; 
+        return $improvements;
   }
 
   protected function createBackup()
@@ -270,6 +271,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   protected function loadMeta()
   {
       $metadata = get_post_meta($this->id, '_shortpixel_meta', true);
+      $settings = \wpSPIO()->settings();
 
       $this->image_meta = new ImageMeta();
       $fs = \wpSPIO()->fileSystem();
@@ -292,7 +294,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       if (is_object($metadata) )
       {
           $this->image_meta->fromClass($metadata->image_meta);
-        //  echo "<PRE>IMAGE META"; print_r($this->image_meta); echo "</PRE>";
           $thumbnails = $this->loadThumbnailsFromWP();
           foreach($thumbnails as $name => $thumbObj)
           {
@@ -324,7 +325,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           }
       }
 
-      return false;
+      if ($this->getExtension == 'png' && $settings->png2jpg > 0)
+          $this->setMeta('is_png2jpg');
+
+      //return false;
   }
 
   private function createSave()
@@ -435,6 +439,28 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       return $bool;
   }
 
+  public function convertPNG()
+  {
+      $bool = parent::convertPNG($this);
+
+      if ($bool)
+      {
+         /*foreach($this->thumbnails as $thumbObj)
+         {
+            $bool = $thumbObj->convertPNG();
+         } */
+         $this->setMeta('did_png2jpg', true);
+
+        // wp_regenerate_metadata();  // do the attachment, the WP way.  Genious!
+        // wp_update_attachment_metadata( $attach_id,  $attach_data );
+      }
+
+      // Update thumbnails with new stuff.
+      $this->thumbnails = $this->loadMetaFromWP();
+      $this->saveMeta();
+
+      return $bool;
+  }
 
 
   protected function isSizeExcluded()

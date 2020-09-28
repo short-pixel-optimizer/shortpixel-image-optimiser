@@ -143,6 +143,29 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
       }
   }
 
+  // Check for proper settings before hitting this function
+  public function convertPNG()
+  {
+    $settings = \wpSPIO()->settings();
+
+     if ($this->getExtension() == 'png')
+     {
+        if ($settings->backupImages)
+        {
+           $backupok = $this->createBackup();
+           if (! $backupok)
+           {
+             ResponseController::add()->withMessage(sprintf(__('Could not create backup for %s, optimization failed. Please check file permissions - %s', 'shortpixel-image-optimiser'), $this->getFileName(), $this->getFullPath() ))->asImportant()->asError();
+             return false;
+           }
+        }
+
+        $result = ShortPixelPng2Jpg::convert($this);
+        
+     }
+     return $result;
+  }
+
 
 
   // !Important . This doubles as  checking excluded image sizes.

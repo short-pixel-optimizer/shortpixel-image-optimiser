@@ -4,49 +4,106 @@
  * Date: 17.11.2017
  * Time: 13:44
  */
+ namespace ShortPixel;
 
  use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+ use ShortPixel\Model\Image\ImageModel as ImageModel;
+ use ShortPixel\Model\Image\MediaLibraryModel as MediaLibraryModel;
+ use ShortPixel\Model\File\DirectoryModel as DirectoryModel;
+ use ShortPixel\Model\File\FileModel as FileModel;
+
  //use ShortPixel\Model\FileModel as FileModel;
  //use ShortPixel\Model\Directorymodel as DirectoryModel;
 
 //TODO decouple from directly using WP metadata, in order to be able to use it for custom images
 class ShortPixelPng2Jpg {
-    private $_settings = null;
 
-    public function __construct($settings){
-        if(function_exists('wp_raise_memory_limit')) {
-            wp_raise_memory_limit( 'image' );
-        }
-        $this->_settings = $settings;
+    private $current_image;
+
+
+    public function __construct()
+    {
+
     }
 
-    protected function canConvertPng2Jpg($image) {
+    public function convert(ImageModel $imageObj)
+    {
+         $settings = \wpSPIO()->settings();
+         // check for possible conversion. From system heaviest to lowest.
+         if ($settings->png2jpg == 0) // conversion is off
+          return false;
+
+         if (! $imageObj->getExtension() == 'png') // not a png ext. fail silently.
+           return false;
+
+          $this->current_image = $this->getPNGImage($imageObj);
+          $this->raiseMemoryLimit();
+
+          if (is_null($this->current_image)) // image creation failed. @todo Error back
+             return false;
+
+        //  if (! $this->canConvert($imageObj)) // @todo Error back
+        //    return;
+
+          if ($this->isTransparent($imageObj) && $settings->png2jpg < 2) // 2 means force conversion for transparent images.
+             return false;
+
+          // Returns an Array with success or not, new file name.
+          $result = self::doConvertPng2Jpg($imageObj);
+          if ($result !== false && is_array($result))
+          {
+             if ($result['success'])
+             {
+               $bool = $this->updateMetaData($result, $imageObj);
+               if (! $bool)
+                 Log::addWarn('Png2Jpg Update Metadata failed');
+
+               $file = $result['file'];
+
+               $imageObj =  new MediaLibraryModel($imageObj->get('id'), $file->getFullPath() ); //$fs->getMediaItem($imageObj->set('id'));
+
+             }
+          }
+
+          return $imageObj;
+    }
+
+
+    protected function isTransParent(ImageModel $imageObj) {
         $transparent = 0;
         $transparent_pixel = $img = $bg = false;
 
         //WPShortPixel::log("PNG2JPG SHELL EXEC: " . shell_exec('convert ' . $image . ' -format "%[opaque]" info:'));
+        $imagePath = $imageObj->getFullPath();
+        $contents = file_get_contents($imagePath);
 
-        if (!file_exists($image)) {
-            Log::addDebug("PNG2JPG FILE MISSING:  " . $image);
+//ord(file_get_contents($image, false, null, 25, 1)) & 4)
+        if(ord(file_get_contents($imagePath, false, null, 25, 1)) & 4) {
+            Log::addDebug("PNG2JPG: 25th byte has third bit 1 - transparency");
             $transparent = 1;
-        } elseif(ord(file_get_contents($image, false, null, 25, 1)) & 4) {
-            Log::addDebug("PNG2JPG: 25th byte has thrid bit 1 - transparency");
-            $transparent = 1;
+            return true;
         } else {
-            $contents = file_get_contents($image);
+
             if (stripos($contents, 'PLTE') !== false && stripos($contents, 'tRNS') !== false) {
                 $transparent = 1;
             }
             if (!$transparent) {
-                $is = getimagesize($image);
-                Log::addDebug("PNG2JPG Image width: " . $is[0] . " height: " . $is[1] . " aprox. size: " . round($is[0]*$is[1]*5/1024/1024) . "M memory limit: " . ini_get('memory_limit') . " USED: " . memory_get_usage());
-                Log::addDebug("PNG2JPG create from png $image");
-                $img = @imagecreatefrompng($image);
+
+                //$is = getimagesize($image);
+                $width = $imageObj->get('width');
+                $height = $imageObj->get('height');
+                Log::addDebug("PNG2JPG Image width: " . $width . " height: " . $height . " aprox. size: " . round($width*$height*5/1024/1024) . "M memory limit: " . ini_get('memory_limit') . " USED: " . memory_get_usage());
+                //Log::addDebug("PNG2JPG create from png $imageObj");
+                if (is_null($this->current_image))
+                   $img = $this->getPNGImage($imageObj);
+                else
+                   $img = $this->current_image; //imagecreatefrompng($imageObj->getFullPath());
+
+                if (is_null($img)) // still error, bye.
+                  return false;
+
                 Log::addDebug("PNG2JPG created from png");
-                if(!$img) {
-                    Log::addDebug("PNG2JPG not a PNG, imagecreatefrompng failed ");
-                    $transparent = true; //it's not a PNG, can't convert it
-                } else {
+
                     Log::addDebug("PNG2JPG is PNG");
                     $w = imagesx($img); // Get the width of the image
                     $h = imagesy($img); // Get the height of the image
@@ -57,17 +114,33 @@ class ShortPixelPng2Jpg {
                             $rgba = imagecolorat($img, $i, $j);
                             if (($rgba & 0x7F000000) >> 24) {
                                 $transparent_pixel = true;
+                                return true;
                                 break;
                             }
                         }
-                    }
-                }
+                      }
             }
         } // non-transparant.
 
         Log::addDebug("PNG2JPG is " . (!$transparent && !$transparent_pixel ? " not" : "") . " transparent");
         //pass on the img too, if it was already loaded from PNG, matter of performance
-        return array('notTransparent' => !$transparent && !$transparent_pixel, 'img' => $img);
+        //return array('notTransparent' => !$transparent && !$transparent_pixel, 'img' => $img);
+        if ($transparent || $transparent_pixel)
+          return true;
+        else
+          return false;
+    }
+
+    /** Try to load resource and an PNG via library */
+    protected function getPNGImage($imageObj)
+    {
+      $image = @imagecreatefrompng($imageObj->getFullPath());
+      if (! $image)
+        return null;
+      else
+      {
+        return $image;
+      }
     }
 
     /**
@@ -79,19 +152,16 @@ class ShortPixelPng2Jpg {
      * @return string
      */
 
-    protected function doConvertPng2Jpg($params, $backup, $suffixRegex = false, $img = false) {
-        $image = $params['file'];
+    protected function doConvertPng2Jpg($imageObj) {
+        //$image = $params['file'];
         $fs = \wpSPIO()->filesystem();
+        $img = $this->current_image;
 
-        Log::addDebug("PNG2JPG doConvert $image");
-        if(!$img) {
-            Log::addDebug("PNG2JPG doConvert create from PNG");
-            $img = (file_exists($image) ? imagecreatefrompng($image) : false);
-            if(!$img) {
-                Log::addDebug("PNG2JPG doConvert image cannot be created.");
-                return (object)array("params" => $params, "unlink" => false); //actually not a PNG.
-            }
-        }
+        $url = $fs->pathToUrl($imageObj);
+        $params = array();
+        $params['success'] = false;
+        $params['file'] = $imageObj;
+//        $params['delete_original'] = false;
 
       //  WPShortPixel::log("PNG2JPG doConvert img ready");
         $x = imagesx($img);
@@ -99,38 +169,57 @@ class ShortPixelPng2Jpg {
         Log::addDebug("PNG2JPG doConvert width $x height $y");
         $bg = imagecreatetruecolor($x, $y);
     //    WPShortPixel::log("PNG2JPG doConvert img created truecolor");
-        if(!$bg) return (object)array("params" => $params, "unlink" => false);
+        if(!$bg)
+        {
+          Log::addError('ImageCreateTrueColor failed');
+          return false;
+        }
+
         imagefill($bg, 0, 0, imagecolorallocate($bg, 255, 255, 255));
         imagealphablending($bg, 1);
         imagecopy($bg, $img, 0, 0, 0, 0, $x, $y);
-        imagedestroy($img);
+    //    imagedestroy($img);
         //$newPath = preg_replace("/\.png$/i", ".jpg", $image);
 
-        $fsFile = $fs->getFile($image); // the original png file
-        $filename = $fsFile->getFileName();
-        $newFileName = $fsFile->getFileBase() . '.jpg'; // convert extension to .png
+      //  $fsFile = $fs->getFile($image); // the original png file
+        $filename = $imageObj->getFileName();
+        $newFileName = $imageObj->getFileBase() . '.jpg'; // convert extension to .png
 
-        $fsNewFile = $fs->getFile($fsFile->getFileDir() . $newFileName);
+        $fsNewFile = $fs->getFile($imageObj->getFileDir() . $newFileName);
 
-        $uniquefile = $this->unique_file( $fsFile->getFileDir(), $fsNewFile);
-        $newPath =  $uniquefile->getFullPath(); //(string) $fsFile->getFileDir() . $uniquepath;
+        $uniqueFile = $this->unique_file( $imageObj->getFileDir(), $fsNewFile);
+        $newPath =  $uniqueFile->getFullPath(); //(string) $fsFile->getFileDir() . $uniquepath;
+
+        if (! $imageObj->getFileDir()->is_writable())
+        {
+          Log::addWarn('Replacement path for PNG not writable ' . $imageObj->getFileDir()->getPath());
+          return false;
+        }
 
         // check old filename, replace with uniqued filename.
-        $newUrl = str_replace($filename, $uniquefile->getFileName(), $params['url']); //preg_replace("/\.png$/i", ".jpg", $params['url']);
+        // @todo Probably not needed anymore
+        $newUrl = str_replace($filename, $uniqueFile->getFileName(), $url); //preg_replace("/\.png$/i", ".jpg", $params['url']);
 
-        if (imagejpeg($bg, $newPath, 90)) {
+        if ($bool = imagejpeg($bg, $newPath, 90)) {
             Log::addDebug("PNG2JPG doConvert created JPEG at $newPath");
-            $newSize = filesize($newPath);
-            $origSize = filesize($image);
+            $newSize = filesize($newPath); // $uniqueFile->getFileSize();
+            $origSize = $imageObj->getFileSize();
+
             if($newSize > $origSize * 0.95 || $newSize == 0) {
                 //if the image is not 5% smaller, don't bother.
                 //if the size is 0, a conversion (or disk write) problem happened, go on with the PNG
+                if (! $uniqueFile->exists())
+                   Log::addWarn('PNG imagejpeg file not written!');
+
                 Log::addDebug("PNG2JPG converted image is larger ($newSize vs. $origSize), keeping the PNG");
-                unlink($newPath);
-                return (object)array("params" => $params, "unlink" => false);
+                //unlink($newPath);
+                $uniqueFile->delete();
+                return false;
             }
             //backup?
-            if($backup) {
+            /*   Backup is not this class responsibility
+
+              if($backup) {
                 $imageForBk = trailingslashit(dirname($image)) . ShortPixelAPI::MB_basename($newPath, '.jpg') . '.png';
                 Log::addDebug("imageForBk should be PNG: $imageForBk");
                 if($image != $imageForBk) {
@@ -148,17 +237,20 @@ class ShortPixelPng2Jpg {
                     unlink($newPath);
                     return (object)array("params" => $params, "unlink" => false);
                 }
-            }
+            } */
             //unlink($image);
-            $params['file'] = $newPath;
-            Log::addDebug("Original_file should be PNG: $image");
-            $params['original_file'] = $image;
-            $params['url'] = $newUrl;
-            $params['type'] = 'image/jpeg';
-            $params['png_size'] = $origSize;
-            $params['jpg_size'] = $newSize;
+            $params['success'] = true;
+            $params['file'] = $uniqueFile;
+            Log::addDebug("Original_file should be PNG:" .  $imageObj->getFullPath());
+            Log::addTemp('New file generated: ' . $uniqueFile->getFullPath() );
+        //    $params['original_file'] = $image;
+            $params['old_url'] = $url;
+            $params['new_url'] = $newUrl;
+            //$params['type'] = 'image/jpeg';
+            //$params['png_size'] = $origSize;
+            //$params['jpg_size'] = $newSize;
         }
-        return (object)array("params" => $params, "unlink" => $image);
+        return $params;
     }
 
     /** Own function to get a unique filename since the WordPress wp_unique_filename seems to not function properly w/ thumbnails */
@@ -185,6 +277,7 @@ class ShortPixelPng2Jpg {
 
     }
 
+  /*   Gone.  If it's excluded it should not run trough doProcessing anyhow on the OptimizeController.
     protected function isExcluded($params) {
         if(is_array($this->_settings->excludePatterns)) {
             foreach($this->_settings->excludePatterns as $item) {
@@ -198,7 +291,7 @@ class ShortPixelPng2Jpg {
             }
         }
         return false;
-    }
+    } */
 
     /**
      * Convert an uploaded image from PNG to JPG
@@ -206,24 +299,32 @@ class ShortPixelPng2Jpg {
      * @return string
      */
     public function convertPng2Jpg($params) {
+        $settings = \wpSPIO()->settings();
+        $fs = \wpSPIO()->filesystem();
 
-        //echo("PARAMS : ");var_dump($params);
-        if(!$this->_settings->png2jpg || strtolower(substr($params['file'], -4)) !== '.png') {
+        $image = isset($params['file']) ? $params['file'] : false;
+
+        if (! $image)
+          return $params;
+
+        $imageObj = $fs->getFile($params['file']);
+
+        if(!$settings->png2jpg || $imageObj->getExtension() !== '.png') {
             return $params;
         }
-        if($this->isExcluded($params)) { return $params; }
+        //if($this->isExcluded($params)) { return $params; }
 
-        $image = $params['file'];
+    //    $image = $params['file'];
         Log::addDebug("Convert Media PNG to JPG on upload: {$image}");
 
-        if($this->_settings->png2jpg == 2) {
+        if($settings->png2jpg == 2) {
             $doConvert = true;
         } else {
             $ret = $this->canConvertPng2Jpg($image);
             $doConvert =  $ret['notTransparent'];
         }
         if ($doConvert) {
-            $ret = $this->doConvertPng2Jpg($params, $this->_settings->backupImages, false, isset($ret['img']) ? $ret['img'] : false);
+            $ret = $this->doConvertPng2Jpg($params, $settings->backupImages, false, isset($ret['img']) ? $ret['img'] : false);
             if($ret->unlink) @unlink($ret->unlink);
             $paramsC = $ret->params;
             if($paramsC['type'] == 'image/jpeg') {
@@ -255,11 +356,12 @@ class ShortPixelPng2Jpg {
         $meta = $itemHandler->getRawMeta();
         $ID = $itemHandler->getId();
         $fs = \wpSPIO()->filesystem();
+        $settings = \wpSPIO()->settings();
 
-        if(!$this->_settings->png2jpg || !isset($meta['file']) || strtolower(substr($meta['file'], -4)) !== '.png') {
+        if(!$settings->png2jpg || !isset($meta['file']) || strtolower(substr($meta['file'], -4)) !== '.png') {
             return ;
         }
-        if($this->isExcluded($meta)) { return; }
+      //if($this->isExcluded($meta)) { return; }
 
         Log::addDebug("Send to processing: Convert Media PNG to JPG #{$ID} META: " . json_encode($meta));
 
@@ -388,6 +490,39 @@ class ShortPixelPng2Jpg {
         Log::addDebug("PNG2JPG done. Return: " . json_encode($meta));
 
         return $meta;
+    }
+
+    protected function updateMetaData($params, ImageModel $imageObj)
+    {
+        if (! $params['success'])
+          return false;
+
+        $newFile = $params['file'];
+        $attach_id = $imageObj->get('id');
+
+
+        // Update attached_file
+        $bool = update_attached_file($attach_id, $newFile->getFullPath() );
+        if (! $bool)
+          return false;
+
+        // Update post mime on attachment
+        $post_ar = array('ID' => $attach_id, 'post_mime_type' => 'image/jpeg');
+
+        $result = wp_update_post($post_ar);
+        if ($result === 0 || is_wp_error($result))
+          return false;
+
+        $metadata = wp_get_attachment_metadata($attach_id);
+
+        $new_metadata = wp_generate_attachment_metadata($attach_id, $newFile->getFullPath());
+        $new_metadata = array_merge($new_metadata, $metadata);
+
+        Log::addDebug('Png2Jpg New Metadata', $new_metadata);
+
+        wp_update_attachment_metadata($attach_id, $new_metadata);
+        return true;
+
     }
 
     /**
@@ -565,4 +700,14 @@ class ShortPixelPng2Jpg {
         }
         return (object)array('data' => $data, 'replaced' => $replaced);
     }
-}
+
+    // Try to increase limits when doing heavy processing
+    private function raiseMemoryLimit()
+    {
+      if(function_exists('wp_raise_memory_limit')) {
+          wp_raise_memory_limit( 'image' );
+      }
+    }
+
+
+} // class
