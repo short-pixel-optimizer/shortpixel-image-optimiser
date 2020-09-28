@@ -161,7 +161,7 @@ class WPShortPixel {
         //This adds the constants used in PHP to be available also in JS
         add_action( 'admin_enqueue_scripts', array( $this, 'shortPixelJS') );
         add_action( 'admin_footer', array($this, 'admin_footer_js') );
-        add_action( 'admin_head', array( $this, 'headCSS') );
+        //add_action( 'admin_head', array( $this, 'headCSS') );
 
         //register a method to display admin notices if necessary
         add_action('admin_notices', array( &$this, 'displayAdminNotices'));
@@ -285,9 +285,9 @@ class WPShortPixel {
        Log::addInfo($message);
     }
 
-    function headCSS() {
+    /*function headCSS() {
         echo('<style>.shortpixel-hide {display:none;}</style>');
-    }
+    } */
 
     /** @todo Plugin init class. Try to get rid of inline JS. Also still loads on all WP pages, prevent that. */
     function shortPixelJS() {
@@ -1889,6 +1889,8 @@ class WPShortPixel {
     private function getBackupFolderInternal(FileModel $file) {
       //  $fileExtension = strtolower(substr($file,strrpos($file,".")+1));
         $fs = \wpSPIO()->filesystem();
+        $settings = \wpSPIO()->settings();
+
         $SubDir = ShortPixelMetaFacade::returnSubDir($file);
         $SubDirOld = ShortPixelMetaFacade::returnSubDirOld($file);
         //$basename = ShortPixelAPI::MB_basename($file);
@@ -1903,6 +1905,10 @@ class WPShortPixel {
           $backupFolder = $backupFile->getFileDir();
           return $backupFolder;
         }
+
+        // If backup is off, just don't return it.
+  //      if (! $settings->backupImages)
+  //        return false;
 
         // Try to unholy old solutions
         $backupFile = $fs->getFile(SHORTPIXEL_BACKUP_FOLDER . '/'. $SubDir . '/' . $basename);

@@ -85,9 +85,12 @@ if (! defined('SHORTPIXEL_DEBUG'))
 {
     define('SHORTPIXEL_DEBUG', false);
 }
+
+
 $log = \ShortPixel\ShortPixelLogger\ShortPixelLogger::getInstance();
 if (\ShortPixel\ShortPixelLogger\ShortPixelLogger::debugIsActive())
   $log->setLogPath(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
+
 
 /* Function to reach core function of ShortPixel
 * Use to get plugin url, plugin path, or certain core controllers
