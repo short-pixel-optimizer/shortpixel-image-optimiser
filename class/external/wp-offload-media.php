@@ -97,7 +97,9 @@ class wpOffload
     {
 
       $scheme = parse_url($file, PHP_URL_SCHEME);
-      if ($scheme !== false && strpos($scheme, 's3') !== false)
+      $item = $this->getItemById($id);
+
+      if ($item !== false)
       {
         $image_meta = wp_get_attachment_metadata( $id );
         $image_file = get_attached_file( $id, true );
