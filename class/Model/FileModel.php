@@ -82,7 +82,7 @@ class FileModel extends \ShortPixel\Model
   public function exists()
   {
     if (is_null($this->exists))
-      $this->exists = file_exists($this->fullpath);
+      $this->exists = @file_exists($this->fullpath);
 
     return $this->exists;
   }
@@ -90,7 +90,7 @@ class FileModel extends \ShortPixel\Model
   public function is_writable()
   {
     if (is_null($this->is_writable))
-      $this->is_writable = is_writable($this->fullpath);
+      $this->is_writable = @is_writable($this->fullpath);
 
     return $this->is_writable;
   }
@@ -98,7 +98,7 @@ class FileModel extends \ShortPixel\Model
   public function is_readable()
   {
     if (is_null($this->is_readable))
-      $this->is_readable = is_readable($this->fullpath);
+      $this->is_readable = @is_readable($this->fullpath);
 
     return $this->is_readable;
   }

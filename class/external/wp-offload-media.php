@@ -75,22 +75,20 @@ class wpOffload
     {
       $scheme = parse_url($file, PHP_URL_SCHEME);
 
+      $item = $this->getItemById($id);
+      if ($item !== false) // this is a offloaded thingie
+      {
+         return get_attached_file($id, true);
+      }
+      /*
       if ($scheme !== false && strpos($scheme, 's3') !== false)
       {
         return get_attached_file($id, true);
       }
-      elseif($scheme !== false)
+      else
       {
-        $item = $this->getItemById($id);
-        if ($item !== false) // this is a offloaded thingie
-        {
-            // Google offload can somehow return weird schemes
-            if ($scheme !== 'http' && $scheme !== 'https')
-            {
-               return get_attached_file($id, true);
-            }
-        }
-      }
+
+      } */
       return $file;
     }
 
