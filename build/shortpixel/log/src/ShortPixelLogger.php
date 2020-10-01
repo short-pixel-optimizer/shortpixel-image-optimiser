@@ -62,6 +62,7 @@ namespace ShortPixel\ShortPixelLogger;
           $this->logLevel = intval($_REQUEST['SHORTPIXEL_DEBUG']);
         }
 
+
       }
       else if ( (defined('SHORTPIXEL_DEBUG') && SHORTPIXEL_DEBUG > 0) )
       {
@@ -136,6 +137,17 @@ namespace ShortPixel\ShortPixelLogger;
      if ($this->logLevel < $level || ! $this->is_active)
      {
        return;
+     }
+
+     // Force administrator on manuals.
+     if ( $this->is_manual_request )
+     {
+        if (! function_exists('wp_get_current_user')) // not loaded yet
+          return false;
+
+        $user_is_administrator = (current_user_can('manage_options')) ? true : false;
+        if (! $user_is_administrator)
+          return false;
      }
 
      // Check where to log to.
@@ -326,6 +338,7 @@ namespace ShortPixel\ShortPixelLogger;
        $controller = $this;
 
        $template_path = __DIR__ . '/' . $this->template  . '.php';
+       
        if (file_exists($template_path))
        {
 
