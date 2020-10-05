@@ -150,7 +150,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
      if ($this->getExtension() == 'png')
      {
-        if ($settings->backupImages)
+        if ($settings->backupImages == 1)
         {
            $backupok = $this->createBackup();
            if (! $backupok)
@@ -161,7 +161,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
         }
 
         $result = ShortPixelPng2Jpg::convert($this);
-        
+
      }
      return $result;
   }

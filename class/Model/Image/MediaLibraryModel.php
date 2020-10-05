@@ -74,9 +74,17 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
      {
         $urls = array_merge($urls, $thumbObj->getOptimizeUrls());
      }
+
      // @todo Check Unlisted
 
+
      // @todo Check Retina's
+    $retinas = $this->getRetinas();
+    foreach($retinas as $retinaObj)
+    {
+       $urls[] = $retinaObj->getOptimizeUrls();
+    }
+
      return $urls;
   }
 
@@ -325,7 +333,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           }
       }
 
-      if ($this->getExtension == 'png' && $settings->png2jpg > 0)
+      if ($this->getExtension() == 'png' && $settings->png2jpg > 0)
           $this->setMeta('is_png2jpg');
 
       //return false;

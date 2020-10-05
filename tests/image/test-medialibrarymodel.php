@@ -234,7 +234,6 @@ class  MediaLibraryModelTest extends  WP_UnitTestCase
 
   }
 
-
   public function testHandleOptimize()
   {
         $tempDir = get_temp_dir();
@@ -259,7 +258,12 @@ class  MediaLibraryModelTest extends  WP_UnitTestCase
         $this->assertFalse(file_exists($optfile));
   }
 
-  //public function test
+  public function testConvertPNG()
+  {
+      $post = $factory->post->create_and_get();
+      $attachment_id = $factory->attachment->create_upload_object( __DIR__ . '/assets/png-test.png', $post->ID ); // this one scales
+
+  }
 
 
 } // class

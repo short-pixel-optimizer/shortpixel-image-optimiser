@@ -131,15 +131,17 @@ class OptimizeController
 
     public function createBulk()
     {
-       //$mediaQ = MediaLibraryQueue::getInstance();
-       //$mediaQ->createNewBulk();
+    //  $this->q->createNewBulk();
+
+       $mediaQ = MediaLibraryQueue::getInstance();
+       $mediaQ->createNewBulk();
+       
     }
 
     public function ajaxCreateBulk()
     {
 
     }
-
 
     // Processing Part
 
@@ -220,18 +222,16 @@ class OptimizeController
       $settings = \wpSPIO()->settings();
       $fs = \wpSPIO()->filesystem();
 
-      $imageObj = $fs->getMediaItem($item->item_id);
+      $imageObj = $fs->getMediaImage($item->item_id);
 
       $result = $imageObj->convertPNG();
       if ($result !== false)
         $imageObj = $result; // returns ImageObj.
-      
+
       $item->urls = $imageObj->getOptimizeURLS();
 
       return $item;
     }
-
-
 
     // This is everything sub-efficient.
     protected function handleAPIResult(Object $item, $q)

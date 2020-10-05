@@ -155,6 +155,8 @@ class ShortPixelPng2Jpg {
     protected function doConvertPng2Jpg($imageObj) {
         //$image = $params['file'];
         $fs = \wpSPIO()->filesystem();
+        $settings = \wpSPIO()->settings();
+
         $img = $this->current_image;
 
         $url = $fs->pathToUrl($imageObj);
@@ -216,6 +218,11 @@ class ShortPixelPng2Jpg {
                 $uniqueFile->delete();
                 return false;
             }
+
+        /*    if ($settings->backupImages > 0)
+            {
+                $imageObj->
+            } */
             //backup?
             /*   Backup is not this class responsibility
 

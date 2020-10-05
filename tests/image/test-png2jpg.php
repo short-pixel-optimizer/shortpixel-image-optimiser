@@ -99,9 +99,7 @@ class  PNG2JPGTest extends  WP_UnitTestCase
   public function testConversion()
   {
     $png2jpg = new \ShortPixel\ShortPixelPng2Jpg();
-  //  $refWPQ = new ReflectionClass('\ShortPixel\ShortPixelPng2Jpg');
-  //  $convertMethod = $refWPQ->getMethod('convert');
-  //  $convertMethod->setAccessible(true);
+
     $fs = \wpSPIO()->filesystem();
 
     $settings = \wpSPIO()->settings();
@@ -114,12 +112,8 @@ class  PNG2JPGTest extends  WP_UnitTestCase
 
     // First one should fail.  (transparency)
     $result = $png2jpg->convert(self::$image_trans);
-    //$this->assertIsArray($result);
     $this->assertFalse($result);
-  //  $file = $result['file'];
-  /*  $this->assertIsObject($file);
-    $this->assertEquals('jpg', $file->getExtension());
-    $this->assertEquals('png-transparant.png', $file->getFileName()); */
+
 
     // Second one should work.  Without Backup.
     $result = $png2jpg->convert(self::$image);
@@ -139,19 +133,17 @@ class  PNG2JPGTest extends  WP_UnitTestCase
     $this->assertEquals('image/jpeg', $post->post_mime_type);
 
     // @todo Test thumbnails, see if generated
-    $imageObj = $fs->getMediaItem(self::$id);
+    $imageObj = $fs->getMediaImage(self::$id);
 
 
     // Third test. With Force transparency, with backup.
     $settings->png2jpg = 2;
+    $settings->backupImages = 1; // test one without backup.
 
     $result = $png2jpg->convert(self::$image_trans);
 
     $this->assertIsObject($result);
-    //$this->assertTrue($result['success']);
-    //$this->assertIsObject($result['file']);
 
-    //$file = $result['file'];
     $this->assertEquals('jpg', $result->getExtension());
     $this->assertEquals('png-transparant.jpg', $result->getFileName());
     $this->assertEquals('png-transparant', $result->getFileBase());
@@ -159,10 +151,6 @@ class  PNG2JPGTest extends  WP_UnitTestCase
     $this->assertEquals($result->getFullPath(), get_attached_file(self::$id_trans));
     $post = get_post(self::$id_trans);
     $this->assertEquals('image/jpeg', $post->post_mime_type);
-
-    // @todo Check the backups
-    $this->assertTrue($result->hasBackup() );
-    
 
   }
 
