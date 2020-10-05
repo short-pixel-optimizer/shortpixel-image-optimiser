@@ -441,3 +441,22 @@ Release date: 2nd April 2020
 
 = EARLIER VERSIONS =
 * please refer to the <a href="https://github.com/short-pixel-optimizer/shortpixel-image-optimiser/blob/master/changelog.txt" target="_blank">changelog.txt</a> file inside the plugin archive.
+
+
+== Update Notice ==
+
+= 5.0 =
+
+* Major rework. Backup and test carefully
+
+= 4.20 =
+
+* Testing Plugin Warning. Please do not release this.
+
+= 4.18 =
+
+* Testing 4.8 plugin warning.  Do not release.
+ 
+= 3.0 =
+
+* Old warning [test]

@@ -40,6 +40,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 
       add_action('admin_notices', array($this, 'check_admin_notices'), 5); // run before the plugin admin notices
 
+      add_action('in_plugin_update_message-shortpixel-image-optimiser/wp-shortpixel.php', array($this, 'pluginUpdateMessages'), 10, 2 );
     }
 
     public static function getInstance()
@@ -365,6 +366,22 @@ class AdminNoticesController extends \ShortPixel\Controller
     {
       if (! \wpSPIO()->env()->is_bulk_page)
         return false;
+    }
+
+    public function pluginUpdateMessages($data, $response)
+    {
+        echo "<PRE>"; var_dump($data); var_dump($response); echo "</PRE>";
+
+        $new_version = isset($data['new_version']) ? $data['new_version'] : false;
+        $version= isset($data['Version']) ? $data['Version'] : false;
+
+        if( isset( $data['upgrade_notice'] ) ) {
+      		printf(
+      			'<div class="update-message">%s</div>',
+      			wpautop( $data['upgrade_notice'] )
+      		);
+      	}
+
     }
 
     protected function getActivationNotice()
