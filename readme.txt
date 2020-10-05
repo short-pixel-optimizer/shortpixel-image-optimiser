@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compressor, ima
 Requires at least: 3.2.0
 Tested up to: 5.5
 Requires PHP: 5.3
-Stable tag: 4.20.2-LOCAL
+Stable tag: 4.20.3-DEV01
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -449,14 +449,3 @@ Release date: 2nd April 2020
 
 * Major rework. Backup and test carefully
 
-= 4.20 =
-
-* Testing Plugin Warning. Please do not release this.
-
-= 4.18 =
-
-* Testing 4.8 plugin warning.  Do not release.
-
-= 3.0 =
-
-* Old warning [test]
