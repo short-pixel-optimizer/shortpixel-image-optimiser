@@ -1785,7 +1785,8 @@ class WPShortPixel {
      * Note - $regeneratedSizes expects part of the metadata array called [sizes], with filename, not just the resized data.
      */
     public function thumbnailsRegeneratedHook($postId, $originalMeta, $regeneratedSizes = array(), $bulk = false) {
-
+        $fs = \wpSPIO()->filesystem();
+        $settings = \wpSPIO()->settings();
 
         if(isset($originalMeta["ShortPixelImprovement"]) && is_numeric($originalMeta["ShortPixelImprovement"])) {
             $shortPixelMeta = $originalMeta["ShortPixel"];
@@ -1796,9 +1797,25 @@ class WPShortPixel {
                 $shortPixelMeta["retinasOpt"] = 0;
             } else {
                 $regeneratedThumbs = array();
+                $mainFile = $fs->getAttachedFile($postId);
                 foreach($regeneratedSizes as $size) {
                     if(isset($size['file']) && in_array($size['file'], $shortPixelMeta["thumbsOptList"] )) {
                         $regeneratedThumbs[] = $size['file'];
+                        $fileObj = $fs->getFile( (string) $mainFile->getFileDir() . $size['file']);
+
+                        // if we are creating Webp, remove it.
+                        if ($settings->createWebp)
+                        {
+                            if (SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION)
+                              $webpObj = $fs->getFile( (string) $fileObj->getFileDir() . $fileObj->getFileName() . '.webp');
+                            else
+                              $webpObj = $fs->getFile( (string) $fileObj->getFileDir() . $fileObj->getFileBase() . '.webp');
+
+                            if ($webpObj->exists())
+                              $webpObj->delete();
+
+                        }
+
                         $shortPixelMeta["thumbsOpt"] = max(0, $shortPixelMeta["thumbsOpt"] - 1); // this is a complicated count of number of thumbnails
                         $shortPixelMeta["retinasOpt"] = max(0, $shortPixelMeta["retinasOpt"] - 1);
                     }

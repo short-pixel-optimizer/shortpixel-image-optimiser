@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compressor, ima
 Requires at least: 3.2.0
 Tested up to: 5.5
 Requires PHP: 5.3
-Stable tag: 4.20.2
+Stable tag: 4.20.3-DEV01
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -441,3 +441,11 @@ Release date: 2nd April 2020
 
 = EARLIER VERSIONS =
 * please refer to the <a href="https://github.com/short-pixel-optimizer/shortpixel-image-optimiser/blob/master/changelog.txt" target="_blank">changelog.txt</a> file inside the plugin archive.
+
+
+== Upgrade Notice ==
+
+= 5.0 =
+
+* Major rework. Backup and test carefully
+

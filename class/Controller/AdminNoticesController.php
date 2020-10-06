@@ -40,6 +40,8 @@ class AdminNoticesController extends \ShortPixel\Controller
 
       add_action('admin_notices', array($this, 'check_admin_notices'), 5); // run before the plugin admin notices
 
+      add_action('after_plugin_row_shortpixel-image-optimiser/wp-shortpixel.php', array($this, 'pluginUpdateMessage') , 99, 2 );
+
     }
 
     public static function getInstance()
@@ -365,6 +367,36 @@ class AdminNoticesController extends \ShortPixel\Controller
     {
       if (! \wpSPIO()->env()->is_bulk_page)
         return false;
+    }
+
+    protected function getPluginUpdateMessage($new_version)
+    {
+        $message = false;
+        if (version_compare(SHORTPIXEL_IMAGE_OPTIMISER_VERSION, $new_version, '>=') ) // already installed 'new version'
+        {
+            return false;
+        }
+        elseif (version_compare($new_version, '5.0', '>=') && version_compare(SHORTPIXEL_IMAGE_OPTIMISER_VERSION, '5.0','<'))
+        {
+             $message = __('<h4>Version 5.0</h4> Warning, Version 5 is a major update. It\'s strongly recommend to backup your site and proceed with caution. Please report issues via our support channels', 'shortpixel-image-optimiser');
+        }
+
+        return $message;
+    }
+
+    public function pluginUpdateMessage($file, $plugin)
+    {
+      $message = $this->getPluginUpdateMessage($plugin['new_version']);
+
+      if( $message !== false) {
+    		$wp_list_table = _get_list_table( 'WP_Plugins_List_Table' );
+    		printf(
+    			'<tr class="plugin-update-tr active"><td colspan="%s" class="plugin-update colspanchange"><div class="notice inline notice-error notice-alt">%s</div></td></tr>',
+    			$wp_list_table->get_column_count(),
+    			wpautop( $message )
+    		);
+    	}
+
     }
 
     protected function getActivationNotice()
