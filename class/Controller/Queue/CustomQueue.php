@@ -24,6 +24,10 @@ class CustomQueue extends Queue
 
    }
 
+   public function startBulk()
+   {
+   }
+
    public function prepare()
    {
 

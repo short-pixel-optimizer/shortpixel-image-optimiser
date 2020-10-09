@@ -11,6 +11,7 @@ class ImageThumbnailMeta
 
   public $tsAdded;
   public $tsOptimized;
+  public $webp;
 
 //  public $has_backup;
 
@@ -19,6 +20,11 @@ class ImageThumbnailMeta
   public $height;
 */
   //public $name;
+
+  public function __construct()
+  {
+     $this->tsAdded = time(); // default
+  }
 
   /** Load data from basic class to prevent issues when class definitions changes over time */
   public function fromClass($object)

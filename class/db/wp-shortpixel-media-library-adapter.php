@@ -449,7 +449,6 @@ class WpShortPixelMediaLbraryAdapter {
                             $moreFilesWithErrors++;
                         }
                     }
-
                 }
 
                 if (version_compare(PHP_VERSION, '5.3.0') >= 0) {

@@ -236,9 +236,11 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                  Log::addTemp('Checking Webp as ' . $webpFile);
                  if (isset($downloadResults[$webpFile]) && isset($downloadResults[$webpFile]->file)) // check if there is webp with same filename
                  {
-                    $bool = $this->handleWebp($downloadResults[$webpFile]->file);
-                     if (! $bool)
+                    $webpResult = $this->handleWebp($downloadResults[$webpFile]->file);
+                     if ($webResult === false)
                        Log::addWarn('Webps available, but copy failed ' . $downloadResults[$webpFile]->file->getFullPath());
+                     else
+                       $this->setMeta('webp', $webpResult->getFileName());
                  }
 
                  $this->setMeta('status', self::FILE_STATUS_SUCCESS);
@@ -354,7 +356,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
             $result = $tempFile->copy($target);
             if (! $result)
               Log::addWarn('Could not copy Webp to destination ' . $target->getFullPath() );
-            return $result;
+            return $target;
       //   }
 
          return false;

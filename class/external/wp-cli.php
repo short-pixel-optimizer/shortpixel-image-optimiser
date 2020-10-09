@@ -84,7 +84,7 @@ class SpioCommand
         $id = intval($args[0]);
 
         $result = $controller->addItemtoQueue($id);
-//var_dump($result);
+
         if ($result->status == 1)
           \WP_CLI::Success($result->message);
         elseif ($result->status == 0)
@@ -125,16 +125,56 @@ class SpioCommand
       $id = intval($args[0]);
 
       $result = $controller->restoreItem($id);
-var_dump($result);
-var_dump(ResponseController::getAll());
+
       if ($result->status == 1)
         \WP_CLI::Success($result->message);
       elseif ($result->status == 0)
         \WP_CLI::Error(sprintf(__("Restored Item: %s", 'shortpixel_image_optimiser'), $result->message) );
   }
 
+ /**
+ * Enqueues the batch for bulk optimizing the media library
+ *
+ * ## OPTIONS
+ *
+ *   [--ticks=<20>]
+ *   : How much times the queue runs
+ *
+ *   [--wait=<3>]
+ *   : How much seconds to wait for next tick.
+ *
+ *   [--run=<true>]
+ *   : Directly start running bulk process after preparing
+ *
+ * ---
+ * default: success
+ * options:
+ *   - success
+ *   - error
+ * ---
+ *
+ * ## EXAMPLES
+ *
+ *   wp spio createbulk
+ *
+ * @when after_wp_load
+ */
+  public function createbulk($args, $assoc)
+  {
+      $controller = OptimizeController::getInstance();
+      $controller->createBulk();
+      $this->runqueue($args, $assoc);
+  }
+
+  public function startbulk($args, $assoc)
+  {
+      $controller = OptimizeController::getInstance();
+      $controller->startBulk();
+
+  }
+
     /**
-   * Runs the queue.
+   * Runs the current queue.
    *
    * ## OPTIONS
    *
@@ -161,34 +201,53 @@ var_dump(ResponseController::getAll());
     public function runqueue($args, $assoc)
     {
         if ( isset($assoc['ticks']))
-          $ticks = $assoc['ticks'];
+          $ticks = intval($assoc['ticks']);
+        else
+          $ticks = 20;
+
+        if (isset($assoc['wait']))
+          $wait = intval($assoc['wait']);
+        else
+          $wait = 3;
+
+        $progress = \WP_CLI\Utils\make_progress_bar( 'This run (ticks) ', $ticks );
+
+        while($ticks > 0)
+        {
+           $bool = $this->runClick();
+           if ($bool === false)
+           {
+             break;
+           }
+           $ticks--;
+           $progress->tick();
+           sleep($wait);
+        }
+
+        $progress->finish();
+    }
+
+    protected function runClick()
+    {
 
         $controller = OptimizeController::getInstance();
         $results = $controller->processQueue();
-
-      //  echo "** RUNQUEUE RESULT: **"; var_dump($results);
 
         $mediaResult = $results['media'];
 
         if (! is_null($mediaResult->message))
         {
-          \WP_CLI::Log($mediaResult->message);
+          \WP_CLI::line($mediaResult->message); // Single Response ( ie prepared, enqueued etc )
         }
 
-      /*  switch($mediaResult->status)
-        {
-           case Queue::
-        } */
-
-        //var_dump(ResponseController::getAll());
-
+        // Result after optimizing items and such.
         if (isset($mediaResult->results))
         {
            foreach($mediaResult->results as $item)
            {
                $result = $item->result;
             //  if ($item->result->status == ApiController::STATUS_ENQUEUED)
-                 \WP_CLI::Log($result->message);
+                 \WP_CLI::line($result->message);
                  if (property_exists($result, 'improvements'))
                  {
                     $improvements = $result->improvements;
@@ -207,6 +266,7 @@ var_dump(ResponseController::getAll());
            }
         }
 
+
         $responses = ResponseController::getAll();
 
         foreach ($responses as $response)
@@ -216,14 +276,24 @@ var_dump(ResponseController::getAll());
             elseif ($response->is('success'))
                \WP_CLI::Success($response->message);
             else
-              \WP_CLI::Log($response->message);
+              \WP_CLI::line($response->message);
+        }
+
+        if ($mediaResult->status == Queue::RESULT_QUEUE_EMPTY)
+        {
+           \WP_CLI::line('Queue reports processing has finished');
+           return false;
+        }
+        elseif($mediaResult->status == Queue::RESULT_PREPARING_DONE && $mediaResult->getStatus('bulk_running') == false)
+        {
+           \WP_CLI::line('Bulk Preparing is done. Bulk can be run by running startbulk command');
         }
 
       //  if ($mediaResult->status !==)
+      return true;
     }
 
-
-}
+} // Class
 
 if ( defined( 'WP_CLI' ) && WP_CLI ) {
    WPCliController::getInstance();

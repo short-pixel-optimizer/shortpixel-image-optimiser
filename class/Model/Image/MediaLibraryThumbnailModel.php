@@ -64,6 +64,9 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
   /** @todo Might be moved to ImageModel, if customImage also has Webp */
   public function getWebp()
   {
+    if (! is_null($this->getMeta('webp')))
+      return $this->getMeta('webp');
+
     $double_webp = \wpSPIO()->env()->useDoubleWebpExtension();
     $fs = \wpSPIO()->filesystem();
 

@@ -2,7 +2,8 @@
 namespace ShortPixel;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
-
+use ShortPixel\Controller\OptimizeController as OptimizeController;
+use ShortPixel\Controller\AjaxController as AjaxController;
 //use ShortPixel\Controller;
 
 /** Plugin class
@@ -127,11 +128,14 @@ class ShortPixelPlugin
       add_action('admin_enqueue_scripts', array($this, 'load_admin_scripts'), 90); // loader via route.
       // defer notices a little to allow other hooks ( notable adminnotices )
 
-      add_action( 'shortpixel-thumbnails-before-regenerate', array( $this->shortPixel, 'thumbnailsBeforeRegenerateHook' ), 10, 1);
-      add_action( 'shortpixel-thumbnails-regenerated', array( $this->shortPixel, 'thumbnailsRegeneratedHook' ), 10, 4);
+    //  add_action( 'shortpixel-thumbnails-before-regenerate', array( $this->shortPixel, 'thumbnailsBeforeRegenerateHook' ), 10, 1);
+      add_action( 'shortpixel-thumbnails-regenerated', array( OptimizeController::getInstance(), 'thumbnailsRegeneratedHook' ), 10, 4);
 
       // Media Library
       add_action('load-upload.php', function() { new \ShortPixel\Controller\View\ListMediaViewController(); });
+
+      // Ajax
+      add_action( 'wp_ajax_shortpixel_image_processing', array(AjaxController::getInstance(), 'processQueue') );
 
       $admin = Controller\AdminController::getInstance();
 

@@ -106,13 +106,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   protected function loadThumbnailsFromWP()
   {
     $wpmeta = $this->getWPMetaData();
-//echo "<PRE>"; print_r($wpmeta); echo "</PRE>";
+
     $thumbnails = array();
     if (isset($wpmeta['sizes']))
     {
           foreach($wpmeta['sizes'] as $name => $data)
           {
-
              if (isset($data['file']))
              {
                $thumbObj = $this->getThumbnailModel($data['file']);
@@ -694,8 +693,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       }
 
       $data = $metadata['ShortPixel'];
-    //  echo " I MUST CONVERT THIS <PRE>";  print_r($metadata); echo "</PRE>";
 
+      if (count($data) == 0)  // This can happen. Empty array is still nothing to convert.
+        return false;
+
+    //  echo " I MUST CONVERT THIS <PRE>";  print_r($metadata); echo "</PRE>";
        $type = isset($data['type']) ? $this->legacyConvertType($data['type']) : '';
 
        $improvement = (isset($metadata['ShortPixelImprovement']) && is_numeric($metadata['ShortPixelImprovement']) && $metadata['ShortPixelImprovement'] > 0) ? $metadata['ShortPixelImprovement'] : 0;
@@ -711,6 +713,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        $exifkept = (isset($data['exifKept']) && $data['exifKept']  == 1) ? true : false;
 
        $tsOptimized = $tsAdded = time();
+
        if ($status == self::FILE_STATUS_SUCCESS)
        {
          //strtotime($tsOptimized)
@@ -733,6 +736,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
        $this->image_meta->did_keepExif = $exifkept;
 
+       $webp = $this->getWebp();
+       if ($webp)
+        $this->image_meta->webp = $webp;
+
        $this->width = isset($metadata['width']) ? $metadata['width'] : false;
        $this->height = isset($metadata['height']) ? $metadata['height'] : false;
 
@@ -747,12 +754,26 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
               $thumbnailObj->image_meta->status = $status;
               $thumbnailObj->image_meta->compressionType = $type;
               $thumbnailObj->image_meta->compressedSize = $thumbnailObj->getFileSize();
-              $thumbnailObj->image_meta->improvement = -1; // n/a
+          //    $thumbnailObj->image_meta->improvement = -1; // n/a
+              if ($thumbnailObj->hasBackup())
+              {
+                $backup = $thumbnailObj->getBackupFile();
+                $thumbnailObj->image_meta->originalSize = $backup->getFileSize();
+              }
+
               $thumbnailObj->image_meta->tsAdded = $tsAdded;
               $thumbnailObj->image_meta->tsOptimized = $tsOptimized;
               $thumbnailObj->has_backup = $thumbnailObj->hasBackup();
 
+              $webp = $thumbnailObj->getWebp();
+              if ($webp)
+              {
+                 $thumbnailObj->image_meta->webp = $webp->getFileName();
+              }
+
               $this->thumbnails[$thumbname] = $thumbnailObj;
+
+
           }
        }
 

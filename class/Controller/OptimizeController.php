@@ -11,6 +11,8 @@ use ShortPixel\Controller\QuotaController as QuotaController;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\ResponseController as ResponseController;
 
+use ShortPixel\Model\Image\ImageModel as ImageModel;
+
 class OptimizeController
 {
     protected static $instance;
@@ -78,25 +80,7 @@ class OptimizeController
         return $json;
     }
 
-    public function ajaxAddItem()
-    {
-          $id = intval($_POST['id']);
-          $type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';
 
-          $json = $this->addItemToQueue($id, $type);
-
-          $this->jsonResponse($json);
-    }
-
-    public function ajaxRestoreItem()
-    {
-      $id = intval($_POST['id']);
-      $type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';
-
-      $json = $this->restoreItem($id, $type);
-
-      $this->jsonResponse($json);
-    }
 
     public function restoreItem($id, $type = 'media')
     {
@@ -129,18 +113,20 @@ class OptimizeController
     }
 
 
+    /** Create a new bulk, enqueue items for bulking */
     public function createBulk()
     {
     //  $this->q->createNewBulk();
-
        $mediaQ = MediaLibraryQueue::getInstance();
-       $mediaQ->createNewBulk();
-       
+       $mediaQ->createNewBulk(array());
     }
 
-    public function ajaxCreateBulk()
+    /*** Start the bulk run */
+    public function startBulk()
     {
-
+        $mediaQ = MediaLibraryQueue::getInstance();
+        $mediaQ->startBulk();
+        $this->processQueue();
     }
 
     // Processing Part
@@ -178,9 +164,8 @@ class OptimizeController
         echo "RESULT ---> "; var_dump($result);
 
         $items = (isset($result->items) && is_array($result->items)) ? $result->items : array();
-      //  $json = $this->queueToJson($result);
 
-
+        // Only runs if result is array, dequeued items.
         foreach($items as $index => $item)
         {
             $urls = $item->urls;
@@ -191,12 +176,11 @@ class OptimizeController
             $item = $this->handleAPIResult($item, $mediaQ);
             $result->items[$index] = $item; // replace processed item, should have result now.
 
-
           //  $result = $api->doRequests($urls, $blocking);
         }
+
         $json = $this->queueToJson($result);
         $results['media'] = $json;
-
 
         $customQ = CustomQueue::getInstance();
         $results['custom'] = array(); // @otodo Implement
@@ -237,8 +221,8 @@ class OptimizeController
     protected function handleAPIResult(Object $item, $q)
     {
       $fs = \wpSPIO()->filesystem();
-      $responseControl = new ResponseController();
-echo "OPTIMIZECONTROL RESULT"; var_dump($item);
+
+//echo "OPTIMIZECONTROL RESULT"; var_dump($item);
       $result = $item->result;
       if ($result->is_error)
       {
@@ -250,7 +234,7 @@ echo "OPTIMIZECONTROL RESULT"; var_dump($item);
           if ($result->is_done || count($item->errors) >= SHORTPIXEL_MAX_FAIL_RETRIES )
           {
              $q->itemFailed($item, true);
-             $responseController->withMessage($result->message)->asError();
+             ResponseController::add()->withMessage($result->message)->asError();
           }
           else
           {
@@ -316,24 +300,40 @@ echo "OPTIMIZECONTROL RESULT"; var_dump($item);
 
     }
 
-    public function ajaxProcessQueue()
+    /** Called via Hook when plugins like RegenerateThumbnailsAdvanced Update an thumbnail */
+    public function thumbnailsChangedHook($postId, $originalMeta, $regeneratedSizes = array(), $bulk = false)
     {
-        if (isset($_POST['bulk-secret']))
-        {
-          $secret = sanitize_text_field($_POST['bulk-secret']);
-          $cacheControl = new \ShortPixel\Controller\CacheController();
-          $cachedObj = $cacheControl->getItem('bulk-secret');
+       $fs = \wpSPIO()->filesystem();
+       $settings = \wpSPIO()->settings();
+       $imageObj = $fs->getMediaImage($postId);
 
-          if (! $cachedObj->exists())
-          {
-             $cachedObj->setValue($secret);
-             $cachedObj->setExpires(3 * MINUTE_IN_SECONDS);
-             $cacheControl->storeItemObject($cachedObj);
-          }
+       if (count($regeneratedSizes) == 0)
+        return;
+
+        $metaUpdated = false;
+        foreach($regeneratedSizes as $sizeName => $size) {
+            if(isset($size['file']))
+            {
+
+                //$fileObj = $fs->getFile( (string) $mainFile->getFileDir() . $size['file']);
+                $thumb = $imageObj->getThumbnail($sizeName);
+                if ($thumb !== false)
+                {
+                   if ($settings->autoMediaLibrary)
+                      $thumb->setMeta('status', ImageModel::FILE_STATUS_PENDING);
+                   else
+                      $thumb->setMeta('status', ImageModel::FILE_STATUS_UNPROCESSED);
+
+                   $webp = $thumb->getWebp();
+                   if ($webp !== false)
+                     $webp->delete();
+
+                    $metaUpdated = true;
+                }
+            }
         }
-
-        $result = $this->processQueue();
-        $this->jsonResponse($result);
+        if ($metaUpdated)
+           $imageObj->saveMeta();
     }
 
     protected function getAPI()
@@ -350,20 +350,27 @@ echo "OPTIMIZECONTROL RESULT"; var_dump($item);
         switch($result->qstatus)
         {
           case Queue::RESULT_PREPARING:
-            $json->message = sprintf(__('Prepared %s items', 'shortpixel-image-optimiser'), count($result->items) );
+            $json->message = sprintf(__('Prepared %s items', 'shortpixel-image-optimiser'), $result->items );
+          break;
+          case Queue::RESULT_PREPARING_DONE:
+            $json->message = sprintf(__('Preparing is done, queue has  %s items ', 'shortpixel-image-optimiser'), $result->items );
           break;
           case Queue::RESULT_EMPTY:
-              $json->message  = __('Empty Queue', 'shortpixel-image-optimiser');
+              $json->message  = __('Queue returned no active items', 'shortpixel-image-optimiser');
+          break;
+          case Queue::RESULT_QUEUE_EMPTY:
+              $json->message = __('Queue empty and done', 'shortpixel-image-optimiser');
           break;
           case Queue::RESULT_ITEMS:
             $json->message = sprintf(__("Fetched %d items",  'shortpixel-image-optimiser'), count($result->items));
             $json->results = $result->items;
           break;
           default:
-             $json->message = __('Unknown Status', 'shortpixel-image-optimiser');
+             $json->message = sprintf(__('Unknown Status %s ', 'shortpixel-image-optimiser'), $result->qstatus);
           break;
         }
         $json->status = $result->qstatus;
+
 
         return $json;
     }
@@ -375,20 +382,11 @@ echo "OPTIMIZECONTROL RESULT"; var_dump($item);
       $json->status = null;
       $json->result = null;
       $json->results = null;
-      $json->actions = null;
+//      $json->actions = null;
       $json->has_error = false;
       $json->message = null;
 
       return $json;
     }
-
-    protected function jsonResponse($json)
-    {
-        wp_send_json($json);
-        exit();
-    }
-
-
-
 
 }

@@ -144,7 +144,7 @@ class WPShortPixel {
         }
 
         //automatic optimization
-        add_action( 'wp_ajax_shortpixel_image_processing', array( &$this, 'handleImageProcessing') );
+      //  add_action( 'wp_ajax_shortpixel_image_processing', array( &$this, 'handleImageProcessing') );
         //manual optimization
         add_action( 'wp_ajax_shortpixel_manual_optimization', array(&$this, 'handleManualOptimization'));
         //check status

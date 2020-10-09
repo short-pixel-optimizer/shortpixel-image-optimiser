@@ -15,7 +15,9 @@ abstract class Queue
     // Result status for Run function
     const RESULT_ITEMS = 1;
     const RESULT_PREPARING = 2;
-    const RESULT_EMPTY = 3;
+    const RESULT_PREPARING_DONE = 3;
+    const RESULT_EMPTY = 4;
+    const RESULT_QUEUE_EMPTY = 10;
     const RESULT_ERROR = -1;
     const RESULT_UNKNOWN = -10;
 
@@ -26,7 +28,9 @@ abstract class Queue
     const FILE_SUCCESS = 2;
     const FILE_WAIT = 3; */
 
-    abstract protected function createNewBulk($args);
+    abstract public function createNewBulk($args);
+    abstract public function startBulk();
+
     abstract protected function prepare();
 
     public static function getInstance()
@@ -61,7 +65,6 @@ abstract class Queue
 
     public function run()
     {
-
        $result = new \stdClass();
        $result->qstatus = self::RESULT_UNKNOWN;
        $result->items = null;
@@ -69,8 +72,10 @@ abstract class Queue
        if ( $this->getStatus('preparing'))
        {
             $prepared = $this->prepare();
-            $result->qstatus = self::STATUS_PREPARING;
+            $result->qstatus = self::RESULT_PREPARING;
             $result->items = $prepared; // number of items.
+            if ($prepared == 0)
+               $result->qstatus = self::RESULT_PREPARING_DONE;
        }
        elseif ($this->getStatus('bulk_running'))
        {
@@ -85,7 +90,10 @@ abstract class Queue
        {
          if (count($items) == 0)
          {
-           $result->qstatus = self::RESULT_EMPTY;
+           if ($this->getStatus('items') == 0 && $this->getStatus('errors') == 0 && $this->getStatus('in_process') == 0) // no items, nothing waiting in retry. Signal finished.
+             $result->qstatus = self::RESULT_QUEUE_EMPTY;
+           else
+             $result->qstatus = self::RESULT_EMPTY;
          }
          else
          {
@@ -94,6 +102,14 @@ abstract class Queue
           $result->items = $items;
 
        }
+       $stats = new \stdClass; // For frontend reporting back.
+       $stats->in_queue = $this->getStatus('items');
+       $stats->in_progress = $this->getStatus('in_progress');
+       $stats->errors = $this->getStatus('errors');
+       $stats->done = $this->getStatus('done');
+       $stats->total = $stats->in_queue + $stats->errors + $stats->done + $stats->in_progress;
+
+       $result->stats = $stats;
 
        return $result;
     }
