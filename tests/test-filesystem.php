@@ -586,14 +586,6 @@ class FileSystemTest extends  WP_UnitTestCase
     $this->assertEquals($urlpath4, $this->fs->pathToUrl($file4));
 
 
-  }
-
-  public function testWithVirtualPath()
-  {
-     $path = '://localhost/wp-content/uploads/2020/08/03134410/About-Us-Intro-Pic_1-330x220.webp';
-
-     $file = $this->fs->getFile($path);
-     $this->assertFalse($file->exists());
 
   }
 
@@ -703,7 +695,6 @@ class FileSystemTest extends  WP_UnitTestCase
     $this->assertDirectoryIsWritable($dirpath);
 
   }
-
 
   public function filterUploadDir($path)
   {
