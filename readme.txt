@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compressor, ima
 Requires at least: 3.2.0
 Tested up to: 5.5
 Requires PHP: 5.3
-Stable tag: 4.20.3-DEV01
+Stable tag: 4.20.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -80,7 +80,7 @@ Help us spread the word by recommending ShortPixel to your friends and collect *
 
 **Other plugins by ShortPixel**
 
-* Image optimization & CDN on the fly - <a href="https://wordpress.org/plugins/shortpixel-adaptive-images/" target="_blank">ShortPixel Adaptive Images</a>
+* Image optimization & CDN on the fly - <a href="https://wordpress.org/plugins/shortpixel-adaptive-images/" target="_blank">ShortPixel Adaptive Images</a> 
 * Easily replace images or files in Media Library - <a href="https://wordpress.org/plugins/enable-media-replace/" target="_blank">Enable Media Replace</a>
 * Regenerate thumbnails plugin compatible with the other ShortPixel plugins - <a href="https://wordpress.org/plugins/regenerate-thumbnails-advanced/" target="_blank">reGenerate Thumbnails Advanced</a>
 * Make sure you don't have huge images in your Media Library - <a href="https://wordpress.org/plugins/resize-image-after-upload/" target="_blank">Resize Image After Upload</a>
@@ -299,13 +299,6 @@ Hide the Cloudflare settings by defining these constants in wp-config.php:
 9. Check other optimized images status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
-
-= 4.20.3 =
-
-* Shortpixel will not log manually when not logged in as administrator.
-* Webp to Picture function also removes invalid lazy load tag (WordPress 5.5+)
-* Fixed a few dead links on settings page
-
 = 4.20.2 =
 
 Release date August 26th 2020
@@ -441,11 +434,3 @@ Release date: 2nd April 2020
 
 = EARLIER VERSIONS =
 * please refer to the <a href="https://github.com/short-pixel-optimizer/shortpixel-image-optimiser/blob/master/changelog.txt" target="_blank">changelog.txt</a> file inside the plugin archive.
-
-
-== Upgrade Notice ==
-
-= 5.0 =
-
-* Major rework. Backup and test carefully
-

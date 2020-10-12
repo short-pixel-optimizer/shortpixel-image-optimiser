@@ -14,13 +14,13 @@ namespace ShortPixel;
     if( $this->is_nginx ){
         $deliverWebpUnaltered = '';                         // Uncheck
         $deliverWebpUnalteredDisabled = 'disabled';         // Disable
-        $deliverWebpUnalteredLabel = __('It looks like you\'re running your site on an NginX server. This means that you can only achieve this functionality by directly configuring the server config files. Please follow this link for instructions on how to achieve this:','shortpixel-image-optimiser')." <a href=\"https://help.shortpixel.com/article/111-configure-nginx-to-transparently-serve-webp-files-when-supported\" target=\"_blank\" data-beacon-article=\"5bfeb9de2c7d3a31944e78ee\">Open article</a>";
+        $deliverWebpUnalteredLabel = __('It looks like you\'re running your site on an NginX server. This means that you can only achieve this functionality by directly configuring the server config files. Please follow this link for instructions on how to achieve this:','shortpixel-image-optimiser')." <a href=\"javascript:void(0)\" data-beacon-article=\"5bfeb9de2c7d3a31944e78ee\">Open article</a>";
     } else {
         if( !$this->is_htaccess_writable ){
             $deliverWebpUnalteredDisabled = 'disabled';     // Disable
             if( $view->data->deliverWebp == 3 ){
                 $deliverWebpAlteredDisabled = 'disabled';   // Disable
-                $deliverWebpUnalteredLabel = __('It looks like you recently moved from an Apache server to an NGINX server, while the option to use .htacces was in use. Please follow this tutorial to see how you could implement by yourself this functionality, outside of the WP plugin: ','shortpixel-image-optimiser') . '<a href="https://help.shortpixel.com/article/111-configure-nginx-to-transparently-serve-webp-files-when-supported" target="_blank" data-beacon-article="5bfeb9de2c7d3a31944e78ee">Open article</a>';
+                $deliverWebpUnalteredLabel = __('It looks like you recently moved from an Apache server to an NGINX server, while the option to use .htacces was in use. Please follow this tutorial to see how you could implement by yourself this functionality, outside of the WP plugin: ','shortpixel-image-optimiser') . '<a href="javascript:void(0)" data-beacon-article="5bfeb9de2c7d3a31944e78ee">Open article</a>';
             } else {
                 $deliverWebpUnalteredLabel = __('It looks like your .htaccess file cannot be written. Please fix this and then return to refresh this page to enable this option.','shortpixel-image-optimiser');
             }
@@ -28,7 +28,7 @@ namespace ShortPixel;
             // Show a message about the risks and caveats of serving WEBP images via .htaccess
             $deliverWebpUnalteredLabel = '<span style="color: initial;">'.__('Based on testing your particular hosting configuration, we determined that your server','shortpixel-image-optimiser').
                 '&nbsp;<img alt="can or can not" src="'. plugins_url( 'res/img/test.jpg' , SHORTPIXEL_PLUGIN_FILE) .'">&nbsp;'.
-                __('serve the WEBP versions of the JPEG files seamlessly, via .htaccess.','shortpixel-image-optimiser').' <a href="https://help.shortpixel.com/article/127-delivering-webp-images-via-htaccess" target="_blank" data-beacon-article="5c1d050e04286304a71d9ce4">Open article to read more about this.</a></span>';
+                __('serve the WEBP versions of the JPEG files seamlessly, via .htaccess.','shortpixel-image-optimiser').' <a href="javascript:void(0)" data-beacon-article="5c1d050e04286304a71d9ce4">Open article to read more about this.</a></span>';
         }
     }
 
