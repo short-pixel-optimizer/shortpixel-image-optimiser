@@ -34,13 +34,14 @@ class AdminNoticesController extends \ShortPixel\Controller
       add_action('admin_notices', array($this, 'displayNotices'), 50); // notices occured before page load
       add_action('admin_footer', array($this, 'displayNotices'));  // called in views.
 
+      add_action('in_plugin_update_message-' . plugin_basename(SHORTPIXEL_PLUGIN_FILE), array($this, 'pluginUpdateMessage') , 50, 2 );
+
       // no persistent notifications with this flag set.
       if (defined('SHORTPIXEL_SILENT_MODE') && SHORTPIXEL_SILENT_MODE === true)
         return;
 
       add_action('admin_notices', array($this, 'check_admin_notices'), 5); // run before the plugin admin notices
 
-      add_action('after_plugin_row_shortpixel-image-optimiser/wp-shortpixel.php', array($this, 'pluginUpdateMessage') , 99, 2 );
 
     }
 
@@ -369,7 +370,7 @@ class AdminNoticesController extends \ShortPixel\Controller
         return false;
     }
 
-    protected function getPluginUpdateMessage($new_version)
+  /*  protected function getPluginUpdateMessage($new_version)
     {
         $message = false;
         if (version_compare(SHORTPIXEL_IMAGE_OPTIMISER_VERSION, $new_version, '>=') ) // already installed 'new version'
@@ -382,22 +383,7 @@ class AdminNoticesController extends \ShortPixel\Controller
         }
 
         return $message;
-    }
-
-    public function pluginUpdateMessage($file, $plugin)
-    {
-      $message = $this->getPluginUpdateMessage($plugin['new_version']);
-
-      if( $message !== false) {
-    		$wp_list_table = _get_list_table( 'WP_Plugins_List_Table' );
-    		printf(
-    			'<tr class="plugin-update-tr active"><td colspan="%s" class="plugin-update colspanchange"><div class="notice inline notice-error notice-alt">%s</div></td></tr>',
-    			$wp_list_table->get_column_count(),
-    			wpautop( $message )
-    		);
-    	}
-
-    }
+    } */
 
     protected function getActivationNotice()
     {
@@ -592,6 +578,182 @@ class AdminNoticesController extends \ShortPixel\Controller
     }
 
 
+    public function pluginUpdateMessage($data, $response)
+    {
+  //    $message = $this->getPluginUpdateMessage($plugin['new_version']);
+
+      $message = $this->get_update_notice($data, $response);
+
+      if( $message !== false && strlen(trim($message)) > 0) {
+    		$wp_list_table = _get_list_table( 'WP_Plugins_List_Table' );
+    		printf(
+    			'<tr class="plugin-update-tr active"><td colspan="%s" class="plugin-update colspanchange"><div class="notice inline notice-error notice-alt">%s</div></td></tr>',
+    			$wp_list_table->get_column_count(),
+    			wpautop( $message )
+    		);
+    	}
+
+    }
+
+    /**
+     *   Stolen from SPAI, Thanks.
+    */
+    private function get_update_notice($data, $response ) {
+            $transient_name = 'shortpixel_update_notice_' . $response->new_version;
+            $update_notice  = get_transient( $transient_name );
+            $url = 'https://plugins.svn.wordpress.org/shortpixel/trunk/readme.txt';
+
+            if ( $update_notice === false ) {
+                    $readme_response = wp_safe_remote_request( $url  );
+                    $content = false;
+                    if (! is_wp_error($readme_response))
+                    {
+                       $content = $readme_response['body'];
+                    }
+
+
+                    if ( !empty( $readme_response ) ) {
+                            $update_notice = $this->parse_update_notice( $content, $response );
+                            set_transient( $transient_name, $update_notice, DAY_IN_SECONDS );
+                    }
+            }
+
+            return $update_notice;
+    }
+
+
+
+    /**
+	         * Parse update notice from readme file.
+	         *
+	         * @param string $content  ShortPixel AI readme file content
+          * @param object $response WordPress response
+	         *
+	         * @return string
+	         */
+	        private function parse_update_notice( $content, $response ) {
+	                //$version_parts     = explode( '.', $response->new_version );
+              //    var_dump($version_parts);
+              //  echo "<PRE>";  var_dump($content); echo "</PRE>";
+
+	               /* $check_for_notices = [
+	                        $version_parts[ 0 ] . '.' . $version_parts[ 1 ] . '.' . $version_parts[ 2 ] . '.' . $version_parts[ 3 ], // build
+	                        $version_parts[ 0 ] . '.' . $version_parts[ 1 ] . '.' . $version_parts[ 2 ], // patch (micro)
+	                        $version_parts[ 0 ] . '.' . $version_parts[ 1 ] . '.0', // minor
+	                        $version_parts[ 0 ] . '.' . $version_parts[ 1 ], // minor
+	                        $version_parts[ 0 ] . '.0.0', // major
+	                        $version_parts[ 0 ] . '.0', // major
+	                ];  */
+                  $new_version = $response->new_version;
+
+	                $update_notice = '';
+
+	               // foreach ( $check_for_notices as $id => $check_version ) {
+	                        if ( version_compare( SHORTPIXEL_IMAGE_OPTIMISER_VERSION, $new_version, '>' ) ) {
+	                                return '';
+	                        }
+
+	                        $result = $this->parse_readme_content( $content, $new_version, $response );
+
+	                        if ( !empty( $result ) ) {
+	                                $update_notice = $result;
+	                        }
+	             //   }
+
+	                return wp_kses_post( $update_notice );
+	        }
+
+
+  /*
+     *
+     * Parses readme file's content to find notice related to passed version
+     *
+     * @param string $content Readme file content
+     * @param string $version Checked version
+     * @param object $response WordPress response
+     *
+     * @return string
+     */
+
+      private function parse_readme_content( $content, $new_version, $response ) {
+
+                $notices_pattern = '/==.*Upgrade Notice.*==(.*)$|==/Uis';
+
+	                $notice = '';
+	                $matches = null;
+
+	                if ( preg_match( $notices_pattern, $content, $matches ) ) {
+
+                  if (! isset($matches[1]))
+                    return ''; // no update texts.
+                  $lines = str_split(trim($matches[1]));
+                  $versions = array();
+                  $inv = false;
+                  foreach($lines as $char)
+                  {
+                     //if (count($versions) == 0)
+                     if ($char == '=' && ! $inv) // = and not recording version, start one.
+                     {
+                        $curver = '';
+                        $inv = true;
+                     }
+                     elseif ($char == ' ' && $inv) // don't record spaces in version
+                         continue;
+                     elseif ($char == '=' && $inv) // end of version line
+                     {  $versions[trim($curver)] = '';
+                        $inv = false;
+                     }
+                     elseif($inv) // record the version string
+                     {
+                        $curver .= $char;
+                     }
+                     elseif(! $inv)  // record the message
+                     {
+                        $versions[trim($curver)] .= $char;
+                     }
+
+
+                  }
+
+                  foreach($versions as $version => $line)
+                  {
+                      if (version_compare(SHORTPIXEL_IMAGE_OPTIMISER_VERSION, $version, '<') && version_compare($version, $new_version, '<='))
+                      {
+                          $notice .= '<span>';
+                          $notice .= $this->markdown2html( $line );
+                          $notice .= '</span>';
+                      }
+                  }
+
+	                }
+
+	                return $notice;
+	        }
+
+	        /*private function replace_readme_constants( $content, $response ) {
+	                $constants    = [ '{{ NEW VERSION }}', '{{ CURRENT VERSION }}', '{{ PHP VERSION }}', '{{ REQUIRED PHP VERSION }}' ];
+	                $replacements = [ $response->new_version, SHORTPIXEL_IMAGE_OPTIMISER_VERSION, PHP_VERSION, $response->requires_php ];
+
+	                return str_replace( $constants, $replacements, $content );
+	        } */
+
+	        private function markdown2html( $content ) {
+	                $patterns = [
+	                        '/\*\*(.+)\*\*/U', // bold
+	                        '/__(.+)__/U', // italic
+	                        '/\[([^\]]*)\]\(([^\)]*)\)/U', // link
+	                ];
+
+	                $replacements = [
+	                        '<strong>${1}</strong>',
+	                        '<em>${1}</em>',
+	                        '<a href="${2}" target="_blank">${1}</a>',
+	                ];
+
+	                $prepared_content = preg_replace( $patterns, $replacements, $content );
+
+	                return isset( $prepared_content ) ? $prepared_content : $content;
+        }
 
 
 } // class
