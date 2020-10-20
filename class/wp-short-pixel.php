@@ -161,7 +161,7 @@ class WPShortPixel {
         //This adds the constants used in PHP to be available also in JS
         add_action( 'admin_enqueue_scripts', array( $this, 'shortPixelJS') );
         add_action( 'admin_footer', array($this, 'admin_footer_js') );
-        add_action( 'admin_head', array( $this, 'headCSS') );
+        //add_action( 'admin_head', array( $this, 'headCSS') );
 
         //register a method to display admin notices if necessary
         add_action('admin_notices', array( &$this, 'displayAdminNotices'));
@@ -285,9 +285,9 @@ class WPShortPixel {
        Log::addInfo($message);
     }
 
-    function headCSS() {
+    /*function headCSS() {
         echo('<style>.shortpixel-hide {display:none;}</style>');
-    }
+    } */
 
     /** @todo Plugin init class. Try to get rid of inline JS. Also still loads on all WP pages, prevent that. */
     function shortPixelJS() {
@@ -1784,7 +1784,8 @@ class WPShortPixel {
      * Note - $regeneratedSizes expects part of the metadata array called [sizes], with filename, not just the resized data.
      */
     public function thumbnailsRegeneratedHook($postId, $originalMeta, $regeneratedSizes = array(), $bulk = false) {
-
+        $fs = \wpSPIO()->filesystem();
+        $settings = \wpSPIO()->settings();
 
         if(isset($originalMeta["ShortPixelImprovement"]) && is_numeric($originalMeta["ShortPixelImprovement"])) {
             $shortPixelMeta = $originalMeta["ShortPixel"];
@@ -1795,9 +1796,25 @@ class WPShortPixel {
                 $shortPixelMeta["retinasOpt"] = 0;
             } else {
                 $regeneratedThumbs = array();
+                $mainFile = $fs->getAttachedFile($postId);
                 foreach($regeneratedSizes as $size) {
                     if(isset($size['file']) && in_array($size['file'], $shortPixelMeta["thumbsOptList"] )) {
                         $regeneratedThumbs[] = $size['file'];
+                        $fileObj = $fs->getFile( (string) $mainFile->getFileDir() . $size['file']);
+
+                        // if we are creating Webp, remove it.
+                        if ($settings->createWebp)
+                        {
+                            if (SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION)
+                              $webpObj = $fs->getFile( (string) $fileObj->getFileDir() . $fileObj->getFileName() . '.webp');
+                            else
+                              $webpObj = $fs->getFile( (string) $fileObj->getFileDir() . $fileObj->getFileBase() . '.webp');
+
+                            if ($webpObj->exists())
+                              $webpObj->delete();
+
+                        }
+
                         $shortPixelMeta["thumbsOpt"] = max(0, $shortPixelMeta["thumbsOpt"] - 1); // this is a complicated count of number of thumbnails
                         $shortPixelMeta["retinasOpt"] = max(0, $shortPixelMeta["retinasOpt"] - 1);
                     }
@@ -1889,6 +1906,8 @@ class WPShortPixel {
     private function getBackupFolderInternal(FileModel $file) {
       //  $fileExtension = strtolower(substr($file,strrpos($file,".")+1));
         $fs = \wpSPIO()->filesystem();
+        $settings = \wpSPIO()->settings();
+
         $SubDir = ShortPixelMetaFacade::returnSubDir($file);
         $SubDirOld = ShortPixelMetaFacade::returnSubDirOld($file);
         //$basename = ShortPixelAPI::MB_basename($file);
@@ -1903,6 +1922,10 @@ class WPShortPixel {
           $backupFolder = $backupFile->getFileDir();
           return $backupFolder;
         }
+
+        // If backup is off, just don't return it.
+  //      if (! $settings->backupImages)
+  //        return false;
 
         // Try to unholy old solutions
         $backupFile = $fs->getFile(SHORTPIXEL_BACKUP_FOLDER . '/'. $SubDir . '/' . $basename);

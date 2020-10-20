@@ -33,6 +33,7 @@ class wpOffload
       $this->as3cf = $as3cf;
       $this->active = true;
 
+
       // if setting to upload to bucket is off, don't hook or do anything really.
       if (! $this->as3cf->get_setting( 'copy-to-s3' ))
       {
@@ -44,6 +45,11 @@ class wpOffload
         $this->is_cname = true;
         $this->cname = $this->as3cf->get_setting( 'cloudfront' );
       }
+
+      $provider = $this->as3cf->get_provider();
+  //    $domain = $provider->get_bucket_location();
+
+  //    var_dump($domain);
 
       add_action('shortpixel_image_optimised', array($this, 'image_upload'));
       add_action('shortpixel_after_restore_image', array($this, 'image_restore')); // hit this when restoring.
@@ -68,10 +74,21 @@ class wpOffload
     public function get_raw_attached_file($file, $id)
     {
       $scheme = parse_url($file, PHP_URL_SCHEME);
+
+      $item = $this->getItemById($id);
+      if ($item !== false) // this is a offloaded thingie
+      {
+         return get_attached_file($id, true);
+      }
+      /*
       if ($scheme !== false && strpos($scheme, 's3') !== false)
       {
         return get_attached_file($id, true);
       }
+      else
+      {
+
+      } */
       return $file;
     }
 
@@ -80,7 +97,9 @@ class wpOffload
     {
 
       $scheme = parse_url($file, PHP_URL_SCHEME);
-      if ($scheme !== false && strpos($scheme, 's3') !== false)
+      $item = $this->getItemById($id);
+
+      if ($item !== false)
       {
         $image_meta = wp_get_attachment_metadata( $id );
         $image_file = get_attached_file( $id, true );
