@@ -587,7 +587,7 @@ class AdminNoticesController extends \ShortPixel\Controller
       if( $message !== false && strlen(trim($message)) > 0) {
     		$wp_list_table = _get_list_table( 'WP_Plugins_List_Table' );
     		printf(
-    			'<tr class="plugin-update-tr active"><td colspan="%s" class="plugin-update colspanchange"><div class="notice inline notice-error notice-alt">%s</div></td></tr>',
+    			'<tr class="plugin-update-tr active"><td colspan="%s" class="plugin-update colspanchange"><div class="notice inline notice-warning notice-alt">%s</div></td></tr>',
     			$wp_list_table->get_column_count(),
     			wpautop( $message )
     		);
@@ -598,15 +598,15 @@ class AdminNoticesController extends \ShortPixel\Controller
     /**
      *   Stolen from SPAI, Thanks.
     */
-    private function get_update_notice($data, $response ) {
+    private function get_update_notice($data, $response) {
             $transient_name = 'shortpixel_update_notice_' . $response->new_version;
             $update_notice  = get_transient( $transient_name );
-            $url = 'https://plugins.svn.wordpress.org/shortpixel/trunk/readme.txt';
+            $url = 'https://plugins.svn.wordpress.org/shortpixel-image-optimiser/trunk/readme.txt';
 
-            if ( $update_notice === false ) {
-                    $readme_response = wp_safe_remote_request( $url  );
+            if ( $update_notice === false || strlen( $update_notice ) == 0 ) {
+                    $readme_response = wp_safe_remote_request( $url );
                     $content = false;
-                    if (! is_wp_error($readme_response))
+                    if (! is_wp_error( $readme_response ) )
                     {
                        $content = $readme_response['body'];
                     }
