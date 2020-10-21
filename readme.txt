@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compressor, ima
 Requires at least: 3.2.0
 Tested up to: 5.5.1
 Requires PHP: 5.3
-Stable tag: 4.21.0
+Stable tag: 4.21.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -299,6 +299,12 @@ Hide the Cloudflare settings by defining these constants in wp-config.php:
 9. Check other optimized images status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 4.21.1 =
+
+Release date October 21st 2020
+* Fix: the spinning robot head on wp-admin pages was never stopping, sorry for that;
+* Language: 0 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted.
 
 = 4.21.0 =
 
