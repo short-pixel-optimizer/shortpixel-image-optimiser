@@ -2,9 +2,9 @@
 Contributors: ShortPixel
 Tags: convert webp, optimize images, image optimization, resize, compressor, image, compression, optimize, image optimiser, image compression, compress pdf, compress jpg, compress png, performance, photography, smush, scale, pictures
 Requires at least: 3.2.0
-Tested up to: 5.5
+Tested up to: 5.5.1
 Requires PHP: 5.3
-Stable tag: 4.20.3-DEV01
+Stable tag: 4.21.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -300,11 +300,16 @@ Hide the Cloudflare settings by defining these constants in wp-config.php:
 
 == Changelog ==
 
-= 4.20.3 =
+= 4.21.0 =
 
-* Shortpixel will not log manually when not logged in as administrator.
-* Webp to Picture function also removes invalid lazy load tag (WordPress 5.5+)
-* Fixed a few dead links on settings page
+Release date October 20th 2020
+* New: Plugin update notification system for future major versions;
+* Tweak: the plugin will not log manually when not logged in as administrator;
+* Fix: the plugin was incorrectly assuming the scheme for offloaded media files/backups;
+* Fix: in some situations the WebP file links weren't correct on some specific multisite installs;
+* Fix: WebP to Picture function also removes invalid lazy load tag (WordPress 5.5+);
+* Fix: there were a few dead links on settings page;
+* Language: 0 new strings added, 0 updated, 0 fuzzied, and 0 obsoleted.
 
 = 4.20.2 =
 
@@ -441,11 +446,3 @@ Release date: 2nd April 2020
 
 = EARLIER VERSIONS =
 * please refer to the <a href="https://github.com/short-pixel-optimizer/shortpixel-image-optimiser/blob/master/changelog.txt" target="_blank">changelog.txt</a> file inside the plugin archive.
-
-
-== Upgrade Notice ==
-
-= 5.0 =
-
-* Major rework. Backup and test carefully
-
