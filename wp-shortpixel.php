@@ -3,9 +3,10 @@
  * Plugin Name: ShortPixel Image Optimizer
  * Plugin URI: https://shortpixel.com/
  * Description: ShortPixel optimizes images automatically, while guarding the quality of your images. Check your <a href="options-general.php?page=wp-shortpixel-settings" target="_blank">Settings &gt; ShortPixel</a> page on how to start optimizing your image library and make your website load faster.
- * Version: 4.20.2
+ * Version: 4.21.1
  * Author: ShortPixel
  * Author URI: https://shortpixel.com
+ * GitHub Plugin URI: https://github.com/short-pixel-optimizer/shortpixel-image-optimiser
  * Text Domain: shortpixel-image-optimiser
  * Domain Path: /lang
  */
@@ -32,7 +33,7 @@ define('SHORTPIXEL_PLUGIN_DIR', __DIR__);
 
 //define('SHORTPIXEL_AFFILIATE_CODE', '');
 
-define('SHORTPIXEL_IMAGE_OPTIMISER_VERSION', "4.20.2");
+define('SHORTPIXEL_IMAGE_OPTIMISER_VERSION', "4.21.1");
 define('SHORTPIXEL_MAX_TIMEOUT', 10);
 define('SHORTPIXEL_VALIDATE_MAX_TIMEOUT', 15);
 define('SHORTPIXEL_BACKUP', 'ShortpixelBackups');
@@ -84,9 +85,12 @@ if (! defined('SHORTPIXEL_DEBUG'))
 {
     define('SHORTPIXEL_DEBUG', false);
 }
+
+
 $log = \ShortPixel\ShortPixelLogger\ShortPixelLogger::getInstance();
 if (\ShortPixel\ShortPixelLogger\ShortPixelLogger::debugIsActive())
   $log->setLogPath(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
+
 
 /* Function to reach core function of ShortPixel
 * Use to get plugin url, plugin path, or certain core controllers
