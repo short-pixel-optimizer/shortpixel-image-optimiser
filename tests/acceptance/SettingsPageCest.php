@@ -19,6 +19,7 @@ class SettingsPageCest
 
     public function reloadPageAfterChangeOptionsWontPersist(AcceptanceTester $I){
         $I->click('.glossy');
+        $I->acceptPopup();
         $I->reloadPage();
         $I->seeCheckboxIsChecked('.shortpixel-radio-lossy');
     }
