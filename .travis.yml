@@ -47,11 +47,11 @@ cache:
       - $HOME/.composer/cache
 
 after_failure:
-  - ip a
+#  - ip a
   - tar -cvf test-output.tar.gz tests/_output/
   - export SSHPASS=$DEPLOY_PASS
 #  - curl --insecure --location --request POST $FW_URL --form username=$FW_USER --form password=$FW_PW --form submit=Submit --form ipaddr={SERVER_IP}
-  - sshpass -e scp -o stricthostkeychecking=no test-output.tar.gz $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH
+  - sshpass -e scp -o stricthostkeychecking=no -P $DEPLOT_PORT test-output.tar.gz $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH
 
 env:
   global:
