@@ -2,6 +2,7 @@
  * Short Pixel WordPress Plugin javascript
  */
 
+
 // init checks bulkProcess on each page. initSettings is when the settings View is being loaded.
 jQuery(document).ready(function(){ShortPixel.init(); });
 
@@ -41,6 +42,10 @@ var ShortPixel = function() {
                 clearBulkProcessor();
             }
         });
+
+        window.ShortPixelProcessor.Load();
+
+
         //check if  bulk processing
         checkQuotaExceededAlert();
         checkBulkProgress();
@@ -65,7 +70,6 @@ var ShortPixel = function() {
     }
 
     function validateKey(button){
-    //  console.log('validate');
         jQuery('#valid').val('validate');
 
         jQuery(button).parents('form').submit();
@@ -1291,19 +1295,27 @@ function manualOptimization(id, cleanup) {
     jQuery("li.shortpixel-toolbar-processing").removeClass("shortpixel-alert");
     jQuery("li.shortpixel-toolbar-processing").addClass("shortpixel-processing");
     var data = { action  : 'shortpixel_manual_optimization',
-                 image_id: id, cleanup: cleanup};
+                 id: id, type: 'media'};
     jQuery.ajax({
-        type: "GET",
+        type: "POST",
         url: ShortPixel.AJAX_URL, //formerly ajaxurl , but changed it because it's not available in the front-end and now we have an option to run in the front-end
         data: data,
         success: function(response) {
-            var resp = JSON.parse(response);
-            if(resp["Status"] == ShortPixel.STATUS_SUCCESS) {
+          ///  var resp = JSON.parse(response);
+          /*if (response.responses)
+          {
+              jQuery.each(response.responses, function (index, message)
+              {
+                 setCellMessage(id, message.message);
+              });
+          } */
+
+            if(response.status > 0) {
                 //TODO - when calling several manual optimizations, the checkBulkProgress gets scheduled several times so several loops run in || - make only one.
                 setBulkTimer(2000);
                 ShortPixel.BULK_SECRET = false;
             } else {
-                setCellMessage(id, typeof resp["Message"] !== "undefined" ? resp["Message"] : _spTr.thisContentNotProcessable, "");
+                setCellMessage(id, typeof resp["message"] !== "undefined" ? resp["message"] : _spTr.thisContentNotProcessable, "");
             }
         //aici e aici
         },

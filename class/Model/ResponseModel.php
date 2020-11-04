@@ -6,17 +6,17 @@ use ShortPixel\Controller\ResponseController as ResponseController;
 
 class ResponseModel
 {
-    protected $message;
-    protected $code;
-    protected $priority = 1;
-    protected $id;
-    protected $actions; // might be tricky to generate
+    public $message;
+    public $code = 1;
+    public $priority = 1;
+    public $id;
+//    protected $actions; // might be tricky to generate
 
-    const RESPONSE_ACTION = 1;
+    const RESPONSE_ACTION = 1; // when an action has been performed
     const RESPONSE_SUCCESS = 2; // not sure this one is needed
     const RESPONSE_ERROR = 10;
     const RESPONSE_WARNING = 11;
-
+    const RESPONSE_ERROR_DELAY = 12; // when an error is serious enough to delay things.
 
     public function __construct()
     {
@@ -45,9 +45,7 @@ class ResponseModel
             return ($this->code == self::RESPONSE_SUCCESS);
           break;
         }
-
     }
-
 
     public function withMessage($message)
     {

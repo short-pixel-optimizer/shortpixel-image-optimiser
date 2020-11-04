@@ -56,11 +56,22 @@ class OptimizeController
 
         $json = $this->getJsonResponse();
         $json->status = 0;
+        $json->id = $id;
+        $json->type = $type;
+
+        if ($mediaItem === false)
+        {
+          $json->is_error = true;
+          $json->message = __('Error - item could not be found', 'shortpixel-image-optimiser');
+          ResponseController::add()->withMessage($json->message)->asError();
+          return $json;
+        }
 
         if (! $mediaItem->isProcessable())
         {
           $json->message = $mediaItem->getProcessableReason();
           $json->has_error = true;
+          ResponseController::add()->withMessage($json->message)->asError();
         }
         else
         {
@@ -69,18 +80,18 @@ class OptimizeController
           {
             $json->message = sprintf(__('Item %d added to Queue. %d items in Queue', 'shortpixel-image-optimiser'), $id, $numitems);
             $json->status = 1;
+            ResponseController::add()->withMessage($json->message);
           }
           else
           {
             $json->message = __('No items added to queue', 'shortpixel-image-optimiser');
             $json->status = 0;
+            ResponseController::add()->withMessage($json->message);
           }
         }
 
         return $json;
     }
-
-
 
     public function restoreItem($id, $type = 'media')
     {
@@ -161,7 +172,7 @@ class OptimizeController
         $mediaQ = MediaLibraryQueue::getInstance();
         $result = $mediaQ->run();
         $results = array();
-        echo "RESULT ---> "; var_dump($result);
+//        echo "RESULT ---> "; var_dump($result);
 
         $items = (isset($result->items) && is_array($result->items)) ? $result->items : array();
 
@@ -169,13 +180,16 @@ class OptimizeController
         foreach($items as $index => $item)
         {
             $urls = $item->urls;
-            $item = $this->sendToProcessing($item);
             if (property_exists($item, 'png2jpg'))
               $item = $this->convertPNG($item, $mediaQ);
+
+            $item = $this->sendToProcessing($item);
 
             $item = $this->handleAPIResult($item, $mediaQ);
             $result->items[$index] = $item; // replace processed item, should have result now.
 
+            Log::addTemp('ProcessQueue Item' . $index,  $item);
+            
           //  $result = $api->doRequests($urls, $blocking);
         }
 
@@ -222,7 +236,6 @@ class OptimizeController
     {
       $fs = \wpSPIO()->filesystem();
 
-//echo "OPTIMIZECONTROL RESULT"; var_dump($item);
       $result = $item->result;
       if ($result->is_error)
       {
@@ -259,8 +272,10 @@ class OptimizeController
 
            // Set the metadata decided on APItime.
            if (isset($item->compressionType))
+           {
              $imageItem->setMeta('compressionType', $item->compressionType);
 
+           }
            /*foreach($result->files as $index => $fileResult)
            {
               $tempFiles[$index] = $fileResult->file;
@@ -270,6 +285,7 @@ class OptimizeController
            {
               $optimizeResult = $imageItem->handleOptimized($result->files);
               $item->result->improvements = $imageItem->getImprovements();
+
 
               if ($optimizeResult)
               {
@@ -370,6 +386,9 @@ class OptimizeController
           break;
         }
         $json->status = $result->qstatus;
+
+        if (property_exists($result, 'stats'))
+          $json->stats = $result->stats;
 
 
         return $json;

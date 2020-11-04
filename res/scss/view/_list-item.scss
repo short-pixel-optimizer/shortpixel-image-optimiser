@@ -1,0 +1,53 @@
+
+.sp-column-info
+{
+  .thumbnails.optimized
+  {
+    position: relative;
+
+    .totals {
+
+    }
+    .thumb-wrapper
+    {
+         background: #fff;
+         padding: 8px;
+         border: 1px solid #ccc;
+         max-width: 300px;
+         position: absolute;
+         display: none;
+         z-index: 10;
+         transition: all 1s;
+         .thumb
+         {
+             position: relative;
+             width: 100%;
+              .optimize-bar {
+                  float: right;
+                   .point
+                   {
+                      width: 8px;
+                      height: 8px;
+
+                      display: inline-block;
+                      border: 1px solid #ccc;
+                      margin-left: 1px;
+                      background: #ccc;
+                      vertical-align: middle;
+
+                      &.checked {
+                        background: green;
+                        box-shadow: 1px 1px 1px green;
+                      }
+                   }
+              }
+         }
+      } // wrapper
+      &:hover {
+        .thumb-wrapper{
+            display: block;
+        }
+      }
+
+  }
+}

@@ -8,7 +8,6 @@ class ApiController
 {
 //  const STATUS_
   const STATUS_ENQUEUED = 10;
-
   const STATUS_SUCCESS = 2;
   const STATUS_UNCHANGED = 0;
   const STATUS_ERROR = -1;
@@ -351,11 +350,11 @@ class ApiController
 
               //TODO la sfarsit sa faca fallback la handleDownload
               if($archive) {
-                  $downloadResult = $this->fromArchive($archive['Path'], $fileData->$fileType, $fileData->$fileSize, $fileData->OriginalSize,
+                  $downloadResult = $this->fromArchive($archive['Path'], $fileData->$fileType, $fileData->$fileSize, $fileData->OriginalSize
                 );
 
               } else {
-                  $downloadResult = $this->handleDownload($fileData->$fileType, $fileData->$fileSize, $fileData->OriginalSize, //isset($fileData->$webpType) ? $fileData->$webpType : 'NA'
+                  $downloadResult = $this->handleDownload($fileData->$fileType, $fileData->$fileSize, $fileData->OriginalSize //isset($fileData->$webpType) ? $fileData->$webpType : 'NA'
                 );
               }
 //Log::addTemp('DownloadRes', $downloadResult);
@@ -374,8 +373,7 @@ class ApiController
                     $webpName = $originalFile->getFileBase() . '.webp'; //basename(parse_url($fileData->$webpType, PHP_URL_PATH));
 
                     if($archive) { // swallow pride here, or fix this.
-                        $webpDownloadResult = $this->fromArchive($archive['Path'], $fileData->$webpType, false,false,
-                      );
+                        $webpDownloadResult = $this->fromArchive($archive['Path'], $fileData->$webpType, false,false);
                     } else {
                         $webpDownloadResult = $this->handleDownload($fileData->$webpType, false, false);
                     }

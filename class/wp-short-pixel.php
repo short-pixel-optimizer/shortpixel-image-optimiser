@@ -146,7 +146,7 @@ class WPShortPixel {
         //automatic optimization
       //  add_action( 'wp_ajax_shortpixel_image_processing', array( &$this, 'handleImageProcessing') );
         //manual optimization
-        add_action( 'wp_ajax_shortpixel_manual_optimization', array(&$this, 'handleManualOptimization'));
+        //add_action( 'wp_ajax_shortpixel_manual_optimization', array(&$this, 'handleManualOptimization'));
         //check status
         add_action( 'wp_ajax_shortpixel_check_status', array(&$this, 'checkStatus'));
         //dismiss notices
@@ -295,29 +295,22 @@ class WPShortPixel {
 
         $is_front = (wpSPIO()->env()->is_front) ? true : false;
 
+        return; // old
+
         // load everywhere, because we are inconsistent.
         wp_enqueue_style('short-pixel-bar.min.css', plugins_url('/res/css/short-pixel-bar.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
 
-        //require_once(ABSPATH . 'wp-admin/includes/screen.php');
-        //if(function_exists('get_current_screen')) {
-        //    $screen = get_current_screen();
+        if ( \wpSPIO()->env()->is_our_screen )
+        {
+        /*if( in_array($screen->id, array('attachment', 'upload', 'settings_page_wp-shortpixel', 'media_page_wp-short-pixel-bulk', 'media_page_wp-short-pixel-custom'))) { */
+            wp_enqueue_style('short-pixel.min.css', plugins_url('/res/css/short-pixel.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
+            //modal - used in settings for selecting folder
+            wp_enqueue_style('short-pixel-modal.min.css', plugins_url('/res/css/short-pixel-modal.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
 
-            // if(is_object($screen)) {
-
-                if ( \wpSPIO()->env()->is_our_screen )
-                {
-                /*if( in_array($screen->id, array('attachment', 'upload', 'settings_page_wp-shortpixel', 'media_page_wp-short-pixel-bulk', 'media_page_wp-short-pixel-custom'))) { */
-                    wp_enqueue_style('short-pixel.min.css', plugins_url('/res/css/short-pixel.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
-                    //modal - used in settings for selecting folder
-                    wp_enqueue_style('short-pixel-modal.min.css', plugins_url('/res/css/short-pixel-modal.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
-
-                    // @todo Might need to be removed later on
-                    wp_register_style('shortpixel-admin', plugins_url('/res/css/shortpixel-admin.css', SHORTPIXEL_PLUGIN_FILE),array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
-                    wp_enqueue_style('shortpixel-admin');
-                }
-          //  }
-      //  }
-
+            // @todo Might need to be removed later on
+            wp_register_style('shortpixel-admin', plugins_url('/res/css/shortpixel-admin.css', SHORTPIXEL_PLUGIN_FILE),array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
+            wp_enqueue_style('shortpixel-admin');
+        }
 
         wp_register_script('shortpixel', plugins_url('/res/js/shortpixel' . $this->jsSuffix,SHORTPIXEL_PLUGIN_FILE), array('jquery', 'jquery.knob.min.js'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 

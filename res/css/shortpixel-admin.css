@@ -233,3 +233,33 @@ body.debug-model-active {
   opacity: 0.7;
   z-index: 10000;
   display: none; }
+
+.sp-column-info .thumbnails.optimized {
+  position: relative; }
+  .sp-column-info .thumbnails.optimized .thumb-wrapper {
+    background: #fff;
+    padding: 8px;
+    border: 1px solid #ccc;
+    max-width: 300px;
+    position: absolute;
+    display: none;
+    z-index: 10;
+    transition: all 1s; }
+    .sp-column-info .thumbnails.optimized .thumb-wrapper .thumb {
+      position: relative;
+      width: 100%; }
+      .sp-column-info .thumbnails.optimized .thumb-wrapper .thumb .optimize-bar {
+        float: right; }
+        .sp-column-info .thumbnails.optimized .thumb-wrapper .thumb .optimize-bar .point {
+          width: 8px;
+          height: 8px;
+          display: inline-block;
+          border: 1px solid #ccc;
+          margin-left: 1px;
+          background: #ccc;
+          vertical-align: middle; }
+          .sp-column-info .thumbnails.optimized .thumb-wrapper .thumb .optimize-bar .point.checked {
+            background: green;
+            box-shadow: 1px 1px 1px green; }
+  .sp-column-info .thumbnails.optimized:hover .thumb-wrapper {
+    display: block; }
