@@ -47,6 +47,7 @@ cache:
       - $HOME/.composer/cache
 
 after_failure:
+  - ip a
   - tar -cvf test-output.tar.gz tests/_output/
   - export SSHPASS=$DEPLOY_PASS
 #  - curl --insecure --location --request POST $FW_URL --form username=$FW_USER --form password=$FW_PW --form submit=Submit --form ipaddr={SERVER_IP}
