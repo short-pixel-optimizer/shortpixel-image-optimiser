@@ -30,6 +30,7 @@ before_script:
   - composer update
   - sudo cp . $WP_PATH/wp-content/plugins/shortpixel-image-optimiser/ -r
   - sudo chmod 777 $WP_PATH/wp-content/uploads/ -R
+  - sudo chown -R apache:apache $WP_PATH/wp-content/uploads
   - wget https://selenium-release.storage.googleapis.com/3.141/selenium-server-standalone-3.141.59.jar
   - wget https://chromedriver.storage.googleapis.com/85.0.4183.87/chromedriver_linux64.zip && unzip chromedriver_linux64.zip && export CHROME_BIN=chromium-browser
   - java -jar selenium-server-standalone-3.141.59.jar &
