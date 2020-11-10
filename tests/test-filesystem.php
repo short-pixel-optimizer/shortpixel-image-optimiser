@@ -76,6 +76,11 @@ class FileSystemTest extends  WP_UnitTestCase
       $this->assertEquals("http://example.org/wp-content/uploads/2020/07/file", $url2);
       $this->assertEquals("http://example.org/wp-content/uploads/2020/07/file", $url3);
       $this->assertEquals("http://example.org/wp-content/uploads/2020/07/file", $url4);
+
+      $path5 = $this->fs->pathToUrL(new \ShortPixel\Model\FileModel('/tmp/wordpress/wp/wp-content/gallery/la043-porta-antica-laccata-e-dorata/result.jpg'));
+
+      $this->assertEquals("http://example.org/wp/wp-content/gallery/la043-porta-antica-laccata-e-dorata/result.jpg", $path5);
+
   }
 
   /** Not testable on VFS due to home-path checks
@@ -580,14 +585,6 @@ class FileSystemTest extends  WP_UnitTestCase
     $this->assertEquals($urlpath4, $this->fs->pathToUrl($file4));
 
 
-  }
-
-  public function testWithVirtualPath()
-  {
-     $path = '://localhost/wp-content/uploads/2020/08/03134410/About-Us-Intro-Pic_1-330x220.webp';
-
-     $file = $this->fs->getFile($path);
-     $this->assertFalse($file->exists());
 
   }
 
@@ -697,7 +694,6 @@ class FileSystemTest extends  WP_UnitTestCase
     $this->assertDirectoryIsWritable($dirpath);
 
   }
-
 
   public function filterUploadDir($path)
   {
