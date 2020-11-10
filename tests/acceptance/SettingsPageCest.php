@@ -11,14 +11,15 @@ class SettingsPageCest
     // tests
     public function changeOptimizationLevel(AcceptanceTester $I)
     {
-        $I->click('Glossy');
+        $I->click('.glossy');
         $I->acceptPopup();
         $I->click('Save Changes');
         $I->seeCheckboxIsChecked('.shortpixel-radio-glossy');
     }
 
     public function reloadPageAfterChangeOptionsWontPersist(AcceptanceTester $I){
-        $I->click('Glossy');
+        $I->click('.glossy');
+        $I->acceptPopup();
         $I->reloadPage();
         $I->seeCheckboxIsChecked('.shortpixel-radio-lossy');
     }

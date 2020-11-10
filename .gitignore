@@ -2,11 +2,10 @@ vendor
 composer.lock
 
 .env.testing
-.idea/.gitignore
-.idea/misc.xml
-.idea/modules.xml
-.idea/php.xml
-.idea/spio2.iml
-.idea/vcs.xml
-.idea/phpunit.xml
+/.idea
 /bin/.env
+/composer.phar
+.env.local
+/build/
+/wordpress/
+/travis_output/
