@@ -5,7 +5,7 @@ composer.lock
 /.idea
 /bin/.env
 /composer.phar
-.env.local
+.env
 /build/
 /wordpress/
 /travis_output/
