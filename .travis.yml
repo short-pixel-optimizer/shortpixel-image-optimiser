@@ -27,7 +27,7 @@ before_script:
   - docker run -h 127.0.0.1 -p 3306:3306 -e MYSQL_ROOT_PASSWORD=$DOCKER_DB_PASSWORD -e MYSQL_DATABASE=$WP_DB --name $DOCKER_DB_NAME -v $WP_PATH/database:/var/lib/mysql -d  mariadb
   - docker run -e WORDPRESS_DB_PASSWORD=$DOCKER_DB_PASSWORD --name wordpress --link $DOCKER_DB_NAME:mysql -p 80:80 -v $WP_PATH:/var/www/html -d wordpress
   - git clone --depth=50 --branch=master $UGAN  ../modules
-  - composer update
+  - COMPOSER=composer-testing.json composer update
   - sudo cp . $WP_PATH/wp-content/plugins/shortpixel-image-optimiser/ -r
   - sudo chmod 777 $WP_PATH/wp-content/ -R
   - wget https://selenium-release.storage.googleapis.com/3.141/selenium-server-standalone-3.141.59.jar
