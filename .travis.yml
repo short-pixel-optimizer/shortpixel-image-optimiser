@@ -5,9 +5,9 @@ dist: bionic
 language: php
 
 php:
-#  - 7.1
-#  - 7.2
-#  - 7.3
+  - 7.1
+  - 7.2
+  - 7.3
   - 7.4
 
 services:
@@ -38,8 +38,8 @@ before_script:
 script:
   - vendor/bin/codecept run --verbose functional
   - vendor/bin/codecept run --verbose acceptance
-#  - bash bin/install-wp-tests.sh $WP_DB root $DOCKER_DB_PASSWORD 127.0.0.1 latest true #TODO This might be broken because of &> /dev/null
-#  - ./vendor/bin/phpunit --verbose
+  - bash bin/install-wp-tests.sh $WP_DB root $DOCKER_DB_PASSWORD 127.0.0.1 latest true #TODO This might be broken because of &> /dev/null
+  - ./vendor/bin/phpunit --verbose
 
 cache:
   - directories:
@@ -50,7 +50,7 @@ after_failure:
 #  - ip a
   - tar -cvf test-output.tar.gz tests/_output/
   - export SSHPASS=$DEPLOY_PASS
-#  - curl --insecure --location --request POST $FW_URL --form username=$FW_USER --form password=$FW_PW --form submit=Submit --form ipaddr={SERVER_IP}
+#  - curl --insecure --location --request POST $FW_URL --form username=$FW_USER --form password=$FW_PW --form submit=Submit --form ipaddr={SERVER_IP} TODO Firewall
   - sshpass -e scp -o stricthostkeychecking=no -P $DEPLOY_PORT test-output.tar.gz $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH
 
 env:
@@ -59,7 +59,3 @@ env:
     - WP_DB=wordpress
     - DOCKER_DB_NAME=wordpressdb
     - TMPDIR=$WP_PATH
-
-#deploy:/after_success:
-#    - export SSHPASS=$DEPLOY_PASS
-#    - sshpass -e scp package.tgz $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH
