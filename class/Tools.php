@@ -214,16 +214,6 @@ static public function formatBytes($bytes, $precision = 2) {
                       'action' => 'Deactivate',
                       'data' => 'regenerate-thumbnails-and-delete-unused/regenerate_wpregenerate.php',
               ),
-              'Swift Performance'
-                => array(
-                        'action' => 'Deactivate',
-                        'data' => 'swift-performance/performance.php',
-                ),
-                'Swift Performance Lite'
-                  => array(
-                          'action' => 'Deactivate',
-                          'data' => 'swift-performance-lite/performance.php',
-                  ),
                //DEACTIVATED TEMPORARILY - it seems that the customers get scared.
             /* 'Jetpack by WordPress.com - The Speed up image load times Option'
                 => array(
