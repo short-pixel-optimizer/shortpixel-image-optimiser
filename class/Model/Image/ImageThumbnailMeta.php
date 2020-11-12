@@ -13,6 +13,8 @@ class ImageThumbnailMeta
   public $tsOptimized;
   public $webp;
 
+  public $file; // **Only for unlisted images. This defines an unlisted image */ 
+
 //  public $has_backup;
 
 /* WIDTH AND HEIGHT ARE IN IMAGEMODEL!

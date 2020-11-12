@@ -371,8 +371,6 @@ class ShortPixelPlugin
   }
 
 
-
-
   /** Load Style via Route, on demand */
   public function load_style($name)
   {
@@ -421,7 +419,7 @@ class ShortPixelPlugin
     $load_bulk = array();  // the whole suit needed for bulking.
 
 
-    if ($plugin_page == 'wp-shortpixel-settings' || $screen_id == 'upload')
+    if ($plugin_page == 'wp-shortpixel-settings')
     {
       $this->load_style('shortpixel-admin');
       $this->load_style('shortpixel');
@@ -431,10 +429,13 @@ class ShortPixelPlugin
     }
 
 
-    if ($screen_id == 'upload')
+    if ($screen_id == 'upload' || $screen_id == 'attachment')
     {
        $this->load_script($load_processor);
        $this->load_script('shortpixel-screen-media'); // screen
+
+       $this->load_style('shortpixel-admin');
+       $this->load_style('shortpixel');
     }
 
 

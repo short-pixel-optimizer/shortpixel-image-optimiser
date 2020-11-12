@@ -156,8 +156,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     {
       if (! property_exists($this->image_meta, $name))
       {
-          Log::addWarn('GetMeta on Undefined Property' . $name);
-          return false;
+          Log::addWarn('GetMeta on Undefined Property : ' . $name);
+          return null;
       }
 
       return $this->image_meta->$name;
@@ -167,6 +167,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     {
       if (! property_exists($this->image_meta, $name))
       {
+          Log::addDebug('Writing meta non existing' . $name);
           return false;
       }
       else

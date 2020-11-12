@@ -2,8 +2,11 @@
 use ShortPixel\Controller\ResponseController as ResponseController;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
+use \ShortPixel\Model\Image\MediaLibraryModel as MediaLibraryModel;
+use \ShortPixel\Model\Image\ImageModel as ImageModel;
 
-class  MediaLibraryModelTest extends  WP_UnitTestCase
+
+class MediaLibraryModelTest extends  WP_UnitTestCase
 {
 
   private static $fs;
@@ -11,12 +14,29 @@ class  MediaLibraryModelTest extends  WP_UnitTestCase
   protected static $image;
   protected static $id;
 
+  private $className = '\ShortPixel\Model\Image\MediaLibraryModel';
+
+
   public function setUp()
   {
 
     WPShortPixelSettings::debugResetOptions();
   //  $this->root = vfsStream::setup('root', null, $this->getTestFiles() );
     // Need an function to empty uploads
+  }
+
+  public function getPrivateMethod( $className, $methodName ) {
+    $reflector = new ReflectionClass( $className );
+    $method = $reflector->getMethod( $methodName );
+    $method->setAccessible( true );
+    return $method;
+  }
+
+  public function getPrivateProperty( $className, $property ) {
+    $reflector = new ReflectionClass( $className );
+    $prop = $reflector->getProperty( $property );
+    $prop->setAccessible( true );
+    return $prop;
   }
 
   public static function wpSetUpBeforeClass($factory)
@@ -38,6 +58,18 @@ class  MediaLibraryModelTest extends  WP_UnitTestCase
       });
 
       Log::getInstance()->setLogPath('/tmp/wordpress/shortpixel_log');
+
+      //@todo same as in test conversion. This needs streamlining
+      $upload_dir = wp_upload_dir('2020/11', true);
+
+      $zip = new ZipArchive;
+      $res = $zip->open( dirname(__FILE__) . '/assets/test-conversion.zip');
+      //var_dump(dirname(__FILE__) . '/assets/test-conversion.zip');
+      //var_dump($upload_dir);
+      if ($res === TRUE) {
+        $zip->extractTo($upload_dir['path']);
+      }
+      $zip->close();
 
   }
 
@@ -192,6 +224,33 @@ class  MediaLibraryModelTest extends  WP_UnitTestCase
       $pattern = array(0 => array('type' => 'name', 'value' => 'uploads'));
       $settings->excludePatterns = $pattern;
       $this->assertFalse($pathMethod->invoke($imageObj),  $imageObj->getFullPath());
+  }
+
+  public function testWebp()
+  {
+    // @todo
+  }
+
+  public function testRetina()
+  {
+     // @todo
+     // Files are installed in other test. Also needs streamlining this.
+     $upload_dir = wp_upload_dir();
+     $path = trailingslashit($upload_dir['path']);
+     $file = $path. '9OE_n601RyA-150x150.jpg';
+
+     $mm = new MediaLibraryModel(0, $file);
+
+     $retinaMethod = $this->getPrivateMethod($this->className, 'getRetinas' );
+
+     $result = $retinaMethod->invoke($mm);
+
+     $this->assertCount(1, $result);
+     $retina = $result[0];
+     $this->assertTrue($retina->exists());
+     $this->assertEquals('9OE_n601RyA-150x150@2x.jpg', $retina->getFileName());
+
+     // @todo Add thumbnails to object and test w/ thumbnail retina.
 
 
   }
@@ -211,7 +270,6 @@ class  MediaLibraryModelTest extends  WP_UnitTestCase
       $imageObj->setMeta('compressionType', 'lossy');
 
       $imageObj->saveMeta();
-
 
       // Reload
       $imageObj = self::$fs->getMediaImage(self::$id);

@@ -20,6 +20,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
         parent::__construct($path);
         $this->image_meta = new ImageThumbnailMeta();
+        $this->setWebp();
   }
 
 
@@ -38,6 +39,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
       'image_meta' => $this->image_meta,
       'name' => $this->name,
       'path' => $this->getFullPath(),
+      'exists' => ($this->exists()) ? 'yes' : 'no',
 
     );
   }
@@ -54,7 +56,8 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
       $filepath = (string) $this->getFileDir();
       $extension = $this->getExtension();
 
-      $retina = new MediaLibraryThumbnailModel($filepath . $filebase . '@2x' . $extension);
+      $retina = new MediaLibraryThumbnailModel($filepath . $filebase . '@2x.' . $extension); // mind the dot in after 2x
+
       if ($retina->exists())
         return $retina;
 
@@ -64,11 +67,16 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
   /** @todo Might be moved to ImageModel, if customImage also has Webp */
   public function getWebp()
   {
+    $fs = \wpSPIO()->filesystem();
+
     if (! is_null($this->getMeta('webp')))
-      return $this->getMeta('webp');
+    {
+      $filepath = $this->getFileDir() . $this->getMeta('webp');
+      $webp = $fs->getFile($filepath);
+      return $webp;
+    }
 
     $double_webp = \wpSPIO()->env()->useDoubleWebpExtension();
-    $fs = \wpSPIO()->filesystem();
 
     if ($double_webp)
       $filename = $this->getFileName();
@@ -76,12 +84,22 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
       $filename = $this->getFileBase();
 
     $filename .= '.webp';
+    $filepath = $this->getFileDir() . $filename;
 
-    $webp = $fs->getFile($filename);
+    $webp = $fs->getFile($filepath);
+
     if ($webp->exists())
       return $webp;
 
     return false;
+  }
+
+  protected function setWebp()
+  {
+      $webp = $this->getWebp();
+      if ($webp !== false && $webp->exists())
+        $this->setMeta('webp', $webp->getFileName() );
+
   }
 
   protected function setMetaObj($metaObj)

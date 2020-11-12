@@ -13,7 +13,7 @@ class UiHelper
     $output = "";
     $id = $imageObj->get('id');
     $primary = in_array('optimizethumbs', $actions) ? 'button-primary' : '';
-//<?php if($thumbsRemain) { echo('button-primary')
+
     $output .= "<div class='sp-column-actions '>
                     <div class='sp-dropdown'>
                         <button onclick='ShortPixel.openImageMenu(event);' class='sp-dropbtn button dashicons dashicons-menu $primary' title='ShortPixel Actions'></button>";
@@ -112,7 +112,7 @@ class UiHelper
                       </div>";
 
        }
-       $output .=  "</div></div> <!-- thumb optimized ->";
+       $output .=  "</div></div> <!-- thumb optimized -->";
     }
 
     if ($retinasDone > 0)
@@ -154,9 +154,10 @@ class UiHelper
 
       if ($mediaItem->isOptimized())
       {
+
           $optimizable = $mediaItem->getOptimizePaths();
 
-           if (count($optimizable) > 0 && $mediaItem->isOptimized() )
+           if (count($optimizable) > 0 )
            {
              $action = self::getAction('optimizethumbs', $id);
              $action['text']  = sprintf(__('Optimize %s  thumbnails','shortpixel-image-optimiser'),count($optimizable));
@@ -167,7 +168,7 @@ class UiHelper
           {
             $list_actions[] = self::getAction('compare', $id);
 
-           switch($mediaItem->getMeta('type'))
+           switch($mediaItem->getMeta('compressionType'))
            {
                case ImageModel::COMPRESSION_LOSSLESS:
                  $list_actions['reoptimize-lossy'] = self::getAction('reoptimize-lossy', $id);
@@ -186,6 +187,7 @@ class UiHelper
           $list_actions['restore'] = self::getAction('restore', $id);
           }
       }
+
 
       return $list_actions;
   }

@@ -7,7 +7,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 {
   protected $thumbnails = array(); // thumbnails of this // MediaLibraryThumbnailModel .
   protected $retinas = array(); // retina files - MediaLibraryThumbnailModel (or retina / webp and move to thumbnail? )
-  protected $webps = array(); // webp files - MediaLibraryThumbnailModel
+  //protected $webps = array(); // webp files - 
   protected $original_file = false; // the original instead of the possibly _scaled one created by WP 5.3 >
 
   protected $is_scaled = false; // if this is WP 5.3 scaled
@@ -114,7 +114,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           {
              if (isset($data['file']))
              {
-               $thumbObj = $this->getThumbnailModel($data['file']);
+               $thumbObj = $this->getThumbnailModel($this->getFileDir() . $data['file']);
+
                $meta = new ImageThumbnailMeta();
                $thumbObj->name = $name;
                $meta->width = (isset($data['width'])) ? $data['width'] : false;
@@ -142,6 +143,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         if ($retinaObj)
            $retinas[$thumbname] = $retinaObj;
       }
+
 
       return $retinas;
   }
@@ -266,11 +268,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       return $bool;
   }
 
-  private function getThumbnailModel($fileName)
+  /** @param String Full Path to the Thumbnail File
+  *   @return Object ThumbnailModel
+  * */
+  private function getThumbnailModel($path)
   {
-      $path = (string) $this->getFileDir();
-      $path = $path . $fileName;
-
       $thumbObj = new MediaLibraryThumbnailModel($path);
       return $thumbObj;
   }
@@ -282,6 +284,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
       $this->image_meta = new ImageMeta();
       $fs = \wpSPIO()->fileSystem();
+//      echo "<PRE>"; var_dump($metadata); echo "</PRE>";
 
       if (! $metadata)
       {
@@ -290,7 +293,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
             $result = $this->checkLegacy();
             if ($result)
             {
+            //  Log::addTemp("Legacy MetaConversion Save(tm) temporarily off");
               $metadata = $this->createSave(); // after convert, pretent it's loaded as save ( and save! ) @todo
+              $this->saveMeta();
+          //    echo "<PRE>"; var_dump($metadata); echo "</PRE>";
+
             /*  echo "metadata from createSave <PRE>";
               print_r($this->getOptimizeUrls());
               echo "</PRE>"; */
@@ -302,6 +309,27 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       {
           $this->image_meta->fromClass($metadata->image_meta);
           $thumbnails = $this->loadThumbnailsFromWP();
+
+          /*foreach($metadata->thumbnails as $name => $data) // load all thumbs from metadata.
+          {
+              $thumbMeta = new ImageThumbnailMeta();
+              $thumbMeta->fromClass($metadata->thumbnails[$name]);
+              //$thumbMeta->set('name', $thumbName);
+              $thumbnails[$name]->setMetaObj($thumbMeta);
+
+              if (isset($wpthumbnails[$name])) // we have this.
+              {
+                unset($wpthumbails[$name]);
+              }
+
+          }
+          if (count($wpthumbnails) > 0)
+          {
+             foreach($wpthumbnails as $name => $data)
+             {
+
+             }
+          } */
           foreach($thumbnails as $name => $thumbObj)
           {
              if (isset($metadata->thumbnails[$name]))
@@ -310,32 +338,57 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
                 $thumbMeta->fromClass($metadata->thumbnails[$name]);
                 //$thumbMeta->set('name', $thumbName);
                 $thumbnails[$name]->setMetaObj($thumbMeta);
+
+                unset($metadata->thumbnails[$name]);
+             }
+          }
+
+          if (count($metadata->thumbnails) > 0) // unlisted in WP metadata sizes.
+          {
+             foreach($metadata->thumbnails as $name => $thumbmeta)
+             {
+
+               $thumbObj = $this->getThumbnailModel($this->getFileDir() . $thumbmeta['file']);
+               $meta = new ImageThumbnailMeta();
+               $thumbObj->name = $name;
+               $meta->width = (isset($thumbmeta['width'])) ? $thumbmeta['width'] : false;
+               $meta->height = (isset($thumbmeta['height'])) ? $thumbmeta['height'] : false;
+               $thumbObj->setMetaObj($meta);
+               $thumbnails[$name] = $thumbObj;
+
              }
           }
           $this->thumbnails = $thumbnails;
 
           if (isset($metadata->retinas))
           {
-              foreach($metadata->retinas as $retinaObj)
+              foreach($metadata->retinas as $name => $retinaMeta)
               {
+                  if ($name == 0) // main file
+                  {
+                    $retfile = $this->getRetina();
+                  }
+                  else
+                  {
+                     if (isset($this->thumbnails[$name]))
+                     {
+                          $thumbObj = $this->thumbnails[$name];
+                          $retfile = $thumbObj->getRetina();
+                     }
+                  }
+
+                  if ($retfile === false)
+                  {
+                      continue; // no retina on this size.
+                  }
+                  $retinaObj = $this->getThumbnailModel($retfile->getFullPath());
                   $retMeta = new ImageThumbnailMeta();
                   $retMeta->fromClass($retinaObj);
-                  $this->retinas[] = $retMeta;
+                  $this->retinas[] = $retinaObj;
               }
           }
-          if (isset($metadata->webps))
-          {
-             foreach($metadata->webps as $webp)
-             {
-                $this->webps[] = $fs->getFile($webp);
-             }
-          }
+
       }
-
-      if ($this->getExtension() == 'png' && $settings->png2jpg > 0)
-          $this->setMeta('is_png2jpg');
-
-      //return false;
   }
 
   private function createSave()
@@ -344,7 +397,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       $metadata->image_meta = $this->image_meta->toClass();
       $thumbnails = array();
       $retinas = array();
-      $webps = array();
+    //  $webps = array();
 
       foreach($this->thumbnails as $thumbName => $thumbObj)
       {
@@ -354,17 +407,17 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       {
          $retinas[$index] = $retinaObj->toClass();
       }
-      foreach($this->webps as $index => $webp)
+      /*foreach($this->webps as $index => $webp)
       {
         $webps[$index] = $webp->getFullPath();
-      }
+      } */
 
       if (count($thumbnails) > 0)
         $metadata->thumbnails = $thumbnails;
       if (count($retinas) > 0)
         $metadata->retinas = $retinas;
-      if (count($webps) > 0)
-        $metadata->webps = $webps;
+      /*if (count($webps) > 0)
+        $metadata->webps = $webps; */
 
       return $metadata;
  }
@@ -697,7 +750,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       if (count($data) == 0)  // This can happen. Empty array is still nothing to convert.
         return false;
 
-    //  echo " I MUST CONVERT THIS <PRE>";  print_r($metadata); echo "</PRE>";
+      echo " I MUST CONVERT THIS <PRE>";  print_r($metadata); echo "</PRE>";
+      echo "*** EXPORT: "; var_export($metadata); echo " *** ";
        $type = isset($data['type']) ? $this->legacyConvertType($data['type']) : '';
 
        $improvement = (isset($metadata['ShortPixelImprovement']) && is_numeric($metadata['ShortPixelImprovement']) && $metadata['ShortPixelImprovement'] > 0) ? $metadata['ShortPixelImprovement'] : 0;
@@ -707,9 +761,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        $error_message = isset($metadata['ShortPixelImprovement']) && ! is_numeric($metadata['ShortPixelImprovement']) ? $metadata['ShortPixelImprovement'] : '';
 
        $retries = isset($data['Retries']) ? intval($data['Retries']) : 0;
-
        $optimized_thumbnails = (isset($data['thumbsOptList']) && is_array($data['thumbsOptList'])) ? $data['thumbsOptList'] : array();
-
        $exifkept = (isset($data['exifKept']) && $data['exifKept']  == 1) ? true : false;
 
        $tsOptimized = $tsAdded = time();
@@ -724,6 +776,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         $this->image_meta->tsOptimized = $tsOptimized;
        }
 
+       $this->image_meta->wasConverted = true;
        $this->image_meta->status = $status;
        //$this->image_meta->type = $type;
        $this->image_meta->improvement = $improvement;
@@ -736,14 +789,20 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
        $this->image_meta->did_keepExif = $exifkept;
 
+
+
        $webp = $this->getWebp();
        if ($webp)
-        $this->image_meta->webp = $webp;
+        $this->image_meta->webp = $webp->getFileName();
 
        $this->width = isset($metadata['width']) ? $metadata['width'] : false;
        $this->height = isset($metadata['height']) ? $metadata['height'] : false;
 
 
+       if (isset($metadata['ShortPixelPng2Jpg']))
+       {
+           $this->image_meta->did_png2jpg = true; //setMeta('did_png2jpg', true);
+       }
     //   $this->image_meta->did_cmyk2rgb = $exifkept;
       // $this->image_meta->tsOptimized =
 
@@ -771,7 +830,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
                  $thumbnailObj->image_meta->webp = $webp->getFileName();
               }
 
+              if (strpos($thumbname, 'sp-found') !== false) // File is 'unlisted', also save file information.
+              {
+                 $thumbnailObj->image_meta->file = $thumbnailObj->getFileName();
+              }
+
               $this->thumbnails[$thumbname] = $thumbnailObj;
+
 
 
           }
@@ -780,13 +845,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        if (isset($data['retinasOpt']))
        {
            $count = $data['retinasOpt'];
+          // var_dump('RetinasOpt: ' . $count);
            $retinas = $this->getRetinas();
+           //print_R($retinas);
            foreach($retinas as $index => $retinaObj) // Thumbnail Model
            {
               $retinaObj->image_meta->status = $status;
               $retinaObj->image_meta->compressionType = $type;
               $retinaObj->image_meta->compressedSize = $retinaObj->getFileSize();
-              $retinaObj->image_meta->improvement = -1; // n/a
+            //  $retinaObj->image_meta->improvement = -1; // n/a
               $retinaObj->image_meta->tsAdded = $tsAdded;
               $retinaObj->image_meta->tsOptimized = $tsOptimized;
               $retinaObj->has_backup = $retinaObj->hasBackup();
@@ -796,14 +863,19 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
            $this->retinas = $retinas;
        }
 
-      if (isset($data['webpCount']))
+      /*if (isset($data['webpCount']))
       {
           $count = $data['webpCount'];
           $webps = $this->getWebps(); // Simple FileModel objects.
           $this->webps = $webps;
-      }
+      } */
 
-//echo "<PRE>"; var_dump($this->createSave());echo "</PRE>";
+      // FOR TESTING @todo remove
+//echo "<PRE><strong>RESULT</strong>";
+//print_r($this->thumbnails);
+//print_r($this->createSave());echo "</PRE>";
+    // *** END TESTING ***/
+
 
       //   $is_png2jpg = isset($data[''])
 
@@ -927,7 +999,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         'image_meta' => $this->image_meta,
         'thumbnails' => $this->thumbnails,
         'retinas' => $this->retinas,
-        'webps' => $this->webps,
         'original_file' => $this->original_file,
         'is_scaled' => $this->is_scaled,
       );

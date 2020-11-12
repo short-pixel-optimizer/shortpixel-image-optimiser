@@ -27,7 +27,7 @@ class ListMediaViewController extends \ShortPixel\Controller
   public function load()
   {
     if (! $this->hooked)
-      $this->loadHooks();  
+      $this->loadHooks();
   }
 
   protected function loadHooks()
