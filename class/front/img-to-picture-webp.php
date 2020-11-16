@@ -166,11 +166,13 @@ class ShortPixelImgToPictureWebp
         $heightAttr = isset($img['height']) && strlen($img['height']) ? ' height="' . $img['height'] . '"' : '';
         $widthAttr = isset($img['width']) && strlen($img['width']) ? ' width="' . $img['width'] . '"' : '';
 
+
         // We don't wanna have src-ish attributes on the <picture>
         unset($img['src']);
         unset($img['data-src']);
         unset($img['data-lazy-src']);
         unset($img['srcset']);
+        unset($img['loading']);
       //  unset($img['data-srcset']); // lazyload - don't know if this solves anything.
         unset($img['sizes']);
 
