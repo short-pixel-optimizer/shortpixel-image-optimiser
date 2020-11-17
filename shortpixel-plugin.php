@@ -173,6 +173,9 @@ class ShortPixelPlugin
     add_action( 'wp_ajax_shortpixel_exit_process', array(AjaxController::getInstance() , 'removeProcessorKey'));
     add_action( 'wp_ajax_shortpixel_get_item_view', array(AjaxController::getInstance(), 'getItemView'));
     add_action( 'wp_ajax_shortpixel_manual_optimization', array(AjaxController::getInstance(), 'addItem'));
+    add_action( 'wp_ajax_shortpixel_get_comparer_data', array(AjaxController::getInstance(), 'getComparerData'));
+
+    add_action( 'wp_ajax_shortpixel_ajaxRequest', array(AjaxController::getInstance(), 'ajaxRequest'));
 
     // *** AJAX HOOKS  @todo These must be moved from wp-short-pixel in future */
     //add_action('wp_ajax_shortpixel_helpscoutOptin', array(\wpSPIO()->settings(), 'ajax_helpscoutOptin'));
@@ -256,6 +259,7 @@ class ShortPixelPlugin
         'nonce_process' => wp_create_nonce('processing'),
         'nonce_exit' => wp_create_nonce('exit_process'),
         'nonce_itemview' => wp_create_nonce('item_view'),
+        'nonce_ajaxrequest' => wp_create_nonce('ajax_request'),
     ));
 
 
@@ -435,6 +439,7 @@ class ShortPixelPlugin
        $this->load_script('shortpixel-screen-media'); // screen
 
        $this->load_style('shortpixel-admin');
+       $this->load_style('shortpixel-modal'); // for comparer
        $this->load_style('shortpixel');
     }
 

@@ -5,7 +5,7 @@ window.ShortPixelProcessor =
   //  spp: {},
     isActive: false,
     interval: 2000,
-    screen: null,
+    screen: null, // UI Object
     tooltip: null,
     isBulkPage: false,
     localSecret: null,
@@ -27,6 +27,7 @@ window.ShortPixelProcessor =
         this.nonce['process'] = ShortPixelProcessorData.nonce_process;
         this.nonce['exit'] = ShortPixelProcessorData.nonce_process;
         this.nonce['itemview'] = ShortPixelProcessorData.nonce_itemview;
+        this.nonce['ajaxRequest'] = ShortPixelProcessorData.nonce_ajaxrequest;
 
         //console.log(ShortPixelProcessorData);
 
@@ -45,10 +46,13 @@ window.ShortPixelProcessor =
            console.debug('Processor not active - ' + this.remoteSecret + ' - ' + this.localSecret);
         }
 
+        // Always load worker, also used for UI actions.
+        this.LoadWorker();
+
         if (this.isActive)
         {
           //  console.debug('loading worker');
-            this.LoadWorker();
+
             this.RunProcess();
         }
 
@@ -58,17 +62,17 @@ window.ShortPixelProcessor =
 
         }
         else
-          this.screen = new ShortPixelScreen({});
+          this.screen = new ShortPixelScreen({}, this);
 
         this.tooltip = new ShortPixelToolTip();
 
 
-      //  console.log(this);
     },
     LoadWorker: function()
     {
         if (window.Worker)
         {
+            console.log('Starting Worker');
             var ajaxURL = ShortPixel.AJAX_URL;
             var nonce = '';
 
@@ -77,14 +81,19 @@ window.ShortPixelProcessor =
             this.worker.onmessage = this.CheckResponse.bind(this);
 
             window.addEventListener('beforeunload', this.ShutDownWorker.bind(this));
-            window.addEventListener('shortpixel.loadItemView', this.LoadItemView.bind(this));
+            //window.addEventListener('shortpixel.loadItemView', this.LoadItemView.bind(this));
+            //window.addEventListener('shortpixel.')
         }
     },
     ShutDownWorker: function()
     {
+        if (this.worker === null) // worker already shut / not loaded
+          return false;
+
+        console.log('Shutting down Worker');
         this.worker.postMessage({'action' : 'shutdown', 'nonce': this.nonce['exit'] });
         this.worker.terminate();
-
+        this.worker = null;
         window.removeEventListener('beforeunload', this.ShutDownWorker.bind(this));
         window.removeEventListener('shortpixel.loadItemView', this.LoadItemView.bind(this));
     },
@@ -92,6 +101,9 @@ window.ShortPixelProcessor =
     {
         //$(document).on timeout - check function.
         //console.log(this);
+        if (this.worker === null)
+           this.LoadWorker(); // JIT worker loading
+
         this.tooltip.DoingProcess();
         this.worker.postMessage({action: 'process', 'nonce' : this.nonce['process']});
 
@@ -103,11 +115,13 @@ window.ShortPixelProcessor =
 
         this.timer = window.setTimeout(this.Process.bind(this), this.interval);
     },
+    StopProcessing: function()
+    {
+         window.clearTimeout(this.timer);
+    },
     CheckResponse: function(message)
     {
-      console.log('checkResponse');
 
-      //console.log(e.status);
       var data = message.data;
 
       if (data.status == false)
@@ -125,8 +139,10 @@ window.ShortPixelProcessor =
           var response = data.response;
           if ( response.callback)
           {
+              console.log('Running callback : ' + response.callback);
               var event = new CustomEvent(response.callback, {detail: response});
               window.dispatchEvent(event);
+              return; // no Handle on callback.
           }
 
            // Check the screen if we are custom or media ( or bulk ) . Check the responses for each of those.
@@ -138,8 +154,6 @@ window.ShortPixelProcessor =
            {
                 this.HandleResponse(response.media, 'media');
            }
-
-
 
       }
 
@@ -154,13 +168,17 @@ window.ShortPixelProcessor =
         // Perhaps if optimization, the new stats and actions should be generated server side?
 
          // If there are items, give them to the screen for display of optimization, waiting status etc.
-         if (response.results !== null)
+         if (typeof response.results !== 'undefined' && response.results !== null)
          {
              for (i = 0; i < response.results.length; i++)
              {
                 var imageResult = response.results[i];
                 this.screen.handleImage(response.results[i], type);
              }
+         }
+         if (typeof response.result !== 'undefined' && response.result !== null)
+         {
+              this.screen.handleImage(response, type); // whole response here is single item.
          }
 
 
@@ -178,9 +196,9 @@ window.ShortPixelProcessor =
              }
              else if (this.qStatus[response.status] == 'QUEUE_EMPTY')
              {
-                 console.debug('Empty Queue');
+                 console.debug('Processor: Empty Queue');
                  this.tooltip.ProcessEnd();
-                 this.ShutDownWorker();
+                 this.StopProcessing();
              }
          }
 
@@ -189,13 +207,23 @@ window.ShortPixelProcessor =
 
          // If all is fine, there is more in queue, enter back into queue.
     },
-    LoadItemView: function(event)
+    LoadItemView: function(data)
     {
-      var data = event.detail;
+  //    var data = event.detail;
       var nonce = this.nonce['itemview'];
       this.worker.postMessage({action: 'getItemView', 'nonce' : this.nonce['itemview'], 'data': { 'id' : data.id, 'type' : data.type, 'callback' : 'shortpixel.RenderItemView'}});
+    },
+    AjaxRequest: function(data)
+    {
+       var localWorker = false;
+
+     // { 'id' : id, 'type' : type, 'callback' : 'shortpixel.RenderItemView'}
+       this.worker.postMessage({action: 'ajaxRequest', 'nonce' : this.nonce['ajaxRequest'], 'data': data });
+
+       //this.runProcess();
 
     }
+
 
     //re/turn spp;
 }

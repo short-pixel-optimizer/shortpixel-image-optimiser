@@ -32,27 +32,27 @@ class OptimizeController
       return self::$instance;
     }
 
-    // Queuing Part
+    protected function getQueue(Object $mediaItem)
+    {
+        $queue = null;
 
+        if ($mediaItem->get('type') == 'media')
+          $queue = MediaLibraryQueue::getInstance();
+
+        if ($mediaItem->get('type') == 'custom')
+          $queue = CustomQueue::getInstance();
+
+        return $queue;
+    }
+
+    // Queuing Part
     /* Add Item to Queue should be used for starting manual Optimization
     * Enqueue a single item, put it to front, remove duplicates.
     @return int Number of Items added
     */
-    public function addItemToQueue($id, $type = 'media')
+    public function addItemToQueue(Object $mediaItem)
     {
         $fs = \wpSPIO()->filesystem();
-
-        if ($type == 'media')
-        {
-          $queue = MediaLibraryQueue::getInstance();
-          $mediaItem = $fs->getMediaImage($id);
-
-        }
-        elseif($type == 'custom')
-        {
-          $queue = CustomQueue::getInstance();
-          $mediaItem = $fs->getCustomImage($id);
-        }
 
         $json = $this->getJsonResponse();
         $json->status = 0;
@@ -93,37 +93,47 @@ class OptimizeController
         return $json;
     }
 
-    public function restoreItem($id, $type = 'media')
+    public function restoreItem(Object $mediaItem)
     {
         $fs = \wpSPIO()->filesystem();
 
-        if ($type == 'media')
-        {
-          $mediaItem = $fs->getMediaImage($id);
-        }
-        elseif($type == 'custom')
-        {
-          $mediaItem = $fs->getCustomImage($id);
-        }
-
         $json = $this->getJsonResponse();
         $json->status = 0;
+        $json->result->item_id = $id;
 
         $result = $mediaItem->restore();
 
         if ($result)
         {
            $json->status = 1;
-           $json->message = __('Item restored', 'shortpixel-image-optimiser');
+           $json->result->message = __('Item restored', 'shortpixel-image-optimiser');
+           $json->result->is_done = true;
         }
         else
         {
-           $json->message = __('Item not restorable', 'shortpixel-image-optimiser');
+           $json->result->message = __('Item not restorable', 'shortpixel-image-optimiser');
+           $json->result->is_done = false;
+           $json->result->is_error = true;
+
         }
         return $json;
     }
 
+    public function reOptimizeItem(Object $mediaItem, $compressionType)
+    {
+      $json = $this->restoreItem($mediaItem);
 
+      if ($json->status == 1) // successfull restore.
+      {
+          $mediaItem->setMeta('compressionType', $compressionType);
+          $json = $this->addItemToQueue($mediaItem);
+          $this->send($json);
+      }
+
+      $this->send($json);
+
+
+    }
     /** Create a new bulk, enqueue items for bulking */
     public function createBulk()
     {
@@ -189,7 +199,7 @@ class OptimizeController
             $result->items[$index] = $item; // replace processed item, should have result now.
 
             Log::addTemp('ProcessQueue Item' . $index,  $item);
-            
+
           //  $result = $api->doRequests($urls, $blocking);
         }
 

@@ -114,7 +114,7 @@ class WPShortPixel {
 
             add_action('wp_ajax_shortpixel_browse_content', array(&$this, 'browseContent'));
             add_action('wp_ajax_shortpixel_get_backup_size', array(&$this, 'getBackupSize'));
-            add_action('wp_ajax_shortpixel_get_comparer_data', array(&$this, 'getComparerData'));
+    //        add_action('wp_ajax_shortpixel_get_comparer_data', array(&$this, 'getComparerData'));
 
             add_action('wp_ajax_shortpixel_new_api_key', array(&$this, 'newApiKey'));
             add_action('wp_ajax_shortpixel_propose_upgrade', array(&$this, 'proposeUpgrade'));

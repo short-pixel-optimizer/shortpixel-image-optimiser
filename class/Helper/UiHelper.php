@@ -275,8 +275,8 @@ class UiHelper
      break;
 
      case 'restore':
-         $action['function'] = 'admin.php?action=shortpixel_restore_backup&attachment_ID=' . $id;
-         $action['type'] = 'link';
+         $action['function'] = 'window.ShortPixelProcessor.screen.restoreItem(' . $id . ');';
+         $action['type'] = 'js';
          $action['text'] = __('Restore backup','shortpixel-image-optimiser');
          $action['display'] = 'inline';
      break;
@@ -288,20 +288,20 @@ class UiHelper
         $action['display'] = 'inline';
      break;
      case 'reoptimize-glossy':
-        $action['function'] = 'reoptimize(' . $id . ', glossy)';
+        $action['function'] = 'window.ShortPixelProcessor.screen.reOptimize(' . $id . ',' . ImageModel::COMPRESSION_GLOSSY . ')';
         $action['type'] = 'js';
         $action['text'] = __('Re-optimize Glossy','shortpixel-image-optimiser') ;
         $action['display'] = 'inline';
      break;
      case 'reoptimize-lossy':
-        $action['function'] = 'reoptimize(' . $id . ', lossy)';
+        $action['function'] = 'window.ShortPixelProcessor.screen.reOptimize(' . $id . ',' . ImageModel::COMPRESSION_LOSSY . ')';
         $action['type'] = 'js';
         $action['text'] = __('Re-optimize Lossy','shortpixel-image-optimiser');
         $action['display'] = 'inline';
      break;
 
      case 'reoptimize-lossless':
-        $action['function'] = 'reoptimize(' . $id . ', lossless)';
+        $action['function'] = 'window.ShortPixelProcessor.screen.reOptimize(' . $id . ',' . ImageModel::COMPRESSION_LOSSLESS . ')';
         $action['type'] = 'js';
         $action['text'] = __('Re-optimize Lossless','shortpixel-image-optimiser');
         $action['display'] = 'inline';

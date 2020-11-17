@@ -714,7 +714,7 @@ var ShortPixel = function() {
             if(!shown) e.target.parentElement.classList.add("sp-show");
     }
 
-    function loadComparer(id) {
+    function loadComparer(id, type) {
         this.comparerData.origUrl = false;
          if(this.comparerData.cssLoaded === false) {
             jQuery('<link>')
@@ -737,13 +737,15 @@ var ShortPixel = function() {
             //jQuery(".sp-close-button").click(ShortPixel.closeComparerPopup);
         }
         if(this.comparerData.origUrl === false) {
+               if (typeof type == 'undefined')
+                  var type = 'media';  // default.
             jQuery.ajax({
                 type: "POST",
                 url: ShortPixel.AJAX_URL,
-                data: { action : 'shortpixel_get_comparer_data', id : id },
+                data: { action : 'shortpixel_get_comparer_data', id : id, type: type },
                 success: function(response) {
-                    data = JSON.parse(response);
-                    jQuery.extend(ShortPixel.comparerData, data);
+                  //  data = JSON.parse(response);
+                    jQuery.extend(ShortPixel.comparerData, response);
                     if(ShortPixel.comparerData.jsLoaded == 2) {
                         ShortPixel.displayComparerPopup(ShortPixel.comparerData.width, ShortPixel.comparerData.height, ShortPixel.comparerData.origUrl, ShortPixel.comparerData.optUrl);
                     }

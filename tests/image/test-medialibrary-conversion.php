@@ -89,7 +89,6 @@ class  MediaLibraryModelConversionTest extends WP_UnitTestCase
 
       $mm = new MediaLibraryModel(0, self::$path . '9OE_n601RyA-scaled.jpg');
 
-
       $metaProp->setValue($mm, $this->getOldFormat()); // set the metadata
       $thumbnails = $loadThumbMethod->invoke($mm); // init the thumbs ( happens on load_meta normally)
       $thumbnailProp->setValue($mm, $thumbnails); // set them, as in loadMeta.
@@ -111,6 +110,8 @@ class  MediaLibraryModelConversionTest extends WP_UnitTestCase
       $this->assertEquals('9OE_n601RyA-scaled.webp', $mm->getMeta('webp'));
       $this->assertEquals($mm->getMeta('webp'), $mm->getWebp()->getFileName());
       $this->assertCount(10, $webpMethod->invoke($mm)); // All thumbs + main image.
+
+      $this->assertTrue(get_post_meta(0, 'shortpixel_was_converted'));
 
   }
 

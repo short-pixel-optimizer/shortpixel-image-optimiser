@@ -2,7 +2,7 @@
 
 onmessage = function(e)
 {
-   console.log(e.data);
+  // console.log(e.data);
   //var data = e.data;
   var action = e.data.action;
   var data = e.data.data;
@@ -22,9 +22,14 @@ onmessage = function(e)
      case 'getItemView':
        SpWorker.GetItemView(data);
      break;
+     case 'ajaxRequest':
+      SpWorker.AjaxRequest(data);
+     break;
   }
 
   SpWorker.nonce = nonce;
+
+  console.log('action' + action); 
 
 
 //  postMessage('hello');
@@ -90,7 +95,11 @@ SpWorker = {
    {
       this.action = 'shortpixel_get_item_view';
       this.Fetch(data);
-
+   },
+   AjaxRequest: function(data)
+   {
+      this.action = 'shortpixel_ajaxRequest';
+      this.Fetch(data);
    }
 
 

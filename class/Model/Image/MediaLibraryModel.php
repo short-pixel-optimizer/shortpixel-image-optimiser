@@ -7,13 +7,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 {
   protected $thumbnails = array(); // thumbnails of this // MediaLibraryThumbnailModel .
   protected $retinas = array(); // retina files - MediaLibraryThumbnailModel (or retina / webp and move to thumbnail? )
-  //protected $webps = array(); // webp files - 
+  //protected $webps = array(); // webp files -
   protected $original_file = false; // the original instead of the possibly _scaled one created by WP 5.3 >
 
   protected $is_scaled = false; // if this is WP 5.3 scaled
 
   protected $wp_metadata;
   protected $id;
+
+  protected $type = 'media';
 
   public function __construct($post_id, $path)
   {
@@ -747,8 +749,18 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
       $data = $metadata['ShortPixel'];
 
+
       if (count($data) == 0)  // This can happen. Empty array is still nothing to convert.
         return false;
+
+
+      // This is a switch to prevent converted items to reconvert when the new metadata is removed ( i.e. restore )
+      $was_converted = get_post_meta($this->id, 'shortpixel_was_converted', true);
+      if ($was_converted == true)
+      {
+        Log::addTemp('This item was converted, not converting again');
+        return false;
+      }
 
       echo " I MUST CONVERT THIS <PRE>";  print_r($metadata); echo "</PRE>";
       echo "*** EXPORT: "; var_export($metadata); echo " *** ";
@@ -788,8 +800,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        $this->image_meta->errorMessage = $error_message;
 
        $this->image_meta->did_keepExif = $exifkept;
-
-
 
        $webp = $this->getWebp();
        if ($webp)
@@ -863,6 +873,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
            $this->retinas = $retinas;
        }
 
+
+       update_post_meta($this->id, 'shortpixel_was_converted', true);
       /*if (isset($data['webpCount']))
       {
           $count = $data['webpCount'];
@@ -895,7 +907,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
          "retinasOpt" =>(isset($rawMeta["ShortPixel"]["retinasOpt"]) ? $rawMeta["ShortPixel"]["retinasOpt"] : null),
          "thumbsTodo" =>(isset($rawMeta["ShortPixel"]["thumbsTodo"]) ? $rawMeta["ShortPixel"]["thumbsTodo"] : false),
          "tsOptimized" => (isset($rawMeta["ShortPixel"]["date"]) ? $rawMeta["ShortPixel"]["date"] : false),
-         "backup" => !isset($rawMeta['ShortPixel']['NoBackup']),
+         "backup" => !isset($rawMeta['ShortPixebugel']['NoBackup']),
          "status" => (!isset($rawMeta["ShortPixel"]) ? 0
                       : (isset($rawMeta["ShortPixelImprovement"]) && is_numeric($rawMeta["ShortPixelImprovement"])
                         && !(   $rawMeta['ShortPixelImprovement'] == 0
