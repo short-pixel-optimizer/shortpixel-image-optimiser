@@ -310,8 +310,6 @@ class ApiController
       $fs = \wpSPIO()->fileSystem();
 
       $counter = $savedSpace =  $originalSpace =  $optimizedSpace /* = $averageCompression */ = 0;
-      //$NoBackup = true;
-
       $compressionType = property_exists($item, 'compressionType') ? $item->compressionType : $settings->compressionType;
 
       if($compressionType) {

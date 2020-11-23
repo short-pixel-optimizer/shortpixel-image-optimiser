@@ -91,7 +91,7 @@ class EditMediaViewController extends \ShortPixel\Controller
           } */
       }
 
-      protected function getActions()
+    /*  protected function getActions()
       {
           $actions = array();
           if (! $this->userIsAllowed)
@@ -126,25 +126,36 @@ class EditMediaViewController extends \ShortPixel\Controller
           }
 
           return $actions;
-      }
+      } */
 
       protected function getStatistics()
       {
         //$data = $this->data;
+        $stats = array();
         $imageObj = $this->imageModel;
-        if ($imageObj->getMeta('did_keepExif') )
+        $did_keepExif = $imageObj->getMeta('did_keepExif');
+        $did_png2jpg = $imageObj->getMeta('did_png2Jpg');
+        $resize = $imageObj->getMeta('resize');
+
+        if ($did_keepExif)
           $stats[] = array(__('EXIF kept', 'shortpixel-image-optimiser'), '');
-        else {
+        elseif ( $did_keepExif === false) {
           $stats[] = array(__('EXIF removed', 'shortpixel-image-optimiser'), '');
         }
 
-        if ($imageObj->getMeta('did_png2Jpg') == true);
+        if ($did_png2jpg == true)
         {
           $stats[] = array(  __('Converted from PNG','shortpixel-image-optimiser'), '');
         }
 
-        $stats[] = array(__("Optimized on", 'shortpixel-image-optimiser') . ": " . $imageObj->getMeta('tsOptimized'), '');
+        if ($resize == true)
+        {
+            $stats[] = array(__('Resized '));
+        }
 
+        $tsOptimized = $imageObj->getMeta('tsOptimized');
+        if ($tsOptimized !== null)
+          $stats[] = array(__("Optimized on", 'shortpixel-image-optimiser') . ": ", $tsOptimized );
 
       /*  $successText .= ($data['webpCount'] ? "<br>+" . $data['webpCount'] . __(" WebP images", 'shortpixel-image-optimiser') : "")
                 . "<br>EXIF: " . ($data['exifKept'] ? __('kept','shortpixel-image-optimiser') :  __('removed','shortpixel-image-optimiser'))
@@ -152,9 +163,11 @@ class EditMediaViewController extends \ShortPixel\Controller
                 . "<br>" . __("Optimized on", 'shortpixel-image-optimiser') . ": " . $data['date']
                 . $todoSizes . $excludeSizes . $missingThumbs;
 */
+
         return $stats;
       }
 
+/*
       protected function getTodo() // @todo Completely fix this.
       {
         $data = $this->data;
@@ -188,7 +201,7 @@ class EditMediaViewController extends \ShortPixel\Controller
 
               return array($todoSizes, $excludeSizes, $missingThumbs);
       }
-
+*/
       protected function getDebugInfo()
       {
           if(! \wpSPIO()->env()->is_debug )
@@ -248,6 +261,12 @@ class EditMediaViewController extends \ShortPixel\Controller
             {
               $display_size = ucfirst(str_replace("_", " ", $size));
               $thumbObj = $imageObj->getThumbnail($size);
+
+              if ($thumbObj === false)
+              {
+                $debugInfo[] =  array(__('Thumbnail not found / loaded: ', 'shortpixel-image-optimiser'), $size );
+                continue;
+              }
 
               $url = $fs->pathToURL($thumbObj); //wp_get_attachment_image_src($this->post_id, $size);
               $filename = $thumbObj->getFullPath();

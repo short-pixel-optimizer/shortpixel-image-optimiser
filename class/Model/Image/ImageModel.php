@@ -75,9 +75,13 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
       {
          list($width, $height) = @getimagesize($this->getFullPath());
          if ($width)
+         {
           $this->width = $width;
+         }
          if ($height)
+         {
           $this->height = $height;
+         }
       }
     }
 
@@ -257,6 +261,23 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                  {
                     $this->setMeta('compressionType', $settings->compressionType);
                  }
+
+                 if ($settings->resizeImages)
+                 {
+
+                   $resizeWidth = $settings->resizeWidth;
+                   $resizeHeight = $settings->resizeHeight;
+
+                   if ($resizeWidth == $this->width || $resizeHeight == $this->height)  // resized.
+                   {
+                       $meta->setMeta('resizeWidth', $width);
+                       $meta->setMeta('resizeHeight', $height);
+                       $meta->setMeta('resize', false);
+                   }
+                   else
+                     $meta->setMeta('resize', false);
+                 }
+
 
                  if ( $tempFile)
                   $tempFile->delete();

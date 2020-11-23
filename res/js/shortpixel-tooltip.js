@@ -19,16 +19,33 @@ var ShortPixelToolTip = function()
         tooltip.classList.remove('shortpixel-hide');
         tooltip.classList.add('shortpixel-processing');
 
-        var alert = document.createElement('div');
-        alert.className = 'notice notice-error';
-        alert.innerHTML = "This is a notification";
+        this.addNotice('A notice. How lucky you are');
+    }
 
-        tooltip.parentNode.insertBefore(alert, tooltip.nextSibling);
+    this.addNotice = function(message)
+    {
+      var tooltip = this.GetToolTip();
+      var toolcontent = tooltip.querySelector('.ab-item');
+
+      var alert = document.createElement('div');
+      alert.className = 'toolbar-notice toolbar-notice-error';
+      alert.innerHTML = message;
+
+      alertChild = toolcontent.parentNode.insertBefore(alert, tooltip.nextSibling);
+
+      window.setTimeout (this.removeNotice.bind(this), 5000, alertChild);
+    }
+    this.removeNotice = function(notice)
+    {
+        notice.style.opacity = 0;
+        window.setTimeout(function () { notice.remove() }, 2000);
+
     }
 
     this.ProcessEnd = function()
     {
         tooltip = this.GetToolTip();
+
         tooltip.classList.add('shortpixel-hide');
         tooltip.classList.remove('shortpixel-processing');
     }

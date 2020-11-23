@@ -72,18 +72,6 @@ class AjaxController
     }
 
 
-    public function addItem()
-    {
-          $id = intval($_POST['id']);
-          $type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';
-
-          $control = OptimizeController::getInstance();
-          $json = $control->addItemToQueue($id, $type);
-
-          ResponseController::add()->withMessage('TESTING');
-          $this->send($json);
-    }
-
     public function processQueue()
     {
 
@@ -180,6 +168,9 @@ class AjaxController
            case 'reOptimizeItem':
              $this->reOptimizeItem($json, $data);
            break;
+           case 'optimizeItem':
+             $this->optimizeItem($json, $data);
+           break;
         }
 
         $json->$type->message = __('Ajaxrequest - no action found', 'shorpixel-image-optimiser');
@@ -203,6 +194,20 @@ class AjaxController
       }
 
       return $mediaItem;
+    }
+
+    public function optimizeItem()
+    {
+          $id = intval($_POST['id']);
+          $type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';
+
+          $mediaItem = $this->getMediaItem($id, $type);
+
+          $control = OptimizeController::getInstance();
+          $json->$type = $control->addItemToQueue($mediaItem);
+
+          ResponseController::add()->withMessage('TESTING');
+          $this->send($json);
     }
 
     public function restoreItem($json, $data)
@@ -234,6 +239,7 @@ class AjaxController
 
        $json->$type = $control->reOptimizeItem($mediaItem, $compressionType);
     }
+
 
     public function createBulk()
     {

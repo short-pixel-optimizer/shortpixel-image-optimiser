@@ -60,7 +60,12 @@ abstract class Queue
        $numitems = $this->q->withOrder(array($item), 5)->withRemoveDuplicates()->enqueue(); // enqueue returns numitems
 
        $this->q->setStatus('preparing', $preparing); // add single should not influence preparing status.
-       return $numitems;
+       $result = new \stdClass;
+       $result = $this->getQStatus($result, $numitems);
+       $result->numitems = $numitems;
+
+       return $result;
+       //return $numitems;
     }
 
     public function run()
@@ -88,30 +93,49 @@ abstract class Queue
 
        if (isset($items)) // did a dequeue.
        {
-         if (count($items) == 0)
-         {
-           if ($this->getStatus('items') == 0 && $this->getStatus('errors') == 0 && $this->getStatus('in_process') == 0) // no items, nothing waiting in retry. Signal finished.
-             $result->qstatus = self::RESULT_QUEUE_EMPTY;
-           else
-             $result->qstatus = self::RESULT_EMPTY;
-         }
-         else
-         {
-           $result->qstatus = self::RESULT_ITEMS;
-         }
+          $result = $this->getQStatus($result, count($items));
           $result->items = $items;
 
        }
-       $stats = new \stdClass; // For frontend reporting back.
-       $stats->in_queue = $this->getStatus('items');
-       $stats->in_progress = $this->getStatus('in_progress');
-       $stats->errors = $this->getStatus('errors');
-       $stats->done = $this->getStatus('done');
-       $stats->total = $stats->in_queue + $stats->errors + $stats->done + $stats->in_progress;
 
-       $result->stats = $stats;
+      //$stats = $this->getStats();
+       //$result->stats = $stats;
 
        return $result;
+    }
+
+    public function getQStatus($result, $numitems)
+    {
+      if ($numitems == 0)
+      {
+        if ($this->getStatus('items') == 0 && $this->getStatus('errors') == 0 && $this->getStatus('in_process') == 0) // no items, nothing waiting in retry. Signal finished.
+        {
+          $result->qstatus = self::RESULT_QUEUE_EMPTY;
+        }
+        else
+        {
+          $result->qstatus = self::RESULT_EMPTY;
+        }
+      }
+      else
+      {
+        $result->qstatus = self::RESULT_ITEMS;
+      }
+
+      return $result;
+    }
+
+
+    public function getStats()
+    {
+      $stats = new \stdClass; // For frontend reporting back.
+      $stats->in_queue = $this->getStatus('items');
+      $stats->in_progress = $this->getStatus('in_process');
+      $stats->errors = $this->getStatus('errors');
+      $stats->done = $this->getStatus('done');
+      $stats->total = $stats->in_queue + $stats->errors + $stats->done + $stats->in_progress;
+
+      return $stats;
     }
 
     public function getQueueName()
@@ -179,8 +203,8 @@ abstract class Queue
         $urls = $imageModel->getOptimizeUrls();
       //  $paths = $imageModel->getOptimizePaths();
 
-        if ($imageModel->getMeta('is_png2jpg'))
-          $item->png2jpg = $imageModel->getMeta('is_png2jpg');
+        if ($imageModel->get('do_png2jpg'))  // Flag is set in Is_Processable in mediaLibraryModel, when settings are on, image is png.
+          $item->png2jpg = $imageModel->get('do_png2jpg');
 
         if ($imageModel->getMeta('compressionType'))
           $item->compressionType = $imageModel->getMeta('compressionType');

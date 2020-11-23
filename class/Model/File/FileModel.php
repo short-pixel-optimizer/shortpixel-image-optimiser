@@ -313,7 +313,6 @@ class FileModel extends \ShortPixel\Model
     $fs = \wpSPIO()->filesystem();
 
 
-
     if (is_null($this->backupDirectory))
     {
       $backup_dir = str_replace($fs->getWPAbsPath(), "", $this->directory->getPath());
@@ -409,8 +408,6 @@ class FileModel extends \ShortPixel\Model
         return $path;
        }
      }
-
-
 
      return false; // seems URL from other server, can't file that.
   }

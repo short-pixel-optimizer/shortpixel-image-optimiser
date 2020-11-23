@@ -50,7 +50,7 @@ class MediaLibraryQueueTest extends  WP_UnitTestCase
       $q = $this->getQ();
       $result = $q->run();
 
-      $this->assertEquals(Queue::RESULT_EMPTY, $result->status);
+      $this->assertEquals(Queue::RESULT_QUEUE_EMPTY, $result->qstatus);
   }
 
 

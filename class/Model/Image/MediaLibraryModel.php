@@ -11,6 +11,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   protected $original_file = false; // the original instead of the possibly _scaled one created by WP 5.3 >
 
   protected $is_scaled = false; // if this is WP 5.3 scaled
+  protected $do_png2jpg = false; // option to flag this one should be checked / converted to jpg.
 
   protected $wp_metadata;
   protected $id;
@@ -306,7 +307,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
             }
       }
 
-
       if (is_object($metadata) )
       {
           $this->image_meta->fromClass($metadata->image_meta);
@@ -391,6 +391,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           }
 
       }
+
+      // settings defaults
+      if ($this->getMeta('originalHeight') == null)
+        $this->setMeta('originalHeight', $this->height);
+
+      if ($this->getMeta('originalWidth') == null)
+        $this->setMeta('originalWidth', $this->width);
   }
 
   private function createSave()
@@ -467,7 +474,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   {
       $bool = true;
       $bool = parent::isProcessable();
-//var_dump($bool);
+      $settings = \wpSPIO()->settings();
+
+      if ($this->getExtension() == 'png' && $settings->png2jpg)
+        $this->is_png2jpg = true;
+
       if (! $bool) // if parent is not processable, check if thumbnails are, can still have a work to do.
       {
           foreach($this->thumbnails as $thumbnail)
@@ -647,9 +658,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
     $transTable = $wpdb->get_results("SELECT COUNT(1) hasTransTable FROM information_schema.tables WHERE table_schema='{$wpdb->dbname}' AND table_name='{$wpdb->prefix}icl_translations'");
     if(isset($transTable[0]->hasTransTable) && $transTable[0]->hasTransTable > 0) {
-        $transGroupId = $wpdb->get_results("SELECT trid FROM {$wpdb->prefix}icl_translations WHERE element_id = " . $this->id . "");
+        $sql = $wpdb->prepare("SELECT trid FROM {$wpdb->prefix}icl_translations WHERE element_id = %d", $this->id);
+        $transGroupId = $wpdb->get_results($sql);
         if(count($transGroupId)) {
-            $transGroup = $wpdb->get_results("SELECT element_id FROM {$wpdb->prefix}icl_translations WHERE trid = " . $transGroupId[0]->trid);
+            $sql = $wpdb->prepare("SELECT element_id FROM {$wpdb->prefix}icl_translations WHERE trid = %d", $transGroupId[0]->trid);
+            $transGroup = $wpdb->get_results($sql);
             foreach($transGroup as $trans) {
                 $transFile = $fs->getFile($trans->element_id);
                 if($mainFile->getFullPath() == $transFile->getFullPath() ){
@@ -748,7 +761,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       }
 
       $data = $metadata['ShortPixel'];
-
 
       if (count($data) == 0)  // This can happen. Empty array is still nothing to convert.
         return false;

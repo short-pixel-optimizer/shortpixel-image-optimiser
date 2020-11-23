@@ -12,10 +12,17 @@ var ShortPixelScreen = function (MainScreen, processor)
     },
     this.handleImage = function(result, type)
     {
-        if (result.result.is_done == true)
+        if (type == 'custom')  // We don't eat that here.
+          return;
+
+        if (typeof result.result !== 'undefined')
         {
             console.log(result);
             var element = document.getElementById('sp-msg-' + result.item_id); // empty result box while getting
+            if (typeof result.message !== 'undefined')
+            {
+               this.updateMessage(id, result.message);
+            }
             if (element !== null)
             {
               element.innerHTML = '';
@@ -26,6 +33,23 @@ var ShortPixelScreen = function (MainScreen, processor)
               //window.dispatchEvent(event);
             }
         }
+        /*if (result.message)
+        {
+           var element = document.getElementById('sp-message-' + result.item_id); // empty result box while getting
+           if (element !== null)
+           {
+               element.innerHTML = result.message;
+           }
+        } */
+    }
+
+    this.updateMessage = function(id, message)
+    {
+       var element = document.getElementById('sp-message-' + id);
+       if (element !== null)
+       {
+          element.innerHTML = message;
+       }
     }
 
     this.updateStats = function()
@@ -73,6 +97,17 @@ var ShortPixelScreen = function (MainScreen, processor)
         };
 
         this.processor.AjaxRequest(data);
+    }
+    this.optimize = function (id)
+    {
+
+       var data = {
+          id: id,
+          type: 'media',
+          screen_action: 'optimizeItem'
+       }
+
+       this.processor.AjaxRequest(data);
     }
 
 

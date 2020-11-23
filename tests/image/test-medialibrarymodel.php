@@ -229,6 +229,8 @@ class MediaLibraryModelTest extends  WP_UnitTestCase
   public function testWebp()
   {
     // @todo
+    $this->markTestIncomplete('This test has not been implemented yet.');
+
   }
 
   public function testRetina()
@@ -264,7 +266,7 @@ class MediaLibraryModelTest extends  WP_UnitTestCase
       $this->assertEquals(0, $imageObj->getMeta('status'));
       $this->assertNull($imageObj->getMeta('compressionType'));
       $this->assertNull($imageObj->getMeta('did_png2Jpg'));
-      $this->assertFalse($imageObj->getMeta('did_png2Jpg'));
+      //$this->assertFalse($imageObj->getMeta('did_png2Jpg'));
 
       $imageObj->setMeta('status', 1);
       $imageObj->setMeta('compressionType', 'lossy');
@@ -318,9 +320,10 @@ class MediaLibraryModelTest extends  WP_UnitTestCase
 
   public function testConvertPNG()
   {
-      $post = $factory->post->create_and_get();
+      $post = $this->factory->post->create_and_get();
       $attachment_id = $factory->attachment->create_upload_object( __DIR__ . '/assets/png-test.png', $post->ID ); // this one scales
 
+      $this->markTestIncomplete('This test has not been implemented yet.');
   }
 
 

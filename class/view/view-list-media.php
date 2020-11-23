@@ -8,7 +8,7 @@ if (isset($this->view->text)): ?>
 <div class='sp-column-info' id='sp-msg-<?php echo($this->view->mediaItem->get('id') );?>'>
       <?php  echo $this->view->text;  ?>
 
-      <div class='messages'>&nbsp;</div>
+
 
 <?php endif;
 
@@ -31,3 +31,4 @@ if (isset($this->view->list_actions))
 }
 ?>
 </div>
+<div id="sp-message-<?php echo($this->view->mediaItem->get('id') ); ?>" class='messages'>&nbsp;</div>

@@ -394,8 +394,7 @@ class WPShortPixel {
         wp_localize_script( 'shortpixel', 'ShortPixelConstants', $ShortPixelConstants );
         wp_localize_script('shortpixel', 'ShortPixelActions', $actions);
 
-        wp_register_script('jquery.knob.min.js', plugins_url('/res/js/jquery.knob.min.js',SHORTPIXEL_PLUGIN_FILE) );
-        wp_register_script('jquery.tooltip.min.js', plugins_url('/res/js/jquery.tooltip.min.js',SHORTPIXEL_PLUGIN_FILE) );
+
 
 
         if (! \wpSPIO()->env()->is_screen_to_use )
@@ -405,8 +404,8 @@ class WPShortPixel {
         }
 
         wp_enqueue_script('shortpixel');
-        wp_enqueue_script('jquery.knob.min.js');
-        wp_enqueue_script('jquery.tooltip.min.js');
+      //  wp_enqueue_script('jquery.knob.min.js');
+    //    wp_enqueue_script('jquery.tooltip.min.js');
 
         wp_enqueue_script('punycode.min.js', plugins_url('/res/js/punycode.min.js',SHORTPIXEL_PLUGIN_FILE) );
     }
@@ -509,7 +508,7 @@ class WPShortPixel {
 
         $args = array(
                 'id'    => 'shortpixel_processing',
-                'title' => '<div id="' . $id . '" title="' . $tooltip . '" ><img alt="' . __('ShortPixel icon','shortpixel-image-optimiser') . '" src="'
+                'title' => '<div id="' . $id . '" title="' . $tooltip . '" ><span class="stats">4</span><img alt="' . __('ShortPixel icon','shortpixel-image-optimiser') . '" src="'
                          . plugins_url( 'res/img/'.$icon, SHORTPIXEL_PLUGIN_FILE ) . '" success-url="' . $successLink . '"><span class="shp-alert">!</span>'
                          .'<div class="cssload-container"><div class="cssload-speeding-wheel"></div></div></div>',
                 'href'  => $link,

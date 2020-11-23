@@ -4,7 +4,7 @@ window.ShortPixelProcessor =
 {
   //  spp: {},
     isActive: false,
-    interval: 2000,
+    interval: 3000,
     screen: null, // UI Object
     tooltip: null,
     isBulkPage: false,
@@ -12,10 +12,16 @@ window.ShortPixelProcessor =
     remoteSecret: null,
     worker: null,
     timer: null,
+    timesEmpty: 0, // number of times queue came up empty.
     nonce: [],
     qStatus: {
+       1:  'QUEUE_ITEMS',
        4:  'QUEUE_WAITING',
        10: 'QUEUE_EMPTY',
+    },
+    fStatus: {
+       1: 'FILE_PENDING',
+       2: 'FILE_SUCCESS',
     },
 
     Load: function()
@@ -66,7 +72,6 @@ window.ShortPixelProcessor =
 
         this.tooltip = new ShortPixelToolTip();
 
-
     },
     LoadWorker: function()
     {
@@ -113,6 +118,9 @@ window.ShortPixelProcessor =
         if (this.timer)
           window.clearTimeout(this.timer);
 
+        if (this.timesEmpty >= 5)
+           this.interval = 2000 + (this.timesEmpty * 1000);  // every time it turns up empty, second slower.
+
         this.timer = window.setTimeout(this.Process.bind(this), this.interval);
     },
     StopProcessing: function()
@@ -146,11 +154,11 @@ window.ShortPixelProcessor =
           }
 
            // Check the screen if we are custom or media ( or bulk ) . Check the responses for each of those.
-           if (this.screen.isCustom && typeof response.custom == 'object' && response.custom !== null)
+           if (typeof response.custom == 'object' && response.custom !== null)
            {
                this.HandleResponse(response.custom, 'custom');
            }
-           if (this.screen.isMedia && typeof response.media == 'object' && response.media !== null)
+           if (typeof response.media == 'object' && response.media !== null)
            {
                 this.HandleResponse(response.media, 'media');
            }
@@ -162,6 +170,7 @@ window.ShortPixelProcessor =
     {
         if (response.has_error == true)
         {
+           this.tooltip.addNotice(response.message);
            this.screen.handleError(response.message);
         }
 
@@ -188,10 +197,17 @@ window.ShortPixelProcessor =
             this.tooltip.RefreshStats(response.stats);
          }
 
-         if (response.result == null && response.results == null)
+         // @todo Check for empty queue across all queues.
+         if (typeof response.qStatus !== 'undefined')
          {
+             if (this.qStatus[response.status] == 'QUEUE_ITEMS')
+             {
+                this.timesEmpty = 0;
+                this.RunProcess();
+             }
              if (this.qStatus[response.status] == 'QUEUE_WAITING')
              {
+                this.timesEmpty++;
                 this.RunProcess(); // run another queue with timeout
              }
              else if (this.qStatus[response.status] == 'QUEUE_EMPTY')

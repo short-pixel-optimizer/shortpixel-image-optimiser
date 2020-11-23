@@ -47,8 +47,8 @@ var ShortPixel = function() {
 
 
         //check if  bulk processing
-        checkQuotaExceededAlert();
-        checkBulkProgress();
+      //  checkQuotaExceededAlert();
+      //  checkBulkProgress();
     }
 
     function setOptions(options) {

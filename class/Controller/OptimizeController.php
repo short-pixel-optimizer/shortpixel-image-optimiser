@@ -54,33 +54,41 @@ class OptimizeController
     {
         $fs = \wpSPIO()->filesystem();
 
+        $id = $mediaItem->get('id');
+        $type = $mediaItem->get('type');
+
         $json = $this->getJsonResponse();
         $json->status = 0;
-        $json->id = $id;
-        $json->type = $type;
+        $json->result = new \stdClass;
+        $json->result->item_id = $id;
+
+
+        $queue = $this->getQueue($mediaItem);
 
         if ($mediaItem === false)
         {
           $json->is_error = true;
-          $json->message = __('Error - item could not be found', 'shortpixel-image-optimiser');
+          $json->result->is_error = true;
+          $json->result->message = __('Error - item could not be found', 'shortpixel-image-optimiser');
           ResponseController::add()->withMessage($json->message)->asError();
-          return $json;
+          //return $json;
         }
 
         if (! $mediaItem->isProcessable())
         {
-          $json->message = $mediaItem->getProcessableReason();
-          $json->has_error = true;
+          $json->result->message = $mediaItem->getProcessableReason();
+          $json->result->is_error = true;
           ResponseController::add()->withMessage($json->message)->asError();
         }
         else
         {
-          $numitems = $queue->addSingleItem($mediaItem); // 1 if ok, 0 if not found, false is not processable
-          if ($numitems > 0)
+          $result = $queue->addSingleItem($mediaItem); // 1 if ok, 0 if not found, false is not processable
+          if ($result->numitems > 0)
           {
-            $json->message = sprintf(__('Item %d added to Queue. %d items in Queue', 'shortpixel-image-optimiser'), $id, $numitems);
+            $json->result->message = sprintf(__('Item %d added to Queue. %d items in Queue', 'shortpixel-image-optimiser'), $id, $result->numitems);
             $json->status = 1;
             ResponseController::add()->withMessage($json->message);
+
           }
           else
           {
@@ -88,6 +96,11 @@ class OptimizeController
             $json->status = 0;
             ResponseController::add()->withMessage($json->message);
           }
+
+            $json->qstatus = $result->qstatus;
+            $json->result->status = ImageModel::FILE_STATUS_PENDING;
+            $json->result->is_error = false;
+            $json->result->message = __('Optimizing, please wait', 'shortpixel-image-optimiser');
         }
 
         return $json;
@@ -127,11 +140,12 @@ class OptimizeController
       {
           $mediaItem->setMeta('compressionType', $compressionType);
           $json = $this->addItemToQueue($mediaItem);
-          $this->send($json);
+        //  $this->send($json);
+          return $json;
       }
 
-      $this->send($json);
-
+    //  $this->send($json);
+     return $json;
 
     }
     /** Create a new bulk, enqueue items for bulking */
@@ -194,7 +208,7 @@ class OptimizeController
               $item = $this->convertPNG($item, $mediaQ);
 
             $item = $this->sendToProcessing($item);
-
+Log::addTemp('Item SendTOProcessing', $item);
             $item = $this->handleAPIResult($item, $mediaQ);
             $result->items[$index] = $item; // replace processed item, should have result now.
 
@@ -203,6 +217,7 @@ class OptimizeController
           //  $result = $api->doRequests($urls, $blocking);
         }
 
+        $result->stats = $mediaQ->getStats();
         $json = $this->queueToJson($result);
         $results['media'] = $json;
 
@@ -247,6 +262,7 @@ class OptimizeController
       $fs = \wpSPIO()->filesystem();
 
       $result = $item->result;
+
       if ($result->is_error)
       {
           if (! property_exists($item, 'errors'))
@@ -395,7 +411,7 @@ class OptimizeController
              $json->message = sprintf(__('Unknown Status %s ', 'shortpixel-image-optimiser'), $result->qstatus);
           break;
         }
-        $json->status = $result->qstatus;
+        $json->qstatus = $result->qstatus;
 
         if (property_exists($result, 'stats'))
           $json->stats = $result->stats;

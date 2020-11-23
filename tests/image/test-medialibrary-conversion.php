@@ -87,7 +87,8 @@ class  MediaLibraryModelConversionTest extends WP_UnitTestCase
       $retinaProp = $this->getPrivateProperty($this->className, 'retinas');
       $webpMethod = $this->getPrivateMethod($this->className, 'getWebps');
 
-      $mm = new MediaLibraryModel(0, self::$path . '9OE_n601RyA-scaled.jpg');
+      $post = $this->factory->post->create_and_get();
+      $mm = new MediaLibraryModel($post->ID, self::$path . '9OE_n601RyA-scaled.jpg');
 
       $metaProp->setValue($mm, $this->getOldFormat()); // set the metadata
       $thumbnails = $loadThumbMethod->invoke($mm); // init the thumbs ( happens on load_meta normally)
@@ -111,7 +112,7 @@ class  MediaLibraryModelConversionTest extends WP_UnitTestCase
       $this->assertEquals($mm->getMeta('webp'), $mm->getWebp()->getFileName());
       $this->assertCount(10, $webpMethod->invoke($mm)); // All thumbs + main image.
 
-      $this->assertTrue(get_post_meta(0, 'shortpixel_was_converted'));
+      $this->assertTrue(get_post_meta($post->ID, 'shortpixel_was_converted', true));
 
   }
 
@@ -123,7 +124,8 @@ class  MediaLibraryModelConversionTest extends WP_UnitTestCase
       $metaProp = $this->getPrivateProperty($this->className, 'wp_metadata');
       $thumbnailProp = $this->getPrivateProperty($this->className, 'thumbnails');
 
-      $mm = new MediaLibraryModel(0, self::$path . '9OE_n601RyA-scaled.jpg');
+      $post = $this->factory->post->create_and_get();
+      $mm = new MediaLibraryModel($post->ID, self::$path . '9OE_n601RyA-scaled.jpg');
 
       $metaProp->setValue($mm, $this->getPng2JpgFormat()); // set the metadata
       $thumbnails = $loadThumbMethod->invoke($mm); // init the thumbs ( happens on load_meta normally)
@@ -144,14 +146,15 @@ class  MediaLibraryModelConversionTest extends WP_UnitTestCase
 
   public function testUnlisted()
   {
+      $this->markTestIncomplete('This test has not been implemented yet.');
 
   }
 
 
 
-  public function convertTestBackup()
+  public function testConvertBackup()
   {
-
+    $this->markTestIncomplete('This test has not been implemented yet.');
   }
 
 } // class

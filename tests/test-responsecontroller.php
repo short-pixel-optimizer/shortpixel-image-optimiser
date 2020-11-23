@@ -12,7 +12,7 @@ class ResponseControllerTest extends WP_UnitTestCase
 
       public function testAddItem()
       {
-          $this->assertCount(0, ResponseController::getAllResponses());
+          $this->assertCount(0, ResponseController::getAll());
 
           $response = ResponseController::add();
 
@@ -23,7 +23,7 @@ class ResponseControllerTest extends WP_UnitTestCase
 
       public function testWithAttributes()
       {
-          $this->assertCount(0, ResponseController::getAllResponses()); //test if empty
+          $this->assertCount(0, ResponseController::getAll()); //test if empty
 
           $response = ResponseController::add()->withMessage('test')->asImportant()->asError();
 
