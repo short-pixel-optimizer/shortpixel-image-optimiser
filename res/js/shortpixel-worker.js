@@ -17,7 +17,7 @@ onmessage = function(e)
         SpWorker.ShutDown();
      break;
      case 'process':
-       SpWorker.Fetch();
+       SpWorker.Process();
      break;
      case 'getItemView':
        SpWorker.GetItemView(data);
@@ -29,7 +29,7 @@ onmessage = function(e)
 
   SpWorker.nonce = nonce;
 
-  console.log('action' + action); 
+  console.log('action : ' + action);
 
 
 //  postMessage('hello');
@@ -100,6 +100,11 @@ SpWorker = {
    {
       this.action = 'shortpixel_ajaxRequest';
       this.Fetch(data);
+   },
+   Process: function()
+   {
+      this.action = 'shortpixel_image_processing';
+      this.Fetch();
    }
 
 

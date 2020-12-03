@@ -43,7 +43,7 @@ class MediaLibraryQueue extends Queue
    public function startBulk()
    {
        $this->q->setStatus('bulk_running', true);
-       
+
    }
 
    public function getQueueName()
@@ -88,7 +88,7 @@ class MediaLibraryQueue extends Queue
      $prepare = array();
      global $wpdb;
 
-echo "QRYP - LAST ID" . $last_id .  ' WITH LIMIT ' . $limit . '\n\n';
+//echo "QRYP - LAST ID" . $last_id .  ' WITH LIMIT ' . $limit . '\n\n';
 
      $sqlmeta = "SELECT DISTINCT post_id FROM " . $wpdb->prefix . "postmeta where (meta_key = %s or meta_key = %s)";
      $prepare[] = '_wp_attached_file';

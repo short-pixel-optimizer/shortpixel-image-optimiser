@@ -41,7 +41,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
      $paths = array();
 
-     if ($this->isProcessable())
+     if ($this->isProcessable(true))
         $paths = array($this->getFullPath());
 
      foreach($this->thumbnails as $thumbObj)
@@ -50,6 +50,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         $paths = array_merge($paths, $thumbObj->getOptimizePaths());
      }
 
+     $paths = array_values(array_unique($paths));
      return $paths;
   }
 
@@ -65,7 +66,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
      }
 
      $urls = array();
-     if ($this->isProcessable())
+     if ($this->isProcessable(true))
       $urls = array($url);
 
      if ($this->isScaled())
@@ -88,6 +89,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        $urls[] = $retinaObj->getOptimizeUrls();
     }
 
+     $urls = array_values(array_unique($urls));
      return $urls;
   }
 
@@ -187,6 +189,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
   public function handleOptimized($tempFiles)
   {
+      Log::addTemp('TEMPFILES, HandleOptimized', $tempFiles);
       $result = parent::handleOptimized($tempFiles);
       $optimized = array();
 
@@ -470,14 +473,19 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   }
 
   /* Check if an image in theory could be processed. Check only exclusions, don't check status etc */
-  public function isProcessable()
+  /* @param Strict Boolean Check only the main image, don't check thumbnails */
+  public function isProcessable($strict = false)
   {
       $bool = true;
       $bool = parent::isProcessable();
+
       $settings = \wpSPIO()->settings();
 
       if ($this->getExtension() == 'png' && $settings->png2jpg)
         $this->is_png2jpg = true;
+
+      if($strict)
+        return $bool;
 
       if (! $bool) // if parent is not processable, check if thumbnails are, can still have a work to do.
       {
@@ -485,7 +493,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           {
 
             $bool = $thumbnail->isThumbnailProcessable();
-        //    var_dump($thumbnail); var_dump($bool);
+
             if ($bool === true) // Is Processable just needs one job
               return true;
           }

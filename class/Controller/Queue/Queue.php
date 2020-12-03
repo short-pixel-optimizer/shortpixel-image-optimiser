@@ -2,6 +2,7 @@
 namespace ShortPixel\Controller\Queue;
 
 use ShortPixel\Model\Image\ImageModel as ImageModel;
+use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 abstract class Queue
 {
@@ -56,6 +57,7 @@ abstract class Queue
        $preparing = $this->getStatus('preparing');
 
        $qItem = $this->imageModelToQueue($imageModel);
+
        $item = array('id' => $imageModel->get('id'), 'value' => $qItem);
        $numitems = $this->q->withOrder(array($item), 5)->withRemoveDuplicates()->enqueue(); // enqueue returns numitems
 
@@ -94,6 +96,7 @@ abstract class Queue
        if (isset($items)) // did a dequeue.
        {
           $result = $this->getQStatus($result, count($items));
+          Log::addTemp('Fetchted Q items', $items);
           $result->items = $items;
 
        }
@@ -158,10 +161,8 @@ abstract class Queue
     protected function deQueuePriority()
     {
       $items = $this->q->deQueue(array('onlypriority' => true));
-    //  echo "R/A/W : "; var_dump($items);
-    //echo "DQPRIO - BEFORE "; var_dump($items);
       $items = array_map(array($this, 'queueToMediaItem'), $items);
-//  echo "DQPRIO - AFTER "; var_dump($items);
+
       return $items;
     }
 
@@ -179,8 +180,9 @@ abstract class Queue
         return $item;
     }
 
-    protected function mediaItemToQueue($mediaItem)
+    protected function mediaItemToQueue($item)
     {
+        $mediaItem = clone $item;  // clone here, not to loose referenced data.
         unset($mediaItem->item_id);
         unset($mediaItem->tries);
 
@@ -191,7 +193,6 @@ abstract class Queue
         $qItem->value = $mediaItem;
         return $qItem;
     }
-
 
     // This might be a general implementation - This should be done only once!
     protected function imageModelToQueue(ImageModel $imageModel)
@@ -217,6 +218,7 @@ abstract class Queue
 
     public function itemFailed($item, $fatal = false)
     {
+
         $qItem = $this->mediaItemToQueue($item); // convert again
         $this->q->itemFailed($qItem, $fatal);
         $this->q->updateItemValue($qItem);

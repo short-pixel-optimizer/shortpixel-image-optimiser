@@ -153,7 +153,7 @@ class UiHelper
       if ($mediaItem->isOptimized())
       {
 
-          $optimizable = $mediaItem->getOptimizePaths();
+          $optimizable = $mediaItem->getOptimizeURLS();
 
            if (count($optimizable) > 0 )
            {
@@ -232,7 +232,7 @@ class UiHelper
     {
        $text = __('Not Processable: ','shortpixel_image_optimiser');
        $text  .= $mediaItem->getProcessableReason();
-       
+
     }
     elseif (! $mediaItem->exists())
     {

@@ -21,7 +21,8 @@ window.ShortPixelProcessor =
     },
     fStatus: {
        1: 'FILE_PENDING',
-       2: 'FILE_SUCCESS',
+       2: 'FILE_DONE',
+       3: 'FILE_RESTORED',
     },
 
     Load: function()
@@ -182,14 +183,13 @@ window.ShortPixelProcessor =
              for (i = 0; i < response.results.length; i++)
              {
                 var imageResult = response.results[i];
-                this.screen.handleImage(response.results[i], type);
+                this.screen.handleImage(imageResult, type);
              }
          }
          if (typeof response.result !== 'undefined' && response.result !== null)
          {
-              this.screen.handleImage(response, type); // whole response here is single item.
+              this.screen.handleImage(response, type); // whole response here is single item. (final!)
          }
-
 
          // Queue status?
          if (response.stats)
@@ -198,19 +198,19 @@ window.ShortPixelProcessor =
          }
 
          // @todo Check for empty queue across all queues.
-         if (typeof response.qStatus !== 'undefined')
+         if (typeof response.qstatus !== 'undefined')
          {
-             if (this.qStatus[response.status] == 'QUEUE_ITEMS')
+             if (this.qStatus[response.qstatus] == 'QUEUE_ITEMS')
              {
                 this.timesEmpty = 0;
                 this.RunProcess();
              }
-             if (this.qStatus[response.status] == 'QUEUE_WAITING')
+             if (this.qStatus[response.qstatus] == 'QUEUE_WAITING')
              {
                 this.timesEmpty++;
                 this.RunProcess(); // run another queue with timeout
              }
-             else if (this.qStatus[response.status] == 'QUEUE_EMPTY')
+             else if (this.qStatus[response.qstatus] == 'QUEUE_EMPTY')
              {
                  console.debug('Processor: Empty Queue');
                  this.tooltip.ProcessEnd();

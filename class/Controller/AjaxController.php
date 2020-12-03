@@ -156,24 +156,27 @@ class AjaxController
         $json->$type->id = $id;
         $json->$type->results = null;
         $json->$type->is_error = false;
-        $json->status = true;
+        $json->status = 0;
 
         $data = array('id' => $id, 'type' => $type, 'action' => $action);
 
         switch($action)
         {
            case 'restoreItem':
-              $this->restoreItem($json, $data);
+              $json = $this->restoreItem($json, $data);
            break;
            case 'reOptimizeItem':
-             $this->reOptimizeItem($json, $data);
+             $json = $this->reOptimizeItem($json, $data);
            break;
            case 'optimizeItem':
-             $this->optimizeItem($json, $data);
+             $json = $this->optimizeItem($json, $data);
+           break;
+           default:
+              $json->$type->message = __('Ajaxrequest - no action found', 'shorpixel-image-optimiser');
            break;
         }
 
-        $json->$type->message = __('Ajaxrequest - no action found', 'shorpixel-image-optimiser');
+
         $this->send($json);
 
     }
@@ -207,7 +210,8 @@ class AjaxController
           $json->$type = $control->addItemToQueue($mediaItem);
 
           ResponseController::add()->withMessage('TESTING');
-          $this->send($json);
+          return $json;
+        //  $this->send($json);
     }
 
     public function restoreItem($json, $data)
@@ -225,7 +229,8 @@ class AjaxController
           'result' => array('is_done' => true),
       ); */
       //$this->getItem
-      $this->send($json);
+      return $json;
+      //$this->send($json);
     }
 
     public function reOptimizeItem($json, $data)
@@ -238,6 +243,7 @@ class AjaxController
        $control = OptimizeController::getInstance();
 
        $json->$type = $control->reOptimizeItem($mediaItem, $compressionType);
+       return $json;
     }
 
 
@@ -253,76 +259,38 @@ class AjaxController
         $id = isset($_POST['id']) ? intval($_POST['id']) : false;
 
         if ( $id === false || !current_user_can( 'upload_files' ) && !current_user_can( 'edit_posts' ) )  {
-            //wp_die(json_encode((object)array('origUrl' => false, 'optUrl' => false, 'width' => 0, 'height' => 0)));
-          //  ResponseController::add()->withMessage(__(''))->asError()
+
             $json->status = 0;
             $json->id = $id;
             $json->message = __('Error - item to compare could not be found or no access', 'shortpixel-image-optimiser');
           //  ResponseController::add()->withMessage($json->message)->asError();
-
             $this->send($json);
         }
 
         $ret = array();
-        // This shall not be Intval, since Post_id can be custom (C-xx)
-      //  $handle = new ShortPixelMetaFacade( sanitize_text_field($_POST['id']) );
-
         $fs = \wpSPIO()->filesystem();
 
         if ($type == 'media')
           $imageObj = $fs->getMediaImage($id);
 
-        //$imageObj->setByPostID(sanitize_text_field($_POST['id']));
-
-        //$file = $imageObj->getFile();
         $backupFile = $imageObj->getBackupFile();
-
-        /* Check if image is scaled, and has no backup, if there is a backup of original (full) file */
-        /*if (! $backupFile && $imageObj->has_original())
-        {
-           $file = $imageObj->has_original();
-           $backupFile = $file->getBackupFile();
-        } */
 
         $backup_url = $fs->pathToUrl($backupFile);
 
-    //    $meta = $imageObj->getMeta();
-      //  $rawMeta = $imageObj->getFacade()->getRawMeta();
-
-      //  $backupUrl = content_url() . "/" . SHORTPIXEL_UPLOADS_NAME . "/" . SHORTPIXEL_BACKUP . "/";
-      //  $uploadsUrl = ShortPixelMetaFacade::getHomeUrl();
-      //  $urlBkPath = ShortPixelMetaFacade::returnSubDir($meta->getPath());
         $ret['origUrl'] = $backup_url; // $backupUrl . $urlBkPath . $meta->getName();
 
-    //    if ($meta->getType() == ShortPixelMetaFacade::CUSTOM_TYPE)
-    //    {
           $ret['optUrl'] = $fs->pathToUrl($imageObj); // $uploadsUrl . $meta->getWebPath();
-        //  self::log('Getting image - ' . $urlBkPath . $meta->getPath());
-          // [BS] Another bug? Width / Height not stored in Shortpixel meta.
           $ret['width'] = $imageObj->getMeta('actualWidth'); // $meta->getActualWidth();
           $ret['height'] = $imageObj->getMeta('actualWidth');
 
           if (is_null($ret['width']))
           {
 
-          //  $imageSizes = getimagesize($ret['optUrl']);
-          // [BS] Fix - Use real path instead of URL on getimagesize.
-            //$imageSizes = getimagesize($meta->getPath());
-
-            //if ($imageSizes)
-            //{
               $ret['width'] = $imageObj->get('width'); // $imageSizes[0];
               $ret['height']= $imageObj->get('height'); //imageSizes[1];
-            //}
+
           }
-      /*  }
-        else
-        {
-          $ret['optUrl'] = wp_get_attachment_url( $_POST['id'] ); //$uploadsUrl . $urlBkPath . $meta->getName();
-          $ret['width'] = $rawMeta['width'];
-          $ret['height'] = $rawMeta['height'];
-        }
- */
+
         $this->send($ret);
     }
 

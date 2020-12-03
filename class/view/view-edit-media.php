@@ -28,10 +28,6 @@ if (! is_null($view->debugInfo) && is_array($view->debugInfo) && count($view->de
     </div>
   <?php endif; ?>
 
-  <?php if (! is_null($view->status_message)): ?>
-    <h5><?php echo $view->status_message; ?></h5>
-  <?php endif; ?>
-
   <?php if (isset($this->view->text)): ?>
   <div class='sp-column-info'><?php  echo $this->view->text;  ?></div>
 <?php endif; ?>
@@ -68,19 +64,10 @@ if (! is_null($view->debugInfo) && is_array($view->debugInfo) && count($view->de
     </ul>
     <?php endif; ?>
   </div>
-
-
-  <?php // defunct  foreach($view->todo as $item)
-  //echo $item ;
-  ?>
-
-  <div class='main-actions'>
-    <?php  // defunct
-    //foreach($view->actions as $action)
-  //  echo $action;
-    ?>
-  </div>
-
-
-
 </div>
+
+  <div id="sp-message-<?php echo($this->view->id); ?>" class='messages'>&nbsp;
+  <?php if (! is_null($view->status_message)): ?>
+    <?php echo $view->status_message; ?>
+  <?php endif; ?>
+  </div>

@@ -438,7 +438,7 @@ class ShortPixelPlugin
       $this->load_style('shortpixel-modal');
       $this->load_style('sp-file-tree');
 
-      //$this->load_script('shortpixel-tooltip');
+      $this->load_script('jquery.tooltip.min.js');
       $this->load_script('sp-file-tree');
 
       $this->load_script($load_processor);

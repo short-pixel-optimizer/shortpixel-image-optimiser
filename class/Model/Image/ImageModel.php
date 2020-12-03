@@ -270,12 +270,12 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
                    if ($resizeWidth == $this->width || $resizeHeight == $this->height)  // resized.
                    {
-                       $meta->setMeta('resizeWidth', $width);
-                       $meta->setMeta('resizeHeight', $height);
-                       $meta->setMeta('resize', false);
+                       $this->setMeta('resizeWidth', $width);
+                       $this->setMeta('resizeHeight', $height);
+                       $this->setMeta('resize', false);
                    }
                    else
-                     $meta->setMeta('resize', false);
+                     $this->setMeta('resize', false);
                  }
 
 

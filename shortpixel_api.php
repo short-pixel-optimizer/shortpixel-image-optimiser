@@ -620,7 +620,7 @@ class ShortPixelAPI {
             $fileSize = "LossySize";
         } else {
             $fileType = "LosslessURL";
-            $fileSize = "LoselessSize";
+            $fileSize = "LosslessSize";
         }
         $webpType = "WebP" . $fileType;
 

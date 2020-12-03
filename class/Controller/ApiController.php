@@ -180,7 +180,8 @@ class ApiController
     }
     else
     {
-       $item->result = $this->returnOK(self::STATUS_ENQUEUED, __('Item is waiting for results', 'shortpixel-image-optimiser'));
+       $text = ($item->tries > 0) ? sprintf(__('Item is waiting for results ( pass %d )', 'shortpixel-image-optimiser'), $item->tries) : __('Item is waiting for results', 'shortpixel-image-optimiser');
+       $item->result = $this->returnOK(self::STATUS_ENQUEUED, $text );
     }
     //return $response;
 
@@ -317,7 +318,7 @@ class ApiController
           $fileSize = "LossySize";
       } else {
           $fileType = "LosslessURL";
-          $fileSize = "LoselessSize";
+          $fileSize = "LosslessSize";
       }
       $webpType = "WebP" . $fileType;
 
@@ -355,8 +356,12 @@ class ApiController
                   $downloadResult = $this->handleDownload($fileData->$fileType, $fileData->$fileSize, $fileData->OriginalSize //isset($fileData->$webpType) ? $fileData->$webpType : 'NA'
                 );
               }
-//Log::addTemp('DownloadRes', $downloadResult);
-              if ( $downloadResult->status == self::STATUS_SUCCESS) {
+//Log::addTemp('DownloadResult', $downloadResult);
+              /* Status_Unchanged will be caught by ImageModel and not copied ( should be ).
+              * @todo Write Unit Test for Status_unchanged
+              * But it should still be regarded as File Done. This can happen on very small file ( 6pxX6px ) which will not optimize. 
+              */
+              if ( $downloadResult->status == self::STATUS_SUCCESS || $downloadResult->status == self::STATUS_UNCHANGED ) {
                   // Removes any query ?strings and returns just filename of originalURL
                   $originalURL = substr($fileData->OriginalURL, 0, (strpos($fileData->OriginalURL, '?'))  ); // Strip Query String from URL.
                   $originalFile = $fs->getFile($originalURL); //basename(parse_url($fileData->OriginalURL, PHP_URL_PATH));
@@ -383,10 +388,10 @@ class ApiController
                     }
                   }
               }
-              elseif ($downloadResult->status == self::STATUS_UNCHANGED)
+              /*elseif ($downloadResult->status == self::STATUS_UNCHANGED)
               {
                   // Do nothing.
-              }
+              } */
               //when the status is STATUS_UNCHANGED we just skip the array line for that one
               /*elseif( $downloadResult->status == self::STATUS_UNCHANGED ) {
                   //this image is unchanged so won't be copied below, only the optimization stats need to be computed

@@ -79,6 +79,7 @@ class QueueTest extends WP_UnitTestCase
 
       $this->assertObjectHasAttribute('compressionType', $qItem);
       $this->assertObjectHasAttribute('urls', $qItem);
+      $this->assertIsArray($qItem->urls);
 
   }
 

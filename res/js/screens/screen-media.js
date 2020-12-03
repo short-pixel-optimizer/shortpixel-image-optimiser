@@ -10,28 +10,45 @@ var ShortPixelScreen = function (MainScreen, processor)
     {
 
     },
-    this.handleImage = function(result, type)
+    this.handleImage = function(resultItem, type)
     {
         if (type == 'custom')  // We don't eat that here.
           return;
 
-        if (typeof result.result !== 'undefined')
+        if (typeof resultItem.result !== 'undefined')
         {
-            console.log(result);
-            var element = document.getElementById('sp-msg-' + result.item_id); // empty result box while getting
-            if (typeof result.message !== 'undefined')
+            console.log(resultItem);
+            // This is final, not more messing with this. In results (multiple) defined one level higher than result object, if single, it's in result.
+            var item_id = typeof resultItem.item_id !== 'undefined' ? resultItem.item_id : resultItem.result.item_id;
+            var message = resultItem.result.message;
+
+            var element = document.getElementById('sp-msg-' + item_id); // empty result box while getting
+            if (typeof message !== 'undefined')
             {
-               this.updateMessage(id, result.message);
+               this.updateMessage(item_id, message);
             }
             if (element !== null)
             {
               element.innerHTML = '';
             //  var event = new CustomEvent('shortpixel.loadItemView', {detail: {'type' : type, 'id': result.id }}); // send for new item view.
+            var fileStatus = processor.fStatus[resultItem.result.status];
 
-              window.addEventListener('shortpixel.RenderItemView', this.renderItemView.bind(this), {'once': true} );
-              this.processor.LoadItemView({id: result.item_id, type: type});
+              if (fileStatus == 'FILE_SUCCESS' || fileStatus == 'FILE_RESTORED' || resultItem.result.is_done == true)
+              {
+                window.addEventListener('shortpixel.RenderItemView', this.renderItemView.bind(this), {'once': true} );
+                this.processor.LoadItemView({id: item_id, type: type});
+              }
+              else if (fileStatus == 'FILE_PENDING')
+              {
+                 element.style.display = 'none';
+              }
               //window.dispatchEvent(event);
             }
+        }
+        else
+        {
+          console.error('handleImage without Result');
+          console.log(resultItem);
         }
         /*if (result.message)
         {
@@ -50,6 +67,8 @@ var ShortPixelScreen = function (MainScreen, processor)
        {
           element.innerHTML = message;
        }
+       else
+        console.error('Update Message coloumn not found ' + id);
     }
 
     this.updateStats = function()

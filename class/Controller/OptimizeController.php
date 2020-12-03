@@ -13,11 +13,13 @@ use ShortPixel\Controller\ResponseController as ResponseController;
 
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 
+
 class OptimizeController
 {
     protected static $instance;
 
     protected static $results;
+
 
     public function __construct()
     {
@@ -59,9 +61,7 @@ class OptimizeController
 
         $json = $this->getJsonResponse();
         $json->status = 0;
-        $json->result = new \stdClass;
         $json->result->item_id = $id;
-
 
         $queue = $this->getQueue($mediaItem);
 
@@ -70,6 +70,7 @@ class OptimizeController
           $json->is_error = true;
           $json->result->is_error = true;
           $json->result->message = __('Error - item could not be found', 'shortpixel-image-optimiser');
+          $json->result->status = ImageModel::FILE_STATUS_ERROR;
           ResponseController::add()->withMessage($json->message)->asError();
           //return $json;
         }
@@ -78,6 +79,7 @@ class OptimizeController
         {
           $json->result->message = $mediaItem->getProcessableReason();
           $json->result->is_error = true;
+          $json->result->status = ImageModel::FILE_STATUS_ERROR;
           ResponseController::add()->withMessage($json->message)->asError();
         }
         else
@@ -112,7 +114,7 @@ class OptimizeController
 
         $json = $this->getJsonResponse();
         $json->status = 0;
-        $json->result->item_id = $id;
+        $json->result->item_id = $mediaItem->get('id');
 
         $result = $mediaItem->restore();
 
@@ -120,12 +122,14 @@ class OptimizeController
         {
            $json->status = 1;
            $json->result->message = __('Item restored', 'shortpixel-image-optimiser');
+           $json->result->status = ImageModel::FILE_STATUS_RESTORED;
            $json->result->is_done = true;
         }
         else
         {
            $json->result->message = __('Item not restorable', 'shortpixel-image-optimiser');
            $json->result->is_done = false;
+           $json->result->status = ImageModel::FILE_STATUS_ERROR;
            $json->result->is_error = true;
 
         }
@@ -140,11 +144,9 @@ class OptimizeController
       {
           $mediaItem->setMeta('compressionType', $compressionType);
           $json = $this->addItemToQueue($mediaItem);
-        //  $this->send($json);
           return $json;
       }
 
-    //  $this->send($json);
      return $json;
 
     }
@@ -208,11 +210,11 @@ class OptimizeController
               $item = $this->convertPNG($item, $mediaQ);
 
             $item = $this->sendToProcessing($item);
-Log::addTemp('Item SendTOProcessing', $item);
+//Log::addTemp('Item After SendTOProcessing', $item);
             $item = $this->handleAPIResult($item, $mediaQ);
             $result->items[$index] = $item; // replace processed item, should have result now.
 
-            Log::addTemp('ProcessQueue Item' . $index,  $item);
+        //    Log::addTemp('ProcessQueue Item' . $index,  $item);
 
           //  $result = $api->doRequests($urls, $blocking);
         }
@@ -260,23 +262,25 @@ Log::addTemp('Item SendTOProcessing', $item);
     protected function handleAPIResult(Object $item, $q)
     {
       $fs = \wpSPIO()->filesystem();
-
+  //    Log::addTemp('HandApiResult ITEM OBJ ', $item);
       $result = $item->result;
 
       if ($result->is_error)
       {
-          if (! property_exists($item, 'errors'))
-            $item->errors = array();
+          /*if (! property_exists($item, 'errors'))
+            $item->errors = array(); */
 
-          $item->errors[] = $result;
+          //$item->errors[] = $result;
 
-          if ($result->is_done || count($item->errors) >= SHORTPIXEL_MAX_FAIL_RETRIES )
+          if ($result->is_done || count($item->tries) >= SHORTPIXEL_MAX_FAIL_RETRIES )
           {
+             // These are cloned, because queue changes object's properties
              $q->itemFailed($item, true);
              ResponseController::add()->withMessage($result->message)->asError();
           }
           else
           {
+            // These are cloned, because queue changes object's properties
               $q->itemFailed($item, false);
           }
       }
@@ -323,14 +327,13 @@ Log::addTemp('Item SendTOProcessing', $item);
                  $item->result->status = ApiController::STATUS_ERROR;
                  $item->result->message = sprintf(__('Image %s optimized with errors', 'shortpixel-image-optimiser'), $item->item_id);
               }
-              //$item->results =// $imageItem->getImprovements();
            }
            else
            {
               Log::addWarn('Api returns Success, but result has no files', $result);
+              $item->result->is_error = true;
+              $item->result->message = sprintf(__('Image %s API returned succes, but without images', 'shortpixel-image-optimiser'), $item->item_id);
               $item->result->status = ApiController::STATUS_FAIL;
-
-              return false;
            }
 
          }

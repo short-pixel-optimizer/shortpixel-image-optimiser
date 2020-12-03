@@ -114,7 +114,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
   public function getOptimizePaths()
   {
-    if ($this->image_meta->status == self::FILE_STATUS_SUCCESS || $this->excludeThumbnails() )
+    if (! $this->isProcessable() )
       return array();
 
     return array($this->getFullPath());
@@ -124,8 +124,9 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
   {
     $fs = \wpSPIO()->filesystem();
     // return $url
-    if ($this->image_meta->status == self::FILE_STATUS_SUCCESS || $this->excludeThumbnails() )
+    if (! $this->isProcessable() )
       return array();
+
     return array($fs->pathToUrl($this));
   }
 
