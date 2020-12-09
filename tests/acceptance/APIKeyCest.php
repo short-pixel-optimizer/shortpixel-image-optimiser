@@ -35,7 +35,8 @@ class APIKeyCest
         $I->click('Save Changes');
 
         $I->see('Error during verifying API key: Wrong API Key.');
-//        $I->see('PfcGjgmofkDpSuodzYHJ', ['name' => 'key']);
+        $apiKey = $I->grabValueFrom('input[name="key"]');
+        $I->assertEquals($_SERVER['SP_API_KEY'], $apiKey);
         $I->dontSee('Great, your API Key is valid. Please take a few moments to review the plugin settings before starting to optimize your images.');
         $I->dontSee('wrongAPIKeySPIOdzYHj');
         $I->see('Your API key is valid.');

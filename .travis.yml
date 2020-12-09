@@ -21,6 +21,7 @@ addons:
       - sshpass
 
 before_script:
+  - sed -i "s/SP_API_KEY/$SP_API_KEY/g" tests/_data/dump.sql
   - phpenv config-rm xdebug.ini
   - mkdir $WP_PATH $WP_PATH/database $WP_PATH/wp-content/uploads -p
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
