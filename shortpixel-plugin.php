@@ -258,6 +258,9 @@ class ShortPixelPlugin
 
     wp_register_script ('shortpixel-screen-nolist', plugins_url('/res/js/screens/screen-nolist.js',SHORTPIXEL_PLUGIN_FILE), array('jquery', 'shortpixel-processor' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
+    wp_register_script ('shortpixel-screen-bulk', plugins_url('/res/js/screens/screen-bulk.js',SHORTPIXEL_PLUGIN_FILE), array('jquery', 'shortpixel-processor' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
+
+
     wp_register_script('shortpixel', plugins_url('/res/js/shortpixel' . $jsSuffix,SHORTPIXEL_PLUGIN_FILE), array('jquery', 'jquery.knob.min.js'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
 
@@ -372,6 +375,8 @@ class ShortPixelPlugin
 
         // @todo Might need to be removed later on
         wp_register_style('shortpixel-admin', plugins_url('/res/css/shortpixel-admin.css', SHORTPIXEL_PLUGIN_FILE),array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
+
+        wp_register_style('shortpixel-bulk', plugins_url('/res/css/shortpixel-bulk.css', SHORTPIXEL_PLUGIN_FILE),array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
         //wp_register_style('shortpixel-admin');
     }
 
@@ -446,6 +451,14 @@ class ShortPixelPlugin
 
     }
 
+    if ($plugin_page == 'wp-short-pixel-bulk')
+    {
+        $this->load_script($load_processor);
+        $this->load_script('shortpixel-screen-bulk');
+
+        $this->load_style('shortpixel-bulk');
+    }
+
 
     if ($screen_id == 'upload' || $screen_id == 'attachment')
     {
@@ -457,7 +470,6 @@ class ShortPixelPlugin
        $this->load_style('shortpixel');
 
     }
-
 
     if ($plugin_page == 'wp-short-pixel-custom')
     {

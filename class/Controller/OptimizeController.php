@@ -128,7 +128,7 @@ class OptimizeController
         else
         {
            $json->result->message = __('Item not restorable', 'shortpixel-image-optimiser');
-           $json->result->is_done = false;
+           $json->result->is_done = true;
            $json->result->status = ImageModel::FILE_STATUS_ERROR;
            $json->result->is_error = true;
 

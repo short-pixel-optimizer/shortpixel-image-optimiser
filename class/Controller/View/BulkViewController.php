@@ -10,10 +10,12 @@ class BulkViewController extends \ShortPixel\Controller
 {
 
   protected $form_action = 'sp-bulk';
+  protected $template = 'view-bulk';
 
   protected $quotaData;
   protected $pendingMeta;
-protected $selected_folders = array();
+  protected $selected_folders = array();
+
 
   public function load()
   {
@@ -150,7 +152,7 @@ protected $selected_folders = array();
 
   }
 
-  public function loadView($template = null)
+  /*public function loadView($template = null)
   {
     $settings = \wpSPIO()->settings();
     $prioQ = \wpSPIO()->getShortPixel()->getPrioQ();
@@ -162,10 +164,10 @@ protected $selected_folders = array();
     $percent = $prioQ->bulkPaused() ? \wpSPIO()->getShortPixel()->getPercent($quotaData) : false;
 
     $view = new \ShortPixelView(\wpSPIO()->getShortPixel());
-    $view->displayBulkProcessingForm($quotaData, $thumbsProcessedCount, $under5PercentCount,
+      //$view->displayBulkProcessingForm($quotaData, $thumbsProcessedCount, $under5PercentCount,
           $prioQ->bulkRan(), $averageCompression, $settings->fileCount,
-          \ShortPixelTools::formatBytes($settings->savedSpace), $percent, $this->pendingMeta);
-  }
+          \ShortPixelTools::formatBytes($settings->savedSpace), $percent, $this->pendingMeta); 
+  }  */
 
   public function loadViewProgress()
   {

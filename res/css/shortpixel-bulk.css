@@ -1,0 +1,99 @@
+.shortpixel-bulk-wrapper .panel {
+  background: #fff;
+  border: 1px solid #ff0000;
+  width: 950px;
+  min-height: 600px;
+  /* (for debuggings)
+    position: absolute; */
+  margin: 40px;
+  z-index: 1;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 1s linear; }
+  .shortpixel-bulk-wrapper .panel.active {
+    visibility: visible;
+    opacity: 1; }
+  .shortpixel-bulk-wrapper .panel .panel-container {
+    z-index: 5;
+    padding: 10%; }
+.shortpixel-bulk-wrapper section.progressbar {
+  margin: 30px 0; }
+  .shortpixel-bulk-wrapper section.progressbar .flex {
+    display: flex;
+    flex-direction: row;
+    width: 80%;
+    justify-content: space-around; }
+    .shortpixel-bulk-wrapper section.progressbar .flex > div {
+      display: flex;
+      align-items: center;
+      position: relative;
+      flex-direction: column;
+      flex-grow: 1; }
+    .shortpixel-bulk-wrapper section.progressbar .flex > div.result .line {
+      background: linear-gradient(90deg, #cccccc 0%, #cccccc 49.9%, white 51%, white 100%); }
+    .shortpixel-bulk-wrapper section.progressbar .flex .line {
+      background: #ccc;
+      height: 2px;
+      width: 100%;
+      box-sizing: border-box;
+      display: inline-block;
+      position: absolute;
+      top: 40%;
+      z-index: 1;
+      transition: color 1s ease-in; }
+    .shortpixel-bulk-wrapper section.progressbar .flex .step {
+      border: 2px solid #ccc;
+      border-radius: 50%;
+      height: 40px;
+      font-size: 28px;
+      font-weight: 700;
+      color: #ccc;
+      width: 40px;
+      line-height: 35px;
+      text-align: center;
+      box-sizing: border-box;
+      display: inline-block;
+      z-index: 2;
+      background: #fff;
+      transition: color 1s ease-in; }
+    .shortpixel-bulk-wrapper section.progressbar .flex .text {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #ccc; }
+.shortpixel-bulk-wrapper section.panel.selection .progressbar .select .line {
+  background: linear-gradient(90deg, #1fbec9 0%, #1fbec9 49.9%, #cccccc 50%, #cccccc 100%); }
+.shortpixel-bulk-wrapper section.panel.selection .progressbar .select .text, .shortpixel-bulk-wrapper section.panel.selection .progressbar .select .step {
+  color: #EC2C25; }
+.shortpixel-bulk-wrapper section.panel.selection .progressbar .select .step {
+  border-color: #1FBEC9; }
+.shortpixel-bulk-wrapper section.panel.summary .progressbar .select .line {
+  background: #1FBEC9; }
+.shortpixel-bulk-wrapper section.panel.summary .progressbar .select .text, .shortpixel-bulk-wrapper section.panel.summary .progressbar .select .step {
+  color: #EC2C25; }
+.shortpixel-bulk-wrapper section.panel.summary .progressbar .select .step {
+  border-color: #1FBEC9; }
+.shortpixel-bulk-wrapper section.panel.summary .progressbar .summary .line {
+  background: linear-gradient(90deg, #1fbec9 0%, #1fbec9 49.9%, #cccccc 50%, #cccccc 100%); }
+.shortpixel-bulk-wrapper section.panel.summary .progressbar .summary .text, .shortpixel-bulk-wrapper section.panel.summary .progressbar .summary .step {
+  color: #EC2C25; }
+.shortpixel-bulk-wrapper section.panel.summary .progressbar .summary .step {
+  border-color: #1FBEC9; }
+.shortpixel-bulk-wrapper section.panel.process .progressbar .select .line, .shortpixel-bulk-wrapper section.panel.process .progressbar .summary .line {
+  background: #1FBEC9; }
+.shortpixel-bulk-wrapper section.panel.process .progressbar .select .text, .shortpixel-bulk-wrapper section.panel.process .progressbar .select .step, .shortpixel-bulk-wrapper section.panel.process .progressbar .summary .text, .shortpixel-bulk-wrapper section.panel.process .progressbar .summary .step {
+  color: #EC2C25; }
+.shortpixel-bulk-wrapper section.panel.process .progressbar .select .step, .shortpixel-bulk-wrapper section.panel.process .progressbar .summary .step {
+  border-color: #1FBEC9; }
+.shortpixel-bulk-wrapper section.panel.process .progressbar .process .line {
+  background: linear-gradient(90deg, #1fbec9 0%, #1fbec9 49.9%, #cccccc 50%, #cccccc 100%); }
+.shortpixel-bulk-wrapper section.panel.process .progressbar .process .text, .shortpixel-bulk-wrapper section.panel.process .progressbar .process .step {
+  color: #EC2C25; }
+.shortpixel-bulk-wrapper section.panel.process .progressbar .process .step {
+  border-color: #1FBEC9; }
+.shortpixel-bulk-wrapper .part-debug {
+  background: #000;
+  color: #fff;
+  width: 100%;
+  min-height: 150px;
+  max-height: 550px; }

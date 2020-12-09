@@ -1,0 +1,158 @@
+.shortpixel-bulk-wrapper
+{
+
+     .panel
+     {
+        background: #fff;
+        border: 1px solid #ff0000;
+        width: 950px;
+        min-height: 600px;
+      /* (for debuggings)
+        position: absolute; */
+        margin: 40px;
+        z-index: 1;
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity 1s linear;
+        &.active
+        {
+            visibility: visible;
+            opacity: 1;
+        }
+        .panel-container
+        {
+           z-index: 5;
+           padding: 10%;
+        }
+     }
+
+
+
+    section.progressbar
+    {
+        margin: 30px 0;
+        .flex
+        {
+          display: flex;
+          flex-direction: row;
+          width: 80%;
+          justify-content: space-around;
+
+          >div
+          {
+             display: flex;
+             align-items: center;
+             position: relative;
+             flex-direction: column;
+             flex-grow: 1;
+
+          }
+          >div.result .line
+          {
+            background: linear-gradient(90deg, rgba(204,204,204,100) 0%, rgba(204,204,204,100) 49.9%, rgba(255,255,255,1) 51%, rgba(255,255,255,1) 100%);
+          }
+
+          .line  {
+            background: #ccc;
+            height: 2px;
+            width: 100%;
+
+            box-sizing: border-box;
+            display: inline-block;
+            position: absolute;
+            top: 40%;
+            z-index: 1;
+            transition: color 1s ease-in;
+
+          }
+          .step
+          {
+            border: 2px solid #ccc;
+            border-radius: 50%;
+            height: 40px;
+            font-size: 28px;
+            font-weight: 700;
+            color: #ccc;
+            width: 40px;
+            line-height: 35px;
+            text-align: center;
+            box-sizing: border-box;
+            display: inline-block;
+            z-index: 2;
+            background: #fff;
+            transition: color 1s ease-in;
+          }
+          .text
+          {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #ccc;
+          }
+        }
+
+
+    } // progressbar
+
+
+    @mixin line-active()
+    {
+      background: linear-gradient(90deg, rgba(31,190,201,1) 0%, rgba(31,190,201,1) 49.9%,  rgba(204,204,204,1) 50%, rgba(204,204,204,1) 100%);
+    }
+
+    // Progressbar states
+    section.panel.selection
+    {
+      .progressbar .select
+      {
+         .line { @include line-active(); }
+         .text, .step { color: #EC2C25; }
+         .step { border-color: #1FBEC9; }
+      }
+    } // panel
+
+    section.panel.summary
+    {
+      .progressbar .select
+      {
+         .line { background: #1FBEC9; }
+         .text, .step { color: #EC2C25; }
+         .step { border-color: #1FBEC9; }
+      }
+      .progressbar .summary
+      {
+         .line { @include line-active(); }
+         .text, .step { color: #EC2C25; }
+         .step { border-color: #1FBEC9; }
+      }
+    } // panel
+
+    section.panel.process
+    {
+
+      .progressbar .select, .progressbar .summary
+      {
+         .line { background: #1FBEC9; }
+         .text, .step { color: #EC2C25; }
+         .step { border-color: #1FBEC9; }
+      }
+      .progressbar .process
+      {
+         .line { @include line-active(); }
+         .text, .step { color: #EC2C25; }
+         .step { border-color: #1FBEC9; }
+      }
+
+    }
+
+    .part-debug
+    {
+       background: #000;
+       color: #fff;
+       width: 100%;
+       min-height: 150px;
+       max-height: 550px;
+
+    }
+
+} // wrapper.

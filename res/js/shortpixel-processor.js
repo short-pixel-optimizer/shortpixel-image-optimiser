@@ -37,6 +37,8 @@ window.ShortPixelProcessor =
         this.nonce['ajaxRequest'] = ShortPixelProcessorData.nonce_ajaxrequest;
 
         //console.log(ShortPixelProcessorData);
+        console.log('remoteSecret ' + this.remoteSecret + ' ' + this.localSecret);
+        //this.localSecret = null;
 
         if (this.remoteSecret == false || this.isBulkPage) // if remoteSecret is false, we are the first process. Take it.
         {
@@ -44,7 +46,7 @@ window.ShortPixelProcessor =
            localStorage.bulkSecret = this.localSecret;
            this.isActive = true;
         }
-        else if (this.remoteSecret == this.localSecret) // There is a secret, we are the processor.
+        else if (this.remoteSecret === this.localSecret) // There is a secret, we are the processor.
         {
            this.isActive = true;
         }
@@ -58,8 +60,6 @@ window.ShortPixelProcessor =
 
         if (this.isActive)
         {
-          //  console.debug('loading worker');
-
             this.RunProcess();
         }
 
@@ -139,11 +139,7 @@ window.ShortPixelProcessor =
       }
       else if (data.status == true && data.response) // data status is from shortpixel worker, not the response object
       {
-          if (! this.screen)
-          {
-             console.error('Missing screen - can\'t report results');
-             return false;
-          }
+
 
           var response = data.response;
           if ( response.callback)
@@ -175,6 +171,12 @@ window.ShortPixelProcessor =
            this.screen.handleError(response.message);
         }
 
+        if (! this.screen)
+        {
+           console.error('Missing screen - can\'t report results');
+           return false;
+        }
+        
         // Perhaps if optimization, the new stats and actions should be generated server side?
 
          // If there are items, give them to the screen for display of optimization, waiting status etc.
