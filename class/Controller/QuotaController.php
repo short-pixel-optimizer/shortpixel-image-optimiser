@@ -1,9 +1,14 @@
 <?php
 namespace ShortPixel\Controller;
 
+use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+
 class QuotaController
 {
     protected static $instance;
+    const CACHE_NAME = 'quotaData';
+
+    protected $quotaData;
 
     public function __construct()
     {
@@ -21,12 +26,66 @@ class QuotaController
     public function hasQuota()
     {
       $settings = \wpSPIO()->settings();
-      
+
       if ($settings->quotaExceeded)
         return false;
 
       return true;
 
+    }
+
+    protected function getQuotaData()
+    {
+        if (! is_null($this->quotaData))
+          return $this->quotaData;
+
+        $cache = new CacheController();
+
+        $cacheData = $cache->getItem(self::CACHE_NAME);
+
+        if (! $cacheData->exists() )
+        {
+            $quotaData = $this->getRemoteQuota();
+            $cache->storeItem(self::CACHE_NAME, $quotaData, 6 * HOUR_IN_SECONDS);
+        }
+        else
+          $quotaData = $cacheData->getValue();
+
+        return $quotaData;
+    }
+
+    public function getQuota()
+    {
+          /*'quotaAvailable' => max(0, $quotaData['APICallsQuotaNumeric'] + $quotaData['APICallsQuotaOneTimeNumeric'] - $quotaData['APICallsMadeNumeric'] - $quotaData['APICallsMadeOneTimeNumeric']))); */
+          $quotaData = $this->getQuotaData();
+          $DateNow = time();
+          $DateSubscription = strtotime($quotaData['APILastRenewalDate']);
+          $DaysToReset = 30 - ((($DateNow  - $DateSubscription) / 84600) % 30);
+
+          $quota = (object) [
+              'monthly' => (object) [
+                'text' => sprintf(__('%s/month', 'shortpixel-image-optimiser'), $quotaData['APICallsQuota']),
+                'total' =>  $quotaData['APICallsQuotaNumeric'],
+                'consumed' => $quotaData['APICallsMadeNumeric'],
+                'remaining' => $quotaData['APICallsQuotaNumeric'] - $quotaData['APICallsMadeNumeric'],
+                'renew' => $DaysToReset,
+              ],
+              'onetime' => (object) [
+                'text' => $quotaData['APICallsQuotaOneTime'],
+                'total' => $quotaData['APICallsQuotaOneTimeNumeric'],
+                'consumed' => $quotaData['APICallsMadeOneTimeNumeric'],
+                'remaining' => $quotaData['APICallsQuotaOneTimeNumeric'] - $quotaData['APICallsMadeOneTimeNumeric'],
+              ],
+          ];
+
+          $quota->total = (object) [
+              'total' => $quota->monthly->total + $quota->onetime->total,
+              'consumed'  => $quota->monthly->consumed + $quota->onetime->consumed,
+              'remaining' =>$quota->monthly->remaining + $quota->onetime->remaining,
+          ];
+
+
+          return $quota;
     }
 
     public function forceCheckRemoteQuota()
@@ -68,10 +127,11 @@ class QuotaController
           );
           $argsStr = "?key=".$apiKey;
 
-          if($appendUserAgent) {
+          //if($appendUserAgent) { // See no reason why not(?)
               $args['body']['useragent'] = "Agent" . urlencode($_SERVER['HTTP_USER_AGENT']);
               $argsStr .= "&useragent=Agent".$args['body']['useragent'];
-          }
+          //}
+          /* QuotaDats is not for license checking.
           if($validate) {
               $args['body']['DomainCheck'] = get_site_url();
               $args['body']['Info'] = get_bloginfo('version') . '|' . phpversion();
@@ -79,7 +139,7 @@ class QuotaController
               $args['body']['ImagesCount'] = $imageCount['mainFiles'];
               $args['body']['ThumbsCount'] = $imageCount['totalFiles'] - $imageCount['mainFiles'];
               $argsStr .= "&DomainCheck={$args['body']['DomainCheck']}&Info={$args['body']['Info']}&ImagesCount={$imageCount['mainFiles']}&ThumbsCount={$args['body']['ThumbsCount']}";
-          }
+          } */
           $args['body']['host'] = parse_url(get_site_url(),PHP_URL_HOST);
           $argsStr .= "&host={$args['body']['host']}";
           if(strlen($settings->siteAuthUser)) {
@@ -179,10 +239,10 @@ class QuotaController
 
           //if a non-valid status exists, delete it
           // @todo Clarify the reason for this statement
-          $lastStatus = $this->_settings->bulkLastStatus;
+          /*$lastStatus = $this->_settings->bulkLastStatus;
           if($lastStatus && $lastStatus['Status'] == ShortPixelAPI::STATUS_NO_KEY) {
               $settings->bulkLastStatus = null;
-          }
+          } */
 
           $dataArray = array(
               "APIKeyValid" => true,
@@ -190,18 +250,19 @@ class QuotaController
               "APICallsQuota" => number_format($data->APICallsQuota) . __(' images','shortpixel-image-optimiser'),
               "APICallsMadeOneTime" => number_format($data->APICallsMadeOneTime) . __(' images','shortpixel-image-optimiser'),
               "APICallsQuotaOneTime" => number_format($data->APICallsQuotaOneTime) . __(' images','shortpixel-image-optimiser'),
-              "APICallsMadeNumeric" => $data->APICallsMade,
-              "APICallsQuotaNumeric" => $data->APICallsQuota,
-              "APICallsMadeOneTimeNumeric" => $data->APICallsMadeOneTime,
-              "APICallsQuotaOneTimeNumeric" => $data->APICallsQuotaOneTime,
+              "APICallsMadeNumeric" => (int) $data->APICallsMade,
+              "APICallsQuotaNumeric" => (int) $data->APICallsQuota,
+              "APICallsMadeOneTimeNumeric" =>  (int) $data->APICallsMadeOneTime,
+              "APICallsQuotaOneTimeNumeric" => (int) $data->APICallsQuotaOneTime,
               "APICallsRemaining" => $data->APICallsQuota + $data->APICallsQuotaOneTime - $data->APICallsMade - $data->APICallsMadeOneTime,
               "APILastRenewalDate" => $data->DateSubscription,
               "DomainCheck" => (isset($data->DomainCheck) ? $data->DomainCheck : null)
           );
 
-          $crtStats = is_array($settings->currentStats) ? array_merge( $settings->currentStats, $dataArray) : $dataArray;
-          $crtStats['optimizePdfs'] = $settings->optimizePdfs;
-          $settings->currentStats = $crtStats;
+          // Why is this?
+        //  $crtStats = is_array($settings->currentStats) ? array_merge( $settings->currentStats, $dataArray) : $dataArray;
+        //  $crtStats['optimizePdfs'] = $settings->optimizePdfs;
+          //$settings->currentStats = $crtStats;
 
           Log::addDebug('GetQuotaInformation Result ', $dataArray);
           return $dataArray;

@@ -8,16 +8,17 @@ var ShortPixelScreen = function (MainScreen, processor)
   this.processor = processor;
 
   this.panels = [];
+  this.currentPanel;
 
-  this.init = function()
+  this.Init = function()
   {
       // Hook up the button and all.
     //  startBulk.addEventListener('click',  this.ButtonStartBulk.bind(this));
-      this.loadPanels();
-      this.loadActions();
+      this.LoadPanels();
+      this.LoadActions();
       //this.loadNav();
   },
-  this.loadPanels = function()
+  this.LoadPanels = function()
   {
       elements = document.querySelectorAll('section.panel');
       var self = this;
@@ -28,7 +29,7 @@ var ShortPixelScreen = function (MainScreen, processor)
       });
 
   },
-  this.loadActions = function()
+  this.LoadActions = function()
   {
       actions = document.querySelectorAll('[data-action]');
       var self = this;
@@ -38,77 +39,175 @@ var ShortPixelScreen = function (MainScreen, processor)
 
           action.addEventListener('click', function(event)
           {
-            console.log(this.switchPanel);
             var element = event.target;
-            var isPanelAction = (element.getAttribute('data-action') == 'open-panel');
+            var actionName = element.getAttribute('data-action');
+            var isPanelAction = (actionName == 'open-panel');
 
             if (isPanelAction)
             {
                var doPanel = element.getAttribute('data-panel');
-               this.switchPanel(doPanel);
+               this.SwitchPanel(doPanel);
+            }
+            else
+            {
+
+                if (typeof this[actionName] == 'function')
+                {
+                    this[actionName].call(this);
+                }
             }
           }.bind(self));
       });
   },
-  this.switchPanel = function(panelName)
+  this.UpdatePanelStatus = function(status, panelName)
+  {
+     if (typeof panelName !== 'undefined')
+      var panel = this.panels[panelName];
+     else
+      var panel = this.panels[this.currentPanel];
+     panel.setAttribute('data-status', status);
+  }
+  this.SwitchPanel = function(panelName)
   {
       if (! this.panels[panelName])
       {
         console.error('Panel ' + panelName + ' does not exist?');
         return;
       }
+      else if (this.currentPanel == panelName)
+      {
+        return; // no switching needed.
+      }
 
       this.panels.forEach(function(panel, index)
       {
-         //var panel = this.panels[i];
-         //console.log(panel);
          panel.style.opacity = 0;
          panel.style.visibility = 'hidden';
       });
 
+      var panel = this.panels[panelName];
 
-      this.panels[panelName].style.opacity = 1;
-      this.panels[panelName].style.visibility = 'visible';
+      panel.style.opacity = 1;
+      panel.style.visibility = 'visible';
 
-       var panel = this.panels[panelName];
+    //  panel.querySelectorAll('')
+
+      this.currentPanel = panelName;
+
+    //   var panel = this.panels[panelName];
 
        if ( panel.getAttribute('data-loadPanel') !== null)
        {
-           //var func = function() {  panel.getAttribute()}
-        //   var
+
            this[panel.getAttribute('data-loadPanel')].call(this);
        }
 
   },
-  this.startBulkProcess = function()
+  this.StartPrepare = function()
   {
      console.log('Start Bulk');
-     console.log(this);
+     var data = {screen_action: 'createBulk', callback: 'shortpixel.prepareBulk'}; //
+
+     // Prepare should happen after selecting what the optimize.
+     window.addEventListener('shortpixel.prepareBulk', this.PrepareBulk.bind(this), {'once': true} );
+     this.processor.AjaxRequest(data);
+
+
+  },
+  this.PrepareBulk = function()
+  {
+      //Remove pause
+      this.processor.SetInterval(500); // do this faster.
+      // Show stats
+      if (this.processor.isManualPaused == true)
+        this.processor.isManualPaused = false; // force run
+
+      this.processor.RunProcess();
+
+      // Run process.run process from now for prepare ( until prepare done? )
+  },
+  this.QueueStatus = function(qStatus)
+  {
+      if (qStatus == 'PREPARING_DONE' || qStatus == 'PREPARING_RECOUNT')
+      {
+          console.log('Queue status: preparing done');
+          this.UpdatePanelStatus('loaded', 'selection');
+          this.processor.SetInterval(-1); // back to default.
+          //this.SwitchPanel('selection');
+
+      }
+    /*  elseif (qStatus == '')
+      {
+
+      } */
+  }
+  this.HandleImage = function(resultItem, type)
+  {
+      console.log('HandleImage');
+      console.log(resultItem, type);
+
+
+  },
+
+  this.UpdateMessage = function(id, message)
+  {
+     console.log('UpdateMessage');
+
+  },
+
+  this.UpdateStats = function(stats, type)
+  {
+      console.log('updating Stats');
+      var elements = document.querySelectorAll('[data-stats-' + type + ']');
+
+      if (elements)
+      {
+          elements.forEach(function (element, index)
+          {
+                var el = element.getAttribute('data-stats-' + type);
+                if (el == null)
+                  return;
+                var index = el.indexOf('-');
+                if (index > -1)
+                {
+                   var first  = el.substr(0, index);
+                   var second = el.substr(index+1);
+
+                   var value = stats[first][second];
+                }
+                else
+                {
+                   var value = stats[el];
+                }
+
+                element.innerHTML = value;
+          });
+      }
+  },
+  this.HandleError = function()
+  {
+
+  },
+  this.StartBulk = function() // Open panel action
+  {
+
 
   }
-  this.handleImage = function(resultItem, type)
+  this.PauseBulk = function (event)
   {
+    if (processor.isManualPaused == false)
+    {
+       processor.isManualPaused = true;
+       localStorage.setItem('tooltipPause','true');
+       this.processor.tooltip.ProcessPause();
+    }
 
-
-  },
-
-  this.updateMessage = function(id, message)
+    this.processor.tooltip.ToggleIcon();
+  }
+  this.StopBulk = function(event)
   {
-
-
-  },
-
-  this.updateStats = function()
-  {
-
-  },
-  this.handleError = function()
-  {
-
-  },
-  this.buttonStartBulk = function()
-  {
-      //this.AjaxRequest
+      this.PauseBulk(event);
+      // do something here to nuke the thing
   }
 
 
@@ -116,11 +215,7 @@ var ShortPixelScreen = function (MainScreen, processor)
 
 
 
-
-
-
-
-  this.init();
+  this.Init();
 
 
 

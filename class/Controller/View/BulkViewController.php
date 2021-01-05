@@ -4,6 +4,7 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 
 use \ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
+use \ShortPixel\Controller\QuotaController as QuotaController;
 
 
 class BulkViewController extends \ShortPixel\Controller
@@ -19,22 +20,10 @@ class BulkViewController extends \ShortPixel\Controller
 
   public function load()
   {
-    $this->checkPost();
-    if ($this->is_form_submit)
-    {
-      $this->doBulkAction();
-    }
+    $quota = QuotaController::getInstance();
+    $this->view->quotaData = $quota->getQuota();
 
-    $this->quotaData = \wpSPIO()->getShortPixel()->checkQuotaAndAlert(null, isset($_GET['checkquota']), 0);
-
-    if ($this->checkDoingBulk())
-    {
-        $this->loadViewProgress();
-    }
-    else
-    {
-      $this->loadView();
-    }
+    $this->loadView();
 
   }
 
@@ -61,6 +50,12 @@ class BulkViewController extends \ShortPixel\Controller
               && (!$prioQ->bulkPaused() || $settings->skipToCustom));
   }
 
+  /*public floadView
+  {
+
+  } */
+
+/*
   public function doBulkAction()
   {
       $spMetaDao = \wpSPIO()->getShortPixel()->getSPMetaDao();
@@ -151,6 +146,7 @@ class BulkViewController extends \ShortPixel\Controller
       }//resume was clicked
 
   }
+*/
 
   /*public function loadView($template = null)
   {
@@ -166,9 +162,9 @@ class BulkViewController extends \ShortPixel\Controller
     $view = new \ShortPixelView(\wpSPIO()->getShortPixel());
       //$view->displayBulkProcessingForm($quotaData, $thumbsProcessedCount, $under5PercentCount,
           $prioQ->bulkRan(), $averageCompression, $settings->fileCount,
-          \ShortPixelTools::formatBytes($settings->savedSpace), $percent, $this->pendingMeta); 
+          \ShortPixelTools::formatBytes($settings->savedSpace), $percent, $this->pendingMeta);
   }  */
-
+/*
   public function loadViewProgress()
   {
     $settings = \wpSPIO()->settings();
@@ -198,6 +194,6 @@ class BulkViewController extends \ShortPixel\Controller
             (   $prioQ->getBulkType() == \ShortPixelQueue::BULK_TYPE_CLEANUP
              || $prioQ->getBulkType() == \ShortPixelQueue::BULK_TYPE_CLEANUP_PENDING ? -1 : ($this->pendingMeta !== null ? ($prioQ->bulkRunning() ? 3 : 2) : 1)), $quotaData);
 
-  }
+  } */
 
 } // class

@@ -25,7 +25,6 @@ class securiVersion
       $urls[$index] = add_query_arg('ver', $time, $url);
     }
 
-    Log::addDebug('SecuriVersion - URLS being versioned', $urls);
     return $urls;
   }
 

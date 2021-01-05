@@ -10,10 +10,10 @@ $this->loadview('bulk/part-dashboard');
 $this->loadView('bulk/part-selection');
 $this->loadView('bulk/part-summary');
 $this->loadView('bulk/part-process');
-$this->loadView('bulk/part-results');
+//$this->loadView('bulk/part-results');
 
 if (\wpSPIO()->env()->is_debug)
-   $this->loadView('bulk/part-debug'); 
+   $this->loadView('bulk/part-debug');
 ?>
 
 

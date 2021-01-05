@@ -6,11 +6,12 @@ var ShortPixelScreen = function (MainScreen, processor)
     this.isMedia = true;
     this.processor = processor;
 
-    this.init = function()
+
+    this.Init = function()
     {
 
     },
-    this.handleImage = function(resultItem, type)
+    this.HandleImage = function(resultItem, type)
     {
         if (type == 'custom')  // We don't eat that here.
           return;
@@ -60,7 +61,7 @@ var ShortPixelScreen = function (MainScreen, processor)
         } */
     }
 
-    this.updateMessage = function(id, message)
+    this.UpdateMessage = function(id, message)
     {
        var element = document.getElementById('sp-message-' + id);
        if (element !== null)
@@ -71,16 +72,16 @@ var ShortPixelScreen = function (MainScreen, processor)
         console.error('Update Message coloumn not found ' + id);
     }
 
-    this.updateStats = function()
+    this.UpdateStats = function()
     {
 
     }
-    this.handleError = function()
+    this.HandleError = function()
     {
 
     }
 
-    this.renderItemView = function(e)
+    this.RenderItemView = function(e)
     {
         var data = e.detail;
 
@@ -94,7 +95,7 @@ var ShortPixelScreen = function (MainScreen, processor)
         return true;
     }
 
-    this.restoreItem = function(id)
+    this.RestoreItem = function(id)
     {
         var data = {};
         //e.detail;
@@ -106,7 +107,7 @@ var ShortPixelScreen = function (MainScreen, processor)
         this.processor.AjaxRequest(data);
         //var id = data.id;
     },
-    this.reOptimize = function(id, compression)
+    this.ReOptimize = function(id, compression)
     {
         var data = {
            id : id ,
@@ -117,7 +118,7 @@ var ShortPixelScreen = function (MainScreen, processor)
 
         this.processor.AjaxRequest(data);
     }
-    this.optimize = function (id)
+    this.Optimize = function (id)
     {
 
        var data = {

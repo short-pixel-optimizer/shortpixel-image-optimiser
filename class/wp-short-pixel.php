@@ -510,6 +510,11 @@ class WPShortPixel {
                 'id'    => 'shortpixel_processing',
                 'title' => '<div id="' . $id . '" title="' . $tooltip . '" ><span class="stats">4</span><img alt="' . __('ShortPixel icon','shortpixel-image-optimiser') . '" src="'
                          . plugins_url( 'res/img/'.$icon, SHORTPIXEL_PLUGIN_FILE ) . '" success-url="' . $successLink . '"><span class="shp-alert">!</span>'
+                         . '<div class="controls">
+                              <span class="dashicons dashicons-controls-pause pause" title="' . __('Pause', 'shortpixel-image-optimiser') . '">&nbsp;</span>
+                              <span class="dashicons dashicons-controls-play play" title="' . __('Resume', 'shortpixel-image-optimiser') . '">&nbsp;</span>
+                            </div>'
+
                          .'<div class="cssload-container"><div class="cssload-speeding-wheel"></div></div></div>',
                 'href'  => $link,
                 'meta'  => array('target'=> $blank, 'class' => 'shortpixel-toolbar-processing' . $extraClasses)

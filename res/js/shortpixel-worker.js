@@ -2,11 +2,13 @@
 
 onmessage = function(e)
 {
-  // console.log(e.data);
-  //var data = e.data;
+
   var action = e.data.action;
   var data = e.data.data;
   var nonce = e.data.nonce;
+
+  SpWorker.nonce = nonce;
+
 
   switch(action)
   {
@@ -27,12 +29,10 @@ onmessage = function(e)
      break;
   }
 
-  SpWorker.nonce = nonce;
 
   console.log('action : ' + action);
 
 
-//  postMessage('hello');
 }
 
 SpWorker = {

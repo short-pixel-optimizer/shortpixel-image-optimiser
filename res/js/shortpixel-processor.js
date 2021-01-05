@@ -4,12 +4,14 @@ window.ShortPixelProcessor =
 {
   //  spp: {},
     isActive: false,
+    defaultInterval: 3000, // @todo customize this from backend var, hook filter.
     interval: 3000,
     screen: null, // UI Object
     tooltip: null,
     isBulkPage: false,
     localSecret: null,
     remoteSecret: null,
+    isManualPaused: false,  // tooltip pause
     worker: null,
     timer: null,
     timesEmpty: 0, // number of times queue came up empty.
@@ -18,6 +20,9 @@ window.ShortPixelProcessor =
        1:  'QUEUE_ITEMS',
        4:  'QUEUE_WAITING',
        10: 'QUEUE_EMPTY',
+       2:  'PREPARING',
+       3:  'PREPARING_DONE',
+       11: 'PREPARING_RECOUNT',
     },
     fStatus: {
        1: 'FILE_PENDING',
@@ -28,11 +33,11 @@ window.ShortPixelProcessor =
     Load: function()
     {
         this.isBulkPage = ShortPixelProcessorData.isBulkPage;
-        this.localSecret = localStorage.bulkSecret;
+        this.localSecret = localStorage.getItem('bulkSecret');
         this.remoteSecret = ShortPixelProcessorData.bulkSecret;
 
         this.nonce['process'] = ShortPixelProcessorData.nonce_process;
-        this.nonce['exit'] = ShortPixelProcessorData.nonce_process;
+        this.nonce['exit'] = ShortPixelProcessorData.nonce_exit;
         this.nonce['itemview'] = ShortPixelProcessorData.nonce_itemview;
         this.nonce['ajaxRequest'] = ShortPixelProcessorData.nonce_ajaxrequest;
 
@@ -40,20 +45,9 @@ window.ShortPixelProcessor =
         console.log('remoteSecret ' + this.remoteSecret + ' ' + this.localSecret);
         //this.localSecret = null;
 
-        if (this.remoteSecret == false || this.isBulkPage) // if remoteSecret is false, we are the first process. Take it.
-        {
-           this.localSecret = this.remoteSecret = Math.random().toString(36).substring(7);
-           localStorage.bulkSecret = this.localSecret;
-           this.isActive = true;
-        }
-        else if (this.remoteSecret === this.localSecret) // There is a secret, we are the processor.
-        {
-           this.isActive = true;
-        }
-        else
-        {
-           console.debug('Processor not active - ' + this.remoteSecret + ' - ' + this.localSecret);
-        }
+        this.tooltip = new ShortPixelToolTip({}, this);
+
+        this.CheckActive();
 
         // Always load worker, also used for UI actions.
         this.LoadWorker();
@@ -71,24 +65,47 @@ window.ShortPixelProcessor =
         else
           this.screen = new ShortPixelScreen({}, this);
 
-        this.tooltip = new ShortPixelToolTip();
 
+    },
+    CheckActive: function()
+    {
+      if (this.remoteSecret == false || this.isBulkPage) // if remoteSecret is false, we are the first process. Take it.
+      {
+         this.localSecret = this.remoteSecret = Math.random().toString(36).substring(7);
+         localStorage.bulkSecret = this.localSecret;
+         this.isActive = true;
+      }
+      else if (this.remoteSecret === this.localSecret) // There is a secret, we are the processor.
+      {
+         this.isActive = true;
+      }
+      else if (this.isManualPaused)
+      {
+          this.isActive = false;
+          this.StopProcessing();
+
+          console.log('Processor Paused');
+      }
+      else
+      {
+         console.debug('Processor not active - ' + this.remoteSecret + ' - ' + this.localSecret);
+         this.tooltip.ProcessEnd();
+      }
     },
     LoadWorker: function()
     {
         if (window.Worker)
         {
-            console.log('Starting Worker');
             var ajaxURL = ShortPixel.AJAX_URL;
             var nonce = '';
+            console.log('Starting Worker');
 
             this.worker = new Worker(ShortPixelProcessorData.workerURL);
+
             this.worker.postMessage({'action': 'init', 'data' : [ajaxURL, this.localSecret]});
             this.worker.onmessage = this.CheckResponse.bind(this);
-
             window.addEventListener('beforeunload', this.ShutDownWorker.bind(this));
-            //window.addEventListener('shortpixel.loadItemView', this.LoadItemView.bind(this));
-            //window.addEventListener('shortpixel.')
+
         }
     },
     ShutDownWorker: function()
@@ -98,15 +115,14 @@ window.ShortPixelProcessor =
 
         console.log('Shutting down Worker');
         this.worker.postMessage({'action' : 'shutdown', 'nonce': this.nonce['exit'] });
-        this.worker.terminate();
+      //  this.worker.terminate();
         this.worker = null;
         window.removeEventListener('beforeunload', this.ShutDownWorker.bind(this));
         window.removeEventListener('shortpixel.loadItemView', this.LoadItemView.bind(this));
     },
     Process: function()
     {
-        //$(document).on timeout - check function.
-        //console.log(this);
+
         if (this.worker === null)
            this.LoadWorker(); // JIT worker loading
 
@@ -119,14 +135,27 @@ window.ShortPixelProcessor =
         if (this.timer)
           window.clearTimeout(this.timer);
 
+        if (this.isManualPaused)
+            return;
+
         if (this.timesEmpty >= 5)
            this.interval = 2000 + (this.timesEmpty * 1000);  // every time it turns up empty, second slower.
+
 
         this.timer = window.setTimeout(this.Process.bind(this), this.interval);
     },
     StopProcessing: function()
     {
+        console.log('Stop Processing' + this.timer);
          window.clearTimeout(this.timer);
+    },
+    SetInterval: function(interval)
+    {
+       if (interval == -1)
+         this.interval = this.defaultInterval;
+      else
+        this.interval = interval;
+
     },
     CheckResponse: function(message)
     {
@@ -139,8 +168,6 @@ window.ShortPixelProcessor =
       }
       else if (data.status == true && data.response) // data status is from shortpixel worker, not the response object
       {
-
-
           var response = data.response;
           if ( response.callback)
           {
@@ -159,6 +186,11 @@ window.ShortPixelProcessor =
            {
                 this.HandleResponse(response.media, 'media');
            }
+           // Total is a response type for combined stats in the bulk.
+           if (typeof response.total == 'object' && response.total !== null)
+           {
+              this.HandleResponse(response.total, 'total');
+           }
 
       }
 
@@ -167,8 +199,8 @@ window.ShortPixelProcessor =
     {
         if (response.has_error == true)
         {
-           this.tooltip.addNotice(response.message);
-           this.screen.handleError(response.message);
+           this.tooltip.AddNotice(response.message);
+           this.screen.HandleError(response.message);
         }
 
         if (! this.screen)
@@ -176,7 +208,7 @@ window.ShortPixelProcessor =
            console.error('Missing screen - can\'t report results');
            return false;
         }
-        
+
         // Perhaps if optimization, the new stats and actions should be generated server side?
 
          // If there are items, give them to the screen for display of optimization, waiting status etc.
@@ -185,43 +217,61 @@ window.ShortPixelProcessor =
              for (i = 0; i < response.results.length; i++)
              {
                 var imageResult = response.results[i];
-                this.screen.handleImage(imageResult, type);
+                this.screen.HandleImage(imageResult, type);
              }
          }
          if (typeof response.result !== 'undefined' && response.result !== null)
          {
-              this.screen.handleImage(response, type); // whole response here is single item. (final!)
+              this.screen.HandleImage(response, type); // whole response here is single item. (final!)
          }
 
          // Queue status?
          if (response.stats)
          {
-            this.tooltip.RefreshStats(response.stats);
+            this.tooltip.RefreshStats(response.stats, type);
+            this.screen.UpdateStats(response.stats, type);
          }
 
          // @todo Check for empty queue across all queues.
+
          if (typeof response.qstatus !== 'undefined')
          {
-             if (this.qStatus[response.qstatus] == 'QUEUE_ITEMS')
+            var qstatus = this.qStatus[response.qstatus];
+             if (qstatus == 'QUEUE_ITEMS' || qstatus == "PREPARING")
              {
+               console.log('Qstatus Preparing');
                 this.timesEmpty = 0;
                 this.RunProcess();
              }
-             if (this.qStatus[response.qstatus] == 'QUEUE_WAITING')
+             if (qstatus == 'QUEUE_WAITING')
              {
+                console.log('Item in Queue, but waiting');
                 this.timesEmpty++;
                 this.RunProcess(); // run another queue with timeout
              }
-             else if (this.qStatus[response.qstatus] == 'QUEUE_EMPTY')
+             else if (qstatus == 'QUEUE_EMPTY')
              {
                  console.debug('Processor: Empty Queue');
                  this.tooltip.ProcessEnd();
                  this.StopProcessing();
              }
+             else if (qstatus == "PREPARING_DONE")
+             {
+                 console.log('Processor: Preparing is done');
+                 this.tooltip.ProcessEnd();
+                 this.StopProcessing();
+
+
+
+                 //if (typeof this.screen.preparingDone == 'function')
+                  // this.screen.PreparingDone();
+             }
          }
 
+         // React to status of the queue. s
+         if (typeof this.screen.QueueStatus == 'function')
+          this.screen.QueueStatus(qstatus);
          // Check for errors like Queue / Key / Maintenance / etc  (is_error true, pass message to screen)
-
 
          // If all is fine, there is more in queue, enter back into queue.
     },

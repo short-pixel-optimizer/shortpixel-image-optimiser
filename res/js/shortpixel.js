@@ -742,7 +742,7 @@ var ShortPixel = function() {
             jQuery.ajax({
                 type: "POST",
                 url: ShortPixel.AJAX_URL,
-                data: { action : 'shortpixel_get_comparer_data', id : id, type: type },
+                data: { action : 'shortpixel_get_comparer_data', id : id, type: type, nonce: ShortPixelProcessorData.nonce_ajaxrequest },
                 success: function(response) {
                   //  data = JSON.parse(response);
                     jQuery.extend(ShortPixel.comparerData, response);

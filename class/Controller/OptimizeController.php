@@ -8,6 +8,7 @@ use ShortPixel\Controller\Queue\Queue as Queue;
 
 use ShortPixel\Controller\QuotaController as QuotaController;
 
+
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\ResponseController as ResponseController;
 
@@ -17,9 +18,7 @@ use ShortPixel\Model\Image\ImageModel as ImageModel;
 class OptimizeController
 {
     protected static $instance;
-
     protected static $results;
-
 
     public function __construct()
     {
@@ -150,21 +149,7 @@ class OptimizeController
      return $json;
 
     }
-    /** Create a new bulk, enqueue items for bulking */
-    public function createBulk()
-    {
-    //  $this->q->createNewBulk();
-       $mediaQ = MediaLibraryQueue::getInstance();
-       $mediaQ->createNewBulk(array());
-    }
 
-    /*** Start the bulk run */
-    public function startBulk()
-    {
-        $mediaQ = MediaLibraryQueue::getInstance();
-        $mediaQ->startBulk();
-        $this->processQueue();
-    }
 
     // Processing Part
 
@@ -198,8 +183,8 @@ class OptimizeController
         $mediaQ = MediaLibraryQueue::getInstance();
         $result = $mediaQ->run();
         $results = array();
-//        echo "RESULT ---> "; var_dump($result);
 
+        // Items is array in case of a dequeue
         $items = (isset($result->items) && is_array($result->items)) ? $result->items : array();
 
         // Only runs if result is array, dequeued items.
@@ -210,11 +195,8 @@ class OptimizeController
               $item = $this->convertPNG($item, $mediaQ);
 
             $item = $this->sendToProcessing($item);
-//Log::addTemp('Item After SendTOProcessing', $item);
             $item = $this->handleAPIResult($item, $mediaQ);
             $result->items[$index] = $item; // replace processed item, should have result now.
-
-        //    Log::addTemp('ProcessQueue Item' . $index,  $item);
 
           //  $result = $api->doRequests($urls, $blocking);
         }
@@ -224,7 +206,9 @@ class OptimizeController
         $results['media'] = $json;
 
         $customQ = CustomQueue::getInstance();
-        $results['custom'] = array(); // @otodo Implement
+        $results['custom'] = false; // @todo Implement
+
+        $results['total'] = $this->calculateStatsTotals($results);
 
         return $results;
     }
@@ -262,15 +246,11 @@ class OptimizeController
     protected function handleAPIResult(Object $item, $q)
     {
       $fs = \wpSPIO()->filesystem();
-  //    Log::addTemp('HandApiResult ITEM OBJ ', $item);
       $result = $item->result;
 
       if ($result->is_error)
       {
-          /*if (! property_exists($item, 'errors'))
-            $item->errors = array(); */
 
-          //$item->errors[] = $result;
 
           if ($result->is_done || count($item->tries) >= SHORTPIXEL_MAX_FAIL_RETRIES )
           {
@@ -410,6 +390,9 @@ class OptimizeController
             $json->message = sprintf(__("Fetched %d items",  'shortpixel-image-optimiser'), count($result->items));
             $json->results = $result->items;
           break;
+          case Queue::RESULT_RECOUNT:
+             $json->message = sprintf(__('Bulk preparation seems to be interrupted. Restart the queue or continue without accurate count', 'shortpixel-image-optimiser'));
+          break;
           default:
              $json->message = sprintf(__('Unknown Status %s ', 'shortpixel-image-optimiser'), $result->qstatus);
           break;
@@ -435,6 +418,46 @@ class OptimizeController
       $json->message = null;
 
       return $json;
+    }
+
+    /** Tries to calculate total stats of the process for bulk reporting
+    *  Format of results is   results [media|custom](object) -> stats
+    */
+    private function calculateStatsTotals($results)
+    {
+        $has_media = $has_custom = false;
+
+        if (is_object($results['media']) && property_exists($results['media']->stats))
+          $has_media = true;
+
+        if (is_object($results['custom']) && property_exists($results['custom']->stats))
+          $has_custom = true;
+
+        $object = new \stdClass;  // total
+
+        if ($has_media && ! $has_custom)
+        {
+           $object->stats = $results['media']->stats;
+           return $object;
+        }
+        elseif(! $has_media && $has_custom)
+        {
+           $object->stats = $results['custom']->stats;
+           return $object;
+        }
+
+        // When both have stats
+        $object->stats = $results['media']->stats;
+
+        foreach ($results['custom']->stats as $key => $value)
+        {
+            if (property_exists($object->stats->$key) && ! is_object($object->stats->$key))
+            {
+               $object->stats->$key = $object->stats->$key + $value;
+            }
+        }
+
+        return $object;
     }
 
 }

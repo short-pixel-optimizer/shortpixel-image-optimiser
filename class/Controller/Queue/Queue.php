@@ -3,6 +3,8 @@ namespace ShortPixel\Controller\Queue;
 
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\Controller\CacheController as CacheController;
+
 
 abstract class Queue
 {
@@ -13,14 +15,17 @@ abstract class Queue
     const PLUGIN_SLUG = 'SPIO';
     const QUEUE_NAME = 'base';
 
+
     // Result status for Run function
     const RESULT_ITEMS = 1;
     const RESULT_PREPARING = 2;
     const RESULT_PREPARING_DONE = 3;
     const RESULT_EMPTY = 4;
     const RESULT_QUEUE_EMPTY = 10;
+    const RESULT_RECOUNT = 11;
     const RESULT_ERROR = -1;
     const RESULT_UNKNOWN = -10;
+
 
     /* Result status (per item) to communicate back to frontend */
 /*    const FILE_NOTEXISTS = -1;
@@ -80,9 +85,20 @@ abstract class Queue
        {
             $prepared = $this->prepare();
             $result->qstatus = self::RESULT_PREPARING;
-            $result->items = $prepared; // number of items.
-            if ($prepared == 0)
+            $result->items = $prepared['items']; // number of items.
+            $result->images = $prepared['images'];
+            if ($prepared['items'] == 0)
+            {
+               Log::addDebug('Queue, prepared can back as zero', $prepared, $images);
                $result->qstatus = self::RESULT_PREPARING_DONE;
+
+               $cache = new CacheController();
+               $countCache = $cache->getItem(static::CACHE_NAME);
+               $count = $countCache->getValue();
+
+               if ($count->items !== $this->q->getStatus('items'))
+                 $result->qstatus = self::RESULT_RECOUNT;
+            }
        }
        elseif ($this->getStatus('bulk_running'))
        {
@@ -137,6 +153,15 @@ abstract class Queue
       $stats->errors = $this->getStatus('errors');
       $stats->done = $this->getStatus('done');
       $stats->total = $stats->in_queue + $stats->errors + $stats->done + $stats->in_progress;
+
+      $cache = new CacheController();
+      $countCache = $cache->getItem(static::CACHE_NAME);
+      $count = $countCache->getValue();
+
+      if (is_object($count))
+      {
+        $stats->bulk = $count;
+      }
 
       return $stats;
     }

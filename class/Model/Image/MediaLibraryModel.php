@@ -290,7 +290,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
       $this->image_meta = new ImageMeta();
       $fs = \wpSPIO()->fileSystem();
-//      echo "<PRE>"; var_dump($metadata); echo "</PRE>";
 
       if (! $metadata)
       {
@@ -299,14 +298,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
             $result = $this->checkLegacy();
             if ($result)
             {
-            //  Log::addTemp("Legacy MetaConversion Save(tm) temporarily off");
               $metadata = $this->createSave(); // after convert, pretent it's loaded as save ( and save! ) @todo
               $this->saveMeta();
-          //    echo "<PRE>"; var_dump($metadata); echo "</PRE>";
 
-            /*  echo "metadata from createSave <PRE>";
-              print_r($this->getOptimizeUrls());
-              echo "</PRE>"; */
             }
       }
 
@@ -472,7 +466,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       return false;
   }
 
-  /* Check if an image in theory could be processed. Check only exclusions, don't check status etc */
+  /* Check if an image in theory could be processed. Check only exclusions, don't check status, thumbnails etc */
   /* @param Strict Boolean Check only the main image, don't check thumbnails */
   public function isProcessable($strict = false)
   {

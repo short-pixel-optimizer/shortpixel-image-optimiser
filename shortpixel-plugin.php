@@ -169,12 +169,14 @@ class ShortPixelPlugin
   public function ajaxHooks()
   {
 
-    // Ajax
-    add_action( 'wp_ajax_shortpixel_image_processing', array(AjaxController::getInstance(), 'processQueue') );
-    add_action( 'wp_ajax_shortpixel_exit_process', array(AjaxController::getInstance() , 'removeProcessorKey'));
-    add_action( 'wp_ajax_shortpixel_get_item_view', array(AjaxController::getInstance(), 'getItemView'));
-    add_action( 'wp_ajax_shortpixel_manual_optimization', array(AjaxController::getInstance(), 'addItem'));
-    add_action( 'wp_ajax_shortpixel_get_comparer_data', array(AjaxController::getInstance(), 'getComparerData'));
+    // Ajax hooks. Should always be prepended with ajax_ and *must* check on nonce in function
+    add_action( 'wp_ajax_shortpixel_image_processing', array(AjaxController::getInstance(), 'ajax_processQueue') );
+    add_action( 'wp_ajax_shortpixel_exit_process', array(AjaxController::getInstance() , 'ajax_removeProcessorKey'));
+    add_action( 'wp_ajax_shortpixel_get_item_view', array(AjaxController::getInstance(), 'ajax_getItemView'));
+    add_action( 'wp_ajax_shortpixel_manual_optimization', array(AjaxController::getInstance(), 'ajax_addItem'));
+
+    // @todo should probably go through ajaxrequest.
+    add_action( 'wp_ajax_shortpixel_get_comparer_data', array(AjaxController::getInstance(), 'ajax_getComparerData'));
 
     add_action( 'wp_ajax_shortpixel_ajaxRequest', array(AjaxController::getInstance(), 'ajaxRequest'));
 
@@ -364,7 +366,7 @@ class ShortPixelPlugin
     wp_register_style('shortpixel-othermedia', plugins_url('/res/css/shortpixel-othermedia.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
 
     // load everywhere, because we are inconsistent.
-    wp_enqueue_style('shortpixel-tooltip', plugins_url('/res/css/shortpixel-toolbar.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
+    wp_enqueue_style('shortpixel-tooltip', plugins_url('/res/css/shortpixel-toolbar.css',SHORTPIXEL_PLUGIN_FILE), array('dashicons'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
 
     if ( \wpSPIO()->env()->is_our_screen )
     {

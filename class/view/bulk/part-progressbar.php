@@ -28,6 +28,4 @@ namespace ShortPixel;
     </div>
   </div>
 
-  [Loading]
-
 </section>

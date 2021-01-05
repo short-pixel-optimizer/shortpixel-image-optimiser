@@ -4,6 +4,9 @@ namespace ShortPixel\Controller;
 
 
 use ShortPixel\Controller\View\ListMediaViewController as ListMediaViewController;
+use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+
+//use ShortPixel\Controller\BulkController as BulkController;
 
 // Class for containing all Ajax Related Actions.
 class AjaxController
@@ -33,8 +36,15 @@ class AjaxController
       return $secretKey;
     }
 
-    public function removeProcessorKey()
+
+    public function ajax_removeProcessorKey()
     {
+      Log::addDebug('Ajax HIT - Process Exiting');
+      Log::addDebug($_POST);
+        $this->checkNonce('exit_process');
+      Log::addDebug('Process Exiting');
+
+        $cacheControl = new CacheController();
         $cacheControl->deleteItem('bulk-secret');
 
         $json = new \stdClass;
@@ -43,8 +53,10 @@ class AjaxController
 
     }
 
-    public function getItemView()
+    public function ajax_getItemView()
     {
+        $this->checkNonce('item_view');
+
           $type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';
           $id = isset($_POST['id']) ? intval($_POST['id']) : false;
 
@@ -72,8 +84,9 @@ class AjaxController
     }
 
 
-    public function processQueue()
+    public function ajax_processQueue()
     {
+        $this->checkNonce('processing');
 
         if (isset($_POST['bulk-secret']))
         {
@@ -92,67 +105,22 @@ class AjaxController
         $control = OptimizeController::getInstance();
         $result = $control->processQueue();
 
-      //  $result = $this->tempFakeResult();
-
         $this->send($result);
     }
 
-    // @todo Remove when publishing
-    public function tempFakeResult()
-    {
-      // Result when image is done ( faked )
-       $resultObj = new \stdClass;
-       $resultObj->compressionType = null;
-       $resultObj->id = 1893;
-       $resultObj->urls = array("http://shortpixel.weblogmechanic.com/wp-content/uploads/2019/07/IMG_20160417_162622.jpg?ver=1562769552", "http://shortpixel.weblogmechanic.com/wp-content/uploads/2019/07/IMG_20160417_162622-150x150.jpg?ver=1562769552", "http://shortpixel.weblogmechanic.com/wp-content/uploads/2019/07/IMG_20160417_162622-400x300.jpg?ver=1562769552", "http://shortpixel.weblogmechanic.com/wp-content/uploads/2019/07/IMG_20160417_162622-768x576.jpg?ver=1562769552", "http://shortpixel.weblogmechanic.com/wp-content/uploads/2019/07/IMG_20160417_162622-1024x768.jpg?ver=1562769552", "http://shortpixel.weblogmechanic.com/wp-content/uploads/2019/07/IMG_20160417_162622-1568x1176.jpg?ver=1562769552", "http://shortpixel.weblogmechanic.com/wp-content/uploads/2019/07/IMG_20160417_162622-300x300.jpg?ver=1562769552", "http://shortpixel.weblogmechanic.com/wp-content/uploads/2019/07/IMG_20160417_162622-450x338.jpg?ver=1562769552", "http://shortpixel.weblogmechanic.com/wp-content/uploads/2019/07/IMG_20160417_162622-100x100.jpg?ver=1562769552", "http://shortpixel.weblogmechanic.com/wp-content/uploads/2019/07/IMG_20160417_162622-300x300.jpg?ver=1562769552",
-    );
-      $resultObj->result = new \stdClass;
-      $resultObj->result->status = 2;
-      $resultObj->result->message = 'Image 32 optimized';
-      $resultObj->result->is_error = false;
-      $resultObj->result->is_done = true;
 
-      $resultObj->improvements = new \stdClass;
-      $resultObj->improvements->main = array('80.04', 113952);
-      $resultObj->improvements->thumbnails = array(
-          'main' => array(99, 666),
-          'large' => array('25.05', '13235948'),
-      );
-      $resultObj->has_error = false;
-      $resultObj->message = "Fetched 1 items";
-
-      $statsObj = new \stdClass;
-      $statsObj->in_queue = 10;
-      $statsObj->errors = 0;
-      $statsObj->done = 54;
-      $statsObj->total = 64;
-
-
-        $media = new \stdClass;
-        $media->has_error = false;
-        $media->message = 'temp message';
-        $media->result = null;
-        $media->results = array(0 => $resultObj,
-        );
-
-        $media->stats = $statsObj;
-        $ar = array(
-            'custom' => new \stdClass,
-            'media' => $media,
-        );
-
-        return $ar;
-    }
 
     public function ajaxRequest()
     {
+        $this->checkNonce('ajax_request');
+
         $action = isset($_POST['screen_action']) ? sanitize_text_field($_POST['screen_action']) : false;
         $type = isset($_POST['type'])  ? sanitize_text_field($_POST['type']) : 'media';
         $id = isset($_POST['id']) ? intval($_POST['id']) : false;
 
         $json = new \stdClass;
         $json->$type = new \stdClass;
-        //$json->$type->result = $result;
+
         $json->$type->id = $id;
         $json->$type->results = null;
         $json->$type->is_error = false;
@@ -171,9 +139,16 @@ class AjaxController
            case 'optimizeItem':
              $json = $this->optimizeItem($json, $data);
            break;
+           case 'createBulk':
+             $json = $this->createBulk($json, $data);
+           break;
+           case 'startBulk':
+             $json = $this->startBulk($json, $data);
+           break;
            default:
               $json->$type->message = __('Ajaxrequest - no action found', 'shorpixel-image-optimiser');
            break;
+
         }
 
 
@@ -224,13 +199,7 @@ class AjaxController
       // @todo Turn back on, when ok.
       $json->$type = $control->restoreItem($mediaItem);
 
-    /*  $json->$type->result = (object) array(
-          'item_id' => $id,
-          'result' => array('is_done' => true),
-      ); */
-      //$this->getItem
       return $json;
-      //$this->send($json);
     }
 
     public function reOptimizeItem($json, $data)
@@ -247,13 +216,29 @@ class AjaxController
     }
 
 
-    public function createBulk()
+    public function createBulk($json, $data)
     {
+        $bulkControl = BulkController::getInstance();
+        $stats = $bulkControl->createNewBulk('media');
+
+        $json->media->stats = $stats;
+
+        return $json;
 
     }
 
+    public function startBulk($json, $data)
+    {
+        $bulkControl = BulkController::getInstance();
+        $result = $bulkControl->startBulk('media');
+
+        $this->send($result);
+    }
+
     /** Data for the compare function */
-    public function getComparerData() {
+    public function ajax_getComparerData() {
+
+        $this->checkNonce('ajax_request');
 
         $type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';
         $id = isset($_POST['id']) ? intval($_POST['id']) : false;
@@ -292,6 +277,18 @@ class AjaxController
           }
 
         $this->send($ret);
+    }
+
+    protected function checkNonce($action)
+    {
+      if (! wp_verify_nonce($_POST['nonce'], $action))
+      {
+        $json = new \stdClass;
+        $json->message = __('Nonce is missing or wrong', 'shortpixel-image-optimiser');
+        $json->status = false;
+        $this->send($json);
+      }
+
     }
 
     protected function send($json)
