@@ -7,8 +7,9 @@ var ShortPixelToolTip = function(reserved, processor)
         var paused =  localStorage.getItem('tooltipPause'); // string returns, not boolean
         if (paused == 'true')
         {
-          console.log('Tooltip Pausing');
-          processor.isManualPaused = true;
+          console.log('manual paused (tooltip)');
+          processor.PauseProcess();
+          //processor.isManualPaused = true;
         }
         var control = document.querySelector('.ab-item .controls');
         control.addEventListener('click', this.ToggleProcessing.bind(this));
@@ -26,7 +27,7 @@ var ShortPixelToolTip = function(reserved, processor)
     {
         return document.querySelector('li.shortpixel-toolbar-processing');
     }
-    this.RefreshStats = function(stats)
+    this.RefreshStats = function(stats) // Meant to put a 'todo' number in the tooltip when processing
     {
 
 
@@ -38,13 +39,15 @@ var ShortPixelToolTip = function(reserved, processor)
 
        if (processor.isManualPaused == false)
        {
-          processor.isManualPaused = true;
+        //  processor.isManualPaused = true;
+          processor.PauseProcess();
           localStorage.setItem('tooltipPause','true');
           this.ProcessPause();
        }
         else
        {
-          processor.isManualPaused = false;
+        //  processor.isManualPaused = false;
+          processor.ResumeProcess();
           localStorage.setItem('tooltipPause','false');
           console.log('ToogleProc' + localStorage.getItem('tooltipPause'));
           this.ProcessResume();
@@ -52,8 +55,8 @@ var ShortPixelToolTip = function(reserved, processor)
 
        processor.CheckActive();
 
-       if (processor.isActive)
-          processor.RunProcess();
+       /*if (processor.isActive)
+          processor.RunProcess(); */
 
     }
 

@@ -11,7 +11,7 @@ window.ShortPixelProcessor =
     isBulkPage: false,
     localSecret: null,
     remoteSecret: null,
-    isManualPaused: false,  // tooltip pause
+    isManualPaused: false,  // tooltip pause :: do not set directly, but only trhough processor functions!
     worker: null,
     timer: null,
     timesEmpty: 0, // number of times queue came up empty.
@@ -45,26 +45,26 @@ window.ShortPixelProcessor =
         console.log('remoteSecret ' + this.remoteSecret + ' ' + this.localSecret);
         //this.localSecret = null;
 
-        this.tooltip = new ShortPixelToolTip({}, this);
-
         this.CheckActive();
 
         // Always load worker, also used for UI actions.
         this.LoadWorker();
 
-        if (this.isActive)
-        {
-            this.RunProcess();
-        }
 
         if (typeof ShortPixelScreen == 'undefined')
         {
            console.error('Missing Screen for feedback!');
-
         }
         else
           this.screen = new ShortPixelScreen({}, this);
 
+        this.tooltip = new ShortPixelToolTip({}, this);
+
+
+        if (this.isActive)
+        {
+            this.RunProcess();
+        }
 
     },
     CheckActive: function()
@@ -82,7 +82,7 @@ window.ShortPixelProcessor =
       else if (this.isManualPaused)
       {
           this.isActive = false;
-          this.StopProcessing();
+          this.StopProcess();
 
           console.log('Processor Paused');
       }
@@ -122,7 +122,6 @@ window.ShortPixelProcessor =
     },
     Process: function()
     {
-
         if (this.worker === null)
            this.LoadWorker(); // JIT worker loading
 
@@ -144,10 +143,34 @@ window.ShortPixelProcessor =
 
         this.timer = window.setTimeout(this.Process.bind(this), this.interval);
     },
-    StopProcessing: function()
+    PauseProcess: function() // This is a manual intervention.
+    {
+      this.isManualPaused = true;
+      var event = new CustomEvent('shortpixel.processor.paused', { detail : {paused: this.isManualPaused }});
+      window.dispatchEvent(event);
+
+      window.clearTimeout(this.timer);
+
+
+    },
+    StopProcess: function()
     {
         console.log('Stop Processing' + this.timer);
-         window.clearTimeout(this.timer);
+        if (this.isManualPaused == true) /// processor ends on status paused.
+        {
+            this.isManualPaused = false;
+            var event = new CustomEvent('shortpixel.processor.paused', { detail : {paused: this.isManualPaused}});
+            window.dispatchEvent(event);
+        }
+        window.clearTimeout(this.timer);
+    },
+    ResumeProcess: function()
+    {
+      this.isManualPaused = false;
+      var event = new CustomEvent('shortpixel.processor.paused', { detail : {paused: this.isManualPaused}});
+      window.dispatchEvent(event);
+
+      this.RunProcess();
     },
     SetInterval: function(interval)
     {
@@ -200,7 +223,7 @@ window.ShortPixelProcessor =
         if (response.has_error == true)
         {
            this.tooltip.AddNotice(response.message);
-           this.screen.HandleError(response.message);
+           this.screen.HandleError(response);
         }
 
         if (! this.screen)
@@ -253,13 +276,13 @@ window.ShortPixelProcessor =
              {
                  console.debug('Processor: Empty Queue');
                  this.tooltip.ProcessEnd();
-                 this.StopProcessing();
+                 this.StopProcess();
              }
              else if (qstatus == "PREPARING_DONE")
              {
                  console.log('Processor: Preparing is done');
                  this.tooltip.ProcessEnd();
-                 this.StopProcessing();
+                 this.StopProcess();
 
 
 
@@ -268,7 +291,7 @@ window.ShortPixelProcessor =
              }
          }
 
-         // React to status of the queue. s
+         // React to status of the queue.
          if (typeof this.screen.QueueStatus == 'function')
           this.screen.QueueStatus(qstatus);
          // Check for errors like Queue / Key / Maintenance / etc  (is_error true, pass message to screen)

@@ -35,8 +35,8 @@
       //  max-width: 950px;
         width: 90%;
         min-height: 600px;
-      /* (for debuggings)
-        position: absolute; */
+      /* (for debuggings)*/
+        position: absolute;
       //  margin: 40px;
         z-index: 1;
       //  visibility: hidden;
@@ -52,6 +52,7 @@
         {
             visibility: visible;
             opacity: 1;
+            box-shadow: 4px 4px 8px #116C7D;
         }
         .panel-container
         {
@@ -60,6 +61,22 @@
           display: inline-block;
           width: 100%;
         }
+     }
+
+     .processor-paused
+     {
+       position: absolute;
+       display: none;
+       top: 105px;
+    //   height: 50px;
+       width: 90%;
+       background: rgba(31, 190,201, 0.8);
+       border: 1px solid #ccc;
+       font-size: 26px;
+       line-height: 26px;
+       padding: 26px 0;
+       text-align: center;
+       z-index: 10;
      }
 
     section.panel.dashboard

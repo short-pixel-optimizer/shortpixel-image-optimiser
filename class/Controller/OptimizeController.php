@@ -213,6 +213,7 @@ class OptimizeController
         return $results;
     }
 
+
     /** Checks and sends the item to processing
     * @param Object $item Item is a stdClass object from Queue. This is not a model, nor a ShortQ Item.
     * @todo Check if PNG2JPG Processing is needed.
@@ -391,6 +392,7 @@ class OptimizeController
             $json->results = $result->items;
           break;
           case Queue::RESULT_RECOUNT:
+             $json->has_errror = true;
              $json->message = sprintf(__('Bulk preparation seems to be interrupted. Restart the queue or continue without accurate count', 'shortpixel-image-optimiser'));
           break;
           default:
@@ -398,6 +400,7 @@ class OptimizeController
           break;
         }
         $json->qstatus = $result->qstatus;
+        //$json->
 
         if (property_exists($result, 'stats'))
           $json->stats = $result->stats;

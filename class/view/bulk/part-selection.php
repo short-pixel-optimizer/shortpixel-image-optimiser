@@ -2,7 +2,7 @@
 namespace ShortPixel;
 
 ?>
-<section class='panel selection' data-panel="selection" data-loadpanel="StartPrepare" data-status="loading">
+<section class='panel selection' data-panel="selection" data-loadpanel="PrepareBulk" data-status="loading">
   <div class="panel-container">
 
       <h3 class="heading"><span><img src="<?php echo \wpSPIO()->plugin_url('res/img/robo-slider.png'); ?>"></span>

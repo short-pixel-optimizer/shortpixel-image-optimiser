@@ -21,8 +21,8 @@
   background: #fff;
   width: 90%;
   min-height: 600px;
-  /* (for debuggings)
-    position: absolute; */
+  /* (for debuggings)*/
+  position: absolute;
   z-index: 1;
   transition: opacity 1s linear;
   box-shadow: 2px 2px 10px #ccc;
@@ -31,11 +31,24 @@
     margin-left: 15px; }
   .shortpixel-bulk-wrapper .panel.active {
     visibility: visible;
-    opacity: 1; }
+    opacity: 1;
+    box-shadow: 4px 4px 8px #116C7D; }
   .shortpixel-bulk-wrapper .panel .panel-container {
     z-index: 5;
     display: inline-block;
     width: 100%; }
+.shortpixel-bulk-wrapper .processor-paused {
+  position: absolute;
+  display: none;
+  top: 105px;
+  width: 90%;
+  background: rgba(31, 190, 201, 0.8);
+  border: 1px solid #ccc;
+  font-size: 26px;
+  line-height: 26px;
+  padding: 26px 0;
+  text-align: center;
+  z-index: 10; }
 .shortpixel-bulk-wrapper section.panel.dashboard h3.heading {
   border: 0; }
 .shortpixel-bulk-wrapper section.panel.dashboard .bulk-wrapper {

@@ -7,6 +7,8 @@ class CustomQueue extends Queue
 {
 
    const QUEUE_NAME = 'Custom';
+   const CACHE_NAME = 'CustomCache'; // When preparing, write needed data to cache.
+
 
    public function __construct()
    {

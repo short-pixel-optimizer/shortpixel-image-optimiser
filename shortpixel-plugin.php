@@ -6,6 +6,9 @@ use ShortPixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Controller\AjaxController as AjaxController;
 //use ShortPixel\Controller;
 
+use ShortPixel\Controller\Queue\MediaLibraryQueue as MediaLibraryQueue;
+use ShortPixel\Controller\Queue\CustomQueue as CustomQueue;
+
 /** Plugin class
 * This class is meant for: WP Hooks, init of runtime and Controller Routing.
 
@@ -261,6 +264,15 @@ class ShortPixelPlugin
     wp_register_script ('shortpixel-screen-nolist', plugins_url('/res/js/screens/screen-nolist.js',SHORTPIXEL_PLUGIN_FILE), array('jquery', 'shortpixel-processor' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
     wp_register_script ('shortpixel-screen-bulk', plugins_url('/res/js/screens/screen-bulk.js',SHORTPIXEL_PLUGIN_FILE), array('jquery', 'shortpixel-processor' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
+
+    $mediaQ = MediaLibraryQueue::getInstance();
+    $customQ = CustomQueue::getInstance();
+
+    // Localize status of queue for resume function to start on proper panel.
+    wp_localize_script('shortpixel-screen-bulk', 'ShortPixelScreenBulk', array(
+           'custom' => $customQ->getStats(),
+           'media' => $mediaQ->getStats(),
+    ) );
 
 
     wp_register_script('shortpixel', plugins_url('/res/js/shortpixel' . $jsSuffix,SHORTPIXEL_PLUGIN_FILE), array('jquery', 'jquery.knob.min.js'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);

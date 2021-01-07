@@ -2,8 +2,6 @@
 namespace ShortPixel;
 ?>
 
-<h1>Shortpixel Bulk Processing</h1>
-
 <section class='dashboard panel active' data-panel="dashboard">
 
   <?php //$this->loadView('bulk/part-progressbar'); ?>

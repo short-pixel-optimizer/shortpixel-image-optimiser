@@ -148,6 +148,9 @@ abstract class Queue
     public function getStats()
     {
       $stats = new \stdClass; // For frontend reporting back.
+      $stats->is_preparing = $this->getStatus('preparing');
+      $stats->is_running = $this->getStatus('running');
+      $stats->is_finished = $this->getStatus('finished');
       $stats->in_queue = $this->getStatus('items');
       $stats->in_progress = $this->getStatus('in_process');
       $stats->errors = $this->getStatus('errors');

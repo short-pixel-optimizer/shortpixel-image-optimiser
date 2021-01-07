@@ -50,7 +50,8 @@ class MediaLibraryQueue extends Queue
 
    public function startBulk()
    {
-       $this->q->setStatus('bulk_running', true);
+       $this->q->setStatus('preparing', false, false);
+       $this->q->setStatus('bulk_running', true, true);
    }
 
    public function getQueueName()
