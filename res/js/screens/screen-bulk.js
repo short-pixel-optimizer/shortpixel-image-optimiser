@@ -165,6 +165,11 @@ var ShortPixelScreen = function (MainScreen, processor)
           //this.SwitchPanel('selection');
 
       }
+      if (qStatus == 'QUEUE_EMPTY')
+      {
+          this.UpdatePanelStatus('queueDone', 'process'); 
+
+      }
     /*  elseif (qStatus == '')
       {
 
@@ -174,6 +179,47 @@ var ShortPixelScreen = function (MainScreen, processor)
   {
       console.log('HandleImage');
       console.log(resultItem, type);
+      var result = resultItem.result;
+      if ( this.processor.fStatus[result.status] == 'FILE_DONE')
+      {
+          this.UpdateData('result', result);
+          if (result.original)
+          {
+              var el = document.querySelector('.image-source img');
+              if (el)
+                el.src  = result.original;
+          }
+          if (result.optimized)
+          {
+              var el = document.querySelector('.image-result img');
+              if (el)
+                el.src  = result.original;
+          }
+
+          if (result.improvements.totalpercentage)
+          {
+              var circle = document.querySelector('.opt-circle-image');
+
+              var total_circle = 289.027;
+              if(result.improvements.totalpercentage >0 ) {
+                  total_circle = Math.round(total_circle-(total_circle*result.improvements.totalpercentage/100));
+              }
+
+              for(i = 0; i < circle.children.length; i++)
+              {
+                 var child = circle.children[i];
+                 if (child.classList.contains('path'))
+                 {
+                    child.style.strokeDashoffset = total_circle + 'px';
+                 }
+                 else if (child.classList.contains('text'))
+                 {
+                    child.textContent = result.improvements.totalpercentage + '%';
+                 }
+              }
+
+          }
+      }
 
 
   },
@@ -183,17 +229,34 @@ var ShortPixelScreen = function (MainScreen, processor)
      console.log('UpdateMessage');
 
   },
-
   this.UpdateStats = function(stats, type)
   {
-      console.log('updating Stats');
-      var elements = document.querySelectorAll('[data-stats-' + type + ']');
+      this.UpdateData('stats', stats, type);
+  }
+  // dataName refers to domain of data i.e. stats, result. Those are mentioned in UI with data-stats-media="total" or data-result
+  this.UpdateData = function(dataName, data, type)
+  {
+      console.log('updating Data :' + dataName);
+      if (typeof type == 'undefined')
+      {
+          var elements = document.querySelectorAll('[data-' + dataName + ']');
+          var attribute = 'data-' + dataName;
+      }
+      else
+      {
+        var elements = document.querySelectorAll('[data-' + dataName + '-' + type + ']');
+        var attribute = 'data-' + dataName + '-' + type;
+      }
 
       if (elements)
       {
           elements.forEach(function (element, index)
           {
-                var el = element.getAttribute('data-stats-' + type);
+                var el = element.getAttribute(attribute);
+                var presentation = false;
+                if (element.hasAttribute('data-presentation'))
+                  presentation = element.getAttribute('data-presentation');
+
                 if (el == null)
                   return;
                 var index = el.indexOf('-');
@@ -201,15 +264,27 @@ var ShortPixelScreen = function (MainScreen, processor)
                 {
                    var first  = el.substr(0, index);
                    var second = el.substr(index+1);
-
-                   var value = stats[first][second];
+                   if (typeof data[first] !== 'undefined' && typeof data[first][second] !== 'undefined')
+                    var value = data[first][second];
+                  else
+                    var value = 'n/a';
                 }
                 else
                 {
-                   var value = stats[el];
+                   if (typeof data[el] !== 'undefined')
+                    var value = data[el];
+                   else
+                    var value = 'n/a';
                 }
 
-                element.innerHTML = value;
+                if (presentation)
+                {
+                    if (presentation == 'css.width.percentage')
+                      element.style.width = value + '%';
+                }
+                else
+                  element.textContent = value;
+
           });
       }
   },
@@ -246,15 +321,27 @@ var ShortPixelScreen = function (MainScreen, processor)
 
   this.TogglePauseNotice = function(event)
   {
-    console.log(event);
+     console.log(event);
      var data = event.detail;
 
-     var el = document.getElementById('processPaused');
+     var el = document.getElementById('processPaused'); // paused overlay
+     var buttonPause  = document.getElementById('PauseBulkButton'); // process window buttons
+     var buttonResume = document.getElementById('ResumeBulkButton');
 
      if(data.paused == true)
+     {
         el.style.display = 'block';
+        buttonPause.style.display = 'none';
+        buttonResume.style.display = 'inline-block';
+
+     }
      else
+     {
         el.style.display = 'none';
+        buttonPause.style.display = 'inline-block';
+        buttonResume.style.display = 'none';
+
+     }
 
   }
 

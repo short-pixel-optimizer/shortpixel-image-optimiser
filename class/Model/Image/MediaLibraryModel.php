@@ -62,7 +62,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
      if (! $url)
      {
-      return false;
+      return array();
      }
 
      $urls = array();
@@ -190,7 +190,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   public function handleOptimized($tempFiles)
   {
       Log::addTemp('TEMPFILES, HandleOptimized', $tempFiles);
-      $result = parent::handleOptimized($tempFiles);
+      if (! $this->isOptimized()) // main file might not be contained in results
+        $result = parent::handleOptimized($tempFiles);
+
       $optimized = array();
 
       // If thumbnails should not be optimized, they should not be in result Array.
@@ -250,9 +252,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
            $totalsize += $size;
            $totalperc += $perc;
            $improvements['thumbnails'][$thumbObj->name] = array($perc, $size);
-
+           $count++;
         }
-
+        $improvements['totalpercentage']  = round($totalperc / $count);
+        $improvements['totalsize'] = $totalsize;
         return $improvements;
   }
 

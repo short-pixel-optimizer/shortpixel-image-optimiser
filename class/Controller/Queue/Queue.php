@@ -156,6 +156,7 @@ abstract class Queue
       $stats->errors = $this->getStatus('errors');
       $stats->done = $this->getStatus('done');
       $stats->total = $stats->in_queue + $stats->errors + $stats->done + $stats->in_progress;
+      $stats->percentage_done = round((100 / $stats->total) * $stats->done);
 
       $cache = new CacheController();
       $countCache = $cache->getItem(static::CACHE_NAME);

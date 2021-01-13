@@ -25,7 +25,7 @@ namespace ShortPixel;
                             a 46,46 0 1 1 0,-92
                             " stroke-width="16" fill-opacity="0" style="stroke-dasharray: 289.027px, 289.027px; stroke-dashoffset: 180px;">
                         </path>
-                        <text class="text" x="50" y="50">50%</text>
+                        <text class="text" x="50" y="50">--</text>
                     </svg>
 
       </div>
@@ -38,21 +38,46 @@ namespace ShortPixel;
     <div class='bulk-summary'>
       <div class='heading'>
         <span><i class='dashicons dashicons-images-alt2'>&nbsp;</i> Media Library</span>
-        <span>Completed
-              <span class='progressbar'><span class='done'></span> </span>
+        <span>
+              <span class='progressbar'>
+                <span class='done-text'><i data-stats-media="percentage_done"></i> %</span>
+                <span class='done' data-stats-media="percentage_done" data-presentation="css.width.percentage"></span>
+              </span>
         </span>
+        <span>&nbsp;</span>
         <span>Check Details</span>
       </div>
       <div>
-        <span>Items processed: <i data-stats-media="done">X</i></span>
-        <span>Items Queued <i data-stats-media="in_queue">X</i></span>
-        <span>Errors : <i data-stats-media="errors">X</i> Check Errors</span>
+        <span>Items processed: <i data-stats-media="done">-</i></span>
+        <span>Processing : <i data-stats-media="in_progress">-</i></span>
+        <span>Items Left <i data-stats-media="in_queue">-</i></span>
+        <span>Errors : <i data-stats-media="errors">-</i> Check Errors</span>
       </div>
 
     </div>
 
     <div class='image-preview'>
-      <p>File Name - Optimization circle</p>
+      <div class="image-preview-line">
+        <strong data-result="queuetype"></strong> <span data-result="filename">Pending</span>
+
+        <svg class="opt-circle-image" viewBox="0 0 100 100">
+                      <path class="trail" d="
+                          M 50,50
+                          m 0,-46
+                          a 46,46 0 1 1 0,92
+                          a 46,46 0 1 1 0,-92
+                          " stroke-width="8" fill-opacity="0">
+                      </path>
+                      <path class="path" d="
+                          M 50,50
+                          m 0,-46
+                          a 46,46 0 1 1 0,92
+                          a 46,46 0 1 1 0,-92
+                          " stroke-width="8" fill-opacity="0" style="stroke-dasharray: 289.027px, 289.027px; stroke-dashoffset: 180px;">
+                      </path>
+                      <text class="text" x="50" y="50">-- %</text>
+                  </svg>
+      </div>
       <div class="preview-wrapper">
         <div class="image-source">
           <img src="">
@@ -67,7 +92,8 @@ namespace ShortPixel;
     </div>
 
     <nav>
-      <button class='button pause' data-action="PauseBulk">Pause Bulk Processing</button>
+      <button class='button pause' data-action="PauseBulk" id="PauseBulkButton">Pause Bulk Processing</button>
+      <button class='button resume' data-action='ResumeBulk' id="ResumeBulkButton">Resume Bulk Processing</button>
       <button class='button-primary stop' data-action="StopBulk" >Stop Bulk Processing</button>
     </nav>
   </div>

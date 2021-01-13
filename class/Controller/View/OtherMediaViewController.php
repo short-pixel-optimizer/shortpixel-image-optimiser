@@ -27,7 +27,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
       public function __construct()
       {
         parent::__construct();
-        $this->setActions(); // possible actions.
+        $this->setActions(); // possible actions for ROWS only..
 
         $this->currentPage = isset($_GET['paged']) ? intval($_GET['paged']) : 1;
         $this->total_items = intval($this->record_count());
@@ -40,7 +40,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
       /** Controller default action - overview */
       public function load()
       {
-          $this->process_actions();
+        //  $this->process_actions();
 
           $this->view->items = $this->getItems();
           $this->view->folders = $this->getItemFolders($this->view->items);
@@ -48,11 +48,11 @@ class OtherMediaViewController extends \ShortPixel\Controller
           $this->view->pagination = $this->getPagination();
           $this->view->filter = $this->getFilter();
 
-          $this->checkQueue();
+    //      $this->checkQueue();
           $this->loadView();
       }
 
-      public function renderNewActions($item_id)
+      /*public function renderNewActions($item_id)
       {
          $item = new \stdClass; // mock class to mimick the records used in the controller
          $item->id = $item_id;
@@ -71,10 +71,10 @@ class OtherMediaViewController extends \ShortPixel\Controller
          $actions = $this->getDisplayActions($this->getActions($item, $file));
 
          return $actions;
-      }
+      } */
 
       //push to the processing list the pending ones, just in cas
-      protected function checkQueue()
+      /*protected function checkQueue()
       {
           $sp = \wpSPIO()->getShortPixel();
           foreach ($this->view->items as $item) {
@@ -85,17 +85,18 @@ class OtherMediaViewController extends \ShortPixel\Controller
                   $customQueue->addSingleItem($item);
               }
           }
-      }
+      } */
 
       /** Sets all possible actions and it's links. Doesn't check what can be loaded per individual case. */
+
       protected function setActions()
       {
         $nonce = wp_create_nonce( 'sp_custom_action' );
         $keyControl = ApiKeyController::getInstance();
 
         $actions = array(
-            'optimize' => array('action' => 'optimize', '_wpnonce' => $nonce , 'text' => __('Optimize now','shortpixel-image-optimiser'), 'class' => ''),
-
+          'optimize' => array('action' => 'optimize', '_wpnonce' => $nonce , 'text' => __('Optimize now','shortpixel-image-optimiser'), 'class' => ''),
+  /*
             'retry' => array('action' => 'optimize', '_wpnonce' => $nonce, 'text' =>  __('Retry','shortpixel-image-optimiser')),
 
             'redolossless' => array('action' => 'redo', '_wpnonce' => $nonce, 'type' => 'lossless', 'text' => __('Re-optimize lossless','shortpixel-image-optimiser')),
@@ -103,20 +104,16 @@ class OtherMediaViewController extends \ShortPixel\Controller
             'redolossy' => array('action' => 'redo', '_wpnonce' => $nonce, 'type' => 'lossy', 'text' => __('Re-optimize lossy','shortpixel-image-optimiser')),
 
             'redoglossy' => array('action' => 'redo', '_wpnonce' => $nonce, 'type' => 'glossy', 'text' => __('Re-optimize glossy','shortpixel-image-optimiser')),
-
+*/
             'quota' => array('action' => 'check-quota', '_wpnonce' => $nonce, 'text' =>__('Check quota','shortpixel-image-optimiser'), 'class' => 'button button-smaller'),
             'extend-quota' => array('link' => '<a href="https://shortpixel.com/login/' . $keyControl->getKeyForDisplay() . '" target="_blank" class="button-primary button-smaller">' . __('Extend Quota','shortpixel-image-optimiser') . '</a>'),
 
-          /*  <a class='button button-smaller button-primary' href='". (defined("SHORTPIXEL_HIDE_API_KEY") ? '' : $this->ctrl->getApiKey()) . "' target='_blank'>"
-                . __('Extend Quota','shortpixel-image-optimiser') .
-            "</a> */
-
-            'restore' => array('action' => 'restore', '_wpnonce' => $nonce, 'text' => __('Restore Backup','shortpixel-image-optimiser')),
+      /*      'restore' => array('action' => 'restore', '_wpnonce' => $nonce, 'text' => __('Restore Backup','shortpixel-image-optimiser')),
 
             'compare' => array('link' => '<a href="javascript:ShortPixel.loadComparer(\'C-%%item_id%%\');">%%text%%</a>',
-                      'text' => __('Compare', 'shortpixel-image-optimiser')),
+                      'text' => __('Compare', 'shortpixel-image-optimiser')), */
             'view' => array('link' => '<a href="%%item_url%%" target="_blank">%%text%%</a>', 'text' => __('View','shortpixel-image-optimiser')),
-            /*'no-key' => array('link' => __('Invalid API Key', 'shortpixel-image-optimiser') . ' <a href="options-general.php?page=wp-shortpixel-settings" class="text-link">%%text%%</a>', 'text' => __('Check your Settings','shortpixel-image-optimiser')           ), */
+
 
 
         );
@@ -244,7 +241,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
           return $spMetaDao->getCustomMetaCount($this->getFilter());
       }
 
-      protected function process_actions()
+/*      protected function process_actions()
       {
 
         $nonce = isset($_REQUEST['_wpnonce']) ? esc_attr($_REQUEST['_wpnonce']) : false;
@@ -312,7 +309,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
               Log::addWarn('Action hit OtherMediaViewController but was not caught' . $action . ' on '. $item_id);
             break;
         }
-      }
+      } */
 
       /** This is a workaround for doing wp_redirect when doing an action, which doesn't work due to the route. Long-term fix would be using Ajax for the actions */
       protected function rewriteHREF()
@@ -492,6 +489,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
       }
 
       /* Actions to list in the action menu */
+      /*
       protected function getActions($item, $file)
       {
          $thisActions = array();
@@ -520,7 +518,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
          }
          elseif ( intval($item->status) == \ShortPixelMeta::FILE_STATUS_SUCCESS)
          {
-           $thisActions[] = $this->actions['compare'];
+           $thisActions[] = $this->actions['compare-custom'];
 
            if ($file->hasBackup())
            {
@@ -544,13 +542,15 @@ class OtherMediaViewController extends \ShortPixel\Controller
            }
          }
 
-         
+
         if (count($thisActions) == 1)
           $thisActions[0]['class'] .= 'button-smaller button button-primary';
 
          return $this->renderActions($thisActions, $item, $file, $forceSingular);
-      }
+      } */
 
+
+      // Used for row actions at the moment.
       protected function renderActions($actions, $item, $forceSingular = false)
       {
 
@@ -590,6 +590,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
         }
         return $actions;
       }
+
 
   /*    protected function renderLegacyCell()
       {
@@ -729,7 +730,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
          return $display_date;
       }
 
-      protected function getDisplayActions($actions)
+    /*  protected function getDisplayActions($actions)
       {
 
            if (count($actions) == 0)
@@ -763,7 +764,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
               $output .= "</div></div> <!-- sp-dropdown -->";
               return $output;
             }
-      }
+      } */
 
 
 }

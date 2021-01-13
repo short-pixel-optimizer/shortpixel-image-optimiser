@@ -252,7 +252,6 @@ class OptimizeController
       if ($result->is_error)
       {
 
-
           if ($result->is_done || count($item->tries) >= SHORTPIXEL_MAX_FAIL_RETRIES )
           {
              // These are cloned, because queue changes object's properties
@@ -294,9 +293,8 @@ class OptimizeController
            Log::addTemp('Going to Handle Optimize --> ', array_keys($result->files));
            if (count($result->files) > 0 )
            {
-              $optimizeResult = $imageItem->handleOptimized($result->files);
+              $optimizeResult = $imageItem->handleOptimized($result->files); // returns boolean or null
               $item->result->improvements = $imageItem->getImprovements();
-
 
               if ($optimizeResult)
               {
@@ -308,6 +306,21 @@ class OptimizeController
                  $item->result->status = ApiController::STATUS_ERROR;
                  $item->result->message = sprintf(__('Image %s optimized with errors', 'shortpixel-image-optimiser'), $item->item_id);
               }
+
+              unset($item->result->files);
+              $item->result->filename = $imageItem->getFileName();
+              $item->result->queuetype = $q::QUEUE_NAME;
+              if ($imageItem->hasBackup())
+              {
+                $backupFile = $imageItem->getBackupFile();
+                $backup_url = $fs->pathToUrl($backupFile);
+                 $item->result->original = $backup_url;
+              }
+              else
+                $item->result->original = false;
+
+              $item->result->optimized = $fs->pathToUrl($imageItem);
+              
            }
            else
            {

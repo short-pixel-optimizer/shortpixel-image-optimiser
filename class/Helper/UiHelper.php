@@ -83,8 +83,12 @@ class UiHelper
     }
 
     $improvements = $imageObj->getImprovements();
-    $thumbsTotal = count($imageObj->get('thumbnails'));  //
-    $thumbsDone =  (isset($improvements['thumbnails'])) ? count($improvements['thumbnails']) : 0;
+    $thumbTotal = $thumbsDone = 0;
+    if ($imageObj->get('thumbnails'))
+    {
+      $thumbsTotal = count($imageObj->get('thumbnails'));  //
+      $thumbsDone =  (isset($improvements['thumbnails'])) ? count($improvements['thumbnails']) : 0;
+    }
 
     if (isset($improvements['thumbnails']))
     {
@@ -152,8 +156,7 @@ class UiHelper
 
       if ($mediaItem->isOptimized())
       {
-
-          $optimizable = $mediaItem->getOptimizeURLS();
+           $optimizable = $mediaItem->getOptimizeURLS();
 
            if (count($optimizable) > 0 )
            {
@@ -164,7 +167,10 @@ class UiHelper
 
           if ($mediaItem->hasBackup())
           {
-            $list_actions[] = self::getAction('compare', $id);
+            if ($mediaItem->get('type') == 'custom')
+                $list_actions[] = self::getAction('compare-custom', $id);
+            else
+              $list_actions[] = self::getAction('compare', $id);
 
            switch($mediaItem->getMeta('compressionType'))
            {
@@ -283,6 +289,12 @@ class UiHelper
 
      case 'compare':
         $action['function'] = 'ShortPixel.loadComparer(' . $id . ')';
+        $action['type'] = 'js';
+        $action['text'] = __('Compare', 'shortpixel-image-optimiser');
+        $action['display'] = 'inline';
+     break;
+     case 'compare-custom':
+        $action['function'] = 'ShortPixel.loadComparer(' . $id . ',"custom")';
         $action['type'] = 'js';
         $action['text'] = __('Compare', 'shortpixel-image-optimiser');
         $action['display'] = 'inline';

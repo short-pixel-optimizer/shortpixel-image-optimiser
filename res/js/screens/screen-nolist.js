@@ -6,11 +6,11 @@ var ShortPixelScreen = function (MainScreen, processor)
     this.isMedia = true;
     this.processor = processor;
 
-    this.init = function()
+    this.Init = function()
     {
 
     },
-    this.handleImage = function(result, type)
+    this.HandleImage = function(result, type)
     {
       /*  if (result.result.is_done == true)
         {
@@ -28,16 +28,16 @@ var ShortPixelScreen = function (MainScreen, processor)
         } */
     }
 
-    this.updateStats = function()
+    this.UpdateStats = function()
     {
 
     }
-    this.handleError = function()
+    this.HandleError = function()
     {
 
     }
 
-    this.renderItemView = function(e)
+    this.RenderItemView = function(e)
     {
       /*  var data = e.detail;
 

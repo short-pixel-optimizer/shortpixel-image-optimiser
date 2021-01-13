@@ -151,7 +151,6 @@ class AjaxController
 
         }
 
-
         $this->send($json);
 
     }
@@ -159,19 +158,9 @@ class AjaxController
     public function getMediaItem($id, $type)
     {
       $fs = \wpSPIO()->filesystem();
-      if ($type == 'media')
-      {
-      //  $queue = MediaLibraryQueue::getInstance();
-        $mediaItem = $fs->getMediaImage($id);
+      return $fs->getImage($id, $type);
 
-      }
-      elseif($type == 'custom')
-      {
-      //  $queue = CustomQueue::getInstance();
-        $mediaItem = $fs->getCustomImage($id);
-      }
 
-      return $mediaItem;
     }
 
     public function optimizeItem()
@@ -255,12 +244,13 @@ class AjaxController
         $ret = array();
         $fs = \wpSPIO()->filesystem();
 
-        if ($type == 'media')
-          $imageObj = $fs->getMediaImage($id);
+        $imageObj = $fs->getImage($id, $type);
 
         $backupFile = $imageObj->getBackupFile();
-
-        $backup_url = $fs->pathToUrl($backupFile);
+        if (is_object($backupFile))
+          $backup_url = $fs->pathToUrl($backupFile);
+        else
+          $backup_url = '';
 
         $ret['origUrl'] = $backup_url; // $backupUrl . $urlBkPath . $meta->getName();
 

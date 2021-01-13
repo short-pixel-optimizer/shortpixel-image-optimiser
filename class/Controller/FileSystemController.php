@@ -53,6 +53,20 @@ Class FileSystemController extends \ShortPixel\Controller
         return $imageObj;
     }
 
+    /** Generic function to get the correct image Object, to prevent many switches everywhere */
+    public function getImage($id, $type)
+    {
+      $imageObj = null;
+
+      if ($type == 'media')
+        $imageObj = $this->getMediaImage($id);
+      elseif($type == 'custom')
+        $imageObj = $this->getCustomImage($id);
+
+      return $imageObj;
+
+    }
+
     /** Get FileModel for a mediaLibrary post_id .
     *
     * This function exists to put get_attached_file to plugin control
@@ -204,7 +218,7 @@ Class FileSystemController extends \ShortPixel\Controller
         if (strpos($url, $wp_home_path) !== false)
         {
           // This is SITE URL, for the same reason it should be home_url in FILEMODEL. The difference is when the site is running on a subdirectory
-          // ** This is a fix for a real-life issue, do not change if this causes issues, another fix is needed then. 
+          // ** This is a fix for a real-life issue, do not change if this causes issues, another fix is needed then.
           $home_url = trailingslashit(get_site_url());
           $url = str_replace($wp_home_path, $home_url, $filepath);
         }

@@ -261,6 +261,8 @@ class ShortPixelPlugin
 
     wp_register_script ('shortpixel-screen-media', plugins_url('/res/js/screens/screen-media.js',SHORTPIXEL_PLUGIN_FILE), array('jquery', 'shortpixel-processor' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
+    wp_register_script ('shortpixel-screen-custom', plugins_url('/res/js/screens/screen-custom.js',SHORTPIXEL_PLUGIN_FILE), array('jquery', 'shortpixel-processor' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
+
     wp_register_script ('shortpixel-screen-nolist', plugins_url('/res/js/screens/screen-nolist.js',SHORTPIXEL_PLUGIN_FILE), array('jquery', 'shortpixel-processor' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
     wp_register_script ('shortpixel-screen-bulk', plugins_url('/res/js/screens/screen-bulk.js',SHORTPIXEL_PLUGIN_FILE), array('jquery', 'shortpixel-processor' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
@@ -487,7 +489,13 @@ class ShortPixelPlugin
 
     if ($plugin_page == 'wp-short-pixel-custom')
     {
-       $this->load_style('shortpixel-othermedia');
+      $this->load_style('shortpixel');
+      $this->load_style('shortpixel-modal'); // for comparer
+      $this->load_style('shortpixel-othermedia');
+
+      $this->load_script($load_processor);
+      $this->load_script('shortpixel-screen-custom'); // screen
+
     }
 
 

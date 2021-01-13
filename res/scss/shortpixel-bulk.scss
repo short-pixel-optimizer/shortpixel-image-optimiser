@@ -21,6 +21,10 @@
           margin-right: 20px;
       }
     }
+    i {
+      font-style: normal;
+    }
+
     p.description
     {
        font-size: 14px;
@@ -471,10 +475,23 @@
         .progressbar
         {
           width: 100px;
-          height: 10px;
+          height: 20px;
           position: relative;
           background: #ccc;
           display: inline-block;
+          .done-text
+          {
+            position: absolute;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 500;
+            top: 0;
+            bottom: 0;
+            padding: 5px 4px;
+            line-height: 10px;
+            z-index: 3;
+
+          }
           .done {
             position: absolute;
             z-index: 2;
@@ -493,18 +510,73 @@
          border: 1px solid #DFEAFF;
          width: 80%;
          margin: 15px auto;
+        .image-preview-line
+        {
+           display: flex;
+           width: 60%;
+           justify-content: space-between;
+           align-items: center;
+           margin: 15px auto;
+           max-width: 300px;
 
 
+           .opt-circle-image {
+               width: 40px;
+               height: 40px;
+               float: right;
+               margin-right: 35px;
+               .trail {
+                 stroke: #ddd;
+               }
+               .path {
+                 stroke: #1FBEC9;
+                 stroke-linecap: round;
+                 transition: stroke-dashoffset 0.5s ease 0s;
+               }
+               .text {
+
+                 fill: #1FBEC9;
+                 font-size: 28px;
+                 font-weight: 700;
+                 dominant-baseline: middle;
+                 text-anchor: middle;
+               }
+           }
+
+         }
          .preview-wrapper
          {
            display: flex;
-           width: 60%;
+        //   width: 60%;
            justify-content: center;
+           margin: 25px 0 40px 0;
            .image-source, .image-result
            {
-              min-width: 160px;
-              min-height: 180px;
+              width: 350px;
+              height: 350px;
               border: 1px solid #DFEAFF;
+              overflow: hidden;
+              position: relative;
+              img {
+                max-width: 100%;
+                max-height: 100%;
+              }
+              p {
+                position: absolute;
+                top: 0;
+                z-index: 2;
+                color: #fff;
+                background: rgba(0,0,0,0.5);
+                padding: 4px;
+              }
+           }
+           .image-source
+           {
+              margin-right: 8px;
+           }
+           .image-result
+           {
+             margin-left: 8px;
            }
          }
       }

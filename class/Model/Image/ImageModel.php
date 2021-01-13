@@ -64,6 +64,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     abstract protected function loadMeta();
     abstract protected function isSizeExcluded();
 
+    abstract protected function getImprovements();
+
     //abstract public function handleOptimized($tempFiles);
 
     // Construct
@@ -187,6 +189,27 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
       }
 
       return false;
+    }
+
+    public function getImprovement($int = false)
+    {
+        if ($this->isOptimized())
+        {
+            $original = $this->getMeta('originalSize');
+            $optimized = $this->getMeta('compressedSize');
+
+            //$diff = $original - $optimized;
+            if ($original == 0 || $optimized == 0)
+              return null;
+
+            if (! $int)
+              return number_format(100.0 * (1.0 - $optimized / $original), 2);
+            else
+              return $original - $optimized;
+
+        }
+        else
+          return null;
     }
 
 
@@ -319,6 +342,10 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         }
     }
 
+    /** Restores a backup to original file *
+    *
+    * **NOTE** This function only moves the file but doesn't save the meta, which should reflect the changes!
+    */
     public function restore()
     {
         if (! $this->isRestorable())

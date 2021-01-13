@@ -2,7 +2,7 @@
 namespace ShortPixel\Model\Image;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
-
+// @todo Custom Model for adding files, instead of meta DAO.
 class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 {
 
@@ -37,10 +37,25 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
     public function getOptimizeUrls()
     {
-        $fs = \wpSPIO()->filesytem();
+
+        $fs = \wpSPIO()->filesystem();
         $url = $fs->pathToUrl($this);
 
-        return array($url);
+        if ($this->isProcessable())
+          return array($url);
+
+        return array();
+    }
+
+    public function restore()
+    {
+       $bool = parent::restore();
+
+       if ($bool)
+        $this->saveMeta();
+
+        return true;
+
     }
 
     // Placeholder function. I think this functionality was not available before
@@ -51,6 +66,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
     public function loadMeta()
     {
+      var_dump(\wpSPIO()->getShortPixel());
       $metadao = \wpSPIO()->getShortPixel()->getSpMetaDao();
       $imagerow = $metadao->getItem($this->id);
 
@@ -59,7 +75,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
       else
         return false;
 
-      $metaObj = new ImageMeta();
+      $metaObj = new ImageThumbnailMeta();
 
       $this->fullpath = $imagerow->path;
       $this->folder_id = $imagerow->folder_id;
@@ -80,7 +96,6 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
       if (! is_numeric($imagerow->message))
         $this->error_message = $imagerow->message;
-
 
       if (intval($imagerow->keep_exif) == 1)
         $metaObj->did_keepExif = true;
@@ -106,10 +121,48 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         $this->image_meta = $metaObj;
     }
 
-    // @todo
     public function saveMeta()
     {
+      //  $metadao = \wpSPIO()->getShortPixel()->getSpMetaDao();
+        //$imagerow = $metadao->getItem($this->id);
 
+      //  $metadao->update($this->image_meta);
+        global $wpdb;
+
+       $table = $wpdb->prefix . 'shortpixel_meta';
+       $where = array('id' => $this->id);
+
+       $metaObj = $this->image_meta;
+
+       $data = array(
+            'compressed_size' => $metaObj->compressedSize,
+            'compressed_type' => $metaObj->compressionType,
+            'keep_exif' =>  ($metaObj->did_keepExif) ? 1 : 0,
+            'cmyk2rgb' =>  ($metaObj->did_cmyk2rgb) ? 1 : 0,
+            'resize' =>  ($metaObj->resize) ? 1 : 0,
+            'resize_width' => $metaObj->resizeWidth,
+            'resize_height' => $metaObj->resizeHeight,
+            'backup' => ($metaObj->has_backup) ? 1 : 0,
+            'status' => $metaObj->status,
+            'message' => $metaObj->improvement,
+            'tsOptimized' => $metaObj->tsOptimized,
+       );
+
+       $format = array(
+            '%d', '%d', '%d','%d','%d','%d','%d','%d','%d','%s', '%d',
+       );
+
+       $res = $wpdb->update($table, $data, $where, $format);
+
+      if ($res !== false)
+        return true;
+      else
+        return false;
     }
 
+
+    public function getImprovements()
+    {
+      return array(); // we have no thumbnails.
+    }
 }

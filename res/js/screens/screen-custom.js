@@ -2,8 +2,8 @@
 // MainScreen as an option for delegate functions
 var ShortPixelScreen = function (MainScreen, processor)
 {
-    this.isCustom = false;
-    this.isMedia = true;
+    this.isCustom = true;
+    this.isMedia = false;
     this.processor = processor;
 
 
@@ -13,12 +13,11 @@ var ShortPixelScreen = function (MainScreen, processor)
     },
     this.HandleImage = function(resultItem, type)
     {
-        if (type == 'custom')  // We don't eat that here.
+        if (type == 'media')  // We don't eat that here.
           return;
 
         if (typeof resultItem.result !== 'undefined')
         {
-            console.log(resultItem);
             // This is final, not more messing with this. In results (multiple) defined one level higher than result object, if single, it's in result.
             var item_id = typeof resultItem.item_id !== 'undefined' ? resultItem.item_id : resultItem.result.item_id;
             var message = resultItem.result.message;
@@ -84,12 +83,12 @@ var ShortPixelScreen = function (MainScreen, processor)
     this.RenderItemView = function(e)
     {
         var data = e.detail;
-
-        if (data.media)
+console.log(data);
+        if (data.custom)
         {
-            var id = data.media.id;
+            var id = data.custom.id;
             var element = document.getElementById('sp-msg-' + id);
-            element.outerHTML = data.media.result;
+            element.outerHTML = data.custom.result;
 
         }
         return true;
@@ -100,7 +99,7 @@ var ShortPixelScreen = function (MainScreen, processor)
         var data = {};
         //e.detail;
         data.id = id;
-        data.type = 'media';
+        data.type = 'custom';
         data.screen_action = 'restoreItem';
         //data.callback = 'this.loadItemView';
         // AjaxRequest should return result, which will go through Handleresponse, then LoadiTemView.
@@ -112,7 +111,7 @@ var ShortPixelScreen = function (MainScreen, processor)
         var data = {
            id : id ,
            compressionType: compression,
-           type: 'media',
+           type: 'custom',
            screen_action: 'reOptimizeItem'
         };
 
@@ -120,10 +119,9 @@ var ShortPixelScreen = function (MainScreen, processor)
     }
     this.Optimize = function (id)
     {
-
        var data = {
           id: id,
-          type: 'media',
+          type: 'custom',
           screen_action: 'optimizeItem'
        }
 

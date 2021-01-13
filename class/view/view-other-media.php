@@ -14,7 +14,7 @@ if ( isset($_GET['noheader']) ) {
 //$this->outputHSBeacon();
 \ShortPixel\HelpScout::outputBeacon();
 
-echo $this->view->rewriteHREF;
+//echo $this->view->rewriteHREF; // old reload.
 
 
 ?>
@@ -86,8 +86,11 @@ echo $this->view->rewriteHREF;
         <?php
         $folders = $this->view->folders;
 
-        foreach($this->view->items as $item): ?>
-        <div class='item item-C-<?php echo $item->id ?>'>
+        foreach($this->view->items as $item):
+
+          ?>
+
+        <div class='item item-C-<?php echo $item->get('id') ?>'>
             <?php
             //  $itemFile = $fs->getFile($item->path);
               $filesize = $item->getFileSize();
@@ -100,6 +103,8 @@ echo $this->view->rewriteHREF;
               $list_actions = UiHelper::getListActions($item);
               if (count($list_actions) > 0)
                 $list_actions = UiHelper::renderBurgerList($list_actions, $item);
+              else
+                $list_actions = '';
 
               $folder = isset($folders[$folder_id]) ? $folders[$folder_id] : false;
               $media_type = ($folder && $folder->isNextGen()) ? __('Nextgen', 'shortpixel-image-optimiser') : __('Custom', 'shortpixel_image_optimiser');
@@ -125,18 +130,28 @@ echo $this->view->rewriteHREF;
             <span class='folderpath'><?php echo (string) $item->getFileDir(); ?></span>
             <span class='mediatype'><?php echo $media_type ?></span>
             <span class="date"><?php echo $display_date ?></span>
-            <span id='sp-cust-msg-C-<?php echo $item->get('id') ?>'>
-              <span class='sp-column-info'><?php
+
+            <span >
+              <span id='sp-msg-<?php echo $item->get('id') ?>'  class='sp-column-info'><?php
               echo UiHelper::getStatusText($item);
               //echo $this->getDisplayStatus($item);
-               ?></span>
+               ?>
+             </span>
+             <span id="sp-message-<?php echo $item->get('id') ?>" class="messages">&nbsp;</span>
             </span>
             <span class='actions'>
               <?php
               if (count($actions) > 0)
               {
-                foreach ($action as $action)
-                  echo $action;
+                foreach($actions as $actionName => $action):
+                  $classes = ($action['display'] == 'button') ? " button-smaller button-primary $actionName " : "$actionName";
+                  $link = ($action['type'] == 'js') ? 'javascript:' . $action['function'] : $action['function'];
+
+                  ?>
+                  <a href="<?php echo $link ?>" class="<?php echo $classes ?>"><?php echo $action['text'] ?></a>
+
+                  <?php
+                endforeach;
               }
               echo $list_actions;
 

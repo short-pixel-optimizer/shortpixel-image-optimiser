@@ -289,11 +289,13 @@ window.ShortPixelProcessor =
                  //if (typeof this.screen.preparingDone == 'function')
                   // this.screen.PreparingDone();
              }
+
+             // React to status of the queue.
+             if (typeof this.screen.QueueStatus == 'function')
+              this.screen.QueueStatus(qstatus);
          }
 
-         // React to status of the queue.
-         if (typeof this.screen.QueueStatus == 'function')
-          this.screen.QueueStatus(qstatus);
+
          // Check for errors like Queue / Key / Maintenance / etc  (is_error true, pass message to screen)
 
          // If all is fine, there is more in queue, enter back into queue.

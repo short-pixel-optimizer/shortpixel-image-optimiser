@@ -12,6 +12,8 @@
   .shortpixel-bulk-wrapper h3.heading span {
     vertical-align: top;
     margin-right: 20px; }
+.shortpixel-bulk-wrapper i {
+  font-style: normal; }
 .shortpixel-bulk-wrapper p.description {
   font-size: 14px;
   max-width: 650px;
@@ -322,10 +324,20 @@
     border: 1px solid #EBF5FF; }
   .shortpixel-bulk-wrapper section.panel.process .bulk-summary .progressbar {
     width: 100px;
-    height: 10px;
+    height: 20px;
     position: relative;
     background: #ccc;
     display: inline-block; }
+    .shortpixel-bulk-wrapper section.panel.process .bulk-summary .progressbar .done-text {
+      position: absolute;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 500;
+      top: 0;
+      bottom: 0;
+      padding: 5px 4px;
+      line-height: 10px;
+      z-index: 3; }
     .shortpixel-bulk-wrapper section.panel.process .bulk-summary .progressbar .done {
       position: absolute;
       z-index: 2;
@@ -339,14 +351,54 @@
   border: 1px solid #DFEAFF;
   width: 80%;
   margin: 15px auto; }
-  .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper {
+  .shortpixel-bulk-wrapper section.panel.process .image-preview .image-preview-line {
     display: flex;
     width: 60%;
-    justify-content: center; }
+    justify-content: space-between;
+    align-items: center;
+    margin: 15px auto;
+    max-width: 300px; }
+    .shortpixel-bulk-wrapper section.panel.process .image-preview .image-preview-line .opt-circle-image {
+      width: 40px;
+      height: 40px;
+      float: right;
+      margin-right: 35px; }
+      .shortpixel-bulk-wrapper section.panel.process .image-preview .image-preview-line .opt-circle-image .trail {
+        stroke: #ddd; }
+      .shortpixel-bulk-wrapper section.panel.process .image-preview .image-preview-line .opt-circle-image .path {
+        stroke: #1FBEC9;
+        stroke-linecap: round;
+        transition: stroke-dashoffset 0.5s ease 0s; }
+      .shortpixel-bulk-wrapper section.panel.process .image-preview .image-preview-line .opt-circle-image .text {
+        fill: #1FBEC9;
+        font-size: 28px;
+        font-weight: 700;
+        dominant-baseline: middle;
+        text-anchor: middle; }
+  .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper {
+    display: flex;
+    justify-content: center;
+    margin: 25px 0 40px 0; }
     .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-source, .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-result {
-      min-width: 160px;
-      min-height: 180px;
-      border: 1px solid #DFEAFF; }
+      width: 350px;
+      height: 350px;
+      border: 1px solid #DFEAFF;
+      overflow: hidden;
+      position: relative; }
+      .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-source img, .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-result img {
+        max-width: 100%;
+        max-height: 100%; }
+      .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-source p, .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-result p {
+        position: absolute;
+        top: 0;
+        z-index: 2;
+        color: #fff;
+        background: rgba(0, 0, 0, 0.5);
+        padding: 4px; }
+    .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-source {
+      margin-right: 8px; }
+    .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-result {
+      margin-left: 8px; }
 .shortpixel-bulk-wrapper section.panel.process nav {
   width: 80%;
   margin: 35px auto; }

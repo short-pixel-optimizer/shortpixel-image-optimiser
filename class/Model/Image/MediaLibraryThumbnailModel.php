@@ -130,27 +130,13 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
     return array($fs->pathToUrl($this));
   }
 
-
-  public function getImprovement($int = false)
+  // Just a placeholder for abstract, shouldn't do anything.
+  public function getImprovements()
   {
-      if ($this->isOptimized())
-      {
-          $original = $this->getMeta('originalSize');
-          $optimized = $this->getMeta('compressedSize');
-
-          //$diff = $original - $optimized;
-          if ($original == 0 || $optimized == 0)
-            return null;
-
-          if (! $int)
-            return number_format(100.0 * (1.0 - $optimized / $original), 2);
-          else
-            return $original - $optimized;
-
-      }
-      else
-        return null;
+     return parent::getImprovements();
   }
+
+
 
   protected function isThumbnailProcessable()
   {
