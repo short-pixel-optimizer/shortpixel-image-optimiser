@@ -56,11 +56,6 @@ class ShortPixelPlugin
       return;
     }
 
-    // @todo Transitionary init for the time being, since plugin init functionality is still split between.
-    global $shortPixelPluginInstance;
-    $shortPixelPluginInstance = new \wpShortPixel();
-    $this->shortPixel = $shortPixelPluginInstance;
-
     $front = new Controller\FrontController();
     $admin = Controller\AdminController::getInstance();
     $adminNotices = Controller\AdminNoticesController::getInstance(); // Hook in the admin notices.
@@ -76,7 +71,7 @@ class ShortPixelPlugin
   /** Mainline Admin Init. Tasks that can be loaded later should go here */
   public function init()
   {
-      $this->shortPixel->loadHooks();
+      $this->getShortPixel()->loadHooks();
 
       $notices = Notices::getInstance(); // This hooks the ajax listener
 
@@ -195,7 +190,7 @@ class ShortPixelPlugin
       // settings page
       $admin_pages[] = add_options_page( __('ShortPixel Settings','shortpixel-image-optimiser'), 'ShortPixel', 'manage_options', 'wp-shortpixel-settings', array($this, 'route'));
 
-      if($this->shortPixel->getSpMetaDao()->hasFoldersTable() && count($this->shortPixel->getSpMetaDao()->getFolders())) {
+      if($this->getShortPixel()->getSpMetaDao()->hasFoldersTable() && count($this->getShortPixel()->getSpMetaDao()->getFolders())) {
           /*translators: title and menu name for the Other media page*/
         $admin_pages[] = add_media_page( __('Other Media Optimized by ShortPixel','shortpixel-image-optimiser'), __('Other Media','shortpixel-image-optimiser'), 'edit_others_posts', 'wp-short-pixel-custom', array( $this, 'route' ) );
       }
@@ -596,8 +591,16 @@ class ShortPixelPlugin
   }
 
   // Get the ShortPixel Object.
+  // @todo Transitionary init for the time being, since plugin init functionality is still split between.
   public function getShortPixel()
   {
+    if (is_null($this->shortPixel))
+    {
+      global $shortPixelPluginInstance;
+      $shortPixelPluginInstance = new \wpShortPixel();
+      $this->shortPixel = $shortPixelPluginInstance;
+    }
+
     return $this->shortPixel;
   }
 

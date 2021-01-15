@@ -8,6 +8,8 @@ use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 
 use ShortPixel\Controller\Queue\CustomQueue as CustomQueue;
 
+use ShortPixel\Helper\UiHelper as UiHelper;
+
 // Future contoller for the edit media metabox view.
 class OtherMediaViewController extends \ShortPixel\Controller
 {
@@ -486,6 +488,32 @@ class OtherMediaViewController extends \ShortPixel\Controller
           }
 
           return $this->renderActions($thisActions, $item);
+      }
+
+      // Use for view, also for renderItemView
+      public function printItemActions($item)
+      {
+        $actions = UiHelper::getActions($item); // $this->getActions($item, $itemFile);
+
+        $list_actions = UiHelper::getListActions($item);
+        if (count($list_actions) > 0)
+          $list_actions = UiHelper::renderBurgerList($list_actions, $item);
+        else
+          $list_actions = '';
+
+        if (count($actions) > 0)
+        {
+          foreach($actions as $actionName => $action):
+            $classes = ($action['display'] == 'button') ? " button-smaller button-primary $actionName " : "$actionName";
+            $link = ($action['type'] == 'js') ? 'javascript:' . $action['function'] : $action['function'];
+
+            ?>
+            <a href="<?php echo $link ?>" class="<?php echo $classes ?>"><?php echo $action['text'] ?></a>
+
+            <?php
+          endforeach;
+        }
+        echo $list_actions;
       }
 
       /* Actions to list in the action menu */

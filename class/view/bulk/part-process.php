@@ -49,7 +49,7 @@ namespace ShortPixel;
       </div>
       <div>
         <span>Items processed: <i data-stats-media="done">-</i></span>
-        <span>Processing : <i data-stats-media="in_progress">-</i></span>
+        <span>Processing : <i data-stats-media="in_process">-</i></span>
         <span>Items Left <i data-stats-media="in_queue">-</i></span>
         <span>Errors : <i data-stats-media="errors">-</i> Check Errors</span>
       </div>

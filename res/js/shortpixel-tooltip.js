@@ -29,6 +29,18 @@ var ShortPixelToolTip = function(reserved, processor)
     }
     this.RefreshStats = function(stats) // Meant to put a 'todo' number in the tooltip when processing
     {
+        var toolTip = this.GetToolTip();
+        var statTip = toolTip.querySelector('.stats');
+
+        if (statTip == null)
+          return;
+
+        statTip.textContent = stats;
+
+        if (statTip.classList.contains('hidden') && stats > 0)
+          statTip.classList.remove('hidden');
+        else if (! statTip.classList.contains('hidden') && stats == 0)
+          statTip.classList.add('hidden')
 
 
     }

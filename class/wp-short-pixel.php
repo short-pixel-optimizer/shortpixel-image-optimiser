@@ -476,7 +476,7 @@ class WPShortPixel {
             //$icon = "shortpixel-alert.png";
         }
         $lastStatus = $this->_settings->bulkLastStatus;
-        if($lastStatus && $lastStatus['Status'] !== ShortPixelAPI::STATUS_SUCCESS) {
+      /*  if($lastStatus && $lastStatus['Status'] !== ShortPixelAPI::STATUS_SUCCESS) {
             $extraClasses = " shortpixel-alert shortpixel-processing";
             $tooltip = '';
 
@@ -489,13 +489,15 @@ class WPShortPixel {
             {
               $link = 'upload.php';
             }
+            // off with the links
+
             $successLink = $link;
 
             $wp_admin_bar->add_node( array(
                 'id'    => 'shortpixel_processing-title',
                 'parent' => 'shortpixel_processing',
                 'title' => $lastStatus['Message'],
-                'href'  => $successLink
+                'href'  => '#' //$successLink
             ));
             $wp_admin_bar->add_node( array(
                 'id'    => 'shortpixel_processing-dismiss',
@@ -504,11 +506,11 @@ class WPShortPixel {
                 'href'  => "#",
                 'meta'  => array('onclick'=> 'dismissFileError(event)')
             ));
-        }
+        } */
 
         $args = array(
                 'id'    => 'shortpixel_processing',
-                'title' => '<div id="' . $id . '" title="' . $tooltip . '" ><span class="stats">4</span><img alt="' . __('ShortPixel icon','shortpixel-image-optimiser') . '" src="'
+                'title' => '<div id="' . $id . '" title="' . $tooltip . '" ><span class="stats hidden">0</span><img alt="' . __('ShortPixel icon','shortpixel-image-optimiser') . '" src="'
                          . plugins_url( 'res/img/'.$icon, SHORTPIXEL_PLUGIN_FILE ) . '" success-url="' . $successLink . '"><span class="shp-alert">!</span>'
                          . '<div class="controls">
                               <span class="dashicons dashicons-controls-pause pause" title="' . __('Pause', 'shortpixel-image-optimiser') . '">&nbsp;</span>
@@ -516,7 +518,7 @@ class WPShortPixel {
                             </div>'
 
                          .'<div class="cssload-container"><div class="cssload-speeding-wheel"></div></div></div>',
-                'href'  => $link,
+                'href'  => 'javascript:void(0)', // $link,
                 'meta'  => array('target'=> $blank, 'class' => 'shortpixel-toolbar-processing' . $extraClasses)
         );
         $wp_admin_bar->add_node( $args );

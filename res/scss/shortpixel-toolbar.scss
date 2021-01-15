@@ -32,6 +32,25 @@ CSS for features that are displayed on all Admin page, like the bar status icon 
        span.shp-alert {
          display:none;
        }
+       .stats
+       {
+         left: -1px;
+         top: 3px;
+         right: 0;
+         position: absolute;
+         z-index: 10;
+         height: 25px;
+         width: 25px;
+         margin: 0 auto;
+         box-sizing: border-box;
+         border-radius: 50%;
+         padding: 5px 0 0 7px;
+         font-weight: 500;
+         font-size: 14px;
+         line-height: 14px;
+         background: rgba(0,0,0,0.6);
+         color: #fff;
+       }
        .controls
        {
            position: absolute;
@@ -132,6 +151,11 @@ CSS for features that are displayed on all Admin page, like the bar status icon 
          visibility: visible;
          opacity: 1;
          z-index: 100;
+       }
+       .stats
+       {
+          opacity: 0;
+          z-index: 0;
        }
    }
    &.shortpixel-alert // alert active.

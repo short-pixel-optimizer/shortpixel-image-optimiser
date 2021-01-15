@@ -223,7 +223,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     public function handleOptimized($downloadResults)
     {
         $settings = \wpSPIO()->settings();
-
+        Log::addTemp('Download Results ', $downloadResults);
         foreach($downloadResults as $urlName => $resultObj)
         {
             if ($urlName != $this->getFileName())
@@ -318,6 +318,10 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         }
 
         Log::addWarn('Could not find images of this item in tempfile -' . $this->id . '(' . $this->getFullPath() . ')', array_keys($downloadResults) );
+
+
+        ResponseController::add()->asError()->withMessage( sprintf(__('Image %s is reporting as optimized, but file couldn\'t be found in the downloaded files', 'shortpixel-image-optimiser'), $this->getFileName() ));
+
         return null;
     }
 

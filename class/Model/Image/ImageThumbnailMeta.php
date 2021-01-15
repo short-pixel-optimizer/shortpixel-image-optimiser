@@ -13,7 +13,11 @@ class ImageThumbnailMeta
   public $tsOptimized;
   public $webp;
 
-  public $file; // **Only for unlisted images. This defines an unlisted image */ 
+  public $file; // **Only for unlisted images. This defines an unlisted image */
+
+
+  // Only for customImageModel! Exception to prevent having to create a whole class. Second var here, warrants a subclass.
+  public $customImprovement;
 
 //  public $has_backup;
 

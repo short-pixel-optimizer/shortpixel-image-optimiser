@@ -66,7 +66,6 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
     public function loadMeta()
     {
-      var_dump(\wpSPIO()->getShortPixel());
       $metadao = \wpSPIO()->getShortPixel()->getSpMetaDao();
       $imagerow = $metadao->getItem($this->id);
 
@@ -75,7 +74,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
       else
         return false;
 
-      $metaObj = new ImageThumbnailMeta();
+      $metaObj = new ImageMeta();
 
       $this->fullpath = $imagerow->path;
       $this->folder_id = $imagerow->folder_id;
@@ -86,7 +85,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
       if ($status == ImageModel::FILE_STATUS_SUCCESS)
       {
-        $metaObj->improvement = $imagerow->message;
+        $metaObj->customImprovement = $imagerow->message;
         $optimizedDate = \DateTime::createFromFormat('Y-m-d H:i:s', $imagerow->ts_optimized);
         $metaObj->tsOptimized = $optimizedDate->getTimestamp();
       }
@@ -94,17 +93,15 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
       $metaObj->compressedSize = intval($imagerow->compressed_size);
       $metaObj->compressionType = intval($imagerow->compression_type);
 
-      if (! is_numeric($imagerow->message))
-        $this->error_message = $imagerow->message;
+      if (! is_numeric($imagerow->message) && ! is_null($imagerow->message))
+        $metaObj->errorMessage = $imagerow->message;
 
-      if (intval($imagerow->keep_exif) == 1)
-        $metaObj->did_keepExif = true;
 
-      if(intval($imagerow->cmyk2rgb) == 1)
-        $metaObj->did_cmyk2rgb = true;
+      $metaObj->did_keepExif = (intval($imagerow->keep_exif) == 1)  ? true : false;
 
-      if (intval($imagerow->resize) > 1)
-        $metaObj->resize = true;
+      $metaObj->did_cmyk2rgb = (intval($imagerow->cmyk2rgb) == 1) ? true : false;
+
+      $metaObj->resize = (intval($imagerow->resize) > 1) ? true : false;
 
       if (intval($imagerow->resize_width) > 0)
         $metaObj->resizeWidth = intval($imagerow->resize_width);
@@ -112,8 +109,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
       if (intval($imagerow->resize_height) > 0)
         $metaObj->resizeHeight = intval($imagerow->resize_height);
 
-      if (intval($imagerow->backup) == 1)
-        $metaObj->has_backup = true;
+        $metaObj->has_backup = (intval($imagerow->backup) == 1) ? true : false;
 
         $addedDate = \DateTime::createFromFormat('Y-m-d H:i:s', $imagerow->ts_added);
         $metaObj->tsAdded = $addedDate->getTimestamp();
@@ -123,10 +119,6 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
     public function saveMeta()
     {
-      //  $metadao = \wpSPIO()->getShortPixel()->getSpMetaDao();
-        //$imagerow = $metadao->getItem($this->id);
-
-      //  $metadao->update($this->image_meta);
         global $wpdb;
 
        $table = $wpdb->prefix . 'shortpixel_meta';
@@ -134,9 +126,17 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
        $metaObj = $this->image_meta;
 
+       if (! is_null($metaObj->customImprovement) && is_numeric($metaObj->customImprovement))
+        $message = $metaObj->customImprovement;
+       elseif (! is_null($metaObj->errorMessage))
+        $message = $metaObj->errorMessage;
+
+      $optimized = new \DateTime();
+      $optimized->setTimestamp($metaObj->tsOptimized);
+
        $data = array(
             'compressed_size' => $metaObj->compressedSize,
-            'compressed_type' => $metaObj->compressionType,
+            'compression_type' => $metaObj->compressionType,
             'keep_exif' =>  ($metaObj->did_keepExif) ? 1 : 0,
             'cmyk2rgb' =>  ($metaObj->did_cmyk2rgb) ? 1 : 0,
             'resize' =>  ($metaObj->resize) ? 1 : 0,
@@ -144,12 +144,12 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
             'resize_height' => $metaObj->resizeHeight,
             'backup' => ($metaObj->has_backup) ? 1 : 0,
             'status' => $metaObj->status,
-            'message' => $metaObj->improvement,
-            'tsOptimized' => $metaObj->tsOptimized,
+            'message' => $message,
+            'ts_optimized' => $optimized->format('Y-m-d H:i:s'),
        );
 
        $format = array(
-            '%d', '%d', '%d','%d','%d','%d','%d','%d','%d','%s', '%d',
+            '%d', '%d', '%d','%d','%d','%d','%d','%d','%d','%s', '%s',
        );
 
        $res = $wpdb->update($table, $data, $where, $format);

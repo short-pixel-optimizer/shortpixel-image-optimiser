@@ -215,6 +215,8 @@ window.ShortPixelProcessor =
               this.HandleResponse(response.total, 'total');
            }
 
+           this.HandleStatus(response);
+
       }
 
     },
@@ -255,50 +257,65 @@ window.ShortPixelProcessor =
             this.screen.UpdateStats(response.stats, type);
          }
 
-         // @todo Check for empty queue across all queues.
-
-         if (typeof response.qstatus !== 'undefined')
-         {
-            var qstatus = this.qStatus[response.qstatus];
-             if (qstatus == 'QUEUE_ITEMS' || qstatus == "PREPARING")
-             {
-               console.log('Qstatus Preparing');
-                this.timesEmpty = 0;
-                this.RunProcess();
-             }
-             if (qstatus == 'QUEUE_WAITING')
-             {
-                console.log('Item in Queue, but waiting');
-                this.timesEmpty++;
-                this.RunProcess(); // run another queue with timeout
-             }
-             else if (qstatus == 'QUEUE_EMPTY')
-             {
-                 console.debug('Processor: Empty Queue');
-                 this.tooltip.ProcessEnd();
-                 this.StopProcess();
-             }
-             else if (qstatus == "PREPARING_DONE")
-             {
-                 console.log('Processor: Preparing is done');
-                 this.tooltip.ProcessEnd();
-                 this.StopProcess();
-
-
-
-                 //if (typeof this.screen.preparingDone == 'function')
-                  // this.screen.PreparingDone();
-             }
-
-             // React to status of the queue.
-             if (typeof this.screen.QueueStatus == 'function')
-              this.screen.QueueStatus(qstatus);
-         }
-
-
          // Check for errors like Queue / Key / Maintenance / etc  (is_error true, pass message to screen)
 
          // If all is fine, there is more in queue, enter back into queue.
+    },
+    /// If both are reported back, both did tick, so both must be considered.
+    HandleStatus: function(data)
+    {
+      var mediaStatus = customStatus = 100;
+      if (typeof data.media !== 'undefined' && typeof data.media.qstatus !== 'undefined' )
+         mediaStatus = data.media.qstatus;
+      if (typeof data.custom !== 'undefined' && typeof data.custom.qstatus !== 'undefined')
+        customStatus = data.custom.qstatus;
+
+
+        // The lowest queue status (for now) equals earlier in process. Don't halt until both are done.
+        if (mediaStatus <= customStatus)
+          var combinedStatus = mediaStatus;
+        else
+          var combinedStatus = customStatus;
+
+      if (combinedStatus == 100)
+        return false; // no status in this request.
+
+
+      if (typeof combinedStatus !== 'undefined')
+      {
+         var qstatus = this.qStatus[combinedStatus];
+          if (qstatus == 'QUEUE_ITEMS' || qstatus == "PREPARING")
+          {
+            console.log('Qstatus Preparing');
+             this.timesEmpty = 0;
+             this.RunProcess();
+          }
+          if (qstatus == 'QUEUE_WAITING')
+          {
+             console.log('Item in Queue, but waiting');
+             this.timesEmpty++;
+             this.RunProcess(); // run another queue with timeout
+          }
+          else if (qstatus == 'QUEUE_EMPTY')
+          {
+              console.debug('Processor: Empty Queue');
+              this.tooltip.ProcessEnd();
+              this.StopProcess();
+          }
+          else if (qstatus == "PREPARING_DONE")
+          {
+              console.log('Processor: Preparing is done');
+              this.tooltip.ProcessEnd();
+              this.StopProcess();
+
+              //if (typeof this.screen.preparingDone == 'function')
+               // this.screen.PreparingDone();
+          }
+
+          // React to status of the queue.
+          if (typeof this.screen.QueueStatus == 'function')
+           this.screen.QueueStatus(qstatus, data);
+      }
     },
     LoadItemView: function(data)
     {

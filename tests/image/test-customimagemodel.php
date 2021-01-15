@@ -10,6 +10,7 @@ class CustomImageModelTest extends  WP_UnitTestCase
 {
 
   static $fs;
+  static $imagePath;
 
   public function setUp()
   {
@@ -37,10 +38,15 @@ class CustomImageModelTest extends  WP_UnitTestCase
       //@todo same as in test conversion. This needs streamlining
       $upload_dir = wp_upload_dir('2020/11', true);
 
-      $source = self::$fs->getFile('assets/image1.jpg');
-      $target = self::$fs->getFile($upload_dir['path'] . '/');
+      $source = self::$fs->getFile( dirname(__FILE__)  . '/assets/image1.jpg');
+      $target = self::$fs->getFile($upload_dir['path'] . '/image1.jpg');
       $source->copy($target);
 
+      self::$imagePath = $target->getFullPath();
+
+      global $wpdb;
+      $table = $wpdb->prefix . 'shortpixel_meta';
+      $wpdb->query('DELETE FROM ' . $table);
 /*      $zip = new ZipArchive;
       $res = $zip->open( dirname(__FILE__) . '/assets/test-conversion.zip');
       //var_dump(dirname(__FILE__) . '/assets/test-conversion.zip');
@@ -62,24 +68,28 @@ class CustomImageModelTest extends  WP_UnitTestCase
 
        $data = array(
             'compressed_size' => 500,
-            'compressed_type' => 1,
+            'compression_type' => 1,
+            'path' => self::$imagePath,
+            'path_md5' => md5(self::$imagePath),
             'keep_exif' =>  1,
             'cmyk2rgb' =>  0,
             'resize' =>  1,
             'resize_width' => 1024,
             'resize_height' => 700,
             'backup' => 1,
-            'status' => 2, // FILE_STATUS_SUCCESS,
+            'status' => ImageModel::FILE_STATUS_SUCCESS, // FILE_STATUS_SUCCESS,
             'message' => 1.25,
-            'tsOptimized' => 100,
+            'ts_optimized' => date("Y-m-d H:i:s"),
        );
 
        $format = array(
-          '%d', '%d', '%d','%d','%d','%d','%d','%d','%d','%s', '%d',
+          '%d', '%d', '%s', '%s', '%d','%d','%d','%d','%d','%d','%d','%s', '%s',
        );
 
        $res = $wpdb->insert($table, $data, $format);
        $id =  $wpdb->insert_id;
+
+       $this->assertGreaterThan(0, $id);
 
        $customObj = self::$fs->getImage($id, 'custom');
 
@@ -88,12 +98,32 @@ class CustomImageModelTest extends  WP_UnitTestCase
        $this->assertEquals('image1.jpg', $customObj->getFileName());
        $this->assertTrue($customObj->exists());
 
-       $this->assertEquals(2, $customObj->getMeta('status'));
+       $this->assertEquals(ImageModel::FILE_STATUS_SUCCESS, $customObj->getMeta('status'));
 
        $this->assertTrue($customObj->isOptimized());
        $this->assertFalse($customObj->hasBackup());
        $this->assertTrue($customObj->getMeta('did_keepExif'));
-       $this->assertFals($customObj->getMeta('did_cmyk2rgb'));
+       $this->assertFalse($customObj->getMeta('did_cmyk2rgb'));
+       $this->assertEquals(1.25, $customObj->getMeta('customImprovement'));
+       $this->assertNull($customObj->getMeta('error_message'));
+
+       $customObj->setMeta('status', ImageModel::FILE_STATUS_UNPROCESSED );
+       $customObj->setMeta('errorMessage', 'StringIsError');
+       $customObj->setMeta('customImprovement', null);
+
+       $customObj->saveMeta();
+
+       $this->assertEquals(ImageModel::FILE_STATUS_UNPROCESSED, $customObj->getMeta('status'));
+       $this->assertEquals('StringIsError', $customObj->getMeta('errorMessage'));
+       $this->assertNull($customObj->getMeta('customImprovement'));
+       $this->assertGreaterThan(0, $customObj->getMeta('tsOptimized'));
+
+       $newObj = self::$fs->getImage($id, 'custom');
+
+       $this->assertEquals(ImageModel::FILE_STATUS_UNPROCESSED, $newObj->getMeta('status'));
+       $this->assertEquals('StringIsError', $newObj->getMeta('errorMessage'));
+       $this->assertNull($newObj->getMeta('customImprovement'));
+
 
   }
 

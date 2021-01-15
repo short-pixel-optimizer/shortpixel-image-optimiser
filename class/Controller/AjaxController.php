@@ -4,6 +4,7 @@ namespace ShortPixel\Controller;
 
 
 use ShortPixel\Controller\View\ListMediaViewController as ListMediaViewController;
+use ShortPixel\Controller\View\OtherMediaViewController as OtherMediaViewController;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 //use ShortPixel\Controller\BulkController as BulkController;
@@ -31,7 +32,6 @@ class AjaxController
       $secretKey = $bulkSecret->getValue();
       if (is_null($secretKey) || strlen($secretKey) == 0)
         $secretKey = false;
-
 
       return $secretKey;
     }
@@ -67,6 +67,15 @@ class AjaxController
                ob_start();
                   $control = new ListMediaViewController();
                   $control->doColumn('wp-shortPixel', $id);
+                $result = ob_get_contents();
+                ob_end_clean();
+             }
+             if ($type == 'custom')
+             {
+                ob_start();
+                   $control = new OtherMediaViewController();
+                   $item = \wpSPIO()->filesystem()->getImage($id, 'custom');
+                   $control->printItemActions($item);
                 $result = ob_get_contents();
                 ob_end_clean();
              }

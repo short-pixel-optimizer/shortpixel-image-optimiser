@@ -30,8 +30,8 @@ var ShortPixelScreen = function (MainScreen, processor)
             if (element !== null)
             {
               element.innerHTML = '';
-            //  var event = new CustomEvent('shortpixel.loadItemView', {detail: {'type' : type, 'id': result.id }}); // send for new item view.
-            var fileStatus = processor.fStatus[resultItem.result.status];
+
+            var fileStatus = processor.fStatus[resultItem.fileStatus];
 
               if (fileStatus == 'FILE_SUCCESS' || fileStatus == 'FILE_RESTORED' || resultItem.result.is_done == true)
               {
@@ -40,9 +40,10 @@ var ShortPixelScreen = function (MainScreen, processor)
               }
               else if (fileStatus == 'FILE_PENDING')
               {
-                 element.style.display = 'none';
+                 //element.style.display = 'none';
+                //this.UpdateMessage(item_id, )
               }
-              //window.dispatchEvent(event);
+
             }
         }
         else
@@ -50,14 +51,7 @@ var ShortPixelScreen = function (MainScreen, processor)
           console.error('handleImage without Result');
           console.log(resultItem);
         }
-        /*if (result.message)
-        {
-           var element = document.getElementById('sp-message-' + result.item_id); // empty result box while getting
-           if (element !== null)
-           {
-               element.innerHTML = result.message;
-           }
-        } */
+
     }
 
     this.UpdateMessage = function(id, message)
@@ -71,9 +65,10 @@ var ShortPixelScreen = function (MainScreen, processor)
         console.error('Update Message coloumn not found ' + id);
     }
 
-    this.UpdateStats = function()
+    this.UpdateStats = function(stats, type)
     {
-
+        var waiting = stats.in_queue + stats.in_process;
+        this.processor.tooltip.RefreshStats(stats.in_queue);
     }
     this.HandleError = function()
     {
@@ -87,7 +82,7 @@ console.log(data);
         if (data.custom)
         {
             var id = data.custom.id;
-            var element = document.getElementById('sp-msg-' + id);
+            var element = document.getElementById('sp-actions-' + id);
             element.outerHTML = data.custom.result;
 
         }

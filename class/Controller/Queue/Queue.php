@@ -39,16 +39,6 @@ abstract class Queue
 
     abstract protected function prepare();
 
-    public static function getInstance()
-    {
-       if (is_null(self::$instance))
-       {
-          $class = get_called_class();
-          self::$instance = new $class();
-       }
-
-       return self::$instance;
-    }
 
     /** Enqueues a single items into the urgent queue list
     *   - Should not be used for bulk images
@@ -102,10 +92,12 @@ abstract class Queue
        }
        elseif ($this->getStatus('bulk_running'))
        {
+            Log::addTemp('Bulk Running on this Q, doing deQueue' . static::QUEUE_NAME);
             $items = $this->deQueue();
        }
        else
        {
+            Log::addTemp('NO Bulk Running on this Q, doing deQueuePriority' . static::QUEUE_NAME);
             $items = $this->deQueuePriority();
        }
 
@@ -152,10 +144,10 @@ abstract class Queue
       $stats->is_running = $this->getStatus('running');
       $stats->is_finished = $this->getStatus('finished');
       $stats->in_queue = $this->getStatus('items');
-      $stats->in_progress = $this->getStatus('in_process');
+      $stats->in_process = $this->getStatus('in_process');
       $stats->errors = $this->getStatus('errors');
       $stats->done = $this->getStatus('done');
-      $stats->total = $stats->in_queue + $stats->errors + $stats->done + $stats->in_progress;
+      $stats->total = $stats->in_queue + $stats->errors + $stats->done + $stats->in_process;
       $stats->percentage_done = round((100 / $stats->total) * $stats->done);
 
       $cache = new CacheController();
@@ -172,7 +164,7 @@ abstract class Queue
 
     public function getQueueName()
     {
-       return self::QUEUE_NAME;
+       return static::QUEUE_NAME;
     }
 
     protected function getStatus($name = false)

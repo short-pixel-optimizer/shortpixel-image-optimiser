@@ -69,7 +69,7 @@ class OptimizeController
           $json->is_error = true;
           $json->result->is_error = true;
           $json->result->message = __('Error - item could not be found', 'shortpixel-image-optimiser');
-          $json->result->status = ImageModel::FILE_STATUS_ERROR;
+          $json->result->fileStatus = ImageModel::FILE_STATUS_ERROR;
           ResponseController::add()->withMessage($json->message)->asError();
           //return $json;
         }
@@ -78,7 +78,7 @@ class OptimizeController
         {
           $json->result->message = $mediaItem->getProcessableReason();
           $json->result->is_error = true;
-          $json->result->status = ImageModel::FILE_STATUS_ERROR;
+          $json->result->fileStatus = ImageModel::FILE_STATUS_ERROR;
           ResponseController::add()->withMessage($json->message)->asError();
         }
         else
@@ -99,7 +99,7 @@ class OptimizeController
           }
 
             $json->qstatus = $result->qstatus;
-            $json->result->status = ImageModel::FILE_STATUS_PENDING;
+            $json->result->fileStatus = ImageModel::FILE_STATUS_PENDING;
             $json->result->is_error = false;
             $json->result->message = __('Optimizing, please wait', 'shortpixel-image-optimiser');
         }
@@ -121,14 +121,14 @@ class OptimizeController
         {
            $json->status = 1;
            $json->result->message = __('Item restored', 'shortpixel-image-optimiser');
-           $json->result->status = ImageModel::FILE_STATUS_RESTORED;
+           $json->fileStatus = ImageModel::FILE_STATUS_RESTORED;
            $json->result->is_done = true;
         }
         else
         {
            $json->result->message = __('Item not restorable', 'shortpixel-image-optimiser');
            $json->result->is_done = true;
-           $json->result->status = ImageModel::FILE_STATUS_ERROR;
+           $json->fileStatus = ImageModel::FILE_STATUS_ERROR;
            $json->result->is_error = true;
 
         }
@@ -181,36 +181,45 @@ class OptimizeController
         }
 
         $mediaQ = MediaLibraryQueue::getInstance();
-        $result = $mediaQ->run();
-        $results = array();
-
-        // Items is array in case of a dequeue
-        $items = (isset($result->items) && is_array($result->items)) ? $result->items : array();
-
-        // Only runs if result is array, dequeued items.
-        foreach($items as $index => $item)
-        {
-            $urls = $item->urls;
-            if (property_exists($item, 'png2jpg'))
-              $item = $this->convertPNG($item, $mediaQ);
-
-            $item = $this->sendToProcessing($item);
-            $item = $this->handleAPIResult($item, $mediaQ);
-            $result->items[$index] = $item; // replace processed item, should have result now.
-
-          //  $result = $api->doRequests($urls, $blocking);
-        }
-
-        $result->stats = $mediaQ->getStats();
-        $json = $this->queueToJson($result);
-        $results['media'] = $json;
-
         $customQ = CustomQueue::getInstance();
-        $results['custom'] = false; // @todo Implement
 
-        $results['total'] = $this->calculateStatsTotals($results);
+        Log::addtemp('CustomQ - ' . $customQ->getQueueName());
+
+        $results = new \stdClass;
+        $results->media = $this->runTick($mediaQ); // run once on mediaQ
+        $results->custom = $this->runTick($customQ);
+        $results->total = $this->calculateStatsTotals($results);
 
         return $results;
+    }
+
+    private function runTick($Q)
+    {
+      $result = $Q->run();
+      $results = array();
+
+      // Items is array in case of a dequeue
+      $items = (isset($result->items) && is_array($result->items)) ? $result->items : array();
+
+      // Only runs if result is array, dequeued items.
+      foreach($items as $index => $item)
+      {
+          $urls = $item->urls;
+          if (property_exists($item, 'png2jpg'))
+            $item = $this->convertPNG($item, $Q);
+
+          $item = $this->sendToProcessing($item);
+          $item = $this->handleAPIResult($item, $Q);
+          $result->items[$index] = $item; // replace processed item, should have result now.
+
+        //  $result = $api->doRequests($urls, $blocking);
+      }
+
+      $result->stats = $Q->getStats();
+      $json = $this->queueToJson($result);
+
+      return $json;
+
     }
 
 
@@ -266,17 +275,21 @@ class OptimizeController
       }
       elseif ($result->is_done)
       {
-         if ($result->status == ApiController::STATUS_SUCCESS )
+         if ($result->apiStatus == ApiController::STATUS_SUCCESS )
          {
            $queue_name = $q->getQueueName();
-           if ($queue_name == 'Media')
+           $type = strtolower($queue_name);
+           /*if ($queue_name == 'Media')
            {
               $imageItem = $fs->getMediaImage($item->item_id);
            }
            elseif ($queue_name == 'Custom')
            {
              $imageItem = $fs->getCustomImage($item->item_id);
-           }
+           } */
+
+           $imageItem = $fs->getImage($item->item_id, $type);
+
 
            $tempFiles = array();
 
@@ -286,10 +299,8 @@ class OptimizeController
              $imageItem->setMeta('compressionType', $item->compressionType);
 
            }
-           /*foreach($result->files as $index => $fileResult)
-           {
-              $tempFiles[$index] = $fileResult->file;
-           } */
+
+
            Log::addTemp('Going to Handle Optimize --> ', array_keys($result->files));
            if (count($result->files) > 0 )
            {
@@ -298,13 +309,16 @@ class OptimizeController
 
               if ($optimizeResult)
               {
-                 $item->result->status = ApiController::STATUS_SUCCESS;
+                 $item->result->apiStatus = ApiController::STATUS_SUCCESS;
+                 $item->fileStatus = ImageModel::FILE_STATUS_SUCCESS;
                  $item->result->message = sprintf(__('Image %s optimized', 'shortpixel-image-optimiser'), $item->item_id);
                }
                else
               {
-                 $item->result->status = ApiController::STATUS_ERROR;
-                 $item->result->message = sprintf(__('Image %s optimized with errors', 'shortpixel-image-optimiser'), $item->item_id);
+                 $item->result->apiStatus = ApiController::STATUS_ERROR;
+                 $item->fileStatus = ImageModel::FILE_STATUS_ERROR;
+                 $item->result->message = sprintf(__('Image not optimized with errors', 'shortpixel-image-optimiser'), $item->item_id);
+
               }
 
               unset($item->result->files);
@@ -320,19 +334,28 @@ class OptimizeController
                 $item->result->original = false;
 
               $item->result->optimized = $fs->pathToUrl($imageItem);
-              
+
            }
            else
            {
               Log::addWarn('Api returns Success, but result has no files', $result);
               $item->result->is_error = true;
-              $item->result->message = sprintf(__('Image %s API returned succes, but without images', 'shortpixel-image-optimiser'), $item->item_id);
-              $item->result->status = ApiController::STATUS_FAIL;
+              $item->result->message += sprintf(__('Image %s API returned succes, but without images', 'shortpixel-image-optimiser'), $item->item_id);
+              $item->result->apiStatus = ApiController::STATUS_FAIL;
+
            }
 
          }
          $q->itemDone($item);
       //   return $result;
+      }
+      else
+      {
+          if ($result->apiStatus == ApiController::STATUS_UNCHANGED)
+          {
+              $item->fileStatus = ImageModel::FILE_STATUS_PENDING;
+              $item->result->message .= sprintf(__(' Pass %d', 'shortpixel-image-optimizer', intval($item->tries) ));
+          }
       }
 
       return $item;
@@ -443,31 +466,31 @@ class OptimizeController
     {
         $has_media = $has_custom = false;
 
-        if (is_object($results['media']) && property_exists($results['media']->stats))
+        if (is_object($results->media) && property_exists($results->media,'stats'))
           $has_media = true;
 
-        if (is_object($results['custom']) && property_exists($results['custom']->stats))
+        if (is_object($results->custom) && property_exists($results->custom, 'stats'))
           $has_custom = true;
 
         $object = new \stdClass;  // total
 
         if ($has_media && ! $has_custom)
         {
-           $object->stats = $results['media']->stats;
+           $object->stats = $results->media->stats;
            return $object;
         }
         elseif(! $has_media && $has_custom)
         {
-           $object->stats = $results['custom']->stats;
+           $object->stats = $results->custom->stats;
            return $object;
         }
 
         // When both have stats
-        $object->stats = $results['media']->stats;
+        $object->stats = $results->custom->stats;
 
-        foreach ($results['custom']->stats as $key => $value)
+        foreach ($results->custom->stats as $key => $value)
         {
-            if (property_exists($object->stats->$key) && ! is_object($object->stats->$key))
+            if (property_exists($object->stats, $key) && ! is_object($object->stats->$key))
             {
                $object->stats->$key = $object->stats->$key + $value;
             }

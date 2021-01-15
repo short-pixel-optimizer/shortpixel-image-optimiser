@@ -74,7 +74,8 @@ var ShortPixelScreen = function (MainScreen, processor)
 
     this.UpdateStats = function()
     {
-
+      var waiting = stats.in_queue + stats.in_process;
+      this.processor.tooltip.RefreshStats(stats.in_queue);
     }
     this.HandleError = function()
     {

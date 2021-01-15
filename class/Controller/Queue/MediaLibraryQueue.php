@@ -11,6 +11,9 @@ class MediaLibraryQueue extends Queue
    const QUEUE_NAME = 'Media';
    const CACHE_NAME = 'MediaCache'; // When preparing, write needed data to cache.
 
+   protected static $instance;
+
+
    /* MediaLibraryQueue Instance */
    public function __construct()
    {
@@ -35,6 +38,18 @@ class MediaLibraryQueue extends Queue
      $this->q->setOption('retry_limit', 20);
      $this->q->setOption('enqueue_limit', 20); */
    }
+
+   public static function getInstance()
+   {
+      if (is_null(self::$instance))
+      {
+         $class = get_called_class();
+         static::$instance = new $class();
+      }
+
+      return static::$instance;
+   }
+
 
    public function createNewBulk($args)
    {

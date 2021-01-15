@@ -356,10 +356,10 @@ class ApiController
                   $downloadResult = $this->handleDownload($fileData->$fileType, $fileData->$fileSize, $fileData->OriginalSize //isset($fileData->$webpType) ? $fileData->$webpType : 'NA'
                 );
               }
-//Log::addTemp('DownloadResult', $downloadResult);
+Log::addTemp('DownloadResult', $downloadResult);
               /* Status_Unchanged will be caught by ImageModel and not copied ( should be ).
               * @todo Write Unit Test for Status_unchanged
-              * But it should still be regarded as File Done. This can happen on very small file ( 6pxX6px ) which will not optimize. 
+              * But it should still be regarded as File Done. This can happen on very small file ( 6pxX6px ) which will not optimize.
               */
               if ( $downloadResult->status == self::STATUS_SUCCESS || $downloadResult->status == self::STATUS_UNCHANGED ) {
                   // Removes any query ?strings and returns just filename of originalURL
@@ -865,7 +865,7 @@ class ApiController
   private function getResultObject()
   {
         $result = new \stdClass;
-        $result->status = null;
+        $result->apiStatus = null;
         $result->message = '';
         $result->is_error = false;
         $result->is_done = false;
@@ -877,7 +877,7 @@ class ApiController
   private function returnFailure($status, $message)
   {
         $result = $this->getResultObject();
-        $result->status = $status;
+        $result->apiStatus = $status;
         $result->message = $message;
         $result->is_error = true;
         $result->is_done = true;
@@ -890,7 +890,7 @@ class ApiController
   {
 
     $result = $this->getResultObject();
-    $result->status = $status;
+    $result->apiStatus = $status;
     $result->message = $message;
 
     //$result->errors[] = array('status' => $status, 'message' => $message);
@@ -902,7 +902,7 @@ class ApiController
   private function returnOK($status = self::STATUS_UNCHANGED, $message = false)
   {
       $result = $this->getResultObject();
-      $result->status = $status;
+      $result->apiStatus = $status;
       $result->is_error = false;
       $result->message = $message;
 
@@ -913,7 +913,7 @@ class ApiController
   private function returnSuccess($file, $status = self::STATUS_SUCCESS, $message = false)
   {
       $result = $this->getResultObject();
-      $result->status = $status;
+      $result->apiStatus = $status;
       $result->message = $message;
       $result->is_done = true;
       if (is_array($file))

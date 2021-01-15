@@ -90,7 +90,7 @@ if ( isset($_GET['noheader']) ) {
 
           ?>
 
-        <div class='item item-C-<?php echo $item->get('id') ?>'>
+        <div class='item item-<?php echo $item->get('id') ?>'>
             <?php
             //  $itemFile = $fs->getFile($item->path);
               $filesize = $item->getFileSize();
@@ -98,13 +98,7 @@ if ( isset($_GET['noheader']) ) {
               $folder_id = $item->get('folder_id');
 
               $rowActions = $this->getRowActions($item);
-              $actions = UiHelper::getActions($item); // $this->getActions($item, $itemFile);
 
-              $list_actions = UiHelper::getListActions($item);
-              if (count($list_actions) > 0)
-                $list_actions = UiHelper::renderBurgerList($list_actions, $item);
-              else
-                $list_actions = '';
 
               $folder = isset($folders[$folder_id]) ? $folders[$folder_id] : false;
               $media_type = ($folder && $folder->isNextGen()) ? __('Nextgen', 'shortpixel-image-optimiser') : __('Custom', 'shortpixel_image_optimiser');
@@ -139,22 +133,9 @@ if ( isset($_GET['noheader']) ) {
              </span>
              <span id="sp-message-<?php echo $item->get('id') ?>" class="messages">&nbsp;</span>
             </span>
-            <span class='actions'>
+            <span class='actions' id='sp-actions-<?php echo $item->get('id') ?>'>
               <?php
-              if (count($actions) > 0)
-              {
-                foreach($actions as $actionName => $action):
-                  $classes = ($action['display'] == 'button') ? " button-smaller button-primary $actionName " : "$actionName";
-                  $link = ($action['type'] == 'js') ? 'javascript:' . $action['function'] : $action['function'];
-
-                  ?>
-                  <a href="<?php echo $link ?>" class="<?php echo $classes ?>"><?php echo $action['text'] ?></a>
-
-                  <?php
-                endforeach;
-              }
-              echo $list_actions;
-
+                 $this->printItemActions($item);
                ?>
               <?php //echo $this->getDisplayActions($this->getActions($item, $itemFile))
             ?></span>

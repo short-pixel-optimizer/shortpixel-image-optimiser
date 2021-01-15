@@ -19,7 +19,7 @@ onmessage = function(e)
         SpWorker.ShutDown();
      break;
      case 'process':
-       SpWorker.Process();
+       SpWorker.Process(data);
      break;
      case 'getItemView':
        SpWorker.GetItemView(data);
@@ -101,10 +101,10 @@ SpWorker = {
       this.action = 'shortpixel_ajaxRequest';
       this.Fetch(data);
    },
-   Process: function()
+   Process: function(data)
    {
       this.action = 'shortpixel_image_processing';
-      this.Fetch();
+      this.Fetch(data);
    }
 
 
