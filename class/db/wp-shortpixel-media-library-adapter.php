@@ -532,8 +532,7 @@ class WpShortPixelMediaLbraryAdapter {
 
   public static function getThumbsToOptimize($data, $filepath)
   {
-          //  @todo weak call. See how in future settings might come via central provider.
-          $settings = new \WPShortPixelSettings();
+          $settings = \wpSPIO()->settings();
 
           $fs = \wpSPIO()->fileSystem();
           $mainfile = $fs->getFile($filepath);
@@ -690,6 +689,7 @@ class WpShortPixelMediaLbraryAdapter {
         $pattern = '/^' . preg_quote($base, '/') . '-\d+x\d+\.'. $ext .'/';
 
         $thumbs = array_merge($thumbs, self::getFilesByPattern($dirPath, $pattern));
+
 
         /*$dirIterator = new \DirectoryIterator($dirPath);
         $regExIterator = new \RegexIterator($dirIterator, $pattern);

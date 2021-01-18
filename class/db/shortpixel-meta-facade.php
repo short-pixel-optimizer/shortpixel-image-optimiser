@@ -264,6 +264,7 @@ class ShortPixelMetaFacade {
  /** Checks if there are unlisted files present in system. Save them into sizes
     * @return int Number 'Unlisted' Items in metadta.
     */
+
     public function searchUnlistedFiles()
     {
       // must be media library, setting must be on.
@@ -275,6 +276,13 @@ class ShortPixelMetaFacade {
       }
 
       //exit($this->_settings->optimizeUnlisted);
+
+      $imageObj = new ImageModel();
+      $imageObj->setbyPostID($this->ID);
+
+
+      return $imageObj->addUnlistedThumbs();
+            
 
       $meta = $this->getMeta();
       Log::addDebug('Finding Thumbs on path' . $meta->getPath());
