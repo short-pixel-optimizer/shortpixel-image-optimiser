@@ -11,6 +11,7 @@ class FileSystemTest extends  WP_UnitTestCase
 
   protected $upload_dir;
 
+// https://make.wordpress.org/core/handbook/testing/automated-testing/writing-phpunit-tests/#shared-setup-between-related-tests
   public function setUp()
   {
     parent::setUp();
@@ -70,17 +71,17 @@ class FileSystemTest extends  WP_UnitTestCase
   }
 
   public function testPathToURL() {
-      $url1 = $this->fs->pathToUrl(new FileModel('./wp-content/uploads/2020/07/file'));
-      $url2 = $this->fs->pathToUrl(new FileModel('wp-content/uploads/2020/07/file'));
-      $url3 = $this->fs->pathToUrl(new FileModel('../wp-content/uploads/2020/07/file'));
-      $url4 = $this->fs->pathToUrl(new FileModel('../../wp-content/uploads/2020/07/file'));
+      $url1 = $this->fs->pathToUrl(new \ShortPixel\Model\FileModel('./wp-content/uploads/2020/07/file'));
+      $url2 = $this->fs->pathToUrl(new \ShortPixel\Model\FileModel('wp-content/uploads/2020/07/file'));
+      $url3 = $this->fs->pathToUrl(new \ShortPixel\Model\FileModel('../wp-content/uploads/2020/07/file'));
+      $url4 = $this->fs->pathToUrl(new \ShortPixel\Model\FileModel('../../wp-content/uploads/2020/07/file'));
 
       $this->assertEquals("http://example.org/wp-content/uploads/2020/07/file", $url1);
       $this->assertEquals("http://example.org/wp-content/uploads/2020/07/file", $url2);
       $this->assertEquals("http://example.org/wp-content/uploads/2020/07/file", $url3);
       $this->assertEquals("http://example.org/wp-content/uploads/2020/07/file", $url4);
 
-      $path5 = $this->fs->pathToUrL(new FileModel('/tmp/wordpress/wp/wp-content/gallery/la043-porta-antica-laccata-e-dorata/result.jpg'));
+      $path5 = $this->fs->pathToUrL(new \ShortPixel\Model\FileModel('/tmp/wordpress/wp/wp-content/gallery/la043-porta-antica-laccata-e-dorata/result.jpg'));
 
       $this->assertEquals("http://example.org/wp/wp-content/gallery/la043-porta-antica-laccata-e-dorata/result.jpg", $path5);
 
@@ -96,7 +97,7 @@ class FileSystemTest extends  WP_UnitTestCase
       $post = $this->factory->post->create_and_get();
       $attachment_id = $this->factory->attachment->create_upload_object( __DIR__ . '/assets/test-image.jpg', $post->ID );
 
-      $file = $this->fs->getMediaImage($attachment_id);
+      $file = $this->fs->getAttachedFile($attachment_id);
 
       $this->assertTrue($file->exists());
       $this->assertTrue($file->is_writable());
@@ -488,19 +489,17 @@ class FileSystemTest extends  WP_UnitTestCase
   public function testWithWpUploadDirError()
   {
     // Setup a test file.
-    $fs = \wpSPIO()->filesystem();
-
     $post = $this->factory->post->create_and_get();
     $attachment_id = $this->factory->attachment->create_upload_object( __DIR__ . '/assets/test-image.jpg', $post->ID );
 
     $fullfilepath = get_attached_file($attachment_id);
     $abspath = $this->fs->getWPUploadBase();
 
-    $image = $fs->getMediaImage($attachment_id);
-    ///$image->setByPostID($attachment_id);
+    $image = new ImageModel($attachment_id);
+    $image->setByPostID($attachment_id);
 
-    $this->assertStringContainsString($abspath, $image->getFullPath());
-    $this->assertEquals($fullfilepath, $image->getFullPath());
+    $this->assertStringContainsString($abspath, $image->getFile()->getFullPath());
+    $this->assertEquals($fullfilepath, $image->getFile()->getFullPath());
 
 
     add_filter('upload_dir', array($this, 'filterUploadDirWithError')); // set upload dir to enable error.
@@ -509,11 +508,11 @@ class FileSystemTest extends  WP_UnitTestCase
     $basedir = $uploadDir['basedir'];
     $baseurl = $uploadDir['baseurl'];
 
-    $image2 = $fs->getMediaImage($attachment_id);
-//    $image2->setByPostID($attachment_id);
+    $image2 = new ImageModel($attachment_id);
+    $image2->setByPostID($attachment_id);
 
-    $this->assertStringContainsString($abspath, $image2->getFullPath());
-    $this->assertEquals($image->getFullPath(), $image2->getFullPath());
+    $this->assertStringContainsString($abspath, $image2->getFile()->getFullPath());
+    $this->assertEquals($image->getFile()->getFullPath(), $image2->getFile()->getFullPath());
 
     remove_filter('upload_dir', array($this, 'filterUploadDirWithError')); // set upload dir to enable error.
   }

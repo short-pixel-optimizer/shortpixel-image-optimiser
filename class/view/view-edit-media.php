@@ -2,6 +2,7 @@
 namespace ShortPixel;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
+
 ?>
 
 <div id='sp-msg-<?php echo($view->id);?>' class='column-wp-shortPixel view-edit-media'>
