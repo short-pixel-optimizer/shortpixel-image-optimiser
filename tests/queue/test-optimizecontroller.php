@@ -54,5 +54,102 @@ class OptimizeControllerTest extends  WP_UnitTestCase
     }
 
 
+    public function testCalculateStatsTotals()
+    {
+      $control = OptimizeController::getInstance();
+
+      $refWPQ = new ReflectionClass('\ShortPixel\Controller\OptimizeController');
+      $statsMethod = $refWPQ->getMethod('CalculateStatsTotals');
+      $statsMethod->setAccessible(true);
+
+      $media = (object) [
+          'stats' => (object) [
+              'bulk' => (object) [
+                  'images' => 0,
+                  'items' => 0,
+                  'optimizedCount' => 0,
+                  'optimizedThumbnailCount' => 0,
+              ],
+              'done' => 0,
+              'errors' => 0,
+              'in_process' => 0,
+              'in_queue' => 0,
+              'is_finished' => false,
+              'is_preparing' => false,
+              'is_running' => false,
+              'percentage_done' => 0,
+              'total' => 0,
+          ]
+      ];
+      $custom = (object) [
+          'stats' => (object) [
+              'bulk' => (object) [
+                  'images' => 0,
+                  'items' => 0,
+                  'optimizedCount' => 0,
+                  'optimizedThumbnailCount' => 0,
+              ],
+              'done' => 0,
+              'errors' => 0,
+              'in_process' => 0,
+              'in_queue' => 0,
+              'is_finished' => false,
+              'is_preparing' => false,
+              'is_running' => false,
+              'percentage_done' => 0,
+              'total' => 0,
+          ]
+      ];
+  //    $custom = clone $media; // No clone since it overwrites the referenced values :/ 
+
+      $media->stats->in_queue = 10;
+      $media->stats->done = 10;
+      $media->stats->total = 20;
+      $media->stats->bulk->images = 100;
+      $media->stats->bulk->items = 10;
+      $media->stats->in_process = true;
+
+      $result = new \stdClass;
+      $result->media = $media;
+
+      $total = $statsMethod->invoke($control, $result);
+
+      $this->assertIsInt($total->stats->total);
+      $this->assertIsInt($total->stats->bulk->items);
+      $this->assertIsInt($total->stats->in_queue);
+
+      $this->assertEquals(20, $total->stats->total);
+      $this->assertEquals(10, $total->stats->bulk->items);
+      $this->assertEquals(10, $total->stats->in_queue);
+      $this->assertTrue($total->stats->in_process);
+      $this->assertFalse($total->stats->is_preparing);
+
+ // not equals to prevent mistakes there
+      $custom->stats->in_queue = 20;
+      $custom->stats->done = 50;
+      $custom->stats->total = 70;
+      $custom->stats->bulk->images = 50;
+      $custom->stats->bulk->items = 5;
+      $custom->stats->in_process = true;
+
+      $custom->stats->is_preparing = true;  // true prevails over false.
+
+      $result->custom = $custom;
+
+      $total = $statsMethod->invoke($control, $result);
+
+      $this->assertIsInt($total->stats->total);
+      $this->assertIsInt($total->stats->bulk->items);
+      $this->assertIsInt($total->stats->in_queue);
+
+      $this->assertEquals(90, $total->stats->total);
+      $this->assertEquals(15, $total->stats->bulk->items);
+      $this->assertEquals(30, $total->stats->in_queue);
+      $this->assertTrue($total->stats->in_process);
+      $this->assertTrue($total->stats->is_preparing);
+
+
+    }
+
 
 }

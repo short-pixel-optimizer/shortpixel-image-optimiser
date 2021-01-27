@@ -13,6 +13,7 @@ class Item
   protected $updated; // as a timestamp
   protected $item_id; // the item id of the processor.
   protected $value; // something of value to the processor
+  protected $item_count = 1; // Amount of items this record represents.
   protected $json_was_array;
   protected $status = 0;
   protected $list_order;

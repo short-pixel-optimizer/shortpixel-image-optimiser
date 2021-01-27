@@ -25,16 +25,29 @@ namespace ShortPixel;
           <div><span>Already Opt Thumbs</span><span data-stats-media="bulk-optimizedThumbnailCount">0</span></div>
 
           <div><span><strong>Total to be optimized in Media Library</strong></span><span>&nbsp;</span></div>
-          <div><span>Items to Optimize</span><span data-stats-media="bulk-items">0</span></div>
-          <div><span>Total images to Optimize </span><span data-stats-media="bulk-images">0</span></div>
+          <div><span>Items to Optimize</span><span data-stats-media="in_queue">0</span></div>
+          <div><span>Total images to Optimize </span><span data-stats-media="images-images">0</span></div>
         </div>
       </div>
 
-      <div class="totals">
-        Total number to be optimized  <span class="number" data-stats-total="bulk-images">0</span>
-        (All)
+    <div class="section-wrapper">
+    <h4><span class='dashicons dashicons-open-folder'>&nbsp;</span> Other Media</h4>
+      <div class="list-table">
+        <div><span>Total Images</span><span >0</span></div>
+        <div><span>Already Opt Items</span><span data-stats-custom="bulk-optimizedCount">0</span></div>
+        <div><span>Already Opt Thumbs</span><span data-stats-custom="bulk-optimizedThumbnailCount">0</span></div>
+
+        <div><span><strong>Total to be optimized in Other Media</strong></span><span>&nbsp;</span></div>
+        <div><span>Items to Optimize</span><span data-stats-custom="in_queue">0</span></div>
+        <div><span>Total images to Optimize </span><span data-stats-custom="bulk-images">0</span></div>
       </div>
     </div>
+
+    <div class="totals">
+      Total number to be optimized  <span class="number" data-stats-total="images-images">0</span>
+      (All)
+    </div>
+  </div>
 
   <?php
     $quotaData = $this->view->quotaData;

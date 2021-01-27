@@ -39,9 +39,8 @@ class AjaxController
 
     public function ajax_removeProcessorKey()
     {
-      Log::addDebug('Ajax HIT - Process Exiting');
-      Log::addDebug($_POST);
-        $this->checkNonce('exit_process');
+
+      $this->checkNonce('exit_process');
       Log::addDebug('Process Exiting');
 
         $cacheControl = new CacheController();
@@ -124,18 +123,23 @@ class AjaxController
         $this->checkNonce('ajax_request');
 
         $action = isset($_POST['screen_action']) ? sanitize_text_field($_POST['screen_action']) : false;
-        $type = isset($_POST['type'])  ? sanitize_text_field($_POST['type']) : 'media';
+        $typeArray = isset($_POST['type'])  ? array(sanitize_text_field($_POST['type'])) : array('media', 'custom');
         $id = isset($_POST['id']) ? intval($_POST['id']) : false;
 
         $json = new \stdClass;
-        $json->$type = new \stdClass;
+        foreach($typeArray as $type)
+        {
+          $json->$type = new \stdClass;
+          $json->$type->id = $id;
+          $json->$type->results = null;
+          $json->$type->is_error = false;
+          $json->status = 0;
+        }
 
-        $json->$type->id = $id;
-        $json->$type->results = null;
-        $json->$type->is_error = false;
-        $json->status = 0;
+        $data = array('id' => $id, 'typeArray' => $typeArray, 'action' => $action);
 
-        $data = array('id' => $id, 'type' => $type, 'action' => $action);
+        if (count($typeArray) == 1) // Actions which need specific type like optimize / restore.
+          $data['type'] = $type[0];
 
         switch($action)
         {
@@ -180,6 +184,10 @@ class AjaxController
           $mediaItem = $this->getMediaItem($id, $type);
 
           $control = OptimizeController::getInstance();
+
+          $json = new \stdClass;
+          $json->$type = new \stdClass;
+
           $json->$type = $control->addItemToQueue($mediaItem);
 
           ResponseController::add()->withMessage('TESTING');
@@ -221,6 +229,10 @@ class AjaxController
 
         $json->media->stats = $stats;
 
+        $stats = $bulkControl->createNewBulk('custom');
+
+        $json->custom->stats = $stats;
+
         return $json;
 
     }
@@ -228,7 +240,13 @@ class AjaxController
     public function startBulk($json, $data)
     {
         $bulkControl = BulkController::getInstance();
+
+        // @todo This needs to check type which Q was choosen in UI.
         $result = $bulkControl->startBulk('media');
+        $json->media = $result;
+
+        $result = $bulkControl->startBulk('custom');
+        $json->custom = $result;
 
         $this->send($result);
     }
@@ -290,6 +308,8 @@ class AjaxController
 
     }
 
+
+
     protected function send($json)
     {
         $json->responses = ResponseController::getAll();
@@ -298,16 +318,15 @@ class AjaxController
         if ($callback)
           $json->callback = $callback; // which type of request we just fullfilled ( response processing )
 
+        $pKey = $this->getProcessorKey();
+        if ($pKey !== false)
+          $json->processorKey = $pKey; 
+
         wp_send_json($json);
         exit();
     }
 
 
-    /** Generate the action output for an item, via UIHelper */
-    protected function getActions($id)
-    {
-
-    }
 
 
 }

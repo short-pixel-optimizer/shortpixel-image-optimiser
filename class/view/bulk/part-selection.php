@@ -18,7 +18,7 @@ namespace ShortPixel;
              <span><img src="<?php echo \wpSPIO()->plugin_url('res/img/bulk/loading-hourglass.svg'); ?>" /></span>
              <span>
              <p>Please wait, ShortPixel is checking for you the images to be optimized... <br>
-               <span class="number" data-stats-total="bulk-items">x</span> images found</p>
+               <span class="number" data-stats-total="total">x</span> items found</p>
            </span>
 
          </div>
@@ -36,10 +36,10 @@ namespace ShortPixel;
 
               Your Media Library
             <div class='option'>
-              Original Images  <span class="number" data-stats-media="bulk-items"><?php _e('n/a', 'shortpixel-image-optimizer') ?></span>
+              Original Images  <span class="number" data-stats-media="total"><?php _e('n/a', 'shortpixel-image-optimizer') ?></span>
             </div>
             <div class='option'>
-              Thumbnails <span class="number" data-stats-media="bulk-images"><?php _e('n/a', 'shortpixel-image-optimizer')  ?></span>
+              Thumbnails <span class="number" data-stats-media="images-images"><?php _e('n/a', 'shortpixel-image-optimizer')  ?></span>
             </div>
          </div>
 

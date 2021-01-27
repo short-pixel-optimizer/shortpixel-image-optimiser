@@ -193,12 +193,12 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         } */
 
         $formerPrio = get_option('wp-short-pixel-priorityQueue');
-        $qGet = (! defined('SHORTPIXEL_NOFLOCK')) ?  ShortPixelQueue::get() : ShortPixelQueueDB::get();
-        if(is_array($formerPrio) && !count($qGet)) {
+      //  $qGet = (! defined('SHORTPIXEL_NOFLOCK')) ?  ShortPixelQueue::get() : ShortPixelQueueDB::get();
+      /*  if(is_array($formerPrio) && !count($qGet)) {
 
-          (! defined('SHORTPIXEL_NOFLOCK')) ? ShortPixelQueue::set($formerPrio) : ShortPixelQueueDB::set($formerPrio);
-            delete_option('wp-short-pixel-priorityQueue');
-        }
+          (! defined('SHORTPIXEL_NOFLOCK')) ? ShortPixelQueue::set($formerPrio) : ShortPixelQueueDB::set($formerPrio); */
+          delete_option('wp-short-pixel-priorityQueue');
+      //  }
     }
 
     public static function onDeactivate() {

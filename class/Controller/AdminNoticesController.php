@@ -138,7 +138,7 @@ class AdminNoticesController extends \ShortPixel\Controller
       if (! \wpSPIO()->env()->is_screen_to_use)
         return; // suppress all when not our screen.
 
-       $this->doFilePermNotice();
+       
        $this->doAPINotices();
        $this->doCompatNotices();
        $this->doUnlistedNotices();
@@ -225,23 +225,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 
     }
 
-    protected function doFilePermNotice()
-    {
-      $testQ = (! defined('SHORTPIXEL_NOFLOCK')) ? \ShortPixelQueue::testQ() : \ShortPixelQueueDB::testQ();
 
-      if( $testQ) {
-        return; // all fine.
-      }
-
-      // Keep this thing out of others screens.
-      if (! \wpSPIO()->env()->is_our_screen)
-        return;
-
-       $message = sprintf(__("ShortPixel is not able to write to the uploads folder so it cannot optimize images, please check permissions (tried to create the file %s/.shortpixel-q-1).",'shortpixel-image-optimiser'),
-                               SHORTPIXEL_UPLOADS_BASE);
-       Notices::addError($message, true);
-
-    }
 
     protected function doCompatNotices()
     {

@@ -2,12 +2,13 @@
 namespace ShortPixel\Controller\Queue;
 
 use ShortPixel\ShortQ\ShortQ as ShortQ;
+use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 class CustomQueue extends Queue
 {
 
-   const QUEUE_NAME = 'Custom';
-   const CACHE_NAME = 'CustomCache'; // When preparing, write needed data to cache.
+   protected $queueName = 'Custom';
+   protected $cacheName = 'CustomCache'; // When preparing, write needed data to cache.
 
    protected static $instance;
 
@@ -27,33 +28,73 @@ class CustomQueue extends Queue
    public function __construct()
    {
      $shortQ = new ShortQ(static::PLUGIN_SLUG);
-     $this->q = $shortQ->getQueue(static::QUEUE_NAME);
+     $this->q = $shortQ->getQueue($this->queueName);
 
-     $this->q->setOption('numitems', 5);
-     $this->q->setOption('mode', 'wait');
-     $this->q->setOption('process_timeout', 7000);
-     $this->q->setOption('retry_limit', 20);
+      $options = array(
+         'numitems' => 5,
+         'mode' => 'wait',
+         'process_timeout' => 7000,
+         'retry_limit' => 20,
+         'enqueue_limit' => 120,
+      );
+
+     $options = apply_filters('shortpixel/customqueue/options', $options);
+     $this->q->setOptions($options);
    }
 
-   public function createNewBulk($args)
-   {
-
-   }
-
-   public function startBulk()
-   {
-   }
 
    public function prepare()
    {
+      $items = $this->queryItems();
 
+      return $this->prepareItems($items);
    }
 
-   public function getQueueName()
+   public function queryItems()
    {
-      return static::QUEUE_NAME;
-   }
+     $last_id = $this->getStatus('last_item_id');
+     $limit = $this->q->getOption('enqueue_limit');
+     $prepare = array();
+     global $wpdb;
 
+     $folderSQL = ' SELECT id FROM ' . $wpdb->prefix . 'shortpixel_folders where status >= 0';
+     $folderRow = $wpdb->get_col($folderSQL);
+
+     // List of prepared (%d) for the folders.
+     $query_arr = join( ',', array_fill( 0, count( $folderRow ), '%d' ) );
+
+     $sql = 'SELECT id FROM ' . $wpdb->prefix . 'shortpixel_meta WHERE folder_id in ( ';
+
+     $sql .= $query_arr . ') ';
+     $prepare = $folderRow;
+
+     if ($last_id > 0)
+     {
+        $sql .= " AND id < %d ";
+        $prepare [] = intval($last_id);
+     }
+
+
+     $sql .= ' order by id DESC LIMIT %d ';
+     $prepare[] = $limit;
+
+     $sql = $wpdb->prepare($sql, $prepare);
+
+     $results = $wpdb->get_col($sql);
+
+Log::addDebug('Results of custom - ' . $sql, $results);
+
+     $fs = \wpSPIO()->filesystem();
+     $items = array();
+
+
+     foreach($results as $item_id)
+     {
+          $items[] = $fs->getImage($item_id, 'custom');
+     }
+
+     return $items;
+   }
 
 
 }

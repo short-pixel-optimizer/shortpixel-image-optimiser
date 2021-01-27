@@ -160,6 +160,11 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
     public function getMeta($name = false)
     {
+      if ($name === false)
+      {
+        return $this->image_meta;
+      }
+      
       if (! property_exists($this->image_meta, $name))
       {
           Log::addWarn('GetMeta on Undefined Property : ' . $name);
@@ -244,7 +249,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
               $originalSize = $this->getFileSize();
 
-              if ($resultObj->status == API::STATUS_UNCHANGED)
+              if ($resultObj->apiStatus == API::STATUS_UNCHANGED)
               {
                 $copyok = true;
                 $optimizedSize = $this->getFileSize();
@@ -265,7 +270,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                  if (isset($downloadResults[$webpFile]) && isset($downloadResults[$webpFile]->file)) // check if there is webp with same filename
                  {
                     $webpResult = $this->handleWebp($downloadResults[$webpFile]->file);
-                     if ($webResult === false)
+                     if ($webpResult === false)
                        Log::addWarn('Webps available, but copy failed ' . $downloadResults[$webpFile]->file->getFullPath());
                      else
                        $this->setMeta('webp', $webpResult->getFileName());
@@ -398,9 +403,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     protected function handleWebp(FileModel $tempFile)
     {
          $fs = \wpSPIO()->filesystem();
-
-      //   $webp = $fs->getFile( (string) $tempFile->getFileDir() . $tempFile->getFileBase() . '.webp');
-
             $target = $fs->getFile( (string) $this->getFileDir() . $this->getFileBase() . '.webp');
         Log::addTemp('handle Webp for ' . $this->getFullPath() . ' Target ' . $target->getFullPath() );
             if( (defined('SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION') && SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION) || $target->exists()) {

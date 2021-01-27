@@ -24,10 +24,8 @@
   width: 90%;
   min-height: 600px;
   /* (for debuggings)*/
-  position: absolute;
   z-index: 1;
-  visibility: hidden;
-  opacity: 0;
+  opacity: 1;
   transition: opacity 1s linear;
   box-shadow: 2px 2px 10px #ccc;
   margin: 15px 0; }

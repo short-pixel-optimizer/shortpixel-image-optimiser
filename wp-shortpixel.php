@@ -76,7 +76,6 @@ define('SHORTPIXEL_BACKUP_URL',
 define('SHORTPIXEL_MAX_EXECUTION_TIME2', 2 ); // @todo 2, 2 what?
 define("SHORTPIXEL_MAX_RESULTS_QUERY", 30);
 
-//define("SHORTPIXEL_NOFLOCK", true); // don't use flock queue, can cause instability.
 //define("SHORTPIXEL_EXPERIMENTAL_SECURICACHE", true);  // tries to add timestamps to URLS, to prevent hitting the cache.
 //define('SHORTPIXEL_SILENT_MODE', true); // no global notifications. Can lead to data damage. After setting, reactivate plugin.
 
@@ -102,10 +101,7 @@ if (! function_exists("wpSPIO"))	{
      return \ShortPixel\ShortPixelPlugin::getInstance();
   }
 }
-// [BS] Start runtime here
-//require_once(SHORTPIXEL_PLUGIN_DIR . '/wp-shortpixel-req.php'); // @todo should be incorporated here.
-//require_once(SHORTPIXEL_PLUGIN_DIR . '/class/controller/controller.php');
-//require_once(SHORTPIXEL_PLUGIN_DIR . '/class/shortpixel-model.php');
+// Start runtime here
 require_once(SHORTPIXEL_PLUGIN_DIR . '/shortpixel-plugin.php'); // loads runtime and needed classes.
 
 // PSR-4 package loader.

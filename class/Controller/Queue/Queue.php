@@ -5,6 +5,7 @@ use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\CacheController as CacheController;
 
+use ShortPixel\ShortQ\ShortQ as ShortQ;
 
 abstract class Queue
 {
@@ -13,7 +14,6 @@ abstract class Queue
     protected static $results;
 
     const PLUGIN_SLUG = 'SPIO';
-    const QUEUE_NAME = 'base';
 
 
     // Result status for Run function
@@ -34,11 +34,26 @@ abstract class Queue
     const FILE_SUCCESS = 2;
     const FILE_WAIT = 3; */
 
-    abstract public function createNewBulk($args);
-    abstract public function startBulk();
+
 
     abstract protected function prepare();
 
+    public function createNewBulk($args)
+    {
+        $this->q->resetQueue();
+        $this->q->setStatus('preparing', true, false);
+        $this->q->setStatus('bulk_running', false, true);
+
+        $cache = new CacheController();
+        $cache->deleteItem($this->cacheName);
+
+    }
+
+    public function startBulk()
+    {
+        $this->q->setStatus('preparing', false, false);
+        $this->q->setStatus('bulk_running', true, true);
+    }
 
     /** Enqueues a single items into the urgent queue list
     *   - Should not be used for bulk images
@@ -71,7 +86,7 @@ abstract class Queue
        $result->qstatus = self::RESULT_UNKNOWN;
        $result->items = null;
 
-       if ( $this->getStatus('preparing'))
+       if ( $this->getStatus('preparing') === true)
        {
             $prepared = $this->prepare();
             $result->qstatus = self::RESULT_PREPARING;
@@ -79,25 +94,31 @@ abstract class Queue
             $result->images = $prepared['images'];
             if ($prepared['items'] == 0)
             {
-               Log::addDebug('Queue, prepared can back as zero', $prepared, $images);
-               $result->qstatus = self::RESULT_PREPARING_DONE;
+
+               Log::addDebug( $this->queueName . ' Queue, prepared came back as zero ', array($prepared, $result->items));
+               if ($prepared['results'] == 0) /// This means no results, empty query.
+                $result->qstatus = self::RESULT_PREPARING_DONE;
 
                $cache = new CacheController();
-               $countCache = $cache->getItem(static::CACHE_NAME);
+               $countCache = $cache->getItem($this->cacheName);
                $count = $countCache->getValue();
 
-               if ($count->items !== $this->q->getStatus('items'))
+            /*   if ($count->items !== $this->getStatus('items'))
+               {
                  $result->qstatus = self::RESULT_RECOUNT;
+                 Log::addDebug("Difference in Items!" .  $count->items . ' ' . $this->getStatus('items'));
+                 $this->recountQueue();
+               } */
             }
        }
-       elseif ($this->getStatus('bulk_running'))
+       elseif ($this->getStatus('bulk_running') === true)
        {
-            Log::addTemp('Bulk Running on this Q, doing deQueue' . static::QUEUE_NAME);
+            Log::addTemp('Bulk Running on this Q, doing deQueue' . $this->queueName);
             $items = $this->deQueue();
        }
        else
        {
-            Log::addTemp('NO Bulk Running on this Q, doing deQueuePriority' . static::QUEUE_NAME);
+            Log::addTemp('NO Bulk Running on this Q, doing deQueuePriority' . $this->queueName);
             $items = $this->deQueuePriority();
        }
 
@@ -114,6 +135,87 @@ abstract class Queue
 
        return $result;
     }
+
+
+    protected function prepareItems($items)
+    {
+        $return = array('items' => 0, 'images' => 0, 'results' => 0);
+
+          if (count($items) == 0)
+          {
+              $this->q->setStatus('preparing', false);
+              Log::addDebug('Preparing, false', $items);
+              return $return;
+          }
+
+          $fs = \wpSPIO()->filesystem();
+
+          $queue = array();
+          $imageCount = 0;
+          $optimizedCount = 0;
+          $optimizedThumbnailCount = 0;
+        //  $thumbnailCount = 0;
+
+          // maybe while on the whole function, until certain time has elapsed?
+          foreach($items as $mediaItem)
+          {
+              //  $mediaItem= $fs->getMediaImage($item);
+
+                if ($mediaItem->isProcessable()) // Checking will be done when processing queue.
+                {
+                   Log::addTemp('Preparing as Processable' . $mediaItem->get('id'));
+                    $qObject = $this->imageModelToQueue($mediaItem);
+                  //  $thumbnailCount += count($mediaItem->get('thumbnails'));
+                    $imageCount += count($qObject->urls);
+
+                    $queue[] = array('id' => $mediaItem->get('id'), 'value' => $qObject, 'item_count' => count($qObject->urls)); // array('id' => $mediaItem->get('id'), 'value' => $mediaItem->getOptimizeURLS() );
+                }
+                else
+                {
+                   if($mediaItem->isOptimized())
+                   {
+                      Log::addTemp('Item is optimized -' . $mediaItem->get('id'));
+                  //  $optimizedCount++;
+                  //  $optimizedThumbnailCount = count($mediaItem->get('thumbnails'));
+                   }
+
+                }
+          }
+
+          $this->q->additems($queue);
+          $numitems = $this->q->enqueue();
+
+          // mediaItem should be last_item_id, save this one.
+          $this->q->setStatus('last_item_id', $mediaItem->get('id')); // enum status to prevent a hang when no items are enqueued, thus last_item_id is not raised. Don't save to DB though.
+          Log::addTemp('Last Item Id stored' . $this->q->getStatus('last_item_id'));
+          Log::addTemp('Items enqueued ' . $numitems);
+
+        /*  $countObj= $this->getCountCache(); */
+          $qCount = count($queue);
+/*
+          $countObj->images += $imageCount;
+          $countObj->items += $qCount;
+          $countObj->optimizedCount += $optimizedCount;
+          $countObj->optimizedThumbnailCount += $optimizedThumbnailCount;
+*/
+          $return['items'] = $qCount;
+          $return['images'] = $imageCount;
+          $return['results'] = count($items); // This is the return of the query. Preparing should not be 'done' before the query ends, but it can return 0 on the qcount if all results are already optimized.
+/*
+    Log::addDebug('This run prepared: ' . $qCount . ' ' . $imageCount, $return);
+    Log::addDebug('Count Cache ', $countObj);
+
+          $this->saveCountCache($countObj); */
+
+          return $return; // only return real amount.
+    }
+
+    // Used by Optimizecontroller on handlesuccess.
+    public function getQueueName()
+    {
+          return $this->queueName;
+    }
+
 
     public function getQStatus($result, $numitems)
     {
@@ -148,28 +250,90 @@ abstract class Queue
       $stats->errors = $this->getStatus('errors');
       $stats->done = $this->getStatus('done');
       $stats->total = $stats->in_queue + $stats->errors + $stats->done + $stats->in_process;
-      $stats->percentage_done = round((100 / $stats->total) * $stats->done);
+      if ($stats->total > 0)
+        $stats->percentage_done = round((100 / $stats->total) * $stats->done);
+      else
+        $stats->percentage_done = 0;
 
-      $cache = new CacheController();
-      $countCache = $cache->getItem(static::CACHE_NAME);
-      $count = $countCache->getValue();
+      //$cache = new CacheController();
+      //$countCache = $cache->getItem($this->cacheName);
+      $countObj =  $this->getCountCache(); // $countCache->getValue();
 
-      if (is_object($count))
+      if ($stats->is_preparing)
       {
-        $stats->bulk = $count;
+        $stats->images = $this->countQueue();
+        //$this->q->itemSum('')
+      }
+
+      if (is_object($countObj))
+      {
+        //$stats->bulk = $countObj;
+
       }
 
       return $stats;
     }
 
-    public function getQueueName()
+    protected function getCountCache()
     {
-       return static::QUEUE_NAME;
+      $cache = new CacheController();
+      $countCache = $cache->getItem($this->cacheName);
+      $countObj = $countCache->getValue();
+
+      if (is_null($countObj) )
+      {
+      //  Log::addDebug('GetCountCache failure ' . $this->cacheName . ', not matching counts ' . $countObj->items . ' <ci gs>  ' . $this->getStatus('items'));
+        //$countObj = $this->recountQueue();
+        //$this->saveCountCache($countObj);
+        $count = (object) [
+            'images' => 0,
+            'items' => 0,
+            'optimizedCount' => 0, // already optimized items
+            'optimizedThumbnailCount' => 0,
+        ];
+      }
+
+      return $countObj;
     }
+
+    protected function saveCountCache($countObj)
+    {
+      $cache = new CacheController();
+      $countCache = $cache->getItem($this->cacheName);
+
+      $countCache->setValue($countObj);
+      $countCache->setExpires(14 * DAY_IN_SECONDS);
+      $cache->storeItemObject ($countCache);
+    }
+
+    /** Recounts the ItemSum for the Queue
+    *
+    * Note that this is not the same number as preparing adds to the cache, which counts across the installation how much images were already optimized. However, we don't want to stop and reset cache just for a few lost numbers so we should accept a flawed outcome here perhaps.
+    */
+    protected function countQueue()
+    {
+        $recount = $this->q->itemSum('countbystatus');
+        Log::addDebug('Recounts, countbystatus', $recount);
+        $count = (object) [
+            'images' => $recount[ShortQ::QSTATUS_WAITING],
+            'images_done' => $recount[ShortQ::QSTATUS_DONE],
+            'images_inprocess' => $recount[ShortQ::QSTATUS_INPROCESS],
+          //  'items' => $this->getStatus('items'),
+          //  'optimizedCount' => $this->getStatus('done'), // already optimized items
+          //  'optimizedThumbnailCount' => $recount[ShortQ::QSTATUS_DONE],
+        ];
+
+    //    Log::addDebug('Recreated ' . $this->cacheName . ' CountCache', $recount);
+        return $count;
+    }
+
 
     protected function getStatus($name = false)
     {
-        return $this->q->getStatus($name);
+        if ($name == 'items')
+          return $this->q->itemCount(); // This one also recounts once queue returns 0
+        else
+          return $this->q->getStatus($name);
     }
 
     protected function deQueue()
@@ -220,7 +384,7 @@ abstract class Queue
     {
 
         $item = new \stdClass;
-        $item->compressionType = null;
+        $item->compressionType = \wpSPIO()->settings()->compressionType;
 
         $urls = $imageModel->getOptimizeUrls();
       //  $paths = $imageModel->getOptimizePaths();
@@ -234,12 +398,12 @@ abstract class Queue
         //$item->paths = apply_filters('shortpixel/queue/paths', $paths, $imageModel->get('id'));
         $item->urls = apply_filters('shortpixel_image_urls', $urls, $imageModel->get('id'));
 
+
         return $item;
     }
 
     public function itemFailed($item, $fatal = false)
     {
-
         $qItem = $this->mediaItemToQueue($item); // convert again
         $this->q->itemFailed($qItem, $fatal);
         $this->q->updateItemValue($qItem);
@@ -249,14 +413,26 @@ abstract class Queue
     {
       $qItem = $this->mediaItemToQueue($item); // convert again
       $this->q->itemDone($qItem);
+    }
 
+    //@todo
+    public function uninstall()
+    {
+        $this->q->uninstall();
+    }
 
+    // @todo
+    public function activatePlugin()
+    {
+        $this->q->resetQueue();
     }
 
     public function getShortQ()
     {
         return $this->q;
     }
+
+
 
 
 } // class

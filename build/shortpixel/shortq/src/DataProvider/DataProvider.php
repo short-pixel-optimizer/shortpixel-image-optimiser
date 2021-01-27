@@ -19,12 +19,15 @@ interface DataProvider
   function alterQueue($changes, $conditions, $operators); // @return Item Count / Boolean . Mass alteration of queue. ( changes, what to change, conditions, basically where statement)
   function itemUpdate(Item $item, $new_status);
   function getItem($item_id);
-  function getItems($args); // get items on basis of status / updated date /etc 
+  function getItems($args); // get items on basis of status / updated date /etc
 
 
   // Returns number of items left in Queue.
-  function itemCount($mode = 'waiting');
+  function itemCount($status = ShortQ::QSTATUS_WAITING);
 
-  function install();
+  // Sum of a arbitrary number of items set by user.
+  function itemSum($status = ShortQ::QSTATUS_ALL);
+
+  function install($nocheck = false);
   function uninstall();
 }

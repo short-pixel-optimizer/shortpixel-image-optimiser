@@ -114,6 +114,7 @@ class  MediaLibraryModelConversionTest extends WP_UnitTestCase
 
       $this->assertTrue(get_post_meta($post->ID, 'shortpixel_was_converted', true));
 
+      $this->assertEquals('87.63', $mm->getImprovement()); // This can be fishy 
   }
 
   public function testConvertpng2jpg()

@@ -150,6 +150,27 @@ class OptimizeController
 
     }
 
+    /** Returns the state of the queue so the startup JS can decide if something is going on and what.  **/
+    public function getStartupData()
+    {
+
+      $mediaQ = MediaLibraryQueue::getInstance();
+      $customQ = CustomQueue::getInstance();
+
+        $data = new \stdClass;
+        $data->media = new \stdClass;
+        $data->custom = new \stdClass;
+        $data->total = new \stdClass;
+
+        $data->media->stats = $mediaQ->getStats();
+        $data->custom->stats = $customQ->getStats();
+
+        $data->total = $this->calculateStatsTotals($data);
+
+        return $data;
+
+    }
+
 
     // Processing Part
 
@@ -183,11 +204,14 @@ class OptimizeController
         $mediaQ = MediaLibraryQueue::getInstance();
         $customQ = CustomQueue::getInstance();
 
-        Log::addtemp('CustomQ - ' . $customQ->getQueueName());
+      //  Log::addtemp('CustomQ - ' . $customQ->getQueueName());
 
         $results = new \stdClass;
+        Log::addTemp('Running tick MEDIA');
         $results->media = $this->runTick($mediaQ); // run once on mediaQ
-        $results->custom = $this->runTick($customQ);
+        Log::addTemp('Running tick Custom - DISABLED');
+    /*    $results->custom = $this->runTick($customQ); */
+
         $results->total = $this->calculateStatsTotals($results);
 
         return $results;
@@ -277,8 +301,10 @@ class OptimizeController
       {
          if ($result->apiStatus == ApiController::STATUS_SUCCESS )
          {
+
            $queue_name = $q->getQueueName();
-           $type = strtolower($queue_name);
+           $qtype = strtolower($queue_name);
+
            /*if ($queue_name == 'Media')
            {
               $imageItem = $fs->getMediaImage($item->item_id);
@@ -288,7 +314,7 @@ class OptimizeController
              $imageItem = $fs->getCustomImage($item->item_id);
            } */
 
-           $imageItem = $fs->getImage($item->item_id, $type);
+           $imageItem = $fs->getImage($item->item_id, $qtype);
 
 
            $tempFiles = array();
@@ -323,7 +349,7 @@ class OptimizeController
 
               unset($item->result->files);
               $item->result->filename = $imageItem->getFileName();
-              $item->result->queuetype = $q::QUEUE_NAME;
+              $item->result->queuetype = $qtype;
               if ($imageItem->hasBackup())
               {
                 $backupFile = $imageItem->getBackupFile();
@@ -427,8 +453,8 @@ class OptimizeController
             $json->message = sprintf(__("Fetched %d items",  'shortpixel-image-optimiser'), count($result->items));
             $json->results = $result->items;
           break;
-          case Queue::RESULT_RECOUNT:
-             $json->has_errror = true;
+          case Queue::RESULT_RECOUNT: // This one should probably not happen.
+             $json->has_error = true;
              $json->message = sprintf(__('Bulk preparation seems to be interrupted. Restart the queue or continue without accurate count', 'shortpixel-image-optimiser'));
           break;
           default:
@@ -450,7 +476,7 @@ class OptimizeController
     {
       $json = new \stdClass;
       $json->status = null;
-      $json->result = null;
+      $json->result = new \stdClass;
       $json->results = null;
 //      $json->actions = null;
       $json->has_error = false;
@@ -466,11 +492,19 @@ class OptimizeController
     {
         $has_media = $has_custom = false;
 
-        if (is_object($results->media) && property_exists($results->media,'stats'))
+        if (property_exists($results, 'media') &&
+            is_object($results->media) &&
+            property_exists($results->media,'stats'))
+        {
           $has_media = true;
+        }
 
-        if (is_object($results->custom) && property_exists($results->custom, 'stats'))
+        if (property_exists($results, 'custom') &&
+            is_object($results->custom) &&
+            property_exists($results->custom, 'stats'))
+        {
           $has_custom = true;
+        }
 
         $object = new \stdClass;  // total
 
@@ -485,18 +519,54 @@ class OptimizeController
            return $object;
         }
 
-        // When both have stats
+        // When both have stats. Custom becomes the main. Calculate media stats over it.
         $object->stats = $results->custom->stats;
 
-        foreach ($results->custom->stats as $key => $value)
+        foreach ($results->media->stats as $key => $value)
         {
-            if (property_exists($object->stats, $key) && ! is_object($object->stats->$key))
+            if (property_exists($object->stats, $key))
             {
-               $object->stats->$key = $object->stats->$key + $value;
+               if (is_numeric($object->stats->$key)) // add only if number.
+               {
+                $object->stats->$key += $value;
+               }
+               elseif(is_bool($object->stats->$key))
+               {
+                  // True > False in total since this status is true for one of the items.
+                  if ($value === true && $object->stats->$key === false)
+                     $object->stats->$key = true;
+               }
+               elseif (is_object($object->stats->$key)) // bulk object, only numbers.
+               {
+                  foreach($results->media->stats->$key as $bKey => $bValue)
+                  {
+                      $object->stats->$key->$bKey += $bValue;
+                  }
+               }
             }
         }
+
 
         return $object;
     }
 
-}
+    public static function activatePlugin()
+    {
+      $mediaQ = MediaLibraryQueue::getInstance();
+      $customQ = CustomQueue::getInstance();
+
+      $mediaQ->activatePlugin();
+      $customQ->activatePlugin();
+    }
+
+    public static function uninstallPlugin()
+    {
+      $mediaQ = MediaLibraryQueue::getInstance();
+      $customQ = CustomQueue::getInstance();
+
+      $mediaQ->uninstall();
+      $customQ->uninstall();
+
+    }
+
+} // class

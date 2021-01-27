@@ -162,6 +162,7 @@ class UiHelper
            {
              $action = self::getAction('optimizethumbs', $id);
              $action['text']  = sprintf(__('Optimize %s  thumbnails','shortpixel-image-optimiser'),count($optimizable));
+             
              $list_actions['optimizethumbs'] = $action;
           }
 

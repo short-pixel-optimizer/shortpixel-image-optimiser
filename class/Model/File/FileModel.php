@@ -396,12 +396,13 @@ class FileModel extends \ShortPixel\Model
 
      $site_url = str_replace('http:', '', home_url('', 'http'));
      $url = str_replace(array('http:', 'https:'), '', $url);
-
+Log::addTemp('FileModel URL' . $url . ' (' . $site_url . ')');
      if (strpos($url, $site_url) !== false)
      {
        // try to replace URL for Path
        $abspath =  \wpSPIO()->filesystem()->getWPAbsPath();
        $path = str_replace($site_url, rtrim($abspath->getPath(),'/'), $url);
+Log::addTemp('FileModel Path and such' . $path . ' ' . $site_url . ' ' . $url . ' ' . $abspath->getpath());
 
        if (! $this->pathIsUrl($path)) // test again.
        {

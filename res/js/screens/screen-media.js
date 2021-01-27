@@ -72,7 +72,7 @@ var ShortPixelScreen = function (MainScreen, processor)
         console.error('Update Message coloumn not found ' + id);
     }
 
-    this.UpdateStats = function()
+    this.UpdateStats = function(stats, type)
     {
       var waiting = stats.in_queue + stats.in_process;
       this.processor.tooltip.RefreshStats(stats.in_queue);

@@ -1,7 +1,7 @@
 {
     "name": "shortpixel/shortq",
     "description": "Simple Queue",
-    "version": 1.1,
+    "version": 1.2,
     "type": "library",
     "license": "MIT",
     "authors": [

@@ -220,6 +220,7 @@ class ShortPixelPlugin
 
     $settings = \wpSPIO()->settings();
     $ajaxController = AjaxController::getInstance();
+    $optimizeController = OptimizeController::getInstance();
 
     $secretKey = $ajaxController->getProcessorKey();
 
@@ -250,6 +251,8 @@ class ShortPixelPlugin
         'nonce_exit' => wp_create_nonce('exit_process'),
         'nonce_itemview' => wp_create_nonce('item_view'),
         'nonce_ajaxrequest' => wp_create_nonce('ajax_request'),
+        'startData' => $optimizeController->getStartupData(),
+
     ));
 
 
@@ -262,14 +265,14 @@ class ShortPixelPlugin
 
     wp_register_script ('shortpixel-screen-bulk', plugins_url('/res/js/screens/screen-bulk.js',SHORTPIXEL_PLUGIN_FILE), array('jquery', 'shortpixel-processor' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
-    $mediaQ = MediaLibraryQueue::getInstance();
-    $customQ = CustomQueue::getInstance();
+  //  $mediaQ = MediaLibraryQueue::getInstance();
+  //  $customQ = CustomQueue::getInstance();
 
     // Localize status of queue for resume function to start on proper panel.
-    wp_localize_script('shortpixel-screen-bulk', 'ShortPixelScreenBulk', array(
+  /*  wp_localize_script('shortpixel-screen-bulk', 'ShortPixelScreenBulk', array(
            'custom' => $customQ->getStats(),
            'media' => $mediaQ->getStats(),
-    ) );
+    ) ); */
 
 
     wp_register_script('shortpixel', plugins_url('/res/js/shortpixel' . $jsSuffix,SHORTPIXEL_PLUGIN_FILE), array('jquery', 'jquery.knob.min.js'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
@@ -639,12 +642,13 @@ class ShortPixelPlugin
 */
       \WPShortPixelSettings::onActivate();
 
+      OptimizeController::activatePlugin();
+
   }
 
   public static function deactivatePlugin()
   {
-    \ShortPixelQueue::resetBulk();
-    (! defined('SHORTPIXEL_NOFLOCK')) ? \ShortPixelQueue::resetPrio() : \ShortPixelQueueDB::resetPrio();
+  
     \WPShortPixelSettings::onDeactivate();
 
     $env = wpSPIO()->env();
@@ -657,6 +661,9 @@ class ShortPixelPlugin
     $log = $fs->getFile(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
     if ($log->exists())
       $log->delete();
+
+
+
   }
 
   public static function uninstallPlugin()
@@ -672,6 +679,8 @@ class ShortPixelPlugin
         $spMetaDao = new \ShortPixelCustomMetaDao(new \WpShortPixelDb());
         $spMetaDao->dropTables();
     }
+
+    OptimizeController::uninstallPlugin();
   }
 
 

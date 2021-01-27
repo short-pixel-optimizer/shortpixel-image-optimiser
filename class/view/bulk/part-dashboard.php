@@ -13,7 +13,7 @@ namespace ShortPixel;
     </h3>
 
     <div class='bulk-wrapper'>
-      <button type="button" class="button-primary" id="start-bulk" data-action="open-panel" data-panel="selection"><span class='dashicons dashicons-controls-play'>&nbsp;</span> Optimize</button>
+      <button type="button" class="button-primary" id="start-optimize" data-action="StartPrepare"><span class='dashicons dashicons-controls-play'>&nbsp;</span> Optimize</button>
     </div>
 
     <p class='description'>Here you can (re)optimize your Media Library, image files from your theme or other media folders that you are using on your site.

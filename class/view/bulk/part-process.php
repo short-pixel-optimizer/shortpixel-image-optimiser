@@ -56,6 +56,27 @@ namespace ShortPixel;
 
     </div>
 
+    <div class='bulk-summary'>
+      <div class='heading'>
+        <span><i class='dashicons dashicons-open-folder'>&nbsp;</i> Other Media</span>
+        <span>
+              <span class='progressbar'>
+                <span class='done-text'><i data-stats-custom="percentage_done"></i> %</span>
+                <span class='done' data-stats-custom="percentage_done" data-presentation="css.width.percentage"></span>
+              </span>
+        </span>
+        <span>&nbsp;</span>
+        <span>Check Details</span>
+      </div>
+      <div>
+        <span>Items processed: <i data-stats-custom="done">-</i></span>
+        <span>Processing : <i data-stats-custom="in_process">-</i></span>
+        <span>Items Left <i data-stats-custom="in_queue">-</i></span>
+        <span>Errors : <i data-stats-custom="errors">-</i> Check Errors</span>
+      </div>
+
+    </div>
+
     <div class='image-preview'>
       <div class="image-preview-line">
         <strong data-result="queuetype"></strong> <span data-result="filename">Pending</span>

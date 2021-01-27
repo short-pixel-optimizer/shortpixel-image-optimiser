@@ -35,16 +35,17 @@ class MysqlDataProvider implements DataProvider
       $list_order = (10 + $this->itemCount());
       $now = $this->timestamptoSQL();
 
-      $sql = 'INSERT IGNORE INTO ' . $this->table . ' (queue_name, plugin_slug, value, list_order, item_id, updated, created) VALUES ';
+      $sql = 'INSERT IGNORE INTO ' . $this->table . ' (queue_name, plugin_slug, value, item_count, list_order, item_id, updated, created) VALUES ';
       $values = array();
       foreach ($items as $item)
       {
         $item_id = (int) $item->item_id;
+        $item_count = (int) $item->item_count;
         $value = $item->getRaw('value'); // value;
 
         $order = (! is_null($item->list_order)) ? $item->list_order : $list_order;
 
-        $values[] = $wpdb->prepare('(%s, %s, %s, %d, %d, %s, %s)', $this->qName, $this->slug, $value, $order, $item_id, $now, $now);
+        $values[] = $wpdb->prepare('(%s, %s, %s,%d, %d, %d, %s, %s)', $this->qName, $this->slug, $value, $item_count, $order, $item_id, $now, $now);
         if (! isset($item->list_order))
           $list_order++;
 
@@ -145,6 +146,9 @@ class MysqlDataProvider implements DataProvider
       return $date;
    }
 
+   /* 
+   * @return Array
+   */
    private function queryItems($args = array())
    {
      $defaults = array(
@@ -261,7 +265,6 @@ class MysqlDataProvider implements DataProvider
 
     return $this->updateRecords($data, $fields, $operators);
 
-
    }
 
    /** Updates one queued item, for instance in case of failing, or status update
@@ -322,7 +325,6 @@ class MysqlDataProvider implements DataProvider
            $count[$row['status']] = $row['count'];
         }
 
-
       }
 
       if (!empty($wpdb->last_error))
@@ -333,6 +335,50 @@ class MysqlDataProvider implements DataProvider
 
       return $count;
    }
+
+   /* Counts Sum of Items in the Database Queue
+   * @param Status Mixed When supplied with ShortQ Status Constant it will count this status, will count all with ShortQ:QSTATUS_ALL.
+   * When given 'countbystatus' it will return an array with  ShortQ Status as key and the count as value
+     @return Mixed Either count int, or Array.
+   */
+   public function itemSum($status = ShortQ::QSTATUS_WAITING)
+   {
+      global $wpdb;
+      if (is_numeric($status) && $status != ShortQ::QSTATUS_ALL)
+      {
+        $sql = 'SELECT SUM(item_count) FROM ' . $this->table . ' WHERE queue_name = %s and plugin_slug = %s and status = %d ';
+        $count = (int) $wpdb->get_var($wpdb->prepare($sql, $this->qName, $this->slug, $status));
+      }
+      elseif ($status == ShortQ::QSTATUS_ALL) // full queue, with records from all status.
+      {
+        $sql = 'SELECT SUM(item_count) FROM ' . $this->table . ' WHERE queue_name = %s and plugin_slug = %s ';
+        $count = (int) $wpdb->get_var($wpdb->prepare($sql, $this->qName, $this->slug));
+      }
+      elseif ($status == 'countbystatus')
+      {
+        $sql = 'SELECT SUM(item_count) as count, status FROM ' . $this->table . ' WHERE queue_name = %s and plugin_slug = %s group by status';
+        $rows = $wpdb->get_results($wpdb->prepare($sql, $this->qName, $this->slug), ARRAY_A);
+        $count = array();
+
+        foreach($rows as $row)
+        {
+           $count[$row['status']] = (int) $row['count'];
+        }
+
+      }
+
+      if (!empty($wpdb->last_error))
+      {
+        $this->handleError($wpdb->last_error);
+        if ($status == 'countbystatus')
+          return array();
+        else
+          return 0;
+      }
+
+      return $count;
+   }
+
 
    /** Update records
    *
@@ -456,9 +502,9 @@ class MysqlDataProvider implements DataProvider
       // if something something, install.
    }
 
-   public function install()
+   public function install($nocheck = false)
    {
-     if ($this->check())
+     if ($nocheck == false && $this->check())
         return true;
 
      require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
@@ -474,11 +520,12 @@ class MysqlDataProvider implements DataProvider
                 status int(11) NOT NULL DEFAULT 0,
                 list_order int(11) NOT NULL,
                 item_id INT NOT NULL,
+                item_count INT DEFAULT 1,
                 value longtext NOT NULL,
                 tries int(11) NOT NULL DEFAULT 0,
                 created timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 updated timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-                PRIMARY KEY (id),
+                PRIMARY KEY  (id),
                 KEY queue_name (queue_name),
                 KEY plugin_slug (plugin_slug),
                 KEY status (status),
@@ -547,6 +594,11 @@ class MysqlDataProvider implements DataProvider
         $this->install();
      }
 
+     // If the error contains something 'unknown' a field might be missing, do a hard DbDelta.
+     if (strpos(strtolower($error), 'unknown') !== false)
+     {
+      $this->install(true);
+     }
      echo "<PRE> ERROR! ";
       print_r( debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2) );
      echo ($wpdb->last_query);

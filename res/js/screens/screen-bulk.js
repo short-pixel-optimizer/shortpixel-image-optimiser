@@ -16,11 +16,12 @@ var ShortPixelScreen = function (MainScreen, processor)
       this.LoadPanels();
       this.LoadActions();
 
-      console.log(ShortPixelScreenBulk);
+    //  console.log(ShortPixelScreenBulk);
       window.addEventListener('shortpixel.processor.paused', this.TogglePauseNotice.bind(self));
 
-      var initMedia = ShortPixelScreenBulk.media;
-      var initCustom = ShortPixelScreenBulk.custom;
+      var processData = ShortPixelProcessorData.startData;
+      var initMedia = processData.media;
+      var initCustom = processData.custom;
       isPreparing = false;
       isRunning = false;
 
@@ -167,7 +168,7 @@ var ShortPixelScreen = function (MainScreen, processor)
       }
       if (qStatus == 'QUEUE_EMPTY')
       {
-          this.UpdatePanelStatus('queueDone', 'process'); 
+          this.UpdatePanelStatus('queueDone', 'process');
 
       }
     /*  elseif (qStatus == '')
@@ -267,23 +268,29 @@ var ShortPixelScreen = function (MainScreen, processor)
                    if (typeof data[first] !== 'undefined' && typeof data[first][second] !== 'undefined')
                     var value = data[first][second];
                   else
-                    var value = 'n/a';
+                    var value = false;
                 }
                 else
                 {
                    if (typeof data[el] !== 'undefined')
                     var value = data[el];
                    else
-                    var value = 'n/a';
+                    var value =  false;
                 }
 
                 if (presentation)
                 {
+                  if (value !== false)
+                  {
                     if (presentation == 'css.width.percentage')
                       element.style.width = value + '%';
+                  }
                 }
                 else
-                  element.textContent = value;
+                {
+                  if (value !== false)
+                    element.textContent = value;
+                }
 
           });
       }

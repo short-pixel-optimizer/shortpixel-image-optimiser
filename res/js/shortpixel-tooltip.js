@@ -148,6 +148,7 @@ var ShortPixelToolTip = function(reserved, processor)
 
         tooltip.classList.add('shortpixel-paused');
         tooltip.classList.remove('shortpixel-processing');
+        tooltip.classList.remove('shortpixel-hide');
         this.ToggleIcon();
 
     }

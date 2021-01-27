@@ -66,6 +66,11 @@ class CustomImageModelTest extends  WP_UnitTestCase
 
        $metaObj = $this->image_meta;
 
+       $now = time();
+       $added = time() - 3600;
+       $tsAdded = date("Y-m-d H:i:s", $added);
+       $tsOptimized = date("Y-m-d H:i:s", $now);
+
        $data = array(
             'compressed_size' => 500,
             'compression_type' => 1,
@@ -79,11 +84,12 @@ class CustomImageModelTest extends  WP_UnitTestCase
             'backup' => 1,
             'status' => ImageModel::FILE_STATUS_SUCCESS, // FILE_STATUS_SUCCESS,
             'message' => 1.25,
-            'ts_optimized' => date("Y-m-d H:i:s"),
+            'ts_added' => $tsAdded,
+            'ts_optimized' => $tsOptimized,
        );
 
        $format = array(
-          '%d', '%d', '%s', '%s', '%d','%d','%d','%d','%d','%d','%d','%s', '%s',
+          '%d', '%d', '%s', '%s', '%d','%d','%d','%d','%d','%d','%s','%s', '%s', '%s',
        );
 
        $res = $wpdb->insert($table, $data, $format);
@@ -106,6 +112,9 @@ class CustomImageModelTest extends  WP_UnitTestCase
        $this->assertFalse($customObj->getMeta('did_cmyk2rgb'));
        $this->assertEquals(1.25, $customObj->getMeta('customImprovement'));
        $this->assertNull($customObj->getMeta('error_message'));
+       $this->assertEquals($added, $customObj->getMeta('tsAdded'));
+       $this->assertEquals($now, $customObj->getMeta('tsOptimized'));
+
 
        $customObj->setMeta('status', ImageModel::FILE_STATUS_UNPROCESSED );
        $customObj->setMeta('errorMessage', 'StringIsError');
@@ -123,11 +132,14 @@ class CustomImageModelTest extends  WP_UnitTestCase
        $this->assertEquals(ImageModel::FILE_STATUS_UNPROCESSED, $newObj->getMeta('status'));
        $this->assertEquals('StringIsError', $newObj->getMeta('errorMessage'));
        $this->assertNull($newObj->getMeta('customImprovement'));
-
+       $this->assertEquals($added, $customObj->getMeta('tsAdded'));
+       $this->assertEquals($now, $customObj->getMeta('tsOptimized'));
 
   }
 
   // @todo Custom Model for adding files
+
+
 
 
 }

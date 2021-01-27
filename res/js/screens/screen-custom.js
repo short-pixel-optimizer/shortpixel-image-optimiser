@@ -83,7 +83,7 @@ console.log(data);
         {
             var id = data.custom.id;
             var element = document.getElementById('sp-actions-' + id);
-            element.outerHTML = data.custom.result;
+            element.innerHTML = data.custom.result;
 
         }
         return true;

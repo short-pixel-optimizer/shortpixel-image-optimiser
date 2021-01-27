@@ -37,6 +37,9 @@ class ImageThumbnailMeta
   {
      foreach($object as $property => $value)
      {
+        if ($property == 'customImprovement')
+        {  continue;  }
+
         if (property_exists($this, $property))
         {
           $this->$property = $value;
@@ -50,8 +53,11 @@ class ImageThumbnailMeta
      $class = new \stdClass;
      $vars = get_object_vars($this);
 
-     foreach($vars as $property => $value)
+     foreach($vars as $property => $value) // only used by media lib.
      {
+       if ($property == 'customImprovement')
+       {  continue;  }
+
        $class->$property = $this->$property;
      }
 

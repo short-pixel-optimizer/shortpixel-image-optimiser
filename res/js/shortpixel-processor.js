@@ -42,8 +42,9 @@ window.ShortPixelProcessor =
         this.nonce['ajaxRequest'] = ShortPixelProcessorData.nonce_ajaxrequest;
 
         //console.log(ShortPixelProcessorData);
-        console.log('remoteSecret ' + this.remoteSecret + ' ' + this.localSecret);
+        console.log('remoteSecret ' + this.remoteSecret + ', localsecret: ' + this.localSecret);
         //this.localSecret = null;
+console.log(ShortPixelProcessorData.startData);
 
         this.CheckActive();
 
@@ -69,28 +70,30 @@ window.ShortPixelProcessor =
     },
     CheckActive: function()
     {
-      if (this.remoteSecret == false || this.isBulkPage) // if remoteSecret is false, we are the first process. Take it.
+      if (this.isManualPaused)
+      {
+          this.isActive = false;
+        //  this.PauseProcess();
+
+          console.log('Processor Paused');
+      }
+      else if (this.remoteSecret == false || this.isBulkPage) // if remoteSecret is false, we are the first process. Take it.
       {
          this.localSecret = this.remoteSecret = Math.random().toString(36).substring(7);
-         localStorage.bulkSecret = this.localSecret;
+         localStorage.setItem('bulkSecret',this.localSecret);
          this.isActive = true;
       }
       else if (this.remoteSecret === this.localSecret) // There is a secret, we are the processor.
       {
          this.isActive = true;
       }
-      else if (this.isManualPaused)
-      {
-          this.isActive = false;
-          this.StopProcess();
-
-          console.log('Processor Paused');
-      }
       else
       {
          console.debug('Processor not active - ' + this.remoteSecret + ' - ' + this.localSecret);
          this.tooltip.ProcessEnd();
       }
+
+      return this.isActive;
     },
     LoadWorker: function()
     {
@@ -134,7 +137,7 @@ window.ShortPixelProcessor =
         if (this.timer)
           window.clearTimeout(this.timer);
 
-        if (this.isManualPaused)
+        if (! this.CheckActive())
             return;
 
         if (this.timesEmpty >= 5)
@@ -150,7 +153,6 @@ window.ShortPixelProcessor =
       window.dispatchEvent(event);
 
       window.clearTimeout(this.timer);
-
 
     },
     StopProcess: function()
@@ -217,6 +219,10 @@ window.ShortPixelProcessor =
 
            this.HandleStatus(response);
 
+           if (response.processorKey)
+           {
+              this.remoteSecret = response.processorKey;
+           }
       }
 
     },
@@ -286,7 +292,7 @@ window.ShortPixelProcessor =
          var qstatus = this.qStatus[combinedStatus];
           if (qstatus == 'QUEUE_ITEMS' || qstatus == "PREPARING")
           {
-            console.log('Qstatus Preparing');
+            console.log('Qstatus Preparing or items returns');
              this.timesEmpty = 0;
              this.RunProcess();
           }

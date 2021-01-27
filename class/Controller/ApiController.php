@@ -204,9 +204,18 @@ class ApiController
     // This is only set if something is up, otherwise, ApiResponise returns array
     if ( isset($APIresponse['Status']))
     {
-        // Check for known errors.
+        // Check for known errors. : https://shortpixel.com/api-docs
         switch($APIresponse['Status']->Code)
         {
+              case -102: // Invalid URL
+              case -105: // URL missing
+              case -106: // Url is inaccessible
+              case -113: // Too many inaccessible URLs
+              case -201: // Invalid image format
+              case -202: // Invalid image or unsupported format
+              case -203: // Could not download file
+                 return $this->returnFailure( self::STATUS_ERROR, $APIresponse['Status']->Message);
+              break;
               case -403:
                   @delete_option('bulkProcessingStatus');
                   $this->_settings->quotaExceeded = 1; // @todo This should be a function in quotaController.
@@ -356,20 +365,22 @@ class ApiController
                   $downloadResult = $this->handleDownload($fileData->$fileType, $fileData->$fileSize, $fileData->OriginalSize //isset($fileData->$webpType) ? $fileData->$webpType : 'NA'
                 );
               }
-Log::addTemp('DownloadResult', $downloadResult);
+
               /* Status_Unchanged will be caught by ImageModel and not copied ( should be ).
               * @todo Write Unit Test for Status_unchanged
               * But it should still be regarded as File Done. This can happen on very small file ( 6pxX6px ) which will not optimize.
               */
-              if ( $downloadResult->status == self::STATUS_SUCCESS || $downloadResult->status == self::STATUS_UNCHANGED ) {
+              if ( $downloadResult->apiStatus == self::STATUS_SUCCESS || $downloadResult->apiStatus == self::STATUS_UNCHANGED ) {
                   // Removes any query ?strings and returns just filename of originalURL
-                  $originalURL = substr($fileData->OriginalURL, 0, (strpos($fileData->OriginalURL, '?'))  ); // Strip Query String from URL.
+                  $originalURL = $fileData->OriginalURL;
+
+                  if (strpos($fileData->OriginalURL, '?') !== false)
+                  {
+                    $originalURL = substr($fileData->OriginalURL, 0, (strpos($fileData->OriginalURL, '?'))  ); // Strip Query String from URL. If it's there!
+                  }
                   $originalFile = $fs->getFile($originalURL); //basename(parse_url($fileData->OriginalURL, PHP_URL_PATH));
                   $originalName = $originalFile->getFileName();
                   $results[$originalName] = $downloadResult;
-
-                  Log::addDebug('Downloaded' . $fileData->OriginalURL);
-
 
                   if (isset($fileData->$webpType))
                   {
@@ -381,7 +392,7 @@ Log::addTemp('DownloadResult', $downloadResult);
                         $webpDownloadResult = $this->handleDownload($fileData->$webpType, false, false);
                     }
 
-                    if ( $webpDownloadResult->status == self::STATUS_SUCCESS)
+                    if ( $webpDownloadResult->apiStatus == self::STATUS_SUCCESS)
                     {
                        Log::addDebug('Downloaded Webp : ' . $fileData->$webpType);
                        $results[$webpName] = $downloadResult;
@@ -430,8 +441,8 @@ Log::addTemp('DownloadResult', $downloadResult);
           $counter++;
       }
 
-//Log::addTemp('results', $results);
       // *******************************
+
       return $this->returnSuccess($results, self::STATUS_SUCCESS, false);
 
       //figure out in what SubDir files should land

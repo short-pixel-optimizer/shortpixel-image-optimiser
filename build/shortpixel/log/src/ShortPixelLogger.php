@@ -62,7 +62,6 @@ namespace ShortPixel\ShortPixelLogger;
           $this->logLevel = intval($_REQUEST['SHORTPIXEL_DEBUG']);
         }
 
-
       }
       else if ( (defined('SHORTPIXEL_DEBUG') && SHORTPIXEL_DEBUG > 0) )
       {
@@ -338,7 +337,7 @@ namespace ShortPixel\ShortPixelLogger;
        $controller = $this;
 
        $template_path = __DIR__ . '/' . $this->template  . '.php';
-       
+      // var_dump( $template_path);
        if (file_exists($template_path))
        {
 

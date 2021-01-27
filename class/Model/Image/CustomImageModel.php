@@ -11,6 +11,8 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
     protected $type = 'custom';
 
+    protected $thumbnails = array(); // placeholder, should return empty.
+    protected $retinas = array(); // placeholder, should return empty.
 
     public function __construct($id)
     {
@@ -64,6 +66,20 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         return false;
     }
 
+    public function handleOptimized($downloadResults)
+    {
+       $bool = parent::handleOptimized($downloadResults);
+
+       if ($bool)
+       {
+         $this->setMeta('customImprovement', $this->getImprovement());
+         $this->saveMeta();
+       }
+
+
+       return $bool;
+    }
+
     public function loadMeta()
     {
       $metadao = \wpSPIO()->getShortPixel()->getSpMetaDao();
@@ -96,7 +112,6 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
       if (! is_numeric($imagerow->message) && ! is_null($imagerow->message))
         $metaObj->errorMessage = $imagerow->message;
 
-
       $metaObj->did_keepExif = (intval($imagerow->keep_exif) == 1)  ? true : false;
 
       $metaObj->did_cmyk2rgb = (intval($imagerow->cmyk2rgb) == 1) ? true : false;
@@ -109,10 +124,14 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
       if (intval($imagerow->resize_height) > 0)
         $metaObj->resizeHeight = intval($imagerow->resize_height);
 
-        $metaObj->has_backup = (intval($imagerow->backup) == 1) ? true : false;
+        //$metaObj->has_backup = (intval($imagerow->backup) == 1) ? true : false;
 
         $addedDate = \DateTime::createFromFormat('Y-m-d H:i:s', $imagerow->ts_added);
         $metaObj->tsAdded = $addedDate->getTimestamp();
+
+        $optimizedDate = \DateTime::createFromFormat('Y-m-d H:i:s', $imagerow->ts_optimized);
+        $metaObj->tsOptimized = $optimizedDate->getTimestamp();
+
 
         $this->image_meta = $metaObj;
     }
@@ -130,9 +149,15 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         $message = $metaObj->customImprovement;
        elseif (! is_null($metaObj->errorMessage))
         $message = $metaObj->errorMessage;
+       else
+        $message = null;
 
       $optimized = new \DateTime();
       $optimized->setTimestamp($metaObj->tsOptimized);
+
+      $added = new \DateTime();
+      $added->setTimeStamp($metaObj->tsAdded);
+
 
        $data = array(
             'compressed_size' => $metaObj->compressedSize,
@@ -142,14 +167,16 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
             'resize' =>  ($metaObj->resize) ? 1 : 0,
             'resize_width' => $metaObj->resizeWidth,
             'resize_height' => $metaObj->resizeHeight,
-            'backup' => ($metaObj->has_backup) ? 1 : 0,
+            'backup' => ($this->hasBackup()) ? 1 : 0,
             'status' => $metaObj->status,
+            'retries' => 0, // this is unused / legacy
             'message' => $message,
+            'ts_added' => $added->format('Y-m-d H:i:s'),
             'ts_optimized' => $optimized->format('Y-m-d H:i:s'),
        );
-
+Log::addDebug('Save Custom Meta', $data);
        $format = array(
-            '%d', '%d', '%d','%d','%d','%d','%d','%d','%d','%s', '%s',
+            '%d', '%d', '%d','%d','%d','%d','%d','%d','%d', '%d',  '%s','%s', '%s',
        );
 
        $res = $wpdb->update($table, $data, $where, $format);

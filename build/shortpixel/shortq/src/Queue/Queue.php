@@ -16,14 +16,14 @@ interface Queue
 {
 
   // needs to sync with DataProvider!
-  const QSTATUS_WAITING = 0; //Waiting for process
+/*  const QSTATUS_WAITING = 0; //Waiting for process
   const QSTATUS_PULLED = 1;
   const QSTATUS_INPROCESS = 2; // Doing process now
   const QSTATUS_DONE = 3; // Is Done.
 
   const QSTATUS_DELETE = -1; // this is a virtual status. If set to this, will be deleted.
   const QSTATUS_ERROR = -2;
-  const QSTATUS_FATAL = -3;
+  const QSTATUS_FATAL = -3; */
   //private $name; // queue name
 
   public function __construct($pluginSlug, $queue_name, $dataProvider);
@@ -47,6 +47,7 @@ interface Queue
 
   public function hasItems();
   public function itemCount();
+  public function itemSum($status = SHORTQ::QSTATUS_ALL);
 
   // reset, start fresh
   public function resetQueue();

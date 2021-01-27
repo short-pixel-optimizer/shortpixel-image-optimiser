@@ -123,8 +123,6 @@ class QueueTest extends WP_UnitTestCase
       $this->assertObjectNotHasAttribute('_queueItem', $qItem);
       $this->assertEquals($testMediaItem, $mItem);
       //$this->assertObjectNotHasAttribute('', $qItem);
-
-
   }
 
   /*public function testMediaItemToQueue()
@@ -158,6 +156,12 @@ class QueueTest extends WP_UnitTestCase
     $this->assertObjectHasAttribute('errors', $mediaItem2);
     $this->assertEquals('test', $mediaItem2->errors);
     $this->assertEquals(1, $mediaItem2->tries);
+  }
+
+  public function testReCountQueue()
+  {
+    $this->markTestIncomplete('This test has not been implemented yet.');
+
   }
 
 }
