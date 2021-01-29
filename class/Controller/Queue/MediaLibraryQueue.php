@@ -8,17 +8,19 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 class MediaLibraryQueue extends Queue
 {
-   protected $queueName = 'Media';
+   protected $queueName = '';
    protected $cacheName = 'MediaCache'; // When preparing, write needed data to cache.
 
    protected static $instance;
 
 
    /* MediaLibraryQueue Instance */
-   public function __construct()
+   public function __construct($queueName = 'Media')
    {
      $shortQ = new ShortQ(self::PLUGIN_SLUG);
-     $this->q = $shortQ->getQueue($this->queueName);
+     Log::addTemp('Getting MediaQ ' . $queueName);
+     $this->q = $shortQ->getQueue($queueName);
+     $this->queueName = $queueName;
 
      $options = array(
         'numitems' => 1,
@@ -30,20 +32,12 @@ class MediaLibraryQueue extends Queue
 
      $options = apply_filters('shortpixel/medialibraryqueue/options', $options);
      $this->q->setOptions($options);
-
    }
 
-   public static function getInstance()
+   public function getType()
    {
-      if (is_null(self::$instance))
-      {
-         $class = get_called_class();
-         static::$instance = new $class();
-      }
-
-      return static::$instance;
+      return 'media';
    }
-
 
    protected function prepare()
    {

@@ -37,6 +37,7 @@ abstract class Queue
 
 
     abstract protected function prepare();
+    abstract public function getType();
 
     public function createNewBulk($args)
     {
@@ -68,8 +69,9 @@ abstract class Queue
 
        $qItem = $this->imageModelToQueue($imageModel);
 
-       $item = array('id' => $imageModel->get('id'), 'value' => $qItem);
-       $numitems = $this->q->withOrder(array($item), 5)->withRemoveDuplicates()->enqueue(); // enqueue returns numitems
+       $item = array('id' => $imageModel->get('id'), 'value' => $qItem, 'item_count' => count($qItem->urls));
+       $this->q->addItems(array($item));
+       $numitems = $this->q->withRemoveDuplicates()->enqueue(); // enqueue returns numitems
 
        $this->q->setStatus('preparing', $preparing); // add single should not influence preparing status.
        $result = new \stdClass;
@@ -86,7 +88,7 @@ abstract class Queue
        $result->qstatus = self::RESULT_UNKNOWN;
        $result->items = null;
 
-       if ( $this->getStatus('preparing') === true)
+       if ( $this->getStatus('preparing') === true) // When preparing a queue for bulk
        {
             $prepared = $this->prepare();
             $result->qstatus = self::RESULT_PREPARING;
@@ -99,9 +101,9 @@ abstract class Queue
                if ($prepared['results'] == 0) /// This means no results, empty query.
                 $result->qstatus = self::RESULT_PREPARING_DONE;
 
-               $cache = new CacheController();
+/*               $cache = new CacheController();
                $countCache = $cache->getItem($this->cacheName);
-               $count = $countCache->getValue();
+               $count = $countCache->getValue(); */
 
             /*   if ($count->items !== $this->getStatus('items'))
                {
@@ -111,15 +113,19 @@ abstract class Queue
                } */
             }
        }
-       elseif ($this->getStatus('bulk_running') === true)
+    /*   elseif ($this->getStatus('bulk_running') === true) // When the bulk is running, regular dequeue
        {
             Log::addTemp('Bulk Running on this Q, doing deQueue' . $this->queueName);
             $items = $this->deQueue();
        }
-       else
+       elseif (\wpSPIO()->env()->is_bulk_page) // resume issue. When preparing done, but not running. Return a all done on still.
        {
-            Log::addTemp('NO Bulk Running on this Q, doing deQueuePriority' . $this->queueName);
-            $items = $this->deQueuePriority();
+
+       } */
+       else // No bulk, but general page, dequeue the priorities.
+       {
+            Log::addTemp('NO Bulk Running on this Q, doing deQueue' . $this->queueName);
+            $items = $this->deQueue();
        }
 
        if (isset($items)) // did a dequeue.
@@ -257,7 +263,7 @@ abstract class Queue
 
       //$cache = new CacheController();
       //$countCache = $cache->getItem($this->cacheName);
-      $countObj =  $this->getCountCache(); // $countCache->getValue();
+    //  $countObj =  $this->getCountCache(); // $countCache->getValue();
 
       if ($stats->is_preparing)
       {
@@ -265,15 +271,16 @@ abstract class Queue
         //$this->q->itemSum('')
       }
 
-      if (is_object($countObj))
+/*      if (is_object($countObj))
       {
         //$stats->bulk = $countObj;
 
-      }
+      } */
 
       return $stats;
     }
 
+/*
     protected function getCountCache()
     {
       $cache = new CacheController();
@@ -305,6 +312,7 @@ abstract class Queue
       $countCache->setExpires(14 * DAY_IN_SECONDS);
       $cache->storeItemObject ($countCache);
     }
+*/
 
     /** Recounts the ItemSum for the Queue
     *
@@ -343,13 +351,13 @@ abstract class Queue
        return $items;
     }
 
-    protected function deQueuePriority()
+    /*protected function deQueuePriority()
     {
       $items = $this->q->deQueue(array('onlypriority' => true));
       $items = array_map(array($this, 'queueToMediaItem'), $items);
 
       return $items;
-    }
+    } */
 
 
     protected function queueToMediaItem($qItem)

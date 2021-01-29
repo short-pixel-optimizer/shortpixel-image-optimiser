@@ -46,15 +46,11 @@ window.ShortPixelProcessor =
         //this.localSecret = null;
 console.log(ShortPixelProcessorData.startData);
 
-        this.CheckActive();
-
-        // Always load worker, also used for UI actions.
-        this.LoadWorker();
-
 
         if (typeof ShortPixelScreen == 'undefined')
         {
            console.error('Missing Screen for feedback!');
+           return;
         }
         else
           this.screen = new ShortPixelScreen({}, this);
@@ -62,7 +58,11 @@ console.log(ShortPixelProcessorData.startData);
         this.tooltip = new ShortPixelToolTip({}, this);
 
 
-        if (this.isActive)
+        // Always load worker, also used for UI actions.
+        this.LoadWorker();
+
+
+        if (this.CheckActive())
         {
             this.RunProcess();
         }
@@ -70,16 +70,15 @@ console.log(ShortPixelProcessorData.startData);
     },
     CheckActive: function()
     {
-      if (this.isManualPaused)
-      {
-          this.isActive = false;
-        //  this.PauseProcess();
 
-          console.log('Processor Paused');
-      }
-      else if (this.remoteSecret == false || this.isBulkPage) // if remoteSecret is false, we are the first process. Take it.
+      if (this.remoteSecret == false || this.isBulkPage) // if remoteSecret is false, we are the first process. Take it.
       {
-         this.localSecret = this.remoteSecret = Math.random().toString(36).substring(7);
+      //   this.localSecret = this.remoteSecret = Math.random().toString(36).substring(7);
+         if (this.localSecret.length > 0)
+           this.remoteSecret = this.localSecret;
+         else
+           this.localSecret = Math.random().toString(36).substring(7);
+
          localStorage.setItem('bulkSecret',this.localSecret);
          this.isActive = true;
       }
@@ -91,8 +90,16 @@ console.log(ShortPixelProcessorData.startData);
       {
          console.debug('Processor not active - ' + this.remoteSecret + ' - ' + this.localSecret);
          this.tooltip.ProcessEnd();
+         this.StopProcess();
       }
 
+      if (this.isManualPaused)
+      {
+          this.isActive = false;
+        //  this.PauseProcess();
+
+          console.log('Processor Paused');
+      }
       return this.isActive;
     },
     LoadWorker: function()
@@ -105,7 +112,11 @@ console.log(ShortPixelProcessorData.startData);
 
             this.worker = new Worker(ShortPixelProcessorData.workerURL);
 
-            this.worker.postMessage({'action': 'init', 'data' : [ajaxURL, this.localSecret]});
+            var isBulk = false;
+            if (this.isBulkPage)
+               isBulk = true;
+
+            this.worker.postMessage({'action': 'init', 'data' : [ajaxURL, this.localSecret], 'isBulk' : isBulk});
             this.worker.onmessage = this.CheckResponse.bind(this);
             window.addEventListener('beforeunload', this.ShutDownWorker.bind(this));
 
@@ -117,7 +128,7 @@ console.log(ShortPixelProcessorData.startData);
           return false;
 
         console.log('Shutting down Worker');
-        this.worker.postMessage({'action' : 'shutdown', 'nonce': this.nonce['exit'] });
+      //  this.worker.postMessage({'action' : 'shutdown', 'nonce': this.nonce['exit'] });
       //  this.worker.terminate();
         this.worker = null;
         window.removeEventListener('beforeunload', this.ShutDownWorker.bind(this));
@@ -138,8 +149,9 @@ console.log(ShortPixelProcessorData.startData);
           window.clearTimeout(this.timer);
 
         if (! this.CheckActive())
+        {
             return;
-
+        }
         if (this.timesEmpty >= 5)
            this.interval = 2000 + (this.timesEmpty * 1000);  // every time it turns up empty, second slower.
 

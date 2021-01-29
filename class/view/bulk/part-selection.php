@@ -24,7 +24,6 @@ namespace ShortPixel;
          </div>
        </div>
 
-
        <div class="interface wrapper">
          <div class="media-library optiongroup">
             <div class='switch_button'>
@@ -34,7 +33,7 @@ namespace ShortPixel;
               </label>
             </div>
 
-              Your Media Library
+            <h4>Your Media Library</h4>
             <div class='option'>
               Original Images  <span class="number" data-stats-media="total"><?php _e('n/a', 'shortpixel-image-optimizer') ?></span>
             </div>
@@ -49,7 +48,8 @@ namespace ShortPixel;
                <input type="checkbox" class="switch">
                <div class="the_switch">&nbsp; </div>
              </label>
-           </div> Custom Images
+           </div>
+           <h4> Custom Images</h4>
             <div class='option'>
               Images <span class="number" data-stats-custom="bulk-items"><?php _e('n/a', 'shortpixel-image-optimizer')  ?></span>
             </div>

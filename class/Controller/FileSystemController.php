@@ -54,7 +54,7 @@ Class FileSystemController extends \ShortPixel\Controller
     }
 
     /** Generic function to get the correct image Object, to prevent many switches everywhere */
-    public function getImage($id, $type)
+    public function getImage(int $id, string $type)
     {
       $imageObj = null;
 

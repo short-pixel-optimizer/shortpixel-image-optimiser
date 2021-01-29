@@ -258,6 +258,22 @@
             }
          }
       }
+
+      .optiongroup
+      {
+         margin-left: 15px;
+         .switch_button {
+            display: inline-block;
+         }
+         h4 {
+            font-size: 14px;
+            font-weight: 700;
+            display: inline-block;
+         }
+         .option {
+           margin-left: 45px;
+          }
+      }
     } // panel
 
     section.panel.summary

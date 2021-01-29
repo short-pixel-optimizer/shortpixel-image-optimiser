@@ -20,29 +20,34 @@ class OptimizeController
     protected static $instance;
     protected static $results;
 
+    protected $isBulk = false; // if queueSystem should run on BulkQueues;
+
     public function __construct()
     {
 
     }
 
-    public static function getInstance()
+    // If OptimizeController should use the bulkQueues.
+    public function setBulk(bool $bool)
     {
-       if ( is_null(self::$instance))
-          self::$instance = new OptimizeController();
-
-      return self::$instance;
+       $this->isBulk = $bool;
     }
 
-    protected function getQueue(Object $mediaItem)
+
+    protected function getQueue($type)
     {
         $queue = null;
 
-        if ($mediaItem->get('type') == 'media')
-          $queue = MediaLibraryQueue::getInstance();
-
-        if ($mediaItem->get('type') == 'custom')
-          $queue = CustomQueue::getInstance();
-
+        if ($type == 'media')
+        {
+            $queueName = ($this->isBulk == true) ? 'media' : 'mediaSingle';
+            $queue = new MediaLibraryQueue($queueName);
+        }
+        if ($type == 'custom')
+        {
+          $queueName = ($this->isBulk == true) ? 'custom' : 'customSingle';
+          $queue = new CustomQueue($queueName);
+        }
         return $queue;
     }
 
@@ -62,7 +67,7 @@ class OptimizeController
         $json->status = 0;
         $json->result->item_id = $id;
 
-        $queue = $this->getQueue($mediaItem);
+        $queue = $this->getQueue($mediaItem->get('type'));
 
         if ($mediaItem === false)
         {
@@ -154,8 +159,8 @@ class OptimizeController
     public function getStartupData()
     {
 
-      $mediaQ = MediaLibraryQueue::getInstance();
-      $customQ = CustomQueue::getInstance();
+        $mediaQ = $this->getQueue('media');
+        $customQ = $this->getQueue('custom');
 
         $data = new \stdClass;
         $data->media = new \stdClass;
@@ -180,7 +185,7 @@ class OptimizeController
     *
     * @return Object JSON object detailing results of run
     */
-    public function processQueue()
+    public function processQueue($queueTypes = array())
     {
 
         $keyControl = ApiKeyController::getInstance();
@@ -201,16 +206,22 @@ class OptimizeController
           return $json;
         }
 
-        $mediaQ = MediaLibraryQueue::getInstance();
-        $customQ = CustomQueue::getInstance();
+        $mediaQ = $this->getQueue('media');
+        $customQ = $this->getQueue('custom');
 
+        Log::addTemp("Media Queue Name " . $mediaQ->getQueueName(), $this->isBulk);
       //  Log::addtemp('CustomQ - ' . $customQ->getQueueName());
+
+        // Here prevent bulk from running when running flag is off
+
+        // Here prevent a runTick is the queue is empty and done already ( reliably )
+
 
         $results = new \stdClass;
         Log::addTemp('Running tick MEDIA');
         $results->media = $this->runTick($mediaQ); // run once on mediaQ
-        Log::addTemp('Running tick Custom - DISABLED');
-    /*    $results->custom = $this->runTick($customQ); */
+        Log::addTemp('Running tick Custom');
+        $results->custom = $this->runTick($customQ);
 
         $results->total = $this->calculateStatsTotals($results);
 
@@ -302,8 +313,8 @@ class OptimizeController
          if ($result->apiStatus == ApiController::STATUS_SUCCESS )
          {
 
-           $queue_name = $q->getQueueName();
-           $qtype = strtolower($queue_name);
+           $qtype = $q->getType();
+           $qtype = strtolower($qtype);
 
            /*if ($queue_name == 'Media')
            {
@@ -552,11 +563,11 @@ class OptimizeController
 
     public static function activatePlugin()
     {
-      $mediaQ = MediaLibraryQueue::getInstance();
-      $customQ = CustomQueue::getInstance();
+      $mediaQ = new MediaLibraryQueue();
+      //$customQ = new CustomQueue();
 
       $mediaQ->activatePlugin();
-      $customQ->activatePlugin();
+    //  $customQ->activatePlugin();
     }
 
     public static function uninstallPlugin()

@@ -2663,7 +2663,7 @@ class WPShortPixel {
         if($quotaData['APICallsQuotaNumeric'] + $quotaData['APICallsQuotaOneTimeNumeric'] > $quotaData['APICallsMadeNumeric'] + $quotaData['APICallsMadeOneTimeNumeric']) {
             $this->_settings->quotaExceeded = '0';
             $this->_settings->prioritySkip = NULL;
-            Log::addInfo("CHECK QUOTA: Skipped: ".json_encode($this->prioQ->getSkipped()));
+          
 
             ?><script>var shortPixelQuotaExceeded = 0;</script><?php
         }

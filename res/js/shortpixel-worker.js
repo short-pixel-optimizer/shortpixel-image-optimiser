@@ -6,14 +6,17 @@ onmessage = function(e)
   var action = e.data.action;
   var data = e.data.data;
   var nonce = e.data.nonce;
+  var isBulk = false;
 
   SpWorker.nonce = nonce;
 
+  if (typeof e.data.isBulk !== 'undefined')
+     isBulk = e.data.isBulk;
 
   switch(action)
   {
      case 'init':
-        SpWorker.Init(data[0], data[1]);
+        SpWorker.Init(data[0], data[1], isBulk);
      break;
      case 'shutdown':
         SpWorker.ShutDown();
@@ -40,6 +43,7 @@ SpWorker = {
    action: 'shortpixel_image_processing',
    secret: null,
    nonce: null,
+   isBulk: false,
 
    Fetch: async function (data)
    {
@@ -54,6 +58,7 @@ SpWorker = {
       params.append('action', this.action);
       params.append('bulk-secret', this.secret);
       params.append('nonce', this.nonce);
+      params.append('isBulk', this.isBulk);
 
       if (typeof data !== 'undefined' && typeof data == 'object')
       {
@@ -73,7 +78,7 @@ SpWorker = {
       {
         console.log('response ok');
           var json = await response.json();
-          console.log(json);
+
           postMessage({'status' : true, response: json});
       }
       else
@@ -81,10 +86,11 @@ SpWorker = {
           postMessage({'status' : false, message: response.status});
       }
    },
-   Init: function(url, secret)
+   Init: function(url, secret, isBulk)
    {
         this.ajaxUrl = url;
         this.secret = secret;
+        this.isBulk = isBulk;
    },
    ShutDown: function()
    {

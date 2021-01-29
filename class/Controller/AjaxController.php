@@ -31,26 +31,72 @@ class AjaxController
 
       $secretKey = $bulkSecret->getValue();
       if (is_null($secretKey) || strlen($secretKey) == 0)
+      {
         $secretKey = false;
-
+      }
       return $secretKey;
     }
 
+    public function checkProcessorKey()
+    {
+      $processKey = $this->getProcessorKey();
+      $bulkSecret = isset($_POST['bulk-secret']) ? sanitize_text_field($_POST['bulk-secret']) : false;
 
+      Log::addTemp("ProcessKey $processKey - BulkSecret $bulkSecret");
+
+      $is_processor = false;
+      if ($processKey == false && $bulkSecret !== false)
+      {
+          $is_processor = true;
+      }
+      elseif ($processKey == $bulkSecret)
+      {
+         $is_processor = true;
+      }
+      elseif (\wpSPIO()->env()->is_bulk_page)
+      {
+         $is_processor = true;
+      }
+
+      // Save new ProcessorKey
+      if ($is_processor && $bulkSecret !== $processKey)
+      {
+        $cacheControl = new CacheController();
+        $cachedObj = $cacheControl->getItem('bulk-secret');
+
+        $cachedObj->setValue($bulkSecret);
+        $cachedObj->setExpires(2 * MINUTE_IN_SECONDS);
+        $cachedObj->save();
+      }
+
+      if (! $is_processor)
+      {
+        $json = new \stdClass;
+        $json->message = __('Processor is active in another window', 'shortpixel-image-optimiser');
+        $json->status = false;
+        $this->send($json);
+      }
+
+    }
+
+
+    /*
+    OFF for now since Pkey doesn't need reloading every page refresh. It's meant so not all site users will be optimizing all the time overloading the server. It can be assigned to somebody for a bit. On bulk page, it should be released though */
+    /*
     public function ajax_removeProcessorKey()
     {
 
       $this->checkNonce('exit_process');
       Log::addDebug('Process Exiting');
 
-        $cacheControl = new CacheController();
-        $cacheControl->deleteItem('bulk-secret');
+      $cacheControl = new CacheController();
+      $cacheControl->deleteItem('bulk-secret');
 
-        $json = new \stdClass;
-        $json->status = 0;
-        $this->send($json);
+      $json = new \stdClass;
+      $json->status = 0;
+      $this->send($json);
 
-    }
+    } */
 
     public function ajax_getItemView()
     {
@@ -95,22 +141,13 @@ class AjaxController
     public function ajax_processQueue()
     {
         $this->checkNonce('processing');
+        $this->checkProcessorKey();
 
-        if (isset($_POST['bulk-secret']))
-        {
-          $secret = sanitize_text_field($_POST['bulk-secret']);
-          $cacheControl = new CacheController();
-          $cachedObj = $cacheControl->getItem('bulk-secret');
+        // Notice that POST variables are always string, so 'true', not true.
+        $isBulk = (isset($_POST['isBulk']) && $_POST['isBulk'] === 'true') ? true : false;
 
-          if (! $cachedObj->exists())
-          {
-             $cachedObj->setValue($secret);
-             $cachedObj->setExpires(3 * MINUTE_IN_SECONDS);
-             $cacheControl->storeItemObject($cachedObj);
-          }
-        }
-
-        $control = OptimizeController::getInstance();
+        $control = new OptimizeController();
+        $control->setBulk($isBulk);
         $result = $control->processQueue();
 
         $this->send($result);
@@ -139,7 +176,7 @@ class AjaxController
         $data = array('id' => $id, 'typeArray' => $typeArray, 'action' => $action);
 
         if (count($typeArray) == 1) // Actions which need specific type like optimize / restore.
-          $data['type'] = $type[0];
+          $data['type'] = $typeArray[0];
 
         switch($action)
         {
@@ -171,11 +208,13 @@ class AjaxController
     public function getMediaItem($id, $type)
     {
       $fs = \wpSPIO()->filesystem();
+
       return $fs->getImage($id, $type);
 
 
     }
 
+    /** Adds  a single Items to the Single queue */
     public function optimizeItem()
     {
           $id = intval($_POST['id']);
@@ -183,7 +222,8 @@ class AjaxController
 
           $mediaItem = $this->getMediaItem($id, $type);
 
-          $control = OptimizeController::getInstance();
+          $control = new OptimizeController();
+
 
           $json = new \stdClass;
           $json->$type = new \stdClass;
@@ -198,10 +238,11 @@ class AjaxController
     public function restoreItem($json, $data)
     {
       $id = $data['id'];
-      $type =$data['type']; // isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';
+      $type =$data['type'];
 
       $mediaItem = $this->getMediaItem($id, $type);
-      $control = OptimizeController::getInstance();
+      $control = new OptimizeController();
+
       // @todo Turn back on, when ok.
       $json->$type = $control->restoreItem($mediaItem);
 
@@ -215,7 +256,7 @@ class AjaxController
        $compressionType = isset($_POST['compressionType']) ? intval($_POST['compressionType']) : 0;
        $mediaItem = $this->getMediaItem($id, $type);
 
-       $control = OptimizeController::getInstance();
+       $control = new OptimizeController();
 
        $json->$type = $control->reOptimizeItem($mediaItem, $compressionType);
        return $json;
@@ -309,7 +350,6 @@ class AjaxController
     }
 
 
-
     protected function send($json)
     {
         $json->responses = ResponseController::getAll();
@@ -320,7 +360,7 @@ class AjaxController
 
         $pKey = $this->getProcessorKey();
         if ($pKey !== false)
-          $json->processorKey = $pKey; 
+          $json->processorKey = $pKey;
 
         wp_send_json($json);
         exit();

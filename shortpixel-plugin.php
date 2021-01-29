@@ -129,7 +129,7 @@ class ShortPixelPlugin
       // defer notices a little to allow other hooks ( notable adminnotices )
 
     //  add_action( 'shortpixel-thumbnails-before-regenerate', array( $this->shortPixel, 'thumbnailsBeforeRegenerateHook' ), 10, 1);
-      add_action( 'shortpixel-thumbnails-regenerated', array( OptimizeController::getInstance(), 'thumbnailsRegeneratedHook' ), 10, 4);
+      add_action( 'shortpixel-thumbnails-regenerated', array( new OptimizeController(), 'thumbnailsRegeneratedHook' ), 10, 4);
 
       // Media Library
       add_action('load-upload.php', array($this, 'route'));
@@ -220,7 +220,6 @@ class ShortPixelPlugin
 
     $settings = \wpSPIO()->settings();
     $ajaxController = AjaxController::getInstance();
-    $optimizeController = OptimizeController::getInstance();
 
     $secretKey = $ajaxController->getProcessorKey();
 
@@ -228,6 +227,10 @@ class ShortPixelPlugin
     $apikey = $keyControl->getKeyForDisplay();
 
     $is_bulk_page = \wpSPIO()->env()->is_bulk_page;
+
+    $optimizeController = new OptimizeController();
+    $optimizeController->setBulk($is_bulk_page);
+
 
     // FileTree in Settings
     wp_register_script('sp-file-tree', plugins_url('/res/js/sp-file-tree.min.js',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
@@ -378,7 +381,7 @@ class ShortPixelPlugin
     wp_register_style('shortpixel-othermedia', plugins_url('/res/css/shortpixel-othermedia.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
 
     // load everywhere, because we are inconsistent.
-    wp_enqueue_style('shortpixel-tooltip', plugins_url('/res/css/shortpixel-toolbar.css',SHORTPIXEL_PLUGIN_FILE), array('dashicons'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
+    wp_register_style('shortpixel-toolbar', plugins_url('/res/css/shortpixel-toolbar.css',SHORTPIXEL_PLUGIN_FILE), array('dashicons'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
 
     if ( \wpSPIO()->env()->is_our_screen )
     {
@@ -446,7 +449,7 @@ class ShortPixelPlugin
 
     if ( \wpSPIO()->env()->is_screen_to_use )
     {
-      $this->load_script('shortpixel-tooltip.js');
+      $this->load_script('shortpixel-tooltip');
       $this->load_style('shortpixel-toolbar');
     }
 
@@ -648,7 +651,7 @@ class ShortPixelPlugin
 
   public static function deactivatePlugin()
   {
-  
+
     \WPShortPixelSettings::onDeactivate();
 
     $env = wpSPIO()->env();

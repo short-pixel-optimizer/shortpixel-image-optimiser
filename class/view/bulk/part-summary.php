@@ -20,11 +20,6 @@ namespace ShortPixel;
       <div class="section-wrapper">
       <h4><span class='dashicons dashicons-images-alt2'>&nbsp;</span> Media Library</h4>
         <div class="list-table">
-          <div><span>Total Images</span><span >0</span></div>
-          <div><span>Already Opt Items</span><span data-stats-media="bulk-optimizedCount">0</span></div>
-          <div><span>Already Opt Thumbs</span><span data-stats-media="bulk-optimizedThumbnailCount">0</span></div>
-
-          <div><span><strong>Total to be optimized in Media Library</strong></span><span>&nbsp;</span></div>
           <div><span>Items to Optimize</span><span data-stats-media="in_queue">0</span></div>
           <div><span>Total images to Optimize </span><span data-stats-media="images-images">0</span></div>
         </div>
@@ -33,13 +28,8 @@ namespace ShortPixel;
     <div class="section-wrapper">
     <h4><span class='dashicons dashicons-open-folder'>&nbsp;</span> Other Media</h4>
       <div class="list-table">
-        <div><span>Total Images</span><span >0</span></div>
-        <div><span>Already Opt Items</span><span data-stats-custom="bulk-optimizedCount">0</span></div>
-        <div><span>Already Opt Thumbs</span><span data-stats-custom="bulk-optimizedThumbnailCount">0</span></div>
-
-        <div><span><strong>Total to be optimized in Other Media</strong></span><span>&nbsp;</span></div>
         <div><span>Items to Optimize</span><span data-stats-custom="in_queue">0</span></div>
-        <div><span>Total images to Optimize </span><span data-stats-custom="bulk-images">0</span></div>
+        <div><span>Total images to Optimize </span><span data-stats-custom="images-images">0</span></div>
       </div>
     </div>
 
@@ -76,7 +66,7 @@ namespace ShortPixel;
     </div>
 
     <div class="over-quota">
-      <span><img src="<?php echo wpSPIO()->plugin_url('res/img/bulk/over-quota.svg') ?>" /></span>  <p>On your ShortPixel account you <span class='red'>only have <?php echo $quotaData->total->total ?> credits available </span>, but you have selected <b data-stats-total="bulk-images">X</b> images to be optimized in this process. You can either go back and select less images to optimize, or you can upgrade to a higher plan or buy one time credits.
+      <span><img src="<?php echo wpSPIO()->plugin_url('res/img/bulk/over-quota.svg') ?>" /></span>  <p>On your ShortPixel account you <span class='red'>only have <?php echo $quotaData->total->total ?> credits available </span>, but you have selected <b data-stats-total="images-images">0</b> images to be optimized in this process. You can either go back and select less images to optimize, or you can upgrade to a higher plan or buy one time credits.
 
        <button class="button">Show me the best options</button>
 

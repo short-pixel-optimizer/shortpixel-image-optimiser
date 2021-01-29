@@ -48,7 +48,7 @@ class BulkController
    {
        if ($type == 'media')
        {
-          $Q = MediaLibraryQueue::getInstance();
+          $Q = new MediaLibraryQueue();
           $Q->startBulk();
        }
        elseif($type == 'custom')
@@ -57,7 +57,8 @@ class BulkController
          $Q->startBulk();
        }
 
-       $optimizeControl = OptimizeController::getInstance();
+       $optimizeControl = new OptimizeController();
+       $optimizeControl->setBulk(true);
        return $optimizeControl->processQueue();
 
    }

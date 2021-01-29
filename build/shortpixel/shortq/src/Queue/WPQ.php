@@ -172,6 +172,7 @@ class WPQ implements Queue
      if ($count > 0)
         $this->setStatusCount('items', -$count );
 
+
       // Probabably not the full solution, but this can happen if deleted items were already Dequeued with status Done.
       if ($this->getStatus('items') <= 0)
       {

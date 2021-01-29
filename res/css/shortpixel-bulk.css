@@ -164,6 +164,16 @@
   100% {
     -moz-transform: rotate(360deg);
     transform: rotate(360deg); } }
+.shortpixel-bulk-wrapper section.panel.selection .optiongroup {
+  margin-left: 15px; }
+  .shortpixel-bulk-wrapper section.panel.selection .optiongroup .switch_button {
+    display: inline-block; }
+  .shortpixel-bulk-wrapper section.panel.selection .optiongroup h4 {
+    font-size: 14px;
+    font-weight: 700;
+    display: inline-block; }
+  .shortpixel-bulk-wrapper section.panel.selection .optiongroup .option {
+    margin-left: 45px; }
 .shortpixel-bulk-wrapper section.panel.summary .progressbar .select .line {
   background: #1FBEC9; }
 .shortpixel-bulk-wrapper section.panel.summary .progressbar .select .text, .shortpixel-bulk-wrapper section.panel.summary .progressbar .select .step {

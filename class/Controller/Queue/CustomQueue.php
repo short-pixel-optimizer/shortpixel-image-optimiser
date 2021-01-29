@@ -7,13 +7,13 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 class CustomQueue extends Queue
 {
 
-   protected $queueName = 'Custom';
+   protected $queueName = '';
    protected $cacheName = 'CustomCache'; // When preparing, write needed data to cache.
 
    protected static $instance;
 
 
-   public static function getInstance()
+   /*public static function getInstance()
    {
       if (is_null(self::$instance))
       {
@@ -22,13 +22,14 @@ class CustomQueue extends Queue
       }
 
       return static::$instance;
-   }
+   } */
 
 
-   public function __construct()
+   public function __construct($queueName = 'Custom')
    {
      $shortQ = new ShortQ(static::PLUGIN_SLUG);
-     $this->q = $shortQ->getQueue($this->queueName);
+     $this->q = $shortQ->getQueue($queueName);
+     $this->queueName = $queueName;
 
       $options = array(
          'numitems' => 5,
@@ -40,6 +41,11 @@ class CustomQueue extends Queue
 
      $options = apply_filters('shortpixel/customqueue/options', $options);
      $this->q->setOptions($options);
+   }
+
+   public function getType()
+   {
+      return 'custom';
    }
 
 
