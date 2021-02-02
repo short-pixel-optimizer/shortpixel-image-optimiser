@@ -8,7 +8,7 @@ var ShortPixelScreen = function (MainScreen, processor)
   this.processor = processor;
 
   this.panels = [];
-  this.currentPanel;
+  this.currentPanel = 'dashboard';
 
   this.Init = function()
   {
@@ -17,7 +17,9 @@ var ShortPixelScreen = function (MainScreen, processor)
       this.LoadActions();
 
     //  console.log(ShortPixelScreenBulk);
-      window.addEventListener('shortpixel.processor.paused', this.TogglePauseNotice.bind(self));
+      window.addEventListener('shortpixel.processor.paused', this.TogglePauseNotice.bind(this));
+      window.addEventListener('shortpixel.bulk.onUpdatePanelStatus', this.EventPanelStatusUpdated.bind(this));
+      window.addEventListener('shortpixel.bulk.onSwitchPanel', this.EventPanelSwitched.bind(this));
 
       var processData = ShortPixelProcessorData.startData;
       var initMedia = processData.media.stats;
@@ -48,8 +50,8 @@ var ShortPixelScreen = function (MainScreen, processor)
       }
       else
       {
-         this.UpdatePanelStatus('loaded', 'dashboard');
          this.processor.StopProcess(); // don't go peeking in the queue.
+         this.SwitchPanel('dashboard');
       }
 console.log(initMedia, isPreparing, isRunning, isFinished);
 
@@ -72,7 +74,6 @@ console.log(initMedia, isPreparing, isRunning, isFinished);
 
       actions.forEach(function (action, index)
       {
-
           action.addEventListener('click', function(event)
           {
             var element = event.target;
@@ -101,11 +102,31 @@ console.log(initMedia, isPreparing, isRunning, isFinished);
       var panel = this.panels[panelName];
      else
       var panel = this.panels[this.currentPanel];
-     panel.setAttribute('data-status', status);
+
+      var currentStatus = panel.getAttribute('data-status');
+      panel.setAttribute('data-status', status);
+
+      var event = new CustomEvent('shortpixel.bulk.onUpdatePanelStatus', { detail : {status: status, oldStatus: currentStatus, panelName: panelName}});
+      window.dispatchEvent(event);
+  }
+  this.ToggleLoading = function(loading)
+  {
+    if (typeof loading == 'undefined' || loading == true)
+      var loading = true;
+    else
+      var loading = false;
+
+    var loader = document.getElementById('bulk-loading');
+    if (loading)
+      loader.setAttribute('data-status', 'loading');
+    else
+      loader.setAttribute('data-status', 'not-loading');
+
   }
   this.SwitchPanel = function(targetName)
   {
      console.debug('Switching Panel ' + targetName);
+      this.ToggleLoading(false);
       if (! this.panels[targetName])
       {
         console.error('Panel ' + targetName + ' does not exist?');
@@ -120,30 +141,31 @@ console.log(initMedia, isPreparing, isRunning, isFinished);
       for (panelName in this.panels)
       {
          var panel = this.panels[panelName];
-         panel.style.opacity = 0;
-         panel.style.visibility = 'hidden';
-         panel.style.zIndex = -1;
+
          panel.classList.remove('active');
+         panel.style.display = 'none';
       };
 
       var panel = this.panels[targetName];
 
-      panel.style.opacity = 1;
-      panel.style.visibility = 'visible';
-      panel.style.zIndex = 1;
-      panel.classList.add('active');
+      panel.style.display = 'block';
+      // This should be the time of transition needed.
+  //    panel.classList.add('active');
 
-    //  panel.querySelectorAll('')
+    // This non-delay makes the transition fade in properly.
+    setTimeout(function() { panel.classList.add('active'); }, 0);
 
-      this.currentPanel = targetName;
-
-    //   var panel = this.panels[panelName];
+       var oldCurrentPanel = this.currentPanel; // for event
+       this.currentPanel = targetName;
 
        if ( panel.getAttribute('data-loadPanel') !== null)
        {
 
            this[panel.getAttribute('data-loadPanel')].call(this);
        }
+
+       var event = new CustomEvent('shortpixel.bulk.onSwitchPanel', { detail : {panelLoad: targetName, panelUnload: oldCurrentPanel}});
+       window.dispatchEvent(event);
 
   },
   this.StartPrepare = function()
@@ -159,6 +181,7 @@ console.log(initMedia, isPreparing, isRunning, isFinished);
   {
       //Remove pause
       this.SwitchPanel('selection');
+      this.ToggleLoading(false);
       this.processor.SetInterval(500); // do this faster.
       // Show stats
       if (this.processor.isManualPaused == true)
@@ -178,6 +201,7 @@ console.log(initMedia, isPreparing, isRunning, isFinished);
           this.UpdatePanelStatus('loaded', 'selection');
           this.SwitchPanel('selection');
           this.processor.SetInterval(-1); // back to default.
+
           //this.SwitchPanel('selection');
 
       }
@@ -190,7 +214,6 @@ console.log(initMedia, isPreparing, isRunning, isFinished);
           else
           {
               this.SwitchPanel('dashboard');
-              this.UpdatePanelStatus('loaded', 'dashboard');
           } // empty queue, no items, start.
     //      this.UpdatePanelStatus('queueDone', 'process');
 
@@ -344,18 +367,17 @@ console.log(initMedia, isPreparing, isRunning, isFinished);
 
     this.processor.tooltip.ToggleIcon();
   }
-  this.StopBulk = function(event)
+  /*this.StopBulk = function(event)
   {
       this.PauseBulk(event);
       // do something here to nuke the thing
-  },
+  }, */
   this.FinishBulk = function(event)
   {
     console.log('Finishing');
     var data = {screen_action: 'finishBulk'}; //
     this.processor.AjaxRequest(data);
     this.SwitchPanel('dashboard');
-    this.UpdatePanelStatus('loaded', 'dashboard');
 
   }
 
@@ -383,7 +405,32 @@ console.log(initMedia, isPreparing, isRunning, isFinished);
 
      }
 
+  },
+  this.EventPanelStatusUpdated = function(event)
+  {
+     var status = event.detail.status;
+     var oldStatus = event.detail.oldStatus;
+     var panelName = event.detail.panelName;
+
+     if (panelName == 'selection' && status == 'loaded')
+     {
+        //this.CheckSelectionScreen();
+     }
+     console.log('Status Updated', event.detail);
   }
+  this.EventPanelSwitched = function(event)
+  {
+     console.log('Panel Switched', event.detail);
+     var panelLoad = event.detail.panelLoad;
+     var panelUnload = event.detail.panelUnload;
+
+     if (panelUnload == 'selection')
+     {
+        this.UpdatePanelStatus('loading', 'selection');
+     }
+  }
+
+  //this.CheckSelectionScreen()  = function()
 
   this.Init();
 

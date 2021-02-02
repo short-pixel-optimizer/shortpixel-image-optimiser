@@ -545,6 +545,8 @@ class OptimizeController
 
         // When both have stats. Custom becomes the main. Calculate media stats over it. Clone, important!
         $object->stats = clone $results->custom->stats;
+        if (property_exists($object->stats, 'images'))
+          $object->stats->images = clone $results->custom->stats->images;
 
         foreach ($results->media->stats as $key => $value)
         {

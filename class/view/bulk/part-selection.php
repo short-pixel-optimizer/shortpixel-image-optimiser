@@ -28,32 +28,32 @@ namespace ShortPixel;
          <div class="media-library optiongroup">
             <div class='switch_button'>
               <label>
-                <input type="checkbox" class="switch" checked>
+                <input type="checkbox" class="switch" id="media_checkbox" checked>
                 <div class="the_switch">&nbsp; </div>
               </label>
             </div>
 
-            <h4>Your Media Library</h4>
+            <h4><label for="media_checkbox">Your Media Library</label></h4>
             <div class='option'>
-              <label>Original Images</label>
+              <label>Items in Library</label>
               <span class="number" data-stats-media="total"><?php _e('n/a', 'shortpixel-image-optimizer') ?></span>
             </div>
             <div class='option'>
-              <labeL>Thumbnails</label> <span class="number" data-stats-media="images-images"><?php _e('n/a', 'shortpixel-image-optimizer')  ?></span>
+              <labeL>Images</label> <span class="number" data-stats-media="images-images"><?php _e('n/a', 'shortpixel-image-optimizer')  ?></span>
             </div>
          </div>
 
          <div class="custom-images optiongroup">
            <div class='switch_button'>
              <label>
-               <input type="checkbox" class="switch" checked>
+               <input type="checkbox" class="switch" id="custom_checkbox" checked>
                <div class="the_switch">&nbsp; </div>
              </label>
            </div>
-           <h4> Custom Images</h4>
+           <h4><label for="custom_checkbox">Custom Images</label></h4>
             <div class='option'>
               <label>Images</label>
-               <span class="number" data-stats-custom="bulk-items"><?php _e('n/a', 'shortpixel-image-optimizer')  ?></span>
+               <span class="number" data-stats-custom="total"><?php _e('n/a', 'shortpixel-image-optimizer')  ?></span>
             </div>
 
          </div>
@@ -68,11 +68,14 @@ namespace ShortPixel;
 
            </div>
            <h4>Also Webp.</h4>
-           
+
 
        </div>
 
-      <nav><button class="button-primary" type="button" data-action="open-panel" data-panel="summary" >Next</button></nav>
+      <nav>
+        <button class="button" type="button" data-action="FinishBulk">Stop Bulk</button>
+        <button class="button-primary" type="button" data-action="open-panel" data-panel="summary" >Next</button>
+      </nav>
 
     </div> <!-- interface wrapper -->
   </div><!-- container -->

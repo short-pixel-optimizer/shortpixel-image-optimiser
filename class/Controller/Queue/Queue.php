@@ -127,9 +127,17 @@ abstract class Queue
        elseif ($this->getStatus('bulk_running') == true) // this is a bulk queue, don't start automatically.
        {
           if ($this->getStatus('running') == true)
+          {
               $items = $this->deQueue();
-          elseif ($this->getStatus('preparing') == false)
+          }
+          elseif ($this->getStatus('preparing') == false && $this->getStatus('finished') == false)
+          {
               $result->qstatus = self::RESULT_PREPARING_DONE;
+          }
+          elseif ($this->getStatus('finished') == true)
+          {
+              $result->qstatus = self::RESULT_QUEUE_EMPTY;
+          }
        }
        else // regular queue can run whenever.
        {
@@ -269,7 +277,7 @@ abstract class Queue
       else
         $stats->percentage_done = 0;
 
-      if ($stats->is_preparing)
+      if (! $stats->is_running)
       {
         $stats->images = $this->countQueue();
       }

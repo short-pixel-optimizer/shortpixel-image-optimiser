@@ -77,7 +77,7 @@ namespace ShortPixel;
     </div>
 
     <nav>
-      <button class="button">Back</button>
+      <button class="button" data-action="open-panel" data-panel="selection">Back</button>
       <button class="button-primary" data-action="open-panel" data-panel="process">Start Bulk Optimization</button>
     </nav>
   </div>

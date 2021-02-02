@@ -1,9 +1,14 @@
+
+
+
 .shortpixel-bulk-wrapper
 {
-
+  /** GENERAL STYLES **/
     h1 {
       font-size: 23px;
-      font-weight: 400px;
+      font-weight: 400;
+      line-height: 30px;
+      margin: 30px 0;
     }
 
     h3.heading {
@@ -37,22 +42,69 @@
       margin: 45px auto;
       width: 80%;
     }
+
+
+
+    .screen-wrapper
+    {
+        background: #fff;
+        width: 90%;
+        min-height: 80vh;
+        position: relative;
+        border-radius: 30px;
+      //  overflow: hidden;
+
+        .shortpixel-bulk-loader
+        {
+           position: absolute;
+           left: 0;
+           right: 0;
+           top: 0;
+           bottom: 0;
+           background: rgba(0,0,0,0.6);
+           transition: opacity 1s linear;
+           z-index: -1;
+           opacity: 0;
+           visibility:hidden;
+           &[data-status="loading"]
+           {
+             z-index: 100;
+             visibility: visible;
+             opacity: 1;
+           }
+
+          .loader {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              width: 100%;
+              height: 100%;
+              justify-content: center;
+              span h2 { color: #fff; }
+              img {
+                  width: 60%;
+               }
+
+          }
+        }
+    }
      .panel
      {
-        background: #fff;
+    //    background: #fff;
     //    border: 1px solid #ff0000;
       //  max-width: 950px;
-        width: 90%;
-        min-height: 90vh;
+        width: 100%;
+      //  min-height: 90vh;
         //height: 100vh;
       /* (for debuggings)*/
         position: absolute;
+        display: none;
       //  margin: 40px;
-        z-index: 1;
-       visibility: hidden;
-        opacity: 1;
+        z-index: 0;
+        visibility: hidden;
+        opacity: 0;
         transition: opacity 1s linear;
-        box-shadow: 2px 2px 10px #ccc;
+        //box-shadow: 2px 2px 10px #ccc;
         margin: 15px 0;
         p {
           margin-left: 15px;
@@ -62,7 +114,10 @@
         {
             visibility: visible;
             opacity: 1;
-            box-shadow: 4px 4px 8px #116C7D;
+            z-index: 5;
+            position: relative;
+
+          //  box-shadow: 4px 4px 8px #116C7D;
         }
         .panel-container
         {
@@ -89,40 +144,12 @@
        z-index: 10;
      }
 
+/**** DASHBOARD ***/
     section.panel.dashboard
     {
        h3.heading { border:0 ;
         }
 
-        &[data-status="loading"]
-        {
-           .load.wrapper {
-             opacity: 1;
-           }
-        }
-        &[data-status="loaded"]
-        {
-          .interface.wrapper
-          {
-             opacity: 1;
-          }
-        }
-
-        .load.wrapper, .interface.wrapper
-        {
-           opacity: 0;
-           transition: all 1s ease-in;
-
-        }
-
-        .load.wrapper .loading {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 70%;
-            img { width: 60%;
-             }
-        }
 
        .bulk-wrapper
        {
@@ -224,7 +251,7 @@
       background: linear-gradient(90deg, rgba(31,190,201,1) 0%, rgba(31,190,201,1) 49.9%,  rgba(204,204,204,1) 50%, rgba(204,204,204,1) 100%);
     }
 
-    // Progressbar states
+    /***************** SELECTION *************/
     section.panel.selection
     {
 
@@ -305,9 +332,10 @@
             font-size: 14px;
             font-weight: 700;
             display: inline-block;
+            margin-left: 25px;
          }
          .option {
-           margin-left: 65px;
+           margin-left: 85px;
            font-size: 16px;
            line-height: 26px;
            label {
@@ -322,6 +350,7 @@
 
     } // panel
 
+  /**************** SUMMARY ******/
     section.panel.summary
     {
 

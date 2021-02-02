@@ -61,10 +61,16 @@ class CustomQueue extends Queue
      $last_id = $this->getStatus('last_item_id');
      $limit = $this->q->getOption('enqueue_limit');
      $prepare = array();
+     $items = array();
+
      global $wpdb;
 
      $folderSQL = ' SELECT id FROM ' . $wpdb->prefix . 'shortpixel_folders where status >= 0';
      $folderRow = $wpdb->get_col($folderSQL);
+
+     // No Active Folders, No Items.
+     if (count($folderRow) == 0)
+       return $items;
 
      // List of prepared (%d) for the folders.
      $query_arr = join( ',', array_fill( 0, count( $folderRow ), '%d' ) );
@@ -91,7 +97,7 @@ class CustomQueue extends Queue
 Log::addDebug('Results of custom - ' . $sql, $results);
 
      $fs = \wpSPIO()->filesystem();
-     $items = array();
+
 
 
      foreach($results as $item_id)
