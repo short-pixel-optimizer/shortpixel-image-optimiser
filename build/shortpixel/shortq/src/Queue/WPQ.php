@@ -126,7 +126,7 @@ class WPQ implements Queue
         $numitems += $this->DataProvider->enqueue($objItems);
 
         $last_id = end($objItems)->item_id;
-        $this->setStatus('last_item_id', $last_id); // directly save this, as a script termination safeguard.
+        $this->setStatus('last_item_id', $last_id); // save this, as a script termination safeguard.
       }
 
       $this->items = array(); // empty the item cache after inserting
@@ -171,7 +171,6 @@ class WPQ implements Queue
 
      if ($count > 0)
         $this->setStatusCount('items', -$count );
-
 
       // Probabably not the full solution, but this can happen if deleted items were already Dequeued with status Done.
       if ($this->getStatus('items') <= 0)
@@ -355,7 +354,6 @@ class WPQ implements Queue
 
   }
 
-
   public function itemCount()
   {
     //  $queue = $this->getQueueStatus();
@@ -396,6 +394,13 @@ class WPQ implements Queue
      $this->DataProvider->removeRecords(array('all' => true));
      $this->status['queues'][$this->qName] = new Status();
      $this->saveStatus();
+  }
+
+  public function cleanQueue()
+  {
+     $this->DataProvider->removeRecords(array('status' => ShortQ::QSTATUS_DONE));
+     $this->DataProvider->removeRecords(array('status' => ShortQ::QSTATUS_FATAL));
+     $this->resetInternalCounts();
   }
 
   /** @todo Users must be able to control preparing / running status controls for resume / play the queue, but possibly not the counts.  */

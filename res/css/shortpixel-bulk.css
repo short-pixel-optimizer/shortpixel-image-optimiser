@@ -19,12 +19,17 @@
   max-width: 650px;
   margin-left: 10px;
   margin: 15px 0; }
+.shortpixel-bulk-wrapper nav {
+  margin: 45px auto;
+  width: 80%; }
 .shortpixel-bulk-wrapper .panel {
   background: #fff;
   width: 90%;
-  min-height: 600px;
+  min-height: 90vh;
   /* (for debuggings)*/
+  position: absolute;
   z-index: 1;
+  visibility: hidden;
   opacity: 1;
   transition: opacity 1s linear;
   box-shadow: 2px 2px 10px #ccc;
@@ -53,6 +58,20 @@
   z-index: 10; }
 .shortpixel-bulk-wrapper section.panel.dashboard h3.heading {
   border: 0; }
+.shortpixel-bulk-wrapper section.panel.dashboard[data-status="loading"] .load.wrapper {
+  opacity: 1; }
+.shortpixel-bulk-wrapper section.panel.dashboard[data-status="loaded"] .interface.wrapper {
+  opacity: 1; }
+.shortpixel-bulk-wrapper section.panel.dashboard .load.wrapper, .shortpixel-bulk-wrapper section.panel.dashboard .interface.wrapper {
+  opacity: 0;
+  transition: all 1s ease-in; }
+.shortpixel-bulk-wrapper section.panel.dashboard .load.wrapper .loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 70%; }
+  .shortpixel-bulk-wrapper section.panel.dashboard .load.wrapper .loading img {
+    width: 60%; }
 .shortpixel-bulk-wrapper section.panel.dashboard .bulk-wrapper {
   background-color: #116C7D;
   text-align: center;
@@ -173,7 +192,14 @@
     font-weight: 700;
     display: inline-block; }
   .shortpixel-bulk-wrapper section.panel.selection .optiongroup .option {
-    margin-left: 45px; }
+    margin-left: 65px;
+    font-size: 16px;
+    line-height: 26px; }
+    .shortpixel-bulk-wrapper section.panel.selection .optiongroup .option label {
+      width: 200px;
+      display: inline-block; }
+    .shortpixel-bulk-wrapper section.panel.selection .optiongroup .option .number {
+      font-weight: 700; }
 .shortpixel-bulk-wrapper section.panel.summary .progressbar .select .line {
   background: #1FBEC9; }
 .shortpixel-bulk-wrapper section.panel.summary .progressbar .select .text, .shortpixel-bulk-wrapper section.panel.summary .progressbar .select .step {
@@ -280,65 +306,65 @@
     border: 1px solid #1FBEC9;
     border-radius: 3px;
     box-shadow: 0px 1px 1px rgba(171, 170, 170, 0.3); }
-.shortpixel-bulk-wrapper section.panel.process .progressbar .select .line, .shortpixel-bulk-wrapper section.panel.process .progressbar .summary .line {
+.shortpixel-bulk-wrapper section.panel.process .progressbar .select .line, .shortpixel-bulk-wrapper section.panel.process .progressbar .summary .line, .shortpixel-bulk-wrapper section.panel.finished .progressbar .select .line, .shortpixel-bulk-wrapper section.panel.finished .progressbar .summary .line {
   background: #1FBEC9; }
-.shortpixel-bulk-wrapper section.panel.process .progressbar .select .text, .shortpixel-bulk-wrapper section.panel.process .progressbar .select .step, .shortpixel-bulk-wrapper section.panel.process .progressbar .summary .text, .shortpixel-bulk-wrapper section.panel.process .progressbar .summary .step {
+.shortpixel-bulk-wrapper section.panel.process .progressbar .select .text, .shortpixel-bulk-wrapper section.panel.process .progressbar .select .step, .shortpixel-bulk-wrapper section.panel.process .progressbar .summary .text, .shortpixel-bulk-wrapper section.panel.process .progressbar .summary .step, .shortpixel-bulk-wrapper section.panel.finished .progressbar .select .text, .shortpixel-bulk-wrapper section.panel.finished .progressbar .select .step, .shortpixel-bulk-wrapper section.panel.finished .progressbar .summary .text, .shortpixel-bulk-wrapper section.panel.finished .progressbar .summary .step {
   color: #ccc; }
-.shortpixel-bulk-wrapper section.panel.process .progressbar .select .step, .shortpixel-bulk-wrapper section.panel.process .progressbar .summary .step {
+.shortpixel-bulk-wrapper section.panel.process .progressbar .select .step, .shortpixel-bulk-wrapper section.panel.process .progressbar .summary .step, .shortpixel-bulk-wrapper section.panel.finished .progressbar .select .step, .shortpixel-bulk-wrapper section.panel.finished .progressbar .summary .step {
   border-color: #1FBEC9; }
-.shortpixel-bulk-wrapper section.panel.process .progressbar .process .line {
+.shortpixel-bulk-wrapper section.panel.process .progressbar .process .line, .shortpixel-bulk-wrapper section.panel.finished .progressbar .process .line {
   background: linear-gradient(90deg, #1fbec9 0%, #1fbec9 49.9%, #cccccc 50%, #cccccc 100%); }
-.shortpixel-bulk-wrapper section.panel.process .progressbar .process .text, .shortpixel-bulk-wrapper section.panel.process .progressbar .process .step {
+.shortpixel-bulk-wrapper section.panel.process .progressbar .process .text, .shortpixel-bulk-wrapper section.panel.process .progressbar .process .step, .shortpixel-bulk-wrapper section.panel.finished .progressbar .process .text, .shortpixel-bulk-wrapper section.panel.finished .progressbar .process .step {
   color: #EC2C25; }
-.shortpixel-bulk-wrapper section.panel.process .progressbar .process .step {
+.shortpixel-bulk-wrapper section.panel.process .progressbar .process .step, .shortpixel-bulk-wrapper section.panel.finished .progressbar .process .step {
   border-color: #1FBEC9; }
-.shortpixel-bulk-wrapper section.panel.process .average-optimization {
+.shortpixel-bulk-wrapper section.panel.process .average-optimization, .shortpixel-bulk-wrapper section.panel.finished .average-optimization {
   position: absolute;
   top: 0;
   right: 35px;
   display: flex;
   justify-content: center;
   margin-top: -10px; }
-  .shortpixel-bulk-wrapper section.panel.process .average-optimization p {
+  .shortpixel-bulk-wrapper section.panel.process .average-optimization p, .shortpixel-bulk-wrapper section.panel.finished .average-optimization p {
     margin-top: 25px;
     margin-right: 15px;
     font-size: 14px; }
-  .shortpixel-bulk-wrapper section.panel.process .average-optimization .opt-circle {
+  .shortpixel-bulk-wrapper section.panel.process .average-optimization .opt-circle, .shortpixel-bulk-wrapper section.panel.finished .average-optimization .opt-circle {
     width: 90px;
     height: 90px;
     float: right;
     margin-right: 35px; }
-    .shortpixel-bulk-wrapper section.panel.process .average-optimization .opt-circle .trail {
+    .shortpixel-bulk-wrapper section.panel.process .average-optimization .opt-circle .trail, .shortpixel-bulk-wrapper section.panel.finished .average-optimization .opt-circle .trail {
       stroke: #ddd; }
-    .shortpixel-bulk-wrapper section.panel.process .average-optimization .opt-circle .path {
+    .shortpixel-bulk-wrapper section.panel.process .average-optimization .opt-circle .path, .shortpixel-bulk-wrapper section.panel.finished .average-optimization .opt-circle .path {
       stroke: #1FBEC9;
       stroke-linecap: round;
       transition: stroke-dashoffset 0.5s ease 0s; }
-    .shortpixel-bulk-wrapper section.panel.process .average-optimization .opt-circle .text {
+    .shortpixel-bulk-wrapper section.panel.process .average-optimization .opt-circle .text, .shortpixel-bulk-wrapper section.panel.finished .average-optimization .opt-circle .text {
       fill: #1FBEC9;
       font-size: 28px;
       font-weight: 700;
       dominant-baseline: middle;
       text-anchor: middle; }
-.shortpixel-bulk-wrapper section.panel.process .bulk-summary {
+.shortpixel-bulk-wrapper section.panel.process .bulk-summary, .shortpixel-bulk-wrapper section.panel.finished .bulk-summary {
   display: table;
   width: 80%;
   margin: 30px auto; }
-  .shortpixel-bulk-wrapper section.panel.process .bulk-summary > div {
+  .shortpixel-bulk-wrapper section.panel.process .bulk-summary > div, .shortpixel-bulk-wrapper section.panel.finished .bulk-summary > div {
     display: table-row; }
-  .shortpixel-bulk-wrapper section.panel.process .bulk-summary > div > span {
+  .shortpixel-bulk-wrapper section.panel.process .bulk-summary > div > span, .shortpixel-bulk-wrapper section.panel.finished .bulk-summary > div > span {
     display: table-cell;
     padding: 16px; }
-  .shortpixel-bulk-wrapper section.panel.process .bulk-summary .heading {
+  .shortpixel-bulk-wrapper section.panel.process .bulk-summary .heading, .shortpixel-bulk-wrapper section.panel.finished .bulk-summary .heading {
     background: #F6F9FF;
     border: 1px solid #EBF5FF; }
-  .shortpixel-bulk-wrapper section.panel.process .bulk-summary .progressbar {
+  .shortpixel-bulk-wrapper section.panel.process .bulk-summary .progressbar, .shortpixel-bulk-wrapper section.panel.finished .bulk-summary .progressbar {
     width: 100px;
     height: 20px;
     position: relative;
     background: #ccc;
     display: inline-block; }
-    .shortpixel-bulk-wrapper section.panel.process .bulk-summary .progressbar .done-text {
+    .shortpixel-bulk-wrapper section.panel.process .bulk-summary .progressbar .done-text, .shortpixel-bulk-wrapper section.panel.finished .bulk-summary .progressbar .done-text {
       position: absolute;
       color: #fff;
       font-size: 10px;
@@ -348,7 +374,7 @@
       padding: 5px 4px;
       line-height: 10px;
       z-index: 3; }
-    .shortpixel-bulk-wrapper section.panel.process .bulk-summary .progressbar .done {
+    .shortpixel-bulk-wrapper section.panel.process .bulk-summary .progressbar .done, .shortpixel-bulk-wrapper section.panel.finished .bulk-summary .progressbar .done {
       position: absolute;
       z-index: 2;
       left: 0;
@@ -356,62 +382,85 @@
       top: 0;
       bottom: 0;
       background: #1FBEC9; }
-.shortpixel-bulk-wrapper section.panel.process .image-preview {
+.shortpixel-bulk-wrapper section.panel.process .image-preview, .shortpixel-bulk-wrapper section.panel.finished .image-preview {
   background: #F6F9FF;
   border: 1px solid #DFEAFF;
   width: 80%;
   margin: 15px auto; }
-  .shortpixel-bulk-wrapper section.panel.process .image-preview .image-preview-line {
+  .shortpixel-bulk-wrapper section.panel.process .image-preview .image-preview-line, .shortpixel-bulk-wrapper section.panel.finished .image-preview .image-preview-line {
     display: flex;
     width: 60%;
     justify-content: space-between;
     align-items: center;
     margin: 15px auto;
     max-width: 300px; }
-    .shortpixel-bulk-wrapper section.panel.process .image-preview .image-preview-line .opt-circle-image {
+    .shortpixel-bulk-wrapper section.panel.process .image-preview .image-preview-line .opt-circle-image, .shortpixel-bulk-wrapper section.panel.finished .image-preview .image-preview-line .opt-circle-image {
       width: 40px;
       height: 40px;
       float: right;
       margin-right: 35px; }
-      .shortpixel-bulk-wrapper section.panel.process .image-preview .image-preview-line .opt-circle-image .trail {
+      .shortpixel-bulk-wrapper section.panel.process .image-preview .image-preview-line .opt-circle-image .trail, .shortpixel-bulk-wrapper section.panel.finished .image-preview .image-preview-line .opt-circle-image .trail {
         stroke: #ddd; }
-      .shortpixel-bulk-wrapper section.panel.process .image-preview .image-preview-line .opt-circle-image .path {
+      .shortpixel-bulk-wrapper section.panel.process .image-preview .image-preview-line .opt-circle-image .path, .shortpixel-bulk-wrapper section.panel.finished .image-preview .image-preview-line .opt-circle-image .path {
         stroke: #1FBEC9;
         stroke-linecap: round;
         transition: stroke-dashoffset 0.5s ease 0s; }
-      .shortpixel-bulk-wrapper section.panel.process .image-preview .image-preview-line .opt-circle-image .text {
+      .shortpixel-bulk-wrapper section.panel.process .image-preview .image-preview-line .opt-circle-image .text, .shortpixel-bulk-wrapper section.panel.finished .image-preview .image-preview-line .opt-circle-image .text {
         fill: #1FBEC9;
         font-size: 28px;
         font-weight: 700;
         dominant-baseline: middle;
         text-anchor: middle; }
-  .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper {
+  .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper, .shortpixel-bulk-wrapper section.panel.finished .image-preview .preview-wrapper {
     display: flex;
     justify-content: center;
     margin: 25px 0 40px 0; }
-    .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-source, .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-result {
+    .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-source, .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-result, .shortpixel-bulk-wrapper section.panel.finished .image-preview .preview-wrapper .image-source, .shortpixel-bulk-wrapper section.panel.finished .image-preview .preview-wrapper .image-result {
       width: 350px;
       height: 350px;
       border: 1px solid #DFEAFF;
       overflow: hidden;
       position: relative; }
-      .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-source img, .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-result img {
+      .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-source img, .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-result img, .shortpixel-bulk-wrapper section.panel.finished .image-preview .preview-wrapper .image-source img, .shortpixel-bulk-wrapper section.panel.finished .image-preview .preview-wrapper .image-result img {
         max-width: 100%;
         max-height: 100%; }
-      .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-source p, .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-result p {
+      .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-source p, .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-result p, .shortpixel-bulk-wrapper section.panel.finished .image-preview .preview-wrapper .image-source p, .shortpixel-bulk-wrapper section.panel.finished .image-preview .preview-wrapper .image-result p {
         position: absolute;
         top: 0;
         z-index: 2;
         color: #fff;
         background: rgba(0, 0, 0, 0.5);
         padding: 4px; }
-    .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-source {
+    .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-source, .shortpixel-bulk-wrapper section.panel.finished .image-preview .preview-wrapper .image-source {
       margin-right: 8px; }
-    .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-result {
+    .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-result, .shortpixel-bulk-wrapper section.panel.finished .image-preview .preview-wrapper .image-result {
       margin-left: 8px; }
-.shortpixel-bulk-wrapper section.panel.process nav {
+.shortpixel-bulk-wrapper section.panel.process nav, .shortpixel-bulk-wrapper section.panel.finished nav {
   width: 80%;
   margin: 35px auto; }
+.shortpixel-bulk-wrapper section.panel.finished .progressbar .select .line, .shortpixel-bulk-wrapper section.panel.finished .progressbar .summary .line, .shortpixel-bulk-wrapper section.panel.finished .progressbar .process .line {
+  background: #1FBEC9; }
+.shortpixel-bulk-wrapper section.panel.finished .progressbar .select .text, .shortpixel-bulk-wrapper section.panel.finished .progressbar .select .step, .shortpixel-bulk-wrapper section.panel.finished .progressbar .summary .text, .shortpixel-bulk-wrapper section.panel.finished .progressbar .summary .step, .shortpixel-bulk-wrapper section.panel.finished .progressbar .process .text, .shortpixel-bulk-wrapper section.panel.finished .progressbar .process .step {
+  color: #ccc; }
+.shortpixel-bulk-wrapper section.panel.finished .progressbar .select .step, .shortpixel-bulk-wrapper section.panel.finished .progressbar .summary .step, .shortpixel-bulk-wrapper section.panel.finished .progressbar .process .step {
+  border-color: #1FBEC9; }
+.shortpixel-bulk-wrapper section.panel.finished .progressbar .result .line {
+  background: linear-gradient(90deg, #1fbec9 0%, #1fbec9 49.9%, #cccccc 50%, #cccccc 100%); }
+.shortpixel-bulk-wrapper section.panel.finished .progressbar .result .text, .shortpixel-bulk-wrapper section.panel.finished .progressbar .result .step {
+  color: #EC2C25; }
+.shortpixel-bulk-wrapper section.panel.finished .progressbar .result .step {
+  border-color: #1FBEC9; }
+.shortpixel-bulk-wrapper section.panel.finished nav {
+  text-align: center; }
+  .shortpixel-bulk-wrapper section.panel.finished nav button.finish {
+    padding: 12px 60px;
+    border-radius: 3px;
+    background: #1FBEC9;
+    font-size: 16px;
+    color: #fff;
+    transition: all 0.5s ease; }
+    .shortpixel-bulk-wrapper section.panel.finished nav button.finish:hover {
+      background: #24d1dd; }
 .shortpixel-bulk-wrapper .part-debug {
   background: #000;
   color: #fff;

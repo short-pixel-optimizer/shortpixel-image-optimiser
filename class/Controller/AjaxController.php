@@ -176,7 +176,10 @@ class AjaxController
         $data = array('id' => $id, 'typeArray' => $typeArray, 'action' => $action);
 
         if (count($typeArray) == 1) // Actions which need specific type like optimize / restore.
+        {
           $data['type'] = $typeArray[0];
+          unset($data['typeArray']);
+        }
 
         switch($action)
         {
@@ -195,6 +198,9 @@ class AjaxController
            case 'startBulk':
              $json = $this->startBulk($json, $data);
            break;
+           case 'finishBulk':
+             $json = $this->finishBulk($json, $data);
+           break;
            default:
               $json->$type->message = __('Ajaxrequest - no action found', 'shorpixel-image-optimiser');
            break;
@@ -210,7 +216,6 @@ class AjaxController
       $fs = \wpSPIO()->filesystem();
 
       return $fs->getImage($id, $type);
-
 
     }
 
@@ -259,6 +264,18 @@ class AjaxController
        $control = new OptimizeController();
 
        $json->$type = $control->reOptimizeItem($mediaItem, $compressionType);
+       return $json;
+    }
+
+    public function finishBulk($json, $data)
+    {
+       $bulkControl = BulkController::getInstance();
+
+       $bulkControl->finishBulk('media');
+       $bulkControl->finishBulk('custom');
+
+       $json->status = 1;
+
        return $json;
     }
 

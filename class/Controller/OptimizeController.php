@@ -34,7 +34,7 @@ class OptimizeController
     }
 
 
-    protected function getQueue($type)
+    public function getQueue($type)
     {
         $queue = null;
 
@@ -216,14 +216,12 @@ class OptimizeController
 
         // Here prevent a runTick is the queue is empty and done already ( reliably )
 
-
         $results = new \stdClass;
-        Log::addTemp('Running tick MEDIA');
         $results->media = $this->runTick($mediaQ); // run once on mediaQ
-        Log::addTemp('Running tick Custom');
         $results->custom = $this->runTick($customQ);
 
         $results->total = $this->calculateStatsTotals($results);
+    //    $this->checkCleanQueue($results);
 
         return $results;
     }
@@ -252,6 +250,7 @@ class OptimizeController
 
       $result->stats = $Q->getStats();
       $json = $this->queueToJson($result);
+      $this->checkQueueClean($result, $Q);
 
       return $json;
 
@@ -356,6 +355,7 @@ class OptimizeController
                  $item->fileStatus = ImageModel::FILE_STATUS_ERROR;
                  $item->result->message = sprintf(__('Image not optimized with errors', 'shortpixel-image-optimiser'), $item->item_id);
 
+
               }
 
               unset($item->result->files);
@@ -384,7 +384,7 @@ class OptimizeController
 
          }
          $q->itemDone($item);
-      //   return $result;
+
       }
       else
       {
@@ -397,6 +397,19 @@ class OptimizeController
 
       return $item;
 
+    }
+
+    protected function checkQueueClean($result, $q)
+    {
+        if ($result->qstatus == Queue::RESULT_QUEUE_EMPTY && ! $this->isBulk)
+        {
+            $stats = $q->getStats();
+
+            if ($stats->done > 0 || $stats->fatal_errors > 0)
+            {
+               $q->cleanQueue(); // clean the queue
+            }
+        }
     }
 
     /** Called via Hook when plugins like RegenerateThumbnailsAdvanced Update an thumbnail */
@@ -530,8 +543,8 @@ class OptimizeController
            return $object;
         }
 
-        // When both have stats. Custom becomes the main. Calculate media stats over it.
-        $object->stats = $results->custom->stats;
+        // When both have stats. Custom becomes the main. Calculate media stats over it. Clone, important!
+        $object->stats = clone $results->custom->stats;
 
         foreach ($results->media->stats as $key => $value)
         {

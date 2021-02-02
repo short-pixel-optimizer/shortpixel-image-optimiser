@@ -2,6 +2,7 @@
 
 //  use ShortPixel\Controller\Queue\CustomQueue as CustomQueue;
   use ShortPixel\Controller\Queue\MediaLibraryQueue as MediaLibraryQueue;
+  use ShortPixel\Controller\Queue\CustomQueue as CustomQueue;
   use ShortPixel\Controller\Queue\Queue as Queue;
 
 class QueueTest extends WP_UnitTestCase
@@ -15,7 +16,7 @@ class QueueTest extends WP_UnitTestCase
 
   public static function wpSetUpBeforeClass($factory)
   {
-    $queue = MediaLibraryQueue::getInstance();
+    $queue = new MediaLibraryQueue();
     self::$q = $queue;
 
     //$factory = self::factory();
@@ -23,7 +24,7 @@ class QueueTest extends WP_UnitTestCase
     $post = $factory->post->create_and_get();
     $attachment_id = $factory->attachment->create_upload_object( __DIR__ . '/assets/image1.jpg', $post->ID ); // this one scales
 
-    $imageObj = self::$fs->getMediaImage($attachment_id);
+    $imageObj = self::$fs->getImage($attachment_id, 'media');
     self::$id = $attachment_id;
     self::$image = $imageObj; // for testing more specific functions.
   }
@@ -53,7 +54,7 @@ class QueueTest extends WP_UnitTestCase
 
       $result = $q->addSingleItem(self::$image);
 
-      $this->assertEquals(1, $result);
+      $this->assertEquals(1, $result->numitems);
       $this->assertFalse($getStatusMethod->invoke($q, 'preparing'));
       $this->assertFalse($getStatusMethod->invoke($q, 'running'));
 
@@ -62,9 +63,16 @@ class QueueTest extends WP_UnitTestCase
       $item = $items[0];
 
       $this->assertFalse($getStatusMethod->invoke($q, 'preparing'));
-      $this->assertFalse($getStatusMethod->invoke($q, 'running'));
-      $this->assertEquals(Queue::RESULT_ITEMS, $result->status);
+      $this->assertTrue($getStatusMethod->invoke($q, 'running'));
+      $this->assertEquals(Queue::RESULT_ITEMS, $result->qstatus);
       $this->assertCount(1, $items);
+
+      $q->itemDone($item);
+
+      $result = $q->run();
+      var_dump($result);
+      $this->assertFalse($getStatusMethod->invoke($q, 'running'));
+      $this->assertCount(0, $result->items);
   }
 
   public function testImageModelToQueue()
@@ -87,6 +95,7 @@ class QueueTest extends WP_UnitTestCase
   {
       $q = $this->getQ();
       $refWPQ = new ReflectionClass('\ShortPixel\Controller\Queue\Queue');
+      \wpSPIO()->settings()->compressionType = 1; // Function sets default compressionType if none given.
 
       $q->addSingleItem(self::$image);
 
@@ -98,7 +107,7 @@ class QueueTest extends WP_UnitTestCase
       $testMediaItem = clone $mediaItem;  // pass by reference in the reflected methods change the $mediaItem var here too.
 
       $this->assertObjectHasAttribute('compressionType', $mediaItem);
-      $this->assertNull($mediaItem->compressionType);
+      $this->assertEquals(1, $mediaItem->compressionType);
       $this->assertObjectHasAttribute('urls', $mediaItem);
       $this->assertObjectHasAttribute('item_id', $mediaItem);
       $this->assertObjectHasAttribute('tries', $mediaItem);
@@ -114,15 +123,12 @@ class QueueTest extends WP_UnitTestCase
       $methodMediaToQ = $refWPQ->getMethod('mediaItemToQueue');
       $methodMediaToQ->setAccessible(true);
 
-//echo "MediaItem2 ";  var_dump($mediaItem);
       $qItem = $methodMediaToQ->invoke($q, $mediaItem);
-//echo "MediaItem3 ";  var_dump($mediaItem);
+
       $mItem = $methodQToMedia->invoke($q, $qItem);
 
- //echo "mItem "; var_dump($mItem);
       $this->assertObjectNotHasAttribute('_queueItem', $qItem);
       $this->assertEquals($testMediaItem, $mItem);
-      //$this->assertObjectNotHasAttribute('', $qItem);
   }
 
   /*public function testMediaItemToQueue()
@@ -158,9 +164,24 @@ class QueueTest extends WP_UnitTestCase
     $this->assertEquals(1, $mediaItem2->tries);
   }
 
-  public function testReCountQueue()
+  public function testGetStats()
   {
-    $this->markTestIncomplete('This test has not been implemented yet.');
+        $mediaQ = new MediaLibraryQueue();
+        $customQ = new CustomQueue();
+
+        $mediaQ->addSingleItem(self::$image);
+        $customQ->addSingleItem(self::$image);
+
+        $mediaStats = $mediaQ->getStats();
+        $customStats = $customQ->getStats();
+
+        $this->assertEquals(1, $mediaStats->in_queue);
+        $this->assertEquals(1, $customStats->in_queue);
+
+        $this->assertEquals(1, $mediaStats->total);
+        $this->assertEquals(1, $customStats->total);
+
+
 
   }
 

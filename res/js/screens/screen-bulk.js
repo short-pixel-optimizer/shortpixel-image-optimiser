@@ -20,26 +20,39 @@ var ShortPixelScreen = function (MainScreen, processor)
       window.addEventListener('shortpixel.processor.paused', this.TogglePauseNotice.bind(self));
 
       var processData = ShortPixelProcessorData.startData;
-      var initMedia = processData.media;
-      var initCustom = processData.custom;
+      var initMedia = processData.media.stats;
+      var initCustom = processData.custom.stats;
       isPreparing = false;
       isRunning = false;
+      isFinished = false;
 
       if (initMedia.is_preparing == true || initCustom.is_preparing == true )
         isPreparing = true;
       else if (initMedia.is_running == true || initCustom.is_running == true )
         isRunning = true;
-
+      else if (initMedia.is_finished == true || initCustom.is_finished == true )
+        isFinished = true;
 
       if (isPreparing)
       {
         this.SwitchPanel('selection');
       }
-      if (isRunning)
+      else if (isRunning)
       {
-        this.SwitchPanel('process');
+        //this.SwitchPanel('process');
         this.processor.PauseProcess(); // when loading, default start paused before resume.
       }
+      else if (isFinished)
+      {
+         //this.SwitchPanel('process');  // needs to run a process and get back stats another try.
+      }
+      else
+      {
+         this.UpdatePanelStatus('loaded', 'dashboard');
+         this.processor.StopProcess(); // don't go peeking in the queue.
+      }
+console.log(initMedia, isPreparing, isRunning, isFinished);
+
   },
   this.LoadPanels = function()
   {
@@ -92,7 +105,7 @@ var ShortPixelScreen = function (MainScreen, processor)
   }
   this.SwitchPanel = function(targetName)
   {
-
+     console.debug('Switching Panel ' + targetName);
       if (! this.panels[targetName])
       {
         console.error('Panel ' + targetName + ' does not exist?');
@@ -145,6 +158,7 @@ var ShortPixelScreen = function (MainScreen, processor)
   this.PrepareBulk = function()
   {
       //Remove pause
+      this.SwitchPanel('selection');
       this.processor.SetInterval(500); // do this faster.
       // Show stats
       if (this.processor.isManualPaused == true)
@@ -156,26 +170,36 @@ var ShortPixelScreen = function (MainScreen, processor)
 
       // Run process.run process from now for prepare ( until prepare done? )
   },
-  this.QueueStatus = function(qStatus)
+  this.QueueStatus = function(qStatus, data)
   {
       if (qStatus == 'PREPARING_DONE' || qStatus == 'PREPARING_RECOUNT')
       {
           console.log('Queue status: preparing done');
           this.UpdatePanelStatus('loaded', 'selection');
+          this.SwitchPanel('selection');
           this.processor.SetInterval(-1); // back to default.
           //this.SwitchPanel('selection');
 
       }
       if (qStatus == 'QUEUE_EMPTY')
       {
-          this.UpdatePanelStatus('queueDone', 'process');
+          if (data.total.stats.total > 0)
+          {
+            this.SwitchPanel('finished'); // if something actually was done.
+          }
+          else
+          {
+              this.SwitchPanel('dashboard');
+              this.UpdatePanelStatus('loaded', 'dashboard');
+          } // empty queue, no items, start.
+    //      this.UpdatePanelStatus('queueDone', 'process');
 
       }
     /*  elseif (qStatus == '')
       {
 
       } */
-  }
+  },
   this.HandleImage = function(resultItem, type)
   {
       console.log('HandleImage');
@@ -325,6 +349,15 @@ var ShortPixelScreen = function (MainScreen, processor)
       this.PauseBulk(event);
       // do something here to nuke the thing
   },
+  this.FinishBulk = function(event)
+  {
+    console.log('Finishing');
+    var data = {screen_action: 'finishBulk'}; //
+    this.processor.AjaxRequest(data);
+    this.SwitchPanel('dashboard');
+    this.UpdatePanelStatus('loaded', 'dashboard');
+
+  }
 
   this.TogglePauseNotice = function(event)
   {
@@ -352,11 +385,6 @@ var ShortPixelScreen = function (MainScreen, processor)
 
   }
 
-
-
-
   this.Init();
-
-
 
 } // Screen

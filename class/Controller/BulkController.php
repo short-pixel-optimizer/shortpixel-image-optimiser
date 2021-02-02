@@ -6,7 +6,7 @@ use ShortPixel\Controller\Queue\CustomQueue as CustomQueue;
 use ShortPixel\Controller\Queue\Queue as Queue;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
-
+// Class for controlling bulk and reporting.
 class BulkController
 {
    protected static $instance;
@@ -28,42 +28,39 @@ class BulkController
    public function createNewBulk($type = 'media')
    {
    //  $this->q->createNewBulk();
-      $cache = new CacheController();
+      $optimizeController = new OptimizeController();
+      $optimizeController->setBulk(true);
 
-      if ($type == 'media')
-      {
-        $Q = MediaLibraryQueue::getInstance();
+        $Q = $optimizeController->getQueue($type);
         $Q->createNewBulk(array());
-      }
-      elseif( $type == 'custom')
-      {
-        $Q = CustomQueue::getInstance();
-        $Q->createNewBulk(array());
-      }
-      return $Q->getStats();
+
+        return $Q->getStats();
    }
 
    /*** Start the bulk run */
    public function startBulk($type = 'media')
    {
-       if ($type == 'media')
-       {
-          $Q = new MediaLibraryQueue();
-          $Q->startBulk();
-       }
-       elseif($type == 'custom')
-       {
-         $Q = CustomQueue::getInstance();
-         $Q->startBulk();
-       }
 
        $optimizeControl = new OptimizeController();
        $optimizeControl->setBulk(true);
+
+       $q = $optimizeControl->getQueue($type);
+       $q->startBulk();
+
        return $optimizeControl->processQueue();
 
    }
 
+   public function finishBulk($type = 'media')
+   {
+     $optimizeControl = new OptimizeController();
+     $optimizeControl->setBulk(true);
+     
+     $q = $optimizeControl->getQueue($type);
+
+     $q->resetQueue();
 
 
+   }
 
 }

@@ -14,7 +14,7 @@ class MediaLibraryQueueTest extends  WP_UnitTestCase
 
   public static function wpSetUpBeforeClass($factory)
   {
-    $queue = MediaLibraryQueue::getInstance();
+    $queue = new MediaLibraryQueue();
     self::$q = $queue;
 
     //$factory = self::factory();
@@ -22,7 +22,7 @@ class MediaLibraryQueueTest extends  WP_UnitTestCase
     $post = $factory->post->create_and_get();
     $attachment_id = $factory->attachment->create_upload_object( __DIR__ . '/assets/image1.jpg', $post->ID ); // this one scales
 
-    $imageObj = self::$fs->getMediaImage($attachment_id);
+    $imageObj = self::$fs->getImage($attachment_id, 'media');
     self::$id = $attachment_id;
     self::$image = $imageObj; // for testing more specific functions.
   }

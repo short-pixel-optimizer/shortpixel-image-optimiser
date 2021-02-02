@@ -28,43 +28,52 @@ namespace ShortPixel;
          <div class="media-library optiongroup">
             <div class='switch_button'>
               <label>
-                <input type="checkbox" class="switch">
+                <input type="checkbox" class="switch" checked>
                 <div class="the_switch">&nbsp; </div>
               </label>
             </div>
 
             <h4>Your Media Library</h4>
             <div class='option'>
-              Original Images  <span class="number" data-stats-media="total"><?php _e('n/a', 'shortpixel-image-optimizer') ?></span>
+              <label>Original Images</label>
+              <span class="number" data-stats-media="total"><?php _e('n/a', 'shortpixel-image-optimizer') ?></span>
             </div>
             <div class='option'>
-              Thumbnails <span class="number" data-stats-media="images-images"><?php _e('n/a', 'shortpixel-image-optimizer')  ?></span>
+              <labeL>Thumbnails</label> <span class="number" data-stats-media="images-images"><?php _e('n/a', 'shortpixel-image-optimizer')  ?></span>
             </div>
          </div>
 
-         <div class="theme-images optiongroup not-implemented">
+         <div class="custom-images optiongroup">
            <div class='switch_button'>
              <label>
-               <input type="checkbox" class="switch">
+               <input type="checkbox" class="switch" checked>
                <div class="the_switch">&nbsp; </div>
              </label>
            </div>
            <h4> Custom Images</h4>
             <div class='option'>
-              Images <span class="number" data-stats-custom="bulk-items"><?php _e('n/a', 'shortpixel-image-optimizer')  ?></span>
+              <label>Images</label>
+               <span class="number" data-stats-custom="bulk-items"><?php _e('n/a', 'shortpixel-image-optimizer')  ?></span>
             </div>
 
          </div>
 
          <div class='optiongroup'>
            <div class='switch_button'>
+
              <label>
                <input type="checkbox" class="switch">
                <div class="the_switch">&nbsp; </div>
              </label>
-           </div> Also Webp.
-         <nav><button class="button-primary" type="button" data-action="open-panel" data-panel="summary" >Next</button></nav>
+
+           </div>
+           <h4>Also Webp.</h4>
+           
+
        </div>
+
+      <nav><button class="button-primary" type="button" data-action="open-panel" data-panel="summary" >Next</button></nav>
+
     </div> <!-- interface wrapper -->
   </div><!-- container -->
 </section>

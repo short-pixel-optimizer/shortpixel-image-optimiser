@@ -10,7 +10,7 @@ use ShortPixel\ShortQ\ShortQ as ShortQ;
 abstract class Queue
 {
     protected $q;
-    protected static $instance;
+//    protected static $instance;
     protected static $results;
 
     const PLUGIN_SLUG = 'SPIO';
@@ -41,9 +41,9 @@ abstract class Queue
 
     public function createNewBulk($args)
     {
-        $this->q->resetQueue();
+        $this->resetQueue();
         $this->q->setStatus('preparing', true, false);
-        $this->q->setStatus('bulk_running', false, true);
+        $this->q->setStatus('bulk_running', true, true);
 
         $cache = new CacheController();
         $cache->deleteItem($this->cacheName);
@@ -53,7 +53,17 @@ abstract class Queue
     public function startBulk()
     {
         $this->q->setStatus('preparing', false, false);
-        $this->q->setStatus('bulk_running', true, true);
+        $this->q->setStatus('running', true, true);
+    }
+
+    public function resetQueue()
+    {
+       $this->q->resetQueue();
+    }
+
+    public function cleanQueue()
+    {
+       $this->q->cleanQueue();
     }
 
     /** Enqueues a single items into the urgent queue list
@@ -99,8 +109,9 @@ abstract class Queue
 
                Log::addDebug( $this->queueName . ' Queue, prepared came back as zero ', array($prepared, $result->items));
                if ($prepared['results'] == 0) /// This means no results, empty query.
+               {
                 $result->qstatus = self::RESULT_PREPARING_DONE;
-
+               }
 /*               $cache = new CacheController();
                $countCache = $cache->getItem($this->cacheName);
                $count = $countCache->getValue(); */
@@ -113,31 +124,25 @@ abstract class Queue
                } */
             }
        }
-    /*   elseif ($this->getStatus('bulk_running') === true) // When the bulk is running, regular dequeue
+       elseif ($this->getStatus('bulk_running') == true) // this is a bulk queue, don't start automatically.
        {
-            Log::addTemp('Bulk Running on this Q, doing deQueue' . $this->queueName);
-            $items = $this->deQueue();
+          if ($this->getStatus('running') == true)
+              $items = $this->deQueue();
+          elseif ($this->getStatus('preparing') == false)
+              $result->qstatus = self::RESULT_PREPARING_DONE;
        }
-       elseif (\wpSPIO()->env()->is_bulk_page) // resume issue. When preparing done, but not running. Return a all done on still.
+       else // regular queue can run whenever.
        {
-
-       } */
-       else // No bulk, but general page, dequeue the priorities.
-       {
-            Log::addTemp('NO Bulk Running on this Q, doing deQueue' . $this->queueName);
             $items = $this->deQueue();
        }
 
        if (isset($items)) // did a dequeue.
        {
           $result = $this->getQStatus($result, count($items));
-          Log::addTemp('Fetchted Q items', $items);
+          Log::addTemp('Fetched Q items', $items);
           $result->items = $items;
 
        }
-
-      //$stats = $this->getStats();
-       //$result->stats = $stats;
 
        return $result;
     }
@@ -254,28 +259,20 @@ abstract class Queue
       $stats->in_queue = $this->getStatus('items');
       $stats->in_process = $this->getStatus('in_process');
       $stats->errors = $this->getStatus('errors');
+      $stats->fatal_errors = $this->getStatus('fatal_errors');
       $stats->done = $this->getStatus('done');
-      $stats->total = $stats->in_queue + $stats->errors + $stats->done + $stats->in_process;
+      $stats->bulk_running = $this->getStatus('bulk_running');
+
+      $stats->total = $stats->in_queue + $stats->fatal_errors + $stats->errors + $stats->done + $stats->in_process;
       if ($stats->total > 0)
         $stats->percentage_done = round((100 / $stats->total) * $stats->done);
       else
         $stats->percentage_done = 0;
 
-      //$cache = new CacheController();
-      //$countCache = $cache->getItem($this->cacheName);
-    //  $countObj =  $this->getCountCache(); // $countCache->getValue();
-
       if ($stats->is_preparing)
       {
         $stats->images = $this->countQueue();
-        //$this->q->itemSum('')
       }
-
-/*      if (is_object($countObj))
-      {
-        //$stats->bulk = $countObj;
-
-      } */
 
       return $stats;
     }

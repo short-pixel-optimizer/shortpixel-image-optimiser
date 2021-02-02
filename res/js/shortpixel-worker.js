@@ -15,8 +15,8 @@ onmessage = function(e)
 
   switch(action)
   {
-     case 'init':
-        SpWorker.Init(data[0], data[1], isBulk);
+     case 'setEnv':
+        SpWorker.SetEnv(data);
      break;
      case 'shutdown':
         SpWorker.ShutDown();
@@ -43,22 +43,26 @@ SpWorker = {
    action: 'shortpixel_image_processing',
    secret: null,
    nonce: null,
-   isBulk: false,
+   isBulk: false, // If we are on the bulk screen  / queue
+   isCustom: false, // Process this queueType - depends on screen
+   isMedia: false,  // Process this queueType  - depends on screen.
 
    Fetch: async function (data)
    {
-    //  console.log(fetch);
-/*      var data = {
-         action: this.action,
-         'bulk-secret': this.secret,
-         nonce: this.nonce,
-      }; */
 
       var params = new URLSearchParams();
       params.append('action', this.action);
       params.append('bulk-secret', this.secret);
       params.append('nonce', this.nonce);
       params.append('isBulk', this.isBulk);
+
+      queues = [];
+      if (this.isMedia == true)
+        queues.push('media');
+      if (this.isCustom == true)
+        queues.push('custom');
+
+      params.append('queues', queues);
 
       if (typeof data !== 'undefined' && typeof data == 'object')
       {
@@ -86,11 +90,12 @@ SpWorker = {
           postMessage({'status' : false, message: response.status});
       }
    },
-   Init: function(url, secret, isBulk)
+   SetEnv: function (data)
    {
-        this.ajaxUrl = url;
-        this.secret = secret;
-        this.isBulk = isBulk;
+      for (key in data)
+      {
+          this[key] = data[key];
+      }
    },
    ShutDown: function()
    {

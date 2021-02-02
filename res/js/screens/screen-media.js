@@ -18,7 +18,7 @@ var ShortPixelScreen = function (MainScreen, processor)
 
         if (typeof resultItem.result !== 'undefined')
         {
-            console.log(resultItem);
+
             // This is final, not more messing with this. In results (multiple) defined one level higher than result object, if single, it's in result.
             var item_id = typeof resultItem.item_id !== 'undefined' ? resultItem.item_id : resultItem.result.item_id;
             var message = resultItem.result.message;
@@ -64,12 +64,37 @@ var ShortPixelScreen = function (MainScreen, processor)
     this.UpdateMessage = function(id, message)
     {
        var element = document.getElementById('sp-message-' + id);
+
+       if (element == null)
+       {
+           var parent = document.getElementById('sp-msg-' + id);
+           if (parent !== null)
+           {
+             var element = document.createElement('div');
+             element.classList.add('message');
+             element.setAttribute('id', 'sp-message-' + id);
+             parent.parentNode.insertBefore(element, parent.nextSibling);
+           }
+       }
+
        if (element !== null)
        {
-          element.innerHTML = message;
+          element.textContent = message;
        }
        else
         console.error('Update Message coloumn not found ' + id);
+    }
+    this.QueueStatus = function(qStatus)
+    {
+/*        if (qStatus == 'QUEUE_EMPTY')
+        {
+          var data = {
+              type: 'media',
+              screen_action: 'finishQueue'
+           };
+
+          this.processor.AjaxRequest(data);
+        } */
     }
 
     this.UpdateStats = function(stats, type)
@@ -89,9 +114,9 @@ var ShortPixelScreen = function (MainScreen, processor)
         if (data.media)
         {
             var id = data.media.id;
+
             var element = document.getElementById('sp-msg-' + id);
             element.outerHTML = data.media.result;
-
         }
         return true;
     }
@@ -131,5 +156,6 @@ var ShortPixelScreen = function (MainScreen, processor)
        this.processor.AjaxRequest(data);
     }
 
+    this.Init();
 
 } // class

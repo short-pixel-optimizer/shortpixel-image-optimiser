@@ -44,7 +44,7 @@ window.ShortPixelProcessor =
         //console.log(ShortPixelProcessorData);
         console.log('remoteSecret ' + this.remoteSecret + ', localsecret: ' + this.localSecret);
         //this.localSecret = null;
-console.log(ShortPixelProcessorData.startData);
+console.log(ShortPixelProcessorData);
 
 
         if (typeof ShortPixelScreen == 'undefined')
@@ -116,7 +116,11 @@ console.log(ShortPixelProcessorData.startData);
             if (this.isBulkPage)
                isBulk = true;
 
-            this.worker.postMessage({'action': 'init', 'data' : [ajaxURL, this.localSecret], 'isBulk' : isBulk});
+            this.worker.postMessage({'action' : 'setEnv',
+            'data': {'isBulk' : isBulk, 'isMedia': true, 'isCustom': true, 'ajaxUrl' : ajaxURL, 'secret' : this.localSecret}
+            });
+
+            /*this.worker.postMessage({'action': 'init', 'data' : [ajaxURL, this.localSecret], 'isBulk' : isBulk}); */
             this.worker.onmessage = this.CheckResponse.bind(this);
             window.addEventListener('beforeunload', this.ShutDownWorker.bind(this));
 
@@ -345,10 +349,7 @@ console.log(ShortPixelProcessorData.startData);
     {
        var localWorker = false;
 
-     // { 'id' : id, 'type' : type, 'callback' : 'shortpixel.RenderItemView'}
        this.worker.postMessage({action: 'ajaxRequest', 'nonce' : this.nonce['ajaxRequest'], 'data': data });
-
-       //this.runProcess();
 
     }
 

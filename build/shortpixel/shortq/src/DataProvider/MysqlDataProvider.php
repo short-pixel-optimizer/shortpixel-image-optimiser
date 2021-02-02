@@ -146,7 +146,7 @@ class MysqlDataProvider implements DataProvider
       return $date;
    }
 
-   /*
+   /* 
    * @return Array
    */
    private function queryItems($args = array())

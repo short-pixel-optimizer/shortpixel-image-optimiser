@@ -56,7 +56,7 @@ class OptimizeControllerTest extends  WP_UnitTestCase
 
     public function testCalculateStatsTotals()
     {
-      $control = OptimizeController::getInstance();
+      $control = new OptimizeController();
 
       $refWPQ = new ReflectionClass('\ShortPixel\Controller\OptimizeController');
       $statsMethod = $refWPQ->getMethod('CalculateStatsTotals');
@@ -100,11 +100,12 @@ class OptimizeControllerTest extends  WP_UnitTestCase
               'total' => 0,
           ]
       ];
-  //    $custom = clone $media; // No clone since it overwrites the referenced values :/ 
+  //    $custom = clone $media; // No clone since it overwrites the referenced values :/
 
       $media->stats->in_queue = 10;
       $media->stats->done = 10;
       $media->stats->total = 20;
+      $media->stats->percentage_done = 25;
       $media->stats->bulk->images = 100;
       $media->stats->bulk->items = 10;
       $media->stats->in_process = true;
@@ -121,6 +122,7 @@ class OptimizeControllerTest extends  WP_UnitTestCase
       $this->assertEquals(20, $total->stats->total);
       $this->assertEquals(10, $total->stats->bulk->items);
       $this->assertEquals(10, $total->stats->in_queue);
+      $this->assertEquals(25, $total->stats->percentage_done);
       $this->assertTrue($total->stats->in_process);
       $this->assertFalse($total->stats->is_preparing);
 
@@ -131,6 +133,7 @@ class OptimizeControllerTest extends  WP_UnitTestCase
       $custom->stats->bulk->images = 50;
       $custom->stats->bulk->items = 5;
       $custom->stats->in_process = true;
+      $custom->stats->percentage_done = 15;
 
       $custom->stats->is_preparing = true;  // true prevails over false.
 
@@ -142,9 +145,11 @@ class OptimizeControllerTest extends  WP_UnitTestCase
       $this->assertIsInt($total->stats->bulk->items);
       $this->assertIsInt($total->stats->in_queue);
 
+
       $this->assertEquals(90, $total->stats->total);
       $this->assertEquals(15, $total->stats->bulk->items);
       $this->assertEquals(30, $total->stats->in_queue);
+      $this->assertEquals(40, $total->stats->percentage_done);
       $this->assertTrue($total->stats->in_process);
       $this->assertTrue($total->stats->is_preparing);
 
