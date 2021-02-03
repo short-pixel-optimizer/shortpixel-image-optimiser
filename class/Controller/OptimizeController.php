@@ -84,16 +84,16 @@ class OptimizeController
           $json->result->message = $mediaItem->getProcessableReason();
           $json->result->is_error = true;
           $json->result->fileStatus = ImageModel::FILE_STATUS_ERROR;
-          ResponseController::add()->withMessage($json->message)->asError();
+          ResponseController::add()->withMessage($json->result->message)->asError();
         }
         else
         {
           $result = $queue->addSingleItem($mediaItem); // 1 if ok, 0 if not found, false is not processable
           if ($result->numitems > 0)
           {
-            $json->result->message = sprintf(__('Item %d added to Queue. %d items in Queue', 'shortpixel-image-optimiser'), $id, $result->numitems);
+            $json->result->message = sprintf(__('Item %s added to Queue. %d items in Queue', 'shortpixel-image-optimiser'), $mediaItem->getFileName(), $result->numitems);
             $json->status = 1;
-            ResponseController::add()->withMessage($json->message);
+            ResponseController::add()->withMessage($json->result->message);
 
           }
           else
@@ -347,7 +347,7 @@ class OptimizeController
               {
                  $item->result->apiStatus = ApiController::STATUS_SUCCESS;
                  $item->fileStatus = ImageModel::FILE_STATUS_SUCCESS;
-                 $item->result->message = sprintf(__('Image %s optimized', 'shortpixel-image-optimiser'), $item->item_id);
+                 $item->result->message = sprintf(__('Image %s optimized', 'shortpixel-image-optimiser'), $imageItem->getFileName());
                }
                else
               {

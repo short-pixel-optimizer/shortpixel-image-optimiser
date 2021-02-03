@@ -29,6 +29,8 @@
   .shortpixel-bulk-wrapper nav {
     margin: 45px auto;
     width: 80%; }
+  .shortpixel-bulk-wrapper .hidden {
+    display: none !important; }
   .shortpixel-bulk-wrapper .screen-wrapper {
     background: #fff;
     width: 90%;

@@ -9,6 +9,14 @@ class ImageThumbnailMeta
   public $originalSize;
 //  public $improvement;
 
+
+  public $resize;
+  public $resizeWidth;
+  public $resizeHeight;
+  public $originalWidth;
+  public $originalHeight;
+
+
   public $tsAdded;
   public $tsOptimized;
   public $webp;
@@ -53,10 +61,11 @@ class ImageThumbnailMeta
      $class = new \stdClass;
      $vars = get_object_vars($this);
 
-     foreach($vars as $property => $value) // only used by media lib.
+     foreach($vars as $property => $value) // only used by media library.
      {
        if ($property == 'customImprovement')
        {  continue;  }
+
 
        $class->$property = $this->$property;
      }

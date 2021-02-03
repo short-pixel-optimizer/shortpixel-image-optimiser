@@ -102,8 +102,30 @@ var ShortPixelScreen = function (MainScreen, processor)
       var waiting = stats.in_queue + stats.in_process;
       this.processor.tooltip.RefreshStats(stats.in_queue);
     }
-    this.HandleError = function()
+    this.GeneralResponses = function(responses)
     {
+       console.log(responses);
+       var self = this;
+
+       if (responses.length == 0)  // no responses.
+         return;
+
+       responses.forEach(function (element, index)
+       {
+            self.processor.tooltip.AddNotice(element.message);
+            if (self.processor.rStatus[element.code] == 'RESPONSE_ERROR')
+            {
+             //  this.Update
+             console.log('Help, do some error here');
+            }
+       });
+
+    }
+    this.HandleError = function(response)
+    {
+          console.error(response);
+
+
 
     }
 

@@ -326,7 +326,7 @@ abstract class Queue
     protected function countQueue()
     {
         $recount = $this->q->itemSum('countbystatus');
-        Log::addDebug('Recounts, countbystatus', $recount);
+      //  Log::addDebug('Recounts, countbystatus', $recount);
         $count = (object) [
             'images' => $recount[ShortQ::QSTATUS_WAITING],
             'images_done' => $recount[ShortQ::QSTATUS_DONE],

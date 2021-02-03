@@ -1,5 +1,18 @@
 
-//Module pattern
+/*** Shortpixel Image Processor ***
+* The processor sends via a browser worker tasks in form of Ajax Request to the browser
+* Ajax returns from browser are processed and then delegated to the screens
+* Every function starts via capitals and camelcased i.e. LoadWorker
+* Normal variables are camel-cased.
+*
+* The remote secret is to prevent several browser clients on different computers but on same site to start processing.
+* This is to limit performance usages on sites with a large number of backend users.
+*
+* -- Screens --
+* A Screen is responsible for putting received values to UI
+* Required function of screen are : HandleImage HandleError UpdateStats
+* Optional functions :  QueueStatus, GeneralResponses
+*/
 window.ShortPixelProcessor =
 {
   //  spp: {},
@@ -16,7 +29,7 @@ window.ShortPixelProcessor =
     timer: null,
     timesEmpty: 0, // number of times queue came up empty.
     nonce: [],
-    qStatus: {
+    qStatus: { // The Queue returns
        1:  'QUEUE_ITEMS',
        4:  'QUEUE_WAITING',
        10: 'QUEUE_EMPTY',
@@ -24,10 +37,17 @@ window.ShortPixelProcessor =
        3:  'PREPARING_DONE',
        11: 'PREPARING_RECOUNT',
     },
-    fStatus: {
+    fStatus: { // FileStatus of ImageModel
        1: 'FILE_PENDING',
        2: 'FILE_DONE',
        3: 'FILE_RESTORED',
+    },
+    rStatus: { // ResponseController
+       1: 'RESPONSE_ACTION', // when an action has been performed *not used*
+       2: 'RESPONSE_SUCCESS', // not sure this one is needed *not used*
+       10: 'RESPONSE_ERROR',
+       11: 'RESPONSE_WARNING', // *not used*
+       12: 'RESPONSE_ERROR_DELAY', // when an error is serious enough to delay things.*not used*
     },
 
     Load: function()
@@ -239,8 +259,17 @@ console.log(ShortPixelProcessorData);
            {
               this.remoteSecret = response.processorKey;
            }
-      }
 
+           if (response.responses)
+           {
+              if (typeof this.screen.GeneralResponses == 'function')
+              {
+                  this.screen.GeneralResponses(response.responses);
+              }
+           }
+      }
+      var event = new CustomEvent('shortpixel.processor.responseHandled', { detail : {paused: this.isManualPaused}});
+      window.dispatchEvent(event);
     },
     HandleResponse: function(response, type)
     {

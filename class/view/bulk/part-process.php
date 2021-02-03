@@ -35,7 +35,7 @@ namespace ShortPixel;
 
     <?php $this->loadView('bulk/part-progressbar'); ?>
 
-    <div class='bulk-summary'>
+    <div class='bulk-summary' data-check-visibility data-control="data-check-media-total">
       <div class='heading'>
         <span><i class='dashicons dashicons-images-alt2'>&nbsp;</i> Media Library</span>
         <span>
@@ -56,7 +56,7 @@ namespace ShortPixel;
 
     </div>
 
-    <div class='bulk-summary'>
+    <div class='bulk-summary' data-check-visibility data-control="data-check-custom-total">
       <div class='heading'>
         <span><i class='dashicons dashicons-open-folder'>&nbsp;</i> Other Media</span>
         <span>

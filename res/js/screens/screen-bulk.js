@@ -10,6 +10,8 @@ var ShortPixelScreen = function (MainScreen, processor)
   this.panels = [];
   this.currentPanel = 'dashboard';
 
+  this.debugCounter = 0;
+
   this.Init = function()
   {
     // Hook up the button and all.
@@ -18,8 +20,10 @@ var ShortPixelScreen = function (MainScreen, processor)
 
     //  console.log(ShortPixelScreenBulk);
       window.addEventListener('shortpixel.processor.paused', this.TogglePauseNotice.bind(this));
+      window.addEventListener('shortpixel.processor.responseHandled', this.CheckPanelData.bind(this));
       window.addEventListener('shortpixel.bulk.onUpdatePanelStatus', this.EventPanelStatusUpdated.bind(this));
       window.addEventListener('shortpixel.bulk.onSwitchPanel', this.EventPanelSwitched.bind(this));
+
 
       var processData = ShortPixelProcessorData.startData;
       var initMedia = processData.media.stats;
@@ -55,7 +59,7 @@ var ShortPixelScreen = function (MainScreen, processor)
       }
 console.log(initMedia, isPreparing, isRunning, isFinished);
 
-  },
+  }
   this.LoadPanels = function()
   {
       elements = document.querySelectorAll('section.panel');
@@ -66,7 +70,7 @@ console.log(initMedia, isPreparing, isRunning, isFinished);
           self.panels[panelName] = panel;
       });
 
-  },
+  }
   this.LoadActions = function()
   {
       actions = document.querySelectorAll('[data-action]');
@@ -95,7 +99,7 @@ console.log(initMedia, isPreparing, isRunning, isFinished);
             }
           }.bind(self));
       });
-  },
+  }
   this.UpdatePanelStatus = function(status, panelName)
   {
      if (typeof panelName !== 'undefined')
@@ -167,7 +171,7 @@ console.log(initMedia, isPreparing, isRunning, isFinished);
        var event = new CustomEvent('shortpixel.bulk.onSwitchPanel', { detail : {panelLoad: targetName, panelUnload: oldCurrentPanel}});
        window.dispatchEvent(event);
 
-  },
+  }
   this.StartPrepare = function()
   {
      console.log('Start Bulk');
@@ -176,7 +180,7 @@ console.log(initMedia, isPreparing, isRunning, isFinished);
      // Prepare should happen after selecting what the optimize.
      window.addEventListener('shortpixel.prepareBulk', this.PrepareBulk.bind(this), {'once': true} );
      this.processor.AjaxRequest(data);
-  },
+  }
   this.PrepareBulk = function()
   {
       //Remove pause
@@ -192,7 +196,7 @@ console.log(initMedia, isPreparing, isRunning, isFinished);
       this.processor.RunProcess();
 
       // Run process.run process from now for prepare ( until prepare done? )
-  },
+  }
   this.QueueStatus = function(qStatus, data)
   {
       if (qStatus == 'PREPARING_DONE' || qStatus == 'PREPARING_RECOUNT')
@@ -222,13 +226,13 @@ console.log(initMedia, isPreparing, isRunning, isFinished);
       {
 
       } */
-  },
+  }
   this.HandleImage = function(resultItem, type)
   {
       console.log('HandleImage');
       console.log(resultItem, type);
       var result = resultItem.result;
-      if ( this.processor.fStatus[result.status] == 'FILE_DONE')
+      if ( this.processor.fStatus[resultItem.fileStatus] == 'FILE_DONE')
       {
           this.UpdateData('result', result);
           if (result.original)
@@ -270,21 +274,21 @@ console.log(initMedia, isPreparing, isRunning, isFinished);
       }
 
 
-  },
-
+  }
   this.UpdateMessage = function(id, message)
   {
      console.log('UpdateMessage');
 
-  },
+  }
   this.UpdateStats = function(stats, type)
   {
       this.UpdateData('stats', stats, type);
+
   }
   // dataName refers to domain of data i.e. stats, result. Those are mentioned in UI with data-stats-media="total" or data-result
   this.UpdateData = function(dataName, data, type)
   {
-      console.log('updating Data :' + dataName);
+      console.log('updating Data :',  dataName, type);
       if (typeof type == 'undefined')
       {
           var elements = document.querySelectorAll('[data-' + dataName + ']');
@@ -331,6 +335,10 @@ console.log(initMedia, isPreparing, isRunning, isFinished);
                   {
                     if (presentation == 'css.width.percentage')
                       element.style.width = value + '%';
+                    if (presentation == 'inputval')
+                    {
+                      element.value = value;
+                    }
                   }
                 }
                 else
@@ -342,9 +350,9 @@ console.log(initMedia, isPreparing, isRunning, isFinished);
           });
       }
   },
-  this.HandleError = function()
+  this.HandleError = function(response)
   {
-
+    console.error(response);
   },
   this.StartBulk = function() // Open panel action
   {
@@ -428,6 +436,88 @@ console.log(initMedia, isPreparing, isRunning, isFinished);
      {
         this.UpdatePanelStatus('loading', 'selection');
      }
+  }
+  /* Checks number data and shows / hide elements based on that
+  * data-check-visibility - will hide/show check against the defined data-control
+  * data-control name must be a data-check- item at the number element - must be with value only.
+  * data-check-control element will check against another number.
+  * data-control must be 0 /higher than data-check-control to  get the check positive.
+
+  */
+  this.CheckPanelData = function() // function to check and hide certain areas if data is not happy.
+  {
+      // Element that should be hidden if referenced number is 0,NaN or elsewhat
+      var panelControls = document.querySelectorAll('[data-control]');
+      var self = this;
+
+      panelControls.forEach(function (element, index)
+      {
+
+          var control = element.getAttribute('data-control');
+          var hasCompareControl = element.hasAttribute('data-control-check');
+
+
+          var checker = document.querySelector('[' + control + ']');
+
+          // basic check if value > 0
+          if (checker == null)
+          {
+            console.error('Control for ' + element.innerHTML + ' didn\'t find reference value element ');
+            return;
+          }
+
+          var value = parseInt(checker.innerHTML);
+          if ( hasCompareControl)
+          {
+            var compareControl = document.querySelector('[' + element.getAttribute('data-control-check') + ']');
+            var compareValue = parseInt(compareControl.innerHTML);
+            self.debugCounter++;
+            console.log('hasCompareControl ', self.debugCounter);
+          }
+          if (isNaN(value))
+          {
+             var check = false;  // NaN can't play.
+          }
+          else if (hasCompareControl)
+          {
+             compareControl = document.querySelector('[' +  + ']');
+
+             if (value > compareValue )
+                var check = true;
+             else
+               var check = false;
+          }
+          else if (value <= 0)
+          {
+             var check = false;   // check failed.
+          }
+          else
+          {
+             var check = true;  // check succeeds
+          }
+
+          if (element.hasAttribute('data-check-visibility'))
+          {
+            var visibility = element.getAttribute('data-check-visibility'); // if check succeeds, show.
+            if (visibility == null || visibility == 'true' || visibility == '')
+               visibility = true;
+            else // if check succeeds, hide.
+               visibility = false;
+
+            var hasHidden = element.classList.contains('hidden');
+            if (check && hasHidden && visibility)
+              element.classList.remove('hidden');
+            else if (! check && ! hasHidden && visibility)
+              element.classList.add('hidden');
+            else if (check && ! visibility && ! hasHidden)
+              element.classList.add('hidden');
+            else if (! check && ! visibility && hasHidden)
+              element.classList.remove('hidden');
+          }
+
+
+      });
+
   }
 
   //this.CheckSelectionScreen()  = function()

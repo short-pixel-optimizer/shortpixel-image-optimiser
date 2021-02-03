@@ -322,7 +322,7 @@ class ApiController
       $counter = $savedSpace =  $originalSpace =  $optimizedSpace /* = $averageCompression */ = 0;
       $compressionType = property_exists($item, 'compressionType') ? $item->compressionType : $settings->compressionType;
 
-      if($compressionType) {
+      if($compressionType > 0) {
           $fileType = "LossyURL";
           $fileSize = "LossySize";
       } else {
@@ -423,20 +423,6 @@ class ApiController
 
         //  $results[$counter] = array('file' => $fileData->$fileType, 'optimizedSize' => $fileData->$fileSize, 'originalSize' => $fileData->OriginalSize, 'originalURL' => $fileData->OriginalURL);
 
-        /*  if (isset($fileData->$webpType))
-          {
-              //$webpDownload = $this->h
-              if($archive) { // swallow pride here, or fix this.
-                  $downloadResult = $this->fromArchive($archive['Path'], $fileData->$webpType, false,false,
-                );
-
-              } else {
-                  $downloadResult = $this->handleDownload($fileData->$webpType, false, false);
-              }
-
-              if ( $downloadResult->status == self::STATUS_SUCCESS)
-                 $results[$originalName] = $downloadResult;
-          } */
 
           $counter++;
       }
@@ -449,6 +435,7 @@ class ApiController
       $mainPath = $itemHandler->getMeta()->getPath();
 
       //if backup is enabled - we try to save the images
+    /* Done by Handler in Imagemodels
       if( $settings->backupImages )
       {
         // @todo Rewrite this to FileSystemController
@@ -461,7 +448,7 @@ class ApiController
               return array("Status" => self::STATUS_FAIL, "Code" =>"backup-fail", "Message" => "Failed to back the image up.");
           }
           $NoBackup = false;
-      }//end backup section
+      }//end backup section */
 
       $writeFailed = 0;
       $width = $height = null;

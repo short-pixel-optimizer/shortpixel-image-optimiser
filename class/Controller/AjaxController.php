@@ -228,14 +228,12 @@ class AjaxController
           $mediaItem = $this->getMediaItem($id, $type);
 
           $control = new OptimizeController();
-
-
           $json = new \stdClass;
           $json->$type = new \stdClass;
 
           $json->$type = $control->addItemToQueue($mediaItem);
 
-          ResponseController::add()->withMessage('TESTING');
+
           return $json;
         //  $this->send($json);
     }

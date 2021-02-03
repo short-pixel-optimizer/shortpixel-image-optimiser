@@ -102,7 +102,7 @@ var ShortPixelToolTip = function(reserved, processor)
         tooltip.classList.remove('shortpixel-hide');
         tooltip.classList.add('shortpixel-processing');
 
-        this.AddNotice('A notice. How lucky you are');
+        
     }
 
     this.AddNotice = function(message)

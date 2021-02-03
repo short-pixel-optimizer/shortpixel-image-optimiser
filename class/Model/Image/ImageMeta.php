@@ -10,12 +10,6 @@ class ImageMeta extends ImageThumbnailMeta
 //  public $is_optimized = false; // if this is optimized
 //  public $is_png2jpg = false; // todo implement.
 
-  public $resize;
-  public $resizeWidth;
-  public $resizeHeight;
-  public $originalWidth;
-  public $originalHeight;
-
   public $errorMessage;
 
   public $wasConverted = false;

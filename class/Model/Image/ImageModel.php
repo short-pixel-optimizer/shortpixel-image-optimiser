@@ -73,6 +73,12 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     {
       parent::__construct($path);
 
+      $this->setImageSize();
+    }
+
+
+    protected function setImageSize()
+    {
       if (! $this->isExtensionExcluded() && $this->isImage())
       {
          list($width, $height) = @getimagesize($this->getFullPath());
@@ -86,7 +92,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
          }
       }
     }
-
     /* Check if an image in theory could be processed. Check only exclusions, don't check status etc */
     public function isProcessable()
     {
@@ -164,7 +169,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
       {
         return $this->image_meta;
       }
-      
+
       if (! property_exists($this->image_meta, $name))
       {
           Log::addWarn('GetMeta on Undefined Property : ' . $name);
@@ -183,6 +188,12 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
       }
       else
         $this->image_meta->$name = $value;
+    }
+
+    public function hasMeta($name)
+    {
+        return  (property_exists($this->image_meta, $name));
+
     }
 
     public function isOptimized()
@@ -228,14 +239,15 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     public function handleOptimized($downloadResults)
     {
         $settings = \wpSPIO()->settings();
-        Log::addTemp('Download Results ', $downloadResults);
+        //Log::addTemp('Download Results ', $downloadResults);
+        Log::addTemp("ImageModel :: HandleOptimized");
+
         foreach($downloadResults as $urlName => $resultObj)
         {
+
             if ($urlName != $this->getFileName())
               continue;
-            // Check for same filename.
-          //  echo " $urlName " . $this->getFileName();
-            Log::addTemp(" $urlName searching " . $this->getFileName() );
+
 
               if ($settings->backupImages)
               {
@@ -260,6 +272,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                 $tempFile = $resultObj->file;
                 $copyok = $tempFile->copy($this);
                 $optimizedSize  = $tempFile->getFileSize();
+                $this->setImageSize();
               }
 
               if ($copyok)
@@ -281,8 +294,10 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                  $this->setMeta('compressedSize', $optimizedSize);
                  $this->setMeta('originalSize', $originalSize);
               //   $this->setMeta('improvement', $originalSize - $optimizedSize);
-                 $this->setMeta('did_keepExif', $settings->keepExif);
-                 $this->setMeta('did_cmyk2rgb', $settings->CMYKtoRGBconversion);
+                 if ($this->hasMeta('did_keepExif'))
+                  $this->setMeta('did_keepExif', $settings->keepExif);
+                 if ($this->hasMeta('did_cmyk2rgb'))
+                  $this->setMeta('did_cmyk2rgb', $settings->CMYKtoRGBconversion);
 
                  // Not set before in this case.
                  if (is_null($this->getMeta('compressionType')) || $this->getMeta('compressionType') === false)
@@ -298,9 +313,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
                    if ($resizeWidth == $this->width || $resizeHeight == $this->height)  // resized.
                    {
-                       $this->setMeta('resizeWidth', $width);
-                       $this->setMeta('resizeHeight', $height);
-                       $this->setMeta('resize', false);
+                       $this->setMeta('resizeWidth', $this->width);
+                       $this->setMeta('resizeHeight', $this->height);
+                       $this->setMeta('resize', true);
                    }
                    else
                      $this->setMeta('resize', false);
@@ -314,7 +329,13 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
               else
               {
                 Log::addError('Copy failed for  ' . $this->getFullPath() );
-                ResponseController::add()->withMessage( sprintf(__('Could not copy optimized image %s from temporary files. Please check file permissions  %s' , 'shortpixel-image-optimiser'), $this->getFileName(), $this->getFullPath()))->asImportant()->asError();
+
+                $rModel = ResponseController::add()->withMessage( sprintf(__('Could not copy optimized image %s from temporary files. Please check file permissions  %s' , 'shortpixel-image-optimiser'), $this->getFileName(), $this->getFullPath()))->asImportant()->asError();
+                if ($this->get('type') == 'media')
+                  $rModel->asMediaItem($this->get('id'));
+                else
+                  $rModel->asCustomItem($this->get('id'));
+
                 return false;
               }
               return true;
@@ -489,7 +510,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
        if ($this->hasBackup())
        {
           $backupFile = $this->getBackupFile();
-          Log::addTemp('BackupFile Size ' . $backupFile->getFileSize() . ' This Filesize' . $this->getFileSize());
+          Log::addTemp('BackupFile Size : ' . $backupFile->getFileSize() . ' This Filesize : ' .
+           $this->getFileSize());
+           Log::addWarn('Backup File ' . $backupFile . ' already exists!');
           if ($backupFile->getFileSize() == $this->getFileSize())
           {   return true; }
           else

@@ -134,7 +134,7 @@ class EditMediaViewController extends \ShortPixel\Controller
         $stats = array();
         $imageObj = $this->imageModel;
         $did_keepExif = $imageObj->getMeta('did_keepExif');
-        $did_png2jpg = $imageObj->getMeta('did_png2Jpg');
+        $did_png2jpg = $imageObj->getMeta('did_png2jpg');
         $resize = $imageObj->getMeta('resize');
 
         if ($did_keepExif)
@@ -150,12 +150,14 @@ class EditMediaViewController extends \ShortPixel\Controller
 
         if ($resize == true)
         {
-            $stats[] = array(__('Resized '));
+            $from = $imageObj->getMeta('originalWidth') . 'x' . $imageObj->getMeta('originalHeight');
+            $to  = $imageObj->getMeta('resizeWidth') . 'x' . $imageObj->getMeta('resizeHeight');
+            $stats[] = array(sprintf(__('Resized %s to %s'), $from, $to), '');
         }
 
         $tsOptimized = $imageObj->getMeta('tsOptimized');
         if ($tsOptimized !== null)
-          $stats[] = array(__("Optimized on", 'shortpixel-image-optimiser') . ": ", $tsOptimized );
+          $stats[] = array(__("Optimized on", 'shortpixel-image-optimiser') . "<br /> ", UiHelper::formatTS($tsOptimized) );
 
       /*  $successText .= ($data['webpCount'] ? "<br>+" . $data['webpCount'] . __(" WebP images", 'shortpixel-image-optimiser') : "")
                 . "<br>EXIF: " . ($data['exifKept'] ? __('kept','shortpixel-image-optimiser') :  __('removed','shortpixel-image-optimiser'))
@@ -278,17 +280,6 @@ class EditMediaViewController extends \ShortPixel\Controller
             }
           }
           return $debugInfo;
-      }
-
-      protected function renderLegacyCell()
-      {
-        $data = $this->data;
-
-        if ( $data['status'] != 'pdfOptimized' && $data['status'] != 'imgOptimized')
-          return null;
-
-        $this->legacyViewObj->renderListCell($this->post_id, $data['status'], $data['showActions'], $data['thumbsToOptimize'],
-                $data['backup'], $data['type'], $data['invType'], '');
       }
 
 } // controller .

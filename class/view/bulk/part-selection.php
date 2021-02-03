@@ -25,7 +25,9 @@ namespace ShortPixel;
        </div>
 
        <div class="interface wrapper">
-         <div class="media-library optiongroup">
+
+         <div class="media-library optiongroup hidden" data-check-visibility data-control="data-check-media-total" >
+
             <div class='switch_button'>
               <label>
                 <input type="checkbox" class="switch" id="media_checkbox" checked>
@@ -36,14 +38,14 @@ namespace ShortPixel;
             <h4><label for="media_checkbox">Your Media Library</label></h4>
             <div class='option'>
               <label>Items in Library</label>
-              <span class="number" data-stats-media="total"><?php _e('n/a', 'shortpixel-image-optimizer') ?></span>
+              <span class="number" data-stats-media="total" data-check-media-total><?php _e('n/a', 'shortpixel-image-optimizer') ?></span>
             </div>
             <div class='option'>
               <labeL>Images</label> <span class="number" data-stats-media="images-images"><?php _e('n/a', 'shortpixel-image-optimizer')  ?></span>
             </div>
          </div>
 
-         <div class="custom-images optiongroup">
+         <div class="custom-images optiongroup hidden" data-check-visibility data-control="data-check-custom-total" >
            <div class='switch_button'>
              <label>
                <input type="checkbox" class="switch" id="custom_checkbox" checked>
@@ -53,12 +55,13 @@ namespace ShortPixel;
            <h4><label for="custom_checkbox">Custom Images</label></h4>
             <div class='option'>
               <label>Images</label>
-               <span class="number" data-stats-custom="total"><?php _e('n/a', 'shortpixel-image-optimizer')  ?></span>
+               <span class="number" data-stats-custom="total" data-check-custom-total ><?php _e('n/a', 'shortpixel-image-optimizer')  ?></span>
             </div>
 
          </div>
 
-         <div class='optiongroup'>
+
+         <div class='optiongroup hidden' data-check-visibility data-control="data-check-media-total" >
            <div class='switch_button'>
 
              <label>
@@ -72,9 +75,14 @@ namespace ShortPixel;
 
        </div>
 
+       <div class='optiongroup' data-check-visibility="false" data-control="data-check-total-total">
+          <h3>No images found</h3>
+          <p> Shortpixel Bulk couldn't find any optimizable images. </p>
+       </div>
+
       <nav>
         <button class="button" type="button" data-action="FinishBulk">Stop Bulk</button>
-        <button class="button-primary" type="button" data-action="open-panel" data-panel="summary" >Next</button>
+        <button class="button-primary" type="button" data-action="open-panel" data-panel="summary" data-check-disable data-control="data-check-total-total">Next</button>
       </nav>
 
     </div> <!-- interface wrapper -->

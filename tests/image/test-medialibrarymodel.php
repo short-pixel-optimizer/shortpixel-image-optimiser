@@ -316,6 +316,8 @@ class MediaLibraryModelTest extends  WP_UnitTestCase
         $this->assertEquals($settings->compressionType, $image->getMeta('compressionType'));
         $this->assertEquals($optfilesize, filesize($image->getFullPath()));
         $this->assertFalse(file_exists($optfile));
+
+
   }
 
   public function testConvertPNG()

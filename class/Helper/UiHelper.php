@@ -123,6 +123,19 @@ class UiHelper
     if ($webpsTotal > 0)
       $output .= '<br>' . sprintf(__('+%s Webp images ','shortpixel-image-optimiser') , $webpsTotal);
 
+    if ($imageObj->isOptimized())
+    {
+        $optimizable = $imageObj->getOptimizeURLS();
+        if (count($optimizable) > 0)
+        {
+           $output .= '<div class="thumbs-todo"><h4>' . __('To Optimize', 'shortpixel-image-optimiser') . '</h4>';
+           foreach($optimizable as $optObj)
+           {
+              $output .= substr($optObj, strrpos($optObj, '/')+1) . '<br>';
+           }
+           $output .= '</div>';
+        }
+    }
 
     return $output;
 
@@ -162,7 +175,7 @@ class UiHelper
            {
              $action = self::getAction('optimizethumbs', $id);
              $action['text']  = sprintf(__('Optimize %s  thumbnails','shortpixel-image-optimiser'),count($optimizable));
-             
+
              $list_actions['optimizethumbs'] = $action;
           }
 
@@ -338,6 +351,14 @@ class UiHelper
    }
 
    return $action;
+  }
+
+  public static function formatTS($ts)
+  {
+      //$format = get_option('date_format') .' @ ' . date_i18n(get_option('time_format');
+      $date = wp_date(get_option('date_format'), $ts);
+      $date .= ' @ ' . wp_date(get_option('time_format'), $ts);
+      return $date;
   }
 
 
