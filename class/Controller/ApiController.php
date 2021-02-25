@@ -315,7 +315,7 @@ class ApiController
   * @return ObjectArray $results The Result of the optimization
   */
   private function handleSuccess($item, $response) {
-      Log::addDebug('Shortpixel API : Handling Success!', $response);
+      //Log::addDebug('Shortpixel API : Handling Success!', $response);
       $settings = \wpSPIO()->settings();
       $fs = \wpSPIO()->fileSystem();
 
@@ -432,7 +432,7 @@ class ApiController
       return $this->returnSuccess($results, self::STATUS_SUCCESS, false);
 
       //figure out in what SubDir files should land
-      $mainPath = $itemHandler->getMeta()->getPath();
+  //    $mainPath = $itemHandler->getMeta()->getPath();
 
       //if backup is enabled - we try to save the images
     /* Done by Handler in Imagemodels
@@ -749,14 +749,7 @@ class ApiController
     //  $returnMessage = array("Status" => self::STATUS_SUCCESS, "Message" => $tempFile);
 
       if ( is_wp_error( $tempFile ) ) {
-      //    @unlink($tempFile);
-      //    @unlink($webpTempFile);
-          $this->returnFailure(self::STATUS_ERROR, __('Error downloading file','shortpixel-image-optimiser') . " ({$optimizedUrl}) " . $tempFile->get_error_message());
-
-        /*  $returnMessage = array(
-              "Status" => self::STATUS_ERROR,
-              "Code" => self::ERR_DOWNLOAD,
-              "Message" => __('Error downloading file','shortpixel-image-optimiser') . " ({$optimizedUrl}) " . $tempFile->get_error_message()); */
+          return $this->returnFailure(self::STATUS_ERROR, __('Error downloading file','shortpixel-image-optimiser') . " ({$optimizedUrl}) " . $tempFile->get_error_message());
       }
 
       $tempFile = $fs->getFile($tempFile); // switch to FS after download

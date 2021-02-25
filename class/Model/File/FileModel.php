@@ -38,7 +38,7 @@ class FileModel extends \ShortPixel\Model
 
 
   /** Creates a file model object. FileModel files don't need to exist on FileSystem */
-  public function __construct($path)
+  public function __construct(string $path)
   {
     $this->fullpath = trim($path);
   }
@@ -82,7 +82,7 @@ class FileModel extends \ShortPixel\Model
   public function exists()
   {
     if (is_null($this->exists))
-      $this->exists = @file_exists($this->fullpath);
+      $this->exists = (@file_exists($this->fullpath) && is_file($this->fullpath));
 
     return $this->exists;
   }
@@ -109,14 +109,29 @@ class FileModel extends \ShortPixel\Model
     if (is_null($this->is_file))
     {
       if ($this->exists())
-        $this->is_file = is_file($this->fullpath);
+      {
+        if (basename($this->fullpath) == '..' || basename($this->fullpath) == '.')
+          $this->is_file = false;
+        else
+          $this->is_file = is_file($this->fullpath);
+      }
       else // file can not exist, but still have a valid filepath format. In that case, if file should return true.
       {
-         //$pathinfo = pathinfo($this->fullpath);
-         //if (isset($pathinfo['extension'])) // extension means file.
 
-         //  if file does not exist on disk, anything can become a file ( with/ without extension, etc). Meaning everything non-existing is a potential file ( or directory ) until created.
-         $this->is_file = true;
+         /*  if file does not exist on disk, anything can become a file ( with/ without extension, etc). Meaning everything non-existing is a potential file ( or directory ) until created. */
+
+         if (basename($this->fullpath) == '..' || basename($this->fullpath) == '.') // don't see this as file.
+         {
+            $this->is_file = false;
+         }
+         else if (! file_exists($this->fullpath) && ! is_dir($this->fullpath))
+         {
+              $this->is_file = true;
+         }
+         else //if (! is_file($this->fullpath)) // can be  a non-existing directory. /
+         {
+              $this->is_file = false;
+         }
 
       }
     }
@@ -179,7 +194,15 @@ class FileModel extends \ShortPixel\Model
       return 0;
   }
 
+  // Creates an empty file
+  public function create()
+  {
+     if (! $this->exists())
+      return touch($this->fullpath);
+     else
+      Log::addWarn('Could not create/write file: ' . $this->fullpath);
 
+  }
   /** Copy a file to somewhere
   *
   * @param $destination String Full Path to new file.
@@ -360,7 +383,11 @@ class FileModel extends \ShortPixel\Model
     $uploadDir = $fs->getWPUploadBase();
     $abspath = $fs->getWPAbsPath();
 
-    if (strpos($path, $abspath->getPath()) === false)
+    if ( is_file($path) && ! is_dir($path) ) // if path and file exist, all should be okish.
+    {
+      return $path;
+    }
+    elseif (strpos($path, $abspath->getPath()) === false)
     {
       $path = $this->relativeToFullPath($path);
     }
@@ -375,6 +402,11 @@ class FileModel extends \ShortPixel\Model
     return $path;
   }
 
+  /** Test is path is an URL
+  *  Checks if this path looks like an URL.
+  * @param $path String  Path to check
+  * @return Boolean If path seems domain.
+  */
   private function pathIsUrl($path)
   {
     $is_http = (substr($path, 0, 4) == 'http') ? true : false;
@@ -390,19 +422,24 @@ class FileModel extends \ShortPixel\Model
 
   }
 
+  /** Resolve an URL to a local path
+  *  This partially comes from WordPress functions attempting the same
+  * @param String $url  The URL to resolve
+  * @return String/Boolean - False is this seems an external domain, otherwise resolved path.
+  */
   private function UrlToPath($url)
   {
      //$uploadDir = wp_upload_dir();
 
      $site_url = str_replace('http:', '', home_url('', 'http'));
      $url = str_replace(array('http:', 'https:'), '', $url);
-Log::addTemp('FileModel URL' . $url . ' (' . $site_url . ')');
+//Log::addTemp('FileModel URL' . $url . ' (' . $site_url . ')');
      if (strpos($url, $site_url) !== false)
      {
        // try to replace URL for Path
        $abspath =  \wpSPIO()->filesystem()->getWPAbsPath();
        $path = str_replace($site_url, rtrim($abspath->getPath(),'/'), $url);
-Log::addTemp('FileModel Path and such' . $path . ' ' . $site_url . ' ' . $url . ' ' . $abspath->getpath());
+//Log::addTemp('FileModel Path and such' . $path . ' ' . $site_url . ' ' . $url . ' ' . $abspath->getpath());
 
        if (! $this->pathIsUrl($path)) // test again.
        {
@@ -422,6 +459,8 @@ Log::addTemp('FileModel Path and such' . $path . ' ' . $site_url . ' ' . $url . 
   */
   private function relativeToFullPath($path)
   {
+      $originalPath = $path; // for safe-keeping
+
       // A file with no path, can never be created to a fullpath.
       if (strlen($path) == 0)
         return $path;
@@ -465,8 +504,13 @@ Log::addTemp('FileModel Path and such' . $path . ' ' . $site_url . ' ' . $url . 
       // if path starts with / remove it due to trailingslashing ABSPATH
       $path = ltrim($path, '/');
       $fullpath = $abspath->getPath() . $path;
+
       // We can't test for file_exists here, since file_model allows non-existing files.
-      return $fullpath;
+      // Test if directory exists, perhaps. Otherwise we are in for a failure anyhow.
+      //if (is_dir(dirname($fullpath)))
+          return $fullpath;
+      //else
+      //    return $originalPath;
   }
 
   /*private function getUploadPath()

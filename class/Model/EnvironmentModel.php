@@ -179,6 +179,22 @@ class EnvironmentModel extends \ShortPixel\Model
   {
     $ng = \ShortPixel\NextGen::getInstance();
     $this->has_nextgen = $ng->has_nextgen();
+  }
+
+  //set default move as "list". only set once, it won't try to set the default mode again.
+  public function setDefaultViewModeList()
+  {
+      $settings = \wpSPIO()->settings();
+      if( $settings->mediaLibraryViewMode === false)
+      {
+          $settings->mediaLibraryViewMode = 1;
+          $currentUserID = false;
+          if ( function_exists('wp_get_current_user') ) {
+              $current_user = wp_get_current_user();
+              $currentUserID = $current_user->ID;
+              update_user_meta($currentUserID, "wp_media_library_mode", "list");
+          }
+      }
 
   }
 

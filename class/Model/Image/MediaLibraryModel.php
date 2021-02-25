@@ -1,6 +1,7 @@
 <?php
 namespace ShortPixel\Model\Image;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use \ShortPixel\ShortPixelPng2Jpg as ShortPixelPng2Jpg;
 
 
 class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailModel
@@ -8,7 +9,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   protected $thumbnails = array(); // thumbnails of this // MediaLibraryThumbnailModel .
   protected $retinas = array(); // retina files - MediaLibraryThumbnailModel (or retina / webp and move to thumbnail? )
   //protected $webps = array(); // webp files -
-  protected $original_file = false; // the original instead of the possibly _scaled one created by WP 5.3 >
+  protected $original_file = false; // the original instead of the possibly _scaled one created by WP 5.3
 
   protected $is_scaled = false; // if this is WP 5.3 scaled
   protected $do_png2jpg = false; // option to flag this one should be checked / converted to jpg.
@@ -17,6 +18,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   protected $id;
 
   protected $type = 'media';
+
+  private $unlistedChecked = false; // limit checking unlisted.
 
   public function __construct($post_id, $path)
   {
@@ -65,6 +68,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       return array();
      }
 
+
      $urls = array();
      if ($this->isProcessable(true))
       $urls = array($url);
@@ -78,8 +82,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
      {
         $urls = array_merge($urls, $thumbObj->getOptimizeUrls());
      }
-
-     // @todo Check Unlisted
 
 
      // @todo Check Retina's
@@ -125,10 +127,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
                $thumbObj = $this->getThumbnailModel($this->getFileDir() . $data['file']);
 
                $meta = new ImageThumbnailMeta();
-               $thumbObj->name = $name;
-              // $meta->width = (isset($data['width'])) ? $data['width'] : false;
-               //$meta->height = (isset($data['height'])) ? $data['height'] : false;
-              // $thumbObj->setMetaObj($meta);
+               $thumbObj->setName($name);
+               $meta->originalWidth = (isset($data['width'])) ? $data['width'] : null; // get from WP
+               $meta->originalHeight = (isset($data['height'])) ? $data['height'] : null;
+               $thumbObj->setMetaObj($meta);
                $thumbnails[$name] = $thumbObj;
              }
           }
@@ -152,10 +154,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
            $retinas[$thumbname] = $retinaObj;
       }
 
-
       return $retinas;
   }
-
 
   protected function getWebps()
   {
@@ -171,9 +171,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
          if ($webp)
           $webps[$thumbname] = $webp;
       }
-      $webp = $this->original_file->getWebp();
-      if ($webp)
-        $webps[1] = $webp; //see main
+      if ($this->isScaled())
+      {
+        $webp = $this->original_file->getWebp();
+        if ($webp)
+          $webps[1] = $webp; //see main
+      }
 
       return $webps;
   }
@@ -210,10 +213,16 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
          // @todo Find here which one is handles, since sizes can have duplicate files ( ie multiple size pointing to same filename, make local array if duplicate comes up / don't reprocess ). Same needed in restore.
 
          $filebase = $thumbnail->getFileBase();
+         $result = false;
+
          if (isset($optimized[$filebase]))
+         {
            $thumbnail->setMetaObj($optimized[$filebase]);
+         }
          else
+         {
           $result = $thumbnail->handleOptimized($tempFiles);
+         }
 
          if ($result)
          {
@@ -221,7 +230,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
          }
       }
 
-      if ($this->isScaled())
+      if ($this->isScaled() && ! $this->getOriginalFile()->isOptimized() )
       {
           $original_file = $this->getOriginalFile();
           $result = $original_file->handleOptimized($tempFiles);
@@ -328,6 +337,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           // Loads thumbnails from the WordPress installation to ensure fresh list, discover later added, etc.
           $thumbnails = $this->loadThumbnailsFromWP();
 
+
           foreach($thumbnails as $name => $thumbObj)
           {
              if (isset($metadata->thumbnails[$name])) // Check WP thumbs against our metadata.
@@ -335,17 +345,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
                 $thumbMeta = new ImageThumbnailMeta();
                 $thumbMeta->fromClass($metadata->thumbnails[$name]); // Load Thumbnail data from our saved Meta in model
 
-              //  var_dump($thumbObj->getMeta('originalWidth'));
-                //var_dump($thumbmeta['width']);
-                //$metadata = $metadata->thumbnails[$name];
+                // Only get data from WordPress meta if we don't have that yet.
 
-                if (is_null($thumbObj->getMeta('originalWidth')))
+                if (is_null($thumbMeta->originalWidth))
                   $thumbObj->setMeta('originalWidth', $thumbObj->get('width'));
 
-                if (is_null($thumbObj->getMeta('originalHeight')))
+                if (is_null($thumbMeta->originalHeight))
                   $thumbObj->setMeta('originalHeight', $thumbObj->get('height'));
 
-                if (is_null($thumbObj->getMeta('tsAdded')))
+                if (is_null($thumbMeta->tsAdded))
                   $thumbObj->setMeta('tsAdded', time());
 
                 $thumbnails[$name]->setMetaObj($thumbMeta);
@@ -353,24 +361,27 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
              }
           }
 
-          if (count($metadata->thumbnails) > 0) // unlisted in WordPress metadata sizes.
+          // Load Thumbnails.
+          if (isset($metadata->thumbnails) && count($metadata->thumbnails) > 0) // unlisted in WordPress metadata sizes. Might be special unlisted one, one that was removed etc.
           {
-             foreach($metadata->thumbnails as $name => $thumbmeta)
+             foreach($metadata->thumbnails as $name => $thumbMeta) // <!-- ThumbMeta is Object
              {
+        //       echo "<PRE>"; print_r($thumbMeta); echo "</PRE>";
 
-               $thumbObj = $this->getThumbnailModel($this->getFileDir() . $thumbmeta['file']);
-               $meta = new ImageThumbnailMeta();
-               $thumbObj->name = $name;
-               //$thumbObj->setMeta('originalWidth')
-            //   $width = (isset($thumbmeta['width'])) ? $thumbmeta['width'] : $thumbObj->get('width');
-              //height = (isset($thumbmeta['height'])) ? $thumbmeta['height'] : $thumbObj->get('height');
+               // Load from Class and file, might be an unlisted one. Meta doesn't save file info, so without might prove a problem!
+               $thumbObj = $this->getThumbnailModel($this->getFileDir() . $thumbMeta->file);
 
-               // set default data.
-              //  $thumbObj->setMeta('originalWidth', $width);
-                //$thumbObj->setMeta('originalHeight', $height);
-              //  $thumbObj->setMeta('tsAdded', time());
-
-               $thumbnails[$name] = $thumbObj;
+               $newMeta = new ImageThumbnailMeta();
+               $newMeta->fromClass($thumbMeta);
+               //$thumbObj = $this->getThumbnailModel($this->getFileDir() . $thumbmeta['file']);
+               //$meta = new ImageThumbnailMeta();
+               //$meta->fromClass($thumbMeta); // Load Thumbnail data from our saved Meta in model
+               $thumbObj->setMetaObj($newMeta);
+               $thumbObj->setName($name);
+               if ($thumbObj->exists()) // if we exist.
+               {
+                $thumbnails[$name] = $thumbObj;
+               }
 
              }
           }
@@ -412,11 +423,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       }
 
       // settings defaults
-      if ($this->getMeta('originalHeight') == null)
-        $this->setMeta('originalHeight', $this->height);
+      if (is_null($this->getMeta('originalHeight')))
+        $this->setMeta('originalHeight', $this->get('height') );
 
-      if ($this->getMeta('originalWidth') == null)
-        $this->setMeta('originalWidth', $this->width);
+      if (is_null($this->getMeta('originalWidth')))
+        $this->setMeta('originalWidth', $this->get('width') );
   }
 
   private function createSave()
@@ -499,13 +510,18 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       $settings = \wpSPIO()->settings();
 
       if ($this->getExtension() == 'png' && $settings->png2jpg)
-        $this->is_png2jpg = true;
+        $this->do_png2jpg = true;
 
       if($strict)
         return $bool;
 
+      // Adds unlisted files to thumbnails array, if needed.
+      // This is bound to be bad for performance and not good for big sites!
+      $this->addUnlisted();
+
       if (! $bool) // if parent is not processable, check if thumbnails are, can still have a work to do.
       {
+
           foreach($this->thumbnails as $thumbnail)
           {
 
@@ -549,23 +565,72 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
   public function convertPNG()
   {
-      $bool = parent::convertPNG($this);
+      $settings = \wpSPIO()->settings();
+      $bool = false;
+      if ($this->getExtension() == 'png')
+      {
+          if ($settings->backupImages == 1)
+          {
+             $backupok = $this->createBackup();
+             if (! $backupok)
+             {
+               ResponseController::add()->withMessage(sprintf(__('Could not create backup for %s, optimization failed. Please check file permissions - %s', 'shortpixel-image-optimiser'), $this->getFileName(), $this->getFullPath() ))->asImportant()->asError();
+               return false;
+             }
+          }
+
+          $pngConvert = new ShortPixelPng2Jpg();
+          $bool = $pngConvert->convert($this);
+          if ($bool == true)
+          {
+             $bool = true; // placeholder maybe
+          }
+          elseif ($settings->backupImages == 1)
+             $this->restore(); // failed, remove backups.
+      }
 
       if ($bool)
       {
-         /*foreach($this->thumbnails as $thumbObj)
-         {
-            $bool = $thumbObj->convertPNG();
-         } */
-         $this->setMeta('did_png2jpg', true);
+        $this->setMeta('did_png2jpg', true);
 
-        // wp_regenerate_metadata();  // do the attachment, the WP way.  Genious!
-        // wp_update_attachment_metadata( $attach_id,  $attach_data );
+        $mainfile = \wpSPIO()->filesystem()->getfile($this->getFileDir() . $this->getFileBase() . '.jpg');
+        Log::addTemp('Removing old files' . $this->getFullPath());
+
+        if ($mainfile->exists()) // if new exists, remove old
+        {
+            $this->delete(); // remove the old file.
+            $this->fullpath = $mainfile->getFullPath();
+            $this->resetStatus();
+            $this->setFileInfo();
+
+        }
+
+        // After Convert, reload new meta.
+        $this->thumbnails = $this->loadThumbnailsFromWP();
+
+        foreach($this->thumbnails as $thumbObj)
+        {
+            $file = \wpSPIO()->filesystem()->getfile($thumbObj->getFileDir() . $thumbObj->getFileBase() . '.jpg');
+            $thumbObj->setMeta('did_png2jpg', true);
+            if ($file->exists()) // if new exists, remove old
+            {
+              Log::addTemp('Removing Thumb: ' . $thumbObj->getFullPath() );
+                $thumbObj->delete(); // remove the old file.
+                $thumbObj->fullpath = $file->getFullPath();
+                $thumbObj->resetStatus();
+                $thumbObj->setFileInfo();
+            }
+        }
+
+        // Update
+        $this->saveMeta();
+      //  Log::addTemp('Doing Construct ' . $mainfile->getFullPath() );
+        //$this->__construct($this->id, $mainfile->getFullPath() );
+    //    Log::addTemp('Reconstructed', $this);
+
       }
 
-      // Update thumbnails with new stuff.
-      $this->thumbnails = $this->loadMetaFromWP();
-      $this->saveMeta();
+    //  $this->loadMeta();
 
       return $bool;
   }
@@ -582,8 +647,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         $type = trim($item["type"]);
         if($type == "size") {
             //$meta = $meta? $meta : wp_get_attachment_metadata($ID);
-            if( $this->width && $this->height
-                 && $this->isProcessableSize($this->width, $this->height, $item["value"]) === false){
+            $width = $this->get('width');
+            $height = $this->get('height');
+            if( $width && $height
+                 && $this->isProcessableSize($width, $height, $item["value"]) === false){
                    $this->processable_status = self::P_EXCLUDE_SIZE;
                   return true;
               }
@@ -714,9 +781,26 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   */
   public function restore()
   {
-    //$itemHandler = $this->facade;
-    //$itemHandler = new ShortPixelMetaFacade($post_id);
-    //$urlsPaths = $itemHandler->getURLsAndPATHs(true, false, true, array(), true, true);
+
+    $fs = \wpSPIO()->filesystem();
+
+    if ($this->getMeta('did_png2jpg'))
+    {
+        $backupFile = $fs->getFile($this->getBackupDirectory() . $this->getFileBase() . '.png'); // check backup.
+
+        if ($backupFile->exists())
+        {
+          $this->delete(); // delete the jpg
+          $this->fullpath = $fs->getFile($this->getFileDir() . $this->getFileBase() . '.png');
+          $this->resetStatus();
+          $this->setFileInfo();
+          $this->create(); // empty placeholder file.
+          Log::addTemp('Restoring png : ' . $this->fullpath);
+          if ($this->exists())
+            Log::addTemp('Exists');
+        }
+    }
+
     $cleanRestore = true;
     $bool = parent::restore();
 
@@ -726,60 +810,68 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        $cleanRestore = false;
     }
 
+    $this->setMeta('did_png2jpg', false);
     $restored = array();
 
     foreach($this->thumbnails as $thumbObj)
     {
-          if ($thumbObj->isOptimized())
+          $filebase = $thumbObj->getFileBase();
+
+          if ($thumbObj->getMeta('did_png2jpg'))
           {
-            $filebase = $thumbObj->getFileBase();
+              $backupFile = $fs->getFile($thumbObj->getBackupDirectory() . $thumbObj->getFileBase() . '.png');
+              if ($backupFile->exists())
+              {
+                $thumbObj->delete(); // delete the jpg
+                $thumbObj->fullpath = $fs->getFile($thumbObj->getFileDir() . $thumbObj->getFileBase() . '.png'); // reset path to .png
+                $thumbObj->resetStatus();
+                $thumbObj->setFileInfo();
+                $thumbObj->create(); // empty placeholder file.
 
-            if (isset($restored[$filebase]))
-            {
-              $bool = true;  // this filebase already restored. In case of duplicate sizes.
-              $thumbObj->imageMeta = new ImageMeta();
-            }
-            else
-              $bool = $thumbObj->restore();
+                Log::addTemp('Restoring thumbnail png : ' . $thumbObj->fullpath);
 
-            if (! $bool)
-              $cleanRestore = false;
-            else
-               $restored[$filebase] = true;
+              }
           }
+
+          if (isset($restored[$filebase]))
+          {
+            $bool = true;  // this filebase already restored. In case of duplicate sizes.
+            $thumbObj->imageMeta = new ImageMeta();
+          }
+          else
+            $bool = $thumbObj->restore();
+
+          if (! $bool)
+            $cleanRestore = false;
+          else
+          {
+             $restored[$filebase] = true;
+             $thumbObj->setMeta('did_png2jpg', false);
+          }
+
     }
 
     if ($this->isScaled())
     {
        $originalFile = $this->getOriginalFile();
-       if ($originalFile->isOptimized())
+       if ($originalFile->getMeta('did_png2jpg'))
        {
-           $originalFile->restore();
-           $this->original_file = $originalFile;
+           $backupFile = $fs->getFile($originalFile->getBackupDirectory() . $originalFile->getFileBase() . '.png');
+           if ($backupFile->exists())
+           {
+             $originalFile->delete();
+             $originalFile->fullpath = $fs->getFile($originalFile->getFileDir() . $originalFile->getFileBase() . '.png'); // reset path to .png
+             $originalFile->resetStatus();
+             $originalFile->setFileInfo();
+             $originalFile->create(); // empty placeholder file.
+
+             Log::addTemp('Restoring original png : ' . $originalFile->fullpath);
+
+           }
        }
 
+       $originalFile->restore();
     }
-
-        // @todo move this to some better permanent structure w/ png2jpg class.
-        if ($this->getMeta('did_png2Jpg'))
-        {
-          $png2jpg = $this->meta->getPng2Jpg();
-          if (isset($png2jpg['originalFile']))
-          {
-            $urlsPaths['PATHs'][] = $png2jpg['originalFile'];
-          }
-          if (isset($png2jpg['originalSizes']))
-          {
-                foreach($png2jpg['originalSizes'] as $size => $data)
-                {
-                  if (isset($data['file']))
-                  {
-                    $filedir = (string) $this->file->getFileDir();
-                    $urlsPaths['PATHs'][] = $filedir . $data['file'];
-                  }
-                }
-          }
-        }
 
         $webps = $this->getWebps();
         foreach($webps as $webpFile)
@@ -870,7 +962,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        if (isset($metadata['ShortPixelPng2Jpg']))
        {
            $this->image_meta->did_png2jpg = true; //setMeta('did_png2jpg', true);
+           $did_jpg2png = true;
        }
+       else
+           $did_jpg2png = false;
     //   $this->image_meta->did_cmyk2rgb = $exifkept;
       // $this->image_meta->tsOptimized =
 
@@ -881,6 +976,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
               $thumbnailObj->image_meta->status = $status;
               $thumbnailObj->image_meta->compressionType = $type;
               $thumbnailObj->image_meta->compressedSize = $thumbnailObj->getFileSize();
+              $thumbnailObj->image_meta->did_jpg2png = true;
           //    $thumbnailObj->image_meta->improvement = -1; // n/a
               if ($thumbnailObj->hasBackup())
               {
@@ -904,8 +1000,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
               }
 
               $this->thumbnails[$thumbname] = $thumbnailObj;
-
-
 
           }
        }
@@ -1073,6 +1167,120 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         'is_scaled' => $this->is_scaled,
       );
 
+  }
+
+  /** Adds Unlisted Image to the Media Library Item
+  * This function is called in IsProcessable
+  */
+  protected function addUnlisted()
+  {
+       // Setting must be active.
+       if (! \wpSPIO()->settings()->optimizeUnlisted )
+         return;
+
+      // Don't check this more than once per run-time.
+      if ( $this->unlistedChecked )
+         return;
+
+        $currentFiles = array($this->getFileName());
+        foreach($this->thumbnails as $thumbObj)
+          $currentFiles[] = $thumbObj->getFileName();
+
+        if ($this->isScaled())
+           $currentFiles[] = $this->getOriginalFile()->getFileName();
+
+        $base = ($this->isScaled() ) ? $this->getOriginalFile()->getFileBase() : $this->getFileBase();
+        $ext = $this->getExtension();
+        $path = (string) $this->getFileDir();
+
+        $pattern = '/^' . preg_quote($base, '/') . '-\d+x\d+\.'. $ext .'/';
+
+        $thumbs = array();
+
+        $all_files = scandir($path,  SCANDIR_SORT_NONE);
+        $result_files = array_values(preg_grep($pattern, $all_files));
+
+
+        $unlisted = array_diff($result_files, $currentFiles);
+
+        if( defined('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES') ){
+            $suffixes = explode(',', SHORTPIXEL_CUSTOM_THUMB_SUFFIXES);
+            if (is_array($suffixes))
+                {
+                  foreach ($suffixes as $suffix){
+
+                      $pattern = '/^' . preg_quote($base, '/') . '-\d+x\d+'. $suffix . '\.'. $ext .'/';
+                      $thumbs = array_values(preg_grep($pattern, $all_files));
+                      if (count($thumbs) > 0)
+                        $unlisted = array_merge($unlisted, $thumbs);
+                      //array_merge($thumbs, self::getFilesByPattern($dirPath, $pattern));
+                      /*foreach($thumbsCandidates as $th) {
+                          if(preg_match($pattern, $th)) {
+                              $thumbs[]= $th;
+                          }
+                      } */
+                  }
+                }
+            }
+            if( defined('SHORTPIXEL_CUSTOM_THUMB_INFIXES') ){
+                $infixes = explode(',', SHORTPIXEL_CUSTOM_THUMB_INFIXES);
+                if (is_array($infixes))
+                {
+                  foreach ($infixes as $infix){
+                      //$thumbsCandidates = @glob($base . $infix  . "-*." . $ext);
+                      $pattern = '/^' . preg_quote($base, '/') . $infix . '-\d+x\d+' . '\.'. $ext .'/';
+                      $thumbs = array_values(preg_grep($pattern, $all_files));
+                      if (count($thumbs) > 0)
+                        $unlisted = array_merge($unlisted, $thumbs);
+                    //  $thumbs = array_merge($thumbs, self::getFilesByPattern($dirPath, $pattern));
+
+                      /*foreach($thumbsCandidates as $th) {
+                          if(preg_match($pattern, $th)) {
+                              $thumbs[]= $th;
+                          }
+                      } */
+                  }
+                }
+            }
+      //  }
+
+      // Quality check on the thumbs. Must exist,  must be same extension.
+
+      $added = false;
+      foreach($unlisted as $unName)
+      {
+          $thumbObj = $this->getThumbnailModel($path . $unName);
+          if ($thumbObj->is_readable())
+          {
+            $thumbObj->setName($unName);
+            $thumbObj->setMeta('originalWidth', $thumbObj->get('width'));
+            $thumbObj->setMeta('originalHeight', $thumbObj->get('height'));
+            $thumbObj->setMeta('file', $thumbObj->getFileName() );
+            $this->thumbnails[$unName] = $thumbObj;
+            $added = true;
+            Log::addTemp('Unlisted Thumb: ', $thumbObj);
+          }
+          else
+            Log::addWarn("Unlisted Image $unName is not readable (permission error?)");
+      }
+
+      if ($added)
+        $this->saveMeta(); // Save it when we are adding images.
+
+      $this->unlistedChecked = true;
+//echo "<PRE>"; var_dump($this->thumbnails); echo "</PRE>";
+      /*foreach($thumbs as $thumbfile)
+      {
+         if ($thumbfile->getExtension() != $ext) // remove false hits, webp and such.
+          continue;
+         if (! $thumbfile->exists()) // thing must exist.
+          continue;
+
+        $results[] = (string) $thumbfile;
+      } */
+
+      /* Returns array with full path, as string */
+      //return $results;
   }
 
 } // class

@@ -137,6 +137,9 @@
   .settings_page_wp-shortpixel-settings .view-notice-row {
     display: none; }
 
+.view-edit-media a.debugModal {
+  margin: 20px 0;
+  display: inline-block; }
 .view-edit-media .debugInfo pre {
   font-size: 11px; }
 .view-edit-media .sp-column-stats {

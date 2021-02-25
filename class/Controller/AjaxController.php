@@ -2,7 +2,6 @@
 
 namespace ShortPixel\Controller;
 
-
 use ShortPixel\Controller\View\ListMediaViewController as ListMediaViewController;
 use ShortPixel\Controller\View\OtherMediaViewController as OtherMediaViewController;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;

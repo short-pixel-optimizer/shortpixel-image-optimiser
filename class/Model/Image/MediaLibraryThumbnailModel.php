@@ -17,7 +17,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
   public function __construct($path)
   {
-
         parent::__construct($path);
         $this->image_meta = new ImageThumbnailMeta();
         $this->setWebp();
@@ -47,7 +46,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
   /** Set the meta name of thumbnail. */
   public function setName($name)
   {
-     $this->sizeName = $name;
+     $this->name = $name;
   }
 
   public function getRetina()
@@ -136,6 +135,32 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
      return parent::getImprovements();
   }
 
+  // From FileModel.  BackupFile is different when png2jpg was converted.
+  /*public function getBackupFile()
+  {
+     if ($this->getMeta('did_png2jpg') == true)
+     {
+       $backupFile = new FileModel($this->getBackupDirectory() . $this->getFileBase()  . '.png');
+       if ($backupFile->exists()) // Check for original PNG
+       {
+          return $backupFile;
+       }
+       else // Backup (haha) in case something went wrong.
+       {
+          $backupFile = parent::getBackupFile();
+          if (is_object($backupFile))
+            return $backupFile;
+       }
+       return false; // Error State
+    }
+    else
+    {
+       return parent::getBackupFile();
+    }
+  } */
+
+
+  //public function isRestorable()
 
 
   protected function isThumbnailProcessable()
@@ -151,30 +176,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
       }
   }
 
-  // Check for proper settings before hitting this function
-  public function convertPNG()
-  {
-    $settings = \wpSPIO()->settings();
-
-     if ($this->getExtension() == 'png')
-     {
-        if ($settings->backupImages == 1)
-        {
-           $backupok = $this->createBackup();
-           if (! $backupok)
-           {
-             ResponseController::add()->withMessage(sprintf(__('Could not create backup for %s, optimization failed. Please check file permissions - %s', 'shortpixel-image-optimiser'), $this->getFileName(), $this->getFullPath() ))->asImportant()->asError();
-             return false;
-           }
-        }
-
-        $result = ShortPixelPng2Jpg::convert($this);
-
-     }
-     return $result;
-  }
-
-
 
   // !Important . This doubles as  checking excluded image sizes.
   protected function isSizeExcluded()
@@ -186,6 +187,49 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
   {
     return (! \wpSPIO()->settings()->processThumbnails);
   }
+
+  public function hasBackup()
+  {
+      if (! $this->getMeta('did_png2jpg'))
+      {
+          return parent::hasBackup();
+      }
+      else
+      {
+        $directory = $this->getBackupDirectory();
+        if (! $directory)
+          return false;
+
+          $backupFile =  $directory . $this->getFileBase() . '.png';
+
+        if (file_exists($backupFile) && ! is_dir($backupFile) )
+          return true;
+        else {
+          return false;
+        }
+      }
+  }
+
+  /** Tries to retrieve an *existing* BackupFile. Returns false if not present.
+  * This file might not be writable.
+  * To get writable directory reference to backup, use FileSystemController
+  */
+  public function getBackupFile()
+  {
+    if (! $this->getMeta('did_png2jpg'))
+    {
+        return parent::getBackupFile();
+    }
+    else
+    {
+     if ($this->hasBackup())
+        return new FileModel($this->getBackupDirectory() . $this->getFileBase() . '.png' );
+     else
+       return false;
+    }
+  }
+
+
 
 
 } // class

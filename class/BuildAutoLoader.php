@@ -63,6 +63,7 @@ class BuildAutoLoader
       'class/external/wp-offload-media.php',
       'class/external/wpengine.php',
       'class/external/wp-cli.php',
+      'class/external/custom-suffixes.php',
     );
 
     echo "Build Plugin.JSON ";

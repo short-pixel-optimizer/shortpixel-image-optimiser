@@ -72,6 +72,8 @@ class Controller
 
   public function setShortPixel($pixel)
   {
+    echo "<PRE>"; print_r(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 9)); echo "</PRE>";
+    exit('Shortpixel should not be called ( Controller.php:76)');
     $this->shortPixel = $pixel; // notice the capital, case-sensitive!
   }
 

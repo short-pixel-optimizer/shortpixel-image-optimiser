@@ -138,7 +138,7 @@ class AdminNoticesController extends \ShortPixel\Controller
       if (! \wpSPIO()->env()->is_screen_to_use)
         return; // suppress all when not our screen.
 
-       
+
        $this->doAPINotices();
        $this->doCompatNotices();
        $this->doUnlistedNotices();
@@ -267,7 +267,8 @@ class AdminNoticesController extends \ShortPixel\Controller
     {
       $settings = \wpSPIO()->settings();
       $currentStats = $settings->currentStats;
-      $shortpixel = \wpSPIO()->getShortPixel();
+    //  $shortpixel = \wpSPIO()->getShortPixel();
+      $quotaController = QuotaController::getInstance();
 
       if (! \wpSPIO()->settings()->verifiedKey)
       {
@@ -275,7 +276,8 @@ class AdminNoticesController extends \ShortPixel\Controller
       }
 
       if(!is_array($currentStats) || isset($_GET['checkquota']) || isset($currentStats["quotaData"])) {
-          $shortpixel->getQuotaInformation();
+          //$shortpixel->getQuotaInformation();
+          $quataController->getQuota();
       }
 
 
@@ -288,16 +290,19 @@ class AdminNoticesController extends \ShortPixel\Controller
       //    $screen = get_current_screen();
           $env = \wpSPIO()->env();
 
-          $statsSetting = is_array($settings->currentStats) ? $settings->currentStats : array();
-          $stats = $shortpixel->countAllIfNeeded($statsSetting, 86400);
+          //$statsSetting = is_array($settings->currentStats) ? $settings->currentStats : array();
+          //$stats = $shortpixel->countAllIfNeeded($statsSetting, 86400);
+          $quotaController = QuotaController::getInstance();
+          $quotaData = $quotaController->getQuota();
 
-          $quotaData = $stats;
+          //$quotaData = $stats;
           $noticeController = Notices::getInstance();
 
           $bulk_notice = $noticeController->getNoticeByID(self::MSG_UPGRADE_BULK);
           $bulk_is_dismissed = ($bulk_notice && $bulk_notice->isDismissed() ) ? true : false;
 
           $month_notice = $noticeController->getNoticeByID(self::MSG_UPGRADE_MONTH);
+    echo "<PRE>"; var_dump($quotaData); echo "</PRE>";
 
           //this is for bulk page - alert on the total credits for total images
           if( ! $bulk_is_dismissed && $env->is_bulk_page && $this->bulkUpgradeNeeded($stats)) {
@@ -309,7 +314,7 @@ class AdminNoticesController extends \ShortPixel\Controller
               //ShortPixelView::displayActivationNotice('upgbulk', );
           }
           //consider the monthly plus 1/6 of the available one-time credits.
-          elseif( $this->monthlyUpgradeNeeded($stats)) {
+          elseif( $this->monthlyUpgradeNeeded($quotaData)) {
               //looks like the user hasn't got enough credits to process the monthly images, display a notice telling this
               $message = $this->getMonthlyUpgradeMessage(array('monthAvg' => $this->getMonthAvg($stats), 'monthlyQuota' => $quotaData['APICallsQuotaNumeric']));
               //ShortPixelView::displayActivationNotice('upgmonth', );
@@ -545,7 +550,8 @@ class AdminNoticesController extends \ShortPixel\Controller
     }
 
     protected function monthlyUpgradeNeeded($quotaData) {
-        return isset($quotaData['APICallsQuotaNumeric']) && $this->getMonthAvg($quotaData) > $quotaData['APICallsQuotaNumeric'] + ($quotaData['APICallsQuotaOneTimeNumeric'] - $quotaData['APICallsMadeOneTimeNumeric'])/6 + 20;
+
+        return isset($quotaData->monthly->total) && $this->getMonthAvg($quotaData) > $quotaData->monthly->total + ($quotaData->onetime->total - $quotaData->onetime->consumed)/6 + 20;
     }
 
     protected function bulkUpgradeNeeded($stats) {
@@ -553,12 +559,15 @@ class AdminNoticesController extends \ShortPixel\Controller
         return $stats['totalFiles'] - $stats['totalProcessedFiles'] > $quotaData['APICallsQuotaNumeric'] + $quotaData['APICallsQuotaOneTimeNumeric'] - $quotaData['APICallsMadeNumeric'] - $quotaData['APICallsMadeOneTimeNumeric'];
     }
 
-    protected function getMonthAvg($stats) {
+    protected function getMonthAvg() {
+        $stats = StatsController::getInstance();
+
         for($i = 4, $count = 0; $i>=1; $i--) {
-            if($count == 0 && $stats['totalM' . $i] == 0) continue;
+            if($count == 0 && $stats->find('period', 'months', $i) == 0) continue;
             $count++;
+
         }
-        return ($stats['totalM1'] + $stats['totalM2'] + $stats['totalM3'] + $stats['totalM4']) / max(1,$count);
+        return ($stats->find('period', 'months', 1) + $stats->find('period', 'months', 2) + $stats->find('period', 'months', 3) + $stats->find('period', 'months', 4) / max(1,$count));
     }
 
 
@@ -616,18 +625,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 	         * @return string
 	         */
 	        private function parse_update_notice( $content, $response ) {
-	                //$version_parts     = explode( '.', $response->new_version );
-              //    var_dump($version_parts);
-              //  echo "<PRE>";  var_dump($content); echo "</PRE>";
 
-	               /* $check_for_notices = [
-	                        $version_parts[ 0 ] . '.' . $version_parts[ 1 ] . '.' . $version_parts[ 2 ] . '.' . $version_parts[ 3 ], // build
-	                        $version_parts[ 0 ] . '.' . $version_parts[ 1 ] . '.' . $version_parts[ 2 ], // patch (micro)
-	                        $version_parts[ 0 ] . '.' . $version_parts[ 1 ] . '.0', // minor
-	                        $version_parts[ 0 ] . '.' . $version_parts[ 1 ], // minor
-	                        $version_parts[ 0 ] . '.0.0', // major
-	                        $version_parts[ 0 ] . '.0', // major
-	                ];  */
                   $new_version = $response->new_version;
 
 	                $update_notice = '';

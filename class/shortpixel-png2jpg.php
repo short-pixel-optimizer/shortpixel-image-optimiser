@@ -1,9 +1,4 @@
 <?php
-/**
- * User: simon
- * Date: 17.11.2017
- * Time: 13:44
- */
  namespace ShortPixel;
 
  use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
@@ -42,9 +37,6 @@ class ShortPixelPng2Jpg {
           if (is_null($this->current_image)) // image creation failed. @todo Error back
              return false;
 
-        //  if (! $this->canConvert($imageObj)) // @todo Error back
-        //    return;
-
           if ($this->isTransparent($imageObj) && $settings->png2jpg < 2) // 2 means force conversion for transparent images.
              return false;
 
@@ -54,18 +46,19 @@ class ShortPixelPng2Jpg {
           {
              if ($result['success'])
              {
+            //   $imageObj =  new MediaLibraryModel($imageObj->get('id'), $imageObj->getFullPath() ); //$fs->getMediaItem($imageObj->set('id'));
+
                $bool = $this->updateMetaData($result, $imageObj);
                if (! $bool)
                  Log::addWarn('Png2Jpg Update Metadata failed');
 
                $file = $result['file'];
 
-               $imageObj =  new MediaLibraryModel($imageObj->get('id'), $file->getFullPath() ); //$fs->getMediaItem($imageObj->set('id'));
-
              }
           }
 
-          return $imageObj;
+        //  return $imageObj;
+        return true;
     }
 
 
@@ -358,6 +351,7 @@ class ShortPixelPng2Jpg {
      * @param type $ID
      * @return string
      */
+     /*
     public function checkConvertMediaPng2Jpg($itemHandler) {
 
         $meta = $itemHandler->getRawMeta();
@@ -497,7 +491,7 @@ class ShortPixelPng2Jpg {
         Log::addDebug("PNG2JPG done. Return: " . json_encode($meta));
 
         return $meta;
-    }
+    } */
 
     protected function updateMetaData($params, ImageModel $imageObj)
     {
@@ -523,7 +517,8 @@ class ShortPixelPng2Jpg {
         $metadata = wp_get_attachment_metadata($attach_id);
 
         $new_metadata = wp_generate_attachment_metadata($attach_id, $newFile->getFullPath());
-        $new_metadata = array_merge($new_metadata, $metadata);
+        $new_metadata = array_merge($metadata, $new_metadata); // merge to preserve other custom metadata
+
 
         Log::addDebug('Png2Jpg New Metadata', $new_metadata);
 

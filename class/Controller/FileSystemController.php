@@ -35,7 +35,7 @@ Class FileSystemController extends \ShortPixel\Controller
     }
 
     /** Get MediaLibraryModel for a Post_id */
-    public function getMediaImage($id)
+    public function getMediaImage(int $id)
     {
         $filepath = get_attached_file($id);
         $filepath = apply_filters('shortpixel_get_attached_file', $filepath, $id);
@@ -47,9 +47,17 @@ Class FileSystemController extends \ShortPixel\Controller
         return $imageObj;
     }
 
-    public function getCustomImage($id)
+    public function getCustomImage(int $id)
     {
         $imageObj = new CustomImageModel($id);
+        return $imageObj;
+    }
+
+    /** Gets a custom Image Model without being in the database. This is used to check if path is a proper customModel path ( not mediaLibrary ) and see if the file should be included per excusion rules */
+    public function getCustomStub(string $path)
+    {
+        $imageObj = new CustomImageModel(0);
+        $imageObj->setPath($path);
         return $imageObj;
     }
 
@@ -163,7 +171,7 @@ Class FileSystemController extends \ShortPixel\Controller
       return $this->getDirectory($upload_dir['basedir']);
     }
 
-    /** This function returns the Absolute Path of the WordPress installation where the content directory is located.
+    /** This function returns the Absolute Path of the WordPress installation where the **CONTENT** directory is located.
     * Normally this would be the same as ABSPATH, but there are installations out there with -cough- alternative approaches
     * @returns DirectoryModel  Either the ABSPATH or where the WP_CONTENT_DIR is located
     */
@@ -179,8 +187,6 @@ Class FileSystemController extends \ShortPixel\Controller
 
         return $this->getDirectory($abspath);
     }
-
-
 
     /** Not in use yet, do not use. Future replacement. */
     public function createBackUpFolder($folder = SHORTPIXEL_BACKUP_FOLDER)

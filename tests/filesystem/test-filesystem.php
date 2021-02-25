@@ -71,17 +71,17 @@ class FileSystemTest extends  WP_UnitTestCase
   }
 
   public function testPathToURL() {
-      $url1 = $this->fs->pathToUrl(new \ShortPixel\Model\FileModel('./wp-content/uploads/2020/07/file'));
-      $url2 = $this->fs->pathToUrl(new \ShortPixel\Model\FileModel('wp-content/uploads/2020/07/file'));
-      $url3 = $this->fs->pathToUrl(new \ShortPixel\Model\FileModel('../wp-content/uploads/2020/07/file'));
-      $url4 = $this->fs->pathToUrl(new \ShortPixel\Model\FileModel('../../wp-content/uploads/2020/07/file'));
+      $url1 = $this->fs->pathToUrl(new FileModel('./wp-content/uploads/2020/07/file'));
+      $url2 = $this->fs->pathToUrl(new FileModel('wp-content/uploads/2020/07/file'));
+      $url3 = $this->fs->pathToUrl(new FileModel('../wp-content/uploads/2020/07/file'));
+      $url4 = $this->fs->pathToUrl(new FileModel('../../wp-content/uploads/2020/07/file'));
 
       $this->assertEquals("http://example.org/wp-content/uploads/2020/07/file", $url1);
       $this->assertEquals("http://example.org/wp-content/uploads/2020/07/file", $url2);
       $this->assertEquals("http://example.org/wp-content/uploads/2020/07/file", $url3);
       $this->assertEquals("http://example.org/wp-content/uploads/2020/07/file", $url4);
 
-      $path5 = $this->fs->pathToUrL(new \ShortPixel\Model\FileModel('/tmp/wordpress/wp/wp-content/gallery/la043-porta-antica-laccata-e-dorata/result.jpg'));
+      $path5 = $this->fs->pathToUrL(new FileModel('/tmp/wordpress/wp/wp-content/gallery/la043-porta-antica-laccata-e-dorata/result.jpg'));
 
       $this->assertEquals("http://example.org/wp/wp-content/gallery/la043-porta-antica-laccata-e-dorata/result.jpg", $path5);
 
@@ -280,7 +280,6 @@ class FileSystemTest extends  WP_UnitTestCase
     $this->assertFalse($repeatdir->isSubFolderOf($dir));
     $this->assertFalse($repeatdir->isSubFolderOf($subdir));
 
-
   }
 
   public function testFileBasic()
@@ -319,13 +318,14 @@ class FileSystemTest extends  WP_UnitTestCase
 
 
       // Test Empty Non existing file
-      $file3 = $this->fs->getFile('');
+      $file3 = $this->fs->getFile('/nono/www/nothere.jpg');
       $this->assertFileNotExists($file3);
       $this->assertFalse($file3->exists(), $file3->getFullPath());
-      $this->assertEquals('', $file3->getFullPath());
-      $this->assertEquals('', $file3->getFileName());
-      $this->assertEquals('', $file3->getFileBase());
-      $this->assertNull($file3->getFileDir());
+      $this->assertEquals('/tmp/wordpress/nono/www/nothere.jpg', $file3->getFullPath()); // append WP path because path does not exist, adds abspath.
+      $this->assertEquals('nothere.jpg', $file3->getFileName());
+      $this->assertEquals('nothere', $file3->getFileBase());
+      $this->assertTrue($file3->is_file()); // non-existing file, still file.
+      $this->assertEquals('/tmp/wordpress/nono/www/', (string) $file3->getFileDir()); // Even non-existing can have a path ( which doens't exist )
 
       // Exists and writable, according to PHP spec.
       $this->assertFalse($file3->is_writable());
@@ -348,7 +348,7 @@ class FileSystemTest extends  WP_UnitTestCase
       // Test creating filemodel with a directory.
       $file5 = $this->fs->getFile($filedir);
       $this->assertEquals($filedir, $file5->getFullPath());
-      $this->assertTrue($file5->exists());
+      $this->assertFalse($file5->exists()); // Is Directory
       $this->assertEquals($filedir, (string) $file5->getFileDir());
       $this->assertNull($file5->getFileBase());
       $this->assertNull($file5->getFileName());
@@ -358,7 +358,7 @@ class FileSystemTest extends  WP_UnitTestCase
       //$this->root->url() . '/nonexisting/..' // VFS Stream fails on this, returning a file_exists on this.
       $file6 = $this->fs->getFile('/no/no/nothere/..');
       $this->assertFalse($file6->exists(), $file6->getFullPath() );
-      $this->assertTrue($file6->is_file());
+      $this->assertFalse($file6->is_file()); // directory-like path
 
       /*  This doesn't work anymore due to mb_pathinfo fix. Hopefully doesn't cause additional issues, but mb is more important now.
       $this->assertEquals('..', $file6->getFileName(), $file6->getFileName());
@@ -377,6 +377,8 @@ class FileSystemTest extends  WP_UnitTestCase
 
     $this->assertTrue($file->exists());
     $this->assertFalse($targetfile->exists());
+    $this->assertTrue($file->is_file());
+    $this->assertTrue($targetfile->is_file(), $targetpath);
 
     // test targetFile setting construct on not exists
     $this->assertEquals($targetfile->getFileName(), 'copy-image1.jpg');
@@ -495,11 +497,11 @@ class FileSystemTest extends  WP_UnitTestCase
     $fullfilepath = get_attached_file($attachment_id);
     $abspath = $this->fs->getWPUploadBase();
 
-    $image = new ImageModel($attachment_id);
-    $image->setByPostID($attachment_id);
+    $image = \wpSPIO()->filesystem()->getImage($attachment_id, 'media');
+    //$image->setByPostID($attachment_id);
 
-    $this->assertStringContainsString($abspath, $image->getFile()->getFullPath());
-    $this->assertEquals($fullfilepath, $image->getFile()->getFullPath());
+    $this->assertStringContainsString($abspath, $image->getFullPath());
+    $this->assertEquals($fullfilepath, $image->getFullPath());
 
 
     add_filter('upload_dir', array($this, 'filterUploadDirWithError')); // set upload dir to enable error.
@@ -508,11 +510,11 @@ class FileSystemTest extends  WP_UnitTestCase
     $basedir = $uploadDir['basedir'];
     $baseurl = $uploadDir['baseurl'];
 
-    $image2 = new ImageModel($attachment_id);
-    $image2->setByPostID($attachment_id);
+    $image2 = \wpSPIO()->filesystem()->getImage($attachment_id, 'media');
+    //$image2->setByPostID($attachment_id);
 
-    $this->assertStringContainsString($abspath, $image2->getFile()->getFullPath());
-    $this->assertEquals($image->getFile()->getFullPath(), $image2->getFile()->getFullPath());
+    $this->assertStringContainsString($abspath, $image2->getFullPath());
+    $this->assertEquals($image->getFullPath(), $image2->getFullPath());
 
     remove_filter('upload_dir', array($this, 'filterUploadDirWithError')); // set upload dir to enable error.
   }

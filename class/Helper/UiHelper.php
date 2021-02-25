@@ -123,7 +123,7 @@ class UiHelper
     if ($webpsTotal > 0)
       $output .= '<br>' . sprintf(__('+%s Webp images ','shortpixel-image-optimiser') , $webpsTotal);
 
-    if ($imageObj->isOptimized())
+    if ($imageObj->isOptimized() && $imageObj->isProcessable())
     {
         $optimizable = $imageObj->getOptimizeURLS();
         if (count($optimizable) > 0)
@@ -361,5 +361,19 @@ class UiHelper
       return $date;
   }
 
+  static public function formatBytes($bytes, $precision = 2) {
+      $units = array('B', 'KB', 'MB', 'GB', 'TB');
 
-}
+      $bytes = max($bytes, 0);
+      $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+      $pow = min($pow, count($units) - 1);
+
+      $bytes /= pow(1024, $pow);
+
+      return round($bytes, $precision) . ' ' . $units[$pow];
+  }
+
+
+
+
+} // class

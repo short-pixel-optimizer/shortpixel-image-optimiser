@@ -2,7 +2,6 @@
 use ShortPixel\Controller\ResponseController as ResponseController;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
-
 class  PNG2JPGTest extends  WP_UnitTestCase
 {
 
@@ -114,21 +113,21 @@ class  PNG2JPGTest extends  WP_UnitTestCase
     $result = $png2jpg->convert(self::$image_trans);
     $this->assertFalse($result);
 
-
     // Second one should work.  Without Backup.
     $result = $png2jpg->convert(self::$image);
 
-    $this->assertIsObject($result);
+    $this->assertTrue($result);
     //$this->assertTrue($result['success']);
     //$this->assertIsObject($result['file']);
 
     //$file = $result['file'];
+    $image = self::$fs->getMediaImage(self::$id);
 
-    $this->assertEquals('jpg', $result->getExtension());
-    $this->assertEquals('png-test.jpg', $result->getFileName());
-    $this->assertEquals('png-test', $result->getFileBase());
+    $this->assertEquals('jpg', $image->getExtension());
+    $this->assertEquals('png-test.jpg', $image->getFileName());
+    $this->assertEquals('png-test', $image->getFileBase());
 
-    $this->assertEquals($result->getFullPath(), get_attached_file(self::$id));
+    $this->assertEquals($image->getFullPath(), get_attached_file(self::$id));
     $post = get_post(self::$id);
     $this->assertEquals('image/jpeg', $post->post_mime_type);
 
@@ -138,24 +137,89 @@ class  PNG2JPGTest extends  WP_UnitTestCase
 
     // Third test. With Force transparency, with backup.
     $settings->png2jpg = 2;
-    $settings->backupImages = 1; // test one without backup.
+    $settings->backupImages = 1; // test one with backup.
 
     $result = $png2jpg->convert(self::$image_trans);
 
-    $this->assertIsObject($result);
+    $this->assertTrue($result);
 
-    $this->assertEquals('jpg', $result->getExtension());
-    $this->assertEquals('png-transparant.jpg', $result->getFileName());
-    $this->assertEquals('png-transparant', $result->getFileBase());
+    $image = self::$fs->getMediaImage(self::$id_trans);
 
-    $this->assertEquals($result->getFullPath(), get_attached_file(self::$id_trans));
+    $this->assertEquals('jpg', $image->getExtension());
+    $this->assertEquals('png-transparant.jpg', $image->getFileName());
+    $this->assertEquals('png-transparant', $image->getFileBase());
+
+    $this->assertEquals($image->getFullPath(), get_attached_file(self::$id_trans));
     $post = get_post(self::$id_trans);
     $this->assertEquals('image/jpeg', $post->post_mime_type);
 
   }
 
+  public function testMediaLibraryConversion()
+  {
+    $post = $this->factory->post->create_and_get();
+    $attachment_id = $this->factory->attachment->create_upload_object( __DIR__ . '/assets/desk.png', $post->ID );
+
+    $settings = \wpSPIO()->settings();
+    $settings->png2jpg = 1;
+    $settings->backupImages = 1;
+
+    $mediaObj = \wpSPIO()->filesystem()->getImage($attachment_id, 'media');
+    $oldfullpath = $mediaObj->getFullPath();
+
+    $this->assertIsObject($mediaObj);
+    $this->assertEquals('png', $mediaObj->getExtension() );
+
+    $this->assertTrue($mediaObj->isProcessable());  // This set png2jpg is setting active.
+    $this->assertTrue($mediaObj->get('do_png2jpg'));
+
+    $bool = $mediaObj->convertPNG();
+    $this->assertTrue($bool);
+
+    $this->assertFileNotExists($oldfullpath);
+
+    // basically the old object stops existing.
+    //$mediaObj = \wpSPIO()->filesystem()->getImage($attachment_id, 'media');
 
 
+    $this->assertEquals('jpg', $mediaObj->getExtension());
+    $this->assertTrue($mediaObj->exists());
+    $this->assertTrue($mediaObj->getMeta('did_png2jpg'));
+    $this->assertFileNotExists($mediaObj->getFileDir() . $mediaObj->getFileBase() . '.png');
+
+    $thumbnails = $mediaObj->get('thumbnails');
+
+    foreach($thumbnails as $thumbObj)
+    {
+       $this->assertEquals('jpg', $thumbObj->getExtension());
+       $this->assertTrue($thumbObj->exists());
+       $this->assertTrue($thumbObj->getMeta('did_png2jpg'));
+       $this->assertFileNotExists($thumbObj->getFileDir() . $thumbObj->getFileBase() . '.png');
+    }
+
+    // Retry on already converted.
+    $bool = $mediaObj->convertPNG();
+    $this->assertFalse($bool);
+
+    // Restore backup, check if it's jpg.
+    $mediaObj->restore();
+
+    $this->assertEquals('png', $mediaObj->getExtension());
+    $this->assertTrue($mediaObj->exists());
+    $this->assertFalse($mediaObj->getMeta('did_png2jpg'));
+    $this->assertFileNotExists($mediaObj->getFileDir() . $mediaObj->getFileBase() . '.jpg');
+
+
+    foreach($thumbnails as $thumbObj)
+    {
+       $this->assertEquals('png', $thumbObj->getExtension());
+       $this->assertTrue($thumbObj->exists());
+       $this->assertFalse($thumbObj->getMeta('did_png2jpg'));
+       $this->assertFileNotExists($thumbObj->getFileDir() . $thumbObj->getFileBase() . '.jpg');
+    }
+
+
+  }
 
 
 }  // class

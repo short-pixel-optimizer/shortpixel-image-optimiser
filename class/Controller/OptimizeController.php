@@ -239,7 +239,13 @@ class OptimizeController
       {
           $urls = $item->urls;
           if (property_exists($item, 'png2jpg'))
-            $item = $this->convertPNG($item, $Q);
+          {
+          //  Log::addTemp('Converting png2jpg');
+            $bool = $this->convertPNG($item, $Q);
+            Log::addTemp('Png2Jpg conversion done (OptimizeController)', $bool);
+            if ($bool == true)
+              continue; // conversion done, item will be requeued with new urls.
+          }
 
           $item = $this->sendToProcessing($item);
           $item = $this->handleAPIResult($item, $Q);
@@ -277,13 +283,18 @@ class OptimizeController
 
       $imageObj = $fs->getMediaImage($item->item_id);
 
-      $result = $imageObj->convertPNG();
-      if ($result !== false)
-        $imageObj = $result; // returns ImageObj.
+      $bool = $imageObj->convertPNG();
+      if ($bool !== false) // It worked.
+      {
+        $imageObj = $fs->getMediaImage($item->item_id);
+        $this->addItemToQueue($imageObj);
 
-      $item->urls = $imageObj->getOptimizeURLS();
+      }
+        //$imageObj = $result; // returns ImageObj.
 
-      return $item;
+    //  $item->urls = $imageObj->getOptimizeURLS();
+
+      return $bool;
     }
 
     // This is everything sub-efficient.

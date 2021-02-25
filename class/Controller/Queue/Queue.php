@@ -403,7 +403,9 @@ abstract class Queue
       //  $paths = $imageModel->getOptimizePaths();
 
         if ($imageModel->get('do_png2jpg'))  // Flag is set in Is_Processable in mediaLibraryModel, when settings are on, image is png.
+        {
           $item->png2jpg = $imageModel->get('do_png2jpg');
+        }
 
         if ($imageModel->getMeta('compressionType'))
           $item->compressionType = $imageModel->getMeta('compressionType');

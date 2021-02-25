@@ -101,7 +101,7 @@ class DirectoryModel extends \ShortPixel\Model
 
   public function exists()
   {
-    $this->exists = file_exists($this->path);
+    $this->exists = file_exists($this->path) && is_dir($this->path);
     return $this->exists;
   }
 

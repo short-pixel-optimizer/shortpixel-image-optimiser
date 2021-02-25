@@ -2,6 +2,7 @@
 namespace ShortPixel\Controller;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notice;
+use ShortPixel\Helper\UiHelper as UiHelper;
 
 use ShortPixel\Model\ApiKeyModel as ApiKeyModel;
 
@@ -40,21 +41,23 @@ class SettingsController extends \ShortPixel\Controller
           $this->model = new \WPShortPixelSettings();
           $this->keyModel = new ApiKeyModel();
 
+          $this->keyModel->loadKey();
+          $this->is_verifiedkey = $this->keyModel->is_verified();
+          $this->is_constant_key = $this->keyModel->is_constant();
+          $this->hide_api_key = $this->keyModel->is_hidden();
+
+
           parent::__construct();
       }
 
       // glue method.
       public function setShortPixel($pixel)
       {
-        parent::setShortPixel($pixel);
-        $this->keyModel->shortPixel = $pixel;
+      //  parent::setShortPixel($pixel);
+      //  $this->keyModel->shortPixel = $pixel;
 
         // It's loading here since it can do validation, which requires Shortpixel.
         // Otherwise this should be loaded on construct.
-        $this->keyModel->loadKey();
-        $this->is_verifiedkey = $this->keyModel->is_verified();
-        $this->is_constant_key = $this->keyModel->is_constant();
-        $this->hide_api_key = $this->keyModel->is_hidden();
       }
 
       // default action of controller
@@ -182,11 +185,15 @@ class SettingsController extends \ShortPixel\Controller
          if (($this->is_constant_key))
              $this->view->data->apiKey = SHORTPIXEL_API_KEY;
 
+
+         $this->loadStatistics();
+         $statsControl = StatsController::getInstance();
+
          $this->view->minSizes = $this->getMaxIntermediateImageSize();
          $this->view->customFolders= $this->loadCustomFolders();
-         $this->view->allThumbSizes = $this->shortPixel->getAllThumbnailSizes();
-         $this->view->averageCompression = $this->shortPixel->getAverageCompression();
-         $this->view->savedBandwidth = \WpShortPixel::formatBytes($this->view->data->savedSpace * 10000,2);
+         $this->view->allThumbSizes = $this->getAllThumbnailSizes();
+         $this->view->averageCompression = $statsControl->getAverageCompression();
+         $this->view->savedBandwidth = UiHelper::formatBytes($this->view->data->savedSpace * 10000,2);
          $this->view->resources = wp_remote_post($this->model->httpProto . "://shortpixel.com/resources-frag");
          if (is_wp_error($this->view->resources))
             $this->view->resources = null;
@@ -197,6 +204,26 @@ class SettingsController extends \ShortPixel\Controller
          $this->view->dismissedNotices = $settings->dismissedNotices;
 
          $this->loadView('view-settings');
+      }
+
+      protected function loadStatistics()
+      {
+        $statsControl = StatsController::getInstance();
+        $stats = new \stdClass;
+
+        $stats->totalOptimized = $statsControl->find('totalOptimized');
+        $stats->totalOriginal = $statsControl->find('totalOriginal');
+        $stats->mainOptimized = $statsControl->find('media', 'images');
+
+        // used in part-general
+        $stats->thumbnailsToProcess = $statsControl->find('total', 'images') - $statsControl->find('total', 'items') - $statsControl->find('total', 'compressed');
+
+
+        /*$this->view->thumbnailsToProcess = isset($quotaData['totalFiles']) ? ($quotaData['totalFiles'] - $quotaData['mainFiles']) - ($quotaData['totalProcessedFiles'] - $quotaData['mainProcessedFiles']) : 0;  */
+
+        $this->view->stats = $stats;
+
+
       }
 
       /** Checks on things and set them for information. */
@@ -237,6 +264,25 @@ class SettingsController extends \ShortPixel\Controller
           return false;
       }
 
+      private function getAllThumbnailSizes()
+      {
+        global $_wp_additional_image_sizes;
+
+        $sizes_names = get_intermediate_image_sizes();
+        $sizes = array();
+        foreach ( $sizes_names as $size ) {
+            $sizes[ $size ][ 'width' ] = intval( get_option( "{$size}_size_w" ) );
+            $sizes[ $size ][ 'height' ] = intval( get_option( "{$size}_size_h" ) );
+            $sizes[ $size ][ 'crop' ] = get_option( "{$size}_crop" ) ? get_option( "{$size}_crop" ) : false;
+        }
+        if(function_exists('wp_get_additional_image_sizes')) {
+            $sizes = array_merge($sizes, wp_get_additional_image_sizes());
+        } elseif(is_array($_wp_additional_image_sizes)) {
+            $sizes = array_merge($sizes, $_wp_additional_image_sizes);
+        }
+        return $sizes;
+      }
+
       protected function getMaxIntermediateImageSize() {
           global $_wp_additional_image_sizes;
 
@@ -262,17 +308,20 @@ class SettingsController extends \ShortPixel\Controller
       protected function loadQuotaData()
       {
         // @todo Probably good idea to put this in a 2-5 min transient or so.
+        $quotaController = quotaController::getInstance();
+
         if (is_null($this->quotaData))
-          $this->quotaData = $this->shortPixel->checkQuotaAndAlert();
+          $this->quotaData = $quotaController->getQuota(); //$this->shortPixel->checkQuotaAndAlert();
+
 
         $quotaData = $this->quotaData;
-        $this->view->thumbnailsToProcess = isset($quotaData['totalFiles']) ? ($quotaData['totalFiles'] - $quotaData['mainFiles']) - ($quotaData['totalProcessedFiles'] - $quotaData['mainProcessedFiles']) : 0;
 
-        $remainingImages = $quotaData['APICallsRemaining'];
+        $remainingImages = $quotaData->total->remaining; // $quotaData['APICallsRemaining'];
         $remainingImages = ( $remainingImages < 0 ) ? 0 : number_format($remainingImages);
+
         $this->view->remainingImages = $remainingImages;
 
-        $this->view->totalCallsMade = array( 'plan' => $quotaData['APICallsMadeNumeric'] , 'oneTime' => $quotaData['APICallsMadeOneTimeNumeric'] );
+        $this->view->totalCallsMade = array( 'plan' => $quotaData->monthly->consumed , 'oneTime' => $quotaData->onetime->consumed );
 
       }
 

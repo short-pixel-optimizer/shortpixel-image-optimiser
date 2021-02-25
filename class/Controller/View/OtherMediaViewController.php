@@ -6,6 +6,8 @@ use ShortPixel\Notices\NoticeController as Notices;
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 
+use ShortPixel\Model\File\DirectoryOtherMediaModel as DirectoryOtherMediaModel;
+
 use ShortPixel\Controller\Queue\CustomQueue as CustomQueue;
 
 use ShortPixel\Helper\UiHelper as UiHelper;
@@ -32,7 +34,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
         $this->setActions(); // possible actions for ROWS only..
 
         $this->currentPage = isset($_GET['paged']) ? intval($_GET['paged']) : 1;
-        $this->total_items = intval($this->record_count());
+    //    $this->total_items = intval($this->record_count());
         $this->orderby = ( ! empty( $_GET['orderby'] ) ) ? $this->filterAllowedOrderBy(sanitize_text_field($_GET['orderby'])) : 'id';
         $this->order = ( ! empty($_GET['order'] ) ) ? sanitize_text_field($_GET['order']) : 'desc'; // If no order, default to asc
         $this->search =  (isset($_GET["s"]) && strlen($_GET["s"]))  ? sanitize_text_field($_GET['s']) : false;
@@ -54,40 +56,6 @@ class OtherMediaViewController extends \ShortPixel\Controller
           $this->loadView();
       }
 
-      /*public function renderNewActions($item_id)
-      {
-         $item = new \stdClass; // mock class to mimick the records used in the controller
-         $item->id = $item_id;
-
-         $spMetaDao = \wpSPIO()->getShortPixel()->getSpMetaDao();
-         $metaModel = $spMetaDao->getMeta($item_id);  // returns shortpixelMeta object
-         if (is_null($metaModel))
-          return '';
-
-         $item->status = $metaModel->getStatus();
-         $item->compression_type = $metaModel->getCompressionType();
-
-         $fs = \wpSPIO()->filesystem();
-         $file = $fs->getFile($metaModel->getPath());
-
-         $actions = $this->getDisplayActions($this->getActions($item, $file));
-
-         return $actions;
-      } */
-
-      //push to the processing list the pending ones, just in cas
-      /*protected function checkQueue()
-      {
-          $sp = \wpSPIO()->getShortPixel();
-          foreach ($this->view->items as $item) {
-              if($item->getMeta('status') == \ShortPixelMeta::FILE_STATUS_PENDING ){
-                  Log::addDebug('Adding pending files to processing - ' . $item->get('id') );
-                  //$sp->getPrioQ()->push(\ShortPixelMetaFacade::queuedId(\ShortPixelMetaFacade::CUSTOM_TYPE, $item->id));
-                  $customQueue = CustomQueue::getInstance();
-                  $customQueue->addSingleItem($item);
-              }
-          }
-      } */
 
       /** Sets all possible actions and it's links. Doesn't check what can be loaded per individual case. */
 
@@ -164,21 +132,22 @@ class OtherMediaViewController extends \ShortPixel\Controller
 
       protected function getItems()
       {
-          $spMetaDao = \wpSPIO()->getShortPixel()->getSpMetaDao();
+          //$spMetaDao = \wpSPIO()->getShortPixel()->getSpMetaDao();
           $fs = \wpSPIO()->filesystem();
           //$total_items  =
 
           // [BS] Moving this from ts_added since often images get added at the same time, resulting in unpredictable sorting
-          $items = $spMetaDao->getPaginatedMetas(\wpSPIO()->env()->has_nextgen, $this->getFilter(), $this->items_per_page, $this->currentPage, $this->orderby, $this->order);
+          $items = $this->queryItems(); //$spMetaDao->getPaginatedMetas(\wpSPIO()->env()->has_nextgen, $this->getFilter(), $this->items_per_page, $this->currentPage, $this->orderby, $this->order);
 
           $removed = array();
           foreach($items as $index => $item)
           {
-             $mediaItem = $fs->getCustomImage($item->id);
+             $mediaItem = $fs->getImage($item->id, 'custom');
 
              if (! $mediaItem->exists()) // remove image if it doesn't exist.
              {
-                  $spMetaDao->deleteByID($item->id);
+                $spMetaDao->deleteByID($item->id);
+
                 $removed[] = $item->path;
                 unset($items[$index]);
              }
@@ -197,7 +166,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
       protected function getItemFolders($items)
       {
          $folderArray = array();
-         $otherMedia = new OtherMediaController();
+         $otherMedia = OtherMediaController::getInstance();
 
          foreach ($items as $item) // mediaItem;
          {
@@ -215,7 +184,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
       protected function loadFolders($items)
       {
          $folderArray = array();
-         $otherMedia = new OtherMediaController();
+         $otherMedia = OtherMediaController::getInstance();
 
          foreach($items as $item)
          {
@@ -238,80 +207,48 @@ class OtherMediaViewController extends \ShortPixel\Controller
           return $filter;
       }
 
-      protected function record_count() {
-          $spMetaDao = \wpSPIO()->getShortPixel()->getSpMetaDao();
-          return $spMetaDao->getCustomMetaCount($this->getFilter());
+      public function queryItems() {
+          $filters = $this->getFilter();
+          global $wpdb;
+
+          $page = $this->currentPage;
+          $controller = OtherMediaController::getInstance();
+
+          $dirs = implode(',', $controller->getActiveDirectoryIDS() );
+          if (strlen($dirs) == 0)
+            return array();
+
+          $sql = "SELECT COUNT(id) as count FROM " . $wpdb->prefix . "shortpixel_meta where folder_id in ( " . $dirs  . ") ";
+
+          foreach($filters as $field => $value) {
+              $sql .= " AND $field " . $value->operator . " ". $value->value . " ";
+          }
+
+          $this->total_items = $wpdb->get_var($sql);
+
+          $sql = "SELECT * FROM " . $wpdb->prefix . "shortpixel_meta where folder_id in ( " . $dirs  . ") ";
+
+
+
+          foreach($filters as $field => $value) {
+              $sql .= " AND $field " . $value->operator . " ". $value->value . " ";
+          }
+
+
+          $sql  .= ($this->orderby ? " ORDER BY " . $this->orderby . " " . $this->order . " " : "")
+                  . " LIMIT " . $this->items_per_page . " OFFSET " . ($page - 1) * $this->items_per_page;
+
+var_dump($sql);
+          $results = $wpdb->get_results($sql);
+          return $results;
       }
 
-/*      protected function process_actions()
-      {
 
-        $nonce = isset($_REQUEST['_wpnonce']) ? esc_attr($_REQUEST['_wpnonce']) : false;
-        $redirect_url = esc_url_raw(remove_query_arg(array('action', 'image', '_wpnonce')));
-        $action = isset($_REQUEST['action']) ? sanitize_text_field($_REQUEST['action']) : false;
-        $item_id = isset($_REQUEST['item_id']) ? intval($_REQUEST['item_id']) : false;
-        $this->view->rewriteHREF = '';
+    //  protected function record_count() {
+          //$spMetaDao = \wpSPIO()->getShortPixel()->getSpMetaDao();
+          //return $spMetaDao->getCustomMetaCount($this->getFilter());
+      //}
 
-        $otherMediaController = new OtherMediaController();
-        $shortpixel = \wpSPIO()->getShortPixel();
-
-        if (! $action)
-         return; // no action this view.
-
-        if (!wp_verify_nonce($nonce, 'sp_custom_action'))
-        {
-         die('Error. Nonce not verified. Do not call this function directly');
-        }
-
-        if ( $item_id === false && $action && $action != 'refresh')
-        {
-          exit('Error. No Item_id given');
-        }
-
-        switch ($action)
-        {
-            case 'optimize':
-                $shortpixel->optimizeCustomImage($item_id);
-                $this->rewriteHREF();
-
-            break;
-            case 'restore':
-                if($shortpixel->doCustomRestore($item_id))
-                {
-                  Notices::addSuccess(__('File Successfully restored', 'shortpixel-image-optimiser'));
-                }
-                $this->rewriteHREF();
-            break;
-            case 'redo':
-              $shortpixel->redo('C-' . $item_id, sanitize_text_field($_GET['type']));
-              $this->rewriteHREF();
-
-            break;
-            case 'refresh':
-                $result = $otherMediaController->refreshFolders(true);
-                if ($result)
-                {
-                  Notices::addSuccess(__('Other media folders fully refreshed and updated', 'shortpixel-image-optimiser'));
-                  $this->rewriteHREF();
-                }
-            break;
-            case 'bulk-optimize': // bulk action checkboxes
-              $optimize_ids = esc_sql($_POST['bulk-optimize']);
-              foreach ($optimize_ids as $id) {
-                 $shortpixel->optimizeCustomImage($id);
-              }
-              $this->rewriteHREF();
-            break;
-            case 'check-quota':
-              $shortpixel->getQuotaInformation();
-
-              $this->rewriteHREF();
-            break;
-            default:
-              Log::addWarn('Action hit OtherMediaViewController but was not caught' . $action . ' on '. $item_id);
-            break;
-        }
-      } */
 
       /** This is a workaround for doing wp_redirect when doing an action, which doesn't work due to the route. Long-term fix would be using Ajax for the actions */
       protected function rewriteHREF()
@@ -516,67 +453,6 @@ class OtherMediaViewController extends \ShortPixel\Controller
         echo $list_actions;
       }
 
-      /* Actions to list in the action menu */
-      /*
-      protected function getActions($item, $file)
-      {
-         $thisActions = array();
-         $settings = \wpSPIO()->settings();
-         $keyControl = ApiKeyController::getInstance();
-         $forceSingular = false; // force view to show all actions separate, not in clickdown
-
-         if (! $keyControl->keyIsVerified())
-         {
-           //$thisActions[] = $this->actions['no-key'];
-
-         }
-         elseif ($settings->quotaExceeded)
-         {
-           $thisActions[] = $this->actions['extend-quota'];
-           $thisActions[] = $this->actions['quota'];
-           $forceSingular = true;
-         }
-         elseif ($item->status < \ShortPixelMeta::FILE_STATUS_UNPROCESSED)
-         {
-           $thisActions[] = $this->actions['retry'];
-         }
-         elseif ($item->status == \ShortPixelMeta::FILE_STATUS_UNPROCESSED || $item->status == \ShortPixelMeta::FILE_STATUS_RESTORED)
-         {
-           $thisActions[] = $this->actions['optimize'];
-         }
-         elseif ( intval($item->status) == \ShortPixelMeta::FILE_STATUS_SUCCESS)
-         {
-           $thisActions[] = $this->actions['compare-custom'];
-
-           if ($file->hasBackup())
-           {
-             switch($item->compression_type) {
-                 case 2:
-                     $actionsEnabled['redolossy'] = $actionsEnabled['redolossless'] = true;
-                     $thisActions[] = $this->actions['redolossy'];
-                     $thisActions[] = $this->actions['redolossless'];
-                     break;
-                 case 1:
-                     $actionsEnabled['redoglossy'] = $actionsEnabled['redolossless'] = true;
-                     $thisActions[] = $this->actions['redoglossy'];
-                     $thisActions[] = $this->actions['redolossless'];
-                     break;
-                 default:
-                     $thisActions[] = $this->actions['redolossy'];
-                     $thisActions[] = $this->actions['redoglossy'];
-                 break;
-             }
-             $thisActions[] = $this->actions['restore'];
-           }
-         }
-
-
-        if (count($thisActions) == 1)
-          $thisActions[0]['class'] .= 'button-smaller button button-primary';
-
-         return $this->renderActions($thisActions, $item, $file, $forceSingular);
-      } */
-
 
       // Used for row actions at the moment.
       protected function renderActions($actions, $item, $forceSingular = false)
@@ -618,87 +494,6 @@ class OtherMediaViewController extends \ShortPixel\Controller
         }
         return $actions;
       }
-
-
-  /*    protected function renderLegacyCell()
-      {
-
-        $data = $this->data;
-
-        if ( $data['status'] != 'pdfOptimized' && $data['status'] != 'imgOptimized')
-          return null;
-
-        $this->legacyViewObj->renderListCell($this->post_id, $data['status'], $data['showActions'], $data['thumbsToOptimize'],
-                $data['backup'], $data['type'], $data['invType'], '');
-      } */
-
-    /*  protected function getDisplayStatus($item)
-      {
-        $keyControl = ApiKeyController::getInstance();
-
-
-        if (! $keyControl->keyIsVerified())
-        {
-            $msg = __('Invalid API Key', 'shortpixel-image-optimiser') . ' <a href="options-general.php?page=wp-shortpixel-settings" class="text-link">' . __('Check your Settings','shortpixel-image-optimiser') . '</a>';
-            return $msg;
-        }
-
-        switch($item->status) {
-            case \ShortPixelMeta::FILE_STATUS_RESTORED:
-              $msg = __('Restored','shortpixel-image-optimiser');
-            break;
-            case \ShortPixelMeta::FILE_STATUS_TORESTORE:
-              $msg = __('Restore Pending','shortpixel-image-optimiser');
-            break;
-            case \ShortPixelMeta::FILE_STATUS_SUCCESS:
-                $msg = $this->getSuccessMessage($item);
-            break;
-            case 1: $msg = "<img src=\"" . wpSPIO()->plugin_url('res/img/loading.gif') . "\" class='sp-loading-small'>&nbsp;"
-                           . __('Image waiting to be processed','shortpixel-image-optimiser');
-                break;
-            case 0: $msg = __('Image not processed.','shortpixel-image-optimiser');
-                break;
-            default:
-                if($item->status < 0) {
-                    $msg = $item->message . "(" . __('code','shortpixel-image-optimiser') . ": " . $item->status . ")";
-                } else {
-                    $msg = "<span style='display:none;'>" . $item->status . "</span>";
-                }
-        }
-        return  $msg;
-
-      } */
-
-  /*    protected function getSuccessMessage($item)
-      {
-        $msg = '';
-
-        $amount = intval($item->message);
-        if (0 + $amount == 0 || 0 + $amount < 5)
-            $msg .= __('Bonus processing','shortpixel-image-optimiser') .  ' ';
-        else
-            $msg .= __('Reduced by','shortpixel-image-optimiser') . " <strong>" . $item->message . "%</strong> ";
-
-        switch($item->getMeta('compressionType') )
-        {
-          case \ShortPixelMeta::COMPRESSION_LOSSY:
-             $msg .= '(' . __('Lossy', 'shortpixel-image-optimiser') . ')';
-          break;
-          case \ShortPixelMeta::COMPRESSION_GLOSSY:
-              $msg .= '(' . __('Glossy', 'shortpixel-image-optimiser') . ')';
-          break;
-          case \ShortPixelMeta::COMPRESSION_LOSSLESSS:
-              $msg .= '(' . __('Lossless', 'shortpixel-image-optimiser') . ')';
-          break;
-        }
-
-        if ($item->getMeta('resize') )
-        {
-           $msg .= '<br>' . sprintf(__('Resized to %s x %s', 'shortpixel-image-optimiser'), $item->resize_width, $item->resize_height);
-        }
-        return $msg;
-
-      } */
 
       protected function getDisplayHeading($heading)
       {

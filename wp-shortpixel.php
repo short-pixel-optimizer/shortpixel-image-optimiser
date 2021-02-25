@@ -112,6 +112,6 @@ $loader->load(SHORTPIXEL_PLUGIN_DIR);
 wpSPIO(); // let's go!
 
 // Activation / Deactivation services
-register_activation_hook( __FILE__, array('\ShortPixel\ShortPixelPlugin','activatePlugin') );
-register_deactivation_hook( __FILE__,  array('\ShortPixel\ShortPixelPlugin','deactivatePlugin') );
-register_uninstall_hook(__FILE__,  array('\ShortPixel\ShortPixelPlugin','uninstallPlugin') );
+register_activation_hook( __FILE__, array('\ShortPixel\Helper\InstallHelper','activatePlugin') );
+register_deactivation_hook( __FILE__,  array('\ShortPixel\Helper\InstallHelper','deactivatePlugin') );
+register_uninstall_hook(__FILE__,  array('\ShortPixel\Helper\InstallHelper','uninstallPlugin') );

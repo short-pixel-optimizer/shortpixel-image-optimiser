@@ -4,10 +4,14 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Controller\AjaxController as AjaxController;
+use ShortPixel\Controller\OtherMediaController as OtherMediaController;
+
 //use ShortPixel\Controller;
 
 use ShortPixel\Controller\Queue\MediaLibraryQueue as MediaLibraryQueue;
 use ShortPixel\Controller\Queue\CustomQueue as CustomQueue;
+
+use ShortPixel\Helper\InstallHelper as InstallHelper;
 
 /** Plugin class
 * This class is meant for: WP Hooks, init of runtime and Controller Routing.
@@ -71,8 +75,7 @@ class ShortPixelPlugin
   /** Mainline Admin Init. Tasks that can be loaded later should go here */
   public function init()
   {
-      $this->getShortPixel()->loadHooks();
-
+      //$this->getShortPixel()->loadHooks();
       $notices = Notices::getInstance(); // This hooks the ajax listener
 
   }
@@ -134,7 +137,10 @@ class ShortPixelPlugin
       // Media Library
       add_action('load-upload.php', array($this, 'route'));
 
+      add_action( 'load-post.php', array( $this, 'route') );
+
       $admin = Controller\AdminController::getInstance();
+
 
       if ($this->settings()->autoMediaLibrary)
       {
@@ -142,10 +148,16 @@ class ShortPixelPlugin
           if (apply_filters('shortpixel/init/automedialibrary', true))
           {
             if($this->settings()->autoMediaLibrary && $this->settings()->png2jpg) {
-                add_action( 'wp_handle_upload', array($admin,'handlePng2JpgHook'));
+
+
+              add_action( 'add_attachment', array($admin,'handlePng2JpgHook'));
+              //  add_action( 'wp_handle_upload', array($admin,'handlePng2JpgHook'));
+
                 // @todo Document what plugin does mpp
-                add_action( 'mpp_handle_upload', array($admin,'handlePng2JpgHook'));
+              //  add_action( 'mpp_handle_upload', array($admin,'handlePng2JpgHook'));
             }
+
+            // @todo what's this?
             add_action('wp_handle_replace', array($admin,'handleReplaceHook'));
 
             if($this->settings()->autoMediaLibrary) {
@@ -162,6 +174,103 @@ class ShortPixelPlugin
         add_filter( 'wp_generate_attachment_metadata', array($admin,'handleImageUploadHook'), 10, 2 );
       }
 
+      load_plugin_textdomain('shortpixel-image-optimiser', false, plugin_basename(dirname( SHORTPIXEL_PLUGIN_FILE )).'/lang');
+
+      $isAdminUser = current_user_can( 'manage_options' ); // @todo This should be in env
+
+      // Probably unused by now.
+  //    define('QUOTA_EXCEEDED', $this->view->getQuotaExceededHTML());
+
+      $this->env()->setDefaultViewModeList();//set default mode as list. only @ first run
+
+      //add hook for image upload processing
+      //add_filter( 'wp_generate_attachment_metadata', array( &$this, 'handleMediaLibraryImageUpload' ), 10, 2 ); // now external
+      add_filter( 'plugin_action_links_' . plugin_basename(SHORTPIXEL_PLUGIN_FILE), array($admin, 'generatePluginLinks'));//for plugin settings page
+
+      //add_action( 'admin_footer', array(&$this, 'handleImageProcessing'));
+
+      //Media custom column
+    //  add_filter( 'manage_media_columns', array( &$this, 'columns' ) );//add media library column header
+      //add_action( 'manage_media_custom_column', array( &$this, 'generateCustomColumn' ), 10, 2 );//generate the media library column
+
+     //Sort and filter on ShortPixel Compression column
+    ///  add_filter( 'manage_upload_sortable_columns', array( &$this, 'columnRegisterSortable') );
+    //  add_filter( 'request', array( &$this, 'columnOrderFilterBy') );
+      //add_action('restrict_manage_posts', array( &$this, 'mediaAddFilterDropdown'));
+      //Edit media meta box
+      //add_action( 'add_meta_boxes', array( &$this, 'shortpixelInfoBox') ); // the info box in edit-media
+
+
+      //for cleaning up the WebP images when an attachment is deleted
+      add_action( 'delete_attachment', array( $admin, 'onDeleteAttachment') );
+      add_action('mime_types', array($admin, 'addWebpMime'));
+
+      // integration with WP/LR Sync plugin
+      add_action( 'wplr_update_media', array( &$this, 'onWpLrUpdateMedia' ), 10, 2);
+
+      //custom hook
+      add_action( 'shortpixel-optimize-now', array( &$this, 'optimizeNowHook' ), 10, 1);
+
+
+      add_filter( 'shortpixel_get_backup', array( &$this, 'shortpixelGetBackupFilter' ), 10, 1 );
+
+      if($isAdminUser) {
+          //add settings page
+          //add_action( 'admin_menu', array( &$this, 'registerSettingsPage' ) );//display SP in Settings menu
+        //   add_action( 'admin_menu', array( &$this, 'registerAdminPage' ) ); // removed
+
+
+      //    add_action( 'delete_attachment', array( &$this, 'handleDeleteAttachmentInBackup' ) );
+      //    add_action( 'load-upload.php', array( &$this, 'handleCustomBulk'));
+
+          //backup restore
+          // These are all replaced by Controller / Model action via ajaxoController.
+        //  add_action('admin_action_shortpixel_restore_backup', array(&$this, 'handleRestoreBackup'));
+          //reoptimize with a different algorithm (losless/lossy)
+          //add_action('wp_ajax_shortpixel_redo', array(&$this, 'handleRedo'));
+          //optimize thumbnails
+        //  add_action('wp_ajax_shortpixel_optimize_thumbs', array(&$this, 'handleOptimizeThumbs'));
+
+          //toolbar notifications
+          add_action( 'admin_bar_menu', array( $admin, 'toolbar_shortpixel_processing'), 999 );
+          add_action( 'wp_head', array( $this, 'headCSS')); // for the front-end
+          //deactivate plugin
+          add_action( 'admin_post_shortpixel_deactivate_plugin', array(&$this, 'deactivatePlugin'));
+
+          //only if the key is not yet valid or the user hasn't bought any credits.
+          // @todo This should not be done here.
+          $settings = $this->settings();
+          $stats = $settings->currentStats;
+          $totalCredits = isset($stats["APICallsQuotaNumeric"]) ? $stats['APICallsQuotaNumeric'] + $stats['APICallsQuotaOneTimeNumeric'] : 0;
+          if(true || !$settings->verifiedKey || $totalCredits < 4000) {
+              require_once 'class/view/shortpixel-feedback.php';
+              new \ShortPixelFeedback( SHORTPIXEL_PLUGIN_FILE, 'shortpixel-image-optimiser', $settings->apiKey, $this);
+          }
+      }
+
+      //automatic optimization
+    //  add_action( 'wp_ajax_shortpixel_image_processing', array( &$this, 'handleImageProcessing') );
+      //manual optimization
+      //add_action( 'wp_ajax_shortpixel_manual_optimization', array(&$this, 'handleManualOptimization'));
+      //check status
+    //  add_action( 'wp_ajax_shortpixel_check_status', array(&$this, 'checkStatus'));
+
+      // deprecated - dismissAdminNotice should not be called no longer.
+      /*add_action( 'wp_ajax_shortpixel_dismiss_notice', array(&$this, 'dismissAdminNotice'));
+      add_action( 'wp_ajax_shortpixel_dismiss_media_alert', array($this, 'dismissMediaAlert'));
+      add_action( 'wp_ajax_shortpixel_dismissFileError', array($this, 'dismissFileError')); */
+
+      //check quota
+      //add_action('wp_ajax_shortpixel_check_quota', array(&$this, 'handleCheckQuota'));
+      //add_action('admin_action_shortpixel_check_quota', array(&$this, 'handleCheckQuota'));
+      //This adds the constants used in PHP to be available also in JS
+      //add_action( 'admin_enqueue_scripts', array( $this, 'shortPixelJS') );
+      //add_action( 'admin_footer', array($this, 'admin_footer_js') );
+
+      //register a method to display admin notices if necessary
+      //add_action('admin_notices', array( &$this, 'displayAdminNotices'));
+
+
   }
 
   public function ajaxHooks()
@@ -172,6 +281,15 @@ class ShortPixelPlugin
     add_action( 'wp_ajax_shortpixel_exit_process', array(AjaxController::getInstance() , 'ajax_removeProcessorKey'));
     add_action( 'wp_ajax_shortpixel_get_item_view', array(AjaxController::getInstance(), 'ajax_getItemView'));
     add_action( 'wp_ajax_shortpixel_manual_optimization', array(AjaxController::getInstance(), 'ajax_addItem'));
+
+    // Custom Media
+    add_action('wp_ajax_shortpixel_browse_content', array(OtherMediaController::getInstance(), 'ajaxBrowseContent'));
+    add_action('wp_ajax_shortpixel_get_backup_size', array(&$this, 'getBackupSize'));
+//        add_action('wp_ajax_shortpixel_get_comparer_data', array(&$this, 'getComparerData'));
+
+    add_action('wp_ajax_shortpixel_new_api_key', array(&$this, 'newApiKey'));
+    add_action('wp_ajax_shortpixel_propose_upgrade', array(&$this, 'proposeUpgrade'));
+
 
     // @todo should probably go through ajaxrequest.
     add_action( 'wp_ajax_shortpixel_get_comparer_data', array(AjaxController::getInstance(), 'ajax_getComparerData'));
@@ -190,7 +308,9 @@ class ShortPixelPlugin
       // settings page
       $admin_pages[] = add_options_page( __('ShortPixel Settings','shortpixel-image-optimiser'), 'ShortPixel', 'manage_options', 'wp-shortpixel-settings', array($this, 'route'));
 
-      if($this->getShortPixel()->getSpMetaDao()->hasFoldersTable() && count($this->getShortPixel()->getSpMetaDao()->getFolders())) {
+      $otherMediaController = OtherMediaController::getInstance();
+      if ($otherMediaController->hasCustomImages())
+      {
           /*translators: title and menu name for the Other media page*/
         $admin_pages[] = add_media_page( __('Other Media Optimized by ShortPixel','shortpixel-image-optimiser'), __('Other Media','shortpixel-image-optimiser'), 'edit_others_posts', 'wp-short-pixel-custom', array( $this, 'route' ) );
       }
@@ -200,11 +320,6 @@ class ShortPixelPlugin
       $this->admin_pages = $admin_pages;
   }
 
-  /** PluginRunTime. Items that should be initialized *only* when doing our pages and territory. */
-  protected function initPluginRunTime()
-  {
-
-  }
 
   /** All scripts should be registed, not enqueued here (unless global wp-admin is needed )
   *
@@ -258,8 +373,7 @@ class ShortPixelPlugin
 
     ));
 
-
-
+    /*** SCREENS **/
     wp_register_script ('shortpixel-screen-media', plugins_url('/res/js/screens/screen-media.js',SHORTPIXEL_PLUGIN_FILE), array('jquery', 'shortpixel-processor' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
     wp_register_script ('shortpixel-screen-custom', plugins_url('/res/js/screens/screen-custom.js',SHORTPIXEL_PLUGIN_FILE), array('jquery', 'shortpixel-processor' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
@@ -355,11 +469,11 @@ class ShortPixelPlugin
     //wp_localize_script('shortpixel', 'ShortPixelActions', $actions);
 
 
-    if (! \wpSPIO()->env()->is_screen_to_use )
+  /*  if (! \wpSPIO()->env()->is_screen_to_use )
     {
       if (! wpSPIO()->env()->is_front) // exeception if this is called to load from your frontie.
          return; // not ours, don't load JS and such.
-    }
+    } */
 
 
   }
@@ -383,8 +497,8 @@ class ShortPixelPlugin
     // load everywhere, because we are inconsistent.
     wp_register_style('shortpixel-toolbar', plugins_url('/res/css/shortpixel-toolbar.css',SHORTPIXEL_PLUGIN_FILE), array('dashicons'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
 
-    if ( \wpSPIO()->env()->is_our_screen )
-    {
+    //if ( \wpSPIO()->env()->is_our_screen )
+  //  {
     /*if( in_array($screen->id, array('attachment', 'upload', 'settings_page_wp-shortpixel', 'media_page_wp-short-pixel-bulk', 'media_page_wp-short-pixel-custom'))) { */
         wp_register_style('short-pixel.min.css', plugins_url('/res/css/short-pixel.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
         //modal - used in settings for selecting folder
@@ -395,7 +509,7 @@ class ShortPixelPlugin
 
         wp_register_style('shortpixel-bulk', plugins_url('/res/css/shortpixel-bulk.css', SHORTPIXEL_PLUGIN_FILE),array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
         //wp_register_style('shortpixel-admin');
-    }
+  //  }
 
   }
 
@@ -426,9 +540,10 @@ class ShortPixelPlugin
 
     foreach($script as $index => $name)
     {
-
         if (wp_script_is($name, 'registered'))
         {
+      //    echo " Enqueue $name <br />";
+          //echo "<PRE style='margin-left:300px'>"; print_r(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,9)); echo "</PRE>";
           wp_enqueue_script($name);
         }
         else {
@@ -444,7 +559,7 @@ class ShortPixelPlugin
     $screen_id = \wpSPIO()->env()->screen_id;
 
     //$load = array();
-    $load_processor = array('shortpixel', 'shortpixel-processor');  // a whole suit needed for processing, not more.
+    $load_processor = array('shortpixel', 'shortpixel-processor');  // a whole suit needed for processing, not more. Always needs a screen as well!
     $load_bulk = array();  // the whole suit needed for bulking.
 
     if ( \wpSPIO()->env()->is_screen_to_use )
@@ -455,16 +570,17 @@ class ShortPixelPlugin
 
     if ($plugin_page == 'wp-shortpixel-settings')
     {
+      $this->load_script($load_processor);
+      $this->load_script('shortpixel-screen-nolist'); // screen
+      $this->load_script('jquery.tooltip.min.js');
+      $this->load_script('sp-file-tree');
+
+
       $this->load_style('shortpixel-admin');
       $this->load_style('shortpixel');
       $this->load_style('shortpixel-modal');
       $this->load_style('sp-file-tree');
 
-      $this->load_script('jquery.tooltip.min.js');
-      $this->load_script('sp-file-tree');
-
-      $this->load_script($load_processor);
-      $this->load_script('shortpixel-screen-nolist'); // screen
 
     }
 
@@ -509,7 +625,7 @@ class ShortPixelPlugin
   public function route()
   {
       global $plugin_page;
-      $this->initPluginRunTime();
+    //  $this->initPluginRunTime(); // Not in use currently.
 
       $default_action = 'load'; // generic action on controller.
       $action = isset($_REQUEST['sp-action']) ? sanitize_text_field($_REQUEST['sp-action']) : $default_action;
@@ -554,6 +670,9 @@ class ShortPixelPlugin
                      case 'upload':
                         $controller = '\ShortPixel\Controller\View\ListMediaViewController';
                      break;
+                     case 'attachment'; // edit-media
+                        $controller = '\ShortPixel\Controller\View\EditMediaViewController';
+                     break;
 
                 }
             break;
@@ -564,7 +683,6 @@ class ShortPixelPlugin
       if ($controller !== false)
       {
         $c = new $controller();
-        $c->setShortPixel($this->shortPixel);
         $c->setControllerURL($url);
         if (method_exists($c, $action))
           $c->$action();
@@ -600,6 +718,10 @@ class ShortPixelPlugin
   // @todo Transitionary init for the time being, since plugin init functionality is still split between.
   public function getShortPixel()
   {
+    echo "<h3> Old ShortPixel Requested. Please fix</h3>";
+    echo "<PRE>"; print_r(debug_backtrace(null, 9)); '</PRE>';
+    exit('bug - destroyer of worlds');
+
     if (is_null($this->shortPixel))
     {
       global $shortPixelPluginInstance;
@@ -618,73 +740,6 @@ class ShortPixelPlugin
     return $this->admin_pages;
   }
 
-  public static function activatePlugin()
-  {
-      self::deactivatePlugin();
-      if(SHORTPIXEL_RESET_ON_ACTIVATE === true && WP_DEBUG === true) { //force reset plugin counters, only on specific occasions and on test environments
-          \WPShortPixelSettings::debugResetOptions();
-          $settings = new \WPShortPixelSettings();
-          $spMetaDao = new \ShortPixelCustomMetaDao(new \WpShortPixelDb(), $settings->excludePatterns);
-          $spMetaDao->dropTables();
-      }
-
-      $env = wpSPIO()->env();
-
-      if(\WPShortPixelSettings::getOpt('deliverWebp') == 3 && ! $env->is_nginx) {
-          \WpShortPixel::alterHtaccess(); //add the htaccess lines
-      }
-
-      \WpShortPixelDb::checkCustomTables();
-
-      Controller\AdminNoticesController::resetAllNotices();
-
-    /*  Controller\AdminNoticesController::resetCompatNotice();
-      Controller\AdminNoticesController::resetAPINotices();
-      Controller\AdminNoticesController::resetQuotaNotices();
-      Controller\AdminNoticesController::resetIntegrationNotices();
-*/
-      \WPShortPixelSettings::onActivate();
-
-      OptimizeController::activatePlugin();
-
-  }
-
-  public static function deactivatePlugin()
-  {
-
-    \WPShortPixelSettings::onDeactivate();
-
-    $env = wpSPIO()->env();
-
-    if (! $env->is_nginx)
-      \WpShortPixel::alterHtaccess(true);
-
-    // save remove.
-    $fs = new Controller\FileSystemController();
-    $log = $fs->getFile(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
-    if ($log->exists())
-      $log->delete();
-
-
-
-  }
-
-  public static function uninstallPlugin()
-  {
-    $settings = new \WPShortPixelSettings();
-    $env = \wpSPIO()->env();
-
-    if($settings->removeSettingsOnDeletePlugin == 1) {
-        \WPShortPixelSettings::debugResetOptions();
-        if (! $env->is_nginx)
-          insert_with_markers( get_home_path() . '.htaccess', 'ShortPixelWebp', '');
-
-        $spMetaDao = new \ShortPixelCustomMetaDao(new \WpShortPixelDb());
-        $spMetaDao->dropTables();
-    }
-
-    OptimizeController::uninstallPlugin();
-  }
 
 
 

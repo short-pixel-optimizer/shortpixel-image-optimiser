@@ -6,6 +6,17 @@
 // init checks bulkProcess on each page. initSettings is when the settings View is being loaded.
 jQuery(document).ready(function(){ShortPixel.init(); });
 
+function delayedInit() {
+    if(typeof ShortPixel !== 'undefined' && ShortPixel.didInit == false) {
+
+        console.error('Shortpixel: Delayed Init. Check your installation for errors');
+        ShortPixel.init();
+    } else {
+        setTimeout(delayedInit, 10000);
+    }
+}
+setTimeout(delayedInit, 10000);
+
 var ShortPixel = function() {
 
     function init() {
@@ -45,6 +56,7 @@ var ShortPixel = function() {
 
         window.ShortPixelProcessor.Load();
 
+        this.didInit = true;
 
         //check if  bulk processing
       //  checkQuotaExceededAlert();
@@ -844,6 +856,7 @@ var ShortPixel = function() {
 
     return {
         init                : init,
+        didInit             : false,
         setOptions          : setOptions,
         isEmailValid        : isEmailValid,
         updateSignupEmail   : updateSignupEmail,
@@ -904,7 +917,7 @@ var ShortPixel = function() {
         returnedStatusSearching: 0, // How often this status has come back in a row from server.
         optInHelp: optInHelp, // Optin for Helpscout cs
     }
-}();
+}(); // End of ShortPixel
 
 function showToolBarAlert($status, $message, id) {
     var robo = jQuery("li.shortpixel-toolbar-processing");

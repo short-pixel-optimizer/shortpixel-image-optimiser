@@ -9,6 +9,9 @@ class ImageThumbnailMeta
   public $originalSize;
 //  public $improvement;
 
+  public $did_keepExif;
+  public $did_cmyk2rgb;
+  public $did_png2jpg; // Was this replaced?
 
   public $resize;
   public $resizeWidth;

@@ -2,7 +2,12 @@
 
 .view-edit-media
 {
-    .debugInfo
+    a.debugModal
+    {
+       margin: 20px 0;
+       display: inline-block;  
+    }
+    .debugInfo // Modal open
     {
       pre
       {

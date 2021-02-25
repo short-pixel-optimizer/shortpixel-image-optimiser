@@ -14,17 +14,17 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
     protected $thumbnails = array(); // placeholder, should return empty.
     protected $retinas = array(); // placeholder, should return empty.
 
-    public function __construct($id)
+    public function __construct(int $id)
     {
         $this->id = $id;
 
-        $this->loadMeta();
+        if ($id > 0)
+          $this->loadMeta();
 
         parent::__construct($this->fullpath);
     }
 
-
-    public function getOptimizePaths()
+  public function getOptimizePaths()
     {
       if (! $this->isProcessable())
         return;
@@ -136,6 +136,13 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         $this->image_meta = $metaObj;
     }
 
+    public function setStub(string $path)
+    {
+       $this->fullpath = $path;
+       $this->path_md5 = md5($this->fullpath);
+    }
+
+
     public function saveMeta()
     {
         global $wpdb;
@@ -186,6 +193,8 @@ Log::addDebug('Save Custom Meta', $data);
       else
         return false;
     }
+
+
 
 
     public function getImprovements()

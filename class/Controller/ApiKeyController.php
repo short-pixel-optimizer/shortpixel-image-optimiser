@@ -25,12 +25,6 @@ class ApiKeyController extends \ShortPixel\Controller
         return self::$instance;
     }
 
-    // glue method.
-    public function setShortPixel($pixel)
-    {
-      parent::setShortPixel($pixel);
-      $this->model->shortPixel = $pixel;
-    }
 
     public function load()
     {

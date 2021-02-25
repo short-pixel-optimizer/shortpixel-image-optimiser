@@ -19,6 +19,7 @@ window.ShortPixelProcessor =
     isActive: false,
     defaultInterval: 3000, // @todo customize this from backend var, hook filter.
     interval: 3000,
+    deferInterval: 60000, // how long to wait between interval to check for new items.
     screen: null, // UI Object
     tooltip: null,
     isBulkPage: false,
@@ -191,9 +192,10 @@ console.log(ShortPixelProcessorData);
       window.clearTimeout(this.timer);
 
     },
-    StopProcess: function()
+    StopProcess: function(args)
     {
-        console.log('Stop Processing' + this.timer);
+        console.log('Stop Processing #' + this.timer);
+
         if (this.isManualPaused == true) /// processor ends on status paused.
         {
             this.isManualPaused = false;
@@ -201,6 +203,18 @@ console.log(ShortPixelProcessorData);
             window.dispatchEvent(event);
         }
         window.clearTimeout(this.timer);
+
+        if (typeof args == 'object')
+        {
+           if (typeof args.defer !== 'undefined' && args.defer)
+           {
+                this.SetInterval(this.deferInterval); //set a long interval
+                this.RunProcess(); // queue a run once
+                this.SetInterval(-1); // restore interval
+           }
+        }
+
+
     },
     ResumeProcess: function()
     {
@@ -351,7 +365,7 @@ console.log(ShortPixelProcessorData);
           {
               console.debug('Processor: Empty Queue');
               this.tooltip.ProcessEnd();
-              this.StopProcess();
+              this.StopProcess({ defer: true });
           }
           else if (qstatus == "PREPARING_DONE")
           {

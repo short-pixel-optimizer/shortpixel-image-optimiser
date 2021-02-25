@@ -73,13 +73,16 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     {
       parent::__construct($path);
 
-      $this->setImageSize();
+      //$this->setImageSize();
     }
 
 
     protected function setImageSize()
     {
-      if (! $this->isExtensionExcluded() && $this->isImage())
+      $this->width = false;  // to prevent is_null check on get to loop if something is off.
+      $this->height = false;
+
+      if (! $this->isExtensionExcluded() && $this->isImage() && $this->is_readable())
       {
          list($width, $height) = @getimagesize($this->getFullPath());
          if ($width)
@@ -95,7 +98,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     /* Check if an image in theory could be processed. Check only exclusions, don't check status etc */
     public function isProcessable()
     {
-        if ( $this->isOptimized() || ! $this->exists()  || $this->isPathExcluded() || $this->isExtensionExcluded() || $this->isSizeExcluded()
+        if ( $this->isOptimized() || ! $this->exists()  || $this->isPathExcluded() || $this->isExtensionExcluded() || $this->isSizeExcluded() || ! $this->is_writable()
         )
           return false;
         else
@@ -157,10 +160,22 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
     public function get($name)
     {
-       if ( isset($this->$name))
+       if (property_exists($this, $name))
+       {
+          if ( ($name == 'width' || $name == 'height') && is_null($this->$name))  // dynamically load this.
+          {
+            $this->setImageSize();
+          }
+
         return $this->$name;
+       }
 
        return null;
+    }
+
+    public function __get($name)
+    {
+        return $this->get($name);
     }
 
     public function getMeta($name = false)
@@ -246,7 +261,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         {
 
             if ($urlName != $this->getFileName())
+            {
               continue;
+            }
 
 
               if ($settings->backupImages)
@@ -254,6 +271,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                   $backupok = $this->createBackup();
                   if (! $backupok)
                   {
+                    Log::addError('Backup Not OK - ' .  $urlName);
                     ResponseController::add()->withMessage(sprintf(__('Could not create backup for %s, optimization failed. Please check file permissions - %s', 'shortpixel-image-optimiser'), $this->getFileName(), $this->getFullPath() ))->asImportant()->asError();
                     return false;
                   }
@@ -311,10 +329,10 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                    $resizeWidth = $settings->resizeWidth;
                    $resizeHeight = $settings->resizeHeight;
 
-                   if ($resizeWidth == $this->width || $resizeHeight == $this->height)  // resized.
+                   if ($resizeWidth == $this->get('width') || $resizeHeight == $this->get('height') )  // resized.
                    {
-                       $this->setMeta('resizeWidth', $this->width);
-                       $this->setMeta('resizeHeight', $this->height);
+                       $this->setMeta('resizeWidth', $this->get('width') );
+                       $this->setMeta('resizeHeight', $this->get('height') );
                        $this->setMeta('resize', true);
                    }
                    else
@@ -353,7 +371,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
     public function isRestorable()
     {
-        if ($this->hasBackup() && $this->is_writable() && $this->isOptimized() )
+        if ($this->hasBackup() && $this->is_writable() )
         {
           return true;
         }
@@ -362,12 +380,11 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
           if (! $this->is_writable())
           {
               ResponseController::add()->withMessage(__('This file cannot be restored due to file permissions - not writable : ' . $this->getFullPath(), 'shortpixel-image-optimiser'))->asError();
-              Log::addTemp('Restore - Not Writable ' . $this->getFullPath() );
+              Log::addWarn('Restore - Not Writable ' . $this->getFullPath() );
           }
           if (! $this->hasBackup())
-            Log::addTemp('Backup not found for file: ', $this);
-          if (! $this->isOptimized())
-            Log::addTemp('Images seems not optimized', $this);
+            Log::addWarn('Backup not found for file: ', $this);
+
            return false;
         }
     }
@@ -417,8 +434,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
        if ($this->hasBackup())
         $this->restore();
 
-//       $this->deleteMeta();
-
+        $this->deleteMeta();
     }
 
     protected function handleWebp(FileModel $tempFile)
@@ -510,13 +526,13 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
        if ($this->hasBackup())
        {
           $backupFile = $this->getBackupFile();
-          Log::addTemp('BackupFile Size : ' . $backupFile->getFileSize() . ' This Filesize : ' .
-           $this->getFileSize());
-           Log::addWarn('Backup File ' . $backupFile . ' already exists!');
+
           if ($backupFile->getFileSize() == $this->getFileSize())
           {   return true; }
           else
-          { return false; }
+          { return false;
+            Log::Error('Backup already exists, and not the same size! BackupFile Size : ' . $backupFile->getFileSize() . ' This Filesize : ' . $this->getFileSize(), $this->fullpath);
+          }
        }
        $directory = $this->getBackupDirectory(true);
        $fs = \wpSPIO()->filesystem();

@@ -16,22 +16,51 @@ class EditMediaViewController extends \ShortPixel\Controller
       protected $legacyViewObj;
 
       protected $imageModel;
+      protected $hooked;
 
       public function __construct()
       {
         parent::__construct();
+
+
       }
 
-      public function load($post_id)
+
+      protected function loadHooks()
       {
-          $this->post_id = $post_id;
+            add_action( 'add_meta_boxes_attachment', array( $this, 'addMetaBox') );
+            $this->hooked = true;
+      }
+
+      public function load()
+      {
+        if (! $this->hooked)
+          $this->loadHooks();
+      }
+
+      public function addMetaBox()
+      {
+          add_meta_box(
+              'shortpixel_info_box',          // this is HTML id of the box on edit screen
+              __('ShortPixel Info', 'shortpixel-image-optimiser'),    // title of the box
+              array( $this, 'doMetaBox'),   // function to be called to display the info
+              null,//,        // on which edit screen the box should appear
+              'side'//'normal',      // part of page where the box should appear
+              //'default'      // priority of the box
+          );
+      }
+
+
+      public function dometaBox($post)
+      {
+          $this->post_id = $post->ID;
 
           $fs = \wpSPIO()->filesystem();
-          $this->imageModel = $fs->getMediaImage($post_id);
+          $this->imageModel = $fs->getMediaImage($this->post_id);
         //  $this->imageModel->setByPostID($post_id);
           $this->imageModel->reAcquire(); // single display mode - reset things.
 
-          $this->view->id = $post_id;
+          $this->view->id = $this->post_id;
           $this->view->status_message = null;
 
         //  $this->actions_allowed = $this->checkUserPrivileges();
@@ -157,7 +186,7 @@ class EditMediaViewController extends \ShortPixel\Controller
 
         $tsOptimized = $imageObj->getMeta('tsOptimized');
         if ($tsOptimized !== null)
-          $stats[] = array(__("Optimized on", 'shortpixel-image-optimiser') . "<br /> ", UiHelper::formatTS($tsOptimized) );
+          $stats[] = array(__("Optimized on :", 'shortpixel-image-optimiser') . "<br /> ", UiHelper::formatTS($tsOptimized) );
 
       /*  $successText .= ($data['webpCount'] ? "<br>+" . $data['webpCount'] . __(" WebP images", 'shortpixel-image-optimiser') : "")
                 . "<br>EXIF: " . ($data['exifKept'] ? __('kept','shortpixel-image-optimiser') :  __('removed','shortpixel-image-optimiser'))

@@ -30,6 +30,7 @@ class ListMediaViewController extends \ShortPixel\Controller
       $this->loadHooks();
   }
 
+  /** Hooks for the MediaLibrary View */
   protected function loadHooks()
   {
 
@@ -38,6 +39,8 @@ class ListMediaViewController extends \ShortPixel\Controller
     //Sort and filter on ShortPixel Compression column
     add_filter( 'manage_upload_sortable_columns', array( $this, 'registerSortable') );
     add_filter( 'request', array( $this, 'filterBy') );
+    add_action('restrict_manage_posts', array( $this, 'mediaAddFilterDropdown'));
+
   }
 
   public function headerColumns($defaults)
@@ -153,6 +156,38 @@ class ListMediaViewController extends \ShortPixel\Controller
 
 
 
+  /*
+  * @hook restrict_manage_posts
+  * @todo Should be part of media library controller.  ( is request best hook for this?)
+  */
+  public function mediaAddFilterDropdown() {
+      $scr = get_current_screen();
+      if ( $scr->base !== 'upload' ) return;
 
+      $status   = filter_input(INPUT_GET, 'shortpixel_status', FILTER_SANITIZE_STRING );
+  //    $selected = (int)$status > 0 ? $status : 0;
+    /*  $args = array(
+          'show_option_none'   => 'ShortPixel',
+          'name'               => 'shortpixel_status',
+          'selected'           => $selected
+      ); */
+//        wp_dropdown_users( $args );
+      $options = array(
+          'all' => __('All Images', 'shortpixel-image-optimiser'),
+          'opt' => __('Optimized', 'shortpixel-image-optimiser'),
+          'unopt' => __('Unoptimized', 'shortpixel-image-optimiser'),
+        //  'pending' => __('Pending', 'shortpixel-image-optimiser'),
+        //  'error' => __('Errors', 'shortpixel-image-optimiser'),
+      );
+
+      echo "<select name='shortpixel_status' id='shortpixel_status'>\n";
+      foreach($options as $optname => $optval)
+      {
+          $selected = ($status == $optname) ? 'selected' : '';
+          echo "<option value='". $optname . "' $selected>" . $optval . "</option>\n";
+      }
+      echo "</select>";
+
+  }
 
 }

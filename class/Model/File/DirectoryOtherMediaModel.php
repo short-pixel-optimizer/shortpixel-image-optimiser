@@ -34,7 +34,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
   public function __construct($path)
   {
 
-    if (is_object($path))
+    if (is_object($path)) // Load directly via Database object, this saves a query.
     {
        $folder = $path;
        $path = $folder->path;
@@ -50,108 +50,26 @@ class DirectoryOtherMediaModel extends DirectoryModel
   }
 
 
-  private function loadFolderByPath($path)
+  public function get($name)
   {
-      $folders = self::get(array('path' => $path)); //s\wpSPIO()->getShortPixel()->getSpMetaDao()->getFolder($path);
-      $folder = false;
+     if (property_exists($this, $name))
+      return $this->$name;
 
-      if ($folders && count($folders) > 0)
-        $folder = $folders[0];
-
-      return $this->loadFolder($folder);
-
+     return null;
   }
 
-  /** Loads from database into model, the extra data of this model. */
-  private function loadFolder($folder)
+  public function set($name, $value)
   {
+     if (property_exists($this, $name))
+     {
+        $this->name = $value;
+        return true;
+     }
 
-    if (is_object($folder))
-    {
-      // suboptimally, this function needs to work both with database record output and instances of itself
-      $class = get_class($folder);
-
-      $this->id = $folder->id;
-
-      if ($this->id > 0)
-       $this->in_db = true;
-
-      if ($class == 'ShortPixel\DirectoryOtherMediaModel')
-      {
-        $this->updated = $folder->updated;
-        $this->create = $folder->created;
-        $this->fileCount = $folder->fileCount;
-      }
-      else
-      {
-        $this->updated = isset($folder->ts_updated) ? $this->DBtoTimestamp($folder->ts_updated) : time();
-        $this->created = isset($folder->ts_created) ? $this->DBtoTimestamp($folder->ts_created) : time();
-        $this->fileCount = isset($folder->file_count) ? $folder->file_count : 0;
-      }
-      if (strlen($folder->name) == 0)
-        $this->name = basename($folder->path);
-      else
-        $this->name = $folder->name;
-
-      $this->status = $folder->status;
-
-      if ($this->status == -1)
-        $this->is_removed = true;
-
-      do_action('shortpixel/othermedia/folder/load', $this->id, $this);
-
-    }
+     return null;
   }
 
-  public function getStatus()
-  {
-      return $this->status;
-  }
 
-  public function setStatus($status)
-  {
-     $this->status = $status;
-  }
-
-  public function getFileCount()
-  {
-     return $this->fileCount;
-  }
-
-  public function getId()
-  {
-    return $this->id;
-  }
-
-  public function getUpdated()
-  {
-     return $this->updated;
-  }
-
-  public function setUpdated($time)
-  {
-    $this->updated = $time;
-  }
-
-  public function setNextGen($bool = true)
-  {
-    $this->is_nextgen = $bool;
-  }
-
-  public function isNextGen()
-  {
-    return $this->is_nextgen;
-  }
-
-  public function hasDBEntry()
-  {
-    return $this->in_db;
-  }
-
-  public function isRemoved()
-  {
-     return $this->is_removed;
-  }
 
   public function getStats()
   {
@@ -174,6 +92,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
             'name' => $this->name,
             'path' => $this->getPath(),
         );
+        // @todo This should be done here
         $result = \wpSPIO()->getShortPixel()->getSpMetaDao()->saveDirectory($args);
         if ($result) // reloading because action can create a new DB-entry, which will not be reflected (in id )
           $this->loadFolderByPath($this->getPath());
@@ -189,6 +108,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
          Log::addError('Trying to remove Folder without ID ' . $id, $this->getPath());
       }
 
+      // @todo This should be query here.
       return \wpSPIO()->getShortPixel()->getSpMetaDao()->removeFolder($id);
 
   }
@@ -250,7 +170,6 @@ class DirectoryOtherMediaModel extends DirectoryModel
   }
 
 
-
   /** Crawls the folder and check for files that are newer than param time, or folder updated
   * Note - last update timestamp is not updated here, needs to be done separately.
   */
@@ -280,16 +199,20 @@ class DirectoryOtherMediaModel extends DirectoryModel
       $filter = ($time > 0)  ? array('date_newer' => $time) : array();
       $files = $fs->getFilesRecursive($this, $filter);
 
-      $shortpixel = \wpSPIO()->getShortPixel();
+      //$shortpixel = \wpSPIO()->getShortPixel();
       // check processable by invoking filter, for now processablepath takes only paths, not objects.
-      $files = array_filter($files, function($file) use($shortpixel) { return $shortpixel->isProcessablePath($file->getFullPath());  });
+      $files = array_filter($files, function($file) { // use($fs)
+        $imageObj = $fs->getCustomStub($file);
+        return $imageObj->isProcessable();
+        //return $shortpixel->isProcessablePath($file->getFullPath());
+       });
 
       Log::addDebug('Refreshing from ' . $time . ', found Files for custom media ID ' . $this-> id . ' -> ' . count($files));
 
     //  $folderObj->setFileCount( count($files) );
 
       \wpSPIO()->settings()->hasCustomFolders = time(); // note, check this against bulk when removing. Custom Media Bulk depends on having a setting.
-      \wpSPIO()->getShortPixel()->getSpMetaDao()->batchInsertImages($files, $this->id);
+      $result = $this->batchInsertImages($files);
 
       $stats = $this->getStats();
       $this->fileCount = $stats->Total;
@@ -297,61 +220,113 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
   }
 
-
-  /* Get the custom Folders from DB, put them in model
-  @return Array  Array of directoryOtherMediaModel
+  /** This function is called by OtherMediaController / RefreshFolders. Other scripts should not call it
+  * @private
   */
-  public static function get($args = array())
-  {
-    $defaults = array(
-        'id' => false,  // Get folder by Id
-        'remove_hidden' => false,
-        'path' => false,
-    );
+  protected function batchInsertImages($files) {
+      //facem un delete pe cele care nu au shortpixel_folder, pentru curatenie - am mai intalnit situatii in care stergerea s-a agatat (stop monitoring)
+      global $wpdb;
 
-    $args = wp_parse_args($args, $defaults);
+      $sqlCleanup = "DELETE FROM {$this->db->getPrefix()}shortpixel_meta WHERE folder_id NOT IN (SELECT id FROM {$this->db->getPrefix()}shortpixel_folders)";
+      $wpdb->query($sqlCleanup);
 
-    $fs =  \wpSPIO()->fileSystem();
-    $cache = new \ShortPixel\Controller\CacheController();
+      $values = array();
+      $sql = "INSERT IGNORE INTO {$this->db->getPrefix()}shortpixel_meta(folder_id, path, name, path_md5, status, ts_added) VALUES ";
+      $format = '(%d,%s,%s,%s,%d,%s)';
+      $i = 0;
+      $count = 0;
+      $placeholders = array();
+      $status = (\wpSPIO()->settings()->autoMediaLibrary == 1) ? ShortPixelMeta::FILE_STATUS_PENDING : ShortPixelMeta::FILE_STATUS_UNPROCESSED;
+      $created = date("Y-m-d H:i:s");
 
-    $spMetaDao = \wpSPIO()->getShortPixel()->getSpMetaDao();
+      foreach($files as $file) {
+          $filepath = $file->getFullPath();
+          $filename = $file->getFileName();
 
-    if ($args['id'] !== false && $args['id'] > 0)
-    {
-        $folders = $spMetaDao->getFolderByID($args['id']);
-    }
-    elseif($args['path'] !== false && strlen($args['path']) > 0)
-    {
-        $folders = $spMetaDao->getFolder($args['path']);
-    }
-    else
-    {
-      $folders = $spMetaDao->getFolders();
-    }
+          array_push($values, $this->id, $filepath, $filename, md5($filepath), $status, $created);
+          $placeholders[] = $format;
 
-    if ($folders === false)  // no folders.
-      return $folders;
+          if($i % 500 == 499) {
+              $query = $sql;
+              $query .= implode(', ', $placeholders);
+              $wpdb->query( $wpdb->prepare("$query ", $values));
 
-    $i = 0;
-    $newfolders = array();
-    foreach($folders as $index => $folder)
-    {
-
-      $dirObj = new DirectoryOtherMediaModel($folder);
-
-      if ($args['remove_hidden'])
-      {
-         if ($dirObj->is_removed)
-          continue;
+              $values = array();
+              $placeholders = array();
+          }
+          $i++;
       }
-      $newfolders[$i] = $dirObj; // $index is dbase id, we just want an array
-      $i++;
-    }
-
-    return $newfolders;
+      if(count($values) > 0) {
+        $query = $sql;
+        $query .= implode(', ', $placeholders);
+        $result = $wpdb->query( $wpdb->prepare("$query ", $values) );
+        Log::addDebug('Q Result', array($result, $wpdb->last_error));
+        //$this->db->query( $this->db->prepare("$query ", $values));
+        return $result;
+      }
   }
 
 
+    private function loadFolderByPath($path)
+    {
+        //$folders = self::getFolders(array('path' => $path));
+         //s\wpSPIO()->getShortPixel()->getSpMetaDao()->getFolder($path);
+         global $wpdb;
 
+         $sql = 'SELECT * FROM ' . $wpdb->prefix . 'shortpixel_folders where path = %s ';
+         $sql = $wpdb->prepare($sql, $path);
+
+        $folder = $wpdb->get_row($sql);
+        if (! is_object($folder))
+          return false;
+        else
+        {
+          $this->loadFolder($folder);
+          $this->in_db = true; // exists in database
+          return true;
+        }
+    }
+
+    /** Loads from database into model, the extra data of this model. */
+    private function loadFolder($folder)
+    {
+
+      if (is_object($folder))
+      {
+        // suboptimally, this function needs to work both with database record output and instances of itself
+        $class = get_class($folder);
+
+        $this->id = $folder->id;
+        $this->in_db = true;
+
+        if ($this->id > 0)
+         $this->in_db = true;
+
+        if ($class == 'ShortPixel\DirectoryOtherMediaModel')
+        {
+          $this->updated = $folder->updated;
+          $this->create = $folder->created;
+          $this->fileCount = $folder->fileCount;
+        }
+        else
+        {
+          $this->updated = isset($folder->ts_updated) ? $this->DBtoTimestamp($folder->ts_updated) : time();
+          $this->created = isset($folder->ts_created) ? $this->DBtoTimestamp($folder->ts_created) : time();
+          $this->fileCount = isset($folder->file_count) ? $folder->file_count : 0;
+        }
+        if (strlen($folder->name) == 0)
+          $this->name = basename($folder->path);
+        else
+          $this->name = $folder->name;
+
+        $this->status = $folder->status;
+
+        if ($this->status == -1)
+          $this->is_removed = true;
+
+        do_action('shortpixel/othermedia/folder/load', $this->id, $this);
+
+      }
+    }
 
 }
