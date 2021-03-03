@@ -300,6 +300,7 @@ Hide the Cloudflare settings by defining these constants in wp-config.php:
 
 == Changelog ==
 
+
 = 4.21.1 =
 
 Release date October 21st 2020

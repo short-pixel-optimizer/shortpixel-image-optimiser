@@ -470,6 +470,8 @@ class ShortPixelAPI {
             return array("Status" => self::STATUS_SUCCESS);
         }
 
+        $PATHs = apply_filters('shortpixel/backup/paths', $PATHs, $mainPath);
+
         //$fullSubDir = str_replace(wp_normalize_path(get_home_path()), "", wp_normalize_path(dirname($itemHandler->getMeta()->getPath()))) . '/';
         //$SubDir = ShortPixelMetaFacade::returnSubDir($itemHandler->getMeta()->getPath(), $itemHandler->getType());
         $fullSubDir = ShortPixelMetaFacade::returnSubDir($mainPath);

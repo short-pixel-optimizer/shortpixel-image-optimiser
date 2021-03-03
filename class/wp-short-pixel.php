@@ -1503,7 +1503,7 @@ class WPShortPixel {
         $result["BulkMsg"] = $this->bulkProgressMessage($deltaBulkPercent, $minutesRemaining);
     }
 
-  
+
 
     private function sendToProcessing($itemHandler, $compressionType = false, $onlyThumbs = false) {
         //conversion of PNG 2 JPG for existing images
@@ -3597,6 +3597,13 @@ Log::addDebug('GetQuotaInformation Result ', $dataArray);
                 $file->delete();
                 $file = $fs->getFile(substr($path, 0, $pos) . "@2x.webp");
                 $file->delete();
+
+                // Check for double extension. Everything is going, so delete if it's not us anyhow.
+                $file = $fs->getFile($path . '.webp');
+                $file->delete();
+
+                $file = $fs->getFile($path . '.@2xwebp');
+                $file->delete();
             }
             //delte also the backups for image and retina correspondent
             $fileName = $pathFile->getFileName();
@@ -3893,6 +3900,8 @@ Log::addDebug('GetQuotaInformation Result ', $dataArray);
         } elseif(is_array($_wp_additional_image_sizes)) {
             $sizes = array_merge($sizes, $_wp_additional_image_sizes);
         }
+
+        $sizes = apply_filters('shortpixel/settings/image_sizes', $sizes);
         return $sizes;
     }
 
