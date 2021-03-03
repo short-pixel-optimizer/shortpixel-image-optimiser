@@ -72,3 +72,6 @@ if (! is_null($view->debugInfo) && is_array($view->debugInfo) && count($view->de
     <?php echo $view->status_message; ?>
   <?php endif; ?>
   </div>
+
+
+<?php $this->loadView('snippets/part-comparer'); ?>

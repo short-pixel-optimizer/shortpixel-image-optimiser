@@ -199,7 +199,6 @@ class ApiController
   {
 
     $APIresponse = $this->parseResponse($response);//get the actual response from API, its an array
-//echo "APIRESP"; var_dump($APIresponse); echo "<BR>";
 
     // This is only set if something is up, otherwise, ApiResponise returns array
     if ( isset($APIresponse['Status']))
@@ -566,7 +565,7 @@ class ApiController
 
       //update metadata for this file
       $meta = $itemHandler->getMeta();
-//        die(var_dump($percentImprovement));
+
       if($meta->getThumbsTodo()) {
           $percentImprovement = $meta->getImprovementPercent();
       }

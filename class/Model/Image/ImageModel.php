@@ -222,6 +222,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
       return false;
     }
 
+    /* Returns the improvement of Image by optimizing
+    * @param boolean $int When true, returns only integer, otherwise a formatted number for display
+    */
     public function getImprovement($int = false)
     {
         if ($this->isOptimized())

@@ -101,7 +101,7 @@ if ( isset($_GET['noheader']) ) {
 
 
               $folder = isset($folders[$folder_id]) ? $folders[$folder_id] : false;
-              $media_type = ($folder && $folder->isNextGen()) ? __('Nextgen', 'shortpixel-image-optimiser') : __('Custom', 'shortpixel_image_optimiser');
+              $media_type = ($folder && $folder->get('is_nextgen')) ? __('Nextgen', 'shortpixel-image-optimiser') : __('Custom', 'shortpixel_image_optimiser');
               $img_url = $fs->pathToUrl($item);
               $is_heavy = ($filesize <= 500000 && $filesize > 0);
 
@@ -152,3 +152,5 @@ if ( isset($_GET['noheader']) ) {
 
 
 </div> <!-- wrap -->
+
+<?php $this->loadView('snippets/part-comparer'); ?>

@@ -47,9 +47,6 @@ class wpOffload
       }
 
       $provider = $this->as3cf->get_provider();
-  //    $domain = $provider->get_bucket_location();
-
-  //    var_dump($domain);
 
       add_action('shortpixel_image_optimised', array($this, 'image_upload'));
       add_action('shortpixel_after_restore_image', array($this, 'image_restore')); // hit this when restoring.

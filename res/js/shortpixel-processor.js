@@ -208,7 +208,8 @@ console.log(ShortPixelProcessorData);
         {
            if (typeof args.defer !== 'undefined' && args.defer)
            {
-                this.SetInterval(this.deferInterval); //set a long interval
+                this.timesEmpty++;
+                this.SetInterval(this.deferInterval * this.timesEmpty); //set a long interval
                 this.RunProcess(); // queue a run once
                 this.SetInterval(-1); // restore interval
            }

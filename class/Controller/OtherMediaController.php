@@ -6,6 +6,8 @@ use ShortPixel\Notices\NoticeController as Notices;
 use ShortPixel\Model\File\DirectoryOtherMediaModel as DirectoryOtherMediaModel;
 use ShortPixel\Model\File\DirectoryModel as DirectoryModel;
 
+use ShortPixel\Controller\OptimizeController as OptimizeController;
+
 // Future contoller for the edit media metabox view.
 class OtherMediaController extends \ShortPixel\Controller
 {
@@ -30,14 +32,25 @@ class OtherMediaController extends \ShortPixel\Controller
     public function getAllFolders()
     {
         $folders = $this->getFolders();
-        return $folders;
+        return $this->loadFoldersFromResult($folders);
+        //return $folders;
     }
 
     public function getActiveFolders()
     {
       $folders = $this->getFolders(array('remove_hidden' => true));
-      return $folders;
+      return $this->loadFoldersFromResult($folders);
+    }
 
+    private function LoadFoldersFromResult($folders)
+    {
+       $dirFolders = array();
+       foreach($folders as $result)
+       {
+          $dirObj = new DirectoryOtherMediaModel($result);
+          $dirFolders[] = $dirObj;
+       }
+       return $dirFolders;
     }
 
     public function getActiveDirectoryIDS()
@@ -61,8 +74,10 @@ class OtherMediaController extends \ShortPixel\Controller
         $folders = $this->getFolders(array('id' => $id));
 
         if (count($folders) > 0)
-          return $folders[0];
-
+        {
+          $folders = $this->loadFoldersFromResult($folders);
+          return array_pop($folders);
+        }
         return false;
     }
 
@@ -99,7 +114,7 @@ class OtherMediaController extends \ShortPixel\Controller
        }
        elseif (! $directory->isSubFolderOf($rootDir) && $directory->getPath() != $rootDir->getPath() )
        {
-          Notices::addError( sprintf(__('The %s folder cannot be processed as it\'s not inside the root path of your website (%s).','shortpixel-image-optimiser'),$addedFolder, $rootDir->getPath()));
+          Notices::addError( sprintf(__('The %s folder cannot be processed as it\'s not inside the root path of your website (%s).','shortpixel-image-optimiser'),$directory->getPath(), $rootDir->getPath()));
           return false;
        }
        elseif($directory->isSubFolderOf($backupDir) || $directory->getPath() == $backupDir->getPath() )
@@ -124,7 +139,7 @@ class OtherMediaController extends \ShortPixel\Controller
          if ($directory->save())
          {
           $directory->updateFileContentChange();
-          $directory->refreshFolder(0);
+          $directory->refreshFolder(true);
          }
        }
        else // if directory is already added, fail silently, but still refresh it.
@@ -133,13 +148,13 @@ class OtherMediaController extends \ShortPixel\Controller
          {
             $directory->setStatus(DirectoryOtherMediaModel::DIRECTORY_STATUS_NORMAL);
             $directory->updateFileContentChange(); // does a save. Dunno if that's wise.
-            $directory->refreshFolder(0);
+            $directory->refreshFolder(true);
          }
          else
-          $directory->refreshFolder();
+          $directory->refreshFolder(false);
        }
 
-      if ($directory->exists() && $directory->getID() > 0)
+      if ($directory->exists() && $directory->get('id') > 0)
         return $directory;
       else
         return false;
@@ -171,6 +186,7 @@ class OtherMediaController extends \ShortPixel\Controller
 
     } */
 
+
     /** Check directory structure for new files */
     public function refreshFolders($force = false, $expires = 5 * MINUTE_IN_SECONDS)
     {
@@ -187,14 +203,9 @@ class OtherMediaController extends \ShortPixel\Controller
       $refreshDelay->setExpires($expires);
       $refreshDelay->save();
 
-
       foreach($customFolders as $directory) {
-        if ($force)
-        {
-          $cache->deleteItemObject($refreshDelay);
-        }
 
-          $this->refreshFolder($directory, $force);
+        $directory->refreshFolder($force);
 
       } // folders
 
@@ -216,51 +227,6 @@ class OtherMediaController extends \ShortPixel\Controller
           return true;
     }
 
-    /** This function is called by OtherMediaController / RefreshFolders. Other scripts should not call it
-    * @private
-    */
-    public function batchInsertImages($files, $folderId) {
-        //facem un delete pe cele care nu au shortpixel_folder, pentru curatenie - am mai intalnit situatii in care stergerea s-a agatat (stop monitoring)
-        global $wpdb;
-
-        $sqlCleanup = "DELETE FROM {$this->db->getPrefix()}shortpixel_meta WHERE folder_id NOT IN (SELECT id FROM {$this->db->getPrefix()}shortpixel_folders)";
-        $this->db->query($sqlCleanup);
-
-        $values = array();
-        $sql = "INSERT IGNORE INTO {$this->db->getPrefix()}shortpixel_meta(folder_id, path, name, path_md5, status, ts_added) VALUES ";
-        $format = '(%d,%s,%s,%s,%d,%s)';
-        $i = 0;
-        $count = 0;
-        $placeholders = array();
-        $status = (\wpSPIO()->settings()->autoMediaLibrary == 1) ? ShortPixelMeta::FILE_STATUS_PENDING : ShortPixelMeta::FILE_STATUS_UNPROCESSED;
-        $created = date("Y-m-d H:i:s");
-
-        foreach($files as $file) {
-            $filepath = $file->getFullPath();
-            $filename = $file->getFileName();
-
-            array_push($values, $folderId, $filepath, $filename, md5($filepath), $status, $created);
-            $placeholders[] = $format;
-
-            if($i % 500 == 499) {
-                $query = $sql;
-                $query .= implode(', ', $placeholders);
-                $this->db->query( $this->db->prepare("$query ", $values));
-
-                $values = array();
-                $placeholders = array();
-            }
-            $i++;
-        }
-        if(count($values) > 0) {
-          $query = $sql;
-          $query .= implode(', ', $placeholders);
-          $result = $wpdb->query( $wpdb->prepare("$query ", $values) );
-          Log::addDebug('Q Result', array($result, $wpdb->last_error));
-          //$this->db->query( $this->db->prepare("$query ", $values));
-        }
-
-    }
 
     public function ajaxBrowseContent()
     {
@@ -345,7 +311,7 @@ class OtherMediaController extends \ShortPixel\Controller
     }
 
     /* Get the custom Folders from DB, put them in model
-    @return Array  Array of directoryOtherMediaModel
+    @return Array  Array database result
     */
     private function getFolders($args = array())
     {

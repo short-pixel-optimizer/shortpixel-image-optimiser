@@ -245,7 +245,6 @@ class AdminNoticesController extends \ShortPixel\Controller
       // If this notice is not already out there, and there are conflicting plugins, go for display.
       if (count($conflictPlugins) > 0)
       {
-      //  var_dump($this->getConflictMessage($conflictPlugins));
           $notice = Notices::addWarning($this->getConflictMessage($conflictPlugins));
           Notices::makePersistent($notice, self::MSG_COMPAT, YEAR_IN_SECONDS);
       }
@@ -295,6 +294,9 @@ class AdminNoticesController extends \ShortPixel\Controller
           $quotaController = QuotaController::getInstance();
           $quotaData = $quotaController->getQuota();
 
+          $statsControl = StatsController::getInstance(); // @todo Implement this.
+    //      $stats = $statsControl->
+
           //$quotaData = $stats;
           $noticeController = Notices::getInstance();
 
@@ -302,7 +304,6 @@ class AdminNoticesController extends \ShortPixel\Controller
           $bulk_is_dismissed = ($bulk_notice && $bulk_notice->isDismissed() ) ? true : false;
 
           $month_notice = $noticeController->getNoticeByID(self::MSG_UPGRADE_MONTH);
-    echo "<PRE>"; var_dump($quotaData); echo "</PRE>";
 
           //this is for bulk page - alert on the total credits for total images
           if( ! $bulk_is_dismissed && $env->is_bulk_page && $this->bulkUpgradeNeeded($stats)) {

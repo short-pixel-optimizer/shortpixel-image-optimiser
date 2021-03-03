@@ -108,11 +108,11 @@ class SettingsController extends \ShortPixel\Controller
          if ($folder_id)
          {
             $otherMediaController = new OtherMediaController();
-            $folder = $otherMediaController->getFolderByID($folder_id);
+            $dirObj = $otherMediaController->getFolderByID($folder_id);
 
-            if ($folder)
+            if ($dirObj)
             {
-               $otherMediaController->refreshFolder($folder, true);
+               $dirObj->refreshFolder(true);
             }
 
          }
@@ -135,7 +135,7 @@ class SettingsController extends \ShortPixel\Controller
       public function processSave()
       {
           // Split this in the several screens. I.e. settings, advanced, Key Request IF etc.
-          if ($this->postData['includeNextGen'] == 1)
+          if (isset($this->postData['includeNextGen']) && $this->postData['includeNextGen'] == 1)
           {
               $nextgen = new NextGen();
               $previous = $this->model->includeNextGen;
@@ -194,10 +194,11 @@ class SettingsController extends \ShortPixel\Controller
          $this->view->allThumbSizes = $this->getAllThumbnailSizes();
          $this->view->averageCompression = $statsControl->getAverageCompression();
          $this->view->savedBandwidth = UiHelper::formatBytes($this->view->data->savedSpace * 10000,2);
-         $this->view->resources = wp_remote_post($this->model->httpProto . "://shortpixel.com/resources-frag");
+         /*$this->view->resources = wp_remote_post($this->model->httpProto . "://shortpixel.com/resources-frag");
+
          if (is_wp_error($this->view->resources))
             $this->view->resources = null;
-
+        */
          $this->view->cloudflare_constant = defined('SHORTPIXEL_CFTOKEN') ? true : false;
 
          $settings = \wpSPIO()->settings();
@@ -419,10 +420,15 @@ class SettingsController extends \ShortPixel\Controller
               //$metaDao = $this->shortPixel->getSpMetaDao();
               $folder_id = intval($post['removeFolder']);
               $otherMedia = new OtherMediaController();
-              $folder = $otherMedia->getFolderByID($folder_id);
+              $dirObj = $otherMedia->getFolderByID($folder_id);
+
+              if ($dirObj === false)
+                return;
+
+            //lder = new DirectoryOtherMediaModel($)
 
             //  Log::addDebug('Removing folder ' . $post['removeFolder']);
-              $folder->delete();
+              $dirObj->delete();
               //$metaDao->removeFolder( sanitize_text_field($post['removeFolder']) );
 
           }

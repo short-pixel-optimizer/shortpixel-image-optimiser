@@ -442,6 +442,7 @@ class OptimizeController
                 $thumb = $imageObj->getThumbnail($sizeName);
                 if ($thumb !== false)
                 {
+                   // @todo This should deliver the medialib item to the queue instead of this.
                    if ($settings->autoMediaLibrary)
                       $thumb->setMeta('status', ImageModel::FILE_STATUS_PENDING);
                    else

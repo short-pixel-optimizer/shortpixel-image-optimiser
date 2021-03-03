@@ -65,8 +65,7 @@ class StatsModel
 
     $this->lastUpdate = $stats['time'];
 
-
-    echo "<PRE> StatsModel CurrentSTATS "; print_r($stats); echo "</PRE>";
+  //  echo "<PRE> StatsModel CurrentSTATS "; print_r($stats); echo "</PRE>";
 
     //$this->stats = $stats;
   }

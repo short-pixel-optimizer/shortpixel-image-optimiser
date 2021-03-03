@@ -368,6 +368,8 @@ class FileModel extends \ShortPixel\Model
   {
     $original_path = $path;
 
+
+
     if ($this->pathIsUrl($path))
     {
       $path = $this->UrlToPath($path);

@@ -337,10 +337,10 @@ class AjaxController
         $ret['origUrl'] = $backup_url; // $backupUrl . $urlBkPath . $meta->getName();
 
           $ret['optUrl'] = $fs->pathToUrl($imageObj); // $uploadsUrl . $meta->getWebPath();
-          $ret['width'] = $imageObj->getMeta('actualWidth'); // $meta->getActualWidth();
-          $ret['height'] = $imageObj->getMeta('actualWidth');
+          $ret['width'] = $imageObj->getMeta('originalWidth'); // $meta->getActualWidth();
+          $ret['height'] = $imageObj->getMeta('originalHeight');
 
-          if (is_null($ret['width']))
+          if (is_null($ret['width']) || $ret['width'] == false)
           {
 
               $ret['width'] = $imageObj->get('width'); // $imageSizes[0];
@@ -348,7 +348,7 @@ class AjaxController
 
           }
 
-        $this->send($ret);
+        $this->send( (object) $ret);
     }
 
     protected function checkNonce($action)

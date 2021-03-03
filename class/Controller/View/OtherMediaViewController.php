@@ -228,8 +228,6 @@ class OtherMediaViewController extends \ShortPixel\Controller
 
           $sql = "SELECT * FROM " . $wpdb->prefix . "shortpixel_meta where folder_id in ( " . $dirs  . ") ";
 
-
-
           foreach($filters as $field => $value) {
               $sql .= " AND $field " . $value->operator . " ". $value->value . " ";
           }
@@ -238,7 +236,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
           $sql  .= ($this->orderby ? " ORDER BY " . $this->orderby . " " . $this->order . " " : "")
                   . " LIMIT " . $this->items_per_page . " OFFSET " . ($page - 1) * $this->items_per_page;
 
-var_dump($sql);
+
           $results = $wpdb->get_results($sql);
           return $results;
       }

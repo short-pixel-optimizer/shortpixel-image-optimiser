@@ -1127,7 +1127,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
     const FILE_STATUS_TORESTORE = 4; // Used for Bulk Restore */
 
     // Most Likely Status not saved in metadata, but must be generated from type / lossy and ShortpixelImprovement Metadata.
-//    echo "<PRE> LEGACY CONVERT STATUS"; var_dump($data); echo "</PRE>";
 
   /*  "status" => (!isset($rawMeta["ShortPixel"]) ? 0
                  : (isset($rawMeta["ShortPixelImprovement"]) && is_numeric($rawMeta["ShortPixelImprovement"])

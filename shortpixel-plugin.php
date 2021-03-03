@@ -233,7 +233,7 @@ class ShortPixelPlugin
 
           //toolbar notifications
           add_action( 'admin_bar_menu', array( $admin, 'toolbar_shortpixel_processing'), 999 );
-          add_action( 'wp_head', array( $this, 'headCSS')); // for the front-end
+        //  add_action( 'wp_head', array( $this, 'headCSS')); // for the front-end
           //deactivate plugin
           add_action( 'admin_post_shortpixel_deactivate_plugin', array(&$this, 'deactivatePlugin'));
 
@@ -542,8 +542,6 @@ class ShortPixelPlugin
     {
         if (wp_script_is($name, 'registered'))
         {
-      //    echo " Enqueue $name <br />";
-          //echo "<PRE style='margin-left:300px'>"; print_r(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,9)); echo "</PRE>";
           wp_enqueue_script($name);
         }
         else {
@@ -561,6 +559,13 @@ class ShortPixelPlugin
     //$load = array();
     $load_processor = array('shortpixel', 'shortpixel-processor');  // a whole suit needed for processing, not more. Always needs a screen as well!
     $load_bulk = array();  // the whole suit needed for bulking.
+
+
+    if ($this->env()->is_debug)
+    {
+       $this->load_script('shortpixel-debug');
+    }
+
 
     if ( \wpSPIO()->env()->is_screen_to_use )
     {
@@ -626,17 +631,11 @@ class ShortPixelPlugin
   {
       global $plugin_page;
     //  $this->initPluginRunTime(); // Not in use currently.
-
       $default_action = 'load'; // generic action on controller.
       $action = isset($_REQUEST['sp-action']) ? sanitize_text_field($_REQUEST['sp-action']) : $default_action;
       $template_part = isset($_GET['part']) ? sanitize_text_field($_GET['part']) : false;
 
       $controller = false;
-
-      if ($this->env()->is_debug)
-      {
-         $this->load_script('shortpixel-debug');
-      }
 
       $url = menu_page_url($plugin_page, false);
       $screen_id = \wpSPIO()->env()->screen_id;

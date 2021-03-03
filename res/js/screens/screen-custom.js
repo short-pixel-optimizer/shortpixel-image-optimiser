@@ -40,7 +40,7 @@ var ShortPixelScreen = function (MainScreen, processor)
               }
               else if (fileStatus == 'FILE_PENDING')
               {
-                 //element.style.display = 'none';
+                 element.style.display = 'none';
                 //this.UpdateMessage(item_id, )
               }
 

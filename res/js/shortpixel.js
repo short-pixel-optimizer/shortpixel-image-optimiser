@@ -741,9 +741,10 @@ var ShortPixel = function() {
         if(this.comparerData.jsLoaded === false) {
             jQuery.getScript(this.WP_PLUGIN_URL + '/res/js/jquery.twentytwenty.min.js', function(){
                 ShortPixel.comparerData.jsLoaded = 2;
+                /*   What should this do?
                 if(ShortPixel.comparerData.origUrl.length > 0) {
                     ShortPixel.displayComparerPopup(ShortPixel.comparerData.width, ShortPixel.comparerData.height, ShortPixel.comparerData.origUrl, ShortPixel.comparerData.optUrl);
-                }
+                } */
             });
             this.comparerData.jsLoaded = 1;
             //jQuery(".sp-close-button").click(ShortPixel.closeComparerPopup);
@@ -757,6 +758,7 @@ var ShortPixel = function() {
                 data: { action : 'shortpixel_get_comparer_data', id : id, type: type, nonce: ShortPixelProcessorData.nonce_ajaxrequest },
                 success: function(response) {
                   //  data = JSON.parse(response);
+
                     jQuery.extend(ShortPixel.comparerData, response);
                     if(ShortPixel.comparerData.jsLoaded == 2) {
                         ShortPixel.displayComparerPopup(ShortPixel.comparerData.width, ShortPixel.comparerData.height, ShortPixel.comparerData.origUrl, ShortPixel.comparerData.optUrl);
@@ -768,6 +770,7 @@ var ShortPixel = function() {
     }
 
     function displayComparerPopup(width, height, imgOriginal, imgOptimized) {
+        console.trace('display poppie');
         //image sizes
         var origWidth = width;
         //depending on the sizes choose the right modal
@@ -814,6 +817,8 @@ var ShortPixel = function() {
             jQuery(window).trigger('resize');
         });
         imgOpt.attr("src", imgOptimized);
+
+        console.log('Popup Loaded! ', modal);
     }
 
     function closeComparerPopup(e) {

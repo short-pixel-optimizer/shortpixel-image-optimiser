@@ -14,15 +14,29 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
     protected $thumbnails = array(); // placeholder, should return empty.
     protected $retinas = array(); // placeholder, should return empty.
 
+    protected $in_db = false;
+    protected $is_stub = false;
+
+
     public function __construct(int $id)
     {
         $this->id = $id;
 
         if ($id > 0)
           $this->loadMeta();
-
+        else
+        {
+          $this->fullpath = ''; // stub
+          $this->is_stub = true;
+        }
         parent::__construct($this->fullpath);
     }
+
+    public function setFolderId(int $folder_id)
+    {
+        $this->folder_id = $folder_id;
+    }
+
 
   public function getOptimizePaths()
     {
@@ -72,7 +86,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
        if ($bool)
        {
-         $this->setMeta('customImprovement', $this->getImprovement());
+         $this->setMeta('customImprovement', parent::getImprovement());
          $this->saveMeta();
        }
 
@@ -82,13 +96,19 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
     public function loadMeta()
     {
-      $metadao = \wpSPIO()->getShortPixel()->getSpMetaDao();
-      $imagerow = $metadao->getItem($this->id);
+    //  $metadao = \wpSPIO()->getShortPixel()->getSpMetaDao();
+    //  $imagerow = $metadao->getItem($this->id);
+      global $wpdb;
 
-      if (count($imagerow) > 0)
-        $imagerow = $imagerow[0];
-      else
+      $sql = 'SELECT * FROM '  . $wpdb->prefix . 'shortpixel_meta where id = %d';
+      $sql = $wpdb->prepare($sql, $this->id);
+
+      $imagerow = $wpdb->get_row($sql);
+
+      if (! is_object($imagerow))
         return false;
+
+      $this->in_db = true; // record found.
 
       $metaObj = new ImageMeta();
 
@@ -102,9 +122,8 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
       if ($status == ImageModel::FILE_STATUS_SUCCESS)
       {
         $metaObj->customImprovement = $imagerow->message;
-        $optimizedDate = \DateTime::createFromFormat('Y-m-d H:i:s', $imagerow->ts_optimized);
-        $metaObj->tsOptimized = $optimizedDate->getTimestamp();
       }
+
 
       $metaObj->compressedSize = intval($imagerow->compressed_size);
       $metaObj->compressionType = intval($imagerow->compression_type);
@@ -126,22 +145,44 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
         //$metaObj->has_backup = (intval($imagerow->backup) == 1) ? true : false;
 
-        $addedDate = \DateTime::createFromFormat('Y-m-d H:i:s', $imagerow->ts_added);
-        $metaObj->tsAdded = $addedDate->getTimestamp();
+        $addedDate = $this->DBtoTimestamp($imagerow->ts_added);
+        $metaObj->tsAdded = $addedDate;
 
-        $optimizedDate = \DateTime::createFromFormat('Y-m-d H:i:s', $imagerow->ts_optimized);
-        $metaObj->tsOptimized = $optimizedDate->getTimestamp();
-
+        $optimizedDate = $this->DBtoTimestamp($imagerow->ts_optimized);
+        $metaObj->tsOptimized = $optimizedDate;
 
         $this->image_meta = $metaObj;
     }
 
-    public function setStub(string $path)
+    public function setStub(string $path, bool $load = true)
     {
        $this->fullpath = $path;
        $this->path_md5 = md5($this->fullpath);
-    }
 
+
+       global $wpdb;
+
+       $sql = 'SELECT id from '  . $wpdb->prefix . 'shortpixel_meta where path =  %s';
+       $sql = $wpdb->prepare($sql, $path);
+
+       $result = $wpdb->get_var($sql);
+       if ( ! is_null($result)  )
+       {
+          $this->in_db = true;
+          $this->id = $result;
+          if ($load)
+            $this->loadMeta();
+       }
+       else
+       {
+          $this->image_meta = new ImageMeta();
+          $this->image_meta->compressedSize = 0;
+          $this->image_meta->tsOptimized = 0;
+          $this->image_meta->tsAdded = time();
+
+       }
+
+    }
 
     public function saveMeta()
     {
@@ -165,8 +206,8 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
       $added = new \DateTime();
       $added->setTimeStamp($metaObj->tsAdded);
 
-
        $data = array(
+            'folder_id' => $this->folder_id,
             'compressed_size' => $metaObj->compressedSize,
             'compression_type' => $metaObj->compressionType,
             'keep_exif' =>  ($metaObj->did_keepExif) ? 1 : 0,
@@ -177,16 +218,50 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
             'backup' => ($this->hasBackup()) ? 1 : 0,
             'status' => $metaObj->status,
             'retries' => 0, // this is unused / legacy
-            'message' => $message,
-            'ts_added' => $added->format('Y-m-d H:i:s'),
-            'ts_optimized' => $optimized->format('Y-m-d H:i:s'),
+            'message' => $message, // this is used for improvement line.
+            'ts_added' => $this->timestampToDB($metaObj->tsAdded),
+            'ts_optimized' => $this->timestampToDB($metaObj->tsOptimized),
+            'path' => $this->getFullPath(),
+            'path_md5' => md5($this->getFullPath()), // this is legacy
        );
-Log::addDebug('Save Custom Meta', $data);
+       // The keys are just for readability.
        $format = array(
-            '%d', '%d', '%d','%d','%d','%d','%d','%d','%d', '%d',  '%s','%s', '%s',
+            'folder_id' => '%d',
+            'compressed_size' => '%d',
+            'compression_type' => '%d' ,
+            'keep_exif' => '%d' ,
+            'cmyk2rgb' => '%d' ,
+            'resize' => '%d' ,
+            'resize_width' => '%d',
+            'resize_height' => '%d',
+            'backup' => '%d',
+            'status' => '%d',
+            'retries' => '%d', // this is unused / legacy
+            'message' => '%s', // this is used for improvement line.
+            'ts_added' => '%s',
+            'ts_optimized' => '%s' ,
+            'path' => '%s',
+            'path_md5' => '%s' , // this is legacy
        );
 
-       $res = $wpdb->update($table, $data, $where, $format);
+
+      // Log::addTemp('Save Custom Meta', $data);
+      $is_new = false;
+
+       if ($this->in_db)
+      {
+        $res = $wpdb->update($table, $data, $where, $format); // result is amount rows updated.
+      }
+      else
+      {
+        $is_new = true;
+        $res = $wpdb->insert($table, $data, $format); // result is new inserted id
+      }
+
+      if ($is_new)
+      {
+         $this->id = $wpdb->insert_id;
+      }
 
       if ($res !== false)
         return true;
@@ -194,11 +269,38 @@ Log::addDebug('Save Custom Meta', $data);
         return false;
     }
 
-
-
+    public function getImprovement($int = false)
+    {
+       return $this->getMeta('customImprovement');
+    }
 
     public function getImprovements()
     {
-      return array(); // we have no thumbnails.
+      $improvements = array();
+      /*$totalsize = $totalperc = $count = 0;
+      if ($this->isOptimized())
+      {
+         $perc = $this->getImprovement();
+         $size = $this->getImprovement(true);
+         $totalsize += $size;
+         $totalperc += $perc;
+         $improvements['main'] = array($perc, $size);
+         $count++;
+      } */
+      $improvements['main'] = array($this->getImprovement(), 0);
+
+      return $this->improvements;
+
+    //  return $improvements; // we have no thumbnails.
+    }
+
+    private function timestampToDB($timestamp)
+    {
+        return date("Y-m-d H:i:s", $timestamp);
+    }
+
+    private function DBtoTimestamp($date)
+    {
+        return strtotime($date);
     }
 }

@@ -147,7 +147,7 @@ abstract class Queue
        if (isset($items)) // did a dequeue.
        {
           $result = $this->getQStatus($result, count($items));
-          Log::addTemp('Fetched Q items', $items);
+        //  Log::addTemp('Fetched Q items', $items);
           $result->items = $items;
 
        }
@@ -285,39 +285,6 @@ abstract class Queue
       return $stats;
     }
 
-/*
-    protected function getCountCache()
-    {
-      $cache = new CacheController();
-      $countCache = $cache->getItem($this->cacheName);
-      $countObj = $countCache->getValue();
-
-      if (is_null($countObj) )
-      {
-      //  Log::addDebug('GetCountCache failure ' . $this->cacheName . ', not matching counts ' . $countObj->items . ' <ci gs>  ' . $this->getStatus('items'));
-        //$countObj = $this->recountQueue();
-        //$this->saveCountCache($countObj);
-        $count = (object) [
-            'images' => 0,
-            'items' => 0,
-            'optimizedCount' => 0, // already optimized items
-            'optimizedThumbnailCount' => 0,
-        ];
-      }
-
-      return $countObj;
-    }
-
-    protected function saveCountCache($countObj)
-    {
-      $cache = new CacheController();
-      $countCache = $cache->getItem($this->cacheName);
-
-      $countCache->setValue($countObj);
-      $countCache->setExpires(14 * DAY_IN_SECONDS);
-      $cache->storeItemObject ($countCache);
-    }
-*/
 
     /** Recounts the ItemSum for the Queue
     *
@@ -326,7 +293,6 @@ abstract class Queue
     protected function countQueue()
     {
         $recount = $this->q->itemSum('countbystatus');
-      //  Log::addDebug('Recounts, countbystatus', $recount);
         $count = (object) [
             'images' => $recount[ShortQ::QSTATUS_WAITING],
             'images_done' => $recount[ShortQ::QSTATUS_DONE],
@@ -336,7 +302,6 @@ abstract class Queue
           //  'optimizedThumbnailCount' => $recount[ShortQ::QSTATUS_DONE],
         ];
 
-    //    Log::addDebug('Recreated ' . $this->cacheName . ' CountCache', $recount);
         return $count;
     }
 
@@ -407,7 +372,7 @@ abstract class Queue
           $item->png2jpg = $imageModel->get('do_png2jpg');
         }
 
-        if ($imageModel->getMeta('compressionType'))
+        if (! is_null($imageModel->getMeta('compressionType')))
           $item->compressionType = $imageModel->getMeta('compressionType');
 
         //$item->paths = apply_filters('shortpixel/queue/paths', $paths, $imageModel->get('id'));

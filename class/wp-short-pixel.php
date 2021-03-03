@@ -2274,83 +2274,14 @@ class WPShortPixel {
             {
               echo "<ul class='jqueryFileTree'>";
               _e('No Directories found that can be added to Custom Folders', 'shortpixel-image-optimiser');
-              echo "</ul>";
+              echo "</ul>";pdate
             }
         }
 
         die();
     }
  */
-    /** Gets data for image comparison. Returns JSON
-    *
-    * @return json JSON data.
-    * TODO - Should return via JSON function in tools
-    */
-    public function getComparerData() {
-        if (!isset($_POST['id']) || !current_user_can( 'upload_files' ) && !current_user_can( 'edit_posts' ) )  {
-            wp_die(json_encode((object)array('origUrl' => false, 'optUrl' => false, 'width' => 0, 'height' => 0)));
-        }
 
-        $ret = array();
-        // This shall not be Intval, since Post_id can be custom (C-xx)
-      //  $handle = new ShortPixelMetaFacade( sanitize_text_field($_POST['id']) );
-
-        $fs = \wpSPIO()->filesystem();
-
-        $imageObj = new ImageModel();
-        $imageObj->setByPostID(sanitize_text_field($_POST['id']));
-
-        $file = $imageObj->getFile();
-        $backupFile = $file->getBackupFile();
-
-        /* Check if image is scaled, and has no backup, if there is a backup of original (full) file */
-        if (! $backupFile && $imageObj->has_original())
-        {
-           $file = $imageObj->has_original();
-           $backupFile = $file->getBackupFile();
-        }
-
-        $backup_url = $fs->pathToUrl($backupFile);
-
-        $meta = $imageObj->getMeta();
-      //  $rawMeta = $imageObj->getFacade()->getRawMeta();
-
-      //  $backupUrl = content_url() . "/" . SHORTPIXEL_UPLOADS_NAME . "/" . SHORTPIXEL_BACKUP . "/";
-      //  $uploadsUrl = ShortPixelMetaFacade::getHomeUrl();
-      //  $urlBkPath = ShortPixelMetaFacade::returnSubDir($meta->getPath());
-        $ret['origUrl'] = $backup_url; // $backupUrl . $urlBkPath . $meta->getName();
-
-    //    if ($meta->getType() == ShortPixelMetaFacade::CUSTOM_TYPE)
-    //    {
-          $ret['optUrl'] = $fs->pathToUrl($file); // $uploadsUrl . $meta->getWebPath();
-        //  self::log('Getting image - ' . $urlBkPath . $meta->getPath());
-          // [BS] Another bug? Width / Height not stored in Shortpixel meta.
-          $ret['width'] = $meta->getActualWidth();
-          $ret['height'] = $meta->getActualHeight();
-
-          if (is_null($ret['width']))
-          {
-
-          //  $imageSizes = getimagesize($ret['optUrl']);
-          // [BS] Fix - Use real path instead of URL on getimagesize.
-            $imageSizes = getimagesize($meta->getPath());
-
-            if ($imageSizes)
-            {
-              $ret['width'] = $imageSizes[0];
-              $ret['height']= $imageSizes[1];
-            }
-          }
-      /*  }
-        else
-        {
-          $ret['optUrl'] = wp_get_attachment_url( $_POST['id'] ); //$uploadsUrl . $urlBkPath . $meta->getName();
-          $ret['width'] = $rawMeta['width'];
-          $ret['height'] = $rawMeta['height'];
-        }
- */
-        die(json_encode((object)$ret));
-    }
 
     // TODO This could be something in an install class.
     public function newApiKey() {

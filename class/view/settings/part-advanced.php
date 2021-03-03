@@ -1,5 +1,6 @@
 <?php
 namespace ShortPixel;
+use \ShortPixel\Helper\UiHelper as UiHelper;
 ?>
 
 <section id="tab-adv-settings" class="clearfix <?php echo ($this->display_part == 'adv-settings') ? ' sel-tab ' :''; ?> ">
@@ -65,58 +66,71 @@ namespace ShortPixel;
 
                         <?php
                         foreach($view->customFolders as $index => $dirObj) {
-                            $folder_id = $dirObj->getID();
+                            $folder_id = $dirObj->get('id');
 
 
-                            $type_display = ($dirObj->isNextGen() ) ? __('Nextgen', 'shortpixel-image-optimiser') . "<br>" : "";
+                            $type_display = ($dirObj->get('is_nextgen') ) ? __('Nextgen', 'shortpixel-image-optimiser') . "<br>" : "";
                         //    $stat = $this->shortPixel->getSpMetaDao()->getFolderOptimizationStatus($folder->getId());
                             $stat = $dirObj->getStats();
 
-                            $cnt = $stat->Total;
+                            $fullstatus = __("Optimized",'shortpixel-image-optimiser') . ": " . $stat->Optimized . ", "
+                                  . ", " . __("Waiting",'shortpixel-image-optimiser') . ": " . $stat->Waiting . ", "
+                                  ;
 
-                            $st = ($cnt == 0
-                                ? __("Empty",'shortpixel-image-optimiser')
-                                : ($stat->Total == $stat->Optimized
-                                    ? __("Optimized",'shortpixel-image-optimiser')
-                                    : ($stat->Optimized + $stat->Pending > 0 ? __("Pending",'shortpixel-image-optimiser') : __("Waiting",'shortpixel-image-optimiser'))));
+                            if ($stat->Total == 0)
+                            {
+                              $optimize_status = __("Empty",'shortpixel-image-optimiser');
+                              $fullstatus = '';
+                            }
+                            elseif ($stat->Total == $stat->Optimized)
+                            {
+                              $optimize_status = __("Optimized",'shortpixel-image-optimiser');
+                            }
+                            elseif ($stat->Optimized > 0)
+                            {
+                               $optimize_status = __("Pending",'shortpixel-image-optimiser');
+                            }
+                            else
+                            {
+                              $optimize_status = __("Waiting",'shortpixel-image-optimiser');
+                            }
 
-                            $err = $stat->Failed > 0 && !$st == __("Empty",'shortpixel-image-optimiser') ? " ({$stat->Failed} failed)" : false;
+                            $action =  __("Stop monitoring",'shortpixel-image-optimiser');
+                            /*$err = $stat->Failed > 0 && !$st == __("Empty",'shortpixel-image-optimiser') ? " ({$stat->Failed} failed)" : false; */
+                            $err = ''; // unused since failed is gone.
                             if (! $dirObj->exists() && ! $err)
                               $err = __('Directory does not exist', 'shortpixel-image-optimiser');
 
-                            $action = ($st == __("Optimized",'shortpixel-image-optimiser') || $st == __("Empty",'shortpixel-image-optimiser') ? __("Stop monitoring",'shortpixel-image-optimiser') : __("Stop optimizing",'shortpixel-image-optimiser'));
 
-                            if ($dirObj->isNextGen() && $view->data->includeNextGen == 1)
+                            if ($dirObj->get('is_nextgen') && $view->data->includeNextGen == 1)
                               $action = false;
 
-                            $fullStat = $st == __("Empty",'shortpixel-image-optimiser') ? "" : __("Optimized",'shortpixel-image-optimiser') . ": " . $stat->Optimized . ", "
-                                    . __("Pending",'shortpixel-image-optimiser') . ": " . $stat->Pending . ", " . __("Waiting",'shortpixel-image-optimiser') . ": " . $stat->Waiting . ", "
-                                    . __("Failed",'shortpixel-image-optimiser') . ": " . $stat->Failed;
 
                               $refreshUrl = add_query_arg(array('sp-action' => 'action_refreshfolder', 'folder_id' => $folder_id, 'part' => 'adv-settings'), $this->url);
                             ?>
                             <div>
-                                <span class='folder folder-<?php echo $dirObj->getId() ?>'><?php echo($dirObj->getPath()); ?></span>
+                                <span class='folder folder-<?php echo $dirObj->get('id') ?>'><?php echo($dirObj->getPath()); ?></span>
                                 <span>
-                                    <?php if(!($st == "Empty")) { ?>
-                                    <span title="<?php echo $fullStat; ?>" class='info-icon'>
+                                    <?php if(!($stat->Total == 0)) { ?>
+                                    <span title="<?php echo $fullstatus; ?>" class='info-icon'>
                                         <img alt='<?php _e('Info Icon', 'shortpixel-image-optimiser') ?>' src='<?php echo( wpSPIO()->plugin_url('res/img/info-icon.png' ));?>' style="margin-bottom: -2px;"/>
                                     </span>&nbsp;<?php  }
-                                    echo($type_display. ' ' . $st . '<br>' . $err);
+                                    echo($type_display. ' ' . $optimize_status. '<br>' . $err);
                                     ?>
                                 </span>
                                 <span>
-                                    <?php echo($cnt); ?> files
+                                    <?php echo($stat->Total); ?> files
                                 </span>
                                 <span>
-                                    <?php echo( date_i18n(  get_option('date_format') . ' H:i', $dirObj->getUpdated() )); ?>
+
+                                    <?php UiHelper::formatTS($dirObj->get('updated')) ?>
                                 </span>
                                 <span>
                                   <a href='<?php echo $refreshUrl ?>' title="<?php _e('Recheck for new images', 'shortpixel-image-optimiser'); ?>" class='refresh-folder'><i class='dashicons dashicons-update'>&nbsp;</i></a>
                                 </span>
                                 <span class='action'>
                                   <?php if ($action): ?>
-                                    <input type="button" class="button remove-folder-button" data-value="<?php echo($dirObj->getID()); ?>" data-name="<?php echo $dirObj->getPath() ?>" title="<?php echo($action . " " . $dirObj->getPath()); ?>" value="<?php echo $action;?>">
+                                    <input type="button" class="button remove-folder-button" data-value="<?php echo($dirObj->get('id')); ?>" data-name="<?php echo $dirObj->getPath() ?>" title="<?php echo($action . " " . $dirObj->getPath()); ?>" value="<?php echo $action;?>">
                                  <?php endif; ?>
                                 </span>
                             </div>

@@ -18,7 +18,6 @@ class MediaLibraryQueue extends Queue
    public function __construct($queueName = 'Media')
    {
      $shortQ = new ShortQ(self::PLUGIN_SLUG);
-     Log::addTemp('Getting MediaQ ' . $queueName);
      $this->q = $shortQ->getQueue($queueName);
      $this->queueName = $queueName;
 

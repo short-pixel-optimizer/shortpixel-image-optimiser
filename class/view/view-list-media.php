@@ -31,6 +31,6 @@ if (isset($this->view->list_actions))
 }
 ?>
 </div>
-<?php /* This is now dynamically generated in media.js
-<div id="sp-message-<?php echo($this->view->mediaItem->get('id') ); ?>" class='messages'>&nbsp;</div>
-*/ ?>
+
+
+<?php $this->loadView('snippets/part-comparer'); ?>

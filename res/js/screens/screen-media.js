@@ -18,7 +18,6 @@ var ShortPixelScreen = function (MainScreen, processor)
 
         if (typeof resultItem.result !== 'undefined')
         {
-
             // This is final, not more messing with this. In results (multiple) defined one level higher than result object, if single, it's in result.
             var item_id = typeof resultItem.item_id !== 'undefined' ? resultItem.item_id : resultItem.result.item_id;
             var message = resultItem.result.message;
