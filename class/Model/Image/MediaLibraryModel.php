@@ -18,8 +18,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   protected $id;
 
   protected $type = 'media';
+  protected $is_main_file = true; // for checking
 
   private $unlistedChecked = false; // limit checking unlisted.
+
+
 
   public function __construct($post_id, $path)
   {
@@ -184,7 +187,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   /* Sanity check in process. Should only be called upon special request, or with single image displays. Should check and recheck stats, thumbs, unlistedthumbs and all assumptions of data that might corrupt or change outside of this plugin */
   public function reAcquire()
   {
-    //  $this->addUnlistedThumbs();
+      $this->addUnlisted();
       //$this->reCheckThumbnails();
       if (\wpSPIO()->settings()->optimizeRetina)
         $this->retinas = $this->getRetinas();
@@ -192,8 +195,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       if (\wpSPIO()->settings()->createWebp)
         $this->webps = $this->getWebps();
 
-
-      // $this->recount();
   }
 
   public function handleOptimized($tempFiles)
@@ -201,7 +202,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
     //  Log::addTemp('TEMPFILES, HandleOptimized', $tempFiles);
        Log::addTemp('MediaLibraryModel :: HandleOptimized');
       if (! $this->isOptimized()) // main file might not be contained in results
-        $result = parent::handleOptimized($tempFiles);
+      {
+          $result = parent::handleOptimized($tempFiles);
+          if (! $result)
+          {
+             return false;
+          }
+      }
 
       $optimized = array();
 
@@ -211,6 +218,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
          if ($thumbnail->isOptimized())
           continue;
          // @todo Find here which one is handles, since sizes can have duplicate files ( ie multiple size pointing to same filename, make local array if duplicate comes up / don't reprocess ). Same needed in restore.
+
+         if (!$thumbnail->isProcessable())
+           continue; // when excluded.
 
          $filebase = $thumbnail->getFileBase();
          $result = false;
@@ -277,11 +287,16 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
            $improvements['thumbnails'][$thumbObj->name] = array($perc, $size);
            $count++;
         }
+
+        if ($count == 0)
+          return false; // no improvements;
+
         $improvements['totalpercentage']  = round($totalperc / $count);
         $improvements['totalsize'] = $totalsize;
         return $improvements;
   }
 
+/* Don't know why this is here.
   protected function createBackup()
   {
       $bool = parent::createbackup();
@@ -299,6 +314,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
       return $bool;
   }
+*/
 
   /** @param String Full Path to the Thumbnail File
   *   @return Object ThumbnailModel
@@ -467,6 +483,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
      $metadata = $this->createSave();
      // There is no point checking for errors since false is returned on both failure and no field changed.
      update_post_meta($this->id, '_shortpixel_meta', $metadata);
+
+     if ($this->isOptimized())
+     {
+        update_post_meta($this->id, '_shortpixel_optimized', $this->getImprovement() );
+     }
   }
 
   /** Delete the Shortpixel Meta */
@@ -476,6 +497,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
      $bool = delete_post_meta($this->id, '_shortpixel_meta');
      if (! $bool)
       Log::addWarn('Delete Post Meta failed');
+
+     delete_post_meta($this->id, '_shortpixel_optimized');
 
      return $bool;
   }
@@ -488,6 +511,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       {
         $thumbObj->onDelete();
       }
+
+
 
       $this->deleteMeta();
   }
@@ -554,8 +579,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       {
           foreach($this->thumbnails as $thumbnail)
           {
+            if (! $thumbnail->isOptimized())
+               continue;
+
             $bool = $thumbnail->isRestorable();
-            if ($bool === true) // Is Processable just needs one job
+            if ($bool === true) // Is Restorable just needs one job
               return true;
           }
       }
@@ -838,7 +866,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
             $bool = true;  // this filebase already restored. In case of duplicate sizes.
             $thumbObj->imageMeta = new ImageMeta();
           }
-          else
+          elseif ($thumbObj->isOptimized())
             $bool = $thumbObj->restore();
 
           if (! $bool)
@@ -1004,6 +1032,41 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           }
        }
 
+       if ($this->isScaled())
+       {
+         $originalFile = $this->original_file;
+         if (in_array($thumbnailObj->getFileName(), $optimized_thumbnails))
+         {
+
+           $originalFile->image_meta->status = $status;
+           $originalFile->image_meta->compressionType = $type;
+           $originalFile->image_meta->compressedSize = $originalFile->getFileSize();
+           $originalFile->image_meta->did_jpg2png = true;
+       //    $thumbnailObj->image_meta->improvement = -1; // n/a
+           if ($thumbnailObj->hasBackup())
+           {
+             $backup = $originalFile->getBackupFile();
+             $originalFile->image_meta->originalSize = $backup->getFileSize();
+           }
+
+           $originalFile->image_meta->tsAdded = $tsAdded;
+           $originalFile->image_meta->tsOptimized = $tsOptimized;
+           $originalFile->has_backup = $originalFile->hasBackup();
+
+           $webp = $originalFile->getWebp();
+           if ($webp)
+           {
+              $originalFile->image_meta->webp = $webp->getFileName();
+           }
+
+           if (strpos($thumbname, 'sp-found') !== false) // File is 'unlisted', also save file information.
+           {
+              $originalFile->image_meta->file = $originalFile->getFileName();
+           }
+
+          }
+       }
+
        if (isset($data['retinasOpt']))
        {
            $count = $data['retinasOpt'];
@@ -1027,6 +1090,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 
        update_post_meta($this->id, 'shortpixel_was_converted', true);
+       delete_post_meta($this->id, '_shortpixel_status');
       /*if (isset($data['webpCount']))
       {
           $count = $data['webpCount'];
@@ -1179,7 +1243,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
       // Don't check this more than once per run-time.
       if ( $this->unlistedChecked )
-         return;
+      {
+          return;
+      }
 
         $currentFiles = array($this->getFileName());
         foreach($this->thumbnails as $thumbObj)
@@ -1198,7 +1264,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
         $all_files = scandir($path,  SCANDIR_SORT_NONE);
         $result_files = array_values(preg_grep($pattern, $all_files));
-
 
         $unlisted = array_diff($result_files, $currentFiles);
 
@@ -1249,7 +1314,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       foreach($unlisted as $unName)
       {
           $thumbObj = $this->getThumbnailModel($path . $unName);
-          if ($thumbObj->is_readable())
+          if ($thumbObj->getExtension() == 'webp') // ignore webp files.
+          {
+            continue;
+          }
+          elseif ($thumbObj->is_readable()) // exclude webps
           {
             $thumbObj->setName($unName);
             $thumbObj->setMeta('originalWidth', $thumbObj->get('width'));
@@ -1260,7 +1329,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
             Log::addTemp('Unlisted Thumb: ', $thumbObj);
           }
           else
+          {
             Log::addWarn("Unlisted Image $unName is not readable (permission error?)");
+          }
       }
 
       if ($added)

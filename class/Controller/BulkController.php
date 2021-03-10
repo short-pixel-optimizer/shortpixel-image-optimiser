@@ -40,12 +40,12 @@ class BulkController
    /*** Start the bulk run */
    public function startBulk($type = 'media')
    {
-
        $optimizeControl = new OptimizeController();
        $optimizeControl->setBulk(true);
 
        $q = $optimizeControl->getQueue($type);
-       $q->startBulk();
+       if ($q->getStatus('items') > 0)
+          $q->startBulk();
 
        return $optimizeControl->processQueue();
 
@@ -55,7 +55,7 @@ class BulkController
    {
      $optimizeControl = new OptimizeController();
      $optimizeControl->setBulk(true);
-     
+
      $q = $optimizeControl->getQueue($type);
 
      $q->resetQueue();

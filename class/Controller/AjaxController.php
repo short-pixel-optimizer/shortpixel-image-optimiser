@@ -8,9 +8,14 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 //use ShortPixel\Controller\BulkController as BulkController;
 
+
 // Class for containing all Ajax Related Actions.
 class AjaxController
 {
+    const PROCESSOR_ACTIVE = -1;
+    const NONCE_FAILED = -2;
+    const NO_ACTION = -3;
+
     private static $instance;
 
     public static function getInstance()
@@ -40,8 +45,10 @@ class AjaxController
     {
       $processKey = $this->getProcessorKey();
       $bulkSecret = isset($_POST['bulk-secret']) ? sanitize_text_field($_POST['bulk-secret']) : false;
+      $isBulk = isset($_POST['isBulk']) ? (bool) sanitize_text_field($_POST['isBulk'])  : false;
 
       Log::addTemp("ProcessKey $processKey - BulkSecret $bulkSecret");
+
 
       $is_processor = false;
       if ($processKey == false && $bulkSecret !== false)
@@ -52,7 +59,7 @@ class AjaxController
       {
          $is_processor = true;
       }
-      elseif (\wpSPIO()->env()->is_bulk_page)
+      elseif ($isBulk)
       {
          $is_processor = true;
       }
@@ -73,6 +80,7 @@ class AjaxController
         $json = new \stdClass;
         $json->message = __('Processor is active in another window', 'shortpixel-image-optimiser');
         $json->status = false;
+        $json->error = self::PROCESSOR_ACTIVE; // processor active
         $this->send($json);
       }
 
@@ -144,10 +152,12 @@ class AjaxController
 
         // Notice that POST variables are always string, so 'true', not true.
         $isBulk = (isset($_POST['isBulk']) && $_POST['isBulk'] === 'true') ? true : false;
+        $queue = (isset($_POST['queues'])) ? sanitize_text_field($_POST['queues']) : 'media,custom';
+        $queues = array_filter(explode(',', $queue), 'trim');
 
-        $control = new OptimizeController();
+        $control = new OptimizeController($queues);
         $control->setBulk($isBulk);
-        $result = $control->processQueue();
+        $result = $control->processQueue($queues);
 
         $this->send($result);
     }
@@ -169,7 +179,7 @@ class AjaxController
           $json->$type->id = $id;
           $json->$type->results = null;
           $json->$type->is_error = false;
-          $json->status = 0;
+          $json->status = false;
         }
 
         $data = array('id' => $id, 'typeArray' => $typeArray, 'action' => $action);
@@ -194,6 +204,9 @@ class AjaxController
            case 'createBulk':
              $json = $this->createBulk($json, $data);
            break;
+           case 'applyBulkSelection':
+             $json = $this->applyBulkSelection($json, $data);
+           break;
            case 'startBulk':
              $json = $this->startBulk($json, $data);
            break;
@@ -202,6 +215,7 @@ class AjaxController
            break;
            default:
               $json->$type->message = __('Ajaxrequest - no action found', 'shorpixel-image-optimiser');
+              $json->error = self::NO_ACTION;
            break;
 
         }
@@ -237,7 +251,7 @@ class AjaxController
         //  $this->send($json);
     }
 
-    public function restoreItem($json, $data)
+    protected function restoreItem($json, $data)
     {
       $id = $data['id'];
       $type =$data['type'];
@@ -251,7 +265,7 @@ class AjaxController
       return $json;
     }
 
-    public function reOptimizeItem($json, $data)
+    protected function reOptimizeItem($json, $data)
     {
        $id = $data['id'];
        $type = $data['type'];
@@ -264,7 +278,7 @@ class AjaxController
        return $json;
     }
 
-    public function finishBulk($json, $data)
+    protected function finishBulk($json, $data)
     {
        $bulkControl = BulkController::getInstance();
 
@@ -277,7 +291,7 @@ class AjaxController
     }
 
 
-    public function createBulk($json, $data)
+    protected function createBulk($json, $data)
     {
         $bulkControl = BulkController::getInstance();
         $stats = $bulkControl->createNewBulk('media');
@@ -292,7 +306,39 @@ class AjaxController
 
     }
 
-    public function startBulk($json, $data)
+    protected function applyBulkSelection($json, $data)
+    {
+        // These values should always be given!
+        $doMedia = filter_var(sanitize_text_field($_POST['mediaActive']), FILTER_VALIDATE_BOOLEAN);
+        $doCustom = filter_var(sanitize_text_field($_POST['customActive']), FILTER_VALIDATE_BOOLEAN);
+        $doWebp = filter_var(sanitize_text_field($_POST['webpActive']), FILTER_VALIDATE_BOOLEAN);
+
+        \wpSPIO()->settings()->createWebp = $doWebp;
+
+        $bulkControl = BulkController::getInstance();
+
+        if (! $doMedia)
+          $bulkControl->finishBulk('media');
+        if (! $doCustom)
+          $bulkControl->finishBulk('custom');
+
+        $optimizeController = new OptimizeController();
+        $optimizeController->setBulk(true);
+
+        $data = $optimizeController->getStartupData();
+
+        $json->media->stats = $data->media->stats;
+        $json->custom->stats = $data->custom->stats;
+        $json->total = $data->total;
+
+        $json->status = true;
+
+        return $json;
+
+
+    }
+
+    protected function startBulk($json, $data)
     {
         $bulkControl = BulkController::getInstance();
 
@@ -316,7 +362,7 @@ class AjaxController
 
         if ( $id === false || !current_user_can( 'upload_files' ) && !current_user_can( 'edit_posts' ) )  {
 
-            $json->status = 0;
+            $json->status = false;
             $json->id = $id;
             $json->message = __('Error - item to compare could not be found or no access', 'shortpixel-image-optimiser');
           //  ResponseController::add()->withMessage($json->message)->asError();
@@ -358,6 +404,7 @@ class AjaxController
         $json = new \stdClass;
         $json->message = __('Nonce is missing or wrong', 'shortpixel-image-optimiser');
         $json->status = false;
+        $json->error = self::NONCE_FAILED;
         $this->send($json);
       }
 

@@ -1,5 +1,7 @@
-var debugModal;
 
+// This file contains debug screen for edit-media
+
+var debugModal;
 jQuery(document).ready(function(jq) {
 	$ = jq;
 
@@ -30,11 +32,6 @@ jQuery(document).ready(function(jq) {
 
 	}
 
-	debugModal.prototype.focus = function()
-	{
-		this.currentModal.show();
-
-	}
 
 	debugModal.prototype.get = function()
 	{
@@ -99,7 +96,7 @@ jQuery(document).ready(function(jq) {
 		$(document).off('keydown', $.proxy(this.keyPressHandler, this));
 		$(document).on('keydown', $.proxy(this.keyPressHandler, this));
 
-		this.currentModal.focus();
+		this.currentModal.trigger('focus');
 	}
 
 	debugModal.prototype.keyPressHandler = function (e)

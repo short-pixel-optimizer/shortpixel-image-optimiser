@@ -122,8 +122,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                                     <?php echo($stat->Total); ?> files
                                 </span>
                                 <span>
-
-                                    <?php UiHelper::formatTS($dirObj->get('updated')) ?>
+                                    <?php echo UiHelper::formatTS($dirObj->get('updated')) ?>
                                 </span>
                                 <span>
                                   <a href='<?php echo $refreshUrl ?>' title="<?php _e('Recheck for new images', 'shortpixel-image-optimiser'); ?>" class='refresh-folder'><i class='dashicons dashicons-update'>&nbsp;</i></a>

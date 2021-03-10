@@ -102,19 +102,19 @@ var ShortPixelToolTip = function(reserved, processor)
         tooltip.classList.remove('shortpixel-hide');
         tooltip.classList.add('shortpixel-processing');
 
-        
+
     }
 
     this.AddNotice = function(message)
     {
-      var tooltip = this.GetToolTip();
+      var tooltip = this.GetToolTip(); // li.shortpixel-toolbar-processing
       var toolcontent = tooltip.querySelector('.ab-item');
 
       var alert = document.createElement('div');
       alert.className = 'toolbar-notice toolbar-notice-error';
       alert.innerHTML = message;
 
-      alertChild = toolcontent.parentNode.insertBefore(alert, tooltip.nextSibling);
+      alertChild = toolcontent.parentNode.insertBefore(alert, toolcontent.nextSibling);
 
       window.setTimeout (this.RemoveNotice.bind(this), 5000, alertChild);
     }

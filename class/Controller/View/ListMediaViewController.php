@@ -104,16 +104,17 @@ class ListMediaViewController extends \ShortPixel\Controller
 
   public function filterBy($vars)
   {
+  //  var_dump($vars);
     if ( isset( $vars['orderby'] ) && 'ShortPixel Compression' == $vars['orderby'] ) {
         $vars = array_merge( $vars, array(
-            'meta_key' => '_shortpixel_status',
+            'meta_key' => '_shortpixel_optimized',
             'orderby' => 'meta_value_num',
         ) );
     }
     if ( 'upload.php' == $GLOBALS['pagenow'] && isset( $_GET['shortpixel_status'] ) ) {
 
         $status       = sanitize_text_field($_GET['shortpixel_status']);
-        $metaKey = '_shortpixel_status';
+        $metaKey = '_shortpixel_optimized';
         //$metaCompare = $status == 0 ? 'NOT EXISTS' : ($status < 0 ? '<' : '=');
 
         if ($status == 'all')
@@ -122,20 +123,12 @@ class ListMediaViewController extends \ShortPixel\Controller
         switch($status)
         {
            case "opt":
-              $status = ShortPixelMeta::FILE_STATUS_SUCCESS;
-              $metaCompare = ">="; // somehow this meta stores optimization percentage.
+            //  $status = ShortPixelMeta::FILE_STATUS_SUCCESS;
+              $metaCompare = "EXISTS"; // somehow this meta stores optimization percentage.
             break;
             case "unopt":
-              $status = ShortPixelMeta::FILE_STATUS_UNPROCESSED;
+            //  $status = ShortPixelMeta::FILE_STATUS_UNPROCESSED;
               $metaCompare = "NOT EXISTS";
-            break;
-            case "pending":
-              $status = ShortPixelMeta::FILE_STATUS_PENDING;
-              $metaCompare = "=";
-            break;
-            case "error":
-              $status = -1;
-              $metaCompare = "<=";
             break;
 
         }
@@ -144,7 +137,7 @@ class ListMediaViewController extends \ShortPixel\Controller
             'meta_query' => array(
                 array(
                     'key'     => $metaKey,
-                    'value'   => $status,
+      //              'value'   => $status,
                     'compare' => $metaCompare,
                 ),
             )

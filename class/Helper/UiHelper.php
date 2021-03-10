@@ -57,9 +57,10 @@ class UiHelper
     $thumbsTotal = ($thumbs) ? count($thumbs) : 0;
 
     $retinas = $imageObj->get('retinas');
+
     $webps = $imageObj->get('webps');
 
-    $webpsTotal = (is_array($webps)) ? count($webps) : 0;
+    $webpsTotal = (is_array($webps)) ? count(array_filter($webps)) : 0;
 
   /*  if ($thumbs)
     {

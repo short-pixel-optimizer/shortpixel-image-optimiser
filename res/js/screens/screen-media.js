@@ -6,6 +6,7 @@ var ShortPixelScreen = function (MainScreen, processor)
     this.isMedia = true;
     this.processor = processor;
 
+    this.currentMessage = '';
 
     this.Init = function()
     {
@@ -63,6 +64,7 @@ var ShortPixelScreen = function (MainScreen, processor)
     this.UpdateMessage = function(id, message)
     {
        var element = document.getElementById('sp-message-' + id);
+       this.currentMessage = message;
 
        if (element == null)
        {
@@ -81,7 +83,10 @@ var ShortPixelScreen = function (MainScreen, processor)
           element.textContent = message;
        }
        else
-        console.error('Update Message coloumn not found ' + id);
+       {
+        //console.error('Update Message column not found ' + id);
+        this.processor.Debug('Update Message Column not found' + id);
+       }
     }
     this.QueueStatus = function(qStatus)
     {
@@ -114,8 +119,24 @@ var ShortPixelScreen = function (MainScreen, processor)
             self.processor.tooltip.AddNotice(element.message);
             if (self.processor.rStatus[element.code] == 'RESPONSE_ERROR')
             {
-             //  this.Update
-             console.log('Help, do some error here');
+
+             if (element.id)
+             {
+               var message = self.currentMessage;
+               self.UpdateMessage(element.id, message + '<br>' + element.message);
+               self.currentMessage = message; // don't overwrite with this, to prevent echo.
+             }
+             else
+             {
+                 var errorBox = document.getElementById('shortpixel-errorbox');
+                 if (errorBox)
+                 {
+                   var error = document.createElement('div');
+                   error.classList.add('error');
+                   error.textContent = element.message;
+                   errorBox.append(error);
+                 }
+             }
             }
        });
 

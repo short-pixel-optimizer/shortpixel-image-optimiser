@@ -173,6 +173,11 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
        return null;
     }
 
+    public function getLastErrorMessage()
+    {
+       return $this->error_message;
+    }
+
     public function __get($name)
     {
         return $this->get($name);
@@ -257,8 +262,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     public function handleOptimized($downloadResults)
     {
         $settings = \wpSPIO()->settings();
-        //Log::addTemp('Download Results ', $downloadResults);
-        Log::addTemp("ImageModel :: HandleOptimized");
+
 
         foreach($downloadResults as $urlName => $resultObj)
         {
@@ -268,14 +272,15 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
               continue;
             }
 
-
               if ($settings->backupImages)
               {
                   $backupok = $this->createBackup();
                   if (! $backupok)
                   {
                     Log::addError('Backup Not OK - ' .  $urlName);
+
                     ResponseController::add()->withMessage(sprintf(__('Could not create backup for %s, optimization failed. Please check file permissions - %s', 'shortpixel-image-optimiser'), $this->getFileName(), $this->getFullPath() ))->asImportant()->asError();
+
                     return false;
                   }
               }
@@ -434,20 +439,23 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     */
     public function onDelete()
     {
-       if ($this->hasBackup())
+      // if ($this->hasBackup())
         $this->restore();
 
-        $this->deleteMeta();
+      //  $this->deleteMeta();
     }
 
     protected function handleWebp(FileModel $tempFile)
     {
          $fs = \wpSPIO()->filesystem();
             $target = $fs->getFile( (string) $this->getFileDir() . $this->getFileBase() . '.webp');
-        Log::addTemp('handle Webp for ' . $this->getFullPath() . ' Target ' . $target->getFullPath() );
+
             if( (defined('SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION') && SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION) || $target->exists()) {
                  $target = $fs->getFile((string) $this->getFileDir() . $this->getFileName() . '.webp'); // double extension, if exists.
+
             }
+            Log::addTemp('handle Webp for ' . $this->getFullPath() . ' Source : ' . $tempFile->getFullpath() . ' Target ' . $target->getFullPath() );
+
             $result = $tempFile->copy($target);
             if (! $result)
               Log::addWarn('Could not copy Webp to destination ' . $target->getFullPath() );
@@ -533,20 +541,23 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
           if ($backupFile->getFileSize() == $this->getFileSize())
           {   return true; }
           else
-          { return false;
-            Log::Error('Backup already exists, and not the same size! BackupFile Size : ' . $backupFile->getFileSize() . ' This Filesize : ' . $this->getFileSize(), $this->fullpath);
+          {
+            Log::addError('Backup already exists, and not the same size! BackupFile Size : ' . $backupFile->getFileSize() . ' This Filesize : ' . $this->getFileSize(), $this->fullpath);
+            $this->error_message = __('Backup already exists with a different size', 'shortpixel-image-optimizer');
+            return false;
           }
        }
        $directory = $this->getBackupDirectory(true);
        $fs = \wpSPIO()->filesystem();
 
-       if(apply_filters('shortpixel_skip_backup', false, $this->getFullPath())){
+       if(apply_filters('shortpixel_skip_backup', false, $this->getFullPath(), $this->is_main_file)){
            return true;
        }
 
        if (! $directory)
        {
           Log::addWarn('Could not create Backup Directory for ' . $this->getFullPath());
+          $this->error_message = __('Could not create backup Directory', 'shortpixel-image-optimizer');
           return false;
        }
 

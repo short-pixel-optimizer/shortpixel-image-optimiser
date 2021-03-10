@@ -139,13 +139,16 @@ class MediaLibraryModelTest extends  WP_UnitTestCase
 
   }
 
+
+
   public function testExcludedSizes()
   {
+
     $post = $this->factory->post->create_and_get();
     $attachment_id = $this->factory->attachment->create_upload_object( __DIR__ . '/assets/image-small-500x625.jpg', $post->ID );
 
+    // testing via pattern
     $imageObj = self::$fs->getMediaImage($attachment_id);
-
     $settings = \wpSPIO()->settings();
 
     $refWPQ = new ReflectionClass('\ShortPixel\Model\Image\MediaLibraryModel');
@@ -183,6 +186,18 @@ class MediaLibraryModelTest extends  WP_UnitTestCase
 
     $this->assertFalse($sizeMethod->invoke($imageObj));
 
+
+    // Testing via 'Exclude Thumbnail sizes' setting
+    $urls_all = $imageObj->getOptimizeUrls();
+    $url_fullcount = count($urls_all); // all
+
+    $settings->excludePatterns = '';
+    $settings->excludeSizes = array('thumbnail');
+
+    $urls = $imageObj->getOptimizeUrls();
+    $url_count = count($urls);
+
+    $this->assertGreaterThan($url_count, $url_fullcount);
 
   }
 

@@ -281,6 +281,8 @@ class SettingsController extends \ShortPixel\Controller
         } elseif(is_array($_wp_additional_image_sizes)) {
             $sizes = array_merge($sizes, $_wp_additional_image_sizes);
         }
+
+        $sizes = apply_filters('shortpixel/settings/image_sizes', $sizes);
         return $sizes;
       }
 

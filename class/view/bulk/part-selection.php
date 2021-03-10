@@ -57,15 +57,14 @@ namespace ShortPixel;
               <label>Images</label>
                <span class="number" data-stats-custom="total" data-check-custom-total ><?php _e('n/a', 'shortpixel-image-optimizer')  ?></span>
             </div>
-
          </div>
-
 
          <div class='optiongroup hidden' data-check-visibility data-control="data-check-media-total" >
            <div class='switch_button'>
 
              <label>
-               <input type="checkbox" class="switch">
+               <input type="checkbox" class="switch" id="webp_checkbox"
+                <?php checked(\wpSPIO()->settings()->createWebp); ?>  />
                <div class="the_switch">&nbsp; </div>
              </label>
 
@@ -82,7 +81,7 @@ namespace ShortPixel;
 
       <nav>
         <button class="button" type="button" data-action="FinishBulk">Stop Bulk</button>
-        <button class="button-primary" type="button" data-action="open-panel" data-panel="summary" data-check-disable data-control="data-check-total-total">Next</button>
+        <button class="button-primary" type="button" data-action="DoSelection" data-panel="summary" data-check-disable data-control="data-check-total-total">Next</button>
       </nav>
 
     </div> <!-- interface wrapper -->

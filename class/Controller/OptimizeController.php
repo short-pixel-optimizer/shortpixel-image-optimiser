@@ -17,7 +17,7 @@ use ShortPixel\Model\Image\ImageModel as ImageModel;
 
 class OptimizeController
 {
-    protected static $instance;
+    //protected static $instance;
     protected static $results;
 
     protected $isBulk = false; // if queueSystem should run on BulkQueues;
@@ -146,9 +146,12 @@ class OptimizeController
 
       if ($json->status == 1) // successfull restore.
       {
-          $mediaItem->setMeta('compressionType', $compressionType);
-          $json = $this->addItemToQueue($mediaItem);
-          return $json;
+          // Hard reload since metadata probably removed / changed but still loaded, which might enqueue wrong files.
+            $mediaItem = \wpSPIO()->filesystem()->getImage($mediaItem->get('id'), $mediaItem->get('type'));
+
+            $mediaItem->setMeta('compressionType', $compressionType);
+            $json = $this->addItemToQueue($mediaItem);
+            return $json;
       }
 
      return $json;
@@ -217,8 +220,10 @@ class OptimizeController
         // Here prevent a runTick is the queue is empty and done already ( reliably )
 
         $results = new \stdClass;
-        $results->media = $this->runTick($mediaQ); // run once on mediaQ
-        $results->custom = $this->runTick($customQ);
+        if ( in_array('media', $queueTypes))
+          $results->media = $this->runTick($mediaQ); // run once on mediaQ
+        if ( in_array('custom', $queueTypes))
+          $results->custom = $this->runTick($customQ);
 
         $results->total = $this->calculateStatsTotals($results);
     //    $this->checkCleanQueue($results);
@@ -258,6 +263,7 @@ class OptimizeController
       $json = $this->queueToJson($result);
       $this->checkQueueClean($result, $Q);
 
+    //  Log::addDebug('JSON RETURN', $json);
       return $json;
 
     }
@@ -337,7 +343,6 @@ class OptimizeController
 
            $imageItem = $fs->getImage($item->item_id, $qtype);
 
-
            $tempFiles = array();
 
            // Set the metadata decided on APItime.
@@ -347,8 +352,7 @@ class OptimizeController
 
            }
 
-
-           Log::addTemp('Going to Handle Optimize --> ', array_keys($result->files));
+           Log::addTemp('Going to Handle Optimize --> ', array_keys($result->files) );
            if (count($result->files) > 0 )
            {
               $optimizeResult = $imageItem->handleOptimized($result->files); // returns boolean or null
@@ -365,7 +369,7 @@ class OptimizeController
                  $item->result->apiStatus = ApiController::STATUS_ERROR;
                  $item->fileStatus = ImageModel::FILE_STATUS_ERROR;
                  $item->result->message = sprintf(__('Image not optimized with errors', 'shortpixel-image-optimiser'), $item->item_id);
-
+                 $item->result->message .= ' ' .  $imageItem->getLastErrorMessage();
 
               }
 
@@ -406,6 +410,7 @@ class OptimizeController
           }
       }
 
+      Log::addDebug('Optimizecontrol - Item is done', $item);
       return $item;
 
     }
@@ -557,6 +562,7 @@ class OptimizeController
 
         // When both have stats. Custom becomes the main. Calculate media stats over it. Clone, important!
         $object->stats = clone $results->custom->stats;
+
         if (property_exists($object->stats, 'images'))
           $object->stats->images = clone $results->custom->stats->images;
 

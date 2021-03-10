@@ -87,7 +87,7 @@ var ShortPixel = function() {
         jQuery(button).parents('form').submit();
     }
 
-    jQuery("#key").keypress(function(e) {
+    jQuery("#key").on('keypress', function(e) {
         if(e.which == 13) {
             jQuery('#valid').val('validate');
         }

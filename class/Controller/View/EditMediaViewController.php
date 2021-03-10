@@ -63,12 +63,6 @@ class EditMediaViewController extends \ShortPixel\Controller
           $this->view->id = $this->post_id;
           $this->view->status_message = null;
 
-        //  $this->actions_allowed = $this->checkUserPrivileges();
-
-        //  $this->view->status_message = UiModel::getStatusMessage($imageModel); // $this->getStatusMessage();
-          /*$this->view->actions = $this->getActions();
-
-          $this->view->todo = $this->getTodo(); */
 
           $this->view->text = UiHelper::getStatusText($this->imageModel);
           $this->view->list_actions = UiHelper::getListActions($this->imageModel);

@@ -14,6 +14,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 /*  public $width;
   public $height;
   public $mime; */
+  protected $is_main_file = false;
 
   public function __construct($path)
   {
@@ -180,6 +181,10 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
   // !Important . This doubles as  checking excluded image sizes.
   protected function isSizeExcluded()
   {
+    $excludeSizes = \wpSPIO()->settings()->excludeSizes;
+    if (is_array($excludeSizes) && in_array($this->name, $excludeSizes))
+      return true;
+
     return false;
   }
 

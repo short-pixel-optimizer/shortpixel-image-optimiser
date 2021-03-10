@@ -318,7 +318,7 @@ class ApiController
       $settings = \wpSPIO()->settings();
       $fs = \wpSPIO()->fileSystem();
 
-      $counter = $savedSpace =  $originalSpace =  $optimizedSpace /* = $averageCompression */ = 0;
+      $counter = $savedSpace =  $originalSpace =  $optimizedSpace = $fileCount /* = $averageCompression */ = 0;
       $compressionType = property_exists($item, 'compressionType') ? $item->compressionType : $settings->compressionType;
 
       if($compressionType > 0) {
@@ -348,14 +348,7 @@ class ApiController
 
           if ( $fileData->Status->Code == self::STATUS_SUCCESS ) //file was processed OK
           {
-            // @todo We want to switch to keeping improvements for all files
-            /*  if ( $counter == 0 ) { //save percent improvement for main file
-                  $percentImprovement = $fileData->PercentImprovement;
-              } else { //count thumbnails only
-                  $settings->thumbsCount = $settings->thumbsCount + 1; // @todo What is this, and why?
-              } */
-
-              //TODO la sfarsit sa faca fallback la handleDownload
+              // ** @todo Fix fromArchive, figure out how it works */
               if($archive) {
                   $downloadResult = $this->fromArchive($archive['Path'], $fileData->$fileType, $fileData->$fileSize, $fileData->OriginalSize
                 );
@@ -378,9 +371,18 @@ class ApiController
                     $originalURL = substr($fileData->OriginalURL, 0, (strpos($fileData->OriginalURL, '?'))  ); // Strip Query String from URL. If it's there!
                   }
                   $originalFile = $fs->getFile($originalURL); //basename(parse_url($fileData->OriginalURL, PHP_URL_PATH));
+
+                  // Put it in Results.
                   $originalName = $originalFile->getFileName();
                   $results[$originalName] = $downloadResult;
 
+                  // Handle Stats
+                  $savedSpace += $fileData->OriginalSize - $fileData->$fileSize;
+                  $originalSpace += $fileData->OriginalSize;
+                  $optimizedSpace += $fileData->$fileSize;
+                  $fileCount++;
+
+                  // ** Download Webp files if they are returned **/
                   if (isset($fileData->$webpType))
                   {
                     $webpName = $originalFile->getFileBase() . '.webp'; //basename(parse_url($fileData->$webpType, PHP_URL_PATH));
@@ -394,7 +396,7 @@ class ApiController
                     if ( $webpDownloadResult->apiStatus == self::STATUS_SUCCESS)
                     {
                        Log::addDebug('Downloaded Webp : ' . $fileData->$webpType);
-                       $results[$webpName] = $downloadResult;
+                       $results[$webpName] = $webpDownloadResult;
                     }
                   }
               }
@@ -411,20 +413,24 @@ class ApiController
               } */
               else {
                   self::cleanupTemporaryFiles($archive, $tempFiles);
-                  //return array("Status" => $downloadResult->status, "Code" => $downloadResult['Code'], "Message" => $downloadResult['Message']);
-                  return $downloadResult;
+                //  return $downloadResult;
               }
 
           }
           else { //there was an error while trying to download a file
               $tempFiles[$counter] = "";
           }
-
-        //  $results[$counter] = array('file' => $fileData->$fileType, 'optimizedSize' => $fileData->$fileSize, 'originalSize' => $fileData->OriginalSize, 'originalURL' => $fileData->OriginalURL);
-
-
           $counter++;
       }
+
+      // Update File Stats
+      $this->_settings->savedSpace += $savedSpace;
+      $this->_settings->fileCount += $fileCount;
+      //new average counting
+      $this->_settings->totalOriginal += $originalSpace;
+      $this->_settings->totalOptimized += $optimizedSpace;
+
+      Log::addTemp("Adding $fileCount files to stats, $originalSpace went to $optimizedSpace ($savedSpace)");
 
       // *******************************
 

@@ -17,6 +17,8 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
     protected $in_db = false;
     protected $is_stub = false;
 
+    protected $is_main_file = true;
+
 
     public function __construct(int $id)
     {

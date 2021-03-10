@@ -50,6 +50,10 @@ window.ShortPixelProcessor =
        11: 'RESPONSE_WARNING', // *not used*
        12: 'RESPONSE_ERROR_DELAY', // when an error is serious enough to delay things.*not used*
     },
+    aStatusError: {  // AjaxController / optimizeController - when an error occured
+        '-1': 'PROCESSOR_ACTIVE', // active in another window
+        '-2': 'NONCE_FAILED',
+    },
 
     Load: function()
     {
@@ -63,10 +67,8 @@ window.ShortPixelProcessor =
         this.nonce['ajaxRequest'] = ShortPixelProcessorData.nonce_ajaxrequest;
 
         //console.log(ShortPixelProcessorData);
-        console.log('remoteSecret ' + this.remoteSecret + ', localsecret: ' + this.localSecret);
+        console.log('remoteSecret ' + this.remoteSecret + ', localsecret: ' + this.localSecret + ' bulk? ' + this.isBulkPage);
         //this.localSecret = null;
-console.log(ShortPixelProcessorData);
-
 
         if (typeof ShortPixelScreen == 'undefined')
         {
@@ -77,7 +79,6 @@ console.log(ShortPixelProcessorData);
           this.screen = new ShortPixelScreen({}, this);
 
         this.tooltip = new ShortPixelToolTip({}, this);
-
 
         // Always load worker, also used for UI actions.
         this.LoadWorker();
@@ -209,13 +210,13 @@ console.log(ShortPixelProcessorData);
            if (typeof args.defer !== 'undefined' && args.defer)
            {
                 this.timesEmpty++;
+                console.log('Stop, defer wait :' + (this.deferInterval * this.timesEmpty));
                 this.SetInterval(this.deferInterval * this.timesEmpty); //set a long interval
                 this.RunProcess(); // queue a run once
                 this.SetInterval(-1); // restore interval
            }
         }
-
-
+        this.tooltip.ProcessEnd();
     },
     ResumeProcess: function()
     {
@@ -238,20 +239,33 @@ console.log(ShortPixelProcessorData);
 
       var data = message.data;
 
-      if (data.status == false)
-      {
-          console.log('Network Error ' + data.message);
-      }
-      else if (data.status == true && data.response) // data status is from shortpixel worker, not the response object
+      if (data.status == true && data.response) // data status is from shortpixel worker, not the response object
       {
           var response = data.response;
           if ( response.callback)
           {
               console.log('Running callback : ' + response.callback);
-              var event = new CustomEvent(response.callback, {detail: response});
-              window.dispatchEvent(event);
-              return; // no Handle on callback.
+              var event = new CustomEvent(response.callback, {detail: response, cancelable: true});
+              var checkPrevent = window.dispatchEvent(event);
+
+              if (! checkPrevent) // if event is preventDefaulted, stop checking response
+                return;
           }
+          if ( response.status == false)
+          {
+             // This is error status, or a usual shutdown, i.e. when process is in another browser.
+             var error = this.aStatusError[response.error];
+             if (error == 'PROCESSOR_ACTIVE')
+             {
+               this.Debug(response.message);
+               this.StopProcess();
+             }
+             if (error == 'NONCE_FAILED')
+             {
+               this.Debug('Nonce Failed'), 'error';
+             }
+
+           }
 
            // Check the screen if we are custom or media ( or bulk ) . Check the responses for each of those.
            if (typeof response.custom == 'object' && response.custom !== null)
@@ -282,6 +296,12 @@ console.log(ShortPixelProcessorData);
                   this.screen.GeneralResponses(response.responses);
               }
            }
+      }
+      else
+      {
+            // This is a work error / http fail
+            this.Debug(data.message, 'error');
+
       }
       var event = new CustomEvent('shortpixel.processor.responseHandled', { detail : {paused: this.isManualPaused}});
       window.dispatchEvent(event);
@@ -365,13 +385,13 @@ console.log(ShortPixelProcessorData);
           else if (qstatus == 'QUEUE_EMPTY')
           {
               console.debug('Processor: Empty Queue');
-              this.tooltip.ProcessEnd();
+              //this.tooltip.ProcessEnd();
               this.StopProcess({ defer: true });
           }
           else if (qstatus == "PREPARING_DONE")
           {
               console.log('Processor: Preparing is done');
-              this.tooltip.ProcessEnd();
+              //this.tooltip.ProcessEnd();
               this.StopProcess();
 
               //if (typeof this.screen.preparingDone == 'function')
@@ -389,11 +409,26 @@ console.log(ShortPixelProcessorData);
       var nonce = this.nonce['itemview'];
       this.worker.postMessage({action: 'getItemView', 'nonce' : this.nonce['itemview'], 'data': { 'id' : data.id, 'type' : data.type, 'callback' : 'shortpixel.RenderItemView'}});
     },
+
     AjaxRequest: function(data)
     {
        var localWorker = false;
 
        this.worker.postMessage({action: 'ajaxRequest', 'nonce' : this.nonce['ajaxRequest'], 'data': data });
+    },
+    Debug: function (message, messageType)
+    {
+      if (typeof messageType == 'undefined')
+        messageType = 'debug';
+
+      if (messageType == 'debug')
+      {
+         console.debug(message);
+      }
+      if (messageType == 'error')
+      {
+          console.error(message)
+      }
 
     }
 

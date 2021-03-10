@@ -2949,6 +2949,58 @@ Log::addDebug('GetQuotaInformation Result ', $dataArray);
         return $result;
     }
 
+    /** Removes webp and backup from specified paths
+      * @todo Implement Filesystem controller on this.
+    */
+    public function deleteBackupsAndWebPs($paths) {
+        /**
+         * Passing a truthy value to the filter will effectively short-circuit this function.
+         * So third party plugins can handle deletion by there own.
+         */
+        if(apply_filters('shortpixel_skip_delete_backups_and_webps', false, $paths)){
+            return;
+        }
+
+        $fs = \wpSPIO()->filesystem();
+
+        $backupFolder = trailingslashit($this->getBackupFolder($paths[0]));
+        Log::addDebug('Removing from Backup Folder - ' . $backupFolder);
+        foreach($paths as $path) {
+            $pos = strrpos($path, ".");
+            $pathFile = $fs->getFile($path);
+            if ($pos !== false) {
+                //$webpPath = substr($path, 0, $pos) . ".webp";
+                //echo($webpPath . "<br>");
+                $file = $fs->getFile(substr($path, 0, $pos) . ".webp");
+                $file->delete();
+                $file = $fs->getFile(substr($path, 0, $pos) . "@2x.webp");
+                $file->delete();
+
+                // Check for double extension. Everything is going, so delete if it's not us anyhow.
+                $file = $fs->getFile($path . '.webp');
+                $file->delete();
+
+                $file = $fs->getFile($path . '.@2xwebp');
+                $file->delete();
+            }
+            //delte also the backups for image and retina correspondent
+            $fileName = $pathFile->getFileName();
+            $extension = $pathFile->getExtension();
+
+            $backupFile = $fs->getFile($backupFolder . $fileName);
+            if ($backupFile->exists())
+              $backupFile->delete();
+
+            //@unlink($backupFolder . $fileName);
+
+            $backupFile = $fs->getFile($backupFolder . preg_replace("/\." . $extension . "$/i", '@2x.' . $extension, $fileName));
+            if ($backupFile->exists() && $backupFile->is_file())
+              $backupFile->delete();
+
+//            @unlink($backupFolder . preg_replace("/\." . $extension . "$/i", '@2x.' . $extension, $fileName));
+        }
+    }
+
 //
     /**
     * @hook manage_media_columns
@@ -3111,6 +3163,8 @@ Log::addDebug('GetQuotaInformation Result ', $dataArray);
         } elseif(is_array($_wp_additional_image_sizes)) {
             $sizes = array_merge($sizes, $_wp_additional_image_sizes);
         }
+
+        $sizes = apply_filters('shortpixel/settings/image_sizes', $sizes);
         return $sizes;
     } */
 

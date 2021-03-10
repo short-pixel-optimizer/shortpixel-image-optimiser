@@ -28,6 +28,7 @@ var ShortPixelScreen = function (MainScreen, processor)
       var processData = ShortPixelProcessorData.startData;
       var initMedia = processData.media.stats;
       var initCustom = processData.custom.stats;
+      var initTotal = processData.total.stats;
       isPreparing = false;
       isRunning = false;
       isFinished = false;
@@ -39,7 +40,9 @@ var ShortPixelScreen = function (MainScreen, processor)
       else if (initMedia.is_finished == true || initCustom.is_finished == true )
         isFinished = true;
 
-      if (isPreparing)
+
+
+  /*    if (isPreparing)
       {
         this.SwitchPanel('selection');
       }
@@ -52,11 +55,18 @@ var ShortPixelScreen = function (MainScreen, processor)
       {
          //this.SwitchPanel('process');  // needs to run a process and get back stats another try.
       }
+      else if (initMedia.in_queue > 0)
+      {
+        this.UpdateStats(initMedia, 'media'); // write UI.
+        this.UpdateStats(initCustom, 'custom');
+        this.UpdateStats(initTotal, 'total');
+        this.SwitchPanel('summary');
+      }
       else
       {
-         this.processor.StopProcess(); // don't go peeking in the queue.
+         this.processor.StopProcess(); // don't go peeking in the queue. // this doesn't work since its' before the init Worker.
          this.SwitchPanel('dashboard');
-      }
+      } */
 console.log(initMedia, isPreparing, isRunning, isFinished);
 
   }
@@ -175,15 +185,18 @@ console.log(initMedia, isPreparing, isRunning, isFinished);
   this.StartPrepare = function()
   {
      console.log('Start Bulk');
-     var data = {screen_action: 'createBulk', callback: 'shortpixel.prepareBulk'}; //
+     var data = {screen_action: 'createBulk', callback: 'shortpixel.PrepareBulk'}; //
 
      // Prepare should happen after selecting what the optimize.
-     window.addEventListener('shortpixel.prepareBulk', this.PrepareBulk.bind(this), {'once': true} );
+     window.addEventListener('shortpixel.PrepareBulk', this.PrepareBulk.bind(this), {'once': true} );
      this.processor.AjaxRequest(data);
   }
-  this.PrepareBulk = function()
+  this.PrepareBulk = function(event)
   {
       //Remove pause
+      if (typeof event == 'object')
+        event.preventDefault(); // stop handler in checkResponse.
+        
       this.SwitchPanel('selection');
       this.ToggleLoading(false);
       this.processor.SetInterval(500); // do this faster.
@@ -194,6 +207,7 @@ console.log(initMedia, isPreparing, isRunning, isFinished);
         //this.processor.isManualPaused = false; // force run
       }
       this.processor.RunProcess();
+      return false;
 
       // Run process.run process from now for prepare ( until prepare done? )
   }
@@ -275,6 +289,19 @@ console.log(initMedia, isPreparing, isRunning, isFinished);
 
 
   }
+  this.DoSelection = function() // action to update response.
+  {
+      var data = {screen_action: 'applyBulkSelection'}; //
+      data.callback = 'shortpixel.applySelectionDone';
+
+      data.mediaActive = (document.getElementById('media_checkbox').checked) ? true : false;
+      data.customActive = (document.getElementById('custom_checkbox').checked) ? true : false;
+      data.webpActive = (document.getElementById('webp_checkbox').checked) ? true : false;
+
+      window.addEventListener('shortpixel.applySelectionDone', function (e) { this.SwitchPanel('summary'); }.bind(this) , {'once': true} );
+      this.processor.AjaxRequest(data);
+
+  }
   this.UpdateMessage = function(id, message)
   {
      console.log('UpdateMessage');
@@ -349,11 +376,12 @@ console.log(initMedia, isPreparing, isRunning, isFinished);
 
           });
       }
-  },
+  }
   this.HandleError = function(response)
   {
     console.error(response);
-  },
+  }
+
   this.StartBulk = function() // Open panel action
   {
       console.log('Starting to Bulk!');
