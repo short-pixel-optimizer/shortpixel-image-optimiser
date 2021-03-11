@@ -3,6 +3,8 @@ namespace ShortPixel\Helper;
 
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
+use ShortPixel\Controller\FileSystemController as FileSystemController;
+use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
 
 
 class InstallHelper
@@ -27,7 +29,8 @@ class InstallHelper
 
       \WpShortPixelDb::checkCustomTables();
 
-      Controller\AdminNoticesController::resetAllNotices();
+      AdminNoticesController::resetAllNotices();
+
 
     /*  Controller\AdminNoticesController::resetCompatNotice();
       Controller\AdminNoticesController::resetAPINotices();
@@ -51,7 +54,7 @@ class InstallHelper
       \WpShortPixel::alterHtaccess(true);
 
     // save remove.
-    $fs = new Controller\FileSystemController();
+    $fs = new FileSystemController();
     $log = $fs->getFile(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
     if ($log->exists())
       $log->delete();
