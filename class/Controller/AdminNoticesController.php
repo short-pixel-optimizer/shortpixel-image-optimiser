@@ -276,7 +276,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 
       if(!is_array($currentStats) || isset($_GET['checkquota']) || isset($currentStats["quotaData"])) {
           //$shortpixel->getQuotaInformation();
-          $quataController->getQuota();
+          $quotaController->getQuota();
       }
 
 

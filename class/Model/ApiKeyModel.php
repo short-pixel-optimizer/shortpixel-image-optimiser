@@ -4,6 +4,7 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notice;
 
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
+use ShortPixel\Controller\QuotaController as QuotaController;
 
 class ApiKeyModel extends \ShortPixel\Model
 {
@@ -280,7 +281,13 @@ class ApiKeyModel extends \ShortPixel\Model
   // Does remote Validation of key. In due time should be replaced with something more lean.
   private function remoteValidate($key)
   {
-    return \wpSPIO()->getShortPixel()->getQuotaInformation($key, true, true);
+//    return \wpSPIO()->getShortPixel()->getQuotaInformation($key, true, true);
+   $qControl = QuotaController::getInstance();
+   $quotaData = $qControl->remoteValidateKey($key);
+
+   return $quotaData;
+
+
   }
 
   protected function checkRedirect()

@@ -107,14 +107,24 @@ class QuotaController
         $settings->quotaExceeded = 0;
     }
 
-    private function getRemoteQuota()
+    public function remoteValidateKey($key)
     {
-        $keyControl = ApiKeyController::getInstance();
-        $apiKey = $keyControl->forceGetApiKey();
+        return $this->getRemoteQuota($key, true);
+    }
+
+
+    private function getRemoteQuota($apiKey = false, $validate = false)
+    {
+        if (! $apiKey && ! $validate) // validation is done by apikeymodel, might result in a loop.
+        {
+          $keyControl = ApiKeyController::getInstance();
+          $apiKey = $keyControl->forceGetApiKey();
+        }
+        if(is_null($apiKey)) {
+          $apiKey = $settings->apiKey;
+        }
 
         $settings = \wpSPIO()->settings();
-
-          if(is_null($apiKey)) { $apiKey = $settings->apiKey; }
 
           if($settings->httpProto != 'https' && $settings->httpProto != 'http') {
               $settings->httpProto = 'https';
@@ -131,15 +141,7 @@ class QuotaController
               $args['body']['useragent'] = "Agent" . urlencode($_SERVER['HTTP_USER_AGENT']);
               $argsStr .= "&useragent=Agent".$args['body']['useragent'];
           //}
-          /* QuotaDats is not for license checking.
-          if($validate) {
-              $args['body']['DomainCheck'] = get_site_url();
-              $args['body']['Info'] = get_bloginfo('version') . '|' . phpversion();
-              $imageCount = WpShortPixelMediaLbraryAdapter::countAllProcessable($settings);
-              $args['body']['ImagesCount'] = $imageCount['mainFiles'];
-              $args['body']['ThumbsCount'] = $imageCount['totalFiles'] - $imageCount['mainFiles'];
-              $argsStr .= "&DomainCheck={$args['body']['DomainCheck']}&Info={$args['body']['Info']}&ImagesCount={$imageCount['mainFiles']}&ThumbsCount={$args['body']['ThumbsCount']}";
-          } */
+
           $args['body']['host'] = parse_url(get_site_url(),PHP_URL_HOST);
           $argsStr .= "&host={$args['body']['host']}";
           if(strlen($settings->siteAuthUser)) {
@@ -165,7 +167,7 @@ class QuotaController
 
           //some hosting providers won't allow https:// POST connections so we try http:// as well
           if(is_wp_error( $response )) {
-              //echo("protocol " . $this->_settings->httpProto . " failed. switching...");
+
               $requestURL = $settings->httpProto == 'https' ?
                   str_replace('https://', 'http://', $requestURL) :
                   str_replace('http://', 'https://', $requestURL);
@@ -237,13 +239,6 @@ class QuotaController
           else
               $settings->quotaExceeded = 1;//activate quota limiting
 
-          //if a non-valid status exists, delete it
-          // @todo Clarify the reason for this statement
-          /*$lastStatus = $this->_settings->bulkLastStatus;
-          if($lastStatus && $lastStatus['Status'] == ShortPixelAPI::STATUS_NO_KEY) {
-              $settings->bulkLastStatus = null;
-          } */
-
           $dataArray = array(
               "APIKeyValid" => true,
               "APICallsMade" => number_format($data->APICallsMade) . __(' images','shortpixel-image-optimiser'),
@@ -260,9 +255,6 @@ class QuotaController
           );
 
           // Why is this?
-        //  $crtStats = is_array($settings->currentStats) ? array_merge( $settings->currentStats, $dataArray) : $dataArray;
-        //  $crtStats['optimizePdfs'] = $settings->optimizePdfs;
-          //$settings->currentStats = $crtStats;
 
           Log::addDebug('GetQuotaInformation Result ', $dataArray);
           return $dataArray;

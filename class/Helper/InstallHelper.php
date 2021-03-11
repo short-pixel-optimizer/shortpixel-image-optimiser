@@ -30,22 +30,12 @@ class InstallHelper
       \WpShortPixelDb::checkCustomTables();
 
       AdminNoticesController::resetAllNotices();
-
-
-    /*  Controller\AdminNoticesController::resetCompatNotice();
-      Controller\AdminNoticesController::resetAPINotices();
-      Controller\AdminNoticesController::resetQuotaNotices();
-      Controller\AdminNoticesController::resetIntegrationNotices();
-*/
       \WPShortPixelSettings::onActivate();
-
       OptimizeController::activatePlugin();
-
   }
 
   public static function deactivatePlugin()
   {
-
     \wpSPIO()->settings()::onDeactivate();
 
     $env = wpSPIO()->env();
@@ -58,7 +48,6 @@ class InstallHelper
     $log = $fs->getFile(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
     if ($log->exists())
       $log->delete();
-
 
   }
 
