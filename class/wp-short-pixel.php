@@ -1503,105 +1503,7 @@ class WPShortPixel {
         $result["BulkMsg"] = $this->bulkProgressMessage($deltaBulkPercent, $minutesRemaining);
     }
 
-    /** Check for unlisted thumbsnail settings and checks if this file has unlisted thumbs present.
-    * Will update meta. if any are found.
-    * @param ShortPixelMetaFacade $itemHandler ShortpixelMetaFacade item handler.
-    * @return int Number of additions to the sizes Metadata.
-    * @todo This function should Dis/pear. addUnlistedThumbs is now part of image model, to be called via proper controller.
-    */
-    private function addUnlistedThumbs($itemHandler)
-    {
-      // must be media library, setting must be on.
-      if($itemHandler->getType() != ShortPixelMetaFacade::MEDIA_LIBRARY_TYPE
-         || ! $this->_settings->optimizeUnlisted) {
-        return 0;
-      }
 
-      $itemHandler->removeSPFoundMeta(); // remove all found meta. If will be re-added here every time.
-      $meta = $itemHandler->getMeta();
-
-      Log::addDebug('Finding Thumbs on path' . $meta->getPath());
-      //$thumbs = WpShortPixelMediaLbraryAdapter::findThumbs($meta->getPath());
-
-      $fs = \wpSPIO()->fileSystem();
-      $mainFile = $fs->getFile($meta->getPath());
-
-      // Find Thumbs returns *full file path*
-      $foundThumbs = WpShortPixelMediaLbraryAdapter::findThumbs($mainFile->getFullPath());
-
-        // no thumbs, then done.
-      if (count($foundThumbs) == 0)
-      {
-        return 0;
-      }
-      //first identify which thumbs are not in the sizes
-      $sizes = $meta->getThumbs();
-      $mimeType = false;
-
-      $allSizes = array();
-      $basepath = $mainFile->getFileDir()->getPath();
-
-      foreach($sizes as $size) {
-        // Thumbs should have filename only. This is shortpixel-meta ! Not metadata!
-        // Provided filename can be unexpected (URL, fullpath), so first do check, get filename, then check the full path
-        $sizeFileCheck = $fs->getFile($size['file']);
-        $sizeFilePath = $basepath . $sizeFileCheck->getFileName();
-        $sizeFile = $fs->getFile($sizeFilePath);
-
-        //get the mime-type from one of the thumbs metas
-        if(isset($size['mime-type'])) { //situation from support case #9351 Ramesh Mehay
-            $mimeType = $size['mime-type'];
-        }
-        $allSizes[] = $sizeFile;
-      }
-
-      foreach($foundThumbs as $id => $found) {
-          $foundFile = $fs->getFile($found);
-
-          foreach($allSizes as $sizeFile) {
-              if ($sizeFile->getExtension() !== $foundFile->getExtension())
-              {
-                $foundThumbs[$id] = false;
-              }
-              elseif ($sizeFile->getFileName() === $foundFile->getFileName())
-              {
-                  $foundThumbs[$id] = false;
-              }
-          }
-      }
-          // add the unfound ones to the sizes array
-          $ind = 1;
-          $counter = 0;
-          // Assumption:: there is no point in adding to this array since findThumbs should find *all* thumbs that are relevant to this image.
-          /*while (isset($sizes[ShortPixelMeta::FOUND_THUMB_PREFIX . str_pad("".$start, 2, '0', STR_PAD_LEFT)]))
-          {
-            $start++;
-          } */
-      //    $start = $ind;
-
-          foreach($foundThumbs as $found) {
-              if($found !== false) {
-                  Log::addDebug('Adding File to sizes -> ' . $found);
-                  $size = getimagesize($found);
-                  Log::addDebug('Add Unlisted, add size' . $found );
-
-                  $sizes[ShortPixelMeta::FOUND_THUMB_PREFIX . str_pad("".$ind, 2, '0', STR_PAD_LEFT)]= array( // it's a file that has no corresponding thumb so it's the WEBP for the main file
-                      'file' => ShortPixelAPI::MB_basename($found),
-                      'width' => $size[0],
-                      'height' => $size[1],
-                      'mime-type' => $mimeType
-                  );
-                  $ind++;
-                  $counter++;
-              }
-          }
-          if($ind > 1) { // at least one thumbnail added, update
-              $meta->setThumbs($sizes);
-              $itemHandler->updateMeta($meta);
-          }
-
-        return $counter;
-  } // addUnlistedThumbs
 
     private function sendToProcessing($itemHandler, $compressionType = false, $onlyThumbs = false) {
         //conversion of PNG 2 JPG for existing images
@@ -3695,6 +3597,13 @@ Log::addDebug('GetQuotaInformation Result ', $dataArray);
                 $file->delete();
                 $file = $fs->getFile(substr($path, 0, $pos) . "@2x.webp");
                 $file->delete();
+
+                // Check for double extension. Everything is going, so delete if it's not us anyhow.
+                $file = $fs->getFile($path . '.webp');
+                $file->delete();
+
+                $file = $fs->getFile($path . '.@2xwebp');
+                $file->delete();
             }
             //delte also the backups for image and retina correspondent
             $fileName = $pathFile->getFileName();
@@ -3991,6 +3900,8 @@ Log::addDebug('GetQuotaInformation Result ', $dataArray);
         } elseif(is_array($_wp_additional_image_sizes)) {
             $sizes = array_merge($sizes, $_wp_additional_image_sizes);
         }
+
+        $sizes = apply_filters('shortpixel/settings/image_sizes', $sizes);
         return $sizes;
     }
 

@@ -2,9 +2,9 @@
 Contributors: ShortPixel
 Tags: convert webp, optimize images, image optimization, resize, compressor, image, compression, optimize, image optimiser, image compression, compress pdf, compress jpg, compress png, performance, photography, smush, scale, pictures
 Requires at least: 3.2.0
-Tested up to: 5.5.1
+Tested up to: 5.7
 Requires PHP: 5.3
-Stable tag: 4.21.1
+Stable tag: 4.21.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -17,7 +17,8 @@ Speed up your website & boost your SEO by compressing old & new images and PDFs.
 Increase your website's SEO ranking, number of visitors and ultimately your sales by optimising any image or PDF document on your website.
 ShortPixel is an easy to use, lightweight, install-and-forget-about-it <a href="https://shortpixel.com" target="_blank">image optimization</a> plugin that can compress all your past images and PDF documents with a single click. New images are automatically resized/rescaled and optimized on the fly, in the background. It's also compatible with any gallery, slider or ecommerce plugin.
 
-**Ready for a quick DEMO? Test <a href="https://sandboxwordpress.com/?htmldata=https://shortpixel.com/sp.html&slug=shortpixel-image-optimiser&redirect=plugins.php&title=Test%20SHORTPIXEL%20Now!&ga=UA-55918546-1" target="_blank">here</a> or <a href="https://wpsandbox.net/" target="_blank">here</a>.**
+**Ready for a quick DEMO? Test our plugin <a href="https://wpsandbox.net/" target="_blank">here</a>.**
+Or you can create a staging copy of your site using <a href="https://wp-staging.com/" target="_blank">WP Staging</a> and test it there.
 
 Short Pixel uses minimal resources and works well with any shared, cloud, VPS or dedicated web hosting. It can optimize any image you have on your website even the images that aren't listed in Media Library like those in galleries like <a href="https://wordpress.org/plugins/nextgen-gallery/" target="_blank">NextGEN</a>, <a href="https://wordpress.org/plugins/modula-best-grid-gallery/" target="_blank">Modula</a> or added directly via FTP!
 
@@ -29,7 +30,7 @@ Make an instant <a href="http://shortpixel.com/image-compression-test" target="_
 
 **Why is ShortPixel the best choice when it comes to image optimization or PDF compression?**
 
-* popular plugin with over 200,000 active installations - according to WordPress
+* popular plugin with over 300,000 active installations - according to WordPress
 * compress JPG (and its variations JPEG, JPEG 2000, JPEG XR), PNG, GIF (still or animated) images and also PDF documents
 * option to freely convert any JPEG, PNG or GIF (even animated ones!) to **WebP** for more Google love. <a href="http://blog.shortpixel.com/how-webp-images-can-speed-up-your-site/" target="_blank">How to enable WebP?</a>
 * option to automatically convert PNG to JPG if that will result in smaller images. Ideal for large images in PNG format
@@ -256,6 +257,12 @@ filters the URLs that will be sent to optimisation, `$URLs` is a plain array;
 `apply_filters('shortpixel/db/chunk_size', $chunk);`
 the `$chunk` is the value ShortPixel chooses to use as number of selected records in one query (based on total table size), some hosts work better with a different value;
 
+`apply_filters('shortpixel/backup/paths', $PATHs, $mainPath);`
+filters the array of paths of the images sent for backup and can be used to exclude certain paths/images/thumbs from being backed up, based on the image path. `$mainPath` is the path of the main image, while `$PATHs` is an array with all files to be backed up (including thumbnails);
+
+`apply_filters('shortpixel/settings/image_sizes', $sizes);`
+filters the array (`$sizes`) of image sizes which can be excluded from processing (displayed in the plugin Advanced settings).
+
 In order to define custom thumbnails to be picked up by the optimization you have two options, both comma separated defines:
 
 `define('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES', '_tl,_tr');`
@@ -299,6 +306,16 @@ Hide the Cloudflare settings by defining these constants in wp-config.php:
 9. Check other optimized images status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+= 4.21.2 =
+
+Release date March 15th, 2021
+* New: added 2 new filters, one for the backup paths and one for the full list of image sizes displayed by the plugin in the Advanced settings;
+* Fix: png2jpg wouldn't update post_mime_type to image/jpeg when converting;
+* Fix: replaced Get_home_path in GetBackupDirectory to use our solution;
+* Fix: unlisted images were not working properly when adding an unlisted image after optimizing other unlisted images;
+* Fix: double WebP path files (e.g. filename.jpg.webp) will now be removed correctly when the original image is deleted;
+* Tweak: various updates to the readme file;
+* Language: 0 new strings added, 0 updated, 0 fuzzed, and 0 obsoleted.
 
 = 4.21.1 =
 

@@ -210,10 +210,10 @@ class ImageModel extends \ShortPixel\Model
 
     }
 
-    private function addUnlistedThumbs()
+    public function addUnlistedThumbs()
     {
-      // @todo weak call. See how in future settings might come via central provider.
-      $settings = new \WPShortPixelSettings();
+      $settings = \wpSPIO()->settings();
+      $fs = \wpSPIO()->filesystem();
 
       // must be media library, setting must be on.
       if($this->facade->getType() != \ShortPixelMetaFacade::MEDIA_LIBRARY_TYPE
@@ -222,17 +222,24 @@ class ImageModel extends \ShortPixel\Model
       }
 
       $this->facade->removeSPFoundMeta(); // remove all found meta. If will be re-added here every time.
-      $meta = $this->meta; //$itemHandler->getMeta();
+      $meta = $this->facade->getMeta(true); // Important meta needs RELOADING here. //$itemHandler->getMeta();
 
-      Log::addDebug('Finding Thumbs on path' . $meta->getPath());
-      $thumbs = \WpShortPixelMediaLbraryAdapter::findThumbs($meta->getPath());
+      //$path = $meta->getPath();
+      if ($this->is_scaled)
+        $pathFile = $this->original_file;
+      else
+        $pathFile = $this->file;
 
-      $fs = \wpSPIO()->filesystem();
-      $mainFile = $this->file;
+      Log::addDebug('Finding Thumbs on path' . $pathFile->getFullPath());
+//      $thumbs = \WpShortPixelMediaLbraryAdapter::findThumbs($pathFile->getFullPath());
+
+      /*$fs = \wpSPIO()->filesystem();
+      $mainFile = $this->file; */
 
       // Find Thumbs returns *full file path*
-      $foundThumbs = \WpShortPixelMediaLbraryAdapter::findThumbs($mainFile->getFullPath());
+      $foundThumbs = \WpShortPixelMediaLbraryAdapter::findThumbs($pathFile->getFullPath());
 
+      //Log::addTemp('Found Thumbs', $foundThumbs);
         // no thumbs, then done.
       if (count($foundThumbs) == 0)
       {
@@ -240,10 +247,11 @@ class ImageModel extends \ShortPixel\Model
       }
       //first identify which thumbs are not in the sizes
       $sizes = $meta->getThumbs();
+
       $mimeType = false;
 
       $allSizes = array();
-      $basepath = $mainFile->getFileDir()->getPath();
+      $basepath = $pathFile->getFileDir()->getPath();
 
       foreach($sizes as $size) {
         // Thumbs should have filename only. This is shortpixel-meta ! Not metadata!

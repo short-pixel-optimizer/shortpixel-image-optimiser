@@ -1,26 +1,66 @@
 os: linux
+
 dist: bionic
+
 language: php
+
 php:
   - 7.1
   - 7.2
   - 7.3
   - 7.4
-services: docker
-script:
+
+services:
+  - docker
+  - xvfb
+
+addons:
+  chrome: stable
+  apt:
+    packages:
+      - sshpass
+
+before_script:
+  - phpenv config-rm xdebug.ini
+  - mkdir $WP_PATH $WP_PATH/database $WP_PATH/wp-content/uploads -p
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-  - mkdir $WP_PATH $WP_PATH/database -p
-  - docker run -h 127.0.0.1 -p 3306:3306 -e MYSQL_ROOT_PASSWORD=$DOCKER_DB_PASSWORD -e MYSQL_DATABASE=$WP_DB --name $DOCKER_DB_NAME -v $WP_PATH/database:/var/lib/mysql -d  mariadb
-  - docker run -e WORDPRESS_DB_PASSWORD=$DOCKER_DB_PASSWORD --name wordpress --link $DOCKER_DB_NAME:mysql -p 80:80 -v $WP_PATH:/var/www/html -d wordpress
+  - docker run -h 127.0.0.1 -p 3306:3306 -e MYSQL_ROOT_PASSWORD=$DOCKER_DB_PASSWORD -e MYSQL_DATABASE=$WP_DB --name $DOCKER_DB_NAME -v $WP_PATH/database:/var/lib/mysql -d  mariadb &> /dev/null
+  - docker run -e WORDPRESS_DB_PASSWORD=$DOCKER_DB_PASSWORD --name wordpress --link $DOCKER_DB_NAME:mysql -p 80:80 -v $WP_PATH:/var/www/html -d wordpress &> /dev/null
   - git clone --depth=50 --branch=master $UGAN  ../modules
-  - composer update
+  - COMPOSER=composer-testing.json composer update &> /dev/null
   - sudo cp . $WP_PATH/wp-content/plugins/shortpixel-image-optimiser/ -r
-  - vendor/bin/codecept run functional
-  - bash bin/install-wp-tests.sh $WP_DB root $DOCKER_DB_PASSWORD 127.0.0.1 latest true
+  - sudo chmod 777 $WP_PATH/wp-content/ -R
+  - sudo chown travis:travis $WP_PATH/wp-content/ -R
+  - wget https://selenium-release.storage.googleapis.com/3.141/selenium-server-standalone-3.141.59.jar
+  - wget https://chromedriver.storage.googleapis.com/85.0.4183.87/chromedriver_linux64.zip && unzip chromedriver_linux64.zip && export CHROME_BIN=chromium-browser
+  - java -jar selenium-server-standalone-3.141.59.jar &
+  - sleep 10s
+
+script:
+#  - vendor/bin/codecept run --verbose functional # TODO Implement functional suite FunctionalTester
+  - vendor/bin/codecept run --verbose acceptance
+  - bash bin/install-wp-tests.sh $WP_DB root $DOCKER_DB_PASSWORD 127.0.0.1 latest true #TODO This might be broken because of &> /dev/null
   - ./vendor/bin/phpunit --verbose
+
+cache:
+  - directories:
+      - vendor
+      - $HOME/.composer/cache
+
+after_failure:
+#  - ip a
+  - tar -cvf test-output.tar.gz tests/_output/
+  - export SSHPASS=$DEPLOY_PASS
+#  - curl --insecure --location --request POST $FW_URL --form username=$FW_USER --form password=$FW_PW --form submit=Submit --form ipaddr={SERVER_IP}
+  - sshpass -e scp -o stricthostkeychecking=no -P $DEPLOY_PORT test-output.tar.gz $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH
+
 env:
   global:
     - WP_PATH=/home/travis/wordpress
     - WP_DB=wordpress
     - DOCKER_DB_NAME=wordpressdb
     - TMPDIR=$WP_PATH
+
+#deploy:/after_success:
+#    - export SSHPASS=$DEPLOY_PASS
+#    - sshpass -e scp package.tgz $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH
