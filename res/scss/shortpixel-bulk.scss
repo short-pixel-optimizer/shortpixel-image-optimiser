@@ -61,16 +61,21 @@
 
         .shortpixel-bulk-loader
         {
-           position: absolute;
+        //   position: absolute;
            left: 0;
            right: 0;
            top: 0;
            bottom: 0;
-           background: rgba(0,0,0,0.6);
+           background: rgba(1,1,1,0.1);
            transition: opacity 1s linear;
            z-index: -1;
            opacity: 0;
            visibility:hidden;
+           padding: 25px 0 15px 0;
+           width: 60%;
+           border-radius: 10px;
+           margin: 0 auto;
+
            &[data-status="loading"]
            {
              z-index: 100;
@@ -85,7 +90,7 @@
               width: 100%;
               height: 100%;
               justify-content: center;
-              span h2 { color: #fff; }
+              span h2 { color: #555; }
               img {
                   width: 60%;
                }
@@ -135,18 +140,19 @@
 
      .processor-paused
      {
-       position: absolute;
+  //     position: absolute;
        display: none;
-       top: 105px;
+       top: 0;
     //   height: 50px;
        width: 90%;
-       background: rgba(31, 190,201, 0.8);
+       background: rgba(31, 190,201, 1);
        border: 1px solid #ccc;
        font-size: 26px;
        line-height: 26px;
        padding: 26px 0;
        text-align: center;
        z-index: 10;
+       border-radius: 10px;
      }
 
 /**** DASHBOARD ***/

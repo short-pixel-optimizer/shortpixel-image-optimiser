@@ -142,6 +142,23 @@ class QuotaController
               $argsStr .= "&useragent=Agent".$args['body']['useragent'];
           //}
 
+          // Only used for keyValidation!
+          if($validate) {
+
+              $statsController = StatsController::getInstance();
+              $imageCount = $statsController->find('media', 'itemsTotal');
+              $thumbsCount = $statsController->find('media', 'thumbsTotal');
+
+              $args['body']['DomainCheck'] = get_site_url();
+              $args['body']['Info'] = get_bloginfo('version') . '|' . phpversion();
+          //    $imageCount = WpShortPixelMediaLbraryAdapter::countAllProcessable($this->_settings);
+              $args['body']['ImagesCount'] = $imageCount; //$imageCount['mainFiles'];
+              $args['body']['ThumbsCount'] = $thumbsCount; // $imageCount['totalFiles'] - $imageCount['mainFiles'];
+              $argsStr .= "&DomainCheck={$args['body']['DomainCheck']}&Info={$args['body']['Info']}&ImagesCount=$imageCount&ThumbsCount=$thumbsCount";
+
+
+          }
+
           $args['body']['host'] = parse_url(get_site_url(),PHP_URL_HOST);
           $argsStr .= "&host={$args['body']['host']}";
           if(strlen($settings->siteAuthUser)) {
@@ -161,6 +178,8 @@ class QuotaController
           if($settings->httpProto === 'https') {
               $args['sslverify'] = false;
           }
+          Log::addTemp('Get Quota Remote Post', $args);
+
           $response = wp_remote_post($requestURL, $args);
 
           $comm['A: ' . (number_format(microtime(true) - $time, 2))] = array("sent" => "POST: " . $requestURL, "args" => $args, "received" => $response);

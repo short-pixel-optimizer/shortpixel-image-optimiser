@@ -16,13 +16,27 @@ namespace ShortPixel;
     <div class='interface wrapper'>
 
       <div class='bulk-wrapper'>
-        <button type="button" class="button-primary" id="start-optimize" data-action="StartPrepare"><span class='dashicons dashicons-controls-play'>&nbsp;</span> Optimize</button>
+        <button type="button" class="button-primary" id="start-optimize" data-action="StartPrepare" disabled><span class='dashicons dashicons-controls-play'>&nbsp;</span> Optimize</button>
       </div>
 
       <p class='description'>Here you can (re)optimize your Media Library, image files from your theme or other media folders that you are using on your site.
 
+   </div>
 
-      <button class="button-secondary">Bulk Restore</button> (i) <button class="button-secondary">Remove Metadata</button> (I)
+   <div class='dashboard-log'>
+      [Logs] 
+
+   </div>
+
+   <div class='shortpixel-bulk-loader' id="bulk-loading" data-status='loading'>
+     <div class='loader'>
+         <span><img src="<?php echo \wpSPIO()->plugin_url('res/img/spinner2.gif'); ?>" /></span>
+         <span>
+         <h2>Please wait, ShortPixel is loading</h2>
+
+       </span>
+
+     </div>
    </div>
 
   </div>

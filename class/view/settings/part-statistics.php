@@ -174,8 +174,10 @@ $quotaData = $this->quotaData;
 </section>
 
 <?php
+if( $quotaData->onetime->total < 10000 && $quotaData->monthly->total <5000 ) {
+    $resources = wp_remote_post($this->model->httpProto . "://shortpixel.com/resources-frag");
 
-if( $view->resources !== null && $quotaData->onetime->total < 10000 && $quotaData->monthly->total <5000 ) {?>
+  ?>
 <section id="tab-resources" <?php echo ($this->display_part == 'resources') ? ' class="sel-tab" ' :''; ?>>
     <h2><a class='tab-link' href='javascript:void(0);' data-id="tab-resources"><?php _e('WP Resources','shortpixel-image-optimiser');?></a></h2>
     <div class="wp-shortpixel-tab-content" style="visibility: hidden">

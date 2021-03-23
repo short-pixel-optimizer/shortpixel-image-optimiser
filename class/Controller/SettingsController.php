@@ -194,11 +194,11 @@ class SettingsController extends \ShortPixel\Controller
          $this->view->allThumbSizes = $this->getAllThumbnailSizes();
          $this->view->averageCompression = $statsControl->getAverageCompression();
          $this->view->savedBandwidth = UiHelper::formatBytes($this->view->data->savedSpace * 10000,2);
-         /*$this->view->resources = wp_remote_post($this->model->httpProto . "://shortpixel.com/resources-frag");
+         //$this->view->resources = wp_remote_post($this->model->httpProto . "://shortpixel.com/resources-frag");
 
-         if (is_wp_error($this->view->resources))
-            $this->view->resources = null;
-        */
+         /*if (is_wp_error($this->view->resources))
+            $this->view->resources = null; */
+
          $this->view->cloudflare_constant = defined('SHORTPIXEL_CFTOKEN') ? true : false;
 
          $settings = \wpSPIO()->settings();
@@ -217,10 +217,10 @@ class SettingsController extends \ShortPixel\Controller
         $stats->mainOptimized = $statsControl->find('media', 'images');
 
         // used in part-general
-        $stats->thumbnailsToProcess = $statsControl->find('total', 'images') - $statsControl->find('total', 'items') - $statsControl->find('total', 'compressed');
+    //  $stats->thumbnailsToProcess = $statsControl->find('total', 'images') - $statsControl->find('total', 'items') - $statsControl->find('total', 'compressed');
 
+//        $stats->totalFiles = $statsControl->find('media', '')
 
-        /*$this->view->thumbnailsToProcess = isset($quotaData['totalFiles']) ? ($quotaData['totalFiles'] - $quotaData['mainFiles']) - ($quotaData['totalProcessedFiles'] - $quotaData['mainProcessedFiles']) : 0;  */
 
         $this->view->stats = $stats;
 
@@ -366,7 +366,6 @@ class SettingsController extends \ShortPixel\Controller
       // This is done before handing it off to the parent controller, to sanitize and check against model.
       protected function processPostData($post)
       {
-        Log::addDebug('raw post data', $post);
 
           if (isset($post['display_part']) && strlen($post['display_part']) > 0)
           {

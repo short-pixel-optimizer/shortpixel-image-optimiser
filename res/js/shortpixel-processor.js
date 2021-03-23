@@ -165,21 +165,27 @@ window.ShortPixelProcessor =
         if (this.worker === null)
            this.LoadWorker(); // JIT worker loading
 
+        console.timeEnd('process-delay');
+
         this.tooltip.DoingProcess();
         this.worker.postMessage({action: 'process', 'nonce' : this.nonce['process']});
 
+        console.time('process-delay');
     },
     RunProcess: function()
     {
         if (this.timer)
+        {
+          console.log('cleared timer #' + this.timer);
           window.clearTimeout(this.timer);
+        }
 
         if (! this.CheckActive())
         {
             return;
         }
-        if (this.timesEmpty >= 5)
-           this.interval = 2000 + (this.timesEmpty * 1000);  // every time it turns up empty, second slower.
+        //if (this.timesEmpty >= 5) // conflicts with the stop defer. 
+        //   this.interval = 2000 + (this.timesEmpty * 1000);  // every time it turns up empty, second slower.
 
 
         this.timer = window.setTimeout(this.Process.bind(this), this.interval);
@@ -210,8 +216,8 @@ window.ShortPixelProcessor =
            if (typeof args.defer !== 'undefined' && args.defer)
            {
                 this.timesEmpty++;
-                console.log('Stop, defer wait :' + (this.deferInterval * this.timesEmpty));
-                this.SetInterval(this.deferInterval * this.timesEmpty); //set a long interval
+                console.log('Stop, defer wait :' + (this.deferInterval * this.timesEmpty), this.timesEmpty);
+                this.SetInterval( (this.deferInterval * this.timesEmpty) ); //set a long interval
                 this.RunProcess(); // queue a run once
                 this.SetInterval(-1); // restore interval
            }

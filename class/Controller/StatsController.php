@@ -17,12 +17,10 @@ class StatsController extends \ShortPixel\Controller
         //  'processed'
     );
 
-
-
     public function __construct()
     {
          $this->model = new StatsModel();
-         $this->queue = new StatsQueue();
+      //   $this->queue = new StatsQueue();
 
     }
 
@@ -53,6 +51,7 @@ class StatsController extends \ShortPixel\Controller
             $stat = $stat->grab($params[$i]);
         }
 
+
         if (is_object($stat)) // failed to get statistic.
         {
             Log::addWarn('Statistics for this path failed', $params );
@@ -72,6 +71,7 @@ class StatsController extends \ShortPixel\Controller
              : 0;
     }
 
+    // This is not functional @todo
     public function addImage($stats)
     {
        $stats->type = 'media';
@@ -83,11 +83,8 @@ class StatsController extends \ShortPixel\Controller
        $this->model->add($stats);
     }
 
+  
 
 
-    protected function startCount()
-    {
-
-    }
 
 } // class

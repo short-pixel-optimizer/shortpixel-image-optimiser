@@ -15,18 +15,6 @@ namespace ShortPixel;
   <div class="screen-wrapper">
 
 
-    <div class='shortpixel-bulk-loader' id="bulk-loading" data-status='loading'>
-      <div class='loader'>
-          <span><img src="<?php echo \wpSPIO()->plugin_url('res/img/spinner2.gif'); ?>" /></span>
-          <span>
-          <h2>Please wait, ShortPixel is loading</h2>
-
-        </span>
-
-      </div>
-    </div>
-
-
   <?php
   //$this->loadView('bulk/part-progressbar');
   $this->loadview('bulk/part-dashboard');

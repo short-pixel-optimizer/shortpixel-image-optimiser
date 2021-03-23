@@ -212,7 +212,7 @@ class OptimizeController
         $mediaQ = $this->getQueue('media');
         $customQ = $this->getQueue('custom');
 
-        Log::addTemp("Media Queue Name " . $mediaQ->getQueueName(), $this->isBulk);
+    //    Log::addTemp("Media Queue Name " . $mediaQ->getQueueName(), $this->isBulk);
       //  Log::addtemp('CustomQ - ' . $customQ->getQueueName());
 
         // Here prevent bulk from running when running flag is off
@@ -352,7 +352,7 @@ class OptimizeController
 
            }
 
-           Log::addTemp('Going to Handle Optimize --> ', array_keys($result->files) );
+           Log::addDebug('Going to Handle Optimize --> ', array_keys($result->files) );
            if (count($result->files) > 0 )
            {
               $optimizeResult = $imageItem->handleOptimized($result->files); // returns boolean or null
@@ -535,14 +535,14 @@ class OptimizeController
 
         if (property_exists($results, 'media') &&
             is_object($results->media) &&
-            property_exists($results->media,'stats'))
+            property_exists($results->media,'stats') && is_object($results->media->stats))
         {
           $has_media = true;
         }
 
         if (property_exists($results, 'custom') &&
             is_object($results->custom) &&
-            property_exists($results->custom, 'stats'))
+            property_exists($results->custom, 'stats') && is_object($results->custom->stats))
         {
           $has_custom = true;
         }

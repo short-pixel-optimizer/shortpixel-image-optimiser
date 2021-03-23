@@ -12,6 +12,9 @@ use ShortPixel\Controller\OptimizeController as OptimizeController;
 class OtherMediaController extends \ShortPixel\Controller
 {
     private $folderIDCache;
+    private static $hasFoldersTable;
+    private static $hasCustomImages;
+
 
     protected static $instance;
 
@@ -90,13 +93,17 @@ class OtherMediaController extends \ShortPixel\Controller
     /* Check if installation has custom image, or anything. To show interface */
     public function hasCustomImages()
     {
+       if (! is_null(self::$hasCustomImages)) // prevent repeat
+         return self::$hasCustomImages;
+
        $count = $this->getFolders(['only_count' => true, 'remove_hidden' => true]);
 
        if ($count == 0)
-        return false;
+        $result = false;
       else
-        return true;
+        $result = true;
 
+      self::$hasCustomImages = $result;
     }
 
 
@@ -382,14 +389,21 @@ class OtherMediaController extends \ShortPixel\Controller
 
       private function hasFoldersTable()
       {
+        if (! is_null(self::$hasFoldersTable))
+          return self::$hasFoldersTable;
+
         global $wpdb;
         $charsetCollate = $wpdb->get_charset_collate();
 
         $foldersTable = $wpdb->get_results("SELECT COUNT(1) hasFoldersTable FROM information_schema.tables WHERE table_schema='{$wpdb->dbname}' AND table_name='{$wpdb->prefix}shortpixel_folders'");
         if(isset($foldersTable[0]->hasFoldersTable) && $foldersTable[0]->hasFoldersTable > 0) {
-            return true;
+            $result = true;
         }
-        return false;
+        else
+           $result = false;
+
+        self::$hasFoldersTable = $result;
+
       }
 
       private function createFolderTable()

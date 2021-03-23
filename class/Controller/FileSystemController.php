@@ -126,7 +126,7 @@ Class FileSystemController extends \ShortPixel\Controller
       $wp_home = get_home_path();
       $filepath = $file->getFullPath();
 
-      // Implement this bastard better here.
+      // Implement this code better here.
       $backup_subdir = \ShortPixelMetaFacade::returnSubDir($filepath);
 
       $backup_fulldir = SHORTPIXEL_BACKUP_FOLDER . '/' . $backup_subdir;

@@ -7,7 +7,7 @@ use ShortPixel\Controller\View\OtherMediaViewController as OtherMediaViewControl
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 //use ShortPixel\Controller\BulkController as BulkController;
-
+use ShortPixel\Helper\UiHelper as UiHelper;
 
 // Class for containing all Ajax Related Actions.
 class AjaxController
@@ -47,7 +47,7 @@ class AjaxController
       $bulkSecret = isset($_POST['bulk-secret']) ? sanitize_text_field($_POST['bulk-secret']) : false;
       $isBulk = isset($_POST['isBulk']) ? (bool) sanitize_text_field($_POST['isBulk'])  : false;
 
-      Log::addTemp("ProcessKey $processKey - BulkSecret $bulkSecret");
+      //Log::addTemp("ProcessKey $processKey - BulkSecret $bulkSecret");
 
 
       $is_processor = false;
@@ -395,6 +395,26 @@ class AjaxController
           }
 
         $this->send( (object) $ret);
+    }
+
+    public function ajax_getBackupFolderSize()
+    {
+        $this->checkNonce('ajax_request');
+
+        $dirObj = \wpSPIO()->filesystem()->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
+
+        $size = $dirObj->getFolderSize();
+        echo UiHelper::formatBytes($size);
+        exit();
+    }
+
+    public function ajax_proposeQuotaUpgrade()
+    {
+         $this->checkNonce('ajax_request');
+
+         $notices = AdminNoticesController::getInstance();
+         $notices->proposeUpgradeRemote();
+         exit();
     }
 
     protected function checkNonce($action)

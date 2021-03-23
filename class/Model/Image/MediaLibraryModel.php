@@ -487,6 +487,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
      if ($this->isOptimized())
      {
         update_post_meta($this->id, '_shortpixel_optimized', $this->getImprovement() );
+        update_post_meta($this->id, '_shortpixel_optdate', $this->getMeta('tsOptimized')); 
      }
   }
 
@@ -940,8 +941,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         return false;
       }
 
-      echo " I MUST CONVERT THIS <PRE>";  print_r($metadata); echo "</PRE>";
-      echo "*** EXPORT: "; var_export($metadata); echo " *** ";
+      /*echo " I MUST CONVERT THIS <PRE>";  print_r($metadata); echo "</PRE>";
+      echo "*** EXPORT: "; var_export($metadata); echo " *** "; */
        $type = isset($data['type']) ? $this->legacyConvertType($data['type']) : '';
 
        $improvement = (isset($metadata['ShortPixelImprovement']) && is_numeric($metadata['ShortPixelImprovement']) && $metadata['ShortPixelImprovement'] > 0) ? $metadata['ShortPixelImprovement'] : 0;
@@ -954,7 +955,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        $optimized_thumbnails = (isset($data['thumbsOptList']) && is_array($data['thumbsOptList'])) ? $data['thumbsOptList'] : array();
        $exifkept = (isset($data['exifKept']) && $data['exifKept']  == 1) ? true : false;
 
-       $tsOptimized = $tsAdded = time();
+       $tsAdded = time();
 
        if ($status == self::FILE_STATUS_SUCCESS)
        {
@@ -1013,7 +1014,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
               }
 
               $thumbnailObj->image_meta->tsAdded = $tsAdded;
-              $thumbnailObj->image_meta->tsOptimized = $tsOptimized;
+              if (isset($tsOptimized))
+                $thumbnailObj->image_meta->tsOptimized = $tsOptimized;
+
               $thumbnailObj->has_backup = $thumbnailObj->hasBackup();
 
               $webp = $thumbnailObj->getWebp();

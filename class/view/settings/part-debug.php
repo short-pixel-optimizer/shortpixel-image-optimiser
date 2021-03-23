@@ -1,6 +1,7 @@
 <?php
 namespace ShortPixel;
 use ShortPixel\Notices\NoticeController as Notices;
+use Shortpixel\Controller\StatsController as StatsController;
 
 ?>
 
@@ -35,6 +36,23 @@ use ShortPixel\Notices\NoticeController as Notices;
   <div class='quotadata'>
     <h3><?php _e('Quota Data', 'shortpixel'); ?></h3>
     <pre><?php var_export($this->quotaData); ?></pre>
+  </div>
+  <div  class="stats env">
+      <h3><?php _e('Stats', 'shortpixel-image-optimizer'); ?></h3>
+      <div class='flex'>
+        <?php $statsControl = StatsController::getInstance();
+        ?>
+        <span>Items</span><span><?php echo $statsControl->find('media', 'items'); ?></span>
+        <span>Thumbs</span><span><?php echo $statsControl->find('media', 'thumbs'); ?></span>
+        <span>Images</span><span><?php echo $statsControl->find('media', 'images'); ?></span>
+        <span>ItemsTotal</span><span><?php echo $statsControl->find('media', 'itemsTotal'); ?></span>
+        <span>ThumbsTotal</span><span><?php echo $statsControl->find('media', 'thumbsTotal'); ?></span>
+        <span>Month #1 </span><span><?php echo $statsControl->find('period', 'months', '1'); ?></span>
+        <span>Month #2 </span><span><?php echo $statsControl->find('period', 'months', '2'); ?></span>
+        <span>Month #3 </span><span><?php echo $statsControl->find('period', 'months', '3'); ?></span>
+        <span>Month #4 </span><span><?php echo $statsControl->find('period', 'months', '4'); ?></span>
+        <span>Custom Optimized</span><span><?php echo $statsControl->find('custom', 'items'); ?></span>
+        <span>Custom Total</span><span><?php echo $statsControl->find('custom', 'itemsTotal'); ?></span>
   </div>
 
   <h3>Tools</h3>

@@ -328,6 +328,29 @@ class DirectoryModel extends \ShortPixel\Model
     return false;
   }
 
+  //** Note, use sparingly, recursive function
+  public function getFolderSize()
+  {
+      //  \wpSPIO()->filesystem()->getFilesRecursive($this)
+        $size = 0;
+        $files = $this->getFiles();
+
+        foreach($files as $fileObj)
+        {
+            $size += $fileObj->getFileSize();
+        }
+        unset($files); //attempt at performance.
+
+        $subdirs = $this->getSubDirectories();
+
+        foreach($subdirs as $subdir)
+        {
+             $size += $subdir->getFolderSize();
+        }
+
+        return $size;
+  }
+
   /** Get this paths parent */
   public function getParent()
   {

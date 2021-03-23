@@ -467,7 +467,7 @@ var ShortPixel = function() {
     }
 
     function getBackupSize() {
-        var browseData = { 'action': 'shortpixel_get_backup_size'};
+        var browseData = { 'action': 'shortpixel_get_backup_size', nonce: ShortPixelProcessorData.nonce_ajaxrequest };
         var browseResponse = "";
         jQuery.ajax({
             type: "POST",
@@ -497,7 +497,7 @@ var ShortPixel = function() {
         if (ShortPixel.isEmailValid(jQuery('#pluginemail').val())) {
             jQuery('#pluginemail-error').css('display', 'none');
             var browseData = { 'action': 'shortpixel_new_api_key',
-                               'email': jQuery('#pluginemail').val()};
+                               'email': jQuery('#pluginemail').val(), nonce: ShortPixelProcessorData.nonce_ajaxrequest};
             jQuery.ajax({
                 type: "POST",
                 async: false,
@@ -535,7 +535,7 @@ var ShortPixel = function() {
         jQuery("#shortPixelProposeUpgradeShade").css("display", "block");
         jQuery("#shortPixelProposeUpgrade").removeClass('shortpixel-hide');
         //get proposal from server
-        var browseData = { 'action': 'shortpixel_propose_upgrade'};
+        var browseData = { 'action': 'shortpixel_propose_upgrade', nonce: ShortPixelProcessorData.nonce_ajaxrequest};
         jQuery.ajax({
             type: "POST",
             url: ShortPixel.AJAX_URL,

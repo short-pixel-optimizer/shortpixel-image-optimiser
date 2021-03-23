@@ -3,7 +3,7 @@ namespace ShortPixel\Controller;
 use ShortPixel\Notices\NoticeController as Notices;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
-use ShortPixel\Model\ApiKeyModel as ApiKeyModel;
+//use ShortPixel\Model\ApiKeyModel as ApiKeyModel;
 
 /* Controller for automatic Notices about status of the plugin.
 * This controller is bound for automatic fire. Regular procedural notices should just be queued using the Notices modules.
@@ -306,7 +306,7 @@ class AdminNoticesController extends \ShortPixel\Controller
           $month_notice = $noticeController->getNoticeByID(self::MSG_UPGRADE_MONTH);
 
           //this is for bulk page - alert on the total credits for total images
-          if( ! $bulk_is_dismissed && $env->is_bulk_page && $this->bulkUpgradeNeeded($stats)) {
+          if( ! $bulk_is_dismissed && $env->is_bulk_page && $this->bulkUpgradeNeeded()) {
               //looks like the user hasn't got enough credits to bulk process all media library
               $message = $this->getBulkUpgradeMessage(array('filesTodo' => $stats['totalFiles'] - $stats['totalProcessedFiles'],
                                                       'quotaAvailable' => max(0, $quotaData['APICallsQuotaNumeric'] + $quotaData['APICallsQuotaOneTimeNumeric'] - $quotaData['APICallsMadeNumeric'] - $quotaData['APICallsMadeOneTimeNumeric'])));
@@ -440,17 +440,19 @@ class AdminNoticesController extends \ShortPixel\Controller
 
     protected function getQuotaExceededMessage($quotaData)
     {
-      $averageCompression = \wpSPIO()->getShortPixel()->getAverageCompression();
+      $statsControl = StatsController::getInstance();
+      $averageCompression = $statsControl->getAverageCompression();
 
-      $keyModel = new apiKeyModel();
-      $keyModel->loadKey();
+      $keyControl = ApiKeyController::getInstance();
 
+      //$keyModel->loadKey();
 
       $login_url = 'https://shortpixel.com/login/';
       $friend_url = $login_url;
-      if (! $keyModel->is_hidden())
+
+      if ($keyControl->getKeyForDisplay())
       {
-        $login_url .= $keyModel->getkey() . '/';
+        $login_url .= $keyControl->getKeyForDisplay() . '/';
         $friend_url = $login_url . 'tellafriend';
       }
 
@@ -531,6 +533,43 @@ class AdminNoticesController extends \ShortPixel\Controller
         return $message;
     }
 
+    protected function proposeUpgradeRemote()
+    {
+        //$stats = $this->countAllIfNeeded($this->_settings->currentStats, 300);
+        $statsController = StatsController::getInstance();
+        //$proposal = wp_remote_post($this->_settings->httpProto . "://shortpixel.com/propose-upgrade-frag", array(
+        //echo("<div style='color: #f50a0a; position: relative; top: -59px; right: -255px; height: 0px; font-weight: bold; font-size: 1.2em;'>atentie de trecut pe live propose-upgrade</div>");
+        $proposal = wp_remote_post("https://shortpixel.com/propose-upgrade-frag", array(
+            'method' => 'POST',
+            'timeout' => 10,
+            'redirection' => 5,
+            'httpversion' => '1.0',
+            'blocking' => true,
+            'headers' => array(),
+            'body' => array("params" => json_encode(array(
+                'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
+                'key' => $this->_settings->apiKey,
+
+                'm1' => $statsController->find('period', 'monthly', '1'),
+                'm2' => $statsController->find('period', 'monthly', '2'),
+                'm3' => $statsController->find('period', 'monthly', '3'),
+                'm4' => $statsController->find('period', 'monthly', '4'),
+                'filesTodo' => $stats['totalFiles'] - $stats['totalProcessedFiles'],
+                'estimated' => $this->_settings->optimizeUnlisted || $this->_settings->optimizeRetina ? 'true' : 'false',
+                /* */
+                'iconsUrl' => base64_encode(wpSPIO()->plugin_url('res/img'))
+            ))),
+            'cookies' => array()
+        )); // remote post
+        if(is_wp_error( $proposal )) {
+            $proposal = array('body' => '');
+        }
+        die($proposal['body']);
+
+
+
+    }
+
     protected function getHelpOptinMessage()
     {
 
@@ -555,9 +594,15 @@ class AdminNoticesController extends \ShortPixel\Controller
         return isset($quotaData->monthly->total) && $this->getMonthAvg($quotaData) > $quotaData->monthly->total + ($quotaData->onetime->total - $quotaData->onetime->consumed)/6 + 20;
     }
 
-    protected function bulkUpgradeNeeded($stats) {
-        $quotaData = $stats;
-        return $stats['totalFiles'] - $stats['totalProcessedFiles'] > $quotaData['APICallsQuotaNumeric'] + $quotaData['APICallsQuotaOneTimeNumeric'] - $quotaData['APICallsMadeNumeric'] - $quotaData['APICallsMadeOneTimeNumeric'];
+    protected function bulkUpgradeNeeded() {
+        $quotaData = QuotaController::getInstance()->getQuota(); //$stats;
+        $stats = StatsController::getInstance();
+
+        $to_process = $stats->find('total', 'imagesTotal') - $stats->find('total', 'images');
+
+        return $to_process > ($quotaData->monthly->total +  $quotaData->onetime->total)  - ($quotaData->monthly->consumed - $quotaData->onetime->consumed);
+
+        //return $to_process > $quotaData->monthly->total +  + $quotaData['APICallsQuotaOneTimeNumeric'] - $quotaData['APICallsMadeNumeric'] - $quotaData['APICallsMadeOneTimeNumeric'];
     }
 
     protected function getMonthAvg() {
