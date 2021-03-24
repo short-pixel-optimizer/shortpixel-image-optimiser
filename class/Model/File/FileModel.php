@@ -183,6 +183,7 @@ class FileModel extends \ShortPixel\Model
         // Feed to full path to DirectoryModel since it checks if input is file, or dir. Using dirname here would cause errors when fullpath is already just a dirpath ( faulty input )
           $this->directory = new DirectoryModel($fullpath);
       }
+      
       return $this->directory;
   }
 
@@ -203,6 +204,22 @@ class FileModel extends \ShortPixel\Model
       Log::addWarn('Could not create/write file: ' . $this->fullpath);
 
   }
+
+  public function append(string $message)
+  {
+       if (! $this->exists() )
+          $this->create();
+
+       if (! $this->is_writable() )
+          Log::addWarn('File append failed on ' . $this->fullpath() . ' - not writable');
+
+      $handle = fopen($this->getFullPath(), 'a');
+      fwrite($handle, $message);
+      fclose($handle);
+
+  }
+
+
   /** Copy a file to somewhere
   *
   * @param $destination String Full Path to new file.

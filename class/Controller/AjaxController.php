@@ -155,7 +155,7 @@ class AjaxController
         $queue = (isset($_POST['queues'])) ? sanitize_text_field($_POST['queues']) : 'media,custom';
         $queues = array_filter(explode(',', $queue), 'trim');
 
-        $control = new OptimizeController($queues);
+        $control = new OptimizeController();
         $control->setBulk($isBulk);
         $result = $control->processQueue($queues);
 
@@ -349,7 +349,7 @@ class AjaxController
         $result = $bulkControl->startBulk('custom');
         $json->custom = $result;
 
-        $this->send($result);
+        $this->send($json);
     }
 
     /** Data for the compare function */

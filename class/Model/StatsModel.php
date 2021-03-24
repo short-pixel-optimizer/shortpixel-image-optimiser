@@ -82,7 +82,7 @@ class StatsModel
     $stats = $settings->currentStats;
 
 
-    $this->lastUpdate = $stats['time'];
+    $this->lastUpdate = (isset($stats['time'])) ? $stats['time'] : 0;
 
     if ( ($this->lastUpdate + $this->refreshStatTime) >= time())
     {

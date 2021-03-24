@@ -43,13 +43,14 @@ namespace ShortPixel;
               </span>
         </span>
         <span>&nbsp;</span>
-        <span>Check Details</span>
+        <span></span>
       </div>
       <div>
         <span>Items processed: <i data-stats-media="done">-</i></span>
         <span>Processing : <i data-stats-media="in_process">-</i></span>
         <span>Items Left <i data-stats-media="in_queue">-</i></span>
-        <span>Errors : <i data-stats-media="errors">-</i> Check Errors</span>
+        <span class="showerrorbox">Errors : <i data-stats-media="fatal_errors" class='error'>- </i></span>
+        <div data-error-media="message" data-presentation="append" class='errorbox'></div>
       </div>
 
     </div>
@@ -64,13 +65,14 @@ namespace ShortPixel;
               </span>
         </span>
         <span>&nbsp;</span>
-        <span>Check Details</span>
+        <span></span>
       </div>
       <div>
         <span>Items processed: <i data-stats-custom="done">-</i></span>
         <span>Processing : <i data-stats-custom="in_process">-</i></span>
         <span>Items Left <i data-stats-custom="in_queue">-</i></span>
-        <span>Errors : <i data-stats-custom="errors">-</i> Check Errors</span>
+        <span class="showerrorbox">Errors : <i data-stats-custom="fatal_errors" class="error">-</i> </span>
+        <div data-error-custom="message" data-presentation="append">Check Errors</div>
       </div>
 
     </div>

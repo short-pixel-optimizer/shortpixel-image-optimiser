@@ -3,6 +3,7 @@ namespace ShortPixel\Helper;
 
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
+use ShortPixel\Controller\BulkController as BulkController;
 use ShortPixel\Controller\FileSystemController as FileSystemController;
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
 
@@ -55,7 +56,7 @@ class InstallHelper
   {
     $settings = \wpSPIO()->settings();
     $env = \wpSPIO()->env();
-
+  BulkController::uninstallPlugin();
     if($settings->removeSettingsOnDeletePlugin == 1) {
         $settings::debugResetOptions();
         if (! $env->is_nginx)
@@ -66,6 +67,7 @@ class InstallHelper
     }
 
     OptimizeController::uninstallPlugin();
+    BulkController::uninstallPlugin();
   }
 
 }

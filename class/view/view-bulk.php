@@ -11,7 +11,7 @@ namespace ShortPixel;
   <!--
   <div class='error'><p id="shortpixel-bulk-error">Error region</p></div>
   -->
-  <div id="processPaused" class="processor-paused"><span class='dashicons dashicons-controls-pause'></span> Processor is paused, click to resume in the tooltip </div>
+  <div id="processPaused" class="processor-paused" data-action="ResumeBulk"><span class='dashicons dashicons-controls-pause' data-action="ResumeBulk"></span> Processor is paused, click to resume</div>
   <div class="screen-wrapper">
 
 

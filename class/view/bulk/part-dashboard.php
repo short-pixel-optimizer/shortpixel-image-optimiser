@@ -16,17 +16,40 @@ namespace ShortPixel;
     <div class='interface wrapper'>
 
       <div class='bulk-wrapper'>
-        <button type="button" class="button-primary" id="start-optimize" data-action="StartPrepare" disabled><span class='dashicons dashicons-controls-play'>&nbsp;</span> Optimize</button>
+        <button type="button" class="button-primary" id="start-optimize" data-action="StartPrepare" ><span class='dashicons dashicons-controls-play' data-action="StartPrepare">&nbsp;</span> Optimize</button>
       </div>
 
       <p class='description'>Here you can (re)optimize your Media Library, image files from your theme or other media folders that you are using on your site.
 
    </div>
 
+   <?php if (count($this->view->logs) > 0): ?>
+
    <div class='dashboard-log'>
-      [Logs] 
+      <h3><?php _e('Previous Bulks', 'shortpixel_image_optimizer'); ?></h3>
+      <?php
+        echo "<div class='head'>";
+        foreach($this->view->logHeaders as $header)
+        {
+           echo "<span>$header</span>";
+        }
+        echo "</div>";
+        foreach ($this->view->logs as $logItem):
+        {
+          echo "<div class='data'>";
+          foreach($logItem as $item)
+          {
+            echo "<span>$item</span>";
+          }
+          echo "</div>";
+        }
+        ?>
+
+
+      <?php endforeach; ?>
 
    </div>
+  <?php endif; ?>
 
    <div class='shortpixel-bulk-loader' id="bulk-loading" data-status='loading'>
      <div class='loader'>

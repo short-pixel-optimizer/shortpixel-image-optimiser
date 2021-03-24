@@ -13,6 +13,7 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\ResponseController as ResponseController;
 
 use ShortPixel\Model\Image\ImageModel as ImageModel;
+use ShortPixel\Helper\UiHelper as UiHelper;
 
 
 class OptimizeController
@@ -253,6 +254,7 @@ class OptimizeController
           }
 
           $item = $this->sendToProcessing($item);
+
           $item = $this->handleAPIResult($item, $Q);
           $result->items[$index] = $item; // replace processed item, should have result now.
 
@@ -316,6 +318,7 @@ class OptimizeController
           {
              // These are cloned, because queue changes object's properties
              $q->itemFailed($item, true);
+             $this->HandleItemError($item);
              ResponseController::add()->withMessage($result->message)->asError();
           }
           else
@@ -368,8 +371,9 @@ class OptimizeController
               {
                  $item->result->apiStatus = ApiController::STATUS_ERROR;
                  $item->fileStatus = ImageModel::FILE_STATUS_ERROR;
-                 $item->result->message = sprintf(__('Image not optimized with errors', 'shortpixel-image-optimiser'), $item->item_id);
-                 $item->result->message .= ' ' .  $imageItem->getLastErrorMessage();
+              //   $item->result->message = sprintf(__('Image not optimized with errors', 'shortpixel-image-optimiser'), $item->item_id);
+                 $item->result->message = ' ' .  $imageItem->getLastErrorMessage();
+                 $item->result->is_error = true;
 
               }
 
@@ -398,7 +402,14 @@ class OptimizeController
            }
 
          }
-         $q->itemDone($item);
+
+         if ($item->result->is_error)
+         {
+          $q->itemFailed($item, true);
+          $this->HandleItemError($item);
+         }
+         else
+           $q->itemDone($item);
 
       }
       else
@@ -415,6 +426,22 @@ class OptimizeController
 
     }
 
+    protected function HandleItemError($item)
+    {
+        if ($this->isBulk)
+        {
+          $fs = \wpSPIO()->filesystem();
+          $backupDir = $fs->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
+          $fileLog = $fs->getFile($backupDir->getPath() . 'current_bulk.log');
+
+          $time = UiHelper::formatTs(time());
+          $fileName = $item->result->filename;
+          $message = $item->result->message; // getLastErrorMessage();
+
+          $fileLog->append($time . ' - ' . $fileName . ' - ' . $message . PHP_EOL);
+        }
+    }
+
     protected function checkQueueClean($result, $q)
     {
         if ($result->qstatus == Queue::RESULT_QUEUE_EMPTY && ! $this->isBulk)
@@ -427,6 +454,7 @@ class OptimizeController
             }
         }
     }
+
 
     /** Called via Hook when plugins like RegenerateThumbnailsAdvanced Update an thumbnail */
     public function thumbnailsChangedHook($postId, $originalMeta, $regeneratedSizes = array(), $bulk = false)
@@ -559,6 +587,10 @@ class OptimizeController
            $object->stats = $results->custom->stats;
            return $object;
         }
+        elseif (! $has_media && ! $has_custom)
+        {
+            return null;
+        }
 
         // When both have stats. Custom becomes the main. Calculate media stats over it. Clone, important!
         $object->stats = clone $results->custom->stats;
@@ -605,12 +637,16 @@ class OptimizeController
 
     public static function uninstallPlugin()
     {
-      $mediaQ = MediaLibraryQueue::getInstance();
-      $customQ = CustomQueue::getInstance();
-
-      $mediaQ->uninstall();
-      $customQ->uninstall();
+      //$mediaQ = MediaLibraryQueue::getInstance();
+      //$queue = new MediaLibraryQueue($queueName);
+      $queues = array('media', 'mediaSingle', 'custom', 'customSingle');
+      foreach($queues as $qName)
+      {
+          $q = new MediaLibraryQueue($qName);
+          $q->uninstall();
+      }
 
     }
+  
 
 } // class

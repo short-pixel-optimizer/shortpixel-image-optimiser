@@ -487,7 +487,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
      if ($this->isOptimized())
      {
         update_post_meta($this->id, '_shortpixel_optimized', $this->getImprovement() );
-        update_post_meta($this->id, '_shortpixel_optdate', $this->getMeta('tsOptimized')); 
+        update_post_meta($this->id, '_shortpixel_optdate', $this->getMeta('tsOptimized'));
      }
   }
 
@@ -565,8 +565,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
               return true;
           }
       }
-
-
 
       return $bool;
   }
@@ -1250,6 +1248,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           return;
       }
 
+      // addUnlisted is called by IsProcessable, file might not exist.
+      if (! $this->exists())
+      {
+          $this->unlistedChecked = true;
+         return;
+      }
+
         $currentFiles = array($this->getFileName());
         foreach($this->thumbnails as $thumbObj)
           $currentFiles[] = $thumbObj->getFileName();
@@ -1341,16 +1346,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         $this->saveMeta(); // Save it when we are adding images.
 
       $this->unlistedChecked = true;
-//echo "<PRE>"; var_dump($this->thumbnails); echo "</PRE>";
-      /*foreach($thumbs as $thumbfile)
-      {
-         if ($thumbfile->getExtension() != $ext) // remove false hits, webp and such.
-          continue;
-         if (! $thumbfile->exists()) // thing must exist.
-          continue;
 
-        $results[] = (string) $thumbfile;
-      } */
 
       /* Returns array with full path, as string */
       //return $results;

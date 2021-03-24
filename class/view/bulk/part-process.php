@@ -3,7 +3,7 @@
 namespace ShortPixel;
 
 ?>
-<section class="panel process" data-panel="process" data-loadpanel="StartBulk">
+<section class="panel process" data-panel="process" >
   <div class="panel-container">
 
     <h3 class="heading"><span><img src="<?php echo \wpSPIO()->plugin_url('res/img/robo-slider.png'); ?>"></span>
@@ -45,13 +45,15 @@ namespace ShortPixel;
               </span>
         </span>
         <span>&nbsp;</span>
-        <span>Check Details</span>
+        <span>&nbsp;</span>
       </div>
       <div>
         <span>Items processed: <i data-stats-media="done">-</i></span>
         <span>Processing : <i data-stats-media="in_process">-</i></span>
         <span>Items Left <i data-stats-media="in_queue">-</i></span>
-        <span>Errors : <i data-stats-media="errors">-</i> Check Errors</span>
+        <span class="showerrorbox">Errors : <i data-stats-media="fatal_errors" class='error'>- </i>
+            </span>
+        <div data-error-media="message" data-presentation="append" class='errorbox'></div>
       </div>
 
     </div>
@@ -66,13 +68,14 @@ namespace ShortPixel;
               </span>
         </span>
         <span>&nbsp;</span>
-        <span>Check Details</span>
+        <span>&nbsp;</span>
       </div>
       <div>
         <span>Items processed: <i data-stats-custom="done">-</i></span>
         <span>Processing : <i data-stats-custom="in_process">-</i></span>
         <span>Items Left <i data-stats-custom="in_queue">-</i></span>
-        <span>Errors : <i data-stats-custom="errors">-</i> Check Errors</span>
+        <span class="showerrorbox">Errors : <i data-stats-custom="fatal_errors" class='error'>-</i></span>
+        <div data-error-custom="message" data-presentation="append" class='errorbox'></div>
       </div>
 
     </div>
@@ -115,7 +118,7 @@ namespace ShortPixel;
     <nav>
       <button class='button pause' data-action="PauseBulk" id="PauseBulkButton">Pause Bulk Processing</button>
       <button class='button resume' data-action='ResumeBulk' id="ResumeBulkButton">Resume Bulk Processing</button>
-      <button class='button-primary stop' data-action="StopBulk" >Stop Bulk Processing</button>
+      <button class='button stop' data-action="StopBulk" >Stop Bulk Processing</button>
     </nav>
   </div>
 </section>

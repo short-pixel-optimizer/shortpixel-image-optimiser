@@ -424,11 +424,12 @@ class ApiController
       }
 
       // Update File Stats
-      $this->_settings->savedSpace += $savedSpace;
-      $this->_settings->fileCount += $fileCount;
+
+      $settings->savedSpace += $savedSpace;
+      $settings->fileCount += $fileCount;
       //new average counting
-      $this->_settings->totalOriginal += $originalSpace;
-      $this->_settings->totalOptimized += $optimizedSpace;
+      $settings->totalOriginal += $originalSpace;
+      $settings->totalOptimized += $optimizedSpace;
 
       Log::addTemp("Adding $fileCount files to stats, $originalSpace went to $optimizedSpace ($savedSpace)");
 

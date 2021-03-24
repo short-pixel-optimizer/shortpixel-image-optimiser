@@ -37,37 +37,57 @@ var ShortPixelScreen = function (MainScreen, processor)
         isPreparing = true;
       else if (initMedia.is_running == true || initCustom.is_running == true )
         isRunning = true;
-      else if (initMedia.is_finished == true || initCustom.is_finished == true )
+      else if ( (initMedia.is_finished == true && initMedia.done > 0)  || (initCustom.is_finished == true && initCustom.done > 0) )
         isFinished = true;
 
+        this.UpdateStats(initMedia, 'media'); // write UI.
+        this.UpdateStats(initCustom, 'custom');
+        this.UpdateStats(initTotal, 'total');
+        this.CheckPanelData();
 
 
-  /*    if (isPreparing)
+      if (isPreparing)
       {
         this.SwitchPanel('selection');
       }
       else if (isRunning)
       {
-        //this.SwitchPanel('process');
+        this.SwitchPanel('process');
+        /*this.UpdateStats(initMedia, 'media'); // write UI.
+        this.UpdateStats(initCustom, 'custom');
+        this.UpdateStats(initTotal, 'total');
+        this.CheckPanelData(); */
         this.processor.PauseProcess(); // when loading, default start paused before resume.
       }
       else if (isFinished)
       {
+         this.processor.StopProcess({ waiting: true });
+
+         if (initMedia.done > 0 || initCustom.done > 0)
+         {
+
+           this.SwitchPanel('finished');
+         }
+         else
+         {
+           this.SwitchPanel('dashboard');
+         }
          //this.SwitchPanel('process');  // needs to run a process and get back stats another try.
       }
       else if (initMedia.in_queue > 0)
       {
-        this.UpdateStats(initMedia, 'media'); // write UI.
+      /*  this.UpdateStats(initMedia, 'media'); // write UI.
         this.UpdateStats(initCustom, 'custom');
         this.UpdateStats(initTotal, 'total');
-        this.SwitchPanel('summary');
+        this.CheckPanelData(); */
+        this.SwitchPanel('selection');
       }
       else
       {
-         this.processor.StopProcess(); // don't go peeking in the queue. // this doesn't work since its' before the init Worker.
+         this.processor.StopProcess({ waiting: true }); // don't go peeking in the queue. // this doesn't work since its' before the init Worker.
          this.SwitchPanel('dashboard');
-      } */
-console.log(initMedia, isPreparing, isRunning, isFinished);
+      }
+console.log("Screen Init Done", initMedia, isPreparing, isRunning, isFinished);
 
   }
   this.LoadPanels = function()
@@ -104,7 +124,7 @@ console.log(initMedia, isPreparing, isRunning, isFinished);
 
                 if (typeof this[actionName] == 'function')
                 {
-                    this[actionName].call(this);
+                    this[actionName].call(this,event);
                 }
             }
           }.bind(self));
@@ -196,12 +216,12 @@ console.log(initMedia, isPreparing, isRunning, isFinished);
       //Remove pause
       if (typeof event == 'object')
         event.preventDefault(); // stop handler in checkResponse.
-        
+
       this.SwitchPanel('selection');
       this.ToggleLoading(false);
       this.processor.SetInterval(500); // do this faster.
       // Show stats
-      if (this.processor.isManualPaused == true)
+      if (! this.processor.CheckActive())
       {
          this.processor.ResumeProcess();
         //this.processor.isManualPaused = false; // force run
@@ -220,26 +240,22 @@ console.log(initMedia, isPreparing, isRunning, isFinished);
           this.SwitchPanel('selection');
           this.processor.SetInterval(-1); // back to default.
 
-          //this.SwitchPanel('selection');
-
       }
       if (qStatus == 'QUEUE_EMPTY')
       {
           if (data.total.stats.total > 0)
           {
             this.SwitchPanel('finished'); // if something actually was done.
+            this.processor.StopProcess();
           }
           else
           {
               this.SwitchPanel('dashboard');
+              this.processor.StopProcess();
+
           } // empty queue, no items, start.
-    //      this.UpdatePanelStatus('queueDone', 'process');
-
       }
-    /*  elseif (qStatus == '')
-      {
 
-      } */
   }
   this.HandleImage = function(resultItem, type)
   {
@@ -286,6 +302,10 @@ console.log(initMedia, isPreparing, isRunning, isFinished);
 
           }
       }
+      else if ( this.processor.fStatus[resultItem.fileStatus] == 'FILE_ERROR')
+      {
+         this.HandleError(result, type);
+      }
 
 
   }
@@ -304,7 +324,7 @@ console.log(initMedia, isPreparing, isRunning, isFinished);
   }
   this.UpdateMessage = function(id, message)
   {
-     console.log('UpdateMessage');
+     console.log('UpdateMessage', id, message);
 
   }
   this.UpdateStats = function(stats, type)
@@ -366,6 +386,10 @@ console.log(initMedia, isPreparing, isRunning, isFinished);
                     {
                       element.value = value;
                     }
+                    if (presentation == 'append')
+                    {
+                      element.innerText = element.innerText + '\n' + value;
+                    }
                   }
                 }
                 else
@@ -377,9 +401,13 @@ console.log(initMedia, isPreparing, isRunning, isFinished);
           });
       }
   }
-  this.HandleError = function(response)
+  this.HandleError = function(response, type)
   {
     console.error(response);
+    var message = response.message + ':' + response.filename;
+    var data = {message: message};
+    this.UpdateData('error', data, type);
+
   }
 
   this.StartBulk = function() // Open panel action
@@ -391,23 +419,39 @@ console.log(initMedia, isPreparing, isRunning, isFinished);
       //window.addEventListener('shortpixel.prepareBulk', this.PrepareBulk.bind(this), {'once': true} );
       this.processor.AjaxRequest(data);
 
+      // process stops after preparing.
+     this.processor.RunProcess();
+
+      this.SwitchPanel('process');
+
   }
   this.PauseBulk = function (event)
   {
-    if (processor.isManualPaused == false)
+    /*if (processor.isManualPaused == false)
     {
        processor.isManualPaused = true;
        localStorage.setItem('tooltipPause','true');
        this.processor.tooltip.ProcessPause();
     }
 
-    this.processor.tooltip.ToggleIcon();
+    this.processor.tooltip.ToggleIcon();*/
+     this.processor.tooltip.ToggleProcessing(event);
+  }
+
+  this.ResumeBulk = function(event)
+  {
+      this.processor.ResumeProcess();
   }
   /*this.StopBulk = function(event)
   {
       this.PauseBulk(event);
       // do something here to nuke the thing
   }, */
+  this.StopBulk = function(event)
+  {
+        if (confirm('[Placeholder finish bulk?]'))
+           this.FinishBulk(event);
+  }
   this.FinishBulk = function(event)
   {
     console.log('Finishing');

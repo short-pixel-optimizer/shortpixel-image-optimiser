@@ -28,6 +28,7 @@ window.ShortPixelProcessor =
     isManualPaused: false,  // tooltip pause :: do not set directly, but only trhough processor functions!
     worker: null,
     timer: null,
+    waitingForAction: false, // used if init yields results that should pause the processor.
     timesEmpty: 0, // number of times queue came up empty.
     nonce: [],
     qStatus: { // The Queue returns
@@ -39,6 +40,7 @@ window.ShortPixelProcessor =
        11: 'PREPARING_RECOUNT',
     },
     fStatus: { // FileStatus of ImageModel
+      '-1': 'FILE_ERROR',
        1: 'FILE_PENDING',
        2: 'FILE_DONE',
        3: 'FILE_RESTORED',
@@ -70,6 +72,8 @@ window.ShortPixelProcessor =
         console.log('remoteSecret ' + this.remoteSecret + ', localsecret: ' + this.localSecret + ' bulk? ' + this.isBulkPage);
         //this.localSecret = null;
 
+        this.tooltip = new ShortPixelToolTip({}, this);
+
         if (typeof ShortPixelScreen == 'undefined')
         {
            console.error('Missing Screen for feedback!');
@@ -78,11 +82,8 @@ window.ShortPixelProcessor =
         else
           this.screen = new ShortPixelScreen({}, this);
 
-        this.tooltip = new ShortPixelToolTip({}, this);
-
         // Always load worker, also used for UI actions.
         this.LoadWorker();
-
 
         if (this.CheckActive())
         {
@@ -110,7 +111,7 @@ window.ShortPixelProcessor =
       }
       else
       {
-         console.debug('Processor not active - ' + this.remoteSecret + ' - ' + this.localSecret);
+         console.debug('Check Active: Processor not active - ' + this.remoteSecret + ' - ' + this.localSecret);
          this.tooltip.ProcessEnd();
          this.StopProcess();
       }
@@ -119,8 +120,12 @@ window.ShortPixelProcessor =
       {
           this.isActive = false;
         //  this.PauseProcess();
-
-          console.log('Processor Paused');
+         console.debug('Check Active: Paused');
+      }
+      if (this.waitingForAction)
+      {
+          this.isActive = false;
+          console.debug('Check Active : Waiting for action');
       }
       return this.isActive;
     },
@@ -184,9 +189,10 @@ window.ShortPixelProcessor =
         {
             return;
         }
-        //if (this.timesEmpty >= 5) // conflicts with the stop defer. 
+        //if (this.timesEmpty >= 5) // conflicts with the stop defer.
         //   this.interval = 2000 + (this.timesEmpty * 1000);  // every time it turns up empty, second slower.
 
+        console.log('Processor: Run Process');
 
         this.timer = window.setTimeout(this.Process.bind(this), this.interval);
     },
@@ -195,7 +201,7 @@ window.ShortPixelProcessor =
       this.isManualPaused = true;
       var event = new CustomEvent('shortpixel.processor.paused', { detail : {paused: this.isManualPaused }});
       window.dispatchEvent(event);
-
+      console.log('Processor: Process Paused');
       window.clearTimeout(this.timer);
 
     },
@@ -221,12 +227,20 @@ window.ShortPixelProcessor =
                 this.RunProcess(); // queue a run once
                 this.SetInterval(-1); // restore interval
            }
+           else if (typeof args.waiting !== 'undefined')
+           {
+             console.log('Stop Process: Waiting for action');
+             this.waitingForAction = args.waiting;
+           }
         }
+
+
         this.tooltip.ProcessEnd();
     },
     ResumeProcess: function()
     {
       this.isManualPaused = false;
+      this.waitingForAction = false;
       var event = new CustomEvent('shortpixel.processor.paused', { detail : {paused: this.isManualPaused}});
       window.dispatchEvent(event);
 
@@ -317,7 +331,7 @@ window.ShortPixelProcessor =
         if (response.has_error == true)
         {
            this.tooltip.AddNotice(response.message);
-           this.screen.HandleError(response);
+           this.screen.HandleError(response, type);
         }
 
         if (! this.screen)

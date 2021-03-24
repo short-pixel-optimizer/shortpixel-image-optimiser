@@ -48,7 +48,7 @@ class BulkController
        //if ($q->getStatus('items') > 0)
        $q->startBulk();
 
-       return $optimizeControl->processQueue();
+       return $optimizeControl->processQueue(array($type));
    }
 
    public function finishBulk($type = 'media')
@@ -74,14 +74,35 @@ class BulkController
    protected function addLog($stats, $type)
    {
         //$data = (array) $stats;
-        $data['items'] = $stats->done;
+        if ($stats->done == 0 && $stats->fatal_errors == 0)
+          return; // nothing done, don't log
+
+        $data['processed'] = $stats->done;
+        $data['not_processed'] = $stats->in_queue;
         $data['errors'] = $stats->errors;
-        $data['fatal_errors'] = $stats->fatal_erors;
+        $data['fatal_errors'] = $stats->fatal_errors;
+        $data['type'] = $type;
         $data['date'] = time();
 
         $logs = $this->getLogs();
-        if (count($logs) == 10)
-          array_shift($logs);
+        $fs = \wpSPIO()->filesystem();
+        $backupDir = $fs->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
+
+        if (count($logs) == 10) // remove logs if more than 10.
+        {
+          $log = array_shift($logs);
+          $log_date = $log['date'];
+
+          $fileLog = $fs->getFile($backupDir->getPath() . 'bulk_' . $log_date . '.log');
+          if ($fileLog->exists())
+            $fileLog->delete();
+        }
+
+        $fileLog = $fs->getFile($backupDir->getPath() . 'current_bulk.log');
+        $moveLog = $fs->getFile($backupDir->getPath() . 'bulk_' . $data['date'] . '.log');
+
+        if ($fileLog->exists())
+          $fileLog->move($moveLog);
 
         $logs[] = $data;
 
@@ -96,4 +117,9 @@ class BulkController
           delete_option(self::$logName);
    }
 
-}
+   public static function uninstallPlugin()
+   {
+      delete_option(self::$logName);
+   }
+
+}  // class
