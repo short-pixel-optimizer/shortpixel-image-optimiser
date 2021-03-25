@@ -29,7 +29,7 @@ before_script:
   - git clone --depth=50 --branch=master $UGAN  ../modules
   - COMPOSER=composer-testing.json composer update &> /dev/null
   - sudo cp . $WP_PATH/wp-content/plugins/shortpixel-image-optimiser/ -r
-  #- sudo chmod 777 $WP_PATH/ -R
+  - sudo chmod 777 $WP_PATH/ -R
   - sudo chown travis:travis $WP_PATH/ -R
   - wget https://selenium-release.storage.googleapis.com/3.141/selenium-server-standalone-3.141.59.jar
   - wget https://chromedriver.storage.googleapis.com/`wget -q -O - https://chromedriver.storage.googleapis.com/LATEST_RELEASE`/chromedriver_linux64.zip && unzip chromedriver_linux64.zip && export CHROME_BIN=chromium-browser
