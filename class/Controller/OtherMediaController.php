@@ -325,7 +325,7 @@ class OtherMediaController extends \ShortPixel\Controller
       global $wpdb;
       $defaults = array(
           'id' => false,  // Get folder by Id
-          'remove_hidden' => true,
+          'remove_hidden' => true, // Query only active folders
           'path' => false,
           'only_count' => false,
       );
@@ -333,8 +333,12 @@ class OtherMediaController extends \ShortPixel\Controller
       $args = wp_parse_args($args, $defaults);
 
       if (! $this->hasFoldersTable())
-        return array();
-
+      {
+        if ($args['only_count'])
+           return 0;
+        else
+          return array();
+      }
       $fs =  \wpSPIO()->fileSystem();
       //$cache = new \ShortPixel\Controller\CacheController();
 
@@ -382,7 +386,6 @@ class OtherMediaController extends \ShortPixel\Controller
         $results = $wpdb->get_results($sql);
 
 
-
       return $results;
     }
 
@@ -396,6 +399,7 @@ class OtherMediaController extends \ShortPixel\Controller
         $charsetCollate = $wpdb->get_charset_collate();
 
         $foldersTable = $wpdb->get_results("SELECT COUNT(1) hasFoldersTable FROM information_schema.tables WHERE table_schema='{$wpdb->dbname}' AND table_name='{$wpdb->prefix}shortpixel_folders'");
+
         if(isset($foldersTable[0]->hasFoldersTable) && $foldersTable[0]->hasFoldersTable > 0) {
             $result = true;
         }
@@ -404,6 +408,7 @@ class OtherMediaController extends \ShortPixel\Controller
 
         self::$hasFoldersTable = $result;
 
+        return $result;
       }
 
       private function createFolderTable()

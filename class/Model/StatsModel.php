@@ -361,8 +361,9 @@ class StatsModel
 
        $otherMediaController = OtherMediaController::getInstance();
        if (! $otherMediaController->hasCustomImages() )
+       {
           return 0;
-
+       }
        $foldersids = implode(',', $otherMediaController->getActiveDirectoryIDS() );
 
        $sql = 'SELECT COUNT(id) as count FROM ' . $wpdb->prefix . 'shortpixel_meta WHERE folder_id in (' . $foldersids . ')';
