@@ -41,24 +41,28 @@ class StatsController extends \ShortPixel\Controller
            {
               return $stat;
            }
-
         }
 
         $stat = $this->model->getStat(array_shift($params));
 
-        for($i =0 ; $i < count($params); $i++)
+        for($i = 0; $i < count($params); $i++)
         {
             $stat = $stat->grab($params[$i]);
         }
 
-
         if (is_object($stat)) // failed to get statistic.
         {
             Log::addWarn('Statistics for this path failed', $params );
-            return __('n/a', 'shortpixel-image-optimizer');
+            return 0;
+            
         }
         else
           return $stat;
+    }
+
+    public function reset()
+    {
+       $this->model->reset();
     }
 
     public function getAverageCompression()
@@ -83,7 +87,25 @@ class StatsController extends \ShortPixel\Controller
        $this->model->add($stats);
     }
 
-  
+    /** This is a different calculation since the thumbs and totals are products of a database query without taking into account optimizable, excluded thumbs etc. This is a performance thing */
+    public function thumbNailsToOptimize()
+    {
+       $totalThumbs = $this->find('media',
+               'thumbsTotal'); // according to database.
+       $totalThumbsOptimized = $this->find('media', 'thumbs');
+
+       $excludedThumbnails = \wpSPIO()->settings()->excludeSizes;
+       $excludeCount = (is_array($excludedThumbnails)) ? count($excludedThumbnails) : 0;
+
+        // Totalthumbs - thumbsOptimized - minus amount of excluded (guess)
+       $toOptimize = $totalThumbs - $totalThumbsOptimized - ($this->find('media', 'items') * $excludeCount);
+
+
+       return $toOptimize;
+
+    }
+
+
 
 
 

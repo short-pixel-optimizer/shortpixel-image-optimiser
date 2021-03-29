@@ -15,6 +15,8 @@ class AjaxController
     const PROCESSOR_ACTIVE = -1;
     const NONCE_FAILED = -2;
     const NO_ACTION = -3;
+    const APIKEY_FAILED = -4;
+    const NOQUOTA = -5;
 
     private static $instance;
 

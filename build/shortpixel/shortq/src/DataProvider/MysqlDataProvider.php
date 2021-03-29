@@ -146,7 +146,7 @@ class MysqlDataProvider implements DataProvider
       return $date;
    }
 
-   /* 
+   /*
    * @return Array
    */
    private function queryItems($args = array())
@@ -513,7 +513,7 @@ class MysqlDataProvider implements DataProvider
      $prefix = $wpdb->prefix;
 
      $charset = $wpdb->get_charset_collate();
-      $sql = "CREATE TABLE `" . $this->table . "` (
+      $sql = "CREATE TABLE IF NOT EXISTS `" . $this->table . "` (
                 id INT UNSIGNED NOT NULL AUTO_INCREMENT,
                 queue_name VARCHAR(30) NOT NULL,
                 plugin_slug VARCHAR(30) NOT NULL,
@@ -533,7 +533,7 @@ class MysqlDataProvider implements DataProvider
                 KEY list_order (list_order)
                 ) $charset; ";
 
-      $result = dbDelta($sql);
+      $result = $wpdb->query($sql);
 
       $sql = "SHOW INDEX FROM " . $this->table . " WHERE Key_name = 'uq_" . $prefix . "'";
       $result = $wpdb->get_results($sql);

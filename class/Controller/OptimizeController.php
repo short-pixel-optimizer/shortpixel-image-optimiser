@@ -196,8 +196,9 @@ class OptimizeController
         if (! $keyControl->keyIsVerified())
         {
            $json = $this->getJsonResponse();
-           $json->error = true;
+           $json->error = AjaxController::APIKEY_FAILED;
            $json->message =  __('Invalid API Key', 'shortpixel-image-optimiser');
+           $json->status = false;
            return $json;
         }
 
@@ -205,7 +206,7 @@ class OptimizeController
         if ( ! $quotaControl->hasQuota())
         {
           $json = $this->getJsonResponse();
-          $json->error = true;
+          $json->error = AjaxController::NOQUOTA;
           $json->message =   __('Quota Exceeded','shortpixel-image-optimiser');
           return $json;
         }
@@ -417,7 +418,7 @@ class OptimizeController
           if ($result->apiStatus == ApiController::STATUS_UNCHANGED)
           {
               $item->fileStatus = ImageModel::FILE_STATUS_PENDING;
-              $item->result->message .= sprintf(__(' Pass %d', 'shortpixel-image-optimizer', intval($item->tries) ));
+              $item->result->message .= sprintf(__(' Pass %d', 'shortpixel-image-optimiser', intval($item->tries) ));
           }
       }
 
@@ -647,6 +648,6 @@ class OptimizeController
       }
 
     }
-  
+
 
 } // class

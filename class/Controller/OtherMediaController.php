@@ -265,7 +265,7 @@ class OtherMediaController extends \ShortPixel\Controller
 
       if ($dirObj->getPath() !== $rootDirObj->getPath() && ! $dirObj->isSubFolderOf($rootDirObj))
       {
-        exit( __('This directory seems not part of WordPress', 'shortpixel-image-optimizer'));
+        exit( __('This directory seems not part of WordPress', 'shortpixel-image-optimiser'));
       }
 
       if( $dirObj->exists() ) {

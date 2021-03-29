@@ -38,7 +38,7 @@ use Shortpixel\Controller\StatsController as StatsController;
     <pre><?php var_export($this->quotaData); ?></pre>
   </div>
   <div  class="stats env">
-      <h3><?php _e('Stats', 'shortpixel-image-optimizer'); ?></h3>
+      <h3><?php _e('Stats', 'shortpixel-image-optimiser'); ?></h3>
       <div class='flex'>
         <?php $statsControl = StatsController::getInstance();
         ?>
@@ -54,6 +54,12 @@ use Shortpixel\Controller\StatsController as StatsController;
         <span>Custom Optimized</span><span><?php echo $statsControl->find('custom', 'items'); ?></span>
         <span>Custom Total</span><span><?php echo $statsControl->find('custom', 'itemsTotal'); ?></span>
   </div>
+  <div class='debug-stats'>
+    <form method="POST" action="<?php echo add_query_arg(array('sp-action' => 'action_debug_resetStats')) ?>"
+      id="shortpixel-form-debug-stats">
+      <button class='button' type='submit'>Clear statistics cache</button>
+      </form>
+  </div>
 
   <h3>Tools</h3>
   <div class='debug-images'>
@@ -62,6 +68,7 @@ use Shortpixel\Controller\StatsController as StatsController;
       <button class='button' type='submit'>Reacquire Thumbnails on Media Library</button>
       </form>
   </div>
+  <p>&nbsp;</p>
 
 </div> <!-- tab-content -->
 </section>

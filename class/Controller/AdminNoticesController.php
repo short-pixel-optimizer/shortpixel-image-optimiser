@@ -265,7 +265,7 @@ class AdminNoticesController extends \ShortPixel\Controller
     protected function doQuotaNotices()
     {
       $settings = \wpSPIO()->settings();
-      $currentStats = $settings->currentStats;
+      //$currentStats = $settings->currentStats;
     //  $shortpixel = \wpSPIO()->getShortPixel();
       $quotaController = QuotaController::getInstance();
 
@@ -274,9 +274,9 @@ class AdminNoticesController extends \ShortPixel\Controller
         return; // no key, no quota.
       }
 
-      if(!is_array($currentStats) || isset($_GET['checkquota']) || isset($currentStats["quotaData"])) {
+      if(isset($_GET['checkquota'])) {
           //$shortpixel->getQuotaInformation();
-          $quotaController->getQuota();
+          $quota = $quotaController->getQuota();
       }
 
 
@@ -306,10 +306,15 @@ class AdminNoticesController extends \ShortPixel\Controller
           $month_notice = $noticeController->getNoticeByID(self::MSG_UPGRADE_MONTH);
 
           //this is for bulk page - alert on the total credits for total images
-          if( ! $bulk_is_dismissed && $env->is_bulk_page && $this->bulkUpgradeNeeded()) {
+          if(! $bulk_is_dismissed && $env->is_bulk_page && $this->bulkUpgradeNeeded()) {
+
+             $todo = $statsControl->find('total', 'itemsTotal') + $statsControl->find('total', 'thumbsTotal');
+             $available = $quotaController->getAvailableQuota();
+             $data = array('filesTodo' => $todo,
+                            'quotaAvailable' => $available);
+
               //looks like the user hasn't got enough credits to bulk process all media library
-              $message = $this->getBulkUpgradeMessage(array('filesTodo' => $stats['totalFiles'] - $stats['totalProcessedFiles'],
-                                                      'quotaAvailable' => max(0, $quotaData['APICallsQuotaNumeric'] + $quotaData['APICallsQuotaOneTimeNumeric'] - $quotaData['APICallsMadeNumeric'] - $quotaData['APICallsMadeOneTimeNumeric'])));
+              $message = $this->getBulkUpgradeMessage($data);
               $notice = Notices::addNormal($message);
               Notices::makePersistent($notice, self::MSG_UPGRADE_BULK, YEAR_IN_SECONDS, array($this, 'upgradeBulkCallback'));
               //ShortPixelView::displayActivationNotice('upgbulk', );
@@ -317,7 +322,7 @@ class AdminNoticesController extends \ShortPixel\Controller
           //consider the monthly plus 1/6 of the available one-time credits.
           elseif( $this->monthlyUpgradeNeeded($quotaData)) {
               //looks like the user hasn't got enough credits to process the monthly images, display a notice telling this
-              $message = $this->getMonthlyUpgradeMessage(array('monthAvg' => $this->getMonthAvg($stats), 'monthlyQuota' => $quotaData['APICallsQuotaNumeric']));
+              $message = $this->getMonthlyUpgradeMessage(array('monthAvg' => $this->getMonthAvg(), 'monthlyQuota' => $quota->monthly->total ));
               //ShortPixelView::displayActivationNotice('upgmonth', );
               $notice = Notices::addNormal($message);
               Notices::makePersistent($notice, self::MSG_UPGRADE_MONTH, YEAR_IN_SECONDS);
@@ -375,7 +380,7 @@ class AdminNoticesController extends \ShortPixel\Controller
         return $message;
     } */
 
-    protected function getActivationNotice()
+    public function getActivationNotice()
     {
       $message = "<p>" . __('In order to start the optimization process, you need to validate your API Key in the '
               . '<a href="options-general.php?page=wp-shortpixel-settings">ShortPixel Settings</a> page in your WordPress Admin.','shortpixel-image-optimiser') . "
@@ -533,7 +538,7 @@ class AdminNoticesController extends \ShortPixel\Controller
         return $message;
     }
 
-    protected function proposeUpgradeRemote()
+    public function proposeUpgradeRemote()
     {
         //$stats = $this->countAllIfNeeded($this->_settings->currentStats, 300);
         $statsController = StatsController::getInstance();

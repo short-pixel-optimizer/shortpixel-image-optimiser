@@ -40,7 +40,7 @@ class UiHelper
     if($percent == 999) return ;
 
     if ($percent == 999 )
-      $output .= __("Reduced by X%(unknown)", 'shortpixel-image-optimizer');
+      $output .= __("Reduced by X%(unknown)", 'shortpixel-image-optimiser');
 
     if ($percent && $percent > 0)
     {
@@ -152,13 +152,13 @@ class UiHelper
   public static function compressionTypeToText($type)
   {
      if ($type == ImageModel::COMPRESSION_LOSSLESS )
-       return __('Lossless', 'shortpixel-image-optimizer');
+       return __('Lossless', 'shortpixel-image-optimiser');
 
      if ($type == ImageModel::COMPRESSION_LOSSY )
-         return __('Lossy', 'shortpixel-image-optimizer');
+         return __('Lossy', 'shortpixel-image-optimiser');
 
      if ($type == ImageModel::COMPRESSION_GLOSSY )
-         return __('Glossy', 'shortpixel-image-optimizer');
+         return __('Glossy', 'shortpixel-image-optimiser');
 
       return $type;
   }

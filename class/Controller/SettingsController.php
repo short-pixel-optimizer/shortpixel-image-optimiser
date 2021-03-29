@@ -120,7 +120,7 @@ class SettingsController extends \ShortPixel\Controller
          $this->load();
       }
 
-
+      /** Button in part-debug. Route via this custom Action. */
       public function action_debug_medialibrary()
       {
         $this->loadEnv();
@@ -128,6 +128,16 @@ class SettingsController extends \ShortPixel\Controller
         \WpShortPixelMediaLbraryAdapter::reCountMediaLibraryItems();
 
         $this->load();
+      }
+
+      /** Button in part-debug, routed via custom Action */
+      public function action_debug_resetStats()
+      {
+          $this->loadEnv();
+          $statsController = StatsController::getInstance();
+          $statsController->reset();
+
+          $this->load();
       }
 
 
@@ -216,8 +226,9 @@ class SettingsController extends \ShortPixel\Controller
         $stats->totalOriginal = $statsControl->find('totalOriginal');
         $stats->mainOptimized = $statsControl->find('media', 'images');
 
-        // used in part-general
-    //  $stats->thumbnailsToProcess = $statsControl->find('total', 'images') - $statsControl->find('total', 'items') - $statsControl->find('total', 'compressed');
+
+        // used in part-g eneral
+        $stats->thumbnailsToProcess =  $statsControl->thumbNailsToOptimize(); // $totalImages - $totalOptimized;
 
 //        $stats->totalFiles = $statsControl->find('media', '')
 

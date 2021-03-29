@@ -38,10 +38,10 @@ namespace ShortPixel;
             <h4><label for="media_checkbox">Your Media Library</label></h4>
             <div class='option'>
               <label>Items in Library</label>
-              <span class="number" data-stats-media="total" data-check-media-total><?php _e('n/a', 'shortpixel-image-optimizer') ?></span>
+              <span class="number" data-stats-media="total" data-check-media-total><?php _e('n/a', 'shortpixel-image-optimiser') ?></span>
             </div>
             <div class='option'>
-              <labeL>Images</label> <span class="number" data-stats-media="images-images"><?php _e('n/a', 'shortpixel-image-optimizer')  ?></span>
+              <labeL>Images</label> <span class="number" data-stats-media="images-images"><?php _e('n/a', 'shortpixel-image-optimiser')  ?></span>
             </div>
          </div>
 
@@ -55,7 +55,7 @@ namespace ShortPixel;
            <h4><label for="custom_checkbox">Custom Images</label></h4>
             <div class='option'>
               <label>Images</label>
-               <span class="number" data-stats-custom="total" data-check-custom-total ><?php _e('n/a', 'shortpixel-image-optimizer')  ?></span>
+               <span class="number" data-stats-custom="total" data-check-custom-total ><?php _e('n/a', 'shortpixel-image-optimiser')  ?></span>
             </div>
          </div>
 

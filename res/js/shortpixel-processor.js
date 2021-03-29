@@ -55,6 +55,9 @@ window.ShortPixelProcessor =
     aStatusError: {  // AjaxController / optimizeController - when an error occured
         '-1': 'PROCESSOR_ACTIVE', // active in another window
         '-2': 'NONCE_FAILED',
+        '-3': 'NO_STATUS',
+        '-4': 'APIKEY_FAILED',
+        '-5': 'NOQUOTA',
     },
 
     Load: function()
@@ -97,12 +100,15 @@ window.ShortPixelProcessor =
       if (this.remoteSecret == false || this.isBulkPage) // if remoteSecret is false, we are the first process. Take it.
       {
       //   this.localSecret = this.remoteSecret = Math.random().toString(36).substring(7);
-         if (this.localSecret.length > 0)
+         if (this.localSecret && this.localSecret.length > 0)
+         {
            this.remoteSecret = this.localSecret;
+         }
          else
+         {
            this.localSecret = Math.random().toString(36).substring(7);
-
-         localStorage.setItem('bulkSecret',this.localSecret);
+           localStorage.setItem('bulkSecret',this.localSecret);
+         }
          this.isActive = true;
       }
       else if (this.remoteSecret === this.localSecret) // There is a secret, we are the processor.
@@ -172,7 +178,7 @@ window.ShortPixelProcessor =
 
         console.timeEnd('process-delay');
 
-        this.tooltip.DoingProcess();
+        //this.tooltip.DoingProcess();
         this.worker.postMessage({action: 'process', 'nonce' : this.nonce['process']});
 
         console.time('process-delay');
@@ -280,9 +286,18 @@ window.ShortPixelProcessor =
                this.Debug(response.message);
                this.StopProcess();
              }
-             if (error == 'NONCE_FAILED')
+             else if (error == 'NONCE_FAILED')
              {
-               this.Debug('Nonce Failed'), 'error';
+               this.Debug('Nonce Failed', 'error');
+             }
+             else if (error == 'NOQUOTA')
+             {
+                this.tooltip.AddNotice(response.message);
+                this.StopProcess();
+             }
+             else if (response.error < 0) // something happened.
+             {
+               this.StopProcess();
              }
 
            }
@@ -328,6 +343,9 @@ window.ShortPixelProcessor =
     },
     HandleResponse: function(response, type)
     {
+        // Issue with the tooltip is when doing usual cycle of emptiness, a running icon is annoying to user. Once queries and yielded results, it might be said that the processor 'is running'
+        this.tooltip.DoingProcess();
+
         if (response.has_error == true)
         {
            this.tooltip.AddNotice(response.message);

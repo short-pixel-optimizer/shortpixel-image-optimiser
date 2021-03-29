@@ -25,7 +25,8 @@ class StatsModel
   protected $refreshStatTime;
 
   // Commented out stats were dropped.
-  protected $defaults = array(
+  // Note: the difference in items / images including thumbs and the counts don't . This is due to technical difference in acquiring the data.
+    protected $defaults = array(
       'media' => array('items' => -1, // total optimized media items found
                        'images' => -1, // total optimized images (+thumbs) found
                        'thumbs' => -1, // SQL does thumbs, but queue doesn't.
@@ -102,7 +103,7 @@ class StatsModel
      $settings->currentStats = $stats;
   }
 
-  public function resetStatistics()
+  public function reset()
   {
       $this->stats = $this->defaults;
       $this->save();
@@ -142,6 +143,7 @@ class StatsModel
 
   public function grab(string $data)
   {
+
      if (is_null($this->currentStat))
        return null;
 
@@ -191,7 +193,7 @@ class StatsModel
             case 'items':
               $data = $this->countMediaItems(['optimizedOnly' => true]);
             break;
-            case 'thumbs':
+            case 'thumbs': // unrealiable if certain thumbs are not optimized, but the main image is.
               $data = $this->countMediaThumbnails(['optimizedOnly' => true]);
             break;
             case 'images':
@@ -358,6 +360,8 @@ class StatsModel
        $args = wp_parse_args($args,$defaults);
 
        $otherMediaController = OtherMediaController::getInstance();
+       if (! $otherMediaController->hasCustomImages() )
+          return 0;
 
        $foldersids = implode(',', $otherMediaController->getActiveDirectoryIDS() );
 

@@ -88,10 +88,26 @@ class QuotaController
           return $quota;
     }
 
+    public function getAvailableQuota()
+    {
+        $quota = $this->getQuota();
+
+        /*max(0, $quotaData['APICallsQuotaNumeric'] + $quotaData['APICallsQuotaOneTimeNumeric'] - $quotaData['APICallsMadeNumeric'] - $quotaData['APICallsMadeOneTimeNumeric']))); */
+
+        return $quota->total->remaining; 
+    }
+
     public function forceCheckRemoteQuota()
     {
        $this->getRemoteQuota();
     }
+
+
+    public function remoteValidateKey($key)
+    {
+        return $this->getRemoteQuota($key, true);
+    }
+
 
     private function resetQuotaExceeded()
     {
@@ -106,12 +122,6 @@ class QuotaController
         }
         $settings->quotaExceeded = 0;
     }
-
-    public function remoteValidateKey($key)
-    {
-        return $this->getRemoteQuota($key, true);
-    }
-
 
     private function getRemoteQuota($apiKey = false, $validate = false)
     {

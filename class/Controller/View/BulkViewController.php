@@ -4,6 +4,7 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
+use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 use ShortPixel\Controller\QuotaController as QuotaController;
 use Shortpixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Controller\BulkController as BulkController;
@@ -25,15 +26,51 @@ class BulkViewController extends \ShortPixel\Controller
     $quota = QuotaController::getInstance();
     $optimizeController = new OptimizeController();
 
-
     $this->view->quotaData = $quota->getQuota();
 
     $this->view->stats = $optimizeController->getStartupData();
 
-    $this->view->logHeaders = array(__('Processed', 'shortpixel_image_optimizer'), __('Errors', 'shortpixel_image_optimizer'), __('Date', 'shortpixel_image_optimizer'));
+    $this->view->logHeaders = array(__('Processed', 'shortpixel_image_optimiser'), __('Errors', 'shortpixel_image_optimizer'), __('Date', 'shortpixel_image_optimizer'));
     $this->view->logs = $this->getLogs();
 
+    $keyControl = ApiKeyController::getInstance();
+
+
+    $this->view->error = false;
+
+    if ( ! $keyControl->keyIsVerified() )
+    {
+        $adminNoticesController = AdminNoticesController::getInstance();
+
+        $this->view->error = true;
+        $this->view->errorTitle = __('Missing API Key', 'shortpixel_image_optimiser');
+        $this->view->errorContent = $adminNoticesController->getActivationNotice();
+        $this->view->showError = 'key';
+    }
+    elseif ( ! $quota->hasQuota())
+    {
+        $this->view->error = true;
+        $this->view->errorTitle = __('Quota Exceeded','shortpixel-image-optimiser');
+        $this->view->errorContent = __('Can\'t start the Bulk Process due to lack of credits', 'shortpixel-image-optimiser');
+        $this->view->showError = 'quota';
+
+    }
+
+    if ($this->view->error)
+      $this->unload();
+
+
     $this->loadView();
+
+  }
+
+  private function unload()
+  {
+     wp_dequeue_script('shortpixel-screen-bulk');
+     wp_dequeue_script('shortpixel-bulk');
+     wp_dequeue_script('shortpixel');
+     wp_dequeue_script('shortpixel-processor');
+
 
   }
 

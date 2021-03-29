@@ -543,7 +543,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
           else
           {
             Log::addError('Backup already exists, and not the same size! BackupFile Size : ' . $backupFile->getFileSize() . ' This Filesize : ' . $this->getFileSize(), $this->fullpath);
-            $this->error_message = __('Backup already exists with a different size', 'shortpixel-image-optimizer');
+            $this->error_message = __('Backup already exists with a different size', 'shortpixel-image-optimiser');
             return false;
           }
        }
@@ -557,7 +557,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
        if (! $directory)
        {
           Log::addWarn('Could not create Backup Directory for ' . $this->getFullPath());
-          $this->error_message = __('Could not create backup Directory', 'shortpixel-image-optimizer');
+          $this->error_message = __('Could not create backup Directory', 'shortpixel-image-optimiser');
           return false;
        }
 

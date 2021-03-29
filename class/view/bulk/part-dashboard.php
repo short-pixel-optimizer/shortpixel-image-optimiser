@@ -23,6 +23,13 @@ namespace ShortPixel;
 
    </div>
 
+   <?php if ($this->view->error): ?>
+     <div class='bulk error'>
+        <h3><?php echo $this->view->errorTitle; ?></h3>
+        <?php echo $this->view->errorContent; ?>
+     </div>
+
+   <?php endif; ?>
    <?php if (count($this->view->logs) > 0): ?>
 
    <div class='dashboard-log'>
@@ -51,16 +58,17 @@ namespace ShortPixel;
    </div>
   <?php endif; ?>
 
-   <div class='shortpixel-bulk-loader' id="bulk-loading" data-status='loading'>
-     <div class='loader'>
-         <span><img src="<?php echo \wpSPIO()->plugin_url('res/img/spinner2.gif'); ?>" /></span>
-         <span>
-         <h2>Please wait, ShortPixel is loading</h2>
+  <?php if (! $this->view->error): ?>
+     <div class='shortpixel-bulk-loader' id="bulk-loading" data-status='loading'>
+       <div class='loader'>
+           <span><img src="<?php echo \wpSPIO()->plugin_url('res/img/spinner2.gif'); ?>" /></span>
+           <span>
+           <h2>Please wait, ShortPixel is loading</h2>
 
-       </span>
+         </span>
 
+       </div>
      </div>
-   </div>
-
-  </div>
-</section>
+  <?php endif; ?>
+ </div> <!-- panel-container -->
+</section> <!-- section -->
