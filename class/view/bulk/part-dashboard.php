@@ -16,7 +16,9 @@ namespace ShortPixel;
     <div class='interface wrapper'>
 
       <div class='bulk-wrapper'>
-        <button type="button" class="button-primary" id="start-optimize" data-action="StartPrepare" ><span class='dashicons dashicons-controls-play' data-action="StartPrepare">&nbsp;</span> Optimize</button>
+        <button type="button" class="button-primary" id="start-optimize" data-action="StartPrepare" <?php echo ($this->view->error) ? "disabled" : ''; ?>  >
+            <span class='dashicons dashicons-controls-play' data-action="StartPrepare">&nbsp;</span> Optimize
+        </button>
       </div>
 
       <p class='description'>Here you can (re)optimize your Media Library, image files from your theme or other media folders that you are using on your site.

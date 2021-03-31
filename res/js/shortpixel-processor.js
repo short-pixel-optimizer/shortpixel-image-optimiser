@@ -58,7 +58,11 @@ window.ShortPixelProcessor =
         '-3': 'NO_STATUS',
         '-4': 'APIKEY_FAILED',
         '-5': 'NOQUOTA',
+        '-10': 'SERVER FAILURE',
     },
+  /*  apiStatusError: {
+
+  } */
 
     Load: function()
     {
@@ -299,7 +303,6 @@ window.ShortPixelProcessor =
              {
                this.StopProcess();
              }
-
            }
 
            // Check the screen if we are custom or media ( or bulk ) . Check the responses for each of those.
@@ -317,7 +320,7 @@ window.ShortPixelProcessor =
               this.HandleResponse(response.total, 'total');
            }
 
-           this.HandleStatus(response);
+           this.HandleQueueStatus(response);
 
            if (response.processorKey)
            {
@@ -366,11 +369,17 @@ window.ShortPixelProcessor =
              for (i = 0; i < response.results.length; i++)
              {
                 var imageResult = response.results[i];
+                if (imageResult.is_error)
+                  this.HandleItemError(imageResult, type);
+
                 this.screen.HandleImage(imageResult, type);
              }
          }
          if (typeof response.result !== 'undefined' && response.result !== null)
          {
+              if (response.result.is_error)
+                this.HandleItemError(result, type);
+
               this.screen.HandleImage(response, type); // whole response here is single item. (final!)
          }
 
@@ -386,7 +395,7 @@ window.ShortPixelProcessor =
          // If all is fine, there is more in queue, enter back into queue.
     },
     /// If both are reported back, both did tick, so both must be considered.
-    HandleStatus: function(data)
+    HandleQueueStatus: function(data)
     {
       var mediaStatus = customStatus = 100;
       if (typeof data.media !== 'undefined' && typeof data.media.qstatus !== 'undefined' )
@@ -441,6 +450,19 @@ window.ShortPixelProcessor =
            this.screen.QueueStatus(qstatus, data);
       }
     },
+    HandleItemError : function(response, type)
+    {
+        var error = this.aStatusError[response.error];
+
+        if (error == 'NOQUOTA' )
+        {
+          this.StopProcess();
+        }
+
+        this.screen.HandleError(response, type);
+
+
+    },
     LoadItemView: function(data)
     {
   //    var data = event.detail;
@@ -465,7 +487,7 @@ window.ShortPixelProcessor =
       }
       if (messageType == 'error')
       {
-          console.error(message)
+          console.error('Error: ' + message);
       }
 
     }

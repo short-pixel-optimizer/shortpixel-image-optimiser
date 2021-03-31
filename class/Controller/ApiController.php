@@ -146,8 +146,11 @@ class ApiController
 
     //WpShortPixel::log("ShortPixel API Request Settings: " . json_encode($requestParameters));
     $response = wp_remote_post($this->apiEndPoint, $requestParameters );
-    Log::addDebug('ShortPixel API Request sent', $requestParameters);
 
+    Log::addDebug('ShortPixel API Request sent', $requestParameters);
+    Log::addtemp('Remote Response ', $response);
+
+//echo "<PRE>"; var_dump($response); echo "</PRE>";  exit();
     //WpShortPixel::log('RESPONSE: ' . json_encode($response));
 
     //only if $Blocking is true analyze the response
@@ -216,9 +219,10 @@ class ApiController
                  return $this->returnFailure( self::STATUS_ERROR, $APIresponse['Status']->Message);
               break;
               case -403:
-                  @delete_option('bulkProcessingStatus');
+                  @delete_option('bulkProcessingStatus'); // legacy
+                  
                   $this->_settings->quotaExceeded = 1; // @todo This should be a function in quotaController.
-                  //return array("Status" => self::STATUS_QUOTA_EXCEEDED, "Message" => __('Quota exceeded.','shortpixel-image-optimiser'));
+
                   return $this->returnRetry( self::STATUS_QUOTA_EXCEEDED, __('Quota exceeded.','shortpixel-image-optimiser'));
                   break;
               case -404:
@@ -289,7 +293,7 @@ class ApiController
         /*return array("Status" => self::STATUS_FAIL, "Message" => __('Unrecognized API response. Please contact support.','shortpixel-image-optimiser'),
                      "Code" => self::ERR_UNKNOWN, "Debug" => ' (SERVER RESPONSE: ' . json_encode($response) . ')');*/
         Log::addError('API returned Unknown Status/Response ', $response);
-        return $this->resultFailure(self::STATUS_FAIL,  __('Unrecognized API response. Please contact support.','shortpixel-image-optimiser'));
+        return $this->returnFailure(self::STATUS_FAIL,  __('Unrecognized API response. Please contact support.','shortpixel-image-optimiser'));
 
     } else {
 

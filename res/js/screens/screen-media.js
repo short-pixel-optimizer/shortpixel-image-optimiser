@@ -144,9 +144,6 @@ var ShortPixelScreen = function (MainScreen, processor)
     this.HandleError = function(response)
     {
           console.error(response);
-
-
-
     }
 
     this.RenderItemView = function(e)

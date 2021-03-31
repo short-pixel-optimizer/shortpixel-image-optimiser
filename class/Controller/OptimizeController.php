@@ -6,8 +6,8 @@ use ShortPixel\Controller\Queue\MediaLibraryQueue as MediaLibraryQueue;
 use ShortPixel\Controller\Queue\CustomQueue as CustomQueue;
 use ShortPixel\Controller\Queue\Queue as Queue;
 
+use ShortPixel\Controller\AjaxController as AjaxController;
 use ShortPixel\Controller\QuotaController as QuotaController;
-
 
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\ResponseController as ResponseController;
@@ -307,6 +307,8 @@ class OptimizeController
     }
 
     // This is everything sub-efficient.
+    /* Handles the Queue Item API result .
+    */
     protected function handleAPIResult(Object $item, $q)
     {
       $fs = \wpSPIO()->filesystem();
@@ -314,6 +316,33 @@ class OptimizeController
 
       if ($result->is_error)
       {
+          // Check ApiStatus, and see what is what for error
+          // https://shortpixel.com/api-docs
+          $apistatus = $result->apiStatus;
+        //  $apiFatal = false;
+
+          if ($apiStatus < -100 && $apiStatus < -300 ) // File Error - between -100 and -300
+          {
+              $item->fileStatus = ImageModel::FILE_STATUS_ERROR;
+            //  $apiFatal = true; // fatal error since the file needs fixing.
+          }
+          // Out of Quota (partial, full)
+          elseif ($apiStatus == -301 || $apiStatus == -403)
+          {
+              $item->status = AjaxController::NOQUOTA;
+            //  $apiFatal = true; // fatal error since quota needs upping.
+          }
+          elseif ($apiStatus == -401)
+          {
+              $item->status = AjaxController::APIKEY_FAILED;
+            //  $apiFatal = true;  // fatal error since key needs fixing.
+          }
+          elseif($apiStatus == -404 || $apiStatus == -500 ) // Full Queue / Maintenance mode
+          {
+              $item->status = AjaxController::SERVER_ERROR;
+            ///  $apiFatal = false;  // Not fatal, keep trying.
+          }
+
 
           if ($result->is_done || count($item->tries) >= SHORTPIXEL_MAX_FAIL_RETRIES )
           {
@@ -325,6 +354,7 @@ class OptimizeController
           else
           {
             // These are cloned, because queue changes object's properties
+            // No specific error, try again.
               $q->itemFailed($item, false);
           }
       }
@@ -420,9 +450,10 @@ class OptimizeController
               $item->fileStatus = ImageModel::FILE_STATUS_PENDING;
               $item->result->message .= sprintf(__(' Pass %d', 'shortpixel-image-optimiser', intval($item->tries) ));
           }
+
       }
 
-      Log::addDebug('Optimizecontrol - Item is done', $item);
+      Log::addDebug('Optimizecontrol - Item has a result ', $item);
       return $item;
 
     }
@@ -549,7 +580,7 @@ class OptimizeController
       $json->result = new \stdClass;
       $json->results = null;
 //      $json->actions = null;
-      $json->has_error = false;
+    //  $json->has_error = false;// probably unused
       $json->message = null;
 
       return $json;

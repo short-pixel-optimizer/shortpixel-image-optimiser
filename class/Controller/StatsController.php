@@ -54,7 +54,7 @@ class StatsController extends \ShortPixel\Controller
         {
             Log::addWarn('Statistics for this path failed', $params );
             return 0;
-            
+
         }
         else
           return $stat;
@@ -102,6 +102,16 @@ class StatsController extends \ShortPixel\Controller
 
 
        return $toOptimize;
+
+    }
+
+    public function totalImagesToOptimize()
+    {
+        $totalImagesOptimized = $this->find('total', 'images');
+        $totalImages = $this->find('total', 'items') + $this->find('total', 'thumbs');
+
+        $toOpt = $totalImages - $totalImagesOptimized;
+        return $toOpt;
 
     }
 

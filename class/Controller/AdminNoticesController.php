@@ -317,7 +317,7 @@ class AdminNoticesController extends \ShortPixel\Controller
               $message = $this->getBulkUpgradeMessage($data);
               $notice = Notices::addNormal($message);
               Notices::makePersistent($notice, self::MSG_UPGRADE_BULK, YEAR_IN_SECONDS, array($this, 'upgradeBulkCallback'));
-              //ShortPixelView::displayActivationNotice('upgbulk', );
+
           }
           //consider the monthly plus 1/6 of the available one-time credits.
           elseif( $this->monthlyUpgradeNeeded($quotaData)) {
@@ -330,10 +330,10 @@ class AdminNoticesController extends \ShortPixel\Controller
       }
       elseif ($settings->quotaExceeded)
       {
-         $stats = $shortpixel->countAllIfNeeded($settings->currentStats, 86400);
-         $quotaData = $stats;
+        // $stats = $shortpixel->countAllIfNeeded($settings->currentStats, 86400);
+      //   $quotaData = $stats;
 
-         $message = $this->getQuotaExceededMessage($quotaData);
+         $message = $this->getQuotaExceededMessage();
 
          $notice = Notices::addError($message);
          Notices::makePersistent($notice, self::MSG_QUOTA_REACHED, WEEK_IN_SECONDS);
@@ -443,10 +443,11 @@ class AdminNoticesController extends \ShortPixel\Controller
       return $message;
     }
 
-    protected function getQuotaExceededMessage($quotaData)
+    protected function getQuotaExceededMessage()
     {
       $statsControl = StatsController::getInstance();
       $averageCompression = $statsControl->getAverageCompression();
+      $quotaController = QuotaController::getInstance();
 
       $keyControl = ApiKeyController::getInstance();
 
@@ -490,15 +491,18 @@ class AdminNoticesController extends \ShortPixel\Controller
     /*    if($recheck) {
              $message .= '<p style="color: red">' . __('You have no available image credits. If you just bought a package, please note that sometimes it takes a few minutes for the payment confirmation to be sent to us by the payment processor.','shortpixel-image-optimiser') . '</p>';
         } */
+        $quota = $quotaController->getQuota();
+
+        $creditsUsed = number_format($quota->monthly->consumed + $quota->onetime->consumed);
+        $totalOptimized = $statsControl->find('total', 'images');
+        $totalImagesToOptimize = number_format($statsControl->totalImagesToOptimize());
 
         $message .= '<p>' . sprintf(__('The plugin has optimized <strong>%s images</strong> and stopped because it reached the available quota limit.','shortpixel-image-optimiser'),
-              number_format(max(0, $quotaData['APICallsMadeNumeric'] + $quotaData['APICallsMadeOneTimeNumeric'])));
+              $creditsUsed);
 
-        if($quotaData['totalProcessedFiles'] < $quotaData['totalFiles']) {
+        if($totalImagesToOptimize > 0) {
 
-              $message .= sprintf(__('<strong> %s images and %s thumbnails</strong> are not yet optimized by ShortPixel.','shortpixel-image-optimiser'),
-                      number_format(max(0, $quotaData['mainFiles'] - $quotaData['mainProcessedFiles'])),
-                      number_format(max(0, ($quotaData['totalFiles'] - $quotaData['mainFiles']) - ($quotaData['totalProcessedFiles'] - $quotaData['mainProcessedFiles']))));
+              $message .= sprintf(__('<strong> %s images thumbnails</strong> are not yet optimized by ShortPixel.','shortpixel-image-optimiser'), $totalImagesToOptimize  );
           }
 
          $message .= '</p>
@@ -542,9 +546,12 @@ class AdminNoticesController extends \ShortPixel\Controller
     {
         //$stats = $this->countAllIfNeeded($this->_settings->currentStats, 300);
         $statsController = StatsController::getInstance();
+        $apiKeyController = ApiKeyController::getInstance();
+        $settings = \wpSPIO()->settings();
         //$proposal = wp_remote_post($this->_settings->httpProto . "://shortpixel.com/propose-upgrade-frag", array(
         //echo("<div style='color: #f50a0a; position: relative; top: -59px; right: -255px; height: 0px; font-weight: bold; font-size: 1.2em;'>atentie de trecut pe live propose-upgrade</div>");
-        $proposal = wp_remote_post("https://shortpixel.com/propose-upgrade-frag", array(
+
+        $args = array(
             'method' => 'POST',
             'timeout' => 10,
             'redirection' => 5,
@@ -553,21 +560,25 @@ class AdminNoticesController extends \ShortPixel\Controller
             'headers' => array(),
             'body' => array("params" => json_encode(array(
                 'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
-                'key' => $this->_settings->apiKey,
+                'key' => $apiKeyController->forceGetApiKey(),
 
-                'm1' => $statsController->find('period', 'monthly', '1'),
-                'm2' => $statsController->find('period', 'monthly', '2'),
-                'm3' => $statsController->find('period', 'monthly', '3'),
-                'm4' => $statsController->find('period', 'monthly', '4'),
-                'filesTodo' => $stats['totalFiles'] - $stats['totalProcessedFiles'],
-                'estimated' => $this->_settings->optimizeUnlisted || $this->_settings->optimizeRetina ? 'true' : 'false',
+                'm1' => $statsController->find('period', 'months', '1'),
+                'm2' => $statsController->find('period', 'months', '2'),
+                'm3' => $statsController->find('period', 'months', '3'),
+                'm4' => $statsController->find('period', 'months', '4'),
+                'filesTodo' => $statsController->totalImagesToOptimize(),
+                'estimated' => $settings->optimizeUnlisted || $settings->optimizeRetina ? 'true' : 'false',
                 /* */
                 'iconsUrl' => base64_encode(wpSPIO()->plugin_url('res/img'))
-            ))),
-            'cookies' => array()
-        )); // remote post
+              ))),
+              'cookies' => array()
+
+        );
+        Log::addTemp('Propose Upgrade Args', $args);
+        $proposal = wp_remote_post("https://shortpixel.com/propose-upgrade-frag", $args);
+
         if(is_wp_error( $proposal )) {
-            $proposal = array('body' => '');
+            $proposal = array('body' => __('Error. Could not contact Shortpixel server for proposal', 'shortpixel-image-optimiser'));
         }
         die($proposal['body']);
 
@@ -600,12 +611,12 @@ class AdminNoticesController extends \ShortPixel\Controller
     }
 
     protected function bulkUpgradeNeeded() {
-        $quotaData = QuotaController::getInstance()->getQuota(); //$stats;
+        $quotaController = QuotaController::getInstance(); //$stats;
         $stats = StatsController::getInstance();
 
-        $to_process = $stats->find('total', 'imagesTotal') - $stats->find('total', 'images');
+        $to_process = $stats->totalImagesToOptimize(); // $stats->find('total', 'imagesTotal') - $stats->find('total', 'images');
 
-        return $to_process > ($quotaData->monthly->total +  $quotaData->onetime->total)  - ($quotaData->monthly->consumed - $quotaData->onetime->consumed);
+        return $to_process > $quotaController->getAvailableQuota();
 
         //return $to_process > $quotaData->monthly->total +  + $quotaData['APICallsQuotaOneTimeNumeric'] - $quotaData['APICallsMadeNumeric'] - $quotaData['APICallsMadeOneTimeNumeric'];
     }

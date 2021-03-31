@@ -80,6 +80,25 @@
             padding: 4px;
         }
      }
+     .table
+     {
+        display: table;
+        >div {
+            display: table-row;
+            >span {
+              display: table-cell;
+            }
+            &.head > span { font-weight: 700; }
+        }
+
+     }
+     .table.notices {
+        > div > span
+        {
+           width: 25%;
+           text-align: center;
+        }
+     }
   }
 
   /* In-view notice ( not on top, between the options ) - styled after WP notice */

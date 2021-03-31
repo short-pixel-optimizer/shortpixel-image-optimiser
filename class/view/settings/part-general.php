@@ -97,7 +97,7 @@
                             jQuery(".shortpixel-compression p." + jQuery(".shortpixel-compression-options input:radio:checked").attr('class')).css("display", "block");
                         }
                         //shortpixelCompressionLevelInfo();
-                        jQuery(".shortpixel-compression-options input:radio").change(shortpixelCompressionLevelInfo);
+                        jQuery(".shortpixel-compression-options input:radio").on('change', shortpixelCompressionLevelInfo);
                     </script>
                 </td>
             </tr>

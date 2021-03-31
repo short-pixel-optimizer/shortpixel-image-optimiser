@@ -1,6 +1,6 @@
 <?php
 namespace ShortPixel;
-use ShortPixel\Notices\NoticeController as Notices;
+use ShortPixel\Notices\NoticeController as NoticeController;
 use Shortpixel\Controller\StatsController as StatsController;
 
 ?>
@@ -37,6 +37,12 @@ use Shortpixel\Controller\StatsController as StatsController;
     <h3><?php _e('Quota Data', 'shortpixel'); ?></h3>
     <pre><?php var_export($this->quotaData); ?></pre>
   </div>
+  <div class='debug-quota'>
+    <form method="POST" action="<?php echo add_query_arg(array('sp-action' => 'action_debug_resetquota')) ?>"
+      id="shortpixel-form-debug-medialib">
+      <button class='button' type='submit'>Clear Quota Data</button>
+      </form>
+  </div>
   <div  class="stats env">
       <h3><?php _e('Stats', 'shortpixel-image-optimiser'); ?></h3>
       <div class='flex'>
@@ -54,10 +60,44 @@ use Shortpixel\Controller\StatsController as StatsController;
         <span>Custom Optimized</span><span><?php echo $statsControl->find('custom', 'items'); ?></span>
         <span>Custom Total</span><span><?php echo $statsControl->find('custom', 'itemsTotal'); ?></span>
   </div>
+
+
   <div class='debug-stats'>
     <form method="POST" action="<?php echo add_query_arg(array('sp-action' => 'action_debug_resetStats')) ?>"
       id="shortpixel-form-debug-stats">
       <button class='button' type='submit'>Clear statistics cache</button>
+      </form>
+  </div>
+
+  <?php $noticeController =  NoticeController::getInstance();
+    $notices = $noticeController->getNotices();
+  ?>
+
+  <h3>Notices (<?php echo count($notices); ?>)</h3>
+  <div class='table notices'>
+
+    <div class='head'>
+      <span>ID</span><span>Done</span><span>Dismissed</span><span>Persistent</span>
+    </div>
+
+  <?php foreach ($notices as $noticeObj): ?>
+
+  <div>
+      <span><?php echo $noticeObj->getID(); ?></span>
+      <span><?php echo ($noticeObj->isDone()) ? 'Y' : 'N'; ?> </span>
+      <span><?php echo ($noticeObj->isDismissed()) ? 'Y' : 'N'; ?> </span>
+      <span><?php echo ($noticeObj->isPersistent()) ? 'Y' : 'N'; ?> </span>
+
+  </div>
+
+
+  <?php endforeach ?>
+  </div>
+
+  <div class='debug-notices'>
+    <form method="POST" action="<?php echo add_query_arg(array('sp-action' => 'action_debug_resetNotices')) ?>"
+      id="shortpixel-form-debug-stats">
+      <button class='button' type='submit'>Reset Notices</button>
       </form>
   </div>
 

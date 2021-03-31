@@ -168,12 +168,21 @@
 }
 .shortpixel-bulk-wrapper section.panel.dashboard .bulk-wrapper button {
   color: #ffffff;
-  background: linear-gradient(90deg, #1FBEC9 0%, #1FB5BF 100%);
+  background: #1FB5BF;
   border-radius: 3px;
   width: 200px;
   height: 45px;
   font-size: 13px;
   line-height: 21px;
+  transition: all 0.2s linear;
+}
+.shortpixel-bulk-wrapper section.panel.dashboard .bulk-wrapper button:hover {
+  background: #50d9e2;
+  font-weight: 600;
+}
+.shortpixel-bulk-wrapper section.panel.dashboard .bulk-wrapper button:disabled {
+  color: #ccc;
+  background: #0e5358;
 }
 .shortpixel-bulk-wrapper section.panel.dashboard .bulk-wrapper button span {
   vertical-align: middle;
@@ -432,7 +441,7 @@
   font-size: 18px;
   font-weight: 700;
 }
-.shortpixel-bulk-wrapper section.panel.summary .over-quota {
+.shortpixel-bulk-wrapper section.panel.summary .over-quota, .shortpixel-bulk-wrapper section.panel.summary .no-images {
   border: 1px solid #ff0000;
   padding: 8px;
   width: 80%;
@@ -440,24 +449,29 @@
   display: flex;
   align-items: center;
 }
-.shortpixel-bulk-wrapper section.panel.summary .over-quota > span {
+.shortpixel-bulk-wrapper section.panel.summary .over-quota > span, .shortpixel-bulk-wrapper section.panel.summary .no-images > span {
   margin-right: 20px;
 }
-.shortpixel-bulk-wrapper section.panel.summary .over-quota p {
+.shortpixel-bulk-wrapper section.panel.summary .over-quota p, .shortpixel-bulk-wrapper section.panel.summary .no-images p {
   max-width: 550px;
   font-size: 14px;
   line-height: 21px;
 }
-.shortpixel-bulk-wrapper section.panel.summary .over-quota p .red {
+.shortpixel-bulk-wrapper section.panel.summary .over-quota p .red, .shortpixel-bulk-wrapper section.panel.summary .no-images p .red {
   color: #ff0000;
 }
-.shortpixel-bulk-wrapper section.panel.summary .over-quota button {
+.shortpixel-bulk-wrapper section.panel.summary .over-quota button, .shortpixel-bulk-wrapper section.panel.summary .no-images button {
   background: #F5F5F5;
   color: #1FBEC9;
   border: 1px solid #1FBEC9;
   border-radius: 3px;
   box-shadow: 0px 1px 1px rgba(171, 170, 170, 0.3);
   margin: 16px 0;
+}
+.shortpixel-bulk-wrapper section.panel.summary .no-images {
+  font-size: 14px;
+  padding: 16px;
+  font-weight: 500;
 }
 .shortpixel-bulk-wrapper section.panel.summary nav {
   margin: 45px auto;
@@ -698,7 +712,7 @@
   left: 26px;
   background: #179588;
 }
-.shortpixel-bulk-wrapper .switch_button input::disabled ~ .the_switch {
+.shortpixel-bulk-wrapper .switch_button input:disabled ~ .the_switch {
   background: #d5d5d5;
   pointer-events: none;
 }

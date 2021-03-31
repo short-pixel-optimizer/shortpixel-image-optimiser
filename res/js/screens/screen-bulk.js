@@ -302,10 +302,10 @@ console.log("Screen Init Done", initMedia, isPreparing, isRunning, isFinished);
 
           }
       }
-      else if ( this.processor.fStatus[resultItem.fileStatus] == 'FILE_ERROR')
+  /*    else if ( this.processor.fStatus[resultItem.fileStatus] == 'FILE_ERROR')
       {
          this.HandleError(result, type);
-      }
+      } */
 
 
   }
@@ -585,6 +585,17 @@ console.log("Screen Init Done", initMedia, isPreparing, isRunning, isFinished);
               element.classList.add('hidden');
             else if (! check && ! visibility && hasHidden)
               element.classList.remove('hidden');
+          }
+          else if ( element.hasAttribute('data-check-presentation'))
+          {
+              var presentation = element.getAttribute('data-check-presentation');
+              if (presentation == 'disable')
+              {
+                  if (check)
+                    element.disabled = false;
+                  else
+                    element.disabled = true;
+              }
           }
 
 

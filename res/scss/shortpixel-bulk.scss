@@ -201,13 +201,24 @@
             button
             {
                color: #ffffff;
-               background: linear-gradient(90deg, #1FBEC9 0%, #1FB5BF 100%);
+               background: #1FB5BF;
                border-radius: 3px;
                width: 200px;
                height: 45px;
-
                font-size: 13px;
                line-height: 21px;
+               transition: all 0.2s linear;
+
+               &:hover
+               {
+                  background: #50d9e2;
+                  font-weight: 600;
+          //        transition: all 1s linear;
+               }
+               &:disabled {
+                 color: #ccc;
+                 background: #0e5358;
+               }
                span
                {
                   vertical-align: middle;
@@ -508,7 +519,7 @@
           }
 
       }
-      .over-quota
+      .over-quota, .no-images,
       {
          border: 1px solid #ff0000;
          padding: 8px;
@@ -533,6 +544,12 @@
            box-shadow: 0px 1px 1px rgba(171, 170, 170, 0.3);
            margin: 16px 0;
          }
+      }
+      .no-images
+      {
+          font-size: 14px;
+          padding: 16px;
+          font-weight: 500;
       }
       nav {
         margin: 45px auto;
@@ -802,7 +819,7 @@
     		  left: 26px;
     		  background: #179588;
     		}
-    		&::disabled ~ .the_switch{
+    		&:disabled ~ .the_switch{
     		  background: #d5d5d5;
     		  pointer-events: none;
     		}

@@ -29,9 +29,9 @@ class StatsModel
     protected $defaults = array(
       'media' => array('items' => -1, // total optimized media items found
                        'images' => -1, // total optimized images (+thumbs) found
-                       'thumbs' => -1, // SQL does thumbs, but queue doesn't.
-                       'itemsTotal' => -1,
-                       'thumbsTotal' => -1,
+                       'thumbs' => -1, // Optimized thumbs - SQL does thumbs, but queue doesn't.
+                       'itemsTotal' => -1, // Total items in media  ( sql )
+                       'thumbsTotal' => -1, // Total thumbs in media ( sql )
                   /*     'lossy' => 0, // processed x compression
                        'lossy_thumbs' => 0, // main / thumbs
                        'lossless' => 0, // main /thumbs

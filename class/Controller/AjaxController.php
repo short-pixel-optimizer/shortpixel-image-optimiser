@@ -17,6 +17,7 @@ class AjaxController
     const NO_ACTION = -3;
     const APIKEY_FAILED = -4;
     const NOQUOTA = -5;
+    const SERVER_ERROR = -6;
 
     private static $instance;
 

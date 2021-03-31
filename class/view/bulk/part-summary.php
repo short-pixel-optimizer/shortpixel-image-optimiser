@@ -35,8 +35,8 @@ namespace ShortPixel;
 
     <div class="totals">
       Total number to be optimized  <span class="number" data-stats-total="images-images" data-check-total-total >0</span>
-      (All)
     </div>
+
   </div>
 
   <?php
@@ -65,20 +65,24 @@ namespace ShortPixel;
 
     </div>
 
-    <div class="over-quota" data-check-visibility="false" data-control="data-quota-total" data-control-check="data-check-total-total">
-      <span><img src="<?php echo wpSPIO()->plugin_url('res/img/bulk/over-quota.svg') ?>" /></span>  <p>On your ShortPixel account you <span class='red'>only have <?php echo $quotaData->total->total ?> credits available </span>, but you have selected <b data-stats-total="images-images">0</b> images to be optimized in this process. You can either go back and select less images to optimize, or you can upgrade to a higher plan or buy one time credits.
+    <div class="over-quota" data-check-visibility="false" data-control="data-quota-remaining" data-control-check="data-check-total-total">
+      <span><img src="<?php echo wpSPIO()->plugin_url('res/img/bulk/over-quota.svg') ?>" /></span>  <p>On your ShortPixel account you <span class='red'>only have <?php echo number_format($quotaData->total->remaining) ?> credits available </span>, but you have selected <b data-stats-total="images-images">0</b> images to be optimized in this process. You can either go back and select less images to optimize, or you can upgrade to a higher plan or buy one time credits.
 
        <button class="button">Show me the best options</button>
 
        </p>
 
 
-       <span class='hidden' data-quota-total><?php echo $quotaData->total->total ?></span>
+       <span class='hidden' data-quota-remaining><?php echo $quotaData->total->remaining ?></span>
+    </div>
+
+    <div class='no-images' data-check-visibility="false" data-control="data-check-total-total">
+        <?php _e('The current selection contains no images. The bulk cannot start.', 'shortpixel-image-optimiser'); ?>
     </div>
 
     <nav>
       <button class="button" data-action="open-panel" data-panel="selection">Back</button>
-      <button class="button-primary" data-action="StartBulk">Start Bulk Optimization</button>
+      <button class="button-primary" data-action="StartBulk" data-control="data-check-total-total" data-check-presentation="disable" >Start Bulk Optimization</button>
     </nav>
   </div>
 </section>

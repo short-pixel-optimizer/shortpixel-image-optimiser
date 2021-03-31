@@ -140,7 +140,23 @@ class SettingsController extends \ShortPixel\Controller
           $this->load();
       }
 
+      public function action_debug_resetquota()
+      {
+          $this->loadEnv();
+          $quotaController = QuotaController::getInstance();
+          $quotaController->forceCheckRemoteQuota();
 
+          $this->load();
+      }
+
+      public function action_debug_resetNotices()
+      {
+          $this->loadEnv();
+          Notice::resetNotices();
+          $nControl = new Notice(); // trigger reload.
+
+          $this->load();
+      }
 
       public function processSave()
       {

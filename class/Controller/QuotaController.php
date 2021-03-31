@@ -94,12 +94,17 @@ class QuotaController
 
         /*max(0, $quotaData['APICallsQuotaNumeric'] + $quotaData['APICallsQuotaOneTimeNumeric'] - $quotaData['APICallsMadeNumeric'] - $quotaData['APICallsMadeOneTimeNumeric']))); */
 
-        return $quota->total->remaining; 
+        return $quota->total->remaining;
     }
 
     public function forceCheckRemoteQuota()
     {
-       $this->getRemoteQuota();
+        $cache = new CacheController();
+        $cacheData = $cache->getItem(self::CACHE_NAME);
+        $cacheData->delete();
+        $this->quotaData = null;
+
+       //$this->getRemoteQuota();
     }
 
 
