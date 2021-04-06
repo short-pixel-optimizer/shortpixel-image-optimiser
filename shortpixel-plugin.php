@@ -289,7 +289,7 @@ class ShortPixelPlugin
 
     add_action('wp_ajax_shortpixel_new_api_key', array(&$this, 'newApiKey'));
     add_action('wp_ajax_shortpixel_propose_upgrade', array(AjaxController::getInstance(), 'ajax_proposeQuotaUpgrade'));
-
+    add_action('wp_ajax_shortpixel_check_quota', array(AjaxController::getInstance(), 'ajax_checkquota'));
 
     // @todo should probably go through ajaxrequest.
     add_action( 'wp_ajax_shortpixel_get_comparer_data', array(AjaxController::getInstance(), 'ajax_getComparerData'));

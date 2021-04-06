@@ -5,6 +5,8 @@ namespace ShortPixel\Controller;
 use ShortPixel\Controller\View\ListMediaViewController as ListMediaViewController;
 use ShortPixel\Controller\View\OtherMediaViewController as OtherMediaViewController;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\Notices\NoticeController as Notices;
+
 
 //use ShortPixel\Controller\BulkController as BulkController;
 use ShortPixel\Helper\UiHelper as UiHelper;
@@ -418,6 +420,37 @@ class AjaxController
          $notices = AdminNoticesController::getInstance();
          $notices->proposeUpgradeRemote();
          exit();
+    }
+
+    public function ajax_checkquota()
+    {
+         $this->checkNonce('ajax_request');
+
+         $quotaController = QuotaController::getInstance();
+         $quotaController->forceCheckRemoteQuota();
+
+         $quota = $quotaController->getQuota();
+         
+         $settings = \wpSPIO()->settings();
+
+         $sendback = wp_get_referer();
+         // sanitize the referring webpage location
+         $sendback = preg_replace('|[^a-z0-9-~+_.?#=&;,/:]|i', '', $sendback);
+
+         $result = array('status' => 'no-quota', 'redirect' => $sendback);
+         //$has_quota = isset($result['APICallsRemaining']) && (intval($result['APICallsRemaining']) > 0) ? true : false;
+         if (! $settings->quotaExceeded)
+         {
+            $result['status'] = 'has-quota';
+          //  $result['quota'] = $result['APICallsRemaining'];
+         }
+         else
+         {
+            Notices::addWarning( __('You have no available image credits. If you just bought a package, please note that sometimes it takes a few minutes for the payment confirmation to be sent to us by the payment processor.','shortpixel-image-optimiser') );
+         }
+
+         wp_send_json($result);
+
     }
 
     protected function checkNonce($action)

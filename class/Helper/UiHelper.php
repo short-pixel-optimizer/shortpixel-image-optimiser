@@ -141,14 +141,7 @@ class UiHelper
     return $output;
 
   }
-/*
-  public static function renderMessage($message)
-  {
-    $output = "<div class='sp-column-info'>" . $message . "</div>";
 
-    return $output;
-  }
- */
   public static function compressionTypeToText($type)
   {
      if ($type == ImageModel::COMPRESSION_LOSSLESS )
@@ -167,6 +160,11 @@ class UiHelper
   {
       $list_actions = array();
       $id = $mediaItem->get('id');
+
+      $quotaControl = QuotaController::getInstance();
+
+      if(! $quotaControl->hasQuota())
+        return array();
 
       if ($mediaItem->isOptimized())
       {

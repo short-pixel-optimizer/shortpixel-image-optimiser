@@ -297,6 +297,7 @@ window.ShortPixelProcessor =
              else if (error == 'NOQUOTA')
              {
                 this.tooltip.AddNotice(response.message);
+                this.Debug('No Quota');
                 this.StopProcess();
              }
              else if (response.error < 0) // something happened.
@@ -368,11 +369,11 @@ window.ShortPixelProcessor =
          {
              for (i = 0; i < response.results.length; i++)
              {
-                var imageResult = response.results[i];
-                if (imageResult.is_error)
-                  this.HandleItemError(imageResult, type);
+                var imageItem = response.results[i];
+                if (imageItem.result.is_error)
+                  this.HandleItemError(imageItem, type);
 
-                this.screen.HandleImage(imageResult, type);
+                this.screen.HandleImage(imageItem, type);
              }
          }
          if (typeof response.result !== 'undefined' && response.result !== null)
@@ -450,16 +451,17 @@ window.ShortPixelProcessor =
            this.screen.QueueStatus(qstatus, data);
       }
     },
-    HandleItemError : function(response, type)
+    HandleItemError : function(result, type)
     {
-        var error = this.aStatusError[response.error];
+        console.log('Handle Item Error', result, type);
+        var error = this.aStatusError[result.error];
 
         if (error == 'NOQUOTA' )
         {
           this.StopProcess();
         }
 
-        this.screen.HandleError(response, type);
+        this.screen.HandleError(result, type);
 
 
     },

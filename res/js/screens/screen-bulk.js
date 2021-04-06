@@ -404,7 +404,7 @@ console.log("Screen Init Done", initMedia, isPreparing, isRunning, isFinished);
   this.HandleError = function(response, type)
   {
     console.error(response);
-    var message = response.message + ':' + response.filename;
+    var message = response.result.message + '(' + response.item_id + ') :' + response.result.filename;
     var data = {message: message};
     this.UpdateData('error', data, type);
 

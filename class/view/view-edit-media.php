@@ -30,7 +30,7 @@ if (! is_null($view->debugInfo) && is_array($view->debugInfo) && count($view->de
   <?php endif; ?>
 
   <?php if (isset($this->view->text)): ?>
-  <div class='sp-column-info'><?php  echo $this->view->text;  ?></div>
+  <div class='sp-column-info'><p><?php  echo $this->view->text;  ?></p></div>
 <?php endif; ?>
 
 

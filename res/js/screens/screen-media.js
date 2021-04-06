@@ -144,6 +144,15 @@ var ShortPixelScreen = function (MainScreen, processor)
     this.HandleError = function(response)
     {
           console.error(response);
+          if (response.result.is_done)
+          {
+            e = {};
+            e.detail = {};
+            e.detail.media = {};
+            e.detail.media.id = response.item_id;
+            e.detail.media.result = '';
+            this.RenderItemView(e); // remove actions.
+         }
     }
 
     this.RenderItemView = function(e)

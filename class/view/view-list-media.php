@@ -6,7 +6,7 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 if (isset($this->view->text)): ?>
 <div class='sp-column-info' id='sp-msg-<?php echo($this->view->mediaItem->get('id') );?>'>
-      <?php  echo $this->view->text;  ?>
+      <p><?php  echo $this->view->text;  ?></p>
 
 
 

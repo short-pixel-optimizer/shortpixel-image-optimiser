@@ -66,6 +66,7 @@ class OptimizeController
 
         $json = $this->getJsonResponse();
         $json->status = 0;
+        $json->result = new \stdClass;
         $json->result->item_id = $id;
 
         $queue = $this->getQueue($mediaItem->get('type'));
@@ -119,6 +120,7 @@ class OptimizeController
 
         $json = $this->getJsonResponse();
         $json->status = 0;
+        $json->result = new \stdClass;
         $json->result->item_id = $mediaItem->get('id');
 
         $result = $mediaItem->restore();
@@ -196,6 +198,7 @@ class OptimizeController
         if (! $keyControl->keyIsVerified())
         {
            $json = $this->getJsonResponse();
+           $json->status = false;
            $json->error = AjaxController::APIKEY_FAILED;
            $json->message =  __('Invalid API Key', 'shortpixel-image-optimiser');
            $json->status = false;
@@ -207,6 +210,7 @@ class OptimizeController
         {
           $json = $this->getJsonResponse();
           $json->error = AjaxController::NOQUOTA;
+          $json->status = false;
           $json->message =   __('Quota Exceeded','shortpixel-image-optimiser');
           return $json;
         }
@@ -314,6 +318,12 @@ class OptimizeController
       $fs = \wpSPIO()->filesystem();
       $result = $item->result;
 
+      $qtype = $q->getType();
+      $qtype = strtolower($qtype);
+
+      $imageItem = $fs->getImage($item->item_id, $qtype);
+      $item->result->filename = $imageItem->getFileName();
+
       if ($result->is_error)
       {
           // Check ApiStatus, and see what is what for error
@@ -321,30 +331,30 @@ class OptimizeController
           $apistatus = $result->apiStatus;
         //  $apiFatal = false;
 
-          if ($apiStatus < -100 && $apiStatus < -300 ) // File Error - between -100 and -300
+          if ($apistatus == ApiController::STATUS_ERROR ) // File Error - between -100 and -300
           {
               $item->fileStatus = ImageModel::FILE_STATUS_ERROR;
             //  $apiFatal = true; // fatal error since the file needs fixing.
           }
-          // Out of Quota (partial, full)
-          elseif ($apiStatus == -301 || $apiStatus == -403)
+          // Out of Quota (partial / full)
+          elseif ($apistatus == ApiController::STATUS_QUOTA_EXCEEDED)
           {
-              $item->status = AjaxController::NOQUOTA;
+              //$item->status = false;
+              $item->result->error = AjaxController::NOQUOTA;
             //  $apiFatal = true; // fatal error since quota needs upping.
           }
-          elseif ($apiStatus == -401)
+          elseif ($apistatus == ApiController::STATUS_NO_KEY)
           {
-              $item->status = AjaxController::APIKEY_FAILED;
+              $item->result->error = AjaxController::APIKEY_FAILED;
             //  $apiFatal = true;  // fatal error since key needs fixing.
           }
-          elseif($apiStatus == -404 || $apiStatus == -500 ) // Full Queue / Maintenance mode
+          elseif($apistatus == ApiController::STATUS_QUEUE_FULL || $apistatus == ApiController::STATUS_MAINTENANCE ) // Full Queue / Maintenance mode
           {
-              $item->status = AjaxController::SERVER_ERROR;
+              $item->result->error = AjaxController::SERVER_ERROR;
             ///  $apiFatal = false;  // Not fatal, keep trying.
           }
 
-
-          if ($result->is_done || count($item->tries) >= SHORTPIXEL_MAX_FAIL_RETRIES )
+          if ($result->is_done || $item->tries >= SHORTPIXEL_MAX_FAIL_RETRIES )
           {
              // These are cloned, because queue changes object's properties
              $q->itemFailed($item, true);
@@ -363,19 +373,6 @@ class OptimizeController
          if ($result->apiStatus == ApiController::STATUS_SUCCESS )
          {
 
-           $qtype = $q->getType();
-           $qtype = strtolower($qtype);
-
-           /*if ($queue_name == 'Media')
-           {
-              $imageItem = $fs->getMediaImage($item->item_id);
-           }
-           elseif ($queue_name == 'Custom')
-           {
-             $imageItem = $fs->getCustomImage($item->item_id);
-           } */
-
-           $imageItem = $fs->getImage($item->item_id, $qtype);
 
            $tempFiles = array();
 
@@ -409,7 +406,7 @@ class OptimizeController
               }
 
               unset($item->result->files);
-              $item->result->filename = $imageItem->getFileName();
+
               $item->result->queuetype = $qtype;
               if ($imageItem->hasBackup())
               {
@@ -441,7 +438,6 @@ class OptimizeController
          }
          else
            $q->itemDone($item);
-
       }
       else
       {
@@ -450,7 +446,6 @@ class OptimizeController
               $item->fileStatus = ImageModel::FILE_STATUS_PENDING;
               $item->result->message .= sprintf(__(' Pass %d', 'shortpixel-image-optimiser', intval($item->tries) ));
           }
-
       }
 
       Log::addDebug('Optimizecontrol - Item has a result ', $item);
@@ -469,8 +464,9 @@ class OptimizeController
           $time = UiHelper::formatTs(time());
           $fileName = $item->result->filename;
           $message = $item->result->message; // getLastErrorMessage();
+          $item_id = $item->item_id;
 
-          $fileLog->append($time . ' - ' . $fileName . ' - ' . $message . PHP_EOL);
+          $fileLog->append($time . ' - ' . $fileName . '( ' . $item_id . ') - ' . $message . PHP_EOL);
         }
     }
 
@@ -577,7 +573,7 @@ class OptimizeController
     {
       $json = new \stdClass;
       $json->status = null;
-      $json->result = new \stdClass;
+      $json->result = null;
       $json->results = null;
 //      $json->actions = null;
     //  $json->has_error = false;// probably unused

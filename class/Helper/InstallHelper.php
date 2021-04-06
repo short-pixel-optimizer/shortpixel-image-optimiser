@@ -50,6 +50,9 @@ class InstallHelper
     if ($log->exists())
       $log->delete();
 
+    global $wpdb;
+    $sql = "delete from wp_options where option_name like '%_transient_shortpixel%'";
+    $wpdb->query($sql); // remove transients.
   }
 
   public static function uninstallPlugin()

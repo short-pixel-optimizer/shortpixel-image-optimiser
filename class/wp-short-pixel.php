@@ -1975,6 +1975,7 @@ class WPShortPixel {
         die(json_encode($ret));
     }
 
+/*
     public function handleCheckQuota()
     {
         $return_json = isset($_POST['return_json']) ? true : false;
@@ -2014,7 +2015,7 @@ class WPShortPixel {
           wp_redirect($sendback);
         // we are done
     }
-
+*/
 
     // @todo integrate this in a normal way / move @unlinks to proper fs delete.
     /*public function handleDeleteAttachmentInBackup($ID) {
@@ -2052,6 +2053,7 @@ class WPShortPixel {
     /** Runs on plugin deactivation
     * @hook admin_post_shortpixel_deactivate_plugin
     */
+    /*
     public function deactivatePlugin() {
         if ( ! wp_verify_nonce( $_GET['_wpnonce'], 'sp_deactivate_plugin_nonce' ) ) {
                 wp_nonce_ays( '' );
@@ -2068,18 +2070,19 @@ class WPShortPixel {
         }
         $this->deactivateAndRedirect(wp_get_referer());
 
-    }
+    } */
 
     /** Deactivates plugin and redirects
     * @param string @url URL to redirect after deactivate
     */
+    /*
     protected function deactivateAndRedirect($url){
         //die(ShortPixelVDD($url));
         deactivate_plugins( sanitize_text_field($_GET['plugin']) );
         wp_safe_redirect( $url );
         die();
 
-    }
+    } */
 
     public function countAllIfNeeded($quotaData, $time) {
         if( !(defined('SHORTPIXEL_DEBUG') && SHORTPIXEL_DEBUG === true) && is_array($this->_settings->currentStats)

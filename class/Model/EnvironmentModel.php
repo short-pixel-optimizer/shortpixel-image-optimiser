@@ -80,6 +80,13 @@ class EnvironmentModel extends \ShortPixel\Model
 
   }
 
+  //https://www.php.net/manual/en/function.sys-getloadavg.php
+  public function getSystemLoad()
+  {
+      $load = sys_getloadavg();
+      
+  }
+
   /* https://github.com/WordPress/WordPress/blob/master/wp-includes/class-wp-image-editor-imagick.php */
   public function hasImagick()
   {
@@ -98,8 +105,8 @@ class EnvironmentModel extends \ShortPixel\Model
     $this->is_apache = strpos(strtolower($_SERVER["SERVER_SOFTWARE"]), 'apache') !== false ? true : false;
     $this->is_gd_installed = function_exists('imagecreatefrompng');
     $this->is_curl_installed = function_exists('curl_init');
-
   }
+
 
   private function setWordPress()
   {

@@ -655,6 +655,12 @@ class AdminNoticesController extends \ShortPixel\Controller
     */
     private function get_update_notice($data, $response) {
             $transient_name = 'shortpixel_update_notice_' . $response->new_version;
+
+            $transient_duration = DAY_IN_SECONDS;
+
+            if (\wpSPIO()->env()->is_debug)
+              $transient_duration = 30;
+
             $update_notice  = get_transient( $transient_name );
             $url = 'https://plugins.svn.wordpress.org/shortpixel-image-optimiser/trunk/readme.txt';
 
@@ -669,7 +675,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 
                     if ( !empty( $readme_response ) ) {
                             $update_notice = $this->parse_update_notice( $content, $response );
-                            set_transient( $transient_name, $update_notice, DAY_IN_SECONDS );
+                            set_transient( $transient_name, $update_notice, $transient_duration );
                     }
             }
 
@@ -693,6 +699,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 	                $update_notice = '';
 
 	               // foreach ( $check_for_notices as $id => $check_version ) {
+
 	                        if ( version_compare( SHORTPIXEL_IMAGE_OPTIMISER_VERSION, $new_version, '>' ) ) {
 	                                return '';
 	                        }
@@ -730,7 +737,10 @@ class AdminNoticesController extends \ShortPixel\Controller
 
                   if (! isset($matches[1]))
                     return ''; // no update texts.
-                  $lines = str_split(trim($matches[1]));
+
+                  $match = str_replace('\n', '', $matches[1]);
+                  $lines = str_split(trim($match));
+
                   $versions = array();
                   $inv = false;
                   foreach($lines as $char)
@@ -766,6 +776,7 @@ class AdminNoticesController extends \ShortPixel\Controller
                           $notice .= '<span>';
                           $notice .= $this->markdown2html( $line );
                           $notice .= '</span>';
+
                       }
                   }
 

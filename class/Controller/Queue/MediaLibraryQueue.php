@@ -26,7 +26,7 @@ class MediaLibraryQueue extends Queue
         'mode' => 'wait',
         'process_timeout' => 7000,
         'retry_limit' => 20,
-        'enqueue_limit' => 20,
+        'enqueue_limit' => 200,
      );
 
      $options = apply_filters('shortpixel/medialibraryqueue/options', $options);

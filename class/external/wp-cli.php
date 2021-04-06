@@ -75,7 +75,7 @@ class SpioCommand
      */
     public function enqueue($args)
     {
-        $controller = OptimizeController::getInstance();
+        $controller = new OptimizeController();
         if (! isset($args[0]))
         {
           \WP_CLI::Error(__('Specify an Media Library Item ID', 'shortpixel_image_optimiser'));
@@ -83,12 +83,18 @@ class SpioCommand
         }
         $id = intval($args[0]);
 
-        $result = $controller->addItemtoQueue($id);
+        $fs = \wpSPIO()->filesystem();
+        $imageObj = $fs->getImage($id, 'media');
+
+        $result = $controller->addItemtoQueue($imageObj);
+
 
         if ($result->status == 1)
-          \WP_CLI::Success($result->message);
+          \WP_CLI::Success($result->result->message);
         elseif ($result->status == 0)
-          \WP_CLI::Error(sprintf(__("Adding this item: %s", 'shortpixel_image_optimiser'), $result->message) );
+        {
+          \WP_CLI::Error(sprintf(__("Adding this item: %s", 'shortpixel_image_optimiser'), $result->result->message) );
+        }
     }
 
 
@@ -116,7 +122,7 @@ class SpioCommand
    */
   public function restore($args)
   {
-      $controller = OptimizeController::getInstance();
+      $controller = new OptimizeController();
       if (! isset($args[0]))
       {
         \WP_CLI::Error(__('Specify an Media Library Item ID', 'shortpixel_image_optimiser'));
@@ -161,14 +167,14 @@ class SpioCommand
  */
   public function createbulk($args, $assoc)
   {
-      $controller = OptimizeController::getInstance();
+      $controller = new OptimizeController();
       $controller->createBulk();
       $this->runqueue($args, $assoc);
   }
 
   public function startbulk($args, $assoc)
   {
-      $controller = OptimizeController::getInstance();
+      $controller = new OptimizeController();
       $controller->startBulk();
 
   }
@@ -210,11 +216,24 @@ class SpioCommand
         else
           $wait = 3;
 
+        if (isset($assoc['queue']))
+        {
+          if (strpos(',', $assoc['queue']) !== false)
+          {
+              $queue = explode(',', $assoc['queue']);
+              $queue = array_map('sanitize_text_field', $queue);
+          }
+          else
+            $queue = array(sanitize_text_field($assoc['queue']));
+        }
+        else
+          $queue = array('media', 'custom');
+
         $progress = \WP_CLI\Utils\make_progress_bar( 'This run (ticks) ', $ticks );
 
         while($ticks > 0)
         {
-           $bool = $this->runClick();
+           $bool = $this->runClick($queue);
            if ($bool === false)
            {
              break;
@@ -227,13 +246,13 @@ class SpioCommand
         $progress->finish();
     }
 
-    protected function runClick()
+    protected function runClick($queueTypes)
     {
 
-        $controller = OptimizeController::getInstance();
-        $results = $controller->processQueue();
+        $controller = new OptimizeController();
+        $results = $controller->processQueue($queueTypes);
 
-        $mediaResult = $results['media'];
+        $mediaResult = $results->media;
 
         if (! is_null($mediaResult->message))
         {
@@ -279,7 +298,7 @@ class SpioCommand
               \WP_CLI::line($response->message);
         }
 
-        if ($mediaResult->status == Queue::RESULT_QUEUE_EMPTY)
+        if ($mediaResult->qstatus == Queue::RESULT_QUEUE_EMPTY)
         {
            \WP_CLI::line('Queue reports processing has finished');
            return false;

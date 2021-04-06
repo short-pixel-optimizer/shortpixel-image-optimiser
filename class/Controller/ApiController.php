@@ -202,6 +202,7 @@ class ApiController
   {
 
     $APIresponse = $this->parseResponse($response);//get the actual response from API, its an array
+    $settings = \wpSPIO()->settings();
 
     // This is only set if something is up, otherwise, ApiResponise returns array
     if ( isset($APIresponse['Status']))
@@ -219,12 +220,16 @@ class ApiController
                  return $this->returnFailure( self::STATUS_ERROR, $APIresponse['Status']->Message);
               break;
               case -403:
+              case -301:
                   @delete_option('bulkProcessingStatus'); // legacy
-                  
-                  $this->_settings->quotaExceeded = 1; // @todo This should be a function in quotaController.
+
+                  $settings->quotaExceeded = 1; // @todo This should be a function in quotaController.
 
                   return $this->returnRetry( self::STATUS_QUOTA_EXCEEDED, __('Quota exceeded.','shortpixel-image-optimiser'));
                   break;
+              case -401:
+                  return $this->returnFailure( self::STATUS_NO_KEY, $APIresponse['Status']->Message);
+              break;
               case -404:
                   //return array("Status" => self::STATUS_QUEUE_FULL, "Message" => $APIresponse['Status']->Message);
                   return $this->returnRetry( self::STATUS_QUEUE_FULL, $APIresponse['Status']->Message);

@@ -352,9 +352,10 @@ var ShortPixel = function() {
     function checkQuota() {
         var data = {
           action:'shortpixel_check_quota',
-          nonce: ShortPixelActions.nonce_check_quota,
+          nonce: ShortPixelProcessorData.nonce_ajaxrequest,
           return_json: true
         };
+
         jQuery.post(ShortPixel.AJAX_URL, data, function(result) {
             console.log("quota refreshed");
             console.log(result);
