@@ -161,7 +161,7 @@ class ShortPixelImgToPictureWebp
         Log::addDebug('ImageBase'. $imageBase);
 
         //some attributes should not be moved from <img>
-        $altAttr = isset($img['alt']) && strlen($img['alt']) ? ' alt="' . $img['alt'] . '"' : '';
+        $altAttr = isset($img['alt'])  ? ' alt="' . $img['alt'] . '"' : '';
         $idAttr = isset($img['id']) && strlen($img['id']) ? ' id="' . $img['id'] . '"' : '';
         $heightAttr = isset($img['height']) && strlen($img['height']) ? ' height="' . $img['height'] . '"' : '';
         $widthAttr = isset($img['width']) && strlen($img['width']) ? ' width="' . $img['width'] . '"' : '';

@@ -306,6 +306,14 @@ Hide the Cloudflare settings by defining these constants in wp-config.php:
 9. Check other optimized images status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 4.22 =
+
+
+* Fix: Custom database tables not set primary key instead unique key
+* Fix: Empty alt tag should not be stripped with webp delivery
+* Fix: bug when using S3-offload in combination with webp delivery
+
 = 4.21.2 =
 
 Release date March 15th, 2021

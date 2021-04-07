@@ -587,8 +587,8 @@ class AdminNoticesController extends \ShortPixel\Controller
       if( $message !== false && strlen(trim($message)) > 0) {
     		$wp_list_table = _get_list_table( 'WP_Plugins_List_Table' );
     		printf(
-    			'<tr class="plugin-update-tr active"><td colspan="%s" class="plugin-update colspanchange"><div class="notice inline notice-warning notice-alt">%s</div></td></tr>',
-    			$wp_list_table->get_column_count(),
+    			'<tr class="plugin-update-tr active"><td colspan="%s" class="plugin-update colspanchange"><div class="notice inline notice-error notice-alt"><h4>%s</h4> %s</div></td></tr>',
+    			$wp_list_table->get_column_count(), __('Version', 'shortpixel_image_optimiser') . ' ' . $response->new_version,
     			wpautop( $message )
     		);
     	}
@@ -599,8 +599,15 @@ class AdminNoticesController extends \ShortPixel\Controller
      *   Stolen from SPAI, Thanks.
     */
     private function get_update_notice($data, $response) {
-            $transient_name = 'shortpixel_update_notice_' . $response->new_version;
+           $transient_name = 'shortpixel_update_notice_' . $response->new_version;
+
+           $transient_duration = DAY_IN_SECONDS;
+
+           if (\wpSPIO()->env()->is_debug)
+             $transient_duration = 30;
+
             $update_notice  = get_transient( $transient_name );
+
             $url = 'https://plugins.svn.wordpress.org/shortpixel-image-optimiser/trunk/readme.txt';
 
             if ( $update_notice === false || strlen( $update_notice ) == 0 ) {
@@ -611,10 +618,9 @@ class AdminNoticesController extends \ShortPixel\Controller
                        $content = $readme_response['body'];
                     }
 
-
                     if ( !empty( $readme_response ) ) {
                             $update_notice = $this->parse_update_notice( $content, $response );
-                            set_transient( $transient_name, $update_notice, DAY_IN_SECONDS );
+                            set_transient( $transient_name, $update_notice, $transient_duration );
                     }
             }
 
@@ -632,21 +638,9 @@ class AdminNoticesController extends \ShortPixel\Controller
 	         * @return string
 	         */
 	        private function parse_update_notice( $content, $response ) {
-	                //$version_parts     = explode( '.', $response->new_version );
-              //    var_dump($version_parts);
-              //  echo "<PRE>";  var_dump($content); echo "</PRE>";
-
-	               /* $check_for_notices = [
-	                        $version_parts[ 0 ] . '.' . $version_parts[ 1 ] . '.' . $version_parts[ 2 ] . '.' . $version_parts[ 3 ], // build
-	                        $version_parts[ 0 ] . '.' . $version_parts[ 1 ] . '.' . $version_parts[ 2 ], // patch (micro)
-	                        $version_parts[ 0 ] . '.' . $version_parts[ 1 ] . '.0', // minor
-	                        $version_parts[ 0 ] . '.' . $version_parts[ 1 ], // minor
-	                        $version_parts[ 0 ] . '.0.0', // major
-	                        $version_parts[ 0 ] . '.0', // major
-	                ];  */
                   $new_version = $response->new_version;
 
-	                $update_notice = '';
+	                $update_notice = false;
 
 	               // foreach ( $check_for_notices as $id => $check_version ) {
 	                        if ( version_compare( SHORTPIXEL_IMAGE_OPTIMISER_VERSION, $new_version, '>' ) ) {
@@ -655,7 +649,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 
 	                        $result = $this->parse_readme_content( $content, $new_version, $response );
 
-	                        if ( !empty( $result ) ) {
+	                        if ( !empty( $result ) && strlen($result) > 0 ) {
 	                                $update_notice = $result;
 	                        }
 	             //   }
@@ -686,7 +680,11 @@ class AdminNoticesController extends \ShortPixel\Controller
 
                   if (! isset($matches[1]))
                     return ''; // no update texts.
-                  $lines = str_split(trim($matches[1]));
+
+                    $match = $matches[1];
+                //  $match = str_replace('\n', '', $matches[1]);
+                  $lines = str_split(trim($match));
+
                   $versions = array();
                   $inv = false;
                   foreach($lines as $char)
@@ -709,9 +707,9 @@ class AdminNoticesController extends \ShortPixel\Controller
                      }
                      elseif(! $inv)  // record the message
                      {
-                        $versions[trim($curver)] .= $char;
+                        if (isset($curver))
+                          $versions[trim($curver)] .= $char;
                      }
-
 
                   }
 
@@ -727,7 +725,8 @@ class AdminNoticesController extends \ShortPixel\Controller
 
 	                }
 
-	                return $notice;
+
+	                return trim($notice);
 	        }
 
 	        /*private function replace_readme_constants( $content, $response ) {
@@ -738,7 +737,10 @@ class AdminNoticesController extends \ShortPixel\Controller
 	        } */
 
 	        private function markdown2html( $content ) {
-	                $patterns = [
+
+                  $content = str_replace(array(PHP_EOL, '\n', '\n\r'), '<br>', $content);
+
+                  $patterns = [
 	                        '/\*\*(.+)\*\*/U', // bold
 	                        '/__(.+)__/U', // italic
 	                        '/\[([^\]]*)\]\(([^\)]*)\)/U', // link
