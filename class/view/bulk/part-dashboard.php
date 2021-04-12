@@ -16,8 +16,8 @@ namespace ShortPixel;
     <div class='interface wrapper'>
 
       <div class='bulk-wrapper'>
-        <button type="button" class="button-primary" id="start-optimize" data-action="StartPrepare" <?php echo ($this->view->error) ? "disabled" : ''; ?>  >
-            <span class='dashicons dashicons-controls-play' data-action="StartPrepare">&nbsp;</span> Optimize
+        <button type="button" class="button-primary" id="start-optimize" data-action="open-panel" data-panel="selection" <?php echo ($this->view->error) ? "disabled" : ''; ?>  >
+            <span class='dashicons dashicons-controls-play' data-action="open-panel" data-panel="selection">&nbsp;</span> Optimize
         </button>
       </div>
 

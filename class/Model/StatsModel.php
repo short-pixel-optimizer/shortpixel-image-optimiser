@@ -82,6 +82,9 @@ class StatsModel
 
     $stats = $settings->currentStats;
 
+    // Legacy. Stats from < 5.0 are loaded somehow. Don't load them.
+    if (isset($stats['APIKeyValid']))
+      $stats = $this->defaults;
 
     $this->lastUpdate = (isset($stats['time'])) ? $stats['time'] : 0;
 
@@ -145,14 +148,13 @@ class StatsModel
   {
 
      if (is_null($this->currentStat))
-       return null;
+          return null;
 
        if (isset($this->currentStat[$data]))
        {
           $this->currentStat = $this->currentStat[$data];
           $this->path[] = $data;
        }
-
 
        if (! is_array($this->currentStat))
        {
@@ -176,7 +178,7 @@ class StatsModel
       if ($path[0] == 'period' && $path[1] == 'months' && isset($path[2]))
       {
           $month = $path[2];
-        //  var_dump($month);
+
           $data = $this->countMonthlyOptimized(intval($month));
 
           if ($data >= 0)

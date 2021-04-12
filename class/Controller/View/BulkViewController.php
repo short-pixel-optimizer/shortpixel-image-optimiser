@@ -8,6 +8,7 @@ use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 use ShortPixel\Controller\QuotaController as QuotaController;
 use Shortpixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Controller\BulkController as BulkController;
+use ShortPixel\Controller\StatsController as StatsController;
 use ShortPixel\Helper\UiHelper as UiHelper;
 
 class BulkViewController extends \ShortPixel\Controller
@@ -29,12 +30,12 @@ class BulkViewController extends \ShortPixel\Controller
     $this->view->quotaData = $quota->getQuota();
 
     $this->view->stats = $optimizeController->getStartupData();
+    $this->view->approx = $this->getApproxData();
 
     $this->view->logHeaders = array(__('Processed', 'shortpixel_image_optimiser'), __('Errors', 'shortpixel_image_optimizer'), __('Date', 'shortpixel_image_optimizer'));
     $this->view->logs = $this->getLogs();
 
     $keyControl = ApiKeyController::getInstance();
-
 
     $this->view->error = false;
 
@@ -61,6 +62,26 @@ class BulkViewController extends \ShortPixel\Controller
 
 
     $this->loadView();
+
+  }
+
+  protected function getApproxData()
+  {
+    $approx = new \stdClass; // guesses on basis of the statsController SQL.
+    $approx->media = new \stdClass;
+    $approx->custom = new \stdClass;
+    $approx->total = new \stdClass;
+
+    $sc = StatsController::getInstance();
+
+    $approx->media->items = $sc->find('media', 'itemsTotal') - $sc->find('media', 'items');
+    $approx->media->thumbs = $sc->find('media', 'thumbsTotal') - $sc->find('media', 'thumbs');
+    $approx->media->total = $approx->media->items + $approx->media->thumbs;
+
+    $approx->custom->items = $sc->find('custom', 'itemsTotal') - $sc->find('custom', 'items');
+
+    $approx->total->images = $sc->totalImagesToOptimize();
+    return $approx;
 
   }
 

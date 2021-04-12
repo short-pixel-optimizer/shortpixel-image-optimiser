@@ -120,15 +120,7 @@ class SettingsController extends \ShortPixel\Controller
          $this->load();
       }
 
-      /** Button in part-debug. Route via this custom Action. */
-      public function action_debug_medialibrary()
-      {
-        $this->loadEnv();
 
-        \WpShortPixelMediaLbraryAdapter::reCountMediaLibraryItems();
-
-        $this->load();
-      }
 
       /** Button in part-debug, routed via custom Action */
       public function action_debug_resetStats()

@@ -1090,7 +1090,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        }
 
 
-       update_post_meta($this->id, 'shortpixel_was_converted', true);
+       update_post_meta($this->id, '_shortpixel_was_converted', true);
        delete_post_meta($this->id, '_shortpixel_status');
       /*if (isset($data['webpCount']))
       {
@@ -1185,22 +1185,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   /** Old Status can be anything*/
   private function legacyConvertStatus($data, $metadata)
   {
-  /*  const FILE_STATUS_UNPROCESSED = 0;
-    const FILE_STATUS_PENDING = 1;
-    const FILE_STATUS_SUCCESS = 2;
-    const FILE_STATUS_RESTORED = 3;
-    const FILE_STATUS_TORESTORE = 4; // Used for Bulk Restore */
 
-    // Most Likely Status not saved in metadata, but must be generated from type / lossy and ShortpixelImprovement Metadata.
-
-  /*  "status" => (!isset($rawMeta["ShortPixel"]) ? 0
-                 : (isset($rawMeta["ShortPixelImprovement"]) && is_numeric($rawMeta["ShortPixelImprovement"])
-                   && !(   $rawMeta['ShortPixelImprovement'] == 0
-                        && (   isset($rawMeta['ShortPixel']['WaitingProcessing'])
-                            || isset($rawMeta['ShortPixel']['date']) && $rawMeta['ShortPixel']['date'] == '1970-01-01')) ? 2
-                    : (isset($rawMeta["ShortPixel"]["WaitingProcessing"]) ? 1
-                       : (isset($rawMeta["ShortPixel"]['ErrCode']) ? $rawMeta["ShortPixel"]['ErrCode'] : -500)))),
-*/
     $waiting = isset($data['WaitingProcessing']) ? true : false;
     $error = isset($data['ErrCode']) ? $data['ErrCode'] : -500;
 

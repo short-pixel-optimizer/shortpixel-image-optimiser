@@ -34,8 +34,6 @@ abstract class Queue
     const FILE_SUCCESS = 2;
     const FILE_WAIT = 3; */
 
-
-
     abstract protected function prepare();
     abstract public function getType();
 
@@ -47,7 +45,6 @@ abstract class Queue
 
         $cache = new CacheController();
         $cache->deleteItem($this->cacheName);
-
     }
 
     public function startBulk()
@@ -73,8 +70,7 @@ abstract class Queue
     */
     public function addSingleItem(ImageModel $imageModel)
     {
-       //if (! $mediaItem->isProcessable())
-      //  return false;
+
        $preparing = $this->getStatus('preparing');
 
        $qItem = $this->imageModelToQueue($imageModel);
@@ -89,7 +85,6 @@ abstract class Queue
        $result->numitems = $numitems;
 
        return $result;
-       //return $numitems;
     }
 
     public function run()
@@ -112,16 +107,7 @@ abstract class Queue
                {
                 $result->qstatus = self::RESULT_PREPARING_DONE;
                }
-/*               $cache = new CacheController();
-               $countCache = $cache->getItem($this->cacheName);
-               $count = $countCache->getValue(); */
 
-            /*   if ($count->items !== $this->getStatus('items'))
-               {
-                 $result->qstatus = self::RESULT_RECOUNT;
-                 Log::addDebug("Difference in Items!" .  $count->items . ' ' . $this->getStatus('items'));
-                 $this->recountQueue();
-               } */
             }
        }
        elseif ($this->getStatus('bulk_running') == true) // this is a bulk queue, don't start automatically.
@@ -171,31 +157,24 @@ abstract class Queue
 
           $queue = array();
           $imageCount = 0;
-          $optimizedCount = 0;
-          $optimizedThumbnailCount = 0;
-        //  $thumbnailCount = 0;
+
 
           // maybe while on the whole function, until certain time has elapsed?
           foreach($items as $mediaItem)
           {
-              //  $mediaItem= $fs->getMediaImage($item);
-
                 if ($mediaItem->isProcessable()) // Checking will be done when processing queue.
                 {
                    Log::addTemp('Preparing as Processable' . $mediaItem->get('id'));
                     $qObject = $this->imageModelToQueue($mediaItem);
-                  //  $thumbnailCount += count($mediaItem->get('thumbnails'));
                     $imageCount += count($qObject->urls);
 
-                    $queue[] = array('id' => $mediaItem->get('id'), 'value' => $qObject, 'item_count' => count($qObject->urls)); // array('id' => $mediaItem->get('id'), 'value' => $mediaItem->getOptimizeURLS() );
+                    $queue[] = array('id' => $mediaItem->get('id'), 'value' => $qObject, 'item_count' => count($qObject->urls));
                 }
                 else
                 {
                    if($mediaItem->isOptimized())
                    {
                       Log::addTemp('Item is optimized -' . $mediaItem->get('id'));
-                  //  $optimizedCount++;
-                  //  $optimizedThumbnailCount = count($mediaItem->get('thumbnails'));
                    }
 
                 }
@@ -209,22 +188,13 @@ abstract class Queue
           Log::addTemp('Last Item Id stored' . $this->q->getStatus('last_item_id'));
           Log::addTemp('Items enqueued ' . $numitems);
 
-        /*  $countObj= $this->getCountCache(); */
+
           $qCount = count($queue);
-/*
-          $countObj->images += $imageCount;
-          $countObj->items += $qCount;
-          $countObj->optimizedCount += $optimizedCount;
-          $countObj->optimizedThumbnailCount += $optimizedThumbnailCount;
-*/
+
           $return['items'] = $qCount;
           $return['images'] = $imageCount;
           $return['results'] = count($items); // This is the return of the query. Preparing should not be 'done' before the query ends, but it can return 0 on the qcount if all results are already optimized.
-/*
-    Log::addDebug('This run prepared: ' . $qCount . ' ' . $imageCount, $return);
-    Log::addDebug('Count Cache ', $countObj);
 
-          $this->saveCountCache($countObj); */
 
           return $return; // only return real amount.
     }
@@ -297,9 +267,6 @@ abstract class Queue
             'images' => $recount[ShortQ::QSTATUS_WAITING],
             'images_done' => $recount[ShortQ::QSTATUS_DONE],
             'images_inprocess' => $recount[ShortQ::QSTATUS_INPROCESS],
-          //  'items' => $this->getStatus('items'),
-          //  'optimizedCount' => $this->getStatus('done'), // already optimized items
-          //  'optimizedThumbnailCount' => $recount[ShortQ::QSTATUS_DONE],
         ];
 
         return $count;
@@ -320,15 +287,6 @@ abstract class Queue
        $items = array_map(array($this, 'queueToMediaItem'), $items);
        return $items;
     }
-
-    /*protected function deQueuePriority()
-    {
-      $items = $this->q->deQueue(array('onlypriority' => true));
-      $items = array_map(array($this, 'queueToMediaItem'), $items);
-
-      return $items;
-    } */
-
 
     protected function queueToMediaItem($qItem)
     {

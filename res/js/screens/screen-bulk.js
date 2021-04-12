@@ -534,7 +534,7 @@ console.log("Screen Init Done", initMedia, isPreparing, isRunning, isFinished);
           // basic check if value > 0
           if (checker == null)
           {
-            console.error('Control for ' + element.innerHTML + ' didn\'t find reference value element ');
+            console.error('Control named ' + control + ' on ' + element.innerHTML + ' didn\'t find reference value element ');
             return;
           }
 

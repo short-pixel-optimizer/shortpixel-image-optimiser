@@ -2,7 +2,7 @@
 namespace ShortPixel;
 
 ?>
-<section class='panel selection' data-panel="selection" data-loadpanel="PrepareBulk" data-status="loading">
+<section class='panel selection' data-panel="selection" data-status="loaded">
   <div class="panel-container">
 
       <h3 class="heading"><span><img src="<?php echo \wpSPIO()->plugin_url('res/img/robo-slider.png'); ?>"></span>
@@ -26,7 +26,7 @@ namespace ShortPixel;
 
        <div class="interface wrapper">
 
-         <div class="media-library optiongroup hidden" data-check-visibility data-control="data-check-media-total" >
+         <div class="media-library optiongroup">
 
             <div class='switch_button'>
               <label>
@@ -37,15 +37,15 @@ namespace ShortPixel;
 
             <h4><label for="media_checkbox">Your Media Library</label></h4>
             <div class='option'>
-              <label>Items in Library</label>
-              <span class="number" data-stats-media="total" data-check-media-total><?php _e('n/a', 'shortpixel-image-optimiser') ?></span>
+              <label>Items to Optimize Library (approx)</label>
+              <span class="number" ><?php echo $this->view->approx->media->items ?></span>
             </div>
             <div class='option'>
-              <labeL>Images</label> <span class="number" data-stats-media="images-images"><?php _e('n/a', 'shortpixel-image-optimiser')  ?></span>
+              <label>Images (approx)</label> <span class="number" ><?php echo $this->view->approx->media->total ?> </span>
             </div>
          </div>
 
-         <div class="custom-images optiongroup hidden" data-check-visibility data-control="data-check-custom-total" >
+         <div class="custom-images optiongroup " >
            <div class='switch_button'>
              <label>
                <input type="checkbox" class="switch" id="custom_checkbox" checked>
@@ -55,11 +55,11 @@ namespace ShortPixel;
            <h4><label for="custom_checkbox">Custom Images</label></h4>
             <div class='option'>
               <label>Images</label>
-               <span class="number" data-stats-custom="total" data-check-custom-total ><?php _e('n/a', 'shortpixel-image-optimiser')  ?></span>
+               <span class="number" data-stats-custom="total" data-check-custom-total ><?php echo $this->view->approx->custom->images ?></span>
             </div>
          </div>
 
-         <div class='optiongroup hidden' data-check-visibility data-control="data-check-media-total" >
+         <div class='optiongroup '  >
            <div class='switch_button'>
 
              <label>
@@ -74,10 +74,14 @@ namespace ShortPixel;
 
        </div>
 
-       <div class='optiongroup' data-check-visibility="false" data-control="data-check-total-total">
+       <div class='optiongroup' data-check-visibility="false" data-control="data-check-approx-total">
           <h3>No images found</h3>
           <p> Shortpixel Bulk couldn't find any optimizable images. </p>
        </div>
+
+       <h4> Approximate unoptimized images in this installation : <span data-check-approx-total><?php echo $this->view->approx->total->images ?></span> </h4>
+
+       <div><p>In the next step the total images to be optimized will be calculated and your bulk process will be prepared.  It will <b>not yet</b> start the process. </p></div>
 
       <nav>
         <button class="button" type="button" data-action="FinishBulk">Stop Bulk</button>
