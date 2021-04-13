@@ -202,8 +202,9 @@ namespace ShortPixel;
                     <p class="settings-info"><?php _e('Images for the web only need RGB format and converting them from CMYK to RGB makes them smaller.','shortpixel-image-optimiser');?></p>
                 </td>
             </tr>
+
             <tr>
-                <th scope="row"><?php _e('WebP Images:','shortpixel-image-optimiser');?></th>
+                <th scope="row"><?php _e('Next Generation Images','shortpixel-image-optimiser');?></th>
                 <td>
                     <input name="createWebp" type="checkbox" id="createWebp" value="1" <?php checked( $view->data->createWebp, "1" );?>>
                     <label for="createWebp">
@@ -215,6 +216,16 @@ namespace ShortPixel;
                             <span class="dashicons dashicons-editor-help"></span><?php _e('More info','shortpixel-image-optimiser');?>
                         </a>
                     </p>
+                    
+                    <p>&nbsp;</p>
+                    <input name="createAvif" type="checkbox" id="createAvif" value="1" <?php checked( $view->data->optimizeRetina, "1"); ?>>
+                    <label for="createAvif"><?php _e('Also create Avif versions.','shortpixel-image-optimiser');?></label>
+                    <p class="settings-info">
+                        <?php _e(' (AV1 Image File Format) is an image file format that stores images compressed with AV1 in HEIF file format. AVIF files are stored with the .avif extension ','shortpixel-image-optimiser');?>
+
+                    </p>
+                    <p>&nbsp;</p>
+
                     <div class="deliverWebpSettings">
                         <input name="deliverWebp" type="checkbox" id="deliverWebp" value="1" <?php checked( ($view->data->deliverWebp > 0), true);?>>
                         <label for="deliverWebp">
@@ -265,6 +276,8 @@ namespace ShortPixel;
                     </div>
                 </td>
             </tr>
+
+
             <tr>
                 <th scope="row"><?php _e('Optimize Retina images','shortpixel-image-optimiser');?></th>
                 <td>

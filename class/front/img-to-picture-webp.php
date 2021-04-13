@@ -184,6 +184,7 @@ class ShortPixelImgToPictureWebp
         unset($img['height']);
 
         $srcsetWebP = array();
+        $srcsetAvif = array();
 
         $imagePaths = array();
 
@@ -221,6 +222,8 @@ class ShortPixelImgToPictureWebp
                 $fileurl_base = str_replace($fsFile->getFileName(), '', $fileurl);
                 $files = array($fileWebp, $fileWebpCompat);
 
+                $fileAvif = $fs->getFile($imageBase . $fsFile->getFileBase() . '.avif');
+
                 foreach($files as $thisfile)
                 {
                   $fileWebp_exists = apply_filters('shortpixel_image_exists', $thisfile->exists(), $thisfile);
@@ -228,6 +231,7 @@ class ShortPixelImgToPictureWebp
                   {
                     $thisfile = $fileWebp_exists = apply_filters('shortpixel/front/webp_notfound', false, $thisfile, $fileurl, $imageBase);
                   }
+
 
                   if ($thisfile !== false)
                   {
@@ -237,6 +241,14 @@ class ShortPixelImgToPictureWebp
                        break;
                   }
                 }
+                $fileAvif_exists = apply_filters('shortpixel_image_exists', $fileAvif->exists(), $fileAvif);
+                if ($fileAvif_exists !== false)
+                {
+                  $fileurl_base = str_replace($fsFile->getFileName(), '', $fileurl);
+                  $srcsetAvif[] = $fileurl_base . $fileAvif->getFileName() . $condition;
+                }
+
+
             }
 
             /*  if () {
@@ -274,7 +286,7 @@ class ShortPixelImgToPictureWebp
         //return($match[0]. "<!-- srcsetTZF:".$srcsetWebP." -->");
 
 
-        if (count($srcsetWebP) == 0) {
+        if (count($srcsetWebP) == 0 && count($srcsetAvif) == 0) {
             return $match[0]; //. (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG no srcsetWebP found (' . $srcsetWebP . ') -->' : '');
             Log::addInfo(' SPDBG no srcsetWebP found (' . $srcsetWebP . ')');
         }
@@ -297,14 +309,24 @@ class ShortPixelImgToPictureWebp
           $srcset = $src; // if not srcset ( it's a src ), replace those.
         $srcPrefix = $srcInfo['prefix'];
 
-        $srcsetWebP = implode(',', $srcsetWebP);
+        $output = '<picture ' . $this->create_attributes($imgpicture) . '>';
 
-        return '<picture ' . $this->create_attributes($imgpicture) . '>'
-        .'<source ' . $srcsetPrefix . 'srcset="' . $srcsetWebP . '"' . ($sizes ? ' ' . $sizesPrefix . 'sizes="' . $sizes . '"' : '') . ' type="image/webp">'
-        .'<source ' . $srcsetPrefix . 'srcset="' . $srcset . '"' . ($sizes ? ' ' . $sizesPrefix . 'sizes="' . $sizes . '"' : '') . ' type="' . $mime  . '">'
+        if (count($srcsetAvif) > 0)
+        {
+            $srcsetAvif = implode(',', $srcsetAvif);
+            $output .= '<source ' . $srcsetPrefix . 'srcset="' . $srcsetAvif . '"' . ($sizes ? ' ' . $sizesPrefix . 'sizes="' . $sizes . '"' : '') . ' type="image/avif">';
+        }
+        if (count($srcsetWebP) > 0)
+        {
+          $srcsetWebP = implode(',', $srcsetWebP);
+          $output .= '<source ' . $srcsetPrefix . 'srcset="' . $srcsetWebP . '"' . ($sizes ? ' ' . $sizesPrefix .  'sizes="' . $sizes . '"' : '') . ' type="image/webp">';
+        }
+        $output .= '<source ' . $srcsetPrefix . 'srcset="' . $srcset . '"' . ($sizes ? ' ' . $sizesPrefix . 'sizes="' . $sizes . '"' : '') . ' type="' . $mime  . '">' 
         .'<img ' . $srcPrefix . 'src="' . $src . '" ' . $this->create_attributes($img) . $idAttr . $altAttr . $heightAttr . $widthAttr
             . (strlen($srcset) ? ' srcset="' . $srcset . '"': '') . (strlen($sizes) ? ' sizes="' . $sizes . '"': '') . '>'
         .'</picture>';
+
+        return $output;
     }
 
     /** Check and remove elements that should not be in the picture tag. Especially items within attributes. */

@@ -92,7 +92,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
         $actions = array(
             'optimize' => array('action' => 'optimize', '_wpnonce' => $nonce , 'text' => __('Optimize now','shortpixel-image-optimiser'), 'class' => ''),
 
-            'retry' => array('action' => 'optimize', '_wpnonce' => $nonce, 'text' =>  __('Retry','shortpixel-image-optimiser')),
+            'retry' => array('action' => 'optimize', '_wpnonce' => $nonce, 'text' =>  __('Retry','shortpixel-image-optimiser'), 'class' => ''),
 
             'redolossless' => array('action' => 'redo', '_wpnonce' => $nonce, 'type' => 'lossless', 'text' => __('Re-optimize lossless','shortpixel-image-optimiser')),
 
@@ -538,7 +538,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
            }
          }
 
-         
+        
         if (count($thisActions) == 1)
           $thisActions[0]['class'] .= 'button-smaller button button-primary';
 
