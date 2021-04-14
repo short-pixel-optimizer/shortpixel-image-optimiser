@@ -374,7 +374,8 @@ class ShortPixelPlugin
       $env = wpSPIO()->env();
 
       if(\WPShortPixelSettings::getOpt('deliverWebp') == 3 && ! $env->is_nginx) {
-          \WpShortPixel::alterHtaccess(); //add the htaccess lines
+          \WpShortPixel::alterHtaccessForWebp(); //add the htaccess lines
+          \WpShortPixel::alterHtaccessForAvif(); //add the htaccess lines
       }
 
       \WpShortPixelDb::checkCustomTables();
@@ -399,8 +400,10 @@ class ShortPixelPlugin
     $env = wpSPIO()->env();
 
     if (! $env->is_nginx)
-      \WpShortPixel::alterHtaccess(true);
-
+    {
+      \WpShortPixel::alterHtaccessForWebp(true);
+      \WpShortPixel::alterHtaccessForAvif(true);
+    }
     // save remove.
     $fs = new Controller\FileSystemController();
     $log = $fs->getFile(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");

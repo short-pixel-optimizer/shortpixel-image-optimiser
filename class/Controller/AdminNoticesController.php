@@ -29,6 +29,9 @@ class AdminNoticesController extends \ShortPixel\Controller
 
     const MSG_INTEGRATION_NGGALLERY = 'IntNotice400';
 
+    private $remote_message_endpoint = 'https://api.shortpixel.com/api/messages';
+    private $remote_readme_endpoint = 'https://plugins.svn.wordpress.org/shortpixel-image-optimiser/trunk/readme.txt';
+
     public function __construct()
     {
       add_action('admin_notices', array($this, 'displayNotices'), 50); // notices occured before page load
@@ -147,6 +150,8 @@ class AdminNoticesController extends \ShortPixel\Controller
        $this->doIntegrationNotices();
 
        $this->doHelpOptInNotices();
+
+       $this->doRemoteNotices();
     }
 
 
@@ -361,6 +366,28 @@ class AdminNoticesController extends \ShortPixel\Controller
             $message = $this->getHelpOptinMessage();
             Notices::addNormal($message);
         }
+    }
+
+    protected function doRemoteNotices()
+    {
+          $notices = $this->get_remote_notices();
+          if ($notices == false)
+            return;
+
+          foreach($notices as $notice)
+          {
+            $noticeController = Notices::getInstance();
+            $noticeObj = $noticeController->getNoticeByID($notice->id);
+
+            // not added to system yet
+             if ($noticeObj == false)
+             {
+                $new_notice = Notices::addNormal($notice->message);
+                Notices::makePersistent($new_notice, $notice->id, MONTH_IN_SECONDS);
+             }
+
+
+          }
     }
 
     // Callback to check if we are on the correct page.
@@ -595,6 +622,41 @@ class AdminNoticesController extends \ShortPixel\Controller
 
     }
 
+
+    private function get_remote_notices()
+    {
+         $transient_name = 'shortpixel_remote_notice';
+         $transient_duration = DAY_IN_SECONDS;
+
+         if (\wpSPIO()->env()->is_debug)
+          $transient_duration = 30;
+
+         $notices = get_transient($transient_name);
+         $url = $this->remote_message_endpoint;
+
+         if ( $notices === false  ) {
+                 $notices_response = wp_safe_remote_request( $url );
+                 $content = false;
+                 if (! is_wp_error( $notices_response ) )
+                 {
+                   Log::addTemp('Return Remote Notice', $notices_response);
+                    $notices = json_decode($notices_response['body']);
+                    Log::addTemp($notices);
+                    Log::addTemp(json_last_error());
+                    if (! is_array($notices))
+                      $notices = false;
+
+                    // Save transient anywhere to prevent over-asking when nothing good is there.
+                    set_transient( $transient_name, $notices, $transient_duration );
+                 }
+                 else
+                 {
+                    set_transient( $transient_name, false, $transient_duration );
+                 }
+         }
+
+         return $notices;
+    }
     /**
      *   Stolen from SPAI, Thanks.
     */
@@ -608,7 +670,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 
             $update_notice  = get_transient( $transient_name );
 
-            $url = 'https://plugins.svn.wordpress.org/shortpixel-image-optimiser/trunk/readme.txt';
+            $url = $this->remote_readme_endpoint;
 
             if ( $update_notice === false || strlen( $update_notice ) == 0 ) {
                     $readme_response = wp_safe_remote_request( $url );
