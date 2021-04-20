@@ -102,14 +102,25 @@ class ShortPixelView {
                             <input type='checkbox' id='thumbnails' name='thumbnails' onclick='ShortPixel.checkThumbsUpdTotal(this)' <?php echo($this->ctrl->processThumbnails() ? "checked":"");?>>
                             <?php _e('Include thumbnails','shortpixel-image-optimiser');?>
                         </div><br><br>
+
                         <div>
 
                           <input name="createWebp" type="checkbox" id="createWebp" value="1" <?php checked( $settings->createWebp, "1" );?> >
                           <label for="createWebp">
-                              <?php _e('Also create <a href="http://blog.shortpixel.com/how-webp-images-can-speed-up-your-site/" target="_blank">WebP versions</a> of the images, <strong>for free</strong>.','shortpixel-image-optimiser');?>
+                            <?php _e('Also create <a href="http://blog.shortpixel.com/how-webp-images-can-speed-up-your-site/" target="_blank">WebP versions</a> of the images, with the additional cost of 1 credit = 1 image or thumbnail..','shortpixel-image-optimiser');?>
                           </label>
 
                         </div><br>
+
+                        <div>
+
+                          <input name="createAvif" type="checkbox" id="createAvif" value="1" <?php checked( $settings->createAvif, "1" );?> >
+                          <label for="createAvif">
+                            <?php _e('Also create AVIF versions of the images, with the additional cost of 1 credit = 1 image or thumbnail.','shortpixel-image-optimiser');?>
+                          </label>
+
+                        </div><br>
+
                         <?php if($quotaData["totalProcessedMlFiles"] > 0) { ?>
                         <div class="bulk-label bulk-total"><?php _e('Total images','shortpixel-image-optimiser');?></div>
                         <div class="bulk-val bulk-total"><?php echo(number_format($quotaData['totalMlFiles']));?></div>
@@ -145,7 +156,7 @@ class ShortPixelView {
                                          srcset='<?php echo(wpSPIO()->plugin_url('res/img/robo-slider.png' ));?> 1x, <?php echo(wpSPIO()->plugin_url('res/img/robo-slider@2x.png' ));?> 2x'/>
                                 </div>
                                 <div  class="bulk-btn-txt">
-                                    <?php printf(__('<span class="label">Start Optimizing</span><br> <span class="total">%s</span> images','shortpixel-image-optimiser'),
+                                    <?php printf(__('<span class="label">Start Optimizing</span><br> <span class="total">%s</span> images','shortpixel-image-. optimiser'),
                                             $this->ctrl->processThumbnails() ?
                                                 number_format(max(0, $quotaData['totalMlFiles'] - $quotaData['totalProcessedMlFiles']) + $customCount) :
                                                 number_format(max(0, $quotaData['mainMlFiles'] - $quotaData['mainProcessedMlFiles']) + $customCount));?>
@@ -433,14 +444,23 @@ class ShortPixelView {
                     <input type='checkbox' id='bulk-thumbnails' name='thumbnails' <?php echo($this->ctrl->processThumbnails() ? "checked":"");?>
                            onchange="ShortPixel.onBulkThumbsCheck(this)"> <?php _e('Include thumbnails','shortpixel-image-optimiser');?><br><br>
 
-                     <div>
+                           <div>
 
-                       <input name="createWebp" type="checkbox" id="createWebp" value="1" <?php checked( $settings->createWebp, "1" );?> >
-                       <label for="createWebp">
-                           <?php _e('Also create <a href="http://blog.shortpixel.com/how-webp-images-can-speed-up-your-site/" target="_blank">WebP versions</a> of the images, <strong>for free</strong>.','shortpixel-image-optimiser');?>
-                       </label>
+                             <input name="createWebp" type="checkbox" id="createWebp" value="1" <?php checked( $settings->createWebp, "1" );?> >
+                             <label for="createWebp">
+                               <?php _e('Also create <a href="http://blog.shortpixel.com/how-webp-images-can-speed-up-your-site/" target="_blank">WebP versions</a> of the images, with the additional cost of 1 credit = 1 image or thumbnail..','shortpixel-image-optimiser');?>
+                             </label>
 
-                     </div><br>
+                           </div><br>
+
+                           <div>
+
+                             <input name="createAvif" type="checkbox" id="createAvif" value="1" <?php checked( $settings->createAvif, "1" );?> >
+                             <label for="createAvif">
+                               <?php _e('Also create AVIF versions of the images, with the additional cost of 1 credit = 1 image or thumbnail.','shortpixel-image-optimiser');?>
+                             </label>
+
+                           </div><br>
 
                    <a class='button' style="float: right;" href='<?php echo add_query_arg('part','bulk-restore-all'); ?> '><?php _e('Bulk Restore Images','shortpixel-image-optimiser'); ?></a>
 

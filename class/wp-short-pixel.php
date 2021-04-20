@@ -3111,7 +3111,7 @@ class WPShortPixel {
           RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png)$
           # AND does a .avif image exist?
           RewriteCond %{DOCUMENT_ROOT}/%1.avif -f
-          # THEN send the webp image and set the env var webp
+          # THEN send the webp image and set the env var avif
           RewriteRule (.+)\.(?:jpe?g|png)$ $1.avif [NC,T=image/avif,E=avif,L]
 
         </IfModule>

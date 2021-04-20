@@ -125,7 +125,7 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         'CMYKtoRGBconversion' => array('s' => 'boolean'), //checkbox
         'createWebp' => array('s' => 'boolean'), // checkbox
         'deliverWebp' => array('s' => 'int'), // checkbox
-        'createAvif' => array('s', 'boolean'), 
+        'createAvif' => array('s' => 'boolean'),  // checkbox
         'optimizeRetina' => array('s' => 'boolean'), // checkbox
         'optimizeUnlisted' => array('s' => 'boolean'), // $checkbox
         'optimizePdfs' => array('s' => 'boolean'), //checkbox

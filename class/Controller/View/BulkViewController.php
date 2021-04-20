@@ -91,10 +91,15 @@ protected $selected_folders = array();
               $settings->processThumbnails = 0;
           }
 
-          if ( isset($_POST['createWebp']) )
+          if (isset($_POST['createWebp']) )
             $settings->createWebp = 1;
           else
             $settings->createWebp = 0;
+
+          if (isset($_POST['createAvif']))
+            $settings->createAvif = 1;
+          else
+            $settings->createAvif = 0;
 
           //clean the custom files errors in order to process them again
           if($settings->hasCustomFolders) {

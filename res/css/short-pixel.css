@@ -641,6 +641,7 @@ article.sp-tabs section.sel-tab h2 {
 
 
 article.sp-tabs section #createWebp:checked ~ .deliverWebpSettings,
+article.sp-tabs section #createAvif:checked ~ .deliverWebpSettings,
 article.sp-tabs section #deliverWebp:checked ~ .deliverWebpTypes,
 article.sp-tabs section #deliverWebpAltered:checked ~ .deliverWebpAlteringTypes
 {
