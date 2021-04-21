@@ -29,7 +29,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 
     const MSG_INTEGRATION_NGGALLERY = 'IntNotice400';
 
-    private $remote_message_endpoint = 'https://api.shortpixel.com/api/messages';
+    private $remote_message_endpoint = 'https://api.shortpixel.com/v2/notices.php';
     private $remote_readme_endpoint = 'https://plugins.svn.wordpress.org/shortpixel-image-optimiser/trunk/readme.txt';
 
     public function __construct()
@@ -99,8 +99,10 @@ class AdminNoticesController extends \ShortPixel\Controller
     public function displayNotices()
     {
       if (! \wpSPIO()->env()->is_screen_to_use)
-        return; // suppress all when not our screen.
-
+      {
+         if(get_current_screen()->base !== 'dashboard') // ugly exception for dashboard.
+          return; // suppress all when not our screen.
+      }
       $noticeControl = Notices::getInstance();
       $noticeControl->loadIcons(array(
           'normal' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/slider.png', SHORTPIXEL_PLUGIN_FILE) . '">',
@@ -139,18 +141,17 @@ class AdminNoticesController extends \ShortPixel\Controller
     public function check_admin_notices()
     {
       if (! \wpSPIO()->env()->is_screen_to_use)
-        return; // suppress all when not our screen.
-
+      {
+          if(get_current_screen()->base !== 'dashboard') // ugly exception for dashboard.
+            return; // suppress all when not our screen.
+      }
        $this->doFilePermNotice();
        $this->doAPINotices();
        $this->doCompatNotices();
        $this->doUnlistedNotices();
        $this->doQuotaNotices();
-
        $this->doIntegrationNotices();
-
        $this->doHelpOptInNotices();
-
        $this->doRemoteNotices();
     }
 
@@ -371,19 +372,42 @@ class AdminNoticesController extends \ShortPixel\Controller
     protected function doRemoteNotices()
     {
           $notices = $this->get_remote_notices();
+
           if ($notices == false)
             return;
 
-          foreach($notices as $notice)
+          foreach($notices as $remoteNotice)
           {
+            if (! isset($remoteNotice->id) && ! isset($remoteNotice->message))
+              return;
+
+            if (! isset($remoteNotice->type))
+              $remoteNotice->type = 'notice';
+
+            $message = esc_html($remoteNotice->message);
+            $id = sanitize_text_field($remoteNotice->id);
+
             $noticeController = Notices::getInstance();
-            $noticeObj = $noticeController->getNoticeByID($notice->id);
+            $noticeObj = $noticeController->getNoticeByID($id);
 
             // not added to system yet
              if ($noticeObj == false)
              {
-                $new_notice = Notices::addNormal($notice->message);
-                Notices::makePersistent($new_notice, $notice->id, MONTH_IN_SECONDS);
+               switch ($remoteNotice->type)
+               {
+                  case 'warning':
+                     $new_notice = Notices::addWarning($message);
+                  break;
+                  case 'error':
+                     $new_notice = Notices::addError($message);
+                  break;
+                  case 'notice':
+                  default:
+                      $new_notice = Notices::addNormal($message);
+                  break;
+               }
+
+                Notices::makePersistent($new_notice, $id, MONTH_IN_SECONDS);
              }
 
 
@@ -631,8 +655,17 @@ class AdminNoticesController extends \ShortPixel\Controller
          if (\wpSPIO()->env()->is_debug)
           $transient_duration = 30;
 
+         $keyModel = new apiKeyModel();
+         $keyModel->loadKey();
+
          $notices = get_transient($transient_name);
          $url = $this->remote_message_endpoint;
+         $url = add_query_arg(array(
+            'key' => $keyModel->getKey(),
+            'version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
+            'target' => 3,
+         ), $url);
+
 
          if ( $notices === false  ) {
                  $notices_response = wp_safe_remote_request( $url );
@@ -642,7 +675,8 @@ class AdminNoticesController extends \ShortPixel\Controller
                    Log::addTemp('Return Remote Notice', $notices_response);
                     $notices = json_decode($notices_response['body']);
                     Log::addTemp($notices);
-                    Log::addTemp(json_last_error());
+                    Log::addTemp(json_last_error_msg());
+
                     if (! is_array($notices))
                       $notices = false;
 

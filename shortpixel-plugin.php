@@ -125,6 +125,7 @@ class ShortPixelPlugin
       add_action('admin_menu', array($this,'admin_pages'));
       add_action('admin_enqueue_scripts', array($this, 'admin_scripts')); // admin scripts
       add_action('admin_enqueue_scripts', array($this, 'load_admin_scripts'), 90); // loader via route.
+
       // defer notices a little to allow other hooks ( notable adminnotices )
 
       add_action( 'shortpixel-thumbnails-before-regenerate', array( $this->shortPixel, 'thumbnailsBeforeRegenerateHook' ), 10, 1);
@@ -189,7 +190,7 @@ class ShortPixelPlugin
   *
   * Not all those registered must be enqueued however.
   */
-  public function admin_scripts()
+  public function admin_scripts($hook_suffix)
   {
     // FileTree in Settings
     wp_register_style('sp-file-tree', plugins_url('/res/css/sp-file-tree.min.css',SHORTPIXEL_PLUGIN_FILE),array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
@@ -245,9 +246,10 @@ class ShortPixelPlugin
   }
 
   /** This is separated from route to load in head, preventing unstyled content all the time */
-  public function load_admin_scripts()
+  public function load_admin_scripts($hook_suffix)
   {
     global $plugin_page;
+
 
     switch($plugin_page)
     {
@@ -286,7 +288,6 @@ class ShortPixelPlugin
       }
 
       $url = menu_page_url($plugin_page, false);
-
 
       switch($plugin_page)
       {
