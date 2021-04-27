@@ -587,6 +587,7 @@ article.sp-tabs section {
     z-index: 0;
 }
 article.sp-tabs section.sel-tab {
+    position: relative;
     box-shadow: 0 3px 3px rgba(0,0,0,0.1);
 }
 article.sp-tabs section .wp-shortpixel-tab-content {

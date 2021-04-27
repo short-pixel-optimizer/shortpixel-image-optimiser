@@ -241,12 +241,15 @@ class ShortPixelImgToPictureWebp
                        break;
                   }
                 }
+
                 $fileAvif_exists = apply_filters('shortpixel_image_exists', $fileAvif->exists(), $fileAvif);
                 if ($fileAvif_exists !== false)
                 {
                   $fileurl_base = str_replace($fsFile->getFileName(), '', $fileurl);
                   $srcsetAvif[] = $fileurl_base . $fileAvif->getFileName() . $condition;
                 }
+
+
 
 
             }
@@ -321,7 +324,7 @@ class ShortPixelImgToPictureWebp
           $srcsetWebP = implode(',', $srcsetWebP);
           $output .= '<source ' . $srcsetPrefix . 'srcset="' . $srcsetWebP . '"' . ($sizes ? ' ' . $sizesPrefix .  'sizes="' . $sizes . '"' : '') . ' type="image/webp">';
         }
-        $output .= '<source ' . $srcsetPrefix . 'srcset="' . $srcset . '"' . ($sizes ? ' ' . $sizesPrefix . 'sizes="' . $sizes . '"' : '') . ' type="' . $mime  . '">' 
+        $output .= '<source ' . $srcsetPrefix . 'srcset="' . $srcset . '"' . ($sizes ? ' ' . $sizesPrefix . 'sizes="' . $sizes . '"' : '') . ' type="' . $mime  . '">'
         .'<img ' . $srcPrefix . 'src="' . $src . '" ' . $this->create_attributes($img) . $idAttr . $altAttr . $heightAttr . $widthAttr
             . (strlen($srcset) ? ' srcset="' . $srcset . '"': '') . (strlen($sizes) ? ' sizes="' . $sizes . '"': '') . '>'
         .'</picture>';

@@ -3011,7 +3011,7 @@ class WPShortPixel {
     /** Updates HTAccess files for Webp
     * @param boolean $clear Clear removes all statements from htaccess. For disabling webp.
     */
-    public static function alterHtaccessForWebp( $clear = false ){
+    public static function alterHtaccess($webp = false, $avif = false){
       // [BS] Backward compat. 11/03/2019 - remove possible settings from root .htaccess
       /* Plugin init is before loading these admin scripts. So it can happen misc.php is not yet loaded */
       if (! function_exists('insert_with_markers'))
@@ -3023,54 +3023,84 @@ class WPShortPixel {
         $upload_dir = wp_upload_dir();
         $upload_base = trailingslashit($upload_dir['basedir']);
 
-        if ( $clear ) {
+        if ( ! $webp && ! $avif ) {
             insert_with_markers( get_home_path() . '.htaccess', 'ShortPixelWebp', '');
             insert_with_markers( $upload_base . '.htaccess', 'ShortPixelWebp', '');
             insert_with_markers( trailingslashit(WP_CONTENT_DIR) . '.htaccess', 'ShortPixelWebp', '');
         } else {
 
-            $rules = '
-<IfModule mod_rewrite.c>
-  RewriteEngine On
+        $avif_rules = '
+        <IfModule mod_rewrite.c>
+        RewriteEngine On
 
-  ##### TRY FIRST the file appended with .webp (ex. test.jpg.webp) #####
-  # Does browser explicitly support webp?
-  RewriteCond %{HTTP_USER_AGENT} Chrome [OR]
-  # OR Is request from Page Speed
-  RewriteCond %{HTTP_USER_AGENT} "Google Page Speed Insights" [OR]
-  # OR does this browser explicitly support webp
-  RewriteCond %{HTTP_ACCEPT} image/webp
-  # AND NOT MS EDGE 42/17 - doesnt work.
-  RewriteCond %{HTTP_USER_AGENT} !Edge/17
-  # AND is the request a jpg or png?
-  RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png)$
-  # AND does a .ext.webp image exist?
-  RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI}.webp -f
-  # THEN send the webp image and set the env var webp
-  RewriteRule ^(.+)$ $1.webp [NC,T=image/webp,E=webp,L]
+        ##### IF try the file with replaced extension (test.avif) #####
+        RewriteCond %{HTTP_ACCEPT} image/avif
+        # AND is the request a jpg or png? (also grab the basepath %1 to match in the next rule)
+        RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png)$
+        # AND does a .avif image exist?
+        RewriteCond %{DOCUMENT_ROOT}/%1.avif -f
+        # THEN send the webp image and set the env var avif
+        RewriteRule (.+)\.(?:jpe?g|png)$ $1.avif [NC,T=image/avif,E=avif,L]
 
-  ##### IF NOT, try the file with replaced extension (test.webp) #####
-  RewriteCond %{HTTP_USER_AGENT} Chrome [OR]
-  RewriteCond %{HTTP_USER_AGENT} "Google Page Speed Insights" [OR]
-  RewriteCond %{HTTP_ACCEPT} image/webp
-  RewriteCond %{HTTP_USER_AGENT} !Edge/17
-  # AND is the request a jpg or png? (also grab the basepath %1 to match in the next rule)
-  RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png)$
-  # AND does a .ext.webp image exist?
-  RewriteCond %{DOCUMENT_ROOT}/%1.webp -f
-  # THEN send the webp image and set the env var webp
-  RewriteRule (.+)\.(?:jpe?g|png)$ $1.webp [NC,T=image/webp,E=webp,L]
+        </IfModule>
+        <IfModule mod_headers.c>
+        # If REDIRECT_webp env var exists, append Accept to the Vary header
+        Header append Vary Accept env=REDIRECT_avif
+        </IfModule>
 
-</IfModule>
-<IfModule mod_headers.c>
-  # If REDIRECT_webp env var exists, append Accept to the Vary header
-  Header append Vary Accept env=REDIRECT_webp
-</IfModule>
+        <IfModule mod_mime.c>
+        AddType image/avif .avif
+        </IfModule>
+              ';
 
-<IfModule mod_mime.c>
-  AddType image/webp .webp
-</IfModule>
+            $webp_rules = '
+        <IfModule mod_rewrite.c>
+          RewriteEngine On
+
+          ##### TRY FIRST the file appended with .webp (ex. test.jpg.webp) #####
+          # Does browser explicitly support webp?
+          RewriteCond %{HTTP_USER_AGENT} Chrome [OR]
+          # OR Is request from Page Speed
+          RewriteCond %{HTTP_USER_AGENT} "Google Page Speed Insights" [OR]
+          # OR does this browser explicitly support webp
+          RewriteCond %{HTTP_ACCEPT} image/webp
+          # AND NOT MS EDGE 42/17 - doesnt work.
+          RewriteCond %{HTTP_USER_AGENT} !Edge/17
+          # AND is the request a jpg or png?
+          RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png)$
+          # AND does a .ext.webp image exist?
+          RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI}.webp -f
+          # THEN send the webp image and set the env var webp
+          RewriteRule ^(.+)$ $1.webp [NC,T=image/webp,E=webp,L]
+
+          ##### IF NOT, try the file with replaced extension (test.webp) #####
+          RewriteCond %{HTTP_USER_AGENT} Chrome [OR]
+          RewriteCond %{HTTP_USER_AGENT} "Google Page Speed Insights" [OR]
+          RewriteCond %{HTTP_ACCEPT} image/webp
+          RewriteCond %{HTTP_USER_AGENT} !Edge/17
+          # AND is the request a jpg or png? (also grab the basepath %1 to match in the next rule)
+          RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png)$
+          # AND does a .ext.webp image exist?
+          RewriteCond %{DOCUMENT_ROOT}/%1.webp -f
+          # THEN send the webp image and set the env var webp
+          RewriteRule (.+)\.(?:jpe?g|png)$ $1.webp [NC,T=image/webp,E=webp,L]
+
+        </IfModule>
+        <IfModule mod_headers.c>
+          # If REDIRECT_webp env var exists, append Accept to the Vary header
+          Header append Vary Accept env=REDIRECT_webp
+        </IfModule>
+
+        <IfModule mod_mime.c>
+          AddType image/webp .webp
+        </IfModule>
         ' ;
+
+          $rules = '';
+          if ($avif)
+            $rules .= $avif_rules;
+          if ($webp)
+            $rules .= $webp_rules;
 
           insert_with_markers( get_home_path() . '.htaccess', 'ShortPixelWebp', $rules);
 
@@ -3082,59 +3112,6 @@ class WPShortPixel {
             insert_with_markers( trailingslashit(WP_CONTENT_DIR) . '.htaccess', 'ShortPixelWebp', $rules);
 
         }
-    }
-
-    public static function alterHtaccessForAvif( $clear = false )
-    {
-        if (! function_exists('insert_with_markers'))
-        {
-          Log::addWarn('AlterHtaccess Called before WP init');
-          return;
-          //require_once( ABSPATH . 'wp-admin/includes/misc.php' );
-        }
-          $upload_dir = wp_upload_dir();
-          $upload_base = trailingslashit($upload_dir['basedir']);
-
-          if ( $clear ) {
-              insert_with_markers( get_home_path() . '.htaccess', 'ShortPixelAvif', '');
-              insert_with_markers( $upload_base . '.htaccess', 'ShortPixelAvif', '');
-              insert_with_markers( trailingslashit(WP_CONTENT_DIR) . '.htaccess', 'ShortPixelAvif', '');
-          } else {
-
-                    $rules = '
-        <IfModule mod_rewrite.c>
-          RewriteEngine On
-
-          ##### IF try the file with replaced extension (test.avif) #####
-          RewriteCond %{HTTP_ACCEPT} image/avif
-          # AND is the request a jpg or png? (also grab the basepath %1 to match in the next rule)
-          RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png)$
-          # AND does a .avif image exist?
-          RewriteCond %{DOCUMENT_ROOT}/%1.avif -f
-          # THEN send the webp image and set the env var avif
-          RewriteRule (.+)\.(?:jpe?g|png)$ $1.avif [NC,T=image/avif,E=avif,L]
-
-        </IfModule>
-        <IfModule mod_headers.c>
-          # If REDIRECT_webp env var exists, append Accept to the Vary header
-          Header append Vary Accept env=REDIRECT_avif
-        </IfModule>
-
-        <IfModule mod_mime.c>
-          AddType image/avif .avif
-        </IfModule>
-                ' ;
-
-                  insert_with_markers( get_home_path() . '.htaccess', 'ShortPixelAvif', $rules);
-
-         /** In uploads and on, it needs Inherit. Otherwise things such as the 404 error page will not be loaded properly
-        * since the WP rewrite will not be active at that point (overruled) **/
-         $rules = str_replace('RewriteEngine On', 'RewriteEngine On' . PHP_EOL . 'RewriteOptions Inherit', $rules);
-
-                    insert_with_markers( $upload_base . '.htaccess', 'ShortPixelAvif', $rules);
-                    insert_with_markers( trailingslashit(WP_CONTENT_DIR) . '.htaccess', 'ShortPixelAvif', $rules);
-
-                }
     }
 
 
