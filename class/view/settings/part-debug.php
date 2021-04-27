@@ -45,6 +45,7 @@ use Shortpixel\Controller\StatsController as StatsController;
   </div>
   <div  class="stats env">
       <h3><?php _e('Stats', 'shortpixel-image-optimiser'); ?></h3>
+      <h4>Media</h4>
       <div class='flex'>
         <?php $statsControl = StatsController::getInstance();
         ?>
@@ -53,12 +54,25 @@ use Shortpixel\Controller\StatsController as StatsController;
         <span>Images</span><span><?php echo $statsControl->find('media', 'images'); ?></span>
         <span>ItemsTotal</span><span><?php echo $statsControl->find('media', 'itemsTotal'); ?></span>
         <span>ThumbsTotal</span><span><?php echo $statsControl->find('media', 'thumbsTotal'); ?></span>
+     </div>
+     <h4>Custom</h4>
+     <div class='flex'>
+       <span>Custom Optimized</span><span><?php echo $statsControl->find('custom', 'items'); ?></span>
+       <span>Custom itemsTotal</span><span><?php echo $statsControl->find('custom', 'itemsTotal'); ?>
+       </span>
+     </div>
+     <h4>Total</h4>
+     <div class='flex'>
+        <span>Items</span><span><?php echo $statsControl->find('total', 'items'); ?></span>
+        <span>Images</span><span><?php echo $statsControl->find('total', 'images'); ?></span>
+        <span>Thumbs</span><span><?php echo $statsControl->find('total', 'thumbs'); ?></span>
+     </div>
+     <h4>Period</h4>
+     <div class='flex'>
         <span>Month #1 </span><span><?php echo $statsControl->find('period', 'months', '1'); ?></span>
         <span>Month #2 </span><span><?php echo $statsControl->find('period', 'months', '2'); ?></span>
         <span>Month #3 </span><span><?php echo $statsControl->find('period', 'months', '3'); ?></span>
         <span>Month #4 </span><span><?php echo $statsControl->find('period', 'months', '4'); ?></span>
-        <span>Custom Optimized</span><span><?php echo $statsControl->find('custom', 'items'); ?></span>
-        <span>Custom Total</span><span><?php echo $statsControl->find('custom', 'itemsTotal'); ?></span>
   </div>
 
 

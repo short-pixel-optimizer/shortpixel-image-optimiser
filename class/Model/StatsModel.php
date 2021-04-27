@@ -29,7 +29,7 @@ class StatsModel
     protected $defaults = array(
       'media' => array('items' => -1, // total optimized media items found
                        'images' => -1, // total optimized images (+thumbs) found
-                       'thumbs' => -1, // Optimized thumbs - SQL does thumbs, but queue doesn't.
+                       'thumbs' => -1, // Optimized thumbs - SQL does thumbs, but queue doesn't. (imprecise query)
                        'itemsTotal' => -1, // Total items in media  ( sql )
                        'thumbsTotal' => -1, // Total thumbs in media ( sql )
                   /*     'lossy' => 0, // processed x compression
@@ -249,7 +249,7 @@ class StatsModel
             break;
             case 'images':
               $media = $this->getStat('media')->grab('images');
-              $custom = $this->getStat('custom')->grab('images');
+              $custom = $this->getStat('custom')->grab('items'); // items == images
               $data = $media + $custom;
             break;
             case 'thumbs':
@@ -289,13 +289,14 @@ class StatsModel
      $args = wp_parse_args($args,$defaults);
 
      // This query will return 2 positions after the thumbnail array declaration.  Value can be up to two positions ( 0-100 thumbnails) . If positions is 1-10 intval will filter out the string part.
-     $sql = "SELECT meta_id, post_id, substr(meta_value, instr(meta_value,'sizes')+9,2) as thumbcount FROM " . $wpdb->postmeta . " WHERE meta_key = '_wp_attachment_metadata'";
+     $sql = "SELECT meta_id, post_id, substr(meta_value, instr(meta_value,'sizes')+9,2) as thumbcount, LOCATE('original_image', meta_value) as originalImage FROM " . $wpdb->postmeta . " WHERE meta_key = '_wp_attachment_metadata'";
 
      if ($args['optimizedOnly'] == true)
      {
        $sql .= ' AND post_id IN ( SELECT post_id FROM ' . $wpdb->postmeta . ' WHERE meta_key = "_shortpixel_optimized")';
      }
 
+Log::addTemp("Statsmodel, countMed", $sql);
      $results = $wpdb->get_results($sql);
      $thumbCount = 0;
 
@@ -304,6 +305,8 @@ class StatsModel
         $count = intval($row->thumbcount);
         if ($count > 0)
            $thumbCount += $count;
+        if ($row->originalImage > 0) // add to count, return value is string pos
+           $thumbCount++;
      }
 
      return $thumbCount;
@@ -370,12 +373,14 @@ class StatsModel
 
        $sql = 'SELECT COUNT(id) as count FROM ' . $wpdb->prefix . 'shortpixel_meta WHERE folder_id in (' . $foldersids . ')';
 
+
        if ($args['optimizedOnly'] == true)
        {
          $sql .= ' AND status = %d';
          $sql = $wpdb->prepare($sql, ImageModel::FILE_STATUS_SUCCESS);
        }
 
+Log::addTemp('CustomItems, stats', $sql);
         $count = $wpdb->get_var($sql);
         return $count;
 

@@ -104,6 +104,8 @@ class OtherMediaController extends \ShortPixel\Controller
         $result = true;
 
       self::$hasCustomImages = $result;
+
+      return $result;
     }
 
 

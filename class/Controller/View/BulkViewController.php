@@ -73,14 +73,26 @@ class BulkViewController extends \ShortPixel\Controller
     $approx->total = new \stdClass;
 
     $sc = StatsController::getInstance();
+    $sc->reset(); // Get a fresh stat.
+
+    $excludeSizes = \wpSPIO()->settings()->excludeSizes;
 
     $approx->media->items = $sc->find('media', 'itemsTotal') - $sc->find('media', 'items');
+
+    // ThumbsTotal - Approx thumbs in installation - Approx optimized thumbs (same query)
     $approx->media->thumbs = $sc->find('media', 'thumbsTotal') - $sc->find('media', 'thumbs');
+
+    // If sizes are excluded, remove this count from the approx.
+    if ( count($excludeSizes) > 0)
+      $approx->media->thumbs = $approx->media->thumbs - ($approx->media->items * count($excludeSizes));
+
+    // Total optimized items + Total optimized (approx) thumbnails
     $approx->media->total = $approx->media->items + $approx->media->thumbs;
 
-    $approx->custom->items = $sc->find('custom', 'itemsTotal') - $sc->find('custom', 'items');
 
-    $approx->total->images = $sc->totalImagesToOptimize();
+    $approx->custom->images = $sc->find('custom', 'itemsTotal') - $sc->find('custom', 'items');
+
+    $approx->total->images = $approx->media->total + $approx->custom->images; // $sc->totalImagesToOptimize();
     return $approx;
 
   }

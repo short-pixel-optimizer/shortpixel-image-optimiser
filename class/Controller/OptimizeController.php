@@ -443,6 +443,7 @@ class OptimizeController
       {
           if ($result->apiStatus == ApiController::STATUS_UNCHANGED)
           {
+              Log::addTemp('Status unchanged -item', $item);
               $item->fileStatus = ImageModel::FILE_STATUS_PENDING;
               $item->result->message .= sprintf(__(' Pass %d', 'shortpixel-image-optimiser', intval($item->tries) ));
           }

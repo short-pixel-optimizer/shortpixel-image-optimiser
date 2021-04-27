@@ -105,12 +105,14 @@ class StatsController extends \ShortPixel\Controller
 
     }
 
+    /** This count all possible optimizable images (approx). Not checking settings like excludesizes / webp / original images etc. More fine-grained approx in BulkViewController  */ 
     public function totalImagesToOptimize()
     {
         $totalImagesOptimized = $this->find('total', 'images');
-        $totalImages = $this->find('total', 'items') + $this->find('total', 'thumbs');
+        $totalImages = $this->find('total', 'itemsTotal') + $this->find('total', 'thumbsTotal');
 
         $toOpt = $totalImages - $totalImagesOptimized;
+
         return $toOpt;
 
     }

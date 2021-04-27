@@ -209,7 +209,7 @@ class AjaxController
            case 'createBulk':
              $json = $this->createBulk($json, $data);
            break;
-           case 'applyBulkSelection':
+           case 'applyBulkSelection': // @todo Perhaps remove this / done via createbulk?
              $json = $this->applyBulkSelection($json, $data);
            break;
            case 'startBulk':
@@ -307,6 +307,7 @@ class AjaxController
 
         $json->custom->stats = $stats;
 
+        $json = $this->applyBulkSelection($json, $data);
         return $json;
 
     }
@@ -317,6 +318,7 @@ class AjaxController
         $doMedia = filter_var(sanitize_text_field($_POST['mediaActive']), FILTER_VALIDATE_BOOLEAN);
         $doCustom = filter_var(sanitize_text_field($_POST['customActive']), FILTER_VALIDATE_BOOLEAN);
         $doWebp = filter_var(sanitize_text_field($_POST['webpActive']), FILTER_VALIDATE_BOOLEAN);
+        $doAvif = filter_var(sanitize_text_field($_POST['webpActive']), FILTER_VALIDATE_BOOLEAN);
 
         \wpSPIO()->settings()->createWebp = $doWebp;
 
@@ -430,7 +432,7 @@ class AjaxController
          $quotaController->forceCheckRemoteQuota();
 
          $quota = $quotaController->getQuota();
-         
+
          $settings = \wpSPIO()->settings();
 
          $sendback = wp_get_referer();

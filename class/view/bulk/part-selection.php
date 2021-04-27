@@ -1,8 +1,9 @@
 <?php
 namespace ShortPixel;
 
+$approx = $this->view->approx;
 ?>
-<section class='panel selection' data-panel="selection" data-status="loaded">
+<section class='panel selection' data-panel="selection" data-status="loaded" >
   <div class="panel-container">
 
       <h3 class="heading"><span><img src="<?php echo \wpSPIO()->plugin_url('res/img/robo-slider.png'); ?>"></span>
@@ -13,7 +14,7 @@ namespace ShortPixel;
 
        <?php $this->loadView('bulk/part-progressbar'); ?>
 
-       <div class='load wrapper' >
+      <div class='load wrapper' >
          <div class='loading'>
              <span><img src="<?php echo \wpSPIO()->plugin_url('res/img/bulk/loading-hourglass.svg'); ?>" /></span>
              <span>
@@ -38,7 +39,7 @@ namespace ShortPixel;
             <h4><label for="media_checkbox">Your Media Library</label></h4>
             <div class='option'>
               <label>Items to Optimize Library (approx)</label>
-              <span class="number" ><?php echo $this->view->approx->media->items ?></span>
+              <span class="number" ><?php echo $approx->media->items ?></span>
             </div>
             <div class='option'>
               <label>Images (approx)</label> <span class="number" ><?php echo $this->view->approx->media->total ?> </span>
@@ -55,7 +56,7 @@ namespace ShortPixel;
            <h4><label for="custom_checkbox">Custom Images</label></h4>
             <div class='option'>
               <label>Images</label>
-               <span class="number" data-stats-custom="total" data-check-custom-total ><?php echo $this->view->approx->custom->images ?></span>
+               <span class="number"  data-check-custom-total ><?php echo $approx->custom->images ?></span>
             </div>
          </div>
 
@@ -63,29 +64,42 @@ namespace ShortPixel;
            <div class='switch_button'>
 
              <label>
-               <input type="checkbox" class="switch" id="webp_checkbox"
+               <input type="checkbox" class="switch" id="webp_checkbox" name="webp_checkbox"
                 <?php checked(\wpSPIO()->settings()->createWebp); ?>  />
                <div class="the_switch">&nbsp; </div>
              </label>
 
            </div>
            <h4>Also Webp.</h4>
-
-
+           <span class="number"><?php echo $approx->total->images ?></span>
        </div>
+
+       <div class='optiongroup '  >
+         <div class='switch_button'>
+
+           <label>
+             <input type="checkbox" class="switch" id="avif_checkbox" name="avif_checkbox"
+              <?php checked(\wpSPIO()->settings()->createAvif); ?>  />
+             <div class="the_switch">&nbsp; </div>
+           </label>
+
+         </div>
+         <h4>Also Avif.</h4>
+         <span class="number"><?php echo $approx->total->images ?></span>
+     </div>
 
        <div class='optiongroup' data-check-visibility="false" data-control="data-check-approx-total">
           <h3>No images found</h3>
           <p> Shortpixel Bulk couldn't find any optimizable images. </p>
        </div>
 
-       <h4> Approximate unoptimized images in this installation : <span data-check-approx-total><?php echo $this->view->approx->total->images ?></span> </h4>
+       <h4> Approximate unoptimized images in this installation : <span data-check-approx-total><?php echo $approx->total->images ?></span> </h4>
 
        <div><p>In the next step the total images to be optimized will be calculated and your bulk process will be prepared.  It will <b>not yet</b> start the process. </p></div>
 
       <nav>
         <button class="button" type="button" data-action="FinishBulk">Stop Bulk</button>
-        <button class="button-primary" type="button" data-action="DoSelection" data-panel="summary" data-check-disable data-control="data-check-total-total">Next</button>
+        <button class="button-primary" type="button" data-action="CreateBulk" data-panel="summary" data-check-disable data-control="data-check-total-total">Next</button>
       </nav>
 
     </div> <!-- interface wrapper -->

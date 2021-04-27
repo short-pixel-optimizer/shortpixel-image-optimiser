@@ -21,7 +21,7 @@ namespace ShortPixel;
       <h4><span class='dashicons dashicons-images-alt2'>&nbsp;</span> Media Library</h4>
         <div class="list-table">
           <div><span>Items to Optimize</span><span data-stats-media="in_queue">0</span></div>
-          <div><span>Total images to Optimize </span><span data-stats-media="images-images">0</span></div>
+          <div><span>Total images to Optimize </span><span data-stats-media="images-images" data-check-media-total>0</span></div>
         </div>
       </div>
 
@@ -33,9 +33,25 @@ namespace ShortPixel;
       </div>
     </div>
 
-    <div class="totals">
-      Total number to be optimized  <span class="number" data-stats-total="images-images" data-check-total-total >0</span>
+    <div>
+    <?php if (\wpSPIO()->settings()->createWebp == 1): ?>
+      <div><span>+Webp</span><span data-stats-total="images-images">&nbsp;</span></div>
+    <?php endif; ?>
+    <?php if (\wpSPIO()->settings()->createAvif == 1): ?>
+      <div><span>+Avif</span><span data-stats-total="images-images">&nbsp;</span></div>
+    <?php endif; ?>
     </div>
+
+
+
+    <div class="totals">
+      Total images to be optimized  <span class="number" data-stats-total="images-images" data-check-total-total >0</span>
+
+      Total Credits Used <span class='number'>666</span>
+    </div>
+
+
+
 
   </div>
 

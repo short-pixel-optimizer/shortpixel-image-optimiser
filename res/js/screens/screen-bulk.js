@@ -53,10 +53,6 @@ var ShortPixelScreen = function (MainScreen, processor)
       else if (isRunning)
       {
         this.SwitchPanel('process');
-        /*this.UpdateStats(initMedia, 'media'); // write UI.
-        this.UpdateStats(initCustom, 'custom');
-        this.UpdateStats(initTotal, 'total');
-        this.CheckPanelData(); */
         this.processor.PauseProcess(); // when loading, default start paused before resume.
       }
       else if (isFinished)
@@ -76,11 +72,7 @@ var ShortPixelScreen = function (MainScreen, processor)
       }
       else if (initMedia.in_queue > 0)
       {
-      /*  this.UpdateStats(initMedia, 'media'); // write UI.
-        this.UpdateStats(initCustom, 'custom');
-        this.UpdateStats(initTotal, 'total');
-        this.CheckPanelData(); */
-        this.SwitchPanel('selection');
+        this.SwitchPanel('summary');
       }
       else
       {
@@ -143,6 +135,7 @@ console.log("Screen Init Done", initMedia, isPreparing, isRunning, isFinished);
       var event = new CustomEvent('shortpixel.bulk.onUpdatePanelStatus', { detail : {status: status, oldStatus: currentStatus, panelName: panelName}});
       window.dispatchEvent(event);
   }
+
   this.ToggleLoading = function(loading)
   {
     if (typeof loading == 'undefined' || loading == true)
@@ -175,7 +168,6 @@ console.log("Screen Init Done", initMedia, isPreparing, isRunning, isFinished);
       for (panelName in this.panels)
       {
          var panel = this.panels[panelName];
-
          panel.classList.remove('active');
          panel.style.display = 'none';
       };
@@ -202,10 +194,19 @@ console.log("Screen Init Done", initMedia, isPreparing, isRunning, isFinished);
        window.dispatchEvent(event);
 
   }
-  this.StartPrepare = function()
+  this.CreateBulk = function()
   {
      console.log('Start Bulk');
      var data = {screen_action: 'createBulk', callback: 'shortpixel.PrepareBulk'}; //
+
+     data.mediaActive = (document.getElementById('media_checkbox').checked) ? true : false;
+     data.customActive = (document.getElementById('custom_checkbox').checked) ? true : false;
+     data.webpActive = (document.getElementById('webp_checkbox').checked) ? true : false;
+     data.avifActive = (document.getElementById('avif_checkbox').checked) ? true : false;
+
+
+     //this.SwitchPanel('selection');
+     this.UpdatePanelStatus('loading', 'selection');
 
      // Prepare should happen after selecting what the optimize.
      window.addEventListener('shortpixel.PrepareBulk', this.PrepareBulk.bind(this), {'once': true} );
@@ -217,8 +218,7 @@ console.log("Screen Init Done", initMedia, isPreparing, isRunning, isFinished);
       if (typeof event == 'object')
         event.preventDefault(); // stop handler in checkResponse.
 
-      this.SwitchPanel('selection');
-      this.ToggleLoading(false);
+
       this.processor.SetInterval(500); // do this faster.
       // Show stats
       if (! this.processor.CheckActive())
@@ -237,7 +237,7 @@ console.log("Screen Init Done", initMedia, isPreparing, isRunning, isFinished);
       {
           console.log('Queue status: preparing done');
           this.UpdatePanelStatus('loaded', 'selection');
-          this.SwitchPanel('selection');
+          this.SwitchPanel('summary');
           this.processor.SetInterval(-1); // back to default.
 
       }
@@ -311,12 +311,14 @@ console.log("Screen Init Done", initMedia, isPreparing, isRunning, isFinished);
   }
   this.DoSelection = function() // action to update response.
   {
+      // @todo Check the future of this function, since checking this is now createBulk.
       var data = {screen_action: 'applyBulkSelection'}; //
       data.callback = 'shortpixel.applySelectionDone';
 
       data.mediaActive = (document.getElementById('media_checkbox').checked) ? true : false;
       data.customActive = (document.getElementById('custom_checkbox').checked) ? true : false;
       data.webpActive = (document.getElementById('webp_checkbox').checked) ? true : false;
+      data.avifActive = (document.getElementById('avif_checkbox').checked) ? true : false;
 
       window.addEventListener('shortpixel.applySelectionDone', function (e) { this.SwitchPanel('summary'); }.bind(this) , {'once': true} );
       this.processor.AjaxRequest(data);
@@ -500,14 +502,15 @@ console.log("Screen Init Done", initMedia, isPreparing, isRunning, isFinished);
   }
   this.EventPanelSwitched = function(event)
   {
+      // @todo Might not be relevant in new paging order.
      console.log('Panel Switched', event.detail);
      var panelLoad = event.detail.panelLoad;
      var panelUnload = event.detail.panelUnload;
 
-     if (panelUnload == 'selection')
+     /*if (panelUnload == 'selection')
      {
         this.UpdatePanelStatus('loading', 'selection');
-     }
+     } */
   }
   /* Checks number data and shows / hide elements based on that
   * data-check-visibility - will hide/show check against the defined data-control

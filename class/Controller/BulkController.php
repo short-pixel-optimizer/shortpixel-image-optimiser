@@ -32,10 +32,10 @@ class BulkController
       $optimizeController = new OptimizeController();
       $optimizeController->setBulk(true);
 
-        $Q = $optimizeController->getQueue($type);
-        $Q->createNewBulk(array());
+      $Q = $optimizeController->getQueue($type);
+      $Q->createNewBulk(array());
 
-        return $Q->getStats();
+      return $Q->getStats();
    }
 
    /*** Start the bulk run */
