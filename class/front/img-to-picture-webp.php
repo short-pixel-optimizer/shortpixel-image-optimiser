@@ -135,6 +135,7 @@ class ShortPixelImgToPictureWebp
         }
 
         $img = $this->get_attributes($match[0]);
+      //  echo "<PRE>"; var_dump($img); echo "</PRE>";
 
         if(isset($img['style']) && strpos($img['style'], 'background') !== false) {
             //don't replace for <img>'s that have background
@@ -161,6 +162,7 @@ class ShortPixelImgToPictureWebp
         Log::addDebug('ImageBase'. $imageBase);
 
         //some attributes should not be moved from <img>
+        // @todo Move these to unset on (imgpicture) and put via create_attributes back
         $altAttr = isset($img['alt'])  ? ' alt="' . $img['alt'] . '"' : '';
         $idAttr = isset($img['id']) && strlen($img['id']) ? ' id="' . $img['id'] . '"' : '';
         $heightAttr = isset($img['height']) && strlen($img['height']) ? ' height="' . $img['height'] . '"' : '';
@@ -172,7 +174,7 @@ class ShortPixelImgToPictureWebp
         unset($img['data-src']);
         unset($img['data-lazy-src']);
         unset($img['srcset']);
-        unset($img['loading']);
+
       //  unset($img['data-srcset']); // lazyload - don't know if this solves anything.
         unset($img['sizes']);
 
@@ -254,41 +256,6 @@ class ShortPixelImgToPictureWebp
 
             }
 
-            /*  if () {
-                    $srcsetWebP .= (strlen($srcsetWebP) ? ',': '')
-                        . $parts[0].'.webp'
-                     . (isset($parts[1]) ? ' ' . $parts[1] : '');
-                }
-                if (apply_filters( 'shortpixel_image_exists', file_exists($fileWebPCompat), $fileWebPCompat)) {
-                    $srcsetWebP .= (strlen($srcsetWebP) ? ',': '')
-                       .preg_replace('/\.[a-zA-Z0-9]+$/', '.webp', $parts[0])
-                       .(isset($parts[1]) ? ' ' . $parts[1] : '');
-                }
-                else {
-                    $notfound = apply_filters('shortpixel/front/webp_notfound', false, $fileWebP, $fileWebpCompat, $item);
-                    Log::addDebug('Image srcset for webp doesn\'t exist', array($fileWebP));
-                }  */
-      //      }
-            //$srcsetWebP = preg_replace('/\.[a-zA-Z0-9]+\s+/', '.webp ', $srcset);
-      /*  } else {
-            $srcset = trim($src);
-
-            $fileWebPCompat = $imageBase . wp_basename($srcset, '.' . pathinfo($srcset, PATHINFO_EXTENSION)) . '.webp';
-            $fileWebP = $imageBase . wp_basename($srcset) . '.webp';
-            if (apply_filters( 'shortpixel_image_exists', file_exists($fileWebP), $fileWebP)) {
-                $srcsetWebP = $srcset.".webp";
-            } else {
-                if (apply_filters( 'shortpixel_image_exists', file_exists($fileWebPCompat), $fileWebPCompat) ) {
-                    $srcsetWebP = preg_replace('/\.[a-zA-Z0-9]+$/', '.webp', $srcset);
-                }
-                else {
-                  Log::addDebug('Image file for webp doesn\'t exist', array($fileWebP));
-                }
-            }
-        } */
-        //return($match[0]. "<!-- srcsetTZF:".$srcsetWebP." -->");
-
-
         if (count($srcsetWebP) == 0 && count($srcsetAvif) == 0) {
             return $match[0]; //. (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG no srcsetWebP found (' . $srcsetWebP . ') -->' : '');
             Log::addInfo(' SPDBG no srcsetWebP found (' . $srcsetWebP . ')');
@@ -298,6 +265,10 @@ class ShortPixelImgToPictureWebp
         $img['class'] = (isset($img['class']) ? $img['class'] . " " : "") . "sp-no-webp";
 
         $imgpicture = $img;
+
+        // Items that should not go on picture, but remain on img tag.
+        unset($imgpicture['loading']);
+
         // remove certain elements for the main picture element.
         $imgpicture = $this->filterForPicture($imgpicture);
 
