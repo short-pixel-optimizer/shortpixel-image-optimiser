@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compressor, ima
 Requires at least: 3.2.0
 Tested up to: 5.7
 Requires PHP: 5.3
-Stable tag: 4.21.2
+Stable tag: 4.22.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -307,12 +307,16 @@ Hide the Cloudflare settings by defining these constants in wp-config.php:
 
 == Changelog ==
 
-= 4.22 =
-
-
-* Fix: Custom database tables not set primary key instead unique key
-* Fix: Empty alt tag should not be stripped with webp delivery
-* Fix: bug when using S3-offload in combination with webp delivery
+= 4.22.0 =
+Release date April 28th, 2021
+* New: ability to generate and serve the AVIF version of the images;
+* New: WebP and AVIF files can now be delivered without conditioning of the generation of such files;
+* Fix: Keep the `loading=lazy` attribute on `IMG` tags when delivering next-generation images using the `picture` method;
+* Fix: Custom database tables were created without primary keys and that caused issues in some cases;
+* Fix: Empty alt tag should not be stripped with WebP delivery;
+* Fix: bug when using S3-offload in combination with Webp delivery;
+* Fix: fixes, additions, and tweaks to the plugin notifications system;
+* Language: 9 new strings added, 14 updated, 0 fuzzed, and 0 obsoleted.
 
 = 4.21.2 =
 
