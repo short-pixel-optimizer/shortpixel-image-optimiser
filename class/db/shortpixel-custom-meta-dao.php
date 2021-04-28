@@ -50,7 +50,7 @@ class ShortPixelCustomMetaDao {
             status SMALLINT NOT NULL DEFAULT 0,
             ts_updated timestamp,
             ts_created timestamp,
-            UNIQUE KEY id (id)
+            PRIMARY KEY id (id)
           ) $charsetCollate;";
        // UNIQUE INDEX spf_path_md5 (path_md5)
     }
@@ -76,7 +76,7 @@ class ShortPixelCustomMetaDao {
             message varchar(255),
             ts_added timestamp,
             ts_optimized timestamp,
-            UNIQUE KEY sp_id (id)
+            PRIMARY KEY sp_id (id)
           ) $charsetCollate;";
           //UNIQUE INDEX sp_path_md5 (path_md5),
           //FOREIGN KEY fk_shortpixel_meta_folder(folder_id) REFERENCES {$tablePrefix}shortpixel_folders(id)

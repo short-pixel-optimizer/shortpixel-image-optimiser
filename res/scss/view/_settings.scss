@@ -13,6 +13,10 @@
     transition: all 1000ms linear;
   }
 
+  .red {
+     color: #ff0000;
+  }
+
   //tabs
   article.sp-tabs
   {
@@ -104,4 +108,44 @@
     display: none;
   }
 
+}
+
+section.banner
+{
+   width: 100%;
+   background-color: #dcfdff;
+   display: flex;
+   align-items: center;
+   border: 1px solid #ccc;
+   margin-top: 35px;
+   margin-bottom: 45px;
+   z-index: 12;
+   position: relative;
+   opacity: 0;
+
+   span {
+     text-align: center;
+
+   }
+
+   .image { flex: 1; }
+   .line {
+      flex: 3;
+      h3 { color: #00d0e5 };
+
+   }
+   .button-wrap
+   {
+     flex: 2;
+     .button {
+        background: #ff0000;
+        padding: 8px;
+        font-weight: 700;
+        font-size: 20px;
+        margin: 8px;
+        color: #fff;
+        text-transform: uppercase;
+        //height: 45px;
+     }
+   }
 }

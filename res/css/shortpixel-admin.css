@@ -1,172 +1,268 @@
 .short-pixel-bulk-page.bulk-restore-all ol li {
-  font-weight: 700; }
+  font-weight: 700;
+}
 .short-pixel-bulk-page.bulk-restore-all section.select_folders {
-  margin: 20px 0; }
-  .short-pixel-bulk-page.bulk-restore-all section.select_folders .input {
-    margin: 10px 0 10px 15px;
-    font-size: 16px;
-    display: block;
-    clear: both; }
-  .short-pixel-bulk-page.bulk-restore-all section.select_folders .filecount {
-    font-size: 12px; }
+  margin: 20px 0;
+}
+.short-pixel-bulk-page.bulk-restore-all section.select_folders .input {
+  margin: 10px 0 10px 15px;
+  font-size: 16px;
+  display: block;
+  clear: both;
+}
+.short-pixel-bulk-page.bulk-restore-all section.select_folders .filecount {
+  font-size: 12px;
+}
 .short-pixel-bulk-page.bulk-restore-all section.random_check .random_answer {
   font-size: 16px;
   font-weight: 700;
   padding: 8px;
   border: 1px solid #ccc;
-  display: inline-block; }
+  display: inline-block;
+}
 .short-pixel-bulk-page.bulk-restore-all section.random_check .inputs {
-  margin: 15px 0; }
-  .short-pixel-bulk-page.bulk-restore-all section.random_check .inputs span {
-    margin-right: 8px; }
+  margin: 15px 0;
+}
+.short-pixel-bulk-page.bulk-restore-all section.random_check .inputs span {
+  margin-right: 8px;
+}
 .short-pixel-bulk-page.bulk-restore-all .button {
   margin: 10px 0;
-  margin-right: 8px; }
+  margin-right: 8px;
+}
 
 .short-pixel-bulk-page .sp-hidden {
-  display: none; }
+  display: none;
+}
 
 /* Specific styles for advanced settings tab */
 #shortpixel-settings-tabs #tab-adv-settings .addCustomFolder {
-  margin: 10px 0; }
-  #shortpixel-settings-tabs #tab-adv-settings .addCustomFolder .add-folder-text {
-    margin-left: 5px; }
-  #shortpixel-settings-tabs #tab-adv-settings .addCustomFolder input[type="text"] {
-    width: 50em;
-    max-width: 70%; }
-  #shortpixel-settings-tabs #tab-adv-settings .addCustomFolder input[name="saveAdv"] {
-    margin-left: 8px; }
+  margin: 10px 0;
+}
+#shortpixel-settings-tabs #tab-adv-settings .addCustomFolder .add-folder-text {
+  margin-left: 5px;
+}
+#shortpixel-settings-tabs #tab-adv-settings .addCustomFolder input[type=text] {
+  width: 50em;
+  max-width: 70%;
+}
+#shortpixel-settings-tabs #tab-adv-settings .addCustomFolder input[name=saveAdv] {
+  margin-left: 8px;
+}
 #shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list {
   display: table;
-  border-collapse: separate; }
-  #shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list div.heading {
-    width: auto;
-    display: table-header-group;
-    padding: 12px 16px 12px 12px; }
-    #shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list div.heading span {
-      font-weight: 600;
-      font-size: 14px; }
-  #shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list div {
-    display: table-row; }
-    #shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list div > span {
-      display: table-cell;
-      padding: 5px 10px;
-      vertical-align: middle;
-      background-color: #eee; }
-      #shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list div > span.action {
-        background-color: unset; }
-  #shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list .refresh-folder {
-    text-decoration: none; }
-  #shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list .info-icon {
-    cursor: pointer; }
+  border-collapse: separate;
+}
+#shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list div.heading {
+  width: auto;
+  display: table-header-group;
+  padding: 12px 16px 12px 12px;
+}
+#shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list div.heading span {
+  font-weight: 600;
+  font-size: 14px;
+}
+#shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list div {
+  display: table-row;
+}
+#shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list div > span {
+  display: table-cell;
+  padding: 5px 10px;
+  vertical-align: middle;
+  background-color: #eee;
+}
+#shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list div > span.action {
+  background-color: unset;
+}
+#shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list .refresh-folder {
+  text-decoration: none;
+}
+#shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list .info-icon {
+  cursor: pointer;
+}
 
 .cf_switch label {
   width: 100%;
   margin: 0 -2px;
   background-color: #e2faff;
-  display: inline-block; }
-  .cf_switch label span {
-    padding: 8px 0px 8px 15px;
-    display: block;
-    font-size: 13px; }
-  .cf_switch label input {
-    display: none; }
-  .cf_switch label input:checked + span {
-    background-color: #0085ba;
-    color: #F7F7F7; }
+  display: inline-block;
+}
+.cf_switch label span {
+  padding: 8px 0px 8px 15px;
+  display: block;
+  font-size: 13px;
+}
+.cf_switch label input {
+  display: none;
+}
+.cf_switch label input:checked + span {
+  background-color: #0085ba;
+  color: #F7F7F7;
+}
 
 .settings_page_wp-shortpixel-settings {
-  /* In-view notice ( not on top, between the options ) - styled after WP notice */ }
-  .settings_page_wp-shortpixel-settings .top-menu {
-    font-size: 18px; }
-    .settings_page_wp-shortpixel-settings .top-menu a {
-      font-size: 18px; }
-  .settings_page_wp-shortpixel-settings .wp-shortpixel-tab-content {
-    transition: all 1000ms linear; }
-  .settings_page_wp-shortpixel-settings article.sp-tabs section .wp-shortpixel-tab-content {
-    opacity: 0; }
-  .settings_page_wp-shortpixel-settings article.sp-tabs section.sel-tab .wp-shortpixel-tab-content {
-    opacity: 1; }
-  .settings_page_wp-shortpixel-settings article.sp-tabs section h2 {
-    position: absolute;
-    font-size: 1.3em;
-    font-weight: normal;
-    width: 180px;
-    height: 1.8em;
-    top: -1.8em;
-    left: 10px;
-    padding: 0;
-    margin: 0;
-    color: #999;
-    background-color: #ddd;
-    /* border-radius: 5px 5px 0 0; */ }
-    .settings_page_wp-shortpixel-settings article.sp-tabs section h2 a {
-      display: block;
-      width: 100%;
-      line-height: 1.8em;
-      text-align: center;
-      text-decoration: none;
-      color: #23282d;
-      outline: 0 none; }
-  .settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(2) h2 {
-    left: 192px; }
-  .settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(3) h2 {
-    left: 374px; }
-  .settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(4) h2 {
-    left: 556px; }
-  .settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(5) h2 {
-    left: 738px; }
-  .settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(6) h2 {
-    left: 920px; }
-  .settings_page_wp-shortpixel-settings section#tab-debug .flex {
-    display: flex; }
-  .settings_page_wp-shortpixel-settings section#tab-debug .env .flex {
-    flex-wrap: wrap;
-    max-width: 450px; }
-    .settings_page_wp-shortpixel-settings section#tab-debug .env .flex span {
-      width: 45%;
-      padding: 4px; }
-  .settings_page_wp-shortpixel-settings .view-notice {
-    box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.1);
-    border: 4px solid #fff;
-    padding: 1px 12px; }
-    .settings_page_wp-shortpixel-settings .view-notice p {
-      margin: 1em 0 !important; }
-    .settings_page_wp-shortpixel-settings .view-notice.warning {
-      border-left-color: #ffb900; }
-  .settings_page_wp-shortpixel-settings .view-notice-row {
-    display: none; }
+  /* In-view notice ( not on top, between the options ) - styled after WP notice */
+}
+.settings_page_wp-shortpixel-settings .top-menu {
+  font-size: 18px;
+}
+.settings_page_wp-shortpixel-settings .top-menu a {
+  font-size: 18px;
+}
+.settings_page_wp-shortpixel-settings .wp-shortpixel-tab-content {
+  transition: all 1000ms linear;
+}
+.settings_page_wp-shortpixel-settings .red {
+  color: #ff0000;
+}
+.settings_page_wp-shortpixel-settings article.sp-tabs section .wp-shortpixel-tab-content {
+  opacity: 0;
+}
+.settings_page_wp-shortpixel-settings article.sp-tabs section.sel-tab .wp-shortpixel-tab-content {
+  opacity: 1;
+}
+.settings_page_wp-shortpixel-settings article.sp-tabs section h2 {
+  position: absolute;
+  font-size: 1.3em;
+  font-weight: normal;
+  width: 180px;
+  height: 1.8em;
+  top: -1.8em;
+  left: 10px;
+  padding: 0;
+  margin: 0;
+  color: #999;
+  background-color: #ddd;
+  /* border-radius: 5px 5px 0 0; */
+}
+.settings_page_wp-shortpixel-settings article.sp-tabs section h2 a {
+  display: block;
+  width: 100%;
+  line-height: 1.8em;
+  text-align: center;
+  text-decoration: none;
+  color: #23282d;
+  outline: 0 none;
+}
+.settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(2) h2 {
+  left: 192px;
+}
+.settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(3) h2 {
+  left: 374px;
+}
+.settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(4) h2 {
+  left: 556px;
+}
+.settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(5) h2 {
+  left: 738px;
+}
+.settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(6) h2 {
+  left: 920px;
+}
+.settings_page_wp-shortpixel-settings section#tab-debug .flex {
+  display: flex;
+}
+.settings_page_wp-shortpixel-settings section#tab-debug .env .flex {
+  flex-wrap: wrap;
+  max-width: 450px;
+}
+.settings_page_wp-shortpixel-settings section#tab-debug .env .flex span {
+  width: 45%;
+  padding: 4px;
+}
+.settings_page_wp-shortpixel-settings .view-notice {
+  box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.1);
+  border: 4px solid #fff;
+  padding: 1px 12px;
+}
+.settings_page_wp-shortpixel-settings .view-notice p {
+  margin: 1em 0 !important;
+}
+.settings_page_wp-shortpixel-settings .view-notice.warning {
+  border-left-color: #ffb900;
+}
+.settings_page_wp-shortpixel-settings .view-notice-row {
+  display: none;
+}
+
+section.banner {
+  width: 100%;
+  background-color: #dcfdff;
+  display: flex;
+  align-items: center;
+  border: 1px solid #ccc;
+  margin-top: 35px;
+  margin-bottom: 45px;
+  z-index: 12;
+  position: relative;
+  opacity: 0;
+}
+section.banner span {
+  text-align: center;
+}
+section.banner .image {
+  flex: 1;
+}
+section.banner .line {
+  flex: 3;
+}
+section.banner .line h3 {
+  color: #00d0e5;
+}
+section.banner .button-wrap {
+  flex: 2;
+}
+section.banner .button-wrap .button {
+  background: #ff0000;
+  padding: 8px;
+  font-weight: 700;
+  font-size: 20px;
+  margin: 8px;
+  color: #fff;
+  text-transform: uppercase;
+}
 
 .view-edit-media .debugInfo pre {
-  font-size: 11px; }
+  font-size: 11px;
+}
 .view-edit-media .sp-column-stats {
-  position: relative; }
-  .view-edit-media .sp-column-stats .sp-column-actions {
-    margin-right: 5px;
-    margin-top: 16px; }
-  .view-edit-media .sp-column-stats .edit-media-stats {
-    border: 1px solid #ccc;
-    padding: 16px; }
-    .view-edit-media .sp-column-stats .edit-media-stats li {
-      margin: 0;
-      line-height: 20px; }
+  position: relative;
+}
+.view-edit-media .sp-column-stats .sp-column-actions {
+  margin-right: 5px;
+  margin-top: 16px;
+}
+.view-edit-media .sp-column-stats .edit-media-stats {
+  border: 1px solid #ccc;
+  padding: 16px;
+}
+.view-edit-media .sp-column-stats .edit-media-stats li {
+  margin: 0;
+  line-height: 20px;
+}
 .view-edit-media .main-actions {
   display: inline-block;
-  width: 100%; }
-  .view-edit-media .main-actions .button.button-smaller {
-    padding: 6px 15px;
-    height: auto;
-    float: none; }
+  width: 100%;
+}
+.view-edit-media .main-actions .button.button-smaller {
+  padding: 6px 15px;
+  height: auto;
+  float: none;
+}
 
 body.debug-model-active {
-  overflow: hidden; }
+  overflow: hidden;
+}
 
 .debugInfo .content.wrapper {
-  display: none; }
-  .debugInfo .content.wrapper li strong {
-    margin-right: 15px; }
-  .debugInfo .content.wrapper ul {
-    margin: 25px 0; }
+  display: none;
+}
+.debugInfo .content.wrapper li strong {
+  margin-right: 15px;
+}
+.debugInfo .content.wrapper ul {
+  margin: 25px 0;
+}
 
 .debug-modal {
   display: none;
@@ -182,45 +278,55 @@ body.debug-model-active {
   top: 10%;
   z-index: 10020;
   display: none;
-  background: #ffffff; }
-  .debug-modal.success {
-    border: 4px solid green; }
-  .debug-modal.error {
-    border: 4px solid red; }
-    .debug-modal.error h3 {
-      background-color: #ff0000; }
-  .debug-modal .content-area {
-    background-color: #fff; }
-  .debug-modal .modal_header {
-    text-align: center;
-    font-size: 16px;
-    font-weight: 700;
-    background-color: #f3f3f3;
-    border-bottom: 1px solid #ccc;
-    padding: 8px 5px;
-    cursor: move; }
-    .debug-modal .modal_header h3 {
-      margin: 0;
-      color: #444;
-      font-weight: 400;
-      padding: 0;
-      text-align: center;
-      text-shadow: none;
-      font-size: 16px; }
-    .debug-modal .modal_header .modal_close {
-      position: absolute;
-      right: 5px;
-      top: 8px;
-      width: 20px;
-      height: 20px;
-      cursor: pointer;
-      color: #444; }
-      .debug-modal .modal_header .modal_close:hover {
-        cursor: pointer;
-        color: #111; }
-  .debug-modal .content, .debug-modal .modal_content {
-    padding: 5px 15px 10px;
-    overflow-y: auto; }
+  background: #ffffff;
+}
+.debug-modal.success {
+  border: 4px solid green;
+}
+.debug-modal.error {
+  border: 4px solid red;
+}
+.debug-modal.error h3 {
+  background-color: #ff0000;
+}
+.debug-modal .content-area {
+  background-color: #fff;
+}
+.debug-modal .modal_header {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+  background-color: #f3f3f3;
+  border-bottom: 1px solid #ccc;
+  padding: 8px 5px;
+  cursor: move;
+}
+.debug-modal .modal_header h3 {
+  margin: 0;
+  color: #444;
+  font-weight: 400;
+  padding: 0;
+  text-align: center;
+  text-shadow: none;
+  font-size: 16px;
+}
+.debug-modal .modal_header .modal_close {
+  position: absolute;
+  right: 5px;
+  top: 8px;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  color: #444;
+}
+.debug-modal .modal_header .modal_close:hover {
+  cursor: pointer;
+  color: #111;
+}
+.debug-modal .content, .debug-modal .modal_content {
+  padding: 5px 15px 10px;
+  overflow-y: auto;
+}
 
 .debugModal_overlay {
   background: #000;
@@ -232,4 +338,7 @@ body.debug-model-active {
   position: fixed;
   opacity: 0.7;
   z-index: 10000;
-  display: none; }
+  display: none;
+}
+
+/*# sourceMappingURL=shortpixel-admin.css.map */

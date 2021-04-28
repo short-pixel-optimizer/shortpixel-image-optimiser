@@ -96,6 +96,7 @@ class WPShortPixel {
         add_action( 'delete_attachment', array( &$this, 'onDeleteImage') );
 
         add_action('mime_types', array($this, 'addWebpMime'));
+        add_action('mime_types', array($this, 'addAvifMime'));
 
         // integration with WP/LR Sync plugin
         add_action( 'wplr_update_media', array( &$this, 'onWpLrUpdateMedia' ), 10, 2);
@@ -1717,6 +1718,14 @@ class WPShortPixel {
 
                         }
 
+                        if ($settings->createAvif)
+                        {
+                          $avifObj = $fs->getFile( (string) $fileObj->getFileDir() . $fileObj->getFileBase() .  '.avif');
+
+                          if ($avifObj->exists())
+                            $avifObj->delete();
+                        }
+
                         $shortPixelMeta["thumbsOpt"] = max(0, $shortPixelMeta["thumbsOpt"] - 1); // this is a complicated count of number of thumbnails
                         $shortPixelMeta["retinasOpt"] = max(0, $shortPixelMeta["retinasOpt"] - 1);
                     }
@@ -2201,7 +2210,7 @@ class WPShortPixel {
 
             if(isset($toUnlink['PATHs'])) foreach($toUnlink['PATHs'] as $unlink) {
                 if($png2jpgMain) {
-                    WPShortPixel::log("PNG2JPG unlink $unlink");
+                    Log::addDebug("PNG2JPG unlink $unlink");
                     $unlinkFile = $fs->getFile($unlink);
                     $unlinkFile->delete();
 
@@ -2209,21 +2218,30 @@ class WPShortPixel {
                 //try also the .webp
                 $unlinkWebpSymlink = trailingslashit(dirname($unlink)) . wp_basename($unlink, '.' . pathinfo($unlink, PATHINFO_EXTENSION)) . '.webp';
                 $unlinkWebp = $unlink . '.webp';
-                WPShortPixel::log("DoRestore webp unlink $unlinkWebp");
+              //  WPShortPixel::log("DoRestore webp unlink $unlinkWebp");
                 //@unlink($unlinkWebpSymlink);
+
 
                 $unlinkFile = $fs->getFile($unlinkWebpSymlink);
                 if ($unlinkFile->exists())
                 {
-                  Log::addDebug('DoRestore, Deleting - ', $unlinkWebpSymlink );
+                  Log::addDebug('DoRestore, Deleting Webp - ', $unlinkWebpSymlink );
                   $unlinkFile->delete();
                 }
 
-                $unlinkFile = $fs->getFile($unlinkWebp);
-                if ($unlinkFile->exists())
+                $unlinkFileDoubleExt = $fs->getFile($unlinkWebp);
+                if ($unlinkFileDoubleExt->exists())
                 {
-                    Log::addDebug('DoRestore, Deleting - ', $unlinkWebp );
-                    $unlinkFile->delete();
+                    Log::addDebug('DoRestore, Deleting DoubleWebp - ', $unlinkWebp );
+                    $unlinkFileDoubleExt->delete();
+                }
+
+                $unlinkAvif = $fs->getFile($unlinkFile->getFileDir() . $unlinkFile->getFileBase() . '.avif');
+
+                if ($unlinkAvif->exists())
+                {
+                   $unlinkAvif->delete();
+                   Log::addDebug('DoRestore, Deleting Avif :' . $unlinkAvif->getFullPath() );
                 }
 
             }
@@ -2993,7 +3011,7 @@ class WPShortPixel {
     /** Updates HTAccess files for Webp
     * @param boolean $clear Clear removes all statements from htaccess. For disabling webp.
     */
-    public static function alterHtaccess( $clear = false ){
+    public static function alterHtaccess($webp = false, $avif = false){
       // [BS] Backward compat. 11/03/2019 - remove possible settings from root .htaccess
       /* Plugin init is before loading these admin scripts. So it can happen misc.php is not yet loaded */
       if (! function_exists('insert_with_markers'))
@@ -3005,56 +3023,86 @@ class WPShortPixel {
         $upload_dir = wp_upload_dir();
         $upload_base = trailingslashit($upload_dir['basedir']);
 
-        if ( $clear ) {
+        if ( ! $webp && ! $avif ) {
             insert_with_markers( get_home_path() . '.htaccess', 'ShortPixelWebp', '');
             insert_with_markers( $upload_base . '.htaccess', 'ShortPixelWebp', '');
             insert_with_markers( trailingslashit(WP_CONTENT_DIR) . '.htaccess', 'ShortPixelWebp', '');
         } else {
 
-            $rules = '
-<IfModule mod_rewrite.c>
-  RewriteEngine On
+        $avif_rules = '
+        <IfModule mod_rewrite.c>
+        RewriteEngine On
 
-  ##### TRY FIRST the file appended with .webp (ex. test.jpg.webp) #####
-  # Does browser explicitly support webp?
-  RewriteCond %{HTTP_USER_AGENT} Chrome [OR]
-  # OR Is request from Page Speed
-  RewriteCond %{HTTP_USER_AGENT} "Google Page Speed Insights" [OR]
-  # OR does this browser explicitly support webp
-  RewriteCond %{HTTP_ACCEPT} image/webp
-  # AND NOT MS EDGE 42/17 - doesnt work.
-  RewriteCond %{HTTP_USER_AGENT} !Edge/17
-  # AND is the request a jpg or png?
-  RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png)$
-  # AND does a .ext.webp image exist?
-  RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI}.webp -f
-  # THEN send the webp image and set the env var webp
-  RewriteRule ^(.+)$ $1.webp [NC,T=image/webp,E=webp,L]
+        ##### IF try the file with replaced extension (test.avif) #####
+        RewriteCond %{HTTP_ACCEPT} image/avif
+        # AND is the request a jpg or png? (also grab the basepath %1 to match in the next rule)
+        RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png)$
+        # AND does a .avif image exist?
+        RewriteCond %{DOCUMENT_ROOT}/%1.avif -f
+        # THEN send the webp image and set the env var avif
+        RewriteRule (.+)\.(?:jpe?g|png)$ $1.avif [NC,T=image/avif,E=avif,L]
 
-  ##### IF NOT, try the file with replaced extension (test.webp) #####
-  RewriteCond %{HTTP_USER_AGENT} Chrome [OR]
-  RewriteCond %{HTTP_USER_AGENT} "Google Page Speed Insights" [OR]
-  RewriteCond %{HTTP_ACCEPT} image/webp
-  RewriteCond %{HTTP_USER_AGENT} !Edge/17
-  # AND is the request a jpg or png? (also grab the basepath %1 to match in the next rule)
-  RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png)$
-  # AND does a .ext.webp image exist?
-  RewriteCond %{DOCUMENT_ROOT}/%1.webp -f
-  # THEN send the webp image and set the env var webp
-  RewriteRule (.+)\.(?:jpe?g|png)$ $1.webp [NC,T=image/webp,E=webp,L]
+        </IfModule>
+        <IfModule mod_headers.c>
+        # If REDIRECT_webp env var exists, append Accept to the Vary header
+        Header append Vary Accept env=REDIRECT_avif
+        </IfModule>
 
-</IfModule>
-<IfModule mod_headers.c>
-  # If REDIRECT_webp env var exists, append Accept to the Vary header
-  Header append Vary Accept env=REDIRECT_webp
-</IfModule>
+        <IfModule mod_mime.c>
+        AddType image/avif .avif
+        </IfModule>
+              ';
 
-<IfModule mod_mime.c>
-  AddType image/webp .webp
-</IfModule>
+            $webp_rules = '
+        <IfModule mod_rewrite.c>
+          RewriteEngine On
+
+          ##### TRY FIRST the file appended with .webp (ex. test.jpg.webp) #####
+          # Does browser explicitly support webp?
+          RewriteCond %{HTTP_USER_AGENT} Chrome [OR]
+          # OR Is request from Page Speed
+          RewriteCond %{HTTP_USER_AGENT} "Google Page Speed Insights" [OR]
+          # OR does this browser explicitly support webp
+          RewriteCond %{HTTP_ACCEPT} image/webp
+          # AND NOT MS EDGE 42/17 - doesnt work.
+          RewriteCond %{HTTP_USER_AGENT} !Edge/17
+          # AND is the request a jpg or png?
+          RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png)$
+          # AND does a .ext.webp image exist?
+          RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI}.webp -f
+          # THEN send the webp image and set the env var webp
+          RewriteRule ^(.+)$ $1.webp [NC,T=image/webp,E=webp,L]
+
+          ##### IF NOT, try the file with replaced extension (test.webp) #####
+          RewriteCond %{HTTP_USER_AGENT} Chrome [OR]
+          RewriteCond %{HTTP_USER_AGENT} "Google Page Speed Insights" [OR]
+          RewriteCond %{HTTP_ACCEPT} image/webp
+          RewriteCond %{HTTP_USER_AGENT} !Edge/17
+          # AND is the request a jpg or png? (also grab the basepath %1 to match in the next rule)
+          RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png)$
+          # AND does a .ext.webp image exist?
+          RewriteCond %{DOCUMENT_ROOT}/%1.webp -f
+          # THEN send the webp image and set the env var webp
+          RewriteRule (.+)\.(?:jpe?g|png)$ $1.webp [NC,T=image/webp,E=webp,L]
+
+        </IfModule>
+        <IfModule mod_headers.c>
+          # If REDIRECT_webp env var exists, append Accept to the Vary header
+          Header append Vary Accept env=REDIRECT_webp
+        </IfModule>
+
+        <IfModule mod_mime.c>
+          AddType image/webp .webp
+        </IfModule>
         ' ;
 
-            insert_with_markers( get_home_path() . '.htaccess', 'ShortPixelWebp', $rules);
+          $rules = '';
+      //    if ($avif)
+          $rules .= $avif_rules;
+        //  if ($webp)
+          $rules .= $webp_rules;
+
+          insert_with_markers( get_home_path() . '.htaccess', 'ShortPixelWebp', $rules);
 
  /** In uploads and on, it needs Inherit. Otherwise things such as the 404 error page will not be loaded properly
 * since the WP rewrite will not be active at that point (overruled) **/
@@ -3065,6 +3113,7 @@ class WPShortPixel {
 
         }
     }
+
 
     /** Gets the average compression
     * @return int Average compressions percentage
@@ -3086,7 +3135,16 @@ class WPShortPixel {
             if (! isset($mimes['webp']))
               $mimes['webp'] = 'image/webp';
         }
+        return $mimes;
+    }
 
+    public function addAvifMime($mimes)
+    {
+        if ($this->_settings->createAvif)
+        {
+            if (! isset($mimes['avif']))
+              $mimes['webp'] = 'image/avif';
+        }
         return $mimes;
     }
 
@@ -3334,21 +3392,39 @@ Log::addDebug('GetQuotaInformation Result ', $dataArray);
                 $renderData['date'] = isset($data['ShortPixel']['date']) ? $data['ShortPixel']['date'] : null;
                 $renderData['quotaExceeded'] = $quotaExceeded;
                 $webP = 0;
+                $avif = 0;
                 if($extended) {
                     if(file_exists(dirname($file->getFullPath()) . '/' . ShortPixelAPI::MB_basename($file->getFullPath(), '.'.$fileExtension) . '.webp' )){
                         $webP++;
+                    }
+                    elseif(file_exists($file->getFullPath() . '.webp'))
+                    {
+                      $webP++;
+                    }
+                    if(file_exists(dirname($file->getFullPath()) . '/' . ShortPixelAPI::MB_basename($file->getFullPath(), '.'.$fileExtension) . '.avif' )){
+                        $avif++;
                     }
                     if(isset($data['sizes'])) {
                     foreach($data['sizes'] as $key => $size) {
                         if (strpos($key, ShortPixelMeta::WEBP_THUMB_PREFIX) === 0) continue;
                         $sizeName = $size['file'];
+
                         if(file_exists(dirname($file->getFullPath()) . '/' . ShortPixelAPI::MB_basename($sizeName, '.'.$fileExtension) . '.webp' )){
                             $webP++;
+                        }
+                        elseif(file_exists(dirname($file->getFullPath()) . '/' . $sizeName . '.webp'))
+                        {
+                          $webP++;
+                        }
+
+                        if(file_exists(dirname($file->getFullPath()) . '/' . ShortPixelAPI::MB_basename($sizeName, '.'.$fileExtension) . '.avif' )){
+                            $avif++;
                         }
                     }
                     }
                 }
                 $renderData['webpCount'] = $webP;
+                $renderData['avifCount'] = $avif;
             }
 /*            elseif($data['ShortPixelImprovement'] == __('Optimization N/A','shortpixel-image-optimiser')) { //We don't optimize this
                 $renderData['status'] = 'n/a';
@@ -3604,6 +3680,10 @@ Log::addDebug('GetQuotaInformation Result ', $dataArray);
 
                 $file = $fs->getFile($path . '.@2xwebp');
                 $file->delete();
+
+                $file = $fs->getFile($path . '.avif');
+                if ($file->exists())
+                  $file->delete();
             }
             //delte also the backups for image and retina correspondent
             $fileName = $pathFile->getFileName();

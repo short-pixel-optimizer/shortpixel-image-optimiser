@@ -620,6 +620,7 @@ class WpShortPixelMediaLbraryAdapter {
         foreach($sizes as $key => $val) {
             if (strpos($key, ShortPixelMeta::WEBP_THUMB_PREFIX) === 0) continue;
             if (isset($val['mime-type']) && $val['mime-type'] == "image/webp") continue;
+            if (isset($val['mime-type']) && $val['mime-type'] == "image/avif") continue;
             if(!isset($val['file'])) continue;
             if (in_array($key, $exclude)) continue;
             $file = $val['file'];

@@ -15,6 +15,7 @@ namespace ShortPixel;
         $deliverWebpUnaltered = '';                         // Uncheck
         $deliverWebpUnalteredDisabled = 'disabled';         // Disable
         $deliverWebpUnalteredLabel = __('It looks like you\'re running your site on an NginX server. This means that you can only achieve this functionality by directly configuring the server config files. Please follow this link for instructions on how to achieve this:','shortpixel-image-optimiser')." <a href=\"https://help.shortpixel.com/article/111-configure-nginx-to-transparently-serve-webp-files-when-supported\" target=\"_blank\" data-beacon-article=\"5bfeb9de2c7d3a31944e78ee\">Open article</a>";
+	$deliverAVIFLabel = __('<strong>It looks like you\'re running your site on an NginX server. You might need additional configuration for AVIF delivery to work as expected</strong>','shortpixel-image-optimiser')." <a href=\"https://blog.shortpixel.com/avif-mime-type-delivery-nginx/\" target=\"_blank\">Read more</a>";
     } else {
         if( !$this->is_htaccess_writable ){
             $deliverWebpUnalteredDisabled = 'disabled';     // Disable
@@ -191,7 +192,7 @@ namespace ShortPixel;
             <tr class='exif_warning view-notice-row'>
                 <th scope="row">&nbsp;</th>
                 <td>
-                  <div class='view-notice warning'><p><?php printf(__('Warning - Converting from PNG to JPG will %s not %s keep the EXIF-information!'), "<strong>","</strong>"); ?></p></div>
+                  <div class='view-notice warning'><p><?php printf(__('Warning - Converting from PNG to JPG will %s not %s keep the EXIF-information!', 'shortpixel-image-optimiser'), "<strong>","</strong>"); ?></p></div>
                 </td>
             </tr>
             <tr>
@@ -202,23 +203,41 @@ namespace ShortPixel;
                     <p class="settings-info"><?php _e('Images for the web only need RGB format and converting them from CMYK to RGB makes them smaller.','shortpixel-image-optimiser');?></p>
                 </td>
             </tr>
+
             <tr>
-                <th scope="row"><?php _e('WebP Images:','shortpixel-image-optimiser');?></th>
+                <th scope="row"><?php _e('Next Generation Images','shortpixel-image-optimiser');?></th>
                 <td>
                     <input name="createWebp" type="checkbox" id="createWebp" value="1" <?php checked( $view->data->createWebp, "1" );?>>
                     <label for="createWebp">
-                        <?php _e('Also create <a href="http://blog.shortpixel.com/how-webp-images-can-speed-up-your-site/" target="_blank">WebP versions</a> of the images, <strong>for free</strong>.','shortpixel-image-optimiser');?>
+                        <?php _e('Also create <a href="https://blog.shortpixel.com/how-webp-images-can-speed-up-your-site/" target="_blank">WebP versions</a> of the images, with the additional cost of 1 credit = 1 image or thumbnail..','shortpixel-image-optimiser');?>
                     </label>
                     <p class="settings-info">
-                        <?php _e('WebP images can be up to three times smaller than PNGs and 25% smaller than JPGs. Choosing this option <strong>does not use up additional credits</strong>.','shortpixel-image-optimiser');?>
-                        <a href="http://blog.shortpixel.com/how-webp-images-can-speed-up-your-site/" target="_blank" class="shortpixel-help-link">
+                        <?php _e('WebP images can be up to three times smaller than PNGs and 25% smaller than JPGs.  <span class="red"><strong>Starting May 10th, 2021 this option will use additional credits (1 credit = 1 image or thumbnail)!</strong></span>','shortpixel-image-optimiser');?>
+                        <a href="https://blog.shortpixel.com/how-webp-images-can-speed-up-your-site/" target="_blank" class="shortpixel-help-link">
                             <span class="dashicons dashicons-editor-help"></span><?php _e('More info','shortpixel-image-optimiser');?>
                         </a>
                     </p>
+
+                    <p>&nbsp;</p>
+                    <input name="createAvif" type="checkbox" id="createAvif" value="1" <?php checked( $view->data->createAvif, "1"); ?>>
+                    <label for="createAvif"><?php _e('Also create <a href="https://blog.shortpixel.com/what-is-avif-and-why-is-it-good/" target="_blank">AVIF versions</a> of the images, with the additional cost of 1 credit = 1 image or thumbnail.','shortpixel-image-optimiser');?></label>
+                    <p class="settings-info">
+                        <?php _e('AVIF is a new format (AV1 Image File Format) and the images can be up to 50% smaller than WebPs, on average. AVIF files are stored with the .avif file name extension ','shortpixel-image-optimiser');?>
+                        <a href="https://blog.shortpixel.com/what-is-avif-and-why-is-it-good/" target="_blank" class="shortpixel-help-link">
+                            <span class="dashicons dashicons-editor-help"></span><?php _e('More info','shortpixel-image-optimiser');?>
+                        </a>
+                        <?php if($deliverAVIFLabel){ ?>
+                                <p class="sp-notice">
+                                <?php echo( $deliverAVIFLabel );?>
+                                </p>
+                        <?php } ?>
+                    </p>
+                    <p>&nbsp;</p>
+
                     <div class="deliverWebpSettings">
                         <input name="deliverWebp" type="checkbox" id="deliverWebp" value="1" <?php checked( ($view->data->deliverWebp > 0), true);?>>
                         <label for="deliverWebp">
-                            <?php _e('Deliver the WebP versions of the images in the front-end:','shortpixel-image-optimiser');?>
+                            <?php _e('Deliver the next generation versions of the images in the front-end:','shortpixel-image-optimiser');?>
                         </label>
                         <ul class="deliverWebpTypes">
                             <li>
@@ -232,7 +251,7 @@ namespace ShortPixel;
                                     </p>
                                 <?php } ?>
                                 <p class="settings-info">
-                                    <?php _e('Each &lt;img&gt; will be replaced with a &lt;picture&gt; tag that will also provide the WebP image as a choice for browsers that support it. Also loads the picturefill.js for browsers that don\'t support the &lt;picture&gt; tag. You don\'t need to activate this if you\'re using the Cache Enabler plugin because your WebP images are already handled by this plugin. <strong>Please make a test before using this option</strong>, as if the styles that your theme is using rely on the position of your &lt;img&gt; tag, you might experience display problems.','shortpixel-image-optimiser'); ?>
+                                    <?php _e('Each &lt;img&gt; will be replaced with a &lt;picture&gt; tag that will also provide AVIF and WebP images as a choice for browsers that support it. Also loads the picturefill.js for browsers that don\'t support the &lt;picture&gt; tag. You don\'t need to activate this if you\'re using the Cache Enabler plugin because your Avif\WebP images are already handled by this plugin. <strong>Please make a test before using this option</strong>, as if the styles that your theme is using rely on the position of your &lt;img&gt; tag, you might experience display problems.','shortpixel-image-optimiser'); ?>
                                     <strong><?php _e('You can revert anytime to the previous state by just deactivating the option.','shortpixel-image-optimiser'); ?></strong>
                                 </p>
                                 <ul class="deliverWebpAlteringTypes">
@@ -265,6 +284,8 @@ namespace ShortPixel;
                     </div>
                 </td>
             </tr>
+
+
             <tr>
                 <th scope="row"><?php _e('Optimize Retina images','shortpixel-image-optimiser');?></th>
                 <td>
@@ -272,7 +293,7 @@ namespace ShortPixel;
                     <label for="optimizeRetina"><?php _e('Also optimize the Retina images (@2x) if they exist.','shortpixel-image-optimiser');?></label>
                     <p class="settings-info">
                         <?php _e('If you have a Retina plugin that generates Retina-specific images (@2x), ShortPixel can optimize them too, alongside the regular Media Library images and thumbnails.','shortpixel-image-optimiser');?>
-                        <a href="http://blog.shortpixel.com/how-to-use-optimized-retina-images-on-your-wordpress-site-for-best-user-experience-on-apple-devices/" target="_blank" class="shortpixel-help-link">
+                        <a href="https://blog.shortpixel.com/how-to-use-optimized-retina-images-on-your-wordpress-site-for-best-user-experience-on-apple-devices/" target="_blank" class="shortpixel-help-link">
                             <span class="dashicons dashicons-editor-help"></span><?php _e('More info','shortpixel-image-optimiser');?>
                         </a>
                     </p>
@@ -312,7 +333,7 @@ namespace ShortPixel;
                                    <br>For the <strong>"size"</strong> type,
                                    which applies only to Media Library images, <strong>the main images (not thumbnails)</strong> that have the size in the specified range will be excluded.
                                    The format for the "size" exclude is: <strong>minWidth</strong>-<strong>maxWidth</strong>x<strong>minHeight</strong>-<strong>maxHeight</strong>, for example <strong>size:1000-1100x2000-2200</strong>. You can also specify a precise size, as <strong>1000x2000</strong>.','shortpixel-image-optimiser');?>
-                        <a href="http://blog.shortpixel.com/shortpixel-how-to-exclude-images-and-folders-from-optimization/" target="_blank" class="shortpixel-help-link">
+                        <a href="https://blog.shortpixel.com/shortpixel-how-to-exclude-images-and-folders-from-optimization/" target="_blank" class="shortpixel-help-link">
                             <span class="dashicons dashicons-editor-help"></span><?php _e('More info','shortpixel-image-optimiser');?>
                         </a>
                     </p>

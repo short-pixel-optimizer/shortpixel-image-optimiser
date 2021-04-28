@@ -149,6 +149,10 @@ class EditMediaController extends \ShortPixel\Controller
         {
           $stats[] = array(__(" WebP images", 'shortpixel-image-optimiser'), $data['webpCount']);
         }
+        if ($data['avifCount'])
+        {
+          $stats[] = array(__(" Avif images", 'shortpixel-image-optimiser'), $data['avifCount']);
+        }
         if ($data['exifKept'])
           $stats[] = array(__('EXIF kept', 'shortpixel-image-optimiser'), '');
         else {

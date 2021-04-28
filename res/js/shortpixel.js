@@ -278,8 +278,8 @@ var ShortPixel = function() {
             jQuery("section").removeClass("sel-tab");
             jQuery('section .wp-shortpixel-tab-content').fadeOut(50);
             jQuery(section).addClass("sel-tab");
-            ShortPixel.adjustSettingsTabs();
-            jQuery(section).find('.wp-shortpixel-tab-content').fadeIn(50);
+
+            jQuery(section).find('.wp-shortpixel-tab-content').fadeIn(50,     ShortPixel.adjustSettingsTabs);
         }
         if(typeof HS !== 'undefined' && typeof HS.beacon.suggest !== 'undefined' ){
             switch(tab){
@@ -302,10 +302,13 @@ var ShortPixel = function() {
 
     // Fixes the height of the current active tab.
     function adjustSettingsTabsHeight(){
-        var sectionHeight = jQuery('section.sel-tab').height() + 90;
-        //sectionHeight = Math.max(sectionHeight, jQuery('section#tab-adv-settings .wp-shortpixel-options').height() + 20);
+        //var sectionHeight = jQuery('section.sel-tab').height() + 90;
+
+              //sectionHeight = Math.max(sectionHeight, jQuery('section#tab-adv-settings .wp-shortpixel-options').height() + 20);
       //  sectionHeight = Math.max(sectionHeight, jQuery('section#tab-resources .area1').height() + 60);
-        jQuery('.section-wrapper').css('height', sectionHeight);
+      //  jQuery('.section-wrapper').css('height', sectionHeight);
+
+        jQuery('.wso.banner').css('opacity', 1);
         //jQuery('#shortpixel-settings-tabs section').css('height', sectionHeight);
     }
 

@@ -28,6 +28,7 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         'CMYKtoRGBconversion' => array('key' => 'wp-short-pixel_cmyk2rgb', 'default' => 1, 'group' => 'options'),
         'createWebp' => array('key' => 'wp-short-create-webp', 'default' => null, 'group' => 'options'),
         'deliverWebp' => array('key' => 'wp-short-pixel-create-webp-markup', 'default' => 0, 'group' => 'options'),
+        'createAvif' => array('key' => 'wp-short-create-avif', 'default' => null, 'group' => 'options'),
         'optimizeRetina' => array('key' => 'wp-short-pixel-optimize-retina', 'default' => 1, 'group' => 'options'),
         'optimizeUnlisted' => array('key' => 'wp-short-pixel-optimize-unlisted', 'default' => 0, 'group' => 'options'),
         'backupImages' => array('key' => 'wp-short-backup_images', 'default' => 1, 'group' => 'options'),
@@ -124,6 +125,7 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         'CMYKtoRGBconversion' => array('s' => 'boolean'), //checkbox
         'createWebp' => array('s' => 'boolean'), // checkbox
         'deliverWebp' => array('s' => 'int'), // checkbox
+        'createAvif' => array('s' => 'boolean'),  // checkbox
         'optimizeRetina' => array('s' => 'boolean'), // checkbox
         'optimizeUnlisted' => array('s' => 'boolean'), // $checkbox
         'optimizePdfs' => array('s' => 'boolean'), //checkbox

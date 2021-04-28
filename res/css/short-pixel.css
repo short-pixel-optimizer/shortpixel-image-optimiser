@@ -587,6 +587,7 @@ article.sp-tabs section {
     z-index: 0;
 }
 article.sp-tabs section.sel-tab {
+    position: relative;
     box-shadow: 0 3px 3px rgba(0,0,0,0.1);
 }
 article.sp-tabs section .wp-shortpixel-tab-content {
@@ -617,7 +618,7 @@ article.sp-tabs section.sel-tab h2 {
     z-index: 100;
 }
 
-.deliverWebpSettings, .deliverWebpTypes, .deliverWebpAlteringTypes {
+.deliverWebpTypes, .deliverWebpAlteringTypes {
     display: none;
 }
 .deliverWebpTypes .sp-notice {
@@ -639,8 +640,6 @@ article.sp-tabs section.sel-tab h2 {
     display: none;
 }
 
-
-article.sp-tabs section #createWebp:checked ~ .deliverWebpSettings,
 article.sp-tabs section #deliverWebp:checked ~ .deliverWebpTypes,
 article.sp-tabs section #deliverWebpAltered:checked ~ .deliverWebpAlteringTypes
 {
