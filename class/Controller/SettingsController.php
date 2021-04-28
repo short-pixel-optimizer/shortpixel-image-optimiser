@@ -408,8 +408,8 @@ class SettingsController extends \ShortPixel\Controller
         $haswebp = (isset($post['createWebp']) && $post['createWebp'] == 1) ? true : false;
         $hasavif = (isset($post['createAvif']) && $post['createAvif'] == 1) ? true : false;
 
-        if ($haswebp || $hasavif)
-        {
+      //  if ($haswebp || $hasavif)
+      //  {
             if (isset($post['deliverWebp']) && $post['deliverWebp'] == 1)
             {
               $type = isset($post['deliverWebpType']) ? $post['deliverWebpType'] : '';
@@ -430,11 +430,12 @@ class SettingsController extends \ShortPixel\Controller
                 $deliverwebp = 3;
               }
             }
-        }
+      //  }
+
 
         if (! $this->is_nginx && $deliverwebp == 3) // unaltered wepb via htaccess
         {
-            \WPShortPixel::alterHtaccess($haswebp, $hasavif);
+            \WPShortPixel::alterHtaccess(true, true); // write both.
         }
 
          $post['deliverWebp'] = $deliverwebp;

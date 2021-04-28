@@ -3097,10 +3097,10 @@ class WPShortPixel {
         ' ;
 
           $rules = '';
-          if ($avif)
-            $rules .= $avif_rules;
-          if ($webp)
-            $rules .= $webp_rules;
+      //    if ($avif)
+          $rules .= $avif_rules;
+        //  if ($webp)
+          $rules .= $webp_rules;
 
           insert_with_markers( get_home_path() . '.htaccess', 'ShortPixelWebp', $rules);
 
