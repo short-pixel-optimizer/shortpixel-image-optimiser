@@ -50,4 +50,14 @@
       }
 
   }
+  .thumbs-todo
+  {
+     position: relative;
+     span {
+         display: none;
+        // border: 1px solid #ccc;
+
+      }
+     h4:hover ~ span { display: block; }
+  }
 }

@@ -47,7 +47,7 @@ namespace ShortPixel;
     <div class="totals">
       Total images to be optimized  <span class="number" data-stats-total="images-images" data-check-total-total >0</span>
 
-      Total Credits Used <span class='number'>666</span>
+      Total Credits Used <span class='number'></span>
     </div>
 
 

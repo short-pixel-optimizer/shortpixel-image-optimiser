@@ -357,5 +357,14 @@ body.debug-model-active {
 .sp-column-info .thumbnails.optimized:hover .thumb-wrapper {
   display: block;
 }
+.sp-column-info .thumbs-todo {
+  position: relative;
+}
+.sp-column-info .thumbs-todo span {
+  display: none;
+}
+.sp-column-info .thumbs-todo h4:hover ~ span {
+  display: block;
+}
 
 /*# sourceMappingURL=shortpixel-admin.css.map */

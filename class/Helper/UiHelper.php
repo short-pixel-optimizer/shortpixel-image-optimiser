@@ -129,11 +129,13 @@ class UiHelper
         $optimizable = $imageObj->getOptimizeURLS();
         if (count($optimizable) > 0)
         {
-           $output .= '<div class="thumbs-todo"><h4>' . __('To Optimize', 'shortpixel-image-optimiser') . '</h4>';
-           foreach($optimizable as $optObj)
-           {
-              $output .= substr($optObj, strrpos($optObj, '/')+1) . '<br>';
-           }
+           $output .= '<div class="thumbs-todo"><h4>' . sprintf(__('%d to optimize', 'shortpixel-image-optimiser'), count($optimizable)) . '</h4>';
+             $output .= "<span>";
+               foreach($optimizable as $optObj)
+               {
+                  $output .= substr($optObj, strrpos($optObj, '/')+1) . '<br>';
+               }
+             $output .= "</span>";
            $output .= '</div>';
         }
     }
