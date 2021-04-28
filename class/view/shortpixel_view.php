@@ -107,7 +107,7 @@ class ShortPixelView {
 
                           <input name="createWebp" type="checkbox" id="createWebp" value="1" <?php checked( $settings->createWebp, "1" );?> >
                           <label for="createWebp">
-                            <?php _e('Also create <a href="http://blog.shortpixel.com/how-webp-images-can-speed-up-your-site/" target="_blank">WebP versions</a> of the images, with the additional cost of 1 credit = 1 image or thumbnail..','shortpixel-image-optimiser');?>
+                            <?php _e('Also create <a href="https://blog.shortpixel.com/how-webp-images-can-speed-up-your-site/" target="_blank">WebP versions</a> of the images, with the additional cost of 1 credit = 1 image or thumbnail..','shortpixel-image-optimiser');?>
                           </label>
 
                         </div><br>
@@ -116,7 +116,7 @@ class ShortPixelView {
 
                           <input name="createAvif" type="checkbox" id="createAvif" value="1" <?php checked( $settings->createAvif, "1" );?> >
                           <label for="createAvif">
-                            <?php _e('Also create AVIF versions of the images, with the additional cost of 1 credit = 1 image or thumbnail.','shortpixel-image-optimiser');?>
+                            <?php _e('Also create <a href="https://blog.shortpixel.com/what-is-avif-and-why-is-it-good/" target="_blank">AVIF versions</a> of the images, with the additional cost of 1 credit = 1 image or thumbnail.','shortpixel-image-optimiser');?>
                           </label>
 
                         </div><br>
@@ -433,7 +433,7 @@ class ShortPixelView {
                     printf(__('Already  <strong>%s</strong> optimized images will not be reprocessed.','shortpixel-image-optimiser'), $todo ? ($optType) : '');
                     if($reopt) { ?>
                     <br><?php _e('Please note that reoptimizing images as <strong>lossy/lossless</strong> may use additional credits.','shortpixel-image-optimiser')?>
-                    <a href="http://blog.shortpixel.com/the-all-new-re-optimization-functions-in-shortpixel/" target="_blank" class="shortpixel-help-link">
+                    <a href="https://blog.shortpixel.com/the-all-new-re-optimization-functions-in-shortpixel/" target="_blank" class="shortpixel-help-link">
                         <span class="dashicons dashicons-editor-help"></span><?php _e('More info','shortpixel-image-optimiser');?>
                     </a>
                     <?php } ?>
@@ -448,7 +448,7 @@ class ShortPixelView {
 
                              <input name="createWebp" type="checkbox" id="createWebp" value="1" <?php checked( $settings->createWebp, "1" );?> >
                              <label for="createWebp">
-                               <?php _e('Also create <a href="http://blog.shortpixel.com/how-webp-images-can-speed-up-your-site/" target="_blank">WebP versions</a> of the images, with the additional cost of 1 credit = 1 image or thumbnail..','shortpixel-image-optimiser');?>
+                               <?php _e('Also create <a href="https://blog.shortpixel.com/how-webp-images-can-speed-up-your-site/" target="_blank">WebP versions</a> of the images, with the additional cost of 1 credit = 1 image or thumbnail..','shortpixel-image-optimiser');?>
                              </label>
 
                            </div><br>
@@ -457,7 +457,7 @@ class ShortPixelView {
 
                              <input name="createAvif" type="checkbox" id="createAvif" value="1" <?php checked( $settings->createAvif, "1" );?> >
                              <label for="createAvif">
-                               <?php _e('Also create AVIF versions of the images, with the additional cost of 1 credit = 1 image or thumbnail.','shortpixel-image-optimiser');?>
+                               <?php _e('Also create <a href="https://blog.shortpixel.com/what-is-avif-and-why-is-it-good/" target="_blank">AVIF versions</a> of the images, with the additional cost of 1 credit = 1 image or thumbnail.','shortpixel-image-optimiser');?>
                              </label>
 
                            </div><br>
@@ -500,7 +500,7 @@ class ShortPixelView {
                       <span class='icon' style="margin-right: 25px;"><img src="<?php echo(wpSPIO()->plugin_url('res/img/robo-winky.png' ));?>" ></span>
                       <span class='content'>
                        <p><?php _e('After you optimized all your images your site speed might still be improved. Allow ShortPixel Specialists to tell you how.', 'shortpixel-image-optimiser');  ?><p>
-                        <p style='font-size: 16px;'><a href="https://shortpixel.com/lp/wso/?utm_source=SPIO" target="_blank" style='font-weight: 700;'><?php _e('Get Your Site Assessment','shortpixel-image-optimiser'); ?></a></p>
+                        <p style='font-size: 16px;'><a href="https://wso.shortpixel.com/?utm_source=SPIO" target="_blank" style='font-weight: 700;'><?php _e('Get Your Site Assessment','shortpixel-image-optimiser'); ?></a></p>
                       </span>
                   </div>
             </div>
@@ -910,7 +910,7 @@ class ShortPixelView {
                             </p>
                             <p class="settings-info shortpixel-radio-info shortpixel-radio-glossy" <?php echo( $this->ctrl->getCompressionType() == 2 ? "" : 'style="display:none"' );?>>
                                 <?php _e('<b>Glossy compression: </b>creates images that are almost pixel-perfect identical to the originals.</br> Best option for photographers and other professionals that use very high quality images on their sites and want best compression while keeping the quality untouched.','shortpixel-image-optimiser');?>
-                                <a href="http://blog.shortpixel.com/glossy-image-optimization-for-photographers/" target="_blank" class="shortpixel-help-link">
+                                <a href="https://blog.shortpixel.com/glossy-image-optimization-for-photographers/" target="_blank" class="shortpixel-help-link">
                                     <span class="dashicons dashicons-editor-help"></span><?php _e('More info about glossy','shortpixel-image-optimiser');?>
                                 </a></p>
                             <p class="settings-info shortpixel-radio-info shortpixel-radio-lossless" <?php echo( $this->ctrl->getCompressionType() == 0 ? "" : 'style="display:none"' );?>>
@@ -952,7 +952,7 @@ class ShortPixelView {
                         <input name="removeExif" type="checkbox" id="removeExif" <?php echo( $removeExif );?>>
                         <label for="removeExif"><?php _e('Remove the EXIF tag of the image (recommended).','shortpixel-image-optimiser');?></label>
                         <p class="settings-info"> <?php _e('EXIF is a set of various pieces of information that are automatically embedded into the image upon creation. This can include GPS position, camera manufacturer, date and time, etc.
-                            Unless you really need that data to be preserved, we recommend removing it as it can lead to <a href="http://blog.shortpixel.com/how-much-smaller-can-be-images-without-exif-icc" target="_blank">better compression rates</a>.','shortpixel-image-optimiser');?></p>
+                            Unless you really need that data to be preserved, we recommend removing it as it can lead to <a href="https://blog.shortpixel.com/how-much-smaller-can-be-images-without-exif-icc" target="_blank">better compression rates</a>.','shortpixel-image-optimiser');?></p>
                     </td>
                 </tr>
                 <tr>
@@ -1213,11 +1213,11 @@ class ShortPixelView {
                     <td>
                         <input name="createWebp" type="checkbox" id="createWebp" <?php echo( $createWebp );?>>
                         <label for="createWebp">
-                            <?php _e('Also create <a href="http://blog.shortpixel.com/how-webp-images-can-speed-up-your-site/" target="_blank">WebP versions</a> of the images, <strong>for free</strong>.','shortpixel-image-optimiser');?>
+                            <?php _e('Also create <a href="https://blog.shortpixel.com/how-webp-images-can-speed-up-your-site/" target="_blank">WebP versions</a> of the images, <strong>for free</strong>.','shortpixel-image-optimiser');?>
                         </label>
                         <p class="settings-info">
                             <?php _e('WebP images can be up to three times smaller than PNGs and 25% smaller than JPGs. Choosing this option <strong>does not use up additional credits</strong>.','shortpixel-image-optimiser');?>
-                            <a href="http://blog.shortpixel.com/how-webp-images-can-speed-up-your-site/" target="_blank" class="shortpixel-help-link">
+                            <a href="https://blog.shortpixel.com/how-webp-images-can-speed-up-your-site/" target="_blank" class="shortpixel-help-link">
                                 <span class="dashicons dashicons-editor-help"></span><?php _e('More info','shortpixel-image-optimiser');?>
                             </a>
                         </p>
@@ -1278,7 +1278,7 @@ class ShortPixelView {
                         <label for="optimizeRetina"><?php _e('Also optimize the Retina images (@2x) if they exist.','shortpixel-image-optimiser');?></label>
                         <p class="settings-info">
                             <?php _e('If you have a Retina plugin that generates Retina-specific images (@2x), ShortPixel can optimize them too, alongside the regular Media Library images and thumbnails.','shortpixel-image-optimiser');?>
-                            <a href="http://blog.shortpixel.com/how-to-use-optimized-retina-images-on-your-wordpress-site-for-best-user-experience-on-apple-devices/" target="_blank" class="shortpixel-help-link">
+                            <a href="https://blog.shortpixel.com/how-to-use-optimized-retina-images-on-your-wordpress-site-for-best-user-experience-on-apple-devices/" target="_blank" class="shortpixel-help-link">
                                 <span class="dashicons dashicons-editor-help"></span><?php _e('More info','shortpixel-image-optimiser');?>
                             </a>
                         </p>
@@ -1318,7 +1318,7 @@ class ShortPixelView {
                                        <br>For the <strong>"size"</strong> type,
                                        which applies only to Media Library images, <strong>the main images (not thumbnails)</strong> that have the size in the specified range will be excluded.
                                        The format for the "size" exclude is: <strong>minWidth</strong>-<strong>maxWidth</strong>x<strong>minHeight</strong>-<strong>maxHeight</strong>, for example <strong>size:1000-1100x2000-2200</strong>. You can also specify a precise size, as <strong>1000x2000</strong>.','shortpixel-image-optimiser');?>
-                            <a href="http://blog.shortpixel.com/shortpixel-how-to-exclude-images-and-folders-from-optimization/" target="_blank" class="shortpixel-help-link">
+                            <a href="https://blog.shortpixel.com/shortpixel-how-to-exclude-images-and-folders-from-optimization/" target="_blank" class="shortpixel-help-link">
                                 <span class="dashicons dashicons-editor-help"></span><?php _e('More info','shortpixel-image-optimiser');?>
                             </a>
                         </p>
