@@ -672,10 +672,7 @@ class AdminNoticesController extends \ShortPixel\Controller
                  $content = false;
                  if (! is_wp_error( $notices_response ) )
                  {
-                   Log::addTemp('Return Remote Notice', $notices_response);
-                    $notices = json_decode($notices_response['body']);
-                    Log::addTemp($notices);
-                    Log::addTemp(json_last_error_msg());
+                   $notices = json_decode($notices_response['body']);
 
                     if (! is_array($notices))
                       $notices = false;
