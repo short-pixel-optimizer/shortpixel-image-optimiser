@@ -14,7 +14,7 @@ class Status
   protected $preparing = false; // flag to signal queue is being created and items are being uploaded.  Don't run.
   protected $running = false; // flag to signal the queue is currently running
   protected $finished = false;  // flag to signal nothing can move this queue anymore.
-  protected $bulk_running = false; // external flag to note if a large amount is being more [optional] 
+  protected $bulk_running = false; // external flag to note if a large amount is being more [optional]
   protected $done = 0; // number of items processed
   protected $errors = 0;
   protected $fatal_errors = 0;
@@ -24,6 +24,8 @@ class Status
   protected $average_ask = 0; // internal
 
   protected $last_item_id = 0;
+
+  protected $custom_data = null; // data for the application, shortq does nothing with it.
 
   public function isCounter($name)
   {
