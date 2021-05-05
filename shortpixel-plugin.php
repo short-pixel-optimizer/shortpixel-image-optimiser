@@ -375,7 +375,7 @@ class ShortPixelPlugin
       $env = wpSPIO()->env();
 
       if(\WPShortPixelSettings::getOpt('deliverWebp') == 3 && ! $env->is_nginx) {
-          \WpShortPixel::alterHtaccess(false, false); //add the htaccess lines
+          \WpShortPixel::alterHtaccess(true, true); //add the htaccess lines
       }
 
       \WpShortPixelDb::checkCustomTables();
