@@ -10,6 +10,7 @@ namespace ShortPixel;
     $deliverWebpUnalteredDisabled = '';
     $deliverWebpAlteredDisabledNotice = false;
     $deliverWebpUnalteredLabel ='';
+    $deliverAVIFLabel ='';
 
     if( $this->is_nginx ){
         $deliverWebpUnaltered = '';                         // Uncheck
