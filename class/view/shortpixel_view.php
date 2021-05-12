@@ -77,15 +77,22 @@ class ShortPixelView {
                                               $averageCompression, $filesOptimized, $savedSpace, $percent, $customCount) {
         $settings = $this->ctrl->getSettings();
         //$this->ctrl->outputHSBeacon();
-        \ShortPixel\HelpScout::outputBeacon();
+        //\ShortPixel\HelpScout::outputBeacon();
 
         $this->bulkType = $this->ctrl->getPrioQ()->getBulkTypeForDisplay(); // adding to the mess
         $hider = ($this->bulkType == ShortPixelQueue::BULK_TYPE_RESTORE) ? 'sp-hidden' : '';
+
+        $mainNotProcessed = max(0, $quotaData['mainFiles'] - $quotaData['mainProcessedFiles']);
+        $thumbsNotProcessed = max(0, ($quotaData['totalFiles'] - $quotaData['mainFiles']) - ($quotaData['totalProcessedFiles'] - $quotaData['mainProcessedFiles']));
+
+
+        $creditsForImageTypes = $quotaData['totalFiles'] - $quotaData['totalProcessedFiles']; //
+        $extraCost = "&nbsp;<strong>" .  sprintf(__('An additional %s credits will be used when active', 'shortpixel-image-optimiser'),$creditsForImageTypes) . "</strong>";
         ?>
         <div class="wrap short-pixel-bulk-page">
             <h1><?php _e('Bulk Image Optimization by ShortPixel','shortpixel-image-optimiser');?></h1>
         <?php
-        if ( !$bulkRan ) {
+        if ( ! $bulkRan  ) {
             ?>
             <div class="sp-notice sp-notice-info sp-floating-block sp-full-width">
                 <form class='start' action='' method='POST' id='startBulk'>
@@ -108,6 +115,7 @@ class ShortPixelView {
                           <input name="createWebp" type="checkbox" id="createWebp" value="1" <?php checked( $settings->createWebp, "1" );?> >
                           <label for="createWebp">
                             <?php _e('Also create <a href="https://blog.shortpixel.com/how-webp-images-can-speed-up-your-site/" target="_blank">WebP versions</a> of the images, with the additional cost of 1 credit = 1 image or thumbnail..','shortpixel-image-optimiser');?>
+                            <?php echo $extraCost ?>
                           </label>
 
                         </div><br>
@@ -117,6 +125,7 @@ class ShortPixelView {
                           <input name="createAvif" type="checkbox" id="createAvif" value="1" <?php checked( $settings->createAvif, "1" );?> >
                           <label for="createAvif">
                             <?php _e('Also create <a href="https://blog.shortpixel.com/what-is-avif-and-why-is-it-good/" target="_blank">AVIF versions</a> of the images, with the additional cost of 1 credit = 1 image or thumbnail.','shortpixel-image-optimiser');?>
+                            <?php echo $extraCost ?>
                           </label>
 
                         </div><br>
@@ -336,6 +345,8 @@ class ShortPixelView {
                     $todo = true;
                     $mainNotProcessed = max(0, $quotaData['mainFiles'] - $quotaData['mainProcessedFiles']);
                     $thumbsNotProcessed = max(0, ($quotaData['totalFiles'] - $quotaData['mainFiles']) - ($quotaData['totalProcessedFiles'] - $quotaData['mainProcessedFiles']));
+
+
                     ?>
                     <p>
                         <?php
@@ -449,6 +460,7 @@ class ShortPixelView {
                              <input name="createWebp" type="checkbox" id="createWebp" value="1" <?php checked( $settings->createWebp, "1" );?> >
                              <label for="createWebp">
                                <?php _e('Also create <a href="https://blog.shortpixel.com/how-webp-images-can-speed-up-your-site/" target="_blank">WebP versions</a> of the images, with the additional cost of 1 credit = 1 image or thumbnail..','shortpixel-image-optimiser');?>
+                               <?php echo $extraCost ?>
                              </label>
 
                            </div><br>
@@ -458,6 +470,7 @@ class ShortPixelView {
                              <input name="createAvif" type="checkbox" id="createAvif" value="1" <?php checked( $settings->createAvif, "1" );?> >
                              <label for="createAvif">
                                <?php _e('Also create <a href="https://blog.shortpixel.com/what-is-avif-and-why-is-it-good/" target="_blank">AVIF versions</a> of the images, with the additional cost of 1 credit = 1 image or thumbnail.','shortpixel-image-optimiser');?>
+                               <?php echo $extraCost ?>
                              </label>
 
                            </div><br>
