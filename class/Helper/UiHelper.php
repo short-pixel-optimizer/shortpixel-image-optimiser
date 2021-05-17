@@ -59,8 +59,10 @@ class UiHelper
     $retinas = $imageObj->get('retinas');
 
     $webps = $imageObj->get('webps');
+    $avif = $imageObj->get('avifs')
 
     $webpsTotal = (is_array($webps)) ? count(array_filter($webps)) : 0;
+    $avifsTotal = (is_array($avifs)) ? count(array_filter($avifs)) : 0;
 
   /*  if ($thumbs)
     {
@@ -123,6 +125,9 @@ class UiHelper
 
     if ($webpsTotal > 0)
       $output .= '<br>' . sprintf(__('+%s Webp images ','shortpixel-image-optimiser') , $webpsTotal);
+
+      if ($avifsTotal > 0)
+        $output .= '<br>' . sprintf(__('+%s Avif images ','shortpixel-image-optimiser') , $avifsTotal);
 
     if ($imageObj->isOptimized() && $imageObj->isProcessable())
     {

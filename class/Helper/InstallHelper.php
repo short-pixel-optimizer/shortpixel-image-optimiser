@@ -25,7 +25,7 @@ class InstallHelper
       $env = wpSPIO()->env();
 
       if(\WPShortPixelSettings::getOpt('deliverWebp') == 3 && ! $env->is_nginx) {
-          \WpShortPixel::alterHtaccess(); //add the htaccess lines
+          \WpShortPixel::alterHtaccess(true,true); //add the htaccess lines
       }
 
       \WpShortPixelDb::checkCustomTables();
@@ -42,7 +42,7 @@ class InstallHelper
     $env = wpSPIO()->env();
 
     if (! $env->is_nginx)
-      \WpShortPixel::alterHtaccess(true);
+      \WpShortPixel::alterHtaccess(false, false);
 
     // save remove.
     $fs = new FileSystemController();

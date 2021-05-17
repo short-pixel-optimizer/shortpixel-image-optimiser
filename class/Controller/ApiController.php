@@ -102,13 +102,24 @@ class ApiController
 
     $args = wp_parse_args($args, $defaults);
 
+    $convertTo = array();
+    if ($this->_settings->createWebp)
+       $convertTo[]= urlencode("+webp");
+    if ($this->_settings->createAvif)
+       $convertTo[] = urlencode('+avif');
+
+     if (count($convertTo) > 0)
+       $convertTo = implode('|', $convertTo);
+     else
+       $convertTo = '';
+
     $requestParameters = array(
         'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
         'key' => $keyControl->forceGetApiKey(),
         'lossy' => $args['compressionType'],
         'cmyk2rgb' => $settings->CMYKtoRGBconversion,
         'keep_exif' => ($settings->keepExif ? "1" : "0"),
-        'convertto' => ($settings->createWebp ? urlencode("+webp") : ""),
+        'convertto' => $convertTo,
         'resize' => $settings->resizeImages ? 1 + 2 * ($settings->resizeType == 'inner' ? 1 : 0) : 0,
         'resize_width' => $settings->resizeWidth,
         'resize_height' => $settings->resizeHeight,
@@ -338,6 +349,7 @@ class ApiController
           $fileSize = "LosslessSize";
       }
       $webpType = "WebP" . $fileType;
+      $avifType = "AVIF" . $fileType;
 
       /** @todo - What does this mean?  */
       $archive = /*false &&*/
@@ -363,7 +375,7 @@ class ApiController
                 );
 
               } else {
-                  $downloadResult = $this->handleDownload($fileData->$fileType, $fileData->$fileSize, $fileData->OriginalSize //isset($fileData->$webpType) ? $fileData->$webpType : 'NA'
+                  $downloadResult = $this->handleDownload($fileData->$fileType, $fileData->$fileSize, $fileData->OriginalSize
                 );
               }
 
@@ -408,6 +420,25 @@ class ApiController
                        $results[$webpName] = $webpDownloadResult;
                     }
                   }
+
+                  // ** Download Webp files if they are returned **/
+                  if (isset($fileData->$avifType))
+                  {
+                    $avifName = $originalFile->getFileBase() . '.webp'; ;
+
+                    if($archive) { // swallow pride here, or fix this.
+                        $avifDownloadResult = $this->fromArchive($archive['Path'], $fileData->$avifType, false,false);
+                    } else {
+                        $avifDownloadResult = $this->handleDownload($fileData->$avifType, false, false);
+                    }
+
+                    if ( $avifDownloadResult->apiStatus == self::STATUS_SUCCESS)
+                    {
+                       Log::addDebug('Downloaded Webp : ' . $fileData->$avifType);
+                       $results[$avifName] = $avifDownloadResult;
+                    }
+                  }
+
               }
               /*elseif ($downloadResult->status == self::STATUS_UNCHANGED)
               {
@@ -735,19 +766,11 @@ class ApiController
       $downloadTimeout = max(ini_get('max_execution_time') - 10, 15);
       $fs = \wpSPIO()->filesystem();
 
-  /*    $webpTempFile = "NA";
-      if($webpUrl !== "NA") {
-          $webpURL = $this->setPreferredProtocol(urldecode($webpUrl));
-          $webpTempFile = download_url($webpURL, $downloadTimeout);
-          $webpTempFile = is_wp_error( $webpTempFile ) ? "NA" : $webpTempFile;
-      } */
 
       //if there is no improvement in size then we do not download this file
       if (($optimizedSize !== false && $originalSize !== false) && $originalSize == $optimizedSize )
       {
           return $this->returnRetry(self::STATUS_UNCHANGED, __("File wasn't optimized so we do not download it.", 'shortpixel-image-optimiser'));
-          //return array("Status" => self::STATUS_UNCHANGED, "Message" => "File wasn't optimized so we do not download it.", "WebP" => $webpTempFile);
-
       }
       $correctFileSize = $optimizedSize;
       $fileURL = $this->setPreferredProtocol(urldecode($optimizedUrl));
@@ -777,10 +800,8 @@ class ApiController
               "Message" => __('Unable to locate downloaded file','shortpixel-image-optimiser') . " " . $tempFile); */
       }
       elseif($correctFileSize !== false &&  $tempFile->getFileSize() != $correctFileSize) {
-          //$size = filesize($tempFile);
-        //  @unlink($tempFile);
+
           $tempFile->delete();
-          //@unlink($webpTempFile);
           Log::addWarn('Incorrect file size: ' . $tempFile->getFullPath() . '(' . $correctFileSize . ')');
           return $this->returnFailure(self::ERR_INCORRECT_FILE_SIZE, sprintf(__('Error downloading file - incorrect file size (downloaded: %s, correct: %s )','shortpixel-image-optimiser'),$tempFile->getFileSize(), $correctFileSize));
           /*$returnMessage = array(
@@ -793,11 +814,7 @@ class ApiController
   }
 
   private function fromArchive($path, $optimizedUrl, $optimizedSize, $originalSize) {
-    /*  $webpTempFile = "NA";
-      if($webpUrl !== "NA") {
-          $webpTempFile = $path . '/' . wp_basename($webpUrl);
-          $webpTempFile = file_exists($webpTempFile) ? $webpTempFile : 'NA';
-      } */
+
       $fs = \wpSPIO()->filesystem();
 
       //if there is no improvement in size then we do not download this file
@@ -814,19 +831,13 @@ class ApiController
       if($tempFile->exists()) {
           //on success we return this
          if( $tempFile->getFileSize() != $correctFileSize) {
-          //   $size = filesize($tempFile);
-             //@unlink($tempFile);
+
              $tempFile->delete();
-        //     @unlink($webpTempFile);
-             /*$returnMessage = array(
-                 "Status" => self::STATUS_ERROR,
-                 "Code" => self::ERR_INCORRECT_FILE_SIZE,
-                 "Message" => sprintf(__('Error in archive - incorrect file size (downloaded: %s, correct: %s )','shortpixel-image-optimiser'),$tempFile->getFilesize(), $correctFileSize)); */
+
                  return $this->returnFailure(self::ERR_INCORRECT_FILE_SIZE, sprintf(__('Error downloading file - incorrect file size (downloaded: %s, correct: %s )','shortpixel-image-optimiser'),$tempFile->getFileSize(), $correctFileSize));
 
           } else {
               $this->returnSuccess($tempFile);
-//             $returnMessage = array("Status" => self::STATUS_SUCCESS, "Message" => $tempFile, "WebP" => $webpTempFile);
          }
       } else {
           $returnMessage = array("Status" => self::STATUS_ERROR,

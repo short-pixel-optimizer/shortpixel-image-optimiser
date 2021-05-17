@@ -203,7 +203,7 @@ class ShortPixelPlugin
 
       //for cleaning up the WebP images when an attachment is deleted
       add_action( 'delete_attachment', array( $admin, 'onDeleteAttachment') );
-      add_action('mime_types', array($admin, 'addWebpMime'));
+      add_action('mime_types', array($admin, 'addMimes'));
 
       // integration with WP/LR Sync plugin
       add_action( 'wplr_update_media', array( &$this, 'onWpLrUpdateMedia' ), 10, 2);
@@ -325,7 +325,7 @@ class ShortPixelPlugin
   *
   * Not all those registered must be enqueued however.
   */
-  public function admin_scripts()
+  public function admin_scripts($hook_suffix)
   {
     if (Log::debugIsActive()) {
         $jsSuffix = '.js'; //use unminified versions for easier debugging
@@ -551,7 +551,7 @@ class ShortPixelPlugin
   }
 
   /** This is separated from route to load in head, preventing unstyled content all the time */
-  public function load_admin_scripts()
+  public function load_admin_scripts($hook_suffix)
   {
     global $plugin_page;
     $screen_id = \wpSPIO()->env()->screen_id;

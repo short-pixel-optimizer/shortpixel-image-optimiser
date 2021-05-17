@@ -78,13 +78,18 @@ class AdminController extends \ShortPixel\Controller
     /** If webp generating functionality is on, give mime-permissions for webp extension
     *
     */
-    public function addWebpMime($mimes)
+    public function addMimes($mimes)
     {
         $settings = \wpSPIO()->settings();
         if ($settings->createWebp)
         {
             if (! isset($mimes['webp']))
               $mimes['webp'] = 'image/webp';
+        }
+        if ($settings->createAvif)
+        {
+            if (! isset($mimes['avif']))
+              $mimes['webp'] = 'image/avif';
         }
         return $mimes;
     }

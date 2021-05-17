@@ -184,6 +184,31 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       return $webps;
   }
 
+  protected function getAvifs()
+  {
+      $avif = array();
+
+      $main = $this->getAvif();
+      if ($main)
+        $avifs[0] = $main;  // on purpose not a string, but number to prevent any custom image sizes to get overwritten.
+
+      foreach($this->thumbnails as $thumbname => $thumbObj)
+      {
+         $avif = $thumbObj->getWebp();
+         if ($avif)
+          $avifs[$thumbname] = $avif;
+      }
+      if ($this->isScaled())
+      {
+        $avif = $this->original_file->getAvif();
+        if ($avif)
+          $avifs[1] = $avif; //see main
+      }
+
+      return $avifs;
+  }
+
+
   /* Sanity check in process. Should only be called upon special request, or with single image displays. Should check and recheck stats, thumbs, unlistedthumbs and all assumptions of data that might corrupt or change outside of this plugin */
   public function reAcquire()
   {
@@ -903,6 +928,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         $webps = $this->getWebps();
         foreach($webps as $webpFile)
             $webpFile->delete();
+
+        $avifs = $this->getAvifs();
+        foreach($avifs as $avifFile)
+            $avifFile->delete();
 
         if ($cleanRestore)
         {

@@ -112,6 +112,9 @@
 .settings_page_wp-shortpixel-settings .wp-shortpixel-tab-content {
   transition: all 1000ms linear;
 }
+.settings_page_wp-shortpixel-settings .red {
+  color: #ff0000;
+}
 .settings_page_wp-shortpixel-settings article.sp-tabs section .wp-shortpixel-tab-content {
   opacity: 0;
 }
@@ -182,6 +185,42 @@
 .settings_page_wp-shortpixel-settings section#tab-debug .table.notices > div > span {
   width: 25%;
   text-align: center;
+}
+.settings_page_wp-shortpixel-settings section.banner {
+  width: 100%;
+  background-color: #dcfdff;
+  display: flex;
+  align-items: center;
+  border: 1px solid #ccc;
+  margin-top: 35px;
+  margin-bottom: 45px;
+  z-index: 12;
+  position: relative;
+  opacity: 0;
+}
+.settings_page_wp-shortpixel-settings section.banner span {
+  text-align: center;
+}
+.settings_page_wp-shortpixel-settings section.banner .image {
+  flex: 1;
+}
+.settings_page_wp-shortpixel-settings section.banner .line {
+  flex: 3;
+}
+.settings_page_wp-shortpixel-settings section.banner .line h3 {
+  color: #00d0e5;
+}
+.settings_page_wp-shortpixel-settings section.banner .button-wrap {
+  flex: 2;
+}
+.settings_page_wp-shortpixel-settings section.banner .button-wrap .button {
+  background: #ff0000;
+  padding: 8px;
+  font-weight: 700;
+  font-size: 20px;
+  margin: 8px;
+  color: #fff;
+  text-transform: uppercase;
 }
 .settings_page_wp-shortpixel-settings .view-notice {
   box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.1);

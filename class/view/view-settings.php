@@ -54,7 +54,7 @@ HelpScout::outputBeacon();
     ?>
 
 </article>
-
+<?php $this->loadView('settings/part-wso'); ?>
 <?php // @todo inline JS ?>
 <script>
     jQuery(document).ready(function(){
