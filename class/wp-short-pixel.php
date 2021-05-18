@@ -678,7 +678,7 @@ class WPShortPixel {
             if(   !is_plugin_active('image-watermark/image-watermark.php')
                && !is_plugin_active('amazon-s3-and-cloudfront/wordpress-s3.php')
                && !is_plugin_active('amazon-s3-and-cloudfront-pro/amazon-s3-and-cloudfront-pro.php')
-               && !is_plugin_active('easy-watermark/index.php')) {
+               && !is_plugin_active('easy-watermark/easy-watermark.php')) {
                 try {
                     $URLsAndPATHs = $this->getURLsAndPATHs($itemHandler);
                     //send a processing request right after a file was uploaded, do NOT wait for response
