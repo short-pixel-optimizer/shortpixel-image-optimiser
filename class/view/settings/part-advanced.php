@@ -231,16 +231,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                        </a>
                    </p>
 
-                   <p>&nbsp;</p>
-                   <input name="createAvif" type="checkbox" id="createAvif" value="1" <?php checked( $view->data->createAvif, "1"); ?>>
-                   <label for="createAvif"><?php _e('Also create <a href="https://blog.shortpixel.com/what-is-avif-and-why-is-it-good/" target="_blank">AVIF versions</a> of the images, with the additional cost of 1 credit = 1 image or thumbnail.','shortpixel-image-optimiser');?></label>
 
-                   <p class="settings-info">
-                        <?php _e('WebP images can be up to three times smaller than PNGs and 25% smaller than JPGs.  <span class="red"><strong>Starting May 10th, 2021 this option will use additional credits (1 credit = 1 image or thumbnail)!</strong></span>','shortpixel-image-optimiser');?>
-                        <a href="https://blog.shortpixel.com/how-webp-images-can-speed-up-your-site/" target="_blank" class="shortpixel-help-link">
-                            <span class="dashicons dashicons-editor-help"></span><?php _e('More info','shortpixel-image-optimiser');?>
-                        </a>
-                    </p>
 
                     <p>&nbsp;</p>
                     <input name="createAvif" type="checkbox" id="createAvif" value="1" <?php checked( $view->data->createAvif, "1"); ?>>
