@@ -21,6 +21,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
         parent::__construct($path);
         $this->image_meta = new ImageThumbnailMeta();
         $this->setWebp();
+        $this->setAvif();
   }
 
 
@@ -94,11 +95,34 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
     return false;
   }
 
+  public function getAvif()
+  {
+      $fs = \wpSPIO()->filesystem();
+      if (! is_null($this->getMeta('avif')))
+      {
+        $filepath = $this->getFileDir() . $this->getMeta('avif');
+        $avif = $fs->getFile($filepath);
+        return $webp;
+      }
+
+    return false;
+  }
+
+  /** @todo Might be moved to ImageModel, if customImage also has Webp */
   protected function setWebp()
   {
       $webp = $this->getWebp();
       if ($webp !== false && $webp->exists())
         $this->setMeta('webp', $webp->getFileName() );
+
+  }
+
+  /** @todo Might be moved to ImageModel, if customImage also has Webp */
+  protected function setAvif()
+  {
+      $avif = $this->getAvif();
+      if ($avif !== false && $avif->exists())
+        $this->setMeta('avif', $avif->getFileName() );
 
   }
 

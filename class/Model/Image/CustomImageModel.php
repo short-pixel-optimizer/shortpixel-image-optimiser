@@ -65,6 +65,29 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         return array();
     }
 
+
+    protected function getWebps()
+    {
+      $fs = \wpSPIO()->filesystem();
+      $webp = $fs->getFile($this->getFileDir() . $this->getFileBase() . '.webp');
+
+      $webps = array();
+
+      if ($webp->exists)
+        $webps[]= $webp;
+
+
+      return $webps;
+
+    }
+
+    protected function getAvifs()
+    {
+        // @todo see if needed
+    }
+
+
+
     public function restore()
     {
        $bool = parent::restore();

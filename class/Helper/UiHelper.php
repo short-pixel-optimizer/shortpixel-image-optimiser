@@ -58,12 +58,10 @@ class UiHelper
 
     $retinas = $imageObj->get('retinas');
 
-    $webps = $imageObj->get('webps');
-    $avifs = $imageObj->get('avifs');
+    $webpsTotal = $imageObj->count('webps');
+    $avifsTotal = $imageObj->count('avifs');
 
-    $webpsTotal = (is_array($webps)) ? count(array_filter($webps)) : 0;
-    $avifsTotal = (is_array($avifs)) ? count(array_filter($avifs)) : 0;
-
+    
   /*  if ($thumbs)
     {
       foreach($thumbs as $thumbObj)

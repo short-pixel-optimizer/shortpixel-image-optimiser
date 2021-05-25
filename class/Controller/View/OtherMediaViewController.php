@@ -7,6 +7,7 @@ use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 
 use ShortPixel\Model\File\DirectoryOtherMediaModel as DirectoryOtherMediaModel;
+use ShortPixel\Model\Image\ImageModel as ImageModel;
 
 use ShortPixel\Controller\Queue\CustomQueue as CustomQueue;
 
@@ -413,11 +414,11 @@ class OtherMediaViewController extends \ShortPixel\Controller
             return $this->renderActions($thisActions, $item); // nothing more.
           }
 
-          if ($item->getMeta('status') < \ShortPixelMeta::FILE_STATUS_UNPROCESSED)
+          if ($item->getMeta('status') < ImageModel::FILE_STATUS_UNPROCESSED)
           {
-            $thisActions[] = $this->actions['retry'];
+            $thisActions[] = $this->actions['optimize'];
           }
-          elseif ($item->getMeta('status') == \ShortPixelMeta::FILE_STATUS_UNPROCESSED || $item->getMeta('status') == \ShortPixelMeta::FILE_STATUS_RESTORED)
+          elseif ($item->getMeta('status') == ImageModel::FILE_STATUS_UNPROCESSED || $item->getMeta('status') == ImageModel::FILE_STATUS_RESTORED)
           {
             $thisActions[] = $this->actions['optimize'];
           }

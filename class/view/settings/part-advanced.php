@@ -398,8 +398,10 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                 <td>
                     <?php foreach($view->allThumbSizes as $sizeKey => $sizeVal) {?>
                         <span style="margin-right: 20px;white-space:nowrap">
+                          <label>
                             <input name="excludeSizes[]" type="checkbox" id="excludeSizes_<?php echo($sizeKey);?>" <?php echo((in_array($sizeKey, $view->data->excludeSizes) ? 'checked' : ''));?>
                                    value="<?php echo($sizeKey);?>">&nbsp;<?php $w=$sizeVal['width']?$sizeVal['width'].'px':'*';$h=$sizeVal['height']?$sizeVal['height'].'px':'*';echo("$sizeKey ({$w} &times; {$h})");?>&nbsp;&nbsp;
+                            </label>
                         </span><br>
                     <?php } ?>
                     <p class="settings-info">

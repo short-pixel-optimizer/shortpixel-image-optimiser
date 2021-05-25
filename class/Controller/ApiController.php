@@ -103,9 +103,9 @@ class ApiController
     $args = wp_parse_args($args, $defaults);
 
     $convertTo = array();
-    if ($this->_settings->createWebp)
+    if ($settings->createWebp)
        $convertTo[]= urlencode("+webp");
-    if ($this->_settings->createAvif)
+    if ($settings->createAvif)
        $convertTo[] = urlencode('+avif');
 
      if (count($convertTo) > 0)

@@ -183,7 +183,7 @@ class FileModel extends \ShortPixel\Model
         // Feed to full path to DirectoryModel since it checks if input is file, or dir. Using dirname here would cause errors when fullpath is already just a dirpath ( faulty input )
           $this->directory = new DirectoryModel($fullpath);
       }
-      
+
       return $this->directory;
   }
 
@@ -384,8 +384,6 @@ class FileModel extends \ShortPixel\Model
   protected function processPath($path)
   {
     $original_path = $path;
-
-
 
     if ($this->pathIsUrl($path))
     {

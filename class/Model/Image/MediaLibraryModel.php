@@ -71,7 +71,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       return array();
      }
 
-
      $urls = array();
      if ($this->isProcessable(true))
       $urls = array($url);
@@ -86,7 +85,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         $urls = array_merge($urls, $thumbObj->getOptimizeUrls());
      }
 
-
      // @todo Check Retina's
     $retinas = $this->getRetinas();
     foreach($retinas as $retinaObj)
@@ -96,6 +94,47 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
      $urls = array_values(array_unique($urls));
      return $urls;
+  }
+
+  public function getOptimizeFileType($type = 'webp')
+  {
+      if ($type = 'webp')
+      {
+        $types = $this->getWebps();
+      }
+      elseif ($type == 'avif')
+      {
+          $types = $this->getAvifs();
+      }
+
+      $toOptimize = array();
+      $fs = \WPSPIO()->filesystem();
+
+      // main file.
+      if (! isset($types[0]))
+      {
+          if ($this->isProcessable() || $this->isOptimized())
+            $toOptimize[] = $fs->pathToUrl($this);
+      }
+      if (! isset($types[1]) && this->isScaled() ) // scaled image
+      {
+        if ($this->original_file->isProcessable() || $this->original_file->isOptimized())
+          $toOptimize[] = $fs->pathToUrl($this->original_file);
+      }
+
+      foreach($this->thumbnails as $thumbName => $thumbObj)
+      {
+          if (! isset($types[$thumbName]))
+          {
+              if ($this->isProcessable() || $this->isOptimized() )
+              {
+                 $toOptimize[] = $fs->pathToUrl($thumbObj);
+              }
+          }
+      }
+
+      return array_filter($toOptimize);
+      //foreach($types as $index => $)
   }
 
   public function getWPMetaData()
@@ -186,15 +225,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
   protected function getAvifs()
   {
-      $avif = array();
-
+      $avifs = array();
       $main = $this->getAvif();
+
       if ($main)
         $avifs[0] = $main;  // on purpose not a string, but number to prevent any custom image sizes to get overwritten.
 
       foreach($this->thumbnails as $thumbname => $thumbObj)
       {
-         $avif = $thumbObj->getWebp();
+         $avif = $thumbObj->getAvif();
          if ($avif)
           $avifs[$thumbname] = $avif;
       }
@@ -208,6 +247,28 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       return $avifs;
   }
 
+  // @todo Needs unit test.
+  public function count($type)
+  {
+      switch($type)
+      {
+         case 'thumbnails' :
+           $count = count($this->thumbnails);
+         break;
+         case 'webps':
+            $count = count($this->getWebps());
+         break;
+         case 'avifs':
+            $count = count($this->getAvifs());
+         break;
+         case 'retinas':
+           $count = count($this->getRetinas());
+         break;
+      }
+
+      return $count;
+
+  }
 
   /* Sanity check in process. Should only be called upon special request, or with single image displays. Should check and recheck stats, thumbs, unlistedthumbs and all assumptions of data that might corrupt or change outside of this plugin */
   public function reAcquire()
@@ -217,8 +278,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       if (\wpSPIO()->settings()->optimizeRetina)
         $this->retinas = $this->getRetinas();
 
-      if (\wpSPIO()->settings()->createWebp)
-        $this->webps = $this->getWebps();
+      //if (\wpSPIO()->settings()->createWebp)
+      $this->webps = $this->getWebps();
 
   }
 
@@ -551,7 +612,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       return false;
   }
 
-  /* Check if an image in theory could be processed. Check only exclusions, don't check status, thumbnails etc */
+  /* Check if an image in theory could be processed. Check exclusions, thumbnails etc */
   /* @param Strict Boolean Check only the main image, don't check thumbnails */
   public function isProcessable($strict = false)
   {
@@ -572,6 +633,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
       if (! $bool) // if parent is not processable, check if thumbnails are, can still have a work to do.
       {
+/*          if ($settings->createWebp && ! $this->getWebp())
+          {
+            return true;
+          }
+
+          if ($settings->createAvif && ! $this->getAvif())
+          {
+            return true;
+          } */
 
           foreach($this->thumbnails as $thumbnail)
           {
@@ -591,8 +661,27 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           }
       }
 
+      // Todo check if Webp / Acif is active, check for unoptimized items
+
       return $bool;
   }
+
+  public function isProcessableFileType($type = 'webp')
+  {
+      if ($type == 'webp' && ! $settings->createWebp)
+        return false;
+
+      if ($type == 'avif' && ! $settings->createAvif)
+          return false;
+
+      $files = $this->getOptimizeFileType($type);
+
+      if (count($files) > 0)
+        return true;
+      else
+        return false;
+  }
+
 
   public function isRestorable()
   {

@@ -66,6 +66,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
     abstract protected function getImprovements();
 
+
+
+
     //abstract public function handleOptimized($tempFiles);
 
     // Construct
@@ -315,6 +318,17 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                        $this->setMeta('webp', $webpResult->getFileName());
                  }
 
+                 $avifFile = $this->getFileBase() . '.avif';
+                 Log::addTemp('Checking Avif as ' . $avifFile);
+                 if (isset($downloadResults[$avifFile]) && isset($downloadResults[$avifFile]->file)) // check if there is webp with same filename
+                 {
+                    $avifResult = $this->handleAvif($downloadResults[$avifFile]->file);
+                     if ($avifResult === false)
+                       Log::addWarn('Avif available, but copy failed ' . $downloadResults[$avifFile]->file->getFullPath());
+                     else
+                       $this->setMeta('avif', $avifResult->getFileName());
+                 }
+
                  $this->setMeta('status', self::FILE_STATUS_SUCCESS);
                  $this->setMeta('tsOptimized', time());
                  $this->setMeta('compressedSize', $optimizedSize);
@@ -465,6 +479,22 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
          return false;
     }
 
+
+    protected function handleAvif(FileModel $tempFile)
+    {
+         $fs = \wpSPIO()->filesystem();
+            $target = $fs->getFile( (string) $this->getFileDir() . $this->getFileBase() . '.avif');
+
+            Log::addTemp('handle Avif for ' . $this->getFullPath() . ' Source : ' . $tempFile->getFullpath() . ' Target ' . $target->getFullPath() );
+
+            $result = $tempFile->copy($target);
+            if (! $result)
+              Log::addWarn('Could not copy Avif to destination ' . $target->getFullPath() );
+            return $target;
+      //   }
+
+         return false;
+    }
 
     protected function isPathExcluded()
     {

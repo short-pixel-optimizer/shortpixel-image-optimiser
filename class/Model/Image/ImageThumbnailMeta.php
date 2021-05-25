@@ -23,6 +23,7 @@ class ImageThumbnailMeta
   public $tsAdded;
   public $tsOptimized;
   public $webp;
+  public $avif;
 
   public $file; // **Only for unlisted images. This defines an unlisted image */
 
