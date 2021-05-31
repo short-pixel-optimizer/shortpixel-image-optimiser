@@ -168,7 +168,8 @@ abstract class Queue
                     $qObject = $this->imageModelToQueue($mediaItem);
                     $imageCount += count($qObject->urls);
 
-                    $queue[] = array('id' => $mediaItem->get('id'), 'value' => $qObject, 'item_count' => count($qObject->urls));
+                      $queue[] = array('id' => $mediaItem->get('id'), 'value' => $qObject, 'item_count' => count($qObject->urls));
+                    
                 }
                 else
                 {
@@ -318,11 +319,71 @@ abstract class Queue
     // This might be a general implementation - This should be done only once!
     protected function imageModelToQueue(ImageModel $imageModel)
     {
-
+      //  $settings = \wpSPIO()->settings();
         $item = new \stdClass;
         $item->compressionType = \wpSPIO()->settings()->compressionType;
 
         $urls = $imageModel->getOptimizeUrls();
+
+        $webps = ($imageModel->isProcessableFileType('webp')) ? $imageModel->getOptimizeFileType('webp') : null;
+        $avifs = ($imageModel->isProcessableFileType('avif')) ? $imageModel->getOptimizeFileType('avif') : null;
+
+        $hasUrls = (count($imageModel) > 0) ? true : false;
+        $hasWebps = (! is_null($webps) && count($webps) > 0) ? true : false;
+        $hasAvifs = count(! is_null($avifs) && count($avifs) > 0) ? true : false;
+        $flags = array();
+        $items = array();
+
+        $webpLeft = $avifLeft = false;
+
+        if (is_null($webps) && is_null($avifs))
+        {
+           // nothing.
+          // $items[] = $item;
+        }
+        else
+        {
+            if ($hasUrls) // if original urls needs optimizing.
+            {
+                if ($hasWebps && count($urls) == count($webps))
+                {
+                   $flags[] = '+webp'; // original + format
+                }
+                else
+                  $webpLeft = true; // or indicate this should go separate ( not full )
+
+                if ($hasAvifs && count($urls) == count($avifs))
+                {
+                   $flags[] = '+avif';
+                }
+                else
+                  $avifLeft = true;
+
+            }
+            elseif(! $hasUrls && $hasWebps || $hasAvifs) // if only webp / avif needs doing.
+            {
+                if ($hasWebps && $hasAvifs)
+                {
+                    if (count($webps) == count($avifs))
+                    {
+                        $flags[] = 'avif';
+                        $flags[] = 'webp';
+                    }
+                    else
+                    {
+                      $flags[] = 'webp';
+                      $avifLeft = true;
+                    }
+                }
+                elseif($hasWebps && ! $hasAvifs)
+                    $flags[] = 'webp';
+                elseif($hasAvifs && ! $hasWebps)
+                    $flags[] = 'avif';
+            }
+
+        }
+
+
       //  $paths = $imageModel->getOptimizePaths();
 
         if ($imageModel->get('do_png2jpg'))  // Flag is set in Is_Processable in mediaLibraryModel, when settings are on, image is png.
@@ -333,11 +394,31 @@ abstract class Queue
         if (! is_null($imageModel->getMeta('compressionType')))
           $item->compressionType = $imageModel->getMeta('compressionType');
 
-        //$item->paths = apply_filters('shortpixel/queue/paths', $paths, $imageModel->get('id'));
+        $item->flags = $flags;
+
+        $items = $item;
+
         $item->urls = apply_filters('shortpixel_image_urls', $urls, $imageModel->get('id'));
 
+        if ($webpLeft) // split the webp request with a dif. flag.
+        {
+           $webpItem = clone $item;
+           $webpItem->flags = array('webp');
+           $webpItem->urls = apply_filters('shortpixel_image_urls', $webps, $imageModel->get('id'));
+           $items[] = $webpItem;
+        }
+        if ($avifLeft)
+        {
+           $avifItem = clone $item;
+           $avifItem->flags = array('avif');
+           $avifItem->urls = apply_filters('shortpixel_image_urls', $webps, $imageModel->get('id'));
+           $items[] = $avifItem;
+        }
 
-        return $item;
+        //$item->paths = apply_filters('shortpixel/queue/paths', $paths, $imageModel->get('id'));
+
+
+        return $items;
     }
 
     public function itemFailed($item, $fatal = false)

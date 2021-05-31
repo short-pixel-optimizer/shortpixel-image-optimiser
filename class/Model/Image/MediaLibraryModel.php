@@ -65,6 +65,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   {
      $fs = \wpSPIO()->filesystem();
      $url = $fs->pathToUrl($this);
+     $settings = \wpSPIO()->settings();
 
      if (! $url)
      {
@@ -82,20 +83,24 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
      foreach($this->thumbnails as $thumbObj)
      {
-        $urls = array_merge($urls, $thumbObj->getOptimizeUrls());
+        if($thumbObj->isThumbnailProcessable())
+          $urls = array_merge($urls, $thumbObj->getOptimizeUrls());
      }
 
      // @todo Check Retina's
-    $retinas = $this->getRetinas();
-    foreach($retinas as $retinaObj)
+    if ($settings->optimizeRetina)
     {
-       $urls[] = $retinaObj->getOptimizeUrls();
-    }
 
+        foreach($this->retinas as $retinaObj)
+        {
+           $urls = array_merge($urls, $retinaObj->getOptimizeUrls());
+        }
+     }
      $urls = array_values(array_unique($urls));
      return $urls;
   }
 
+  /** Get FileTypes that might be optimized */
   public function getOptimizeFileType($type = 'webp')
   {
       if ($type = 'webp')
@@ -113,10 +118,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       // main file.
       if (! isset($types[0]))
       {
-          if ($this->isProcessable() || $this->isOptimized())
+          // The isProcessable(true) is very important, since non-strict calls of this function check this function as well ( resulting in loop )
+          if ($this->isProcessable(true) || $this->isOptimized())
             $toOptimize[] = $fs->pathToUrl($this);
       }
-      if (! isset($types[1]) && this->isScaled() ) // scaled image
+      if (! isset($types[1]) && $this->isScaled() ) // scaled image
       {
         if ($this->original_file->isProcessable() || $this->original_file->isOptimized())
           $toOptimize[] = $fs->pathToUrl($this->original_file);
@@ -126,14 +132,14 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       {
           if (! isset($types[$thumbName]))
           {
-              if ($this->isProcessable() || $this->isOptimized() )
+              if ($thumbObj->isThumbnailProcessable() || $thumbObj->isOptimized() )
               {
                  $toOptimize[] = $fs->pathToUrl($thumbObj);
               }
           }
       }
 
-      return array_filter($toOptimize);
+      return array_values(array_unique($toOptimize));
       //foreach($types as $index => $)
   }
 
@@ -183,11 +189,21 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
   protected function getRetinas()
   {
+      if (! is_null($this->retinas))
+        return $this->retinas;
+
       $retinas = array();
       $main = $this->getRetina();
 
       if ($main)
         $retinas[0] = $main; // on purpose not a string, but number to prevent any custom image sizes to get overwritten.
+
+      if ($this->isScaled())
+      {
+        $retscaled = $this->original_file->getRetina();
+        if ($retscaled)
+          $retinas[1] = $retscaled; //see main
+      }
 
       foreach ($this->thumbnails as $thumbname => $thumbObj)
       {
@@ -195,6 +211,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         if ($retinaObj)
            $retinas[$thumbname] = $retinaObj;
       }
+
 
       return $retinas;
   }
@@ -491,36 +508,25 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
           if (isset($metadata->retinas))
           {
+              $retinas = $this->getRetinas();
               foreach($metadata->retinas as $name => $retinaMeta)
               {
-                  if ($name == 0) // main file
+                  if (isset($retinas[$name]))
                   {
-                    $retfile = $this->getRetina();
+                    $retfile = $retinas[$name];
+                    $retinaObj = $this->getThumbnailModel($retfile->getFullPath());
+                    $retMeta = new ImageThumbnailMeta();
+                    $retMeta->fromClass($retinaMeta);
+                    $retinaObj->setMetaObj($retMeta);
+                    $this->retinas[$name] = $retinaObj;
                   }
-                  else
-                  {
-                     if (isset($this->thumbnails[$name]))
-                     {
-                          $thumbObj = $this->thumbnails[$name];
-                          $retfile = $thumbObj->getRetina();
-                     }
-                  }
-
-                  if ($retfile === false)
-                  {
-                      continue; // no retina on this size.
-                  }
-                  $retinaObj = $this->getThumbnailModel($retfile->getFullPath());
-                  $retMeta = new ImageThumbnailMeta();
-                  $retMeta->fromClass($retinaObj);
-                  $this->retinas[] = $retinaObj;
               }
           }
 
-          if (isset($metadata->original_file))
+        /*  if (isset($metadata->original_file))
           {
               $this->original_file = $metadata->original_file;
-          }
+          } */
 
       }
 
@@ -633,15 +639,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
       if (! $bool) // if parent is not processable, check if thumbnails are, can still have a work to do.
       {
-/*          if ($settings->createWebp && ! $this->getWebp())
-          {
-            return true;
-          }
-
-          if ($settings->createAvif && ! $this->getAvif())
-          {
-            return true;
-          } */
 
           foreach($this->thumbnails as $thumbnail)
           {
@@ -662,12 +659,19 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       }
 
       // Todo check if Webp / Acif is active, check for unoptimized items
+      if ($this->isProcessableFileType('webp'))
+        $bool = true;
+      if ($this->isProcessableFileType('avif'))
+         $bool = true;
+
 
       return $bool;
   }
 
   public function isProcessableFileType($type = 'webp')
   {
+      $settings = \WPSPIO()->settings();
+
       if ($type == 'webp' && ! $settings->createWebp)
         return false;
 
@@ -1053,12 +1057,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       $was_converted = get_post_meta($this->id, 'shortpixel_was_converted', true);
       if ($was_converted == true)
       {
-        Log::addTemp('This item was converted, not converting again');
+        Log::addDebug('This item was converted, not converting again');
         return false;
       }
 
-      /*echo " I MUST CONVERT THIS <PRE>";  print_r($metadata); echo "</PRE>";
-      echo "*** EXPORT: "; var_export($metadata); echo " *** "; */
+      echo " I MUST CONVERT THIS <PRE>";  print_r($metadata); echo "</PRE>";
+    //  echo "*** EXPORT: "; var_export($metadata); echo " *** ";
        $type = isset($data['type']) ? $this->legacyConvertType($data['type']) : '';
 
        $improvement = (isset($metadata['ShortPixelImprovement']) && is_numeric($metadata['ShortPixelImprovement']) && $metadata['ShortPixelImprovement'] > 0) ? $metadata['ShortPixelImprovement'] : 0;
@@ -1121,7 +1125,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
               $thumbnailObj->image_meta->status = $status;
               $thumbnailObj->image_meta->compressionType = $type;
               $thumbnailObj->image_meta->compressedSize = $thumbnailObj->getFileSize();
-              $thumbnailObj->image_meta->did_jpg2png = true;
+              $thumbnailObj->image_meta->did_jpg2png = $did_jpg2png;
           //    $thumbnailObj->image_meta->improvement = -1; // n/a
               if ($thumbnailObj->hasBackup())
               {
@@ -1160,7 +1164,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
            $originalFile->image_meta->status = $status;
            $originalFile->image_meta->compressionType = $type;
            $originalFile->image_meta->compressedSize = $originalFile->getFileSize();
-           $originalFile->image_meta->did_jpg2png = true;
+           $originalFile->image_meta->did_jpg2png = $did_jpg2png;
        //    $thumbnailObj->image_meta->improvement = -1; // n/a
            if ($thumbnailObj->hasBackup())
            {
@@ -1194,17 +1198,32 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
            //print_R($retinas);
            foreach($retinas as $index => $retinaObj) // Thumbnail Model
            {
+
               $retinaObj->image_meta->status = $status;
               $retinaObj->image_meta->compressionType = $type;
-              $retinaObj->image_meta->compressedSize = $retinaObj->getFileSize();
+              if ($status == self::FILE_STATUS_SUCCESS)
+                $retinaObj->image_meta->compressedSize = $retinaObj->getFileSize();
+              else
+                $retinaObj->image_meta->originalSize = $retinaObj->getFileSize();
             //  $retinaObj->image_meta->improvement = -1; // n/a
               $retinaObj->image_meta->tsAdded = $tsAdded;
               $retinaObj->image_meta->tsOptimized = $tsOptimized;
-              $retinaObj->has_backup = $retinaObj->hasBackup();
+              $retinaObj->image_meta->did_jpg2png = $did_jpg2png;
+              if ($retinaObj->hasBackup())
+              {
+                $retinaObj->has_backup = true;
+                if ($status == self::FILE_STATUS_SUCCESS)
+                  $retinaObj->image_meta->originalSize = $retinaObj->getBackupFile()->getFileSize();
+              }
 
               $retinas[$index] = $retinaObj;
            }
            $this->retinas = $retinas;
+           Log::addTemp('Retinas', $retinas);
+           if ($count !== count($retinas))
+           {
+              Log::addWarning("Conversion: $count retinas expected in legacy, " . count($retinas) . 'found', $retinas);
+           }
        }
 
 

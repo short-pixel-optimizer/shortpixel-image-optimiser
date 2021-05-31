@@ -61,7 +61,7 @@ class UiHelper
     $webpsTotal = $imageObj->count('webps');
     $avifsTotal = $imageObj->count('avifs');
 
-    
+
   /*  if ($thumbs)
     {
       foreach($thumbs as $thumbObj)
@@ -130,6 +130,10 @@ class UiHelper
     if ($imageObj->isOptimized() && $imageObj->isProcessable())
     {
         $optimizable = $imageObj->getOptimizeURLS();
+        // Todo check if Webp / Acif is active, check for unoptimized items
+        $processWebp = ($imageObj->isProcessableFileType('webp')) ? true : false;
+        $processAvif = ($imageObj->isProcessableFileType('avif')) ? true : false;
+
         if (count($optimizable) > 0)
         {
            $output .= '<div class="thumbs-todo"><h4>' . sprintf(__('%d to optimize', 'shortpixel-image-optimiser'), count($optimizable)) . '</h4>';
@@ -140,6 +144,31 @@ class UiHelper
                }
              $output .= "</span>";
            $output .= '</div>';
+        }
+
+        if ($processWebp && count($optimizable) == 0)
+        {
+           $webps = $imageObj->getOptimizeFileType('webp');
+           $output .= '<div class="thumbs-todo"><h4>' . sprintf(__('%d Webp files to create', 'shortpixel-image-optimiser'), count($webps)) . '</h4>';
+             $output .= "<span>";
+               foreach($webps as $optObj)
+               {
+                  $output .= substr($optObj, strrpos($optObj, '/')+1) . '<br>';
+               }
+             $output .= "</span>";
+           $output .= '</div>';
+        }
+        if ($processAvif && count($optimizable) == 0)
+        {
+            $avifs = $imageObj->getOptimizeFileType('avif');
+            $output .= '<div class="thumbs-todo"><h4>' . sprintf(__('%d Avif files to create', 'shortpixel-image-optimiser'), count($avifs)) . '</h4>';
+              $output .= "<span>";
+                foreach($avifs as $optObj)
+                {
+                   $output .= substr($optObj, strrpos($optObj, '/')+1) . '<br>';
+                }
+              $output .= "</span>";
+            $output .= '</div>';
         }
     }
 
@@ -174,12 +203,29 @@ class UiHelper
       if ($mediaItem->isOptimized())
       {
            $optimizable = $mediaItem->getOptimizeURLS();
+           //$webp = $mediaItem->
+           var_dump($optimizable);
 
-           if (count($optimizable) > 0 )
+           if ($mediaItem->isProcessable())
            {
              $action = self::getAction('optimizethumbs', $id);
-             $action['text']  = sprintf(__('Optimize %s  thumbnails','shortpixel-image-optimiser'),count($optimizable));
+             if (count($optimizable) > 0)
+             {
+               $action['text']  = sprintf(__('Optimize %s  thumbnails','shortpixel-image-optimiser'),count($optimizable));
+             }
+             else
+             {
+                 $optimizableWebp = count($mediaItem->getOptimizeFileType('webp'));
+                 $optimizableAvif = count($mediaItem->getOptimizeFileType('avif'));
 
+                 if ($optimizableWebp > 0 && $optimizableAvif > 0)
+                   $text  = sprintf(__('Optimize %s webps and %s avif','shortpixel-image-optimiser'),$optimizableWebp, $optimizableAvif);
+                 elseif ($optimizableWebp > 0)
+                   $text  = sprintf(__('Optimize %s webps','shortpixel-image-optimiser'),$optimizableWebp);
+                 else
+                    $text  = sprintf(__('Optimize %s webps','shortpixel-image-optimiser'),$optimizableAvif);
+                 $action['text'] = $text;
+             }
              $list_actions['optimizethumbs'] = $action;
           }
 

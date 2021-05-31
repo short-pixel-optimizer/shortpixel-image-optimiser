@@ -194,10 +194,8 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
         return false;
       else
       {
-        //echo "EXIST" . $this->getFullPath(); var_dump($this->exists());
-        //echo "OPtimized"; var_dump($this->isOptimized());
-        return parent::isProcessable();
 
+        return parent::isProcessable();
       }
   }
 
