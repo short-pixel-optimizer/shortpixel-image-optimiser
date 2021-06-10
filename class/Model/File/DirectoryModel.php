@@ -243,6 +243,7 @@ class DirectoryModel extends \ShortPixel\Model
 
     $defaults = array(
         'date_newer' => null,
+        'exclude' => null,
     );
     $args = wp_parse_args($args, $defaults);
 
@@ -282,6 +283,14 @@ class DirectoryModel extends \ShortPixel\Model
        $modified = $file->getModified();
        if ($modified < $args['date_newer'] )
           $filter = false;
+     }
+     if (! is_null($args['exclude_files']))
+     {
+        foreach($args['exclude_files'] as $ex)
+        {
+           if (strpos($file->getFullPath(), $ex) !== false)
+             $filter = false;
+        }
      }
 
      return $filter;

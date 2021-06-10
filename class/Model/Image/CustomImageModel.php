@@ -65,28 +65,112 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         return array();
     }
 
+    public function count($type)
+    {
+      // everything is 1 on 1 in the customModel
+      switch($type)
+      {
+         case 'thumbnails':
+            return 0;
+         break;
+         case 'webps':
+            $count = count($this->getWebps());
+         break;
+         case 'avifs':
+            $count = count($this->getAvifs());
+         break;
+         case 'retinas':
+           $count = count($this->getRetinas());
+         break;
+      }
+
+
+      return $count; // 0 or 1
+    }
+
+    /* Check if an image in theory could be processed. Check only exclusions, don't check status etc */
+    public function isProcessable()
+    {
+        $bool = parent::isProcessable();
+
+        if (! $bool)
+        {
+          // Todo check if Webp / Acif is active, check for unoptimized items
+          if ($this->isProcessableFileType('webp'))
+            $bool = true;
+          if ($this->isProcessableFileType('avif'))
+             $bool = true;
+
+        }
+
+        return $bool;
+    }
+
 
     protected function getWebps()
     {
       $fs = \wpSPIO()->filesystem();
       $webp = $fs->getFile($this->getFileDir() . $this->getFileBase() . '.webp');
 
+
+      if (! $webp->exists())
+      {
+        return array($webp);
+      }
+
+      $double_webp = \wpSPIO()->env()->useDoubleWebpExtension();
+
+      if ($double_webp)
+        $filename = $this->getFileName();
+      else
+        $filename = $this->getFileBase();
+
+      $filename .= '.webp';
+      $filepath = $this->getFileDir() . $filename;
+
+      $webp = $fs->getFile($filepath);
+
       $webps = array();
-
-      if ($webp->exists)
-        $webps[]= $webp;
-
+      if ($webp->exists())
+        $webps = array($webp);
 
       return $webps;
-
     }
 
     protected function getAvifs()
     {
-        // @todo see if needed
+      $fs = \wpSPIO()->filesystem();
+      $avif = $fs->getFile($this->getFileDir() . $this->getFileBase() . '.avif');
+
+      $avifs = array();
+
+      if ($avif->exists())
+        $avifs[]= $avif;
+
+      return $avifs;
     }
 
+    /** Get FileTypes that might be optimized. Checking for setting should go via isProcessableFileType! */
+    public function getOptimizeFileType($type = 'webp')
+    {
+        if ($type == 'webp')
+        {
+          $types = $this->getWebps();
+        }
+        elseif ($type == 'avif')
+        {
+            $types = $this->getAvifs();
+        }
 
+        $toOptimize = array();
+        $fs = \WPSPIO()->filesystem();
+
+        if (count($types) == 0)
+          return array($fs->pathToUrl($this));
+        else
+          return array();
+
+    }
 
     public function restore()
     {

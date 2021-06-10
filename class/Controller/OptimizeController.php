@@ -242,27 +242,30 @@ class OptimizeController
       $result = $Q->run();
       $results = array();
 
-      // Items is array in case of a dequeue
+      // Items is array in case of a dequeue items.
       $items = (isset($result->items) && is_array($result->items)) ? $result->items : array();
+    //  Log::addTemp('RunTik ITems' . count($items), $items);
 
       // Only runs if result is array, dequeued items.
-      foreach($items as $index => $item)
+      foreach($items as $mainIndex => $item)
       {
-          $urls = $item->urls;
-          if (property_exists($item, 'png2jpg'))
-          {
-          //  Log::addTemp('Converting png2jpg');
-            $bool = $this->convertPNG($item, $Q);
-            Log::addTemp('Png2Jpg conversion done (OptimizeController)', $bool);
-            if ($bool == true)
-              continue; // conversion done, item will be requeued with new urls.
-          }
+        //  foreach($itemArray as $item)
+      //    {
+            $urls = $item->urls;
+            if (property_exists($item, 'png2jpg'))
+            {
+            //  Log::addTemp('Converting png2jpg');
+              $bool = $this->convertPNG($item, $Q);
+              Log::addTemp('Png2Jpg conversion done (OptimizeController)', $bool);
+              if ($bool == true)
+                continue; // conversion done, item will be requeued with new urls.
+            }
 
-          $item = $this->sendToProcessing($item);
+            $item = $this->sendToProcessing($item);
 
-          $item = $this->handleAPIResult($item, $Q);
-          $result->items[$index] = $item; // replace processed item, should have result now.
-
+            $item = $this->handleAPIResult($item, $Q);
+            $result->items[$mainIndex] = $item; // replace processed item, should have result now.
+      //    }
         //  $result = $api->doRequests($urls, $blocking);
       }
 
@@ -305,7 +308,7 @@ class OptimizeController
       }
         //$imageObj = $result; // returns ImageObj.
 
-    //  $item->urls = $imageObj->getOptimizeURLS();
+    //  $item->urls = $imageObj->convertergetOptimizeURLS();
 
       return $bool;
     }
@@ -357,6 +360,7 @@ class OptimizeController
           if ($result->is_done || $item->tries >= SHORTPIXEL_MAX_FAIL_RETRIES )
           {
              // These are cloned, because queue changes object's properties
+             Log::addDebug('HandleApiResult - Item failed ' . $item->item_id);
              $q->itemFailed($item, true);
              $this->HandleItemError($item);
              ResponseController::add()->withMessage($result->message)->asError();
@@ -372,15 +376,12 @@ class OptimizeController
       {
          if ($result->apiStatus == ApiController::STATUS_SUCCESS )
          {
-
-
            $tempFiles = array();
 
            // Set the metadata decided on APItime.
            if (isset($item->compressionType))
            {
              $imageItem->setMeta('compressionType', $item->compressionType);
-
            }
 
            Log::addDebug('Going to Handle Optimize --> ', array_keys($result->files) );
@@ -394,6 +395,7 @@ class OptimizeController
                  $item->result->apiStatus = ApiController::STATUS_SUCCESS;
                  $item->fileStatus = ImageModel::FILE_STATUS_SUCCESS;
                  $item->result->message = sprintf(__('Image %s optimized', 'shortpixel-image-optimiser'), $imageItem->getFileName());
+
                }
                else
               {
@@ -410,7 +412,7 @@ class OptimizeController
               $item->result->queuetype = $qtype;
               if ($imageItem->hasBackup())
               {
-                $backupFile = $imageItem->getBackupFile();
+                $backupFile = $imageItem->getBackupFile(); // attach backup for compare in bulk
                 $backup_url = $fs->pathToUrl($backupFile);
                  $item->result->original = $backup_url;
               }
@@ -437,7 +439,15 @@ class OptimizeController
           $this->HandleItemError($item);
          }
          else
-           $q->itemDone($item);
+         {
+           if ($imageItem->isProcessable())
+           {
+              Log::addDebug('Item with ID' . $imageItem->item_id . ' still has processables');
+                $this->addItemToQueue($imageItem); // requeue for further processing.
+           }
+           else
+            $q->itemDone($item);
+         }
       }
       else
       {
@@ -445,7 +455,8 @@ class OptimizeController
           {
               Log::addTemp('Status unchanged -item', $item);
               $item->fileStatus = ImageModel::FILE_STATUS_PENDING;
-              $item->result->message .= sprintf(__(' Pass %d', 'shortpixel-image-optimiser', intval($item->tries) ));
+              $item->result->message .= sprintf(__(' Pass %d', 'shortpixel-image-optimiser'), intval($item->tries) );
+              $q->itemFailed($item, false); // register as failed, retry in x time, q checks timeouts
           }
       }
 

@@ -14,6 +14,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 /*  public $width;
   public $height;
   public $mime; */
+  protected $prevent_next_try = false;
   protected $is_main_file = false;
 
   public function __construct($path)
@@ -108,6 +109,19 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
     return false;
   }
 
+  public function getOptimizeFileType($type = 'webp')
+  {
+      if ($type == 'webp')
+        $file = $this->getWebp();
+      elseif ($type == 'avif')
+        $file = $this->getAvif();
+
+      if ( ($this->isThumbnailProcessable() || $this->isOptimized()) && $file === false)  // if no file, it can be optimized.
+        return true;
+      else
+        return false;
+  }
+
   /** @todo Might be moved to ImageModel, if customImage also has Webp */
   protected function setWebp()
   {
@@ -186,7 +200,11 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
 
   //public function isRestorable()
+  protected function preventNextTry($reason = '')
+  {
+      $this->prevent_next_try = $reason;
 
+  }
 
   protected function isThumbnailProcessable()
   {

@@ -10,7 +10,7 @@ var ShortPixelScreen = function (MainScreen, processor)
 
     this.Init = function()
     {
-
+          addEventListener('shortpixel.media.resumeprocessing', this.processor.ResumeProcess.bind(this.processor));
     },
     this.HandleImage = function(resultItem, type)
     {
@@ -200,6 +200,9 @@ var ShortPixelScreen = function (MainScreen, processor)
           type: 'media',
           screen_action: 'optimizeItem'
        }
+
+       if (! this.processor.CheckActive())
+         data.callback = 'shortpixel.media.resumeprocessing';
 
        this.processor.AjaxRequest(data);
     }

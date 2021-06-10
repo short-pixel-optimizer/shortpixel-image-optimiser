@@ -71,11 +71,12 @@ class ApiController
       }
 
       $requestArgs = array('urls' => $item->urls); // obligatory
-      if (isset($item->compressionType))
+      if (property_exists($item, 'compressionType'))
         $requestArgs['compressionType'] = $item->compressionType;
       $requestArgs['blocking'] =  ($item->tries == 0) ? false : true;
       $requestArgs['item_id'] = $item->item_id;
       $requestArgs['refresh'] = (property_exists($item, 'refresh') && $item->refresh) ? true : false;
+      $requestArgs['flags'] = (property_exists($item, 'flags')) ? $item->flags : array();
 
       $request = $this->getRequest($requestArgs);
       $item = $this->doRequest($item, $request);
@@ -98,11 +99,12 @@ class ApiController
           'blocking' => true,
           'item_id' => null,
           'refresh' => false,
+          'flags' => array(),
     );
 
     $args = wp_parse_args($args, $defaults);
 
-    $convertTo = array();
+    /*$convertTo = array();
     if ($settings->createWebp)
        $convertTo[]= urlencode("+webp");
     if ($settings->createAvif)
@@ -111,7 +113,10 @@ class ApiController
      if (count($convertTo) > 0)
        $convertTo = implode('|', $convertTo);
      else
-       $convertTo = '';
+       $convertTo = ''; */
+
+    $convertTo = implode("|", $args['flags']);
+
 
     $requestParameters = array(
         'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
@@ -159,7 +164,7 @@ class ApiController
     $response = wp_remote_post($this->apiEndPoint, $requestParameters );
 
     Log::addDebug('ShortPixel API Request sent', $requestParameters);
-    Log::addtemp('Remote Response ', $response);
+  //  Log::addtemp('Remote Response ', $response);
 
 //echo "<PRE>"; var_dump($response); echo "</PRE>";  exit();
     //WpShortPixel::log('RESPONSE: ' . json_encode($response));
@@ -213,6 +218,8 @@ class ApiController
   {
 
     $APIresponse = $this->parseResponse($response);//get the actual response from API, its an array
+  //  Log::addTemp('Api Response, Item', $item);
+  //  Log::addTemp('Api Response, Parsed (handleResponse)', $APIresponse);
     $settings = \wpSPIO()->settings();
 
     // This is only set if something is up, otherwise, ApiResponise returns array
@@ -250,11 +257,16 @@ class ApiController
           }
     }
 
+    $neededURLS = $item->urls;
+
+    Log::addTemp("neededURLS", $neededURLS);
+    Log::addTemp('Response', $APIresponse);
 
     if ( isset($APIresponse[0]) ) //API returned image details
     {
-        foreach ( $APIresponse as $imageObject ) {//this part makes sure that all the sizes were processed and ready to be downloaded
-            if ( isset($imageObject->Status) && ( $imageObject->Status->Code == 0 || $imageObject->Status->Code == 1 ) ) {
+        foreach ( $APIresponse as $imageObject ) {//this part makes sure that all the sizes were processed and ready to be downloaded.
+          // If status is still waiting. Check if the return URL is one we sent.
+            if ( isset($imageObject->Status) && ( $imageObject->Status->Code == 0 || $imageObject->Status->Code == 1 ) && in_array($imageObject->OriginalURL, $neededURLS)) {
               //  sleep(1); // @todo ??
         //        return $this->processImageRecursive($URLs, $PATHs, $itemHandler, $startTime);
                 return $this->returnOK(self::STATUS_UNCHANGED, __('Item is waiting for optimisation', 'shortpixel-image-optimiser'));
@@ -334,7 +346,7 @@ class ApiController
   * @return ObjectArray $results The Result of the optimization
   */
   private function handleSuccess($item, $response) {
-      //Log::addDebug('Shortpixel API : Handling Success!', $response);
+      Log::addDebug('Shortpixel API : Handling Success!', $response);
       $settings = \wpSPIO()->settings();
       $fs = \wpSPIO()->fileSystem();
 
@@ -351,13 +363,15 @@ class ApiController
       $webpType = "WebP" . $fileType;
       $avifType = "AVIF" . $fileType;
 
-      /** @todo - What does this mean?  */
-      $archive = /*false &&*/
+      /** @todo - What does this mean?
+      *    It seems this is not active at all, commenting out for now.
+        */
+/*      $archive =
           ($settings->downloadArchive == self::DOWNLOAD_ARCHIVE && class_exists('PharData') && isset($APIresponse[count($APIresponse) - 1]->ArchiveStatus))
           ? $this->downloadArchive($APIresponse[count($APIresponse) - 1], $compressionType) : false;
       if($archive !== false && $archive['Status'] !== self::STATUS_SUCCESS) {
           return $archive;
-      }
+      } */
 
       $tempFiles = $responseFiles = $results = array();
 
@@ -370,14 +384,16 @@ class ApiController
           if ( $fileData->Status->Code == self::STATUS_SUCCESS ) //file was processed OK
           {
               // ** @todo Fix fromArchive, figure out how it works */
-              if($archive) {
+              // It seems this is not active at all, commenting out for now.
+            /*  if($archive) {
                   $downloadResult = $this->fromArchive($archive['Path'], $fileData->$fileType, $fileData->$fileSize, $fileData->OriginalSize
                 );
 
-              } else {
+              } else { */
                   $downloadResult = $this->handleDownload($fileData->$fileType, $fileData->$fileSize, $fileData->OriginalSize
                 );
-              }
+                $archive = false;
+              //}
 
               /* Status_Unchanged will be caught by ImageModel and not copied ( should be ).
               * @todo Write Unit Test for Status_unchanged
@@ -404,7 +420,7 @@ class ApiController
                   $fileCount++;
 
                   // ** Download Webp files if they are returned **/
-                  if (isset($fileData->$webpType))
+                  if (isset($fileData->$webpType) && $fileData->$webpType != 'NA')
                   {
                     $webpName = $originalFile->getFileBase() . '.webp'; //basename(parse_url($fileData->$webpType, PHP_URL_PATH));
 
@@ -422,7 +438,7 @@ class ApiController
                   }
 
                   // ** Download Webp files if they are returned **/
-                  if (isset($fileData->$avifType))
+                  if (isset($fileData->$avifType) && $fileData->$avifType !== 'NA')
                   {
                     $avifName = $originalFile->getFileBase() . '.webp'; ;
 
@@ -434,7 +450,7 @@ class ApiController
 
                     if ( $avifDownloadResult->apiStatus == self::STATUS_SUCCESS)
                     {
-                       Log::addDebug('Downloaded Webp : ' . $fileData->$avifType);
+                       Log::addDebug('Downloaded Avif : ' . $fileData->$avifType);
                        $results[$avifName] = $avifDownloadResult;
                     }
                   }

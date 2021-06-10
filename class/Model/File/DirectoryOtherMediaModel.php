@@ -207,6 +207,8 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
       $fs = \wpSPIO()->filesystem();
       $filter = ($time > 0)  ? array('date_newer' => $time) : array();
+      $filter['exclude_files'] = array('.webp', '.avif');
+
       $files = $fs->getFilesRecursive($this, $filter);
 
       \wpSPIO()->settings()->hasCustomFolders = time(); // note, check this against bulk when removing. Custom Media Bulk depends on having a setting.

@@ -100,7 +100,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
      return $urls;
   }
 
-  /** Get FileTypes that might be optimized */
+  /** Get FileTypes that might be optimized. Checking for setting should go via isProcessableFileType! */
   public function getOptimizeFileType($type = 'webp')
   {
       if ($type = 'webp')
@@ -122,21 +122,16 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           if ($this->isProcessable(true) || $this->isOptimized())
             $toOptimize[] = $fs->pathToUrl($this);
       }
-      if (! isset($types[1]) && $this->isScaled() ) // scaled image
+      if ($this->isScaled() ) // scaled image
       {
-        if ($this->original_file->isProcessable() || $this->original_file->isOptimized())
-          $toOptimize[] = $fs->pathToUrl($this->original_file);
+        if ($this->original_file->getOptimizeFileType($type) )
+            $toOptimize[] = $fs->pathToUrl($this->original_file);
       }
 
       foreach($this->thumbnails as $thumbName => $thumbObj)
       {
-          if (! isset($types[$thumbName]))
-          {
-              if ($thumbObj->isThumbnailProcessable() || $thumbObj->isOptimized() )
-              {
-                 $toOptimize[] = $fs->pathToUrl($thumbObj);
-              }
-          }
+          if ($thumbObj->getOptimizeFileType($type))
+              $toOptimize[] = $fs->pathToUrl($thumbObj);
       }
 
       return array_values(array_unique($toOptimize));
@@ -273,13 +268,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
            $count = count($this->thumbnails);
          break;
          case 'webps':
-            $count = count($this->getWebps());
+            $count = count(array_unique($this->getWebps()));
          break;
          case 'avifs':
-            $count = count($this->getAvifs());
+            $count = count(array_unique($this->getAvifs()));
          break;
          case 'retinas':
-           $count = count($this->getRetinas());
+           $count = count(array_unique($this->getRetinas()));
          break;
       }
 
@@ -304,20 +299,28 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   {
     //  Log::addTemp('TEMPFILES, HandleOptimized', $tempFiles);
        Log::addTemp('MediaLibraryModel :: HandleOptimized');
-      if (! $this->isOptimized()) // main file might not be contained in results
+      if (! $this->isOptimized() ) // main file might not be contained in results
       {
           $result = parent::handleOptimized($tempFiles);
           if (! $result)
           {
+             if ($this->get('prevent_next_try') !== false)
+               $this->preventNextTry($this->get('prevent_next_try'));
+
              return false;
           }
       }
+
+      $this->handleOptimizedFileType($tempFiles);
 
       $optimized = array();
 
       // If thumbnails should not be optimized, they should not be in result Array.
       foreach($this->thumbnails as $thumbnail)
       {
+
+         $thumbnail->handleOptimizedFileType($tempFiles); // check for webps /etc
+
          if ($thumbnail->isOptimized())
           continue;
          // @todo Find here which one is handles, since sizes can have duplicate files ( ie multiple size pointing to same filename, make local array if duplicate comes up / don't reprocess ). Same needed in restore.
@@ -341,19 +344,35 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
          {
             $optimized[$filebase]  = $thumbnail->getMetaObj();
          }
+         elseif ($thumbnail->get('prevent_next_try') !== false) // in case of fatal issues.
+         {
+              $this->preventNextTry($thumbnail->get('prevent_next_try'));
+         }
       }
 
-      if ($this->isScaled() && ! $this->getOriginalFile()->isOptimized() )
+      if ($this->isScaled() )
       {
           $original_file = $this->getOriginalFile();
-          $result = $original_file->handleOptimized($tempFiles);
+          $original_file->handleOptimizedFileType($tempFiles);
+
+          if (! $original_file->isOptimized())
+          {
+
+            $result = $original_file->handleOptimized($tempFiles);
+            if (! $result &&  $original_file->get('prevent_next_try') !== false)
+            {
+                $this->preventNextTry($original_file->get('prevent_next_try'));
+            }
+
+
+            Log::addDebug('Is Scaled, Original file handled optimized', $original_file);
+          }
           $this->original_file = $original_file;
       }
 
       // @todo Check for WPML Duplicates
-
-
       $this->saveMeta();
+
 
       return true;
   }
@@ -523,10 +542,17 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
               }
           }
 
-        /*  if (isset($metadata->original_file))
+          if (isset($metadata->original_file))
           {
-              $this->original_file = $metadata->original_file;
-          } */
+              $orFile = $this->getOriginalFile();
+              if ($orFile)
+              {
+                $orMeta = new ImageThumbnailMeta();
+                $orMeta->fromClass($metadata->original_file);
+                $orFile->setMetaObj($orMeta);
+                $this->original_file = $orFile;
+              }
+          }
 
       }
 
@@ -565,7 +591,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         $metadata->retinas = $retinas;
       /*if (count($webps) > 0)
         $metadata->webps = $webps; */
-      $metadata->original_file = $this->original_file;
+
+      if ($this->isScaled())
+      {
+        Log::addTemp('SaveMeta CreateSave Original File', $this->original_file);
+        $metadata->original_file = $this->original_file->toClass();
+      }
 
       return $metadata;
  }
@@ -668,23 +699,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       return $bool;
   }
 
-  public function isProcessableFileType($type = 'webp')
-  {
-      $settings = \WPSPIO()->settings();
-
-      if ($type == 'webp' && ! $settings->createWebp)
-        return false;
-
-      if ($type == 'avif' && ! $settings->createAvif)
-          return false;
-
-      $files = $this->getOptimizeFileType($type);
-
-      if (count($files) > 0)
-        return true;
-      else
-        return false;
-  }
 
 
   public function isRestorable()
@@ -921,6 +935,16 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
     return array_unique($duplicates);
   }
 
+  /* Protect this image from being optimized. This flag should be unset by UX / Retry button on front */
+  protected function preventNextTry($reason = 1)
+  {
+      //Log::addError('Call resulted in preventNextTry on thumbnailModel');
+      //exit('Fatal error : Prevent Next Try should not be run on thumbnails');
+      update_post_meta($this->id, '_shortpixel_prevent_optimize', $reason);
+
+  }
+
+
   /** Removed the current attachment, with hopefully removing everything we set.
   * @todo Should probably not delete files ( SPIO never deletes files ) , other than our backups / webps during restore.
   */
@@ -983,7 +1007,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
             $bool = true;  // this filebase already restored. In case of duplicate sizes.
             $thumbObj->imageMeta = new ImageMeta();
           }
-          elseif ($thumbObj->isOptimized())
+          elseif ($thumbObj->isRestorable())
             $bool = $thumbObj->restore();
 
           if (! $bool)
@@ -1054,7 +1078,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 
       // This is a switch to prevent converted items to reconvert when the new metadata is removed ( i.e. restore )
-      $was_converted = get_post_meta($this->id, 'shortpixel_was_converted', true);
+      $was_converted = get_post_meta($this->id, '_shortpixel_was_converted', true);
       if ($was_converted == true)
       {
         Log::addDebug('This item was converted, not converting again');
@@ -1158,7 +1182,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        if ($this->isScaled())
        {
          $originalFile = $this->original_file;
-         if (in_array($thumbnailObj->getFileName(), $optimized_thumbnails))
+         if (in_array($originalFile->getFileName(), $optimized_thumbnails))
          {
 
            $originalFile->image_meta->status = $status;

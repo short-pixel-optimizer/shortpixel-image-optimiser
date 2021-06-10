@@ -65,9 +65,10 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     abstract protected function isSizeExcluded();
 
     abstract protected function getImprovements();
+    abstract protected function getOptimizeFileType();
 
-
-
+    // Function to prevent image from doing anything automatically - after fatal error.
+    abstract protected function preventNextTry($reason = '');
 
     //abstract public function handleOptimized($tempFiles);
 
@@ -107,6 +108,25 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         else
           return true;
     }
+
+    public function isProcessableFileType($type = 'webp')
+    {
+        $settings = \WPSPIO()->settings();
+
+        if ($type == 'webp' && ! $settings->createWebp)
+          return false;
+
+        if ($type == 'avif' && ! $settings->createAvif)
+            return false;
+
+        $files = $this->getOptimizeFileType($type);
+
+        if (count($files) > 0)
+          return true;
+        else
+          return false;
+    }
+
 
     public function exists()
     {
@@ -266,7 +286,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     {
         $settings = \wpSPIO()->settings();
 
-
         foreach($downloadResults as $urlName => $resultObj)
         {
 
@@ -307,7 +326,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
               if ($copyok)
               {
             //
-                 $webpFile = $this->getFileBase() . '.webp';
+/*                 $webpFile = $this->getFileBase() . '.webp';
                  Log::addTemp('Checking Webp as ' . $webpFile);
                  if (isset($downloadResults[$webpFile]) && isset($downloadResults[$webpFile]->file)) // check if there is webp with same filename
                  {
@@ -327,7 +346,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                        Log::addWarn('Avif available, but copy failed ' . $downloadResults[$avifFile]->file->getFullPath());
                      else
                        $this->setMeta('avif', $avifResult->getFileName());
-                 }
+                 } */
 
                  $this->setMeta('status', self::FILE_STATUS_SUCCESS);
                  $this->setMeta('tsOptimized', time());
@@ -391,6 +410,31 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         return null;
     }
 
+    public function handleOptimizedFileType($downloadResults)
+    {
+          $webpFile = $this->getFileBase() . '.webp';
+          Log::addTemp('Checking Webp as ' . $webpFile);
+          if (isset($downloadResults[$webpFile]) && isset($downloadResults[$webpFile]->file)) // check if there is webp with same filename
+          {
+             $webpResult = $this->handleWebp($downloadResults[$webpFile]->file);
+              if ($webpResult === false)
+                Log::addWarn('Webps available, but copy failed ' . $downloadResults[$webpFile]->file->getFullPath());
+              else
+                $this->setMeta('webp', $webpResult->getFileName());
+          }
+
+          $avifFile = $this->getFileBase() . '.avif';
+          Log::addTemp('Checking Avif as ' . $avifFile);
+          if (isset($downloadResults[$avifFile]) && isset($downloadResults[$avifFile]->file)) // check if there is webp with same filename
+          {
+             $avifResult = $this->handleAvif($downloadResults[$avifFile]->file);
+              if ($avifResult === false)
+                Log::addWarn('Avif available, but copy failed ' . $downloadResults[$avifFile]->file->getFullPath());
+              else
+                $this->setMeta('avif', $avifResult->getFileName());
+          }
+    }
+
     public function isRestorable()
     {
         if ($this->hasBackup() && $this->is_writable() )
@@ -405,7 +449,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
               Log::addWarn('Restore - Not Writable ' . $this->getFullPath() );
           }
           if (! $this->hasBackup())
-            Log::addWarn('Backup not found for file: ', $this);
+            Log::addDebug('Backup not found for file: ', $this->getFullPath());
 
            return false;
         }
@@ -464,13 +508,20 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
          $fs = \wpSPIO()->filesystem();
             $target = $fs->getFile( (string) $this->getFileDir() . $this->getFileBase() . '.webp');
 
-            if( (defined('SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION') && SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION) || $target->exists()) {
+            // only copy when this constant is set.
+            if( (defined('SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION') && SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION) ) {
                  $target = $fs->getFile((string) $this->getFileDir() . $this->getFileName() . '.webp'); // double extension, if exists.
 
             }
             Log::addTemp('handle Webp for ' . $this->getFullPath() . ' Source : ' . $tempFile->getFullpath() . ' Target ' . $target->getFullPath() );
 
-            $result = $tempFile->copy($target);
+            $result = false;
+
+            if (! $target->exists()) // don't copy if exists.
+            {  $result = $tempFile->copy($target); }
+            else
+              $result = true; // if already exists, all fine by us.
+
             if (! $result)
               Log::addWarn('Could not copy Webp to destination ' . $target->getFullPath() );
             return $target;
@@ -568,14 +619,29 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
        {
           $backupFile = $this->getBackupFile();
 
+          // If backupfile is bigger (indicating original file)
           if ($backupFile->getFileSize() == $this->getFileSize())
-          {   return true; }
+          {
+             return true;
+          }
           else
           {
-            Log::addError('Backup already exists, and not the same size! BackupFile Size : ' . $backupFile->getFileSize() . ' This Filesize : ' . $this->getFileSize(), $this->fullpath);
-            $this->error_message = __('Backup already exists with a different size', 'shortpixel-image-optimiser');
+            // Return the backup for a retry.
+            if ($this->isRestorable())
+            {
+              if ($backupFile->getFileSize() > $this->getFileSize())
+                $this->restore();
+            }
+            else
+            {
+              $this->preventNextTry(__('Fatal Issue: Backup exists, but is not restorable', 'shortpixel-image-optimiser'));
+              Log::addError('Backup already exists, and not the same size! BackupFile Size : ' . $backupFile->getFileSize() . ' This Filesize : ' . $this->getFileSize(), $this->fullpath);
+              $this->error_message = __('Backup already exists with a different size', 'shortpixel-image-optimiser');
+            }
+
             return false;
           }
+          exit('Fatal error, createbackup protection - this should never reach');
        }
        $directory = $this->getBackupDirectory(true);
        $fs = \wpSPIO()->filesystem();

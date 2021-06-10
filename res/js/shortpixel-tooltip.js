@@ -22,6 +22,8 @@ var ShortPixelToolTip = function(reserved, processor)
           //  processor.CheckActive();
             this.ProcessPause();
         }
+
+      window.addEventListener('shortpixel.processor.paused', this.ProcessChange.bind(this));
     }
     this.GetToolTip = function() // internal function please.
     {
@@ -151,6 +153,15 @@ var ShortPixelToolTip = function(reserved, processor)
         tooltip.classList.remove('shortpixel-hide');
         this.ToggleIcon();
 
+    }
+    this.ProcessChange = function(e)
+    {
+        var detail = e.detail;
+
+        if (detail.paused == false)
+           this.ProcessResume();
+        else
+           this.ProcessPause();
     }
     this.HandleError = function()
     {

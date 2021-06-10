@@ -104,7 +104,6 @@ class ListMediaViewController extends \ShortPixel\Controller
 
   public function filterBy($vars)
   {
-  //  var_dump($vars);
     if ( isset( $vars['orderby'] ) && 'ShortPixel Compression' == $vars['orderby'] ) {
         $vars = array_merge( $vars, array(
             'meta_key' => '_shortpixel_optimized',

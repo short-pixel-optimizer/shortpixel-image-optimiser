@@ -134,6 +134,7 @@ class UiHelper
         $processWebp = ($imageObj->isProcessableFileType('webp')) ? true : false;
         $processAvif = ($imageObj->isProcessableFileType('avif')) ? true : false;
 
+
         if (count($optimizable) > 0)
         {
            $output .= '<div class="thumbs-todo"><h4>' . sprintf(__('%d to optimize', 'shortpixel-image-optimiser'), count($optimizable)) . '</h4>';
@@ -204,7 +205,6 @@ class UiHelper
       {
            $optimizable = $mediaItem->getOptimizeURLS();
            //$webp = $mediaItem->
-           var_dump($optimizable);
 
            if ($mediaItem->isProcessable())
            {
@@ -215,8 +215,8 @@ class UiHelper
              }
              else
              {
-                 $optimizableWebp = count($mediaItem->getOptimizeFileType('webp'));
-                 $optimizableAvif = count($mediaItem->getOptimizeFileType('avif'));
+                 $optimizableWebp = $mediaItem->isProcessableFileType('webp') ? count($mediaItem->getOptimizeFileType('webp')) : 0;
+                 $optimizableAvif = $mediaItem->isProcessableFileType('avif') ? count($mediaItem->getOptimizeFileType('avif')) : 0;
 
                  if ($optimizableWebp > 0 && $optimizableAvif > 0)
                    $text  = sprintf(__('Optimize %s webps and %s avif','shortpixel-image-optimiser'),$optimizableWebp, $optimizableAvif);
@@ -228,6 +228,7 @@ class UiHelper
              }
              $list_actions['optimizethumbs'] = $action;
           }
+
 
           if ($mediaItem->hasBackup())
           {

@@ -74,8 +74,9 @@ abstract class Queue
        $preparing = $this->getStatus('preparing');
 
        $qItem = $this->imageModelToQueue($imageModel);
+       $counts = $qItem->counts;
 
-       $item = array('id' => $imageModel->get('id'), 'value' => $qItem, 'item_count' => count($qItem->urls));
+       $item = array('id' => $imageModel->get('id'), 'value' => $qItem, 'item_count' => $counts->creditCount);
        $this->q->addItems(array($item));
        $numitems = $this->q->withRemoveDuplicates()->enqueue(); // enqueue returns numitems
 
@@ -156,7 +157,7 @@ abstract class Queue
           $fs = \wpSPIO()->filesystem();
 
           $queue = array();
-          $imageCount = 0;
+          $imageCount = $webpCount = $avifCount = 0;
 
 
           // maybe while on the whole function, until certain time has elapsed?
@@ -166,10 +167,16 @@ abstract class Queue
                 {
                    Log::addTemp('Preparing as Processable' . $mediaItem->get('id'));
                     $qObject = $this->imageModelToQueue($mediaItem);
-                    $imageCount += count($qObject->urls);
 
-                      $queue[] = array('id' => $mediaItem->get('id'), 'value' => $qObject, 'item_count' => count($qObject->urls));
-                    
+                    $counts = $qObject->counts;
+
+                      $queue[] = array('id' => $mediaItem->get('id'), 'value' => $qObject, 'item_count' => $counts->creditCount);
+
+                    $imageCount += $counts->creditCount;
+                    $webpCount += $counts->webpCount;
+                    $avifCount += $counts->avifCount;
+
+
                 }
                 else
                 {
@@ -184,8 +191,20 @@ abstract class Queue
           $this->q->additems($queue);
           $numitems = $this->q->enqueue();
 
+          $customData = $this->getStatus('custom_data');
+
+          if (! is_object($customData))
+          {
+             $customData = $this->createCustomData();
+          }
+
+          $customData->webpCount += $webpCount;
+          $customData->avifCount += $avifCount;
+
+          $this->q->setStatus('custom_data', $customData, false);
+
           // mediaItem should be last_item_id, save this one.
-          $this->q->setStatus('last_item_id', $mediaItem->get('id')); // enum status to prevent a hang when no items are enqueued, thus last_item_id is not raised. Don't save to DB though.
+          $this->q->setStatus('last_item_id', $mediaItem->get('id')); // enum status to prevent a hang when no items are enqueued, thus last_item_id is not raised. save to DB.
           Log::addTemp('Last Item Id stored' . $this->q->getStatus('last_item_id'));
           Log::addTemp('Items enqueued ' . $numitems);
 
@@ -264,11 +283,21 @@ abstract class Queue
     protected function countQueue()
     {
         $recount = $this->q->itemSum('countbystatus');
+        $customData = $this->getStatus('custom_data');
         $count = (object) [
             'images' => $recount[ShortQ::QSTATUS_WAITING],
             'images_done' => $recount[ShortQ::QSTATUS_DONE],
             'images_inprocess' => $recount[ShortQ::QSTATUS_INPROCESS],
         ];
+
+        $count->images_webp = 0;
+        $count->images_avif = 0;
+        if (is_object($customData))
+        {
+          $count->images_webp = $customData->webpCount;
+          $count->images_avif = $customData->avifCount;
+        }
+
 
         return $count;
     }
@@ -284,15 +313,20 @@ abstract class Queue
 
     protected function deQueue()
     {
-       $items = $this->q->deQueue();
+       $items = $this->q->deQueue(); // Items, can be multiple different according to throttle.
+
        $items = array_map(array($this, 'queueToMediaItem'), $items);
+       Log::addTemp('Q Dequeue', $items);
+       Log::addTemp('Count: ' . count($items));
        return $items;
     }
 
     protected function queueToMediaItem($qItem)
     {
-        $item = new \stdClass;
 
+        //$items = array(); // convert to a item array to be send off.
+
+        $item = new \stdClass;
         $item = $qItem->value;
         $item->_queueItem = $qItem;
 
@@ -300,6 +334,18 @@ abstract class Queue
         $item->tries = $qItem->tries;
 
         return $item;
+        /*foreach($qItem->value as $values) // Always an array of items.
+        {
+          $newItem = clone $item;
+          foreach($values as $key => $val)
+          {
+              $newItem->$key = $val;
+          }
+          $newItem->_queueItem = $qItem;
+          $items[] = $newItem;
+        } */
+
+        //return $items;
     }
 
     protected function mediaItemToQueue($item)
@@ -316,7 +362,8 @@ abstract class Queue
         return $qItem;
     }
 
-    // This might be a general implementation - This should be done only once!
+    // This is a general implementation - This should be done only once!
+    // The 'avif / webp left imp. is commented out since both API / and OptimizeController don't play well with this.
     protected function imageModelToQueue(ImageModel $imageModel)
     {
       //  $settings = \wpSPIO()->settings();
@@ -324,39 +371,53 @@ abstract class Queue
         $item->compressionType = \wpSPIO()->settings()->compressionType;
 
         $urls = $imageModel->getOptimizeUrls();
+        $counts = new \stdClass;
+        $counts->creditCount = 0;  // count the used credits for this item.
+        $counts->avifCount = 0;
+        $counts->webpCount = 0;
+        //$creditCount = 0;
 
         $webps = ($imageModel->isProcessableFileType('webp')) ? $imageModel->getOptimizeFileType('webp') : null;
         $avifs = ($imageModel->isProcessableFileType('avif')) ? $imageModel->getOptimizeFileType('avif') : null;
 
-        $hasUrls = (count($imageModel) > 0) ? true : false;
+        $hasUrls = (count($urls) > 0) ? true : false;
         $hasWebps = (! is_null($webps) && count($webps) > 0) ? true : false;
-        $hasAvifs = count(! is_null($avifs) && count($avifs) > 0) ? true : false;
+        $hasAvifs = (! is_null($avifs) && count($avifs) > 0) ? true : false;
         $flags = array();
         $items = array();
 
         $webpLeft = $avifLeft = false;
 
+        //Log::addTemp('Amount of avifs found', $avifs);
+
         if (is_null($webps) && is_null($avifs))
         {
            // nothing.
           // $items[] = $item;
+            $counts->creditCount += count($urls);
         }
         else
         {
             if ($hasUrls) // if original urls needs optimizing.
             {
+                $counts->creditCount += count($urls);
+
                 if ($hasWebps && count($urls) == count($webps))
                 {
                    $flags[] = '+webp'; // original + format
+                   $counts->creditCount += count($urls);
+                   $counts->webpCount += count($urls);
                 }
-                else
+                elseif($hasWebps)
                   $webpLeft = true; // or indicate this should go separate ( not full )
 
                 if ($hasAvifs && count($urls) == count($avifs))
                 {
                    $flags[] = '+avif';
+                   $counts->creditCount += count($urls);
+                   $counts->avifCount += count($urls);
                 }
-                else
+                elseif($hasAvifs)
                   $avifLeft = true;
 
             }
@@ -368,25 +429,41 @@ abstract class Queue
                     {
                         $flags[] = 'avif';
                         $flags[] = 'webp';
+                        $counts->creditCount += count($webps) * 2;
+                        $counts->webpCount += count($webps);
+                        $counts->avifCount += count($avifs);
+                        $urls = $webps; // Main URLS not available, but needs queuing.
                     }
                     else
                     {
                       $flags[] = 'webp';
                       $avifLeft = true;
+                      $counts->creditCount += count($webps);
+                      $counts->webpCount += count($webps);
+                      $urls = $webps;
                     }
                 }
                 elseif($hasWebps && ! $hasAvifs)
+                {
                     $flags[] = 'webp';
+                    $counts->creditCount += count($webps);
+                    $counts->webpCount += count($webps);
+                    $urls = $webps;
+                }
                 elseif($hasAvifs && ! $hasWebps)
+                {
                     $flags[] = 'avif';
+                    $counts->creditCount += count($avifs);
+                    $counts->avifCount += count($avifs);
+                    $urls = $avifs;
+                }
             }
 
         }
 
-
       //  $paths = $imageModel->getOptimizePaths();
-
-        if ($imageModel->get('do_png2jpg'))  // Flag is set in Is_Processable in mediaLibraryModel, when settings are on, image is png.
+        //Log::addDebug('AvifL on ' . $imageModel->get('id') . ' ', array($avifLeft, $urls));
+        if ($imageModel->get('do_png2jpg') && $hasUrls)  // Flag is set in Is_Processable in mediaLibraryModel, when settings are on, image is png.
         {
           $item->png2jpg = $imageModel->get('do_png2jpg');
         }
@@ -396,29 +473,43 @@ abstract class Queue
 
         $item->flags = $flags;
 
-        $items = $item;
-
         $item->urls = apply_filters('shortpixel_image_urls', $urls, $imageModel->get('id'));
+        //$items = array($item);
+        $item->counts = $counts;
 
-        if ($webpLeft) // split the webp request with a dif. flag.
+      /*  if ($webpLeft) // split the webp request with a dif. flag.
         {
            $webpItem = clone $item;
            $webpItem->flags = array('webp');
            $webpItem->urls = apply_filters('shortpixel_image_urls', $webps, $imageModel->get('id'));
+           if (property_exists($webpItem, 'png2jpg'))
+            unset($webpItem->png2jpg);
+           $counts->creditCount += count($webpItem->urls);
+           $counts->webpCount += count($webpItem->urls);
            $items[] = $webpItem;
         }
         if ($avifLeft)
         {
            $avifItem = clone $item;
            $avifItem->flags = array('avif');
-           $avifItem->urls = apply_filters('shortpixel_image_urls', $webps, $imageModel->get('id'));
+           $avifItem->urls = apply_filters('shortpixel_image_urls', $avifs, $imageModel->get('id'));
+           if (property_exists($avifItem, 'png2jpg'))
+              unset($avifItem->png2jpg);
+           $counts->creditCount += count($avifItem->urls);
+           $counts->avifCount += count($avifItem->urls);
            $items[] = $avifItem;
         }
 
         //$item->paths = apply_filters('shortpixel/queue/paths', $paths, $imageModel->get('id'));
+        $items[0]->counts = $counts; */
 
 
-        return $items;
+        return $item;
+    }
+
+    private function countQueueItem()
+    {
+
     }
 
     public function itemFailed($item, $fatal = false)
@@ -451,6 +542,15 @@ abstract class Queue
         return $this->q;
     }
 
+    // All custom Data in the App should be created here.
+    private function createCustomData()
+    {
+        $data = new \stdClass;
+        $data->webpCount = 0;
+        $data->avifCount = 0;
+
+        return $data;
+    }
 
 
 
