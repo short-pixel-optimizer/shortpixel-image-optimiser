@@ -84,6 +84,8 @@ class FileModel extends \ShortPixel\Model
     if (is_null($this->exists))
       $this->exists = (@file_exists($this->fullpath) && is_file($this->fullpath));
 
+    $this->exists = apply_filters('shortpixel_image_exists', $this->exists, $this->fullpath, $this);
+    $this->exists = apply_filters('shortpixel/file/exists',  $this->exists, $this->fullpath, $this);
     return $this->exists;
   }
 
@@ -342,7 +344,7 @@ class FileModel extends \ShortPixel\Model
   /* Util function to get location of backup Directory.
   * @return Boolean | DirectModel  Returns false if directory is not properly set, otherwhise with a new directoryModel
   */
-  protected function getBackupDirectory($create = false)
+  protected function getBackupDirectory()
   {
 
     if (is_null($this->getFileDir()))
@@ -352,24 +354,23 @@ class FileModel extends \ShortPixel\Model
     }
     $fs = \wpSPIO()->filesystem();
 
-
     if (is_null($this->backupDirectory))
     {
-      $backup_dir = str_replace($fs->getWPAbsPath(), "", $this->directory->getPath());
+      /*$backup_dir = str_replace($fs->getWPAbsPath(), "", $this->directory->getPath());
       $backupDirectory = SHORTPIXEL_BACKUP_FOLDER . '/' . $backup_dir;
-      $directory = new DirectoryModel($backupDirectory);
+      $directory = new DirectoryModel($backupDirectory); */
+      $directory = $fs->getBackupDirectory($this);
 
-      if ($create) // This is used for creating of backups. Create dir if not there.
-      {
-         $directory->check();
-      }
 
-      if (! $directory->exists()) // check if exists. FileModel should not attempt to create.
+      if ($directory === false || ! $directory->exists()) // check if exists. FileModel should not attempt to create.
       {
         Log::addWarn('Backup Directory not existing ' . $backupDirectory);
         return false;
       }
-      $this->backupDirectory = $directory;
+      elseif($directory !== false)
+        $this->backupDirectory = $directory;
+      else
+        return false;
     }
 
     return $this->backupDirectory;

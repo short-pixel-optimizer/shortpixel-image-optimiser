@@ -287,7 +287,7 @@ class ShortPixelMetaFacade {
 
 
       return $imageObj->addUnlistedThumbs();
-            
+
 
       $meta = $this->getMeta();
       Log::addDebug('Finding Thumbs on path' . $meta->getPath());
@@ -553,6 +553,7 @@ class ShortPixelMetaFacade {
     * @param $no_exist_check  Don't check if returned file exists. This prevents remote downloading it ( in use for onDeleteImage atm)
     * @todo This function needs splitting into urls / paths and made to function more clear .
     */
+    /*
     public function getURLsAndPATHs($processThumbnails, $onlyThumbs = false, $addRetina = true, $excludeSizes = array(), $includeOptimized = false, $no_exist_check = false) {
         $sizesMissing = array();
         $cacheController = new Cache();
@@ -783,6 +784,7 @@ class ShortPixelMetaFacade {
         return array("URLs" => $urlList, "PATHs" => $filePaths, "sizesMissing" => $sizesMissing);
     }
 
+*/
     /** @todo Separate download try and post / attach_id functions .
     * Also used by S3-Offload
     */
@@ -1109,13 +1111,13 @@ class ShortPixelMetaFacade {
         return false;
     }
 
-    public function optimizationSucceeded() {
+/*    public function optimizationSucceeded() {
         if($this->getType() == self::MEDIA_LIBRARY_TYPE) {
             do_action( 'shortpixel_image_optimised', $this->getId() );
         }
-    }
-
+    } */
+/*
     public static function optimizationStarted($id) {
         do_action( 'shortpixel_start_image_optimisation', $id );
-    }
+    } */
 }

@@ -227,8 +227,7 @@ class ShortPixelImgToPictureWebp
 
                 foreach($files as $thisfile)
                 {
-                  $fileWebp_exists = apply_filters('shortpixel_image_exists', $thisfile->exists(), $thisfile);
-                  if (! $fileWebp_exists)
+                  if (! $thisfile->exists())
                   {
                     $thisfile = $fileWebp_exists = apply_filters('shortpixel/front/webp_notfound', false, $thisfile, $fileurl, $imageBase);
                   }
@@ -242,8 +241,7 @@ class ShortPixelImgToPictureWebp
                   }
                 }
 
-                $fileAvif_exists = apply_filters('shortpixel_image_exists', $fileAvif->exists(), $fileAvif);
-                if ($fileAvif_exists !== false)
+                if ($fileAvif->exists())
                 {
                    $fileurl_base = str_replace($fsFile->getFileName(), '', $fileurl);
                    $srcsetAvif[] = $fileurl_base . $fileAvif->getFileName() . $condition;

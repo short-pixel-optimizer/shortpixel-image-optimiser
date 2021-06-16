@@ -478,6 +478,17 @@
                  > div {
                    display: table-row;
                    background-color: #F0F5FF;
+                   font-size:16px;
+                   &.filetypes
+                   {
+                      background: #F5F9FF;
+                      color: #aaa;
+                      font-size: 12px;
+                      > span
+                      {
+                         border: 0;
+                      }
+                   }
                  }
                  > div > span
                  {
@@ -486,6 +497,7 @@
                     width: 50%;
                     text-align: center;
                     padding: 15px 0;
+
 
                  }
               }

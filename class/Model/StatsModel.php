@@ -289,7 +289,10 @@ class StatsModel
      $args = wp_parse_args($args,$defaults);
 
      // This query will return 2 positions after the thumbnail array declaration.  Value can be up to two positions ( 0-100 thumbnails) . If positions is 1-10 intval will filter out the string part.
-     $sql = "SELECT meta_id, post_id, substr(meta_value, instr(meta_value,'sizes')+9,2) as thumbcount, LOCATE('original_image', meta_value) as originalImage FROM " . $wpdb->postmeta . " WHERE meta_key = '_wp_attachment_metadata'";
+     $sql = "SELECT meta_id, post_id, substr(meta_value, instr(meta_value,'sizes')+9,2) as thumbcount, LOCATE('original_image', meta_value) as originalImage FROM " . $wpdb->postmeta . " WHERE meta_key = '_wp_attachment_metadata' ";
+
+     $sql .= " AND post_id NOT IN ( SELECT post_id FROM " . $wpdb->postmeta . " where meta_key = '_shortpixel_prevent_optimize' )";  // exclude 'crashed items'
+
 
      if ($args['optimizedOnly'] == true)
      {
@@ -328,6 +331,8 @@ Log::addTemp("Statsmodel, countMed", $sql);
       {
         $sql .= ' AND post_id IN ( SELECT post_id FROM ' . $wpdb->postmeta . ' WHERE meta_key = "_shortpixel_optimized")';
       }
+
+     $sql .= " AND post_id NOT IN ( SELECT post_id FROM " . $wpdb->postmeta . " where meta_key = '_shortpixel_prevent_optimize' )";  // exclude 'crashed items'
 
       $count = $wpdb->get_var($sql);
       return $count;
@@ -380,7 +385,6 @@ Log::addTemp("Statsmodel, countMed", $sql);
          $sql = $wpdb->prepare($sql, ImageModel::FILE_STATUS_SUCCESS);
        }
 
-Log::addTemp('CustomItems, stats', $sql);
         $count = $wpdb->get_var($sql);
         return $count;
 

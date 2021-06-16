@@ -299,13 +299,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   {
     //  Log::addTemp('TEMPFILES, HandleOptimized', $tempFiles);
        Log::addTemp('MediaLibraryModel :: HandleOptimized');
+      $return = true;
       if (! $this->isOptimized() ) // main file might not be contained in results
       {
           $result = parent::handleOptimized($tempFiles);
           if (! $result)
           {
-             if ($this->get('prevent_next_try') !== false)
-               $this->preventNextTry($this->get('prevent_next_try'));
 
              return false;
           }
@@ -340,6 +339,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           $result = $thumbnail->handleOptimized($tempFiles);
          }
 
+         Log::addTemp('Thumbnail, result', array($result,$thumbnail->get('prevent_next_try')));
          if ($result)
          {
             $optimized[$filebase]  = $thumbnail->getMetaObj();
@@ -347,6 +347,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
          elseif ($thumbnail->get('prevent_next_try') !== false) // in case of fatal issues.
          {
               $this->preventNextTry($thumbnail->get('prevent_next_try'));
+              $return = false; //failed
          }
       }
 
@@ -362,6 +363,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
             if (! $result &&  $original_file->get('prevent_next_try') !== false)
             {
                 $this->preventNextTry($original_file->get('prevent_next_try'));
+                $return = false; // failed.
             }
 
 
@@ -374,7 +376,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       $this->saveMeta();
 
 
-      return true;
+      return $return;
   }
 
   public function getImprovements()
@@ -940,10 +942,25 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   {
       //Log::addError('Call resulted in preventNextTry on thumbnailModel');
       //exit('Fatal error : Prevent Next Try should not be run on thumbnails');
+      Log::addWarn($this->get('id') . ' preventing next try: ' . $reason);
       update_post_meta($this->id, '_shortpixel_prevent_optimize', $reason);
 
   }
 
+  public function isOptimizePrevented()
+  {
+       $reason = get_post_meta($this->id, '_shortpixel_prevent_optimize', true);
+       if ($reason === false || strlen($reason) == 0)
+         return false;
+       else
+         return $reason;
+  }
+
+  public function resetPrevent()
+  {
+      Log::addTemp('Reset Preventor');
+      delete_post_meta($this->id, '_shortpixel_prevent_optimize');
+  }
 
   /** Removed the current attachment, with hopefully removing everything we set.
   * @todo Should probably not delete files ( SPIO never deletes files ) , other than our backups / webps during restore.
@@ -969,6 +986,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
             Log::addTemp('Exists');
         }
     }
+
+    do_action('shortpixel_before_restore_image', $this->get('id'));
+    do_action('shortpixel/image/before_restore', $this);
 
     $cleanRestore = true;
     $bool = parent::restore();

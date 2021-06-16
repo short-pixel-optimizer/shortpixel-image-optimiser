@@ -476,9 +476,9 @@ class SettingsController extends \ShortPixel\Controller
       {
         $deliverwebp = 0;
         if (! $this->is_nginx)
-          \WPShortPixel::alterHtaccess(false, false); // always remove the statements.
+          \ShortPixelTools::alterHtaccess(false, false); // always remove the statements.
 
-                  
+
         if (isset($post['createWebp']) && $post['createWebp'] == 1)
         {
             if (isset($post['deliverWebp']) && $post['deliverWebp'] == 1)
@@ -505,7 +505,7 @@ class SettingsController extends \ShortPixel\Controller
 
         if (! $this->is_nginx && $deliverwebp == 3) // deliver webp/avif via htaccess, write rules
         {
-          \WPShortPixel::alterHtaccess(true, true);
+          \ShortPixelTools::alterHtaccess(true, true);
         }
 
          $post['deliverWebp'] = $deliverwebp;

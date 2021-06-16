@@ -404,6 +404,15 @@
 .shortpixel-bulk-wrapper section.panel.summary .summary-list .section-wrapper .list-table > div {
   display: table-row;
   background-color: #F0F5FF;
+  font-size: 16px;
+}
+.shortpixel-bulk-wrapper section.panel.summary .summary-list .section-wrapper .list-table > div.filetypes {
+  background: #F5F9FF;
+  color: #aaa;
+  font-size: 12px;
+}
+.shortpixel-bulk-wrapper section.panel.summary .summary-list .section-wrapper .list-table > div.filetypes > span {
+  border: 0;
 }
 .shortpixel-bulk-wrapper section.panel.summary .summary-list .section-wrapper .list-table > div > span {
   display: table-cell;

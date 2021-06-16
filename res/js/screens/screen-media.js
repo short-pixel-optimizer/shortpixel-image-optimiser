@@ -141,18 +141,22 @@ var ShortPixelScreen = function (MainScreen, processor)
        });
 
     }
-    this.HandleError = function(response)
+    this.HandleError = function(result)
     {
-          console.error(response);
-          if (response.result.is_done)
+          if (result.message && result.item_id)
+          {
+            this.UpdateMessage(result.item_id, result.message);
+          }
+          this.processor.LoadItemView({id: result.item_id, type: 'media'});
+          /*if (result.is_done)
           {
             e = {};
             e.detail = {};
             e.detail.media = {};
-            e.detail.media.id = response.item_id;
-            e.detail.media.result = '';
+            e.detail.media.id = result.item_id;
+            e.detail.media.result = result.message;
             this.RenderItemView(e); // remove actions.
-         }
+         } */
     }
 
     this.RenderItemView = function(e)

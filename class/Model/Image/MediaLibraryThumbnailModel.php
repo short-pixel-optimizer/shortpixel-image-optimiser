@@ -202,8 +202,20 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
   //public function isRestorable()
   protected function preventNextTry($reason = '')
   {
+      Log::addTemp('Thumb : preventNextTry ' . $reason);
       $this->prevent_next_try = $reason;
+  }
 
+  // Don't ask thumbnails this, only the main image
+  public function isOptimizePrevented()
+  {
+     return false;
+  }
+
+  // Don't ask thumbnails this, only the main image
+  public function resetPrevent()
+  {
+     return null;
   }
 
   protected function isThumbnailProcessable()

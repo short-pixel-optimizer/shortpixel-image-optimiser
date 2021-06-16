@@ -119,14 +119,17 @@ class UiHelper
     }
 
     if ($retinasDone > 0)
-      $output .= '<br>' . sprintf(__('+%s Retina images optimized','shortpixel-image-optimiser') , $retinasDone);
-
+    {
+      $output .= '<div class="filetype retina">' . sprintf(__('+%s Retina images optimized','shortpixel-image-optimiser') , $retinasDone) . '</div>';
+    }
     if ($webpsTotal > 0)
-      $output .= '<br>' . sprintf(__('+%s Webp images ','shortpixel-image-optimiser') , $webpsTotal);
-
-      if ($avifsTotal > 0)
-        $output .= '<br>' . sprintf(__('+%s Avif images ','shortpixel-image-optimiser') , $avifsTotal);
-
+    {
+      $output .=  '<div class="filetype webp">' . sprintf(__('+%s Webp images ','shortpixel-image-optimiser') , $webpsTotal) . '</div>';
+    }
+    if ($avifsTotal > 0)
+    {
+        $output .=  '<div class="filetype avif">' . sprintf(__('+%s Avif images ','shortpixel-image-optimiser') , $avifsTotal) . '</div>';
+    }
     if ($imageObj->isOptimized() && $imageObj->isProcessable())
     {
         $optimizable = $imageObj->getOptimizeURLS();
@@ -171,6 +174,14 @@ class UiHelper
               $output .= "</span>";
             $output .= '</div>';
         }
+    }
+
+    if ($imageObj->isOptimizePrevented() !== false)
+    {
+        $retry = self::getAction('retry', $imageObj->get('id'));
+        $output .= "<div class='shortpixel-image-error'>" . $imageObj->isOptimizePrevented();
+        $output .= "<span class='shortpixel-error-reset'>" . sprintf(__('After you have fixed this issue, you can %s click here to retry %s', 'shortpixel-image-optimiser'), '<a href="javascript:' . $retry['function'] . '">', '</a>');
+        $output .= '</div>';
     }
 
     return $output;

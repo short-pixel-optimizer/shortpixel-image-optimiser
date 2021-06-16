@@ -1,6 +1,8 @@
 
 .sp-column-info
 {
+  position: relative;
+
   .thumbnails.optimized
   {
     position: relative;
@@ -50,6 +52,12 @@
       }
 
   }
+  .sp-column-actions
+  {
+     position: absolute;
+     right: 10px;
+     top: 0;
+  }
   .thumbs-todo
   {
      position: relative;
@@ -59,5 +67,33 @@
 
       }
      h4:hover ~ span { display: block; }
+  }
+
+  h4 { margin: 0; }
+  .shortpixel-image-error {
+      display: block;
+      border: 1px solid #ff0000;
+      padding: 12px;
+      margin: 14px 0;
+      font-size: 14px;
+      font-weight: 700;
+
+      .shortpixel-error-reset
+      {
+         font-weight: 500;
+         font-size: 12px;
+         display: block;
+      }
+  } //error
+} // sp-column-info
+
+// The whole column
+.column-wp-shortPixel
+{
+
+  .message
+  {
+     font-size: 14px;
+     font-weight: 700;
   }
 }

@@ -56,7 +56,7 @@ $approx = $this->view->approx;
            <h4><label for="custom_checkbox">Custom Images</label></h4>
             <div class='option'>
               <label>Images</label>
-               <span class="number"  data-check-custom-total ><?php echo $approx->custom->images ?></span>
+               <span class="number" ><?php echo $approx->custom->images ?></span>
             </div>
          </div>
 

@@ -19,6 +19,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
     protected $is_main_file = true;
 
+    const FILE_STATUS_PREVENT = -10;
 
     public function __construct(int $id)
     {
@@ -174,6 +175,9 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
     public function restore()
     {
+       do_action('shortpixel_before_restore_image', $this->get('id'));
+       do_action('shortpixel/image/before_restore', $this);
+
        $bool = parent::restore();
 
        if ($bool)
@@ -291,6 +295,32 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
        }
 
+    }
+
+    protected function preventNextTry($reason = '')
+    {
+        $this->setMeta('errorMessage', $reason);
+        $this->setMeta('status', SELF::FILE_STATUS_PREVENT);
+        $this->saveMeta();
+    }
+
+    public function isOptimizePrevented()
+    {
+         $status = $this->getMeta('status');
+
+         if ($status == self::FILE_STATUS_PREVENT )
+         {
+            return $this->getMeta('errorMessage');
+         }
+
+         return false;
+    }
+
+    public function resetPrevent()
+    {
+        $this->setMeta('status', self::FILE_STATUS_UNPROCESSED);
+        $this->setMeta('errorMessage', '');
+        $this->saveMeta();
     }
 
     public function saveMeta()

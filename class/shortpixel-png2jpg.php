@@ -147,6 +147,8 @@ class ShortPixelPng2Jpg {
 
     protected function doConvertPng2Jpg($imageObj) {
         //$image = $params['file'];
+        do_action('shortpixel/image/convertpng2jpg_before', $imageObj);
+
         $fs = \wpSPIO()->filesystem();
         $settings = \wpSPIO()->settings();
 
@@ -250,6 +252,7 @@ class ShortPixelPng2Jpg {
             //$params['png_size'] = $origSize;
             //$params['jpg_size'] = $newSize;
         }
+        do_action('shortpixel/image/convertpng2jpg_after', $imageObj, $params);
         return $params;
     }
 

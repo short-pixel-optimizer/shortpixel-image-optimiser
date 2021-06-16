@@ -52,7 +52,9 @@ class wpOffload
       add_action('shortpixel_after_restore_image', array($this, 'image_restore')); // hit this when restoring.
       add_action('shortpixel/image/convertpng2jpg_after', array($this, 'image_converted'));
       add_action('shortpixel_restore_after_pathget', array($this, 'remove_remote')); // not optimal -> has to do w/ doRestore and when URL/PATH is available when not on server .
-      add_action('shortpixel/image/convertpng2jpg_before', array($this, 'remove_remote'));
+
+      // Seems this better served by _after? If it fails, it's removed from remote w/o filechange.
+    //  add_action('shortpixel/image/convertpng2jpg_before', array($this, 'remove_remote'));
       add_filter('as3cf_attachment_file_paths', array($this, 'add_webp_paths'));
       add_filter('as3cf_remove_attachment_paths', array($this, 'remove_webp_paths'));
 

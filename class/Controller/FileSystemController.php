@@ -129,10 +129,17 @@ Class FileSystemController extends \ShortPixel\Controller
       // Implement this code better here.
       $backup_subdir = \ShortPixelMetaFacade::returnSubDir($filepath);
 
+/* from fileModel:
+      $backup_dir = str_replace($fs->getWPAbsPath(), "", $this->directory->getPath());
+      $backupDirectory = SHORTPIXEL_BACKUP_FOLDER . '/' . $backup_dir;
+      $directory = new DirectoryModel($backupDirectory);
+*/
       $backup_fulldir = SHORTPIXEL_BACKUP_FOLDER . '/' . $backup_subdir;
       Log::addDebug('Get File BackupDirectory' . $backup_fulldir);
 
       $directory = $this->getDirectory($backup_fulldir);
+
+      $directory = apply_filters("shortpixel/file/backup_folder", $directory, $file);      
 
       if ($directory->check())
         return $directory;

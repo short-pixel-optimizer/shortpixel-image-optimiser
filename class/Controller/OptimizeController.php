@@ -69,12 +69,17 @@ class OptimizeController
         $json->result = new \stdClass;
         $json->result->item_id = $id;
 
+        // Manual Optimization order should always go trough
+        if ($mediaItem->isOptimizePrevented() !== false)
+            $mediaItem->resetPrevent();
+
         $queue = $this->getQueue($mediaItem->get('type'));
 
         if ($mediaItem === false)
         {
           $json->is_error = true;
           $json->result->is_error = true;
+          $json->result->is_done = true;
           $json->result->message = __('Error - item could not be found', 'shortpixel-image-optimiser');
           $json->result->fileStatus = ImageModel::FILE_STATUS_ERROR;
           ResponseController::add()->withMessage($json->message)->asError();
@@ -85,6 +90,7 @@ class OptimizeController
         {
           $json->result->message = $mediaItem->getProcessableReason();
           $json->result->is_error = true;
+          $json->result->is_done = true;
           $json->result->fileStatus = ImageModel::FILE_STATUS_ERROR;
           ResponseController::add()->withMessage($json->result->message)->asError();
         }
@@ -395,6 +401,7 @@ class OptimizeController
                  $item->result->apiStatus = ApiController::STATUS_SUCCESS;
                  $item->fileStatus = ImageModel::FILE_STATUS_SUCCESS;
                  $item->result->message = sprintf(__('Image %s optimized', 'shortpixel-image-optimiser'), $imageItem->getFileName());
+                 do_action( 'shortpixel_image_optimised', $imageItem->get('id'), $imageItem, $item );
 
                }
                else

@@ -379,7 +379,7 @@ window.ShortPixelProcessor =
          if (typeof response.result !== 'undefined' && response.result !== null)
          {
               if (response.result.is_error)
-                this.HandleItemError(result, type);
+                this.HandleItemError(response.result, type);
 
               this.screen.HandleImage(response, type); // whole response here is single item. (final!)
          }

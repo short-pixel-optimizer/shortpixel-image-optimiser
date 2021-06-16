@@ -41,6 +41,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     const P_EXCLUDE_SIZE  = 3;
     const P_EXCLUDE_PATH  = 4;
     const P_IS_OPTIMIZED = 5;
+    const P_FILE_NOTWRITABLE = 6;
 
     protected $image_meta; // metadata Object of the image.
 
@@ -69,6 +70,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
     // Function to prevent image from doing anything automatically - after fatal error.
     abstract protected function preventNextTry($reason = '');
+    abstract public function isOptimizePrevented();
+    abstract public function resetPrevent(); // to get going.
 
     //abstract public function handleOptimized($tempFiles);
 
@@ -102,9 +105,14 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     /* Check if an image in theory could be processed. Check only exclusions, don't check status etc */
     public function isProcessable()
     {
-        if ( $this->isOptimized() || ! $this->exists()  || $this->isPathExcluded() || $this->isExtensionExcluded() || $this->isSizeExcluded() || ! $this->is_writable()
+        if ( $this->isOptimized() || ! $this->exists()  || $this->isPathExcluded() || $this->isExtensionExcluded() || $this->isSizeExcluded() || ! $this->is_writable() || $this->isOptimizePrevented() !== false
         )
+        {
+          if(! $this->is_writable() && $this->processable_status == 0)
+            $this->processable_status = self::P_FILE_NOTWRITABLE;
+
           return false;
+        }
         else
           return true;
     }
@@ -160,6 +168,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
          break;
          case self::P_IS_OPTIMIZED:
             $message = __('Image is already optimized', 'shortpixel-image-optimiser');
+         break;
+        case self::P_FILE_NOTWRITABLE:
+            $message = __('Image is not writable', 'shortpixel-image-optimiser');
          break;
          default:
             $message = __(sprintf('Unknown Issue, Code %s',  $this->processable_status), 'shortpixel-image-optimiser');
@@ -466,6 +477,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
             return false; // no backup / everything not writable.
         }
 
+
         $backupFile = $this->getBackupFile();
 
         if (! $backupFile)
@@ -627,9 +639,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
           else
           {
             // Return the backup for a retry.
-            if ($this->isRestorable())
+            if ($this->isRestorable() && ($backupFile->getFileSize() > $this->getFileSize()))
             {
-              if ($backupFile->getFileSize() > $this->getFileSize())
+                Log::addWarn('Backup Failed, File is restorable, try to recover. ' . $this->getFullPath() );
                 $this->restore();
             }
             else
@@ -646,7 +658,12 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
        $directory = $this->getBackupDirectory(true);
        $fs = \wpSPIO()->filesystem();
 
+
+       // @Deprecated
        if(apply_filters('shortpixel_skip_backup', false, $this->getFullPath(), $this->is_main_file)){
+           return true;
+       }
+       if(apply_filters('shortpixel/image/skip_backup', false, $this->getFullPath(), $this->is_main_file)){
            return true;
        }
 

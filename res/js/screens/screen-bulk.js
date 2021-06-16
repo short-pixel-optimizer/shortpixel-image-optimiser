@@ -403,10 +403,10 @@ console.log("Screen Init Done", initMedia, isPreparing, isRunning, isFinished);
           });
       }
   }
-  this.HandleError = function(response, type)
+  this.HandleError = function(result, type)
   {
     console.error(response);
-    var message = response.result.message + '(' + response.item_id + ') :' + response.result.filename;
+    var message = result.message + '(' + result.item_id + ');
     var data = {message: message};
     this.UpdateData('error', data, type);
 

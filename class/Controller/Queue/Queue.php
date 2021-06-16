@@ -85,6 +85,7 @@ abstract class Queue
        $result = $this->getQStatus($result, $numitems);
        $result->numitems = $numitems;
 
+       do_action('shortpixel_start_image_optimisation', $imageModel->get('id'), $imageModel);
        return $result;
     }
 
@@ -176,6 +177,7 @@ abstract class Queue
                     $webpCount += $counts->webpCount;
                     $avifCount += $counts->avifCount;
 
+                    do_action('shortpixel_start_image_optimisation', $mediaItem->get('id'), $mediaItem);
 
                 }
                 else
@@ -263,7 +265,7 @@ abstract class Queue
 
       $stats->total = $stats->in_queue + $stats->fatal_errors + $stats->errors + $stats->done + $stats->in_process;
       if ($stats->total > 0)
-        $stats->percentage_done = round((100 / $stats->total) * $stats->done);
+        $stats->percentage_done = round((100 / $stats->total) * ($stats->done + $stats->fatal_errors));
       else
         $stats->percentage_done = 0;
 

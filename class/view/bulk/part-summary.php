@@ -21,7 +21,16 @@ namespace ShortPixel;
       <h4><span class='dashicons dashicons-images-alt2'>&nbsp;</span> Media Library</h4>
         <div class="list-table">
           <div><span>Items to Optimize</span><span data-stats-media="in_queue">0</span></div>
-          <div><span>Total images to Optimize </span><span data-stats-media="images-images" data-check-media-total>0</span></div>
+
+          <div><span>Total images to Optimize </span><span data-check-media-total data-stats-media="images-images" data-check-media-total>0</span></div>
+
+          <?php if (\wpSPIO()->settings()->createWebp == 1): ?>
+            <div class='filetypes'><span>of which Webp</span><span data-stats-media="images-images_webp">&nbsp;</span></div>
+          <?php endif; ?>
+          <?php if (\wpSPIO()->settings()->createAvif == 1): ?>
+            <div class='filetypes'><span>of which Avif</span><span data-stats-media="images-images_avif">&nbsp;</span></div>
+          <?php endif; ?>
+
         </div>
       </div>
 
@@ -29,19 +38,20 @@ namespace ShortPixel;
     <h4><span class='dashicons dashicons-open-folder'>&nbsp;</span> Other Media</h4>
       <div class="list-table">
         <div><span>Items to Optimize</span><span data-stats-custom="in_queue">0</span></div>
-        <div><span>Total images to Optimize </span><span data-stats-custom="images-images">0</span></div>
+        <div><span>Total images to Optimize </span><span data-check-custom-total data-stats-custom="images-images">0</span></div>
       </div>
     </div>
 
+<!--
     <div>
     <?php if (\wpSPIO()->settings()->createWebp == 1): ?>
-      <div><span>+Webp</span><span data-stats-total="images-images">&nbsp;</span></div>
+      <div><span>+Webp</span><span data-stats-total="images-images_webp">&nbsp;</span></div>
     <?php endif; ?>
     <?php if (\wpSPIO()->settings()->createAvif == 1): ?>
-      <div><span>+Avif</span><span data-stats-total="images-images">&nbsp;</span></div>
+      <div><span>+Avif</span><span data-stats-total="images-images_avif">&nbsp;</span></div>
     <?php endif; ?>
     </div>
-
+-->
 
 
     <div class="totals">
@@ -61,7 +71,7 @@ namespace ShortPixel;
 
     <div class="credits">
       <p class='heading'><span>Your ShortPixel Credits</span>
-        <span><?php echo  number_format($quotaData->total->total) ?></span>
+        <span><?php echo  number_format($quotaData->total->remaining) ?></span>
       </p>
 
       <p><span>Your monthly plan</span>
