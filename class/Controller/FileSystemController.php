@@ -100,7 +100,7 @@ Class FileSystemController extends \ShortPixel\Controller
     {
       $filepath = \wp_get_original_image_path($id);
       $filepath = apply_filters('shortpixel_get_original_image_path', $filepath, $id);
-      return new MediaLibraryThumbnailModel($filepath);
+      return new MediaLibraryThumbnailModel($filepath, $id, 'original');
     }
 
     /** Get DirectoryModel for a certain path. This can exist or not
@@ -126,6 +126,11 @@ Class FileSystemController extends \ShortPixel\Controller
       $wp_home = get_home_path();
       $filepath = $file->getFullPath();
 
+      if ($file->is_virtual())
+      {
+         $filepath = apply_filters('shortpixel/file/virtual/translate', $filepath, $file);
+      }
+
       // Implement this code better here.
       $backup_subdir = \ShortPixelMetaFacade::returnSubDir($filepath);
 
@@ -139,7 +144,7 @@ Class FileSystemController extends \ShortPixel\Controller
 
       $directory = $this->getDirectory($backup_fulldir);
 
-      $directory = apply_filters("shortpixel/file/backup_folder", $directory, $file);      
+      $directory = apply_filters("shortpixel/file/backup_folder", $directory, $file);
 
       if ($directory->check())
         return $directory;
@@ -264,6 +269,24 @@ Class FileSystemController extends \ShortPixel\Controller
         return false;
     }
 
+    /** Utility function to check if a path is an URL
+    *  Checks if this path looks like an URL.
+    * @param $path String  Path to check
+    * @return Boolean If path seems domain.
+    */
+    public function pathIsUrl($path)
+    {
+      $is_http = (substr($path, 0, 4) == 'http') ? true : false;
+      $is_https = (substr($path, 0, 5) == 'https') ? true : false;
+      $is_neutralscheme = (substr($path, 0, 2) == '//') ? true : false; // when URL is relative like //wp-content/etc
+      $has_urldots = (strpos($path, '://') !== false) ? true : false; // Like S3 offloads
+
+      if ($is_http || $is_https || $is_neutralscheme || $has_urldots)
+        return true;
+      else
+        return false;
+    }
+
     /** Sort files / directories in a certain way.
     * Future dev to include options via arg.
     */
@@ -288,6 +311,46 @@ Class FileSystemController extends \ShortPixel\Controller
 
         return $array;
 
+    }
+
+    public function downloadFile($url, $destinationPath)
+    {
+      $downloadTimeout = max(SHORTPIXEL_MAX_EXECUTION_TIME - 10, 15);
+      $fs = \wpSPIO()->filesystem();
+    //  $fs = \wpSPIO()->fileSystem();
+      $destinationFile = $fs->getFile($destinationPath);
+
+      $args_for_get = array(
+        'stream' => true,
+        'filename' => $destinationPath,
+      );
+
+      $response = wp_remote_get( $url, $args_for_get );
+
+      if(is_wp_error( $response )) {
+        Log::addError('Download file failed', array($url, $response->get_error_messages(), $response->get_error_codes() ));
+
+        // Try to get it then via this way.
+        $response = download_url($url, $downloadTimeout);
+        if (!is_wp_error($response)) // response when alright is a tmp filepath. But given path can't be trusted since that can be reason for fail.
+        {
+          $tmpFile = $fs->getFile($response);
+          $result = $tmpFile->move($destinationFile);
+
+        } // download_url ..
+        else {
+          Log::addError('Secondary download failed', array($url, $response->get_error_messages(), $response->get_error_codes() ));
+        }
+      }
+      else { // success, at least the download.
+          $destinationFile = $fs->getFile($response['filename']);
+      }
+
+      Log::addDebug('Remote Download attempt result', array($url, $destinationPath));
+      if ($destinationPath->exists())
+        return true;
+      else
+        return false;
     }
 
     /** Get all files from a directory tree, starting at given dir.

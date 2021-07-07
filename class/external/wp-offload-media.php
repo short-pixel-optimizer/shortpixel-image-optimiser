@@ -14,6 +14,9 @@ class wpOffload
     protected $is_cname = false;
     protected $cname;
 
+    // if might have to do these checks many times for each thumbnails, keep it fastish.
+    //protected $retrievedCache = array();
+
     public function __construct()
     {
        // This must be called before WordPress' init.
@@ -46,10 +49,10 @@ class wpOffload
         $this->cname = $this->as3cf->get_setting( 'cloudfront' );
       }
 
-      $provider = $this->as3cf->get_provider();
+  //    $provider = $this->as3cf->get_provider();
 
       add_action('shortpixel_image_optimised', array($this, 'image_upload'));
-      add_action('shortpixel_after_restore_image', array($this, 'image_restore')); // hit this when restoring.
+      add_action('shortpixel_after_restore_image', array($this, 'image_restore'), 10, 3); // hit this when restoring.
       add_action('shortpixel/image/convertpng2jpg_after', array($this, 'image_converted'));
       add_action('shortpixel_restore_after_pathget', array($this, 'remove_remote')); // not optimal -> has to do w/ doRestore and when URL/PATH is available when not on server .
 
@@ -62,8 +65,10 @@ class wpOffload
 
       add_filter('as3cf_pre_update_attachment_metadata', array($this, 'preventInitialUpload'), 10,4);
 
-      add_filter('shortpixel_get_attached_file', array($this, 'get_raw_attached_file'),10, 2);
-      add_filter('shortpixel_get_original_image_path', array($this, 'get_raw_original_path'), 10, 2);
+    //  add_filter('shortpixel_get_attached_file', array($this, 'get_raw_attached_file'),10, 2);
+    //  add_filter('shortpixel_get_original_image_path', array($this, 'get_raw_original_path'), 10, 2);
+      add_filter('shortpixel/image/urltopath', array($this, 'checkIfOffloaded'), 10,2);
+      add_filter('shortpixel/file/virtual/translate', array($this, 'getLocalPathByURL'));
 
       // for webp picture paths rendered via output
       add_filter('shortpixel_webp_image_base', array($this, 'checkWebpRemotePath'), 10, 2);
@@ -129,8 +134,23 @@ class wpOffload
       return $file;
     }
 
-    public function image_restore($id)
+    /**
+    * @param $id attachment id (WP)
+    * @param $mediaItem  MediaLibraryModel
+    * @param $clean - boolean - if restore did all files (clean) or partial (not clean)
+    */
+    public function image_restore($id, $mediaItem, $clean)
     {
+      if (! $clean)
+        return false; // don't do anything until we have restored all ( for now )
+
+      $settings = \wpSPIO()->settings();
+
+      // If there are excluded sizes, there are not in backups. might not be left on remote, or ( if delete ) on server, so just generate the images and move them.
+
+      Log::addTemp('Create subsizes for ' . $id . ' : ' . $mediaItem->getFullPath() );
+      $mediaItem->wpCreateImageSizes();
+
       $this->remove_remote($id);
       $this->image_upload($id);
     }
@@ -147,6 +167,7 @@ class wpOffload
       $this->as3cf->remove_attachment_files_from_provider($id, $mediaItem);
     }
 
+
     /** @return Returns S3Ofload MediaItem, or false when this does not exist */
     protected function getItemById($id)
     {
@@ -155,15 +176,76 @@ class wpOffload
         return $mediaItem;
     }
 
-    protected function getByURL($url)
+    public function checkIfOffloaded($bool, $url)
+    {
+      $source_id = $this->getSourceIDByURL($url);
+    //  echo "--" . $this->getLocalPathByURL($url). '<BR>';
+      if ($source_id !== false)
+        return true;
+      else
+        return false;
+    }
+
+    protected function getSourceIDByURL($url)
     {
       $class = $this->itemClassName;
       $source_id = $class::get_source_id_by_remote_url($url);
-
       if ($source_id !== false)
-        return $this->getItemById($source_id);
+        return $source_id;
       else
+      {
+        $source_id = $this->checkIfThumbnail($url); // can be item or false.
+        return $source_id;
+      }
+
+      return false;
+    }
+
+    //** The thumbnails are not recorded by offload, but still offloaded.
+    private function checkIfThumbnail($original_url)
+    {
+        //$result = \attachment_url_to_postid($url);
+        $pattern = '/(.*)-\d+[xX]\d+(\.\w+)/m';
+        $url = preg_replace($pattern, '$1$2', $original_url);
+
+        $class = $this->itemClassName;
+        $source_id = $class::get_source_id_by_remote_url($url);
+
+        if ($source_id !== false)
+          return $source_id;
+        else
+          return false;
+
+
+      /*  //$item = $this->getItemById($source_id);
+echo "<PRE>"; var_dump($item->key(wp_basename($original_url))); echo "</PRE>";
+        if ($source_id !== false)
+          return $this->getItemById($source_id);
+        else
+          return false; */
+    }
+
+    public function getLocalPathByURL($url)
+    {
+       $source_id = $this->getSourceIDByURL($url);
+       if ($source_id == false)
+       {
         return false;
+      }
+       $item = $this->getItemById($source_id);
+
+       $original_path = $item->original_source_path(); // $values['original_source_path'];
+
+       if (wp_basename($url) !== wp_basename($original_path)) // thumbnails translate to main file.
+       {
+          $original_path = str_replace(wp_basename($original_path), wp_basename($url), $original_path);
+       }
+
+       $fs = \wpSPIO()->filesystem();
+       $base = $fs->getWPUploadBase();
+
+       $file  = $fs->getFile($base . $original_path);
+       return $file;
     }
 
     public function image_converted($id)
@@ -182,8 +264,9 @@ class wpOffload
         if ($mediaItem === false) // mediaItem seems not present. Probably not a remote file
           return;
 
-        $this->as3cf->remove_attachment_files_from_provider($id, $mediaItem);
-        $providerSourcePath = $mediaItem->source_path();
+      // Removed / this leads to missing images when images are excluded
+      //  $this->as3cf->remove_attachment_files_from_provider($id, $mediaItem);
+      //  $providerSourcePath = $mediaItem->source_path();
 
         //$providerFile = $fs->getFile($provider_object['key']);
         $providerFile = $fs->getFile($providerSourcePath);
@@ -241,11 +324,13 @@ class wpOffload
     public function preventInitialUpload($bool, $data, $post_id, $old_provider_object)
     {
         $settings = \wpSPIO()->settings();
+        $fs = \wpSPIO()->filesystem();
 
         if ($settings->autoMediaLibrary)
         {
           // Don't prevent whaffever if shortpixel is already done. This can be caused by plugins doing a metadata update, we don't care then.
-          if (! isset($data['ShortPixelImprovement']))
+          $mediaItem = $fs->getImage($post_id, 'media');
+          if ($mediaItem && ! $mediaItem->isOptimized())
           {
             Log::addDebug('Preventing Initial Upload', $post_id);
             return true;
@@ -306,6 +391,8 @@ class wpOffload
     {
       $paths = $this->getWebpPaths($paths, false);
     //  Log::addDebug('Remove S3 Paths', array($paths));
+    Log::addTemp('as3cf_remove_attachment_paths via remove_webp_path', $paths);
+
       return $paths;
     }
 

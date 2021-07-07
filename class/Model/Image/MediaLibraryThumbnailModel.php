@@ -16,11 +16,15 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
   public $mime; */
   protected $prevent_next_try = false;
   protected $is_main_file = false;
+  protected $id; // this is the parent attachment id
+  protected $size; // size of image in WP, if applicable.
 
-  public function __construct($path)
+  public function __construct($path, $id, $size)
   {
         parent::__construct($path);
         $this->image_meta = new ImageThumbnailMeta();
+        $this->id = $id;
+        $this->size = $size;
         $this->setWebp();
         $this->setAvif();
   }
@@ -78,6 +82,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
       return $webp;
     }
 
+
     $double_webp = \wpSPIO()->env()->useDoubleWebpExtension();
 
     if ($double_webp)
@@ -90,7 +95,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
     $webp = $fs->getFile($filepath);
 
-    if ($webp->exists())
+    if (! $webp->is_virtual() && $webp->exists())
       return $webp;
 
     return false;
@@ -165,7 +170,20 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
     if (! $this->isProcessable() )
       return array();
 
-    return array($fs->pathToUrl($this));
+    $url = $this->getURL();
+    if (! $url)
+      return array(); //nothing
+
+
+    return array($url);
+  }
+
+  public function getURL()
+  {
+      if ($this->size == 'original')
+        return wp_get_original_image_url($this->id);
+      else
+        return wp_get_attachment_image_url($this->id, $this->size);
   }
 
   // Just a placeholder for abstract, shouldn't do anything.
@@ -265,6 +283,54 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
           return false;
         }
       }
+  }
+
+  public function restore()
+  {
+    if ($this->is_virtual())
+    {
+       $fs = \wpSPIO()->filesystem();
+       $filepath = apply_filters('shortpixel/file/virtual/translate', $this->getFullPath(), $this);
+
+       $this->setVirtualToReal($filepath);
+    }
+
+    return parent::restore();
+  }
+
+  protected function createBackup()
+  {
+    if ($this->is_virtual()) // download remote file to backup.
+    {
+      $fs = \wpSPIO()->filesystem();
+      $filepath = apply_filters('shortpixel/file/virtual/translate', $this->getFullPath(), $this);
+      $result = $fs->downloadFile($this->getURL(), $filepath); // download remote file for backup.
+
+      if ($result == false)
+      {
+        $this->preventNextTry(__('Fatal Issue: Remote virtual file could not be downloaded for backup', 'shortpixel-image-optimiser'));
+        Log::addError('Remote file download failed to: ' . $filepath, $this->getURL());
+        $this->error_message = __('Remote file could not be downloaded' . $this->getFullPath(), 'shortpixel-image-optimiser');
+
+        return false;
+      }
+
+      $this->setVirtualToReal($filepath);
+    }
+
+    return parent::createBackup();
+
+  }
+
+  private function setVirtualToReal($fullpath)
+  {
+    $this->resetStatus();
+    $this->fullpath = $fullpath;
+    $this->directory = null; //reset directory
+    $this->is_virtual = false; // stops being virtual
+    $this->setFileInfo();
+    Log::addTemp('Debug Translated File Info -- ' . $this->getFullPath() .  ' ' . $this->getFileDir());
+
   }
 
   /** Tries to retrieve an *existing* BackupFile. Returns false if not present.

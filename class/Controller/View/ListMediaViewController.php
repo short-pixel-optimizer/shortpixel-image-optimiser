@@ -72,7 +72,6 @@ class ListMediaViewController extends \ShortPixel\Controller
      $keyControl = ApiKeyController::getInstance();
      $quotaControl = QuotaController::getInstance();
 
-//echo "listMediaViewController: "; var_dump($mediaItem->getFullPath());
      $this->view->mediaItem = $mediaItem;
 
      $actions = array();

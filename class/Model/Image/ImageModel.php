@@ -89,7 +89,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
       $this->width = false;  // to prevent is_null check on get to loop if something is off.
       $this->height = false;
 
-      if (! $this->isExtensionExcluded() && $this->isImage() && $this->is_readable())
+      if (! $this->isExtensionExcluded() && $this->isImage() && $this->is_readable() && ! $this->is_virtual())
       {
          list($width, $height) = @getimagesize($this->getFullPath());
          if ($width)
@@ -105,7 +105,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     /* Check if an image in theory could be processed. Check only exclusions, don't check status etc */
     public function isProcessable()
     {
-        if ( $this->isOptimized() || ! $this->exists()  || $this->isPathExcluded() || $this->isExtensionExcluded() || $this->isSizeExcluded() || ! $this->is_writable() || $this->isOptimizePrevented() !== false
+        if ( $this->isOptimized() || ! $this->exists()  || $this->isPathExcluded() || $this->isExtensionExcluded() || $this->isSizeExcluded() || (! $this->is_writable() && ! $this->is_virtual()) || $this->isOptimizePrevented() !== false
         )
         {
           if(! $this->is_writable() && $this->processable_status == 0)
@@ -184,6 +184,13 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     {
         if (! $this->exists())
           return false;
+        if ($this->is_virtual()) // if virtual, don't filecheck on image.
+        {
+            if (! $this->isExtensionExcluded() )
+              return true;
+            else
+              return false;
+        }
 
         $this->mime = mime_content_type($this->getFullPath());
         if (strpos($this->mime, 'image') >= 0)
@@ -296,6 +303,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     public function handleOptimized($downloadResults)
     {
         $settings = \wpSPIO()->settings();
+        $fs = \wpSPIO()->filesystem();
 
         foreach($downloadResults as $urlName => $resultObj)
         {
@@ -329,7 +337,15 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
               else
               {
                 $tempFile = $resultObj->file;
-                $copyok = $tempFile->copy($this);
+                if ($this->is_virtual())
+                {
+                    $filepath = apply_filters('shortpixel/file/virtual/translate', $this->getFullPath(), $this);
+                    $virtualFile = $fs->getFile($filepath);
+                    $copyok = $tempFile->copy($virtualFile);
+                }
+                else
+                    $copyok = $tempFile->copy($this);
+
                 $optimizedSize  = $tempFile->getFileSize();
                 $this->setImageSize();
               }
@@ -448,7 +464,11 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
     public function isRestorable()
     {
-        if ($this->hasBackup() && $this->is_writable() )
+        if (! $this->isOptimized())
+        {
+           return false;  // not optimized, done.
+        }
+        elseif ($this->hasBackup() && ($this->is_virtual() || $this->is_writable()) )
         {
           return true;
         }
@@ -474,9 +494,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     {
         if (! $this->isRestorable())
         {
+            Log::addWarn('Trying restore action on non-restorable: ' . $this->getFullPath());
             return false; // no backup / everything not writable.
         }
-
 
         $backupFile = $this->getBackupFile();
 
@@ -510,7 +530,12 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     public function onDelete()
     {
       // if ($this->hasBackup())
-        $this->restore();
+        //$this->restore();
+        if ($this->hasBackup())
+        {
+           $file = $this->getBackupFile();
+           $file->delete();
+        }
 
       //  $this->deleteMeta();
     }
@@ -657,7 +682,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
        }
        $directory = $this->getBackupDirectory(true);
        $fs = \wpSPIO()->filesystem();
-
 
        // @Deprecated
        if(apply_filters('shortpixel_skip_backup', false, $this->getFullPath(), $this->is_main_file)){

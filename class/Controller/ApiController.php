@@ -259,8 +259,8 @@ class ApiController
 
     $neededURLS = $item->urls;
 
-    Log::addTemp("neededURLS", $neededURLS);
-    Log::addTemp('Response', $APIresponse);
+    //Log::addTemp("neededURLS", $neededURLS);
+    //Log::addTemp('Response', $APIresponse);
 
     if ( isset($APIresponse[0]) ) //API returned image details
     {

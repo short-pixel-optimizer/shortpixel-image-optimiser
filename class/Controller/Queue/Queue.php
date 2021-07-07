@@ -135,7 +135,6 @@ abstract class Queue
        if (isset($items)) // did a dequeue.
        {
           $result = $this->getQStatus($result, count($items));
-        //  Log::addTemp('Fetched Q items', $items);
           $result->items = $items;
 
        }
@@ -166,7 +165,6 @@ abstract class Queue
           {
                 if ($mediaItem->isProcessable()) // Checking will be done when processing queue.
                 {
-                   Log::addTemp('Preparing as Processable' . $mediaItem->get('id'));
                     $qObject = $this->imageModelToQueue($mediaItem);
 
                     $counts = $qObject->counts;
@@ -207,9 +205,6 @@ abstract class Queue
 
           // mediaItem should be last_item_id, save this one.
           $this->q->setStatus('last_item_id', $mediaItem->get('id')); // enum status to prevent a hang when no items are enqueued, thus last_item_id is not raised. save to DB.
-          Log::addTemp('Last Item Id stored' . $this->q->getStatus('last_item_id'));
-          Log::addTemp('Items enqueued ' . $numitems);
-
 
           $qCount = count($queue);
 
@@ -318,8 +313,6 @@ abstract class Queue
        $items = $this->q->deQueue(); // Items, can be multiple different according to throttle.
 
        $items = array_map(array($this, 'queueToMediaItem'), $items);
-       Log::addTemp('Q Dequeue', $items);
-       Log::addTemp('Count: ' . count($items));
        return $items;
     }
 
@@ -389,8 +382,6 @@ abstract class Queue
         $items = array();
 
         $webpLeft = $avifLeft = false;
-
-        //Log::addTemp('Amount of avifs found', $avifs);
 
         if (is_null($webps) && is_null($avifs))
         {

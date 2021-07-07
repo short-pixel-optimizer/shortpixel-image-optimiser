@@ -28,6 +28,7 @@ class FileModel extends \ShortPixel\Model
   protected $is_writable = null;
   protected $is_readable = null;
   protected $is_file = null;
+  protected $is_virtual = false;
 
   protected $status;
 
@@ -41,6 +42,12 @@ class FileModel extends \ShortPixel\Model
   public function __construct(string $path)
   {
     $this->fullpath = trim($path);
+    $fs = \wpSPIO()->filesystem();
+    if ($fs->pathIsUrl($path)) // Asap check for URL's to prevent remote wrappers from running.
+    {
+
+      $this->UrlToPath($path);
+    }
   }
 
   /* Get a string representation of file, the fullpath
@@ -77,12 +84,15 @@ class FileModel extends \ShortPixel\Model
       $this->is_readable = null;
       $this->is_file = null;
       $this->exists = null;
+      $this->is_virtual = null;
   }
 
   public function exists()
   {
     if (is_null($this->exists))
+    {
       $this->exists = (@file_exists($this->fullpath) && is_file($this->fullpath));
+    }
 
     $this->exists = apply_filters('shortpixel_image_exists', $this->exists, $this->fullpath, $this);
     $this->exists = apply_filters('shortpixel/file/exists',  $this->exists, $this->fullpath, $this);
@@ -91,8 +101,25 @@ class FileModel extends \ShortPixel\Model
 
   public function is_writable()
   {
-    if (is_null($this->is_writable))
-      $this->is_writable = @is_writable($this->fullpath);
+    if ($this->is_virtual())
+    {
+       $this->is_writable = false;  // can't write to remote files
+    }
+    elseif (is_null($this->is_writable))
+    {
+      if ($this->exists())
+      {
+        $this->is_writable = @is_writable($this->fullpath);
+      }
+      else // quite expensive check to see if file is writable.
+      {
+          $res = $this->create();
+          $this->delete();
+          $this->is_writable = $res;
+      }
+
+    }
+
 
     return $this->is_writable;
   }
@@ -105,10 +132,23 @@ class FileModel extends \ShortPixel\Model
     return $this->is_readable;
   }
 
+  // A file is virtual when the file is remote  with URL and no local alternative is present.
+  public function is_virtual()
+  {
+     if ( is_null($this->is_virtual))
+      $this->is_virtual = false; // return bool
+     return $this->is_virtual;
+  }
+
   /* Function checks if path is actually a file. This can be used to check possible confusion if a directory path is given to filemodel */
   public function is_file()
   {
-    if (is_null($this->is_file))
+    if ($this->is_virtual()) // don't look further when virtual
+    {
+        $this->is_file = true;
+        return $this->is_file;
+    }
+    elseif (is_null($this->is_file))
     {
       if ($this->exists())
       {
@@ -201,7 +241,11 @@ class FileModel extends \ShortPixel\Model
   public function create()
   {
      if (! $this->exists())
-      return touch($this->fullpath);
+     {
+      $res = touch($this->fullpath);
+      $this->exists = $res;
+      return $res;
+    }
      else
       Log::addWarn('Could not create/write file: ' . $this->fullpath);
 
@@ -385,19 +429,20 @@ class FileModel extends \ShortPixel\Model
   protected function processPath($path)
   {
     $original_path = $path;
+    $fs = \wpSPIO()->filesystem();
 
-    if ($this->pathIsUrl($path))
+
+    if ($fs->pathIsUrl($path))
     {
       $path = $this->UrlToPath($path);
     }
 
-    if ($path === false)
+    if ($path === false) // don't process further
       return false;
 
     $path = wp_normalize_path($path);
 
     // if path does not contain basepath.
-    $fs = \wpSPIO()->filesystem();
     $uploadDir = $fs->getWPUploadBase();
     $abspath = $fs->getWPAbsPath();
 
@@ -420,25 +465,7 @@ class FileModel extends \ShortPixel\Model
     return $path;
   }
 
-  /** Test is path is an URL
-  *  Checks if this path looks like an URL.
-  * @param $path String  Path to check
-  * @return Boolean If path seems domain.
-  */
-  private function pathIsUrl($path)
-  {
-    $is_http = (substr($path, 0, 4) == 'http') ? true : false;
-    $is_https = (substr($path, 0, 5) == 'https') ? true : false;
-    $is_neutralscheme = (substr($path, 0, 2) == '//') ? true : false; // when URL is relative like //wp-content/etc
-    $has_urldots = (strpos($path, '://') !== false) ? true : false;
 
-    if ($is_http || $is_https || $is_neutralscheme || $has_urldots)
-      return true;
-    else {
-      return false;
-    }
-
-  }
 
   /** Resolve an URL to a local path
   *  This partially comes from WordPress functions attempting the same
@@ -451,21 +478,39 @@ class FileModel extends \ShortPixel\Model
 
      $site_url = str_replace('http:', '', home_url('', 'http'));
      $url = str_replace(array('http:', 'https:'), '', $url);
-//Log::addTemp('FileModel URL' . $url . ' (' . $site_url . ')');
+     $fs = \wpSPIO()->filesystem();
+
      if (strpos($url, $site_url) !== false)
      {
        // try to replace URL for Path
        $abspath =  \wpSPIO()->filesystem()->getWPAbsPath();
        $path = str_replace($site_url, rtrim($abspath->getPath(),'/'), $url);
-//Log::addTemp('FileModel Path and such' . $path . ' ' . $site_url . ' ' . $url . ' ' . $abspath->getpath());
 
-       if (! $this->pathIsUrl($path)) // test again.
+
+       if (! $fs->pathIsUrl($path)) // test again.
        {
         return $path;
        }
      }
 
-     return false; // seems URL from other server, can't file that.
+     $this->is_virtual = true;
+
+     $path = apply_filters('shortpixel/image/urltopath', false, $url);
+     if ($path !== false)
+     {
+          $this->exists = true;
+          $this->is_readable = true;
+          $this->is_file = true;
+     }
+     else
+     {
+         $this->exists = false;
+         $this->is_readable = false;
+         $this->is_file = false;
+     }
+
+
+     return false; // seems URL from other server, use virtual mode.
   }
 
   /** Tries to find the full path for a perceived relative path.

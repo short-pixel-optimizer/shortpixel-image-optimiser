@@ -63,13 +63,17 @@ class EditMediaViewController extends \ShortPixel\Controller
           $this->view->id = $this->post_id;
           $this->view->status_message = null;
 
-
           $this->view->text = UiHelper::getStatusText($this->imageModel);
           $this->view->list_actions = UiHelper::getListActions($this->imageModel);
           if ( count($this->view->list_actions) > 0)
             $this->view->list_actions = UiHelper::renderBurgerList($this->view->list_actions, $this->imageModel);
           else
             $this->view->list_actions = '';
+
+          echo "EDITMEDIAV";
+          var_dump($this->imageModel->getFullPath());
+        //  $res = wp_create_image_subsizes($this->imageModel->getFullPath(), $this->post_id);
+          //var_dump($res);
 
 
           $this->view->actions = UiHelper::getActions($this->imageModel);
@@ -93,63 +97,7 @@ class EditMediaViewController extends \ShortPixel\Controller
       protected function getStatusMessage()
       {
           return UIHelper::renderSuccessText($this->imageModel);
-
-        /*  if (! isset($this->data['status']))
-            return;
-
-          switch($this->data['status'])
-          {
-            case 'n/a':
-                return _e('Optimization N/A','shortpixel-image-optimiser');
-            break;
-            case 'notFound':
-                return  _e('Image does not exist.','shortpixel-image-optimiser');
-                break;
-            case 'invalidKey':
-                return _e('Invalid API Key. <a href="options-general.php?page=wp-shortpixel-settings">Check your Settings</a>','shortpixel-image-optimiser');
-            break;
-            case 'quotaExceeded':
-                return __('Quota Exceeded','shortpixel-image-optimiser');
-            break;
-          } */
       }
-
-    /*  protected function getActions()
-      {
-          $actions = array();
-          if (! $this->userIsAllowed)
-            return $actions;
-
-          switch($this->data['status'])
-          {
-            case 'optimizeNow':
-              $actions[] =  '<a class="button button-smaller button-primary" href="javascript:manualOptimization(' . $this->post_id . ',false)">
-                                          ' .  __('Optimize now','shortpixel-image-optimiser') . '
-                            </a>';
-            break;
-            case 'retry':
-            case 'waiting':
-              if (isset($this->data['cleanup']))
-              {
-                  $actions[] = '<a class="button button-smaller button-primary" href="javascript:manualOptimization(' . $this->post_id . ', true)">' .
-                       __('Cleanup&Retry','shortpixel-image-optimiser') . '</a>';
-              }
-              else {
-                if($this->data['status'] == 'retry' && (isset($this->data['backup']) && $this->data['backup']) ) {
-                  $actions[] =  '<a class="button button-smaller sp-action-restore"
-                                href="admin.php?action=shortpixel_restore_backup&attachment_ID=' . $this->post_id . '" style="margin-left:5px;"
-                        title="' . __('Restore Image from Backup', 'shortpixel-image-optimiser') . '">
-                         ' . __('Cleanup','shortpixel-image-optimiser') . '</a>';
-
-                    }
-                  $actions[] = '<a class="button button-smaller button-primary" href="javascript:manualOptimization(' . $this->post_id . ', false)">' .
-                         __('Retry','shortpixel-image-optimiser')  . '</a>';
-              }
-            break;
-          }
-
-          return $actions;
-      } */
 
       protected function getStatistics()
       {
@@ -182,51 +130,9 @@ class EditMediaViewController extends \ShortPixel\Controller
         if ($tsOptimized !== null)
           $stats[] = array(__("Optimized on :", 'shortpixel-image-optimiser') . "<br /> ", UiHelper::formatTS($tsOptimized) );
 
-      /*  $successText .= ($data['webpCount'] ? "<br>+" . $data['webpCount'] . __(" WebP images", 'shortpixel-image-optimiser') : "")
-                . "<br>EXIF: " . ($data['exifKept'] ? __('kept','shortpixel-image-optimiser') :  __('removed','shortpixel-image-optimiser'))
-                . ($data['png2jpg'] ? '<br>' . __('Converted from PNG','shortpixel-image-optimiser'): '')
-                . "<br>" . __("Optimized on", 'shortpixel-image-optimiser') . ": " . $data['date']
-                . $todoSizes . $excludeSizes . $missingThumbs;
-*/
-
         return $stats;
       }
 
-/*
-      protected function getTodo() // @todo Completely fix this.
-      {
-        $data = $this->data;
-        if ( $data['status'] != 'pdfOptimized' && $data['status'] != 'imgOptimized')
-          return array();
-
-              $excluded = (isset($data['excludeSizes']) ? count($data['excludeSizes']) : 0);
-              $todoSizes = $missingThumbs = $excludeSizes = '';
-
-                if(isset($data['thumbsToOptimizeList']) && count($data['thumbsToOptimizeList'])) {
-                    $todoSizes .= "<br><span style='word-break: break-all;'> <span style='font-weight: bold;'>" . __("To optimize:", 'shortpixel-image-optimiser') . "</span>";
-                    foreach($data['thumbsToOptimizeList'] as $todoItem) {
-                        $todoSizes .= "<br> &#8226;&nbsp;" . $todoItem;
-                    }
-                    $todoSizes .= '</span>';
-                }
-                if(isset($data['excludeSizes']) && count($data['excludeSizes']) > 0 ) {
-                    $excludeSizes .= "<br><span style='word-break: break-all;'> <span style='font-weight: bold;'>" . __("Excluded thumbnails:", 'shortpixel-image-optimiser') . "</span>";
-                    foreach($data['excludeSizes'] as $excludedItem) {
-                        $excludeSizes .= "<br> &#8226;&nbsp;" . $excludedItem;
-                    }
-                    $excludeSizes .= '</span>';
-                }
-                if(count($data['thumbsMissing'])) {
-                    $missingThumbs .= "<br><span style='word-break: break-all;'> <span style='font-weight: bold;'>" . __("Missing thumbnails:", 'shortpixel-image-optimiser') . "</span>";
-                    foreach($data['thumbsMissing'] as $miss) {
-                        $missingThumbs .= "<br> &#8226&nbsp;" . $miss;
-                    }
-                    $missingThumbs .= '</span>';
-                }
-
-              return array($todoSizes, $excludeSizes, $missingThumbs);
-      }
-*/
       protected function getDebugInfo()
       {
           if(! \wpSPIO()->env()->is_debug )
@@ -293,7 +199,7 @@ class EditMediaViewController extends \ShortPixel\Controller
                 continue;
               }
 
-              $url = $fs->pathToURL($thumbObj); //wp_get_attachment_image_src($this->post_id, $size);
+              $url = $thumbObj->getURL(); //$fs->pathToURL($thumbObj); //wp_get_attachment_image_src($this->post_id, $size);
               $filename = $thumbObj->getFullPath();
             //  $debugMeta =// print_r($thumbObj->debugGetImageMeta(), true);
               $width = $thumbObj->get('width');

@@ -15,20 +15,17 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   protected $do_png2jpg = false; // option to flag this one should be checked / converted to jpg.
 
   protected $wp_metadata;
-  protected $id;
 
   protected $type = 'media';
   protected $is_main_file = true; // for checking
 
   private $unlistedChecked = false; // limit checking unlisted.
 
-
-
   public function __construct($post_id, $path)
   {
       $this->id = $post_id;
 
-      parent::__construct($path);
+      parent::__construct($path, $post_id, null);
 
       // WP 5.3 and higher. Check for original file.
       if (function_exists('wp_get_original_image_path'))
@@ -44,7 +41,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
   public function getOptimizePaths()
   {
-
      $paths = array();
 
      if ($this->isProcessable(true))
@@ -64,10 +60,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   public function getOptimizeUrls()
   {
      $fs = \wpSPIO()->filesystem();
-     $url = $fs->pathToUrl($this);
+
      $settings = \wpSPIO()->settings();
 
-     if (! $url)
+     $url = $this->getURL();
+
+     if (! $url) // If the whole image URL can't be found
      {
       return array();
      }
@@ -100,6 +98,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
      return $urls;
   }
 
+  // Try to get the URL via WordPress
+  public function getURL()
+  {
+     return wp_get_attachment_url($this->id);
+  }
+
   /** Get FileTypes that might be optimized. Checking for setting should go via isProcessableFileType! */
   public function getOptimizeFileType($type = 'webp')
   {
@@ -120,18 +124,22 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       {
           // The isProcessable(true) is very important, since non-strict calls of this function check this function as well ( resulting in loop )
           if ($this->isProcessable(true) || $this->isOptimized())
-            $toOptimize[] = $fs->pathToUrl($this);
+          {
+
+            $toOptimize[] = $this->getURL(); // $fs->pathToUrl($this);
+
+          }
       }
       if ($this->isScaled() ) // scaled image
       {
         if ($this->original_file->getOptimizeFileType($type) )
-            $toOptimize[] = $fs->pathToUrl($this->original_file);
+            $toOptimize[] = $this->original_file->getURL(); //$fs->pathToUrl($this->original_file);
       }
 
       foreach($this->thumbnails as $thumbName => $thumbObj)
       {
           if ($thumbObj->getOptimizeFileType($type))
-              $toOptimize[] = $fs->pathToUrl($thumbObj);
+              $toOptimize[] = $thumbObj->getURL(); //$fs->pathToUrl($thumbObj);
       }
 
       return array_values(array_unique($toOptimize));
@@ -167,7 +175,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           {
              if (isset($data['file']))
              {
-               $thumbObj = $this->getThumbnailModel($this->getFileDir() . $data['file']);
+               $thumbObj = $this->getThumbnailModel($this->getFileDir() . $data['file'], $name);
 
                $meta = new ImageThumbnailMeta();
                $thumbObj->setName($name);
@@ -443,9 +451,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   /** @param String Full Path to the Thumbnail File
   *   @return Object ThumbnailModel
   * */
-  private function getThumbnailModel($path)
+  private function getThumbnailModel($path, $size)
   {
-      $thumbObj = new MediaLibraryThumbnailModel($path);
+      $thumbObj = new MediaLibraryThumbnailModel($path, $this->id, $size);
       return $thumbObj;
   }
 
@@ -506,10 +514,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           {
              foreach($metadata->thumbnails as $name => $thumbMeta) // <!-- ThumbMeta is Object
              {
-        //       echo "<PRE>"; print_r($thumbMeta); echo "</PRE>";
-
                // Load from Class and file, might be an unlisted one. Meta doesn't save file info, so without might prove a problem!
-               $thumbObj = $this->getThumbnailModel($this->getFileDir() . $thumbMeta->file);
+               $thumbObj = $this->getThumbnailModel($this->getFileDir() . $thumbMeta['file'], $name);
 
                $newMeta = new ImageThumbnailMeta();
                $newMeta->fromClass($thumbMeta);
@@ -535,7 +541,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
                   if (isset($retinas[$name]))
                   {
                     $retfile = $retinas[$name];
-                    $retinaObj = $this->getThumbnailModel($retfile->getFullPath());
+                    $retinaObj = $this->getThumbnailModel($retfile->getFullPath(), $name);
                     $retMeta = new ImageThumbnailMeta();
                     $retMeta->fromClass($retinaMeta);
                     $retinaObj->setMetaObj($retMeta);
@@ -629,6 +635,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
      return $bool;
   }
 
+  /** Ondelete is trigger by WordPress deleting an image. SPIO should delete it's data, and backups */
   public function onDelete()
   {
       parent::onDelete();
@@ -638,6 +645,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         $thumbObj->onDelete();
       }
 
+      if ($this->isScaled())
+      {
+         $originalFile = $this->getOriginalFile();
+         $originalFile->onDelete();
+      }
 
 
       $this->deleteMeta();
@@ -716,8 +728,14 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
                continue;
 
             $bool = $thumbnail->isRestorable();
+
             if ($bool === true) // Is Restorable just needs one job
               return true;
+          }
+          if ($this->isScaled() && ! $bool)
+          {
+             $originalFile = $this->getOriginalFile();
+             $bool = $originalFile->isRestorable();
           }
       }
 
@@ -991,6 +1009,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
     do_action('shortpixel/image/before_restore', $this);
 
     $cleanRestore = true;
+
     $bool = parent::restore();
 
     if (! $bool)
@@ -1078,7 +1097,33 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         else
           $this->saveMeta(); // Save if something is not restored.
 
+        do_action('shortpixel_after_restore_image', $this->id, $this, $cleanRestore);
         return $bool;
+  }
+
+  /** This function will recreate thumbnails. This is -only- needed for very special cases, i.e. offload */
+  public function wpCreateImageSizes()
+  {
+    add_filter('as3cf_wait_for_generate_attachment_metadata', array($this, 'returnTrue'));
+
+    $fullpath = $this->getFullPath();
+    if ($this->isScaled()) // if scaled, the original file is the main file for thumbnail base
+    {
+       $originalFile = $this->getOriginalFile();
+       $fullpath = $originalFile->getFullPath();
+    }
+    $res = \wp_create_image_subsizes($fullpath, $this->id);
+    Log::addTemp('result', $res);
+    Log::addTemp('dir' . (string) $this->getFileDir(), \scandir($this->getFileDir()));
+
+    remove_filter('as3cf_wait_for_generate_attachment_metadata', array($this, 'returnTrue'));
+
+  }
+
+
+  public function returnTrue()
+  {
+     return true;
   }
 
   // Convert from old metadata if needed.
@@ -1237,9 +1282,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        if (isset($data['retinasOpt']))
        {
            $count = $data['retinasOpt'];
-          // var_dump('RetinasOpt: ' . $count);
+
            $retinas = $this->getRetinas();
-           //print_R($retinas);
+
            foreach($retinas as $index => $retinaObj) // Thumbnail Model
            {
 
@@ -1415,7 +1460,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       }
 
       // addUnlisted is called by IsProcessable, file might not exist.
-      if (! $this->exists())
+      // If virtual, we can't read dir, don't do it.
+      if (! $this->exists() || $this->is_virtual())
       {
           $this->unlistedChecked = true;
          return;
@@ -1487,7 +1533,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       $added = false;
       foreach($unlisted as $unName)
       {
-          $thumbObj = $this->getThumbnailModel($path . $unName);
+          $thumbObj = $this->getThumbnailModel($path . $unName, $unName);
           if ($thumbObj->getExtension() == 'webp') // ignore webp files.
           {
             continue;

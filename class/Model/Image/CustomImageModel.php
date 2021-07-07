@@ -58,7 +58,10 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
     {
 
         $fs = \wpSPIO()->filesystem();
-        $url = $fs->pathToUrl($this);
+        if ($this->is_virtual())
+          $url = $this->getFullPath();
+        else
+          $url = $fs->pathToUrl($this);
 
         if ($this->isProcessable())
           return array($url);
