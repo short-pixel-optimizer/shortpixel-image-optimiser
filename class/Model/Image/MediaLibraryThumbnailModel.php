@@ -165,8 +165,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
   public function getOptimizeUrls()
   {
-    $fs = \wpSPIO()->filesystem();
-    // return $url
     if (! $this->isProcessable() )
       return array();
 
@@ -181,9 +179,11 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
   public function getURL()
   {
       if ($this->size == 'original')
-        return wp_get_original_image_url($this->id);
+        $url = wp_get_original_image_url($this->id);
       else
-        return wp_get_attachment_image_url($this->id, $this->size);
+        $url = wp_get_attachment_image_url($this->id, $this->size);
+
+      return $this->fs()->checkURL($url);
   }
 
   // Just a placeholder for abstract, shouldn't do anything.

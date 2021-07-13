@@ -118,15 +118,18 @@ class BulkViewController extends \ShortPixel\Controller
 
       foreach($logs as $logData)
       {
+
           $logFile = $fs->getFile($backupDir->getPath() . 'bulk_' . $logData['date'] . '.log');
           $errors = $logData['fatal_errors'];
 
           if ($logFile->exists())
             $errors = '<a href="' . $fs->pathToUrl($logFile) . '">' . $errors . '</a>';
 
-          $view[] = array($logData['processed'], $errors,  UiHelper::formatTS($logData['date']));
+          $view[$logData['date']] = array($logData['processed'], $errors,  UiHelper::formatTS($logData['date']));
 
       }
+
+      krsort($view);
 
       return $view;
   }

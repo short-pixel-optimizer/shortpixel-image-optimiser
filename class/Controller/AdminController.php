@@ -32,8 +32,6 @@ class AdminController extends \ShortPixel\Controller
     */
     public function handleImageUploadHook($meta, $id)
     {
-    //    return \wpSPIO()->getShortPixel()->handleMediaLibraryImageUpload($meta, $ID);
-
         // Media only hook
         $mediaItem = \wpSPIO()->filesystem()->getImage($id, 'media');
         $control = new OptimizeController();
@@ -55,7 +53,6 @@ class AdminController extends \ShortPixel\Controller
       {
           $mediaItem->convertPNG();
       }
-      //return \wpSPIO()->getShortPixel()->convertPng2Jpg($params);
     }
 
     /** When replacing happens.
@@ -64,8 +61,12 @@ class AdminController extends \ShortPixel\Controller
     public function handleReplaceHook($params)
     {
       if(isset($params['post_id'])) { //integration with EnableMediaReplace - that's an upload for replacing an existing ID
-          $itemHandler = \wpSPIO()->getShortPixel()->onDeleteImage( intval($params['post_id']) );
-          $itemHandler->deleteAllSPMeta();
+
+          $post_id = intval($params['post_id']);
+          $fs = \wpSPIO()->filesystem();
+          
+          $imageObj = $fs->getImage($post_id, 'media');
+          $imageObj->onDelete();
       }
     }
 

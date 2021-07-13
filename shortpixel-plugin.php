@@ -75,7 +75,6 @@ class ShortPixelPlugin
   /** Mainline Admin Init. Tasks that can be loaded later should go here */
   public function init()
   {
-      //$this->getShortPixel()->loadHooks();
       $notices = Notices::getInstance(); // This hooks the ajax listener
 
   }

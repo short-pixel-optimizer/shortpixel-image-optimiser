@@ -342,9 +342,7 @@ class OtherMediaController extends \ShortPixel\Controller
           return array();
       }
       $fs =  \wpSPIO()->fileSystem();
-      //$cache = new \ShortPixel\Controller\CacheController();
 
-      //$spMetaDao = \wpSPIO()->getShortPixel()->getSpMetaDao();
       if ($args['only_count'])
         $selector = 'count(id) as id';
       else

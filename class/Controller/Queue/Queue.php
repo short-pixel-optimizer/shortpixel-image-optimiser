@@ -366,6 +366,7 @@ abstract class Queue
         $item->compressionType = \wpSPIO()->settings()->compressionType;
 
         $urls = $imageModel->getOptimizeUrls();
+
         $counts = new \stdClass;
         $counts->creditCount = 0;  // count the used credits for this item.
         $counts->avifCount = 0;
@@ -466,38 +467,25 @@ abstract class Queue
 
         $item->flags = $flags;
 
+        // Former securi function, add timestamp to all URLS, for cache busting.
+        $urls = $this->timestampURLS($urls, $imageModel->get('id'));
         $item->urls = apply_filters('shortpixel_image_urls', $urls, $imageModel->get('id'));
-        //$items = array($item);
         $item->counts = $counts;
-
-      /*  if ($webpLeft) // split the webp request with a dif. flag.
-        {
-           $webpItem = clone $item;
-           $webpItem->flags = array('webp');
-           $webpItem->urls = apply_filters('shortpixel_image_urls', $webps, $imageModel->get('id'));
-           if (property_exists($webpItem, 'png2jpg'))
-            unset($webpItem->png2jpg);
-           $counts->creditCount += count($webpItem->urls);
-           $counts->webpCount += count($webpItem->urls);
-           $items[] = $webpItem;
-        }
-        if ($avifLeft)
-        {
-           $avifItem = clone $item;
-           $avifItem->flags = array('avif');
-           $avifItem->urls = apply_filters('shortpixel_image_urls', $avifs, $imageModel->get('id'));
-           if (property_exists($avifItem, 'png2jpg'))
-              unset($avifItem->png2jpg);
-           $counts->creditCount += count($avifItem->urls);
-           $counts->avifCount += count($avifItem->urls);
-           $items[] = $avifItem;
-        }
-
-        //$item->paths = apply_filters('shortpixel/queue/paths', $paths, $imageModel->get('id'));
-        $items[0]->counts = $counts; */
 
 
         return $item;
+    }
+
+    protected function timestampURLS($urls, $id)
+    {
+      // https://developer.wordpress.org/reference/functions/get_post_modified_time/
+      $time = get_post_modified_time('U', false, $id );
+      foreach($urls as $index => $url)
+      {
+        $urls[$index] = add_query_arg('ver', $time, $url);
+      }
+
+      return $urls;
     }
 
     private function countQueueItem()

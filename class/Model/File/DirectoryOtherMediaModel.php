@@ -140,8 +140,6 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
       $result = $wpdb->query($sql);
 
-      //return \wpSPIO()->getShortPixel()->getSpMetaDao()->removeFolder($id);
-
   }
 
   public function isRemoved()
@@ -327,7 +325,6 @@ class DirectoryOtherMediaModel extends DirectoryModel
     private function loadFolderByPath($path)
     {
         //$folders = self::getFolders(array('path' => $path));
-         //s\wpSPIO()->getShortPixel()->getSpMetaDao()->getFolder($path);
          global $wpdb;
 
          $sql = 'SELECT * FROM ' . $wpdb->prefix . 'shortpixel_folders where path = %s ';

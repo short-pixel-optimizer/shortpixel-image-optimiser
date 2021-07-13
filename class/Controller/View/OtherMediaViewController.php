@@ -133,12 +133,11 @@ class OtherMediaViewController extends \ShortPixel\Controller
 
       protected function getItems()
       {
-          //$spMetaDao = \wpSPIO()->getShortPixel()->getSpMetaDao();
           $fs = \wpSPIO()->filesystem();
           //$total_items  =
 
           // [BS] Moving this from ts_added since often images get added at the same time, resulting in unpredictable sorting
-          $items = $this->queryItems(); //$spMetaDao->getPaginatedMetas(\wpSPIO()->env()->has_nextgen, $this->getFilter(), $this->items_per_page, $this->currentPage, $this->orderby, $this->order);
+          $items = $this->queryItems();
 
           $removed = array();
           foreach($items as $index => $item)
@@ -242,11 +241,6 @@ class OtherMediaViewController extends \ShortPixel\Controller
           return $results;
       }
 
-
-    //  protected function record_count() {
-          //$spMetaDao = \wpSPIO()->getShortPixel()->getSpMetaDao();
-          //return $spMetaDao->getCustomMetaCount($this->getFilter());
-      //}
 
 
       /** This is a workaround for doing wp_redirect when doing an action, which doesn't work due to the route. Long-term fix would be using Ajax for the actions */

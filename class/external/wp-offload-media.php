@@ -7,6 +7,7 @@ class wpOffload
 {
     protected $as3cf;
     protected $active = false;
+    protected $offloading = true;
     private $itemClassName;
 
     protected $settings;
@@ -37,10 +38,11 @@ class wpOffload
       $this->active = true;
 
 
+
       // if setting to upload to bucket is off, don't hook or do anything really.
       if (! $this->as3cf->get_setting( 'copy-to-s3' ))
       {
-        return;
+        $this->offloading = false;
       }
 
       if ('cloudfront' === $this->as3cf->get_setting( 'domain' ))
@@ -305,6 +307,9 @@ echo "<PRE>"; var_dump($item->key(wp_basename($original_url))); echo "</PRE>";
 
     public function image_upload($id)
     {
+        if (! $this->offloading)
+          return false;
+
         $item = $this->getItemById($id);
 
         if ( $item === false && ! $this->as3cf->get_setting( 'copy-to-s3' ) ) {
@@ -325,6 +330,9 @@ echo "<PRE>"; var_dump($item->key(wp_basename($original_url))); echo "</PRE>";
     {
         $settings = \wpSPIO()->settings();
         $fs = \wpSPIO()->filesystem();
+
+        if (! $this->offloading)
+          return false;
 
         if ($settings->autoMediaLibrary)
         {

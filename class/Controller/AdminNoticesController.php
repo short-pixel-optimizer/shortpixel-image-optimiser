@@ -273,8 +273,7 @@ class AdminNoticesController extends \ShortPixel\Controller
     protected function doQuotaNotices()
     {
       $settings = \wpSPIO()->settings();
-      //$currentStats = $settings->currentStats;
-    //  $shortpixel = \wpSPIO()->getShortPixel();
+
       $quotaController = QuotaController::getInstance();
 
       if (! \wpSPIO()->settings()->verifiedKey)

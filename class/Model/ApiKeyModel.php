@@ -281,7 +281,6 @@ class ApiKeyModel extends \ShortPixel\Model
   // Does remote Validation of key. In due time should be replaced with something more lean.
   private function remoteValidate($key)
   {
-//    return \wpSPIO()->getShortPixel()->getQuotaInformation($key, true, true);
    $qControl = QuotaController::getInstance();
    $quotaData = $qControl->remoteValidateKey($key);
 

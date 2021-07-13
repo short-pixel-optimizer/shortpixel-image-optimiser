@@ -101,6 +101,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
           $this->height = $height;
          }
       }
+
     }
     /* Check if an image in theory could be processed. Check only exclusions, don't check status etc */
     public function isProcessable()
@@ -340,6 +341,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                 if ($this->is_virtual())
                 {
                     $filepath = apply_filters('shortpixel/file/virtual/translate', $this->getFullPath(), $this);
+
                     $virtualFile = $fs->getFile($filepath);
                     $copyok = $tempFile->copy($virtualFile);
                 }
@@ -820,6 +822,11 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
           }
 
         return $counter;
+    }
+
+    protected function fs()
+    {
+       return \wpSPIO()->filesystem();
     }
 
 } // model

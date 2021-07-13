@@ -389,15 +389,28 @@ class AjaxController
 
         $ret['origUrl'] = $backup_url; // $backupUrl . $urlBkPath . $meta->getName();
 
-          $ret['optUrl'] = $fs->pathToUrl($imageObj); // $uploadsUrl . $meta->getWebPath();
+          $ret['optUrl'] = $imageObj->getURL(); // $uploadsUrl . $meta->getWebPath();
           $ret['width'] = $imageObj->getMeta('originalWidth'); // $meta->getActualWidth();
           $ret['height'] = $imageObj->getMeta('originalHeight');
 
           if (is_null($ret['width']) || $ret['width'] == false)
           {
 
-              $ret['width'] = $imageObj->get('width'); // $imageSizes[0];
-              $ret['height']= $imageObj->get('height'); //imageSizes[1];
+              if (! $imageObj->is_virtual())
+              {
+                $ret['width'] = $imageObj->get('width'); // $imageSizes[0];
+                $ret['height']= $imageObj->get('height'); //imageSizes[1];
+              }
+              else
+              {
+                  $size = getimagesize($backupFile->getFullPath());
+                  if (is_array($size))
+                  {
+                     $ret['width'] = $size[0];
+                     $ret['height'] = $size[1];
+                  }
+
+              }
 
           }
 

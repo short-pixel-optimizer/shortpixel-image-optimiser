@@ -59,8 +59,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
   public function getOptimizeUrls()
   {
-     $fs = \wpSPIO()->filesystem();
-
      $settings = \wpSPIO()->settings();
 
      $url = $this->getURL();
@@ -101,7 +99,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   // Try to get the URL via WordPress
   public function getURL()
   {
-     return wp_get_attachment_url($this->id);
+     return $this->fs()->checkURL(wp_get_attachment_url($this->id));
   }
 
   /** Get FileTypes that might be optimized. Checking for setting should go via isProcessableFileType! */
@@ -117,7 +115,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       }
 
       $toOptimize = array();
-      $fs = \WPSPIO()->filesystem();
 
       // main file.
       if (! isset($types[0]))
@@ -167,6 +164,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   protected function loadThumbnailsFromWP()
   {
     $wpmeta = $this->getWPMetaData();
+
+    if (is_null($this->originalWidth))
+      $this->originalWidth = $wpmeta['width'];
+
+    if (is_null($this->originalWidth))
+      $this->originalHeight = $wpmeta['height']; 
+
 
     $thumbnails = array();
     if (isset($wpmeta['sizes']))
@@ -298,7 +302,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       if (\wpSPIO()->settings()->optimizeRetina)
         $this->retinas = $this->getRetinas();
 
-      //if (\wpSPIO()->settings()->createWebp)
       $this->webps = $this->getWebps();
 
   }
@@ -428,25 +431,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         return $improvements;
   }
 
-/* Don't know why this is here.
-  protected function createBackup()
-  {
-      $bool = parent::createbackup();
-
-      if ($bool)
-      {
-         foreach($this->thumbnails as $thumbnail)
-        {
-           $bool = $thumbnail->createBackup();
-           if (! $bool) // if something goes wrong, abort.
-             return $bool;
-        }
-
-      }
-
-      return $bool;
-  }
-*/
 
   /** @param String Full Path to the Thumbnail File
   *   @return Object ThumbnailModel

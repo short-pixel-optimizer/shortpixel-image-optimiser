@@ -70,12 +70,6 @@ class EditMediaViewController extends \ShortPixel\Controller
           else
             $this->view->list_actions = '';
 
-          echo "EDITMEDIAV";
-          var_dump($this->imageModel->getFullPath());
-        //  $res = wp_create_image_subsizes($this->imageModel->getFullPath(), $this->post_id);
-          //var_dump($res);
-
-
           $this->view->actions = UiHelper::getActions($this->imageModel);
           // $this->view->actions = $actions;
           $this->view->stats = $this->getStatistics();

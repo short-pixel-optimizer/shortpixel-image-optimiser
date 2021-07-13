@@ -269,6 +269,21 @@ Class FileSystemController extends \ShortPixel\Controller
         return false;
     }
 
+    public function checkURL($url)
+    {
+        if (! $this->pathIsURL($url))
+        {
+           //$siteurl = get_option('siteurl');
+           if (strpos($url, get_site_url()) == false)
+           {
+              $url = get_site_url(null, $url);
+
+           }
+        }
+
+        return apply_filters('shortpixel/filesystem/url', $url);
+    }
+
     /** Utility function to check if a path is an URL
     *  Checks if this path looks like an URL.
     * @param $path String  Path to check

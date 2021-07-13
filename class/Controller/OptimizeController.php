@@ -221,22 +221,21 @@ class OptimizeController
           return $json;
         }
 
-        $mediaQ = $this->getQueue('media');
-        $customQ = $this->getQueue('custom');
-
-    //    Log::addTemp("Media Queue Name " . $mediaQ->getQueueName(), $this->isBulk);
-      //  Log::addtemp('CustomQ - ' . $customQ->getQueueName());
-
         // Here prevent bulk from running when running flag is off
 
         // Here prevent a runTick is the queue is empty and done already ( reliably )
 
         $results = new \stdClass;
         if ( in_array('media', $queueTypes))
+        {
+          $mediaQ = $this->getQueue('media');
           $results->media = $this->runTick($mediaQ); // run once on mediaQ
+        }
         if ( in_array('custom', $queueTypes))
+        {
+          $customQ = $this->getQueue('custom');
           $results->custom = $this->runTick($customQ);
-
+        }
         $results->total = $this->calculateStatsTotals($results);
     //    $this->checkCleanQueue($results);
 

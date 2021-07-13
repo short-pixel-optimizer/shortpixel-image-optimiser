@@ -83,7 +83,7 @@ window.ShortPixelProcessor =
 
         if (typeof ShortPixelScreen == 'undefined')
         {
-           console.error('Missing Screen for feedback!');
+           console.error('Missing Screen!');
            return;
         }
         else

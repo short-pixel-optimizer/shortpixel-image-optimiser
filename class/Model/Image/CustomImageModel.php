@@ -212,8 +212,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
     public function loadMeta()
     {
-    //  $metadao = \wpSPIO()->getShortPixel()->getSpMetaDao();
-    //  $imagerow = $metadao->getItem($this->id);
+
       global $wpdb;
 
       $sql = 'SELECT * FROM '  . $wpdb->prefix . 'shortpixel_meta where id = %d';
