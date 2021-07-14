@@ -169,7 +169,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       $this->originalWidth = $wpmeta['width'];
 
     if (is_null($this->originalWidth))
-      $this->originalHeight = $wpmeta['height']; 
+      $this->originalHeight = $wpmeta['height'];
 
 
     $thumbnails = array();
@@ -499,7 +499,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
              foreach($metadata->thumbnails as $name => $thumbMeta) // <!-- ThumbMeta is Object
              {
                // Load from Class and file, might be an unlisted one. Meta doesn't save file info, so without might prove a problem!
-               $thumbObj = $this->getThumbnailModel($this->getFileDir() . $thumbMeta['file'], $name);
+
+               // If file is not set, it's indication it's not a unlisted image, we can't add it. 
+               if (! property_exists($thumbMeta, 'file'))
+                 continue;
+
+               $thumbObj = $this->getThumbnailModel($this->getFileDir() . $thumbMeta->file, $name);
 
                $newMeta = new ImageThumbnailMeta();
                $newMeta->fromClass($thumbMeta);
