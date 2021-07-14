@@ -10,25 +10,29 @@ namespace ShortPixel;
 
 
     <h3 class="heading"><span><img src="<?php echo \wpSPIO()->plugin_url('res/img/robo-slider.png'); ?>"></span>
-      Welcome to the Bulk Processing page. You can add a bulk job by selecting one of the options below
+      <?php _e('Welcome to the Bulk Processing page. You can add a bulk job by selecting one of the options below', 'shortpixel-image-optimiser'); ?>
     </h3>
 
     <div class='interface wrapper'>
 
       <div class='bulk-wrapper'>
         <button type="button" class="button-primary" id="start-optimize" data-action="open-panel" data-panel="selection" <?php echo ($this->view->error) ? "disabled" : ''; ?>  >
-            <span class='dashicons dashicons-controls-play' data-action="open-panel" data-panel="selection">&nbsp;</span> Optimize
+            <span class='dashicons dashicons-controls-play' data-action="open-panel" data-panel="selection">&nbsp;</span> <?php _e('Start optimizing','shortpixel-image-optimiser'); ?>
         </button>
       </div>
 
-      <p class='description'>Here you can (re)optimize your Media Library, image files from your theme or other media folders that you are using on your site.
+      <p class='description'><?php _e('Here you can (re)optimize your Media Library, image files from your theme or other media folders that you are using on your site.', 'shortpixel-image-optimiser'); ?></p>
 
    </div>
 
    <?php if ($this->view->error): ?>
      <div class='bulk error'>
         <h3><?php echo $this->view->errorTitle; ?></h3>
-        <?php echo $this->view->errorContent; ?>
+        <p><?php echo $this->view->errorContent; ?></p>
+        <?php if (property_exists($this->view, 'errorText')): ?>
+            <p class='text'><?php echo $this->view->errorText ?></p>
+        <?php endif; ?>
+
      </div>
 
    <?php endif; ?>
@@ -46,9 +50,12 @@ namespace ShortPixel;
         foreach ($this->view->logs as $logItem):
         {
           echo "<div class='data'>";
-          foreach($logItem as $item)
+          foreach($logItem as $field => $item)
           {
-            echo "<span>$item</span>";
+            if ($field == 'date')
+              echo '<span class="checkmark_green date">' . sprintf(__('%sCompleted%s on %s','shortpixel-image-optimiser'), '<b>','</b>', $item) . '</span>';
+            else
+              echo "<span>$item</span>";
           }
           echo "</div>";
         }

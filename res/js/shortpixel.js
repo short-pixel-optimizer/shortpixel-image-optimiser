@@ -54,13 +54,28 @@ var ShortPixel = function() {
             }
         });
 
-        window.ShortPixelProcessor.Load();
+        if (window.ShortPixelProcessor && ShortPixelConstants[0].HAS_QUOTA == 1)
+          window.ShortPixelProcessor.Load();
 
         this.didInit = true;
 
-        //check if  bulk processing
-      //  checkQuotaExceededAlert();
-      //  checkBulkProgress();
+        /* Future Feature, instead of calling Spixel directly?
+        var dials = document.querySelector('.percentDial');
+        for (i = 0; i < dials.children.length; i++)
+        {
+            console.log(dials);
+            var dial = dials[i];
+            if (dial.getAttribute('data-dialsize'))
+            {
+               var size = dial.getAttribute('data-dialsize');
+            }
+            else
+              var size = 60;
+
+            this.percentDial(dial.attr('id'),60 );
+        } */
+
+
     }
 
     function setOptions(options) {
@@ -771,7 +786,6 @@ var ShortPixel = function() {
     }
 
     function displayComparerPopup(width, height, imgOriginal, imgOptimized) {
-        console.trace('display poppie');
         //image sizes
         var origWidth = width;
         //depending on the sizes choose the right modal
@@ -1396,20 +1410,6 @@ function optimizeThumbs(id) {
     });
 }
 
-/*
-function dismissShortPixelNoticeExceed(e) {
-    jQuery("#wp-admin-bar-shortpixel_processing").hide();
-    var data = { action  : 'shortpixel_dismiss_notice',
-                 notice_id: 'exceed'};
-    jQuery.get(ShortPixel.AJAX_URL, data, function(response) {
-        data = JSON.parse(response);
-        if(data["Status"] == ShortPixel.STATUS_SUCCESS) {
-            console.log("dismissed");
-        }
-    });
-    e.preventDefault();
-} */
-
 /* @todo Must go, still in use in some parts */
 function dismissShortPixelNotice(id) {
     jQuery("#short-pixel-notice-" + id).hide();
@@ -1435,99 +1435,7 @@ function dismissFileError() {
     });
 }
 
-function PercentageAnimator(outputSelector, targetPercentage) {
-    this.animationSpeed = 10;
-    this.increment = 2;
-    this.curPercentage = 0;
-    this.targetPercentage = targetPercentage;
-    this.outputSelector = outputSelector;
 
-    this.animate = function(percentage) {
-        this.targetPercentage = percentage;
-        setTimeout(PercentageTimer.bind(null, this), this.animationSpeed);
-    }
-}
-
-function PercentageTimer(animator) {
-    if (animator.curPercentage - animator.targetPercentage < -animator.increment) {
-        animator.curPercentage += animator.increment;
-    } else if (animator.curPercentage - animator.targetPercentage > animator.increment) {
-        animator.curPercentage -= animator.increment;
-    } else {
-        animator.curPercentage = animator.targetPercentage;
-    }
-
-    jQuery(animator.outputSelector).text(animator.curPercentage + "%");
-
-    if (animator.curPercentage != animator.targetPercentage) {
-        setTimeout(PercentageTimer.bind(null,animator), animator.animationSpeed)
-    }
-}
-
-function progressUpdate(percent, message) {
-    var progress = jQuery("#bulk-progress");
-    if(progress.length) {
-        jQuery(".progress-left", progress).css("width", percent + "%");
-        jQuery(".progress-img", progress).css("left", percent + "%");
-        if(percent > 24) {
-            jQuery(".progress-img span", progress).html("");
-            jQuery(".progress-left", progress).html(percent + "%");
-        } else {
-            jQuery(".progress-img span", progress).html(percent + "%");
-            jQuery(".progress-left", progress).html("");
-        }
-        jQuery(".bulk-estimate").html(message);
-    }
-}
-
-
-
-function sliderUpdate(id, thumb, bkThumb, percent, filename){
-    var oldSlide = jQuery(".bulk-slider div.bulk-slide:first-child");
-    if(oldSlide.length === 0) {
-        return;
-    }
-    if(oldSlide.attr("id") != "empty-slide") {
-        oldSlide.hide();
-    }
-    oldSlide.css("z-index", 1000);
-    jQuery(".bulk-img-opt", oldSlide).attr("src", "");
-    if(typeof bkThumb === 'undefined') {
-        bkThumb = '';
-    }
-    if(bkThumb.length > 0) {
-        jQuery(".bulk-img-orig", oldSlide).attr("src", "");
-    }
-
-    var newSlide = oldSlide.clone();
-    newSlide.attr("id", "slide-" + id);
-    jQuery(".bulk-img-opt", newSlide).attr("src", thumb);
-    if(bkThumb.length > 0) {
-        jQuery(".img-original", newSlide).css("display", "inline-block");
-        jQuery(".bulk-img-orig", newSlide).attr("src", bkThumb);
-    } else {
-        jQuery(".img-original", newSlide).css("display", "none");
-    }
-    jQuery(".bulk-opt-percent", newSlide).html('<input type="text" class="dial" value="' + percent + '"/>');
-
-    jQuery(".bulk-slider").append(newSlide);
-    ShortPixel.percentDial("#" + newSlide.attr("id") + " .dial", 100);
-
-    jQuery(".bulk-slider-container span.filename").html("&nbsp;&nbsp;" + filename);
-    if(oldSlide.attr("id") == "empty-slide") {
-        oldSlide.remove();
-        jQuery(".bulk-slider-container").css("display", "block");
-    } else {
-        oldSlide.animate({ left: oldSlide.width() + oldSlide.position().left }, 'slow', 'swing', function(){
-            oldSlide.remove();
-            newSlide.fadeIn("slow");
-        });
-    }
-}
-
-function hideSlider() {
-    jQuery(".bulk-slider-container").css("display", "none");
-}
 
 function showStats() {
     var statsDiv = jQuery(".bulk-stats");

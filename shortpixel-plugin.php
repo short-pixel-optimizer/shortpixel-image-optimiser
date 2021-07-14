@@ -3,6 +3,7 @@ namespace ShortPixel;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
+use ShortPixel\Controller\QuotaController as QuotaController;
 use ShortPixel\Controller\AjaxController as AjaxController;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 
@@ -345,6 +346,8 @@ class ShortPixelPlugin
     $optimizeController = new OptimizeController();
     $optimizeController->setBulk($is_bulk_page);
 
+    $quotaController = QuotaController::getInstance();
+
 
     // FileTree in Settings
     wp_register_script('sp-file-tree', plugins_url('/res/js/sp-file-tree.min.js',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
@@ -381,6 +384,11 @@ class ShortPixelPlugin
 
     wp_register_script ('shortpixel-screen-bulk', plugins_url('/res/js/screens/screen-bulk.js',SHORTPIXEL_PLUGIN_FILE), array('jquery', 'shortpixel-processor' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
+    // screen translations. Can all be loaded on the same var, since only one screen can be active.
+    wp_localize_script('shortpixel-screen-bulk', 'shortPixelScreen', array(
+        'endBulk' => __('This will stop the bulk processing and return to the start. Do you want o to do this?', 'shortpixel-image-optimiser')
+    ));
+
   //  $mediaQ = MediaLibraryQueue::getInstance();
   //  $customQ = CustomQueue::getInstance();
 
@@ -415,6 +423,7 @@ class ShortPixelPlugin
         'FRONT_BOOTSTRAP'=> $settings->frontBootstrap && (!isset($settings->lastBackAction) || (time() - $settings->lastBackAction > 600)) ? 1 : 0,
         'AJAX_URL'=>admin_url('admin-ajax.php'),
         'BULK_SECRET' => $secretKey,
+        'HAS_QUOTA' => ($quotaController->hasQuota()) ? 1 : 0,
 
     ));
 
@@ -483,9 +492,6 @@ class ShortPixelPlugin
     wp_register_style('sp-file-tree', plugins_url('/res/css/sp-file-tree.min.css',SHORTPIXEL_PLUGIN_FILE),array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
 
     wp_register_style('shortpixel', plugins_url('/res/css/short-pixel.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
-
-    //modal - used in settings for selecting folder
-    wp_register_style('shortpixel-modal', plugins_url('/res/css/short-pixel-modal.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
 
     // notices. additional styles for SPIO.
     wp_register_style('shortpixel-notices', plugins_url('/res/css/shortpixel-notices.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);

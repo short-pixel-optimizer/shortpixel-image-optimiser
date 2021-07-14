@@ -103,8 +103,6 @@ var ShortPixelToolTip = function(reserved, processor)
         tooltip = this.GetToolTip();
         tooltip.classList.remove('shortpixel-hide');
         tooltip.classList.add('shortpixel-processing');
-
-
     }
 
     this.AddNotice = function(message)
@@ -134,7 +132,6 @@ var ShortPixelToolTip = function(reserved, processor)
       tooltip.classList.remove('shortpixel-paused');
       tooltip.classList.add('shortpixel-processing');
       this.ToggleIcon();
-
 
     }
     this.ProcessEnd = function()

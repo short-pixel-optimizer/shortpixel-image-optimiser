@@ -521,7 +521,7 @@ class AdminNoticesController extends \ShortPixel\Controller
           $message .= '<div style="float:right; margin-top: 10px">
               <div class="bulk-progress-indicator" style="height: 110px">
                   <div style="margin-bottom:5px">' . __('Average image<br>reduction so far:','shortpixel-image-optimiser') . '</div>
-                  <div id="sp-avg-optimization"><input type="text" id="sp-avg-optimization-dial" value="' . round($averageCompression) . '" class="dial"></div>
+                  <div id="sp-avg-optimization"><input type="text" id="sp-avg-optimization-dial" value="' . round($averageCompression) . '" class="dial percentDial" data-dialsize="60"></div>
                   <script>
                       jQuery(function() {
                           ShortPixel.percentDial("#sp-avg-optimization-dial", 60);

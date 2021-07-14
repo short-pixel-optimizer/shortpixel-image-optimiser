@@ -13,6 +13,7 @@
 * Required function of screen are : HandleImage HandleError UpdateStats
 * Optional functions :  QueueStatus, GeneralResponses
 */
+
 window.ShortPixelProcessor =
 {
   //  spp: {},
@@ -244,7 +245,6 @@ window.ShortPixelProcessor =
            }
         }
 
-
         this.tooltip.ProcessEnd();
     },
     ResumeProcess: function()
@@ -266,7 +266,6 @@ window.ShortPixelProcessor =
     },
     CheckResponse: function(message)
     {
-
       var data = message.data;
 
       if (data.status == true && data.response) // data status is from shortpixel worker, not the response object

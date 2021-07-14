@@ -52,7 +52,8 @@ class BulkViewController extends \ShortPixel\Controller
     {
         $this->view->error = true;
         $this->view->errorTitle = __('Quota Exceeded','shortpixel-image-optimiser');
-        $this->view->errorContent = __('Can\'t start the Bulk Process due to lack of credits', 'shortpixel-image-optimiser');
+        $this->view->errorContent = __('Can\'t start the Bulk Process due to lack of credits.', 'shortpixel-image-optimiser');
+        $this->view->errorText = __('Please check or add quota and refresh the page', 'shortpixel-image-optimiser');
         $this->view->showError = 'quota';
 
     }
@@ -99,10 +100,10 @@ class BulkViewController extends \ShortPixel\Controller
 
   private function unload()
   {
-     wp_dequeue_script('shortpixel-screen-bulk');
-     wp_dequeue_script('shortpixel-bulk');
-     wp_dequeue_script('shortpixel');
-     wp_dequeue_script('shortpixel-processor');
+    //wp_dequeue_script('shortpixel-screen-bulk');
+  //   wp_dequeue_script('shortpixel-bulk');
+    // wp_dequeue_script('shortpixel');
+    // wp_dequeue_script('shortpixel-processor');
 
 
   }
@@ -125,7 +126,9 @@ class BulkViewController extends \ShortPixel\Controller
           if ($logFile->exists())
             $errors = '<a href="' . $fs->pathToUrl($logFile) . '">' . $errors . '</a>';
 
-          $view[$logData['date']] = array($logData['processed'], $errors,  UiHelper::formatTS($logData['date']));
+
+
+          $view[$logData['date']] = array('images' => $logData['processed'], 'errors' => $errors, 'date' => UiHelper::formatTS($logData['date']) );
 
       }
 

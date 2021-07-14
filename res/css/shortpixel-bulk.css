@@ -14,7 +14,7 @@
 .shortpixel-bulk-wrapper h3.heading {
   margin: 15px 0 15px 0px;
   padding-left: 10px;
-  font-size: 19px;
+  font-size: 20px;
   font-weight: 400;
   line-height: 42px;
   border-bottom: 1px solid #ccc;
@@ -45,7 +45,6 @@
   width: 90%;
   min-height: 80vh;
   position: relative;
-  border-radius: 30px;
 }
 .shortpixel-bulk-wrapper .screen-wrapper .shortpixel-bulk-loader {
   left: 0;
@@ -105,8 +104,15 @@
   display: inline-block;
   width: 100%;
 }
-.shortpixel-bulk-wrapper .panel .error {
+.shortpixel-bulk-wrapper .panel .error h3 {
+  margin-left: 12px;
+}
+.shortpixel-bulk-wrapper .panel .error p {
+  margin-left: 12px;
   color: #ff0000;
+}
+.shortpixel-bulk-wrapper .panel .error p.text {
+  color: #000;
 }
 .shortpixel-bulk-wrapper .panel .errorbox {
   display: block;
@@ -158,6 +164,9 @@
   border: 0;
 }
 .shortpixel-bulk-wrapper section.panel.dashboard .bulk-wrapper {
+  background: url("../img/bulk/dashboard-background.svg") no-repeat;
+  background-size: cover;
+  background-position: left center;
   background-color: #116C7D;
   text-align: center;
   height: 150px;
@@ -165,6 +174,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+.shortpixel-bulk-wrapper section.panel.dashboard .bulk-wrapper .dashboard-image {
+  z-index: 1;
+  position: absolute;
+  left: 0;
+  right: 0;
 }
 .shortpixel-bulk-wrapper section.panel.dashboard .bulk-wrapper button {
   color: #ffffff;
@@ -189,11 +204,12 @@
 }
 .shortpixel-bulk-wrapper section.panel.dashboard .dashboard-log {
   display: table;
-  width: 50%;
+  width: 80%;
   margin: 0 auto;
 }
 .shortpixel-bulk-wrapper section.panel.dashboard .dashboard-log h3 {
   display: table-caption;
+  text-align: center;
 }
 .shortpixel-bulk-wrapper section.panel.dashboard .dashboard-log > div {
   display: table-row;
@@ -204,9 +220,24 @@
 }
 .shortpixel-bulk-wrapper section.panel.dashboard .dashboard-log .head span {
   font-weight: 700;
+  padding-left: 15px;
 }
 .shortpixel-bulk-wrapper section.panel.dashboard .dashboard-log .data span {
+  border-bottom: 1px solid #EBF5FF;
+  border-top: 1px solid #EBF5FF;
   font-size: 15px;
+  padding-left: 10px;
+}
+.shortpixel-bulk-wrapper section.panel.dashboard .dashboard-log .data span:first-child {
+  border-left: 1px solid #EBF5FF;
+}
+.shortpixel-bulk-wrapper section.panel.dashboard .dashboard-log .data span:last-child {
+  border-right: 1px solid #EBF5FF;
+}
+.shortpixel-bulk-wrapper section.panel.dashboard .dashboard-log .data span.date {
+  color: #1FBEC9;
+  background: url("../img/bulk/checkmark.svg") left center no-repeat;
+  padding-left: 29px;
 }
 .shortpixel-bulk-wrapper section.progressbar {
   margin: 30px 0;

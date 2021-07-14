@@ -23,6 +23,11 @@ var ShortPixelScreen = function (MainScreen, processor)
       window.addEventListener('shortpixel.processor.responseHandled', this.CheckPanelData.bind(this));
       window.addEventListener('shortpixel.bulk.onUpdatePanelStatus', this.EventPanelStatusUpdated.bind(this));
       window.addEventListener('shortpixel.bulk.onSwitchPanel', this.EventPanelSwitched.bind(this));
+      window.addEventListener('shortpixel.process.stop', function (Event)
+      {
+        Event.preventDefault();
+        this.processor.StopProcess.bind(this.processor)
+      }.bind(this) );
 
 
       var processData = ShortPixelProcessorData.startData;
@@ -44,7 +49,6 @@ var ShortPixelScreen = function (MainScreen, processor)
         this.UpdateStats(initCustom, 'custom');
         this.UpdateStats(initTotal, 'total');
         this.CheckPanelData();
-
 
       if (isPreparing)
       {
@@ -144,6 +148,11 @@ console.log("Screen Init Done", initMedia, isPreparing, isRunning, isFinished);
       var loading = false;
 
     var loader = document.getElementById('bulk-loading');
+
+    // This happens when out of quota.
+    if (loader == null)
+      return;
+
     if (loading)
       loader.setAttribute('data-status', 'loading');
     else
@@ -451,14 +460,15 @@ console.log("Screen Init Done", initMedia, isPreparing, isRunning, isFinished);
   }, */
   this.StopBulk = function(event)
   {
-        if (confirm('[Placeholder finish bulk?]'))
-           this.FinishBulk(event);
+      if (confirm(shortPixelScreen.endBulk))
+         this.FinishBulk(event);
   }
   this.FinishBulk = function(event)
   {
     console.log('Finishing');
-    var data = {screen_action: 'finishBulk'}; //
+    var data = {screen_action: 'finishBulk', callback: 'shortpixel.process.stop'}; //
     this.processor.AjaxRequest(data);
+
     this.SwitchPanel('dashboard');
 
   }
