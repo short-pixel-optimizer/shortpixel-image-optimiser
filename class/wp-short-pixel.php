@@ -2175,7 +2175,15 @@ class WPShortPixel {
                     $crtMeta['height'] = $height;
                 }
                 if($png2jpgMain) {
-                    $crtMeta['file'] = trailingslashit(dirname($crtMeta['file'])) . $fsFile->getFileName();
+
+                    $dirname = dirname($crtMeta['file']);
+                    if ($dirname == '.')
+                      $dirname = '';
+                    else
+                      $dirname = trailingslashit($dirname);
+
+                    $crtMeta['file'] = $dirname . $fsFile->getFileName();
+                    
                     update_attached_file($ID, $crtMeta['file']);
 
                     if($png2jpgSizes && count($png2jpgSizes)) {
