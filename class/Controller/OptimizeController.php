@@ -292,7 +292,27 @@ class OptimizeController
     {
 
       $api = $this->getAPI();
-      $item = $api->processMediaItem($item);
+      if (property_exists($item, 'action'))
+      {
+           $imageObj = $fs->getMediaImage($item->item_id);
+           switch($item->action)
+           {
+              case 'restore';
+                 $imageObj->restore();
+
+              break;
+              case 'migrate':
+                // Loading the item should already be enough to trigger.
+              break;
+           }
+
+           $imageObj->result = new \stdClass;
+           $imageObj->result->is_done = true; // always done
+           $imageObj->result->is_error = false; // for now
+           $imageObj->result->apiResult = ApiController::STATUS_IGNORE;
+      }
+      else // as normal
+        $item = $api->processMediaItem($item);
 
       return $item;
     }

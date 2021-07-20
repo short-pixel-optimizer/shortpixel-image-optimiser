@@ -36,6 +36,17 @@ namespace ShortPixel;
      </div>
 
    <?php endif; ?>
+
+   <?php if (! $this->view->error): ?>
+     <h4><?php _e('Advanced Options','shortpixel-image-optimiser'); ?></h4>
+
+     <div class='advanced-actions'>
+       <button type="button" class="button" id="bulk-restore"><?php _e('Bulk Restore', 'shortpixel-image-optimiser'); ?></button>
+       
+     </div>
+
+   <?php endif; ?>
+
    <?php if (count($this->view->logs) > 0): ?>
 
    <div class='dashboard-log'>

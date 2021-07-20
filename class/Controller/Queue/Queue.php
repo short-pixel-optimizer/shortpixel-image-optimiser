@@ -159,11 +159,17 @@ abstract class Queue
           $queue = array();
           $imageCount = $webpCount = $avifCount = 0;
 
+          $customData = $this->getStatus('custom_data');
+
+          if (! is_null($customData->customOperation))
+            $operation = $customdata->customOperation;
+          else
+            $operation = false;
 
           // maybe while on the whole function, until certain time has elapsed?
           foreach($items as $mediaItem)
           {
-                if ($mediaItem->isProcessable()) // Checking will be done when processing queue.
+                if ($mediaItem->isProcessable() && ! $operation) // Checking will be done when processing queue.
                 {
                     $qObject = $this->imageModelToQueue($mediaItem);
 
@@ -180,7 +186,23 @@ abstract class Queue
                 }
                 else
                 {
-                   if($mediaItem->isOptimized())
+                   if($operation !== false)
+                   {
+                      if ($operation == 'bulk-restore')
+                      {
+                          $qObject = $this->imageModelToQueue($mediaItem);
+                          $qObject->action = 'restore';
+                          $queue[] = array('id' => $mediaItem->get('id'), 'value' => $qObject, 'item_count' => $counts->creditCount);
+                      }
+                      elseif ($operation == 'migrate')
+                      {
+                          $qObject = $this->imageModelToQueue($mediaItem);
+                          $qObject->action = 'migrate';
+
+                          $queue[] = array('id' => $mediaItem->get('id'), 'value' => $qObject, 'item_count' => $counts->creditCount);
+                      }
+                   }
+                   elseif($mediaItem->isOptimized())
                    {
                       Log::addTemp('Item is optimized -' . $mediaItem->get('id'));
                    }
@@ -193,10 +215,6 @@ abstract class Queue
 
           $customData = $this->getStatus('custom_data');
 
-          if (! is_object($customData))
-          {
-             $customData = $this->createCustomData();
-          }
 
           $customData->webpCount += $webpCount;
           $customData->avifCount += $avifCount;
@@ -304,8 +322,16 @@ abstract class Queue
     {
         if ($name == 'items')
           return $this->q->itemCount(); // This one also recounts once queue returns 0
-        else
-          return $this->q->getStatus($name);
+        elseif ($name == 'custom_data')
+        {
+            $customData = $this->q->getStatus('custom_data');
+            if (! is_object($customData))
+            {
+               $customData = $this->createCustomData();
+            }
+            return $customData;
+        }
+        return $this->q->getStatus($name);
     }
 
     protected function deQueue()
@@ -523,12 +549,15 @@ abstract class Queue
         return $this->q;
     }
 
+
+
     // All custom Data in the App should be created here.
     private function createCustomData()
     {
         $data = new \stdClass;
         $data->webpCount = 0;
         $data->avifCount = 0;
+        $data->customOperation = null;
 
         return $data;
     }

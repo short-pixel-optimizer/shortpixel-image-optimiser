@@ -25,14 +25,26 @@ class BulkController
      return self::$instance;
    }
 
-   /** Create a new bulk, enqueue items for bulking */
-   public function createNewBulk($type = 'media')
+   /** Create a new bulk, enqueue items for bulking
+   * @param $type String media or custom is supported.
+   * @param $customOp String   Not a usual optimize queue, but something else. options:
+   * 'bulk-restore', or 'migrate'.
+   */
+   public function createNewBulk($type = 'media', $customOp = null)
    {
    //  $this->q->createNewBulk();
       $optimizeController = new OptimizeController();
       $optimizeController->setBulk(true);
 
       $Q = $optimizeController->getQueue($type);
+
+      if (! is_null($specialOp))
+      {
+        $customData = $Q->getStatus('custom_data');
+        $customData->customOperation = $customOp;
+        $Q->getShortQ()->setStatus('custom_data', $customData);
+      }
+
       $Q->createNewBulk(array());
 
       return $Q->getStats();
