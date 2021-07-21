@@ -20,6 +20,7 @@ class ApiController
   const STATUS_SEARCHING = -8; // when the Queue is looping over images, but in batch none were found.
   const STATUS_QUEUE_FULL = -404;
   const STATUS_MAINTENANCE = -500;
+  const STATUS_NOT_API = -1000; // Not an API process, i.e restore / migrate. Don't handle as optimized 
 
   const ERR_FILE_NOT_FOUND = -2;
   const ERR_TIMEOUT = -3;

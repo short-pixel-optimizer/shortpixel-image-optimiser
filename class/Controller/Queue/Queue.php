@@ -63,6 +63,12 @@ abstract class Queue
        $this->q->cleanQueue();
     }
 
+    // gateway to set custom options for queue.
+    public function setOptions($options)
+    {
+        return $this->q->setOptions($options);
+    }
+
     /** Enqueues a single items into the urgent queue list
     *   - Should not be used for bulk images
     * @param ImageModel $mediaItem An ImageModel (CustomImageModel or MediaLibraryModel) object
@@ -159,12 +165,9 @@ abstract class Queue
           $queue = array();
           $imageCount = $webpCount = $avifCount = 0;
 
-          $customData = $this->getStatus('custom_data');
+          //$customData = $this->getStatus('custom_data');
 
-          if (! is_null($customData->customOperation))
-            $operation = $customdata->customOperation;
-          else
-            $operation = false;
+          $operation = $this->getCustomDataItem('customOperation'); // false or value
 
           // maybe while on the whole function, until certain time has elapsed?
           foreach($items as $mediaItem)
@@ -188,11 +191,15 @@ abstract class Queue
                 {
                    if($operation !== false)
                    {
+                      $counts = $qObject->counts;
                       if ($operation == 'bulk-restore')
                       {
-                          $qObject = $this->imageModelToQueue($mediaItem);
-                          $qObject->action = 'restore';
-                          $queue[] = array('id' => $mediaItem->get('id'), 'value' => $qObject, 'item_count' => $counts->creditCount);
+                          if ($mediaItem->isRestorable())
+                          {
+                            $qObject = $this->imageModelToQueue($mediaItem);
+                            $qObject->action = 'restore';
+                            $queue[] = array('id' => $mediaItem->get('id'), 'value' => $qObject, 'item_count' => $counts->creditCount);
+                          }
                       }
                       elseif ($operation == 'migrate')
                       {
@@ -334,6 +341,29 @@ abstract class Queue
         return $this->q->getStatus($name);
     }
 
+    public function setCustomBulk($type = null, $options = array() )
+    {
+        if (is_null($type))
+          return false;
+
+        $customData = $this->getStatus('custom_data');
+        $customData->customOperation = $type;
+        if (is_array($options) && count($options) > 0)
+          $customData->queueOptions = $options;
+
+        $this->getShortQ()->setStatus('custom_data', $customData);
+    }
+
+    public function getCustomDataItem($name)
+    {
+        $customData = $this->getStatus('custom_data');
+        if (property_exists($customData, $name))
+        {
+           return $customData->$name;
+        }
+        return false;
+    }
+
     protected function deQueue()
     {
        $items = $this->q->deQueue(); // Items, can be multiple different according to throttle.
@@ -344,9 +374,6 @@ abstract class Queue
 
     protected function queueToMediaItem($qItem)
     {
-
-        //$items = array(); // convert to a item array to be send off.
-
         $item = new \stdClass;
         $item = $qItem->value;
         $item->_queueItem = $qItem;
@@ -355,18 +382,6 @@ abstract class Queue
         $item->tries = $qItem->tries;
 
         return $item;
-        /*foreach($qItem->value as $values) // Always an array of items.
-        {
-          $newItem = clone $item;
-          foreach($values as $key => $val)
-          {
-              $newItem->$key = $val;
-          }
-          $newItem->_queueItem = $qItem;
-          $items[] = $newItem;
-        } */
-
-        //return $items;
     }
 
     protected function mediaItemToQueue($item)

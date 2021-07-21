@@ -65,11 +65,14 @@ Class FileSystemController extends \ShortPixel\Controller
     public function getImage(int $id, string $type)
     {
       $imageObj = null;
+      Log::addTemp('FSControl GetImage: ' . $id . ' ' . $type);
 
       if ($type == 'media')
         $imageObj = $this->getMediaImage($id);
       elseif($type == 'custom')
         $imageObj = $this->getCustomImage($id);
+      else
+        Log::addError('FileSystemController GetImage - no correc type given: ' . $type);
 
       return $imageObj;
 

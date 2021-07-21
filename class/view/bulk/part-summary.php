@@ -22,7 +22,7 @@ namespace ShortPixel;
         <div class="list-table">
           <div><span>Items to Optimize</span><span data-stats-media="in_queue">0</span></div>
 
-          <div><span>Total images to Optimize </span><span data-check-media-total data-stats-media="images-images" data-check-media-total>0</span></div>
+          <div><span>Total images to Optimize </span><span data-stats-media="images-images">0</span></div>
 
           <?php if (\wpSPIO()->settings()->createWebp == 1): ?>
             <div class='filetypes'><span>of which Webp</span><span data-stats-media="images-images_webp">&nbsp;</span></div>
@@ -38,7 +38,7 @@ namespace ShortPixel;
     <h4><span class='dashicons dashicons-open-folder'>&nbsp;</span> Other Media</h4>
       <div class="list-table">
         <div><span>Items to Optimize</span><span data-stats-custom="in_queue">0</span></div>
-        <div><span>Total images to Optimize </span><span data-check-custom-total data-stats-custom="images-images">0</span></div>
+        <div><span>Total images to Optimize </span><span  data-stats-custom="images-images">0</span></div>
       </div>
     </div>
 

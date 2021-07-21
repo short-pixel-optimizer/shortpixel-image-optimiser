@@ -38,11 +38,11 @@ namespace ShortPixel;
    <?php endif; ?>
 
    <?php if (! $this->view->error): ?>
-     <h4><?php _e('Advanced Options','shortpixel-image-optimiser'); ?></h4>
-
      <div class='advanced-actions'>
-       <button type="button" class="button" id="bulk-restore"><?php _e('Bulk Restore', 'shortpixel-image-optimiser'); ?></button>
-       
+       <h4><?php _e('Advanced Options','shortpixel-image-optimiser'); ?></h4>
+       <button type="button" class="button" id="bulk-restore" data-action='open-panel' data-panel="bulk-restore"><?php _e('Bulk Restore', 'shortpixel-image-optimiser'); ?></button>
+       <button type="button" class="button" id="bulk-restore" data-action='open-panel' data-panel="bulk-migrate"><?php _e('Migrate from 4x', 'shortpixel-image-optimiser'); ?></button>
+
      </div>
 
    <?php endif; ?>

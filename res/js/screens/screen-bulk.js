@@ -287,6 +287,11 @@ console.log("Screen Init Done", initMedia, isPreparing, isRunning, isFinished);
                 el.src  = result.original;
           }
 
+          if (result.orginal || result.optimized && document.querySelector('.image-preview').classList.contains('hidden'))
+          {
+            document.querySelector('.image-preview').classList.remove('hidden');
+          }
+
           if (result.improvements.totalpercentage)
           {
               var circle = document.querySelector('.opt-circle-image');
@@ -311,10 +316,7 @@ console.log("Screen Init Done", initMedia, isPreparing, isRunning, isFinished);
 
           }
       }
-  /*    else if ( this.processor.fStatus[resultItem.fileStatus] == 'FILE_ERROR')
-      {
-         this.HandleError(result, type);
-      } */
+
 
 
   }
@@ -414,7 +416,7 @@ console.log("Screen Init Done", initMedia, isPreparing, isRunning, isFinished);
   }
   this.HandleError = function(result, type)
   {
-    console.error(response);
+    console.error(result);
     var message = result.message + '(' + result.item_id + ')';
     var data = {message: message};
     this.UpdateData('error', data, type);
@@ -438,14 +440,6 @@ console.log("Screen Init Done", initMedia, isPreparing, isRunning, isFinished);
   }
   this.PauseBulk = function (event)
   {
-    /*if (processor.isManualPaused == false)
-    {
-       processor.isManualPaused = true;
-       localStorage.setItem('tooltipPause','true');
-       this.processor.tooltip.ProcessPause();
-    }
-
-    this.processor.tooltip.ToggleIcon();*/
      this.processor.tooltip.ToggleProcessing(event);
   }
 
@@ -453,11 +447,6 @@ console.log("Screen Init Done", initMedia, isPreparing, isRunning, isFinished);
   {
       this.processor.ResumeProcess();
   }
-  /*this.StopBulk = function(event)
-  {
-      this.PauseBulk(event);
-      // do something here to nuke the thing
-  }, */
   this.StopBulk = function(event)
   {
       if (confirm(shortPixelScreen.endBulk))
@@ -614,6 +603,50 @@ console.log("Screen Init Done", initMedia, isPreparing, isRunning, isFinished);
 
       });
 
+  }
+
+  this.ToggleButton = function(event)
+  {
+      var checkbox = event.target;
+      var target = document.getElementById(checkbox.getAttribute('data-target'));
+      if (checkbox.checked)
+      {
+        target.disabled = false;
+        target.classList.remove('disabled');
+      }
+      else
+      {
+         target.disabled = true;
+         target.classList.add('disabled');
+      }
+  }
+
+  this.BulkRestoreAll = function (event)
+  {
+    console.log('Start Restore All');
+    var data = {screen_action: 'startRestoreAll', callback: 'shortpixel.startRestoreAll'}; //
+
+    //this.SwitchPanel('selection');
+    //this.UpdatePanelStatus('loading', 'selection');
+
+    // Prepare should happen after selecting what the optimize.
+    window.addEventListener('shortpixel.startRestoreAll', this.PrepareBulk.bind(this), {'once': true} );
+    window.addEventListener('shortpixel.bulk.onSwitchPanel', this.StartBulk.bind(this), {'once': true});
+    this.processor.AjaxRequest(data);
+  }
+
+  this.BulkMigrateAll = function (event)
+  {
+    console.log('Start Migrate All');
+    var data = {screen_action: 'startMigrateAll', callback: 'shortpixel.startMigrateAll'}; //
+
+    //this.SwitchPanel('selection');
+    //this.UpdatePanelStatus('loading', 'selection');
+
+    // Prepare should happen after selecting what the optimize.
+    window.addEventListener('shortpixel.startMigrateAll', this.PrepareBulk.bind(this), {'once': true} );
+    window.addEventListener('shortpixel.bulk.onSwitchPanel', this.StartBulk.bind(this), {'once': true});
+    this.processor.AjaxRequest(data);
   }
 
   //this.CheckSelectionScreen()  = function()

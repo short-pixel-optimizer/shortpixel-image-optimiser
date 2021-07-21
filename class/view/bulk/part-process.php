@@ -54,6 +54,7 @@ namespace ShortPixel;
         <span class="showerrorbox">Errors : <i data-stats-media="fatal_errors" class='error'>- </i>
             </span>
         <div data-error-media="message" data-presentation="append" class='errorbox'></div>
+        <span class='hidden' data-check-media-total data-stats-media="total">0</span>
       </div>
 
     </div>
@@ -76,11 +77,12 @@ namespace ShortPixel;
         <span>Items Left <i data-stats-custom="in_queue">-</i></span>
         <span class="showerrorbox">Errors : <i data-stats-custom="fatal_errors" class='error'>-</i></span>
         <div data-error-custom="message" data-presentation="append" class='errorbox'></div>
+        <span class='hidden' data-check-custom-total data-stats-custom="total">0</span>
       </div>
 
     </div>
 
-    <div class='image-preview'>
+    <div class='image-preview hidden'>
       <div class="image-preview-line">
         <strong data-result="queuetype"></strong> <span data-result="filename">Pending</span>
 

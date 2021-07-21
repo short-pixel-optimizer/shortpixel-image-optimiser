@@ -38,14 +38,23 @@ class BulkController
 
       $Q = $optimizeController->getQueue($type);
 
-      if (! is_null($specialOp))
-      {
-        $customData = $Q->getStatus('custom_data');
-        $customData->customOperation = $customOp;
-        $Q->getShortQ()->setStatus('custom_data', $customData);
-      }
-
       $Q->createNewBulk(array());
+
+      if (! is_null($customOp))
+      {
+        $options = array();
+        if ($customOp == 'bulk-restore')
+        {
+          $options['numitems'] = 5;
+          $options['retry_limit'] = 5;
+          $options['process_timeout'] = 3000;
+        }
+        if ($customOp == 'migrate')
+        {
+           $options['numitems'] = 200;
+        }
+        $Q->setCustomBulk($customOp, $options);
+      }
 
       return $Q->getStats();
    }

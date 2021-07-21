@@ -34,7 +34,6 @@ class OptimizeController
        $this->isBulk = $bool;
     }
 
-
     public function getQueue($type)
     {
         $queue = null;
@@ -48,6 +47,13 @@ class OptimizeController
         {
           $queueName = ($this->isBulk == true) ? 'custom' : 'customSingle';
           $queue = new CustomQueue($queueName);
+        }
+
+        $options = $queue->getCustomDataItem('queueOptions');
+        if ($options !== false)
+        {
+            Log::addTemp('Settings Queue Options', $options);
+            $queue->setOptions($options);
         }
         return $queue;
     }
@@ -266,7 +272,7 @@ class OptimizeController
                 continue; // conversion done, item will be requeued with new urls.
             }
 
-            $item = $this->sendToProcessing($item);
+            $item = $this->sendToProcessing($item, $Q);
 
             $item = $this->handleAPIResult($item, $Q);
             $result->items[$mainIndex] = $item; // replace processed item, should have result now.
@@ -288,28 +294,32 @@ class OptimizeController
     * @param Object $item Item is a stdClass object from Queue. This is not a model, nor a ShortQ Item.
     * @todo Check if PNG2JPG Processing is needed.
     */
-    public function sendToProcessing(Object $item)
+    public function sendToProcessing(Object $item, $q)
     {
 
       $api = $this->getAPI();
       if (property_exists($item, 'action'))
       {
-           $imageObj = $fs->getMediaImage($item->item_id);
+           $fs = \wpSPIO()->filesystem();
+           $qtype = $q->getType();
+           $qtype = strtolower($qtype);
+
+           $imageObj = $fs->getImage($item->item_id, $qtype);
            switch($item->action)
            {
               case 'restore';
                  $imageObj->restore();
-
               break;
               case 'migrate':
                 // Loading the item should already be enough to trigger.
+                Log::addTemp('migrating: ' . $item->item_id);
               break;
            }
 
-           $imageObj->result = new \stdClass;
-           $imageObj->result->is_done = true; // always done
-           $imageObj->result->is_error = false; // for now
-           $imageObj->result->apiResult = ApiController::STATUS_IGNORE;
+           $item->result = new \stdClass;
+           $item->result->is_done = true; // always done
+           $item->result->is_error = false; // for now
+           $item->result->apiStatus = ApiController::STATUS_NOT_API;
       }
       else // as normal
         $item = $api->processMediaItem($item);
@@ -345,6 +355,7 @@ class OptimizeController
     {
       $fs = \wpSPIO()->filesystem();
       $result = $item->result;
+      Log::addTemp('HandleAPIResult', $result);
 
       $qtype = $q->getType();
       $qtype = strtolower($qtype);
@@ -448,6 +459,11 @@ class OptimizeController
               $item->result->optimized = $fs->pathToUrl($imageItem);
 
            }
+           // This was not a request process, just handle it and mark it as done.
+           elseif ($result->apiStatus == ApiController::STATUS_NOT_API)
+           {
+              // Nothing here.
+           }
            else
            {
               Log::addWarn('Api returns Success, but result has no files', $result);
@@ -466,7 +482,7 @@ class OptimizeController
          }
          else
          {
-           if ($imageItem->isProcessable())
+           if ($imageItem->isProcessable() && $result->apiStatus !== ApiController::STATUS_NOT_API)
            {
               Log::addDebug('Item with ID' . $imageItem->item_id . ' still has processables');
                 $this->addItemToQueue($imageItem); // requeue for further processing.

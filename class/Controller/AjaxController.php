@@ -218,6 +218,12 @@ class AjaxController
            case 'finishBulk':
              $json = $this->finishBulk($json, $data);
            break;
+           case 'startRestoreAll':
+              $json = $this->startRestoreAll($json,$data);
+           break;
+           case 'startMigrateAll':
+              $json = $this->startMigrateAll($json, $data);
+           break;
            default:
               $json->$type->message = __('Ajaxrequest - no action found', 'shorpixel-image-optimiser');
               $json->error = self::NO_ACTION;
@@ -309,7 +315,6 @@ class AjaxController
 
         $json = $this->applyBulkSelection($json, $data);
         return $json;
-
     }
 
     protected function applyBulkSelection($json, $data)
@@ -341,9 +346,9 @@ class AjaxController
         $json->status = true;
 
         return $json;
-
-
     }
+
+
 
     protected function startBulk($json, $data)
     {
@@ -357,6 +362,30 @@ class AjaxController
         $json->custom = $result;
 
         $this->send($json);
+    }
+
+    protected function startRestoreAll($json, $data)
+    {
+       $bulkControl = BulkController::getInstance();
+
+       $stats = $bulkControl->createNewBulk('media', 'bulk-restore');
+       $json->media->stats = $stats;
+
+       $stats = $bulkControl->createNewBulk('custom', 'bulk-restore');
+       $json->custom->stats = $stats;
+
+//       $json = $this->applyBulkSelection($json, $data);
+       return $json;
+    }
+
+    protected function startMigrateAll($json, $data)
+    {
+       $bulkControl = BulkController::getInstance();
+
+       $stats = $bulkControl->createNewBulk('media', 'migrate');
+       $json->media->stats = $stats;
+
+       return $json;
     }
 
     /** Data for the compare function */
