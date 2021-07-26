@@ -131,7 +131,7 @@ class WPShortPixel {
 
             //toolbar notifications
             add_action( 'admin_bar_menu', array( &$this, 'toolbar_shortpixel_processing'), 999 );
-            add_action( 'wp_head', array( $this, 'headCSS')); // for the front-end
+        //    add_action( 'wp_head', array( $this, 'headCSS')); // for the front-end
             //deactivate plugin
             add_action( 'admin_post_shortpixel_deactivate_plugin', array(&$this, 'deactivatePlugin'));
             //only if the key is not yet valid or the user hasn't bought any credits.
@@ -2183,7 +2183,7 @@ class WPShortPixel {
                       $dirname = trailingslashit($dirname);
 
                     $crtMeta['file'] = $dirname . $fsFile->getFileName();
-                    
+
                     update_attached_file($ID, $crtMeta['file']);
 
                     if($png2jpgSizes && count($png2jpgSizes)) {

@@ -314,6 +314,14 @@ Alternatively, you can use this filter in your theme's functions.php file:
 
 == Changelog ==
 
+= 4.23.3 - DEV01 =
+
+* Fix - Error when using WordPress 5.8 Widget editor
+* Fix - Error when using WP-offload and webp image could not be detected
+* Fix - Png2Jpg when using WP without date directory format would incorrectly add ./ to filename
+* Fix - Unregistered retina files could throw off optimization
+* Fix - Easy Watermark changed it's main file, so it SPIO wouldn't properly detect it
+
 = 4.22.2 =
 Release date May 12th, 2021
 * Fix: the Bulk screen reflects better the extra credits used for WebP and/or AVIF creation;
