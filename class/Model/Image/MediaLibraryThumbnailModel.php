@@ -108,7 +108,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
       {
         $filepath = $this->getFileDir() . $this->getMeta('avif');
         $avif = $fs->getFile($filepath);
-        return $webp;
+        return $avif;
       }
 
     return false;
@@ -116,10 +116,17 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
   public function getOptimizeFileType($type = 'webp')
   {
+      // pdf extension can be optimized, but don't come with these filetypes
+      if ($this->getExtension() == 'pdf')
+      {
+        return false;
+      }
+      
       if ($type == 'webp')
         $file = $this->getWebp();
       elseif ($type == 'avif')
         $file = $this->getAvif();
+
 
       if ( ($this->isThumbnailProcessable() || $this->isOptimized()) && $file === false)  // if no file, it can be optimized.
         return true;

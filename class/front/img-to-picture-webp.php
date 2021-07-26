@@ -148,6 +148,11 @@ class ShortPixelImgToPictureWebp
           return $match[0];
         }
 
+        if (! isset($img['src']) && ! isset($img['srcset']))
+        {
+           return $match[0];
+        }
+
         $srcInfo = $this->lazyGet($img, 'src');
         $srcsetInfo = $this->lazyGet($img, 'srcset');
         $sizesInfo = $this->lazyGet($img, 'sizes');

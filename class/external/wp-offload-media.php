@@ -449,7 +449,7 @@ echo "<PRE>"; var_dump($item->key(wp_basename($original_url))); echo "</PRE>";
     // GetbyURL can't find thumbnails, only the main image. We are going to assume, if imagebase is ok, the webp might be there.
     public function fixWebpRemotePath($bool, $file, $url, $imagebase)
     {
-        if (strpos($url, $imagebase->getPath() ) !== false)
+        if (strpos($url, $imagebase ) !== false)
           return $file;
         else
           return $bool;

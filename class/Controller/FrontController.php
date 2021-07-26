@@ -26,7 +26,7 @@ class FrontController extends \ShortPixel\Controller
     // Ajax call is not front, but backend. Hook nopriv if ajax is incoming and front process is on.
     if (wpSPIO()->env()->is_ajaxcall && $do_front)
     {
-        $this->hookFrontImageProcessing();
+        $this->hookFrontProcessing();
     }
   }
 

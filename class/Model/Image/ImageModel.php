@@ -159,7 +159,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
             $message = __('File does not exist', 'shortpixel-image-optimiser');
          break;
          case self::P_EXCLUDE_EXTENSION:
-            $message = __('Image Extension Excluded', 'shortpixel-image-optimiser');
+            $message = __('Image Extension not processable', 'shortpixel-image-optimiser');
          break;
          case self::P_EXCLUDE_SIZE:
             $message = __('Image Size Excluded', 'shortpixel-image-optimiser');
@@ -354,29 +354,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
               if ($copyok)
               {
-            //
-/*                 $webpFile = $this->getFileBase() . '.webp';
-                 Log::addTemp('Checking Webp as ' . $webpFile);
-                 if (isset($downloadResults[$webpFile]) && isset($downloadResults[$webpFile]->file)) // check if there is webp with same filename
-                 {
-                    $webpResult = $this->handleWebp($downloadResults[$webpFile]->file);
-                     if ($webpResult === false)
-                       Log::addWarn('Webps available, but copy failed ' . $downloadResults[$webpFile]->file->getFullPath());
-                     else
-                       $this->setMeta('webp', $webpResult->getFileName());
-                 }
-
-                 $avifFile = $this->getFileBase() . '.avif';
-                 Log::addTemp('Checking Avif as ' . $avifFile);
-                 if (isset($downloadResults[$avifFile]) && isset($downloadResults[$avifFile]->file)) // check if there is webp with same filename
-                 {
-                    $avifResult = $this->handleAvif($downloadResults[$avifFile]->file);
-                     if ($avifResult === false)
-                       Log::addWarn('Avif available, but copy failed ' . $downloadResults[$avifFile]->file->getFullPath());
-                     else
-                       $this->setMeta('avif', $avifResult->getFileName());
-                 } */
-
                  $this->setMeta('status', self::FILE_STATUS_SUCCESS);
                  $this->setMeta('tsOptimized', time());
                  $this->setMeta('compressedSize', $optimizedSize);
@@ -608,6 +585,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
     protected function isExtensionExcluded()
     {
+
         if (in_array($this->getExtension(), self::PROCESSABLE_EXTENSIONS))
         {
             return false;

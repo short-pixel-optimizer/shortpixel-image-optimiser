@@ -63,6 +63,8 @@ class EditMediaViewController extends \ShortPixel\Controller
           $this->view->id = $this->post_id;
           $this->view->status_message = null;
 
+          echo "<PRE>"; print_r($this->imageModel->getOptimizeURLS()); echo "</PRE>"; 
+
           $this->view->text = UiHelper::getStatusText($this->imageModel);
           $this->view->list_actions = UiHelper::getListActions($this->imageModel);
           if ( count($this->view->list_actions) > 0)
@@ -82,8 +84,7 @@ class EditMediaViewController extends \ShortPixel\Controller
 
           $this->view->debugInfo = $this->getDebugInfo();
 
-        //  $this->view->message = isset($this->data['message']) ? $this->data['message'] : '';
-          //$this->view->r
+
           $this->loadView();
 
       }

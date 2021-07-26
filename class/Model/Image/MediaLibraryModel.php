@@ -122,8 +122,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           // The isProcessable(true) is very important, since non-strict calls of this function check this function as well ( resulting in loop )
           if ($this->isProcessable(true) || $this->isOptimized())
           {
-
-            $toOptimize[] = $this->getURL(); // $fs->pathToUrl($this);
+            if (parent::getOptimizeFileType($type))
+              $toOptimize[] = $this->getURL(); // $fs->pathToUrl($this);
 
           }
       }
@@ -165,11 +165,39 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   {
     $wpmeta = $this->getWPMetaData();
 
-    if (is_null($this->originalWidth))
-      $this->originalWidth = $wpmeta['width'];
+    $width = null; $height = null;
+    if (! isset($wpmeta['width']))
+    {
+       if ($this->getExtension == 'pdf')
+       {
+          $width = $wpmeta['full']['width'];
+       }
+    }
+    else
+      $width = $wpmeta['width'];
+
+
+    if (! isset($wpmeta['height']))
+    {
+       if ($this->getExtension == 'pdf')
+       {
+          $height = $wpmeta['full']['height'];
+       }
+    }
+    else
+      $height = $wpmeta['height'];
+
+    if (is_null($width) || is_null($height) && ! $this->is_virtual())
+    {
+       $width = (is_null($width)) ? $this->get('width') : $width;
+       $height = (is_null($height)) ? $this->get('height') : $height;
+    }
 
     if (is_null($this->originalWidth))
-      $this->originalHeight = $wpmeta['height'];
+      $this->originalWidth = $width;
+
+    if (is_null($this->originalWidth))
+      $this->originalHeight = $height;
 
 
     $thumbnails = array();
@@ -500,7 +528,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
              {
                // Load from Class and file, might be an unlisted one. Meta doesn't save file info, so without might prove a problem!
 
-               // If file is not set, it's indication it's not a unlisted image, we can't add it. 
+               // If file is not set, it's indication it's not a unlisted image, we can't add it.
                if (! property_exists($thumbMeta, 'file'))
                  continue;
 
@@ -1139,7 +1167,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         return false;
       }
 
-      echo " I MUST CONVERT THIS <PRE>";  print_r($metadata); echo "</PRE>";
+        Log::addDebug("Conversion of legacy: ", array($metadata));
     //  echo "*** EXPORT: "; var_export($metadata); echo " *** ";
        $type = isset($data['type']) ? $this->legacyConvertType($data['type']) : '';
 
