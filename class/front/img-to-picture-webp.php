@@ -135,7 +135,6 @@ class ShortPixelImgToPictureWebp
         }
 
         $img = $this->get_attributes($match[0]);
-      //  echo "<PRE>"; var_dump($img); echo "</PRE>";
 
         if(isset($img['style']) && strpos($img['style'], 'background') !== false) {
             //don't replace for <img>'s that have background
@@ -149,6 +148,12 @@ class ShortPixelImgToPictureWebp
           return $match[0];
         }
 
+        // No src is not something we can handle. This can happen when creating an image in WP Gutenberg but not setting any image file on the block, but adding something like a custom class
+        if (! isset($img['src']) && ! isset($img['srcset']))
+        {
+           return $match[0];
+        }
+
         $srcInfo = $this->lazyGet($img, 'src');
         $srcsetInfo = $this->lazyGet($img, 'srcset');
         $sizesInfo = $this->lazyGet($img, 'sizes');
@@ -159,7 +164,7 @@ class ShortPixelImgToPictureWebp
             Log::addInfo('SPDBG baseurl doesn\'t match ' . $srcInfo['value'], array($imageBase) );
             return $match[0]; // . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG baseurl doesn\'t match ' . $src . '  -->' : '');
         }
-        Log::addDebug('ImageBase'. $imageBase);
+        Log::addDebug('ImageBase -'. $imageBase);
 
         //some attributes should not be moved from <img>
         // @todo Move these to unset on (imgpicture) and put via create_attributes back
