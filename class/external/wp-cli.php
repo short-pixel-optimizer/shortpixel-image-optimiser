@@ -2,6 +2,7 @@
 namespace ShortPixel;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
+use ShortPixel\Controller\BulkController as BulkController;
 
 use ShortPixel\Controller\Queue\Queue as Queue;
 use ShortPixel\Controller\ApiController as ApiController;
@@ -123,6 +124,8 @@ class SpioCommand
   public function restore($args)
   {
       $controller = new OptimizeController();
+      $fs = \wpSPIO()->filesystem();
+
       if (! isset($args[0]))
       {
         \WP_CLI::Error(__('Specify an Media Library Item ID', 'shortpixel_image_optimiser'));
@@ -167,15 +170,25 @@ class SpioCommand
  */
   public function createbulk($args, $assoc)
   {
-      $controller = new OptimizeController();
-      $controller->createBulk();
-      $this->runqueue($args, $assoc);
+    $bulkControl = BulkController::getInstance();
+    $json = new \stdClass;
+    $json->media = new \stdClass;
+    $json->custom = new \stdClass;
+
+    $stats = $bulkControl->createNewBulk('media');
+    $json->media->stats = $stats;
+
+    $stats = $bulkControl->createNewBulk('custom');
+    $json->custom->stats = $stats;
+
+    //$json = $this->applyBulkSelection($json, $data);
+    return $json;
   }
 
   public function startbulk($args, $assoc)
   {
       $controller = new OptimizeController();
-      $controller->startBulk();
+      $result = $controller->startBulk();
 
   }
 
@@ -190,6 +203,11 @@ class SpioCommand
    * [--wait=<3>]
    * : How much seconds to wait for next tick.
    *
+   * [--complete]
+   * : Run until either preparation is done or bulk has run fully.
+   *
+   * [--queue=<name>]
+   * : Either 'media' or 'custom' . Omit to run both.
    * ---
    * default: success
    * options:
@@ -199,17 +217,22 @@ class SpioCommand
    *
    * ## EXAMPLES
    *
-   *   wp spio runqueue <ticks=20> <wait=3>
+   *   wp spio run <ticks=20> <wait=3>
    *
    *
    * @when after_wp_load
    */
-    public function runqueue($args, $assoc)
+    public function run($args, $assoc)
     {
         if ( isset($assoc['ticks']))
           $ticks = intval($assoc['ticks']);
         else
           $ticks = 20;
+
+        if ( isset($assoc['complete']))
+        {
+            $ticks = -1;
+        }
 
         if (isset($assoc['wait']))
           $wait = intval($assoc['wait']);
