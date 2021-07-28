@@ -561,6 +561,12 @@ class WpShortPixelMediaLbraryAdapter {
                     continue;
                   }
 
+                  // Drop @2x (retina) images from the size. Some plugins generate retinas, add them to the sizes without registering them, which leads to confusing of the plugin since retinas are not stored under the optimize thumbslist.
+                  if (strpos($size, '@2x') !== false || strpos($file->getFileName(), '@2x') !== false)
+                  {
+                    continue;
+                  }
+
                   if(!in_array($size, $exclude) && !in_array($file->getFileName(), $thumbsOptList)) {
                       $thumbsToOptimizeList[] = $file->getFileName();
                   }

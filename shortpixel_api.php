@@ -898,6 +898,7 @@ class ShortPixelAPI {
 
         $itemHandler->updateMeta($meta);
         $itemHandler->optimizationSucceeded();
+        $itemHandler->deleteItemCache();  // remove cache when done, to prevent re-optimizing things.
         Log::addDebug("HANDLE SUCCESS: Metadata saved.");
 
         if(!$originalSpace) { //das kann nicht sein, alles klar?!

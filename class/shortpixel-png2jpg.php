@@ -316,7 +316,13 @@ class ShortPixelPng2Jpg {
             $toUnlink[] = $retMain->unlink;
             do_action('shortpixel/image/convertpng2jpg_before', $ID, $meta);
             //convert to the new URLs the urls in the existing posts.
-            $baseRelPath = trailingslashit(dirname($image));
+            $baseRelPath = dirname($image);
+            // this happens when image does not have a subdir structure like 2021/07
+			      if ($baseRelPath == '.')
+				     $baseRelPath = '';
+			         else
+				    $baseRelPath = trailingslashit($baseRelPath);
+        
             $toReplace[self::removeUrlProtocol($imageUrl)] = $baseUrl . $baseRelPath . wp_basename($ret['file']);
             $pngSize = $ret['png_size'];
             $jpgSize = $ret['jpg_size'];

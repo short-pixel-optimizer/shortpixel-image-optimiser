@@ -131,7 +131,7 @@ class WPShortPixel {
 
             //toolbar notifications
             add_action( 'admin_bar_menu', array( &$this, 'toolbar_shortpixel_processing'), 999 );
-            add_action( 'wp_head', array( $this, 'headCSS')); // for the front-end
+        //    add_action( 'wp_head', array( $this, 'headCSS')); // for the front-end
             //deactivate plugin
             add_action( 'admin_post_shortpixel_deactivate_plugin', array(&$this, 'deactivatePlugin'));
             //only if the key is not yet valid or the user hasn't bought any credits.
@@ -678,7 +678,7 @@ class WPShortPixel {
             if(   !is_plugin_active('image-watermark/image-watermark.php')
                && !is_plugin_active('amazon-s3-and-cloudfront/wordpress-s3.php')
                && !is_plugin_active('amazon-s3-and-cloudfront-pro/amazon-s3-and-cloudfront-pro.php')
-               && !is_plugin_active('easy-watermark/index.php')) {
+               && !is_plugin_active('easy-watermark/easy-watermark.php')) {
                 try {
                     $URLsAndPATHs = $this->getURLsAndPATHs($itemHandler);
                     //send a processing request right after a file was uploaded, do NOT wait for response
@@ -2103,7 +2103,7 @@ class WPShortPixel {
                         if ($bkOrigFile && $bkOrigFile->exists())
                           $bkOrigFile->move($origFile);
 
-                        Log::addDebug('Restore result - Backup original file', array($bkOrigFile, $origFile));
+                        Log::addDebug('Restore result - Backup original file', array($bkOrigFile->getFullPath(), $origFile->getFullPath() ));
                     }
                     //$this->renameWithRetina($bkFile, $file);
                     if (! $bkFile->move($fsFile))
@@ -2175,7 +2175,15 @@ class WPShortPixel {
                     $crtMeta['height'] = $height;
                 }
                 if($png2jpgMain) {
-                    $crtMeta['file'] = trailingslashit(dirname($crtMeta['file'])) . $fsFile->getFileName();
+
+                    $dirname = dirname($crtMeta['file']);
+                    if ($dirname == '.')
+                      $dirname = '';
+                    else
+                      $dirname = trailingslashit($dirname);
+
+                    $crtMeta['file'] = $dirname . $fsFile->getFileName();
+
                     update_attached_file($ID, $crtMeta['file']);
 
                     if($png2jpgSizes && count($png2jpgSizes)) {

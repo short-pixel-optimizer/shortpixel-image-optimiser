@@ -2,9 +2,9 @@
 Contributors: ShortPixel
 Tags: convert webp, optimize images, image optimization, resize, compressor, image, avif, compression, optimize, image optimiser, image compression, compress pdf, compress jpg, compress png, performance, photography, smush, scale, pictures
 Requires at least: 4.2.0
-Tested up to: 5.7
+Tested up to: 5.8
 Requires PHP: 5.3
-Stable tag: 4.22.2
+Stable tag: 4.22.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -313,6 +313,15 @@ Alternatively, you can use this filter in your theme's functions.php file:
 9. Check other optimized images status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 4.22.3 =
+Release date July 28th, 2021
+* Fix: Error when using WordPress 5.8 Widget editor;
+* Fix: Error when using WP-Offload and WebP image could not be detected;
+* Fix: PNG2JPG when using WP without date directory format would incorrectly add ./ to filename;
+* Fix: Unregistered retina files could throw off optimization;
+* Fix: Easy Watermark plugin changed its main file, so it couldn't be properly detected;
+* Language: 0 new string added, 0 updated, 0 fuzzed, and 0 obsoleted.
 
 = 4.22.2 =
 Release date May 12th, 2021
