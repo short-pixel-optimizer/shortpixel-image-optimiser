@@ -4,12 +4,10 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 
 
-if (isset($this->view->text)): ?>
+?>
 <div class='sp-column-info' id='sp-msg-<?php echo($this->view->mediaItem->get('id') );?>'>
+<?php if (property_exists($this->view,'text') && strlen($this->view->text) > 0):  ?>
       <p><?php  echo $this->view->text;  ?></p>
-
-
-
 <?php endif;
 
 if (isset($this->view->actions)):
@@ -33,4 +31,4 @@ if (isset($this->view->list_actions))
 </div>
 
 
-<?php $this->loadView('snippets/part-comparer'); ?>
+<?php //$this->loadView('snippets/part-comparer'); ?>

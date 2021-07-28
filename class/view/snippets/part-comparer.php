@@ -3,9 +3,9 @@ namespace ShortPixel;
 
 ?>
 
-<!-- The image comparer --> 
+<!-- The image comparer -->
 
-<div class="sp-modal-shade"></div>
+<div id="sp-modal-shade" class="sp-modal-shade"></div>
     <div id="spUploadCompare" class="shortpixel-modal shortpixel-hide">
       <div class="sp-modal-title">
         <button type="button" class="sp-close-button">&times;</button>

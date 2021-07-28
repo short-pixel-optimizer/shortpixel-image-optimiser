@@ -10,10 +10,7 @@ CSS for features that are displayed on all Admin page, like the bar status icon 
       display: none;
    }
    a.ab-item > div {
-       /*    background-image: url("../img/loading-dark-big.gif");
-           background-position: center center;
-           background-repeat: no-repeat;
-       */
+
        height: 33px;
        width: 33px;
        padding: 0;
@@ -31,6 +28,7 @@ CSS for features that are displayed on all Admin page, like the bar status icon 
        }
        span.shp-alert {
          display:none;
+         margin-left: -8px;
        }
        .stats
        {
@@ -139,7 +137,9 @@ CSS for features that are displayed on all Admin page, like the bar status icon 
 
        }
 
+
    } // ab-item > div
+
    &.shortpixel-paused .ab-item > div
    {
        .cssload-speeding-wheel
@@ -158,7 +158,8 @@ CSS for features that are displayed on all Admin page, like the bar status icon 
           z-index: 0;
        }
    }
-   &.shortpixel-alert // alert active.
+
+   &.shortpixel-alert .ab-item > div // alert active.
    {
        span.shp-alert{
           display: inline;
@@ -168,7 +169,17 @@ CSS for features that are displayed on all Admin page, like the bar status icon 
           font-weight: bold;
           vertical-align: middle;
       }
+      .controls { display: none; }
    }
+   &.shortpixel-quota-exceeded .ab-item > div {
+       .cssload-container { display: none; }
+       &:hover img:hover
+       {
+         opacity: 1;
+         visibility: visible;
+       }
+   }
+
    .toolbar-notice
    {
       position: absolute;

@@ -15,6 +15,7 @@ class InstallHelper
       self::deactivatePlugin();
       $settings = \wpSPIO()->settings();
 
+      // @todo This will not work in new version
       if(SHORTPIXEL_RESET_ON_ACTIVATE === true && WP_DEBUG === true) { //force reset plugin counters, only on specific occasions and on test environments
           $settings::debugResetOptions();
         //  $settings = new \WPShortPixelSettings();
@@ -72,5 +73,30 @@ class InstallHelper
     OptimizeController::uninstallPlugin();
     BulkController::uninstallPlugin();
   }
+
+}
+
+public static function deactivateConflictingPlugin()
+{
+  if ( ! wp_verify_nonce( $_GET['_wpnonce'], 'sp_deactivate_plugin_nonce' ) ) {
+        wp_nonce_ays( '' );
+  }
+
+  $referrer_url = wp_get_referer();
+  $conflict = \ShortPixelTools::getConflictingPlugins();
+  $url = wp_get_referer();
+
+  foreach($conflict as $c => $value) {
+      $conflictingString = $value['page'];
+      if($conflictingString != null && strpos($referrer_url, $conflictingString) !== false){
+          $url = get_dashboard_url();
+          deactivate_plugins( sanitize_text_field($_GET['plugin']) );
+          break;
+      }
+  }
+
+  wp_safe_redirect($url);
+  die();
+
 
 }

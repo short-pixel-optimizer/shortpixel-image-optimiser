@@ -31,6 +31,18 @@ class OtherMediaController extends \ShortPixel\Controller
         return self::$instance;
     }
 
+    public function getFolderTable()
+    {
+        global $wpdb;
+        return $wpdb->prefix . 'shortpixel_folders';
+    }
+
+    public function getMetaTable()
+    {
+        global $wpdb;
+        return  $wpdb->prefix . 'shortpixel_meta';
+    }
+
     // Get CustomFolder for usage.
     public function getAllFolders()
     {
@@ -45,7 +57,7 @@ class OtherMediaController extends \ShortPixel\Controller
       return $this->loadFoldersFromResult($folders);
     }
 
-    private function LoadFoldersFromResult($folders)
+    private function loadFoldersFromResult($folders)
     {
        $dirFolders = array();
        foreach($folders as $result)
@@ -68,8 +80,6 @@ class OtherMediaController extends \ShortPixel\Controller
 
       $this->folderIDCache = $results;
       return $this->folderIDCache;
-
-
     }
 
     public function getFolderByID($id)
@@ -88,6 +98,23 @@ class OtherMediaController extends \ShortPixel\Controller
     {
        $folder = new DirectoryOtherMediaModel($path);
        return $folder;
+    }
+
+    public function getCustomImageByPath($path)
+    {
+         global $wpdb;
+         $sql = 'SELECT id FROM ' . $this->getMetaTable() . ' WHERE path = %s';
+         $sql = $wpdb->prepare($sql, $path);
+
+         $custom_id = $wpdb->get_var($sql);
+         $fs = \wpSPIO()->filesystem();
+
+         if (! is_null($custom_id))
+         {
+            return $fs->getImage($custom_id, 'custom');
+         }
+         else
+            return $fs->getCustomStub($path); // stub
     }
 
     /* Check if installation has custom image, or anything. To show interface */
@@ -168,32 +195,6 @@ class OtherMediaController extends \ShortPixel\Controller
       else
         return false;
     }
-
-/* @todo This should just be model
-    public function refreshFolder(DirectoryOtherMediaModel $directory, $force = false)
-    {
-      $updated = $directory->updateFileContentChange();
-      $update_time = $directory->getUpdated();
-      if ($updated || $force)
-      {
-
-        // when forcing, set to never updated.
-        if ($force)
-        {
-          $update_time = 0; // force from begin of times.
-        }
-
-        if ($directory->exists() )
-        {
-          $directory->refreshFolder($update_time);
-        }
-        else {
-          Log::addWarn('Custom folder does not exist: ', $directory);
-          return false;
-        }
-      }
-
-    } */
 
 
     /** Check directory structure for new files */

@@ -84,7 +84,7 @@ class EnvironmentModel extends \ShortPixel\Model
   public function getSystemLoad()
   {
       $load = sys_getloadavg();
-      
+
   }
 
   /* https://github.com/WordPress/WordPress/blob/master/wp-includes/class-wp-image-editor-imagick.php */
@@ -184,7 +184,7 @@ class EnvironmentModel extends \ShortPixel\Model
 
   public function setIntegrations()
   {
-    $ng = \ShortPixel\NextGen::getInstance();
+    $ng = \ShortPixel\NextGenController::getInstance();
     $this->has_nextgen = $ng->has_nextgen();
   }
 

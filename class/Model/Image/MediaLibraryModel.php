@@ -21,6 +21,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
   private $unlistedChecked = false; // limit checking unlisted.
 
+  private $optimizePrevented; // cache if there is any reason to prevent optimizing
+
   public function __construct($post_id, $path)
   {
       $this->id = $post_id;
@@ -648,6 +650,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       Log::addWarn('Delete Post Meta failed');
 
      delete_post_meta($this->id, '_shortpixel_optimized');
+     $this->resetPrevent();
 
      return $bool;
   }
@@ -984,7 +987,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
   public function isOptimizePrevented()
   {
+       if (! is_null($this->optimizePrevented))
+         return $this->optimizePrevented;
+
        $reason = get_post_meta($this->id, '_shortpixel_prevent_optimize', true);
+
+       $this->optimizePrevented = $reason;
+
        if ($reason === false || strlen($reason) == 0)
          return false;
        else
@@ -1452,6 +1461,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
   public function __debugInfo() {
       return array(
+        'id' => $this->id, 
         'image_meta' => $this->image_meta,
         'thumbnails' => $this->thumbnails,
         'retinas' => $this->retinas,

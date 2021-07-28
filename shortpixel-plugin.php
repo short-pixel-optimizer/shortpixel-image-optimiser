@@ -6,6 +6,7 @@ use ShortPixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Controller\QuotaController as QuotaController;
 use ShortPixel\Controller\AjaxController as AjaxController;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
+use ShortPixel\NextGenController as NextGenController;
 
 //use ShortPixel\Controller;
 
@@ -23,7 +24,7 @@ class ShortPixelPlugin
   private static $instance;
   protected static $modelsLoaded = array(); // don't require twice, limit amount of require looksups..
 
-  private $paths = array('class', 'class/controller', 'class/external', 'class/controller/views'); // classes that are autoloaded
+//  private $paths = array('class', 'class/controller', 'class/external', 'class/controller/views'); // classes that are autoloaded
 
   protected $is_noheaders = false;
 
@@ -132,7 +133,8 @@ class ShortPixelPlugin
       // defer notices a little to allow other hooks ( notable adminnotices )
 
     //  add_action( 'shortpixel-thumbnails-before-regenerate', array( $this->shortPixel, 'thumbnailsBeforeRegenerateHook' ), 10, 1);
-      add_action( 'shortpixel-thumbnails-regenerated', array( new OptimizeController(), 'thumbnailsRegeneratedHook' ), 10, 4);
+      $optimizeController = new OptimizeController();
+      add_action( 'shortpixel-thumbnails-regenerated', array( $optimizeController, 'thumbnailsChangedHook' ), 10, 4);
 
       // Media Library
       add_action('load-upload.php', array($this, 'route'));
@@ -206,13 +208,13 @@ class ShortPixelPlugin
       add_action('mime_types', array($admin, 'addMimes'));
 
       // integration with WP/LR Sync plugin
-      add_action( 'wplr_update_media', array( &$this, 'onWpLrUpdateMedia' ), 10, 2);
+      add_action( 'wplr_update_media', array( AjaxController::getInstance() , 'onWpLrUpdateMedia' ), 10, 2);
 
-      //custom hook
-      add_action( 'shortpixel-optimize-now', array( &$this, 'optimizeNowHook' ), 10, 1);
+      //custom hook  - seems not in use from previous versions.
+      //add_action( 'shortpixel-optimize-now', array( &$this, 'optimizeNowHook' ), 10, 1);
 
-
-      add_filter( 'shortpixel_get_backup', array( &$this, 'shortpixelGetBackupFilter' ), 10, 1 );
+      // no clue what the function of this hook is or was.
+      //add_filter( 'shortpixel_get_backup', array( &$this, 'shortpixelGetBackupFilter' ), 10, 1 );
 
       if($isAdminUser) {
           //add settings page
@@ -234,8 +236,9 @@ class ShortPixelPlugin
           //toolbar notifications
           add_action( 'admin_bar_menu', array( $admin, 'toolbar_shortpixel_processing'), 999 );
         //  add_action( 'wp_head', array( $this, 'headCSS')); // for the front-end
-          //deactivate plugin
-          add_action( 'admin_post_shortpixel_deactivate_plugin', array(&$this, 'deactivatePlugin'));
+
+          //deactivate conflicting plugins if found
+          add_action( 'admin_post_shortpixel_deactivate_plugin', array('\ShortPixel\Helper\InstallHelper', 'deactivateConflictingPlugin'));
 
           //only if the key is not yet valid or the user hasn't bought any credits.
           // @todo This should not be done here.
@@ -278,16 +281,24 @@ class ShortPixelPlugin
 
     // Ajax hooks. Should always be prepended with ajax_ and *must* check on nonce in function
     add_action( 'wp_ajax_shortpixel_image_processing', array(AjaxController::getInstance(), 'ajax_processQueue') );
+    /* This one off, seems unused
+    * @todo Remove if no issue
     add_action( 'wp_ajax_shortpixel_exit_process', array(AjaxController::getInstance() , 'ajax_removeProcessorKey'));
+    */
     add_action( 'wp_ajax_shortpixel_get_item_view', array(AjaxController::getInstance(), 'ajax_getItemView'));
+    /* Probably superseded w/ ajaxcontroller ajaxRequest. @todo Remove if no issues
     add_action( 'wp_ajax_shortpixel_manual_optimization', array(AjaxController::getInstance(), 'ajax_addItem'));
-
+    */
     // Custom Media
     add_action('wp_ajax_shortpixel_browse_content', array(OtherMediaController::getInstance(), 'ajaxBrowseContent'));
     add_action('wp_ajax_shortpixel_get_backup_size', array(AjaxController::getInstance(), 'ajax_getBackupFolderSize'));
 //        add_action('wp_ajax_shortpixel_get_comparer_data', array(&$this, 'getComparerData'));
 
-    add_action('wp_ajax_shortpixel_new_api_key', array(&$this, 'newApiKey'));
+    /** Most likely already superseded by actions in SettingsController
+    * @todo Remove if new api key works w/o issues
+    * add_action('wp_ajax_shortpixel_new_api_key', array($this, 'newApiKey'));
+    */
+
     add_action('wp_ajax_shortpixel_propose_upgrade', array(AjaxController::getInstance(), 'ajax_proposeQuotaUpgrade'));
     add_action('wp_ajax_shortpixel_check_quota', array(AjaxController::getInstance(), 'ajax_checkquota'));
 
@@ -502,19 +513,17 @@ class ShortPixelPlugin
     // load everywhere, because we are inconsistent.
     wp_register_style('shortpixel-toolbar', plugins_url('/res/css/shortpixel-toolbar.css',SHORTPIXEL_PLUGIN_FILE), array('dashicons'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
 
-    //if ( \wpSPIO()->env()->is_our_screen )
-  //  {
-    /*if( in_array($screen->id, array('attachment', 'upload', 'settings_page_wp-shortpixel', 'media_page_wp-short-pixel-bulk', 'media_page_wp-short-pixel-custom'))) { */
-        wp_register_style('short-pixel.min.css', plugins_url('/res/css/short-pixel.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
-        //modal - used in settings for selecting folder
-        wp_register_style('short-pixel-modal.min.css', plugins_url('/res/css/short-pixel-modal.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
+    wp_register_style('short-pixel.min.css', plugins_url('/res/css/short-pixel.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
+    //modal - used in settings for selecting folder
+    wp_register_style('short-pixel-modal.min.css', plugins_url('/res/css/short-pixel-modal.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION);
 
-        // @todo Might need to be removed later on
-        wp_register_style('shortpixel-admin', plugins_url('/res/css/shortpixel-admin.css', SHORTPIXEL_PLUGIN_FILE),array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
+    // @todo Might need to be removed later on
+    wp_register_style('shortpixel-admin', plugins_url('/res/css/shortpixel-admin.css', SHORTPIXEL_PLUGIN_FILE),array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
 
-        wp_register_style('shortpixel-bulk', plugins_url('/res/css/shortpixel-bulk.css', SHORTPIXEL_PLUGIN_FILE),array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
-        //wp_register_style('shortpixel-admin');
-  //  }
+    wp_register_style('shortpixel-bulk', plugins_url('/res/css/shortpixel-bulk.css', SHORTPIXEL_PLUGIN_FILE),array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
+
+    wp_register_style('shortpixel-nextgen', plugins_url('/res/css/shortpixel-nextgen.css', SHORTPIXEL_PLUGIN_FILE),array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
+
 
   }
 
@@ -593,17 +602,15 @@ class ShortPixelPlugin
 
 
     }
-
-    if ($plugin_page == 'wp-short-pixel-bulk')
+    elseif ($plugin_page == 'wp-short-pixel-bulk')
     {
         $this->load_script($load_processor);
         $this->load_script('shortpixel-screen-bulk');
 
+        $this->load_style('shortpixel-admin');
         $this->load_style('shortpixel-bulk');
     }
-
-
-    if ($screen_id == 'upload' || $screen_id == 'attachment')
+    elseif ($screen_id == 'upload' || $screen_id == 'attachment')
     {
        $this->load_script($load_processor);
        $this->load_script('shortpixel-screen-media'); // screen
@@ -613,8 +620,7 @@ class ShortPixelPlugin
        $this->load_style('shortpixel');
 
     }
-
-    if ($plugin_page == 'wp-short-pixel-custom')
+    elseif ($plugin_page == 'wp-short-pixel-custom')
     {
       $this->load_style('shortpixel');
       $this->load_style('shortpixel-modal'); // for comparer
@@ -622,6 +628,15 @@ class ShortPixelPlugin
 
       $this->load_script($load_processor);
       $this->load_script('shortpixel-screen-custom'); // screen
+
+    }
+    elseif(NextGenController::getInstance()->isNextGenScreen())
+    {
+        $this->load_script($load_processor);
+        $this->load_script('shortpixel-screen-media'); // screen
+
+        $this->load_style('shortpixel');
+        $this->load_style('shortpixel-nextgen');
 
     }
 

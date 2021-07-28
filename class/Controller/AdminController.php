@@ -64,7 +64,7 @@ class AdminController extends \ShortPixel\Controller
 
           $post_id = intval($params['post_id']);
           $fs = \wpSPIO()->filesystem();
-          
+
           $imageObj = $fs->getImage($post_id, 'media');
           $imageObj->onDelete();
       }
@@ -136,10 +136,9 @@ class AdminController extends \ShortPixel\Controller
         $icon = "shortpixel.png";
         $successLink = $link = admin_url(current_user_can( 'edit_others_posts')? 'upload.php?page=wp-short-pixel-bulk' : 'upload.php');
         $blank = "";
-    /*    if($this->prioQ->processing()) {
-            $extraClasses = " shortpixel-processing";
-        } */
-        if($settings->quotaExceeded && !isset($settings->dismissedNotices['exceed'])) {
+
+
+        if($settings->quotaExceeded ) {
             $extraClasses = " shortpixel-alert shortpixel-quota-exceeded";
             /*translators: toolbar icon tooltip*/
             $id = 'short-pixel-notice-exceed';
@@ -147,14 +146,12 @@ class AdminController extends \ShortPixel\Controller
             $exceedTooltip = __('ShortPixel quota exceeded. Click for details.','shortpixel-image-optimiser');
             //$link = "http://shortpixel.com/login/" . $this->_settings->apiKey;
             $link = "options-general.php?page=wp-shortpixel-settings";
-            //$blank = '_blank';
-            //$icon = "shortpixel-alert.png";
+
         }
-        $lastStatus = $settings->bulkLastStatus;
 
         $args = array(
                 'id'    => 'shortpixel_processing',
-                'title' => '<div id="' . $id . '" title="' . $tooltip . '" ><span class="stats hidden">0</span><img alt="' . __('ShortPixel icon','shortpixel-image-optimiser') . '" src="'
+                'title' => '<div id="' . $id . '" title="' . $tooltip . '"><span class="stats hidden">0</span><img alt="' . __('ShortPixel icon','shortpixel-image-optimiser') . '" src="'
                          . plugins_url( 'res/img/'.$icon, SHORTPIXEL_PLUGIN_FILE ) . '" success-url="' . $successLink . '"><span class="shp-alert">!</span>'
                          . '<div class="controls">
                               <span class="dashicons dashicons-controls-pause pause" title="' . __('Pause', 'shortpixel-image-optimiser') . '">&nbsp;</span>
@@ -167,7 +164,7 @@ class AdminController extends \ShortPixel\Controller
         );
         $wp_admin_bar->add_node( $args );
 
-        if($settings->quotaExceeded && !isset($settings->dismissedNotices['exceed'])) {
+        if($settings->quotaExceeded ) {
             $wp_admin_bar->add_node( array(
                 'id'    => 'shortpixel_processing-title',
                 'parent' => 'shortpixel_processing',

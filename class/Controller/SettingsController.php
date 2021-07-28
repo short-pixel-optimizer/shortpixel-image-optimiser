@@ -6,7 +6,7 @@ use ShortPixel\Helper\UiHelper as UiHelper;
 
 use ShortPixel\Model\ApiKeyModel as ApiKeyModel;
 
-use ShortPixel\NextGen as NextGen;
+use ShortPixel\NextGenController as NextGenController;
 
 class SettingsController extends \ShortPixel\Controller
 {
@@ -361,7 +361,7 @@ class SettingsController extends \ShortPixel\Controller
 
         if ($this->has_nextgen)
         {
-          $ng = NextGen::getInstance();
+          $ng = NextGenController::getInstance();
           $NGfolders = $ng->getGalleries();
           $foldersArray = array();
 

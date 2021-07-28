@@ -61,17 +61,6 @@ class UiHelper
     $webpsTotal = $imageObj->count('webps');
     $avifsTotal = $imageObj->count('avifs');
 
-
-  /*  if ($thumbs)
-    {
-      foreach($thumbs as $thumbObj)
-      {
-        if ($thumbObj->isOptimized())
-        {
-          $thumbsDone++;
-        }
-      }
-    } */
     if($retinas)
     {
       foreach($retinas as $retinaObj)
@@ -176,13 +165,7 @@ class UiHelper
         }
     }
 
-    if ($imageObj->isOptimizePrevented() !== false)
-    {
-        $retry = self::getAction('retry', $imageObj->get('id'));
-        $output .= "<div class='shortpixel-image-error'>" . $imageObj->isOptimizePrevented();
-        $output .= "<span class='shortpixel-error-reset'>" . sprintf(__('After you have fixed this issue, you can %s click here to retry %s', 'shortpixel-image-optimiser'), '<a href="javascript:' . $retry['function'] . '">', '</a>');
-        $output .= '</div>';
-    }
+
 
     return $output;
 
@@ -209,15 +192,12 @@ class UiHelper
 
       $quotaControl = QuotaController::getInstance();
 
-      if(! $quotaControl->hasQuota())
-        return array();
-
       if ($mediaItem->isOptimized())
       {
            $optimizable = $mediaItem->getOptimizeURLS();
            //$webp = $mediaItem->
 
-           if ($mediaItem->isProcessable())
+           if ($mediaItem->isProcessable() && ! $mediaItem->isOptimizePrevented())
            {
              $action = self::getAction('optimizethumbs', $id);
              if (count($optimizable) > 0)
@@ -268,6 +248,12 @@ class UiHelper
           }
       }
 
+      if(! $quotaControl->hasQuota())
+      {
+         $remove = array('reoptimize-lossy' => '', 'reoptimize-glossy' => '', 'reoptimize-lossless' => '', 'optimizethumbs' => '');
+         $list_actions = array_diff_key($list_actions, $remove);
+
+      }
 
       return $list_actions;
   }
@@ -283,7 +269,7 @@ class UiHelper
        $actions['extendquota'] = self::getAction('extendquota', $id);
        $actions['checkquota'] = self::getAction('checkquota', $id);
     }
-    elseif($mediaItem->isProcessable() && ! $mediaItem->isOptimized())
+    elseif($mediaItem->isProcessable() && ! $mediaItem->isOptimized() && ! $mediaItem->isOptimizePrevented())
     {
        $actions['optimize'] = self::getAction('optimize', $id);
     }
@@ -301,11 +287,11 @@ class UiHelper
     {
       $text = __('Invalid API Key. <a href="options-general.php?page=wp-shortpixel-settings">Check your Settings</a>','shortpixel-image-optimiser');
     }
-    elseif(! $quotaControl->hasQuota())
+  /*  elseif(! $quotaControl->hasQuota())
     {
        $text = __('Quota Exceeded','shortpixel-image-optimiser');
 
-    }
+    } */
     elseif ($mediaItem->isOptimized())
     {
        $text = UiHelper::renderSuccessText($mediaItem);
@@ -318,12 +304,22 @@ class UiHelper
     }
     elseif (! $mediaItem->exists())
     {
-       $text = __('Image does not exist.','shortpixel-image-optimiser');
+       $text = __('File does not exist.','shortpixel-image-optimiser');
     }
     elseif ($mediaItem->getMeta('status') < 0)
     {
       $text = $mediaItem->getMeta('errorMessage');
     }
+
+//    var_dump( ($imageObj->isOptimizePrevented() !== false) );
+      if ($mediaItem->isOptimizePrevented() !== false)
+      {
+
+          $retry = self::getAction('retry', $mediaItem->get('id'));
+          $text .= "<div class='shortpixel-image-error'>" . $mediaItem->isOptimizePrevented();
+          $text .= "<span class='shortpixel-error-reset'>" . sprintf(__('After you have fixed this issue, you can %s click here to retry %s', 'shortpixel-image-optimiser'), '<a href="javascript:' . $retry['function'] . '">', '</a>');
+          $text .= '</div>';
+      }
 
     return $text;
   }
@@ -408,8 +404,6 @@ class UiHelper
         $action['text'] = __('Check&nbsp;&nbsp;Quota','shortpixel-image-optimiser');
 
      break;
-
-
    }
 
    return $action;

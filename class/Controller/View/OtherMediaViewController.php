@@ -546,41 +546,4 @@ class OtherMediaViewController extends \ShortPixel\Controller
          return $display_date;
       }
 
-    /*  protected function getDisplayActions($actions)
-      {
-
-           if (count($actions) == 0)
-           {
-             return '';
-           }
-           elseif (count($actions) == 1)
-            {
-              return "<div class='single-action'>" . $actions[0] . "</div>";
-            }
-           elseif($actions[0] == 'render-loose')
-           {
-             array_shift($actions);
-             $output = '<div class="multi-action-wrapper">';
-             foreach($actions as $action )
-             {
-               $output .= "<div class='single-action'>" . $action. "</div>";
-             }
-             $output .= "</div>";
-             return $output;
-           }
-            else{
-
-            $output = "<div class='sp-dropdown'>
-                <button onclick='ShortPixel.openImageMenu(event);' class='sp-dropbtn button dashicons dashicons-menu' title='" .  __('ShortPixel Actions', 'shortpixel-image-optimiser') . "'></button>
-                <div class='sp-dropdown-content'>";
-              foreach($actions as $action)
-              {
-                  $output .= $action;
-              }
-              $output .= "</div></div> <!-- sp-dropdown -->";
-              return $output;
-            }
-      } */
-
-
 }

@@ -247,6 +247,8 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
     private function timestampToDB($timestamp)
     {
+        if ($timestamp == 0) // when adding / or empty.
+          $timestamp = time();
         return date("Y-m-d H:i:s", $timestamp);
     }
 

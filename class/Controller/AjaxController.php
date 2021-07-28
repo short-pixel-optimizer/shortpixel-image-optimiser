@@ -251,6 +251,10 @@ class AjaxController
 
           $mediaItem = $this->getMediaItem($id, $type);
 
+          // if order is given, remove barrier and file away.
+          if ($mediaItem->isOptimizedPrevented() !== false)
+            $mediaItem->resetPrevent();
+
           $control = new OptimizeController();
           $json = new \stdClass;
           $json->$type = new \stdClass;
@@ -260,6 +264,38 @@ class AjaxController
 
           return $json;
         //  $this->send($json);
+    }
+
+    /* Integration for WP /LR Sync plugin  - https://meowapps.com/plugin/wplr-sync/
+    * @todo Test if it works
+    *
+    */
+    public function onWpLrUpdateMedia()
+    {
+      $meta = wp_get_attachment_metadata($imageId);
+      if(is_array($meta)) {
+           if (isset($meta['ShortPixel'])) // get rid of legacy data
+            unset($meta['ShortPixel']);
+           //$meta['ShortPixel'] = array();
+           //$meta['ShortPixel']['WaitingProcessing'] = true;
+          // $this->prioQ->push($imageId);
+           //wp_update_attachment_metadata($imageId, $meta);
+           update_post_meta($imageId, '_wp_attachment_metadata', $meta);
+      //     ShortPixelMetaFacade::optimizationStarted($imageId);
+      }
+
+      // Get and remove Meta
+      $mediaItem = \wpSPIO()->filesystem->getImage($imageId, 'media');
+      $mediaItem->deleteMeta();
+
+      // Optimize
+      $control = new OptimizeController();
+      $json = new \stdClass;
+      $json->$type = new \stdClass;
+
+      $json->$type = $control->addItemToQueue($mediaItem);
+      return $json;
+  
     }
 
     protected function restoreItem($json, $data)
@@ -407,8 +443,19 @@ class AjaxController
 
         $ret = array();
         $fs = \wpSPIO()->filesystem();
-
         $imageObj = $fs->getImage($id, $type);
+
+        // With PDF, the thumbnail called 'full' is the image, the main is the PDF file
+        if ($imageObj->getExtension() == 'pdf')
+        {
+           $thumbImg = $imageObj->getThumbnail('full');
+           if ($thumbImg !== false)
+           {
+              $imageObj = $thumbImg;
+           }
+        }
+
+
 
         $backupFile = $imageObj->getBackupFile();
         if (is_object($backupFile))

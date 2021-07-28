@@ -240,15 +240,21 @@ class FileModel extends \ShortPixel\Model
   // Creates an empty file
   public function create()
   {
-     if (! $this->exists())
+     if (! $this->exists() )
      {
-      $res = touch($this->fullpath);
-      $this->exists = $res;
-      return $res;
+      $fileDir = $this->getFileDir();
+
+      if (! is_null($fileDir) && $fileDir->exists())
+      {
+        $res = touch($this->fullpath);
+        $this->exists = $res;
+        return $res;
+      }
     }
      else
       Log::addWarn('Could not create/write file: ' . $this->fullpath);
 
+    return false;
   }
 
   public function append(string $message)

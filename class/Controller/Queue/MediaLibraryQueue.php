@@ -78,7 +78,8 @@ class MediaLibraryQueue extends Queue
           $items[] = $fs->getImage($item_id, 'media');
      }
 
-     return $items;
+     // Remove failed object, ie if getImage returned false.
+     return array_filter($items);
 
 
    }

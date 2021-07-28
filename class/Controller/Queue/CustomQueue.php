@@ -94,8 +94,6 @@ class CustomQueue extends Queue
 
      $results = $wpdb->get_col($sql);
 
-Log::addDebug('Results of custom - ' . $sql, $results);
-
      $fs = \wpSPIO()->filesystem();
 
 
@@ -105,7 +103,7 @@ Log::addDebug('Results of custom - ' . $sql, $results);
           $items[] = $fs->getImage($item_id, 'custom');
      }
 
-     return $items;
+     return array_filter($items);
    }
 
 

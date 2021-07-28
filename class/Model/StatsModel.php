@@ -334,6 +334,7 @@ Log::addTemp("Statsmodel, countMed", $sql);
 
      $sql .= " AND post_id NOT IN ( SELECT post_id FROM " . $wpdb->postmeta . " where meta_key = '_shortpixel_prevent_optimize' )";  // exclude 'crashed items'
 
+     Log::addTemp('countMediaItems', $sql);
       $count = $wpdb->get_var($sql);
       return $count;
   }

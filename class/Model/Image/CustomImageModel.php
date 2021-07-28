@@ -29,7 +29,9 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
           $this->loadMeta();
         else
         {
+
           $this->fullpath = ''; // stub
+          $this->image_meta = new ImageMeta();
           $this->is_stub = true;
         }
         parent::__construct($this->fullpath);

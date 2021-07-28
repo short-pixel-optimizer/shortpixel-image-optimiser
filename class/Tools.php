@@ -1,5 +1,6 @@
 <?php
 
+// @todo In time this should be moved to a helper class
 class ShortPixelTools {
 /*    public static function parseJSON($data) {
         if ( function_exists('json_decode') ) {

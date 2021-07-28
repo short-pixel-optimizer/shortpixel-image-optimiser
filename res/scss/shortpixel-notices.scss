@@ -1,11 +1,18 @@
 
-.shortpixel.notice
+.shortpixel.shortpixel-notice
 {
    //padding: 18px;
    min-height: 75px;
    padding: 8px;
    display: flex;
    align-items: center;
+   background: #fff;
+   padding: 1px 12px;
+   box-shadow: 0 1px 1px rgba(0,0,0,0.04);
+   border: 1px solid #c3c4c7;
+   margin: 5px 15px 2px;
+   border-left-color: #72aee6;
+   position: relative;
 
    img
    {
@@ -73,7 +80,7 @@
 }
 
 // compat list if.
-.shortpixel.notice
+.shortpixel.shortpixel-notice
 {
   .sp-conflict-plugins {
       display: table;

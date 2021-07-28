@@ -41,6 +41,8 @@ class ListMediaViewController extends \ShortPixel\Controller
     add_filter( 'request', array( $this, 'filterBy') );
     add_action('restrict_manage_posts', array( $this, 'mediaAddFilterDropdown'));
 
+    add_action('loop_end', array($this, 'loadComparer'));
+
   }
 
   public function headerColumns($defaults)
@@ -94,6 +96,11 @@ class ListMediaViewController extends \ShortPixel\Controller
       $this->view->actions = array();
       $this->view->list_actions = '';
     }
+  }
+
+  public function loadComparer()
+  {
+    $this->loadView('snippets/part-comparer');
   }
 
   public function registerSortable($columns)

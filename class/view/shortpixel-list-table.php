@@ -2,6 +2,8 @@
 return; // not in use
 use ShortPixel\Notices\NoticeController as Notices;
 
+// @todo Remove File if no crashes
+exit('ShortPixel-List-Table should not be in use');
 
 if( ! class_exists( 'WP_List_Table' ) ) {
     require_once( ABSPATH . 'wp-admin/includes/class-wp-list-table.php' );

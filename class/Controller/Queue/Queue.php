@@ -172,7 +172,7 @@ abstract class Queue
           // maybe while on the whole function, until certain time has elapsed?
           foreach($items as $mediaItem)
           {
-                if ($mediaItem->isProcessable() && ! $operation) // Checking will be done when processing queue.
+                if ($mediaItem->isProcessable() && $mediaItem->isOptimizePrevented() === false && ! $operation) // Checking will be done when processing queue.
                 {
                     $qObject = $this->imageModelToQueue($mediaItem);
 

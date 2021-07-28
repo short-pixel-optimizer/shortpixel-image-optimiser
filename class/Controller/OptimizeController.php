@@ -322,8 +322,9 @@ class OptimizeController
            $item->result->apiStatus = ApiController::STATUS_NOT_API;
       }
       else // as normal
+      {
         $item = $api->processMediaItem($item);
-
+      }
       return $item;
     }
 

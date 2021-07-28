@@ -8,10 +8,6 @@ CSS for features that are displayed on all Admin page, like the bar status icon 
   display: none;
 }
 #wpadminbar li.shortpixel-toolbar-processing a.ab-item > div {
-  /*    background-image: url("../img/loading-dark-big.gif");
-      background-position: center center;
-      background-repeat: no-repeat;
-  */
   height: 33px;
   width: 33px;
   padding: 0;
@@ -29,6 +25,7 @@ CSS for features that are displayed on all Admin page, like the bar status icon 
 }
 #wpadminbar li.shortpixel-toolbar-processing a.ab-item > div span.shp-alert {
   display: none;
+  margin-left: -8px;
 }
 #wpadminbar li.shortpixel-toolbar-processing a.ab-item > div .stats {
   left: -1px;
@@ -144,13 +141,23 @@ CSS for features that are displayed on all Admin page, like the bar status icon 
   opacity: 0;
   z-index: 0;
 }
-#wpadminbar li.shortpixel-toolbar-processing.shortpixel-alert span.shp-alert {
+#wpadminbar li.shortpixel-toolbar-processing.shortpixel-alert .ab-item > div span.shp-alert {
   display: inline;
   font-size: 26px;
   line-height: 26px;
   color: red;
   font-weight: bold;
   vertical-align: middle;
+}
+#wpadminbar li.shortpixel-toolbar-processing.shortpixel-alert .ab-item > div .controls {
+  display: none;
+}
+#wpadminbar li.shortpixel-toolbar-processing.shortpixel-quota-exceeded .ab-item > div .cssload-container {
+  display: none;
+}
+#wpadminbar li.shortpixel-toolbar-processing.shortpixel-quota-exceeded .ab-item > div:hover img:hover {
+  opacity: 1;
+  visibility: visible;
 }
 #wpadminbar li.shortpixel-toolbar-processing .toolbar-notice {
   position: absolute;
