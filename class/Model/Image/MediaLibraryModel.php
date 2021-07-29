@@ -992,12 +992,16 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
        $reason = get_post_meta($this->id, '_shortpixel_prevent_optimize', true);
 
-       $this->optimizePrevented = $reason;
-
        if ($reason === false || strlen($reason) == 0)
+       {
+         $this->optimizePrevented = false;
          return false;
+       }
        else
+       {
+         $this->optimizePrevented = $reason;
          return $reason;
+       }
   }
 
   public function resetPrevent()
@@ -1461,7 +1465,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
   public function __debugInfo() {
       return array(
-        'id' => $this->id, 
+        'id' => $this->id,
         'image_meta' => $this->image_meta,
         'thumbnails' => $this->thumbnails,
         'retinas' => $this->retinas,

@@ -252,7 +252,7 @@ class AjaxController
           $mediaItem = $this->getMediaItem($id, $type);
 
           // if order is given, remove barrier and file away.
-          if ($mediaItem->isOptimizedPrevented() !== false)
+          if ($mediaItem->isOptimizePrevented() !== false)
             $mediaItem->resetPrevent();
 
           $control = new OptimizeController();
@@ -295,7 +295,7 @@ class AjaxController
 
       $json->$type = $control->addItemToQueue($mediaItem);
       return $json;
-  
+
     }
 
     protected function restoreItem($json, $data)
