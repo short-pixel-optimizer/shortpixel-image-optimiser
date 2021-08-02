@@ -162,6 +162,10 @@ class SettingsController extends \ShortPixel\Controller
             $this->keyModel->checkKey($check_key);
           }
 
+          // Reset Avif Check Cache.
+          $cache = new CacheController();
+          $cache->deleteItem('avif_server_check');
+
           // end
           if ($this->do_redirect)
             $this->doRedirect('bulk');
@@ -195,6 +199,9 @@ class SettingsController extends \ShortPixel\Controller
 
          $settings = \wpSPIO()->settings();
          $this->view->dismissedNotices = $settings->dismissedNotices;
+
+         if ($this->view->data->createAvif == 1)
+           $this->avifServerCheck();
 
          $this->loadView('view-settings');
       }
@@ -235,6 +242,56 @@ class SettingsController extends \ShortPixel\Controller
             return true;
           }
           return false;
+      }
+
+      protected function avifServerCheck()
+      {
+          $cache = new CacheController();
+          if (apply_filters('shortpixel/avifcheck/override', false) === true)
+          { return; }
+
+          if (! $cache->getItem('avif_server_check')->exists())
+          {
+             $url = \WPSPIO()->plugin_url('res/img/test.avif');
+             $headers = get_headers($url);
+             $is_error = true;
+
+             // Defaults.
+             $error_message = __('Avif server test failed. Your server might not be configured to display AVIF files properly. Serving Avif might cause your images to not load', 'shortpixel-image-optimiser');
+             $error_detail = __('The request did not return valid HTTP Headers. Check if the plugin is allowed to get ' . $url, 'shortpixel-image-optimiser');
+
+             if (is_array($headers) )
+             {
+                 $contentType = $headers[8];
+                 $response = $headers[0];  //http response.
+
+                // http not ok, redirect etc. Shouldn't happen.
+                 if (strpos($response, '200') === false)
+                 {
+                   $error_detail = __('The request did not return OK status:', 'shortpixel-image-optimiser') . $response;
+                 }
+                 elseif(strpos($contentType, 'avif') === false)
+                 {
+                   $error_detail = __('Server responded with wrong content type: ', 'shortpixel_image_optimiser') . ' ' . $contentType;
+                 }
+                 else
+                 {
+                    $is_error = false;
+                 }
+             }
+
+             if ($is_error)
+             {
+                Notice::addError('<h4>' . $error_message . '</h4><p>' . $error_detail . '</p>');
+             }
+             else
+             {
+                   $item = $cache->getItem('avif_server_check');
+                   $item->setValue(time());
+                   $item->setExpires(WEEK_IN_SECONDS);
+                   $cache->storeItemObject($item );
+             }
+          }
       }
 
       protected function getMaxIntermediateImageSize() {
@@ -441,8 +498,6 @@ class SettingsController extends \ShortPixel\Controller
          $post['deliverWebp'] = $deliverwebp;
          unset($post['deliverWebpAlteringType']);
          unset($post['deliverWebpType']);
-
-//echo "<PRE>"; var_dump($deliverwebp); print_r($post); echo "</PRE>"; exit();
 
          return $post;
       }
