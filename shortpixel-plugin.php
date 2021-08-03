@@ -401,7 +401,7 @@ class ShortPixelPlugin
         'endBulk' => __('This will stop the bulk processing and return to the start. Do you want o to do this?', 'shortpixel-image-optimiser')
     ));
 
-    wp_register_script('shortpixel', plugins_url('/res/js/shortpixel' . $jsSuffix,SHORTPIXEL_PLUGIN_FILE), array('jquery', 'jquery.knob.min.js'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
+    wp_register_script('shortpixel', plugins_url('/res/js/shortpixel.js',SHORTPIXEL_PLUGIN_FILE), array('jquery', 'jquery.knob.min.js'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
 
     // Using an Array within another Array to protect the primitive values from being cast to strings

@@ -38,9 +38,6 @@ class nextGenViewController extends \ShortPixel\Controller
    }
 
    public function loadItem( $nextGenObj ) {
-
-    //   echo "<PRE>"; var_dump($nextGenObj); echo "</PRE>";
-
        $this->view = new \stdClass; // reset every row
 
        //$meta = $metadao->getMetaForPath($picture->imagePath);

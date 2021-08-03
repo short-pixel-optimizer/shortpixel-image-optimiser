@@ -54,7 +54,7 @@ var ShortPixel = function() {
             }
         });
 
-        if (window.ShortPixelProcessor && ShortPixelConstant[0].HAS_QUOTA == 1)
+        if (window.ShortPixelProcessor && ShortPixelConstants[0].HAS_QUOTA == 1)
           window.ShortPixelProcessor.Load();
 
         this.didInit = true;

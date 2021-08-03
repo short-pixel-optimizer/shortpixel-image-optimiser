@@ -155,9 +155,9 @@ class SettingsController extends \ShortPixel\Controller
           // Split this in the several screens. I.e. settings, advanced, Key Request IF etc.
           if (isset($this->postData['includeNextGen']) && $this->postData['includeNextGen'] == 1)
           {
-              $nextgen = new NextGen();
+              $nextgen = new NextGenController();
               $previous = $this->model->includeNextGen;
-              $nextgen->nextGenEnabled($previous);
+              $nextgen->enableNextGen($previous);
 
               // Reset any integration notices when updating settings.
               AdminNoticesController::resetIntegrationNotices();

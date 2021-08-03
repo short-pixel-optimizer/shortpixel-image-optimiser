@@ -79,6 +79,12 @@ class NextGenController
 
   }
 
+  /** called from settingController when enabling the nextGen settings */
+  public function enableNextGen($silent)
+  {
+     $this->addNextGenGalleriesToCustom($silent);
+  }
+
 
   public function add_screen_loads($use_screens)
   {
