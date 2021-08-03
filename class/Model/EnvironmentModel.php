@@ -105,6 +105,7 @@ class EnvironmentModel extends \ShortPixel\Model
     $this->is_apache = strpos(strtolower($_SERVER["SERVER_SOFTWARE"]), 'apache') !== false ? true : false;
     $this->is_gd_installed = function_exists('imagecreatefrompng');
     $this->is_curl_installed = function_exists('curl_init');
+
   }
 
 

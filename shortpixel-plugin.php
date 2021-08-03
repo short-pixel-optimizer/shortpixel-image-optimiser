@@ -169,6 +169,7 @@ class ShortPixelPlugin
                 add_filter( 'mpp_generate_metadata', array($admin,'handleImageUploadHook'), 10, 2 );
             }
           }
+
       }
       elseif($this->settings()->frontBootstrap && $this->env()->is_front)
       {
@@ -400,40 +401,18 @@ class ShortPixelPlugin
         'endBulk' => __('This will stop the bulk processing and return to the start. Do you want o to do this?', 'shortpixel-image-optimiser')
     ));
 
-  //  $mediaQ = MediaLibraryQueue::getInstance();
-  //  $customQ = CustomQueue::getInstance();
-
-    // Localize status of queue for resume function to start on proper panel.
-  /*  wp_localize_script('shortpixel-screen-bulk', 'ShortPixelScreenBulk', array(
-           'custom' => $customQ->getStats(),
-           'media' => $mediaQ->getStats(),
-    ) ); */
-
-
     wp_register_script('shortpixel', plugins_url('/res/js/shortpixel' . $jsSuffix,SHORTPIXEL_PLUGIN_FILE), array('jquery', 'jquery.knob.min.js'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
 
     // Using an Array within another Array to protect the primitive values from being cast to strings
     $ShortPixelConstants = array(array(
-      /*  'STATUS_SUCCESS'=>ShortPixelAPI::STATUS_SUCCESS,
-        'STATUS_EMPTY_QUEUE'=>self::BULK_EMPTY_QUEUE,
-        'STATUS_ERROR'=>ShortPixelAPI::STATUS_ERROR,
-        'STATUS_FAIL'=>ShortPixelAPI::STATUS_FAIL,
-        'STATUS_QUOTA_EXCEEDED'=>ShortPixelAPI::STATUS_QUOTA_EXCEEDED,
-        'STATUS_SKIP'=>ShortPixelAPI::STATUS_SKIP,
-        'STATUS_NO_KEY'=>ShortPixelAPI::STATUS_NO_KEY,
-        'STATUS_RETRY'=>ShortPixelAPI::STATUS_RETRY,
-        'STATUS_QUEUE_FULL'=>ShortPixelAPI::STATUS_QUEUE_FULL,
-        'STATUS_MAINTENANCE'=>ShortPixelAPI::STATUS_MAINTENANCE,
-        'STATUS_SEARCHING' => ShortPixelAPI::STATUS_SEARCHING, */
         'WP_PLUGIN_URL'=>plugins_url( '', SHORTPIXEL_PLUGIN_FILE ),
         'WP_ADMIN_URL'=>admin_url(),
         'API_IS_ACTIVE' => $keyControl->keyIsVerified(),
-  //      'DEFAULT_COMPRESSION'=>0 + intval($this->_settings->compressionType), // no int can happen when settings are empty still
-  //      'MEDIA_ALERT'=>$this->_settings->mediaAlert ? "done" : "todo",
         'FRONT_BOOTSTRAP'=> $settings->frontBootstrap && (!isset($settings->lastBackAction) || (time() - $settings->lastBackAction > 600)) ? 1 : 0,
         'AJAX_URL'=>admin_url('admin-ajax.php'),
         'BULK_SECRET' => $secretKey,
+        'nonce_ajaxrequest' => wp_create_nonce('ajax_request'),
         'HAS_QUOTA' => ($quotaController->hasQuota()) ? 1 : 0,
 
     ));

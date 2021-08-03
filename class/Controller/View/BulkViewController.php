@@ -77,9 +77,7 @@ class BulkViewController extends \ShortPixel\Controller
     $sc->reset(); // Get a fresh stat.
 
     $excludeSizes = \wpSPIO()->settings()->excludeSizes;
-var_dump($sc->find('media', 'itemsTotal'));
-var_dump( $sc->find('media', 'items') );
-var_dump( $sc->find('media', 'thumbs') );
+
 
     $approx->media->items = $sc->find('media', 'itemsTotal') - $sc->find('media', 'items');
 

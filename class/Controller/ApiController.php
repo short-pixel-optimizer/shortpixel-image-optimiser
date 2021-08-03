@@ -160,15 +160,8 @@ class ApiController
 
   protected function doRequest($item, $requestParameters)
   {
-
-    //WpShortPixel::log("ShortPixel API Request Settings: " . json_encode($requestParameters));
     $response = wp_remote_post($this->apiEndPoint, $requestParameters );
-
     Log::addDebug('ShortPixel API Request sent', $requestParameters);
-  //  Log::addtemp('Remote Response ', $response);
-
-//echo "<PRE>"; var_dump($response); echo "</PRE>";  exit();
-    //WpShortPixel::log('RESPONSE: ' . json_encode($response));
 
     //only if $Blocking is true analyze the response
     if ( $requestParameters['blocking'] )

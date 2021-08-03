@@ -54,7 +54,7 @@ var ShortPixel = function() {
             }
         });
 
-        if (window.ShortPixelProcessor && ShortPixelConstants[0].HAS_QUOTA == 1)
+        if (window.ShortPixelProcessor && ShortPixelConstant[0].HAS_QUOTA == 1)
           window.ShortPixelProcessor.Load();
 
         this.didInit = true;
@@ -367,7 +367,7 @@ var ShortPixel = function() {
     function checkQuota() {
         var data = {
           action:'shortpixel_check_quota',
-          nonce: ShortPixelProcessorData.nonce_ajaxrequest,
+          nonce: ShortPixelConstants[0].nonce_ajaxrequest,
           return_json: true
         };
 
@@ -483,7 +483,7 @@ var ShortPixel = function() {
     }
 
     function getBackupSize() {
-        var browseData = { 'action': 'shortpixel_get_backup_size', nonce: ShortPixelProcessorData.nonce_ajaxrequest };
+        var browseData = { 'action': 'shortpixel_get_backup_size', nonce: ShortPixelConstants[0].nonce_ajaxrequest };
         var browseResponse = "";
         jQuery.ajax({
             type: "POST",
@@ -513,7 +513,7 @@ var ShortPixel = function() {
         if (ShortPixel.isEmailValid(jQuery('#pluginemail').val())) {
             jQuery('#pluginemail-error').css('display', 'none');
             var browseData = { 'action': 'shortpixel_new_api_key',
-                               'email': jQuery('#pluginemail').val(), nonce: ShortPixelProcessorData.nonce_ajaxrequest};
+                               'email': jQuery('#pluginemail').val(), nonce: ShortPixelConstants[0].nonce_ajaxrequest};
             jQuery.ajax({
                 type: "POST",
                 async: false,
@@ -550,8 +550,9 @@ var ShortPixel = function() {
         jQuery("#shortPixelProposeUpgrade .sp-modal-body").html("");
         jQuery("#shortPixelProposeUpgradeShade").css("display", "block");
         jQuery("#shortPixelProposeUpgrade").removeClass('shortpixel-hide');
+        jQuery("#shortPixelProposeUpgradeShade").on('click', this.closeProposeUpgrade);
         //get proposal from server
-        var browseData = { 'action': 'shortpixel_propose_upgrade', nonce: ShortPixelProcessorData.nonce_ajaxrequest};
+        var browseData = { 'action': 'shortpixel_propose_upgrade', nonce: ShortPixelConstants[0].nonce_ajaxrequest};
         jQuery.ajax({
             type: "POST",
             url: ShortPixel.AJAX_URL,
@@ -771,7 +772,7 @@ var ShortPixel = function() {
             jQuery.ajax({
                 type: "POST",
                 url: ShortPixel.AJAX_URL,
-                data: { action : 'shortpixel_get_comparer_data', id : id, type: type, nonce: ShortPixelProcessorData.nonce_ajaxrequest },
+                data: { action : 'shortpixel_get_comparer_data', id : id, type: type, nonce: ShortPixelConstants[0].nonce_ajaxrequest },
                 success: function(response) {
                   //  data = JSON.parse(response);
 
