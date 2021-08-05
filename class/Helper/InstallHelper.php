@@ -52,7 +52,7 @@ class InstallHelper
       $log->delete();
 
     global $wpdb;
-    $sql = "delete from wp_options where option_name like '%_transient_shortpixel%'";
+    $sql = "delete from " . $wpdb->options . " where option_name like '%_transient_shortpixel%'";
     $wpdb->query($sql); // remove transients.
   }
 

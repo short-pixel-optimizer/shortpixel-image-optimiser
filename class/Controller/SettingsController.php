@@ -330,7 +330,7 @@ class SettingsController extends \ShortPixel\Controller
       protected function loadQuotaData()
       {
         // @todo Probably good idea to put this in a 2-5 min transient or so.
-        $quotaController = quotaController::getInstance();
+        $quotaController = QuotaController::getInstance();
 
         if (is_null($this->quotaData))
           $this->quotaData = $quotaController->getQuota(); //$this->shortPixel->checkQuotaAndAlert();

@@ -242,7 +242,7 @@ class OptimizeController
           $customQ = $this->getQueue('custom');
           $results->custom = $this->runTick($customQ);
         }
-        Log::addTemp('ProcessQ Results', $results);
+
         $results->total = $this->calculateStatsTotals($results);
     //    $this->checkCleanQueue($results);
 
@@ -355,14 +355,26 @@ class OptimizeController
     protected function handleAPIResult(Object $item, $q)
     {
       $fs = \wpSPIO()->filesystem();
-      $result = $item->result;
+
       Log::addTemp('HandleAPIResult', $result);
 
       $qtype = $q->getType();
       $qtype = strtolower($qtype);
 
       $imageItem = $fs->getImage($item->item_id, $qtype);
-      $item->result->filename = $imageItem->getFileName();
+      // If something is in the queue for long, but somebody decides to trash the file in the meanwhile.
+      if ($imageItem === false)
+      {
+        $item->result->message = __("File Error. File could not be loaded with this ID ", 'shortpixel-image-optimiser');
+        $item->result->apiStatus = ApiController::STATUS_NOT_API;
+        $item->fileStatus = ImageModel::FILE_STATUS_ERROR;
+        $item->result->is_done = true;
+        $item->result->is_error = true;
+      }
+      else
+        $item->result->filename = $imageItem->getFileName();
+
+      $result = $item->result;
 
       if ($result->is_error)
       {

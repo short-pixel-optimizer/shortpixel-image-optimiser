@@ -223,9 +223,18 @@ class UiHelper
           if ($mediaItem->hasBackup())
           {
             if ($mediaItem->get('type') == 'custom')
-                $list_actions[] = self::getAction('compare-custom', $id);
+            {
+                if ($mediaItem->getExtension() !== 'pdf') // no support for this
+                  $list_actions[] = self::getAction('compare-custom', $id);
+            }
             else
-              $list_actions[] = self::getAction('compare', $id);
+            {
+              // PDF without thumbnail can't be compared.
+              if ($mediaItem->getExtension() == 'pdf' && ! $mediaItem->getThumbnail('full') || ! $mediaItem->getThumbnail('full')->hasBackup())
+              { }
+              else
+                $list_actions[] = self::getAction('compare', $id);
+            }
 
            switch($mediaItem->getMeta('compressionType'))
            {
