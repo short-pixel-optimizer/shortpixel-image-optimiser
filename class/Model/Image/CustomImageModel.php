@@ -170,6 +170,10 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
     /** Get FileTypes that might be optimized. Checking for setting should go via isProcessableFileType! */
     public function getOptimizeFileType($type = 'webp')
     {
+        // Pdf files can't have special images.
+        if ($this->getExtension() == 'pdf')
+          return array();
+
         if ($type == 'webp')
         {
           $types = $this->getWebps();
@@ -178,6 +182,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         {
             $types = $this->getAvifs();
         }
+
 
         $toOptimize = array();
         $fs = \WPSPIO()->filesystem();
@@ -472,7 +477,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
       } */
       $improvements['main'] = array($this->getImprovement(), 0);
 
-      return $this->improvements;
+      return $improvements;
 
     //  return $improvements; // we have no thumbnails.
     }

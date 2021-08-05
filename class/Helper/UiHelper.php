@@ -229,11 +229,18 @@ class UiHelper
             }
             else
             {
-              // PDF without thumbnail can't be compared.
-              if ($mediaItem->getExtension() == 'pdf' && ! $mediaItem->getThumbnail('full') || ! $mediaItem->getThumbnail('full')->hasBackup())
-              { }
-              else
-                $list_actions[] = self::getAction('compare', $id);
+                // PDF without thumbnail can't be compared.
+                $showCompare = true;
+                if ($mediaItem->getExtension() == 'pdf')
+                {
+  				            if (! $mediaItem->getThumbnail('full'))
+  					               $showCompare = false;
+  				            elseif(! $mediaItem->getThumbnail('full')->hasBackup())
+  					             $showCompare = false;
+  			         }
+
+  				       if ($showCompare)
+                   $list_actions[] = self::getAction('compare', $id);
             }
 
            switch($mediaItem->getMeta('compressionType'))
