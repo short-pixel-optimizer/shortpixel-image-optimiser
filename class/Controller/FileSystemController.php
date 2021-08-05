@@ -135,7 +135,7 @@ Class FileSystemController extends \ShortPixel\Controller
          $filepath = apply_filters('shortpixel/file/virtual/translate', $filepath, $file);
       }
 
-      // Implement this code better here.
+      // Implement this code better here. @todo Get rid of MetaFacade here
       $backup_subdir = \ShortPixelMetaFacade::returnSubDir($filepath);
 
 /* from fileModel:
@@ -144,7 +144,6 @@ Class FileSystemController extends \ShortPixel\Controller
       $directory = new DirectoryModel($backupDirectory);
 */
       $backup_fulldir = SHORTPIXEL_BACKUP_FOLDER . '/' . $backup_subdir;
-      Log::addDebug('Get File BackupDirectory' . $backup_fulldir);
 
       $directory = $this->getDirectory($backup_fulldir);
 
@@ -396,6 +395,7 @@ Class FileSystemController extends \ShortPixel\Controller
 
         return $fileArray;
     }
+
 
 
 }

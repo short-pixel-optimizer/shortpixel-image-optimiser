@@ -328,13 +328,12 @@ echo "<PRE>"; var_dump($item->key(wp_basename($original_url))); echo "</PRE>";
     */
     public function preventInitialUpload($bool, $data, $post_id, $old_provider_object)
     {
-        $settings = \wpSPIO()->settings();
         $fs = \wpSPIO()->filesystem();
 
         if (! $this->offloading)
           return false;
 
-        if ($settings->autoMediaLibrary)
+        if (\wpSPIO()->env()->is_autoprocess)
         {
           // Don't prevent whaffever if shortpixel is already done. This can be caused by plugins doing a metadata update, we don't care then.
           $mediaItem = $fs->getImage($post_id, 'media');

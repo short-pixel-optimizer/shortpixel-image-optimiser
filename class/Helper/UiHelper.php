@@ -126,7 +126,6 @@ class UiHelper
         $processWebp = ($imageObj->isProcessableFileType('webp')) ? true : false;
         $processAvif = ($imageObj->isProcessableFileType('avif')) ? true : false;
 
-
         if (count($optimizable) > 0)
         {
            $output .= '<div class="thumbs-todo"><h4>' . sprintf(__('%d to optimize', 'shortpixel-image-optimiser'), count($optimizable)) . '</h4>';
@@ -214,7 +213,7 @@ class UiHelper
                  elseif ($optimizableWebp > 0)
                    $text  = sprintf(__('Optimize %s webps','shortpixel-image-optimiser'),$optimizableWebp);
                  else
-                    $text  = sprintf(__('Optimize %s webps','shortpixel-image-optimiser'),$optimizableAvif);
+                    $text  = sprintf(__('Optimize %s avifs','shortpixel-image-optimiser'),$optimizableAvif);
                  $action['text'] = $text;
              }
              $list_actions['optimizethumbs'] = $action;

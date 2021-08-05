@@ -492,9 +492,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
          }
         $bool = $backupFile->move($this);
 
-        if ($bool)
-          $this->image_meta = new ImageMeta(); // wipe metadata for this image.
-        else
+        //if ($bool)
+          //$this->image_meta = new ImageMeta(); // wipe metadata for this image.
+        if (! $bool)
         {
           ResponseController::add()->withMessage(__('Moving Backupfile failed' , 'shortpixel-image-optimiser'));
           Log::addTemp('moving file failed'); // @todo Proper error here.

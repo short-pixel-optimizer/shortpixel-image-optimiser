@@ -242,6 +242,7 @@ class OptimizeController
           $customQ = $this->getQueue('custom');
           $results->custom = $this->runTick($customQ);
         }
+        Log::addTemp('ProcessQ Results', $results);
         $results->total = $this->calculateStatsTotals($results);
     //    $this->checkCleanQueue($results);
 
@@ -284,7 +285,6 @@ class OptimizeController
       $json = $this->queueToJson($result);
       $this->checkQueueClean($result, $Q);
 
-    //  Log::addDebug('JSON RETURN', $json);
       return $json;
 
     }
@@ -559,7 +559,7 @@ class OptimizeController
                 if ($thumb !== false)
                 {
                    // @todo This should deliver the medialib item to the queue instead of this.
-                   if ($settings->autoMediaLibrary)
+                   if (\wpSPIO()->env()->is_autoprocess)
                       $thumb->setMeta('status', ImageModel::FILE_STATUS_PENDING);
                    else
                       $thumb->setMeta('status', ImageModel::FILE_STATUS_UNPROCESSED);
@@ -618,6 +618,10 @@ class OptimizeController
 
         if (property_exists($result, 'stats'))
           $json->stats = $result->stats;
+
+      /*  Log::addDebug('JSON RETURN', $json);
+        if (property_exists($result,'items'))
+          Log::addDebug('Result Items', $result->items); */
 
 
         return $json;

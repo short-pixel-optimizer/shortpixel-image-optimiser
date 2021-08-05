@@ -391,4 +391,35 @@ class DirectoryModel extends \ShortPixel\Model
       return $parentDir;
   }
 
+  public function delete()
+  {
+     return rmdir($this->getPath());
+  }
+
+  /** This will try to remove the whole structure. Use with care.
+  *  This is mostly used to clear the backups.
+  */
+  public function recursiveDelete()
+  {
+       if (! $this->exists() || ! $this->is_writable())
+         return false;
+
+       // This is a security measure to prevent unintended wipes.
+       $wpdir = \wpSPIO()->filesystem()->getWPUploadBase();
+       if (! $this->isSubFolderOf($wpdir))
+        return false;
+
+       $files = $this->getFiles();
+       $subdirs = $this->getSubDirectories();
+
+       foreach($files as $file)
+        $file->delete();
+
+       foreach($subdirs as $subdir)
+          $subdir->recursiveDelete();
+
+        $this->delete();
+
+  }
+
 }

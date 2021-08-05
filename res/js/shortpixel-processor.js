@@ -155,7 +155,7 @@ window.ShortPixelProcessor =
                isBulk = true;
 
             this.worker.postMessage({'action' : 'setEnv',
-            'data': {'isBulk' : isBulk, 'isMedia': true, 'isCustom': true, 'ajaxUrl' : ajaxURL, 'secret' : this.localSecret}
+            'data': {'isBulk' : isBulk, 'isMedia': this.screen.isMedia, 'isCustom': this.screen.isCustom, 'ajaxUrl' : ajaxURL, 'secret' : this.localSecret}
             });
 
             /*this.worker.postMessage({'action': 'init', 'data' : [ajaxURL, this.localSecret], 'isBulk' : isBulk}); */

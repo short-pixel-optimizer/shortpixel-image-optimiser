@@ -15,7 +15,7 @@ class FrontController extends \ShortPixel\Controller
 
   public function __construct()
   {
-    $do_front =  \wpSPIO()->settings()->frontBootstrap;
+    $do_front =  (\wpSPIO()->settings()->frontBootstrap && \wpSPIO()->env()->is_autoprocess) ? true : false;
 
     if (\wpSPIO()->env()->is_front) // if is front.
     {
@@ -23,11 +23,12 @@ class FrontController extends \ShortPixel\Controller
       if ($do_front)
         $this->hookFrontProcessing();
     }
-    // Ajax call is not front, but backend. Hook nopriv if ajax is incoming and front process is on.
-    if (wpSPIO()->env()->is_ajaxcall && $do_front)
+  //  var_dump(wpSPIO()->env());
+    // Ajax call is not front, but backend. Hook nopriv if ajax is incoming and front process is on. ( So it should be not doing that? )
+    /*if (wpSPIO()->env()->is_ajaxcall && $do_front)
     {
         $this->hookFrontProcessing();
-    }
+    } */
   }
 
   protected function initWebpHooks()
@@ -53,6 +54,7 @@ class FrontController extends \ShortPixel\Controller
 
   protected function hookFrontProcessing()
   {
+      Log::addDebug('Doing Front Processing now');
       $optimizeController = new OptimizeController();
       $optimizeController->processQueue(array('media', 'custom'));
   }

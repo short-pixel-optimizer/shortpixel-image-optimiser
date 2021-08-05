@@ -144,12 +144,12 @@ class ShortPixelPlugin
       $admin = Controller\AdminController::getInstance();
 
 
-      if ($this->settings()->autoMediaLibrary)
+      if ($this->env()->is_autoprocess)
       {
           // compat filter to shortcircuit this in cases.  (see external - visualcomposer)
           if (apply_filters('shortpixel/init/automedialibrary', true))
           {
-            if($this->settings()->autoMediaLibrary && $this->settings()->png2jpg) {
+            if($this->settings()->png2jpg) {
 
 
               add_action( 'add_attachment', array($admin,'handlePng2JpgHook'));
@@ -162,12 +162,10 @@ class ShortPixelPlugin
             // @todo what's this?
             add_action('wp_handle_replace', array($admin,'handleReplaceHook'));
 
-            if($this->settings()->autoMediaLibrary) {
+            add_filter( 'wp_generate_attachment_metadata', array($admin,'handleImageUploadHook'), 10, 2 );
+            // @todo Document what plugin does mpp
+            add_filter( 'mpp_generate_metadata', array($admin,'handleImageUploadHook'), 10, 2 );
 
-                add_filter( 'wp_generate_attachment_metadata', array($admin,'handleImageUploadHook'), 10, 2 );
-                // @todo Document what plugin does mpp
-                add_filter( 'mpp_generate_metadata', array($admin,'handleImageUploadHook'), 10, 2 );
-            }
           }
 
       }
@@ -252,32 +250,10 @@ class ShortPixelPlugin
           }
       }
 
-      //automatic optimization
-    //  add_action( 'wp_ajax_shortpixel_image_processing', array( &$this, 'handleImageProcessing') );
-      //manual optimization
-      //add_action( 'wp_ajax_shortpixel_manual_optimization', array(&$this, 'handleManualOptimization'));
-      //check status
-    //  add_action( 'wp_ajax_shortpixel_check_status', array(&$this, 'checkStatus'));
-
-      // deprecated - dismissAdminNotice should not be called no longer.
-      /*add_action( 'wp_ajax_shortpixel_dismiss_notice', array(&$this, 'dismissAdminNotice'));
-      add_action( 'wp_ajax_shortpixel_dismiss_media_alert', array($this, 'dismissMediaAlert'));
-      add_action( 'wp_ajax_shortpixel_dismissFileError', array($this, 'dismissFileError')); */
-
-      //check quota
-      //add_action('wp_ajax_shortpixel_check_quota', array(&$this, 'handleCheckQuota'));
-      //add_action('admin_action_shortpixel_check_quota', array(&$this, 'handleCheckQuota'));
-      //This adds the constants used in PHP to be available also in JS
-      //add_action( 'admin_enqueue_scripts', array( $this, 'shortPixelJS') );
-      //add_action( 'admin_footer', array($this, 'admin_footer_js') );
-
-      //register a method to display admin notices if necessary
-      //add_action('admin_notices', array( &$this, 'displayAdminNotices'));
-
 
   }
 
-  public function ajaxHooks()
+  protected function ajaxHooks()
   {
 
     // Ajax hooks. Should always be prepended with ajax_ and *must* check on nonce in function
@@ -293,7 +269,7 @@ class ShortPixelPlugin
     // Custom Media
     add_action('wp_ajax_shortpixel_browse_content', array(OtherMediaController::getInstance(), 'ajaxBrowseContent'));
     add_action('wp_ajax_shortpixel_get_backup_size', array(AjaxController::getInstance(), 'ajax_getBackupFolderSize'));
-//        add_action('wp_ajax_shortpixel_get_comparer_data', array(&$this, 'getComparerData'));
+
 
     /** Most likely already superseded by actions in SettingsController
     * @todo Remove if new api key works w/o issues

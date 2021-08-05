@@ -39,7 +39,6 @@ class AdminController extends \ShortPixel\Controller
         Log::addTemp('Handle Image Upload: Item Added to Queue' . $id);
 
         return $meta; // It's a filter, otherwise no thumbs
-
     }
 
     /** For conversion
@@ -122,7 +121,7 @@ class AdminController extends \ShortPixel\Controller
     *   hook - admin_bar_menu
     *  @param Obj $wp_admin_bar
     */
-    function toolbar_shortpixel_processing( $wp_admin_bar ) {
+    public function toolbar_shortpixel_processing( $wp_admin_bar ) {
 
         if (! \wpSPIO()->env()->is_screen_to_use )
           return; // not ours, don't load JS and such.
@@ -175,5 +174,4 @@ class AdminController extends \ShortPixel\Controller
         }
     }
 
-
-}
+} // class

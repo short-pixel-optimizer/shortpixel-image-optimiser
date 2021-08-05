@@ -46,7 +46,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
   public function getOptimizePaths()
     {
       if (! $this->isProcessable())
-        return;
+        return array();
 
        $paths = array();
 
@@ -65,7 +65,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         else
           $url = $fs->pathToUrl($this);
 
-        if ($this->isProcessable())
+        if ($this->isProcessable(true))
           return array($url);
 
         return array();
@@ -95,11 +95,11 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
     }
 
     /* Check if an image in theory could be processed. Check only exclusions, don't check status etc */
-    public function isProcessable()
+    public function isProcessable($strict = false)
     {
         $bool = parent::isProcessable();
 
-        if (! $bool)
+        if (! $bool && ! $strict)
         {
           // Todo check if Webp / Acif is active, check for unoptimized items
           if ($this->isProcessableFileType('webp'))
@@ -108,20 +108,20 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
              $bool = true;
 
         }
-
         return $bool;
     }
 
 
-    protected function getWebps()
+
+
+    protected function getWebp()
     {
       $fs = \wpSPIO()->filesystem();
       $webp = $fs->getFile($this->getFileDir() . $this->getFileBase() . '.webp');
 
-
       if (! $webp->exists())
       {
-        return array($webp);
+        return false;
       }
 
       $double_webp = \wpSPIO()->env()->useDoubleWebpExtension();
@@ -136,14 +136,19 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
       $webp = $fs->getFile($filepath);
 
-      $webps = array();
       if ($webp->exists())
-        $webps = array($webp);
+        return $webp;
 
-      return $webps;
+      return false;
     }
 
-    protected function getAvifs()
+    protected function getWebps()
+    {
+         $webp = array($this->getWebp());
+         return array_filter($webp);
+    }
+
+    protected function getAvif()
     {
       $fs = \wpSPIO()->filesystem();
       $avif = $fs->getFile($this->getFileDir() . $this->getFileBase() . '.avif');
@@ -151,9 +156,15 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
       $avifs = array();
 
       if ($avif->exists())
-        $avifs[]= $avif;
+        return $avif;
 
-      return $avifs;
+      return false;
+    }
+
+    protected function getAvifs()
+    {
+         $avif = array($this->getAvif());
+         return array_filter($avif);
     }
 
     /** Get FileTypes that might be optimized. Checking for setting should go via isProcessableFileType! */
@@ -201,6 +212,9 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
     public function handleOptimized($downloadResults)
     {
        $bool = parent::handleOptimized($downloadResults);
+
+       $this->handleOptimizedFileType($downloadResults);
+
 
        if ($bool)
        {
@@ -271,11 +285,11 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         $this->image_meta = $metaObj;
     }
 
+    /** Load a CustomImageModel as Stub ( to be added ) . Checks if the image is already added as well */
     public function setStub(string $path, bool $load = true)
     {
        $this->fullpath = $path;
        $this->path_md5 = md5($this->fullpath);
-
 
        global $wpdb;
 
@@ -410,6 +424,32 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         return true;
       else
         return false;
+    }
+
+    public function deleteMeta()
+    {
+      global $wpdb;
+      $table = $wpdb->prefix . 'shortpixel_meta';
+      $where = array('id' => $this->id);
+
+      $result = $wpdb->delete($table, $where, array('%d'));
+
+      return $result;
+    }
+
+    public function onDelete()
+    {
+        $this->deleteMeta();
+
+        $webp = $this->getWebp();
+        $avif = $this->getAvif();
+
+        if ($webp !== false && $webp->exists())
+          $webp->delete();
+
+        if ($avif !== false && $avif->exists())
+           $avif->delete();
+
     }
 
     public function getImprovement($int = false)

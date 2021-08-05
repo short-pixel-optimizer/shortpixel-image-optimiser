@@ -406,11 +406,8 @@ class FileModel extends \ShortPixel\Model
 
     if (is_null($this->backupDirectory))
     {
-      /*$backup_dir = str_replace($fs->getWPAbsPath(), "", $this->directory->getPath());
-      $backupDirectory = SHORTPIXEL_BACKUP_FOLDER . '/' . $backup_dir;
-      $directory = new DirectoryModel($backupDirectory); */
-      $directory = $fs->getBackupDirectory($this);
 
+      $directory = $fs->getBackupDirectory($this);
 
       if ($directory === false || ! $directory->exists()) // check if exists. FileModel should not attempt to create.
       {

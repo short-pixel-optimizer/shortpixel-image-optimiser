@@ -111,6 +111,13 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
         return $avif;
       }
 
+    // Check if exists on disk
+    $filepath = $this->getFileDir() . $this->getFileBase() . '.webp';
+    $avif = $fs->getFile($filepath);
+
+    if (! $avif->is_virtual() && $avif->exists())
+      return $avif;
+
     return false;
   }
 
@@ -121,7 +128,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
       {
         return false;
       }
-      
+
       if ($type == 'webp')
         $file = $this->getWebp();
       elseif ($type == 'avif')
@@ -132,6 +139,18 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
         return true;
       else
         return false;
+  }
+
+  public function onDelete()
+  {
+      $webp = $this->getWebp();
+      if ($webp !== false && $webp->exists())
+         $webp->delete();
+      $avif = $this->getAvif();
+      if ($avif !== false && $avif->exists())
+         $avif->delete();
+
+      return parent::onDelete();
   }
 
   /** @todo Might be moved to ImageModel, if customImage also has Webp */

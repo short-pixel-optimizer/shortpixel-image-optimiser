@@ -107,7 +107,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   /** Get FileTypes that might be optimized. Checking for setting should go via isProcessableFileType! */
   public function getOptimizeFileType($type = 'webp')
   {
-      if ($type = 'webp')
+      if ($type == 'webp')
       {
         $types = $this->getWebps();
       }
@@ -339,7 +339,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   public function handleOptimized($tempFiles)
   {
     //  Log::addTemp('TEMPFILES, HandleOptimized', $tempFiles);
-       Log::addTemp('MediaLibraryModel :: HandleOptimized');
+      Log::addTemp('MediaLibraryModel :: HandleOptimized');
       $return = true;
       if (! $this->isOptimized() ) // main file might not be contained in results
       {

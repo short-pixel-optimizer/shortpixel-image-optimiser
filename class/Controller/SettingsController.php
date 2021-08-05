@@ -371,12 +371,12 @@ class SettingsController extends \ShortPixel\Controller
             $foldersArray[] = $fsFolder->getPath();
           }
 
-          foreach($customFolders as $index => $folder)
+          /*foreach($customFolders as $index => $folder)
           {
             if(in_array($folder->getPath(), $foldersArray )) {
                 $folder->setNextGen(true);
               }
-          }
+          } */
         }
 
         return $customFolders;
@@ -456,7 +456,8 @@ class SettingsController extends \ShortPixel\Controller
 
           if (isset($post['emptyBackup']))
           {
-            $this->shortPixel->emptyBackup();
+              $dir = \wpSPIO()->filesystem()->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
+              $dir->recursiveDelete();
           }
           unset($post['emptyBackup']);
 

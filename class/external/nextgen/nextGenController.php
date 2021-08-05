@@ -3,7 +3,9 @@ namespace ShortPixel;
 use ShortPixel\Notices\NoticeController as Notice;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
+use ShortPixel\Model\File\DirectoryOtherMediaModel as DirectoryOtherMediaModel;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
+use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
 
 class NextGenController
 {
@@ -133,7 +135,7 @@ class NextGenController
       $gid = $wpdb->get_var($sql);
 
       if (! is_null($gid) && is_numeric($gid))
-        $directory->setNextGen(true);
+        $directory->set('status', DirectoryOtherMediaModel::DIRECTORY_STATUS_NEXTGEN);
   }
 
   /* @return DirectoryModel */
@@ -160,8 +162,7 @@ class NextGenController
   * Note - this function does *Not* check if nextgen is enabled, not if checks custom Tables. Use nextgenEnabled for this.
   * Enabled checks are not an external class issue, so must be done before calling.
   */
-  public function addNextGenGalleriesToCustom($silent = true) {
-      $shortPixel = \wpSPIO()->getShortPixel();
+   public function addNextGenGalleriesToCustom($silent = true) {
       $fs = \wpSPIO()->filesystem();
       $homepath = $fs->getWPFileBase();
       $folderMsg = "";
@@ -170,18 +171,22 @@ class NextGenController
 
       $otherMedia = new otherMediaController();
 
-      $meta = $shortPixel->getSpMetaDao();
-
       foreach($ngGalleries as $gallery) {
           $folder = $otherMedia->getFolderByPath($gallery->getPath());
-          if ($folder->hasDBEntry())
+          if ($folder->get('in_db'))
           {
             continue;
           }
 
-          $result = $otherMedia->addDirectory($gallery->getPath());
-          if (! $result)
+          $directory = $otherMedia->addDirectory($gallery->getPath());
+
+          if (! $directory)
             Log::addWarn('Could not add this directory' . $gallery->getPath() );
+          else
+          {
+             $directory->set('status', DirectoryOtherMediaModel::DIRECTORY_STATUS_NEXTGEN);
+             $directory->save();
+          }
       }
 
       if (count($ngGalleries) > 0)
@@ -199,13 +204,13 @@ class NextGenController
 
   public function handleImageUpload($image)
   {
-    $shortPixel = \wpSPIO()->getShortPixel();
-    $metadao = $shortPixel->getSpMetaDao();
     $otherMedia = new OtherMediaController();
+    //$fs = \wpSPIO()->filesystem();
 
     if (\wpSPIO()->settings()->includeNextGen == 1) {
           $imageFsPath = $this->getImageAbspath($image);
-          $customFolders = $otherMedia->getAllFolders();
+          $otherMedia->addImage($imageFsPath);
+          /*$customFolders = $otherMedia->getAllFolders();
 
           $folderId = -1;
           foreach ($customFolders as $folder) {
@@ -218,14 +223,23 @@ class NextGenController
               $galleryPath = dirname($imageFsPath);
               $folder = $otherMedia->addDirectory($galleryPath);
 
-            //  $folder = new \ShortPixelFolder(array("path" => $galleryPath), $this->_settings->excludePatterns);
-          //    $folderMsg = $metadao->saveFolder($folder);
               if ($folder)
                 $folderId = $folder->getId();
-              //self::log("NG Image Upload: created folder from path $galleryPath : Folder info: " .  json_encode($folder));
           }
 
-          return $shortPixel->addPathToCustomFolder($imageFsPath, $folderId, $image->pid);
+          $imageObj = $fs->getCustomStub($imageFsPath, true);
+          if ($imageObj->get('in_db') == false)
+          {
+            $imageObj->setFolderId($folderId);
+            $imageObj->
+
+            if (\wpSPIO()->env()->is_autoprocess)
+            {
+
+            }
+          } */
+
+        //  return $shortPixel->addPathToCustomFolder($imageFsPath, $folderId, $image->pid);
       }
   }
 
@@ -236,12 +250,13 @@ class NextGenController
 
   public function onDeleteImage($nggId, $size)
   {
-
       $image = $this->getNGImageByID($nggId);
       $path  = $this->getImageAbspath($image);
 
-      $meta = \wpSPIO()->getShortPixel()->getSpMetaDao()->getMetaForPath($path);
-      \wpSPIO()->getShortPixel()->getSpMetaDao()->delete($meta);
+//      $meta = \wpSPIO()->getShortPixel()->getSpMetaDao()->getMetaForPath($path);
+//      \wpSPIO()->getShortPixel()->getSpMetaDao()->delete($meta);
+
+
 
   }
 

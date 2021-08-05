@@ -182,7 +182,7 @@ class OtherMediaController extends \ShortPixel\Controller
        {
          if ($directory->isRemoved())
          {
-            $directory->setStatus(DirectoryOtherMediaModel::DIRECTORY_STATUS_NORMAL);
+            $directory->set('status', DirectoryOtherMediaModel::DIRECTORY_STATUS_NORMAL);
             $directory->updateFileContentChange(); // does a save. Dunno if that's wise.
             $directory->refreshFolder(true);
          }
@@ -194,6 +194,38 @@ class OtherMediaController extends \ShortPixel\Controller
         return $directory;
       else
         return false;
+    }
+
+    // Main function to add a path to the Custom Media.
+    public function addImage($path_or_file, $args = array())
+    {
+        $defaults = array(
+          'is_nextgen' => false,
+        );
+
+        $args = wp_parse_args($args, $defaults);
+
+        $fs = \wpSPIO()->filesystem();
+
+        if (is_object($path_or_file)) // assume fileObject
+          $file = $path_or_file;
+        else
+        {
+           $file = $fs->getFile($path_or_file);
+        }
+        $folder = $this->getFolderByPath($file->getFileDir());
+
+        if (! $folder->get('in_db'))
+        {
+            if ($args['is_nextgen'] == true)
+            {
+               $folder->set('status', DirectoryOtherMediaModel::DIRECTORY_STATUS_NEXTGEN );
+            }
+            $folder->save();
+        }
+
+        $folder->addImages(array($file));
+
     }
 
 

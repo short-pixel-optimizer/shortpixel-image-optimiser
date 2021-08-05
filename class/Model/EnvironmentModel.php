@@ -35,6 +35,7 @@ class EnvironmentModel extends \ShortPixel\Model
 
     // Debug flag
     public $is_debug = false;
+    public $is_autoprocess = false;
 
     protected static $instance;
 
@@ -117,19 +118,22 @@ class EnvironmentModel extends \ShortPixel\Model
     $this->determineFrontBack();
 
 
-    if (defined('DOING_AJAX') && DOING_AJAX)
+    if (wp_doing_ajax())
     {
       $this->is_ajaxcall = true;
     }
 
     $this->is_debug = Log::debugIsActive();
 
+    if (\wpSPIO()->settings()->autoMediaLibrary == 1)
+      $this->is_autoprocess = true;
+
   }
 
   // check if this request is front or back.
   protected function determineFrontBack()
   {
-    if ( is_admin() )
+    if ( is_admin() || wp_doing_ajax() )
       $this->is_admin = true;
     else
       $this->is_front = true;

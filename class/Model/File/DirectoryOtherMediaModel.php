@@ -210,7 +210,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
       $files = $fs->getFilesRecursive($this, $filter);
 
       \wpSPIO()->settings()->hasCustomFolders = time(); // note, check this against bulk when removing. Custom Media Bulk depends on having a setting.
-      $result = $this->batchInsertImages($files);
+      $result = $this->addImages($files);
 
       $this->stats = null; //reset
       $stats = $this->getStats();
@@ -258,10 +258,10 @@ class DirectoryOtherMediaModel extends DirectoryModel
     }
 
   /** This function is called by OtherMediaController / RefreshFolders. Other scripts should not call it
-  * @private
+  * @public
   * @param Array of CustomMediaImageModel stubs.
   */
-  private function batchInsertImages($files) {
+  public function addImages($files) {
 
       global $wpdb;
       /*$sqlCleanup = "DELETE FROM {$this->db->getPrefix()}shortpixel_meta WHERE folder_id NOT IN (SELECT id FROM {$this->db->getPrefix()}shortpixel_folders)";
@@ -284,7 +284,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
           {
              $imageObj->saveMeta();
              Log::addTemp('Batch New : new File saved');
-             if (\wpSPIO()->settings()->autoMediaLibrary == 1)
+             if (\wpSPIO()->env()->is_autoprocess)
              {
                 Log::addTemp('adding item to queue ' . $imageObj->get('id'));
                 $optimizeControl->addItemToQueue($imageObj);
