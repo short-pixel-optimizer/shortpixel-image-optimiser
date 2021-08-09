@@ -165,6 +165,7 @@ class SettingsController extends \ShortPixel\Controller
           // Reset Avif Check Cache.
           $cache = new CacheController();
           $cache->deleteItem('avif_server_check');
+          Notice::removeNoticeByID(AdminNoticesController::MSG_AVIF_ERROR);
 
           // end
           if ($this->do_redirect)
@@ -249,7 +250,8 @@ class SettingsController extends \ShortPixel\Controller
           $cache = new CacheController();
           if (apply_filters('shortpixel/avifcheck/override', false) === true)
           { return; }
-
+          // @todo Debug, remove
+//$cache->deleteItem('avif_server_check');
           if (! $cache->getItem('avif_server_check')->exists())
           {
              $url = \WPSPIO()->plugin_url('res/img/test.avif');
@@ -257,18 +259,35 @@ class SettingsController extends \ShortPixel\Controller
              $is_error = true;
 
              // Defaults.
-             $error_message = __('Avif server test failed. Your server might not be configured to display AVIF files properly. Serving Avif might cause your images to not load', 'shortpixel-image-optimiser');
+             $error_message = __('Avif server test failed. Your server might not be configured to display AVIF files properly. Serving Avif might cause your images to not load. Check your images, disable the AVIF option or update your web server configuration.', 'shortpixel-image-optimiser');
              $error_detail = __('The request did not return valid HTTP Headers. Check if the plugin is allowed to get ' . $url, 'shortpixel-image-optimiser');
+
+             $contentType = null;
+             $response = $headers[0];
 
              if (is_array($headers) )
              {
-                 $contentType = $headers[8];
-                 $response = $headers[0];  //http response.
+                foreach($headers as $index => $header)
+                {
+                    if ( strpos(strtolower($header), 'content-type') !== false )
+                      $contentType = $header;
+
+                }
+                // $contentType = $headers[8];
+                //$response = $headers[0];  //http response.
 
                 // http not ok, redirect etc. Shouldn't happen.
-                 if (strpos($response, '200') === false)
+                 if (is_null($response))
+                 {
+                    $error_detail = __('We could not detect any response header to an avif file request', 'shortpixel-image-optimiser');
+                 }
+                 elseif (strpos($response, '200') === false)
                  {
                    $error_detail = __('The request did not return OK status:', 'shortpixel-image-optimiser') . $response;
+                 }
+                 elseif(is_null($contentType))
+                 {
+                    $error_details = __('We could not detect a content-type reponse to an avif file request', 'shortpixel-image-optimiser');
                  }
                  elseif(strpos($contentType, 'avif') === false)
                  {
@@ -282,7 +301,8 @@ class SettingsController extends \ShortPixel\Controller
 
              if ($is_error)
              {
-                Notice::addError('<h4>' . $error_message . '</h4><p>' . $error_detail . '</p>');
+                $notice = Notice::addError('<h4>' . $error_message . '</h4><p>' . $error_detail . '</p><p class="small">' . __('Returned Headers:<br>', 'shortpixel-image-optimiser') . print_r($headers, true) .  '</p>');
+                Notice::makePersistent($notice, AdminNoticesController::MSG_AVIF_ERROR, MONTH_IN_SECONDS);
              }
              else
              {
