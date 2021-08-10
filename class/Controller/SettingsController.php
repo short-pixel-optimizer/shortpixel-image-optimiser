@@ -250,9 +250,8 @@ class SettingsController extends \ShortPixel\Controller
           $cache = new CacheController();
           if (apply_filters('shortpixel/avifcheck/override', false) === true)
           { return; }
-          // @todo Debug, remove
-//$cache->deleteItem('avif_server_check');
-          if (! $cache->getItem('avif_server_check')->exists())
+
+          if ($cache->getItem('avif_server_check')->exists() === false)
           {
              $url = \WPSPIO()->plugin_url('res/img/test.avif');
              $headers = get_headers($url);
@@ -270,11 +269,14 @@ class SettingsController extends \ShortPixel\Controller
                 foreach($headers as $index => $header)
                 {
                     if ( strpos(strtolower($header), 'content-type') !== false )
-                      $contentType = $header;
-
+										{
+											// This is another header that can interrupt.
+											if (strpos(strtolower($header), 'x-content-type-options') == false)
+											{
+                      	$contentType = $header;
+											}
+										}
                 }
-                // $contentType = $headers[8];
-                //$response = $headers[0];  //http response.
 
                 // http not ok, redirect etc. Shouldn't happen.
                  if (is_null($response))
@@ -301,8 +303,18 @@ class SettingsController extends \ShortPixel\Controller
 
              if ($is_error)
              {
-                $notice = Notice::addError('<h4>' . $error_message . '</h4><p>' . $error_detail . '</p><p class="small">' . __('Returned Headers:<br>', 'shortpixel-image-optimiser') . print_r($headers, true) .  '</p>');
-                Notice::makePersistent($notice, AdminNoticesController::MSG_AVIF_ERROR, MONTH_IN_SECONDS);
+							   $noticeController = Notice::getInstance();
+					       $notice = $noticeController->getNoticeByID(AdminNoticesController::MSG_AVIF_ERROR);
+								 if ($notice && $notice->isDismissed() === true)
+							 	 {
+									 // Do Nothing
+								 }
+								 else
+								 {
+		                $notice = Notice::addError('<h4>' . $error_message . '</h4><p>' . $error_detail . '</p><p class="small">' . __('Returned Headers:<br>', 'shortpixel-image-optimiser') . print_r($headers, true) .  '</p>');
+		                Notice::makePersistent($notice, AdminNoticesController::MSG_AVIF_ERROR, MONTH_IN_SECONDS);
+								 }
+
              }
              else
              {
