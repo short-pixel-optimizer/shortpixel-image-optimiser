@@ -209,7 +209,7 @@ class AjaxController
            case 'createBulk':
              $json = $this->createBulk($json, $data);
            break;
-           case 'applyBulkSelection': // @todo Perhaps remove this / done via createbulk?
+           case 'applyBulkSelection':
              $json = $this->applyBulkSelection($json, $data);
            break;
            case 'startBulk':
@@ -267,21 +267,18 @@ class AjaxController
     }
 
     /* Integration for WP /LR Sync plugin  - https://meowapps.com/plugin/wplr-sync/
-    * @todo Test if it works
+    * @todo Test if it works with plugin intergration
     *
     */
     public function onWpLrUpdateMedia()
     {
       $meta = wp_get_attachment_metadata($imageId);
       if(is_array($meta)) {
-           if (isset($meta['ShortPixel'])) // get rid of legacy data
+						// get rid of legacy data, otherwise it will convert
+           if (isset($meta['ShortPixel']))
             unset($meta['ShortPixel']);
-           //$meta['ShortPixel'] = array();
-           //$meta['ShortPixel']['WaitingProcessing'] = true;
-          // $this->prioQ->push($imageId);
-           //wp_update_attachment_metadata($imageId, $meta);
+
            update_post_meta($imageId, '_wp_attachment_metadata', $meta);
-      //     ShortPixelMetaFacade::optimizationStarted($imageId);
       }
 
       // Get and remove Meta
@@ -306,7 +303,6 @@ class AjaxController
       $mediaItem = $this->getMediaItem($id, $type);
       $control = new OptimizeController();
 
-      // @todo Turn back on, when ok.
       $json->$type = $control->restoreItem($mediaItem);
 
       return $json;
@@ -390,7 +386,6 @@ class AjaxController
     {
         $bulkControl = BulkController::getInstance();
 
-        // @todo This needs to check type which Q was choosen in UI.
         $result = $bulkControl->startBulk('media');
         $json->media = $result;
 

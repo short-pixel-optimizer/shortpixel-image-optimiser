@@ -3,6 +3,7 @@ namespace ShortPixel\Controller;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notice;
 use ShortPixel\Helper\UiHelper as UiHelper;
+use ShortPixel\Helper\InstallHelper as InstallHelper;
 
 use ShortPixel\Model\ApiKeyModel as ApiKeyModel;
 
@@ -50,15 +51,6 @@ class SettingsController extends \ShortPixel\Controller
           parent::__construct();
       }
 
-      // glue method.
-      public function setShortPixel($pixel)
-      {
-      //  parent::setShortPixel($pixel);
-      //  $this->keyModel->shortPixel = $pixel;
-
-        // It's loading here since it can do validation, which requires Shortpixel.
-        // Otherwise this should be loaded on construct.
-      }
 
       // default action of controller
       public function load()
@@ -197,7 +189,7 @@ class SettingsController extends \ShortPixel\Controller
          if ($this->is_verifiedkey) // supress quotaData alerts when handing unset API's.
           $this->loadQuotaData();
         else
-          \WpShortPixelDb::checkCustomTables();
+          InstallHelper::checkTables();
 
          $this->view->data = (Object) $this->model->getData();
          if (($this->is_constant_key))
@@ -266,21 +258,18 @@ class SettingsController extends \ShortPixel\Controller
 
       /* Temporary function to check if HTaccess is writable.
       * HTaccess is writable if it exists *and* is_writable, or can be written if directory is writable.
-      * @todo Should be replaced when File / Folder model are complete. Function check should go there.
       */
       private function HTisWritable()
       {
           if ($this->is_nginx)
             return false;
 
-          if (file_exists(get_home_path() . '.htaccess') && is_writable(get_home_path() . '.htaccess'))
-          {
-            return true;
-          }
-          elseif (! file_exists(get_home_path() . '.htaccess') && file_exists(get_home_path()) && is_writable(get_home_path()))
-          {
-            return true;
-          }
+					$file = \wpSPIO()->filesystem()->getFile(get_home_path() . '.htaccess');
+					if ($file->is_writable())
+					{
+						 return true;
+					}
+
           return false;
       }
 

@@ -1011,7 +1011,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   }
 
   /** Removed the current attachment, with hopefully removing everything we set.
-  * @todo Should probably not delete files ( SPIO never deletes files ) , other than our backups / webps during restore.
   */
   public function restore()
   {
@@ -1029,9 +1028,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           $this->resetStatus();
           $this->setFileInfo();
           $this->create(); // empty placeholder file.
-          Log::addTemp('Restoring png : ' . $this->fullpath);
-          if ($this->exists())
-            Log::addTemp('Exists');
         }
     }
 
@@ -1560,7 +1556,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       //  }
 
       // Quality check on the thumbs. Must exist,  must be same extension.
-
       $added = false;
       foreach($unlisted as $unName)
       {
@@ -1589,10 +1584,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         $this->saveMeta(); // Save it when we are adding images.
 
       $this->unlistedChecked = true;
-
-
-      /* Returns array with full path, as string */
-      //return $results;
   }
 
 } // class

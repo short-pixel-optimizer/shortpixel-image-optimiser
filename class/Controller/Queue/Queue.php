@@ -547,13 +547,11 @@ abstract class Queue
       $this->q->itemDone($qItem);
     }
 
-    //@todo
     public function uninstall()
     {
         $this->q->uninstall();
     }
 
-    // @todo
     public function activatePlugin()
     {
         $this->q->resetQueue();
@@ -563,8 +561,6 @@ abstract class Queue
     {
         return $this->q;
     }
-
-
 
     // All custom Data in the App should be created here.
     private function createCustomData()

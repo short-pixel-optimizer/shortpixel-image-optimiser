@@ -127,6 +127,7 @@ class AdminController extends \ShortPixel\Controller
           return; // not ours, don't load JS and such.
 
         $settings = \wpSPIO()->settings();
+				$quotaController = QuotaController::getInstance();
 
         $extraClasses = " shortpixel-hide";
         /*translators: toolbar icon tooltip*/
@@ -136,8 +137,8 @@ class AdminController extends \ShortPixel\Controller
         $successLink = $link = admin_url(current_user_can( 'edit_others_posts')? 'upload.php?page=wp-short-pixel-bulk' : 'upload.php');
         $blank = "";
 
-
-        if($settings->quotaExceeded ) {
+        if($quotaController->hasQuota() === false)
+				{
             $extraClasses = " shortpixel-alert shortpixel-quota-exceeded";
             /*translators: toolbar icon tooltip*/
             $id = 'short-pixel-notice-exceed';
@@ -145,7 +146,6 @@ class AdminController extends \ShortPixel\Controller
             $exceedTooltip = __('ShortPixel quota exceeded. Click for details.','shortpixel-image-optimiser');
             //$link = "http://shortpixel.com/login/" . $this->_settings->apiKey;
             $link = "options-general.php?page=wp-shortpixel-settings";
-
         }
 
         $args = array(
@@ -163,7 +163,8 @@ class AdminController extends \ShortPixel\Controller
         );
         $wp_admin_bar->add_node( $args );
 
-        if($settings->quotaExceeded ) {
+        if($quotaController->hasQuota() === false)
+				{
             $wp_admin_bar->add_node( array(
                 'id'    => 'shortpixel_processing-title',
                 'parent' => 'shortpixel_processing',

@@ -31,24 +31,24 @@ class BuildAutoLoader
        'shortpixel_api.php',
        'class/wp-short-pixel.php',
        'class/wp-shortpixel-settings.php',
-       'class/view/shortpixel_view.php',
+      // 'class/view/shortpixel_view.php',
        'class/shortpixel-png2jpg.php',
        'class/front/img-to-picture-webp.php',
     );
 
     $models = array(
-           'class/Model/shortpixel-entity.php',
-           'class/Model/shortpixel-meta.php',
-           'class/Model/shortpixel-folder.php',
+        //   'class/Model/shortpixel-entity.php',
+        //   'class/Model/shortpixel-meta.php',
+        //   'class/Model/shortpixel-folder.php',
     );
 
-    $db = array(
-        'class/db/shortpixel-db.php',
-        'class/db/wp-shortpixel-db.php',
+/*    $db = array(
+      // 'class/db/shortpixel-db.php',
+      //  'class/db/wp-shortpixel-db.php',
         'class/db/shortpixel-custom-meta-dao.php',
         'class/db/wp-shortpixel-media-library-adapter.php',
         'class/db/shortpixel-meta-facade.php'
-    );
+    ); */
 
 
     $externals = array(
@@ -68,7 +68,7 @@ class BuildAutoLoader
     );
 
     echo "Build Plugin.JSON ";
-    return array_merge($main,$models,$db,$externals);
+    return array_merge($main,$models,$externals);
   }
 
 }

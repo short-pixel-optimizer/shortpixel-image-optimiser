@@ -157,7 +157,6 @@ class ListMediaViewController extends \ShortPixel\Controller
 
   /*
   * @hook restrict_manage_posts
-  * @todo Should be part of media library controller.  ( is request best hook for this?)
   */
   public function mediaAddFilterDropdown() {
       $scr = get_current_screen();

@@ -20,8 +20,6 @@ class StatsController extends \ShortPixel\Controller
     public function __construct()
     {
          $this->model = new StatsModel();
-      //   $this->queue = new StatsQueue();
-
     }
 
     public static function getInstance()
@@ -105,7 +103,7 @@ class StatsController extends \ShortPixel\Controller
 
     }
 
-    /** This count all possible optimizable images (approx). Not checking settings like excludesizes / webp / original images etc. More fine-grained approx in BulkViewController  */ 
+    /** This count all possible optimizable images (approx). Not checking settings like excludesizes / webp / original images etc. More fine-grained approx in BulkViewController  */
     public function totalImagesToOptimize()
     {
         $totalImagesOptimized = $this->find('total', 'images');

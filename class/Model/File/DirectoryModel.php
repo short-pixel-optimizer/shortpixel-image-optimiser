@@ -108,7 +108,9 @@ class DirectoryModel extends \ShortPixel\Model
     return filemtime($this->path);
   }
 
-  /** Get basename of the directory. Without path */
+  /**
+  * Get basename of the directory. Without path
+  */
   public function getName()
   {
     return $this->name;
@@ -126,6 +128,7 @@ class DirectoryModel extends \ShortPixel\Model
     return $this->is_writable;
   }
 
+
   public function is_readable()
   {
      $this->is_readable = is_readable($this->path);
@@ -141,12 +144,11 @@ class DirectoryModel extends \ShortPixel\Model
   */
   public function getRelativePath()
   {
-    //$_SERVER['DOCUMENT_ROOT'] <!-- another tool.
      $upload_dir = wp_upload_dir(null, false);
 
      $install_dir = get_home_path();
      if($install_dir == '/') {
-         $install_dir = \wpSPIO()->filesystem()->getWPAbsPath();
+       $install_dir = \wpSPIO()->filesystem()->getWPAbsPath();
      }
 
      $install_dir = trailingslashit($install_dir);
@@ -155,7 +157,7 @@ class DirectoryModel extends \ShortPixel\Model
      // try to build relativePath without first slash.
      $relativePath = str_replace($install_dir, '', $path);
 
-     if (! is_dir( $install_dir . $relativePath))
+     if (is_dir( $install_dir . $relativePath) === false)
      {
         $test_path = $this->reverseConstructPath($path, $install_dir);
         if ($test_path !== false)
@@ -171,7 +173,7 @@ class DirectoryModel extends \ShortPixel\Model
         }
      }
 
-     // if relativePath has less amount of characters, changes are this worked.
+     // If relativePath has less amount of characters, changes are this worked.
      if (strlen($path) > strlen($relativePath))
      {
        return ltrim(trailingslashit($relativePath), '/');
@@ -179,26 +181,31 @@ class DirectoryModel extends \ShortPixel\Model
      return false;
   }
 
+
   private function reverseConstructPath($path, $install_path)
   {
-    $pathar = array_values(array_filter(explode('/', $path))); // array value to reset index
-    $parts = array(); //
+    // Array value to reset index
+    $pathar = array_values(array_filter(explode('/', $path)));
+    $parts = array();
 
     if (is_array($pathar))
     {
-      // reverse loop the structure until solid ground is found.
+      // Reverse loop the structure until solid ground is found.
       for ($i = (count($pathar)); $i > 0; $i--)
       {
-        $parts[]  = $pathar[$i-1];
+        $parts[]  = $pathar[$i - 1];
         $testpath = implode('/', array_reverse($parts));
-        if (is_dir($install_path . $testpath)) // if the whole thing exists
+        // if the whole thing exists
+        if (is_dir($install_path . $testpath) === true)
         {
           return $testpath;
         }
       }
     }
     return false;
+
   }
+
 
   /* Last Resort function to just reduce path to various known WorPress paths. */
   private function constructUsualDirectories($path)
@@ -255,7 +262,6 @@ class DirectoryModel extends \ShortPixel\Model
   }
 
   /* Get files from directory
-  * @todo In future this should accept some basic filters via args.
   * @returns Array|boolean Returns false if something wrong w/ directory, otherwise a files array of FileModel Object.
   */
   public function getFiles($args = array())
@@ -323,14 +329,16 @@ class DirectoryModel extends \ShortPixel\Model
   {
     $fs = \wpSPIO()->fileSystem();
 
-    if (! $this->exists() || ! $this->is_readable() )
+    if (! $this->exists() || ! $this->is_readable())
+    {
       return false;
+    }
 
     $dirIt = new \DirectoryIterator($this->path);
     $dirArray = array();
-    foreach($dirIt as $fileInfo)
+    foreach ($dirIt as $fileInfo)
     { // IsDot must go first here, or there is possiblity to run into openbasedir restrictions.
-       if (! $fileInfo->isDot() && $fileInfo->isDir() && $fileInfo->isReadable()  )
+       if (! $fileInfo->isDot() && $fileInfo->isDir() && $fileInfo->isReadable())
        {
          $dir = new DirectoryModel($fileInfo->getRealPath());
          if ($dir->exists())

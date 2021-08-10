@@ -1,53 +1,52 @@
 <?php
+
 namespace ShortPixel\Controller;
+
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
-
-
 
 class ApiController
 {
-//  const STATUS_
-  const STATUS_ENQUEUED = 10;
-  const STATUS_SUCCESS = 2;
-  const STATUS_UNCHANGED = 0;
-  const STATUS_ERROR = -1;
-  const STATUS_FAIL = -2;
-  const STATUS_QUOTA_EXCEEDED = -3;
-  const STATUS_SKIP = -4;
-  const STATUS_NOT_FOUND = -5;
-  const STATUS_NO_KEY = -6;
-  const STATUS_RETRY = -7;
-  const STATUS_SEARCHING = -8; // when the Queue is looping over images, but in batch none were found.
-  const STATUS_QUEUE_FULL = -404;
-  const STATUS_MAINTENANCE = -500;
-  const STATUS_NOT_API = -1000; // Not an API process, i.e restore / migrate. Don't handle as optimized
+    public const STATUS_ENQUEUED = 10;
+    public const STATUS_SUCCESS = 2;
+    public const STATUS_UNCHANGED = 0;
+    public const STATUS_ERROR = -1;
+    public const STATUS_FAIL = -2;
+    public const STATUS_QUOTA_EXCEEDED = -3;
+    public const STATUS_SKIP = -4;
+    public const STATUS_NOT_FOUND = -5;
+    public const STATUS_NO_KEY = -6;
+    public const STATUS_RETRY = -7;
+    public const STATUS_SEARCHING = -8; // when the Queue is looping over images, but in batch none were   found.
+    public const STATUS_QUEUE_FULL = -404;
+    public const STATUS_MAINTENANCE = -500;
+    public const STATUS_NOT_API = -1000; // Not an API process, i.e restore / migrate. Don't handle as optimized
 
-  const ERR_FILE_NOT_FOUND = -2;
-  const ERR_TIMEOUT = -3;
-  const ERR_SAVE = -4;
-  const ERR_SAVE_BKP = -5;
-  const ERR_INCORRECT_FILE_SIZE = -6;
-  const ERR_DOWNLOAD = -7;
-  const ERR_PNG2JPG_MEMORY = -8;
-  const ERR_POSTMETA_CORRUPT = -9;
-  const ERR_UNKNOWN = -999;
+    public const ERR_FILE_NOT_FOUND = -2;
+    public const ERR_TIMEOUT = -3;
+    public const ERR_SAVE = -4;
+    public const ERR_SAVE_BKP = -5;
+    public const ERR_INCORRECT_FILE_SIZE = -6;
+    public const ERR_DOWNLOAD = -7;
+    public const ERR_PNG2JPG_MEMORY = -8;
+    public const ERR_POSTMETA_CORRUPT = -9;
+    public const ERR_UNKNOWN = -999;
 
-  const DOWNLOAD_ARCHIVE = 7; // @todo Other settings for this Setting?
+    public const DOWNLOAD_ARCHIVE = 7;
 
-  private static $instance;
+    private static $instance;
 
-  private $apiEndPoint;
-  private $apiDumpEndPoint;
+    private $apiEndPoint;
+    private $apiDumpEndPoint;
 
-  protected static $temporaryFiles = array();
-  protected static $temporaryDirs = array();
+    protected static $temporaryFiles = array();
+    protected static $temporaryDirs = array();
 
-  public function __construct()
-  {
-    $settings = \wpSPIO()->settings();
-    $this->apiEndPoint = $settings->httpProto . '://' . SHORTPIXEL_API . '/v2/reducer.php';
-    $this->apiDumpEndPoint = $settings->httpProto . '://' . SHORTPIXEL_API . '/v2/cleanup.php';
-  }
+    public function __construct()
+    {
+      $settings = \wpSPIO()->settings();
+      $this->apiEndPoint = $settings->httpProto . '://' . SHORTPIXEL_API . '/v2/reducer.php';
+      $this->apiDumpEndPoint = $settings->httpProto . '://' . SHORTPIXEL_API . '/v2/cleanup.php';
+    }
 
 
   public static function getInstance()
@@ -82,9 +81,6 @@ class ApiController
       $request = $this->getRequest($requestArgs);
       $item = $this->doRequest($item, $request);
 
-      // @todo Might be interesting to put the result to Item for furter return processing.
-      //$item->result = $this->getResult($result);
-
       return $item;
   }
 
@@ -104,20 +100,7 @@ class ApiController
     );
 
     $args = wp_parse_args($args, $defaults);
-
-    /*$convertTo = array();
-    if ($settings->createWebp)
-       $convertTo[]= urlencode("+webp");
-    if ($settings->createAvif)
-       $convertTo[] = urlencode('+avif');
-
-     if (count($convertTo) > 0)
-       $convertTo = implode('|', $convertTo);
-     else
-       $convertTo = ''; */
-
     $convertTo = implode("|", $args['flags']);
-
 
     $requestParameters = array(
         'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
@@ -212,12 +195,11 @@ class ApiController
   {
 
     $APIresponse = $this->parseResponse($response);//get the actual response from API, its an array
-  //  Log::addTemp('Api Response, Item', $item);
-  //  Log::addTemp('Api Response, Parsed (handleResponse)', $APIresponse);
+
     $settings = \wpSPIO()->settings();
 
     // This is only set if something is up, otherwise, ApiResponise returns array
-    if ( isset($APIresponse['Status']))
+    if (isset($APIresponse['Status']))
     {
         // Check for known errors. : https://shortpixel.com/api-docs
         switch($APIresponse['Status']->Code)
@@ -233,9 +215,9 @@ class ApiController
               break;
               case -403:
               case -301:
-                  @delete_option('bulkProcessingStatus'); // legacy
-
-                  $settings->quotaExceeded = 1; // @todo This should be a function in quotaController.
+									// legacy
+                  @delete_option('bulkProcessingStatus');
+									$quotaController::getInstance()->setQuotaExceeded();
 
                   return $this->returnRetry( self::STATUS_QUOTA_EXCEEDED, __('Quota exceeded.','shortpixel-image-optimiser'));
                   break;
@@ -253,16 +235,11 @@ class ApiController
 
     $neededURLS = $item->urls;
 
-    //Log::addTemp("neededURLS", $neededURLS);
-    //Log::addTemp('Response', $APIresponse);
-
     if ( isset($APIresponse[0]) ) //API returned image details
     {
         foreach ( $APIresponse as $imageObject ) {//this part makes sure that all the sizes were processed and ready to be downloaded.
           // If status is still waiting. Check if the return URL is one we sent.
             if ( isset($imageObject->Status) && ( $imageObject->Status->Code == 0 || $imageObject->Status->Code == 1 ) && in_array($imageObject->OriginalURL, $neededURLS)) {
-              //  sleep(1); // @todo ??
-        //        return $this->processImageRecursive($URLs, $PATHs, $itemHandler, $startTime);
                 return $this->returnOK(self::STATUS_UNCHANGED, __('Item is waiting for optimisation', 'shortpixel-image-optimiser'));
             }
         }
@@ -270,25 +247,16 @@ class ApiController
         $firstImage = $APIresponse[0];//extract as object first image
         switch($firstImage->Status->Code)
         {
-        case self::STATUS_SUCCESS: //self::STATUS_SUCCESS: <- @todo Success in this constant is 1 ,but appears to be 2? // success
+        case self::STATUS_SUCCESS:
             //handle image has been processed
             return $this->handleSuccess($item, $APIresponse);
         default:
-            //handle error
-          //  $incR = 1;
-          /*  This should not be possible / optimizeURLS should checks path.
-           if ( !file_exists($PATHs[0]) ) {
-                $err = array("Status" => self::STATUS_NOT_FOUND, "Message" => "File not found on disk. "
-                             . ($itemHandler->getType() == ShortPixelMetaFacade::CUSTOM_TYPE ? "Image" : "Media")
-                             . " ID: " . $itemHandler->getId(), "Code" => self::ERR_FILE_NOT_FOUND);
-                $incR = 3;
-            } */
+
             if ( isset($APIresponse[0]->Status->Message) ) {
-                //return array("Status" => self::STATUS_FAIL, "Message" => "There was an error and your request was not processed (" . $APIresponse[0]->Status->Message . "). REQ: " . json_encode($URLs));
+
                 $err = array("Status" => self::STATUS_FAIL, "Code" => (isset($APIresponse[0]->Status->Code) ? $APIresponse[0]->Status->Code : self::ERR_UNKNOWN),
                              "Message" => __('There was an error and your request was not processed.','shortpixel-image-optimiser')
                                           . " (" . wp_basename($APIresponse[0]->OriginalURL) . ": " . $APIresponse[0]->Status->Message . ")");
-              ///  $this->resultFa
                 return $this->returnRetry($err['Code'], $err['Message']);
             } else {
                 $err = array("Status" => self::STATUS_FAIL, "Message" => __('There was an error and your request was not processed.','shortpixel-image-optimiser'),
@@ -296,16 +264,6 @@ class ApiController
                 return $this->returnRetry($err['Code'], $err['Message']);
             }
 
-        //    $itemHandler->incrementRetries($incR, $err["Code"], $err["Message"]);
-        //    $meta = $itemHandler->getMeta();
-          /* Stuff for the queue */
-
-            /*if($meta->getRetries() >= SHORTPIXEL_MAX_FAIL_RETRIES) {
-                $meta->setStatus($APIresponse[0]->Status->Code);
-                $meta->setMessage($APIresponse[0]->Status->Message);
-                $itemHandler->updateMeta($meta);
-            } */
-          //  return $err;
         }
     }
 
@@ -329,7 +287,8 @@ class ApiController
       }
       return $this->returnRetry(self::STATUS_FAIL, $message);
     } // else
-  } // handleResponse
+  }
+  // handleResponse function
 
 
 
@@ -339,7 +298,8 @@ class ApiController
   * @param Object $response The API Response with opt. info.
   * @return ObjectArray $results The Result of the optimization
   */
-  private function handleSuccess($item, $response) {
+  private function handleSuccess($item, $response)
+  {
       Log::addDebug('Shortpixel API : Handling Success!', $response);
       $settings = \wpSPIO()->settings();
       $fs = \wpSPIO()->fileSystem();
@@ -357,43 +317,27 @@ class ApiController
       $webpType = "WebP" . $fileType;
       $avifType = "AVIF" . $fileType;
 
-      /** @todo - What does this mean?
-      *    It seems this is not active at all, commenting out for now.
-        */
-/*      $archive =
-          ($settings->downloadArchive == self::DOWNLOAD_ARCHIVE && class_exists('PharData') && isset($APIresponse[count($APIresponse) - 1]->ArchiveStatus))
-          ? $this->downloadArchive($APIresponse[count($APIresponse) - 1], $compressionType) : false;
-      if($archive !== false && $archive['Status'] !== self::STATUS_SUCCESS) {
-          return $archive;
-      } */
 
       $tempFiles = $responseFiles = $results = array();
 
       //download each file from array and process it
-      foreach ( $response as $fileData )
+      foreach ($response as $fileData )
       {
-
           if(!isset($fileData->Status)) continue; //if optimized images archive is activated, last entry of APIResponse if the Archive data.
 
-          if ( $fileData->Status->Code == self::STATUS_SUCCESS ) //file was processed OK
+          //file was processed OK
+          if ($fileData->Status->Code == self::STATUS_SUCCESS )
           {
-              // ** @todo Fix fromArchive, figure out how it works */
-              // It seems this is not active at all, commenting out for now.
-            /*  if($archive) {
-                  $downloadResult = $this->fromArchive($archive['Path'], $fileData->$fileType, $fileData->$fileSize, $fileData->OriginalSize
-                );
-
-              } else { */
                   $downloadResult = $this->handleDownload($fileData->$fileType, $fileData->$fileSize, $fileData->OriginalSize
                 );
                 $archive = false;
-              //}
 
               /* Status_Unchanged will be caught by ImageModel and not copied ( should be ).
               * @todo Write Unit Test for Status_unchanged
               * But it should still be regarded as File Done. This can happen on very small file ( 6pxX6px ) which will not optimize.
               */
-              if ( $downloadResult->apiStatus == self::STATUS_SUCCESS || $downloadResult->apiStatus == self::STATUS_UNCHANGED ) {
+              if ($downloadResult->apiStatus == self::STATUS_SUCCESS || $downloadResult->apiStatus == self::STATUS_UNCHANGED )
+              {
                   // Removes any query ?strings and returns just filename of originalURL
                   $originalURL = $fileData->OriginalURL;
 
@@ -486,281 +430,6 @@ class ApiController
       // *******************************
 
       return $this->returnSuccess($results, self::STATUS_SUCCESS, false);
-
-      //figure out in what SubDir files should land
-  //    $mainPath = $itemHandler->getMeta()->getPath();
-
-      //if backup is enabled - we try to save the images
-    /* Done by Handler in Imagemodels
-      if( $settings->backupImages )
-      {
-        // @todo Rewrite this to FileSystemController
-          $backupStatus = self::backupImage($mainPath, $PATHs);
-          Log::addDebug('Status', $backupStatus);
-          if($backupStatus == self::STATUS_FAIL) {
-              $itemHandler->incrementRetries(1, self::ERR_SAVE_BKP, $backupStatus["Message"]);
-              self::cleanupTemporaryFiles($archive, empty($tempFiles) ? array() : $tempFiles);
-              Log::addError('Failed to create image backup!', array('status' => $backupStatus));
-              return array("Status" => self::STATUS_FAIL, "Code" =>"backup-fail", "Message" => "Failed to back the image up.");
-          }
-          $NoBackup = false;
-      }//end backup section */
-
-      $writeFailed = 0;
-      $width = $height = null;
-      $do_resize = $this->_settings->resizeImages;
-      $retinas = 0;
-      $thumbsOpt = 0;
-      $thumbsOptList = array();
-      // The settings model.
-//      $settings = \wpSPIO()->settings();
-
-
-      //Log::addDebug($tempFiles);
-      // Check and Run all tempfiles. Move it to appropiate places.
-      if ( !empty($tempFiles) )
-      {
-          //overwrite the original files with the optimized ones
-          foreach ( $tempFiles as $tempFileID => $tempFile )
-          {
-              if(!is_array($tempFile)) continue;
-
-              $targetFile = $fs->getFile($PATHs[$tempFileID]);
-              $isRetina = ShortPixelMetaFacade::isRetina($targetFile->getFullPath()); // @todo See what this does
-
-              // @todo What is status unchanged here?
-              if(   ($tempFile['Status'] == self::STATUS_UNCHANGED || $tempFile['Status'] == self::STATUS_SUCCESS) && !$isRetina
-                 && $targetFile->getFullPath() !== $mainPath) {
-                  $thumbsOpt++;
-                  $thumbsOptList[] = self::MB_basename($targetFile->getFullPath());
-              }
-
-              if($tempFile['Status'] == self::STATUS_SUCCESS) { //if it's unchanged it will still be in the array but only for WebP (handled below)
-                  $tempFilePATH = $fs->getFile($tempFile["Message"]);
-
-                  //@todo Move file logic to use FS controller / fileModel.
-                  if ( $tempFilePATH->exists() && (! $targetFile->exists() || $targetFile->is_writable()) ) {
-                    //  copy($tempFilePATH, $targetFile);
-                      $tempFilePATH->move($targetFile);
-
-                      if(ShortPixelMetaFacade::isRetina($targetFile->getFullPath())) {
-                          $retinas ++;
-                      }
-                      if($do_resize && $itemHandler->getMeta()->getPath() == $targetFile->getFullPath() ) { //this is the main image
-                          $size = getimagesize($PATHs[$tempFileID]);
-                          $width = $size[0];
-                          $height = $size[1];
-                      }
-                      //Calculate the saved space
-                      $fileData = $APIresponse[$tempFileID];
-                      $savedSpace += $fileData->OriginalSize - $fileData->$fileSize;
-                      $originalSpace += $fileData->OriginalSize;
-                      $optimizedSpace += $fileData->$fileSize;
-                      //$averageCompression += $fileData->PercentImprovement;
-                      Log::addInfo("HANDLE SUCCESS: Image " . $PATHs[$tempFileID] . " original size: ".$fileData->OriginalSize . " optimized: " . $fileData->$fileSize);
-
-                      //add the number of files with < 5% optimization
-                      if ( ( ( 1 - $APIresponse[$tempFileID]->$fileSize/$APIresponse[$tempFileID]->OriginalSize ) * 100 ) < 5 ) {
-                          $this->_settings->under5Percent++;
-                      }
-                  }
-                  else {
-                      if($archive &&  SHORTPIXEL_DEBUG === true) {
-                          if(! $tempFilePATH->exists()) {
-                              Log::addWarn("MISSING FROM ARCHIVE. tempFilePath: " . $tempFilePATH->getFullPath() . " with ID: $tempFileID");
-                          } elseif(! $targetFile->is_writable() ){
-                              Log::addWarn("TARGET NOT WRITABLE: " . $targetFile->getFullPath() );
-                          }
-                      }
-                      $writeFailed++;
-                  }
-                  //@unlink($tempFilePATH); // @todo Unlink is risky due to lack of checks.
-                //  $tempFilePath->delete();
-              }
-
-              $tempWebpFilePATH = $fs->getFile($tempFile["WebP"]);
-              if( $tempWebpFilePATH->exists() ) {
-                  $targetWebPFileCompat = $fs->getFile($targetFile->getFileDir() . $targetFile->getFileName() . '.webp');
-                  /*$targetWebPFileCompat = dirname($targetFile) . '/'. self::MB_basename($targetFile, '.' . pathinfo($targetFile, PATHINFO_EXTENSION)) . ".webp"; */
-
-                  $targetWebPFile = $fs->getFile($targetFile->getFileDir() . $targetFile->getFileBase() . '.webp');
-                  //if the Targetfile already exists, it means that there is another file with the same basename but different extension which has its .webP counterpart save it with double extension
-                  if(SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION || $targetWebPFile->exists()) {
-                      $tempWebpFilePATH->move($targetWebPFileCompat);
-                  } else {
-                      $tempWebpFilePATH->move($targetWebPFile);
-                  }
-              }
-          } // / For each tempFile
-          self::cleanupTemporaryFiles($archive, $tempFiles);
-
-          if ( $writeFailed > 0 )//there was an error
-          {
-
-            /*  Log::addDebug("ARCHIVE HAS MISSING FILES. EXPECTED: " . json_encode($PATHs)
-                              . " AND: " . json_encode($APIresponse)
-                              . " GOT ARCHIVE: " . $APIresponse[count($APIresponse) - 1]->ArchiveURL . " LOSSLESS: " . $APIresponse[count($APIresponse) - 1]->ArchiveLosslessURL
-                              . " CONTAINING: " . json_encode(scandir($archive['Path']))); */
-              Log::addDebug('Archive files missing (expected paths, response)', array($PATHs, $APIresponse));
-
-              $msg = sprintf(__('Optimized version of %s file(s) couldn\'t be updated.','shortpixel-image-optimiser'),$writeFailed);
-              $itemHandler->incrementRetries(1, self::ERR_SAVE, $msg);
-              $this->_settings->bulkProcessingStatus = "error";
-              return array("Status" => self::STATUS_FAIL, "Code" =>"write-fail", "Message" => $msg);
-          }
-      } elseif( 0 + $fileData->PercentImprovement < 5) {
-          $this->_settings->under5Percent++;
-      }
-      //old average counting
-      $this->_settings->savedSpace += $savedSpace;
-      //$averageCompression = $this->_settings->averageCompression * $this->_settings->fileCount /  ($this->_settings->fileCount + count($APIresponse));
-      //$this->_settings->averageCompression = $averageCompression;
-      $this->_settings->fileCount += count($APIresponse);
-      //new average counting
-      $this->_settings->totalOriginal += $originalSpace;
-      $this->_settings->totalOptimized += $optimizedSpace;
-
-      //update metadata for this file
-      $meta = $itemHandler->getMeta();
-
-      if($meta->getThumbsTodo()) {
-          $percentImprovement = $meta->getImprovementPercent();
-      }
-      $png2jpg = $meta->getPng2Jpg();
-      $png2jpg = is_array($png2jpg) ? $png2jpg['optimizationPercent'] : 0;
-      $meta->setMessage($originalSpace
-              ? number_format(100.0 * (1.0 - $optimizedSpace / $originalSpace), 2)
-              : "Couldn't compute thumbs optimization percent. Main image: " . $percentImprovement);
-      WPShortPixel::log("HANDLE SUCCESS: Image optimization: ".$meta->getMessage());
-      $meta->setCompressionType($compressionType);
-      $meta->setCompressedSize(@filesize($meta->getPath()));
-      $meta->setKeepExif($this->_settings->keepExif);
-      $meta->setCmyk2rgb($this->_settings->CMYKtoRGBconversion);
-      $meta->setTsOptimized(date("Y-m-d H:i:s"));
-      $meta->setThumbsOptList(is_array($meta->getThumbsOptList()) ? array_unique(array_merge($meta->getThumbsOptList(), $thumbsOptList)) : $thumbsOptList);
-      $meta->setThumbsOpt(($meta->getThumbsTodo() ||  $this->_settings->processThumbnails) ? count($meta->getThumbsOptList()) : 0);
-      $meta->setRetinasOpt($retinas);
-      if(null !== $this->_settings->excludeSizes) {
-          $meta->setExcludeSizes($this->_settings->excludeSizes);
-      }
-      $meta->setThumbsTodo(false);
-      //* Not yet as it doesn't seem to work... */$meta->addThumbs($webpSizes);
-      if($width && $height) {
-          $meta->setActualWidth($width);
-          $meta->setActualHeight($height);
-      }
-
-      $meta->setRetries($meta->getRetries() + 1);
-      $meta->setBackup(!$NoBackup);
-      $meta->setStatus(2);
-
-      if ($do_resize)
-      {
-
-        $resizeWidth = $settings->resizeWidth;
-        $resizeHeight = $settings->resizeHeight;
-
-        if ($resizeWidth == $width || $resizeHeight == $height)  // resized.
-        {
-            $meta->setResizeWidth($width);
-            $meta->setResizeHeight($height);
-            $meta->setResize(true);
-        }
-        else
-          $meta->setResize(false);
-      }
-
-      $itemHandler->updateMeta($meta);
-      $itemHandler->optimizationSucceeded();
-      Log::addDebug("HANDLE SUCCESS: Metadata saved.");
-
-      if(!$originalSpace) { //das kann nicht sein, alles klar?!
-          throw new Exception("OriginalSpace = 0. APIResponse" . json_encode($APIresponse));
-      }
-
-      //we reset the retry counter in case of success
-      $this->_settings->apiRetries = 0;
-
-      return array("Status" => self::STATUS_SUCCESS, "Message" => 'Success: No pixels remained unsqueezed :-)',
-          "PercentImprovement" => $originalSpace
-          ? number_format(100.0 * (1.0 - (1.0 - $png2jpg / 100.0) * $optimizedSpace / $originalSpace), 2)
-          : "Couldn't compute thumbs optimization percent. Main image: " . $percentImprovement);
-  }//end handleSuccess
-
-  /** If SPIO API returns archive and host supports it, uncompress it here */
-  private function downloadArchive($archive, $compressionType, $first = true) {
-      if($archive->ArchiveStatus->Code == 1 || $archive->ArchiveStatus->Code == 0) { // @todo Put constants on these
-        //  return array("Status" => self::STATUS_RETRY, "Code" => 1, "Message" => "Pending");
-        return $this->returnRetry(self::STATUS_RETRY, __('Pending', 'shortpixel-image-optimiser'));
-      }
-
-      if($archive->ArchiveStatus->Code != self::STATUS_SUCCESS)
-        return false;
-
-      $archiveTempDir = get_temp_dir() . '/' . $archiveBasename;
-      $fs = \wpSPIO()->filesystem();
-      $tempDir = $fs->getDirectory($archiveTempDir);
-      $tempDir->check();// try to create temporary folder
-
-      if( $tempDir->exists() && (time() - $tempDir->getModified() < max(30, SHORTPIXEL_MAX_EXECUTION_TIME) + 10)) {
-          Log::addWarn("CONFLICT. Folder already exists and is modified in the last minute. Current IP:" . $_SERVER['REMOTE_ADDR']);
-          //return array("Status" => self::STATUS_RETRY, "Code" => 1, "Message" => "Pending");
-          return $this->returnRetry(self::STATUS_RETRY, __('Pending. Temp directory already in use', 'shortpixel-image-optimiser'));
-      }
-      elseif( ! $tempDir->exists() ) {
-          //return array("Status" => self::STATUS_ERROR, "Code" => self::ERR_SAVE, "Message" => "Could not create temporary folder.");
-          $this->returnFailure(self::STATUS_ERROR, __("Could not create temporary folder", 'shortpixel-image-optimiser'));
-      }
-      //return array("Status" => self::STATUS_SUCCESS, "Dir" => $tempDir);
-///      }
-
-    //  } else {
-
-          $suffix = ($compressionType == 0 ? "-lossless" : "");
-          $archiveURL = "Archive" . ($compressionType == 0 ? "Lossless" : "") . "URL";
-          $archiveSize = "Archive" . ($compressionType == 0 ? "Lossless" : "") . "Size";
-
-        //  $archiveTemp = $this->createArchiveTempFolder(wp_basename($archive->$archiveURL, '.tar'));
-          //if($archiveTemp["Status"] == self::STATUS_SUCCESS) { $archiveTempDir = $archiveTemp["Dir"]; }
-        //  else { return $archiveTemp; }
-
-          $downloadResult = $this->handleDownload($archive->$archiveURL, $archive->$archiveSize, 0, 'NA');
-
-          if ( $downloadResult->status == self::STATUS_SUCCESS ) {
-              $archiveFile = $downloadResult['Message'];
-              if(filesize($archiveFile) !== $archive->$archiveSize) {
-                  @unlink($archiveFile);
-                  ShortpixelFolder::deleteFolder($archiveTempDir);
-                  Log::addWarn('Download Failed, archive not same size as remote');
-                  return array("Status" => self::STATUS_RETRY, "Code" => 1, "Message" => "Pending");
-              }
-              $pharData = new PharData($archiveFile);
-              try {
-
-                  $info = "Current IP:" . $_SERVER['REMOTE_ADDR'] . "ARCHIVE CONTENTS: COUNT " . $pharData->count() . ", ";
-                  Log::addDebug($info);
-
-                  $pharData->extractTo($archiveTempDir, null, true);
-                  WPShortPixel::log("ARCHIVE EXTRACTED " . json_encode(scandir($archiveTempDir)));
-                  @unlink($archiveFile);
-              } catch (Exception $ex) {
-                  @unlink($archiveFile);
-                  ShortpixelFolder::deleteFolder($archiveTempDir);
-                  return array("Status" => self::STATUS_ERROR, "Code" => $ex->getCode(), "Message" => $ex->getMessage());
-              }
-              return array("Status" => self::STATUS_SUCCESS, "Code" => 2, "Message" => "Success", "Path" => $archiveTempDir);
-
-          } else {
-              WPShortPixel::log("ARCHIVE ERROR (" . $archive->$archiveURL . "): " . json_encode($downloadResult));
-              if($first && $downloadResult['Code'] == self::ERR_INCORRECT_FILE_SIZE) {
-                  WPShortPixel::log("RETRYING AFTER ARCHIVE ERROR");
-                  return $this->downloadArchive($archive, $compressionType, false); // try again, maybe the archive was flushing...
-              }
-              @rmdir($archiveTempDir); //in the case it was just created and it's empty...
-              return array("Status" => $downloadResult['Status'], "Code" => $downloadResult['Code'], "Message" => $downloadResult['Message']);
-          }
-  //    }
-      return false;
   }
 
   /**

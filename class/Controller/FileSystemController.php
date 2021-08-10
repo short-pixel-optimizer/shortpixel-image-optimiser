@@ -79,24 +79,6 @@ Class FileSystemController extends \ShortPixel\Controller
 
     }
 
-    /** Get FileModel for a mediaLibrary post_id .
-    *
-    * This function exists to put get_attached_file to plugin control
-    * Externals / Interals maybe filter it.
-    *
-    * @param $id Attachement ID for the media library item
-    * @return FileModel returns a FileModel file.
-    * @todo This function will be more at home in a medialibrary_model
-    */
-  /*  public function getAttachedFile($id)
-    {
-        $filepath = get_attached_file($id);
-        // same signature as wordpress' filter. Only for this plugin.
-        $filepath = apply_filters('shortpixel_get_attached_file', $filepath, $id);
-
-        return new FileModel($filepath);
-
-    } */
 
     /* wp_get_original_image_path with specific ShortPixel filter
      */
@@ -135,14 +117,20 @@ Class FileSystemController extends \ShortPixel\Controller
          $filepath = apply_filters('shortpixel/file/virtual/translate', $filepath, $file);
       }
 
-      // Implement this code better here. @todo Get rid of MetaFacade here
-      $backup_subdir = \ShortPixelMetaFacade::returnSubDir($filepath);
+      if ($filepath !== $file->getFullPath())
+      {
+         $file = $this->getFile($filepath);
+      }
 
-/* from fileModel:
-      $backup_dir = str_replace($fs->getWPAbsPath(), "", $this->directory->getPath());
-      $backupDirectory = SHORTPIXEL_BACKUP_FOLDER . '/' . $backup_dir;
-      $directory = new DirectoryModel($backupDirectory);
-*/
+      $fileDir = $file->getFileDir();
+
+      $backup_subdir = $fileDir->getRelativePath();
+
+      if ($backup_subdir === false)
+      {
+         $backup_subdir = $this->returnOldSubDir($filepath);
+      }
+
       $backup_fulldir = SHORTPIXEL_BACKUP_FOLDER . '/' . $backup_subdir;
 
       $directory = $this->getDirectory($backup_fulldir);
@@ -394,6 +382,35 @@ Class FileSystemController extends \ShortPixel\Controller
         }
 
         return $fileArray;
+    }
+
+    /** Old method of getting a subDir. This is messy and hopefully should not be used anymore. It's added here for backward compat in case of exceptions */
+    private function returnOldSubDir($file)
+    {
+              // Experimental FS handling for relativePath. Should be able to cope with more exceptions.  See Unit Tests
+              $homePath = get_home_path();
+              if($homePath == '/') {
+                  $homePath = $this->getWPAbsPath();
+              }
+              $hp = wp_normalize_path($homePath);
+              $file = wp_normalize_path($file);
+
+            //  $sp__uploads = wp_upload_dir();
+
+              if(strstr($file, $hp)) {
+                  $path = str_replace( $hp, "", $file);
+              } elseif( strstr($file, dirname( WP_CONTENT_DIR ))) { //in some situations the content dir is not inside the root, check this also (ex. single.shortpixel.com)
+                  $path = str_replace( trailingslashit(dirname( WP_CONTENT_DIR )), "", $file);
+              } elseif( (strstr(realpath($file), realpath($hp)))) {
+                  $path = str_replace( realpath($hp), "", realpath($file));
+              } elseif( strstr($file, trailingslashit(dirname(dirname( SHORTPIXEL_UPLOADS_BASE )))) ) {
+                  $path = str_replace( trailingslashit(dirname(dirname( SHORTPIXEL_UPLOADS_BASE ))), "", $file);
+              } else {
+                  $path = (substr($file, 1));
+              }
+              $pathArr = explode('/', $path);
+              unset($pathArr[count($pathArr) - 1]);
+              return implode('/', $pathArr) . '/';
     }
 
 

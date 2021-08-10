@@ -1,6 +1,5 @@
 vendor
 composer.lock
-
 .env.testing
 .idea/.gitignore
 .idea/misc.xml

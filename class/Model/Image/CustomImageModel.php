@@ -111,9 +111,6 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         return $bool;
     }
 
-
-
-
     protected function getWebp()
     {
       $fs = \wpSPIO()->filesystem();

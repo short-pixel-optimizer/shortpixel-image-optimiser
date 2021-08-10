@@ -113,6 +113,15 @@ class QuotaController
         return $this->getRemoteQuota($key, true);
     }
 
+		/**
+		* Function should be called when plugin detects the remote quota has been exceeded
+		*/
+		public function setQuotaExceeded()
+		{
+			  $settings = \wpSPIO()->settings();
+				$settings->quotaExceeded = 1;
+		}
+
 
     private function resetQuotaExceeded()
     {
@@ -168,7 +177,6 @@ class QuotaController
 
               $args['body']['DomainCheck'] = get_site_url();
               $args['body']['Info'] = get_bloginfo('version') . '|' . phpversion();
-          //    $imageCount = WpShortPixelMediaLbraryAdapter::countAllProcessable($this->_settings);
               $args['body']['ImagesCount'] = $imageCount; //$imageCount['mainFiles'];
               $args['body']['ThumbsCount'] = $thumbsCount; // $imageCount['totalFiles'] - $imageCount['mainFiles'];
               $argsStr .= "&DomainCheck={$args['body']['DomainCheck']}&Info={$args['body']['Info']}&ImagesCount=$imageCount&ThumbsCount=$thumbsCount";
@@ -270,10 +278,16 @@ class QuotaController
               return $defaultData;
           }
 
-          if ( ( $data->APICallsMade + $data->APICallsMadeOneTime ) < ( $data->APICallsQuota + $data->APICallsQuotaOneTime ) ) //reset quota exceeded flag -> user is allowed to process more images.
+					//reset quota exceeded flag -> user is allowed to process more images.
+          if ( ( $data->APICallsMade + $data->APICallsMadeOneTime ) < ( $data->APICallsQuota + $data->APICallsQuotaOneTime ) )
+					{
               $this->resetQuotaExceeded();
+					}
           else
-              $settings->quotaExceeded = 1;//activate quota limiting
+					{
+							//activate quota limiting
+              $this->setQuotaExceeded();
+					}
 
           $dataArray = array(
               "APIKeyValid" => true,

@@ -134,12 +134,12 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
       global $wpdb;
 
-      // @todo This should be query here.
       $sql = 'DELETE FROM ' . $wpdb->prefix . 'shortpixel_folders where id = %d';
       $sql = $wpdb->prepare($sql, $this->id);
 
       $result = $wpdb->query($sql);
 
+			return $result;
   }
 
   public function isRemoved()

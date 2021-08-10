@@ -1,15 +1,17 @@
 <?php
+
 namespace ShortPixel\Controller;
+
 use ShortPixel\Notices\NoticeController as Notices;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
-//use ShortPixel\Model\ApiKeyModel as ApiKeyModel;
+// Use ShortPixel\Model\ApiKeyModel as ApiKeyModel
 
-/* Controller for automatic Notices about status of the plugin.
-* This controller is bound for automatic fire. Regular procedural notices should just be queued using the Notices modules.
-* Called in admin_notices.
-*/
-
+/**
+ * Controller for automatic Notices about status of the plugin.
+ * This controller is bound for automatic fire. Regular procedural notices should just be queued using the Notices modules.
+ * Called in admin_notices.
+ */
 class AdminNoticesController extends \ShortPixel\Controller
 {
     protected static $instance;
@@ -35,7 +37,7 @@ class AdminNoticesController extends \ShortPixel\Controller
     public function __construct()
     {
       add_action('admin_notices', array($this, 'displayNotices'), 50); // notices occured before page load
-      add_action('admin_footer', array($this, 'displayNotices'));  // called in views.
+        add_action('admin_footer', array($this, 'displayNotices'));  // called in views.
 
       add_action('in_plugin_update_message-' . plugin_basename(SHORTPIXEL_PLUGIN_FILE), array($this, 'pluginUpdateMessage') , 50, 2 );
 
@@ -51,7 +53,7 @@ class AdminNoticesController extends \ShortPixel\Controller
     public static function getInstance()
     {
       if (is_null(self::$instance))
-          self::$instance = new AdminNoticesController();
+            self::$instance = new AdminNoticesController();
 
       return self::$instance;
     }
@@ -166,7 +168,7 @@ class AdminNoticesController extends \ShortPixel\Controller
           return; // no key, no integrations.
         }
 
-        if (\wpSPIO()->env()->has_nextgen && ! $settings->includeNextGen  )
+        if (\wpSPIO()->env()->has_nextgen && ! $settings->includeNextGen)
         {
             $url = admin_url('options-general.php?page=wp-shortpixel-settings&part=adv-settings');
             $message = sprintf(__('It seems you are using NextGen Gallery. You can optimize your galleries with ShortPixel, but this is currently not enabled. To enable, %sgo to settings and enable%s it!', 'shortpixel_image_optimiser'), '<a href="' . $url . '">', '</a>');
@@ -291,7 +293,7 @@ class AdminNoticesController extends \ShortPixel\Controller
       * isset($this->_settings->currentStats['optimizePdfs'])
       * && $this->_settings->currentStats['optimizePdfs'] == $this->_settings->optimizePdfs )
       */
-      if(!$settings->quotaExceeded)
+      if($quotaController->hasQuota() === true)
       {
       //    $screen = get_current_screen();
           $env = \wpSPIO()->env();
@@ -301,7 +303,7 @@ class AdminNoticesController extends \ShortPixel\Controller
           $quotaController = QuotaController::getInstance();
           $quotaData = $quotaController->getQuota();
 
-          $statsControl = StatsController::getInstance(); // @todo Implement this.
+          $statsControl = StatsController::getInstance(); // @todo Implement this. (Figure out what this was )
     //      $stats = $statsControl->
 
           //$quotaData = $stats;
@@ -335,7 +337,7 @@ class AdminNoticesController extends \ShortPixel\Controller
               Notices::makePersistent($notice, self::MSG_UPGRADE_MONTH, YEAR_IN_SECONDS);
           }
       }
-      elseif ($settings->quotaExceeded)
+      elseif ($quotaController->hasQuota() === false)
       {
         // $stats = $shortpixel->countAllIfNeeded($settings->currentStats, 86400);
       //   $quotaData = $stats;
@@ -366,7 +368,7 @@ class AdminNoticesController extends \ShortPixel\Controller
     }
 
     protected function doRemoteNotices()
-   {
+    {
          $notices = $this->get_remote_notices();
 
          if ($notices == false)
@@ -407,14 +409,16 @@ class AdminNoticesController extends \ShortPixel\Controller
             }
 
 
-         }
+        }
    }
 
     // Callback to check if we are on the correct page.
     public function upgradeBulkCallback($notice)
     {
       if (! \wpSPIO()->env()->is_bulk_page)
+			{
         return false;
+			}
     }
 
   /*  protected function getPluginUpdateMessage($new_version)
