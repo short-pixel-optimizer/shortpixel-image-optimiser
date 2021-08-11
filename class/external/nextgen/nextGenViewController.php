@@ -20,7 +20,6 @@ class nextGenViewController extends \ShortPixel\Controller
 
    }
 
-   // @todo move NGG specific function to own integration
    public static function nggColumns( $defaults ) {
        self::$nggColumnIndex = count($defaults) + 1;
   /*     add_filter( 'ngg_manage_images_column_' . self::$nggColumnIndex . '_header', array( '\ShortPixel\nextGenViewController', 'nggColumnHeader' ) );

@@ -38,7 +38,6 @@ class SettingsController extends \ShortPixel\Controller
 
       public function __construct()
       {
-          // @todo Remove Debug Call
           $this->model = new \WPShortPixelSettings();
           $this->keyModel = new ApiKeyModel();
 
@@ -434,11 +433,7 @@ class SettingsController extends \ShortPixel\Controller
               if ($dirObj === false)
                 return;
 
-            //lder = new DirectoryOtherMediaModel($)
-
-            //  Log::addDebug('Removing folder ' . $post['removeFolder']);
               $dirObj->delete();
-              //$metaDao->removeFolder( sanitize_text_field($post['removeFolder']) );
 
           }
           unset($post['removeFolder']);
@@ -570,7 +565,6 @@ class SettingsController extends \ShortPixel\Controller
         {
           $url = "upload.php?page=wp-short-pixel-bulk";
         }
-        Log::addDebug('Redirecting: ', $url );
         wp_redirect($url);
         exit();
       }

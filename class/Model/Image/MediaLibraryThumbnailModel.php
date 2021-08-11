@@ -70,56 +70,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
       return false;
   }
 
-  /** @todo Might be moved to ImageModel, if customImage also has Webp */
-  public function getWebp()
-  {
-    $fs = \wpSPIO()->filesystem();
 
-    if (! is_null($this->getMeta('webp')))
-    {
-      $filepath = $this->getFileDir() . $this->getMeta('webp');
-      $webp = $fs->getFile($filepath);
-      return $webp;
-    }
-
-
-    $double_webp = \wpSPIO()->env()->useDoubleWebpExtension();
-
-    if ($double_webp)
-      $filename = $this->getFileName();
-    else
-      $filename = $this->getFileBase();
-
-    $filename .= '.webp';
-    $filepath = $this->getFileDir() . $filename;
-
-    $webp = $fs->getFile($filepath);
-
-    if (! $webp->is_virtual() && $webp->exists())
-      return $webp;
-
-    return false;
-  }
-
-  public function getAvif()
-  {
-      $fs = \wpSPIO()->filesystem();
-      if (! is_null($this->getMeta('avif')))
-      {
-        $filepath = $this->getFileDir() . $this->getMeta('avif');
-        $avif = $fs->getFile($filepath);
-        return $avif;
-      }
-
-    // Check if exists on disk
-    $filepath = $this->getFileDir() . $this->getFileBase() . '.webp';
-    $avif = $fs->getFile($filepath);
-
-    if (! $avif->is_virtual() && $avif->exists())
-      return $avif;
-
-    return false;
-  }
 
   public function getOptimizeFileType($type = 'webp')
   {
@@ -153,23 +104,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
       return parent::onDelete();
   }
 
-  /** @todo Might be moved to ImageModel, if customImage also has Webp */
-  protected function setWebp()
-  {
-      $webp = $this->getWebp();
-      if ($webp !== false && $webp->exists())
-        $this->setMeta('webp', $webp->getFileName() );
 
-  }
-
-  /** @todo Might be moved to ImageModel, if customImage also has Webp */
-  protected function setAvif()
-  {
-      $avif = $this->getAvif();
-      if ($avif !== false && $avif->exists())
-        $this->setMeta('avif', $avif->getFileName() );
-
-  }
 
   protected function setMetaObj($metaObj)
   {
@@ -218,32 +153,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
      return parent::getImprovements();
   }
 
-  // From FileModel.  BackupFile is different when png2jpg was converted.
-  /*public function getBackupFile()
-  {
-     if ($this->getMeta('did_png2jpg') == true)
-     {
-       $backupFile = new FileModel($this->getBackupDirectory() . $this->getFileBase()  . '.png');
-       if ($backupFile->exists()) // Check for original PNG
-       {
-          return $backupFile;
-       }
-       else // Backup (haha) in case something went wrong.
-       {
-          $backupFile = parent::getBackupFile();
-          if (is_object($backupFile))
-            return $backupFile;
-       }
-       return false; // Error State
-    }
-    else
-    {
-       return parent::getBackupFile();
-    }
-  } */
-
-
-  //public function isRestorable()
   protected function preventNextTry($reason = '')
   {
       Log::addTemp('Thumb : preventNextTry ' . $reason);

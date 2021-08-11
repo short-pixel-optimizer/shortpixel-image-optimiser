@@ -26,7 +26,11 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         $this->id = $id;
 
         if ($id > 0)
+				{
           $this->loadMeta();
+				  $this->setWebp();
+				  $this->setAvif();
+				}
         else
         {
 
@@ -111,51 +115,10 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         return $bool;
     }
 
-    protected function getWebp()
-    {
-      $fs = \wpSPIO()->filesystem();
-      $webp = $fs->getFile($this->getFileDir() . $this->getFileBase() . '.webp');
-
-      if (! $webp->exists())
-      {
-        return false;
-      }
-
-      $double_webp = \wpSPIO()->env()->useDoubleWebpExtension();
-
-      if ($double_webp)
-        $filename = $this->getFileName();
-      else
-        $filename = $this->getFileBase();
-
-      $filename .= '.webp';
-      $filepath = $this->getFileDir() . $filename;
-
-      $webp = $fs->getFile($filepath);
-
-      if ($webp->exists())
-        return $webp;
-
-      return false;
-    }
-
     protected function getWebps()
     {
          $webp = array($this->getWebp());
          return array_filter($webp);
-    }
-
-    protected function getAvif()
-    {
-      $fs = \wpSPIO()->filesystem();
-      $avif = $fs->getFile($this->getFileDir() . $this->getFileBase() . '.avif');
-
-      $avifs = array();
-
-      if ($avif->exists())
-        return $avif;
-
-      return false;
     }
 
     protected function getAvifs()

@@ -64,6 +64,8 @@
                     <label for="compressionType"><?php _e('Compression type:','shortpixel-image-optimiser');?></label>
                 </th>
                 <td>
+
+
                     <div class="shortpixel-compression">
                         <div class="shortpixel-compression-options">
                             <label class="lossy" title="<?php _e('This is the recommended option in most cases, producing results that look the same as the original to the human eye.','shortpixel-image-optimiser');?>">
@@ -76,7 +78,8 @@
                                 <input type="radio" class="shortpixel-radio-lossless" name="compressionType" value="0" <?php echo( $view->data->compressionType == 0 ? "checked" : "" );?>><span><?php _e('Lossless','shortpixel-image-optimiser');?></span>
                             </label>
                             <?php _e('<a href="https://shortpixel.com/online-image-compression" style="margin-left:20px;" target="_blank">Make a few tests</a> to help you decide.'); ?>
-                        </div>
+
+
                         <p class="settings-info shortpixel-radio-info shortpixel-radio-lossy" <?php echo( $view->data->compressionType == 1 ? "" : 'style="display:none"' );?>>
                             <?php _e('<b>Lossy compression (recommended): </b>offers the best compression rate.</br> This is the recommended option for most users, producing results that look the same as the original to the human eye.','shortpixel-image-optimiser');?>
                         </p>
@@ -89,15 +92,16 @@
                             <?php _e('<b>Lossless compression: </b> the resulting image is pixel-identical with the original image.</br>Make sure not a single pixel looks different in the optimized image compared with the original.
                             In some rare cases you will need to use this type of compression. Some technical drawings or images from vector graphics are possible situations.','shortpixel-image-optimiser');?>
                         </p>
+                        </div>
+
                     </div>
                     <script>
-                        // @todo Remove JS from interface
+
                         function shortpixelCompressionLevelInfo() {
                             jQuery(".shortpixel-compression p").css("display", "none");
                             jQuery(".shortpixel-compression p." + jQuery(".shortpixel-compression-options input:radio:checked").attr('class')).css("display", "block");
                         }
-                        //shortpixelCompressionLevelInfo();
-                        jQuery(".shortpixel-compression-options input:radio").on('change', shortpixelCompressionLevelInfo);
+                        jQuery(".shortpixel-compression-options input:radio").on('change', shortpixelCompressionLevelInfo); 
                     </script>
                 </td>
             </tr>

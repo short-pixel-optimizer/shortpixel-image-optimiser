@@ -207,7 +207,7 @@ class OptimizeController
     {
 
         $keyControl = ApiKeyController::getInstance();
-        if (! $keyControl->keyIsVerified())
+        if ($keyControl->keyIsVerified() === false)
         {
            $json = $this->getJsonResponse();
            $json->status = false;
@@ -218,7 +218,7 @@ class OptimizeController
         }
 
         $quotaControl = QuotaController::getInstance();
-        if ( ! $quotaControl->hasQuota())
+        if ($quotaControl->hasQuota() === false)
         {
           $json = $this->getJsonResponse();
           $json->error = AjaxController::NOQUOTA;
@@ -227,9 +227,9 @@ class OptimizeController
           return $json;
         }
 
-        // Here prevent bulk from running when running flag is off
+        // @todo Here prevent bulk from running when running flag is off
 
-        // Here prevent a runTick is the queue is empty and done already ( reliably )
+        // @todo Here prevent a runTick is the queue is empty and done already ( reliably )
 
         $results = new \stdClass;
         if ( in_array('media', $queueTypes))
@@ -256,13 +256,10 @@ class OptimizeController
 
       // Items is array in case of a dequeue items.
       $items = (isset($result->items) && is_array($result->items)) ? $result->items : array();
-    //  Log::addTemp('RunTik ITems' . count($items), $items);
 
       // Only runs if result is array, dequeued items.
       foreach($items as $mainIndex => $item)
       {
-        //  foreach($itemArray as $item)
-      //    {
             $urls = $item->urls;
             if (property_exists($item, 'png2jpg'))
             {
@@ -277,8 +274,6 @@ class OptimizeController
 
             $item = $this->handleAPIResult($item, $Q);
             $result->items[$mainIndex] = $item; // replace processed item, should have result now.
-      //    }
-        //  $result = $api->doRequests($urls, $blocking);
       }
 
       $result->stats = $Q->getStats();
@@ -286,14 +281,13 @@ class OptimizeController
       $this->checkQueueClean($result, $Q);
 
       return $json;
-
     }
 
 
     /** Checks and sends the item to processing
     * @param Object $item Item is a stdClass object from Queue. This is not a model, nor a ShortQ Item.
-    * @todo Check if PNG2JPG Processing is needed.
-    */
+    *
+		*/
     public function sendToProcessing(Object $item, $q)
     {
 
@@ -570,22 +564,28 @@ class OptimizeController
                 $thumb = $imageObj->getThumbnail($sizeName);
                 if ($thumb !== false)
                 {
-                   // @todo This should deliver the medialib item to the queue instead of this.
-                   if (\wpSPIO()->env()->is_autoprocess)
-                      $thumb->setMeta('status', ImageModel::FILE_STATUS_PENDING);
-                   else
-                      $thumb->setMeta('status', ImageModel::FILE_STATUS_UNPROCESSED);
+                  $thumb->setMeta('status', ImageModel::FILE_STATUS_UNPROCESSED);
 
                    $webp = $thumb->getWebp();
                    if ($webp !== false)
                      $webp->delete();
 
+									 $avif = $thumb->getAvif();
+									 if ($avif !== false)
+									 	 $avif->delete();
+
                     $metaUpdated = true;
                 }
             }
         }
+
         if ($metaUpdated)
            $imageObj->saveMeta();
+
+				if (\wpSPIO()->env()->is_autoprocess)
+				{
+						$this->addItemToQueue($imageObj);
+				}
     }
 
     protected function getAPI()

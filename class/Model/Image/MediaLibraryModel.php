@@ -363,7 +363,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
          if ($thumbnail->isOptimized())
           continue;
-         // @todo Find here which one is handles, since sizes can have duplicate files ( ie multiple size pointing to same filename, make local array if duplicate comes up / don't reprocess ). Same needed in restore.
 
          if (!$thumbnail->isProcessable())
            continue; // when excluded.
@@ -487,7 +486,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
             $result = $this->checkLegacy();
             if ($result)
             {
-              $metadata = $this->createSave(); // after convert, pretent it's loaded as save ( and save! ) @todo
               $this->saveMeta();
 
             }
@@ -1344,73 +1342,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
        update_post_meta($this->id, '_shortpixel_was_converted', true);
        delete_post_meta($this->id, '_shortpixel_status');
-      /*if (isset($data['webpCount']))
-      {
-          $count = $data['webpCount'];
-          $webps = $this->getWebps(); // Simple FileModel objects.
-          $this->webps = $webps;
-      } */
-
-      // FOR TESTING @todo remove
-//echo "<PRE><strong>RESULT</strong>";
-//print_r($this->thumbnails);
-//print_r($this->createSave());echo "</PRE>";
-    // *** END TESTING ***/
-
-
-      //   $is_png2jpg = isset($data[''])
-
-        // $meta = new ImageMeta();
-      //   $meta->
-         /*"thumbs" => (isset($rawMeta["sizes"]) ? $rawMeta["sizes"] : array()),
-         "message" =>(isset($rawMeta["ShortPixelImprovement"]) ? $rawMeta["ShortPixelImprovement"] : null),
-         "png2jpg" => (isset($rawMeta["ShortPixelPng2Jpg"]) ? $rawMeta["ShortPixelPng2Jpg"] : false),
-         "compressionType" =>(isset($rawMeta["ShortPixel"]["type"])
-                 ? ($rawMeta["ShortPixel"]["type"] == 'glossy' ? 2 : ($rawMeta["ShortPixel"]["type"] == "lossy" ? 1 : 0) )
-                 : null),
-         "thumbsOpt" =>(isset($rawMeta["ShortPixel"]["thumbsOpt"]) ? $rawMeta["ShortPixel"]["thumbsOpt"] : null),
-         "thumbsOptList" =>(isset($rawMeta["ShortPixel"]["thumbsOptList"]) ? $rawMeta["ShortPixel"]["thumbsOptList"] : array()),
-         'excludeSizes' =>(isset($rawMeta["ShortPixel"]["excludeSizes"]) ? $rawMeta["ShortPixel"]["excludeSizes"] : null),
-         "thumbsMissing" =>(isset($rawMeta["ShortPixel"]["thumbsMissing"]) ? $rawMeta["ShortPixel"]["thumbsMissing"] : null),
-         //[retinasOpt] => 5
-         "retinasOpt" =>(isset($rawMeta["ShortPixel"]["retinasOpt"]) ? $rawMeta["ShortPixel"]["retinasOpt"] : null),
-         "thumbsTodo" =>(isset($rawMeta["ShortPixel"]["thumbsTodo"]) ? $rawMeta["ShortPixel"]["thumbsTodo"] : false),
-         "tsOptimized" => (isset($rawMeta["ShortPixel"]["date"]) ? $rawMeta["ShortPixel"]["date"] : false),
-         "backup" => !isset($rawMeta['ShortPixebugel']['NoBackup']),
-         "status" => (!isset($rawMeta["ShortPixel"]) ? 0
-                      : (isset($rawMeta["ShortPixelImprovement"]) && is_numeric($rawMeta["ShortPixelImprovement"])
-                        && !(   $rawMeta['ShortPixelImprovement'] == 0
-                             && (   isset($rawMeta['ShortPixel']['WaitingProcessing'])
-                                 || isset($rawMeta['ShortPixel']['date']) && $rawMeta['ShortPixel']['date'] == '1970-01-01')) ? 2
-                         : (isset($rawMeta["ShortPixel"]["WaitingProcessing"]) ? 1
-                            : (isset($rawMeta["ShortPixel"]['ErrCode']) ? $rawMeta["ShortPixel"]['ErrCode'] : -500)))),
-         "retries" =>(isset($rawMeta["ShortPixel"]["Retries"]) ? $rawMeta["ShortPixel"]["Retries"] : 0),
-  */
-
-  /* NEEDS TO BE SET:
-  public $status = 0;
-  public $compressionType;
-  public $compressedSize;
-  public $improvement;
-
-  public $tsAdded;
-  public $tsOptimized;
-
-  public $has_backup;
-
-  public $did_keepExif = false;
-  public $did_cmyk2rgb = false;
-  public $did_png2Jpg = false;
-  public $is_optimized = false; // if this is optimized
-  public $is_png2jpg = false; // todo implement.
-
-  public $resize;
-  public $resizeWidth;
-  public $resizeHeight;
-  public $actualWidth;
-  public $actualHeight;
-
-  */
+    
       return true;
   }
 

@@ -344,7 +344,6 @@ class UiHelper
      $action = array('function' => '', 'type' => '', 'text' => '', 'display' => '');
      $keyControl = ApiKeyController::getInstance();
 
-    // @todo Needs Nonces on Links
     switch($name)
     {
       case 'optimize':
