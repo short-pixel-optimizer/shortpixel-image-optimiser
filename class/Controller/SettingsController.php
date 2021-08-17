@@ -107,6 +107,10 @@ class SettingsController extends \ShortPixel\Controller
             }
 
          }
+				 else
+				 {
+				 	Log::addWarn('RefreshFolder without folder id '. $folder_id );
+				 }
 
          $this->load();
       }
@@ -140,6 +144,42 @@ class SettingsController extends \ShortPixel\Controller
 
           $this->load();
       }
+
+			public function action_debug_resetQueue()
+			{
+				 $queue = isset($_POST['queue']) ? sanitize_text_field($_POST['queue']) : null;
+				 $this->loadEnv();
+
+				 if (! is_null($queue))
+				 {
+					 	 	$opt = new OptimizeController();
+				 		 	$statsMedia = $opt->getQueue('media');
+				 			$statsCustom = $opt->getQueue('custom');
+
+				 			$opt->setBulk(true);
+
+				 		 	$bulkMedia = $opt->getQueue('media');
+				 			$bulkCustom = $opt->getQueue('custom');
+
+				 			$queues = array('media' => $statsMedia, 'custom' => $statsCustom, 'mediaBulk' => $bulkMedia, 'customBulk' => $bulkCustom);
+
+					   if ($queue == 'all')
+						 {
+							  foreach($queues as $q)
+								{
+										$q->resetQueue();
+								}
+
+						 }
+						 else
+						 {
+							 	$queues[$queue]->resetQueue();
+						 }
+
+				 }
+
+				 $this->load();
+			}
 
       public function processSave()
       {

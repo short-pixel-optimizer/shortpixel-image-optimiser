@@ -1,9 +1,11 @@
 <?php
+namespace ShortPixel;
+use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+
 /**
  * User: simon
  * Date: 11.04.2018
  */
-
 class ShortPixelFeedback {
 
     private $key;
@@ -11,12 +13,11 @@ class ShortPixelFeedback {
     private $plugin_file = '';
     private $plugin_name = '';
 
-    function __construct( $_plugin_file, $slug, $key, $ctrl) {
+    function __construct( $_plugin_file, $slug, $key) {
 
         $this->plugin_file = $_plugin_file;
         $this->plugin_name = $slug; //for translations
         $this->key = $key;
-        $this->ctrl = $ctrl;
 
         // Deactivation
         add_filter( 'plugin_action_links_' . plugin_basename( $this->plugin_file ), array( $this, 'filterActionLinks') );
@@ -289,14 +290,24 @@ class ShortPixelFeedback {
 
         check_ajax_referer( 'shortpixel_deactivate_plugin', 'security' );
 
-        $_POST = $this->ctrl->validateFeedback($_POST);
+
+        //$_POST = $this->ctrl->validateFeedback($_POST);
+				Log::addTemp('DeactivePluginPOST', $_POST);
+
+				$keep_settings = isset($_POST['keep-settings']) ? intval($_POST['keep-settings']) : null;
+
+				if(is_null($keep_settings) === false) {
+            \wpSPIO()->settings()->removeSettingsOnDeletePlugin = 1 - $keep_settings;
+        }
+
+
         if ( isset($_POST['reason']) && isset($_POST['details']) && isset($_POST['anonymous']) ) {
-            require_once 'shortpixel-plugin-request.php';
+            require_once(\WPSPIO()->plugin_path() . 'class/view/shortpixel-plugin-request.php');
             $anonymous = isset($_POST['anonymous']) && $_POST['anonymous'];
             $args = array(
                 'key' => $anonymous ? false : $this->key,
-                'reason' => $_POST['reason'],
-                'details' => $_POST['details'],
+                'reason' => sanitize_text_field($_POST['reason']),
+                'details' => sanitize_text_field($_POST['details']),
                 'anonymous' => $anonymous
             );
             $request = new ShortPixelPluginRequest( $this->plugin_file, 'http://' . SHORTPIXEL_API . '/v2/feedback.php', $args );

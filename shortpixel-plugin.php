@@ -155,15 +155,15 @@ class ShortPixelPlugin
               add_action( 'add_attachment', array($admin,'handlePng2JpgHook'));
               //  add_action( 'wp_handle_upload', array($admin,'handlePng2JpgHook'));
 
-                // @todo Document what plugin does mpp
-              //  add_action( 'mpp_handle_upload', array($admin,'handlePng2JpgHook'));
+                // @integration MediaPress
+              add_action( 'mpp_handle_upload', array($admin,'handlePng2JpgHook'));
             }
 
-            // @todo what's this?
+            // Handle for EMR
             add_action('wp_handle_replace', array($admin,'handleReplaceHook'));
 
             add_filter( 'wp_generate_attachment_metadata', array($admin,'handleImageUploadHook'), 10, 2 );
-            // @todo Document what plugin does mpp
+            // @integration MediaPress
             add_filter( 'mpp_generate_metadata', array($admin,'handleImageUploadHook'), 10, 2 );
 
           }
@@ -179,28 +179,10 @@ class ShortPixelPlugin
 
       $isAdminUser = current_user_can( 'manage_options' ); // @todo This should be in env
 
-      // Probably unused by now.
-  //    define('QUOTA_EXCEEDED', $this->view->getQuotaExceededHTML());
 
       $this->env()->setDefaultViewModeList();//set default mode as list. only @ first run
 
-      //add hook for image upload processing
-      //add_filter( 'wp_generate_attachment_metadata', array( &$this, 'handleMediaLibraryImageUpload' ), 10, 2 ); // now external
       add_filter( 'plugin_action_links_' . plugin_basename(SHORTPIXEL_PLUGIN_FILE), array($admin, 'generatePluginLinks'));//for plugin settings page
-
-      //add_action( 'admin_footer', array(&$this, 'handleImageProcessing'));
-
-      //Media custom column
-    //  add_filter( 'manage_media_columns', array( &$this, 'columns' ) );//add media library column header
-      //add_action( 'manage_media_custom_column', array( &$this, 'generateCustomColumn' ), 10, 2 );//generate the media library column
-
-     //Sort and filter on ShortPixel Compression column
-    ///  add_filter( 'manage_upload_sortable_columns', array( &$this, 'columnRegisterSortable') );
-    //  add_filter( 'request', array( &$this, 'columnOrderFilterBy') );
-      //add_action('restrict_manage_posts', array( &$this, 'mediaAddFilterDropdown'));
-      //Edit media meta box
-      //add_action( 'add_meta_boxes', array( &$this, 'shortpixelInfoBox') ); // the info box in edit-media
-
 
       //for cleaning up the WebP images when an attachment is deleted
       add_action( 'delete_attachment', array( $admin, 'onDeleteAttachment') );
@@ -209,29 +191,7 @@ class ShortPixelPlugin
       // integration with WP/LR Sync plugin
       add_action( 'wplr_update_media', array( AjaxController::getInstance() , 'onWpLrUpdateMedia' ), 10, 2);
 
-      //custom hook  - seems not in use from previous versions.
-      //add_action( 'shortpixel-optimize-now', array( &$this, 'optimizeNowHook' ), 10, 1);
-
-      // no clue what the function of this hook is or was.
-      //add_filter( 'shortpixel_get_backup', array( &$this, 'shortpixelGetBackupFilter' ), 10, 1 );
-
       if($isAdminUser) {
-          //add settings page
-          //add_action( 'admin_menu', array( &$this, 'registerSettingsPage' ) );//display SP in Settings menu
-        //   add_action( 'admin_menu', array( &$this, 'registerAdminPage' ) ); // removed
-
-
-      //    add_action( 'delete_attachment', array( &$this, 'handleDeleteAttachmentInBackup' ) );
-      //    add_action( 'load-upload.php', array( &$this, 'handleCustomBulk'));
-
-          //backup restore
-          // These are all replaced by Controller / Model action via ajaxoController.
-        //  add_action('admin_action_shortpixel_restore_backup', array(&$this, 'handleRestoreBackup'));
-          //reoptimize with a different algorithm (losless/lossy)
-          //add_action('wp_ajax_shortpixel_redo', array(&$this, 'handleRedo'));
-          //optimize thumbnails
-        //  add_action('wp_ajax_shortpixel_optimize_thumbs', array(&$this, 'handleOptimizeThumbs'));
-
           //toolbar notifications
           add_action( 'admin_bar_menu', array( $admin, 'toolbar_shortpixel_processing'), 999 );
         //  add_action( 'wp_head', array( $this, 'headCSS')); // for the front-end
@@ -245,8 +205,8 @@ class ShortPixelPlugin
           $stats = $settings->currentStats;
           $totalCredits = isset($stats["APICallsQuotaNumeric"]) ? $stats['APICallsQuotaNumeric'] + $stats['APICallsQuotaOneTimeNumeric'] : 0;
           if(true || !$settings->verifiedKey || $totalCredits < 4000) {
-              require_once 'class/view/shortpixel-feedback.php';
-              new \ShortPixelFeedback( SHORTPIXEL_PLUGIN_FILE, 'shortpixel-image-optimiser', $settings->apiKey, $this);
+              require_once ('class/view/shortpixel-feedback.php');
+              new ShortPixelFeedback( SHORTPIXEL_PLUGIN_FILE, 'shortpixel-image-optimiser', $settings->apiKey);
           }
       }
 
@@ -258,23 +218,10 @@ class ShortPixelPlugin
 
     // Ajax hooks. Should always be prepended with ajax_ and *must* check on nonce in function
     add_action( 'wp_ajax_shortpixel_image_processing', array(AjaxController::getInstance(), 'ajax_processQueue') );
-    /* This one off, seems unused
-    * @todo Remove if no issue
-    add_action( 'wp_ajax_shortpixel_exit_process', array(AjaxController::getInstance() , 'ajax_removeProcessorKey'));
-    */
-    add_action( 'wp_ajax_shortpixel_get_item_view', array(AjaxController::getInstance(), 'ajax_getItemView'));
-    /* Probably superseded w/ ajaxcontroller ajaxRequest. @todo Remove if no issues
-    add_action( 'wp_ajax_shortpixel_manual_optimization', array(AjaxController::getInstance(), 'ajax_addItem'));
-    */
+
     // Custom Media
     add_action('wp_ajax_shortpixel_browse_content', array(OtherMediaController::getInstance(), 'ajaxBrowseContent'));
     add_action('wp_ajax_shortpixel_get_backup_size', array(AjaxController::getInstance(), 'ajax_getBackupFolderSize'));
-
-
-    /** Most likely already superseded by actions in SettingsController
-    * @todo Remove if new api key works w/o issues
-    * add_action('wp_ajax_shortpixel_new_api_key', array($this, 'newApiKey'));
-    */
 
     add_action('wp_ajax_shortpixel_propose_upgrade', array(AjaxController::getInstance(), 'ajax_proposeQuotaUpgrade'));
     add_action('wp_ajax_shortpixel_check_quota', array(AjaxController::getInstance(), 'ajax_checkquota'));
@@ -284,8 +231,9 @@ class ShortPixelPlugin
 
     add_action( 'wp_ajax_shortpixel_ajaxRequest', array(AjaxController::getInstance(), 'ajaxRequest'));
 
-    // *** AJAX HOOKS  @todo These must be moved from wp-short-pixel in future */
-    //add_action('wp_ajax_shortpixel_helpscoutOptin', array(\wpSPIO()->settings(), 'ajax_helpscoutOptin'));
+		// Used by processor
+		 add_action( 'wp_ajax_shortpixel_get_item_view', array(AjaxController::getInstance(), 'ajax_getItemView'));
+
 
   }
 
@@ -588,7 +536,7 @@ class ShortPixelPlugin
     elseif(NextGenController::getInstance()->isNextGenScreen())
     {
         $this->load_script($load_processor);
-        $this->load_script('shortpixel-screen-media'); // screen
+        $this->load_script('shortpixel-screen-custom'); // screen
 
         $this->load_style('shortpixel');
         $this->load_style('shortpixel-nextgen');

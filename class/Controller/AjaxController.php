@@ -4,6 +4,7 @@ namespace ShortPixel\Controller;
 
 use ShortPixel\Controller\View\ListMediaViewController as ListMediaViewController;
 use ShortPixel\Controller\View\OtherMediaViewController as OtherMediaViewController;
+use ShortPixel\Controller\View\OtherMediaController as OtherMediaController;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 
@@ -249,6 +250,8 @@ class AjaxController
           $id = intval($_POST['id']);
           $type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';
 
+					$addImage = isset($_POST['optimizeType']) ? sanitize_text_field($_POST['optimizeType']) : null;
+
           $mediaItem = $this->getMediaItem($id, $type);
 
           // if order is given, remove barrier and file away.
@@ -267,6 +270,7 @@ class AjaxController
     }
 
     /* Integration for WP /LR Sync plugin  - https://meowapps.com/plugin/wplr-sync/
+		* @integration WP / LR Sync
     * @todo Test if it works with plugin intergration
     *
     */

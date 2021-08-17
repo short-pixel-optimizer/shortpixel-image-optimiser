@@ -65,7 +65,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
   {
      if (property_exists($this, $name))
      {
-        $this->name = $value;
+        $this->$name = $value;
         return true;
      }
 
@@ -210,7 +210,9 @@ class DirectoryOtherMediaModel extends DirectoryModel
       $files = $fs->getFilesRecursive($this, $filter);
 
       \wpSPIO()->settings()->hasCustomFolders = time(); // note, check this against bulk when removing. Custom Media Bulk depends on having a setting.
-      $result = $this->addImages($files);
+
+
+    	$result = $this->addImages($files);
 
       $this->stats = null; //reset
       $stats = $this->getStats();
@@ -264,6 +266,10 @@ class DirectoryOtherMediaModel extends DirectoryModel
   public function addImages($files) {
 
       global $wpdb;
+			if ( apply_filters('shortpixel/othermedia/addfiles', true, $files, $this) === false)
+			{
+				 return false;
+			}
       /*$sqlCleanup = "DELETE FROM {$this->db->getPrefix()}shortpixel_meta WHERE folder_id NOT IN (SELECT id FROM {$this->db->getPrefix()}shortpixel_folders)";
       $wpdb->query($sqlCleanup); */
 
@@ -283,7 +289,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
           elseif ($imageObj->isProcessable())
           {
              $imageObj->saveMeta();
-             Log::addTemp('Batch New : new File saved');
+             Log::addTemp('Batch New : new File saved ' . $imageObj->getFullPath() );
              if (\wpSPIO()->env()->is_autoprocess)
              {
                 Log::addTemp('adding item to queue ' . $imageObj->get('id'));
@@ -346,9 +352,9 @@ class DirectoryOtherMediaModel extends DirectoryModel
     /** Loads from database into model, the extra data of this model. */
     private function loadFolder($folder)
     {
-
-        $class = get_class($folder);
-
+      //  $class = get_class($folder);
+			  Log::addTemp('loadFolder', $folder);
+				// Setters before action
         $this->id = $folder->id;
 
         if ($this->id > 0)
@@ -358,14 +364,16 @@ class DirectoryOtherMediaModel extends DirectoryModel
         $this->created = isset($folder->ts_created) ? $this->DBtoTimestamp($folder->ts_created) : time();
         $this->fileCount = isset($folder->file_count) ? $folder->file_count : 0; // deprecated, do not rely on.
 
+        $this->status = $folder->status;
 
         if (strlen($folder->name) == 0)
           $this->name = basename($folder->path);
         else
           $this->name = $folder->name;
 
-        $this->status = $folder->status;
+        do_action('shortpixel/othermedia/folder/load', $this->id, $this);
 
+				// Making conclusions after action.
         if ($this->status == -1)
           $this->is_removed = true;
 
@@ -373,9 +381,6 @@ class DirectoryOtherMediaModel extends DirectoryModel
         {
           $this->is_nextgen = true;
         }
-
-        do_action('shortpixel/othermedia/folder/load', $this->id, $this);
-
 
     }
 

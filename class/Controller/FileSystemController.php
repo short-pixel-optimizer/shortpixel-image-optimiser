@@ -109,7 +109,11 @@ Class FileSystemController extends \ShortPixel\Controller
     */
     public function getBackupDirectory(FileModel $file)
     {
-      $wp_home = get_home_path();
+			if (! function_exists('get_home_path'))
+			{
+				require_once(ABSPATH . 'wp-admin/includes/file.php');
+			}
+      $wp_home = \get_home_path();
       $filepath = $file->getFullPath();
 
       if ($file->is_virtual())

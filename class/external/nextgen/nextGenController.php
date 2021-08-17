@@ -7,6 +7,7 @@ use ShortPixel\Model\File\DirectoryOtherMediaModel as DirectoryOtherMediaModel;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
 
+// @integration NextGen Gallery
 class NextGenController
 {
   protected static $instance;
@@ -34,6 +35,7 @@ class NextGenController
     if ($this->has_nextgen())
     {
       add_action('shortpixel/othermedia/folder/load', array($this, 'loadFolder'), 10, 2);
+			add_action('shortpixel/othermedia/addfiles', array($this, 'checkAddFiles'), 10, 3);
 
       add_filter( 'ngg_manage_images_columns', array( '\ShortPixel\nextGenViewController', 'nggColumns' ) );
       add_filter( 'ngg_manage_images_number_of_columns', array( '\ShortPixel\nextGenViewController', 'nggCountColumns' ) );
@@ -135,8 +137,29 @@ class NextGenController
       $gid = $wpdb->get_var($sql);
 
       if (! is_null($gid) && is_numeric($gid))
-        $directory->set('status', DirectoryOtherMediaModel::DIRECTORY_STATUS_NEXTGEN);
+			{
+        $res = $directory->set('status', DirectoryOtherMediaModel::DIRECTORY_STATUS_NEXTGEN);
+				//echo $gid;
+			}
   }
+
+	/** Hook. If there is a refreshFolder action on a nextGen Directory, but the optimize Nextgen setting is off, it should not add those files to the custom Media */
+	public function checkAddFiles($bool, $files, $dirObj)
+	{
+			// Nothing nextgen.
+			if ($dirObj->get('is_nextgen') === false)
+		  {
+				 return $bool;
+			}
+
+			// If it's nextgen, but the setting is not on, reject those files.
+			if ($this->optimizeNextGen() === false)
+			{
+				 	return false;
+			}
+
+			return $bool;
+	}
 
   /* @return DirectoryModel */
   public function getGalleries()
@@ -172,13 +195,17 @@ class NextGenController
       $otherMedia = new otherMediaController();
 
       foreach($ngGalleries as $gallery) {
+					Log::addTemp('Add Gall NG, getFByPath', $gallery->getPath());
           $folder = $otherMedia->getFolderByPath($gallery->getPath());
-          if ($folder->get('in_db'))
+					Log::addTemp('Folder', $folder);
+          if ($folder->get('in_db') === true)
           {
             continue;
           }
-
-          $directory = $otherMedia->addDirectory($gallery->getPath());
+					else
+					{
+          	$directory = $otherMedia->addDirectory($gallery->getPath());
+					}
 
           if (! $directory)
             Log::addWarn('Could not add this directory' . $gallery->getPath() );
@@ -207,39 +234,9 @@ class NextGenController
     $otherMedia = new OtherMediaController();
     //$fs = \wpSPIO()->filesystem();
 
-    if (\wpSPIO()->settings()->includeNextGen == 1) {
+    if ($this->optimizeNextGen() === true) {
           $imageFsPath = $this->getImageAbspath($image);
           $otherMedia->addImage($imageFsPath);
-          /*$customFolders = $otherMedia->getAllFolders();
-
-          $folderId = -1;
-          foreach ($customFolders as $folder) {
-              if (strpos($imageFsPath, $folder->getPath()) === 0) {
-                  $folderId = $folder->getId();
-                  break;
-              }
-          }
-          if ($folderId == -1) { //if not found, create
-              $galleryPath = dirname($imageFsPath);
-              $folder = $otherMedia->addDirectory($galleryPath);
-
-              if ($folder)
-                $folderId = $folder->getId();
-          }
-
-          $imageObj = $fs->getCustomStub($imageFsPath, true);
-          if ($imageObj->get('in_db') == false)
-          {
-            $imageObj->setFolderId($folderId);
-            $imageObj->
-
-            if (\wpSPIO()->env()->is_autoprocess)
-            {
-
-            }
-          } */
-
-        //  return $shortPixel->addPathToCustomFolder($imageFsPath, $folderId, $image->pid);
       }
   }
 
@@ -252,12 +249,6 @@ class NextGenController
   {
       $image = $this->getNGImageByID($nggId);
       $path  = $this->getImageAbspath($image);
-
-//      $meta = \wpSPIO()->getShortPixel()->getSpMetaDao()->getMetaForPath($path);
-//      \wpSPIO()->getShortPixel()->getSpMetaDao()->delete($meta);
-
-
-
   }
 
   public function updateImageSize($nggId, $path) {

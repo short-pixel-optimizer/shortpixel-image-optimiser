@@ -145,14 +145,13 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         'helpscoutOptin' => array('s' => 'boolean'), // checkbox
     );
 
-    // @todo Eventually, this should not happen onLoad, but on demand.
       public function __construct() {
-        $this->populateOptions();
+        //$this->populateOptions();
     }
 
     public function populateOptions() {
 
-        $this->_apiKey = self::getOpt('wp-short-pixel-apiKey', '');
+      /*  $this->_apiKey = self::getOpt('wp-short-pixel-apiKey', '');
         $this->_verifiedKey = self::getOpt('wp-short-pixel-verifiedKey', $this->_verifiedKey);
         $this->_compressionType = self::getOpt('wp-short-pixel-compression', $this->_compressionType);
         $this->_processThumbnails = self::getOpt('wp-short-process_thumbnails', $this->_processThumbnails);
@@ -160,16 +159,16 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         $this->_backupImages = self::getOpt('wp-short-backup_images', $this->_backupImages);
         $this->_resizeImages =  self::getOpt( 'wp-short-pixel-resize-images', 0);
         $this->_resizeWidth = self::getOpt( 'wp-short-pixel-resize-width', 0);
-        $this->_resizeHeight = self::getOpt( 'wp-short-pixel-resize-height', 0);
+        $this->_resizeHeight = self::getOpt( 'wp-short-pixel-resize-height', 0); */
 
         // the following lines practically set defaults for options if they're not set
-        foreach(self::$_optionsMap as $opt) {
+        /*foreach(self::$_optionsMap as $opt) {
             self::getOpt($opt['key'], $opt['default']);
         }
 
         if(self::getOpt("downloadArchive") == -1) {
             self::setOpt(self::$_optionsMap["downloadArchive"]['key'], crc32(get_site_url())%10);
-        }
+        }  */
     }
 
     public static function debugResetOptions() {

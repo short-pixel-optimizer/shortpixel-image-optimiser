@@ -54,8 +54,10 @@ class AdminController extends \ShortPixel\Controller
       }
     }
 
-    /** When replacing happens.
+    /**
+		* When replacing happens.
     * @hook wp_handle_replace
+		* @integration Enable Media Replace
     */
     public function handleReplaceHook($params)
     {

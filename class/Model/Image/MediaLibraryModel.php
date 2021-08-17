@@ -412,9 +412,23 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           $this->original_file = $original_file;
       }
 
-      // @todo Check for WPML Duplicates
       $this->saveMeta();
 
+			$duplicates = $this->getWPMLDuplicates();
+			if (is_array($duplicates) && count($duplicates) > 0)
+			{
+				$current_id = $this->id;
+				// Run the WPML duplicates
+				foreach($duplicates as $duplicate_id)
+				{
+						// Save the exact same data under another post.
+					  $this->id = $duplicate_id;
+						$this->saveMeta();
+
+				}
+				$this->id = $current_id;
+
+			}
 
       return $return;
   }
@@ -916,6 +930,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         return false;
   }
 
+	/**  Try to find language duplicates in WPML and add the same status to it.
+	** @integration WPML
+	*
+	*/
   public function getWPMLDuplicates()
   {
     global $wpdb;
@@ -1122,6 +1140,27 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           $this->saveMeta(); // Save if something is not restored.
 
         do_action('shortpixel_after_restore_image', $this->id, $this, $cleanRestore);
+
+				$duplicates = $this->getWPMLDuplicates();
+				if (is_array($duplicates) && count($duplicates) > 0 )
+				{
+					$current_id = $this->id;
+
+					foreach($duplicates as $duplicate_id)
+					{
+						 $this->id = $duplicate_id;
+						 if ($cleanRestore)
+						 {
+							 	$this->deleteMeta();
+						 }
+						 else
+						 {
+							  $this->saveMeta();
+						 }
+						 do_action('shortpixel_after_restore_image', $this->id, $this, $cleanRestore);
+					}
+					$this->id = $current_id;
+				}
         return $bool;
   }
 
@@ -1342,7 +1381,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
        update_post_meta($this->id, '_shortpixel_was_converted', true);
        delete_post_meta($this->id, '_shortpixel_status');
-    
+
       return true;
   }
 

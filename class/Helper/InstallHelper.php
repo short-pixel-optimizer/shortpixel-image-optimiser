@@ -154,7 +154,7 @@ class InstallHelper
      return "CREATE TABLE {$prefix}shortpixel_folders (
           id mediumint(9) NOT NULL AUTO_INCREMENT,
           path varchar(512),
-          name varchar(64),
+          name varchar(150),
           path_md5 char(32),
           file_count int,
           status SMALLINT NOT NULL DEFAULT 0,
@@ -175,7 +175,7 @@ class InstallHelper
           folder_id mediumint(9) NOT NULL,
           ext_meta_id int(10),
           path varchar(512),
-          name varchar(64),
+          name varchar(150),
           path_md5 char(32),
           compressed_size int(10) NOT NULL DEFAULT 0,
           compression_type tinyint,

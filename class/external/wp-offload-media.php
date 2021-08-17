@@ -3,6 +3,7 @@ namespace ShortPixel;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notice;
 
+// @integration WP Offload Media Lite
 class wpOffload
 {
     protected $as3cf;

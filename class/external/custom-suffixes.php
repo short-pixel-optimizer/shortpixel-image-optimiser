@@ -11,6 +11,8 @@ class CustomSuffixes
   }
 
   // This adds constants for mentioned plugins checking for specific suffixes on addUnlistedImages.
+	// @integration Envira Gallery
+	// @integration Soliloquy
   public function addConstants()
   {
     if( !defined('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES')) {

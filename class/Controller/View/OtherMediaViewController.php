@@ -35,7 +35,6 @@ class OtherMediaViewController extends \ShortPixel\Controller
         $this->setActions(); // possible actions for ROWS only..
 
         $this->currentPage = isset($_GET['paged']) ? intval($_GET['paged']) : 1;
-    //    $this->total_items = intval($this->record_count());
         $this->orderby = ( ! empty( $_GET['orderby'] ) ) ? $this->filterAllowedOrderBy(sanitize_text_field($_GET['orderby'])) : 'id';
         $this->order = ( ! empty($_GET['order'] ) ) ? sanitize_text_field($_GET['order']) : 'desc'; // If no order, default to asc
         $this->search =  (isset($_GET["s"]) && strlen($_GET["s"]))  ? sanitize_text_field($_GET['s']) : false;
@@ -117,9 +116,9 @@ class OtherMediaViewController extends \ShortPixel\Controller
                                 'sortable' => true,
                                 'orderby' => 'status',
                             ),
-               'actions' => array('title' => __('Actions', 'shortpixel-image-optimiser'),
+              /* 'actions' => array('title' => __('Actions', 'shortpixel-image-optimiser'),
                                  'sortable' => false,
-                            ),
+                            ), */
         );
 
         $keyControl = ApiKeyController::getInstance();
@@ -229,7 +228,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
           $sql = "SELECT * FROM " . $wpdb->prefix . "shortpixel_meta where folder_id in ( " . $dirs  . ") ";
 
           foreach($filters as $field => $value) {
-              $sql .= " AND $field " . $value->operator . " ". $value->value . " ";
+              $sql .= " AND $field " . $vatotlue->operator . " ". $value->value . " ";
           }
 
 
@@ -295,6 +294,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
           $total = $this->total_items;
           $per_page = $this->items_per_page;
 
+var_dump($total);
           $pages = round($total / $per_page);
 
           if ($pages <= 1)

@@ -1,11 +1,12 @@
 <?php
+namespace ShortPixel;
+use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+
 /**
  * User: simon
  * Date: 11.04.2018
  */
 // @todo Remove File if no crashes
-exit('ShortPixel Plugin Request - should not be in use ');
-
 class ShortPixelPluginRequest {
 
     /**

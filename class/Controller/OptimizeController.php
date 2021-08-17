@@ -545,7 +545,10 @@ class OptimizeController
     }
 
 
-    /** Called via Hook when plugins like RegenerateThumbnailsAdvanced Update an thumbnail */
+    /**
+		* @integration Regenerate Thumbnails Advanced 
+		* Called via Hook when plugins like RegenerateThumbnailsAdvanced Update an thumbnail
+		*/
     public function thumbnailsChangedHook($postId, $originalMeta, $regeneratedSizes = array(), $bulk = false)
     {
        $fs = \wpSPIO()->filesystem();

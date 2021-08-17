@@ -135,8 +135,7 @@ class OtherMediaController extends \ShortPixel\Controller
       return $result;
     }
 
-
-    public function addDirectory($path)
+	   public function addDirectory($path)
     {
        $fs = \wpSPIO()->filesystem();
        $directory = new DirectoryOtherMediaModel($path);
@@ -208,15 +207,17 @@ class OtherMediaController extends \ShortPixel\Controller
         $fs = \wpSPIO()->filesystem();
 
         if (is_object($path_or_file)) // assume fileObject
-          $file = $path_or_file;
+        {
+					  $file = $path_or_file;
+				}
         else
         {
            $file = $fs->getFile($path_or_file);
         }
-        $folder = $this->getFolderByPath($file->getFileDir());
+        $folder = $this->getFolderByPath( (string) $file->getFileDir());
 
-        if (! $folder->get('in_db'))
-        {
+        if ($folder->get('in_db') === false)
+				{
             if ($args['is_nextgen'] == true)
             {
                $folder->set('status', DirectoryOtherMediaModel::DIRECTORY_STATUS_NEXTGEN );
@@ -247,7 +248,9 @@ class OtherMediaController extends \ShortPixel\Controller
 
       foreach($customFolders as $directory) {
 
-        $directory->refreshFolder($force);
+				$stats = $directory->getStats();
+				$forcenow = ($force || $stats->Total === 0) ? true : false;
+        $directory->refreshFolder($forcenow);
 
       } // folders
 

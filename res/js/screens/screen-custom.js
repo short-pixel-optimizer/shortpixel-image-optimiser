@@ -9,7 +9,7 @@ var ShortPixelScreen = function (MainScreen, processor)
 
     this.Init = function()
     {
-
+					addEventListener('shortpixel.custom.resumeprocessing', this.processor.ResumeProcess.bind(this.processor));
     },
     this.HandleImage = function(resultItem, type)
     {
@@ -56,6 +56,31 @@ var ShortPixelScreen = function (MainScreen, processor)
 
     this.UpdateMessage = function(id, message)
     {
+	       var element = document.getElementById('sp-message-' + id);
+	       this.currentMessage = message;
+
+	       if (element == null)
+	       {
+	           var parent = document.getElementById('sp-msg-' + id);
+	           if (parent !== null)
+	           {
+	             var element = document.createElement('div');
+	             element.classList.add('message');
+	             element.setAttribute('id', 'sp-message-' + id);
+	             parent.parentNode.insertBefore(element, parent.nextSibling);
+	           }
+	       }
+
+	       if (element !== null)
+	       {
+	          element.textContent = message;
+	       }
+	       else
+	       {
+	        //console.error('Update Message column not found ' + id);
+	        this.processor.Debug('Update Message Column not found' + id);
+	       }
+			/*
        var element = document.getElementById('sp-message-' + id);
        if (element !== null)
        {
@@ -63,6 +88,7 @@ var ShortPixelScreen = function (MainScreen, processor)
        }
        else
         console.error('Update Message coloumn not found ' + id);
+				*/
     }
 
     this.UpdateStats = function(stats, type)
@@ -78,11 +104,10 @@ var ShortPixelScreen = function (MainScreen, processor)
     this.RenderItemView = function(e)
     {
         var data = e.detail;
-console.log(data);
         if (data.custom)
         {
             var id = data.custom.id;
-            var element = document.getElementById('sp-actions-' + id);
+            var element = document.getElementById('sp-msg-' + id);
             element.innerHTML = data.custom.result;
 
         }
@@ -114,14 +139,18 @@ console.log(data);
     }
     this.Optimize = function (id)
     {
+
        var data = {
           id: id,
           type: 'custom',
           screen_action: 'optimizeItem'
        }
 
+			 if (! this.processor.CheckActive())
+			     data.callback = 'shortpixel.custom.resumeprocessing';
+
        this.processor.AjaxRequest(data);
     }
 
-
+		this.Init();
 } // class

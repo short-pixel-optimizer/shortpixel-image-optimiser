@@ -70,7 +70,6 @@ class ShortPixelPng2Jpg {
         $imagePath = $imageObj->getFullPath();
         $contents = file_get_contents($imagePath);
 
-//ord(file_get_contents($image, false, null, 25, 1)) & 4)
         if(ord(file_get_contents($imagePath, false, null, 25, 1)) & 4) {
             Log::addDebug("PNG2JPG: 25th byte has third bit 1 - transparency");
             $transparent = 1;
@@ -86,7 +85,6 @@ class ShortPixelPng2Jpg {
                 $width = $imageObj->get('width');
                 $height = $imageObj->get('height');
                 Log::addDebug("PNG2JPG Image width: " . $width . " height: " . $height . " aprox. size: " . round($width*$height*5/1024/1024) . "M memory limit: " . ini_get('memory_limit') . " USED: " . memory_get_usage());
-                //Log::addDebug("PNG2JPG create from png $imageObj");
                 if (is_null($this->current_image))
                    $img = $this->getPNGImage($imageObj);
                 else
@@ -146,7 +144,6 @@ class ShortPixelPng2Jpg {
      */
 
     protected function doConvertPng2Jpg($imageObj) {
-        //$image = $params['file'];
         do_action('shortpixel/image/convertpng2jpg_before', $imageObj);
 
         $fs = \wpSPIO()->filesystem();
@@ -158,14 +155,11 @@ class ShortPixelPng2Jpg {
         $params = array();
         $params['success'] = false;
         $params['file'] = $imageObj;
-//        $params['delete_original'] = false;
 
-      //  WPShortPixel::log("PNG2JPG doConvert img ready");
         $x = imagesx($img);
         $y = imagesy($img);
         Log::addDebug("PNG2JPG doConvert width $x height $y");
         $bg = imagecreatetruecolor($x, $y);
-    //    WPShortPixel::log("PNG2JPG doConvert img created truecolor");
         if(!$bg)
         {
           Log::addError('ImageCreateTrueColor failed');
@@ -214,43 +208,13 @@ class ShortPixelPng2Jpg {
                 return false;
             }
 
-        /*    if ($settings->backupImages > 0)
-            {
-                $imageObj->
-            } */
-            //backup?
-            /*   Backup is not this class responsibility
 
-              if($backup) {
-                $imageForBk = trailingslashit(dirname($image)) . ShortPixelAPI::MB_basename($newPath, '.jpg') . '.png';
-                Log::addDebug("imageForBk should be PNG: $imageForBk");
-                if($image != $imageForBk) {
-                    Log::addDebug("PNG2JPG doConvert rename $image to $imageForBk");
-                    @rename($image, $imageForBk);
-                }
-                if(!file_exists($imageForBk)) {
-                    unlink($newPath);
-                    return (object)array("params" => $params, "unlink" => false);
-                }
-                $image = $imageForBk;
-                $ret = ShortPixelAPI::backupImage($image, array($image));
-                if($ret['Status'] !== ShortPixelAPI::STATUS_SUCCESS) {
-                    Log::addDebug("PNG2JPG couldn't backup, keeping the PNG");
-                    unlink($newPath);
-                    return (object)array("params" => $params, "unlink" => false);
-                }
-            } */
-            //unlink($image);
             $params['success'] = true;
             $params['file'] = $uniqueFile;
             Log::addDebug("Original_file should be PNG:" .  $imageObj->getFullPath());
-            Log::addTemp('New file generated: ' . $uniqueFile->getFullPath() );
-        //    $params['original_file'] = $image;
             $params['old_url'] = $url;
             $params['new_url'] = $newUrl;
-            //$params['type'] = 'image/jpeg';
-            //$params['png_size'] = $origSize;
-            //$params['jpg_size'] = $newSize;
+
         }
         do_action('shortpixel/image/convertpng2jpg_after', $imageObj, $params);
         return $params;

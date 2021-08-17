@@ -33,18 +33,16 @@ class nextGenViewController extends \ShortPixel\Controller
    }
 
    public static function nggColumnHeader( $default ) {
+
+		 	 wp_enqueue_style('dashicons');
        return __('ShortPixel Compression','shortpixel-image-optimiser');
    }
 
    public function loadItem( $nextGenObj ) {
        $this->view = new \stdClass; // reset every row
 
-       //$meta = $metadao->getMetaForPath($picture->imagePath);
-
        $otherMediaController = OtherMediaController::getInstance();
        $mediaItem = $otherMediaController->getCustomImageByPath($nextGenObj->imagePath);
-
-       //UIHelper::
        $this->view->mediaItem = $mediaItem;
        $this->view->text = UiHelper::getStatusText($mediaItem);
 

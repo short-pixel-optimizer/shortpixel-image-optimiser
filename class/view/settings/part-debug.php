@@ -2,6 +2,7 @@
 namespace ShortPixel;
 use ShortPixel\Notices\NoticeController as NoticeController;
 use Shortpixel\Controller\StatsController as StatsController;
+use Shortpixel\Controller\OptimizeController as OptimizeController;
 
 ?>
 
@@ -116,6 +117,66 @@ use Shortpixel\Controller\StatsController as StatsController;
   </div>
 
   <p>&nbsp;</p>
+
+	<div class='table queue-stats'>
+		<?php
+			$opt = new OptimizeController();
+
+		 	$statsMedia = $opt->getQueue('media');
+			$statsCustom = $opt->getQueue('custom');
+
+			$opt->setBulk(true);
+
+		 	$bulkMedia = $opt->getQueue('media');
+			$bulkCustom = $opt->getQueue('custom');
+
+			$queues = array('media' => $statsMedia, 'custom' => $statsCustom, 'mediaBulk' => $bulkMedia, 'customBulk' => $bulkCustom);
+
+			?>
+			  <div class='head'>
+					<span>Name</span>
+					<span>In Queue</span>
+					<span>In process</span>
+					<span>Errors</span>
+					<span>Fatal</span>
+					<span>Done</span>
+					<span>Total</span>
+				</div>
+			<?php
+
+			foreach($queues as $name => $queue):
+					$stats = $queue->getStats();
+					echo "<div>";
+						echo "<span>" . $name . '</span>';
+						echo "<span>" .  $stats->in_queue . '</span>';
+						echo "<span>" .  $stats->in_process . '</span>';
+						echo "<span>" .  $stats->errors . '</span>';
+						echo "<span>" .  $stats->fatal_errors . '</span>';
+						echo "<span>" .  $stats->done . '</span>';
+						echo "<span>" .  $stats->total . '</span>';
+
+					echo "</div>";
+				?>
+
+			<?php endforeach; ?>
+
+  <div class='debug-queue'>
+    <form method="POST" action="<?php echo add_query_arg(array('sp-action' => 'action_debug_resetQueue')) ?>"
+      id="shortpixel-form-reset-queue">
+      <button class='button' type='submit'>Reset ShortQ</button>
+			<select name="queue">
+					<option>All</option>
+					<?php foreach($queues as $name => $q)
+					{
+						 echo "<option>$name</option>";
+					}
+					?>
+			</select>
+      </form>
+  </div>
+
+
+	</div>
 
 </div> <!-- tab-content -->
 </section>

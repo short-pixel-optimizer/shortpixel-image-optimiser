@@ -11,11 +11,6 @@ $fs = \wpSPIO()->filesystem();
 if ( isset($_GET['noheader']) ) {
     require_once(ABSPATH . 'wp-admin/admin-header.php');
 }
-//$this->outputHSBeacon();
-\ShortPixel\HelpScout::outputBeacon();
-
-//echo $this->view->rewriteHREF; // old reload.
-
 
 ?>
 <div class="wrap shortpixel-other-media">
@@ -126,19 +121,17 @@ if ( isset($_GET['noheader']) ) {
             <span class="date"><?php echo $display_date ?></span>
 
             <span >
-              <span id='sp-msg-<?php echo $item->get('id') ?>'  class='sp-column-info'><?php
-              echo UiHelper::getStatusText($item);
+              <div id='sp-msg-<?php echo $item->get('id') ?>'  class='sp-column-info'><?php
               //echo $this->getDisplayStatus($item);
+							$this->printItemActions($item);
+              echo UiHelper::getStatusText($item);
+
                ?>
-             </span>
-             <span id="sp-message-<?php echo $item->get('id') ?>" class="messages">&nbsp;</span>
-            </span>
-            <span class='actions' id='sp-actions-<?php echo $item->get('id') ?>'>
-              <?php
-                 $this->printItemActions($item);
-               ?>
-              <?php //echo $this->getDisplayActions($this->getActions($item, $itemFile))
-            ?></span>
+							 </div>
+	          </span>
+
+
+
         </div>
         <?php endforeach; ?>
       </div>

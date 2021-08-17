@@ -191,6 +191,9 @@ class UiHelper
 
       $quotaControl = QuotaController::getInstance();
 
+			if ($id === 0)
+				return array();
+
       if ($mediaItem->isOptimized())
       {
            $optimizable = $mediaItem->getOptimizeURLS();
@@ -279,6 +282,9 @@ class UiHelper
     $id = $mediaItem->get('id');
     $quotaControl = QuotaController::getInstance();
 
+		if ($id === 0)
+			return array();
+
     if(! $quotaControl->hasQuota())
     {
        $actions['extendquota'] = self::getAction('extendquota', $id);
@@ -302,11 +308,11 @@ class UiHelper
     {
       $text = __('Invalid API Key. <a href="options-general.php?page=wp-shortpixel-settings">Check your Settings</a>','shortpixel-image-optimiser');
     }
-  /*  elseif(! $quotaControl->hasQuota())
-    {
-       $text = __('Quota Exceeded','shortpixel-image-optimiser');
-
-    } */
+		// This basically happens when a NextGen gallery is not added to Custom Media.
+		elseif ($mediaItem->get('id') === 0)
+		{
+			 $text = __('This image was not found in our database. Refresh folders, or add this gallery', 'shortpixel-image-optimiser');
+		}
     elseif ($mediaItem->isOptimized())
     {
        $text = UiHelper::renderSuccessText($mediaItem);
