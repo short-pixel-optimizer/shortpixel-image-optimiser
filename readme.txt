@@ -3,7 +3,7 @@ Contributors: ShortPixel
 Tags: convert webp, optimize images, image optimization, resize, compressor, image, avif, compression, optimize, image optimiser, image compression, compress pdf, compress jpg, compress png, performance, photography, smush, scale, pictures
 Requires at least: 4.2.0
 Tested up to: 5.8
-Requires PHP: 5.3
+Requires PHP: 5.6
 Stable tag: 4.22.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html

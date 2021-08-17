@@ -163,9 +163,9 @@ class SettingsController extends \ShortPixel\Controller
           }
 
           // Reset Avif Check Cache.
-          $cache = new CacheController();
-          $cache->deleteItem('avif_server_check');
-          Notice::removeNoticeByID(AdminNoticesController::MSG_AVIF_ERROR);
+        //  $cache = new CacheController();
+        //  $cache->deleteItem('avif_server_check');
+        //  Notice::removeNoticeByID(AdminNoticesController::MSG_AVIF_ERROR);
 
           // end
           if ($this->do_redirect)
@@ -271,7 +271,7 @@ class SettingsController extends \ShortPixel\Controller
                     if ( strpos(strtolower($header), 'content-type') !== false )
 										{
 											// This is another header that can interrupt.
-											if (strpos(strtolower($header), 'x-content-type-options') == false)
+											if (strpos(strtolower($header), 'x-content-type-options') === false)
 											{
                       	$contentType = $header;
 											}
@@ -279,21 +279,13 @@ class SettingsController extends \ShortPixel\Controller
                 }
 
                 // http not ok, redirect etc. Shouldn't happen.
-                 if (is_null($response))
+                 if (is_null($response) || strpos($response, '200') === false)
                  {
-                    $error_detail = __('We could not detect any response header to an avif file request', 'shortpixel-image-optimiser');
+                   $error_detail = sprintf(__('The AVIF check could not be completed, because the plugin couldn\'t fetch  %s %s %s. %s Please check the security/firewall settings and try again', 'shortpixel-image-optimiser'), '<a href="' . $url . '">', $url, '</a>', '<br>');
                  }
-                 elseif (strpos($response, '200') === false)
+                 elseif(is_null($contentType) || strpos($contentType, 'avif') === false)
                  {
-                   $error_detail = __('The request did not return OK status:', 'shortpixel-image-optimiser') . $response;
-                 }
-                 elseif(is_null($contentType))
-                 {
-                    $error_details = __('We could not detect a content-type reponse to an avif file request', 'shortpixel-image-optimiser');
-                 }
-                 elseif(strpos($contentType, 'avif') === false)
-                 {
-                   $error_detail = __('Server responded with wrong content type: ', 'shortpixel_image_optimiser') . ' ' . $contentType;
+                   $error_detail = sprintf(__('The necessary Content-type header for AVIF files wasn\'t found, please check this with your Hosting and/or CDN provider. For more details about how to fix this, %s check this article %s', 'shortpixel_image_optimiser'), '<a href="https://blog.shortpixel.com/avif-mime-type-delivery-apache-nginx/"> ', '</a>');
                  }
                  else
                  {
