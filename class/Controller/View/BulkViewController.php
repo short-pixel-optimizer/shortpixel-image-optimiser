@@ -11,7 +11,7 @@ use ShortPixel\Controller\BulkController as BulkController;
 use ShortPixel\Controller\StatsController as StatsController;
 use ShortPixel\Helper\UiHelper as UiHelper;
 
-class BulkViewController extends \ShortPixel\Controller
+class BulkViewController extends \ShortPixel\ViewController
 {
 
   protected $form_action = 'sp-bulk';
@@ -85,7 +85,7 @@ class BulkViewController extends \ShortPixel\Controller
     $approx->media->thumbs = $sc->find('media', 'thumbsTotal') - $sc->find('media', 'thumbs');
 
     // If sizes are excluded, remove this count from the approx.
-    if ( count($excludeSizes) > 0)
+    if (is_array($excludeSizes) && count($excludeSizes) > 0)
       $approx->media->thumbs = $approx->media->thumbs - ($approx->media->items * count($excludeSizes));
 
     // Total optimized items + Total optimized (approx) thumbnails

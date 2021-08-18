@@ -26,9 +26,9 @@ $quotaData = $this->quotaData;
                         </div>
                         <div id="sp-bulk-stats" style="display:none">
                             <?php
-                                $under5PercentCount = $view->data->under5Percent; //amount of under 5% optimized imgs.
+                                $under5PercentCount = (int) $view->data->under5Percent; //amount of under 5% optimized imgs.
 
-                                $totalOptimized = $view->stats->totalOptimized;
+                                $totalOptimized = (int) $view->stats->totalOptimized;
 
                                 $mainOptimized = $view->stats->mainOptimized
                                 //isset($quotaData['mainProcessedFiles']) ? $quotaData['mainProcessedFiles'] : 0;
@@ -100,9 +100,9 @@ $quotaData = $this->quotaData;
                                 ( $this->hide_api_key ? '' : $view->data->apiKey));?>
                         <br><br>
                         <?php _e('Consumed: ','shortpixel-image-optimiser'); ?>
-                        <strong><?php echo( number_format( $view->totalCallsMade['plan'] ) ); ?></strong>
+                        <strong><?php echo( number_format( $quotaData->monthly->consumed ) ); ?></strong>
                         <?php _e('; Remaining: ','shortpixel-image-optimiser'); ?>
-                        <strong><?php echo( number_format( $quotaData->monthly->total -  $view->totalCallsMade['plan'] ) ); ?></strong>
+                        <strong><?php echo( number_format( $quotaData->monthly->remaining) ); ?></strong>
                     </td>
                 </tr>
                 <tr>
@@ -116,7 +116,7 @@ $quotaData = $this->quotaData;
                         <?php _e('Consumed: ','shortpixel-image-optimiser'); ?>
                         <strong><?php echo( number_format($quotaData->onetime->consumed) ); ?></strong>
                         <?php _e('; Remaining: ','shortpixel-image-optimiser'); ?>
-                        <strong><?php echo( number_format( $quotaData->onetime->total - $quotaData->onetime->consumed ) ); ?></strong>**
+                        <strong><?php echo( number_format( $quotaData->onetime->remaining) ); ?></strong>**
                     </td>
                 </tr>
                 <tr>

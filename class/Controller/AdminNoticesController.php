@@ -5,6 +5,8 @@ namespace ShortPixel\Controller;
 use ShortPixel\Notices\NoticeController as Notices;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
+use ShortPixel\ViewController as ViewController;
+
 // Use ShortPixel\Model\ApiKeyModel as ApiKeyModel
 
 /**
@@ -132,7 +134,7 @@ class AdminNoticesController extends \ShortPixel\Controller
               wp_enqueue_script('jquery.knob.min.js');
               wp_enqueue_script('jquery.tooltip.min.js');
               wp_enqueue_script('shortpixel');
-              \wpSPIO()->load_style('shortpixel-modal');
+            //  \wpSPIO()->load_style('shortpixel-modal');
             }
           }
         }
@@ -332,7 +334,7 @@ class AdminNoticesController extends \ShortPixel\Controller
           elseif( $this->monthlyUpgradeNeeded($quotaData)) {
               //looks like the user hasn't got enough credits to process the monthly images, display a notice telling this
               $message = $this->getMonthlyUpgradeMessage(array('monthAvg' => $this->getMonthAvg(), 'monthlyQuota' => $quota->monthly->total ));
-              //ShortPixelView::displayActivationNotice('upgmonth', );
+
               $notice = Notices::addNormal($message);
               Notices::makePersistent($notice, self::MSG_UPGRADE_MONTH, YEAR_IN_SECONDS);
           }
@@ -536,17 +538,8 @@ class AdminNoticesController extends \ShortPixel\Controller
 
     }
 
-      /*    <img src="<?php echo(wpSPIO()->plugin_url('res/img/robo-scared.png'));?>"
-               srcset='<?php echo(wpSPIO()->plugin_url('res/img/robo-scared.png' ));?> 1x, <?php echo(wpSPIO()->plugin_url('res/img/robo-scared@2x.png' ));?> 2x'
-               class='short-pixel-notice-icon'> */
-
         $message .= '<h3>' . __('Quota Exceeded','shortpixel-image-optimiser') . '</h3>';
 
-    //    $recheck = isset($_GET['checkquota']) ? true : false;
-
-    /*    if($recheck) {
-             $message .= '<p style="color: red">' . __('You have no available image credits. If you just bought a package, please note that sometimes it takes a few minutes for the payment confirmation to be sent to us by the payment processor.','shortpixel-image-optimiser') . '</p>';
-        } */
         $quota = $quotaController->getQuota();
 
         $creditsUsed = number_format($quota->monthly->consumed + $quota->onetime->consumed);
@@ -583,21 +576,9 @@ class AdminNoticesController extends \ShortPixel\Controller
     }
 
     protected function proposeUpgradePopup() {
-      /*  wp_enqueue_style('short-pixel-modal.min.css', plugins_url('/res/css/short-pixel-modal.min.css',SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION); */
-
-        \WPSPIO()->load_style('shortpixel-admin');
-
-        $message = '<div id="shortPixelProposeUpgradeShade" class="sp-modal-shade" style="display:none;"></div>
-            <div id="shortPixelProposeUpgrade" class="shortpixel-modal shortpixel-hide" style="min-width:610px;margin-left:-305px;">
-                <div class="sp-modal-title">
-                    <button type="button" class="sp-close-upgrade-button" onclick="ShortPixel.closeProposeUpgrade()">&times;</button>' .
-                     __('Upgrade your ShortPixel account', 'shortpixel-image-optimiser') . '
-                </div>
-                <div class="sp-modal-body sptw-modal-spinner" style="height:auto;min-height:400px;padding:0;">
-                </div>
-
-             </div>';
-        return $message;
+      		// @todo LoadView Snippet here.
+					$view = new ViewController();
+					$view->loadView('snippets/part-upgrade-options');
     }
 
     public function proposeUpgradeRemote()
@@ -704,8 +685,21 @@ class AdminNoticesController extends \ShortPixel\Controller
    }
 
     protected function monthlyUpgradeNeeded($quotaData) {
+				if  (isset($quotaData->monthly->total))
+				{
 
-        return isset($quotaData->monthly->total) && $this->getMonthAvg($quotaData) > $quotaData->monthly->total + ($quotaData->onetime->total - $quotaData->onetime->consumed)/6 + 20;
+						$monthAvg = $this->getMonthAvg($quotaData);
+						// +20 I suspect to not trigger on very low values of monthly use(?)
+						$threshold = $quotaData->monthly->total + $quotaData->onetime->remaining/6+20;
+
+						Log::addTemp("Monthly Notice needed $monthAvg $threshold");
+						if ($monthAvg > $threshold)
+						{
+								return true;
+						}
+
+				}
+				return false;
     }
 
     protected function bulkUpgradeNeeded() {
@@ -722,11 +716,16 @@ class AdminNoticesController extends \ShortPixel\Controller
     protected function getMonthAvg() {
         $stats = StatsController::getInstance();
 
+				// Count how many months have some optimized images.
         for($i = 4, $count = 0; $i>=1; $i--) {
-            if($count == 0 && $stats->find('period', 'months', $i) == 0) continue;
+            if($count == 0 && $stats->find('period', 'months', $i) == 0)
+						{
+							continue;
+						}
             $count++;
 
         }
+				// Sum last 4 months, and divide by number of active months to get number of avg per active month.
         return ($stats->find('period', 'months', 1) + $stats->find('period', 'months', 2) + $stats->find('period', 'months', 3) + $stats->find('period', 'months', 4) / max(1,$count));
     }
 

@@ -14,7 +14,7 @@ use ShortPixel\Controller\Queue\CustomQueue as CustomQueue;
 use ShortPixel\Helper\UiHelper as UiHelper;
 
 // Future contoller for the edit media metabox view.
-class OtherMediaViewController extends \ShortPixel\Controller
+class OtherMediaViewController extends \ShortPixel\ViewController
 {
       //$this->model = new
       protected $template = 'view-other-media';
@@ -66,22 +66,11 @@ class OtherMediaViewController extends \ShortPixel\Controller
 
         $actions = array(
           'optimize' => array('action' => 'optimize', '_wpnonce' => $nonce , 'text' => __('Optimize now','shortpixel-image-optimiser'), 'class' => ''),
-  /*
-            'retry' => array('action' => 'optimize', '_wpnonce' => $nonce, 'text' =>  __('Retry','shortpixel-image-optimiser')),
 
-            'redolossless' => array('action' => 'redo', '_wpnonce' => $nonce, 'type' => 'lossless', 'text' => __('Re-optimize lossless','shortpixel-image-optimiser')),
-
-            'redolossy' => array('action' => 'redo', '_wpnonce' => $nonce, 'type' => 'lossy', 'text' => __('Re-optimize lossy','shortpixel-image-optimiser')),
-
-            'redoglossy' => array('action' => 'redo', '_wpnonce' => $nonce, 'type' => 'glossy', 'text' => __('Re-optimize glossy','shortpixel-image-optimiser')),
-*/
             'quota' => array('action' => 'check-quota', '_wpnonce' => $nonce, 'text' =>__('Check quota','shortpixel-image-optimiser'), 'class' => 'button button-smaller'),
             'extend-quota' => array('link' => '<a href="https://shortpixel.com/login/' . $keyControl->getKeyForDisplay() . '" target="_blank" class="button-primary button-smaller">' . __('Extend Quota','shortpixel-image-optimiser') . '</a>'),
 
-      /*      'restore' => array('action' => 'restore', '_wpnonce' => $nonce, 'text' => __('Restore Backup','shortpixel-image-optimiser')),
 
-            'compare' => array('link' => '<a href="javascript:ShortPixel.loadComparer(\'C-%%item_id%%\');">%%text%%</a>',
-                      'text' => __('Compare', 'shortpixel-image-optimiser')), */
             'view' => array('link' => '<a href="%%item_url%%" target="_blank">%%text%%</a>', 'text' => __('View','shortpixel-image-optimiser')),
 
 
@@ -294,7 +283,6 @@ class OtherMediaViewController extends \ShortPixel\Controller
           $total = $this->total_items;
           $per_page = $this->items_per_page;
 
-var_dump($total);
           $pages = round($total / $per_page);
 
           if ($pages <= 1)

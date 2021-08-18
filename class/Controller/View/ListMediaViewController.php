@@ -9,7 +9,7 @@ use ShortPixel\Controller\QuotaController as QuotaController;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 
 // Controller for the MediaLibraryView
-class ListMediaViewController extends \ShortPixel\Controller
+class ListMediaViewController extends \ShortPixel\ViewController
 {
 
   protected $template = 'view-list-media';

@@ -225,6 +225,9 @@ class AjaxController
            case 'startMigrateAll':
               $json = $this->startMigrateAll($json, $data);
            break;
+					 case 'request_new_api_key':
+
+					 break; 
            default:
               $json->$type->message = __('Ajaxrequest - no action found', 'shorpixel-image-optimiser');
               $json->error = self::NO_ACTION;

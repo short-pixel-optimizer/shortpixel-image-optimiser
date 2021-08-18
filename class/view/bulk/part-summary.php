@@ -94,13 +94,14 @@ namespace ShortPixel;
     <div class="over-quota" data-check-visibility="false" data-control="data-quota-remaining" data-control-check="data-check-total-total">
       <span><img src="<?php echo wpSPIO()->plugin_url('res/img/bulk/over-quota.svg') ?>" /></span>  <p>On your ShortPixel account you <span class='red'>only have <?php echo number_format($quotaData->total->remaining) ?> credits available </span>, but you have selected <b data-stats-total="images-images">0</b> images to be optimized in this process. You can either go back and select less images to optimize, or you can upgrade to a higher plan or buy one time credits.
 
-       <button class="button">Show me the best options</button>
+       <button class="button" onClick="ShortPixel.proposeUpgrade();">Show me the best options</button>
 
        </p>
 
 
        <span class='hidden' data-quota-remaining><?php echo $quotaData->total->remaining ?></span>
     </div>
+		<?php $this->loadView('snippets/part-upgrade-options'); ?>
 
     <div class='no-images' data-check-visibility="false" data-control="data-check-total-total">
         <?php _e('The current selection contains no images. The bulk cannot start.', 'shortpixel-image-optimiser'); ?>

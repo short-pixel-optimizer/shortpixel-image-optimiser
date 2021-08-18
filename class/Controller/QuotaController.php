@@ -67,7 +67,7 @@ class QuotaController
                 'text' => sprintf(__('%s/month', 'shortpixel-image-optimiser'), $quotaData['APICallsQuota']),
                 'total' =>  $quotaData['APICallsQuotaNumeric'],
                 'consumed' => $quotaData['APICallsMadeNumeric'],
-                'remaining' => $quotaData['APICallsQuotaNumeric'] - $quotaData['APICallsMadeNumeric'],
+                'remaining' => max($quotaData['APICallsQuotaNumeric'] - $quotaData['APICallsMadeNumeric'], 0),
                 'renew' => $DaysToReset,
               ],
               'onetime' => (object) [
@@ -110,6 +110,8 @@ class QuotaController
 
     public function remoteValidateKey($key)
     {
+			  // Remove the cache before checking.
+				$this->forceCheckRemoteQuota();
         return $this->getRemoteQuota($key, true);
     }
 
@@ -278,8 +280,25 @@ class QuotaController
               return $defaultData;
           }
 
+          $dataArray = array(
+              "APIKeyValid" => true,
+              "APICallsMade" => number_format($data->APICallsMade) . __(' images','shortpixel-image-optimiser'),
+              "APICallsQuota" => number_format($data->APICallsQuota) . __(' images','shortpixel-image-optimiser'),
+              "APICallsMadeOneTime" => number_format($data->APICallsMadeOneTime) . __(' images','shortpixel-image-optimiser'),
+              "APICallsQuotaOneTime" => number_format($data->APICallsQuotaOneTime) . __(' images','shortpixel-image-optimiser'),
+              "APICallsMadeNumeric" => (int) max($data->APICallsMade, 0),
+              "APICallsQuotaNumeric" => (int) max($data->APICallsQuota, 0),
+              "APICallsMadeOneTimeNumeric" =>  (int) max($data->APICallsMadeOneTime, 0),
+              "APICallsQuotaOneTimeNumeric" => (int) max($data->APICallsQuotaOneTime, 0),
+
+              "APILastRenewalDate" => $data->DateSubscription,
+              "DomainCheck" => (isset($data->DomainCheck) ? $data->DomainCheck : null)
+          );
+					 // My Eyes!  Basically :  ApiCalls - ApiCalls used, both for monthly and onetime. Max of each is 0.  Negative quota seems possible, but should not be substracted from one or the other. 
+					 $dataArray["APICallsRemaining"] = max($dataArray['APICallsQuotaNumeric'] - $dataArray['APICallsMadeNumeric'], 0) + max($dataArray['APICallsQuotaOneTimeNumeric'] - $dataArray['APICallsMadeOneTimeNumeric'],0);
+
 					//reset quota exceeded flag -> user is allowed to process more images.
-          if ( ( $data->APICallsMade + $data->APICallsMadeOneTime ) < ( $data->APICallsQuota + $data->APICallsQuotaOneTime ) )
+          if ( $dataArray['APICallsRemaining'] > 0)
 					{
               $this->resetQuotaExceeded();
 					}
@@ -288,23 +307,6 @@ class QuotaController
 							//activate quota limiting
               $this->setQuotaExceeded();
 					}
-
-          $dataArray = array(
-              "APIKeyValid" => true,
-              "APICallsMade" => number_format($data->APICallsMade) . __(' images','shortpixel-image-optimiser'),
-              "APICallsQuota" => number_format($data->APICallsQuota) . __(' images','shortpixel-image-optimiser'),
-              "APICallsMadeOneTime" => number_format($data->APICallsMadeOneTime) . __(' images','shortpixel-image-optimiser'),
-              "APICallsQuotaOneTime" => number_format($data->APICallsQuotaOneTime) . __(' images','shortpixel-image-optimiser'),
-              "APICallsMadeNumeric" => (int) $data->APICallsMade,
-              "APICallsQuotaNumeric" => (int) $data->APICallsQuota,
-              "APICallsMadeOneTimeNumeric" =>  (int) $data->APICallsMadeOneTime,
-              "APICallsQuotaOneTimeNumeric" => (int) $data->APICallsQuotaOneTime,
-              "APICallsRemaining" => $data->APICallsQuota + $data->APICallsQuotaOneTime - $data->APICallsMade - $data->APICallsMadeOneTime,
-              "APILastRenewalDate" => $data->DateSubscription,
-              "DomainCheck" => (isset($data->DomainCheck) ? $data->DomainCheck : null)
-          );
-
-          // Why is this?
 
           Log::addDebug('GetQuotaInformation Result ', $dataArray);
           return $dataArray;

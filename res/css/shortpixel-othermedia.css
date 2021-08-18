@@ -129,11 +129,17 @@
   max-width: 400px;
   min-width: 250px;
   display: inline-block;
+  position: relative;
 }
 @media (max-width: 1550px) {
   .shortpixel-other-media .list-overview .item .sp-column-info {
     width: auto;
   }
+}
+.shortpixel-other-media .list-overview .item .sp-column-info .sp-column-actions {
+  position: absolute;
+  right: 10px;
+  top: 0;
 }
 @media (max-width: 1250px) {
   .shortpixel-other-media .list-overview .heading .type {

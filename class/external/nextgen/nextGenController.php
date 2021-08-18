@@ -7,6 +7,8 @@ use ShortPixel\Model\File\DirectoryOtherMediaModel as DirectoryOtherMediaModel;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
 
+use ShortPixel\NextGenViewController as NextGenViewController;
+
 // @integration NextGen Gallery
 class NextGenController
 {
@@ -17,7 +19,6 @@ class NextGenController
   public function __construct()
   {
     add_filter('shortpixel/init/optimize_on_screens', array($this, 'add_screen_loads'));
-    //$this->view = new nextGenView();
 
     add_action('plugins_loaded', array($this, 'hooks'));
     add_action('deactivate_nextgen-gallery/nggallery.php', array($this, 'resetNotification'));
@@ -25,6 +26,8 @@ class NextGenController
 
   public function hooks()
   {
+		$this->view = new NextGenViewController();
+
     if ($this->optimizeNextGen()) // if optimization is on, hook.
     {
       add_action('ngg_update_addgallery_page', array( $this, 'addNextGenGalleriesToCustom'));
@@ -37,10 +40,11 @@ class NextGenController
       add_action('shortpixel/othermedia/folder/load', array($this, 'loadFolder'), 10, 2);
 			add_action('shortpixel/othermedia/addfiles', array($this, 'checkAddFiles'), 10, 3);
 
-      add_filter( 'ngg_manage_images_columns', array( '\ShortPixel\nextGenViewController', 'nggColumns' ) );
-      add_filter( 'ngg_manage_images_number_of_columns', array( '\ShortPixel\nextGenViewController', 'nggCountColumns' ) );
-      add_filter( 'ngg_manage_images_column_7_header', array( '\ShortPixel\nextGenViewController', 'nggColumnHeader' ) );
+      add_filter( 'ngg_manage_images_columns', array( $this->view, 'nggColumns' ) );
+      add_filter( 'ngg_manage_images_number_of_columns', array( $this->view, 'nggCountColumns' ) );
+      add_filter( 'ngg_manage_images_column_7_header', array( $this->view, 'nggColumnHeader' ) );
       add_filter( 'ngg_manage_images_column_7_content', array( $this, 'loadNextGenItem' ), 10,2 );
+
     }
 
   }
@@ -105,7 +109,7 @@ class NextGenController
 
   public function loadNextGenItem($unknown, $picture)
   {
-       $viewController = new nextGenViewController();
+       $viewController = new NextGenViewController();
        $viewController->loadItem($picture);
   }
   /** Enables nextGen, add galleries to custom folders

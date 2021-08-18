@@ -67,13 +67,18 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         if ($this->is_virtual())
           $url = $this->getFullPath();
         else
-          $url = $fs->pathToUrl($this);
+          $url = $this->getURL();
 
         if ($this->isProcessable(true))
           return array($url);
 
         return array();
     }
+
+		public function getURL()
+		{
+			  return \wpSPIO()->filesystem()->pathToUrl($this);
+		}
 
     public function count($type)
     {
@@ -147,6 +152,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         $toOptimize = array();
         $fs = \WPSPIO()->filesystem();
 
+				// The file must not exist yet.
         if (count($types) == 0)
           return array($fs->pathToUrl($this));
         else
@@ -162,7 +168,10 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
        $bool = parent::restore();
 
        if ($bool)
+			 {
+				 $this->setMeta('status', ImageModel::FILE_STATUS_UNPROCESSED);
         $this->saveMeta();
+			 }
 
         return true;
 

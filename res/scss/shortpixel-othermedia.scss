@@ -151,7 +151,7 @@
              color: #fff;
              text-decoration: none;
              text-align: center;
-             
+
            }
            .button-smaller
            {
@@ -179,9 +179,16 @@
            max-width: 400px;
            min-width: 250px;
            display: inline-block;
+					 position: relative;
            @media(max-width: 1550px) {
                width: auto;
            }
+					 .sp-column-actions
+					 {
+						  position: absolute;
+							right: 10px;
+							top: 0;
+					 }
          }
       }
       @media(max-width: 1250px)

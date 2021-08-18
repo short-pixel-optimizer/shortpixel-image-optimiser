@@ -6,9 +6,8 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Helper\UiHelper as UiHelper;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 
-
 /* Class for View integration in the Nextgen gallery */
-class nextGenViewController extends \ShortPixel\Controller
+class NextGenViewController extends \ShortPixel\Controller
 {
   protected static $nggColumnIndex = 0;
 
@@ -20,7 +19,7 @@ class nextGenViewController extends \ShortPixel\Controller
 
    }
 
-   public static function nggColumns( $defaults ) {
+   public function nggColumns( $defaults ) {
        self::$nggColumnIndex = count($defaults) + 1;
   /*     add_filter( 'ngg_manage_images_column_' . self::$nggColumnIndex . '_header', array( '\ShortPixel\nextGenViewController', 'nggColumnHeader' ) );
        add_filter( 'ngg_manage_images_column_' . self::$nggColumnIndex . '_content', array( '\ShortPixel\nextGenViewController', 'nggColumnContent' ), 10, 2 );
@@ -28,13 +27,14 @@ class nextGenViewController extends \ShortPixel\Controller
        return $defaults;
    }
 
-   public static function nggCountColumns( $count ) {
+   public function nggCountColumns( $count ) {
        return $count + 1;
    }
 
-   public static function nggColumnHeader( $default ) {
+   public function nggColumnHeader( $default ) {
 
 		 	 wp_enqueue_style('dashicons');
+			 $this->loadView('snippets/part-comparer');
        return __('ShortPixel Compression','shortpixel-image-optimiser');
    }
 

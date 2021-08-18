@@ -263,11 +263,6 @@ class ShortPixelPlugin
   */
   public function admin_scripts($hook_suffix)
   {
-    if (Log::debugIsActive()) {
-        $jsSuffix = '.js'; //use unminified versions for easier debugging
-    }
-    else
-        $jsSuffix = '.min.js';
 
     $settings = \wpSPIO()->settings();
     $ajaxController = AjaxController::getInstance();
@@ -500,7 +495,6 @@ class ShortPixelPlugin
 
       $this->load_style('shortpixel-admin');
       $this->load_style('shortpixel');
-      $this->load_style('shortpixel-modal');
       $this->load_style('sp-file-tree');
 
 
@@ -519,15 +513,16 @@ class ShortPixelPlugin
        $this->load_script('shortpixel-screen-media'); // screen
 
        $this->load_style('shortpixel-admin');
-       $this->load_style('shortpixel-modal'); // for comparer
        $this->load_style('shortpixel');
 
     }
     elseif ($plugin_page == 'wp-short-pixel-custom')
     {
       $this->load_style('shortpixel');
-      $this->load_style('shortpixel-modal'); // for comparer
+      $this->load_style('shortpixel-admin');
+
       $this->load_style('shortpixel-othermedia');
+
 
       $this->load_script($load_processor);
       $this->load_script('shortpixel-screen-custom'); // screen
@@ -537,6 +532,7 @@ class ShortPixelPlugin
     {
         $this->load_script($load_processor);
         $this->load_script('shortpixel-screen-custom'); // screen
+        $this->load_style('shortpixel-admin');
 
         $this->load_style('shortpixel');
         $this->load_style('shortpixel-nextgen');

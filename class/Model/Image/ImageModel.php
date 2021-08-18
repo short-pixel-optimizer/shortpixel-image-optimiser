@@ -281,7 +281,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 	      }
 
 	    // Check if exists on disk
-	    $filepath = $this->getFileDir() . $this->getFileBase() . '.webp';
+	    $filepath = $this->getFileDir() . $this->getFileBase() . '.avif';
 	    $avif = $fs->getFile($filepath);
 
 	    if (! $avif->is_virtual() && $avif->exists())

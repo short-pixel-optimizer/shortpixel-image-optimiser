@@ -8,6 +8,7 @@ use ShortPixel\Controller\Queue\Queue as Queue;
 
 use ShortPixel\Controller\AjaxController as AjaxController;
 use ShortPixel\Controller\QuotaController as QuotaController;
+use ShortPixel\Controller\StatsController as StatsController;
 
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\ResponseController as ResponseController;
@@ -370,6 +371,9 @@ class OptimizeController
 
       $result = $item->result;
 
+			$quotaController = QuotaController::getInstance();
+			$statsController = StatsController::getInstance();
+
       if ($result->is_error)
       {
           // Check ApiStatus, and see what is what for error
@@ -387,6 +391,7 @@ class OptimizeController
           {
               //$item->status = false;
               $item->result->error = AjaxController::NOQUOTA;
+							$quotaController->setQuotaExceeded();
             //  $apiFatal = true; // fatal error since quota needs upping.
           }
           elseif ($apistatus == ApiController::STATUS_NO_KEY)
@@ -421,6 +426,7 @@ class OptimizeController
          {
            $tempFiles = array();
 
+
            // Set the metadata decided on APItime.
            if (isset($item->compressionType))
            {
@@ -430,6 +436,10 @@ class OptimizeController
            Log::addDebug('Going to Handle Optimize --> ', array_keys($result->files) );
            if (count($result->files) > 0 )
            {
+						 	// Dump Stats, Dump Quota. Refresh
+							$quotaController->forceCheckRemoteQuota();
+							$statsController->reset();
+
               $optimizeResult = $imageItem->handleOptimized($result->files); // returns boolean or null
               $item->result->improvements = $imageItem->getImprovements();
 
@@ -546,7 +556,7 @@ class OptimizeController
 
 
     /**
-		* @integration Regenerate Thumbnails Advanced 
+		* @integration Regenerate Thumbnails Advanced
 		* Called via Hook when plugins like RegenerateThumbnailsAdvanced Update an thumbnail
 		*/
     public function thumbnailsChangedHook($postId, $originalMeta, $regeneratedSizes = array(), $bulk = false)

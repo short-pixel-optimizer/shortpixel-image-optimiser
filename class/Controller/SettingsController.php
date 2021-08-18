@@ -9,7 +9,7 @@ use ShortPixel\Model\ApiKeyModel as ApiKeyModel;
 
 use ShortPixel\NextGenController as NextGenController;
 
-class SettingsController extends \ShortPixel\Controller
+class SettingsController extends \ShortPixel\ViewController
 {
 
      //env
@@ -90,6 +90,80 @@ class SettingsController extends \ShortPixel\Controller
 
         $this->doRedirect();
       }
+
+			public function action_request_new_key()
+			{
+					$this->loadEnv();
+ 	        $this->checkPost();
+
+					$email = isset($_POST['pluginemail']) ? trim(sanitize_text_field($_POST['pluginemail'])) : null;
+
+					// Not a proper form post.
+					if (is_null($email))
+					{
+						$this->load();
+						return;
+					}
+
+					// Old code starts here.
+	        if( $this->keyModel->is_verified() === true) {
+	            $this->load(); // already verified?
+							return;
+	        }
+	        $params = array(
+	            'method' => 'POST',
+	            'timeout' => 10,
+	            'redirection' => 5,
+	            'httpversion' => '1.0',
+	            'blocking' => true,
+	            'sslverify' => false,
+	            'headers' => array(),
+	            'body' => array(
+	                'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
+	                'email' => $email,
+	                'ip' => isset($_SERVER["HTTP_X_FORWARDED_FOR"]) ? sanitize_text_field($_SERVER["HTTP_X_FORWARDED_FOR"]) : sanitize_text_field($_SERVER['REMOTE_ADDR']),
+	            )
+	        );
+
+	        $newKeyResponse = wp_remote_post("https://shortpixel.com/free-sign-up-plugin", $params);
+
+					$errorText = __("There was problem requesting a new code. Server response: ", 'shortpixel-image-optimiser');
+
+	        if ( is_object($newKeyResponse) && get_class($newKeyResponse) == 'WP_Error' ) {
+	            //die(json_encode((object)array('Status' => 'fail', 'Details' => '503')));
+							Notice::addError($errorText . $newKeyResponse->get_error_message() );
+	        }
+	        elseif ( isset($newKeyResponse['response']['code']) && $newKeyResponse['response']['code'] <> 200 ) {
+	            //die(json_encode((object)array('Status' => 'fail', 'Details' =>
+							Notice::addError($errorText . $newKeyResponse['response']['code']);
+	        }
+					$body = $newKeyResponse['body'];
+        	$body = json_decode($body);
+					Log::addTemp('New Key Register', $body);
+
+	        if($body->Status == 'success') {
+	            $key = trim($body->Details);
+							$valid = $this->keyModel->checkKey($key);
+	            //$validityData = $this->getQuotaInformation($key, true, true);
+
+	            if($valid === true) {
+	                \ShortPixel\Controller\AdminNoticesController::resetAPINotices();
+	                Notice::addSuccess(__('Great, you successfully claimed your API Key! Please take a few moments to review the plugin settings below before starting to optimize your images.','shortpixel-image-optimiser'));
+	            }
+	        }
+					elseif($body->Status == 'existing')
+					{
+						 Notice::addWarning( sprintf(__('This email address is already in use. Please use your API-key in the "Already have an API key" field. You can obtain your license key via %s your account %s ', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/login/">', '</a>') );
+					}
+					else
+					{
+						 Notice::addError( __('Unexpected error obtain your ShortPixel key. Please contact support about this', 'shortpixel-image-optimiser') . '  ' . json_encode($body) );
+					}
+
+					Log::addTemp('Request New Key Done, redirecting');
+					$this->doRedirect();
+
+			}
 
       /* Custom Media, refresh a single Folder */
       public function action_refreshfolder()
@@ -181,6 +255,8 @@ class SettingsController extends \ShortPixel\Controller
 				 $this->load();
 			}
 
+
+
       public function processSave()
       {
           // Split this in the several screens. I.e. settings, advanced, Key Request IF etc.
@@ -242,7 +318,7 @@ class SettingsController extends \ShortPixel\Controller
          $this->view->customFolders= $this->loadCustomFolders();
          $this->view->allThumbSizes = $this->getAllThumbnailSizes();
          $this->view->averageCompression = $statsControl->getAverageCompression();
-         $this->view->savedBandwidth = UiHelper::formatBytes($this->view->data->savedSpace * 10000,2);
+         $this->view->savedBandwidth = UiHelper::formatBytes( (int) $this->view->data->savedSpace * 10000,2);
          //$this->view->resources = wp_remote_post($this->model->httpProto . "://shortpixel.com/resources-frag");
 
          /*if (is_wp_error($this->view->resources))
@@ -371,7 +447,6 @@ class SettingsController extends \ShortPixel\Controller
 
         $this->view->remainingImages = $remainingImages;
 
-        $this->view->totalCallsMade = array( 'plan' => $quotaData->monthly->consumed , 'oneTime' => $quotaData->onetime->consumed );
 
       }
 
@@ -605,6 +680,7 @@ class SettingsController extends \ShortPixel\Controller
         {
           $url = "upload.php?page=wp-short-pixel-bulk";
         }
+				Log::addTemp('Redirect URL ' . $url);
         wp_redirect($url);
         exit();
       }

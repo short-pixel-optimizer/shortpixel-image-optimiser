@@ -7,7 +7,7 @@ use ShortPixel\Helper\UiHelper as UiHelper;
 //use ShortPixel\Model\ImageModel as ImageModel;
 
 // Future contoller for the edit media metabox view.
-class EditMediaViewController extends \ShortPixel\Controller
+class EditMediaViewController extends \ShortPixel\ViewController
 {
       protected $template = 'view-edit-media';
   //    protected $model = 'image';

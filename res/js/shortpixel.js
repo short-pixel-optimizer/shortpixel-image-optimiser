@@ -1,8 +1,6 @@
 /**
  * Short Pixel WordPress Plugin javascript
  */
-
-
 // init checks bulkProcess on each page. initSettings is when the settings View is being loaded.
 jQuery(document).ready(function(){ShortPixel.init(); });
 
@@ -40,6 +38,13 @@ var ShortPixel = function() {
             jQuery('#backup-folder-size').html(ShortPixel.getBackupSize());
         }
 
+				if (jQuery('#shortpixel-form-request-key').length > 0)
+				{
+					  jQuery('#pluginemail').on('change, keyup', $.proxy(this.updateSignupEmail, this));
+						jQuery('#request_key').on('mouseenter', $.proxy(this.updateSignupEmail, this));
+						jQuery('#request_key').on('click', $.proxy(this.newApiKey, this));
+				}
+
         if( ShortPixel.MEDIA_ALERT == 'todo' && jQuery('div.media-frame.mode-grid').length > 0) {
             //the media table is not in the list mode, alert the user
             jQuery('div.media-frame.mode-grid').before('<div id="short-pixel-media-alert" class="notice notice-warning"><p>'
@@ -59,23 +64,6 @@ var ShortPixel = function() {
 
         this.didInit = true;
 
-        /* Future Feature, instead of calling Spixel directly?
-        var dials = document.querySelector('.percentDial');
-        for (i = 0; i < dials.children.length; i++)
-        {
-            console.log(dials);
-            var dial = dials[i];
-            if (dial.getAttribute('data-dialsize'))
-            {
-               var size = dial.getAttribute('data-dialsize');
-            }
-            else
-              var size = 60;
-
-            this.percentDial(dial.attr('id'),60 );
-        } */
-
-
     }
 
     function setOptions(options) {
@@ -89,10 +77,19 @@ var ShortPixel = function() {
     }
 
     function updateSignupEmail() {
-        var email = jQuery('#pluginemail').val();
-        if(ShortPixel.isEmailValid(email)) {
+        var email = jQuery('#pluginemail').val().trim();
+				var $submit = jQuery('#request_key');
+				var isValid = ShortPixel.isEmailValid(email)
+        if(isValid) {
             jQuery('#request_key').removeClass('disabled');
+						$submit.removeClass('disabled');
+						$submit.removeAttr('disabled');
         }
+				else
+				{
+						$submit.attr('disabled', true);
+					  $submit.addClass('disabled');
+				}
         jQuery('#request_key').attr('href', jQuery('#request_key').attr('href').split('?')[0] + '?pluginemail=' + email);
     }
 
@@ -498,6 +495,9 @@ var ShortPixel = function() {
     }
 
     function newApiKey(event) {
+				event.preventDefault();
+        ShortPixel.updateSignupEmail();
+
         if(!jQuery("#tos").is( ":checked" )) {
             event.preventDefault();
             jQuery("#tos-robo").fadeIn(400,function(){jQuery("#tos-hand").fadeIn();});
@@ -507,12 +507,18 @@ var ShortPixel = function() {
             });
             return;
         }
+				if (jQuery('#request_key').is(':disabled'))
+				{
+					return false;
+				}
         jQuery('#request_key').addClass('disabled');
         jQuery('#pluginemail_spinner').addClass('is-active');
-        ShortPixel.updateSignupEmail();
-        if (ShortPixel.isEmailValid(jQuery('#pluginemail').val())) {
+
+				jQuery('#shortpixel-form-request-key').submit();
+      /*  if (ShortPixel.isEmailValid(jQuery('#pluginemail').val())) {
             jQuery('#pluginemail-error').css('display', 'none');
-            var browseData = { 'action': 'shortpixel_new_api_key',
+            var browseData = { 'screen_action': 'request_new_api_key',
+															 'action' : 'shortpixel_ajaxRequest',
                                'email': jQuery('#pluginemail').val(), nonce: ShortPixelConstants[0].nonce_ajaxrequest};
             jQuery.ajax({
                 type: "POST",
@@ -541,6 +547,7 @@ var ShortPixel = function() {
         }
         jQuery('#request_key').removeClass('disabled');
         jQuery('#pluginemail_spinner').removeClass('is-active');
+				*/
     }
 
     // [TODO] Check where this function is called and if modal is working here.

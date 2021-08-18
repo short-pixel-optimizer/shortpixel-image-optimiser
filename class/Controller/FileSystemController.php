@@ -198,6 +198,10 @@ Class FileSystemController extends \ShortPixel\Controller
     /** Not in use yet, do not use. Future replacement. */
     public function createBackUpFolder($folder = SHORTPIXEL_BACKUP_FOLDER)
     {
+				$dirObj = $this->getDirectory($folder);
+				$result = $dirObj->check();  // check creates the whole structure if needed.
+
+				return $result;
 
     }
 

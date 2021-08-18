@@ -187,7 +187,7 @@ class ApiKeyModel extends \ShortPixel\Model
     $this->verifiedKey = false;
     $this->apiKeyTried = '';
     $this->key_is_verified = false;
-    Log::addDebug('Clearing API Key');
+    Log::addDebug('Clearing API Key', debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,10));
 
     AdminNoticesController::resetAPINotices();
     AdminNoticesController::resetQuotaNotices();
@@ -226,12 +226,6 @@ class ApiKeyModel extends \ShortPixel\Model
   /** Process some things when key has been added. This is from original wp-short-pixel.php */
   protected function processNewKey($quotaData)
   {
-    $settingsObj = \wpSPIO()->settings();
-    $lastStatus = $settingsObj->bulkLastStatus;
-
-    if(isset($lastStatus['Status']) && $lastStatus['Status'] == \ShortPixelAPI::STATUS_NO_KEY) {
-        $settingsObj->bulkLastStatus = null;
-    }
     //display notification
     $urlParts = explode("/", get_site_url());
     if( $quotaData['DomainCheck'] == 'NOT Accessible'){
@@ -248,7 +242,7 @@ class ApiKeyModel extends \ShortPixel\Model
     }
 
     //test that the "uploads"  have the right rights and also we can create the backup dir for ShortPixel
-    if ( !file_exists(SHORTPIXEL_BACKUP_FOLDER) && ! \ShortPixelFolder::createBackUpFolder() )
+    if ( \wpSPIO()->filesystem()->createBackupFolder() === false)
     {
         $notice = sprintf(__("There is something preventing us to create a new folder for backing up your original files.<BR>Please make sure that folder <b>%s</b> has the necessary write and read rights.",'shortpixel-image-optimiser'),
                              WP_CONTENT_DIR . '/' . SHORTPIXEL_UPLOADS_NAME );

@@ -6,6 +6,7 @@ use ShortPixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Controller\BulkController as BulkController;
 use ShortPixel\Controller\FileSystemController as FileSystemController;
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
+use ShortPixel\Controller\StatsController as StatsController;
 
 
 class InstallHelper
@@ -55,6 +56,10 @@ class InstallHelper
     global $wpdb;
     $sql = "delete from " . $wpdb->options . " where option_name like '%_transient_shortpixel%'";
     $wpdb->query($sql); // remove transients.
+
+		// saved in settings object, reset all stats.
+ 		StatsController::getInstance()->reset();
+
   }
 
   public static function uninstallPlugin()
