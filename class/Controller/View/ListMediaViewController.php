@@ -63,7 +63,7 @@ class ListMediaViewController extends \ShortPixel\ViewController
      {
        $this->view = new \stdClass; // reset every row
        $this->loadItem($id);
-       $this->loadView();
+       $this->loadView(null, false);
      }
   }
 
@@ -83,10 +83,15 @@ class ListMediaViewController extends \ShortPixel\ViewController
 
     $this->view->text = UiHelper::getStatusText($mediaItem);
     $this->view->list_actions = UiHelper::getListActions($mediaItem);
+
     if ( count($this->view->list_actions) > 0)
+		{
       $this->view->list_actions = UiHelper::renderBurgerList($this->view->list_actions, $mediaItem);
+		}
     else
+		{
       $this->view->list_actions = '';
+		}
 
     $this->view->actions = UiHelper::getActions($mediaItem);
     //$this->view->actions = $actions;

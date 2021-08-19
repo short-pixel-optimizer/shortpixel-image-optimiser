@@ -27,7 +27,6 @@ class UiHelper
     }
 
     $output .= "</div> <!--sp-dropdown-content--> </div> <!--sp-dropdown--> </div> <!--sp-column-actions--> ";
-
     return $output;
   }
 
@@ -272,7 +271,6 @@ class UiHelper
          $list_actions = array_diff_key($list_actions, $remove);
 
       }
-
       return $list_actions;
   }
 
@@ -281,7 +279,6 @@ class UiHelper
     $actions = array();
     $id = $mediaItem->get('id');
     $quotaControl = QuotaController::getInstance();
-
 		if ($id === 0)
 			return array();
 
@@ -294,6 +291,7 @@ class UiHelper
     {
        $actions['optimize'] = self::getAction('optimize', $id);
     }
+
     return $actions;
   }
 

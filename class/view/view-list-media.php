@@ -23,6 +23,8 @@ if (isset($this->view->actions)):
 
 endif;
 
+
+
 if (isset($this->view->list_actions))
 {
    echo $this->view->list_actions;
