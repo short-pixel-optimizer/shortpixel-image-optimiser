@@ -248,18 +248,27 @@
   background: #fff;
   padding: 8px;
   border: 1px solid #ccc;
-  max-width: 300px;
+  max-width: 360px;
   position: absolute;
   display: none;
   z-index: 10;
   transition: all 1s;
+  box-sizing: border-box;
 }
 .sp-column-info .thumbnails.optimized .thumb-wrapper .thumb {
   position: relative;
   width: 100%;
 }
+.sp-column-info .thumbnails.optimized .thumb-wrapper .thumb .thumb-name {
+  overflow: hidden;
+  max-width: 200px;
+  white-space: nowrap;
+  display: inline-block;
+}
 .sp-column-info .thumbnails.optimized .thumb-wrapper .thumb .optimize-bar {
   float: right;
+  width: 110px;
+  margin-left: 8px;
 }
 .sp-column-info .thumbnails.optimized .thumb-wrapper .thumb .optimize-bar .point {
   width: 8px;

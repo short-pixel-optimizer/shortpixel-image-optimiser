@@ -85,7 +85,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
       elseif ($type == 'avif')
         $file = $this->getAvif();
 
-
       if ( ($this->isThumbnailProcessable() || $this->isOptimized()) && $file === false)  // if no file, it can be optimized.
         return true;
       else
@@ -173,7 +172,9 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
   protected function isThumbnailProcessable()
   {
-      if ( $this->excludeThumbnails()) // if thumbnail processing is off, thumbs are never processable.
+			// if thumbnail processing is off, thumbs are never processable.
+			// This is also used by main file, so check for that!
+      if ( $this->excludeThumbnails() && $this->is_main_file === false)
         return false;
       else
       {

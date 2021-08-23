@@ -28,8 +28,8 @@ class BuildAutoLoader
   public static function getFiles()
   {
     $main = array(
-       'shortpixel_api.php',
-       'class/wp-short-pixel.php',
+      // 'shortpixel_api.php',
+      // 'class/wp-short-pixel.php',
        'class/wp-shortpixel-settings.php',
       // 'class/view/shortpixel_view.php',
        'class/shortpixel-png2jpg.php',
@@ -54,15 +54,15 @@ class BuildAutoLoader
     $externals = array(
       'class/external/cloudflare.php',
       'class/external/flywheel.php',
-      'class/external/gravityforms.php',
+      //'class/external/gravityforms.php',
       'class/external/helpscout.php',
       'class/external/nextgen/nextGenController.php',
       'class/external/nextgen/nextGenViewController.php',
-      'class/external/securi.php',
-      'class/external/shortpixel_queue_db.php',
+      //'class/external/securi.php',
+      //'class/external/shortpixel_queue_db.php',
       'class/external/visualcomposer.php',
       'class/external/wp-offload-media.php',
-      'class/external/wpengine.php',
+      //'class/external/wpengine.php',
       'class/external/wp-cli.php',
       'class/external/custom-suffixes.php',
     );

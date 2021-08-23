@@ -12,7 +12,7 @@ class UiHelper
   {
     $output = "";
     $id = $imageObj->get('id');
-    $primary = in_array('optimizethumbs', $actions) ? 'button-primary' : '';
+    $primary = isset($actions['optimizethumbs']) ? 'button-primary' : '';
 
     $output .= "<div class='sp-column-actions '>
                     <div class='sp-dropdown'>
@@ -98,7 +98,7 @@ class UiHelper
 
 
            $output .= "<div class='thumb " . $thumbName . "' title='" . $title . "'>"
-                       . $thumbName .
+                       . "<span class='thumb-name'>" .  $thumbName . '</span>' .
                         "<span class='optimize-bar'>" . $blocks_on . $blocks_off . "</span>
                       </div>";
 

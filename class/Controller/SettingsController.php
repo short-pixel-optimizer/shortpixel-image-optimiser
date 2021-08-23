@@ -237,7 +237,7 @@ class SettingsController extends \ShortPixel\ViewController
 
 				 			$queues = array('media' => $statsMedia, 'custom' => $statsCustom, 'mediaBulk' => $bulkMedia, 'customBulk' => $bulkCustom);
 
-					   if ($queue == 'all')
+					   if ( strtolower($queue) == 'all')
 						 {
 							  foreach($queues as $q)
 								{

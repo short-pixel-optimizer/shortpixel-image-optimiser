@@ -4,6 +4,8 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use \ShortPixel\ShortPixelPng2Jpg as ShortPixelPng2Jpg;
 
 
+use ShortPixel\Helper\InstallHelper as InstallHelper;
+
 class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailModel
 {
   protected $thumbnails = array(); // thumbnails of this // MediaLibraryThumbnailModel .
@@ -121,11 +123,14 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       // main file.
       if (! isset($types[0]))
       {
+
           // The isProcessable(true) is very important, since non-strict calls of this function check this function as well ( resulting in loop )
           if ($this->isProcessable(true) || $this->isOptimized())
           {
             if (parent::getOptimizeFileType($type))
+						{
               $toOptimize[] = $this->getURL(); // $fs->pathToUrl($this);
+						}
 
           }
       }
@@ -358,6 +363,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       // If thumbnails should not be optimized, they should not be in result Array.
       foreach($this->thumbnails as $thumbnail)
       {
+				 // Check if thumbnail is in the tempfiles return set. This might not always be the case
+				 if (! isset($tempFiles[$thumbnail->getFileName()]) )
+				 {
+					  continue;
+				 }
 
          $thumbnail->handleOptimizedFileType($tempFiles); // check for webps /etc
 
@@ -933,61 +943,40 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	/**  Try to find language duplicates in WPML and add the same status to it.
 	** @integration WPML
 	*
+	* Old _icl_lang_duplicate_of method have been removed, seems legacy.
 	*/
   public function getWPMLDuplicates()
   {
     global $wpdb;
     $fs = \wpSPIO()->filesystem();
 
-    $parentId = get_post_meta ($this->id, '_icl_lang_duplicate_of', true );
-    if($parentId) $id = $parentId;
+		$duplicates = array();
 
-  //  $mainFile = $fs->getAttachedFile($id);
+		// Detect WPML
+		if (! function_exists('icl_object_id'))
+		{
+			 return array();
+		}
 
-    $duplicates = $wpdb->get_col( $wpdb->prepare( "
-        SELECT pm.post_id FROM {$wpdb->postmeta} pm
-        WHERE pm.meta_value = %s AND pm.meta_key = '_icl_lang_duplicate_of'
-    ", $this->id ) );
 
-    //Polylang
-    $moreDuplicates = $wpdb->get_results( $wpdb->prepare( "
-        SELECT p.ID, p.guid FROM {$wpdb->posts} p
-        INNER JOIN {$wpdb->posts} pbase ON p.guid = pbase.guid
-     WHERE pbase.ID = %s and p.guid != ''
-    ", $this->id ) );
+		$sql = "select * from wp_icl_translations where trid in (select trid from wp_icl_translations where element_id = %d)";
 
-    //MySQL is doing a CASE INSENSITIVE join on p.guid!! so double check the results.
-    $guid = false;
-    foreach($moreDuplicates as $duplicate) {
-        if($duplicate->ID == $this->id) {
-            $guid = $duplicate->guid;
-        }
-    }
-    foreach($moreDuplicates as $duplicate) {
-        if($duplicate->guid == $guid) {
-            $duplicates[] = $duplicate->ID;
-        }
-    }
+		$sql = $wpdb->prepare($sql, $this->id);
+		$results = $wpdb->get_results($sql);
 
-    $duplicates = array_unique($duplicates);
+		if (is_array($results))
+		{
+			foreach($results as $result)
+			{
+				 	 if ($result->element_id == $this->id)
+					 {
+						 continue;
+					 }
+					 $duplicates[] = $result->element_id;
 
-    if(!in_array($this->id, $duplicates)) $duplicates[] = $this->id;
+			}
+		}
 
-    $transTable = $wpdb->get_results("SELECT COUNT(1) hasTransTable FROM information_schema.tables WHERE table_schema='{$wpdb->dbname}' AND table_name='{$wpdb->prefix}icl_translations'");
-    if(isset($transTable[0]->hasTransTable) && $transTable[0]->hasTransTable > 0) {
-        $sql = $wpdb->prepare("SELECT trid FROM {$wpdb->prefix}icl_translations WHERE element_id = %d", $this->id);
-        $transGroupId = $wpdb->get_results($sql);
-        if(count($transGroupId)) {
-            $sql = $wpdb->prepare("SELECT element_id FROM {$wpdb->prefix}icl_translations WHERE trid = %d", $transGroupId[0]->trid);
-            $transGroup = $wpdb->get_results($sql);
-            foreach($transGroup as $trans) {
-                $transFile = $fs->getFile($trans->element_id);
-                if($mainFile->getFullPath() == $transFile->getFullPath() ){
-                    $duplicates[] = $trans->element_id;
-                }
-            }
-        }
-    }
     return array_unique($duplicates);
   }
 

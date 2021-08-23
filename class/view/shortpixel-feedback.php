@@ -176,6 +176,7 @@ class ShortPixelFeedback {
                         'better-plugin' : '<?php echo __( 'Can you mention it ?', $this->plugin_name ) ?>',
                         'incompatibility' : '<?php echo __( 'With what plugin or theme is incompatible ?', $this->plugin_name ) ?>',
                         'maintenance' : '<?php echo __( 'Please specify', $this->plugin_name ) ?>',
+												'temporary' : '',
                     };
 
                 $( deactivateURL).attr('onclick', "javascript:event.preventDefault();");
@@ -217,12 +218,30 @@ class ShortPixelFeedback {
                     formContainer.html( '<?php echo $html; ?>');
 
                     formContainer.on( 'change', 'input[type=radio]', function(){
-                        console.log(formContainer);
+
                         var detailsLabel = formContainer.find( '#shortpixel-deactivate-details-label strong' ),
                             anonymousLabel = formContainer.find( 'label[for="anonymous"]' )[0],
                             submitSpan = formContainer.find( '#shortpixel-deactivate-submit-form span' )[0],
                             value = formContainer.find( 'input[name="shortpixel-deactivate-reason"]:checked' ).val();
-                        detailsLabel.text( detailsStrings[ value ] );
+														commentBox = formContainer.find('textarea[name="shortpixel-deactivate-details"]');
+
+												console.log(detailsLabel);
+												console.log(commentBox);
+												var the_detail = detailsStrings[ value ];
+												console.log(the_detail);
+												if (the_detail == '')
+												{
+													detailsLabel.css('visibility','hidden');
+													commentBox.css('visibility','hidden');
+												}
+												else
+												{
+													detailsLabel.css('visibility','visible');
+													commentBox.css('visibility','visible');
+
+												}
+
+                        detailsLabel.text( the_detail );
                         anonymousLabel.style.visibility = "visible";
                         submitSpan.style.display = "inline-block";
                         if(deactivated) {
@@ -275,14 +294,15 @@ class ShortPixelFeedback {
         $form['heading'] = __( 'Sorry to see you go', $this->plugin_name );
         $form['body'] = __( 'Before you deactivate the plugin, would you quickly give us your reason for doing so?', $this->plugin_name );
         $form['options'] = array(
-            'setup'           => __( 'Set up is too difficult', $this->plugin_name ),
-            'docs'            => __( 'Lack of documentation', $this->plugin_name ),
-            'features'        => __( 'Not the features I wanted', $this->plugin_name ),
-            'better-plugin'   => __( 'Found a better plugin', $this->plugin_name ),
-            'incompatibility' => __( 'Incompatible with theme or plugin', $this->plugin_name ),
-            'maintenance'     => __( 'Other', $this->plugin_name ),
+						'temporary' 			=> __('Temporary deactivation', 'shortpixel-image-optimiser'),
+            'setup'           => __( 'Set up is too difficult',  'shortpixel-image-optimiser' ),
+            'docs'            => __( 'Lack of documentation',  'shortpixel-image-optimiser' ),
+            'features'        => __( 'Not the features I wanted',  'shortpixel-image-optimiser' ),
+            'better-plugin'   => __( 'Found a better plugin',  'shortpixel-image-optimiser' ),
+            'incompatibility' => __( 'Incompatible with theme or plugin',  'shortpixel-image-optimiser' ),
+            'maintenance'     => __( 'Other',  'shortpixel-image-optimiser' ),
         );
-        $form['details'] = __( 'How could we improve ?', $this->plugin_name );
+        $form['details'] = __( 'How could we improve ?',  'shortpixel-image-optimiser');
         return $form;
     }
 

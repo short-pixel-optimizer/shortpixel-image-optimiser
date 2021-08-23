@@ -38,8 +38,6 @@ class wpOffload
       $this->as3cf = $as3cf;
       $this->active = true;
 
-
-
       // if setting to upload to bucket is off, don't hook or do anything really.
       if (! $this->as3cf->get_setting( 'copy-to-s3' ))
       {
