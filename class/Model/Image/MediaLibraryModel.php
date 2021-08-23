@@ -972,7 +972,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					 {
 						 continue;
 					 }
-					 $duplicates[] = $result->element_id;
+					 $duplicateFile = $fs->getMediaImage($result->element_id);
+					 // Check if the path is the same. WPML translations can be linked to different images, so this is important.
+					 if ($this->getFullPath() == $duplicateFile->getFullPath())
+					 {
+					 		$duplicates[] = $result->element_id;
+				 	 }
 
 			}
 		}
