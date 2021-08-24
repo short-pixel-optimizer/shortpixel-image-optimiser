@@ -82,6 +82,17 @@ class OtherMediaController extends \ShortPixel\Controller
       return $this->folderIDCache;
     }
 
+		public function getHiddenDirectoryIDS()
+		{
+      global $wpdb;
+
+      $sql = 'SELECT id from ' . $wpdb->prefix  .'shortpixel_folders where status = -1';
+      $results = $wpdb->get_col($sql);
+
+			return $results;
+		}
+
+
     public function getFolderByID($id)
     {
         $folders = $this->getFolders(array('id' => $id));
@@ -167,10 +178,22 @@ class OtherMediaController extends \ShortPixel\Controller
          Notices::addError( sprintf(__('Folder %s is not writeable. Please check permissions and try again.','shortpixel-image-optimiser'),$directory->getPath()) );
          return false;
        }
+			 else
+			 {
+				 $folders = $this->getAllFolders();
+				 foreach($folders as $folder)
+				 {
+					   if ($directory->isSubFolderOf($folder))
+						 {
+							  Notices::addError(__('This folder is a subfolder of an already existing Other Media folder. It cannot be added', 'shortpixel-image-optimiser'));
+								return false;
+						 }
+				 }
+			 }
 
        if (! $directory->get('in_db'))
        {
-         Log::addDebug('Has no DB entry, on addDirectory', $directory);
+         Log::addTemp('Has no DB entry, on addDirectory', $directory);
          if ($directory->save())
          {
           $directory->updateFileContentChange();
@@ -233,6 +256,7 @@ class OtherMediaController extends \ShortPixel\Controller
     /** Check directory structure for new files */
     public function refreshFolders($force = false, $expires = 5 * MINUTE_IN_SECONDS)
     {
+			$this->cleanUp();
       $customFolders = $this->getActiveFolders();
 
       $cache = new CacheController();
@@ -256,6 +280,21 @@ class OtherMediaController extends \ShortPixel\Controller
 
       return true;
     }
+
+		/**
+		 * Function to clean the folders and meta from unused stuff
+		*/
+		protected function cleanUp()
+		{
+			 global $wpdb;
+			 $folderTable = $this->getFolderTable();
+			 $metaTable = $this->getMetaTable();
+
+			 // Remove folders that are removed, and have no images in MetaTable.
+			 $sql = " DELETE FROM $folderTable WHERE status < 0 AND id NOT IN ( SELECT DISTINCT folder_id FROM $metaTable)";
+			 $wpdb->query($sql);
+
+		}
 
     /* Check if this directory is part of the MediaLibrary */
     protected function checkifMediaLibrary(DirectoryModel $directory)

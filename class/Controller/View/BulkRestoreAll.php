@@ -45,10 +45,8 @@ class BulkRestoreAll extends \ShortPixel\ViewController
 
     public function getCustomFolders()
     {
-      //wpshortPixel::refreshCustomFolders();
-      //$spMetaDao = $this->shortPixel->getSpMetaDao();
-      //$customFolders = $spMetaDao->getFolders();
-      $otherMedia = new OtherMediaController();
+
+      $otherMedia = OtherMediaController::getInstance();
 
       return $otherMedia->getAllFolders();
 

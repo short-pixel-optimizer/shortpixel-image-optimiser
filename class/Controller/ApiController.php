@@ -198,10 +198,11 @@ class ApiController
 
     $settings = \wpSPIO()->settings();
 
-    // This is only set if something is up, otherwise, ApiResponise returns array
+    // This is only set if something is up, otherwise, ApiResponse returns array
     if (isset($APIresponse['Status']))
     {
         // Check for known errors. : https://shortpixel.com/api-docs
+				Log::addDebug('Api Response Status :' . $APIresponse['Status']->Code  );
         switch($APIresponse['Status']->Code)
         {
               case -102: // Invalid URL
@@ -213,21 +214,21 @@ class ApiController
               case -203: // Could not download file
                  return $this->returnFailure( self::STATUS_ERROR, $APIresponse['Status']->Message);
               break;
-              case -403:
-              case -301:
+              case -403: // Quota Exceeded
+              case -301: // The file is larger than remaining quota
 									// legacy
                   @delete_option('bulkProcessingStatus');
-									$quotaController::getInstance()->setQuotaExceeded();
+									QuotaController::getInstance()->setQuotaExceeded();
 
                   return $this->returnRetry( self::STATUS_QUOTA_EXCEEDED, __('Quota exceeded.','shortpixel-image-optimiser'));
                   break;
-              case -401:
+              case -401: // Invalid Api Key
                   return $this->returnFailure( self::STATUS_NO_KEY, $APIresponse['Status']->Message);
               break;
-              case -404:
+              case -404: // Maximum number in optimization queue (remote)
                   //return array("Status" => self::STATUS_QUEUE_FULL, "Message" => $APIresponse['Status']->Message);
                   return $this->returnRetry( self::STATUS_QUEUE_FULL, $APIresponse['Status']->Message);
-              case -500:
+              case -500: // API in maintenance.
                   //return array("Status" => self::STATUS_MAINTENANCE, "Message" => $APIresponse['Status']->Message);
                   return $this->returnRetry( self::STATUS_MAINTENANCE, $APIresponse['Status']->Message);
           }
@@ -269,9 +270,7 @@ class ApiController
 
     // If this code reaches here, something is wrong.
     if(!isset($APIresponse['Status'])) {
-        //WpShortPixel::log("API Response Status unfound : " . json_encode($APIresponse));
-        /*return array("Status" => self::STATUS_FAIL, "Message" => __('Unrecognized API response. Please contact support.','shortpixel-image-optimiser'),
-                     "Code" => self::ERR_UNKNOWN, "Debug" => ' (SERVER RESPONSE: ' . json_encode($response) . ')');*/
+
         Log::addError('API returned Unknown Status/Response ', $response);
         return $this->returnFailure(self::STATUS_FAIL,  __('Unrecognized API response. Please contact support.','shortpixel-image-optimiser'));
 

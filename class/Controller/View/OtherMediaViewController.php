@@ -26,6 +26,8 @@ class OtherMediaViewController extends \ShortPixel\ViewController
       protected $order;
       protected $orderby;
       protected $search;
+			protected $show_hidden = false;
+			protected $has_hidden_items = false; 
 
       protected $actions = array();
 
@@ -38,6 +40,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
         $this->orderby = ( ! empty( $_GET['orderby'] ) ) ? $this->filterAllowedOrderBy(sanitize_text_field($_GET['orderby'])) : 'id';
         $this->order = ( ! empty($_GET['order'] ) ) ? sanitize_text_field($_GET['order']) : 'desc'; // If no order, default to asc
         $this->search =  (isset($_GET["s"]) && strlen($_GET["s"]))  ? sanitize_text_field($_GET['s']) : false;
+				$this->show_hidden = isset($_GET['show_hidden']) ? sanitize_text_field($_GET['show_hidden']) : false;
 
       }
 
@@ -122,7 +125,6 @@ class OtherMediaViewController extends \ShortPixel\ViewController
       protected function getItems()
       {
           $fs = \wpSPIO()->filesystem();
-          //$total_items  =
 
           // [BS] Moving this from ts_added since often images get added at the same time, resulting in unpredictable sorting
           $items = $this->queryItems();
@@ -201,8 +203,17 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 
           $page = $this->currentPage;
           $controller = OtherMediaController::getInstance();
+//var_dump($this->show_hidden); exit();
+					$hidden_ids = $controller->getHiddenDirectoryIDS();
+					if (count($hidden_ids) > 0)
+						$this->has_hidden_items = true;
 
-          $dirs = implode(',', $controller->getActiveDirectoryIDS() );
+
+					if ($this->show_hidden == true)
+          	$dirs = implode(',', $hidden_ids );
+					else
+          	$dirs = implode(',', $controller->getActiveDirectoryIDS() );
+
           if (strlen($dirs) == 0)
             return array();
 

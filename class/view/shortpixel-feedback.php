@@ -1,6 +1,7 @@
 <?php
 namespace ShortPixel;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 
 /**
  * User: simon
@@ -13,11 +14,13 @@ class ShortPixelFeedback {
     private $plugin_file = '';
     private $plugin_name = '';
 
-    function __construct( $_plugin_file, $slug, $key) {
+    function __construct( $_plugin_file, $slug) {
 
         $this->plugin_file = $_plugin_file;
         $this->plugin_name = $slug; //for translations
-        $this->key = $key;
+
+				$apiControl = ApiKeyController::getInstance();
+				$this->key = $apiControl->forceGetApiKey();
 
         // Deactivation
         add_filter( 'plugin_action_links_' . plugin_basename( $this->plugin_file ), array( $this, 'filterActionLinks') );
@@ -75,7 +78,7 @@ class ShortPixelFeedback {
         $html .= '<div class="shortpixel-deactivate-form-footer"><p>';
         $html .= '<label for="anonymous" title="'
             . __("If you UNCHECK this then your email address will be sent along with your feedback. This can be used by ShortPixel to get back to you for more info or a solution.",'shortpixel-image-optimiser')
-            . '"><input type="checkbox" name="shortpixel-deactivate-tracking" checked="checked" id="anonymous"> ' . esc_html__( 'Send anonymous', $this->plugin_name ) . '</label><br>';
+            . '"><input type="checkbox" name="shortpixel-deactivate-tracking" checked="checked" id="anonymous" value="1"> ' . esc_html__( 'Send anonymous', $this->plugin_name ) . '</label><br>';
         $html .= '<a id="shortpixel-deactivate-submit-form" class="button button-primary" href="#">'
             . __( '<span>Submit&nbsp;and&nbsp;</span>Deactivate', $this->plugin_name )
             . '</a>';
@@ -225,10 +228,10 @@ class ShortPixelFeedback {
                             value = formContainer.find( 'input[name="shortpixel-deactivate-reason"]:checked' ).val();
 														commentBox = formContainer.find('textarea[name="shortpixel-deactivate-details"]');
 
-												console.log(detailsLabel);
-												console.log(commentBox);
+											//	console.log(detailsLabel);
+											//	console.log(commentBox);
 												var the_detail = detailsStrings[ value ];
-												console.log(the_detail);
+											//	console.log(the_detail);
 												if (the_detail == '')
 												{
 													detailsLabel.css('visibility','hidden');
@@ -252,9 +255,14 @@ class ShortPixelFeedback {
                                 e.preventDefault();
                                 var data = {
                                     reason: formContainer.find('input[name="shortpixel-deactivate-reason"]:checked').val(),
-                                    details: formContainer.find('#shortpixel-deactivate-details').val(),
-                                    anonymous: formContainer.find('#anonymous:checked').length,
+                                    details: formContainer.find('#shortpixel-deactivate-details').val()
+                                    //anonymous: formContainer.find('#anonymous:checked').length,
                                 };
+																if (formContainer.find('#anonymous').is(':checked'))
+																	data['anonymous'] = 1;
+																else
+																	data['anonymous'] = 0;
+
                                 SubmitFeedback(data, formContainer);
                             });
                         }
@@ -268,10 +276,6 @@ class ShortPixelFeedback {
                             SubmitFeedback({}, formContainer);
                         }
                     });
-
-                    /*formContainer.on('click', '#shortpixel-deactivate-plugin', function(e){
-                        e.preventDefault();
-                    });*/
 
                     // If we click outside the form, the form will close
                     $('.shortpixel-deactivate-form-bg').on('click',function(){
@@ -310,22 +314,19 @@ class ShortPixelFeedback {
 
         check_ajax_referer( 'shortpixel_deactivate_plugin', 'security' );
 
-
-        //$_POST = $this->ctrl->validateFeedback($_POST);
-				Log::addTemp('DeactivePluginPOST', $_POST);
-
 				$keep_settings = isset($_POST['keep-settings']) ? intval($_POST['keep-settings']) : null;
 
 				if(is_null($keep_settings) === false) {
             \wpSPIO()->settings()->removeSettingsOnDeletePlugin = 1 - $keep_settings;
         }
 
+				Log::addDebug('Deactive Plugin Callback POST', $_POST);
 
         if ( isset($_POST['reason']) && isset($_POST['details']) && isset($_POST['anonymous']) ) {
             require_once(\WPSPIO()->plugin_path() . 'class/view/shortpixel-plugin-request.php');
-            $anonymous = isset($_POST['anonymous']) && $_POST['anonymous'];
+            $anonymous = (intval($_POST['anonymous']) == 1) ? true : false;
             $args = array(
-                'key' => $anonymous ? false : $this->key,
+                'key' =>  $this->key,
                 'reason' => sanitize_text_field($_POST['reason']),
                 'details' => sanitize_text_field($_POST['details']),
                 'anonymous' => $anonymous

@@ -66,7 +66,7 @@ class ShortPixelPng2Jpg {
         $transparent = 0;
         $transparent_pixel = $img = $bg = false;
 
-        //WPShortPixel::log("PNG2JPG SHELL EXEC: " . shell_exec('convert ' . $image . ' -format "%[opaque]" info:'));
+
         $imagePath = $imageObj->getFullPath();
         $contents = file_get_contents($imagePath);
 
@@ -244,21 +244,7 @@ class ShortPixelPng2Jpg {
 
     }
 
-  /*   Gone.  If it's excluded it should not run trough doProcessing anyhow on the OptimizeController.
-    protected function isExcluded($params) {
-        if(is_array($this->_settings->excludePatterns)) {
-            foreach($this->_settings->excludePatterns as $item) {
-                $type = trim($item["type"]);
-                if(in_array($type, array('name', 'path')) && WpShortPixel::matchExcludePattern($params['file'], $item['value'])) {
-                    return true; //excluded by name pattern
-                }
-                if(isset($params['width']) && isset($params['height']) && 'size' == $type && WPShortPixel::isProcessableSize($params['width'], $params['height'], $item['value'])){
-                    return true;
-                }
-            }
-        }
-        return false;
-    } */
+
 
     /**
      * Convert an uploaded image from PNG to JPG
@@ -371,9 +357,9 @@ class ShortPixelPng2Jpg {
         }
         $startTime = microtime(true);
         foreach($options as $option){
-          //  WPShortPixel::log("PNG2JPG update URLS on $option ");
             if( $option == 'custom' ){
                 $n = 0;
+								//@todo This probably crashes
                 $page_size = WpShortPixelMediaLbraryAdapter::getOptimalChunkSize('postmeta');
 
                 for( $page = 0; $items = $wpdb->get_results("SELECT * FROM $wpdb->postmeta LIMIT " . ($page * $page_size) . ", $page_size"); $page++ ) {

@@ -7,7 +7,7 @@ use ShortPixel\Helper\UiHelper as UiHelper;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 
 /* Class for View integration in the Nextgen gallery */
-class NextGenViewController extends \ShortPixel\Controller
+class NextGenViewController extends \ShortPixel\ViewController
 {
   protected static $nggColumnIndex = 0;
 

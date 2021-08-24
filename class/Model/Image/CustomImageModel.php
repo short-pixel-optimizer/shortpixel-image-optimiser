@@ -27,13 +27,15 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
         if ($id > 0)
 				{
-          $this->loadMeta();
-				  $this->setWebp();
-				  $this->setAvif();
+          $bool = $this->loadMeta();
+					if ($bool)
+					{
+				  	$this->setWebp();
+				  	$this->setAvif();
+					}
 				}
         else
         {
-
           $this->fullpath = ''; // stub
           $this->image_meta = new ImageMeta();
           $this->is_stub = true;
@@ -210,12 +212,13 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
       $imagerow = $wpdb->get_row($sql);
 
+			$metaObj = new ImageMeta();
+			$this->image_meta = $metaObj; // even if not found, load an empty imageMeta.
+
       if (! is_object($imagerow))
         return false;
 
       $this->in_db = true; // record found.
-
-      $metaObj = new ImageMeta();
 
       $this->fullpath = $imagerow->path;
       $this->folder_id = $imagerow->folder_id;
@@ -353,6 +356,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
             'ts_added' => $this->timestampToDB($metaObj->tsAdded),
             'ts_optimized' => $this->timestampToDB($metaObj->tsOptimized),
             'path' => $this->getFullPath(),
+						'name' => $this->getFileName(),
             'path_md5' => md5($this->getFullPath()), // this is legacy
        );
        // The keys are just for readability.
@@ -372,6 +376,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
             'ts_added' => '%s',
             'ts_optimized' => '%s' ,
             'path' => '%s',
+						'name' => '%s',
             'path_md5' => '%s' , // this is legacy
        );
 

@@ -42,10 +42,11 @@ class ShortPixelPluginRequest {
 
         $this->url = $url;
         // Set variables
-        $this->allow_tracking = !$args['anonymous'];
+        $this->allow_tracking = ($args['anonymous'] === false)? true : false;
         $this->plugin_file = $_plugin_file;
         $this->data['unique'] = md5( home_url() . get_bloginfo( 'admin_email' ) );
-        $this->data['key'] = $args['key'];
+				if ($args['anonymous'] == false)
+        	$this->data['key'] = $args['key'];
         $this->data['wordpress']['deactivated_plugin']['uninstall_reason'] = $args['reason'];
         $this->data['wordpress']['deactivated_plugin']['uninstall_details'] = $args['details'];
 
@@ -209,6 +210,9 @@ class ShortPixelPluginRequest {
             'body'        => $this->data,
             'user-agent'  => 'MT/EPSILON-CUSTOMER-TRACKING/' . esc_url( home_url() )
         ) );
+
+				Log::addTemp('Request Data', $this->data);
+				Log::addTemp('Request Send: ', $request);
 
         if ( is_wp_error( $request ) ) {
             return false;

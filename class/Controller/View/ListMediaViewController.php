@@ -79,9 +79,6 @@ class ListMediaViewController extends \ShortPixel\ViewController
      $actions = array();
      $list_actions = array();
 
-		 var_dump($mediaItem->getWPMLDuplicates());
-  //   $is_processable = $mediaItem->isProcessable();
-
     $this->view->text = UiHelper::getStatusText($mediaItem);
     $this->view->list_actions = UiHelper::getListActions($mediaItem);
 

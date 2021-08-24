@@ -38,7 +38,7 @@ class SettingsController extends \ShortPixel\ViewController
 
       public function __construct()
       {
-          $this->model = new \WPShortPixelSettings();
+          $this->model = \wpSPIO()->settings();
           $this->keyModel = new ApiKeyModel();
 
           $this->keyModel->loadKey();
@@ -172,7 +172,7 @@ class SettingsController extends \ShortPixel\ViewController
 
          if ($folder_id)
          {
-            $otherMediaController = new OtherMediaController();
+            $otherMediaController = OtherMediaController::getInstance();
             $dirObj = $otherMediaController->getFolderByID($folder_id);
 
             if ($dirObj)
@@ -453,7 +453,7 @@ class SettingsController extends \ShortPixel\ViewController
       protected function loadCustomFolders()
       {
 
-        $otherMedia = new OtherMediaController();
+        $otherMedia = OtherMediaController::getInstance();
 
         $otherMedia->refreshFolders();
         $customFolders = $otherMedia->getActiveFolders();
@@ -530,7 +530,7 @@ class SettingsController extends \ShortPixel\ViewController
           {
             $folderpath = sanitize_text_field(stripslashes($post['addCustomFolder']));
 
-            $otherMedia = new OtherMediaController();
+            $otherMedia = OtherMediaController::getInstance();;
             $result = $otherMedia->addDirectory($folderpath);
             if ($result)
             {
@@ -542,7 +542,7 @@ class SettingsController extends \ShortPixel\ViewController
           if(isset($post['removeFolder']) && intval($post['removeFolder']) > 0) {
               //$metaDao = $this->shortPixel->getSpMetaDao();
               $folder_id = intval($post['removeFolder']);
-              $otherMedia = new OtherMediaController();
+              $otherMedia = OtherMediaController::getInstance();
               $dirObj = $otherMedia->getFolderByID($folder_id);
 
               if ($dirObj === false)

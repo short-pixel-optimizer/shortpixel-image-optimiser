@@ -21,7 +21,6 @@ class InstallHelper
       // @todo This will not work in new version
       if(SHORTPIXEL_RESET_ON_ACTIVATE === true && WP_DEBUG === true) { //force reset plugin counters, only on specific occasions and on test environments
           $settings::debugResetOptions();
-        //  $settings = new \WPShortPixelSettings();
 					self::removeTables();
       }
 
@@ -50,8 +49,9 @@ class InstallHelper
     // save remove.
     $fs = new FileSystemController();
     $log = $fs->getFile(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
-    if ($log->exists())
-      $log->delete();
+		// @todo Debug, put this back
+    //if ($log->exists())
+    //  $log->delete();
 
     global $wpdb;
     $sql = "delete from " . $wpdb->options . " where option_name like '%_transient_shortpixel%'";

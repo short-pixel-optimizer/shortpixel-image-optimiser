@@ -48,6 +48,20 @@ if ( isset($_GET['noheader']) ) {
   </div>
 
   <div class='pagination tablenav'>
+			<div class="view_switch">
+				<?php if ($this->has_hidden_items):
+
+					if ($this->show_hidden)
+					{
+						 printf('<a href="%s">%s</a>', add_query_arg('show_hidden',false), __('Back to normal items', 'shortpixel-image-optimiser'));
+					}
+					else
+					{
+						 printf('<a href="%s">%s</a>', add_query_arg('show_hidden',true), __('Show hidden items', 'shortpixel-image-optimiser'));
+					}
+
+		     endif; ?>
+			</div>
       <div class='tablenav-pages'>
         <?php echo $this->view->pagination; ?>
     </div>
@@ -124,7 +138,7 @@ if ( isset($_GET['noheader']) ) {
               <div id='sp-msg-<?php echo $item->get('id') ?>'  class='sp-column-info'><?php
               //echo $this->getDisplayStatus($item);
 							$this->printItemActions($item);
-              echo UiHelper::getStatusText($item);
+              echo "<div>" .  UiHelper::getStatusText($item) . "</div>";
 
                ?>
 							 </div>

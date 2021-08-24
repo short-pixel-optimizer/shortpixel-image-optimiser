@@ -196,14 +196,19 @@ class NextGenController
       //add the NextGen galleries to custom folders
       $ngGalleries = $this->getGalleries(); // DirectoryModel return.
 
-      $otherMedia = new otherMediaController();
+      $otherMedia = OtherMediaController::getInstance();
 
-      foreach($ngGalleries as $gallery) {
+      foreach($ngGalleries as $gallery)
+			{
 					Log::addTemp('Add Gall NG, getFByPath', $gallery->getPath());
           $folder = $otherMedia->getFolderByPath($gallery->getPath());
 					Log::addTemp('Folder', $folder);
           if ($folder->get('in_db') === true)
           {
+						if ($folder->get('status') !== 1)
+						{
+							 $folder->set('status', DIRECTORY_STATUS_NEXTGEN);
+						}
             continue;
           }
 					else
@@ -212,7 +217,9 @@ class NextGenController
 					}
 
           if (! $directory)
+					{
             Log::addWarn('Could not add this directory' . $gallery->getPath() );
+					}
           else
           {
              $directory->set('status', DirectoryOtherMediaModel::DIRECTORY_STATUS_NEXTGEN);
@@ -235,7 +242,7 @@ class NextGenController
 
   public function handleImageUpload($image)
   {
-    $otherMedia = new OtherMediaController();
+    $otherMedia = OtherMediaController::getInstance();
     //$fs = \wpSPIO()->filesystem();
 
     if ($this->optimizeNextGen() === true) {

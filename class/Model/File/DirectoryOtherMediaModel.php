@@ -6,6 +6,7 @@ use ShortPixel\Notices\NoticeController as Notice;
 use \ShortPixel\Model\File\DirectoryModel as DirectoryModel;
 
 use ShortPixel\Controller\OptimizeController as OptimizeController;
+use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 
 // extends DirectoryModel. Handles Shortpixel_meta database table
 // Replacing main parts of shortpixel-folder
@@ -108,20 +109,29 @@ class DirectoryOtherMediaModel extends DirectoryModel
         $table = $wpdb->prefix . 'shortpixel_folders';
 
         $is_new = false;
+				$result = false;
 
         if ($this->in_db) // Update
         {
-            $wpdb->update($table, $data, array('id' => $this->id), $format);
+            $result = $wpdb->update($table, $data, array('id' => $this->id), $format);
         }
         else // Add new
         {
             $this->id = $wpdb->insert($table, $data);
+						if ($this->id !== false)
+						{
+							$is_new = true;
+							$result = $this->id;
+						}
         }
 
+				// reloading because action can create a new DB-entry, which will not be reflected (in id )
+        if ($is_new)
+				{
+        	$this->loadFolderByPath($this->getPath());
+				}
 
-        if ($is_new) // reloading because action can create a new DB-entry, which will not be reflected (in id )
-        $this->loadFolderByPath($this->getPath());
-
+				return $result;
   }
 
   public function delete()
@@ -133,11 +143,30 @@ class DirectoryOtherMediaModel extends DirectoryModel
       }
 
       global $wpdb;
+			$otherMedia = OtherMediaController::getInstance();
 
-      $sql = 'DELETE FROM ' . $wpdb->prefix . 'shortpixel_folders where id = %d';
-      $sql = $wpdb->prepare($sql, $this->id);
+			// Remove all files from this folder that are not optimized.
+			$sql = "DELETE FROM " . $otherMedia->getMetaTable() . ' WHERE status <> 2 and folder_id = %d';
+			$sql = $wpdb->prepare($sql, $this->id);
+			$wpdb->query($sql);
 
-      $result = $wpdb->query($sql);
+			// Check if there are any images left.
+			$sql = 'SELECT count(id) FROM ' . $otherMedia->getMetaTable() . ' WHERE folder_id = %d';
+			$sql = $wpdb->prepare($sql, $this->id);
+			$numImages = $wpdb->get_var($sql);
+
+			if ($numImages > 0)
+			{
+					$sql = 'UPDATE ' . $otherMedia->getFolderTable() . ' SET status = -1 where id = %d';
+					$sql = $wpdb->prepare($sql, $this->id);
+					$result = $wpdb->query($sql);
+			}
+			else
+			{
+		      $sql = 'DELETE FROM ' . $otherMedia->getFolderTable() . ' where id = %d';
+		      $sql = $wpdb->prepare($sql, $this->id);
+		      $result = $wpdb->query($sql);
+			}
 
 			return $result;
   }
@@ -183,7 +212,6 @@ class DirectoryOtherMediaModel extends DirectoryModel
       }
       else
       {
-
         $time = 0; //force refresh of the whole.
       }
 
@@ -211,7 +239,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
       \wpSPIO()->settings()->hasCustomFolders = time(); // note, check this against bulk when removing. Custom Media Bulk depends on having a setting.
 
-
+			Log::addTemp('Refresh Folder Yields', array($filter, $files));
     	$result = $this->addImages($files);
 
       $this->stats = null; //reset
@@ -276,18 +304,33 @@ class DirectoryOtherMediaModel extends DirectoryModel
       $values = array();
 
       $optimizeControl = new OptimizeController();
+			$otherMediaControl = OtherMediaController::getInstance();
+			$activeFolders = $otherMediaControl->getActiveDirectoryIDS();
+
       $fs = \wpSPIO()->filesystem();
 
       foreach($files as $fileObj)
       {
           $imageObj = $fs->getCustomStub($fileObj->getFullPath(), false);
-          $imageObj->setFolderId($this->id);
 
-          //$imageObj = $fs->getCustomStub($files, false);
-          if ($imageObj->get('in_db') == true) // already exists
+					// image already exists
+          if ($imageObj->get('in_db') == true)
+					{
+						// Check if folder id is something else. This might indicate removed or inactive folders.
+						// If in inactive folder, move to current active.
+						if ($imageObj->get('folder_id') !== $this->id)
+						{
+							 if (! in_array($imageObj->get('folder_id'), $activeFolders) )
+							 {
+								   $imageObj->setFolderId($this->id);
+									 $imageObj->saveMeta();
+							 }
+						}
             continue;
+					}
           elseif ($imageObj->isProcessable())
           {
+  	         $imageObj->setFolderId($this->id);
              $imageObj->saveMeta();
              Log::addTemp('Batch New : new File saved ' . $imageObj->getFullPath() );
              if (\wpSPIO()->env()->is_autoprocess)
@@ -329,6 +372,11 @@ class DirectoryOtherMediaModel extends DirectoryModel
       } */
   }
 
+		private function loadFolderById()
+		{
+
+		}
+
 
     private function loadFolderByPath($path)
     {
@@ -353,7 +401,6 @@ class DirectoryOtherMediaModel extends DirectoryModel
     private function loadFolder($folder)
     {
       //  $class = get_class($folder);
-			  Log::addTemp('loadFolder', $folder);
 				// Setters before action
         $this->id = $folder->id;
 

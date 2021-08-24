@@ -206,7 +206,7 @@ class ShortPixelPlugin
           $totalCredits = isset($stats["APICallsQuotaNumeric"]) ? $stats['APICallsQuotaNumeric'] + $stats['APICallsQuotaOneTimeNumeric'] : 0;
           if(true || !$settings->verifiedKey || $totalCredits < 4000) {
               require_once ('class/view/shortpixel-feedback.php');
-              new ShortPixelFeedback( SHORTPIXEL_PLUGIN_FILE, 'shortpixel-image-optimiser', $settings->apiKey);
+              new ShortPixelFeedback( SHORTPIXEL_PLUGIN_FILE, 'shortpixel-image-optimiser');
           }
       }
 
@@ -638,16 +638,7 @@ class ShortPixelPlugin
   {
     echo "<h3> Old ShortPixel Requested. Please fix</h3>";
     echo "<PRE>"; print_r(debug_backtrace(null, 9)); '</PRE>';
-    exit('bug - destroyer of worlds');
-
-    if (is_null($this->shortPixel))
-    {
-      global $shortPixelPluginInstance;
-      $shortPixelPluginInstance = new \wpShortPixel();
-      $this->shortPixel = $shortPixelPluginInstance;
-    }
-
-    return $this->shortPixel;
+    exit('This is a bug.');
   }
 
   /** Returns defined admin page hooks. Internal use - check states via environmentmodel

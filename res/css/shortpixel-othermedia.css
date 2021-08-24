@@ -138,7 +138,7 @@
 }
 .shortpixel-other-media .list-overview .item .sp-column-info .sp-column-actions {
   position: absolute;
-  right: 10px;
+  right: -10px;
   top: 0;
 }
 @media (max-width: 1250px) {
