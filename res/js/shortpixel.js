@@ -489,7 +489,7 @@ var ShortPixel = function() {
             success: function(response) {
                  browseResponse = response;
             },
-            async: false
+            //async: false
         });
         return browseResponse;
     }

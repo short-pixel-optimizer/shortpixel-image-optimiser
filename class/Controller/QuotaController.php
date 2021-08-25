@@ -205,7 +205,6 @@ class QuotaController
           if($settings->httpProto === 'https') {
               $args['sslverify'] = false;
           }
-          Log::addTemp('Get Quota Remote Post', $args);
 
           $response = wp_remote_post($requestURL, $args);
 
@@ -294,7 +293,7 @@ class QuotaController
               "APILastRenewalDate" => $data->DateSubscription,
               "DomainCheck" => (isset($data->DomainCheck) ? $data->DomainCheck : null)
           );
-					 // My Eyes!  Basically :  ApiCalls - ApiCalls used, both for monthly and onetime. Max of each is 0.  Negative quota seems possible, but should not be substracted from one or the other. 
+					 // My Eyes!  Basically :  ApiCalls - ApiCalls used, both for monthly and onetime. Max of each is 0.  Negative quota seems possible, but should not be substracted from one or the other.
 					 $dataArray["APICallsRemaining"] = max($dataArray['APICallsQuotaNumeric'] - $dataArray['APICallsMadeNumeric'], 0) + max($dataArray['APICallsQuotaOneTimeNumeric'] - $dataArray['APICallsMadeOneTimeNumeric'],0);
 
 					//reset quota exceeded flag -> user is allowed to process more images.

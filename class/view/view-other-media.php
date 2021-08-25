@@ -22,9 +22,9 @@ if ( isset($_GET['noheader']) ) {
 
         <div>
           <?php
-          $nonce = wp_create_nonce( 'sp_custom_action' );
+          $nonce = wp_create_nonce( 'refresh_folders' );
           ?>
-            <a href="upload.php?page=wp-short-pixel-custom&action=refresh&_wpnonce=<?php echo $nonce ?>" id="refresh" class="button button-primary" title="<?php _e('Refresh custom folders content','shortpixel-image-optimiser');?>">
+            <a href="upload.php?page=wp-short-pixel-custom&sp-action=action_refreshfolders&_wpnonce=<?php echo $nonce ?>" id="refresh" class="button button-primary" title="<?php _e('Refresh custom folders content','shortpixel-image-optimiser');?>">
                 <?php _e('Refresh folders','shortpixel-image-optimiser');?>
             </a>
         </div>

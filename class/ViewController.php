@@ -48,7 +48,7 @@ class ViewController extends Controller
   {
     if (count($_POST) == 0) // no post, nothing to check, return silent.
       return;
-			
+
     if (! isset($_POST['sp-nonce']) || ! wp_verify_nonce( $_POST['sp-nonce'], $this->form_action))
     {
       Log::addInfo('Check Post fails nonce check, action : ' . $this->form_action, array($_POST) );
@@ -64,17 +64,6 @@ class ViewController extends Controller
     }
   }
 
-  /** Meant as a temporary glue method between all the shortpixel methods and the newer structures
-  *
-  * @param Object $pixel WPShortPixel instance.
-  */
-
-  public function setShortPixel($pixel)
-  {
-    echo "<PRE>"; print_r(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 9)); echo "</PRE>";
-    exit('Shortpixel should not be called ( Controller.php:76)');
-    $this->shortPixel = $pixel; // notice the capital, case-sensitive!
-  }
 
   /** Loads a view
   *

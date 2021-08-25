@@ -3,7 +3,7 @@
 var ShortPixelScreen = function (MainScreen, processor)
 {
     this.isCustom = true;
-    this.isMedia = false;
+    this.isMedia = true;
     this.processor = processor;
 
 

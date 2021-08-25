@@ -76,7 +76,7 @@ window.ShortPixelProcessor =
         this.nonce['itemview'] = ShortPixelProcessorData.nonce_itemview;
         this.nonce['ajaxRequest'] = ShortPixelProcessorData.nonce_ajaxrequest;
 
-        //console.log(ShortPixelProcessorData);
+        console.log(ShortPixelProcessorData.startData);
         console.log('remoteSecret ' + this.remoteSecret + ', localsecret: ' + this.localSecret + ' bulk? ' + this.isBulkPage);
         //this.localSecret = null;
 
@@ -89,6 +89,9 @@ window.ShortPixelProcessor =
         }
         else
           this.screen = new ShortPixelScreen({}, this);
+
+				// Load the Startup Data (needs screen)
+				this.tooltip.InitStats();
 
         // Always load worker, also used for UI actions.
         this.LoadWorker();

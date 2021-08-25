@@ -131,6 +131,10 @@ class NextGenController
   public function loadFolder($id, $directory)
   {
       $path = $directory->getPath();
+			// No reason to check this?
+			if ($directory->get('status') == DirectoryOtherMediaModel::DIRECTORY_STATUS_NEXTGEN)
+			{	return;  }
+
       $path_split = array_filter(explode('/', $path));
 
       $searchPath = trailingslashit(implode('/', array_slice($path_split, -2, 2)));
@@ -140,9 +144,11 @@ class NextGenController
       $sql = $wpdb->prepare($sql, '%' . $searchPath . '');
       $gid = $wpdb->get_var($sql);
 
+
       if (! is_null($gid) && is_numeric($gid))
 			{
         $res = $directory->set('status', DirectoryOtherMediaModel::DIRECTORY_STATUS_NEXTGEN);
+				$directory->save();
 				//echo $gid;
 			}
   }
@@ -200,14 +206,14 @@ class NextGenController
 
       foreach($ngGalleries as $gallery)
 			{
-					Log::addTemp('Add Gall NG, getFByPath', $gallery->getPath());
           $folder = $otherMedia->getFolderByPath($gallery->getPath());
-					Log::addTemp('Folder', $folder);
+
           if ($folder->get('in_db') === true)
           {
 						if ($folder->get('status') !== 1)
 						{
-							 $folder->set('status', DIRECTORY_STATUS_NEXTGEN);
+							 $folder->set('status', DirectoryOtherMediaModel::DIRECTORY_STATUS_NEXTGEN);
+							 $folder->save();
 						}
             continue;
           }

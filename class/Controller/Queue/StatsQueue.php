@@ -21,7 +21,6 @@ class StatsQueue extends MediaLibraryQueue
   public function __construct($queueName = 'Stats')
   {
     $shortQ = new ShortQ(self::PLUGIN_SLUG);
-    Log::addTemp('Getting StatsMediaQ ' . $queueName);
     $this->q = $shortQ->getQueue($queueName);
     $this->queueName = $queueName;
 

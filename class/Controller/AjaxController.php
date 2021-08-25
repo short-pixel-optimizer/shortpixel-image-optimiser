@@ -53,8 +53,6 @@ class AjaxController
       $bulkSecret = isset($_POST['bulk-secret']) ? sanitize_text_field($_POST['bulk-secret']) : false;
       $isBulk = isset($_POST['isBulk']) ? (bool) sanitize_text_field($_POST['isBulk'])  : false;
 
-      //Log::addTemp("ProcessKey $processKey - BulkSecret $bulkSecret");
-
 
       $is_processor = false;
       if ($processKey == false && $bulkSecret !== false)
@@ -227,7 +225,7 @@ class AjaxController
            break;
 					 case 'request_new_api_key':
 
-					 break; 
+					 break;
            default:
               $json->$type->message = __('Ajaxrequest - no action found', 'shorpixel-image-optimiser');
               $json->error = self::NO_ACTION;

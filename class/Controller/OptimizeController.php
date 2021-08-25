@@ -53,7 +53,6 @@ class OptimizeController
         $options = $queue->getCustomDataItem('queueOptions');
         if ($options !== false)
         {
-            Log::addTemp('Settings Queue Options', $options);
             $queue->setOptions($options);
         }
         return $queue;
@@ -264,9 +263,7 @@ class OptimizeController
             $urls = $item->urls;
             if (property_exists($item, 'png2jpg'))
             {
-            //  Log::addTemp('Converting png2jpg');
               $bool = $this->convertPNG($item, $Q);
-              Log::addTemp('Png2Jpg conversion done (OptimizeController)', $bool);
               if ($bool == true)
                 continue; // conversion done, item will be requeued with new urls.
             }
@@ -307,7 +304,6 @@ class OptimizeController
               break;
               case 'migrate':
                 // Loading the item should already be enough to trigger.
-                Log::addTemp('migrating: ' . $item->item_id);
               break;
            }
 
@@ -350,8 +346,6 @@ class OptimizeController
     protected function handleAPIResult(Object $item, $q)
     {
       $fs = \wpSPIO()->filesystem();
-
-      Log::addTemp('HandleAPIResult', $result);
 
       $qtype = $q->getType();
       $qtype = strtolower($qtype);
@@ -512,7 +506,6 @@ class OptimizeController
       {
           if ($result->apiStatus == ApiController::STATUS_UNCHANGED)
           {
-              Log::addTemp('Status unchanged -item', $item);
               $item->fileStatus = ImageModel::FILE_STATUS_PENDING;
               $item->result->message .= sprintf(__(' Pass %d', 'shortpixel-image-optimiser'), intval($item->tries) );
               $q->itemFailed($item, false); // register as failed, retry in x time, q checks timeouts

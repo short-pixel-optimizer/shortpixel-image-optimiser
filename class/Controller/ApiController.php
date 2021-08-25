@@ -424,7 +424,7 @@ class ApiController
       $settings->totalOriginal += $originalSpace;
       $settings->totalOptimized += $optimizedSpace;
 
-      Log::addTemp("Adding $fileCount files to stats, $originalSpace went to $optimizedSpace ($savedSpace)");
+      Log::addDebug("Adding $fileCount files to stats, $originalSpace went to $optimizedSpace ($savedSpace)");
 
       // *******************************
 
@@ -440,7 +440,6 @@ class ApiController
    */
   private function handleDownload($optimizedUrl, $optimizedSize = false, $originalSize = false){
 
-    Log::addTemp('Handle Download: ' . $optimizedUrl . ' ( ' . $optimizedSize . ' '  . $originalSize);
       $downloadTimeout = max(ini_get('max_execution_time') - 10, 15);
       $fs = \wpSPIO()->filesystem();
 

@@ -36,7 +36,6 @@ class AdminController extends \ShortPixel\Controller
         $mediaItem = \wpSPIO()->filesystem()->getImage($id, 'media');
         $control = new OptimizeController();
         $control->addItemToQueue($mediaItem);
-        Log::addTemp('Handle Image Upload: Item Added to Queue' . $id);
 
         return $meta; // It's a filter, otherwise no thumbs
     }

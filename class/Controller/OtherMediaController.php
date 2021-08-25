@@ -193,7 +193,6 @@ class OtherMediaController extends \ShortPixel\Controller
 
        if (! $directory->get('in_db'))
        {
-         Log::addTemp('Has no DB entry, on addDirectory', $directory);
          if ($directory->save())
          {
           $directory->updateFileContentChange();
@@ -266,7 +265,6 @@ class OtherMediaController extends \ShortPixel\Controller
       {
         return true;
       }
-
       $refreshDelay->setExpires($expires);
       $refreshDelay->save();
 

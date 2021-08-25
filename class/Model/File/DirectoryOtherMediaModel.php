@@ -301,6 +301,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
       /*$sqlCleanup = "DELETE FROM {$this->db->getPrefix()}shortpixel_meta WHERE folder_id NOT IN (SELECT id FROM {$this->db->getPrefix()}shortpixel_folders)";
       $wpdb->query($sqlCleanup); */
 
+
       $values = array();
 
       $optimizeControl = new OptimizeController();

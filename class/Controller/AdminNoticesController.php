@@ -613,7 +613,6 @@ class AdminNoticesController extends \ShortPixel\Controller
               'cookies' => array()
 
         );
-        Log::addTemp('Propose Upgrade Args', $args);
         $proposal = wp_remote_post("https://shortpixel.com/propose-upgrade-frag", $args);
 
         if(is_wp_error( $proposal )) {
@@ -692,7 +691,6 @@ class AdminNoticesController extends \ShortPixel\Controller
 						// +20 I suspect to not trigger on very low values of monthly use(?)
 						$threshold = $quotaData->monthly->total + $quotaData->onetime->remaining/6+20;
 
-						Log::addTemp("Monthly Notice needed $monthAvg $threshold");
 						if ($monthAvg > $threshold)
 						{
 								return true;

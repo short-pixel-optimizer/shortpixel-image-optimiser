@@ -139,7 +139,6 @@ class SettingsController extends \ShortPixel\ViewController
 	        }
 					$body = $newKeyResponse['body'];
         	$body = json_decode($body);
-					Log::addTemp('New Key Register', $body);
 
 	        if($body->Status == 'success') {
 	            $key = trim($body->Details);
@@ -148,7 +147,7 @@ class SettingsController extends \ShortPixel\ViewController
 
 	            if($valid === true) {
 	                \ShortPixel\Controller\AdminNoticesController::resetAPINotices();
-	                Notice::addSuccess(__('Great, you successfully claimed your API Key! Please take a few moments to review the plugin settings below before starting to optimize your images.','shortpixel-image-optimiser'));
+	                /* Notice::addSuccess(__('Great, you successfully claimed your API Key! Please take a few moments to review the plugin settings below before starting to optimize your images.','shortpixel-image-optimiser')); */
 	            }
 	        }
 					elseif($body->Status == 'existing')
@@ -160,7 +159,6 @@ class SettingsController extends \ShortPixel\ViewController
 						 Notice::addError( __('Unexpected error obtain your ShortPixel key. Please contact support about this', 'shortpixel-image-optimiser') . '  ' . json_encode($body) );
 					}
 
-					Log::addTemp('Request New Key Done, redirecting');
 					$this->doRedirect();
 
 			}
@@ -680,7 +678,6 @@ class SettingsController extends \ShortPixel\ViewController
         {
           $url = "upload.php?page=wp-short-pixel-bulk";
         }
-				Log::addTemp('Redirect URL ' . $url);
         wp_redirect($url);
         exit();
       }

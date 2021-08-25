@@ -546,7 +546,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           }
 
           // Load Thumbnails.
-          if (isset($metadata->thumbnails) && count($metadata->thumbnails) > 0) // unlisted in WordPress metadata sizes. Might be special unlisted one, one that was removed etc.
+          if (property_exists($metadata,'thumbnails') && count($metadata->thumbnails) > 0) // unlisted in WordPress metadata sizes. Might be special unlisted one, one that was removed etc.
           {
              foreach($metadata->thumbnails as $name => $thumbMeta) // <!-- ThumbMeta is Object
              {
@@ -574,7 +574,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           }
           $this->thumbnails = $thumbnails;
 
-          if (isset($metadata->retinas))
+          if (property_exists($metadata, 'retinas') && is_object($metadata->retinas))
           {
               $retinas = $this->getRetinas();
               foreach($metadata->retinas as $name => $retinaMeta)
@@ -591,7 +591,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
               }
           }
 
-          if (isset($metadata->original_file))
+          if (property_exists($metadata, 'original_file') && is_object($metadata->original_file))
           {
               $orFile = $this->getOriginalFile();
               if ($orFile)

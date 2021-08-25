@@ -23,28 +23,49 @@ var ShortPixelToolTip = function(reserved, processor)
             this.ProcessPause();
         }
 
+
       window.addEventListener('shortpixel.processor.paused', this.ProcessChange.bind(this));
     }
     this.GetToolTip = function() // internal function please.
     {
         return document.querySelector('li.shortpixel-toolbar-processing');
     }
-    this.RefreshStats = function(stats) // Meant to put a 'todo' number in the tooltip when processing
+		this.InitStats = function()
+		{
+		      var processData = ShortPixelProcessorData.startData;
+					this.RefreshStats(processData.media.stats, 'media');
+					this.RefreshStats(processData.custom.stats, 'custom');
+					this.RefreshStats(processData.total.stats, 'total');
+		}
+		// Used to put a 'todo' number in the tooltip when processing
+    this.RefreshStats = function(stats, type)
     {
+				var neededType;
+
+				if (processor.screen.isMedia == true && processor.screen.isCustom == true)
+					neededType = 'total';
+				else if (processor.screen.isMedia == true && processor.screen.isCustom == false)
+					neededType = 'media';
+				else if (processor.screen.isMedia == false && processor.screen.isCustom == true)
+					neededType = 'custom';
+
+				if (neededType !== type)
+					return;
+
         var toolTip = this.GetToolTip();
         var statTip = toolTip.querySelector('.stats');
+				console.log('refresh', stats);
 
         if (statTip == null)
           return;
 
-        statTip.textContent = stats;
+				var number = stats.in_queue + stats.in_process;
+        statTip.textContent = number;
 
-        if (statTip.classList.contains('hidden') && stats > 0)
+        if (statTip.classList.contains('hidden') && number > 0)
           statTip.classList.remove('hidden');
-        else if (! statTip.classList.contains('hidden') && stats == 0)
-          statTip.classList.add('hidden')
-
-
+        else if (! statTip.classList.contains('hidden') && number == 0)
+          statTip.classList.add('hidden');
     }
     this.ToggleProcessing = function(event)
     {
@@ -118,6 +139,7 @@ var ShortPixelToolTip = function(reserved, processor)
 
       window.setTimeout (this.RemoveNotice.bind(this), 5000, alertChild);
     }
+
 
     this.RemoveNotice = function(notice)
     {

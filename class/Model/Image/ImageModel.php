@@ -587,8 +587,10 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
          $fs = \wpSPIO()->filesystem();
             $target = $fs->getFile( (string) $this->getFileDir() . $this->getFileBase() . '.webp');
 
+						Log::addTemp('DOUBLE2EBP' . SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION);
             // only copy when this constant is set.
-            if( (defined('SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION') && SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION) ) {
+            if( (defined('SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION') && SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION) == true ) {
+								Log::addTemp('double extension need detected');
                  $target = $fs->getFile((string) $this->getFileDir() . $this->getFileName() . '.webp'); // double extension, if exists.
 
             }

@@ -211,7 +211,6 @@ abstract class Queue
                    }
                    elseif($mediaItem->isOptimized())
                    {
-                      Log::addTemp('Item is optimized -' . $mediaItem->get('id'));
                    }
 
                 }

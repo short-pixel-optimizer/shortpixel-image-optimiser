@@ -27,7 +27,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
       protected $orderby;
       protected $search;
 			protected $show_hidden = false;
-			protected $has_hidden_items = false; 
+			protected $has_hidden_items = false;
 
       protected $actions = array();
 
@@ -58,6 +58,21 @@ class OtherMediaViewController extends \ShortPixel\ViewController
     //      $this->checkQueue();
           $this->loadView();
       }
+
+			public function action_refreshfolders()
+			{
+				   if (wp_verify_nonce( $_REQUEST['_wpnonce'], 'refresh_folders'))
+					 {
+						 	 $otherMediaController = OtherMediaController::getInstance();
+							 $otherMediaController->refreshFolders(true);
+					 }
+					 else
+					 {
+						  Log::addWarn('Incorrect nonce for refreshfolders');
+					 }
+
+					 $this->load();
+			}
 
 
       /** Sets all possible actions and it's links. Doesn't check what can be loaded per individual case. */
