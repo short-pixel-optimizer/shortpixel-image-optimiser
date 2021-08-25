@@ -3,8 +3,8 @@ Contributors: ShortPixel
 Tags: convert webp, optimize images, image optimization, resize, compressor, image, avif, compression, optimize, image optimiser, image compression, compress pdf, compress jpg, compress png, performance, photography, smush, scale, pictures
 Requires at least: 4.2.0
 Tested up to: 5.8
-Requires PHP: 5.3
-Stable tag: 4.22.3
+Requires PHP: 5.6
+Stable tag: 4.22.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -313,6 +313,12 @@ Alternatively, you can use this filter in your theme's functions.php file:
 9. Check other optimized images status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 4.22.4 =
+Release date August 25th, 2021
+* Compat: Added a notification system for the cases when AVIF files cannot be delivered with the current server/host settings;
+* Compat: bumped the minimum supported PHP version to 5.6;
+* Language: 5 new string added, 0 updated, 0 fuzzed, and 0 obsoleted.
 
 = 4.22.3 =
 Release date July 28th, 2021
