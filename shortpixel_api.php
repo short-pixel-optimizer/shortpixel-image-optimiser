@@ -712,7 +712,7 @@ class ShortPixelAPI {
         {
             $backupStatus = self::backupImage($mainPath, $PATHs);
             Log::addTemp('Status backup - ', $backupStatus);
-            if($backupStatus == self::STATUS_FAIL) {
+            if($backupStatus['Status'] == self::STATUS_FAIL) {
                 $itemHandler->incrementRetries(1, self::ERR_SAVE_BKP, $backupStatus["Message"]);
                 self::cleanupTemporaryFiles($archive, empty($tempFiles) ? array() : $tempFiles);
                 Log::addError('Failed to create image backup!', array('status' => $backupStatus));
