@@ -1038,7 +1038,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           $this->resetStatus();
           $this->setFileInfo();
           $this->create(); // empty placeholder file.
+
+					$post_ar = array('ID' => $this->get('id'), 'post_mime_type' => 'image/jpeg');
         }
+
     }
 
     do_action('shortpixel_before_restore_image', $this->get('id'));

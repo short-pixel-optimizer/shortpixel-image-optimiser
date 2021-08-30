@@ -3,6 +3,7 @@
 namespace ShortPixel\Model\Image;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
+use \Shortpixel\Model\File\FileModel as FileModel;
 
 // Represent a thumbnail image / limited image in mediaLibrary.
 class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel

@@ -282,15 +282,15 @@ class ShortPixelPng2Jpg {
             $paramsC = $ret->params;
             if($paramsC['type'] == 'image/jpeg') {
                 // we don't have metadata, so save the information in a temporary map
-                $conv = $this->_settings->convertedPng2Jpg;
+                $conv = $settings->convertedPng2Jpg;
                 //do a cleanup first
                 foreach($conv as $key => $val) {
                     if(time() - $val['timestamp'] > 3600) unset($conv[$key]);
                 }
-                $conv[$paramsC['file']] = array('pngFile' => $paramsC['original_file'], 'backup' => $this->_settings->backupImages,
+                $conv[$paramsC['file']] = array('pngFile' => $paramsC['original_file'], 'backup' => $settings->backupImages,
                     'optimizationPercent' => round(100.0 * (1.00 - $paramsC['jpg_size'] / $paramsC['png_size'])),
                     'timestamp' => time());
-                $this->_settings->convertedPng2Jpg = $conv;
+                $settings->convertedPng2Jpg = $conv;
             }
             return $paramsC;
         }
@@ -325,7 +325,7 @@ class ShortPixelPng2Jpg {
 
 
         Log::addDebug('Png2Jpg New Metadata', $new_metadata);
-
+				wp_update_post(array('ID' => $ID, 'post_mime_type' => 'image/jpeg' ));
         wp_update_attachment_metadata($attach_id, $new_metadata);
         return true;
 
@@ -350,7 +350,7 @@ class ShortPixelPng2Jpg {
             'attachments' =>	array("UPDATE $wpdb->posts SET guid = replace(guid, %s, %s) WHERE post_type = 'attachment'",  __('Attachments','shortpixel-image-optimiser') ),
             'links' =>			array("UPDATE $wpdb->links SET link_url = replace(link_url, %s, %s)", __('Links','shortpixel-image-optimiser') ),
             'custom' =>			array("UPDATE $wpdb->postmeta SET meta_value = replace(meta_value, %s, %s)",  __('Custom Fields','shortpixel-image-optimiser') ),
-            'guids' =>			array("UPDATE $wpdb->posts SET guid = replace(guid, %s, %s), post_mime_type = 'image/jpeg' ",  __('GUIDs','shortpixel-image-optimiser') )
+            'guids' =>			array("UPDATE $wpdb->posts SET guid = replace(guid, %s, %s)",  __('GUIDs','shortpixel-image-optimiser') )
         );
         if(count($options) == 0) {
             $options = array_keys($queries);
