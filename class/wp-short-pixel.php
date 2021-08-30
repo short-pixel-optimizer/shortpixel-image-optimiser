@@ -2032,6 +2032,10 @@ class WPShortPixel {
             $fsFile = $fs->getFile($png2jpgMain); // original is non-existing at this time. :: Target
             $bkFile = $fs->getFile($bkFolder->getPath() . $fsFile->getFileName()); // Update this, because of filename (extension)
 
+						// Do the mime type
+						wp_update_post(array('ID' => $attachmentID, 'post_mime_type' => 'image/png' ));
+
+
         }
 
         //first check if the file is readable by the current user - otherwise it will be unaccessible for the web browser
