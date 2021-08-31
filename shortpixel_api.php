@@ -434,7 +434,6 @@ class ShortPixelAPI {
         if($avifUrl !== "NA") {
             $avifUrl = $this->setPreferredProtocol(urldecode($avifUrl));
             $avifTempFile = download_url($avifUrl, $downloadTimeout);
-            Log::addTemp("Download Avif " . $avifUrl);
             $avifTempFile = is_wp_error( $avifTempFile ) ? "NA" : $avifTempFile;
         }
 
@@ -672,9 +671,6 @@ class ShortPixelAPI {
                 $webpUrl = isset($fileData->$webpType) ? $fileData->$webpType : 'NA';
                 $avifUrl = isset($fileData->$avifType) ? $fileData->$avifType : 'NA';
 
-                Log::addTemp('Searching for types : ' . $webpType .  ' - ' . $avifType);
-                Log::addtemp("HandleSuccess, FileData ", $fileData);
-
                 //TODO la sfarsit sa faca fallback la handleDownload
                 if($archive) {
                     $downloadResult = $this->fromArchive($archive['Path'], $fileData->$fileType, $fileData->$fileSize, $fileData->OriginalSize, $webpUrl, $avifUrl );
@@ -711,7 +707,6 @@ class ShortPixelAPI {
         if( $this->_settings->backupImages )
         {
             $backupStatus = self::backupImage($mainPath, $PATHs);
-            Log::addTemp('Status backup - ', $backupStatus);
             if($backupStatus['Status'] == self::STATUS_FAIL) {
                 $itemHandler->incrementRetries(1, self::ERR_SAVE_BKP, $backupStatus["Message"]);
                 self::cleanupTemporaryFiles($archive, empty($tempFiles) ? array() : $tempFiles);
@@ -812,7 +807,6 @@ class ShortPixelAPI {
                     /*$targetAvifFileCompat = $fs->getFile($targetFile->getFileDir() . $targetFile->getFileName() . '.avif');*/
 
                     $targetWebPFile = $fs->getFile($targetFile->getFileDir() . $targetFile->getFileBase() . '.avif');
-                    Log::addTemp("Moving Avif file ");
                     $tempAvifFilePATH->move($targetWebPFile);
 
                 }

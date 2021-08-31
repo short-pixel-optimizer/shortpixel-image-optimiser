@@ -405,7 +405,6 @@ class ShortPixelPng2Jpg {
      */
     protected function updateFileAlsoInWPMLDuplicates($parentID, &$parentMeta, $file){
         $duplicates = ShortPixelMetaFacade::getWPMLDuplicates($parentID);
-        Log::addTemp("Update Duplicates on png2jpg", $duplicates);
         foreach($duplicates as $ID) {
             $meta = $parentID == $ID ? $parentMeta : wp_get_attachment_metadata($ID);
             $meta['file'] = $file;

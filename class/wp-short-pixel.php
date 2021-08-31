@@ -1422,7 +1422,7 @@ class WPShortPixel {
             //$prio = $this->prioQ->remove($ID);
             $prio = $this->prioQ->remove($itemId);
             if(isset($result["Code"])
-               && (   $result["Code"] == "write-fail" //could not write
+               && (   in_array($result["Code"], array("write-fail", "backup-fail")) //could not write
                    || (in_array(0+$result["Code"], array(-201)) && $meta->getRetries() >= 3))) { //for -201 (invalid image format) we retry only 3 times.
                 //put this one in the failed images list - to show the user at the end
                 $prio = $this->prioQ->addToFailed($itemHandler->getQueuedId());
