@@ -1422,7 +1422,7 @@ class WPShortPixel {
             //$prio = $this->prioQ->remove($ID);
             $prio = $this->prioQ->remove($itemId);
             if(isset($result["Code"])
-               && (   $result["Code"] == "write-fail" //could not write
+               && (   in_array($result["Code"], array("write-fail", "backup-fail")) //could not write
                    || (in_array(0+$result["Code"], array(-201)) && $meta->getRetries() >= 3))) { //for -201 (invalid image format) we retry only 3 times.
                 //put this one in the failed images list - to show the user at the end
                 $prio = $this->prioQ->addToFailed($itemHandler->getQueuedId());
@@ -2031,6 +2031,10 @@ class WPShortPixel {
 
             $fsFile = $fs->getFile($png2jpgMain); // original is non-existing at this time. :: Target
             $bkFile = $fs->getFile($bkFolder->getPath() . $fsFile->getFileName()); // Update this, because of filename (extension)
+
+						// Do the mime type
+						wp_update_post(array('ID' => $attachmentID, 'post_mime_type' => 'image/png' ));
+
 
         }
 

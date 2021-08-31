@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compressor, ima
 Requires at least: 4.2.0
 Tested up to: 5.8
 Requires PHP: 5.6
-Stable tag: 4.22.4
+Stable tag: 4.22.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -313,6 +313,13 @@ Alternatively, you can use this filter in your theme's functions.php file:
 9. Check other optimized images status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 4.22.5 =
+Release date August 31st, 2021
+* Fix: in some cases, the MIME type of other files than images were wrongly set to `image/jpg`;
+* Fix: when restoring from backup a PNG that was converted to JPG, the MIME type wasn't set back to `image/png`;
+* Fix: in case backup fails for any reason, the image in discussion will be skipped (so the original one won't get overwritten);
+* Language: 0 new string added, 0 updated, 0 fuzzed, and 0 obsoleted.
 
 = 4.22.4 =
 Release date August 25th, 2021

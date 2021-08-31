@@ -239,7 +239,6 @@ class ImageModel extends \ShortPixel\Model
       // Find Thumbs returns *full file path*
       $foundThumbs = \WpShortPixelMediaLbraryAdapter::findThumbs($pathFile->getFullPath());
 
-      //Log::addTemp('Found Thumbs', $foundThumbs);
         // no thumbs, then done.
       if (count($foundThumbs) == 0)
       {
