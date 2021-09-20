@@ -252,6 +252,10 @@ class DirectoryModel extends \ShortPixel\Model
           echo $error['message'];
           Log::addWarn('MkDir failed: ' . $error['message'], array($error));
         }
+				// reset.
+				$this->exists = null;
+				$this->is_readable = null;
+				$this->is_writable = null;
 
      }
      if ($this->exists() && $check_writable && ! $this->is_writable())
@@ -378,7 +382,15 @@ class DirectoryModel extends \ShortPixel\Model
     { // IsDot must go first here, or there is possiblity to run into openbasedir restrictions.
        if (! $fileInfo->isDot() && $fileInfo->isDir() && $fileInfo->isReadable())
        {
-         $dir = new DirectoryModel($fileInfo->getRealPath());
+				 if ('ShortPixel\Model\File\DirectoryOtherMediaModel' == get_called_class())
+				 {
+				 	$dir = new DirectoryOtherMediaModel($fileInfo->getRealPath());
+				 }
+				 else
+				 {
+         	$dir = new DirectoryModel($fileInfo->getRealPath());
+				 }
+
          if ($dir->exists())
             $dirArray[] = $dir;
        }

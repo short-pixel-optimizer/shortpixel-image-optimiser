@@ -106,7 +106,7 @@ Class FileSystemController extends \ShortPixel\Controller
     * @param FileModel $file FileModel with file that needs a backup.
     * @return DirectoryModel | Boolean DirectoryModel pointing to the backup directory. Returns false if the directory could not be created, or initialized.
     */
-    public function getBackupDirectory(FileModel $file)
+    public function getBackupDirectory(FileModel $file, $create = false)
     {
 			if (! function_exists('get_home_path'))
 			{
@@ -140,8 +140,10 @@ Class FileSystemController extends \ShortPixel\Controller
 
       $directory = apply_filters("shortpixel/file/backup_folder", $directory, $file);
 
-      if ($directory->check())
+      if ($create === false && $directory->exists())
         return $directory;
+			elseif ($create === true && $directory->check()) // creates directory if needed.
+				return $directory;
       else {
         return false;
       }

@@ -216,6 +216,11 @@ class DirectoryOtherMediaModel extends DirectoryModel
         $time = 0; //force refresh of the whole.
       }
 
+			if (! $this->checkDirectory(true))
+			{
+				return false;
+			}
+
       if ($this->id <= 0)
       {
         Log::addWarn('FolderObj from database is not there, while folder seems ok ' . $this->getPath() );
@@ -251,6 +256,111 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
   }
 
+	/**  Check if a directory is allowed. Directory can't be media library, outside of root, or already existing in the database
+	* @param $silent If not allowed, don't generate notices.
+	*
+	*/
+	public function checkDirectory($silent = false)
+	{
+			$fs = \wpSPIO()->filesystem();
+       $rootDir = $fs->getWPFileBase();
+       $backupDir = $fs->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
+			 $otherMediaController = OtherMediaController::getInstance();
+
+       if (! $this->exists())
+       {
+				 if ($silent === false)
+				 {
+          Notice::addError(__('Could not be added, directory not found: ' . $path ,'shortpixel-image-optimiser'));
+				 }
+          return false;
+       }
+       elseif (! $this->isSubFolderOf($rootDir) && $this->getPath() != $rootDir->getPath() )
+       {
+				 if ($silent === false)
+			 	 {
+          Notice::addError( sprintf(__('The %s folder cannot be processed as it\'s not inside the root path of your website (%s).','shortpixel-image-optimiser'),$directory->getPath(), $rootDir->getPath()));
+				}
+          return false;
+       }
+       elseif($this->isSubFolderOf($backupDir) || $this->getPath() == $backupDir->getPath() )
+       {
+				 if ($silent === false)
+				 {
+          Notice::addError( __('This folder contains the ShortPixel Backups. Please select a different folder.','shortpixel-image-optimiser'));
+				}
+          return false;
+       }
+       elseif( $otherMediaController->checkIfMediaLibrary($this) )
+       {
+				 if ($silent === false)
+				 {
+          Notice::addError(__('This folder contains Media Library images. To optimize Media Library images please go to <a href="upload.php?mode=list">Media Library list view</a> or to <a href="upload.php?page=wp-short-pixel-bulk">ShortPixel Bulk page</a>.','shortpixel-image-optimiser'));
+				}
+          return false;
+       }
+       elseif (! $this->is_writable())
+       {
+				 if ($silent === false)
+				 {
+         	Notice::addError( sprintf(__('Folder %s is not writeable. Please check permissions and try again.','shortpixel-image-optimiser'),$this->getPath()) );
+			 	 }
+         return false;
+
+       }
+			 else
+			 {
+				 $folders = $otherMediaController->getAllFolders();
+
+				 foreach($folders as $folder)
+				 {
+					   if ($this->isSubFolderOf($folder))
+						 {
+							 if ($silent === false)
+							 {
+							  Notice::addError(__('This folder is a subfolder of an already existing Other Media folder. It cannot be added', 'shortpixel-image-optimiser'));
+							 }
+								return false;
+						 }
+				 }
+			 }
+
+			 return true;
+	}
+
+/*
+  public function getFiles($args = array())
+	{
+			// Check if this directory if not forbidden.
+			if (! $this->checkDirectory(true))
+			{
+				return array();
+			}
+
+			return parent::getFiles($args);
+	}
+*/
+/*  public function getSubDirectories()
+	  {
+				$dirs = parent::getSubDirectories();
+				$checked = array();
+				foreach($dirs as $dir)
+				{
+					 if ($dir->checkDirectory(false))
+					 {
+					 	$checked[] = $dir;
+					 }
+					 else
+					 {
+					 	Log::addDebug('Illegal directory' . $dir->getPath());
+					 }
+				}
+
+				return $checked;
+		}
+*/
+
+
     private function recurseLastChangeFile($mtime = 0)
     {
       $ignore = array('.','..');
@@ -274,6 +384,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
       $mtime = max($mtime, filemtime($path));
 
       foreach($files as $file) {
+
 
           $filepath = $path . $file;
 

@@ -41,10 +41,10 @@ namespace ShortPixel;
 				<div><span>Images</span><span data-stats-custom="images-images_basecount">n/a</span></div>
 
 				<?php if (\wpSPIO()->settings()->createWebp == 1): ?>
-					<div class='filetypes'><span>of which Webp</span><span data-stats-custom="images-images_webp">&nbsp;</span></div>
+					<div class='filetypes'><span>+ Webp</span><span data-stats-custom="images-images_webp">&nbsp;</span></div>
 				<?php endif; ?>
 				<?php if (\wpSPIO()->settings()->createAvif == 1): ?>
-					<div class='filetypes'><span>of which Avif</span><span data-stats-custom="images-images_avif">&nbsp;</span></div>
+					<div class='filetypes'><span>+ Avif</span><span data-stats-custom="images-images_avif">&nbsp;</span></div>
 				<?php endif; ?>
         <div><span>Total images to Optimize </span><span  data-stats-custom="images-images">0</span></div>
       </div>

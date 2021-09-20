@@ -2,7 +2,7 @@
 namespace ShortPixel\Model\Image;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use \ShortPixel\ShortPixelPng2Jpg as ShortPixelPng2Jpg;
-
+use ShortPixel\Controller\ResponseController as ResponseController;
 
 use ShortPixel\Helper\InstallHelper as InstallHelper;
 

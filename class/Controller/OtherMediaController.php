@@ -150,46 +150,11 @@ class OtherMediaController extends \ShortPixel\Controller
     {
        $fs = \wpSPIO()->filesystem();
        $directory = new DirectoryOtherMediaModel($path);
-       $rootDir = $fs->getWPFileBase();
-       $backupDir = $fs->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
 
-			 // @todo This decision treee should move to directoryModel to use for AddFiles / RefreshFolder as well 
-       if (! $directory->exists())
-       {
-          Notices::addError(__('Could not be added, directory not found: ' . $path ,'shortpixel-image-optimiser'));
-          return false;
-       }
-       elseif (! $directory->isSubFolderOf($rootDir) && $directory->getPath() != $rootDir->getPath() )
-       {
-          Notices::addError( sprintf(__('The %s folder cannot be processed as it\'s not inside the root path of your website (%s).','shortpixel-image-optimiser'),$directory->getPath(), $rootDir->getPath()));
-          return false;
-       }
-       elseif($directory->isSubFolderOf($backupDir) || $directory->getPath() == $backupDir->getPath() )
-       {
-          Notices::addError( __('This folder contains the ShortPixel Backups. Please select a different folder.','shortpixel-image-optimiser'));
-          return false;
-       }
-       elseif( $this->checkIfMediaLibrary($directory) )
-       {
-          Notices::addError(__('This folder contains Media Library images. To optimize Media Library images please go to <a href="upload.php?mode=list">Media Library list view</a> or to <a href="upload.php?page=wp-short-pixel-bulk">ShortPixel Bulk page</a>.','shortpixel-image-optimiser'));
-          return false;
-       }
-       elseif (! $directory->is_writable())
-       {
-         Notices::addError( sprintf(__('Folder %s is not writeable. Please check permissions and try again.','shortpixel-image-optimiser'),$directory->getPath()) );
-         return false;
-       }
-			 else
+			 // Check if this directory is allowed.
+			 if ($this->checkDirectoryRecursive($directory) === false)
 			 {
-				 $folders = $this->getAllFolders();
-				 foreach($folders as $folder)
-				 {
-					   if ($directory->isSubFolderOf($folder))
-						 {
-							  Notices::addError(__('This folder is a subfolder of an already existing Other Media folder. It cannot be added', 'shortpixel-image-optimiser'));
-								return false;
-						 }
-				 }
+				 return false;
 			 }
 
        if (! $directory->get('in_db'))
@@ -217,6 +182,35 @@ class OtherMediaController extends \ShortPixel\Controller
       else
         return false;
     }
+
+		// Recursive check if any of the directories is not addable. If so cancel the whole thing.
+		public function checkDirectoryRecursive($directory)
+		{
+				 if ($directory->checkDirectory() === false)
+				 {
+				 	return false;
+				 }
+
+				 $subDirs = $directory->getSubDirectories();
+				 foreach($subDirs as $subDir)
+				 {
+					  if ($subDir->checkDirectory() === false)
+						{
+							 return false;
+						}
+						else
+						{
+							 $result = $this->checkDirectoryRecursive($subDir);
+							 if ($result === false)
+							 {
+							 	return $result;
+							}
+						}
+
+				 }
+
+				 return true;
+		}
 
     // Main function to add a path to the Custom Media.
     public function addImage($path_or_file, $args = array())
@@ -296,7 +290,7 @@ class OtherMediaController extends \ShortPixel\Controller
 		}
 
     /* Check if this directory is part of the MediaLibrary */
-    protected function checkifMediaLibrary(DirectoryModel $directory)
+    public function checkifMediaLibrary(DirectoryModel $directory)
     {
       $fs = \wpSPIO()->filesystem();
       $uploadDir = $fs->getWPUploadBase();

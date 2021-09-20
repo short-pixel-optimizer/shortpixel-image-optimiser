@@ -403,9 +403,10 @@ class FileModel extends \ShortPixel\Model
     return $this->mime;
   }
   /* Util function to get location of backup Directory.
+	* @param Create - If true will try to create directory if it doesn't exist.
   * @return Boolean | DirectModel  Returns false if directory is not properly set, otherwhise with a new directoryModel
   */
-  protected function getBackupDirectory()
+  protected function getBackupDirectory($create = false)
   {
 
     if (is_null($this->getFileDir()))
@@ -417,7 +418,7 @@ class FileModel extends \ShortPixel\Model
 
     if (is_null($this->backupDirectory))
     {
-      $directory = $fs->getBackupDirectory($this);
+      $directory = $fs->getBackupDirectory($this, $create);
 
       if ($directory === false || ! $directory->exists()) // check if exists. FileModel should not attempt to create.
       {
