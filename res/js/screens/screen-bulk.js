@@ -83,7 +83,7 @@ var ShortPixelScreen = function (MainScreen, processor)
          this.processor.StopProcess({ waiting: true }); // don't go peeking in the queue. // this doesn't work since its' before the init Worker.
          this.SwitchPanel('dashboard');
       }
-console.log("Screen Init Done", initMedia, isPreparing, isRunning, isFinished);
+console.log("Screen Init Done", initMedia, initCustom);
 
   }
   this.LoadPanels = function()

@@ -16,10 +16,10 @@ class DirectoryModel extends \ShortPixel\Model
   protected $name;
 
   // Directory status
-  protected $exists = false;
-  protected $is_writable = false;
-  protected $is_readable = false;
-  protected $is_virtual = false;
+  protected $exists = null;
+  protected $is_writable = null;
+  protected $is_readable = null;
+  protected $is_virtual = null;
 
   protected $fields = array();
 
@@ -81,12 +81,13 @@ class DirectoryModel extends \ShortPixel\Model
       //basename($this->path);
       $this->name = $dir->getFileName();
 
-      if (file_exists($this->path))
-      {
-        $this->exists();
-        $this->is_writable();
-        $this->is_readable();
-      }
+		// Off the keep resources  / not sure if needed.
+    //  if (file_exists($this->path))
+    //  {
+    //    $this->exists();
+    //  $this->is_writable();
+    //    $this->is_readable();
+    //  }
   }
 
   public function __toString()
@@ -118,21 +119,31 @@ class DirectoryModel extends \ShortPixel\Model
 
   public function exists()
   {
-    $this->exists = file_exists($this->path) && is_dir($this->path);
+		if (is_null($this->exists))
+		{
+			$this->exists = file_exists($this->path) && is_dir($this->path);
+		}
     return $this->exists;
   }
 
   public function is_writable()
   {
-    $this->is_writable = is_writable($this->path);
+		if (is_null($this->is_writable))
+		{
+    	$this->is_writable = is_writable($this->path);
+		}
     return $this->is_writable;
   }
 
 
   public function is_readable()
   {
+		if (is_null($this->is_readable))
+		{
      $this->is_readable = is_readable($this->path);
-     return $this->is_readable;
+	  }
+
+    return $this->is_readable;
   }
 
   public function is_virtual()
@@ -269,7 +280,8 @@ class DirectoryModel extends \ShortPixel\Model
 
     $defaults = array(
         'date_newer' => null,
-        'exclude' => null,
+        'exclude_files' => null,
+				'include_files' => null,
     );
     $args = wp_parse_args($args, $defaults);
 
@@ -284,18 +296,31 @@ class DirectoryModel extends \ShortPixel\Model
     if ($handle = opendir($this->path)) {
         while (false !== ($entry = readdir($handle))) {
             if ( ($entry != "." && $entry != "..") && ! is_dir($this->path . $entry) ) {
-                $fileArray[] = new FileModel($this->path . $entry);
+
+
+								$fileObj = new FileModel($this->path . $entry);
+								if ($has_filters)
+								{
+									 if ($this->fileFilter($fileObj,$args) === false)
+									 {
+									 	$fileObj = null;
+								 	 }
+								}
+
+								if (! is_null($fileObj))
+                	$fileArray[] = $fileObj;
             }
         }
         closedir($handle);
     }
 
+/*
     if ($has_filters)
     {
       $fileArray = array_filter($fileArray, function ($file) use ($args) {
            return $this->fileFilter($file, $args);
        } );
-    }
+    } */
     return $fileArray;
   }
 
@@ -304,6 +329,19 @@ class DirectoryModel extends \ShortPixel\Model
   {
      $filter = true;
 
+		 if (! is_null($args['include_files']))
+		 {
+			  foreach($args['include_files'] as $inc)
+				{
+						// If any in included is true, filter is good for us.
+					 $filter = false;
+           if (strpos($file->getRawFullPath(), $inc) !== false)
+					 {
+             $filter = true;
+						 break;
+					 }
+				}
+		 }
      if (! is_null($args['date_newer']))
      {
        $modified = $file->getModified();
@@ -314,7 +352,7 @@ class DirectoryModel extends \ShortPixel\Model
      {
         foreach($args['exclude_files'] as $ex)
         {
-           if (strpos($file->getFullPath(), $ex) !== false)
+           if (strpos($file->getRawFullPath(), $ex) !== false)
              $filter = false;
         }
      }

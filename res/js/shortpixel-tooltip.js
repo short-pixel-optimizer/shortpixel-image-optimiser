@@ -54,19 +54,39 @@ var ShortPixelToolTip = function(reserved, processor)
 
         var toolTip = this.GetToolTip();
         var statTip = toolTip.querySelector('.stats');
-				console.log('refresh', stats);
+				console.log('refresh', stats, neededType);
 
         if (statTip == null)
           return;
 
 				var number = stats.in_queue + stats.in_process;
-        statTip.textContent = number;
+        statTip.textContent = this.FormatNumber(number);
 
         if (statTip.classList.contains('hidden') && number > 0)
           statTip.classList.remove('hidden');
         else if (! statTip.classList.contains('hidden') && number == 0)
           statTip.classList.add('hidden');
     }
+
+		this.FormatNumber = function(num) 
+		{
+				var digits = 1;
+				  var si = [
+		    { value: 1E18, symbol: "E" },
+		    { value: 1E15, symbol: "P" },
+		    { value: 1E12, symbol: "T" },
+		    { value: 1E9,  symbol: "G" },
+		    { value: 1E6,  symbol: "M" },
+		    { value: 1E3,  symbol: "k" }
+		  ], i;
+				  for (i = 0; i < si.length; i++) {
+				    if (num >= si[i].value) {
+				      return (num / si[i].value).toFixed(digits).replace(/\.?0+$/, "") + si[i].symbol;
+				    }
+			  }
+  	return num;
+	}
+
     this.ToggleProcessing = function(event)
     {
        event.preventDefault();

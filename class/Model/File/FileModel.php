@@ -346,11 +346,22 @@ class FileModel extends \ShortPixel\Model
 
   public function getFullPath()
   {
-    if (is_null($this->filename)) // filename here since fullpath is set unchecked in constructor, but might be a different take
+		// filename here since fullpath is set unchecked in constructor, but might be a different take
+    if (is_null($this->filename))
+		{
       $this->setFileInfo();
+		}
 
     return $this->fullpath;
   }
+
+	// Testing this. Principle is that when the plugin is absolutely sure this is a file, not something remote, not something non-existing, get the fullpath without any check.
+	// This function should *only* be used when processing mega amounts of files while not doing optimization or any processing.
+	// So far, testing use for file Filter */
+	public function getRawFullPath()
+	{
+			return $this->fullpath;
+	}
 
   public function getFileName()
   {
@@ -410,7 +421,7 @@ class FileModel extends \ShortPixel\Model
 
       if ($directory === false || ! $directory->exists()) // check if exists. FileModel should not attempt to create.
       {
-        Log::addWarn('Backup Directory not existing ' . $backupDirectory);
+        //Log::addWarn('Backup Directory not existing ' . $directory-);
         return false;
       }
       elseif ($directory !== false)
@@ -437,7 +448,6 @@ class FileModel extends \ShortPixel\Model
     $original_path = $path;
     $fs = \wpSPIO()->filesystem();
 
-
     if ($fs->pathIsUrl($path))
     {
       $path = $this->UrlToPath($path);
@@ -447,10 +457,7 @@ class FileModel extends \ShortPixel\Model
       return false;
 
     $path = wp_normalize_path($path);
-
-    // if path does not contain basepath.
-    $uploadDir = $fs->getWPUploadBase();
-    $abspath = $fs->getWPAbsPath();
+		$abspath = $fs->getWPAbsPath();
 
     if ( is_file($path) && ! is_dir($path) ) // if path and file exist, all should be okish.
     {
@@ -458,6 +465,10 @@ class FileModel extends \ShortPixel\Model
     }
     elseif (strpos($path, $abspath->getPath()) === false)
     {
+	    // if path does not contain basepath.
+	    $uploadDir = $fs->getWPUploadBase();
+	    $abspath = $fs->getWPAbsPath();
+
       $path = $this->relativeToFullPath($path);
     }
     $path = apply_filters('shortpixel/filesystem/processFilePath', $path, $original_path);

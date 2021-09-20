@@ -218,7 +218,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 
           $page = $this->currentPage;
           $controller = OtherMediaController::getInstance();
-//var_dump($this->show_hidden); exit();
+
 					$hidden_ids = $controller->getHiddenDirectoryIDS();
 					if (count($hidden_ids) > 0)
 						$this->has_hidden_items = true;
@@ -243,7 +243,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
           $sql = "SELECT * FROM " . $wpdb->prefix . "shortpixel_meta where folder_id in ( " . $dirs  . ") ";
 
           foreach($filters as $field => $value) {
-              $sql .= " AND $field " . $vatotlue->operator . " ". $value->value . " ";
+              $sql .= " AND $field " . $value->operator . " ". $value->value . " ";
           }
 
 

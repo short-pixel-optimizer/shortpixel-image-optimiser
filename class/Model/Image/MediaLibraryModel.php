@@ -1419,10 +1419,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
     {
        $status = self::FILE_STATUS_PENDING;
     }
+		elseif($error == 'backup-fail' || $error == 'write-fail' )
+		{
+			$status = self::FILE_STATUS_ERROR;
+		}
     elseif ($error < 0)
     {
       $status = $error;
     }
+
 
     return $status;
   }

@@ -55,7 +55,7 @@ Class FileSystemController extends \ShortPixel\Controller
     }
 
     /** Gets a custom Image Model without being in the database. This is used to check if path is a proper customModel path ( not mediaLibrary ) and see if the file should be included per excusion rules */
-    public function getCustomStub(string $path, bool $load = true)
+    public function getCustomStub(string $path, $load = true)
     {
         $imageObj = new CustomImageModel(0);
         $imageObj->setStub($path, $load);
@@ -188,6 +188,9 @@ Class FileSystemController extends \ShortPixel\Controller
           $abspath = ABSPATH;
         else
           $abspath = $wpContentAbs;
+
+				if (defined('UPLOADS')) // if this is set, lead.
+					$abspath = trailingslashit(ABSPATH) . UPLOADS;
 
         $abspath = apply_filters('shortpixel/filesystem/abspath', $abspath );
 
@@ -395,6 +398,7 @@ Class FileSystemController extends \ShortPixel\Controller
     private function returnOldSubDir($file)
     {
               // Experimental FS handling for relativePath. Should be able to cope with more exceptions.  See Unit Tests
+				Log::addWarn('Return Old Subdir was called, everything else failed');
               $homePath = get_home_path();
               if($homePath == '/') {
                   $homePath = $this->getWPAbsPath();

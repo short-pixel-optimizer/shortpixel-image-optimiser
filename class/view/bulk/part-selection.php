@@ -71,7 +71,9 @@ $approx = $this->view->approx;
 
            </div>
            <h4>Also Webp.</h4>
-           <span class="number"><?php echo $approx->total->images ?></span>
+					 <div><span>Media</span><span class="number"><?php echo $approx->media->total ?></span></div>
+           <div><span>Custom </span><span class="number"><?php echo $approx->custom->images ?></span>
+					 </div>
        </div>
 
        <div class='optiongroup '  >
@@ -85,7 +87,9 @@ $approx = $this->view->approx;
 
          </div>
          <h4>Also Avif.</h4>
-         <span class="number"><?php echo $approx->total->images ?></span>
+					 <div><span>Media</span><span class="number"><?php echo $approx->media->total ?></span></div>
+           <div><span>Custom </span><span class="number"><?php echo $approx->custom->images ?></span>
+					 </div>
      </div>
 
        <div class='optiongroup' data-check-visibility="false" data-control="data-check-approx-total">

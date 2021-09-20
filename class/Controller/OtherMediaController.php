@@ -153,6 +153,7 @@ class OtherMediaController extends \ShortPixel\Controller
        $rootDir = $fs->getWPFileBase();
        $backupDir = $fs->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
 
+			 // @todo This decision treee should move to directoryModel to use for AddFiles / RefreshFolder as well 
        if (! $directory->exists())
        {
           Notices::addError(__('Could not be added, directory not found: ' . $path ,'shortpixel-image-optimiser'));

@@ -4,6 +4,7 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notice;
 
 use \ShortPixel\Model\File\DirectoryModel as DirectoryModel;
+use \ShortPixel\Model\Image\ImageModel as ImageModel;
 
 use ShortPixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
@@ -234,12 +235,12 @@ class DirectoryOtherMediaModel extends DirectoryModel
       $fs = \wpSPIO()->filesystem();
       $filter = ($time > 0)  ? array('date_newer' => $time) : array();
       $filter['exclude_files'] = array('.webp', '.avif');
+			$filter['include_files'] = ImageModel::PROCESSABLE_EXTENSIONS;
 
       $files = $fs->getFilesRecursive($this, $filter);
 
       \wpSPIO()->settings()->hasCustomFolders = time(); // note, check this against bulk when removing. Custom Media Bulk depends on having a setting.
 
-			Log::addTemp('Refresh Folder Yields', array($filter, $files));
     	$result = $this->addImages($files);
 
       $this->stats = null; //reset
@@ -253,10 +254,22 @@ class DirectoryOtherMediaModel extends DirectoryModel
     private function recurseLastChangeFile($mtime = 0)
     {
       $ignore = array('.','..');
+
+			// Directories without read rights should not be checked at all.
+			if (! $this->is_readable())
+				return $mtime;
+
       $path = $this->getPath();
 
       $files = scandir($path);
-      $files = array_diff($files, $ignore);
+
+			// no files, nothing to update.
+			if (! is_array($files))
+			{
+					return $mtime;
+			}
+
+			$files = array_diff($files, $ignore);
 
       $mtime = max($mtime, filemtime($path));
 
@@ -298,9 +311,6 @@ class DirectoryOtherMediaModel extends DirectoryModel
 			{
 				 return false;
 			}
-      /*$sqlCleanup = "DELETE FROM {$this->db->getPrefix()}shortpixel_meta WHERE folder_id NOT IN (SELECT id FROM {$this->db->getPrefix()}shortpixel_folders)";
-      $wpdb->query($sqlCleanup); */
-
 
       $values = array();
 
@@ -312,11 +322,15 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
       foreach($files as $fileObj)
       {
+					// Note that load is set to false here.
           $imageObj = $fs->getCustomStub($fileObj->getFullPath(), false);
 
 					// image already exists
           if ($imageObj->get('in_db') == true)
 					{
+						// Load meta to make it check the folder_id.
+						$imageObj->loadMeta();
+
 						// Check if folder id is something else. This might indicate removed or inactive folders.
 						// If in inactive folder, move to current active.
 						if ($imageObj->get('folder_id') !== $this->id)
@@ -333,51 +347,22 @@ class DirectoryOtherMediaModel extends DirectoryModel
           {
   	         $imageObj->setFolderId($this->id);
              $imageObj->saveMeta();
-             Log::addTemp('Batch New : new File saved ' . $imageObj->getFullPath() );
+            // Log::addTemp('Batch New : new File saved ' . $imageObj->getFullPath() );
              if (\wpSPIO()->env()->is_autoprocess)
              {
-                Log::addTemp('adding item to queue ' . $imageObj->get('id'));
+                //Log::addTemp('adding item to queue ' . $imageObj->get('id'));
                 $optimizeControl->addItemToQueue($imageObj);
              }
           }
 
       }
 
-      /*$status = (\wpSPIO()->settings()->autoMediaLibrary == 1) ? ShortPixelMeta::FILE_STATUS_PENDING : ShortPixelMeta::FILE_STATUS_UNPROCESSED; */
-    /*  $created = date("Y-m-d H:i:s");
-
-      foreach($files as $file) {
-          $filepath = $file->getFullPath();
-          $filename = $file->getFileName();
-
-          array_push($values, $this->id, $filepath, $filename, md5($filepath), $status, $created);
-          $placeholders[] = $format;
-
-          if($i % 500 == 499) {
-              $query = $sql;
-              $query .= implode(', ', $placeholders);
-              $wpdb->query( $wpdb->prepare("$query ", $values));
-
-              $values = array();
-              $placeholders = array();
-          }
-          $i++;
-      }
-      if(count($values) > 0) {
-        $query = $sql;
-        $query .= implode(', ', $placeholders);
-        $result = $wpdb->query( $wpdb->prepare("$query ", $values) );
-        Log::addDebug('Q Result', array($result, $wpdb->last_error));
-        //$this->db->query( $this->db->prepare("$query ", $values));
-        return $result;
-      } */
   }
 
 		private function loadFolderById()
 		{
 
 		}
-
 
     private function loadFolderByPath($path)
     {

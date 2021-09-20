@@ -163,7 +163,7 @@ abstract class Queue
           $fs = \wpSPIO()->filesystem();
 
           $queue = array();
-          $imageCount = $webpCount = $avifCount = 0;
+          $imageCount = $webpCount = $avifCount = $baseCount = 0;
 
           //$customData = $this->getStatus('custom_data');
 
@@ -183,6 +183,7 @@ abstract class Queue
                     $imageCount += $counts->creditCount;
                     $webpCount += $counts->webpCount;
                     $avifCount += $counts->avifCount;
+										$baseCount += $counts->baseCount; // base images (all minus webp/avif)
 
                     do_action('shortpixel_start_image_optimisation', $mediaItem->get('id'), $mediaItem);
 
@@ -224,6 +225,7 @@ abstract class Queue
 
           $customData->webpCount += $webpCount;
           $customData->avifCount += $avifCount;
+					$customData->baseCount += $baseCount;
 
           $this->q->setStatus('custom_data', $customData, false);
 
@@ -317,6 +319,7 @@ abstract class Queue
         {
           $count->images_webp = $customData->webpCount;
           $count->images_avif = $customData->avifCount;
+					$count->images_basecount = $customData->baseCount;
         }
 
 
@@ -409,6 +412,7 @@ abstract class Queue
 
         $counts = new \stdClass;
         $counts->creditCount = 0;  // count the used credits for this item.
+				$counts->baseCount = 0; // count the base images.
         $counts->avifCount = 0;
         $counts->webpCount = 0;
         //$creditCount = 0;
@@ -429,30 +433,41 @@ abstract class Queue
            // nothing.
           // $items[] = $item;
             $counts->creditCount += count($urls);
+						$counts->baseCount += count($urls);
+
         }
         else
         {
             if ($hasUrls) // if original urls needs optimizing.
             {
                 $counts->creditCount += count($urls);
+								$counts->baseCount += count($urls);
 
                 if ($hasWebps && count($urls) == count($webps))
                 {
                    $flags[] = '+webp'; // original + format
-                   $counts->creditCount += count($urls);
-                   $counts->webpCount += count($urls);
+                   $counts->creditCount += count($webps);
+                   $counts->webpCount += count($webps);
                 }
                 elseif($hasWebps)
+								{
                   $webpLeft = true; // or indicate this should go separate ( not full )
+									$counts->creditCount += count($webps); // add count since this will be requeued when main part is done, causing more credit cost while running.
+									$counts->webpCount += count($webps);
+								}
 
                 if ($hasAvifs && count($urls) == count($avifs))
                 {
                    $flags[] = '+avif';
-                   $counts->creditCount += count($urls);
-                   $counts->avifCount += count($urls);
+                   $counts->creditCount += count($avifs);
+                   $counts->avifCount += count($avifs);
                 }
                 elseif($hasAvifs)
+								{
                   $avifLeft = true;
+                  $counts->creditCount += count($avifs); // add counts
+                  $counts->avifCount += count($avifs);
+								}
 
             }
             elseif(! $hasUrls && $hasWebps || $hasAvifs) // if only webp / avif needs doing.
@@ -512,7 +527,6 @@ abstract class Queue
         $item->urls = apply_filters('shortpixel_image_urls', $urls, $imageModel->get('id'));
         $item->counts = $counts;
 
-
         return $item;
     }
 
@@ -567,6 +581,7 @@ abstract class Queue
         $data = new \stdClass;
         $data->webpCount = 0;
         $data->avifCount = 0;
+				$data->baseCount = 0;
         $data->customOperation = null;
 
         return $data;

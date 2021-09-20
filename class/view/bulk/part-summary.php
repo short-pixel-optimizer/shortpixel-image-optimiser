@@ -18,26 +18,34 @@ namespace ShortPixel;
         <span><img src="<?php echo wpSPIO()->plugin_url('res/img/bulk/robot-book-summary.svg') ?>" /></span>
       </h3>
       <div class="section-wrapper" data-check-visibility data-control="data-check-media-total">
-      <h4><span class='dashicons dashicons-images-alt2'>&nbsp;</span> Media Library</h4>
+      <h4><span class='dashicons dashicons-images-alt2'>&nbsp;</span> Media Library (<span data-stats-media="in_queue">0</span> items)</h4>
         <div class="list-table">
-          <div><span>Items to Optimize</span><span data-stats-media="in_queue">0</span></div>
 
-          <div><span>Total images to Optimize </span><span data-stats-media="images-images">0</span></div>
 
+						<div><span>Images</span><span data-stats-media="images-images_basecount">n/a</span></div>
           <?php if (\wpSPIO()->settings()->createWebp == 1): ?>
-            <div class='filetypes'><span>of which Webp</span><span data-stats-media="images-images_webp">&nbsp;</span></div>
+            <div class='filetypes'><span>+ Webp</span><span data-stats-media="images-images_webp">&nbsp;</span></div>
           <?php endif; ?>
           <?php if (\wpSPIO()->settings()->createAvif == 1): ?>
-            <div class='filetypes'><span>of which Avif</span><span data-stats-media="images-images_avif">&nbsp;</span></div>
+            <div class='filetypes'><span>+ Avif</span><span data-stats-media="images-images_avif">&nbsp;</span></div>
           <?php endif; ?>
+
+          <div><span>Total images to Optimize </span><span data-stats-media="images-images">0</span></div>
 
         </div>
       </div>
 
     <div class="section-wrapper" data-check-visibility data-control="data-check-custom-total">
-    <h4><span class='dashicons dashicons-open-folder'>&nbsp;</span> Other Media</h4>
+    <h4><span class='dashicons dashicons-open-folder'>&nbsp;</span> Other Media ( <span data-stats-custom="in_queue">0</span> )</h4>
       <div class="list-table">
-        <div><span>Items to Optimize</span><span data-stats-custom="in_queue">0</span></div>
+				<div><span>Images</span><span data-stats-custom="images-images_basecount">n/a</span></div>
+
+				<?php if (\wpSPIO()->settings()->createWebp == 1): ?>
+					<div class='filetypes'><span>of which Webp</span><span data-stats-custom="images-images_webp">&nbsp;</span></div>
+				<?php endif; ?>
+				<?php if (\wpSPIO()->settings()->createAvif == 1): ?>
+					<div class='filetypes'><span>of which Avif</span><span data-stats-custom="images-images_avif">&nbsp;</span></div>
+				<?php endif; ?>
         <div><span>Total images to Optimize </span><span  data-stats-custom="images-images">0</span></div>
       </div>
     </div>
