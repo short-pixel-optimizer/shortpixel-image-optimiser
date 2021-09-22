@@ -49,6 +49,16 @@ namespace ShortPixel;
 
    <?php if (count($this->view->logs) > 0): ?>
 
+	 <div id="LogModal" class="shortpixel-modal shortpixel-hide bulk-modal">
+		 <span class="close" data-action="CloseModal" data-id="LogModal">X</span>
+	 	  <div class='title'>
+		
+			</div>
+			<div class="content sptw-modal-spinner">
+
+			</div>
+	 </div>
+	 <div id="LogModal-Shade" class='sp-modal-shade'></div>
    <div class='dashboard-log'>
       <h3><?php _e('Previous Bulks', 'shortpixel_image_optimizer'); ?></h3>
       <?php

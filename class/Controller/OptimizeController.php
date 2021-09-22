@@ -530,7 +530,7 @@ class OptimizeController
           $message = $item->result->message; // getLastErrorMessage();
           $item_id = $item->item_id;
 
-          $fileLog->append($time . ' - ' . $fileName . '( ' . $item_id . ') - ' . $message . PHP_EOL);
+          $fileLog->append($time . '|' . $fileName . '| ' . $item_id . '|' . $message . ';' .PHP_EOL);
         }
     }
 

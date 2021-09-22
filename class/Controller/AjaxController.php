@@ -226,6 +226,10 @@ class AjaxController
 					 case 'request_new_api_key':
 
 					 break;
+					 case "loadLogFile":
+					  	$data['logFile'] = isset($_POST['loadFile']) ? sanitize_text_field($_POST['loadFile']) : null;
+					 		$json = $this->loadLogFile($json, $data);
+					 break;
            default:
               $json->$type->message = __('Ajaxrequest - no action found', 'shorpixel-image-optimiser');
               $json->error = self::NO_ACTION;
@@ -543,6 +547,55 @@ class AjaxController
          wp_send_json($result);
 
     }
+
+		protected function loadLogFile($json, $data)
+		{
+			 $logFile = $data['logFile'];
+			 $type = $data['type'];
+
+			 if (is_null($logFile))
+			 {
+				  $json->$type->is_error = true;
+					$json->$type->result = __('Could not load log file', 'shortpixel-image-optimiser');
+					return $json;
+			 }
+
+       $bulkController = BulkController::getInstance();
+			 $log = $bulkController->getLog($logFile);
+
+			 if (! $log )
+			 {
+				  $json->$type->is_error = true;
+					$json->$type->result = __('Log file does not exist', 'shortpixel-image-optimiser');
+					return $json;
+			 }
+
+			 $content = $log->getContents();
+			 $lines = explode(';', $content);
+
+			 $headers = array(
+				 __('Time', 'shortpixel-image-optimiser'),
+				 __('Filename', 'shortpixel-image-optimiser'),
+			   __('Error', 'shortpixel-image-optimiser'));
+
+			 foreach($lines as $index => $line)
+			 {
+				  $cells = explode('|', $line);
+					if (isset($cells[2]))
+					{
+						 $id = $cells[2]; // replaces the image id with a link to image.
+						 $cells[2] = admin_url('post.php?post=' . $id . '&action=edit');
+				//		 unset($cells[3]);
+					}
+					$lines[$index] = (array) $cells;
+			 }
+			 $lines = array_values(array_filter($lines));
+			 array_unshift($lines, $headers);
+			 $json->$type->results = $lines;
+			 return $json;
+
+
+		}
 
     protected function checkNonce($action)
     {

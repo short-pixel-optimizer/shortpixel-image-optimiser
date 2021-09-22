@@ -418,16 +418,10 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
     public function onDelete()
     {
+				parent::onDelete();
         $this->deleteMeta();
 
-        $webp = $this->getWebp();
-        $avif = $this->getAvif();
 
-        if ($webp !== false && $webp->exists())
-          $webp->delete();
-
-        if ($avif !== false && $avif->exists())
-           $avif->delete();
 
     }
 

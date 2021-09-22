@@ -649,6 +649,103 @@ console.log("Screen Init Done", initMedia, initCustom);
     this.processor.AjaxRequest(data);
   }
 
+	// Opening of Log files on the dashboard
+	this.OpenLog = function(event)
+	{
+		 event.preventDefault();
+		 console.log('Borks', event);
+    var data = {screen_action: 'loadLogFile', callback: 'shortpixel.showLogModal'};
+		data['loadFile'] = event.target.getAttribute('data-file');
+		data['type'] = 'log'; // for the answer.
+
+		modalData = this.GetModal();
+		modal = modalData[0];
+		title = modalData[1];
+		content = modalData[2];
+
+		modal.classList.remove('shortpixel-hide');
+		title.textContent = '';
+		content.innerHTML = ''; //empty
+
+		if (! content.classList.contains('sptw-modal-spinner')) 
+			content.classList.add('sptw-modal-spinner');
+
+    window.addEventListener('shortpixel.showLogModal', this.ShowLogModal.bind(this), {'once': true});
+    this.processor.AjaxRequest(data);
+	}
+
+	this.GetModal = function()
+	{
+			var modal = document.getElementById('LogModal');
+			for (i = 0; i < modal.children.length; i++)
+			{
+				 if (modal.children[i].classList.contains('title'))
+				 {
+				 	var title = modal.children[i];
+				 }
+				 else if (modal.children[i].classList.contains('content'))
+				 {
+				   var content = modal.children[i];
+				 }
+			}
+
+			return [modal, title, content];
+	}
+
+	this.ShowLogModal = function(event)
+	{
+	//		console.log(event);
+			var log = event.detail.log;
+
+			if (log.is_error == true)
+			{
+				console.error(log);
+				this.CloseModal();
+			}
+
+			modalData = this.GetModal();
+			modal = modalData[0];
+			text = modalData[1];
+			content = modalData[2];
+
+			console.log(log.results);
+			//console.log(modal.children());
+
+			title.textContent = 'title - this needs loading';
+
+			for (i = 0; i < log.results.length; i++)
+			{
+					var html = '<div>';
+
+					if (i == 0)
+					{
+						for (j = 0; j < log.results[i].length; j++ )
+						{
+							html += '<span>' + log.results[i][j] + '</span>';
+						}
+					}
+					else if (log.results[i].length >= 3)
+					{
+						html += '<span>' + log.results[i][0] + '</span>';
+						html += '<span><a href="' + log.results[i][2] + '">' + log.results[i][1] + '</a>';
+						html += '<span>' + log.results[i][3] + '</span>';
+					}
+
+					html += '</div>';
+					console.log(html);
+					content.innerHTML += html;
+
+					content.classList.remove('sptw-modal-spinner');
+			}
+	}
+
+	this.CloseModal = function(event)
+	{
+		 event.preventDefault();
+ 		 var modal = document.getElementById('LogModal');
+		 modal.classList.add('shortpixel-hide');
+	}
+
   //this.CheckSelectionScreen()  = function()
 
   this.Init();

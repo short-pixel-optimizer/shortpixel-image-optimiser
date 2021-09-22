@@ -143,6 +143,9 @@ class ShortPixelPlugin
 
       $admin = Controller\AdminController::getInstance();
 
+      // Handle for EMR
+      add_action('wp_handle_replace', array($admin,'handleReplaceHook'));
+
 
       if ($this->env()->is_autoprocess)
       {
@@ -151,7 +154,6 @@ class ShortPixelPlugin
           {
             if($this->settings()->png2jpg) {
 
-
               add_action( 'add_attachment', array($admin,'handlePng2JpgHook'));
               //  add_action( 'wp_handle_upload', array($admin,'handlePng2JpgHook'));
 
@@ -159,8 +161,7 @@ class ShortPixelPlugin
               add_action( 'mpp_handle_upload', array($admin,'handlePng2JpgHook'));
             }
 
-            // Handle for EMR
-            add_action('wp_handle_replace', array($admin,'handleReplaceHook'));
+						add_action("enable-media-replace-upload-done", array($admin, 'handleReplaceEnqueue'), 10,3);
 
             add_filter( 'wp_generate_attachment_metadata', array($admin,'handleImageUploadHook'), 10, 2 );
             // @integration MediaPress

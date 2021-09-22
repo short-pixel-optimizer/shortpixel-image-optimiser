@@ -579,6 +579,15 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
            $file->delete();
         }
 
+        $webp = $this->getWebp();
+        $avif = $this->getAvif();
+
+        if ($webp !== false && $webp->exists())
+          $webp->delete();
+
+        if ($avif !== false && $avif->exists())
+           $avif->delete();
+
       //  $this->deleteMeta();
     }
 

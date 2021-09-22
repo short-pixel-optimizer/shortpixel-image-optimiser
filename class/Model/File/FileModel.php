@@ -344,6 +344,11 @@ class FileModel extends \ShortPixel\Model
 
   }
 
+	public function getContents()
+	{
+			return file_get_contents($this->getFullPath());
+	}
+
   public function getFullPath()
   {
 		// filename here since fullpath is set unchecked in constructor, but might be a different take

@@ -92,6 +92,18 @@ class BulkController
         return $logs;
    }
 
+	 public function getLog($logName)
+	 {
+  		 $fs = \wpSPIO()->filesystem();
+			 $backupDir = $fs->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
+
+			 $log = $fs->getFile($backupDir->getPath() . $logName);
+			 if ($log->exists())
+			 	 return $log;
+			 else
+			 	return false;
+	 }
+
    protected function addLog($stats, $type)
    {
         //$data = (array) $stats;

@@ -33,7 +33,7 @@ onmessage = function(e)
   }
 
 
-  console.log('action : ' + action);
+  //console.log('action : ' + action);
 
 
 }

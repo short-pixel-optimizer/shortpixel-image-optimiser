@@ -68,7 +68,18 @@ class AdminController extends \ShortPixel\Controller
           $imageObj = $fs->getImage($post_id, 'media');
           $imageObj->onDelete();
       }
+
     }
+
+		public function handleReplaceEnqueue($target, $source, $post_id)
+		{
+			//var_dump($post_id); exit('yo');
+				$fs = \wpSPIO()->filesystem();
+        $imageObj = $fs->getImage($post_id, 'media');
+				$optimizeController = new OptimizeController();
+				$optimizeController->addItemToQueue($imageObj);
+
+		}
 
     public function generatePluginLinks($links) {
         $in = '<a href="options-general.php?page=wp-shortpixel-settings">Settings</a>';

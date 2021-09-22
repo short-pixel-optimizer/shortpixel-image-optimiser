@@ -125,7 +125,7 @@ class BulkViewController extends \ShortPixel\ViewController
           $errors = $logData['fatal_errors'];
 
           if ($logFile->exists())
-            $errors = '<a href="' . $fs->pathToUrl($logFile) . '">' . $errors . '</a>';
+            $errors = '<a data-action="OpenLog" data-file="' . $logFile->getFileName() . '" href="' . $fs->pathToUrl($logFile) . '">' . $errors . '</a>';
 
 
 
