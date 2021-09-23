@@ -473,6 +473,12 @@ class SettingsController extends \ShortPixel\Controller
 
           parent::processPostData($post);
 
+					// Unset front optimization when automedialib. is off
+					if ($this->postData['autoMediaLibrary'] == 0)
+					{
+						 $this->postData['frontBootstrap'] = 0;
+					}
+
       }
 
       /** Function for the WebP settings overload
