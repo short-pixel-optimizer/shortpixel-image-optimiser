@@ -458,14 +458,12 @@ class DirectoryOtherMediaModel extends DirectoryModel
           {
   	         $imageObj->setFolderId($this->id);
              $imageObj->saveMeta();
-            // Log::addTemp('Batch New : new File saved ' . $imageObj->getFullPath() );
+
              if (\wpSPIO()->env()->is_autoprocess)
              {
-                //Log::addTemp('adding item to queue ' . $imageObj->get('id'));
                 $optimizeControl->addItemToQueue($imageObj);
              }
           }
-
       }
 
   }

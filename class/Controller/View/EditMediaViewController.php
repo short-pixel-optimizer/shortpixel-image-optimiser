@@ -54,6 +54,10 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
           $fs = \wpSPIO()->filesystem();
           $this->imageModel = $fs->getMediaImage($this->post_id);
+
+					// Asking for something non-existing.
+					if ($this->imageModel === false)
+						return false;
         //  $this->imageModel->setByPostID($post_id);
           $this->imageModel->reAcquire(); // single display mode - reset things.
 

@@ -110,13 +110,17 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
     {
         $bool = parent::isProcessable();
 
-        if (! $bool && ! $strict)
+        if ($bool === false && $strict === false)
         {
           // Todo check if Webp / Acif is active, check for unoptimized items
           if ($this->isProcessableFileType('webp'))
+					{
             $bool = true;
+					}
           if ($this->isProcessableFileType('avif'))
+					{
              $bool = true;
+					}
 
         }
         return $bool;
@@ -420,9 +424,6 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
     {
 				parent::onDelete();
         $this->deleteMeta();
-
-
-
     }
 
     public function getImprovement($int = false)

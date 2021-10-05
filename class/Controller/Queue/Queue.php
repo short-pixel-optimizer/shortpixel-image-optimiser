@@ -517,9 +517,11 @@ abstract class Queue
           $item->png2jpg = $imageModel->get('do_png2jpg');
         }
 
-        if (! is_null($imageModel->getMeta('compressionType')))
+				// CompressionType can be integer, but not empty string. In cases empty string might happen, causing lossless optimization, which is not correct. 
+        if (! is_null($imageModel->getMeta('compressionType')) && is_int($imageModel->getMeta('compressionType')))
+				{
           $item->compressionType = $imageModel->getMeta('compressionType');
-
+				}
         $item->flags = $flags;
 
         // Former securi function, add timestamp to all URLS, for cache busting.

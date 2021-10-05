@@ -381,7 +381,12 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
               if ($settings->backupImages)
               {
-                  $backupok = $this->createBackup();
+									// If conversion to jpg is done, this function also does the backup.
+									if ($this->getMeta('did_png2jpg') === true)
+										 $backupok = true;
+									else
+                  	 $backupok = $this->createBackup();
+
                   if (! $backupok)
                   {
                     Log::addError('Backup Not OK - ' .  $urlName);

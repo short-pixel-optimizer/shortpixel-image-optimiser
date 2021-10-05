@@ -74,6 +74,10 @@ class ListMediaViewController extends \ShortPixel\ViewController
      $keyControl = ApiKeyController::getInstance();
      $quotaControl = QuotaController::getInstance();
 
+		 // Asking for something non-existing.
+		 if ($mediaItem === false)
+		 	 return;
+
      $this->view->mediaItem = $mediaItem;
 
      $actions = array();

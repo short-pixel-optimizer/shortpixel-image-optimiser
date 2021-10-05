@@ -235,7 +235,6 @@ class ShortPixelPlugin
 		// Used by processor
 		 add_action( 'wp_ajax_shortpixel_get_item_view', array(AjaxController::getInstance(), 'ajax_getItemView'));
 
-
   }
 
   /** Hook in our admin pages */

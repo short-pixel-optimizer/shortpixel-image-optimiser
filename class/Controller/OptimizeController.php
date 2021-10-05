@@ -264,8 +264,8 @@ class OptimizeController
             if (property_exists($item, 'png2jpg'))
             {
               $bool = $this->convertPNG($item, $Q);
-              if ($bool == true)
-                continue; // conversion done, item will be requeued with new urls.
+              //if ($bool == true)
+              //  continue; // conversion done, item will be requeued with new urls.
             }
 
             $item = $this->sendToProcessing($item, $Q);
@@ -373,30 +373,24 @@ class OptimizeController
           // Check ApiStatus, and see what is what for error
           // https://shortpixel.com/api-docs
           $apistatus = $result->apiStatus;
-        //  $apiFatal = false;
 
           if ($apistatus == ApiController::STATUS_ERROR ) // File Error - between -100 and -300
           {
               $item->fileStatus = ImageModel::FILE_STATUS_ERROR;
-            //  $apiFatal = true; // fatal error since the file needs fixing.
           }
           // Out of Quota (partial / full)
           elseif ($apistatus == ApiController::STATUS_QUOTA_EXCEEDED)
           {
-              //$item->status = false;
               $item->result->error = AjaxController::NOQUOTA;
 							$quotaController->setQuotaExceeded();
-            //  $apiFatal = true; // fatal error since quota needs upping.
           }
           elseif ($apistatus == ApiController::STATUS_NO_KEY)
           {
               $item->result->error = AjaxController::APIKEY_FAILED;
-            //  $apiFatal = true;  // fatal error since key needs fixing.
           }
           elseif($apistatus == ApiController::STATUS_QUEUE_FULL || $apistatus == ApiController::STATUS_MAINTENANCE ) // Full Queue / Maintenance mode
           {
               $item->result->error = AjaxController::SERVER_ERROR;
-            ///  $apiFatal = false;  // Not fatal, keep trying.
           }
 
           if ($result->is_done || $item->tries >= SHORTPIXEL_MAX_FAIL_RETRIES )
@@ -419,7 +413,6 @@ class OptimizeController
          if ($result->apiStatus == ApiController::STATUS_SUCCESS )
          {
            $tempFiles = array();
-
 
            // Set the metadata decided on APItime.
            if (isset($item->compressionType))
@@ -468,6 +461,7 @@ class OptimizeController
                 $item->result->original = false;
 
               $item->result->optimized = $fs->pathToUrl($imageItem);
+
 
            }
            // This was not a request process, just handle it and mark it as done.

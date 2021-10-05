@@ -211,10 +211,10 @@ class ShortPixelPng2Jpg {
 
             $params['success'] = true;
             $params['file'] = $uniqueFile;
-            Log::addDebug("Original_file should be PNG:" .  $imageObj->getFullPath());
             $params['old_url'] = $url;
             $params['new_url'] = $newUrl;
 
+						Log::addDebug('PNG2jPG Converted', $params);
         }
         do_action('shortpixel/image/convertpng2jpg_after', $imageObj, $params);
         return $params;
@@ -241,9 +241,7 @@ class ShortPixelPng2Jpg {
       }
 
       return $file;
-
     }
-
 
 
     /**
@@ -297,14 +295,20 @@ class ShortPixelPng2Jpg {
         return $params;
     }
 
+		public function restorePng2Jpg(ImageModel $imageObj)
+		{
+					$params = array('restore' => true);
+					$this->updateMetaData($params, $imageObj);
+
+		}
+
     protected function updateMetaData($params, ImageModel $imageObj)
     {
-        if (! $params['success'])
+        if (! $params['success'] && ! $params['restore'])
           return false;
 
         $newFile = $params['file'];
         $attach_id = $imageObj->get('id');
-
 
         // Update attached_file
         $bool = update_attached_file($attach_id, $newFile->getFullPath() );
@@ -312,7 +316,10 @@ class ShortPixelPng2Jpg {
           return false;
 
         // Update post mime on attachment
-        $post_ar = array('ID' => $attach_id, 'post_mime_type' => 'image/jpeg');
+				if ($params['success'])
+        	$post_ar = array('ID' => $attach_id, 'post_mime_type' => 'image/jpeg');
+				elseif ($params['restore'])
+					$post_ar = array('ID' => $attach_id, 'post_mime_type' => 'image/png');
 
         $result = wp_update_post($post_ar);
         if ($result === 0 || is_wp_error($result))
@@ -325,13 +332,11 @@ class ShortPixelPng2Jpg {
 
 
         Log::addDebug('Png2Jpg New Metadata', $new_metadata);
-				wp_update_post(array('ID' => $ID, 'post_mime_type' => 'image/jpeg' ));
+		//		wp_update_post(array('ID' => $attach_id, 'post_mime_type' => 'image/jpeg' ));
         wp_update_attachment_metadata($attach_id, $new_metadata);
         return true;
 
     }
-
-
 
     /**
      * taken from Velvet Blues Update URLs plugin
