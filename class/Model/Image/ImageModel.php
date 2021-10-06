@@ -31,7 +31,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     const COMPRESSION_LOSSY = 1;
     const COMPRESSION_GLOSSY = 2;
 
-    // Extension that we process
+    // Extension that we process .
     const PROCESSABLE_EXTENSIONS = array('jpg', 'jpeg', 'gif', 'png', 'pdf');
 
     //
@@ -489,7 +489,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     public function handleOptimizedFileType($downloadResults)
     {
           $webpFile = $this->getFileBase() . '.webp';
-          Log::addTemp('Checking Webp as ' . $webpFile);
+
           if (isset($downloadResults[$webpFile]) && isset($downloadResults[$webpFile]->file)) // check if there is webp with same filename
           {
              $webpResult = $this->handleWebp($downloadResults[$webpFile]->file);
@@ -500,7 +500,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
           }
 
           $avifFile = $this->getFileBase() . '.avif';
-          Log::addTemp('Checking Avif as ' . $avifFile);
+
           if (isset($downloadResults[$avifFile]) && isset($downloadResults[$avifFile]->file)) // check if there is webp with same filename
           {
              $avifResult = $this->handleAvif($downloadResults[$avifFile]->file);
@@ -565,7 +565,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         if (! $bool)
         {
           ResponseController::add()->withMessage(__('Moving Backupfile failed' , 'shortpixel-image-optimiser'));
-          Log::addTemp('moving file failed');
         }
         return $bool;
     }
@@ -601,14 +600,12 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
          $fs = \wpSPIO()->filesystem();
             $target = $fs->getFile( (string) $this->getFileDir() . $this->getFileBase() . '.webp');
 
-						Log::addTemp('DOUBLE2EBP' . SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION);
             // only copy when this constant is set.
             if( (defined('SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION') && SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION) == true ) {
-								Log::addTemp('double extension need detected');
                  $target = $fs->getFile((string) $this->getFileDir() . $this->getFileName() . '.webp'); // double extension, if exists.
 
             }
-            Log::addTemp('handle Webp for ' . $this->getFullPath() . ' Source : ' . $tempFile->getFullpath() . ' Target ' . $target->getFullPath() );
+
 
             $result = false;
 
@@ -630,8 +627,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     {
          $fs = \wpSPIO()->filesystem();
             $target = $fs->getFile( (string) $this->getFileDir() . $this->getFileBase() . '.avif');
-
-            Log::addTemp('handle Avif for ' . $this->getFullPath() . ' Source : ' . $tempFile->getFullpath() . ' Target ' . $target->getFullPath() );
 
             $result = $tempFile->copy($target);
             if (! $result)
@@ -665,7 +660,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     protected function isExtensionExcluded()
     {
 
-        if (in_array($this->getExtension(), self::PROCESSABLE_EXTENSIONS))
+        if (in_array( strtolower($this->getExtension()) , self::PROCESSABLE_EXTENSIONS))
         {
             return false;
         }

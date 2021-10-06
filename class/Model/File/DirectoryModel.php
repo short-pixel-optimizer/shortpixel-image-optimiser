@@ -339,7 +339,7 @@ class DirectoryModel extends \ShortPixel\Model
 				{
 						// If any in included is true, filter is good for us.
 					 $filter = false;
-           if (strpos($file->getRawFullPath(), $inc) !== false)
+           if (strpos( strtolower($file->getRawFullPath()), strtolower($inc) ) !== false)
 					 {
              $filter = true;
 						 break;
@@ -356,7 +356,7 @@ class DirectoryModel extends \ShortPixel\Model
      {
         foreach($args['exclude_files'] as $ex)
         {
-           if (strpos($file->getRawFullPath(), $ex) !== false)
+           if (strpos( strtolower($file->getRawFullPath()), strtolower($ex) ) !== false)
              $filter = false;
         }
      }

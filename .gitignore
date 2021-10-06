@@ -15,6 +15,5 @@ composer.lock
 /bin/.
 /composer.phar
 .env.local
-/build/
 /wordpress/
 /travis_output/

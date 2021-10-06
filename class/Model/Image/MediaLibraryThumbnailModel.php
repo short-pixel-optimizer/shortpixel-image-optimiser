@@ -155,7 +155,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
   protected function preventNextTry($reason = '')
   {
-      Log::addTemp('Thumb : preventNextTry ' . $reason);
       $this->prevent_next_try = $reason;
   }
 
@@ -266,7 +265,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
     $this->directory = null; //reset directory
     $this->is_virtual = false; // stops being virtual
     $this->setFileInfo();
-    Log::addTemp('Debug Translated File Info -- ' . $this->getFullPath() .  ' ' . $this->getFileDir());
 
   }
 

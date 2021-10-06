@@ -299,7 +299,6 @@ class StatsModel
        $sql .= ' AND post_id IN ( SELECT post_id FROM ' . $wpdb->postmeta . ' WHERE meta_key = "_shortpixel_optimized")';
      }
 
-Log::addTemp("Statsmodel, countMed", $sql);
      $results = $wpdb->get_results($sql);
      $thumbCount = 0;
 
@@ -334,7 +333,6 @@ Log::addTemp("Statsmodel, countMed", $sql);
 
      $sql .= " AND post_id NOT IN ( SELECT post_id FROM " . $wpdb->postmeta . " where meta_key = '_shortpixel_prevent_optimize' )";  // exclude 'crashed items'
 
-     Log::addTemp('countMediaItems', $sql);
       $count = $wpdb->get_var($sql);
       return $count;
   }
@@ -356,7 +354,7 @@ Log::addTemp("Statsmodel, countMed", $sql);
      $sql = $wpdb->prepare($sql, $date->getTimeStamp(), $dateUntil->getTimeStamp() );
 
      $count = $wpdb->get_var($sql);
-     Log::addTemp('CountMonth SQL' . $count, $sql);
+
      return $count;
   }
 

@@ -387,7 +387,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           $result = $thumbnail->handleOptimized($tempFiles);
          }
 
-         Log::addTemp('Thumbnail, result', array($result,$thumbnail->get('prevent_next_try')));
          if ($result)
          {
             $optimized[$filebase]  = $thumbnail->getMetaObj();
@@ -641,7 +640,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
       if ($this->isScaled())
       {
-        Log::addTemp('SaveMeta CreateSave Original File', $this->original_file);
         $metadata->original_file = $this->original_file->toClass();
       }
 
@@ -664,7 +662,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   /** Delete the Shortpixel Meta. */
   public function deleteMeta()
   {
-     Log::addTemp('Deleting ShortPixel Meta ' . $this->id);
      $bool = delete_post_meta($this->id, '_shortpixel_meta');
      if (! $bool)
       Log::addWarn('Delete Post Meta failed');
@@ -817,7 +814,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         $this->setMeta('did_png2jpg', true);
 
         $mainfile = \wpSPIO()->filesystem()->getfile($this->getFileDir() . $this->getFileBase() . '.jpg');
-        Log::addTemp('Removing old files' . $this->getFullPath());
 
         if ($mainfile->exists()) // if new exists, remove old
         {
@@ -837,7 +833,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
             $thumbObj->setMeta('did_png2jpg', true);
             if ($file->exists()) // if new exists, remove old
             {
-              Log::addTemp('Removing Thumb: ' . $thumbObj->getFullPath() );
                 $thumbObj->delete(); // remove the old file.
                 $thumbObj->fullpath = $file->getFullPath();
                 $thumbObj->resetStatus();
@@ -853,7 +848,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
             if ($file->exists()) // if new exists, remove old
             {
-              	Log::addTemp('Removing Original File: ' . $originalFile->getFullPath() );
                 $originalFile->delete(); // remove the old file.
                 $originalFile->fullpath = $file->getFullPath();
                 $originalFile->resetStatus();
@@ -911,7 +905,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
               //  $thumbObj->setFileInfo();
                 //$thumbObj->create(); // empty placeholder file.
 
-                Log::addTemp('Restoring thumbnail png : ' . $thumbObj->fullpath);
 								$thumbObj->setMeta('did_png2jpg', false);
 								$thumbObj->setMeta('status', 0);
 								$restored[$filebase] = true; // done, just reset.
@@ -936,15 +929,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           //   $originalFile->setFileInfo();
           //   $originalFile->create(); // empty placeholder file.
 
-             Log::addTemp('Restoring original png : ' . $originalFile->fullpath);
 
         //   }
 
     }
 
 		// Fullpath now will still be .jpg
-		Log::addTemp('Before Restore, fullpath' . $this->getFullPath() );
-		Log::addTemp('backup file', $this->getBackupFile());
+
 		$pngConvert = new ShortPixelPng2Jpg();
 
 		$pngConvert->restorePng2Jpg($this);
@@ -1110,7 +1101,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
   public function resetPrevent()
   {
-      Log::addTemp('Reset Preventor');
       delete_post_meta($this->id, '_shortpixel_prevent_optimize');
   }
 
@@ -1137,7 +1127,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
     if (! $bool)
     {
-       Log::addTemp('Restoring main file failed ' . $this->getFullPath());
        $cleanRestore = false;
     }
 
@@ -1182,7 +1171,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
         if ($cleanRestore)
         {
-            Log::addTemp('Restore clean : Deleting metadata');
             $this->deleteMeta();
         }
         else
@@ -1225,8 +1213,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        $fullpath = $originalFile->getFullPath();
     }
     $res = \wp_create_image_subsizes($fullpath, $this->id);
-    Log::addTemp('result', $res);
-    Log::addTemp('dir' . (string) $this->getFileDir(), \scandir($this->getFileDir()));
 
     remove_filter('as3cf_wait_for_generate_attachment_metadata', array($this, 'returnTrue'));
 
@@ -1430,7 +1416,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
               $retinas[$index] = $retinaObj;
            }
            $this->retinas = $retinas;
-           Log::addTemp('Retinas', $retinas);
            if ($count !== count($retinas))
            {
               Log::addWarning("Conversion: $count retinas expected in legacy, " . count($retinas) . 'found', $retinas);
@@ -1607,7 +1592,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
             $thumbObj->setMeta('file', $thumbObj->getFileName() );
             $this->thumbnails[$unName] = $thumbObj;
             $added = true;
-            Log::addTemp('Unlisted Thumb: ', $thumbObj);
           }
           else
           {

@@ -385,7 +385,6 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
        );
 
 
-      // Log::addTemp('Save Custom Meta', $data);
       $is_new = false;
 
        if ($this->in_db)

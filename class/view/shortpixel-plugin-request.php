@@ -211,8 +211,6 @@ class ShortPixelPluginRequest {
             'user-agent'  => 'MT/EPSILON-CUSTOMER-TRACKING/' . esc_url( home_url() )
         ) );
 
-				Log::addTemp('Request Data', $this->data);
-				Log::addTemp('Request Send: ', $request);
 
         if ( is_wp_error( $request ) ) {
             return false;

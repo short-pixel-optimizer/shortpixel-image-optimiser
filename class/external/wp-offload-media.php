@@ -149,7 +149,6 @@ class wpOffload
 
       // If there are excluded sizes, there are not in backups. might not be left on remote, or ( if delete ) on server, so just generate the images and move them.
 
-      Log::addTemp('Create subsizes for ' . $id . ' : ' . $mediaItem->getFullPath() );
       $mediaItem->wpCreateImageSizes();
 
       $this->remove_remote($id);
@@ -397,7 +396,6 @@ echo "<PRE>"; var_dump($item->key(wp_basename($original_url))); echo "</PRE>";
     {
       $paths = $this->getWebpPaths($paths, false);
     //  Log::addDebug('Remove S3 Paths', array($paths));
-    Log::addTemp('as3cf_remove_attachment_paths via remove_webp_path', $paths);
 
       return $paths;
     }
