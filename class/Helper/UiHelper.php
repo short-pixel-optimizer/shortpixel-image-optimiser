@@ -430,8 +430,17 @@ class UiHelper
   public static function formatTS($ts)
   {
       //$format = get_option('date_format') .' @ ' . date_i18n(get_option('time_format');
-      $date = wp_date(get_option('date_format'), $ts);
-      $date .= ' @ ' . wp_date(get_option('time_format'), $ts);
+			if (function_exists('wp_date'))
+			{
+      	$date = wp_date(get_option('date_format'), $ts);
+				$date .= ' @ ' . wp_date(get_option('time_format'), $ts);
+			}
+			else
+			{
+      	$date = date_i18n(get_option('date_format'), $ts);
+				$date .= ' @ ' . date_i18n(get_option('time_format'), $ts);
+
+			}
       return $date;
   }
 
