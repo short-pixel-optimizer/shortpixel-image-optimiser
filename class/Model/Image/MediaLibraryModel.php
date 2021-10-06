@@ -871,9 +871,20 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 	protected function restorePNG2JPG()
 	{
-    if ($this->getMeta('did_png2jpg'))
-    {
-        $backupFile = $this->getBackupFile(); //$fs->getFile($this->getBackupDirectory() . $this->getFileBase() . '.png'); // check backup.
+			$fs = \wpSPIO()->filesystem();
+
+			// ImageModel restore, restored png file to .jpg file ( due to $this)
+		 	$pngFile = $fs->getFile($this->getFileDir() . $this->getFileBase() . '.png');
+
+			if (! $pngFile->exists())
+			{
+					 $this->move($pngFile);
+				//	 $this->fullpath = $pngFile->getFullPath();
+				//	 $this->resetStatus();
+				//	 $this->setFileInfo();
+			}
+
+      /*  $backupFile = $this->getBackupFile(); //$fs->getFile($this->getBackupDirectory() . $this->getFileBase() . '.png'); // check backup.
 
         if ($backupFile->exists())
         {
@@ -886,8 +897,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				//	$post_ar = array('ID' => $this->get('id'), 'post_mime_type' => 'image/jpeg');
 
         }
+*/
 
-    }
     foreach($this->thumbnails as $thumbObj)
     {
 							// Thumbnails with conversion don't have a backup.
@@ -931,9 +942,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
     }
 
-		// TODO MONDAY
+		// Fullpath now will still be .jpg
+		Log::addTemp('Before Restore, fullpath' . $this->getFullPath() );
+		Log::addTemp('backup file', $this->getBackupFile());
 		$pngConvert = new ShortPixelPng2Jpg();
-		$pngConvert->restorePng2Jpg($params, $this);
+
+		$pngConvert->restorePng2Jpg($this);
 	}
 
 

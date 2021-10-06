@@ -7,6 +7,9 @@
  use ShortPixel\Model\File\DirectoryModel as DirectoryModel;
  use ShortPixel\Model\File\FileModel as FileModel;
 
+ use ShortPixel\Replacer\Replacer as Replacer;
+use ShortPixel\Notices\NoticeController as Notices;
+
  //use ShortPixel\Model\FileModel as FileModel;
  //use ShortPixel\Model\Directorymodel as DirectoryModel;
 
@@ -14,7 +17,7 @@
 class ShortPixelPng2Jpg {
 
     private $current_image;
-
+		private $replacer;
 
     public function __construct()
     {
@@ -24,6 +27,8 @@ class ShortPixelPng2Jpg {
     public function convert(ImageModel $imageObj)
     {
          $settings = \wpSPIO()->settings();
+				 $fs = \wpSPIO()->filesystem();
+
          // check for possible conversion. From system heaviest to lowest.
          if ($settings->png2jpg == 0) // conversion is off
           return false;
@@ -40,22 +45,48 @@ class ShortPixelPng2Jpg {
           if ($this->isTransparent($imageObj) && $settings->png2jpg < 2) // 2 means force conversion for transparent images.
              return false;
 
+					$this->replacer = new Replacer();
+
+					$this->replacer->setSource($fs->pathToUrl($imageObj));
+					if ($imageObj->get('type') == 'media')
+					{
+						 $this->replacer->setSourceMeta($imageObj->getWPMetaData());
+					}
+
+
           // Returns an Array with success or not, new file name.
-          $result = self::doConvertPng2Jpg($imageObj);
+          $result = $this->doConvertPng2Jpg($imageObj);
           if ($result !== false && is_array($result))
           {
+
              if ($result['success'])
              {
             //   $imageObj =  new MediaLibraryModel($imageObj->get('id'), $imageObj->getFullPath() ); //$fs->getMediaItem($imageObj->set('id'));
+							 $this->replacer->setTarget($result['target_url']);
 
-               $bool = $this->updateMetaData($result, $imageObj);
-               if (! $bool)
+               $res = $this->updateMetaData($result, $imageObj);
+               if ($res === false)
+							 {
                  Log::addWarn('Png2Jpg Update Metadata failed');
+							 }
+							 else
+							 {
+					 				$this->replacer->setTargetMeta($res);
 
+							 }
                $file = $result['file'];
 
              }
           }
+
+				// All is done, run the replacer.
+				$result = $this->replacer->replace();
+
+				if (is_array($result))
+				{
+					 foreach($result as $error)
+					 	  Notices::addError($error);
+				}
 
         //  return $imageObj;
         return true;
@@ -208,11 +239,10 @@ class ShortPixelPng2Jpg {
                 return false;
             }
 
-
             $params['success'] = true;
             $params['file'] = $uniqueFile;
-            $params['old_url'] = $url;
-            $params['new_url'] = $newUrl;
+        //    $params['old_url'] = $url;
+            $params['target_url'] = $newUrl;
 
 						Log::addDebug('PNG2jPG Converted', $params);
         }
@@ -263,43 +293,62 @@ class ShortPixelPng2Jpg {
         if(!$settings->png2jpg || $imageObj->getExtension() !== '.png') {
             return $params;
         }
-        //if($this->isExcluded($params)) { return $params; }
 
-    //    $image = $params['file'];
         Log::addDebug("Convert Media PNG to JPG on upload: {$image}");
 
-        if($settings->png2jpg == 2) {
-            $doConvert = true;
-        } else {
-            $ret = $this->canConvertPng2Jpg($image);
-            $doConvert =  $ret['notTransparent'];
-        }
-        if ($doConvert) {
-            $ret = $this->doConvertPng2Jpg($params, $settings->backupImages, false, isset($ret['img']) ? $ret['img'] : false);
-            if($ret->unlink) @unlink($ret->unlink);
-            $paramsC = $ret->params;
-            if($paramsC['type'] == 'image/jpeg') {
-                // we don't have metadata, so save the information in a temporary map
-                $conv = $settings->convertedPng2Jpg;
-                //do a cleanup first
-                foreach($conv as $key => $val) {
-                    if(time() - $val['timestamp'] > 3600) unset($conv[$key]);
-                }
-                $conv[$paramsC['file']] = array('pngFile' => $paramsC['original_file'], 'backup' => $settings->backupImages,
-                    'optimizationPercent' => round(100.0 * (1.00 - $paramsC['jpg_size'] / $paramsC['png_size'])),
-                    'timestamp' => time());
-                $settings->convertedPng2Jpg = $conv;
+        $ret = $this->doConvertPng2Jpg($params, $settings->backupImages, false, isset($ret['img']) ? $ret['img'] : false);
+        if($ret->unlink) @unlink($ret->unlink);
+        $paramsC = $ret->params;
+        if($paramsC['type'] == 'image/jpeg') {
+            // we don't have metadata, so save the information in a temporary map
+            $conv = $settings->convertedPng2Jpg;
+            //do a cleanup first
+            foreach($conv as $key => $val) {
+                if(time() - $val['timestamp'] > 3600) unset($conv[$key]);
             }
-            return $paramsC;
+            $conv[$paramsC['file']] = array('pngFile' => $paramsC['original_file'], 'backup' => $settings->backupImages,
+                'optimizationPercent' => round(100.0 * (1.00 - $paramsC['jpg_size'] / $paramsC['png_size'])),
+                'timestamp' => time());
+            $settings->convertedPng2Jpg = $conv;
         }
-        return $params;
+        return $paramsC;
+
+      //  return $params;
     }
+
 
 		public function restorePng2Jpg(ImageModel $imageObj)
 		{
 					$params = array('restore' => true);
-					$this->updateMetaData($params, $imageObj);
+					$fs = \wpSPIO()->filesystem();
 
+					$url = $fs->pathToUrl($imageObj);
+
+					$this->replacer = new Replacer();
+					$this->replacer->setSource($url);
+
+					if ($imageObj->get('type') == 'media')
+					{
+						 $this->replacer->setSourceMeta($imageObj->getWPMetaData());
+					}
+
+					// @todo Combine this script with the one at doConvertPng2Jpg into a function. Perhaps.
+					$newFileName = $imageObj->getFileBase() . '.png';
+					$fsNewFile = $fs->getFile($imageObj->getFileDir() . $newFileName);
+        //	$uniqueFile = $this->unique_file( $imageObj->getFileDir(), $fsNewFile);
+        //	$newPath =  $uniqueFile->getFullPath(); //(string) $fsFile->getFileDir() . $uniquepath;
+        	$newUrl = str_replace($imageObj->getFileName(), $fsNewFile->getFileName(), $url);
+
+					$params['file'] = $fsNewFile;
+
+					$result = $this->updateMetaData($params, $imageObj);
+
+					if ($result !== false)
+					{
+					 	$this->replacer->setTarget($newUrl);
+						$this->replacer->setTargetMeta($result);
+						$this->replacer->replace();
+				 	}
 		}
 
     protected function updateMetaData($params, ImageModel $imageObj)
@@ -316,165 +365,31 @@ class ShortPixelPng2Jpg {
           return false;
 
         // Update post mime on attachment
-				if ($params['success'])
+				if (isset($params['success']))
         	$post_ar = array('ID' => $attach_id, 'post_mime_type' => 'image/jpeg');
-				elseif ($params['restore'])
+				elseif ( isset($params['restore']) )
 					$post_ar = array('ID' => $attach_id, 'post_mime_type' => 'image/png');
 
         $result = wp_update_post($post_ar);
         if ($result === 0 || is_wp_error($result))
+				{
+				  Log::addError('Issue updating WP Post png2jpg - ' . $attach_id);
           return false;
+				}
 
         $metadata = wp_get_attachment_metadata($attach_id);
 
         $new_metadata = wp_generate_attachment_metadata($attach_id, $newFile->getFullPath());
-        $new_metadata = array_merge($metadata, $new_metadata); // merge to preserve other custom metadata
 
+        $new_metadata = array_merge($metadata, $new_metadata); // merge to preserve other custom metadata
 
         Log::addDebug('Png2Jpg New Metadata', $new_metadata);
 		//		wp_update_post(array('ID' => $attach_id, 'post_mime_type' => 'image/jpeg' ));
         wp_update_attachment_metadata($attach_id, $new_metadata);
-        return true;
+        return $new_metadata;
 
     }
 
-    /**
-     * taken from Velvet Blues Update URLs plugin
-     * @param $options
-     * @param $oldurl
-     * @param $newurl
-     * @return array
-     */
-    public static function png2JpgUpdateUrls($options, $map){
-        global $wpdb;
-        Log::addDebug("PNG2JPG update URLS " . json_encode($map));
-        $results = array();
-        $queries = array(
-            'content' =>		array("UPDATE $wpdb->posts SET post_content = replace(post_content, %s, %s)",  __('Content Items (Posts, Pages, Custom Post Types, Revisions)','shortpixel-image-optimiser') ),
-            'excerpts' =>		array("UPDATE $wpdb->posts SET post_excerpt = replace(post_excerpt, %s, %s)", __('Excerpts','shortpixel-image-optimiser') ),
-            'attachments' =>	array("UPDATE $wpdb->posts SET guid = replace(guid, %s, %s) WHERE post_type = 'attachment'",  __('Attachments','shortpixel-image-optimiser') ),
-            'links' =>			array("UPDATE $wpdb->links SET link_url = replace(link_url, %s, %s)", __('Links','shortpixel-image-optimiser') ),
-            'custom' =>			array("UPDATE $wpdb->postmeta SET meta_value = replace(meta_value, %s, %s)",  __('Custom Fields','shortpixel-image-optimiser') ),
-            'guids' =>			array("UPDATE $wpdb->posts SET guid = replace(guid, %s, %s)",  __('GUIDs','shortpixel-image-optimiser') )
-        );
-        if(count($options) == 0) {
-            $options = array_keys($queries);
-        }
-        $startTime = microtime(true);
-        foreach($options as $option){
-            if( $option == 'custom' ){
-                $n = 0;
-								//@todo This probably crashes
-                $page_size = WpShortPixelMediaLbraryAdapter::getOptimalChunkSize('postmeta');
-
-                for( $page = 0; $items = $wpdb->get_results("SELECT * FROM $wpdb->postmeta LIMIT " . ($page * $page_size) . ", $page_size"); $page++ ) {
-                    foreach( $items as $item ) {
-                        $value = $item->meta_value;
-                        if( trim($value) == '' || $item->meta_key == '_wp_attached_file' || $item->meta_key == '_wp_attachment_metadata') {
-                            continue;
-                        }
-
-                        $edited = (object)array('data' => $value, 'replaced' => false);
-                        foreach($map as $oldurl => $newurl) {
-                            if (strlen($newurl)) {
-                                $editedOne = self::png2JpgUnserializeReplace($oldurl, $newurl, $edited->data);
-                                $edited->data = $editedOne->data;
-                                $edited->replaced = $edited->replaced || $editedOne->replaced;
-                            }
-                        }
-                        if( $edited->replaced ){
-                            $fix = $wpdb->query("UPDATE $wpdb->postmeta SET meta_value = '".$edited->data."' WHERE meta_id = ".$item->meta_id );
-                            if( $fix )
-                                $n++;
-                        }
-                    }
-                    //check time. This loop could take long because it's scanning all the postmeta table which in some cases becomes huge...
-                    $timeElapsed = microtime(true) - $startTime;
-                    if($timeElapsed > SHORTPIXEL_MAX_EXECUTION_TIME / 2) {
-                        //try to add some time or get out if not
-                        if(\wpSPIO()->env()->is_function_usable('set_time_limit') && set_time_limit(SHORTPIXEL_MAX_EXECUTION_TIME)) {
-                            $startTime += SHORTPIXEL_MAX_EXECUTION_TIME / 2;
-                        } else {
-                            break;
-                        }
-                    }
-                }
-                $results[$option] = array($n, $queries[$option][1]);
-            }
-            else {
-                foreach($map as $oldurl => $newurl) {
-                    if(strlen($newurl)) {
-                        $result = $wpdb->query( $wpdb->prepare( $queries[$option][0], $oldurl, $newurl) );
-                        $results[$option] = array($result, $queries[$option][1]);
-                    }
-                }
-            }
-        }
-        return $results;
-    }
-
-    public static function removeUrlProtocol($url) {
-        return preg_replace("/^http[s]{0,1}:\/\//", "", $url);
-    }
-
-    /**
-     * taken from Velvet Blues Update URLs plugin
-     * @param string $from
-     * @param string $to
-     * @param string $data
-     * @param bool|false $serialised
-     * @return array|mixed|string
-     */
-    public static function png2JpgUnserializeReplace( $from = '', $to = '', $data = '', $serialised = false ) {
-        $replaced = false;
-        try {
-            if ( false !== is_serialized( $data ) ) {
-
-                if(false === strpos($data, wp_basename($from))) {
-                    return (object)array('data' => $data, 'replaced' => false); //quick pre-screening
-                }
-
-                $unserialized = unserialize( $data );
-                $ret = self::png2JpgUnserializeReplace( $from, $to, $unserialized, true );
-                $data = $ret->data;
-                $replaced = $replaced || $ret->replaced;
-            }
-            elseif ( is_array( $data ) ) {
-                $_tmp = array( );
-                foreach ( $data as $key => $value ) {
-                    $ret = self::png2JpgUnserializeReplace( $from, $to, $value, false );
-                    $_tmp[ $key ] = $ret->data;
-                    $replaced = $replaced || $ret->replaced;
-                }
-                $data = $_tmp;
-                unset( $_tmp );
-            }
-            elseif(is_object( $data )) {
-                foreach(get_object_vars($data) as $key => $value) {
-                    $ret = self::png2JpgUnserializeReplace( $from, $to, $value, false );
-                    $_tmp[ $key ] = $ret->data;
-                    $replaced = $replaced || $ret->replaced;
-                }
-                $data = (object)$_tmp;
-            }
-            elseif ( is_string( $data )) {
-                if(false !== strpos($data, $from)) {
-                    $replaced = true;
-                    $data = str_replace( $from, $to, $data );
-                } elseif(   strlen($from) > strlen($data) //data is shorter than the url to be replaced - could be a relative path?
-                         && strlen($data) >= strlen(wp_basename($from)) //but should at least contain the file name
-                         && strpos($from, $data) == strlen($from) - strlen($data)) {
-                    $replaced = true;
-                    $data = substr($to, strlen($from) - strlen($data));
-                }
-            }
-            if ( $serialised ) {
-                return (object)array('data' => serialize($data), 'replaced' => $replaced);
-            }
-        } catch( Exception $error ) {
-        }
-        return (object)array('data' => $data, 'replaced' => $replaced);
-    }
 
     // Try to increase limits when doing heavy processing
     private function raiseMemoryLimit()

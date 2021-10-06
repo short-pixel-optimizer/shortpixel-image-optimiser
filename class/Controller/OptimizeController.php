@@ -297,6 +297,11 @@ class OptimizeController
            $qtype = strtolower($qtype);
 
            $imageObj = $fs->getImage($item->item_id, $qtype);
+
+					 if ($imageObj === false) // not exist error.
+					 {
+					 	 return $this->handleAPIResult($item, $q);
+					 }
            switch($item->action)
            {
               case 'restore';
@@ -326,6 +331,11 @@ class OptimizeController
 
       $imageObj = $fs->getMediaImage($item->item_id);
 
+			 if ($imageObj === false) // not exist error.
+			 {
+			 	 return $this->handleAPIResult($item, $mediaQ);
+			 }
+
       $bool = $imageObj->convertPNG();
       if ($bool !== false) // It worked.
       {
@@ -354,6 +364,7 @@ class OptimizeController
       // If something is in the queue for long, but somebody decides to trash the file in the meanwhile.
       if ($imageItem === false)
       {
+				$item->result = new \stdClass;
         $item->result->message = __("File Error. File could not be loaded with this ID ", 'shortpixel-image-optimiser');
         $item->result->apiStatus = ApiController::STATUS_NOT_API;
         $item->fileStatus = ImageModel::FILE_STATUS_ERROR;

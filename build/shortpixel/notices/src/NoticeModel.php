@@ -144,7 +144,7 @@ class NoticeModel //extends ShortPixelModel
   public function getForDisplay()
   {
     $this->viewed = true;
-    $class = 'shortpixel shortpixel-notice  notice ';
+    $class = 'shortpixel shortpixel-notice notice';
 
     $icon = '';
 
@@ -255,8 +255,6 @@ class NoticeModel //extends ShortPixelModel
   private function getDismissJS()
   {
 
-//    $data = wp_json_encode(array('action' => $this->notice_action, 'plugin_action' => 'dismiss', 'nonce' => $nonce, 'id' => $this->id, 'time' => $this->suppress_period));
-
       $js = '';
       if (is_null(self::$jsDismissLoaded))
       {
@@ -282,25 +280,11 @@ class NoticeModel //extends ShortPixelModel
                             $(parent).remove();
                         })
                     });
-
           }";
       }
 
-  //  $data_string = "{action:'$this->notice_action'}";
       $js .=  ' jQuery("#' . $this->id . '").find(".notice-dismiss").on("click", shortpixel_notice_dismiss); ';
 
-
-  /*    $js = "jQuery(document).on('click','#$this->id button.notice-dismiss',
-         function(event) {
-           event.preventDefault()
-           var data = $data;
-           var url = $url;
-           jQuery.post(url, data);
-           var $el = jQuery(event.target.parent('.shortpixel-notice'));
-
-           $el.fadeTo(100, 0 function() { $el.slideUp(100, 0, function () { $el.remove() })});
-      }
-      );"; */
       return "\n jQuery(document).ready(function(){ \n" . $js . "\n});";
   }
 
