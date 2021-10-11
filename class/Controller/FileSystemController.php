@@ -134,6 +134,9 @@ Class FileSystemController extends \ShortPixel\Controller
         else
           $abspath = $wpContentAbs;
 
+				if (defined('UPLOADS')) // if this is set, lead.
+					$abspath = trailingslashit(ABSPATH) . UPLOADS;
+
         $abspath = apply_filters('shortpixel/filesystem/abspath', $abspath );
 
         return $this->getDirectory($abspath);
@@ -177,8 +180,16 @@ Class FileSystemController extends \ShortPixel\Controller
         if (strpos($url, $wp_home_path) !== false)
         {
           // This is SITE URL, for the same reason it should be home_url in FILEMODEL. The difference is when the site is running on a subdirectory
-          // ** This is a fix for a real-life issue, do not change if this causes issues, another fix is needed then. 
-          $home_url = trailingslashit(get_site_url());
+          // (1) ** This is a fix for a real-life issue, do not change if this causes issues, another fix is needed then.
+		  // (2) ** Also a real life fix when a path is /wwwroot/assets/sites/2/ etc, in get site url, the home URL is the site URL, without appending the sites stuff. Fails on original image.
+		    if ($this->env->is_multisite && ! $this->env->is_mainsite)
+			{
+				$wp_home_path = wp_normalize_path(trailingslashit($uploads['basedir']));
+				$home_url = trailingslashit($uploads['baseurl']);
+			}
+			else
+       	$home_url = trailingslashit(get_site_url()); // (1)
+
           $url = str_replace($wp_home_path, $home_url, $filepath);
         }
 

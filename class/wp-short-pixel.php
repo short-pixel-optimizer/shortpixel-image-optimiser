@@ -2105,9 +2105,10 @@ class WPShortPixel {
                     {
                         $bkOrigFile = $origFile->getBackUpFile();
                         if ($bkOrigFile && $bkOrigFile->exists())
-                          $bkOrigFile->move($origFile);
+                        {  $bkOrigFile->move($origFile);
 
-                        Log::addDebug('Restore result - Backup original file', array($bkOrigFile->getFullPath(), $origFile->getFullPath() ));
+                        	Log::addDebug('Restore result - Backup original file', array($bkOrigFile->getFullPath(), $origFile->getFullPath() ));
+												}
                     }
                     //$this->renameWithRetina($bkFile, $file);
                     if (! $bkFile->move($fsFile))
