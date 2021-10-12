@@ -57,6 +57,7 @@
   top: 10px;
   color: white;
   font-size: 26px;
+  cursor: pointer;
 }
 .shortpixel-bulk-wrapper .bulk-modal .title {
   margin: 0;
@@ -72,6 +73,23 @@
   padding: 12px;
   box-sizing: border-box;
   height: 90%;
+}
+.shortpixel-bulk-wrapper .bulk-modal .content .table-wrapper {
+  display: table;
+}
+.shortpixel-bulk-wrapper .bulk-modal .content .table-wrapper .heading {
+  font-weight: 700;
+}
+.shortpixel-bulk-wrapper .bulk-modal .content .table-wrapper .heading > span {
+  border-bottom: 1px solid #ccc;
+  border-left: 1px solid #ddd;
+}
+.shortpixel-bulk-wrapper .bulk-modal .content .table-wrapper > div {
+  display: table-row;
+}
+.shortpixel-bulk-wrapper .bulk-modal .content .table-wrapper > div > span {
+  display: table-cell;
+  padding: 4px 8px;
 }
 .shortpixel-bulk-wrapper .screen-wrapper {
   background: #fff;

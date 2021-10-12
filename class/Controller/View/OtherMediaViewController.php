@@ -151,7 +151,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 
              if (! $mediaItem->exists()) // remove image if it doesn't exist.
              {
-                $mediaItem->onDelete(); 
+                $mediaItem->onDelete();
 
                 $removed[] = $item->path;
                 unset($items[$index]);

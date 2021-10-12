@@ -271,7 +271,6 @@ class AjaxController
 
 
           return $json;
-        //  $this->send($json);
     }
 
     /* Integration for WP /LR Sync plugin  - https://meowapps.com/plugin/wplr-sync/
@@ -552,6 +551,7 @@ class AjaxController
 		{
 			 $logFile = $data['logFile'];
 			 $type = $data['type'];
+			 $date = UiHelper::formatTS($data['date']);
 
 			 if (is_null($logFile))
 			 {
@@ -584,13 +584,14 @@ class AjaxController
 					if (isset($cells[2]))
 					{
 						 $id = $cells[2]; // replaces the image id with a link to image.
-						 $cells[2] = admin_url('post.php?post=' . $id . '&action=edit');
+						 $cells[2] = admin_url('post.php?post=' . trim($id) . '&action=edit');
 				//		 unset($cells[3]);
 					}
 					$lines[$index] = (array) $cells;
 			 }
 			 $lines = array_values(array_filter($lines));
 			 array_unshift($lines, $headers);
+			 $json->$type->title = sprintf(__('Bulk ran on %s', 'shortpixel-image-optimiser'), $date);
 			 $json->$type->results = $lines;
 			 return $json;
 

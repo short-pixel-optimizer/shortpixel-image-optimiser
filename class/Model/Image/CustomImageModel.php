@@ -176,6 +176,11 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
        if ($bool)
 			 {
 				 $this->setMeta('status', ImageModel::FILE_STATUS_UNPROCESSED);
+				 $this->setMeta('compressed_size', 0);
+				 $this->setMeta('compression_type', null);
+				 $this->setMeta('backup', null);
+				 $this->setMeta('retries', 0);
+
         $this->saveMeta();
 			 }
 
@@ -238,7 +243,8 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
 
       $metaObj->compressedSize = intval($imagerow->compressed_size);
-      $metaObj->compressionType = intval($imagerow->compression_type);
+			// The null check is important, otherwise it will always optimize wrongly.
+      $metaObj->compressionType = (is_null($imagerow->compression_type)) ? null : intval($imagerow->compression_type);
 
       if (! is_numeric($imagerow->message) && ! is_null($imagerow->message))
         $metaObj->errorMessage = $imagerow->message;

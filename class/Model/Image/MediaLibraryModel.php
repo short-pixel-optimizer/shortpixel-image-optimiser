@@ -1169,6 +1169,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         foreach($avifs as $avifFile)
             $avifFile->delete();
 
+				// Any legacy will have false information by now; remove.
+				$this->removeLegacy();
+
         if ($cleanRestore)
         {
             $this->deleteMeta();
@@ -1186,6 +1189,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					foreach($duplicates as $duplicate_id)
 					{
 						 $this->id = $duplicate_id;
+						 $this->removeLegacy();
 						 if ($cleanRestore)
 						 {
 							 	$this->deleteMeta();
@@ -1224,6 +1228,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
      return true;
   }
 
+	// Check and remove legacy data.
+	// If metadata is removed in a restore process, the legacy data will be reimported, which should not happen.
 	private function removeLegacy()
 	{
 		$metadata = $this->wp_metadata;
@@ -1296,6 +1302,18 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        $this->image_meta->errorMessage = $error_message;
 
        $this->image_meta->did_keepExif = $exifkept;
+
+	      if ($this->hasBackup())
+	      {
+	        $backup = $this->getBackupFile();
+	        $this->image_meta->originalSize = $backup->getFileSize();
+	      }
+				elseif ( isset($metadata['ShortPixelImprovement']))
+				{
+					 // If the improvement is set, calculate back originalsize.
+					 $imp = $metadata['ShortPixelImprovement'];
+					 $this->image_meta->originalSize = ($this->fileSize() / (100 - $imp)) * 100;
+				}
 
        $webp = $this->getWebp();
        if ($webp)

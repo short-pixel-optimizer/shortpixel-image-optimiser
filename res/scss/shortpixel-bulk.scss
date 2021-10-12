@@ -64,6 +64,7 @@
 						 top: 10px;
 						 color: white;
 						 font-size: 26px;
+						 cursor: pointer;
 					}
 			 .title
 			 {
@@ -83,7 +84,17 @@
 				 padding: 12px;
 				 box-sizing: border-box;
 				 height: 90%;
-
+				 .table-wrapper {
+						display: table;
+						.heading { font-weight: 700;
+	 							> span { border-bottom: 1px solid #ccc; border-left: 1px solid #ddd; }
+					 }
+					 > div { display: table-row; }
+					 > div > span {
+						 	display: table-cell;
+							padding: 4px 8px;
+						}
+				 }
 			 }
 		}
 

@@ -52,9 +52,12 @@ namespace ShortPixel;
 	 <div id="LogModal" class="shortpixel-modal shortpixel-hide bulk-modal">
 		 <span class="close" data-action="CloseModal" data-id="LogModal">X</span>
 	 	  <div class='title'>
-		
+
 			</div>
 			<div class="content sptw-modal-spinner">
+				 <div class='table-wrapper'>
+
+				 </div>
 
 			</div>
 	 </div>

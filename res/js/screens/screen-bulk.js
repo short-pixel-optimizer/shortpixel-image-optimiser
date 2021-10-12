@@ -662,12 +662,17 @@ console.log("Screen Init Done", initMedia, initCustom);
 		modal = modalData[0];
 		title = modalData[1];
 		content = modalData[2];
+		wrapper = modalData[3];
 
 		modal.classList.remove('shortpixel-hide');
 		title.textContent = '';
-		content.innerHTML = ''; //empty
 
-		if (! content.classList.contains('sptw-modal-spinner')) 
+		if (wrapper !== null)
+			wrapper.innerHTML = '';
+		else
+			content.innerHTML = ''; //empty
+
+		if (! content.classList.contains('sptw-modal-spinner'))
 			content.classList.add('sptw-modal-spinner');
 
     window.addEventListener('shortpixel.showLogModal', this.ShowLogModal.bind(this), {'once': true});
@@ -677,6 +682,7 @@ console.log("Screen Init Done", initMedia, initCustom);
 	this.GetModal = function()
 	{
 			var modal = document.getElementById('LogModal');
+			var wrapper = null;
 			for (i = 0; i < modal.children.length; i++)
 			{
 				 if (modal.children[i].classList.contains('title'))
@@ -685,16 +691,20 @@ console.log("Screen Init Done", initMedia, initCustom);
 				 }
 				 else if (modal.children[i].classList.contains('content'))
 				 {
+					 if (modal.children[i].querySelector('.table-wrapper'))
+					 {
+						 	wrapper = modal.children[i].querySelector('.table-wrapper');
+					 }
 				   var content = modal.children[i];
-				 }
+
+				}
 			}
 
-			return [modal, title, content];
+			return [modal, title, content, wrapper];
 	}
 
 	this.ShowLogModal = function(event)
 	{
-	//		console.log(event);
 			var log = event.detail.log;
 
 			if (log.is_error == true)
@@ -703,19 +713,31 @@ console.log("Screen Init Done", initMedia, initCustom);
 				this.CloseModal();
 			}
 
+			var shade = document.getElementById('LogModal-Shade');
+			shade.style.display = 'block';
+			shade.addEventListener('click', this.CloseModal.bind(this), {'once': true});
+			if (shade)
+			{
+				// var node = shade.cloneNode(true);
+				// node.style.display = 'block';
+				 //node.id = 'LogModal-Shade-Active';
+				 //document.body.appendChild (node);
+			}
+
 			modalData = this.GetModal();
 			modal = modalData[0];
 			text = modalData[1];
 			content = modalData[2];
+			wrapper = modalData[3];
 
-			console.log(log.results);
-			//console.log(modal.children());
-
-			title.textContent = 'title - this needs loading';
+			title.textContent = log.title;
 
 			for (i = 0; i < log.results.length; i++)
 			{
-					var html = '<div>';
+				  if (i === 0)
+						var html = '<div class="heading">';
+					else
+						var html = '<div>';
 
 					if (i == 0)
 					{
@@ -727,16 +749,20 @@ console.log("Screen Init Done", initMedia, initCustom);
 					else if (log.results[i].length >= 3)
 					{
 						html += '<span>' + log.results[i][0] + '</span>';
-						html += '<span><a href="' + log.results[i][2] + '">' + log.results[i][1] + '</a>';
+						html += '<span><a href="' + log.results[i][2] + '" target="_blank">' + log.results[i][1] + '</a></span>';
 						html += '<span>' + log.results[i][3] + '</span>';
 					}
 
 					html += '</div>';
-					console.log(html);
-					content.innerHTML += html;
+
+					if (wrapper !== null)
+						wrapper.innerHTML += html;
+					else
+						content.innerHTML += html;
 
 					content.classList.remove('sptw-modal-spinner');
 			}
+
 	}
 
 	this.CloseModal = function(event)
@@ -744,6 +770,9 @@ console.log("Screen Init Done", initMedia, initCustom);
 		 event.preventDefault();
  		 var modal = document.getElementById('LogModal');
 		 modal.classList.add('shortpixel-hide');
+
+		 var shade = document.getElementById('LogModal-Shade');
+		 shade.style.display = 'none';
 	}
 
   //this.CheckSelectionScreen()  = function()
