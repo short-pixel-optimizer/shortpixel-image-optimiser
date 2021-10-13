@@ -12,6 +12,9 @@ var ShortPixelScreen = function (MainScreen, processor)
 
   this.debugCounter = 0;
 
+	this.averageOptimization = 0;
+	this.numOptimizations = 0;
+
   this.Init = function()
   {
     // Hook up the button and all.
@@ -83,6 +86,11 @@ var ShortPixelScreen = function (MainScreen, processor)
          this.processor.StopProcess({ waiting: true }); // don't go peeking in the queue. // this doesn't work since its' before the init Worker.
          this.SwitchPanel('dashboard');
       }
+
+			if (this.processor.isManualPaused)
+			{
+      		var event = new CustomEvent('shortpixel.processor.paused', { detail : {paused: 	this.processor.isManualPaused }});
+			}
 console.log("Screen Init Done", initMedia, initCustom);
 
   }
@@ -104,7 +112,8 @@ console.log("Screen Init Done", initMedia, initCustom);
 
       actions.forEach(function (action, index)
       {
-          action.addEventListener('click', function(event)
+				  var eventName = (action.getAttribute('data-event')) ? action.getAttribute('data-event') : 'click';
+          action.addEventListener(eventName, function(event)
           {
             var element = event.target;
             var actionName = element.getAttribute('data-action');
@@ -314,12 +323,39 @@ console.log("Screen Init Done", initMedia, initCustom);
                  }
               }
 
+							this.AddAverageOptimization(result.improvements.totalpercentage);
           }
       }
-
-
-
   }
+
+	this.AddAverageOptimization = function(num)
+	{
+			this.numOptimizations++;
+			this.averageOptimization += num;
+
+			var total = this.averageOptimization / this.numOptimizations;
+
+			var circle = document.querySelector('.opt-circle-average');
+
+			var total_circle = 289.027;
+			if( total  >0 ) {
+					total_circle = Math.round(total_circle-(total_circle * total /100));
+			}
+
+			for(i = 0; i < circle.children.length; i++)
+			{
+				 var child = circle.children[i];
+				 if (child.classList.contains('path'))
+				 {
+						child.style.strokeDashoffset = total_circle + 'px';
+				 }
+				 else if (child.classList.contains('text'))
+				 {
+						child.textContent = total.totalpercentage + '%';
+				 }
+			}
+
+	}
   this.DoSelection = function() // action to update response.
   {
       // @todo Check the future of this function, since checking this is now createBulk.
@@ -335,11 +371,11 @@ console.log("Screen Init Done", initMedia, initCustom);
       this.processor.AjaxRequest(data);
 
   }
-  this.UpdateMessage = function(id, message)
+/*  this.UpdateMessage = function(id, message)
   {
      console.log('UpdateMessage', id, message);
 
-  }
+  } */
   this.UpdateStats = function(stats, type)
   {
       this.UpdateData('stats', stats, type);
@@ -401,7 +437,7 @@ console.log("Screen Init Done", initMedia, initCustom);
                     }
                     if (presentation == 'append')
                     {
-                      element.innerText = element.innerText + '\n' + value;
+                      element.innerHTML = element.innerHTML + value;
                     }
                   }
                 }
@@ -414,14 +450,56 @@ console.log("Screen Init Done", initMedia, initCustom);
           });
       }
   }
+	/** HandleError is used for both general error and result errors. The latter have a result object embedded and more information */
   this.HandleError = function(result, type)
   {
     console.error(result);
+		var fatal = false;
+		var cssClass = '';
+
+		if (typeof result.result !== 'undefined')
+		{
+			 var item = result.result;
+			 var filename = (typeof item.filename !== 'undefined') ? item.filename : false;
+			 var message = '(' + result.item_id + ') ' + item.message;
+			 var fatal = (item.is_done == true) ? true : false;
+			 if (filename)
+			 {
+				  message += ' (' + filename + ') ';
+			 }
+
+		}
+		else
+		{
     var message = result.message + '(' + result.item_id + ')';
-    var data = {message: message};
-    this.UpdateData('error', data, type);
+
+		}
+
+		if (fatal)
+			 cssClass += ' fatal';
+		var data = {message: '<div class="'+ cssClass + '">' + message + '</div>'};
+		this.UpdateData('error', data, type);
 
   }
+
+	this.ToggleErrorBox = function(event)
+	{
+
+		 var type = event.target.getAttribute('data-errorbox');
+
+			//type.css.opacity = 1;
+			var errorbox = document.querySelector('.errorbox.' + type);
+			if (event.target.checked === true)
+			{
+			 	errorbox.style.opacity = 1;
+				errorbox.style.display = 'block';
+			}
+			else
+			{
+				errorbox.opacity = 0;
+				errorbox.style.display = 'none';
+			}
+	}
 
   this.StartBulk = function() // Open panel action
   {
@@ -454,7 +532,7 @@ console.log("Screen Init Done", initMedia, initCustom);
   }
   this.FinishBulk = function(event)
   {
-    console.log('Finishing');
+
     var data = {screen_action: 'finishBulk', callback: 'shortpixel.process.stop'}; //
     this.processor.AjaxRequest(data);
 

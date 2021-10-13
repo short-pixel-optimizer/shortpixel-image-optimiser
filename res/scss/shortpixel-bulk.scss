@@ -188,15 +188,22 @@
         .errorbox {
           display: block;
           transition: 1s all;
-          position: absolute;
+        //  position: absolute;
           opacity: 0;
+					display: none;
           right: 10px;
           top: 4px;
           padding: 8px;
           height: 100%;
           border: 1px solid #000;
-          z-index: -1;
+					width: 80%;
+					margin: 30px auto;
+      //    z-index: -1;
           background: rgba(255,255,255,0.9);
+					line-height: 22px;
+					max-height: 300px;
+					.fatal { color: #ff0000; }
+
         }
         .showerrorbox:hover ~ .errorbox, .errorbox:hover {
             //display: inline;
@@ -696,7 +703,7 @@
           margin-right: 15px;
           font-size: 14px;
         }
-        .opt-circle {
+        .opt-circle-average {
             width: 90px;
             height: 90px;
             float: right;

@@ -10,7 +10,7 @@ namespace ShortPixel;
       Shortpixel Bulk is finished
       <div class='average-optimization'>
           <p>Overal optimization</p>
-          <svg class="opt-circle" viewBox="-10 0 150 140">
+          <svg class="opt-circle-average" viewBox="-10 0 150 140">
                         <path class="trail" d="
                             M 50,50
                             m 0,-46
@@ -25,7 +25,7 @@ namespace ShortPixel;
                             a 46,46 0 1 1 0,-92
                             " stroke-width="16" fill-opacity="0" style="stroke-dasharray: 289.027px, 289.027px; stroke-dashoffset: 180px;">
                         </path>
-                        <text class="text" x="50" y="50">--</text>
+                        <text class="text" x="50" y="50"><?php _e('N/A', 'shortpixel-image-optimiser'); ?></text>
                     </svg>
 
       </div>
@@ -33,7 +33,7 @@ namespace ShortPixel;
 
     <?php $this->loadView('bulk/part-progressbar'); ?>
 
-    <div class='bulk-summary'>
+    <div class='bulk-summary' data-check-visibility data-control="data-check-media-total">
       <div class='heading'>
         <span><i class='dashicons dashicons-images-alt2'>&nbsp;</i> Media Library</span>
         <span>
@@ -55,7 +55,7 @@ namespace ShortPixel;
 
     </div>
 
-    <div class='bulk-summary'>
+    <div class='bulk-summary' data-check-visibility data-control="data-check-custom-total">
       <div class='heading'>
         <span><i class='dashicons dashicons-open-folder'>&nbsp;</i> Other Media</span>
         <span>

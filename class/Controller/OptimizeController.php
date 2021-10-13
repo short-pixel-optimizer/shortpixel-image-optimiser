@@ -194,7 +194,6 @@ class OptimizeController
 
     }
 
-
     // Processing Part
 
     // next tick of items to do.

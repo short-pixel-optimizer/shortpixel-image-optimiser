@@ -1,0 +1,110 @@
+{
+    "media": {
+        "status": null,
+        "result": null,
+        "results": [{
+            "compressionType": 0,
+            "flags": [],
+            "urls": ["http:\/\/shortpixel.weblogmechanic.com\/wp-content\/uploads\/2021\/10\/WUydTfaP3t4.jpg?ver=1634060249", "http:\/\/shortpixel.weblogmechanic.com\/wp-content\/uploads\/2021\/10\/WUydTfaP3t4-1024x683.jpg?ver=1634060249", "http:\/\/shortpixel.weblogmechanic.com\/wp-content\/uploads\/2021\/10\/WUydTfaP3t4-1000x288.jpg?ver=1634060249", "http:\/\/shortpixel.weblogmechanic.com\/wp-content\/uploads\/2021\/10\/WUydTfaP3t4-450x300.jpg?ver=1634060249"],
+            "counts": {
+                "creditCount": 4,
+                "baseCount": 4,
+                "avifCount": 0,
+                "webpCount": 0
+            },
+            "_queueItem": {},
+            "item_id": "2244",
+            "tries": "1",
+            "result": {
+                "apiStatus": 2,
+                "message": "Image WUydTfaP3t4.jpg optimized",
+                "is_error": false,
+                "is_done": true,
+                "filename": "WUydTfaP3t4.jpg",
+                "improvements": {
+                    "main": ["4.60", 7873],
+                    "thumbnails": {
+                        "large": ["4.86", 3526],
+                        "post-thumbnail": ["4.36", 2085],
+                        "large-feature": ["4.36", 2085],
+                        "small-feature": ["3.73", 701]
+                    },
+                    "totalpercentage": 56,
+                    "totalsize": 16270
+                },
+                "queuetype": "media",
+                "original": "http:\/\/shortpixel.weblogmechanic.com\/wp-content\/uploads\/ShortpixelBackups\/wp-content\/uploads\/2021\/10\/WUydTfaP3t4.jpg",
+                "optimized": "http:\/\/shortpixel.weblogmechanic.com\/wp-content\/uploads\/2021\/10\/WUydTfaP3t4.jpg"
+            },
+            "fileStatus": 2
+        }],
+        "message": "Fetched 1 items",
+        "qstatus": 1,
+        "stats": {
+            "is_preparing": false,
+            "is_running": true,
+            "is_finished": false,
+            "in_queue": 400,
+            "in_process": 32,
+            "errors": 6,
+            "fatal_errors": 0,
+            "done": 6,
+            "bulk_running": false,
+            "total": 1000,
+            "percentage_done": 666
+        }
+    },
+    "custom": {
+        "status": null,
+        "result": null,
+        "results": null,
+        "message": "Queue empty and done",
+        "qstatus": 10,
+        "stats": {
+            "is_preparing": false,
+            "is_running": false,
+            "is_finished": true,
+            "in_queue": 0,
+            "in_process": 0,
+            "errors": 0,
+            "fatal_errors": 0,
+            "done": 0,
+            "bulk_running": false,
+            "total": 3,
+            "percentage_done": 0,
+            "images": {
+                "images": 0,
+                "images_done": 0,
+                "images_inprocess": 0,
+                "images_webp": 0,
+                "images_avif": 0,
+                "images_basecount": 0
+            }
+        }
+    },
+    "total": {
+        "stats": {
+            "is_preparing": false,
+            "is_running": true,
+            "is_finished": true,
+            "in_queue": 0,
+            "in_process": 0,
+            "errors": 0,
+            "fatal_errors": 0,
+            "done": 1,
+            "bulk_running": false,
+            "total": 1,
+            "percentage_done": 100,
+            "images": {
+                "images": 0,
+                "images_done": 0,
+                "images_inprocess": 0,
+                "images_webp": 0,
+                "images_avif": 0,
+                "images_basecount": 0
+            }
+        }
+    },
+    "responses": [],
+    "processorKey": "shortpixel-test"
+}

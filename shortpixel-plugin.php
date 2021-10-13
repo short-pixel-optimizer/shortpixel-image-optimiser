@@ -317,7 +317,7 @@ class ShortPixelPlugin
 
     // screen translations. Can all be loaded on the same var, since only one screen can be active.
     wp_localize_script('shortpixel-screen-bulk', 'shortPixelScreen', array(
-        'endBulk' => __('This will stop the bulk processing and return to the start. Do you want o to do this?', 'shortpixel-image-optimiser')
+        'endBulk' => __('This will stop the bulk processing and return to the start. Do you want o to do this?', 'shortpixel-image-optimiser'),
     ));
 
     wp_register_script('shortpixel', plugins_url('/res/js/shortpixel.js',SHORTPIXEL_PLUGIN_FILE), array('jquery', 'jquery.knob.min.js'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);

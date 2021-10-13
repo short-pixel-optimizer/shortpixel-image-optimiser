@@ -168,15 +168,21 @@
 .shortpixel-bulk-wrapper .panel .errorbox {
   display: block;
   transition: 1s all;
-  position: absolute;
   opacity: 0;
+  display: none;
   right: 10px;
   top: 4px;
   padding: 8px;
   height: 100%;
   border: 1px solid #000;
-  z-index: -1;
+  width: 80%;
+  margin: 30px auto;
   background: rgba(255, 255, 255, 0.9);
+  line-height: 22px;
+  max-height: 300px;
+}
+.shortpixel-bulk-wrapper .panel .errorbox .fatal {
+  color: #ff0000;
 }
 .shortpixel-bulk-wrapper .panel .showerrorbox:hover ~ .errorbox, .shortpixel-bulk-wrapper .panel .errorbox:hover {
   opacity: 1;
@@ -613,21 +619,21 @@
   margin-right: 15px;
   font-size: 14px;
 }
-.shortpixel-bulk-wrapper section.panel.process .average-optimization .opt-circle, .shortpixel-bulk-wrapper section.panel.finished .average-optimization .opt-circle {
+.shortpixel-bulk-wrapper section.panel.process .average-optimization .opt-circle-average, .shortpixel-bulk-wrapper section.panel.finished .average-optimization .opt-circle-average {
   width: 90px;
   height: 90px;
   float: right;
   margin-right: 35px;
 }
-.shortpixel-bulk-wrapper section.panel.process .average-optimization .opt-circle .trail, .shortpixel-bulk-wrapper section.panel.finished .average-optimization .opt-circle .trail {
+.shortpixel-bulk-wrapper section.panel.process .average-optimization .opt-circle-average .trail, .shortpixel-bulk-wrapper section.panel.finished .average-optimization .opt-circle-average .trail {
   stroke: #ddd;
 }
-.shortpixel-bulk-wrapper section.panel.process .average-optimization .opt-circle .path, .shortpixel-bulk-wrapper section.panel.finished .average-optimization .opt-circle .path {
+.shortpixel-bulk-wrapper section.panel.process .average-optimization .opt-circle-average .path, .shortpixel-bulk-wrapper section.panel.finished .average-optimization .opt-circle-average .path {
   stroke: #1FBEC9;
   stroke-linecap: round;
   transition: stroke-dashoffset 0.5s ease 0s;
 }
-.shortpixel-bulk-wrapper section.panel.process .average-optimization .opt-circle .text, .shortpixel-bulk-wrapper section.panel.finished .average-optimization .opt-circle .text {
+.shortpixel-bulk-wrapper section.panel.process .average-optimization .opt-circle-average .text, .shortpixel-bulk-wrapper section.panel.finished .average-optimization .opt-circle-average .text {
   fill: #1FBEC9;
   font-size: 28px;
   font-weight: 700;

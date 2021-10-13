@@ -154,6 +154,11 @@ class AjaxController
         $this->checkNonce('processing');
         $this->checkProcessorKey();
 
+				if ($this->getProcessorKey() == 'shortpixel-test')
+				{
+						$this->returnTestData();
+				}
+
         // Notice that POST variables are always string, so 'true', not true.
         $isBulk = (isset($_POST['isBulk']) && $_POST['isBulk'] === 'true') ? true : false;
         $queue = (isset($_POST['queues'])) ? sanitize_text_field($_POST['queues']) : 'media,custom';
@@ -627,6 +632,18 @@ class AjaxController
         wp_send_json($json);
         exit();
     }
+
+		private function returnTestData()
+		{
+				$is_error = rand(1, 10);
+				$path = \wpSPIO()->plugin_path('tests/jsonresults/');
+//var_dump($path);
+				$json = file_get_contents($path . 'error.json');
+				$json = json_decode($json);
+				wp_send_json($json);
+
+
+		}
 
 
 
