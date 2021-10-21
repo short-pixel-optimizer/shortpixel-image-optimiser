@@ -104,6 +104,19 @@ class BulkController
 			 	return false;
 	 }
 
+	 public function getLogData($fileName)
+	 {
+		 		$logs = $this->getLogs();
+
+				foreach($logs as $log)
+				{
+					 if (isset($log['logfile']) && $log['logfile'] == $fileName)
+					 	 return $log;
+				}
+
+				return false;
+	 }
+
    protected function addLog($stats, $type)
    {
         //$data = (array) $stats;
@@ -137,10 +150,13 @@ class BulkController
         if ($fileLog->exists())
           $fileLog->move($moveLog);
 
+				$data['logfile'] = 'bulk_' . $data['date'] . '.log';
         $logs[] = $data;
 
         $this->saveLogs($logs);
    }
+
+
 
    protected function saveLogs($logs)
    {

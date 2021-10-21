@@ -9,7 +9,7 @@ CSS for features that are displayed on all Admin page, like the bar status icon 
    &.shortpixel-hide {
       display: none;
    }
-   a.ab-item > div {
+   .ab-item > div {
 
        height: 33px;
        width: 33px;
@@ -62,6 +62,7 @@ CSS for features that are displayed on all Admin page, like the bar status icon 
            visibility: hidden;
            z-index: 0;
            overflow: hidden;
+					 cursor: pointer;
 
             .play, .pause
             {
@@ -181,55 +182,26 @@ CSS for features that are displayed on all Admin page, like the bar status icon 
        }
    }
 
-   .toolbar-notice
-   {
-      position: absolute;
-      left: 50px;
-      top: 0;
-      border: 1px solid rgb(28,191,203);
-      background: #fff;
-      color: #000;
-      padding: 9px;
-      white-space: nowrap;
-      transition: opacity 5s;
-      opacity: 1;
+	 .toolbar-notice-wrapper
+	 {
+	      position: absolute;
+	      left: 0px;
+	      top: 30px;
 
-   }
+	   .toolbar-notice
+	   {
+	      border: 1px solid rgb(28,191,203);
+	      background: #fff;
+	      color: #000;
+	      padding: 4px 14px;
+	      white-space: nowrap;
+	      transition: opacity 5s;
+	      opacity: 1;
+				margin: 4px;
+				min-width: 300px;
+	   }
+	 }
 
-}
 
-/*
-li.shortpixel-toolbar-processing
-li.shortpixel-toolbar-processing > a.ab-item > div > img,
-#wpadminbar li.shortpixel-toolbar-processing > a.ab-item > div > img{
-
-}
-li.shortpixel-toolbar-processing span.shp-alert,
-#wpadminbar li.shortpi
-xel-toolbar-processing > a.ab-item > div > span.shp-alert{
 
 }
-li.shortpixel-toolbar-processing.shortpixel-alert > a.ab-item > div > span.shp-alert,
-#wpadminbar li.shortpixel-toolbar-processing.shortpixel-alert > a.ab-item > div >
-li.shortpixel-toolbar-processing.shortpixel-alert > a.ab-item > div,
-#wpadminbar li.shortpixel-toolbar-processing.shortpixel-alert > a.ab-item > div{
-    background-image: none;
-}
-
-#wpadminbar .shortpixel-toolbar-processing
-
-#wpadminbar .shortpixel-toolbar-processing.shortpixel-quota-exceeded .cssload-container,
-#wpadminbar .shortpixel-toolbar-processing.shortpixel-alert .cssload-container{
-    display: none;
-}
-
-#wpadminbar .shortpixel-toolbar-processing
-
-.sp-quota-exceeded-alert {
-
-}
-.shortpixel-clearfix {
-    width:100%;
-    float:left;
-}
-*/

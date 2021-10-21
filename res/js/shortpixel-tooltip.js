@@ -68,7 +68,7 @@ var ShortPixelToolTip = function(reserved, processor)
           statTip.classList.add('hidden');
     }
 
-		this.FormatNumber = function(num) 
+		this.FormatNumber = function(num)
 		{
 				var digits = 1;
 				  var si = [
@@ -149,13 +149,22 @@ var ShortPixelToolTip = function(reserved, processor)
     this.AddNotice = function(message)
     {
       var tooltip = this.GetToolTip(); // li.shortpixel-toolbar-processing
-      var toolcontent = tooltip.querySelector('.ab-item');
+      var toolcontent = tooltip.querySelector('.toolbar-notice-wrapper');
+
+			if (toolcontent == null)
+			{
+					var abItem = tooltip.querySelector('.ab-item');
+					var wrapper = document.createElement('div');
+					wrapper.className = 'toolbar-notice-wrapper';
+					abItem.parentNode.insertBefore(wrapper, abItem.nextSibling);
+					var toolcontent = tooltip.querySelector('.toolbar-notice-wrapper');
+			}
 
       var alert = document.createElement('div');
       alert.className = 'toolbar-notice toolbar-notice-error';
       alert.innerHTML = message;
 
-      alertChild = toolcontent.parentNode.insertBefore(alert, toolcontent.nextSibling);
+      alertChild = toolcontent.appendChild(alert);
 
       window.setTimeout (this.RemoveNotice.bind(this), 5000, alertChild);
     }

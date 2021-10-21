@@ -293,7 +293,7 @@ console.log("Screen Init Done", initMedia, initCustom);
           {
               var el = document.querySelector('.image-result img');
               if (el)
-                el.src  = result.original;
+                el.src  = result.optimized;
           }
 
           if (result.orginal || result.optimized && document.querySelector('.image-preview').classList.contains('hidden'))
@@ -351,7 +351,7 @@ console.log("Screen Init Done", initMedia, initCustom);
 				 }
 				 else if (child.classList.contains('text'))
 				 {
-						child.textContent = total.totalpercentage + '%';
+						child.textContent = Math.round(total) + '%';
 				 }
 			}
 

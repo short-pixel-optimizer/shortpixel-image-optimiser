@@ -7,14 +7,14 @@ CSS for features that are displayed on all Admin page, like the bar status icon 
 #wpadminbar li.shortpixel-toolbar-processing.shortpixel-hide {
   display: none;
 }
-#wpadminbar li.shortpixel-toolbar-processing a.ab-item > div {
+#wpadminbar li.shortpixel-toolbar-processing .ab-item > div {
   height: 33px;
   width: 33px;
   padding: 0;
   margin-top: -1px;
   padding: 0 3px;
 }
-#wpadminbar li.shortpixel-toolbar-processing a.ab-item > div img {
+#wpadminbar li.shortpixel-toolbar-processing .ab-item > div img {
   margin-right: 2px;
   margin-top: 6px;
   vertical-align: top;
@@ -23,11 +23,11 @@ CSS for features that are displayed on all Admin page, like the bar status icon 
   position: absolute;
   top: 0;
 }
-#wpadminbar li.shortpixel-toolbar-processing a.ab-item > div span.shp-alert {
+#wpadminbar li.shortpixel-toolbar-processing .ab-item > div span.shp-alert {
   display: none;
   margin-left: -8px;
 }
-#wpadminbar li.shortpixel-toolbar-processing a.ab-item > div .stats {
+#wpadminbar li.shortpixel-toolbar-processing .ab-item > div .stats {
   left: -1px;
   top: 3px;
   right: 0;
@@ -46,7 +46,7 @@ CSS for features that are displayed on all Admin page, like the bar status icon 
   color: #fff;
   text-align: center;
 }
-#wpadminbar li.shortpixel-toolbar-processing a.ab-item > div .controls {
+#wpadminbar li.shortpixel-toolbar-processing .ab-item > div .controls {
   position: absolute;
   top: 0;
   height: 32px;
@@ -57,8 +57,9 @@ CSS for features that are displayed on all Admin page, like the bar status icon 
   visibility: hidden;
   z-index: 0;
   overflow: hidden;
+  cursor: pointer;
 }
-#wpadminbar li.shortpixel-toolbar-processing a.ab-item > div .controls .play, #wpadminbar li.shortpixel-toolbar-processing a.ab-item > div .controls .pause {
+#wpadminbar li.shortpixel-toolbar-processing .ab-item > div .controls .play, #wpadminbar li.shortpixel-toolbar-processing .ab-item > div .controls .pause {
   font-family: dashicons;
   font-size: 32px;
   color: #fff;
@@ -66,10 +67,10 @@ CSS for features that are displayed on all Admin page, like the bar status icon 
   width: 100%;
   line-height: 1;
 }
-#wpadminbar li.shortpixel-toolbar-processing a.ab-item > div .controls .play.hidden, #wpadminbar li.shortpixel-toolbar-processing a.ab-item > div .controls .pause.hidden {
+#wpadminbar li.shortpixel-toolbar-processing .ab-item > div .controls .play.hidden, #wpadminbar li.shortpixel-toolbar-processing .ab-item > div .controls .pause.hidden {
   display: none;
 }
-#wpadminbar li.shortpixel-toolbar-processing a.ab-item > div .cssload-container {
+#wpadminbar li.shortpixel-toolbar-processing .ab-item > div .cssload-container {
   width: 100%;
   height: 24px;
   text-align: center;
@@ -77,7 +78,7 @@ CSS for features that are displayed on all Admin page, like the bar status icon 
   top: 0px;
   left: -1px;
 }
-#wpadminbar li.shortpixel-toolbar-processing a.ab-item > div .cssload-speeding-wheel {
+#wpadminbar li.shortpixel-toolbar-processing .ab-item > div .cssload-speeding-wheel {
   width: 24px;
   height: 24px;
   opacity: 0.7;
@@ -121,11 +122,11 @@ CSS for features that are displayed on all Admin page, like the bar status icon 
     transform: rotate(360deg);
   }
 }
-#wpadminbar li.shortpixel-toolbar-processing a.ab-item > div:hover img:hover, #wpadminbar li.shortpixel-toolbar-processing a.ab-item > div:hover .stats {
+#wpadminbar li.shortpixel-toolbar-processing .ab-item > div:hover img:hover, #wpadminbar li.shortpixel-toolbar-processing .ab-item > div:hover .stats {
   opacity: 0;
   visibility: hidden;
 }
-#wpadminbar li.shortpixel-toolbar-processing a.ab-item > div:hover .controls {
+#wpadminbar li.shortpixel-toolbar-processing .ab-item > div:hover .controls {
   visibility: visible;
   opacity: 1;
   z-index: 100;
@@ -160,53 +161,21 @@ CSS for features that are displayed on all Admin page, like the bar status icon 
   opacity: 1;
   visibility: visible;
 }
-#wpadminbar li.shortpixel-toolbar-processing .toolbar-notice {
+#wpadminbar li.shortpixel-toolbar-processing .toolbar-notice-wrapper {
   position: absolute;
-  left: 50px;
-  top: 0;
+  left: 0px;
+  top: 30px;
+}
+#wpadminbar li.shortpixel-toolbar-processing .toolbar-notice-wrapper .toolbar-notice {
   border: 1px solid #1cbfcb;
   background: #fff;
   color: #000;
-  padding: 9px;
+  padding: 4px 14px;
   white-space: nowrap;
   transition: opacity 5s;
   opacity: 1;
+  margin: 4px;
+  min-width: 300px;
 }
-
-/*
-li.shortpixel-toolbar-processing
-li.shortpixel-toolbar-processing > a.ab-item > div > img,
-#wpadminbar li.shortpixel-toolbar-processing > a.ab-item > div > img{
-
-}
-li.shortpixel-toolbar-processing span.shp-alert,
-#wpadminbar li.shortpi
-xel-toolbar-processing > a.ab-item > div > span.shp-alert{
-
-}
-li.shortpixel-toolbar-processing.shortpixel-alert > a.ab-item > div > span.shp-alert,
-#wpadminbar li.shortpixel-toolbar-processing.shortpixel-alert > a.ab-item > div >
-li.shortpixel-toolbar-processing.shortpixel-alert > a.ab-item > div,
-#wpadminbar li.shortpixel-toolbar-processing.shortpixel-alert > a.ab-item > div{
-    background-image: none;
-}
-
-#wpadminbar .shortpixel-toolbar-processing
-
-#wpadminbar .shortpixel-toolbar-processing.shortpixel-quota-exceeded .cssload-container,
-#wpadminbar .shortpixel-toolbar-processing.shortpixel-alert .cssload-container{
-    display: none;
-}
-
-#wpadminbar .shortpixel-toolbar-processing
-
-.sp-quota-exceeded-alert {
-
-}
-.shortpixel-clearfix {
-    width:100%;
-    float:left;
-}
-*/
 
 /*# sourceMappingURL=shortpixel-toolbar.css.map */

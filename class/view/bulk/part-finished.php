@@ -42,18 +42,27 @@ namespace ShortPixel;
                 <span class='done' data-stats-media="percentage_done" data-presentation="css.width.percentage"></span>
               </span>
         </span>
+        <span>Processing : <i data-stats-media="in_process">-</i></span>
         <span>&nbsp;</span>
-        <span></span>
+				<span>&nbsp;</span>
       </div>
       <div>
         <span>Items processed: <i data-stats-media="done">-</i></span>
-        <span>Processing : <i data-stats-media="in_process">-</i></span>
+
         <span>Items Left <i data-stats-media="in_queue">-</i></span>
-        <span class="showerrorbox">Errors : <i data-stats-media="fatal_errors" class='error'>- </i></span>
-        <div data-error-media="message" data-presentation="append" class='errorbox'></div>
+        <span>Errors : <i data-check-media-fatalerrors data-stats-media="fatal_errors" class='error'>- </i>
+            </span>
+				<span data-check-visibility data-control="data-check-media-fatalerrors" ><label title="<?php _e('Show Errors', 'shortpixel-image-optimiser'); ?>">
+					<input type="checkbox" name="show-errors" value="show" data-action='ToggleErrorBox' data-errorbox='media' data-event='change'>Show Errors</label>
+			 </span>
+        <span class='hidden' data-check-media-total data-stats-media="total">0</span>
+
       </div>
 
     </div>
+
+		<div data-error-media="message" data-presentation="append" class='errorbox media'></div>
+
 
     <div class='bulk-summary' data-check-visibility data-control="data-check-custom-total">
       <div class='heading'>
@@ -64,15 +73,21 @@ namespace ShortPixel;
                 <span class='done' data-stats-custom="percentage_done" data-presentation="css.width.percentage"></span>
               </span>
         </span>
+  			<span>Processing : <i data-stats-custom="in_process">-</i></span>
+			  <span>&nbsp;</span>
         <span>&nbsp;</span>
-        <span></span>
       </div>
       <div>
         <span>Items processed: <i data-stats-custom="done">-</i></span>
-        <span>Processing : <i data-stats-custom="in_process">-</i></span>
+
         <span>Items Left <i data-stats-custom="in_queue">-</i></span>
-        <span class="showerrorbox">Errors : <i data-stats-custom="fatal_errors" class="error">-</i> </span>
-        <div data-error-custom="message" data-presentation="append">Check Errors</div>
+        <span>Errors : <i data-check-custom-fatalerrors  data-stats-custom="fatal_errors" class='error'>-</i></span>
+
+			<span data-check-visibility data-control="data-check-custom-fatalerrors" ><label title="<?php _e('Show Errors', 'shortpixel-image-optimiser'); ?>">
+				<input type="checkbox" name="show-errors" value="show" data-action='ToggleErrorBox' data-errorbox='custom' data-event='change'>Show Errors</label>
+		 </span>
+
+        <span class='hidden' data-check-custom-total data-stats-custom="total">0</span>
       </div>
 
     </div>

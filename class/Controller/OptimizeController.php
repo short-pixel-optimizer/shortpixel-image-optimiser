@@ -490,6 +490,7 @@ class OptimizeController
 
          }
 
+				 // This is_error can happen not from api, but from handleOptimized
          if ($item->result->is_error)
          {
           $q->itemFailed($item, true);

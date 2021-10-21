@@ -105,7 +105,7 @@ window.ShortPixelProcessor =
     CheckActive: function()
     {
 
-      if (this.remoteSecret == false || this.isBulkPage) // if remoteSecret is false, we are the first process. Take it.
+      if (this.remoteSecret == false || this.remoteSecret == '' || this.isBulkPage) // if remoteSecret is false, we are the first process. Take it.
       {
       //   this.localSecret = this.remoteSecret = Math.random().toString(36).substring(7);
          if (this.localSecret && this.localSecret.length > 0)

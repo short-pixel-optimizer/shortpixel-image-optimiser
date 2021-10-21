@@ -29,7 +29,7 @@
                         "large-feature": ["4.36", 2085],
                         "small-feature": ["3.73", 701]
                     },
-                    "totalpercentage": 56,
+                    "totalpercentage": 26,
                     "totalsize": 16270
                 },
                 "queuetype": "media",
@@ -47,11 +47,11 @@
             "in_queue": 400,
             "in_process": 32,
             "errors": 6,
-            "fatal_errors": 0,
+            "fatal_errors": 2,
             "done": 6,
             "bulk_running": false,
             "total": 1000,
-            "percentage_done": 666
+            "percentage_done": 75
         }
     },
     "custom": {
@@ -64,11 +64,11 @@
             "is_preparing": false,
             "is_running": false,
             "is_finished": true,
-            "in_queue": 0,
-            "in_process": 0,
-            "errors": 0,
-            "fatal_errors": 0,
-            "done": 0,
+            "in_queue": 100,
+            "in_process": 1,
+            "errors": 5,
+            "fatal_errors": 2,
+            "done": 10,
             "bulk_running": false,
             "total": 3,
             "percentage_done": 0,

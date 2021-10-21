@@ -180,13 +180,10 @@
   background: rgba(255, 255, 255, 0.9);
   line-height: 22px;
   max-height: 300px;
+  overflow-y: scroll;
 }
 .shortpixel-bulk-wrapper .panel .errorbox .fatal {
   color: #ff0000;
-}
-.shortpixel-bulk-wrapper .panel .showerrorbox:hover ~ .errorbox, .shortpixel-bulk-wrapper .panel .errorbox:hover {
-  opacity: 1;
-  z-index: 10;
 }
 .shortpixel-bulk-wrapper .processor-paused {
   display: none;
@@ -682,6 +679,9 @@
   top: 0;
   bottom: 0;
   background: #1FBEC9;
+}
+.shortpixel-bulk-wrapper section.panel.process .bulk-summary .progressbar label input[type=checkbox], .shortpixel-bulk-wrapper section.panel.finished .bulk-summary .progressbar label input[type=checkbox] {
+  margin-right: 8px;
 }
 .shortpixel-bulk-wrapper section.panel.process .image-preview, .shortpixel-bulk-wrapper section.panel.finished .image-preview {
   background: #F6F9FF;

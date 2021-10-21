@@ -125,9 +125,9 @@ class BulkViewController extends \ShortPixel\ViewController
           $errors = $logData['fatal_errors'];
 
           if ($logFile->exists())
+					{
             $errors = '<a data-action="OpenLog" data-file="' . $logFile->getFileName() . '" href="' . $fs->pathToUrl($logFile) . '">' . $errors . '</a>';
-
-
+					}
 
           $view[$logData['date']] = array('images' => $logData['processed'], 'errors' => $errors, 'date' => UiHelper::formatTS($logData['date']) );
 

@@ -105,7 +105,7 @@ var ShortPixelScreen = function (MainScreen, processor)
     {
 			console.log('UpdateStats', stats, type);
       var waiting = stats.in_queue + stats.in_process;
-      this.processor.tooltip.RefreshStats(stats.in_queue);
+      this.processor.tooltip.RefreshStats(waiting);
     }
     this.GeneralResponses = function(responses)
     {

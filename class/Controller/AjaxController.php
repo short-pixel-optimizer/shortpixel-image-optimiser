@@ -53,7 +53,6 @@ class AjaxController
       $bulkSecret = isset($_POST['bulk-secret']) ? sanitize_text_field($_POST['bulk-secret']) : false;
       $isBulk = isset($_POST['isBulk']) ? (bool) sanitize_text_field($_POST['isBulk'])  : false;
 
-
       $is_processor = false;
       if ($processKey == false && $bulkSecret !== false)
       {
@@ -87,7 +86,6 @@ class AjaxController
         $json->error = self::PROCESSOR_ACTIVE; // processor active
         $this->send($json);
       }
-
     }
 
 
@@ -556,7 +554,7 @@ class AjaxController
 		{
 			 $logFile = $data['logFile'];
 			 $type = $data['type'];
-			 $date = UiHelper::formatTS($data['date']);
+
 
 			 if (is_null($logFile))
 			 {
@@ -575,6 +573,9 @@ class AjaxController
 					return $json;
 			 }
 
+	 	 //	$date = UiHelper::formatTS($log->date);
+		 	 $logData = $bulkController->getLogData($logFile); // starts from options.
+			 $date = (isset($logData['date'])) ? UiHelper::formatTS($logData['date']) : false;
 			 $content = $log->getContents();
 			 $lines = explode(';', $content);
 
@@ -637,7 +638,6 @@ class AjaxController
 		{
 				$is_error = rand(1, 10);
 				$path = \wpSPIO()->plugin_path('tests/jsonresults/');
-//var_dump($path);
 				$json = file_get_contents($path . 'error.json');
 				$json = json_decode($json);
 				wp_send_json($json);

@@ -170,7 +170,7 @@ class AdminController extends \ShortPixel\Controller
                             </div>'
 
                          .'<div class="cssload-container"><div class="cssload-speeding-wheel"></div></div></div>',
-                'href'  => 'javascript:void(0)', // $link,
+    //            'href'  => 'javascript:void(0)', // $link,
                 'meta'  => array('target'=> $blank, 'class' => 'shortpixel-toolbar-processing' . $extraClasses)
         );
         $wp_admin_bar->add_node( $args );
