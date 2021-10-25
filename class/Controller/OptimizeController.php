@@ -736,13 +736,14 @@ class OptimizeController
         return $object;
     }
 
-    public static function activatePlugin()
+    public static function resetQueues()
     {
-      $mediaQ = new MediaLibraryQueue();
-      //$customQ = new CustomQueue();
-
-      $mediaQ->activatePlugin();
-    //  $customQ->activatePlugin();
+	      $queues = array('media', 'mediaSingle', 'custom', 'customSingle');
+	      foreach($queues as $qName)
+	      {
+	          $q = new MediaLibraryQueue($qName);
+	          $q->activatePlugin();
+	      }
     }
 
     public static function uninstallPlugin()

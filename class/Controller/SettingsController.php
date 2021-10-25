@@ -9,6 +9,7 @@ use ShortPixel\Model\ApiKeyModel as ApiKeyModel;
 
 use ShortPixel\NextGenController as NextGenController;
 
+
 class SettingsController extends \ShortPixel\ViewController
 {
 
@@ -274,6 +275,12 @@ class SettingsController extends \ShortPixel\ViewController
               $check_key = $this->postData['apiKey'];
               unset($this->postData['apiKey']); // unset, since keyModel does the saving.
           }
+
+					// If the compression type setting changes, remove all queued items to prevent further optimizing with a wrong type.
+					if (intval($this->postData['compressionType']) !== intval($this->model->compressionType))
+					{
+						 OptimizeController::resetQueues();
+					}
 
           // write checked and verified post data to model. With normal models, this should just be call to update() function
           foreach($this->postData as $name => $value)

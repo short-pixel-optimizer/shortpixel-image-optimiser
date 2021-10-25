@@ -93,6 +93,9 @@ var ShortPixelScreen = function (MainScreen, processor)
 
     this.UpdateStats = function(stats, type)
     {
+				if ( type !== 'total')
+					return;
+
         var waiting = stats.in_queue + stats.in_process;
         this.processor.tooltip.RefreshStats(waiting);
     }
