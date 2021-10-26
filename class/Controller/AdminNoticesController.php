@@ -33,6 +33,8 @@ class AdminNoticesController extends \ShortPixel\Controller
 
     const MSG_INTEGRATION_NGGALLERY = 'IntNotice400';
 
+		const MSG_CONVERT_LEGACY = 'LegNotice100';
+
     private $remote_message_endpoint = 'https://api.shortpixel.com/v2/notices.php';
     private $remote_readme_endpoint = 'https://plugins.svn.wordpress.org/shortpixel-image-optimiser/trunk/readme.txt';
 
@@ -151,7 +153,6 @@ class AdminNoticesController extends \ShortPixel\Controller
             return; // suppress all when not our screen.
       }
 
-
        $this->doAPINotices();
        $this->doCompatNotices();
        $this->doUnlistedNotices();
@@ -261,6 +262,25 @@ class AdminNoticesController extends \ShortPixel\Controller
           Notices::makePersistent($notice, self::MSG_COMPAT, YEAR_IN_SECONDS);
       }
     }
+
+		// Called by MediaLibraryModel
+		public function invokeLegacyNotice()
+		{
+			  	$message = '<p><strong>' .  __('ShortPixel found items in media library with a legacy optimization format', 'shortpixel-image-optimiser') . '</strong></p>';
+
+					$message .= '<p>' . __('Shortpixel automatically converts them when encountered. Please check if your image library is converted properly', 'shortpixel-image-optimiser') . '</p>';
+
+					$message .=  '<p>' . __('It is recommend to convert all items to the modern format.', 'shortpixekl-image-optimser') . '</p>';
+
+					$link = admin_url('upload.php?page=wp-short-pixel-bulk&panel=bulk-migrate');
+					$action = __('Convert legacy data', 'shortpixel-image-optimiser');
+
+          $message .= '<p><a href="' . $link . '" class="button button-primary">' . $action. '</a></p>';
+
+					$notice = Notices::addNormal($message);
+					Notices::makePersistent($notice, self::MSG_CONVERT_LEGACY, YEAR_IN_SECONDS);
+
+		}
 
     protected function doUnlistedNotices()
     {
@@ -460,7 +480,7 @@ class AdminNoticesController extends \ShortPixel\Controller
               ? wp_nonce_url( admin_url( 'admin-post.php?action=shortpixel_deactivate_plugin&plugin=' . urlencode( $plugin['path'] ) ), 'sp_deactivate_plugin_nonce' )
               : $plugin['href'];
           $message .= '<li class="sp-conflict-plugins-list"><strong>' . $plugin['name'] . '</strong>';
-          $message .= '<a href="' . $link . '" class="button button-primary">' . __( $action, 'shortpixel_image_optimiser' ) . '</a>';
+          $message .= '<a href="' . $link . '" class="button button-primary">' . $action . '</a>';
 
           if($plugin['details']) $message .= '<br>';
           if($plugin['details']) $message .= '<span>' . $plugin['details'] . '</span>';

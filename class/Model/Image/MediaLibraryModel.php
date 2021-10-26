@@ -3,6 +3,7 @@ namespace ShortPixel\Model\Image;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use \ShortPixel\ShortPixelPng2Jpg as ShortPixelPng2Jpg;
 use ShortPixel\Controller\ResponseController as ResponseController;
+use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
 
 use ShortPixel\Helper\InstallHelper as InstallHelper;
 
@@ -1256,6 +1257,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         return false;
 
 
+
       // This is a switch to prevent converted items to reconvert when the new metadata is removed ( i.e. restore )
       $was_converted = get_post_meta($this->id, '_shortpixel_was_converted', true);
       if ($was_converted == true)
@@ -1263,6 +1265,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         Log::addDebug('This item was converted, not converting again');
         return false;
       }
+
+			$adminNotices = AdminNoticesController::getInstance();
+			$adminNotices->invokeLegacyNotice();
 
         Log::addDebug("Conversion of legacy: ", array($metadata));
     //  echo "*** EXPORT: "; var_export($metadata); echo " *** ";

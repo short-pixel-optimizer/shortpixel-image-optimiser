@@ -63,6 +63,7 @@ namespace ShortPixel;
 	 </div>
 	 <div id="LogModal-Shade" class='sp-modal-shade'></div>
    <div class='dashboard-log'>
+
       <h3><?php _e('Previous Bulks', 'shortpixel_image_optimizer'); ?></h3>
       <?php
         echo "<div class='head'>";
@@ -73,16 +74,16 @@ namespace ShortPixel;
         echo "</div>";
         foreach ($this->view->logs as $logItem):
         {
-          echo "<div class='data'>";
-          foreach($logItem as $field => $item)
-          {
-            if ($field == 'date')
-              echo '<span class="checkmark_green date">' . sprintf(__('%sCompleted%s on %s','shortpixel-image-optimiser'), '<b>','</b>', $item) . '</span>';
-            else
-              echo "<span>$item</span>";
-          }
+          echo "<div class='data " . $logItem['type'] . "'>";
+
+					  echo "<span>" . $logItem['images']  . '</span>';
+						echo "<span>" . $logItem['errors'] . '</span>';
+
+              echo '<span class="checkmark_green date">' . sprintf(__('%sCompleted%s on %s','shortpixel-image-optimiser'), '<b>','</b>', $logItem['date']) . '</span>';
+
+
           echo "</div>";
-        }
+         }
         ?>
 
 

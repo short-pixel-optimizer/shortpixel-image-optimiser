@@ -129,7 +129,7 @@ class BulkViewController extends \ShortPixel\ViewController
             $errors = '<a data-action="OpenLog" data-file="' . $logFile->getFileName() . '" href="' . $fs->pathToUrl($logFile) . '">' . $errors . '</a>';
 					}
 
-          $view[$logData['date']] = array('images' => $logData['processed'], 'errors' => $errors, 'date' => UiHelper::formatTS($logData['date']) );
+          $view[$logData['date']] = array('type' => $logData['type'], 'images' => $logData['processed'], 'errors' => $errors, 'date' => UiHelper::formatTS($logData['date']) );
 
       }
 

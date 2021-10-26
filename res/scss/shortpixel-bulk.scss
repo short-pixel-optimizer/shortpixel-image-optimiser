@@ -40,6 +40,10 @@
     nav {
       margin: 45px auto;
       width: 80%;
+			.button {
+				margin-right: 8px;
+				padding: 8px 16px;
+			}
     }
 
     .hidden {
@@ -329,8 +333,11 @@
                  background: url('../img/bulk/checkmark.svg') left center no-repeat;
                  padding-left: 29px;
               }
-
             }
+						&.custom
+						{
+						
+						}
           }
        }
 
@@ -865,6 +872,9 @@
       nav {
           width: 80%;
           margin: 35px auto;
+
+
+
       }
 
     } // section process
@@ -965,5 +975,28 @@
     	}
 
     }
+
+		//******* SPECIAL BULK SCREENS **/
+		.bulk-special-wrapper
+		{
+			 margin: 0 auto;
+	//		 border: 1px solid #ccc;
+			 max-width: 80%;
+			 h4 { color: #ff0000;
+						font-weight: 700;
+						font-size: 20px;
+
+						&.warning
+						{
+							 float: left;
+							 margin: 25px;
+						}
+
+			 	}
+				.warning { color: #ff0000;  }
+
+
+
+		}
 
 } // wrapper.

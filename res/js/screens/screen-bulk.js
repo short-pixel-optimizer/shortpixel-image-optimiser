@@ -26,11 +26,12 @@ var ShortPixelScreen = function (MainScreen, processor)
       window.addEventListener('shortpixel.processor.responseHandled', this.CheckPanelData.bind(this));
       window.addEventListener('shortpixel.bulk.onUpdatePanelStatus', this.EventPanelStatusUpdated.bind(this));
       window.addEventListener('shortpixel.bulk.onSwitchPanel', this.EventPanelSwitched.bind(this));
-      window.addEventListener('shortpixel.process.stop', function (Event)
+			window.addEventListener('shortpixel.reloadscreen', this.ReloadScreen.bind(this));
+      /*window.addEventListener('shortpixel.process.stop', function (Event)
       {
         Event.preventDefault();
         this.processor.StopProcess.bind(this.processor)
-      }.bind(this) );
+      }.bind(this) ); */
 
 
       var processData = ShortPixelProcessorData.startData;
@@ -90,6 +91,12 @@ var ShortPixelScreen = function (MainScreen, processor)
 			if (this.processor.isManualPaused)
 			{
       		var event = new CustomEvent('shortpixel.processor.paused', { detail : {paused: 	this.processor.isManualPaused }});
+			}
+
+			// This var is defined in admin_scripts, localize.
+			if ( typeof shortPixelScreen.panel !== 'undefined')
+			{
+				 this.SwitchPanel(shortPixelScreen.panel);
 			}
 console.log("Screen Init Done", initMedia, initCustom);
 
@@ -532,13 +539,18 @@ console.log("Screen Init Done", initMedia, initCustom);
   }
   this.FinishBulk = function(event)
   {
-
-    var data = {screen_action: 'finishBulk', callback: 'shortpixel.process.stop'}; //
+		// Screen needs reloading after doing all to reset all / load the logs.
+    var data = {screen_action: 'finishBulk', callback: 'shortpixel.reloadscreen'}; //
     this.processor.AjaxRequest(data);
-
-    this.SwitchPanel('dashboard');
-
   }
+	this.ReloadScreen = function(event)
+	{
+			console.log('reload event');
+		 	//window.trigger('shortpixel.process.stop');
+			location.reload();
+//			this.SwitchPanel('dashboard');
+
+	}
 
   this.TogglePauseNotice = function(event)
   {
