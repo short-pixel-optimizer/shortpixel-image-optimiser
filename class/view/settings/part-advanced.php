@@ -1,7 +1,9 @@
 <?php
 namespace ShortPixel;
 use \ShortPixel\Helper\UiHelper as UiHelper;
+
 ?>
+
 
 <section id="tab-adv-settings" class="clearfix <?php echo ($this->display_part == 'adv-settings') ? ' sel-tab ' :''; ?> ">
     <h2><a class='tab-link' href='javascript:void(0);' data-id="tab-adv-settings"><?php _e('Advanced','shortpixel-image-optimiser');?></a></h2>
@@ -399,6 +401,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                     <?php foreach($view->allThumbSizes as $sizeKey => $sizeVal) {?>
                         <span style="margin-right: 20px;white-space:nowrap">
                           <label>
+
                             <input name="excludeSizes[]" type="checkbox" id="excludeSizes_<?php echo($sizeKey);?>" <?php echo((in_array($sizeKey, $view->data->excludeSizes) ? 'checked' : ''));?>
                                    value="<?php echo($sizeKey);?>">&nbsp;<?php $w=$sizeVal['width']?$sizeVal['width'].'px':'*';$h=$sizeVal['height']?$sizeVal['height'].'px':'*';echo("$sizeKey ({$w} &times; {$h})");?>&nbsp;&nbsp;
                             </label>

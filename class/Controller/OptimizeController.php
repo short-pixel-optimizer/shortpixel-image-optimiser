@@ -35,6 +35,8 @@ class OptimizeController
        $this->isBulk = $bool;
     }
 
+		/** Gets the correct queue type */
+		// @todo Check how much this is called during run. Perhaps cachine q's instead of new object everytime is more efficient.
     public function getQueue($type)
     {
         $queue = null;
@@ -57,6 +59,7 @@ class OptimizeController
         }
         return $queue;
     }
+
 
     // Queuing Part
     /* Add Item to Queue should be used for starting manual Optimization
@@ -126,6 +129,20 @@ class OptimizeController
         return $json;
     }
 
+		public function isItemInQueue(Object $mediaItem)
+		{
+				$type = $mediaItem->get('type');
+			  $q = $this->getQueue($type);
+
+				$result = $q->getShortQ()->getItem($mediaItem->get('id'));
+
+				if (is_object($result))
+					 return true;
+				else
+					 return false;
+
+		}
+
     public function restoreItem(Object $mediaItem)
     {
         $fs = \wpSPIO()->filesystem();
@@ -135,7 +152,19 @@ class OptimizeController
         $json->result = new \stdClass;
         $json->result->item_id = $mediaItem->get('id');
 
+				$optimized = $mediaItem->getMeta('tsOptimized');
+
         $result = $mediaItem->restore();
+
+				// Dump this item from server if optimized in the last hour, since it can still be server-side cached.
+				if ( (  wp_date( 'U', time() ) - $optimized) < HOUR_IN_SECONDS )
+				{
+					 $api = $this->getAPI();
+					 $item = new \stdClass;
+					 $item->urls = $mediaItem->getOptimizeUrls();
+					 $api->dumpMediaItem($item);
+				}
+
 
         if ($result)
         {
@@ -409,7 +438,8 @@ class OptimizeController
              Log::addDebug('HandleApiResult - Item failed ' . $item->item_id);
              $q->itemFailed($item, true);
              $this->HandleItemError($item);
-             ResponseController::add()->withMessage($result->message)->asError();
+						 // This whole thing kinda failed.
+          //   ResponseController::add()->withMessage($result->message)->asError();
           }
           else
           {

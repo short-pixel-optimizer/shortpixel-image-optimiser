@@ -197,7 +197,7 @@ class EnvironmentModel extends \ShortPixel\Model
   public function setDefaultViewModeList()
   {
       $settings = \wpSPIO()->settings();
-      if( $settings->mediaLibraryViewMode === false)
+      if( $settings->mediaLibraryViewMode == false)
       {
           $settings->mediaLibraryViewMode = 1;
           $currentUserID = false;

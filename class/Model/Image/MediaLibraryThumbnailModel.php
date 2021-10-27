@@ -231,7 +231,15 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
        $this->setVirtualToReal($filepath);
     }
 
-    return parent::restore();
+
+    $bool = parent::restore();
+
+		if ($bool === true)
+		{
+			 $this->image_meta = new ImageThumbNailMeta();
+		}
+
+		return $bool;
   }
 
   protected function createBackup()

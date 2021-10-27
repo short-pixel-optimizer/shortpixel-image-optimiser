@@ -246,7 +246,7 @@ class FileModel extends \ShortPixel\Model
 
       if (! is_null($fileDir) && $fileDir->exists())
       {
-        $res = touch($this->fullpath);
+        $res = @touch($this->fullpath);
         $this->exists = $res;
         return $res;
       }

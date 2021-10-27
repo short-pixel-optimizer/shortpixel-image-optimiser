@@ -1131,7 +1131,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        $cleanRestore = false;
     }
 
-    $this->setMeta('did_png2jpg', false);
     $restored = array();
 
     foreach($this->thumbnails as $thumbObj)
@@ -1141,7 +1140,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           if (isset($restored[$filebase]))
           {
             $bool = true;  // this filebase already restored. In case of duplicate sizes.
-            $thumbObj->imageMeta = new ImageMeta();
+            $thumbObj->image_meta = new ImageThumbnailMeta();
           }
           elseif ($thumbObj->isRestorable())
             $bool = $thumbObj->restore();
@@ -1151,7 +1150,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           else
           {
              $restored[$filebase] = true;
-             //$thumbObj->setMeta('did_png2jpg', false);
           }
 
     }
@@ -1178,7 +1176,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
             $this->deleteMeta();
         }
         else
+				{
           $this->saveMeta(); // Save if something is not restored.
+				}
 
         do_action('shortpixel_after_restore_image', $this->id, $this, $cleanRestore);
 
@@ -1203,7 +1203,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					}
 					$this->id = $current_id;
 				}
-        return $bool;
+
+			// @todo Restore can be false if last item failed, which doesn't sound right.
+
+	    return $bool;
   }
 
   /** This function will recreate thumbnails. This is -only- needed for very special cases, i.e. offload */

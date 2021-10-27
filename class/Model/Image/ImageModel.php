@@ -104,6 +104,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     /* Check if an image in theory could be processed. Check only exclusions, don't check status etc */
     public function isProcessable()
     {
+				$this->processable_status = 0; // reset everytime.
+				
         if ( $this->isOptimized() || ! $this->exists()  || $this->isPathExcluded() || $this->isExtensionExcluded() || $this->isSizeExcluded() || (! $this->is_writable() && ! $this->is_virtual()) || $this->isOptimizePrevented() !== false
         )
         {
@@ -562,7 +564,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
          }
         $bool = $backupFile->move($this);
 
-        if (! $bool)
+        if ($bool !== true)
         {
           ResponseController::add()->withMessage(__('Moving Backupfile failed' , 'shortpixel-image-optimiser'));
         }

@@ -26,7 +26,10 @@ var ShortPixelScreen = function (MainScreen, processor)
             var element = document.getElementById('sp-msg-' + item_id); // empty result box while getting
             if (typeof message !== 'undefined')
             {
-               this.UpdateMessage(item_id, message);
+								 var isError = false;
+							 if (resultItem.result.is_error == true)
+							    isError = true;
+               this.UpdateMessage(item_id, message, isError);
             }
             if (element !== null)
             {
@@ -61,9 +64,13 @@ var ShortPixelScreen = function (MainScreen, processor)
         } */
     }
 
-    this.UpdateMessage = function(id, message)
+    this.UpdateMessage = function(id, message, isError)
     {
+
        var element = document.getElementById('sp-message-' + id);
+			 if (typeof isError === 'undefined')
+			 	 isError = false;
+
        this.currentMessage = message;
 
        if (element == null)
@@ -75,12 +82,19 @@ var ShortPixelScreen = function (MainScreen, processor)
              element.classList.add('message');
              element.setAttribute('id', 'sp-message-' + id);
              parent.parentNode.insertBefore(element, parent.nextSibling);
+
            }
        }
 
        if (element !== null)
        {
-          element.textContent = message;
+				  if (element.classList.contains('error'))
+						 element.classList.remove('error');
+
+          element.innerHTML = message;
+
+					if (isError)
+						 element.classList.add('error');
        }
        else
        {
@@ -111,6 +125,8 @@ var ShortPixelScreen = function (MainScreen, processor)
       var waiting = stats.in_queue + stats.in_process;
       this.processor.tooltip.RefreshStats(waiting);
     }
+
+		// For now this is not used.
     this.GeneralResponses = function(responses)
     {
        console.log(responses);
@@ -118,6 +134,7 @@ var ShortPixelScreen = function (MainScreen, processor)
 
        if (responses.length == 0)  // no responses.
          return;
+
 
        responses.forEach(function (element, index)
        {
@@ -150,7 +167,7 @@ var ShortPixelScreen = function (MainScreen, processor)
     {
           if (result.message && result.item_id)
           {
-            this.UpdateMessage(result.item_id, result.message);
+            this.UpdateMessage(result.item_id, result.message, true);
           }
           this.processor.LoadItemView({id: result.item_id, type: 'media'});
           /*if (result.is_done)

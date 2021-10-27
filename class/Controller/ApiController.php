@@ -81,8 +81,44 @@ class ApiController
       $request = $this->getRequest($requestArgs);
       $item = $this->doRequest($item, $request);
 
+			if ($item->result->is_error === true && $item->result->is_done === true)
+			{
+				 $this->dumpMediaItem($item); // item failed, directly dump anything from server.
+			}
+
       return $item;
   }
+
+	/* Ask to remove the items from the remote cache.
+	  @param $item Must be object, with URLS set as array of urllist.
+	*/
+	public function dumpMediaItem($item)
+	{
+     $settings = \wpSPIO()->settings();
+     $keyControl = ApiKeyController::getInstance();
+
+		 if (property_exists($item, 'urls') === false || ! is_array($item->urls) || count($item->urls) == 0)
+		 {
+			  Log::addError('Media Item without URLS cannnot be dumped', $item);
+				return false;
+		 }
+
+		 $request = $this->getRequest();
+
+		 $request['body'] = json_encode(
+			 			array(
+                'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
+                'key' => $keyControl->forceGetApiKey(),
+                'urllist' => $item->urls	)
+					);
+
+		 Log::addDebug('Dumping Media Item', $request);
+
+		 $ret = wp_remote_post($this->apiDumpEndPoint, $request);
+
+     return $ret;
+
+	}
 
   /** Former, prepare Request in API */
   private function getRequest($args = array())
@@ -115,6 +151,7 @@ class ApiController
         'urllist' => $args['urls'],
     );
 
+
     if(/*false &&*/ $settings->downloadArchive == self::DOWNLOAD_ARCHIVE && class_exists('PharData')) {
         $requestParameters['group'] = $args['item_id'];
     }
@@ -141,10 +178,12 @@ class ApiController
     return $arguments;
   }
 
+
+
   protected function doRequest($item, $requestParameters)
   {
     $response = wp_remote_post($this->apiEndPoint, $requestParameters );
-    Log::addDebug('ShortPixel API Request sent', $requestParameters);
+    Log::addDebug('ShortPixel API Request sent', $requestParameters['body']);
 
     //only if $Blocking is true analyze the response
     if ( $requestParameters['blocking'] )
@@ -195,15 +234,26 @@ class ApiController
   {
 
     $APIresponse = $this->parseResponse($response);//get the actual response from API, its an array
-
     $settings = \wpSPIO()->settings();
 
+
+		// Don't know if it's this or that.
+		$status = false;
+		if (isset($APIresponse['Status']))
+		{
+			$status = $APIresponse['Status'];
+		}
+		elseif( property_exists($APIresponse[0], 'Status'))
+		{
+			$status = $APIresponse[0]->Status;
+		}
+
     // This is only set if something is up, otherwise, ApiResponse returns array
-    if (isset($APIresponse['Status']))
+    if (is_object($status))
     {
         // Check for known errors. : https://shortpixel.com/api-docs
-				Log::addDebug('Api Response Status :' . $APIresponse['Status']->Code  );
-        switch($APIresponse['Status']->Code)
+				Log::addDebug('Api Response Status :' . $status->Code  );
+        switch($status->Code)
         {
               case -102: // Invalid URL
               case -105: // URL missing
@@ -212,7 +262,7 @@ class ApiController
               case -201: // Invalid image format
               case -202: // Invalid image or unsupported format
               case -203: // Could not download file
-                 return $this->returnFailure( self::STATUS_ERROR, $APIresponse['Status']->Message);
+                 return $this->returnFailure( self::STATUS_ERROR, $status->Message);
               break;
               case -403: // Quota Exceeded
               case -301: // The file is larger than remaining quota
@@ -223,14 +273,14 @@ class ApiController
                   return $this->returnRetry( self::STATUS_QUOTA_EXCEEDED, __('Quota exceeded.','shortpixel-image-optimiser'));
                   break;
               case -401: // Invalid Api Key
-                  return $this->returnFailure( self::STATUS_NO_KEY, $APIresponse['Status']->Message);
+                  return $this->returnFailure( self::STATUS_NO_KEY, $status->Message);
               break;
               case -404: // Maximum number in optimization queue (remote)
                   //return array("Status" => self::STATUS_QUEUE_FULL, "Message" => $APIresponse['Status']->Message);
-                  return $this->returnRetry( self::STATUS_QUEUE_FULL, $APIresponse['Status']->Message);
+                  return $this->returnRetry( self::STATUS_QUEUE_FULL, $status->Message);
               case -500: // API in maintenance.
                   //return array("Status" => self::STATUS_MAINTENANCE, "Message" => $APIresponse['Status']->Message);
-                  return $this->returnRetry( self::STATUS_MAINTENANCE, $APIresponse['Status']->Message);
+                  return $this->returnRetry( self::STATUS_MAINTENANCE, $status->Message);
           }
     }
 
@@ -253,6 +303,8 @@ class ApiController
             return $this->handleSuccess($item, $APIresponse);
         default:
 
+						// Theoretically this should not be needed.
+						Log::addWarn('ApiController Response not handled before default case');
             if ( isset($APIresponse[0]->Status->Message) ) {
 
                 $err = array("Status" => self::STATUS_FAIL, "Code" => (isset($APIresponse[0]->Status->Code) ? $APIresponse[0]->Status->Code : self::ERR_UNKNOWN),
@@ -575,6 +627,7 @@ class ApiController
         $result->message = $message;
         $result->is_error = true;
         $result->is_done = true;
+				$result->is_questionable_debug = true;
 
         return $result;  // fatal.
   }

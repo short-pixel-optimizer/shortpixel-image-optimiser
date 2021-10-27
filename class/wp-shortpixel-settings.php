@@ -1,4 +1,6 @@
 <?php
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+
 
 /** Settings Model **/
 class WPShortPixelSettings extends \ShortPixel\Model {
@@ -77,7 +79,7 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         'dismissedNotices' => array('key' => 'wp-short-pixel-dismissed-notices', 'default' => array(), 'group' => 'state'),
         'activationDate' => array('key' => 'wp-short-pixel-activation-date', 'default' => null, 'group' => 'state'),
         'activationNotice' => array('key' => 'wp-short-pixel-activation-notice', 'default' => null, 'group' => 'state'),
-        'mediaLibraryViewMode' => array('key' => 'wp-short-pixel-view-mode', 'default' => null, 'group' => 'state'),
+        'mediaLibraryViewMode' => array('key' => 'wp-short-pixel-view-mode', 'default' => false, 'group' => 'state'),
         'redirectedSettings' => array('key' => 'wp-short-pixel-redirected-settings', 'default' => null, 'group' => 'state'),
         'convertedPng2Jpg' => array('key' => 'wp-short-pixel-converted-png2jpg', 'default' => array(), 'group' => 'state'),
         'helpscoutOptin' => array('key' => 'wp-short-pixel-helpscout-optin', 'default' => -1, 'group' => 'state'),
@@ -211,7 +213,7 @@ class WPShortPixelSettings extends \ShortPixel\Model {
     public function __get($name)
     {
         if (array_key_exists($name, self::$_optionsMap)) {
-            return $this->getOpt(self::$_optionsMap[$name]['key']);
+            return $this->getOpt(self::$_optionsMap[$name]['key'], self::$_optionsMap[$name]['default']);
         }
         $trace = debug_backtrace();
         trigger_error(
@@ -233,13 +235,19 @@ class WPShortPixelSettings extends \ShortPixel\Model {
     }
 
     public static function getOpt($key, $default = null) {
+
         if(isset(self::$_optionsMap[$key]['key'])) { //first try our name
             $key = self::$_optionsMap[$key]['key'];
+						$default = self::$_optionsMap[$key]['default'];
         }
         if(get_option($key) === false) {
+
             add_option( $key, $default, '', 'no' );
+
         }
-        return get_option($key);
+
+        $opt = get_option($key, $default);
+				return $opt;
     }
 
     public function setOpt($key, $val) {

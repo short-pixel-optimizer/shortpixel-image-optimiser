@@ -4,6 +4,7 @@ namespace ShortPixel\Helper;
 use \ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 use ShortPixel\Controller\QuotaController as QuotaController;
+use ShortPixel\Controller\OptimizeController as OptimizeController;
 
 class UiHelper
 {
@@ -279,6 +280,8 @@ class UiHelper
     $actions = array();
     $id = $mediaItem->get('id');
     $quotaControl = QuotaController::getInstance();
+		$optimizeController = new OptimizeController();
+
 		if ($id === 0)
 			return array();
 
@@ -287,7 +290,7 @@ class UiHelper
        $actions['extendquota'] = self::getAction('extendquota', $id);
        $actions['checkquota'] = self::getAction('checkquota', $id);
     }
-    elseif($mediaItem->isProcessable() && ! $mediaItem->isOptimized() && ! $mediaItem->isOptimizePrevented())
+    elseif($mediaItem->isProcessable() && ! $mediaItem->isOptimized() && ! $mediaItem->isOptimizePrevented() && ! $optimizeController->isItemInQueue($mediaItem))
     {
        $actions['optimize'] = self::getAction('optimize', $id);
     }
@@ -299,6 +302,7 @@ class UiHelper
   {
     $keyControl = ApiKeyController::getInstance();
     $quotaControl = QuotaController::getInstance();
+		$optimizeController = new OptimizeController();
 
     $text = '';
 
@@ -329,8 +333,11 @@ class UiHelper
     {
       $text = $mediaItem->getMeta('errorMessage');
     }
+		elseif( $optimizeController->isItemInQueue($mediaItem) === true)
+		{
+			 $text = __('This item is waiting to be processed', 'shortpixel-image-optimiser');
+		}
 
-//    var_dump( ($imageObj->isOptimizePrevented() !== false) );
       if ($mediaItem->isOptimizePrevented() !== false)
       {
 

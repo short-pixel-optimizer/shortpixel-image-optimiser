@@ -31,7 +31,7 @@ namespace ShortPixel;
       </div>
     </h3>
 
-    <p class='description'>Welcome to the bulk optimization wizard, where you will be able to select the images that ShortPixel will optimize in the background for you.</p>
+    <p class='description'><?php _e('ShortPixel is optimizing your images. Please leave this window open for the process to complete', 'shortpixel-image-optimiser'); ?> </p>
 
     <?php $this->loadView('bulk/part-progressbar'); ?>
 
@@ -133,9 +133,10 @@ namespace ShortPixel;
     </div>
 
     <nav>
+			<button class='button stop' data-action="StopBulk" >Stop Bulk Processing</button>
       <button class='button pause' data-action="PauseBulk" id="PauseBulkButton">Pause Bulk Processing</button>
-      <button class='button resume' data-action='ResumeBulk' id="ResumeBulkButton">Resume Bulk Processing</button>
-      <button class='button stop' data-action="StopBulk" >Stop Bulk Processing</button>
+      <button class='button button-primary resume' data-action='ResumeBulk' id="ResumeBulkButton">Resume Bulk Processing</button>
+
     </nav>
   </div>
 </section>

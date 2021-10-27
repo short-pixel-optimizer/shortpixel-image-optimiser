@@ -192,9 +192,11 @@ class ShortPixelPlugin
       // integration with WP/LR Sync plugin
       add_action( 'wplr_update_media', array( AjaxController::getInstance() , 'onWpLrUpdateMedia' ), 10, 2);
 
+          add_action( 'admin_bar_menu', array( $admin, 'toolbar_shortpixel_processing'), 999 );
+
+
       if($isAdminUser) {
           //toolbar notifications
-          add_action( 'admin_bar_menu', array( $admin, 'toolbar_shortpixel_processing'), 999 );
         //  add_action( 'wp_head', array( $this, 'headCSS')); // for the front-end
 
           //deactivate conflicting plugins if found
