@@ -132,7 +132,7 @@ class ShortPixelPlugin
       add_action('admin_enqueue_scripts', array($this, 'load_admin_scripts'), 90); // loader via route.
       // defer notices a little to allow other hooks ( notable adminnotices )
 
-    //  add_action( 'shortpixel-thumbnails-before-regenerate', array( $this->shortPixel, 'thumbnailsBeforeRegenerateHook' ), 10, 1);
+
       $optimizeController = new OptimizeController();
       add_action( 'shortpixel-thumbnails-regenerated', array( $optimizeController, 'thumbnailsChangedHook' ), 10, 4);
 
@@ -160,6 +160,8 @@ class ShortPixelPlugin
                 // @integration MediaPress
               add_action( 'mpp_handle_upload', array($admin,'handlePng2JpgHook'));
             }
+
+      			add_action( 'shortpixel-thumbnails-before-regenerate', array( $admin, 'preventImageHook' ), 10, 1);
 
 						add_action("enable-media-replace-upload-done", array($admin, 'handleReplaceEnqueue'), 10,3);
 

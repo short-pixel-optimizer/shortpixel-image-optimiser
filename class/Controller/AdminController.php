@@ -14,6 +14,8 @@ class AdminController extends \ShortPixel\Controller
 {
     protected static $instance;
 
+		private static $preventUploadHook = array();
+
     public function __construct()
     {
 
@@ -33,12 +35,23 @@ class AdminController extends \ShortPixel\Controller
     public function handleImageUploadHook($meta, $id)
     {
         // Media only hook
+				if ( in_array($id, self::$preventUploadHook))
+				{
+					 return $meta;
+				}
+				
         $mediaItem = \wpSPIO()->filesystem()->getImage($id, 'media');
         $control = new OptimizeController();
         $control->addItemToQueue($mediaItem);
 
         return $meta; // It's a filter, otherwise no thumbs
     }
+
+		public function preventImageHook($id)
+		{
+			  self::$preventUploadHook[] = $id;
+		}
+
 
     /** For conversion
     * @hook wp_handle_upload

@@ -30,7 +30,7 @@ class OptimizeController
     }
 
     // If OptimizeController should use the bulkQueues.
-    public function setBulk(bool $bool)
+    public function setBulk($bool)
     {
        $this->isBulk = $bool;
     }
@@ -593,6 +593,8 @@ class OptimizeController
        $settings = \wpSPIO()->settings();
        $imageObj = $fs->getMediaImage($postId);
 
+			 Log::addDebug('Regenerated Thumbnails reported', $regeneratedSizes);
+
        if (count($regeneratedSizes) == 0)
         return;
 
@@ -625,7 +627,12 @@ class OptimizeController
 
 				if (\wpSPIO()->env()->is_autoprocess)
 				{
-						$this->addItemToQueue($imageObj);
+						if($imageObj->isOptimized())
+						{
+							Log::addTemp('Enqueue Thumbnail' . $imageObj->get('id'), $imageObj);
+							Log::addTemp( $imageObj->getOptimized() );
+							$this->addItemToQueue($imageObj);
+						}
 				}
     }
 

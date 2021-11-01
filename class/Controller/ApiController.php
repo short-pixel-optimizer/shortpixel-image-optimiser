@@ -627,7 +627,6 @@ class ApiController
         $result->message = $message;
         $result->is_error = true;
         $result->is_done = true;
-				$result->is_questionable_debug = true;
 
         return $result;  // fatal.
   }
