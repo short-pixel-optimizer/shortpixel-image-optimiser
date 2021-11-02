@@ -103,7 +103,7 @@ $approx = $this->view->approx;
 
       <nav>
         <button class="button" type="button" data-action="FinishBulk">Stop Bulk</button>
-        <button class="button-primary" type="button" data-action="CreateBulk" data-panel="summary" data-check-disable data-control="data-check-total-total">Next</button>
+        <button class="button-primary button" type="button" data-action="CreateBulk" data-panel="summary" data-check-disable data-control="data-check-total-total">Next</button>
       </nav>
 
     </div> <!-- interface wrapper -->

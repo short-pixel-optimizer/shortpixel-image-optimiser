@@ -37,7 +37,7 @@ namespace ShortPixel;
 
    <?php endif; ?>
 
-   <?php if (! $this->view->error): ?>
+   <?php if (! $this->view->error): /*
      <div class='advanced-actions'>
        <h4><?php _e('Advanced Options','shortpixel-image-optimiser'); ?></h4>
        <button type="button" class="button" id="bulk-restore" data-action='open-panel' data-panel="bulk-restore"><?php _e('Bulk Restore', 'shortpixel-image-optimiser'); ?></button>
@@ -45,7 +45,7 @@ namespace ShortPixel;
 
      </div>
 
-   <?php endif; ?>
+   */ endif; ?>
 
    <?php if (count($this->view->logs) > 0): ?>
 

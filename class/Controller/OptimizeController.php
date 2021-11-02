@@ -164,8 +164,11 @@ class OptimizeController
 
         $result = $mediaItem->restore();
 
+				// Compat for ancient WP
+				$now = function_exists('wp_date') ? wp_date( 'U', time() ) : time();
+
 				// Dump this item from server if optimized in the last hour, since it can still be server-side cached.
-				if ( (  wp_date( 'U', time() ) - $optimized) < HOUR_IN_SECONDS )
+				if ( ( $now   - $optimized) < HOUR_IN_SECONDS )
 				{
 					 $api = $this->getAPI();
 					 $item = new \stdClass;
