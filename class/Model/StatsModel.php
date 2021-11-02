@@ -123,7 +123,7 @@ class StatsModel
 
   }
 
-  public function get(string $name)
+  public function get($name)
   {
       if (property_exists($this, $name))
          return $this->$name;
@@ -131,7 +131,7 @@ class StatsModel
         return null;
   }
 
-  public function getStat(string $type)
+  public function getStat($type)
   {
       $this->currentStat = null;
 
@@ -144,7 +144,7 @@ class StatsModel
       return $this;
   }
 
-  public function grab(string $data)
+  public function grab($data)
   {
 
      if (is_null($this->currentStat))
@@ -337,7 +337,7 @@ class StatsModel
       return $count;
   }
 
-  private function countMonthlyOptimized(int $monthsAgo = 1)
+  private function countMonthlyOptimized($monthsAgo = 1)
   {
      global $wpdb;
      //$monthsAgo = 0 - $monthsAgo; // minus it for the sub.

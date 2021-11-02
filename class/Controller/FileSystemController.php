@@ -34,8 +34,10 @@ Class FileSystemController extends \ShortPixel\Controller
       return new FileModel($path);
     }
 
-    /** Get MediaLibraryModel for a Post_id */
-    public function getMediaImage(int $id)
+    /** Get MediaLibraryModel for a Post_id
+		* @param int $id
+		*/
+    public function getMediaImage($id)
     {
         $filepath = get_attached_file($id);
         //$filepath = apply_filters('shortpixel_get_attached_file', $filepath, $id);
@@ -48,22 +50,28 @@ Class FileSystemController extends \ShortPixel\Controller
         return $imageObj;
     }
 
-    public function getCustomImage(int $id)
+		/**
+		* @param int $id
+		*/
+    public function getCustomImage($id)
     {
         $imageObj = new CustomImageModel($id);
         return $imageObj;
     }
 
     /** Gets a custom Image Model without being in the database. This is used to check if path is a proper customModel path ( not mediaLibrary ) and see if the file should be included per excusion rules */
-    public function getCustomStub(string $path, $load = true)
+    public function getCustomStub( $path, $load = true)
     {
         $imageObj = new CustomImageModel(0);
         $imageObj->setStub($path, $load);
         return $imageObj;
     }
 
-    /** Generic function to get the correct image Object, to prevent many switches everywhere */
-    public function getImage(int $id, string $type)
+    /** Generic function to get the correct image Object, to prevent many switches everywhere
+		* int $id
+		* string $type
+		*/
+    public function getImage( $id,  $type)
     {
       $imageObj = null;
 
@@ -75,11 +83,11 @@ Class FileSystemController extends \ShortPixel\Controller
         Log::addError('FileSystemController GetImage - no correc type given: ' . $type);
 
       return $imageObj;
-
     }
 
 
     /* wp_get_original_image_path with specific ShortPixel filter
+		* @param int $id
      */
     public function getOriginalImage($id)
     {

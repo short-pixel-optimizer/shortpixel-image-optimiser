@@ -30,6 +30,10 @@ class ResponseController
     // @internal Should not be used.
     public static function updateModel(ResponseModel $model)
     {
+				// For PHP < 7 . Hopefully this doesn't really matter much.
+				if (! function_exists('spl_object_id'))
+					 return $model;
+
         foreach(self::$responses as $index => $response)
         {
            if (spl_object_id($response) == spl_object_id($model))

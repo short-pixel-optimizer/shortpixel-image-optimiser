@@ -39,7 +39,7 @@ class FileModel extends \ShortPixel\Model
 
 
   /** Creates a file model object. FileModel files don't need to exist on FileSystem */
-  public function __construct(string $path)
+  public function __construct($path)
   {
     $this->fullpath = trim($path);
     $fs = \wpSPIO()->filesystem();
@@ -119,7 +119,6 @@ class FileModel extends \ShortPixel\Model
       }
 
     }
-
 
     return $this->is_writable;
   }
@@ -257,7 +256,7 @@ class FileModel extends \ShortPixel\Model
     return false;
   }
 
-  public function append(string $message)
+  public function append($message)
   {
        if (! $this->exists() )
           $this->create();

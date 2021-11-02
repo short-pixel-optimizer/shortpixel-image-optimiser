@@ -21,7 +21,8 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
     const FILE_STATUS_PREVENT = -10;
 
-    public function __construct(int $id)
+		// @param int $id
+    public function __construct($id)
     {
         $this->id = $id;
 
@@ -43,7 +44,10 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         parent::__construct($this->fullpath);
     }
 
-    public function setFolderId(int $folder_id)
+		/**
+		* @param int $folder_id;
+		*/
+    public function setFolderId($folder_id)
     {
         $this->folder_id = $folder_id;
     }
@@ -272,8 +276,12 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         $this->image_meta = $metaObj;
     }
 
-    /** Load a CustomImageModel as Stub ( to be added ) . Checks if the image is already added as well */
-    public function setStub(string $path, bool $load = true)
+    /** Load a CustomImageModel as Stub ( to be added ) . Checks if the image is already added as well
+		 *
+		 * @param String $path
+		 * @param Boolean $load
+		*/
+    public function setStub($path, $load = true)
     {
        $this->fullpath = $path;
        $this->path_md5 = md5($this->fullpath);

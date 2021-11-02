@@ -1320,7 +1320,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				{
 					 // If the improvement is set, calculate back originalsize.
 					 $imp = $metadata['ShortPixelImprovement'];
-					 $this->image_meta->originalSize = ($this->fileSize() / (100 - $imp)) * 100;
+					 $this->image_meta->originalSize = ($this->getFileSize() / (100 - $imp)) * 100;
 				}
 
        $webp = $this->getWebp();

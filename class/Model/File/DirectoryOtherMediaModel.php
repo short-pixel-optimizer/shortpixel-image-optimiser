@@ -205,7 +205,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
   /** Crawls the folder and check for files that are newer than param time, or folder updated
   * Note - last update timestamp is not updated here, needs to be done separately.
   */
-  public function refreshFolder(bool $force = false)
+  public function refreshFolder($force = false)
   {
       if ($force === false)
       {

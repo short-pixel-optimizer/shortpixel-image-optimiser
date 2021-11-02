@@ -39,7 +39,8 @@ class InstallHelper
 
   public static function deactivatePlugin()
   {
-    \wpSPIO()->settings()::onDeactivate();
+    $settings = \wpSPIO()->settings();
+		$settings::onDeactivate();
 
     $env = wpSPIO()->env();
 

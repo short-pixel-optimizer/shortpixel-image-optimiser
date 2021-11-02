@@ -101,7 +101,7 @@
                             jQuery(".shortpixel-compression p").css("display", "none");
                             jQuery(".shortpixel-compression p." + jQuery(".shortpixel-compression-options input:radio:checked").attr('class')).css("display", "block");
                         }
-                        jQuery(".shortpixel-compression-options input:radio").on('change', shortpixelCompressionLevelInfo); 
+                        jQuery(".shortpixel-compression-options input:radio").on('change', shortpixelCompressionLevelInfo);
                     </script>
                 </td>
             </tr>
@@ -170,14 +170,19 @@
                 <td>
                     <input name="resizeImages" type="checkbox" id="resize" value="1" <?php checked( $view->data->resizeImages, true );?>>
                     <label for="resize"><?php _e('to maximum','shortpixel-image-optimiser');?></label>
-                    <input type="text" name="resizeWidth" id="width" style="width:70px" class="resize-sizes"
+
+                    <input type="number" min="1" max="20000" name="resizeWidth" id="width" style="width:80px" class="resize-sizes"
                            value="<?php echo( $view->data->resizeWidth > 0 ? $view->data->resizeWidth : min(924, $view->minSizes['width']) );?>" <?php echo( $resizeDisabled );?>/> <?php
                            _e('pixels wide &times;','shortpixel-image-optimiser');?>
-                    <input type="text" name="resizeHeight" id="height" class="resize-sizes" style="width:70px"
+
+                    <input type="number" min="1" max="20000" name="resizeHeight" id="height" class="resize-sizes" style="width:80px"
                            value="<?php echo( $view->data->resizeHeight > 0 ? $view->data->resizeHeight : min(924, $view->minSizes['height']) );?>" <?php echo( $resizeDisabled );?>/> <?php
                            _e('pixels high (original aspect ratio is preserved and image is not cropped)','shortpixel-image-optimiser');?>
+
                     <input type="hidden" id="min-resizeWidth" value="<?php echo($view->minSizes['width']);?>" data-nicename="<?php _e('Width', 'shortpixel-image-optimiser'); ?>" />
+
                     <input type="hidden" id="min-resizeHeight" value="<?php echo($view->minSizes['height']);?>" data-nicename="<?php _e('Height', 'shortpixel-image-optimiser'); ?>"/>
+
                     <p class="settings-info">
                         <?php _e('Recommended for large photos, like the ones taken with your phone. Saved space can go up to 80% or more after resizing.','shortpixel-image-optimiser');?>
                         <a href="https://blog.shortpixel.com/resize-images/" class="shortpixel-help-link" target="_blank">

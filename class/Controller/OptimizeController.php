@@ -64,9 +64,10 @@ class OptimizeController
     // Queuing Part
     /* Add Item to Queue should be used for starting manual Optimization
     * Enqueue a single item, put it to front, remove duplicates.
+		* @param Object $mediaItem
     @return int Number of Items added
     */
-    public function addItemToQueue(Object $mediaItem)
+    public function addItemToQueue($mediaItem)
     {
         $fs = \wpSPIO()->filesystem();
 
@@ -129,7 +130,10 @@ class OptimizeController
         return $json;
     }
 
-		public function isItemInQueue(Object $mediaItem)
+		/** Check if item is in queue.
+		* @param Object $mediaItem
+		*/
+		public function isItemInQueue($mediaItem)
 		{
 				$type = $mediaItem->get('type');
 			  $q = $this->getQueue($type);
@@ -143,7 +147,11 @@ class OptimizeController
 
 		}
 
-    public function restoreItem(Object $mediaItem)
+		/** Restores an item
+		*
+		* @param Object $mediaItem
+		*/
+    public function restoreItem($mediaItem)
     {
         $fs = \wpSPIO()->filesystem();
 
@@ -184,7 +192,11 @@ class OptimizeController
         return $json;
     }
 
-    public function reOptimizeItem(Object $mediaItem, $compressionType)
+		/** Reoptimize an item
+		*
+		* @param Object $mediaItem
+		*/
+		public function reOptimizeItem($mediaItem, $compressionType)
     {
       $json = $this->restoreItem($mediaItem);
 
@@ -312,9 +324,9 @@ class OptimizeController
 
     /** Checks and sends the item to processing
     * @param Object $item Item is a stdClass object from Queue. This is not a model, nor a ShortQ Item.
-    *
+    * @param Object $q  Queue Object
 		*/
-    public function sendToProcessing(Object $item, $q)
+    public function sendToProcessing($item, $q)
     {
 
       $api = $this->getAPI();
@@ -352,7 +364,7 @@ class OptimizeController
       return $item;
     }
 
-    protected function convertPNG(Object $item, $mediaQ)
+    protected function convertPNG($item, $mediaQ)
     {
       $settings = \wpSPIO()->settings();
       $fs = \wpSPIO()->filesystem();
@@ -381,7 +393,7 @@ class OptimizeController
     // This is everything sub-efficient.
     /* Handles the Queue Item API result .
     */
-    protected function handleAPIResult(Object $item, $q)
+    protected function handleAPIResult($item, $q)
     {
       $fs = \wpSPIO()->filesystem();
 

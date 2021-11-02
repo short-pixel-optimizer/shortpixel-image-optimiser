@@ -6,32 +6,32 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 class ApiController
 {
-    public const STATUS_ENQUEUED = 10;
-    public const STATUS_SUCCESS = 2;
-    public const STATUS_UNCHANGED = 0;
-    public const STATUS_ERROR = -1;
-    public const STATUS_FAIL = -2;
-    public const STATUS_QUOTA_EXCEEDED = -3;
-    public const STATUS_SKIP = -4;
-    public const STATUS_NOT_FOUND = -5;
-    public const STATUS_NO_KEY = -6;
-    public const STATUS_RETRY = -7;
-    public const STATUS_SEARCHING = -8; // when the Queue is looping over images, but in batch none were   found.
-    public const STATUS_QUEUE_FULL = -404;
-    public const STATUS_MAINTENANCE = -500;
-    public const STATUS_NOT_API = -1000; // Not an API process, i.e restore / migrate. Don't handle as optimized
+    const STATUS_ENQUEUED = 10;
+    const STATUS_SUCCESS = 2;
+    const STATUS_UNCHANGED = 0;
+    const STATUS_ERROR = -1;
+    const STATUS_FAIL = -2;
+    const STATUS_QUOTA_EXCEEDED = -3;
+    const STATUS_SKIP = -4;
+    const STATUS_NOT_FOUND = -5;
+    const STATUS_NO_KEY = -6;
+    const STATUS_RETRY = -7;
+    const STATUS_SEARCHING = -8; // when the Queue is looping over images, but in batch none were   found.
+    const STATUS_QUEUE_FULL = -404;
+    const STATUS_MAINTENANCE = -500;
+    const STATUS_NOT_API = -1000; // Not an API process, i.e restore / migrate. Don't handle as optimized
 
-    public const ERR_FILE_NOT_FOUND = -2;
-    public const ERR_TIMEOUT = -3;
-    public const ERR_SAVE = -4;
-    public const ERR_SAVE_BKP = -5;
-    public const ERR_INCORRECT_FILE_SIZE = -6;
-    public const ERR_DOWNLOAD = -7;
-    public const ERR_PNG2JPG_MEMORY = -8;
-    public const ERR_POSTMETA_CORRUPT = -9;
-    public const ERR_UNKNOWN = -999;
+    const ERR_FILE_NOT_FOUND = -2;
+    const ERR_TIMEOUT = -3;
+    const ERR_SAVE = -4;
+    const ERR_SAVE_BKP = -5;
+    const ERR_INCORRECT_FILE_SIZE = -6;
+    const ERR_DOWNLOAD = -7;
+    const ERR_PNG2JPG_MEMORY = -8;
+    const ERR_POSTMETA_CORRUPT = -9;
+    const ERR_UNKNOWN = -999;
 
-    public const DOWNLOAD_ARCHIVE = 7;
+    const DOWNLOAD_ARCHIVE = 7;
 
     private static $instance;
 
