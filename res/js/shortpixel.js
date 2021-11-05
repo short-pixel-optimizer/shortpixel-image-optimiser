@@ -144,6 +144,7 @@ var ShortPixel = function() {
     }
 
     function setupGeneralTab() {
+				// @todo Make something workable out of this
         var rad = 0;
         if (typeof document.wp_shortpixel_options !== 'undefined')
           rad = document.wp_shortpixel_options.compressionType;
@@ -154,9 +155,10 @@ var ShortPixel = function() {
                     prev = this;
                 }
                 // Warns once that changing compressType is only for new images.
-                if(typeof ShortPixel.setupGeneralTabAlert !== 'undefined') return;
-                alert(_spTr.alertOnlyAppliesToNewImages);
-                ShortPixel.setupGeneralTabAlert = 1;
+            //    if(typeof ShortPixel.setupGeneralTabAlert !== 'undefined') return;
+              //  alert(_spTr.alertOnlyAppliesToNewImages);
+              //  ShortPixel.setupGeneralTabAlert = 1;
+							  $('.compression-notice-row').removeClass('shortpixel-hide');
             };
         }
 

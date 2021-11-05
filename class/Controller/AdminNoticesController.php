@@ -35,6 +35,8 @@ class AdminNoticesController extends \ShortPixel\Controller
 
 		const MSG_CONVERT_LEGACY = 'LegNotice100';
 
+		const MSG_LISTVIEW_ACTIVE = 'UxNotice100';
+
     private $remote_message_endpoint = 'https://api.shortpixel.com/v2/notices.php';
     private $remote_readme_endpoint = 'https://plugins.svn.wordpress.org/shortpixel-image-optimiser/trunk/readme.txt';
 
@@ -160,6 +162,8 @@ class AdminNoticesController extends \ShortPixel\Controller
        $this->doIntegrationNotices();
        $this->doHelpOptInNotices();
        $this->doRemoteNotices();
+
+			 $this->doListViewNotice();
     }
 
 
@@ -411,7 +415,7 @@ class AdminNoticesController extends \ShortPixel\Controller
            $noticeObj = $noticeController->getNoticeByID($id);
 
            // not added to system yet
-            if ($noticeObj == false)
+            if ($noticeObj === false)
             {
               switch ($remoteNotice->type)
               {
@@ -433,6 +437,37 @@ class AdminNoticesController extends \ShortPixel\Controller
 
         }
    }
+
+	 protected function doListViewNotice()
+	 {
+	   	$screen_id = \wpSPIO()->env()->screen_id;
+			if ($screen_id !== 'upload')
+				return;
+
+     $noticeController = Notices::getInstance();
+
+      if ( function_exists('wp_get_current_user') ) {
+            $current_user = wp_get_current_user();
+            $currentUserID = $current_user->ID;
+            $viewMode = get_user_meta($currentUserID, "wp_media_library_mode", true);
+
+						if ($viewMode !== "list")
+						{
+							  $message = __('You can see Shortpixel Image Optimiser actions and data only via the list view. Switch to the list view to use the plugin via the media library', 'shortpixel-image-optimiser');
+								$new_notice = Notices::addNormal($message);
+								Notices::makePersistent($new_notice, self::MSG_LISTVIEW_ACTIVE, YEAR_IN_SECONDS);
+						}
+						else
+						{
+							$noticeObj = $noticeController->getNoticeByID(self::MSG_LISTVIEW_ACTIVE);
+							if ($noticeObj !== false)
+							{
+									Notices::removeNoticeByID(self::MSG_LISTVIEW_ACTIVE);
+							}
+						}
+
+        }
+	 }
 
     // Callback to check if we are on the correct page.
     public function upgradeBulkCallback($notice)

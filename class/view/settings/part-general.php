@@ -71,12 +71,15 @@
                             <label class="lossy" title="<?php _e('This is the recommended option in most cases, producing results that look the same as the original to the human eye.','shortpixel-image-optimiser');?>">
                                 <input type="radio" class="shortpixel-radio-lossy" name="compressionType" value="1"  <?php echo( $view->data->compressionType == 1 ? "checked" : "" );?>><span><?php _e('Lossy','shortpixel-image-optimiser');?></span>
                             </label>
+
                             <label class="glossy" title="<?php _e('Best option for photographers and other professionals that use very high quality images on their sites and want best compression while keeping the quality untouched.','shortpixel-image-optimiser');?>">
                                 <input type="radio" class="shortpixel-radio-glossy" name="compressionType" value="2" <?php echo( $view->data->compressionType == 2 ? "checked" : "" );?>><span><?php _e('Glossy','shortpixel-image-optimiser');?></span>
                             </label>
+
                             <label class="lossless" title="<?php _e('Make sure not a single pixel looks different in the optimized image compared with the original. In some rare cases you will need to use this type of compression. Some technical drawings or images from vector graphics are possible situations.','shortpixel-image-optimiser');?>">
                                 <input type="radio" class="shortpixel-radio-lossless" name="compressionType" value="0" <?php echo( $view->data->compressionType == 0 ? "checked" : "" );?>><span><?php _e('Lossless','shortpixel-image-optimiser');?></span>
                             </label>
+
                             <?php _e('<a href="https://shortpixel.com/online-image-compression" style="margin-left:20px;" target="_blank">Make a few tests</a> to help you decide.'); ?>
 
 
@@ -94,6 +97,8 @@
                         </p>
                         </div>
 
+
+
                     </div>
                     <script>
 
@@ -105,6 +110,17 @@
                     </script>
                 </td>
             </tr>
+
+						<tr class="compression-notice-row shortpixel-hide">
+							<th scope="row">&nbsp;</th>
+							<td>												<div class='compression-notice warning'>
+																						<p><?php _e( 'This type of optimization will apply to new uploaded images. Images that were already processed will not be re-optimized unless you restart the bulk process.', 'shortpixel-image-optimiser' ); ?></p>
+																						<p><?php _e('Any current optimization process running will be stopped.', 'shortpixel-image-optimiser'); ?></p>
+
+																			</div>
+							</td>
+						</tr>
+
             <tr>
                 <th scope="row"><?php _e('Also include thumbnails:','shortpixel-image-optimiser');?></th>
                 <td><input name="processThumbnails" type="checkbox" id="thumbnails" value="1" <?php checked($view->data->processThumbnails, '1');?>>

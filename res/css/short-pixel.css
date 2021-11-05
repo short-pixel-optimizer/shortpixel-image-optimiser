@@ -558,9 +558,7 @@ p.settings-info.shortpixel-settings-error {
     background-color:#0085ba;
     color:#F7F7F7;
 }
-.shortpixel-compression .shortpixel-radio-info {
-    min-height: 60px;
-}
+
 
 /* TABS CONTROLS */
 article.sp-tabs {

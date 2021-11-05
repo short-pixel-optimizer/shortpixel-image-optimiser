@@ -294,6 +294,9 @@ class OptimizeController
 
     private function runTick($Q)
     {
+			// @todo Hunch that ajax heartbeat might be running this.
+			Log::addTemp('RunTick', array(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3)));
+
       $result = $Q->run();
       $results = array();
 
