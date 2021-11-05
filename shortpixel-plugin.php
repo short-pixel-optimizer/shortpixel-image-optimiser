@@ -145,7 +145,7 @@ class ShortPixelPlugin
             }
             add_action('wp_handle_replace', array($admin,'handleReplaceHook'));
 
-            if($this->settings()->autoMediaLibrary) {
+            if($this->settings()->autoMediaLibrary && $this->env()->is_front === false) {
 
                 add_filter( 'wp_generate_attachment_metadata', array($admin,'handleImageUploadHook'), 10, 2 );
                 // @todo Document what plugin does mpp
