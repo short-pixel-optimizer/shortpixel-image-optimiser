@@ -146,8 +146,12 @@ var ShortPixel = function() {
     function setupGeneralTab() {
 				// @todo Make something workable out of this
         var rad = 0;
+
         if (typeof document.wp_shortpixel_options !== 'undefined')
           rad = document.wp_shortpixel_options.compressionType;
+
+				var savedCompression = document.getElementById('compressionType-database').value;
+
         for(var i = 0, prev = null; i < rad.length; i++) {
             rad[i].onclick = function() {
 
@@ -158,6 +162,9 @@ var ShortPixel = function() {
             //    if(typeof ShortPixel.setupGeneralTabAlert !== 'undefined') return;
               //  alert(_spTr.alertOnlyAppliesToNewImages);
               //  ShortPixel.setupGeneralTabAlert = 1;
+							 if (this.value == savedCompression)
+  					 		$('.compression-notice-row').addClass('shortpixel-hide');
+							else
 							  $('.compression-notice-row').removeClass('shortpixel-hide');
             };
         }

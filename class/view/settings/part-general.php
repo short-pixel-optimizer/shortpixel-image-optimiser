@@ -65,7 +65,7 @@
                 </th>
                 <td>
 
-
+										<input type="hidden" id="compressionType-database" value="<?php echo $view->data->compressionType ?>">
                     <div class="shortpixel-compression">
                         <div class="shortpixel-compression-options">
                             <label class="lossy" title="<?php _e('This is the recommended option in most cases, producing results that look the same as the original to the human eye.','shortpixel-image-optimiser');?>">
@@ -97,8 +97,6 @@
                         </p>
                         </div>
 
-
-
                     </div>
                     <script>
 
@@ -113,11 +111,13 @@
 
 						<tr class="compression-notice-row shortpixel-hide">
 							<th scope="row">&nbsp;</th>
-							<td>												<div class='compression-notice warning'>
-																						<p><?php _e( 'This type of optimization will apply to new uploaded images. Images that were already processed will not be re-optimized unless you restart the bulk process.', 'shortpixel-image-optimiser' ); ?></p>
-																						<p><?php _e('Any current optimization process running will be stopped.', 'shortpixel-image-optimiser'); ?></p>
+							<td>
+								<div class='compression-notice warning'>
+									<h4>Changing Compression</h4>
+									<p><?php _e( 'This type of optimization will apply to newly or processed images. Images that were already processed will not be re-optimized. If you want to change the already optimized images, restore them first. ', 'shortpixel-image-optimiser' ); ?></p>
+									<p><?php _e('Current optimization processes in the queue will be stopped.', 'shortpixel-image-optimiser'); ?></p>
 
-																			</div>
+								</div>
 							</td>
 						</tr>
 
@@ -131,6 +131,7 @@
                     </p>
                 </td>
             </tr>
+						
             <tr>
                 <th scope="row"><?php _e('Image backup','shortpixel-image-optimiser');?></th>
                 <td>

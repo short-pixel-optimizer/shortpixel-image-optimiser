@@ -42,6 +42,7 @@ HelpScout::outputBeacon();
         {
           $this->loadView('settings/part-statistics');
         }
+				$this->loadView('settings/part-tools'); 
         if (Log::debugIsActive())
         {
           $this->loadView('settings/part-debug');

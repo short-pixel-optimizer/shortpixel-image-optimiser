@@ -79,9 +79,7 @@ class BulkController
 
      $q = $optimizeControl->getQueue($type);
 
-     $stats = $q->getStats(); // for the log
-
-     $this->addLog($stats, $type);
+		 $this->addLog($q);
 
      $q->resetQueue();
    }
@@ -117,9 +115,14 @@ class BulkController
 				return false;
 	 }
 
-   protected function addLog($stats, $type)
+   protected function addLog($q)
    {
         //$data = (array) $stats;
+				$stats = $q->getStats(); // for the log
+				$type = $q->getType();
+
+				Log::addTemp('Adding log');
+
         if ($stats->done == 0 && $stats->fatal_errors == 0)
           return; // nothing done, don't log
 
@@ -128,6 +131,10 @@ class BulkController
         $data['errors'] = $stats->errors;
         $data['fatal_errors'] = $stats->fatal_errors;
         $data['type'] = $type;
+				if ($q->getCustomDataItem('customOperation'))
+				{
+					$data['operation'] = $q->getCustomDataItem('customOperation');
+				}
         $data['date'] = time();
 
         $logs = $this->getLogs();

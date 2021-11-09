@@ -74,13 +74,16 @@ namespace ShortPixel;
         echo "</div>";
         foreach ($this->view->logs as $logItem):
         {
-          echo "<div class='data " . $logItem['type'] . "'>";
+
+          	echo "<div class='data " . $logItem['type'] . "'>";
 
 					  echo "<span>" . $logItem['images']  . '</span>';
 						echo "<span>" . $logItem['errors'] . '</span>';
 
               echo '<span class="checkmark_green date">' . sprintf(__('%sCompleted%s on %s','shortpixel-image-optimiser'), '<b>','</b>', $logItem['date']) . '</span>';
 
+						echo "<span>" . $logItem['type'] . ' ' . $logItem['operation'] . '</span>';
+//						print_r($logItem);
 
           echo "</div>";
          }

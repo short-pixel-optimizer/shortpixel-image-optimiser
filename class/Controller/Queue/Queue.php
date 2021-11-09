@@ -359,6 +359,7 @@ abstract class Queue
     public function getCustomDataItem($name)
     {
         $customData = $this->getStatus('custom_data');
+				Log::addTemp('CustomData in GetCustomDArta : ' . $name , $customData);
         if (property_exists($customData, $name))
         {
            return $customData->$name;
@@ -517,7 +518,7 @@ abstract class Queue
           $item->png2jpg = $imageModel->get('do_png2jpg');
         }
 
-				// CompressionType can be integer, but not empty string. In cases empty string might happen, causing lossless optimization, which is not correct. 
+				// CompressionType can be integer, but not empty string. In cases empty string might happen, causing lossless optimization, which is not correct.
         if (! is_null($imageModel->getMeta('compressionType')) && is_int($imageModel->getMeta('compressionType')))
 				{
           $item->compressionType = $imageModel->getMeta('compressionType');

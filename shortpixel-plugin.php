@@ -322,7 +322,8 @@ class ShortPixelPlugin
 		$panel = isset($_GET['panel']) ? sanitize_text_field($_GET['panel']) : false;
 
 		$bulkLocalize = array(
-        'endBulk' => __('This will stop the bulk processing and return to the start. Do you want o to do this?', 'shortpixel-image-optimiser'),
+        'endBulk' => __('This will stop the bulk processing and return to the start. Do you want to do this?', 'shortpixel-image-optimiser'),
+				'reloadURL' => admin_url('upload.php?page=wp-short-pixel-bulk'), 
     );
 		if ($panel)
 			$bulkLocalize['panel'] = $panel;

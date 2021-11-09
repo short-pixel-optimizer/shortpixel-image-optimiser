@@ -545,9 +545,10 @@ console.log("Screen Init Done", initMedia, initCustom);
   }
 	this.ReloadScreen = function(event)
 	{
-			console.log('reload event');
 		 	//window.trigger('shortpixel.process.stop');
-			location.reload();
+			var url = shortPixelScreen.reloadURL;
+			location.href = url;
+
 //			this.SwitchPanel('dashboard');
 
 	}

@@ -9,6 +9,7 @@ use ShortPixel\Controller\QuotaController as QuotaController;
 use Shortpixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Controller\BulkController as BulkController;
 use ShortPixel\Controller\StatsController as StatsController;
+use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 use ShortPixel\Helper\UiHelper as UiHelper;
 
 class BulkViewController extends \ShortPixel\ViewController
@@ -68,6 +69,8 @@ class BulkViewController extends \ShortPixel\ViewController
 
   protected function getApproxData()
   {
+		$otherMediaController = OtherMediaController::getInstance();
+
     $approx = new \stdClass; // guesses on basis of the statsController SQL.
     $approx->media = new \stdClass;
     $approx->custom = new \stdClass;
@@ -93,6 +96,7 @@ class BulkViewController extends \ShortPixel\ViewController
 
 
     $approx->custom->images = $sc->find('custom', 'itemsTotal') - $sc->find('custom', 'items');
+		$approx->custom->has_custom = $otherMediaController->hasCustomImages();
 
     $approx->total->images = $approx->media->total + $approx->custom->images; // $sc->totalImagesToOptimize();
     return $approx;
@@ -129,7 +133,12 @@ class BulkViewController extends \ShortPixel\ViewController
             $errors = '<a data-action="OpenLog" data-file="' . $logFile->getFileName() . '" href="' . $fs->pathToUrl($logFile) . '">' . $errors . '</a>';
 					}
 
-          $view[$logData['date']] = array('type' => $logData['type'], 'images' => $logData['processed'], 'errors' => $errors, 'date' => UiHelper::formatTS($logData['date']) );
+					$op = (isset($logData['operation'])) ? $logData['operation'] : false;
+
+          $view[$logData['date']] = array('type' => $logData['type'], 'images' => $logData['processed'], 'errors' => $errors, 'date' => UiHelper::formatTS($logData['date']), 'operation' => $op);
+
+
+
 
       }
 

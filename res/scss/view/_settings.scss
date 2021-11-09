@@ -155,14 +155,23 @@
     padding: 1px 12px;
     p {
       margin: 1em 0 !important;
- 			line-height: 12px;
+ 			//line-height: 12px;
 
     }
+		h4 {
+			margin: 0;
+			font-size: 16px;
+		}
     &.warning
     {
       border-left-color: #ffb900;
     }
   }
+	// lazy reposition.
+	.compression-notice
+	{
+		margin-top: -20px;
+	}
 
   .view-notice-row
   {

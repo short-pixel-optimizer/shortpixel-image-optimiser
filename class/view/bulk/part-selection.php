@@ -5,6 +5,9 @@ $approx = $this->view->approx;
 ?>
 <section class='panel selection' data-panel="selection" data-status="loaded" >
   <div class="panel-container">
+			<span class='hidden' data-check-custom-hascustom >
+				<?php echo  ($this->view->approx->custom->has_custom === true) ? 1 : 0;  ?>
+			</span>
 
       <h3 class="heading"><span><img src="<?php echo \wpSPIO()->plugin_url('res/img/robo-slider.png'); ?>"></span>
         Shortpixel Bulk Optimization - Select Images
@@ -46,7 +49,7 @@ $approx = $this->view->approx;
             </div>
          </div>
 
-         <div class="custom-images optiongroup " >
+         <div class="custom-images optiongroup"  data-check-visibility data-control="data-check-custom-hascustom" >
            <div class='switch_button'>
              <label>
                <input type="checkbox" class="switch" id="custom_checkbox" checked>
@@ -72,7 +75,8 @@ $approx = $this->view->approx;
            </div>
            <h4>Also Webp.</h4>
 					 <div><span>Media</span><span class="number"><?php echo $approx->media->total ?></span></div>
-           <div><span>Custom </span><span class="number"><?php echo $approx->custom->images ?></span>
+
+           <div data-check-visibility data-control="data-check-custom-hascustom"><span>Custom </span><span class="number"><?php echo $approx->custom->images ?></span>
 					 </div>
        </div>
 
@@ -88,7 +92,7 @@ $approx = $this->view->approx;
          </div>
          <h4>Also Avif.</h4>
 					 <div><span>Media</span><span class="number"><?php echo $approx->media->total ?></span></div>
-           <div><span>Custom </span><span class="number"><?php echo $approx->custom->images ?></span>
+           <div data-check-visibility data-control="data-check-custom-hascustom"><span>Custom </span><span class="number"><?php echo $approx->custom->images ?></span>
 					 </div>
      </div>
 

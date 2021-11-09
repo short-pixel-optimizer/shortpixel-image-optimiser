@@ -26,7 +26,7 @@ namespace ShortPixel;
                             " stroke-width="16" fill-opacity="0" style="stroke-dasharray: 289.027px, 289.027px; stroke-dashoffset: 180px;">
                         </path>
                         <text class="text" x="50" y="50"><?php _e('N/A', 'shortpixel-image-optimiser'); ?></text>
-                    </svg>
+            </svg>
 
       </div>
     </h3>
