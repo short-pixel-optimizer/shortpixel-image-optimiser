@@ -4,6 +4,8 @@ use ShortPixel\Notices\NoticeController as NoticeController;
 use Shortpixel\Controller\StatsController as StatsController;
 use Shortpixel\Controller\OptimizeController as OptimizeController;
 
+
+
 ?>
 
 <section id="tab-debug" <?php echo ($this->display_part == 'debug') ? ' class="sel-tab" ' :''; ?>>

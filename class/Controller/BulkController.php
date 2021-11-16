@@ -121,8 +121,6 @@ class BulkController
 				$stats = $q->getStats(); // for the log
 				$type = $q->getType();
 
-				Log::addTemp('Adding log');
-
         if ($stats->done == 0 && $stats->fatal_errors == 0)
           return; // nothing done, don't log
 

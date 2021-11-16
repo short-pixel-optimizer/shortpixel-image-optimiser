@@ -124,7 +124,7 @@ class OptimizeController
             $json->qstatus = $result->qstatus;
             $json->result->fileStatus = ImageModel::FILE_STATUS_PENDING;
             $json->result->is_error = false;
-            $json->result->message = __('Optimizing, please wait', 'shortpixel-image-optimiser');
+            $json->result->message = __('Item added to queue and will be optimized on the next run', 'shortpixel-image-optimiser');
         }
 
         return $json;
@@ -186,7 +186,10 @@ class OptimizeController
         }
         else
         {
-           $json->result->message = __('Item not restorable', 'shortpixel-image-optimiser');
+					 if ( ! $mediaItem->isOptimized())
+					 	$json->result->message = __('Item could\'t be restored - Item is not optimized.', 'shortpixel-image-optimiser');
+					 else
+           	$json->result->message = __('Item is not restorable', 'shortpixel-image-optimiser');
            $json->result->is_done = true;
            $json->fileStatus = ImageModel::FILE_STATUS_ERROR;
            $json->result->is_error = true;
@@ -295,7 +298,6 @@ class OptimizeController
     private function runTick($Q)
     {
 			// @todo Hunch that ajax heartbeat might be running this.
-			Log::addTemp('RunTick', array(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3)));
 
       $result = $Q->run();
       $results = array();
@@ -647,8 +649,7 @@ class OptimizeController
 				{
 						if($imageObj->isOptimized())
 						{
-							Log::addTemp('Enqueue Thumbnail' . $imageObj->get('id'), $imageObj);
-							Log::addTemp( $imageObj->getOptimized() );
+
 							$this->addItemToQueue($imageObj);
 						}
 				}
@@ -671,7 +672,7 @@ class OptimizeController
             $json->message = sprintf(__('Prepared %s items', 'shortpixel-image-optimiser'), $result->items );
           break;
           case Queue::RESULT_PREPARING_DONE:
-            $json->message = sprintf(__('Preparing is done, queue has  %s items ', 'shortpixel-image-optimiser'), $result->items );
+            $json->message = sprintf(__('Preparing is done, queue has %s items ', 'shortpixel-image-optimiser'), $result->stats->total );
           break;
           case Queue::RESULT_EMPTY:
               $json->message  = __('Queue returned no active items', 'shortpixel-image-optimiser');

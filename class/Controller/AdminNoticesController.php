@@ -7,6 +7,8 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\ViewController as ViewController;
 
+use ShortPixel\Model\AccessModel as AccessModel;
+
 // Use ShortPixel\Model\ApiKeyModel as ApiKeyModel
 
 /**
@@ -112,6 +114,8 @@ class AdminNoticesController extends \ShortPixel\Controller
             return; // suppress all when not our screen.
       }
 
+			$access = AccessModel::getInstance();
+
       $noticeControl = Notices::getInstance();
       $noticeControl->loadIcons(array(
           'normal' => '<img class="short-pixel-notice-icon" src="' . plugins_url('res/img/slider.png', SHORTPIXEL_PLUGIN_FILE) . '">',
@@ -130,7 +134,14 @@ class AdminNoticesController extends \ShortPixel\Controller
 
           foreach($notices as $notice)
           {
-            echo $notice->getForDisplay();
+						if ($access->noticeIsAllowed($notice))
+						{
+            		echo $notice->getForDisplay();
+						}
+						else
+						{
+							 continue;
+						}
 
             if ($notice->getID() == AdminNoticesController::MSG_QUOTA_REACHED || $notice->getID() == AdminNoticesController::MSG_UPGRADE_MONTH
             || $notice->getID() == AdminNoticesController::MSG_UPGRADE_BULK)

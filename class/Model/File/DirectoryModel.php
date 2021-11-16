@@ -242,14 +242,25 @@ class DirectoryModel extends \ShortPixel\Model
   */
   public function check($check_writable = false)
   {
+		 $permission = $this->getPermissionRecursive();
+
+  	 if ($permission === false) // if something wrong, return to default.
+		 {
+		 		$permission = $this->new_directory_permission;
+		 }
+
      if (! $this->exists())
      {
-        Log::addInfo('Directory does not exists. Try to create recursive ' . $this->path . ' with '  . $this->new_directory_permission);
-        $result = @mkdir($this->path, $this->new_directory_permission , true);
+
+        Log::addInfo('Directory does not exists. Try to create recursive ' . $this->path . ' with '  . $permission);
+
+
+        $result = @mkdir($this->path, $permission , true);
+				chmod ($this->path, $permission );
+
         if (! $result)
         {
           $error = error_get_last();
-          echo $error['message'];
           Log::addWarn('MkDir failed: ' . $error['message'], array($error));
         }
 				// reset.
@@ -260,7 +271,11 @@ class DirectoryModel extends \ShortPixel\Model
      }
      if ($this->exists() && $check_writable && ! $this->is_writable())
      {
-       chmod($this->path, $this->new_directory_permission);
+       chmod($this->path, $this->permission);
+			 if (! $this->is_writable()) // perhaps parent permission is no good.
+			 {
+			 		chmod($this->path, $this->new_directory_permission);
+			 }
      }
 
      if (! $this->exists())
@@ -275,6 +290,20 @@ class DirectoryModel extends \ShortPixel\Model
     }
     return true;
   }
+
+	public function getPermissionRecursive()
+	{
+		 $parent = $this->getParent();
+		  if (! $parent->exists())
+			{
+				 return $parent->getPermissionRecursive();
+			}
+			else
+			{
+				 return $parent->getPermissions();
+			}
+
+	}
 
   /* Get files from directory
   * @returns Array|boolean Returns false if something wrong w/ directory, otherwise a files array of FileModel Object.
@@ -448,6 +477,24 @@ class DirectoryModel extends \ShortPixel\Model
 
       return $parentDir;
   }
+
+	public function getPermissions()
+	{
+			if (! $this->exists())
+			{
+				 Log::addWarning('Directory not existing (fileperms): '. $this->getPath() );
+				 return false;
+			}
+		  $perms = fileperms($this->getPath());
+
+			if ($perms !== false)
+			{
+				return $perms;
+			}
+			else
+				return false;
+
+	}
 
   public function delete()
   {

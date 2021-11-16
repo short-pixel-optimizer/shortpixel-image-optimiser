@@ -1,10 +1,13 @@
 <?php
 namespace ShortPixel\Helper;
 
-use \ShortPixel\Model\Image\ImageModel as ImageModel;
+use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 use ShortPixel\Controller\QuotaController as QuotaController;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
+
+use ShortPixel\Model\AccessModel as AccessModel;
+
 
 class UiHelper
 {
@@ -96,7 +99,6 @@ class UiHelper
 
            $blocks_on = str_repeat('<span class="point checked">&nbsp;</span>', $rating);
            $blocks_off = str_repeat('<span class="point">&nbsp;</span>', (10- $rating));
-
 
            $output .= "<div class='thumb " . $thumbName . "' title='" . $title . "'>"
                        . "<span class='thumb-name'>" .  $thumbName . '</span>' .
@@ -191,6 +193,12 @@ class UiHelper
 
       $quotaControl = QuotaController::getInstance();
 
+			$access = AccessModel::getInstance();
+			if (! $access->imageIsEditable($mediaItem))
+			{
+				 return array();
+			}
+
 			if ($id === 0)
 				return array();
 
@@ -282,6 +290,12 @@ class UiHelper
     $quotaControl = QuotaController::getInstance();
 		$optimizeController = new OptimizeController();
 
+		$access = AccessModel::getInstance();
+		if (! $access->imageIsEditable($mediaItem))
+		{
+			 return array();
+		}
+
 		if ($id === 0)
 			return array();
 
@@ -294,6 +308,8 @@ class UiHelper
     {
        $actions['optimize'] = self::getAction('optimize', $id);
     }
+
+
 
     return $actions;
   }

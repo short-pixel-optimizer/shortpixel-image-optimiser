@@ -242,10 +242,9 @@ class ApiKeyModel extends \ShortPixel\Model
     }
 
     //test that the "uploads"  have the right rights and also we can create the backup dir for ShortPixel
-    if ( \wpSPIO()->filesystem()->createBackupFolder() === false)
+    if ( \wpSPIO()->filesystem()->checkBackupFolder() === false)
     {
-        $notice = sprintf(__("There is something preventing us to create a new folder for backing up your original files.<BR>Please make sure that folder <b>%s</b> has the necessary write and read rights.",'shortpixel-image-optimiser'),
-                             WP_CONTENT_DIR . '/' . SHORTPIXEL_UPLOADS_NAME );
+        $notice = sprintf(__("There is something preventing us to create a new folder for backing up your original files.<BR>Please make sure that folder <b>%s</b> has the necessary write and read rights.",'shortpixel-image-optimiser'), WP_CONTENT_DIR . '/' . SHORTPIXEL_UPLOADS_NAME );
        Notice::addError($notice);
     }
 

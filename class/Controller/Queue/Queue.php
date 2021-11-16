@@ -4,6 +4,7 @@ namespace ShortPixel\Controller\Queue;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\CacheController as CacheController;
+use ShortPixel\Controller\ResponseController as ResponseController;
 
 use ShortPixel\ShortQ\ShortQ as ShortQ;
 
@@ -167,7 +168,11 @@ abstract class Queue
 
           //$customData = $this->getStatus('custom_data');
 
-          $operation = $this->getCustomDataItem('customOperation'); // false or value
+          $operation = $this->getCustomDataItem('customOperation'); // false or value (or null)
+					Log::addDebug('Operation', $operation);
+
+					if (is_null($operation))
+						$operation = false;
 
           // maybe while on the whole function, until certain time has elapsed?
           foreach($items as $mediaItem)
@@ -175,6 +180,7 @@ abstract class Queue
                 if ($mediaItem->isProcessable() && $mediaItem->isOptimizePrevented() === false && ! $operation) // Checking will be done when processing queue.
                 {
                     $qObject = $this->imageModelToQueue($mediaItem);
+
 
                     $counts = $qObject->counts;
 
@@ -213,6 +219,14 @@ abstract class Queue
                    elseif($mediaItem->isOptimized())
                    {
                    }
+									 else
+									 {
+										 	$message = sprintf(__('Preparing of item %d failed - %s','shortpixel-image-optimiser'),
+												$mediaItem->get('id'), $mediaItem->getProcessableReason() );
+
+											ResponseController::add()->asError()->withMessage($message);
+
+									 }
 
                 }
           }
@@ -359,7 +373,6 @@ abstract class Queue
     public function getCustomDataItem($name)
     {
         $customData = $this->getStatus('custom_data');
-				Log::addTemp('CustomData in GetCustomDArta : ' . $name , $customData);
         if (property_exists($customData, $name))
         {
            return $customData->$name;
@@ -585,7 +598,7 @@ abstract class Queue
         $data->webpCount = 0;
         $data->avifCount = 0;
 				$data->baseCount = 0;
-        $data->customOperation = null;
+        $data->customOperation = false;
 
         return $data;
     }

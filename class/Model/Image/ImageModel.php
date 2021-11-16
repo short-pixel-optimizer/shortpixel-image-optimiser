@@ -42,6 +42,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     const P_EXCLUDE_PATH  = 4;
     const P_IS_OPTIMIZED = 5;
     const P_FILE_NOTWRITABLE = 6;
+		const P_BACKUPDIR_NOTWRITABLE = 7;
+		const P_BACKUP_EXISTS = 8;
+
 
     protected $image_meta; // metadata Object of the image.
 
@@ -105,12 +108,13 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     public function isProcessable()
     {
 				$this->processable_status = 0; // reset everytime.
-				
-        if ( $this->isOptimized() || ! $this->exists()  || $this->isPathExcluded() || $this->isExtensionExcluded() || $this->isSizeExcluded() || (! $this->is_writable() && ! $this->is_virtual()) || $this->isOptimizePrevented() !== false
-        )
+
+        if ( $this->isOptimized() || ! $this->exists()  || $this->isPathExcluded() || $this->isExtensionExcluded() || $this->isSizeExcluded() || (! $this->is_writable() && ! $this->is_virtual()) || $this->isOptimizePrevented() !== false )
         {
           if(! $this->is_writable() && $this->processable_status == 0)
+					{
             $this->processable_status = self::P_FILE_NOTWRITABLE;
+					}
 
           return false;
         }
@@ -173,6 +177,13 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         case self::P_FILE_NOTWRITABLE:
             $message = __('Image is not writable', 'shortpixel-image-optimiser');
          break;
+				 case self::P_BACKUPDIR_NOTWRITABLE:
+				 		$message = __('Backup directory is not writable', 'shortpixel-image-optimiser');
+				 break;
+				 case self::P_BACKUP_EXISTS:
+				 		$message = __('Backup already exists', 'shortpixel-image-optimiser');
+				 break;
+
          default:
             $message = __(sprintf('Unknown Issue, Code %s',  $this->processable_status), 'shortpixel-image-optimiser');
          break;
@@ -559,13 +570,28 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
         if (! $backupFile->is_readable())
         {
+						Log::addError('BackupFile not readable' . $backupFile->getFullPath());
             ResponseController::add()->withMessage(__('BackupFile not readable. Check file and/or file permissions', 'shortpixel-image-optimiser'));
            return false; //error
          }
-        $bool = $backupFile->move($this);
+				 elseif (! $backupFile->is_writable())
+				 {
+ 						Log::addError('BackupFile not writable' . $backupFile->getFullPath());
+             ResponseController::add()->asError()->withMessage(__('BackupFile not writable. Check file and/or file permissions', 'shortpixel-image-optimiser'));
+            return false; //error
+				 }
+				 if (! $this->is_writable())
+				 {
+					 	 Log::addError('Target File not writable' . $this->getFullPath());
+					   ResponseController::add()->withMessage( sprintf(__('Target file %s not writable. Check file permissions', 'shortpixel-image-optimiser'), $this->getFullPath()));
+						 return false;
+				 }
+
+				$bool = $backupFile->move($this);
 
         if ($bool !== true)
         {
+					Log::addError('Moving backupFile failed -' . $this->getFullpath() );
           ResponseController::add()->withMessage(__('Moving Backupfile failed' , 'shortpixel-image-optimiser'));
         }
         return $bool;
@@ -727,8 +753,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
             }
             else
             {
-              $this->preventNextTry(__('Fatal Issue: Backup exists, but is not restorable', 'shortpixel-image-optimiser'));
-              Log::addError('Backup already exists, and not the same size! BackupFile Size : ' . $backupFile->getFileSize() . ' This Filesize : ' . $this->getFileSize(), $this->fullpath);
+              $this->preventNextTry(__('Fatal Issue: The Backup file already exists. The backup seems not restorable, or the current file is bigger than the backup indicating an error.', 'shortpixel-image-optimiser'));
+
+              Log::addError('The backup already exists, and is smaller than the current file. BackupFile Size : ' . $backupFile->getFileSize() . ' This Filesize : ' . $this->getFileSize(), $this->fullpath);
               $this->error_message = __('Backup already exists with a different size', 'shortpixel-image-optimiser');
             }
 

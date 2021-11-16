@@ -80,7 +80,7 @@ Class FileSystemController extends \ShortPixel\Controller
       elseif($type == 'custom')
         $imageObj = $this->getCustomImage($id);
       else
-        Log::addError('FileSystemController GetImage - no correc type given: ' . $type);
+        Log::addError('FileSystemController GetImage - no correct type given: ' . $type);
 
       return $imageObj;
     }
@@ -208,14 +208,13 @@ Class FileSystemController extends \ShortPixel\Controller
     }
 
     /** Not in use yet, do not use. Future replacement. */
-    public function createBackUpFolder($folder = SHORTPIXEL_BACKUP_FOLDER)
+    public function checkBackUpFolder($folder = SHORTPIXEL_BACKUP_FOLDER)
     {
 				$dirObj = $this->getDirectory($folder);
-				$result = $dirObj->check();  // check creates the whole structure if needed.
-
+				$result = $dirObj->check(true);  // check creates the whole structure if needed.
 				return $result;
-
     }
+
 
     /** Utility function that tries to convert a file-path to a webURL.
     *

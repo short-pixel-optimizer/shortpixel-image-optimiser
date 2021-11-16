@@ -157,11 +157,13 @@ class AjaxController
 						$this->returnTestData();
 				}
 
+
         // Notice that POST variables are always string, so 'true', not true.
         $isBulk = (isset($_POST['isBulk']) && $_POST['isBulk'] === 'true') ? true : false;
         $queue = (isset($_POST['queues'])) ? sanitize_text_field($_POST['queues']) : 'media,custom';
         $queues = array_filter(explode(',', $queue), 'trim');
 
+		//		Log::addTemp('Ajax ProcessQueue', debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 2) );
         $control = new OptimizeController();
         $control->setBulk($isBulk);
         $result = $control->processQueue($queues);

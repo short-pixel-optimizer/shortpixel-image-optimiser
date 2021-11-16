@@ -261,13 +261,16 @@ class FileModel extends \ShortPixel\Model
        if (! $this->exists() )
           $this->create();
 
-       if (! $this->is_writable() )
-          Log::addWarn('File append failed on ' . $this->fullpath() . ' - not writable');
-
+      if (! $this->is_writable() )
+			{
+          Log::addWarn('File append failed on ' . $this->getFullPath() . ' - not writable');
+					return false;
+			}
       $handle = fopen($this->getFullPath(), 'a');
       fwrite($handle, $message);
       fclose($handle);
 
+			return true;
   }
 
 
@@ -297,8 +300,11 @@ class FileModel extends \ShortPixel\Model
       $status = @copy($sourcePath, $destinationPath);
 
       if (! $status)
+			{
         Log::addWarn('Could not copy file ' . $sourcePath . ' to' . $destinationPath);
-      else {
+			}
+      else
+			{
         $destination->resetStatus();
         $destination->setFileInfo(); // refresh info.
       }
@@ -317,6 +323,11 @@ class FileModel extends \ShortPixel\Model
      if ($this->copy($destination))
      {
        $result = $this->delete();
+			 if ($result == false)
+			 {
+				 Log::addError('Move can\'t remove ' . $this->getFullPath());
+			 }
+
        $this->resetStatus();
        $destination->resetStatus();
      }

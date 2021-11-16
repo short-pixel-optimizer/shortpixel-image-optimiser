@@ -160,7 +160,7 @@ class QuotaController
 
           $requestURL = $settings->httpProto . '://' . SHORTPIXEL_API . '/v2/api-status.php';
           $args = array(
-              'timeout'=> SHORTPIXEL_VALIDATE_MAX_TIMEOUT,
+              'timeout'=> 15, // wait for 15 secs.
               'body' => array('key' => $apiKey)
           );
           $argsStr = "?key=".$apiKey;

@@ -3,14 +3,13 @@
  * Plugin Name: ShortPixel Image Optimizer
  * Plugin URI: https://shortpixel.com/
  * Description: ShortPixel optimizes images automatically, while guarding the quality of your images. Check your <a href="options-general.php?page=wp-shortpixel-settings" target="_blank">Settings &gt; ShortPixel</a> page on how to start optimizing your image library and make your website load faster.
- * Version: 5.0-Alpha-Queue-029
+ * Version: 5.0-Alpha-Queue-030
  * Author: ShortPixel
  * Author URI: https://shortpixel.com
  * GitHub Plugin URI: https://github.com/short-pixel-optimizer/shortpixel-image-optimiser
  * Text Domain: shortpixel-image-optimiser
  * Domain Path: /lang
  */
-
 
 // Preventing double load crash.
 if (function_exists('wpSPIO'))
@@ -31,24 +30,16 @@ if (! defined('SHORTPIXEL_RESET_ON_ACTIVATE'))
 define('SHORTPIXEL_PLUGIN_FILE', __FILE__);
 define('SHORTPIXEL_PLUGIN_DIR', __DIR__);
 
-//define('SHORTPIXEL_AFFILIATE_CODE', '');
+define('SHORTPIXEL_IMAGE_OPTIMISER_VERSION', "5.0-Alpha-Queue-030");
 
-define('SHORTPIXEL_IMAGE_OPTIMISER_VERSION', "5.0-Alpha-Queue-029");
-define('SHORTPIXEL_MAX_TIMEOUT', 10);
-define('SHORTPIXEL_VALIDATE_MAX_TIMEOUT', 15);
 define('SHORTPIXEL_BACKUP', 'ShortpixelBackups');
-define('SHORTPIXEL_MAX_API_RETRIES', 50);
-define('SHORTPIXEL_MAX_ERR_RETRIES', 5);
 define('SHORTPIXEL_MAX_FAIL_RETRIES', 3);
-if(!defined('SHORTPIXEL_MAX_THUMBS')) { //can be defined in wp-config.php
-    define('SHORTPIXEL_MAX_THUMBS', 149);
-}
+
 
 if(!defined('SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION')) { //can be defined in wp-config.php
     define('SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION', false);
 }
 
-define('SHORTPIXEL_PRESEND_ITEMS', 3);
 define('SHORTPIXEL_API', 'api.shortpixel.com');
 
 $max_exec = intval(ini_get('max_execution_time'));
@@ -73,8 +64,6 @@ define('SHORTPIXEL_BACKUP_URL',
         : dirname(dirname($sp__uploads['baseurl'])))
     . '/' . SHORTPIXEL_BACKUP);
 
-define('SHORTPIXEL_MAX_EXECUTION_TIME2', 2 ); // @todo 2, 2 what?
-define("SHORTPIXEL_MAX_RESULTS_QUERY", 30);
 
 //define("SHORTPIXEL_EXPERIMENTAL_SECURICACHE", true);  // tries to add timestamps to URLS, to prevent hitting the cache.
 //define('SHORTPIXEL_SILENT_MODE', true); // no global notifications. Can lead to data damage. After setting, reactivate plugin.
