@@ -10,6 +10,8 @@ class ResponseModel
     public $code = 1;
     public $priority = 1;
     public $id;
+		public $filename; // image or codefile that the result of this annoyance.
+
 //    protected $actions; // might be tricky to generate
 
     const RESPONSE_ACTION = 1; // when an action has been performed
@@ -52,6 +54,11 @@ class ResponseModel
        $this->message = $message;
        return $this->chainIt();
     }
+		public function inFile($filename)
+		{
+			 $this->filename = $filename;
+			 return $this->chainIt();
+		}
     //public function withCode // asImportant? asMessage ? asSuccess?
     public function asMediaItem($id)
     {
@@ -63,6 +70,14 @@ class ResponseModel
        $this->id = $id;
        return $this->chainIt();
     }
+
+		public function asItem($id, $type = 'media')
+		{
+			  if ($type == 'media')
+					 return $this->asMediaItem($id);
+				else
+					 return $this->asCustomItem($id);
+		}
     public function asSuccess()
     {
         $this->code = self::RESPONSE_SUCCESS;

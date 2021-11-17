@@ -435,9 +435,10 @@ class OtherMediaViewController extends \ShortPixel\ViewController
       }
 
       // Use for view, also for renderItemView
-      public function printItemActions($item)
+			public function printItemActions($item)
       {
         $actions = UiHelper::getActions($item); // $this->getActions($item, $itemFile);
+
 
         $list_actions = UiHelper::getListActions($item);
         if (count($list_actions) > 0)

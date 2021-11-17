@@ -270,7 +270,10 @@ class UiHelper
                break;
            }
 
-          $list_actions['restore'] = self::getAction('restore', $id);
+					 	if ($mediaItem->isRestorable())
+					 	{
+          		$list_actions['restore'] = self::getAction('restore', $id);
+						}
           }
       }
 
@@ -304,7 +307,7 @@ class UiHelper
        $actions['extendquota'] = self::getAction('extendquota', $id);
        $actions['checkquota'] = self::getAction('checkquota', $id);
     }
-    elseif($mediaItem->isProcessable() && ! $mediaItem->isOptimized() && ! $mediaItem->isOptimizePrevented() && ! $optimizeController->isItemInQueue($mediaItem))
+    elseif($mediaItem->isProcessable(true) && ! $mediaItem->isOptimized() && ! $mediaItem->isOptimizePrevented() && ! $optimizeController->isItemInQueue($mediaItem))
     {
        $actions['optimize'] = self::getAction('optimize', $id);
     }
@@ -335,7 +338,7 @@ class UiHelper
     {
        $text = UiHelper::renderSuccessText($mediaItem);
     }
-    elseif (! $mediaItem->isProcessable() && ! $mediaItem->isOptimized())
+    elseif (! $mediaItem->isProcessable(true) && ! $mediaItem->isOptimized())
     {
        $text = __('Not Processable: ','shortpixel_image_optimiser');
        $text  .= $mediaItem->getProcessableReason();

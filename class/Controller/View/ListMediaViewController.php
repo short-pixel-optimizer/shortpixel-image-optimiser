@@ -6,7 +6,10 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Helper\UiHelper as UiHelper;
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 use ShortPixel\Controller\QuotaController as QuotaController;
+use ShortPixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
+
+
 
 // Controller for the MediaLibraryView
 class ListMediaViewController extends \ShortPixel\ViewController
@@ -15,7 +18,6 @@ class ListMediaViewController extends \ShortPixel\ViewController
   protected $template = 'view-list-media';
 //  protected $model = 'image';
 
-  protected $hooked = false;
 
   public function __construct()
   {
@@ -26,9 +28,75 @@ class ListMediaViewController extends \ShortPixel\ViewController
 
   public function load()
   {
-    if (! $this->hooked)
+			$this->checkAction(); // bulk action checkboxes, y'all
       $this->loadHooks();
+
   }
+
+	/** Check if a bulk action (checkboxes) was requested
+	*/
+	protected function checkAction()
+	{
+	   $wp_list_table = _get_list_table('WP_Media_List_Table');
+     $action = $wp_list_table->current_action();
+
+
+		 if (! $action)
+		 		return;
+
+		if(strpos($action, 'shortpixel') === 0 ) {
+		 		check_admin_referer('bulk-media');
+
+				// Nothing selected, nothing doin'
+				if (! isset($_GET['media']) || ! is_array($_GET['media']))
+					return;
+
+		}
+
+		 $fs = \wpSPIO()->filesystem();
+		 $optimizeController = new OptimizeController();
+		 $items = array_filter($_GET['media'], 'intval');
+
+		 $numItems = count($items);
+	   $plugin_action = str_replace('shortpixel-', '', $action);
+
+		 $targetCompressionType = null;
+
+		 switch ($plugin_action)
+		 {
+			  case "glossy":
+					 $targetCompressionType = ImageModel::COMPRESSION_GLOSSY;
+				break;
+				case "lossy":
+					 $targetCompressionType = ImageModel::COMPRESSION_LOSSY;
+				break;
+				case "lossless":
+					  $targetCompressionType = ImageModel::COMPRESSION_LOSSLESS;
+				break;
+		 }
+
+		 foreach($items as $item_id)
+		 {
+			 	 $mediaItem = $fs->getMediaImage($item_id);
+			   switch($plugin_action)
+				 {
+					 	case 'optimize':
+							 $res = $optimizeController->addItemToQueue($mediaItem);
+						break;
+						case 'glossy':
+						case 'lossy':
+						case 'lossless':
+							 	$res = $optimizeController->reOptimizeItem($mediaItem, $targetCompressionType);
+						break;
+						case 'restore';
+								$res = $optimizeController->restoreItem($mediaItem);
+						break;
+				 }
+
+		 }
+
+	}
+
 
   /** Hooks for the MediaLibrary View */
   protected function loadHooks()

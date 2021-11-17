@@ -53,7 +53,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
     <table class="form-table">
         <tbody>
             <tr>
-                <th scope="row"><label for="additional-media"><?php _e('Additional media folders','shortpixel-image-optimiser');?></label></th>
+                <th scope="row"><label for="additional-media"><?php _e('Custom media folders','shortpixel-image-optimiser');?></label></th>
                 <td>
                     <span style="display:none;">Current PHP version: <?php echo(phpversion()) ?></span>
                     <?php if($view->customFolders) { ?>
@@ -154,7 +154,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                       </a>
                     <input type="submit" name="save" id="saveAdvAddFolder" class="button button-primary hidden" title="<?php _e('Add this Folder','shortpixel-image-optimiser');?>" value="<?php _e('Add this Folder','shortpixel-image-optimiser');?>">
                     <p class="settings-info">
-                        <?php _e('Use the Select... button to select site folders. ShortPixel will optimize images and PDFs from the specified folders and their subfolders. The optimization status for each image or PDF in these folders can be seen in the <a href="upload.php?page=wp-short-pixel-custom">Other Media list</a>, under the Media menu.','shortpixel-image-optimiser');?>
+                        <?php _e('Use the Select... button to select site folders. ShortPixel will optimize images and PDFs from the specified folders and their subfolders. The optimization status for each image or PDF in these folders can be seen in the <a href="upload.php?page=wp-short-pixel-custom">Custom Media list</a>, under the Media menu.','shortpixel-image-optimiser');?>
                         <a href="https://blog.shortpixel.com/optimize-images-outside-media-library/" target="_blank" class="shortpixel-help-link">
                             <span class="dashicons dashicons-editor-help"></span><?php _e('More info','shortpixel-image-optimiser');?>
                         </a>

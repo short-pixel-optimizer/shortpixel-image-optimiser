@@ -187,6 +187,10 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
         $this->saveMeta();
 			 }
+			 else
+			 {
+
+			 }
 
         return true;
 

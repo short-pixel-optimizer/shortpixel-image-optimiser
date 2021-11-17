@@ -354,6 +354,32 @@ class FileModel extends \ShortPixel\Model
 
   }
 
+	/** Try to make sure that the file in argument has the same owner as current file */
+	/* Off - This is on most installations not possible.
+	public function matchOwner(FileModel $subject)
+	{
+				$owner =  fileowner($this->getFullPath());
+				if ($owner === false)
+				{
+					 Log::addWarn('Could not get Owner of file. Aborting', $this->getFullPath());
+					 return false;
+				}
+
+				$owner_subject = fileowner($subject->getFullPath());
+
+				if ($owner_subject === false)
+				{
+					 Log::addWarn('Could not get Owner of target. Aborting', $this->getFullPath());
+					 return false;
+				}
+
+				if ($owner !== $owner_subject)
+				{
+					 chown ($subject->getFullPath(), $owner );
+				}
+
+	} */
+
 	public function getContents()
 	{
 			return file_get_contents($this->getFullPath());

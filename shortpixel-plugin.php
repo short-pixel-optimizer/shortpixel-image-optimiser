@@ -252,7 +252,7 @@ class ShortPixelPlugin
       if ($otherMediaController->hasCustomImages())
       {
           /*translators: title and menu name for the Other media page*/
-        $admin_pages[] = add_media_page( __('Other Media Optimized by ShortPixel','shortpixel-image-optimiser'), __('Other Media','shortpixel-image-optimiser'), 'edit_others_posts', 'wp-short-pixel-custom', array( $this, 'route' ) );
+        $admin_pages[] = add_media_page( __('Custom Media Optimized by ShortPixel','shortpixel-image-optimiser'), __('Custom Media','shortpixel-image-optimiser'), 'edit_others_posts', 'wp-short-pixel-custom', array( $this, 'route' ) );
       }
       /*translators: title and menu name for the Bulk Processing page*/
       $admin_pages[] = add_media_page( __('ShortPixel Bulk Process','shortpixel-image-optimiser'), __('Bulk ShortPixel','shortpixel-image-optimiser'), 'edit_others_posts', 'wp-short-pixel-bulk', array( $this, 'route' ) );
@@ -323,7 +323,7 @@ class ShortPixelPlugin
 
 		$bulkLocalize = array(
         'endBulk' => __('This will stop the bulk processing and return to the start. Do you want to do this?', 'shortpixel-image-optimiser'),
-				'reloadURL' => admin_url('upload.php?page=wp-short-pixel-bulk'), 
+				'reloadURL' => admin_url('upload.php?page=wp-short-pixel-bulk'),
     );
 		if ($panel)
 			$bulkLocalize['panel'] = $panel;

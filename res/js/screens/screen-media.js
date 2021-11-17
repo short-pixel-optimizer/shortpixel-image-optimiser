@@ -126,7 +126,6 @@ var ShortPixelScreen = function (MainScreen, processor)
       this.processor.tooltip.RefreshStats(waiting);
     }
 
-		// For now this is not used.
     this.GeneralResponses = function(responses)
     {
        console.log(responses);
@@ -135,10 +134,28 @@ var ShortPixelScreen = function (MainScreen, processor)
        if (responses.length == 0)  // no responses.
          return;
 
+			 var shownId = []; // prevent the same ID from creating multiple tooltips. There will be punishment for this.
 
        responses.forEach(function (element, index)
        {
-            self.processor.tooltip.AddNotice(element.message);
+
+				  	if (element.id)
+						{
+								if (shownId.indexOf(element.id) > -1)
+								{
+									return; // skip
+								}
+								else
+								{
+									shownId.push(element.id);
+								}
+						}
+
+						var message = element.message;
+						if (element.filename)
+							message += ' - ' + element.filename;
+
+            self.processor.tooltip.AddNotice(message);
             if (self.processor.rStatus[element.code] == 'RESPONSE_ERROR')
             {
 
@@ -163,12 +180,18 @@ var ShortPixelScreen = function (MainScreen, processor)
        });
 
     }
+
+		// For some reason all these functions are repeated up there ^^
+		// HandleError is handling from results / result, not ResponseController. Check if it has negative effects it's kinda off now.
     this.HandleError = function(result)
     {
+				// console.log('HANDLE ERROR', result);
+
           if (result.message && result.item_id)
           {
             this.UpdateMessage(result.item_id, result.message, true);
           }
+
           this.processor.LoadItemView({id: result.item_id, type: 'media'});
           /*if (result.is_done)
           {

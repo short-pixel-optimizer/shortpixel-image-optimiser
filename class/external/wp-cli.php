@@ -492,8 +492,13 @@ class SpioBulk extends SpioCommand
 	  {
 			 $bulkControl = BulkController::getInstance();
 
-			 $result = $bulkControl->startBulk();
+			 $queue = $this->getQueueArgument($assoc);
 
+			 foreach($queue as $qname)
+			 {
+			 	$result = $bulkControl->startBulk($qname);
+			 }
+			 
 			 $this->run($args, $assoc);
 	     //$controller = new OptimizeController();
 	     //$result = $controller->startBulk();

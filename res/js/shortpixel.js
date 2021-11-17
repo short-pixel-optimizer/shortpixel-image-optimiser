@@ -20,14 +20,15 @@ var ShortPixel = function() {
     function init() {
 
         if (typeof ShortPixel.API_IS_ACTIVE !== 'undefined') return; //was initialized by the 10 sec. setTimeout, rare but who knows, might happen on very slow connections...
+
         //are we on media list?
         if( jQuery('table.wp-list-table.media').length > 0) {
             //register a bulk action
-            jQuery('select[name^="action"] option:last-child').before('<option value="short-pixel-bulk">' + _spTr.optimizeWithSP
-                + '</option><option value="short-pixel-bulk-lossy"> → ' + _spTr.redoLossy
-                + '</option><option value="short-pixel-bulk-glossy"> → ' + _spTr.redoGlossy
-                + '</option><option value="short-pixel-bulk-lossless"> → ' + _spTr.redoLossless
-                + '</option><option value="short-pixel-bulk-restore"> → ' + _spTr.restoreOriginal
+            jQuery('select[name^="action"] option:last-child').before('<option value="shortpixel-optimize">' + _spTr.optimizeWithSP
+                + '</option><option value="shortpixel-lossy"> → ' + _spTr.redoLossy
+                + '</option><option value="shortpixel-glossy"> → ' + _spTr.redoGlossy
+                + '</option><option value="shortpixel-lossless"> → ' + _spTr.redoLossless
+                + '</option><option value="shortpixel-restore"> → ' + _spTr.restoreOriginal
                 + '</option>');
         }
 
@@ -64,6 +65,9 @@ var ShortPixel = function() {
 
         this.didInit = true;
 
+				// Move footer notices to the top, where it should be.
+				$headerEnd = $( '.wrap h1, .wrap h2' ).first();
+				$( 'div.shortpixel-notice' ).not( '.inline, .below-h2' ).insertAfter( $headerEnd );
     }
 
     function setOptions(options) {

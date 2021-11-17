@@ -220,7 +220,7 @@ class SettingsController extends \ShortPixel\ViewController
 
 			public function action_debug_resetQueue()
 			{
-				 $queue = isset($_POST['queue']) ? sanitize_text_field($_POST['queue']) : null;
+				 $queue = isset($_REQUEST['queue']) ? sanitize_text_field($_REQUEST['queue']) : null;
 				 $this->loadEnv();
 
 				 if (! is_null($queue))
@@ -249,9 +249,21 @@ class SettingsController extends \ShortPixel\ViewController
 							 	$queues[$queue]->resetQueue();
 						 }
 
-				 }
+						 if ($queue == 'all')
+						 {
+						 	$message = sprintf(__('All queues have been reset', 'shortpixel-image-optimiser'));
+						 }
+						 else
+						 {
+								 $message = sprintf(__(' Queue %s have been reset', 'shortpixel-image-optimiser'), $queue);
+ 						 }
+
+						 Notice::addSuccess($message);
+			 }
 
 				 $this->load();
+
+
 			}
 
 

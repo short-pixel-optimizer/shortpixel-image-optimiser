@@ -15,7 +15,7 @@ if ( isset($_GET['noheader']) ) {
 ?>
 <div class="wrap shortpixel-other-media">
     <h2>
-        <?php _e('Other Media optimized by ShortPixel','shortpixel-image-optimiser');?>
+        <?php _e('Custom Media optimized by ShortPixel','shortpixel-image-optimiser');?>
     </h2>
 
     <div class='toolbar'>
@@ -96,6 +96,7 @@ if ( isset($_GET['noheader']) ) {
         $folders = $this->view->folders;
 
         foreach($this->view->items as $item):
+
 
           ?>
 

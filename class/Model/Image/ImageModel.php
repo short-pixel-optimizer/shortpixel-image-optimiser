@@ -561,6 +561,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         }
 
         $backupFile = $this->getBackupFile();
+				$type = $this->get('type');
+				$id = $this->get('id');
 
         if (! $backupFile)
         {
@@ -571,19 +573,19 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         if (! $backupFile->is_readable())
         {
 						Log::addError('BackupFile not readable' . $backupFile->getFullPath());
-            ResponseController::add()->withMessage(__('BackupFile not readable. Check file and/or file permissions', 'shortpixel-image-optimiser'));
+            ResponseController::add()->asItem($id, $type)->asErrir()->withMessage(__('BackupFile not readable. Check file and/or file permissions', 'shortpixel-image-optimiser'))->inFile($backupFile->getFileName());
            return false; //error
          }
 				 elseif (! $backupFile->is_writable())
 				 {
  						Log::addError('BackupFile not writable' . $backupFile->getFullPath());
-             ResponseController::add()->asError()->withMessage(__('BackupFile not writable. Check file and/or file permissions', 'shortpixel-image-optimiser'));
+             ResponseController::add()->asItem($id,$type)->asError()->withMessage(__('BackupFile not writable. Check file and/or file permissions', 'shortpixel-image-optimiser'))->inFile($backupFile->getFileName());
             return false; //error
 				 }
 				 if (! $this->is_writable())
 				 {
 					 	 Log::addError('Target File not writable' . $this->getFullPath());
-					   ResponseController::add()->withMessage( sprintf(__('Target file %s not writable. Check file permissions', 'shortpixel-image-optimiser'), $this->getFullPath()));
+					   ResponseController::add()->asItem($id,$type)->asError()->withMessage( sprintf(__('Target file %s not writable. Check file permissions', 'shortpixel-image-optimiser'), $this->getFullPath()))->inFile($backupFile->getFileName());
 						 return false;
 				 }
 
@@ -791,6 +793,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
        else
        {
          $result = $this->copy($backupFile);
+				//  $this->matchOwner($backupFile); // Operation not permitted :( 
+				// $this->matchPermission($backupFile);
        }
 
        if (! $result)
