@@ -552,7 +552,7 @@ class AdminNoticesController extends \ShortPixel\Controller
     {
       $message = '<p>' . sprintf(__("You currently have <strong>%d images and thumbnails to optimize</strong> but you only have <strong>%d images</strong> available in your current plan."
             . " You might need to upgrade your plan in order to have all your images optimized.", 'shortpixel-image-optimiser'), $extra['filesTodo'], $extra['quotaAvailable']) . '</p>';
-      $message .= '  <button class="button button-primary" id="shortpixel-upgrade-advice" onclick="ShortPixel.proposeUpgrade()" style="margin-right:10px;"><strong>' .  __('Show me the best available options', 'shortpixel-image-optimiser') . '</strong></button>';
+      $message .= '<p><button class="button button-primary" id="shortpixel-upgrade-advice" onclick="ShortPixel.proposeUpgrade()" style="margin-right:10px;"><strong>' .  __('Show me the best available options', 'shortpixel-image-optimiser') . '</strong></button></p>';
       $message .= $this->proposeUpgradePopup();
       //self::includeProposeUpgradePopup();
       return $message;
@@ -653,8 +653,13 @@ class AdminNoticesController extends \ShortPixel\Controller
         $statsController = StatsController::getInstance();
         $apiKeyController = ApiKeyController::getInstance();
         $settings = \wpSPIO()->settings();
-        //$proposal = wp_remote_post($this->_settings->httpProto . "://shortpixel.com/propose-upgrade-frag", array(
-        //echo("<div style='color: #f50a0a; position: relative; top: -59px; right: -255px; height: 0px; font-weight: bold; font-size: 1.2em;'>atentie de trecut pe live propose-upgrade</div>");
+
+				// Combo-bonus.
+				$multiplier = 1;
+				if ($settings->createWebp)
+				  $multiplier++;
+				if ($settings->createAvif)
+					 $multiplier++;
 
         $args = array(
             'method' => 'POST',
@@ -666,11 +671,10 @@ class AdminNoticesController extends \ShortPixel\Controller
             'body' => array("params" => json_encode(array(
                 'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
                 'key' => $apiKeyController->forceGetApiKey(),
-
-                'm1' => $statsController->find('period', 'months', '1'),
-                'm2' => $statsController->find('period', 'months', '2'),
-                'm3' => $statsController->find('period', 'months', '3'),
-                'm4' => $statsController->find('period', 'months', '4'),
+                'm1' => $statsController->find('period', 'months', '1') * $multiplier,
+                'm2' => $statsController->find('period', 'months', '2') * $multiplier,
+                'm3' => $statsController->find('period', 'months', '3') * $multiplier,
+                'm4' => $statsController->find('period', 'months', '4') * $multiplier,
                 'filesTodo' => $statsController->totalImagesToOptimize(),
                 'estimated' => $settings->optimizeUnlisted || $settings->optimizeRetina ? 'true' : 'false',
                 /* */
@@ -679,6 +683,7 @@ class AdminNoticesController extends \ShortPixel\Controller
               'cookies' => array()
 
         );
+
         $proposal = wp_remote_post("https://shortpixel.com/propose-upgrade-frag", $args);
 
         if(is_wp_error( $proposal )) {

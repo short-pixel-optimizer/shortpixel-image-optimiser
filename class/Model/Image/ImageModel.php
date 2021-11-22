@@ -793,7 +793,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
        else
        {
          $result = $this->copy($backupFile);
-				//  $this->matchOwner($backupFile); // Operation not permitted :( 
+				//  $this->matchOwner($backupFile); // Operation not permitted :(
 				// $this->matchPermission($backupFile);
        }
 

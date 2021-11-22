@@ -206,6 +206,14 @@
   background-color: #0085ba;
   color: #F7F7F7;
 }
+.cf_switch.global-hidden label {
+  cursor: default;
+}
+.cf_switch.global-hidden input:checked + span {
+  background-color: #fff;
+  color: #000;
+  padding-left: 0;
+}
 
 #tab-tools .option {
   width: 80%;

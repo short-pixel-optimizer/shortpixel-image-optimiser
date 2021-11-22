@@ -99,8 +99,14 @@ var ShortPixelScreen = function (MainScreen, processor)
         var waiting = stats.in_queue + stats.in_process;
         this.processor.tooltip.RefreshStats(waiting);
     }
-    this.HandleError = function()
+    this.HandleError = function(result)
     {
+			 console.log('error');
+       if (result.message && result.item_id)
+       {
+         this.UpdateMessage(result.item_id, result.message, true);
+       }
+			 this.processor.tooltip.AddNotice(result.message);
 
     }
 

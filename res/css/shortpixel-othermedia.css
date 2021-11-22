@@ -85,6 +85,7 @@
 }
 .shortpixel-other-media .list-overview .item .filename {
   font-size: 14px;
+  min-width: 150px;
 }
 .shortpixel-other-media .list-overview .item .thumb {
   min-width: 60px;

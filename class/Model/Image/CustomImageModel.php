@@ -189,7 +189,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 			 }
 			 else
 			 {
-
+				  return false;
 			 }
 
         return true;

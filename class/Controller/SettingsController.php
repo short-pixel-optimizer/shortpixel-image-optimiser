@@ -58,7 +58,7 @@ class SettingsController extends \ShortPixel\ViewController
         $this->loadEnv();
         $this->checkPost(); // sets up post data
 
-        $this->model->redirectedSe_settingsttings = 2; // Prevents any redirects after loading settings
+        $this->model->redirectedSettings = 2; // Prevents any redirects after loading settings
 
         if ($this->is_form_submit)
         {
@@ -329,6 +329,8 @@ class SettingsController extends \ShortPixel\ViewController
 
 
          $this->loadStatistics();
+				 $this->checkCloudFlare();
+
          $statsControl = StatsController::getInstance();
 
          $this->view->minSizes = $this->getMaxIntermediateImageSize();
@@ -367,8 +369,27 @@ class SettingsController extends \ShortPixel\ViewController
 
         $this->view->stats = $stats;
 
-
       }
+
+			/** @todo Remove this check in Version 5.1 including all data on the old CF token */
+			protected function checkCloudFlare()
+			{
+          $settings = \wpSPIO()->settings();
+
+				 $authkey = $settings->cloudflareAuthKey;
+				 $this->view->hide_cf_global = true;
+
+				 if (strlen($authkey) > 0)
+				 {
+					 $message = '<h4> ' . __('Cloudflare', 'shortpixel-image-optimiser') . '</h4>';
+					 $message .= '<p>' . __('It seems you are using the Cloudflare Global API key. This is less safe than use the Cloudflare Token and will be removed in the next version for this reason.  Please switch to the token.', 'shortpixel-image-optimiser') . '</p>';
+				 	 $message .= '<p>' . sprintf(__('%s Using the Cloudflare Token %s', 'shortpixel-image-optimiser'), '<a href="https://help.shortpixel.com/article/325-using-shortpixel-image-optimizer-with-cloudflare-api-token" target="_blank">', '</a>') . '</p>';
+
+					  Notice::addNormal($message);
+						$this->view->hide_cf_global = false;
+				 }
+
+			}
 
       /** Checks on things and set them for information. */
       protected function loadEnv()
@@ -491,12 +512,6 @@ class SettingsController extends \ShortPixel\ViewController
             $foldersArray[] = $fsFolder->getPath();
           }
 
-          /*foreach($customFolders as $index => $folder)
-          {
-            if(in_array($folder->getPath(), $foldersArray )) {
-                $folder->setNextGen(true);
-              }
-          } */
         }
 
         return $customFolders;
