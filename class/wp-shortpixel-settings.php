@@ -236,9 +236,10 @@ class WPShortPixelSettings extends \ShortPixel\Model {
 
     public static function getOpt($key, $default = null) {
 
+				// This function required the internal Key. If this not given, but settings key, overwrite.
         if(isset(self::$_optionsMap[$key]['key'])) { //first try our name
-            $key = self::$_optionsMap[$key]['key'];
-						$default = self::$_optionsMap[$key]['default'];
+						$default = self::$_optionsMap[$key]['default']; // first do default do to overwrite.
+						$key = self::$_optionsMap[$key]['key'];
         }
         if(get_option($key) === false) {
 
