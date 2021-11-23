@@ -30,84 +30,110 @@ $approx = $this->view->approx;
 
        <div class="interface wrapper">
 
-         <div class="media-library optiongroup">
+				 <div class="option-block">
 
-            <div class='switch_button'>
-              <label>
-                <input type="checkbox" class="switch" id="media_checkbox" checked>
-                <div class="the_switch">&nbsp; </div>
-              </label>
-            </div>
+					 <h2>Optimize: </h2>
+					 <p>Shortpixel has <b>estimated</b> the number of images that still can be optimized. <br />After selecting options the plugin will calculate exactly how much images will be optimized this bulk.</p>
 
-            <h4><label for="media_checkbox">Your Media Library</label></h4>
-            <div class='option'>
-              <label>Items to Optimize Library (approx)</label>
-              <span class="number" ><?php echo $approx->media->items ?></span>
-            </div>
-            <div class='option'>
-              <label>Images (approx)</label> <span class="number" ><?php echo $this->view->approx->media->total ?> </span>
-            </div>
-         </div>
+	         <div class="media-library optiongroup">
 
-         <div class="custom-images optiongroup"  data-check-visibility data-control="data-check-custom-hascustom" >
-           <div class='switch_button'>
-             <label>
-               <input type="checkbox" class="switch" id="custom_checkbox" checked>
-               <div class="the_switch">&nbsp; </div>
-             </label>
-           </div>
-           <h4><label for="custom_checkbox">Custom Images</label></h4>
-            <div class='option'>
-              <label>Images</label>
-               <span class="number" ><?php echo $approx->custom->images ?></span>
-            </div>
-         </div>
+	            <div class='switch_button'>
+	              <label>
+	                <input type="checkbox" class="switch" id="media_checkbox" checked>
+	                <div class="the_switch">&nbsp; </div>
+	              </label>
+	            </div>
 
-         <div class='optiongroup '  >
-           <div class='switch_button'>
 
-             <label>
-               <input type="checkbox" class="switch" id="webp_checkbox" name="webp_checkbox"
-                <?php checked(\wpSPIO()->settings()->createWebp); ?>  />
-               <div class="the_switch">&nbsp; </div>
-             </label>
+	            <h4><label for="media_checkbox"><?php _e('Media Library','shortpixel-image-optimiser'); ?></label></h4>
+	            <div class='option'>
+	              <label>Items</label>
+	              <span class="number" ><?php echo $approx->media->items ?></span>
+	            </div>
+	            <div class='option'>
+	              <label>Images</label> <span class="number" ><?php echo $this->view->approx->media->total ?> </span>
+	            </div>
+	         </div>
 
-           </div>
-           <h4>Also Webp.</h4>
-					 <div><span>Media</span><span class="number"><?php echo $approx->media->total ?></span></div>
+	         <div class="custom-images optiongroup"  data-check-visibility data-control="data-check-custom-hascustom" >
+	           <div class='switch_button'>
+	             <label>
+	               <input type="checkbox" class="switch" id="custom_checkbox" checked>
+	               <div class="the_switch">&nbsp; </div>
+	             </label>
+	           </div>
+	           <h4><label for="custom_checkbox">Custom Images</label></h4>
+	            <div class='option'>
+	              <label>Images</label>
+	               <span class="number" ><?php echo $approx->custom->images ?></span>
+	            </div>
+	         </div>
+				</div> <!-- block -->
 
-           <div data-check-visibility data-control="data-check-custom-hascustom"><span>Custom </span><span class="number"><?php echo $approx->custom->images ?></span>
-					 </div>
-       </div>
+				 <div class="option-block selection-settings">
+					 <h2>Options: </h2>
+						 <p>Check if you want to also want to create Webp / Avif Files. These options will change the settings of your installation</p>
+		         <div class='optiongroup '  >
+		           <div class='switch_button'>
 
-       <div class='optiongroup '  >
-         <div class='switch_button'>
+		             <label>
+		               <input type="checkbox" class="switch" id="webp_checkbox" name="webp_checkbox"
+		                <?php checked(\wpSPIO()->settings()->createWebp); ?>  />
+		               <div class="the_switch">&nbsp; </div>
+		             </label>
 
-           <label>
-             <input type="checkbox" class="switch" id="avif_checkbox" name="avif_checkbox"
-              <?php checked(\wpSPIO()->settings()->createAvif); ?>  />
-             <div class="the_switch">&nbsp; </div>
-           </label>
+		           </div>
+		           <h4>Also create <b>WebP</b> versions of the images</h4>
+							 <div class='option'><label>Media</label>
+								 	+ <span class="number"><?php echo $approx->media->total ?></span> credits
+							</div>
 
-         </div>
-         <h4>Also Avif.</h4>
-					 <div><span>Media</span><span class="number"><?php echo $approx->media->total ?></span></div>
-           <div data-check-visibility data-control="data-check-custom-hascustom"><span>Custom </span><span class="number"><?php echo $approx->custom->images ?></span>
-					 </div>
-     </div>
+		           <div class='option' data-check-visibility data-control="data-check-custom-hascustom"><label>Custom </label>
+								 + <span class="number"><?php echo $approx->custom->images ?></span> credits
+							 </div>
+		       </div>
 
+		       <div class='optiongroup '  >
+		         <div class='switch_button'>
+
+		           <label>
+		             <input type="checkbox" class="switch" id="avif_checkbox" name="avif_checkbox"
+		              <?php checked(\wpSPIO()->settings()->createAvif); ?>  />
+		             <div class="the_switch">&nbsp; </div>
+		           </label>
+
+		         </div>
+		         <h4>Also create <b>Avif</b> versions of the images</h4>
+							 <div class="option"><label>Media</label>
+								 	+ <span class="number"><?php echo $approx->media->total ?></span> credits
+								</div>
+		           <div class="option" data-check-visibility data-control="data-check-custom-hascustom"><label>Custom </label> + <span class="number"><?php echo $approx->custom->images ?></span> credits
+							 </div>
+		     </div>
+		 </div>
+
+ 	 	 <div class="option-block">
        <div class='optiongroup' data-check-visibility="false" data-control="data-check-approx-total">
-          <h3>No images found</h3>
-          <p> Shortpixel Bulk couldn't find any optimizable images. </p>
+          <h3><?php _e('No images found', 'shortpixel-image-optimiser'); ?></h3>
+          <p><?php _e('Shortpixel Bulk couldn\'t find any optimizable images.','shortpixel-image-optimiser'); ?></p>
        </div>
 
-       <h4> Approximate unoptimized images in this installation : <span data-check-approx-total><?php echo $approx->total->images ?></span> </h4>
+
+       <h4 class='approx'><?php _e('Approximate unoptimized images in this installation', 'shortpixel-image-optimiser'); ?> : <span data-check-approx-total><?php echo $approx->total->images ?></span> </h4>
 
        <div><p>In the next step the total images to be optimized will be calculated and your bulk process will be prepared.  It will <b>not yet</b> start the process. </p></div>
+		 </div>
 
       <nav>
-        <button class="button" type="button" data-action="FinishBulk">Stop Bulk</button>
-        <button class="button-primary button" type="button" data-action="CreateBulk" data-panel="summary" data-check-disable data-control="data-check-total-total">Next</button>
+        <button class="button" type="button" data-action="FinishBulk">
+					<span class='dashicons dashicons-arrow-left'></span>
+					<?php _e('Back', 'shortpixel-image-optimiser'); ?>
+				</button>
+
+        <button class="button-primary button" type="button" data-action="CreateBulk" data-panel="summary" data-check-disable data-control="data-check-total-total">
+					<span class='dashicons dashicons-arrow-right'></span>
+					<?php _e('Calculate and summary', 'shortpixel-image-optimiser'); ?>
+				</button>
       </nav>
 
     </div> <!-- interface wrapper -->

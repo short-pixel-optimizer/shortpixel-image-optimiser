@@ -40,6 +40,25 @@
 .shortpixel-bulk-wrapper nav .button {
   margin-right: 8px;
   padding: 8px 16px;
+  background: #F5F5F5;
+  color: #1FBEC9;
+  letter-spacing: 0.3px;
+  font-weight: 700;
+  font-size: 14px;
+}
+.shortpixel-bulk-wrapper nav .button .dashicons {
+  font-size: 26px;
+  height: 26px;
+  margin-right: 6px;
+  padding-top: 2px;
+}
+.shortpixel-bulk-wrapper nav .button-primary {
+  margin-left: 15px;
+  background: #1FBEC9;
+  color: #fff;
+  border: 1px solid #1FBEC9;
+  border-radius: 3px;
+  box-shadow: 0px 1px 1px rgba(171, 170, 170, 0.3);
 }
 .shortpixel-bulk-wrapper .hidden {
   display: none !important;
@@ -241,17 +260,22 @@
 }
 .shortpixel-bulk-wrapper section.panel.dashboard .bulk-wrapper button {
   color: #ffffff;
-  background: #1FB5BF;
+  background: linear-gradient(to left, #136970, #1FB5BF);
   border-radius: 3px;
-  width: 200px;
-  height: 45px;
+  width: 250px;
+  height: 65px;
   font-size: 13px;
   line-height: 21px;
-  transition: all 0.2s linear;
+  transition: all 0.5s linear;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.3px;
+  border: 1px solid #ccc;
 }
 .shortpixel-bulk-wrapper section.panel.dashboard .bulk-wrapper button:hover {
   background: #50d9e2;
   font-weight: 600;
+  transition: all 1s linear;
 }
 .shortpixel-bulk-wrapper section.panel.dashboard .bulk-wrapper button:disabled {
   color: #ccc;
@@ -416,8 +440,19 @@
     transform: rotate(360deg);
   }
 }
-.shortpixel-bulk-wrapper section.panel.selection .optiongroup {
-  margin-left: 15px;
+.shortpixel-bulk-wrapper section.panel.selection .option-block {
+  margin: 0 auto 35px;
+  width: 80%;
+}
+.shortpixel-bulk-wrapper section.panel.selection .option-block h2 {
+  font-size: 22px;
+  color: #555;
+}
+.shortpixel-bulk-wrapper section.panel.selection .option-block p {
+  margin-left: 0;
+}
+.shortpixel-bulk-wrapper section.panel.selection .option-block.selection-settings .option, .shortpixel-bulk-wrapper section.panel.selection .option-block.selection-settings label {
+  font-size: 13px;
 }
 .shortpixel-bulk-wrapper section.panel.selection .optiongroup .switch_button {
   display: inline-block;
@@ -523,6 +558,7 @@
   display: table;
   margin: 35px 0 35px 25px;
   width: 50%;
+  margin-left: 10%;
 }
 .shortpixel-bulk-wrapper section.panel.summary .credits > p {
   display: table-row;
@@ -570,24 +606,6 @@
   font-size: 14px;
   padding: 16px;
   font-weight: 500;
-}
-.shortpixel-bulk-wrapper section.panel.summary nav {
-  margin: 45px auto;
-  width: 80%;
-}
-.shortpixel-bulk-wrapper section.panel.summary nav .button {
-  background: #F5F5F5;
-  color: #1FBEC9;
-  padding: 4px 16px;
-}
-.shortpixel-bulk-wrapper section.panel.summary nav .button-primary {
-  padding: 4px 16px;
-  margin-left: 15px;
-  background: #1FBEC9;
-  color: #fff;
-  border: 1px solid #1FBEC9;
-  border-radius: 3px;
-  box-shadow: 0px 1px 1px rgba(171, 170, 170, 0.3);
 }
 .shortpixel-bulk-wrapper section.panel.process .progressbar .select .line, .shortpixel-bulk-wrapper section.panel.process .progressbar .summary .line, .shortpixel-bulk-wrapper section.panel.finished .progressbar .select .line, .shortpixel-bulk-wrapper section.panel.finished .progressbar .summary .line {
   background: #1FBEC9;

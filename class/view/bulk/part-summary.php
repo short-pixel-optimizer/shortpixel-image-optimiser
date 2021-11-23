@@ -116,8 +116,14 @@ namespace ShortPixel;
     </div>
 
     <nav>
-      <button class="button" data-action="open-panel" data-panel="selection">Back</button>
-      <button class="button-primary" data-action="StartBulk" data-control="data-check-total-total" data-check-presentation="disable" >Start Bulk Optimization</button>
+      <button class="button" data-action="open-panel" data-panel="selection">
+				<span class='dashicons dashicons-arrow-left'></span>
+				<?php _e('Back','shortpixel-image-optimiser'); ?>
+			</button>
+      <button class="button-primary button" data-action="StartBulk" data-control="data-check-total-total" data-check-presentation="disable">
+				<span class='dashicons dashicons-arrow-right'></span>
+				<?php _e('Start Bulk Optimization', 'shortpixel-image-optimiser'); ?>
+			</button>
     </nav>
   </div>
 </section>
