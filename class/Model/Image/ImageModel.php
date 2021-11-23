@@ -625,6 +625,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
       //  $this->deleteMeta();
     }
 
+
     protected function handleWebp(FileModel $tempFile)
     {
          $fs = \wpSPIO()->filesystem();

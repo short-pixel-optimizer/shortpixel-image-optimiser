@@ -248,8 +248,14 @@ class OtherMediaController extends \ShortPixel\Controller
 
 
     /** Check directory structure for new files */
-    public function refreshFolders($force = false, $expires = 5 * MINUTE_IN_SECONDS)
+    public function refreshFolders($force = false, $expires = null)
     {
+ 			// a little PHP 5.5. compat. 
+			if (is_null($expires))
+			{
+				$expires = 5 * MINUTE_IN_SECONDS;
+			}
+
 			$this->cleanUp();
       $customFolders = $this->getActiveFolders();
 

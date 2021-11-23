@@ -96,6 +96,16 @@ abstract class Queue
        return $result;
     }
 
+		/** Drop Item if it needs dropping. This can be needed in case of image alteration and it's in the queue */
+		public function dropItem($item_id)
+		{
+				$this->q->removeItems(array(
+						'item_id' => $item_id,
+				));
+				
+		}
+
+
     public function run()
     {
        $result = new \stdClass();

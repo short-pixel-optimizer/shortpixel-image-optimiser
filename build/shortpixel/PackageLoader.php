@@ -44,7 +44,6 @@ class PackageLoader
     public function loadFiles($files){
         foreach($files as $file){
             $fullpath = $this->dir."/".$file;
-
             if(file_exists($fullpath)){
                 include_once($fullpath);
             }
@@ -84,7 +83,6 @@ class PackageLoader
 
                     foreach ($classpaths as $classpath) {
                       $fullpath = trailingslashit($dir) . trailingslashit($classpath) .$filename;
-
                         if (file_exists($fullpath)) {
                             include_once $fullpath;
                         }

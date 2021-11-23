@@ -39,7 +39,7 @@ class AdminController extends \ShortPixel\Controller
 				{
 					 return $meta;
 				}
-				
+
         $mediaItem = \wpSPIO()->filesystem()->getImage($id, 'media');
         $control = new OptimizeController();
         $control->addItemToQueue($mediaItem);
@@ -86,7 +86,6 @@ class AdminController extends \ShortPixel\Controller
 
 		public function handleReplaceEnqueue($target, $source, $post_id)
 		{
-			//var_dump($post_id); exit('yo');
 				$fs = \wpSPIO()->filesystem();
         $imageObj = $fs->getImage($post_id, 'media');
 				$optimizeController = new OptimizeController();

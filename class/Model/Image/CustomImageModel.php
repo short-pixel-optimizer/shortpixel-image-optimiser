@@ -1,6 +1,8 @@
 <?php
 namespace ShortPixel\Model\Image;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\Controller\OptimizeController as OptimizeController;
+
 
 // @todo Custom Model for adding files, instead of meta DAO.
 class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
@@ -441,7 +443,25 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
     {
 				parent::onDelete();
         $this->deleteMeta();
+				$this->dropfromQueue();
     }
+
+			public function dropFromQueue()
+			{
+				 Log::addTemp('Dropping From Queue : ' . $this->get('id'));
+
+				 $optimizeController = new OptimizeController();
+
+				 $q = $optimizeController->getQueue($this->type);
+				 $q->dropItem($this->get('id'));
+
+				 // Drop also from bulk if there.
+
+				 $optimizeController->setBulk(true);
+
+				 $q = $optimizeController->getQueue($this->type);
+				 $q->dropItem($this->get('id'));
+			}
 
     public function getImprovement($int = false)
     {

@@ -4,6 +4,7 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use \ShortPixel\ShortPixelPng2Jpg as ShortPixelPng2Jpg;
 use ShortPixel\Controller\ResponseController as ResponseController;
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
+use ShortPixel\Controller\OptimizeController as OptimizeController;
 
 use ShortPixel\Helper\InstallHelper as InstallHelper;
 
@@ -693,7 +694,28 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		 	$this->removeLegacy();
       $this->deleteMeta();
+
+			$this->dropFromQueue();
+
+
   }
+
+	public function dropFromQueue()
+	{
+		 Log::addTemp('Dropping From Queue : ' . $this->get('id'));
+
+		 $optimizeController = new OptimizeController();
+
+		 $q = $optimizeController->getQueue($this->type);
+		 $q->dropItem($this->get('id'));
+
+		 // Drop also from bulk if there.
+
+		 $optimizeController->setBulk(true);
+
+		 $q = $optimizeController->getQueue($this->type);
+		 $q->dropItem($this->get('id'));
+	}
 
   public function getThumbNail($name)
   {

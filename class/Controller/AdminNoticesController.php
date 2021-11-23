@@ -23,6 +23,7 @@ class AdminNoticesController extends \ShortPixel\Controller
     const MSG_COMPAT = 'Error100';  // Plugin Compatility, warn for the ones that disturb functions.
     const MSG_FILEPERMS = 'Error101'; // File Permission check, if Queue is file-based.
     const MSG_UNLISTED_FOUND = 'Error102'; // SPIO found unlisted images, but this setting is not on
+		const MSG_AVIF_ERROR = 'Error103'; // Detected unexpected or wrong AVIF headers when avif is on.
 
     //const MSG_NO_
     const MSG_QUOTA_REACHED = 'QuotaReached100';

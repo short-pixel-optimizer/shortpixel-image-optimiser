@@ -167,7 +167,7 @@ class Replacer
 	    Log::addDebug('Doing meta search and replace -', array($search_urls, $replace_urls) );
 	    Log::addDebug('Searching with BaseuRL ' . $base_url);
 
-	    do_action('emr/replace_urls', $search_urls, $replace_urls);
+	    do_action('shortpixel/replacer/replace_urls', $search_urls, $replace_urls);
 	    $updated = 0;
 
 	    $updated += $this->doReplaceQuery($base_url, $search_urls, $replace_urls);
