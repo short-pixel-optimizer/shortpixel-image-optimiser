@@ -229,6 +229,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     public function getLastErrorMessage()
     {
        return $this->error_message;
+
     }
 
     public function __get($name)
@@ -622,6 +623,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         if ($avif !== false && $avif->exists())
            $avif->delete();
 
+
       //  $this->deleteMeta();
     }
 
@@ -759,7 +761,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
               $this->preventNextTry(__('Fatal Issue: The Backup file already exists. The backup seems not restorable, or the current file is bigger than the backup indicating an error.', 'shortpixel-image-optimiser'));
 
               Log::addError('The backup already exists, and is smaller than the current file. BackupFile Size : ' . $backupFile->getFileSize() . ' This Filesize : ' . $this->getFileSize(), $this->fullpath);
-              $this->error_message = __('Backup already exists with a different size', 'shortpixel-image-optimiser');
+
+
+              $this->error_message = __('Larger backup file exists.', 'shortpixel-image-optimiser');
             }
 
             return false;

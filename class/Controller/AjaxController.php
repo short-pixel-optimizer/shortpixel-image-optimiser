@@ -611,8 +611,14 @@ class AjaxController
     {
       if (! wp_verify_nonce($_POST['nonce'], $action))
       {
+
+				$id = isset($_POST['id']) ? intval($_POST['id']) : false;
+				$action = isset($_POST['screen_action']) ? sanitize_text_field($_POST['screen_action']) : false;
+
         $json = new \stdClass;
-        $json->message = __('Nonce is missing or wrong', 'shortpixel-image-optimiser');
+        $json->message = __('Nonce is missing or wrong - Try to refresh the page', 'shortpixel-image-optimiser');
+				$json->item_id = $id;
+				$json->action = $action;
         $json->status = false;
         $json->error = self::NONCE_FAILED;
         $this->send($json);

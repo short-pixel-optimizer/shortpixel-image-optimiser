@@ -480,7 +480,7 @@ class OptimizeController
              $imageItem->setMeta('compressionType', $item->compressionType);
            }
 
-           Log::addDebug('Going to Handle Optimize --> ', array_keys($result->files) );
+           Log::addDebug('*** HandleAPIResult: Handle Optimized ** ', array_keys($result->files) );
            if (count($result->files) > 0 )
            {
 						 	// Dump Stats, Dump Quota. Refresh
@@ -503,7 +503,7 @@ class OptimizeController
                  $item->result->apiStatus = ApiController::STATUS_ERROR;
                  $item->fileStatus = ImageModel::FILE_STATUS_ERROR;
               //   $item->result->message = sprintf(__('Image not optimized with errors', 'shortpixel-image-optimiser'), $item->item_id);
-                 $item->result->message = ' ' .  $imageItem->getLastErrorMessage();
+                 $item->result->message = $imageItem->getLastErrorMessage();
                  $item->result->is_error = true;
 
               }
@@ -628,16 +628,9 @@ class OptimizeController
                 if ($thumb !== false)
                 {
                   $thumb->setMeta('status', ImageModel::FILE_STATUS_UNPROCESSED);
-
-                   $webp = $thumb->getWebp();
-                   if ($webp !== false)
-                     $webp->delete();
-
-									 $avif = $thumb->getAvif();
-									 if ($avif !== false)
-									 	 $avif->delete();
-
-                    $metaUpdated = true;
+									$thumb->onDelete();
+									                  
+                  $metaUpdated = true;
                 }
             }
         }

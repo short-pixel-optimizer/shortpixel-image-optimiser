@@ -366,9 +366,9 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                 <th scope="row"><?php _e('Optimize media on upload','shortpixel-image-optimiser');?></th>
                 <td>
                     <input name="autoMediaLibrary" type="checkbox" id="autoMediaLibrary" value="1" <?php checked( $view->data->autoMediaLibrary, "1" );?>>
-                    <label for="autoMediaLibrary"><?php _e('Automatically optimize Media Library items after they are uploaded (recommended).','shortpixel-image-optimiser');?></label>
+                    <label for="autoMediaLibrary"><?php _e('Automatically optimize Items after they are uploaded (recommended).','shortpixel-image-optimiser');?></label>
                     <p class="settings-info">
-                        <?php _e('By default, ShortPixel will automatically optimize all the freshly uploaded image and PDF files. If you uncheck this you\'ll need to either run Bulk ShortPixel or go to Media Library (in list view) and click on the right side "Optimize now" button(s).','shortpixel-image-optimiser');?>
+                        <?php _e('ShortPixel will automatically optimize images and PDF-files uploaded or added. If you uncheck this you\'ll need to run the ShortPixel bulk or manually optimize images later.','shortpixel-image-optimiser');?>
                     </p>
                 </td>
             </tr>

@@ -218,7 +218,6 @@ class ApiController
        $text = ($item->tries > 0) ? sprintf(__('Item is waiting for results ( pass %d )', 'shortpixel-image-optimiser'), $item->tries) : __('Item is waiting for results', 'shortpixel-image-optimiser');
        $item->result = $this->returnOK(self::STATUS_ENQUEUED, $text );
     }
-    //return $response;
 
     return $item;
   }

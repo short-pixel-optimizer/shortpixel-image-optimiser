@@ -73,7 +73,7 @@ var ShortPixelScreen = function (MainScreen, processor)
 
 	       if (element !== null)
 	       {
-	          element.textContent = message;
+	          element.innerHTML = message;
 	       }
 	       else
 	       {
@@ -99,15 +99,82 @@ var ShortPixelScreen = function (MainScreen, processor)
         var waiting = stats.in_queue + stats.in_process;
         this.processor.tooltip.RefreshStats(waiting);
     }
+		this.GeneralResponses = function(responses)
+	    {
+	       console.log(responses);
+	       var self = this;
+
+	       if (responses.length == 0)  // no responses.
+	         return;
+
+				 var shownId = []; // prevent the same ID from creating multiple tooltips. There will be punishment for this.
+
+	       responses.forEach(function (element, index)
+	       {
+
+					  	if (element.id)
+							{
+									if (shownId.indexOf(element.id) > -1)
+									{
+										return; // skip
+									}
+									else
+									{
+										shownId.push(element.id);
+									}
+							}
+
+							var message = element.message;
+							if (element.filename)
+								message += ' - ' + element.filename;
+
+	            self.processor.tooltip.AddNotice(message);
+	            if (self.processor.rStatus[element.code] == 'RESPONSE_ERROR')
+	            {
+
+	             if (element.id)
+	             {
+	               var message = self.currentMessage;
+	               self.UpdateMessage(element.id, message + '<br>' + element.message);
+	               self.currentMessage = message; // don't overwrite with this, to prevent echo.
+	             }
+	             else
+	             {
+	                 var errorBox = document.getElementById('shortpixel-errorbox');
+	                 if (errorBox)
+	                 {
+	                   var error = document.createElement('div');
+	                   error.classList.add('error');
+	                   error.innerHTML = element.message;
+	                   errorBox.append(error);
+	                 }
+	             }
+	            }
+	       });
+
+	    }
+
+    // For some reason all these functions are repeated up there ^^
+		// HandleError is handling from results / result, not ResponseController. Check if it has negative effects it's kinda off now.
     this.HandleError = function(result)
     {
-			 console.log('error');
-       if (result.message && result.item_id)
-       {
-         this.UpdateMessage(result.item_id, result.message, true);
-       }
-			 this.processor.tooltip.AddNotice(result.message);
+				// console.log('HANDLE ERROR', result);
 
+          if (result.message && result.item_id)
+          {
+            this.UpdateMessage(result.item_id, result.message, true);
+          }
+
+          this.processor.LoadItemView({id: result.item_id, type: 'media'});
+          /*if (result.is_done)
+          {
+            e = {};
+            e.detail = {};
+            e.detail.media = {};
+            e.detail.media.id = result.item_id;
+            e.detail.media.result = result.message;
+            this.RenderItemView(e); // remove actions.
+         } */
     }
 
     this.RenderItemView = function(e)

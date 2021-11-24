@@ -340,9 +340,11 @@ window.ShortPixelProcessor =
       }
       else
       {
-            // This is a work error / http fail
-            this.Debug(data.message, 'error');
+            // This is a work error / http / nonce / generail fail
+						this.screen.HandleError(data);
+						this.tooltip.AddNotice(data.message);
 
+            this.Debug(data.message, 'error');
       }
       var event = new CustomEvent('shortpixel.processor.responseHandled', { detail : {paused: this.isManualPaused}});
       window.dispatchEvent(event);
@@ -355,7 +357,7 @@ window.ShortPixelProcessor =
         if (response.has_error == true)
         {
            this.tooltip.AddNotice(response.message);
-           this.screen.HandleError(response, type);
+           //this.screen.HandleError(response, type);
         }
 
         if (! this.screen)

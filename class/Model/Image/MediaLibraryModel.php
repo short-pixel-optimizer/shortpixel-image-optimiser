@@ -160,10 +160,34 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       return $this->wp_metadata;
   }
 
-  // Not sure if it will work like this.
+	/** Check if image is scaled by WordPress
+	*
+	*	@return boolean
+	*/
   public function isScaled()
   {
      return $this->is_scaled;
+  }
+
+	/** Check and find if there is an error message around
+	*
+	* This is usually requested after some error status has been detected.
+	* Note that the error might not be in the main image, but can also be in a thumbnail!
+	*
+	*/
+  public function getLastErrorMessage()
+  {
+       $message =  $this->error_message;
+			 if (is_null($message) || strlen($message) == 0)
+			 {
+				   foreach ($this->thumbnails as $thumbnail)
+					 {
+						  $message = $thumbnail->getLastErrorMessage();
+							if (! is_null($message) && strlen($message) > 0)
+								return $message;
+					 }
+			 }
+
   }
 
 
@@ -351,7 +375,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           $result = parent::handleOptimized($tempFiles);
           if (! $result)
           {
-
              return false;
           }
       }

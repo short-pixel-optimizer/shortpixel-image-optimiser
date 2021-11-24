@@ -82,7 +82,6 @@ var ShortPixelScreen = function (MainScreen, processor)
              element.classList.add('message');
              element.setAttribute('id', 'sp-message-' + id);
              parent.parentNode.insertBefore(element, parent.nextSibling);
-
            }
        }
 
@@ -91,6 +90,7 @@ var ShortPixelScreen = function (MainScreen, processor)
 				  if (element.classList.contains('error'))
 						 element.classList.remove('error');
 
+					console.log('update message '  + message)
           element.innerHTML = message;
 
 					if (isError)
@@ -172,7 +172,7 @@ var ShortPixelScreen = function (MainScreen, processor)
                  {
                    var error = document.createElement('div');
                    error.classList.add('error');
-                   error.textContent = element.message;
+                   error.innerHTML = element.message;
                    errorBox.append(error);
                  }
              }
