@@ -12,6 +12,7 @@ if ( isset($_GET['noheader']) ) {
     require_once(ABSPATH . 'wp-admin/admin-header.php');
 }
 
+
 ?>
 <div class="wrap shortpixel-other-media">
     <h2>
@@ -19,7 +20,6 @@ if ( isset($_GET['noheader']) ) {
     </h2>
 
     <div class='toolbar'>
-
         <div>
           <?php
           $nonce = wp_create_nonce( 'refresh_folders' );
@@ -28,6 +28,8 @@ if ( isset($_GET['noheader']) ) {
                 <?php _e('Refresh folders','shortpixel-image-optimiser');?>
             </a>
         </div>
+			<hr class='wp-header-end' />
+
 
 
       <div class="searchbox">
@@ -47,6 +49,7 @@ if ( isset($_GET['noheader']) ) {
       </div>
   </div>
 
+<?php if ($this->view->pagination !== false): ?>
   <div class='pagination tablenav'>
 			<div class="view_switch">
 				<?php if ($this->has_hidden_items):
@@ -66,6 +69,7 @@ if ( isset($_GET['noheader']) ) {
         <?php echo $this->view->pagination; ?>
     </div>
   </div>
+<?php endif; ?>
 
     <div class='list-overview'>
       <div class='heading'>

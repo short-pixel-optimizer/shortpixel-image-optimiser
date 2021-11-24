@@ -66,7 +66,7 @@ var ShortPixel = function() {
         this.didInit = true;
 
 				// Move footer notices to the top, where it should be.
-				$headerEnd = $( '.wrap h1, .wrap h2' ).first();
+				$headerEnd = $( '.wp-header-end' );
 				$( 'div.shortpixel-notice' ).not( '.inline, .below-h2' ).insertAfter( $headerEnd );
     }
 

@@ -7,9 +7,8 @@ use ShortPixel\Helper\UiHelper as UiHelper;
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 use ShortPixel\Controller\QuotaController as QuotaController;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
+use ShortPixel\Notices\NoticeController as Notice;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
-
-
 
 // Controller for the MediaLibraryView
 class ListMediaViewController extends \ShortPixel\ViewController
@@ -18,19 +17,15 @@ class ListMediaViewController extends \ShortPixel\ViewController
   protected $template = 'view-list-media';
 //  protected $model = 'image';
 
-
   public function __construct()
   {
     parent::__construct();
-
-
   }
 
   public function load()
   {
 			$this->checkAction(); // bulk action checkboxes, y'all
       $this->loadHooks();
-
   }
 
 	/** Check if a bulk action (checkboxes) was requested
@@ -115,6 +110,7 @@ class ListMediaViewController extends \ShortPixel\ViewController
 
   public function headerColumns($defaults)
   {
+
     $defaults['wp-shortPixel'] = __('ShortPixel Compression', 'shortpixel-image-optimiser');
     if(current_user_can( 'manage_options' )) {
         $defaults['wp-shortPixel'] .=
@@ -190,9 +186,11 @@ class ListMediaViewController extends \ShortPixel\ViewController
   public function filterBy($vars)
   {
     if ( isset( $vars['orderby'] ) && 'ShortPixel Compression' == $vars['orderby'] ) {
+
         $vars = array_merge( $vars, array(
-            'meta_key' => '_shortpixel_optimized',
-            'orderby' => 'meta_value_num',
+          'meta_key' => '_shortpixel_optimized',
+          'orderby' => 'meta_value_num',
+
         ) );
     }
     if ( 'upload.php' == $GLOBALS['pagenow'] && isset( $_GET['shortpixel_status'] ) ) {

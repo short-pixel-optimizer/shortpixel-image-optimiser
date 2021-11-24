@@ -312,7 +312,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
           $pages = round($total / $per_page);
 
           if ($pages <= 1)
-            return ''; // no pages.
+            return false; // no pages.
 
           $disable_first = $disable_last = $disable_prev =  $disable_next = false;
           $page_links = array();
