@@ -188,6 +188,14 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 				 $this->setMeta('retries', 0);
 
         $this->saveMeta();
+
+        $webps = $this->getWebps();
+        foreach($webps as $webpFile)
+            $webpFile->delete();
+
+        $avifs = $this->getAvifs();
+        foreach($avifs as $avifFile)
+            $avifFile->delete();
 			 }
 			 else
 			 {

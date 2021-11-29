@@ -216,13 +216,6 @@ class wpOffload
         else
           return false;
 
-
-      /*  //$item = $this->getItemById($source_id);
-echo "<PRE>"; var_dump($item->key(wp_basename($original_url))); echo "</PRE>";
-        if ($source_id !== false)
-          return $this->getItemById($source_id);
-        else
-          return false; */
     }
 
     public function getLocalPathByURL($url)

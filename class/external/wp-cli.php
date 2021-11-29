@@ -181,7 +181,7 @@ class SpioCommand
 
 			$this->showResponses();
 
-var_dump($result);
+
 	 		if (property_exists($result,'message' && strlen($result->message) > 0))
 				 $message = $result->message;
 			elseif (property_exists($result, 'result') && property_exists($result->result, 'message'))
@@ -498,7 +498,7 @@ class SpioBulk extends SpioCommand
 			 {
 			 	$result = $bulkControl->startBulk($qname);
 			 }
-			 
+
 			 $this->run($args, $assoc);
 	     //$controller = new OptimizeController();
 	     //$result = $controller->startBulk();
