@@ -143,9 +143,13 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
   public function getURL()
   {
+			$fs = \wpSPIO()->filesystem();
+
       if ($this->size == 'original')
         $url = wp_get_original_image_url($this->id);
-      else
+      elseif ($this->isUnlisted())
+				$url = $fs->pathToUrl($this);
+			else
         $url = wp_get_attachment_image_url($this->id, $this->size);
 
       return $this->fs()->checkURL($url);
@@ -182,10 +186,22 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
         return false;
       else
       {
-
-        return parent::isProcessable();
+        $bool = parent::isProcessable();
+				return $bool;
       }
   }
+
+	/** Function to check if said thumbnail is a WP-native or something SPIO added as unlisted
+	*
+	*
+	*/
+	protected function isUnlisted()
+	{
+		 	 if (! is_null($this->getMeta('file')))
+			 	return true;
+			else
+				return false;
+	}
 
 
   // !Important . This doubles as  checking excluded image sizes.
@@ -197,6 +213,8 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
     return false;
   }
+
+
 
   protected function excludeThumbnails()
   {

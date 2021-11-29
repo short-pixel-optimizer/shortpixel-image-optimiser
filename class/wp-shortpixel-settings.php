@@ -25,7 +25,7 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         'apiKey' => array('key' => 'wp-short-pixel-apiKey', 'default' => '', 'group' => 'options'),
         'verifiedKey' => array('key' => 'wp-short-pixel-verifiedKey', 'default' => false, 'group' => 'options'),
         'compressionType' => array('key' => 'wp-short-pixel-compression', 'default' => 1, 'group' => 'options'),
-        'processThumbnails' => array('key' => 'wp-short-process_thumbnails', 'default' => null, 'group' => 'options'),
+        'processThumbnails' => array('key' => 'wp-short-process_thumbnails', 'default' => 1, 'group' => 'options'),
         'keepExif' => array('key' => 'wp-short-pixel-keep-exif', 'default' => 0, 'group' => 'options'),
         'CMYKtoRGBconversion' => array('key' => 'wp-short-pixel_cmyk2rgb', 'default' => 1, 'group' => 'options'),
         'createWebp' => array('key' => 'wp-short-create-webp', 'default' => null, 'group' => 'options'),

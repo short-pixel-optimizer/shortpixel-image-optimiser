@@ -125,13 +125,14 @@
                 <th scope="row"><?php _e('Also include thumbnails:','shortpixel-image-optimiser');?></th>
                 <td><input name="processThumbnails" type="checkbox" id="thumbnails" value="1" <?php checked($view->data->processThumbnails, '1');?>>
                     <label for="thumbnails"><?php _e('Apply compression also to <strong>image thumbnails.</strong> ','shortpixel-image-optimiser');?></label>
+
                     <?php echo($view->data->processThumbnails != 1 && $view->stats->thumbnailsToProcess > 0 ? "(" . number_format($view->stats->thumbnailsToProcess) . " " . __('thumbnails to optimize','shortpixel-image-optimiser') . ")" : "");?>
                     <p class="settings-info">
                         <?php _e('It is highly recommended that you optimize the thumbnails as they are usually the images most viewed by end users and can generate most traffic.<br>Please note that thumbnails count up to your total quota.','shortpixel-image-optimiser');?>
                     </p>
                 </td>
             </tr>
-						
+
             <tr>
                 <th scope="row"><?php _e('Image backup','shortpixel-image-optimiser');?></th>
                 <td>
