@@ -981,9 +981,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
     }
 
 		// Fullpath now will still be .jpg
-
 		$pngConvert = new ShortPixelPng2Jpg();
-
 		$pngConvert->restorePng2Jpg($this);
 	}
 
@@ -1163,11 +1161,14 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
     do_action('shortpixel/image/before_restore', $this);
 
     $cleanRestore = true;
+		$did_png2jpg = $this->getMeta('did_png2jpg');
 
+		// ** Warning - This will also reset metadata
     $bool = parent::restore();
 
-		if ( $this->getMeta('did_png2jpg', true))
+		if ($did_png2jpg)
 		{
+			 Log::addTemp('Restore PNG2JPG');
 			 $this->restorePNG2JPG();
 		}
 

@@ -55,6 +55,7 @@ class SettingsController extends \ShortPixel\ViewController
       // default action of controller
       public function load()
       {
+
         $this->loadEnv();
         $this->checkPost(); // sets up post data
 
@@ -262,10 +263,7 @@ class SettingsController extends \ShortPixel\ViewController
 			 }
 
 				 $this->load();
-
-
 			}
-
 
 
       public function processSave()
@@ -422,7 +420,7 @@ class SettingsController extends \ShortPixel\ViewController
              }
              else
              {
-									Notices::removeNoticeByID(AdminNoticesController::MSG_AVIF_ERROR);
+									 Notice::removeNoticeByID(AdminNoticesController::MSG_AVIF_ERROR);
 
                    $item = $cache->getItem('avif_server_check');
                    $item->setValue(time());
@@ -456,13 +454,14 @@ class SettingsController extends \ShortPixel\ViewController
 			protected function checkCloudFlare()
 			{
           $settings = \wpSPIO()->settings();
+					$settings->cloudflareAuthKey = 'bla';
 
 				 $authkey = $settings->cloudflareAuthKey;
 				 $this->view->hide_cf_global = true;
 
 				 if (strlen($authkey) > 0)
 				 {
-					 $message = '<h4> ' . __('Cloudflare', 'shortpixel-image-optimiser') . '</h4>';
+					 $message = '<h3> ' . __('Cloudflare', 'shortpixel-image-optimiser') . '</h3>';
 					 $message .= '<p>' . __('It seems you are using the Cloudflare Global API key. This is less safe than use the Cloudflare Token and will be removed in the next version for this reason.  Please switch to the token.', 'shortpixel-image-optimiser') . '</p>';
 				 	 $message .= '<p>' . sprintf(__('%s Using the Cloudflare Token %s', 'shortpixel-image-optimiser'), '<a href="https://help.shortpixel.com/article/325-using-shortpixel-image-optimizer-with-cloudflare-api-token" target="_blank">', '</a>') . '</p>';
 

@@ -21,7 +21,7 @@ namespace ShortPixel;
         </button>
       </div>
 
-      <p class='description'><?php _e('Here you can (re)optimize your Media Library, image files from your theme or other media folders that you are using on your site.', 'shortpixel-image-optimiser'); ?></p>
+      <p class='description'><?php _e('Here you can (re)optimize your Media Library, image files from your theme or custom media folders that you are using on your site.', 'shortpixel-image-optimiser'); ?></p>
 
    </div>
 

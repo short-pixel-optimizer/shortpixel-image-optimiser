@@ -9,7 +9,7 @@ namespace ShortPixel;
       Shortpixel Bulk Optimization - Select Images
     </h3>
 
-    <p class='description'>Welcome to the bulk optimization wizard, where you will be able to select the images that ShortPixel will optimize in the background for you.</p>
+    <p class='description'><?php _e('Welcome to the bulk optimization wizard, where you will be able to select the images that ShortPixel will optimize in the background for you.','shortpixel-image-optimiser'); ?></p>
 
     <?php $this->loadView('bulk/part-progressbar'); ?>
 
@@ -23,43 +23,32 @@ namespace ShortPixel;
 
 
 						<div><span>Images</span><span data-stats-media="images-images_basecount">n/a</span></div>
-          <?php if (\wpSPIO()->settings()->createWebp == 1): ?>
-            <div class='filetypes'><span>+ Webp</span><span data-stats-media="images-images_webp">&nbsp;</span></div>
-          <?php endif; ?>
-          <?php if (\wpSPIO()->settings()->createAvif == 1): ?>
-            <div class='filetypes'><span>+ Avif</span><span data-stats-media="images-images_avif">&nbsp;</span></div>
-          <?php endif; ?>
 
-          <div><span>Total images to Optimize </span><span data-stats-media="images-images">0</span></div>
+            <div class='filetypes' data-check-visibility data-control="data-check-has-webp"><span>+ Webp</span><span data-stats-media="images-images_webp" data-check-has-webp>&nbsp;</span></div>
+            <div class='filetypes' data-check-visibility data-control="data-check-has-avif"><span>+ Avif</span><span data-stats-media="images-images_avif" data-check-has-avif>&nbsp;</span></div>
+
+
+          <div><span><?php _e('Total images to Optimize','shortpixel-image-optimiser'); ?></span><span data-stats-media="images-images">0</span></div>
 
         </div>
       </div>
 
     <div class="section-wrapper" data-check-visibility data-control="data-check-custom-total">
-    <h4><span class='dashicons dashicons-open-folder'>&nbsp;</span> Other Media ( <span data-stats-custom="in_queue">0</span> )</h4>
+    <h4><span class='dashicons dashicons-open-folder'>&nbsp;</span><?php _e('Custom Media', 'shortpixel-image-optimiser') ?> ( <span data-stats-custom="in_queue">0</span> )</h4>
       <div class="list-table">
 				<div><span>Images</span><span data-stats-custom="images-images_basecount">n/a</span></div>
 
-				<?php if (\wpSPIO()->settings()->createWebp == 1): ?>
-					<div class='filetypes'><span>+ Webp</span><span data-stats-custom="images-images_webp">&nbsp;</span></div>
-				<?php endif; ?>
-				<?php if (\wpSPIO()->settings()->createAvif == 1): ?>
-					<div class='filetypes'><span>+ Avif</span><span data-stats-custom="images-images_avif">&nbsp;</span></div>
-				<?php endif; ?>
+
+					<div class='filetypes' data-check-visibility data-control="data-check-has-webp" ><span>+ Webp</span>
+						<span data-stats-custom="images-images_webp">&nbsp;</span>
+					</div>
+					<div class='filetypes' data-check-visibility data-control="data-check-has-avif">
+						<span>+ Avif</span><span data-stats-custom="images-images_avif">&nbsp;</span>
+					</div>
+
         <div><span>Total images to Optimize </span><span  data-stats-custom="images-images">0</span></div>
       </div>
     </div>
-
-<!--
-    <div>
-    <?php if (\wpSPIO()->settings()->createWebp == 1): ?>
-      <div><span>+Webp</span><span data-stats-total="images-images_webp">&nbsp;</span></div>
-    <?php endif; ?>
-    <?php if (\wpSPIO()->settings()->createAvif == 1): ?>
-      <div><span>+Avif</span><span data-stats-total="images-images_avif">&nbsp;</span></div>
-    <?php endif; ?>
-    </div>
--->
 
 
     <div class="totals">
@@ -68,9 +57,6 @@ namespace ShortPixel;
       Total Credits Used <span class='number'></span>
     </div>
 
-
-
-
   </div>
 
   <?php
@@ -78,8 +64,8 @@ namespace ShortPixel;
   ?>
 
     <div class="credits">
-      <p class='heading'><span>Your ShortPixel Credits</span>
-        <span><?php echo  number_format($quotaData->total->remaining) ?></span>
+      <p class='heading'><span><?php _e('Your ShortPixel Credits', 'shortpixel-image-optimiser'); ?></span>
+        <span><?php echo number_format($quotaData->total->remaining) ?></span>
       </p>
 
       <p><span>Your monthly plan</span>
@@ -103,9 +89,7 @@ namespace ShortPixel;
       <span><img src="<?php echo wpSPIO()->plugin_url('res/img/bulk/over-quota.svg') ?>" /></span>  <p>On your ShortPixel account you <span class='red'>only have <?php echo number_format($quotaData->total->remaining) ?> credits available </span>, but you have selected <b data-stats-total="images-images">0</b> images to be optimized in this process. You can either go back and select less images to optimize, or you can upgrade to a higher plan or buy one time credits.
 
        <button class="button" onClick="ShortPixel.proposeUpgrade();">Show me the best options</button>
-
-       </p>
-
+     </p>
 
        <span class='hidden' data-quota-remaining><?php echo $quotaData->total->remaining ?></span>
     </div>
@@ -117,7 +101,7 @@ namespace ShortPixel;
 
     <nav>
       <button class="button" data-action="open-panel" data-panel="selection">
-				<span class='dashicons dashicons-arrow-left'></span>
+				<span class='dashicons dashicons-arrow-left' ></span>
 				<?php _e('Back','shortpixel-image-optimiser'); ?>
 			</button>
       <button class="button-primary button" data-action="StartBulk" data-control="data-check-total-total" data-check-presentation="disable">

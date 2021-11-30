@@ -62,6 +62,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
           $this->imageModel->reAcquire(); // single display mode - reset things.
 
 
+
           $this->view->id = $this->post_id;
           $this->view->status_message = null;
 

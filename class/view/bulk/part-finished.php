@@ -66,7 +66,7 @@ namespace ShortPixel;
 
     <div class='bulk-summary' data-check-visibility data-control="data-check-custom-total">
       <div class='heading'>
-        <span><i class='dashicons dashicons-open-folder'>&nbsp;</i> Other Media</span>
+        <span><i class='dashicons dashicons-open-folder'>&nbsp;</i> <?php _e('Custom Media','shortpixel-image-optimiser'); ?></span>
         <span>
               <span class='progressbar'>
                 <span class='done-text'><i data-stats-custom="percentage_done"></i> %</span>

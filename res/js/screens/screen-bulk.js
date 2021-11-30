@@ -128,6 +128,7 @@ console.log("Screen Init Done", initMedia, initCustom);
 
             if (isPanelAction)
             {
+							 console.log('changing panel');
                var doPanel = element.getAttribute('data-panel');
                this.SwitchPanel(doPanel);
             }

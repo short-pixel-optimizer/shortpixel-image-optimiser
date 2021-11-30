@@ -17,6 +17,8 @@ HelpScout::outputBeacon();
     <a href="https://shortpixel.com/contact" target="_blank"><?php _e('Support','shortpixel-image-optimiser');?> </a>
 </p>
 
+<hr class='wp-header-end'>
+
 
 <article id="shortpixel-settings-tabs" class="sp-tabs">
     <?php if (! $this->is_verifiedkey)
@@ -42,7 +44,7 @@ HelpScout::outputBeacon();
         {
           $this->loadView('settings/part-statistics');
         }
-				$this->loadView('settings/part-tools'); 
+				$this->loadView('settings/part-tools');
         if (Log::debugIsActive())
         {
           $this->loadView('settings/part-debug');

@@ -112,7 +112,7 @@ class ApiController
                 'urllist' => $item->urls	)
 					);
 
-		 Log::addDebug('Dumping Media Item', $request);
+		 Log::addDebug('Dumping Media Item', $item->urls);
 
 		 $ret = wp_remote_post($this->apiDumpEndPoint, $request);
 

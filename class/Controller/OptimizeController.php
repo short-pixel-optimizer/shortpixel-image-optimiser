@@ -155,10 +155,12 @@ class OptimizeController
     {
         $fs = \wpSPIO()->filesystem();
 
+				$item_id = $mediaItem->get('id');
+
         $json = $this->getJsonResponse();
         $json->status = 0;
         $json->result = new \stdClass;
-        $json->result->item_id = $mediaItem->get('id');
+        $json->result->item_id = $item_id;
 
 				$optimized = $mediaItem->getMeta('tsOptimized');
 
@@ -166,6 +168,9 @@ class OptimizeController
 
 				// Compat for ancient WP
 				$now = function_exists('wp_date') ? wp_date( 'U', time() ) : time();
+
+				// Reset the whole thing after that. 
+				$mediaItem = $fs->getImage($item_id, 'media');
 
 				// Dump this item from server if optimized in the last hour, since it can still be server-side cached.
 				if ( ( $now   - $optimized) < HOUR_IN_SECONDS )
@@ -629,7 +634,7 @@ class OptimizeController
                 {
                   $thumb->setMeta('status', ImageModel::FILE_STATUS_UNPROCESSED);
 									$thumb->onDelete();
-									                  
+
                   $metaUpdated = true;
                 }
             }
