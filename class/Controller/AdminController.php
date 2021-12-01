@@ -134,7 +134,7 @@ class AdminController extends \ShortPixel\Controller
           if ($imageObj !== false)
             $result = $imageObj->onDelete();
         }
-        catch(Exception $e)
+        catch(\Exception $e)
         {
           Log::addError('OndeleteImage triggered an error. ' . $e->getMessage(), $e);
         }
