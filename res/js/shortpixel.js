@@ -580,7 +580,12 @@ var ShortPixel = function() {
             success: function(response) {
                 jQuery("#shortPixelProposeUpgrade .sp-modal-body").removeClass('sptw-modal-spinner');
                 jQuery("#shortPixelProposeUpgrade .sp-modal-body").html(response);
-            }
+            },
+						complete: function(response, status)
+						{
+							 console.log(response, status);
+
+						}
         });
     }
 

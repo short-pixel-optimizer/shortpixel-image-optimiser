@@ -54,41 +54,43 @@ var ShortPixelScreen = function (MainScreen, processor)
 
     }
 
-    this.UpdateMessage = function(id, message)
+    this.UpdateMessage = function(id, message, isError)
     {
-	       var element = document.getElementById('sp-message-' + id);
-	       this.currentMessage = message;
 
-	       if (element == null)
-	       {
-	           var parent = document.getElementById('sp-msg-' + id);
-	           if (parent !== null)
-	           {
-	             var element = document.createElement('div');
-	             element.classList.add('message');
-	             element.setAttribute('id', 'sp-message-' + id);
-	             parent.parentNode.insertBefore(element, parent.nextSibling);
-	           }
-	       }
-
-	       if (element !== null)
-	       {
-	          element.innerHTML = message;
-	       }
-	       else
-	       {
-	        //console.error('Update Message column not found ' + id);
-	        this.processor.Debug('Update Message Column not found' + id);
-	       }
-			/*
        var element = document.getElementById('sp-message-' + id);
+			 if (typeof isError === 'undefined')
+			 	 isError = false;
+
+       this.currentMessage = message;
+
+       if (element == null)
+       {
+           var parent = document.getElementById('sp-msg-' + id);
+           if (parent !== null)
+           {
+             var element = document.createElement('div');
+             element.classList.add('message');
+             element.setAttribute('id', 'sp-message-' + id);
+             parent.parentNode.insertBefore(element, parent.nextSibling);
+           }
+       }
+
        if (element !== null)
        {
+				  if (element.classList.contains('error'))
+						 element.classList.remove('error');
+
+					console.log('update message '  + message)
           element.innerHTML = message;
+
+					if (isError)
+						 element.classList.add('error');
        }
        else
-        console.error('Update Message coloumn not found ' + id);
-				*/
+       {
+        //console.error('Update Message column not found ' + id);
+        this.processor.Debug('Update Message Column not found' + id);
+       }
     }
 
     this.UpdateStats = function(stats, type)
@@ -180,11 +182,13 @@ var ShortPixelScreen = function (MainScreen, processor)
     this.RenderItemView = function(e)
     {
         var data = e.detail;
+				console.log('RenderItemView', data);
+
         if (data.custom)
         {
             var id = data.custom.id;
             var element = document.getElementById('sp-msg-' + id);
-            element.innerHTML = data.custom.result;
+            element.outerHTML = data.custom.result;
 
         }
         return true;

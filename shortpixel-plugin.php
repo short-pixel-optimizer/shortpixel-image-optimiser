@@ -155,7 +155,7 @@ class ShortPixelPlugin
             if($this->settings()->png2jpg) {
 
               add_action( 'add_attachment', array($admin,'handlePng2JpgHook'));
-              //  add_action( 'wp_handle_upload', array($admin,'handlePng2JpgHook'));
+              add_action( 'wp_handle_upload', array($admin,'handlePng2JpgHook'));
 
                 // @integration MediaPress
               add_action( 'mpp_handle_upload', array($admin,'handlePng2JpgHook'));

@@ -253,29 +253,35 @@ class UiHelper
   				       if ($showCompare)
                    $list_actions[] = self::getAction('compare', $id);
             }
+			 			if ($mediaItem->isRestorable())
+						{
 
-           switch($mediaItem->getMeta('compressionType'))
-           {
-               case ImageModel::COMPRESSION_LOSSLESS:
-                 $list_actions['reoptimize-lossy'] = self::getAction('reoptimize-lossy', $id);
-                 $list_actions['reoptimize-glossy'] = self::getAction('reoptimize-glossy', $id);
-               break;
-               case ImageModel::COMPRESSION_LOSSY:
-                 $list_actions['reoptimize-lossless'] = self::getAction('reoptimize-lossless', $id);
-                 $list_actions['reoptimize-glossy'] = self::getAction('reoptimize-glossy', $id);
-               break;
-               case ImageModel::COMPRESSION_GLOSSY:
-                 $list_actions['reoptimize-lossy'] = self::getAction('reoptimize-lossy', $id);
-                 $list_actions['reoptimize-lossless'] = self::getAction('reoptimize-lossless', $id);
-               break;
-           }
+		           switch($mediaItem->getMeta('compressionType'))
+		           {
+		               case ImageModel::COMPRESSION_LOSSLESS:
+		                 $list_actions['reoptimize-lossy'] = self::getAction('reoptimize-lossy', $id);
+		                 $list_actions['reoptimize-glossy'] = self::getAction('reoptimize-glossy', $id);
+		               break;
+		               case ImageModel::COMPRESSION_LOSSY:
+		                 $list_actions['reoptimize-lossless'] = self::getAction('reoptimize-lossless', $id);
+		                 $list_actions['reoptimize-glossy'] = self::getAction('reoptimize-glossy', $id);
+		               break;
+		               case ImageModel::COMPRESSION_GLOSSY:
+		                 $list_actions['reoptimize-lossy'] = self::getAction('reoptimize-lossy', $id);
+		                 $list_actions['reoptimize-lossless'] = self::getAction('reoptimize-lossless', $id);
+		               break;
+		           }
 
-					 	if ($mediaItem->isRestorable())
-					 	{
-          		$list_actions['restore'] = self::getAction('restore', $id);
+
+		          		$list_actions['restore'] = self::getAction('restore', $id);
+							} // isRestorable
+						else
+						{
+							 //echo $mediaItem->getReason('restorable');
 						}
-          }
-      }
+        } // hasBackup
+
+      } //isOptimized
 
       if(! $quotaControl->hasQuota())
       {

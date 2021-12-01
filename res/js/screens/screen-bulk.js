@@ -519,7 +519,8 @@ console.log("Screen Init Done", initMedia, initCustom);
       this.processor.AjaxRequest(data);
 
       // process stops after preparing.
-     this.processor.RunProcess();
+			// ResumeProcess, not RunProcess because that hits the pauseToggles.
+     this.processor.ResumeProcess();
 
       this.SwitchPanel('process');
 

@@ -90,7 +90,7 @@ class ApiController
   }
 
 	/* Ask to remove the items from the remote cache.
-	  @param $item Must be object, with URLS set as array of urllist.
+	  @param $item Must be object, with URLS set as array of urllist. - Secretly not a mediaItem - shame
 	*/
 	public function dumpMediaItem($item)
 	{

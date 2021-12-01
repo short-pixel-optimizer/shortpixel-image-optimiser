@@ -218,13 +218,11 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
        $this->handleOptimizedFileType($downloadResults);
 
-
        if ($bool)
        {
          $this->setMeta('customImprovement', parent::getImprovement());
          $this->saveMeta();
        }
-
 
        return $bool;
     }

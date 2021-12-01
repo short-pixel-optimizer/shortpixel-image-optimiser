@@ -434,6 +434,20 @@ class OtherMediaViewController extends \ShortPixel\ViewController
           return $this->renderActions($thisActions, $item);
       }
 
+			// Function to sync output exactly with Media Library functions for consistency
+			public function doActionColumn($item)
+			{
+          ?>
+					<div id='sp-msg-<?php echo $item->get('id') ?>'  class='sp-column-info'><?php
+          //echo $this->getDisplayStatus($item);
+					$this->printItemActions($item);
+          echo "<div>" .  UiHelper::getStatusText($item) . "</div>";
+
+           ?>
+					 </div>
+					 <?php
+			}
+
       // Use for view, also for renderItemView
 			public function printItemActions($item)
       {

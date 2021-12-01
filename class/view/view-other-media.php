@@ -140,14 +140,9 @@ if ( isset($_GET['noheader']) ) {
             <span class="date"><?php echo $display_date ?></span>
 
             <span >
-              <div id='sp-msg-<?php echo $item->get('id') ?>'  class='sp-column-info'><?php
-              //echo $this->getDisplayStatus($item);
-							$this->printItemActions($item);
-              echo "<div>" .  UiHelper::getStatusText($item) . "</div>";
-
-               ?>
-							 </div>
+								<?php $this->doActionColumn($item); ?>
 	          </span>
+
 
 
 

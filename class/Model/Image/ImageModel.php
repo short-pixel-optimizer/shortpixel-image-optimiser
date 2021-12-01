@@ -45,6 +45,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		const P_BACKUPDIR_NOTWRITABLE = 7;
 		const P_BACKUP_EXISTS = 8;
 
+		// For restorable status
+		const P_RESTORABLE = 9;
+		const P_BACKUP_NOT_EXISTS = 10;
 
     protected $image_meta; // metadata Object of the image.
 
@@ -57,6 +60,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     protected $id;
 
     protected $processable_status = 0;
+		protected $restorable_status = 0;
 
     //protected $is_optimized = false;
   //  protected $is_image = false;
@@ -83,7 +87,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
       //$this->setImageSize();
     }
-
 
     protected function setImageSize()
     {
@@ -151,10 +154,25 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
        return $result;
     }
 
-    public function getProcessableReason()
+		/** In time this should replace the other. This one added for semantic reasons. */
+		public function getReason($name = 'processable')
+		{
+				$status = null;
+
+			 if ($name == 'processable')
+			 	$status = $this->processable_status;
+			 elseif($name == 'restorable')
+			 	$status = $this->restorable_status;
+
+			 return $this->getProcessableReason($status);
+		}
+
+    public function getProcessableReason($status = null)
     {
       $message = false;
-      switch($this->processable_status)
+			$status = (! is_null($status)) ? $status : $this->processable_status;
+
+      switch($status)
       {
          case self::P_PROCESSABLE:
             $message = __('Image Processable', 'shortpixel-image-optimiser');
@@ -174,7 +192,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
          case self::P_IS_OPTIMIZED:
             $message = __('Image is already optimized', 'shortpixel-image-optimiser');
          break;
-        case self::P_FILE_NOTWRITABLE:
+         case self::P_FILE_NOTWRITABLE:
             $message = __('Image is not writable', 'shortpixel-image-optimiser');
          break;
 				 case self::P_BACKUPDIR_NOTWRITABLE:
@@ -183,7 +201,12 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 				 case self::P_BACKUP_EXISTS:
 				 		$message = __('Backup already exists', 'shortpixel-image-optimiser');
 				 break;
-
+				 case self::P_RESTORABLE:
+				 		$message = __('Image restorable', 'shortpixel-image-optimiser');
+				 break;
+				 case self::P_BACKUP_NOT_EXISTS:
+				 		$message = __('Backup does not exist', 'shortpixel-image-optimiser');
+				 break;
          default:
             $message = __(sprintf('Unknown Issue, Code %s',  $this->processable_status), 'shortpixel-image-optimiser');
          break;
@@ -529,22 +552,27 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     {
         if (! $this->isOptimized())
         {
+					 $this->restorable_status = self::P_IS_OPTIMIZED;
            return false;  // not optimized, done.
         }
         elseif ($this->hasBackup() && ($this->is_virtual() || $this->is_writable()) )
         {
+					$this->restorable_status = self::P_RESTORABLE;
           return true;
         }
         else
         {
           if (! $this->is_writable())
           {
-              ResponseController::add()->withMessage(__('This file cannot be restored due to file permissions - not writable : ' . $this->getFullPath(), 'shortpixel-image-optimiser'))->asError();
+            /*  ResponseController::add()->withMessage(__('This file cannot be restored due to file permissions - not writable : ' . $this->getFullPath(), 'shortpixel-image-optimiser'))->asError(); */
+							$this->restorable_status = self::P_FILE_NOTWRITABLE;
               Log::addWarn('Restore - Not Writable ' . $this->getFullPath() );
           }
           if (! $this->hasBackup())
+					{
+						$this->restorable_status = self::P_BACKUP_NOT_EXISTS;
             Log::addDebug('Backup not found for file: ', $this->getFullPath());
-
+					}
            return false;
         }
     }
@@ -574,7 +602,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         if (! $backupFile->is_readable())
         {
 						Log::addError('BackupFile not readable' . $backupFile->getFullPath());
-            ResponseController::add()->asItem($id, $type)->asErrir()->withMessage(__('BackupFile not readable. Check file and/or file permissions', 'shortpixel-image-optimiser'))->inFile($backupFile->getFileName());
+            ResponseController::add()->asItem($id, $type)->asError()->withMessage(__('BackupFile not readable. Check file and/or file permissions', 'shortpixel-image-optimiser'))->inFile($backupFile->getFileName());
            return false; //error
          }
 				 elseif (! $backupFile->is_writable())
@@ -756,7 +784,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                 Log::addWarn('Backup Failed, File is restorable, try to recover. ' . $this->getFullPath() );
                 $this->restore();
 
-								$this->error_message = __('Backup already exists, but image is recoverable and the plugin will rollback. Retry after', 'shortpixel-image-optimser');
+								$this->error_message = __('Backup already exists, but image is recoverable and the plugin will rollback. Will retry to optimize again. ', 'shortpixel-image-optimser');
             }
             else
             {

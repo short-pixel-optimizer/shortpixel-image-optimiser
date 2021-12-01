@@ -381,7 +381,9 @@ class ShortPixelPng2Jpg {
 
         $new_metadata = wp_generate_attachment_metadata($attach_id, $newFile->getFullPath());
 
-        $new_metadata = array_merge($metadata, $new_metadata); // merge to preserve other custom metadata
+				// Metadata might not be array when add_attachment is calling this hook via AdminController ( PNG2JPG) 
+				if (is_array($metadata))
+        	$new_metadata = array_merge($metadata, $new_metadata); // merge to preserve other custom metadata
 
         Log::addDebug('Png2Jpg New Metadata', $new_metadata);
 		//		wp_update_post(array('ID' => $attach_id, 'post_mime_type' => 'image/jpeg' ));

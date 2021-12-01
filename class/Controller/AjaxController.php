@@ -129,7 +129,7 @@ class AjaxController
                 ob_start();
                    $control = new OtherMediaViewController();
                    $item = \wpSPIO()->filesystem()->getImage($id, 'custom');
-                   $control->printItemActions($item);
+                   $control->doActionColumn($item);
                 $result = ob_get_contents();
                 ob_end_clean();
              }
@@ -622,6 +622,7 @@ class AjaxController
         $json->status = false;
         $json->error = self::NONCE_FAILED;
         $this->send($json);
+				exit();
       }
 
     }

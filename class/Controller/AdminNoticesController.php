@@ -685,7 +685,12 @@ class AdminNoticesController extends \ShortPixel\Controller
 
         );
 
+		//		Log::addTemp('Post Request ProposeUpgrade', $args);
+
+
         $proposal = wp_remote_post("https://shortpixel.com/propose-upgrade-frag", $args);
+
+			//	Log::addTemp('Request Req', $proposal);
 
         if(is_wp_error( $proposal )) {
             $proposal = array('body' => __('Error. Could not contact Shortpixel server for proposal', 'shortpixel-image-optimiser'));
@@ -758,7 +763,6 @@ class AdminNoticesController extends \ShortPixel\Controller
     protected function monthlyUpgradeNeeded($quotaData) {
 				if  (isset($quotaData->monthly->total))
 				{
-
 						$monthAvg = $this->getMonthAvg($quotaData);
 						// +20 I suspect to not trigger on very low values of monthly use(?)
 						$threshold = $quotaData->monthly->total + $quotaData->onetime->remaining/6+20;
@@ -767,12 +771,12 @@ class AdminNoticesController extends \ShortPixel\Controller
 						{
 								return true;
 						}
-
 				}
 				return false;
     }
 
     protected function bulkUpgradeNeeded() {
+
         $quotaController = QuotaController::getInstance(); //$stats;
         $stats = StatsController::getInstance();
 

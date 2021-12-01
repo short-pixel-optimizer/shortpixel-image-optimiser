@@ -454,7 +454,7 @@ class SettingsController extends \ShortPixel\ViewController
 			protected function checkCloudFlare()
 			{
           $settings = \wpSPIO()->settings();
-					$settings->cloudflareAuthKey = 'bla';
+
 
 				 $authkey = $settings->cloudflareAuthKey;
 				 $this->view->hide_cf_global = true;

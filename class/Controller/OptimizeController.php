@@ -169,8 +169,8 @@ class OptimizeController
 				// Compat for ancient WP
 				$now = function_exists('wp_date') ? wp_date( 'U', time() ) : time();
 
-				// Reset the whole thing after that. 
-				$mediaItem = $fs->getImage($item_id, 'media');
+				// Reset the whole thing after that.
+				$mediaItem = $fs->getImage($item_id, $mediaItem->get('type'));
 
 				// Dump this item from server if optimized in the last hour, since it can still be server-side cached.
 				if ( ( $now   - $optimized) < HOUR_IN_SECONDS )
@@ -555,8 +555,12 @@ class OptimizeController
          {
            if ($imageItem->isProcessable() && $result->apiStatus !== ApiController::STATUS_NOT_API)
            {
-              Log::addDebug('Item with ID' . $imageItem->item_id . ' still has processables');
-                $this->addItemToQueue($imageItem); // requeue for further processing.
+              Log::addDebug('Item with ID' . $imageItem->item_id . ' still has processables (with dump)');
+ 						  $api = $this->getAPI();
+							$item = new \stdClass;
+							$item->urls = $imageItem->getOptimizeUrls();
+							$api->dumpMediaItem($item);
+              $this->addItemToQueue($imageItem); // requeue for further processing.
            }
            else
             $q->itemDone($item);
