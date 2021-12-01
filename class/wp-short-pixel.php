@@ -8,6 +8,8 @@ use ShortPixel\Model\ImageModel as ImageModel;
 
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
 
+use \Exception as Exception;
+
 class WPShortPixel {
 
     const BULK_EMPTY_QUEUE = 0;
