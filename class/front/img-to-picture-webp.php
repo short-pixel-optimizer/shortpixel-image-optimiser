@@ -11,12 +11,12 @@ class ShortPixelImgToPictureWebp
 
     public function convert($content)
     {
-
         // Don't do anything with the RSS feed.
         if (is_feed() || is_admin()) {
             Log::addInfo('SPDBG convert is_feed or is_admin');
             return $content; // . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!--  -->' : '');
         }
+
 
         $new_content = $this->testPictures($content);
         if ($new_content !== false)
@@ -28,6 +28,8 @@ class ShortPixelImgToPictureWebp
           Log::addDebug('Test Pictures returned empty.');
         }
 
+
+			//	preg_match_all
         $content = preg_replace_callback('/<img[^>]*>/i', array($this, 'convertImage'), $content);
         //$content = preg_replace_callback('/background.*[^:](url\(.*\)[,;])/im', array('self', 'convertInlineStyle'), $content);
 
@@ -163,7 +165,7 @@ class ShortPixelImgToPictureWebp
             Log::addInfo('SPDBG baseurl doesn\'t match ' . $srcInfo['value'], array($imageBase) );
             return $match[0]; // . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG baseurl doesn\'t match ' . $src . '  -->' : '');
         }
-        Log::addDebug('ImageBase'. $imageBase);
+        Log::addDebug('ImageBase ' . $imageBase);
 
         //some attributes should not be moved from <img>
         // @todo Move these to unset on (imgpicture) and put via create_attributes back
@@ -278,17 +280,17 @@ class ShortPixelImgToPictureWebp
           $srcset = $src; // if not srcset ( it's a src ), replace those.
         $srcPrefix = $srcInfo['prefix'];
 
-        $srcsetWebP = implode(',', $srcsetWebP);
+      //  $srcsetWebP = implode(',', $srcsetWebP);
 
 
         $output = '<picture ' . $this->create_attributes($imgpicture) . '>';
 
-        if (count($srcsetAvif) > 0)
+        if (is_array($srcsetAvif) && count($srcsetAvif) > 0)
         {
             $srcsetAvif = implode(',', $srcsetAvif);
             $output .= '<source ' . $srcsetPrefix . 'srcset="' . $srcsetAvif . '"' . ($sizes ? ' ' . $sizesPrefix . 'sizes="' . $sizes . '"' : '') . ' type="image/avif">';
         }
-        if (count($srcsetWebP) > 0)
+        if (is_array($srcsetWebP) && count($srcsetWebP) > 0)
         {
           $srcsetWebP = implode(',', $srcsetWebP);
           $output .= '<source ' . $srcsetPrefix . 'srcset="' . $srcsetWebP . '"' . ($sizes ? ' ' . $sizesPrefix .  'sizes="' . $sizes . '"' : '') . ' type="image/webp">';
