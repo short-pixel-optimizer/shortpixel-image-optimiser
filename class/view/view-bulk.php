@@ -12,8 +12,14 @@ namespace ShortPixel;
   <div class='error'><p id="shortpixel-bulk-error">Error region</p></div>
   -->
   <div id="processPaused" class="processor-paused" data-action="ResumeBulk"><span class='dashicons dashicons-controls-pause' data-action="ResumeBulk"></span> Processor is paused, click to resume</div>
-  <div class="screen-wrapper">
 
+  <div id="processorOverQuota" class="processor-overquota">
+			<h3>There are no credits left. Processing paused. </h3>
+			<p><a href="javascript:window.location.reload()">Click to reload page after adding credits</a></p>
+	</div>
+
+
+  <div class="screen-wrapper">
 
   <?php
   //$this->loadView('bulk/part-progressbar');

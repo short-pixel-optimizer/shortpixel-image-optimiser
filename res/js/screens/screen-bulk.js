@@ -462,24 +462,39 @@ console.log("Screen Init Done", initMedia, initCustom);
   this.HandleError = function(result, type)
   {
     console.error(result);
+
 		var fatal = false;
 		var cssClass = '';
+		var message = '';
 
-		if (typeof result.result !== 'undefined')
+		if (typeof result.result !== 'undefined') // item error
 		{
-			 var item = result.result;
-			 var filename = (typeof item.filename !== 'undefined') ? item.filename : false;
-			 var message = '(' + result.item_id + ') ' + item.message;
-			 var fatal = (item.is_done == true) ? true : false;
-			 if (filename)
+			 if (result.result)
 			 {
-				  message += ' (' + filename + ') ';
+			 		var item = result.result;
+			 		var filename = (typeof item.filename !== 'undefined') ? item.filename : false;
+			 		var message = '(' + result.item_id + ') ' + item.message;
+			 		var fatal = (item.is_done == true) ? true : false;
+			 		if (filename)
+			 		{
+				  		message += ' (' + filename + ') ';
+			 		}
+
+			 }
+
+			 var error = this.processor.aStatusError[result.error];
+
+			 if (error == 'NOQUOTA')
+			 {
+						 this.ToggleOverQuotaNotice(true);
 			 }
 
 		}
-		else
+		else // unknown.
 		{
-    var message = result.message + '(' + result.item_id + ')';
+
+    	var message = result.message + '(' + result.item_id + ')';
+			console.log(message);
 
 		}
 
@@ -557,7 +572,6 @@ console.log("Screen Init Done", initMedia, initCustom);
 
   this.TogglePauseNotice = function(event)
   {
-     console.log(event);
      var data = event.detail;
 
      var el = document.getElementById('processPaused'); // paused overlay
@@ -577,9 +591,28 @@ console.log("Screen Init Done", initMedia, initCustom);
         buttonPause.style.display = 'inline-block';
         buttonResume.style.display = 'none';
 
+				// in case this is overquota situation, on unpause, recheck situation, hide the thing.
+				this.ToggleOverQuotaNotice(false);
      }
 
-  },
+  }
+
+  // Everything that needs to happen when going overQuota.
+	this.ToggleOverQuotaNotice = function(toggle)
+	{
+		 var overQ = document.getElementById('processorOverQuota');
+
+		 if (toggle)
+		 {
+				overQ.style.display = 'block';
+		 }
+		 else
+		 {
+			   overQ.style.display = 'none';
+		 }
+
+	}
+
   this.EventPanelStatusUpdated = function(event)
   {
      var status = event.detail.status;

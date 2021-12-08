@@ -462,9 +462,8 @@ class OptimizeController
              // These are cloned, because queue changes object's properties
              Log::addDebug('HandleApiResult - Item failed ' . $item->item_id);
              $q->itemFailed($item, true);
-             $this->HandleItemError($item);
-						 // This whole thing kinda failed.
-          //   ResponseController::add()->withMessage($result->message)->asError();
+             $this->HandleItemError($item, $qtype);
+
           }
           else
           {
@@ -504,14 +503,14 @@ class OptimizeController
 
                }
                else
-              {
+               {
                  $item->result->apiStatus = ApiController::STATUS_ERROR;
                  $item->fileStatus = ImageModel::FILE_STATUS_ERROR;
               //   $item->result->message = sprintf(__('Image not optimized with errors', 'shortpixel-image-optimiser'), $item->item_id);
                  $item->result->message = $imageItem->getLastErrorMessage();
                  $item->result->is_error = true;
 
-              }
+               }
 
               unset($item->result->files);
 
@@ -549,7 +548,7 @@ class OptimizeController
          if ($item->result->is_error)
          {
           $q->itemFailed($item, true);
-          $this->HandleItemError($item);
+          $this->HandleItemError($item, $qtype);
          }
          else
          {
@@ -581,13 +580,13 @@ class OptimizeController
 
     }
 
-    protected function HandleItemError($item)
+    protected function HandleItemError($item, $type)
     {
         if ($this->isBulk)
         {
           $fs = \wpSPIO()->filesystem();
           $backupDir = $fs->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
-          $fileLog = $fs->getFile($backupDir->getPath() . 'current_bulk.log');
+          $fileLog = $fs->getFile($backupDir->getPath() . 'current_bulk_' . $type . '.log');
 
           $time = UiHelper::formatTs(time());
           $fileName = $item->result->filename;

@@ -21,14 +21,15 @@ class ApiController
     const STATUS_MAINTENANCE = -500;
     const STATUS_NOT_API = -1000; // Not an API process, i.e restore / migrate. Don't handle as optimized
 
-    const ERR_FILE_NOT_FOUND = -2;
-    const ERR_TIMEOUT = -3;
-    const ERR_SAVE = -4;
-    const ERR_SAVE_BKP = -5;
-    const ERR_INCORRECT_FILE_SIZE = -6;
-    const ERR_DOWNLOAD = -7;
-    const ERR_PNG2JPG_MEMORY = -8;
-    const ERR_POSTMETA_CORRUPT = -9;
+		// Moved these numbers higher to prevent conflict with STATUS
+    const ERR_FILE_NOT_FOUND = -902;
+    const ERR_TIMEOUT = -903;
+    const ERR_SAVE = -904;
+    const ERR_SAVE_BKP = -905;
+    const ERR_INCORRECT_FILE_SIZE = -906;
+    const ERR_DOWNLOAD = -907;
+    const ERR_PNG2JPG_MEMORY = -908;
+    const ERR_POSTMETA_CORRUPT = -909;
     const ERR_UNKNOWN = -999;
 
     const DOWNLOAD_ARCHIVE = 7;
@@ -99,7 +100,7 @@ class ApiController
 
 		 if (property_exists($item, 'urls') === false || ! is_array($item->urls) || count($item->urls) == 0)
 		 {
-			  Log::addError('Media Item without URLS cannnot be dumped', $item);
+			  Log::addError('Media Item without URLS cannnot be dumped' . $item->get('id') , $item);
 				return false;
 		 }
 
@@ -112,7 +113,7 @@ class ApiController
                 'urllist' => $item->urls	)
 					);
 
-		 Log::addDebug('Dumping Media Item', $item->urls);
+		 Log::addDebug('Dumping Media Item ', $item->urls);
 
 		 $ret = wp_remote_post($this->apiDumpEndPoint, $request);
 
@@ -378,7 +379,7 @@ class ApiController
           //file was processed OK
           if ($fileData->Status->Code == self::STATUS_SUCCESS )
           {
-                  $downloadResult = $this->handleDownload($fileData->$fileType, $fileData->$fileSize, $fileData->OriginalSize
+                $downloadResult = $this->handleDownload($fileData->$fileType, $fileData->$fileSize, $fileData->OriginalSize
                 );
                 $archive = false;
 
@@ -395,6 +396,8 @@ class ApiController
                   {
                     $originalURL = substr($fileData->OriginalURL, 0, (strpos($fileData->OriginalURL, '?'))  ); // Strip Query String from URL. If it's there!
                   }
+
+									// This is the main translation back from URL back to local path.
                   $originalFile = $fs->getFile($originalURL); //basename(parse_url($fileData->OriginalURL, PHP_URL_PATH));
 
                   // Put it in Results.
@@ -444,20 +447,15 @@ class ApiController
                   }
 
               }
-              /*elseif ($downloadResult->status == self::STATUS_UNCHANGED)
-              {
-                  // Do nothing.
-              } */
-              //when the status is STATUS_UNCHANGED we just skip the array line for that one
-              /*elseif( $downloadResult->status == self::STATUS_UNCHANGED ) {
-                  //this image is unchanged so won't be copied below, only the optimization stats need to be computed
-                  $originalSpace += $fileData->OriginalSize;
-                  $optimizedSpace += $fileData->$fileSize;
+              else {  // Some error
+                //  self::cleanupTemporaryFiles($archive, $tempFiles);
+								if (property_exists($downloadResult, 'file')) // delete Temp File if there.
+								{
+									 if ($downloadResult->file->exists())
+									 	$downloadResult->file->delete();
+								}
+                return $downloadResult;
 
-              } */
-              else {
-                  self::cleanupTemporaryFiles($archive, $tempFiles);
-                //  return $downloadResult;
               }
 
           }
@@ -498,6 +496,7 @@ class ApiController
       //if there is no improvement in size then we do not download this file
       if (($optimizedSize !== false && $originalSize !== false) && $originalSize == $optimizedSize )
       {
+				  Log::addDebug('Optimize and Original size seems the same');
           return $this->returnRetry(self::STATUS_UNCHANGED, __("File wasn't optimized so we do not download it.", 'shortpixel-image-optimiser'));
       }
       $correctFileSize = $optimizedSize;
@@ -511,11 +510,26 @@ class ApiController
           $tempFile = download_url($fileURL, $downloadTimeout);
       }
 
-      //on success we return this
-    //  $returnMessage = array("Status" => self::STATUS_SUCCESS, "Message" => $tempFile);
-
       if ( is_wp_error( $tempFile ) ) {
-          return $this->returnFailure(self::STATUS_ERROR, __('Error downloading file','shortpixel-image-optimiser') . " ({$optimizedUrl}) " . $tempFile->get_error_message());
+
+				  $fail = true;
+					$error = self::STATUS_ERROR;
+					$error_message = $tempFile->get_error_message();
+
+					if (strpos($error_message, 'timed out') !== false)
+					{
+							$error = self::ERR_TIMEOUT;
+							$fail = false;
+					}
+
+					if ($fail)
+					{
+          		return $this->returnFailure($error, __('Error downloading file','shortpixel-image-optimiser') . " ({$optimizedUrl}) " . $error_message);
+					}
+					else
+					{
+					    return $this->returnRetry($error, __('Error downloading file','shortpixel-image-optimiser') . " ({$optimizedUrl}) " . $error_message);
+					}
       }
 
       $tempFile = $fs->getFile($tempFile); // switch to FS after download

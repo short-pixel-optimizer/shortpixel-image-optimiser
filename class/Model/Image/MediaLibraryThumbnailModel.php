@@ -94,14 +94,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
   public function onDelete()
   {
-  /* Moved to ImageModel
-	    $webp = $this->getWebp();
-      if ($webp !== false && $webp->exists())
-         $webp->delete();
-      $avif = $this->getAvif();
-      if ($avif !== false && $avif->exists())
-         $avif->delete();
-*/
       $bool = parent::onDelete();
 			// minimally reset all the metadata.
 			$this->image_meta = new ImageThumbnailMeta();
@@ -252,7 +244,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
        $this->setVirtualToReal($filepath);
     }
-
 
     $bool = parent::restore();
 

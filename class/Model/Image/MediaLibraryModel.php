@@ -180,6 +180,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        $message =  $this->error_message;
 			 if (is_null($message) || strlen($message) == 0)
 			 {
+
 				   foreach ($this->thumbnails as $thumbnail)
 					 {
 						  $message = $thumbnail->getLastErrorMessage();
@@ -188,6 +189,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					 }
 			 }
 
+			 return $message;
   }
 
 
@@ -843,6 +845,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
                ResponseController::add()->withMessage(sprintf(__('ConvertPNG could not create backup for %s, optimization failed. Please check file permissions - %s', 'shortpixel-image-optimiser'), $this->getFileName(), $this->getFullPath() ))->asImportant()->asError();
                return false;
              }
+
+						 foreach($this->thumbnails as $thumbnail)
+						 {
+							  $thumbnail->createBackup();
+						 }
+
           }
 
           $pngConvert = new ShortPixelPng2Jpg();
@@ -852,7 +860,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
              $bool = true; // placeholder maybe
           }
           elseif ($settings->backupImages == 1)
+					{
              $this->restore(); // failed, remove backups.
+					}
       }
 
       if ($bool)
@@ -918,10 +928,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 			if (! $pngFile->exists())
 			{
+					// This is a PNG content file, that has been restored as a .jpg file.
 					 $this->move($pngFile);
-				//	 $this->fullpath = $pngFile->getFullPath();
-				//	 $this->resetStatus();
-				//	 $this->setFileInfo();
+
 			}
 
       /*  $backupFile = $this->getBackupFile(); //$fs->getFile($this->getBackupDirectory() . $this->getFileBase() . '.png'); // check backup.
@@ -945,6 +954,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
               //$backupFile = $thumbObj->getBackupFile(); //$fs->getFile($thumbObj->getBackupDirectory() . $thumbObj->getFileBase() . '.png');
             //if ($backupFile->exists())
               //{
+							if ($thumbObj->hasBackup())
+							{
+									$backupFile = $thumbObj->getBackupFile();
+									$backupFile->delete();
+
+							}
+
                 $thumbObj->delete(); // delete the jpg
               //  $thumbObj->fullpath = $fs->getFile($thumbObj->getFileDir() . $thumbObj->getFileBase() . '.png'); // reset path to .png
                 $thumbObj->resetStatus();

@@ -66,8 +66,8 @@ var ShortPixel = function() {
         this.didInit = true;
 
 				// Move footer notices to the top, where it should be.
-				$headerEnd = $( '.wp-header-end' );
-				$( 'div.shortpixel-notice' ).not( '.inline, .below-h2' ).insertAfter( $headerEnd );
+				$headerEnd = jQuery( '.wp-header-end' );
+				jQuery( 'div.shortpixel-notice' ).not( '.inline, .below-h2' ).insertAfter( $headerEnd );
     }
 
     function setOptions(options) {
@@ -167,9 +167,9 @@ var ShortPixel = function() {
               //  alert(_spTr.alertOnlyAppliesToNewImages);
               //  ShortPixel.setupGeneralTabAlert = 1;
 							 if (this.value == savedCompression)
-  					 		$('.compression-notice-row').addClass('shortpixel-hide');
+  					 		jQuery('.compression-notice-row').addClass('shortpixel-hide');
 							else
-							  $('.compression-notice-row').removeClass('shortpixel-hide');
+							  jQuery('.compression-notice-row').removeClass('shortpixel-hide');
             };
         }
 
@@ -1509,7 +1509,7 @@ function SPstringFormat() {
     };
 
     SpioResize.hide = function() {
-        $('.presentation-wrap').css('opacity', 0);
+        jQuery('.presentation-wrap').css('opacity', 0);
     }
 
     SpioResize.animate = function(img, step1, frame, step2, rule) {

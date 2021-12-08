@@ -58,6 +58,7 @@ class AdminController extends \ShortPixel\Controller
     */
     public function handlePng2JpgHook($id)
     {
+			var_dump($id);
       $mediaItem = \wpSPIO()->filesystem()->getImage($id, 'media');
       // IsProcessable sets do_png2jpg flag.
       if ($mediaItem->isProcessable() && $mediaItem->get('do_png2jpg') == true)

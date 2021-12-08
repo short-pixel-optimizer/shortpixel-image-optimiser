@@ -359,6 +359,9 @@ class ShortPixelPng2Jpg {
         $newFile = $params['file'];
         $attach_id = $imageObj->get('id');
 
+				// This action prevents images from being regenerated on the thumbnail hook.
+			  	do_action('shortpixel-thumbnails-before-regenerate', $attach_id );
+
         // Update attached_file
         $bool = update_attached_file($attach_id, $newFile->getFullPath() );
         if (! $bool)
@@ -381,7 +384,7 @@ class ShortPixelPng2Jpg {
 
         $new_metadata = wp_generate_attachment_metadata($attach_id, $newFile->getFullPath());
 
-				// Metadata might not be array when add_attachment is calling this hook via AdminController ( PNG2JPG) 
+				// Metadata might not be array when add_attachment is calling this hook via AdminController ( PNG2JPG)
 				if (is_array($metadata))
         	$new_metadata = array_merge($metadata, $new_metadata); // merge to preserve other custom metadata
 

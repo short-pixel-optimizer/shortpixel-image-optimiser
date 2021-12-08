@@ -160,13 +160,19 @@ var ShortPixelToolTip = function(reserved, processor)
 					var toolcontent = tooltip.querySelector('.toolbar-notice-wrapper');
 			}
 
+			var id = message.replace(/[^a-zA-Z ]/g, "").replace(/ /g, "").slice(0,20);
+
       var alert = document.createElement('div');
+			alert.dataset.msgid = id;
       alert.className = 'toolbar-notice toolbar-notice-error';
       alert.innerHTML = message;
 
-      alertChild = toolcontent.appendChild(alert);
-
-      window.setTimeout (this.RemoveNotice.bind(this), 5000, alertChild);
+			// Prevent double notices with same message
+			if (toolcontent.querySelector('[data-msgid="' + id + '"]') == null)
+			{
+      	alertChild = toolcontent.appendChild(alert);
+      	window.setTimeout (this.RemoveNotice.bind(this), 5000, alertChild);
+			}
     }
 
 

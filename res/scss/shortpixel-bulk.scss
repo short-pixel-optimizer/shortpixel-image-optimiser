@@ -240,8 +240,9 @@
      {
   //     position: absolute;
        display: none;
-       top: 0;
+       //top: 0;
     //   height: 50px;
+			 margin: 25px 0;
        width: 90%;
        background: rgba(31, 190,201, 1);
        border: 1px solid #ccc;
@@ -269,6 +270,33 @@
          &:hover::before{ content: '\F522'}
        }
      }
+
+		 .processor-overquota
+		 {
+				 display: none;
+				 background: #ff0000;
+
+			//	 border: 1px solid #ccc;
+				 line-height: 26px;
+				 padding: 20px 0;
+				 border-radius: 12px;
+				 margin: 25px 0;
+				 width: 90%;
+				 text-align: center;
+				 h3 {
+					font-size: 26px;
+					color: #fff;
+					margin: 10px 0;
+				 }
+				 p a
+				 {
+					 font-size: 16px;
+					 color: #fff;
+					  text-decoration: none;
+				 }
+
+
+		 }
 
 /**** DASHBOARD ***/
     section.panel.dashboard
@@ -861,21 +889,22 @@
            margin: 25px 0 40px 0;
            .image-source, .image-result
            {
-              width: 350px;
-              height: 350px;
+              max-width: 400px;
+              max-height: 400px;
             //  border: 1px solid #DFEAFF;
               overflow: hidden;
               position: relative;
 
               img {
-                max-width: 100%;
-                max-height: 100%;
+              //  max-width: 100%;
+              //  max-height: 100%;
                 width: 100%;
+								object-fit: cover;
               //  transition: opacity 1s eas
                 &[src=""]
                 {
-                   height: 350px;
-                   width: 350px;
+                  // height: 350px;
+                //   width: 350px;
                 }
               }
               p {

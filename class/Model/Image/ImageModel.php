@@ -252,7 +252,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     public function getLastErrorMessage()
     {
        return $this->error_message;
-
     }
 
     public function __get($name)

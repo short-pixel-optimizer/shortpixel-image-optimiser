@@ -125,7 +125,7 @@ class BulkViewController extends \ShortPixel\ViewController
       foreach($logs as $logData)
       {
 
-          $logFile = $fs->getFile($backupDir->getPath() . 'bulk_' . $logData['date'] . '.log');
+          $logFile = $fs->getFile($backupDir->getPath() . 'bulk_' . $logData['type'] . '_' . $logData['date'] . '.log');
           $errors = $logData['fatal_errors'];
 
           if ($logFile->exists())
@@ -135,7 +135,7 @@ class BulkViewController extends \ShortPixel\ViewController
 
 					$op = (isset($logData['operation'])) ? $logData['operation'] : false;
 
-          $view[$logData['date']] = array('type' => $logData['type'], 'images' => $logData['processed'], 'errors' => $errors, 'date' => UiHelper::formatTS($logData['date']), 'operation' => $op);
+          $view[] = array('type' => $logData['type'], 'images' => $logData['processed'], 'errors' => $errors, 'date' => UiHelper::formatTS($logData['date']), 'operation' => $op);
 
 
 

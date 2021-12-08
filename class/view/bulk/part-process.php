@@ -124,7 +124,7 @@ namespace ShortPixel;
           <img src="">
           <p>Original Image</p>
         </div>
-        <img src="<?php echo \wpSPIO()->plugin_url('res/img/bulk/optimize-arrow-right.svg') ?>" />
+
         <div class="image-result">
           <img src="">
           <p>Optimized Image</p>

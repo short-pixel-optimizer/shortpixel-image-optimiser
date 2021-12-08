@@ -67,6 +67,9 @@ window.ShortPixelProcessor =
 
     Load: function()
     {
+			window.addEventListener('error', this.ScriptError.bind(this));
+
+
         this.isBulkPage = ShortPixelProcessorData.isBulkPage;
         this.localSecret = localStorage.getItem('bulkSecret');
         this.remoteSecret = ShortPixelProcessorData.bulkSecret;
@@ -76,9 +79,8 @@ window.ShortPixelProcessor =
         this.nonce['itemview'] = ShortPixelProcessorData.nonce_itemview;
         this.nonce['ajaxRequest'] = ShortPixelProcessorData.nonce_ajaxrequest;
 
-        console.log(ShortPixelProcessorData.startData);
-        console.log('remoteSecret ' + this.remoteSecret + ', localsecret: ' + this.localSecret + ' bulk? ' + this.isBulkPage);
-        //this.localSecret = null;
+        console.log('Start Data from Server', ShortPixelProcessorData.startData);
+        console.log('remoteSecret ' + this.remoteSecret + ', localsecret: ' + this.localSecret + ' - is this bulk? ' + this.isBulkPage);
 
         this.tooltip = new ShortPixelToolTip({}, this);
 
@@ -299,8 +301,9 @@ window.ShortPixelProcessor =
              else if (error == 'NOQUOTA')
              {
                 this.tooltip.AddNotice(response.message);
-                this.Debug('No Quota');
-                this.StopProcess();
+								this.screen.HandleError(response);
+                this.Debug('No Quota - CheckResponse handler');
+								this.PauseProcess();
              }
              else if (response.error < 0) // something happened.
              {
@@ -374,8 +377,15 @@ window.ShortPixelProcessor =
              for (i = 0; i < response.results.length; i++)
              {
                 var imageItem = response.results[i];
+								if (imageItem == null || ! imageItem.result)
+								{
+									 console.error('Expecting ImageItem Object', imageItem);
+									 continue;
+								}
                 if (imageItem.result.is_error)
+								{
                   this.HandleItemError(imageItem, type);
+								}
 
                 this.screen.HandleImage(imageItem, type);
              }
@@ -462,7 +472,7 @@ window.ShortPixelProcessor =
 
         if (error == 'NOQUOTA' )
         {
-          this.StopProcess();
+          this.PauseProcess();
         }
 
         this.screen.HandleError(result, type);
@@ -496,8 +506,12 @@ window.ShortPixelProcessor =
           console.error('Error: ' + message);
       }
 
-    }
+    },
+
+		ScriptError: function(error)
+		{
+			  console.error('Script Error! ', error);
+		}
 
 
-    //re/turn spp;
 }

@@ -68,7 +68,6 @@ class AccessModel
 						return true;
 				}
 			}
-
 			return false;
 	}
 

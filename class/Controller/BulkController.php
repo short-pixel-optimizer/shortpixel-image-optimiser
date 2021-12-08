@@ -142,20 +142,25 @@ class BulkController
         if (count($logs) == 10) // remove logs if more than 10.
         {
           $log = array_shift($logs);
-          $log_date = $log['date'];
+          //$log_date = $log['date'];
+					//$log_type = $log['type'];
+					if (isset($data['logfile']))
+					{
+						$logfile = $data['logfile'];
 
-          $fileLog = $fs->getFile($backupDir->getPath() . 'bulk_' . $log_date . '.log');
-          if ($fileLog->exists())
-            $fileLog->delete();
+	          $fileLog = $fs->getFile($backupDir->getPath() . $logfile);
+	          if ($fileLog->exists())
+	            $fileLog->delete();
+					}
         }
 
-        $fileLog = $fs->getFile($backupDir->getPath() . 'current_bulk.log');
-        $moveLog = $fs->getFile($backupDir->getPath() . 'bulk_' . $data['date'] . '.log');
+        $fileLog = $fs->getFile($backupDir->getPath() . 'current_bulk_' . $type . '.log');
+        $moveLog = $fs->getFile($backupDir->getPath() . 'bulk_' . $type. '_' . $data['date'] . '.log');
 
         if ($fileLog->exists())
           $fileLog->move($moveLog);
 
-				$data['logfile'] = 'bulk_' . $data['date'] . '.log';
+				$data['logfile'] = 'bulk_' . $type . '_' . $data['date'] . '.log';
         $logs[] = $data;
 
         $this->saveLogs($logs);

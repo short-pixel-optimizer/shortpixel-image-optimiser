@@ -154,11 +154,15 @@ class ShortPixelPlugin
           {
             if($this->settings()->png2jpg) {
 
+
+							/*
+							This processing off because it doesn't make sense to already start this before optimizing, which will happen via queue. 
               add_action( 'add_attachment', array($admin,'handlePng2JpgHook'));
               add_action( 'wp_handle_upload', array($admin,'handlePng2JpgHook'));
 
                 // @integration MediaPress
               add_action( 'mpp_handle_upload', array($admin,'handlePng2JpgHook'));
+							*/
             }
 
       			add_action( 'shortpixel-thumbnails-before-regenerate', array( $admin, 'preventImageHook' ), 10, 1);
