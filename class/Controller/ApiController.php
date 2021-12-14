@@ -100,7 +100,7 @@ class ApiController
 
 		 if (property_exists($item, 'urls') === false || ! is_array($item->urls) || count($item->urls) == 0)
 		 {
-			  Log::addError('Media Item without URLS cannnot be dumped' . $item->get('id') , $item);
+			  Log::addError('Media Item without URLS cannnot be dumped ', $item);
 				return false;
 		 }
 
