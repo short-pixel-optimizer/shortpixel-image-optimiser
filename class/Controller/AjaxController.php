@@ -274,7 +274,6 @@ class AjaxController
 
           $json->$type = $control->addItemToQueue($mediaItem);
 
-
           return $json;
     }
 

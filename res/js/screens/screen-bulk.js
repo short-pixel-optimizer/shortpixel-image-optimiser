@@ -78,7 +78,7 @@ var ShortPixelScreen = function (MainScreen, processor)
          }
          //this.SwitchPanel('process');  // needs to run a process and get back stats another try.
       }
-      else if (initMedia.in_queue > 0)
+      else if (initMedia.in_queue > 0 || initCustom.in_queue > 0)
       {
         this.SwitchPanel('summary');
       }

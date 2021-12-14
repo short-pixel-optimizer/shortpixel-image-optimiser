@@ -39,11 +39,11 @@ namespace ShortPixel;
 				<div><span>Images</span><span data-stats-custom="images-images_basecount">n/a</span></div>
 
 
-					<div class='filetypes' data-check-visibility data-control="data-check-has-webp" ><span>+ Webp</span>
-						<span data-stats-custom="images-images_webp">&nbsp;</span>
+					<div class='filetypes' data-check-visibility data-control="data-check-has-custom-webp" ><span>+ Webp</span>
+						<span data-stats-custom="images-images_webp" data-check-has-custom-webp>&nbsp;</span>
 					</div>
-					<div class='filetypes' data-check-visibility data-control="data-check-has-avif">
-						<span>+ Avif</span><span data-stats-custom="images-images_avif">&nbsp;</span>
+					<div class='filetypes' data-check-visibility data-control="data-check-has-custom-avif">
+						<span>+ Avif</span><span data-stats-custom="images-images_avif" data-check-has-custom-avif>&nbsp;</span>
 					</div>
 
         <div><span>Total images to Optimize </span><span  data-stats-custom="images-images">0</span></div>

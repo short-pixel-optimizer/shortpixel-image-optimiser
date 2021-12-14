@@ -216,6 +216,7 @@ class SettingsController extends \ShortPixel\ViewController
           Notice::resetNotices();
           $nControl = new Notice(); // trigger reload.
 
+
           $this->load();
       }
 
@@ -261,6 +262,7 @@ class SettingsController extends \ShortPixel\ViewController
 
 						 Notice::addSuccess($message);
 			 }
+
 
 				 $this->load();
 			}

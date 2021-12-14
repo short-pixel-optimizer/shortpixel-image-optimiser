@@ -44,10 +44,12 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     const P_FILE_NOTWRITABLE = 6;
 		const P_BACKUPDIR_NOTWRITABLE = 7;
 		const P_BACKUP_EXISTS = 8;
+		const P_OPTIMIZE_PREVENTED = 9;
 
 		// For restorable status
-		const P_RESTORABLE = 9;
-		const P_BACKUP_NOT_EXISTS = 10;
+		const P_RESTORABLE = 109;
+		const P_BACKUP_NOT_EXISTS = 110;
+		const P_NOT_OPTIMIZED = 111;
 
     protected $image_meta; // metadata Object of the image.
 
@@ -201,11 +203,17 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 				 case self::P_BACKUP_EXISTS:
 				 		$message = __('Backup already exists', 'shortpixel-image-optimiser');
 				 break;
+				 case self::P_OPTIMIZE_PREVENTED:
+				 		$message = __('Fatal error preventing processing', 'shortpixel-image-optimiser');
+				 break;
 				 case self::P_RESTORABLE:
 				 		$message = __('Image restorable', 'shortpixel-image-optimiser');
 				 break;
 				 case self::P_BACKUP_NOT_EXISTS:
 				 		$message = __('Backup does not exist', 'shortpixel-image-optimiser');
+				 break;
+				 case self::P_NOT_OPTIMIZED:
+				 		$message = __('Image is not optimized', 'shortpixel-image-optimiser');
 				 break;
          default:
             $message = __(sprintf('Unknown Issue, Code %s',  $this->processable_status), 'shortpixel-image-optimiser');
@@ -551,7 +559,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     {
         if (! $this->isOptimized())
         {
-					 $this->restorable_status = self::P_IS_OPTIMIZED;
+					 $this->restorable_status = self::P_NOT_OPTIMIZED;
            return false;  // not optimized, done.
         }
         elseif ($this->hasBackup() && ($this->is_virtual() || $this->is_writable()) )
@@ -783,15 +791,15 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                 Log::addWarn('Backup Failed, File is restorable, try to recover. ' . $this->getFullPath() );
                 $this->restore();
 
-								$this->error_message = __('Backup already exists, but image is recoverable and the plugin will rollback. Will retry to optimize again. ', 'shortpixel-image-optimser');
+								$this->error_message = __('Backup already exists, but image is recoverable and the plugin will rollback. Will retry to optimize again. ', 'shortpixel-image-optimiser');
             }
             else
             {
               $this->preventNextTry(__('Fatal Issue: The Backup file already exists. The backup seems not restorable, or the current file is bigger than the backup indicating an error.', 'shortpixel-image-optimiser'));
 
-              Log::addError('The backup already exists, and is smaller than the current file. BackupFile Size : ' . $backupFile->getFileSize() . ' This Filesize : ' . $this->getFileSize(), $this->fullpath);
+              Log::addError('The backup file already exists and is bigger than the current file. BackupFile Size : ' . $backupFile->getFileSize() . ' This Filesize : ' . $this->getFileSize(), $this->fullpath);
 
-              $this->error_message = __('Larger backup file exists.', 'shortpixel-image-optimiser');
+              $this->error_message = __('Backup not possible: already exists and current file is bigger.', 'shortpixel-image-optimiser');
             }
 
             return false;

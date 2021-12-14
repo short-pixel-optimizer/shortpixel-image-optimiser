@@ -125,7 +125,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       // main file.
       if (! isset($types[0]))
       {
-
           // The isProcessable(true) is very important, since non-strict calls of this function check this function as well ( resulting in loop )
           if ($this->isProcessable(true) || $this->isOptimized())
           {
@@ -1143,7 +1142,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   public function isOptimizePrevented()
   {
        if (! is_null($this->optimizePrevented))
+			 {
          return $this->optimizePrevented;
+			 }
 
        $reason = get_post_meta($this->id, '_shortpixel_prevent_optimize', true);
 
@@ -1154,6 +1155,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        }
        else
        {
+ 			   $this->processable_status = self::P_OPTIMIZE_PREVENTED;
          $this->optimizePrevented = $reason;
          return $reason;
        }
@@ -1163,8 +1165,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   {
       delete_post_meta($this->id, '_shortpixel_prevent_optimize');
   }
-
-
 
   /** Removed the current attachment, with hopefully removing everything we set.
   */
@@ -1321,11 +1321,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       if (count($data) == 0)  // This can happen. Empty array is still nothing to convert.
         return false;
 
-
-
       // This is a switch to prevent converted items to reconvert when the new metadata is removed ( i.e. restore )
       $was_converted = get_post_meta($this->id, '_shortpixel_was_converted', true);
-      if ($was_converted == true)
+      if ($was_converted == true || is_numeric($was_converted))
       {
         Log::addDebug('This item was converted, not converting again');
         return false;
@@ -1511,7 +1509,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        }
 
 
-       update_post_meta($this->id, '_shortpixel_was_converted', true);
+       update_post_meta($this->id, '_shortpixel_was_converted', time());
        delete_post_meta($this->id, '_shortpixel_status');
 
       return true;

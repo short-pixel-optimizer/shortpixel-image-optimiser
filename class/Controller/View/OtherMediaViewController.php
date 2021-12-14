@@ -443,9 +443,11 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 					$this->printItemActions($item);
           echo "<div>" .  UiHelper::getStatusText($item) . "</div>";
 
+
            ?>
 					 </div>
 					 <?php
+
 			}
 
       // Use for view, also for renderItemView

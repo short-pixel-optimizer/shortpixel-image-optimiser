@@ -132,6 +132,28 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         return $bool;
     }
 
+		public function isRestorable()
+		{
+
+			 $bool = parent::isRestorable();
+
+			 	// If fine, all fine.
+			 	if ($bool == true)
+			 	{
+			 		return $bool;
+				}
+
+				// If not, check this..
+				if ($this->hasBackup() && $this->getMeta('status') == self::FILE_STATUS_PREVENT)
+				{
+					 	return true;
+				}
+				else
+				{
+					  return $bool;
+				}
+		}
+
     protected function getWebps()
     {
          $webp = array($this->getWebp());
@@ -214,7 +236,12 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
     public function handleOptimized($downloadResults)
     {
-       $bool = parent::handleOptimized($downloadResults);
+			 $bool = true;
+			 
+			 if (! $this->isOptimized() ) // main file might not be contained in results
+			 {
+       		$bool = parent::handleOptimized($downloadResults);
+			 }
 
        $this->handleOptimizedFileType($downloadResults);
 
@@ -335,6 +362,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
          if ($status == self::FILE_STATUS_PREVENT )
          {
+					  $this->processable_status = self::P_OPTIMIZE_PREVENTED;
             return $this->getMeta('errorMessage');
          }
 
@@ -343,7 +371,12 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
     public function resetPrevent()
     {
-        $this->setMeta('status', self::FILE_STATUS_UNPROCESSED);
+
+				if ($this->hasBackup())
+					$this->setMeta('status', self::FILE_STATUS_SUCCESS);
+				else
+        	$this->setMeta('status', self::FILE_STATUS_UNPROCESSED);
+
         $this->setMeta('errorMessage', '');
         $this->saveMeta();
     }

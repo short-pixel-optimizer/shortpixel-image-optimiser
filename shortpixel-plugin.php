@@ -156,7 +156,7 @@ class ShortPixelPlugin
 
 
 							/*
-							This processing off because it doesn't make sense to already start this before optimizing, which will happen via queue. 
+							This processing off because it doesn't make sense to already start this before optimizing, which will happen via queue.
               add_action( 'add_attachment', array($admin,'handlePng2JpgHook'));
               add_action( 'wp_handle_upload', array($admin,'handlePng2JpgHook'));
 
@@ -172,9 +172,7 @@ class ShortPixelPlugin
             add_filter( 'wp_generate_attachment_metadata', array($admin,'handleImageUploadHook'), 10, 2 );
             // @integration MediaPress
             add_filter( 'mpp_generate_metadata', array($admin,'handleImageUploadHook'), 10, 2 );
-
           }
-
       }
       elseif($this->settings()->frontBootstrap && $this->env()->is_front)
       {
