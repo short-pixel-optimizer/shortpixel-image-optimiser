@@ -253,11 +253,11 @@ class SettingsController extends \ShortPixel\ViewController
 
 						 if ($queue == 'all')
 						 {
-						 	$message = sprintf(__('All queues have been reset', 'shortpixel-image-optimiser'));
+						 	$message = sprintf(__('All items in the queues have been removed and the process is stopped', 'shortpixel-image-optimiser'));
 						 }
 						 else
 						 {
-								 $message = sprintf(__(' Queue %s have been reset', 'shortpixel-image-optimiser'), $queue);
+								 $message = sprintf(__('All items in the %s queue have been removed and the process is stopped', 'shortpixel-image-optimiser'), $queue);
  						 }
 
 						 Notice::addSuccess($message);

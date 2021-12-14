@@ -5,6 +5,7 @@ use ShortPixel\Notices\NoticeController as Notices;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Controller\QuotaController as QuotaController;
 use ShortPixel\Controller\AjaxController as AjaxController;
+use ShortPixel\Controller\AdminController as AdminController;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 use ShortPixel\NextGenController as NextGenController;
 
@@ -141,7 +142,7 @@ class ShortPixelPlugin
 
       add_action( 'load-post.php', array( $this, 'route') );
 
-      $admin = Controller\AdminController::getInstance();
+      $admin = AdminController::getInstance();
 
       // Handle for EMR
       add_action('wp_handle_replace', array($admin,'handleReplaceHook'));
@@ -196,7 +197,7 @@ class ShortPixelPlugin
       // integration with WP/LR Sync plugin
       add_action( 'wplr_update_media', array( AjaxController::getInstance() , 'onWpLrUpdateMedia' ), 10, 2);
 
-          add_action( 'admin_bar_menu', array( $admin, 'toolbar_shortpixel_processing'), 999 );
+      add_action( 'admin_bar_menu', array( $admin, 'toolbar_shortpixel_processing'), 999 );
 
 
       if($isAdminUser) {
