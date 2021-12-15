@@ -71,6 +71,10 @@ class ShortPixelPlugin
     $this->ajaxHooks();
 
 
+		if ( defined( 'WP_CLI' ) && WP_CLI ) {
+   		WPCliController::getInstance();
+		}
+
     add_action('admin_init', array($this, 'init'));
   }
 

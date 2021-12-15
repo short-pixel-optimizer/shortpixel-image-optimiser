@@ -31,20 +31,19 @@ class WpCliController
 
     protected function initCommands()
     {
-        \WP_CLI::add_command('spio', '\ShortPixel\SpioCommand');
+        \WP_CLI::add_command('spio', '\ShortPixel\SpioSingle');
 				\WP_CLI::add_command('spio bulk', '\ShortPixel\SpioBulk');
 
     }
 
 }
 
-
 /**
 * ShortPixel Image Optimizer
 *
 *
 */
-class SpioCommand
+class SpioCommandBase
 {
 
      protected static $runs = 0;
@@ -58,7 +57,7 @@ class SpioCommand
      *
      *
 	   * [--type=<type>]
-	   * : Media | Custom
+	   * : media or custom
 	   * ---
 	   * default: media
 	   * options:
@@ -126,92 +125,23 @@ class SpioCommand
     }
 
 
-    /**
-   * Restores optimized item to original ( if backups are active )
-   *
-   * ## OPTIONS
-   *
-   * <id>
-   * : MediaLibrary ID
-	 *
-   * [--type=<type>]
-   * : Media | Custom
-   * ---
-   * default: media
-   * options:
-   *   - media
-   *   - custom
-   * ---
-   *
-   * ## EXAMPLES
-   *
-   *   wp spio restore 1
-   *
-   * @when after_wp_load
-   */
-  public function restore($args, $assoc_args)
-  {
-      $controller = new OptimizeController();
-      $fs = \wpSPIO()->filesystem();
-
-      if (! isset($args[0]))
-      {
-        \WP_CLI::Error(__('Specify an (Media Library) Item ID', 'shortpixel_image_optimiser'));
-        return;
-      }
-			if (! is_numeric($args[0]))
-			{
-				 \WP_CLI::Error(__('Item ID need to be a number', 'shortpixel-image-optimiser'));
-				 return;
-			}
-
-
-      $id = intval($args[0]);
-			$type = $assoc_args['type'];
-
-			$image = $fs->getImage($id, $type);
-
-			if ($image === false)
-			{
-				 \WP_CLI::Error(__('No Image returned. Please check if the number and type are correct and the image exists', 'shortpixel-image-optimiser'));
-				 return;
-			}
-
-      $result = $controller->restoreItem($image);
-
-			$this->showResponses();
-
-
-	 		if (property_exists($result,'message' && strlen($result->message) > 0))
-				 $message = $result->message;
-			elseif (property_exists($result, 'result') && property_exists($result->result, 'message'))
-				 $message = $result->result->message;
-
-      if ($result->status == 1)
-			{
-        \WP_CLI::Success($message);
-			}
-      elseif ($result->status == 0)
-			{
-        \WP_CLI::Error(sprintf(__("Restored Item: %s", 'shortpixel_image_optimiser'), $message) );
-			}
-
-			$this->showResponses();
-  }
-
-
-
    /**
    * Runs the current queue.
    *
    * ## OPTIONS
    *
-   * [--ticks=<20>]
+   * [--ticks=<number>]
    * : How much times the queue runs
+	 * ---
+	 * default: 20
+	 * ---
    *
-   * [--wait=<3000>]
+   * [--wait=<miliseconds>]
    * : How much miliseconds to wait for next tick.
-   *
+	 * ---
+	 * default: 3000
+	 * ---
+	 *
    * [--complete]
    * : Run until either preparation is done or queue is completely finished.
    *
@@ -219,20 +149,17 @@ class SpioCommand
    * : Either 'media' or 'custom' . Omit to run both.
    * ---
    * default: media,custom
-   * options:
-   *   - media
-   *   - custom
-	 *
    * ---
    *
    * ## EXAMPLES
    *
+	 * 	 wp spio run
    *   wp spio run --ticks=20 --wait=3000
 	 * 	 wp spio run --complete
 	 *   wp spio run --queue=media
    *
    *
-   * @when after_wp_load
+   * @when after_wp_loadA
    */
     public function run($args, $assoc)
     {
@@ -453,140 +380,3 @@ class SpioCommand
 		}
 
 } // Class
-
-
-class SpioBulk extends SpioCommand
-{
-	   /**
-	   * Starts prepared queue. The bulk needs an express command to start running.
-	   *
-	   * ## OPTIONS
-	   *
-	   * [--ticks=<20>]
-	   * : How much times the queue runs
-	   *
-	   * [--wait=<3000>]
-	   * : How much miliseconds to wait for next tick.
-	   *
-	   * [--complete]
-	   * : Run until either preparation is done or bulk has run fully.
-	   *
-	   * [--queue=<name>]
-	   * : Either 'media' or 'custom' . Omit to run both.
-	   * ---
-	   * default: media,custom
-	   * options:
-	   *   - media
-	   *   - custom
-		 *
-	   * ---
-	   *
-	   * ## EXAMPLES
-	   *
-	   *   wp spio run <ticks=20> <wait=3000>
-	   *
-	   *
-	   * @when after_wp_load
-	   */
-	  public function start($args, $assoc)
-	  {
-			 $bulkControl = BulkController::getInstance();
-
-			 $queue = $this->getQueueArgument($assoc);
-
-			 foreach($queue as $qname)
-			 {
-			 	$result = $bulkControl->startBulk($qname);
-			 }
-
-			 $this->run($args, $assoc);
-	     //$controller = new OptimizeController();
-	     //$result = $controller->startBulk();
-	  }
-
-	 /**
-	 * Enqueues the batch for bulk optimizing the media library
-	 *
-	 * ## OPTIONS
-	 *
-	 * [--queue=<name>]
-	 * : Either 'media' or 'custom' . Omit to run both.
-	 *
-	 * ## EXAMPLES
-	 *
-	 *   wp spio bulk create
-	 *
-
-	 *
-	 * @when after_wp_load
-	 */
-	  public function create($args, $assoc)
-	  {
-	    $bulkControl = BulkController::getInstance();
-	    $json = new \stdClass;
-	    $json->media = new \stdClass;
-	    $json->custom = new \stdClass;
-
-			$queues = $this->getQueueArgument($assoc);
-
-			foreach($queues as $qname)
-			{
-	    	$stats = $bulkControl->createNewBulk($qname);
-	    	$json->$qname->stats = $stats;
-
-				\WP_CLI::Line("Bulk $qname created. Waiting to prepare");
-
-			}
-
-	  }
-
-		// To ensure the bulk switch is ok.
-		protected function getOptimizeController()
-		{
-
-				$optimizeController = new OptimizeController();
-				$optimizeController->setBulk(true);
-				return $optimizeController;
-		}
-
-			/**
-			*	 Prepares items, similar to the run command. If will only run when a queue is in preparing stage and will run until everything is prepared.
-			*
-
-			 * [--queue=<name>]
-		   * : Either 'media' or 'custom' . Omit to run both.
-		   * ---
-		   * default: media,custom
-		   * options:
-		   *   - media
-		   *   - custom
-			 *
-			*/
-			public function prepare($args, $assoc)
-			{
-					 $queues = $this->getQueueArgument($assoc);
-					 $optimizeController = $this->getOptimizeController();
-
-						$data = $optimizeController->getStartupData();
-
-						if (! $data->total->stats->is_preparing)
-						{
-							 \WP_CLI::Error("Queue is not in status preparing, aborting");
-					//		 break;
-						}
-						else
-						{
-							 $assoc['complete']  = true;
-							 //$assoc['queue'] = $qname;
-							 $assoc['wait'] = 500;
-							 $this->run($args, $assoc);
-
-						}
-
-			}
-
-} // CLASS
-
-if ( defined( 'WP_CLI' ) && WP_CLI ) {
-   WPCliController::getInstance();
-}
