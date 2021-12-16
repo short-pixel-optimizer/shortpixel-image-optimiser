@@ -203,7 +203,7 @@ class QuotaController
 
           //Try first HTTPS post. add the sslverify = false if https
           if($settings->httpProto === 'https') {
-              $args['sslverify'] = false;
+              $args['sslverify'] = apply_filters('shortpixel/system/sslverify', true);
           }
 
           $response = wp_remote_post($requestURL, $args);
@@ -217,8 +217,8 @@ class QuotaController
                   str_replace('https://', 'http://', $requestURL) :
                   str_replace('http://', 'https://', $requestURL);
               // add or remove the sslverify
-              if($settings->httpProto === 'http') {
-                  $args['sslverify'] = false;
+              if($settings->httpProto === 'https') {
+                  $args['sslverify'] = apply_filters('shortpixel/system/sslverify', true);
               } else {
                   unset($args['sslverify']);
               }
