@@ -102,7 +102,7 @@ abstract class Queue
 				$this->q->removeItems(array(
 						'item_id' => $item_id,
 				));
-				
+
 		}
 
 
@@ -167,7 +167,7 @@ abstract class Queue
           if (count($items) == 0)
           {
               $this->q->setStatus('preparing', false);
-              Log::addDebug('Preparing, false', $items);
+              Log::addDebug('PrepareItems: Items can back as empty array. Nothing to prepare');
               return $return;
           }
 
@@ -179,10 +179,15 @@ abstract class Queue
           //$customData = $this->getStatus('custom_data');
 
           $operation = $this->getCustomDataItem('customOperation'); // false or value (or null)
-					Log::addDebug('Operation', $operation);
+
 
 					if (is_null($operation))
 						$operation = false;
+
+					if ($operation !== false)
+					{
+						Log::addDebug('Operation is not false - ', $operation);
+					}
 
           // maybe while on the whole function, until certain time has elapsed?
           foreach($items as $mediaItem)
@@ -190,7 +195,6 @@ abstract class Queue
                 if ($mediaItem->isProcessable() && $mediaItem->isOptimizePrevented() === false && ! $operation) // Checking will be done when processing queue.
                 {
                     $qObject = $this->imageModelToQueue($mediaItem);
-
 
                     $counts = $qObject->counts;
 
@@ -260,7 +264,11 @@ abstract class Queue
 
           $return['items'] = $qCount;
           $return['images'] = $imageCount;
+					/** NOTE! The count items is the amount of items queried and checked. It might be they never enqueued, just that the check process is running.
+					*/
           $return['results'] = count($items); // This is the return of the query. Preparing should not be 'done' before the query ends, but it can return 0 on the qcount if all results are already optimized.
+
+
 
 
           return $return; // only return real amount.

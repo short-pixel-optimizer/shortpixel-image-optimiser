@@ -269,12 +269,12 @@ class SpioCommandBase
 
       	if ($combinedStatus == Queue::RESULT_QUEUE_EMPTY)
         {
-           \WP_CLI::line('Queue reports processing has finished');
+           \WP_CLI::log('Queue reports processing has finished');
            return false;
         }
         elseif($combinedStatus == Queue::RESULT_PREPARING_DONE)
         {
-           \WP_CLI::line('Bulk Preparing is done. Bulk can be run by the start command');
+           \WP_CLI::log('Bulk Preparing is done.');
 					 return false;
         }
 
@@ -326,7 +326,7 @@ class SpioCommandBase
 
 							}
 
-							\WP_CLI::line($line);
+							\WP_CLI::log($line);
 
 							if (isset($assoc['show-debug']))
 							{

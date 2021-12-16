@@ -13,6 +13,7 @@ class SpioBulk extends SpioCommandBase
 {
 	   /**
 	   * Starts prepared queue. The bulk needs an express command to start running.
+		 * After starting, the queue can be finished by using the run command.
 	   *
 	   * ## OPTIONS
 	   *
@@ -37,7 +38,7 @@ class SpioBulk extends SpioCommandBase
 	   *
 	   * ## EXAMPLES
 	   *
-	   *   wp spio run <ticks=20> <wait=3000>
+	   *   wp spio start <ticks=20> <wait=3000>
 	   *
 	   *
 	   * @when after_wp_load
@@ -56,6 +57,7 @@ class SpioBulk extends SpioCommandBase
 			 $this->run($args, $assoc);
 	     //$controller = new OptimizeController();
 	     //$result = $controller->startBulk();
+
 	  }
 
 	 /**
@@ -92,6 +94,7 @@ class SpioBulk extends SpioCommandBase
 
 			}
 
+			$this->showResponses();
 	  }
 
 		// To ensure the bulk switch is ok.
@@ -106,15 +109,15 @@ class SpioBulk extends SpioCommandBase
 			/**
 			*	 Prepares items, similar to the run command. If will only run when a queue is in preparing stage and will run until everything is prepared.
 			*
-
-			 * [--queue=<name>]
-		   * : Either 'media' or 'custom' . Omit to run both.
-		   * ---
-		   * default: media,custom
-		   * options:
-		   *   - media
-		   *   - custom
-			 *
+			*
+			* [--queue=<name>]
+		  * : Either 'media' or 'custom' . Omit to run both.
+		  * ---
+		  * default: media,custom
+		  * options:
+		  *   - media
+		  *   - custom
+			*
 			*/
 			public function prepare($args, $assoc)
 			{
@@ -125,7 +128,7 @@ class SpioBulk extends SpioCommandBase
 
 						if (! $data->total->stats->is_preparing)
 						{
-							 \WP_CLI::Error("Queue is not in status preparing, aborting");
+							 \WP_CLI::Error("No queues have status preparing, aborting");
 					//		 break;
 						}
 						else
@@ -137,6 +140,7 @@ class SpioBulk extends SpioCommandBase
 
 						}
 
+						//$this->showResponses();
 			}
 
 

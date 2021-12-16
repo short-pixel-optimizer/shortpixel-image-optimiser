@@ -182,16 +182,15 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
             $types = $this->getAvifs();
         }
 
-
         $toOptimize = array();
         $fs = \WPSPIO()->filesystem();
 
 				// The file must not exist yet.
-        if (count($types) == 0)
+        if (count($types) == 0 && ($this->isProcessable(true) || $this->isOptimized()) )
           return array($fs->pathToUrl($this));
         else
           return array();
-
+				
     }
 
     public function restore()
@@ -237,7 +236,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
     public function handleOptimized($downloadResults)
     {
 			 $bool = true;
-			 
+
 			 if (! $this->isOptimized() ) // main file might not be contained in results
 			 {
        		$bool = parent::handleOptimized($downloadResults);

@@ -51,7 +51,7 @@ $approx = $this->view->approx;
 	              <span class="number" ><?php echo $approx->media->items ?></span>
 	            </div>
 	            <div class='option'>
-	              <label>Images</label> <span class="number" ><?php echo $this->view->approx->media->total ?> </span>
+	              <label>Images</label> <span class="number" ><?php echo $approx->media->total ?> </span>
 	            </div>
 	         </div>
 

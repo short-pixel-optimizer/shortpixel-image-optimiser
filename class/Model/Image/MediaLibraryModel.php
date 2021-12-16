@@ -697,6 +697,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		 delete_post_meta($this->id, '_shortpixel_was_converted');
 
+     delete_post_meta($this->id, '_shortpixel_optdate');
+
      return $bool;
   }
 
@@ -791,10 +793,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
       // Todo check if Webp / Acif is active, check for unoptimized items
       if ($this->isProcessableFileType('webp'))
+			{
         $bool = true;
+			}
       if ($this->isProcessableFileType('avif'))
+			{
          $bool = true;
-
+			}
 
       return $bool;
   }

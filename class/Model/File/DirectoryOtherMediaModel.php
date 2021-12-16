@@ -454,7 +454,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
 						}
             continue;
 					}
-          elseif ($imageObj->isProcessable())
+          elseif ($imageObj->isProcessable(true)) // Check strict on Processable here.
           {
   	         $imageObj->setFolderId($this->id);
              $imageObj->saveMeta();

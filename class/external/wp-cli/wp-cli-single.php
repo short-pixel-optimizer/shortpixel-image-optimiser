@@ -66,7 +66,6 @@ class SpioSingle extends SpioCommandBase
 
 			$this->showResponses();
 
-
 	 		if (property_exists($result,'message' && strlen($result->message) > 0))
 				 $message = $result->message;
 			elseif (property_exists($result, 'result') && property_exists($result->result, 'message'))
@@ -81,7 +80,6 @@ class SpioSingle extends SpioCommandBase
         \WP_CLI::Error(sprintf(__("Restored Item: %s", 'shortpixel_image_optimiser'), $message) );
 			}
 
-			$this->showResponses();
   }
 
 
