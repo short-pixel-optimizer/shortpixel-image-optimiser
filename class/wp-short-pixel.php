@@ -3227,8 +3227,8 @@ class WPShortPixel {
                 str_replace('https://', 'http://', $requestURL) :
                 str_replace('http://', 'https://', $requestURL);
             // add or remove the sslverify
-            if($this->_settings->httpProto === 'http') {
-                $args['sslverify'] = false;
+            if($this->_settings->httpProto === 'https') {
+                $args['sslverify'] = apply_filters('shortpixel/system/sslverify', true);
             } else {
                 unset($args['sslverify']);
             }
