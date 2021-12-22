@@ -225,7 +225,13 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
         if (! $directory)
           return false;
 
-          $backupFile =  $directory . $this->getFileBase() . '.png';
+        $backupFile =  $directory . $this->getFileBase() . '.png';
+
+				// Issue with PNG not being scaled on the main file.
+				if (! file_exists($backupFile) && $this->is_main_file == true && $this->isScaled())
+				{
+					 $backupFile = $directory . $this->getOriginalFile()->getFileBase() . '.png';
+				}
 
         if (file_exists($backupFile) && ! is_dir($backupFile) )
           return true;
@@ -302,7 +308,19 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
     else
     {
      if ($this->hasBackup())
-        return new FileModel($this->getBackupDirectory() . $this->getFileBase() . '.png' );
+		 {
+			  $directory = $this->getBackupDirectory();
+			  $backupFile = $directory . $this->getFileBase() . '.png';
+
+				/* Because WP doesn't support big PNG with scaled for some reason, it's possible it doesn't create them. Which means we end up with a scaled images without backup */
+ 				if (! file_exists($backupFile) && $this->isScaled())
+ 				{
+ 					 $backupFile = $directory . $this->getOriginalFile()->getFileBase() . '.png';
+ 				}
+
+				return new FileModel($backupFile);
+
+		 }
      else
        return false;
     }

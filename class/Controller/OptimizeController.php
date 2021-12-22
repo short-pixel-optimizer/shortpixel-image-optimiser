@@ -394,8 +394,11 @@ class OptimizeController
       {
         $imageObj = $fs->getMediaImage($item->item_id);
         $this->addItemToQueue($imageObj);
-
       }
+			else
+			{
+				 return $this->handleApiResult($item, $mediaQ);
+			}
         //$imageObj = $result; // returns ImageObj.
 
     //  $item->urls = $imageObj->convertergetOptimizeURLS();

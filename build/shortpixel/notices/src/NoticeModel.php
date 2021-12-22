@@ -144,7 +144,7 @@ class NoticeModel //extends ShortPixelModel
   public function getForDisplay()
   {
     $this->viewed = true;
-    $class = 'shortpixel shortpixel-notice notice';
+    $class = 'shortpixel shortpixel-notice notice ';
 
     $icon = '';
 

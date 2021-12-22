@@ -72,8 +72,11 @@ class EditMediaViewController extends \ShortPixel\ViewController
             $this->view->list_actions = '';
 
           $this->view->actions = UiHelper::getActions($this->imageModel);
-          // $this->view->actions = $actions;
+          
           $this->view->stats = $this->getStatistics();
+
+					//$image = $this->imageModel;
+
 
           if (! $this->userIsAllowed)
           {
@@ -155,6 +158,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
           $debugInfo['shortpixeldata'] = array(__('Data'), $this->data);
           $debugInfo['wpmetadata'] = array(__('WP Get Attachment Metadata'), $meta );
+
           if ($imageObj->hasBackup())
           {
             $backupFile = $imageObj->getBackupFile();
@@ -171,7 +175,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
              $debugInfo[] = array(__('Original File'), $original->getFullPath()  . '(' . \ShortPixelTools::formatBytes($original->getFileSize()) . ')');
              $orbackup = $original->getBackupFile();
              if ($orbackup)
-              $debugInfo[] = array(__('Backup'), $orbackup->getFullPath() . '(' . \ShortPixelTools::formatBytes($orbackup->getFileSize()) . ')');
+              $debugInfo[] = array(__('Backup Original Image'), $orbackup->getFullPath() . '(' . \ShortPixelTools::formatBytes($orbackup->getFileSize()) . ')');
           }
 
           if (! isset($meta['sizes']) )

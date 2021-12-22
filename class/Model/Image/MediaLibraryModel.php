@@ -855,6 +855,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 							  $thumbnail->createBackup();
 						 }
 
+						 if ($this->isScaled())
+						 {
+							  $this->getOriginalFile()->createBackup();
+						 }
+
           }
 
           $pngConvert = new ShortPixelPng2Jpg();
@@ -923,90 +928,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       return $bool;
   }
 
-	protected function restorePNG2JPG()
-	{
-			$fs = \wpSPIO()->filesystem();
-
-			// ImageModel restore, restored png file to .jpg file ( due to $this)
-		 	$pngFile = $fs->getFile($this->getFileDir() . $this->getFileBase() . '.png');
-
-			if (! $pngFile->exists())
-			{
-					// This is a PNG content file, that has been restored as a .jpg file.
-					 $this->move($pngFile);
-
-			}
-
-      /*  $backupFile = $this->getBackupFile(); //$fs->getFile($this->getBackupDirectory() . $this->getFileBase() . '.png'); // check backup.
-
-        if ($backupFile->exists())
-        {
-          $this->delete(); // delete the jpg
-          $this->fullpath = $fs->getFile($this->getFileDir() . $this->getFileBase() . '.png');
-          $this->resetStatus();
-          $this->setFileInfo();
-          $this->create(); // empty placeholder file.
-
-				//	$post_ar = array('ID' => $this->get('id'), 'post_mime_type' => 'image/jpeg');
-
-        }
-*/
-
-    foreach($this->thumbnails as $thumbObj)
-    {
-							// Thumbnails with conversion don't have a backup.
-              //$backupFile = $thumbObj->getBackupFile(); //$fs->getFile($thumbObj->getBackupDirectory() . $thumbObj->getFileBase() . '.png');
-            //if ($backupFile->exists())
-              //{
-							if ($thumbObj->hasBackup())
-							{
-									$backupFile = $thumbObj->getBackupFile();
-									$backupFile->delete();
-
-							}
-
-                $thumbObj->delete(); // delete the jpg
-              //  $thumbObj->fullpath = $fs->getFile($thumbObj->getFileDir() . $thumbObj->getFileBase() . '.png'); // reset path to .png
-                $thumbObj->resetStatus();
-              //  $thumbObj->setFileInfo();
-                //$thumbObj->create(); // empty placeholder file.
-
-								$thumbObj->setMeta('did_png2jpg', false);
-								$thumbObj->setMeta('status', 0);
-								$restored[$filebase] = true; // done, just reset.
-              //}
-
-
-
-    }
-
-    if ($this->isScaled())
-    {
-       $originalFile = $this->getOriginalFile();
-
-
-           //$backupFile = $fs->getFile($originalFile->getBackupDirectory() . $originalFile->getFileBase() . '.png');
-          // if ($backupFile->exists())
-           //{
-             $originalFile->delete();
-             $originalFile->fullpath = $fs->getFile($originalFile->getFileDir() . $originalFile->getFileBase() . '.png'); // reset path to .png
-             $originalFile->resetStatus();
-						 $originalFile->setMeta('status', 0);
-          //   $originalFile->setFileInfo();
-          //   $originalFile->create(); // empty placeholder file.
-
-
-        //   }
-
-    }
-
-		// Fullpath now will still be .jpg
-		$pngConvert = new ShortPixelPng2Jpg();
-		$pngConvert->restorePng2Jpg($this);
-	}
-
-
-  protected function isSizeExcluded()
+	protected function isSizeExcluded()
   {
     $excludePatterns = \wpSPIO()->settings()->excludePatterns;
 
@@ -1190,8 +1112,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		if ($did_png2jpg)
 		{
 			 Log::addTemp('Restore PNG2JPG');
-			 $this->restorePNG2JPG();
+			 if ($bool)
+			 	$bool = $this->restorePNG2JPG();
+			 else
+			 	 return $bool;
 		}
+
 
     if (! $bool)
     {
@@ -1210,10 +1136,14 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
             $thumbObj->image_meta = new ImageThumbnailMeta();
           }
           elseif ($thumbObj->isRestorable())
+					{
             $bool = $thumbObj->restore();
+					}
 
           if (! $bool)
+					{
             $cleanRestore = false;
+					}
           else
           {
              $restored[$filebase] = true;
@@ -1221,10 +1151,14 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
     }
 
-    if ($this->isScaled())
+    if ($this->isScaled() )
     {
        $originalFile = $this->getOriginalFile();
-       $originalFile->restore();
+			 if ($originalFile->isRestorable())
+		 	 {
+       		$bool = $originalFile->restore();
+			 }
+
     }
 
         $webps = $this->getWebps();
@@ -1275,6 +1209,93 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 	    return $bool;
   }
+
+	/** New Setup of RestorePNG2JPG. Runs after copying backupfile back to uploads.
+	*/
+	protected function restorePNG2JPG()
+	{
+			$fs = \wpSPIO()->filesystem();
+
+			// ImageModel restore, restored png file to .jpg file ( due to $this)
+			// File has just been restored, but it will be wrong extension in uploads
+			//
+		//	$backupFile = //$this->getBackupFile(); // Should return as PNG file
+
+		 	$destination = $fs->getFile($this->getFileDir() . $this->getFileBase() . '.png');
+
+			// If scaled in the name, revert to originalFile.
+			if ($this->isScaled())
+			{
+					$originalFile = $this->getOriginalFile();
+					$destination = $fs->getFile($this->getFileDir() . $originalFile->getFileBase() . '.png');
+
+			}
+
+			// Destination is image.png, the original.
+			if (! $destination->exists())
+			{
+					Log::addTemp('Moving PNG file', $destination->getFullPath());
+					// This is a PNG content file, that has been restored as a .jpg file.
+					$this->move($destination);
+			}
+			else
+			{
+					return false;
+			}
+
+
+    	foreach($this->thumbnails as $thumbObj)
+    	{
+							if ($thumbObj->hasBackup())
+							{
+									$backupFile = $thumbObj->getBackupFile();
+
+									$backupFile->delete();
+
+									$backupFileJPG = $fs->getFile($backupFile->getFileDir() . $backupFile->getFileBase() . '.jpg');
+									if ($backupFileJPG->exists())
+									{
+										 $backupFileJPG->delete();
+									}
+							}
+
+                $thumbObj->delete(); // delete the jpg
+                $thumbObj->resetStatus();
+	/*							$thumbObj->setMeta('did_png2jpg', false);
+								$thumbObj->setMeta('status', 0); */
+								$thumbObj->image_meta = new ImageThumbnailMeta();
+							//	$restored[$filebase] = true; // done, just reset.
+    		}
+
+		    if ($this->isScaled())
+		    {
+
+		       	$originalFile = $this->getOriginalFile();
+
+						if ($originalFile->hasBackup())
+						{
+								$backupFile = $originalFile->getBackupFile();
+								$backupFile->delete();
+
+								$backupFileJPG = $fs->getFile($backupFile->getFileDir() . $backupFile->getFileBase() . '.jpg');
+								if ($backupFileJPG->exists())
+								{
+									 $backupFileJPG->delete();
+								}
+						}
+			     	$originalFile->delete(); // should be .jpg file.
+
+			   //  $originalFile->fullpath = $fs->getFile($originalFile->getFileDir() . $originalFile->getFileBase() . '.png'); // reset path to .png
+			      $originalFile->resetStatus();
+						$originalFile->setMeta('status', 0);
+		    }
+
+				// Fullpath now will still be .jpg
+				$pngConvert = new ShortPixelPng2Jpg();
+				$pngConvert->restorePng2Jpg($this);
+
+				return true;
+	}
 
   /** This function will recreate thumbnails. This is -only- needed for very special cases, i.e. offload */
   public function wpCreateImageSizes()

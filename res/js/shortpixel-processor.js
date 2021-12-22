@@ -345,9 +345,16 @@ window.ShortPixelProcessor =
       {
             // This is a work error / http / nonce / generail fail
 						this.screen.HandleError(data);
-						this.tooltip.AddNotice(data.message);
 
-            this.Debug(data.message, 'error');
+						if (data.message)
+						{
+							 var message = String(data.message); // whatever this is, cast to string
+							 this.tooltip.AddNotice(message);
+							 this.Debug(message, 'error');
+						}
+
+
+
       }
       var event = new CustomEvent('shortpixel.processor.responseHandled', { detail : {paused: this.isManualPaused}});
       window.dispatchEvent(event);

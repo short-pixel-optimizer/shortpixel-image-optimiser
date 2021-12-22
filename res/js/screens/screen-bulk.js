@@ -134,7 +134,6 @@ console.log("Screen Init Done", initMedia, initCustom);
             }
             else
             {
-
                 if (typeof this[actionName] == 'function')
                 {
                     this[actionName].call(this,event);

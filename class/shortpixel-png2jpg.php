@@ -8,7 +8,7 @@
  use ShortPixel\Model\File\FileModel as FileModel;
 
  use ShortPixel\Replacer\Replacer as Replacer;
-use ShortPixel\Notices\NoticeController as Notices;
+ use ShortPixel\Notices\NoticeController as Notices;
 
  //use ShortPixel\Model\FileModel as FileModel;
  //use ShortPixel\Model\Directorymodel as DirectoryModel;
@@ -316,28 +316,49 @@ class ShortPixelPng2Jpg {
       //  return $params;
     }
 
-
+		/*
+		* @param $imageObj Object will come to us, still in old .jpg format, while the file on the drive might / should also have returned to it's .png backup state. $imageObj is expected to serve outdated information, which will build the source.
+		*/
 		public function restorePng2Jpg(ImageModel $imageObj)
 		{
 					$params = array('restore' => true);
 					$fs = \wpSPIO()->filesystem();
 
+					// This URL will be the 'base URL' in the replacement.
 					$url = $fs->pathToUrl($imageObj);
 
+					if ($imageObj->isScaled())
+					{
+						$url = $fs->pathToUrl($imageObj->getOriginalFile());
+					}
+
+					Log::addTemp('SourceURL', $url);
 					$this->replacer = new Replacer();
 					$this->replacer->setSource($url);
 
 					if ($imageObj->get('type') == 'media')
 					{
+						 Log::addTemp('Restore SourceMeta getWpMetaData', $imageObj->getWPMetaData());
 						 $this->replacer->setSourceMeta($imageObj->getWPMetaData());
 					}
 
 					// @todo Combine this script with the one at doConvertPng2Jpg into a function. Perhaps.
-					$newFileName = $imageObj->getFileBase() . '.png';
+					$oldFileName = $imageObj->getFileName(); // Old File Name, Still .jpg
+					$newFileName =  $imageObj->getFileBase() . '.png';
+
+					if ($imageObj->isScaled())
+					{
+						 $oldFileName = $imageObj->getOriginalFile()->getFileName();
+						 $newFileName = $imageObj->getOriginalFile()->getFileBase() . '.png';
+					}
+
 					$fsNewFile = $fs->getFile($imageObj->getFileDir() . $newFileName);
+					Log::addTemp('Png2Jpg : NewFileName', $newFileName);
+
         //	$uniqueFile = $this->unique_file( $imageObj->getFileDir(), $fsNewFile);
         //	$newPath =  $uniqueFile->getFullPath(); //(string) $fsFile->getFileDir() . $uniquepath;
-        	$newUrl = str_replace($imageObj->getFileName(), $fsNewFile->getFileName(), $url);
+        	$newUrl = str_replace($oldFileName, $fsNewFile->getFileName(), $url);
+					Log::addTemp('Target URL Png2Jpg: ' . $newUrl);
 
 					$params['file'] = $fsNewFile;
 
@@ -353,7 +374,7 @@ class ShortPixelPng2Jpg {
 
     protected function updateMetaData($params, ImageModel $imageObj)
     {
-        if (! $params['success'] && ! $params['restore'])
+        if (! isset($params['success']) && ! isset($params['restore']))
           return false;
 
         $newFile = $params['file'];
@@ -386,8 +407,16 @@ class ShortPixelPng2Jpg {
 
 				// Metadata might not be array when add_attachment is calling this hook via AdminController ( PNG2JPG)
 				if (is_array($metadata))
+				{
+					// Original Image in the new situation can not be there. Don't preserve it.
+					if (isset($metadata['original_image']) && ! isset($new_metadata['original_image']) )
+					{
+						 	unset($metadata['original_image']);
+					}
+
         	$new_metadata = array_merge($metadata, $new_metadata); // merge to preserve other custom metadata
 
+				}
         Log::addDebug('Png2Jpg New Metadata', $new_metadata);
 		//		wp_update_post(array('ID' => $attach_id, 'post_mime_type' => 'image/jpeg' ));
         wp_update_attachment_metadata($attach_id, $new_metadata);
