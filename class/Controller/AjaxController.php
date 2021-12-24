@@ -545,7 +545,7 @@ class AjaxController
          }
          else
          {
-            Notices::addWarning( __('You have no available image credits. If you just bought a package, please note that sometimes it takes a few minutes for the payment confirmation to be sent to us by the payment processor.','shortpixel-image-optimiser') );
+            Notices::addWarning( __('You have no available image credits. If you just bought a package, please note that sometimes it takes a few minutes for the payment processor to send us the payment confirmation.','shortpixel-image-optimiser') );
          }
 
          wp_send_json($result);

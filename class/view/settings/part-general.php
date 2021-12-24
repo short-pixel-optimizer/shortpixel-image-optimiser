@@ -80,14 +80,14 @@
                                 <input type="radio" class="shortpixel-radio-lossless" name="compressionType" value="0" <?php echo( $view->data->compressionType == 0 ? "checked" : "" );?>><span><?php _e('Lossless','shortpixel-image-optimiser');?></span>
                             </label>
 
-                            <?php _e('<a href="https://shortpixel.com/online-image-compression" style="margin-left:20px;" target="_blank">Make a few tests</a> to help you decide.'); ?>
+                            <?php _e('<a href="https://shortpixel.com/online-image-compression" style="margin-left:20px;" target="_blank">Run a few tests</a> to help you decide.'); ?>
 
 
                         <p class="settings-info shortpixel-radio-info shortpixel-radio-lossy" <?php echo( $view->data->compressionType == 1 ? "" : 'style="display:none"' );?>>
                             <?php _e('<b>Lossy compression (recommended): </b>offers the best compression rate.</br> This is the recommended option for most users, producing results that look the same as the original to the human eye.','shortpixel-image-optimiser');?>
                         </p>
                         <p class="settings-info shortpixel-radio-info shortpixel-radio-glossy" <?php echo( $view->data->compressionType == 2 ? "" : 'style="display:none"' );?>>
-                            <?php _e('<b>Glossy compression: </b>creates images that are almost pixel-perfect identical to the originals.</br> Best option for photographers and other professionals that use very high quality images on their sites and want best compression while keeping the quality untouched.','shortpixel-image-optimiser');?>
+                            <?php _e('<b>Glossy compression: </b>creates images that are almost pixel-perfect identical with the originals.</br> Best option for photographers and other professionals that use very high quality images on their sites and want the best compression while keeping the quality untouched.','shortpixel-image-optimiser');?>
                             <a href="https://blog.shortpixel.com/glossy-image-optimization-for-photographers/" target="_blank" class="shortpixel-help-link">
                                 <span class="dashicons dashicons-editor-help"></span><?php _e('More info about glossy','shortpixel-image-optimiser');?>
                             </a></p>
@@ -138,12 +138,12 @@
                 <td>
                     <input name="backupImages" type="checkbox" id="backupImages" value="1" <?php checked($view->data->backupImages,'1'); ?>>
                     <label for="backupImages"><?php _e('Save and keep a backup of your original images in a separate folder.','shortpixel-image-optimiser');?></label>
-                    <p class="settings-info"><?php _e('You <strong>need to have backup active</strong> in order to be able to restore images to originals or to convert from Lossy to Lossless and back.','shortpixel-image-optimiser');?></p>
+                    <p class="settings-info"><?php _e('You <strong>need to have the backup active</strong> to restore the images to originals or to convert from Lossy to Lossless and back.','shortpixel-image-optimiser');?></p>
                 </td>
             </tr>
             <tr class='view-notice-row backup_warning'>
               <th scope='row'>&nbsp;</th>
-              <td><div class='view-notice warning'><p><?php _e('Make sure you have a backup in place. When optimizing Shortpixel will overwrite your images without recovery. This may result in lost images.', 'shortpixel-image-optimiser') ?></p></div></td>
+              <td><div class='view-notice warning'><p><?php _e('Make sure you have a backup in place. When optimizing, ShortPixel will overwrite your images without recovery, which may result in lost images.', 'shortpixel-image-optimiser') ?></p></div></td>
             </tr>
             <tr>
                 <th scope="row"><?php _e('Remove EXIF','shortpixel-image-optimiser');?></th>
@@ -158,7 +158,7 @@
             <tr class='exif_warning view-notice-row'>
                 <th scope="row">&nbsp;</th>
                 <td>
-                  <div class='view-notice warning'><p><?php printf(__('Warning - Converting from PNG to JPG will %s not %s keep the EXIF-information!'), "<strong>","</strong>"); ?></p></div>
+                  <div class='view-notice warning'><p><?php printf(__('Warning - Converting from PNG to JPG will %s not %s keep the EXIF information!'), "<strong>","</strong>"); ?></p></div>
                 </td>
             </tr>
 
@@ -176,7 +176,7 @@
             <tr class='exif_imagick_warning view-notice-row' data-imagick="<?php echo $imagick ?>">
                   <th scope="row">&nbsp;</th>
                   <td>
-                    <div class='view-notice warning'><p><?php printf(__('Warning - Imagick library not detected on server. WordPress will use another library to resize images, which may result in loss of EXIF-information'), "<strong>","</strong>"); ?></p></div>
+                    <div class='view-notice warning'><p><?php printf(__('Warning - Imagick library not detected on server. WordPress will use another library to resize images, which may result in loss of EXIF information'), "<strong>","</strong>"); ?></p></div>
                   </td>
             </tr>
 
@@ -195,7 +195,7 @@
 
                     <input type="number" min="1" max="20000" name="resizeHeight" id="height" class="resize-sizes" style="width:80px"
                            value="<?php echo( $view->data->resizeHeight > 0 ? $view->data->resizeHeight : min(924, $view->minSizes['height']) );?>" <?php echo( $resizeDisabled );?>/> <?php
-                           _e('pixels high (original aspect ratio is preserved and image is not cropped)','shortpixel-image-optimiser');?>
+                           _e('pixels high (preserves the original aspect ratio and doesn\'t crop the image)','shortpixel-image-optimiser');?>
 
                     <input type="hidden" id="min-resizeWidth" value="<?php echo($view->minSizes['width']);?>" data-nicename="<?php _e('Width', 'shortpixel-image-optimiser'); ?>" />
 

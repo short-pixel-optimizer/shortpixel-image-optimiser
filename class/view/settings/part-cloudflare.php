@@ -15,19 +15,19 @@ namespace ShortPixel;
                 echo('<p style="font-weight:bold;color:red">' . __("Please enable PHP cURL extension for the Cloudflare integration to work.", 'shortpixel-image-optimiser') . '</p>' );
             }
             ?>
-            <p><?php _e("If you're using Cloudflare on your site then we advise you to fill in the details below. This will allow ShortPixel to work seamlessly with Cloudflare so that any image optimized/restored by ShortPixel will be automatically updated on Cloudflare as well.",'shortpixel-image-optimiser');?></p>
+            <p><?php _e("If you're using Cloudflare on your site then we advise you to fill in the details below. This allows ShortPixel to work seamlessly with Cloudflare, so that any image optimized/restored by ShortPixel is automatically updated on Cloudflare as well.",'shortpixel-image-optimiser');?></p>
 
             <table class="form-table">
                 <tbody>
                   <tr>
                       <th scope="row"><label
-                                  for="cloudflare-zone-id"><?php _e('Zone ID:', 'shortpixel-image-optimiser'); ?></label>
+                                  for="cloudflare-zone-id"><?php _e('Zone ID', 'shortpixel-image-optimiser'); ?></label>
                       </th>
                       <td>
                           <input name="cloudflareZoneID" type="text" id="cloudflare-zone-id" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>
                                  value="<?php echo(stripslashes(esc_html($view->data->cloudflareZoneID))); ?>" class="regular-text">
                           <p class="settings-info">
-                              <?php _e('This can be found in your Cloudflare account in the "Overview" section for your domain.','shortpixel-image-optimiser');?>
+                              <?php _e('You can found this in your Cloudflare account in the "Overview" section for your domain.','shortpixel-image-optimiser');?>
                           </p>
                       </td>
                   </tr>

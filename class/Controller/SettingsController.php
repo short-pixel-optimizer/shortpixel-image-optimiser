@@ -464,8 +464,8 @@ class SettingsController extends \ShortPixel\ViewController
 				 if (strlen($authkey) > 0)
 				 {
 					 $message = '<h3> ' . __('Cloudflare', 'shortpixel-image-optimiser') . '</h3>';
-					 $message .= '<p>' . __('It seems you are using the Cloudflare Global API key. This is less safe than use the Cloudflare Token and will be removed in the next version for this reason.  Please switch to the token.', 'shortpixel-image-optimiser') . '</p>';
-				 	 $message .= '<p>' . sprintf(__('%s Using the Cloudflare Token %s', 'shortpixel-image-optimiser'), '<a href="https://help.shortpixel.com/article/325-using-shortpixel-image-optimizer-with-cloudflare-api-token" target="_blank">', '</a>') . '</p>';
+					 $message .= '<p>' . __('It appears that you are using the Cloudflare Global API key. As it is not as safe as the Cloudflare Token, it will be removed in the next version. Please, switch to the token.', 'shortpixel-image-optimiser') . '</p>';
+				 	 $message .= '<p>' . sprintf(__('%s How to set up the Cloudflare Token %s', 'shortpixel-image-optimiser'), '<a href="https://help.shortpixel.com/article/325-using-shortpixel-image-optimizer-with-cloudflare-api-token" target="_blank">', '</a>') . '</p>';
 
 					  Notice::addNormal($message);
 						$this->view->hide_cf_global = false;
