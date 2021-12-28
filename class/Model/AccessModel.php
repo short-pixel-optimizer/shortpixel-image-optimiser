@@ -30,12 +30,11 @@ class AccessModel
 					'actions' => array(),
 			);
 
-			$spioCaps = apply_filters('shortpixel/init/permissions', $spioCaps);
+		 $spioCaps = apply_filters('shortpixel/init/permissions', $spioCaps);
 		 // $this->cap_actions = bla.
 		 $this->caps = $spioCaps;
 
 	}
-
 
 	public static function getInstance()
 	{
