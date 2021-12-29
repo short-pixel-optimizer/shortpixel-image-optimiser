@@ -18,8 +18,8 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
     if( $this->is_nginx ){
         $deliverWebpUnaltered = '';                         // Uncheck
         $deliverWebpUnalteredDisabled = 'disabled';         // Disable
-        $deliverWebpUnalteredLabel = __('It looks like you\'re running your site on an NginX server. This means that you can only achieve this functionality by directly configuring the server config files. Please follow this link for instructions on how to achieve this:','shortpixel-image-optimiser')." <a href=\"https://help.shortpixel.com/article/111-configure-nginx-to-transparently-serve-webp-files-when-supported\" target=\"_blank\" data-beacon-article=\"5bfeb9de2c7d3a31944e78ee\">Open article</a>";
-        $deliverAVIFLabel = __('<strong>It looks like you\'re running your site on an NginX server. You might need additional configuration for AVIF delivery to work as expected</strong>','shortpixel-image-optimiser')." <a href=\"https://blog.shortpixel.com/avif-mime-type-delivery-nginx/\" target=\"_blank\">Read more</a>";
+        $deliverWebpUnalteredLabel = __('It looks like you\'re running your site on an NGINX server. This means that you can only achieve this functionality by directly configuring the server config files. Please, follow this link for instructions:','shortpixel-image-optimiser')." <a class=\"shortpixel-help-link\" href=\"https://help.shortpixel.com/article/111-configure-nginx-to-transparently-serve-webp-files-when-supported\" target=\"_blank\" data-beacon-article=\"5bfeb9de2c7d3a31944e78ee\"><span class=\"dashicons dashicons-editor-help\"></span>Open article</a>";
+        $deliverAVIFLabel = __('<strong>It looks like you\'re running your site on an NGINX server. You may need additional configuration for the AVIF delivery to work as expected</strong>','shortpixel-image-optimiser')." <a class=\"shortpixel-help-link\" href=\"https://blog.shortpixel.com/avif-mime-type-delivery-nginx/\" target=\"_blank\"><span class=\"dashicons dashicons-editor-help\"></span>Read more</a>";
     } else {
         if( !$this->is_htaccess_writable ){
             $deliverWebpUnalteredDisabled = 'disabled';     // Disable
@@ -154,7 +154,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                       </a>
                     <input type="submit" name="save" id="saveAdvAddFolder" class="button button-primary hidden" title="<?php _e('Add this Folder','shortpixel-image-optimiser');?>" value="<?php _e('Add this Folder','shortpixel-image-optimiser');?>">
                     <p class="settings-info">
-                        <?php _e('Use the Select... button to select site folders. ShortPixel will optimize images and PDFs from the specified folders and their subfolders. The optimization status for each image or PDF in these folders can be seen in the <a href="upload.php?page=wp-short-pixel-custom">Custom Media list</a>, under the Media menu.','shortpixel-image-optimiser');?>
+                        <?php _e('Use the Select... button to select site folders. ShortPixel will optimize images and PDFs from the specified folders and their subfolders. In the <a href="upload.php?page=wp-short-pixel-custom">Custom Media list</a>, under the Media menu, you can see the optimization status for each image or PDF in these folders.','shortpixel-image-optimiser');?>
                         <a href="https://blog.shortpixel.com/optimize-images-outside-media-library/" target="_blank" class="shortpixel-help-link">
                             <span class="dashicons dashicons-editor-help"></span><?php _e('More info','shortpixel-image-optimiser');?>
                         </a>
@@ -182,7 +182,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                 <td>
                     <input name="includeNextGen" type="checkbox" id="nextGen" value='1' <?php echo  checked($view->data->includeNextGen,'1' );?>> <label for="nextGen"><?php _e('Optimize NextGen galleries.','shortpixel-image-optimiser');?></label>
                     <p class="settings-info">
-                        <?php _e('Check this to add all your current NextGen galleries to the custom folders list and to also have all the future NextGen galleries and images optimized automatically by ShortPixel.','shortpixel-image-optimiser');?>
+                        <?php _e('Check this to add all your current NextGen galleries to the Custom Media folders list and to also have all the future NextGen galleries and images optimized automatically by ShortPixel.','shortpixel-image-optimiser');?>
                     </p>
                 </td>
             </tr>
@@ -191,11 +191,11 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                 <th scope="row"><?php _e('Convert PNG images to JPEG','shortpixel-image-optimiser');?></th>
                 <td>
                     <input name="png2jpg" type="checkbox" id="png2jpg" value="1" <?php checked( ($view->data->png2jpg > 0), true);?> <?php echo($this->is_gd_installed ? '' : 'disabled') ?>>
-                    <label for="png2jpg"><?php _e('Automatically convert the PNG images to JPEG if possible.','shortpixel-image-optimiser');
+                    <label for="png2jpg"><?php _e('Automatically convert the PNG images to JPEG, if possible.','shortpixel-image-optimiser');
                         if(!$this->is_gd_installed) {echo("&nbsp;<span style='color:red;'>" . __('You need PHP GD for this. Please ask your hosting to install it.','shortpixel-image-optimiser') . "</span>");}
                     ?></label>
                     <p class="settings-info">
-                        <?php _e('Converts all PNGs that don\'t have transparent pixels to JPEG. This can dramatically reduce the file size, especially if you have camera pictures that are saved in PNG format. The plugin will also search for references of the image in posts and will replace them.','shortpixel-image-optimiser');?>
+                        <?php _e('Converts all PNGs that don\'t have transparent pixels to JPEG. This can dramatically reduce the file size, especially if you have camera pictures that are saved in PNG format. The plugin will also search for references of the image in posts and replace them.','shortpixel-image-optimiser');?>
                         <strong><?php _e('The image will NOT be converted if the resulting JPEG is larger than the original PNG.','shortpixel-image-optimiser');?></strong>
                     </p><br>
                     <?php // @todo Issue with this. png2jpg > 0, is force ?>
@@ -208,26 +208,26 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
             <tr class='exif_warning view-notice-row'>
                 <th scope="row">&nbsp;</th>
                 <td>
-                   <div class='view-notice warning'><p><?php printf(__('Warning - Converting from PNG to JPG will %s not %s keep the EXIF-information!', 'shortpixel-image-optimiser'), "<strong>","</strong>"); ?></p></div>
+                   <div class='view-notice warning'><p><?php printf(__('Warning - Converting from PNG to JPG will %s not %s keep the EXIF information!', 'shortpixel-image-optimiser'), "<strong>","</strong>"); ?></p></div>
                 </td>
             </tr>
             <tr>
                 <th scope="row"><?php _e('CMYK to RGB conversion','shortpixel-image-optimiser');?></th>
                 <td>
                     <input name="cmyk2rgb" type="checkbox" id="cmyk2rgb" value="1" <?php checked( $view->data->CMYKtoRGBconversion, "1" );?>>
-                    <label for="cmyk2rgb"><?php _e('Adjust your images\' colours for computer and mobile screen display.','shortpixel-image-optimiser');?></label>
-                    <p class="settings-info"><?php _e('Images for the web only need RGB format and converting them from CMYK to RGB makes them smaller.','shortpixel-image-optimiser');?></p>
+                    <label for="cmyk2rgb"><?php _e('Adjust your images\' colors for computer and mobile displays.','shortpixel-image-optimiser');?></label>
+                    <p class="settings-info"><?php _e('Images for the web only need the RGB format and converting them from CMYK to RGB makes them smaller.','shortpixel-image-optimiser');?></p>
                 </td>
             </tr>
             <tr>
-                <th scope="row"><?php _e('Next Generation Images:','shortpixel-image-optimiser');?></th>
+                <th scope="row"><?php _e('Next Generation Images','shortpixel-image-optimiser');?></th>
                 <td>
                     <input name="createWebp" type="checkbox" id="createWebp" value="1" <?php checked( $view->data->createWebp, "1" );?>>
                     <label for="createWebp">
-                       <?php _e('Also create <a href="https://blog.shortpixel.com/how-webp-images-can-speed-up-your-site/" target="_blank">WebP versions</a> of the images, with the additional cost of 1 credit = 1 image or thumbnail..','shortpixel-image-optimiser');?>
+                       <?php _e('Also create <a href="https://blog.shortpixel.com/how-webp-images-can-speed-up-your-site/" target="_blank">WebP versions</a> of the images, with the additional cost of 1 credit = 1 image or thumbnail.','shortpixel-image-optimiser');?>
                     </label>
                     <p class="settings-info">
-                      <?php _e('WebP images can be up to three times smaller than PNGs and 25% smaller than JPGs.  <span class="red"><strong>Starting May 10th, 2021 this option will use additional credits (1 credit = 1 image or thumbnail)!</strong></span>','shortpixel-image-optimiser');?>
+                      <?php _e('WebP images can be up to three times smaller than PNGs and 25% smaller than JPGs.','shortpixel-image-optimiser');?>
                        <a href="https://blog.shortpixel.com/how-webp-images-can-speed-up-your-site/" target="_blank" class="shortpixel-help-link">
                            <span class="dashicons dashicons-editor-help"></span><?php _e('More info','shortpixel-image-optimiser');?>
                        </a>
@@ -239,7 +239,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                     <input name="createAvif" type="checkbox" id="createAvif" value="1" <?php checked( $view->data->createAvif, "1"); ?>>
                     <label for="createAvif"><?php _e('Also create <a href="https://blog.shortpixel.com/what-is-avif-and-why-is-it-good/" target="_blank">AVIF versions</a> of the images, with the additional cost of 1 credit = 1 image or thumbnail.','shortpixel-image-optimiser');?></label>
                     <p class="settings-info">
-                        <?php _e('AVIF is a new format (AV1 Image File Format) and the images can be up to 50% smaller than WebPs, on average. AVIF files are stored with the .avif file name extension ','shortpixel-image-optimiser');?>
+                        <?php _e('AVIF is a new image format and the AVIF images can be, on average, up to 50% smaller than WebPs. The files are stored with the .avif file name extension.','shortpixel-image-optimiser');?>
                         <a href="https://blog.shortpixel.com/what-is-avif-and-why-is-it-good/" target="_blank" class="shortpixel-help-link">
                             <span class="dashicons dashicons-editor-help"></span><?php _e('More info','shortpixel-image-optimiser');?>
                         </a>
@@ -264,12 +264,12 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                                 </label>
                                 <?php if($deliverWebpAlteredDisabledNotice){ ?>
                                     <p class="sp-notice">
-                                        <?php _e('After the option to work on .htaccess was selected, the .htaccess file has become unaccessible / readonly. Please make the .htaccess file writeable again to be able to further set up this option.','shortpixel-image-optimiser')?>
+                                        <?php _e('After the option to work on .htaccess was selected, the .htaccess file has become unaccessible / read-only. Please make the .htaccess file writeable again to be able to further set this option up.','shortpixel-image-optimiser')?>
                                     </p>
                                 <?php } ?>
                                 <p class="settings-info">
-                                     <?php _e('Each &lt;img&gt; will be replaced with a &lt;picture&gt; tag that will also provide AVIF and WebP images as a choice for browsers that support it. Also loads the picturefill.js for browsers that don\'t support the &lt;picture&gt; tag. You don\'t need to activate this if you\'re using the Cache Enabler plugin because your Avif\WebP images are already handled by this plugin. <strong>Please make a test before using this option</strong>, as if the styles that your theme is using rely on the position of your &lt;img&gt; tag, you might experience display problems.','shortpixel-image-optimiser'); ?>
-                                    <strong><?php _e('You can revert anytime to the previous state by just deactivating the option.','shortpixel-image-optimiser'); ?></strong>
+                                     <?php _e('Each &lt;img&gt; will be replaced with a &lt;picture&gt; tag that will also provide AVIF and WebP images for browsers that support it. Also, it loads the picturefill.js for browsers that don\'t support the &lt;picture&gt; tag. You don\'t need to activate this if you\'re using the Cache Enabler plugin because your AVIF\WebP images are already handled by this plugin. <strong>Please run some tests before using this option!</strong> If the styles that your theme is using rely on the position of your &lt;img&gt; tags, you may experience display problems.','shortpixel-image-optimiser'); ?>
+                                    <strong><?php _e('You can revert anytime to the previous state just by deactivating the option.','shortpixel-image-optimiser'); ?></strong>
                                 </p>
                                 <ul class="deliverWebpAlteringTypes">
                                     <li>
@@ -316,9 +316,9 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                 <th scope="row"><?php _e('Optimize other thumbs','shortpixel-image-optimiser');?></th>
                 <td>
                     <input name="optimizeUnlisted" type="checkbox" id="optimizeUnlisted" value="1" <?php checked( $view->data->optimizeUnlisted, "1" );?>>
-                    <label for="optimizeUnlisted"><?php _e('Also optimize the unlisted thumbs if found.','shortpixel-image-optimiser');?></label>
+                    <label for="optimizeUnlisted"><?php _e('Also optimize the unlisted thumbs, if found.','shortpixel-image-optimiser');?></label>
                     <p class="settings-info">
-                        <?php _e('Some plugins create thumbnails which are not registered in the metadata but instead only create them alongside the other thumbnails. Let ShortPixel optimize them as well.','shortpixel-image-optimiser');?>
+                        <?php _e('Some plugins create thumbnails that are not registered in the metadata, but instead only exist alongside the other thumbnails. Let ShortPixel optimize them as well.','shortpixel-image-optimiser');?>
                     </p>
                 </td>
             </tr>
@@ -338,14 +338,14 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                     <p class="settings-info">
                         <?php _e('Add patterns separated by comma. A pattern consist of a <strong>type:value</strong> pair; the accepted types are
                                   <strong>"name"</strong>, <strong>"path"</strong> and <strong>"size"</strong>.
-                                   A file will be excluded if it matches any of the patterns.
-                                   <br>For a <strong>"name"</strong> pattern only the filename will be matched but for a <strong>"path"</strong>,
-                                   all the path will be matched (useful for excluding certain subdirectories altoghether).
+                                   A file is excluded if it matches any of the patterns.
+                                   <br>For a <strong>"name"</strong> pattern only the filename is matched, but for a <strong>"path"</strong>,
+                                   all the path will be matched (useful for excluding certain sub-directories altoghether).
                                    For these you can also use regular expressions accepted by preg_match, but without "," or ":".
-                                   A pattern will be considered a regex if it starts with a "/" and is valid.
+                                   A pattern is considered a regex if it starts with a "/" and it\'s valid.
                                    <br>For the <strong>"size"</strong> type,
-                                   which applies only to Media Library images, <strong>the main images (not thumbnails)</strong> that have the size in the specified range will be excluded.
-                                   The format for the "size" exclude is: <strong>minWidth</strong>-<strong>maxWidth</strong>x<strong>minHeight</strong>-<strong>maxHeight</strong>, for example <strong>size:1000-1100x2000-2200</strong>. You can also specify a precise size, as <strong>1000x2000</strong>.','shortpixel-image-optimiser');?>
+                                   which applies only to Media Library images, <strong>the main images (not thumbnails)</strong> that have the size in the specified range are excluded.
+                                   The format for the "size" exclude is: <strong>minWidth</strong>-<strong>maxWidth</strong>x<strong>minHeight</strong>-<strong>maxHeight</strong>, for example <strong>size:1000-1100x2000-2200</strong>. You can also specify a precise size, such as <strong>1000x2000</strong>.','shortpixel-image-optimiser');?>
                         <a href="https://blog.shortpixel.com/shortpixel-how-to-exclude-images-and-folders-from-optimization/" target="_blank" class="shortpixel-help-link">
                             <span class="dashicons dashicons-editor-help"></span><?php _e('More info','shortpixel-image-optimiser');?>
                         </a>
@@ -358,7 +358,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                     <input name="siteAuthUser" type="text" id="siteAuthUser" value="<?php echo( stripslashes(esc_html($view->data->siteAuthUser )));?>" class="regular-text" placeholder="<?php _e('User','shortpixel-image-optimiser');?>"><br>
                     <input name="siteAuthPass" type="text" id="siteAuthPass" value="<?php echo( stripslashes(esc_html($view->data->siteAuthPass )));?>" class="regular-text" placeholder="<?php _e('Password','shortpixel-image-optimiser');?>">
                     <p class="settings-info">
-                        <?php _e('Only fill in these fields if your site (front-end) is not publicly accessible and visitors need a user/pass to connect to it. If you don\'t know what is this then just <strong>leave the fields empty</strong>.','shortpixel-image-optimiser');?>
+                        <?php _e('Only fill in these fields if your site (front-end) is not publicly accessible and visitors need a user/pass to connect to it. If you don\'t know what this is, then just <strong>leave the fields empty</strong>.','shortpixel-image-optimiser');?>
                     </p>
                 </td>
             </tr>
@@ -368,17 +368,17 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                     <input name="autoMediaLibrary" type="checkbox" id="autoMediaLibrary" value="1" <?php checked( $view->data->autoMediaLibrary, "1" );?>>
                     <label for="autoMediaLibrary"><?php _e('Automatically optimize Items after they are uploaded (recommended).','shortpixel-image-optimiser');?></label>
                     <p class="settings-info">
-                        <?php _e('ShortPixel will automatically optimize images and PDF-files uploaded or added. If you uncheck this you\'ll need to run the ShortPixel bulk or manually optimize images later.','shortpixel-image-optimiser');?>
+                        <?php _e('ShortPixel will automatically optimize the newly added images and PDF files. If you uncheck this option, you\'ll need to run the ShortPixel bulk or manually optimize the images later.','shortpixel-image-optimiser');?>
                     </p>
                 </td>
             </tr>
             <tr id="frontBootstrapRow">
-                <th scope="row"><?php _e('Process in front-end','shortpixel-image-optimiser');?></th>
+                <th scope="row"><?php _e('Process in the front-end','shortpixel-image-optimiser');?></th>
                 <td>
                     <input name="frontBootstrap" type="checkbox" id="frontBootstrap" value="1" <?php checked( $view->data->frontBootstrap, '1' );?>>
-                    <label for="frontBootstrap"><?php _e('Automatically optimize images added by users in front end.','shortpixel-image-optimiser');?></label>
+                    <label for="frontBootstrap"><?php _e('Automatically optimize images added by users in front-end of the site.','shortpixel-image-optimiser');?></label>
                     <p class="settings-info">
-                        <?php _e('Check this if you have users that add images or PDF documents from custom forms in the front-end. This could increase the load on your server if you have a lot of users simultaneously connected.','shortpixel-image-optimiser');?>
+                        <?php _e('Check this if you have users adding images or PDF documents from custom forms in the front-end of the site. If many users connect simultaneously, activating this option could increase the load on your server.','shortpixel-image-optimiser');?>
                     </p>
                 </td>
                 <script>
@@ -408,7 +408,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                         </span><br>
                     <?php } ?>
                     <p class="settings-info">
-                        <?php _e('Please check the thumbnail sizes you would like to <strong>exclude</strong> from optimization. There might be sizes created by themes or plugins which do not appear here, because they were not properly registered with WordPress. If you want to ignore them too, please uncheck the option <strong>Optimize other thumbs</strong> above.','shortpixel-image-optimiser');?>
+                        <?php _e('Please check the thumbnail sizes you would like to <strong>exclude</strong> from optimization. There may be sizes created by themes or plugins which do not appear here, because they were not properly registered in WordPress. If you want to ignore them too, please uncheck the <strong>Optimize other thumbs</strong> option above.','shortpixel-image-optimiser');?>
                     </p>
                 </td>
             </tr>

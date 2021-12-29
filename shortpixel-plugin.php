@@ -329,7 +329,7 @@ class ShortPixelPlugin
 		$panel = isset($_GET['panel']) ? sanitize_text_field($_GET['panel']) : false;
 
 		$bulkLocalize = array(
-        'endBulk' => __('This will stop the bulk processing and return to the start. Do you want to do this?', 'shortpixel-image-optimiser'),
+        'endBulk' => __('This will stop the bulk processing and take you back to the start. Are you sure you want to do this?', 'shortpixel-image-optimiser'),
 				'reloadURL' => admin_url('upload.php?page=wp-short-pixel-bulk'),
     );
 		if ($panel)
@@ -388,7 +388,7 @@ class ShortPixelPlugin
             'confirmBulkRestore' => __( "Are you sure you want to restore from backup all the images in your Media Library optimized with ShortPixel?", 'shortpixel-image-optimiser' ),
             'confirmBulkCleanup' => __( "Are you sure you want to cleanup the ShortPixel metadata info for the images in your Media Library optimized with ShortPixel? This will make ShortPixel 'forget' that it optimized them and will optimize them again if you re-run the Bulk Optimization process.", 'shortpixel-image-optimiser' ),
             'confirmBulkCleanupPending' => __( "Are you sure you want to cleanup the pending metadata?", 'shortpixel-image-optimiser' ),
-            'alertDeliverWebPAltered' => __( "Warning: Using this method alters the structure of the rendered HTML code (IMG tags get included in PICTURE tags),\nwhich in some rare cases can lead to CSS/JS inconsistencies.\n\nPlease test this functionality thoroughly after activating!\n\nIf you notice any issue, just deactivate it and the HTML will will revert to the previous state.", 'shortpixel-image-optimiser' ),
+            'alertDeliverWebPAltered' => __( "Warning: Using this method alters the structure of the rendered HTML code (IMG tags get included in PICTURE tags), which, in some rare \ncases, can lead to CSS/JS inconsistencies.\n\nPlease test this functionality thoroughly after activating!\n\nIf you notice any issue, just deactivate it and the HTML will will revert to the previous state.", 'shortpixel-image-optimiser' ),
             'alertDeliverWebPUnaltered' => __('This option will serve both WebP and the original image using the same URL, based on the web browser capabilities, please make sure you\'re serving the images from your server and not using a CDN which caches the images.', 'shortpixel-image-optimiser' ),
             'originalImage' => __('Original image', 'shortpixel-image-optimiser' ),
             'optimizedImage' => __('Optimized image', 'shortpixel-image-optimiser' ),

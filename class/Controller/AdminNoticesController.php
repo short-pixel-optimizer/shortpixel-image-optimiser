@@ -618,7 +618,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 
         if($totalImagesToOptimize > 0) {
 
-              $message .= sprintf(__('<strong> %s images thumbnails</strong> are not yet optimized by ShortPixel.','shortpixel-image-optimiser'), $totalImagesToOptimize  );
+              $message .= sprintf(__('<strong> %s images and thumbnails</strong> are not yet optimized by ShortPixel.','shortpixel-image-optimiser'), $totalImagesToOptimize  );
           }
 
          $message .= '</p>
@@ -634,7 +634,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 
           $message .= '<p>' . __('Get more image credits by referring ShortPixel to your friends!','shortpixel-image-optimiser') . '
               <a href="' . $friend_url . '" target="_blank">' . __('Check your account','shortpixel-image-optimiser') .
-              '</a> ' . __('for your unique referral link. For each user that joins, you will receive +100 additional image credits/month.','shortpixel-image-optimiser') . '
+              '</a> ' . __('for your unique referral link. For each person that joins, you will receive +100 additional image credits/month.','shortpixel-image-optimiser') . '
           </p>
           </div>';
 

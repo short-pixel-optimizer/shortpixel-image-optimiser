@@ -10,7 +10,7 @@ namespace ShortPixel;
 
 
     <h3 class="heading"><span><img src="<?php echo \wpSPIO()->plugin_url('res/img/robo-slider.png'); ?>"></span>
-      <?php _e('Welcome to the Bulk Processing page. You can add a bulk job by selecting one of the options below', 'shortpixel-image-optimiser'); ?>
+      <?php _e('Welcome to the Bulk Processing page. You can add a bulk job by clicking on the button below.', 'shortpixel-image-optimiser'); ?>
     </h3>
 
     <div class='interface wrapper'>
@@ -21,7 +21,7 @@ namespace ShortPixel;
         </button>
       </div>
 
-      <p class='description'><?php _e('Here you can (re)optimize your Media Library, image files from your theme or custom media folders that you are using on your site.', 'shortpixel-image-optimiser'); ?></p>
+      <p class='description'><?php _e('Here you can (re)optimize your Media Library or Custom Media folders from your website.', 'shortpixel-image-optimiser'); ?></p>
 
    </div>
 

@@ -16,7 +16,7 @@ use Shortpixel\Controller\OptimizeController as OptimizeController;
   <div class='env'>
     <h3><?php _e('Environment', 'shortpixel'); ?></h3>
     <div class='flex'>
-      <span>Nginx</span><span><?php var_export($this->is_nginx); ?></span>
+      <span>NGINX</span><span><?php var_export($this->is_nginx); ?></span>
       <span>KeyVerified</span><span><?php var_export($this->is_verifiedkey); ?></span>
       <span>HtAccess writable</span><span><?php var_export($this->is_htaccess_writable); ?></span>
       <span>Multisite</span><span><?php var_export($this->is_multisite); ?></span>

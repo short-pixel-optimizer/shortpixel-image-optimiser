@@ -4,17 +4,17 @@ namespace ShortPixel;
 
 
 <div class="shortpixel-bulk-wrapper">
-  <h1>Shortpixel Bulk Processing</h1>
+  <h1>ShortPixel Bulk Processing</h1>
 
 
 
   <!--
   <div class='error'><p id="shortpixel-bulk-error">Error region</p></div>
   -->
-  <div id="processPaused" class="processor-paused" data-action="ResumeBulk"><span class='dashicons dashicons-controls-pause' data-action="ResumeBulk"></span> Processor is paused, click to resume</div>
+  <div id="processPaused" class="processor-paused" data-action="ResumeBulk"><span class='dashicons dashicons-controls-pause' data-action="ResumeBulk"></span>The Bulk Processing is paused, please click to resume</div>
 
   <div id="processorOverQuota" class="processor-overquota">
-			<h3>There are no credits left. Processing paused. </h3>
+			<h3>There are no credits left. The Bulk Processing is paused.</h3>
 			<p><a href="javascript:window.location.reload()">Click to reload page after adding credits</a></p>
 	</div>
 

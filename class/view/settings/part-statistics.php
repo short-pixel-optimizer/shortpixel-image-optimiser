@@ -93,10 +93,10 @@ $quotaData = $this->quotaData;
 
                             $DaysToReset = $quotaData->monthly->renew;
                             //30 - ((($DateNow  - $DateSubscription) / 84600) % 30);
-                            printf(__('%s/month, renews in %s  days, on %s ( <a href="https://shortpixel.com/login/%s" target="_blank">Need More? See the options available</a> )','shortpixel-image-optimiser'),
+                            printf(__('%s, renews in %s  days, on %s ( <a href="https://shortpixel.com/login/%s" target="_blank">Need More? See the options available</a> )','shortpixel-image-optimiser'),
                                 $quotaData->monthly->text, $DaysToReset,
                                 date('M d, Y', strtotime(date('M d, Y') . ' + ' . $DaysToReset . ' days')), ( $this->hide_api_key) ? '' : $view->data->apiKey ); ?><br/>
-                        <?php printf(__('<a href="https://shortpixel.com/login/%s/tell-a-friend" target="_blank">Join our friend referral system</a> to win more credits. For each user that joins, you receive +100 images credits/month.','shortpixel-image-optimiser'),
+                        <?php printf(__('<a href="https://shortpixel.com/login/%s/tell-a-friend" target="_blank">Join our friend referral system</a> to win more credits. For each person that joins, you receive +100 image credits/month.','shortpixel-image-optimiser'),
                                 ( $this->hide_api_key ? '' : $view->data->apiKey));?>
                         <br><br>
                         <?php _e('Consumed: ','shortpixel-image-optimiser'); ?>
