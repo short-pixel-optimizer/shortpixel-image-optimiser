@@ -73,7 +73,8 @@ Class FileSystemController extends \ShortPixel\Controller
 		*/
     public function getImage( $id,  $type)
     {
-      $imageObj = null;
+			// False, OptimizeController does a hard check for false.
+      $imageObj = false;
 
       if ($type == 'media')
         $imageObj = $this->getMediaImage($id);

@@ -190,7 +190,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
           return array($fs->pathToUrl($this));
         else
           return array();
-				
+
     }
 
     public function restore()
@@ -520,6 +520,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
          $count++;
       } */
       $improvements['main'] = array($this->getImprovement(), 0);
+			$improvements['totalpercentage'] = round($this->getImprovement()); // the same.
 
       return $improvements;
 

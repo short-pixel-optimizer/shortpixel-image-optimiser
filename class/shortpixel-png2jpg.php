@@ -27,6 +27,7 @@ class ShortPixelPng2Jpg {
     public function convert(ImageModel $imageObj)
     {
          $settings = \wpSPIO()->settings();
+				 $env = \SPIO()->env();
 				 $fs = \wpSPIO()->filesystem();
 
          // check for possible conversion. From system heaviest to lowest.
@@ -35,6 +36,12 @@ class ShortPixelPng2Jpg {
 
          if (! $imageObj->getExtension() == 'png') // not a png ext. fail silently.
            return false;
+
+				if ($env->is_gd_installed === false)
+				{
+					 Log::addWarn('Convert in png2jpg called without proper installation of GD! . Aborting ');
+					 return false;
+				}
 
           $this->current_image = $this->getPNGImage($imageObj);
           $this->raiseMemoryLimit();

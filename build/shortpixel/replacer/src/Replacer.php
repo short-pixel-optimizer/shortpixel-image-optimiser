@@ -109,8 +109,6 @@ class Replacer
 	    $search_urls = $urls['source'];
 	    $replace_urls = $urls['target'];
 
-			Log::addDebug('Search/Replace Replace before balance', array($search_urls, $replace_urls) );
-
 	    /* If the replacement is much larger than the source, there can be more thumbnails. This leads to disbalance in the search/replace arrays.
 	      Remove those from the equation. If the size doesn't exist in the source, it shouldn't be in use either */
 	    foreach($replace_urls as $size => $url)
@@ -122,10 +120,10 @@ class Replacer
 	      }
 	    }
 
-	  //  Log::addDebug('Source', $this->source_metadata);
-	  //  Log::addDebug('Target', $this->target_metadata);
+	    Log::addDebug('Source', $this->source_metadata);
+	    Log::addDebug('Target', $this->target_metadata);
 	    /* If on the other hand, some sizes are available in source, but not in target, try to replace them with something closeby.  */
-	    foreach($search_urls as  $size => $url)
+	    foreach($search_urls as $size => $url)
 	    {
 	        if (! isset($replace_urls[$size]))
 	        {
@@ -365,8 +363,8 @@ class Replacer
           'target' => array('url' => $this->target_url, 'metadata' => $this->getFilesFromMetadata($this->target_metadata) ),
       );
 
-      Log::addDebug('Source Metadata', array($this->source_url, $this->source_metadata));
-      Log::addDebug('Target Metadata', array($this->target_url, $this->target_metadata));
+    //  Log::addDebug('Source Metadata', $this->source_metadata);
+  //    Log::addDebug('Target Metadata', $this->target_metadata);
 
       $result = array();
 

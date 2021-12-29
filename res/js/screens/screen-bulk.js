@@ -310,6 +310,7 @@ console.log("Screen Init Done", initMedia, initCustom);
 
           if (result.improvements.totalpercentage)
           {
+							// Opt-Circle-Image is average of the file itself.
               var circle = document.querySelector('.opt-circle-image');
 
               var total_circle = 289.027;
@@ -342,26 +343,29 @@ console.log("Screen Init Done", initMedia, initCustom);
 
 			var total = this.averageOptimization / this.numOptimizations;
 
-			var circle = document.querySelector('.opt-circle-average');
+			// There are circles on process and finished.
+			var circles = document.querySelectorAll('.opt-circle-average');
 
-			var total_circle = 289.027;
-			if( total  >0 ) {
-					total_circle = Math.round(total_circle-(total_circle * total /100));
-			}
-
-			for(i = 0; i < circle.children.length; i++)
+			circles.forEach(function (circle)
 			{
-				 var child = circle.children[i];
-				 if (child.classList.contains('path'))
-				 {
-						child.style.strokeDashoffset = total_circle + 'px';
-				 }
-				 else if (child.classList.contains('text'))
-				 {
-						child.textContent = Math.round(total) + '%';
-				 }
-			}
+				var total_circle = 289.027;
+				if( total  >0 ) {
+						total_circle = Math.round(total_circle-(total_circle * total /100));
+				}
 
+				for(i = 0; i < circle.children.length; i++)
+				{
+					 var child = circle.children[i];
+					 if (child.classList.contains('path'))
+					 {
+							child.style.strokeDashoffset = total_circle + 'px';
+					 }
+					 else if (child.classList.contains('text'))
+					 {
+							child.textContent = Math.round(total) + '%';
+					 }
+				}
+			}); // circles;
 	}
   this.DoSelection = function() // action to update response.
   {
@@ -508,19 +512,38 @@ console.log("Screen Init Done", initMedia, initCustom);
 	{
 
 		 var type = event.target.getAttribute('data-errorbox');
+		 var checked = event.target.checked;
+		 var inputName = event.target.name;
 
-			//type.css.opacity = 1;
-			var errorbox = document.querySelector('.errorbox.' + type);
-			if (event.target.checked === true)
+			// There are multiple errorBoxes
+			var errorBoxes = document.querySelectorAll('.errorbox.' + type);
+
+			errorBoxes.forEach(function(errorbox)
 			{
-			 	errorbox.style.opacity = 1;
-				errorbox.style.display = 'block';
-			}
-			else
-			{
-				errorbox.opacity = 0;
-				errorbox.style.display = 'none';
-			}
+				if (checked === true)
+				{
+				 	errorbox.style.opacity = 1;
+					errorbox.style.display = 'block';
+				}
+				else
+				{
+					errorbox.opacity = 0;
+					errorbox.style.display = 'none';
+				}
+			}); //foreach
+
+			var inputs = document.querySelectorAll('input[name="' + inputName + '"]');
+			inputs.forEach(function (inputBox) {
+					if (inputBox.getAttribute('data-errorbox') != type)
+					{
+						 return;
+					}
+					if (checked != inputBox.checked)
+					{
+						 // sync other boxes with same name and type
+						 inputBox.checked = checked;
+					}
+			});
 	}
 
   this.StartBulk = function() // Open panel action

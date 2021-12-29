@@ -33,7 +33,7 @@ class BulkViewController extends \ShortPixel\ViewController
     $this->view->stats = $optimizeController->getStartupData();
     $this->view->approx = $this->getApproxData();
 
-    $this->view->logHeaders = array(__('Processed', 'shortpixel_image_optimiser'), __('Errors', 'shortpixel_image_optimizer'), __('Date', 'shortpixel_image_optimizer'));
+    $this->view->logHeaders = array(__('Images', 'shortpixel_image_optimiser'), __('Errors', 'shortpixel_image_optimizer'), __('Date', 'shortpixel_image_optimizer'));
     $this->view->logs = $this->getLogs();
 
     $keyControl = ApiKeyController::getInstance();
@@ -135,10 +135,37 @@ class BulkViewController extends \ShortPixel\ViewController
 
 					$op = (isset($logData['operation'])) ? $logData['operation'] : false;
 
-          $view[] = array('type' => $logData['type'], 'images' => $logData['processed'], 'errors' => $errors, 'date' => UiHelper::formatTS($logData['date']), 'operation' => $op);
+					// BulkName is just to compile a user-friendly name for the operation log.
+					$bulkName = '';
 
+					switch($logData['type'])
+					{
+						 case 'custom':
+						 	$bulkName = __('Custom Media Bulk', 'shortpixel-image-optimiser');
+						 break;
+						 case 'media':
+						 	$bulkName = __('Media Library Bulk', 'shortpixel-image-optimiser');
+						 break;
+					}
 
+					$bulkName  .= ' '; // add a space.
 
+					switch($op)
+					{
+							 case 'bulk-restore':
+							 		 $bulkName .= __('Restore', 'shortpixel-image-optimiser');
+							 break;
+							 case 'migrate':
+							 		 $bulkName .= __('Migrate old Metadata', 'shortpixel-image-optimiser');
+							 break;
+							 default:
+							 	 	 $bulkName .= __('Optimization', 'shortpixel-image-optimiser');
+							 break;
+					}
+
+					$images = isset($logData['total_images']) ? $logData['total_images'] : $logData['processed'];
+
+          $view[] = array('type' => $logData['type'], 'images' => $images, 'errors' => $errors, 'date' => UiHelper::formatTS($logData['date']), 'operation' => $op, 'bulkName' => $bulkName);
 
       }
 

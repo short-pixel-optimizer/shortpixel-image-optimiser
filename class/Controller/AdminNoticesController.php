@@ -448,6 +448,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 
 
         }
+
    }
 
 	 protected function doListViewNotice()

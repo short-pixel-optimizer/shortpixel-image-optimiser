@@ -30,8 +30,6 @@ if ( isset($_GET['noheader']) ) {
         </div>
 			<hr class='wp-header-end' />
 
-
-
       <div class="searchbox">
             <form method="get">
                 <input type="hidden" name="page" value="wp-short-pixel-custom" />

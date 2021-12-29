@@ -65,7 +65,7 @@ namespace ShortPixel;
 
 		<div data-error-media="message" data-presentation="append" class='errorbox media'></div>
 
-
+		<!-- ****** CUSTOM ********  ---> 
     <div class='bulk-summary' data-check-visibility data-control="data-check-custom-total">
       <div class='heading'>
         <span><i class='dashicons dashicons-open-folder'>&nbsp;</i> <?php _e('Custom Media', 'shortpixel-image-optimiser'); ?> </span>

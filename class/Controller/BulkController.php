@@ -124,10 +124,16 @@ class BulkController
         if ($stats->done == 0 && $stats->fatal_errors == 0)
           return; // nothing done, don't log
 
+			  Log::addTemp('AddLog Stats -- ', $stats);
+
         $data['processed'] = $stats->done;
         $data['not_processed'] = $stats->in_queue;
         $data['errors'] = $stats->errors;
         $data['fatal_errors'] = $stats->fatal_errors;
+
+				if (property_exists($stats, 'images'))
+					$data['total_images'] = $stats->images->images_done;
+					
         $data['type'] = $type;
 				if ($q->getCustomDataItem('customOperation'))
 				{

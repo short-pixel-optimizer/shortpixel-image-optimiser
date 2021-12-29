@@ -192,7 +192,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                 <td>
                     <input name="png2jpg" type="checkbox" id="png2jpg" value="1" <?php checked( ($view->data->png2jpg > 0), true);?> <?php echo($this->is_gd_installed ? '' : 'disabled') ?>>
                     <label for="png2jpg"><?php _e('Automatically convert the PNG images to JPEG, if possible.','shortpixel-image-optimiser');
-                        if(!$this->is_gd_installed) {echo("&nbsp;<span style='color:red;'>" . __('You need PHP GD for this. Please ask your hosting to install it.','shortpixel-image-optimiser') . "</span>");}
+                        if(!$this->is_gd_installed) {echo("&nbsp;<span style='color:red;'>" . __('You need PHP GD with support for JPEG and PNG files for this feature. Please ask your hosting to install it.','shortpixel-image-optimiser') . "</span>");}
                     ?></label>
                     <p class="settings-info">
                         <?php _e('Converts all PNGs that don\'t have transparent pixels to JPEG. This can dramatically reduce the file size, especially if you have camera pictures that are saved in PNG format. The plugin will also search for references of the image in posts and replace them.','shortpixel-image-optimiser');?>
