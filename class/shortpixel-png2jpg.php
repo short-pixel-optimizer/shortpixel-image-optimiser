@@ -27,7 +27,7 @@ class ShortPixelPng2Jpg {
     public function convert(ImageModel $imageObj)
     {
          $settings = \wpSPIO()->settings();
-				 $env = \SPIO()->env();
+				 $env = \wpSPIO()->env();
 				 $fs = \wpSPIO()->filesystem();
 
          // check for possible conversion. From system heaviest to lowest.
