@@ -795,11 +795,11 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
             }
             else
             {
-              $this->preventNextTry(__('Fatal Issue: The Backup file already exists. The backup seems not restorable, or the current file is bigger than the backup indicating an error.', 'shortpixel-image-optimiser'));
+              $this->preventNextTry(__('Fatal Issue: The Backup file already exists. The backup seems not restorable, or the original file is bigger than the backup, indicating an error.', 'shortpixel-image-optimiser'));
 
-              Log::addError('The backup file already exists and is bigger than the current file. BackupFile Size : ' . $backupFile->getFileSize() . ' This Filesize : ' . $this->getFileSize(), $this->fullpath);
+              Log::addError('The backup file already exists and it is bigger than the original file. BackupFile Size: ' . $backupFile->getFileSize() . ' This Filesize: ' . $this->getFileSize(), $this->fullpath);
 
-              $this->error_message = __('Backup not possible: already exists and current file is bigger.', 'shortpixel-image-optimiser');
+              $this->error_message = __('Backup not possible: it already exists and the original file is bigger.', 'shortpixel-image-optimiser');
             }
 
             return false;
