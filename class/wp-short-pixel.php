@@ -3682,11 +3682,14 @@ Log::addDebug('GetQuotaInformation Result ', $dataArray);
             $pos = strrpos($path, ".");
             $pathFile = $fs->getFile($path);
             if ($pos !== false) {
-                //$webpPath = substr($path, 0, $pos) . ".webp";
-                //echo($webpPath . "<br>");
+								// Webp single extension
                 $file = $fs->getFile(substr($path, 0, $pos) . ".webp");
                 $file->delete();
+								// Webp Retina @2x.
                 $file = $fs->getFile(substr($path, 0, $pos) . "@2x.webp");
+                $file->delete();
+								// Avif single extension
+                $file = $fs->getFile(substr($path, 0, $pos) . ".avif");
                 $file->delete();
 
                 // Check for double extension. Everything is going, so delete if it's not us anyhow.
