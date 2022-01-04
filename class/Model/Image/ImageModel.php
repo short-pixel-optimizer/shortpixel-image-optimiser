@@ -743,24 +743,34 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
         $first = substr($pattern, 0,1);
 
+				$matchRegEx = false;
+
+				// Check for RegEx.
+				// if pattern is not proper regex, just try strpos. It can be a path like /sites/example.com/etc
         if ($first == '/')
         {
           if (@preg_match($pattern, false) !== false)
           {
-            $m = preg_match($pattern,  $target);
-            if ($m !== false && $m > 0) // valid regex, more hits than zero
-            {
-              return true;
-            }
-          }
-        }
-        else
-        {
+						$matchRegEx = true;
+					}
+				}
+
+				if (! $matchRegEx)
+				{
           if (strpos($target, $pattern) !== false)
           {
             return true;
           }
-        }
+				}
+				else
+				{
+						$m = preg_match($pattern,  $target);
+            if ($m !== false && $m > 0) // valid regex, more hits than zero
+            {
+              return true;
+            }
+				}
+
         return false;
     }
 

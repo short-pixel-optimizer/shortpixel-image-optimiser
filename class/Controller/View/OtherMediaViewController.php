@@ -422,14 +422,10 @@ class OtherMediaViewController extends \ShortPixel\ViewController
             return $this->renderActions($thisActions, $item); // nothing more.
           }
 
-          if ($item->getMeta('status') < ImageModel::FILE_STATUS_UNPROCESSED)
-          {
-            $thisActions[] = $this->actions['optimize'];
-          }
-          elseif ($item->getMeta('status') == ImageModel::FILE_STATUS_UNPROCESSED || $item->getMeta('status') == ImageModel::FILE_STATUS_RESTORED)
-          {
-            $thisActions[] = $this->actions['optimize'];
-          }
+					if ($item->isProcessable())
+					{
+					  	$thisActions[] = $this->actions['optimize'];
+					}
 
           return $this->renderActions($thisActions, $item);
       }
@@ -442,7 +438,6 @@ class OtherMediaViewController extends \ShortPixel\ViewController
           //echo $this->getDisplayStatus($item);
 					$this->printItemActions($item);
           echo "<div>" .  UiHelper::getStatusText($item) . "</div>";
-
 
            ?>
 					 </div>

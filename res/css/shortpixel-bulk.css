@@ -765,19 +765,14 @@
   margin: 25px 0 40px 0;
 }
 .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-source, .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-result, .shortpixel-bulk-wrapper section.panel.finished .image-preview .preview-wrapper .image-source, .shortpixel-bulk-wrapper section.panel.finished .image-preview .preview-wrapper .image-result {
-  width: 350px;
-  height: 350px;
+  max-width: 400px;
+  max-height: 400px;
   overflow: hidden;
   position: relative;
 }
 .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-source img, .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-result img, .shortpixel-bulk-wrapper section.panel.finished .image-preview .preview-wrapper .image-source img, .shortpixel-bulk-wrapper section.panel.finished .image-preview .preview-wrapper .image-result img {
-  max-width: 100%;
-  max-height: 100%;
   width: 100%;
-}
-.shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-source img[src=""], .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-result img[src=""], .shortpixel-bulk-wrapper section.panel.finished .image-preview .preview-wrapper .image-source img[src=""], .shortpixel-bulk-wrapper section.panel.finished .image-preview .preview-wrapper .image-result img[src=""] {
-  height: 350px;
-  width: 350px;
+  object-fit: cover;
 }
 .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-source p, .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-result p, .shortpixel-bulk-wrapper section.panel.finished .image-preview .preview-wrapper .image-source p, .shortpixel-bulk-wrapper section.panel.finished .image-preview .preview-wrapper .image-result p {
   position: absolute;

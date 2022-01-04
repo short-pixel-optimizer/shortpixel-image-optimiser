@@ -1029,8 +1029,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			 return array();
 		}
 
-
-		$sql = "select * from wp_icl_translations where trid in (select trid from wp_icl_translations where element_id = %d)";
+		$sql = "select * from " . $wpdb->prefix . "icl_translations where trid in (select trid from " . $wpdb->prefix . "icl_translations where element_id = %d)";
 
 		$sql = $wpdb->prepare($sql, $this->id);
 		$results = $wpdb->get_results($sql);

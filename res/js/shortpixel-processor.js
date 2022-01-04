@@ -69,7 +69,6 @@ window.ShortPixelProcessor =
     {
 			window.addEventListener('error', this.ScriptError.bind(this));
 
-
         this.isBulkPage = ShortPixelProcessorData.isBulkPage;
         this.localSecret = localStorage.getItem('bulkSecret');
         this.remoteSecret = ShortPixelProcessorData.bulkSecret;
@@ -381,7 +380,7 @@ window.ShortPixelProcessor =
          // If there are items, give them to the screen for display of optimization, waiting status etc.
          if (typeof response.results !== 'undefined' && response.results !== null)
          {
-             for (i = 0; i < response.results.length; i++)
+             for (var i = 0; i < response.results.length; i++)
              {
                 var imageItem = response.results[i];
 								if (imageItem == null || ! imageItem.result)
@@ -395,6 +394,7 @@ window.ShortPixelProcessor =
 								}
 
                 this.screen.HandleImage(imageItem, type);
+
              }
          }
          if (typeof response.result !== 'undefined' && response.result !== null)

@@ -250,11 +250,12 @@ class OtherMediaController extends \ShortPixel\Controller
     /** Check directory structure for new files */
     public function refreshFolders($force = false, $expires = null)
     {
- 			// a little PHP 5.5. compat. 
+ 			// a little PHP 5.5. compat.
 			if (is_null($expires))
 			{
 				$expires = 5 * MINUTE_IN_SECONDS;
 			}
+
 
 			$this->cleanUp();
       $customFolders = $this->getActiveFolders();
@@ -272,6 +273,7 @@ class OtherMediaController extends \ShortPixel\Controller
       foreach($customFolders as $directory) {
 
 				$stats = $directory->getStats();
+				
 				$forcenow = ($force || $stats->Total === 0) ? true : false;
         $directory->refreshFolder($forcenow);
 

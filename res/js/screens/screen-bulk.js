@@ -1,5 +1,4 @@
 
-
 var ShortPixelScreen = function (MainScreen, processor)
 {
 
@@ -103,7 +102,7 @@ console.log("Screen Init Done", initMedia, initCustom);
   }
   this.LoadPanels = function()
   {
-      elements = document.querySelectorAll('section.panel');
+      var elements = document.querySelectorAll('section.panel');
       var self = this;
       elements.forEach(function (panel, index)
       {
@@ -284,8 +283,8 @@ console.log("Screen Init Done", initMedia, initCustom);
   }
   this.HandleImage = function(resultItem, type)
   {
-      console.log('HandleImage');
-      console.log(resultItem, type);
+      console.log('HandleImage', resultItem, type);
+
       var result = resultItem.result;
       if ( this.processor.fStatus[resultItem.fileStatus] == 'FILE_DONE')
       {
@@ -318,7 +317,7 @@ console.log("Screen Init Done", initMedia, initCustom);
                   total_circle = Math.round(total_circle-(total_circle*result.improvements.totalpercentage/100));
               }
 
-              for(i = 0; i < circle.children.length; i++)
+              for( var i = 0; i < circle.children.length; i++)
               {
                  var child = circle.children[i];
                  if (child.classList.contains('path'))
@@ -353,7 +352,7 @@ console.log("Screen Init Done", initMedia, initCustom);
 						total_circle = Math.round(total_circle-(total_circle * total /100));
 				}
 
-				for(i = 0; i < circle.children.length; i++)
+				for(var i = 0; i < circle.children.length; i++)
 				{
 					 var child = circle.children[i];
 					 if (child.classList.contains('path'))
@@ -395,7 +394,15 @@ console.log("Screen Init Done", initMedia, initCustom);
   // dataName refers to domain of data i.e. stats, result. Those are mentioned in UI with data-stats-media="total" or data-result
   this.UpdateData = function(dataName, data, type)
   {
-      console.log('updating Data :',  dataName, type);
+      console.log('updating Data :',  dataName, data, type);
+			self.debugCounter++;
+
+			if (self.debugCounter > 20)
+			{
+				console.error('loop detected, pausing');
+				this.PauseBulk();
+			}
+
       if (typeof type == 'undefined')
       {
           var elements = document.querySelectorAll('[data-' + dataName + ']');
@@ -693,8 +700,7 @@ console.log("Screen Init Done", initMedia, initCustom);
           {
             var compareControl = document.querySelector('[' + element.getAttribute('data-control-check') + ']');
             var compareValue = parseInt(compareControl.innerHTML);
-            self.debugCounter++;
-            console.log('hasCompareControl ', self.debugCounter);
+
           }
           if (isNaN(value))
           {
@@ -831,7 +837,7 @@ console.log("Screen Init Done", initMedia, initCustom);
 	{
 			var modal = document.getElementById('LogModal');
 			var wrapper = null;
-			for (i = 0; i < modal.children.length; i++)
+			for (var i = 0; i < modal.children.length; i++)
 			{
 				 if (modal.children[i].classList.contains('title'))
 				 {
@@ -880,7 +886,7 @@ console.log("Screen Init Done", initMedia, initCustom);
 
 			title.textContent = log.title;
 
-			for (i = 0; i < log.results.length; i++)
+			for (var i = 0; i < log.results.length; i++)
 			{
 				  if (i === 0)
 						var html = '<div class="heading">';
