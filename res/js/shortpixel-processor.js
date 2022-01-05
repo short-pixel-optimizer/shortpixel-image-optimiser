@@ -13,6 +13,7 @@
 * Required function of screen are : HandleImage HandleError UpdateStats
 * Optional functions :  QueueStatus, GeneralResponses
 */
+'use strict';
 
 window.ShortPixelProcessor =
 {
@@ -185,12 +186,9 @@ window.ShortPixelProcessor =
         if (this.worker === null)
            this.LoadWorker(); // JIT worker loading
 
-        console.timeEnd('process-delay');
-
         //this.tooltip.DoingProcess();
         this.worker.postMessage({action: 'process', 'nonce' : this.nonce['process']});
 
-        console.time('process-delay');
     },
     RunProcess: function()
     {
@@ -419,7 +417,9 @@ window.ShortPixelProcessor =
     /// If both are reported back, both did tick, so both must be considered.
     HandleQueueStatus: function(data)
     {
-      var mediaStatus = customStatus = 100;
+      var mediaStatus = 100;
+			var customStatus = 100;
+
       if (typeof data.media !== 'undefined' && typeof data.media.qstatus !== 'undefined' )
          mediaStatus = data.media.qstatus;
       if (typeof data.custom !== 'undefined' && typeof data.custom.qstatus !== 'undefined')
@@ -517,7 +517,7 @@ window.ShortPixelProcessor =
 
 		ScriptError: function(error)
 		{
-			  console.error('Script Error! ', error);
+			  console.trace('Script Error! ', error);
 		}
 
 

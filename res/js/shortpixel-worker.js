@@ -1,4 +1,4 @@
-
+'use strict';
 
 onmessage = function(e)
 {
@@ -32,13 +32,9 @@ onmessage = function(e)
      break;
   }
 
-
-  //console.log('action : ' + action);
-
-
 }
 
-SpWorker = {
+var SpWorker = {
    ajaxUrl: null,
    action: 'shortpixel_image_processing',
    secret: null,
@@ -56,7 +52,7 @@ SpWorker = {
       params.append('nonce', this.nonce);
       params.append('isBulk', this.isBulk);
 
-      queues = [];
+      var queues = [];
       if (this.isMedia == true)
         queues.push('media');
       if (this.isCustom == true)
@@ -66,7 +62,7 @@ SpWorker = {
 
       if (typeof data !== 'undefined' && typeof data == 'object')
       {
-         for(key in data)
+         for(var key in data)
              params.append(key, data[key]);
       }
 
@@ -80,7 +76,6 @@ SpWorker = {
 
       if (response.ok)
       {
-        console.log('response ok');
           var json = await response.json();
 
           postMessage({'status' : true, response: json});
@@ -92,7 +87,7 @@ SpWorker = {
    },
    SetEnv: function (data)
    {
-      for (key in data)
+      for (var key in data)
       {
           this[key] = data[key];
       }
@@ -119,4 +114,4 @@ SpWorker = {
    }
 
 
-}
+} // worker

@@ -97,6 +97,11 @@ class AdminNoticesController extends \ShortPixel\Controller
       Notices::removeNoticeByID(self::MSG_INTEGRATION_NGGALLERY);
     }
 
+		public static function resetLegacyNotice()
+		{
+			Notices::removeNoticeByID(self::MSG_CONVERT_LEGACY);
+		}
+
     /** ReInstates A Persistent Notice manually */
     public static function reInstateQuotaExceeded()
     {
@@ -253,8 +258,6 @@ class AdminNoticesController extends \ShortPixel\Controller
         }
 
     }
-
-
 
     protected function doCompatNotices()
     {

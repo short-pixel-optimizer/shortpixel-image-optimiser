@@ -1,3 +1,4 @@
+'use strict';
 
 var ShortPixelScreen = function (MainScreen, processor)
 {
@@ -37,9 +38,9 @@ var ShortPixelScreen = function (MainScreen, processor)
       var initMedia = processData.media.stats;
       var initCustom = processData.custom.stats;
       var initTotal = processData.total.stats;
-      isPreparing = false;
-      isRunning = false;
-      isFinished = false;
+      var isPreparing = false;
+      var isRunning = false;
+      var isFinished = false;
 
       if (initMedia.is_preparing == true || initCustom.is_preparing == true )
         isPreparing = true;
@@ -113,7 +114,7 @@ console.log("Screen Init Done", initMedia, initCustom);
   }
   this.LoadActions = function()
   {
-      actions = document.querySelectorAll('[data-action]');
+      var actions = document.querySelectorAll('[data-action]');
       var self = this;
 
       actions.forEach(function (action, index)
@@ -127,7 +128,6 @@ console.log("Screen Init Done", initMedia, initCustom);
 
             if (isPanelAction)
             {
-							 console.log('changing panel');
                var doPanel = element.getAttribute('data-panel');
                this.SwitchPanel(doPanel);
             }
@@ -189,7 +189,7 @@ console.log("Screen Init Done", initMedia, initCustom);
       }
 
   //    this.panels.forEach(function(panel, index)
-      for (panelName in this.panels)
+      for (var panelName in this.panels)
       {
          var panel = this.panels[panelName];
          panel.classList.remove('active');
@@ -812,11 +812,11 @@ console.log("Screen Init Done", initMedia, initCustom);
 		data['loadFile'] = event.target.getAttribute('data-file');
 		data['type'] = 'log'; // for the answer.
 
-		modalData = this.GetModal();
-		modal = modalData[0];
-		title = modalData[1];
-		content = modalData[2];
-		wrapper = modalData[3];
+		var modalData = this.GetModal();
+		var modal = modalData[0];
+		var title = modalData[1];
+		var content = modalData[2];
+		var wrapper = modalData[3];
 
 		modal.classList.remove('shortpixel-hide');
 		title.textContent = '';
@@ -878,11 +878,11 @@ console.log("Screen Init Done", initMedia, initCustom);
 				 //document.body.appendChild (node);
 			}
 
-			modalData = this.GetModal();
-			modal = modalData[0];
-			text = modalData[1];
-			content = modalData[2];
-			wrapper = modalData[3];
+			var modalData = this.GetModal();
+			var modal = modalData[0];
+			var title = modalData[1];
+			var content = modalData[2];
+			var wrapper = modalData[3];
 
 			title.textContent = log.title;
 
@@ -895,7 +895,7 @@ console.log("Screen Init Done", initMedia, initCustom);
 
 					if (i == 0)
 					{
-						for (j = 0; j < log.results[i].length; j++ )
+						for (var j = 0; j < log.results[i].length; j++ )
 						{
 							html += '<span>' + log.results[i][j] + '</span>';
 						}

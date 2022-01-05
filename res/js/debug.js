@@ -1,4 +1,4 @@
-
+'use strict';
 // This file contains debug screen for edit-media
 
 var debugModal;
@@ -55,7 +55,7 @@ jQuery(document).ready(function(jq) {
 			this.currentModal.height(this.setHeight);
 		}
 
-		$m = this.currentModal;
+		var $m = this.currentModal;
 
 		var headerHeight = $m.find('.modal_header').outerHeight();
 
@@ -78,7 +78,7 @@ jQuery(document).ready(function(jq) {
 
 		if (modalHeight > this.windowHeight) // if height is higher than screen supports
 		{
-			newHeight = this.windowHeight - top - 5;
+			var newHeight = this.windowHeight - top - 5;
 			this.currentModal.height(newHeight);
 
 			var newContentH = newHeight - headerHeight;

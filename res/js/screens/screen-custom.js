@@ -1,4 +1,4 @@
-
+'use strict';
 // MainScreen as an option for delegate functions
 var ShortPixelScreen = function (MainScreen, processor)
 {
@@ -205,7 +205,7 @@ var ShortPixelScreen = function (MainScreen, processor)
         // AjaxRequest should return result, which will go through Handleresponse, then LoadiTemView.
         this.processor.AjaxRequest(data);
         //var id = data.id;
-    },
+    }
     this.ReOptimize = function(id, compression)
     {
         var data = {
@@ -214,6 +214,9 @@ var ShortPixelScreen = function (MainScreen, processor)
            type: 'custom',
            screen_action: 'reOptimizeItem'
         };
+
+			 if (! this.processor.CheckActive())
+			     data.callback = 'shortpixel.custom.resumeprocessing';
 
         this.processor.AjaxRequest(data);
     }

@@ -81,6 +81,14 @@ class BulkController
 
 		 $this->addLog($q);
 
+		 $op = $q->getCustomDataItem('customOperation');
+
+		 // When finishing, remove the Legacy Notice
+		 if ($op == 'migrate')
+		 {
+			 	AdminNoticesController::resetLegacyNotice();
+		 }
+
      $q->resetQueue();
    }
 
@@ -133,7 +141,7 @@ class BulkController
 
 				if (property_exists($stats, 'images'))
 					$data['total_images'] = $stats->images->images_done;
-					
+
         $data['type'] = $type;
 				if ($q->getCustomDataItem('customOperation'))
 				{

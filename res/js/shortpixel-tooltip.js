@@ -1,3 +1,5 @@
+'use strict';
+
 var ShortPixelToolTip = function(reserved, processor)
 {
 
@@ -9,7 +11,6 @@ var ShortPixelToolTip = function(reserved, processor)
         {
           console.log('manual paused (tooltip)');
           processor.PauseProcess();
-          //processor.isManualPaused = true;
         }
         var control = document.querySelector('.ab-item .controls');
         control.addEventListener('click', this.ToggleProcessing.bind(this));
@@ -18,8 +19,6 @@ var ShortPixelToolTip = function(reserved, processor)
 
         if (processor.isManualPaused == true)
         {
-          //  console.log('manual paused (tooltip)');
-          //  processor.CheckActive();
             this.ProcessPause();
         }
 
@@ -94,14 +93,12 @@ var ShortPixelToolTip = function(reserved, processor)
 
        if (processor.isManualPaused == false)
        {
-        //  processor.isManualPaused = true;
           processor.PauseProcess();
           localStorage.setItem('tooltipPause','true');
           this.ProcessPause();
        }
         else
        {
-        //  processor.isManualPaused = false;
           processor.ResumeProcess();
           localStorage.setItem('tooltipPause','false');
           console.log('ToogleProc' + localStorage.getItem('tooltipPause'));
@@ -110,16 +107,13 @@ var ShortPixelToolTip = function(reserved, processor)
 
        processor.CheckActive();
 
-       /*if (processor.isActive)
-          processor.RunProcess(); */
-
     }
 
     this.ToggleIcon = function()
     {
       var controls = document.querySelectorAll('.ab-item .controls > span');
 
-      for(i = 0; i < controls.length; i++)
+      for(var i = 0; i < controls.length; i++)
       {
           var control = controls[i];
           if (control.classList.contains('pause'))
@@ -141,7 +135,7 @@ var ShortPixelToolTip = function(reserved, processor)
 
     this.DoingProcess = function()
     {
-        tooltip = this.GetToolTip();
+        var tooltip = this.GetToolTip();
         tooltip.classList.remove('shortpixel-hide');
         tooltip.classList.add('shortpixel-processing');
     }
@@ -170,7 +164,7 @@ var ShortPixelToolTip = function(reserved, processor)
 			// Prevent double notices with same message
 			if (toolcontent.querySelector('[data-msgid="' + id + '"]') == null)
 			{
-      	alertChild = toolcontent.appendChild(alert);
+      	var alertChild = toolcontent.appendChild(alert);
       	window.setTimeout (this.RemoveNotice.bind(this), 5000, alertChild);
 			}
     }
@@ -184,7 +178,7 @@ var ShortPixelToolTip = function(reserved, processor)
     }
     this.ProcessResume = function()
     {
-      tooltip = this.GetToolTip();
+      var tooltip = this.GetToolTip();
 
       tooltip.classList.remove('shortpixel-paused');
       tooltip.classList.add('shortpixel-processing');
@@ -193,14 +187,14 @@ var ShortPixelToolTip = function(reserved, processor)
     }
     this.ProcessEnd = function()
     {
-        tooltip = this.GetToolTip();
+        var tooltip = this.GetToolTip();
 
         tooltip.classList.add('shortpixel-hide');
         tooltip.classList.remove('shortpixel-processing');
     }
     this.ProcessPause = function()
     {
-        tooltip = this.GetToolTip();
+        var tooltip = this.GetToolTip();
 
         tooltip.classList.add('shortpixel-paused');
         tooltip.classList.remove('shortpixel-processing');
