@@ -886,6 +886,8 @@ console.log("Screen Init Done", initMedia, initCustom);
 
 			title.textContent = log.title;
 
+			var logType = log.logType;
+
 			for (var i = 0; i < log.results.length; i++)
 			{
 				  if (i === 0)
@@ -903,7 +905,10 @@ console.log("Screen Init Done", initMedia, initCustom);
 					else if (log.results[i].length >= 3)
 					{
 						html += '<span>' + log.results[i][0] + '</span>';
-						html += '<span><a href="' + log.results[i][2] + '" target="_blank">' + log.results[i][1] + '</a></span>';
+						if (logType == 'custom')
+							html += '<span>' + log.results[i][1] + '</span>';
+						else
+							html += '<span><a href="' + log.results[i][2] + '" target="_blank">' + log.results[i][1] + '</a></span>';
 						html += '<span>' + log.results[i][3] + '</span>';
 					}
 

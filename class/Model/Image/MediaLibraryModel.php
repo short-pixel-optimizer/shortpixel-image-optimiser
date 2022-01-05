@@ -634,6 +634,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
       if (is_null($this->getMeta('originalWidth')))
         $this->setMeta('originalWidth', $this->get('width') );
+
+      // Adds unlisted files to thumbnails array, if needed.
+      // This is bound to be bad for performance and not good for big sites!
+			// Moved this from isProcessable to be a bit more performance friendly.
+      $this->addUnlisted();
+
   }
 
   private function createSave()
@@ -765,10 +771,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
       if($strict)
         return $bool;
-
-      // Adds unlisted files to thumbnails array, if needed.
-      // This is bound to be bad for performance and not good for big sites!
-      $this->addUnlisted();
 
       if (! $bool) // if parent is not processable, check if thumbnails are, can still have a work to do.
       {
@@ -1607,6 +1609,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   */
   protected function addUnlisted()
   {
+
+
+
        // Setting must be active.
        if (! \wpSPIO()->settings()->optimizeUnlisted )
          return;
@@ -1640,11 +1645,14 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
         $thumbs = array();
 
+//echo "<PRE> ADDUNLISTED "; echo $pattern; print_r($currentFiles);
+
         $all_files = scandir($path,  SCANDIR_SORT_NONE);
         $result_files = array_values(preg_grep($pattern, $all_files));
-
+//print_r($all_files);
         $unlisted = array_diff($result_files, $currentFiles);
-
+				//print_r($unlisted);
+//Secho  "</PRE>";
         if( defined('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES') ){
             $suffixes = explode(',', SHORTPIXEL_CUSTOM_THUMB_SUFFIXES);
             if (is_array($suffixes))

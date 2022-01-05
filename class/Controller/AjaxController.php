@@ -557,7 +557,6 @@ class AjaxController
 			 $logFile = $data['logFile'];
 			 $type = $data['type'];
 
-
 			 if (is_null($logFile))
 			 {
 				  $json->$type->is_error = true;
@@ -567,6 +566,12 @@ class AjaxController
 
        $bulkController = BulkController::getInstance();
 			 $log = $bulkController->getLog($logFile);
+			 $logData = $bulkController->getLogData($logFile);
+
+			 $logType = $logData['type']; // custom or media.
+
+			 $json->$type->logType = $logType;
+
 
 			 if (! $log )
 			 {
