@@ -3829,34 +3829,41 @@ Log::addDebug('GetQuotaInformation Result ', $dataArray);
     }
 
     static public function matchExcludePattern($target, $pattern) {
-        if(strlen($pattern) == 0)  // can happen on faulty input in settings.
+            if(strlen($pattern) == 0)  // can happen on faulty input in settings.
           return false;
 
         $first = substr($pattern, 0,1);
 
+				$matchRegEx = false;
+
+				// Check for RegEx.
+				// if pattern is not proper regex, just try strpos. It can be a path like /sites/example.com/etc
         if ($first == '/')
         {
           if (@preg_match($pattern, false) !== false)
           {
-            $m = preg_match($pattern,  $target);
-            if ($m !== false && $m > 0) // valid regex, more hits than zero
-            {
-              return true;
-            }
-          }
-        }
-        else
-        {
+						$matchRegEx = true;
+					}
+				}
+
+				if (! $matchRegEx)
+				{
           if (strpos($target, $pattern) !== false)
           {
             return true;
           }
-        }
+				}
+				else
+				{
+						$m = preg_match($pattern,  $target);
+            if ($m !== false && $m > 0) // valid regex, more hits than zero
+            {
+              return true;
+            }
+				}
+
         return false;
 
-        /*return (
-            $pattern[0] == '/' && @preg_match($pattern, false) !== false && preg_match($pattern,  $target) //search as regex pattern if starts with a / and regex is valid
-            || $pattern[0] != '/' && strpos($target, $pattern) !== false ); //search as a substring if not */
     }
 
     //return an array with URL(s) and PATH(s) for this file
