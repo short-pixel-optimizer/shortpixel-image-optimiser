@@ -261,6 +261,9 @@
   display: inline-block;
   min-width: 200px;
 }
+.shortpixel-modal-active .debug-modal.debugInfo ul li img {
+  max-height: 150px;
+}
 .shortpixel-modal-active .debug-modal.debugInfo .green {
   color: green;
 }

@@ -56,8 +56,12 @@
 							 display: inline-block;
 							 min-width: 200px;
 						}
+						img {
+							max-height: 150px;
+						}
 				 }
 			}
+
       pre
       {
       //  font-size: 12px;
