@@ -5,16 +5,9 @@
     a.debugModal
     {
        margin: 20px 0;
-       display: inline-block;  
+       display: inline-block;
     }
-    .debugInfo // Modal open
-    {
-      pre
-      {
-        font-size: 11px;
-    //    overflow: hidden;
-      }
-    }
+
     .sp-column-stats
     {
       position: relative;
@@ -51,3 +44,25 @@
     }
 
 } // view-edit-media
+
+	// Loads on the bottom body part, load strict
+    .shortpixel-modal-active .debug-modal.debugInfo // Modal open
+    {
+			ul
+			{
+				 li {
+					  strong
+						{
+							 display: inline-block;
+							 min-width: 200px;
+						}
+				 }
+			}
+      pre
+      {
+      //  font-size: 12px;
+    //    overflow: hidden;
+      }
+			.green { color: green; }
+			.red { color: red; }
+    }

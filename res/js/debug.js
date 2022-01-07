@@ -91,7 +91,7 @@ jQuery(document).ready(function(jq) {
 
 
 		$('.debugModal_overlay').show();
-		$('body').addClass('max-modal-active');
+		$('body').addClass('shortpixel-modal-active');
 
 		$(document).off('keydown', $.proxy(this.keyPressHandler, this));
 		$(document).on('keydown', $.proxy(this.keyPressHandler, this));
@@ -128,7 +128,7 @@ jQuery(document).ready(function(jq) {
 		this.currentModal.remove();
 		this.currentModal = null;
 		$('.debugModal_overlay').remove();
-		$('body').removeClass('max-modal-active');
+		$('body').removeClass('shortpixel-modal-active');
 		$(document).off('keydown', $.proxy(this.keyPressHandler, this));
 
 	}

@@ -232,9 +232,6 @@
   margin: 20px 0;
   display: inline-block;
 }
-.view-edit-media .debugInfo pre {
-  font-size: 11px;
-}
 .view-edit-media .sp-column-stats {
   position: relative;
 }
@@ -258,6 +255,17 @@
   padding: 6px 15px;
   height: auto;
   float: none;
+}
+
+.shortpixel-modal-active .debug-modal.debugInfo ul li strong {
+  display: inline-block;
+  min-width: 200px;
+}
+.shortpixel-modal-active .debug-modal.debugInfo .green {
+  color: green;
+}
+.shortpixel-modal-active .debug-modal.debugInfo .red {
+  color: red;
 }
 
 .shortpixel-other-media .sp-column-info .sp-column-actions {

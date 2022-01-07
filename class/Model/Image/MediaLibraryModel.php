@@ -456,6 +456,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				{
 						// Save the exact same data under another post.
 					  $this->id = $duplicate_id;
+						$this->dropFromQueue();
 						$this->saveMeta();
 
 				}
@@ -1609,9 +1610,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   */
   protected function addUnlisted()
   {
-
-
-
        // Setting must be active.
        if (! \wpSPIO()->settings()->optimizeUnlisted )
          return;
@@ -1637,62 +1635,74 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         if ($this->isScaled())
            $currentFiles[] = $this->getOriginalFile()->getFileName();
 
-        $base = ($this->isScaled() ) ? $this->getOriginalFile()->getFileBase() : $this->getFileBase();
-        $ext = $this->getExtension();
-        $path = (string) $this->getFileDir();
+				$processFiles = array();
+				$unlisted = array();
 
-        $pattern = '/^' . preg_quote($base, '/') . '-\d+x\d+\.'. $ext .'/';
+				$processFiles[] = $this;
+				if ($this->isScaled())
+					$processFiles[] = $this->getOriginalFile();
 
-        $thumbs = array();
+  			$all_files = scandir($this->getFileDir(),  SCANDIR_SORT_NONE);
+				$all_files = array_diff($all_files, $currentFiles);
 
-//echo "<PRE> ADDUNLISTED "; echo $pattern; print_r($currentFiles);
 
-        $all_files = scandir($path,  SCANDIR_SORT_NONE);
-        $result_files = array_values(preg_grep($pattern, $all_files));
-//print_r($all_files);
-        $unlisted = array_diff($result_files, $currentFiles);
-				//print_r($unlisted);
-//Secho  "</PRE>";
-        if( defined('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES') ){
-            $suffixes = explode(',', SHORTPIXEL_CUSTOM_THUMB_SUFFIXES);
-            if (is_array($suffixes))
-                {
-                  foreach ($suffixes as $suffix){
+				foreach($processFiles as $mediaItem)
+				{
 
-                      $pattern = '/^' . preg_quote($base, '/') . '-\d+x\d+'. $suffix . '\.'. $ext .'/';
-                      $thumbs = array_values(preg_grep($pattern, $all_files));
-                      if (count($thumbs) > 0)
-                        $unlisted = array_merge($unlisted, $thumbs);
-                      //array_merge($thumbs, self::getFilesByPattern($dirPath, $pattern));
-                      /*foreach($thumbsCandidates as $th) {
-                          if(preg_match($pattern, $th)) {
-                              $thumbs[]= $th;
-                          }
-                      } */
-                  }
-                }
-            }
-            if( defined('SHORTPIXEL_CUSTOM_THUMB_INFIXES') ){
-                $infixes = explode(',', SHORTPIXEL_CUSTOM_THUMB_INFIXES);
-                if (is_array($infixes))
-                {
-                  foreach ($infixes as $infix){
-                      //$thumbsCandidates = @glob($base . $infix  . "-*." . $ext);
-                      $pattern = '/^' . preg_quote($base, '/') . $infix . '-\d+x\d+' . '\.'. $ext .'/';
-                      $thumbs = array_values(preg_grep($pattern, $all_files));
-                      if (count($thumbs) > 0)
-                        $unlisted = array_merge($unlisted, $thumbs);
-                    //  $thumbs = array_merge($thumbs, self::getFilesByPattern($dirPath, $pattern));
+	        $base = $mediaItem->getFileBase();
+	        $ext = $mediaItem->getExtension();
+	        $path = (string) $mediaItem->getFileDir();
 
-                      /*foreach($thumbsCandidates as $th) {
-                          if(preg_match($pattern, $th)) {
-                              $thumbs[]= $th;
-                          }
-                      } */
-                  }
-                }
-            }
-      //  }
+	        $pattern = '/^' . preg_quote($base, '/') . '-\d+x\d+\.'. $ext .'/';
+
+	        $thumbs = array();
+
+	        $result_files = array_values(preg_grep($pattern, $all_files));
+
+	       // $add_unlisted = array_diff($result_files, $currentFiles);
+					$unlisted = array_merge($unlisted, $result_files);
+
+	        if( defined('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES') ){
+	            $suffixes = explode(',', SHORTPIXEL_CUSTOM_THUMB_SUFFIXES);
+	            if (is_array($suffixes))
+	                {
+	                  foreach ($suffixes as $suffix){
+
+	                      $pattern = '/^' . preg_quote($base, '/') . '-\d+x\d+'. $suffix . '\.'. $ext .'/';
+	                      $thumbs = array_values(preg_grep($pattern, $all_files));
+	                      if (count($thumbs) > 0)
+	                        $unlisted = array_merge($unlisted, $thumbs);
+	                      //array_merge($thumbs, self::getFilesByPattern($dirPath, $pattern));
+	                      /*foreach($thumbsCandidates as $th) {
+	                          if(preg_match($pattern, $th)) {
+	                              $thumbs[]= $th;
+	                          }
+	                      } */
+	                  }
+	                }
+	            }
+	            if( defined('SHORTPIXEL_CUSTOM_THUMB_INFIXES') ){
+	                $infixes = explode(',', SHORTPIXEL_CUSTOM_THUMB_INFIXES);
+	                if (is_array($infixes))
+	                {
+	                  foreach ($infixes as $infix){
+	                      //$thumbsCandidates = @glob($base . $infix  . "-*." . $ext);
+	                      $pattern = '/^' . preg_quote($base, '/') . $infix . '-\d+x\d+' . '\.'. $ext .'/';
+	                      $thumbs = array_values(preg_grep($pattern, $all_files));
+	                      if (count($thumbs) > 0)
+	                        $unlisted = array_merge($unlisted, $thumbs);
+	                    //  $thumbs = array_merge($thumbs, self::getFilesByPattern($dirPath, $pattern));
+
+	                      /*foreach($thumbsCandidates as $th) {
+	                          if(preg_match($pattern, $th)) {
+	                              $thumbs[]= $th;
+	                          }
+	                      } */
+	                  }
+	                }
+	            }
+
+			}  // processFiles loop
 
       // Quality check on the thumbs. Must exist,  must be same extension.
       $added = false;

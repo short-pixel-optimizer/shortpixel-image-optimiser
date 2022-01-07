@@ -138,26 +138,65 @@ class EditMediaViewController extends \ShortPixel\ViewController
           $meta = \wp_get_attachment_metadata($this->post_id);
 
           $fs = \wpSPIO()->filesystem();
-          $imageObj = $fs->getMediaImage($this->post_id);
+          //$imageObj = $fs->getMediaImage($this->post_id);
           /*$imageObj = new ImageModel();
           $imageObj->setByPostID($this->post_id); */
         //  $imageFile = //$imageObj->getFile();
+					$imageObj = $this->imageModel;
 
-          $sizes = isset($this->data['sizes']) ? $this->data['sizes'] : array();
+					if ($imageObj->isProcessable())
+					{
+						 $urls = $imageObj->getOptimizeUrls();
+
+						 if ($imageObj->isProcessableFileType('webp'))
+						 {
+							$diff = array_diff($imageObj->getOptimizeFileType('webp'), $urls); // diff from mains.
+							foreach($diff as $i => $v)
+							{
+								$diff[$i] = " [webp] " . $v;
+							}
+						 	$urls = array_merge($urls, $diff);
+						 }
+						 if ($imageObj->isProcessableFileType('avif'))
+						 {
+						 	$diff = array_diff($imageObj->getOptimizeFileType('avif'), $urls); // diff from mains.
+							foreach($diff as $i => $v)
+							{
+								$diff[$i] = " [avif] " . $v;
+							}
+						 	$urls = array_merge($urls, $diff);
+						 }
+					}
+
+					$thumbnails = $imageObj->get('thumbnails');
+					$processable = ($imageObj->isProcessable()) ? '<span class="green">Yes</span>' : '<span class="red">No</span> (' . $imageObj->getReason('processable') . ')';
+					$restorable = ($imageObj->isRestorable()) ? '<span class="green">Yes</span>' : '<span class="red">No</span> (' . $imageObj->getReason('restorable') . ')';
+        //  $sizes = isset($this->data['sizes']) ? $this->data['sizes'] : array();
 
           //$debugMeta = $imageObj->debugGetImageMeta();
 
           $debugInfo = array();
-          $debugInfo[] = array(__('URL', 'shortpixel_image_optiser'), wp_get_attachment_url($this->post_id));
-          $debugInfo[] = array(__('File'), get_attached_file($this->post_id));
-          $debugInfo[] = array(__('Size and Mime'), $imageObj->get('width') . 'x' . $imageObj->get('height'). '(' . $imageObj->get('mime') . ')');
-          $debugInfo[] = array(__('Status'), $this->imageModel->getMeta('status')  );
+          $debugInfo[] = array(__('URL (get attachment URL)', 'shortpixel_image_optiser'), wp_get_attachment_url($this->post_id));
+          $debugInfo[] = array(__('File (get attached)'), get_attached_file($this->post_id));
+          $debugInfo[] = array(__('Size and Mime (ImageObj)'), $imageObj->get('width') . 'x' . $imageObj->get('height'). '(' . $imageObj->get('mime') . ')');
+          $debugInfo[] = array(__('Status (Shortpixel)'), $imageObj->getMeta('status') . ' '   );
+
+					$debugInfo[] = array(__('Processable'), $processable);
+					$debugInfo[] = array(__('Restorable'), $restorable);
 
           $debugInfo[] = array(__('WPML Duplicates'), json_encode($imageObj->getWPMLDuplicates()) );
-          $debugInfo['imagemetadata'] = array(__('ImageModel Metadata'), $imageObj);
 
-          $debugInfo['shortpixeldata'] = array(__('Data'), $this->data);
-          $debugInfo['wpmetadata'] = array(__('WP Get Attachment Metadata'), $meta );
+					if (isset($urls))
+					{
+						 $debugInfo[] = array(__('To Optimize URLS'),  $urls);
+					}
+
+          $debugInfo['imagemetadata'] = array(__('ImageModel Metadata (ShortPixel)'), $imageObj);
+					$debugInfo[] = array('', '<hr>');
+
+          //$debugInfo['shortpixeldata'] = array(__('Data'), $this->data);
+          $debugInfo['wpmetadata'] = array(__('WordPress Get Attachment Metadata'), $meta );
+					$debugInfo[] = array('', '<hr>');
 
           if ($imageObj->hasBackup())
           {
@@ -166,17 +205,20 @@ class EditMediaViewController extends \ShortPixel\ViewController
             $debugInfo[] = array(__('Backup File'), (string) $backupFile . '(' . \ShortPixelTools::formatBytes($backupFile->getFileSize()) . ')' );
           }
           else {
-            $debugInfo[] =  array(__("No Backup Available"), '');
+            $debugInfo[] =  array(__("No Main File Backup Available"), '');
           }
 
           if ($or = $imageObj->hasOriginal())
           {
              $original = $imageObj->getOriginalFile();
-             $debugInfo[] = array(__('Original File'), $original->getFullPath()  . '(' . \ShortPixelTools::formatBytes($original->getFileSize()) . ')');
+             $debugInfo[] = array(__('Has Original File: '), $original->getFullPath()  . '(' . \ShortPixelTools::formatBytes($original->getFileSize()) . ')');
              $orbackup = $original->getBackupFile();
              if ($orbackup)
-              $debugInfo[] = array(__('Backup Original Image'), $orbackup->getFullPath() . '(' . \ShortPixelTools::formatBytes($orbackup->getFileSize()) . ')');
+              $debugInfo[] = array(__('Has Backup Original Image'), $orbackup->getFullPath() . '(' . \ShortPixelTools::formatBytes($orbackup->getFileSize()) . ')');
+						$debugInfo[] = array('', '<hr>');
+
           }
+
 
           if (! isset($meta['sizes']) )
           {
@@ -184,10 +226,12 @@ class EditMediaViewController extends \ShortPixel\ViewController
           }
           else
           {
-            foreach($meta['sizes'] as $size => $data)
+            foreach($thumbnails as $thumbObj)
             {
+							$size = $thumbObj->get('size');
+
               $display_size = ucfirst(str_replace("_", " ", $size));
-              $thumbObj = $imageObj->getThumbnail($size);
+              //$thumbObj = $imageObj->getThumbnail($size);
 
               if ($thumbObj === false)
               {
@@ -197,14 +241,23 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
               $url = $thumbObj->getURL(); //$fs->pathToURL($thumbObj); //wp_get_attachment_image_src($this->post_id, $size);
               $filename = $thumbObj->getFullPath();
+							$backup = $thumbObj->hasBackup() ? $thumbObj->getBackupFile()->getFullPath() : 'n/a';
             //  $debugMeta =// print_r($thumbObj->debugGetImageMeta(), true);
               $width = $thumbObj->get('width');
               $height = $thumbObj->get('height');
 
-              $debugInfo[] = array('', "<div class='$size previewwrapper'><img src='" . $url . "'><p class='label'>$url ( $display_size - $width X $height ) <br> $filename</p><p>&nbsp;</p></div>");
+					$processable = ($imageObj->isProcessable()) ? '<span class="green">Yes</span>' : '<span class="red">No</span> (' . $imageObj->getReason('processable') . ')';
+					$restorable = ($imageObj->isRestorable()) ? '<span class="green">Yes</span>' : '<span class="red">No</span> (' . 		$imageObj->getReason('restorable') . ')';
+
+              $debugInfo[] = array('', "<div class='$size previewwrapper'><img src='" . $url . "'><p class='label'>
+							<b>URL:</b> $url ( $display_size - $width X $height ) <br><b>FileName:</b>  $filename <br> <b>Backup:</b> $backup </p>
+							<p><b>Processable: </b> $processable <br> <b>Restorable:</b>  $restorable</p>
+							<hr></div>");
             }
           }
           return $debugInfo;
       }
+
+
 
 } // controller .
