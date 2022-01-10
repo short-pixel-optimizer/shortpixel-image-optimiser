@@ -41,9 +41,9 @@ var ShortPixel = function() {
 
 				if (jQuery('#shortpixel-form-request-key').length > 0)
 				{
-					  jQuery('#pluginemail').on('change, keyup', $.proxy(this.updateSignupEmail, this));
-						jQuery('#request_key').on('mouseenter', $.proxy(this.updateSignupEmail, this));
-						jQuery('#request_key').on('click', $.proxy(this.newApiKey, this));
+					  jQuery('#pluginemail').on('change, keyup', jQuery.proxy(this.updateSignupEmail, this));
+						jQuery('#request_key').on('mouseenter', jQuery.proxy(this.updateSignupEmail, this));
+						jQuery('#request_key').on('click', jQuery.proxy(this.newApiKey, this));
 				}
 
         if( ShortPixel.MEDIA_ALERT == 'todo' && jQuery('div.media-frame.mode-grid').length > 0) {
@@ -154,7 +154,10 @@ var ShortPixel = function() {
         if (typeof document.wp_shortpixel_options !== 'undefined')
           rad = document.wp_shortpixel_options.compressionType;
 
-				var savedCompression = document.getElementById('compressionType-database').value;
+				if (document.getElementById('compressionType-database') !== null)
+					var savedCompression = document.getElementById('compressionType-database').value;
+				else
+					var savedCompression = null;
 
         for(var i = 0, prev = null; i < rad.length; i++) {
             rad[i].onclick = function() {

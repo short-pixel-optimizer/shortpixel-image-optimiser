@@ -121,6 +121,7 @@ class AdminNoticesController extends \ShortPixel\Controller
       }
 
 			$access = AccessModel::getInstance();
+			$screen = get_current_screen();
 
       $noticeControl = Notices::getInstance();
       $noticeControl->loadIcons(array(
@@ -140,7 +141,12 @@ class AdminNoticesController extends \ShortPixel\Controller
 
           foreach($notices as $notice)
           {
-						if ($access->noticeIsAllowed($notice))
+							// Ugly exception for listView Notice. If happens more, notices should extended to include screen check.
+						if ($notice->getID() == AdminNoticesController::MSG_LISTVIEW_ACTIVE && \wpSPIO()->env()->screen_id !== 'upload' )
+						{
+							 continue;
+						}
+						elseif ($access->noticeIsAllowed($notice))
 						{
             		echo $notice->getForDisplay();
 						}
@@ -458,7 +464,9 @@ class AdminNoticesController extends \ShortPixel\Controller
 	 {
 	   	$screen_id = \wpSPIO()->env()->screen_id;
 			if ($screen_id !== 'upload')
+			{
 				return;
+			}
 
      $noticeController = Notices::getInstance();
 
@@ -467,7 +475,12 @@ class AdminNoticesController extends \ShortPixel\Controller
             $currentUserID = $current_user->ID;
             $viewMode = get_user_meta($currentUserID, "wp_media_library_mode", true);
 
-						if ($viewMode !== "list")
+						if ($viewMode === "" || strlen($viewMode) == 0)
+						{
+								// If nothing is set, set it for them.
+								update_user_meta($currentUserID, 'wp_media_library_mode', 'list');
+						}
+						elseif ($viewMode !== "list")
 						{
 							  $message = __('You can see Shortpixel Image Optimiser actions and data only via the list view. Switch to the list view to use the plugin via the media library', 'shortpixel-image-optimiser');
 								$new_notice = Notices::addNormal($message);

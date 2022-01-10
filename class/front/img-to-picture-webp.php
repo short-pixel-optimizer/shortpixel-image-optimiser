@@ -165,7 +165,7 @@ class ShortPixelImgToPictureWebp
             Log::addInfo('SPDBG baseurl doesn\'t match ' . $srcInfo['value'], array($imageBase) );
             return $match[0]; // . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG baseurl doesn\'t match ' . $src . '  -->' : '');
         }
-        Log::addDebug('ImageBase ' . $imageBase);
+      //  Log::addDebug('ImageBase ' . $imageBase);
 
         //some attributes should not be moved from <img>
         // @todo Move these to unset on (imgpicture) and put via create_attributes back
