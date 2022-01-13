@@ -289,7 +289,7 @@ Log::addDebug('Item in handleResponse', $item);
     }
 
     $neededURLS = $item->urls;
-		// Return filename in response with item to make it more descriptive. 
+		// Return filename in response with item to make it more descriptive.
 		$filename = (property_exists($item, 'result') && property_exists($item->result, 'filename')) ? $item->result->filename : '';
 
     if ( isset($APIresponse[0]) ) //API returned image details
@@ -299,7 +299,7 @@ Log::addDebug('Item in handleResponse', $item);
             if ( isset($imageObject->Status) && ( $imageObject->Status->Code == 0 || $imageObject->Status->Code == 1 ) && in_array($imageObject->OriginalURL, $neededURLS)) {
 
 
-                return $this->returnOK(self::STATUS_UNCHANGED, sprintf(__('Item %s is waiting for remote results', 'shortpixel-image-optimiser'), $filename);
+                return $this->returnOK(self::STATUS_UNCHANGED, sprintf(__('Item %s is waiting for remote results', 'shortpixel-image-optimiser'), $filename));
             }
         }
 
