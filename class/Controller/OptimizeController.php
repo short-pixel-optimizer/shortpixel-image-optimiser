@@ -46,11 +46,16 @@ class OptimizeController
             $queueName = ($this->isBulk == true) ? 'media' : 'mediaSingle';
             $queue = new MediaLibraryQueue($queueName);
         }
-        if ($type == 'custom')
+        elseif ($type == 'custom')
         {
           $queueName = ($this->isBulk == true) ? 'custom' : 'customSingle';
           $queue = new CustomQueue($queueName);
         }
+				else
+				{
+					Log::addInfo("Get Queue $type seems not a queue");
+					return false;
+				}
 
         $options = $queue->getCustomDataItem('queueOptions');
         if ($options !== false)
@@ -559,9 +564,16 @@ class OptimizeController
            {
               Log::addDebug('Item with ID' . $imageItem->item_id . ' still has processables (with dump)');
  						  $api = $this->getAPI();
-							$item = new \stdClass;
-							$item->urls = $imageItem->getOptimizeUrls();
-							$api->dumpMediaItem($item);
+							$newItem = new \stdClass;
+							$newItem->urls = $imageItem->getOptimizeUrls();
+
+							$webps = ($imageItem->isProcessableFileType('webp')) ? $imageItem->getOptimizeFileType('webp') : array();
+							$avifs = ($imageItem->isProcessableFileType('avif')) ? $imageItem->getOptimizeFileType('avif') : array();
+
+							// Add to URLs also the possiblity of images with only webp / avif needs. Otherwise URLs would end up emtpy.
+							$newItem->urls = array_merge($newItem->urls, $webps, $avifs);
+
+							$api->dumpMediaItem($newItem);
               $this->addItemToQueue($imageItem); // requeue for further processing.
            }
            else

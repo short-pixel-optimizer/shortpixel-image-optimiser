@@ -31,6 +31,7 @@ class SpioSingle extends SpioCommandBase
    * ## EXAMPLES
    *
    *   wp spio restore 1
+	 *   wp spio restore 1 --type=custom
    *
    * @when after_wp_load
    */
@@ -49,7 +50,6 @@ class SpioSingle extends SpioCommandBase
 				 \WP_CLI::Error(__('Item ID need to be a number', 'shortpixel-image-optimiser'));
 				 return;
 			}
-
 
       $id = intval($args[0]);
 			$type = $assoc_args['type'];
@@ -79,8 +79,9 @@ class SpioSingle extends SpioCommandBase
 			{
         \WP_CLI::Error(sprintf(__("Restored Item: %s", 'shortpixel_image_optimiser'), $message) );
 			}
-
   }
+
+
 
 
 } // CLASS

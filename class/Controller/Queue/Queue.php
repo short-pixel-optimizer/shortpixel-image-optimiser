@@ -42,6 +42,7 @@ abstract class Queue
     {
         $this->resetQueue();
         $this->q->setStatus('preparing', true, false);
+				$this->q->setStatus('finished', false, false);
         $this->q->setStatus('bulk_running', true, true);
 
         $cache = new CacheController();

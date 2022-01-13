@@ -230,12 +230,16 @@ class ApiController
     return (array)$data;
   }
 
+	/**
+	*
+	**/
   private function handleResponse($item, $response)
   {
 
     $APIresponse = $this->parseResponse($response);//get the actual response from API, its an array
     $settings = \wpSPIO()->settings();
 
+Log::addDebug('Item in handleResponse', $item);
 
 		// Don't know if it's this or that.
 		$status = false;
@@ -285,13 +289,17 @@ class ApiController
     }
 
     $neededURLS = $item->urls;
+		// Return filename in response with item to make it more descriptive. 
+		$filename = (property_exists($item, 'result') && property_exists($item->result, 'filename')) ? $item->result->filename : '';
 
     if ( isset($APIresponse[0]) ) //API returned image details
     {
         foreach ( $APIresponse as $imageObject ) {//this part makes sure that all the sizes were processed and ready to be downloaded.
           // If status is still waiting. Check if the return URL is one we sent.
             if ( isset($imageObject->Status) && ( $imageObject->Status->Code == 0 || $imageObject->Status->Code == 1 ) && in_array($imageObject->OriginalURL, $neededURLS)) {
-                return $this->returnOK(self::STATUS_UNCHANGED, __('Item is waiting for optimisation', 'shortpixel-image-optimiser'));
+
+
+                return $this->returnOK(self::STATUS_UNCHANGED, sprintf(__('Item %s is waiting for remote results', 'shortpixel-image-optimiser'), $filename);
             }
         }
 
