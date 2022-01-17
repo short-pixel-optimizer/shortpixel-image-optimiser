@@ -2967,6 +2967,10 @@ class WPShortPixel {
 
         $stats = $this->countAllIfNeeded($this->_settings->currentStats, 300);
 
+				$webpActive = ($this->_settings->createWebp) ? true : false;
+				$avifActive = ($this->_settings->createAvif) ? true : false;
+
+
         //$proposal = wp_remote_post($this->_settings->httpProto . "://shortpixel.com/propose-upgrade-frag", array(
         //echo("<div style='color: #f50a0a; position: relative; top: -59px; right: -255px; height: 0px; font-weight: bold; font-size: 1.2em;'>atentie de trecut pe live propose-upgrade</div>");
         $proposal = wp_remote_post("https://shortpixel.com/propose-upgrade-frag", array(
@@ -2995,6 +2999,8 @@ class WPShortPixel {
                 'm4' => $stats['totalM4'],
                 'filesTodo' => $stats['totalFiles'] - $stats['totalProcessedFiles'],
                 'estimated' => $this->_settings->optimizeUnlisted || $this->_settings->optimizeRetina ? 'true' : 'false',
+								'webp' => $webpActive,
+								'avif' => $avifActive,
                 /* */
                 'iconsUrl' => base64_encode(wpSPIO()->plugin_url('res/img'))
             ))),
