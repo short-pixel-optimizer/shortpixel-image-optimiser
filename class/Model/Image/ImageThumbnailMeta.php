@@ -9,16 +9,16 @@ class ImageThumbnailMeta
   public $originalSize;
 //  public $improvement;
 
-  public $did_keepExif;
-  public $did_cmyk2rgb;
-  public $did_png2jpg; // Was this replaced?
+  public $did_keepExif  = false;
+  public $did_cmyk2rg = false;
+  public $did_png2jpg = false; // Was this replaced?
+	public $tried_png2jpg = false; // Tried it, might not have working.
 
   public $resize;
   public $resizeWidth;
   public $resizeHeight;
   public $originalWidth;
   public $originalHeight;
-
 
   public $tsAdded;
   public $tsOptimized;
@@ -27,17 +27,9 @@ class ImageThumbnailMeta
 
   public $file; // **Only for unlisted images. This defines an unlisted image */
 
-
   // Only for customImageModel! Exception to prevent having to create a whole class. Second var here, warrants a subclass.
   public $customImprovement;
 
-//  public $has_backup;
-
-/* WIDTH AND HEIGHT ARE IN IMAGEMODEL!
-  public $width;
-  public $height;
-*/
-  //public $name;
 
   public function __construct()
   {

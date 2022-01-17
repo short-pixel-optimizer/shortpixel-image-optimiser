@@ -672,12 +672,8 @@ class AdminNoticesController extends \ShortPixel\Controller
         $apiKeyController = ApiKeyController::getInstance();
         $settings = \wpSPIO()->settings();
 
-				// Combo-bonus.
-				$multiplier = 1;
-				if ($settings->createWebp)
-				  $multiplier++;
-				if ($settings->createAvif)
-					 $multiplier++;
+				$webpActive = ($settings->createWebp) ? true : false;
+				$avifActive =  ($settings->createAvif) ? true : false;
 
         $args = array(
             'method' => 'POST',
@@ -689,12 +685,14 @@ class AdminNoticesController extends \ShortPixel\Controller
             'body' => array("params" => json_encode(array(
                 'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
                 'key' => $apiKeyController->forceGetApiKey(),
-                'm1' => $statsController->find('period', 'months', '1') * $multiplier,
-                'm2' => $statsController->find('period', 'months', '2') * $multiplier,
-                'm3' => $statsController->find('period', 'months', '3') * $multiplier,
-                'm4' => $statsController->find('period', 'months', '4') * $multiplier,
+                'm1' => $statsController->find('period', 'months', '1'),
+                'm2' => $statsController->find('period', 'months', '2'),
+                'm3' => $statsController->find('period', 'months', '3'),
+                'm4' => $statsController->find('period', 'months', '4'),
                 'filesTodo' => $statsController->totalImagesToOptimize(),
                 'estimated' => $settings->optimizeUnlisted || $settings->optimizeRetina ? 'true' : 'false',
+								'webp' => $webpActive,
+								'avif' => $avifActive, 
                 /* */
                 'iconsUrl' => base64_encode(wpSPIO()->plugin_url('res/img'))
               ))),

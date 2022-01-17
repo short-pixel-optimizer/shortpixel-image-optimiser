@@ -322,8 +322,8 @@ class OptimizeController
             if (property_exists($item, 'png2jpg'))
             {
               $bool = $this->convertPNG($item, $Q);
-              //if ($bool == true)
-              //  continue; // conversion done, item will be requeued with new urls.
+              if ($bool == true)
+                continue; // conversion done one way or another, item will be need requeuing, because new urls / flag.
             }
 
             $item = $this->sendToProcessing($item, $Q);
@@ -395,14 +395,25 @@ class OptimizeController
 			 }
 
       $bool = $imageObj->convertPNG();
-      if ($bool !== false) // It worked.
+
+			// Regardless if it worked or not, requeue the item otherwise it will keep trying to convert due to the flag.
+      $imageObj = $fs->getMediaImage($item->item_id);
+      $this->addItemToQueue($imageObj);
+
+			if ($bool !== false) // It worked.
       {
-        $imageObj = $fs->getMediaImage($item->item_id);
-        $this->addItemToQueue($imageObj);
+
       }
 			else
 			{
-				 return $this->handleApiResult($item, $mediaQ);
+
+					// Updated: Do nothing - if PNG not converted for some reason, process as normal.
+
+				 // Enter error state here.
+				 /*$item->result = new \stdClass;
+				 $item->result->is_done = true;
+				 $item->result->is_error = true;
+				 return $this->handleApiResult($item, $mediaQ); */
 			}
         //$imageObj = $result; // returns ImageObj.
 
@@ -433,7 +444,9 @@ class OptimizeController
         $item->result->is_error = true;
       }
       else
+			{
         $item->result->filename = $imageItem->getFileName();
+			}
 
       $result = $item->result;
 
@@ -567,17 +580,24 @@ class OptimizeController
 							$newItem = new \stdClass;
 							$newItem->urls = $imageItem->getOptimizeUrls();
 
-							$webps = ($imageItem->isProcessableFileType('webp')) ? $imageItem->getOptimizeFileType('webp') : array();
-							$avifs = ($imageItem->isProcessableFileType('avif')) ? $imageItem->getOptimizeFileType('avif') : array();
+							//$webps = ($imageItem->isProcessableFileType('webp')) ? $imageItem->getOptimizeFileType('webp') : array();
+							//$avifs = ($imageItem->isProcessableFileType('avif')) ? $imageItem->getOptimizeFileType('avif') : array();
 
 							// Add to URLs also the possiblity of images with only webp / avif needs. Otherwise URLs would end up emtpy.
-							$newItem->urls = array_merge($newItem->urls, $webps, $avifs);
+							//$newItem->urls = array_merge($newItem->urls, $webps, $avifs);
 
-							$api->dumpMediaItem($newItem);
+							// It can happen that only webp /avifs are left for this image. This can't influence the API cache, so dump is not needed. Just don't send empty URLs for processing here.
+							if (count($newItem->urls) > 0)
+							{
+								$api->dumpMediaItem($newItem);
+							}
+
               $this->addItemToQueue($imageItem); // requeue for further processing.
            }
            else
-            $q->itemDone($item);
+					 {
+            $q->itemDone($item); // Unbelievable but done.
+					 }
          }
       }
       else

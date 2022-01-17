@@ -239,7 +239,7 @@ class ApiController
     $APIresponse = $this->parseResponse($response);//get the actual response from API, its an array
     $settings = \wpSPIO()->settings();
 
-Log::addDebug('Item in handleResponse', $item);
+//Log::addTemp('Item in handleResponse', $item);
 
 		// Don't know if it's this or that.
 		$status = false;

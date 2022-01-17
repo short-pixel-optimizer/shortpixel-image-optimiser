@@ -60,7 +60,6 @@ class ShortPixelPng2Jpg {
 						 $this->replacer->setSourceMeta($imageObj->getWPMetaData());
 					}
 
-
           // Returns an Array with success or not, new file name.
           $result = $this->doConvertPng2Jpg($imageObj);
           if ($result !== false && is_array($result))
@@ -83,17 +82,25 @@ class ShortPixelPng2Jpg {
 							 }
                $file = $result['file'];
 
-             }
-          }
+							 // All is done, run the replacer.
+							 $result = $this->replacer->replace();
 
-				// All is done, run the replacer.
-				$result = $this->replacer->replace();
+							 if (is_array($result))
+							 {
+									 foreach($result as $error)
+									 	  Notices::addError($error);
+							 }
 
-				if (is_array($result))
-				{
-					 foreach($result as $error)
-					 	  Notices::addError($error);
-				}
+							  return true;
+             } // success
+
+
+          } // result.
+					else
+					{
+						return false;
+					}
+
 
         //  return $imageObj;
         return true;
@@ -237,19 +244,28 @@ class ShortPixelPng2Jpg {
             if($newSize > $origSize * 0.95 || $newSize == 0) {
                 //if the image is not 5% smaller, don't bother.
                 //if the size is 0, a conversion (or disk write) problem happened, go on with the PNG
-                if (! $uniqueFile->exists())
-                   Log::addWarn('PNG imagejpeg file not written!');
-
                 Log::addDebug("PNG2JPG converted image is larger ($newSize vs. $origSize), keeping the PNG");
                 //unlink($newPath);
-                $uniqueFile->delete();
-                return false;
+
+								$newFile = $fs->getFile($newPath);
+								$newFile->delete();
+
+								return false;
             }
 
-            $params['success'] = true;
-            $params['file'] = $uniqueFile;
+            if (! $uniqueFile->exists())
+						{
+               Log::addWarn('PNG imagejpeg file not written!');
+							 $params['success'] = false;
+						}
+						else
+						{
+            	$params['success'] = true;
+            	$params['file'] = $uniqueFile;
         //    $params['old_url'] = $url;
-            $params['target_url'] = $newUrl;
+            	$params['target_url'] = $newUrl;
+
+						}
 
 						Log::addDebug('PNG2jPG Converted', $params);
         }
@@ -362,8 +378,6 @@ class ShortPixelPng2Jpg {
 					$fsNewFile = $fs->getFile($imageObj->getFileDir() . $newFileName);
 					Log::addTemp('Png2Jpg : NewFileName', $newFileName);
 
-        //	$uniqueFile = $this->unique_file( $imageObj->getFileDir(), $fsNewFile);
-        //	$newPath =  $uniqueFile->getFullPath(); //(string) $fsFile->getFileDir() . $uniquepath;
         	$newUrl = str_replace($oldFileName, $fsNewFile->getFileName(), $url);
 					Log::addTemp('Target URL Png2Jpg: ' . $newUrl);
 

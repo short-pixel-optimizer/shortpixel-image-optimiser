@@ -767,11 +767,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
       $settings = \wpSPIO()->settings();
 
-      if ($this->getExtension() == 'png' && $settings->png2jpg)
+      if ($this->getExtension() == 'png' && $settings->png2jpg && $this->getMeta('tried_png2jpg') == false)
+			{
         $this->do_png2jpg = true;
+			}
 
       if($strict)
+			{
         return $bool;
+			}
 
       if (! $bool) // if parent is not processable, check if thumbnails are, can still have a work to do.
       {
@@ -871,15 +875,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           {
              $bool = true; // placeholder maybe
           }
-          elseif ($settings->backupImages == 1)
-					{
-             $this->restore(); // failed, remove backups.
-					}
+    //      else
       }
 
-      if ($bool)
+      if ($bool === true)
       {
         $this->setMeta('did_png2jpg', true);
+				$this->setMeta('tried_png2jpg', true);
 
         $mainfile = \wpSPIO()->filesystem()->getfile($this->getFileDir() . $this->getFileBase() . '.jpg');
 
@@ -899,6 +901,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         {
             $file = $fs->getFile($thumbObj->getFileDir() . $thumbObj->getFileBase() . '.jpg');
             $thumbObj->setMeta('did_png2jpg', true);
+
             if ($file->exists()) // if new exists, remove old
             {
                 $thumbObj->delete(); // remove the old file.
@@ -925,11 +928,44 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         // Update
         $this->saveMeta();
       }
+			else  // false didn't work. This can also be for legimate reasons as big jpg, or transparency.
+			{
+
+					if ($settings->backupImages == 1)
+					{
+						 Log::addTemp('Convert PNG failed, removing backups (MediaLibraryM)');
+
+						 // When failed, delete the backups. This can't be done via restore since image is not optimized.
+						 $backupFile = $this->getBackupFile();
+						 if ($backupFile->exists())
+						 {
+							 $backupFile->delete();
+						 }
+
+						 foreach($this->thumbnails as $thumbnail)
+						 {
+								$backupFile = $thumbnail->getBackupFile();
+								if ($backupFile->exists())
+									 $backupFile->delete();
+						 }
+						 if ($this->isScaled())
+						 {
+								$backupFile = $this->getOriginalFile()->getBackupFile();
+								if ($backupFile->exists())
+									 $backupFile->delete();
+
+						 }
+					}
+
+					// Prevent from retrying next time, since stuff will be requeued.
+					$this->setMeta('tried_png2jpg', true);
+					$this->saveMeta();
+			}
 
     //  $this->loadMeta();
 
       return $bool;
-  }
+  } // convertPNG
 
 	protected function isSizeExcluded()
   {

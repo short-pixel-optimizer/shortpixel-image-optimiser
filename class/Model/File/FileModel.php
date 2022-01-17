@@ -340,7 +340,13 @@ class FileModel extends \ShortPixel\Model
   public function delete()
   {
      if ($this->exists())
+		 {
       \wp_delete_file($this->fullpath);  // delete file hook via wp_delete_file
+		 }
+		 else
+		 {
+			  Log::addWarn('Trying to remove non-existing file: ' . $this->getFullPath());
+		 }
 
       if (! file_exists($this->fullpath))
       {
@@ -349,7 +355,7 @@ class FileModel extends \ShortPixel\Model
       }
       else {
         return false;
-        Log::addWarn('File seems not removed - ' . $this->fullpath);
+        Log::addWarn('File seems not removed - ' . $this->getFullPath());
       }
 
   }
