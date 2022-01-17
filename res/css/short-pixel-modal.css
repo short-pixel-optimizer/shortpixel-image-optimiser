@@ -27,6 +27,8 @@ div.shortpixel-modal {
 div.shortpixel-modal .sp-close-button, div.shortpixel-modal .sp-close-upgrade-button {
     float: right;
     margin-top: 0px;
+    padding-top: 6px;
+    padding-bottom: 10px;
     background: transparent;
     border: none;
     font-size: 22px;

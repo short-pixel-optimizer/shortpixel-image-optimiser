@@ -2,9 +2,9 @@
 Contributors: ShortPixel
 Tags: convert webp, optimize images, image optimization, resize, compressor, image, avif, compression, optimize, image optimiser, image compression, compress pdf, compress jpg, compress png, performance, photography, smush, scale, pictures
 Requires at least: 4.2.0
-Tested up to: 5.8
+Tested up to: 5.9
 Requires PHP: 5.6
-Stable tag: 4.22.6
+Stable tag: 4.22.7
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -17,7 +17,7 @@ Speed up your website & boost your SEO by compressing old & new images and PDFs.
 Increase your website's SEO ranking, number of visitors and ultimately your sales by optimising any image or PDF document on your website.
 ShortPixel is an easy to use, lightweight, install-and-forget-about-it <a href="https://shortpixel.com" target="_blank">image optimization</a> plugin that can compress all your past images and PDF documents with a single click. New images are automatically resized/rescaled and optimized on the fly, in the background. It's also compatible with any gallery, slider or ecommerce plugin.
 
-**Ready for a quick DEMO? Test our plugin <a href="https://wpsandbox.net/" target="_blank">here</a>.**
+**Ready for a quick DEMO? Test our plugin <a href="https://demo.tastewp.com/shortpixel-image-optimiser" target="_blank">here</a> and <a href="https://wpsandbox.net/" target="_blank">here</a>.**
 Or you can create a staging copy of your site using <a href="https://wp-staging.com/" target="_blank">WP Staging</a> and test it there.
 
 Short Pixel uses minimal resources and works well with any shared, cloud, VPS or dedicated web hosting. It can optimize any image you have on your website even the images that aren't listed in Media Library like those in galleries like <a href="https://wordpress.org/plugins/nextgen-gallery/" target="_blank">NextGEN</a>, <a href="https://wordpress.org/plugins/modula-best-grid-gallery/" target="_blank">Modula</a> or added directly via FTP!
@@ -313,6 +313,16 @@ Alternatively, you can use this filter in your theme's functions.php file:
 9. Check other optimized images status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 4.22.7 =
+Release date January 17th, 2022
+* Fix: switched all requests to the API to https to avoid insecure warnings;
+* Fix: certain excludes by path were seen as regex-only and weren't processed correctly;
+* Fix: the upgrade pop-up was not considering properly AVIF & WebP when proposing upgrade options;
+* Fix: in certain cases, on Custom Media, there were some PHP Notices related to backups;
+* Fix: AVIF files weren't removed when deleting an image from the Media Library;
+* Fix: when the option to optimize images added in the front-end was enabled, some unnecessary calls to the backend were made in some cases;
+* Language: 0 new string added, 0 updated, 0 fuzzed, and 0 obsoleted.
 
 = 4.22.6 =
 Release date October 11th, 2021

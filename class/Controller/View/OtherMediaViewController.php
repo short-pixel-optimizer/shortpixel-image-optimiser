@@ -94,11 +94,11 @@ class OtherMediaViewController extends \ShortPixel\Controller
 
             'retry' => array('action' => 'optimize', '_wpnonce' => $nonce, 'text' =>  __('Retry','shortpixel-image-optimiser'), 'class' => ''),
 
-            'redolossless' => array('action' => 'redo', '_wpnonce' => $nonce, 'type' => 'lossless', 'text' => __('Re-optimize lossless','shortpixel-image-optimiser')),
+            'redolossless' => array('action' => 'redo', '_wpnonce' => $nonce, 'type' => 'lossless', 'text' => __('Re-optimize lossless','shortpixel-image-optimiser'), 'class' => ''),
 
-            'redolossy' => array('action' => 'redo', '_wpnonce' => $nonce, 'type' => 'lossy', 'text' => __('Re-optimize lossy','shortpixel-image-optimiser')),
+            'redolossy' => array('action' => 'redo', '_wpnonce' => $nonce, 'type' => 'lossy', 'text' => __('Re-optimize lossy','shortpixel-image-optimiser'), 'class' => ''),
 
-            'redoglossy' => array('action' => 'redo', '_wpnonce' => $nonce, 'type' => 'glossy', 'text' => __('Re-optimize glossy','shortpixel-image-optimiser')),
+            'redoglossy' => array('action' => 'redo', '_wpnonce' => $nonce, 'type' => 'glossy', 'text' => __('Re-optimize glossy','shortpixel-image-optimiser'), 'class' => ''),
 
             'quota' => array('action' => 'check-quota', '_wpnonce' => $nonce, 'text' =>__('Check quota','shortpixel-image-optimiser'), 'class' => 'button button-smaller'),
             'extend-quota' => array('link' => '<a href="https://shortpixel.com/login/' . $keyControl->getKeyForDisplay() . '" target="_blank" class="button-primary button-smaller">' . __('Extend Quota','shortpixel-image-optimiser') . '</a>'),
@@ -110,7 +110,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
             'restore' => array('action' => 'restore', '_wpnonce' => $nonce, 'text' => __('Restore Backup','shortpixel-image-optimiser')),
 
             'compare' => array('link' => '<a href="javascript:ShortPixel.loadComparer(\'C-%%item_id%%\');">%%text%%</a>',
-                      'text' => __('Compare', 'shortpixel-image-optimiser')),
+                      'text' => __('Compare', 'shortpixel-image-optimiser'), 'class' => ''),
             'view' => array('link' => '<a href="%%item_url%%" target="_blank">%%text%%</a>', 'text' => __('View','shortpixel-image-optimiser')),
             /*'no-key' => array('link' => __('Invalid API Key', 'shortpixel-image-optimiser') . ' <a href="options-general.php?page=wp-shortpixel-settings" class="text-link">%%text%%</a>', 'text' => __('Check your Settings','shortpixel-image-optimiser')           ), */
 
@@ -514,10 +514,11 @@ class OtherMediaViewController extends \ShortPixel\Controller
          }
          elseif ( intval($item->status) == \ShortPixelMeta::FILE_STATUS_SUCCESS)
          {
-           $thisActions[] = $this->actions['compare'];
+
 
            if ($file->hasBackup())
            {
+						  $thisActions[] = $this->actions['compare'];
              switch($item->compression_type) {
                  case 2:
                      $actionsEnabled['redolossy'] = $actionsEnabled['redolossless'] = true;
@@ -538,7 +539,8 @@ class OtherMediaViewController extends \ShortPixel\Controller
            }
          }
 
-        
+
+
         if (count($thisActions) == 1)
           $thisActions[0]['class'] .= 'button-smaller button button-primary';
 

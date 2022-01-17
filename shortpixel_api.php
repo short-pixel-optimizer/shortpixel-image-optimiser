@@ -46,7 +46,7 @@ class ShortPixelAPI {
             'method' => 'POST',
             'timeout' => 15,
             'redirection' => 3,
-            'sslverify' => false,
+            'sslverify' => apply_filters('shortpixel/system/sslverify', true),
             'httpversion' => '1.0',
             'blocking' => $Blocking,
             'headers' => array(),

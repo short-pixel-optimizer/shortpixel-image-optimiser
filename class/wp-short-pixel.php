@@ -8,6 +8,8 @@ use ShortPixel\Model\ImageModel as ImageModel;
 
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
 
+use \Exception as Exception;
+
 class WPShortPixel {
 
     const BULK_EMPTY_QUEUE = 0;
@@ -2965,6 +2967,10 @@ class WPShortPixel {
 
         $stats = $this->countAllIfNeeded($this->_settings->currentStats, 300);
 
+				$webpActive = ($this->_settings->createWebp) ? true : false;
+				$avifActive = ($this->_settings->createAvif) ? true : false;
+
+
         //$proposal = wp_remote_post($this->_settings->httpProto . "://shortpixel.com/propose-upgrade-frag", array(
         //echo("<div style='color: #f50a0a; position: relative; top: -59px; right: -255px; height: 0px; font-weight: bold; font-size: 1.2em;'>atentie de trecut pe live propose-upgrade</div>");
         $proposal = wp_remote_post("https://shortpixel.com/propose-upgrade-frag", array(
@@ -2993,6 +2999,8 @@ class WPShortPixel {
                 'm4' => $stats['totalM4'],
                 'filesTodo' => $stats['totalFiles'] - $stats['totalProcessedFiles'],
                 'estimated' => $this->_settings->optimizeUnlisted || $this->_settings->optimizeRetina ? 'true' : 'false',
+								'webp' => $webpActive,
+								'avif' => $avifActive,
                 /* */
                 'iconsUrl' => base64_encode(wpSPIO()->plugin_url('res/img'))
             ))),
@@ -3225,8 +3233,8 @@ class WPShortPixel {
                 str_replace('https://', 'http://', $requestURL) :
                 str_replace('http://', 'https://', $requestURL);
             // add or remove the sslverify
-            if($this->_settings->httpProto === 'http') {
-                $args['sslverify'] = false;
+            if($this->_settings->httpProto === 'https') {
+                $args['sslverify'] = apply_filters('shortpixel/system/sslverify', true);
             } else {
                 unset($args['sslverify']);
             }
@@ -3680,11 +3688,14 @@ Log::addDebug('GetQuotaInformation Result ', $dataArray);
             $pos = strrpos($path, ".");
             $pathFile = $fs->getFile($path);
             if ($pos !== false) {
-                //$webpPath = substr($path, 0, $pos) . ".webp";
-                //echo($webpPath . "<br>");
+								// Webp single extension
                 $file = $fs->getFile(substr($path, 0, $pos) . ".webp");
                 $file->delete();
+								// Webp Retina @2x.
                 $file = $fs->getFile(substr($path, 0, $pos) . "@2x.webp");
+                $file->delete();
+								// Avif single extension
+                $file = $fs->getFile(substr($path, 0, $pos) . ".avif");
                 $file->delete();
 
                 // Check for double extension. Everything is going, so delete if it's not us anyhow.
@@ -3824,34 +3835,41 @@ Log::addDebug('GetQuotaInformation Result ', $dataArray);
     }
 
     static public function matchExcludePattern($target, $pattern) {
-        if(strlen($pattern) == 0)  // can happen on faulty input in settings.
+            if(strlen($pattern) == 0)  // can happen on faulty input in settings.
           return false;
 
         $first = substr($pattern, 0,1);
 
+				$matchRegEx = false;
+
+				// Check for RegEx.
+				// if pattern is not proper regex, just try strpos. It can be a path like /sites/example.com/etc
         if ($first == '/')
         {
           if (@preg_match($pattern, false) !== false)
           {
-            $m = preg_match($pattern,  $target);
-            if ($m !== false && $m > 0) // valid regex, more hits than zero
-            {
-              return true;
-            }
-          }
-        }
-        else
-        {
+						$matchRegEx = true;
+					}
+				}
+
+				if (! $matchRegEx)
+				{
           if (strpos($target, $pattern) !== false)
           {
             return true;
           }
-        }
+				}
+				else
+				{
+						$m = preg_match($pattern,  $target);
+            if ($m !== false && $m > 0) // valid regex, more hits than zero
+            {
+              return true;
+            }
+				}
+
         return false;
 
-        /*return (
-            $pattern[0] == '/' && @preg_match($pattern, false) !== false && preg_match($pattern,  $target) //search as regex pattern if starts with a / and regex is valid
-            || $pattern[0] != '/' && strpos($target, $pattern) !== false ); //search as a substring if not */
     }
 
     //return an array with URL(s) and PATH(s) for this file
