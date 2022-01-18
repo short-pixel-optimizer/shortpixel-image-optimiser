@@ -483,6 +483,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
            $improvements['main'] = array($perc, $size);
            $count++;
         }
+
         foreach($this->thumbnails as $thumbObj)
         {
            if (! $thumbObj->isOptimized())

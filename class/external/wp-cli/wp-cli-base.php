@@ -8,6 +8,9 @@ use ShortPixel\Controller\Queue\Queue as Queue;
 use ShortPixel\Controller\ApiController as ApiController;
 use ShortPixel\Controller\ResponseController as ResponseController;
 
+use ShortPixel\Helper\UiHelper as UiHelper;
+
+
 class WpCliController
 {
     public static $instance;
@@ -114,7 +117,7 @@ class SpioCommandBase
 				}
         elseif ($result->status == 0)
         {
-          \WP_CLI::Error(sprintf(__("Adding this item: %s", 'shortpixel_image_optimiser'), $result->result->message) );
+          \WP_CLI::Error(sprintf(__("while adding item: %s", 'shortpixel_image_optimiser'), $result->result->message) );
         }
 
 				$this->status($args, $assoc);
@@ -204,21 +207,26 @@ class SpioCommandBase
         $results = $controller->processQueue($queueTypes);
 
 //echo "RESULTS -> "; var_dump($results);
+//print_r($results);
+	 			$totalStats = (property_exists($results, 'total') && property_exists($results->total, 'stats')) ? $results->total->stats : null;
+
 				foreach($queueTypes as $qname)
 				{
 
-					$qresult = $results->$qname;
+					$qresult = $results->$qname; // qname really is type.
 
 	        if (! is_null($qresult->message))
 	        {
+
 						// Queue Empty not interesting for CLI.
-						if ($qresult->qstatus == Queue::RESULT_QUEUE_EMPTY)
+						if ($qresult->qstatus == Queue::RESULT_QUEUE_EMPTY || $qresult->qstatus == Queue::RESULT_EMPTY)
 						{
 
 						}
-						else
+						// Result / Results have more interesting information than how much was fetched here probably.
+						elseif (! property_exists($qresult, 'result') && ! property_exists($qresult, 'results'))
 						{
-	          	\WP_CLI::line( ucfirst($qname) . ' : ' . $qresult->message); // Single Response ( ie prepared, enqueued etc )
+	          	\WP_CLI::log( ucfirst($qname) . ' : ' . $qresult->message); // Single Response ( ie prepared, enqueued etc )
 						}
 	        }
 
@@ -229,34 +237,24 @@ class SpioCommandBase
 		           {
 
 		               $result = $item->result;
-									 // echo "RESULT"; var_dump($result);
-		            //  if ($item->result->status == ApiController::STATUS_ENQUEUED)
-								 		if (property_exists($result, 'apiStatus') && $result->apiStatus == ApiController::STATUS_SUCCESS)
-										{
-											\WP_CLI::line(\WP_CLI::colorize('%g' . $result->message . ' %n')); // testing
-										}
-										else
-										{
-												\WP_CLI::line( $result->message);
-										}
+									 $counts = $item->counts;
+									 $apiStatus = property_exists($result, 'apiStatus') ? $result->apiStatus : null;
 
-		                 if (property_exists($result, 'improvements'))
-		                 {
-		                    $improvements = $result->improvements;
-		                    if (isset($improvements['main']))
-		                       \WP_CLI::Success( sprintf(__('Image optimized by %d %% ', 'shortpixel-image-optimiser'), $improvements['main'][0]));
+									 $this->displayResult($result, $qname, $counts);
 
-		                    if (isset($improvements['thumbnails']))
-		                    {
-		                      foreach($improvements['thumbnails'] as $thumbName => $optData)
-		                      {
-		                         \WP_CLI::Success( sprintf(__('%s optimized by %d %% ', 'shortpixel-image-optimiser'), $thumbName, $optData[0]));
-		                      }
-		                    }
-		                 }
+									 // prevent spamming.
+									 if (! is_null($totalStats) && $apiStatus == ApiController::STATUS_SUCCESS )
+									 {
+									 	 $this->displayStatsLine('Total', $totalStats);
+									 }
 
 		           }
-	        }
+	        	}
+						if (property_exists($qresult, 'result') && is_object($qresult->result))
+						{
+								$this->displayResult($qresult->result);
+						}
+
 				}
 
 				// Combined Status. Implememented from shortpixel-processor.js
@@ -297,6 +295,84 @@ class SpioCommandBase
       return true;
     }
 
+		// Function for Showing JSON output of Optimizer regarding the process.
+		protected function displayResult($result, $type, $counts = null)
+		{
+				 // echo "RESULT"; var_dump($result);
+			//  if ($item->result->status == ApiController::STATUS_ENQUEUED)
+				$apiStatus = property_exists($result, 'apiStatus') ? $result->apiStatus : null;
+
+
+					if ($apiStatus == ApiController::STATUS_SUCCESS)
+					{
+							\WP_CLI::line(' ');
+							\WP_CLI::line('---------------------------------------');
+							\WP_CLI::line(' ');
+							\WP_CLI::line(' ' . $result->message); // testing
+
+							 if (property_exists($result, 'improvements'))
+							 {
+								  $outputTable = array();
+
+
+									$improvements = $result->improvements;
+
+
+									if (isset($improvements['main']))
+									{
+										 $outputTable[] = array('name' => 'main', 'improvement' => $improvements['main'][0] .'%');
+									}
+										// \WP_CLI::Success( sprintf(__('Image optimized by %d %% ', 'shortpixel-image-optimiser'), $improvements['main'][0]));
+
+									if (isset($improvements['thumbnails']))
+									{
+										foreach($improvements['thumbnails'] as $thumbName => $optData)
+										{
+											$outputTable[] = array('name' => $thumbName, 'improvement' => $optData[0] . '%');
+									//		 \WP_CLI::Success( sprintf(__('%s optimized by %d %% ', 'shortpixel-image-optimiser'), $thumbName, $optData[0]));
+										}
+									}
+
+									$outputTable[] = array('name' => ' ', 'improvement' => ' ');
+									$outputTable[] = array('name' => __('Total', 'shortpixel-image-optimiser'), 'improvement' => $improvements['totalpercentage']. '%');
+
+									\WP_CLI\Utils\format_items('table', $outputTable, array('name', 'improvement'));
+
+//echo 'cnt'; print_r($counts);
+									if (! is_null($counts))
+									{
+										 $baseMsg = sprintf(' This job, %d credit(s) were used. %d for images ', $counts->creditCount,
+										 $counts->baseCount);
+
+										 if ($counts->webpCount > 0)
+										 	 $baseMsg .= sprintf(', %d for webps ', $counts->webpCount);
+										if ( $counts->avifCount > 0)
+											 $baseMsg .= sprintf(', %d for avifs ', $counts->avifCount);
+
+										 \WP_CLI::line($baseMsg);
+									}
+									\WP_CLI::line(' ');
+									\WP_CLI::line('---------------------------------------');
+									\WP_CLI::line(' ');
+							 }
+
+				 } // success
+				 else
+				 {
+
+							\WP_CLI::line($result->message);
+				 }
+
+		}
+
+		protected function displayStatsLine($name, $stats)
+		{
+
+				$line = sprintf('Current Status for %s : (%d\%d) Done (%d%%), %d awaiting %d errors --', $name, $stats->done, $stats->total, $stats->percentage_done, ( $stats->in_process + $stats->in_queue ), $stats->fatal_errors);
+
+				\WP_CLI::line($line);
+		}
+
 	 /** Shows the current status of the queue
 	 *
    * [--show-debug]
@@ -309,7 +385,7 @@ class SpioCommandBase
    *
    *   wp spio status [--show-debug]
    *
-		*/
+	 */
 		public function status($args, $assoc)
 		{
 				$queue = $this->getQueueArgument($assoc);
@@ -318,36 +394,29 @@ class SpioCommandBase
 		//		$startupData = $optimizeController->getStartupData();
 				$startupData = $this->getStatus();
 
-				var_dump($startupData);
+			//	var_dump($startupData);
+
+				$items = array();
+				$fields = array('queue name', 'in queue', 'in process', 'fatal errors', 'done', 'total', 'preparing', 'running', 'finished');
 
 				foreach($queue as $queue_name)
 				{
 					  	//$Q = $optimizeController->getQueue($queue_name);
 							$stats = $startupData->$queue_name->stats;
 
-							if ($stats->is_finished)
-							{
-								 $line = sprintf("Queue %s is finished: %s done %s fatal errors", $queue_name, $stats->done,  $stats->fatal_errors);
-							}
-							elseif ($stats->is_running)
-							{
-								 $line = sprintf("Queue %s is running: %s in queue, %s in process,  %s done (%s percent)  %s fatal errors", $queue_name, $stats->in_queue, $stats->in_process, $stats->done, $stats->percentage_done,  $stats->fatal_errors);
-							}
-							elseif ($stats->is_preparing)
-							{
-								 $line = sprintf("Queue %s is preparing: %s in queue ", $queue_name, $stats->in_queue);
-							}
-							elseif ($stats->total > 0)
-							{
-								 $line = sprintf("Queue %s is waiting for action, %s waiting %s done %s errors", $queue_name,  $stats->in_queue, $stats->done, $stats->fatal_errors );
+							$item = array(
+									'queue name' => $queue_name,
+									'in queue' => $stats->in_queue,
+									'in process' => $stats->in_process,
+									'fatal errors' => $stats->fatal_errors,
+									'done' => $stats->done,
+									'total' => $stats->total,
+									'preparing' => ($stats->is_preparing) ? __('Yes', 'shortpixel-image-optimiser') : __('No', 'shortpixel-image-optimiser'),
+									'running' => ($stats->is_running) ? __('Yes', 'shortpixel-image-optimiser') : __('No', 'shortpixel-image-optimiser'),
+									'finished' => ($stats->is_finished) ? __('Yes', 'shortpixel-image-optimiser') : __('No', 'shortpixel-image-optimiser'),
+							);
 
-							}
-							else
-							{
-								 $line = sprintf("Queue %s is in unknown state, %s waiting %s done %s errors", $queue_name,  $stats->in_queue, $stats->done, $stats->fatal_errors );
-							}
-
-							\WP_CLI::log($line);
+							$items[] = $item;
 
 							if (isset($assoc['show-debug']))
 							{
@@ -355,6 +424,65 @@ class SpioCommandBase
 							}
 				}
 
+				\WP_CLI::Line("--- Current Status ---");
+				\WP_CLI\Utils\format_items('table', $items, $fields);
+		}
+
+	 /** Shows Key setting that are applied when running via WP_CLI.
+	 *
+	 *
+   * ---
+   *
+   * ## EXAMPLES
+   *
+   *   wp settings
+   *
+	 */
+		public function settings()
+		{
+			  $settings = \WPspio()->settings();
+
+				$items = array();
+				$fields = array('setting', 'value');
+
+				$items[] = array('setting' => 'Compression', 'value' => UiHelper::compressionTypeToText($settings->compressionType));
+				$items[] = array('setting' => 'Image Backup', 'value' => $this->textBoolean($settings->backupImages, true));
+				$items[] = array('setting' => 'Processed Thumbnails', 'value' => $this->textBoolean($settings->processThumbnails, true));
+				$items[] = array('setting' => ' ', 'value' => ' ');
+				$items[] = array('setting' => 'Creates Webp', 'value' => $this->textBoolean($settings->createWebp));
+				$items[] = array('setting' => 'Creates Avif', 'value' =>  $this->textBoolean($settings->createAvif));
+
+				\WP_CLI\Utils\format_items('table', $items, $fields);
+		}
+
+    //  Colored is buggy, so off for now -> https://github.com/wp-cli/php-cli-tools/issues/134
+		private function textBoolean($bool, $colored = false)
+		{
+			 	$colored = false;
+				$values = array('','');
+
+				if ($bool)
+				{
+					if ($colored)
+					{
+						$values = array('%g', '%n');
+					}
+					$res =  vsprintf(__('%sYes%s', 'shortpixel-image-optimiser'), $values);
+					if ($colored)
+						$res = \WP_CLI::colorize($res);
+				}
+				else
+				{
+					if ($colored)
+					{
+						$values = array('%r', '');
+					}
+					$res = vsprintf(__('%sNo%s', 'shortpixel-image-optimiser'), $values);
+					if ($colored)
+							$res = \WP_CLI::colorize($res);
+				}
+
+				return $res;
 		}
 
 		protected function getStatus()

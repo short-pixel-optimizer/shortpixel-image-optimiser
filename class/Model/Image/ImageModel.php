@@ -195,7 +195,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
             $message = __('Image is already optimized', 'shortpixel-image-optimiser');
          break;
          case self::P_FILE_NOTWRITABLE:
-            $message = __('Image is not writable', 'shortpixel-image-optimiser');
+            $message = sprintf(__('Image %s is not writable in %s', 'shortpixel-image-optimiser'), $this->getFileName(), (string) $this->getFileDir());
          break;
 				 case self::P_BACKUPDIR_NOTWRITABLE:
 				 		$message = __('Backup directory is not writable', 'shortpixel-image-optimiser');

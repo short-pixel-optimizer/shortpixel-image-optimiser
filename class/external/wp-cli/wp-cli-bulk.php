@@ -70,6 +70,9 @@ class SpioBulk extends SpioCommandBase
 				$running = true;
 				$created = false;
 
+				 $this->settings();
+				 usleep(2000); // digest settings 
+
 				//	$Q = $optimizeController->getQueue($qname);
 
 					while($running)
@@ -77,7 +80,6 @@ class SpioBulk extends SpioCommandBase
 						 	$data = $optimizeController->getStartupData();
 							$combined = $data->total->stats;
 
-//echo 'AUTO STATS'; print_r($data);
 
 							// Is_finished is no queue running.
 							if ($combined->is_preparing)
@@ -101,6 +103,7 @@ class SpioBulk extends SpioCommandBase
 							elseif ($combined->total > 0 && $combined->done == 0 && $combined->is_running == false && $combined->is_preparing == false && $combined->is_finished == false)
 							{
 								 \WP_CLI::line('[Auto Bulk] Starting to process');
+								 $this->status($args, $assoc);
  								 $this->start($args, $assoc);
 							}
 						  elseif ($combined->is_finished)
@@ -125,6 +128,7 @@ class SpioBulk extends SpioCommandBase
 
 
 				\WP_CLI::log('Automatic Bulk ended');
+				$this->status($args, $assoc);
 		}
 
 	 /**

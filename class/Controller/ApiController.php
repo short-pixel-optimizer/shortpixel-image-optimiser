@@ -205,18 +205,22 @@ class ApiController
         {
            $item->result = $this->handleResponse($item, $response);
         }
-  /*      if ( isset($errorMessage) )
-        {//set details inside file so user can know what happened
-          //  $itemHandler->incrementRetries(1, $errorCode, $errorMessage);
-          return self::STATUS_FAIL;
-            //return array("response" => array("code" => $errorCode, "message" => $errorMessage ));
-        } */
 
-        //return $response;//this can be an error or a good response
     }
-    else
+    else // This should be only non-blocking the FIRST time it's send off.
     {
-       $text = ($item->tries > 0) ? sprintf(__('Item is waiting for results ( pass %d )', 'shortpixel-image-optimiser'), $item->tries) : __('Item is waiting for results', 'shortpixel-image-optimiser');
+			 if ($item->tries > 0)
+			 {
+			 		Log::addWarn('DOREQUEST sent item non-blocking with multiple tries!', $item);
+			 }
+
+			 // Non-blocking shouldn't have tries.
+       /*$text = ($item->tries > 0) ? sprintf(__('(Api DoRequest) Item is waiting for results ( pass %d )', 'shortpixel-image-optimiser'), $item->tries) : __('(Api DoRequest) Item is waiting for results', 'shortpixel-image-optimiser');
+			 */
+			 $urls = count($item->urls);
+			 $flags = $requestParameters['flags'];
+			 $text = sprintf(__('New item #%d sent for processing ( %d URLS, %s)  ', 'shortpixel-image-optimiser'), $item->item_id, $urls, $flags );
+
        $item->result = $this->returnOK(self::STATUS_ENQUEUED, $text );
     }
 
@@ -239,6 +243,7 @@ class ApiController
     $APIresponse = $this->parseResponse($response);//get the actual response from API, its an array
     $settings = \wpSPIO()->settings();
 
+//print_r($APIresponse);
 //Log::addTemp('Item in handleResponse', $item);
 
 		// Don't know if it's this or that.
@@ -288,18 +293,34 @@ class ApiController
           }
     }
 
-    $neededURLS = $item->urls;
-		// Return filename in response with item to make it more descriptive.
-		$filename = (property_exists($item, 'result') && property_exists($item->result, 'filename')) ? $item->result->filename : '';
+    $neededURLS = $item->urls; // URLS we are waiting for.
+
 
     if ( isset($APIresponse[0]) ) //API returned image details
     {
-        foreach ( $APIresponse as $imageObject ) {//this part makes sure that all the sizes were processed and ready to be downloaded.
+				$analyze = array('total' => count($item->urls), 'ready' => 0, 'waiting' => 0);
+				foreach($APIresponse as $imageObject) // loop for analyzing
+				{
+					if (property_exists($imageObject, 'Status'))
+					{
+					 	if ($imageObject->Status->Code == self::STATUS_SUCCESS)
+					 	{
+					 	  	$analyze['ready']++;
+					 	}
+						elseif ($imageObject->Status->Code == 0 || $imageObject->Status->Code == 1) // unchanged /waiting
+						{
+							 $analyze['waiting']++;
+						}
+					}
+				}
+
+				// This part makes sure that all the sizes were processed and ready to be downloaded. If ones is missing, we wait more.
+        foreach ( $APIresponse as $imageObject ) {
+
           // If status is still waiting. Check if the return URL is one we sent.
             if ( isset($imageObject->Status) && ( $imageObject->Status->Code == 0 || $imageObject->Status->Code == 1 ) && in_array($imageObject->OriginalURL, $neededURLS)) {
 
-
-                return $this->returnOK(self::STATUS_UNCHANGED, sprintf(__('Item %s is waiting for remote results', 'shortpixel-image-optimiser'), $filename));
+                return $this->returnOK(self::STATUS_UNCHANGED, sprintf(__('Item #%s is waiting for %d images (%d/%d)', 'shortpixel-image-optimiser'), $item->item_id, $analyze['waiting'], $analyze['ready'], $analyze['total']));
             }
         }
 

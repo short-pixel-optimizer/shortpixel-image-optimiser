@@ -47,7 +47,7 @@ class SpioSingle extends SpioCommandBase
       }
 			if (! is_numeric($args[0]))
 			{
-				 \WP_CLI::Error(__('Item ID need to be a number', 'shortpixel-image-optimiser'));
+				 \WP_CLI::Error(__('Item ID needs to be a number', 'shortpixel-image-optimiser'));
 				 return;
 			}
 
@@ -77,7 +77,7 @@ class SpioSingle extends SpioCommandBase
 			}
       elseif ($result->status == 0)
 			{
-        \WP_CLI::Error(sprintf(__("Restored Item: %s", 'shortpixel_image_optimiser'), $message) );
+        \WP_CLI::Error(sprintf(__("Restoring Item: %s", 'shortpixel_image_optimiser'), $message) );
 			}
   }
 

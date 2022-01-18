@@ -169,7 +169,15 @@ class OptimizeController
 
 				$optimized = $mediaItem->getMeta('tsOptimized');
 
-        $result = $mediaItem->restore();
+				if ($mediaItem->isRestorable())
+				{
+        	$result = $mediaItem->restore();
+				}
+				else
+				{
+					 $result = false;
+					 $json->result->message = $mediaItem->getReason('restorable');
+				}
 
 				// Compat for ancient WP
 				$now = function_exists('wp_date') ? wp_date( 'U', time() ) : time();
@@ -196,10 +204,11 @@ class OptimizeController
         }
         else
         {
-					 if ( ! $mediaItem->isOptimized())
-					 	$json->result->message = __('Item could\'t be restored - Item is not optimized.', 'shortpixel-image-optimiser');
-					 else
-           	$json->result->message = __('Item is not restorable', 'shortpixel-image-optimiser');
+
+					 if (! property_exists($json->result, 'message'))
+					 {
+					 		$json->result->message = __('Item is not restorable', 'shortpixel-image-optimiser');
+				 	 }
            $json->result->is_done = true;
            $json->fileStatus = ImageModel::FILE_STATUS_ERROR;
            $json->result->is_error = true;
@@ -409,18 +418,11 @@ class OptimizeController
 
 					// Updated: Do nothing - if PNG not converted for some reason, process as normal.
 
-				 // Enter error state here.
-				 /*$item->result = new \stdClass;
-				 $item->result->is_done = true;
-				 $item->result->is_error = true;
-				 return $this->handleApiResult($item, $mediaQ); */
 			}
-        //$imageObj = $result; // returns ImageObj.
-
-    //  $item->urls = $imageObj->convertergetOptimizeURLS();
 
       return $bool;
     }
+
 
     // This is everything sub-efficient.
     /* Handles the Queue Item API result .
@@ -605,7 +607,11 @@ class OptimizeController
           if ($result->apiStatus == ApiController::STATUS_UNCHANGED)
           {
               $item->fileStatus = ImageModel::FILE_STATUS_PENDING;
-              $item->result->message .= sprintf(__(' Pass %d', 'shortpixel-image-optimiser'), intval($item->tries) );
+
+							// Try to replace the item ID with the filename.
+							$item->result->message = substr_replace( $item->result->message,  $imageItem->getFileName() . ' ', strpos($item->result->message, '#' . $item->item_id), 0);
+
+              $item->result->message .= sprintf(__('(cycle %d)', 'shortpixel-image-optimiser'), intval($item->tries) );
               $q->itemFailed($item, false); // register as failed, retry in x time, q checks timeouts
           }
       }
@@ -804,7 +810,11 @@ class OptimizeController
         {
             if (property_exists($object->stats, $key))
             {
-               if (is_numeric($object->stats->$key)) // add only if number.
+							 if ($key == 'percentage_done')
+							 {
+								 	$object->stats->$key = (($object->stats->$key + $value) / 2); //exceptionnes.
+							 }
+               elseif (is_numeric($object->stats->$key)) // add only if number.
                {
                 $object->stats->$key += $value;
                }
