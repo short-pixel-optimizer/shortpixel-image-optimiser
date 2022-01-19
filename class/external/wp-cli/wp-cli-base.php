@@ -281,11 +281,12 @@ class SpioCommandBase
       	if ($combinedStatus == Queue::RESULT_QUEUE_EMPTY)
         {
            \WP_CLI::log('All Queues report processing has finished');
+
            return false;
         }
         elseif($combinedStatus == Queue::RESULT_PREPARING_DONE)
         {
-           \WP_CLI::log(sprintf('Bulk Preparing is done. %d items ', $results->total->stats->total));
+           \WP_CLI::log(sprintf('Bulk Preparing is done. %d items. Use start command to signal ready. Use run to process after starting.', $results->total->stats->total));
 					 return false;
         }
 

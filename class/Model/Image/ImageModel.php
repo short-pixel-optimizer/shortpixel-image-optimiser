@@ -671,19 +671,24 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
             // only copy when this constant is set.
             if( (defined('SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION') && SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION) == true ) {
                  $target = $fs->getFile((string) $this->getFileDir() . $this->getFileName() . '.webp'); // double extension, if exists.
-
             }
 
 
             $result = false;
 
             if (! $target->exists()) // don't copy if exists.
-            {  $result = $tempFile->copy($target); }
+            {
+							$result = $tempFile->copy($target); 
+						}
             else
+						{
               $result = true; // if already exists, all fine by us.
+						}
 
             if (! $result)
+						{
               Log::addWarn('Could not copy Webp to destination ' . $target->getFullPath() );
+						}
             return $target;
       //   }
 

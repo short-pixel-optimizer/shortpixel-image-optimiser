@@ -16,7 +16,6 @@ abstract class Queue
 
     const PLUGIN_SLUG = 'SPIO';
 
-
     // Result status for Run function
     const RESULT_ITEMS = 1;
     const RESULT_PREPARING = 2;

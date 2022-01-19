@@ -439,8 +439,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
                 $return = false; // failed.
             }
 
-
-            Log::addDebug('Is Scaled, Original file handled optimized', $original_file);
           }
           $this->original_file = $original_file;
       }

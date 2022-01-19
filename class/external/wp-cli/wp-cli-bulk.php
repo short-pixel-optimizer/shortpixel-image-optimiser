@@ -71,7 +71,7 @@ class SpioBulk extends SpioCommandBase
 				$created = false;
 
 				 $this->settings();
-				 usleep(2000); // digest settings 
+				 usleep(2000); // digest settings
 
 				//	$Q = $optimizeController->getQueue($qname);
 
@@ -93,11 +93,6 @@ class SpioBulk extends SpioCommandBase
 								\WP_CLI::line('Bulk Running ...');
 								 $this->run($args, $assoc); // Run All
 
-								 if ( $this->last_combinedStatus == Queue::RESULT_QUEUE_EMPTY && $combined->total > 0)
-								 {
-									 		\WP_CLI::Success(sprintf('[Auto Bulk] Finished Queue %s Items done, %s Errors', $stats->done, $stats->fatal_errors));
-											$this->finishBulk();
-								 }
 
 							}
 							elseif ($combined->total > 0 && $combined->done == 0 && $combined->is_running == false && $combined->is_preparing == false && $combined->is_finished == false)
@@ -112,6 +107,9 @@ class SpioBulk extends SpioCommandBase
 									{
 										\WP_CLI::Line('[Auto Bulk] Seems finished and done running');
 										$running = false;
+
+										$this->finishBulk();
+
 										break;
 									}
 									\WP_CLI::Line('[Auto Bulk] Creating New Queue');
@@ -195,10 +193,10 @@ class SpioBulk extends SpioCommandBase
 	 *
 	 * @when after_wp_load
 	 */
-		public function restore($args, $assoc)
+		/*public function restore($args, $assoc)
 		{
 				\WP_CLI::Line('Not yet implemented');
-		}
+		} */
 
 
 		protected function finishBulk($args, $assoc)
@@ -253,8 +251,6 @@ class SpioBulk extends SpioCommandBase
 							 //$assoc['queue'] = $qname;
 							 $assoc['wait'] = 500;
 							 $bool = $this->run($args, $assoc);
-
-
 						}
 
 						//$this->showResponses();

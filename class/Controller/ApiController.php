@@ -100,7 +100,7 @@ class ApiController
 
 		 if (property_exists($item, 'urls') === false || ! is_array($item->urls) || count($item->urls) == 0)
 		 {
-			  Log::addError('Media Item without URLS cannnot be dumped ', $item);
+			  Log::addWarn('Media Item without URLS cannnot be dumped ', $item);
 				return false;
 		 }
 
@@ -180,8 +180,12 @@ class ApiController
   }
 
 
-
-  protected function doRequest($item, $requestParameters)
+	/** DoRequest : Does a remote_post to the API
+	*
+	* @param Object $item  The QueueItemObject
+	* @param Array $requestParameters  The HTTP parameters for the remote post (arguments in getRequest)
+	*/
+  protected function doRequest($item, $requestParameters,)
   {
     $response = wp_remote_post($this->apiEndPoint, $requestParameters );
     Log::addDebug('ShortPixel API Request sent', $requestParameters['body']);
@@ -218,7 +222,8 @@ class ApiController
        /*$text = ($item->tries > 0) ? sprintf(__('(Api DoRequest) Item is waiting for results ( pass %d )', 'shortpixel-image-optimiser'), $item->tries) : __('(Api DoRequest) Item is waiting for results', 'shortpixel-image-optimiser');
 			 */
 			 $urls = count($item->urls);
-			 $flags = $requestParameters['flags'];
+			 $flags = property_exists($item, 'flags') ? $item->flags : array();
+			 $flags = implode("|", $flags);
 			 $text = sprintf(__('New item #%d sent for processing ( %d URLS, %s)  ', 'shortpixel-image-optimiser'), $item->item_id, $urls, $flags );
 
        $item->result = $this->returnOK(self::STATUS_ENQUEUED, $text );
