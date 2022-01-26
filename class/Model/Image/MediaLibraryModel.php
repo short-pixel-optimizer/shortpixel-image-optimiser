@@ -23,7 +23,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   protected $type = 'media';
   protected $is_main_file = true; // for checking
 
-  private $unlistedChecked = false; // limit checking unlisted.
+  private static $unlistedChecked = array(); // limit checking unlisted.
 
   private $optimizePrevented; // cache if there is any reason to prevent optimizing
 
@@ -1646,22 +1646,51 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   protected function addUnlisted()
   {
        // Setting must be active.
-       if (! \wpSPIO()->settings()->optimizeUnlisted )
-         return;
+       /*if (! \wpSPIO()->settings()->optimizeUnlisted )
+         return; */
+
+			$searchUnlisted = \wpSPIO()->settings()->optimizeUnlisted;
 
       // Don't check this more than once per run-time.
-      if ( $this->unlistedChecked )
+      if ( in_array($this->get('id'), self::$unlistedChecked ))
       {
           return;
       }
+
+			if (defined('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES'))
+			{
+					$suffixes = explode(',', SHORTPIXEL_CUSTOM_THUMB_SUFFIXES);
+			}
+			else
+				 $suffixes = array();
+
+      if( defined('SHORTPIXEL_CUSTOM_THUMB_INFIXES') ){
+	       $infixes = explode(',', SHORTPIXEL_CUSTOM_THUMB_INFIXES);
+			}
+			else
+			{
+				 $infixes = array();
+			}
+
+			$searchSuffixes = array_unique(apply_filters('shortpixel/image/unlisted_suffixes', $suffixes));
+			$searchInfixes =  array_unique(apply_filters('shortpixel/image/unlisted_infixes', $infixes));
+
+Log::addTemp('Checking:', array($searchUnlisted, $searchSuffixes, $searchInfixes));
 
       // addUnlisted is called by IsProcessable, file might not exist.
       // If virtual, we can't read dir, don't do it.
       if (! $this->exists() || $this->is_virtual())
       {
-          $this->unlistedChecked = true;
+				 self::$unlistedChecked[] = $this->get('id');
          return;
       }
+
+			// if all have nothing to do, do nothing.
+			if ($searchUnlisted == false && count($searchSuffixes) == 0 && count($searchInfixes) == 0)
+			{
+				 self::$unlistedChecked[] = $this->get('id');
+				 return;
+			}
 
         $currentFiles = array($this->getFileName());
         foreach($this->thumbnails as $thumbObj)
@@ -1688,39 +1717,40 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	        $ext = $mediaItem->getExtension();
 	        $path = (string) $mediaItem->getFileDir();
 
-	        $pattern = '/^' . preg_quote($base, '/') . '-\d+x\d+\.'. $ext .'/';
+					if ($searchUnlisted)
+					{
+	        	$pattern = '/^' . preg_quote($base, '/') . '-\d+x\d+\.'. $ext .'/';
+	        	$thumbs = array();
+	        	$result_files = array_values(preg_grep($pattern, $all_files));
+					}
+					else
+					{
+						$result_files = array();
+					}
 
-	        $thumbs = array();
+Log::addTemp('MediaLModel ResultFiles', $result_files);
 
-	        $result_files = array_values(preg_grep($pattern, $all_files));
-
-	       // $add_unlisted = array_diff($result_files, $currentFiles);
 					$unlisted = array_merge($unlisted, $result_files);
 
-	        if( defined('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES') ){
-	            $suffixes = explode(',', SHORTPIXEL_CUSTOM_THUMB_SUFFIXES);
-	            if (is_array($suffixes))
+	        if( count($searchSuffixes) > 0){
+	           // $suffixes = explode(',', SHORTPIXEL_CUSTOM_THUMB_SUFFIXES);
+	            if (is_array($searchSuffixes))
 	                {
-	                  foreach ($suffixes as $suffix){
+	                  foreach ($searchSuffixes as $suffix){
 
 	                      $pattern = '/^' . preg_quote($base, '/') . '-\d+x\d+'. $suffix . '\.'. $ext .'/';
 	                      $thumbs = array_values(preg_grep($pattern, $all_files));
+
 	                      if (count($thumbs) > 0)
 	                        $unlisted = array_merge($unlisted, $thumbs);
-	                      //array_merge($thumbs, self::getFilesByPattern($dirPath, $pattern));
-	                      /*foreach($thumbsCandidates as $th) {
-	                          if(preg_match($pattern, $th)) {
-	                              $thumbs[]= $th;
-	                          }
-	                      } */
 	                  }
 	                }
 	            }
-	            if( defined('SHORTPIXEL_CUSTOM_THUMB_INFIXES') ){
-	                $infixes = explode(',', SHORTPIXEL_CUSTOM_THUMB_INFIXES);
-	                if (is_array($infixes))
+	            if( count($searchInfixes) > 0 ){
+	               // $infixes = explode(',', SHORTPIXEL_CUSTOM_THUMB_INFIXES);
+	                if (is_array($searchInfixes))
 	                {
-	                  foreach ($infixes as $infix){
+	                  foreach ($searchInfixes as $infix){
 	                      //$thumbsCandidates = @glob($base . $infix  . "-*." . $ext);
 	                      $pattern = '/^' . preg_quote($base, '/') . $infix . '-\d+x\d+' . '\.'. $ext .'/';
 	                      $thumbs = array_values(preg_grep($pattern, $all_files));
@@ -1744,7 +1774,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       foreach($unlisted as $unName)
       {
           $thumbObj = $this->getThumbnailModel($path . $unName, $unName);
-          if ($thumbObj->getExtension() == 'webp') // ignore webp files.
+          if ($thumbObj->getExtension() == 'webp' || $thumbObj->getExtension() == 'avif') // ignore webp/avif files.
           {
             continue;
           }
@@ -1766,7 +1796,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       if ($added)
         $this->saveMeta(); // Save it when we are adding images.
 
-      $this->unlistedChecked = true;
+			self::$unlistedChecked[] = $this->get('id');
   }
 
 } // class

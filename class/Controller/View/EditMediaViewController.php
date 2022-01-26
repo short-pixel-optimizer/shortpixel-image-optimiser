@@ -103,6 +103,10 @@ class EditMediaViewController extends \ShortPixel\ViewController
         $did_png2jpg = $imageObj->getMeta('did_png2jpg');
         $resize = $imageObj->getMeta('resize');
 
+				// Not optimized, not data.
+				if (! $imageObj->isOptimized())
+					return array();
+
         if ($did_keepExif)
           $stats[] = array(__('EXIF kept', 'shortpixel-image-optimiser'), '');
         elseif ( $did_keepExif === false) {

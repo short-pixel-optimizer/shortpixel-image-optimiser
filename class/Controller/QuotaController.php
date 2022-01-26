@@ -60,7 +60,7 @@ class QuotaController
           $quotaData = $this->getQuotaData();
           $DateNow = time();
           $DateSubscription = strtotime($quotaData['APILastRenewalDate']);
-          $DaysToReset = 30 - ((($DateNow  - $DateSubscription) / 84600) % 30);
+          $DaysToReset = 30 - (int) ((($DateNow  - $DateSubscription) / 84600) % 30);
 
           $quota = (object) [
               'monthly' => (object) [

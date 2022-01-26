@@ -174,7 +174,7 @@ namespace ShortPixel\ShortPixelLogger;
    {
       $items = $debugItem->getForFormat();
       $items['time_passed'] =  round ( ($items['time'] - $this->start_time), 5);
-      $items['time'] =  date('Y-m-d H:i:s', $items['time'] );
+      $items['time'] =  date('Y-m-d H:i:s', (int) $items['time'] );
 
       if ( ($items['caller']) && is_array($items['caller']) && count($items['caller']) > 0)
       {

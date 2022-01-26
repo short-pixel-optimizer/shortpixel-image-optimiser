@@ -238,7 +238,7 @@ class ListMediaViewController extends \ShortPixel\ViewController
       $scr = get_current_screen();
       if ( $scr->base !== 'upload' ) return;
 
-      $status   = filter_input(INPUT_GET, 'shortpixel_status', FILTER_SANITIZE_STRING );
+      $status   = filter_input(INPUT_GET, 'shortpixel_status', FILTER_UNSAFE_RAW );
   //    $selected = (int)$status > 0 ? $status : 0;
     /*  $args = array(
           'show_option_none'   => 'ShortPixel',

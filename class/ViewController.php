@@ -71,17 +71,19 @@ class ViewController extends Controller
   */
   public function loadView($template = null, $unique = true)
   {
-      if (strlen(trim($template)) == 0)
-        $template = null;
-
-      if (is_null($this->template) && is_null($template))
-      {
-        // error
-        return false;
-      }
-
       // load either param or class template.
       $template = (is_null($template)) ? $this->template : $template;
+
+
+      if (is_null($template) )
+      {
+        return false;
+      }
+      elseif (strlen(trim($template)) == 0)
+			{
+        return false;
+			}
+
 
       $view = $this->view;
       $controller = $this;
