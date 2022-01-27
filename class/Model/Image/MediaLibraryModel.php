@@ -1728,8 +1728,6 @@ Log::addTemp('Checking:', array($searchUnlisted, $searchSuffixes, $searchInfixes
 						$result_files = array();
 					}
 
-Log::addTemp('MediaLModel ResultFiles', $result_files);
-
 					$unlisted = array_merge($unlisted, $result_files);
 
 	        if( count($searchSuffixes) > 0){

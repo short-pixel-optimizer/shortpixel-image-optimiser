@@ -304,6 +304,7 @@ class ApiController
     if ( isset($APIresponse[0]) ) //API returned image details
     {
 				$analyze = array('total' => count($item->urls), 'ready' => 0, 'waiting' => 0);
+				$waitingDebug = array();
 				foreach($APIresponse as $imageObject) // loop for analyzing
 				{
 					if (property_exists($imageObject, 'Status'))
@@ -315,15 +316,20 @@ class ApiController
 						elseif ($imageObject->Status->Code == 0 || $imageObject->Status->Code == 1) // unchanged /waiting
 						{
 							 $analyze['waiting']++;
+						//	 $waitingDebug[] = $imageObj->
 						}
 					}
 				}
+
+
 
 				// This part makes sure that all the sizes were processed and ready to be downloaded. If ones is missing, we wait more.
         foreach ( $APIresponse as $imageObject ) {
 
           // If status is still waiting. Check if the return URL is one we sent.
             if ( isset($imageObject->Status) && ( $imageObject->Status->Code == 0 || $imageObject->Status->Code == 1 ) && in_array($imageObject->OriginalURL, $neededURLS)) {
+
+								Log::addTemp('API :: Still waiting : ', $imageObject);
 
                 return $this->returnOK(self::STATUS_UNCHANGED, sprintf(__('Item #%s is waiting for %d images (%d/%d)', 'shortpixel-image-optimiser'), $item->item_id, $analyze['waiting'], $analyze['ready'], $analyze['total']));
             }

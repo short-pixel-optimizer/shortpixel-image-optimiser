@@ -1,6 +1,7 @@
 <?php
 namespace ShortPixel\Controller;
 
+
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 class QuotaController
@@ -59,8 +60,9 @@ class QuotaController
           /*'quotaAvailable' => max(0, $quotaData['APICallsQuotaNumeric'] + $quotaData['APICallsQuotaOneTimeNumeric'] - $quotaData['APICallsMadeNumeric'] - $quotaData['APICallsMadeOneTimeNumeric']))); */
           $quotaData = $this->getQuotaData();
           $DateNow = time();
+
           $DateSubscription = strtotime($quotaData['APILastRenewalDate']);
-          $DaysToReset = 30 - (int) ((($DateNow  - $DateSubscription) / 84600) % 30);
+          $DaysToReset =  30 - ( (int) (  ( $DateNow  - $DateSubscription) / 84600) % 30);
 
           $quota = (object) [
               'monthly' => (object) [

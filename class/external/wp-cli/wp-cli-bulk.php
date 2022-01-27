@@ -54,7 +54,8 @@ class SpioBulk extends SpioCommandBase
 	  }
 
 
-		/** Automatically Bulk Process all that needs to be done
+		/**
+		* Automatically Bulk Process all that needs to be done
 		*
 	  * [--queue=<name>]
 	  * : Either 'media' or 'custom' . Omit to run both.
@@ -108,7 +109,7 @@ class SpioBulk extends SpioCommandBase
 										\WP_CLI::Line('[Auto Bulk] Seems finished and done running');
 										$running = false;
 
-										$this->finishBulk();
+										$this->finishBulk($args, $assoc);
 
 										break;
 									}

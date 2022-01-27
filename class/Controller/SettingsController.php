@@ -765,6 +765,17 @@ class SettingsController extends \ShortPixel\ViewController
             }
 
         }
+
+				var_dump($patterns);
+
+				foreach($patterns as $pair)
+				{
+						$pattern = $pair['value'];
+					  if ( @preg_match($pattern, false) === false)
+						{
+							 Notice::addWarning(sprintf(__('Pattern %s returned an error.', 'shortpixel-image-optimser'), $pattern ));
+						}
+				}
         $post['excludePatterns'] = $patterns;
         return $post;
       }

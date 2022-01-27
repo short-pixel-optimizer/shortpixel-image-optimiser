@@ -678,7 +678,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
             if (! $target->exists()) // don't copy if exists.
             {
-							$result = $tempFile->copy($target); 
+							$result = $tempFile->copy($target);
 						}
             else
 						{
@@ -747,7 +747,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
           return false;
 
         $first = substr($pattern, 0,1);
-
 				$matchRegEx = false;
 
 				// Check for RegEx.
@@ -759,6 +758,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 						$matchRegEx = true;
 					}
 				}
+
 
 				if (! $matchRegEx)
 				{
