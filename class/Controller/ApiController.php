@@ -185,7 +185,7 @@ class ApiController
 	* @param Object $item  The QueueItemObject
 	* @param Array $requestParameters  The HTTP parameters for the remote post (arguments in getRequest)
 	*/
-  protected function doRequest($item, $requestParameters,)
+  protected function doRequest($item, $requestParameters )
   {
     $response = wp_remote_post($this->apiEndPoint, $requestParameters );
     Log::addDebug('ShortPixel API Request sent', $requestParameters['body']);
