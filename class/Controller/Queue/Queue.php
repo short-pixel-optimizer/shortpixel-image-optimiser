@@ -180,13 +180,12 @@ abstract class Queue
 
           $operation = $this->getCustomDataItem('customOperation'); // false or value (or null)
 
-
 					if (is_null($operation))
 						$operation = false;
 
 					if ($operation !== false)
 					{
-						Log::addDebug('Operation is not false - ', $operation);
+						Log::addDebug('Operation is not false : ' . $operation);
 					}
 
           // maybe while on the whole function, until certain time has elapsed?
@@ -217,14 +216,14 @@ abstract class Queue
                       {
                           if ($mediaItem->isRestorable())
                           {
-                            $qObject = $this->imageModelToQueue($mediaItem);
+                            $qObject = new \stdClass; //$this->imageModelToQueue($mediaItem);
                             $qObject->action = 'restore';
                             $queue[] = array('id' => $mediaItem->get('id'), 'value' => $qObject, 'item_count' => $counts->creditCount);
                           }
                       }
                       elseif ($operation == 'migrate')
                       {
-                          $qObject = $this->imageModelToQueue($mediaItem);
+                          $qObject = new \stdClass;  //$this->imageModelToQueue($mediaItem);
                           $qObject->action = 'migrate';
 
                           $queue[] = array('id' => $mediaItem->get('id'), 'value' => $qObject, 'item_count' => $counts->creditCount);

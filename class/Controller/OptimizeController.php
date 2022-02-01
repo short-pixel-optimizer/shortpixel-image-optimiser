@@ -330,6 +330,7 @@ class OptimizeController
             $urls = $item->urls;
             if (property_exists($item, 'png2jpg') && ! property_exists($item, 'action'))
             {
+
               $bool = $this->convertPNG($item, $Q);
               if ($bool == true)
                 continue; // conversion done one way or another, item will be need requeuing, because new urls / flag.
@@ -562,7 +563,6 @@ class OptimizeController
               $item->result->is_error = true;
               $item->result->message += sprintf(__('Image %s API returned succes, but without images', 'shortpixel-image-optimiser'), $item->item_id);
               $item->result->apiStatus = ApiController::STATUS_FAIL;
-
            }
 
          }
