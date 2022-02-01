@@ -268,9 +268,6 @@ abstract class Queue
 					*/
           $return['results'] = count($items); // This is the return of the query. Preparing should not be 'done' before the query ends, but it can return 0 on the qcount if all results are already optimized.
 
-
-
-
           return $return; // only return real amount.
     }
 

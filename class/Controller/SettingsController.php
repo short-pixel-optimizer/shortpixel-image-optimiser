@@ -360,13 +360,14 @@ class SettingsController extends \ShortPixel\ViewController
          $this->loadStatistics();
 				 $this->checkCloudFlare();
 
+
          $statsControl = StatsController::getInstance();
 
          $this->view->minSizes = $this->getMaxIntermediateImageSize();
          $this->view->customFolders= $this->loadCustomFolders();
          $this->view->allThumbSizes = $this->getAllThumbnailSizes();
          $this->view->averageCompression = $statsControl->getAverageCompression();
-         $this->view->savedBandwidth = UiHelper::formatBytes( (int) $this->view->data->savedSpace * 10000,2);
+         $this->view->savedBandwidth = UiHelper::formatBytes( intval($this->view->data->savedSpace) * 10000,2);
          //$this->view->resources = wp_remote_post($this->model->httpProto . "://shortpixel.com/resources-frag");
 
          /*if (is_wp_error($this->view->resources))

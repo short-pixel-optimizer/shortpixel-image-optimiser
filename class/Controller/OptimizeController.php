@@ -328,7 +328,7 @@ class OptimizeController
       foreach($items as $mainIndex => $item)
       {
             $urls = $item->urls;
-            if (property_exists($item, 'png2jpg'))
+            if (property_exists($item, 'png2jpg') && ! property_exists($item, 'action'))
             {
               $bool = $this->convertPNG($item, $Q);
               if ($bool == true)
