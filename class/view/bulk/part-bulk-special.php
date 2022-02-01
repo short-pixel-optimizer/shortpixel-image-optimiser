@@ -1,17 +1,24 @@
+<?php
+use \ShortPixel\Controller\BulkController as BulkController;
+
+	$bulk = BulkController::getInstance();
+	$queueRunning = $bulk->isAnyBulkRunning();
+?>
+
 <section class='panel bulk-restore' data-panel="bulk-restore"  >
   <h3 class='heading'>
     <?php _e("Bulk Restore", 'shortpixel-image-optimiser'); ?>
   </h3>
 
-	<div class='bulk-special-wrapper'>
 
+	<div class='bulk-special-wrapper'>
 
 	  <h4 class='warning'><?php _e('Warning', 'shortpixel-image-optimiser'); ?></h4>
 
 	  <p><?php printf(__('By starting the %s bulk restore %s process, the plugin will try to restore %s all images %s to the original state. All images will become unoptimized.', 'shortpixel-image-optimiser'), '<b>', '</b>', '<b>', '</b>'); ?></p>
 
 				<p class='warning'><?php _e('It is strongly advised to create a full backup before starting this process.', 'shortpixel-image-optimiser'); ?></p>
-				
+
 	  <p><input type="checkbox" id="bulk-restore-agree" value="agree" data-action="ToggleButton" data-target="bulk-restore-button"> <?php _e('I want to restore all images. I understand this action is permanent and nonreversible', 'shortpixel-image-optimiser'); ?></p>
 
 

@@ -50,8 +50,10 @@ class QuotaController
             $cache->storeItem(self::CACHE_NAME, $quotaData, 6 * HOUR_IN_SECONDS);
         }
         else
+				{
           $quotaData = $cacheData->getValue();
-
+				}
+					
         return $quotaData;
     }
 
@@ -142,6 +144,8 @@ class QuotaController
 
         $settings->quotaExceeded = 0;
     }
+
+
 
     private function getRemoteQuota($apiKey = false, $validate = false)
     {

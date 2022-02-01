@@ -215,7 +215,6 @@ class SpioBulk extends SpioCommandBase
 		// To ensure the bulk switch is ok.
 		protected function getOptimizeController()
 		{
-
 				$optimizeController = new OptimizeController();
 				$optimizeController->setBulk(true);
 				return $optimizeController;

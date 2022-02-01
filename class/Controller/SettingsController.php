@@ -190,6 +190,33 @@ class SettingsController extends \ShortPixel\ViewController
       }
 
 
+			public function action_debug_redirectBulk()
+			{
+				$opt = new OptimizeController();
+	 			$opt->setBulk(true);
+
+	 		 	$bulkMedia = $opt->getQueue('media');
+	 			$bulkCustom = $opt->getQueue('custom');
+
+				$bulkMedia->resetQueue();
+				$bulkCustom->resetQueue();
+
+				$action = isset($_REQUEST['bulk']) ? sanitize_text_field($_REQUEST['bulk']) : null;
+
+				if ($action == 'migrate')
+				{
+					$this->doRedirect('bulk-migrate');
+				}
+
+				if ($action == 'restore')
+				{
+					$this->doRedirect('bulk-restore');
+				}
+				//upload.php?page=wp-short-pixel-bulk&panel=bulk-migrate
+
+				//upload.php?page=wp-short-pixel-bulk&panel=bulk-restore
+
+			}
 
       /** Button in part-debug, routed via custom Action */
       public function action_debug_resetStats()
@@ -307,6 +334,8 @@ class SettingsController extends \ShortPixel\ViewController
             $this->keyModel->checkKey($check_key);
           }
 
+					$this->loadQuotaData(true);
+
           // end
           if ($this->do_redirect)
             $this->doRedirect('bulk');
@@ -350,8 +379,6 @@ class SettingsController extends \ShortPixel\ViewController
 
 				 if ($this->view->data->createAvif == 1)
            $this->avifServerCheck();
-
-
 
          $this->loadView('view-settings');
       }
@@ -551,10 +578,17 @@ class SettingsController extends \ShortPixel\ViewController
           return array('width' => max(100, $width), 'height' => max(100, $height));
       }
 
-      protected function loadQuotaData()
+			// @param Force.  needed on settings save because it sends off the HTTP Auth
+      protected function loadQuotaData($force = false)
       {
-        // @todo Probably good idea to put this in a 2-5 min transient or so.
         $quotaController = QuotaController::getInstance();
+
+
+				if ($force === true)
+				{
+					 $quotaController->forceCheckRemoteQuota();
+					 $this->quotaData = null;
+				}
 
         if (is_null($this->quotaData))
           $this->quotaData = $quotaController->getQuota(); //$this->shortPixel->checkQuotaAndAlert();
@@ -766,16 +800,20 @@ class SettingsController extends \ShortPixel\ViewController
 
         }
 
-				var_dump($patterns);
+		//		var_dump($patterns);
 
-				foreach($patterns as $pair)
+			/*	foreach($patterns as $pair)
 				{
 						$pattern = $pair['value'];
-					  if ( @preg_match($pattern, false) === false)
+						$first = substr($pattern, 0,1);
+						if ($first == '/')
 						{
-							 Notice::addWarning(sprintf(__('Pattern %s returned an error.', 'shortpixel-image-optimser'), $pattern ));
+						  if ( @preg_match($pattern, false) === false)
+							{
+								 Notice::addWarning(sprintf(__('Pattern %s returned an error.', 'shortpixel-image-optimser'), $pattern ));
+							}
 						}
-				}
+				} */
         $post['excludePatterns'] = $patterns;
         return $post;
       }
@@ -811,8 +849,17 @@ class SettingsController extends \ShortPixel\ViewController
         }
         elseif($redirect == 'bulk')
         {
-          $url = "upload.php?page=wp-short-pixel-bulk";
+          $url = admin_url("upload.php?page=wp-short-pixel-bulk");
         }
+				elseif($redirect == 'bulk-migrate')
+				{
+					 $url = admin_url('upload.php?page=wp-short-pixel-bulk&panel=bulk-migrate');
+				}
+				elseif ($redirect == 'bulk-restore')
+				{
+						$url = admin_url('upload.php?page=wp-short-pixel-bulk&panel=bulk-restore');
+				}
+
         wp_redirect($url);
         exit();
       }

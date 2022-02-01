@@ -59,6 +59,36 @@ class BulkController
       return $Q->getStats();
    }
 
+	 public function isBulkRunning($type = 'media')
+	 {
+       $optimizeControl = new OptimizeController();
+       $optimizeControl->setBulk(true);
+
+		   $queue = $optimizeControl->getQueue($type);
+
+			 $stats = $queue->getStats();
+
+			 if ( $stats->is_finished === false && $stats->total > 0)
+			 {
+			 	return true;
+		 	 }
+			 else
+			 {
+			 	return false;
+			}
+	 }
+
+	 public function isAnyBulkRunning()
+	 {
+		   $bool = $this->isBulkRunning('media');
+			 if ($bool === false)
+			 {
+				   $bool = $this->isBulkRunning('custom');
+			 }
+
+			 return $bool;
+	 }
+
    /*** Start the bulk run */
    public function startBulk($type = 'media')
    {
@@ -181,8 +211,6 @@ class BulkController
 
         $this->saveLogs($logs);
    }
-
-
 
    protected function saveLogs($logs)
    {

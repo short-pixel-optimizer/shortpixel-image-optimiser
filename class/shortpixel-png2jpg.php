@@ -241,21 +241,24 @@ class ShortPixelPng2Jpg {
             $newSize = filesize($newPath); // $uniqueFile->getFileSize();
             $origSize = $imageObj->getFileSize();
 
+						// Reload the file we just wrote.
+						$newFile = $fs->getFile($newPath);
+
             if($newSize > $origSize * 0.95 || $newSize == 0) {
                 //if the image is not 5% smaller, don't bother.
                 //if the size is 0, a conversion (or disk write) problem happened, go on with the PNG
                 Log::addDebug("PNG2JPG converted image is larger ($newSize vs. $origSize), keeping the PNG");
                 //unlink($newPath);
 
-								$newFile = $fs->getFile($newPath);
+						//		$newFile = $fs->getFile($newPath);
 								$newFile->delete();
-
 								return false;
             }
 
-            if (! $uniqueFile->exists())
+
+            if (! $newFile->exists())
 						{
-               Log::addWarn('PNG imagejpeg file not written!');
+               Log::addWarn('PNG imagejpeg file not written!', $uniqueFile->getFileName() );
 							 $params['success'] = false;
 						}
 						else

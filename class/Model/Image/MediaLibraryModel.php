@@ -1675,7 +1675,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			$searchSuffixes = array_unique(apply_filters('shortpixel/image/unlisted_suffixes', $suffixes));
 			$searchInfixes =  array_unique(apply_filters('shortpixel/image/unlisted_infixes', $infixes));
 
-Log::addTemp('Checking:', array($searchUnlisted, $searchSuffixes, $searchInfixes));
+//Log::addTemp('Checking:', array($searchUnlisted, $searchSuffixes, $searchInfixes));
 
       // addUnlisted is called by IsProcessable, file might not exist.
       // If virtual, we can't read dir, don't do it.
