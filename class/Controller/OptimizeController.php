@@ -388,6 +388,7 @@ class OptimizeController
       else // as normal
       {
         $item = $api->processMediaItem($item);
+
       }
       return $item;
     }
@@ -583,7 +584,7 @@ class OptimizeController
 							$newItem->urls = $imageItem->getOptimizeUrls();
 
 							//$webps = ($imageItem->isProcessableFileType('webp')) ? $imageItem->getOptimizeFileType('webp') : array();
-							//$avifs = ($imageItem->isProcessableFileType('avif')) ? $imageItem->getOptimizeFileType('avif') : array();
+							//$avifs = ($imageItem->isProcessableFileType('avigetQueueNamef')) ? $imageItem->getOptimizeFileType('avif') : array();
 
 							// Add to URLs also the possiblity of images with only webp / avif needs. Otherwise URLs would end up emtpy.
 							//$newItem->urls = array_merge($newItem->urls, $webps, $avifs);
@@ -616,7 +617,13 @@ class OptimizeController
           }
       }
 
+			if (property_exists($result, 'message'))
+			{
+				 $item->result->message = '(' . ucfirst($qtype) . ') ' . $item->result->message;
+			}
+
       Log::addDebug('Optimizecontrol - Item has a result ', $item);
+
       return $item;
 
     }
