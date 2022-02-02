@@ -206,9 +206,13 @@ class SpioCommandBase
         $controller = $this->getOptimizeController();
         $results = $controller->processQueue($queueTypes);
 
-//echo "RESULTS -> "; var_dump($results);
-//print_r($results);
 	 			$totalStats = (property_exists($results, 'total') && property_exists($results->total, 'stats')) ? $results->total->stats : null;
+
+				// Trouble
+				if (is_object($results) && property_exists($results, 'status') && $results->status === false)
+				{
+					 	\WP_CLI::error($results->message);
+				}
 
 				foreach($queueTypes as $qname)
 				{

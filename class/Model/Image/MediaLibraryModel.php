@@ -944,7 +944,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						 foreach($this->thumbnails as $thumbnail)
 						 {
 								$backupFile = $thumbnail->getBackupFile();
-								if ($backupFile->exists())
+								// check if there is backup and if file exists.
+								if (is_object($backupFile) && $backupFile->exists())
 									 $backupFile->delete();
 						 }
 						 if ($this->isScaled())
