@@ -109,12 +109,14 @@ class FrontController extends \ShortPixel\Controller
       // Don't do anything with the RSS feed.
       if ( is_feed() || is_admin() ) { return; }
 
+			var_dump(plugins_url());
+
       echo '<script>'
          . 'var spPicTest = document.createElement( "picture" );'
          . 'if(!window.HTMLPictureElement && document.addEventListener) {'
               . 'window.addEventListener("DOMContentLoaded", function() {'
                   . 'var scriptTag = document.createElement("script");'
-                  . 'scriptTag.src = "' . plugins_url('/res/js/picturefill.min.js', __FILE__) . '";'
+                  . 'scriptTag.src = "' . plugins_url('/res/js/picturefill.min.js', SHORTPIXEL_PLUGIN_FILE) . '";'
                   . 'document.body.appendChild(scriptTag);'
               . '});'
           . '}'
