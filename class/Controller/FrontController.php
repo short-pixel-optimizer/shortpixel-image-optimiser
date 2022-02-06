@@ -109,8 +109,6 @@ class FrontController extends \ShortPixel\Controller
       // Don't do anything with the RSS feed.
       if ( is_feed() || is_admin() ) { return; }
 
-			var_dump(plugins_url());
-
       echo '<script>'
          . 'var spPicTest = document.createElement( "picture" );'
          . 'if(!window.HTMLPictureElement && document.addEventListener) {'
