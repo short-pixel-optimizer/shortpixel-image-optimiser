@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compressor, ima
 Requires at least: 4.2.0
 Tested up to: 5.9
 Requires PHP: 5.6
-Stable tag: 4.22.7
+Stable tag: 4.22.8
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -313,6 +313,13 @@ Alternatively, you can use this filter in your theme's functions.php file:
 9. Check other optimized images status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 4.22.8 =
+Release date February 8th, 2022
+* Fix: an error was occurring on new installs when using PHP8;
+* Fix: when uploading an image through Gutenberg's image block, the optimization wasn't getting triggered;
+* Fix: wrong path for `picturefill.js` that was used only in certain cases on IE;
+* Language: 0 new string added, 0 updated, 0 fuzzed, and 0 obsoleted.
 
 = 4.22.7 =
 Release date January 17th, 2022
