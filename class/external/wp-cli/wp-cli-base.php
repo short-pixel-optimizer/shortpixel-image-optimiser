@@ -187,8 +187,12 @@ class SpioCommandBase
            }
 
            $ticks--;
-			
-					ob_flush();
+
+					if (ob_get_length() !== false)
+					{
+						ob_flush();
+					}
+
          	sleep($wait);
 
         }
