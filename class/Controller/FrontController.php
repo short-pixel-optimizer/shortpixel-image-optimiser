@@ -114,7 +114,7 @@ class FrontController extends \ShortPixel\Controller
          . 'if(!window.HTMLPictureElement && document.addEventListener) {'
               . 'window.addEventListener("DOMContentLoaded", function() {'
                   . 'var scriptTag = document.createElement("script");'
-                  . 'scriptTag.src = "' . plugins_url('/res/js/picturefill.min.js', __FILE__) . '";'
+                  . 'scriptTag.src = "' . plugins_url('/res/js/picturefill.min.js', SHORTPIXEL_PLUGIN_FILE) . '";'
                   . 'document.body.appendChild(scriptTag);'
               . '});'
           . '}'

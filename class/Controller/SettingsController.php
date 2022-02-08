@@ -191,7 +191,7 @@ class SettingsController extends \ShortPixel\Controller
          $this->view->customFolders= $this->loadCustomFolders();
          $this->view->allThumbSizes = $this->shortPixel->getAllThumbnailSizes();
          $this->view->averageCompression = $this->shortPixel->getAverageCompression();
-         $this->view->savedBandwidth = \WpShortPixel::formatBytes($this->view->data->savedSpace * 10000,2);
+         $this->view->savedBandwidth = \WpShortPixel::formatBytes( intval($this->view->data->savedSpace) * 10000,2);
          $this->view->resources = wp_remote_post($this->model->httpProto . "://shortpixel.com/resources-frag");
          if (is_wp_error($this->view->resources))
             $this->view->resources = null;
