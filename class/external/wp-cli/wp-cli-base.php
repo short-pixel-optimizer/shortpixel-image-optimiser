@@ -139,7 +139,7 @@ class SpioCommandBase
    * [--wait=<miliseconds>]
    * : How much miliseconds to wait for next tick.
 	 * ---
-	 * default: 3000
+	 * default: 3
 	 * ---
 	 *
 	 *
@@ -153,7 +153,7 @@ class SpioCommandBase
    * ## EXAMPLES
    *
 	 * 	 wp spio run 														| Complete all processes
-   *   wp spio run --ticks=20 --wait=3000			| Ticks and wait time.
+   *   wp spio run --ticks=20 --wait=3				| Ticks and wait time.
 	 *   wp spio run --queue=media							| Only run a specific queue.
    *
    *
@@ -161,14 +161,13 @@ class SpioCommandBase
    */
     public function run($args, $assoc)
     {
-
         if ( isset($assoc['ticks']))
           $ticks = intval($assoc['ticks']);
 
         if (isset($assoc['wait']))
           $wait = intval($assoc['wait']);
         else
-          $wait = 3000;
+          $wait = 3;
 
 				$complete = false;
         if (! isset($assoc['ticks']))
@@ -179,8 +178,6 @@ class SpioCommandBase
 
 				$queue = $this->getQueueArgument($assoc);
 
-      //  $progress = \WP_CLI\Utils\make_progress_bar( 'This run (ticks) ', $ticks );
-
         while($ticks > 0 || $complete == true)
         {
            $bool = $this->runClick($queue);
@@ -190,9 +187,9 @@ class SpioCommandBase
            }
 
            $ticks--;
-
-					// \WP_CLI::line('Waiting ' . $wait * 1000);
-           usleep($wait * 1000);
+			
+					ob_flush();
+         	sleep($wait);
 
         }
 
@@ -239,9 +236,15 @@ class SpioCommandBase
 		        {
 		           foreach($qresult->results as $item)
 		           {
+								   // Non-result results can happen ( ie. with PNG conversion ). Probably just ignore.
+								 	 if (! is_object($item->result))
+									 {
+										  continue;
+									 }
 
 		               $result = $item->result;
 									 $counts = $item->counts;
+
 									 $apiStatus = property_exists($result, 'apiStatus') ? $result->apiStatus : null;
 
 									 $this->displayResult($result, $qname, $counts);
@@ -303,8 +306,6 @@ class SpioCommandBase
 		// Function for Showing JSON output of Optimizer regarding the process.
 		protected function displayResult($result, $type, $counts = null)
 		{
-				 // echo "RESULT"; var_dump($result);
-			//  if ($item->result->status == ApiController::STATUS_ENQUEUED)
 				$apiStatus = property_exists($result, 'apiStatus') ? $result->apiStatus : null;
 
 
@@ -318,10 +319,7 @@ class SpioCommandBase
 							 if (property_exists($result, 'improvements'))
 							 {
 								  $outputTable = array();
-
-
 									$improvements = $result->improvements;
-
 
 									if (isset($improvements['main']))
 									{
@@ -334,7 +332,6 @@ class SpioCommandBase
 										foreach($improvements['thumbnails'] as $thumbName => $optData)
 										{
 											$outputTable[] = array('name' => $thumbName, 'improvement' => $optData[0] . '%');
-									//		 \WP_CLI::Success( sprintf(__('%s optimized by %d %% ', 'shortpixel-image-optimiser'), $thumbName, $optData[0]));
 										}
 									}
 
@@ -343,7 +340,6 @@ class SpioCommandBase
 
 									\WP_CLI\Utils\format_items('table', $outputTable, array('name', 'improvement'));
 
-//echo 'cnt'; print_r($counts);
 									if (! is_null($counts))
 									{
 										 $baseMsg = sprintf(' This job, %d credit(s) were used. %d for images ', $counts->creditCount,
@@ -394,12 +390,8 @@ class SpioCommandBase
 		public function status($args, $assoc)
 		{
 				$queue = $this->getQueueArgument($assoc);
-			//	$optimizeController = $this->getOptimizeController();
 
-		//		$startupData = $optimizeController->getStartupData();
 				$startupData = $this->getStatus();
-
-			//	var_dump($startupData);
 
 				$items = array();
 				$fields = array('queue name', 'in queue', 'in process', 'fatal errors', 'done', 'total', 'preparing', 'running', 'finished');

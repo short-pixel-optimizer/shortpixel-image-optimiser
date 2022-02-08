@@ -29,7 +29,7 @@ class SpioBulk extends SpioCommandBase
 	   *
 	   * ## EXAMPLES
 	   *
-	   *   wp spio start <ticks=20> <wait=3000>
+	   *   wp spio start <ticks=20> <wait=3>
 		 * 	 wp spio start
 	   *
 	   *
@@ -72,15 +72,12 @@ class SpioBulk extends SpioCommandBase
 				$created = false;
 
 				 $this->settings();
-				 usleep(2000); // digest settings
+				 sleep(2); // user can digest settings
 
-				//	$Q = $optimizeController->getQueue($qname);
-
-					while($running)
-					{
+				while($running)
+				{
 						 	$data = $optimizeController->getStartupData();
 							$combined = $data->total->stats;
-
 
 							// Is_finished is no queue running.
 							if ($combined->is_preparing)
@@ -88,13 +85,12 @@ class SpioBulk extends SpioCommandBase
 								\WP_CLI::line('[Auto Bulk] Preparing .. ');
 								 $this->prepare($args, $assoc);
 								 $this->start($args, $assoc);
+								 \WP_CLI::line('Preparing Run done');
 							}
 							elseif ($combined->is_running)
 							{
 								\WP_CLI::line('Bulk Running ...');
 								 $this->run($args, $assoc); // Run All
-
-
 							}
 							elseif ($combined->total > 0 && $combined->done == 0 && $combined->is_running == false && $combined->is_preparing == false && $combined->is_finished == false)
 							{
@@ -249,7 +245,7 @@ class SpioBulk extends SpioCommandBase
 						{
 							 $assoc['complete']  = true;
 							 //$assoc['queue'] = $qname;
-							 $assoc['wait'] = 500;
+							 $assoc['wait'] = 0.5;
 							 $bool = $this->run($args, $assoc);
 						}
 

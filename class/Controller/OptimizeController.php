@@ -333,7 +333,9 @@ class OptimizeController
 
               $bool = $this->convertPNG($item, $Q);
               if ($bool == true)
+							{
                 continue; // conversion done one way or another, item will be need requeuing, because new urls / flag.
+							}
             }
 
             $item = $this->sendToProcessing($item, $Q);
@@ -494,7 +496,9 @@ class OptimizeController
           {
             // These are cloned, because queue changes object's properties
             // No specific error, try again.
-              $q->itemFailed($item, false);
+
+						// @todo Maybe should not return failed as status?
+            //  $q->itemFailed($item, false);
           }
       }
       elseif ($result->is_done)
@@ -613,7 +617,7 @@ class OptimizeController
 							$item->result->message = substr_replace( $item->result->message,  $imageItem->getFileName() . ' ', strpos($item->result->message, '#' . $item->item_id), 0);
 
               $item->result->message .= sprintf(__('(cycle %d)', 'shortpixel-image-optimiser'), intval($item->tries) );
-              $q->itemFailed($item, false); // register as failed, retry in x time, q checks timeouts
+            //  $q->itemFailed($item, false); // register as failed, retry in x time, q checks timeouts
           }
       }
 
