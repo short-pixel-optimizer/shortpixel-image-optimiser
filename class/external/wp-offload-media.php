@@ -47,9 +47,6 @@ class wpOffload
       }
 
       $provider = $this->as3cf->get_provider();
-  //    $domain = $provider->get_bucket_location();
-
-  //    var_dump($domain);
 
       add_action('shortpixel_image_optimised', array($this, 'image_upload'));
       add_action('shortpixel_after_restore_image', array($this, 'image_restore')); // hit this when restoring.
@@ -248,8 +245,17 @@ class wpOffload
           // Don't prevent whaffever if shortpixel is already done. This can be caused by plugins doing a metadata update, we don't care then.
           if (! isset($data['ShortPixelImprovement']))
           {
-            Log::addDebug('Preventing Initial Upload', $post_id);
-            return true;
+
+						$image_file = get_attached_file( $post_id, true );
+						if (strpos($image_file, '.pdf') !== false && ! $settings->optimizePdfs  )
+						{
+							 Log::addDebug('S3 Prevent Initial Upload detected PDF, which will not be optimized', $post_id);
+							 return false;
+						}
+						{
+            	Log::addDebug('Preventing Initial Upload', $post_id);
+            	return true;
+						}
           }
         }
         return $bool;
