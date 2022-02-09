@@ -24,7 +24,7 @@ class MediaLibraryQueue extends Queue
      $options = array(
         'numitems' => 1,  // amount of items to pull per tick when optimizing
         'mode' => 'wait',
-        'process_timeout' => 7000, // time between request for the image.
+        'process_timeout' => 7000, // time between request for the image. (in milisecs)
         'retry_limit' => 30, // amount of times it will retry without errors before giving up
         'enqueue_limit' => 200, // amount of items added to the queue when preparing.
      );
