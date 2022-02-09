@@ -330,6 +330,14 @@ class wpOffload
           $mediaItem = $fs->getImage($post_id, 'media');
           if ($mediaItem && ! $mediaItem->isOptimized())
           {
+
+						$image_file = $mediaItem->getFileName();
+						if (strpos($image_file, '.pdf') !== false && ! $settings->optimizePdfs  )
+						{
+							 Log::addDebug('S3 Prevent Initial Upload detected PDF, which will not be optimized', $post_id);
+							 return false;
+						}
+
             Log::addDebug('Preventing Initial Upload', $post_id);
             return true;
           }
