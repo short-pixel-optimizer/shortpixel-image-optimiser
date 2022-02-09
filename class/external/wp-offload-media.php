@@ -252,10 +252,10 @@ class wpOffload
 							 Log::addDebug('S3 Prevent Initial Upload detected PDF, which will not be optimized', $post_id);
 							 return false;
 						}
-						{
+
             	Log::addDebug('Preventing Initial Upload', $post_id);
             	return true;
-						}
+						
           }
         }
         return $bool;
