@@ -243,7 +243,7 @@ console.log("Screen Init Done", initMedia, initCustom);
         event.preventDefault(); // stop handler in checkResponse.
 
 
-      this.processor.SetInterval(500); // do this faster.
+      this.processor.SetInterval(200); // do this faster.
       // Show stats
       if (! this.processor.CheckActive())
       {
@@ -274,7 +274,7 @@ console.log("Screen Init Done", initMedia, initCustom);
           }
           else
           {
-              this.SwitchPanel('dashboard');
+              this.SwitchPanel('dashboard'); // seems we are just at the begin.
               this.processor.StopProcess();
 
           } // empty queue, no items, start.
@@ -556,7 +556,7 @@ console.log("Screen Init Done", initMedia, initCustom);
   this.StartBulk = function() // Open panel action
   {
       console.log('Starting to Bulk!');
-      var data = {screen_action: 'startBulk'}; //
+      var data = {screen_action: 'startBulk', callback: 'shortpixel.bulk.started'}; //
 
       // Prepare should happen after selecting what the optimize.
       //window.addEventListener('shortpixel.prepareBulk', this.PrepareBulk.bind(this), {'once': true} );
@@ -564,7 +564,10 @@ console.log("Screen Init Done", initMedia, initCustom);
 
       // process stops after preparing.
 			// ResumeProcess, not RunProcess because that hits the pauseToggles.
-     this.processor.ResumeProcess();
+			window.addEventListener('shortpixel.bulk.started', function() {
+					this.processor.ResumeProcess();
+				}.bind(this), {'once': true} );
+      //this.processor.ResumeProcess();
 
       this.SwitchPanel('process');
 
@@ -780,8 +783,8 @@ console.log("Screen Init Done", initMedia, initCustom);
     console.log('Start Restore All');
     var data = {screen_action: 'startRestoreAll', callback: 'shortpixel.startRestoreAll'}; //
 
-    //this.SwitchPanel('selection');
-    //this.UpdatePanelStatus('loading', 'selection');
+    this.SwitchPanel('selection');
+    this.UpdatePanelStatus('loading', 'selection');
 
     // Prepare should happen after selecting what the optimize.
     window.addEventListener('shortpixel.startRestoreAll', this.PrepareBulk.bind(this), {'once': true} );
