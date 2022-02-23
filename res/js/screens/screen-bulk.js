@@ -794,8 +794,9 @@ console.log("Screen Init Done", initMedia, initCustom);
     console.log('Start Migrate All');
     var data = {screen_action: 'startMigrateAll', callback: 'shortpixel.startMigrateAll'}; //
 
-    //this.SwitchPanel('selection');
-    //this.UpdatePanelStatus('loading', 'selection');
+    this.SwitchPanel('selection');
+    this.UpdatePanelStatus('loading', 'selection');
+  	//this.SwitchPanel('process');
 
     // Prepare should happen after selecting what the optimize.
     window.addEventListener('shortpixel.startMigrateAll', this.PrepareBulk.bind(this), {'once': true} );

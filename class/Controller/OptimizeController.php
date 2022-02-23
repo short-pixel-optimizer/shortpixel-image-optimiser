@@ -378,6 +378,7 @@ class OptimizeController
                  $imageObj->restore();
               break;
               case 'migrate':
+								Log::addTemp('migrating item : #' , $imageObj->get('id'));
                 // Loading the item should already be enough to trigger.
               break;
            }

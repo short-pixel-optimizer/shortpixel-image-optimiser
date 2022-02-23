@@ -189,8 +189,20 @@ abstract class Queue
 					}
 
           // maybe while on the whole function, until certain time has elapsed?
-          foreach($items as $mediaItem)
+          foreach($items as $item_id)
           {
+							// Migrate shouldn't load image object at all since that would trigger the conversion.
+							  if ($operation == 'migrate')
+								{
+                    $qObject = new \stdClass;  //$this->imageModelToQueue($mediaItem);
+                    $qObject->action = 'migrate';
+                    $queue[] = array('id' => $item_id, 'value' => $qObject, 'item_count' => 1);
+
+										continue;
+								}
+
+								$mediaItem = $fs->getImage($item_id, $this->getType() );
+
                 if ($mediaItem->isProcessable() && $mediaItem->isOptimizePrevented() === false && ! $operation) // Checking will be done when processing queue.
                 {
                     $qObject = $this->imageModelToQueue($mediaItem);
@@ -221,13 +233,6 @@ abstract class Queue
                             $queue[] = array('id' => $mediaItem->get('id'), 'value' => $qObject, 'item_count' => $counts->creditCount);
                           }
                       }
-                      elseif ($operation == 'migrate')
-                      {
-                          $qObject = new \stdClass;  //$this->imageModelToQueue($mediaItem);
-                          $qObject->action = 'migrate';
-
-                          $queue[] = array('id' => $mediaItem->get('id'), 'value' => $qObject, 'item_count' => $counts->creditCount);
-                      }
                    }
                    elseif($mediaItem->isOptimized())
                    {
@@ -249,7 +254,6 @@ abstract class Queue
 
           $customData = $this->getStatus('custom_data');
 
-
           $customData->webpCount += $webpCount;
           $customData->avifCount += $avifCount;
 					$customData->baseCount += $baseCount;
@@ -257,7 +261,7 @@ abstract class Queue
           $this->q->setStatus('custom_data', $customData, false);
 
           // mediaItem should be last_item_id, save this one.
-          $this->q->setStatus('last_item_id', $mediaItem->get('id')); // enum status to prevent a hang when no items are enqueued, thus last_item_id is not raised. save to DB.
+          $this->q->setStatus('last_item_id', $item_id); // enum status to prevent a hang when no items are enqueued, thus last_item_id is not raised. save to DB.
 
           $qCount = count($queue);
 

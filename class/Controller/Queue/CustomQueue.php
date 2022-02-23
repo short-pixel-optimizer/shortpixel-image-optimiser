@@ -100,7 +100,7 @@ class CustomQueue extends Queue
 
      foreach($results as $item_id)
      {
-          $items[] = $fs->getImage($item_id, 'custom');
+          $items[] = $item_id; //$fs->getImage($item_id, 'custom');
      }
 
      return array_filter($items);
