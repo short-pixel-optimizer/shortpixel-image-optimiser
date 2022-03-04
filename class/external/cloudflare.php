@@ -79,6 +79,8 @@ class CloudFlareAPI {
      */
     private function start_cloudflare_cache_purge_process( $image_id ) {
 
+        //@TODO Also add the WebP and/or AVIF URLs to the purge list, for both Media Library and Custom Media items
+
         // Fetch CloudFlare API credentials
         /*$cloudflare_auth_email = $this->_cloudflareEmail;
         $cloudflare_auth_key   = $this->_cloudflareAuthKey;
@@ -94,12 +96,16 @@ class CloudFlareAPI {
                 $fetch_images_sizes[] = 'full';
             }
 
-            // Fetch the URL for each image size
-            foreach ( $fetch_images_sizes as $size ) {
-                // 0 - url; 1 - width; 2 - height
-                $image_attributes = wp_get_attachment_image_src( $image_id, $size );
-                // Append to the list
-                array_push( $purge_array, $image_attributes[0] );
+            if ( get_post_type( $image_id ) === 'attachment' ) {
+                // The item is a Media Library item, fetch the URL for each image size
+                foreach ( $fetch_images_sizes as $size ) {
+                    // 0 - url; 1 - width; 2 - height
+                    $image_attributes = wp_get_attachment_image_src( $image_id, $size );
+                    // Append to the list
+                    array_push( $purge_array, $image_attributes[0] );
+                }
+            } else {
+                // The item is a Custom Media item and we need to construct the full URL from the path
             }
 
             if ( ! empty( $purge_array ) ) {
