@@ -84,7 +84,7 @@ class ListMediaViewController extends \ShortPixel\ViewController
 							 	$res = $optimizeController->reOptimizeItem($mediaItem, $targetCompressionType);
 						break;
 						case 'restore';
-								$res = $optimizeController->restoreItem($mediaItem);
+								$res = $optimizeController->restoreItem($mediaItem, $item_id);
 						break;
 				 }
 

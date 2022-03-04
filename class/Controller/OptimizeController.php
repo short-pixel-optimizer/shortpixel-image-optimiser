@@ -156,16 +156,32 @@ class OptimizeController
 		*
 		* @param Object $mediaItem
 		*/
-    public function restoreItem($mediaItem)
+    public function restoreItem($mediaItem, $item_id)
     {
         $fs = \wpSPIO()->filesystem();
-
-				$item_id = $mediaItem->get('id');
 
         $json = $this->getJsonResponse();
         $json->status = 0;
         $json->result = new \stdClass;
         $json->result->item_id = $item_id;
+
+        if (!$mediaItem)
+        {
+					 if (! property_exists($json->result, 'message'))
+					 {
+					 		$json->result->message = __('Item is not restorable', 'shortpixel-image-optimiser');
+				 	 }
+           $json->result->is_done = true;
+           $json->fileStatus = ImageModel::FILE_STATUS_ERROR;
+           $json->result->is_error = true;
+
+            Log::addWarn('Item with id ' . $json->result->item_id . ' is not restorable,');
+
+        return $json;
+        }
+
+//		$item_id = $mediaItem->get('id');
+
 
 				$optimized = $mediaItem->getMeta('tsOptimized');
 
@@ -327,7 +343,6 @@ class OptimizeController
       // Only runs if result is array, dequeued items.
       foreach($items as $mainIndex => $item)
       {
-            $urls = $item->urls;
             if (property_exists($item, 'png2jpg') && ! property_exists($item, 'action'))
             {
 

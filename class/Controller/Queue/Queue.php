@@ -203,7 +203,9 @@ abstract class Queue
 
 								$mediaItem = $fs->getImage($item_id, $this->getType() );
 
-                if ($mediaItem->isProcessable() && $mediaItem->isOptimizePrevented() === false && ! $operation) // Checking will be done when processing queue.
+            //checking if the $mediaItem actually exists
+            if ( $mediaItem ) {
+                if ($mediaItem->isProcessable() && $mediaItem->isOptimizePrevented() == false && ! $operation) // Checking will be done when processing queue.
                 {
                     $qObject = $this->imageModelToQueue($mediaItem);
 
@@ -223,14 +225,13 @@ abstract class Queue
                 {
                    if($operation !== false)
                    {
-                      $counts = $qObject->counts;
                       if ($operation == 'bulk-restore')
                       {
                           if ($mediaItem->isRestorable())
                           {
                             $qObject = new \stdClass; //$this->imageModelToQueue($mediaItem);
                             $qObject->action = 'restore';
-                            $queue[] = array('id' => $mediaItem->get('id'), 'value' => $qObject, 'item_count' => $counts->creditCount);
+                            $queue[] = array('id' => $mediaItem->get('id'), 'value' => $qObject);
                           }
                       }
                    }
@@ -247,6 +248,13 @@ abstract class Queue
 									 }
 
                 }
+			  }
+			  else
+			  {
+				  $message = sprintf(__('Preparing of item %d failed, invalid post content or type','shortpixel-image-optimiser'),$item_id);
+				  ResponseController::add()->asError()->withMessage($message);
+				  Log::addWarn('The item with id ' . $item_id . ' cannot be processed because it is either corrupted or an invalid post type');
+			  }
           }
 
           $this->q->additems($queue);
