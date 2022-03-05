@@ -31,7 +31,7 @@ $queueRunning = $bulk->isAnyBulkRunning();
 			<a href="<?php echo add_query_arg(array('sp-action' => 'action_debug_redirectBulk', 'bulk' => 'migrate', 'noheader' => true), $url) ?>" class="button">
 					<?php _e('Search and Migrate All', 'shortpixel-image-optimiser'); ?>
 			</a>
-			<p class='description'><?php printf(__('If you upgraded from a ShortPixel Image Optimiser version prior than version 5.0, you may want to convert all your image data to the new format. This will speed up the plugin and ensure all data is preserved. %s Check your image data after running the conversion! %s', 'shortpixel-image-optimiser'), '<b>', '</b>') ?> </p>
+			<p class='description'><?php printf(__('If you upgraded from a ShortPixel Image Optimizer version prior than version 5.0, you may want to convert all your image data to the new format. This will speed up the plugin and ensure all data is preserved. %s Check your image data after running the conversion! %s', 'shortpixel-image-optimiser'), '<b>', '</b>') ?> </p>
 		</div>
 
 

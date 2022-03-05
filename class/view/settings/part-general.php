@@ -114,7 +114,7 @@
 							<td>
 								<div class='compression-notice warning'>
 									<h4>Changing Compression</h4>
-									<p><?php _e( 'This type of optimization will apply to newly or processed images. Images that were already processed will not be re-optimized. If you want to change the already optimized images, restore them first. ', 'shortpixel-image-optimiser' ); ?></p>
+									<p><?php _e( 'This type of optimization will apply only to new or unprocessed images. Images that were already processed will not be re-optimized. If you want to change the already optimized images, restore them from the backup first. ', 'shortpixel-image-optimiser' ); ?></p>
 									<p><?php _e('Current optimization processes in the queue will be stopped.', 'shortpixel-image-optimiser'); ?></p>
 
 								</div>
