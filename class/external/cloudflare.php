@@ -105,7 +105,11 @@ class CloudFlareAPI {
                     array_push( $purge_array, $image_attributes[0] );
                 }
             } else {
-                // The item is a Custom Media item and we need to construct the full URL from the path
+                // The item is a Custom Media item
+                $fs = \wpSPIO()->filesystem();
+                $item = $fs->getImage( $image_id, 'custom' );
+                $item_url = $fs->pathToUrl( $item );
+                array_push( $purge_array, $item_url );
             }
 
             if ( ! empty( $purge_array ) ) {
