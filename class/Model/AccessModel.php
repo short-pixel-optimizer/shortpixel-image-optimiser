@@ -23,7 +23,8 @@ class AccessModel
 	{
 
 			$spioCaps = array(
-					'notices' =>  'activate_plugins',
+					'notices' =>  'activate_plugins',				// used in AdminNoticesController
+					'quota-warning' => 'manage_options',    // used in AdminController
 					'image_all' =>  'edit_others_posts',
 					'image_user' => 'edit_post',
 					'custom_all' => 'edit_others_posts',
@@ -53,6 +54,15 @@ class AccessModel
 			return $this->user()->has_cap($cap);
 	}
 
+	/*
+	@param SPIO capability to check again the user WordPress permissions.
+	*/
+	public function userIsAllowed($cap)
+	{
+			$cap = $this->getCap($cap);
+			return $this->user()->has_cap($cap);
+	}
+
 	public function imageIsEditable($mediaItem)
 	{
 			$type = $mediaItem->get('type');
@@ -77,6 +87,8 @@ class AccessModel
 	}
 
 	/** Find the needed capability
+	*
+	* This translates a SPIO capability into the associated cap that is registered within WordPress.
 	*
 	* @param $cap The required Capability
 	* @param $default The default value if not found. This is defaults to an admin cap to prevent access leaking.

@@ -5,6 +5,8 @@ use ShortPixel\Notices\NoticeController as Notices;
 
 use \ShortPixel\ShortPixelPng2Jpg as ShortPixelPng2Jpg;
 
+use ShortPixel\Model\AccessModel as AccessModel;
+
 
 /* AdminController is meant for handling events, hooks, filters in WordPress where there is *NO* specific or more precise  Shortpixel Page active.
 *
@@ -152,6 +154,7 @@ class AdminController extends \ShortPixel\Controller
           return; // not ours, don't load JS and such.
 
         $settings = \wpSPIO()->settings();
+        $access = AccessModel::getInstance();
 				$quotaController = QuotaController::getInstance();
 
         $extraClasses = " shortpixel-hide";
@@ -168,9 +171,18 @@ class AdminController extends \ShortPixel\Controller
             /*translators: toolbar icon tooltip*/
             $id = 'short-pixel-notice-exceed';
             $tooltip = '';
-            $exceedTooltip = __('ShortPixel quota exceeded. Click for details.','shortpixel-image-optimiser');
-            //$link = "http://shortpixel.com/login/" . $this->_settings->apiKey;
-            $link = "options-general.php?page=wp-shortpixel-settings";
+
+            if ($access->userIsAllowed('quota-warning'))
+            {
+              $exceedTooltip = __('ShortPixel quota exceeded. Click for details.','shortpixel-image-optimiser');
+              //$link = "http://shortpixel.com/login/" . $this->_settings->apiKey;
+              $link = "options-general.php?page=wp-shortpixel-settings";
+            }
+            else {
+              $exceedTooltip = __('ShortPixel quota exceeded. Click for details.','shortpixel-image-optimiser');
+              //$link = "http://shortpixel.com/login/" . $this->_settings->apiKey;
+              $link = false;
+            }
         }
 
         $args = array(
