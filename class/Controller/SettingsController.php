@@ -803,18 +803,18 @@ class SettingsController extends \ShortPixel\ViewController
 
 		//		var_dump($patterns);
 
-			/*	foreach($patterns as $pair)
+			  foreach($patterns as $pair)
 				{
 						$pattern = $pair['value'];
-						$first = substr($pattern, 0,1);
-						if ($first == '/')
+						//$first = substr($pattern, 0,1);
+						if ($type == 'regex-name' || $type == 'regex-path')
 						{
 						  if ( @preg_match($pattern, false) === false)
 							{
-								 Notice::addWarning(sprintf(__('Pattern %s returned an error.', 'shortpixel-image-optimser'), $pattern ));
+								 Notice::addWarning(sprintf(__('Regular Expression Pattern %s returned an error. Please check if the expression is correct. %s * Special characters should be escaped. %s * A regular expression must be contained between two slashes  ', 'shortpixel-image-optimser'), $pattern, "<br>", "<br>" ));
 							}
 						}
-				} */
+				}
         $post['excludePatterns'] = $patterns;
         return $post;
       }

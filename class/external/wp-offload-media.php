@@ -359,6 +359,9 @@ class wpOffload
          $webpformat1 = $basepath . $file->getFileName() . '.webp';
          $webpformat2 = $basepath . $file->getFileBase() . '.webp';
 
+         $avifformat =  $basepath . $file->getFileBase() . '.avif';
+
+
          if ($check_exists)
          {
            if (file_exists($webpformat1))
@@ -375,6 +378,17 @@ class wpOffload
          }
          else {
            $newPaths[$size . '_webp2'] =  $webpformat2;
+         }
+
+         if ($check_exists)
+         {
+            if (file_exists($avifformat))
+            {
+               $newPaths[$size . '_avif'] = $avifformat;
+            }
+            else {
+               $newPaths[$size . '_avif'] = $avifformat;
+            }
          }
 
       }

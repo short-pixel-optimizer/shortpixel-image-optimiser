@@ -192,7 +192,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                 <td>
                     <input name="png2jpg" type="checkbox" id="png2jpg" value="1" <?php checked( ($view->data->png2jpg > 0), true);?> <?php echo($this->is_gd_installed ? '' : 'disabled') ?>>
                     <label for="png2jpg"><?php _e('Automatically convert the PNG images to JPEG, if possible.','shortpixel-image-optimiser');
-                        if(!$this->is_gd_installed) {echo("&nbsp;<span style='color:red;'>" . __('You need PHP GD with support for JPEG and PNG files for this feature. Please ask your hosting to install it.','shortpixel-image-optimiser') . "</span>");}
+                        if(!$this->is_gd_installed) {echo("&nbsp;<span style='color:red;'>" . __('You need PHP GD with support for JPEG and PNG files for this feature. Please ask your hosting provider to install it.','shortpixel-image-optimiser') . "</span>");}
                     ?></label>
                     <p class="settings-info">
                         <?php _e('Converts all PNGs that don\'t have transparent pixels to JPEG. This can dramatically reduce the file size, especially if you have camera pictures that are saved in PNG format. The plugin will also search for references of the image in posts and replace them.','shortpixel-image-optimiser');?>
@@ -332,17 +332,19 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
             <tr>
                 <th scope="row"><label for="excludePatterns"><?php _e('Exclude patterns','shortpixel-image-optimiser');?></label></th>
                 <td>
-                    <input name="excludePatterns" type="text" id="excludePatterns" value="<?php echo( $excludePatterns );?>" class="regular-text" placeholder="<?php
-                        _e('name:keepbig, path:/ignore_regex/i, size:1000x2000','shortpixel-image-optimiser');?>">
-                    <?php _e('Exclude certain images from being optimized, based on patterns.','shortpixel-image-optimiser');?>
+
+                    <textarea name="excludePatterns" type="text" id="excludePatterns" placeholder="<?php
+                        _e('name:keepbig, path:/ignore_regex/i, size:1000x2000','shortpixel-image-optimiser');?>" rows="4" cols="60"><?php echo( $excludePatterns );?></textarea>
+
                     <p class="settings-info">
                         <?php _e('Add patterns separated by comma. A pattern consist of a <strong>type:value</strong> pair; the accepted types are
-                                  <strong>"name"</strong>, <strong>"path"</strong> and <strong>"size"</strong>.
-                                   A file is excluded if it matches any of the patterns.
-                                   <br>For a <strong>"name"</strong> pattern only the filename is matched, but for a <strong>"path"</strong>,
-                                   all the path will be matched (useful for excluding certain sub-directories altoghether).
-                                   For these you can also use regular expressions accepted by preg_match, but without "," or ":".
-                                   A pattern is considered a regex if it starts with a "/" and it\'s valid.
+                                  <strong>"name"</strong>, <strong>"path"</strong>, <strong>"size"</strong>, <strong>"regex-name"</strong> and <strong>"regex-path"</strong>.
+                                   A file is excluded if it matches any of the patterns. <br>
+                                   <br>For a <strong>"name"</strong> pattern only the filename is matched, for <strong>"path"</strong>,
+                                   the whole path will be matched (useful for excluding certain (sub)-directories altoghether).
+                                   <br><br>
+                                   <strong>"regex-path"</strong> and <strong>"regex-name"</strong> work the same, except it requires a valid regular expression, contained between slashes. Special characters should be escaped.
+                                   <br>
                                    <br>For the <strong>"size"</strong> type,
                                    which applies only to Media Library images, <strong>the main images (not thumbnails)</strong> that have the size in the specified range are excluded.
                                    The format for the "size" exclude is: <strong>minWidth</strong>-<strong>maxWidth</strong>x<strong>minHeight</strong>-<strong>maxHeight</strong>, for example <strong>size:1000-1100x2000-2200</strong>. You can also specify a precise size, such as <strong>1000x2000</strong>.','shortpixel-image-optimiser');?>

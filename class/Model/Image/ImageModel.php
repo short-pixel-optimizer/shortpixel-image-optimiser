@@ -718,10 +718,18 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
         foreach($excludePatterns as $item) {
             $type = trim($item["type"]);
-            if(in_array($type, array("name", "path"))) {
+            if(in_array($type, array("name", "path", 'regex-name','regex-path'))) {
                 $pattern = trim($item["value"]);
                 $target = ($type == "name") ? $this->getFileName() : $this->getFullPath();
-                if( self::matchExcludePattern($target, $pattern) ) { //search as a substring if not
+
+                if ($type == 'regex-name' || $type == 'regex-path')
+                {
+                    $result = $this->matchExludeRegexPattern($target, $pattern);
+                }
+                else {
+                    $result =  $this->matchExcludePattern($target, $pattern);
+                }
+                if($result === true) { //search as a substring if not
                     $this->processable_status = self::P_EXCLUDE_PATH;
                     return true;
                 }
@@ -746,37 +754,26 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         if(strlen($pattern) == 0)  // can happen on faulty input in settings.
           return false;
 
-        $first = substr($pattern, 0,1);
-				$matchRegEx = false;
-
-				// Check for RegEx.
-				// if pattern is not proper regex, just try strpos. It can be a path like /sites/example.com/etc
-        if ($first == '/')
+        if (strpos($target, $pattern) !== false)
         {
-          if (@preg_match($pattern, false) !== false)
-          {
-						$matchRegEx = true;
-					}
-				}
-
-
-				if (! $matchRegEx)
-				{
-          if (strpos($target, $pattern) !== false)
-          {
-            return true;
-          }
-				}
-				else
-				{
-						$m = preg_match($pattern,  $target);
-            if ($m !== false && $m > 0) // valid regex, more hits than zero
-            {
-              return true;
-            }
-				}
+          return true;
+        }
 
         return false;
+    }
+
+    protected function matchExludeRegexPattern($target, $pattern)
+    {
+      if(strlen($pattern) == 0)  // can happen on faulty input in settings.
+        return false;
+
+      $m = preg_match($pattern,  $target);
+      if ($m !== false && $m > 0) // valid regex, more hits than zero
+      {
+        return true;
+      }
+
+      return false;
     }
 
     /** Convert Image Meta to A Class */

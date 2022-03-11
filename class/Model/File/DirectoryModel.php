@@ -451,6 +451,12 @@ class DirectoryModel extends \ShortPixel\Model
         $size = 0;
         $files = $this->getFiles();
 
+        // GetFiles can return Boolean false on missing directory. 
+        if (! is_array($files))
+        {
+           return $size;
+        }
+
         foreach($files as $fileObj)
         {
             $size += $fileObj->getFileSize();
