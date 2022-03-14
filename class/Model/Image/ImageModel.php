@@ -53,6 +53,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
     protected $image_meta; // metadata Object of the image.
 
+    // ImageModel properties are not stored but is generated data.  Only storage should happen to the values in Meta. 
     protected $width;
     protected $height;
     protected $mime;

@@ -305,11 +305,11 @@ static public function formatBytes($bytes, $precision = 2) {
            ##### IF try the file with replaced extension (test.avif) #####
            RewriteCond %{HTTP_ACCEPT} image/avif
            # AND is the request a jpg or png? (also grab the basepath %1 to match in the next rule)
-           RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png)$
+           RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png|gif)$
            # AND does a .avif image exist?
            RewriteCond %{DOCUMENT_ROOT}/%1.avif -f
            # THEN send the webp image and set the env var avif
-           RewriteRule (.+)\.(?:jpe?g|png)$ $1.avif [NC,T=image/avif,E=avif,L]
+           RewriteRule (.+)\.(?:jpe?g|png|gif)$ $1.avif [NC,T=image/avif,E=avif,L]
            </IfModule>
            <IfModule mod_headers.c>
            # If REDIRECT_webp env var exists, append Accept to the Vary header
@@ -333,7 +333,7 @@ static public function formatBytes($bytes, $precision = 2) {
              # AND NOT MS EDGE 42/17 - doesnt work.
              RewriteCond %{HTTP_USER_AGENT} !Edge/17
              # AND is the request a jpg or png?
-             RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png)$
+             RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png|gif)$
              # AND does a .ext.webp image exist?
              RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI}.webp -f
              # THEN send the webp image and set the env var webp
@@ -344,11 +344,11 @@ static public function formatBytes($bytes, $precision = 2) {
              RewriteCond %{HTTP_ACCEPT} image/webp
              RewriteCond %{HTTP_USER_AGENT} !Edge/17
              # AND is the request a jpg or png? (also grab the basepath %1 to match in the next rule)
-             RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png)$
+             RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png|gif)$
              # AND does a .ext.webp image exist?
              RewriteCond %{DOCUMENT_ROOT}/%1.webp -f
              # THEN send the webp image and set the env var webp
-             RewriteRule (.+)\.(?:jpe?g|png)$ $1.webp [NC,T=image/webp,E=webp,L]
+             RewriteRule (.+)\.(?:jpe?g|png|gif)$ $1.webp [NC,T=image/webp,E=webp,L]
            </IfModule>
            <IfModule mod_headers.c>
              # If REDIRECT_webp env var exists, append Accept to the Vary header

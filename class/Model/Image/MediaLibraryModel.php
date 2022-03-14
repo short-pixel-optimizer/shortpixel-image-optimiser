@@ -527,15 +527,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
       if (! $metadata)
       {
-            // Thumbnails is a an array of ThumbnailModels
-            $this->thumbnails = $this->loadThumbnailsFromWP();
+          // Thumbnails is a an array of ThumbnailModels
+          $this->thumbnails = $this->loadThumbnailsFromWP();
 
-            $result = $this->checkLegacy();
-            if ($result)
-            {
-              $this->saveMeta();
+          $result = $this->checkLegacy();
+          if ($result)
+          {
+            $this->saveMeta();
 
-            }
+          }
       }
       elseif (is_object($metadata) )
       {
@@ -1244,7 +1244,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				}
 
 			// @todo Restore can be false if last item failed, which doesn't sound right.
-
 	    return $bool;
   }
 

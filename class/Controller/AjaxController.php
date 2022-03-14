@@ -315,7 +315,7 @@ class AjaxController
       $mediaItem = $this->getMediaItem($id, $type);
       $control = new OptimizeController();
 
-      $json->$type = $control->restoreItem($mediaItem, $id);
+      $json->$type = $control->restoreItem($mediaItem);
 
       return $json;
     }

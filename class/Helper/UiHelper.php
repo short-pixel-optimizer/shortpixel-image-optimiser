@@ -12,6 +12,15 @@ use ShortPixel\Model\AccessModel as AccessModel;
 class UiHelper
 {
 
+	private static $outputMode = 'admin';
+
+	public static function setOutputHandler($name)
+	{
+		 	self::$outputMode = $name;
+
+
+	}
+
   public static function renderBurgerList($actions, $imageObj)
   {
     $output = "";

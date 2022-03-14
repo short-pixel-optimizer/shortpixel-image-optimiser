@@ -67,6 +67,7 @@ class BuildAutoLoader
 			'class/external/wp-cli/wp-cli-single.php',
 			'class/external/wp-cli/wp-cli-bulk.php',
       'class/external/custom-suffixes.php',
+      'class/external/pantheon.php', 
     );
 
     echo "Build Plugin.JSON ";

@@ -156,16 +156,11 @@ class OptimizeController
 		*
 		* @param Object $mediaItem
 		*/
-    public function restoreItem($mediaItem, $item_id)
+    public function restoreItem($mediaItem)
     {
         $fs = \wpSPIO()->filesystem();
 
-        $json = $this->getJsonResponse();
-        $json->status = 0;
-        $json->result = new \stdClass;
-        $json->result->item_id = $item_id;
-
-        if (!$mediaItem)
+        if (! is_object($mediaItem))  // something wrong
         {
 					 if (! property_exists($json->result, 'message'))
 					 {
@@ -177,11 +172,17 @@ class OptimizeController
 
             Log::addWarn('Item with id ' . $json->result->item_id . ' is not restorable,');
 
-        return $json;
+            return $json;
         }
 
-//		$item_id = $mediaItem->get('id');
+        $item_id = $mediaItem->get('id');
 
+        $json = $this->getJsonResponse();
+        $json->status = 0;
+        $json->result = new \stdClass;
+        $json->result->item_id = $item_id;
+
+//		$item_id = $mediaItem->get('id');
 
 				$optimized = $mediaItem->getMeta('tsOptimized');
 

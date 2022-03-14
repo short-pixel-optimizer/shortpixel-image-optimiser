@@ -224,7 +224,7 @@ class ApiController
 			 $urls = count($item->urls);
 			 $flags = property_exists($item, 'flags') ? $item->flags : array();
 			 $flags = implode("|", $flags);
-			 $text = sprintf(__('New item #%d sent for processing ( %d URLS, %s)  ', 'shortpixel-image-optimiser'), $item->item_id, $urls, $flags );
+			 $text = sprintf(__('New item #%d sent for processing ( %d URLS %s)  ', 'shortpixel-image-optimiser'), $item->item_id, $urls, $flags );
 
        $item->result = $this->returnOK(self::STATUS_ENQUEUED, $text );
     }

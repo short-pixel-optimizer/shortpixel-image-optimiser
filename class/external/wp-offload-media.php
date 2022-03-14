@@ -74,60 +74,12 @@ class wpOffload
       // for webp picture paths rendered via output
       add_filter('shortpixel_webp_image_base', array($this, 'checkWebpRemotePath'), 10, 2);
       add_filter('shortpixel/front/webp_notfound', array($this, 'fixWebpRemotePath'), 10, 4);
+
+			add_filter('as3cf_remove_source_files_from_provider', function ($paths){  Log::addTemp("removing these paths", $paths); return $paths;
+			});
+
     }
 
-    public function get_raw_attached_file($file, $id)
-    {
-      $scheme = parse_url($file, PHP_URL_SCHEME);
-
-      $item = $this->getItemById($id);
-      if ($item !== false) // this is a offloaded thingie
-      {
-         return get_attached_file($id, true);
-      }
-      /*
-      if ($scheme !== false && strpos($scheme, 's3') !== false)
-      {
-        return get_attached_file($id, true);
-      }
-      else
-      {
-
-      } */
-      return $file;
-    }
-
-    // partial copy of the wp_get_original_image_path function. It doesn't support raw filter on get_attached_file
-    public function get_raw_original_path($file, $id)
-    {
-
-      $scheme = parse_url($file, PHP_URL_SCHEME);
-      $item = $this->getItemById($id);
-
-      if ($item !== false)
-      {
-        $image_meta = wp_get_attachment_metadata( $id );
-        $image_file = get_attached_file( $id, true );
-
-        if ( empty( $image_meta['original_image'] ) ) {
-            $original_image = $image_file;
-        } else {
-            $original_image = path_join( dirname( $image_file ), $image_meta['original_image'] );
-        }
-        $file = $original_image;
-      }
-
-      return $file;
-    }
-
-    public function addURLforDownload($bool, $url, $host)
-    {
-      $provider = $this->as3cf->get_provider();
-      $provider->get_url_domain();
-
-      //as3cf_aws_s3_client_args filter?
-      return $url;
-    }
 
     public function returnOriginalFile($file, $attach_id)
     {
@@ -135,9 +87,23 @@ class wpOffload
       return $file;
     }
 
+		private function getMediaClass()
+		{
+			if (method_exists($this->as3cf, 'get_source_type_class'))
+			{
+				$class = $this->as3cf->get_source_type_class('media-library');
+			}
+			else
+			{
+				$class = $this->itemClassName; //backward compat.
+			}
+
+			return $class;
+		}
+
     /**
     * @param $id attachment id (WP)
-    * @param $mediaItem  MediaLibraryModel
+    * @param $mediaItem  MediaLibraryModel SPIO
     * @param $clean - boolean - if restore did all files (clean) or partial (not clean)
     */
     public function image_restore($id, $mediaItem, $clean)
@@ -148,7 +114,6 @@ class wpOffload
       $settings = \wpSPIO()->settings();
 
       // If there are excluded sizes, there are not in backups. might not be left on remote, or ( if delete ) on server, so just generate the images and move them.
-
       $mediaItem->wpCreateImageSizes();
 
       $this->remove_remote($id);
@@ -157,29 +122,48 @@ class wpOffload
 
     public function remove_remote($id)
     {
-      $mediaItem = $this->getItemById($id);
+      $mediaItem = $this->getItemById($id); // MediaItem is AS3CF Object
       if ($mediaItem === false)
       {
         Log::addDebug('S3-Offload MediaItem not remote - ' . $id);
         return false;
       }
-    //  $provider_object = $this->as3cf->get_attachment_provider_info($id);
-      $this->as3cf->remove_attachment_files_from_provider($id, $mediaItem);
+
+			Log::addTemp('Remove Remote Media Item is there', $mediaItem);
+
+			// Backwards compat.
+			if (method_exists($this->as3cf, 'remove_attachment_files_from_provider'))
+			{
+      	$this->as3cf->remove_attachment_files_from_provider($id, $mediaItem);
+			}
+			else
+			{
+				$itemHandler = $this->as3cf->get_item_handler('remove-provider');
+				$result = $itemHandler->handle($mediaItem); //handle it then.
+				Log::addTemp('S3Offload Remove Result', $result);
+			}
+
     }
 
 
     /** @return Returns S3Ofload MediaItem, or false when this does not exist */
     protected function getItemById($id)
     {
-        $clazz = $this->itemClassName;
-        $mediaItem = $clazz::get_by_source_id($id);
+				$class = $this->getMediaClass();
+				if (! method_exists($class, 'create_from_source_id'))
+        {
+        	$mediaItem = $class::get_by_source_id($id);
+				}
+				else {
+					 $mediaItem = $class::create_from_source_id($id);
+				}
         return $mediaItem;
     }
 
     public function checkIfOffloaded($bool, $url)
     {
       $source_id = $this->getSourceIDByURL($url);
-    //  echo "--" . $this->getLocalPathByURL($url). '<BR>';
+
       if ($source_id !== false)
         return true;
       else
@@ -188,8 +172,16 @@ class wpOffload
 
     protected function getSourceIDByURL($url)
     {
-      $class = $this->itemClassName;
-      $source_id = $class::get_source_id_by_remote_url($url);
+      $class = $this->getMediaClass();
+      $source = $class::get_item_source_by_remote_url($url);
+
+			/// Function can return false
+			if ($source === false)
+				return false;
+
+Log::addTemp('GetSourceByID', $source);
+			$source_id = isset($source['id']) ? intval($source['id']) : false;
+
       if ($source_id !== false)
         return $source_id;
       else
@@ -208,8 +200,10 @@ class wpOffload
         $pattern = '/(.*)-\d+[xX]\d+(\.\w+)/m';
         $url = preg_replace($pattern, '$1$2', $original_url);
 
-        $class = $this->itemClassName;
-        $source_id = $class::get_source_id_by_remote_url($url);
+        $class = $this->getMediaClass();
+        $source = $class::get_item_source_by_remote_url($url);
+
+				$source_id = isset($source['id']) ? intval($source['id']) : false;
 
         if ($source_id !== false)
           return $source_id;
@@ -245,47 +239,26 @@ class wpOffload
     {
         $fs = \wpSPIO()->fileSystem();
 
-        // Don't offload when setting is off.
-        // delete the old file.
-      //  $provider_object = $this->as3cf->get_attachment_provider_info($id);
-
-  //      $this->as3cf->remove_attachment_files_from_provider($id, $provider_object);
-        // get some new ones.
-
         // delete the old file
         $mediaItem = $this->getItemById($id);
         if ($mediaItem === false) // mediaItem seems not present. Probably not a remote file
           return;
 
-      // Removed / this leads to missing images when images are excluded
-      //  $this->as3cf->remove_attachment_files_from_provider($id, $mediaItem);
-      //  $providerSourcePath = $mediaItem->source_path();
-
-        //$providerFile = $fs->getFile($provider_object['key']);
         $providerFile = $fs->getFile($providerSourcePath);
         $newFile = $fs->getFile($this->returnOriginalFile(null, $id));
 
         // convert
-        //$newfilemeta = $provider_object['key'];
         if ($providerFile->getExtension() !== $newFile->getExtension())
         {
-          //  $newfilemeta = str_replace($providerFile->getFileName(), $newFile->getFileName(), $newfilemeta);
           $data = $mediaItem->key_values(true);
           $record_id = $data['id'];
-/*          $data['path']
-          $data['original_path']
-          $data['original_source_path']
-          $data['source_path'] */
 
           $data['path'] = str_replace($providerFile->getFileName(), $newFile->getFileName(), $data['path']);
-          /*$data['original_path'] = str_replace($providerFile->getFileName(), $newFile->getFileName(), $data['original_path']);
-          $data['source_path'] = str_replace($providerFile->getFileName(), $newFile->getFileName(), $data['source_path']);
-          $data['original_source_path'] = str_replace($providerFile->getFileName(), $newFile->getFileName(), $data['original_source_path']);
-*/
 
 
-//$provider, $region, $bucket, $path, $is_private, $source_id, $source_path, $original_filename = null, $private_sizes = array(), $id = null
-          $newItem = new $this->itemClassName($data['provider'], $data['region'], $data['bucket'], $data['path'], $data['is_private'], $data['source_id'], $data['source_path'], $newFile->getFileName(), $data['extra_info'], $record_id );
+					//$provider, $region, $bucket, $path, $is_private, $source_id, $source_path, $original_filename = null, $private_sizes = array(), $id = null
+					$class = $this->getMediaClass();
+          $newItem = new $class($data['provider'], $data['region'], $data['bucket'], $data['path'], $data['is_private'], $data['source_id'], $data['source_path'], $newFile->getFileName(), $data['extra_info'], $record_id );
 
           $newItem->save();
 
@@ -310,7 +283,19 @@ class wpOffload
         }
 
         Log::addDebug('Uploading New Attachment');
-        $this->as3cf->upload_attachment($id);
+        $mediaItem = $this->getItemById($id);  // A3cf MediaItem.
+
+        // This is old version as3cf
+        if (method_exists($this->as3cf, 'upload_attachment'))
+        {
+          $this->as3cf->upload_attachment($id);
+        }
+        else {
+          // This should load the A3cf UploadHandler
+          $itemHandler = $this->as3cf->get_item_handler('upload');
+          $result = $itemHandler->handle($mediaItem); //handle it then.
+          Log::addTemp('S3Offload Upload Result', $result);
+        }
     }
 
     /** This function will cut out the initial upload to S3Offload and rely solely on the image_upload function provided here, after shortpixel optimize.
@@ -386,10 +371,10 @@ class wpOffload
             {
                $newPaths[$size . '_avif'] = $avifformat;
             }
-            else {
-               $newPaths[$size . '_avif'] = $avifformat;
-            }
          }
+				 else {
+				 	 $newPaths[$size . '_avif'] = $avifformat;
+				 }
 
       }
 
@@ -464,18 +449,6 @@ class wpOffload
           return $file;
         else
           return $bool;
-
-      /*  $mediaItem = $this->getByURL($url);
-        if ($mediaItem !== false)
-        {
-          return $file;
-        }
-        else
-        {
-        //  Log::addDebug('Fixing Remote Path failed', array($file->getFullPath(), $url));
-        }
-        return false; */
-
     }
 
 }

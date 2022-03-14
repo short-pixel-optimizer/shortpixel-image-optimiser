@@ -10,7 +10,7 @@ class ImageThumbnailMeta
 //  public $improvement;
 
   public $did_keepExif  = false;
-  public $did_cmyk2rg = false;
+  public $did_cmyk2rgb = false;
   public $did_png2jpg = false; // Was this replaced?
 	public $tried_png2jpg = false; // Tried it, might not have working.
 
