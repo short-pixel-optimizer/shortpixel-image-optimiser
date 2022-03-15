@@ -61,7 +61,7 @@ class BuildAutoLoader
       //'class/external/securi.php',
       //'class/external/shortpixel_queue_db.php',
       'class/external/visualcomposer.php',
-      'class/external/wp-offload-media-hookonly.php',
+      'class/external/wp-offload-media.php',
       //'class/external/wpengine.php',
       'class/external/wp-cli/wp-cli-base.php',
 			'class/external/wp-cli/wp-cli-single.php',

@@ -7,7 +7,7 @@
   max-height: 50px;
 }
 .shortpixel.shortpixel-notice .notice-dismiss {
-  margin-top: 6px;
+  margin-top: 10px;
 }
 
 /* In-view notice ( not on top, between the options ) - styled after WP notice */

@@ -523,8 +523,8 @@ class MysqlDataProvider implements DataProvider
                 item_count INT DEFAULT 1,
                 value longtext NOT NULL,
                 tries int(11) NOT NULL DEFAULT 0,
-                created TIMESTAMP,
-                updated TIMESTAMP,
+                created timestamp ,
+                updated timestamp,
                 PRIMARY KEY  (id),
                 KEY queue_name (queue_name),
                 KEY plugin_slug (plugin_slug),
@@ -533,7 +533,7 @@ class MysqlDataProvider implements DataProvider
                 KEY list_order (list_order)
                 ) $charset; ";
 
-      $result = dbDelta($sql);
+			$result = dbDelta($sql);
 
       $sql = "SHOW INDEX FROM " . $this->table . " WHERE Key_name = 'uq_" . $prefix . "'";
       $result = $wpdb->get_results($sql);
@@ -600,12 +600,7 @@ class MysqlDataProvider implements DataProvider
       $this->install(true);
      }
 
-		 /*echo "<PRE> ERROR! ";
-      print_r( debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2) );
-     echo ($wpdb->last_query);
-     var_dump($error);
-     echo "</PRE>"; */
-     //$this->install();
+     $this->install();
 
      // @todo Add error log here
    }

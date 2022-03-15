@@ -144,7 +144,7 @@ class NoticeModel //extends ShortPixelModel
   public function getForDisplay()
   {
     $this->viewed = true;
-    $class = 'shortpixel shortpixel-notice ';
+    $class = 'shortpixel shortpixel-notice';
 
     $icon = '';
 
@@ -226,21 +226,21 @@ class NoticeModel //extends ShortPixelModel
 
     if ($this->is_removable)
     {
-      $output .= '<button type="button" id="button-' . $id . '" class="notice-dismiss" data-dismiss="' . $this->suppress_period . '" ><span class="screen-reader-text">' . __('Dismiss this notice', 'shortpixel-image-optimiser') . '</span></button>';
+			      $output .= '<button type="button" id="button-' . $id . '" class="notice-dismiss" data-dismiss="' . $this->suppress_period . '" ><span class="screen-reader-text">' . __('Dismiss this notice', 'shortpixel-image-optimiser') . '</span></button>';
 
-			if (! $this->is_persistent)
-			{
-				 $output .= "<script type='text/javascript'>\n
-				 							document.getElementById('button-$id').onclick = function()
-											{
-													var el = document.getElementById('$id');
-			                    $(el).fadeTo(100,0,function() {
-			                        $(el).slideUp(100, 0, function () {
-			                            $(el).remove();
-			                        })
-			                    });
-											} </script>";
-			}
+       if (! $this->is_persistent)
+       {
+                $output .= "<script type='text/javascript'>\n
+                                document.getElementById('button-$id').onclick = function()
+                                {
+                                  var el = document.getElementById('$id');
+                           				$(el).fadeTo(100,0,function() {
+                               		$(el).slideUp(100, 0, function () {
+                                  $(el).remove();
+                               })
+                           });
+                         } </script>";
+       }
     }
 
     $output .= "</div>";

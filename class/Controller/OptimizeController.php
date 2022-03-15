@@ -616,11 +616,22 @@ class OptimizeController
           if ($result->apiStatus == ApiController::STATUS_UNCHANGED)
           {
               $item->fileStatus = ImageModel::FILE_STATUS_PENDING;
+							$retry_limit = $q->getShortQ()->getOption('retry_limit');
+
 
 							// Try to replace the item ID with the filename.
 							$item->result->message = substr_replace( $item->result->message,  $imageItem->getFileName() . ' ', strpos($item->result->message, '#' . $item->item_id), 0);
-
               $item->result->message .= sprintf(__('(cycle %d)', 'shortpixel-image-optimiser'), intval($item->tries) );
+
+							Log::addTemp('Item Tries', $item->tries);
+							if ($retry_limit == $item->tries || $retry_limit == ($item->tries -1))
+							{
+									$result->apiStatus = ApiController::ERR_TIMEOUT;
+									$item->result->message = __('Retry Limit reached. Image might be too large, limit too low or network issues.  ', 'shortpixel-image-optimiser');
+							}
+						/* Item is not failing here:  Failed items come on the bottom of the queue, after all others so might cause multiple credit eating if the time is long. checkQueue is only done at the end of the queue.
+						* Secondly, failing it, would prevent it going to TIMEOUT on the PROCESS in WPQ - which would mess with correct timings on that.  
+						*/
             //  $q->itemFailed($item, false); // register as failed, retry in x time, q checks timeouts
           }
       }

@@ -184,8 +184,8 @@ class WPQ implements Queue
 	// Remove Items directly from queue. Expand this function when required (but use dequeue if possible). For now only support for item_id.
 	public function removeItems($args)
 	{
-			 if (isset($args['item_id']))
-		   	$this->DataProvider->removeRecords(array('item_id' => $args['item_id'] ));
+									 if (isset($args['item_id']))
+									$this->DataProvider->removeRecords(array('item_id' => $args['item_id'] ));
 
 	}
 
@@ -255,6 +255,7 @@ class WPQ implements Queue
 
      return $items;
   }
+
 
 
   /* Handles in processTimeOuts

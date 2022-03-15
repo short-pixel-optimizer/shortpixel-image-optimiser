@@ -9,7 +9,9 @@ class wpOffload
     protected $as3cf;
     protected $active = false;
     protected $offloading = true;
+
     private $itemClassName;
+		private $useHandlers =  false; // Check for newer ItemHandlers or Compat mode.
 
     protected $settings;
 
@@ -27,13 +29,21 @@ class wpOffload
 
     public function init($as3cf)
     {
+
       if (! class_exists('\DeliciousBrains\WP_Offload_Media\Items\Media_Library_Item'))
       {
         Notice::addWarning(__('Your S3-Offload plugin version doesn\'t seem to be compatible. Please upgrade the S3-Offload plugin', 'shortpixel-image-optimiser'), true);
+				return false;
       }
-      else {
-        $this->itemClassName = '\DeliciousBrains\WP_Offload_Media\Items\Media_Library_Item';
-      }
+
+
+      $this->itemClassName = '\DeliciousBrains\WP_Offload_Media\Items\Media_Library_Item';
+
+			if (method_exists($as3cf, 'get_item_handler'))
+			{
+				 $this->useHandlers = true; // we have a new version
+			}
+
 
       $this->as3cf = $as3cf;
       $this->active = true;
@@ -89,7 +99,7 @@ class wpOffload
 
 		private function getMediaClass()
 		{
-			if (method_exists($this->as3cf, 'get_source_type_class'))
+			if ($this->useHandlers)
 			{
 				$class = $this->as3cf->get_source_type_class('media-library');
 			}
@@ -117,6 +127,7 @@ class wpOffload
       $mediaItem->wpCreateImageSizes();
 
       $this->remove_remote($id);
+
       $this->image_upload($id);
     }
 
@@ -132,15 +143,16 @@ class wpOffload
 			Log::addTemp('Remove Remote Media Item is there', $mediaItem);
 
 			// Backwards compat.
-			if (method_exists($this->as3cf, 'remove_attachment_files_from_provider'))
+			if ($this->useHandlers)
 			{
-      	$this->as3cf->remove_attachment_files_from_provider($id, $mediaItem);
-			}
-			else
-			{
-				$itemHandler = $this->as3cf->get_item_handler('remove-provider');
+				$remove = \DeliciousBrains\WP_Offload_Media\Items\Remove_Provider_Handler::get_item_handler_key_name();
+				$itemHandler = $this->as3cf->get_item_handler($remove);
 				$result = $itemHandler->handle($mediaItem); //handle it then.
 				Log::addTemp('S3Offload Remove Result', $result);
+			}
+			else // compat.
+			{
+					$this->as3cf->remove_attachment_files_from_provider($id, $mediaItem);
 			}
 
     }
@@ -235,6 +247,7 @@ Log::addTemp('GetSourceByID', $source);
        return $file;
     }
 
+/*
     public function image_converted($id)
     {
         $fs = \wpSPIO()->fileSystem();
@@ -268,6 +281,7 @@ Log::addTemp('GetSourceByID', $source);
         // upload
         $this->image_upload($id); // delete and reupload
     }
+*/
 
     public function image_upload($id)
     {
@@ -286,15 +300,16 @@ Log::addTemp('GetSourceByID', $source);
         $mediaItem = $this->getItemById($id);  // A3cf MediaItem.
 
         // This is old version as3cf
-        if (method_exists($this->as3cf, 'upload_attachment'))
+        if ($this->useHandlers)
         {
-          $this->as3cf->upload_attachment($id);
-        }
-        else {
-          // This should load the A3cf UploadHandler
-          $itemHandler = $this->as3cf->get_item_handler('upload');
+					// This should load the A3cf UploadHandler
+					$upload = \DeliciousBrains\WP_Offload_Media\Items\Upload_Handler::get_item_handler_key_name();
+          $itemHandler = $this->as3cf->get_item_handler($upload);
           $result = $itemHandler->handle($mediaItem); //handle it then.
           Log::addTemp('S3Offload Upload Result', $result);
+        }
+        else {
+					   $this->as3cf->upload_attachment($id);
         }
     }
 
