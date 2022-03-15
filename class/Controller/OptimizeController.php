@@ -348,10 +348,7 @@ class OptimizeController
             {
 
               $bool = $this->convertPNG($item, $Q);
-              if ($bool == true)
-							{
-                continue; // conversion done one way or another, item will be need requeuing, because new urls / flag.
-							}
+               continue; // conversion done one way or another, item will be need requeuing, because new urls / flag.
             }
 
             $item = $this->sendToProcessing($item, $Q);
@@ -430,16 +427,6 @@ class OptimizeController
       $imageObj = $fs->getMediaImage($item->item_id);
       $this->addItemToQueue($imageObj);
 
-			if ($bool !== false) // It worked.
-      {
-
-      }
-			else
-			{
-
-					// Updated: Do nothing - if PNG not converted for some reason, process as normal.
-
-			}
 
       return $bool;
     }

@@ -19,6 +19,7 @@ class ApiController
     const STATUS_SEARCHING = -8; // when the Queue is looping over images, but in batch none were   found.
     const STATUS_QUEUE_FULL = -404;
     const STATUS_MAINTENANCE = -500;
+		const STATUS_CONNECTION_ERROR = -503; // Not official, error connection in WP.
     const STATUS_NOT_API = -1000; // Not an API process, i.e restore / migrate. Don't handle as optimized
 
 		// Moved these numbers higher to prevent conflict with STATUS
@@ -82,6 +83,7 @@ class ApiController
       $request = $this->getRequest($requestArgs);
       $item = $this->doRequest($item, $request);
 
+			// If error has occured, but it's not related to connection.
 			if ($item->result->is_error === true && $item->result->is_done === true)
 			{
 				 $this->dumpMediaItem($item); // item failed, directly dump anything from server.
@@ -196,8 +198,8 @@ class ApiController
         if ( is_object($response) && get_class($response) == 'WP_Error' )
         {
             $errorMessage = $response->errors['http_request_failed'][0];
-            $errorCode = 503;
-            $item->result = $this->returnFailure($errorCode, $errorMessage);
+            $errorCode = self::STATUS_CONNECTION_ERROR;
+            $item->result = $this->returnRetry($errorCode, $errorMessage);
         }
         elseif ( isset($response['response']['code']) && $response['response']['code'] <> 200 )
         {

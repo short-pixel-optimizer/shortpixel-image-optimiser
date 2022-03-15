@@ -43,9 +43,11 @@ class AdminController extends \ShortPixel\Controller
 				}
 
         $mediaItem = \wpSPIO()->filesystem()->getImage($id, 'media');
-        $control = new OptimizeController();
-        $control->addItemToQueue($mediaItem);
-
+				if ($mediaItem->isProcessable())
+				{
+        	$control = new OptimizeController();
+        	$control->addItemToQueue($mediaItem);
+				}
         return $meta; // It's a filter, otherwise no thumbs
     }
 
@@ -116,7 +118,7 @@ class AdminController extends \ShortPixel\Controller
         if ($settings->createAvif)
         {
             if (! isset($mimes['avif']))
-              $mimes['webp'] = 'image/avif';
+              $mimes['avif'] = 'image/avif';
         }
         return $mimes;
     }
