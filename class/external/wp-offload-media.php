@@ -12,6 +12,7 @@ class wpOffload
 
     private $itemClassName;
 		private $useHandlers =  false; // Check for newer ItemHandlers or Compat mode.
+		protected $shouldPrevent = true; // if offload should be prevented. This is turned off when SPIO want to tell S3 to offload. Better than removing filter.
 
     protected $settings;
 
@@ -44,7 +45,6 @@ class wpOffload
 				 $this->useHandlers = true; // we have a new version
 			}
 
-
       $this->as3cf = $as3cf;
       $this->active = true;
 
@@ -70,7 +70,15 @@ class wpOffload
       // Seems this better served by _after? If it fails, it's removed from remote w/o filechange.
     //  add_action('shortpixel/image/convertpng2jpg_before', array($this, 'remove_remote'));
       add_filter('as3cf_attachment_file_paths', array($this, 'add_webp_paths'));
-      add_filter('as3cf_remove_attachment_paths', array($this, 'remove_webp_paths'));
+
+			if ($this->useHandlers)
+			{
+				add_filter('as3cf_remove_source_files_from_provider', array($this, 'remove_webp_paths'), 10);
+			}
+			else {
+      	add_filter('as3cf_remove_attachment_paths', array($this, 'remove_webp_paths'));
+			}
+
 
       add_filter('shortpixel/restore/targetfile', array($this, 'returnOriginalFile'),10,2);
 
@@ -85,9 +93,46 @@ class wpOffload
       add_filter('shortpixel_webp_image_base', array($this, 'checkWebpRemotePath'), 10, 2);
       add_filter('shortpixel/front/webp_notfound', array($this, 'fixWebpRemotePath'), 10, 4);
 
-			add_filter('as3cf_remove_source_files_from_provider', function ($paths){  Log::addTemp("removing these paths", $paths); return $paths;
-			});
+			//add_filter('as3cf_remove_source_files_from_provider', function ($paths){  Log::addTemp("removing these paths", $paths); return $paths;
+			//}, 20);
 
+
+/*
+
+	echo "<PRE style='margin-left: 200px'>";
+
+$a3cfItem = $this->getItemById(24);
+$remove = \DeliciousBrains\WP_Offload_Media\Items\Remove_Provider_Handler::get_item_handler_key_name();
+$itemHandler = $this->as3cf->get_item_handler($remove);
+$files = $a3cfItem->offloaded_files();
+//$result = $itemHandler->handle($a3cfItem, array( 'verify_exists_on_local' => false));
+	$result = $itemHandler->handle($a3cfItem, array( 'verify_exists_on_local' => false, 'offloaded_files' => $files ));
+	$region = $a3cfItem->region();
+	$bucket = $a3cfItem->bucket();
+
+print_r($region); print_r($bucket);
+print_r($a3cfItem->offloaded_files());
+$objects = array();
+
+foreach($a3cfItem->objects() as $object_key => $the_rest)
+{
+	$objects[] = array('Key' => $a3cfItem->provider_key( $object_key ) );
+}
+
+print_r($objects);
+//print_r($files);
+//print_r($result);
+
+$this->as3cf->get_provider_client( $region )->delete_objects( array(
+	'Bucket'  => $bucket,
+	'Objects' => $objects,
+) );
+	//	   print_r( $item->offloaded_files() );
+
+	//		 print_r($item->provider_key_for_filename('Q0-fOL2nqZc.webp', false)); echo "<BR>";
+//			 print_r($item->full_source_path_for_filename('Q0-fOL2nqZc.webp'));
+		 echo "</PRE>";
+*/
     }
 
 
@@ -128,12 +173,12 @@ class wpOffload
 
       $this->remove_remote($id);
 
-      $this->image_upload($id);
+  //    $this->image_upload($id);
     }
 
     public function remove_remote($id)
     {
-      $mediaItem = $this->getItemById($id); // MediaItem is AS3CF Object
+      $a3cfItem = $this->getItemById($id); // MediaItem is AS3CF Object
       if ($mediaItem === false)
       {
         Log::addDebug('S3-Offload MediaItem not remote - ' . $id);
@@ -147,12 +192,16 @@ class wpOffload
 			{
 				$remove = \DeliciousBrains\WP_Offload_Media\Items\Remove_Provider_Handler::get_item_handler_key_name();
 				$itemHandler = $this->as3cf->get_item_handler($remove);
-				$result = $itemHandler->handle($mediaItem); //handle it then.
+				$files = $a3cfItem->offloaded_files();
+		//		$result = $itemHandler->handle($a3cfItem, array( 'verify_exists_on_local' => false)); //handle it then.
+				$result = $itemHandler->handle($a3cfItem, array( 'verify_exists_on_local' => false, 'offloaded_files' => $files )); //handle it then.
+
+
 				Log::addTemp('S3Offload Remove Result', $result);
 			}
 			else // compat.
 			{
-					$this->as3cf->remove_attachment_files_from_provider($id, $mediaItem);
+					$this->as3cf->remove_attachment_files_from_provider($id, $a3cfItem);
 			}
 
     }
@@ -299,6 +348,12 @@ Log::addTemp('GetSourceByID', $source);
         Log::addDebug('Uploading New Attachment');
         $mediaItem = $this->getItemById($id);  // A3cf MediaItem.
 
+				$this->shouldPrevent = false;
+				$data = wp_get_attachment_metadata($id);
+				$data = apply_filters('wp_update_attachment_metadata', $data, $id);
+				$this->shouldPrevent = true;
+
+				return;
         // This is old version as3cf
         if ($this->useHandlers)
         {
@@ -323,6 +378,9 @@ Log::addTemp('GetSourceByID', $source);
 
         if (! $this->offloading)
           return false;
+
+				if ($this->shouldPrevent === false) // if false is returned, it's NOT prevented, so on-going.
+						return false;
 
         if (\wpSPIO()->env()->is_autoprocess)
         {
@@ -403,14 +461,14 @@ Log::addTemp('GetSourceByID', $source);
     {
       //  Log::addDebug('Received Paths', array($paths));
         $paths = $this->getWebpPaths($paths, true);
-  //      Log::addDebug('Webp Path Founder (S3)', array($paths));
+        Log::addDebug('Webp Path Founder (S3)', array($paths));
         return $paths;
     }
 
     public function remove_webp_paths($paths)
     {
       $paths = $this->getWebpPaths($paths, false);
-    //  Log::addDebug('Remove S3 Paths', array($paths));
+      Log::addDebug('Remove S3 Paths', array($paths));
 
       return $paths;
     }
