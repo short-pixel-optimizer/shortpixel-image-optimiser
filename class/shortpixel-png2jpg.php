@@ -94,6 +94,8 @@ class ShortPixelPng2Jpg {
 							  return true;
              } // success
 
+						 // new hook.
+						 do_action('shortpixel/image/convertpng2jpg_success', $imageObj);
 
           } // result.
 					else
@@ -272,6 +274,8 @@ class ShortPixelPng2Jpg {
 
 						Log::addDebug('PNG2jPG Converted', $params);
         }
+
+				//legacy. Not at this point metadata has not been updated. 
         do_action('shortpixel/image/convertpng2jpg_after', $imageObj, $params);
         return $params;
     }

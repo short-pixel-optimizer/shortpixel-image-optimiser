@@ -62,7 +62,7 @@ class wpOffload
   //    $provider = $this->as3cf->get_provider();
       add_action('shortpixel_image_optimised', array($this, 'image_upload'));
       add_action('shortpixel_after_restore_image', array($this, 'image_restore'), 10, 3); // hit this when restoring.
-      add_action('shortpixel/image/convertpng2jpg_after', array($this, 'image_converted'));
+
       add_action('shortpixel_restore_after_pathget', array($this, 'remove_remote')); // not optimal -> has to do w/ doRestore and when URL/PATH is available when not on server .
 
       // Seems this better served by _after? If it fails, it's removed from remote w/o filechange.
@@ -72,14 +72,15 @@ class wpOffload
 			if ($this->useHandlers)
 			{
 			//	add_filter('as3cf_remove_source_files_from_provider', array($this, 'remove_webp_paths'), 10);
+				add_action('shortpixel/image/convertpng2jpg_success', array($this, 'image_converted'), 10);
+
 			}
 			else {
       	add_filter('as3cf_remove_attachment_paths', array($this, 'remove_webp_paths'));
+				add_action('shortpixel/image/convertpng2jpg_after', array($this, 'image_converted_legacy'), 10, 2);
 			}
 
-
       add_filter('shortpixel/restore/targetfile', array($this, 'returnOriginalFile'),10,2);
-
       add_filter('as3cf_pre_update_attachment_metadata', array($this, 'preventInitialUpload'), 10,4);
 
     //  add_filter('shortpixel_get_attached_file', array($this, 'get_raw_attached_file'),10, 2);
@@ -169,7 +170,6 @@ class wpOffload
     {
 				$class = $this->getMediaClass();
 			  $mediaItem = $class::get_by_source_id($id);
-				 //$mediaItem = $class::create_from_source_id($id);
 
 				if ($this->useHandlers && $mediaItem === false)
 				{
@@ -254,18 +254,36 @@ class wpOffload
        return $file;
     }
 
-/*
-    public function image_converted($id)
+
+		/** Converted after png2jpg
+		*
+		*  @param MediaItem Object SPIO
+		*/
+    public function image_converted($mediaItem)
     {
         $fs = \wpSPIO()->fileSystem();
 
-        // delete the old file
-        $mediaItem = $this->getItemById($id);
-        if ($mediaItem === false) // mediaItem seems not present. Probably not a remote file
-          return;
+				// Do nothing if not successfull
+				if ($params['success'] === false)
+					return;
 
-        $providerFile = $fs->getFile($providerSourcePath);
-        $newFile = $fs->getFile($this->returnOriginalFile(null, $id));
+				Log::addTemp('S3Off Converting ');
+				$id = $mediaItem->get('id');
+				$this->remove_remote($id);
+
+				$item = $this->getItemById($id);
+				$item->delete();
+
+				$this->image_upload($id);
+				return;
+        // delete the old file
+       // $item = $this->getItemById($id);
+       // if ($mediaItem === false) // mediaItem seems not present. Probably not a remote file
+       //   return;
+
+        //$providerFile = $fs->getFile($providerSourcePath);
+        //$newFile = $fs->getFile($this->returnOriginalFile(null, $id));
+
 
         // convert
         if ($providerFile->getExtension() !== $newFile->getExtension())
@@ -288,7 +306,62 @@ class wpOffload
         // upload
         $this->image_upload($id); // delete and reupload
     }
+
+
+    public function image_converted_legacy($id)
+    {
+        $fs = \wpSPIO()->fileSystem();
+
+        // Don't offload when setting is off.
+        // delete the old file.
+      //  $provider_object = $this->as3cf->get_attachment_provider_info($id);
+
+  //      $this->as3cf->remove_attachment_files_from_provider($id, $provider_object);
+        // get some new ones.
+
+        // delete the old file
+        $mediaItem = $this->getItemById($id);
+        if ($mediaItem === false) // mediaItem seems not present. Probably not a remote file
+          return;
+
+        $this->as3cf->remove_attachment_files_from_provider($id, $mediaItem);
+        $providerSourcePath = $mediaItem->source_path();
+
+        //$providerFile = $fs->getFile($provider_object['key']);
+        $providerFile = $fs->getFile($providerSourcePath);
+        $newFile = $fs->getFile($this->returnOriginalFile(null, $id));
+
+        // convert
+        //$newfilemeta = $provider_object['key'];
+        if ($providerFile->getExtension() !== $newFile->getExtension())
+        {
+          //  $newfilemeta = str_replace($providerFile->getFileName(), $newFile->getFileName(), $newfilemeta);
+          $data = $mediaItem->key_values(true);
+          $record_id = $data['id'];
+/*          $data['path']
+          $data['original_path']
+          $data['original_source_path']
+          $data['source_path'] */
+
+          $data['path'] = str_replace($providerFile->getFileName(), $newFile->getFileName(), $data['path']);
+          /*$data['original_path'] = str_replace($providerFile->getFileName(), $newFile->getFileName(), $data['original_path']);
+          $data['source_path'] = str_replace($providerFile->getFileName(), $newFile->getFileName(), $data['source_path']);
+          $data['original_source_path'] = str_replace($providerFile->getFileName(), $newFile->getFileName(), $data['original_source_path']);
 */
+
+
+//$provider, $region, $bucket, $path, $is_private, $source_id, $source_path, $original_filename = null, $private_sizes = array(), $id = null
+          $newItem = new $this->itemClassName($data['provider'], $data['region'], $data['bucket'], $data['path'], $data['is_private'], $data['source_id'], $data['source_path'], $newFile->getFileName(), $data['extra_info'], $record_id );
+
+          $newItem->save();
+
+            Log::addDebug('S3Offload - Uploading converted file ');
+        }
+
+        // upload
+        $this->image_upload($id); // delete and reupload
+    }
+
 
     public function image_upload($id)
     {
@@ -409,7 +482,7 @@ class wpOffload
     {
       //  Log::addDebug('Received Paths', array($paths));
         $paths = $this->getWebpPaths($paths, true);
-        Log::addDebug('Webp Path Founder (S3)', array($paths));
+        //Log::addDebug('Webp Path Founder (S3)', array($paths));
         return $paths;
     }
 
@@ -417,7 +490,7 @@ class wpOffload
     public function remove_webp_paths($paths)
     {
       $paths = $this->getWebpPaths($paths, false);
-      Log::addDebug('Remove S3 Paths', array($paths));
+      //Log::addDebug('Remove S3 Paths', array($paths));
 
       return $paths;
     }
