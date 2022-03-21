@@ -37,7 +37,6 @@ class wpOffload
 				return false;
       }
 
-
       $this->itemClassName = '\DeliciousBrains\WP_Offload_Media\Items\Media_Library_Item';
 
 			if (method_exists($as3cf, 'get_item_handler'))
@@ -61,7 +60,6 @@ class wpOffload
       }
 
   //    $provider = $this->as3cf->get_provider();
-
       add_action('shortpixel_image_optimised', array($this, 'image_upload'));
       add_action('shortpixel_after_restore_image', array($this, 'image_restore'), 10, 3); // hit this when restoring.
       add_action('shortpixel/image/convertpng2jpg_after', array($this, 'image_converted'));
@@ -73,7 +71,7 @@ class wpOffload
 
 			if ($this->useHandlers)
 			{
-				add_filter('as3cf_remove_source_files_from_provider', array($this, 'remove_webp_paths'), 10);
+			//	add_filter('as3cf_remove_source_files_from_provider', array($this, 'remove_webp_paths'), 10);
 			}
 			else {
       	add_filter('as3cf_remove_attachment_paths', array($this, 'remove_webp_paths'));
@@ -96,43 +94,6 @@ class wpOffload
 			//add_filter('as3cf_remove_source_files_from_provider', function ($paths){  Log::addTemp("removing these paths", $paths); return $paths;
 			//}, 20);
 
-
-/*
-
-	echo "<PRE style='margin-left: 200px'>";
-
-$a3cfItem = $this->getItemById(24);
-$remove = \DeliciousBrains\WP_Offload_Media\Items\Remove_Provider_Handler::get_item_handler_key_name();
-$itemHandler = $this->as3cf->get_item_handler($remove);
-$files = $a3cfItem->offloaded_files();
-//$result = $itemHandler->handle($a3cfItem, array( 'verify_exists_on_local' => false));
-	$result = $itemHandler->handle($a3cfItem, array( 'verify_exists_on_local' => false, 'offloaded_files' => $files ));
-	$region = $a3cfItem->region();
-	$bucket = $a3cfItem->bucket();
-
-print_r($region); print_r($bucket);
-print_r($a3cfItem->offloaded_files());
-$objects = array();
-
-foreach($a3cfItem->objects() as $object_key => $the_rest)
-{
-	$objects[] = array('Key' => $a3cfItem->provider_key( $object_key ) );
-}
-
-print_r($objects);
-//print_r($files);
-//print_r($result);
-
-$this->as3cf->get_provider_client( $region )->delete_objects( array(
-	'Bucket'  => $bucket,
-	'Objects' => $objects,
-) );
-	//	   print_r( $item->offloaded_files() );
-
-	//		 print_r($item->provider_key_for_filename('Q0-fOL2nqZc.webp', false)); echo "<BR>";
-//			 print_r($item->full_source_path_for_filename('Q0-fOL2nqZc.webp'));
-		 echo "</PRE>";
-*/
     }
 
 
@@ -173,35 +134,31 @@ $this->as3cf->get_provider_client( $region )->delete_objects( array(
 
       $this->remove_remote($id);
 
-  //    $this->image_upload($id);
+      $this->image_upload($id);
     }
 
     public function remove_remote($id)
     {
-      $a3cfItem = $this->getItemById($id); // MediaItem is AS3CF Object
-      if ($mediaItem === false)
+      $item = $this->getItemById($id); // MediaItem is AS3CF Object
+      if ($item === false)
       {
         Log::addDebug('S3-Offload MediaItem not remote - ' . $id);
         return false;
       }
-
-			Log::addTemp('Remove Remote Media Item is there', $mediaItem);
 
 			// Backwards compat.
 			if ($this->useHandlers)
 			{
 				$remove = \DeliciousBrains\WP_Offload_Media\Items\Remove_Provider_Handler::get_item_handler_key_name();
 				$itemHandler = $this->as3cf->get_item_handler($remove);
-				$files = $a3cfItem->offloaded_files();
-		//		$result = $itemHandler->handle($a3cfItem, array( 'verify_exists_on_local' => false)); //handle it then.
-				$result = $itemHandler->handle($a3cfItem, array( 'verify_exists_on_local' => false, 'offloaded_files' => $files )); //handle it then.
+			//	$files = $a3cfItem->offloaded_files();
+				$result = $itemHandler->handle($item, array( 'verify_exists_on_local' => false)); //handle it then.
+			//	$result = $itemHandler->handle($item, array( 'verify_exists_on_local' => false, 'offloaded_files' => $files )); //handle it then.
 
-
-				Log::addTemp('S3Offload Remove Result', $result);
 			}
 			else // compat.
 			{
-					$this->as3cf->remove_attachment_files_from_provider($id, $a3cfItem);
+					$this->as3cf->remove_attachment_files_from_provider($id, $item);
 			}
 
     }
@@ -211,15 +168,17 @@ $this->as3cf->get_provider_client( $region )->delete_objects( array(
     protected function getItemById($id)
     {
 				$class = $this->getMediaClass();
-				if (! method_exists($class, 'create_from_source_id'))
-        {
-        	$mediaItem = $class::get_by_source_id($id);
-				}
-				else {
+			  $mediaItem = $class::get_by_source_id($id);
+				 //$mediaItem = $class::create_from_source_id($id);
+
+				if ($this->useHandlers && $mediaItem === false)
+				{
 					 $mediaItem = $class::create_from_source_id($id);
 				}
+
         return $mediaItem;
     }
+
 
     public function checkIfOffloaded($bool, $url)
     {
@@ -240,7 +199,6 @@ $this->as3cf->get_provider_client( $region )->delete_objects( array(
 			if ($source === false)
 				return false;
 
-Log::addTemp('GetSourceByID', $source);
 			$source_id = isset($source['id']) ? intval($source['id']) : false;
 
       if ($source_id !== false)
@@ -345,22 +303,12 @@ Log::addTemp('GetSourceByID', $source);
           return false;
         }
 
-        Log::addDebug('Uploading New Attachment');
-        $mediaItem = $this->getItemById($id);  // A3cf MediaItem.
-
-				$this->shouldPrevent = false;
-				$data = wp_get_attachment_metadata($id);
-				$data = apply_filters('wp_update_attachment_metadata', $data, $id);
-				$this->shouldPrevent = true;
-
-				return;
-        // This is old version as3cf
         if ($this->useHandlers)
         {
 					// This should load the A3cf UploadHandler
 					$upload = \DeliciousBrains\WP_Offload_Media\Items\Upload_Handler::get_item_handler_key_name();
           $itemHandler = $this->as3cf->get_item_handler($upload);
-          $result = $itemHandler->handle($mediaItem); //handle it then.
+          $result = $itemHandler->handle($item); //handle it then.
           Log::addTemp('S3Offload Upload Result', $result);
         }
         else {
@@ -465,6 +413,7 @@ Log::addTemp('GetSourceByID', $source);
         return $paths;
     }
 
+
     public function remove_webp_paths($paths)
     {
       $paths = $this->getWebpPaths($paths, false);
@@ -472,6 +421,7 @@ Log::addTemp('GetSourceByID', $source);
 
       return $paths;
     }
+
 
     public function checkWebpRemotePath($url, $original)
     {
