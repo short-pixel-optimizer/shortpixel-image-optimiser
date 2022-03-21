@@ -81,11 +81,11 @@ Help us spread the word by recommending ShortPixel to your friends and collect *
 
 **Other plugins by ShortPixel**
 
-* Image optimization & CDN on the fly - <a href="https://wordpress.org/plugins/shortpixel-adaptive-images/" target="_blank">ShortPixel Adaptive Images</a>
-* Easily replace images or files in Media Library - <a href="https://wordpress.org/plugins/enable-media-replace/" target="_blank">Enable Media Replace</a>
-* Regenerate thumbnails plugin compatible with the other ShortPixel plugins - <a href="https://wordpress.org/plugins/regenerate-thumbnails-advanced/" target="_blank">reGenerate Thumbnails Advanced</a>
-* Make sure you don't have huge images in your Media Library - <a href="https://wordpress.org/plugins/resize-image-after-upload/" target="_blank">Resize Image After Upload</a>
-
+* [ShortPixel Adaptive Images](https://wordpress.org/plugins/shortpixel-adaptive-images/) - On-the-fly image optimization & CDN delivery
+* [Enable Media Replace](https://wordpress.org/plugins/enable-media-replace/) - Easily replace images or files in Media Library
+* [reGenerate Thumbnails Advanced](https://wordpress.org/plugins/regenerate-thumbnails-advanced/) - Easily regenerate thumbnails
+* [Resize Image After Upload](https://wordpress.org/plugins/resize-image-after-upload/) - Automatically resize each uploaded image
+* [WP SVG Images](https://wordpress.org/plugins/wp-svg-images/) - Secure upload of SVG files to Media Library
 
 **Get in touch!**
 
