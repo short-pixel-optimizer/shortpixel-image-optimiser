@@ -3164,7 +3164,7 @@ class WPShortPixel {
         if ($this->_settings->createAvif)
         {
             if (! isset($mimes['avif']))
-              $mimes['webp'] = 'image/avif';
+              $mimes['avif'] = 'image/avif';
         }
         return $mimes;
     }
