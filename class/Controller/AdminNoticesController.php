@@ -424,7 +424,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 		{
 			 global $wpdb;
 
-			 $table_name = $wpdb->prefix . 'shortpixel_postdata';
+			 $table_name = $wpdb->prefix . 'shortpixel_postmeta';
 			if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table_name) ) == $table_name)
 			{
 				 $message = $this->getAlreadyUpgradedMessage();
@@ -636,7 +636,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 		{
 			 $message = '<p>' . __('It seems you already upgraded to Shortpixel Image Optimiser version 5.0. Please do not downgrade, since this might result in data loss. Please consult our support team if you have any issues with the new version.  ') . '</p>';
 
-			 $message .= '<p>' . sprintf(__('To get rid of this message, remove the database table %s . All optimizations done with version 5 will be forgotten.', 'shortpixel_image_optimiser'), 'shortpixel_postdata') . '</p>';
+			 $message .= '<p>' . sprintf(__('To get rid of this message, remove the database table %s . All optimizations done with version 5 will be forgotten.', 'shortpixel_image_optimiser'), 'shortpixel_postmeta') . '</p>';
 
 			 return $message;
 		}
