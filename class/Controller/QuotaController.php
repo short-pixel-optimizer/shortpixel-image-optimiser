@@ -53,7 +53,7 @@ class QuotaController
 				{
           $quotaData = $cacheData->getValue();
 				}
-					
+
         return $quotaData;
     }
 
@@ -194,7 +194,13 @@ class QuotaController
 
           $args['body']['host'] = parse_url(get_site_url(),PHP_URL_HOST);
           $argsStr .= "&host={$args['body']['host']}";
-          if(strlen($settings->siteAuthUser)) {
+					if (defined('SHORTPIXEL_HTTP_AUTH_USER') && defined('SHORTPIXEL_HTTP_AUTH_PASSWORD'))
+					{
+						$args['body']['user'] = stripslashes(SHORTPIXEL_HTTP_AUTH_USER);
+						$args['body']['pass'] = stripslashes(SHORTPIXEL_HTTP_AUTH_PASSWORD);
+						$argsStr .= '&user=' . urlencode($args['body']['user']) . '&pass=' . urlencode($args['body']['pass']);
+					}
+          elseif(strlen($settings->siteAuthUser)) {
 
               $args['body']['user'] = stripslashes($settings->siteAuthUser);
               $args['body']['pass'] = stripslashes($settings->siteAuthPass);

@@ -105,9 +105,14 @@ class InstallHelper
 
   }
 
+	/**
+	* Check if TableName exists
+	* @param $tableName The Name of the Table without Prefix.
+	*/
 	public static function checkTableExists($tableName)
 	{
 		      global $wpdb;
+					$tableName = $wpdb->prefix . $tableName;
 		      $sql = $wpdb->prepare("
 		               SHOW TABLES LIKE %s
 		               ", $tableName);
@@ -127,11 +132,11 @@ class InstallHelper
 			global $wpdb;
     	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 
-			if (self::checkTableExists($wpdb->prefix . 'shortpixel_folders') === false)
+			if (self::checkTableExists('shortpixel_folders') === false)
 	    {
 					dbDelta(self::getFolderTableSQL());
 			}
-			if (self::checkTableExists($wpdb->prefix . 'shortpixel_meta') === false)
+			if (self::checkTableExists('shortpixel_meta') === false)
 			{
 	 	    	dbDelta(self::getMetaTableSQL());
 			}

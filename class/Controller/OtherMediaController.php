@@ -8,6 +8,8 @@ use ShortPixel\Model\File\DirectoryModel as DirectoryModel;
 
 use ShortPixel\Controller\OptimizeController as OptimizeController;
 
+use ShortPixel\Helper\InstallHelper as InstallHelper;
+
 // Future contoller for the edit media metabox view.
 class OtherMediaController extends \ShortPixel\Controller
 {
@@ -134,7 +136,10 @@ class OtherMediaController extends \ShortPixel\Controller
        if (! is_null(self::$hasCustomImages)) // prevent repeat
          return self::$hasCustomImages;
 
-       $count = $this->getFolders(['only_count' => true, 'remove_hidden' => true]);
+			if (InstallHelper::checkTableExists('shortpixel_meta') === false)
+				$count = 0;
+			else
+        $count = $this->getFolders(['only_count' => true, 'remove_hidden' => true]);
 
        if ($count == 0)
         $result = false;
@@ -256,6 +261,8 @@ class OtherMediaController extends \ShortPixel\Controller
 				$expires = 5 * MINUTE_IN_SECONDS;
 			}
 
+			if (! $this->hasFoldersTable())
+				return false; 
 
 			$this->cleanUp();
       $customFolders = $this->getActiveFolders();
@@ -273,7 +280,7 @@ class OtherMediaController extends \ShortPixel\Controller
       foreach($customFolders as $directory) {
 
 				$stats = $directory->getStats();
-				
+
 				$forcenow = ($force || $stats->Total === 0) ? true : false;
         $directory->refreshFolder($forcenow);
 
@@ -293,7 +300,8 @@ class OtherMediaController extends \ShortPixel\Controller
 
 			 // Remove folders that are removed, and have no images in MetaTable.
 			 $sql = " DELETE FROM $folderTable WHERE status < 0 AND id NOT IN ( SELECT DISTINCT folder_id FROM $metaTable)";
-			 $wpdb->query($sql);
+			 $result = $wpdb->query($sql);
+
 
 		}
 
@@ -468,52 +476,9 @@ class OtherMediaController extends \ShortPixel\Controller
 
       private function hasFoldersTable()
       {
-        if (! is_null(self::$hasFoldersTable))
-          return self::$hasFoldersTable;
-
-        global $wpdb;
-        $charsetCollate = $wpdb->get_charset_collate();
-
-        $foldersTable = $wpdb->get_results("SELECT COUNT(1) hasFoldersTable FROM information_schema.tables WHERE table_schema='{$wpdb->dbname}' AND table_name='{$wpdb->prefix}shortpixel_folders'");
-
-        if(isset($foldersTable[0]->hasFoldersTable) && $foldersTable[0]->hasFoldersTable > 0) {
-            $result = true;
-        }
-        else
-           $result = false;
-
-        self::$hasFoldersTable = $result;
-
-        return $result;
+				return InstallHelper::checkTableExists('shortpixel_folders');
       }
 
-      private function createFolderTable()
-      {
-        global $wpdb;
-
-        if ($this->hasFolderTable())
-          return;
-
-        require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-
-
-        $sql = "CREATE TABLE {$tablePrefix}shortpixel_folders (
-             id mediumint(9) NOT NULL AUTO_INCREMENT,
-             path varchar(512),
-             name varchar(64),
-             path_md5 char(32),
-             file_count int,
-             status SMALLINT NOT NULL DEFAULT 0,
-             ts_updated timestamp,
-             ts_created timestamp,
-             UNIQUE KEY id (id)
-           ) $charsetCollate;";
-
-
-          $result = dbDelta($sql);
-
-          return $result;
-      }
 
 
 } // Class
