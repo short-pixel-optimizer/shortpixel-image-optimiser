@@ -10,6 +10,7 @@ use ShortPixel\Helper\InstallHelper as InstallHelper;
 
 class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailModel
 {
+
   protected $thumbnails = array(); // thumbnails of this // MediaLibraryThumbnailModel .
   protected $retinas = array(); // retina files - MediaLibraryThumbnailModel (or retina / webp and move to thumbnail? )
   //protected $webps = array(); // webp files -
@@ -26,6 +27,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   private static $unlistedChecked = array(); // limit checking unlisted.
 
   private $optimizePrevented; // cache if there is any reason to prevent optimizing
+
+	const IMAGE_TYPE_MAIN = 0;
+	const IMAGE_TYPE_THUMB = 1;
+	const IMAGE_TYPE_ORIGINAL = 2;
+	const IMAGE_TYPE_RETINA = 3;
 
   public function __construct($post_id, $path)
   {
@@ -519,7 +525,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
   protected function loadMeta()
   {
-      $metadata = get_post_meta($this->id, '_shortpixel_meta', true); // ShortPixel MetaData
+			//$metadata = get_post_meta($this->id, '_shortpixel_meta', true); // ShortPixel MetaData
+		//	echo "POST META <PRE>"; print_r($metadata); echo "</PRE>";
+
+			$metadata = $this->getDBMeta();
+//			echo 'GetDbMeta <PRE> '; print_r($metadata); echo "</PRE>";
+
       $settings = \wpSPIO()->settings();
 
       $this->image_meta = new ImageMeta();
@@ -531,10 +542,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           $this->thumbnails = $this->loadThumbnailsFromWP();
 
           $result = $this->checkLegacy();
+
           if ($result)
           {
             $this->saveMeta();
-
+						//$metadata = $this->GetDbMeta();
           }
       }
       elseif (is_object($metadata) )
@@ -642,6 +654,230 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
   }
 
+	protected function getDBMeta()
+	{
+		 global $wpdb;
+
+		 // Main Image.
+		 $sql = 'SELECT * FROM ' . $wpdb->prefix . 'shortpixel_postmeta WHERE attach_id = %d ORDER BY parent ASC';
+		 $sql = $wpdb->prepare($sql, $this->id);
+		 $meta = $wpdb->get_results($sql);
+
+		 // If metadata is null and the last-error discussed about exist (and probably doesn't exist), check the table. s
+		 if (count($meta) == 0 && strpos($wpdb->last_error, 'exist') !== false)
+		 {
+			  InstallHelper::checkTables();
+				return false;
+		 }
+		 elseif (count($meta) == 0) // no records, no object.
+		 {
+			 return false;
+		 }
+
+		 // Thumbnails
+//		 $sql = 'SELECT * FROM ' . $wpdb->prefix . 'shortpixel_postmeta where parent = %d';
+	//		 $sql = $wpdb->prepare($sql, $this->id);
+
+		// Mimic the previous SPixel solution regarding the return Metadata Object needed, with all thunbnails there.
+		 $metadata = new \stdClass;
+		 $metadata->image_meta = new \stdClass;
+		 $metadata->thumbnails = new \stdClass;
+		 $metadata->thumbnails = array();
+
+		 //$metadata = new \stdClass; // main image
+	   for($i = 0; $i < count($meta); $i++)
+		 {
+			 	 	$record = $meta[$i];
+
+					// @todo Here goes all the table stuff looking like metadata objects.
+					$data = new \stdClass;
+					$data->databaseID = $record->id;
+					$data->status = $record->status;
+					$data->compressionType = $record->compression_type;
+					$data->compressedSize = $record->compressed_size;
+					$data->originalSize = $record->original_size;
+
+					// @todo This needs to be Mysql TimeStamp -> Unix TS-ilized.
+					$data->tsAdded = \ShortPixelTools::DBtoTimestamp($record->tsAdded);
+					$data->tsOptimized = \ShortPixelTools::DBtoTimestamp($record->tsOptimized);
+
+					// [...]
+					$extra_info = json_decode($record->extra_info);
+
+					// @todo Extra info should probably be stored as JSON?
+					foreach($extra_info as $name => $val)
+					{
+						 $data->$name = $val;
+					}
+
+					if ($record->parent == 0)
+					{
+						// Database ID should probably also be stored for the thumbnails, so updating / insert into the database will be easier. We have a free primary key, so why not use it?
+							$metadata->image_meta  = $data;
+					}
+					elseif($record->parent > 0)  // Thumbnails
+					{
+						 switch($record->image_type)
+						 {
+							 	 case self::IMAGE_TYPE_THUMB:
+								 	$metadata->thumbnails[$record->size] = $data;
+								 break;
+								 case self::IMAGE_TYPE_RETINA:
+								 	$metadata->retinas[$record->size] = $data;
+								 break;
+								 case self::IMAGE_TYPE_ORIGINAL:
+								 	$metadata->original_file = $data;
+								 break;
+						 }
+
+					}
+
+		 }
+
+		 return $metadata;
+	}
+
+	/*
+	*
+	*/
+	// @todo Test with retinas, they probably won't work because named after thumbname or 0
+
+	protected function saveDBMeta($metadata)
+	{
+		 //global $wpdb;
+
+		 $records = array();
+		 $records[] = $this->createRecord($metadata->image_meta, self::IMAGE_TYPE_MAIN);
+
+		 if (property_exists($metadata, 'thumbnails'))
+		 {
+				 foreach($metadata->thumbnails as $name => $thumbData)
+				 {
+							$records[] = $this->createRecord($thumbData, self::IMAGE_TYPE_THUMB, $name);
+				 }
+	 	 }
+
+		 if (property_exists($metadata, 'retinas'))
+		 {
+				 foreach($metadata->retinas as $name => $retData)
+				 {
+					 	$records[] = $this->createRecord($retData, self::IMAGE_TYPE_RETINA, $name);
+				 }
+		 }
+
+		 if ($this->isScaled())
+		 {
+			  $orData = $metadata->original_file;
+				$records[] = $this->createRecord($orData, self::IMAGE_TYPE_ORIGINAL);
+		 }
+		 // @todo II -> figure out how to store thumbnails.  Probably either per thumbnails check if it exists in the database and then update or delete.
+		 //  This should include a check to see if there are thumbnail sizes no longer in the thumbnails array, probably they should be removed.
+
+		 $this->cleanupDatabase($records);
+
+	}
+
+
+	private function createRecord($data, $imageType, $sizeName = null)
+	{
+		 global $wpdb;
+		 $table = $wpdb->prefix . 'shortpixel_postmeta';
+
+		 //echo "<PRE>"; print_r($data); echo "</PRE>";
+
+		 $attach_id = $this->id;
+		 $parent = ($imageType == self::IMAGE_TYPE_MAIN) ? 0 : $this->id;
+
+
+		 $fields = array(
+			 	'attach_id' => $attach_id,
+				'parent' => $parent,
+				'image_type' => $imageType,
+				'size' => $sizeName,
+				'status' => $data->status,
+				'compression_type' => $data->compressionType,
+				'compressed_size' => $data->compressedSize,
+				'original_size' => $data->originalSize,
+				'tsAdded' => \ShortPixelTools::timestampToDB($data->tsAdded),
+				'tsOptimized' => \ShortPixelTools::timestampToDB($data->tsOptimized),
+		 );
+
+		 unset($data->status);
+		 unset($data->compressionType);
+		 unset($data->compressedSize);
+		 unset($data->originalSize);
+		 unset($data->tsAdded);
+		 unset($data->tsOptimized);
+
+		 if (property_exists($data, 'databaseID') && intval($data->databaseID) > 0)
+		 {
+			 $databaseID = $data->databaseID;
+			 $insert = false;
+			 unset($data->databaseID); // All this to prevent it from being in extra_info.
+		 }
+		 else {
+		 	 $insert = true;
+		 }
+
+		 $fields['extra_info'] = wp_json_encode($data); // everything else
+
+		 $format = array('%d', '%d','%d', '%s', '%d', '%d', '%d', '%d', '%s', '%s', '%s');
+
+		 if ($insert === true)
+		 {
+			  $wpdb->insert($table, $fields, $format);
+				$database_id = $wpdb->insert_id;
+				Log::addTemp('Insert Record with ID ' . $database_id);
+
+				switch($imageType)
+				{
+					 case self::IMAGE_TYPE_MAIN:
+					 		$this->setMeta('databaseID', $database_id);
+					 break;
+					 case self::IMAGE_TYPE_THUMB:
+					 		$this->thumbnails[$sizeName]->setMeta('databaseID', $database_id);
+					 break;
+					 case self::IMAGE_TYPE_RETINA:
+					 		$this->retinas[$sizeName]->setMeta('databaseID', $database_id);
+					 break;
+					 case self::IMAGE_TYPE_ORIGINAL:
+					 		$this->original_file->setMeta('databaseID', $database_id);
+					 break;
+				}
+		 }
+		 else {
+			 	$wpdb->update($table, $fields,  array('id' => $databaseID),$format, array('%d'));
+				Log::addTemp('Update Record with ID ' . $databaseID);
+				$database_id = $databaseID;
+		 }
+
+		 return $database_id;
+	}
+
+	private function cleanupDatabase($records)
+	{
+		 global $wpdb;
+
+		 // Empty numbers might erase the whole thing.
+		 $records = array_filter($records, 'intval');
+		 if (count($records) == 0)
+		 	return;
+
+
+		 $in_str_arr = array_fill( 0, count( $records ), '%s' );
+		 $in_str = join( ',', $in_str_arr );
+
+		 $prepare = array_merge( array($this->id), $records);
+
+		 $sql = 'DELETE FROM ' . $wpdb->prefix . 'shortpixel_postmeta WHERE attach_id = %d and id not in (' . $in_str . ') ';
+		 $sql = $wpdb->prepare($sql, $prepare);
+
+//Log::addDebug('Cleansing the world ' . $sql);
+
+		  $wpdb->query($sql);
+
+	}
+
   private function createSave()
   {
       $metadata = new \stdClass; // $this->image_meta->toClass();
@@ -680,30 +916,39 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
  public function saveMeta()
  {
-     $metadata = $this->createSave();
-     // There is no point checking for errors since false is returned on both failure and no field changed.
-     update_post_meta($this->id, '_shortpixel_meta', $metadata);
+	   global $wpdb;
 
-     if ($this->isOptimized())
+		 $metadata = $this->createSave();
+
+//Log::addTemp('Saving Meta', $metadata);
+		 $this->saveDBMeta($metadata);
+     // There is no point checking for errors since false is returned on both failure and no field changed.
+     //update_post_meta($this->id, '_shortpixel_meta', $metadata);
+
+     /* if ($this->isOptimized())
      {
         update_post_meta($this->id, '_shortpixel_optimized', $this->getImprovement() );
         update_post_meta($this->id, '_shortpixel_optdate', $this->getMeta('tsOptimized'));
-     }
+     } */
   }
 
   /** Delete the Shortpixel Meta. */
   public function deleteMeta()
   {
-     $bool = delete_post_meta($this->id, '_shortpixel_meta');
-     if (! $bool)
-      Log::addWarn('Delete Post Meta failed');
+		global $wpdb;
+    // $bool = delete_post_meta($this->id, '_shortpixel_meta');
+     //if (! $bool)
+     // Log::addWarn('Delete Post Meta failed');
 
-     delete_post_meta($this->id, '_shortpixel_optimized');
+     //delete_post_meta($this->id, '_shortpixel_optimized');
      $this->resetPrevent();
+		 //delete_post_meta($this->id, '_shortpixel_was_converted');
+     //delete_post_meta($this->id, '_shortpixel_optdate');
 
-		 delete_post_meta($this->id, '_shortpixel_was_converted');
+		 $sql = 'DELETE FROM ' . $wpdb->prefix . 'shortpixel_postmeta WHERE attach_id = %s';
+		 $sql = $wpdb->prepare($sql, $this->id);
 
-     delete_post_meta($this->id, '_shortpixel_optdate');
+		 $bool = $wpdb->query($sql);
 
      return $bool;
   }
@@ -1405,7 +1650,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
        $error_message = isset($metadata['ShortPixelImprovement']) && ! is_numeric($metadata['ShortPixelImprovement']) ? $metadata['ShortPixelImprovement'] : '';
 
-       $retries = isset($data['Retries']) ? intval($data['Retries']) : 0;
+    //   $retries = isset($data['Retries']) ? intval($data['Retries']) : 0;
        $optimized_thumbnails = (isset($data['thumbsOptList']) && is_array($data['thumbsOptList'])) ? $data['thumbsOptList'] : array();
        $exifkept = (isset($data['exifKept']) && $data['exifKept']  == 1) ? true : false;
 
@@ -1427,9 +1672,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        $this->image_meta->improvement = $improvement;
        $this->image_meta->compressionType = $type;
        $this->image_meta->compressedSize = $this->getFileSize();
-       $this->image_meta->retries = $retries;
+     //  $this->image_meta->retries = $retries;
        $this->image_meta->tsAdded = $tsAdded;
-       $this->image_meta->has_backup = $this->hasBackup();
+     //  $this->image_meta->has_backup = $this->hasBackup();
        $this->image_meta->errorMessage = $error_message;
 
        $this->image_meta->did_keepExif = $exifkept;

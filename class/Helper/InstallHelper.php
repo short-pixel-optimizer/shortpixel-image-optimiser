@@ -140,19 +140,72 @@ class InstallHelper
 			{
 	 	    	dbDelta(self::getMetaTableSQL());
 			}
+			if (self::checkTableExists('shortpixel_postmeta') === false)
+			{
+					dbDelta(self::getPostMetaSQL());
+			}
+
+			self::checkIndexes();
+	}
+
+	private static function checkIndexes()
+	{
+			global $wpdb;
+
+			$definitions = array(
+				 'shortpixel_meta' => array(
+					 	'path' => 'path'
+				 ),
+				 'shortpixel_folders' => array(
+					  'path' => 'path'
+				 ),
+				 'shortpixel_postmeta' => array(
+					   'attach_id' => 'attach_id',
+						 'parent' => 'parent',
+						 'size' => 'size',
+						 'status' => 'status',
+						 'compression_type' => 'compression_type'
+				 )
+			);
+
+			foreach($definitions as $raw_tableName => $indexes)
+			{
+					$tableName = $wpdb->prefix . $raw_tableName;
+					foreach($indexes as $indexName => $fieldName)
+					{
+							// Check exists
+							$sql = 'SHOW INDEX FROM ' . $tableName . ' WHERE Key_name = %s';
+							$sql = $wpdb->prepare($sql, $indexName);
+
+							$res = $wpdb->get_row($sql);
+
+							if (is_null($res))
+							{
+								// can't prepare for those, also not any user data here.
+								 $sql = 'CREATE INDEX ' . $indexName . ' ON ' . $tableName . ' ( ' . $fieldName . ')';
+								 $res = $wpdb->query($sql);
+							}
+
+					}
+			}
 	}
 
 	private static function removeTables()
 	{
 		 global $wpdb;
-			if (self::checkTableExists($wpdb->prefix . 'shortpixel_folders') === false)
+			if (self::checkTableExists('shortpixel_folders') === false)
 	    {
 					$sql = 'DROP TABLE  ' . $wpdb->prefix . 'shortpixel_folders';
 					$wpdb->query($sql);
 			}
-			if (self::checkTableExists($wpdb->prefix . 'shortpixel_meta') === false)
+			if (self::checkTableExists('shortpixel_meta') === false)
 			{
 	 	    	$sql = 'DROP TABLE  ' . $wpdb->prefix . 'shortpixel_meta';
+					$wpdb->query($sql);
+			}
+			if (self::checkTableExists('shortpixel_postmeta') === false)
+			{
+					$sql = 'DROP TABLE  ' . $wpdb->prefix . 'shortpixel_postmeta';
 					$wpdb->query($sql);
 			}
 	}
@@ -205,6 +258,31 @@ class InstallHelper
         ) $charsetCollate;";
 
   }
+
+	public static function getPostMetaSQL()
+	{
+		 global $wpdb;
+		 $charsetCollate = $wpdb->get_charset_collate();
+		 $prefix = $wpdb->prefix;
+
+		 $sql = "CREATE TABLE {$prefix}shortpixel_postmeta (
+			 id bigint unsigned NOT NULL AUTO_INCREMENT ,
+			 attach_id bigint unsigned NOT NULL,
+			 parent bigint unsigned NOT NULL,
+			 image_type tinyint default 0,
+			 size varchar(50),
+			 status tinyint default 0,
+			 compression_type tinyint,
+			 compressed_size  int,
+			 original_size int,
+			 tsAdded timestamp,
+			 tsOptimized  timestamp,
+			 extra_info LONGTEXT,
+			 PRIMARY KEY id (id)
+		 ) $charsetCollate;";
+
+		 return $sql;
+	}
 
 
 } // InstallHelper

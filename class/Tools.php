@@ -96,6 +96,16 @@ static public function formatBytes($bytes, $precision = 2) {
     return round($bytes, $precision) . ' ' . $units[$pow];
 }
 
+static public function timestampToDB($timestamp)
+{
+		return date("Y-m-d H:i:s", $timestamp);
+}
+
+static public function DBtoTimestamp($date)
+{
+		return strtotime($date);
+}
+
     public static function commonPrefix($str1, $str2) {
         $limit = min(strlen($str1), strlen($str2));
         for ($i = 0; $i < $limit && $str1[$i] === $str2[$i]; $i++);

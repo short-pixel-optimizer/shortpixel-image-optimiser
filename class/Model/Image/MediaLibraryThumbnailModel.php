@@ -12,6 +12,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
   //abstract protected function loadMeta();
 
   public $name;
+
 /*  public $width;
   public $height;
   public $mime; */

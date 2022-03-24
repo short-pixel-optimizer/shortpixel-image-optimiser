@@ -78,6 +78,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 					$image = $this->imageModel;
 
 
+
           if (! $this->userIsAllowed)
           {
             $this->view->actions = array();

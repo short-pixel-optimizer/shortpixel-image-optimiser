@@ -305,10 +305,10 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
         //$metaObj->has_backup = (intval($imagerow->backup) == 1) ? true : false;
 
-        $addedDate = $this->DBtoTimestamp($imagerow->ts_added);
+        $addedDate = \ShortPixelTools::DBtoTimestamp($imagerow->ts_added);
         $metaObj->tsAdded = $addedDate;
 
-        $optimizedDate = $this->DBtoTimestamp($imagerow->ts_optimized);
+        $optimizedDate = \ShortPixelTools::DBtoTimestamp($imagerow->ts_optimized);
         $metaObj->tsOptimized = $optimizedDate;
 
         $this->image_meta = $metaObj;
@@ -415,8 +415,8 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
             'status' => $metaObj->status,
             'retries' => 0, // this is unused / legacy
             'message' => $message, // this is used for improvement line.
-            'ts_added' => $this->timestampToDB($metaObj->tsAdded),
-            'ts_optimized' => $this->timestampToDB($metaObj->tsOptimized),
+            'ts_added' => \ShortPixelTools::timestampToDB($metaObj->tsAdded),
+            'ts_optimized' => \ShortPixelTools::timestampToDB($metaObj->tsOptimized),
             'path' => $this->getFullPath(),
 						'name' => $this->getFileName(),
             'path_md5' => md5($this->getFullPath()), // this is legacy
@@ -527,13 +527,4 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
     //  return $improvements; // we have no thumbnails.
     }
 
-    private function timestampToDB($timestamp)
-    {
-        return date("Y-m-d H:i:s", $timestamp);
-    }
-
-    private function DBtoTimestamp($date)
-    {
-        return strtotime($date);
-    }
 }

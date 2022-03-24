@@ -3,6 +3,7 @@ namespace ShortPixel\Model\Image;
 
 class ImageThumbnailMeta
 {
+	public $databaseID = null;
   public $status = 0;
   public $compressionType;
   public $compressedSize;
@@ -62,8 +63,8 @@ class ImageThumbnailMeta
        if ($property == 'customImprovement')
        {  continue;  }
 
-       if (is_null($value)) // don't save default / values without init.
-          continue;
+      // if (is_null($value)) // don't save default / values without init.
+       //   continue;
 
 
        $class->$property = $this->$property;
