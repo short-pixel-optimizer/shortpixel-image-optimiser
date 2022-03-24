@@ -404,6 +404,13 @@ class wpOffload
 					// Don't prevent whaffever if shortpixel is already done. This can be caused by plugins doing a metadata update, we don't care then.
 					if (! isset($data['ShortPixelImprovement']) && $this->shouldPrevent === true)
 					{
+						$file = get_attached_file($post_id);
+						if (strpos($file, '.pdf') !== false && ! $settings->optimizePdfs  )
+						{
+							 Log::addDebug('S3 Prevent Initial Upload detected PDF, which will not be optimized', $post_id);
+							 return false;
+						}
+
 						Log::addDebug('Preventing Initial Upload', $post_id);
 						return true;
 					}
