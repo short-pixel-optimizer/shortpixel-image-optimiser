@@ -3056,12 +3056,12 @@ class WPShortPixel {
 
         ##### IF try the file with replaced extension (test.avif) #####
         RewriteCond %{HTTP_ACCEPT} image/avif
-        # AND is the request a jpg or png? (also grab the basepath %1 to match in the next rule)
-        RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png)$
+        # AND is the request a jpg, png or gif? (also grab the basepath %1 to match in the next rule)
+        RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png|gif)$
         # AND does a .avif image exist?
         RewriteCond %{DOCUMENT_ROOT}/%1.avif -f
         # THEN send the avif image and set the env var avif
-        RewriteRule (.+)\.(?:jpe?g|png)$ $1.avif [NC,T=image/avif,E=avif,L]
+        RewriteRule (.+)\.(?:jpe?g|png|gif)$ $1.avif [NC,T=image/avif,E=avif,L]
 
         </IfModule>
         <IfModule mod_headers.c>
