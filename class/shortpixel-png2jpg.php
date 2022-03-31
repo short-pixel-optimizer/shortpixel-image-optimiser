@@ -91,18 +91,19 @@ class ShortPixelPng2Jpg {
 									 	  Notices::addError($error);
 							 }
 
+							 // new hook.
+							 do_action('shortpixel/image/convertpng2jpg_success', $imageObj);
+
 							  return true;
              } // success
 
-						 // new hook.
-						 do_action('shortpixel/image/convertpng2jpg_success', $imageObj);
+
 
           } // result.
 					else
 					{
 						return false;
 					}
-
 
         //  return $imageObj;
         return true;
@@ -275,7 +276,7 @@ class ShortPixelPng2Jpg {
 						Log::addDebug('PNG2jPG Converted', $params);
         }
 
-				//legacy. Not at this point metadata has not been updated. 
+				//legacy. Not at this point metadata has not been updated.
         do_action('shortpixel/image/convertpng2jpg_after', $imageObj, $params);
         return $params;
     }
@@ -366,7 +367,7 @@ class ShortPixelPng2Jpg {
 					$this->replacer = new Replacer();
 					$this->replacer->setSource($url);
 
-					if ($imageObj->get('type') == 'media')
+					if ($imageObj->get('type') == 'media') // old stuff
 					{
 						 Log::addTemp('Restore SourceMeta getWpMetaData', $imageObj->getWPMetaData());
 						 $this->replacer->setSourceMeta($imageObj->getWPMetaData());
@@ -445,9 +446,11 @@ class ShortPixelPng2Jpg {
         	$new_metadata = array_merge($metadata, $new_metadata); // merge to preserve other custom metadata
 
 				}
-        Log::addDebug('Png2Jpg New Metadata', $new_metadata);
+        Log::addDebug('Png2Jpg New Metadata' . $attach_id, $new_metadata);
 		//		wp_update_post(array('ID' => $attach_id, 'post_mime_type' => 'image/jpeg' ));
-        wp_update_attachment_metadata($attach_id, $new_metadata);
+        $bool = wp_update_attachment_metadata($attach_id, $new_metadata);
+			  Log::addTemp('Result of Update '  . $bool );
+
         return $new_metadata;
 
     }

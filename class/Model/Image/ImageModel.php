@@ -52,8 +52,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		const P_NOT_OPTIMIZED = 111;
 
     protected $image_meta; // metadata Object of the image.
+		protected $recordChanged = false;
 
-    // ImageModel properties are not stored but is generated data.  Only storage should happen to the values in Meta. 
+    // ImageModel properties are not stored but is generated data.  Only storage should happen to the values in Meta.
     protected $width;
     protected $height;
     protected $mime;
@@ -64,6 +65,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
     protected $processable_status = 0;
 		protected $restorable_status = 0;
+
+
 
     //protected $is_optimized = false;
   //  protected $is_image = false;
@@ -353,14 +356,27 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
     public function setMeta($name, $value)
     {
-      if (! property_exists($this->image_meta, $name))
+      if (! $this->hasMeta($name))
       {
           Log::addDebug('Writing meta non existing' . $name);
           return false;
       }
       else
+			{
+				if ($this->image_meta->$name !== $value)
+				{
+					 $this->recordChanged(true, $this->image_meta->$name, $value);
+				}
         $this->image_meta->$name = $value;
+
+			}
     }
+
+		// Indicates this image has changed data.  Parameters optional for future use.
+		protected function recordChanged($bool = true, $old_value = null, $new_value = null)
+		{
+			 $this->recordChanged = $bool; // Updated record for this image.
+		}
 
     public function hasMeta($name)
     {

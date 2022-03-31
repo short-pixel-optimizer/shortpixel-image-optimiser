@@ -32,6 +32,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	const IMAGE_TYPE_THUMB = 1;
 	const IMAGE_TYPE_ORIGINAL = 2;
 	const IMAGE_TYPE_RETINA = 3;
+	const IMAGE_TYPE_DUPLICATE = 4;
 
   public function __construct($post_id, $path)
   {
@@ -390,6 +391,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
       $optimized = array();
 
+			$compressionType = $this->getMeta('compressionType'); // CompressionType not set on subimages etc.
+
       // If thumbnails should not be optimized, they should not be in result Array.
       foreach($this->thumbnails as $thumbnail)
       {
@@ -398,6 +401,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				 {
 					  continue;
 				 }
+
+				 $thumbnail->setMeta('compressionType', $compressionType);
 
          $thumbnail->handleOptimizedFileType($tempFiles); // check for webps /etc
 
@@ -410,7 +415,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
          $filebase = $thumbnail->getFileBase();
          $result = false;
 
-         if (isset($optimized[$filebase]))
+         if (isset($optimized[$filebase])) // double sizes.
          {
            $thumbnail->setMetaObj($optimized[$filebase]);
          }
@@ -434,6 +439,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       {
           $original_file = $this->getOriginalFile();
           $original_file->handleOptimizedFileType($tempFiles);
+					$original_file->setMeta('compressionType', $compressionType);
+
 
           if (! $original_file->isOptimized())
           {
@@ -454,17 +461,19 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			$duplicates = $this->getWPMLDuplicates();
 			if (is_array($duplicates) && count($duplicates) > 0)
 			{
-				$current_id = $this->id;
+//				$current_id = $this->id;
 				// Run the WPML duplicates
 				foreach($duplicates as $duplicate_id)
 				{
 						// Save the exact same data under another post.
-					  $this->id = $duplicate_id;
-						$this->dropFromQueue();
-						$this->saveMeta();
+						$this->createDuplicateRecord($duplicate_id);
+					  //$this->id = $duplicate_id;
+						//$this->dropFromQueue();
+
+						//$this->saveMeta();
 
 				}
-				$this->id = $current_id;
+//				$this->id = $current_id;
 
 			}
 
@@ -525,11 +534,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
   protected function loadMeta()
   {
-			//$metadata = get_post_meta($this->id, '_shortpixel_meta', true); // ShortPixel MetaData
-		//	echo "POST META <PRE>"; print_r($metadata); echo "</PRE>";
-
 			$metadata = $this->getDBMeta();
-//			echo 'GetDbMeta <PRE> '; print_r($metadata); echo "</PRE>";
 
       $settings = \wpSPIO()->settings();
 
@@ -555,7 +560,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
           // Loads thumbnails from the WordPress installation to ensure fresh list, discover later added, etc.
           $thumbnails = $this->loadThumbnailsFromWP();
-
 
           foreach($thumbnails as $name => $thumbObj)
           {
@@ -659,9 +663,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		 global $wpdb;
 
 		 // Main Image.
-		 $sql = 'SELECT * FROM ' . $wpdb->prefix . 'shortpixel_postmeta WHERE attach_id = %d ORDER BY parent ASC';
-		 $sql = $wpdb->prepare($sql, $this->id);
-		 $meta = $wpdb->get_results($sql);
+		 $sqlQuery = 'SELECT * FROM ' . $wpdb->prefix . 'shortpixel_postmeta WHERE attach_id = %d ORDER BY parent ASC';
+		 $sqlPrep = $wpdb->prepare($sqlQuery, $this->id);
+		 $meta = $wpdb->get_results($sqlPrep);
 
 		 // If metadata is null and the last-error discussed about exist (and probably doesn't exist), check the table. s
 		 if (count($meta) == 0 && strpos($wpdb->last_error, 'exist') !== false)
@@ -669,9 +673,47 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			  InstallHelper::checkTables();
 				return false;
 		 }
-		 elseif (count($meta) == 0) // no records, no object.
+
+		 if (count($meta) == 1 && $meta[0]->image_type == self::IMAGE_TYPE_DUPLICATE)
 		 {
-			 return false;
+				$duplicate_id = $meta[0]->parent;
+				$sqlPrep = $wpdb->prepare($sqlQuery, $duplicate_id);
+				$meta = $wpdb->get_results($sqlPrep);
+
+		 }
+
+		 if (count($meta) == 0) // no records, no object.
+		 {
+
+			 $duplicates = $this->getWPMLDuplicates();
+			 if (count($duplicates) > 0) //duplicates found, but not saved.
+			 {
+				 $in_str_arr = array_fill( 0, count( $duplicates ), '%s' );
+				 $in_str = join( ',', $in_str_arr );
+
+				 $prepare = array_merge( array(self::IMAGE_TYPE_MAIN), $duplicates);
+
+
+				 $sql = 'SELECT attach_id FROM ' . $wpdb->prefix . 'shortpixel_postmeta WHERE image_type = %d and attach_id in ( ' . $in_str . ') ';
+				 $sql = $wpdb->prepare($sql, $prepare);
+
+				 $parent_id = $wpdb->get_var($sql);
+
+				 if (is_numeric($parent_id))
+				 {
+					  $this->createDuplicateRecord($this->id, $parent_id);
+
+						$sqlPrep = $wpdb->prepare($sqlQuery, $parent_id);
+						$meta = $wpdb->get_results($sqlPrep); // get the parent meta.
+				 }
+				 else {
+				 	  return false; 
+				 }
+			 }
+			 else {
+			 		 return false;
+			 }
+
 		 }
 
 		 // Thumbnails
@@ -765,7 +807,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				 }
 		 }
 
-		 if ($this->isScaled())
+		 if ($this->isScaled() && property_exists($metadata, 'original_file'))
 		 {
 			  $orData = $metadata->original_file;
 				$records[] = $this->createRecord($orData, self::IMAGE_TYPE_ORIGINAL);
@@ -786,7 +828,17 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		 //echo "<PRE>"; print_r($data); echo "</PRE>";
 
 		 $attach_id = $this->id;
+
 		 $parent = ($imageType == self::IMAGE_TYPE_MAIN) ? 0 : $this->id;
+
+		 if ($imageType == self::IMAGE_TYPE_DUPLICATE)
+		 {
+			  $attach_id = $data->attach_id;
+				$parent = $data->parent;
+
+				unset($data->attach_id);
+				unset($data->parent);
+		 }
 
 
 		 $fields = array(
@@ -854,6 +906,33 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		 return $database_id;
 	}
 
+	private function createDuplicateRecord($duplicate_id, $parent = null)
+	{
+		  $data = new \StdClass;
+
+			$data->parent = ($parent == null) ? $this->id : $parent;
+			$data->attach_id = $duplicate_id;
+			$imageType = self::IMAGE_TYPE_DUPLICATE;
+
+/*
+			$data->status = $this->getMeta('status');
+			$data->tsOptimized = $this->getMeta('tsOptimized');
+			$data->tsAdded = $this->getMeta('tsAdded');
+			$data->compressionType = $this->getMeta('compressionType');
+			$data->originalSize = $this->getMeta('originalSize');
+			$data->compressedSize = $this->getMeta('compressedSize');
+*/
+			$data->status = null;
+			$data->tsOptimized = null;
+			$data->tsAdded = null;
+			$data->compressionType = null;;
+			$data->originalSize = null;
+			$data->compressedSize = null;
+
+
+			$this->createRecord($data, $imageType);
+	}
+
 	private function cleanupDatabase($records)
 	{
 		 global $wpdb;
@@ -872,10 +951,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		 $sql = 'DELETE FROM ' . $wpdb->prefix . 'shortpixel_postmeta WHERE attach_id = %d and id not in (' . $in_str . ') ';
 		 $sql = $wpdb->prepare($sql, $prepare);
 
-//Log::addDebug('Cleansing the world ' . $sql);
-
-		  $wpdb->query($sql);
-
+		 Log::addDebug('Cleaning up: ', $records);
+		 $wpdb->query($sql);
 	}
 
   private function createSave()
@@ -888,27 +965,30 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
       foreach($this->thumbnails as $thumbName => $thumbObj)
       {
-         $thumbnails[$thumbName] = $thumbObj->toClass();
+				 if ($thumbObj->getMeta('status') > 0)
+				 {
+         		$thumbnails[$thumbName] = $thumbObj->toClass();
+				 }
       }
       foreach($this->retinas as $index => $retinaObj)
       {
-         $retinas[$index] = $retinaObj->toClass();
+				 if ($retinaObj->getMeta('status') > 0)
+				 {
+         		$retinas[$index] = $retinaObj->toClass();
+				 }
       }
-      /*foreach($this->webps as $index => $webp)
-      {
-        $webps[$index] = $webp->getFullPath();
-      } */
 
       if (count($thumbnails) > 0)
         $metadata->thumbnails = $thumbnails;
       if (count($retinas) > 0)
         $metadata->retinas = $retinas;
-      /*if (count($webps) > 0)
-        $metadata->webps = $webps; */
 
       if ($this->isScaled())
       {
-        $metadata->original_file = $this->original_file->toClass();
+				if ($this->original_file->getMeta('status') > 0 )
+				{
+        	$metadata->original_file = $this->original_file->toClass();
+				}
       }
 
       return $metadata;
@@ -973,8 +1053,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       $this->deleteMeta();
 
 			$this->dropFromQueue();
-
-
   }
 
 	public function dropFromQueue()
@@ -1307,33 +1385,51 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		$duplicates = array();
 
-		// Detect WPML
+		// Detects WPML -and- Polylang
 		if (! function_exists('icl_object_id'))
 		{
 			 return array();
 		}
 
-		$sql = "select * from " . $wpdb->prefix . "icl_translations where trid in (select trid from " . $wpdb->prefix . "icl_translations where element_id = %d)";
 
-		$sql = $wpdb->prepare($sql, $this->id);
-		$results = $wpdb->get_results($sql);
-
-		if (is_array($results))
+		if (InstallHelper::checkTableExists('icl_translations'))
 		{
-			foreach($results as $result)
-			{
-				 	 if ($result->element_id == $this->id)
-					 {
-						 continue;
-					 }
-					 $duplicateFile = $fs->getMediaImage($result->element_id);
-					 // Check if the path is the same. WPML translations can be linked to different images, so this is important.
-					 if ($this->getFullPath() == $duplicateFile->getFullPath())
-					 {
-					 		$duplicates[] = $result->element_id;
-				 	 }
+				$sql = "select * from " . $wpdb->prefix . "icl_translations where trid in (select trid from " . $wpdb->prefix . "icl_translations where element_id = %d)";
 
-			}
+				$sql = $wpdb->prepare($sql, $this->id);
+				$results = $wpdb->get_results($sql);
+
+					if (is_array($results))
+					{
+						foreach($results as $result)
+						{
+							 	 if ($result->element_id == $this->id)  // don't select your own.
+								 {
+									 continue;
+								 }
+								 $duplicateFile = $fs->getMediaImage($result->element_id);
+								 // Check if the path is the same. WPML translations can be linked to different images, so this is important.
+								 if ($this->getFullPath() == $duplicateFile->getFullPath())
+								 {
+								 		$duplicates[] = $result->element_id;
+							 	 }
+
+						}
+					}
+		}  // wpml
+		if (defined('POLYLANG_VERSION')) // polylang
+		{
+				// unholy sql where guid is duplicated.
+				$sql = 'SELECT id FROM ' . $wpdb->prefix . 'posts WHERE guid in (select guid from ' . $wpdb->prefix . 'posts where id = %d ) and post_type = %s and id <> %d';
+				$sql = $wpdb->prepare($sql, $this->id, 'attachment', $this->id);
+
+				$results = $wpdb->get_col($sql);
+
+				foreach($results as $index => $element_id)
+				{
+					 $duplicates[]= intval($element_id);
+				}
+
 		}
 
     return array_unique($duplicates);
@@ -1488,6 +1584,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					$this->id = $current_id;
 				}
 
+			Log::addTemp('Restore Attach Metadata', wp_get_attachment_metadata($this->id));
+
 			// @todo Restore can be false if last item failed, which doesn't sound right.
 	    return $bool;
   }
@@ -1576,6 +1674,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				$pngConvert = new ShortPixelPng2Jpg();
 				$pngConvert->restorePng2Jpg($this);
 
+				$this->wp_metadata = null;  // restore changes the metadata.
+
 				return true;
 	}
 
@@ -1606,7 +1706,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	// If metadata is removed in a restore process, the legacy data will be reimported, which should not happen.
 	private function removeLegacy()
 	{
-		$metadata = $this->wp_metadata;
+		$metadata = $this->getWPMetaData();
 		if (isset($metadata['ShortPixel']))
 		{
 			 unset($metadata['ShortPixel']);
@@ -1617,7 +1717,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   // Convert from old metadata if needed.
   private function checkLegacy()
   {
-      $metadata = $this->wp_metadata;
+      $metadata = $this->getWPMetaData();
 
       if (! isset($metadata['ShortPixel']))
       {
@@ -1698,6 +1798,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        $this->width = isset($metadata['width']) ? $metadata['width'] : false;
        $this->height = isset($metadata['height']) ? $metadata['height'] : false;
 
+			 $this->recordChanged(true);
+
 
        if (isset($metadata['ShortPixelPng2Jpg']))
        {
@@ -1741,6 +1843,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
                  $thumbnailObj->image_meta->file = $thumbnailObj->getFileName();
               }
 
+							$thumbnailObj->recordChanged(true);
               $this->thumbnails[$thumbname] = $thumbnailObj;
 
           }
@@ -1778,6 +1881,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
               $originalFile->image_meta->file = $originalFile->getFileName();
            }
 
+					  $originalFile->recordChanged(true);
           }
        }
 
@@ -1807,6 +1911,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
                   $retinaObj->image_meta->originalSize = $retinaObj->getBackupFile()->getFileSize();
               }
 
+							$retinaObj->recordChanged(true);
               $retinas[$index] = $retinaObj;
            }
            $this->retinas = $retinas;
