@@ -155,6 +155,9 @@ class AdminNoticesController extends \ShortPixel\Controller
        $this->doIntegrationNotices();
        $this->doHelpOptInNotices();
        $this->doRemoteNotices();
+
+			 // Check if we are legacy, or if SPIO 5 was ever installed.
+			 $this->checkLegacyNotices();
     }
 
 
@@ -417,6 +420,21 @@ class AdminNoticesController extends \ShortPixel\Controller
           }
     }
 
+		protected function checkLegacyNotices()
+		{
+			 global $wpdb;
+
+			 $table_name = $wpdb->prefix . 'shortpixel_postmeta';
+			if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table_name) ) == $table_name)
+			{
+				 $message = $this->getAlreadyUpgradedMessage();
+				   Notices::addError($message);
+			}
+
+
+		}
+
+
     // Callback to check if we are on the correct page.
     public function upgradeBulkCallback($notice)
     {
@@ -613,6 +631,15 @@ class AdminNoticesController extends \ShortPixel\Controller
        }); </script>";
        return $message;
     }
+
+		protected function getAlreadyUpgradedMessage()
+		{
+			 $message = '<p>' . __('It seems you already upgraded to Shortpixel Image Optimizer version 5 and came back to version 4. We do not recommend using version 4 anymore because it might result in data loss. Please consult our support team if you have any issues with the new version.') . '</p>';
+
+			 $message .= '<p>' . sprintf(__('If you are sure about what you\'re doing and you want to get rid of this message, remove the database table %s. All optimizations done with version 5 will be forgotten and they will be processed again with version 4, according to your settings. ', 'shortpixel_image_optimiser'), 'shortpixel_postmeta') . '<a class="shortpixel-help-link" href="https://shortpixel.com/knowledge-base/article/529-downgrading-shortpixel-image-optimizer-version-5-version-4" target="_blank"><span class="dashicons dashicons-editor-help"></span>' . __('Reaad more', 'shortpixel-image-optimiser') . '</a>' . '</p>';
+
+			 return $message;
+		}
 
     protected function monthlyUpgradeNeeded($quotaData) {
         return isset($quotaData['APICallsQuotaNumeric']) && $this->getMonthAvg($quotaData) > $quotaData['APICallsQuotaNumeric'] + ($quotaData['APICallsQuotaOneTimeNumeric'] - $quotaData['APICallsMadeOneTimeNumeric'])/6 + 20;

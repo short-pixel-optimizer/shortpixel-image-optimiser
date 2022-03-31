@@ -3060,12 +3060,12 @@ class WPShortPixel {
         RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png)$
         # AND does a .avif image exist?
         RewriteCond %{DOCUMENT_ROOT}/%1.avif -f
-        # THEN send the webp image and set the env var avif
+        # THEN send the avif image and set the env var avif
         RewriteRule (.+)\.(?:jpe?g|png)$ $1.avif [NC,T=image/avif,E=avif,L]
 
         </IfModule>
         <IfModule mod_headers.c>
-        # If REDIRECT_webp env var exists, append Accept to the Vary header
+        # If REDIRECT_avif env var exists, append Accept to the Vary header
         Header append Vary Accept env=REDIRECT_avif
         </IfModule>
 
@@ -3087,8 +3087,8 @@ class WPShortPixel {
           RewriteCond %{HTTP_ACCEPT} image/webp
           # AND NOT MS EDGE 42/17 - doesnt work.
           RewriteCond %{HTTP_USER_AGENT} !Edge/17
-          # AND is the request a jpg or png?
-          RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png)$
+          # AND is the request a jpg, png or gif?
+          RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png|gif)$
           # AND does a .ext.webp image exist?
           RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI}.webp -f
           # THEN send the webp image and set the env var webp
@@ -3099,12 +3099,12 @@ class WPShortPixel {
           RewriteCond %{HTTP_USER_AGENT} "Google Page Speed Insights" [OR]
           RewriteCond %{HTTP_ACCEPT} image/webp
           RewriteCond %{HTTP_USER_AGENT} !Edge/17
-          # AND is the request a jpg or png? (also grab the basepath %1 to match in the next rule)
-          RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png)$
+          # AND is the request a jpg, png or gif? (also grab the basepath %1 to match in the next rule)
+          RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png|gif)$
           # AND does a .ext.webp image exist?
           RewriteCond %{DOCUMENT_ROOT}/%1.webp -f
           # THEN send the webp image and set the env var webp
-          RewriteRule (.+)\.(?:jpe?g|png)$ $1.webp [NC,T=image/webp,E=webp,L]
+          RewriteRule (.+)\.(?:jpe?g|png|gif)$ $1.webp [NC,T=image/webp,E=webp,L]
 
         </IfModule>
         <IfModule mod_headers.c>
@@ -3164,7 +3164,7 @@ class WPShortPixel {
         if ($this->_settings->createAvif)
         {
             if (! isset($mimes['avif']))
-              $mimes['webp'] = 'image/avif';
+              $mimes['avif'] = 'image/avif';
         }
         return $mimes;
     }
@@ -3205,7 +3205,14 @@ class WPShortPixel {
         }
         $args['body']['host'] = parse_url(get_site_url(),PHP_URL_HOST);
         $argsStr .= "&host={$args['body']['host']}";
-        if(strlen($this->_settings->siteAuthUser)) {
+
+				if (defined('SHORTPIXEL_HTTP_AUTH_USER') && defined('SHORTPIXEL_HTTP_AUTH_PASSWORD'))
+				{
+					$args['body']['user'] = stripslashes(SHORTPIXEL_HTTP_AUTH_USER);
+					$args['body']['pass'] = stripslashes(SHORTPIXEL_HTTP_AUTH_PASSWORD);
+					$argsStr .= '&user=' . urlencode($args['body']['user']) . '&pass=' . urlencode($args['body']['pass']);
+				}
+        elseif(strlen($this->_settings->siteAuthUser)) {
 
             $args['body']['user'] = stripslashes($this->_settings->siteAuthUser);
             $args['body']['pass'] = stripslashes($this->_settings->siteAuthPass);

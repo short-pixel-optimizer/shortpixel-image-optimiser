@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compressor, ima
 Requires at least: 4.2.0
 Tested up to: 5.9
 Requires PHP: 5.6
-Stable tag: 4.22.8
+Stable tag: 4.22.9
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -81,11 +81,11 @@ Help us spread the word by recommending ShortPixel to your friends and collect *
 
 **Other plugins by ShortPixel**
 
-* Image optimization & CDN on the fly - <a href="https://wordpress.org/plugins/shortpixel-adaptive-images/" target="_blank">ShortPixel Adaptive Images</a>
-* Easily replace images or files in Media Library - <a href="https://wordpress.org/plugins/enable-media-replace/" target="_blank">Enable Media Replace</a>
-* Regenerate thumbnails plugin compatible with the other ShortPixel plugins - <a href="https://wordpress.org/plugins/regenerate-thumbnails-advanced/" target="_blank">reGenerate Thumbnails Advanced</a>
-* Make sure you don't have huge images in your Media Library - <a href="https://wordpress.org/plugins/resize-image-after-upload/" target="_blank">Resize Image After Upload</a>
-
+* [ShortPixel Adaptive Images](https://wordpress.org/plugins/shortpixel-adaptive-images/) - On-the-fly image optimization & CDN delivery
+* [Enable Media Replace](https://wordpress.org/plugins/enable-media-replace/) - Easily replace images or files in Media Library
+* [reGenerate Thumbnails Advanced](https://wordpress.org/plugins/regenerate-thumbnails-advanced/) - Easily regenerate thumbnails
+* [Resize Image After Upload](https://wordpress.org/plugins/resize-image-after-upload/) - Automatically resize each uploaded image
+* [WP SVG Images](https://wordpress.org/plugins/wp-svg-images/) - Secure upload of SVG files to Media Library 
 
 **Get in touch!**
 
@@ -284,6 +284,11 @@ Hide the Cloudflare settings by defining these constants in wp-config.php:
 `define('SHORTPIXEL_CFTOKEN', 'the Cloudflare API token that has Purge Cache right');`
 `define('SHORTPIXEL_CFZONE', 'The Zone ID from the domain settings in Cloudflare');`
 
+Add HTTP basic authentication credentials by defining these constants in wp-config.php
+
+`define('SHORTPIXEL_HTTP_AUTH_USER', 'user');`
+`define('SHORTPIXEL_HTTP_AUTH_PASSWORD', 'pass');`
+
 Hide the WSO banner in the settings by defining this constant in wp-config.php:
 
 `define('SHORTPIXEL_NO_BANNER', true);`
@@ -313,6 +318,18 @@ Alternatively, you can use this filter in your theme's functions.php file:
 9. Check other optimized images status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 4.22.9 =
+Release date March 31st, 2022
+* Fix: fixed the integration with the WP Media Offload plugin, which was broken in version 3.6.0;
+* Fix: added support for offloading AVIF files via WP Media Offload;
+* Fix: PDF files were not offloaded via WP Media Offload if the process PDF option wasn't enabled in SPIO;
+* Fix: added support for delivering animated gif files as WebP when using the .htaccess method;
+* Fix: the link for the plugin settings was leading to a 404 in the network admin of a multisite install;
+* Tweak: added 2 new constants for adding the HTTP basic authentication credentials directly in wp-config.php;
+* Tweak: added a notification in case of downgrading from the upcoming SPIO 5 version;
+* Compat: added integration with Pantheon cache, thanks to @TrilipuT & @LogicEveryWhere;
+* Language: 3 new strings added, 0 updated, 0 fuzzed, and 0 obsoleted.
 
 = 4.22.8 =
 Release date February 8th, 2022
@@ -547,3 +564,9 @@ Release date: 2nd April 2020
 
 = EARLIER VERSIONS =
 * please refer to the <a href="https://github.com/short-pixel-optimizer/shortpixel-image-optimiser/blob/master/changelog.txt" target="_blank">changelog.txt</a> file inside the plugin archive.
+
+== Upgrade Notice ==
+
+= 4.22.9 =
+
+* This version contains a fix for the WP Offload Media plugin version 3.6.0 and above. Please ensure you're running the latest WP Offload Media plugin and check that everything works correctly after upgrading.

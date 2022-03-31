@@ -340,16 +340,24 @@ namespace ShortPixel;
                     </p>
                 </td>
             </tr>
+
+
             <tr>
                 <th scope="row"><label for="authentication"><?php _e('HTTP AUTH credentials','shortpixel-image-optimiser');?></label></th>
                 <td>
-                    <input name="siteAuthUser" type="text" id="siteAuthUser" value="<?php echo( stripslashes(esc_html($view->data->siteAuthUser )));?>" class="regular-text" placeholder="<?php _e('User','shortpixel-image-optimiser');?>"><br>
+								<?php if (! defined('SHORTPIXEL_HTTP_AUTH_USER')): ?>
+	                  <input name="siteAuthUser" type="text" id="siteAuthUser" value="<?php echo( stripslashes(esc_html($view->data->siteAuthUser )));?>" class="regular-text" placeholder="<?php _e('User','shortpixel-image-optimiser');?>"><br>
                     <input name="siteAuthPass" type="text" id="siteAuthPass" value="<?php echo( stripslashes(esc_html($view->data->siteAuthPass )));?>" class="regular-text" placeholder="<?php _e('Password','shortpixel-image-optimiser');?>">
                     <p class="settings-info">
                         <?php _e('Only fill in these fields if your site (front-end) is not publicly accessible and visitors need a user/pass to connect to it. If you don\'t know what is this then just <strong>leave the fields empty</strong>.','shortpixel-image-optimiser');?>
                     </p>
+								<?php else:  ?>
+											<p><?php _e('The HTTP AUth credentials have been defined in the wp-config file', 'shortpixel-image-optimiser'); ?></p>
+								<?php endif; ?>
+
                 </td>
             </tr>
+
             <tr>
                 <th scope="row"><?php _e('Optimize media on upload','shortpixel-image-optimiser');?></th>
                 <td>

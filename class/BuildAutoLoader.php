@@ -57,6 +57,7 @@ class BuildAutoLoader
       'class/external/gravityforms.php',
       'class/external/helpscout.php',
       'class/external/nextgen.php',
+      'class/external/pantheon.php',
       'class/external/securi.php',
       'class/external/shortpixel_queue_db.php',
       'class/external/visualcomposer.php',
