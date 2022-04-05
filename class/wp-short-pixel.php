@@ -27,7 +27,7 @@ class WPShortPixel {
 
     private $timer;
 
-    public static $PROCESSABLE_EXTENSIONS = array('jpg', 'jpeg', 'gif', 'png', 'pdf');
+    public static $PROCESSABLE_EXTENSIONS = array('jpg', 'jpeg', 'gif', 'png', 'pdf', 'heic');
 
     private static $first_run = false;
 
@@ -105,7 +105,6 @@ class WPShortPixel {
 
         //custom hook
         add_action( 'shortpixel-optimize-now', array( &$this, 'optimizeNowHook' ), 10, 1);
-
 
         add_filter( 'shortpixel_get_backup', array( &$this, 'shortpixelGetBackupFilter' ), 10, 1 );
 
@@ -3168,6 +3167,8 @@ class WPShortPixel {
         }
         return $mimes;
     }
+
+
 
     /**
      *

@@ -2,12 +2,19 @@
 namespace ShortPixel;
 use ShortPixel\Notices\NoticeController as Notices;
 
+
+
 ?>
 
 <section id="tab-debug" <?php echo ($this->display_part == 'debug') ? ' class="sel-tab" ' :''; ?>>
   <h2><a class='tab-link' href='javascript:void(0);' data-id="tab-debug">
     <?php _e('Debug','shortpixel-image-optimiser');?></a>
   </h2>
+
+<?php
+print_r(wp_get_default_extension_for_mime_type('image/heif'));
+
+?>
 
 <div class="wp-shortpixel-options wp-shortpixel-tab-content" style="visibility: hidden">
   <div class='env'>
