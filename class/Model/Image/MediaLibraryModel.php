@@ -707,7 +707,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						$meta = $wpdb->get_results($sqlPrep); // get the parent meta.
 				 }
 				 else {
-				 	  return false; 
+				 	  return false;
 				 }
 			 }
 			 else {
@@ -866,6 +866,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			 $databaseID = $data->databaseID;
 			 $insert = false;
 			 unset($data->databaseID); // All this to prevent it from being in extra_info.
+		 }
+		 elseif(property_exists($data, 'databaseID')) // It can be null on init.
+		 {
+			 unset($data->databaseID);
 		 }
 		 else {
 		 	 $insert = true;

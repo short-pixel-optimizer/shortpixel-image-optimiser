@@ -284,8 +284,16 @@ class WPQ implements Queue
     foreach($items as $item)
     {
        $item->tries++;
-       $updated += $this->DataProvider->itemUpdate($item, array('status' => ShortQ::QSTATUS_WAITING, 'tries' => $item->tries));
+			 if ($item->tries > $this->getOption('retry_limit'))
+			 {
+				 $this->itemFailed($item, true); // fatal fail
+			 }
+			 else
+			 {
+			 	$updated += $this->DataProvider->itemUpdate($item, array('status' => ShortQ::QSTATUS_WAITING, 'tries' => $item->tries));
+			 }
     }
+
 
 
     return $updated;

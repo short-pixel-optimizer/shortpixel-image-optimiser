@@ -5,6 +5,13 @@ use Shortpixel\Controller\StatsController as StatsController;
 use Shortpixel\Controller\OptimizeController as OptimizeController;
 
 
+$opt = new OptimizeController();
+
+$q = $opt->getQueue('media');
+
+
+
+
 ?>
 
 <section id="tab-debug" <?php echo ($this->display_part == 'debug') ? ' class="sel-tab" ' :''; ?>>
