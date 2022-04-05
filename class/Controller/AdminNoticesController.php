@@ -634,9 +634,9 @@ class AdminNoticesController extends \ShortPixel\Controller
 
 		protected function getAlreadyUpgradedMessage()
 		{
-			 $message = '<p>' . __('It seems you already upgraded to Shortpixel Image Optimiser version 5.0. Please do not downgrade, since this might result in data loss. Please consult our support team if you have any issues with the new version.  ') . '</p>';
+			 $message = '<p>' . __('It seems you already upgraded to Shortpixel Image Optimizer version 5 and came back to version 4. We do not recommend using version 4 anymore because it might result in data loss. Please consult our support team if you have any issues with the new version.') . '</p>';
 
-			 $message .= '<p>' . sprintf(__('To get rid of this message, remove the database table %s . All optimizations done with version 5 will be forgotten.', 'shortpixel_image_optimiser'), 'shortpixel_postmeta') . '</p>';
+			 $message .= '<p>' . sprintf(__('If you are sure about what you\'re doing and you want to get rid of this message, remove the database table %s. All optimizations done with version 5 will be forgotten and they will be processed again with version 4, according to your settings. ', 'shortpixel_image_optimiser'), 'shortpixel_postmeta') . '<a class="shortpixel-help-link" href="https://shortpixel.com/knowledge-base/article/529-downgrading-shortpixel-image-optimizer-version-5-version-4" target="_blank"><span class="dashicons dashicons-editor-help"></span>' . __('Reaad more', 'shortpixel-image-optimiser') . '</a>' . '</p>';
 
 			 return $message;
 		}
