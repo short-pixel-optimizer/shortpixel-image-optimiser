@@ -126,13 +126,7 @@ $quotaData = $this->quotaData;
                         </a></th>
                     <td>&nbsp;</td>
                 </tr>
-                <tr>
-                    <th scope="row">
-                        <?php _e('Credits consumed on','shortpixel-image-optimiser');?>
-                        <?php echo(parse_url(get_site_url(),PHP_URL_HOST));?>:
-                    </th>
-                    <td><strong><?php echo($view->data->fileCount);?></strong></td>
-                </tr>
+
                 <?php
                 // @todo This is always true, but must it be?
                 if(true || $view->data->backupImages) { ?>
