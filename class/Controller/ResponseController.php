@@ -7,44 +7,82 @@ use ShortPixel\Model\ResponseModel as ResponseModel;
 class ResponseController
 {
 
-    protected static $responses = array();
+    protected static $items = array();
+
+		protected static $queueName; // the current queueName.
+		protected static $queueType;  // the urrrent queueType.
+		protected static $queueMaxTries;
 
 
-    public static function add()
-    {
-        $model = new ResponseModel();
-        self::$responses[] = $model;
-        return $model;
-    }
+		/**
+		* @param Object QueueObject being used.
+		*/
+		public static function setQ($q)
+		{
+			 $queueType = $q->getType();
 
-    public static function getAll()
-    {
-        return self::$responses;
-    }
+			 self::$queueName = $q->getQueueName();
+			 self::$queueType = $queueType;
+			 self::$queueMaxTries = $q->getShortQ()->getOption('retry_limit');
 
-    public static function clear()
-    {
-        self::$responses = array();
-    }
-
-    // @internal Should not be used.
-    public static function updateModel(ResponseModel $model)
-    {
-				// For PHP < 7 . Hopefully this doesn't really matter much.
-				if (! function_exists('spl_object_id'))
-					 return $model;
-
-        foreach(self::$responses as $index => $response)
-        {
-           if (spl_object_id($response) == spl_object_id($model))
-           {
-              self::$responses[$index] = $model;
-              return $model;
-           }
-        }
-
-    }
-    // offer filters based on status / priority here.
+			 if (! isset(self::$items[$queueType]))
+			 {
+				  self::$items[self::$queueType]  = array();
+			 }
+		}
 
 
-}
+		protected static function getItem($item_id)
+		{
+				$itemType = self::$queueType;
+				if (isset(self::$items[$itemType][$item_id]))
+				{
+					 $item = self::$items[$itemType][$item_id];
+
+				}
+				else {
+						$item = new ResponseModel($item_id, $itemType);
+				}
+
+				return $item;
+		}
+
+		// ?
+		//
+		public static function addData($item_id, $name, $value = null)
+		{
+			if (! is_array($name) && ! is_object($name) )
+			{
+				$data = array($name => $value);
+			}
+			else {
+				$data = $name;
+			}
+
+			$resp = self::getItem($item_id); // resonseModel
+
+			foreach($data as $prop => $val)
+			{
+					if (property_exists($resp, $prop))
+					{
+						 $resp->prop = $val;
+					}
+
+			}
+
+		}
+
+
+		public static function outputItem($item, $format)
+		{
+
+
+		}
+
+		private function responseStrings()
+		{
+
+		}
+
+
+} // Class

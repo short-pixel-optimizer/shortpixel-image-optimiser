@@ -31,7 +31,7 @@ namespace ShortPixel;
       </div>
     </h3>
 
-    <?php $this->loadView('bulk/part-progressbar'); ?>
+    <?php $this->loadView('bulk/part-progressbar', false); ?>
 
     <div class='bulk-summary' data-check-visibility data-control="data-check-media-total">
       <div class='heading'>

@@ -97,7 +97,6 @@ class OptimizeController
           $json->result->is_done = true;
           $json->result->message = __('Error - item could not be found', 'shortpixel-image-optimiser');
           $json->result->fileStatus = ImageModel::FILE_STATUS_ERROR;
-          ResponseController::add()->withMessage($json->message)->asError();
           //return $json;
         }
 
@@ -107,7 +106,6 @@ class OptimizeController
           $json->result->is_error = true;
           $json->result->is_done = true;
           $json->result->fileStatus = ImageModel::FILE_STATUS_ERROR;
-          ResponseController::add()->withMessage($json->result->message)->asError();
         }
         else
         {
@@ -116,14 +114,12 @@ class OptimizeController
           {
             $json->result->message = sprintf(__('Item %s added to Queue. %d items in Queue', 'shortpixel-image-optimiser'), $mediaItem->getFileName(), $result->numitems);
             $json->status = 1;
-            ResponseController::add()->withMessage($json->result->message);
 
           }
           else
           {
             $json->message = __('No items added to queue', 'shortpixel-image-optimiser');
             $json->status = 0;
-            ResponseController::add()->withMessage($json->message);
           }
 
             $json->qstatus = $result->qstatus;
@@ -333,15 +329,18 @@ class OptimizeController
 
     private function runTick($Q)
     {
-			// @todo Hunch that ajax heartbeat might be running this.
-
       $result = $Q->run();
       $results = array();
+
+			ResponseController::setQ($Q);
 
       // Items is array in case of a dequeue items.
       $items = (isset($result->items) && is_array($result->items)) ? $result->items : array();
 
-      // Only runs if result is array, dequeued items.
+      /* Only runs if result is array, dequeued items.
+				 Item is a MediaItem subset of QueueItem
+
+			*/
       foreach($items as $mainIndex => $item)
       {
             if (property_exists($item, 'png2jpg') && ! property_exists($item, 'action'))
@@ -623,14 +622,13 @@ class OptimizeController
 							$item->result->message = substr_replace( $item->result->message,  $imageItem->getFileName() . ' ', strpos($item->result->message, '#' . $item->item_id), 0);
               $item->result->message .= sprintf(__('(cycle %d)', 'shortpixel-image-optimiser'), intval($item->tries) );
 
-							Log::addTemp('Item Tries', $item->tries);
 							if ($retry_limit == $item->tries || $retry_limit == ($item->tries -1))
 							{
 									$result->apiStatus = ApiController::ERR_TIMEOUT;
 									$item->result->message = __('Retry Limit reached. Image might be too large, limit too low or network issues.  ', 'shortpixel-image-optimiser');
 							}
 						/* Item is not failing here:  Failed items come on the bottom of the queue, after all others so might cause multiple credit eating if the time is long. checkQueue is only done at the end of the queue.
-						* Secondly, failing it, would prevent it going to TIMEOUT on the PROCESS in WPQ - which would mess with correct timings on that.  
+						* Secondly, failing it, would prevent it going to TIMEOUT on the PROCESS in WPQ - which would mess with correct timings on that.
 						*/
             //  $q->itemFailed($item, false); // register as failed, retry in x time, q checks timeouts
           }
@@ -642,6 +640,7 @@ class OptimizeController
 			}
 
       Log::addDebug('Optimizecontrol - Item has a result ', $item);
+			ResponseController::addData($item->item_id, $item->result);
 
       return $item;
 

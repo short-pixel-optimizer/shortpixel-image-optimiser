@@ -100,22 +100,41 @@ class UiHelper
        elseif ($thumbsDone > 0)
          $output .= '<div class="totals">' . sprintf(__('+%s thumbnails optimized','shortpixel-image-optimiser'),$thumbsDone) . '</div>';
 
-       $output .= "<div class='thumb-wrapper'>";
-       foreach($improvements['thumbnails'] as $thumbName => $thumbStat)
-       {
-           $title =  sprintf(__('%s : %s', 'shortpixel-image-optimiser'), $thumbName, $thumbStat[0] . '%');
-           $rating = ceil( round($thumbStat[0]) / 10);
 
-           $blocks_on = str_repeat('<span class="point checked">&nbsp;</span>', $rating);
-           $blocks_off = str_repeat('<span class="point">&nbsp;</span>', (10- $rating));
+			 $improvs = array();
+			 // Quality Check
+			 foreach($improvements['thumbnails'] as $thumbName => $thumbStat)
+			 {
+				  $stat = $thumbStat[0];
+				 	if (is_numeric($stat) && $stat >= 0)
+					{
+						 $improvs[$thumbName] = $stat;
+					}
 
-           $output .= "<div class='thumb " . $thumbName . "' title='" . $title . "'>"
-                       . "<span class='thumb-name'>" .  $thumbName . '</span>' .
-                        "<span class='optimize-bar'>" . $blocks_on . $blocks_off . "</span>
-                      </div>";
+			 }
 
-       }
-       $output .=  "</div></div> <!-- thumb optimized -->";
+
+			 if (count($improvs) > 0)
+			 {
+		       $output .= "<div class='thumb-wrapper'>";
+
+		       foreach($improvs as $thumbName => $stat)
+		       {
+						  
+		           $title =  sprintf(__('%s : %s', 'shortpixel-image-optimiser'), $thumbName, $stat . '%');
+		           $rating = ceil( round($stat) / 10);
+
+		           $blocks_on = str_repeat('<span class="point checked">&nbsp;</span>', $rating);
+		           $blocks_off = str_repeat('<span class="point">&nbsp;</span>', (10- $rating));
+
+		           $output .= "<div class='thumb " . $thumbName . "' title='" . $title . "'>"
+		                       . "<span class='thumb-name'>" .  $thumbName . '</span>' .
+		                        "<span class='optimize-bar'>" . $blocks_on . $blocks_off . "</span>
+		                      </div>";
+
+		       }
+		       $output .=  "</div></div> <!-- thumb optimized -->";
+				}
     }
 
     if ($retinasDone > 0)

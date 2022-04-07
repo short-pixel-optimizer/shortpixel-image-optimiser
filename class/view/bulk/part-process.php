@@ -33,7 +33,7 @@ namespace ShortPixel;
 
     <p class='description'><?php _e('ShortPixel is optimizing your images. Please leave this window open for the process to finish.', 'shortpixel-image-optimiser'); ?> </p>
 
-    <?php $this->loadView('bulk/part-progressbar'); ?>
+    <?php $this->loadView('bulk/part-progressbar', false); ?>
 
     <div class='bulk-summary' data-check-visibility data-control="data-check-media-total">
       <div class='heading'>
@@ -65,7 +65,7 @@ namespace ShortPixel;
 
 		<div data-error-media="message" data-presentation="append" class='errorbox media'></div>
 
-		<!-- ****** CUSTOM ********  ---> 
+		<!-- ****** CUSTOM ********  --->
     <div class='bulk-summary' data-check-visibility data-control="data-check-custom-total">
       <div class='heading'>
         <span><i class='dashicons dashicons-open-folder'>&nbsp;</i> <?php _e('Custom Media', 'shortpixel-image-optimiser'); ?> </span>

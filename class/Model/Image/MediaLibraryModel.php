@@ -865,14 +865,14 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		 {
 			 $databaseID = $data->databaseID;
 			 $insert = false;
-			 unset($data->databaseID); // All this to prevent it from being in extra_info.
-		 }
-		 elseif(property_exists($data, 'databaseID')) // It can be null on init.
-		 {
-			 unset($data->databaseID);
 		 }
 		 else {
 		 	 $insert = true;
+		 }
+
+		 if(property_exists($data, 'databaseID')) // It can be null on init.
+		 {
+			 unset($data->databaseID);
 		 }
 
 		 $fields['extra_info'] = wp_json_encode($data); // everything else
@@ -1733,6 +1733,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       if (count($data) == 0)  // This can happen. Empty array is still nothing to convert.
         return false;
 
+			// Waiting for processing is a state where it's not optimized, or should be.
+			if (count($data) == 1 && isset($data['WaitingProcessing']))
+			{
+				 return false;
+			}
+
       // This is a switch to prevent converted items to reconvert when the new metadata is removed ( i.e. restore )
       $was_converted = get_post_meta($this->id, '_shortpixel_was_converted', true);
       if ($was_converted == true || is_numeric($was_converted))
@@ -1856,7 +1862,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        if ($this->isScaled())
        {
          $originalFile = $this->original_file;
-         if (in_array($originalFile->getFileName(), $optimized_thumbnails))
+
+         if (isset($metadata['original_image']))
          {
 
            $originalFile->image_meta->status = $status;

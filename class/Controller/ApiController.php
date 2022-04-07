@@ -333,6 +333,7 @@ class ApiController
 
 								Log::addTemp('API :: Still waiting : ', $imageObject);
 
+							//	ResponseController:: @todo See what needs this doing.
                 return $this->returnOK(self::STATUS_UNCHANGED, sprintf(__('Item #%s is waiting for %d images (%d/%d)', 'shortpixel-image-optimiser'), $item->item_id, $analyze['waiting'], $analyze['ready'], $analyze['total']));
             }
         }
@@ -508,13 +509,14 @@ class ApiController
       }
 
       // Update File Stats
-
-      $settings->savedSpace += $savedSpace;
-      $settings->fileCount += $fileCount;
-      //new average counting
-      $settings->totalOriginal += $originalSpace;
-      $settings->totalOptimized += $optimizedSpace;
-
+			if ($savedSpace > 0)
+			{
+      	$settings->savedSpace += $savedSpace;
+      	$settings->fileCount += $fileCount;
+      	//new average counting
+      	$settings->totalOriginal += $originalSpace;
+      	$settings->totalOptimized += $optimizedSpace;
+			}
       Log::addDebug("Adding $fileCount files to stats, $originalSpace went to $optimizedSpace ($savedSpace)");
 
       // *******************************

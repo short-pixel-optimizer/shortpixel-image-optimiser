@@ -4,7 +4,7 @@ namespace ShortPixel;
 
 <section class='dashboard panel active' data-panel="dashboard" style='display: block'  >
 
-  <?php //$this->loadView('bulk/part-progressbar'); ?>
+  <?php //$this->loadView('bulk/part-progressbar', false); ?>
 
   <div class="panel-container">
 

@@ -11,7 +11,7 @@ namespace ShortPixel;
 
     <p class='description'><?php _e('Welcome to the bulk optimization wizard, where you can select the images that ShortPixel will optimize in the background for you.','shortpixel-image-optimiser'); ?></p>
 
-    <?php $this->loadView('bulk/part-progressbar'); ?>
+    <?php $this->loadView('bulk/part-progressbar', false); ?>
 
     <div class='summary-list'>
       <h3>Review and start the Bulk

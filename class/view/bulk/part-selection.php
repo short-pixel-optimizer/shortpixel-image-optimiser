@@ -15,7 +15,7 @@ $approx = $this->view->approx;
 
       <p class='description'>Welcome to the bulk optimization wizard, where you can select the images that ShortPixel will optimize in the background for you.</p>
 
-       <?php $this->loadView('bulk/part-progressbar'); ?>
+       <?php $this->loadView('bulk/part-progressbar', false); ?>
 
       <div class='load wrapper' >
          <div class='loading'>

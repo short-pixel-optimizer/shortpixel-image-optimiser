@@ -445,7 +445,6 @@ class AjaxController
             $json->status = false;
             $json->id = $id;
             $json->message = __('Error - item to compare could not be found or no access', 'shortpixel-image-optimiser');
-          //  ResponseController::add()->withMessage($json->message)->asError();
             $this->send($json);
         }
 
@@ -634,7 +633,7 @@ class AjaxController
 
     protected function send($json)
     {
-        $json->responses = ResponseController::getAll();
+        //$json->responses = ResponseController::getAll();
 
         $callback = isset($_POST['callback']) ? sanitize_text_field($_POST['callback']) : false;
         if ($callback)

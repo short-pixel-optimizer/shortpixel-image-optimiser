@@ -12,7 +12,7 @@ composer.lock
 /.idea/shortpixel-image-optimiser.iml
 /.idea/workspace.xml
 /.idea
-/bin/.
+bin/
 /composer.phar
 .env.local
 /wordpress/

@@ -22,7 +22,7 @@ namespace ShortPixel;
   <div class="screen-wrapper">
 
   <?php
-  //$this->loadView('bulk/part-progressbar');
+  //$this->loadView('bulk/part-progressbar', false);
   $this->loadview('bulk/part-dashboard');
   $this->loadView('bulk/part-selection');
   $this->loadView('bulk/part-summary');
