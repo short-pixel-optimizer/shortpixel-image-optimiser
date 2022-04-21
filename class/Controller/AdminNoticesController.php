@@ -601,7 +601,7 @@ class AdminNoticesController extends \ShortPixel\Controller
       if ($keyControl->getKeyForDisplay())
       {
         $login_url .= $keyControl->getKeyForDisplay() . '/';
-        $friend_url = $login_url . 'tellafriend';
+        $friend_url = $login_url . 'tell-a-friend';
       }
 
      $message = '<div class="wrap sp-quota-exceeded-alert"  id="short-pixel-notice-exceed">';
