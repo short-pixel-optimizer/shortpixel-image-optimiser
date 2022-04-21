@@ -302,7 +302,7 @@ class wpOffload
     }
 
 
-		// This is  legacy for old S3-Offload plugins.  
+		// This is  legacy for old S3-Offload plugins.
     public function image_converted_legacy($id)
     {
         $fs = \wpSPIO()->fileSystem();
@@ -429,7 +429,14 @@ class wpOffload
       foreach($paths as $size => $path)
       {
          $file = $fs->getFile($path);
-         $basepath = $file->getFileDir()->getPath();
+				 $basedir = $file->getFileDir();
+
+				 if (is_null($basedir)) // This could only happen if path is completely empty.
+				 {
+					  continue;
+				 }
+				 
+         $basepath = $basedir->getPath();
          $newPaths[$size] = $path;
 
          $webpformat1 = $basepath . $file->getFileName() . '.webp';
