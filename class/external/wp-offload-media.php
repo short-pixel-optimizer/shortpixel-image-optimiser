@@ -432,7 +432,16 @@ class wpOffload
       foreach($paths as $size => $path)
       {
          $file = $fs->getFile($path);
-         $basepath = $file->getFileDir()->getPath();
+
+				 $basedir = $file->getFileDir();
+
+				 if (is_null($basedir)) // This could only happen if path is completely empty.
+				 {
+					  continue;
+				 }
+
+         $basepath = $basedir->getPath();
+
          $newPaths[$size] = $path;
 
          $webpformat1 = $basepath . $file->getFileName() . '.webp';
@@ -480,9 +489,7 @@ class wpOffload
     */
     public function add_webp_paths($paths)
     {
-      //  Log::addDebug('Received Paths', array($paths));
         $paths = $this->getWebpPaths($paths, true);
-        //Log::addDebug('Webp Path Founder (S3)', array($paths));
         return $paths;
     }
 
