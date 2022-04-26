@@ -154,9 +154,7 @@ class QuotaController
           $keyControl = ApiKeyController::getInstance();
           $apiKey = $keyControl->forceGetApiKey();
         }
-        if(is_null($apiKey)) {
-          $apiKey = $settings->apiKey;
-        } 
+
 
         $settings = \wpSPIO()->settings();
 
