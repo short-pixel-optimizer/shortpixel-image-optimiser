@@ -338,7 +338,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
            $current_url = remove_query_arg( 'paged', $this->getPageURL());
 
            $output = '<form method="GET" action="'. $current_url . '">'; //'<span class="pagination-links">';
-           $output .= '<span class="displaying-num">'. sprintf(__('%d Items', 'shortpixel-image-optimiser'), $this->total_items) . '</span>';
+           $output .= '<span class="displaying-num">'. sprintf(__('%d Images', 'shortpixel-image-optimiser'), $this->total_items) . '</span>';
 
            if ( $disable_first ) {
                     $page_links[] = '<span class="tablenav-pages-navspan button disabled" aria-hidden="true">&laquo;</span>';

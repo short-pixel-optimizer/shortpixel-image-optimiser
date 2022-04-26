@@ -16,7 +16,7 @@ if (function_exists('wpSPIO'))
 {
     add_action('admin_notices', function () {
       echo '<div class="error"><h4>';
-      printf(__('Shortpixel plugin already loaded. You might have two versions active. Not loaded: %s', 'shortpixel-image-optimiser'), __FILE__);
+      printf(__('ShortPixel plugin already loaded. You might have two versions active. Not loaded: %s', 'shortpixel-image-optimiser'), __FILE__);
       echo '</h4></div>';
     });
     return;

@@ -32,7 +32,7 @@ Release date: 4th February 2020
 * New - Token support for Cloudflare via config constant or settings.
 * Backup setting - add orange warning when backups are off.
 * Button to dismiss the top bar notification of missing files.
-* Shortpixel now loads scripts with 'defer' on front site, if it's configured to be loaded there.
+* ShortPixel now loads scripts with 'defer' on front site, if it's configured to be loaded there.
 * Hiding Cloudflare details via wp-config.php.
 * Hide the option "Process in front-end" when "Optimize media on upload" is not checked.
 * Fixes for multibyte filenames with mixed locales.
@@ -96,13 +96,13 @@ Release date: 27th November 2019
 * Fixed: directories with no permission would give PHP error
 * Fixed: pathToUrl now also works for paths outside wp uploads
 * Fixed: check for DOING_AJAX on redirect to settings.
-* Fixed: Shortpixel icon + exclamation mark in  toolbar showing on every page load.
+* Fixed: ShortPixel icon + exclamation mark in toolbar showing on every page load.
 * Fixed: Add Custom media browser doesn't display files anymore
 * Fixed: WebP option adds an extra border if image already has a border -> borders will not be replicated to <picture> tags.
 * Fixed: Validating empty key doesn't show any message.
 * Fixed: on Nginx writes .htaccess files.
 * Fixed: Bug with safeGetAttachmentUrl for URLs that start with //.
-* Fixed: New S3-Offload version breaks Shortpixel and offloading.
+* Fixed: New S3-Offload version breaks ShortPixel and offloading.
 * Fixed: get_attached_file when S3-Offload is active, breaks other plugins.
 * Fixed: crash when doing .htaccess files ( WP 5.3 specific ).
 * Fixed: double file occurences on png2jpg in conjunction with s3offload.

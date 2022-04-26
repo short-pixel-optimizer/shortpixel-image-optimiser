@@ -220,6 +220,13 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                 </td>
             </tr>
             <tr>
+                <th scope="row"><?php _e('Optimize PDFs','shortpixel-image-optimiser');?></th>
+                <td>
+                    <input name="optimizePdfs" type="checkbox" id="optimizePdfs" value="1" <?php checked( $view->data->optimizePdfs, "1" );?>>
+                    <label for="optimizePdfs"><?php _e('Automatically optimize PDF documents.','shortpixel-image-optimiser');?></label>
+                </td>
+            </tr>
+            <tr>
                 <th scope="row"><?php _e('Next Generation Images','shortpixel-image-optimiser');?></th>
                 <td>
                     <input name="createWebp" type="checkbox" id="createWebp" value="1" <?php checked( $view->data->createWebp, "1" );?>>
@@ -302,32 +309,37 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                 </td>
             </tr>
             <tr>
-                <th scope="row"><?php _e('Optimize Retina images','shortpixel-image-optimiser');?></th>
+                <th scope="row"><?php _e('Optimize media on upload','shortpixel-image-optimiser');?></th>
                 <td>
-                    <input name="optimizeRetina" type="checkbox" id="optimizeRetina" value="1" <?php checked( $view->data->optimizeRetina, "1"); ?>>
-                    <label for="optimizeRetina"><?php _e('Also optimize the Retina images (@2x) if they exist.','shortpixel-image-optimiser');?></label>
+                    <input name="autoMediaLibrary" type="checkbox" id="autoMediaLibrary" value="1" <?php checked( $view->data->autoMediaLibrary, "1" );?>>
+                    <label for="autoMediaLibrary"><?php _e('Automatically optimize images after they are uploaded (recommended).','shortpixel-image-optimiser');?></label>
                     <p class="settings-info">
-                        <?php _e('If you have a Retina plugin that generates Retina-specific images (@2x), ShortPixel can optimize them too, alongside the regular Media Library images and thumbnails.','shortpixel-image-optimiser');?>
-                             <a href="https://blog.shortpixel.com/how-to-use-optimized-retina-images-on-your-wordpress-site-for-best-user-experience-on-apple-devices/" target="_blank" class="shortpixel-help-link">
+                        <?php _e('ShortPixel will automatically optimize the newly added images and PDF files. If you uncheck this option, you\'ll need to run the ShortPixel bulk or manually optimize the images later.','shortpixel-image-optimiser');?>
                     </p>
                 </td>
             </tr>
-            <tr>
-                <th scope="row"><?php _e('Optimize other thumbs','shortpixel-image-optimiser');?></th>
+            <tr id="frontBootstrapRow">
+                <th scope="row"><?php _e('Process in the front-end','shortpixel-image-optimiser');?></th>
                 <td>
-                    <input name="optimizeUnlisted" type="checkbox" id="optimizeUnlisted" value="1" <?php checked( $view->data->optimizeUnlisted, "1" );?>>
-                    <label for="optimizeUnlisted"><?php _e('Also optimize the unlisted thumbs, if found.','shortpixel-image-optimiser');?></label>
+                    <input name="frontBootstrap" type="checkbox" id="frontBootstrap" value="1" <?php checked( $view->data->frontBootstrap, '1' );?>>
+                    <label for="frontBootstrap"><?php _e('Automatically optimize images added by users in front-end of the site.','shortpixel-image-optimiser');?></label>
                     <p class="settings-info">
-                        <?php _e('Some plugins create thumbnails that are not registered in the metadata, but instead only exist alongside the other thumbnails. Let ShortPixel optimize them as well.','shortpixel-image-optimiser');?>
+                        <?php _e('Check this if you have users adding images or PDF documents from custom forms in the front-end of the site. If many users connect simultaneously, activating this option could increase the load on your server.','shortpixel-image-optimiser');?>
                     </p>
                 </td>
-            </tr>
-            <tr>
-                <th scope="row"><?php _e('Optimize PDFs','shortpixel-image-optimiser');?></th>
-                <td>
-                    <input name="optimizePdfs" type="checkbox" id="optimizePdfs" value="1" <?php checked( $view->data->optimizePdfs, "1" );?>>
-                    <label for="optimizePdfs"><?php _e('Automatically optimize PDF documents.','shortpixel-image-optimiser');?></label>
-                </td>
+                <script>
+                    var spaiAML = document.getElementById('autoMediaLibrary');
+                    document.getElementById('frontBootstrapRow').setAttribute('style', spaiAML.checked ? '' : 'display:none;');
+                    spaiAML.addEventListener('change', function() {
+                        if(this.checked) {
+                            jQuery('#frontBootstrapRow').show(500);
+                        } else {
+                            jQuery('#frontBootstrapRow').hide(500);
+                        }
+                    });
+
+
+                </script>
             </tr>
             <tr>
                 <th scope="row"><label for="excludePatterns"><?php _e('Exclude patterns','shortpixel-image-optimiser');?></label></th>
@@ -369,37 +381,25 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                 </td>
             </tr>
             <tr>
-                <th scope="row"><?php _e('Optimize media on upload','shortpixel-image-optimiser');?></th>
+                <th scope="row"><?php _e('Optimize Retina images','shortpixel-image-optimiser');?></th>
                 <td>
-                    <input name="autoMediaLibrary" type="checkbox" id="autoMediaLibrary" value="1" <?php checked( $view->data->autoMediaLibrary, "1" );?>>
-                    <label for="autoMediaLibrary"><?php _e('Automatically optimize Items after they are uploaded (recommended).','shortpixel-image-optimiser');?></label>
+                    <input name="optimizeRetina" type="checkbox" id="optimizeRetina" value="1" <?php checked( $view->data->optimizeRetina, "1"); ?>>
+                    <label for="optimizeRetina"><?php _e('Also optimize the Retina images (@2x) if they exist.','shortpixel-image-optimiser');?></label>
                     <p class="settings-info">
-                        <?php _e('ShortPixel will automatically optimize the newly added images and PDF files. If you uncheck this option, you\'ll need to run the ShortPixel bulk or manually optimize the images later.','shortpixel-image-optimiser');?>
+                        <?php _e('If you have a Retina plugin that generates Retina-specific images (@2x), ShortPixel can optimize them too, alongside the regular Media Library images and thumbnails.','shortpixel-image-optimiser');?>
+                             <a href="https://blog.shortpixel.com/how-to-use-optimized-retina-images-on-your-wordpress-site-for-best-user-experience-on-apple-devices/" target="_blank" class="shortpixel-help-link">
                     </p>
                 </td>
             </tr>
-            <tr id="frontBootstrapRow">
-                <th scope="row"><?php _e('Process in the front-end','shortpixel-image-optimiser');?></th>
+            <tr>
+                <th scope="row"><?php _e('Optimize other thumbnails','shortpixel-image-optimiser');?></th>
                 <td>
-                    <input name="frontBootstrap" type="checkbox" id="frontBootstrap" value="1" <?php checked( $view->data->frontBootstrap, '1' );?>>
-                    <label for="frontBootstrap"><?php _e('Automatically optimize images added by users in front-end of the site.','shortpixel-image-optimiser');?></label>
+                    <input name="optimizeUnlisted" type="checkbox" id="optimizeUnlisted" value="1" <?php checked( $view->data->optimizeUnlisted, "1" );?>>
+                    <label for="optimizeUnlisted"><?php _e('Also optimize the unlisted thumbnails, if found.','shortpixel-image-optimiser');?></label>
                     <p class="settings-info">
-                        <?php _e('Check this if you have users adding images or PDF documents from custom forms in the front-end of the site. If many users connect simultaneously, activating this option could increase the load on your server.','shortpixel-image-optimiser');?>
+                        <?php _e('Some plugins create thumbnails that are not registered in the metadata, but instead only exist alongside the other thumbnails. Let ShortPixel optimize them as well.','shortpixel-image-optimiser');?>
                     </p>
                 </td>
-                <script>
-                    var spaiAML = document.getElementById('autoMediaLibrary');
-                    document.getElementById('frontBootstrapRow').setAttribute('style', spaiAML.checked ? '' : 'display:none;');
-                    spaiAML.addEventListener('change', function() {
-                        if(this.checked) {
-                            jQuery('#frontBootstrapRow').show(500);
-                        } else {
-                            jQuery('#frontBootstrapRow').hide(500);
-                        }
-                    });
-
-
-                </script>
             </tr>
             <tr>
                 <th scope="row"><label for="excludeSizes"><?php _e('Exclude thumbnail sizes','shortpixel-image-optimiser');?></label></th>
@@ -414,7 +414,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                         </span><br>
                     <?php } ?>
                     <p class="settings-info">
-                        <?php _e('Please check the thumbnail sizes you would like to <strong>exclude</strong> from optimization. There may be sizes created by themes or plugins which do not appear here, because they were not properly registered in WordPress. If you want to ignore them too, please uncheck the <strong>Optimize other thumbs</strong> option above.','shortpixel-image-optimiser');?>
+                        <?php _e('Please check the thumbnail sizes you would like to <strong>exclude</strong> from optimization. There may be sizes created by themes or plugins which do not appear here, because they were not properly registered in WordPress. If you want to ignore them too, please uncheck the <strong>Optimize other thumbnails</strong> option above.','shortpixel-image-optimiser');?>
                     </p>
                 </td>
             </tr>

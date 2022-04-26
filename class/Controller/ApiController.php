@@ -394,7 +394,7 @@ class ApiController
   */
   private function handleSuccess($item, $response)
   {
-      Log::addDebug('Shortpixel API : Handling Success!', $response);
+      Log::addDebug('ShortPixel API : Handling Success!', $response);
       $settings = \wpSPIO()->settings();
       $fs = \wpSPIO()->fileSystem();
 

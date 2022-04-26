@@ -114,7 +114,7 @@
 							<td>
 								<div class='compression-notice warning'>
 									<h4>Changing Compression</h4>
-									<p><?php _e( 'This type of optimization will apply only to new or unprocessed images. Images that were already processed will not be re-optimized. If you want to change the already optimized images, restore them from the backup first. ', 'shortpixel-image-optimiser' ); ?></p>
+									<p><?php _e( 'This type of optimization will apply only to new or unprocessed images. Images that were already processed will not be re-optimized. If you want to change the already optimized images, <a href="options-general.php?page=wp-shortpixel-settings&part=tools">restore them from the backup</a> first.', 'shortpixel-image-optimiser' ); ?></p>
 									<p><?php _e('Current optimization processes in the queue will be stopped.', 'shortpixel-image-optimiser'); ?></p>
 
 								</div>
@@ -134,11 +134,11 @@
             </tr>
 
             <tr>
-                <th scope="row"><?php _e('Image backup','shortpixel-image-optimiser');?></th>
+                <th scope="row"><?php _e('Backup','shortpixel-image-optimiser');?></th>
                 <td>
                     <input name="backupImages" type="checkbox" id="backupImages" value="1" <?php checked($view->data->backupImages,'1'); ?>>
-                    <label for="backupImages"><?php _e('Save and keep a backup of your original images in a separate folder.','shortpixel-image-optimiser');?></label>
-                    <p class="settings-info"><?php _e('You <strong>need to have the backup active</strong> to restore the images to originals or to convert from Lossy to Lossless and back.','shortpixel-image-optimiser');?></p>
+                    <label for="backupImages"><?php _e('Create a backup of the original images, saved on your server in /wp-content/uploads/ShortpixelBackups/.','shortpixel-image-optimiser');?></label>
+                    <p class="settings-info"><?php _e('You can remove the backup folder at any moment but it is best to keep a local/cloud copy, in case you want to restore the optimized files to originals or re-optimize the images using a different compression method.','shortpixel-image-optimiser');?></p>
                 </td>
             </tr>
             <tr class='view-notice-row backup_warning'>

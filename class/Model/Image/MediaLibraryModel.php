@@ -1016,7 +1016,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
      } */
   }
 
-  /** Delete the Shortpixel Meta. */
+  /** Delete the ShortPixel Meta. */
   public function deleteMeta()
   {
 		global $wpdb;

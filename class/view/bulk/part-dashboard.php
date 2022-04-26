@@ -10,7 +10,7 @@ namespace ShortPixel;
 
 
     <h3 class="heading"><span><img src="<?php echo \wpSPIO()->plugin_url('res/img/robo-slider.png'); ?>"></span>
-      <?php _e('Welcome to the Bulk Processing page. You can add a bulk job by clicking on the button below.', 'shortpixel-image-optimiser'); ?>
+      <?php _e('Welcome to the Bulk Processing page!', 'shortpixel-image-optimiser'); ?>
     </h3>
 
     <div class='interface wrapper'>

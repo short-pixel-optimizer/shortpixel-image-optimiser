@@ -200,12 +200,12 @@ class CloudFlareAPI {
       curl_close( $curl_connection );
 
       if ( ! is_array( $result ) ) {
-          Log::addWarn( 'Shortpixel - CloudFlare: The CloudFlare API is not responding correctly', $result);
+          Log::addWarn( 'ShortPixel - CloudFlare: The CloudFlare API is not responding correctly', $result);
       } elseif ( isset( $result['success'] ) && isset( $result['errors'] ) && false === (bool) $result['success'] ) {
-          Log::addWarn( 'Shortpixel - CloudFlare, Error messages: '
+          Log::addWarn( 'ShortPixel - CloudFlare, Error messages: '
               . (isset($result['errors']['message']) ? $result['errors']['message'] : json_encode($result['errors'])) );
       } else {
-          Log::addInfo('Shortpixel - CloudFlare successfully requested clear cache for: ', array($postfields));
+          Log::addInfo('ShortPixel - CloudFlare successfully requested clear cache for: ', array($postfields));
       }
 
       return $result;

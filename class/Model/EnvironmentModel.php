@@ -30,7 +30,7 @@ class EnvironmentModel extends \ShortPixel\Model
     private $screen_is_set = false;
     public $is_screen_to_use = false; // where shortpixel optimizer loads
     public $is_our_screen = false; // where shortpixel hooks in more complicated functions.
-    public $is_bulk_page = false; // Shortpixel bulk screen.
+    public $is_bulk_page = false; // ShortPixel bulk screen.
     public $screen_id = false;
 
     // Debug flag

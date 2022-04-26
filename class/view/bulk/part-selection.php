@@ -33,7 +33,7 @@ $approx = $this->view->approx;
 				 <div class="option-block">
 
 					 <h2>Optimize: </h2>
-					 <p>Shortpixel has <b>estimated</b> the number of images that can still be optimized. <br />After choosing the options, the plugin will calculate exactly how many images will be optimized.</p>
+					 <p>ShortPixel has <b>estimated</b> the number of images that can still be optimized. <br />After choosing the options, the plugin will calculate exactly how many images will be optimized.</p>
 
 	         <div class="media-library optiongroup">
 
@@ -47,11 +47,11 @@ $approx = $this->view->approx;
 
 	            <h4><label for="media_checkbox"><?php _e('Media Library','shortpixel-image-optimiser'); ?></label></h4>
 	            <div class='option'>
-	              <label>Items</label>
+	              <label>Images (estimate)</label>
 	              <span class="number" ><?php echo $approx->media->items ?></span>
 	            </div>
 	            <div class='option'>
-	              <label>Images</label> <span class="number" ><?php echo $approx->media->total ?> </span>
+	              <label>Thumbnails (estimate)</label> <span class="number" ><?php echo $approx->media->total ?> </span>
 	            </div>
 	         </div>
 
@@ -64,7 +64,7 @@ $approx = $this->view->approx;
 	           </div>
 	           <h4><label for="custom_checkbox">Custom Media images</label></h4>
 	            <div class='option'>
-	              <label>Images</label>
+	              <label>Images (estimate)</label>
 	               <span class="number" ><?php echo $approx->custom->images ?></span>
 	            </div>
 	         </div>
@@ -83,14 +83,8 @@ $approx = $this->view->approx;
 		             </label>
 
 		           </div>
-		           <h4>Also create <b>WebP</b> versions of the images</h4>
-							 <div class='option'><label>Media Libary</label>
-								 	+ <span class="number"><?php echo $approx->media->total ?></span> credits
-							</div>
-
-		           <div class='option' data-check-visibility data-control="data-check-custom-hascustom"><label>Custom Media</label>
-								 + <span class="number"><?php echo $approx->custom->images ?></span> credits
-							 </div>
+			   <h4>Also create <b>WebP</b> versions of the images</h4>
+				<div class="option">The total number of WebP images will be calculated in the next step.</div>
 		       </div>
 
 		       <div class='optiongroup '  >
@@ -104,24 +98,20 @@ $approx = $this->view->approx;
 
 		         </div>
 		         <h4>Also create <b>AVIF</b> versions of the images</h4>
-							 <div class="option"><label>Media Library</label>
-								 	+ <span class="number"><?php echo $approx->media->total ?></span> credits
-								</div>
-		           <div class="option" data-check-visibility data-control="data-check-custom-hascustom"><label>Custom Media</label> + <span class="number"><?php echo $approx->custom->images ?></span> credits
-							 </div>
+				<div class="option">The total number of AVIF images will be calculated in the next step.</div>
 		     </div>
 		 </div>
 
  	 	 <div class="option-block">
        <div class='optiongroup' data-check-visibility="false" data-control="data-check-approx-total">
           <h3><?php _e('No images found', 'shortpixel-image-optimiser'); ?></h3>
-          <p><?php _e('Shortpixel Bulk couldn\'t find any optimizable images.','shortpixel-image-optimiser'); ?></p>
+          <p><?php _e('ShortPixel Bulk couldn\'t find any optimizable images.','shortpixel-image-optimiser'); ?></p>
        </div>
 
 
        <h4 class='approx'><?php _e('An estimate of unoptimized images in this installation', 'shortpixel-image-optimiser'); ?> : <span data-check-approx-total><?php echo $approx->total->images ?></span> </h4>
 
-       <div><p>In the next step the plugin calculates the total number of images to be optimized, and your bulk process will be prepared. It will <b>not yet</b> start the bulk process.</p></div>
+       <div><p>In the next step the plugin calculates the total number of images to be optimized, and your bulk process will be prepared. It will <b>not yet</b> start the processing, but will display a summary of what will be optimized.</p></div>
 		 </div>
 
       <nav>
@@ -132,7 +122,7 @@ $approx = $this->view->approx;
 
         <button class="button-primary button" type="button" data-action="CreateBulk" data-panel="summary" data-check-disable data-control="data-check-total-total">
 					<span class='dashicons dashicons-arrow-right'></span>
-					<?php _e('Calculate and summary', 'shortpixel-image-optimiser'); ?>
+					<?php _e('Calculate', 'shortpixel-image-optimiser'); ?>
 				</button>
       </nav>
 
