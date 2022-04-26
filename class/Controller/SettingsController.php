@@ -334,7 +334,7 @@ class SettingsController extends \ShortPixel\ViewController
             $this->keyModel->checkKey($check_key);
           }
 
-					$this->loadQuotaData(true);
+				//	$this->loadQuotaData(true);
 
           // end
           if ($this->do_redirect)

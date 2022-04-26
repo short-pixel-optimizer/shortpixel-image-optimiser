@@ -156,7 +156,7 @@ class QuotaController
         }
         if(is_null($apiKey)) {
           $apiKey = $settings->apiKey;
-        }
+        } 
 
         $settings = \wpSPIO()->settings();
 
