@@ -101,7 +101,7 @@ class ApiKeyModel extends \ShortPixel\Model
   }
 
   /** Checks the API key to see if we have a validated situation
-  *  @param $key String The 20-character Shortpixel API Key or empty string
+  *  @param $key String The 20-character ShortPixel API Key or empty string
   *  @return boolean Returns a boolean indicating valid key or not
   *
   * An Api key can be removed from the system by passing an empty string when the key is not hidden.

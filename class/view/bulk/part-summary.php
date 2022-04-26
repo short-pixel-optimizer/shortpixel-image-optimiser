@@ -18,23 +18,23 @@ namespace ShortPixel;
         <span><img src="<?php echo wpSPIO()->plugin_url('res/img/bulk/robot-book-summary.svg') ?>" /></span>
       </h3>
       <div class="section-wrapper" data-check-visibility data-control="data-check-media-total">
-      <h4><span class='dashicons dashicons-images-alt2'>&nbsp;</span> Media Library (<span data-stats-media="in_queue">0</span> items)</h4>
+      <h4><span class='dashicons dashicons-images-alt2'>&nbsp;</span> Media Library (<span data-stats-media="in_queue">0</span> images)</h4>
         <div class="list-table">
 
 
-						<div><span>Images</span><span data-stats-media="images-images_basecount">n/a</span></div>
+						<div><span>Images & thumbnails</span><span data-stats-media="images-images_basecount">n/a</span></div>
 
-            <div class='filetypes' data-check-visibility data-control="data-check-has-webp"><span>+ WebP images</span><span data-stats-media="images-images_webp" data-check-has-webp>&nbsp;</span></div>
-            <div class='filetypes' data-check-visibility data-control="data-check-has-avif"><span>+ AVIF images</span><span data-stats-media="images-images_avif" data-check-has-avif>&nbsp;</span></div>
+            <div class='filetypes' data-check-visibility data-control="data-check-has-webp"><span>+ WebP images & thumbnails</span><span data-stats-media="images-images_webp" data-check-has-webp>&nbsp;</span></div>
+            <div class='filetypes' data-check-visibility data-control="data-check-has-avif"><span>+ AVIF images & thumbnails</span><span data-stats-media="images-images_avif" data-check-has-avif>&nbsp;</span></div>
 
 
-          <div><span><?php _e('Total images to optimize from the Media Library','shortpixel-image-optimiser'); ?></span><span data-stats-media="images-images">0</span></div>
+          <div><span><?php _e('Total images & thumbnails to optimize from the Media Library','shortpixel-image-optimiser'); ?></span><span data-stats-media="images-images">0</span></div>
 
         </div>
       </div>
 
     <div class="section-wrapper" data-check-visibility data-control="data-check-custom-total">
-    <h4><span class='dashicons dashicons-open-folder'>&nbsp;</span><?php _e('Custom Media', 'shortpixel-image-optimiser') ?> ( <span data-stats-custom="in_queue">0</span> )</h4>
+    <h4><span class='dashicons dashicons-open-folder'>&nbsp;</span><?php _e('Custom Media', 'shortpixel-image-optimiser') ?> (<span data-stats-custom="in_queue">0</span> images)</h4>
       <div class="list-table">
 				<div><span>Images</span><span data-stats-custom="images-images_basecount">n/a</span></div>
 
@@ -52,7 +52,7 @@ namespace ShortPixel;
 
 
     <div class="totals">
-      Total images to optimize <span class="number" data-stats-total="images-images" data-check-total-total >0</span>
+      Total images to optimize: <span class="number" data-stats-total="images-images" data-check-total-total >0</span>
 
       Total Credits Will Be Used <span class='number'></span>
     </div>

@@ -293,7 +293,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 		{
 			  	$message = '<p><strong>' .  __('ShortPixel found items in media library with a legacy optimization format', 'shortpixel-image-optimiser') . '</strong></p>';
 
-					$message .= '<p>' . __('Shortpixel automatically converts them when encountered. Please check if your image library is converted properly', 'shortpixel-image-optimiser') . '</p>';
+					$message .= '<p>' . __('ShortPixel automatically converts them when encountered. Please check if your image library is converted properly', 'shortpixel-image-optimiser') . '</p>';
 
 					$message .=  '<p>' . __('It is recommend to convert all items to the modern format.', 'shortpixekl-image-optimser') . '</p>';
 
@@ -482,7 +482,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 						}
 						elseif ($viewMode !== "list")
 						{
-							  $message = __('You can see Shortpixel Image Optimiser actions and data only via the list view. Switch to the list view to use the plugin via the media library', 'shortpixel-image-optimiser');
+							  $message = __('You can see ShortPixel Image Optimiser actions and data only via the list view. Switch to the list view to use the plugin via the media library', 'shortpixel-image-optimiser');
 								$new_notice = Notices::addNormal($message);
 								Notices::makePersistent($new_notice, self::MSG_LISTVIEW_ACTIVE, YEAR_IN_SECONDS);
 						}
@@ -708,7 +708,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 			//	Log::addTemp('Request Req', $proposal);
 
         if(is_wp_error( $proposal )) {
-            $proposal = array('body' => __('Error. Could not contact Shortpixel server for proposal', 'shortpixel-image-optimiser'));
+            $proposal = array('body' => __('Error. Could not contact ShortPixel server for proposal', 'shortpixel-image-optimiser'));
         }
         die($proposal['body']);
 
@@ -718,11 +718,11 @@ class AdminNoticesController extends \ShortPixel\Controller
     {
 
       //onclick='ShortPixel.optInHelp(0)'
-       $message = __('Shortpixel needs to ask permission to load the help functionality');
+       $message = __('ShortPixel needs to ask permission to load the help functionality');
        $message .= "<div><button type='button' id='sp-helpscout-disallow' class='button button-primary' >" . __('No, I don\'t need help', 'shortpixel-image-optimiser') . "</button> &nbsp;&nbsp;";
        $message .= "<button type='button' id='sp-helpscout-allow' class='button button-primary'>" . __('Yes, load the help widget', 'shortpixel-image-optimiser') . "</button></div>";
 
-       $message .= "<p>" . __('Shortpixel uses third party services Helpscout and Quriobot to access our help easier. By giving permission you agree to opt-in and load these service on ShortPixel related pages', 'shortpixel-image-optimiser');
+       $message .= "<p>" . __('ShortPixel uses third party services Helpscout and Quriobot to access our help easier. By giving permission you agree to opt-in and load these service on ShortPixel related pages', 'shortpixel-image-optimiser');
 
        $message .= "<script>window.addEventListener('load', function(){
             document.getElementById('sp-helpscout-allow').addEventListener('click', ShortPixel.optInHelp, {once: true} );
