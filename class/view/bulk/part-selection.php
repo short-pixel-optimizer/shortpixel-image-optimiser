@@ -21,7 +21,7 @@ $approx = $this->view->approx;
          <div class='loading'>
              <span><img src="<?php echo \wpSPIO()->plugin_url('res/img/bulk/loading-hourglass.svg'); ?>" /></span>
              <span>
-             <p>Please wait, ShortPixel is checking the images to be optimized... <br>
+             <p>Please wait, ShortPixel is checking the images to be processed... <br>
                <span class="number" data-stats-total="total">x</span> items found</p>
            </span>
 
