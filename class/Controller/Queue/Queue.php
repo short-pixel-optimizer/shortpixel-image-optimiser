@@ -240,19 +240,25 @@ abstract class Queue
                    }
 									 else
 									 {
-										 	$message = sprintf(__('Preparing of item %d failed - %s','shortpixel-image-optimiser'),
-												$mediaItem->get('id'), $mediaItem->getProcessableReason() );
-
-											ResponseController::add()->asError()->withMessage($message);
-
+												$response = array(
+							 					 	'is_error' => true,
+							 						'item_type' => ResponseController::ISSUE_QUEUE_FAILED,
+							 						'message ' => ' Item failed: ' . $mediaItem->getProcessableReason(),
+							 				 );
+							 				  ResponseController::addData($item_id, $response);
 									 }
 
                 }
 			  }
 			  else
 			  {
-				  $message = sprintf(__('Preparing of item %d failed, invalid post content or type','shortpixel-image-optimiser'),$item_id);
-				  ResponseController::add()->asError()->withMessage($message);
+
+				 $response = array(
+					 	'is_error' => true,
+						'item_type' => ResponseController::ISSUE_QUEUE_FAILED,
+						'message ' => ' Enqueing of item failed : invalid post content or post type',
+				 );
+				 	ResponseController::addData($item_id, $response);
 				  Log::addWarn('The item with id ' . $item_id . ' cannot be processed because it is either corrupted or an invalid post type');
 			  }
           }

@@ -9,12 +9,15 @@ class ResponseModel
 
 	// Identification for Item.
 	public $item_id;
-	public $item_type;
+	public $item_type; // set by queue
 
 	// General item variables
 	public $fileName;
 	public $is_error;
 	public $is_done;
+
+	public $apiStatus;
+	public $fileStatus;
 
 	// Images being processed variables. From APIController
 	public $tries;
@@ -22,7 +25,13 @@ class ResponseModel
 	public $images_waiting;
 	public $images_total;
 
+	public $issue_type;
+ 	public $message; // This can be base text, but decision textually is within responsecontroller.
+
 //	public $queueName;
+
+
+
 
 
 	/**

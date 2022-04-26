@@ -113,6 +113,7 @@ class AjaxController
 
           $type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';
           $id = isset($_POST['id']) ? intval($_POST['id']) : false;
+					$result = '';
 
           if ($id > 0)
           {
@@ -633,8 +634,6 @@ class AjaxController
 
     protected function send($json)
     {
-        //$json->responses = ResponseController::getAll();
-
         $callback = isset($_POST['callback']) ? sanitize_text_field($_POST['callback']) : false;
         if ($callback)
           $json->callback = $callback; // which type of request we just fullfilled ( response processing )

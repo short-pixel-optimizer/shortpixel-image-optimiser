@@ -263,7 +263,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
     public function getLastErrorMessage()
     {
-       return $this->error_message;
+       return 'Deprecated - Get message via ResponseController'; // $this->error_message;
     }
 
     public function __get($name)
@@ -452,7 +452,13 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                   {
                     Log::addError('Backup Not OK - ' .  $urlName);
 
-                    ResponseController::add()->withMessage(sprintf(__('Could not create backup for %s, optimization failed. Please check file permissions - %s', 'shortpixel-image-optimiser'), $this->getFileName(), $this->getFullPath() ))->asImportant()->asError();
+										$response = array(
+												'is_error' => true,
+												'issue_type' => ResponseController::ISSUE_BACKUP_CREATE,
+												'message' => __('Could not create backup. Please check file permissions', 'shortpixel-image-optimiser'),
+										);
+
+										ResponseController::addData($this->get('id'), $response);
 
                     return false;
                   }
@@ -526,11 +532,13 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
               {
                 Log::addError('Copy failed for  ' . $this->getFullPath() );
 
-                $rModel = ResponseController::add()->withMessage( sprintf(__('Could not copy optimized image %s from temporary files. Please check file permissions  %s' , 'shortpixel-image-optimiser'), $this->getFileName(), $this->getFullPath()))->asImportant()->asError();
-                if ($this->get('type') == 'media')
-                  $rModel->asMediaItem($this->get('id'));
-                else
-                  $rModel->asCustomItem($this->get('id'));
+								$response = array(
+										'is_error' => true,
+										'issue_type' => ResponseController::ISSUE_BACKUP_CREATE,
+										'message' => __('Could not copy optimized image from temporary files. Check file permissions', 'shortpixel-image-optimiser'),
+								);
+
+								ResponseController::addData($this->get('id'), $response);;
 
                 return false;
               }
@@ -541,8 +549,14 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
         Log::addWarn('Could not find images of this item in tempfile -' . $this->id . '(' . $this->getFullPath() . ')', array_keys($downloadResults) );
 
+				$response = array(
+					 'is_error' => true,
+					 'issue_type' => ResponseController::ISSUE_OPTIMIZED_NOFILE,
+					 'message' => __('Image is reporting as optimized, but file couldn\'t be found in the downloaded files', 'shortpixel-image-optimiser'),
 
-        ResponseController::add()->asError()->withMessage( sprintf(__('Image %s is reporting as optimized, but file couldn\'t be found in the downloaded files', 'shortpixel-image-optimiser'), $this->getFileName() ));
+				);
+
+				ResponseController::addData($this->get('id'), $response);
 
         return null;
     }
@@ -588,13 +602,28 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         {
           if (! $this->is_writable())
           {
-            /*  ResponseController::add()->withMessage(__('This file cannot be restored due to file permissions - not writable : ' . $this->getFullPath(), 'shortpixel-image-optimiser'))->asError(); */
+
+						  $response = array(
+									'is_error' => true,
+									'issue_type' => ResponseController::ISSUE_FILE_NOTWRITABLE,
+									'message' => __('This file can\'t be restored, not writable', 'shortpixel-image-optimiser'),
+
+							);
+							ResponseController::addData($this->get('id'), $response);
+
 							$this->restorable_status = self::P_FILE_NOTWRITABLE;
               Log::addWarn('Restore - Not Writable ' . $this->getFullPath() );
           }
           if (! $this->hasBackup())
 					{
 						$this->restorable_status = self::P_BACKUP_NOT_EXISTS;
+						$response = array(
+								'is_error' => true,
+								'issue_type' => ResponseController::ISSUE_BACKUP_EXISTS,
+								'message' => __('Can\'t restore, backup file doesn\'t exist', 'shortpixel-image-optimiser'),
+
+						);
+						ResponseController::addData($this->get('id'), $response);
             Log::addDebug('Backup not found for file: ', $this->getFullPath());
 					}
            return false;
@@ -626,19 +655,39 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         if (! $backupFile->is_readable())
         {
 						Log::addError('BackupFile not readable' . $backupFile->getFullPath());
-            ResponseController::add()->asItem($id, $type)->asError()->withMessage(__('BackupFile not readable. Check file and/or file permissions', 'shortpixel-image-optimiser'))->inFile($backupFile->getFileName());
+						$response = array(
+								'is_error' => true,
+								'issue_type' => ResponseController::ISSUE_BACKUP_EXISTS,
+								'message' => __('BackupFile not readable. Check file and/or file permissions', 'shortpixel-image-optimiser'),
+						);
+						ResponseController::addData($this->get('id'), $response);
+
            return false; //error
          }
 				 elseif (! $backupFile->is_writable())
 				 {
  						Log::addError('BackupFile not writable' . $backupFile->getFullPath());
-             ResponseController::add()->asItem($id,$type)->asError()->withMessage(__('BackupFile not writable. Check file and/or file permissions', 'shortpixel-image-optimiser'))->inFile($backupFile->getFileName());
+						 $response = array(
+								 'is_error' => true,
+								 'issue_type' => ResponseController::ISSUE_FILE_NOTWRITABLE,
+								 'message' => __('BackupFile not writable. Check file and/or file permissions', 'shortpixel-image-optimiser'),
+
+						 );
+						 ResponseController::addData($this->get('id'), $response);
             return false; //error
 				 }
 				 if (! $this->is_writable())
 				 {
 					 	 Log::addError('Target File not writable' . $this->getFullPath());
-					   ResponseController::add()->asItem($id,$type)->asError()->withMessage( sprintf(__('Target file %s not writable. Check file permissions', 'shortpixel-image-optimiser'), $this->getFullPath()))->inFile($backupFile->getFileName());
+
+						 $response = array(
+								 'is_error' => true,
+								 'issue_type' => ResponseController::ISSUE_FILE_NOTWRITABLE,
+								 'message' => __('Target file not writable. Check file permissions', 'shortpixel-image-optimiser'),
+
+						 );
+						 ResponseController::addData($this->get('id'), $response);
+
 						 return false;
 				 }
 
@@ -647,7 +696,13 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         if ($bool !== true)
         {
 					Log::addError('Moving backupFile failed -' . $this->getFullpath() );
-          ResponseController::add()->withMessage(__('Moving Backupfile failed' , 'shortpixel-image-optimiser'));
+					$response = array(
+							'is_error' => true,
+							'issue_type' => ResponseController::ISSUE_FILE_NOTWRITABLE,
+							'message' => __('Moving Backup file failed', 'shortpixel-image-optimiser'),
+
+					);
+					ResponseController::addData($this->get('id'), $response);
         }
         return $bool;
     }

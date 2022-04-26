@@ -83,6 +83,8 @@ class ApiController
       $request = $this->getRequest($requestArgs);
       $item = $this->doRequest($item, $request);
 
+			ResponseController::addData($item->item_id, 'images_total', count($item->urls));
+
 			// If error has occured, but it's not related to connection.
 			if ($item->result->is_error === true && $item->result->is_done === true)
 			{
@@ -250,9 +252,6 @@ class ApiController
     $APIresponse = $this->parseResponse($response);//get the actual response from API, its an array
     $settings = \wpSPIO()->settings();
 
-//print_r($APIresponse);
-//Log::addTemp('Item in handleResponse', $item);
-
 		// Don't know if it's this or that.
 		$status = false;
 		if (isset($APIresponse['Status']))
@@ -323,6 +322,13 @@ class ApiController
 					}
 				}
 
+				$imageData = array(
+						'images_done' => $analyze['ready'],
+						'images_waiting' => $analyze['waiting'],
+						'images_total' => $analyze['total']
+				);
+
+				ResponseController::addData($item->item_id, $imageData);
 
 
 				// This part makes sure that all the sizes were processed and ready to be downloaded. If ones is missing, we wait more.
@@ -334,7 +340,7 @@ class ApiController
 								Log::addTemp('API :: Still waiting : ', $imageObject);
 
 							//	ResponseController:: @todo See what needs this doing.
-                return $this->returnOK(self::STATUS_UNCHANGED, sprintf(__('Item #%s is waiting for %d images (%d/%d)', 'shortpixel-image-optimiser'), $item->item_id, $analyze['waiting'], $analyze['ready'], $analyze['total']));
+                return $this->returnOK(self::STATUS_UNCHANGED, sprintf(__('Item is waiting', 'shortpixel-image-optimiser')));
             }
         }
 
@@ -361,7 +367,7 @@ class ApiController
             }
 
         }
-    }
+    } // ApiResponse[0]
 
     // If this code reaches here, something is wrong.
     if(!isset($APIresponse['Status'])) {
@@ -371,14 +377,18 @@ class ApiController
 
     } else {
 
+			Log::addTemp($APIresponse);
       //sometimes the response array can be different
       if (is_numeric($APIresponse['Status']->Code)) {
-          //return array("Status" => self::STATUS_FAIL, "Message" => $APIresponse['Status']->Message);
           $message = $APIresponse['Status']->Message;
       } else {
-          //return array("Status" => self::STATUS_FAIL, "Message" => $APIresponse[0]->Status->Message);
           $message = $APIresponse[0]->Status->Message;
       }
+
+			if (! isset($message) || is_null($message) || $message == '')
+			{
+				 $message = __('Unrecognized API message. Please contact support.','shortpixel-image-optimiser');
+			}
       return $this->returnRetry(self::STATUS_FAIL, $message);
     } // else
   }

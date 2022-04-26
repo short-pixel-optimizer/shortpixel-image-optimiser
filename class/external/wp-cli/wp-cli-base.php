@@ -204,6 +204,8 @@ class SpioCommandBase
 
     protected function runClick($queueTypes)
     {
+			  ResponseController::setOutput(ResponseController::OUTPUT_CLI);
+
         $controller = $this->getOptimizeController();
         $results = $controller->processQueue($queueTypes);
 
@@ -496,7 +498,9 @@ class SpioCommandBase
 
 		protected function showResponses()
 		{
-         $responses = ResponseController::getAll();
+				return false; // @todo Pending responseControl, offf.
+
+         /*$responses = ResponseController::getAll();
 
          foreach ($responses as $response)
          {
@@ -506,7 +510,7 @@ class SpioCommandBase
                 \WP_CLI::Success($response->message);
              else
                \WP_CLI::line($response->message);
-         }
+         } */
 		}
 
 		protected function getQueueArgument($assoc)

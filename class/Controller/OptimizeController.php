@@ -442,6 +442,7 @@ class OptimizeController
       $qtype = strtolower($qtype);
 
       $imageItem = $fs->getImage($item->item_id, $qtype);
+
       // If something is in the queue for long, but somebody decides to trash the file in the meanwhile.
       if ($imageItem === false)
       {
@@ -455,6 +456,7 @@ class OptimizeController
       else
 			{
         $item->result->filename = $imageItem->getFileName();
+				ResponseController::addData($item->item_id, 'fileName', $imageItem->getFileName());
 			}
 
       $result = $item->result;
@@ -487,12 +489,21 @@ class OptimizeController
               $item->result->error = AjaxController::SERVER_ERROR;
           }
 
+					$response = array(
+						 'is_error' => true,
+						 'message' => $item->result->message, // These mostly come from API
+					);
+					ResponseController::addData($item->item_id, $response);
+
+
           if ($result->is_done || $item->tries >= SHORTPIXEL_MAX_FAIL_RETRIES )
           {
              // These are cloned, because queue changes object's properties
              Log::addDebug('HandleApiResult - Item failed ' . $item->item_id);
              $q->itemFailed($item, true);
              $this->HandleItemError($item, $qtype);
+
+						 ResponseController::addData($item->item_id, 'is_done', true);
 
           }
           else
@@ -530,8 +541,10 @@ class OptimizeController
               {
                  $item->result->apiStatus = ApiController::STATUS_SUCCESS;
                  $item->fileStatus = ImageModel::FILE_STATUS_SUCCESS;
-                 $item->result->message = sprintf(__('Image %s optimized', 'shortpixel-image-optimiser'), $imageItem->getFileName());
+
+               //  $item->result->message = sprintf(__('Image %s optimized', 'shortpixel-image-optimiser'), $imageItem->getFileName());
                  do_action( 'shortpixel_image_optimised', $imageItem->get('id'), $imageItem, $item );
+							//	 ResponseController::addData($item->item_id,'message', __('Optimized'));
 
                }
                else
@@ -539,7 +552,7 @@ class OptimizeController
                  $item->result->apiStatus = ApiController::STATUS_ERROR;
                  $item->fileStatus = ImageModel::FILE_STATUS_ERROR;
               //   $item->result->message = sprintf(__('Image not optimized with errors', 'shortpixel-image-optimiser'), $item->item_id);
-                 $item->result->message = $imageItem->getLastErrorMessage();
+              //   $item->result->message = $imageItem->getLastErrorMessage();
                  $item->result->is_error = true;
 
                }
@@ -569,7 +582,9 @@ class OptimizeController
            {
               Log::addWarn('Api returns Success, but result has no files', $result);
               $item->result->is_error = true;
-              $item->result->message += sprintf(__('Image %s API returned succes, but without images', 'shortpixel-image-optimiser'), $item->item_id);
+              $message = sprintf(__('Image API returned succes, but without images', 'shortpixel-image-optimiser'), $item->item_id);
+							ResponseController::addData($item->item_id, 'message', $message );
+
               $item->result->apiStatus = ApiController::STATUS_FAIL;
            }
 
@@ -619,13 +634,14 @@ class OptimizeController
 
 
 							// Try to replace the item ID with the filename.
-							$item->result->message = substr_replace( $item->result->message,  $imageItem->getFileName() . ' ', strpos($item->result->message, '#' . $item->item_id), 0);
-              $item->result->message .= sprintf(__('(cycle %d)', 'shortpixel-image-optimiser'), intval($item->tries) );
+						//	$item->result->message = substr_replace( $item->result->message,  $imageItem->getFileName() . ' ', strpos($item->result->message, '#' . $item->item_id), 0);
+             // $item->result->message .= sprintf(__('(cycle %d)', 'shortpixel-image-optimiser'), intval($item->tries) );
 
 							if ($retry_limit == $item->tries || $retry_limit == ($item->tries -1))
 							{
-									$result->apiStatus = ApiController::ERR_TIMEOUT;
-									$item->result->message = __('Retry Limit reached. Image might be too large, limit too low or network issues.  ', 'shortpixel-image-optimiser');
+									$item->result->apiStatus = ApiController::ERR_TIMEOUT;
+									$message = __('Retry Limit reached. Image might be too large, limit too low or network issues.  ', 'shortpixel-image-optimiser');
+									ResponseController::addData($item->item_id, 'message', $message);
 							}
 						/* Item is not failing here:  Failed items come on the bottom of the queue, after all others so might cause multiple credit eating if the time is long. checkQueue is only done at the end of the queue.
 						* Secondly, failing it, would prevent it going to TIMEOUT on the PROCESS in WPQ - which would mess with correct timings on that.
@@ -634,13 +650,23 @@ class OptimizeController
           }
       }
 
-			if (property_exists($result, 'message'))
-			{
-				 $item->result->message = '(' . ucfirst($qtype) . ') ' . $item->result->message;
-			}
 
       Log::addDebug('Optimizecontrol - Item has a result ', $item);
-			ResponseController::addData($item->item_id, $item->result);
+			ResponseController::addData($item->item_id, array(
+				'is_error' => $item->result->is_error,
+				'is_done' => $item->result->is_done,
+				'apiStatus' => $item->result->apiStatus,
+				'tries' => $item->tries,
+
+			));
+
+			if (property_exists($item, 'fileStatus'))
+			{
+				 ResponseController::addData($item->item_id, 'fileStatus', $item->fileStatus);
+			}
+
+			// For now here, see how that goes
+			$item->result->message = ResponseController::formatItem($item->item_id);
 
       return $item;
 
@@ -648,6 +674,7 @@ class OptimizeController
 
     protected function HandleItemError($item, $type)
     {
+			 // Perhaps in future this might be taken directly from ResponseController
         if ($this->isBulk)
         {
           $fs = \wpSPIO()->filesystem();

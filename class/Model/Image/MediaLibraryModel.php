@@ -1179,7 +1179,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
              $backupok = $this->createBackup();
              if (! $backupok)
              {
-               ResponseController::add()->withMessage(sprintf(__('ConvertPNG could not create backup for %s, optimization failed. Please check file permissions - %s', 'shortpixel-image-optimiser'), $this->getFileName(), $this->getFullPath() ))->asImportant()->asError();
+							 $response = array(
+									'is_error' => true,
+									'item_type' => ResponseController::ISSUE_FILE_NOTWRITABLE,
+									'message ' => __('ConvertPNG could not create backup. Please check file permissions', 'shortpixel-image-optimiser'),
+							 );
+								Response::addData($item_id, $response);
+
                return false;
              }
 
