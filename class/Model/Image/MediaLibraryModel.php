@@ -1184,7 +1184,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 									'item_type' => ResponseController::ISSUE_FILE_NOTWRITABLE,
 									'message ' => __('ConvertPNG could not create backup. Please check file permissions', 'shortpixel-image-optimiser'),
 							 );
-								Response::addData($item_id, $response);
+								ResponseController::addData($this->get('id'), $response);
 
                return false;
              }
