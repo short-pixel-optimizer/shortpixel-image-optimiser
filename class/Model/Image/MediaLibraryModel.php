@@ -1038,19 +1038,25 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   }
 
   /** Ondelete is trigger by WordPress deleting an image. SPIO should delete it's data, and backups */
-  public function onDelete()
+	// FileDelete param for subclass compat.
+  public function onDelete($fileDelete = false)
   {
-      parent::onDelete();
+			$duplicates = $this->getWPMLDuplicates();
+
+			$fileDelete = (count($duplicates) == 0) ? true : false;
+
+			if ($fileDelete == true)
+      	parent::onDelete();
 
       foreach($this->thumbnails as $thumbObj)
       {
-        $thumbObj->onDelete();
+        $thumbObj->onDelete($fileDelete);
       }
 
       if ($this->isScaled())
       {
          $originalFile = $this->getOriginalFile();
-         $originalFile->onDelete();
+         $originalFile->onDelete($fileDelete);
       }
 
 		 	$this->removeLegacy();

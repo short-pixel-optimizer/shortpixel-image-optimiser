@@ -2,10 +2,10 @@
 namespace ShortPixel;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
-HelpScout::outputBeacon();
+//HelpScout::outputBeacon();
 
 ?>
-<div class="wrap">
+<div class="wrap is-shortpixel-settings-page">
 <h1><?php _e('ShortPixel Plugin Settings','shortpixel-image-optimiser');?></h1>
 <p class='top-menu'>
 
@@ -47,7 +47,7 @@ HelpScout::outputBeacon();
         }
         if ($view->averageCompression !== null)
         {
-          $this->loadView('settings/part-statistics');
+        //  $this->loadView('settings/part-statistics');
         }
 				$this->loadView('settings/part-tools');
         if (Log::debugIsActive())
@@ -63,9 +63,3 @@ HelpScout::outputBeacon();
 
 </article>
 <?php $this->loadView('settings/part-wso'); ?>
-<?php // @todo inline JS ?>
-<script>
-    jQuery(document).ready(function(){
-        ShortPixel.initSettings();
-      });
-</script>

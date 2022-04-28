@@ -17,6 +17,7 @@ setTimeout(delayedInit, 10000);
 
 var ShortPixel = function() {
 
+	// The InitSettings usually runs before these settings, making everything complicated (@todo)
     function init() {
 
         if (typeof ShortPixel.API_IS_ACTIVE !== 'undefined') return; //was initialized by the 10 sec. setTimeout, rare but who knows, might happen on very slow connections...
@@ -35,9 +36,10 @@ var ShortPixel = function() {
         // Extracting the protected Array from within the 0 element of the parent array
         ShortPixel.setOptions(ShortPixelConstants[0]);
 
-        if(jQuery('#backup-folder-size').length) {
+       /* if(jQuery('#backup-folder-size').length) {
             jQuery('#backup-folder-size').html(ShortPixel.getBackupSize());
-        }
+        } */
+
 
 				if (jQuery('#shortpixel-form-request-key').length > 0)
 				{
@@ -68,6 +70,12 @@ var ShortPixel = function() {
 				// Move footer notices to the top, where it should be.
 				$headerEnd = jQuery( '.wp-header-end' );
 				jQuery( 'div.shortpixel-notice' ).not( '.inline, .below-h2' ).insertAfter( $headerEnd );
+
+				var settingsPage = document.querySelector('.is-shortpixel-settings-page');
+				if (settingsPage !== null)
+				{
+					  this.initSettings();
+				}
     }
 
     function setOptions(options) {
@@ -270,12 +278,10 @@ var ShortPixel = function() {
         jQuery( window ).on('resize', function() {
             ShortPixel.adjustSettingsTabs();
         });
-        /*if(window.location.hash) {
-            var target = ('tab-' + window.location.hash.substring(window.location.hash.indexOf("#")+1)).replace(/\//, '');
-            if(jQuery("section#" + target).length) {
-                ShortPixel.switchSettingsTab( target );
-            }
-        } */
+
+				// shortpixel.ui is the designation for settings and ui-related events not in processor realm.
+				window.addEventListener('shortpixel.ui.settingsTabLoad', this.loadTabData.bind(this));
+
         jQuery("article.sp-tabs a.tab-link").on('click', function(e){
             var theID = jQuery(e.target).data("id");
             ShortPixel.switchSettingsTab( theID );
@@ -295,6 +301,10 @@ var ShortPixel = function() {
                 window.alert(_spTr.alertDeliverWebPUnaltered);
             }
         });
+
+				// Init active tab
+				var activeTab = document.querySelector('section.sel-tab');
+				ShortPixel.switchSettingsTab(activeTab.getAttribute('id'));
     }
 
     // Switch between settings tabs.
@@ -324,9 +334,13 @@ var ShortPixel = function() {
             jQuery(section).addClass("sel-tab");
             //ShortPixel.adjustSettingsTabs();
             //jQuery(section).find('.wp-shortpixel-tab-content').fadeIn(50);
-            jQuery(section).find('.wp-shortpixel-tab-content').fadeIn(50,     ShortPixel.adjustSettingsTabs);
+            jQuery(section).find('.wp-shortpixel-tab-content').fadeIn(50, ShortPixel.adjustSettingsTabs);
+
+						var event = new CustomEvent('shortpixel.ui.settingsTabLoad', { detail : {tabName: tab, section: section }});
+						window.dispatchEvent(event);
+
         }
-        if(typeof HS !== 'undefined' && typeof HS.beacon.suggest !== 'undefined' ){
+       /* if(typeof HS !== 'undefined' && typeof HS.beacon.suggest !== 'undefined' ){
             switch(tab){
                 case "settings":
                     beacon = shortpixel_suggestions_settings;
@@ -342,8 +356,28 @@ var ShortPixel = function() {
                     break;
             }
             HS.beacon.suggest(beacon);
-        }
+        } */
     }
+
+		// Newer function to load tab specific data, removing load from general init.
+		function loadTabData(e)
+		{
+				var detail = e.detail;
+				if (detail.tabName == 'tools')
+				{
+					 this.loadToolsTabData();
+
+				}
+		}
+
+		function loadToolsTabData()
+		{
+			var sizeText = document.querySelector('[data-tabfield="backupSize"]');
+			if (sizeText.dataset.value == '')
+			{
+				var backupSize = this.getBackupSize(sizeText);
+			}
+		}
 
     // Fixes the height of the current active tab.
     function adjustSettingsTabsHeight(){
@@ -495,7 +529,7 @@ var ShortPixel = function() {
         return browseResponse;
     }
 
-    function getBackupSize() {
+    function getBackupSize(element) {
         var browseData = { 'action': 'shortpixel_get_backup_size', nonce: ShortPixelConstants[0].nonce_ajaxrequest };
         var browseResponse = "";
         jQuery.ajax({
@@ -504,6 +538,8 @@ var ShortPixel = function() {
             data: browseData,
             success: function(response) {
                  browseResponse = response;
+								 element.dataset.value = browseResponse;
+								 element.textContent = browseResponse;
             },
             //async: false
         });
@@ -912,6 +948,8 @@ var ShortPixel = function() {
         validateKey         : validateKey,
         enableResize        : enableResize,
         setupGeneralTab     : setupGeneralTab,
+				loadTabData					: loadTabData,
+				loadToolsTabData		: loadToolsTabData,
         apiKeyChanged       : apiKeyChanged,
         setupAdvancedTab    : setupAdvancedTab,
         checkThumbsUpdTotal : checkThumbsUpdTotal,

@@ -93,9 +93,15 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
         return false;
   }
 
-  public function onDelete()
+	// @param FileDelete can be false. I.e. multilang duplicates might need removal of metadata, but not images.
+  public function onDelete($fileDelete = true)
   {
-      $bool = parent::onDelete();
+			if ($fileDelete == true)
+      	$bool = parent::onDelete();
+			else {
+				$bool = true;
+			}
+
 			// minimally reset all the metadata.
 			$this->image_meta = new ImageThumbnailMeta();
 			return $bool;

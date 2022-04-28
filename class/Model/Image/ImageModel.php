@@ -713,8 +713,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     */
     public function onDelete()
     {
-      // if ($this->hasBackup())
-        //$this->restore();
         if ($this->hasBackup())
         {
            $file = $this->getBackupFile();
@@ -730,8 +728,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         if ($avif !== false && $avif->exists())
            $avif->delete();
 
-
-      //  $this->deleteMeta();
     }
 
 

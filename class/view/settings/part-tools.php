@@ -45,6 +45,25 @@ $queueRunning = $bulk->isAnyBulkRunning();
 					<p class='description'><?php printf(__('Will %sUndo%s all optimizations and restore all your backed up images to their original state', 'shortpixel-image-optimiser'), '<b>','</b>'); ?></p>
 			</div>
 
+
+			<tr>
+					<th scope="row">
+							<?php _e('Original images are stored in a backup folder. Your backup folder\'s size is now:','shortpixel-image-optimiser');?>
+
+					</th>
+					<td>
+							<form action="" method="POST">
+											<div data-tabfield="backupSize" data-value=""><?php _e('Calculating...', 'shortpixel-image-optimiser'); ?></div>
+
+									<button type="submit" class="button button-secondary shortpixel-confirm"
+												 name="emptyBackup" data-confirm="<?php  _e('Are you sure you want to delete all the backup images? You won\'t be able to restore from backup or to reoptimize with different settings if you delete the backups.','shortpixel-image-optimiser'); ?>">
+												  <?php _e('Empty backups','shortpixel-image-optimiser');?>
+									</button>
+							</form>
+					</td>
+			</tr>
+
+
 		</div>
 	</div> <!-- options tab content -->
 </section>

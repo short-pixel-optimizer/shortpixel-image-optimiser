@@ -120,7 +120,7 @@ class UiHelper
 
 		       foreach($improvs as $thumbName => $stat)
 		       {
-						  
+
 		           $title =  sprintf(__('%s : %s', 'shortpixel-image-optimiser'), $thumbName, $stat . '%');
 		           $rating = ceil( round($stat) / 10);
 
@@ -504,7 +504,7 @@ class UiHelper
       return $date;
   }
 
-  static public function formatBytes($bytes, $precision = 2) {
+  public static function formatBytes($bytes, $precision = 2) {
       $units = array('B', 'KB', 'MB', 'GB', 'TB');
 
       $bytes = max($bytes, 0);
@@ -513,8 +513,13 @@ class UiHelper
 
       $bytes /= pow(1024, $pow);
 
-      return round($bytes, $precision) . ' ' . $units[$pow];
+      return number_format_i18n(round($bytes, $precision), $precision) . ' ' . $units[$pow];
   }
+
+	public static function formatNumber($number, $precision = 2)
+	{
+		  return number_format_i18n($number, $precision);
+	}
 
 
 

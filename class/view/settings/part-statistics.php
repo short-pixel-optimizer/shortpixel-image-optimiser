@@ -140,26 +140,7 @@ $quotaData = $this->quotaData;
                     </th>
                     <td><strong><?php echo($view->data->fileCount);?></strong></td>
                 </tr>
-                <?php
-                // @todo This is always true, but must it be?
-                if(true || $view->data->backupImages) { ?>
-                <tr>
-                    <th scope="row">
-                        <?php _e('Original images are stored in a backup folder. Your backup folder\'s size is now:','shortpixel-image-optimiser');?>
-                    </th>
-                    <td>
-                        <form action="" method="POST">
-                          <?php $backupFolderSize = null; ?>
-                            <?php if ($backupFolderSize === null) { ?>
-                                <span id='backup-folder-size'>Calculating...</span>
-                            <?php } else { echo($backupFolderSize); }?>
-                            <input type="submit"  style="margin-left: 15px; vertical-align: middle;" class="button button-secondary shortpixel-confirm"
-                                   name="emptyBackup" value="<?php _e('Empty backups','shortpixel-image-optimiser');?>"
-                                   data-confirm="<?php  _e('Are you sure you want to delete all the backup images? You won\'t be able to restore from backup or to reoptimize with different settings if you delete the backups.','shortpixel-image-optimiser'); ?>"/>
-                        </form>
-                    </td>
-                </tr>
-                <?php } ?>
+                
             </tbody>
         </table>
         <div style="display:none">
