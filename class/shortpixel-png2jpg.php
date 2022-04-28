@@ -363,13 +363,11 @@ class ShortPixelPng2Jpg {
 						$url = $fs->pathToUrl($imageObj->getOriginalFile());
 					}
 
-					Log::addTemp('SourceURL', $url);
 					$this->replacer = new Replacer();
 					$this->replacer->setSource($url);
 
 					if ($imageObj->get('type') == 'media') // old stuff
 					{
-						 Log::addTemp('Restore SourceMeta getWpMetaData', $imageObj->getWPMetaData());
 						 $this->replacer->setSourceMeta($imageObj->getWPMetaData());
 					}
 
@@ -384,10 +382,8 @@ class ShortPixelPng2Jpg {
 					}
 
 					$fsNewFile = $fs->getFile($imageObj->getFileDir() . $newFileName);
-					Log::addTemp('Png2Jpg : NewFileName', $newFileName);
 
         	$newUrl = str_replace($oldFileName, $fsNewFile->getFileName(), $url);
-					Log::addTemp('Target URL Png2Jpg: ' . $newUrl);
 
 					$params['file'] = $fsNewFile;
 
@@ -449,7 +445,6 @@ class ShortPixelPng2Jpg {
         Log::addDebug('Png2Jpg New Metadata' . $attach_id, $new_metadata);
 		//		wp_update_post(array('ID' => $attach_id, 'post_mime_type' => 'image/jpeg' ));
         $bool = wp_update_attachment_metadata($attach_id, $new_metadata);
-			  Log::addTemp('Result of Update '  . $bool );
 
         return $new_metadata;
 

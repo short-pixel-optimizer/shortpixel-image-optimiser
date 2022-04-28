@@ -883,7 +883,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		 {
 			  $wpdb->insert($table, $fields, $format);
 				$database_id = $wpdb->insert_id;
-				Log::addTemp('Insert Record with ID ' . $database_id);
 
 				switch($imageType)
 				{
@@ -903,7 +902,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		 }
 		 else {
 			 	$wpdb->update($table, $fields,  array('id' => $databaseID),$format, array('%d'));
-				Log::addTemp('Update Record with ID ' . $databaseID);
 				$database_id = $databaseID;
 		 }
 
@@ -1004,7 +1002,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		 $metadata = $this->createSave();
 
-//Log::addTemp('Saving Meta', $metadata);
 		 $this->saveDBMeta($metadata);
      // There is no point checking for errors since false is returned on both failure and no field changed.
      //update_post_meta($this->id, '_shortpixel_meta', $metadata);
@@ -1067,7 +1064,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 	public function dropFromQueue()
 	{
-		 Log::addTemp('Dropping From Queue : ' . $this->get('id'));
 
 		 $optimizeController = new OptimizeController();
 
@@ -1271,7 +1267,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 					if ($settings->backupImages == 1)
 					{
-						 Log::addTemp('Convert PNG failed, removing backups (MediaLibraryM)');
 
 						 // When failed, delete the backups. This can't be done via restore since image is not optimized.
 						 $backupFile = $this->getBackupFile();
@@ -1506,7 +1501,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		if ($did_png2jpg)
 		{
-			 Log::addTemp('Restore PNG2JPG');
 			 if ($bool)
 			 	$bool = $this->restorePNG2JPG();
 			 else
@@ -1600,8 +1594,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					$this->id = $current_id;
 				}
 
-			Log::addTemp('Restore Attach Metadata', wp_get_attachment_metadata($this->id));
-
 			// @todo Restore can be false if last item failed, which doesn't sound right.
 	    return $bool;
   }
@@ -1630,7 +1622,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			// Destination is image.png, the original.
 			if (! $destination->exists())
 			{
-					Log::addTemp('Moving PNG file', $destination->getFullPath());
 					// This is a PNG content file, that has been restored as a .jpg file.
 					$this->move($destination);
 			}
@@ -2047,8 +2038,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 			$searchSuffixes = array_unique(apply_filters('shortpixel/image/unlisted_suffixes', $suffixes));
 			$searchInfixes =  array_unique(apply_filters('shortpixel/image/unlisted_infixes', $infixes));
-
-//Log::addTemp('Checking:', array($searchUnlisted, $searchSuffixes, $searchInfixes));
 
       // addUnlisted is called by IsProcessable, file might not exist.
       // If virtual, we can't read dir, don't do it.

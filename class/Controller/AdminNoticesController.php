@@ -692,7 +692,7 @@ class AdminNoticesController extends \ShortPixel\Controller
                 'filesTodo' => $statsController->totalImagesToOptimize(),
                 'estimated' => $settings->optimizeUnlisted || $settings->optimizeRetina ? 'true' : 'false',
 								'webp' => $webpActive,
-								'avif' => $avifActive, 
+								'avif' => $avifActive,
                 /* */
                 'iconsUrl' => base64_encode(wpSPIO()->plugin_url('res/img'))
               ))),
@@ -700,12 +700,8 @@ class AdminNoticesController extends \ShortPixel\Controller
 
         );
 
-		//		Log::addTemp('Post Request ProposeUpgrade', $args);
-
 
         $proposal = wp_remote_post("https://shortpixel.com/propose-upgrade-frag", $args);
-
-			//	Log::addTemp('Request Req', $proposal);
 
         if(is_wp_error( $proposal )) {
             $proposal = array('body' => __('Error. Could not contact ShortPixel server for proposal', 'shortpixel-image-optimiser'));

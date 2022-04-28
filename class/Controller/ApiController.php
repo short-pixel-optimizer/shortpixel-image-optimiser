@@ -337,8 +337,6 @@ class ApiController
           // If status is still waiting. Check if the return URL is one we sent.
             if ( isset($imageObject->Status) && ( $imageObject->Status->Code == 0 || $imageObject->Status->Code == 1 ) && in_array($imageObject->OriginalURL, $neededURLS)) {
 
-								Log::addTemp('API :: Still waiting : ', $imageObject);
-
 							//	ResponseController:: @todo See what needs this doing.
                 return $this->returnOK(self::STATUS_UNCHANGED, sprintf(__('Item is waiting', 'shortpixel-image-optimiser')));
             }
@@ -377,7 +375,6 @@ class ApiController
 
     } else {
 
-			Log::addTemp($APIresponse);
       //sometimes the response array can be different
       if (is_numeric($APIresponse['Status']->Code)) {
           $message = $APIresponse['Status']->Message;

@@ -65,7 +65,6 @@ class ResponseController
 
 				}
 				else {
-						Log::addTemp('Creating new ResponseModel');
 						$item = new ResponseModel($item_id, $itemType);
 				}
 
@@ -91,7 +90,6 @@ class ResponseController
 			}
 
 			$resp = self::getResponseItem($item_id); // responseModel
-			Log::addTemp('Adding Data for ' . $item_id, $data);
 
 			foreach($data as $prop => $val)
 			{
@@ -100,7 +98,6 @@ class ResponseController
 						 $resp->$prop = $val;
 					}
 					else {
-						Log::addTemp('ResponseModel Wrong Property:' . $prop);
 					}
 
 			}
@@ -113,14 +110,16 @@ class ResponseController
 		public static function formatItem($item_id)
 		{
 				 $item = self::getResponseItem($item_id); // ResponseMOdel
-				 Log::addTemp('Format Response Item', $item);
 				 $text = $item->message;
+
 
 				 if ($item->is_error)
 				 	  $text = self::formatErrorItem($item, $text);
 				 else {
 					 	$text = self::formatRegularItem($item, $text);
 				 }
+
+				 Log::addTemp('FormatItem ResponseCC', $item);
 
 				 return $text;
 		}
@@ -145,22 +144,27 @@ class ResponseController
 
 		private static function formatRegularItem($item, $text)
 		{
-			  if (! $item->is_done)
+
+			  if (! $item->is_done && $item->apiStatus == ApiController::STATUS_UNCHANGED)
 				{
-					 $text = sprintf(__('Optimizing - waiting for results (%d/%d)','shortpixel-image-optimiser'), $item->images_done, $item->images_total);
+					 	$text = sprintf(__('Optimizing - waiting for results (%d/%d)','shortpixel-image-optimiser'), $item->images_done, $item->images_total);
+				}
+				if (! $item->is_done && $item->apiStatus == ApiController::STATUS_ENQUEUED)
+				{
+				  	$text = sprintf(__('Optimizing - Item has been sent to ShortPixel (%d/%d)','shortpixel-image-optimiser'), $item->images_done, $item->images_total);
 				}
 
 				switch($item->apiStatus)
 				{
 					 case ApiController::STATUS_SUCCESS:
-					 	$text = __('Item successfully optimized', 'shortpixel-image-optimiser');
+					 	$text = __('Item successfuly optimized', 'shortpixel-image-optimiser');
 					 break;
 
 					 case ApiController::STATUS_FAIL:
 					 case ApiController::ERR_TIMEOUT:
 						 if (self::$screenOutput < self::OUTPUT_CLI)
 						 {
-							 		$text .= ' ' . sprintf(__('in %s', 'shortpixel_image_optimiser'), $item->fileName);
+							// 		$text .= ' ' . sprintf(__('in %s', 'shortpixel_image_optimiser'), $item->fileName);
 						 }
 					 break;
 				}

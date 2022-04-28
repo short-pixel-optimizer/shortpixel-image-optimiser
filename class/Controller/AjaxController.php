@@ -164,7 +164,6 @@ class AjaxController
         $queue = (isset($_POST['queues'])) ? sanitize_text_field($_POST['queues']) : 'media,custom';
         $queues = array_filter(explode(',', $queue), 'trim');
 
-		//		Log::addTemp('Ajax ProcessQueue', debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 2) );
         $control = new OptimizeController();
         $control->setBulk($isBulk);
         $result = $control->processQueue($queues);

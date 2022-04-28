@@ -92,9 +92,6 @@ class wpOffload
       add_filter('shortpixel_webp_image_base', array($this, 'checkWebpRemotePath'), 10, 2);
       add_filter('shortpixel/front/webp_notfound', array($this, 'fixWebpRemotePath'), 10, 4);
 
-			//add_filter('as3cf_remove_source_files_from_provider', function ($paths){  Log::addTemp("removing these paths", $paths); return $paths;
-			//}, 20);
-
     }
 
 
@@ -267,7 +264,6 @@ class wpOffload
 				if ($params['success'] === false)
 					return;
 
-				Log::addTemp('S3Off Converting ');
 				$id = $mediaItem->get('id');
 				$this->remove_remote($id);
 
@@ -382,7 +378,6 @@ class wpOffload
 					$upload = \DeliciousBrains\WP_Offload_Media\Items\Upload_Handler::get_item_handler_key_name();
           $itemHandler = $this->as3cf->get_item_handler($upload);
           $result = $itemHandler->handle($item); //handle it then.
-          Log::addTemp('S3Offload Upload Result', $result);
         }
         else {
 					   $this->as3cf->upload_attachment($id);

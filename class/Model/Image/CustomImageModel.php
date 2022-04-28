@@ -486,8 +486,6 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
 			public function dropFromQueue()
 			{
-				 Log::addTemp('Dropping From Queue : ' . $this->get('id'));
-
 				 $optimizeController = new OptimizeController();
 
 				 $q = $optimizeController->getQueue($this->type);

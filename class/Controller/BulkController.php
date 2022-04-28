@@ -164,8 +164,6 @@ class BulkController
           return; // nothing done, don't log
 				}
 
-			  Log::addTemp('AddLog Stats -- ', $stats);
-
         $data['processed'] = $stats->done;
         $data['not_processed'] = $stats->in_queue;
         $data['errors'] = $stats->errors;

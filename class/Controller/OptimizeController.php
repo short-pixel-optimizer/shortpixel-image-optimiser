@@ -343,14 +343,11 @@ class OptimizeController
 			*/
       foreach($items as $mainIndex => $item)
       {
-            if (property_exists($item, 'png2jpg') && ! property_exists($item, 'action'))
-            {
 
-              $bool = $this->convertPNG($item, $Q);
-               continue; // conversion done one way or another, item will be need requeuing, because new urls / flag.
-            }
+               //continue; // conversion done one way or another, item will be need requeuing, because new urls / flag.
 
-            $item = $this->sendToProcessing($item, $Q);
+						$item = $this->sendToProcessing($item, $Q);
+
 
             $item = $this->handleAPIResult($item, $Q);
             $result->items[$mainIndex] = $item; // replace processed item, should have result now.
@@ -372,6 +369,11 @@ class OptimizeController
     {
 
       $api = $this->getAPI();
+			// @todo Figure out why this isn't just on action regime as well.
+			if (property_exists($item, 'png2jpg'))
+			{
+				 $item->action = 'png2jpg';
+			}
       if (property_exists($item, 'action'))
       {
            $fs = \wpSPIO()->filesystem();
@@ -379,6 +381,11 @@ class OptimizeController
            $qtype = strtolower($qtype);
 
            $imageObj = $fs->getImage($item->item_id, $qtype);
+
+            $item->result = new \stdClass;
+            $item->result->is_done = true; // always done
+            $item->result->is_error = false; // for now
+            $item->result->apiStatus = ApiController::STATUS_NOT_API;
 
 					 if ($imageObj === false) // not exist error.
 					 {
@@ -390,15 +397,14 @@ class OptimizeController
                  $imageObj->restore();
               break;
               case 'migrate':
-								Log::addTemp('migrating item : #' , $imageObj->get('id'));
                 // Loading the item should already be enough to trigger.
               break;
+							case 'png2jpg':
+								$item = $this->convertPNG($item, $Q);
+								$item->result->is_done = false;  // if not, finished to newly enqueued
+								// @todo Tell ResponseControllers about those actions
+							break;
            }
-
-           $item->result = new \stdClass;
-           $item->result->is_done = true; // always done
-           $item->result->is_error = false; // for now
-           $item->result->apiStatus = ApiController::STATUS_NOT_API;
       }
       else // as normal
       {
@@ -417,17 +423,24 @@ class OptimizeController
 
 			 if ($imageObj === false) // not exist error.
 			 {
-			 	 return $this->handleAPIResult($item, $mediaQ);
+			 	 return $item; //$this->handleAPIResult($item, $mediaQ);
 			 }
 
       $bool = $imageObj->convertPNG();
+
+			if ($bool)
+			{
+				 ResponseController::addData($item->item_id, 'message', __('PNG2JPG converted', 'shortpixel-image-optimiser'));
+			}
+			else {
+				 ResponseController::addData($item->item_id, 'message', __('PNG2JPG not converted', 'shortpixel-image-optimiser'));
+			}
 
 			// Regardless if it worked or not, requeue the item otherwise it will keep trying to convert due to the flag.
       $imageObj = $fs->getMediaImage($item->item_id);
       $this->addItemToQueue($imageObj);
 
-
-      return $bool;
+      return $item;
     }
 
 
@@ -637,10 +650,13 @@ class OptimizeController
 						//	$item->result->message = substr_replace( $item->result->message,  $imageItem->getFileName() . ' ', strpos($item->result->message, '#' . $item->item_id), 0);
              // $item->result->message .= sprintf(__('(cycle %d)', 'shortpixel-image-optimiser'), intval($item->tries) );
 
+						  Log::addTemp("Unchanged: retry_limit $retry_limit tries " . $item->tries);
 							if ($retry_limit == $item->tries || $retry_limit == ($item->tries -1))
 							{
+								  Log::addTemp('Retry Limit reached', $retry_limit);
 									$item->result->apiStatus = ApiController::ERR_TIMEOUT;
 									$message = __('Retry Limit reached. Image might be too large, limit too low or network issues.  ', 'shortpixel-image-optimiser');
+
 									ResponseController::addData($item->item_id, 'message', $message);
 							}
 						/* Item is not failing here:  Failed items come on the bottom of the queue, after all others so might cause multiple credit eating if the time is long. checkQueue is only done at the end of the queue.

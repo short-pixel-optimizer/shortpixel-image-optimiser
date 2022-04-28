@@ -30,7 +30,6 @@ class MediaLibraryQueue extends Queue
      );
 
      $options = apply_filters('shortpixel/medialibraryqueue/options', $options);
-		 //Log::addTemp('Queue Options Media', $options);
      $this->q->setOptions($options);
    }
 

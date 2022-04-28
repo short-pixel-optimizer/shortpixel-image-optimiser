@@ -87,7 +87,7 @@ class wpOffload
       add_filter('shortpixel/front/webp_notfound', array($this, 'fixWebpRemotePath'), 10, 4);
 
 			// Debug hook
-			add_filter('as3cf_remove_source_files_from_provider', function ($paths){  Log::addTemp("removing these paths", $paths); return $paths;
+			add_filter('as3cf_remove_source_files_from_provider', function ($paths){  return $paths;
 			});
 
     }
@@ -135,33 +135,6 @@ class wpOffload
       $this->image_upload($id);
     }
 
-/*
-    public function remove_remote($id)
-    {
-      $mediaItem = $this->getItemById($id); // MediaItem is AS3CF Object
-      if ($mediaItem === false)
-      {
-        Log::addDebug('S3-Offload MediaItem not remote - ' . $id);
-        return false;
-      }
-
-			Log::addTemp('Remove Remote Media Item is there', $mediaItem);
-
-			// Backwards compat.
-			if (method_exists($this->as3cf, 'remove_attachment_files_from_provider'))
-			{
-      	$this->as3cf->remove_attachment_files_from_provider($id, $mediaItem);
-			}
-			else
-			{
-				$itemHandler = $this->as3cf->get_item_handler('remove-provider');
-				$result = $itemHandler->handle($mediaItem); //handle it then.
-				Log::addTemp('S3Offload Remove Result', $result);
-			}
-
-    }
-*/
-
     /** @return Returns S3Ofload MediaItem, or false when this does not exist */
     protected function getItemById($id)
     {
@@ -196,7 +169,6 @@ class wpOffload
 			if ($source === false)
 				return false;
 
-Log::addTemp('GetSourceByID', $source);
 			$source_id = isset($source['id']) ? intval($source['id']) : false;
 
       if ($source_id !== false)
@@ -252,40 +224,7 @@ Log::addTemp('GetSourceByID', $source);
        return $file;
     }
 
-    /*  We should check if we can do without this function.
-		public function image_converted($id)
-    {
-        $fs = \wpSPIO()->fileSystem();
 
-        // delete the old file
-        $mediaItem = $this->getItemById($id);
-        if ($mediaItem === false) // mediaItem seems not present. Probably not a remote file
-          return;
-
-        $providerFile = $fs->getFile($providerSourcePath);
-        $newFile = $fs->getFile($this->returnOriginalFile(null, $id));
-
-        // convert
-        if ($providerFile->getExtension() !== $newFile->getExtension())
-        {
-          $data = $mediaItem->key_values(true);
-          $record_id = $data['id'];
-
-          $data['path'] = str_replace($providerFile->getFileName(), $newFile->getFileName(), $data['path']);
-
-
-					//$provider, $region, $bucket, $path, $is_private, $source_id, $source_path, $original_filename = null, $private_sizes = array(), $id = null
-					$class = $this->getMediaClass();
-          $newItem = new $class($data['provider'], $data['region'], $data['bucket'], $data['path'], $data['is_private'], $data['source_id'], $data['source_path'], $newFile->getFileName(), $data['extra_info'], $record_id );
-
-          $newItem->save();
-
-            Log::addDebug('S3Offload - Uploading converted file ');
-        }
-
-        // upload
-        $this->image_upload($id); // delete and reupload
-    } */
 
     public function image_upload($id)
     {
@@ -311,7 +250,6 @@ Log::addTemp('GetSourceByID', $source);
 				$data = apply_filters('wp_update_attachment_metadata', $data, $id);
 				$this->shouldPrevent = true;
 
-				Log::addTemp('Applied filters for Attachment Metadata');
 
 				return true;
         // This is old version as3cf
@@ -323,7 +261,6 @@ Log::addTemp('GetSourceByID', $source);
           // This should load the A3cf UploadHandler
           $itemHandler = $this->as3cf->get_item_handler('upload');
          $result = $itemHandler->handle($mediaItem); //handle it then.
-          Log::addTemp('S3Offload Upload Result', $result);
         }
     }
 
@@ -421,7 +358,6 @@ Log::addTemp('GetSourceByID', $source);
     {
       //  Log::addDebug('Received Paths', array($paths));
         $paths = $this->getWebpPaths($paths, true);
-				Log::addTemp('Add S3 Paths', $paths);
   //      Log::addDebug('Webp Path Founder (S3)', array($paths));
         return $paths;
     }
@@ -430,7 +366,6 @@ Log::addTemp('GetSourceByID', $source);
     {
 
       $paths = $this->getWebpPaths($paths, false);
-			Log::addTemp('Remove S3 Paths', $paths);
     //  Log::addDebug('Remove S3 Paths', array($paths));
 
       return $paths;
