@@ -342,45 +342,6 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                 </script>
             </tr>
             <tr>
-                <th scope="row"><label for="excludePatterns"><?php _e('Exclude patterns','shortpixel-image-optimiser');?></label></th>
-                <td>
-
-                    <textarea name="excludePatterns" type="text" id="excludePatterns" placeholder="<?php
-                        _e('name:keepbig, path:/ignore_regex/i, size:1000x2000','shortpixel-image-optimiser');?>" rows="4" cols="60"><?php echo( $excludePatterns );?></textarea>
-
-                    <p class="settings-info">
-                        <?php _e('Add patterns separated by comma. A pattern consist of a <strong>type:value</strong> pair; the accepted types are
-                                  <strong>"name"</strong>, <strong>"path"</strong>, <strong>"size"</strong>, <strong>"regex-name"</strong> and <strong>"regex-path"</strong>.
-                                   A file is excluded if it matches any of the patterns. <br>
-                                   <br>For a <strong>"name"</strong> pattern only the filename is matched, for <strong>"path"</strong>,
-                                   the whole path will be matched (useful for excluding certain (sub)-directories altoghether).
-                                   <br><br>
-                                   <strong>"regex-path"</strong> and <strong>"regex-name"</strong> work the same, except it requires a valid regular expression, contained between slashes. Special characters should be escaped.
-                                   <br>
-                                   <br>For the <strong>"size"</strong> type,
-                                   which applies only to Media Library images, <strong>the main images (not thumbnails)</strong> that have the size in the specified range are excluded.
-                                   The format for the "size" exclude is: <strong>minWidth</strong>-<strong>maxWidth</strong>x<strong>minHeight</strong>-<strong>maxHeight</strong>, for example <strong>size:1000-1100x2000-2200</strong>. You can also specify a precise size, such as <strong>1000x2000</strong>.','shortpixel-image-optimiser');?>
-                        <a href="https://blog.shortpixel.com/shortpixel-how-to-exclude-images-and-folders-from-optimization/" target="_blank" class="shortpixel-help-link">
-                            <span class="dashicons dashicons-editor-help"></span><?php _e('More info','shortpixel-image-optimiser');?>
-                        </a>
-                    </p>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row"><label for="authentication"><?php _e('HTTP AUTH credentials','shortpixel-image-optimiser');?></label></th>
-                <td>
-									<?php if (! defined('SHORTPIXEL_HTTP_AUTH_USER')): ?>
-		                  <input name="siteAuthUser" type="text" id="siteAuthUser" value="<?php echo( stripslashes(esc_html($view->data->siteAuthUser )));?>" class="regular-text" placeholder="<?php _e('User','shortpixel-image-optimiser');?>"><br>
-	                    <input name="siteAuthPass" type="text" id="siteAuthPass" value="<?php echo( stripslashes(esc_html($view->data->siteAuthPass )));?>" class="regular-text" placeholder="<?php _e('Password','shortpixel-image-optimiser');?>">
-	                    <p class="settings-info">
-	                        <?php _e('Only fill in these fields if your site (front-end) is not publicly accessible and visitors need a user/pass to connect to it. If you don\'t know what is this then just <strong>leave the fields empty</strong>.','shortpixel-image-optimiser');?>
-	                    </p>
-									<?php else:  ?>
-												<p><?php _e('The HTTP AUth credentials have been defined in the wp-config file', 'shortpixel-image-optimiser'); ?></p>
-									<?php endif; ?>
-                </td>
-            </tr>
-            <tr>
                 <th scope="row"><?php _e('Optimize Retina images','shortpixel-image-optimiser');?></th>
                 <td>
                     <input name="optimizeRetina" type="checkbox" id="optimizeRetina" value="1" <?php checked( $view->data->optimizeRetina, "1"); ?>>
@@ -416,6 +377,45 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                     <p class="settings-info">
                         <?php _e('Please check the thumbnail sizes you would like to <strong>exclude</strong> from optimization. There may be sizes created by themes or plugins which do not appear here, because they were not properly registered in WordPress. If you want to ignore them too, please uncheck the <strong>Optimize other thumbnails</strong> option above.','shortpixel-image-optimiser');?>
                     </p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row"><label for="excludePatterns"><?php _e('Exclude patterns','shortpixel-image-optimiser');?></label></th>
+                <td>
+
+                    <textarea name="excludePatterns" type="text" id="excludePatterns" placeholder="<?php
+                        _e('name:keepbig, path:/ignore_regex/i, size:1000x2000','shortpixel-image-optimiser');?>" rows="4" cols="60"><?php echo( $excludePatterns );?></textarea>
+
+                    <p class="settings-info">
+                        <?php _e('Add patterns separated by comma. A pattern consist of a <strong>type:value</strong> pair; the accepted types are
+                                  <strong>"name"</strong>, <strong>"path"</strong>, <strong>"size"</strong>, <strong>"regex-name"</strong> and <strong>"regex-path"</strong>.
+                                   A file is excluded if it matches any of the patterns. <br>
+                                   <br>For a <strong>"name"</strong> pattern only the filename is matched, for <strong>"path"</strong>,
+                                   the whole path will be matched (useful for excluding certain (sub)-directories altoghether).
+                                   <br><br>
+                                   <strong>"regex-path"</strong> and <strong>"regex-name"</strong> work the same, except it requires a valid regular expression, contained between slashes. Special characters should be escaped.
+                                   <br>
+                                   <br>For the <strong>"size"</strong> type,
+                                   which applies only to Media Library images, <strong>the main images (not thumbnails)</strong> that have the size in the specified range are excluded.
+                                   The format for the "size" exclude is: <strong>minWidth</strong>-<strong>maxWidth</strong>x<strong>minHeight</strong>-<strong>maxHeight</strong>, for example <strong>size:1000-1100x2000-2200</strong>. You can also specify a precise size, such as <strong>1000x2000</strong>.','shortpixel-image-optimiser');?>
+                        <a href="https://blog.shortpixel.com/shortpixel-how-to-exclude-images-and-folders-from-optimization/" target="_blank" class="shortpixel-help-link">
+                            <span class="dashicons dashicons-editor-help"></span><?php _e('More info','shortpixel-image-optimiser');?>
+                        </a>
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row"><label for="authentication"><?php _e('HTTP AUTH credentials','shortpixel-image-optimiser');?></label></th>
+                <td>
+									<?php if (! defined('SHORTPIXEL_HTTP_AUTH_USER')): ?>
+		                  <input name="siteAuthUser" type="text" id="siteAuthUser" value="<?php echo( stripslashes(esc_html($view->data->siteAuthUser )));?>" class="regular-text" placeholder="<?php _e('User','shortpixel-image-optimiser');?>"><br>
+	                    <input name="siteAuthPass" type="text" id="siteAuthPass" value="<?php echo( stripslashes(esc_html($view->data->siteAuthPass )));?>" class="regular-text" placeholder="<?php _e('Password','shortpixel-image-optimiser');?>">
+	                    <p class="settings-info">
+	                        <?php _e('Only fill in these fields if your site (front-end) is not publicly accessible and visitors need a user/pass to connect to it. If you don\'t know what is this then just <strong>leave the fields empty</strong>.','shortpixel-image-optimiser');?>
+	                    </p>
+									<?php else:  ?>
+												<p><?php _e('The HTTP AUTH credentials have been defined in the wp-config file.', 'shortpixel-image-optimiser'); ?></p>
+									<?php endif; ?>
                 </td>
             </tr>
         </tbody>
