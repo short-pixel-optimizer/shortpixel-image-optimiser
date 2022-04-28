@@ -35,6 +35,12 @@ var ShortPixelToolTip = function(reserved, processor)
 					this.RefreshStats(processData.media.stats, 'media');
 					this.RefreshStats(processData.custom.stats, 'custom');
 					this.RefreshStats(processData.total.stats, 'total');
+
+					// Hide Tooltip is manual paused is true, but there is also nothing to do.
+					if (processor.isManualPaused == true && processData.total.stats.total <= 0)
+					{
+						 this.ProcessEnd();
+					}
 		}
 		// Used to put a 'todo' number in the tooltip when processing
     this.RefreshStats = function(stats, type)
