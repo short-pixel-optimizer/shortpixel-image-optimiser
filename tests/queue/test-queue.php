@@ -70,7 +70,6 @@ class QueueTest extends WP_UnitTestCase
       $q->itemDone($item);
 
       $result = $q->run();
-      var_dump($result);
       $this->assertFalse($getStatusMethod->invoke($q, 'running'));
       $this->assertCount(0, $result->items);
   }

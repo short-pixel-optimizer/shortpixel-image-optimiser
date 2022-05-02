@@ -64,8 +64,7 @@ class MediaLibraryModelTest extends  WP_UnitTestCase
 
       $zip = new ZipArchive;
       $res = $zip->open( dirname(__FILE__) . '/assets/test-conversion.zip');
-      //var_dump(dirname(__FILE__) . '/assets/test-conversion.zip');
-      //var_dump($upload_dir);
+
       if ($res === TRUE) {
         $zip->extractTo($upload_dir['path']);
       }

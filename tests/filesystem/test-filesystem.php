@@ -528,7 +528,6 @@ class FileSystemTest extends  WP_UnitTestCase
     // See - https://developer.wordpress.org/reference/functions/_wp_upload_dir/ . Otherwise constant is used.
     update_option('upload_url_path', $url . '/wp-content/uploads');
     $upl = wp_upload_dir(null, false, true);
-    //var_dump($upl);
   }
   // What happens when a URL is given instead of a file .
   public function testFileWithUrl()

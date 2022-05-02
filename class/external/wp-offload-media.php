@@ -83,7 +83,7 @@ class wpOffload
       add_filter('shortpixel/restore/targetfile', array($this, 'returnOriginalFile'),10,2);
       add_filter('as3cf_pre_update_attachment_metadata', array($this, 'preventInitialUpload'), 10,4);
 
-    //  add_filter('shortpixel_get_attached_file', array($this, 'get_raw_attached_file'),10, 2);
+      //add_filter('shortpixel_get_attached_file', array($this, 'get_raw_attached_file'),10, 2);
     //  add_filter('shortpixel_get_original_image_path', array($this, 'get_raw_original_path'), 10, 2);
       add_filter('shortpixel/image/urltopath', array($this, 'checkIfOffloaded'), 10,2);
       add_filter('shortpixel/file/virtual/translate', array($this, 'getLocalPathByURL'));
@@ -364,7 +364,7 @@ class wpOffload
         if (! $this->offloading)
           return false;
 
-				// Only medialibrary offloading supported. 
+				// Only medialibrary offloading supported.
 				if ('media' !== $imageItem->get('type') )
 				{
 					 return false;

@@ -49,8 +49,7 @@ class CustomImageModelTest extends  WP_UnitTestCase
       $wpdb->query('DELETE FROM ' . $table);
 /*      $zip = new ZipArchive;
       $res = $zip->open( dirname(__FILE__) . '/assets/test-conversion.zip');
-      //var_dump(dirname(__FILE__) . '/assets/test-conversion.zip');
-      //var_dump($upload_dir);
+
       if ($res === TRUE) {
         $zip->extractTo($upload_dir['path']);
       }

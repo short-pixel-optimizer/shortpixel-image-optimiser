@@ -233,7 +233,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
           return false;
 
         $backupFile =  $directory . $this->getFileBase() . '.png';
-
 				// Issue with PNG not being scaled on the main file.
 				if (! file_exists($backupFile) && $this->is_main_file == true && $this->isScaled())
 				{

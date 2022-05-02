@@ -801,7 +801,6 @@ class SettingsController extends \ShortPixel\ViewController
 
         }
 
-		//		var_dump($patterns);
 
 			  foreach($patterns as $pair)
 				{

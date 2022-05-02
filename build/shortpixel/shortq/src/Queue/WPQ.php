@@ -515,7 +515,6 @@ class WPQ implements Queue
   private function checkQueue()
   {
     $this->resetInternalCounts(); // retrieve accurate count from dataSource.
-  //  var_dump($this->currentStatus);
 
     $tasks_done = $this->getStatus('done');
     $tasks_open = $this->getStatus('items');

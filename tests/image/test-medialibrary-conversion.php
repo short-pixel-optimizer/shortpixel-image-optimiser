@@ -18,8 +18,7 @@ class  MediaLibraryModelConversionTest extends WP_UnitTestCase
 
     $zip = new ZipArchive;
     $res = $zip->open( dirname(__FILE__) . '/assets/test-conversion.zip');
-    //var_dump(dirname(__FILE__) . '/assets/test-conversion.zip');
-    //var_dump($upload_dir);
+
     if ($res === TRUE) {
       $zip->extractTo($upload_dir['path']);
     }
@@ -114,7 +113,7 @@ class  MediaLibraryModelConversionTest extends WP_UnitTestCase
 
       $this->assertTrue(get_post_meta($post->ID, 'shortpixel_was_converted', true));
 
-      $this->assertEquals('87.63', $mm->getImprovement()); // This can be fishy 
+      $this->assertEquals('87.63', $mm->getImprovement()); // This can be fishy
   }
 
   public function testConvertpng2jpg()

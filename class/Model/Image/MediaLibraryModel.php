@@ -1146,6 +1146,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       $bool = true;
       $bool = parent::isRestorable();
 
+
       if (! $bool) // if parent is not processable, check if thumbnails are, can still have a work to do.
       {
           foreach($this->thumbnails as $thumbnail)

@@ -189,12 +189,13 @@
                     <input name="resizeImages" type="checkbox" id="resize" value="1" <?php checked( $view->data->resizeImages, true );?>>
                     <label for="resize"><?php _e('to maximum','shortpixel-image-optimiser');?></label>
 
+
                     <input type="number" min="1" max="20000" name="resizeWidth" id="width" style="width:80px" class="resize-sizes"
-                           value="<?php echo( $view->data->resizeWidth > 0 ? $view->data->resizeWidth : min(924, $view->minSizes['width']) );?>" <?php echo( $resizeDisabled );?>/> <?php
+                           value="<?php echo( $view->data->resizeWidth > 0 ? $view->data->resizeWidth : min(1200, $view->minSizes['width']) );?>" <?php echo( $resizeDisabled );?>/> <?php
                            _e('pixels wide &times;','shortpixel-image-optimiser');?>
 
                     <input type="number" min="1" max="20000" name="resizeHeight" id="height" class="resize-sizes" style="width:80px"
-                           value="<?php echo( $view->data->resizeHeight > 0 ? $view->data->resizeHeight : min(924, $view->minSizes['height']) );?>" <?php echo( $resizeDisabled );?>/> <?php
+                           value="<?php echo( $view->data->resizeHeight > 0 ? $view->data->resizeHeight : min(1200, $view->minSizes['height']) );?>" <?php echo( $resizeDisabled );?>/> <?php
                            _e('pixels high (preserves the original aspect ratio and doesn\'t crop the image)','shortpixel-image-optimiser');?>
 
                     <input type="hidden" id="min-resizeWidth" value="<?php echo($view->minSizes['width']);?>" data-nicename="<?php _e('Width', 'shortpixel-image-optimiser'); ?>" />
@@ -281,8 +282,8 @@
 
                         </div>
                         <?php
-                        $resize_width  = (int) ( $view->data->resizeWidth > 0 ? $view->data->resizeWidth : min( 924, $view->minSizes[ 'width' ] ) );
-                        $resize_height = (int) ( $view->data->resizeHeight > 0 ? $view->data->resizeHeight : min( 924, $view->minSizes[ 'height' ] ) );
+                        $resize_width  = (int) ( $view->data->resizeWidth > 0 ? $view->data->resizeWidth : min( 1200, $view->minSizes[ 'width' ] ) );
+                        $resize_height = (int) ( $view->data->resizeHeight > 0 ? $view->data->resizeHeight : min( 1200, $view->minSizes[ 'height' ] ) );
                         $ratio         = $resize_height / $resize_width;
 
                         $frame_style = 'padding-top:' . round( ( $ratio < 1.5 ? ( $ratio < 0.5 ? 0.5 : $ratio ) : 1.5 ) * 100, 0 ) . '%;';

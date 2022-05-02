@@ -63,7 +63,6 @@ class Tests{
       while($this->q->hasItems())
       {
         $item = $this->q->deQueue();
-        echo "ITEM FROM THA Q "; var_dump($item);
       }
     }
 
