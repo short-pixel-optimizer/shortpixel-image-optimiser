@@ -397,7 +397,7 @@ class OptimizeController
                 // Loading the item should already be enough to trigger.
               break;
 							case 'png2jpg':
-								$item = $this->convertPNG($item, $Q);
+								$item = $this->convertPNG($item, $q);
 								$item->result->is_done = false;  // if not, finished to newly enqueued
 								// @todo Tell ResponseControllers about those actions
 							break;
