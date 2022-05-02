@@ -343,11 +343,8 @@ class OptimizeController
 			*/
       foreach($items as $mainIndex => $item)
       {
-
                //continue; // conversion done one way or another, item will be need requeuing, because new urls / flag.
-
 						$item = $this->sendToProcessing($item, $Q);
-
 
             $item = $this->handleAPIResult($item, $Q);
             $result->items[$mainIndex] = $item; // replace processed item, should have result now.
@@ -465,6 +462,8 @@ class OptimizeController
         $item->fileStatus = ImageModel::FILE_STATUS_ERROR;
         $item->result->is_done = true;
         $item->result->is_error = true;
+
+				ResponseController::addData($item->item_id, 'message', $message);
       }
       else
 			{
@@ -512,7 +511,7 @@ class OptimizeController
           if ($result->is_done || $item->tries >= SHORTPIXEL_MAX_FAIL_RETRIES )
           {
              // These are cloned, because queue changes object's properties
-             Log::addDebug('HandleApiResult - Item failed ' . $item->item_id);
+             //Log::addDebug('HandleApiResult - Item failed ' . $item->item_id);
              $q->itemFailed($item, true);
              $this->HandleItemError($item, $qtype);
 
@@ -557,8 +556,6 @@ class OptimizeController
 
                //  $item->result->message = sprintf(__('Image %s optimized', 'shortpixel-image-optimiser'), $imageItem->getFileName());
                  do_action( 'shortpixel_image_optimised', $imageItem->get('id'), $imageItem, $item );
-							//	 ResponseController::addData($item->item_id,'message', __('Optimized'));
-
                }
                else
                {
@@ -651,6 +648,7 @@ class OptimizeController
              // $item->result->message .= sprintf(__('(cycle %d)', 'shortpixel-image-optimiser'), intval($item->tries) );
 
 						  Log::addTemp("Unchanged: retry_limit $retry_limit tries " . $item->tries);
+
 							if ($retry_limit == $item->tries || $retry_limit == ($item->tries -1))
 							{
 								  Log::addTemp('Retry Limit reached', $retry_limit);
@@ -659,6 +657,9 @@ class OptimizeController
 
 									ResponseController::addData($item->item_id, 'message', $message);
 							}
+							else {
+									ResponseController::addData($item->item_id, 'message', $item->result->message); // item is waiting base line here.
+							}
 						/* Item is not failing here:  Failed items come on the bottom of the queue, after all others so might cause multiple credit eating if the time is long. checkQueue is only done at the end of the queue.
 						* Secondly, failing it, would prevent it going to TIMEOUT on the PROCESS in WPQ - which would mess with correct timings on that.
 						*/
@@ -666,8 +667,14 @@ class OptimizeController
           }
       }
 
+			// Cleaning up the debugger.
+			$debugItem = clone $item;
+			unset($debugItem->_queueItem);
+			unset($debugItem->counts);
 
-      Log::addDebug('Optimizecontrol - Item has a result ', $item);
+			Log::addDebug('Optimizecontrol - Item has a result ', $debugItem);
+
+
 			ResponseController::addData($item->item_id, array(
 				'is_error' => $item->result->is_error,
 				'is_done' => $item->result->is_done,
@@ -688,18 +695,20 @@ class OptimizeController
 
     }
 
-    protected function HandleItemError($item, $type)
+    private function HandleItemError($item, $type)
     {
 			 // Perhaps in future this might be taken directly from ResponseController
         if ($this->isBulk)
-        {
+				{
+					$responseItem = ResponseController::getResponseItem($item->item_id);
           $fs = \wpSPIO()->filesystem();
           $backupDir = $fs->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
           $fileLog = $fs->getFile($backupDir->getPath() . 'current_bulk_' . $type . '.log');
 
           $time = UiHelper::formatTs(time());
-          $fileName = $item->result->filename;
-          $message = $item->result->message; // getLastErrorMessage();
+
+          $fileName = $responseItem->fileName;
+          $message = ResponseController::formatItem($item->item_id);
           $item_id = $item->item_id;
 
           $fileLog->append($time . '|' . $fileName . '| ' . $item_id . '|' . $message . ';' .PHP_EOL);

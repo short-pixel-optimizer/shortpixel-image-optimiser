@@ -25,13 +25,10 @@ class ResponseModel
 	public $images_waiting;
 	public $images_total;
 
-	public $issue_type;
+	public $issue_type; // Optional - if there is any issue to report. 
  	public $message; // This can be base text, but decision textually is within responsecontroller.
 
 //	public $queueName;
-
-
-
 
 
 	/**

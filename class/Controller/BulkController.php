@@ -89,17 +89,22 @@ class BulkController
 			 return $bool;
 	 }
 
-   /*** Start the bulk run */
-   public function startBulk($type = 'media')
+   /*** Start the bulk run. Must deliver all queues at once due to processQueue bundling */
+   public function startBulk($types = 'media')
    {
        $optimizeControl = new OptimizeController();
        $optimizeControl->setBulk(true);
 
-       $q = $optimizeControl->getQueue($type);
-       //if ($q->getStatus('items') > 0)
-       $q->startBulk();
+			 if (! is_array($types))
+			 	 $types = array($types);
 
-       return $optimizeControl->processQueue(array($type));
+			 foreach($types as $type)
+			 {
+	       $q = $optimizeControl->getQueue($type);
+	       $q->startBulk();
+			 }
+
+       return $optimizeControl->processQueue(array($types));
    }
 
    public function finishBulk($type = 'media')

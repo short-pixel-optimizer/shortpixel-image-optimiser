@@ -383,7 +383,7 @@ window.ShortPixelProcessor =
                 var imageItem = response.results[i];
 								if (imageItem == null || ! imageItem.result)
 								{
-									 console.error('Expecting ImageItem Object', imageItem);
+									 console.error('Expecting ImageItem Object with result ', imageItem);
 									 continue;
 								}
                 if (imageItem.result.is_error)

@@ -399,13 +399,14 @@ class AjaxController
     {
         $bulkControl = BulkController::getInstance();
 
-        $result = $bulkControl->startBulk('media');
-        $json->media = $result;
+				$types = array('media', 'custom');
+        $result = $bulkControl->startBulk($types);
+//        $json->media = $result;
 
-        $result = $bulkControl->startBulk('custom');
-        $json->custom = $result;
+    //    $result = $bulkControl->startBulk('custom');
+  //      $json->custom = $result;
 
-        $this->send($json);
+        $this->send($result);
     }
 
     protected function startRestoreAll($json, $data)

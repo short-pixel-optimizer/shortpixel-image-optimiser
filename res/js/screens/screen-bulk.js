@@ -289,20 +289,24 @@ console.log("Screen Init Done", initMedia, initCustom);
       if ( this.processor.fStatus[resultItem.fileStatus] == 'FILE_DONE')
       {
           this.UpdateData('result', result);
+
+					var originalImage = document.querySelector('.image-source img');
+					var optimizedImage =  document.querySelector('.image-result img');
+
+					// reset database to avoid mismatches.
+					originalImage.src = originalImage.dataset.placeholder;
+					optimizedImage.src =  optimizedImage.dataset.placeholder;
+
           if (result.original)
           {
-              var el = document.querySelector('.image-source img');
-              if (el)
-                el.src  = result.original;
+                originalImage.src  = result.original;
           }
           if (result.optimized)
           {
-              var el = document.querySelector('.image-result img');
-              if (el)
-                el.src  = result.optimized;
+                optimizedImage.src  = result.optimized;
           }
 
-          if (result.orginal || result.optimized && document.querySelector('.image-preview').classList.contains('hidden'))
+          if ( (result.orginal || result.optimized) && document.querySelector('.image-preview').classList.contains('hidden'))
           {
             document.querySelector('.image-preview').classList.remove('hidden');
           }
@@ -483,13 +487,12 @@ console.log("Screen Init Done", initMedia, initCustom);
 			 {
 			 		var item = result.result;
 			 		var filename = (typeof item.filename !== 'undefined') ? item.filename : false;
-			 		var message = '(' + result.item_id + ') ' + item.message;
+			 		var message = item.message;
 			 		var fatal = (item.is_done == true) ? true : false;
 			 		if (filename)
 			 		{
 				  		message += ' (' + filename + ') ';
 			 		}
-
 			 }
 
 			 var error = this.processor.aStatusError[result.error];
@@ -502,9 +505,8 @@ console.log("Screen Init Done", initMedia, initCustom);
 		}
 		else // unknown.
 		{
-
     	var message = result.message + '(' + result.item_id + ')';
-			console.log(message);
+			console.error('Error without item - ' + message);
 
 		}
 

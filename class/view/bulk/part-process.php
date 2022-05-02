@@ -49,9 +49,9 @@ namespace ShortPixel;
 				<span>&nbsp;</span>
       </div>
       <div>
-        <span>Images processed: <i data-stats-media="done">-</i></span>
+        <span>Finished: <i data-stats-media="done">-</i></span>
 
-        <span>Images Left: <i data-stats-media="in_queue">-</i></span>
+        <span>Waiting: <i data-stats-media="in_queue">-</i></span>
         <span>Errors: <i data-check-media-fatalerrors data-stats-media="fatal_errors" class='error'>- </i>
             </span>
 				<span data-check-visibility data-control="data-check-media-fatalerrors" ><label title="<?php _e('Show Errors', 'shortpixel-image-optimiser'); ?>">
@@ -121,13 +121,14 @@ namespace ShortPixel;
       </div>
       <div class="preview-wrapper">
         <div class="image-source">
-          <img src="">
+          <img src="<?php echo \wpSPIO()->plugin_url('res/img/bulk/placeholder.svg'); ?>" data-placeholder="<?php echo \wpSPIO()->plugin_url('res/img/bulk/placeholder.svg'); ?>">
+
           <p>Original Image</p>
         </div>
 
         <div class="image-result">
-          <img src="">
-          <p>Optimized Image</p>
+          <img src="<?php echo \wpSPIO()->plugin_url('res/img/bulk/placeholder.svg'); ?>" data-placeholder="<?php echo \wpSPIO()->plugin_url('res/img/bulk/placeholder.svg'); ?>">
+				<p>Optimized Image</p>
         </div>
       </div>
     </div>

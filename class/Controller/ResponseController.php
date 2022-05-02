@@ -3,6 +3,7 @@ namespace ShortPixel\Controller;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Model\ResponseModel as ResponseModel;
+use ShortPixel\Model\Image\ImageModel as ImageModel;
 
 class ResponseController
 {
@@ -119,7 +120,7 @@ class ResponseController
 					 	$text = self::formatRegularItem($item, $text);
 				 }
 
-				 Log::addTemp('FormatItem ResponseCC', $item);
+				 Log::addTemp('FormatItem Response : ' . $text);
 
 				 return $text;
 		}
@@ -132,6 +133,13 @@ class ResponseController
 				 		if (self::$screenOutput < self::OUTPUT_CLI) // all but cli .
 				 			$text .= sprintf(__(' - file %s', 'shortpixel-image-optimiser'), $item->fileName);
 				 break;
+			}
+
+			switch($item->fileStatus)
+			{
+				  case ImageModel::FILE_STATUS_ERROR:
+							$text .= sprintf(__('( %s %d ) ', 'shortpixel-image-optimizer'), (strtolower($item->item_type) == 'media') ?  __('Attachment ID ') : __('Custom Type '), $item->item_id);
+					break;
 			}
 
 			if (self::$screenOutput == self::OUTPUT_CLI)
