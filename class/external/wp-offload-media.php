@@ -60,7 +60,7 @@ class wpOffload
       }
 
   //    $provider = $this->as3cf->get_provider();
-      add_action('shortpixel_image_optimised', array($this, 'image_upload'));
+      add_action('shortpixel_image_optimised', array($this, 'image_upload'), 10, 2);
       add_action('shortpixel_after_restore_image', array($this, 'image_restore'), 10, 3); // hit this when restoring.
 
       add_action('shortpixel_restore_after_pathget', array($this, 'remove_remote')); // not optimal -> has to do w/ doRestore and when URL/PATH is available when not on server .
@@ -359,10 +359,16 @@ class wpOffload
     }
 
 
-    public function image_upload($id)
+    public function image_upload($id, $imageItem)
     {
         if (! $this->offloading)
           return false;
+
+				// Only medialibrary offloading supported. 
+				if ('media' !== $imageItem->get('type') )
+				{
+					 return false;
+				}
 
         $item = $this->getItemById($id);
 
@@ -391,6 +397,7 @@ class wpOffload
     public function preventInitialUpload($bool, $data, $post_id, $old_provider_object)
     {
         $fs = \wpSPIO()->filesystem();
+				$settings = \WPSPIO()->settings();
 
         if (! $this->offloading)
           return false;
