@@ -378,7 +378,7 @@ class AdminNoticesController extends \ShortPixel\Controller
           //consider the monthly plus 1/6 of the available one-time credits.
           elseif( $this->monthlyUpgradeNeeded($quotaData)) {
               //looks like the user hasn't got enough credits to process the monthly images, display a notice telling this
-              $message = $this->getMonthlyUpgradeMessage(array('monthAvg' => $this->getMonthAvg(), 'monthlyQuota' => $quota->monthly->total ));
+              $message = $this->getMonthlyUpgradeMessage(array('monthAvg' => $this->getMonthAvg(), 'monthlyQuota' => $quotaData->monthly->total ));
 
               $notice = Notices::addNormal($message);
               Notices::makePersistent($notice, self::MSG_UPGRADE_MONTH, YEAR_IN_SECONDS);
