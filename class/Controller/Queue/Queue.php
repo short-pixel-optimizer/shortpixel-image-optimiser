@@ -163,6 +163,7 @@ abstract class Queue
     protected function prepareItems($items)
     {
         $return = array('items' => 0, 'images' => 0, 'results' => 0);
+				$settings = \wpSPIO()->settings();
 
           if (count($items) == 0)
           {
@@ -207,6 +208,12 @@ abstract class Queue
             if ( $mediaItem ) {
                 if ($mediaItem->isProcessable() && $mediaItem->isOptimizePrevented() == false && ! $operation) // Checking will be done when processing queue.
                 {
+
+										// If PDF and not enabled, not processing.
+										if ($mediaItem->getExtension() == 'pdf' && ! $settings->optimizePdfs)
+										{
+											continue;
+										}
                     $qObject = $this->imageModelToQueue($mediaItem);
 
                     $counts = $qObject->counts;

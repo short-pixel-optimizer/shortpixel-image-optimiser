@@ -4,6 +4,9 @@ use ShortPixel\ShortQ\Item as Item;
 use ShortPixel\ShortQ\Status as Status;
 use \ShortPixel\ShortQ\ShortQ as ShortQ;
 
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+
+
 class WPQ implements Queue
 {
   private $statusName = 'shortqwp_';
@@ -286,6 +289,7 @@ class WPQ implements Queue
        $item->tries++;
 			 if ($item->tries > $this->getOption('retry_limit'))
 			 {
+				 Log::addTemp('WPQ.PHP THIS ITEM TIMEDOUT! ', $item);
 				 $this->itemFailed($item, true); // fatal fail
 			 }
 			 else

@@ -136,6 +136,7 @@ Class FileSystemController extends \ShortPixel\Controller
 
       $fileDir = $file->getFileDir();
 
+
       $backup_subdir = $fileDir->getRelativePath();
 
       if ($backup_subdir === false)

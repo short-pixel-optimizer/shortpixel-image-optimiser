@@ -36,6 +36,7 @@ class AdminController extends \ShortPixel\Controller
     */
     public function handleImageUploadHook($meta, $id)
     {
+
         // Media only hook
 				if ( in_array($id, self::$preventUploadHook))
 				{
@@ -43,6 +44,17 @@ class AdminController extends \ShortPixel\Controller
 				}
 
         $mediaItem = \wpSPIO()->filesystem()->getImage($id, 'media');
+
+				if ($mediaItem->getExtension()  == 'pdf')
+				{
+					$settings = \wpSPIO()->settings();
+					if (! $settings->optimizePdfs)
+					{
+						 Log::addDebug('Image Upload Hook detected PDF, which is turned off - not optimizing');
+						 return $meta; 
+					}
+				}
+
 				if ($mediaItem->isProcessable())
 				{
         	$control = new OptimizeController();
@@ -89,12 +101,19 @@ class AdminController extends \ShortPixel\Controller
 
     }
 
+		/** This function is bound to enable-media-replace hook and fire when a file was replaced
+		*
+		*
+		*/
 		public function handleReplaceEnqueue($target, $source, $post_id)
 		{
-				$fs = \wpSPIO()->filesystem();
+		/*		$fs = \wpSPIO()->filesystem();
         $imageObj = $fs->getImage($post_id, 'media');
 				$optimizeController = new OptimizeController();
-				$optimizeController->addItemToQueue($imageObj);
+				$optimizeController->addItemToQueue($imageObj); */
+
+				// Delegate this to the hook, so all checks are done there.
+				$this->handleImageUploadHook(array(), $post_id);
 
 		}
 

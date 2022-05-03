@@ -73,7 +73,6 @@ class wpOffload
 			{
 			//	add_filter('as3cf_remove_source_files_from_provider', array($this, 'remove_webp_paths'), 10);
 				add_action('shortpixel/image/convertpng2jpg_success', array($this, 'image_converted'), 10);
-
 			}
 			else {
       	add_filter('as3cf_remove_attachment_paths', array($this, 'remove_webp_paths'));
@@ -93,6 +92,7 @@ class wpOffload
       add_filter('shortpixel/front/webp_notfound', array($this, 'fixWebpRemotePath'), 10, 4);
 
     }
+
 
 
     public function returnOriginalFile($file, $attach_id)
@@ -132,7 +132,7 @@ class wpOffload
 
       $this->remove_remote($id);
 
-      $this->image_upload($id);
+      $this->image_upload($id, $mediaItem);
     }
 
     public function remove_remote($id)
@@ -192,10 +192,6 @@ class wpOffload
       $class = $this->getMediaClass();
       $source = $class::get_item_source_by_remote_url($url);
 
-			/// Function can return false
-			if ($source === false)
-				return false;
-
 			$source_id = isset($source['id']) ? intval($source['id']) : false;
 
       if ($source_id !== false)
@@ -228,11 +224,15 @@ class wpOffload
 
     }
 
+		// @param s3 based URL that which is needed for finding local path
+		// @return String Filepath.  Translated file path
     public function getLocalPathByURL($url)
     {
        $source_id = $this->getSourceIDByURL($url);
+
        if ($source_id == false)
        {
+
         return false;
       }
        $item = $this->getItemById($source_id);
@@ -247,7 +247,7 @@ class wpOffload
        $fs = \wpSPIO()->filesystem();
        $base = $fs->getWPUploadBase();
 
-       $file  = $fs->getFile($base . $original_path);
+       $file  = $base . $original_path;
        return $file;
     }
 
@@ -267,10 +267,10 @@ class wpOffload
 				$id = $mediaItem->get('id');
 				$this->remove_remote($id);
 
-				$item = $this->getItemById($id);
+				$item = $this->getItemById($id, $mediaItem);
 				$item->delete();
 
-				$this->image_upload($id);
+				$this->image_upload($id, $mediaItem);
 				return;
         // delete the old file
        // $item = $this->getItemById($id);
@@ -300,7 +300,7 @@ class wpOffload
         }
 
         // upload
-        $this->image_upload($id); // delete and reupload
+        $this->image_upload($id, $mediaItem); // delete and reupload
     }
 
 
@@ -316,12 +316,12 @@ class wpOffload
         // get some new ones.
 
         // delete the old file
-        $mediaItem = $this->getItemById($id);
-        if ($mediaItem === false) // mediaItem seems not present. Probably not a remote file
+        $item = $this->getItemById($id);
+        if ($item === false) // mediaItem seems not present. Probably not a remote file
           return;
 
-        $this->as3cf->remove_attachment_files_from_provider($id, $mediaItem);
-        $providerSourcePath = $mediaItem->source_path();
+        $this->as3cf->remove_attachment_files_from_provider($id, $item);
+        $providerSourcePath = $item->source_path();
 
         //$providerFile = $fs->getFile($provider_object['key']);
         $providerFile = $fs->getFile($providerSourcePath);
@@ -332,7 +332,7 @@ class wpOffload
         if ($providerFile->getExtension() !== $newFile->getExtension())
         {
           //  $newfilemeta = str_replace($providerFile->getFileName(), $newFile->getFileName(), $newfilemeta);
-          $data = $mediaItem->key_values(true);
+          $data = $item->key_values(true);
           $record_id = $data['id'];
 /*          $data['path']
           $data['original_path']
@@ -354,8 +354,10 @@ class wpOffload
             Log::addDebug('S3Offload - Uploading converted file ');
         }
 
+				$mediaItem = $fs->getImage($post_id, 'media');
+
         // upload
-        $this->image_upload($id); // delete and reupload
+        $this->image_upload($id, $mediaItem); // delete and reupload
     }
 
 
@@ -380,9 +382,40 @@ class wpOffload
 
         if ($this->useHandlers)
         {
+
+					// Add Web/Avifs back under new method.
+
+					$fullPaths = $item->full_source_paths();
+					$extra_info = $item->extra_info();
+
+					$file_paths = $this->add_webp_paths($fullPaths);
+
+					if (! isset($extra_info['objects']))
+					 	$extra_info['objects']= array();
+
+
+					foreach ( $file_paths as $size => $size_file_path ) {
+						if ( $size === 'file' ) {
+							continue;
+						}
+
+						$new_object = array(
+							'source_file' => wp_basename( $size_file_path ),
+							'is_private'  => false,
+						);
+
+						$extra_info['objects'][ $size ] = $new_object;
+					}
+
+					if (count($file_paths) > 0)
+					{
+						 $item->set_extra_info($extra_info);
+					}
+
 					// This should load the A3cf UploadHandler
 					$upload = \DeliciousBrains\WP_Offload_Media\Items\Upload_Handler::get_item_handler_key_name();
           $itemHandler = $this->as3cf->get_item_handler($upload);
+
           $result = $itemHandler->handle($item); //handle it then.
         }
         else {
@@ -413,7 +446,7 @@ class wpOffload
           {
 
 						$image_file = $mediaItem->getFileName();
-						if (strpos($image_file, '.pdf') !== false && ! $settings->optimizePdfs  )
+						if ($mediaItem->getExtension() == 'pdf' && ! $settings->optimizePdfs  )
 						{
 							 Log::addDebug('S3 Prevent Initial Upload detected PDF, which will not be optimized', $post_id);
 							 return false;
