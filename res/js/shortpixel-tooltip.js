@@ -107,7 +107,6 @@ var ShortPixelToolTip = function(reserved, processor)
        {
           processor.ResumeProcess();
           localStorage.setItem('tooltipPause','false');
-          console.log('ToogleProc' + localStorage.getItem('tooltipPause'));
           this.ProcessResume();
        }
 

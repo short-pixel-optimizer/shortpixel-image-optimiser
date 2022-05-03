@@ -165,7 +165,7 @@ class ResponseController
 				switch($item->apiStatus)
 				{
 					 case ApiController::STATUS_SUCCESS:
-					 	$text = __('Item successfuly optimized', 'shortpixel-image-optimiser');
+					 	$text = __('Item successfully optimized', 'shortpixel-image-optimiser');
 					 break;
 
 					 case ApiController::STATUS_FAIL:

@@ -253,8 +253,11 @@ window.ShortPixelProcessor =
     {
       this.isManualPaused = false;
       this.waitingForAction = false;
+			localStorage.setItem('tooltipPause','false'); // also remove the cookie so it doesn't keep hanging on page refresh.
+
       var event = new CustomEvent('shortpixel.processor.paused', { detail : {paused: this.isManualPaused}});
       window.dispatchEvent(event);
+
 
       this.RunProcess();
     },
