@@ -330,7 +330,6 @@ class ApiController
 
 				ResponseController::addData($item->item_id, $imageData);
 
-
 				// This part makes sure that all the sizes were processed and ready to be downloaded. If ones is missing, we wait more.
         foreach ( $APIresponse as $imageObject ) {
 
@@ -346,6 +345,7 @@ class ApiController
         switch($firstImage->Status->Code)
         {
         case self::STATUS_SUCCESS:
+
             //handle image has been processed
             return $this->handleSuccess($item, $APIresponse);
         default:

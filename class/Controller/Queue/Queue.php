@@ -463,6 +463,7 @@ abstract class Queue
 
         $urls = $imageModel->getOptimizeUrls();
 
+
         $counts = new \stdClass;
         $counts->creditCount = 0;  // count the used credits for this item.
 				$counts->baseCount = 0; // count the base images.

@@ -186,6 +186,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
       else
       {
         $bool = parent::isProcessable();
+
 				return $bool;
       }
   }
@@ -222,7 +223,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
   public function hasBackup()
   {
-		
+
       if (! $this->getMeta('did_png2jpg'))
       {
           return parent::hasBackup();

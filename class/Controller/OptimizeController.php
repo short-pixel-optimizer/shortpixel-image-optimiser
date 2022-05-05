@@ -647,11 +647,9 @@ class OptimizeController
 						//	$item->result->message = substr_replace( $item->result->message,  $imageItem->getFileName() . ' ', strpos($item->result->message, '#' . $item->item_id), 0);
              // $item->result->message .= sprintf(__('(cycle %d)', 'shortpixel-image-optimiser'), intval($item->tries) );
 
-						  Log::addTemp("Unchanged: retry_limit $retry_limit tries " . $item->tries);
-
 							if ($retry_limit == $item->tries || $retry_limit == ($item->tries -1))
 							{
-								  Log::addTemp('Retry Limit reached', $retry_limit);
+
 									$item->result->apiStatus = ApiController::ERR_TIMEOUT;
 									$message = __('Retry Limit reached. Image might be too large, limit too low or network issues.  ', 'shortpixel-image-optimiser');
 

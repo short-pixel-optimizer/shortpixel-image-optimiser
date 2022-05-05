@@ -54,7 +54,7 @@ class ResponseController
 		}
 
 
-		protected static function getResponseItem($item_id)
+		public static function getResponseItem($item_id)
 		{
 				$itemType = self::$queueType;
 				if (is_null($itemType)) // fail-safe
@@ -120,8 +120,6 @@ class ResponseController
 					 	$text = self::formatRegularItem($item, $text);
 				 }
 
-				 Log::addTemp('FormatItem Response : ' . $text);
-
 				 return $text;
 		}
 
@@ -144,7 +142,7 @@ class ResponseController
 
 			if (self::$screenOutput == self::OUTPUT_CLI)
 			{
-				 $text = '(' . $this->queueName . ' : ' . $item->fileName . ') ' . $text . ' ';
+				 $text = '(' . self::$queueName . ' : ' . $item->fileName . ') ' . $text . ' ';
 			}
 
 			return $text;

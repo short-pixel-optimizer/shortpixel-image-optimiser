@@ -84,6 +84,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
      $urls = array();
      if ($this->isProcessable(true))
       $urls = array($url);
+		else {
+		}
 
      if ($this->isScaled())
      {
@@ -112,7 +114,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   // Try to get the URL via WordPress
   public function getURL()
   {
-     return $this->fs()->checkURL(wp_get_attachment_url($this->id));
+     $url = $this->fs()->checkURL(wp_get_attachment_url($this->id));
+		 return $url;
   }
 
   /** Get FileTypes that might be optimized. Checking for setting should go via isProcessableFileType! */
@@ -378,7 +381,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   public function handleOptimized($tempFiles)
   {
       $return = true;
-      if (! $this->isOptimized() ) // main file might not be contained in results
+      if (! $this->isOptimized() && isset($tempFiles[$this->getFileName()]) ) // main file might not be contained in results
       {
           $result = parent::handleOptimized($tempFiles);
           if (! $result)
@@ -1126,7 +1129,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           }
       }
 
-      // Todo check if Webp / Acif is active, check for unoptimized items
+      // Todo check if Webp / Avisf is active, check for unoptimized items
       if ($this->isProcessableFileType('webp'))
 			{
         $bool = true;

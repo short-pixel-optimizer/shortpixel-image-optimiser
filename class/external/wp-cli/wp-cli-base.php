@@ -366,8 +366,13 @@ class SpioCommandBase
 				 } // success
 				 else
 				 {
-
-							\WP_CLI::line($result->message);
+					  if ($result->is_error)
+						{
+							\WP_CLI::error($result->message, false);
+						}
+						else {
+							\WP_CLI::line($result->message);							
+						}
 				 }
 
 		}

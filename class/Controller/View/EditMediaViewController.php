@@ -58,10 +58,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 					// Asking for something non-existing.
 					if ($this->imageModel === false)
 						return false;
-        //  $this->imageModel->setByPostID($post_id);
-        //  $this->imageModel->reAcquire(); // single display mode - reset things.
-
-					
+        
 
           $this->view->id = $this->post_id;
           $this->view->status_message = null;
