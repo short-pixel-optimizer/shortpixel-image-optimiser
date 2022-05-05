@@ -20,6 +20,9 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
     ?>" target="_blank">
         <?php _e('ShortPixel account','shortpixel-image-optimiser');?>
     </a>
+
+		<span class='quota-remaining'>
+			<?php printf(__('%s Credits remaining', 'shortpixel-image-optimiser'),  $this->formatNumber($this->quotaData->total->remaining, 0)); ?>
 </p>
 
 <hr class='wp-header-end'>
@@ -47,7 +50,7 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
         }
         if ($view->averageCompression !== null)
         {
-        //  $this->loadView('settings/part-statistics');
+    //     $this->loadView('settings/part-statistics');
         }
 				$this->loadView('settings/part-tools');
         if (Log::debugIsActive())

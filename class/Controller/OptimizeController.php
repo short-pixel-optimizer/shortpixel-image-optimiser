@@ -322,6 +322,8 @@ class OptimizeController
         }
 
         $results->total = $this->calculateStatsTotals($results);
+				$results = $this->numberFormatStats($results);
+
     //    $this->checkCleanQueue($results);
 
         return $results;
@@ -912,6 +914,38 @@ class OptimizeController
 
         return $object;
     }
+
+		private function numberFormatStats($results) // run the whole stats thing through the numberFormat.
+		{
+//			 $run = array('media', 'custom', 'total')
+			 foreach($results as $qn => $item)
+			 {
+				  if (is_object($item) && property_exists($item, 'stats'))
+					{
+					  foreach($item->stats as $key => $value)
+						{
+								 if (is_object($value))
+								 {
+									  foreach($value as $key2 => $val2) // embedded 'images' can happen here.
+										{
+										 $value->$key2 = UIHelper::formatNumber($val2, 0);
+										}
+								 }
+								 elseif (strpos($key, 'percentage') !== false)
+								 {
+								 	  $value = UIHelper::formatNumber($value, 2);
+								 }
+								 else
+								 {
+								 		$value = UIHelper::formatNumber($value, 0);
+								 }
+
+								$results->$qn->stats->$key = $value;
+						}
+					}
+			 }
+			 return $results;
+		}
 
     public static function resetQueues()
     {

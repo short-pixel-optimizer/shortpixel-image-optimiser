@@ -158,7 +158,6 @@ class AjaxController
 						$this->returnTestData();
 				}
 
-
         // Notice that POST variables are always string, so 'true', not true.
         $isBulk = (isset($_POST['isBulk']) && $_POST['isBulk'] === 'true') ? true : false;
         $queue = (isset($_POST['queues'])) ? sanitize_text_field($_POST['queues']) : 'media,custom';

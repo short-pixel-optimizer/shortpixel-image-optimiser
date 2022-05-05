@@ -1,4 +1,3 @@
-@charset "UTF-8";
 .shortpixel-bulk-wrapper {
   /** GENERAL STYLES **/
   /**** DASHBOARD ***/
@@ -235,7 +234,7 @@
   font-size: 26px;
 }
 .shortpixel-bulk-wrapper .processor-paused .dashicons:hover::before {
-  content: "";
+  content: "\f522";
 }
 .shortpixel-bulk-wrapper .processor-overquota {
   display: none;

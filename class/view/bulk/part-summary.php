@@ -65,33 +65,33 @@ namespace ShortPixel;
 
     <div class="credits">
       <p class='heading'><span><?php _e('Your ShortPixel Credits Available', 'shortpixel-image-optimiser'); ?></span>
-        <span><?php echo number_format($quotaData->total->remaining) ?></span>
+        <span><?php echo $this->formatNumber($quotaData->total->remaining, 0) ?></span>
       </p>
 
       <p><span>Your monthly plan</span>
          <span><?php echo $quotaData->monthly->text ?> <br>
-              <?php _e('Consumed', 'shortpixel-image-optimiser'); ?> <?php echo number_format($quotaData->monthly->consumed) ?>
-              <?php _e('; Remaining', 'shortpixel-image-optimiser'); ?> <?php echo number_format($quotaData->monthly->remaining) ?>
+              <?php _e('Consumed', 'shortpixel-image-optimiser'); ?> <?php echo $this->formatNumber($quotaData->monthly->consumed, 0) ?>
+              <?php _e('; Remaining', 'shortpixel-image-optimiser'); ?> <?php echo $this->formatNumber($quotaData->monthly->remaining, 0) ?>
           </span>
       </p>
 
       <p>
           <span>Your One Time Credits</span>
           <span><?php echo $quotaData->onetime->text ?> <br>
-             <?php _e('Consumed', 'shortpixel-image-optimiser'); ?> <?php echo number_format($quotaData->onetime->consumed) ?>
-             <?php _e('; Remaining', 'shortpixel-image-optimiser'); ?> <?php echo number_format($quotaData->onetime->remaining) ?>
+             <?php _e('Consumed', 'shortpixel-image-optimiser'); ?> <?php echo $this->formatNumber($quotaData->onetime->consumed, 0) ?>
+             <?php _e('; Remaining', 'shortpixel-image-optimiser'); ?> <?php echo $this->formatNumber($quotaData->onetime->remaining, 0) ?>
          </span>
       </p>
 
     </div>
 
     <div class="over-quota" data-check-visibility="false" data-control="data-quota-remaining" data-control-check="data-check-total-total">
-      <span><img src="<?php echo wpSPIO()->plugin_url('res/img/bulk/over-quota.svg') ?>" /></span>  <p>In your ShortPixel account you <span class='red'>have only <?php echo number_format($quotaData->total->remaining) ?> credits available </span>, but you have chosen <b data-stats-total="images-images">0</b> images to be optimized in this bulk process. You can either go back and select less images, or you can upgrade to a higher plan or buy one-time credits.
+      <span><img src="<?php echo wpSPIO()->plugin_url('res/img/bulk/over-quota.svg') ?>" /></span>  <p>In your ShortPixel account you <span class='red'>have only <?php echo $this->formatNumber($quotaData->total->remaining, 0) ?> credits available </span>, but you have chosen <b data-stats-total="images-images">0</b> images to be optimized in this bulk process. You can either go back and select less images, or you can upgrade to a higher plan or buy one-time credits.
 
        <button class="button" onClick="ShortPixel.proposeUpgrade();">Show me the best options</button>
      </p>
 
-       <span class='hidden' data-quota-remaining><?php echo $quotaData->total->remaining ?></span>
+       <span class='hidden' data-quota-remaining><?php echo $this->formatNumber($quotaData->total->remaining, 0) ?></span>
     </div>
 		<?php $this->loadView('snippets/part-upgrade-options'); ?>
 

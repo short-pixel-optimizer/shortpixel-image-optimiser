@@ -598,10 +598,9 @@ class SettingsController extends \ShortPixel\ViewController
         $quotaData = $this->quotaData;
 
         $remainingImages = $quotaData->total->remaining; // $quotaData['APICallsRemaining'];
-        $remainingImages = ( $remainingImages < 0 ) ? 0 : number_format($remainingImages);
+        $remainingImages = ( $remainingImages < 0 ) ? 0 : $this->formatNumber($remainingImages, 0);
 
         $this->view->remainingImages = $remainingImages;
-
 
       }
 

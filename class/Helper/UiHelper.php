@@ -56,7 +56,7 @@ class UiHelper
 
     if ($percent && $percent > 0)
     {
-      $output .= __('Reduced by','shortpixel-image-optimiser') . ' <strong>' . $percent . '%</strong> ';
+      $output .= __('Reduced by','shortpixel-image-optimiser') . ' <strong>' . self::formatNumber($percent,2) . '%</strong> ';
     }
     if (intval($percent) < 5)
       $output .= __('Bonus processing','shortpixel-image-optimiser');
@@ -96,9 +96,9 @@ class UiHelper
     {
        $output .= '<div class="thumbnails optimized">';
        if ($thumbsTotal > $thumbsDone)
-         $output .= '<div class="totals">' . sprintf(__('+%s of %s thumbnails optimized','shortpixel-image-optimiser'),$thumbsDone,$thumbsTotal) . '</div>';
+         $output .= '<div class="totals">' . sprintf(__('+%s of %s thumbnails optimized','shortpixel-image-optimiser'), self::formatNumber($thumbsDone,0), self::formatNumber($thumbsTotal,0)) . '</div>';
        elseif ($thumbsDone > 0)
-         $output .= '<div class="totals">' . sprintf(__('+%s thumbnails optimized','shortpixel-image-optimiser'),$thumbsDone) . '</div>';
+         $output .= '<div class="totals">' . sprintf(__('+%s thumbnails optimized','shortpixel-image-optimiser'), self::formatNumber($thumbsDone, 0)) . '</div>';
 
 
 			 $improvs = array();
@@ -108,7 +108,7 @@ class UiHelper
 				  $stat = $thumbStat[0];
 				 	if (is_numeric($stat) && $stat >= 0)
 					{
-						 $improvs[$thumbName] = $stat;
+						 $improvs[$thumbName] = self::formatNumber($stat,2);
 					}
 
 			 }
@@ -518,7 +518,7 @@ class UiHelper
 
 	public static function formatNumber($number, $precision = 2)
 	{
-		  return number_format_i18n($number, $precision);
+		  return number_format_i18n( (int) $number, $precision);
 	}
 
 

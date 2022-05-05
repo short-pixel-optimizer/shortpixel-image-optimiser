@@ -7,6 +7,9 @@
 .settings_page_wp-shortpixel-settings .top-menu a {
   font-size: 18px;
 }
+.settings_page_wp-shortpixel-settings .top-menu .quota-remaining {
+  float: right;
+}
 .settings_page_wp-shortpixel-settings .wp-shortpixel-tab-content {
   transition: all 1000ms linear;
 }

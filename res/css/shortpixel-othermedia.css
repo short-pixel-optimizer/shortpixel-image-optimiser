@@ -1,4 +1,3 @@
-@charset "UTF-8";
 @media (max-width: 1250px) {
   #shortpixel-hs-blind, #shortpixel-hs-tools, #botbutton, #beacon-container {
     display: none !important;
@@ -55,14 +54,14 @@
   visibility: visible;
 }
 .shortpixel-other-media .list-overview .heading a .sorted.desc::before {
-  content: "";
+  content: "\f140";
 }
 .shortpixel-other-media .list-overview .heading a:hover .sorting-indicator::before {
-  content: "";
+  content: "\f142";
   visibility: visible;
 }
 .shortpixel-other-media .list-overview .heading a:hover .sorting-indicator.asc::before {
-  content: "";
+  content: "\f140";
 }
 .shortpixel-other-media .list-overview .heading span.heading span {
   float: left;

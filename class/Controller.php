@@ -1,6 +1,8 @@
 <?php
 namespace ShortPixel;
 
+use ShortPixel\Helper\UiHelper as UiHelper;
+
 /**  Proto parent class for all controllers.
 *
 * So far none of the controller need or implement similar enough functions for a parent to make sense. * Perhaps this will change of time, so most are extending this parent.
@@ -23,5 +25,11 @@ class Controller
 
 	    return false;
 	  }
+
+		// helper for a helper.
+		protected function formatNumber($number, $precision = 2)
+		{
+			 return UIHelper::formatNumber($number, $precision);
+		}
 
 } // class

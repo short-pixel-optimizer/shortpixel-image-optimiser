@@ -1504,13 +1504,6 @@ function dismissFileError() {
 
 
 
-function showStats() {
-    var statsDiv = jQuery(".bulk-stats");
-    if(statsDiv.length > 0) {
-
-    }
-}
-
 // first is string to replace, rest are arguments.
 function SPstringFormat() {
   var params = Array.prototype.slice.call(arguments);

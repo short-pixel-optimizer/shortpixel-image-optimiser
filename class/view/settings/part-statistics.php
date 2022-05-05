@@ -44,24 +44,7 @@ $quotaData = $this->quotaData;
                                     <div class="label"><?php _e('Saved space:','shortpixel-image-optimiser');?></div><div class="stat-value"><?php echo($view->data->savedSpace);?></div>
                                 </div>
                         </div>
-                        <script>
-                            jQuery(function() {
-                                jQuery("#sp-total-optimization-dial").val("<?php echo("" . round($view->averageCompression))?>");
-                                ShortPixel.percentDial("#sp-total-optimization-dial", 160);
 
-                                jQuery(".sp-bulk-summary").spTooltip({
-                                    tooltipSource: "inline",
-                                    tooltipSourceID: "#sp-bulk-stats"
-                                });
-                            });
-                            !function(d,s,id){//Just optimized my site with ShortPixel image optimization plugin
-                                var js,
-                                    fjs=d.getElementsByTagName(s)[0],
-                                    p=/^http:/.test(d.location)?'http':'https';
-                                if(!d.getElementById(id)){js=d.createElement(s);
-                                    js.id=id;js.src=p+'://platform.twitter.com/widgets.js';
-                                    fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');
-                        </script>
                     </td>
                 </tr>
                 <tr>
@@ -140,7 +123,7 @@ $quotaData = $this->quotaData;
                     </th>
                     <td><strong><?php echo($view->data->fileCount);?></strong></td>
                 </tr>
-                
+
             </tbody>
         </table>
         <div style="display:none">
