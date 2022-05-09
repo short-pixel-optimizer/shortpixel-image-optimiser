@@ -59,12 +59,12 @@ var ShortPixelToolTip = function(reserved, processor)
 
         var toolTip = this.GetToolTip();
         var statTip = toolTip.querySelector('.stats');
-				console.log('refresh', stats, neededType);
+			
 
         if (statTip == null)
           return;
 
-				var number = stats.in_queue + stats.in_process;
+				var number = parseInt(stats.in_queue) + parseInt(stats.in_process);
         statTip.textContent = this.FormatNumber(number);
 
         if (statTip.classList.contains('hidden') && number > 0)

@@ -327,15 +327,15 @@ abstract class Queue
     public function getStats()
     {
       $stats = new \stdClass; // For frontend reporting back.
-      $stats->is_preparing = $this->getStatus('preparing');
-      $stats->is_running = $this->getStatus('running');
-      $stats->is_finished = $this->getStatus('finished');
-      $stats->in_queue = $this->getStatus('items');
-      $stats->in_process = $this->getStatus('in_process');
-      $stats->errors = $this->getStatus('errors');
-      $stats->fatal_errors = $this->getStatus('fatal_errors');
-      $stats->done = $this->getStatus('done');
-      $stats->bulk_running = $this->getStatus('bulk_running');
+      $stats->is_preparing = (bool) $this->getStatus('preparing');
+      $stats->is_running = (bool) $this->getStatus('running');
+      $stats->is_finished = (bool) $this->getStatus('finished');
+      $stats->in_queue = (int) $this->getStatus('items');
+      $stats->in_process = (int) $this->getStatus('in_process');
+      $stats->errors = (int) $this->getStatus('errors');
+      $stats->fatal_errors = (int) $this->getStatus('fatal_errors');
+      $stats->done = (int) $this->getStatus('done');
+      $stats->bulk_running = (bool) $this->getStatus('bulk_running');
 
       $stats->total = $stats->in_queue + $stats->fatal_errors + $stats->errors + $stats->done + $stats->in_process;
       if ($stats->total > 0)

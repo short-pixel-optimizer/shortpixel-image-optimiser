@@ -328,6 +328,8 @@ class ApiController
 						'images_total' => $analyze['total']
 				);
 
+				Log::addTemp('FULL API RESP', $APIresponse);
+
 				ResponseController::addData($item->item_id, $imageData);
 
 				// This part makes sure that all the sizes were processed and ready to be downloaded. If ones is missing, we wait more.
@@ -538,15 +540,15 @@ class ApiController
    * @param int $originalSize
    * @return array status /message array
    */
-  private function handleDownload($optimizedUrl, $optimizedSize = false, $originalSize = false){
-
+  private function handleDownload($optimizedUrl, $optimizedSize = false, $originalSize = false)
+	{
       $downloadTimeout = max(ini_get('max_execution_time') - 10, 15);
       $fs = \wpSPIO()->filesystem();
 
-
-      //if there is no improvement in size then we do not download this file
-      if (($optimizedSize !== false && $originalSize !== false) && $originalSize == $optimizedSize )
+      //if there is no improvement in size then we do not download this file, except (sigh) when the fileType is heic since it converts. 
+      if (($optimizedSize !== false && $originalSize !== false) && $originalSize == $optimizedSize && strpos($optimizedUrl, 'heic') === false )
       {
+
 				  Log::addDebug('Optimize and Original size seems the same');
           return $this->returnRetry(self::STATUS_UNCHANGED, __("File wasn't optimized so we do not download it.", 'shortpixel-image-optimiser'));
       }

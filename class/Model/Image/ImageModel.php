@@ -476,6 +476,19 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
               else
               {
                 $tempFile = $resultObj->file;
+
+
+								// assume that if this happens, the conversion to jpg was done.
+								if ($this->getExtension() == 'heic')
+								{
+										$heicPath = $this->getFullPath();
+
+										$this->fullpath = (string) $this->getFileDir() .  $this->getFileBase() . '.jpg';
+										$this->resetStatus();
+										$this->setFileInfo();
+										$wasHeic = true;
+
+								}
                 if ($this->is_virtual())
                 {
                     $filepath = apply_filters('shortpixel/file/virtual/translate', $this->getFullPath(), $this);
@@ -525,8 +538,18 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                  }
 
 
-                 if ( $tempFile)
+                 if ($tempFile)
                   $tempFile->delete();
+
+								 if ($wasHeic)
+								 {
+									  $heicFile = $fs->getFile($heicPath);
+										if ($heicFile->exists())
+										{
+											$heicFile->delete(); // the original heic -file should not linger in uploads. 
+										}
+								 }
+
 
               }
               else

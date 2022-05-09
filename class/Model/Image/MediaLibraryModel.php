@@ -383,11 +383,22 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       $return = true;
       if (! $this->isOptimized() && isset($tempFiles[$this->getFileName()]) ) // main file might not be contained in results
       {
+					if ($this->getExtension() == 'heic')
+					{
+						 $isHeic = true;
+					}
+
           $result = parent::handleOptimized($tempFiles);
           if (! $result)
           {
              return false;
           }
+
+					if (isset($isHeic) && $isHeic == true)
+					{
+						  $metadata = $this->generateThumbnails();
+					}
+
       }
 
       $this->handleOptimizedFileType($tempFiles);
@@ -876,6 +887,14 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		 if(property_exists($data, 'databaseID')) // It can be null on init.
 		 {
 			 unset($data->databaseID);
+		 }
+
+		 if (property_exists($data, 'errorMessage'))
+		 {
+			  if (is_null($data->errorMessage) || strlen(trim($data->errorMessage)) == 0)
+				{
+					 unset($data->errorMessage);
+				}
 		 }
 
 		 $fields['extra_info'] = wp_json_encode($data); // everything else
@@ -1712,6 +1731,14 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   {
      return true;
   }
+
+
+	private function generateThumbnails()
+	{
+		 Log::addTemp('Generating thumbnails on basis of : ' . $this->get('id') . ' ' . $this->getFullPath());
+	 	 $metadata = wp_generate_attachment_metadata($this->get('id'), $this->getFullPath());
+		 return $metadata;
+	}
 
 	// Check and remove legacy data.
 	// If metadata is removed in a restore process, the legacy data will be reimported, which should not happen.

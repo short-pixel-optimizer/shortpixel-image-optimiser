@@ -156,29 +156,29 @@ class OptimizeController
     {
         $fs = \wpSPIO()->filesystem();
 
-        if (! is_object($mediaItem))  // something wrong
-        {
-					 if (! property_exists($json->result, 'message'))
-					 {
-					 		$json->result->message = __('Item is not restorable', 'shortpixel-image-optimiser');
-				 	 }
-           $json->result->is_done = true;
-           $json->fileStatus = ImageModel::FILE_STATUS_ERROR;
-           $json->result->is_error = true;
-
-            Log::addWarn('Item with id ' . $json->result->item_id . ' is not restorable,');
-
-            return $json;
-        }
-
-        $item_id = $mediaItem->get('id');
-
         $json = $this->getJsonResponse();
         $json->status = 0;
         $json->result = new \stdClass;
         $json->result->item_id = $item_id;
 
-//		$item_id = $mediaItem->get('id');
+        if (! is_object($mediaItem))  // something wrong
+        {
+
+					$json->result = new \stdClass;
+					$json->result->message = __("File Error. File could not be loaded with this ID ", 'shortpixel-image-optimiser');
+					$json->result->apiStatus = ApiController::STATUS_NOT_API;
+					$json->fileStatus = ImageModel::FILE_STATUS_ERROR;
+					$json->result->is_done = true;
+					$json->result->is_error = true;
+
+					ResponseController::addData($item->item_id, 'message', $item->result->message);
+
+          Log::addWarn('Item with id ' . $json->result->item_id . ' is not restorable,');
+
+           return $json;
+        }
+
+        $item_id = $mediaItem->get('id');
 
 				$optimized = $mediaItem->getMeta('tsOptimized');
 
@@ -465,7 +465,7 @@ class OptimizeController
         $item->result->is_done = true;
         $item->result->is_error = true;
 
-				ResponseController::addData($item->item_id, 'message', $message);
+				ResponseController::addData($item->item_id, 'message', $item->result->message);
       }
       else
 			{
