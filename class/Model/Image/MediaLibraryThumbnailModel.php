@@ -300,7 +300,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
     $this->directory = null; //reset directory
     $this->is_virtual = false; // stops being virtual
     $this->setFileInfo();
-
   }
 
   /** Tries to retrieve an *existing* BackupFile. Returns false if not present.

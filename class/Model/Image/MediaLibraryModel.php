@@ -381,6 +381,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   public function handleOptimized($tempFiles)
   {
       $return = true;
+			$wpmeta = wp_get_attachment_metadata($this->get('id'));
+			$metaUpdated = false;
+
       if (! $this->isOptimized() && isset($tempFiles[$this->getFileName()]) ) // main file might not be contained in results
       {
 					if ($this->getExtension() == 'heic')
@@ -397,6 +400,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					if (isset($isHeic) && $isHeic == true)
 					{
 						  $metadata = $this->generateThumbnails();
+					}
+
+					if ($this->getMeta('resize') == true)
+					{
+						 $wpmeta['width'] = $this->get('width');
+ 						 $wpmeta['height'] = $this->get('height');
+						 $metaUpdated = true;
 					}
 
       }
@@ -440,7 +450,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
          if ($result)
          {
-            $optimized[$filebase]  = $thumbnail->getMetaObj();
+            $optimized[$filebase] = $thumbnail->getMetaObj();
+
+						 if ($thumbnail->getMeta('resize') == true)
+						 {
+							 		$size = $thumbnail->get('size');
+									$wpmeta['sizes'][$size]['width'] = $thumbnail->get('width');
+									$wpmeta['sizes'][$size]['height']  = $thumbnail->get('height');
+									$metaUpdated = true;
+						 }
          }
          elseif ($thumbnail->get('prevent_next_try') !== false) // in case of fatal issues.
          {
@@ -472,6 +490,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
       $this->saveMeta();
 
+			if ($metaUpdated === true)
+			{
+				update_post_meta($this->get('id'), '_wp_attachment_metadata', $wpmeta);
+
+			}
+
 			$duplicates = $this->getWPMLDuplicates();
 			if (is_array($duplicates) && count($duplicates) > 0)
 			{
@@ -481,6 +505,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				{
 						// Save the exact same data under another post.
 						$this->createDuplicateRecord($duplicate_id);
+
+						if ($metaUpdated === true)
+						{
+							$duplicate_meta = wp_get_attachment_metadata($duplicate_id);
+							$duplicate_meta = array_merge($duplicate_meta, $wpmeta);
+
+							update_post_meta($duplicate_id, '_wp_attachment_metadata', $duplicate_meta);
+
+						}
 					  //$this->id = $duplicate_id;
 						//$this->dropFromQueue();
 
@@ -895,6 +928,14 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				{
 					 unset($data->errorMessage);
 				}
+		 }
+
+		 foreach ($data as $index => $value)
+		 {
+			   if (is_null($value)) // don't store things that are null
+				 	{
+						unset($data->$index);
+					}
 		 }
 
 		 $fields['extra_info'] = wp_json_encode($data); // everything else

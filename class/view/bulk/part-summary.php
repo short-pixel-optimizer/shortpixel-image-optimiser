@@ -91,7 +91,10 @@ namespace ShortPixel;
        <button class="button" onClick="ShortPixel.proposeUpgrade();">Show me the best options</button>
      </p>
 
-       <span class='hidden' data-quota-remaining><?php echo $this->formatNumber($quotaData->total->remaining, 0) ?></span>
+       <span class='hidden' data-quota-remaining><?php
+			 // This is hidden check, no number format.
+			 	echo $quotaData->total->remaining
+			 ?></span>
     </div>
 		<?php $this->loadView('snippets/part-upgrade-options'); ?>
 

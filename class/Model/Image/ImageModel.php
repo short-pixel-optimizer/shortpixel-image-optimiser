@@ -527,7 +527,13 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                    $resizeWidth = $settings->resizeWidth;
                    $resizeHeight = $settings->resizeHeight;
 
-                   if ($resizeWidth == $this->get('width') || $resizeHeight == $this->get('height') )  // resized.
+									 $originalWidth = $this->getMeta('originalWidth');
+									 $originalHeight = $this->getMeta('originalHeight');
+
+									 $width = $this->get('width'); // image width
+									 $height = $this->get('height');
+
+                   if ( ($resizeWidth == $width && $width != $originalWidth)  || ($resizeHeight == $height && $height != $originalHeight ) ) // resized.
                    {
                        $this->setMeta('resizeWidth', $this->get('width') );
                        $this->setMeta('resizeHeight', $this->get('height') );
@@ -541,12 +547,12 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                  if ($tempFile)
                   $tempFile->delete();
 
-								 if ($wasHeic)
+								 if (isset($wasHeic) && $wasHeic == true)
 								 {
 									  $heicFile = $fs->getFile($heicPath);
 										if ($heicFile->exists())
 										{
-											$heicFile->delete(); // the original heic -file should not linger in uploads. 
+											$heicFile->delete(); // the original heic -file should not linger in uploads.
 										}
 								 }
 

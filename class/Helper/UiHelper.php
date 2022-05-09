@@ -487,6 +487,38 @@ class UiHelper
    return $action;
   }
 
+	// @param MediaLibraryModel Object $imageItem
+	// @param String $size  Preferred size
+	public static function findBestPreview($imageItem, $size = 800)
+	{
+		 	$closestObj = $imageItem;
+
+			// set the standard.
+			$bestdiff = abs($imageItem->get('width') - $size);
+
+			$thumbnails = $imageItem->get('thumbnails');
+
+			if (! is_array($thumbnails))
+			{
+				 return $closestObj; // nothing more to do.
+			}
+
+			foreach($thumbnails as $thumbnail)
+			{
+				 if (! $thumbnail->isOptimized() || ! $thumbnail->hasBackup())
+				 	continue;
+
+					$diff = abs($thumbnail->get('width') - $size);
+					if ($diff < $bestdiff)
+					{
+						 $closestObj = $thumbnail;
+						 $bestdiff = $diff;
+					}
+			}
+
+			return $closestObj;
+	}
+
   public static function formatTS($ts)
   {
       //$format = get_option('date_format') .' @ ' . date_i18n(get_option('time_format');

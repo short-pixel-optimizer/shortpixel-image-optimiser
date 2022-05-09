@@ -100,7 +100,7 @@ var ShortPixelScreen = function (MainScreen, processor)
        else
        {
         //console.error('Update Message column not found ' + id);
-        this.processor.Debug('Update Message Column not found' + id);
+        this.processor.Debug('Update Message Column not found - ' + id);
        }
     }
     this.QueueStatus = function(qStatus)
@@ -242,7 +242,7 @@ var ShortPixelScreen = function (MainScreen, processor)
 
 			 if (! this.processor.CheckActive())
 			     data.callback = 'shortpixel.custom.resumeprocessing';
-					 
+
         this.processor.AjaxRequest(data);
     }
     this.Optimize = function (id)

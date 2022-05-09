@@ -159,7 +159,6 @@ class OptimizeController
         $json = $this->getJsonResponse();
         $json->status = 0;
         $json->result = new \stdClass;
-        $json->result->item_id = $item_id;
 
         if (! is_object($mediaItem))  // something wrong
         {
@@ -179,6 +178,8 @@ class OptimizeController
         }
 
         $item_id = $mediaItem->get('id');
+
+				$json->result->item_id = $item_id;
 
 				$optimized = $mediaItem->getMeta('tsOptimized');
 
@@ -572,16 +573,18 @@ class OptimizeController
               unset($item->result->files);
 
               $item->result->queuetype = $qtype;
-              if ($imageItem->hasBackup())
+
+							$showItem = UiHelper::findBestPreview($imageItem); // find smaller / better preview 
+              if ($showItem->hasBackup())
               {
-                $backupFile = $imageItem->getBackupFile(); // attach backup for compare in bulk
+                $backupFile = $showItem->getBackupFile(); // attach backup for compare in bulk
                 $backup_url = $fs->pathToUrl($backupFile);
                  $item->result->original = $backup_url;
               }
               else
                 $item->result->original = false;
 
-              $item->result->optimized = $fs->pathToUrl($imageItem);
+              $item->result->optimized = $fs->pathToUrl($showItem);
 
 
            }
