@@ -63,8 +63,6 @@ class EditMediaViewController extends \ShortPixel\ViewController
           $this->view->id = $this->post_id;
           $this->view->status_message = null;
 
-					var_dump(UIHelper::findBestPreview($this->imageModel));
-
 
           $this->view->text = UiHelper::getStatusText($this->imageModel);
           $this->view->list_actions = UiHelper::getListActions($this->imageModel);
