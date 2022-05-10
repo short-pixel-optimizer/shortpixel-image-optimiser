@@ -341,7 +341,7 @@ abstract class Queue
       if ($stats->total > 0)
         $stats->percentage_done = round((100 / $stats->total) * ($stats->done + $stats->fatal_errors));
       else
-        $stats->percentage_done = 0;
+        $stats->percentage_done = 100; // no items means all done.
 
       if (! $stats->is_running)
       {

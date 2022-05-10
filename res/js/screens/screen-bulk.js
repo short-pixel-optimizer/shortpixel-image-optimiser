@@ -227,6 +227,7 @@ console.log("Screen Init Done", initMedia, initCustom);
      data.customActive = (document.getElementById('custom_checkbox').checked) ? true : false;
      data.webpActive = (document.getElementById('webp_checkbox').checked) ? true : false;
      data.avifActive = (document.getElementById('avif_checkbox').checked) ? true : false;
+		 data.thumbsActive = (document.getElementById('thumbnails_checkbox').checked) ? true : false;
 
 
      //this.SwitchPanel('selection');

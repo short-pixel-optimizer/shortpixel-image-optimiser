@@ -318,29 +318,48 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                     </p>
                 </td>
             </tr>
+
+
+
+						<?php if ($view->data->frontBootstrap == 1):  ?>
+
+
             <tr id="frontBootstrapRow">
                 <th scope="row"><?php _e('Process in the front-end','shortpixel-image-optimiser');?></th>
                 <td>
                     <input name="frontBootstrap" type="checkbox" id="frontBootstrap" value="1" <?php checked( $view->data->frontBootstrap, '1' );?>>
                     <label for="frontBootstrap"><?php _e('Automatically optimize images added by users in front-end of the site.','shortpixel-image-optimiser');?></label>
-                    <p class="settings-info">
-                        <?php _e('Check this if you have users adding images or PDF documents from custom forms in the front-end of the site. If many users connect simultaneously, activating this option could increase the load on your server.','shortpixel-image-optimiser');?>
-                    </p>
+
                 </td>
-                <script>
-                    var spaiAML = document.getElementById('autoMediaLibrary');
-                    document.getElementById('frontBootstrapRow').setAttribute('style', spaiAML.checked ? '' : 'display:none;');
-                    spaiAML.addEventListener('change', function() {
-                        if(this.checked) {
-                            jQuery('#frontBootstrapRow').show(500);
-                        } else {
-                            jQuery('#frontBootstrapRow').hide(500);
-                        }
-                    });
-
-
-                </script>
             </tr>
+						<tr>
+							<th scope='row'>&nbsp;</th>
+							<td>
+								<div class='view-notice warning'><p><?php _e('Important. From version 5 the front processing option is no longer available. There will be no processing on the frontend. To enable optimizing images without visiting the backend, please see the options available for command line optimization.', 'shortpixel-image-optimiser') ?></p>
+									<p><?php _e('To turn off this message, click the checkbox and save settings', 'shortpixel-image-optimiser'); ?></p>
+								</div>
+							</td>
+						</tr>
+
+					<?php endif; ?>
+
+						<script>
+								var spaiAML = document.getElementById('autoMediaLibrary');
+								var frontOption = document.getElementById('frontBootstrapRow');
+
+								if (frontOption !== null)
+								{
+										frontOption.setAttribute('style', spaiAML.checked ? '' : 'display:none;');
+										spaiAML.addEventListener('change', function() {
+												if(this.checked) {
+														jQuery('#frontBootstrapRow').show(500);
+												} else {
+														jQuery('#frontBootstrapRow').hide(500);
+												}
+										});
+								}
+						</script>
+
             <tr>
                 <th scope="row"><?php _e('Optimize Retina images','shortpixel-image-optimiser');?></th>
                 <td>

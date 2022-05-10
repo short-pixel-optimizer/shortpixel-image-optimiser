@@ -5,10 +5,10 @@ class Pantheon {
 
 	public function __construct()
 	{
-		add_action( 'shortpixel_image_optimised', array( $this, 'flush_image_caches' ), 10, 2 );
+		add_action( 'shortpixel/image/optimised', array( $this, 'flush_image_caches' ), 10 );
 	}
 
-	public function flush_image_caches( $id, $imageItem )
+	public function flush_image_caches( $imageItem )
 	{
 
     $image_paths[] = $imageItem->getURL();

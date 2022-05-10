@@ -99,6 +99,12 @@ class BulkViewController extends \ShortPixel\ViewController
 		$approx->custom->has_custom = $otherMediaController->hasCustomImages();
 
     $approx->total->images = $approx->media->total + $approx->custom->images; // $sc->totalImagesToOptimize();
+
+		// Prevent any guesses to go below zero.
+		foreach($approx->media as $item => $value)
+		{
+			  $approx->media->$item = max($value, 0);
+		}
     return $approx;
 
   }

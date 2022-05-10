@@ -151,6 +151,9 @@ class ShortPixelPlugin
       // Handle for EMR
       add_action('wp_handle_replace', array($admin,'handleReplaceHook'));
 
+			// Action / hook for who wants. Please refer to manual / support to prevent loss of credits.
+			add_action('shortpixel/hook/processqueue', array($admin, 'processQueueHook'));
+
 
       if ($this->env()->is_autoprocess)
       {
@@ -158,7 +161,6 @@ class ShortPixelPlugin
           if (apply_filters('shortpixel/init/automedialibrary', true))
           {
             if($this->settings()->png2jpg) {
-
 
 							/*
 							This processing off because it doesn't make sense to already start this before optimizing, which will happen via queue.
@@ -179,16 +181,11 @@ class ShortPixelPlugin
             add_filter( 'mpp_generate_metadata', array($admin,'handleImageUploadHook'), 10, 2 );
           }
       }
-      elseif($this->settings()->frontBootstrap && $this->env()->is_front)
-      {
-        // if automedialibrary is off, but we do want to auto-optimize on the front, still load the hook.
-        add_filter( 'wp_generate_attachment_metadata', array($admin,'handleImageUploadHook'), 10, 2 );
-      }
+
 
       load_plugin_textdomain('shortpixel-image-optimiser', false, plugin_basename(dirname( SHORTPIXEL_PLUGIN_FILE )).'/lang');
 
       $isAdminUser = current_user_can( 'manage_options' ); // @todo This should be in env
-
 
       $this->env()->setDefaultViewModeList();//set default mode as list. only @ first run
 

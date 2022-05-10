@@ -22,10 +22,10 @@ namespace ShortPixel;
         <div class="list-table">
 
 
-						<div><span>Images & thumbnails</span><span data-stats-media="images-images_basecount">n/a</span></div>
+						<div><span>Images</span><span data-stats-media="images-images_basecount">n/a</span></div>
 
-            <div class='filetypes' data-check-visibility data-control="data-check-has-webp"><span>+ WebP images & thumbnails</span><span data-stats-media="images-images_webp" data-check-has-webp>&nbsp;</span></div>
-            <div class='filetypes' data-check-visibility data-control="data-check-has-avif"><span>+ AVIF images & thumbnails</span><span data-stats-media="images-images_avif" data-check-has-avif>&nbsp;</span></div>
+            <div class='filetypes' data-check-visibility data-control="data-check-has-webp"><span>+ WebP images </span><span data-stats-media="images-images_webp" data-check-has-webp>&nbsp;</span></div>
+            <div class='filetypes' data-check-visibility data-control="data-check-has-avif"><span>+ AVIF images </span><span data-stats-media="images-images_avif" data-check-has-avif>&nbsp;</span></div>
 
 
           <div><span><?php _e('Total images & thumbnails to optimize from the Media Library','shortpixel-image-optimiser'); ?></span><span data-stats-media="images-images">0</span></div>

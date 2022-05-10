@@ -274,6 +274,8 @@ class OptimizeController
 
     }
 
+
+
     // Processing Part
 
     // next tick of items to do.
@@ -558,7 +560,8 @@ class OptimizeController
                  $item->fileStatus = ImageModel::FILE_STATUS_SUCCESS;
 
                //  $item->result->message = sprintf(__('Image %s optimized', 'shortpixel-image-optimiser'), $imageItem->getFileName());
-                 do_action( 'shortpixel_image_optimised', $imageItem->get('id'), $imageItem, $item );
+                 do_action('shortpixel_image_optimised', $imageItem->get('id'));
+								 do_action('shortpixel/image/optimised', $imageItem);
                }
                else
                {
@@ -574,7 +577,7 @@ class OptimizeController
 
               $item->result->queuetype = $qtype;
 
-							$showItem = UiHelper::findBestPreview($imageItem); // find smaller / better preview 
+							$showItem = UiHelper::findBestPreview($imageItem); // find smaller / better preview
               if ($showItem->hasBackup())
               {
                 $backupFile = $showItem->getBackupFile(); // attach backup for compare in bulk
@@ -698,39 +701,6 @@ class OptimizeController
 
     }
 
-    private function HandleItemError($item, $type)
-    {
-			 // Perhaps in future this might be taken directly from ResponseController
-        if ($this->isBulk)
-				{
-					$responseItem = ResponseController::getResponseItem($item->item_id);
-          $fs = \wpSPIO()->filesystem();
-          $backupDir = $fs->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
-          $fileLog = $fs->getFile($backupDir->getPath() . 'current_bulk_' . $type . '.log');
-
-          $time = UiHelper::formatTs(time());
-
-          $fileName = $responseItem->fileName;
-          $message = ResponseController::formatItem($item->item_id);
-          $item_id = $item->item_id;
-
-          $fileLog->append($time . '|' . $fileName . '| ' . $item_id . '|' . $message . ';' .PHP_EOL);
-        }
-    }
-
-    protected function checkQueueClean($result, $q)
-    {
-        if ($result->qstatus == Queue::RESULT_QUEUE_EMPTY && ! $this->isBulk)
-        {
-            $stats = $q->getStats();
-
-            if ($stats->done > 0 || $stats->fatal_errors > 0)
-            {
-               $q->cleanQueue(); // clean the queue
-            }
-        }
-    }
-
 
     /**
 		* @integration Regenerate Thumbnails Advanced
@@ -775,6 +745,40 @@ class OptimizeController
 							$this->addItemToQueue($imageObj);
 						}
 				}
+    }
+
+
+		private function HandleItemError($item, $type)
+    {
+			 // Perhaps in future this might be taken directly from ResponseController
+        if ($this->isBulk)
+				{
+					$responseItem = ResponseController::getResponseItem($item->item_id);
+          $fs = \wpSPIO()->filesystem();
+          $backupDir = $fs->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
+          $fileLog = $fs->getFile($backupDir->getPath() . 'current_bulk_' . $type . '.log');
+
+          $time = UiHelper::formatTs(time());
+
+          $fileName = $responseItem->fileName;
+          $message = ResponseController::formatItem($item->item_id);
+          $item_id = $item->item_id;
+
+          $fileLog->append($time . '|' . $fileName . '| ' . $item_id . '|' . $message . ';' .PHP_EOL);
+        }
+    }
+
+    protected function checkQueueClean($result, $q)
+    {
+        if ($result->qstatus == Queue::RESULT_QUEUE_EMPTY && ! $this->isBulk)
+        {
+            $stats = $q->getStats();
+
+            if ($stats->done > 0 || $stats->fatal_errors > 0)
+            {
+               $q->cleanQueue(); // clean the queue
+            }
+        }
     }
 
     protected function getAPI()

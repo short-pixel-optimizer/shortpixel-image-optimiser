@@ -50,10 +50,33 @@ $approx = $this->view->approx;
 	              <label>Images (estimate)</label>
 	              <span class="number" ><?php echo $approx->media->items ?></span>
 	            </div>
-	            <div class='option'>
-	              <label>Thumbnails (estimate)</label> <span class="number" ><?php echo $approx->media->total ?> </span>
-	            </div>
+							<?php if (\wpSPIO()->settings()->processThumbnails == 1): ?>
+		            <div class='option'>
+		              <label>Thumbnails (estimate)</label> <span class="number" ><?php echo $approx->media->total ?> </span>
+		            </div>
+							<?php endif; ?>
 	         </div>
+
+
+					<?php if (! \wpSPIO()->settings()->processThumbnails): ?>
+					<div class='thumbnails optiongroup'>
+						<div class='switch_button'>
+							<label>
+								<input type="checkbox" class="switch" id="thumbnails_checkbox" <?php checked(\wpSPIO()->settings()->processThumbnails); ?>>
+								<div class="the_switch">&nbsp; </div>
+							</label>
+						</div>
+						<h4>Process Image Thumbnails</h4>
+						<div class='option'>
+							<label>Thumbnails (estimate)</label> <span class="number" ><?php echo $approx->media->total ?> </span>
+						</div>
+
+						<p>It's recommend to process the WordPress thumbnails. There are the small images that are most often used on posts and pages. These options change the settings of your installation.</p>
+
+
+
+					</div>
+				<?php endif; ?>
 
 	         <div class="custom-images optiongroup"  data-check-visibility data-control="data-check-custom-hascustom" >
 	           <div class='switch_button'>

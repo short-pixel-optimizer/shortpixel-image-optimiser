@@ -200,6 +200,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
        $bool = parent::restore();
 
+			 $return = true;
        if ($bool)
 			 {
 				 $this->setMeta('status', ImageModel::FILE_STATUS_UNPROCESSED);
@@ -220,11 +221,12 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 			 }
 			 else
 			 {
-				  return false;
+				  $return = false;
 			 }
 
-        return true;
+			 do_action('shortpixel/image/after_restore', $this, $bool);
 
+       return $return;
     }
 
     // Placeholder function. I think this functionality was not available before

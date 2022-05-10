@@ -367,9 +367,11 @@ class AjaxController
         $doCustom = filter_var(sanitize_text_field($_POST['customActive']), FILTER_VALIDATE_BOOLEAN);
         $doWebp = filter_var(sanitize_text_field($_POST['webpActive']), FILTER_VALIDATE_BOOLEAN);
         $doAvif = filter_var(sanitize_text_field($_POST['avifActive']), FILTER_VALIDATE_BOOLEAN);
+				$doThumbs = filter_var(sanitize_text_field($_POST['thumbsActive']), FILTER_VALIDATE_BOOLEAN);
 
         \wpSPIO()->settings()->createWebp = $doWebp;
 				\wpSPIO()->settings()->createAvif = $doAvif;
+				\wpSPIO()->settings()->processThumbnails = $doThumbs;
 
         $bulkControl = BulkController::getInstance();
 

@@ -545,7 +545,7 @@ class ApiController
       $downloadTimeout = max(ini_get('max_execution_time') - 10, 15);
       $fs = \wpSPIO()->filesystem();
 
-      //if there is no improvement in size then we do not download this file, except (sigh) when the fileType is heic since it converts. 
+      //if there is no improvement in size then we do not download this file, except (sigh) when the fileType is heic since it converts.
       if (($optimizedSize !== false && $originalSize !== false) && $originalSize == $optimizedSize && strpos($optimizedUrl, 'heic') === false )
       {
 
@@ -555,12 +555,12 @@ class ApiController
       $correctFileSize = $optimizedSize;
       $fileURL = $this->setPreferredProtocol(urldecode($optimizedUrl));
 
-      $tempFile = download_url($fileURL, $downloadTimeout);
+      $tempFile = \download_url($fileURL, $downloadTimeout);
       Log::addInfo('Downloading ' . $fileURL . ' to : '.json_encode($tempFile));
       if(is_wp_error( $tempFile ))
       { //try to switch the default protocol
           $fileURL = $this->setPreferredProtocol(urldecode($optimizedUrl), true); //force recheck of the protocol
-          $tempFile = download_url($fileURL, $downloadTimeout);
+          $tempFile = \download_url($fileURL, $downloadTimeout);
       }
 
       if ( is_wp_error( $tempFile ) ) {

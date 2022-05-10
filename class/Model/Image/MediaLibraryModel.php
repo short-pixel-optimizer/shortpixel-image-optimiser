@@ -1634,7 +1634,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           $this->saveMeta(); // Save if something is not restored.
 				}
 
-        do_action('shortpixel_after_restore_image', $this->id, $this, $cleanRestore);
+        do_action('shortpixel_after_restore_image', $this->id);
+				do_action('shortpixel/image/after_restore', $this, $cleanrestore);
 
 				$duplicates = $this->getWPMLDuplicates();
 				if (is_array($duplicates) && count($duplicates) > 0 )

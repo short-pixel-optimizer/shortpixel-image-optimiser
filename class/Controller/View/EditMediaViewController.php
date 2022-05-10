@@ -181,7 +181,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
           $debugInfo = array();
           $debugInfo[] = array(__('URL (get attachment URL)', 'shortpixel_image_optiser'), wp_get_attachment_url($this->post_id));
           $debugInfo[] = array(__('File (get attached)'), get_attached_file($this->post_id));
-          $debugInfo[] = array(__('Size and Mime (ImageObj)'), $imageObj->get('width') . 'x' . $imageObj->get('height'). '(' . $imageObj->get('mime') . ')');
+          $debugInfo[] = array(__('Size and Mime (ImageObj)'), $imageObj->get('width') . 'x' . $imageObj->get('height'). ' (' . $imageObj->get('mime') . ')');
           $debugInfo[] = array(__('Status (Shortpixel)'), $imageObj->getMeta('status') . ' '   );
 
 					$debugInfo[] = array(__('Processable'), $processable);

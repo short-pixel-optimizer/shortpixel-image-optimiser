@@ -2,6 +2,7 @@
 namespace ShortPixel\Controller;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
+use ShortPixel\Controller\Queue\Queue as Queue;
 
 use \ShortPixel\ShortPixelPng2Jpg as ShortPixelPng2Jpg;
 
@@ -51,7 +52,7 @@ class AdminController extends \ShortPixel\Controller
 					if (! $settings->optimizePdfs)
 					{
 						 Log::addDebug('Image Upload Hook detected PDF, which is turned off - not optimizing');
-						 return $meta; 
+						 return $meta;
 					}
 				}
 
@@ -66,6 +67,66 @@ class AdminController extends \ShortPixel\Controller
 		public function preventImageHook($id)
 		{
 			  self::$preventUploadHook[] = $id;
+		}
+
+		public function processQueueHook($args = array())
+		{
+				$defaults = array(
+					'wait' => 3, // amount of time to wait for next round. Prevents high loads
+					'run_once' => false, //  If true queue must be run at least every few minutes. If false, it tries to complete all.
+					'queues' => array('media','custom'),
+				);
+
+				if (wp_doing_cron())
+				{
+					 $this->loadCronCompat();
+				}
+
+				Log::addTemp('Process Queue Hook Run');
+
+				$args = wp_parse_args($args, $defaults);
+
+			  $control = new OptimizeController();
+
+			 	if ($args['run_once'] === true)
+				{
+					 return	$control->processQueue($args['queues']);
+				}
+
+				$running = true;
+				$i = 0;
+
+				while($running)
+				{
+							 	$results = $control->processQueue($args['queues']);
+								$running = false;
+
+								foreach($args['queues'] as $qname)
+								{
+									  $result = $results->$qname;
+										// If Queue is not completely empty, there should be something to do.
+										if ($result->qstatus != QUEUE::RESULT_QUEUE_EMPTY)
+										{
+											 $running = true;
+											 continue;
+										}
+								}
+								Log::addTemp('results admincontroller', $results);
+
+							sleep($args['wait']);
+				}
+
+				Log::addTemp('End of run');
+
+		}
+
+		// WP functions that are not loaded during Cron Time.
+		protected function loadCronCompat()
+		{
+			  if (! function_exists('download_url'))
+				{
+					 include(ABSPATH . "wp-admin/includes/admin.php");
+				}
 		}
 
 
