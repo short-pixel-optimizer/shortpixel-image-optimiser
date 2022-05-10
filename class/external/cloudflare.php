@@ -68,7 +68,7 @@ class CloudFlareAPI {
           Log::addWarn('Cloudflare Config OK, but no CURL to request');
         }
         else
-          $this->start_cloudflare_cache_purge_process($image_id);
+          $this->start_cloudflare_cache_purge_process($imageObj);
       }
 
     }
@@ -114,6 +114,8 @@ class CloudFlareAPI {
                 array_push( $purge_array, $item_url );
             }
 			*/
+						$fs = \wpSPIO()->filesystem();
+			
 						$image_paths[] = $imageItem->getURL();
 						if ($imageItem->getWebp() !== false)
 							 $image_paths[] = $fs->pathToUrl($imageItem->getWebp());
