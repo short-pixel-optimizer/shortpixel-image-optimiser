@@ -115,7 +115,7 @@ class CloudFlareAPI {
             }
 			*/
 						$fs = \wpSPIO()->filesystem();
-			
+
 						$image_paths[] = $imageItem->getURL();
 						if ($imageItem->getWebp() !== false)
 							 $image_paths[] = $fs->pathToUrl($imageItem->getWebp());
@@ -123,33 +123,34 @@ class CloudFlareAPI {
 						if ($imageItem->getAvif() !== false)
  								 $image_paths[] = $fs->pathToUrl($imageItem->getAvif());
 
-
-						if ($imageItem->hasOriginal())
+					  if ($imageItem->get('type') == 'media')
 						{
-							 $originalFile = $imageItem->getOriginalFile();
-							 $image_paths[] = $originalFile->getURL();
+								if ($imageItem->hasOriginal())
+								{
+									 $originalFile = $imageItem->getOriginalFile();
+									 $image_paths[] = $originalFile->getURL();
 
-							 if ($originalFile->getWebp() !== false)
- 								 $image_paths[] = $fs->pathToUrl($originalFile->getWebp());
+									 if ($originalFile->getWebp() !== false)
+		 								 $image_paths[] = $fs->pathToUrl($originalFile->getWebp());
 
- 							if ($originalFile->getAvif() !== false)
-	 								 $image_paths[] = $fs->pathToUrl($originalFile->getAvif());
+		 							if ($originalFile->getAvif() !== false)
+			 								 $image_paths[] = $fs->pathToUrl($originalFile->getAvif());
+								}
+
+								if (count($imageItem->get('thumbnails')) > 0)
+								{
+									 foreach($imageItem->get('thumbnails') as $thumbObj)
+									 {
+											 $image_paths[] = $thumbObj->getURL();
+
+											 if ($thumbObj->getWebp() !== false)
+												 $image_paths[] = $fs->pathToUrl($thumbObj->getWebp());
+
+											if ($thumbObj->getAvif() !== false)
+													 $image_paths[] = $fs->pathToUrl($thumbObj->getAvif());
+									 }
+								}
 						}
-
-						if (count($imageItem->get('thumbnails')) > 0)
-						{
-							 foreach($imageItem->get('thumbnails') as $thumbObj)
-							 {
-									 $image_paths[] = $thumbObj->getURL();
-
-									 if ($thumbObj->getWebp() !== false)
-										 $image_paths[] = $fs->pathToUrl($thumbObj->getWebp());
-
-									if ($thumbObj->getAvif() !== false)
-											 $image_paths[] = $fs->pathToUrl($thumbObj->getAvif());
-							 }
-						}
-
 						Log::addTemp('Cloudflare purging: ', $image_paths);
 
             if ( ! empty( $image_paths ) ) {
