@@ -242,7 +242,7 @@ console.log("Screen Init Done", initMedia, initCustom);
      data.webpActive = (document.getElementById('webp_checkbox').checked) ? true : false;
      data.avifActive = (document.getElementById('avif_checkbox').checked) ? true : false;
 
-		 if (typeof (document.getElementById('thumbnails_checkbox')) !== 'undefined')
+		 if (typeof (document.getElementById('thumbnails_checkbox')) !== null)
 		 		data.thumbsActive = (document.getElementById('thumbnails_checkbox').checked) ? true : false;
 
 
