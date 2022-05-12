@@ -128,14 +128,17 @@ console.log("Screen Init Done", initMedia, initCustom);
 							  action.children[i].addEventListener(eventName, self.DoActionEvent.bind(self));
 						 }
 					}
-
-
-
       });
   },
 	this.DoActionEvent = function(event)
 	{
 		var element = event.target;
+
+		// Might be the child
+		if (element.getAttribute('data-action') == null)
+		{
+			var element = element.parentElement;
+		}
 		var actionName = element.getAttribute('data-action');
 		var isPanelAction = (actionName == 'open-panel');
 
@@ -242,7 +245,7 @@ console.log("Screen Init Done", initMedia, initCustom);
      data.webpActive = (document.getElementById('webp_checkbox').checked) ? true : false;
      data.avifActive = (document.getElementById('avif_checkbox').checked) ? true : false;
 
-		 if (typeof (document.getElementById('thumbnails_checkbox')) !== null)
+		 if (document.getElementById('thumbnails_checkbox') !== null)
 		 		data.thumbsActive = (document.getElementById('thumbnails_checkbox').checked) ? true : false;
 
 
