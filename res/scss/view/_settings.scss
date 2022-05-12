@@ -23,7 +23,7 @@
   //tabs
   article.sp-tabs
   {
-    section
+    section // inside the tab
     {
       .wp-shortpixel-tab-content
       { opacity: 0; }
@@ -31,6 +31,11 @@
       {
         opacity: 1;
       }
+
+			.option-content
+			{
+				 display: inline-block;
+			}
     }
     section h2 {
       position: absolute;

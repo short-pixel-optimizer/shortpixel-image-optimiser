@@ -22,6 +22,9 @@
 .settings_page_wp-shortpixel-settings article.sp-tabs section.sel-tab .wp-shortpixel-tab-content {
   opacity: 1;
 }
+.settings_page_wp-shortpixel-settings article.sp-tabs section .option-content {
+  display: inline-block;
+}
 .settings_page_wp-shortpixel-settings article.sp-tabs section h2 {
   position: absolute;
   font-size: 1.3em;
@@ -252,6 +255,7 @@
 
 div.spio-inline-help {
   float: right;
+  margin-left: 15px;
 }
 div.spio-inline-help span {
   font-size: 1.8em;

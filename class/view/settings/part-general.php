@@ -78,9 +78,6 @@
                 </th>
                 <td>
 
-
-										 <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/11-lossy-glossy-or-lossless-which-one-is-the-best-for-me"></span></div>
-
 										<input type="hidden" id="compressionType-database" value="<?php echo $view->data->compressionType ?>">
                     <div class="shortpixel-compression">
                         <div class="shortpixel-compression-options">
@@ -96,8 +93,9 @@
                                 <input type="radio" class="shortpixel-radio-lossless" name="compressionType" value="0" <?php echo( $view->data->compressionType == 0 ? "checked" : "" );?>><span><?php _e('Lossless','shortpixel-image-optimiser');?></span>
                             </label>
 
-                            <?php _e('<a href="https://shortpixel.com/online-image-compression" style="margin-left:20px;" target="_blank">Run a few tests</a> to help you decide.'); ?>
+                      <?php printf(__('%s Run a few tests %s to help you decide.', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/online-image-compression" style="margin-left:20px;" target="_blank">', '</a>'); ?>
 
+										 <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/11-lossy-glossy-or-lossless-which-one-is-the-best-for-me"></span></div>
 
                         <p class="settings-info shortpixel-radio-info shortpixel-radio-lossy" <?php echo( $view->data->compressionType == 1 ? "" : 'style="display:none"' );?>>
                             <?php _e('<b>Lossy compression (recommended): </b>offers the best compression rate.</br> This is the recommended option for most users, producing results that look the same as the original to the human eye.','shortpixel-image-optimiser');?>
@@ -140,8 +138,9 @@
             <tr>
                 <th scope="row"><?php _e('Also include thumbnails:','shortpixel-image-optimiser');?></th>
                 <td>
-										 <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/511-settings-also-include-thumbnails"></span></div>
+
 										<div class='switch_button'>
+										 <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/511-settings-also-include-thumbnails"></span></div>
 				              <label>
 				                <input type="checkbox" class="switch" name="processThumbnails" value="1" <?php checked($view->data->processThumbnails, '1');?>>
 				                <div class="the_switch">&nbsp; </div>
@@ -153,24 +152,24 @@
                         <?php _e('It is highly recommended that you optimize the thumbnails as they are usually the images most viewed by end users and can generate most traffic.<br>Please note that thumbnails count up to your total quota.','shortpixel-image-optimiser');?>
                     </p>
 
-
                 </td>
             </tr>
 
             <tr>
                 <th scope="row"><?php _e('Backup','shortpixel-image-optimiser');?></th>
                 <td>
-									 <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/515-settings-image-backup"></span></div>
 
-									 <div class='switch_button'>
-										 <label>
-											 <input type="checkbox" class="switch" name="backupImages" value="1" <?php checked($view->data->backupImages, '1');?>>
-											 <div class="the_switch">&nbsp; </div>
-											<?php _e('Create a backup of the original images, saved on your server in /wp-content/uploads/ShortpixelBackups/.','shortpixel-image-optimiser');?>
-										 </label>
-									 </div>
 
-                    <p class="settings-info"><?php _e('You can remove the backup folder at any moment but it is best to keep a local/cloud copy, in case you want to restore the optimized files to originals or re-optimize the images using a different compression method.','shortpixel-image-optimiser');?></p>
+										 <div class='switch_button'>
+											 <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/515-settings-image-backup"></span></div>
+											 <label>
+												 <input type="checkbox" class="switch" name="backupImages" value="1" <?php checked($view->data->backupImages, '1');?>>
+												 <div class="the_switch">&nbsp; </div>
+												<?php _e('Create a backup of the original images, saved on your server in /wp-content/uploads/ShortpixelBackups/.','shortpixel-image-optimiser');?>
+											 </label>
+										 </div>
+
+	                    <p class="settings-info"><?php _e('You can remove the backup folder at any moment but it is best to keep a local/cloud copy, in case you want to restore the optimized files to originals or re-optimize the images using a different compression method.','shortpixel-image-optimiser');?></p>
                 </td>
             </tr>
 
@@ -181,10 +180,10 @@
             <tr>
                 <th scope="row"><?php _e('Remove EXIF','shortpixel-image-optimiser');?></th>
                 <td>
-									<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/483-spai-remove-exif">
- 								 </span></div>
 
 									<div class='switch_button'>
+										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/483-spai-remove-exif">
+	 								 </span></div>
 										<label>
 											<input type="checkbox" class="switch" name="removeExif" value="1" <?php checked($view->data->keepExif, 0);?>>
 											<div class="the_switch">&nbsp; </div>

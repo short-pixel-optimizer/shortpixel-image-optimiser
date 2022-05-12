@@ -190,8 +190,8 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
             <tr>
                 <th scope="row"><?php _e('Convert PNG images to JPEG','shortpixel-image-optimiser');?></th>
                 <td>
- 										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/516-settings-convert-png-images-to-jpeg"></span></div>
 									 <div class='switch_button option-png2jpg'>
+ 										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/516-settings-convert-png-images-to-jpeg"></span></div>
 										 <label>
 											 <input type="checkbox" class="switch" name="png2jpg" value="1" <?php checked( ($view->data->png2jpg > 0), true);?> <?php echo($this->is_gd_installed ? '' : 'disabled') ?> data-toggle="png2jpgforce">
 											 <div class="the_switch">&nbsp; </div>
@@ -202,9 +202,9 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
 								 <?php    if(!$this->is_gd_installed) {echo("&nbsp;<div style='color:red;'>" . __('You need PHP GD with support for JPEG and PNG files for this feature. Please ask your hosting provider to install it.','shortpixel-image-optimiser') . "</div>"); }
 									?>
 
-									<p>&nbsp;</p>
 
 										<div class='switch_button option-png2jpgforce toggleTarget' id="png2jpgforce">
+											<p>&nbsp;</p>
 											<label>
 												<input type="checkbox" class="switch" name="png2jpgForce" value="1" <?php checked(($view->data->png2jpg > 1), true);?> <?php echo($this->is_gd_installed ? '' : 'disabled') ?>>
 												<div class="the_switch">&nbsp; </div>
@@ -223,10 +223,8 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
             <tr>
                 <th scope="row"><?php _e('CMYK to RGB conversion','shortpixel-image-optimiser');?></th>
                 <td>
-
-										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/517-settings---cmyk-to-rgb-conversion"></span></div>
-
 									 <div class='switch_button'>
+	 										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/517-settings---cmyk-to-rgb-conversion"></span></div>
 										 <label>
 											 <input type="checkbox" class="switch" name="cmyk2rgb" value="1" <?php checked( $view->data->CMYKtoRGBconversion, "1" );?>>
 											 <div class="the_switch">&nbsp; </div>
@@ -239,10 +237,9 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
             <tr>
                 <th scope="row"><?php _e('Optimize PDFs','shortpixel-image-optimiser');?></th>
                 <td>
-
-										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/520-settings-optimize-pdfs"></span></div>
-
 									 <div class='switch_button'>
+										 <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/520-settings-optimize-pdfs"></span></div>
+
 										 <label>
 											 <input type="checkbox" class="switch" name="optimizePdfs" value="1" <?php checked( $view->data->optimizePdfs, "1" );?>>
 											 <div class="the_switch">&nbsp; </div>
@@ -255,10 +252,8 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
             <tr>
                 <th scope="row"><?php _e('Next Generation Images','shortpixel-image-optimiser');?></th>
                 <td>
-
-										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/286-how-to-serve-webp-files-using-spio"></span></div>
-
 									 <div class='switch_button'>
+										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/286-how-to-serve-webp-files-using-spio"></span></div>
 										 <label>
 											 <input type="checkbox" class="switch" name="createWebp" value="1" <?php checked( $view->data->createWebp, "1" );?>>
 											 <div class="the_switch">&nbsp; </div>
@@ -268,9 +263,8 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
 
                     <p>&nbsp;</p>
 
-										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/467-how-to-create-and-serve-avif-files-using-shortpixel-image-optimizer"></span></div>
-
 									 <div class='switch_button'>
+										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/467-how-to-create-and-serve-avif-files-using-shortpixel-image-optimizer"></span></div>
 										 <label>
 											 <input type="checkbox" class="switch" name="createAvif" value="1" <?php checked( $view->data->createAvif, "1" );?>>
 											 <div class="the_switch">&nbsp; </div>
@@ -288,9 +282,8 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                     <p>&nbsp;</p>
 
                     <div class="deliverWebpSettings">
-												<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/126-which-webp-files-delivery-method-is-the-best-for-me"></span></div>
-
 											 <div class='switch_button'>
+												<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/126-which-webp-files-delivery-method-is-the-best-for-me"></span></div>
 												 <label>
 													 <input type="checkbox" class="switch" name="deliverWebp" data-toggle="deliverTypes" value="1" <?php checked( ($view->data->deliverWebp > 0), true);?>>
 													 <div class="the_switch">&nbsp; </div>
@@ -351,8 +344,9 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
             <tr>
                 <th scope="row"><?php _e('Optimize media on upload','shortpixel-image-optimiser');?></th>
                 <td>
- 									<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/521-settings-optimize-media-on-upload"></span></div>
+
 									 <div class='switch_button'>
+									<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/521-settings-optimize-media-on-upload"></span></div>
 										 <label>
 											 <input type="checkbox" class="switch" name="autoMediaLibrary" value="1" <?php checked( $view->data->autoMediaLibrary, "1" );?>>
 											 <div class="the_switch">&nbsp; </div>
@@ -406,9 +400,8 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
             <tr>
                 <th scope="row"><?php _e('Optimize Retina images','shortpixel-image-optimiser');?></th>
                 <td>
-										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/518-settings-optimize-retina-images"></span></div>
-
 									 <div class='switch_button'>
+										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/518-settings-optimize-retina-images"></span></div>
 										 <label>
 											 <input type="checkbox" class="switch" name="optimizeRetina" value="1" <?php checked( $view->data->optimizeRetina, "1" );?>>
 											 <div class="the_switch">&nbsp; </div>
@@ -420,9 +413,10 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
             <tr>
                 <th scope="row"><?php _e('Optimize other thumbnails','shortpixel-image-optimiser');?></th>
                 <td>
- 										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/519-settings---optimize-other-thumbs"></span></div>
+
 
 									 <div class='switch_button'>
+ 										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/519-settings---optimize-other-thumbs"></span></div>
 										 <label>
 											 <input type="checkbox" class="switch" name="optimizeUnlisted" value="1" <?php checked( $view->data->optimizeUnlisted, "1" );?>>
 											 <div class="the_switch">&nbsp; </div>
@@ -434,7 +428,8 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
             <tr>
                 <th scope="row"><label for="excludeSizes"><?php _e('Exclude thumbnail sizes','shortpixel-image-optimiser');?></label></th>
                 <td>
-									<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/113-how-can-i-optimize-only-certain-thumbnail-sizes"></span></div>
+									<div class="option-content">
+										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/113-how-can-i-optimize-only-certain-thumbnail-sizes"></span></div>
 
 
                     <?php foreach($view->allThumbSizes as $sizeKey => $sizeVal) {?>
@@ -446,6 +441,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                             </label>
                         </span><br>
                     <?php } ?>
+									</div>
                 </td>
             </tr>
             <tr>
