@@ -190,19 +190,28 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
             <tr>
                 <th scope="row"><?php _e('Convert PNG images to JPEG','shortpixel-image-optimiser');?></th>
                 <td>
-                    <input name="png2jpg" type="checkbox" id="png2jpg" value="1" <?php checked( ($view->data->png2jpg > 0), true);?> <?php echo($this->is_gd_installed ? '' : 'disabled') ?>>
-                    <label for="png2jpg"><?php _e('Automatically convert the PNG images to JPEG, if possible.','shortpixel-image-optimiser');
-                        if(!$this->is_gd_installed) {echo("&nbsp;<span style='color:red;'>" . __('You need PHP GD with support for JPEG and PNG files for this feature. Please ask your hosting provider to install it.','shortpixel-image-optimiser') . "</span>");}
-                    ?></label>
-                    <p class="settings-info">
-                        <?php _e('Converts all PNGs that don\'t have transparent pixels to JPEG. This can dramatically reduce the file size, especially if you have camera pictures that are saved in PNG format. The plugin will also search for references of the image in posts and replace them.','shortpixel-image-optimiser');?>
-                        <strong><?php _e('The image will NOT be converted if the resulting JPEG is larger than the original PNG.','shortpixel-image-optimiser');?></strong>
-                    </p><br>
-                    <?php // @todo Issue with this. png2jpg > 0, is force ?>
-                    <input name="png2jpgForce" type="checkbox" id="png2jpgForce" value="1" <?php checked(($view->data->png2jpg > 1), true);?> <?php echo($this->is_gd_installed ? '' : 'disabled') ?>>
-                    <label for="png2jpgForce">
-                        <?php _e('Also force the conversion of images with transparency.','shortpixel-image-optimiser'); ?>
-                    </label>
+ 										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/516-settings-convert-png-images-to-jpeg"></span></div>
+									 <div class='switch_button option-png2jpg'>
+										 <label>
+											 <input type="checkbox" class="switch" name="png2jpg" value="1" <?php checked( ($view->data->png2jpg > 0), true);?> <?php echo($this->is_gd_installed ? '' : 'disabled') ?> data-toggle="png2jpgforce">
+											 <div class="the_switch">&nbsp; </div>
+											 <?php _e('Automatically convert the PNG images to JPEG, if possible.','shortpixel-image-optimiser'); ?>
+										 </label>
+									 </div>
+
+								 <?php    if(!$this->is_gd_installed) {echo("&nbsp;<div style='color:red;'>" . __('You need PHP GD with support for JPEG and PNG files for this feature. Please ask your hosting provider to install it.','shortpixel-image-optimiser') . "</div>"); }
+									?>
+
+									<p>&nbsp;</p>
+
+										<div class='switch_button option-png2jpgforce toggleTarget' id="png2jpgforce">
+											<label>
+												<input type="checkbox" class="switch" name="png2jpgForce" value="1" <?php checked(($view->data->png2jpg > 1), true);?> <?php echo($this->is_gd_installed ? '' : 'disabled') ?>>
+												<div class="the_switch">&nbsp; </div>
+												<?php _e('Also force the conversion of images with transparency.','shortpixel-image-optimiser'); ?>
+											</label>
+										</div>
+
                 </td>
             </tr>
             <tr class='exif_warning view-notice-row'>
@@ -214,71 +223,101 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
             <tr>
                 <th scope="row"><?php _e('CMYK to RGB conversion','shortpixel-image-optimiser');?></th>
                 <td>
-                    <input name="cmyk2rgb" type="checkbox" id="cmyk2rgb" value="1" <?php checked( $view->data->CMYKtoRGBconversion, "1" );?>>
-                    <label for="cmyk2rgb"><?php _e('Adjust your images\' colors for computer and mobile displays.','shortpixel-image-optimiser');?></label>
-                    <p class="settings-info"><?php _e('Images for the web only need the RGB format and converting them from CMYK to RGB makes them smaller.','shortpixel-image-optimiser');?></p>
+
+										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/517-settings---cmyk-to-rgb-conversion"></span></div>
+
+									 <div class='switch_button'>
+										 <label>
+											 <input type="checkbox" class="switch" name="cmyk2rgb" value="1" <?php checked( $view->data->CMYKtoRGBconversion, "1" );?>>
+											 <div class="the_switch">&nbsp; </div>
+											 <?php _e('Adjust your images\' colors for computer and mobile displays.','shortpixel-image-optimiser');?>
+										 </label>
+									 </div>
+
                 </td>
             </tr>
             <tr>
                 <th scope="row"><?php _e('Optimize PDFs','shortpixel-image-optimiser');?></th>
                 <td>
-                    <input name="optimizePdfs" type="checkbox" id="optimizePdfs" value="1" <?php checked( $view->data->optimizePdfs, "1" );?>>
-                    <label for="optimizePdfs"><?php _e('Automatically optimize PDF documents.','shortpixel-image-optimiser');?></label>
+
+										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/520-settings-optimize-pdfs"></span></div>
+
+									 <div class='switch_button'>
+										 <label>
+											 <input type="checkbox" class="switch" name="optimizePdfs" value="1" <?php checked( $view->data->optimizePdfs, "1" );?>>
+											 <div class="the_switch">&nbsp; </div>
+											 <?php _e('Automatically optimize PDF documents.','shortpixel-image-optimiser');?>
+										 </label>
+									 </div>
+
                 </td>
             </tr>
             <tr>
                 <th scope="row"><?php _e('Next Generation Images','shortpixel-image-optimiser');?></th>
                 <td>
-                    <input name="createWebp" type="checkbox" id="createWebp" value="1" <?php checked( $view->data->createWebp, "1" );?>>
-                    <label for="createWebp">
-                       <?php _e('Also create <a href="https://blog.shortpixel.com/how-webp-images-can-speed-up-your-site/" target="_blank">WebP versions</a> of the images, with the additional cost of 1 credit = 1 image or thumbnail.','shortpixel-image-optimiser');?>
-                    </label>
-                    <p class="settings-info">
-                      <?php _e('WebP images can be up to three times smaller than PNGs and 25% smaller than JPGs.','shortpixel-image-optimiser');?>
-                       <a href="https://blog.shortpixel.com/how-webp-images-can-speed-up-your-site/" target="_blank" class="shortpixel-help-link">
-                           <span class="dashicons dashicons-editor-help"></span><?php _e('More info','shortpixel-image-optimiser');?>
-                       </a>
-                   </p>
 
+										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/286-how-to-serve-webp-files-using-spio"></span></div>
 
+									 <div class='switch_button'>
+										 <label>
+											 <input type="checkbox" class="switch" name="createWebp" value="1" <?php checked( $view->data->createWebp, "1" );?>>
+											 <div class="the_switch">&nbsp; </div>
+											  <?php _e('Create <a href="https://blog.shortpixel.com/how-webp-images-can-speed-up-your-site/" target="_blank">WebP versions</a> of the images, with the additional cost of 1 credit = 1 image or thumbnail.','shortpixel-image-optimiser');?>
+										 </label>
+									 </div>
 
                     <p>&nbsp;</p>
-                    <input name="createAvif" type="checkbox" id="createAvif" value="1" <?php checked( $view->data->createAvif, "1"); ?>>
-                    <label for="createAvif"><?php _e('Also create <a href="https://blog.shortpixel.com/what-is-avif-and-why-is-it-good/" target="_blank">AVIF versions</a> of the images, with the additional cost of 1 credit = 1 image or thumbnail.','shortpixel-image-optimiser');?></label>
-                    <p class="settings-info">
-                        <?php _e('AVIF is a new image format and the AVIF images can be, on average, up to 50% smaller than WebPs. The files are stored with the .avif file name extension.','shortpixel-image-optimiser');?>
-                        <a href="https://blog.shortpixel.com/what-is-avif-and-why-is-it-good/" target="_blank" class="shortpixel-help-link">
-                            <span class="dashicons dashicons-editor-help"></span><?php _e('More info','shortpixel-image-optimiser');?>
-                        </a>
-                        <?php if($deliverAVIFLabel){ ?>
+
+										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/467-how-to-create-and-serve-avif-files-using-shortpixel-image-optimizer"></span></div>
+
+									 <div class='switch_button'>
+										 <label>
+											 <input type="checkbox" class="switch" name="createAvif" value="1" <?php checked( $view->data->createAvif, "1" );?>>
+											 <div class="the_switch">&nbsp; </div>
+											 <?php _e('Create <a href="https://blog.shortpixel.com/what-is-avif-and-why-is-it-good/" target="_blank">AVIF versions</a> of the images, with the additional cost of 1 credit = 1 image or thumbnail.','shortpixel-image-optimiser');?>
+										 </label>
+									 </div>
+
+
+                   <?php if($deliverAVIFLabel || true){ ?>
                                 <p class="sp-notice">
-                                <?php echo( $deliverAVIFLabel );?>
+                               <?php echo( $deliverAVIFLabel );?>
                                 </p>
-                        <?php } ?>
-                    </p>
+                   <?php } ?>
+
                     <p>&nbsp;</p>
 
                     <div class="deliverWebpSettings">
-                        <input name="deliverWebp" type="checkbox" id="deliverWebp" value="1" <?php checked( ($view->data->deliverWebp > 0), true);?>>
-                        <label for="deliverWebp">
-                            <?php _e('Deliver the next generation versions of the images in the front-end:','shortpixel-image-optimiser');?>
-                        </label>
-                        <ul class="deliverWebpTypes">
+												<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/126-which-webp-files-delivery-method-is-the-best-for-me"></span></div>
+
+											 <div class='switch_button'>
+												 <label>
+													 <input type="checkbox" class="switch" name="deliverWebp" data-toggle="deliverTypes" value="1" <?php checked( ($view->data->deliverWebp > 0), true);?>>
+													 <div class="the_switch">&nbsp; </div>
+													 <?php _e('Deliver the next generation versions of the images in the front-end:','shortpixel-image-optimiser');?>
+												 </label>
+											 </div>
+
+
+                        <ul class="deliverWebpTypes toggleTarget" id="deliverTypes">
                             <li>
-                                <input type="radio" name="deliverWebpType" id="deliverWebpAltered" <?php checked( ($view->data->deliverWebp >= 1 && $view->data->deliverWebp <= 2), true); ?> <?php echo( $deliverWebpAlteredDisabled );?> value="deliverWebpAltered">
+                                <input type="radio" name="deliverWebpType" id="deliverWebpAltered" <?php checked( ($view->data->deliverWebp >= 1 && $view->data->deliverWebp <= 2), true); ?> <?php echo( $deliverWebpAlteredDisabled );?> value="deliverWebpAltered" data-toggle="deliverAlteringTypes">
                                 <label for="deliverWebpAltered">
                                     <?php _e('Using the &lt;PICTURE&gt; tag syntax','shortpixel-image-optimiser');?>
                                 </label>
+
                                 <?php if($deliverWebpAlteredDisabledNotice){ ?>
                                     <p class="sp-notice">
                                         <?php _e('After the option to work on .htaccess was selected, the .htaccess file has become unaccessible / read-only. Please make the .htaccess file writeable again to be able to further set this option up.','shortpixel-image-optimiser')?>
                                     </p>
                                 <?php } ?>
+
                                 <p class="settings-info">
                                      <?php _e('Each &lt;img&gt; will be replaced with a &lt;picture&gt; tag that will also provide AVIF and WebP images for browsers that support it. Also, it loads the picturefill.js for browsers that don\'t support the &lt;picture&gt; tag. You don\'t need to activate this if you\'re using the Cache Enabler plugin because your AVIF\WebP images are already handled by this plugin. <strong>Please run some tests before using this option!</strong> If the styles that your theme is using rely on the position of your &lt;img&gt; tags, you may experience display problems.','shortpixel-image-optimiser'); ?>
                                     <strong><?php _e('You can revert anytime to the previous state just by deactivating the option.','shortpixel-image-optimiser'); ?></strong>
                                 </p>
-                                <ul class="deliverWebpAlteringTypes">
+
+                                <ul class="deliverWebpAlteringTypes toggleTarget" id="deliverAlteringTypes">
                                     <li>
                                         <input type="radio" name="deliverWebpAlteringType" id="deliverWebpAlteredWP" <?php checked(($view->data->deliverWebp == 2), true);?> value="deliverWebpAlteredWP">
                                         <label for="deliverWebpAlteredWP">
@@ -294,7 +333,8 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                                 </ul>
                             </li>
                             <li>
-                                <input type="radio" name="deliverWebpType" id="deliverWebpUnaltered" <?php checked(($view->data->deliverWebp == 3), true);?> <?php echo( $deliverWebpUnalteredDisabled );?> value="deliverWebpUnaltered">
+                                <input type="radio" name="deliverWebpType" id="deliverWebpUnaltered" <?php checked(($view->data->deliverWebp == 3), true);?> <?php echo( $deliverWebpUnalteredDisabled );?> value="deliverWebpUnaltered" data-toggle="deliverAlteringTypes" data-toggle-reverse>
+
                                 <label for="deliverWebpUnaltered">
                                     <?php _e('Without altering the page code (via .htaccess)','shortpixel-image-optimiser')?>
                                 </label>
@@ -311,11 +351,14 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
             <tr>
                 <th scope="row"><?php _e('Optimize media on upload','shortpixel-image-optimiser');?></th>
                 <td>
-                    <input name="autoMediaLibrary" type="checkbox" id="autoMediaLibrary" value="1" <?php checked( $view->data->autoMediaLibrary, "1" );?>>
-                    <label for="autoMediaLibrary"><?php _e('Automatically optimize images after they are uploaded (recommended).','shortpixel-image-optimiser');?></label>
-                    <p class="settings-info">
-                        <?php _e('ShortPixel will automatically optimize the newly added images and PDF files. If you uncheck this option, you\'ll need to run the ShortPixel bulk or manually optimize the images later.','shortpixel-image-optimiser');?>
-                    </p>
+ 									<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/521-settings-optimize-media-on-upload"></span></div>
+									 <div class='switch_button'>
+										 <label>
+											 <input type="checkbox" class="switch" name="autoMediaLibrary" value="1" <?php checked( $view->data->autoMediaLibrary, "1" );?>>
+											 <div class="the_switch">&nbsp; </div>
+											 	<?php _e('Automatically optimize images after they are uploaded (recommended).','shortpixel-image-optimiser');?>
+									 </label>
+									 </div>
                 </td>
             </tr>
 
@@ -363,27 +406,37 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
             <tr>
                 <th scope="row"><?php _e('Optimize Retina images','shortpixel-image-optimiser');?></th>
                 <td>
-                    <input name="optimizeRetina" type="checkbox" id="optimizeRetina" value="1" <?php checked( $view->data->optimizeRetina, "1"); ?>>
-                    <label for="optimizeRetina"><?php _e('Also optimize the Retina images (@2x) if they exist.','shortpixel-image-optimiser');?></label>
-                    <p class="settings-info">
-                        <?php _e('If you have a Retina plugin that generates Retina-specific images (@2x), ShortPixel can optimize them too, alongside the regular Media Library images and thumbnails.','shortpixel-image-optimiser');?>
-                             <a href="https://blog.shortpixel.com/how-to-use-optimized-retina-images-on-your-wordpress-site-for-best-user-experience-on-apple-devices/" target="_blank" class="shortpixel-help-link">
-                    </p>
+										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/518-settings-optimize-retina-images"></span></div>
+
+									 <div class='switch_button'>
+										 <label>
+											 <input type="checkbox" class="switch" name="optimizeRetina" value="1" <?php checked( $view->data->optimizeRetina, "1" );?>>
+											 <div class="the_switch">&nbsp; </div>
+											 		<?php _e('Also optimize the Retina images (@2x) if they exist.','shortpixel-image-optimiser');?>
+								 			</label>
+									 </div>
                 </td>
             </tr>
             <tr>
                 <th scope="row"><?php _e('Optimize other thumbnails','shortpixel-image-optimiser');?></th>
                 <td>
-                    <input name="optimizeUnlisted" type="checkbox" id="optimizeUnlisted" value="1" <?php checked( $view->data->optimizeUnlisted, "1" );?>>
-                    <label for="optimizeUnlisted"><?php _e('Also optimize the unlisted thumbnails, if found.','shortpixel-image-optimiser');?></label>
-                    <p class="settings-info">
-                        <?php _e('Some plugins create thumbnails that are not registered in the metadata, but instead only exist alongside the other thumbnails. Let ShortPixel optimize them as well.','shortpixel-image-optimiser');?>
-                    </p>
+ 										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/519-settings---optimize-other-thumbs"></span></div>
+
+									 <div class='switch_button'>
+										 <label>
+											 <input type="checkbox" class="switch" name="optimizeUnlisted" value="1" <?php checked( $view->data->optimizeUnlisted, "1" );?>>
+											 <div class="the_switch">&nbsp; </div>
+													<?php _e('Also optimize unlisted thumbnails, if found.','shortpixel-image-optimiser');?>
+											</label>
+									 </div>
                 </td>
             </tr>
             <tr>
                 <th scope="row"><label for="excludeSizes"><?php _e('Exclude thumbnail sizes','shortpixel-image-optimiser');?></label></th>
                 <td>
+									<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/113-how-can-i-optimize-only-certain-thumbnail-sizes"></span></div>
+
+
                     <?php foreach($view->allThumbSizes as $sizeKey => $sizeVal) {?>
                         <span style="margin-right: 20px;white-space:nowrap">
                           <label>
@@ -393,9 +446,6 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                             </label>
                         </span><br>
                     <?php } ?>
-                    <p class="settings-info">
-                        <?php _e('Please check the thumbnail sizes you would like to <strong>exclude</strong> from optimization. There may be sizes created by themes or plugins which do not appear here, because they were not properly registered in WordPress. If you want to ignore them too, please uncheck the <strong>Optimize other thumbnails</strong> option above.','shortpixel-image-optimiser');?>
-                    </p>
                 </td>
             </tr>
             <tr>

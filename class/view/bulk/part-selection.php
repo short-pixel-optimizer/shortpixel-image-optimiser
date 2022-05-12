@@ -66,7 +66,7 @@ $approx = $this->view->approx;
 								<div class="the_switch">&nbsp; </div>
 							</label>
 						</div>
-						<h4>Process Image Thumbnails</h4>
+						<h4><label for="thumbnails_checkbox">Process Image Thumbnails</label></h4>
 						<div class='option'>
 							<label>Thumbnails (estimate)</label> <span class="number" ><?php echo $approx->media->total ?> </span>
 						</div>
@@ -106,11 +106,11 @@ $approx = $this->view->approx;
 		             </label>
 
 		           </div>
-			   <h4>Also create <b>WebP</b> versions of the images</h4>
+			   <h4><label for="webp_checkbox">Also create <b>WebP</b> versions of the images</label></h4>
 				<div class="option">The total number of WebP images will be calculated in the next step.</div>
 		       </div>
 
-		       <div class='optiongroup '  >
+		       <div class='optiongroup'>
 		         <div class='switch_button'>
 
 		           <label>
@@ -120,7 +120,7 @@ $approx = $this->view->approx;
 		           </label>
 
 		         </div>
-		         <h4>Also create <b>AVIF</b> versions of the images</h4>
+		         <h4><label for="avif_checkbox">Also create <b>AVIF</b> versions of the images</label></h4>
 				<div class="option">The total number of AVIF images will be calculated in the next step.</div>
 		     </div>
 		 </div>

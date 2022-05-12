@@ -10,8 +10,6 @@
 					jQuery(function() {
 							jQuery("#sp-total-optimization-dial").val("<?php echo("" . round($view->averageCompression))?>");
 							ShortPixel.percentDial("#sp-total-optimization-dial", 100);
-
-
 					});
 			</script>
     <table class="form-table">
@@ -81,6 +79,8 @@
                 <td>
 
 
+										 <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/11-lossy-glossy-or-lossless-which-one-is-the-best-for-me"></span></div>
+
 										<input type="hidden" id="compressionType-database" value="<?php echo $view->data->compressionType ?>">
                     <div class="shortpixel-compression">
                         <div class="shortpixel-compression-options">
@@ -139,24 +139,41 @@
 
             <tr>
                 <th scope="row"><?php _e('Also include thumbnails:','shortpixel-image-optimiser');?></th>
-                <td><input name="processThumbnails" type="checkbox" id="thumbnails" value="1" <?php checked($view->data->processThumbnails, '1');?>>
-                    <label for="thumbnails"><?php _e('Apply compression also to <strong>image thumbnails.</strong> ','shortpixel-image-optimiser');?></label>
+                <td>
+										 <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/511-settings-also-include-thumbnails"></span></div>
+										<div class='switch_button'>
+				              <label>
+				                <input type="checkbox" class="switch" name="processThumbnails" value="1" <?php checked($view->data->processThumbnails, '1');?>>
+				                <div class="the_switch">&nbsp; </div>
+												<?php printf(__('Apply compression also to %s image thumbnails %s. ','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
+									    </label>
+				            </div>
 
-                    <?php echo($view->data->processThumbnails != 1 && $view->stats->thumbnailsToProcess > 0 ? "(" . number_format($view->stats->thumbnailsToProcess) . " " . __('thumbnails to optimize','shortpixel-image-optimiser') . ")" : "");?>
                     <p class="settings-info">
                         <?php _e('It is highly recommended that you optimize the thumbnails as they are usually the images most viewed by end users and can generate most traffic.<br>Please note that thumbnails count up to your total quota.','shortpixel-image-optimiser');?>
                     </p>
+
+
                 </td>
             </tr>
 
             <tr>
                 <th scope="row"><?php _e('Backup','shortpixel-image-optimiser');?></th>
                 <td>
-                    <input name="backupImages" type="checkbox" id="backupImages" value="1" <?php checked($view->data->backupImages,'1'); ?>>
-                    <label for="backupImages"><?php _e('Create a backup of the original images, saved on your server in /wp-content/uploads/ShortpixelBackups/.','shortpixel-image-optimiser');?></label>
+									 <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/515-settings-image-backup"></span></div>
+
+									 <div class='switch_button'>
+										 <label>
+											 <input type="checkbox" class="switch" name="backupImages" value="1" <?php checked($view->data->backupImages, '1');?>>
+											 <div class="the_switch">&nbsp; </div>
+											<?php _e('Create a backup of the original images, saved on your server in /wp-content/uploads/ShortpixelBackups/.','shortpixel-image-optimiser');?>
+										 </label>
+									 </div>
+
                     <p class="settings-info"><?php _e('You can remove the backup folder at any moment but it is best to keep a local/cloud copy, in case you want to restore the optimized files to originals or re-optimize the images using a different compression method.','shortpixel-image-optimiser');?></p>
                 </td>
             </tr>
+
             <tr class='view-notice-row backup_warning'>
               <th scope='row'>&nbsp;</th>
               <td><div class='view-notice warning'><p><?php _e('Make sure you have a backup in place. When optimizing, ShortPixel will overwrite your images without recovery, which may result in lost images.', 'shortpixel-image-optimiser') ?></p></div></td>
@@ -164,10 +181,17 @@
             <tr>
                 <th scope="row"><?php _e('Remove EXIF','shortpixel-image-optimiser');?></th>
                 <td>
-                    <input name="removeExif" type="checkbox" id="removeExif" value="1" <?php checked($view->data->keepExif, 0);?>>
-                    <label for="removeExif"><?php _e('Remove the EXIF tag of the image (recommended).','shortpixel-image-optimiser');?></label>
-                    <p class="settings-info"> <?php _e('EXIF is a set of various pieces of information that are automatically embedded into the image upon creation. This can include GPS position, camera manufacturer, date and time, etc.
-                        Unless you really need that data to be preserved, we recommend removing it as it can lead to <a href="https://blog.shortpixel.com/how-much-smaller-can-be-images-without-exif-icc" target="_blank">better compression rates</a>.','shortpixel-image-optimiser');?></p>
+									<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/483-spai-remove-exif">
+ 								 </span></div>
+
+									<div class='switch_button'>
+										<label>
+											<input type="checkbox" class="switch" name="removeExif" value="1" <?php checked($view->data->keepExif, 0);?>>
+											<div class="the_switch">&nbsp; </div>
+											<?php _e('Remove the EXIF tag of the image (recommended).','shortpixel-image-optimiser');?>
+										</label>
+									</div>
+
 
                 </td>
             </tr>
@@ -331,13 +355,6 @@
                     <script type="text/javascript">
 
                     </script>
-
-
-
-
-
-
-
                 </td>
             </tr>
         </tbody>

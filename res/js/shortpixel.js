@@ -287,6 +287,7 @@ var ShortPixel = function() {
             ShortPixel.switchSettingsTab( theID );
         });
 
+
         jQuery('input[type=radio][name=deliverWebpType]').on('change', function() {
             if (this.value == 'deliverWebpAltered') {
                 if(window.confirm(_spTr.alertDeliverWebPAltered)){

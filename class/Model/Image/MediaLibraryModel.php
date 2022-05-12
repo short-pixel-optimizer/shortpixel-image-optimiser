@@ -1635,7 +1635,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				}
 
         do_action('shortpixel_after_restore_image', $this->id);
-				do_action('shortpixel/image/after_restore', $this, $cleanrestore);
+				do_action('shortpixel/image/after_restore', $this, $cleanRestore);
 
 				$duplicates = $this->getWPMLDuplicates();
 				if (is_array($duplicates) && count($duplicates) > 0 )

@@ -616,34 +616,7 @@ article.sp-tabs section.sel-tab h2 {
     z-index: 100;
 }
 
-.deliverWebpTypes, .deliverWebpAlteringTypes {
-    display: none;
-}
-.deliverWebpTypes .sp-notice {
-    color: red;
-}
-.deliverWebpSettings {
-    margin: 16px 0;
-}
-.deliverWebpSettings input:disabled+label {
-    color: #818181;
-}
-.deliverWebpTypes, .deliverWebpAlteringTypes {
-    margin: 16px 0 16px 16px;
-}
-#png2jpg:not(:checked) ~ #png2jpgForce,
-#png2jpg:not(:checked) ~ label[for=png2jpgForce] {
-    /*pointer-events: none;
-    opacity: .5;*/
-    display: none;
-}
 
-
-article.sp-tabs section #deliverWebp:checked ~ .deliverWebpTypes,
-article.sp-tabs section #deliverWebpAltered:checked ~ .deliverWebpAlteringTypes
-{
-    display: block;
-}
 /*article.sp-tabs section,
 article.sp-tabs section h2 {
     -webkit-transition: all 500ms ease;

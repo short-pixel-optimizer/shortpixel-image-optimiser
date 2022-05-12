@@ -298,6 +298,7 @@ class ShortPixelPlugin
     wp_register_script('shortpixel-debug', plugins_url('/res/js/debug.js',SHORTPIXEL_PLUGIN_FILE), array('jquery', 'jquery-ui-draggable'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
     wp_register_script ('shortpixel-tooltip', plugins_url('/res/js/shortpixel-tooltip.js',SHORTPIXEL_PLUGIN_FILE), array('jquery' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
+		wp_register_script('shortpixel-settings', plugins_url('res/js/shortpixel-settings.js', SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
      wp_register_script('shortpixel-processor', plugins_url('/res/js/shortpixel-processor.js',SHORTPIXEL_PLUGIN_FILE), array('jquery', 'shortpixel-tooltip' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
@@ -436,6 +437,7 @@ class ShortPixelPlugin
 
     wp_register_style('shortpixel-nextgen', plugins_url('/res/css/shortpixel-nextgen.css', SHORTPIXEL_PLUGIN_FILE),array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
 
+		wp_register_style('shortpixel-settings', plugins_url('/res/css/shortpixel-settings.css', SHORTPIXEL_PLUGIN_FILE),array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
 
   }
 
@@ -505,11 +507,13 @@ class ShortPixelPlugin
       $this->load_script('shortpixel-screen-nolist'); // screen
       $this->load_script('jquery.tooltip.min.js');
       $this->load_script('sp-file-tree');
+			$this->load_script('shortpixel-settings');
 
 
       $this->load_style('shortpixel-admin');
       $this->load_style('shortpixel');
       $this->load_style('sp-file-tree');
+			$this->load_style('shortpixel-settings');
 
 
     }

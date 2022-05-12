@@ -33,7 +33,6 @@ var ShortPixelScreen = function (MainScreen, processor)
         this.processor.StopProcess.bind(this.processor)
       }.bind(this) ); */
 
-
       var processData = ShortPixelProcessorData.startData;
       var initMedia = processData.media.stats;
       var initCustom = processData.custom.stats;
@@ -120,27 +119,42 @@ console.log("Screen Init Done", initMedia, initCustom);
       actions.forEach(function (action, index)
       {
 				  var eventName = (action.getAttribute('data-event')) ? action.getAttribute('data-event') : 'click';
-          action.addEventListener(eventName, function(event)
-          {
-            var element = event.target;
-            var actionName = element.getAttribute('data-action');
-            var isPanelAction = (actionName == 'open-panel');
 
-            if (isPanelAction)
-            {
-               var doPanel = element.getAttribute('data-panel');
-               this.SwitchPanel(doPanel);
-            }
-            else
-            {
-                if (typeof this[actionName] == 'function')
-                {
-                    this[actionName].call(this,event);
-                }
-            }
-          }.bind(self));
+					action.addEventListener(eventName, self.DoActionEvent.bind(self));
+					if (action.children.length > 0)
+					{
+						 for(var i = 0; i < action.children.length; i++)
+						 {
+							  action.children[i].addEventListener(eventName, self.DoActionEvent.bind(self));
+						 }
+					}
+
+
+
       });
-  }
+  },
+	this.DoActionEvent = function(event)
+	{
+		var element = event.target;
+		var actionName = element.getAttribute('data-action');
+		var isPanelAction = (actionName == 'open-panel');
+
+		 console.log('Do Action ' + actionName);
+
+		if (isPanelAction)
+		{
+			 var doPanel = element.getAttribute('data-panel');
+			 this.SwitchPanel(doPanel);
+		}
+		else
+		{
+				if (typeof this[actionName] == 'function')
+				{
+						this[actionName].call(this,event);
+				}
+		}
+
+	},
   this.UpdatePanelStatus = function(status, panelName)
   {
      if (typeof panelName !== 'undefined')
@@ -227,7 +241,9 @@ console.log("Screen Init Done", initMedia, initCustom);
      data.customActive = (document.getElementById('custom_checkbox').checked) ? true : false;
      data.webpActive = (document.getElementById('webp_checkbox').checked) ? true : false;
      data.avifActive = (document.getElementById('avif_checkbox').checked) ? true : false;
-		 data.thumbsActive = (document.getElementById('thumbnails_checkbox').checked) ? true : false;
+
+		 if (typeof (document.getElementById('thumbnails_checkbox')) !== 'undefined')
+		 		data.thumbsActive = (document.getElementById('thumbnails_checkbox').checked) ? true : false;
 
 
      //this.SwitchPanel('selection');

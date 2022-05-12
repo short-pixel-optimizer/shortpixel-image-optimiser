@@ -981,60 +981,7 @@
 
     }
 
-    .switch_button
-    {
-    	margin-left: -5px;
-
-    	label{
-    		padding: 8px 5px; // this padding to make clicking more flexible ( bigger hitbox )
-
-    		&:focus {
-    			outline: none;
-    		}
-    	}
-    	input { display: none;
-    		&:checked ~ .the_switch { background: #6fbeb5; }
-    		&:checked ~ .the_switch:after {
-    		  left: 26px;
-    		  background: #179588;
-    		}
-    		&:disabled ~ .the_switch{
-    		  background: #d5d5d5;
-    		  pointer-events: none;
-    		}
-    		&:disabled ~ .the_switch:after { background: #bcbdbc; }
-    	}
-    	.the_switch{
-    	  position: relative;
-    	  display: inline-block;
-    	  height: 15px;
-    	  width: 50px;
-    	  background: #898989;
-    	  border-radius: 100px;
-    	  cursor: pointer;
-    	  transition: all 0.3s ease;
-    	  &:after {
-    		  position: absolute;
-    		  left: -2px;
-    		  top: -3px;
-    		  display: block;
-    		  width: 24px;
-    		  height: 24px;
-    		  border-radius: 100px;
-    		  background: #aaa;
-    		  box-shadow: 0px 3px 3px rgba(0,0,0,0.05);
-    		  content: '';
-    		  transition: all 0.2s ease;
-    		}
-    		&:active:after { transform: scale(0.9, 0.85); }
-    		&:focus {
-    			outline: none;
-    		}
-    	}
-
-    }
-
-		//******* SPECIAL BULK SCREENS **/
+ 		//******* SPECIAL BULK SCREENS **/
 		.bulk-special-wrapper
 		{
 			 margin: 0 auto;
