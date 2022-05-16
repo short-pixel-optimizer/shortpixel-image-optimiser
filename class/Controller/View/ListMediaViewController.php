@@ -4,11 +4,16 @@ namespace ShortPixel\Controller\View;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Helper\UiHelper as UiHelper;
+use ShortPixel\Helper\UtilHelper as UtilHelper;
+
+
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 use ShortPixel\Controller\QuotaController as QuotaController;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Notices\NoticeController as Notice;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
+use ShortPixel\Model\Image\MediaLibraryModel as MediaLibraryModel;
+
 
 // Controller for the MediaLibraryView
 class ListMediaViewController extends \ShortPixel\ViewController
@@ -101,7 +106,13 @@ class ListMediaViewController extends \ShortPixel\ViewController
     add_action( 'manage_media_custom_column', array( $this, 'doColumn' ), 10, 2 );//generate the media library column
     //Sort and filter on ShortPixel Compression column
     add_filter( 'manage_upload_sortable_columns', array( $this, 'registerSortable') );
-    add_filter( 'request', array( $this, 'filterBy') );
+
+		// Keep noses out of the rest.
+		if (\wpSPIO()->env()->is_screen_to_use)
+		{
+			add_filter( 'request', array( $this, 'filterBy') );
+			add_action('posts_request', array($this, 'parseQuery'), 10, 2);
+		}
     add_action('restrict_manage_posts', array( $this, 'mediaAddFilterDropdown'));
 
     add_action('loop_end', array($this, 'loadComparer'));
@@ -185,49 +196,108 @@ class ListMediaViewController extends \ShortPixel\ViewController
 
   public function filterBy($vars)
   {
+//return false;
     if ( isset( $vars['orderby'] ) && 'ShortPixel Compression' == $vars['orderby'] ) {
 
-        $vars = array_merge( $vars, array(
+			 //$vars['shortpixel-order'] = $vars['order'];
+			 //$vars['orderby'] = 'sum';
+			// @todo This one basically can also move as a query hiijack .
+        /*$vars = array_merge( $vars, array(
           'meta_key' => '_shortpixel_optimized',
           'orderby' => 'meta_value_num',
 
-        ) );
+        ) ); */
     }
+
+		// Must return postID's  as ID
     if ( 'upload.php' == $GLOBALS['pagenow'] && isset( $_GET['shortpixel_status'] ) ) {
 
-        $status       = sanitize_text_field($_GET['shortpixel_status']);
-        $metaKey = '_shortpixel_optimized';
-        //$metaCompare = $status == 0 ? 'NOT EXISTS' : ($status < 0 ? '<' : '=');
+      $status = sanitize_text_field($_GET['shortpixel_status']);
 
-        if ($status == 'all')
-          return $vars; // not for us
+			if ($status == 'all')
+			{
+				 return $vars; // nono
+			}
+			switch ($status)
+			{
+				 case 'opt':
+				 	$filter = 'optimized';
+				 break;
+				 case 'unopt':
+				 default:
+				 	$filter = 'unoptimized';
+				 break;
+			}
 
-        switch($status)
-        {
-           case "opt":
-            //  $status = ShortPixelMeta::FILE_STATUS_SUCCESS;
-              $metaCompare = "EXISTS"; // somehow this meta stores optimization percentage.
-            break;
-            case "unopt":
-            //  $status = ShortPixelMeta::FILE_STATUS_UNPROCESSED;
-              $metaCompare = "NOT EXISTS";
-            break;
+			$vars['shortpixel-filter']  = $filter;
 
-        }
+			if (isset($vars['post_type']))
+			{
+				 unset($vars['post_type']); // no need to query this when going custom.
+			}
 
-        $vars = array_merge( $vars, array(
-            'meta_query' => array(
-                array(
-                    'key'     => $metaKey,
-      //              'value'   => $status,
-                    'compare' => $metaCompare,
-                ),
-            )
-        ));
     }
 
     return $vars;
   }
+
+	public function parseQuery($request, $wpquery)
+	{
+		global $wpdb;
+	//	echo "<PRE style='margin-left: 400px; '>"; var_dump($wpquery->query_vars); var_dump($request); echo "</PRE>";
+
+		 // @todo The order is not working. Can be made to work but already is not scaling in performance ( very heavy )
+		 // @todo2 Unoptimized can only work in case of restore but not new files, because those are not in the database yet! 
+		 if (isset($wpquery->query_vars['shortpixel-filter']) || isset($wpquery->query_vars['shortpixel-order']) )
+		 {
+			  $filter = isset($wpquery->query_vars['shortpixel-filter']) ? $wpquery->query_vars['shortpixel-filter'] : false ;
+				$order =  isset($wpquery->query_vars['shortpixel-order']) ? $wpquery->query_vars['shortpixel-order'] : false;
+
+				if ($filter == 'optimized')
+				{
+					 $fileStatus = ImageModel::FILE_STATUS_SUCCESS;
+				}
+				elseif ($filter == 'unoptimized') {
+						$fileStatus = ImageModel::FILE_STATUS_UNPROCESSED;
+				}
+
+			  $tableName = UtilHelper::getPostMetaTable();
+			  $post_where = substr($request, strpos($request, '1=1'));
+
+
+				if ($filter !== false)
+				{
+					$sql = ' SELECT attach_id AS ID FROM ' . $tableName;
+					$sql .= ' INNER JOIN ' . $wpdb->posts . ' ON ' . $wpdb->posts . '.ID = ' . $tableName . '.attach_id ';
+
+					$sql .= 'WHERE image_type = %d AND status =  %d';
+					$sql = $wpdb->prepare($sql, MediaLibraryModel::IMAGE_TYPE_MAIN,  $fileStatus);
+					$sql .= ' AND ' . $post_where; // glue back the orders, and the all.
+				}
+
+				if ($order !== false)
+				{
+					$sql = ' SELECT attach_id AS ID, (100.0 * (1.0 - compressed_size/original_size)) as SUM FROM ' . $tableName;
+					$sql .= ' INNER JOIN ' . $wpdb->posts . ' ON ' . $wpdb->posts . '.ID = ' . $tableName . '.attach_id ';
+
+				//	$orderstart = strpos($post_where, 'ORDER BY');
+				//	$orderend = strpos
+				//	$post_where = substr_replace($post_where, 'SUM', , strpos($post_where, $wpquery->query_vars['order']) -1);
+//var_dump($post_where);
+					$sql .= 'WHERE ' . $post_where; // glue back the orders, and the all.
+
+				}
+				return $sql;
+		 }
+
+	/*	 if ()
+		 {
+
+		 }
+*/
+
+		 return $request;
+	}
 
 
 

@@ -11,6 +11,7 @@ use ShortPixel\Notices\NoticeController as Notices;
 
 //use ShortPixel\Controller\BulkController as BulkController;
 use ShortPixel\Helper\UiHelper as UiHelper;
+use ShortPixel\Helper\InstallHelper as InstallHelper;
 
 // Class for containing all Ajax Related Actions.
 class AjaxController
@@ -227,6 +228,15 @@ class AjaxController
            case 'startMigrateAll':
               $json = $this->startMigrateAll($json, $data);
            break;
+					 case 'startRemoveLegacy':
+					 		$json = $this->startRemoveLegacy($json, $data);
+					 break;
+					 case "toolsRemoveAll":
+					 		 $json = $this->removeAllData($json, $data);
+					 break;
+					 case "toolsRemoveBackup":
+					 		 $json = $this->removeBackup($json, $data);
+					 break;
 					 case 'request_new_api_key':
 
 					 break;
@@ -434,6 +444,16 @@ class AjaxController
        $bulkControl = BulkController::getInstance();
 
        $stats = $bulkControl->createNewBulk('media', 'migrate');
+       $json->media->stats = $stats;
+
+       return $json;
+    }
+
+		protected function startRemoveLegacy($json, $data)
+    {
+       $bulkControl = BulkController::getInstance();
+
+       $stats = $bulkControl->createNewBulk('media', 'removeLegacy');
        $json->media->stats = $stats;
 
        return $json;
@@ -661,6 +681,37 @@ class AjaxController
 				wp_send_json($json);
 
 
+		}
+
+		private function removeAllData($json, $data)
+		{
+				if (wp_verify_nonce($_POST['tools-nonce'], 'remove-all'))
+				{
+			 		InstallHelper::hardUninstall();
+					$json->settings->results = __('All Data has been removed. You can now uninstall the plugin', 'shortpixel-image-optimiser');
+				}
+				else {
+						Log::addTemp('Remove all data Nonce failed');
+				}
+
+				return $json;
+		}
+
+		private function removeBackup($json, $data)
+		{
+
+			if (wp_verify_nonce($_POST['tools-nonce'], 'empty-backup'))
+			{
+				$dir = \wpSPIO()->filesystem()->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
+			  $dir->recursiveDelete();
+			 $json->settings->results = __('The backups have been removed. You can close the window', 'shortpixel-image-optimiser');
+			 Log::addTemp('Would have removed backups');
+			}
+			else {
+				$json->settings->results = __('Error: Invalid Nonce in empty backups', 'shortpixel-image-optimiser');
+			}
+
+			return $json;
 		}
 
 

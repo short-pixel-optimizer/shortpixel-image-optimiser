@@ -1,7 +1,7 @@
 <?php
 namespace ShortPixel;
 ?>
-<section class='progressbar'>
+<section class='spio-progressbar'>
 
 
 

@@ -58,3 +58,28 @@ use \ShortPixel\Controller\BulkController as BulkController;
 	  </nav>
 	</div>
 </section>
+
+<section class='panel bulk-removeLegacy' data-panel="bulk-removeLegacy"  >
+  <h3 class='heading'>
+    <?php _e("Bulk remove legacy data", 'shortpixel-image-optimiser'); ?>
+  </h3>
+
+	<div class='bulk-special-wrapper'>
+
+	  <h4 class='warning'><?php _e('Warning', 'shortpixel-image-optimiser'); ?></h4>
+
+	  <p><?php printf(__('By starting the %s remove legacy %s process, the plugin will try to remove %s legacy data %s. If not all data is properly migrated or some of it failed, it will be impossible to undo or redo', 'shortpixel-image-optimiser'), '<b>', '</b>', '<b>', '</b>'); ?></p>
+
+		<p class='warning'><?php _e('It is strongly advised to create a full backup before starting this process.', 'shortpixel-image-optimiser'); ?></p>
+	  <p><input type="checkbox" id="bulk-migrate-agree" value="agree" data-action="ToggleButton" data-target="bulk-removelegacy-button"> <?php _e('I want to remove all legacy data. I understand this action is permanent. I made a backup of my site including images and database.', 'shortpixel-image-optimiser'); ?></p>
+
+
+	  <nav>
+
+	    <button class="button" data-action="open-panel" data-panel="dashboard"><?php _e('Back','shortpixel-image-optimiser'); ?></button>
+
+			 <button class="button disabled button-primary" disabled id='bulk-removelegacy-button' data-action="BulkRemoveLegacy"  ><?php _e('Remove all legacy metadata', 'shortpixel-image-optimiser') ?></button>
+
+	  </nav>
+	</div>
+</section>

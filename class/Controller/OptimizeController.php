@@ -406,6 +406,9 @@ class OptimizeController
 								$item->result->is_done = false;  // if not, finished to newly enqueued
 								// @todo Tell ResponseControllers about those actions
 							break;
+							case 'removeLegacy':
+									 $imageObj->removeLegacyShortPixel();
+							break;
            }
       }
       else // as normal

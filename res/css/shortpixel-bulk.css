@@ -340,26 +340,26 @@
   background: url("../img/bulk/checkmark.svg") left center no-repeat;
   padding-left: 29px;
 }
-.shortpixel-bulk-wrapper section.progressbar {
+.shortpixel-bulk-wrapper section.spio-progressbar {
   margin: 30px 0;
 }
-.shortpixel-bulk-wrapper section.progressbar .flex {
+.shortpixel-bulk-wrapper section.spio-progressbar .flex {
   display: flex;
   flex-direction: row;
   width: 80%;
   justify-content: space-around;
 }
-.shortpixel-bulk-wrapper section.progressbar .flex > div {
+.shortpixel-bulk-wrapper section.spio-progressbar .flex > div {
   display: flex;
   align-items: center;
   position: relative;
   flex-direction: column;
   flex-grow: 1;
 }
-.shortpixel-bulk-wrapper section.progressbar .flex > div.result .line {
+.shortpixel-bulk-wrapper section.spio-progressbar .flex > div.result .line {
   background: linear-gradient(90deg, #cccccc 0%, #cccccc 49.9%, white 51%, white 100%);
 }
-.shortpixel-bulk-wrapper section.progressbar .flex .line {
+.shortpixel-bulk-wrapper section.spio-progressbar .flex .line {
   background: #ccc;
   height: 2px;
   width: 100%;
@@ -370,7 +370,7 @@
   z-index: 1;
   transition: color 1s ease-in;
 }
-.shortpixel-bulk-wrapper section.progressbar .flex .step {
+.shortpixel-bulk-wrapper section.spio-progressbar .flex .step {
   border: 2px solid #ccc;
   border-radius: 50%;
   height: 40px;
@@ -386,19 +386,19 @@
   background: #fff;
   transition: color 1s ease-in;
 }
-.shortpixel-bulk-wrapper section.progressbar .flex .text {
+.shortpixel-bulk-wrapper section.spio-progressbar .flex .text {
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   color: #ccc;
 }
-.shortpixel-bulk-wrapper section.panel.selection .progressbar .select .line {
+.shortpixel-bulk-wrapper section.panel.selection .spio-progressbar .select .line {
   background: linear-gradient(90deg, #1fbec9 0%, #1fbec9 49.9%, #cccccc 50%, #cccccc 100%);
 }
-.shortpixel-bulk-wrapper section.panel.selection .progressbar .select .text, .shortpixel-bulk-wrapper section.panel.selection .progressbar .select .step {
+.shortpixel-bulk-wrapper section.panel.selection .spio-progressbar .select .text, .shortpixel-bulk-wrapper section.panel.selection .spio-progressbar .select .step {
   color: #EC2C25;
 }
-.shortpixel-bulk-wrapper section.panel.selection .progressbar .select .step {
+.shortpixel-bulk-wrapper section.panel.selection .spio-progressbar .select .step {
   border-color: #1FBEC9;
 }
 .shortpixel-bulk-wrapper section.panel.selection .load.wrapper, .shortpixel-bulk-wrapper section.panel.selection .interface.wrapper {
@@ -494,22 +494,22 @@
 .shortpixel-bulk-wrapper section.panel.selection .optiongroup .option .number {
   font-weight: 700;
 }
-.shortpixel-bulk-wrapper section.panel.summary .progressbar .select .line {
+.shortpixel-bulk-wrapper section.panel.summary .spio-progressbar .select .line {
   background: #1FBEC9;
 }
-.shortpixel-bulk-wrapper section.panel.summary .progressbar .select .text, .shortpixel-bulk-wrapper section.panel.summary .progressbar .select .step {
+.shortpixel-bulk-wrapper section.panel.summary .spio-progressbar .select .text, .shortpixel-bulk-wrapper section.panel.summary .spio-progressbar .select .step {
   color: #ccc;
 }
-.shortpixel-bulk-wrapper section.panel.summary .progressbar .select .step {
+.shortpixel-bulk-wrapper section.panel.summary .spio-progressbar .select .step {
   border-color: #1FBEC9;
 }
-.shortpixel-bulk-wrapper section.panel.summary .progressbar .summary .line {
+.shortpixel-bulk-wrapper section.panel.summary .spio-progressbar .summary .line {
   background: linear-gradient(90deg, #1fbec9 0%, #1fbec9 49.9%, #cccccc 50%, #cccccc 100%);
 }
-.shortpixel-bulk-wrapper section.panel.summary .progressbar .summary .text, .shortpixel-bulk-wrapper section.panel.summary .progressbar .summary .step {
+.shortpixel-bulk-wrapper section.panel.summary .spio-progressbar .summary .text, .shortpixel-bulk-wrapper section.panel.summary .spio-progressbar .summary .step {
   color: #EC2C25;
 }
-.shortpixel-bulk-wrapper section.panel.summary .progressbar .summary .step {
+.shortpixel-bulk-wrapper section.panel.summary .spio-progressbar .summary .step {
   border-color: #1FBEC9;
 }
 .shortpixel-bulk-wrapper section.panel.summary .summary-list {
@@ -626,22 +626,22 @@
   padding: 16px;
   font-weight: 500;
 }
-.shortpixel-bulk-wrapper section.panel.process .progressbar .select .line, .shortpixel-bulk-wrapper section.panel.process .progressbar .summary .line, .shortpixel-bulk-wrapper section.panel.finished .progressbar .select .line, .shortpixel-bulk-wrapper section.panel.finished .progressbar .summary .line {
+.shortpixel-bulk-wrapper section.panel.process .spio-progressbar .select .line, .shortpixel-bulk-wrapper section.panel.process .spio-progressbar .summary .line, .shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .select .line, .shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .summary .line {
   background: #1FBEC9;
 }
-.shortpixel-bulk-wrapper section.panel.process .progressbar .select .text, .shortpixel-bulk-wrapper section.panel.process .progressbar .select .step, .shortpixel-bulk-wrapper section.panel.process .progressbar .summary .text, .shortpixel-bulk-wrapper section.panel.process .progressbar .summary .step, .shortpixel-bulk-wrapper section.panel.finished .progressbar .select .text, .shortpixel-bulk-wrapper section.panel.finished .progressbar .select .step, .shortpixel-bulk-wrapper section.panel.finished .progressbar .summary .text, .shortpixel-bulk-wrapper section.panel.finished .progressbar .summary .step {
+.shortpixel-bulk-wrapper section.panel.process .spio-progressbar .select .text, .shortpixel-bulk-wrapper section.panel.process .spio-progressbar .select .step, .shortpixel-bulk-wrapper section.panel.process .spio-progressbar .summary .text, .shortpixel-bulk-wrapper section.panel.process .spio-progressbar .summary .step, .shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .select .text, .shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .select .step, .shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .summary .text, .shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .summary .step {
   color: #ccc;
 }
-.shortpixel-bulk-wrapper section.panel.process .progressbar .select .step, .shortpixel-bulk-wrapper section.panel.process .progressbar .summary .step, .shortpixel-bulk-wrapper section.panel.finished .progressbar .select .step, .shortpixel-bulk-wrapper section.panel.finished .progressbar .summary .step {
+.shortpixel-bulk-wrapper section.panel.process .spio-progressbar .select .step, .shortpixel-bulk-wrapper section.panel.process .spio-progressbar .summary .step, .shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .select .step, .shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .summary .step {
   border-color: #1FBEC9;
 }
-.shortpixel-bulk-wrapper section.panel.process .progressbar .process .line, .shortpixel-bulk-wrapper section.panel.finished .progressbar .process .line {
+.shortpixel-bulk-wrapper section.panel.process .spio-progressbar .process .line, .shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .process .line {
   background: linear-gradient(90deg, #1fbec9 0%, #1fbec9 49.9%, #cccccc 50%, #cccccc 100%);
 }
-.shortpixel-bulk-wrapper section.panel.process .progressbar .process .text, .shortpixel-bulk-wrapper section.panel.process .progressbar .process .step, .shortpixel-bulk-wrapper section.panel.finished .progressbar .process .text, .shortpixel-bulk-wrapper section.panel.finished .progressbar .process .step {
+.shortpixel-bulk-wrapper section.panel.process .spio-progressbar .process .text, .shortpixel-bulk-wrapper section.panel.process .spio-progressbar .process .step, .shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .process .text, .shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .process .step {
   color: #EC2C25;
 }
-.shortpixel-bulk-wrapper section.panel.process .progressbar .process .step, .shortpixel-bulk-wrapper section.panel.finished .progressbar .process .step {
+.shortpixel-bulk-wrapper section.panel.process .spio-progressbar .process .step, .shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .process .step {
   border-color: #1FBEC9;
 }
 .shortpixel-bulk-wrapper section.panel.process .average-optimization, .shortpixel-bulk-wrapper section.panel.finished .average-optimization {
@@ -694,14 +694,14 @@
   background: #F6F9FF;
   border: 1px solid #EBF5FF;
 }
-.shortpixel-bulk-wrapper section.panel.process .bulk-summary .progressbar, .shortpixel-bulk-wrapper section.panel.finished .bulk-summary .progressbar {
+.shortpixel-bulk-wrapper section.panel.process .bulk-summary .line-progressbar, .shortpixel-bulk-wrapper section.panel.finished .bulk-summary .line-progressbar {
   width: 100px;
   height: 20px;
   position: relative;
   background: #ccc;
   display: inline-block;
 }
-.shortpixel-bulk-wrapper section.panel.process .bulk-summary .progressbar .done-text, .shortpixel-bulk-wrapper section.panel.finished .bulk-summary .progressbar .done-text {
+.shortpixel-bulk-wrapper section.panel.process .bulk-summary .line-progressbar .done-text, .shortpixel-bulk-wrapper section.panel.finished .bulk-summary .line-progressbar .done-text {
   position: absolute;
   color: #fff;
   font-size: 10px;
@@ -712,7 +712,7 @@
   line-height: 10px;
   z-index: 3;
 }
-.shortpixel-bulk-wrapper section.panel.process .bulk-summary .progressbar .done, .shortpixel-bulk-wrapper section.panel.finished .bulk-summary .progressbar .done {
+.shortpixel-bulk-wrapper section.panel.process .bulk-summary .line-progressbar .done, .shortpixel-bulk-wrapper section.panel.finished .bulk-summary .line-progressbar .done {
   position: absolute;
   z-index: 2;
   left: 0;
@@ -721,7 +721,7 @@
   bottom: 0;
   background: #1FBEC9;
 }
-.shortpixel-bulk-wrapper section.panel.process .bulk-summary .progressbar label input[type=checkbox], .shortpixel-bulk-wrapper section.panel.finished .bulk-summary .progressbar label input[type=checkbox] {
+.shortpixel-bulk-wrapper section.panel.process .bulk-summary .line-progressbar label input[type=checkbox], .shortpixel-bulk-wrapper section.panel.finished .bulk-summary .line-progressbar label input[type=checkbox] {
   margin-right: 8px;
 }
 .shortpixel-bulk-wrapper section.panel.process .image-preview, .shortpixel-bulk-wrapper section.panel.finished .image-preview {
@@ -791,22 +791,22 @@
   width: 80%;
   margin: 35px auto;
 }
-.shortpixel-bulk-wrapper section.panel.finished .progressbar .select .line, .shortpixel-bulk-wrapper section.panel.finished .progressbar .summary .line, .shortpixel-bulk-wrapper section.panel.finished .progressbar .process .line {
+.shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .select .line, .shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .summary .line, .shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .process .line {
   background: #1FBEC9;
 }
-.shortpixel-bulk-wrapper section.panel.finished .progressbar .select .text, .shortpixel-bulk-wrapper section.panel.finished .progressbar .select .step, .shortpixel-bulk-wrapper section.panel.finished .progressbar .summary .text, .shortpixel-bulk-wrapper section.panel.finished .progressbar .summary .step, .shortpixel-bulk-wrapper section.panel.finished .progressbar .process .text, .shortpixel-bulk-wrapper section.panel.finished .progressbar .process .step {
+.shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .select .text, .shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .select .step, .shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .summary .text, .shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .summary .step, .shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .process .text, .shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .process .step {
   color: #ccc;
 }
-.shortpixel-bulk-wrapper section.panel.finished .progressbar .select .step, .shortpixel-bulk-wrapper section.panel.finished .progressbar .summary .step, .shortpixel-bulk-wrapper section.panel.finished .progressbar .process .step {
+.shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .select .step, .shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .summary .step, .shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .process .step {
   border-color: #1FBEC9;
 }
-.shortpixel-bulk-wrapper section.panel.finished .progressbar .result .line {
+.shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .result .line {
   background: linear-gradient(90deg, #1fbec9 0%, #1fbec9 49.9%, #cccccc 50%, #cccccc 100%);
 }
-.shortpixel-bulk-wrapper section.panel.finished .progressbar .result .text, .shortpixel-bulk-wrapper section.panel.finished .progressbar .result .step {
+.shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .result .text, .shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .result .step {
   color: #EC2C25;
 }
-.shortpixel-bulk-wrapper section.panel.finished .progressbar .result .step {
+.shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .result .step {
   border-color: #1FBEC9;
 }
 .shortpixel-bulk-wrapper section.panel.finished nav {

@@ -47,7 +47,7 @@ class ViewController extends Controller
   protected function checkPost()
   {
     if (count($_POST) == 0) // no post, nothing to check, return silent.
-      return;
+      return true;
 
     if (! isset($_POST['sp-nonce']) || ! wp_verify_nonce( $_POST['sp-nonce'], $this->form_action))
     {
@@ -61,8 +61,10 @@ class ViewController extends Controller
       unset($_POST['_wp_http_referer']);
       $this->is_form_submit = true;
       $this->processPostData($_POST);
+
     }
-  }
+		return true;
+	}
 
 
   /** Loads a view

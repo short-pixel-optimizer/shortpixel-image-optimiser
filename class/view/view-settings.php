@@ -2,8 +2,6 @@
 namespace ShortPixel;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
-//HelpScout::outputBeacon();
-
 ?>
 <div class="wrap is-shortpixel-settings-page">
 <h1><?php _e('ShortPixel Plugin Settings','shortpixel-image-optimiser');?></h1>
@@ -21,8 +19,11 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
         <?php _e('ShortPixel account','shortpixel-image-optimiser');?>
     </a>
 
+		<?php if (! is_null($this->quotaData)): ?>
 		<span class='quota-remaining'>
 			<?php printf(__('%s Credits remaining', 'shortpixel-image-optimiser'),  $this->formatNumber($this->quotaData->total->remaining, 0)); ?>
+		</span>
+		<?php endif; ?>
 </p>
 
 <hr class='wp-header-end'>
@@ -67,4 +68,5 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 </article>
 
 <?php $this->loadView('snippets/part-inline-help'); ?>
+<?php $this->loadView('snippets/part-inline-modal'); ?>
 <?php $this->loadView('settings/part-wso'); ?>

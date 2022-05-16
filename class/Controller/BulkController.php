@@ -49,7 +49,7 @@ class BulkController
           $options['retry_limit'] = 5;
           $options['process_timeout'] = 3000;
         }
-        if ($customOp == 'migrate')
+        if ($customOp == 'migrate' || $customOp == 'removeLegacy')
         {
            $options['numitems'] = 200;
         }

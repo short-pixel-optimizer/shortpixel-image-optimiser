@@ -16,7 +16,7 @@ class  PNG2JPGTest extends  WP_UnitTestCase
   public function setUp()
   {
 
-    WPShortPixelSettings::debugResetOptions();
+    WPShortPixelSettings::resetOptions();
   //  $this->root = vfsStream::setup('root', null, $this->getTestFiles() );
     // Need an function to empty uploads
   }

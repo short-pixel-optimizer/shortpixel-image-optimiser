@@ -212,6 +212,10 @@ class SettingsController extends \ShortPixel\ViewController
 				{
 					$this->doRedirect('bulk-restore');
 				}
+				if ($action == 'removeLegacy')
+				{
+					 $this->doRedirect('bulk-removeLegacy');
+				}
 				//upload.php?page=wp-short-pixel-bulk&panel=bulk-migrate
 
 				//upload.php?page=wp-short-pixel-bulk&panel=bulk-restore
@@ -297,6 +301,8 @@ class SettingsController extends \ShortPixel\ViewController
 
       public function processSave()
       {
+					Log::addTemp('Processing Save');
+
           // Split this in the several screens. I.e. settings, advanced, Key Request IF etc.
           if (isset($this->postData['includeNextGen']) && $this->postData['includeNextGen'] == 1)
           {
@@ -703,8 +709,16 @@ class SettingsController extends \ShortPixel\ViewController
 
           if (isset($post['emptyBackup']))
           {
-              $dir = \wpSPIO()->filesystem()->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
-              $dir->recursiveDelete();
+						  if (wp_verify_nonce($_POST['tools-nonce'], 'empty-backup'))
+							{
+								//$dir = \wpSPIO()->filesystem()->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
+	             // $dir->recursiveDelete();
+							 Log::addTemp('Would have removed backups');
+							}
+							else {
+								exit('Invalid Nonce in empty backups');
+							}
+
           }
           unset($post['emptyBackup']);
 
@@ -857,6 +871,10 @@ class SettingsController extends \ShortPixel\ViewController
 				elseif ($redirect == 'bulk-restore')
 				{
 						$url = admin_url('upload.php?page=wp-short-pixel-bulk&panel=bulk-restore');
+				}
+				elseif ($redirect == 'bulk-removeLegacy')
+				{
+						$url = admin_url('upload.php?page=wp-short-pixel-bulk&panel=bulk-removeLegacy');
 				}
 
         wp_redirect($url);

@@ -152,6 +152,7 @@ class BulkViewController extends \ShortPixel\ViewController
 						 case 'media':
 						 	$bulkName = __('Media Library Bulk', 'shortpixel-image-optimiser');
 						 break;
+
 					}
 
 					$bulkName  .= ' '; // add a space.
@@ -163,6 +164,9 @@ class BulkViewController extends \ShortPixel\ViewController
 							 break;
 							 case 'migrate':
 							 		 $bulkName .= __('Migrate old Metadata', 'shortpixel-image-optimiser');
+							 break;
+							 case 'removeLegacy':
+								$bulkName = __('Remove Legacy Data', 'shortpixel-image-optimiser');
 							 break;
 							 default:
 							 	 	 $bulkName .= __('Optimization', 'shortpixel-image-optimiser');

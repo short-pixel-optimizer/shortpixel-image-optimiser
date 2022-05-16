@@ -401,7 +401,7 @@
 
     } // Section
 
-    section.progressbar
+    section.spio-progressbar
     {
         margin: 30px 0;
         .flex
@@ -477,7 +477,7 @@
     section.panel.selection
     {
 
-      .progressbar .select
+      .spio-progressbar .select
       {
          .line { @include line-active(); }
          .text, .step { color: #EC2C25; }
@@ -593,13 +593,13 @@
     section.panel.summary
     {
 
-      .progressbar .select
+      .spio-progressbar .select
       {
          .line { background: #1FBEC9; }
          .text, .step { color: #ccc }
          .step { border-color: #1FBEC9; }
       }
-      .progressbar .summary
+      .spio-progressbar .summary
       {
          .line { @include line-active(); }
          .text, .step { color: #EC2C25; }
@@ -737,13 +737,13 @@
 
     section.panel.process, section.panel.finished
     {
-      .progressbar .select, .progressbar .summary
+      .spio-progressbar .select, .spio-progressbar .summary
       {
          .line { background: #1FBEC9; }
          .text, .step { color: #ccc }
          .step { border-color: #1FBEC9; }
       }
-      .progressbar .process
+      .spio-progressbar .process
       {
          .line { @include line-active(); }
          .text, .step { color: #EC2C25; }
@@ -801,7 +801,7 @@
            background: #F6F9FF;
            border: 1px solid #EBF5FF;
         }
-        .progressbar
+        .line-progressbar
         {
           width: 100px;
           height: 20px;
@@ -939,13 +939,13 @@
 
     section.panel.finished
     {
-      .progressbar .select, .progressbar .summary, .progressbar .process
+      .spio-progressbar .select, .spio-progressbar .summary, .spio-progressbar .process
       {
          .line { background: #1FBEC9; }
          .text, .step { color: #ccc }
          .step { border-color: #1FBEC9; }
       }
-      .progressbar .result
+      .spio-progressbar .result
       {
          .line { @include line-active(); }
          .text, .step { color: #EC2C25; }

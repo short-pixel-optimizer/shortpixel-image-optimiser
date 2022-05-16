@@ -25,6 +25,21 @@
 .settings_page_wp-shortpixel-settings article.sp-tabs section .option-content {
   display: inline-block;
 }
+.settings_page_wp-shortpixel-settings article.sp-tabs section .toggleTarget {
+  display: none;
+  opacity: 0;
+  height: 0;
+  overflow: hidden;
+  transition: height 350ms ease-in-out, opacity 750ms ease-in-out;
+}
+.settings_page_wp-shortpixel-settings article.sp-tabs section .modalTarget {
+  display: none;
+}
+.settings_page_wp-shortpixel-settings article.sp-tabs section .toggleTarget.is-visible {
+  display: block;
+  opacity: 1;
+  height: auto;
+}
 .settings_page_wp-shortpixel-settings article.sp-tabs section h2 {
   position: absolute;
   font-size: 1.3em;
@@ -199,18 +214,6 @@
 }
 #shortpixel-settings-tabs #tab-adv-settings .deliverWebpTypes, #shortpixel-settings-tabs #tab-adv-settings .deliverWebpAlteringTypes {
   margin: 16px 0 16px 16px;
-}
-#shortpixel-settings-tabs #tab-adv-settings .toggleTarget {
-  display: none;
-  opacity: 0;
-  height: 0;
-  overflow: hidden;
-  transition: height 350ms ease-in-out, opacity 750ms ease-in-out;
-}
-#shortpixel-settings-tabs #tab-adv-settings .toggleTarget.is-visible {
-  display: block;
-  opacity: 1;
-  height: auto;
 }
 
 .cf_switch label {

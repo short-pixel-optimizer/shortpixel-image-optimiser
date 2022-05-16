@@ -285,7 +285,7 @@ body.debug-model-active {
 }
 
 .shortpixel-hide {
-  display: none;
+  display: none !important;
 }
 
 .switch_button {

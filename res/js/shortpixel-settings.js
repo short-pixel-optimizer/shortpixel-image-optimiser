@@ -24,6 +24,12 @@ var ShortPixelSettings = function()
 					toggle.dispatchEvent(evInit);
 			});
 
+			var modals = document.querySelectorAll('[data-action="open-modal"]');
+			modals.forEach(function (modal, index)
+			{
+					modal.addEventListener('click', self.OpenModal.bind(self));
+			});
+
 	}
 
 	this.DoToggleAction = function(event)
@@ -91,6 +97,91 @@ this.HideElement = function (elem) {
 	}, 350);
 
 };
+
+
+this.OpenModal = function(elem)
+{
+		var target = elem.target;
+		var targetElem = document.getElementById(target.dataset.target);
+		if (! targetElem)
+			return;
+
+		var shade = document.getElementById('spioSettingsModalShade');
+		var modal = document.getElementById('spioSettingsModal');
+
+		shade.style.display = 'block';
+		modal.classList.remove('spio-hide');
+
+		var body = modal.querySelector('.spio-modal-body');
+		body.innerHTML = ('afterbegin', targetElem.innerHTML); //.cloneNode()
+		body.style.background = '#fff';
+
+		shade.addEventListener('click', this.CloseModal.bind(this), {'once': true} );
+
+		if (body.querySelector('[data-action="ajaxrequest"]') !== null)
+		{
+			body.querySelector('[data-action="ajaxrequest"]').addEventListener('click', this.SendModal.bind(this));
+		}
+
+}
+
+this.CloseModal = function(elem)
+{
+	var shade = document.getElementById('spioSettingsModalShade');
+	var modal = document.getElementById('spioSettingsModal');
+
+	shade.style.display = 'none';
+	modal.classList.add('spio-hide');
+
+}
+
+this.SendModal = function(elem)
+{
+	var modal = document.getElementById('spioSettingsModal');
+	var body = modal.querySelector('.spio-modal-body');
+	var inputs = body.querySelectorAll('input');
+
+	var data = {};
+	var validated = true;
+
+	for (var i = 0; i < inputs.length; i++)
+	{
+		 data[inputs[i].name] = inputs[i].value;
+		 if (typeof inputs[i].dataset.required !== 'undefined')
+		 {
+			  if (inputs[i].value !== inputs[i].dataset.required)
+				{
+					 inputs[i].style.border = '1px solid #ff0000';
+					 validated = false;
+					 return false;
+				}
+		 }
+	}
+
+	if (! validated)
+		return false;
+
+	console.log(data);
+	data.callback = 'shortpixelSettings.receiveModal'
+	data.type = 'settings';
+
+	window.addEventListener('shortpixelSettings.receiveModal', this.ReceiveModal.bind(this), {'once': true} );
+
+	window.ShortPixelProcessor.AjaxRequest(data);
+
+}
+
+this.ReceiveModal = function(elem)
+{
+	 console.log(elem);
+	 if (typeof elem.detail.settings.results !== undefined)
+	 {
+		 var modal = document.getElementById('spioSettingsModal');
+	 	 var body = modal.querySelector('.spio-modal-body');
+
+		 body.innerHTML = elem.detail.settings.results;
+	 }
+}
 
 	this.Init();
 } // SPSettings

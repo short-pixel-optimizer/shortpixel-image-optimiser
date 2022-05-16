@@ -37,7 +37,7 @@ namespace ShortPixel;
       <div class='heading'>
         <span><i class='dashicons dashicons-images-alt2'>&nbsp;</i> Media Library</span>
         <span>
-              <span class='progressbar'>
+              <span class='line-progressbar'>
                 <span class='done-text'><i data-stats-media="percentage_done"></i> %</span>
                 <span class='done' data-stats-media="percentage_done" data-presentation="css.width.percentage"></span>
               </span>

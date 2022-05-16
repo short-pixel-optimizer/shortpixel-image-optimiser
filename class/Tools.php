@@ -35,30 +35,6 @@ class ShortPixelTools {
     }
 
 
-    public static function requestIsFrontendAjax()
-    {
-        $script_filename = isset($_SERVER['SCRIPT_FILENAME']) ? $_SERVER['SCRIPT_FILENAME'] : '';
-
-        //Try to figure out if frontend AJAX request... If we are DOING_AJAX; let's look closer
-        if((defined('DOING_AJAX') && DOING_AJAX))
-        {
-            //From wp-includes/functions.php, wp_get_referer() function.
-            //Required to fix: https://core.trac.wordpress.org/ticket/25294
-            $ref = '';
-            if ( ! empty( $_REQUEST['_wp_http_referer'] ) ) {
-                $ref = wp_unslash( $_REQUEST['_wp_http_referer'] );
-            } elseif ( ! empty( $_SERVER['HTTP_REFERER'] ) ) {
-                $ref = wp_unslash( $_SERVER['HTTP_REFERER'] );
-            }
-          //If referer does not contain admin URL and we are using the admin-ajax.php endpoint, this is likely a frontend AJAX request
-          if(((strpos($ref, admin_url()) === false) && (basename($script_filename) === 'admin-ajax.php')))
-            return true;
-        }
-
-        //If no checks triggered, we end up here - not an AJAX request.
-        return false;
-    }
-
     /** Function to convert dateTime object to a date output
     *
     * Function checks if the date is recent and then uploads are friendlier message. Taken from media library list table date function

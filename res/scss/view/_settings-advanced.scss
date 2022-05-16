@@ -62,22 +62,6 @@
     margin: 16px 0 16px 16px;
 }
 
-	.toggleTarget
-	{
-		 display: none;
-		 opacity: 0;
-		 height: 0;
-		 overflow: hidden;
-		 transition: height 350ms ease-in-out, opacity 750ms ease-in-out;
-	}
-
-	.toggleTarget.is-visible
-	{
-		display: block;
-		opacity: 1;
-		height: auto;
-
-	}
 
 
 

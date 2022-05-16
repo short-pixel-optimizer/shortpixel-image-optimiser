@@ -184,19 +184,15 @@ abstract class Queue
 					if (is_null($operation))
 						$operation = false;
 
-					if ($operation !== false)
-					{
-						Log::addDebug('Operation is not false : ' . $operation);
-					}
 
           // maybe while on the whole function, until certain time has elapsed?
           foreach($items as $item_id)
           {
 							// Migrate shouldn't load image object at all since that would trigger the conversion.
-							  if ($operation == 'migrate')
+							  if ($operation == 'migrate' || $operation == 'removeLegacy')
 								{
                     $qObject = new \stdClass;  //$this->imageModelToQueue($mediaItem);
-                    $qObject->action = 'migrate';
+                    $qObject->action = $operation;
                     $queue[] = array('id' => $item_id, 'value' => $qObject, 'item_count' => 1);
 
 										continue;

@@ -18,12 +18,6 @@ class InstallHelper
       self::deactivatePlugin();
       $settings = \wpSPIO()->settings();
 
-      // @todo This will not work in new version
-      if(SHORTPIXEL_RESET_ON_ACTIVATE === true && WP_DEBUG === true) { //force reset plugin counters, only on specific occasions and on test environments
-          $settings::debugResetOptions();
-					self::removeTables();
-      }
-
       $env = wpSPIO()->env();
 
       if(\WPShortPixelSettings::getOpt('deliverWebp') == 3 && ! $env->is_nginx) {
@@ -50,9 +44,9 @@ class InstallHelper
     // save remove.
     $fs = new FileSystemController();
     $log = $fs->getFile(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
-		// @todo Debug, put this back
-    //if ($log->exists())
-    //  $log->delete();
+
+    if ($log->exists())
+     $log->delete();
 
     global $wpdb;
     $sql = "delete from " . $wpdb->options . " where option_name like '%_transient_shortpixel%'";
@@ -65,20 +59,41 @@ class InstallHelper
 
   public static function uninstallPlugin()
   {
-    $settings = \wpSPIO()->settings();
-    $env = \wpSPIO()->env();
-  BulkController::uninstallPlugin();
-    if($settings->removeSettingsOnDeletePlugin == 1) {
-        $settings::debugResetOptions();
-        if (! $env->is_nginx)
-          insert_with_markers( get_home_path() . '.htaccess', 'ShortPixelWebp', '');
-
-        self::removeTables();
-    }
+   // $settings = \wpSPIO()->settings();
+ //   $env = \wpSPIO()->env();
 
     OptimizeController::uninstallPlugin();
     BulkController::uninstallPlugin();
   }
+
+ // Removes everything  of SPIO 5.x .  Not recommended.
+	public static function hardUninstall()
+	{
+		$env = \wpSPIO()->env();
+		$settings = \wpSPIO()->settings();
+
+		$nonce = $_POST['tools-nonce'];
+		if ( ! wp_verify_nonce( $nonce, 'remove-all' ) ) {
+          wp_nonce_ays( '' );
+    }
+
+		self::deactivatePlugin(); // deactivate
+		self::uninstallPlugin(); // uninstall
+
+
+		$settings::resetOptions();
+
+		if (! $env->is_nginx)
+			insert_with_markers( get_home_path() . '.htaccess', 'ShortPixelWebp', '');
+
+		self::removeTables();
+
+		// Remove Backups
+		$dir = \wpSPIO()->filesystem()->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
+		$dir->recursiveDelete();
+
+	}
+
 
   public static function deactivateConflictingPlugin()
   {
@@ -193,19 +208,20 @@ class InstallHelper
 	private static function removeTables()
 	{
 		 global $wpdb;
-			if (self::checkTableExists('shortpixel_folders') === false)
+			if (self::checkTableExists('shortpixel_folders') === true)
 	    {
 					$sql = 'DROP TABLE  ' . $wpdb->prefix . 'shortpixel_folders';
 					$wpdb->query($sql);
 			}
-			if (self::checkTableExists('shortpixel_meta') === false)
+			if (self::checkTableExists('shortpixel_meta') === true)
 			{
 	 	    	$sql = 'DROP TABLE  ' . $wpdb->prefix . 'shortpixel_meta';
 					$wpdb->query($sql);
 			}
-			if (self::checkTableExists('shortpixel_postmeta') === false)
+			if (self::checkTableExists('shortpixel_postmeta') === true)
 			{
 					$sql = 'DROP TABLE  ' . $wpdb->prefix . 'shortpixel_postmeta';
+					error_log('Dropping postmeta' . $sql);
 					$wpdb->query($sql);
 			}
 	}

@@ -1774,6 +1774,17 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
      return true;
   }
 
+	// Function to remove all shortpixel related data
+	// It's separated from the private function.
+	public function removeLegacyShortPixel()
+	{
+		 $bool = $this->removeLegacy();
+		 if ($bool)
+		 {
+		 		delete_post_meta($this->id, '_shortpixel_was_converted');
+				delete_post_meta($this->id, '_shortpixel_status');
+		 }
+	}
 
 	private function generateThumbnails()
 	{
@@ -1784,14 +1795,30 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 	// Check and remove legacy data.
 	// If metadata is removed in a restore process, the legacy data will be reimported, which should not happen.
+	/* @return bool If legacy data was found and removed or not */
 	private function removeLegacy()
 	{
 		$metadata = $this->getWPMetaData();
-		if (isset($metadata['ShortPixel']))
+		$updated = false;
+
+
+		$unset = array('ShortPixel', 'ShortPixelImprovement', 'ShortPixelPng2Jpg');
+
+		foreach($unset as $key)
 		{
-			 unset($metadata['ShortPixel']);
-			 wp_update_attachment_metadata($this->id, $metadata);
+			 if (isset($metadata[$key]))
+			 {
+				  unset($metadata[$key]);
+					$updated = true;
+			 }
 		}
+
+		if ($updated === true)
+		{
+			wp_update_attachment_metadata($this->id, $metadata);
+		}
+
+		return $updated;
 	}
 
   // Convert from old metadata if needed.

@@ -173,7 +173,7 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         }  */
     }
 
-    public static function debugResetOptions() {
+    public static function resetOptions() {
         foreach(self::$_optionsMap as $key => $val) {
             delete_option($val['key']);
         }

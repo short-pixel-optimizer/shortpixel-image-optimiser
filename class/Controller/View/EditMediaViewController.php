@@ -59,10 +59,8 @@ class EditMediaViewController extends \ShortPixel\ViewController
 					if ($this->imageModel === false)
 						return false;
 
-
           $this->view->id = $this->post_id;
           $this->view->status_message = null;
-
 
           $this->view->text = UiHelper::getStatusText($this->imageModel);
           $this->view->list_actions = UiHelper::getListActions($this->imageModel);

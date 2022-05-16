@@ -828,6 +828,21 @@ console.log("Screen Init Done", initMedia, initCustom);
     window.addEventListener('shortpixel.bulk.onSwitchPanel', this.StartBulk.bind(this), {'once': true});
     this.processor.AjaxRequest(data);
   }
+	this.BulkRemoveLegacy = function (event)
+  {
+    console.log('Start Remove Legacy');
+    var data = {screen_action: 'startRemoveLegacy', callback: 'shortpixel.startRemoveLegacy'}; //
+
+    this.SwitchPanel('selection');
+    this.UpdatePanelStatus('loading', 'selection');
+  	//this.SwitchPanel('process');
+
+    // Prepare should happen after selecting what the optimize.
+    window.addEventListener('shortpixel.startRemoveLegacy', this.PrepareBulk.bind(this), {'once': true} );
+    window.addEventListener('shortpixel.bulk.onSwitchPanel', this.StartBulk.bind(this), {'once': true});
+    this.processor.AjaxRequest(data);
+  }
+
 
 	// Opening of Log files on the dashboard
 	this.OpenLog = function(event)
