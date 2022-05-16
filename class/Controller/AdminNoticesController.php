@@ -649,12 +649,6 @@ class AdminNoticesController extends \ShortPixel\Controller
                      onclick="ShortPixel.checkQuota()">
           </div>';
 
-          $message .= '<p>' . __('Get more image credits by referring ShortPixel to your friends!','shortpixel-image-optimiser') . '
-              <a href="' . $friend_url . '" target="_blank">' . __('Check your account','shortpixel-image-optimiser') .
-              '</a> ' . __('for your unique referral link. For each person that joins, you will receive +100 additional image credits/month.','shortpixel-image-optimiser') . '
-          </p>
-          </div>';
-
         $message .= $this->proposeUpgradePopup();
         return $message;
     }

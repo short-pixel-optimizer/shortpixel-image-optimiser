@@ -12,7 +12,7 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
     ?>" target="_blank">
         <?php _e('Add credits','shortpixel-image-optimiser');?>
     </a> | <a href="https://shortpixel.com/knowledge-base/" target="_blank"><?php _e('Knowledge Base','shortpixel-image-optimiser');?> </a> |
-    <a href="https://shortpixel.com/contact" target="_blank"><?php _e('Contact us','shortpixel-image-optimiser');?> </a> |
+    <a href="https://shortpixel.com/contact" target="_blank"><?php _e('Contact Support','shortpixel-image-optimiser');?> </a> |
     <a href="https://shortpixel.com/<?php
     echo(($view->data->apiKey ? "login/".( $this->hide_api_key ? '' : $view->data->apiKey) : "pricing"));
     ?>" target="_blank">
