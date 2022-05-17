@@ -138,7 +138,6 @@ class ShortPixelAPI {
             'urllist' => $URLs
         );
 
-				$requestParameters = apply_filters('shortpixel/api/request', $requestParameters, $itemHandler->getId(), $itemHandler);
 
 				if(/*false &&*/ $this->_settings->downloadArchive == 7 && class_exists('PharData')) {
             $requestParameters['group'] = $itemHandler->getId();
@@ -146,6 +145,9 @@ class ShortPixelAPI {
         if($refresh) {
             $requestParameters['refresh'] = 1;
         }
+
+				$requestParameters = apply_filters('shortpixel/api/request', $requestParameters,   $itemHandler->getId());
+
 
         //WpShortPixel::log("ShortPixel API Request Settings: " . json_encode($requestParameters));
         $response = wp_remote_post($this->_apiEndPoint, $this->prepareRequest($requestParameters, $Blocking) );
