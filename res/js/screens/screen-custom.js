@@ -52,6 +52,7 @@ var ShortPixelScreen = function (MainScreen, processor)
           console.log(resultItem);
         }
 
+				return false;
     }
 
     this.UpdateMessage = function(id, message, isError)

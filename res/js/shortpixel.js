@@ -373,11 +373,11 @@ var ShortPixel = function() {
 
 		function loadToolsTabData()
 		{
-			var sizeText = document.querySelector('[data-tabfield="backupSize"]');
+			/*var sizeText = document.querySelector('[data-tabfield="backupSize"]');
 			if (sizeText.dataset.value == '')
 			{
 				var backupSize = this.getBackupSize(sizeText);
-			}
+			} */
 		}
 
     // Fixes the height of the current active tab.
@@ -531,7 +531,8 @@ var ShortPixel = function() {
     }
 
     function getBackupSize(element) {
-        var browseData = { 'action': 'shortpixel_get_backup_size', nonce: ShortPixelConstants[0].nonce_ajaxrequest };
+       /* Off until we found something better.
+			 var browseData = { 'action': 'shortpixel_get_backup_size', nonce: ShortPixelConstants[0].nonce_ajaxrequest };
         var browseResponse = "";
         jQuery.ajax({
             type: "POST",
@@ -544,8 +545,8 @@ var ShortPixel = function() {
             },
             //async: false
         });
-        return browseResponse;
-    }
+        return browseResponse; */
+     }
 
     function newApiKey(event) {
 				event.preventDefault();
@@ -653,7 +654,9 @@ var ShortPixel = function() {
     function initFolderSelector() {
         jQuery(".select-folder-button").on('click', function(){
             jQuery(".sp-folder-picker-shade").fadeIn(100); //.css("display", "block");
-            jQuery(".shortpixel-modal.modal-folder-picker").show();
+						jQuery(".shortpixel-modal.modal-folder-picker").removeClass('shortpixel-hide');
+						jQuery(".shortpixel-modal.modal-folder-picker").show();
+
 
             var picker = jQuery(".sp-folder-picker");
             picker.parent().css('margin-left', -picker.width() / 2);
@@ -664,6 +667,7 @@ var ShortPixel = function() {
         });
         jQuery(".shortpixel-modal input.select-folder-cancel, .sp-folder-picker-shade").on('click', function(){
             jQuery(".sp-folder-picker-shade").fadeOut(100); //.css("display", "none");
+						jQuery(".shortpixel-modal.modal-folder-picker").addClass('shortpixel-hide');
             jQuery(".shortpixel-modal.modal-folder-picker").hide();
         });
         jQuery(".shortpixel-modal input.select-folder").on('click', function(e){

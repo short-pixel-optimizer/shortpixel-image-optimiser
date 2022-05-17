@@ -161,7 +161,6 @@ this.SendModal = function(elem)
 	if (! validated)
 		return false;
 
-	console.log(data);
 	data.callback = 'shortpixelSettings.receiveModal'
 	data.type = 'settings';
 
@@ -183,7 +182,7 @@ this.ReceiveModal = function(elem)
 	 }
 }
 
-	this.Init();
+ 	this.Init();
 } // SPSettings
 
 document.addEventListener("DOMContentLoaded", function(){

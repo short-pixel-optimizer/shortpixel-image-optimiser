@@ -658,6 +658,7 @@ class OptimizeController
 						//	$item->result->message = substr_replace( $item->result->message,  $imageItem->getFileName() . ' ', strpos($item->result->message, '#' . $item->item_id), 0);
              // $item->result->message .= sprintf(__('(cycle %d)', 'shortpixel-image-optimiser'), intval($item->tries) );
 
+
 							if ($retry_limit == $item->tries || $retry_limit == ($item->tries -1))
 							{
 

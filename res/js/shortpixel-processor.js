@@ -379,6 +379,8 @@ window.ShortPixelProcessor =
         // Perhaps if optimization, the new stats and actions should be generated server side?
 
          // If there are items, give them to the screen for display of optimization, waiting status etc.
+				 var imageHandled = false;  // Only post one image per result-set to the ImageHandler, to prevent flooding.
+
          if (typeof response.results !== 'undefined' && response.results !== null)
          {
              for (var i = 0; i < response.results.length; i++)
@@ -394,8 +396,10 @@ window.ShortPixelProcessor =
                   this.HandleItemError(imageItem, type);
 								}
 
-                this.screen.HandleImage(imageItem, type);
-
+								if (! imageHandled)
+								{
+                	imageHandled = this.screen.HandleImage(imageItem, type);
+								}
              }
          }
          if (typeof response.result !== 'undefined' && response.result !== null)
@@ -403,7 +407,10 @@ window.ShortPixelProcessor =
               if (response.result.is_error)
                 this.HandleItemError(response.result, type);
 
-              this.screen.HandleImage(response, type); // whole response here is single item. (final!)
+							if (! imageHandled)
+							{
+              	imageHandled = this.screen.HandleImage(response, type); // whole response here is single item. (final!)
+							}
          }
 
          // Queue status?
@@ -413,9 +420,6 @@ window.ShortPixelProcessor =
             this.screen.UpdateStats(response.stats, type);
          }
 
-         // Check for errors like Queue / Key / Maintenance / etc  (is_error true, pass message to screen)
-
-         // If all is fine, there is more in queue, enter back into queue.
     },
     /// If both are reported back, both did tick, so both must be considered.
     HandleQueueStatus: function(data)

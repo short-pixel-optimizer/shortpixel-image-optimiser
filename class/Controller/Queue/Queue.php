@@ -6,6 +6,8 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\CacheController as CacheController;
 use ShortPixel\Controller\ResponseController as ResponseController;
 
+use ShortPixel\Helper\UiHelper as UiHelper;
+
 use ShortPixel\ShortQ\ShortQ as ShortQ;
 
 abstract class Queue
@@ -458,7 +460,8 @@ abstract class Queue
         $item->compressionType = \wpSPIO()->settings()->compressionType;
 
         $urls = $imageModel->getOptimizeUrls();
-
+				$imagePreview = UIHelper::findBestPreview($imageModel, 800, true);
+				$imagePreviewURL = (is_object($imagePreview)) ? $imagePreview->getURL() : false;
 
         $counts = new \stdClass;
         $counts->creditCount = 0;  // count the used credits for this item.
@@ -577,6 +580,7 @@ abstract class Queue
         // Former securi function, add timestamp to all URLS, for cache busting.
         $urls = $this->timestampURLS($urls, $imageModel->get('id'));
         $item->urls = apply_filters('shortpixel_image_urls', $urls, $imageModel->get('id'));
+				$item->preview = $imagePreviewURL;
         $item->counts = $counts;
 
         return $item;

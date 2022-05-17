@@ -28,12 +28,12 @@
 }
 .shortpixel-bulk-wrapper p.description {
   font-size: 14px;
-  max-width: 650px;
   margin-left: 10px;
   margin: 15px 0;
 }
 .shortpixel-bulk-wrapper nav {
-  margin: 45px auto;
+  margin: auto;
+  margin-top: 45px;
   width: 80%;
 }
 .shortpixel-bulk-wrapper nav .button {
@@ -61,6 +61,18 @@
 }
 .shortpixel-bulk-wrapper .hidden {
   display: none !important;
+}
+.shortpixel-bulk-wrapper .dashicons.spin {
+  animation: dashicons-spin 1s infinite;
+  animation-timing-function: linear;
+}
+@keyframes dashicons-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 .shortpixel-bulk-wrapper .bulk-modal {
   position: absolute;
@@ -124,7 +136,7 @@
   right: 0;
   top: 0;
   bottom: 0;
-  background: rgba(1, 1, 1, 0.1);
+  background: #fff;
   transition: opacity 1s linear;
   z-index: -1;
   opacity: 0;
@@ -137,7 +149,9 @@
 .shortpixel-bulk-wrapper .screen-wrapper .shortpixel-bulk-loader[data-status=loading] {
   z-index: 100;
   visibility: visible;
-  opacity: 1;
+  opacity: 0.9;
+  position: absolute;
+  width: 100%;
 }
 .shortpixel-bulk-wrapper .screen-wrapper .shortpixel-bulk-loader .loader {
   display: flex;
@@ -160,8 +174,9 @@
   z-index: 0;
   visibility: hidden;
   opacity: 0;
-  transition: opacity 1s linear;
+  transition: opacity 500ms ease-in;
   margin: 15px 0;
+  padding-bottom: 35px;
 }
 .shortpixel-bulk-wrapper .panel p {
   margin-left: 15px;
@@ -218,7 +233,7 @@
   padding: 26px 0;
   text-align: center;
   z-index: 10;
-  border-radius: 10px;
+  border-radius: 3px;
   cursor: pointer;
   transition: all 900ms;
 }
@@ -403,13 +418,17 @@
 }
 .shortpixel-bulk-wrapper section.panel.selection .load.wrapper, .shortpixel-bulk-wrapper section.panel.selection .interface.wrapper {
   opacity: 0;
-  transition: all 1s ease-in;
+  height: 0;
+  transition: opacity 100ms ease-in;
 }
 .shortpixel-bulk-wrapper section.panel.selection[data-status=loading] .load.wrapper {
   opacity: 1;
+  height: auto;
+  padding-bottom: 45px;
 }
 .shortpixel-bulk-wrapper section.panel.selection[data-status=loaded] .interface.wrapper {
   opacity: 1;
+  height: auto;
 }
 .shortpixel-bulk-wrapper section.panel.selection .load.wrapper .loading {
   display: flex;
@@ -689,6 +708,7 @@
 .shortpixel-bulk-wrapper section.panel.process .bulk-summary > div > span, .shortpixel-bulk-wrapper section.panel.finished .bulk-summary > div > span {
   display: table-cell;
   padding: 16px;
+  width: 25%;
 }
 .shortpixel-bulk-wrapper section.panel.process .bulk-summary .heading, .shortpixel-bulk-wrapper section.panel.finished .bulk-summary .heading {
   background: #F6F9FF;
@@ -724,56 +744,78 @@
 .shortpixel-bulk-wrapper section.panel.process .bulk-summary .line-progressbar label input[type=checkbox], .shortpixel-bulk-wrapper section.panel.finished .bulk-summary .line-progressbar label input[type=checkbox] {
   margin-right: 8px;
 }
-.shortpixel-bulk-wrapper section.panel.process .image-preview, .shortpixel-bulk-wrapper section.panel.finished .image-preview {
+.shortpixel-bulk-wrapper section.panel.process .image-preview-section, .shortpixel-bulk-wrapper section.panel.finished .image-preview-section {
   background: #F6F9FF;
   border: 1px solid #DFEAFF;
   width: 80%;
   margin: 15px auto;
 }
-.shortpixel-bulk-wrapper section.panel.process .image-preview .image-preview-line, .shortpixel-bulk-wrapper section.panel.finished .image-preview .image-preview-line {
+.shortpixel-bulk-wrapper section.panel.process .image-preview-section .image-preview-line, .shortpixel-bulk-wrapper section.panel.finished .image-preview-section .image-preview-line {
   display: flex;
-  width: 60%;
+  width: 90%;
   justify-content: space-between;
   align-items: center;
   margin: 15px auto;
 }
-.shortpixel-bulk-wrapper section.panel.process .image-preview .image-preview-line .opt-circle-image, .shortpixel-bulk-wrapper section.panel.finished .image-preview .image-preview-line .opt-circle-image {
-  width: 40px;
-  height: 40px;
-  float: right;
-  margin-right: 35px;
+.shortpixel-bulk-wrapper section.panel.process .image-preview-section .image-preview-line [data-result=filename], .shortpixel-bulk-wrapper section.panel.finished .image-preview-section .image-preview-line [data-result=filename] {
+  overflow: hidden;
 }
-.shortpixel-bulk-wrapper section.panel.process .image-preview .image-preview-line .opt-circle-image .trail, .shortpixel-bulk-wrapper section.panel.finished .image-preview .image-preview-line .opt-circle-image .trail {
+.shortpixel-bulk-wrapper section.panel.process .image-preview-section .image-preview-line .opt-circle-image, .shortpixel-bulk-wrapper section.panel.finished .image-preview-section .image-preview-line .opt-circle-image {
+  width: 55px;
+  height: 55px;
+  float: right;
+}
+.shortpixel-bulk-wrapper section.panel.process .image-preview-section .image-preview-line .opt-circle-image .trail, .shortpixel-bulk-wrapper section.panel.finished .image-preview-section .image-preview-line .opt-circle-image .trail {
   stroke: #ddd;
 }
-.shortpixel-bulk-wrapper section.panel.process .image-preview .image-preview-line .opt-circle-image .path, .shortpixel-bulk-wrapper section.panel.finished .image-preview .image-preview-line .opt-circle-image .path {
+.shortpixel-bulk-wrapper section.panel.process .image-preview-section .image-preview-line .opt-circle-image .path, .shortpixel-bulk-wrapper section.panel.finished .image-preview-section .image-preview-line .opt-circle-image .path {
   stroke: #1FBEC9;
   stroke-linecap: round;
   transition: stroke-dashoffset 0.5s ease 0s;
 }
-.shortpixel-bulk-wrapper section.panel.process .image-preview .image-preview-line .opt-circle-image .text, .shortpixel-bulk-wrapper section.panel.finished .image-preview .image-preview-line .opt-circle-image .text {
+.shortpixel-bulk-wrapper section.panel.process .image-preview-section .image-preview-line .opt-circle-image .text, .shortpixel-bulk-wrapper section.panel.finished .image-preview-section .image-preview-line .opt-circle-image .text {
   fill: #1FBEC9;
   font-size: 28px;
   font-weight: 700;
   dominant-baseline: middle;
   text-anchor: middle;
 }
-.shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper, .shortpixel-bulk-wrapper section.panel.finished .image-preview .preview-wrapper {
-  display: flex;
-  justify-content: center;
+.shortpixel-bulk-wrapper section.panel.process .image-preview-section .preview-wrapper, .shortpixel-bulk-wrapper section.panel.finished .image-preview-section .preview-wrapper {
+  width: 100%;
+  overflow: hidden;
   margin: 25px 0 40px 0;
 }
-.shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-source, .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-result, .shortpixel-bulk-wrapper section.panel.finished .image-preview .preview-wrapper .image-source, .shortpixel-bulk-wrapper section.panel.finished .image-preview .preview-wrapper .image-result {
-  max-width: 400px;
+.shortpixel-bulk-wrapper section.panel.process .image-preview-section .preview-wrapper .slide-mask, .shortpixel-bulk-wrapper section.panel.finished .image-preview-section .preview-wrapper .slide-mask {
+  flex-wrap: nowrap;
+  display: flex;
+  justify-content: flex-start;
+}
+.shortpixel-bulk-wrapper section.panel.process .image-preview-section .preview-wrapper .preview-image, .shortpixel-bulk-wrapper section.panel.finished .image-preview-section .preview-wrapper .preview-image {
+  transition: 1s all linear;
+  display: flex;
+  justify-content: center;
+  flex-shrink: 0;
+  flex-grow: 0;
+  width: 100%;
+}
+.shortpixel-bulk-wrapper section.panel.process .image-preview-section .preview-wrapper .current.preview-image, .shortpixel-bulk-wrapper section.panel.finished .image-preview-section .preview-wrapper .current.preview-image {
+  opacity: 1;
+}
+.shortpixel-bulk-wrapper section.panel.process .image-preview-section .preview-wrapper .old.preview-image, .shortpixel-bulk-wrapper section.panel.finished .image-preview-section .preview-wrapper .old.preview-image {
+  display: none;
+}
+.shortpixel-bulk-wrapper section.panel.process .image-preview-section .preview-wrapper .image, .shortpixel-bulk-wrapper section.panel.finished .image-preview-section .preview-wrapper .image {
+  max-width: 45%;
   max-height: 400px;
   overflow: hidden;
   position: relative;
 }
-.shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-source img, .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-result img, .shortpixel-bulk-wrapper section.panel.finished .image-preview .preview-wrapper .image-source img, .shortpixel-bulk-wrapper section.panel.finished .image-preview .preview-wrapper .image-result img {
+.shortpixel-bulk-wrapper section.panel.process .image-preview-section .preview-wrapper .image img, .shortpixel-bulk-wrapper section.panel.finished .image-preview-section .preview-wrapper .image img {
   width: 100%;
+  height: auto;
   object-fit: cover;
 }
-.shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-source p, .shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-result p, .shortpixel-bulk-wrapper section.panel.finished .image-preview .preview-wrapper .image-source p, .shortpixel-bulk-wrapper section.panel.finished .image-preview .preview-wrapper .image-result p {
+.shortpixel-bulk-wrapper section.panel.process .image-preview-section .preview-wrapper .image p, .shortpixel-bulk-wrapper section.panel.finished .image-preview-section .preview-wrapper .image p {
   position: absolute;
   top: 0;
   z-index: 2;
@@ -781,15 +823,15 @@
   background: rgba(0, 0, 0, 0.5);
   padding: 4px;
 }
-.shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-source, .shortpixel-bulk-wrapper section.panel.finished .image-preview .preview-wrapper .image-source {
+.shortpixel-bulk-wrapper section.panel.process .image-preview-section .preview-wrapper .image.source, .shortpixel-bulk-wrapper section.panel.finished .image-preview-section .preview-wrapper .image.source {
   margin-right: 8px;
 }
-.shortpixel-bulk-wrapper section.panel.process .image-preview .preview-wrapper .image-result, .shortpixel-bulk-wrapper section.panel.finished .image-preview .preview-wrapper .image-result {
+.shortpixel-bulk-wrapper section.panel.process .image-preview-section .preview-wrapper .image.result, .shortpixel-bulk-wrapper section.panel.finished .image-preview-section .preview-wrapper .image.result {
   margin-left: 8px;
 }
 .shortpixel-bulk-wrapper section.panel.process nav, .shortpixel-bulk-wrapper section.panel.finished nav {
   width: 80%;
-  margin: 35px auto;
+  margin-top: 35px;
 }
 .shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .select .line, .shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .summary .line, .shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .process .line {
   background: #1FBEC9;

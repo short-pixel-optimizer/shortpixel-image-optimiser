@@ -35,6 +35,7 @@ namespace ShortPixel;
 
     <?php $this->loadView('bulk/part-progressbar', false); ?>
 
+		<!--- ###### MEDIA ###### -->
     <div class='bulk-summary' data-check-visibility data-control="data-check-media-total">
       <div class='heading'>
         <span><i class='dashicons dashicons-images-alt2'>&nbsp;</i> Media Library</span>
@@ -42,9 +43,12 @@ namespace ShortPixel;
               <span class='line-progressbar'>
                 <span class='done-text'><i data-stats-media="percentage_done"></i> %</span>
                 <span class='done' data-stats-media="percentage_done" data-presentation="css.width.percentage"></span>
+
               </span>
+							<span class='dashicons spin dashicons-update line-progressbar-spinner' data-check-visibility data-control="data-check-media-in_process">&nbsp;</span>
+
         </span>
-        <span>Processing: <i data-stats-media="in_process">-</i></span>
+        <span>Processing: <i data-stats-media="in_process" data-check-media-in_process >-</i></span>
         <span>&nbsp;</span>
 				<span>&nbsp;</span>
       </div>
@@ -70,12 +74,14 @@ namespace ShortPixel;
       <div class='heading'>
         <span><i class='dashicons dashicons-open-folder'>&nbsp;</i> <?php _e('Custom Media', 'shortpixel-image-optimiser'); ?> </span>
         <span>
-              <span class='progressbar'>
+              <span class='line-progressbar'>
                 <span class='done-text'><i data-stats-custom="percentage_done"></i> %</span>
                 <span class='done' data-stats-custom="percentage_done" data-presentation="css.width.percentage"></span>
               </span>
+							<span class='dashicons spin dashicons-update line-progressbar-spinner' data-check-visibility data-control="data-check-custom-in_process">&nbsp;</span>
+
         </span>
-  			<span>Processing: <i data-stats-custom="in_process">-</i></span>
+  			<span>Processing: <i data-stats-custom="in_process" data-check-custom-in_process>-</i></span>
 			  <span>&nbsp;</span>
         <span>&nbsp;</span>
       </div>
@@ -96,10 +102,18 @@ namespace ShortPixel;
 
     <div data-error-custom="message" data-presentation="append" class='errorbox custom'></div>
 
+		<nav>
+			<button class='button stop' data-action="StopBulk" >Stop Bulk Processing</button>
+			<button class='button pause' data-action="PauseBulk" id="PauseBulkButton">Pause Bulk Processing</button>
+			<button class='button button-primary resume' data-action='ResumeBulk' id="ResumeBulkButton">Resume Bulk Processing</button>
 
-    <div class='image-preview hidden'>
-      <div class="image-preview-line">
-        <strong data-result="queuetype"></strong> <span data-result="filename">Pending</span>
+		</nav>
+
+    <div class='image-preview-section hidden'> <!-- /hidden -->
+       <div class="image-preview-line">
+        <!-- <strong data-result="queuetype"></strong>  -->
+				<span>&nbsp;</span> <!-- Spacer for flex -->
+				<span data-result="filename">&nbsp;</span>
 
         <svg class="opt-circle-image" viewBox="0 0 100 100">
                       <path class="trail" d="
@@ -119,25 +133,42 @@ namespace ShortPixel;
                       <text class="text" x="50" y="50">-- %</text>
                   </svg>
       </div>
+
       <div class="preview-wrapper">
-        <div class="image-source">
-          <img src="<?php echo \wpSPIO()->plugin_url('res/img/bulk/placeholder.svg'); ?>" data-placeholder="<?php echo \wpSPIO()->plugin_url('res/img/bulk/placeholder.svg'); ?>">
+			 <div class="slide-mask" id="preview-structure" data-placeholder="<?php echo \wpSPIO()->plugin_url('res/img/bulk/placeholder.svg'); ?>">
 
-          <p>Original Image</p>
-        </div>
+					<div class='current preview-image'>
+		        <div class="image source">
+		          <img src="<?php echo \wpSPIO()->plugin_url('res/img/bulk/placeholder.svg'); ?>" >
 
-        <div class="image-result">
-          <img src="<?php echo \wpSPIO()->plugin_url('res/img/bulk/placeholder.svg'); ?>" data-placeholder="<?php echo \wpSPIO()->plugin_url('res/img/bulk/placeholder.svg'); ?>">
-				<p>Optimized Image</p>
-        </div>
-      </div>
+		          <p>Original Image</p>
+		        </div>
+
+		        <div class="image result">
+		          <img src="<?php echo \wpSPIO()->plugin_url('res/img/bulk/placeholder.svg'); ?>" >
+						<p>Optimized Image</p>
+		        </div>
+					</div>
+
+					<div class='new preview-image'>
+
+							<div class="image source">
+								<img src="<?php echo \wpSPIO()->plugin_url('res/img/bulk/placeholder.svg'); ?>" >
+
+								<p>Original Image</p>
+							</div>
+
+							<div class="image result">
+								<img src="<?php echo \wpSPIO()->plugin_url('res/img/bulk/placeholder.svg'); ?>" >
+							<p>Optimized Image</p>
+							</div>
+					</div>
+	      </div> <!-- slidemask -->
+			</div>  <!-- preview wrapper -->
     </div>
 
-    <nav>
-			<button class='button stop' data-action="StopBulk" >Stop Bulk Processing</button>
-      <button class='button pause' data-action="PauseBulk" id="PauseBulkButton">Pause Bulk Processing</button>
-      <button class='button button-primary resume' data-action='ResumeBulk' id="ResumeBulkButton">Resume Bulk Processing</button>
+		<div id="preloader" class="hidden">
 
-    </nav>
+
   </div>
 </section>

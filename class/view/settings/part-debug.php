@@ -82,8 +82,8 @@ $q = $opt->getQueue('media');
         <span>Month #2 </span><span><?php echo $statsControl->find('period', 'months', '2'); ?></span>
         <span>Month #3 </span><span><?php echo $statsControl->find('period', 'months', '3'); ?></span>
         <span>Month #4 </span><span><?php echo $statsControl->find('period', 'months', '4'); ?></span>
-  </div>
-
+  	</div>
+	</div> <!-- stats -->	
 
   <div class='debug-stats'>
     <form method="POST" action="<?php echo add_query_arg(array('sp-action' => 'action_debug_resetStats')) ?>"

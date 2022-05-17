@@ -166,7 +166,10 @@ console.log("Screen Init Done", initMedia, initCustom);
       var panel = this.panels[this.currentPanel];
 
       var currentStatus = panel.getAttribute('data-status');
-      panel.setAttribute('data-status', status);
+			panel.setAttribute('data-status', '');
+			 setTimeout(function() {
+				 panel.setAttribute('data-status', status);
+			 }, 1000);
 
       var event = new CustomEvent('shortpixel.bulk.onUpdatePanelStatus', { detail : {status: status, oldStatus: currentStatus, panelName: panelName}});
       window.dispatchEvent(event);
@@ -310,26 +313,28 @@ console.log("Screen Init Done", initMedia, initCustom);
       {
           this.UpdateData('result', result);
 
-					var originalImage = document.querySelector('.image-source img');
-					var optimizedImage =  document.querySelector('.image-result img');
+					//var originalImage = document.querySelector('.image-source img');
+					//var optimizedImage =  document.querySelector('.image-result img');
 
 					// reset database to avoid mismatches.
-					originalImage.src = originalImage.dataset.placeholder;
-					optimizedImage.src =  optimizedImage.dataset.placeholder;
+//					originalImage.src = originalImage.dataset.placeholder;
+//					optimizedImage.src =  optimizedImage.dataset.placeholder;
 
           if (result.original)
           {
-                originalImage.src  = result.original;
+ //               originalImage.src  = result.original;
           }
           if (result.optimized)
           {
-                optimizedImage.src  = result.optimized;
+  //              optimizedImage.src  = result.optimized;
           }
 
-          if ( (result.orginal || result.optimized) && document.querySelector('.image-preview').classList.contains('hidden'))
+          if ( (result.orginal || result.optimized) && document.querySelector('.image-preview-section').classList.contains('hidden'))
           {
-            document.querySelector('.image-preview').classList.remove('hidden');
+            document.querySelector('.image-preview-section').classList.remove('hidden');
           }
+
+					this.HandleImageEffect(result.original, result.optimized);
 
           if (result.improvements.totalpercentage)
           {
@@ -356,8 +361,102 @@ console.log("Screen Init Done", initMedia, initCustom);
 
 							this.AddAverageOptimization(result.improvements.totalpercentage);
           }
+					return true; // This prevents flooding.
       }
+			else if (typeof resultItem.preview !== 'undefined' && resultItem.preview != false)
+			{
+				 var name = resultItem.preview.split(/[\\/]/).pop();
+				 name = name.replace(/[^a-zA-Z0-9 ]/g, '');
+
+				 var preLoader = document.getElementById('preloader');
+				 if (preLoader.querySelector('[data-name="' + name + '"]') == null)
+				 {
+						var el = document.createElement('span');
+						var img = document.createElement('img');
+						img.src = resultItem.preview;
+						el.appendChild(img);
+						el.dataset.name = name;
+						preloader.appendChild(el)
+						console.log('preloading URL with name', name, resultItem.preview, el);
+
+						// Remove from DOM after a while to prevent DOM bloating.
+						if (preloader.children.length >= 10)
+						{
+							 preloader.children[0].remove();
+						}
+				 }
+			}
+			return false;
   }
+
+	// Function to neatly slide the new / old images around.
+	this.HandleImageEffect = function(originalSrc, optimizedSrc)
+	{
+		if (! originalSrc && ! optimizedSrc)
+		{
+			return false;
+		}
+
+		var preview = document.getElementById('preview-structure');
+		var offset = preview.offsetWidth;
+
+		var placeHolder = preview.dataset.placeholder;
+
+     if (preview.querySelector('.preview-image.old') !== null)
+		 {
+			  preview.querySelector('.preview-image.old').remove();
+		 }
+
+//		var originalImage = preview.querySelector('.current.preview-image image.source');
+//		var optimizedImage =  preview.querySelector('.current.preview-image image.result');
+
+//console.log('preview children', preview.children);
+		var currentItem = preview.children[0];
+		var newItem = preview.children[1];
+		var cloneNode = newItem.cloneNode(true);
+
+
+		if (originalSrc)
+		{
+			 preview.querySelector('.new.preview-image .image.source img').src = originalSrc;
+		}
+		else {
+			 preview.querySelector('.new.preview-image .image.source').style.display = 'none';
+		}
+
+		if (optimizedSrc)
+		{
+			 preview.querySelector('.new.preview-image .image.result img').src = optimizedSrc;
+		}
+		else {
+			 preview.querySelector('.new.preview-image .image.result').style.display = 'none';
+		}
+//		currentItem.classList.add('slideleft');
+		currentItem.style.marginLeft = '-' + offset + 'px';
+		setTimeout(function() {
+
+			//.classList.remove('current');
+			//child.classList.add('old');
+			newItem.classList.remove('new');
+			newItem.classList.add('current');
+
+			currentItem.remove();
+		}, 1000);
+
+		if (typeof cloneNode !== 'undefined')
+		{
+			cloneNode.querySelector('.image.source img').src = placeHolder;
+			cloneNode.querySelector('.image.result img').src = placeHolder;
+			preview.appendChild(cloneNode);
+		}
+
+		//var ImageSrc = document.querySelector('')
+		// reset display to avoid mismatches.
+//					originalImage.src = originalImage.dataset.placeholder;
+//					optimizedImage.src =  optimizedImage.dataset.placeholder;
+
+
+	}
 
 	this.AddAverageOptimization = function(num)
 	{
@@ -649,6 +748,16 @@ console.log("Screen Init Done", initMedia, initCustom);
 				this.ToggleOverQuotaNotice(false);
      }
 
+		 var spinners = document.querySelectorAll('.line-progressbar-spinner');
+		 for (var i =0; i < spinners.length; i++)
+		 {
+					 if (data.paused == true)
+					 	spinners[i].classList.remove('spin');
+					 else
+					 	spinners[i].classList.add('spin');
+		 }
+
+
   }
 
   // Everything that needs to happen when going overQuota.
@@ -673,10 +782,10 @@ console.log("Screen Init Done", initMedia, initCustom);
      var oldStatus = event.detail.oldStatus;
      var panelName = event.detail.panelName;
 
-     if (panelName == 'selection' && status == 'loaded')
+     /*if (panelName == 'selection' && status == 'loaded')
      {
         //this.CheckSelectionScreen();
-     }
+     } */
      console.log('Status Updated', event.detail);
   }
   this.EventPanelSwitched = function(event)

@@ -164,6 +164,8 @@ class ApiController
         $requestParameters['refresh'] = 1;
     }
 
+		$requestParameters = apply_filters('shortpixel/api/request', $requestParameters, $args['item_id']);
+
     $arguments = array(
         'method' => 'POST',
         'timeout' => 15,

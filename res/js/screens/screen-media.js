@@ -63,6 +63,7 @@ var ShortPixelScreen = function (MainScreen, processor)
                element.innerHTML = result.message;
            }
         } */
+				return false; 
     }
 
     this.UpdateMessage = function(id, message, isError)

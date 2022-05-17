@@ -489,7 +489,8 @@ class UiHelper
 
 	// @param MediaLibraryModel Object $imageItem
 	// @param String $size  Preferred size
-	public static function findBestPreview($imageItem, $size = 800)
+	// @param String Preload The preloader tries to guess what the preview might be for a more smooth process. Ignore optimize / backup
+	public static function findBestPreview($imageItem, $size = 800, $preload = false)
 	{
 		 	$closestObj = $imageItem;
 
@@ -505,7 +506,7 @@ class UiHelper
 
 			foreach($thumbnails as $thumbnail)
 			{
-				 if (! $thumbnail->isOptimized() || ! $thumbnail->hasBackup())
+				 if (! $preload && (! $thumbnail->isOptimized() || ! $thumbnail->hasBackup()))
 				 	continue;
 
 					$diff = abs($thumbnail->get('width') - $size);

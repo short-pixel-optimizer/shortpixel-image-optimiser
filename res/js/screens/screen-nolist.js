@@ -13,7 +13,7 @@ var ShortPixelScreen = function (MainScreen, processor)
     },
     this.HandleImage = function(result, type)
     {
-
+				return false; 
     }
 
     this.UpdateStats = function()

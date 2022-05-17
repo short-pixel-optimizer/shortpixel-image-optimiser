@@ -13,6 +13,7 @@ $queueRunning = $bulk->isAnyBulkRunning();
 <section id="tab-tools" class="clearfix <?php echo ($this->display_part == 'tools') ? ' sel-tab ' :''; ?> ">
     <h2><a class='tab-link' href='javascript:void(0);' data-id="tab-tools"><?php _e('Tools','shortpixel-image-optimiser');?></a></h2>
 
+
 	<p class='description'><?php printf(__('The tools provided are designed to make bulk changes to your data. Therefore, it is %s very important %s that you back up your entire website. ', 'shortpixel-image-optimiser'), '<b>', '</b>'); ?></p>
 
 	<div class='wp-shortpixel-options wp-shortpixel-tab-content'>
@@ -51,7 +52,6 @@ $queueRunning = $bulk->isAnyBulkRunning();
 					<p class='description'><?php printf(__('Will %sRemove Legacy data%s . This may result in data loss. Not recommended to do this manually.', 'shortpixel-image-optimiser'), '<b>','</b>'); ?></p>
 			</div>
 
-
 			<div class='option action'>
 						<button type="button" class='button' data-action="open-modal" data-target="ToolsRemoveAll">
 														<?php _e('Remove all Shortpixel Data', 'shortpixel-image-optimiser'); ?></button>
@@ -65,7 +65,7 @@ $queueRunning = $bulk->isAnyBulkRunning();
 							<p>&nbsp;</p>
 							<p><?php _e('This will remove all Shortpixel Data including data about optimization.', 'shortpixel-image-optimiser'); ?></p>
 							<?php _e('Type confirm to delete all Shortpixel data', 'shortpixel-image-optimiser'); ?>
-							<input type="text" name="confirm" value="" required data-required='confirm' />
+							<input type="text" name="confirm" value=""  data-required='confirm' />
 
 							<p><b>I understand that all Shortpixel data will be removed.  </b></p>
 
@@ -76,17 +76,16 @@ $queueRunning = $bulk->isAnyBulkRunning();
 			</div>
 
 
-
 			 <div class="option action">
 							<?php _e('Original images are stored in a backup folder. Your backup folder\'s size is now:','shortpixel-image-optimiser');?>
 
 							<div class="backup-modal">
-											<div data-tabfield="backupSize" data-value=""><?php _e('Calculating...', 'shortpixel-image-optimiser'); ?></div>
+
 									<?php wp_nonce_field('empty-backup', 'tools-nonce'); ?>
 
 									<button type="button" class='button' data-action="open-modal" data-target="ToolsRemoveBackup">
 																	<?php _e('Remove backups', 'shortpixel-image-optimiser'); ?></button>
-																	
+
 
 									<div class='remove-backup modalTarget' id="ToolsRemoveBackup">
 
@@ -96,7 +95,7 @@ $queueRunning = $bulk->isAnyBulkRunning();
 										<p>&nbsp;</p>
 										<p><?php _e('This will delete all the backup images. You won\'t be able to restore from backup or to reoptimize with different settings if you delete the backups.', 'shortpixel-image-optimiser'); ?></p>
 										<?php _e('Type confirm to delete all Shortpixel data', 'shortpixel-image-optimiser'); ?>
-										<input type="text" name="confirm" value="" required data-required='confirm' />
+										<input type="text" name="confirm" value="" data-required='confirm' />
 
 										<p><b>I understand that all Backups will be removed.  </b></p>
 
