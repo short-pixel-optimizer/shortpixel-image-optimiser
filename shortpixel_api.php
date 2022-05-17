@@ -137,7 +137,10 @@ class ShortPixelAPI {
             'resize_height' => $this->_settings->resizeHeight,
             'urllist' => $URLs
         );
-        if(/*false &&*/ $this->_settings->downloadArchive == 7 && class_exists('PharData')) {
+
+				$requestParameters = apply_filters('shortpixel/api/request', $requestParameters, $itemHandler->getId(), $itemHandler);
+
+				if(/*false &&*/ $this->_settings->downloadArchive == 7 && class_exists('PharData')) {
             $requestParameters['group'] = $itemHandler->getId();
         }
         if($refresh) {
