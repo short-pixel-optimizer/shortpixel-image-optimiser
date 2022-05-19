@@ -219,6 +219,12 @@ class UiHelper
       $list_actions = array();
       $id = $mediaItem->get('id');
 
+		  $keyControl = ApiKeyController::getInstance();
+			if (! $keyControl->keyIsVerified())
+			{
+				return array(); // nothing
+			}
+
       $quotaControl = QuotaController::getInstance();
 
 			$access = AccessModel::getInstance();
@@ -327,6 +333,12 @@ class UiHelper
     $quotaControl = QuotaController::getInstance();
 		$optimizeController = new OptimizeController();
 
+		$keyControl = ApiKeyController::getInstance();
+		if (! $keyControl->keyIsVerified())
+		{
+			return array(); // nothing
+		}
+		
 		$access = AccessModel::getInstance();
 		if (! $access->imageIsEditable($mediaItem))
 		{

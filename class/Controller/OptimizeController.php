@@ -76,6 +76,24 @@ class OptimizeController
     {
         $fs = \wpSPIO()->filesystem();
 
+				if (! is_object($mediaItem))  // something wrong
+				{
+
+					$json->result = new \stdClass;
+					$json->result->message = __("File Error. File could not be loaded with this ID ", 'shortpixel-image-optimiser');
+					$json->result->apiStatus = ApiController::STATUS_NOT_API;
+					$json->fileStatus = ImageModel::FILE_STATUS_ERROR;
+					$json->result->is_done = true;
+					$json->result->is_error = true;
+
+					ResponseController::addData($item->item_id, 'message', $item->result->message);
+
+					Log::addWarn('Item with id ' . $json->result->item_id . ' is not restorable,');
+
+					 return $json;
+				}
+				
+
         $id = $mediaItem->get('id');
         $type = $mediaItem->get('type');
 
