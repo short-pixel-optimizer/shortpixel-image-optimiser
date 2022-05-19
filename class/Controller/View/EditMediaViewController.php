@@ -73,7 +73,8 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
           $this->view->stats = $this->getStatistics();
 
-					$image = $this->imageModel;
+
+
 
           if (! $this->userIsAllowed)
           {

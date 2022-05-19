@@ -30,7 +30,7 @@ $adminEmail = get_bloginfo('admin_email');
 if($adminEmail == 'noreply@addendio.com') $adminEmail = false; //hack for the addendio sandbox e-mail
 
 ?>
-<section id="tab-settings" <?php echo ($this->display_part == 'settings') ? ' class="sel-tab" ' :''; ?> >
+<section id="tab-settings" class="sel-tab" >
     <h2><a class='tab-link' href='javascript:void(0);' data-id="tab-settings">
       <?php _e('Join ShortPixel','shortpixel-image-optimiser');?></a>
     </h2>

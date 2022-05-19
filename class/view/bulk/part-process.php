@@ -38,7 +38,7 @@ namespace ShortPixel;
 		<!--- ###### MEDIA ###### -->
     <div class='bulk-summary' data-check-visibility data-control="data-check-media-total">
       <div class='heading'>
-        <span><i class='dashicons dashicons-images-alt2'>&nbsp;</i> Media Library</span>
+        <span><i class='dashicons dashicons-images-alt2'>&nbsp;</i> <?php _e('Media Library' ,'shortpixel-image-optimiser'); ?></span>
         <span>
               <span class='line-progressbar'>
                 <span class='done-text'><i data-stats-media="percentage_done"></i> %</span>
@@ -55,7 +55,7 @@ namespace ShortPixel;
       <div>
         <span>Finished: <i data-stats-media="done">-</i></span>
 
-        <span>Waiting: <i data-stats-media="in_queue">-</i></span>
+        <span><?php _e('Waiting','shortpixel-image-optimiser'); ?> <i data-stats-media="in_queue">-</i></span>
         <span>Errors: <i data-check-media-fatalerrors data-stats-media="fatal_errors" class='error'>- </i>
             </span>
 				<span data-check-visibility data-control="data-check-media-fatalerrors" ><label title="<?php _e('Show Errors', 'shortpixel-image-optimiser'); ?>">
@@ -86,9 +86,9 @@ namespace ShortPixel;
         <span>&nbsp;</span>
       </div>
       <div>
-        <span>Images processed: <i data-stats-custom="done">-</i></span>
+        <span>Finished: <i data-stats-custom="done">-</i></span>
 
-        <span>Images Left: <i data-stats-custom="in_queue">-</i></span>
+        <span><?php _e('Waiting','shortpixel-image-optimiser'); ?>: <i data-stats-custom="in_queue">-</i></span>
         <span>Errors: <i data-check-custom-fatalerrors  data-stats-custom="fatal_errors" class='error'>-</i></span>
 
 			<span data-check-visibility data-control="data-check-custom-fatalerrors" ><label title="<?php _e('Show Errors', 'shortpixel-image-optimiser'); ?>">

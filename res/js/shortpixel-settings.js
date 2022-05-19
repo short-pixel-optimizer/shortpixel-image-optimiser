@@ -172,14 +172,21 @@ this.SendModal = function(elem)
 
 this.ReceiveModal = function(elem)
 {
-	 console.log(elem);
-	 if (typeof elem.detail.settings.results !== undefined)
+
+
+	 if (typeof elem.detail.settings.results !== 'undefined')
 	 {
 		 var modal = document.getElementById('spioSettingsModal');
 	 	 var body = modal.querySelector('.spio-modal-body');
 
 		 body.innerHTML = elem.detail.settings.results;
 	 }
+
+	 if (typeof elem.detail.settings.redirect !== 'undefined')
+	 {
+			window.location.href = elem.detail.settings.redirect;
+	 }
+
 }
 
  	this.Init();

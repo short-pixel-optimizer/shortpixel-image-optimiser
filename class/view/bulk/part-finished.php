@@ -68,7 +68,7 @@ namespace ShortPixel;
       <div class='heading'>
         <span><i class='dashicons dashicons-open-folder'>&nbsp;</i> <?php _e('Custom Media','shortpixel-image-optimiser'); ?></span>
         <span>
-              <span class='progressbar'>
+              <span class='line-progressbar'>
                 <span class='done-text'><i data-stats-custom="percentage_done"></i> %</span>
                 <span class='done' data-stats-custom="percentage_done" data-presentation="css.width.percentage"></span>
               </span>

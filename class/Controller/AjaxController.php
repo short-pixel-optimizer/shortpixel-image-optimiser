@@ -688,11 +688,13 @@ class AjaxController
 				if (wp_verify_nonce($_POST['tools-nonce'], 'remove-all'))
 				{
 			 		InstallHelper::hardUninstall();
-					$json->settings->results = __('All Data has been removed. You can now uninstall the plugin', 'shortpixel-image-optimiser');
+					$json->settings->results = __('All Data has been removed. The plugin has been deactivated', 'shortpixel-image-optimiser');
 				}
 				else {
 						Log::addTemp('Remove all data Nonce failed');
 				}
+
+				$json->settings->redirect = admin_url('plugins.php');
 
 				return $json;
 		}

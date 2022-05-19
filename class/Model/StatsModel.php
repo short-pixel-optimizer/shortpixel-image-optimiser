@@ -5,6 +5,10 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
+use ShortPixel\Model\Image\MediaLibraryModel as MediaLibraryModel;
+
+
+use ShortPixel\Helper\UtilHelper as UtilHelper;
 
 class StatsModel
 {
@@ -31,7 +35,7 @@ class StatsModel
                        'images' => -1, // total optimized images (+thumbs) found
                        'thumbs' => -1, // Optimized thumbs - SQL does thumbs, but queue doesn't. (imprecise query)
                        'itemsTotal' => -1, // Total items in media  ( sql )
-                       'thumbsTotal' => -1, // Total thumbs in media ( sql ) - imprecise query 
+                       'thumbsTotal' => -1, // Total thumbs in media ( sql ) - imprecise query
                   /*     'lossy' => 0, // processed x compression
                        'lossy_thumbs' => 0, // main / thumbs
                        'lossless' => 0, // main /thumbs
@@ -150,11 +154,12 @@ class StatsModel
      if (is_null($this->currentStat))
           return null;
 
-       if (isset($this->currentStat[$data]))
+       if (array_key_exists($data, $this->currentStat))
        {
           $this->currentStat = $this->currentStat[$data];
           $this->path[] = $data;
        }
+
 
        if (! is_array($this->currentStat))
        {
@@ -166,8 +171,9 @@ class StatsModel
         return $this->currentStat;
        }
        else
+			 {
         return $this;
-
+			 }
   }
 
   private function fetchStatData()
@@ -199,7 +205,6 @@ class StatsModel
               $data = $this->countMediaThumbnails(['optimizedOnly' => true]);
             break;
             case 'images':
-              //$data = $this->countMediaThumbnails();
               $data = $this->getStat('media')->grab('items') + $this->getStat('media')->grab('thumbs');
             break;
             case 'itemsTotal':
@@ -287,17 +292,24 @@ class StatsModel
      );
 
      $args = wp_parse_args($args,$defaults);
-
-     // This query will return 2 positions after the thumbnail array declaration.  Value can be up to two positions ( 0-100 thumbnails) . If positions is 1-10 intval will filter out the string part.
-     $sql = "SELECT meta_id, post_id, substr(meta_value, instr(meta_value,'sizes')+9,2) as thumbcount, LOCATE('original_image', meta_value) as originalImage FROM " . $wpdb->postmeta . " WHERE meta_key = '_wp_attachment_metadata' ";
-
-     $sql .= " AND post_id NOT IN ( SELECT post_id FROM " . $wpdb->postmeta . " where meta_key = '_shortpixel_prevent_optimize' )";  // exclude 'crashed items'
-
+		 $prepare = array();
 
      if ($args['optimizedOnly'] == true)
      {
-       $sql .= ' AND post_id IN ( SELECT post_id FROM ' . $wpdb->postmeta . ' WHERE meta_key = "_shortpixel_optimized")';
+       $sql =  ' SELECT count(id) as thumbcount FROM ' . UtilHelper::getPostMetaTable() . ' WHERE status = %d AND (image_type = %d or image_type = %d)';
+			 $prepare = array(ImageModel::FILE_STATUS_SUCCESS, MediaLibraryModel::IMAGE_TYPE_THUMB, MediaLibraryModel::IMAGE_TYPE_ORIGINAL);
      }
+		 else {
+			 // This query will return 2 positions after the thumbnail array declaration.  Value can be up to two positions ( 0-100 thumbnails) . If positions is 1-10 intval will filter out the string part.
+	     $sql = "SELECT meta_id, post_id, substr(meta_value, instr(meta_value,'sizes')+9,2) as thumbcount, LOCATE('original_image', meta_value) as originalImage FROM " . $wpdb->postmeta . " WHERE meta_key = '_wp_attachment_metadata' ";
+
+	     $sql .= " AND post_id NOT IN ( SELECT post_id FROM " . $wpdb->postmeta . " where meta_key = '_shortpixel_prevent_optimize' )";  // exclude 'crashed items'
+		 }
+
+		 if (count($prepare) > 0)
+		 {
+			  $sql = $wpdb->prepare($sql, $prepare);
+		 }
 
      $results = $wpdb->get_results($sql);
      $thumbCount = 0;
@@ -307,11 +319,11 @@ class StatsModel
         $count = intval($row->thumbcount);
         if ($count > 0)
            $thumbCount += $count;
-        if ($row->originalImage > 0) // add to count, return value is string pos
+        if (property_exists($row, 'originalImage') && $row->originalImage > 0) // add to count, return value is string pos
            $thumbCount++;
      }
 
-     return $thumbCount;
+     return intval($thumbCount);
   }
 
   private function countMediaItems($args = array())
@@ -323,18 +335,24 @@ class StatsModel
       );
 
       $args = wp_parse_args($args,$defaults);
-
-      $sql = 'SELECT count(meta_id) FROM ' . $wpdb->postmeta . ' WHERE meta_key = "_wp_attached_file"';
+			$prepare = array();
 
       if ($args['optimizedOnly'] == true)
       {
-        $sql .= ' AND post_id IN ( SELECT post_id FROM ' . $wpdb->postmeta . ' WHERE meta_key = "_shortpixel_optimized")';
+        //$sql .= ' AND post_id IN ( SELECT post_id FROM ' . $wpdb->postmeta . ' WHERE meta_key = "_shortpixel_optimized")';
+				$sql = ' SELECT count(id) as count FROM ' . UtilHelper::getPostMetaTable() . ' WHERE status = %d AND parent = %d';
+				$prepare = array(ImageModel::FILE_STATUS_SUCCESS, MediaLibraryModel::IMAGE_TYPE_MAIN);
       }
+			else {
+				$sql = 'SELECT count(meta_id) FROM ' . $wpdb->postmeta . ' WHERE meta_key = "_wp_attached_file"';
+     		$sql .= " AND post_id NOT IN ( SELECT post_id FROM " . $wpdb->postmeta . " where meta_key = '_shortpixel_prevent_optimize' )";  // exclude 'crashed items'
+			}
 
-     $sql .= " AND post_id NOT IN ( SELECT post_id FROM " . $wpdb->postmeta . " where meta_key = '_shortpixel_prevent_optimize' )";  // exclude 'crashed items'
+			if (count($prepare) > 0)
+				$sql = $wpdb->prepare($sql, $prepare);
 
       $count = $wpdb->get_var($sql);
-      return $count;
+      return intval($count);
   }
 
   private function countMonthlyOptimized($monthsAgo = 1)

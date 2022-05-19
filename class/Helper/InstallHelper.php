@@ -92,6 +92,9 @@ class InstallHelper
 		$dir = \wpSPIO()->filesystem()->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
 		$dir->recursiveDelete();
 
+		$plugin = basename(SHORTPIXEL_PLUGIN_DIR) . '/' . basename(SHORTPIXEL_PLUGIN_FILE);
+		deactivate_plugins($plugin);
+
 	}
 
 

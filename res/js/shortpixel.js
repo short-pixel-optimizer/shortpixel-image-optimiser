@@ -305,6 +305,7 @@ var ShortPixel = function() {
 
 				// Init active tab
 				var activeTab = document.querySelector('section.sel-tab');
+				if (activeTab !== null);
 				ShortPixel.switchSettingsTab(activeTab.getAttribute('id'));
     }
 
