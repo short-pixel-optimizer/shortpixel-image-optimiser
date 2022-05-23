@@ -51,15 +51,22 @@ class EditMediaViewController extends \ShortPixel\ViewController
       public function dometaBox($post)
       {
           $this->post_id = $post->ID;
+					$this->view->debugInfo = array();
+					$this->view->id = $this->post_id;
+					$this->view->list_actions = '';
 
           $fs = \wpSPIO()->filesystem();
           $this->imageModel = $fs->getMediaImage($this->post_id);
 
 					// Asking for something non-existing.
 					if ($this->imageModel === false)
-						return false;
+					{
+						$this->view->status_message = __('File Error. This could be not an image or the file is missing', 'shortpixel-image-optimiser');
 
-          $this->view->id = $this->post_id;
+						$this->loadView();
+						return false;
+					}
+
           $this->view->status_message = null;
 
           $this->view->text = UiHelper::getStatusText($this->imageModel);
@@ -73,15 +80,13 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
           $this->view->stats = $this->getStatistics();
 
-
-
-
           if (! $this->userIsAllowed)
           {
             $this->view->actions = array();
             $this->view->list_actions = '';
           }
 
+					// @todo remove this if not DEVMODE
           $this->view->debugInfo = $this->getDebugInfo();
 
           $this->loadView();

@@ -76,6 +76,10 @@ class OptimizeController
     {
         $fs = \wpSPIO()->filesystem();
 
+				$json = $this->getJsonResponse();
+        $json->status = 0;
+        $json->result = new \stdClass;
+
 				if (! is_object($mediaItem))  // something wrong
 				{
 
@@ -92,14 +96,11 @@ class OptimizeController
 
 					 return $json;
 				}
-				
+
 
         $id = $mediaItem->get('id');
         $type = $mediaItem->get('type');
 
-        $json = $this->getJsonResponse();
-        $json->status = 0;
-        $json->result = new \stdClass;
         $json->result->item_id = $id;
 
         // Manual Optimization order should always go trough

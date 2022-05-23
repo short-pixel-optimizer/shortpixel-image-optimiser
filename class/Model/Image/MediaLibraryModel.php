@@ -720,16 +720,14 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			  InstallHelper::checkTables();
 				return false;
 		 }
-
-		 if (count($meta) == 1 && $meta[0]->image_type == self::IMAGE_TYPE_DUPLICATE)
+		 elseif (count($meta) == 1 && $meta[0]->image_type == self::IMAGE_TYPE_DUPLICATE)
 		 {
 				$duplicate_id = $meta[0]->parent;
 				$sqlPrep = $wpdb->prepare($sqlQuery, $duplicate_id);
 				$meta = $wpdb->get_results($sqlPrep);
 
 		 }
-
-		 if (count($meta) == 0) // no records, no object.
+		 elseif (count($meta) == 0) // no records, no object.
 		 {
 
 			 $duplicates = $this->getWPMLDuplicates();
@@ -1457,21 +1455,19 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   {
     global $wpdb;
     $fs = \wpSPIO()->filesystem();
+		$env = \wpSPIO()->env();
 
 		$duplicates = array();
 
-		// Detects WPML -and- Polylang
-		if (! function_exists('icl_object_id'))
+
+		if ($env->plugin_active('wpml'))
 		{
-			 return array();
-		}
+				$sql = "select element_id from " . $wpdb->prefix . "icl_translations where trid in (select trid from " . $wpdb->prefix . "icl_translations where element_id = %d) and element_id <> %d";
 
+				$sql = $wpdb->prepare($sql, $this->id, $this->id);
 
-		if (InstallHelper::checkTableExists('icl_translations'))
-		{
-				$sql = "select * from " . $wpdb->prefix . "icl_translations where trid in (select trid from " . $wpdb->prefix . "icl_translations where element_id = %d)";
+				Log::addTemp('WPML SQl '. $sql);
 
-				$sql = $wpdb->prepare($sql, $this->id);
 				$results = $wpdb->get_results($sql);
 
 					if (is_array($results))
@@ -1482,9 +1478,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 								 {
 									 continue;
 								 }
-								 $duplicateFile = $fs->getMediaImage($result->element_id);
+								 //$duplicateFile = $fs->getMediaImage($result->element_id);
+
 								 // Check if the path is the same. WPML translations can be linked to different images, so this is important.
-								 if ($this->getFullPath() == $duplicateFile->getFullPath())
+								 // Add. Prev. it loaded to whole media Image but this doesn't go well with loadDbMeta checks, so a rougher check now to see if files are similar. In any case if not identifical, should not be threated as such
+								 if (get_attached_file($this->id) == get_attached_file($result->element_id))
 								 {
 								 		$duplicates[] = $result->element_id;
 							 	 }
@@ -1492,12 +1490,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						}
 					}
 		}  // wpml
-		if (defined('POLYLANG_VERSION')) // polylang
+		if ($env->plugin_active('polylang')) // polylang
 		{
 				// unholy sql where guid is duplicated.
 				$sql = 'SELECT id FROM ' . $wpdb->prefix . 'posts WHERE guid in (select guid from ' . $wpdb->prefix . 'posts where id = %d ) and post_type = %s and id <> %d';
-				$sql = $wpdb->prepare($sql, $this->id, 'attachment', $this->id);
 
+				$sql = $wpdb->prepare($sql, $this->id, 'attachment', $this->id);
+Log::addTemp('Polylang SQl '. $sql);
 				$results = $wpdb->get_col($sql);
 
 				foreach($results as $index => $element_id)

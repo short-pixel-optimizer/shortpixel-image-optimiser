@@ -337,6 +337,7 @@ namespace ShortPixel\ShortPixelLogger;
        $controller = $this;
 
        $template_path = __DIR__ . '/' . $this->template  . '.php';
+      // var_dump( $template_path);
        if (file_exists($template_path))
        {
 

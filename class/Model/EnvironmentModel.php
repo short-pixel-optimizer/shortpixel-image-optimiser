@@ -78,8 +78,25 @@ class EnvironmentModel extends \ShortPixel\Model
       return true;
 
     return false;
-
   }
+
+	public function plugin_active($name)
+	{
+		 switch($name)
+		 {
+			  case 'wpml':
+					$plugin = 'sitepress-multilingual-cms/sitepress.php';
+				break;
+				case 'polylang':
+					$plugin = 'polylang/polylang.php';
+				break;
+				default:
+					 $plugin = 'none';
+				break;
+		 }
+
+		 return \is_plugin_active($name);
+	}
 
   //https://www.php.net/manual/en/function.sys-getloadavg.php
   public function getSystemLoad()
@@ -230,4 +247,6 @@ class EnvironmentModel extends \ShortPixel\Model
 
       return false;
   }
+
+
 }

@@ -141,6 +141,8 @@ namespace ShortPixel;
 		        <div class="image source">
 		          <img src="<?php echo \wpSPIO()->plugin_url('res/img/bulk/placeholder.svg'); ?>" >
 
+
+
 		          <p>Original Image</p>
 		        </div>
 

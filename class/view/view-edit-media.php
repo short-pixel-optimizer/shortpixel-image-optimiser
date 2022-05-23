@@ -29,7 +29,7 @@ if (! is_null($view->debugInfo) && is_array($view->debugInfo) && count($view->de
     </div>
   <?php endif; ?>
 
-  <?php if (isset($this->view->text)): ?>
+  <?php if (property_exists($this->view, 'text')): ?>
   <div class='sp-column-info'><p><?php  echo $this->view->text;  ?></p></div>
 <?php endif; ?>
 
@@ -56,7 +56,7 @@ if (! is_null($view->debugInfo) && is_array($view->debugInfo) && count($view->de
 
     ?>
 
-    <?php if (count($view->stats) > 0): ?>
+    <?php if (property_exists($view, 'stats') && count($view->stats) > 0): ?>
     <ul class='edit-media-stats'>
     <?php foreach($view->stats as $index => $data)
     { ?>
@@ -67,9 +67,9 @@ if (! is_null($view->debugInfo) && is_array($view->debugInfo) && count($view->de
   </div>
 </div>
 
-  <div id="sp-message-<?php echo($this->view->id); ?>" class='messages'>&nbsp;
+  <div id="sp-message-<?php echo($this->view->id); ?>" class='messages'>
   <?php if (! is_null($view->status_message)): ?>
-    <?php echo $view->status_message; ?>
+  <?php echo $view->status_message; ?>
   <?php endif; ?>
   </div>
 
