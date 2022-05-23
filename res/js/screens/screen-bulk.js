@@ -97,6 +97,7 @@ var ShortPixelScreen = function (MainScreen, processor)
 			{
 				 this.SwitchPanel(shortPixelScreen.panel);
 			}
+
 console.log("Screen Init Done", initMedia, initCustom);
 
   }
@@ -571,7 +572,7 @@ console.log("Screen Init Done", initMedia, initCustom);
                   if (value !== false)
                   {
                     if (presentation == 'css.width.percentage')
-                      element.style.width = value + '%';
+                      element.style.width = parseInt(value) + '%';
                     if (presentation == 'inputval')
                     {
                       element.value = value;

@@ -9,7 +9,7 @@ $opt = new OptimizeController();
 
 $q = $opt->getQueue('media');
 
-
+$env = \wpSPIO()->env();
 
 
 ?>
@@ -33,6 +33,10 @@ $q = $opt->getQueue('media');
       <span>Has Nextgen</span><span><?php var_export($this->has_nextgen); ?></span>
 
     </div>
+		<div class='flex'>
+			<span>GD Installed</span><span><?php var_export($env->is_gd_installed); ?></span>
+			<span>Curl Installed</span><span><?php var_export($env->is_curl_installed); ?></span>
+		</div>
   </div>
 
   <div class='settings'>
@@ -83,7 +87,7 @@ $q = $opt->getQueue('media');
         <span>Month #3 </span><span><?php echo $statsControl->find('period', 'months', '3'); ?></span>
         <span>Month #4 </span><span><?php echo $statsControl->find('period', 'months', '4'); ?></span>
   	</div>
-	</div> <!-- stats -->	
+	</div> <!-- stats -->
 
   <div class='debug-stats'>
     <form method="POST" action="<?php echo add_query_arg(array('sp-action' => 'action_debug_resetStats')) ?>"

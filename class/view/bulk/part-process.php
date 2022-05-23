@@ -53,7 +53,7 @@ namespace ShortPixel;
 				<span>&nbsp;</span>
       </div>
       <div>
-        <span>Finished: <i data-stats-media="done">-</i></span>
+        <span>Processed: <i data-stats-media="done">-</i></span>
 
         <span><?php _e('Waiting','shortpixel-image-optimiser'); ?> <i data-stats-media="in_queue">-</i></span>
         <span>Errors: <i data-check-media-fatalerrors data-stats-media="fatal_errors" class='error'>- </i>
@@ -86,7 +86,7 @@ namespace ShortPixel;
         <span>&nbsp;</span>
       </div>
       <div>
-        <span>Finished: <i data-stats-custom="done">-</i></span>
+        <span>Processed: <i data-stats-custom="done">-</i></span>
 
         <span><?php _e('Waiting','shortpixel-image-optimiser'); ?>: <i data-stats-custom="in_queue">-</i></span>
         <span>Errors: <i data-check-custom-fatalerrors  data-stats-custom="fatal_errors" class='error'>-</i></span>
@@ -140,15 +140,14 @@ namespace ShortPixel;
 					<div class='current preview-image'>
 		        <div class="image source">
 		          <img src="<?php echo \wpSPIO()->plugin_url('res/img/bulk/placeholder.svg'); ?>" >
-
-
-
 		          <p>Original Image</p>
+							<?php $this->loadView('snippets/part-svgloader', false); ?>
 		        </div>
 
 		        <div class="image result">
 		          <img src="<?php echo \wpSPIO()->plugin_url('res/img/bulk/placeholder.svg'); ?>" >
 						<p>Optimized Image</p>
+						<?php $this->loadView('snippets/part-svgloader', false); ?>
 		        </div>
 					</div>
 
@@ -156,12 +155,13 @@ namespace ShortPixel;
 
 							<div class="image source">
 								<img src="<?php echo \wpSPIO()->plugin_url('res/img/bulk/placeholder.svg'); ?>" >
-
+								<?php $this->loadView('snippets/part-svgloader', false); ?>
 								<p>Original Image</p>
 							</div>
 
 							<div class="image result">
 								<img src="<?php echo \wpSPIO()->plugin_url('res/img/bulk/placeholder.svg'); ?>" >
+								<?php $this->loadView('snippets/part-svgloader', false); ?>
 							<p>Optimized Image</p>
 							</div>
 					</div>
@@ -173,4 +173,6 @@ namespace ShortPixel;
 
 
   </div>
+
+
 </section>

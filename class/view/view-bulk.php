@@ -4,13 +4,8 @@ namespace ShortPixel;
 
 
 <div class="shortpixel-bulk-wrapper">
-  <h1>ShortPixel Bulk Processing</h1>
+  <h1><?php _e('ShortPixel Bulk Processing', 'shortpixel-image-optimiser'); ?></h1>
 
-
-
-  <!--
-  <div class='error'><p id="shortpixel-bulk-error">Error region</p></div>
-  -->
   <div id="processPaused" class="processor-paused" data-action="ResumeBulk"><span class='dashicons dashicons-controls-pause' data-action="ResumeBulk"></span>The Bulk Processing is paused, please click to resume</div>
 
   <div id="processorOverQuota" class="processor-overquota">

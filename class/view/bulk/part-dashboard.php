@@ -93,10 +93,12 @@ namespace ShortPixel;
    </div>
   <?php endif; ?>
 
+
   <?php if (! $this->view->error): ?>
      <div class='shortpixel-bulk-loader' id="bulk-loading" data-status='loading'>
        <div class='loader'>
-           <span><img src="<?php echo \wpSPIO()->plugin_url('res/img/spinner2.gif'); ?>" /></span>
+				 	 <span class="svg-spinner"><?php $this->loadView('snippets/part-svgloader', false); ?></span>
+
            <span>
            <h2>Please wait, ShortPixel is loading</h2>
 

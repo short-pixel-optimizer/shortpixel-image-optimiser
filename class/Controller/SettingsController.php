@@ -346,6 +346,7 @@ class SettingsController extends \ShortPixel\ViewController
           if ($this->do_redirect)
             $this->doRedirect('bulk');
           else {
+						Notice::addSuccess(__('Settings Saved', 'shortpixel-image-optimiser'));
             $this->doRedirect();
           }
       }

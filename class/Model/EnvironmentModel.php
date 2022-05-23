@@ -95,7 +95,7 @@ class EnvironmentModel extends \ShortPixel\Model
 				break;
 		 }
 
-		 return \is_plugin_active($name);
+		 return \is_plugin_active($plugin);
 	}
 
   //https://www.php.net/manual/en/function.sys-getloadavg.php

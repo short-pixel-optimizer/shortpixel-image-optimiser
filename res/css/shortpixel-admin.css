@@ -290,7 +290,7 @@ body.debug-model-active {
 
 .switch_button {
   line-height: 12px;
-  margin: 10px -5px;
+  margin: 2px -5px 10px -5px;
   display: inline-block;
 }
 .switch_button label {

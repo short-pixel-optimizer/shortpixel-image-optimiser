@@ -74,6 +74,10 @@
     transform: rotate(360deg);
   }
 }
+.shortpixel-bulk-wrapper .loading-icon {
+  width: 50%;
+  height: 50%;
+}
 .shortpixel-bulk-wrapper .bulk-modal {
   position: absolute;
   padding: 0;
@@ -164,8 +168,9 @@
 .shortpixel-bulk-wrapper .screen-wrapper .shortpixel-bulk-loader .loader span h2 {
   color: #555;
 }
-.shortpixel-bulk-wrapper .screen-wrapper .shortpixel-bulk-loader .loader img {
-  width: 60%;
+.shortpixel-bulk-wrapper .screen-wrapper .shortpixel-bulk-loader .loader .svg-spinner .svg-loader {
+  width: 200px;
+  height: 50px;
 }
 .shortpixel-bulk-wrapper .panel {
   width: 100%;
@@ -814,11 +819,24 @@
   width: 100%;
   height: auto;
   object-fit: cover;
+  z-index: 10;
+  position: relative;
+}
+.shortpixel-bulk-wrapper section.panel.process .image-preview-section .preview-wrapper .image img[src*="placeholder.svg"], .shortpixel-bulk-wrapper section.panel.finished .image-preview-section .preview-wrapper .image img[src*="placeholder.svg"] {
+  z-index: 1;
+}
+.shortpixel-bulk-wrapper section.panel.process .image-preview-section .preview-wrapper .image .svg-loader, .shortpixel-bulk-wrapper section.panel.finished .image-preview-section .preview-wrapper .image .svg-loader {
+  width: 100%;
+  height: 70px;
+  position: absolute;
+  top: calc(50% - 35px);
+  left: 0;
+  z-index: 5;
 }
 .shortpixel-bulk-wrapper section.panel.process .image-preview-section .preview-wrapper .image p, .shortpixel-bulk-wrapper section.panel.finished .image-preview-section .preview-wrapper .image p {
   position: absolute;
   top: 0;
-  z-index: 2;
+  z-index: 10;
   color: #fff;
   background: rgba(0, 0, 0, 0.5);
   padding: 4px;
