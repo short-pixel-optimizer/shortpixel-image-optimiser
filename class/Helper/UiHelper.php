@@ -108,7 +108,7 @@ class UiHelper
 				  $stat = $thumbStat[0];
 				 	if (is_numeric($stat) && $stat >= 0)
 					{
-						 $improvs[$thumbName] = self::formatNumber($stat,2);
+						 $improvs[$thumbName] = $stat; //self::formatNumber($stat,2);
 					}
 
 			 }
@@ -121,7 +121,8 @@ class UiHelper
 		       foreach($improvs as $thumbName => $stat)
 		       {
 
-		           $title =  sprintf(__('%s : %s', 'shortpixel-image-optimiser'), $thumbName, $stat . '%');
+						   $statText = self::formatNumber($stat, 2);
+		           $title =  sprintf(__('%s : %s', 'shortpixel-image-optimiser'), $thumbName, $statText . '%');
 		           $rating = ceil( round($stat) / 10);
 
 		           $blocks_on = str_repeat('<span class="point checked">&nbsp;</span>', $rating);
@@ -338,7 +339,7 @@ class UiHelper
 		{
 			return array(); // nothing
 		}
-		
+
 		$access = AccessModel::getInstance();
 		if (! $access->imageIsEditable($mediaItem))
 		{
@@ -563,7 +564,7 @@ class UiHelper
 
 	public static function formatNumber($number, $precision = 2)
 	{
-		  return number_format_i18n( (int) $number, $precision);
+		  return  number_format_i18n( (int) $number, $precision);
 	}
 
 

@@ -115,12 +115,15 @@ if ( isset($_GET['noheader']) ) {
               $folder = isset($folders[$folder_id]) ? $folders[$folder_id] : false;
               $media_type = ($folder && $folder->get('is_nextgen')) ? __('Nextgen', 'shortpixel-image-optimiser') : __('Custom', 'shortpixel_image_optimiser');
               $img_url = $fs->pathToUrl($item);
-              $is_heavy = ($filesize <= 500000 && $filesize > 0);
+              $is_heavy = ($filesize >= 500000 && $filesize > 0);
 
             ?>
             <span><a href="<?php echo($img_url);?>" target="_blank">
-                <div class='thumb' <?php if($is_heavy) echo('title="' . __('This image is heavy and it would slow this page down if displayed here. Click to open it in a new browser tab.', 'shortpixel-image-optimiser') . '"');
-                ?> style="background-image:url('<?php echo($is_heavy ? $img_url : wpSPIO()->plugin_url('res/img/heavy-image@2x.png' )) ?>')"></div>
+                <div class='thumb' <?php if($is_heavy)
+								{
+								 	echo('title="' . __('This image is heavy and it would slow this page down if displayed here. Click to open it in a new browser tab.', 'shortpixel-image-optimiser') . '"');
+								}
+                ?> style="background-image:url('<?php echo($is_heavy ? wpSPIO()->plugin_url('res/img/heavy-image@2x.png') : $img_url) ?>')"></div>
                 </a></span>
             <span class='filename'><?php echo $item->getFileName() ?>
                 <div class="row-actions"><?php
@@ -131,7 +134,9 @@ if ( isset($_GET['noheader']) ) {
                     if ($i < ($numberActions-1) )
                       echo '|';
                 }
-                ?></div>
+                ?>
+								<span class='item-id'>#<?php echo $item->get('id'); ?></span>
+							</div>
             </span>
             <span class='folderpath'><?php echo (string) $item->getFileDir(); ?></span>
             <span class='mediatype'><?php echo $media_type ?></span>
