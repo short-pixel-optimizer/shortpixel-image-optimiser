@@ -67,7 +67,29 @@ namespace ShortPixel;
 
     </div>
 
-		<div data-error-media="message" data-presentation="append" class='errorbox media'></div>
+		<div data-error-media="message" data-presentation="append" class='errorbox media'>
+				<?php if(property_exists($this->view, 'mediaErrorLog') && $this->view->mediaErrorLog !== false)
+				{
+						foreach($this->view->mediaErrorLog as $line)
+						{
+							 $cells = array_filter(explode('|', $line));
+							 if (count($cells) == 1)
+							 	continue; // empty line
+							 if (count($cells) > 0)
+							 {
+							 	echo '<div class="fatal">';
+								if (isset($cells[0]))  // Date
+									 echo $cells[0] . ': ';
+								if (isset($cells[3]) )  // Error message
+								 		echo $cells[3];
+								elseif(isset($cells[1]))
+								 		echo $cells[1];
+								echo '</div>';
+							}
+						}
+				}
+				?>
+		</div>
 
 		<!-- ****** CUSTOM ********  --->
     <div class='bulk-summary' data-check-visibility data-control="data-check-custom-total">
@@ -100,7 +122,29 @@ namespace ShortPixel;
 
     </div>
 
-    <div data-error-custom="message" data-presentation="append" class='errorbox custom'></div>
+    <div data-error-custom="message" data-presentation="append" class='errorbox custom'>
+			<?php if(property_exists($this->view, 'customErrorLog') && $this->view->customErrorLog !== false)
+			{
+					foreach($this->view->customErrorLog as $line)
+					{
+						 $cells = array_filter(explode('|', $line));
+						 if (count($cells) == 1)
+							continue; // empty line
+						 if (count($cells) > 0)
+						 {
+							echo '<div class="fatal">';
+							if (isset($cells[0]))  // Date
+								 echo $cells[0] . ': ';
+							if (isset($cells[3]) )  // Error message
+									echo $cells[3];
+							elseif(isset($cells[1]))
+									echo $cells[1];
+							echo '</div>';
+						}
+					}
+			}
+			?>
+		</div>
 
 		<nav>
 			<button class='button stop' data-action="StopBulk" >Stop Bulk Processing</button>

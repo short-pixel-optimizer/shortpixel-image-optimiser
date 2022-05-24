@@ -10,10 +10,10 @@ $approx = $this->view->approx;
 			</span>
 
       <h3 class="heading"><span><img src="<?php echo \wpSPIO()->plugin_url('res/img/robo-slider.png'); ?>"></span>
-        ShortPixel Bulk Optimization - Select Images
+        <?php _e('ShortPixel Bulk Optimization - Select Images', 'shortpixel-image-optimiser'); ?>
       </h3>
 
-      <p class='description'>Welcome to the bulk optimization wizard, where you can select the images that ShortPixel will optimize in the background for you.</p>
+      <p class='description'><?php _e('Select the type of images that ShortPixel should optimize for you.','shortpixel-image-optimiser'); ?></p>
 
        <?php $this->loadView('bulk/part-progressbar', false); ?>
 
@@ -21,7 +21,7 @@ $approx = $this->view->approx;
          <div class='loading'>
              <span><img src="<?php echo \wpSPIO()->plugin_url('res/img/bulk/loading-hourglass.svg'); ?>" /></span>
              <span>
-             <p>Please wait, ShortPixel is checking the images to be processed... <br>
+             <p><php _e('Please wait, ShortPixel is checking the images to be processed...','shortpixel-image-optimiser'); ?><br>
                <span class="number" data-stats-total="total">x</span> items found</p>
            </span>
 
@@ -32,8 +32,8 @@ $approx = $this->view->approx;
 
 				 <div class="option-block">
 
-					 <h2>Optimize: </h2>
-					 <p>ShortPixel has <b>estimated</b> the number of images that can still be optimized. <br />After choosing the options, the plugin will calculate exactly how many images will be optimized.</p>
+					 <h2><?php _e('Optimize:','shortpixel-image-optimiser'); ?> </h2>
+					 <p><?php printf(__('ShortPixel has %sestimated%s the number of images that can still be optimized. <br />After choosing the options, the plugin will calculate exactly how many images will be optimized.','shortpixel-image-optimiser'), '<b>','</b>'); ?></p>
 
 	         <div class="media-library optiongroup">
 
@@ -47,12 +47,12 @@ $approx = $this->view->approx;
 
 	            <h4><label for="media_checkbox"><?php _e('Media Library','shortpixel-image-optimiser'); ?></label></h4>
 	            <div class='option'>
-	              <label>Images (estimate)</label>
+	              <label><?php _e('Images (estimate)', 'shortpixel-image-optimiser'); ?></label>
 	              <span class="number" ><?php echo $approx->media->items ?></span>
 	            </div>
 							<?php if (\wpSPIO()->settings()->processThumbnails == 1): ?>
 		            <div class='option'>
-		              <label>Thumbnails (estimate)</label> <span class="number" ><?php echo $approx->media->total ?> </span>
+		              <label><?php _e('Thumbnails (estimate)','shortpixel-image-optimiser'); ?></label> <span class="number" ><?php echo $approx->media->total ?> </span>
 		            </div>
 							<?php endif; ?>
 	         </div>
@@ -66,12 +66,12 @@ $approx = $this->view->approx;
 								<div class="the_switch">&nbsp; </div>
 							</label>
 						</div>
-						<h4><label for="thumbnails_checkbox">Process Image Thumbnails</label></h4>
+						<h4><label for="thumbnails_checkbox"><?php _e('Process Image Thumbnails','shortpixel-image-optimiser'); ?></label></h4>
 						<div class='option'>
-							<label>Thumbnails (estimate)</label> <span class="number" ><?php echo $approx->media->total ?> </span>
+							<label><?php _e('Thumbnails (estimate)','shortpixel-image-optimiser'); ?></label> <span class="number" ><?php echo $approx->media->total ?> </span>
 						</div>
 
-						<p>It's recommend to process the WordPress thumbnails. There are the small images that are most often used on posts and pages. These options change the settings of your installation.</p>
+						<p><?php _e('It\'s recommend to process the WordPress thumbnails. There are the small images that are most often used on posts and pages. These options change the settings of your installation.','shortpixel-image-optimiser'); ?></p>
 
 
 
@@ -140,12 +140,12 @@ $approx = $this->view->approx;
       <nav>
         <button class="button" type="button" data-action="FinishBulk">
 					<span class='dashicons dashicons-arrow-left'></span>
-					<?php _e('Back', 'shortpixel-image-optimiser'); ?>
+					<p><?php _e('Back', 'shortpixel-image-optimiser'); ?></p>
 				</button>
 
         <button class="button-primary button" type="button" data-action="CreateBulk" data-panel="summary" data-check-disable data-control="data-check-total-total">
 					<span class='dashicons dashicons-arrow-right'></span>
-					<?php _e('Calculate', 'shortpixel-image-optimiser'); ?>
+					<p><?php _e('Calculate', 'shortpixel-image-optimiser'); ?></p>
 				</button>
       </nav>
 

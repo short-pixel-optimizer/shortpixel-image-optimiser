@@ -17,7 +17,8 @@ namespace ShortPixel;
 
       <div class='bulk-wrapper'>
         <button type="button" class="button-primary button" id="start-optimize" data-action="open-panel" data-panel="selection" <?php echo ($this->view->error) ? "disabled" : ''; ?>  >
-            <span class='dashicons dashicons-controls-play' data-action="open-panel" data-panel="selection">&nbsp;</span> <?php _e('Start optimizing','shortpixel-image-optimiser'); ?>
+            <span class='dashicons dashicons-controls-play' data-action="open-panel" data-panel="selection">&nbsp;</span>
+						<p><?php _e('Start optimizing','shortpixel-image-optimiser'); ?></p>
         </button>
       </div>
 

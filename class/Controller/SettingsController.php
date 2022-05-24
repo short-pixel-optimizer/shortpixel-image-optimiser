@@ -7,6 +7,7 @@ use ShortPixel\Helper\InstallHelper as InstallHelper;
 
 use ShortPixel\Model\ApiKeyModel as ApiKeyModel;
 
+
 use ShortPixel\NextGenController as NextGenController;
 
 
@@ -359,9 +360,11 @@ class SettingsController extends \ShortPixel\ViewController
         else
           InstallHelper::checkTables();
 
+				 $keyController = ApiKeyController::getInstance();
+
          $this->view->data = (Object) $this->model->getData();
-         if (($this->is_constant_key))
-             $this->view->data->apiKey = SHORTPIXEL_API_KEY;
+
+         $this->view->data->apiKey = $keyController->getKeyForDisplay();
 
 
          $this->loadStatistics();

@@ -196,6 +196,7 @@ class ApiController
     $response = wp_remote_post($this->apiEndPoint, $requestParameters );
     Log::addDebug('ShortPixel API Request sent', $requestParameters['body']);
 
+
     //only if $Blocking is true analyze the response
     if ( $requestParameters['blocking'] )
     {
@@ -330,7 +331,6 @@ class ApiController
 						'images_total' => $analyze['total']
 				);
 
-				Log::addTemp('FULL API RESP', $APIresponse);
 
 				ResponseController::addData($item->item_id, $imageData);
 

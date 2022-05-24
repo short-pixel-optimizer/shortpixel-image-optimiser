@@ -595,7 +595,7 @@ console.log("Screen Init Done", initMedia, initCustom);
 	/** HandleError is used for both general error and result errors. The latter have a result object embedded and more information */
   this.HandleError = function(result, type)
   {
-    console.error(result);
+//    console.error(result);
 
 		var fatal = false;
 		var cssClass = '';

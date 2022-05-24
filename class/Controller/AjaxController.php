@@ -607,7 +607,7 @@ class AjaxController
 			 }
 
 	 	 //	$date = UiHelper::formatTS($log->date);
-		 	 $logData = $bulkController->getLogData($logFile); // starts from options.
+		 	 //$logData = $bulkController->getLogData($logFile); // starts from options.
 			 $date = (isset($logData['date'])) ? UiHelper::formatTS($logData['date']) : false;
 			 $content = $log->getContents();
 			 $lines = explode(';', $content);

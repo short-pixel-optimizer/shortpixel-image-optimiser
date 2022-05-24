@@ -47,7 +47,7 @@ namespace ShortPixel;
 				<span>&nbsp;</span>
       </div>
       <div>
-        <span>Images processed: <i data-stats-media="done">-</i></span>
+        <span>Processed: <i data-stats-media="done">-</i></span>
 
         <span>Images Left: <i data-stats-media="in_queue">-</i></span>
         <span>Errors: <i data-check-media-fatalerrors data-stats-media="fatal_errors" class='error'>- </i>
@@ -78,7 +78,7 @@ namespace ShortPixel;
         <span>&nbsp;</span>
       </div>
       <div>
-        <span>Images processed: <i data-stats-custom="done">-</i></span>
+        <span>Processed: <i data-stats-custom="done">-</i></span>
 
         <span>Images Left: <i data-stats-custom="in_queue">-</i></span>
         <span>Errors: <i data-check-custom-fatalerrors  data-stats-custom="fatal_errors" class='error'>-</i></span>

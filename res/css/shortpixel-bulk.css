@@ -28,36 +28,53 @@
 }
 .shortpixel-bulk-wrapper p.description {
   font-size: 14px;
-  margin-left: 10px;
-  margin: 15px 0;
+  margin: 15px 0 15px 15px;
 }
-.shortpixel-bulk-wrapper nav {
-  margin: auto;
-  margin-top: 45px;
-  width: 80%;
-}
-.shortpixel-bulk-wrapper nav .button {
+.shortpixel-bulk-wrapper .button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  float: left;
   margin-right: 8px;
   padding: 8px 16px;
   background: #F5F5F5;
-  color: #1FBEC9;
+  color: #1cbecb;
   letter-spacing: 0.3px;
   font-weight: 700;
   font-size: 14px;
+  transition: 300ms all linear;
+  border: 1px solid #0f6a7d;
 }
-.shortpixel-bulk-wrapper nav .button .dashicons {
+.shortpixel-bulk-wrapper .button:hover {
+  background: #1cbecb;
+  color: #fff;
+  border: 1px solid #1cbecb;
+}
+.shortpixel-bulk-wrapper .button .dashicons {
   font-size: 26px;
   height: 26px;
-  margin-right: 6px;
-  padding-top: 2px;
+  margin-right: 8px;
+}
+.shortpixel-bulk-wrapper .button p {
+  margin: 0;
+  display: inline;
+  font-size: 14px;
+  vertical-align: bottom;
+}
+.shortpixel-bulk-wrapper .button-primary {
+  background: #0f6a7d;
+  color: #fff;
+  border: 1px solid #0f6a7d;
+  border-radius: 3px;
+  box-shadow: 0px 1px 1px rgba(171, 170, 170, 0.3);
+}
+.shortpixel-bulk-wrapper nav {
+  margin: 45px auto;
+  width: 80%;
+  min-height: 50px;
 }
 .shortpixel-bulk-wrapper nav .button-primary {
   margin-left: 15px;
-  background: #1FBEC9;
-  color: #fff;
-  border: 1px solid #1FBEC9;
-  border-radius: 3px;
-  box-shadow: 0px 1px 1px rgba(171, 170, 170, 0.3);
 }
 .shortpixel-bulk-wrapper .hidden {
   display: none !important;
@@ -183,9 +200,6 @@
   margin: 15px 0;
   padding-bottom: 35px;
 }
-.shortpixel-bulk-wrapper .panel p {
-  margin-left: 15px;
-}
 .shortpixel-bulk-wrapper .panel.active {
   visibility: visible;
   opacity: 1;
@@ -299,21 +313,18 @@
 }
 .shortpixel-bulk-wrapper section.panel.dashboard .bulk-wrapper button {
   color: #ffffff;
-  background: linear-gradient(to left, #136970, #1FB5BF);
   border-radius: 3px;
   width: 250px;
   height: 65px;
-  font-size: 13px;
-  line-height: 21px;
   transition: all 0.5s linear;
   font-weight: 700;
-  font-size: 16px;
   letter-spacing: 0.3px;
   border: 1px solid #ccc;
 }
 .shortpixel-bulk-wrapper section.panel.dashboard .bulk-wrapper button:hover {
-  background: #50d9e2;
-  font-weight: 600;
+  background: #0f6a7d;
+  height: 80px;
+  width: 300px;
   transition: all 1s linear;
 }
 .shortpixel-bulk-wrapper section.panel.dashboard .bulk-wrapper button:disabled {
@@ -321,7 +332,7 @@
   background: #0e5358;
 }
 .shortpixel-bulk-wrapper section.panel.dashboard .bulk-wrapper button span {
-  vertical-align: middle;
+  margin-right: 16px;
 }
 .shortpixel-bulk-wrapper section.panel.dashboard .dashboard-log {
   display: table;
@@ -366,7 +377,7 @@
 .shortpixel-bulk-wrapper section.spio-progressbar .flex {
   display: flex;
   flex-direction: row;
-  width: 80%;
+  width: 90%;
   justify-content: space-around;
 }
 .shortpixel-bulk-wrapper section.spio-progressbar .flex > div {
@@ -393,11 +404,11 @@
 .shortpixel-bulk-wrapper section.spio-progressbar .flex .step {
   border: 2px solid #ccc;
   border-radius: 50%;
-  height: 40px;
+  height: 45px;
   font-size: 28px;
   font-weight: 700;
   color: #ccc;
-  width: 40px;
+  width: 45px;
   line-height: 35px;
   text-align: center;
   box-sizing: border-box;
@@ -405,12 +416,14 @@
   z-index: 2;
   background: #fff;
   transition: color 1s ease-in;
+  padding-top: 2px;
 }
 .shortpixel-bulk-wrapper section.spio-progressbar .flex .text {
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   color: #ccc;
+  margin-top: 8px;
 }
 .shortpixel-bulk-wrapper section.panel.selection .spio-progressbar .select .line {
   background: linear-gradient(90deg, #1fbec9 0%, #1fbec9 49.9%, #cccccc 50%, #cccccc 100%);
@@ -494,9 +507,6 @@
 .shortpixel-bulk-wrapper section.panel.selection .option-block p {
   margin-left: 0;
 }
-.shortpixel-bulk-wrapper section.panel.selection .option-block.selection-settings .option, .shortpixel-bulk-wrapper section.panel.selection .option-block.selection-settings label {
-  font-size: 13px;
-}
 .shortpixel-bulk-wrapper section.panel.selection .optiongroup .switch_button {
   display: inline-block;
 }
@@ -508,7 +518,6 @@
 }
 .shortpixel-bulk-wrapper section.panel.selection .optiongroup .option {
   margin-left: 85px;
-  font-size: 16px;
   line-height: 26px;
 }
 .shortpixel-bulk-wrapper section.panel.selection .optiongroup .option label {
@@ -585,8 +594,7 @@
   display: table-cell;
   border: 1px solid #DFEAFF;
   width: 50%;
-  text-align: center;
-  padding: 15px 0;
+  padding: 15px 0 15px 15px;
 }
 .shortpixel-bulk-wrapper section.panel.summary .totals {
   text-align: center;
@@ -599,9 +607,8 @@
 }
 .shortpixel-bulk-wrapper section.panel.summary .credits {
   display: table;
-  margin: 35px 0 35px 25px;
-  width: 50%;
-  margin-left: 10%;
+  width: 80%;
+  margin: 35px auto;
 }
 .shortpixel-bulk-wrapper section.panel.summary .credits > p {
   display: table-row;
@@ -610,9 +617,21 @@
   display: table-cell;
   padding: 10px 0;
   font-size: 14px;
+  vertical-align: middle;
 }
 .shortpixel-bulk-wrapper section.panel.summary .credits > p > span:first-child {
   font-weight: 700;
+  width: 40%;
+}
+.shortpixel-bulk-wrapper section.panel.summary .credits > p > span:nth-child(2n) {
+  width: 30%;
+}
+.shortpixel-bulk-wrapper section.panel.summary .credits > p > span:nth-child(3n) {
+  text-align: right;
+}
+.shortpixel-bulk-wrapper section.panel.summary .credits > p > span .button {
+  float: right;
+  margin-right: 0;
 }
 .shortpixel-bulk-wrapper section.panel.summary .credits .heading span {
   font-size: 18px;
@@ -620,7 +639,7 @@
 }
 .shortpixel-bulk-wrapper section.panel.summary .over-quota, .shortpixel-bulk-wrapper section.panel.summary .no-images {
   border: 1px solid #ff0000;
-  padding: 8px;
+  padding: 16px;
   width: 80%;
   margin: 30px auto;
   display: flex;

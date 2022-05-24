@@ -8,13 +8,13 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 <p class='top-menu'>
 
     <a href="https://shortpixel.com/<?php
-    echo(($view->data->apiKey ? "login/".( $this->hide_api_key ? '' : $view->data->apiKey) : "pricing"));
+    echo(($view->data->apiKey ? "login/". $view->data->apiKey : "pricing"));
     ?>" target="_blank">
         <?php _e('Add credits','shortpixel-image-optimiser');?>
     </a> | <a href="https://shortpixel.com/knowledge-base/" target="_blank"><?php _e('Knowledge Base','shortpixel-image-optimiser');?> </a> |
     <a href="https://shortpixel.com/contact" target="_blank"><?php _e('Contact Support','shortpixel-image-optimiser');?> </a> |
     <a href="https://shortpixel.com/<?php
-    echo(($view->data->apiKey ? "login/".( $this->hide_api_key ? '' : $view->data->apiKey) : "pricing"));
+    echo(($view->data->apiKey ? "login/". $view->data->apiKey : "pricing"));
     ?>" target="_blank">
         <?php _e('ShortPixel account','shortpixel-image-optimiser');?>
     </a>

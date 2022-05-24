@@ -292,11 +292,21 @@ static public function DBtoTimestamp($date)
            # Does the browser support avif?
            RewriteCond %{HTTP_ACCEPT} image/avif
            # AND is the request a jpg or png? (also grab the basepath %1 to match in the next rule)
-           RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png)$
+           RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png|gif)$
            # AND does a .avif image exist?
            RewriteCond %{DOCUMENT_ROOT}/%1.avif -f
            # THEN send the avif image and set the env var avif
            RewriteRule (.+)\.(?:jpe?g|png)$ $1.avif [NC,T=image/avif,E=avif,L]
+
+					 # Does the browser support avif?
+					 RewriteCond %{HTTP_ACCEPT} image/avif
+					 # AND is the request a jpg or png? (also grab the basepath %1 to match in the next rule)
+					 RewriteCond %{REQUEST_URI} ^(.+)\.(?:jpe?g|png|gif)$
+					 # AND does a .jpg.avif image exist?
+					 RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI}.avif -f
+					 # THEN send the avif image and set the env var avif
+					 RewriteRule ^(.+)$ $1.avif [NC,T=image/avif,E=avif,L]
+
            </IfModule>
            <IfModule mod_headers.c>
            # If REDIRECT_avif env var exists, append Accept to the Vary header
@@ -363,8 +373,6 @@ static public function DBtoTimestamp($date)
 
            }
        }
-
-
 
 } // class
 

@@ -1466,7 +1466,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 				$sql = $wpdb->prepare($sql, $this->id, $this->id);
 
-				Log::addTemp('WPML SQl '. $sql);
 
 				$results = $wpdb->get_results($sql);
 
@@ -1496,7 +1495,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				$sql = 'SELECT id FROM ' . $wpdb->prefix . 'posts WHERE guid in (select guid from ' . $wpdb->prefix . 'posts where id = %d ) and post_type = %s and id <> %d';
 
 				$sql = $wpdb->prepare($sql, $this->id, 'attachment', $this->id);
-Log::addTemp('Polylang SQl '. $sql);
 				$results = $wpdb->get_col($sql);
 
 				foreach($results as $index => $element_id)

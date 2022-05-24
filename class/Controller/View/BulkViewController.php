@@ -59,8 +59,11 @@ class BulkViewController extends \ShortPixel\ViewController
 
     }
 
-    if ($this->view->error)
-      $this->unload();
+		$this->view->mediaErrorLog = $this->loadCurrentLog('media');
+		$this->view->customErrorLog = $this->loadCurrentLog('custom');
+
+		$this->view->buyMoreHref = 'https://shortpixel.com/' . ($keyControl->getKeyForDisplay() ? 'login/' . $keyControl->getKeyForDisplay() : 'pricing'); 
+
 
 
     $this->loadView();
@@ -109,15 +112,24 @@ class BulkViewController extends \ShortPixel\ViewController
 
   }
 
-  private function unload()
-  {
-    //wp_dequeue_script('shortpixel-screen-bulk');
-  //   wp_dequeue_script('shortpixel-bulk');
-    // wp_dequeue_script('shortpixel');
-    // wp_dequeue_script('shortpixel-processor');
+	/* Function to check for and load the current Log.  This can be present on load time when the bulk page is refreshed during operations.
+	*  Reload the past error and display them in the error box.
+	* @param String $type  media or custom
+	*/
+	protected function loadCurrentLog($type = 'media')
+	{
+		$bulkController = BulkController::getInstance();
 
+		$log = $bulkController->getLog('current_bulk_' . $type . '.log');
 
-  }
+		if ($log == false)
+			return false;
+
+		 $content = $log->getContents();
+		 $lines = array_filter(explode(';', $content));
+
+		 return $lines;
+	}
 
   public function getLogs()
   {
@@ -183,8 +195,5 @@ class BulkViewController extends \ShortPixel\ViewController
 
       return $view;
   }
-
-
-
 
 } // class

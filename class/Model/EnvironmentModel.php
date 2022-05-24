@@ -248,5 +248,14 @@ class EnvironmentModel extends \ShortPixel\Model
       return false;
   }
 
+	public function useDoubleAvifExtension()
+  {
+      if (defined('SHORTPIXEL_USE_DOUBLE_AVIF_EXTENSION') && SHORTPIXEL_USE_DOUBLE_AVIF_EXTENSION)
+        return true;
+
+      return false;
+  }
+
+
 
 }

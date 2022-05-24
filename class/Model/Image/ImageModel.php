@@ -328,8 +328,15 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 	        return $avif;
 	      }
 
+			$double_avif = \wpSPIO()->env()->useDoubleAvifExtension();
+
+			if ($double_avif)
+	      $filename = $this->getFileName();
+	    else
+	      $filename = $this->getFileBase();
+
 	    // Check if exists on disk
-	    $filepath = $this->getFileDir() . $this->getFileBase() . '.avif';
+	    $filepath = $this->getFileDir() . $filename . '.avif';
 	    $avif = $fs->getFile($filepath);
 
 	    if (! $avif->is_virtual() && $avif->exists())
@@ -798,6 +805,11 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     {
          $fs = \wpSPIO()->filesystem();
             $target = $fs->getFile( (string) $this->getFileDir() . $this->getFileBase() . '.avif');
+
+						// only copy when this constant is set.
+            if( (defined('SHORTPIXEL_USE_DOUBLE_AVIF_EXTENSION') && SHORTPIXEL_USE_DOUBLE_AVIF_EXTENSION) == true ) {
+                 $target = $fs->getFile((string) $this->getFileDir() . $this->getFileName() . '.avif'); // double extension, if exists.
+            }
 
             $result = $tempFile->copy($target);
             if (! $result)

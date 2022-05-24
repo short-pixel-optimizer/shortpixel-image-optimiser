@@ -605,6 +605,10 @@ abstract class Queue
 
     public function itemFailed($item, $fatal = false)
     {
+			  if ($fatal)
+			  {
+					 Log::addError('Item failed while optimizing', $item);
+				}
         $qItem = $this->mediaItemToQueue($item); // convert again
         $this->q->itemFailed($qItem, $fatal);
         $this->q->updateItemValue($qItem);
