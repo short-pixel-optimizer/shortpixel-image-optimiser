@@ -689,28 +689,35 @@
 }
 .shortpixel-bulk-wrapper section.panel.process .average-optimization, .shortpixel-bulk-wrapper section.panel.finished .average-optimization {
   position: absolute;
-  top: 0;
-  right: 35px;
+  top: 0px;
+  right: 0;
   display: flex;
   justify-content: center;
-  margin-top: -10px;
+  z-index: 2;
+  background: rgba(255, 255, 255, 0.4);
 }
 .shortpixel-bulk-wrapper section.panel.process .average-optimization p, .shortpixel-bulk-wrapper section.panel.finished .average-optimization p {
-  margin-top: 25px;
-  margin-right: 15px;
-  font-size: 14px;
+  margin: 0;
+  font-size: 13px;
+  position: absolute;
+  bottom: 45px;
+  left: 0;
+  padding: 6px 10px;
+  color: #fff;
+  background: rgba(15, 106, 125, 0.5);
+  font-weight: 700;
+  border-radius: 3px;
 }
 .shortpixel-bulk-wrapper section.panel.process .average-optimization .opt-circle-average, .shortpixel-bulk-wrapper section.panel.finished .average-optimization .opt-circle-average {
-  width: 90px;
-  height: 90px;
+  width: 150px;
+  height: 150px;
   float: right;
-  margin-right: 35px;
 }
 .shortpixel-bulk-wrapper section.panel.process .average-optimization .opt-circle-average .trail, .shortpixel-bulk-wrapper section.panel.finished .average-optimization .opt-circle-average .trail {
   stroke: #ddd;
 }
 .shortpixel-bulk-wrapper section.panel.process .average-optimization .opt-circle-average .path, .shortpixel-bulk-wrapper section.panel.finished .average-optimization .opt-circle-average .path {
-  stroke: #1FBEC9;
+  stroke: #1cbecb;
   stroke-linecap: round;
   transition: stroke-dashoffset 0.5s ease 0s;
 }

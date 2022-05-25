@@ -9,7 +9,7 @@ namespace ShortPixel;
     <h3 class="heading"><span><img src="<?php echo \wpSPIO()->plugin_url('res/img/robo-slider.png'); ?>"></span>
       ShortPixel Bulk is in progress
       <div class='average-optimization'>
-          <p>Average Optimization </p>
+          <p>Average this run</p>
           <svg class="opt-circle-average" viewBox="-10 0 150 140">
                         <path class="trail" d="
                             M 50,50
