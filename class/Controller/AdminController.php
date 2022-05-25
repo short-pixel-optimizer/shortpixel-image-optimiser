@@ -226,6 +226,8 @@ class AdminController extends \ShortPixel\Controller
         return $result;
     }
 
+
+
     /** Displays an icon in the toolbar when processing images
     *   hook - admin_bar_menu
     *  @param Obj $wp_admin_bar

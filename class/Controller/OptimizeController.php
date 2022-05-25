@@ -535,10 +535,8 @@ class OptimizeController
 					ResponseController::addData($item->item_id, $response);
 
 
-          if ($result->is_done || $item->tries >= SHORTPIXEL_MAX_FAIL_RETRIES )
+          if ($result->is_done )
           {
-             // These are cloned, because queue changes object's properties
-             //Log::addDebug('HandleApiResult - Item failed ' . $item->item_id);
              $q->itemFailed($item, true);
              $this->HandleItemError($item, $qtype);
 
@@ -547,11 +545,7 @@ class OptimizeController
           }
           else
           {
-            // These are cloned, because queue changes object's properties
-            // No specific error, try again.
 
-						// @todo Maybe should not return failed as status?
-            //  $q->itemFailed($item, false);
           }
       }
       elseif ($result->is_done)
@@ -633,6 +627,7 @@ class OptimizeController
 				 // This is_error can happen not from api, but from handleOptimized
          if ($item->result->is_error)
          {
+					 Log::addDebug('Item failed, has error on done ', $item);
           $q->itemFailed($item, true);
           $this->HandleItemError($item, $qtype);
          }
@@ -685,6 +680,13 @@ class OptimizeController
 									$message = __('Retry Limit reached. Image might be too large, limit too low or network issues.  ', 'shortpixel-image-optimiser');
 
 									ResponseController::addData($item->item_id, 'message', $message);
+									ResponseController::addData($item->item_id, 'is_error', true);
+									ResponseController::addData($item->item_id, 'is_done', true);
+
+									$item->result->is_error = true;
+									$item->result->is_done = true;
+
+									$this->HandleItemError($item, $qtype);
 							}
 							else {
 									ResponseController::addData($item->item_id, 'message', $item->result->message); // item is waiting base line here.

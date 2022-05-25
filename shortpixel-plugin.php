@@ -151,9 +151,9 @@ class ShortPixelPlugin
       // Handle for EMR
       add_action('wp_handle_replace', array($admin,'handleReplaceHook'));
 
-			// Action / hook for who wants. Please refer to manual / support to prevent loss of credits.
+			// Action / hook for who wants to use CRON. Please refer to manual / support to prevent loss of credits.
 			add_action('shortpixel/hook/processqueue', array($admin, 'processQueueHook'));
-
+			
 
       if ($this->env()->is_autoprocess)
       {

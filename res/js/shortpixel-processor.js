@@ -61,7 +61,8 @@ window.ShortPixelProcessor =
         '-4': 'APIKEY_FAILED',
         '-5': 'NOQUOTA',
         '-10': 'SERVER FAILURE',
-    },
+				'-903': 'TIMEOUT', // SPIO shortQ retry limit reached.
+     },
   /*  apiStatusError: {
 
   } */

@@ -55,7 +55,7 @@ namespace ShortPixel;
       <div>
         <span>Processed: <i data-stats-media="done">-</i></span>
 
-        <span><?php _e('Waiting','shortpixel-image-optimiser'); ?> <i data-stats-media="in_queue">-</i></span>
+        <span><?php _e('Waiting','shortpixel-image-optimiser'); ?>: <i data-stats-media="in_queue">-</i></span>
         <span>Errors: <i data-check-media-fatalerrors data-stats-media="fatal_errors" class='error'>- </i>
             </span>
 				<span data-check-visibility data-control="data-check-media-fatalerrors" ><label title="<?php _e('Show Errors', 'shortpixel-image-optimiser'); ?>">

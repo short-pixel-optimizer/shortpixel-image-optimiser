@@ -49,7 +49,6 @@ class WPQ implements Queue
     $this->options->timeout_recount = 20000; // Time to recount and check stuff from datasource in MS
     $this->options->is_debug = false;
 
-    $this->inProcessTimeout();
   }
 
   public function setOptions($options)
@@ -286,6 +285,7 @@ class WPQ implements Queue
        $item->tries++;
 			 if ($item->tries > $this->getOption('retry_limit'))
 			 {
+				 do_action('shortpixel/modules/wpq/item/timeout', $item);
 				 $this->itemFailed($item, true); // fatal fail
 			 }
 			 else
