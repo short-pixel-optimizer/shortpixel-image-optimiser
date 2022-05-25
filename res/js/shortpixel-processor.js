@@ -80,7 +80,14 @@ window.ShortPixelProcessor =
         this.nonce['itemview'] = ShortPixelProcessorData.nonce_itemview;
         this.nonce['ajaxRequest'] = ShortPixelProcessorData.nonce_ajaxrequest;
 
-        console.log('Start Data from Server', ShortPixelProcessorData.startData);
+				if (ShortPixelProcessorData.interval && ShortPixelProcessorData.interval > 100)
+				this.interval = ShortPixelProcessorData.interval;
+
+				if (ShortPixelProcessorData.interval && ShortPixelProcessorData.interval > 100)
+				this.deferInterval = ShortPixelProcessorData.deferInterval;
+
+
+        console.log('Start Data from Server', ShortPixelProcessorData.startData, this.interval, this.deferInterval);
         console.log('remoteSecret ' + this.remoteSecret + ', localsecret: ' + this.localSecret + ' - is this bulk? ' + this.isBulkPage);
 
         this.tooltip = new ShortPixelToolTip({}, this);

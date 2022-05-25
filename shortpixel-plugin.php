@@ -153,7 +153,7 @@ class ShortPixelPlugin
 
 			// Action / hook for who wants to use CRON. Please refer to manual / support to prevent loss of credits.
 			add_action('shortpixel/hook/processqueue', array($admin, 'processQueueHook'));
-			
+
 
       if ($this->env()->is_autoprocess)
       {
@@ -302,6 +302,12 @@ class ShortPixelPlugin
 
      wp_register_script('shortpixel-processor', plugins_url('/res/js/shortpixel-processor.js',SHORTPIXEL_PLUGIN_FILE), array('jquery', 'shortpixel-tooltip' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
+		 // How often JS processor asks for next tick on server. Low for fastestness and high loads, high number for surviving servers.
+		$interval = apply_filters('shortpixel/processor/interval', 3000);
+
+		// If the queue is empty how often to check if something new appeared from somewhere. Excluding the manual items added by current processor user.
+		$deferInterval = apply_filters('shortpixel/process/deferInterval', 60000);
+
     wp_localize_script('shortpixel-processor', 'ShortPixelProcessorData',  array(
         'bulkSecret' => $secretKey,
         'isBulkPage' => (bool) $is_bulk_page,
@@ -312,6 +318,8 @@ class ShortPixelPlugin
         'nonce_itemview' => wp_create_nonce('item_view'),
         'nonce_ajaxrequest' => wp_create_nonce('ajax_request'),
         'startData' => $optimizeController->getStartupData(),
+				'interval' => $interval,
+				'deferInterval' => $deferInterval, 
 
     ));
 
