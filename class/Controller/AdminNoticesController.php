@@ -137,7 +137,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 
         if (count($notices) > 0)
         {
-          wp_enqueue_style('shortpixel-notices');
+          \wpSPIO()->load_style('shortpixel-notices');
 
           foreach($notices as $notice)
           {
@@ -388,7 +388,7 @@ class AdminNoticesController extends \ShortPixel\Controller
       {
         // $stats = $shortpixel->countAllIfNeeded($settings->currentStats, 86400);
       //   $quotaData = $stats;
-
+				 Log::addDebug('Over quota detected, loading message (adminnotices)');
          $message = $this->getQuotaExceededMessage();
 
          $notice = Notices::addError($message);
@@ -604,11 +604,11 @@ class AdminNoticesController extends \ShortPixel\Controller
         $friend_url = $login_url . 'tell-a-friend';
       }
 
-     $message = '<div class="wrap sp-quota-exceeded-alert"  id="short-pixel-notice-exceed">';
+     $message = '<div class="sp-quota-exceeded-alert"  id="short-pixel-notice-exceed">';
 
      if($averageCompression) {
 
-          $message .= '<div style="float:right; margin-top: 10px">
+          $message .= '<div style="float:right;">
               <div class="bulk-progress-indicator" style="height: 110px">
                   <div style="margin-bottom:5px">' . __('Average image<br>reduction so far:','shortpixel-image-optimiser') . '</div>
                   <div id="sp-avg-optimization"><input type="text" id="sp-avg-optimization-dial" value="' . round($averageCompression) . '" class="dial percentDial" data-dialsize="60"></div>
@@ -649,6 +649,7 @@ class AdminNoticesController extends \ShortPixel\Controller
                      onclick="ShortPixel.checkQuota()">
           </div>';
 
+				$message .= '</div>'; /// closing div
         $message .= $this->proposeUpgradePopup();
         return $message;
     }

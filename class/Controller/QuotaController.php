@@ -9,7 +9,9 @@ class QuotaController
     protected static $instance;
     const CACHE_NAME = 'quotaData';
 
+
     protected $quotaData;
+
 
     public function __construct()
     {
@@ -29,8 +31,9 @@ class QuotaController
       $settings = \wpSPIO()->settings();
 
       if ($settings->quotaExceeded)
+			{
         return false;
-
+			}
       return true;
 
     }
@@ -47,7 +50,12 @@ class QuotaController
         if (! $cacheData->exists() )
         {
             $quotaData = $this->getRemoteQuota();
-            $cache->storeItem(self::CACHE_NAME, $quotaData, 6 * HOUR_IN_SECONDS);
+						if (! $this->hasQuota())
+							$timeout = MINUTE_IN_SECONDS;
+						else {
+							$timeout = HOUR_IN_SECONDS;
+						}
+            $cache->storeItem(self::CACHE_NAME, $quotaData, $timeout);
         }
         else
 				{
@@ -126,23 +134,21 @@ class QuotaController
 		{
 			  $settings = \wpSPIO()->settings();
 				$settings->quotaExceeded = 1;
+				$this->forceCheckRemoteQuota(); // remove the previous cache.
 		}
 
 
     private function resetQuotaExceeded()
     {
         $settings = \wpSPIO()->settings();
-      //  if( $settings->quotaExceeded == 1) {
-            $dismissed = $settings->dismissedNotices ? $settings->dismissedNotices : array();
-            //unset($dismissed['exceed']);
-            $settings->prioritySkip = array();
-            $settings->dismissedNotices = $dismissed;
-            AdminNoticesController::resetAPINotices();
-            AdminNoticesController::resetQuotaNotices();
-            Log::addDebug('Reset Quota Exceeded and reset Notices');
-    //    }
+        $dismissed = $settings->dismissedNotices ? $settings->dismissedNotices : array();
 
-        $settings->quotaExceeded = 0;
+        $settings->prioritySkip = array();
+        $settings->dismissedNotices = $dismissed;
+        AdminNoticesController::resetAPINotices();
+        AdminNoticesController::resetQuotaNotices();
+        Log::addDebug('Reset Quota Exceeded and reset Notices');
+       	$settings->quotaExceeded = 0;
     }
 
 
@@ -307,6 +313,7 @@ class QuotaController
 					 $dataArray["APICallsRemaining"] = max($dataArray['APICallsQuotaNumeric'] - $dataArray['APICallsMadeNumeric'], 0) + max($dataArray['APICallsQuotaOneTimeNumeric'] - $dataArray['APICallsMadeOneTimeNumeric'],0);
 
 					//reset quota exceeded flag -> user is allowed to process more images.
+
           if ( $dataArray['APICallsRemaining'] > 0)
 					{
               $this->resetQuotaExceeded();

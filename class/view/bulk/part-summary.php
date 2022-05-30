@@ -52,7 +52,7 @@ namespace ShortPixel;
 
 
     <div class="totals">
-      Total Credits: <span class="number" data-stats-total="images-images" data-check-total-total >0</span>
+		<?php _e('Total credits needed','shortpixel-image-optimiser') ?>: <span class="number" data-stats-total="images-images" data-check-total-total >0</span>
 
        <span class='number'></span>
     </div>

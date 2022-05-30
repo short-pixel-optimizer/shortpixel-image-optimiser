@@ -176,7 +176,7 @@ class UiHelper
              $output .= "<span>";
                foreach($webps as $optObj)
                {
-                  $output .= substr($optObj, strrpos($optObj, '/')+1) . '<br>';
+                  $output .= self::convertImageTypeName(substr($optObj, strrpos($optObj, '/')+1), 'webp') . '<br>';
                }
              $output .= "</span>";
            $output .= '</div>';
@@ -188,7 +188,7 @@ class UiHelper
               $output .= "<span>";
                 foreach($avifs as $optObj)
                 {
-                   $output .= substr($optObj, strrpos($optObj, '/')+1) . '<br>';
+                   $output .= self::convertImageTypeName(substr($optObj, strrpos($optObj, '/')+1), 'avif') . '<br>';
                 }
               $output .= "</span>";
             $output .= '</div>';
@@ -200,6 +200,9 @@ class UiHelper
     return $output;
 
   }
+
+
+
 
   public static function compressionTypeToText($type)
   {
@@ -567,6 +570,27 @@ class UiHelper
 		  return  number_format_i18n( (int) $number, $precision);
 	}
 
+	protected static function convertImageTypeName($name, $type)
+	{
+		if ($type == 'webp')
+		{
+			$is_double = \wpSPIO()->env()->useDoubleWebpExtension();
+		}
+		if ($type == 'avif')
+		{
+			$is_double = \wpSPIO()->env()->useDoubleAvifExtension();
+		}
+
+		if ($is_double)
+		{
+			 return $name . '.' . $type;
+		}
+		else
+		{
+			 return substr($name, 0, strpos($name, '.')) . '.' . $type;
+		}
+
+	}
 
 
 

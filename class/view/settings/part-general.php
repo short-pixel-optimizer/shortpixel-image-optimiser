@@ -6,23 +6,12 @@
 
     <div class="wp-shortpixel-options wp-shortpixel-tab-content" style="visibility: hidden">
 
-			<script>
-					jQuery(function() {
-							jQuery("#sp-total-optimization-dial").val("<?php echo("" . round($view->averageCompression))?>");
-							ShortPixel.percentDial("#sp-total-optimization-dial", 100);
-					});
-			</script>
+
     <table class="form-table">
         <tbody>
             <tr>
                 <th scope="row"><label for="key"><?php _e('API Key:','shortpixel-image-optimiser');?></label></th>
                 <td>
-
-								<?php if ( round($view->averageCompression) > 20): ?>
-									<div class="sp-bulk-summary">
-											<input type="text" value="<?php echo("" . round($view->averageCompression))?>" id="sp-total-optimization-dial" class="dial">
-									</div>
-								<?php endif; ?>
 
                   <?php
                   $canValidate = false;

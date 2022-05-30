@@ -105,7 +105,7 @@ class ListMediaViewController extends \ShortPixel\ViewController
     add_filter( 'manage_media_columns', array( $this, 'headerColumns' ) );//add media library column header
     add_action( 'manage_media_custom_column', array( $this, 'doColumn' ), 10, 2 );//generate the media library column
     //Sort and filter on ShortPixel Compression column
-    add_filter( 'manage_upload_sortable_columns', array( $this, 'registerSortable') );
+    //add_filter( 'manage_upload_sortable_columns', array( $this, 'registerSortable') );
 
 		// Keep noses out of the rest.
 		if (\wpSPIO()->env()->is_screen_to_use)
@@ -123,12 +123,12 @@ class ListMediaViewController extends \ShortPixel\ViewController
   {
 
     $defaults['wp-shortPixel'] = __('ShortPixel Compression', 'shortpixel-image-optimiser');
-    if(current_user_can( 'manage_options' )) {
+   /* if(current_user_can( 'manage_options' )) {
         $defaults['wp-shortPixel'] .=
                   '&nbsp;<a href="options-general.php?page=wp-shortpixel-settings&part=stats" title="'
                 . __('ShortPixel Statistics','shortpixel-image-optimiser')
                 . '"><span class="dashicons dashicons-dashboard"></span></a>';
-    }
+    } */
     return $defaults;
   }
 
@@ -188,27 +188,14 @@ class ListMediaViewController extends \ShortPixel\ViewController
     $this->loadView('snippets/part-comparer');
   }
 
-  public function registerSortable($columns)
+  /*public function registerSortable($columns)
   {
       $columns['wp-shortPixel'] = 'ShortPixel Compression';
       return $columns;
-  }
+  } */
 
   public function filterBy($vars)
   {
-//return false;
-    if ( isset( $vars['orderby'] ) && 'ShortPixel Compression' == $vars['orderby'] ) {
-
-			 //$vars['shortpixel-order'] = $vars['order'];
-			 //$vars['orderby'] = 'sum';
-			// @todo This one basically can also move as a query hiijack .
-        /*$vars = array_merge( $vars, array(
-          'meta_key' => '_shortpixel_optimized',
-          'orderby' => 'meta_value_num',
-
-        ) ); */
-    }
-
 		// Must return postID's  as ID
     if ( 'upload.php' == $GLOBALS['pagenow'] && isset( $_GET['shortpixel_status'] ) ) {
 
@@ -235,7 +222,6 @@ class ListMediaViewController extends \ShortPixel\ViewController
 			{
 				 unset($vars['post_type']); // no need to query this when going custom.
 			}
-
     }
 
     return $vars;
@@ -251,7 +237,7 @@ class ListMediaViewController extends \ShortPixel\ViewController
 		 if (isset($wpquery->query_vars['shortpixel-filter']) || isset($wpquery->query_vars['shortpixel-order']) )
 		 {
 			  $filter = isset($wpquery->query_vars['shortpixel-filter']) ? $wpquery->query_vars['shortpixel-filter'] : false ;
-				$order =  isset($wpquery->query_vars['shortpixel-order']) ? $wpquery->query_vars['shortpixel-order'] : false;
+				//$order =  isset($wpquery->query_vars['shortpixel-order']) ? $wpquery->query_vars['shortpixel-order'] : false;
 
 				if ($filter == 'optimized')
 				{
@@ -279,30 +265,12 @@ class ListMediaViewController extends \ShortPixel\ViewController
 				{
 					 $where = " AND " . $wpdb->posts . '.ID not in ( SELECT attach_id FROM ' . $tableName . " WHERE parent = %d and status = %d) ";
 					 $where = $wpdb->prepare($where, MediaLibraryModel::IMAGE_TYPE_MAIN, ImageModel::FILE_STATUS_SUCCESS);
-				//	 $post_where = $where . $post_where;
+
 					  $sql = substr_replace($request, $where, ($post_pos + strlen($post_pos)) ,0);
 				}
 
-				if ($order !== false)
-				{
-					$sql = ' SELECT attach_id AS ID, (100.0 * (1.0 - compressed_size/original_size)) as SUM FROM ' . $tableName;
-					$sql .= ' INNER JOIN ' . $wpdb->posts . ' ON ' . $wpdb->posts . '.ID = ' . $tableName . '.attach_id ';
-
-				//	$orderstart = strpos($post_where, 'ORDER BY');
-				//	$orderend = strpos
-				//	$post_where = substr_replace($post_where, 'SUM', , strpos($post_where, $wpquery->query_vars['order']) -1);
-//var_dump($post_where);
-					$sql .= 'WHERE ' . $post_where; // glue back the orders, and the all.
-
-				}
 				return $sql;
 		 }
-
-	/*	 if ()
-		 {
-
-		 }
-*/
 
 		 return $request;
 	}

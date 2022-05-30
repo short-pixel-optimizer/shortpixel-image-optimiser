@@ -38,7 +38,6 @@ class ViewController extends Controller
     $this->view->notices =  null; // Notices of class notice, for everything noticable
     $this->view->data = null;  // Data(base), to separate from regular view data
 
-
   }
 
   /* Check if postData has been submitted.

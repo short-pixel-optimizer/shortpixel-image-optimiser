@@ -135,17 +135,7 @@ div.bulk-progress.bulk-progress-partners a div {
     margin-left: 30px;
     font-size: 1.2em;
 }
-div.bulk-progress .bulk-progress-indicator,
-div.sp-quota-exceeded-alert .bulk-progress-indicator {
-    display: inline-block;
-    text-align: center;
-    padding: 0 10px;
-    margin-left: 10px;
-    float: left;
-    height: 90px;
-    overflow: hidden;
-    border: 1px solid #1CAECB;
-}
+
 div.wrap.short-pixel-bulk-page .bulk-notice-container {
     margin-top: 15px;
     position: absolute;
@@ -179,12 +169,7 @@ div.wrap.short-pixel-bulk-page .bulk-notice-msg img {
     margin-top:3px;
     margin-right: 5px;
 }
-div.sp-bulk-summary {
-    position: absolute;
-		top: 10px;
-		right: 10px;
-    margin:8px 5px 3px 20px;
-}
+
 .sp-notice .bulk-error-show {
     cursor: pointer;
 }
@@ -609,12 +594,7 @@ article.sp-tabs section.sel-tab h2 {
     background-color: #fff;
     z-index: 2;
 }
-#tab-stats .sp-bulk-summary {
-    position: absolute;
-    right: 0;
-    top: 0;
-    z-index: 100;
-}
+
 
 
 /*article.sp-tabs section,

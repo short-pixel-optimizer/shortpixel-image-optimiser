@@ -2,6 +2,8 @@
 // in our own scope.
 .settings_page_wp-shortpixel-settings
 {
+	@import '../elements/colors';
+
   .top-menu
   {
     font-size: 18px;
@@ -20,6 +22,58 @@
      color: #ff0000;
   }
 
+	div.sp-bulk-summary {
+	    position: absolute;
+			top: 50px;
+			right: 50px;
+	    margin:8px 5px 3px 20px;
+ 		 	//right: 0;
+ 		 	//top: 0;
+ 		 	z-index: 10;
+		//	width: 150px;
+		//	height: 150px;
+
+			.opt-circle-average {
+					width: 150px;
+					height: 150px;
+					float: right;
+				 // margin-right: 35px;
+					.trail {
+						stroke: #ddd;
+					}
+					.path {
+						stroke: $color-dark;
+						stroke-linecap: round;
+						transition: stroke-dashoffset 0.5s ease 0s;
+					}
+					.text {
+
+						fill: #1FBEC9;
+						font-size: 28px;
+						font-weight: 700;
+						dominant-baseline: middle;
+						text-anchor: middle;
+					}
+			}
+			span {
+				margin: 0;
+				font-size: 13px;
+				position: absolute;
+			//	width: 100%;
+
+				bottom: 45px;
+				left: -15px;
+				padding: 6px 10px;
+				color: #fff;
+				background: rgba($color-darkest, 0.5);
+				font-weight: 700;
+				border-radius: 3px;
+				white-space: nowrap;
+			}
+	}
+
+
+
   //tabs
   article.sp-tabs
   {
@@ -35,6 +89,10 @@
 			.option-content
 			{
 				 display: inline-block;
+			}
+			.suboption // if you are child of main option, indent left. 
+			{
+				margin-left: 8px;
 			}
 
 
@@ -216,4 +274,4 @@
     display: none;
   }
 
-}
+} // end of settings

@@ -1,6 +1,9 @@
+@import 'elements/colors';
+
 
 .shortpixel.shortpixel-notice
 {
+
    //padding: 18px;
    min-height: 75px;
    padding: 8px;
@@ -28,8 +31,14 @@
      &.icon {
        //float: left;
        margin: 0 25px 0 0;
+			 width: 80px;
       // display: inline-block;
      }
+		 &.content
+		 {
+			 width: 50%;
+			 padding: 8px 0;
+		 }
    }
    .details-wrapper // open close mechanic.
    {
@@ -95,9 +104,9 @@
 
   }
 
-  .content button
+  .content button, .content .button-primary
   { // gets overwritten in NGG.
-    background-color: #007cba;
+    background-color: $color-darkest;
   }
 
   li.sp-conflict-plugins-list {

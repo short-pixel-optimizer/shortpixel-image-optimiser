@@ -19,6 +19,11 @@
 }
 .shortpixel.shortpixel-notice span.icon {
   margin: 0 25px 0 0;
+  width: 80px;
+}
+.shortpixel.shortpixel-notice span.content {
+  width: 50%;
+  padding: 8px 0;
 }
 .shortpixel.shortpixel-notice .details-wrapper {
   margin: 8px 0 4px 0;
@@ -70,8 +75,8 @@
 .shortpixel.shortpixel-notice .sp-conflict-plugins li > * {
   display: table-cell;
 }
-.shortpixel.shortpixel-notice .content button {
-  background-color: #007cba;
+.shortpixel.shortpixel-notice .content button, .shortpixel.shortpixel-notice .content .button-primary {
+  background-color: #0f6a7d;
 }
 .shortpixel.shortpixel-notice li.sp-conflict-plugins-list {
   line-height: 28px;

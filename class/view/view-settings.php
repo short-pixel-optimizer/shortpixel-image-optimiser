@@ -37,6 +37,10 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
   <?php
     if ($this->is_verifiedkey):
+
+			$this->loadView('settings/part-optpie');
+
+
       ?>
       <form name='wp_shortpixel_options' action='<?php echo add_query_arg('noheader', 'true') ?>'  method='post' id='wp_shortpixel_options'>
         <input type='hidden' name='display_part' value="<?php echo $this->display_part ?>" />

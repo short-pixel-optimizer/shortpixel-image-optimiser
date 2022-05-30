@@ -84,6 +84,10 @@ class ShortPixelPlugin
   {
       $notices = Notices::getInstance(); // This hooks the ajax listener
 
+			$quotaController = QuotaController::getInstance();
+			$quotaController->getQuota();
+
+
   }
 
   /** Function to get plugin settings
@@ -319,7 +323,7 @@ class ShortPixelPlugin
         'nonce_ajaxrequest' => wp_create_nonce('ajax_request'),
         'startData' => $optimizeController->getStartupData(),
 				'interval' => $interval,
-				'deferInterval' => $deferInterval, 
+				'deferInterval' => $deferInterval,
 
     ));
 
@@ -507,6 +511,7 @@ class ShortPixelPlugin
     {
       $this->load_script('shortpixel-tooltip');
       $this->load_style('shortpixel-toolbar');
+
     }
 
     if ($plugin_page == 'wp-shortpixel-settings')

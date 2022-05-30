@@ -288,61 +288,57 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     }
 
 
-	  public function getWebp()
+	  protected function getImageType($type = 'webp')
 	  {
 	    $fs = \wpSPIO()->filesystem();
 
-	    if (! is_null($this->getMeta('webp')))
+	    if (! is_null($this->getMeta($type)))
 	    {
-	      $filepath = $this->getFileDir() . $this->getMeta('webp');
-	      $webp = $fs->getFile($filepath);
-	      return $webp;
+	      $filepath = $this->getFileDir() . $this->getMeta($type);
+	      $file = $fs->getFile($filepath);
+	      return $file;
 	    }
 
+			if ($type == 'webp')
+			{
+	    	$is_double = \wpSPIO()->env()->useDoubleWebpExtension();
+			}
+			if ($type == 'avif')
+			{
+				$is_double = \wpSPIO()->env()->useDoubleAvifExtension();
+			}
 
-	    $double_webp = \wpSPIO()->env()->useDoubleWebpExtension();
+			$double_filepath = $this->getFileDir() .  $this->getFileName() . '.' . $type;
+		  $filepath = $this->getFileDir() . $this->getFileBase() . '.' . $type;
 
-	    if ($double_webp)
-	      $filename = $this->getFileName();
-	    else
-	      $filename = $this->getFileBase();
+			if ($is_double)
+				$file = $fs->getFile($double_filepath);
+			else
+	    	$file = $fs->getFile($filepath);
 
-	    $filename .= '.webp';
-	    $filepath = $this->getFileDir() . $filename;
+			// If double extension is enabled, but no file, check the alternative.
+			if (! $file->exists()  && ! $file->is_virtual())
+			{
+				 if ($is_double)
+				 		$file = $fs->getFile($filepath);
+				 else
+				 		$file = $fs->getFile($double_filepath);
+			}
 
-	    $webp = $fs->getFile($filepath);
-
-	    if (! $webp->is_virtual() && $webp->exists())
-	      return $webp;
+	    if (! $file->is_virtual() && $file->exists())
+	      return $file;
 
 	    return false;
 	  }
 
+		public function getWebp()
+		{
+				return $this->getImageType('webp');
+		}
+
 	  public function getAvif()
 	  {
-	      $fs = \wpSPIO()->filesystem();
-	      if (! is_null($this->getMeta('avif')))
-	      {
-	        $filepath = $this->getFileDir() . $this->getMeta('avif');
-	        $avif = $fs->getFile($filepath);
-	        return $avif;
-	      }
-
-			$double_avif = \wpSPIO()->env()->useDoubleAvifExtension();
-
-			if ($double_avif)
-	      $filename = $this->getFileName();
-	    else
-	      $filename = $this->getFileBase();
-
-	    // Check if exists on disk
-	    $filepath = $this->getFileDir() . $filename . '.avif';
-	    $avif = $fs->getFile($filepath);
-
-	    if (! $avif->is_virtual() && $avif->exists())
-	      return $avif;
-
-	    return false;
+	    	return $this->getImageType('avif');
 	  }
 
 	  protected function setWebp()

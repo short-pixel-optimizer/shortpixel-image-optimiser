@@ -203,7 +203,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
 									?>
 
 
-										<div class='switch_button option-png2jpgforce toggleTarget' id="png2jpgforce">
+										<div class='switch_button option-png2jpgforce toggleTarget suboption' id="png2jpgforce">
 											<p>&nbsp;</p>
 											<label>
 												<input type="checkbox" class="switch" name="png2jpgForce" value="1" <?php checked(($view->data->png2jpg > 1), true);?> <?php echo($this->is_gd_installed ? '' : 'disabled') ?>>

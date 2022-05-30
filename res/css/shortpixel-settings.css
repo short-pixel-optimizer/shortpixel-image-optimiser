@@ -16,6 +16,46 @@
 .settings_page_wp-shortpixel-settings .red {
   color: #ff0000;
 }
+.settings_page_wp-shortpixel-settings div.sp-bulk-summary {
+  position: absolute;
+  top: 50px;
+  right: 50px;
+  margin: 8px 5px 3px 20px;
+  z-index: 10;
+}
+.settings_page_wp-shortpixel-settings div.sp-bulk-summary .opt-circle-average {
+  width: 150px;
+  height: 150px;
+  float: right;
+}
+.settings_page_wp-shortpixel-settings div.sp-bulk-summary .opt-circle-average .trail {
+  stroke: #ddd;
+}
+.settings_page_wp-shortpixel-settings div.sp-bulk-summary .opt-circle-average .path {
+  stroke: #1cbecb;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.5s ease 0s;
+}
+.settings_page_wp-shortpixel-settings div.sp-bulk-summary .opt-circle-average .text {
+  fill: #1FBEC9;
+  font-size: 28px;
+  font-weight: 700;
+  dominant-baseline: middle;
+  text-anchor: middle;
+}
+.settings_page_wp-shortpixel-settings div.sp-bulk-summary span {
+  margin: 0;
+  font-size: 13px;
+  position: absolute;
+  bottom: 45px;
+  left: -15px;
+  padding: 6px 10px;
+  color: #fff;
+  background: rgba(15, 106, 125, 0.5);
+  font-weight: 700;
+  border-radius: 3px;
+  white-space: nowrap;
+}
 .settings_page_wp-shortpixel-settings article.sp-tabs section .wp-shortpixel-tab-content {
   opacity: 0;
 }
@@ -24,6 +64,9 @@
 }
 .settings_page_wp-shortpixel-settings article.sp-tabs section .option-content {
   display: inline-block;
+}
+.settings_page_wp-shortpixel-settings article.sp-tabs section .suboption {
+  margin-left: 8px;
 }
 .settings_page_wp-shortpixel-settings article.sp-tabs section .toggleTarget {
   display: none;
@@ -245,7 +288,6 @@
 
 #tab-tools .option {
   width: 80%;
-  max-width: 500px;
   padding: 8px;
   margin: 25px 0;
 }
