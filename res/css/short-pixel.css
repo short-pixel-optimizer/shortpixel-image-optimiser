@@ -498,14 +498,7 @@ th.sorted.column-wp-shortPixel a {
     border: 1px solid #1CAECB;
     padding: 15px 0 0 20px;
 }
-p.settings-info {
-    padding-top: 0px;
-    color: #818181;
-    font-size:13px !important;
-}
-p.settings-info.shortpixel-settings-error {
-    color: #c32525;
-}
+
 
 .shortpixel-key-valid{
     font-weight:bold;

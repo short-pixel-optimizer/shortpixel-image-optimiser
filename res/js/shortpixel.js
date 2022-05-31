@@ -322,6 +322,10 @@ var ShortPixel = function() {
         else {
             location.hash = url;
         } */
+				if (section.length == 0)
+				{
+					 tab = 'settings'; // if tab does not exist.
+				}
         jQuery('input[name="display_part"]').val(tab);
         var uri = window.location.href.toString();
         if (uri.indexOf("?") > 0) {

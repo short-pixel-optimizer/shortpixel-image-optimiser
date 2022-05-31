@@ -592,7 +592,7 @@ abstract class Queue
       $time = get_post_modified_time('U', false, $id );
       foreach($urls as $index => $url)
       {
-        $urls[$index] = add_query_arg('ver', $time, $url);
+        $urls[$index] = add_query_arg('ver', $time, $url); //has url
       }
 
       return $urls;

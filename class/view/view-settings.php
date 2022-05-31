@@ -5,8 +5,9 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 ?>
 <div class="wrap is-shortpixel-settings-page">
 <h1><?php _e('ShortPixel Plugin Settings','shortpixel-image-optimiser');?></h1>
-<p class='top-menu'>
+<div class='top-menu'>
 
+	  <div class='links'>
     <a href="https://shortpixel.com/<?php
     echo(($view->data->apiKey ? "login/". $view->data->apiKey : "pricing"));
     ?>" target="_blank">
@@ -18,13 +19,18 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
     ?>" target="_blank">
         <?php _e('ShortPixel account','shortpixel-image-optimiser');?>
     </a>
+		</div>
 
+		<div class='pie-wrapper'>
+			<?php	$this->loadView('settings/part-optpie'); ?>
+		</div>
+		
 		<?php if (! is_null($this->quotaData)): ?>
-		<span class='quota-remaining'>
+		<div class='quota-remaining'>
 			<?php printf(__('%s Credits remaining', 'shortpixel-image-optimiser'),  $this->formatNumber($this->quotaData->total->remaining, 0)); ?>
-		</span>
+		</div>
 		<?php endif; ?>
-</p>
+</div>
 
 <hr class='wp-header-end'>
 
@@ -38,11 +44,10 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
   <?php
     if ($this->is_verifiedkey):
 
-			$this->loadView('settings/part-optpie');
 
 
       ?>
-      <form name='wp_shortpixel_options' action='<?php echo add_query_arg('noheader', 'true') ?>'  method='post' id='wp_shortpixel_options'>
+      <form name='wp_shortpixel_options' action='<?php echo esc_url(add_query_arg('noheader', 'true')) ?>'  method='post' id='wp_shortpixel_options'>
         <input type='hidden' name='display_part' value="<?php echo $this->display_part ?>" />
         <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
       <div class='section-wrapper'>

@@ -110,7 +110,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                               $action = false;
 
 
-                              $refreshUrl = add_query_arg(array('sp-action' => 'action_refreshfolder', 'folder_id' => $folder_id, 'part' => 'adv-settings'), $this->url);
+                              $refreshUrl = add_query_arg(array('sp-action' => 'action_refreshfolder', 'folder_id' => $folder_id, 'part' => 'adv-settings'), $this->url); // has url
                             ?>
                             <div>
                                 <span class='folder folder-<?php echo $dirObj->get('id') ?>'><?php echo($dirObj->getPath()); ?></span>

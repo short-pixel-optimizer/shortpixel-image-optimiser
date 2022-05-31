@@ -24,7 +24,7 @@ if ( isset($_GET['noheader']) ) {
           <?php
           $nonce = wp_create_nonce( 'refresh_folders' );
           ?>
-            <a href="upload.php?page=wp-short-pixel-custom&sp-action=action_refreshfolders&_wpnonce=<?php echo $nonce ?>" id="refresh" class="button button-primary" title="<?php _e('Refresh custom folders content','shortpixel-image-optimiser');?>">
+            <a href="<?php echo admin_url('upload.php?page=wp-short-pixel-custom&sp-action=action_refreshfolders&_wpnonce=' . $nonce); ?>" id="refresh" class="button button-primary" title="<?php _e('Refresh custom folders content','shortpixel-image-optimiser');?>">
                 <?php _e('Refresh folders','shortpixel-image-optimiser');?>
             </a>
         </div>
@@ -54,11 +54,11 @@ if ( isset($_GET['noheader']) ) {
 
 					if ($this->show_hidden)
 					{
-						 printf('<a href="%s">%s</a>', add_query_arg('show_hidden',false), __('Back to normal items', 'shortpixel-image-optimiser'));
+						 printf('<a href="%s">%s</a>', esc_url(add_query_arg('show_hidden',false), __('Back to normal items', 'shortpixel-image-optimiser')));
 					}
 					else
 					{
-						 printf('<a href="%s">%s</a>', add_query_arg('show_hidden',true), __('Show hidden items', 'shortpixel-image-optimiser'));
+						 printf('<a href="%s">%s</a>', esc_url(add_query_arg('show_hidden',true), __('Show hidden items', 'shortpixel-image-optimiser')));
 					}
 
 		     endif; ?>

@@ -11,14 +11,6 @@ if( $total  >0 ) {
 
 ?>
 
-<script>
-		jQuery(function() {
-		//	jQuery("#sp-total-optimization-dial").val("<?php echo("" . round($view->averageCompression))?>");
-		//		ShortPixel.percentDial("#sp-total-optimization-dial", 100);
-		});
-</script>
-
-
 <?php if ( round($view->averageCompression) > 20): ?>
 	<div class="sp-bulk-summary">
 			<span><?php _e('Average optimization', 'shortpixel-image-optimiser'); ?></span>

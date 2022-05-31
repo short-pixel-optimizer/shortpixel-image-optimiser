@@ -44,7 +44,7 @@ if($adminEmail == 'noreply@addendio.com') $adminEmail = false; //hack for the ad
         <tr>
             <th scope="row"><label for="key"><?php _e('E-mail address:','shortpixel-image-optimiser');?></label></th>
             <td>
-							<form method="POST" action="<?php echo add_query_arg(array('noheader' => 'true', 'sp-action' => 'action_request_new_key')) ?>"
+							<form method="POST" action="<?php echo esc_url(add_query_arg(array('noheader' => 'true', 'sp-action' => 'action_request_new_key'))) ?>"
 								  id="shortpixel-form-request-key">
 								  <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
 
@@ -91,7 +91,7 @@ if($adminEmail == 'noreply@addendio.com') $adminEmail = false; //hack for the ad
     <?php _e('If you already have an API Key please input it below and press Validate.','shortpixel-image-optimiser');?>
 </p>
 
-<form method="POST" action="<?php echo add_query_arg(array('noheader' => 'true', 'sp-action' => 'action_addkey')) ?>"
+<form method="POST" action="<?php echo esc_url(add_query_arg(array('noheader' => 'true', 'sp-action' => 'action_addkey'))) ?>"
   id="shortpixel-form-nokey">
   <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
 

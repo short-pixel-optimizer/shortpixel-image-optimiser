@@ -62,7 +62,7 @@ class BulkViewController extends \ShortPixel\ViewController
 		$this->view->mediaErrorLog = $this->loadCurrentLog('media');
 		$this->view->customErrorLog = $this->loadCurrentLog('custom');
 
-		$this->view->buyMoreHref = 'https://shortpixel.com/' . ($keyControl->getKeyForDisplay() ? 'login/' . $keyControl->getKeyForDisplay() : 'pricing'); 
+		$this->view->buyMoreHref = 'https://shortpixel.com/' . ($keyControl->getKeyForDisplay() ? 'login/' . $keyControl->getKeyForDisplay() : 'pricing');
 
 
 
@@ -128,7 +128,33 @@ class BulkViewController extends \ShortPixel\ViewController
 		 $content = $log->getContents();
 		 $lines = array_filter(explode(';', $content));
 
-		 return $lines;
+		 $output = '';
+
+		 foreach ($lines as $line)
+		 {
+			 	$cells = array_filter(explode('|', $line));
+				if (count($cells) == 1)
+					continue; // empty line.
+
+				$date = $filename = $message = $item_id = false;
+
+				$date = $cells[0];
+				$filename = isset($cells[1]) ? $cells[1] : false;
+				$item_id = isset($cells[2]) ? $cells[2] : false;
+				$message = isset($cells[3]) ? $cells[3] : false;
+
+				$output = '<div class="fatal">';
+				$output .= $date . ': ';
+				if ($message)
+					$output .= $message;
+				if ($filename)
+					$output .= ' ( '. __('in file ','shortpixel-image-optimiser') . ' ' . $filename . ' ) ';
+
+				$output .= '</div>';
+		 }
+
+
+		 return $output;
 	}
 
   public function getLogs()

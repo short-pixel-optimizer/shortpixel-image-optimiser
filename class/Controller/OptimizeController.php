@@ -594,16 +594,26 @@ class OptimizeController
               $item->result->queuetype = $qtype;
 
 							$showItem = UiHelper::findBestPreview($imageItem); // find smaller / better preview
-              if ($showItem->hasBackup())
+
+							if ($showItem->getExtension() == 'pdf') // non-showable formats here
+							{
+								 $item->result->original = false;
+								 $item->result->optimized = false;
+							}
+							elseif ($showItem->hasBackup())
               {
                 $backupFile = $showItem->getBackupFile(); // attach backup for compare in bulk
                 $backup_url = $fs->pathToUrl($backupFile);
-                 $item->result->original = $backup_url;
+                $item->result->original = $backup_url;
+								$item->result->optimized = $fs->pathToUrl($showItem);
               }
               else
+							{
                 $item->result->original = false;
+								$item->result->optimized = $fs->pathToUrl($showItem);
+							}
 
-              $item->result->optimized = $fs->pathToUrl($showItem);
+
 
 
            }

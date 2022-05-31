@@ -61,7 +61,13 @@ namespace ShortPixel;
 
     </div>
 
-		<div data-error-media="message" data-presentation="append" class='errorbox media'></div>
+		<div data-error-media="message" data-presentation="append" class='errorbox media'>
+			<?php if(property_exists($this->view, 'mediaErrorLog') && $this->view->mediaErrorLog !== false)
+			{
+				echo $this->view->mediaErrorLog;
+			}
+			?>
+		</div>
 
 		<!-- ****** CUSTOM ********  --->
     <div class='bulk-summary' data-check-visibility data-control="data-check-custom-total">
@@ -73,15 +79,15 @@ namespace ShortPixel;
                 <span class='done' data-stats-custom="percentage_done" data-presentation="css.width.percentage"></span>
               </span>
         </span>
-  			<span>Processing: <i data-stats-custom="in_process">-</i></span>
+  			<span><?php _e('Processing','shortpixel-image-optimiser') ?>: <i data-stats-custom="in_process">-</i></span>
 			  <span>&nbsp;</span>
         <span>&nbsp;</span>
       </div>
       <div>
-        <span>Processed: <i data-stats-custom="done">-</i></span>
+        <span><?php _e('Processed','shortpixel-image-optimiser'); ?>: <i data-stats-custom="done">-</i></span>
 
-        <span>Images Left: <i data-stats-custom="in_queue">-</i></span>
-        <span>Errors: <i data-check-custom-fatalerrors  data-stats-custom="fatal_errors" class='error'>-</i></span>
+        <span><?php _e('Images Left', 'shortpixel-image-optimiser') ?>: <i data-stats-custom="in_queue">-</i></span>
+        <span><?php _e('Errors','shortpixel-image-optimiser') ?>: <i data-check-custom-fatalerrors  data-stats-custom="fatal_errors" class='error'>-</i></span>
 
 			<span data-check-visibility data-control="data-check-custom-fatalerrors" ><label title="<?php _e('Show Errors', 'shortpixel-image-optimiser'); ?>">
 				<input type="checkbox" name="show-errors" value="show" data-action='ToggleErrorBox' data-errorbox='custom' data-event='change'>Show Errors</label>
@@ -92,7 +98,13 @@ namespace ShortPixel;
 
     </div>
 
-    <div data-error-custom="message" data-presentation="append" class='errorbox custom'></div>
+    <div data-error-custom="message" data-presentation="append" class='errorbox custom'>
+			<?php if(property_exists($this->view, 'customErrorLog') && $this->view->customErrorLog !== false)
+			{
+				echo $this->view->customErrorLog;
+			}
+			?>
+		</div>
 
 
     <nav>

@@ -50,7 +50,6 @@ namespace ShortPixel;
         </span>
         <span>Processing: <i data-stats-media="in_process" data-check-media-in_process >-</i></span>
         <span>&nbsp;</span>
-				<span>&nbsp;</span>
       </div>
       <div>
         <span>Processed: <i data-stats-media="done">-</i></span>
@@ -70,23 +69,7 @@ namespace ShortPixel;
 		<div data-error-media="message" data-presentation="append" class='errorbox media'>
 				<?php if(property_exists($this->view, 'mediaErrorLog') && $this->view->mediaErrorLog !== false)
 				{
-						foreach($this->view->mediaErrorLog as $line)
-						{
-							 $cells = array_filter(explode('|', $line));
-							 if (count($cells) == 1)
-							 	continue; // empty line
-							 if (count($cells) > 0)
-							 {
-							 	echo '<div class="fatal">';
-								if (isset($cells[0]))  // Date
-									 echo $cells[0] . ': ';
-								if (isset($cells[3]) )  // Error message
-								 		echo $cells[3];
-								elseif(isset($cells[1]))
-								 		echo $cells[1];
-								echo '</div>';
-							}
-						}
+					echo $this->view->mediaErrorLog;
 				}
 				?>
 		</div>
@@ -125,23 +108,7 @@ namespace ShortPixel;
     <div data-error-custom="message" data-presentation="append" class='errorbox custom'>
 			<?php if(property_exists($this->view, 'customErrorLog') && $this->view->customErrorLog !== false)
 			{
-					foreach($this->view->customErrorLog as $line)
-					{
-						 $cells = array_filter(explode('|', $line));
-						 if (count($cells) == 1)
-							continue; // empty line
-						 if (count($cells) > 0)
-						 {
-							echo '<div class="fatal">';
-							if (isset($cells[0]))  // Date
-								 echo $cells[0] . ': ';
-							if (isset($cells[3]) )  // Error message
-									echo $cells[3];
-							elseif(isset($cells[1]))
-									echo $cells[1];
-							echo '</div>';
-						}
-					}
+					echo $this->view->customErrorLog;
 			}
 			?>
 		</div>

@@ -314,23 +314,7 @@ console.log("Screen Init Done", initMedia, initCustom);
       {
           this.UpdateData('result', result);
 
-					//var originalImage = document.querySelector('.image-source img');
-					//var optimizedImage =  document.querySelector('.image-result img');
-
-					// reset database to avoid mismatches.
-//					originalImage.src = originalImage.dataset.placeholder;
-//					optimizedImage.src =  optimizedImage.dataset.placeholder;
-
-          if (result.original)
-          {
- //               originalImage.src  = result.original;
-          }
-          if (result.optimized)
-          {
-  //              optimizedImage.src  = result.optimized;
-          }
-
-          if ( (result.orginal || result.optimized) && document.querySelector('.image-preview-section').classList.contains('hidden'))
+          if (document.querySelector('.image-preview-section').classList.contains('hidden')  )
           {
             document.querySelector('.image-preview-section').classList.remove('hidden');
           }
@@ -393,10 +377,10 @@ console.log("Screen Init Done", initMedia, initCustom);
 	// Function to neatly slide the new / old images around.
 	this.HandleImageEffect = function(originalSrc, optimizedSrc)
 	{
-		if (! originalSrc && ! optimizedSrc)
+		/*if (! originalSrc && ! optimizedSrc)
 		{
 			return false;
-		}
+		} */
 
 		var preview = document.getElementById('preview-structure');
 		var offset = preview.offsetWidth;
@@ -422,7 +406,7 @@ console.log("Screen Init Done", initMedia, initCustom);
 			 preview.querySelector('.new.preview-image .image.source img').src = originalSrc;
 		}
 		else {
-			 preview.querySelector('.new.preview-image .image.source').style.display = 'none';
+			 preview.querySelector('.new.preview-image .image.source img').src = placeHolder;
 		}
 
 		if (optimizedSrc)

@@ -751,6 +751,7 @@
   position: relative;
   background: #ccc;
   display: inline-block;
+  vertical-align: middle;
 }
 .shortpixel-bulk-wrapper section.panel.process .bulk-summary .line-progressbar .done-text, .shortpixel-bulk-wrapper section.panel.finished .bulk-summary .line-progressbar .done-text {
   position: absolute;
@@ -822,7 +823,7 @@
   justify-content: flex-start;
 }
 .shortpixel-bulk-wrapper section.panel.process .image-preview-section .preview-wrapper .preview-image, .shortpixel-bulk-wrapper section.panel.finished .image-preview-section .preview-wrapper .preview-image {
-  transition: 1s all linear;
+  transition: 0.5s all linear;
   display: flex;
   justify-content: center;
   align-items: center;

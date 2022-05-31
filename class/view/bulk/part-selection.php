@@ -52,7 +52,7 @@ $approx = $this->view->approx;
 	            </div>
 							<?php if (\wpSPIO()->settings()->processThumbnails == 1): ?>
 		            <div class='option'>
-		              <label><?php _e('Thumbnails (estimate)','shortpixel-image-optimiser'); ?></label> <span class="number" ><?php echo $approx->media->total ?> </span>
+		              <label><?php _e('Thumbnails (estimate)','shortpixel-image-optimiser'); ?></label> <span class="number" ><?php echo $approx->media->thumbs ?> </span>
 		            </div>
 							<?php endif; ?>
 	         </div>

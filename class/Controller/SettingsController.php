@@ -36,6 +36,7 @@ class SettingsController extends \ShortPixel\ViewController
      );
 
      protected $display_part = 'settings';
+		 protected $all_display_parts = array('settings', 'adv-settings', 'cloudflare', 'debug', 'tools');
      protected $form_action = 'save-settings';
 
       public function __construct()
@@ -526,7 +527,7 @@ class SettingsController extends \ShortPixel\ViewController
           $this->is_mainsite = $env->is_mainsite;
           $this->has_nextgen = $env->has_nextgen;
 
-          $this->display_part = isset($_GET['part']) ? sanitize_text_field($_GET['part']) : 'settings';
+          $this->display_part = (isset($_GET['part']) && in_array($_GET['part'], $this->all_display_parts) ) ? sanitize_text_field($_GET['part']) : 'settings';
       }
 
       /* Temporary function to check if HTaccess is writable.
@@ -860,9 +861,9 @@ class SettingsController extends \ShortPixel\ViewController
       {
         if ($redirect == 'self')
         {
-          $url = add_query_arg('part', $this->display_part);
-          $url = remove_query_arg('noheader', $url);
-          $url = remove_query_arg('sp-action', $url);
+          $url = esc_url(add_query_arg('part', $this->display_part));
+          $url = remove_query_arg('noheader', $url); // has url
+          $url = remove_query_arg('sp-action', $url); // has url
         }
         elseif($redirect == 'bulk')
         {

@@ -3,6 +3,8 @@ namespace ShortPixel;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notice;
 
+use ShortPixel\Controller\QuotaController as QuotaController;
+
 // @integration WP Offload Media Lite
 class wpOffload
 {
@@ -433,6 +435,11 @@ class wpOffload
         $fs = \wpSPIO()->filesystem();
 				$settings = \WPSPIO()->settings();
 
+				$quotaController = quotaController::getInstance();
+				if ($quotaController->hasQuota() === false)
+				{
+					return false;
+				}
         if (! $this->offloading)
           return false;
 

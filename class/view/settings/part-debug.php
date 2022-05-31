@@ -51,7 +51,7 @@ $env = \wpSPIO()->env();
     <pre><?php var_export($this->quotaData); ?></pre>
   </div>
   <div class='debug-quota'>
-    <form method="POST" action="<?php echo add_query_arg(array('sp-action' => 'action_debug_resetquota')) ?>"
+    <form method="POST" action="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_resetquota'))) ?>"
       id="shortpixel-form-debug-medialib">
       <button class='button' type='submit'>Clear Quota Data</button>
       </form>
@@ -90,7 +90,7 @@ $env = \wpSPIO()->env();
 	</div> <!-- stats -->
 
   <div class='debug-stats'>
-    <form method="POST" action="<?php echo add_query_arg(array('sp-action' => 'action_debug_resetStats')) ?>"
+    <form method="POST" action="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_resetStats'))) ?>"
       id="shortpixel-form-debug-stats">
       <button class='button' type='submit'>Clear statistics cache</button>
       </form>
@@ -122,7 +122,7 @@ $env = \wpSPIO()->env();
   </div>
 
   <div class='debug-notices'>
-    <form method="POST" action="<?php echo add_query_arg(array('sp-action' => 'action_debug_resetNotices')) ?>"
+    <form method="POST" action="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_resetNotices'))) ?>"
       id="shortpixel-form-debug-stats">
       <button class='button' type='submit'>Reset Notices</button>
       </form>
@@ -173,7 +173,7 @@ $env = \wpSPIO()->env();
 			<?php endforeach; ?>
 
   <div class='debug-queue'>
-    <form method="POST" action="<?php echo add_query_arg(array('sp-action' => 'action_debug_resetQueue')) ?>"
+    <form method="POST" action="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_resetQueue'))) ?>"
       id="shortpixel-form-reset-queue">
       <button class='button' type='submit'>Reset ShortQ</button>
 			<select name="queue">

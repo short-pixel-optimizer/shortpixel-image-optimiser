@@ -33,11 +33,6 @@ namespace ShortPixel;
                   </tr>
 
                 <tr>
-                    <th scope="row">&nbsp;</th>
-                    <td><h3><?php _e('Cloudflare Authentication', 'shortpixel-image-optimiser'); ?></h3></td>
-                </tr>
-
-                <tr>
                     <th scope="row" class='cf_switch <?php if ($view->hide_cf_global === true) { echo 'global-hidden'; } ?>'>
                       <?php
                         $token_checked =   (strlen($view->data->cloudflareToken) > 0) ? 'checked' : '';

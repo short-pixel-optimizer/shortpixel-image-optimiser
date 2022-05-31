@@ -888,6 +888,9 @@
           position: relative;
           background: #ccc;
           display: inline-block;
+					vertical-align: middle;
+
+
           .done-text
           {
             position: absolute;
@@ -987,7 +990,7 @@
 
 					 .preview-image
 					 {
-						 transition: 1s all linear;
+						 transition: 0.5s all linear;
  						 display: flex;
 						 justify-content: center;
 						 align-items: center;

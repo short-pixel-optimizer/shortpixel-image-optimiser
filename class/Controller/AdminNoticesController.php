@@ -737,7 +737,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 
         $notices = get_transient($transient_name);
         $url = $this->remote_message_endpoint;
-        $url = add_query_arg(array(
+        $url = add_query_arg(array(  // has url 
            'key' => $keyControl->forceGetApiKey(),
            'version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
            'target' => 3,

@@ -511,7 +511,10 @@ class UiHelper
 		 	$closestObj = $imageItem;
 
 			// set the standard.
-			$bestdiff = abs($imageItem->get('width') - $size);
+			if ($imageItem->getExtension() == 'pdf') // try not to select non-showable extensions.
+				$bestdiff = 0;
+			else
+				$bestdiff = abs($imageItem->get('width') - $size);
 
 			$thumbnails = $imageItem->get('thumbnails');
 

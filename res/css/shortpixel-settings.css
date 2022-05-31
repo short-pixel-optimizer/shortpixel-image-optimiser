@@ -3,12 +3,77 @@
 }
 .settings_page_wp-shortpixel-settings .top-menu {
   font-size: 18px;
+  display: flex;
+  width: 100%;
+  min-height: 50px;
+  align-items: center;
 }
-.settings_page_wp-shortpixel-settings .top-menu a {
+.settings_page_wp-shortpixel-settings .top-menu .links {
+  flex: 12 4 auto;
+}
+.settings_page_wp-shortpixel-settings .top-menu .links a {
   font-size: 18px;
+  margin-right: 8px;
 }
 .settings_page_wp-shortpixel-settings .top-menu .quota-remaining {
+  flex: 2 1 2;
+  text-align: center;
+}
+.settings_page_wp-shortpixel-settings .top-menu .pie-wrapper {
+  position: relative;
+  flex: 4 2 auto;
+  min-width: 150px;
+}
+@media (max-width: 1500px) {
+  .settings_page_wp-shortpixel-settings .top-menu .pie-wrapper {
+    min-width: 100px;
+  }
+}
+.settings_page_wp-shortpixel-settings .top-menu div.sp-bulk-summary {
+  position: absolute;
+  top: -45px;
+  z-index: 10;
+}
+.settings_page_wp-shortpixel-settings .top-menu div.sp-bulk-summary .opt-circle-average {
+  width: 150px;
+  height: 150px;
   float: right;
+}
+.settings_page_wp-shortpixel-settings .top-menu div.sp-bulk-summary .opt-circle-average .trail {
+  stroke: #ddd;
+}
+.settings_page_wp-shortpixel-settings .top-menu div.sp-bulk-summary .opt-circle-average .path {
+  stroke: #1cbecb;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.5s ease 0s;
+}
+.settings_page_wp-shortpixel-settings .top-menu div.sp-bulk-summary .opt-circle-average .text {
+  fill: #1FBEC9;
+  font-size: 28px;
+  font-weight: 700;
+  dominant-baseline: middle;
+  text-anchor: middle;
+}
+.settings_page_wp-shortpixel-settings .top-menu div.sp-bulk-summary span {
+  margin: 0;
+  font-size: 11px;
+  position: absolute;
+  bottom: 45px;
+  padding: 4px 8px;
+  color: #fff;
+  background: rgba(15, 106, 125, 0.5);
+  font-weight: 700;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+@media (max-width: 1500px) {
+  .settings_page_wp-shortpixel-settings .top-menu div.sp-bulk-summary .opt-circle-average {
+    width: 100px;
+    height: 100px;
+  }
+  .settings_page_wp-shortpixel-settings .top-menu div.sp-bulk-summary span {
+    display: none;
+  }
 }
 .settings_page_wp-shortpixel-settings .wp-shortpixel-tab-content {
   transition: all 1000ms linear;
@@ -16,45 +81,13 @@
 .settings_page_wp-shortpixel-settings .red {
   color: #ff0000;
 }
-.settings_page_wp-shortpixel-settings div.sp-bulk-summary {
-  position: absolute;
-  top: 50px;
-  right: 50px;
-  margin: 8px 5px 3px 20px;
-  z-index: 10;
+.settings_page_wp-shortpixel-settings article.sp-tabs section p.settings-info {
+  padding-top: 0px;
+  color: #818181;
+  font-size: 13px !important;
 }
-.settings_page_wp-shortpixel-settings div.sp-bulk-summary .opt-circle-average {
-  width: 150px;
-  height: 150px;
-  float: right;
-}
-.settings_page_wp-shortpixel-settings div.sp-bulk-summary .opt-circle-average .trail {
-  stroke: #ddd;
-}
-.settings_page_wp-shortpixel-settings div.sp-bulk-summary .opt-circle-average .path {
-  stroke: #1cbecb;
-  stroke-linecap: round;
-  transition: stroke-dashoffset 0.5s ease 0s;
-}
-.settings_page_wp-shortpixel-settings div.sp-bulk-summary .opt-circle-average .text {
-  fill: #1FBEC9;
-  font-size: 28px;
-  font-weight: 700;
-  dominant-baseline: middle;
-  text-anchor: middle;
-}
-.settings_page_wp-shortpixel-settings div.sp-bulk-summary span {
-  margin: 0;
-  font-size: 13px;
-  position: absolute;
-  bottom: 45px;
-  left: -15px;
-  padding: 6px 10px;
-  color: #fff;
-  background: rgba(15, 106, 125, 0.5);
-  font-weight: 700;
-  border-radius: 3px;
-  white-space: nowrap;
+.settings_page_wp-shortpixel-settings article.sp-tabs section p.settings-info.shortpixel-settings-error {
+  color: #c32525;
 }
 .settings_page_wp-shortpixel-settings article.sp-tabs section .wp-shortpixel-tab-content {
   opacity: 0;
@@ -287,15 +320,49 @@
 }
 
 #tab-tools .option {
-  width: 80%;
   padding: 8px;
+  display: inline-block;
+}
+#tab-tools .option p {
+  margin: 14px 0;
+}
+#tab-tools .option {
+  clear: both;
+  display: flex;
   margin: 25px 0;
 }
-#tab-tools .option .button {
-  margin: 10px 8px;
+#tab-tools .option div.name {
+  width: 220px;
+  font-weight: 700;
+  display: inline-block;
+  flex: 0 0 auto;
 }
-#tab-tools .danger-zone {
+#tab-tools .option div.field {
+  display: inline-block;
+  vertical-align: middle;
+}
+#tab-tools .option div.field .button {
+  min-width: 200px;
+  font-weight: 700;
+  text-align: center;
+  padding: 6px 8px;
+}
+#tab-tools .option div.field .button.danger {
+  color: #fff;
+  background: #ff0000;
   border: 1px solid #ff0000;
+}
+#tab-tools .option-row {
+  margin: 15px 0;
+  display: block;
+}
+#tab-tools .danger-zone h3 {
+  margin-left: 15px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+#tab-tools .danger-zone > p {
+  margin-left: 15px;
 }
 
 div.spio-inline-help {
