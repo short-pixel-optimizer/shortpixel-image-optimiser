@@ -52,33 +52,33 @@ class ShortPixelListTable extends WP_List_Table {
                 $url = ShortPixelMetaFacade::pathToWebPath($item->folder);
 
                 $admin_url = admin_url('upload.php');
-                $admin_url = add_query_arg(array('page' => sanitize_text_field($_REQUEST['page']), 'image' => absint($item->id), 'noheader' => 'true'), $admin_url);
+                $admin_url = add_query_arg(array('page' => sanitize_text_field($_REQUEST['page']), 'image' => absint($item->id), 'noheader' => 'true'), $admin_url); // has url
 
                 // add the order options if active
                 if (isset($_GET['orderby']))
                 {
                   $order = isset($_GET['order']) ? sanitize_text_field($_GET['order']) : 'desc';
-                  $admin_url = add_query_arg(array('orderby' => sanitize_text_field($_GET['orderby']), 'order' => $order), $admin_url);
+                  $admin_url = add_query_arg(array('orderby' => sanitize_text_field($_GET['orderby']), 'order' => $order), $admin_url); // has url
                 }
                 if (isset($_GET['paged']))
                 {
-                  $admin_url = add_query_arg('paged', intval($_GET['paged']), $admin_url);
+                  $admin_url = add_query_arg('paged', intval($_GET['paged']), $admin_url); // has url
                 }
 
                 $actions = array(
-                    'optimize' => sprintf('<a href="%s">%s</a>', add_query_arg(array('action' => 'optimize', '_wpnonce' => wp_create_nonce( 'sp_optimize_image' ), ), $admin_url), __('Optimize','shortpixel-image-optimiser')),
+                    'optimize' => sprintf('<a href="%s">%s</a>', esc_url(add_query_arg(array('action' => 'optimize', '_wpnonce' => wp_create_nonce( 'sp_optimize_image' ), ), $admin_url)), __('Optimize','shortpixel-image-optimiser')),
 
-                    'retry' => sprintf('<a href="%s">%s</a>', add_query_arg(array('action' => 'optimize', '_wpnonce' => wp_create_nonce( 'sp_optimize_image' ), ), $admin_url), __('Retry','shortpixel-image-optimiser')),
+                    'retry' => sprintf('<a href="%s">%s</a>', esc_url(add_query_arg(array('action' => 'optimize', '_wpnonce' => wp_create_nonce( 'sp_optimize_image' ), ), $admin_url)), __('Retry','shortpixel-image-optimiser')),
 
-                    'redolossless' => sprintf('<a href="%s">%s</a>', add_query_arg(array('action' => 'redo', '_wpnonce' => wp_create_nonce( 'sp_redo_image'), 'type' => 'lossless'),$admin_url), __('Re-optimize lossless','shortpixel-image-optimiser')),
+                    'redolossless' => sprintf('<a href="%s">%s</a>', esc_url(add_query_arg(array('action' => 'redo', '_wpnonce' => wp_create_nonce( 'sp_redo_image'), 'type' => 'lossless'),$admin_url)), __('Re-optimize lossless','shortpixel-image-optimiser')),
 
-                    'redolossy' => sprintf('<a href="%s">%s</a>', add_query_arg(array('action' => 'redo', '_wpnonce' => wp_create_nonce( 'sp_redo_image'), 'type' => 'lossy'), $admin_url), __('Re-optimize lossy','shortpixel-image-optimiser')),
+                    'redolossy' => sprintf('<a href="%s">%s</a>', esc_url(add_query_arg(array('action' => 'redo', '_wpnonce' => wp_create_nonce( 'sp_redo_image'), 'type' => 'lossy'), $admin_url)), __('Re-optimize lossy','shortpixel-image-optimiser')),
 
-                    'redoglossy' => sprintf('<a href="%s">%s</a>', add_query_arg(array('action' => 'redo', '_wpnonce' => wp_create_nonce( 'sp_redo_image'), 'type' => 'glossy'), $admin_url), __('Re-optimize glossy','shortpixel-image-optimiser')),
+                    'redoglossy' => sprintf('<a href="%s">%s</a>', esc_url(add_query_arg(array('action' => 'redo', '_wpnonce' => wp_create_nonce( 'sp_redo_image'), 'type' => 'glossy'), $admin_url)), __('Re-optimize glossy','shortpixel-image-optimiser')),
 
-                    'quota' => sprintf('<a href="%s">%s</a>', add_query_arg(array('action' => 'quota', '_wpnonce' => wp_create_nonce( 'sp_check_quota')), $admin_url), __('Check quota','shortpixel-image-optimiser')),
+                    'quota' => sprintf('<a href="%s">%s</a>', esc_url(add_query_arg(array('action' => 'quota', '_wpnonce' => wp_create_nonce( 'sp_check_quota')), $admin_url)), __('Check quota','shortpixel-image-optimiser')),
 
-                    'restore' => sprintf('<a href="%s">%s</a>', add_query_arg(array('action' => 'restore', '_wpnonce' => wp_create_nonce( 'sp_restore_image')), $admin_url), __('Restore','shortpixel-image-optimiser')),
+                    'restore' => sprintf('<a href="%s">%s</a>', esc_url(add_query_arg(array('action' => 'restore', '_wpnonce' => wp_create_nonce( 'sp_restore_image')), $admin_url)), __('Restore','shortpixel-image-optimiser')),
 
 
                     'compare' => sprintf( '<a href="javascript:ShortPixel.loadComparer(\'C-' . absint($item->id) . '\');">%s</a>"',

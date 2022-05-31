@@ -694,7 +694,7 @@ class AdminNoticesController extends \ShortPixel\Controller
             'key' => $keyModel->getKey(),
             'version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
             'target' => 3,
-         ), $url);
+         ), $url); // has url 
 
 
          if ( $notices === false  ) {

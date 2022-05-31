@@ -146,7 +146,7 @@ class ShortPixelAPI {
             $requestParameters['refresh'] = 1;
         }
 
-				$requestParameters = apply_filters('shortpixel/api/request', $requestParameters,   $itemHandler->getId());
+				$requestParameters = apply_filters('shortpixel/api/request', $requestParameters, $itemHandler->getId());
 
 
         //WpShortPixel::log("ShortPixel API Request Settings: " . json_encode($requestParameters));

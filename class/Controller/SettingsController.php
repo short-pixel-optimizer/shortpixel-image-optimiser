@@ -281,7 +281,7 @@ class SettingsController extends \ShortPixel\Controller
                 // http not ok, redirect etc. Shouldn't happen.
                  if (is_null($response) || strpos($response, '200') === false)
                  {
-                   $error_detail = sprintf(__('The AVIF check could not be completed, because the plugin couldn\'t fetch  %s %s %s. %s Please check the security/firewall settings and try again', 'shortpixel-image-optimiser'), '<a href="' . $url . '">', $url, '</a>', '<br>');
+                   $error_detail = sprintf(__('The AVIF check could not be completed, because the plugin couldn\'t fetch  %s %s %s. %s Please check the security/firewall settings and try again', 'shortpixel-image-optimiser'), '<a href="' . esc_url($url) . '">', esc_url($url), '</a>', '<br>');
                  }
                  elseif(is_null($contentType) || strpos($contentType, 'avif') === false)
                  {
@@ -589,9 +589,9 @@ class SettingsController extends \ShortPixel\Controller
       {
         if ($redirect == 'self')
         {
-          $url = add_query_arg('part', $this->display_part);
-          $url = remove_query_arg('noheader', $url);
-          $url = remove_query_arg('sp-action', $url);
+          $url = esc_url_raw(add_query_arg('part', $this->display_part));
+          $url = remove_query_arg('noheader', $url); // has url
+          $url = remove_query_arg('sp-action', $url); // has url
         }
         elseif($redirect == 'bulk')
         {

@@ -328,7 +328,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
 
         // Try with controller URL, if not present, try with upload URL and page param.
         $admin_url = admin_url('upload.php');
-        $url = (is_null($this->url)) ?  add_query_arg('page','wp-short-pixel-custom', $admin_url) : $this->url;
+        $url = (is_null($this->url)) ?  add_query_arg('page','wp-short-pixel-custom', $admin_url) : $this->url; // has url
 
         $page_args = array_filter(wp_parse_args($args, $defaults));
         return add_query_arg($page_args, $url);
@@ -387,7 +387,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
            $total_pages_before = '<span class="paging-input">';
            $total_pages_after  = '</span></span>';
 
-           $current_url = remove_query_arg( 'paged', $this->getPageURL());
+           $current_url = remove_query_arg( 'paged', $this->getPageURL()); // has url 
 
            $output = '<form method="GET" action="'. $current_url . '">'; //'<span class="pagination-links">';
            $output .= '<span class="displaying-num">'. sprintf(__('%d Items', 'shortpixel-image-optimiser'), $this->total_items) . '</span>';
@@ -408,7 +408,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
             } else {
                 $page_links[] = sprintf(
                     "<a class='prev-page button' href='%s'><span class='screen-reader-text'>%s</span><span aria-hidden='true'>%s</span></a>",
-                    esc_url( add_query_arg( 'paged', max( 1, $current - 1 ), $current_url ) ),
+                    esc_url( add_query_arg( 'paged', max( 1, $current - 1 ), $current_url ) ), // has url
                     __( 'Previous page' ),
                     '&lsaquo;'
                 );
@@ -574,7 +574,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
               $class = (isset($action['class'])) ? $action['class'] : '';
 
 
-              $link = '<a href="' . $url . '" class="action-' . $action_arg . ' ' . $class . '">' . $text . '</a>';
+              $link = '<a href="' . esc_url($url) . '" class="action-' . $action_arg . ' ' . $class . '">' . $text . '</a>';
           }
 
           $actions[$index] = $link;
@@ -700,7 +700,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
               {
                 $sorturl = add_query_arg('order', 'asc', $sorturl);
               }
-              $output = '<a href="' . $sorturl . '"><span>' . $title . '</span><span class="sorting-indicator '. $sorted . '">&nbsp;</span></a>';
+              $output = '<a href="' . esc_url($sorturl) . '"><span>' . $title . '</span><span class="sorting-indicator '. $sorted . '">&nbsp;</span></a>';
           }
           else
           {

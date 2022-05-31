@@ -1,6 +1,6 @@
 
     <div class="wrap short-pixel-bulk-page bulk-restore-all">
-        <form action='<?php echo remove_query_arg('part'); ?>' method='POST' >
+        <form action='<?php echo esc_url(remove_query_arg('part')); ?>' method='POST' >
         <?php wp_nonce_field('sp-bulk', 'sp-nonce'); ?>
         <h1><?php _e('Bulk Image Optimization by ShortPixel','shortpixel-image-optimiser');?></h1>
 
@@ -41,7 +41,7 @@
         </section>
 
         <div class='form-controls'>
-          <a class='button' href="<?php echo remove_query_arg('part') ?>"><?php _e('Back', 'shortpixel-image-optimiser'); ?></a>
+          <a class='button' href="<?php echo esc_url(remove_query_arg('part')) ?>"><?php _e('Back', 'shortpixel-image-optimiser'); ?></a>
           <button disabled aria-disabled="true" type='submit' class='button bulk restore disabled' name='bulkRestore' id='bulkRestore'><?php _e('Bulk Restore', 'shortpixel-image-optimiser'); ?></button>
         </div>
 

@@ -46,7 +46,7 @@ print_r(wp_get_default_extension_for_mime_type('image/heif'));
 
   <h3>Tools</h3>
   <div class='debug-images'>
-    <form method="POST" action="<?php echo add_query_arg(array('sp-action' => 'action_debug_medialibrary')) ?>"
+    <form method="POST" action="<?php echo esc_url( add_query_arg(array('sp-action' => 'action_debug_medialibrary')) ); ?>"
       id="shortpixel-form-debug-medialib">
       <button class='button' type='submit'>Reacquire Thumbnails on Media Library</button>
       </form>

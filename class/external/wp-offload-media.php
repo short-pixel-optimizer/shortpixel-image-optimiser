@@ -402,6 +402,12 @@ class wpOffload
     {
 				$settings = \wpSPIO()->settings();
 
+				// If no quota, unlikely we need to directly optimize.
+				if ($settings->quotaExceeded)
+				{
+					 return $bool;
+				}
+
 				if ($settings->autoMediaLibrary)
 				{
 					// Don't prevent whaffever if shortpixel is already done. This can be caused by plugins doing a metadata update, we don't care then.
@@ -435,7 +441,7 @@ class wpOffload
 				 {
 					  continue;
 				 }
-				 
+
          $basepath = $basedir->getPath();
          $newPaths[$size] = $path;
 
