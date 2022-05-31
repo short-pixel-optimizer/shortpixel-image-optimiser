@@ -27,7 +27,7 @@ class WPShortPixel {
 
     private $timer;
 
-    public static $PROCESSABLE_EXTENSIONS = array('jpg', 'jpeg', 'gif', 'png', 'pdf', 'heic');
+    public static $PROCESSABLE_EXTENSIONS = array('jpg', 'jpeg', 'gif', 'png', 'pdf');
 
     private static $first_run = false;
 
