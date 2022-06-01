@@ -84,14 +84,14 @@
 
                       <?php printf(__('%s Run a few tests %s to help you decide.', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/online-image-compression" style="margin-left:20px;" target="_blank">', '</a>'); ?>
 
-										 <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/11-lossy-glossy-or-lossless-which-one-is-the-best-for-me"></span></div>
+										 <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/11-lossy-glossy-or-lossless-which-one-is-the-best-for-me"></span></div>
 
                         <p class="settings-info shortpixel-radio-info shortpixel-radio-lossy" <?php echo( $view->data->compressionType == 1 ? "" : 'style="display:none"' );?>>
                             <?php _e('<b>Lossy compression (recommended): </b>offers the best compression rate.</br> This is the recommended option for most users, producing results that look the same as the original to the human eye.','shortpixel-image-optimiser');?>
                         </p>
                         <p class="settings-info shortpixel-radio-info shortpixel-radio-glossy" <?php echo( $view->data->compressionType == 2 ? "" : 'style="display:none"' );?>>
                             <?php _e('<b>Glossy compression: </b>creates images that are almost pixel-perfect identical with the originals.</br> Best option for photographers and other professionals that use very high quality images on their sites and want the best compression while keeping the quality untouched.','shortpixel-image-optimiser');?>
-                            <a href="https://blog.shortpixel.com/glossy-image-optimization-for-photographers/" target="_blank" class="shortpixel-help-link">
+                            <a href="https://shortpixel.com/blog/glossy-image-optimization-for-photographers/" target="_blank" class="shortpixel-help-link">
                                 <span class="dashicons dashicons-editor-help"></span><?php _e('More info about glossy','shortpixel-image-optimiser');?>
                             </a></p>
                         <p class="settings-info shortpixel-radio-info shortpixel-radio-lossless" <?php echo( $view->data->compressionType == 0 ? "" : 'style="display:none"' );?>>
@@ -129,7 +129,7 @@
                 <td>
 
 										<div class='switch_button'>
-										 <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/511-settings-also-include-thumbnails"></span></div>
+										 <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/511-settings-also-include-thumbnails"></span></div>
 				              <label>
 				                <input type="checkbox" class="switch" name="processThumbnails" value="1" <?php checked($view->data->processThumbnails, '1');?>>
 				                <div class="the_switch">&nbsp; </div>
@@ -150,7 +150,7 @@
 
 
 										 <div class='switch_button'>
-											 <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/515-settings-image-backup"></span></div>
+											 <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/515-settings-image-backup"></span></div>
 											 <label>
 												 <input type="checkbox" class="switch" name="backupImages" value="1" <?php checked($view->data->backupImages, '1');?>>
 												 <div class="the_switch">&nbsp; </div>
@@ -171,7 +171,7 @@
                 <td>
 
 									<div class='switch_button'>
-										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Inline help" data-link="https://help.shortpixel.com/article/483-spai-remove-exif">
+										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/483-spai-remove-exif">
 	 								 </span></div>
 										<label>
 											<input type="checkbox" class="switch" name="removeExif" value="1" <?php checked($view->data->keepExif, 0);?>>
@@ -232,8 +232,8 @@
 
                     <p class="settings-info">
                         <?php _e('Recommended for large photos, like the ones taken with your phone. Saved space can go up to 80% or more after resizing.','shortpixel-image-optimiser');?>
-                        <a href="https://blog.shortpixel.com/resize-images/" class="shortpixel-help-link" target="_blank">
-                            <span class="dashicons dashicons-editor-help"></span><?php _e('Read more','shortpixel-image-optimiser');?>
+                        <a href="https://shortpixel.com/blog/resize-images/" class="shortpixel-help-link" target="_blank">
+                            <span class="dashicons dashicons-editor-help"></span>
                         </a><br/>
                     </p>
                     <?php if(false) { ?>
@@ -246,7 +246,7 @@
                         <img alt="<?php _e('Resize inner','shortpixel-image-optimiser'); ?>" src="<?php echo(wpSPIO()->plugin_url('res/img/resize-inner.png' ));?>"
                              srcset='<?php echo(wpSPIO()->plugin_url('res/img/resize-inner.png' ));?> 1x, <?php echo(wpSPIO()->plugin_url('res/img/resize-inner@2x.png' ));?> 2x'
                              title="<?php _e('Sizes will be smaller or equal to the corresponding value. For example, if you set the resize dimensions at 1000x1200, an image of 2000x3000px will be resized to 800x1200px while an image of 3000x2000px will be resized to 1000x667px','shortpixel-image-optimiser');?>">
-                        <div style="display:inline-block;margin-left: 20px;"><a href="https://blog.shortpixel.com/resize-images/" class="shortpixel-help-link" target="_blank">
+                        <div style="display:inline-block;margin-left: 20px;"><a href="https://shortpixel.com/blog/resize-images/" class="shortpixel-help-link" target="_blank">
                             <span class="dashicons dashicons-editor-help"></span><?php _e('What is this?','shortpixel-image-optimiser');?></a>
                         </div>
                     </div>
@@ -304,7 +304,7 @@
                                 <input type="radio" name="resizeType" id="resize_type_inner" value="inner" <?= $view->data->resizeType == 'inner' ? 'checked' : ''; ?>>
                                 <?= __( 'Contain', 'shortpixel-image-optimiser' ); ?>
                             </label><br>
-                            <div style="display:inline-block;margin-top: 15px;"><a href="https://blog.shortpixel.com/resize-images/" class="shortpixel-help-link" target="_blank">
+                            <div style="display:inline-block;margin-top: 15px;"><a href="https://shortpixel.com/blog/resize-images/" class="shortpixel-help-link" target="_blank">
                                     <span class="dashicons dashicons-editor-help"></span><?php _e('What is this?','shortpixel-image-optimiser');?></a>
                             </div>
 
