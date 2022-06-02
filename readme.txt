@@ -2,9 +2,9 @@
 Contributors: ShortPixel
 Tags: convert webp, optimize images, image optimization, resize, compressor, image, avif, compression, optimize, image optimiser, image compression, compress pdf, compress jpg, compress png, performance, photography, smush, scale, pictures
 Requires at least: 4.2.0
-Tested up to: 5.9
+Tested up to: 6.0
 Requires PHP: 5.6
-Stable tag: 4.22.9
+Stable tag: 4.22.10
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -260,7 +260,10 @@ the `$chunk` is the value ShortPixel chooses to use as number of selected record
 filters the array of paths of the images sent for backup and can be used to exclude certain paths/images/thumbs from being backed up, based on the image path. `$mainPath` is the path of the main image, while `$PATHs` is an array with all files to be backed up (including thumbnails);
 
 `apply_filters('shortpixel/settings/image_sizes', $sizes);`
-filters the array (`$sizes`) of image sizes which can be excluded from processing (displayed in the plugin Advanced settings).
+filters the array (`$sizes`) of image sizes which can be excluded from processing (displayed in the plugin Advanced settings);
+
+`apply_filters('shortpixel/api/request', $requestParameters, $item_id);`
+filters the parameters sent to the optimization API (through `$requestParameters`), described in detail here: <a href="https://shortpixel.com/api-docs" target="_blank">ShortPixel Reducer API</a>; `$item_id` contains the ID of the Media Library item, or the ID of the Custom Media item (when used). In short, this filter can be used to alter any parameters sent to the API, depending on the needs. For example, you can set different resize parameters for different post types, different compression levels, remove EXIF or not, covert WebP/AVIF, and basically any other parameter that is sent to the API for a specific image (together with all its thumbnails).
 
 In order to define custom thumbnails to be picked up by the optimization you have two options, both comma separated defines:
 
@@ -318,6 +321,18 @@ Alternatively, you can use this filter in your theme's functions.php file:
 9. Check other optimized images status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 4.22.10 =
+Release date June 2nd, 2022
+* Fix: updated all `add_query_arg` and `remove_query_arg` functions for enhanced security;
+* Fix: in some cases, the offloading via WP Offload Media wasn't properly done when converting from PNG to JPG;
+* Fix: PDF files weren't offloaded via WP Offload Media  when running out of credits;
+* Fix: removed the backups folder calculation because it was making the settings page very slow in certain cases;
+* Fix: removed the consumed credits from the statistics tab, because it wasn't working correctly;
+* Fix: increased the default image resize options;
+* Fix: a potential fatal error on PHP 8 was corrected;
+* Tweak: added a new filter for the requests that are sent to the optimization API, documented above in the Developers section;
+* Language: 0 new strings added, 0 updated, 0 fuzzed, and 0 obsoleted.
 
 = 4.22.9 =
 Release date March 31st, 2022
