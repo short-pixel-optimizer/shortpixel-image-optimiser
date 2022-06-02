@@ -584,4 +584,4 @@ Release date: 2nd April 2020
 
 = 4.22.9 =
 
-* This version contains a fix for the WP Offload Media plugin version 3.6.0 and above. Please ensure you're running the latest WP Offload Media plugin and check that everything works correctly after upgrading.
+* This version contains a fix for the WP Offload Media plugin version 2.6.0 and above. Please ensure you're running the latest WP Offload Media plugin and check that everything works correctly after upgrading.
