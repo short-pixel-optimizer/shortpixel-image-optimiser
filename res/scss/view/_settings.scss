@@ -57,16 +57,7 @@
 		div.sp-bulk-summary {
 				position: absolute;
 				top: -45px;
-			//	min-width: 150px;
-			//	top: 50px;
-			//	right: 50px;
-			//	margin:8px 5px 3px 20px;
-				//right: 0;
-				//top: 0;
 				z-index: 10;
-			//	width: 150px;
-			//	height: 150px;
-
 
 				.opt-circle-average {
 						width: 150px;
@@ -128,6 +119,25 @@
   .red {
      color: #ff0000;
   }
+
+	.option
+	{
+		 padding: 8px;
+		 display: inline-block;
+		 .button
+		 {
+
+		 }
+		 p {
+			 margin: 14px 0;
+		 }
+	}
+
+	.shortpixel-help-link span.dashicons
+	{
+	    text-decoration: none;
+	    margin-top: -1px;
+	}
 
   //tabs
   article.sp-tabs
@@ -339,4 +349,40 @@
     display: none;
   }
 
+	// ####### SETTINGS TAB (GENERAL)
+	#tab-settings
+	{
+			.shortpixel-compression
+			{
+				  strong
+					{
+						 line-height: 22px;
+					}
+					.shortpixel-compression-options {
+	//		    	color: #999;
+						display: inline-block;
+				}
+				label {
+				    width:158px;
+				    margin: 0 -2px;
+				    background-color:$color-light;
+				    font-weight: bold;
+				    display: inline-block;
+						span {
+						    text-align:center;
+						    font-size: 16px;
+						    padding:8px 0px;
+						    display:block;
+						}
+						input {
+						    display: none;
+								&:checked + span {
+								    background-color:$color-darkest;
+								    color:#FFF;
+								}
+						}
+
+				}
+			}
+	} // tab-settings
 } // end of settings

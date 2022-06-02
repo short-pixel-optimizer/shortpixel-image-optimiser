@@ -214,6 +214,8 @@
               ?>
                 <th scope="row"><?php _e('Resize large images','shortpixel-image-optimiser');?></th>
                 <td>
+										<div class='option'>
+
                     <input name="resizeImages" type="checkbox" id="resize" value="1" <?php checked( $view->data->resizeImages, true );?>>
                     <label for="resize"><?php _e('to maximum','shortpixel-image-optimiser');?></label>
 
@@ -232,9 +234,9 @@
 
                     <p class="settings-info">
                         <?php _e('Recommended for large photos, like the ones taken with your phone. Saved space can go up to 80% or more after resizing.','shortpixel-image-optimiser');?>
-                        <a href="https://shortpixel.com/blog/resize-images/" class="shortpixel-help-link" target="_blank">
-                            <span class="dashicons dashicons-editor-help"></span>
-                        </a><br/>
+
+										</div>
+
                     </p>
                     <?php if(false) { ?>
                     <div style="margin-top: 10px;">
@@ -246,9 +248,7 @@
                         <img alt="<?php _e('Resize inner','shortpixel-image-optimiser'); ?>" src="<?php echo(wpSPIO()->plugin_url('res/img/resize-inner.png' ));?>"
                              srcset='<?php echo(wpSPIO()->plugin_url('res/img/resize-inner.png' ));?> 1x, <?php echo(wpSPIO()->plugin_url('res/img/resize-inner@2x.png' ));?> 2x'
                              title="<?php _e('Sizes will be smaller or equal to the corresponding value. For example, if you set the resize dimensions at 1000x1200, an image of 2000x3000px will be resized to 800x1200px while an image of 3000x2000px will be resized to 1000x667px','shortpixel-image-optimiser');?>">
-                        <div style="display:inline-block;margin-left: 20px;"><a href="https://shortpixel.com/blog/resize-images/" class="shortpixel-help-link" target="_blank">
-                            <span class="dashicons dashicons-editor-help"></span><?php _e('What is this?','shortpixel-image-optimiser');?></a>
-                        </div>
+
                     </div>
                     <?php } ?>
 
@@ -292,7 +292,7 @@
                         .resize-type-wrap label {
                             display: inline-block;
                             padding: 15px 0 0 0;
-                        }
+                        } 
                     </style>
                     <div class="resize-type-wrap" <?php echo( $view->data->resizeImages ? '' : 'style="display:none;"' );?>>
                         <div class="resize-options-wrap">
@@ -305,6 +305,7 @@
                                 <?= __( 'Contain', 'shortpixel-image-optimiser' ); ?>
                             </label><br>
                             <div style="display:inline-block;margin-top: 15px;"><a href="https://shortpixel.com/blog/resize-images/" class="shortpixel-help-link" target="_blank">
+
                                     <span class="dashicons dashicons-editor-help"></span><?php _e('What is this?','shortpixel-image-optimiser');?></a>
                             </div>
 
@@ -324,21 +325,6 @@
                                  srcset="<?php echo(wpSPIO()->plugin_url('res/img/resize-type@2x.png'));?> 2x" alt="">
                         </div>
 
-                        <!--
-                        <div class="presentation-wrap">
-                            <div class="presentation-wrapper hidden" data-type="<?= $view->data->resizeType ?>">
-                                <div class="frame-wrap">
-                                    <div class="frame">
-                                        <div class="frame-inner" style="<?= $frame_style; ?>">
-                                            <div class="image-wrap">
-                                                <img src="<?= wpSPIO()->plugin_url( 'res/img/resize-type.png' ); ?>" data-width="<?= $image_size[ 0 ]; ?>" data-height="<?= $image_size[ 1 ]; ?>" srcset="<?= wpSPIO()->plugin_url( 'res/img/resize-type@2x.png' ); ?> 2x" alt="" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        -->
                     </div>
                     <script type="text/javascript">
 

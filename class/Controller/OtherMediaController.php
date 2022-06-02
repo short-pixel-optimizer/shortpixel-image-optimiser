@@ -262,7 +262,7 @@ class OtherMediaController extends \ShortPixel\Controller
 			}
 
 			if (! $this->hasFoldersTable())
-				return false; 
+				return false;
 
 			$this->cleanUp();
       $customFolders = $this->getActiveFolders();
@@ -280,10 +280,8 @@ class OtherMediaController extends \ShortPixel\Controller
       foreach($customFolders as $directory) {
 
 				$stats = $directory->getStats();
-
 				$forcenow = ($force || $stats->Total === 0) ? true : false;
-        $directory->refreshFolder($forcenow);
-
+	      $directory->refreshFolder($forcenow);
       } // folders
 
       return true;

@@ -2,6 +2,7 @@
 namespace ShortPixel;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
+
 ?>
 <div class="wrap is-shortpixel-settings-page">
 <h1><?php _e('ShortPixel Plugin Settings','shortpixel-image-optimiser');?></h1>
@@ -24,10 +25,14 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 		<div class='pie-wrapper'>
 			<?php	$this->loadView('settings/part-optpie'); ?>
 		</div>
-		
+
 		<?php if (! is_null($this->quotaData)): ?>
 		<div class='quota-remaining'>
+			<a href="https://shortpixel.com/<?php
+			echo(($view->data->apiKey ? "login/". $view->data->apiKey . "/dashboard" : "login"));
+			?>" target="_blank">
 			<?php printf(__('%s Credits remaining', 'shortpixel-image-optimiser'),  $this->formatNumber($this->quotaData->total->remaining, 0)); ?>
+		</a>
 		</div>
 		<?php endif; ?>
 </div>
@@ -78,4 +83,3 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 <?php $this->loadView('snippets/part-inline-help'); ?>
 <?php $this->loadView('snippets/part-inline-modal'); ?>
-<?php $this->loadView('settings/part-wso'); ?>

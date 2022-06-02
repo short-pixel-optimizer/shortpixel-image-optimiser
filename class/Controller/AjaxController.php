@@ -4,7 +4,6 @@ namespace ShortPixel\Controller;
 
 use ShortPixel\Controller\View\ListMediaViewController as ListMediaViewController;
 use ShortPixel\Controller\View\OtherMediaViewController as OtherMediaViewController;
-use ShortPixel\Controller\View\OtherMediaController as OtherMediaController;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 
@@ -394,6 +393,12 @@ class AjaxController
           $bulkControl->finishBulk('media');
         if (! $doCustom)
           $bulkControl->finishBulk('custom');
+
+				if ($doCustom)
+				{
+					$otherMediaController = OtherMediaController::getInstance();
+					$otherMediaController->refreshFolders(true);
+				}
 
         $optimizeController = new OptimizeController();
         $optimizeController->setBulk(true);

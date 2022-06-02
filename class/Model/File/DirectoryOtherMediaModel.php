@@ -464,6 +464,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
                 $optimizeControl->addItemToQueue($imageObj);
              }
           }
+
       }
 
   }

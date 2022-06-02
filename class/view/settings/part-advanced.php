@@ -202,12 +202,17 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
 
             <?php if($this->has_nextgen) { ?>
             <tr>
-                <th scope="row"><?php _e('Optimize NextGen galleries','shortpixel-image-optimiser');?></th>
+                <th scope="row"><?php _e('NextGen','shortpixel-image-optimiser');?></th>
                 <td>
-                    <input name="includeNextGen" type="checkbox" id="nextGen" value='1' <?php echo  checked($view->data->includeNextGen,'1' );?>> <label for="nextGen"><?php _e('Optimize NextGen galleries.','shortpixel-image-optimiser');?></label>
-                    <p class="settings-info">
-                        <?php _e('Check this to add all your current NextGen galleries to the Custom Media folders list and to also have all the future NextGen galleries and images optimized automatically by ShortPixel.','shortpixel-image-optimiser');?>
-                    </p>
+									<div class='switch_button'>
+										<label>
+                    	<input name="includeNextGen" type="checkbox" id="nextGen" value='1' <?php echo  checked($view->data->includeNextGen,'1' );?>>
+
+										<div class="the_switch">&nbsp; </div>
+										<?php _e('Optimize NextGen galleries.','shortpixel-image-optimiser');?>
+									</label>
+								</div>
+
                 </td>
             </tr>
             <?php } ?>
@@ -371,7 +376,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                             $stat = $dirObj->getStats();
 
                             $fullstatus = __("Optimized",'shortpixel-image-optimiser') . ": " . $stat->Optimized . ", "
-                                  . ", " . __("Waiting",'shortpixel-image-optimiser') . ": " . $stat->Waiting . ", "
+                                  . " " . __("Waiting",'shortpixel-image-optimiser') . ": " . $stat->Waiting . ""
                                   ;
 
                             if ($stat->Total == 0)

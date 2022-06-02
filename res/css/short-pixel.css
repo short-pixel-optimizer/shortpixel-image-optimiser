@@ -509,35 +509,7 @@ th.sorted.column-wp-shortPixel a {
     color: #3485ba;
     margin-left: -20px;
 }
-.shortpixel-compression .shortpixel-compression-options {
-    color: #999;
-}
-.shortpixel-compression strong {
-    line-height: 22px;
-}
-.shortpixel-compression .shortpixel-compression-options {
-    display: inline-block;
-}
-.shortpixel-compression label {
-    width:158px;
-    margin: 0 -2px;
-    background-color:#e2faff;
-    font-weight: bold;
-    display: inline-block;
-}
-.shortpixel-compression label span {
-    text-align:center;
-    font-size: 18px;
-    padding:8px 0px;
-    display:block;
-}
-.shortpixel-compression label input {
-    display: none;
-}
-.shortpixel-compression input:checked + span {
-    background-color:#0085ba;
-    color:#F7F7F7;
-}
+
 
 
 /* TABS CONTROLS */
@@ -590,19 +562,6 @@ article.sp-tabs section.sel-tab h2 {
 
 
 
-/*article.sp-tabs section,
-article.sp-tabs section h2 {
-    -webkit-transition: all 500ms ease;
-    -moz-transition: all 500ms ease;
-    -ms-transition: all 500ms ease;
-    -o-transition: all 500ms ease;
-    transition: all 500ms ease;
-}
-*/
-.shortpixel-help-link span.dashicons{
-    text-decoration: none;
-    margin-top: -1px;
-}
 /* Resources */
 @media(min-width: 1000px) {
     section#tab-resources .col-md-6 {

@@ -94,6 +94,17 @@
 .settings_page_wp-shortpixel-settings .red {
   color: #ff0000;
 }
+.settings_page_wp-shortpixel-settings .option {
+  padding: 8px;
+  display: inline-block;
+}
+.settings_page_wp-shortpixel-settings .option p {
+  margin: 14px 0;
+}
+.settings_page_wp-shortpixel-settings .shortpixel-help-link span.dashicons {
+  text-decoration: none;
+  margin-top: -1px;
+}
 .settings_page_wp-shortpixel-settings article.sp-tabs section p.settings-info {
   padding-top: 0px;
   color: #818181;
@@ -255,6 +266,32 @@
 .settings_page_wp-shortpixel-settings .view-notice-row {
   display: none;
 }
+.settings_page_wp-shortpixel-settings #tab-settings .shortpixel-compression strong {
+  line-height: 22px;
+}
+.settings_page_wp-shortpixel-settings #tab-settings .shortpixel-compression .shortpixel-compression-options {
+  display: inline-block;
+}
+.settings_page_wp-shortpixel-settings #tab-settings .shortpixel-compression label {
+  width: 158px;
+  margin: 0 -2px;
+  background-color: #93d7e5;
+  font-weight: bold;
+  display: inline-block;
+}
+.settings_page_wp-shortpixel-settings #tab-settings .shortpixel-compression label span {
+  text-align: center;
+  font-size: 16px;
+  padding: 8px 0px;
+  display: block;
+}
+.settings_page_wp-shortpixel-settings #tab-settings .shortpixel-compression label input {
+  display: none;
+}
+.settings_page_wp-shortpixel-settings #tab-settings .shortpixel-compression label input:checked + span {
+  background-color: #0f6a7d;
+  color: #FFF;
+}
 
 /* Specific styles for advanced settings tab */
 #shortpixel-settings-tabs #tab-adv-settings .addCustomFolder {
@@ -332,13 +369,6 @@
   padding-left: 0;
 }
 
-#tab-tools .option {
-  padding: 8px;
-  display: inline-block;
-}
-#tab-tools .option p {
-  margin: 14px 0;
-}
 #tab-tools .option {
   clear: both;
   display: flex;
