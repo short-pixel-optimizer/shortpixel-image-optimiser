@@ -376,7 +376,10 @@ class ShortPixelPng2Jpg {
             $itemHandler->deleteItemCache(); // remove cache since filetype changes.
             Log::addDebug("Updated meta: " . json_encode($meta));
 						wp_update_post(array('ID' => $ID, 'post_mime_type' => 'image/jpeg' ));
-            do_action('shortpixel/image/convertpng2jpg_after', $ID, $meta);
+
+						do_action('shortpixel/image/convertpng2jpg_after', $ID, $meta); //@deprecated
+            do_action('shortpixel/image/convertpng2jpg_success', $ID, $meta); // Will change in V5.
+
         }
 
         if(count($toReplace)) {

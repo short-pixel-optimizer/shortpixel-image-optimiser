@@ -253,20 +253,20 @@ class wpOffload
 		*
 		*  @param MediaItem Object SPIO
 		*/
-    public function image_converted($mediaItem)
+    public function image_converted($id)
     {
         $fs = \wpSPIO()->fileSystem();
 
 				// Do nothing if not successfull
-				if ($params['success'] === false)
-					return;
+			//if ($params['success'] === false)
+			//		return;
 
-				Log::addTemp('S3Off Converting ');
-				$id = $mediaItem->get('id');
+				Log::addTemp('S3Off Converting ' . $id);
+				//$id = $mediaItem->get('id');
 				$this->remove_remote($id);
 
 				$item = $this->getItemById($id);
-				$item->delete();
+			//	$item->delete();
 
 				$this->image_upload($id);
 				return;
@@ -302,6 +302,7 @@ class wpOffload
     }
 
 
+		// This is  legacy for old S3-Offload plugins.
     public function image_converted_legacy($id)
     {
         $fs = \wpSPIO()->fileSystem();
@@ -316,8 +317,10 @@ class wpOffload
         // delete the old file
         $mediaItem = $this->getItemById($id);
         if ($mediaItem === false) // mediaItem seems not present. Probably not a remote file
-          return;
-
+				{
+					Log::addTemp('Legacy converted didnt return item');
+				  return;
+				}
         $this->as3cf->remove_attachment_files_from_provider($id, $mediaItem);
         $providerSourcePath = $mediaItem->source_path();
 
@@ -399,6 +402,12 @@ class wpOffload
     {
 				$settings = \wpSPIO()->settings();
 
+				// If no quota, unlikely we need to directly optimize.
+				if ($settings->quotaExceeded)
+				{
+					 return $bool;
+				}
+
 				if ($settings->autoMediaLibrary)
 				{
 					// Don't prevent whaffever if shortpixel is already done. This can be caused by plugins doing a metadata update, we don't care then.
@@ -426,7 +435,14 @@ class wpOffload
       foreach($paths as $size => $path)
       {
          $file = $fs->getFile($path);
-         $basepath = $file->getFileDir()->getPath();
+				 $basedir = $file->getFileDir();
+
+				 if (is_null($basedir)) // This could only happen if path is completely empty.
+				 {
+					  continue;
+				 }
+
+         $basepath = $basedir->getPath();
          $newPaths[$size] = $path;
 
          $webpformat1 = $basepath . $file->getFileName() . '.webp';

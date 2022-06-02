@@ -106,7 +106,6 @@ class WPShortPixel {
         //custom hook
         add_action( 'shortpixel-optimize-now', array( &$this, 'optimizeNowHook' ), 10, 1);
 
-
         add_filter( 'shortpixel_get_backup', array( &$this, 'shortpixelGetBackupFilter' ), 10, 1 );
 
         if($isAdminUser) {
@@ -3168,6 +3167,8 @@ class WPShortPixel {
         }
         return $mimes;
     }
+
+
 
     /**
      *

@@ -185,7 +185,7 @@ class ShortPixelView {
                         <div style="position: absolute;bottom: 10px;right: 10px;">
                         <?php /*    <input type='submit' name='bulkRestore' id='bulkRestore' class='button' value='<?php _e('Bulk Restore Media Library','shortpixel-image-optimiser');?>' onclick="ShortPixel.confirmBulkAction('Restore', event)" style="margin-bottom:10px;">
                         */ ?>
-                                <p><a class='button' style="width:100%; text-align: center" href='<?php echo add_query_arg('part','bulk-restore-all'); ?> '><?php _e('Bulk Restore Images','shortpixel-image-optimiser'); ?></a></p>
+                                <p><a class='button' style="width:100%; text-align: center" href='<?php echo esc_url(add_query_arg('part','bulk-restore-all')); ?> '><?php _e('Bulk Restore Images','shortpixel-image-optimiser'); ?></a></p>
 
 
                             <input type='submit' name='bulkCleanup' id='bulkCleanup' class='button' value='<?php _e('Bulk Delete SP Metadata','shortpixel-image-optimiser');?>'
@@ -475,7 +475,7 @@ class ShortPixelView {
 
                            </div><br>
 
-                   <a class='button' style="float: right;" href='<?php echo add_query_arg('part','bulk-restore-all'); ?> '><?php _e('Bulk Restore Images','shortpixel-image-optimiser'); ?></a>
+                   <a class='button' style="float: right;" href='<?php echo esc_url(add_query_arg('part','bulk-restore-all')); ?> '><?php _e('Bulk Restore Images','shortpixel-image-optimiser'); ?></a>
 
                     <input type='submit' name='bulkProcess' id='bulkProcess' class='button button-primary' value='<?php _e('Restart Optimizing','shortpixel-image-optimiser');?>'
                            <?php echo($settings->quotaExceeded? "disabled title=\"" . __("Top-up your account to optimize more images.",'shortpixel-image-optimiser')."\"" : ""); ?>>

@@ -167,10 +167,10 @@
                     <input name="resizeImages" type="checkbox" id="resize" value="1" <?php checked( $view->data->resizeImages, true );?>>
                     <label for="resize"><?php _e('to maximum','shortpixel-image-optimiser');?></label>
                     <input type="text" name="resizeWidth" id="width" style="width:70px" class="resize-sizes"
-                           value="<?php echo( $view->data->resizeWidth > 0 ? $view->data->resizeWidth : min(924, $view->minSizes['width']) );?>" <?php echo( $resizeDisabled );?>/> <?php
+                           value="<?php echo( $view->data->resizeWidth > 0 ? $view->data->resizeWidth : min(1200, $view->minSizes['width']) );?>" <?php echo( $resizeDisabled );?>/> <?php
                            _e('pixels wide &times;','shortpixel-image-optimiser');?>
                     <input type="text" name="resizeHeight" id="height" class="resize-sizes" style="width:70px"
-                           value="<?php echo( $view->data->resizeHeight > 0 ? $view->data->resizeHeight : min(924, $view->minSizes['height']) );?>" <?php echo( $resizeDisabled );?>/> <?php
+                           value="<?php echo( $view->data->resizeHeight > 0 ? $view->data->resizeHeight : min(1200, $view->minSizes['height']) );?>" <?php echo( $resizeDisabled );?>/> <?php
                            _e('pixels high (original aspect ratio is preserved and image is not cropped)','shortpixel-image-optimiser');?>
                     <input type="hidden" id="min-resizeWidth" value="<?php echo($view->minSizes['width']);?>" data-nicename="<?php _e('Width', 'shortpixel-image-optimiser'); ?>" />
                     <input type="hidden" id="min-resizeHeight" value="<?php echo($view->minSizes['height']);?>" data-nicename="<?php _e('Height', 'shortpixel-image-optimiser'); ?>"/>

@@ -27,7 +27,7 @@ HelpScout::outputBeacon();
   <?php
     if ($this->is_verifiedkey):
       ?>
-      <form name='wp_shortpixel_options' action='<?php echo add_query_arg('noheader', 'true') ?>'  method='post' id='wp_shortpixel_options'>
+      <form name='wp_shortpixel_options' action='<?php echo esc_url(add_query_arg('noheader', 'true')) ?>'  method='post' id='wp_shortpixel_options'>
         <input type='hidden' name='display_part' value="<?php echo $this->display_part ?>" />
         <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
       <div class='section-wrapper'>

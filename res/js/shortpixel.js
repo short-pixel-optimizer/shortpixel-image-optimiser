@@ -24,9 +24,9 @@ var ShortPixel = function() {
         // Extracting the protected Array from within the 0 element of the parent array
         ShortPixel.setOptions(ShortPixelConstants[0]);
 
-        if(jQuery('#backup-folder-size').length) {
+      /*  if(jQuery('#backup-folder-size').length) {
             jQuery('#backup-folder-size').html(ShortPixel.getBackupSize());
-        }
+        } */
 
         if( ShortPixel.MEDIA_ALERT == 'todo' && jQuery('div.media-frame.mode-grid').length > 0) {
             //the media table is not in the list mode, alert the user

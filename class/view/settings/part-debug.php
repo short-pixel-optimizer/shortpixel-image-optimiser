@@ -2,12 +2,15 @@
 namespace ShortPixel;
 use ShortPixel\Notices\NoticeController as Notices;
 
+
+
 ?>
 
 <section id="tab-debug" <?php echo ($this->display_part == 'debug') ? ' class="sel-tab" ' :''; ?>>
   <h2><a class='tab-link' href='javascript:void(0);' data-id="tab-debug">
     <?php _e('Debug','shortpixel-image-optimiser');?></a>
   </h2>
+
 
 <div class="wp-shortpixel-options wp-shortpixel-tab-content" style="visibility: hidden">
   <div class='env'>
@@ -39,7 +42,7 @@ use ShortPixel\Notices\NoticeController as Notices;
 
   <h3>Tools</h3>
   <div class='debug-images'>
-    <form method="POST" action="<?php echo add_query_arg(array('sp-action' => 'action_debug_medialibrary')) ?>"
+    <form method="POST" action="<?php echo esc_url( add_query_arg(array('sp-action' => 'action_debug_medialibrary')) ); ?>"
       id="shortpixel-form-debug-medialib">
       <button class='button' type='submit'>Reacquire Thumbnails on Media Library</button>
       </form>

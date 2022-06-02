@@ -45,7 +45,7 @@ protected $selected_folders = array();
     global $wpdb;
 
     $qry_left = "SELECT count(meta_id) FilesLeftToBeProcessed FROM " . $wpdb->prefix . "postmeta
-    WHERE meta_key = '_wp_attached_file' AND post_id <= " . (0 + $prioQ->getStartBulkId());
+    WHERE meta_key = '_wp_attached_file' AND post_id <= " . ((int) $prioQ->getStartBulkId());
     $filesLeft = $wpdb->get_results($qry_left);
 
     //check the custom bulk
