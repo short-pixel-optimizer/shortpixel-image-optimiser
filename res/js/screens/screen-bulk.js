@@ -407,6 +407,7 @@ console.log("Screen Init Done", initMedia, initCustom);
 		}
 		else {
 			 preview.querySelector('.new.preview-image .image.source img').src = placeHolder;
+			 preview.querySelector('.new.preview-image .image.source img').classList.add('notempty');
 		}
 
 		if (optimizedSrc)

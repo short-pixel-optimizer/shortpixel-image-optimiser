@@ -1027,10 +1027,13 @@
                 width: 100%;
 								height: auto;
 								object-fit: cover;
-
 								&[src*="placeholder.svg"]
 								{
-									z-index: 1;
+									background-color: #ebedf1;
+								}
+								&[src*="placeholder.svg"]:not(.notempty)
+								{
+									z-index: 1;									
 								}
 								z-index: 10;
 								position: relative;
