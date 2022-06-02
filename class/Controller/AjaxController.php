@@ -429,13 +429,24 @@ class AjaxController
     {
        $bulkControl = BulkController::getInstance();
 
-       $stats = $bulkControl->createNewBulk('media', 'bulk-restore');
-       $json->media->stats = $stats;
+			 $queue = (isset($_POST['queues'])) ? sanitize_text_field($_POST['queues']) : false;
+			 if ($queue === false) // safety first.
+			 	return $json;
 
-       $stats = $bulkControl->createNewBulk('custom', 'bulk-restore');
-       $json->custom->stats = $stats;
+			 $queues = array_filter(explode(',', $queue), 'trim');
 
-//       $json = $this->applyBulkSelection($json, $data);
+			 if (in_array('media', $queues))
+			 {
+       	$stats = $bulkControl->createNewBulk('media', 'bulk-restore');
+       	$json->media->stats = $stats;
+			 }
+
+			 if (in_array('custom', $queues))
+			 {
+	       $stats = $bulkControl->createNewBulk('custom', 'bulk-restore');
+	       $json->custom->stats = $stats;
+			 }
+
        return $json;
     }
 

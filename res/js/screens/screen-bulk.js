@@ -897,7 +897,23 @@ console.log("Screen Init Done", initMedia, initCustom);
   this.BulkRestoreAll = function (event)
   {
     console.log('Start Restore All');
-    var data = {screen_action: 'startRestoreAll', callback: 'shortpixel.startRestoreAll'}; //
+		var do_media = document.getElementById('restore_media_checkbox').checked;
+		var do_custom = document.getElementById('restore_custom_checkbox').checked;
+
+		if (do_media == false && do_custom == false)
+		{
+			 document.getElementById('restore_media_warn').classList.remove('hidden');
+			 return false;
+		}
+
+
+		var queues = [];
+		if (do_media == true)
+			queues.push('media');
+		if (do_custom == true)
+			queues.push('custom');
+
+    var data = {screen_action: 'startRestoreAll', callback: 'shortpixel.startRestoreAll', queues: queues}; //
 
     this.SwitchPanel('selection');
     this.UpdatePanelStatus('loading', 'selection');

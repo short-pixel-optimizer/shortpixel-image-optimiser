@@ -19,7 +19,32 @@ use \ShortPixel\Controller\BulkController as BulkController;
 
 				<p class='warning'><?php _e('It is strongly advised to create a full backup before starting this process.', 'shortpixel-image-optimiser'); ?></p>
 
-	  <p><input type="checkbox" id="bulk-restore-agree" value="agree" data-action="ToggleButton" data-target="bulk-restore-button"> <?php _e('I want to restore all images. I understand this action is permanent and nonreversible', 'shortpixel-image-optimiser'); ?></p>
+
+					<div class='optiongroup' data-check-visibility data-control="data-check-custom-hascustom">
+
+						<div class='switch_button'>
+							<label>
+								<input type="checkbox" class="switch" id="restore_media_checkbox" >
+								<div class="the_switch">&nbsp; </div>
+							</label>
+						</div>
+						<h4><label for="restore_media_checkbox"><?php _e('Restore media library','shortpixel-image-optimiser'); ?></label></h4>
+					</div>
+
+
+					<div class='optiongroup' data-check-visibility data-control="data-check-custom-hascustom">
+						<div class='switch_button'>
+							<label>
+								<input type="checkbox" class="switch" id="restore_custom_checkbox" value='1' >
+								<div class="the_switch">&nbsp; </div>
+							</label>
+						</div>
+						<h4><label for="restore_custom_checkbox"><?php _e('Restore custom media','shortpixel-image-optimiser'); ?></label></h4>
+					</div>
+
+		<p class='optiongroup warning hidden' id="restore_media_warn"><?php _e('Please select one of the options', 'shortpixel-image-optimiser'); ?></p>
+
+	  <p class='optiongroup' ><input type="checkbox" id="bulk-restore-agree" value="agree" data-action="ToggleButton" data-target="bulk-restore-button"> <?php _e('I want to restore all images. I understand this action is permanent and nonreversible', 'shortpixel-image-optimiser'); ?></p>
 
 
 	  <nav>

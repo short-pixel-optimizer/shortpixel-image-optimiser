@@ -36,6 +36,7 @@ namespace ShortPixel;
     <?php $this->loadView('bulk/part-progressbar', false); ?>
 
 		<!--- ###### MEDIA ###### -->
+		<span class='hidden' data-check-media-total data-stats-media="total">0</span>
     <div class='bulk-summary' data-check-visibility data-control="data-check-media-total">
       <div class='heading'>
         <span><i class='dashicons dashicons-images-alt2'>&nbsp;</i> <?php _e('Media Library' ,'shortpixel-image-optimiser'); ?></span>
@@ -49,8 +50,8 @@ namespace ShortPixel;
 
         </span>
         <span>Processing: <i data-stats-media="in_process" data-check-media-in_process >-</i></span>
-        <span>&nbsp;</span>
       </div>
+
       <div>
         <span>Processed: <i data-stats-media="done">-</i></span>
 
@@ -60,7 +61,6 @@ namespace ShortPixel;
 				<span data-check-visibility data-control="data-check-media-fatalerrors" ><label title="<?php _e('Show Errors', 'shortpixel-image-optimiser'); ?>">
 					<input type="checkbox" name="show-errors" value="show" data-action='ToggleErrorBox' data-errorbox='media' data-event='change'>Show Errors</label>
 			 </span>
-        <span class='hidden' data-check-media-total data-stats-media="total">0</span>
 
       </div>
 
@@ -75,6 +75,8 @@ namespace ShortPixel;
 		</div>
 
 		<!-- ****** CUSTOM ********  --->
+		<span class='hidden' data-check-custom-total data-stats-custom="total">0</span>
+
     <div class='bulk-summary' data-check-visibility data-control="data-check-custom-total">
       <div class='heading'>
         <span><i class='dashicons dashicons-open-folder'>&nbsp;</i> <?php _e('Custom Media', 'shortpixel-image-optimiser'); ?> </span>
@@ -87,8 +89,7 @@ namespace ShortPixel;
 
         </span>
   			<span>Processing: <i data-stats-custom="in_process" data-check-custom-in_process>-</i></span>
-			  <span>&nbsp;</span>
-        <span>&nbsp;</span>
+
       </div>
       <div>
         <span>Processed: <i data-stats-custom="done">-</i></span>
@@ -100,7 +101,6 @@ namespace ShortPixel;
 				<input type="checkbox" name="show-errors" value="show" data-action='ToggleErrorBox' data-errorbox='custom' data-event='change'>Show Errors</label>
 		 </span>
 
-        <span class='hidden' data-check-custom-total data-stats-custom="total">0</span>
       </div>
 
     </div>

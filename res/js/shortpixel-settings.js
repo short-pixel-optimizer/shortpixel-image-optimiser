@@ -118,6 +118,8 @@ this.OpenModal = function(elem)
 
 		shade.addEventListener('click', this.CloseModal.bind(this), {'once': true} );
 
+		modal.querySelector('.spio-close-help-button').addEventListener('click', this.CloseModal.bind(this), {'once': true});
+
 		if (body.querySelector('[data-action="ajaxrequest"]') !== null)
 		{
 			body.querySelector('[data-action="ajaxrequest"]').addEventListener('click', this.SendModal.bind(this));

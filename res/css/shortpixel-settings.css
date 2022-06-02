@@ -1,6 +1,19 @@
 .settings_page_wp-shortpixel-settings {
   /* In-view notice ( not on top, between the options ) - styled after WP notice */
 }
+.settings_page_wp-shortpixel-settings a {
+  color: #0f6a7d;
+}
+.settings_page_wp-shortpixel-settings .button {
+  color: #0f6a7d;
+}
+.settings_page_wp-shortpixel-settings .button-primary {
+  background-color: #0f6a7d;
+  color: #fff;
+}
+.settings_page_wp-shortpixel-settings .button-primary:hover {
+  background-color: #1cbecb;
+}
 .settings_page_wp-shortpixel-settings .top-menu {
   font-size: 18px;
   display: flex;

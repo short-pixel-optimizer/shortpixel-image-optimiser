@@ -80,9 +80,6 @@ class ApiKeyModel extends \ShortPixel\Model
       update_option($this->model['redirectedSettings']['key'], $this->redirectedSettings);
       update_option($this->model['apiKeyTried']['key'], $this->apiKeyTried);
 
-
-      Log::addDebug('Update Verified', array($this->apiKey, $this->verifiedKey));
-
   }
 
   /** Resets the last APIkey that was attempted with validation
@@ -206,11 +203,10 @@ class ApiKeyModel extends \ShortPixel\Model
 
     $checked_key = ($quotaData['APIKeyValid']) ? true : false;
 
-     Log::addDebug('Verify Result', $quotaData);
-     Log::addDebug('Key is verified ', array( $this->verifiedKey));
 
      if (! $checked_key)
      {
+			  Log::addError('Key is not validated', $quotaData['Message']);
         Notice::addError(sprintf(__('Error during verifying API key: %s','shortpixel-image-optimiser'), $quotaData['Message'] ));
      }
      elseif ($checked_key) {

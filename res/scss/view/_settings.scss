@@ -5,6 +5,22 @@
 	@import '../elements/colors';
 	@import '../elements/breakpoints';
 
+	a {
+		color: $color-darkest;
+
+	}
+	.button
+	{
+		color: $color-darkest;
+	}
+	.button-primary {
+		background-color: $color-darkest;
+		color: #fff;
+		&:hover
+		{
+			background-color: $color-dark;
+		}
+	}
   .top-menu
   {
     font-size: 18px;
@@ -126,7 +142,7 @@
 			p.settings-info.shortpixel-settings-error {
 			    color: #c32525;
 			}
-			
+
       .wp-shortpixel-tab-content
       { opacity: 0; }
       &.sel-tab .wp-shortpixel-tab-content

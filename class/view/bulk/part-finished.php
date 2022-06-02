@@ -7,7 +7,7 @@ namespace ShortPixel;
   <div class="panel-container">
 
     <h3 class="heading"><span><img src="<?php echo \wpSPIO()->plugin_url('res/img/robo-slider.png'); ?>"></span>
-      The ShortPixel Bulk Processing is finished
+      <?php _e('The ShortPixel Bulk Processing is finished' ,'shortpixel-image-optimiser'); ?>
       <div class='average-optimization'>
           <p>Average this run</p>
           <svg class="opt-circle-average" viewBox="-10 0 150 140">
@@ -32,6 +32,7 @@ namespace ShortPixel;
     </h3>
 
     <?php $this->loadView('bulk/part-progressbar', false); ?>
+		<span class='hidden' data-check-media-total data-stats-media="total">0</span>
 
     <div class='bulk-summary' data-check-visibility data-control="data-check-media-total">
       <div class='heading'>
@@ -43,9 +44,9 @@ namespace ShortPixel;
               </span>
         </span>
         <span>Processing: <i data-stats-media="in_process">-</i></span>
-        <span>&nbsp;</span>
-				<span>&nbsp;</span>
+
       </div>
+
       <div>
         <span>Processed: <i data-stats-media="done">-</i></span>
 
@@ -55,11 +56,11 @@ namespace ShortPixel;
 				<span data-check-visibility data-control="data-check-media-fatalerrors" ><label title="<?php _e('Show Errors', 'shortpixel-image-optimiser'); ?>">
 					<input type="checkbox" name="show-errors" value="show" data-action='ToggleErrorBox' data-errorbox='media' data-event='change'>Show Errors</label>
 			 </span>
-        <span class='hidden' data-check-media-total data-stats-media="total">0</span>
 
       </div>
 
     </div>
+
 
 		<div data-error-media="message" data-presentation="append" class='errorbox media'>
 			<?php if(property_exists($this->view, 'mediaErrorLog') && $this->view->mediaErrorLog !== false)
@@ -70,6 +71,8 @@ namespace ShortPixel;
 		</div>
 
 		<!-- ****** CUSTOM ********  --->
+		<span class='hidden' data-check-custom-total data-stats-custom="total">0</span>
+
     <div class='bulk-summary' data-check-visibility data-control="data-check-custom-total">
       <div class='heading'>
         <span><i class='dashicons dashicons-open-folder'>&nbsp;</i> <?php _e('Custom Media','shortpixel-image-optimiser'); ?></span>
@@ -80,8 +83,7 @@ namespace ShortPixel;
               </span>
         </span>
   			<span><?php _e('Processing','shortpixel-image-optimiser') ?>: <i data-stats-custom="in_process">-</i></span>
-			  <span>&nbsp;</span>
-        <span>&nbsp;</span>
+
       </div>
       <div>
         <span><?php _e('Processed','shortpixel-image-optimiser'); ?>: <i data-stats-custom="done">-</i></span>
@@ -92,8 +94,6 @@ namespace ShortPixel;
 			<span data-check-visibility data-control="data-check-custom-fatalerrors" ><label title="<?php _e('Show Errors', 'shortpixel-image-optimiser'); ?>">
 				<input type="checkbox" name="show-errors" value="show" data-action='ToggleErrorBox' data-errorbox='custom' data-event='change'>Show Errors</label>
 		 </span>
-
-        <span class='hidden' data-check-custom-total data-stats-custom="total">0</span>
       </div>
 
     </div>

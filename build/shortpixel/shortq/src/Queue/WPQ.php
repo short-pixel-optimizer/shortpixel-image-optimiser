@@ -465,6 +465,10 @@ class WPQ implements Queue
   /** Get the current status of this slug / queue */
   protected function currentStatus()
   {
+		 // This can happen when uninstalling/ removing queues.
+		 if (! isset($this->status['queues']) || ! isset($this->status['queues'][$this->qName]))
+		 		return false;
+		else
      return $this->status['queues'][$this->qName];
   }
 
@@ -473,7 +477,6 @@ class WPQ implements Queue
       if (! isset($this->status['queues'][$this->qName]))
       {
         $this->status['queues'][$this->qName] = new Status();
-      //  $this->currentStatus = $this->status[$this->pSlug]['queues'][$this->qName];
 
         $this->saveStatus();
       }
@@ -490,7 +493,6 @@ class WPQ implements Queue
     if (! isset($this->status['queues'][$this->qName]))
       $this->createQueue();
 
-    // $this->currentStatus = $this->status[$this->pSlug]['queues'][$this->qName];
   }
 
   public function getStatus($item = false)

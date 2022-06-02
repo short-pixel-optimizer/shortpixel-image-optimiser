@@ -739,7 +739,7 @@
 .shortpixel-bulk-wrapper section.panel.process .bulk-summary > div > span, .shortpixel-bulk-wrapper section.panel.finished .bulk-summary > div > span {
   display: table-cell;
   padding: 16px;
-  width: 25%;
+  width: 33%;
 }
 .shortpixel-bulk-wrapper section.panel.process .bulk-summary .heading, .shortpixel-bulk-wrapper section.panel.finished .bulk-summary .heading {
   background: #F6F9FF;
@@ -932,6 +932,35 @@
   margin: 25px;
 }
 .shortpixel-bulk-wrapper .bulk-special-wrapper .warning {
+  color: #ff0000;
+}
+.shortpixel-bulk-wrapper .bulk-special-wrapper .optiongroup {
+  clear: both;
+  margin-left: 130px;
+}
+.shortpixel-bulk-wrapper .bulk-special-wrapper .optiongroup .switch_button {
+  display: inline-block;
+}
+.shortpixel-bulk-wrapper .bulk-special-wrapper .optiongroup h4 {
+  font-size: 14px;
+  font-weight: 400;
+  display: inline-block;
+  margin-left: 25px;
+  color: #000;
+}
+.shortpixel-bulk-wrapper .bulk-special-wrapper .optiongroup .option {
+  margin-left: 85px;
+  line-height: 26px;
+}
+.shortpixel-bulk-wrapper .bulk-special-wrapper .optiongroup .option label {
+  width: 200px;
+  display: inline-block;
+}
+.shortpixel-bulk-wrapper .bulk-special-wrapper .optiongroup .option .number {
+  font-weight: 700;
+}
+.shortpixel-bulk-wrapper .bulk-special-wrapper .optiongroup.warning {
+  font-weight: 700;
   color: #ff0000;
 }
 

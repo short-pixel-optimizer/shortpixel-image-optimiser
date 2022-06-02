@@ -23,7 +23,9 @@ namespace ShortPixel;
   $this->loadView('bulk/part-summary');
   $this->loadView('bulk/part-process');
   $this->loadView('bulk/part-finished');
+
   $this->loadView('bulk/part-bulk-special');
+
   //$this->loadView('bulk/part-results');
 
   if (\wpSPIO()->env()->is_debug)
