@@ -19,7 +19,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
         $deliverWebpUnaltered = '';                         // Uncheck
         $deliverWebpUnalteredDisabled = 'disabled';         // Disable
         $deliverWebpUnalteredLabel = __('It looks like you\'re running your site on an NGINX server. This means that you can only achieve this functionality by directly configuring the server config files. Please, follow this link for instructions:','shortpixel-image-optimiser')." <a class=\"shortpixel-help-link\" href=\"https://shortpixel.com/knowledge-base/article/111-configure-nginx-to-transparently-serve-webp-files-when-supported\" target=\"_blank\" data-beacon-article=\"5bfeb9de2c7d3a31944e78ee\"><span class=\"dashicons dashicons-editor-help\"></span></a>";
-        $deliverAVIFLabel = __('<strong>It looks like you\'re running your site on an NGINX server. You may need additional configuration for the AVIF delivery to work as expected</strong>','shortpixel-image-optimiser')." <a class=\"shortpixel-help-link\" href=\"https://shortpixel.com/blog/avif-mime-type-delivery-nginx/\" target=\"_blank\"><span class=\"dashicons dashicons-editor-help\"></span></a>";
+        $deliverAVIFLabel = __('<strong>It looks like you\'re running your site on an NGINX server. You may need additional configuration for the AVIF delivery to work as expected</strong>','shortpixel-image-optimiser')." <a class=\"shortpixel-help-link\" href=\"https://shortpixel.com/knowledge-base/article/499-how-do-i-configure-my-web-server-to-deliver-avif-images/\" target=\"_blank\"><span class=\"dashicons dashicons-editor-help\"></span></a>";
     } else {
         if( !$this->is_htaccess_writable ){
             $deliverWebpUnalteredDisabled = 'disabled';     // Disable
@@ -328,10 +328,13 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
             <tr>
                 <th scope="row"><label for="excludePatterns"><?php _e('Exclude patterns','shortpixel-image-optimiser');?></label></th>
                 <td>
+			<div class="option-content">
+				<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/88-how-to-exclude-images-from-being-optimized"></span></div>
 
                     <textarea name="excludePatterns" type="text" id="excludePatterns" placeholder="<?php
-                        _e('name:keepbig, path:/ignore_regex/i, size:1000x2000','shortpixel-image-optimiser');?>" rows="4" cols="60"><?php echo( $excludePatterns );?></textarea>
+                        _e('name:keepbig, path:/full/path/to/exclude/, regex-name:/valid_regex/, size:1000x2000','shortpixel-image-optimiser');?>" rows="4" cols="60"><?php echo( $excludePatterns );?></textarea>
 
+			</div>
                     <p class="settings-info">
                         <?php _e('Add patterns separated by comma. A pattern consist of a <strong>type:value</strong> pair; the accepted types are
                                   <strong>"name"</strong>, <strong>"path"</strong>, <strong>"size"</strong>, <strong>"regex-name"</strong> and <strong>"regex-path"</strong>.
@@ -339,14 +342,11 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                                    <br>For a <strong>"name"</strong> pattern only the filename is matched, for <strong>"path"</strong>,
                                    the whole path will be matched (useful for excluding certain (sub)-directories altoghether).
                                    <br><br>
-                                   <strong>"regex-path"</strong> and <strong>"regex-name"</strong> work the same, except it requires a valid regular expression, contained between slashes. Special characters should be escaped.
+                                   <strong>"regex-path"</strong> and <strong>"regex-name"</strong> work the same, except it requires a valid regular expression, contained between slashes. Special characters should be escaped by adding \ in front of them.
                                    <br>
                                    <br>For the <strong>"size"</strong> type,
                                    which applies only to Media Library images, <strong>the main images (not thumbnails)</strong> that have the size in the specified range are excluded.
                                    The format for the "size" exclude is: <strong>minWidth</strong>-<strong>maxWidth</strong>x<strong>minHeight</strong>-<strong>maxHeight</strong>, for example <strong>size:1000-1100x2000-2200</strong>. You can also specify a precise size, such as <strong>1000x2000</strong>.','shortpixel-image-optimiser');?>
-                        <a href="https://shortpixel.com/blog/shortpixel-how-to-exclude-images-and-folders-from-optimization/" target="_blank" class="shortpixel-help-link">
-                            <span class="dashicons dashicons-editor-help"></span>
-                        </a>
                     </p>
                 </td>
             </tr>

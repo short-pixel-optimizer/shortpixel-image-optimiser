@@ -15,6 +15,7 @@ namespace ShortPixel;
                 echo('<p style="font-weight:bold;color:red">' . __("Please enable PHP cURL extension for the Cloudflare integration to work.", 'shortpixel-image-optimiser') . '</p>' );
             }
             ?>
+			  <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/160-cloudlfare"></span></div>
             <p><?php _e("If you're using Cloudflare on your site then we advise you to fill in the details below. This allows ShortPixel to work seamlessly with Cloudflare, so that any image optimized/restored by ShortPixel is automatically updated on Cloudflare as well.",'shortpixel-image-optimiser');?></p>
 
             <table class="form-table">

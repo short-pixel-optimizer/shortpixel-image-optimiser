@@ -55,7 +55,7 @@ $queueRunning = $bulk->isAnyBulkRunning();
 		<hr />
 
 		<div class='danger-zone'>
-			<h3><?php _e('Danger Zone', 'shortpixel-image-optimiser'); ?></h3>
+			<h3><?php _e('Danger Zone - please read carefully!', 'shortpixel-image-optimiser'); ?></h3>
 			<p><?php _e('The actions below are regarding the cleanup and uninstallation of the plugin. They cannot be undone. It is important to have a fresh backup ready before attempting any of them because they will cause data loss.', 'shortpixel-image-optimiser') ?></p>
 			<hr />
 
@@ -63,10 +63,13 @@ $queueRunning = $bulk->isAnyBulkRunning();
 			<div class='option'>
 					<div class='name'>Remove data</div>
 					<div class='field'>
-						<a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_redirectBulk', 'bulk' => 'restore', 'noheader' => true), $url)) ?>" class="button danger">Bulk Restore</a>
+						<div class="option-content">
+							<a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_redirectBulk', 'bulk' => 'restore', 'noheader' => true), $url)) ?>" class="button danger">Bulk Restore</a>
 
-					<p class='description'><?php printf(__('%sReverts%s all optimizations and restores all your backed-up images to their original state. The used credits will not be refunded and you will have to re-optimize your images.', 'shortpixel-image-optimiser'), '<b>','</b>'); ?></p>
-				</div>
+							<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/14-can-i-restore-my-images-what-happens-with-the-originals"></span></div>
+						</div>
+						<p class='description'><?php printf(__('%sReverts%s all optimizations and restores all your backed-up images to their original state. The used credits will not be refunded and you will have to re-optimize your images.', 'shortpixel-image-optimiser'), '<b>','</b>'); ?></p>
+					</div>
 			</div>
 
 			<div class='option'>
@@ -81,10 +84,12 @@ $queueRunning = $bulk->isAnyBulkRunning();
 			<div class='option'>
 					<div class='name'>&nbsp;</div>
 					<div class='field'>
-						<button type="button" class='button danger' data-action="open-modal" data-target="ToolsRemoveAll">
+						<div class="option-content">
+							<button type="button" class='button danger' data-action="open-modal" data-target="ToolsRemoveAll">
 														<?php _e('Remove all Shortpixel Data', 'shortpixel-image-optimiser'); ?></button>
 
-
+							<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/81-remove-all-the-shortpixel-related-data-on-a-wp-website"></span></div>
+						</div>
 						<div class='remove-all modalTarget' id="ToolsRemoveAll">
 
 							<input type="hidden" name="screen_action" value="toolsRemoveAll" />
@@ -111,10 +116,13 @@ $queueRunning = $bulk->isAnyBulkRunning();
 										<div class="backup-modal">
 									<?php wp_nonce_field('empty-backup', 'tools-nonce'); ?>
 
-									<button type="button" class='button danger' data-action="open-modal" data-target="ToolsRemoveBackup">
+									<div class="option-content">
+										<button type="button" class='button danger' data-action="open-modal" data-target="ToolsRemoveBackup">
 																	<?php _e('Remove backups', 'shortpixel-image-optimiser'); ?></button>
 
+										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/83-how-to-remove-the-backed-up-images-in-wordpress"></span></div>
 
+									</div>
 									<div class='remove-backup modalTarget' id="ToolsRemoveBackup">
 
 										<input type="hidden" name="screen_action" value="toolsRemoveBackup" />
