@@ -17,18 +17,18 @@ class ResponseController
 		protected static $screenOutput  = 1; // see consts down
 
 		// Some form of issue keeping
-		public const ISSUE_BACKUP_CREATE = 10; // Issues with backups in ImageModel
-		public const ISSUE_BACKUP_EXISTS = 11;
-		public const ISSUE_OPTIMIZED_NOFILE = 12; // Issues with missing files
-		public const ISSUE_QUEUE_FAILED = 13;  // Issues with enqueueing items ( Queue )
-		public const ISSUE_FILE_NOTWRITABLE = 20; // Issues with file writing
+		const ISSUE_BACKUP_CREATE = 10; // Issues with backups in ImageModel
+		const ISSUE_BACKUP_EXISTS = 11;
+		const ISSUE_OPTIMIZED_NOFILE = 12; // Issues with missing files
+		const ISSUE_QUEUE_FAILED = 13;  // Issues with enqueueing items ( Queue )
+		const ISSUE_FILE_NOTWRITABLE = 20; // Issues with file writing
 
-		public const ISSUE_API = 50; // Issues with API - general
-		public const ISSUE_QUOTA = 100; // Issues with Quota.
+		const ISSUE_API = 50; // Issues with API - general
+		const ISSUE_QUOTA = 100; // Issues with Quota.
 
-		public const OUTPUT_MEDIA = 1; // Has context of image, needs simple language
-		public const OUTPUT_BULK = 2;
-		public const OUTPUT_CLI = 3;  // Has no context, needs more information
+		const OUTPUT_MEDIA = 1; // Has context of image, needs simple language
+		const OUTPUT_BULK = 2;
+		const OUTPUT_CLI = 3;  // Has no context, needs more information
 
 
 		/**

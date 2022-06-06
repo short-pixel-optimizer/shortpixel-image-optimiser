@@ -47,6 +47,7 @@ class ShortQ
       switch($this->dataProvider)
       {
         case 'mysql':
+				default:
            $dataProvider = new DataProvider\MysqlDataProvider($this->pluginSlug, $this->queueName);
         break;
       }

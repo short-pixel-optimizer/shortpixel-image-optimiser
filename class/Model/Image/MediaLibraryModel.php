@@ -382,7 +382,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   {
       $return = true;
 			$wpmeta = wp_get_attachment_metadata($this->get('id'));
-			$metaUpdated = false;
 
       if (! $this->isOptimized() && isset($tempFiles[$this->getFileName()]) ) // main file might not be contained in results
       {
@@ -406,8 +405,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					{
 						 $wpmeta['width'] = $this->get('width');
  						 $wpmeta['height'] = $this->get('height');
-						 $metaUpdated = true;
 					}
+					$wpmeta['filesize'] = $this->getFileSize();
 
       }
 
@@ -448,17 +447,20 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           $result = $thumbnail->handleOptimized($tempFiles);
          }
 
+				 // Always update the WP meta.
+				 $size = $thumbnail->get('size');
+				 if ($thumbnail->getMeta('resize') == true)
+				 {
+
+							$wpmeta['sizes'][$size]['width'] = $thumbnail->get('width');
+							$wpmeta['sizes'][$size]['height']  = $thumbnail->get('height');
+				 }
+
+				 $wpmeta['sizes'][$size]['filesize'] = $thumbnail->getFileSize();
+
          if ($result)
          {
             $optimized[$filebase] = $thumbnail->getMetaObj();
-
-						 if ($thumbnail->getMeta('resize') == true)
-						 {
-							 		$size = $thumbnail->get('size');
-									$wpmeta['sizes'][$size]['width'] = $thumbnail->get('width');
-									$wpmeta['sizes'][$size]['height']  = $thumbnail->get('height');
-									$metaUpdated = true;
-						 }
          }
          elseif ($thumbnail->get('prevent_next_try') !== false) // in case of fatal issues.
          {
@@ -473,11 +475,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           $original_file->handleOptimizedFileType($tempFiles);
 					$original_file->setMeta('compressionType', $compressionType);
 
-
           if (! $original_file->isOptimized())
           {
 
             $result = $original_file->handleOptimized($tempFiles);
+
             if (! $result &&  $original_file->get('prevent_next_try') !== false)
             {
                 $this->preventNextTry($original_file->get('prevent_next_try'));
@@ -490,37 +492,24 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
       $this->saveMeta();
 
-			if ($metaUpdated === true)
-			{
-				update_post_meta($this->get('id'), '_wp_attachment_metadata', $wpmeta);
 
-			}
+			update_post_meta($this->get('id'), '_wp_attachment_metadata', $wpmeta);
+
 
 			$duplicates = $this->getWPMLDuplicates();
 			if (is_array($duplicates) && count($duplicates) > 0)
 			{
-//				$current_id = $this->id;
 				// Run the WPML duplicates
 				foreach($duplicates as $duplicate_id)
 				{
 						// Save the exact same data under another post.
 						$this->createDuplicateRecord($duplicate_id);
 
-						if ($metaUpdated === true)
-						{
-							$duplicate_meta = wp_get_attachment_metadata($duplicate_id);
-							$duplicate_meta = array_merge($duplicate_meta, $wpmeta);
+						$duplicate_meta = wp_get_attachment_metadata($duplicate_id);
+						$duplicate_meta = array_merge($duplicate_meta, $wpmeta);
 
-							update_post_meta($duplicate_id, '_wp_attachment_metadata', $duplicate_meta);
-
-						}
-					  //$this->id = $duplicate_id;
-						//$this->dropFromQueue();
-
-						//$this->saveMeta();
-
+						update_post_meta($duplicate_id, '_wp_attachment_metadata', $duplicate_meta);
 				}
-//				$this->id = $current_id;
 
 			}
 

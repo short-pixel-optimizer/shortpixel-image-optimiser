@@ -474,7 +474,7 @@ class WPQ implements Queue
 
   private function createQueue()
   {
-      if (! isset($this->status['queues'][$this->qName]))
+      if (! isset($this->status['queues'][$this->qName]) || $this->status['queues'][$this->qName] === false)
       {
         $this->status['queues'][$this->qName] = new Status();
 
@@ -507,7 +507,14 @@ class WPQ implements Queue
   {
     // $this->status[$this->pSlug]['queues'][$this->qName] = $this->currentStatus;
      $status = get_option($this->statusName);  // two different Q's can run simulanously.
-     $status['queues'][$this->qName] = $this->currentStatus();
+		 $currentStatus = $this->currentStatus();
+		 if( $currentStatus === false && isset($status['queues'][$this->qName]) ) // Don't save status which has been removed.
+		 {
+			  unset($status['queues'][$this->qName]);
+		 }
+		else {
+	     	$status['queues'][$this->qName] = $this->currentStatus();
+		 }
      update_option($this->statusName, $status);
   }
 
@@ -517,7 +524,6 @@ class WPQ implements Queue
   private function checkQueue()
   {
     $this->resetInternalCounts(); // retrieve accurate count from dataSource.
-  //  var_dump($this->currentStatus);
 
     $tasks_done = $this->getStatus('done');
     $tasks_open = $this->getStatus('items');
@@ -548,13 +554,8 @@ class WPQ implements Queue
           $this->DataProvider->itemUpdate($errItem, array('status' => ShortQ::QSTATUS_WAITING));
         }
         else {
-          //$item = Item::import($erroritem->value);
-          //if ($item)
-        //  {
-          //  $item->errorCode = self::QSTATUS_FATAL;
-          //  $item->errorMessage = 'WPQ - Number of retries surpassed settings';
-            $this->DataProvider->itemUpdate($errItem, array('status' => ShortQ::QSTATUS_FATAL));
-        //  }
+           $this->DataProvider->itemUpdate($errItem, array('status' => ShortQ::QSTATUS_FATAL));
+
         }
       }
     } // tasks_errors
@@ -562,12 +563,9 @@ class WPQ implements Queue
     if($update_at_end)
     {
       $this->resetInternalCounts(); // retrieve accurate count from dataSource.
-      //$status = $this->getQueueStatus();
       $tasks_open = $this->currentStatus()->get('items');
       $tasks_inprocess = $this->currentStatus()->get('in_process');
     }
-
-  //  $this->saveStatus(); // save result to DB.
 
     if ($tasks_open > 0 || $tasks_inprocess > 0)
       return true;

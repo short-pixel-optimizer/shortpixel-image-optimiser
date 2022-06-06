@@ -321,7 +321,7 @@ class ShortPixelPlugin
         'nonce_exit' => wp_create_nonce('exit_process'),
         'nonce_itemview' => wp_create_nonce('item_view'),
         'nonce_ajaxrequest' => wp_create_nonce('ajax_request'),
-        'startData' => $optimizeController->getStartupData(),
+        'startData' => (\wpSPIO()->env()->is_screen_to_use) ? $optimizeController->getStartupData() : false,
 				'interval' => $interval,
 				'deferInterval' => $deferInterval,
 
