@@ -395,6 +395,11 @@
   background: #ff0000;
   border: 1px solid #ff0000;
 }
+#tab-tools .option div.field.queue-warning {
+  border: 1px solid #ff0000;
+  font-weight: 700;
+  padding: 6px 8px;
+}
 #tab-tools .option-row {
   margin: 15px 0;
   display: block;

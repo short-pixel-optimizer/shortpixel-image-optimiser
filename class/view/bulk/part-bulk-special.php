@@ -69,7 +69,7 @@ use \ShortPixel\Controller\BulkController as BulkController;
 
 	  <p><?php printf(__('By starting the %s bulk metadata migration %s process, the plugin will try to migrate the old format of optimization information (used by the plugin for versions prior to 5.0) to the new format used from version 5.0 onward for %s all the images. %s It is possible to have exceptions and some of the image information migration may fail. You should get all the details for these cases at the end of the process, in the Errors section.', 'shortpixel-image-optimiser'), '<b>', '</b>', '<b>', '</b>'); ?></p>
 
-		<p class='warning'><?php _e('It is strongly advised to create a full backup before starting this process.', 'shortpixel-image-optimiser'); ?></p>
+		<p class='warning optiongroup'><?php _e('It is strongly advised to create a full backup before starting this process.', 'shortpixel-image-optimiser'); ?></p>
 
 	  <p class='optiongroup'><input type="checkbox" id="bulk-migrate-agree" value="agree" data-action="ToggleButton" data-target="bulk-migrate-button"> <?php _e('I want to migrate the metadata for all images. I understand this action is permanent. I made a backup of my site including images and database.', 'shortpixel-image-optimiser'); ?></p>
 
@@ -96,7 +96,7 @@ use \ShortPixel\Controller\BulkController as BulkController;
 
 	  <p><?php printf(__('By starting the %s remove legacy metadata %s process, the plugin will try to remove all the %s legacy data %s (that was used by the plugin to store the optimization information in versions earlier than 5.0). If this legacy metadata isn\'t properly migrated or some of the migration failed for any reason, it will be impossible to undo or redo the process. In these cases, the optimization information for images processed with versions earlier than 5.0 could be lost.', 'shortpixel-image-optimiser'), '<b>', '</b>', '<b>', '</b>'); ?></p>
 
-		<p class='warning'><?php _e('It is strongly advised to create a full backup before starting this process.', 'shortpixel-image-optimiser'); ?></p>
+		<p class='warning optiongroup'><?php _e('It is strongly advised to create a full backup before starting this process.', 'shortpixel-image-optimiser'); ?></p>
 	  <p class='optiongroup'><input type="checkbox" id="bulk-migrate-agree" value="agree" data-action="ToggleButton" data-target="bulk-removelegacy-button"> <?php _e('I want to remove all legacy data. I understand this action is permanent. I made a backup of my site including images and database.', 'shortpixel-image-optimiser'); ?></p>
 
 

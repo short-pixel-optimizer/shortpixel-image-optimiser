@@ -433,6 +433,7 @@ class AjaxController
     protected function startRestoreAll($json, $data)
     {
        $bulkControl = BulkController::getInstance();
+			 OptimizeController::resetQueues(); // prevent any weirdness
 
 			 $queue = (isset($_POST['queues'])) ? sanitize_text_field($_POST['queues']) : false;
 			 if ($queue === false) // safety first.
@@ -458,6 +459,8 @@ class AjaxController
     protected function startMigrateAll($json, $data)
     {
        $bulkControl = BulkController::getInstance();
+			 OptimizeController::resetQueues(); // prevent any weirdness
+
 
        $stats = $bulkControl->createNewBulk('media', 'migrate');
        $json->media->stats = $stats;
@@ -468,6 +471,8 @@ class AjaxController
 		protected function startRemoveLegacy($json, $data)
     {
        $bulkControl = BulkController::getInstance();
+			 OptimizeController::resetQueues(); // prevent any weirdness
+
 
        $stats = $bulkControl->createNewBulk('media', 'removeLegacy');
        $json->media->stats = $stats;

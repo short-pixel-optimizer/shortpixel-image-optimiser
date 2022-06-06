@@ -18,6 +18,19 @@ $queueRunning = $bulk->isAnyBulkRunning();
 
 	<div class='wp-shortpixel-options wp-shortpixel-tab-content'>
 
+
+
+		<?php if ($queueRunning === true): ?>
+		<div class='option'>
+			<div class='name'>&nbsp;</div>
+
+			<div class='field action queue-warning'>
+				 	<?php _e('It looks like a bulk process is still active. Please note that bulk actions will reset running bulk processes. ', 'shortpixel-image-optimiser'); ?>
+			 </div>
+		</div>
+		<?php endif; ?>
+
+
 		<div class='option'>
 			<div class='name'><?php _e('Migrate data', 'shortpixel-image-optimiser'); ?></div>
 			<div class='field'><a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_redirectBulk', 'bulk' => 'migrate', 'noheader' => true), $url)); ?>" class="button">
@@ -38,17 +51,6 @@ $queueRunning = $bulk->isAnyBulkRunning();
 
 			</div>
 		</div>
-
-
-		<?php if ($queueRunning === true): ?>
-		<div class='option'>
-			<div class='name'>&nbsp;</div>
-
-			<div class='field danger-zone action'>
-				 	<?php _e('It looks like a bulk process is still active. Please note that bulk actions will reset running bulk processes. ', 'shortpixel-image-optimiser'); ?>
-			 </div>
-		</div>
-		<?php endif; ?>
 
 
 

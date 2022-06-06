@@ -19,6 +19,8 @@ class ShortPixelPng2Jpg {
     private $current_image;
 		private $replacer;
 
+		private $reason;
+
     public function __construct()
     {
 
@@ -67,7 +69,6 @@ class ShortPixelPng2Jpg {
 
              if ($result['success'])
              {
-            //   $imageObj =  new MediaLibraryModel($imageObj->get('id'), $imageObj->getFullPath() ); //$fs->getMediaItem($imageObj->set('id'));
 							 $this->replacer->setTarget($result['target_url']);
 
                $res = $this->updateMetaData($result, $imageObj);

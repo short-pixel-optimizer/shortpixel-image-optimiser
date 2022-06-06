@@ -32,6 +32,13 @@
 							}
 					}
 
+					&.queue-warning
+					{
+						border: 1px solid #ff0000;
+						font-weight: 700;
+						padding: 6px 8px;
+					}
+
 			}
 			//p.description { margin: 8px 0; }
 	}
