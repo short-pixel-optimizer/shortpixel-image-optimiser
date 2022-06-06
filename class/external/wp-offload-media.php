@@ -134,7 +134,7 @@ class wpOffload
 
       $this->remove_remote($id);
 
-      $this->image_upload($id, $mediaItem);
+      $this->image_upload($mediaItem);
     }
 
     public function remove_remote($id)

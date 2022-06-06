@@ -54,11 +54,11 @@ if ( isset($_GET['noheader']) ) {
 
 					if ($this->show_hidden)
 					{
-						 printf('<a href="%s">%s</a>', esc_url(add_query_arg('show_hidden',false), __('Back to normal items', 'shortpixel-image-optimiser')));
+						 printf('<a href="%s">%s</a>', esc_url(add_query_arg('show_hidden',false)), __('Back to normal items', 'shortpixel-image-optimiser'));
 					}
 					else
 					{
-						 printf('<a href="%s">%s</a>', esc_url(add_query_arg('show_hidden',true), __('Show hidden items', 'shortpixel-image-optimiser')));
+						 printf('<a href="%s">%s</a>', esc_url(add_query_arg('show_hidden',true)), __('Show hidden items', 'shortpixel-image-optimiser'));
 					}
 
 		     endif; ?>

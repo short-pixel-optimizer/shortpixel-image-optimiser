@@ -882,6 +882,7 @@ var ShortPixel = function() {
         jQuery(".shortpixel-slider", modal).css("width", width);
         modal.css("width", width);
         modal.css('marginLeft',  marginLeft + 'px');
+				modal.removeClass('shortpixel-hide');
         jQuery(".sp-modal-body", modal).css("height", height);
         modal.show();
         //modal.parent().css('display', 'block');
@@ -892,9 +893,9 @@ var ShortPixel = function() {
         }
 
         // Close Options
-        jQuery(".sp-close-button").on('click', ShortPixel.closeComparerPopup);
-        jQuery(document).on('keyup.sp_modal_active', ShortPixel.closeComparerPopup);
-        jQuery('.sp-modal-shade').on('click', ShortPixel.closeComparerPopup);
+        jQuery(".sp-close-button").on('click',  { modal: modal}, ShortPixel.closeComparerPopup);
+        jQuery(document).on('keyup.sp_modal_active', { modal: modal}, ShortPixel.closeComparerPopup );
+        jQuery('.sp-modal-shade').on('click', { modal: modal},  ShortPixel.closeComparerPopup, );
 
         //change images srcs
         var imgOpt = jQuery(".spUploadCompareOptimized", modal);
@@ -913,8 +914,9 @@ var ShortPixel = function() {
 
     function closeComparerPopup(e) {
       //  jQuery("#spUploadCompareSideBySide").parent().css("display", 'none');
-        jQuery("#spUploadCompareSideBySide").hide();
-        jQuery("#spUploadCompare").hide();
+       // jQuery("#spUploadCompareSideBySide").hide();
+        //jQuery("#spUploadCompare").hide();
+				e.data.modal.addClass('shortpixel-hide');
         jQuery('.sp-modal-shade').hide();
         jQuery(document).unbind('keyup.sp_modal_active');
         jQuery('.sp-modal-shade').off('click');
