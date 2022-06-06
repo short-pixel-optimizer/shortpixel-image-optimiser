@@ -129,11 +129,16 @@ class wpOffload
 
       $settings = \wpSPIO()->settings();
 
+			// Only medialibrary offloading supported.
+			if ('media' !== $mediaItem->get('type') )
+			{
+				 return false;
+			}
+
       // If there are excluded sizes, there are not in backups. might not be left on remote, or ( if delete ) on server, so just generate the images and move them.
       $mediaItem->wpCreateImageSizes();
 
       $this->remove_remote($id);
-
       $this->image_upload($mediaItem);
     }
 
@@ -272,7 +277,7 @@ class wpOffload
 				$item = $this->getItemById($id, $mediaItem);
 				$item->delete();
 
-				$this->image_upload($id, $mediaItem);
+				$this->image_upload($mediaItem);
 				return;
         // delete the old file
        // $item = $this->getItemById($id);
@@ -302,7 +307,7 @@ class wpOffload
         }
 
         // upload
-        $this->image_upload($id, $mediaItem); // delete and reupload
+        $this->image_upload($mediaItem); // delete and reupload
     }
 
 
@@ -359,7 +364,7 @@ class wpOffload
 				$mediaItem = $fs->getImage($post_id, 'media');
 
         // upload
-        $this->image_upload($id, $mediaItem); // delete and reupload
+        $this->image_upload($mediaItem); // delete and reupload
     }
 
 

@@ -224,7 +224,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 				  $return = false;
 			 }
 
-			 do_action('shortpixel/image/after_restore', $this, $bool);
+			 do_action('shortpixel/image/after_restore', $this, $this->id, $bool);
 
        return $return;
     }
