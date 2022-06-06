@@ -1620,8 +1620,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           $this->saveMeta(); // Save if something is not restored.
 				}
 
-        do_action('shortpixel_after_restore_image', $this->id);
-				do_action('shortpixel/image/after_restore', $this, $cleanRestore);
+        do_action('shortpixel_after_restore_image', $this->id, $cleanRestore); // legacy
+				do_action('shortpixel/image/after_restore', $this, $this->id, $cleanRestore);
 
 				$duplicates = $this->getWPMLDuplicates();
 				if (is_array($duplicates) && count($duplicates) > 0 )
@@ -1640,7 +1640,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						 {
 							  $this->saveMeta();
 						 }
-						 do_action('shortpixel_after_restore_image', $this->id, $this, $cleanRestore);
+						 do_action('shortpixel_after_restore_image', $this->id, $cleanRestore);
+						 do_action('shortpixel/image/after_restore', $this, $this->id,  $cleanRestore);
+
 					}
 					$this->id = $current_id;
 				}

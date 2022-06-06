@@ -6,6 +6,7 @@ use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 /**
  * User: simon
  * Date: 11.04.2018
+ * @todo This whole thing needs redoing. 
  */
 class ShortPixelFeedback {
 
@@ -69,18 +70,18 @@ class ShortPixelFeedback {
             $html .= '</div><!-- .shortpixel-deactivate-options -->';
         }
         $html .= '<hr/>';
-        $html .= '<span title="' . __( 'Un-check this if you don\\\'t plan to use ShortPixel in the future on this website. You might also want to run a Bulk Delete SP Metadata before removing the plugin (Media Library -> Bulk ShortPixel).', $this->plugin_name )
-            . '"><input type="checkbox" name="shortpixel-keep-settings" id="shortpixel-keep-settings" value="yes" checked> <label for="shortpixel-keep-settings">'
-            . esc_html__( 'Keep the ShortPixel settings on plugin deletion.', $this->plugin_name ) . '</label></span><br>';
+        $html .= '<span title="' . __( 'Un-check this if you don\\\'t plan to use ShortPixel in the future on this website. You might also want to run a Bulk Delete SP Metadata before removing the plugin (Media Library -> Bulk ShortPixel).', 'shortpixel-image-optimiser' )
+            . '">'
+            . sprintf(__(  'If you want to completely uninstall ShortPIxel from your site, please go to %s Settings → ShortPixel → Tools %s.', 'shortpixel-image-optimiser' ),'<a href="' . esc_url(admin_url('/options-general.php?page=wp-shortpixel-settings&part=tools'))  . '">', '</a>') . '</span><br>';
         $html .= '<hr/>';
         $html .= '</div><!-- .shortpixel-deactivate-form-body -->';
-        $html .= '<p class="deactivating-spinner"><span class="spinner"></span> ' . __( 'Submitting form', $this->plugin_name ) . '</p>';
+        $html .= '<p class="deactivating-spinner"><span class="spinner"></span> ' . __( 'Submitting form', 'shortpixel-image-optimiser' ) . '</p>';
         $html .= '<div class="shortpixel-deactivate-form-footer"><p>';
         $html .= '<label for="anonymous" title="'
             . __("If you UNCHECK this then your email address will be sent along with your feedback. This can be used by ShortPixel to get back to you for more info or a solution.",'shortpixel-image-optimiser')
-            . '"><input type="checkbox" name="shortpixel-deactivate-tracking" checked="checked" id="anonymous" value="1"> ' . esc_html__( 'Send anonymous', $this->plugin_name ) . '</label><br>';
+            . '"><input type="checkbox" name="shortpixel-deactivate-tracking" checked="checked" id="anonymous" value="1"> ' . esc_html__( 'Send anonymous', 'shortpixel-image-optimiser' ) . '</label><br>';
         $html .= '<a id="shortpixel-deactivate-submit-form" class="button button-primary" href="#">'
-            . __( '<span>Submit&nbsp;and&nbsp;</span>Deactivate', $this->plugin_name )
+            . __( '<span>Submit&nbsp;and&nbsp;</span>Deactivate', 'shortpixel-image-optimiser' )
             . '</a>';
         $html .= '</p></div>';
         ?>
@@ -173,12 +174,12 @@ class ShortPixelFeedback {
                     formContainer = $(formID),
                     deactivated = true,
                     detailsStrings = {
-                        'setup' : '<?php echo __( 'What was the dificult part ?', $this->plugin_name ) ?>',
-                        'docs' : '<?php echo __( 'What can we describe more ?', $this->plugin_name ) ?>',
-                        'features' : '<?php echo __( 'How could we improve ?', $this->plugin_name ) ?>',
-                        'better-plugin' : '<?php echo __( 'Can you mention it ?', $this->plugin_name ) ?>',
-                        'incompatibility' : '<?php echo __( 'With what plugin or theme is incompatible ?', $this->plugin_name ) ?>',
-                        'maintenance' : '<?php echo __( 'Please specify', $this->plugin_name ) ?>',
+                        'setup' : '<?php echo __( 'What was the dificult part ?', 'shortpixel-image-optimiser') ?>',
+                        'docs' : '<?php echo __( 'What can we describe more ?', 'shortpixel-image-optimiser' ) ?>',
+                        'features' : '<?php echo __( 'How could we improve ?', 'shortpixel-image-optimiser' ) ?>',
+                        'better-plugin' : '<?php echo __( 'Can you mention it ?', 'shortpixel-image-optimiser' ) ?>',
+                        'incompatibility' : '<?php echo __( 'With what plugin or theme is incompatible ?', 'shortpixel-image-optimiser' ) ?>',
+                        'maintenance' : '<?php echo __( 'Please specify', 'shortpixel-image-optimiser') ?>',
 												'temporary' : '',
                     };
 
@@ -295,8 +296,8 @@ class ShortPixelFeedback {
      */
     public function getFormInfo() {
         $form = array();
-        $form['heading'] = __( 'Sorry to see you go', $this->plugin_name );
-        $form['body'] = __( 'Before you deactivate the plugin, would you quickly give us your reason for doing so?', $this->plugin_name );
+        $form['heading'] = __( 'Sorry to see you go', 'shortpixel-image-optimiser' );
+        $form['body'] = __( 'Before you deactivate the plugin, would you quickly give us your reason for doing so?', 'shortpixel-image-optimiser' );
         $form['options'] = array(
 						'temporary' 			=> __('Temporary deactivation', 'shortpixel-image-optimiser'),
             'setup'           => __( 'Set up is too difficult',  'shortpixel-image-optimiser' ),

@@ -63,7 +63,7 @@ class wpOffload
 
   //    $provider = $this->as3cf->get_provider();
       add_action('shortpixel/image/optimised', array($this, 'image_upload'), 10);
-      add_action('shortpixel_after_restore_image', array($this, 'image_restore'), 10, 3); // hit this when restoring.
+      add_action('shortpixel/image/after_restore', array($this, 'image_restore'), 10, 3); // hit this when restoring.
 
       add_action('shortpixel_restore_after_pathget', array($this, 'remove_remote')); // not optimal -> has to do w/ doRestore and when URL/PATH is available when not on server .
 
@@ -122,7 +122,7 @@ class wpOffload
     * @param $mediaItem  MediaLibraryModel SPIO
     * @param $clean - boolean - if restore did all files (clean) or partial (not clean)
     */
-    public function image_restore($id, $mediaItem, $clean)
+    public function image_restore($mediaItem, $id, $clean)
     {
       if (! $clean)
         return false; // don't do anything until we have restored all ( for now )
