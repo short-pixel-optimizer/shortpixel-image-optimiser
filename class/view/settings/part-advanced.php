@@ -2,8 +2,6 @@
 namespace ShortPixel;
 use \ShortPixel\Helper\UiHelper as UiHelper;
 
-
-// @todo remove tests
 ?>
 
 
@@ -163,7 +161,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
             </tr>
 
 
-<?php $view->data->frontBootstrap = 1 ?>
+
 						<?php if ( $view->data->frontBootstrap == 1):  ?>
 
 
@@ -186,22 +184,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
 
 					<?php endif; ?>
 
-						<script>
-								var spaiAML = document.getElementById('autoMediaLibrary');
-								var frontOption = document.getElementById('frontBootstrapRow');
 
-								if (frontOption !== null)
-								{
-										frontOption.setAttribute('style', spaiAML.checked ? '' : 'display:none;');
-										spaiAML.addEventListener('change', function() {
-												if(this.checked) {
-														jQuery('#frontBootstrapRow').show(500);
-												} else {
-														jQuery('#frontBootstrapRow').hide(500);
-												}
-										});
-								}
-						</script>
 
             <?php if($this->has_nextgen) { ?>
             <tr>
