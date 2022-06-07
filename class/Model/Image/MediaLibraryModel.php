@@ -1258,14 +1258,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
           $pngConvert = new ShortPixelPng2Jpg();
           $bool = $pngConvert->convert($this);
-
       }
 
       if ($bool === true)
       {
         $this->setMeta('did_png2jpg', true);
-
-
         $mainfile = \wpSPIO()->filesystem()->getfile($this->getFileDir() . $this->getFileBase() . '.jpg');
 
         if ($mainfile->exists()) // if new exists, remove old
@@ -1274,7 +1271,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
             $this->fullpath = $mainfile->getFullPath();
             $this->resetStatus();
             $this->setFileInfo();
-
         }
 
         // After Convert, reload new meta.

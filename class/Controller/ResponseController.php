@@ -102,9 +102,7 @@ class ResponseController
 					}
 
 			}
-
 			self::updateResponseItem($resp);
-
 		}
 
 
@@ -112,7 +110,6 @@ class ResponseController
 		{
 				 $item = self::getResponseItem($item_id); // ResponseMOdel
 				 $text = $item->message;
-
 
 				 if ($item->is_error)
 				 	  $text = self::formatErrorItem($item, $text);

@@ -2,6 +2,8 @@
 namespace ShortPixel;
 use \ShortPixel\Helper\UiHelper as UiHelper;
 
+
+// @todo remove tests
 ?>
 
 
@@ -135,8 +137,9 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                                     <?php _e('Without altering the page code (via .htaccess)','shortpixel-image-optimiser')?>
                                 </label>
                                 <?php if($deliverWebpUnalteredLabel){ ?>
-                                    <p class="sp-notice">
+                                    <p class="sp-notice"><strong>
                                         <?php echo( $deliverWebpUnalteredLabel );?>
+																			</strong>
                                     </p>
                                 <?php } ?>
                             </li>
@@ -151,7 +154,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
 									 <div class='switch_button'>
 									<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/521-settings-optimize-media-on-upload"></span></div>
 										 <label>
-											 <input type="checkbox" class="switch" name="autoMediaLibrary" value="1" <?php checked( $view->data->autoMediaLibrary, "1" );?>>
+											 <input type="checkbox" class="switch" name="autoMediaLibrary" id='autoMediaLibrary' value="1" <?php checked( $view->data->autoMediaLibrary, "1" );?>>
 											 <div class="the_switch">&nbsp; </div>
 											 	<?php _e('Automatically optimize images after they are uploaded (recommended).','shortpixel-image-optimiser');?>
 									 </label>
@@ -160,8 +163,8 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
             </tr>
 
 
-
-						<?php if ($view->data->frontBootstrap == 1):  ?>
+<?php $view->data->frontBootstrap = 1 ?>
+						<?php if ( $view->data->frontBootstrap == 1):  ?>
 
 
             <tr id="frontBootstrapRow">
