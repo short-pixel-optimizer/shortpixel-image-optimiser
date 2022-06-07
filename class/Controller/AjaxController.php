@@ -712,7 +712,6 @@ class AjaxController
 					$json->settings->results = __('All Data has been removed. The plugin has been deactivated', 'shortpixel-image-optimiser');
 				}
 				else {
-						Log::addTemp('Remove all data Nonce failed');
 				}
 
 				$json->settings->redirect = admin_url('plugins.php');
@@ -728,7 +727,6 @@ class AjaxController
 				$dir = \wpSPIO()->filesystem()->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
 			  $dir->recursiveDelete();
 			 $json->settings->results = __('The backups have been removed. You can close the window', 'shortpixel-image-optimiser');
-			 Log::addTemp('Would have removed backups');
 			}
 			else {
 				$json->settings->results = __('Error: Invalid Nonce in empty backups', 'shortpixel-image-optimiser');

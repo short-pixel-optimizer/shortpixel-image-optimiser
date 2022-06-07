@@ -21,7 +21,6 @@ var ShortPixelScreen = function (MainScreen, processor)
       this.LoadPanels();
       this.LoadActions();
 
-    //  console.log(ShortPixelScreenBulk);
       window.addEventListener('shortpixel.processor.paused', this.TogglePauseNotice.bind(this));
       window.addEventListener('shortpixel.processor.responseHandled', this.CheckPanelData.bind(this));
       window.addEventListener('shortpixel.bulk.onUpdatePanelStatus', this.EventPanelStatusUpdated.bind(this));
@@ -350,6 +349,7 @@ console.log("Screen Init Done", initMedia, initCustom);
       }
 			else if (typeof resultItem.preview !== 'undefined' && resultItem.preview != false)
 			{
+				/* Preloading doesn't solve it.
 				 var name = resultItem.preview.split(/[\\/]/).pop();
 				 name = name.replace(/[^a-zA-Z0-9 ]/g, '');
 
@@ -369,7 +369,7 @@ console.log("Screen Init Done", initMedia, initCustom);
 						{
 							 preloader.children[0].remove();
 						}
-				 }
+				 } */
 			}
 
   }

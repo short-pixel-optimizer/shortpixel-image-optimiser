@@ -44,6 +44,7 @@
   font-size: 14px;
   transition: 300ms all linear;
   border: 1px solid #0f6a7d;
+  min-height: 44px;
 }
 .shortpixel-bulk-wrapper .button:hover {
   background: #1cbecb;

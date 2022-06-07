@@ -1050,7 +1050,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	   global $wpdb;
 
 		 $metadata = $this->createSave();
-Log::addTemp('sSave Meta', $metadata);
 		 $this->saveDBMeta($metadata);
      // There is no point checking for errors since false is returned on both failure and no field changed.
      //update_post_meta($this->id, '_shortpixel_meta', $metadata);
@@ -1827,7 +1826,6 @@ Log::addTemp('sSave Meta', $metadata);
 
 	private function generateThumbnails()
 	{
-		 Log::addTemp('Generating thumbnails on basis of : ' . $this->get('id') . ' ' . $this->getFullPath());
 	 	 $metadata = wp_generate_attachment_metadata($this->get('id'), $this->getFullPath());
 		 return $metadata;
 	}

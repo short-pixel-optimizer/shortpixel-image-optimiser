@@ -9,6 +9,8 @@ use ShortPixel\Model\Image\MediaLibraryModel as MediaLibraryModel;
 
 
 use ShortPixel\Helper\UtilHelper as UtilHelper;
+use ShortPixel\Helper\InstallHelper as InstallHelper;
+
 
 class StatsModel
 {
@@ -352,6 +354,14 @@ class StatsModel
 				$sql = $wpdb->prepare($sql, $prepare);
 
       $count = $wpdb->get_var($sql);
+
+
+			if (is_null($count) && strpos($wpdb->last_error, 'exist') !== false)
+			{
+				 InstallHelper::checkTables();
+				 return 0;
+			}
+
       return intval($count);
   }
 

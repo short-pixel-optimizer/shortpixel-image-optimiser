@@ -151,7 +151,6 @@ class CloudFlareAPI {
 									 }
 								}
 						}
-						Log::addTemp('Cloudflare purging: ', $image_paths);
 
             if ( ! empty( $image_paths ) ) {
               //$prepare_request_info['files'] = $image_url_for_purge;

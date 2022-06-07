@@ -303,7 +303,6 @@ class SettingsController extends \ShortPixel\ViewController
 
       public function processSave()
       {
-					Log::addTemp('Processing Save');
 
           // Split this in the several screens. I.e. settings, advanced, Key Request IF etc.
           if (isset($this->postData['includeNextGen']) && $this->postData['includeNextGen'] == 1)
@@ -716,9 +715,8 @@ class SettingsController extends \ShortPixel\ViewController
           {
 						  if (wp_verify_nonce($_POST['tools-nonce'], 'empty-backup'))
 							{
-								//$dir = \wpSPIO()->filesystem()->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
-	             // $dir->recursiveDelete();
-							 Log::addTemp('Would have removed backups');
+								$dir = \wpSPIO()->filesystem()->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
+	              $dir->recursiveDelete();
 							}
 							else {
 								exit('Invalid Nonce in empty backups');

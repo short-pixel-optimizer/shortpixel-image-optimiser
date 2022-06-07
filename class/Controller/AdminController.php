@@ -82,8 +82,6 @@ class AdminController extends \ShortPixel\Controller
 					 $this->loadCronCompat();
 				}
 
-				Log::addTemp('Process Queue Hook Run');
-
 				$args = wp_parse_args($args, $defaults);
 
 			  $control = new OptimizeController();
@@ -111,12 +109,10 @@ class AdminController extends \ShortPixel\Controller
 											 continue;
 										}
 								}
-								Log::addTemp('results admincontroller', $results);
 
 							sleep($args['wait']);
 				}
 
-				Log::addTemp('End of run');
 
 		}
 
