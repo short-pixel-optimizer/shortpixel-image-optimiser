@@ -1237,8 +1237,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 							 );
 								ResponseController::addData($this->get('id'), $response);
 
-								// Bail out with setting flag, so not to repeat. 
-							 $this->setMeta('did_png2jpg', true);
+								// Bail out with setting flag, so not to repeat.
+							 $this->setMeta('tried_png2jpg', true);
 							 $this->saveMeta();
 
                return false;
