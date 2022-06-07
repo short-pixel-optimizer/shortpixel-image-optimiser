@@ -1237,6 +1237,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 							 );
 								ResponseController::addData($this->get('id'), $response);
 
+								// Bail out with setting flag, so not to repeat. 
+							 $this->setMeta('did_png2jpg', true);
+							 $this->saveMeta();
+
                return false;
              }
 
@@ -1254,17 +1258,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
           $pngConvert = new ShortPixelPng2Jpg();
           $bool = $pngConvert->convert($this);
-          if ($bool === true)
-          {
-             $bool = true; // placeholder maybe
-          }
-    //      else
+
       }
 
       if ($bool === true)
       {
         $this->setMeta('did_png2jpg', true);
-				$this->setMeta('tried_png2jpg', true);
+
 
         $mainfile = \wpSPIO()->filesystem()->getfile($this->getFileDir() . $this->getFileBase() . '.jpg');
 
@@ -1311,7 +1311,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
             }
 				}
         // Update
-        $this->saveMeta();
       }
 			else  // false didn't work. This can also be for legimate reasons as big jpg, or transparency.
 			{
@@ -1343,11 +1342,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					}
 
 					// Prevent from retrying next time, since stuff will be requeued.
-					$this->setMeta('tried_png2jpg', true);
-					$this->saveMeta();
+
 			}
 
-    //  $this->loadMeta();
+			$this->setMeta('tried_png2jpg', true);
+			$this->saveMeta();
 
       return $bool;
   } // convertPNG
