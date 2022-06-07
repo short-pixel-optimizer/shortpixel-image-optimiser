@@ -440,7 +440,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
          if (isset($optimized[$filebase])) // double sizes.
          {
+					 $databaseID = $thumbnail->getMeta('databaseID');
            $thumbnail->setMetaObj($optimized[$filebase]);
+					 $thumbnail->setMeta('databaseID', $databaseID);  // keep dbase id the same, otherwise it won't write this thumb to DB due to same ID.
+					 $result = false;
          }
          else
          {
@@ -491,8 +494,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       }
 
       $this->saveMeta();
-
-
 			update_post_meta($this->get('id'), '_wp_attachment_metadata', $wpmeta);
 
 
@@ -859,8 +860,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		 global $wpdb;
 		 $table = $wpdb->prefix . 'shortpixel_postmeta';
 
-		 //echo "<PRE>"; print_r($data); echo "</PRE>";
-
 		 $attach_id = $this->id;
 
 		 $parent = ($imageType == self::IMAGE_TYPE_MAIN) ? 0 : $this->id;
@@ -1051,7 +1050,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	   global $wpdb;
 
 		 $metadata = $this->createSave();
-
+Log::addTemp('sSave Meta', $metadata);
 		 $this->saveDBMeta($metadata);
      // There is no point checking for errors since false is returned on both failure and no field changed.
      //update_post_meta($this->id, '_shortpixel_meta', $metadata);
@@ -1286,6 +1285,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         {
             $file = $fs->getFile($thumbObj->getFileDir() . $thumbObj->getFileBase() . '.jpg');
             $thumbObj->setMeta('did_png2jpg', true);
+						$thumbObj->setMeta('status', ImageModel::FILE_STATUS_PENDING);
 
             if ($file->exists()) // if new exists, remove old
             {
@@ -1301,6 +1301,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		       $originalFile = $this->getOriginalFile();
 					 $file = $fs->getFile($originalFile->getFileDir() . $originalFile->getFileBase() . '.jpg');
            $originalFile->setMeta('did_png2jpg', true);
+					 $originalFile->setMeta('status', ImageModel::FILE_STATUS_PENDING);
 
             if ($file->exists()) // if new exists, remove old
             {
@@ -1544,10 +1545,27 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
     do_action('shortpixel/image/before_restore', $this);
 
     $cleanRestore = true;
+		$wpmeta = wp_get_attachment_metadata($this->get('id'));
+
+/*					if ($this->getMeta('resize') == true)
+					{
+						 $wpmeta['width'] = $this->get('width');
+ 						 $wpmeta['height'] = $this->get('height');
+					}
+					*/
 		$did_png2jpg = $this->getMeta('did_png2jpg');
+		$is_resized = $this->getMeta('resize');
 
 		// ** Warning - This will also reset metadata
     $bool = parent::restore();
+
+		if ($is_resized)
+		{
+			$wpmeta['width'] = $this->get('width');
+			$wpmeta['height'] = $this->get('height');
+		}
+		$wpmeta['filesize'] = $this->getFileSize();
+
 
 		if ($did_png2jpg)
 		{
@@ -1568,6 +1586,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
     foreach($this->thumbnails as $thumbObj)
     {
           $filebase = $thumbObj->getFileBase();
+					$is_resized = $thumbObj->getMeta('resize');
+					$size = $thumbObj->get('size');
 
           if (isset($restored[$filebase]))
           {
@@ -1576,8 +1596,16 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           }
           elseif ($thumbObj->isRestorable())
 					{
-            $bool = $thumbObj->restore();
+            $bool = $thumbObj->restore(); // resets metadata
 					}
+
+					if ($is_resized)
+					{
+							$wpmeta['sizes'][$size]['width'] = $thumbObj->get('width');
+							$wpmeta['sizes'][$size]['height']  = $thumbObj->get('height');
+					}
+
+					$wpmeta['sizes'][$size]['filesize'] = $thumbObj->getFileSize();
 
           if (! $bool)
 					{
@@ -1620,6 +1648,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           $this->saveMeta(); // Save if something is not restored.
 				}
 
+				update_post_meta($this->get('id'), '_wp_attachment_metadata', $wpmeta);
+
+
         do_action('shortpixel_after_restore_image', $this->id, $cleanRestore); // legacy
 				do_action('shortpixel/image/after_restore', $this, $this->id, $cleanRestore);
 
@@ -1632,6 +1663,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					{
 						 $this->id = $duplicate_id;
 						 $this->removeLegacy();
+
+						 $duplicate_meta = wp_get_attachment_metadata($duplicate_id);
+						 $duplicate_meta = array_merge($duplicate_meta, $wpmeta);
+						 update_post_meta($duplicate_id, '_wp_attachment_metadata', $duplicate_meta);
+
 						 if ($cleanRestore)
 						 {
 							 	$this->deleteMeta();
@@ -1672,14 +1708,21 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 			}
 
+			// We can't remove files until the end of process because some plugins will block it.
+			$toRemove = array();
+
 			// Destination is image.png, the original.
 			if (! $destination->exists())
 			{
-					// This is a PNG content file, that has been restored as a .jpg file.
-					$this->move($destination);
+					// This is a PNG content file, that has been restored as a .jpg file which is now main.
+					$this->copy($destination);
+					$toRemove[] = $this;
 			}
 			else
 			{
+					ResponseController::addData('message', __('Restore PNG2JPG : Restoring to target that already exists', 'shortpixel-image-optimiser'));
+					ResponseController::addData('is_error', true);
+
 					return false;
 			}
 
@@ -1699,12 +1742,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 									}
 							}
 
-                $thumbObj->delete(); // delete the jpg
-                $thumbObj->resetStatus();
-	/*							$thumbObj->setMeta('did_png2jpg', false);
-								$thumbObj->setMeta('status', 0); */
-								$thumbObj->image_meta = new ImageThumbnailMeta();
-							//	$restored[$filebase] = true; // done, just reset.
+              //  $thumbObj->delete(); // delete the jpg
+								$toRemove[] = $thumbObj;
+               // $thumbObj->resetStatus();
+							//	$thumbObj->image_meta = new ImageThumbnailMeta();
     		}
 
 		    if ($this->isScaled())
@@ -1723,17 +1764,27 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 									 $backupFileJPG->delete();
 								}
 						}
-			     	$originalFile->delete(); // should be .jpg file.
 
-			   //  $originalFile->fullpath = $fs->getFile($originalFile->getFileDir() . $originalFile->getFileBase() . '.png'); // reset path to .png
-			      $originalFile->resetStatus();
-						$originalFile->setMeta('status', 0);
+						$toRemove[] = $originalFile;
+//						$originalFile->delete(); // should be .jpg file.
+//			      $originalFile->resetStatus();
+//						$originalFile->image_meta = new ImageThumbnailMeta();
 		    }
 
 				// Fullpath now will still be .jpg
+				// PNGconvert is first, because some plugins check for _attached_file metadata and prevent deleting files if still connected to media library. Exmaple: polylang.
 				$pngConvert = new ShortPixelPng2Jpg();
 				$pngConvert->restorePng2Jpg($this);
 
+				foreach($toRemove as $fileObj)
+				{
+					 $fileObj->delete();
+					 $fileObj->resetStatus();
+					 if ($fileObj->get('is_main_file') == false)
+					 {
+					 	$fileObj->image_meta = new ImageThumbNailMeta();
+					 }
+				}
 				$this->wp_metadata = null;  // restore changes the metadata.
 
 				return true;

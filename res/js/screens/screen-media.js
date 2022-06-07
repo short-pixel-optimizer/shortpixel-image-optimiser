@@ -12,7 +12,8 @@ var ShortPixelScreen = function (MainScreen, processor)
     this.Init = function()
     {
           addEventListener('shortpixel.media.resumeprocessing', this.processor.ResumeProcess.bind(this.processor));
-    },
+    }
+
     this.HandleImage = function(resultItem, type)
     {
         if (type == 'custom')  // We don't eat that here.
@@ -63,7 +64,7 @@ var ShortPixelScreen = function (MainScreen, processor)
                element.innerHTML = result.message;
            }
         } */
-				return false; 
+				return false;
     }
 
     this.UpdateMessage = function(id, message, isError)
@@ -130,7 +131,7 @@ var ShortPixelScreen = function (MainScreen, processor)
 
     this.GeneralResponses = function(responses)
     {
-       console.log(responses);
+
        var self = this;
 
        if (responses.length == 0)  // no responses.
@@ -187,7 +188,6 @@ var ShortPixelScreen = function (MainScreen, processor)
 		// HandleError is handling from results / result, not ResponseController. Check if it has negative effects it's kinda off now.
     this.HandleError = function(result)
     {
-				// console.log('HANDLE ERROR', result);
 
           if (result.message && result.item_id)
           {
@@ -215,7 +215,7 @@ var ShortPixelScreen = function (MainScreen, processor)
             var id = data.media.id;
 
             var element = document.getElementById('sp-msg-' + id);
-            element.outerHTML = data.media.result;
+            element.outerHTML = data.media.itemView;
         }
         return true;
     }

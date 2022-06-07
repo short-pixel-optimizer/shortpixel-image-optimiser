@@ -111,7 +111,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
   protected function setMetaObj($metaObj)
   {
-     $this->image_meta = $metaObj;
+     $this->image_meta = clone $metaObj;
   }
 
   protected function getMetaObj()

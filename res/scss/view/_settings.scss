@@ -9,6 +9,9 @@
 		color: $color-darkest;
 
 	}
+	p {
+		font-size: 14px;
+	}
 	.button
 	{
 		color: $color-darkest;
@@ -147,7 +150,7 @@
 			p.settings-info {
 			    padding-top: 0px;
 			    color: #818181;
-			    font-size:13px !important;
+			    font-size:13px !important; 
 			}
 			p.settings-info.shortpixel-settings-error {
 			    color: #c32525;

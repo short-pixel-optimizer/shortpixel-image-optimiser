@@ -58,15 +58,13 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     protected $width;
     protected $height;
     protected $mime;
-    protected $url;
+   // protected $url; // possibly not in use.
     protected $error_message;
 
     protected $id;
 
     protected $processable_status = 0;
 		protected $restorable_status = 0;
-
-
 
     //protected $is_optimized = false;
   //  protected $is_image = false;
@@ -90,8 +88,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     public function __construct($path)
     {
       parent::__construct($path);
-
-      //$this->setImageSize();
     }
 
     protected function setImageSize()
@@ -447,9 +443,13 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
               {
 									// If conversion to jpg is done, this function also does the backup.
 									if ($this->getMeta('did_png2jpg') === true)
-										 $backupok = true;
+									{
+											 $backupok = true;
+									}
 									else
+									{
                   	 $backupok = $this->createBackup();
+									}
 
                   if (! $backupok)
                   {
@@ -737,6 +737,12 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 					);
 					ResponseController::addData($this->get('id'), $response);
         }
+				else {
+					$this->width = null;
+					$this->height = null;
+					$this->mime = null;
+
+				}
         return $bool;
     }
 

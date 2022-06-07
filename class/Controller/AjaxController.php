@@ -138,7 +138,7 @@ class AjaxController
 
           $json = new \stdClass;
           $json->$type = new \stdClass;
-          $json->$type->result = $result;
+          $json->$type->itemView = $result;
           $json->$type->id = $id;
           $json->$type->results = null;
           $json->$type->is_error = false;

@@ -247,6 +247,8 @@ class OptimizeController
            $json->result->is_error = true;
 
         }
+
+				
         return $json;
     }
 

@@ -325,7 +325,7 @@ class FileModel extends \ShortPixel\Model
        $result = $this->delete();
 			 if ($result == false)
 			 {
-				 Log::addError('Move can\'t remove ' . $this->getFullPath());
+				 Log::addError('Move can\'t remove file ' . $this->getFullPath());
 			 }
 
        $this->resetStatus();
@@ -354,37 +354,12 @@ class FileModel extends \ShortPixel\Model
         return true;
       }
       else {
+				$writable = ($this->is_writable()) ? 'true' : 'false';
+				Log::addWarn('File seems not removed - ' . $this->getFullPath() . ' (writable:' . $writable . ')');
         return false;
-        Log::addWarn('File seems not removed - ' . $this->getFullPath());
       }
 
   }
-
-	/** Try to make sure that the file in argument has the same owner as current file */
-	/* Off - This is on most installations not possible.
-	public function matchOwner(FileModel $subject)
-	{
-				$owner =  fileowner($this->getFullPath());
-				if ($owner === false)
-				{
-					 Log::addWarn('Could not get Owner of file. Aborting', $this->getFullPath());
-					 return false;
-				}
-
-				$owner_subject = fileowner($subject->getFullPath());
-
-				if ($owner_subject === false)
-				{
-					 Log::addWarn('Could not get Owner of target. Aborting', $this->getFullPath());
-					 return false;
-				}
-
-				if ($owner !== $owner_subject)
-				{
-					 chown ($subject->getFullPath(), $owner );
-				}
-
-	} */
 
 	public function getContents()
 	{

@@ -189,7 +189,7 @@ var ShortPixelScreen = function (MainScreen, processor)
         {
             var id = data.custom.id;
             var element = document.getElementById('sp-msg-' + id);
-            element.outerHTML = data.custom.result;
+            element.outerHTML = data.custom.itemView;
 
         }
         return true;

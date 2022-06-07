@@ -67,7 +67,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 						return false;
 					}
 
-				
+
 
           $this->view->status_message = null;
 
