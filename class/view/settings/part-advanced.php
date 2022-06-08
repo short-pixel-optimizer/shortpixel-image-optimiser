@@ -437,7 +437,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                       <input type="hidden" id="customFolderBase" value="<?php echo $this->view->customFolderBase; ?>">
 
                       <a class="button select-folder-button" title="<?php _e('Select the images folder on your server.','shortpixel-image-optimiser');?>" href="javascript:void(0);">
-                          <?php _e('Select ...','shortpixel-image-optimiser');?>
+                          <?php _e('Select','shortpixel-image-optimiser');?>
                       </a>
                     <input type="submit" name="save" id="saveAdvAddFolder" class="button button-primary hidden" title="<?php _e('Add this Folder','shortpixel-image-optimiser');?>" value="<?php _e('Add this Folder','shortpixel-image-optimiser');?>">
                     <p class="settings-info">

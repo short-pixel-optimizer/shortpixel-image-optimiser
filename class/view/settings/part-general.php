@@ -124,7 +124,7 @@
 						</tr>
 
             <tr>
-                <th scope="row"><?php _e('Also include thumbnails:','shortpixel-image-optimiser');?></th>
+                <th scope="row"><?php _e('Thumbnail compression:','shortpixel-image-optimiser');?></th>
                 <td>
 
 										<div class='switch_button'>
