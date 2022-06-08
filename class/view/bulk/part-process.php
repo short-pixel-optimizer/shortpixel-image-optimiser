@@ -7,7 +7,7 @@ namespace ShortPixel;
   <div class="panel-container">
 
     <h3 class="heading"><span><img src="<?php echo \wpSPIO()->plugin_url('res/img/robo-slider.png'); ?>"></span>
-      ShortPixel Bulk is in progress
+      ShortPixel Bulk Process is in progress
       <div class='average-optimization'>
           <p>Average this run</p>
           <svg class="opt-circle-average" viewBox="-10 0 150 140">
@@ -31,7 +31,7 @@ namespace ShortPixel;
       </div>
     </h3>
 
-    <p class='description'><?php _e('ShortPixel is optimizing your images. Please leave this window open for the process to finish.', 'shortpixel-image-optimiser'); ?> </p>
+    <p class='description'><?php _e('ShortPixel is processing your images. Please keep this window open to complete the process.', 'shortpixel-image-optimiser'); ?> </p>
 
     <?php $this->loadView('bulk/part-progressbar', false); ?>
 

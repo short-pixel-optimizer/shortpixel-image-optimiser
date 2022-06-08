@@ -1,5 +1,5 @@
 
-/*** Shortpixel Image Processor ***
+/*** ShortPixel Image Processor ***
 * The processor sends via a browser worker tasks in form of Ajax Request to the browser
 * Ajax returns from browser are processed and then delegated to the screens
 * Every function starts via capitals and camelcased i.e. LoadWorker

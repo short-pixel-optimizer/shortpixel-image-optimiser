@@ -82,7 +82,7 @@
                                 <input type="radio" class="shortpixel-radio-lossless" name="compressionType" value="0" <?php echo( $view->data->compressionType == 0 ? "checked" : "" );?>><span><?php _e('Lossless','shortpixel-image-optimiser');?></span>
                             </label>
 
-                      <?php printf(__('%s Run a few tests %s to help you decide.', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/online-image-compression" style="margin-left:20px;" target="_blank">', '</a>'); ?>
+                      <?php printf(__('%s Run a few tests%s to help you decide.', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/online-image-compression" style="margin-left:20px;" target="_blank">', '</a>'); ?>
 
 										 <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/11-lossy-glossy-or-lossless-which-one-is-the-best-for-me"></span></div>
 
@@ -116,9 +116,8 @@
 							<th scope="row">&nbsp;</th>
 							<td>
 								<div class='compression-notice warning'>
-									<h4>Changing Compression</h4>
-									<p><?php _e( 'This type of optimization will apply only to new or unprocessed images. Images that were already processed will not be re-optimized. If you want to change the already optimized images, <a href="options-general.php?page=wp-shortpixel-settings&part=tools">restore them from the backup</a> first.', 'shortpixel-image-optimiser' ); ?></p>
-									<p><?php _e('Current optimization processes in the queue will be stopped.', 'shortpixel-image-optimiser'); ?></p>
+									<p><?php _e( 'This compression type will apply only to new or unprocessed images. Images that were already processed will not be re-optimized. If you want to change the compression type of already optimized images, <a href="options-general.php?page=wp-shortpixel-settings&part=tools">restore them from the backup</a> first.', 'shortpixel-image-optimiser' ); ?></p>
+									<p><?php _e('The current optimization processes in the queue will be stopped.', 'shortpixel-image-optimiser'); ?></p>
 
 								</div>
 							</td>
@@ -133,7 +132,7 @@
 				              <label>
 				                <input type="checkbox" class="switch" name="processThumbnails" value="1" <?php checked($view->data->processThumbnails, '1');?>>
 				                <div class="the_switch">&nbsp; </div>
-												<?php printf(__('Apply compression also to %s image thumbnails %s. ','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
+												<?php printf(__('Apply compression also to %s image thumbnails.%s ','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
 									    </label>
 				            </div>
 
@@ -158,7 +157,7 @@
 											 </label>
 										 </div>
 
-	                    <p class="settings-info"><?php _e('You can remove the backup folder at any moment but it is best to keep a local/cloud copy, in case you want to restore the optimized files to originals or re-optimize the images using a different compression method.','shortpixel-image-optimiser');?></p>
+	                    <p class="settings-info"><?php _e('You can remove the backup folder at any moment but it is best to keep a local/cloud copy, in case you want to restore the optimized files to originals or re-optimize the images using a different compression type.','shortpixel-image-optimiser');?></p>
                 </td>
             </tr>
 

@@ -11,10 +11,9 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 	  <div class='links'>
     <a href="https://shortpixel.com/<?php
     echo(($view->data->apiKey ? "login/". $view->data->apiKey : "pricing"));
-    ?>" target="_blank">
-        <?php _e('Buy credits','shortpixel-image-optimiser');?>
-    </a> | <a href="https://shortpixel.com/knowledge-base/" target="_blank"><?php _e('Knowledge Base','shortpixel-image-optimiser');?> </a> |
-    <a href="https://shortpixel.com/contact" target="_blank"><?php _e('Contact Support','shortpixel-image-optimiser');?> </a> |
+    ?>" target="_blank"><?php _e( 'Buy credits', 'shortpixel-image-optimiser' );?></a> |
+    <a href="https://shortpixel.com/knowledge-base/" target="_blank"><?php _e('Knowledge Base','shortpixel-image-optimiser');?></a> |
+    <a href="https://shortpixel.com/contact" target="_blank"><?php _e('Contact Support','shortpixel-image-optimiser');?></a> |
     <a href="https://shortpixel.com/<?php
     echo(($view->data->apiKey ? "login/". $view->data->apiKey . "/dashboard" : "login"));
     ?>" target="_blank">

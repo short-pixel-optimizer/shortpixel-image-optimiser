@@ -7,7 +7,7 @@ jQuery(document).ready(function(){ShortPixel.init(); });
 function delayedInit() {
     if(typeof ShortPixel !== 'undefined' && ShortPixel.didInit == false) {
 
-        console.error('Shortpixel: Delayed Init. Check your installation for errors');
+        console.error('ShortPixel: Delayed Init. Check your installation for errors');
         ShortPixel.init();
     } else {
         setTimeout(delayedInit, 10000);

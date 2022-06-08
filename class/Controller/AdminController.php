@@ -9,7 +9,7 @@ use \ShortPixel\ShortPixelPng2Jpg as ShortPixelPng2Jpg;
 use ShortPixel\Model\AccessModel as AccessModel;
 
 
-/* AdminController is meant for handling events, hooks, filters in WordPress where there is *NO* specific or more precise  Shortpixel Page active.
+/* AdminController is meant for handling events, hooks, filters in WordPress where there is *NO* specific or more precise  ShortPixel Page active.
 *
 * This should be a delegation class connection global hooks and such to the best shortpixel handler.
 */

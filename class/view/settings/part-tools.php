@@ -36,7 +36,7 @@ $queueRunning = $bulk->isAnyBulkRunning();
 			<div class='field'><a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_redirectBulk', 'bulk' => 'migrate', 'noheader' => true), $url)); ?>" class="button">
 						<?php _e('Search and Migrate All', 'shortpixel-image-optimiser'); ?>
 				</a>
-				<p class='description'><?php printf(__('ShortPixel Image Optimizer version 5.0 brings a new format to store the image optimization information. If you upgraded from a version prior to version 5.0, you may want to convert all your image data to the new format. This conversion will speed up the plugin and ensure all data is preserved. %s Check your image data after running the conversion! %s', 'shortpixel-image-optimiser'), '<br><b>', '</b>') ?> </p>
+				<p class='description'><?php printf(__('ShortPixel Image Optimizer version 5.0 brings a new format for saving the image optimization information. If you have upgraded from a version prior to version 5.0, you may want to convert all your image data to the new format. This conversion will speed up the plugin and ensure that all data is preserved. %s Check your image data after doing the conversion! %s', 'shortpixel-image-optimiser'), '<br><b>', '</b>') ?> </p>
 			</div>
 		</div>
 
@@ -47,7 +47,7 @@ $queueRunning = $bulk->isAnyBulkRunning();
 			<div class='field'>
 
 				<a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_resetQueue', 'queue' => 'all', 'part' => 'tools'), $url)); ?>" class="button"><?php _e('Clear the Queue','shortpixel-image-optimiser'); ?></a>
-				<p class='description'><?php _e('Removes all current items waiting or in process from all the queues. This stops any optimization process across the installation.', 'shortpixel-image-optimiser'); ?> </p>
+				<p class='description'><?php _e('Removes all items currently waiting or being processed from all queues. This stops all optimization processes in the entire installation.', 'shortpixel-image-optimiser'); ?> </p>
 
 			</div>
 		</div>
@@ -58,7 +58,7 @@ $queueRunning = $bulk->isAnyBulkRunning();
 
 		<div class='danger-zone'>
 			<h3><?php _e('Danger Zone - please read carefully!', 'shortpixel-image-optimiser'); ?></h3>
-			<p><?php _e('The actions below are regarding the cleanup and uninstallation of the plugin. They cannot be undone. It is important to have a fresh backup ready before attempting any of them because they will cause data loss.', 'shortpixel-image-optimiser') ?></p>
+			<p><?php _e('The following actions are related to cleaning up and uninstalling the plugin. They cannot be undone. It is important that you create a new backup copy before performing any of these actions, as this may result in data loss.', 'shortpixel-image-optimiser') ?></p>
 			<hr />
 
 
@@ -70,7 +70,7 @@ $queueRunning = $bulk->isAnyBulkRunning();
 
 							<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/14-can-i-restore-my-images-what-happens-with-the-originals"></span></div>
 						</div>
-						<p class='description'><?php printf(__('%sReverts%s all optimizations and restores all your backed-up images to their original state. The used credits will not be refunded and you will have to re-optimize your images.', 'shortpixel-image-optimiser'), '<b>','</b>'); ?></p>
+						<p class='description'><?php printf(__('%sUndoes%s all optimizations and restores all your backed-up images to their original state. Credits used will not be refunded and you will have to optimize your images again.', 'shortpixel-image-optimiser'), '<b>','</b>'); ?></p>
 					</div>
 			</div>
 
@@ -79,7 +79,7 @@ $queueRunning = $bulk->isAnyBulkRunning();
 					<div class='field'>
 						<a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_redirectBulk', 'bulk' => 'removeLegacy', 'noheader' => true), $url)); ?>" class="button danger">Remove Legacy Data</a>
 
-					<p class='description'><?php printf(__('%sRemoves the Legacy data%s (the old format of storing image optimization info in the DB, used before version 5). This may result in data loss. Not recommended to do this manually.', 'shortpixel-image-optimiser'), '<b>','</b>'); ?></p>
+					<p class='description'><?php printf(__('%sRemoves Legacy Data%s (the old format for storing image optimization information in the database, which was used before version 5). This may result in data loss. It is not recommended to do this manually.', 'shortpixel-image-optimiser'), '<b>','</b>'); ?></p>
 				</div>
 			</div>
 
@@ -88,7 +88,7 @@ $queueRunning = $bulk->isAnyBulkRunning();
 					<div class='field'>
 						<div class="option-content">
 							<button type="button" class='button danger' data-action="open-modal" data-target="ToolsRemoveAll">
-														<?php _e('Remove all Shortpixel Data', 'shortpixel-image-optimiser'); ?></button>
+														<?php _e('Remove all ShortPixel Data', 'shortpixel-image-optimiser'); ?></button>
 
 							<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/81-remove-all-the-shortpixel-related-data-on-a-wp-website"></span></div>
 						</div>
@@ -98,16 +98,16 @@ $queueRunning = $bulk->isAnyBulkRunning();
 							<?php  wp_nonce_field('remove-all', 'tools-nonce'); ?>
 
 							<p>&nbsp;</p>
-							<p><?php _e('This will remove all Shortpixel Data including data about optimization and image backups.', 'shortpixel-image-optimiser'); ?></p>
-							<?php _e('Type confirm to delete all Shortpixel data', 'shortpixel-image-optimiser'); ?>
+							<p><?php _e('This will remove all ShortPixel Data including data about optimization and image backups.', 'shortpixel-image-optimiser'); ?></p>
+							<?php _e('Type confirm to delete all ShortPixel data', 'shortpixel-image-optimiser'); ?>
 							<input type="text" name="confirm" value=""  data-required='confirm' />
 
-							<p><b><?php _e('I understand that all Shortpixel data will be removed.','shortpixel-image-optimiser'); ?></b></p>
+							<p><b><?php _e('I understand that all ShortPixel data will be removed.','shortpixel-image-optimiser'); ?></b></p>
 
 							<button type="button" class='button modal-send' name="uninstall" data-action='ajaxrequest'><?php _e('Remove all data', 'shortpixel-image-optimiser'); ?></button>
 
 						</div> <!-- modal -->
-						<p class='description'><?php printf(__('%sRemoves all ShortPixel data (including backups) %s  and deactivates the plugin. Your images will not change (the optimized ones will remain), but the next time ShortPixel is activated, it will not recognize any previous optimizations.', 'shortpixel-image-optimiser'), '<b>','</b>'); ?></p>
+						<p class='description'><?php printf(__('%sRemoves all ShortPixel data (including backups) %s and deactivates the plugin. Your images will not be changed (the optimized images will remain), but the next time ShortPixel is activated, it will no longer recognize previous optimizations.', 'shortpixel-image-optimiser'), '<b>','</b>'); ?></p>
 				 </div>
 			</div>
 
@@ -132,7 +132,7 @@ $queueRunning = $bulk->isAnyBulkRunning();
 
 										<p>&nbsp;</p>
 										<p><?php _e('This will delete all the backup images. You won\'t be able to restore from backup or to reoptimize with different settings if you delete the backups.', 'shortpixel-image-optimiser'); ?></p>
-										<?php _e('Type confirm to delete all Shortpixel backups', 'shortpixel-image-optimiser'); ?>
+										<?php _e('Type confirm to delete all ShortPixel backups', 'shortpixel-image-optimiser'); ?>
 										<input type="text" name="confirm" value="" data-required='confirm' />
 
 										<p><b><?php _e('I understand that all Backups will be removed.','shortpixel-image-optimiser'); ?>  </b></p>
@@ -143,7 +143,7 @@ $queueRunning = $bulk->isAnyBulkRunning();
 									</div>
 							</div> <!-- backup modal -->
 
-							<p class='description'><?php _e('When backups are enabled, original images are stored in a backup folder. Removing the backup folder means that you can\'t restore or reoptimize images. We strongly recommend to keep a copy of the backup folder (/wp-content/uploads/ShortpixelBackups/) somewhere safe.','shortpixel-image-optimiser');?>
+							<p class='description'><?php _e('When backups are enabled, original images are stored in a backup folder. If you remove the backup folder, you will not be able to restore or reoptimize the images. We strongly recommend that you keep a copy of the backup folder (/wp-content/uploads/ShortpixelBackups/) somewhere safe.','shortpixel-image-optimiser');?>
 						</div>
 
 				</div>

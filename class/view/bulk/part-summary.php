@@ -14,7 +14,7 @@ namespace ShortPixel;
     <?php $this->loadView('bulk/part-progressbar', false); ?>
 
     <div class='summary-list'>
-      <h3>Review and start the Bulk
+      <h3>Review and start the Bulk Process
         <span><img src="<?php echo wpSPIO()->plugin_url('res/img/bulk/robot-book-summary.svg') ?>" /></span>
       </h3>
       <div class="section-wrapper" data-check-visibility data-control="data-check-media-total">
@@ -71,16 +71,16 @@ namespace ShortPixel;
 
       <p><span>Your monthly plan</span>
          <span><?php echo $quotaData->monthly->text ?> <br>
-              <?php _e('Consumed', 'shortpixel-image-optimiser'); ?> <?php echo $this->formatNumber($quotaData->monthly->consumed, 0) ?>
-              <?php _e('; Remaining', 'shortpixel-image-optimiser'); ?> <?php echo $this->formatNumber($quotaData->monthly->remaining, 0) ?>
+              <?php _e('Used:', 'shortpixel-image-optimiser'); ?> <?php echo $this->formatNumber($quotaData->monthly->consumed, 0); ?>
+              <?php _e('; Remaining:', 'shortpixel-image-optimiser'); ?> <?php echo $this->formatNumber($quotaData->monthly->remaining, 0); ?>
           </span>
       </p>
 
       <p>
-          <span>Your One Time Credits</span>
+          <span>Your one-time credits</span>
           <span><?php echo $quotaData->onetime->text ?> <br>
-             <?php _e('Consumed', 'shortpixel-image-optimiser'); ?> <?php echo $this->formatNumber($quotaData->onetime->consumed, 0) ?>
-             <?php _e('; Remaining', 'shortpixel-image-optimiser'); ?> <?php echo $this->formatNumber($quotaData->onetime->remaining, 0) ?>
+             <?php _e('Used:', 'shortpixel-image-optimiser'); ?> <?php echo $this->formatNumber($quotaData->onetime->consumed, 0) ?>
+             <?php _e('; Remaining:', 'shortpixel-image-optimiser'); ?> <?php echo $this->formatNumber($quotaData->onetime->remaining, 0) ?>
          </span>
       </p>
 

@@ -33,7 +33,7 @@ $approx = $this->view->approx;
 				 <div class="option-block">
 
 					 <h2><?php _e('Optimize:','shortpixel-image-optimiser'); ?> </h2>
-					 <p><?php printf(__('ShortPixel has %sestimated%s the number of images that can still be optimized. <br />After choosing the options, the plugin will calculate exactly how many images will be optimized.','shortpixel-image-optimiser'), '<b>','</b>'); ?></p>
+					 <p><?php printf(__('ShortPixel has %sestimated%s the number of images that can still be optimized. %sAfter you select the options, the plugin will calculate exactly how many images to optimize.','shortpixel-image-optimiser'), '<b>','</b>', '<br />'); ?></p>
 
 	         <div class="media-library optiongroup">
 
@@ -71,7 +71,7 @@ $approx = $this->view->approx;
 							<label><?php _e('Thumbnails (estimate)','shortpixel-image-optimiser'); ?></label> <span class="number" ><?php echo $approx->media->total ?> </span>
 						</div>
 
-						<p><?php _e('It\'s recommend to process the WordPress thumbnails. There are the small images that are most often used on posts and pages. These options change the settings of your installation.','shortpixel-image-optimiser'); ?></p>
+						<p><?php _e('It is recommended to process the WordPress thumbnails. These are the small images that are most often used in posts and pages.This option changes the global ShortPixel settings of your site.','shortpixel-image-optimiser'); ?></p>
 
 
 
@@ -95,7 +95,7 @@ $approx = $this->view->approx;
 
 				 <div class="option-block selection-settings">
 					 <h2>Options: </h2>
-						 <p>Check these if you want to also create WebP / AVIF files. These options change the settings of your installation.</p>
+						 <p>Enable these options if you also want to create WebP/AVIF files. These options change the global ShortPixel settings of your site.</p>
 		         <div class='optiongroup '  >
 		           <div class='switch_button'>
 
@@ -134,7 +134,7 @@ $approx = $this->view->approx;
 
        <h4 class='approx'><?php _e('An estimate of unoptimized images in this installation', 'shortpixel-image-optimiser'); ?> : <span data-check-approx-total><?php echo $approx->total->images ?></span> </h4>
 
-       <div><p>In the next step the plugin calculates the total number of images to be optimized, and your bulk process will be prepared. It will <b>not yet</b> start the processing, but will display a summary of what will be optimized.</p></div>
+       <div><p>In the next step, the plugin will calculate the total number of images to be optimized, and your bulk process will be prepared. The processing <b>will not start yet</b>, but a summary of the images to be optimized will be displayed.</p></div>
 		 </div>
 
       <nav>

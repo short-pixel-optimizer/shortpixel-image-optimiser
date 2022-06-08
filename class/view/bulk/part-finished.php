@@ -108,7 +108,7 @@ namespace ShortPixel;
 
 
     <nav>
-      <button class='button finish' data-action="FinishBulk" id="FinishBulkButton">Finish Bulk</button>
+      <button class='button finish' data-action="FinishBulk" id="FinishBulkButton">Finish Bulk Process</button>
     </nav>
 
 

@@ -211,7 +211,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
 										 <label>
 											 <input type="checkbox" class="switch" name="optimizePdfs" value="1" <?php checked( $view->data->optimizePdfs, "1" );?>>
 											 <div class="the_switch">&nbsp; </div>
-											 <?php _e('Automatically optimize PDF documents.','shortpixel-image-optimiser');?>
+											 <?php _e('Also optimize PDF documents.','shortpixel-image-optimiser');?>
 										 </label>
 									 </div>
 
@@ -342,6 +342,8 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                     <span style="display:none;">Current PHP version: <?php echo(phpversion()) ?></span>
                     <?php if($view->customFolders) { ?>
 
+			<div class="option-content">
+			    <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/46-how-to-optimize-images-in-wordpress-themes-and-plugins"></span></div>
                         <div class="shortpixel-folders-list">
                             <div class='heading'>
                                 <span><?php _e('Folder name','shortpixel-image-optimiser');?></span>
@@ -423,6 +425,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                             </div>
                         <?php }?>
                       </div> <!-- shortpixel-folders-list -->
+		      </div>
                     <?php } ?>
 
                     <div class='addCustomFolder'>
@@ -439,9 +442,6 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                     <input type="submit" name="save" id="saveAdvAddFolder" class="button button-primary hidden" title="<?php _e('Add this Folder','shortpixel-image-optimiser');?>" value="<?php _e('Add this Folder','shortpixel-image-optimiser');?>">
                     <p class="settings-info">
                         <?php _e('Use the Select... button to select site folders. ShortPixel will optimize images and PDFs from the specified folders and their subfolders. In the <a href="upload.php?page=wp-short-pixel-custom">Custom Media list</a>, under the Media menu, you can see the optimization status for each image or PDF in these folders.','shortpixel-image-optimiser');?>
-                        <a href="https://shortpixel.com/blog/optimize-images-outside-media-library/" target="_blank" class="shortpixel-help-link">
-                            <span class="dashicons dashicons-editor-help"></span>
-                        </a>
                     </p>
 
                     <div class="sp-modal-shade sp-folder-picker-shade"></div>
