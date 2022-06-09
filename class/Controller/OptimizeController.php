@@ -248,7 +248,7 @@ class OptimizeController
 
         }
 
-				
+
         return $json;
     }
 
@@ -289,7 +289,9 @@ class OptimizeController
         $data->media->stats = $mediaQ->getStats();
         $data->custom->stats = $customQ->getStats();
 
+
         $data->total = $this->calculateStatsTotals($data);
+				$data = $this->numberFormatStats($data);
 
         return $data;
 
@@ -392,6 +394,13 @@ class OptimizeController
     {
 
       $api = $this->getAPI();
+
+			$fs = \wpSPIO()->filesystem();
+			$qtype = $q->getType();
+			$qtype = strtolower($qtype);
+
+			$imageObj = $fs->getImage($item->item_id, $qtype);
+
 			// @todo Figure out why this isn't just on action regime as well.
 			if (property_exists($item, 'png2jpg'))
 			{
@@ -399,12 +408,6 @@ class OptimizeController
 			}
       if (property_exists($item, 'action'))
       {
-           $fs = \wpSPIO()->filesystem();
-           $qtype = $q->getType();
-           $qtype = strtolower($qtype);
-
-           $imageObj = $fs->getImage($item->item_id, $qtype);
-
             $item->result = new \stdClass;
             $item->result->is_done = true; // always done
             $item->result->is_error = false; // for now
@@ -434,7 +437,7 @@ class OptimizeController
       }
       else // as normal
       {
-        $item = $api->processMediaItem($item);
+				$item = $api->processMediaItem($item, $imageObj);
 
       }
       return $item;
@@ -562,8 +565,9 @@ class OptimizeController
              $imageItem->setMeta('compressionType', $item->compressionType);
            }
 
-           Log::addDebug('*** HandleAPIResult: Handle Optimized ** ', array_keys($result->files) );
-           if (count($result->files) > 0 )
+           	Log::addDebug('*** HandleAPIResult: Handle Optimized ** ', array_keys($result->files) );
+
+					 if (count($result->files) > 0 )
            {
 						 	// Dump Stats, Dump Quota. Refresh
 							$quotaController->forceCheckRemoteQuota();
@@ -962,12 +966,14 @@ class OptimizeController
 		private function numberFormatStats($results) // run the whole stats thing through the numberFormat.
 		{
 //			 $run = array('media', 'custom', 'total')
+
 			 foreach($results as $qn => $item)
 			 {
 				  if (is_object($item) && property_exists($item, 'stats'))
 					{
 					  foreach($item->stats as $key => $value)
 						{
+								 $raw_value = $value;
 								 if (is_object($value))
 								 {
 									  foreach($value as $key2 => $val2) // embedded 'images' can happen here.
@@ -985,6 +991,10 @@ class OptimizeController
 								 }
 
 								$results->$qn->stats->$key = $value;
+							/*	if (! property_exists($results->$qn->stats, 'raw'))
+									$results->$qn->stats->raw = new \stdClass;
+
+								$results->$qn->stats->raw->$key = $raw_value; */
 						}
 					}
 			 }

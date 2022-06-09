@@ -64,8 +64,21 @@ class ApiController
   * @param Object $item Item of stdClass
   * @return Returns same Item with Result of request
   */
-  public function processMediaItem($item)
+  public function processMediaItem($item, $imageObj)
   {
+		 	if (! $imageObj->isProcessable())
+			{
+					if ($imageObj->isOptimized())
+					{
+						 $item->result = $this->returnFailure(self::STATUS_FAIL, __('Item is already optimized', 'shortpixel-image-optimiser'));
+						 return $item;
+					}
+					else {
+						 $item->result = $this->returnFailure(self::STATUS_FAIL, __('Item is not processable and not optimized', 'shortpixel-image-optimiser'));
+						 return $item;
+					}
+			}
+
       if (! is_array($item->urls) || count($item->urls) == 0)
       {
           $item->result = $this->returnFailure(self::STATUS_FAIL, __('No Urls given for this Item', 'shortpixel-image-optimiser'));
@@ -733,7 +746,7 @@ class ApiController
       if (is_array($file))
         $result->files = $file;
       else
-        $result->file = $file;
+        $result->file = $file; // this file is being used in imageModel
 
       return $result;
   }

@@ -316,7 +316,7 @@ class SettingsController extends \ShortPixel\ViewController
           // Split this in the several screens. I.e. settings, advanced, Key Request IF etc.
           if (isset($this->postData['includeNextGen']) && $this->postData['includeNextGen'] == 1)
           {
-              $nextgen = new NextGenController();
+              $nextgen = NextGenController::getInstance();
               $previous = $this->model->includeNextGen;
               $nextgen->enableNextGen($previous);
 

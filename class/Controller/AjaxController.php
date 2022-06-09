@@ -40,10 +40,8 @@ class AjaxController
       $bulkSecret = $cacheControl->getItem('bulk-secret');
 
       $secretKey = $bulkSecret->getValue();
-			Log::addTemp('Local Secret Key' . $secretKey);
       if (is_null($secretKey) || strlen($secretKey) == 0)
       {
-				Log::addTemp('Falsing secret key?' . strlen($secretKey));
         $secretKey = false;
       }
       return $secretKey;

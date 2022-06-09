@@ -170,17 +170,19 @@ class OtherMediaController extends \ShortPixel\Controller
        {
          if ($directory->save())
          {
-          $directory->updateFileContentChange();
+					$this->folderIDCache = null;
           $directory->refreshFolder(true);
+          $directory->updateFileContentChange();
          }
        }
        else // if directory is already added, fail silently, but still refresh it.
        {
          if ($directory->isRemoved())
          {
+					 	$this->folderIDCache = null;
             $directory->set('status', DirectoryOtherMediaModel::DIRECTORY_STATUS_NORMAL);
+						$directory->refreshFolder(true);
             $directory->updateFileContentChange(); // does a save. Dunno if that's wise.
-            $directory->refreshFolder(true);
          }
          else
           $directory->refreshFolder(false);

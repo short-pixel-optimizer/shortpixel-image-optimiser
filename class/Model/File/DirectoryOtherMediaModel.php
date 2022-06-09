@@ -216,6 +216,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
         $time = 0; //force refresh of the whole.
       }
 
+
 			if (! $this->checkDirectory(true))
 			{
 				return false;
@@ -244,8 +245,8 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
       $files = $fs->getFilesRecursive($this, $filter);
 
-      \wpSPIO()->settings()->hasCustomFolders = time(); // note, check this against bulk when removing. Custom Media Bulk depends on having a setting.
 
+      \wpSPIO()->settings()->hasCustomFolders = time(); // note, check this against bulk when removing. Custom Media Bulk depends on having a setting.
     	$result = $this->addImages($files);
 
       $this->stats = null; //reset
@@ -423,6 +424,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
 				 return false;
 			}
 
+
       $values = array();
 
       $optimizeControl = new OptimizeController();
@@ -430,6 +432,8 @@ class DirectoryOtherMediaModel extends DirectoryModel
 			$activeFolders = $otherMediaControl->getActiveDirectoryIDS();
 
       $fs = \wpSPIO()->filesystem();
+
+			Log::addDebug('activeFolders', $activeFolders);
 
       foreach($files as $fileObj)
       {
@@ -452,6 +456,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
 									 $imageObj->saveMeta();
 							 }
 						}
+
             continue;
 					}
           elseif ($imageObj->isProcessable(true)) // Check strict on Processable here.
@@ -464,6 +469,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
                 $optimizeControl->addItemToQueue($imageObj);
              }
           }
+
 
       }
 

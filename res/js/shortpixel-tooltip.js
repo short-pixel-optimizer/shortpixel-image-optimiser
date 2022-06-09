@@ -59,12 +59,20 @@ var ShortPixelToolTip = function(reserved, processor)
 
         var toolTip = this.GetToolTip();
         var statTip = toolTip.querySelector('.stats');
-			
 
         if (statTip == null)
           return;
 
-				var number = parseInt(stats.in_queue) + parseInt(stats.in_process);
+				var inqueue = stats.in_queue;
+				var inprocess = stats.in_process;
+				var pattern = new RegExp("\\.|\\,", '');
+
+				if (inqueue)
+						inqueue = inqueue.replace(pattern,''); // remove number formats
+				if (inprocess)
+						inprocess = inprocess.replace(pattern,''); // remove number formats
+
+				var number = parseInt(inqueue) + parseInt(inprocess);
         statTip.textContent = this.FormatNumber(number);
 
         if (statTip.classList.contains('hidden') && number > 0)

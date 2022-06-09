@@ -9,15 +9,17 @@ var ShortPixelScreen = function (MainScreen, processor)
 
     this.currentMessage = '';
 
+
     this.Init = function()
     {
-          addEventListener('shortpixel.media.resumeprocessing', this.processor.ResumeProcess.bind(this.processor));
+          window.addEventListener('shortpixel.media.resumeprocessing', this.processor.ResumeProcess.bind(this.processor));
+					window.addEventListener('shortpixel.RenderItemView', this.RenderItemView.bind(this) );
     }
 
     this.HandleImage = function(resultItem, type)
     {
         if (type == 'custom')  // We don't eat that here.
-          return;
+          return false;
 
         if (typeof resultItem.result !== 'undefined')
         {
@@ -41,7 +43,6 @@ var ShortPixelScreen = function (MainScreen, processor)
 
               if (fileStatus == 'FILE_SUCCESS' || fileStatus == 'FILE_RESTORED' || resultItem.result.is_done == true)
               {
-                window.addEventListener('shortpixel.RenderItemView', this.RenderItemView.bind(this), {'once': true} );
                 this.processor.LoadItemView({id: item_id, type: type});
               }
               else if (fileStatus == 'FILE_PENDING')
@@ -211,7 +212,6 @@ var ShortPixelScreen = function (MainScreen, processor)
     this.RenderItemView = function(e)
     {
         var data = e.detail;
-
         if (data.media)
         {
             var id = data.media.id;

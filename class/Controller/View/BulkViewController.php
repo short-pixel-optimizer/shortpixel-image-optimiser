@@ -133,6 +133,7 @@ class BulkViewController extends \ShortPixel\ViewController
 		 foreach ($lines as $line)
 		 {
 			 	$cells = array_filter(explode('|', $line));
+
 				if (count($cells) == 1)
 					continue; // empty line.
 
@@ -143,7 +144,7 @@ class BulkViewController extends \ShortPixel\ViewController
 				$item_id = isset($cells[2]) ? $cells[2] : false;
 				$message = isset($cells[3]) ? $cells[3] : false;
 
-				$output = '<div class="fatal">';
+				$output .= '<div class="fatal">';
 				$output .= $date . ': ';
 				if ($message)
 					$output .= $message;
@@ -168,7 +169,7 @@ class BulkViewController extends \ShortPixel\ViewController
 
       foreach($logs as $logData)
       {
-			
+
 
           $logFile = $fs->getFile($backupDir->getPath() . 'bulk_' . $logData['type'] . '_' . $logData['date'] . '.log');
           $errors = $logData['fatal_errors'];

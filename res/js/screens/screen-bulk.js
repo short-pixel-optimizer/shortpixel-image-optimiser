@@ -375,6 +375,7 @@ console.log("Screen Init Done", initMedia, initCustom);
 				 } */
 			}
 
+			return false;
   }
 
 	// Function to neatly slide the new / old images around.

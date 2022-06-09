@@ -39,6 +39,7 @@ class NextGenViewController extends \ShortPixel\ViewController
    }
 
    public function loadItem( $nextGenObj ) {
+
        $this->view = new \stdClass; // reset every row
 
        $otherMediaController = OtherMediaController::getInstance();
@@ -61,7 +62,7 @@ class NextGenViewController extends \ShortPixel\ViewController
          $this->view->list_actions = '';
        }
 
-       $this->loadView();
+       $this->loadView($this->template, false);
    }
 
 

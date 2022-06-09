@@ -4,6 +4,7 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Helper\UiHelper as UiHelper;
 
+
 //use ShortPixel\Model\ImageModel as ImageModel;
 
 // Future contoller for the edit media metabox view.
@@ -67,8 +68,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 						return false;
 					}
 
-
-
+					
           $this->view->status_message = null;
 
           $this->view->text = UiHelper::getStatusText($this->imageModel);

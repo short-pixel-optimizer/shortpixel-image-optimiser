@@ -279,7 +279,7 @@ window.ShortPixelProcessor =
       window.dispatchEvent(event);
 
 
-      this.RunProcess();
+      this.Process(); // don't wait the interval to go on resume.
     },
     SetInterval: function(interval)
     {
@@ -406,7 +406,7 @@ window.ShortPixelProcessor =
         // Perhaps if optimization, the new stats and actions should be generated server side?
 
          // If there are items, give them to the screen for display of optimization, waiting status etc.
-				 var imageHandled = false;  // Only post one image per result-set to the ImageHandler, to prevent flooding.
+				 var imageHandled = false;  // Only post one image per result-set to the ImageHandler (on bulk), to prevent flooding.
 
          if (typeof response.results !== 'undefined' && response.results !== null)
          {
@@ -426,6 +426,10 @@ window.ShortPixelProcessor =
 								if (! imageHandled)
 								{
                 	imageHandled = this.screen.HandleImage(imageItem, type);
+									console.log('imageHandled', imageHandled)
+								}
+								else {
+									console.log('Not handling image', imageItem);
 								}
              }
          }

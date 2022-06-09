@@ -14,6 +14,7 @@ class NextGenController
 {
   protected static $instance;
 //  protected $view;
+	private $enableOverride = false; // when activating NG will not report active yet, but try to refresh folders. Do so.
 
 // ngg_created_new_gallery
   public function __construct()
@@ -68,10 +69,18 @@ class NextGenController
 
   public function optimizeNextGen()
   {
-     if (\wpSPIO()->settings()->includeNextGen == 1)
-       return true;
+		 if ($this->enableOverride === true)
+		 {
+		 	 return true;
+		 }
+     elseif (\wpSPIO()->settings()->includeNextGen == 1)
+    {
+			 return true;
+		}
     else
+		{
       return false;
+		}
   }
 
   public function isNextGenScreen()
@@ -90,6 +99,7 @@ class NextGenController
   /** called from settingController when enabling the nextGen settings */
   public function enableNextGen($silent)
   {
+		 $this->enableOverride = true;
      $this->addNextGenGalleriesToCustom($silent);
   }
 
