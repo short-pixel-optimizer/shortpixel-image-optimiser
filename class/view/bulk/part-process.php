@@ -57,11 +57,13 @@ namespace ShortPixel;
 
         <span><?php _e('Waiting','shortpixel-image-optimiser'); ?>: <i data-stats-media="in_queue">-</i></span>
         <span><?php _e('Errors','shortpixel-image-optimiser') ?>: <i data-check-media-fatalerrors data-stats-media="fatal_errors" class='error'>- </i>
-            </span>
-				<span data-check-visibility data-control="data-check-media-fatalerrors" ><label title="<?php _e('Show Errors', 'shortpixel-image-optimiser'); ?>">
-					<input type="checkbox" name="show-errors" value="show" data-action='ToggleErrorBox' data-errorbox='media' data-event='change'>
-						<?php _e('Show Errors','shortpixel-image-optimiser'); ?></label>
-			 </span>
+					<span class="display-error-box" data-check-visibility data-control="data-check-media-fatalerrors" ><label title="<?php _e('Show Errors', 'shortpixel-image-optimiser'); ?>">
+						<input type="checkbox" name="show-errors" value="show" data-action='ToggleErrorBox' data-errorbox='media' data-event='change'>
+							<?php _e('Show Errors','shortpixel-image-optimiser'); ?></label>
+				 </span>
+
+				</span>
+
 
       </div>
 
@@ -96,11 +98,14 @@ namespace ShortPixel;
         <span><?php _e('Processed','shortpixel-image-optimiser'); ?>: <i data-stats-custom="done">-</i></span>
 
         <span><?php _e('Waiting','shortpixel-image-optimiser'); ?>: <i data-stats-custom="in_queue">-</i></span>
-        <span><?php _e('Errors') ?>: <i data-check-custom-fatalerrors  data-stats-custom="fatal_errors" class='error'>-</i></span>
+        <span><?php _e('Errors') ?>: <i data-check-custom-fatalerrors  data-stats-custom="fatal_errors" class='error'>-</i>
 
-			<span data-check-visibility data-control="data-check-custom-fatalerrors" ><label title="<?php _e('Show Errors', 'shortpixel-image-optimiser'); ?>">
-				<input type="checkbox" name="show-errors" value="show" data-action='ToggleErrorBox' data-errorbox='custom' data-event='change'><?php _e('Show Errors','shortpixel-image-optimiser'); ?></label>
-		 </span>
+					<span class="display-error-box" data-check-visibility data-control="data-check-custom-fatalerrors" ><label title="<?php _e('Show Errors', 'shortpixel-image-optimiser'); ?>">
+						<input type="checkbox" name="show-errors" value="show" data-action='ToggleErrorBox' data-errorbox='custom' data-event='change'><?php _e('Show Errors','shortpixel-image-optimiser'); ?></label>
+				 </span>
+				</span>
+
+
 
       </div>
 

@@ -374,6 +374,9 @@
   padding-left: 0;
 }
 
+#tab-tools .button {
+  min-height: 44px;
+}
 #tab-tools .option {
   clear: both;
   display: flex;

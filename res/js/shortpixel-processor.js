@@ -113,9 +113,10 @@ window.ShortPixelProcessor =
         // Always load worker, also used for UI actions.
         this.LoadWorker();
 
-        if (this.CheckActive() && this.hasStartQuota)
+        if (this.CheckActive())
         {
-            this.RunProcess();
+					 	if (this.hasStartQuota)
+            	 this.RunProcess();
         }
 
     },
@@ -133,6 +134,9 @@ window.ShortPixelProcessor =
          {
            this.localSecret = Math.random().toString(36).substring(7);
            localStorage.setItem('bulkSecret',this.localSecret);
+					 // tell worker to use correct key.
+					 this.worker.postMessage({'action' : 'updateLocalSecret',
+					 'key': this.localSecret });
          }
          this.isActive = true;
       }
@@ -189,8 +193,9 @@ window.ShortPixelProcessor =
         if (this.worker === null) // worker already shut / not loaded
           return false;
 
+
         console.log('Shutting down Worker');
-      //  this.worker.postMessage({'action' : 'shutdown', 'nonce': this.nonce['exit'] });
+        this.worker.postMessage({'action' : 'shutdown', 'nonce': this.nonce['exit'] });
       //  this.worker.terminate();
         this.worker = null;
         window.removeEventListener('beforeunload', this.ShutDownWorker.bind(this));

@@ -163,6 +163,7 @@ class BulkController
         //$data = (array) $stats;
 				$stats = $q->getStats(); // for the log
 				$type = $q->getType();
+			//	$customData = $q->getCustomDataItem('');
 
         if ($stats->done == 0 && $stats->fatal_errors == 0)
 				{
@@ -174,6 +175,10 @@ class BulkController
         $data['errors'] = $stats->errors;
         $data['fatal_errors'] = $stats->fatal_errors;
 
+				$webpcount = $q->getCustomDataItem('webpcount');
+				$avifcount = $q->getCustomDataItem('avifcount');
+				$basecount = $q->getCustomDataItem('basecount');
+			
 				if (property_exists($stats, 'images'))
 					$data['total_images'] = $stats->images->images_done;
 

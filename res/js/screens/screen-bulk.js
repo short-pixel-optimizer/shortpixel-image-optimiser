@@ -125,7 +125,6 @@ console.log("Screen Init Done", initMedia, initCustom);
 					{
 						 for(var i = 0; i < action.children.length; i++)
 						 {
-							 	console.log('adding action ', eventName, action.children[i]);
 							  action.children[i].addEventListener(eventName, self.DoActionEvent.bind(self));
 						 }
 					}
@@ -399,7 +398,6 @@ console.log("Screen Init Done", initMedia, initCustom);
 //		var originalImage = preview.querySelector('.current.preview-image image.source');
 //		var optimizedImage =  preview.querySelector('.current.preview-image image.result');
 
-//console.log('preview children', preview.children);
 		var currentItem = preview.children[0];
 		var newItem = preview.children[1];
 		var cloneNode = newItem.cloneNode(true);

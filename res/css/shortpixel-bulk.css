@@ -777,6 +777,9 @@
 .shortpixel-bulk-wrapper section.panel.process .bulk-summary .line-progressbar label input[type=checkbox], .shortpixel-bulk-wrapper section.panel.finished .bulk-summary .line-progressbar label input[type=checkbox] {
   margin-right: 8px;
 }
+.shortpixel-bulk-wrapper section.panel.process .bulk-summary .display-error-box, .shortpixel-bulk-wrapper section.panel.finished .bulk-summary .display-error-box {
+  float: right;
+}
 .shortpixel-bulk-wrapper section.panel.process .image-preview-section, .shortpixel-bulk-wrapper section.panel.finished .image-preview-section {
   background: #F6F9FF;
   border: 1px solid #DFEAFF;

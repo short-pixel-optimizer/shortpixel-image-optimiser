@@ -300,6 +300,15 @@ class SettingsController extends \ShortPixel\ViewController
 				 $this->load();
 			}
 
+			public function action_debug_removeProcessorKey()
+			{
+				//$this->loadEnv();
+
+				$cacheControl = new CacheController();
+				$cacheControl->deleteItem('bulk-secret');
+				exit('reloading settings would cause processorKey to be set again');
+			}
+
 
       public function processSave()
       {

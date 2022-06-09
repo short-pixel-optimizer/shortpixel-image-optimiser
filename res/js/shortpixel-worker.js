@@ -30,6 +30,11 @@ onmessage = function(e)
      case 'ajaxRequest':
       SpWorker.AjaxRequest(data);
      break;
+		 case 'updateLocalSecret':
+
+		  var key = e.data.key;
+		  SpWorker.UpdateLocalSecret(key);
+		 break;
   }
 
 }
@@ -42,6 +47,7 @@ var SpWorker = {
    isBulk: false, // If we are on the bulk screen  / queue
    isCustom: false, // Process this queueType - depends on screen
    isMedia: false,  // Process this queueType  - depends on screen.
+	 stopped: false,
 
    Fetch: async function (data)
    {
@@ -74,7 +80,15 @@ var SpWorker = {
           body: params.toString(),
 
       }).catch (function (error){
-					 console.log('Worker.js reporting issue on catch', error);
+					 if (! this.stopped)
+					 {
+					 		postMessage({'status' : false, message: error});
+					 		console.error('Worker.js reporting issue on catch', error);
+					 }
+					 else {
+					 	console.log('stopped but not complaining!');
+					 }
+					return false;
 				});
 
       if (response.ok)
@@ -98,9 +112,13 @@ var SpWorker = {
    },
    ShutDown: function()
    {
-       this.action ='shortpixel_exit_process';
-       this.Fetch();
+       this.stopped = true;
+//       this.Fetch();
    },
+	 UpdateLocalSecret: function(key)
+	 {
+		  this.secret = key;
+	 },
    GetItemView: function(data)
    {
       this.action = 'shortpixel_get_item_view';

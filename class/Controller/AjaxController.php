@@ -40,8 +40,10 @@ class AjaxController
       $bulkSecret = $cacheControl->getItem('bulk-secret');
 
       $secretKey = $bulkSecret->getValue();
+			Log::addTemp('Local Secret Key' . $secretKey);
       if (is_null($secretKey) || strlen($secretKey) == 0)
       {
+				Log::addTemp('Falsing secret key?' . strlen($secretKey));
         $secretKey = false;
       }
       return $secretKey;
@@ -51,7 +53,7 @@ class AjaxController
     {
       $processKey = $this->getProcessorKey();
       $bulkSecret = isset($_POST['bulk-secret']) ? sanitize_text_field($_POST['bulk-secret']) : false;
-      $isBulk = isset($_POST['isBulk']) ? (bool) sanitize_text_field($_POST['isBulk'])  : false;
+      $isBulk = isset($_POST['isBulk']) ? filter_var(sanitize_text_field($_POST['isBulk']), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) : false;
 
       $is_processor = false;
       if ($processKey == false && $bulkSecret !== false)
@@ -153,7 +155,7 @@ class AjaxController
         $this->checkNonce('processing');
         $this->checkProcessorKey();
 
-			
+
 				if ($this->getProcessorKey() == 'shortpixel-test')
 				{
 						$this->returnTestData();

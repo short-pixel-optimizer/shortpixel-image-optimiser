@@ -186,9 +186,15 @@ $env = \wpSPIO()->env();
 			</select>
       </form>
   </div>
+</div> <!--- stats -->
 
-
-	</div>
+<p></p>
+<div class='debug-key'>
+	<form method="POST" action="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_removeProcessorKey'))) ?>"
+		id="shortpixel-form-debug-stats">
+		<button class='button' type='submit'>Reset Processor Key</button>
+		</form>
+</div>
 
 </div> <!-- tab-content -->
 </section>
