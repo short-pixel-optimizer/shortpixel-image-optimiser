@@ -72,7 +72,10 @@ var SpWorker = {
             'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
           },
           body: params.toString(),
-      });
+
+      }).catch (function (error){
+					 console.log('Worker.js reporting issue on catch', error);
+				});
 
       if (response.ok)
       {
@@ -82,6 +85,7 @@ var SpWorker = {
       }
       else
       {
+					console.error('Worker.js reporting issue', response);
           postMessage({'status' : false, message: response.status});
       }
    },

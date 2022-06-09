@@ -33,6 +33,7 @@ window.ShortPixelProcessor =
     waitingForAction: false, // used if init yields results that should pause the processor.
     timesEmpty: 0, // number of times queue came up empty.
     nonce: [],
+		hasStartQuota: false, // if we start without quota, don't notice too much, don't run.
     qStatus: { // The Queue returns
        1:  'QUEUE_ITEMS',
        4:  'QUEUE_WAITING',
@@ -67,8 +68,9 @@ window.ShortPixelProcessor =
 
   } */
 
-    Load: function()
+    Load: function(hasQuota)
     {
+
 			window.addEventListener('error', this.ScriptError.bind(this));
 
         this.isBulkPage = ShortPixelProcessorData.isBulkPage;
@@ -79,6 +81,10 @@ window.ShortPixelProcessor =
         this.nonce['exit'] = ShortPixelProcessorData.nonce_exit;
         this.nonce['itemview'] = ShortPixelProcessorData.nonce_itemview;
         this.nonce['ajaxRequest'] = ShortPixelProcessorData.nonce_ajaxrequest;
+
+				if (hasQuota == 1)
+					this.hasStartQuota = true;
+
 
 				if (ShortPixelProcessorData.interval && ShortPixelProcessorData.interval > 100)
 				this.interval = ShortPixelProcessorData.interval;
@@ -106,7 +112,7 @@ window.ShortPixelProcessor =
         // Always load worker, also used for UI actions.
         this.LoadWorker();
 
-        if (this.CheckActive())
+        if (this.CheckActive() && this.hasStartQuota)
         {
             this.RunProcess();
         }
@@ -308,7 +314,9 @@ window.ShortPixelProcessor =
              }
              else if (error == 'NOQUOTA')
              {
-                this.tooltip.AddNotice(response.message);
+							  if (this.hasStartQuota)
+                	this.tooltip.AddNotice(response.message);
+
 								this.screen.HandleError(response);
                 this.Debug('No Quota - CheckResponse handler');
 								this.PauseProcess();

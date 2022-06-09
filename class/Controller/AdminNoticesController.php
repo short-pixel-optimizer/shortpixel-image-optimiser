@@ -614,7 +614,10 @@ class AdminNoticesController extends \ShortPixel\Controller
                   <div id="sp-avg-optimization"><input type="text" id="sp-avg-optimization-dial" value="' . round($averageCompression) . '" class="dial percentDial" data-dialsize="60"></div>
                   <script>
                       jQuery(function() {
-                          ShortPixel.percentDial("#sp-avg-optimization-dial", 60);
+													if (ShortPixel)
+													{
+                          	ShortPixel.percentDial("#sp-avg-optimization-dial", 60);
+													}
                       });
                   </script>
               </div>
@@ -640,13 +643,12 @@ class AdminNoticesController extends \ShortPixel\Controller
 
          $message .= '</p>
             <div>
-              <button class="button button-primary" id="shortpixel-upgrade-advice" onclick="ShortPixel.proposeUpgrade()" style="margin-right:10px;"><strong>' .  __('Show me the best available options', 'shortpixel-image-optimiser') . '</strong></button>
+              <button class="button button-primary" type="button" id="shortpixel-upgrade-advice" onclick="ShortPixel.proposeUpgrade()" style="margin-right:10px;"><strong>' .  __('Show me the best available options', 'shortpixel-image-optimiser') . '</strong></button>
               <a class="button button-primary" href="' . $login_url . '"
-                 title="' . __('Go to my account and select a plan','shortpixel-image-optimiser') . '" target="_blank" style="margin-right:10px;">
+                 title="' . __('Go to my account and select a plan','shortpixel-image-optimiser') . '" target="_blank" style="margin-right:10px; line-height: 40px">
                   <strong>' . __('Upgrade','shortpixel-image-optimiser') . '</strong>
               </a>
-              <input type="button" name="checkQuota" class="button" value="'.  __('Confirm New Credits','shortpixel-image-optimiser') . '"
-                     onclick="ShortPixel.checkQuota()">
+              <button type="button" name="checkQuota" class="button" onclick="ShortPixel.checkQuota()">'.  __('Confirm New Credits','shortpixel-image-optimiser') . '</button>
           </div>';
 
 				$message .= '</div>'; /// closing div
@@ -737,7 +739,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 
         $notices = get_transient($transient_name);
         $url = $this->remote_message_endpoint;
-        $url = add_query_arg(array(  // has url 
+        $url = add_query_arg(array(  // has url
            'key' => $keyControl->forceGetApiKey(),
            'version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
            'target' => 3,

@@ -75,7 +75,7 @@
 .shortpixel.shortpixel-notice .sp-conflict-plugins li > * {
   display: table-cell;
 }
-.shortpixel.shortpixel-notice .content button, .shortpixel.shortpixel-notice .content .button-primary {
+.shortpixel.shortpixel-notice .content .button-primary {
   background-color: #0f6a7d;
 }
 .shortpixel.shortpixel-notice li.sp-conflict-plugins-list {

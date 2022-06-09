@@ -12,13 +12,16 @@
 	p {
 		font-size: 14px;
 	}
-	.button
+	.button, button:focus
 	{
 		color: $color-darkest;
+		min-height: 44px;
 	}
-	.button-primary {
+	.button-primary, .button-primary:focus {
 		background-color: $color-darkest;
 		color: #fff;
+		min-height: 44px;
+
 		&:hover
 		{
 			background-color: $color-dark;
@@ -150,7 +153,7 @@
 			p.settings-info {
 			    padding-top: 0px;
 			    color: #818181;
-			    font-size:13px !important; 
+			    font-size:13px !important;
 			}
 			p.settings-info.shortpixel-settings-error {
 			    color: #c32525;

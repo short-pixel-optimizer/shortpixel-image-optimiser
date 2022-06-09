@@ -139,8 +139,12 @@ class OtherMediaController extends \ShortPixel\Controller
 			if (InstallHelper::checkTableExists('shortpixel_meta') === false)
 				$count = 0;
 			else
-        $count = $this->getFolders(['only_count' => true, 'remove_hidden' => true]);
+			{
+				global $wpdb;
 
+				$sql = 'SELECT count(id) as count from ' . $wpdb->prefix . 'shortpixel_meta';
+        $count = $wpdb->get_var($sql); //$this->getFolders(['only_count' => true, 'remove_hidden' => true]);
+			 }
        if ($count == 0)
         $result = false;
       else

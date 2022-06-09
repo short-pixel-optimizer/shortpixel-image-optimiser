@@ -7,9 +7,9 @@ namespace ShortPixel;
   <div class="panel-container">
 
     <h3 class="heading"><span><img src="<?php echo \wpSPIO()->plugin_url('res/img/robo-slider.png'); ?>"></span>
-      ShortPixel Bulk Process is in progress
+      <?php _e('ShortPixel Bulk Process is in progress','shortpixel-image-optimiser'); ?>
       <div class='average-optimization'>
-          <p>Average this run</p>
+          <p><?php _e('Average this run','shortpixel-image-optimiser'); ?></p>
           <svg class="opt-circle-average" viewBox="-10 0 150 140">
                         <path class="trail" d="
                             M 50,50
@@ -49,17 +49,18 @@ namespace ShortPixel;
 							<span class='dashicons spin dashicons-update line-progressbar-spinner' data-check-visibility data-control="data-check-media-in_process">&nbsp;</span>
 
         </span>
-        <span>Processing: <i data-stats-media="in_process" data-check-media-in_process >-</i></span>
+        <span><?php _e('Processing', 'shortpixel-image-optimiser') ?>: <i data-stats-media="in_process" data-check-media-in_process >-</i></span>
       </div>
 
       <div>
-        <span>Processed: <i data-stats-media="done">-</i></span>
+        <span><?php _e('Processed', 'shortpixel-image-optimiser'); ?>: <i data-stats-media="done">-</i></span>
 
         <span><?php _e('Waiting','shortpixel-image-optimiser'); ?>: <i data-stats-media="in_queue">-</i></span>
-        <span>Errors: <i data-check-media-fatalerrors data-stats-media="fatal_errors" class='error'>- </i>
+        <span><?php _e('Errors','shortpixel-image-optimiser') ?>: <i data-check-media-fatalerrors data-stats-media="fatal_errors" class='error'>- </i>
             </span>
 				<span data-check-visibility data-control="data-check-media-fatalerrors" ><label title="<?php _e('Show Errors', 'shortpixel-image-optimiser'); ?>">
-					<input type="checkbox" name="show-errors" value="show" data-action='ToggleErrorBox' data-errorbox='media' data-event='change'>Show Errors</label>
+					<input type="checkbox" name="show-errors" value="show" data-action='ToggleErrorBox' data-errorbox='media' data-event='change'>
+						<?php _e('Show Errors','shortpixel-image-optimiser'); ?></label>
 			 </span>
 
       </div>
@@ -88,17 +89,17 @@ namespace ShortPixel;
 							<span class='dashicons spin dashicons-update line-progressbar-spinner' data-check-visibility data-control="data-check-custom-in_process">&nbsp;</span>
 
         </span>
-  			<span>Processing: <i data-stats-custom="in_process" data-check-custom-in_process>-</i></span>
+  			<span><?php _e('Processing', 'shortpixel-image-optimiser') ?>: <i data-stats-custom="in_process" data-check-custom-in_process>-</i></span>
 
       </div>
       <div>
-        <span>Processed: <i data-stats-custom="done">-</i></span>
+        <span><?php _e('Processed','shortpixel-image-optimiser'); ?>: <i data-stats-custom="done">-</i></span>
 
         <span><?php _e('Waiting','shortpixel-image-optimiser'); ?>: <i data-stats-custom="in_queue">-</i></span>
-        <span>Errors: <i data-check-custom-fatalerrors  data-stats-custom="fatal_errors" class='error'>-</i></span>
+        <span><?php _e('Errors') ?>: <i data-check-custom-fatalerrors  data-stats-custom="fatal_errors" class='error'>-</i></span>
 
 			<span data-check-visibility data-control="data-check-custom-fatalerrors" ><label title="<?php _e('Show Errors', 'shortpixel-image-optimiser'); ?>">
-				<input type="checkbox" name="show-errors" value="show" data-action='ToggleErrorBox' data-errorbox='custom' data-event='change'>Show Errors</label>
+				<input type="checkbox" name="show-errors" value="show" data-action='ToggleErrorBox' data-errorbox='custom' data-event='change'><?php _e('Show Errors','shortpixel-image-optimiser'); ?></label>
 		 </span>
 
       </div>
@@ -114,9 +115,15 @@ namespace ShortPixel;
 		</div>
 
 		<nav>
-			<button class='button stop' data-action="StopBulk" >Stop Bulk Processing</button>
-			<button class='button pause' data-action="PauseBulk" id="PauseBulkButton">Pause Bulk Processing</button>
-			<button class='button button-primary resume' data-action='ResumeBulk' id="ResumeBulkButton">Resume Bulk Processing</button>
+			<button class='button stop' type='button' data-action="StopBulk" >
+					<?php _e('Stop Bulk Processing' ,'shortpixel-image-optimiser'); ?>
+			</button>
+			<button class='button pause' type='button' data-action="PauseBulk" id="PauseBulkButton">
+				<?php _e('Pause Bulk Processing' ,'shortpixel-image-optimiser') ?>
+			</button>
+			<button class='button button-primary resume' type='button' data-action='ResumeBulk' id="ResumeBulkButton">
+				<?php _e('Resume Bulk Processing','shortpixel-image-optimiser'); ?>
+			</button>
 
 		</nav>
 
@@ -151,13 +158,13 @@ namespace ShortPixel;
 					<div class='current preview-image'>
 		        <div class="image source">
 		          <img src="<?php echo \wpSPIO()->plugin_url('res/img/bulk/placeholder.svg'); ?>" >
-		          <p>Original Image</p>
+		          <p><?php _e('Original Image', 'shortpixel-image-optimiser'); ?></p>
 							<?php $this->loadView('snippets/part-svgloader', false); ?>
 		        </div>
 
 		        <div class="image result">
 		          <img src="<?php echo \wpSPIO()->plugin_url('res/img/bulk/placeholder.svg'); ?>" >
-						<p>Optimized Image</p>
+						<p><?php _e('Optimized Image', 'shortpixel-image-optimiser'); ?></p>
 						<?php $this->loadView('snippets/part-svgloader', false); ?>
 		        </div>
 					</div>
@@ -167,13 +174,13 @@ namespace ShortPixel;
 							<div class="image source">
 								<img src="<?php echo \wpSPIO()->plugin_url('res/img/bulk/placeholder.svg'); ?>" >
 								<?php $this->loadView('snippets/part-svgloader', false); ?>
-								<p>Original Image</p>
+								<p><?php _e('Original Image','shortpixel-image-optimiser'); ?></p>
 							</div>
 
 							<div class="image result">
 								<img src="<?php echo \wpSPIO()->plugin_url('res/img/bulk/placeholder.svg'); ?>" >
 								<?php $this->loadView('snippets/part-svgloader', false); ?>
-							<p>Optimized Image</p>
+							<p><?php _e('Optimized Image','shortpixel-image-optimiser'); ?></p>
 							</div>
 					</div>
 	      </div> <!-- slidemask -->

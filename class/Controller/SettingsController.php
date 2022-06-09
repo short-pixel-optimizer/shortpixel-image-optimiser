@@ -344,6 +344,7 @@ class SettingsController extends \ShortPixel\ViewController
 				//	$this->loadQuotaData(true);
 
           // end
+
           if ($this->do_redirect)
             $this->doRedirect('bulk');
           else {
@@ -859,9 +860,11 @@ class SettingsController extends \ShortPixel\ViewController
       {
         if ($redirect == 'self')
         {
-          $url = esc_url(add_query_arg('part', $this->display_part));
+
+          $url = esc_url_raw(add_query_arg('part', $this->display_part));
           $url = remove_query_arg('noheader', $url); // has url
           $url = remove_query_arg('sp-action', $url); // has url
+
         }
         elseif($redirect == 'bulk')
         {

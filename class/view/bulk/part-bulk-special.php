@@ -19,7 +19,7 @@ use \ShortPixel\Controller\BulkController as BulkController;
 
 				<p class='warning'><?php _e('It is strongly advised to create a full backup before starting this process.', 'shortpixel-image-optimiser'); ?></p>
 
-
+<?php if ($this->view->approx->custom->has_custom === true) : ?>
 					<div class='optiongroup' data-check-visibility data-control="data-check-custom-hascustom">
 
 						<div class='switch_button'>
@@ -41,16 +41,16 @@ use \ShortPixel\Controller\BulkController as BulkController;
 						</div>
 						<h4><label for="restore_custom_checkbox"><?php _e('Restore custom media','shortpixel-image-optimiser'); ?></label></h4>
 					</div>
-
+<?php endif ?>
 		<p class='optiongroup warning hidden' id="restore_media_warn"><?php _e('Please select one of the options', 'shortpixel-image-optimiser'); ?></p>
 
 	  <p class='optiongroup' ><input type="checkbox" id="bulk-restore-agree" value="agree" data-action="ToggleButton" data-target="bulk-restore-button"> <?php _e('I want to restore all selected images. I understand this action is permanent and nonreversible', 'shortpixel-image-optimiser'); ?></p>
 
 
 	  <nav>
-    	<button class="button" data-action="open-panel" data-panel="dashboard"><?php _e('Back','shortpixel-image-optimiser'); ?></button>
+    	<button type="button" class="button" data-action="open-panel" data-panel="dashboard"><?php _e('Back','shortpixel-image-optimiser'); ?></button>
 
-			<button class="button button-primary disabled" disabled id='bulk-restore-button' data-action="BulkRestoreAll"  ><?php _e('Bulk Restore All Images', 'shortpixel-image-optimiser') ?></button>
+			<button type="button" class="button button-primary disabled" id='bulk-restore-button' data-action="BulkRestoreAll" disabled><?php _e('Bulk Restore All Images', 'shortpixel-image-optimiser') ?></button>
 
 	  </nav>
 
@@ -77,9 +77,9 @@ use \ShortPixel\Controller\BulkController as BulkController;
 	  <nav>
 
 
-	    <button class="button" data-action="open-panel" data-panel="dashboard"><?php _e('Back','shortpixel-image-optimiser'); ?></button>
+	    <button class="button" type="button" data-action="open-panel" data-panel="dashboard"><?php _e('Back','shortpixel-image-optimiser'); ?></button>
 
-			 <button class="button disabled button-primary" disabled id='bulk-migrate-button' data-action="BulkMigrateAll"  ><?php _e('Search and migrate All Images', 'shortpixel-image-optimiser') ?></button>
+			 <button type="button" type="button" class="button disabled button-primary" disabled id='bulk-migrate-button' data-action="BulkMigrateAll"  ><?php _e('Search and migrate All Images', 'shortpixel-image-optimiser') ?></button>
 
 	  </nav>
 	</div>
@@ -102,9 +102,9 @@ use \ShortPixel\Controller\BulkController as BulkController;
 
 	  <nav>
 
-	    <button class="button" data-action="open-panel" data-panel="dashboard"><?php _e('Back','shortpixel-image-optimiser'); ?></button>
+	    <button type="button" class="button" data-action="open-panel" data-panel="dashboard"><?php _e('Back','shortpixel-image-optimiser'); ?></button>
 
-			 <button class="button disabled button-primary" disabled id='bulk-removelegacy-button' data-action="BulkRemoveLegacy"  ><?php _e('Remove all legacy metadata', 'shortpixel-image-optimiser') ?></button>
+			 <button type="button" class="button disabled button-primary" disabled id='bulk-removelegacy-button' data-action="BulkRemoveLegacy"  ><?php _e('Remove all legacy metadata', 'shortpixel-image-optimiser') ?></button>
 
 	  </nav>
 	</div>

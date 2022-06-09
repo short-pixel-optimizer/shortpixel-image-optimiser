@@ -1932,8 +1932,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				elseif ( isset($metadata['ShortPixelImprovement']))
 				{
 					 // If the improvement is set, calculate back originalsize.
-					 $imp = $metadata['ShortPixelImprovement'];
-					 $this->image_meta->originalSize = ($this->getFileSize() / (100 - $imp)) * 100;
+					 $imp = intval($metadata['ShortPixelImprovement']); // try to make int. Legacy can contain errors / message / crap here. 
+	 			   if ($imp > 0)
+	 				  	$this->image_meta->originalSize = ($this->getFileSize() / (100 - $imp)) * 100;
 				}
 
        $webp = $this->getWebp();

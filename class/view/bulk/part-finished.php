@@ -9,7 +9,7 @@ namespace ShortPixel;
     <h3 class="heading"><span><img src="<?php echo \wpSPIO()->plugin_url('res/img/robo-slider.png'); ?>"></span>
       <?php _e('The ShortPixel Bulk Processing is finished' ,'shortpixel-image-optimiser'); ?>
       <div class='average-optimization'>
-          <p>Average this run</p>
+          <p><?php _e('Average this run','shortpixel-image-optimiser'); ?></p>
           <svg class="opt-circle-average" viewBox="-10 0 150 140">
                         <path class="trail" d="
                             M 50,50
@@ -36,25 +36,25 @@ namespace ShortPixel;
 
     <div class='bulk-summary' data-check-visibility data-control="data-check-media-total">
       <div class='heading'>
-        <span><i class='dashicons dashicons-images-alt2'>&nbsp;</i> Media Library</span>
+        <span><i class='dashicons dashicons-images-alt2'>&nbsp;</i> <?php _e('Media Library','shortpixel-image-optimiser'); ?></span>
         <span>
               <span class='line-progressbar'>
                 <span class='done-text'><i data-stats-media="percentage_done"></i> %</span>
                 <span class='done' data-stats-media="percentage_done" data-presentation="css.width.percentage"></span>
               </span>
         </span>
-        <span>Processing: <i data-stats-media="in_process">-</i></span>
+        <span><?php _e('Processing','shortpixel-image-optimiser') ?>: <i data-stats-media="in_process">-</i></span>
 
       </div>
 
       <div>
-        <span>Processed: <i data-stats-media="done">-</i></span>
+        <span><?php _e('Processed','shortpixel-image-optimiser'); ?>: <i data-stats-media="done">-</i></span>
 
-        <span>Images Left: <i data-stats-media="in_queue">-</i></span>
-        <span>Errors: <i data-check-media-fatalerrors data-stats-media="fatal_errors" class='error'>- </i>
+        <span><?php _e('Images Left','shortpixel-image-optimiser'); ?>: <i data-stats-media="in_queue">-</i></span>
+        <span><?php _e('Errors','shortpixel-image-optimiser'); ?>: <i data-check-media-fatalerrors data-stats-media="fatal_errors" class='error'>- </i>
             </span>
 				<span data-check-visibility data-control="data-check-media-fatalerrors" ><label title="<?php _e('Show Errors', 'shortpixel-image-optimiser'); ?>">
-					<input type="checkbox" name="show-errors" value="show" data-action='ToggleErrorBox' data-errorbox='media' data-event='change'>Show Errors</label>
+					<input type="checkbox" name="show-errors" value="show" data-action='ToggleErrorBox' data-errorbox='media' data-event='change'><?php _e('Show Errors','shortpixel-image-optimiser'); ?></label>
 			 </span>
 
       </div>
@@ -108,7 +108,7 @@ namespace ShortPixel;
 
 
     <nav>
-      <button class='button finish' data-action="FinishBulk" id="FinishBulkButton">Finish Bulk Process</button>
+      <button class='button finish' type="button" data-action="FinishBulk" id="FinishBulkButton">Finish Bulk Process</button>
     </nav>
 
 

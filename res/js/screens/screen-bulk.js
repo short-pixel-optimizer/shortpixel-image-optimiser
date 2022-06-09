@@ -125,6 +125,7 @@ console.log("Screen Init Done", initMedia, initCustom);
 					{
 						 for(var i = 0; i < action.children.length; i++)
 						 {
+							 	console.log('adding action ', eventName, action.children[i]);
 							  action.children[i].addEventListener(eventName, self.DoActionEvent.bind(self));
 						 }
 					}
@@ -139,10 +140,13 @@ console.log("Screen Init Done", initMedia, initCustom);
 		{
 			var element = element.parentElement;
 		}
+		if (element.disabled == true) // disabled button still register events, prevent going.
+		{
+			return false;
+		}
 		var actionName = element.getAttribute('data-action');
 		var isPanelAction = (actionName == 'open-panel');
 
-		 console.log('Do Action ' + actionName);
 
 		if (isPanelAction)
 		{
@@ -898,22 +902,28 @@ console.log("Screen Init Done", initMedia, initCustom);
   this.BulkRestoreAll = function (event)
   {
     console.log('Start Restore All');
-		var do_media = document.getElementById('restore_media_checkbox').checked;
-		var do_custom = document.getElementById('restore_custom_checkbox').checked;
+	//	var media = document.getElementById('restore_media_checkbox');
+		var media = document.getElementById('restore_media_checkbox');
+		var custom = document.getElementById('restore_custom_checkbox');
+		var queues = [];
 
-		if (do_media == false && do_custom == false)
+		// no checkboxes, only media in system => do media.
+		if (media == null && custom == null)
+		{
+			 queues.push('media');
+		}
+		else if (media.checked == false && custom.checked == false) // pick one
 		{
 			 document.getElementById('restore_media_warn').classList.remove('hidden');
 			 return false;
 		}
-
-
-		var queues = [];
-		if (do_media == true)
-			queues.push('media');
-		if (do_custom == true)
-			queues.push('custom');
-
+		else // check which one
+		{
+			if (media.checked == true)
+				queues.push('media');
+			if (custom.checked == true)
+				queues.push('custom');
+		}
     var data = {screen_action: 'startRestoreAll', callback: 'shortpixel.startRestoreAll', queues: queues}; //
 
     this.SwitchPanel('selection');

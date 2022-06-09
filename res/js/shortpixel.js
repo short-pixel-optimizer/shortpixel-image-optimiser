@@ -62,9 +62,10 @@ var ShortPixel = function() {
             }
         });
 
-        if (window.ShortPixelProcessor && ShortPixelConstants[0].HAS_QUOTA == 1)
-          window.ShortPixelProcessor.Load();
-
+        if (window.ShortPixelProcessor)
+				{
+          window.ShortPixelProcessor.Load(ShortPixel['HAS_QUOTA']);
+				}
         this.didInit = true;
 
 				// Move footer notices to the top, where it should be.
@@ -77,7 +78,6 @@ var ShortPixel = function() {
 					  this.initSettings();
 				}
     }
-
     function setOptions(options) {
         for(var opt in options) {
             ShortPixel[opt] = options[opt];

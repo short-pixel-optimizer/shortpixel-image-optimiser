@@ -89,7 +89,7 @@ namespace ShortPixel;
     <div class="over-quota" data-check-visibility="false" data-control="data-quota-remaining" data-control-check="data-check-total-total">
       <span><img src="<?php echo wpSPIO()->plugin_url('res/img/bulk/over-quota.svg') ?>" /></span>  <p>In your ShortPixel account you <span class='red'>have only <?php echo $this->formatNumber($quotaData->total->remaining, 0) ?> credits available </span>, but you have chosen <b data-stats-total="images-images">0</b> images to be optimized in this bulk process. You can either go back and select less images, or you can upgrade to a higher plan or buy one-time credits.
 
-       <button class="button" onClick="ShortPixel.proposeUpgrade();">Show me the best options</button>
+       <button type="button" class="button" onClick="ShortPixel.proposeUpgrade();">Show me the best options</button>
      </p>
 
        <span class='hidden' data-quota-remaining><?php
@@ -104,11 +104,11 @@ namespace ShortPixel;
     </div>
 
     <nav>
-      <button class="button" data-action="open-panel" data-panel="selection">
+      <button class="button" type="button" data-action="open-panel" data-panel="selection">
 				<span class='dashicons dashicons-arrow-left' ></span>
 				<p><?php _e('Back','shortpixel-image-optimiser'); ?></p>
 			</button>
-      <button class="button-primary button" data-action="StartBulk" data-control="data-check-total-total" data-check-presentation="disable">
+      <button class="button-primary button" type="button" data-action="StartBulk" data-control="data-check-total-total" data-check-presentation="disable">
 				<span class='dashicons dashicons-arrow-right'></span>
 				<p><?php _e('Start Bulk Optimization', 'shortpixel-image-optimiser'); ?></p>
 			</button>
