@@ -645,7 +645,7 @@ class AdminNoticesController extends \ShortPixel\Controller
             <div>
               <button class="button button-primary" type="button" id="shortpixel-upgrade-advice" onclick="ShortPixel.proposeUpgrade()" style="margin-right:10px;"><strong>' .  __('Show me the best available options', 'shortpixel-image-optimiser') . '</strong></button>
               <a class="button button-primary" href="' . $login_url . '"
-                 title="' . __('Go to my account and select a plan','shortpixel-image-optimiser') . '" target="_blank" style="margin-right:10px; line-height: 40px">
+                 title="' . __('Go to my account and select a plan','shortpixel-image-optimiser') . '" target="_blank" style="margin-right:10px;">
                   <strong>' . __('Upgrade','shortpixel-image-optimiser') . '</strong>
               </a>
               <button type="button" name="checkQuota" class="button" onclick="ShortPixel.checkQuota()">'.  __('Confirm New Credits','shortpixel-image-optimiser') . '</button>

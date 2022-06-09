@@ -188,14 +188,16 @@ var ShortPixelScreen = function (MainScreen, processor)
 		// HandleError is handling from results / result, not ResponseController. Check if it has negative effects it's kinda off now.
     this.HandleError = function(result)
     {
-
           if (result.message && result.item_id)
           {
             this.UpdateMessage(result.item_id, result.message, true);
           }
 
-          this.processor.LoadItemView({id: result.item_id, type: 'media'});
-          /*if (result.is_done)
+					if (typeof result.item_id !== 'undefined')
+					{
+          	this.processor.LoadItemView({id: result.item_id, type: 'media'});
+					}
+					/*if (result.is_done)
           {
             e = {};
             e.detail = {};

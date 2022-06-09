@@ -85,8 +85,8 @@ var SpWorker = {
       }
       else
       {
-					console.error('Worker.js reporting issue', response);
-          postMessage({'status' : false, message: response.status});
+					console.error('Worker.js reporting issue');
+          postMessage({'status' : false, message: response.status + ' ' + response.statusText});
       }
    },
    SetEnv: function (data)

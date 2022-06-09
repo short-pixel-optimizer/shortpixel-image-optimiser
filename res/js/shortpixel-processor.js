@@ -34,6 +34,7 @@ window.ShortPixelProcessor =
     timesEmpty: 0, // number of times queue came up empty.
     nonce: [],
 		hasStartQuota: false, // if we start without quota, don't notice too much, don't run.
+		workerErrors: 0, // times worker encoutered an error.
     qStatus: { // The Queue returns
        1:  'QUEUE_ITEMS',
        4:  'QUEUE_WAITING',
@@ -357,9 +358,11 @@ window.ShortPixelProcessor =
               }
            }
       }
-      else
+      else  // This is a worker error / http / nonce / generail fail
       {
-            // This is a work error / http / nonce / generail fail
+						this.workerErrors++;
+						this.timesEmpty = 0; // don't drag it.
+
 						this.screen.HandleError(data);
 
 						if (data.message)
@@ -369,7 +372,10 @@ window.ShortPixelProcessor =
 							 this.Debug(message, 'error');
 						}
 
-
+						if (this.workerErrors >= 3)
+							this.StopProcess();
+						else
+							this.StopProcess({ defer: true });
 
       }
       var event = new CustomEvent('shortpixel.processor.responseHandled', { detail : {paused: this.isManualPaused}});

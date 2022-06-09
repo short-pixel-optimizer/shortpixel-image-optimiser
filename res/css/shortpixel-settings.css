@@ -9,15 +9,16 @@
 }
 .settings_page_wp-shortpixel-settings .button, .settings_page_wp-shortpixel-settings button:focus {
   color: #0f6a7d;
-  min-height: 44px;
 }
 .settings_page_wp-shortpixel-settings .button-primary, .settings_page_wp-shortpixel-settings .button-primary:focus {
   background-color: #0f6a7d;
   color: #fff;
-  min-height: 44px;
 }
 .settings_page_wp-shortpixel-settings .button-primary:hover, .settings_page_wp-shortpixel-settings .button-primary:focus:hover {
   background-color: #1cbecb;
+}
+.settings_page_wp-shortpixel-settings .submit .button {
+  min-height: 44px;
 }
 .settings_page_wp-shortpixel-settings .top-menu {
   font-size: 18px;
@@ -356,7 +357,6 @@
 .cf_switch label span {
   padding: 8px 0px 8px 15px;
   display: block;
-  font-size: 13px;
 }
 .cf_switch label input {
   display: none;
@@ -384,6 +384,7 @@
   font-weight: 700;
   display: inline-block;
   flex: 0 0 auto;
+  font-size: 14px;
 }
 #tab-tools .option div.field {
   display: inline-block;

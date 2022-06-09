@@ -15,16 +15,19 @@
 	.button, button:focus
 	{
 		color: $color-darkest;
-		min-height: 44px;
 	}
 	.button-primary, .button-primary:focus {
 		background-color: $color-darkest;
 		color: #fff;
-		min-height: 44px;
 
 		&:hover
 		{
 			background-color: $color-dark;
+		}
+	}
+	.submit {
+		.button {
+			min-height: 44px;
 		}
 	}
   .top-menu

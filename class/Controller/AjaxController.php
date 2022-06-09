@@ -153,6 +153,7 @@ class AjaxController
         $this->checkNonce('processing');
         $this->checkProcessorKey();
 
+			
 				if ($this->getProcessorKey() == 'shortpixel-test')
 				{
 						$this->returnTestData();
