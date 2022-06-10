@@ -132,7 +132,7 @@ $quotaData = $this->quotaData;
                 if(true || $view->data->backupImages) { ?>
                 <tr>
                     <th scope="row">
-                        <?php _e('Original images are stored in a backup folder. Your backup folder\'s size is now:','shortpixel-image-optimiser');?>
+                        <?php _e('Original images are stored in a backup folder.','shortpixel-image-optimiser');?>
                     </th>
                     <td>
                         <form action="" method="POST">
