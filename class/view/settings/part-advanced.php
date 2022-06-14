@@ -33,7 +33,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
             // Show a message about the risks and caveats of serving WEBP images via .htaccess
             $deliverWebpUnalteredLabel = '<span style="color: initial;">'.__('Based on testing your particular hosting configuration, we determined that your server','shortpixel-image-optimiser').
                 '&nbsp;<img alt="can or can not" src="'. plugins_url( 'res/img/test.jpg' , SHORTPIXEL_PLUGIN_FILE) .'">&nbsp;'.
-                __('serve the WEBP versions of the JPEG files seamlessly, via .htaccess.','shortpixel-image-optimiser').' <a href="https://shortpixel.com/knowledge-base/article/127-delivering-webp-images-via-htaccess" target="_blank" data-beacon-article="5c1d050e04286304a71d9ce4">Open article to read more about this.</a></span>';
+                __('serve the WebP or AVIF versions of the JPEG files seamlessly, via .htaccess.','shortpixel-image-optimiser').' <a href="https://shortpixel.com/knowledge-base/article/127-delivering-webp-images-via-htaccess" target="_blank" data-beacon-article="5c1d050e04286304a71d9ce4">Open article to read more about this.</a></span>';
         }
     }
 
