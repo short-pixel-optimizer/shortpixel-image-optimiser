@@ -1,5 +1,7 @@
-var debugModal;
+'use strict';
+// This file contains debug screen for edit-media
 
+var debugModal;
 jQuery(document).ready(function(jq) {
 	$ = jq;
 
@@ -30,11 +32,6 @@ jQuery(document).ready(function(jq) {
 
 	}
 
-	debugModal.prototype.focus = function()
-	{
-		this.currentModal.show();
-
-	}
 
 	debugModal.prototype.get = function()
 	{
@@ -58,7 +55,7 @@ jQuery(document).ready(function(jq) {
 			this.currentModal.height(this.setHeight);
 		}
 
-		$m = this.currentModal;
+		var $m = this.currentModal;
 
 		var headerHeight = $m.find('.modal_header').outerHeight();
 
@@ -81,7 +78,7 @@ jQuery(document).ready(function(jq) {
 
 		if (modalHeight > this.windowHeight) // if height is higher than screen supports
 		{
-			newHeight = this.windowHeight - top - 5;
+			var newHeight = this.windowHeight - top - 5;
 			this.currentModal.height(newHeight);
 
 			var newContentH = newHeight - headerHeight;
@@ -94,12 +91,12 @@ jQuery(document).ready(function(jq) {
 
 
 		$('.debugModal_overlay').show();
-		$('body').addClass('max-modal-active');
+		$('body').addClass('shortpixel-modal-active');
 
 		$(document).off('keydown', $.proxy(this.keyPressHandler, this));
 		$(document).on('keydown', $.proxy(this.keyPressHandler, this));
 
-		this.currentModal.focus();
+		this.currentModal.trigger('focus');
 	}
 
 	debugModal.prototype.keyPressHandler = function (e)
@@ -131,7 +128,7 @@ jQuery(document).ready(function(jq) {
 		this.currentModal.remove();
 		this.currentModal = null;
 		$('.debugModal_overlay').remove();
-		$('body').removeClass('max-modal-active');
+		$('body').removeClass('shortpixel-modal-active');
 		$(document).off('keydown', $.proxy(this.keyPressHandler, this));
 
 	}

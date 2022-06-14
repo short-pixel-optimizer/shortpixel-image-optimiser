@@ -12,6 +12,7 @@ abstract class Model
     foreach($this->model as $item => $options)
     {
       $data[$item] = $this->{$item};
+			
     }
     return $data;
   }

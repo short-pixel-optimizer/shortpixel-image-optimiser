@@ -2,14 +2,12 @@
 
 .view-edit-media
 {
-    .debugInfo
+    a.debugModal
     {
-      pre
-      {
-        font-size: 11px;
-    //    overflow: hidden;
-      }
+       margin: 20px 0;
+       display: inline-block;
     }
+
     .sp-column-stats
     {
       position: relative;
@@ -21,8 +19,8 @@
       }
       .edit-media-stats
       {
-        border: 1px solid #ccc;
-        padding: 16px;
+       // border: 1px solid #ccc;
+       // padding: 16px;
 
         li
         {
@@ -46,3 +44,29 @@
     }
 
 } // view-edit-media
+
+	// Loads on the bottom body part, load strict
+    .shortpixel-modal-active .debug-modal.debugInfo // Modal open
+    {
+			ul
+			{
+				 li {
+					  strong
+						{
+							 display: inline-block;
+							 min-width: 200px;
+						}
+						img {
+							max-height: 150px;
+						}
+				 }
+			}
+
+      pre
+      {
+      //  font-size: 12px;
+    //    overflow: hidden;
+      }
+			.green { color: green; }
+			.red { color: red; }
+    }

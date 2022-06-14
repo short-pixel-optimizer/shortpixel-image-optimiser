@@ -1,11 +1,21 @@
+@import 'elements/colors';
 
-.shortpixel.notice
+
+.shortpixel.shortpixel-notice
 {
+
    //padding: 18px;
    min-height: 75px;
    padding: 8px;
    display: flex;
    align-items: center;
+   background: #fff;
+   padding: 1px 12px;
+   box-shadow: 0 1px 1px rgba(0,0,0,0.04);
+   border: 1px solid #c3c4c7;
+   margin: 15px 0;
+   border-left-color: #72aee6;
+   position: relative;
 
    img
    {
@@ -21,8 +31,14 @@
      &.icon {
        //float: left;
        margin: 0 25px 0 0;
+			 width: 80px;
       // display: inline-block;
      }
+		 &.content
+		 {
+		//	 width: 50%;
+			 padding: 8px 0;
+		 }
    }
    .details-wrapper // open close mechanic.
    {
@@ -73,7 +89,7 @@
 }
 
 // compat list if.
-.shortpixel.notice
+.shortpixel.shortpixel-notice
 {
   .sp-conflict-plugins {
       display: table;
@@ -88,9 +104,12 @@
 
   }
 
-  .content button
+  .content .button-primary
   { // gets overwritten in NGG.
-    background-color: #007cba;
+    background-color: $color-darkest;
+		border-color: $color-darkest;
+
+		&:hover { background-color: $color-dark; }
   }
 
   li.sp-conflict-plugins-list {

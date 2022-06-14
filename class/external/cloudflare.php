@@ -25,7 +25,8 @@ class CloudFlareAPI {
 
     public function __construct()
     {
-        add_action( 'shortpixel_image_optimised', array( $this, 'check_cloudflare' ) );
+        add_action('shortpixel/image/optimised', array( $this, 'check_cloudflare' ), 10 );
+				add_action('shortpixel/image/before_restore', array($this, 'check_cloudflare'), 10);
     }
 
 
@@ -49,13 +50,13 @@ class CloudFlareAPI {
 
         if (empty($this->zone_id))
         {
-          Log::addWarn('CF - ZoneID setting is obligatory');
+          //Log::addWarn('CF - ZoneID setting is obligatory');
         }
 
         $this->setup_done = true;
     }
 
-    public function check_cloudflare($image_id)
+    public function check_cloudflare($imageObj)
     {
       if (! $this->setup_done)
         $this->setup();
@@ -67,7 +68,7 @@ class CloudFlareAPI {
           Log::addWarn('Cloudflare Config OK, but no CURL to request');
         }
         else
-          $this->start_cloudflare_cache_purge_process($image_id);
+          $this->start_cloudflare_cache_purge_process($imageObj);
       }
 
     }
@@ -77,7 +78,9 @@ class CloudFlareAPI {
      *
      * @param $image_id - WordPress image media ID
      */
-    private function start_cloudflare_cache_purge_process( $image_id ) {
+    private function start_cloudflare_cache_purge_process( $imageItem ) {
+
+        //@TODO Also add the WebP and/or AVIF URLs to the purge list, for both Media Library and Custom Media items
 
         // Fetch CloudFlare API credentials
         /*$cloudflare_auth_email = $this->_cloudflareEmail;
@@ -94,15 +97,62 @@ class CloudFlareAPI {
                 $fetch_images_sizes[] = 'full';
             }
 
-            // Fetch the URL for each image size
-            foreach ( $fetch_images_sizes as $size ) {
-                // 0 - url; 1 - width; 2 - height
-                $image_attributes = wp_get_attachment_image_src( $image_id, $size );
-                // Append to the list
-                array_push( $purge_array, $image_attributes[0] );
+/*
+            if ( $imageItem->getType() == 'media' ) {
+                // The item is a Media Library item, fetch the URL for each image size
+                foreach ( $fetch_images_sizes as $size ) {
+                    // 0 - url; 1 - width; 2 - height
+                    $image_attributes = wp_get_attachment_image_src( $image_id, $size );
+                    // Append to the list
+                    array_push( $purge_array, $image_attributes[0] );
+                }
+            } else {
+                // The item is a Custom Media item
+                $fs = \wpSPIO()->filesystem();
+                $item = $fs->getImage( $image_id, 'custom' );
+                $item_url = $fs->pathToUrl( $item );
+                array_push( $purge_array, $item_url );
             }
+			*/
+						$fs = \wpSPIO()->filesystem();
 
-            if ( ! empty( $purge_array ) ) {
+						$image_paths[] = $imageItem->getURL();
+						if ($imageItem->getWebp() !== false)
+							 $image_paths[] = $fs->pathToUrl($imageItem->getWebp());
+
+						if ($imageItem->getAvif() !== false)
+ 								 $image_paths[] = $fs->pathToUrl($imageItem->getAvif());
+
+					  if ($imageItem->get('type') == 'media')
+						{
+								if ($imageItem->hasOriginal())
+								{
+									 $originalFile = $imageItem->getOriginalFile();
+									 $image_paths[] = $originalFile->getURL();
+
+									 if ($originalFile->getWebp() !== false)
+		 								 $image_paths[] = $fs->pathToUrl($originalFile->getWebp());
+
+		 							if ($originalFile->getAvif() !== false)
+			 								 $image_paths[] = $fs->pathToUrl($originalFile->getAvif());
+								}
+
+								if (count($imageItem->get('thumbnails')) > 0)
+								{
+									 foreach($imageItem->get('thumbnails') as $thumbObj)
+									 {
+											 $image_paths[] = $thumbObj->getURL();
+
+											 if ($thumbObj->getWebp() !== false)
+												 $image_paths[] = $fs->pathToUrl($thumbObj->getWebp());
+
+											if ($thumbObj->getAvif() !== false)
+													 $image_paths[] = $fs->pathToUrl($thumbObj->getAvif());
+									 }
+								}
+						}
+
+            if ( ! empty( $image_paths ) ) {
               //$prepare_request_info['files'] = $image_url_for_purge;
                 // Encode the data into JSON before send
                 $dispatch_purge_info = function_exists('wp_json_encode') ? wp_json_encode( $prepare_request_info ) : json_encode( $prepare_request_info );
@@ -114,7 +164,7 @@ class CloudFlareAPI {
                     'Content-Type: application/json'
                 ); */
 
-                $response = $this->delete_url_cache_request_action($purge_array);
+                $response = $this->delete_url_cache_request_action($image_paths);
 
                 // Start the process of cache purge
             /*    $request_response = $this->delete_url_cache_request_action( "https://api.cloudflare.com/client/v4/zones/" . $cloudflare_zone_id . "/purge_cache", $dispatch_purge_info, $dispatch_header ); */
@@ -190,12 +240,12 @@ class CloudFlareAPI {
       curl_close( $curl_connection );
 
       if ( ! is_array( $result ) ) {
-          Log::addWarn( 'Shortpixel - CloudFlare: The CloudFlare API is not responding correctly', $result);
+          Log::addWarn( 'ShortPixel - CloudFlare: The CloudFlare API is not responding correctly', $result);
       } elseif ( isset( $result['success'] ) && isset( $result['errors'] ) && false === (bool) $result['success'] ) {
-          Log::addWarn( 'Shortpixel - CloudFlare, Error messages: '
+          Log::addWarn( 'ShortPixel - CloudFlare, Error messages: '
               . (isset($result['errors']['message']) ? $result['errors']['message'] : json_encode($result['errors'])) );
       } else {
-          Log::addInfo('Shortpixel - CloudFlare successfully requested clear cache for: ', array($postfields));
+          Log::addInfo('ShortPixel - CloudFlare successfully requested clear cache for: ', array($postfields));
       }
 
       return $result;

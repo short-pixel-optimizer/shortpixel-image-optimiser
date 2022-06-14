@@ -6,8 +6,15 @@ use ShortPixel\Notices\NoticeController as Notices;
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 
+use ShortPixel\Model\File\DirectoryOtherMediaModel as DirectoryOtherMediaModel;
+use ShortPixel\Model\Image\ImageModel as ImageModel;
+
+use ShortPixel\Controller\Queue\CustomQueue as CustomQueue;
+
+use ShortPixel\Helper\UiHelper as UiHelper;
+
 // Future contoller for the edit media metabox view.
-class OtherMediaViewController extends \ShortPixel\Controller
+class OtherMediaViewController extends \ShortPixel\ViewController
 {
       //$this->model = new
       protected $template = 'view-other-media';
@@ -19,26 +26,28 @@ class OtherMediaViewController extends \ShortPixel\Controller
       protected $order;
       protected $orderby;
       protected $search;
+			protected $show_hidden = false;
+			protected $has_hidden_items = false;
 
       protected $actions = array();
 
       public function __construct()
       {
         parent::__construct();
-        $this->setActions(); // possible actions.
+        $this->setActions(); // possible actions for ROWS only..
 
         $this->currentPage = isset($_GET['paged']) ? intval($_GET['paged']) : 1;
-        $this->total_items = intval($this->record_count());
         $this->orderby = ( ! empty( $_GET['orderby'] ) ) ? $this->filterAllowedOrderBy(sanitize_text_field($_GET['orderby'])) : 'id';
         $this->order = ( ! empty($_GET['order'] ) ) ? sanitize_text_field($_GET['order']) : 'desc'; // If no order, default to asc
         $this->search =  (isset($_GET["s"]) && strlen($_GET["s"]))  ? sanitize_text_field($_GET['s']) : false;
+				$this->show_hidden = isset($_GET['show_hidden']) ? sanitize_text_field($_GET['show_hidden']) : false;
 
       }
 
       /** Controller default action - overview */
       public function load()
       {
-          $this->process_actions();
+        //  $this->process_actions();
 
           $this->view->items = $this->getItems();
           $this->view->folders = $this->getItemFolders($this->view->items);
@@ -46,73 +55,42 @@ class OtherMediaViewController extends \ShortPixel\Controller
           $this->view->pagination = $this->getPagination();
           $this->view->filter = $this->getFilter();
 
-          $this->checkQueue();
+    //      $this->checkQueue();
           $this->loadView();
       }
 
-      public function renderNewActions($item_id)
-      {
-         $item = new \stdClass; // mock class to mimick the records used in the controller
-         $item->id = $item_id;
+			public function action_refreshfolders()
+			{
+				   if (wp_verify_nonce( $_REQUEST['_wpnonce'], 'refresh_folders'))
+					 {
+						 	 $otherMediaController = OtherMediaController::getInstance();
+							 $otherMediaController->refreshFolders(true);
+					 }
+					 else
+					 {
+						  Log::addWarn('Incorrect nonce for refreshfolders');
+					 }
 
-         $spMetaDao = \wpSPIO()->getShortPixel()->getSpMetaDao();
-         $metaModel = $spMetaDao->getMeta($item_id);  // returns shortpixelMeta object
-         if (is_null($metaModel))
-          return '';
+					 $this->load();
+			}
 
-         $item->status = $metaModel->getStatus();
-         $item->compression_type = $metaModel->getCompressionType();
-
-         $fs = \wpSPIO()->filesystem();
-         $file = $fs->getFile($metaModel->getPath());
-
-         $actions = $this->getDisplayActions($this->getActions($item, $file));
-
-         return $actions;
-      }
-
-      //push to the processing list the pending ones, just in cas
-      protected function checkQueue()
-      {
-          $sp = \wpSPIO()->getShortPixel();
-          foreach ($this->view->items as $item) {
-              if($item->status == \ShortPixelMeta::FILE_STATUS_PENDING ){
-                  Log::addDebug('Adding pending files to processing - ' . $item->id);
-                  $sp->getPrioQ()->push(\ShortPixelMetaFacade::queuedId(\ShortPixelMetaFacade::CUSTOM_TYPE, $item->id));
-              }
-          }
-      }
 
       /** Sets all possible actions and it's links. Doesn't check what can be loaded per individual case. */
+
       protected function setActions()
       {
         $nonce = wp_create_nonce( 'sp_custom_action' );
         $keyControl = ApiKeyController::getInstance();
 
         $actions = array(
-            'optimize' => array('action' => 'optimize', '_wpnonce' => $nonce , 'text' => __('Optimize now','shortpixel-image-optimiser'), 'class' => ''),
-
-            'retry' => array('action' => 'optimize', '_wpnonce' => $nonce, 'text' =>  __('Retry','shortpixel-image-optimiser'), 'class' => ''),
-
-            'redolossless' => array('action' => 'redo', '_wpnonce' => $nonce, 'type' => 'lossless', 'text' => __('Re-optimize lossless','shortpixel-image-optimiser'), 'class' => ''),
-
-            'redolossy' => array('action' => 'redo', '_wpnonce' => $nonce, 'type' => 'lossy', 'text' => __('Re-optimize lossy','shortpixel-image-optimiser'), 'class' => ''),
-
-            'redoglossy' => array('action' => 'redo', '_wpnonce' => $nonce, 'type' => 'glossy', 'text' => __('Re-optimize glossy','shortpixel-image-optimiser'), 'class' => ''),
+          'optimize' => array('action' => 'optimize', '_wpnonce' => $nonce , 'text' => __('Optimize now','shortpixel-image-optimiser'), 'class' => ''),
 
             'quota' => array('action' => 'check-quota', '_wpnonce' => $nonce, 'text' =>__('Check quota','shortpixel-image-optimiser'), 'class' => 'button button-smaller'),
             'extend-quota' => array('link' => '<a href="https://shortpixel.com/login/' . $keyControl->getKeyForDisplay() . '" target="_blank" class="button-primary button-smaller">' . __('Extend Quota','shortpixel-image-optimiser') . '</a>'),
 
-          /*  <a class='button button-smaller button-primary' href='". (defined("SHORTPIXEL_HIDE_API_KEY") ? '' : $this->ctrl->getApiKey()) . "' target='_blank'>"
-                . __('Extend Quota','shortpixel-image-optimiser') .
-            "</a> */
 
-            'restore' => array('action' => 'restore', '_wpnonce' => $nonce, 'text' => __('Restore Backup','shortpixel-image-optimiser')),
-
-            'compare' => array('link' => '<a href="javascript:ShortPixel.loadComparer(\'C-%%item_id%%\');">%%text%%</a>',
-                      'text' => __('Compare', 'shortpixel-image-optimiser'), 'class' => ''),
             'view' => array('link' => '<a href="%%item_url%%" target="_blank">%%text%%</a>', 'text' => __('View','shortpixel-image-optimiser')),
-            /*'no-key' => array('link' => __('Invalid API Key', 'shortpixel-image-optimiser') . ' <a href="options-general.php?page=wp-shortpixel-settings" class="text-link">%%text%%</a>', 'text' => __('Check your Settings','shortpixel-image-optimiser')           ), */
+
 
 
         );
@@ -122,7 +100,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
       protected function getHeadings()
       {
          $headings = array(
-              'thumbnails' => array('title' => __('Thumbnails', 'shortpixel-image-optimiser'),
+              'thumbnails' => array('title' => __('Thumbnail', 'shortpixel-image-optimiser'),
                               'sortable' => false,
                               'orderby' => 'id',  // placeholder to allow sort on this.
                             ),
@@ -145,9 +123,9 @@ class OtherMediaViewController extends \ShortPixel\Controller
                                 'sortable' => true,
                                 'orderby' => 'status',
                             ),
-               'actions' => array('title' => __('Actions', 'shortpixel-image-optimiser'),
+              /* 'actions' => array('title' => __('Actions', 'shortpixel-image-optimiser'),
                                  'sortable' => false,
-                            ),
+                            ), */
         );
 
         $keyControl = ApiKeyController::getInstance();
@@ -161,24 +139,24 @@ class OtherMediaViewController extends \ShortPixel\Controller
 
       protected function getItems()
       {
-          $spMetaDao = \wpSPIO()->getShortPixel()->getSpMetaDao();
           $fs = \wpSPIO()->filesystem();
-          //$total_items  =
 
           // [BS] Moving this from ts_added since often images get added at the same time, resulting in unpredictable sorting
-          $items = $spMetaDao->getPaginatedMetas(\wpSPIO()->env()->has_nextgen, $this->getFilter(), $this->items_per_page, $this->currentPage, $this->orderby, $this->order);
+          $items = $this->queryItems();
 
           $removed = array();
           foreach($items as $index => $item)
           {
-             $fsFile = $fs->getFile($item->path);
-             if (! $fsFile->exists()) // remove image if it doesn't exist.
+             $mediaItem = $fs->getImage($item->id, 'custom');
+
+             if (! $mediaItem->exists()) // remove image if it doesn't exist.
              {
-                $meta = new \ShortPixelMeta($item);
-                $spMetaDao->delete($meta);
+                $mediaItem->onDelete();
+
                 $removed[] = $item->path;
                 unset($items[$index]);
              }
+             $items[$index] = $mediaItem;
           }
 
           if (count($removed) > 0)
@@ -193,11 +171,11 @@ class OtherMediaViewController extends \ShortPixel\Controller
       protected function getItemFolders($items)
       {
          $folderArray = array();
-         $otherMedia = new OtherMediaController();
+         $otherMedia = OtherMediaController::getInstance();
 
-         foreach ($items as $item)
+         foreach ($items as $item) // mediaItem;
          {
-            $folder_id = $item->folder_id;
+            $folder_id = $item->get('folder_id');
             if (! isset($folderArray[$folder_id]))
             {
               $folderArray[$folder_id] = $otherMedia->getFolderByID($folder_id);
@@ -211,11 +189,11 @@ class OtherMediaViewController extends \ShortPixel\Controller
       protected function loadFolders($items)
       {
          $folderArray = array();
-         $otherMedia = new OtherMediaController();
+         $otherMedia = OtherMediaController::getInstance();
 
          foreach($items as $item)
          {
-            $folder_id = $item->folder_id;
+            $folder_id = $item->get('folder_id');
             if (! isset($folderArray[$folder_id]))
             {
                 $folderArray[$folder_id]  = $otherMedia->getFolderByID($folder_id);
@@ -234,80 +212,50 @@ class OtherMediaViewController extends \ShortPixel\Controller
           return $filter;
       }
 
-      protected function record_count() {
-          $spMetaDao = \wpSPIO()->getShortPixel()->getSpMetaDao();
-          return $spMetaDao->getCustomMetaCount($this->getFilter());
+      public function queryItems() {
+          $filters = $this->getFilter();
+          global $wpdb;
+
+          $page = $this->currentPage;
+          $controller = OtherMediaController::getInstance();
+
+					$hidden_ids = $controller->getHiddenDirectoryIDS();
+					if (count($hidden_ids) > 0)
+						$this->has_hidden_items = true;
+
+
+					if ($this->show_hidden == true)
+          	$dirs = implode(',', $hidden_ids );
+					else
+          	$dirs = implode(',', $controller->getActiveDirectoryIDS() );
+
+          if (strlen($dirs) == 0)
+            return array();
+
+          $sql = "SELECT COUNT(id) as count FROM " . $wpdb->prefix . "shortpixel_meta where folder_id in ( " . $dirs  . ") ";
+
+          foreach($filters as $field => $value) {
+              $sql .= " AND $field " . $value->operator . " ". $value->value . " ";
+          }
+
+          $this->total_items = $wpdb->get_var($sql);
+
+          $sql = "SELECT * FROM " . $wpdb->prefix . "shortpixel_meta where folder_id in ( " . $dirs  . ") ";
+
+          foreach($filters as $field => $value) {
+              $sql .= " AND $field " . $value->operator . " ". $value->value . " ";
+          }
+
+
+          $sql  .= ($this->orderby ? " ORDER BY " . $this->orderby . " " . $this->order . " " : "")
+                  . " LIMIT " . $this->items_per_page . " OFFSET " . ($page - 1) * $this->items_per_page;
+
+
+          $results = $wpdb->get_results($sql);
+          return $results;
       }
 
-      protected function process_actions()
-      {
 
-        $nonce = isset($_REQUEST['_wpnonce']) ? esc_attr($_REQUEST['_wpnonce']) : false;
-        $redirect_url = esc_url_raw(remove_query_arg(array('action', 'image', '_wpnonce')));
-        $action = isset($_REQUEST['action']) ? sanitize_text_field($_REQUEST['action']) : false;
-        $item_id = isset($_REQUEST['item_id']) ? intval($_REQUEST['item_id']) : false;
-        $this->view->rewriteHREF = '';
-
-        $otherMediaController = new OtherMediaController();
-        $shortpixel = \wpSPIO()->getShortPixel();
-
-        if (! $action)
-         return; // no action this view.
-
-        if (!wp_verify_nonce($nonce, 'sp_custom_action'))
-        {
-         die('Error. Nonce not verified. Do not call this function directly');
-        }
-
-        if ( $item_id === false && $action && $action != 'refresh')
-        {
-          exit('Error. No Item_id given');
-        }
-
-        switch ($action)
-        {
-            case 'optimize':
-                $shortpixel->optimizeCustomImage($item_id);
-                $this->rewriteHREF();
-
-            break;
-            case 'restore':
-                if($shortpixel->doCustomRestore($item_id))
-                {
-                  Notices::addSuccess(__('File Successfully restored', 'shortpixel-image-optimiser'));
-                }
-                $this->rewriteHREF();
-            break;
-            case 'redo':
-              $shortpixel->redo('C-' . $item_id, sanitize_text_field($_GET['type']));
-              $this->rewriteHREF();
-
-            break;
-            case 'refresh':
-                $result = $otherMediaController->refreshFolders(true);
-                if ($result)
-                {
-                  Notices::addSuccess(__('Other media folders fully refreshed and updated', 'shortpixel-image-optimiser'));
-                  $this->rewriteHREF();
-                }
-            break;
-            case 'bulk-optimize': // bulk action checkboxes
-              $optimize_ids = esc_sql($_POST['bulk-optimize']);
-              foreach ($optimize_ids as $id) {
-                 $shortpixel->optimizeCustomImage($id);
-              }
-              $this->rewriteHREF();
-            break;
-            case 'check-quota':
-              $shortpixel->getQuotaInformation();
-
-              $this->rewriteHREF();
-            break;
-            default:
-              Log::addWarn('Action hit OtherMediaViewController but was not caught' . $action . ' on '. $item_id);
-            break;
-        }
-      }
 
       /** This is a workaround for doing wp_redirect when doing an action, which doesn't work due to the route. Long-term fix would be using Ajax for the actions */
       protected function rewriteHREF()
@@ -331,7 +279,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
         $url = (is_null($this->url)) ?  add_query_arg('page','wp-short-pixel-custom', $admin_url) : $this->url; // has url
 
         $page_args = array_filter(wp_parse_args($args, $defaults));
-        return add_query_arg($page_args, $url);
+        return add_query_arg($page_args, $url); // has url
 
       }
 
@@ -364,7 +312,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
           $pages = round($total / $per_page);
 
           if ($pages <= 1)
-            return ''; // no pages.
+            return false; // no pages.
 
           $disable_first = $disable_last = $disable_prev =  $disable_next = false;
           $page_links = array();
@@ -387,10 +335,10 @@ class OtherMediaViewController extends \ShortPixel\Controller
            $total_pages_before = '<span class="paging-input">';
            $total_pages_after  = '</span></span>';
 
-           $current_url = remove_query_arg( 'paged', $this->getPageURL()); // has url 
+           $current_url = remove_query_arg( 'paged', $this->getPageURL()); // has url
 
            $output = '<form method="GET" action="'. $current_url . '">'; //'<span class="pagination-links">';
-           $output .= '<span class="displaying-num">'. sprintf(__('%d Items', 'shortpixel-image-optimiser'), $this->total_items) . '</span>';
+           $output .= '<span class="displaying-num">'. sprintf(__('%d Images', 'shortpixel-image-optimiser'), $this->total_items) . '</span>';
 
            if ( $disable_first ) {
                     $page_links[] = '<span class="tablenav-pages-navspan button disabled" aria-hidden="true">&laquo;</span>';
@@ -408,7 +356,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
             } else {
                 $page_links[] = sprintf(
                     "<a class='prev-page button' href='%s'><span class='screen-reader-text'>%s</span><span aria-hidden='true'>%s</span></a>",
-                    esc_url( add_query_arg( 'paged', max( 1, $current - 1 ), $current_url ) ), // has url
+                    esc_url( add_query_arg( 'paged', max( 1, $current - 1 ), $current_url ) ),
                     __( 'Previous page' ),
                     '&lsaquo;'
                 );
@@ -458,8 +406,10 @@ class OtherMediaViewController extends \ShortPixel\Controller
           return $output;
       }
 
-      /** Actions to list under the Image row */
-      protected function getRowActions($item, $file)
+      /** Actions to list under the Image row
+      * @param $item CustomImageModel
+      */
+      protected function getRowActions($item)
       {
           $thisActions = array();
           $thisActions[] = $this->actions['view']; // always .
@@ -467,87 +417,64 @@ class OtherMediaViewController extends \ShortPixel\Controller
 
           $keyControl = ApiKeyController::getInstance();
 
-
           if ($settings->quotaExceeded || ! $keyControl->keyIsVerified() )
           {
-            return $this->renderActions($thisActions, $item, $file); // nothing more.
+            return $this->renderActions($thisActions, $item); // nothing more.
           }
 
-          if ($item->status < \ShortPixelMeta::FILE_STATUS_UNPROCESSED)
-          {
-            $thisActions[] = $this->actions['retry'];
-          }
-          elseif ($item->status == \ShortPixelMeta::FILE_STATUS_UNPROCESSED || $item->status == \ShortPixelMeta::FILE_STATUS_RESTORED)
-          {
-            $thisActions[] = $this->actions['optimize'];
-          }
+					if ($item->isProcessable())
+					{
+					  	$thisActions[] = $this->actions['optimize'];
+					}
 
-          return $this->renderActions($thisActions, $item, $file);
+          return $this->renderActions($thisActions, $item);
       }
 
-      /* Actions to list in the action menu */
-      protected function getActions($item, $file)
+			// Function to sync output exactly with Media Library functions for consistency
+			public function doActionColumn($item)
+			{
+          ?>
+					<div id='sp-msg-<?php echo $item->get('id') ?>'  class='sp-column-info'><?php
+          //echo $this->getDisplayStatus($item);
+					$this->printItemActions($item);
+          echo "<div>" .  UiHelper::getStatusText($item) . "</div>";
+
+           ?>
+					 </div>
+					 <?php
+
+			}
+
+      // Use for view, also for renderItemView
+			public function printItemActions($item)
       {
-         $thisActions = array();
-         $settings = \wpSPIO()->settings();
-         $keyControl = ApiKeyController::getInstance();
-         $forceSingular = false; // force view to show all actions separate, not in clickdown
-
-         if (! $keyControl->keyIsVerified())
-         {
-           //$thisActions[] = $this->actions['no-key'];
-
-         }
-         elseif ($settings->quotaExceeded)
-         {
-           $thisActions[] = $this->actions['extend-quota'];
-           $thisActions[] = $this->actions['quota'];
-           $forceSingular = true;
-         }
-         elseif ($item->status < \ShortPixelMeta::FILE_STATUS_UNPROCESSED)
-         {
-           $thisActions[] = $this->actions['retry'];
-         }
-         elseif ($item->status == \ShortPixelMeta::FILE_STATUS_UNPROCESSED || $item->status == \ShortPixelMeta::FILE_STATUS_RESTORED)
-         {
-           $thisActions[] = $this->actions['optimize'];
-         }
-         elseif ( intval($item->status) == \ShortPixelMeta::FILE_STATUS_SUCCESS)
-         {
+        $actions = UiHelper::getActions($item); // $this->getActions($item, $itemFile);
 
 
-           if ($file->hasBackup())
-           {
-						  $thisActions[] = $this->actions['compare'];
-             switch($item->compression_type) {
-                 case 2:
-                     $actionsEnabled['redolossy'] = $actionsEnabled['redolossless'] = true;
-                     $thisActions[] = $this->actions['redolossy'];
-                     $thisActions[] = $this->actions['redolossless'];
-                     break;
-                 case 1:
-                     $actionsEnabled['redoglossy'] = $actionsEnabled['redolossless'] = true;
-                     $thisActions[] = $this->actions['redoglossy'];
-                     $thisActions[] = $this->actions['redolossless'];
-                     break;
-                 default:
-                     $thisActions[] = $this->actions['redolossy'];
-                     $thisActions[] = $this->actions['redoglossy'];
-                 break;
-             }
-             $thisActions[] = $this->actions['restore'];
-           }
-         }
+        $list_actions = UiHelper::getListActions($item);
+        if (count($list_actions) > 0)
+          $list_actions = UiHelper::renderBurgerList($list_actions, $item);
+        else
+          $list_actions = '';
 
+        if (count($actions) > 0)
+        {
+          foreach($actions as $actionName => $action):
+            $classes = ($action['display'] == 'button') ? " button-smaller button-primary $actionName " : "$actionName";
+            $link = ($action['type'] == 'js') ? 'javascript:' . $action['function'] : $action['function'];
 
+            ?>
+            <a href="<?php echo $link ?>" class="<?php echo $classes ?>"><?php echo $action['text'] ?></a>
 
-        if (count($thisActions) == 1)
-          $thisActions[0]['class'] .= 'button-smaller button button-primary';
-
-         return $this->renderActions($thisActions, $item, $file, $forceSingular);
+            <?php
+          endforeach;
+        }
+        echo $list_actions;
       }
 
-      protected function renderActions($actions, $item, $file, $forceSingular = false)
+
+      // Used for row actions at the moment.
+      protected function renderActions($actions, $item, $forceSingular = false)
       {
 
         foreach($actions as $index => $action)
@@ -557,10 +484,10 @@ class OtherMediaViewController extends \ShortPixel\Controller
           if (isset($action['link']))
           {
              $fs = \wpSPIO()->filesystem();
-             $item_url = $fs->pathToUrl($file);
+             $item_url = $fs->pathToUrl($item);
 
              $link = $action['link'];
-             $link = str_replace('%%item_id%%', $item->id, $link);
+             $link = str_replace('%%item_id%%', $item->get('id'), $link);
              $link = str_replace('%%text%%', $text, $link);
              $link = str_replace('%%item_url%%', $item_url, $link);
           }
@@ -568,7 +495,7 @@ class OtherMediaViewController extends \ShortPixel\Controller
           {
               $action_arg = $action['action']; //
               $nonce = $action['_wpnonce'];
-              $url = $this->getPageURL(array('action' => $action_arg, '_wpnonce' => $nonce, 'item_id' => $item->id));
+              $url = $this->getPageURL(array('action' => $action_arg, '_wpnonce' => $nonce, 'item_id' => $item->get('id') ));
               if (isset($action['type']))
                 $url = add_query_arg('type', $action['type'], $url);
               $class = (isset($action['class'])) ? $action['class'] : '';
@@ -585,86 +512,6 @@ class OtherMediaViewController extends \ShortPixel\Controller
           array_unshift($actions, 'render-loose');
         }
         return $actions;
-      }
-
-      protected function renderLegacyCell()
-      {
-
-        $data = $this->data;
-
-        if ( $data['status'] != 'pdfOptimized' && $data['status'] != 'imgOptimized')
-          return null;
-
-        $this->legacyViewObj->renderListCell($this->post_id, $data['status'], $data['showActions'], $data['thumbsToOptimize'],
-                $data['backup'], $data['type'], $data['invType'], '');
-      }
-
-      protected function getDisplayStatus($item)
-      {
-        $keyControl = ApiKeyController::getInstance();
-
-
-        if (! $keyControl->keyIsVerified())
-        {
-            $msg = __('Invalid API Key', 'shortpixel-image-optimiser') . ' <a href="options-general.php?page=wp-shortpixel-settings" class="text-link">' . __('Check your Settings','shortpixel-image-optimiser') . '</a>';
-            return $msg;
-        }
-
-        switch($item->status) {
-            case \ShortPixelMeta::FILE_STATUS_RESTORED:
-              $msg = __('Restored','shortpixel-image-optimiser');
-            break;
-            case \ShortPixelMeta::FILE_STATUS_TORESTORE:
-              $msg = __('Restore Pending','shortpixel-image-optimiser');
-            break;
-            case \ShortPixelMeta::FILE_STATUS_SUCCESS:
-                $msg = $this->getSuccessMessage($item);
-            break;
-            case 1: $msg = "<img src=\"" . wpSPIO()->plugin_url('res/img/loading.gif') . "\" class='sp-loading-small'>&nbsp;"
-                           . __('Image waiting to be processed','shortpixel-image-optimiser');
-                break;
-            case 0: $msg = __('Image not processed.','shortpixel-image-optimiser');
-                break;
-            default:
-                if($item->status < 0) {
-                    $msg = $item->message . "(" . __('code','shortpixel-image-optimiser') . ": " . $item->status . ")";
-                } else {
-                    $msg = "<span style='display:none;'>" . $item->status . "</span>";
-                }
-        }
-        return  $msg;
-
-      }
-
-      protected function getSuccessMessage($item)
-      {
-        $msg = '';
-
-        $amount = intval($item->message);
-        if (0 + $amount == 0 || 0 + $amount < 5)
-            $msg .= __('Bonus processing','shortpixel-image-optimiser') .  ' ';
-        else
-            $msg .= __('Reduced by','shortpixel-image-optimiser') . " <strong>" . $item->message . "%</strong> ";
-
-        switch($item->compression_type)
-        {
-          case \ShortPixelMeta::COMPRESSION_LOSSY:
-             $msg .= '(' . __('Lossy', 'shortpixel-image-optimiser') . ')';
-          break;
-          case \ShortPixelMeta::COMPRESSION_GLOSSY:
-              $msg .= '(' . __('Glossy', 'shortpixel-image-optimiser') . ')';
-          break;
-          case \ShortPixelMeta::COMPRESSION_LOSSLESSS:
-              $msg .= '(' . __('Lossless', 'shortpixel-image-optimiser') . ')';
-          break;
-        }
-
-        if ($item->resize)
-        {
-           $msg .= '<br>' . sprintf(__('Resized to %s x %s', 'shortpixel-image-optimiser'), $item->resize_width, $item->resize_height);
-        }
-        return $msg;
-
       }
 
       protected function getDisplayHeading($heading)
@@ -712,53 +559,17 @@ class OtherMediaViewController extends \ShortPixel\Controller
 
       protected function getDisplayDate($item)
       {
-        if ($item->ts_optimized > 0)
-          $date_string = $item->ts_optimized;
+        if ($item->getMeta('tsOptimized') > 0)
+          $timestamp = $item->getMeta('tsOptimized');
         else
-          $date_string = $item->ts_added;
+          $timestamp = $item->getMeta('tsAdded');
 
-        $date = new \DateTime($date_string);
+        $date = new \DateTime();
+        $date->setTimestamp($timestamp);
 
         $display_date = \ShortPixelTools::format_nice_date($date);
 
          return $display_date;
       }
-
-      protected function getDisplayActions($actions)
-      {
-
-           if (count($actions) == 0)
-           {
-             return '';
-           }
-           elseif (count($actions) == 1)
-            {
-              return "<div class='single-action'>" . $actions[0] . "</div>";
-            }
-           elseif($actions[0] == 'render-loose')
-           {
-             array_shift($actions);
-             $output = '<div class="multi-action-wrapper">';
-             foreach($actions as $action )
-             {
-               $output .= "<div class='single-action'>" . $action. "</div>";
-             }
-             $output .= "</div>";
-             return $output;
-           }
-            else{
-
-            $output = "<div class='sp-dropdown'>
-                <button onclick='ShortPixel.openImageMenu(event);' class='sp-dropbtn button dashicons dashicons-menu' title='" .  __('ShortPixel Actions', 'shortpixel-image-optimiser') . "'></button>
-                <div class='sp-dropdown-content'>";
-              foreach($actions as $action)
-              {
-                  $output .= $action;
-              }
-              $output .= "</div></div> <!-- sp-dropdown -->";
-              return $output;
-            }
-      }
-
 
 }

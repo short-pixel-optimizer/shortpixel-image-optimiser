@@ -4,6 +4,7 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notice;
 
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
+use ShortPixel\Controller\QuotaController as QuotaController;
 
 class ApiKeyModel extends \ShortPixel\Model
 {
@@ -79,9 +80,6 @@ class ApiKeyModel extends \ShortPixel\Model
       update_option($this->model['redirectedSettings']['key'], $this->redirectedSettings);
       update_option($this->model['apiKeyTried']['key'], $this->apiKeyTried);
 
-
-      Log::addDebug('Update Verified', array($this->apiKey, $this->verifiedKey));
-
   }
 
   /** Resets the last APIkey that was attempted with validation
@@ -100,7 +98,7 @@ class ApiKeyModel extends \ShortPixel\Model
   }
 
   /** Checks the API key to see if we have a validated situation
-  *  @param $key String The 20-character Shortpixel API Key or empty string
+  *  @param $key String The 20-character ShortPixel API Key or empty string
   *  @return boolean Returns a boolean indicating valid key or not
   *
   * An Api key can be removed from the system by passing an empty string when the key is not hidden.
@@ -179,6 +177,11 @@ class ApiKeyModel extends \ShortPixel\Model
       return $this->apiKey;
   }
 
+	public function uninstall()
+	{
+		 $this->clearApiKey();
+	}
+
   protected function clearApiKey()
   {
     $this->key_is_empty = true;
@@ -186,13 +189,18 @@ class ApiKeyModel extends \ShortPixel\Model
     $this->verifiedKey = false;
     $this->apiKeyTried = '';
     $this->key_is_verified = false;
-    Log::addDebug('Clearing API Key');
 
     AdminNoticesController::resetAPINotices();
     AdminNoticesController::resetQuotaNotices();
     AdminNoticesController::resetIntegrationNotices();
 
-    $this->update();
+		// Remove them all
+		delete_option($this->model['apiKey']['key']);
+		delete_option($this->model['verifiedKey']['key']);
+		delete_option($this->model['redirectedSettings']['key']);
+		delete_option($this->model['apiKeyTried']['key']);
+
+   // $this->update();
 
   }
 
@@ -205,11 +213,10 @@ class ApiKeyModel extends \ShortPixel\Model
 
     $checked_key = ($quotaData['APIKeyValid']) ? true : false;
 
-     Log::addDebug('Verify Result', $quotaData);
-     Log::addDebug('Key is verified ', array( $this->verifiedKey));
 
      if (! $checked_key)
      {
+			  Log::addError('Key is not validated', $quotaData['Message']);
         Notice::addError(sprintf(__('Error during verifying API key: %s','shortpixel-image-optimiser'), $quotaData['Message'] ));
      }
      elseif ($checked_key) {
@@ -225,12 +232,6 @@ class ApiKeyModel extends \ShortPixel\Model
   /** Process some things when key has been added. This is from original wp-short-pixel.php */
   protected function processNewKey($quotaData)
   {
-    $settingsObj = \wpSPIO()->settings();
-    $lastStatus = $settingsObj->bulkLastStatus;
-
-    if(isset($lastStatus['Status']) && $lastStatus['Status'] == \ShortPixelAPI::STATUS_NO_KEY) {
-        $settingsObj->bulkLastStatus = null;
-    }
     //display notification
     $urlParts = explode("/", get_site_url());
     if( $quotaData['DomainCheck'] == 'NOT Accessible'){
@@ -247,10 +248,9 @@ class ApiKeyModel extends \ShortPixel\Model
     }
 
     //test that the "uploads"  have the right rights and also we can create the backup dir for ShortPixel
-    if ( !file_exists(SHORTPIXEL_BACKUP_FOLDER) && ! \ShortPixelFolder::createBackUpFolder() )
+    if ( \wpSPIO()->filesystem()->checkBackupFolder() === false)
     {
-        $notice = sprintf(__("There is something preventing us to create a new folder for backing up your original files.<BR>Please make sure that folder <b>%s</b> has the necessary write and read rights.",'shortpixel-image-optimiser'),
-                             WP_CONTENT_DIR . '/' . SHORTPIXEL_UPLOADS_NAME );
+        $notice = sprintf(__("There is something preventing us to create a new folder for backing up your original files.<BR>Please make sure that folder <b>%s</b> has the necessary write and read rights.",'shortpixel-image-optimiser'), WP_CONTENT_DIR . '/' . SHORTPIXEL_UPLOADS_NAME );
        Notice::addError($notice);
     }
 
@@ -280,7 +280,12 @@ class ApiKeyModel extends \ShortPixel\Model
   // Does remote Validation of key. In due time should be replaced with something more lean.
   private function remoteValidate($key)
   {
-    return \wpSPIO()->getShortPixel()->getQuotaInformation($key, true, true);
+   $qControl = QuotaController::getInstance();
+   $quotaData = $qControl->remoteValidateKey($key);
+
+   return $quotaData;
+
+
   }
 
   protected function checkRedirect()

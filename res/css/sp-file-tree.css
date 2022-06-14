@@ -6,7 +6,7 @@ div.sp-folder-picker {
     overflow: auto;}
 
 UL.jqueryFileTree LI.directory.selected {
-    background-color: #209fd2;
+    background-color: #fafafa;
 }
 
 

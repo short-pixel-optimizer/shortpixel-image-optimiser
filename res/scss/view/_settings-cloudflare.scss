@@ -10,6 +10,7 @@
   //	font-weight: 700;
   	display: inline-block;
   //  font-size: 13px;
+		//cursor: default;
 
     span
     {
@@ -17,7 +18,7 @@
     //  font-size: 18px;
       padding:8px 0px 8px 15px;
       display:block;
-      font-size: 13px;
+      //font-size: 13px;
 
     }
     input {
@@ -29,4 +30,19 @@
       color:#F7F7F7;
     }
   }
+
+	&.global-hidden
+	{
+		label {
+			 cursor: default;
+		}
+	  input:checked + span
+		{
+			 background-color: #fff;
+			 color: #000;
+			 padding-left: 0;
+		}
+
+	}
+
 }

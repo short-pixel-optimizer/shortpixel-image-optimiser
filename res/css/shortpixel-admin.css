@@ -1,229 +1,6 @@
-.short-pixel-bulk-page.bulk-restore-all ol li {
-  font-weight: 700;
-}
-.short-pixel-bulk-page.bulk-restore-all section.select_folders {
+.view-edit-media a.debugModal {
   margin: 20px 0;
-}
-.short-pixel-bulk-page.bulk-restore-all section.select_folders .input {
-  margin: 10px 0 10px 15px;
-  font-size: 16px;
-  display: block;
-  clear: both;
-}
-.short-pixel-bulk-page.bulk-restore-all section.select_folders .filecount {
-  font-size: 12px;
-}
-.short-pixel-bulk-page.bulk-restore-all section.random_check .random_answer {
-  font-size: 16px;
-  font-weight: 700;
-  padding: 8px;
-  border: 1px solid #ccc;
   display: inline-block;
-}
-.short-pixel-bulk-page.bulk-restore-all section.random_check .inputs {
-  margin: 15px 0;
-}
-.short-pixel-bulk-page.bulk-restore-all section.random_check .inputs span {
-  margin-right: 8px;
-}
-.short-pixel-bulk-page.bulk-restore-all .button {
-  margin: 10px 0;
-  margin-right: 8px;
-}
-
-.short-pixel-bulk-page .sp-hidden {
-  display: none;
-}
-
-/* Specific styles for advanced settings tab */
-#shortpixel-settings-tabs #tab-adv-settings .addCustomFolder {
-  margin: 10px 0;
-}
-#shortpixel-settings-tabs #tab-adv-settings .addCustomFolder .add-folder-text {
-  margin-left: 5px;
-}
-#shortpixel-settings-tabs #tab-adv-settings .addCustomFolder input[type=text] {
-  width: 50em;
-  max-width: 70%;
-}
-#shortpixel-settings-tabs #tab-adv-settings .addCustomFolder input[name=saveAdv] {
-  margin-left: 8px;
-}
-#shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list {
-  display: table;
-  border-collapse: separate;
-}
-#shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list div.heading {
-  width: auto;
-  display: table-header-group;
-  padding: 12px 16px 12px 12px;
-}
-#shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list div.heading span {
-  font-weight: 600;
-  font-size: 14px;
-}
-#shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list div {
-  display: table-row;
-}
-#shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list div > span {
-  display: table-cell;
-  padding: 5px 10px;
-  vertical-align: middle;
-  background-color: #eee;
-}
-#shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list div > span.action {
-  background-color: unset;
-}
-#shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list .refresh-folder {
-  text-decoration: none;
-}
-#shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list .info-icon {
-  cursor: pointer;
-}
-
-.cf_switch label {
-  width: 100%;
-  margin: 0 -2px;
-  background-color: #e2faff;
-  display: inline-block;
-}
-.cf_switch label span {
-  padding: 8px 0px 8px 15px;
-  display: block;
-  font-size: 13px;
-}
-.cf_switch label input {
-  display: none;
-}
-.cf_switch label input:checked + span {
-  background-color: #0085ba;
-  color: #F7F7F7;
-}
-
-.settings_page_wp-shortpixel-settings {
-  /* In-view notice ( not on top, between the options ) - styled after WP notice */
-}
-.settings_page_wp-shortpixel-settings .top-menu {
-  font-size: 18px;
-}
-.settings_page_wp-shortpixel-settings .top-menu a {
-  font-size: 18px;
-}
-.settings_page_wp-shortpixel-settings .wp-shortpixel-tab-content {
-  transition: all 1000ms linear;
-}
-.settings_page_wp-shortpixel-settings .red {
-  color: #ff0000;
-}
-.settings_page_wp-shortpixel-settings article.sp-tabs section .wp-shortpixel-tab-content {
-  opacity: 0;
-}
-.settings_page_wp-shortpixel-settings article.sp-tabs section.sel-tab .wp-shortpixel-tab-content {
-  opacity: 1;
-}
-.settings_page_wp-shortpixel-settings article.sp-tabs section h2 {
-  position: absolute;
-  font-size: 1.3em;
-  font-weight: normal;
-  width: 180px;
-  height: 1.8em;
-  top: -1.8em;
-  left: 10px;
-  padding: 0;
-  margin: 0;
-  color: #999;
-  background-color: #ddd;
-  /* border-radius: 5px 5px 0 0; */
-}
-.settings_page_wp-shortpixel-settings article.sp-tabs section h2 a {
-  display: block;
-  width: 100%;
-  line-height: 1.8em;
-  text-align: center;
-  text-decoration: none;
-  color: #23282d;
-  outline: 0 none;
-}
-.settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(2) h2 {
-  left: 192px;
-}
-.settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(3) h2 {
-  left: 374px;
-}
-.settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(4) h2 {
-  left: 556px;
-}
-.settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(5) h2 {
-  left: 738px;
-}
-.settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(6) h2 {
-  left: 920px;
-}
-.settings_page_wp-shortpixel-settings section#tab-debug .flex {
-  display: flex;
-}
-.settings_page_wp-shortpixel-settings section#tab-debug .env .flex {
-  flex-wrap: wrap;
-  max-width: 450px;
-}
-.settings_page_wp-shortpixel-settings section#tab-debug .env .flex span {
-  width: 45%;
-  padding: 4px;
-}
-.settings_page_wp-shortpixel-settings .view-notice {
-  box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.1);
-  border: 4px solid #fff;
-  padding: 1px 12px;
-}
-.settings_page_wp-shortpixel-settings .view-notice p {
-  margin: 1em 0 !important;
-}
-.settings_page_wp-shortpixel-settings .view-notice.warning {
-  border-left-color: #ffb900;
-}
-.settings_page_wp-shortpixel-settings .view-notice-row {
-  display: none;
-}
-
-section.banner {
-  width: 100%;
-  background-color: #dcfdff;
-  display: flex;
-  align-items: center;
-  border: 1px solid #ccc;
-  margin-top: 35px;
-  margin-bottom: 45px;
-  z-index: 12;
-  position: relative;
-  opacity: 0;
-}
-section.banner span {
-  text-align: center;
-}
-section.banner .image {
-  flex: 1;
-}
-section.banner .line {
-  flex: 3;
-}
-section.banner .line h3 {
-  color: #00d0e5;
-}
-section.banner .button-wrap {
-  flex: 2;
-}
-section.banner .button-wrap .button {
-  background: #ff0000;
-  padding: 8px;
-  font-weight: 700;
-  font-size: 20px;
-  margin: 8px;
-  color: #fff;
-  text-transform: uppercase;
-}
-
-.view-edit-media .debugInfo pre {
-  font-size: 11px;
 }
 .view-edit-media .sp-column-stats {
   position: relative;
@@ -231,10 +8,6 @@ section.banner .button-wrap .button {
 .view-edit-media .sp-column-stats .sp-column-actions {
   margin-right: 5px;
   margin-top: 16px;
-}
-.view-edit-media .sp-column-stats .edit-media-stats {
-  border: 1px solid #ccc;
-  padding: 16px;
 }
 .view-edit-media .sp-column-stats .edit-media-stats li {
   margin: 0;
@@ -248,6 +21,173 @@ section.banner .button-wrap .button {
   padding: 6px 15px;
   height: auto;
   float: none;
+}
+
+.shortpixel-modal-active .debug-modal.debugInfo ul li strong {
+  display: inline-block;
+  min-width: 200px;
+}
+.shortpixel-modal-active .debug-modal.debugInfo ul li img {
+  max-height: 150px;
+}
+.shortpixel-modal-active .debug-modal.debugInfo .green {
+  color: green;
+}
+.shortpixel-modal-active .debug-modal.debugInfo .red {
+  color: red;
+}
+
+.shortpixel-other-media .sp-column-info .sp-column-actions {
+  max-width: 140px;
+  float: right;
+  text-align: right;
+}
+
+.sp-column-info {
+  position: relative;
+}
+.sp-column-info .thumbnails.optimized {
+  position: relative;
+}
+.sp-column-info .thumbnails.optimized .thumb-wrapper {
+  background: #fff;
+  padding: 8px;
+  border: 1px solid #ccc;
+  max-width: 360px;
+  position: absolute;
+  display: none;
+  z-index: 10;
+  transition: all 1s;
+  box-sizing: border-box;
+}
+.sp-column-info .thumbnails.optimized .thumb-wrapper .thumb {
+  position: relative;
+  width: 100%;
+}
+.sp-column-info .thumbnails.optimized .thumb-wrapper .thumb .thumb-name {
+  overflow: hidden;
+  max-width: 200px;
+  white-space: nowrap;
+  display: inline-block;
+}
+.sp-column-info .thumbnails.optimized .thumb-wrapper .thumb .optimize-bar {
+  float: right;
+  width: 110px;
+  margin-left: 8px;
+}
+.sp-column-info .thumbnails.optimized .thumb-wrapper .thumb .optimize-bar .point {
+  width: 8px;
+  height: 8px;
+  display: inline-block;
+  border: 1px solid #ccc;
+  margin-left: 1px;
+  background: #ccc;
+  vertical-align: middle;
+}
+.sp-column-info .thumbnails.optimized .thumb-wrapper .thumb .optimize-bar .point.checked {
+  background: green;
+  box-shadow: 1px 1px 1px green;
+}
+.sp-column-info .thumbnails.optimized:hover .thumb-wrapper {
+  display: block;
+}
+.sp-column-info .sp-column-actions {
+  position: absolute;
+  right: 10px;
+  top: 0;
+}
+.sp-column-info .thumbs-todo {
+  position: relative;
+}
+.sp-column-info .thumbs-todo span {
+  display: none;
+}
+.sp-column-info .thumbs-todo h4:hover ~ span {
+  display: block;
+}
+.sp-column-info h4 {
+  margin: 0;
+}
+.sp-column-info .shortpixel-image-error {
+  display: block;
+  border: 1px solid #ff0000;
+  padding: 12px;
+  margin: 14px 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+.sp-column-info .shortpixel-image-error .shortpixel-error-reset {
+  font-weight: 500;
+  font-size: 12px;
+  display: block;
+}
+
+.column-wp-shortPixel .message {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 12px 0;
+}
+
+div.sp-modal-shade {
+  display: none;
+  /* Hidden by default */
+  position: fixed;
+  /* Stay in place */
+  z-index: 10000;
+  /* Sit on top - blame WP-admin for the z-index battle . */
+  left: 0;
+  top: 0;
+  width: 100%;
+  /* Full width */
+  height: 100%;
+  /* Full height */
+  overflow: auto;
+  /* Enable scroll if needed */
+  background: black;
+  /* Fallback color */
+  background: rgba(0, 0, 0, 0.4);
+  /* Black w/ opacity */
+  opacity: 0.4;
+}
+
+div.shortpixel-modal {
+  background-color: #fefefe;
+  /*margin: 8% auto;  15% from the top and centered */
+  padding: 20px;
+  border: 1px solid #888;
+  width: 30%;
+  /* Could be more or less, depending on screen size */
+  min-width: 300px;
+  /* Could be more or less, depending on screen size */
+  z-index: 100001;
+  /* Proper z-index */
+  position: fixed;
+  top: 10%;
+  left: 50%;
+  max-height: 90%;
+  overflow-y: auto;
+}
+div.shortpixel-modal .sp-close-button, div.shortpixel-modal button.sp-close-upgrade-button {
+  float: right;
+  margin-top: 0px;
+  background: transparent !important;
+  border: none;
+  font-size: 22px;
+  line-height: 10px;
+  cursor: pointer;
+}
+div.shortpixel-modal .sptw-modal-spinner {
+  background-image: url("../img/spinner2.gif");
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+div.sp-modal-title {
+  font-size: 22px;
+}
+
+div.sp-modal-body {
+  margin-top: 10px;
 }
 
 body.debug-model-active {
@@ -339,6 +279,71 @@ body.debug-model-active {
   opacity: 0.7;
   z-index: 10000;
   display: none;
+}
+
+.shortpixel-hide {
+  display: none !important;
+}
+
+.switch_button {
+  line-height: 12px;
+  margin: 2px -5px 10px -5px;
+  display: inline-block;
+}
+.switch_button label {
+  padding: 8px 5px;
+}
+.switch_button label:focus {
+  outline: none;
+}
+.switch_button input {
+  display: none;
+}
+.switch_button input:checked ~ .the_switch {
+  background: #1fbec9;
+}
+.switch_button input:checked ~ .the_switch:after {
+  left: 20px;
+  background: #1caecb;
+}
+.switch_button input:disabled ~ .the_switch {
+  background: #d5d5d5;
+  pointer-events: none;
+}
+.switch_button input:disabled ~ .the_switch:after {
+  background: #bcbdbc;
+}
+.switch_button .the_switch {
+  margin: 8px 15px 8px 0;
+  position: relative;
+  display: inline-block;
+  height: 10px;
+  width: 40px;
+  background: #cccccc;
+  border-radius: 100px;
+  cursor: pointer;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.25) !important;
+}
+.switch_button .the_switch:after {
+  position: absolute;
+  left: -2px;
+  top: -4px;
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: 100px;
+  background: #aaa;
+  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.31);
+  content: "";
+  -webkit-transition: left 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), padding 0.5s ease, margin 0.5s ease !important;
+  -o-transition: left 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), padding 0.5s ease, margin 0.5s ease !important;
+  transition: left 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), padding 0.5s ease, margin 0.5s ease !important;
+}
+.switch_button .the_switch:active:after {
+  transform: scale(0.9, 0.85);
+}
+.switch_button .the_switch:focus {
+  outline: none;
 }
 
 /*# sourceMappingURL=shortpixel-admin.css.map */

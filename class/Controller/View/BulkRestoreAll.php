@@ -4,7 +4,7 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 use \ShortPixel\Controller\OtherMediaController as OtherMediaController;
 
-class BulkRestoreAll extends \ShortPixel\Controller
+class BulkRestoreAll extends \ShortPixel\ViewController
 {
     protected static $slug = 'bulk-restore-all';
     protected $template = 'view-restore-all';
@@ -45,10 +45,8 @@ class BulkRestoreAll extends \ShortPixel\Controller
 
     public function getCustomFolders()
     {
-      //wpshortPixel::refreshCustomFolders();
-      //$spMetaDao = $this->shortPixel->getSpMetaDao();
-      //$customFolders = $spMetaDao->getFolders();
-      $otherMedia = new OtherMediaController();
+
+      $otherMedia = OtherMediaController::getInstance();
 
       return $otherMedia->getAllFolders();
 
