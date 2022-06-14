@@ -288,9 +288,10 @@ console.log("Screen Init Done", initMedia, initCustom);
       if (qStatus == 'PREPARING_DONE' || qStatus == 'PREPARING_RECOUNT')
       {
           console.log('Queue status: preparing done');
-          this.UpdatePanelStatus('loaded', 'selection');
+
           this.SwitchPanel('summary');
-          this.processor.SetInterval(-1); // back to default.
+ 					this.UpdatePanelStatus('loaded', 'selection');
+				  this.processor.SetInterval(-1); // back to default.
 
       }
       if (qStatus == 'QUEUE_EMPTY')
@@ -934,9 +935,6 @@ console.log("Screen Init Done", initMedia, initCustom);
 		}
     var data = {screen_action: 'startRestoreAll', callback: 'shortpixel.startRestoreAll', queues: queues}; //
 
-    this.SwitchPanel('selection');
-    this.UpdatePanelStatus('loading', 'selection');
-
     // Prepare should happen after selecting what the optimize.
     window.addEventListener('shortpixel.startRestoreAll', this.PrepareBulk.bind(this), {'once': true} );
     window.addEventListener('shortpixel.bulk.onSwitchPanel', this.StartBulk.bind(this), {'once': true});
@@ -945,11 +943,9 @@ console.log("Screen Init Done", initMedia, initCustom);
 
   this.BulkMigrateAll = function (event)
   {
-    console.log('Start Migrate All');
     var data = {screen_action: 'startMigrateAll', callback: 'shortpixel.startMigrateAll'}; //
 
 		this.UpdatePanelStatus('loading', 'selection');
-
 		this.SwitchPanel('selection');
 
   	//this.SwitchPanel('process');
@@ -961,7 +957,7 @@ console.log("Screen Init Done", initMedia, initCustom);
   }
 	this.BulkRemoveLegacy = function (event)
   {
-    console.log('Start Remove Legacy');
+
     var data = {screen_action: 'startRemoveLegacy', callback: 'shortpixel.startRemoveLegacy'}; //
 
     this.SwitchPanel('selection');
@@ -973,6 +969,15 @@ console.log("Screen Init Done", initMedia, initCustom);
     window.addEventListener('shortpixel.bulk.onSwitchPanel', this.StartBulk.bind(this), {'once': true});
     this.processor.AjaxRequest(data);
   }
+	this.StartBulkOperation = function (event)
+	{
+		this.PrepareBulk();
+
+		this.UpdatePanelStatus('loading', 'selection');
+		this.SwitchPanel('selection');
+
+
+	}
 
 
 	// Opening of Log files on the dashboard

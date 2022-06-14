@@ -289,7 +289,6 @@ class OptimizeController
         $data->media->stats = $mediaQ->getStats();
         $data->custom->stats = $customQ->getStats();
 
-
         $data->total = $this->calculateStatsTotals($data);
 				$data = $this->numberFormatStats($data);
 

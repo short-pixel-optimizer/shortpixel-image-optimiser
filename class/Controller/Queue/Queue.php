@@ -179,8 +179,6 @@ abstract class Queue
           $queue = array();
           $imageCount = $webpCount = $avifCount = $baseCount = 0;
 
-          //$customData = $this->getStatus('custom_data');
-
           $operation = $this->getCustomDataItem('customOperation'); // false or value (or null)
 
 					if (is_null($operation))
@@ -334,6 +332,9 @@ abstract class Queue
       $stats->fatal_errors = (int) $this->getStatus('fatal_errors');
       $stats->done = (int) $this->getStatus('done');
       $stats->bulk_running = (bool) $this->getStatus('bulk_running');
+
+			$customData = $this->getStatus('custom_data');
+			Log::addTemp('customData', $customData);
 
       $stats->total = $stats->in_queue + $stats->fatal_errors + $stats->errors + $stats->done + $stats->in_process;
       if ($stats->total > 0)

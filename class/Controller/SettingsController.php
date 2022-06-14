@@ -194,14 +194,8 @@ class SettingsController extends \ShortPixel\ViewController
 
 			public function action_debug_redirectBulk()
 			{
-				$opt = new OptimizeController();
-	 			$opt->setBulk(true);
 
-	 		 	$bulkMedia = $opt->getQueue('media');
-	 			$bulkCustom = $opt->getQueue('custom');
-
-				$bulkMedia->resetQueue();
-				$bulkCustom->resetQueue();
+	 			OptimizeController::resetQueues();
 
 				$action = isset($_REQUEST['bulk']) ? sanitize_text_field($_REQUEST['bulk']) : null;
 

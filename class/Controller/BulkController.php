@@ -52,7 +52,9 @@ class BulkController
         if ($customOp == 'migrate' || $customOp == 'removeLegacy')
         {
            $options['numitems'] = 200;
+
         }
+			//	Log::addTemp('options', $options);
         $Q->setCustomBulk($customOp, $options);
       }
 
@@ -178,7 +180,7 @@ class BulkController
 				$webpcount = $q->getCustomDataItem('webpcount');
 				$avifcount = $q->getCustomDataItem('avifcount');
 				$basecount = $q->getCustomDataItem('basecount');
-			
+
 				if (property_exists($stats, 'images'))
 					$data['total_images'] = $stats->images->images_done;
 

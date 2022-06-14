@@ -29,8 +29,6 @@ class InstallHelper
       AdminNoticesController::resetAllNotices();
       \WPShortPixelSettings::onActivate();
       OptimizeController::resetQueues();
-
-			error_log('Activate pLuing');
   }
 
   public static function deactivatePlugin()
@@ -113,7 +111,7 @@ class InstallHelper
 		$plugin = sanitize_text_field($_GET['plugin']); // our target.
 
 	  deactivate_plugins($plugin);
-        
+
     wp_safe_redirect($url);
     die();
 

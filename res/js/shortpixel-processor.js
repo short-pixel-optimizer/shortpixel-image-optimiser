@@ -204,7 +204,9 @@ window.ShortPixelProcessor =
     Process: function()
     {
         if (this.worker === null)
+				{
            this.LoadWorker(); // JIT worker loading
+				}
 
         //this.tooltip.DoingProcess();
         this.worker.postMessage({action: 'process', 'nonce' : this.nonce['process']});
@@ -225,7 +227,7 @@ window.ShortPixelProcessor =
         //if (this.timesEmpty >= 5) // conflicts with the stop defer.
         //   this.interval = 2000 + (this.timesEmpty * 1000);  // every time it turns up empty, second slower.
 
-        console.log('Processor: Run Process');
+        console.log('Processor: Run Process in ' + this.interval);
 
         this.timer = window.setTimeout(this.Process.bind(this), this.interval);
     },
@@ -379,7 +381,10 @@ window.ShortPixelProcessor =
 						}
 
 						if (this.workerErrors >= 3)
+						{
 							this.StopProcess();
+							this.ShutDownWorker();
+						}
 						else
 							this.StopProcess({ defer: true });
 
