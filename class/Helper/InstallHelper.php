@@ -30,18 +30,22 @@ class InstallHelper
       \WPShortPixelSettings::onActivate();
       OptimizeController::resetQueues();
 
-			error_log('Activate pLuing');
+
+			$settings->currentVersion = SHORTPIXEL_IMAGE_OPTIMISER_VERSION;
   }
 
   public static function deactivatePlugin()
   {
+
     $settings = \wpSPIO()->settings();
 		$settings::onDeactivate();
 
     $env = wpSPIO()->env();
 
     if (! $env->is_nginx)
+		{
       \ShortPixelTools::alterHtaccess(false, false);
+		}
 
     // save remove.
     $fs = new FileSystemController();
@@ -113,7 +117,7 @@ class InstallHelper
 		$plugin = sanitize_text_field($_GET['plugin']); // our target.
 
 	  deactivate_plugins($plugin);
-        
+
     wp_safe_redirect($url);
     die();
 
