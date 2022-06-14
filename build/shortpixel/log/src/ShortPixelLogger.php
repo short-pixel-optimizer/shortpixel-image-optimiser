@@ -62,7 +62,6 @@ namespace ShortPixel\ShortPixelLogger;
           $this->logLevel = intval($_REQUEST['SHORTPIXEL_DEBUG']);
         }
 
-
       }
       else if ( (defined('SHORTPIXEL_DEBUG') && SHORTPIXEL_DEBUG > 0) )
       {
@@ -175,7 +174,7 @@ namespace ShortPixel\ShortPixelLogger;
    {
       $items = $debugItem->getForFormat();
       $items['time_passed'] =  round ( ($items['time'] - $this->start_time), 5);
-      $items['time'] =  date('Y-m-d H:i:s', $items['time'] );
+      $items['time'] =  date('Y-m-d H:i:s', (int) $items['time'] );
 
       if ( ($items['caller']) && is_array($items['caller']) && count($items['caller']) > 0)
       {
@@ -248,6 +247,11 @@ namespace ShortPixel\ShortPixelLogger;
      $level = DebugItem::LEVEL_WARN;
      $log = self::getInstance();
      $log->addLog($message, $level, $args);
+   }
+   // Alias, since it goes wrong so often.
+   public static function addWarning($message, $args = array())
+   {
+      self::addWarn($message, $args);
    }
    public static function addInfo($message, $args = array())
    {
@@ -333,7 +337,7 @@ namespace ShortPixel\ShortPixelLogger;
        $controller = $this;
 
        $template_path = __DIR__ . '/' . $this->template  . '.php';
-       
+      // var_dump( $template_path);
        if (file_exists($template_path))
        {
 

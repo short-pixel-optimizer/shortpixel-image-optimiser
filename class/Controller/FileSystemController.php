@@ -2,13 +2,17 @@
 namespace ShortPixel\Controller;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
-use ShortPixel\Model\DirectoryModel as DirectoryModel;
-use ShortPixel\Model\FileModel as FileModel;
+use ShortPixel\Model\File\DirectoryModel as DirectoryModel;
+use ShortPixel\Model\File\FileModel as FileModel;
 
+use ShortPixel\Model\Image\MediaLibraryModel as MediaLibraryModel;
+use ShortPixel\Model\Image\MediaLibraryThumbnailModel as MediaLibraryThumbnailModel;
+use ShortPixel\Model\Image\CustomImageModel as CustomImageModel;
 
 /** Controller for FileSystem operations
 *
 * This controller is used for -compound- ( complex ) FS operations, using the provided models File en Directory.
+* USE via \wpSPIO()->filesystem();
 */
 Class FileSystemController extends \ShortPixel\Controller
 {
@@ -30,29 +34,67 @@ Class FileSystemController extends \ShortPixel\Controller
       return new FileModel($path);
     }
 
-    /** Get FileModel for a mediaLibrary post_id .
-    *
-    * This function exists to put get_attached_file to plugin control
-    * Externals / Interals maybe filter it.
-    *
-    * @param $id Attachement ID for the media library item
-    * @return FileModel returns a FileModel file.
-    * @todo This function will be more at home in a medialibrary_model
-    */
-    public function getAttachedFile($id)
+    /** Get MediaLibraryModel for a Post_id
+		* @param int $id
+		*/
+    public function getMediaImage($id)
     {
         $filepath = get_attached_file($id);
-        // same signature as wordpress' filter. Only for this plugin.
         $filepath = apply_filters('shortpixel_get_attached_file', $filepath, $id);
-        return new FileModel($filepath);
+
+        // Somehow get_attached_file can return other random stuff.
+        if ($filepath === false || strlen($filepath) == 0)
+          return false;
+
+        $imageObj = new MediaLibraryModel($id, $filepath);
+        return $imageObj;
     }
 
-    /* wp_get_original_image_path with specific ShortPixel filter */
-    public function getOriginalPath($id)
+		/**
+		* @param int $id
+		*/
+    public function getCustomImage($id)
+    {
+        $imageObj = new CustomImageModel($id);
+        return $imageObj;
+    }
+
+    /** Gets a custom Image Model without being in the database. This is used to check if path is a proper customModel path ( not mediaLibrary ) and see if the file should be included per excusion rules */
+    public function getCustomStub( $path, $load = true)
+    {
+        $imageObj = new CustomImageModel(0);
+        $imageObj->setStub($path, $load);
+        return $imageObj;
+    }
+
+    /** Generic function to get the correct image Object, to prevent many switches everywhere
+		* int $id
+		* string $type
+		*/
+    public function getImage( $id,  $type)
+    {
+			// False, OptimizeController does a hard check for false.
+      $imageObj = false;
+
+      if ($type == 'media')
+        $imageObj = $this->getMediaImage($id);
+      elseif($type == 'custom')
+        $imageObj = $this->getCustomImage($id);
+      else
+        Log::addError('FileSystemController GetImage - no correct type given: ' . $type);
+
+      return $imageObj;
+    }
+
+
+    /* wp_get_original_image_path with specific ShortPixel filter
+		* @param int $id
+     */
+    public function getOriginalImage($id)
     {
       $filepath = \wp_get_original_image_path($id);
       $filepath = apply_filters('shortpixel_get_original_image_path', $filepath, $id);
-      return new FileModel($filepath);
+      return new MediaLibraryThumbnailModel($filepath, $id, 'original');
     }
 
     /** Get DirectoryModel for a certain path. This can exist or not
@@ -73,21 +115,45 @@ Class FileSystemController extends \ShortPixel\Controller
     * @param FileModel $file FileModel with file that needs a backup.
     * @return DirectoryModel | Boolean DirectoryModel pointing to the backup directory. Returns false if the directory could not be created, or initialized.
     */
-    public function getBackupDirectory(FileModel $file)
+    public function getBackupDirectory(FileModel $file, $create = false)
     {
-      $wp_home = get_home_path();
+			if (! function_exists('get_home_path'))
+			{
+				require_once(ABSPATH . 'wp-admin/includes/file.php');
+			}
+      $wp_home = \get_home_path();
       $filepath = $file->getFullPath();
 
-      // Implement this bastard better here.
-      $backup_subdir = \ShortPixelMetaFacade::returnSubDir($filepath);
+      if ($file->is_virtual())
+      {
+         $filepath = apply_filters('shortpixel/file/virtual/translate', $filepath, $file);
+      }
+
+      if ($filepath !== $file->getFullPath())
+      {
+         $file = $this->getFile($filepath);
+      }
+
+      $fileDir = $file->getFileDir();
+
+
+      $backup_subdir = $fileDir->getRelativePath();
+
+      if ($backup_subdir === false)
+      {
+         $backup_subdir = $this->returnOldSubDir($filepath);
+      }
 
       $backup_fulldir = SHORTPIXEL_BACKUP_FOLDER . '/' . $backup_subdir;
-      Log::addDebug('Get File BackupDirectory' . $backup_fulldir);
 
       $directory = $this->getDirectory($backup_fulldir);
 
-      if ($directory->check())
+      $directory = apply_filters("shortpixel/file/backup_folder", $directory, $file);
+
+      if ($create === false && $directory->exists())
         return $directory;
+			elseif ($create === true && $directory->check()) // creates directory if needed.
+				return $directory;
       else {
         return false;
       }
@@ -119,12 +185,13 @@ Class FileSystemController extends \ShortPixel\Controller
     public function getWPUploadBase()
     {
       $upload_dir = wp_upload_dir(null, false);
+
       return $this->getDirectory($upload_dir['basedir']);
     }
 
-    /** This function returns the Absolute Path of the WordPress installation
+    /** This function returns the Absolute Path of the WordPress installation where the **CONTENT** directory is located.
     * Normally this would be the same as ABSPATH, but there are installations out there with -cough- alternative approaches
-    * @returns DirectoryModel
+    * @returns DirectoryModel  Either the ABSPATH or where the WP_CONTENT_DIR is located
     */
     public function getWPAbsPath()
     {
@@ -142,13 +209,14 @@ Class FileSystemController extends \ShortPixel\Controller
         return $this->getDirectory($abspath);
     }
 
-
-
     /** Not in use yet, do not use. Future replacement. */
-    public function createBackUpFolder($folder = SHORTPIXEL_BACKUP_FOLDER)
+    public function checkBackUpFolder($folder = SHORTPIXEL_BACKUP_FOLDER)
     {
-
+				$dirObj = $this->getDirectory($folder);
+				$result = $dirObj->check(true);  // check creates the whole structure if needed.
+				return $result;
     }
+
 
     /** Utility function that tries to convert a file-path to a webURL.
     *
@@ -188,8 +256,7 @@ Class FileSystemController extends \ShortPixel\Controller
 				$home_url = trailingslashit($uploads['baseurl']);
 			}
 			else
-       	$home_url = trailingslashit(get_site_url()); // (1)
-
+          $home_url = trailingslashit(get_site_url()); // (1)
           $url = str_replace($wp_home_path, $home_url, $filepath);
         }
 
@@ -221,6 +288,39 @@ Class FileSystemController extends \ShortPixel\Controller
         return false;
     }
 
+    public function checkURL($url)
+    {
+        if (! $this->pathIsURL($url))
+        {
+           //$siteurl = get_option('siteurl');
+           if (strpos($url, get_site_url()) == false)
+           {
+              $url = get_site_url(null, $url);
+
+           }
+        }
+
+        return apply_filters('shortpixel/filesystem/url', $url);
+    }
+
+    /** Utility function to check if a path is an URL
+    *  Checks if this path looks like an URL.
+    * @param $path String  Path to check
+    * @return Boolean If path seems domain.
+    */
+    public function pathIsUrl($path)
+    {
+      $is_http = (substr($path, 0, 4) == 'http') ? true : false;
+      $is_https = (substr($path, 0, 5) == 'https') ? true : false;
+      $is_neutralscheme = (substr($path, 0, 2) == '//') ? true : false; // when URL is relative like //wp-content/etc
+      $has_urldots = (strpos($path, '://') !== false) ? true : false; // Like S3 offloads
+
+      if ($is_http || $is_https || $is_neutralscheme || $has_urldots)
+        return true;
+      else
+        return false;
+    }
+
     /** Sort files / directories in a certain way.
     * Future dev to include options via arg.
     */
@@ -247,6 +347,46 @@ Class FileSystemController extends \ShortPixel\Controller
 
     }
 
+    public function downloadFile($url, $destinationPath)
+    {
+      $downloadTimeout = max(SHORTPIXEL_MAX_EXECUTION_TIME - 10, 15);
+      $fs = \wpSPIO()->filesystem();
+    //  $fs = \wpSPIO()->fileSystem();
+      $destinationFile = $fs->getFile($destinationPath);
+
+      $args_for_get = array(
+        'stream' => true,
+        'filename' => $destinationPath,
+      );
+
+      $response = wp_remote_get( $url, $args_for_get );
+
+      if(is_wp_error( $response )) {
+        Log::addError('Download file failed', array($url, $response->get_error_messages(), $response->get_error_codes() ));
+
+        // Try to get it then via this way.
+        $response = download_url($url, $downloadTimeout);
+        if (!is_wp_error($response)) // response when alright is a tmp filepath. But given path can't be trusted since that can be reason for fail.
+        {
+          $tmpFile = $fs->getFile($response);
+          $result = $tmpFile->move($destinationFile);
+
+        } // download_url ..
+        else {
+          Log::addError('Secondary download failed', array($url, $response->get_error_messages(), $response->get_error_codes() ));
+        }
+      }
+      else { // success, at least the download.
+          $destinationFile = $fs->getFile($response['filename']);
+      }
+
+      Log::addDebug('Remote Download attempt result', array($url, $destinationPath));
+      if ($destinationPath->exists())
+        return true;
+      else
+        return false;
+    }
+
     /** Get all files from a directory tree, starting at given dir.
     * @param DirectoryModel $dir to recursive into
     * @param Array $filters Collection of optional filters as accepted by FileFilter in directoryModel
@@ -271,6 +411,37 @@ Class FileSystemController extends \ShortPixel\Controller
 
         return $fileArray;
     }
+
+    /** Old method of getting a subDir. This is messy and hopefully should not be used anymore. It's added here for backward compat in case of exceptions */
+    private function returnOldSubDir($file)
+    {
+              // Experimental FS handling for relativePath. Should be able to cope with more exceptions.  See Unit Tests
+				Log::addWarn('Return Old Subdir was called, everything else failed');
+              $homePath = get_home_path();
+              if($homePath == '/') {
+                  $homePath = $this->getWPAbsPath();
+              }
+              $hp = wp_normalize_path($homePath);
+              $file = wp_normalize_path($file);
+
+            //  $sp__uploads = wp_upload_dir();
+
+              if(strstr($file, $hp)) {
+                  $path = str_replace( $hp, "", $file);
+              } elseif( strstr($file, dirname( WP_CONTENT_DIR ))) { //in some situations the content dir is not inside the root, check this also (ex. single.shortpixel.com)
+                  $path = str_replace( trailingslashit(dirname( WP_CONTENT_DIR )), "", $file);
+              } elseif( (strstr(realpath($file), realpath($hp)))) {
+                  $path = str_replace( realpath($hp), "", realpath($file));
+              } elseif( strstr($file, trailingslashit(dirname(dirname( SHORTPIXEL_UPLOADS_BASE )))) ) {
+                  $path = str_replace( trailingslashit(dirname(dirname( SHORTPIXEL_UPLOADS_BASE ))), "", $file);
+              } else {
+                  $path = (substr($file, 1));
+              }
+              $pathArr = explode('/', $path);
+              unset($pathArr[count($pathArr) - 1]);
+              return implode('/', $pathArr) . '/';
+    }
+
 
 
 }

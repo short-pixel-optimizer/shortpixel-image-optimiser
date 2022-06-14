@@ -1,0 +1,136 @@
+{
+    "media": {
+        "status": null,
+        "result": null,
+        "results": [{
+            "compressionType": "2",
+            "flags": [],
+            "urls": ["http:\/\/shortpixel.weblogmechanic.com\/wp-content\/uploads\/2021\/10\/XBvUUWU9Hyg.jpg?ver=1634060261", "http:\/\/shortpixel.weblogmechanic.com\/wp-content\/uploads\/2021\/10\/XBvUUWU9Hyg-683x1024.jpg?ver=1634060261", "http:\/\/shortpixel.weblogmechanic.com\/wp-content\/uploads\/2021\/10\/XBvUUWU9Hyg-1024x1536.jpg?ver=1634060261", "http:\/\/shortpixel.weblogmechanic.com\/wp-content\/uploads\/2021\/10\/XBvUUWU9Hyg-1365x2048.jpg?ver=1634060261", "http:\/\/shortpixel.weblogmechanic.com\/wp-content\/uploads\/2021\/10\/XBvUUWU9Hyg-1000x288.jpg?ver=1634060261", "http:\/\/shortpixel.weblogmechanic.com\/wp-content\/uploads\/2021\/10\/XBvUUWU9Hyg-200x300.jpg?ver=1634060261"],
+            "counts": {
+                "creditCount": 6,
+                "baseCount": 6,
+                "avifCount": 0,
+                "webpCount": 0
+            },
+            "_queueItem": {},
+            "item_id": "2248",
+            "tries": "1",
+            "result": {
+                "apiStatus": -1,
+                "message": "URL is inaccessible from our server(s) due to access restrictions.",
+                "is_error": true,
+                "is_done": true,
+                "filename": "XBvUUWU9Hyg.jpg"
+            },
+            "fileStatus": -1
+        }],
+        "message": "Fetched 1 items",
+        "qstatus": 1,
+        "stats": {
+            "is_preparing": false,
+            "is_running": true,
+            "is_finished": false,
+            "in_queue": 2,
+            "in_process": 1,
+            "errors": 0,
+            "fatal_errors": 2,
+            "done": 0,
+            "bulk_running": true,
+            "total": 5,
+            "percentage_done": 40
+        }
+    },
+    "custom": {
+        "status": null,
+        "result": null,
+        "results": [{
+            "compressionType": "2",
+            "flags": [],
+            "urls": ["http:\/\/shortpixel.weblogmechanic.com\/wp-content\/justanother\/fakeimg.jpg"],
+            "counts": {
+                "creditCount": 1,
+                "baseCount": 1,
+                "avifCount": 0,
+                "webpCount": 0
+            },
+            "result": {
+                "apiStatus": -1,
+                "message": "URL is inaccessible from our server(s) due to access restrictions.",
+                "is_error": true,
+                "is_done": true,
+                "filename": "fakeimg.jpg"
+            },
+            "_queueItem": {},
+            "item_id": "16143",
+            "tries": "3",
+            "fileStatus": -1
+        }, {
+            "compressionType": "2",
+            "flags": [],
+            "urls": ["http:\/\/shortpixel.weblogmechanic.com\/wp-content\/justanother\/Ticket_Helsi_10-07-2021.pdf"],
+            "counts": {
+                "creditCount": 1,
+                "baseCount": 1,
+                "avifCount": 0,
+                "webpCount": 0
+            },
+            "_queueItem": {},
+            "item_id": "16140",
+            "tries": "1",
+            "result": {
+                "apiStatus": -1,
+                "message": "URL is inaccessible from our server(s) due to access restrictions.",
+                "is_error": true,
+                "is_done": true,
+                "filename": "Ticket_Helsi_10-07-2021.pdf"
+            },
+            "fileStatus": -1
+        }],
+        "message": "Fetched 2 items",
+        "qstatus": 1,
+        "stats": {
+            "is_preparing": false,
+            "is_running": true,
+            "is_finished": false,
+            "in_queue": 0,
+            "in_process": 0,
+            "errors": 0,
+            "fatal_errors": 5,
+            "done": 1,
+            "bulk_running": true,
+            "total": 6,
+            "percentage_done": 100
+        }
+    },
+    "total": {
+        "stats": {
+            "is_preparing": false,
+            "is_running": true,
+            "is_finished": false,
+            "in_queue": 2,
+            "in_process": 1,
+            "errors": 0,
+            "fatal_errors": 7,
+            "done": 1,
+            "bulk_running": true,
+            "total": 11,
+            "percentage_done": 140
+        }
+    },
+    "responses": [{
+        "message": "URL is inaccessible from our server(s) due to access restrictions.",
+        "code": 10,
+        "priority": 1,
+        "id": null
+    }, {
+        "message": "URL is inaccessible from our server(s) due to access restrictions.",
+        "code": 10,
+        "priority": 1,
+        "id": null
+    }, {
+        "message": "URL is inaccessible from our server(s) due to access restrictions.",
+        "code": 10,
+        "priority": 1,
+        "id": null
+    }]
+}

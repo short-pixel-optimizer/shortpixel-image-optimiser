@@ -3,38 +3,107 @@ namespace ShortPixel\Controller;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 
-use ShortPixel\Model\DirectoryOtherMediaModel as DirectoryOtherMediaModel;
-use ShortPixel\Model\DirectoryModel as DirectoryModel;
+use ShortPixel\Model\File\DirectoryOtherMediaModel as DirectoryOtherMediaModel;
+use ShortPixel\Model\File\DirectoryModel as DirectoryModel;
+
+use ShortPixel\Controller\OptimizeController as OptimizeController;
+
+use ShortPixel\Helper\InstallHelper as InstallHelper;
 
 // Future contoller for the edit media metabox view.
 class OtherMediaController extends \ShortPixel\Controller
 {
+    private $folderIDCache;
+    private static $hasFoldersTable;
+    private static $hasCustomImages;
+
+
+    protected static $instance;
+
     public function __construct()
     {
         parent::__construct();
     }
 
+    public static function getInstance()
+    {
+        if (is_null(self::$instance))
+           self::$instance = new OtherMediaController();
+
+        return self::$instance;
+    }
+
+    public function getFolderTable()
+    {
+        global $wpdb;
+        return $wpdb->prefix . 'shortpixel_folders';
+    }
+
+    public function getMetaTable()
+    {
+        global $wpdb;
+        return  $wpdb->prefix . 'shortpixel_meta';
+    }
+
     // Get CustomFolder for usage.
     public function getAllFolders()
     {
-        $folders = DirectoryOtherMediaModel::get();
-        return $folders;
+        $folders = $this->getFolders();
+        return $this->loadFoldersFromResult($folders);
+        //return $folders;
     }
 
     public function getActiveFolders()
     {
-      $folders = DirectoryOtherMediaModel::get(array('remove_hidden' => true));
-      return $folders;
-
+      $folders = $this->getFolders(array('remove_hidden' => true));
+      return $this->loadFoldersFromResult($folders);
     }
+
+    private function loadFoldersFromResult($folders)
+    {
+       $dirFolders = array();
+       foreach($folders as $result)
+       {
+          $dirObj = new DirectoryOtherMediaModel($result);
+          $dirFolders[] = $dirObj;
+       }
+       return $dirFolders;
+    }
+
+    public function getActiveDirectoryIDS()
+    {
+      if (! is_null($this->folderIDCache))
+        return $this->folderIDCache;
+
+      global $wpdb;
+
+      $sql = 'SELECT id from ' . $wpdb->prefix  .'shortpixel_folders where status <> -1';
+      $results = $wpdb->get_col($sql);
+
+      $this->folderIDCache = $results;
+      return $this->folderIDCache;
+    }
+
+		public function getHiddenDirectoryIDS()
+		{
+      global $wpdb;
+
+      $sql = 'SELECT id from ' . $wpdb->prefix  .'shortpixel_folders where status = -1';
+      $results = $wpdb->get_col($sql);
+
+			return $results;
+		}
+
 
     public function getFolderByID($id)
     {
-        $folders = DirectoryOtherMediaModel::get(array('id' => $id));
+        $folders = $this->getFolders(array('id' => $id));
 
         if (count($folders) > 0)
-          return $folders[0];
-
+        {
+          $folders = $this->loadFoldersFromResult($folders);
+          return array_pop($folders);
+        }
         return false;
     }
 
@@ -44,105 +113,164 @@ class OtherMediaController extends \ShortPixel\Controller
        return $folder;
     }
 
+    public function getCustomImageByPath($path)
+    {
+         global $wpdb;
+         $sql = 'SELECT id FROM ' . $this->getMetaTable() . ' WHERE path = %s';
+         $sql = $wpdb->prepare($sql, $path);
 
-    public function addDirectory($path)
+         $custom_id = $wpdb->get_var($sql);
+         $fs = \wpSPIO()->filesystem();
+
+         if (! is_null($custom_id))
+         {
+            return $fs->getImage($custom_id, 'custom');
+         }
+         else
+            return $fs->getCustomStub($path); // stub
+    }
+
+    /* Check if installation has custom image, or anything. To show interface */
+    public function hasCustomImages()
+    {
+       if (! is_null(self::$hasCustomImages)) // prevent repeat
+         return self::$hasCustomImages;
+
+			if (InstallHelper::checkTableExists('shortpixel_meta') === false)
+				$count = 0;
+			else
+			{
+				global $wpdb;
+
+				$sql = 'SELECT count(id) as count from ' . $wpdb->prefix . 'shortpixel_meta';
+        $count = $wpdb->get_var($sql); //$this->getFolders(['only_count' => true, 'remove_hidden' => true]);
+			 }
+       if ($count == 0)
+        $result = false;
+      else
+        $result = true;
+
+      self::$hasCustomImages = $result;
+
+      return $result;
+    }
+
+	   public function addDirectory($path)
     {
        $fs = \wpSPIO()->filesystem();
        $directory = new DirectoryOtherMediaModel($path);
-       $rootDir = $fs->getWPFileBase();
-       $backupDir = $fs->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
 
-      /* if(ShortPixelMetaFacade::isMediaSubfolder($folder->getPath())) {
-                  return
-              } */
+			 // Check if this directory is allowed.
+			 if ($this->checkDirectoryRecursive($directory) === false)
+			 {
+				 return false;
+			 }
 
-       if (! $directory->exists())
+       if (! $directory->get('in_db'))
        {
-          Notices::addError(__('Could not be added, directory not found: ' . $path ,'shortpixel-image-optimiser'));
-          return false;
-       }
-       elseif (! $directory->isSubFolderOf($rootDir) && $directory->getPath() != $rootDir->getPath() )
-       {
-          Notices::addError( sprintf(__('The %s folder cannot be processed as it\'s not inside the root path of your website (%s).','shortpixel-image-optimiser'),$addedFolder, $rootDir->getPath()));
-          return false;
-       }
-       elseif($directory->isSubFolderOf($backupDir) || $directory->getPath() == $backupDir->getPath() )
-       {
-          Notices::addError( __('This folder contains the ShortPixel Backups. Please select a different folder.','shortpixel-image-optimiser'));
-          return false;
-       }
-       elseif( $this->checkIfMediaLibrary($directory) )
-       { // ShortPixelMetaFacade::isMediaSubfolder
-          Notices::addError(__('This folder contains Media Library images. To optimize Media Library images please go to <a href="upload.php?mode=list">Media Library list view</a> or to <a href="upload.php?page=wp-short-pixel-bulk">ShortPixel Bulk page</a>.','shortpixel-image-optimiser'));
-          return false;
-       }
-       elseif (! $directory->is_writable())
-       {
-         Notices::addError( sprintf(__('Folder %s is not writeable. Please check permissions and try again.','shortpixel-image-optimiser'),$directory->getPath()) );
-         return false;
-       }
-
-
-       if (! $directory->hasDBEntry())
-       {
-         Log::addDebug('Has no DB entry, on addDirectory', $directory);
          if ($directory->save())
          {
+					$this->folderIDCache = null;
+          $directory->refreshFolder(true);
           $directory->updateFileContentChange();
-          $directory->refreshFolder(0);
          }
        }
        else // if directory is already added, fail silently, but still refresh it.
        {
          if ($directory->isRemoved())
          {
-            $directory->setStatus(DirectoryOtherMediaModel::DIRECTORY_STATUS_NORMAL);
+					 	$this->folderIDCache = null;
+            $directory->set('status', DirectoryOtherMediaModel::DIRECTORY_STATUS_NORMAL);
+						$directory->refreshFolder(true);
             $directory->updateFileContentChange(); // does a save. Dunno if that's wise.
-            $directory->refreshFolder(0);
          }
          else
-          $directory->refreshFolder();
+          $directory->refreshFolder(false);
        }
 
-      if ($directory->exists() && $directory->getID() > 0)
+      if ($directory->exists() && $directory->get('id') > 0)
         return $directory;
       else
         return false;
     }
 
-    public function refreshFolder(DirectoryOtherMediaModel $directory, $force = false)
+		// Recursive check if any of the directories is not addable. If so cancel the whole thing.
+		public function checkDirectoryRecursive($directory)
+		{
+				 if ($directory->checkDirectory() === false)
+				 {
+				 	return false;
+				 }
+
+				 $subDirs = $directory->getSubDirectories();
+				 foreach($subDirs as $subDir)
+				 {
+					  if ($subDir->checkDirectory() === false)
+						{
+							 return false;
+						}
+						else
+						{
+							 $result = $this->checkDirectoryRecursive($subDir);
+							 if ($result === false)
+							 {
+							 	return $result;
+							}
+						}
+
+				 }
+
+				 return true;
+		}
+
+    // Main function to add a path to the Custom Media.
+    public function addImage($path_or_file, $args = array())
     {
-      $updated = $directory->updateFileContentChange();
-      $update_time = $directory->getUpdated();
-      if ($updated || $force)
-      {
+        $defaults = array(
+          'is_nextgen' => false,
+        );
 
-        // when forcing, set to never updated.
-        if ($force)
+        $args = wp_parse_args($args, $defaults);
+
+        $fs = \wpSPIO()->filesystem();
+
+        if (is_object($path_or_file)) // assume fileObject
         {
-          $update_time = 0; // force from begin of times.
+					  $file = $path_or_file;
+				}
+        else
+        {
+           $file = $fs->getFile($path_or_file);
+        }
+        $folder = $this->getFolderByPath( (string) $file->getFileDir());
+
+        if ($folder->get('in_db') === false)
+				{
+            if ($args['is_nextgen'] == true)
+            {
+               $folder->set('status', DirectoryOtherMediaModel::DIRECTORY_STATUS_NEXTGEN );
+            }
+            $folder->save();
         }
 
-        if ($directory->exists() )
-        {
-          $directory->refreshFolder($update_time);
-        }
-        else {
-          Log::addWarn('Custom folder does not exist: ', $directory);
-          return false;
-        }
-      }
+        $folder->addImages(array($file));
 
     }
+
 
     /** Check directory structure for new files */
     public function refreshFolders($force = false, $expires = null)
     {
-			// a little PHP 5.5. compat. 
+ 			// a little PHP 5.5. compat.
 			if (is_null($expires))
 			{
 				$expires = 5 * MINUTE_IN_SECONDS;
 			}
+
+			if (! $this->hasFoldersTable())
+				return false;
+
+			$this->cleanUp();
       $customFolders = $this->getActiveFolders();
 
       $cache = new CacheController();
@@ -152,26 +280,37 @@ class OtherMediaController extends \ShortPixel\Controller
       {
         return true;
       }
-
       $refreshDelay->setExpires($expires);
       $refreshDelay->save();
 
-
       foreach($customFolders as $directory) {
-        if ($force)
-        {
-          $cache->deleteItemObject($refreshDelay);
-        }
 
-          $this->refreshFolder($directory, $force);
-
+				$stats = $directory->getStats();
+				$forcenow = ($force || $stats->Total === 0) ? true : false;
+	      $directory->refreshFolder($forcenow);
       } // folders
 
       return true;
     }
 
+		/**
+		 * Function to clean the folders and meta from unused stuff
+		*/
+		protected function cleanUp()
+		{
+			 global $wpdb;
+			 $folderTable = $this->getFolderTable();
+			 $metaTable = $this->getMetaTable();
+
+			 // Remove folders that are removed, and have no images in MetaTable.
+			 $sql = " DELETE FROM $folderTable WHERE status < 0 AND id NOT IN ( SELECT DISTINCT folder_id FROM $metaTable)";
+			 $result = $wpdb->query($sql);
+
+
+		}
+
     /* Check if this directory is part of the MediaLibrary */
-    protected function checkifMediaLibrary(DirectoryModel $directory)
+    public function checkifMediaLibrary(DirectoryModel $directory)
     {
       $fs = \wpSPIO()->filesystem();
       $uploadDir = $fs->getWPUploadBase();
@@ -183,9 +322,167 @@ class OtherMediaController extends \ShortPixel\Controller
            return false;
       elseif (is_numeric($directory->getName() )) // upload subdirs come in variation of year or month, both numeric.
           return true;
-
-
     }
 
 
-}
+    public function ajaxBrowseContent()
+    {
+      if ( ! $this->userIsAllowed )  {
+          wp_die(__('You do not have sufficient permissions to access this page.','shortpixel-image-optimiser'));
+      }
+      $fs = \wpSPIO()->filesystem();
+      $rootDirObj = $fs->getWPFileBase();
+      $path = $rootDirObj->getPath();
+
+
+      $postDir = isset($_POST['dir']) ? trim(sanitize_text_field($_POST['dir'])) : null;
+      if (! is_null($postDir))
+      {
+         $postDir = rawurldecode($postDir);
+         $children = explode('/', $postDir );
+
+         foreach($children as $child)
+         {
+            if ($child == '.' || $child == '..')
+              continue;
+
+             $path .= '/' . $child;
+         }
+
+      }
+
+      $dirObj = $fs->getDirectory($path);
+
+      if ($dirObj->getPath() !== $rootDirObj->getPath() && ! $dirObj->isSubFolderOf($rootDirObj))
+      {
+        exit( __('This directory seems not part of WordPress', 'shortpixel-image-optimiser'));
+      }
+
+      if( $dirObj->exists() ) {
+
+          //$dir = $fs->getDirectory($postDir);
+    //      $files = $dirObj->getFiles();
+          $subdirs = $fs->sortFiles($dirObj->getSubDirectories()); // runs through FS sort.
+
+
+          foreach($subdirs as $index => $dir) // weed out the media library subdirectories.
+          {
+            $dirname = $dir->getName();
+            if($dirname == 'ShortpixelBackups' || $this->checkifMediaLibrary($dir))
+            {
+               unset($subdirs[$index]);
+            }
+          }
+
+          if( count($subdirs) > 0 ) {
+              echo "<ul class='jqueryFileTree'>";
+              foreach($subdirs as $dir ) {
+
+                  $returnDir = substr($dir->getPath(), strlen($rootDirObj->getPath())); // relative to root.
+                  $dirpath = $dir->getPath();
+                  $dirname = $dir->getName();
+                  // @todo Should in time be moved to othermedia_controller / check if media library
+
+                  $htmlRel	= str_replace("'", "&apos;", $returnDir );
+                  $htmlName	= htmlentities($dirname);
+                  //$ext	= preg_replace('/^.*\./', '', $file);
+
+                  if( $dir->exists()  ) {
+                      //KEEP the spaces in front of the rel values - it's a trick to make WP Hide not replace the wp-content path
+                          echo "<li class='directory collapsed'><a rel=' " .$htmlRel. "'>" . $htmlName . "</a></li>";
+                  }
+
+              }
+
+              echo "</ul>";
+          }
+          elseif ($_POST['dir'] == '/')
+          {
+            echo "<ul class='jqueryFileTree'>";
+            _e('No Directories found that can be added to Custom Folders', 'shortpixel-image-optimiser');
+            echo "</ul>";
+          }
+      }
+
+      die();
+    }
+
+    /* Get the custom Folders from DB, put them in model
+    @return Array  Array database result
+    */
+    private function getFolders($args = array())
+    {
+      global $wpdb;
+      $defaults = array(
+          'id' => false,  // Get folder by Id
+          'remove_hidden' => true, // Query only active folders
+          'path' => false,
+          'only_count' => false,
+      );
+
+      $args = wp_parse_args($args, $defaults);
+
+      if (! $this->hasFoldersTable())
+      {
+        if ($args['only_count'])
+           return 0;
+        else
+          return array();
+      }
+      $fs =  \wpSPIO()->fileSystem();
+
+      if ($args['only_count'])
+        $selector = 'count(id) as id';
+      else
+        $selector = '*';
+
+      $sql = "SELECT " . $selector . "  FROM " . $wpdb->prefix . "shortpixel_folders WHERE 1=1 ";
+      $prepare = array();
+    //  $mask = array();
+
+      if ($args['id'] !== false && $args['id'] > 0)
+      {
+          $sql .= ' AND id = %d';
+          $prepare[] = $args['id'];
+          //$mask[] = '%d';
+          //$folders = $spMetaDao->getFolderByID($args['id']);
+      }
+      elseif($args['path'] !== false && strlen($args['path']) > 0)
+      {
+          //$folders = $spMetaDao->getFolder($args['path']);
+          $sql .= ' AND path = %s';
+          $prepare[] = $args['path'];
+        //  $mask[] = $args['%s'];
+      }
+      else
+      {
+      //  $folders = $spMetaDao->getFolders();
+      }
+
+      if ($args['remove_hidden'])
+      {
+          $sql .= " AND status <> -1";
+      }
+
+
+      if (count($prepare) > 0)
+        $sql = $wpdb->prepare($sql, $prepare);
+
+      if ($args['only_count'])
+        $results = intval($wpdb->get_var($sql));
+      else
+        $results = $wpdb->get_results($sql);
+
+
+      return $results;
+    }
+
+
+      private function hasFoldersTable()
+      {
+				return InstallHelper::checkTableExists('shortpixel_folders');
+      }
+
+
+
+} // Class

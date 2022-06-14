@@ -1,30 +1,36 @@
+<?php
 namespace ShortPixel;
-
 
 class Pantheon {
 
-	public function __construct() 
+	public function __construct()
 	{
-		add_action( 'shortpixel_image_optimised', array( $this, 'flush_image_caches' ) );
+		add_action( 'shortpixel/image/optimised', array( $this, 'flush_image_caches' ), 10 );
 	}
 
-	public function flush_image_caches( $id ) 
+	public function flush_image_caches( $imageItem )
 	{
-		$image_sizes = get_intermediate_image_sizes();
-		$image_paths = [];
-		$domain      = get_site_url();
-		foreach ( $image_sizes as $size ) {
-			$image_array = wp_get_attachment_image_src( $id, $size );
-			if ( $image_array ) {
-				/**
-				 *  $0 Image source URL.
-				 *  We need absolute URI without domain
-				 *
-				 * @see wp_get_attachment_image_src
-				 */
-				$image_paths[] = str_replace( $domain, '', $image_array[0] );
-			}
+
+    $image_paths[] = $imageItem->getURL();
+
+		if ($imageItem->hasOriginal())
+		{
+			 $image_paths[] = $imageItem->getOriginalFile()->getURL();
 		}
+
+    if (count($imageItem->get('thumbnails')) > 0)
+    {
+       foreach($imageItem->get('thumbnails') as $thumbObj)
+       {
+           $image_paths[] = $thumbObj->getURL();
+       }
+    }
+
+    $domain      = get_site_url();
+    $image_paths = array_map(function($path) use ($domain)
+    {
+       return str_replace( $domain, '', $path);
+    },$image_paths);
 
 		if ( ! empty( $image_paths ) ) {
 			$image_paths = array_unique( $image_paths );
@@ -33,8 +39,8 @@ class Pantheon {
 				pantheon_wp_clear_edge_paths( $image_paths );
 			}
 		}
-	}
-}
+  }
+} // class
 
 if ( ! empty( $_ENV['PANTHEON_ENVIRONMENT'] ) ) {
 	$p = new Pantheon();  // monitor hook.

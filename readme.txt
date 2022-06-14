@@ -1,10 +1,10 @@
 === ShortPixel Image Optimizer ===
 Contributors: ShortPixel
 Tags: convert webp, optimize images, image optimization, resize, compressor, image, avif, compression, optimize, image optimiser, image compression, compress pdf, compress jpg, compress png, performance, photography, smush, scale, pictures
-Requires at least: 4.2.0
+Requires at least: 4.8.0
 Tested up to: 6.0
 Requires PHP: 5.6
-Stable tag: 4.22.10
+Stable tag: 5.0.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -321,6 +321,12 @@ Alternatively, you can use this filter in your theme's functions.php file:
 9. Check other optimized images status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 5.0.0 =
+Release date June 14th, 2022
+We hope today is a lucky day because SPIO 5 is super cool, excellent and faster. Now bug free! Just kidding :-) read on for the changelog and be kind with us in reporting issues. The dev team will be eternally grateful!
+* New: this is a major rewrite of the plugin, where all the processing engine has been completely changed, as well as other major parts of the plugin;
+* Language: pretty much all strings were either added, updated, fuzzed or obsoleted, therefore we didn't lose time in counting them; we hope you will understand.
 
 = 4.22.10 =
 Release date June 2nd, 2022

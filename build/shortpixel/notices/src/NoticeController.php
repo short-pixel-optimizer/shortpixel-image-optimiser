@@ -108,7 +108,7 @@ class NoticeController //extends ShortPixelController
       }
       self::$notices[] = $notice;
       $this->countNotices();
-      Log::addDebug('Adding notice - ', $notice);
+
       $this->update();
       return $notice;
   }

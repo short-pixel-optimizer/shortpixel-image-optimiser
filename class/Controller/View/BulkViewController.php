@@ -3,204 +3,230 @@ namespace ShortPixel\Controller\View;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 
-use \ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
+use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
+use ShortPixel\Controller\ApiKeyController as ApiKeyController;
+use ShortPixel\Controller\QuotaController as QuotaController;
+use Shortpixel\Controller\OptimizeController as OptimizeController;
+use ShortPixel\Controller\BulkController as BulkController;
+use ShortPixel\Controller\StatsController as StatsController;
+use ShortPixel\Controller\OtherMediaController as OtherMediaController;
+use ShortPixel\Helper\UiHelper as UiHelper;
 
-
-class BulkViewController extends \ShortPixel\Controller
+class BulkViewController extends \ShortPixel\ViewController
 {
 
   protected $form_action = 'sp-bulk';
+  protected $template = 'view-bulk';
 
   protected $quotaData;
   protected $pendingMeta;
-protected $selected_folders = array();
+  protected $selected_folders = array();
+
 
   public function load()
   {
-    $this->checkPost();
-    if ($this->is_form_submit)
+    $quota = QuotaController::getInstance();
+    $optimizeController = new OptimizeController();
+
+    $this->view->quotaData = $quota->getQuota();
+
+    $this->view->stats = $optimizeController->getStartupData();
+    $this->view->approx = $this->getApproxData();
+
+    $this->view->logHeaders = array(__('Images', 'shortpixel_image_optimiser'), __('Errors', 'shortpixel_image_optimizer'), __('Date', 'shortpixel_image_optimizer'));
+    $this->view->logs = $this->getLogs();
+
+    $keyControl = ApiKeyController::getInstance();
+
+    $this->view->error = false;
+
+    if ( ! $keyControl->keyIsVerified() )
     {
-      $this->doBulkAction();
+        $adminNoticesController = AdminNoticesController::getInstance();
+
+        $this->view->error = true;
+        $this->view->errorTitle = __('Missing API Key', 'shortpixel_image_optimiser');
+        $this->view->errorContent = $adminNoticesController->getActivationNotice();
+        $this->view->showError = 'key';
+    }
+    elseif ( ! $quota->hasQuota())
+    {
+        $this->view->error = true;
+        $this->view->errorTitle = __('Quota Exceeded','shortpixel-image-optimiser');
+        $this->view->errorContent = __('Can\'t start the Bulk Process due to lack of credits.', 'shortpixel-image-optimiser');
+        $this->view->errorText = __('Please check or add quota and refresh the page', 'shortpixel-image-optimiser');
+        $this->view->showError = 'quota';
+
     }
 
-    $this->quotaData = \wpSPIO()->getShortPixel()->checkQuotaAndAlert(null, isset($_GET['checkquota']), 0);
+		$this->view->mediaErrorLog = $this->loadCurrentLog('media');
+		$this->view->customErrorLog = $this->loadCurrentLog('custom');
 
-    if ($this->checkDoingBulk())
-    {
-        $this->loadViewProgress();
-    }
-    else
-    {
-      $this->loadView();
-    }
+		$this->view->buyMoreHref = 'https://shortpixel.com/' . ($keyControl->getKeyForDisplay() ? 'login/' . $keyControl->getKeyForDisplay() : 'pricing');
+
+
+
+    $this->loadView();
 
   }
 
-  public function checkDoingBulk()
+  protected function getApproxData()
   {
-    $prioQ = \wpSPIO()->getShortPixel()->getPrioQ();
-    $settings = \wpSPIO()->settings();
-    $spMetaDao = \wpSPIO()->getShortPixel()->getSPMetaDao();
+		$otherMediaController = OtherMediaController::getInstance();
 
-    global $wpdb;
+    $approx = new \stdClass; // guesses on basis of the statsController SQL.
+    $approx->media = new \stdClass;
+    $approx->custom = new \stdClass;
+    $approx->total = new \stdClass;
 
-    $qry_left = "SELECT count(meta_id) FilesLeftToBeProcessed FROM " . $wpdb->prefix . "postmeta
-    WHERE meta_key = '_wp_attached_file' AND post_id <= " . ((int) $prioQ->getStartBulkId());
-    $filesLeft = $wpdb->get_results($qry_left);
+    $sc = StatsController::getInstance();
+    $sc->reset(); // Get a fresh stat.
 
-    //check the custom bulk
-    $pendingMeta = $settings->hasCustomFolders ? $spMetaDao->getPendingMetaCount() : 0;
-
-    $this->pendingMeta = $pendingMeta;
+    $excludeSizes = \wpSPIO()->settings()->excludeSizes;
 
 
-    return ( ($filesLeft[0]->FilesLeftToBeProcessed > 0 && $prioQ->bulkRunning())
-          || (0 + $pendingMeta > 0 && !$settings->customBulkPaused && $prioQ->bulkRan() )//bulk processing was started
-              && (!$prioQ->bulkPaused() || $settings->skipToCustom));
+    $approx->media->items = $sc->find('media', 'itemsTotal') - $sc->find('media', 'items');
+
+    // ThumbsTotal - Approx thumbs in installation - Approx optimized thumbs (same query)
+    $approx->media->thumbs = $sc->find('media', 'thumbsTotal') - $sc->find('media', 'thumbs');
+
+    // If sizes are excluded, remove this count from the approx.
+    if (is_array($excludeSizes) && count($excludeSizes) > 0)
+      $approx->media->thumbs = $approx->media->thumbs - ($approx->media->items * count($excludeSizes));
+
+    // Total optimized items + Total optimized (approx) thumbnails
+    $approx->media->total = $approx->media->items + $approx->media->thumbs;
+
+
+    $approx->custom->images = $sc->find('custom', 'itemsTotal') - $sc->find('custom', 'items');
+		$approx->custom->has_custom = $otherMediaController->hasCustomImages();
+
+    $approx->total->images = $approx->media->total + $approx->custom->images; // $sc->totalImagesToOptimize();
+
+		// Prevent any guesses to go below zero.
+		foreach($approx->media as $item => $value)
+		{
+			  $approx->media->$item = max($value, 0);
+		}
+    return $approx;
+
   }
 
-  public function doBulkAction()
-  {
-      $spMetaDao = \wpSPIO()->getShortPixel()->getSPMetaDao();
-      $prioQ = \wpSPIO()->getShortPixel()->getPrioQ();
-      $settings = \wpSPIO()->settings();
+	/* Function to check for and load the current Log.  This can be present on load time when the bulk page is refreshed during operations.
+	*  Reload the past error and display them in the error box.
+	* @param String $type  media or custom
+	*/
+	protected function loadCurrentLog($type = 'media')
+	{
+		$bulkController = BulkController::getInstance();
 
-      if(isset($_POST['bulkProcessPause']))
-      {//pause an ongoing bulk processing, it might be needed sometimes
-          $prioQ->pauseBulk();
-          if($settings->hasCustomFolders && $spMetaDao->getPendingMetaCount()) {
-              $settings->customBulkPaused = 1;
-          }
+		$log = $bulkController->getLog('current_bulk_' . $type . '.log');
+
+		if ($log == false)
+			return false;
+
+		 $content = $log->getContents();
+		 $lines = array_filter(explode(';', $content));
+
+		 $output = '';
+
+		 foreach ($lines as $line)
+		 {
+			 	$cells = array_filter(explode('|', $line));
+
+				if (count($cells) == 1)
+					continue; // empty line.
+
+				$date = $filename = $message = $item_id = false;
+
+				$date = $cells[0];
+				$filename = isset($cells[1]) ? $cells[1] : false;
+				$item_id = isset($cells[2]) ? $cells[2] : false;
+				$message = isset($cells[3]) ? $cells[3] : false;
+
+				$kblink = UIHelper::getKBSearchLink($message);
+				$kbinfo = '<span class="kbinfo"><a href="' . $kblink . '" target="_blank" ><span class="dashicons dashicons-editor-help">&nbsp;</span></a></span>';
+
+
+
+				$output .= '<div class="fatal">';
+				$output .= $date . ': ';
+				if ($message)
+					$output .= $message;
+				if ($filename)
+					$output .= ' ( '. __('in file ','shortpixel-image-optimiser') . ' ' . $filename . ' ) ' . $kbinfo;
+
+				$output .= '</div>';
+		 }
+
+
+		 return $output;
+	}
+
+  public function getLogs()
+  {
+      $bulkController = BulkController::getInstance();
+      $logs = $bulkController->getLogs();
+      $fs = \wpSPIO()->filesystem();
+      $backupDir = $fs->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
+
+      $view = array();
+
+      foreach($logs as $logData)
+      {
+
+
+          $logFile = $fs->getFile($backupDir->getPath() . 'bulk_' . $logData['type'] . '_' . $logData['date'] . '.log');
+          $errors = $logData['fatal_errors'];
+
+          if ($logFile->exists())
+					{
+            $errors = '<a data-action="OpenLog" data-file="' . $logFile->getFileName() . '" href="' . $fs->pathToUrl($logFile) . '">' . $errors . '</a>';
+					}
+
+					$op = (isset($logData['operation'])) ? $logData['operation'] : false;
+
+					// BulkName is just to compile a user-friendly name for the operation log.
+					$bulkName = '';
+
+					switch($logData['type'])
+					{
+						 case 'custom':
+						 	$bulkName = __('Custom Media Bulk', 'shortpixel-image-optimiser');
+						 break;
+						 case 'media':
+						 	$bulkName = __('Media Library Bulk', 'shortpixel-image-optimiser');
+						 break;
+
+					}
+
+					$bulkName  .= ' '; // add a space.
+
+					switch($op)
+					{
+							 case 'bulk-restore':
+							 		 $bulkName .= __('Restore', 'shortpixel-image-optimiser');
+							 break;
+							 case 'migrate':
+							 		 $bulkName .= __('Migrate old Metadata', 'shortpixel-image-optimiser');
+							 break;
+							 case 'removeLegacy':
+								$bulkName = __('Remove Legacy Data', 'shortpixel-image-optimiser');
+							 break;
+							 default:
+							 	 	 $bulkName .= __('Optimization', 'shortpixel-image-optimiser');
+							 break;
+					}
+
+					$images = isset($logData['total_images']) ? $logData['total_images'] : $logData['processed'];
+
+          $view[] = array('type' => $logData['type'], 'images' => $images, 'errors' => $errors, 'date' => UiHelper::formatTS($logData['date']), 'operation' => $op, 'bulkName' => $bulkName);
+
       }
 
-      if(isset($_POST['bulkProcessStop']))
-      {//stop an ongoing bulk processing
-          $prioQ->stopBulk();
-          if($settings->hasCustomFolders && $spMetaDao->getPendingMetaCount()) {
-              $settings->customBulkPaused = 1;
-          }
-          $settings->cancelPointer = NULL;
-      }
+      krsort($view);
 
-      if(isset($_POST["bulkProcess"]))
-      {
-          //set the thumbnails option
-          if ( isset($_POST['thumbnails']) ) {
-              $settings->processThumbnails = 1;
-          } else {
-              $settings->processThumbnails = 0;
-          }
-
-          if (isset($_POST['createWebp']) )
-            $settings->createWebp = 1;
-          else
-            $settings->createWebp = 0;
-
-          if (isset($_POST['createAvif']))
-            $settings->createAvif = 1;
-          else
-            $settings->createAvif = 0;
-
-          //clean the custom files errors in order to process them again
-          if($settings->hasCustomFolders) {
-              $spMetaDao->resetFailed();
-              $spMetaDao->resetRestored();
-              $spMetaDao->setPending();
-          }
-
-          $prioQ->startBulk(\ShortPixelQueue::BULK_TYPE_OPTIMIZE);
-          $settings->customBulkPaused = 0;
-          Log::addInfo("BULK:  Start:  " . $prioQ->getStartBulkId() . ", stop: " . $prioQ->getStopBulkId() . " PrioQ: "
-               .json_encode($prioQ->get()));
-      }//end bulk process  was clicked
-
-      if(isset($_POST["bulkRestore"]))
-      {
-          Log::addInfo('Bulk Process - Bulk Restore');
-          $bulkRestore = new BulkRestoreAll(); // controller
-          $bulkRestore->setupBulk();
-
-          $prioQ->startBulk(\ShortPixelQueue::BULK_TYPE_RESTORE);
-          $settings->customBulkPaused = 0;
-      }//end bulk restore  was clicked
-
-      if(isset($_POST["bulkCleanup"]))
-      {
-          Log::addInfo('Bulk Process - Bulk Cleanup ');
-          $prioQ->startBulk(\ShortPixelQueue::BULK_TYPE_CLEANUP);
-          $settings->customBulkPaused = 0;
-      }//end bulk restore  was clicked
-
-      if(isset($_POST["bulkCleanupPending"]))
-      {
-          Log::addInfo('Bulk Process - Clean Pending');
-          $prioQ->startBulk(\ShortPixelQueue::BULK_TYPE_CLEANUP_PENDING);
-          $settings->customBulkPaused = 0;
-      }//end bulk restore  was clicked
-
-      if(isset($_POST["bulkProcessResume"]))
-      {
-          Log::addInfo('Bulk Process - Bulk Resume');
-          $prioQ->resumeBulk();
-          $settings->customBulkPaused = 0;
-      }//resume was clicked
-
-      if(isset($_POST["skipToCustom"]))
-      {
-          Log::addInfo('Bulk Process - Skipping to Custom Media Process');
-          $settings->skipToCustom = true;
-          $settings->customBulkPaused = 0;
-
-      }//resume was clicked
-
-  }
-
-  public function loadView($template = null)
-  {
-    $settings = \wpSPIO()->settings();
-    $prioQ = \wpSPIO()->getShortPixel()->getPrioQ();
-
-    $averageCompression = \wpSPIO()->getShortPixel()->getAverageCompression();
-    $thumbsProcessedCount = $settings->thumbsCount;//amount of optimized thumbnails
-    $under5PercentCount =  $settings->under5Percent;//amount of under 5% optimized imgs.
-    $quotaData = $this->quotaData;
-    $percent = $prioQ->bulkPaused() ? \wpSPIO()->getShortPixel()->getPercent($quotaData) : false;
-
-    $view = new \ShortPixelView(\wpSPIO()->getShortPixel());
-    $view->displayBulkProcessingForm($quotaData, $thumbsProcessedCount, $under5PercentCount,
-          $prioQ->bulkRan(), $averageCompression, $settings->fileCount,
-          \ShortPixelTools::formatBytes($settings->savedSpace), $percent, $this->pendingMeta);
-  }
-
-  public function loadViewProgress()
-  {
-    $settings = \wpSPIO()->settings();
-    $prioQ = \wpSPIO()->getShortPixel()->getPrioQ();
-
-    if($settings->quotaExceeded == 1) {
-        AdminNoticesController::reInstateQuotaExceeded();
-        $this->loadView();
-        return false;
-    }
-
-    if( $settings->verifiedKey == false ) {//invalid API Key
-        return;
-    }
-
-    $quotaData = $this->quotaData;
-    $prioQ = \wpSPIO()->getShortPixel()->getPrioQ();
-
-    //average compression
-    $averageCompression = \wpSPIO()->getShortPixel()->getAverageCompression();
-
-    $msg = \wpSPIO()->getShortPixel()->bulkProgressMessage($prioQ->getDeltaBulkPercent(), $prioQ->getTimeRemaining());
-
-    $view = new \ShortPixelView(\wpSPIO()->getShortPixel());
-    $view->displayBulkProcessingRunning(\wpSPIO()->getShortPixel()->getPercent($quotaData), $msg, $quotaData['APICallsRemaining'], $averageCompression,
-             $prioQ->getBulkType() == \ShortPixelQueue::BULK_TYPE_RESTORE ? 0 :
-            (   $prioQ->getBulkType() == \ShortPixelQueue::BULK_TYPE_CLEANUP
-             || $prioQ->getBulkType() == \ShortPixelQueue::BULK_TYPE_CLEANUP_PENDING ? -1 : ($this->pendingMeta !== null ? ($prioQ->bulkRunning() ? 3 : 2) : 1)), $quotaData);
-
+      return $view;
   }
 
 } // class

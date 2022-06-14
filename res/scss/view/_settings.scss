@@ -2,32 +2,213 @@
 // in our own scope.
 .settings_page_wp-shortpixel-settings
 {
+	@import '../elements/colors';
+	@import '../elements/breakpoints';
+
+	a {
+		color: $color-darkest;
+
+	}
+	p {
+		font-size: 14px;
+	}
+	.button, button:focus
+	{
+		color: $color-darkest;
+		border-color: $color-darkest;
+	}
+	.button-primary, .button-primary:focus {
+		background-color: $color-darkest;
+		border-color: $color-darkest;
+		color: #fff;
+
+		&:hover
+		{
+			background-color: $color-dark;
+			border-color: $color-darkest;
+
+		}
+	}
+	.submit {
+		.button {
+			min-height: 44px;
+		}
+	}
   .top-menu
   {
     font-size: 18px;
-    a { font-size: 18px; }
-  }
+		display: flex;
+		width: 100%;
+		min-height: 50px;
+		align-items: center;
+		margin: 15px 0;
+
+		.links
+		{
+	    a { font-size: 18px; margin-right: 8px; }
+			flex: 12 4 auto;
+//		flex-grow: 14;
+
+		}
+		.quota-remaining
+		{
+			 //float: right;
+			 flex: 2 1 2;
+			 text-align: center;
+		}
+		.pie-wrapper
+		{
+			position: relative;
+			flex: 4 2 auto;
+			min-width: 100px;
+			display: inline-block;
+//			flex-grow: 2;
+			@include breakpoint(0, 1100px)
+			{
+					display: none;
+			}
+		}
+		div.sp-bulk-summary {
+				position: absolute;
+				top: -55px;
+				right: -25px;
+
+				z-index: 10;
+
+				.opt-circle-average {
+						width: 100px;
+						height: 100px;
+						float: right;
+					 // margin-right: 35px;
+						.trail {
+							stroke: #ddd;
+						}
+						.path {
+							stroke: $color-dark;
+							stroke-linecap: round;
+							transition: stroke-dashoffset 0.5s ease 0s;
+						}
+						.text {
+
+							fill: #1FBEC9;
+							font-size: 28px;
+							font-weight: 700;
+							dominant-baseline: middle;
+							text-anchor: middle;
+						}
+
+				}
+				span {
+					display: none;
+					margin: 0;
+					font-size: 11px;
+					position: absolute;
+				//	width: 100%;
+
+					bottom: 45px;
+					//left: -15px;
+					padding: 4px 8px;
+					color: #fff;
+					background: rgba($color-darkest, 0.5);
+					font-weight: 700;
+					border-radius: 3px;
+					white-space: nowrap;
+				}
+				@include breakpoint(0,1500px)
+				{
+
+					.opt-circle-average {
+							width: 100px;
+							height: 100px;
+					}
+					span
+					{
+						display: none;
+					}
+				}
+		} // optimized thing
+  } // top menu
 
   .wp-shortpixel-tab-content
   {
     transition: all 1000ms linear;
   }
-
   .red {
      color: #ff0000;
   }
 
+	.option
+	{
+		 padding: 8px;
+		 display: inline-block;
+		 .button
+		 {
+
+		 }
+		 p {
+			 margin: 14px 0;
+		 }
+	}
+
+	.shortpixel-help-link span.dashicons
+	{
+	    text-decoration: none;
+	    margin-top: -1px;
+	}
+
   //tabs
   article.sp-tabs
   {
-    section
+    section // inside the tab
     {
+			p.settings-info {
+			    padding-top: 0px;
+			    color: #818181;
+			    font-size:13px !important;
+			}
+			p.settings-info.shortpixel-settings-error {
+			    color: #c32525;
+			}
+
       .wp-shortpixel-tab-content
       { opacity: 0; }
       &.sel-tab .wp-shortpixel-tab-content
       {
         opacity: 1;
       }
+
+
+			.option-content
+			{
+				 display: inline-block;
+			}
+			.suboption // if you are child of main option, indent left.
+			{
+				margin-left: 20px;
+			}
+
+
+				.toggleTarget
+				{
+					 display: none;
+					 opacity: 0;
+					 height: 0;
+					 overflow: hidden;
+					 transition: height 350ms ease-in-out, opacity 750ms ease-in-out;
+				}
+
+				.modalTarget
+				{
+					 display: none;
+				}
+
+				.toggleTarget.is-visible
+				{
+					display: block;
+					opacity: 1;
+					height: auto;
+
+				}
     }
     section h2 {
       position: absolute;
@@ -52,6 +233,12 @@
           outline: 0 none;
       }
     }
+		section.sel-tab h2
+		{
+			color: #333;
+			background-color: #fff;
+			z-index: 2;
+		}
   }
 
   article.sp-tabs section:nth-child(2) h2 {
@@ -84,10 +271,70 @@
             padding: 4px;
         }
      }
+     .table
+     {
+        display: table;
+        >div {
+            display: table-row;
+            >span {
+              display: table-cell;
+            }
+            &.head > span { font-weight: 700; }
+        }
+
+     }
+     .table.notices {
+        > div > span
+        {
+           width: 25%;
+           text-align: center;
+        }
+     }
   }
 
+  section.banner
+  {
+     width: 100%;
+     background-color: #dcfdff;
+     display: flex;
+     align-items: center;
+     border: 1px solid #ccc;
+     margin-top: 35px;
+     margin-bottom: 45px;
+
+     position: relative;
+     opacity: 0;
+
+     span {
+       text-align: center;
+
+     }
+
+     .image { flex: 1; }
+     .line {
+        flex: 3;
+        h3 { color: #00d0e5 };
+
+     }
+     .button-wrap
+     {
+       flex: 2;
+       .button {
+          background: #ff0000;
+          padding: 8px;
+          font-weight: 700;
+          font-size: 20px;
+          margin: 8px;
+          color: #fff;
+          text-transform: uppercase;
+          //height: 45px;
+       }
+     }
+  }
+
+
   /* In-view notice ( not on top, between the options ) - styled after WP notice */
-  .view-notice
+  .view-notice, .compression-notice
   {
 
     box-shadow: 0 1px 1px 0 rgba( 0, 0, 0, 0.1 );
@@ -96,56 +343,63 @@
     padding: 1px 12px;
     p {
       margin: 1em 0 !important;
+ 			//line-height: 12px;
+
     }
+		h4 {
+			margin: 0;
+			font-size: 16px;
+		}
     &.warning
     {
       border-left-color: #ffb900;
     }
   }
+	// lazy reposition.
+	.compression-notice
+	{
+		margin-top: -20px;
+	}
 
   .view-notice-row
   {
     display: none;
   }
 
-}
+	// ####### SETTINGS TAB (GENERAL)
+	#tab-settings
+	{
+			.shortpixel-compression
+			{
+				  strong
+					{
+						 line-height: 22px;
+					}
+					.shortpixel-compression-options {
+	//		    	color: #999;
+						display: inline-block;
+				}
+				label {
+				    width:158px;
+				    margin: 0 -2px;
+				    background-color:$color-light;
+				    font-weight: bold;
+				    display: inline-block;
+						span {
+						    text-align:center;
+						    font-size: 16px;
+						    padding:8px 0px;
+						    display:block;
+						}
+						input {
+						    display: none;
+								&:checked + span {
+								    background-color:$color-darkest;
+								    color:#FFF;
+								}
+						}
 
-section.banner
-{
-   width: 100%;
-   background-color: #dcfdff;
-   display: flex;
-   align-items: center;
-   border: 1px solid #ccc;
-   margin-top: 35px;
-   margin-bottom: 45px;
-   z-index: 12;
-   position: relative;
-   opacity: 0;
-
-   span {
-     text-align: center;
-
-   }
-
-   .image { flex: 1; }
-   .line {
-      flex: 3;
-      h3 { color: #00d0e5 };
-
-   }
-   .button-wrap
-   {
-     flex: 2;
-     .button {
-        background: #ff0000;
-        padding: 8px;
-        font-weight: 700;
-        font-size: 20px;
-        margin: 8px;
-        color: #fff;
-        text-transform: uppercase;
-        //height: 45px;
-     }
-   }
-}
+				}
+			}
+	} // tab-settings
+} // end of settings
