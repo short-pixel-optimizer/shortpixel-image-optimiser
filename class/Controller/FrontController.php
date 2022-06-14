@@ -28,7 +28,7 @@ class FrontController extends \ShortPixel\Controller
   {
     $webp_option = \wpSPIO()->settings()->deliverWebp;
 
-    if ( $webp_option ) {
+    if ( $webp_option ) {  // @tood Replace this function with the one in ENV. 
         if(\ShortPixelTools::shortPixelIsPluginActive('shortpixel-adaptive-images/short-pixel-ai.php')) {
             Notices::addWarning(__('Please deactivate the ShortPixel Image Optimizer\'s
                 <a href="options-general.php?page=wp-shortpixel-settings&part=adv-settings">Deliver the next generation versions of the images in the front-end</a>

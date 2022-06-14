@@ -94,7 +94,7 @@ class FileModel extends \ShortPixel\Model
       $this->exists = (@file_exists($this->fullpath) && is_file($this->fullpath));
     }
 
-    $this->exists = apply_filters('shortpixel_image_exists', $this->exists, $this->fullpath, $this);
+    $this->exists = apply_filters('shortpixel_image_exists', $this->exists, $this->fullpath, $this); //legacy
     $this->exists = apply_filters('shortpixel/file/exists',  $this->exists, $this->fullpath, $this);
     return $this->exists;
   }

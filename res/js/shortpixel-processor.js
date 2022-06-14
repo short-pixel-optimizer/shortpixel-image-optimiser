@@ -242,7 +242,7 @@ window.ShortPixelProcessor =
     {
         console.log('Stop Processing #' + this.timer);
 
-				// @todo this can probably go? Why would StopProcess cancel Manual pauses? 
+				// @todo this can probably go? Why would StopProcess cancel Manual pauses?
         if (this.isManualPaused == true) /// processor ends on status paused.
         {
             this.isManualPaused = false;
@@ -471,7 +471,7 @@ window.ShortPixelProcessor =
 
       if (combinedStatus == 100)
 			{
-
+					this.StopProcess({ defer: true });
 		       return false; // no status in this request.
 			}
 

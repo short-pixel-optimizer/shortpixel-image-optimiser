@@ -23,7 +23,8 @@ if (function_exists('wpSPIO'))
 }
 
 if (! defined('SHORTPIXEL_RESET_ON_ACTIVATE'))
-  define('SHORTPIXEL_RESET_ON_ACTIVATE', false); //if true TODO set false
+  define('SHORTPIXEL_RESET_ON_ACTIVATE', false);
+	
 //define('SHORTPIXEL_DEBUG', true);
 //define('SHORTPIXEL_DEBUG_TARGET', true);
 
