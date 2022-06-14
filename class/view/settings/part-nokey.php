@@ -30,7 +30,7 @@ $adminEmail = get_bloginfo('admin_email');
 if($adminEmail == 'noreply@addendio.com') $adminEmail = false; //hack for the addendio sandbox e-mail
 
 ?>
-<section id="tab-settings" <?php echo ($this->display_part == 'settings') ? ' class="sel-tab" ' :''; ?> >
+<section id="tab-settings" class="sel-tab" >
     <h2><a class='tab-link' href='javascript:void(0);' data-id="tab-settings">
       <?php _e('Join ShortPixel','shortpixel-image-optimiser');?></a>
     </h2>
@@ -44,15 +44,21 @@ if($adminEmail == 'noreply@addendio.com') $adminEmail = false; //hack for the ad
         <tr>
             <th scope="row"><label for="key"><?php _e('E-mail address:','shortpixel-image-optimiser');?></label></th>
             <td>
+							<form method="POST" action="<?php echo esc_url(add_query_arg(array('noheader' => 'true', 'sp-action' => 'action_request_new_key'))) ?>"
+								  id="shortpixel-form-request-key">
+								  <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
+
+
                 <input name="pluginemail" type="text" id="pluginemail" value="<?php echo( $adminEmail );?>"
-                       onchange="ShortPixel.updateSignupEmail();" class="regular-text">
+                       class="regular-text">
+
                 <span class="spinner" id="pluginemail_spinner" style="float:none;"></span>
-                <a type="button" id="request_key" class="button button-primary" title="<?php _e('Request a new API key','shortpixel-image-optimiser');?>"
+
+                <button type="submit" id="request_key" class="button button-primary" title="<?php _e('Request a new API key','shortpixel-image-optimiser');?>"
                    href="https://shortpixel.com/free-sign-up?pluginemail=<?php echo( $adminEmail );?>"
-                   onclick="ShortPixel.newApiKey(event);"
-                   onmouseenter="ShortPixel.updateSignupEmail();">
+                >
                    <?php _e('Request Key','shortpixel-image-optimiser');?>
-                </a>
+                </button>
                 <p class="settings-info shortpixel-settings-error" style='display:none;' id='pluginemail-error'>
                     <b><?php _e('Please provide a valid e-mail address.', 'shortpixel-image-optimiser');?></b>
                 </p>
@@ -62,16 +68,17 @@ if($adminEmail == 'noreply@addendio.com') $adminEmail = false; //hack for the ad
                     } else {
                         _e('Please input your e-mail address and press the Request Key button.','shortpixel-image-optimiser');
                     }
-                    ?><br><span style="position:relative;">
+                    ?><p><span style="position:relative;">
                         <input name="tos" type="checkbox" id="tos">
                         <img id="tos-robo" alt="<?php _e('ShortPixel logo', 'shortpixel-image-optimiser'); ?>"
                              src="<?php echo(wpSPIO()->plugin_url('res/img/slider.png' ));?>" style="position: absolute;left: -95px;bottom: -26px;display:none;">
                         <img id="tos-hand" alt="<?php _e('Hand pointing', 'shortpixel-image-optimiser'); ?>"
                              src="<?php echo(wpSPIO()->plugin_url('res/img/point.png' ));?>" style="position: absolute;left: -39px;bottom: -9px;display:none;">
                     </span>
-                    <?php _e('I have read and I agree to the <a href="https://shortpixel.com/tos" target="_blank">Terms of Service</a> and the <a href="https://shortpixel.com/privacy" target="_blank">Privacy Policy</a> (<a href="https://shortpixel.com/privacy#gdpr" target="_blank">GDPR compliant</a>).','shortpixel-image-optimiser');
-                    ?>
+                    <label for="tos"><?php _e('I have read and I agree to the <a href="https://shortpixel.com/tos" target="_blank">Terms of Service</a> and the <a href="https://shortpixel.com/privacy" target="_blank">Privacy Policy</a> (<a href="https://shortpixel.com/privacy#gdpr" target="_blank">GDPR compliant</a>).','shortpixel-image-optimiser');
+                    ?> </label></p>
                 </p>
+								</form>
             </td>
         </tr>
     </tbody>
@@ -84,7 +91,7 @@ if($adminEmail == 'noreply@addendio.com') $adminEmail = false; //hack for the ad
     <?php _e('If you already have an API Key please input it below and press Validate.','shortpixel-image-optimiser');?>
 </p>
 
-<form method="POST" action="<?php echo esc_url(add_query_arg(array('noheader' => 'true', 'sp-action' => 'action_addkey'))); ?>"
+<form method="POST" action="<?php echo esc_url(add_query_arg(array('noheader' => 'true', 'sp-action' => 'action_addkey'))) ?>"
   id="shortpixel-form-nokey">
   <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
 

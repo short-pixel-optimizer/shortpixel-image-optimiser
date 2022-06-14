@@ -3,7 +3,7 @@
  * Plugin Name: ShortPixel Image Optimizer
  * Plugin URI: https://shortpixel.com/
  * Description: ShortPixel optimizes images automatically, while guarding the quality of your images. Check your <a href="/wp-admin/options-general.php?page=wp-shortpixel-settings" target="_blank">Settings &gt; ShortPixel</a> page on how to start optimizing your image library and make your website load faster.
- * Version: 4.22.10
+ * Version: 5.0.0-RC-86
  * Author: ShortPixel
  * Author URI: https://shortpixel.com
  * GitHub Plugin URI: https://github.com/short-pixel-optimizer/shortpixel-image-optimiser
@@ -11,13 +11,12 @@
  * Domain Path: /lang
  */
 
-
 // Preventing double load crash.
 if (function_exists('wpSPIO'))
 {
     add_action('admin_notices', function () {
       echo '<div class="error"><h4>';
-      printf(__('Shortpixel plugin already loaded. You might have two versions active. Not loaded: %s', 'shortpixel-image-optimiser'), __FILE__);
+      printf(__('ShortPixel plugin already loaded. You might have two versions active. Not loaded: %s', 'shortpixel-image-optimiser'), __FILE__);
       echo '</h4></div>';
     });
     return;
@@ -31,24 +30,19 @@ if (! defined('SHORTPIXEL_RESET_ON_ACTIVATE'))
 define('SHORTPIXEL_PLUGIN_FILE', __FILE__);
 define('SHORTPIXEL_PLUGIN_DIR', __DIR__);
 
-//define('SHORTPIXEL_AFFILIATE_CODE', '');
+define('SHORTPIXEL_IMAGE_OPTIMISER_VERSION', "5.0.0-RC-86");
 
-define('SHORTPIXEL_IMAGE_OPTIMISER_VERSION', "4.22.10");
-define('SHORTPIXEL_MAX_TIMEOUT', 10);
-define('SHORTPIXEL_VALIDATE_MAX_TIMEOUT', 15);
 define('SHORTPIXEL_BACKUP', 'ShortpixelBackups');
-define('SHORTPIXEL_MAX_API_RETRIES', 50);
-define('SHORTPIXEL_MAX_ERR_RETRIES', 5);
 define('SHORTPIXEL_MAX_FAIL_RETRIES', 3);
-if(!defined('SHORTPIXEL_MAX_THUMBS')) { //can be defined in wp-config.php
-    define('SHORTPIXEL_MAX_THUMBS', 149);
-}
 
 if(!defined('SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION')) { //can be defined in wp-config.php
     define('SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION', false);
 }
 
-define('SHORTPIXEL_PRESEND_ITEMS', 3);
+if(!defined('SHORTPIXEL_USE_DOUBLE_AVIF_EXTENSION')) { //can be defined in wp-config.php
+    define('SHORTPIXEL_USE_DOUBLE_AVIF_EXTENSION', false);
+}
+
 define('SHORTPIXEL_API', 'api.shortpixel.com');
 
 $max_exec = intval(ini_get('max_execution_time'));
@@ -73,10 +67,7 @@ define('SHORTPIXEL_BACKUP_URL',
         : dirname(dirname($sp__uploads['baseurl'])))
     . '/' . SHORTPIXEL_BACKUP);
 
-define('SHORTPIXEL_MAX_EXECUTION_TIME2', 2 );
-define("SHORTPIXEL_MAX_RESULTS_QUERY", 30);
 
-//define("SHORTPIXEL_NOFLOCK", true); // don't use flock queue, can cause instability.
 //define("SHORTPIXEL_EXPERIMENTAL_SECURICACHE", true);  // tries to add timestamps to URLS, to prevent hitting the cache.
 //define('SHORTPIXEL_SILENT_MODE', true); // no global notifications. Can lead to data damage. After setting, reactivate plugin.
 
@@ -102,10 +93,7 @@ if (! function_exists("wpSPIO"))	{
      return \ShortPixel\ShortPixelPlugin::getInstance();
   }
 }
-// [BS] Start runtime here
-//require_once(SHORTPIXEL_PLUGIN_DIR . '/wp-shortpixel-req.php'); // @todo should be incorporated here.
-//require_once(SHORTPIXEL_PLUGIN_DIR . '/class/controller/controller.php');
-//require_once(SHORTPIXEL_PLUGIN_DIR . '/class/shortpixel-model.php');
+// Start runtime here
 require_once(SHORTPIXEL_PLUGIN_DIR . '/shortpixel-plugin.php'); // loads runtime and needed classes.
 
 // PSR-4 package loader.
@@ -116,6 +104,6 @@ $loader->load(SHORTPIXEL_PLUGIN_DIR);
 wpSPIO(); // let's go!
 
 // Activation / Deactivation services
-register_activation_hook( __FILE__, array('\ShortPixel\ShortPixelPlugin','activatePlugin') );
-register_deactivation_hook( __FILE__,  array('\ShortPixel\ShortPixelPlugin','deactivatePlugin') );
-register_uninstall_hook(__FILE__,  array('\ShortPixel\ShortPixelPlugin','uninstallPlugin') );
+register_activation_hook( __FILE__, array('\ShortPixel\Helper\InstallHelper','activatePlugin') );
+register_deactivation_hook( __FILE__,  array('\ShortPixel\Helper\InstallHelper','deactivatePlugin') );
+register_uninstall_hook(__FILE__,  array('\ShortPixel\Helper\InstallHelper','uninstallPlugin') );

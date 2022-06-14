@@ -30,10 +30,12 @@ class EnvironmentModel extends \ShortPixel\Model
     private $screen_is_set = false;
     public $is_screen_to_use = false; // where shortpixel optimizer loads
     public $is_our_screen = false; // where shortpixel hooks in more complicated functions.
-    public $is_bulk_page = false; // Shortpixel bulk screen.
+    public $is_bulk_page = false; // ShortPixel bulk screen.
+    public $screen_id = false;
 
     // Debug flag
     public $is_debug = false;
+    public $is_autoprocess = false;
 
     protected static $instance;
 
@@ -76,6 +78,37 @@ class EnvironmentModel extends \ShortPixel\Model
       return true;
 
     return false;
+  }
+
+	public function plugin_active($name)
+	{
+		 switch($name)
+		 {
+			  case 'wpml':
+					$plugin = 'sitepress-multilingual-cms/sitepress.php';
+				break;
+				case 'polylang':
+					$plugin = 'polylang/polylang.php';
+				break;
+				case 'spai':
+					$plugin = 'shortpixel-adaptive-images/short-pixel-ai.php';
+				break;
+				default:
+					 $plugin = 'none';
+				break;
+		 }
+
+		 if (!function_exists('is_plugin_active')) {
+    	include_once(ABSPATH . 'wp-admin/includes/plugin.php');
+		 }
+
+		 return \is_plugin_active($plugin);
+	}
+
+  //https://www.php.net/manual/en/function.sys-getloadavg.php
+  public function getSystemLoad()
+  {
+      $load = sys_getloadavg();
 
   }
 
@@ -95,10 +128,10 @@ class EnvironmentModel extends \ShortPixel\Model
   {
     $this->is_nginx = strpos(strtolower($_SERVER["SERVER_SOFTWARE"]), 'nginx') !== false ? true : false;
     $this->is_apache = strpos(strtolower($_SERVER["SERVER_SOFTWARE"]), 'apache') !== false ? true : false;
-    $this->is_gd_installed = function_exists('imagecreatefrompng');
+    $this->is_gd_installed = function_exists('imagecreatefrompng') && function_exists('imagejpeg');
     $this->is_curl_installed = function_exists('curl_init');
-
   }
+
 
   private function setWordPress()
   {
@@ -108,19 +141,22 @@ class EnvironmentModel extends \ShortPixel\Model
     $this->determineFrontBack();
 
 
-    if (defined('DOING_AJAX') && DOING_AJAX)
+    if (wp_doing_ajax())
     {
       $this->is_ajaxcall = true;
     }
 
     $this->is_debug = Log::debugIsActive();
 
+    if (\wpSPIO()->settings()->autoMediaLibrary == 1)
+      $this->is_autoprocess = true;
+
   }
 
   // check if this request is front or back.
   protected function determineFrontBack()
   {
-    if ( is_admin() )
+    if ( is_admin() || wp_doing_ajax() )
       $this->is_admin = true;
     else
       $this->is_front = true;
@@ -143,6 +179,7 @@ class EnvironmentModel extends \ShortPixel\Model
     );
     $use_screens = apply_filters('shortpixel/init/optimize_on_screens', $use_screens);
 
+    $this->screen_id = $screen->id;
     if(in_array($screen->id, $use_screens)) {
           $this->is_screen_to_use = true;
     }
@@ -175,8 +212,26 @@ class EnvironmentModel extends \ShortPixel\Model
 
   public function setIntegrations()
   {
-    $ng = \ShortPixel\NextGen::getInstance();
+    $ng = \ShortPixel\NextGenController::getInstance();
     $this->has_nextgen = $ng->has_nextgen();
+  }
+
+
+
+  //set default move as "list". only set once, it won't try to set the default mode again.
+  public function setDefaultViewModeList()
+  {
+      $settings = \wpSPIO()->settings();
+      if( $settings->mediaLibraryViewMode == false)
+      {
+          $settings->mediaLibraryViewMode = 1;
+          $currentUserID = false;
+          if ( function_exists('wp_get_current_user') ) {
+              $current_user = wp_get_current_user();
+              $currentUserID = $current_user->ID;
+              update_user_meta($currentUserID, "wp_media_library_mode", "list");
+          }
+      }
 
   }
 
@@ -192,6 +247,24 @@ class EnvironmentModel extends \ShortPixel\Model
       $slug = str_replace($plugins_dir->getPath(), '', $file);
 
       return $slug;
-
   }
+
+  public function useDoubleWebpExtension()
+  {
+      if (defined('SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION') && SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION)
+        return true;
+
+      return false;
+  }
+
+	public function useDoubleAvifExtension()
+  {
+      if (defined('SHORTPIXEL_USE_DOUBLE_AVIF_EXTENSION') && SHORTPIXEL_USE_DOUBLE_AVIF_EXTENSION)
+        return true;
+
+      return false;
+  }
+
+
+
 }

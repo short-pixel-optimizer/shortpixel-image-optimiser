@@ -29,34 +29,54 @@ if (! is_null($view->debugInfo) && is_array($view->debugInfo) && count($view->de
     </div>
   <?php endif; ?>
 
-  <?php if (! is_null($view->status_message)): ?>
-    <h5><?php echo $view->status_message; ?></h5>
-  <?php endif; ?>
+  <?php if (property_exists($this->view, 'text')): ?>
+  <div class='sp-column-info'>
+		<?php
+			    // burger if needed.
+			    echo '<p>' . $this->view->list_actions . '</p>'; ?>
+		<p><?php  echo $this->view->text;  ?></p></div>
 
-  <p><?php echo $view->message; ?></p>
+<?php endif; ?>
 
-  <?php if (count($view->stats) > 0): ?>
+
   <div class='sp-column-stats'>
-    <?php $this->renderLegacyCell(); ?>
+    <?php
+    // single actions
+    if (isset($this->view->actions)):
+      foreach($this->view->actions as $actionName => $action):
+        $classes = ($action['display'] == 'button') ? " button-smaller button-primary $actionName " : "$actionName";
+        $link = ($action['type'] == 'js') ? 'javascript:' . $action['function'] : $action['function'];
+
+        ?>
+        <a href="<?php echo $link ?>" class="<?php echo $classes ?>"><?php echo $action['text'] ?></a>
+
+        <?php
+      endforeach;
+
+    endif;
+
+
+    ?>
+
+    <?php if (property_exists($view, 'stats') && count($view->stats) > 0): ?>
     <ul class='edit-media-stats'>
     <?php foreach($view->stats as $index => $data)
     { ?>
        <li><span><?php echo $data[0] ?></span> <span><?php echo $data[1] ?></span></li>
     <?php } ?>
     </ul>
+    <?php endif; ?>
   </div>
-<?php endif; ?>
-
-  <?php foreach($view->todo as $item)
-  echo $item ;
-  ?>
-
-  <div class='main-actions'>
-    <?php foreach($view->actions as $action)
-    echo $action;
-    ?>
-  </div>
-
-
-
 </div>
+
+  <div id="sp-message-<?php echo($this->view->id); ?>" class='messages'>
+  <?php if (! is_null($view->status_message)): ?>
+  <?php echo $view->status_message; ?>
+  <?php endif; ?>
+  </div>
+
+  <div id='shortpixel-errorbox' class="errorbox">&nbsp;</div>
+
+
+
+<?php $this->loadView('snippets/part-comparer'); ?>

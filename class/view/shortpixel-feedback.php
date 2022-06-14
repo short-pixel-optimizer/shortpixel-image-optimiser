@@ -1,9 +1,13 @@
 <?php
+namespace ShortPixel;
+use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\Controller\ApiKeyController as ApiKeyController;
+
 /**
  * User: simon
  * Date: 11.04.2018
+ * @todo This whole thing needs redoing. 
  */
-
 class ShortPixelFeedback {
 
     private $key;
@@ -11,12 +15,13 @@ class ShortPixelFeedback {
     private $plugin_file = '';
     private $plugin_name = '';
 
-    function __construct( $_plugin_file, $slug, $key, $ctrl) {
+    function __construct( $_plugin_file, $slug) {
 
         $this->plugin_file = $_plugin_file;
         $this->plugin_name = $slug; //for translations
-        $this->key = $key;
-        $this->ctrl = $ctrl;
+
+				$apiControl = ApiKeyController::getInstance();
+				$this->key = $apiControl->forceGetApiKey();
 
         // Deactivation
         add_filter( 'plugin_action_links_' . plugin_basename( $this->plugin_file ), array( $this, 'filterActionLinks') );
@@ -65,18 +70,18 @@ class ShortPixelFeedback {
             $html .= '</div><!-- .shortpixel-deactivate-options -->';
         }
         $html .= '<hr/>';
-        $html .= '<span title="' . __( 'Un-check this if you don\\\'t plan to use ShortPixel in the future on this website. You might also want to run a Bulk Delete SP Metadata before removing the plugin (Media Library -> Bulk ShortPixel).', $this->plugin_name )
-            . '"><input type="checkbox" name="shortpixel-keep-settings" id="shortpixel-keep-settings" value="yes" checked> <label for="shortpixel-keep-settings">'
-            . esc_html__( 'Keep the ShortPixel settings on plugin deletion.', $this->plugin_name ) . '</label></span><br>';
+        $html .= '<span title="' . __( 'Un-check this if you don\\\'t plan to use ShortPixel in the future on this website. You might also want to run a Bulk Delete SP Metadata before removing the plugin (Media Library -> Bulk ShortPixel).', 'shortpixel-image-optimiser' )
+            . '">'
+            . sprintf(__(  'If you want to completely uninstall ShortPIxel from your site, please go to %s Settings → ShortPixel → Tools %s.', 'shortpixel-image-optimiser' ),'<a href="' . esc_url(admin_url('/options-general.php?page=wp-shortpixel-settings&part=tools'))  . '">', '</a>') . '</span><br>';
         $html .= '<hr/>';
         $html .= '</div><!-- .shortpixel-deactivate-form-body -->';
-        $html .= '<p class="deactivating-spinner"><span class="spinner"></span> ' . __( 'Submitting form', $this->plugin_name ) . '</p>';
+        $html .= '<p class="deactivating-spinner"><span class="spinner"></span> ' . __( 'Submitting form', 'shortpixel-image-optimiser' ) . '</p>';
         $html .= '<div class="shortpixel-deactivate-form-footer"><p>';
         $html .= '<label for="anonymous" title="'
             . __("If you UNCHECK this then your email address will be sent along with your feedback. This can be used by ShortPixel to get back to you for more info or a solution.",'shortpixel-image-optimiser')
-            . '"><input type="checkbox" name="shortpixel-deactivate-tracking" checked="checked" id="anonymous"> ' . esc_html__( 'Send anonymous', $this->plugin_name ) . '</label><br>';
+            . '"><input type="checkbox" name="shortpixel-deactivate-tracking" checked="checked" id="anonymous" value="1"> ' . esc_html__( 'Send anonymous', 'shortpixel-image-optimiser' ) . '</label><br>';
         $html .= '<a id="shortpixel-deactivate-submit-form" class="button button-primary" href="#">'
-            . __( '<span>Submit&nbsp;and&nbsp;</span>Deactivate', $this->plugin_name )
+            . __( '<span>Submit&nbsp;and&nbsp;</span>Deactivate', 'shortpixel-image-optimiser' )
             . '</a>';
         $html .= '</p></div>';
         ?>
@@ -169,12 +174,13 @@ class ShortPixelFeedback {
                     formContainer = $(formID),
                     deactivated = true,
                     detailsStrings = {
-                        'setup' : '<?php echo __( 'What was the dificult part ?', $this->plugin_name ) ?>',
-                        'docs' : '<?php echo __( 'What can we describe more ?', $this->plugin_name ) ?>',
-                        'features' : '<?php echo __( 'How could we improve ?', $this->plugin_name ) ?>',
-                        'better-plugin' : '<?php echo __( 'Can you mention it ?', $this->plugin_name ) ?>',
-                        'incompatibility' : '<?php echo __( 'With what plugin or theme is incompatible ?', $this->plugin_name ) ?>',
-                        'maintenance' : '<?php echo __( 'Please specify', $this->plugin_name ) ?>',
+                        'setup' : '<?php echo __( 'What was the dificult part ?', 'shortpixel-image-optimiser') ?>',
+                        'docs' : '<?php echo __( 'What can we describe more ?', 'shortpixel-image-optimiser' ) ?>',
+                        'features' : '<?php echo __( 'How could we improve ?', 'shortpixel-image-optimiser' ) ?>',
+                        'better-plugin' : '<?php echo __( 'Can you mention it ?', 'shortpixel-image-optimiser' ) ?>',
+                        'incompatibility' : '<?php echo __( 'With what plugin or theme is incompatible ?', 'shortpixel-image-optimiser' ) ?>',
+                        'maintenance' : '<?php echo __( 'Please specify', 'shortpixel-image-optimiser') ?>',
+												'temporary' : '',
                     };
 
                 $( deactivateURL).attr('onclick', "javascript:event.preventDefault();");
@@ -216,12 +222,30 @@ class ShortPixelFeedback {
                     formContainer.html( '<?php echo $html; ?>');
 
                     formContainer.on( 'change', 'input[type=radio]', function(){
-                        console.log(formContainer);
+
                         var detailsLabel = formContainer.find( '#shortpixel-deactivate-details-label strong' ),
                             anonymousLabel = formContainer.find( 'label[for="anonymous"]' )[0],
                             submitSpan = formContainer.find( '#shortpixel-deactivate-submit-form span' )[0],
                             value = formContainer.find( 'input[name="shortpixel-deactivate-reason"]:checked' ).val();
-                        detailsLabel.text( detailsStrings[ value ] );
+														commentBox = formContainer.find('textarea[name="shortpixel-deactivate-details"]');
+
+											//	console.log(detailsLabel);
+											//	console.log(commentBox);
+												var the_detail = detailsStrings[ value ];
+											//	console.log(the_detail);
+												if (the_detail == '')
+												{
+													detailsLabel.css('visibility','hidden');
+													commentBox.css('visibility','hidden');
+												}
+												else
+												{
+													detailsLabel.css('visibility','visible');
+													commentBox.css('visibility','visible');
+
+												}
+
+                        detailsLabel.text( the_detail );
                         anonymousLabel.style.visibility = "visible";
                         submitSpan.style.display = "inline-block";
                         if(deactivated) {
@@ -232,9 +256,14 @@ class ShortPixelFeedback {
                                 e.preventDefault();
                                 var data = {
                                     reason: formContainer.find('input[name="shortpixel-deactivate-reason"]:checked').val(),
-                                    details: formContainer.find('#shortpixel-deactivate-details').val(),
-                                    anonymous: formContainer.find('#anonymous:checked').length,
+                                    details: formContainer.find('#shortpixel-deactivate-details').val()
+                                    //anonymous: formContainer.find('#anonymous:checked').length,
                                 };
+																if (formContainer.find('#anonymous').is(':checked'))
+																	data['anonymous'] = 1;
+																else
+																	data['anonymous'] = 0;
+
                                 SubmitFeedback(data, formContainer);
                             });
                         }
@@ -248,10 +277,6 @@ class ShortPixelFeedback {
                             SubmitFeedback({}, formContainer);
                         }
                     });
-
-                    /*formContainer.on('click', '#shortpixel-deactivate-plugin', function(e){
-                        e.preventDefault();
-                    });*/
 
                     // If we click outside the form, the form will close
                     $('.shortpixel-deactivate-form-bg').on('click',function(){
@@ -271,17 +296,18 @@ class ShortPixelFeedback {
      */
     public function getFormInfo() {
         $form = array();
-        $form['heading'] = __( 'Sorry to see you go', $this->plugin_name );
-        $form['body'] = __( 'Before you deactivate the plugin, would you quickly give us your reason for doing so?', $this->plugin_name );
+        $form['heading'] = __( 'Sorry to see you go', 'shortpixel-image-optimiser' );
+        $form['body'] = __( 'Before you deactivate the plugin, would you quickly give us your reason for doing so?', 'shortpixel-image-optimiser' );
         $form['options'] = array(
-            'setup'           => __( 'Set up is too difficult', $this->plugin_name ),
-            'docs'            => __( 'Lack of documentation', $this->plugin_name ),
-            'features'        => __( 'Not the features I wanted', $this->plugin_name ),
-            'better-plugin'   => __( 'Found a better plugin', $this->plugin_name ),
-            'incompatibility' => __( 'Incompatible with theme or plugin', $this->plugin_name ),
-            'maintenance'     => __( 'Other', $this->plugin_name ),
+						'temporary' 			=> __('Temporary deactivation', 'shortpixel-image-optimiser'),
+            'setup'           => __( 'Set up is too difficult',  'shortpixel-image-optimiser' ),
+            'docs'            => __( 'Lack of documentation',  'shortpixel-image-optimiser' ),
+            'features'        => __( 'Not the features I wanted',  'shortpixel-image-optimiser' ),
+            'better-plugin'   => __( 'Found a better plugin',  'shortpixel-image-optimiser' ),
+            'incompatibility' => __( 'Incompatible with theme or plugin',  'shortpixel-image-optimiser' ),
+            'maintenance'     => __( 'Other',  'shortpixel-image-optimiser' ),
         );
-        $form['details'] = __( 'How could we improve ?', $this->plugin_name );
+        $form['details'] = __( 'How could we improve ?',  'shortpixel-image-optimiser');
         return $form;
     }
 
@@ -289,14 +315,21 @@ class ShortPixelFeedback {
 
         check_ajax_referer( 'shortpixel_deactivate_plugin', 'security' );
 
-        $_POST = $this->ctrl->validateFeedback($_POST);
+				$keep_settings = isset($_POST['keep-settings']) ? intval($_POST['keep-settings']) : null;
+
+				if(is_null($keep_settings) === false) {
+            \wpSPIO()->settings()->removeSettingsOnDeletePlugin = 1 - $keep_settings;
+        }
+
+				Log::addDebug('Deactive Plugin Callback POST', $_POST);
+
         if ( isset($_POST['reason']) && isset($_POST['details']) && isset($_POST['anonymous']) ) {
-            require_once 'shortpixel-plugin-request.php';
-            $anonymous = isset($_POST['anonymous']) && $_POST['anonymous'];
+            require_once(\WPSPIO()->plugin_path() . 'class/view/shortpixel-plugin-request.php');
+            $anonymous = (intval($_POST['anonymous']) == 1) ? true : false;
             $args = array(
-                'key' => $anonymous ? false : $this->key,
-                'reason' => $_POST['reason'],
-                'details' => $_POST['details'],
+                'key' =>  $this->key,
+                'reason' => sanitize_text_field($_POST['reason']),
+                'details' => sanitize_text_field($_POST['details']),
                 'anonymous' => $anonymous
             );
             $request = new ShortPixelPluginRequest( $this->plugin_file, 'http://' . SHORTPIXEL_API . '/v2/feedback.php', $args );
