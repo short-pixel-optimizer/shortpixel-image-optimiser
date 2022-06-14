@@ -1,6 +1,5 @@
 vendor
 composer.lock
-
 .DS_Store
 .env.testing
 .idea/.gitignore
@@ -14,9 +13,8 @@ composer.lock
 /.idea/shortpixel-image-optimiser.iml
 /.idea/workspace.xml
 /.idea
-/bin/.
+bin/
 /composer.phar
 .env.local
-/build/
 /wordpress/
 /travis_output/
