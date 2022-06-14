@@ -1,8 +1,9 @@
 'use strict';
 
-/** ShortPixel: Changed punycode to sp_punycode in order to prevent possible conflicts with other WP plugins that use punycode 
+/** ShortPixel: Changed punycode to sp_punycode in order to prevent possible conflicts with other WP plugins that use punycode
  *              Also moved all the functions inside the sp_punycode const for the same reason and changed const's to let's */
 
+// 5.0 Deprecated ** Let's see if the modern world works without this **/ 
 var sp_punycode = function(){
 
     /** Highest positive signed 32-bit float value */

@@ -3,8 +3,6 @@
     font-style: normal;
 }
 
-.shortpixel-hide { display: none; }
-
 .clearfix:before, .clearfix:after { content: " "; /* 1 */ display: table; /* 2 */}
 .clearfix:after { clear: both; }
 .clearfix { zoom: 1; }
@@ -137,17 +135,7 @@ div.bulk-progress.bulk-progress-partners a div {
     margin-left: 30px;
     font-size: 1.2em;
 }
-div.bulk-progress .bulk-progress-indicator,
-div.sp-quota-exceeded-alert .bulk-progress-indicator {
-    display: inline-block;
-    text-align: center;
-    padding: 0 10px;
-    margin-left: 10px;
-    float: left;
-    height: 90px;
-    overflow: hidden;
-    border: 1px solid #1CAECB;
-}
+
 div.wrap.short-pixel-bulk-page .bulk-notice-container {
     margin-top: 15px;
     position: absolute;
@@ -181,10 +169,7 @@ div.wrap.short-pixel-bulk-page .bulk-notice-msg img {
     margin-top:3px;
     margin-right: 5px;
 }
-div.sp-bulk-summary {
-    float:right;
-    margin:8px 5px 3px 20px;
-}
+
 .sp-notice .bulk-error-show {
     cursor: pointer;
 }
@@ -513,14 +498,7 @@ th.sorted.column-wp-shortPixel a {
     border: 1px solid #1CAECB;
     padding: 15px 0 0 20px;
 }
-p.settings-info {
-    padding-top: 0px;
-    color: #818181;
-    font-size:13px !important;
-}
-p.settings-info.shortpixel-settings-error {
-    color: #c32525;
-}
+
 
 .shortpixel-key-valid{
     font-weight:bold;
@@ -531,38 +509,8 @@ p.settings-info.shortpixel-settings-error {
     color: #3485ba;
     margin-left: -20px;
 }
-.shortpixel-compression .shortpixel-compression-options {
-    color: #999;
-}
-.shortpixel-compression strong {
-    line-height: 22px;
-}
-.shortpixel-compression .shortpixel-compression-options {
-    display: inline-block;
-}
-.shortpixel-compression label {
-    width:158px;
-    margin: 0 -2px;
-    background-color:#e2faff;
-    font-weight: bold;
-    display: inline-block;
-}
-.shortpixel-compression label span {
-    text-align:center;
-    font-size: 18px;
-    padding:8px 0px;
-    display:block;
-}
-.shortpixel-compression label input {
-    display: none;
-}
-.shortpixel-compression input:checked + span {
-    background-color:#0085ba;
-    color:#F7F7F7;
-}
-.shortpixel-compression .shortpixel-radio-info {
-    min-height: 60px;
-}
+
+
 
 /* TABS CONTROLS */
 article.sp-tabs {
@@ -611,53 +559,9 @@ article.sp-tabs section.sel-tab h2 {
     background-color: #fff;
     z-index: 2;
 }
-#tab-stats .sp-bulk-summary {
-    position: absolute;
-    right: 0;
-    top: 0;
-    z-index: 100;
-}
 
-.deliverWebpTypes, .deliverWebpAlteringTypes {
-    display: none;
-}
-.deliverWebpTypes .sp-notice {
-    color: red;
-}
-.deliverWebpSettings {
-    margin: 16px 0;
-}
-.deliverWebpSettings input:disabled+label {
-    color: #818181;
-}
-.deliverWebpTypes, .deliverWebpAlteringTypes {
-    margin: 16px 0 16px 16px;
-}
-#png2jpg:not(:checked) ~ #png2jpgForce,
-#png2jpg:not(:checked) ~ label[for=png2jpgForce] {
-    /*pointer-events: none;
-    opacity: .5;*/
-    display: none;
-}
 
-article.sp-tabs section #deliverWebp:checked ~ .deliverWebpTypes,
-article.sp-tabs section #deliverWebpAltered:checked ~ .deliverWebpAlteringTypes
-{
-    display: block;
-}
-/*article.sp-tabs section,
-article.sp-tabs section h2 {
-    -webkit-transition: all 500ms ease;
-    -moz-transition: all 500ms ease;
-    -ms-transition: all 500ms ease;
-    -o-transition: all 500ms ease;
-    transition: all 500ms ease;
-}
-*/
-.shortpixel-help-link span.dashicons{
-    text-decoration: none;
-    margin-top: -1px;
-}
+
 /* Resources */
 @media(min-width: 1000px) {
     section#tab-resources .col-md-6 {

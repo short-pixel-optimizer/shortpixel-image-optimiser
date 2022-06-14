@@ -25,12 +25,6 @@ class ApiKeyController extends \ShortPixel\Controller
         return self::$instance;
     }
 
-    // glue method.
-    public function setShortPixel($pixel)
-    {
-      parent::setShortPixel($pixel);
-      $this->model->shortPixel = $pixel;
-    }
 
     public function load()
     {
@@ -47,9 +41,26 @@ class ApiKeyController extends \ShortPixel\Controller
          return false;
     }
 
+    /** Warning: NEVER use this for displaying API keys. Only for internal functions */
+    public function forceGetApiKey()
+    {
+      return $this->model->getKey();
+    }
+
     public function keyIsVerified()
     {
        return $this->model->is_verified();
     }
+
+		public function uninstall()
+		{
+			 $this->model->uninstall();
+		}
+
+		public static function uninstallPlugin()
+		{
+			 $controller = self::getInstance();
+			 $controller->uninstall();
+		}
 
 }

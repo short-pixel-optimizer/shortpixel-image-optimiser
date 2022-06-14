@@ -3,34 +3,32 @@ namespace ShortPixel;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 
+use ShortPixel\Helper\UiHelper as UiHelper;
+
+
 $fs = \wpSPIO()->filesystem();
 
 if ( isset($_GET['noheader']) ) {
     require_once(ABSPATH . 'wp-admin/admin-header.php');
 }
-//$this->outputHSBeacon();
-\ShortPixel\HelpScout::outputBeacon();
-
-echo $this->view->rewriteHREF;
 
 
 ?>
 <div class="wrap shortpixel-other-media">
     <h2>
-        <?php _e('Other Media optimized by ShortPixel','shortpixel-image-optimiser');?>
+        <?php _e('Custom Media optimized by ShortPixel','shortpixel-image-optimiser');?>
     </h2>
 
     <div class='toolbar'>
-
         <div>
           <?php
-          $nonce = wp_create_nonce( 'sp_custom_action' );
+          $nonce = wp_create_nonce( 'refresh_folders' );
           ?>
-            <a href="upload.php?page=wp-short-pixel-custom&action=refresh&_wpnonce=<?php echo $nonce ?>" id="refresh" class="button button-primary" title="<?php _e('Refresh custom folders content','shortpixel-image-optimiser');?>">
+            <a href="<?php echo admin_url('upload.php?page=wp-short-pixel-custom&sp-action=action_refreshfolders&_wpnonce=' . $nonce); ?>" id="refresh" class="button button-primary" title="<?php _e('Refresh custom folders content','shortpixel-image-optimiser');?>">
                 <?php _e('Refresh folders','shortpixel-image-optimiser');?>
             </a>
         </div>
-
+			<hr class='wp-header-end' />
 
       <div class="searchbox">
             <form method="get">
@@ -49,11 +47,27 @@ echo $this->view->rewriteHREF;
       </div>
   </div>
 
+<?php if ($this->view->pagination !== false): ?>
   <div class='pagination tablenav'>
+			<div class="view_switch">
+				<?php if ($this->has_hidden_items):
+
+					if ($this->show_hidden)
+					{
+						 printf('<a href="%s">%s</a>', esc_url(add_query_arg('show_hidden',false)), __('Back to normal items', 'shortpixel-image-optimiser'));
+					}
+					else
+					{
+						 printf('<a href="%s">%s</a>', esc_url(add_query_arg('show_hidden',true)), __('Show hidden items', 'shortpixel-image-optimiser'));
+					}
+
+		     endif; ?>
+			</div>
       <div class='tablenav-pages'>
         <?php echo $this->view->pagination; ?>
     </div>
   </div>
+<?php endif; ?>
 
     <div class='list-overview'>
       <div class='heading'>
@@ -83,28 +97,35 @@ echo $this->view->rewriteHREF;
         <?php
         $folders = $this->view->folders;
 
-        foreach($this->view->items as $item): ?>
-        <div class='item item-C-<?php echo $item->id ?>'>
-            <?php
-              $itemFile = $fs->getFile($item->path);
-              $filesize = $itemFile->getFileSize();
-              $display_date = $this->getDisplayDate($item);
-              $folder_id = $item->folder_id;
+        foreach($this->view->items as $item):
 
-              $rowActions = $this->getRowActions($item, $itemFile);
-              $actions = $this->getActions($item, $itemFile);
+
+          ?>
+
+        <div class='item item-<?php echo $item->get('id') ?>'>
+            <?php
+            //  $itemFile = $fs->getFile($item->path);
+              $filesize = $item->getFileSize();
+              $display_date = $this->getDisplayDate($item);
+              $folder_id = $item->get('folder_id');
+
+              $rowActions = $this->getRowActions($item);
+
 
               $folder = isset($folders[$folder_id]) ? $folders[$folder_id] : false;
-              $media_type = ($folder && $folder->isNextGen()) ? __('Nextgen', 'shortpixel-image-optimiser') : __('Custom', 'shortpixel_image_optimiser');
-              $img_url = $fs->pathToUrl($itemFile);
-              $heavy = ($filesize <= 500000 && $filesize > 0);
+              $media_type = ($folder && $folder->get('is_nextgen')) ? __('Nextgen', 'shortpixel-image-optimiser') : __('Custom', 'shortpixel_image_optimiser');
+              $img_url = $fs->pathToUrl($item);
+              $is_heavy = ($filesize >= 500000 && $filesize > 0);
 
             ?>
             <span><a href="<?php echo($img_url);?>" target="_blank">
-                <div class='thumb' <?php if($heavy) echo('title="' . __('This image is heavy and it would slow this page down if displayed here. Click to open it in a new browser tab.', 'shortpixel-image-optimiser') . '"');
-                ?> style="background-image:url('<?php echo($heavy ? $img_url : wpSPIO()->plugin_url('res/img/heavy-image@2x.png' )) ?>')"></div>
+                <div class='thumb' <?php if($is_heavy)
+								{
+								 	echo('title="' . __('This image is heavy and it would slow this page down if displayed here. Click to open it in a new browser tab.', 'shortpixel-image-optimiser') . '"');
+								}
+                ?> style="background-image:url('<?php echo($is_heavy ? wpSPIO()->plugin_url('res/img/heavy-image@2x.png') : $img_url) ?>')"></div>
                 </a></span>
-            <span class='filename'><?php echo $itemFile->getFileName() ?>
+            <span class='filename'><?php echo $item->getFileName() ?>
                 <div class="row-actions"><?php
                 $numberActions = count($rowActions);
                 for ($i = 0; $i < $numberActions; $i++)
@@ -113,17 +134,21 @@ echo $this->view->rewriteHREF;
                     if ($i < ($numberActions-1) )
                       echo '|';
                 }
-                ?></div>
+                ?>
+								<span class='item-id'>#<?php echo $item->get('id'); ?></span>
+							</div>
             </span>
-            <span class='folderpath'><?php echo (string) $itemFile->getFileDir(); ?></span>
+            <span class='folderpath'><?php echo (string) $item->getFileDir(); ?></span>
             <span class='mediatype'><?php echo $media_type ?></span>
             <span class="date"><?php echo $display_date ?></span>
-            <span id='sp-cust-msg-C-<?php echo $item->id ?>'>
-              <span class='sp-column-info'><?php echo $this->getDisplayStatus($item); ?></span>
-            </span>
-            <span class='actions'>
-              <?php echo $this->getDisplayActions($this->getActions($item, $itemFile))
-            ?></span>
+
+            <span >
+								<?php $this->doActionColumn($item); ?>
+	          </span>
+
+
+
+
         </div>
         <?php endforeach; ?>
       </div>
@@ -137,3 +162,5 @@ echo $this->view->rewriteHREF;
 
 
 </div> <!-- wrap -->
+
+<?php $this->loadView('snippets/part-comparer'); ?>

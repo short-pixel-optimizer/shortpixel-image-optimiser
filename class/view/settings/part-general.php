@@ -6,11 +6,13 @@
 
     <div class="wp-shortpixel-options wp-shortpixel-tab-content" style="visibility: hidden">
 
+
     <table class="form-table">
         <tbody>
             <tr>
                 <th scope="row"><label for="key"><?php _e('API Key:','shortpixel-image-optimiser');?></label></th>
                 <td>
+
                   <?php
                   $canValidate = false;
                   // Several conditions for showing API key.
@@ -64,79 +66,126 @@
                     <label for="compressionType"><?php _e('Compression type:','shortpixel-image-optimiser');?></label>
                 </th>
                 <td>
+
+										<input type="hidden" id="compressionType-database" value="<?php echo $view->data->compressionType ?>">
                     <div class="shortpixel-compression">
                         <div class="shortpixel-compression-options">
                             <label class="lossy" title="<?php _e('This is the recommended option in most cases, producing results that look the same as the original to the human eye.','shortpixel-image-optimiser');?>">
                                 <input type="radio" class="shortpixel-radio-lossy" name="compressionType" value="1"  <?php echo( $view->data->compressionType == 1 ? "checked" : "" );?>><span><?php _e('Lossy','shortpixel-image-optimiser');?></span>
                             </label>
+
                             <label class="glossy" title="<?php _e('Best option for photographers and other professionals that use very high quality images on their sites and want best compression while keeping the quality untouched.','shortpixel-image-optimiser');?>">
                                 <input type="radio" class="shortpixel-radio-glossy" name="compressionType" value="2" <?php echo( $view->data->compressionType == 2 ? "checked" : "" );?>><span><?php _e('Glossy','shortpixel-image-optimiser');?></span>
                             </label>
+
                             <label class="lossless" title="<?php _e('Make sure not a single pixel looks different in the optimized image compared with the original. In some rare cases you will need to use this type of compression. Some technical drawings or images from vector graphics are possible situations.','shortpixel-image-optimiser');?>">
                                 <input type="radio" class="shortpixel-radio-lossless" name="compressionType" value="0" <?php echo( $view->data->compressionType == 0 ? "checked" : "" );?>><span><?php _e('Lossless','shortpixel-image-optimiser');?></span>
                             </label>
-                            <?php _e('<a href="https://shortpixel.com/online-image-compression" style="margin-left:20px;" target="_blank">Make a few tests</a> to help you decide.'); ?>
-                        </div>
+
+                      <?php printf(__('%s Run a few tests%s to help you decide.', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/online-image-compression" style="margin-left:20px;" target="_blank">', '</a>'); ?>
+
+										 <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/11-lossy-glossy-or-lossless-which-one-is-the-best-for-me"></span></div>
+
                         <p class="settings-info shortpixel-radio-info shortpixel-radio-lossy" <?php echo( $view->data->compressionType == 1 ? "" : 'style="display:none"' );?>>
                             <?php _e('<b>Lossy compression (recommended): </b>offers the best compression rate.</br> This is the recommended option for most users, producing results that look the same as the original to the human eye.','shortpixel-image-optimiser');?>
                         </p>
                         <p class="settings-info shortpixel-radio-info shortpixel-radio-glossy" <?php echo( $view->data->compressionType == 2 ? "" : 'style="display:none"' );?>>
-                            <?php _e('<b>Glossy compression: </b>creates images that are almost pixel-perfect identical to the originals.</br> Best option for photographers and other professionals that use very high quality images on their sites and want best compression while keeping the quality untouched.','shortpixel-image-optimiser');?>
-                            <a href="https://blog.shortpixel.com/glossy-image-optimization-for-photographers/" target="_blank" class="shortpixel-help-link">
+                            <?php _e('<b>Glossy compression: </b>creates images that are almost pixel-perfect identical with the originals.</br> Best option for photographers and other professionals that use very high quality images on their sites and want the best compression while keeping the quality untouched.','shortpixel-image-optimiser');?>
+                            <a href="https://shortpixel.com/blog/glossy-image-optimization-for-photographers/" target="_blank" class="shortpixel-help-link">
                                 <span class="dashicons dashicons-editor-help"></span><?php _e('More info about glossy','shortpixel-image-optimiser');?>
                             </a></p>
                         <p class="settings-info shortpixel-radio-info shortpixel-radio-lossless" <?php echo( $view->data->compressionType == 0 ? "" : 'style="display:none"' );?>>
                             <?php _e('<b>Lossless compression: </b> the resulting image is pixel-identical with the original image.</br>Make sure not a single pixel looks different in the optimized image compared with the original.
                             In some rare cases you will need to use this type of compression. Some technical drawings or images from vector graphics are possible situations.','shortpixel-image-optimiser');?>
                         </p>
+                        </div>
+
                     </div>
                     <script>
-                        // @todo Remove JS from interface
+
                         function shortpixelCompressionLevelInfo() {
                             jQuery(".shortpixel-compression p").css("display", "none");
                             jQuery(".shortpixel-compression p." + jQuery(".shortpixel-compression-options input:radio:checked").attr('class')).css("display", "block");
                         }
-                        //shortpixelCompressionLevelInfo();
-                        jQuery(".shortpixel-compression-options input:radio").change(shortpixelCompressionLevelInfo);
+                        jQuery(".shortpixel-compression-options input:radio").on('change', shortpixelCompressionLevelInfo);
                     </script>
                 </td>
             </tr>
+
+						<tr class="compression-notice-row shortpixel-hide">
+							<th scope="row">&nbsp;</th>
+							<td>
+								<div class='compression-notice warning'>
+									<p><?php _e( 'This compression type will apply only to new or unprocessed images. Images that were already processed will not be re-optimized. If you want to change the compression type of already optimized images, <a href="options-general.php?page=wp-shortpixel-settings&part=tools">restore them from the backup</a> first.', 'shortpixel-image-optimiser' ); ?></p>
+									<p><?php _e('The current optimization processes in the queue will be stopped.', 'shortpixel-image-optimiser'); ?></p>
+
+								</div>
+							</td>
+						</tr>
+
             <tr>
-                <th scope="row"><?php _e('Also include thumbnails:','shortpixel-image-optimiser');?></th>
-                <td><input name="processThumbnails" type="checkbox" id="thumbnails" value="1" <?php checked($view->data->processThumbnails, '1');?>>
-                    <label for="thumbnails"><?php _e('Apply compression also to <strong>image thumbnails.</strong> ','shortpixel-image-optimiser');?></label>
-                    <?php echo($view->thumbnailsToProcess > 0 ? "(" . number_format($view->thumbnailsToProcess) . " " . __('thumbnails to optimize','shortpixel-image-optimiser') . ")" : "");?>
+                <th scope="row"><?php _e('Thumbnail compression:','shortpixel-image-optimiser');?></th>
+                <td>
+
+										<div class='switch_button'>
+										 <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/511-settings-also-include-thumbnails"></span></div>
+				              <label>
+				                <input type="checkbox" class="switch" name="processThumbnails" value="1" <?php checked($view->data->processThumbnails, '1');?>>
+				                <div class="the_switch">&nbsp; </div>
+												<?php printf(__('Apply compression also to %s image thumbnails.%s ','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
+									    </label>
+				            </div>
+
                     <p class="settings-info">
                         <?php _e('It is highly recommended that you optimize the thumbnails as they are usually the images most viewed by end users and can generate most traffic.<br>Please note that thumbnails count up to your total quota.','shortpixel-image-optimiser');?>
                     </p>
+
                 </td>
             </tr>
+
             <tr>
-                <th scope="row"><?php _e('Image backup','shortpixel-image-optimiser');?></th>
+                <th scope="row"><?php _e('Backup','shortpixel-image-optimiser');?></th>
                 <td>
-                    <input name="backupImages" type="checkbox" id="backupImages" value="1" <?php checked($view->data->backupImages,'1'); ?>>
-                    <label for="backupImages"><?php _e('Save and keep a backup of your original images in a separate folder.','shortpixel-image-optimiser');?></label>
-                    <p class="settings-info"><?php _e('You <strong>need to have backup active</strong> in order to be able to restore images to originals or to convert from Lossy to Lossless and back.','shortpixel-image-optimiser');?></p>
+
+
+										 <div class='switch_button'>
+											 <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/515-settings-image-backup"></span></div>
+											 <label>
+												 <input type="checkbox" class="switch" name="backupImages" value="1" <?php checked($view->data->backupImages, '1');?>>
+												 <div class="the_switch">&nbsp; </div>
+												<?php _e('Create a backup of the original images, saved on your server in /wp-content/uploads/ShortpixelBackups/.','shortpixel-image-optimiser');?>
+											 </label>
+										 </div>
+
+	                    <p class="settings-info"><?php _e('You can remove the backup folder at any moment but it is best to keep a local/cloud copy, in case you want to restore the optimized files to originals or re-optimize the images using a different compression type.','shortpixel-image-optimiser');?></p>
                 </td>
             </tr>
+
             <tr class='view-notice-row backup_warning'>
               <th scope='row'>&nbsp;</th>
-              <td><div class='view-notice warning'><p><?php _e('Make sure you have a backup in place. When optimizing Shortpixel will overwrite your images without recovery. This may result in lost images.', 'shortpixel-image-optimiser') ?></p></div></td>
+              <td><div class='view-notice warning'><p><?php _e('Make sure you have a backup in place. When optimizing, ShortPixel will overwrite your images without recovery, which may result in lost images.', 'shortpixel-image-optimiser') ?></p></div></td>
             </tr>
             <tr>
                 <th scope="row"><?php _e('Remove EXIF','shortpixel-image-optimiser');?></th>
                 <td>
-                    <input name="removeExif" type="checkbox" id="removeExif" value="1" <?php checked($view->data->keepExif, 0);?>>
-                    <label for="removeExif"><?php _e('Remove the EXIF tag of the image (recommended).','shortpixel-image-optimiser');?></label>
-                    <p class="settings-info"> <?php _e('EXIF is a set of various pieces of information that are automatically embedded into the image upon creation. This can include GPS position, camera manufacturer, date and time, etc.
-                        Unless you really need that data to be preserved, we recommend removing it as it can lead to <a href="https://blog.shortpixel.com/how-much-smaller-can-be-images-without-exif-icc" target="_blank">better compression rates</a>.','shortpixel-image-optimiser');?></p>
+
+									<div class='switch_button'>
+										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/483-spai-remove-exif">
+	 								 </span></div>
+										<label>
+											<input type="checkbox" class="switch" name="removeExif" value="1" <?php checked($view->data->keepExif, 0);?>>
+											<div class="the_switch">&nbsp; </div>
+											<?php _e('Remove the EXIF tag of the image (recommended).','shortpixel-image-optimiser');?>
+										</label>
+									</div>
+
 
                 </td>
             </tr>
             <tr class='exif_warning view-notice-row'>
                 <th scope="row">&nbsp;</th>
                 <td>
-                  <div class='view-notice warning'><p><?php printf(__('Warning - Converting from PNG to JPG will %s not %s keep the EXIF-information!'), "<strong>","</strong>"); ?></p></div>
+                  <div class='view-notice warning'><p><?php printf(__('Warning - Converting from PNG to JPG will %s not %s keep the EXIF information!'), "<strong>","</strong>"); ?></p></div>
                 </td>
             </tr>
 
@@ -154,7 +203,7 @@
             <tr class='exif_imagick_warning view-notice-row' data-imagick="<?php echo $imagick ?>">
                   <th scope="row">&nbsp;</th>
                   <td>
-                    <div class='view-notice warning'><p><?php printf(__('Warning - Imagick library not detected on server. WordPress will use another library to resize images, which may result in loss of EXIF-information'), "<strong>","</strong>"); ?></p></div>
+                    <div class='view-notice warning'><p><?php printf(__('Warning - Imagick library not detected on server. WordPress will use another library to resize images, which may result in loss of EXIF information'), "<strong>","</strong>"); ?></p></div>
                   </td>
             </tr>
 
@@ -164,21 +213,33 @@
               ?>
                 <th scope="row"><?php _e('Resize large images','shortpixel-image-optimiser');?></th>
                 <td>
-                    <input name="resizeImages" type="checkbox" id="resize" value="1" <?php checked( $view->data->resizeImages, true );?>>
-                    <label for="resize"><?php _e('to maximum','shortpixel-image-optimiser');?></label>
-                    <input type="text" name="resizeWidth" id="width" style="width:70px" class="resize-sizes"
+
+											<div class='switch_button'>
+												<label>
+													<input type="checkbox" class="switch" name="resize" id='resize' value="1" <?php checked($view->data->resizeImages, true);?>>
+													<div class="the_switch">&nbsp; </div>
+													<?php _e('to maximum','shortpixel-image-optimiser') ?>
+												</label>
+											</div>
+
+
+
+                    <input type="number" min="1" max="20000" name="resizeWidth" id="width" style="width:80px" class="resize-sizes"
                            value="<?php echo( $view->data->resizeWidth > 0 ? $view->data->resizeWidth : min(1200, $view->minSizes['width']) );?>" <?php echo( $resizeDisabled );?>/> <?php
                            _e('pixels wide &times;','shortpixel-image-optimiser');?>
-                    <input type="text" name="resizeHeight" id="height" class="resize-sizes" style="width:70px"
+
+                    <input type="number" min="1" max="20000" name="resizeHeight" id="height" class="resize-sizes" style="width:80px"
                            value="<?php echo( $view->data->resizeHeight > 0 ? $view->data->resizeHeight : min(1200, $view->minSizes['height']) );?>" <?php echo( $resizeDisabled );?>/> <?php
-                           _e('pixels high (original aspect ratio is preserved and image is not cropped)','shortpixel-image-optimiser');?>
+                           _e('pixels high (preserves the original aspect ratio and doesn\'t crop the image)','shortpixel-image-optimiser');?>
+
                     <input type="hidden" id="min-resizeWidth" value="<?php echo($view->minSizes['width']);?>" data-nicename="<?php _e('Width', 'shortpixel-image-optimiser'); ?>" />
+
                     <input type="hidden" id="min-resizeHeight" value="<?php echo($view->minSizes['height']);?>" data-nicename="<?php _e('Height', 'shortpixel-image-optimiser'); ?>"/>
+
                     <p class="settings-info">
-                        <?php _e('Recommended for large photos, like the ones taken with your phone. Saved space can go up to 80% or more after resizing.','shortpixel-image-optimiser');?>
-                        <a href="https://blog.shortpixel.com/resize-images/" class="shortpixel-help-link" target="_blank">
-                            <span class="dashicons dashicons-editor-help"></span><?php _e('Read more','shortpixel-image-optimiser');?>
-                        </a><br/>
+                        <?php _e('Recommended for large photos, like the ones taken with your phone. Saved space can go up to 80% or more after resizing. Please note that this option does not prevent thumbnails from being created that should  be larger than the selected dimensions, but these thumbnails will also be resized to the dimensions selected here.','shortpixel-image-optimiser');?>
+
+
                     </p>
                     <?php if(false) { ?>
                     <div style="margin-top: 10px;">
@@ -190,9 +251,7 @@
                         <img alt="<?php _e('Resize inner','shortpixel-image-optimiser'); ?>" src="<?php echo(wpSPIO()->plugin_url('res/img/resize-inner.png' ));?>"
                              srcset='<?php echo(wpSPIO()->plugin_url('res/img/resize-inner.png' ));?> 1x, <?php echo(wpSPIO()->plugin_url('res/img/resize-inner@2x.png' ));?> 2x'
                              title="<?php _e('Sizes will be smaller or equal to the corresponding value. For example, if you set the resize dimensions at 1000x1200, an image of 2000x3000px will be resized to 800x1200px while an image of 3000x2000px will be resized to 1000x667px','shortpixel-image-optimiser');?>">
-                        <div style="display:inline-block;margin-left: 20px;"><a href="https://blog.shortpixel.com/resize-images/" class="shortpixel-help-link" target="_blank">
-                            <span class="dashicons dashicons-editor-help"></span><?php _e('What is this?','shortpixel-image-optimiser');?></a>
-                        </div>
+
                     </div>
                     <?php } ?>
 
@@ -248,14 +307,15 @@
                                 <input type="radio" name="resizeType" id="resize_type_inner" value="inner" <?= $view->data->resizeType == 'inner' ? 'checked' : ''; ?>>
                                 <?= __( 'Contain', 'shortpixel-image-optimiser' ); ?>
                             </label><br>
-                            <div style="display:inline-block;margin-top: 15px;"><a href="https://blog.shortpixel.com/resize-images/" class="shortpixel-help-link" target="_blank">
+                            <div style="display:inline-block;margin-top: 15px;"><a href="https://shortpixel.com/knowledge-base/article/208-can-shortpixel-automatically-resize-new-image-uploads/" class="shortpixel-help-link" target="_blank">
+
                                     <span class="dashicons dashicons-editor-help"></span><?php _e('What is this?','shortpixel-image-optimiser');?></a>
                             </div>
 
                         </div>
                         <?php
-                        $resize_width  = (int) ( $view->data->resizeWidth > 0 ? $view->data->resizeWidth : min( 924, $view->minSizes[ 'width' ] ) );
-                        $resize_height = (int) ( $view->data->resizeHeight > 0 ? $view->data->resizeHeight : min( 924, $view->minSizes[ 'height' ] ) );
+                        $resize_width  = (int) ( $view->data->resizeWidth > 0 ? $view->data->resizeWidth : min( 1200, $view->minSizes[ 'width' ] ) );
+                        $resize_height = (int) ( $view->data->resizeHeight > 0 ? $view->data->resizeHeight : min( 1200, $view->minSizes[ 'height' ] ) );
                         $ratio         = $resize_height / $resize_width;
 
                         $frame_style = 'padding-top:' . round( ( $ratio < 1.5 ? ( $ratio < 0.5 ? 0.5 : $ratio ) : 1.5 ) * 100, 0 ) . '%;';
@@ -268,32 +328,10 @@
                                  srcset="<?php echo(wpSPIO()->plugin_url('res/img/resize-type@2x.png'));?> 2x" alt="">
                         </div>
 
-                        <!--
-                        <div class="presentation-wrap">
-                            <div class="presentation-wrapper hidden" data-type="<?= $view->data->resizeType ?>">
-                                <div class="frame-wrap">
-                                    <div class="frame">
-                                        <div class="frame-inner" style="<?= $frame_style; ?>">
-                                            <div class="image-wrap">
-                                                <img src="<?= wpSPIO()->plugin_url( 'res/img/resize-type.png' ); ?>" data-width="<?= $image_size[ 0 ]; ?>" data-height="<?= $image_size[ 1 ]; ?>" srcset="<?= wpSPIO()->plugin_url( 'res/img/resize-type@2x.png' ); ?> 2x" alt="" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        -->
                     </div>
                     <script type="text/javascript">
 
                     </script>
-
-
-
-
-
-
-
                 </td>
             </tr>
         </tbody>
