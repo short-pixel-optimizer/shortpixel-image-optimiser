@@ -59,9 +59,7 @@ class CacheController extends \ShortPixel\Controller
     {
       $cache->delete();
     }
-		else {
-			Log::addWarn('Asked to remove non-existing cache item' . $name);
-		}
+
   }
 
   public function deleteItemObject(CacheModel $cache)
