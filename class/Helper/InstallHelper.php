@@ -29,17 +29,22 @@ class InstallHelper
       AdminNoticesController::resetAllNotices();
       \WPShortPixelSettings::onActivate();
       OptimizeController::resetQueues();
+
+			$settings->currentVersion = SHORTPIXEL_IMAGE_OPTIMISER_VERSION;
   }
 
   public static function deactivatePlugin()
   {
+
     $settings = \wpSPIO()->settings();
 		$settings::onDeactivate();
 
     $env = wpSPIO()->env();
 
     if (! $env->is_nginx)
+		{
       \ShortPixelTools::alterHtaccess(false, false);
+		}
 
     // save remove.
     $fs = new FileSystemController();

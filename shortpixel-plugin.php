@@ -63,14 +63,13 @@ class ShortPixelPlugin
       return;
     }
 
-		$this->check_plugin_version();
-
     $front = new Controller\FrontController();
     $admin = Controller\AdminController::getInstance();
     $adminNotices = Controller\AdminNoticesController::getInstance(); // Hook in the admin notices.
 
     $this->initHooks();
     $this->ajaxHooks();
+
 
 
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
@@ -84,6 +83,8 @@ class ShortPixelPlugin
   /** Mainline Admin Init. Tasks that can be loaded later should go here */
   public function init()
   {
+			// This runs activation thing. Should be -after- init
+			$this->check_plugin_version();
 
       $notices = Notices::getInstance(); // This hooks the ajax listener
 			$quotaController = QuotaController::getInstance();
