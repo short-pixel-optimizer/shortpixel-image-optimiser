@@ -1,8 +1,5 @@
 <?php
 namespace ShortPixel;
-
-// \WPSPIO()->load_style('shortpixel-admin');
-
 ?>
 
   <div id="shortPixelProposeUpgradeShade" class="sp-modal-shade" style="display:none;"></div>

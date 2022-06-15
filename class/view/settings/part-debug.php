@@ -50,13 +50,15 @@ $env = \wpSPIO()->env();
     <h3><?php _e('Quota Data', 'shortpixel'); ?></h3>
     <pre><?php var_export($this->quotaData); ?></pre>
   </div>
+
+
   <div class='debug-quota'>
-    <form method="POST" action="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_resetquota'))) ?>"
-      id="shortpixel-form-debug-medialib">
+    <form method="POST" action="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_resetquota'))) ?>">
+
       <button class='button' type='submit'>Clear Quota Data</button>
       </form>
   </div>
-  <div  class="stats env">
+  <div class="stats env">
       <h3><?php _e('Stats', 'shortpixel-image-optimiser'); ?></h3>
       <h4>Media</h4>
       <div class='flex'>

@@ -22,7 +22,7 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 			<div class='pie-wrapper'><?php	$this->loadView('settings/part-optpie'); ?></div>
 		</div>
 
-		
+
 		<?php if (! is_null($this->quotaData)): ?>
 		<div class='quota-remaining'>
 			<a href="https://shortpixel.com/<?php
@@ -49,10 +49,11 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 
       ?>
-      <form name='wp_shortpixel_options' action='<?php echo esc_url(add_query_arg('noheader', 'true')) ?>'  method='post' id='wp_shortpixel_options'>
-        <input type='hidden' name='display_part' value="<?php echo $this->display_part ?>" />
-        <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
       <div class='section-wrapper'>
+				<form name='wp_shortpixel_options' action='<?php echo esc_url(add_query_arg('noheader', 'true')) ?>'  method='post' id='wp_shortpixel_options'>
+	        <input type='hidden' name='display_part' value="<?php echo $this->display_part ?>" />
+	        <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
+
         <?php
         $this->loadView('settings/part-general');
         $this->loadView('settings/part-advanced');
@@ -65,13 +66,16 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
     //     $this->loadView('settings/part-statistics');
         }
 				$this->loadView('settings/part-tools');
-        if (Log::debugIsActive())
+
+        ?>
+			</form>
+			<?php
+				if (Log::debugIsActive())
         {
           $this->loadView('settings/part-debug');
         }
-        ?>
-      </div>
-      </form>
+				?>
+			</div> <!-- wrappur -->
       <?php
     endif;
     ?>

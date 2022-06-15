@@ -343,18 +343,12 @@ class AdminNoticesController extends \ShortPixel\Controller
       */
       if($quotaController->hasQuota() === true)
       {
-      //    $screen = get_current_screen();
           $env = \wpSPIO()->env();
 
-          //$statsSetting = is_array($settings->currentStats) ? $settings->currentStats : array();
-          //$stats = $shortpixel->countAllIfNeeded($statsSetting, 86400);
           $quotaController = QuotaController::getInstance();
           $quotaData = $quotaController->getQuota();
 
           $statsControl = StatsController::getInstance(); // @todo Implement this. (Figure out what this was )
-    //      $stats = $statsControl->
-
-          //$quotaData = $stats;
           $noticeController = Notices::getInstance();
 
           $bulk_notice = $noticeController->getNoticeByID(self::MSG_UPGRADE_BULK);
@@ -572,8 +566,7 @@ class AdminNoticesController extends \ShortPixel\Controller
       $message = '<p>' . sprintf(__("You currently have <strong>%d images and thumbnails to optimize</strong> but you only have <strong>%d images</strong> available in your current plan."
             . " You might need to upgrade your plan in order to have all your images optimized.", 'shortpixel-image-optimiser'), $extra['filesTodo'], $extra['quotaAvailable']) . '</p>';
       $message .= '<p><button class="button button-primary" id="shortpixel-upgrade-advice" onclick="ShortPixel.proposeUpgrade()" style="margin-right:10px;"><strong>' .  __('Show me the best available options', 'shortpixel-image-optimiser') . '</strong></button></p>';
-      $message .= $this->proposeUpgradePopup();
-      //self::includeProposeUpgradePopup();
+       $this->proposeUpgradePopup();
       return $message;
     }
 
@@ -582,7 +575,7 @@ class AdminNoticesController extends \ShortPixel\Controller
       $message = '<p>' . sprintf(__("You are adding an average of <strong>%d images and thumbnails every month</strong> to your Media Library and you have <strong>a plan of %d images/month</strong>."
             . " You might need to upgrade your plan in order to have all your images optimized.", 'shortpixel-image-optimiser'), $extra['monthAvg'], $extra['monthlyQuota']) . '</p>';
       $message .= '  <button class="button button-primary" id="shortpixel-upgrade-advice" onclick="ShortPixel.proposeUpgrade()" style="margin-right:10px;"><strong>' .  __('Show me the best available options', 'shortpixel-image-optimiser') . '</strong></button>';
-      $message .= $this->proposeUpgradePopup();
+      $this->proposeUpgradePopup();
       return $message;
     }
 
@@ -653,7 +646,7 @@ class AdminNoticesController extends \ShortPixel\Controller
           </div>';
 
 				$message .= '</div>'; /// closing div
-        $message .= $this->proposeUpgradePopup();
+        $this->proposeUpgradePopup();
         return $message;
     }
 
@@ -770,12 +763,12 @@ class AdminNoticesController extends \ShortPixel\Controller
    }
 
     protected function monthlyUpgradeNeeded($quotaData) {
+
 				if  (isset($quotaData->monthly->total))
 				{
 						$monthAvg = $this->getMonthAvg($quotaData);
 						// +20 I suspect to not trigger on very low values of monthly use(?)
 						$threshold = $quotaData->monthly->total + $quotaData->onetime->remaining/6+20;
-
 						if ($monthAvg > $threshold)
 						{
 								return true;
