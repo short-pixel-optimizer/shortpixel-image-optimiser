@@ -55,7 +55,7 @@ class BuildAutoLoader
       'class/external/cloudflare.php',
       'class/external/flywheel.php',
       //'class/external/gravityforms.php',
-      'class/external/helpscout.php',
+      //'class/external/helpscout.php',
       'class/external/nextgen/nextGenController.php',
       'class/external/nextgen/nextGenViewController.php',
       //'class/external/securi.php',

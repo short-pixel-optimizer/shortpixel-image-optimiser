@@ -728,7 +728,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 				 $prepare = array_merge( array(self::IMAGE_TYPE_MAIN), $duplicates);
 
-
 				 $sql = 'SELECT attach_id FROM ' . $wpdb->prefix . 'shortpixel_postmeta WHERE image_type = %d and attach_id in ( ' . $in_str . ') ';
 				 $sql = $wpdb->prepare($sql, $prepare);
 

@@ -413,7 +413,7 @@ class UiHelper
       {
 
           $retry = self::getAction('retry', $mediaItem->get('id'));
-          $text .= "<div class='shortpixel-image-error'>" . $mediaItem->isOptimizePrevented();
+          $text .= "<div class='shortpixel-image-error'>" . esc_html($mediaItem->isOptimizePrevented());
           $text .= "<span class='shortpixel-error-reset'>" . sprintf(__('After you have fixed this issue, you can %s click here to retry %s', 'shortpixel-image-optimiser'), '<a href="javascript:' . $retry['function'] . '">', '</a>');
           $text .= '</div>';
       }

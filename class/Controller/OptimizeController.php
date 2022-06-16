@@ -332,9 +332,7 @@ class OptimizeController
         }
 
         // @todo Here prevent bulk from running when running flag is off
-
         // @todo Here prevent a runTick is the queue is empty and done already ( reliably )
-
         $results = new \stdClass;
         if ( in_array('media', $queueTypes))
         {
