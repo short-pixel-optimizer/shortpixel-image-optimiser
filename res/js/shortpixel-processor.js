@@ -97,8 +97,9 @@ window.ShortPixelProcessor =
         console.log('Start Data from Server', ShortPixelProcessorData.startData, this.interval, this.deferInterval);
         console.log('remoteSecret ' + this.remoteSecret + ', localsecret: ' + this.localSecret + ' - is this bulk? ' + this.isBulkPage);
 
-        this.tooltip = new ShortPixelToolTip({}, this);
 
+        this.tooltip = new ShortPixelToolTip({}, this);
+				
         if (typeof ShortPixelScreen == 'undefined')
         {
            console.error('Missing Screen!');
@@ -242,7 +243,7 @@ window.ShortPixelProcessor =
     {
         console.log('Stop Processing #' + this.timer);
 
-				// @todo this can probably go? Why would StopProcess cancel Manual pauses? 
+				// @todo this can probably go? Why would StopProcess cancel Manual pauses?
         if (this.isManualPaused == true) /// processor ends on status paused.
         {
             this.isManualPaused = false;
