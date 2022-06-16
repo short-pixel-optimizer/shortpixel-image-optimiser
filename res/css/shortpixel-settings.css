@@ -181,20 +181,23 @@
   background-color: #fff;
   z-index: 2;
 }
-.settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(2) h2 {
+.settings_page_wp-shortpixel-settings article.sp-tabs section:nth-of-type(2) h2 {
   left: 192px;
 }
-.settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(3) h2 {
+.settings_page_wp-shortpixel-settings article.sp-tabs section:nth-of-type(3) h2 {
   left: 374px;
 }
-.settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(4) h2 {
+.settings_page_wp-shortpixel-settings article.sp-tabs section:nth-of-type(4) h2 {
   left: 556px;
 }
-.settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(5) h2 {
+.settings_page_wp-shortpixel-settings article.sp-tabs section:nth-of-type(5) h2 {
   left: 738px;
 }
-.settings_page_wp-shortpixel-settings article.sp-tabs section:nth-child(6) h2 {
+.settings_page_wp-shortpixel-settings article.sp-tabs section:nth-of-type(6) h2 {
   left: 920px;
+}
+.settings_page_wp-shortpixel-settings section#tab-debug h2 {
+  left: 738px;
 }
 .settings_page_wp-shortpixel-settings section#tab-debug .flex {
   display: flex;

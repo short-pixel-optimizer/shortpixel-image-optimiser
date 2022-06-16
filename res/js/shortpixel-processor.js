@@ -97,8 +97,9 @@ window.ShortPixelProcessor =
         console.log('Start Data from Server', ShortPixelProcessorData.startData, this.interval, this.deferInterval);
         console.log('remoteSecret ' + this.remoteSecret + ', localsecret: ' + this.localSecret + ' - is this bulk? ' + this.isBulkPage);
 
-        this.tooltip = new ShortPixelToolTip({}, this);
 
+        this.tooltip = new ShortPixelToolTip({}, this);
+				
         if (typeof ShortPixelScreen == 'undefined')
         {
            console.error('Missing Screen!');

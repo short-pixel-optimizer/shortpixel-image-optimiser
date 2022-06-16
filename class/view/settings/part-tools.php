@@ -33,9 +33,14 @@ $queueRunning = $bulk->isAnyBulkRunning();
 
 		<div class='option'>
 			<div class='name'><?php _e('Migrate data', 'shortpixel-image-optimiser'); ?></div>
-			<div class='field'><a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_redirectBulk', 'bulk' => 'migrate', 'noheader' => true), $url)); ?>" class="button">
-						<?php _e('Search and Migrate All', 'shortpixel-image-optimiser'); ?>
-				</a>
+			<div class='field'>
+				<div class='option-content'>
+						<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/539-spio-5-tells-me-to-convert-legacy-data-what-is-this">
+					 </span></div>
+						<a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_redirectBulk', 'bulk' => 'migrate', 'noheader' => true), $url)); ?>" class="button">
+								<?php _e('Search and Migrate All', 'shortpixel-image-optimiser'); ?>
+						</a>
+				</div>
 				<p class='settings-info'><?php printf(__('ShortPixel Image Optimizer version 5.0 brings a new format for saving the image optimization information. If you have upgraded from a version prior to version 5.0, you may want to convert all your image data to the new format. This conversion will speed up the plugin and ensure that all data is preserved. %s Check your image data after doing the conversion! %s', 'shortpixel-image-optimiser'), '<br><b>', '</b>') ?> </p>
 			</div>
 		</div>

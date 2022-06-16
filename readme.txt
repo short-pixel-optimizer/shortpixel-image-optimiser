@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compressor, ima
 Requires at least: 4.8.0
 Tested up to: 6.0
 Requires PHP: 5.6
-Stable tag: 5.0.1
+Stable tag: 5.0.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -308,6 +308,18 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 9. Check other optimized images status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 5.0.2 =
+Release date June 16th, 2022
+* Fix: an uncaught error was fixed for the sites running without the `fileinfo` PHP extension that is needed by the plugin to get the mime type of the files;
+* Fix: the resize switch from the settings wasn't properly working;
+* Fix: a hidden modal in the dashboard was taking up a lot of empty space;
+* Fix: some popups in the settings were always getting triggered in WordPress versions 5.5 and below;
+* Fix: if the admin bar tooltip cannot load for any reason, let the JS processor continue its job;
+* Fix: advancing from step 2 of the bulk process was sometimes blocked;
+* Tweak: improved the notification text and updated the link around the legacy metadata migration;
+* Tweak: the legacy conversion notification is now hidden when out of credits;
+* Language: 0 new strings added, 3 updated, 0 fuzzed, and 0 obsoleted.
 
 = 5.0.1 =
 Release date June 14th, 2022

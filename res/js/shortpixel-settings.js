@@ -20,7 +20,7 @@ var ShortPixelSettings = function()
 				//	var target = (action.getAttribute('data-toggle')) ? action.getAttribute('data-toggle') : 'click';
 					toggle.addEventListener('change', self.DoToggleAction.bind(self));
 
-					var evInit = new Event('change');
+					var evInit = new CustomEvent('change',  {detail : { init: true }} );
 					toggle.dispatchEvent(evInit);
 			});
 

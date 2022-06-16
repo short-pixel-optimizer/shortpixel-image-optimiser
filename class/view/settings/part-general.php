@@ -216,7 +216,7 @@
 
 											<div class='switch_button'>
 												<label>
-													<input type="checkbox" class="switch" name="resize" id='resize' value="1" <?php checked($view->data->resizeImages, true);?>>
+													<input type="checkbox" class="switch" name="resizeImages" id='resize' value="1" <?php checked($view->data->resizeImages, true);?>>
 													<div class="the_switch">&nbsp; </div>
 													<?php _e('to maximum','shortpixel-image-optimiser') ?>
 												</label>

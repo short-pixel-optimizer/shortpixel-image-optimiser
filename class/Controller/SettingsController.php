@@ -230,7 +230,9 @@ class SettingsController extends \ShortPixel\ViewController
 
       public function action_debug_resetquota()
       {
+
           $this->loadEnv();
+
           $quotaController = QuotaController::getInstance();
           $quotaController->forceCheckRemoteQuota();
 

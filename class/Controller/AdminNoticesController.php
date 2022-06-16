@@ -292,14 +292,14 @@ class AdminNoticesController extends \ShortPixel\Controller
 		{
 			  	$message = '<p><strong>' .  __('ShortPixel found items in media library with a legacy optimization format!', 'shortpixel-image-optimiser') . '</strong></p>';
 
-					$message .= '<p>' . __('Prior to version 5.0, a different format was used to store ShortPixel optimization information. ShortPixel automatically converts media library items when they are opened. %s Please check if your images contain the optimization information after conversion. %s Read more %s', 'shortpixel-image-optimiser') . '</p>';
+					$message .= '<p>' . __('Prior to version 5.0, a different format was used to store ShortPixel optimization information. ShortPixel automatically migrates the media library items to the new format when they are opened. %s Please check if your images contain the optimization information after the migration. %s Read more %s', 'shortpixel-image-optimiser') . '</p>';
 
-					$message .=  '<p>' . __('It is recommended to convert all items to the modern format.', 'shortpixekl-image-optimser') . '</p>';
+					$message .=  '<p>' . __('It is recommended to migrate all items to the modern format by clicking on the button below.', 'shortpixekl-image-optimser') . '</p>';
 					$message .= '<p><a href="%s" class="button button-primary">%s</a></p>';
 
-					$read_link = esc_url('https://shortpixel.com/knowledge-base/article/434-where-exactly-does-shortpixel-store-the-data-on-the-database');
+					$read_link = esc_url('https://shortpixel.com/knowledge-base/article/539-spio-5-tells-me-to-convert-legacy-data-what-is-this');
 					$action_link = esc_url(admin_url('upload.php?page=wp-short-pixel-bulk&panel=bulk-migrate'));
-					$action_name = __('Convert legacy data', 'shortpixel-image-optimiser');
+					$action_name = __('Migrate legacy data', 'shortpixel-image-optimiser');
 
 					$message = sprintf($message, '<br>', '<a href="' . $read_link . '" target="_blank">', '</a>', $action_link, $action_name);
 
@@ -343,18 +343,12 @@ class AdminNoticesController extends \ShortPixel\Controller
       */
       if($quotaController->hasQuota() === true)
       {
-      //    $screen = get_current_screen();
           $env = \wpSPIO()->env();
 
-          //$statsSetting = is_array($settings->currentStats) ? $settings->currentStats : array();
-          //$stats = $shortpixel->countAllIfNeeded($statsSetting, 86400);
           $quotaController = QuotaController::getInstance();
           $quotaData = $quotaController->getQuota();
 
           $statsControl = StatsController::getInstance(); // @todo Implement this. (Figure out what this was )
-    //      $stats = $statsControl->
-
-          //$quotaData = $stats;
           $noticeController = Notices::getInstance();
 
           $bulk_notice = $noticeController->getNoticeByID(self::MSG_UPGRADE_BULK);
@@ -572,8 +566,7 @@ class AdminNoticesController extends \ShortPixel\Controller
       $message = '<p>' . sprintf(__("You currently have <strong>%d images and thumbnails to optimize</strong> but you only have <strong>%d images</strong> available in your current plan."
             . " You might need to upgrade your plan in order to have all your images optimized.", 'shortpixel-image-optimiser'), $extra['filesTodo'], $extra['quotaAvailable']) . '</p>';
       $message .= '<p><button class="button button-primary" id="shortpixel-upgrade-advice" onclick="ShortPixel.proposeUpgrade()" style="margin-right:10px;"><strong>' .  __('Show me the best available options', 'shortpixel-image-optimiser') . '</strong></button></p>';
-      $message .= $this->proposeUpgradePopup();
-      //self::includeProposeUpgradePopup();
+       $this->proposeUpgradePopup();
       return $message;
     }
 
@@ -582,7 +575,7 @@ class AdminNoticesController extends \ShortPixel\Controller
       $message = '<p>' . sprintf(__("You are adding an average of <strong>%d images and thumbnails every month</strong> to your Media Library and you have <strong>a plan of %d images/month</strong>."
             . " You might need to upgrade your plan in order to have all your images optimized.", 'shortpixel-image-optimiser'), $extra['monthAvg'], $extra['monthlyQuota']) . '</p>';
       $message .= '  <button class="button button-primary" id="shortpixel-upgrade-advice" onclick="ShortPixel.proposeUpgrade()" style="margin-right:10px;"><strong>' .  __('Show me the best available options', 'shortpixel-image-optimiser') . '</strong></button>';
-      $message .= $this->proposeUpgradePopup();
+      $this->proposeUpgradePopup();
       return $message;
     }
 
@@ -653,7 +646,7 @@ class AdminNoticesController extends \ShortPixel\Controller
           </div>';
 
 				$message .= '</div>'; /// closing div
-        $message .= $this->proposeUpgradePopup();
+        $this->proposeUpgradePopup();
         return $message;
     }
 
@@ -770,12 +763,12 @@ class AdminNoticesController extends \ShortPixel\Controller
    }
 
     protected function monthlyUpgradeNeeded($quotaData) {
+
 				if  (isset($quotaData->monthly->total))
 				{
 						$monthAvg = $this->getMonthAvg($quotaData);
 						// +20 I suspect to not trigger on very low values of monthly use(?)
 						$threshold = $quotaData->monthly->total + $quotaData->onetime->remaining/6+20;
-
 						if ($monthAvg > $threshold)
 						{
 								return true;

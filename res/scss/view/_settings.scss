@@ -241,25 +241,30 @@
 		}
   }
 
-  article.sp-tabs section:nth-child(2) h2 {
+  article.sp-tabs section:nth-of-type(2) h2 {
       left: 192px;
   }
-  article.sp-tabs section:nth-child(3) h2 {
+  article.sp-tabs section:nth-of-type(3) h2 {
       left: 374px;
   }
-  article.sp-tabs section:nth-child(4) h2 {
+  article.sp-tabs section:nth-of-type(4) h2 {
       left: 556px;
   }
-  article.sp-tabs section:nth-child(5) h2 {
+  article.sp-tabs section:nth-of-type(5) h2 {
       left: 738px;
   }
-  article.sp-tabs section:nth-child(6) h2 {
+  article.sp-tabs section:nth-of-type(6) h2 {
       left: 920px;
   }
+	//debug-tab is now after the other tabs, because of form issues.
+	article.sp-tabs section#tab-debug {
+
+	}
   //article.sp-tabs section h2
 
   section#tab-debug
   {
+			h2 { left: 738px; }
      .flex {
        display: flex;
      }
