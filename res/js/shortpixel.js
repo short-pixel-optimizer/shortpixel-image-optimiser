@@ -289,6 +289,11 @@ var ShortPixel = function() {
 
 
         jQuery('input[type=radio][name=deliverWebpType]').on('change', function(e) {
+						// shortpixel-settings init trigger events for toggles, ignore this when so.
+						if (e.detail && e.detail.init && e.detail.init === true)
+						{
+								return false;
+						}
             if (this.value == 'deliverWebpAltered') {
                 if(window.confirm(_spTr.alertDeliverWebPAltered)){
                     var selectedItems = jQuery('input[type=radio][name=deliverWebpAlteringType]:checked').length;

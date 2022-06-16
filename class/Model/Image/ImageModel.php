@@ -235,11 +235,19 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
               return false;
         }
 
-        $this->mime = mime_content_type($this->getFullPath());
-        if (strpos($this->mime, 'image') >= 0)
-           return true;
-        else
-          return false;
+				if  (\wpSPIO()->env()->is_function_usable('mime_content_type'))
+				{
+					$this->mime = mime_content_type($this->getFullPath());
+	        if (strpos($this->mime, 'image') >= 0)
+	           return true;
+	        else
+	          return false;
+
+				}
+				else {
+					return true; // assume without check, that extension says what it is.
+					// @todo This should probably trigger a notice in adminNoticesController.
+				}
     }
 
     public function get($name)

@@ -13,7 +13,8 @@ var ShortPixelToolTip = function(reserved, processor)
           processor.PauseProcess();
         }
         var control = document.querySelector('.ab-item .controls');
-        control.addEventListener('click', this.ToggleProcessing.bind(this));
+				if (control)
+        	control.addEventListener('click', this.ToggleProcessing.bind(this));
 
         this.ToggleIcon();
 
@@ -27,7 +28,12 @@ var ShortPixelToolTip = function(reserved, processor)
     }
     this.GetToolTip = function() // internal function please.
     {
-        return document.querySelector('li.shortpixel-toolbar-processing');
+        var element =  document.querySelector('li.shortpixel-toolbar-processing');
+				if (element === null)
+				{
+					 console.error('Tooltip could not be found!');
+				}
+				return element;
     }
 		this.InitStats = function()
 		{
@@ -58,6 +64,8 @@ var ShortPixelToolTip = function(reserved, processor)
 					return;
 
         var toolTip = this.GetToolTip();
+				if (toolTip === null)
+					return false;
         var statTip = toolTip.querySelector('.stats');
 
         if (statTip == null)
@@ -66,7 +74,7 @@ var ShortPixelToolTip = function(reserved, processor)
 				var inqueue = stats.in_queue;
 				var inprocess = stats.in_process;
 
-				// @todo This needs fixing. 
+				// @todo This needs fixing.
 				var pattern = new RegExp("\\.|\\,", '');
 
 				if (typeof inqueue === 'string'  && inqueue)
@@ -151,6 +159,8 @@ var ShortPixelToolTip = function(reserved, processor)
     this.DoingProcess = function()
     {
         var tooltip = this.GetToolTip();
+				if (tooltip === null)
+					return false;
         tooltip.classList.remove('shortpixel-hide');
         tooltip.classList.add('shortpixel-processing');
     }
@@ -158,6 +168,8 @@ var ShortPixelToolTip = function(reserved, processor)
     this.AddNotice = function(message)
     {
       var tooltip = this.GetToolTip(); // li.shortpixel-toolbar-processing
+			if (tooltip === null)
+				return false;
       var toolcontent = tooltip.querySelector('.toolbar-notice-wrapper');
 
 			if (toolcontent == null)
@@ -194,7 +206,8 @@ var ShortPixelToolTip = function(reserved, processor)
     this.ProcessResume = function()
     {
       var tooltip = this.GetToolTip();
-
+			if (tooltip === null)
+				return false;
       tooltip.classList.remove('shortpixel-paused');
       tooltip.classList.add('shortpixel-processing');
       this.ToggleIcon();
@@ -203,6 +216,8 @@ var ShortPixelToolTip = function(reserved, processor)
     this.ProcessEnd = function()
     {
         var tooltip = this.GetToolTip();
+				if (tooltip === null)
+					return false;
 
         tooltip.classList.add('shortpixel-hide');
         tooltip.classList.remove('shortpixel-processing');
@@ -210,6 +225,8 @@ var ShortPixelToolTip = function(reserved, processor)
     this.ProcessPause = function()
     {
         var tooltip = this.GetToolTip();
+				if (tooltip === null)
+					return false;
 
         tooltip.classList.add('shortpixel-paused');
         tooltip.classList.remove('shortpixel-processing');
@@ -228,8 +245,8 @@ var ShortPixelToolTip = function(reserved, processor)
     }
     this.HandleError = function()
     {
-
+					console.trace('tooltip error');
     }
 
-    this.Init();
+this.Init();
 } // tooltip.

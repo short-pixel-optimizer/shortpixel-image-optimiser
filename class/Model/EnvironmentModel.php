@@ -67,8 +67,8 @@ class EnvironmentModel extends \ShortPixel\Model
   {
     if (count($this->disabled_functions) == 0)
     {
-      $disabled = ini_get('disable_functions');
-      $this->disabled_functions = explode($disabled, ',');
+      $disabled = ini_get('disable_functions');			
+      $this->disabled_functions = explode(',', $disabled);
     }
 
     if (isset($this->disabled_functions[$function]))
