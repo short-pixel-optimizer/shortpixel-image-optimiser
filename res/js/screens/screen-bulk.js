@@ -133,6 +133,8 @@ console.log("Screen Init Done", initMedia, initCustom);
 	this.DoActionEvent = function(event)
 	{
 		var element = event.target;
+		event.preventDefault();
+		event.stopPropagation();
 
 		// Might be the child
 		if (element.getAttribute('data-action') == null)
