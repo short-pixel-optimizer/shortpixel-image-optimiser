@@ -5,6 +5,7 @@ use \ShortPixel\ShortPixelPng2Jpg as ShortPixelPng2Jpg;
 use ShortPixel\Controller\ResponseController as ResponseController;
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
+use ShortPixel\Controller\QuotaController as QuotaController;
 
 use ShortPixel\Helper\InstallHelper as InstallHelper;
 
@@ -1881,9 +1882,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         return false;
       }
 
-			$adminNotices = AdminNoticesController::getInstance();
-			$adminNotices->invokeLegacyNotice();
-
+			$quotaController = QuotaController::getInstance();
+			if ($quotaController->hasQuota() === false)
+			{
+				$adminNotices = AdminNoticesController::getInstance();
+				$adminNotices->invokeLegacyNotice();
+			}
+			
         Log::addDebug("Conversion of legacy: ", array($metadata));
     //  echo "*** EXPORT: "; var_export($metadata); echo " *** ";
        $type = isset($data['type']) ? $this->legacyConvertType($data['type']) : '';
