@@ -387,6 +387,8 @@ Class FileSystemController extends \ShortPixel\Controller
         return false;
     }
 
+
+
     /** Get all files from a directory tree, starting at given dir.
     * @param DirectoryModel $dir to recursive into
     * @param Array $filters Collection of optional filters as accepted by FileFilter in directoryModel
@@ -411,6 +413,30 @@ Class FileSystemController extends \ShortPixel\Controller
 
         return $fileArray;
     }
+
+		// Url very sparingly.
+		public function url_exists($url)
+		{
+			 if (! \wpSPIO()->env()->is_function_usable('curl_init'))
+			 {
+				  return null;
+			 }
+
+			$ch = curl_init($url);
+			curl_setopt($ch, CURLOPT_NOBODY, true);
+			curl_exec($ch);
+			$responseCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+			curl_close($ch);
+
+			if ($responseCode == 200)
+			{
+				return true;
+			}
+			else {
+				return false;
+			}
+
+		}
 
     /** Old method of getting a subDir. This is messy and hopefully should not be used anymore. It's added here for backward compat in case of exceptions */
     private function returnOldSubDir($file)

@@ -296,7 +296,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 	  {
 	    $fs = \wpSPIO()->filesystem();
 
-	    if (! is_null($this->getMeta($type)))
+	    if (! is_null($this->getMeta($type))) 
 	    {
 	      $filepath = $this->getFileDir() . $this->getMeta($type);
 	      $file = $fs->getFile($filepath);
