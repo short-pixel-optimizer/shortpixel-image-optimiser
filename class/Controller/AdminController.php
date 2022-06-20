@@ -101,12 +101,15 @@ class AdminController extends \ShortPixel\Controller
 
 								foreach($args['queues'] as $qname)
 								{
-									  $result = $results->$qname;
-										// If Queue is not completely empty, there should be something to do.
-										if ($result->qstatus != QUEUE::RESULT_QUEUE_EMPTY)
+									  if (property_exists($results, $qname))
 										{
-											 $running = true;
-											 continue;
+											  $result = $results->$qname;
+												// If Queue is not completely empty, there should be something to do.
+												if ($result->qstatus != QUEUE::RESULT_QUEUE_EMPTY)
+												{
+													 $running = true;
+													 continue;
+												}
 										}
 								}
 
