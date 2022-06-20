@@ -121,20 +121,23 @@ console.log("Screen Init Done", initMedia, initCustom);
 				  var eventName = (action.getAttribute('data-event')) ? action.getAttribute('data-event') : 'click';
 
 					action.addEventListener(eventName, self.DoActionEvent.bind(self));
+					/*
+					This is off, since I can't find any clue that children don't get triggered, but it does create double events when added.
 					if (action.children.length > 0)
 					{
 						 for(var i = 0; i < action.children.length; i++)
 						 {
-							  action.children[i].addEventListener(eventName, self.DoActionEvent.bind(self));
+							 // action.children[i].addEventListener(eventName, self.DoActionEvent.bind(self));
 						 }
 					}
+					*/
       });
-  },
+  }
+
 	this.DoActionEvent = function(event)
 	{
 		var element = event.target;
-		event.preventDefault();
-		event.stopPropagation();
+		var action = element.getAttribute('data-action');
 
 		// Might be the child
 		if (element.getAttribute('data-action') == null)
@@ -148,7 +151,6 @@ console.log("Screen Init Done", initMedia, initCustom);
 		var actionName = element.getAttribute('data-action');
 		var isPanelAction = (actionName == 'open-panel');
 
-
 		if (isPanelAction)
 		{
 			 var doPanel = element.getAttribute('data-panel');
@@ -161,7 +163,6 @@ console.log("Screen Init Done", initMedia, initCustom);
 						this[actionName].call(this,event);
 				}
 		}
-
 	}
 
   this.UpdatePanelStatus = function(status, panelName)
