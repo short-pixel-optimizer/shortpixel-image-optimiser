@@ -421,8 +421,7 @@ console.log("Screen Init Done", initMedia, initCustom);
 			 preview.querySelector('.new.preview-image .image.source img').src = originalSrc;
 		}
 		else {
-			 preview.querySelector('.new.preview-image .image.source img').src = placeHolder;
-			 preview.querySelector('.new.preview-image .image.source img').classList.add('notempty');
+			preview.querySelector('.new.preview-image .image.source').style.display = 'none';
 		}
 
 		if (optimizedSrc)
@@ -430,7 +429,9 @@ console.log("Screen Init Done", initMedia, initCustom);
 			 preview.querySelector('.new.preview-image .image.result img').src = optimizedSrc;
 		}
 		else {
-			 preview.querySelector('.new.preview-image .image.result').style.display = 'none';
+			 preview.querySelector('.new.preview-image .image.result img').src = placeHolder;
+			 preview.querySelector('.new.preview-image .image.result img').classList.add('notempty');
+
 		}
 //		currentItem.classList.add('slideleft');
 		currentItem.style.marginLeft = '-' + offset + 'px';
