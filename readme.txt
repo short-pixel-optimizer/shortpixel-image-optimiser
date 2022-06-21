@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compressor, ima
 Requires at least: 4.8.0
 Tested up to: 6.0
 Requires PHP: 5.6
-Stable tag: 5.0.2
+Stable tag: 5.0.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -308,6 +308,17 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 9. Check other optimized images status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 5.0.3 =
+Release date June 21st, 2022
+* Fix: the plugin now recognizes the offloaded WebP/AVIF files, when they are not also present anymore on the server;
+* Fix: in some cases, the bulk and manual optimization was stuck due to some errors related to the legacy optimization information;
+* Fix: when saving the settings, the credits quota and other API-related data will be sent to the API, for faster sync;
+* Fix: when having the backups turned off, a placeholder image was displayed instead of the original one;
+* Fix: an empty space was sometimes shown on some pages, as a result of some dismissed notifications;
+* Fix: various small fixes around the plugin processing engine, for increased speed and stability;
+* Fix: updated various pieces of code in accordance with the WordPress Coding Standards;
+* Language: 1 new string added, 0 updated, 0 fuzzed, and 0 obsoleted.
 
 = 5.0.2 =
 Release date June 16th, 2022
