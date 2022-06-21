@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<ruleset name="ShortPixel">
+    <description>ShortPixel WP Ruleset </description>
+		    <file>.</file>
+
+		    <!-- Exclude the Composer Vendor directory. -->
+		    <exclude-pattern>/vendor/*</exclude-pattern>
+		    <exclude-pattern>/tests/*</exclude-pattern>
+ 				<exclude-pattern>/res/js/*</exclude-pattern>
+				<exclude-pattern>/res/css/*</exclude-pattern>
+
+		    <!-- wpcs installed path -->
+	<!--	    <config name="installed_paths" value="/var/www/tools/wpcs" />
+-->
+				<!-- Colors! Nice! -->
+			    <arg name="colors"/>
+
+<!-- security related -->
+				<!-- <rule ref="WordPress.Security"/> -->
+
+				<rule ref="WordPress">
+						 <exclude name="Generic.WhiteSpace.DisallowSpaceIndent.SpacesUsed" />
+						 <exclude name="WordPress.Files.FileName.InvalidClassFileName" />
+						 <exclude name="WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase" />
+
+				</rule>
+
+
+</ruleset>

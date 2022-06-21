@@ -182,7 +182,6 @@ class AdminNoticesController extends \ShortPixel\Controller
        $this->doUnlistedNotices();
        $this->doQuotaNotices();
        $this->doIntegrationNotices();
-       $this->doHelpOptInNotices();
        $this->doRemoteNotices();
 
 			 $this->doListViewNotice();
@@ -334,6 +333,7 @@ class AdminNoticesController extends \ShortPixel\Controller
         return; // no key, no quota.
       }
 
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
       if(isset($_GET['checkquota'])) {
           //$shortpixel->getQuotaInformation();
           $quota = $quotaController->getQuota();
@@ -402,19 +402,6 @@ class AdminNoticesController extends \ShortPixel\Controller
 
     }
 
-
-    protected function doHelpOptInNotices()
-    {
-       return; // this is disabled pending review.
-        $settings = \wpSPIO()->settings();
-        $optin = $settings->helpscoutOptin;
-
-        if ($optin == -1)
-        {
-            $message = $this->getHelpOptinMessage();
-            Notices::addNormal($message);
-        }
-    }
 
     protected function doRemoteNotices()
     {
@@ -704,30 +691,11 @@ class AdminNoticesController extends \ShortPixel\Controller
         if(is_wp_error( $proposal )) {
             $proposal = array('body' => __('Error. Could not contact ShortPixel server for proposal', 'shortpixel-image-optimiser'));
         }
-        die($proposal['body']);
+        die( $proposal['body'] );
 
     }
 
-    protected function getHelpOptinMessage()
-    {
-
-      //onclick='ShortPixel.optInHelp(0)'
-       $message = __('ShortPixel needs to ask permission to load the help functionality');
-       $message .= "<div><button type='button' id='sp-helpscout-disallow' class='button button-primary' >" . __('No, I don\'t need help', 'shortpixel-image-optimiser') . "</button> &nbsp;&nbsp;";
-       $message .= "<button type='button' id='sp-helpscout-allow' class='button button-primary'>" . __('Yes, load the help widget', 'shortpixel-image-optimiser') . "</button></div>";
-
-       $message .= "<p>" . __('ShortPixel uses third party services Helpscout and Quriobot to access our help easier. By giving permission you agree to opt-in and load these service on ShortPixel related pages', 'shortpixel-image-optimiser');
-
-       $message .= "<script>window.addEventListener('load', function(){
-            document.getElementById('sp-helpscout-allow').addEventListener('click', ShortPixel.optInHelp, {once: true} );
-            document.getElementById('sp-helpscout-allow').toggleParam = 'on';
-            document.getElementById('sp-helpscout-disallow').addEventListener('click', ShortPixel.optInHelp, {once: true} );
-            document.getElementById('sp-helpscout-disallow').toggleParam = 'off';
-       }); </script>";
-       return $message;
-    }
-
-    private function get_remote_notices()
+   private function get_remote_notices()
    {
         $transient_name = 'shortpixel_remote_notice';
         $transient_duration = DAY_IN_SECONDS;
