@@ -335,6 +335,8 @@ abstract class Queue
       $stats->done = (int) $this->getStatus('done');
       $stats->bulk_running = (bool) $this->getStatus('bulk_running');
 
+			$customData = $this->getStatus('custom_data');
+
       $stats->total = $stats->in_queue + $stats->fatal_errors + $stats->errors + $stats->done + $stats->in_process;
       if ($stats->total > 0)
         $stats->percentage_done = round((100 / $stats->total) * ($stats->done + $stats->fatal_errors));
