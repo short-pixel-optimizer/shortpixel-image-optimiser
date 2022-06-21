@@ -127,15 +127,24 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
     return array($this->getFullPath());
   }
 
-  public function getOptimizeUrls()
+	// get_path param see MediaLibraryModel
+  public function getOptimizeUrls($get_path = false)
   {
     if (! $this->isProcessable() )
       return array();
 
-    $url = $this->getURL();
-    if (! $url)
-      return array(); //nothing
+		if (true === $get_path)
+		{
+			$url = $this->getFullPath();
+		}
+		else {
+			$url = $this->getURL();
+		}
 
+    if (! $url)
+		{
+      return array(); //nothing
+		}
 
     return array($url);
   }
@@ -145,11 +154,16 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 			$fs = \wpSPIO()->filesystem();
 
       if ($this->size == 'original')
+			{
         $url = wp_get_original_image_url($this->id);
+			}
       elseif ($this->isUnlisted())
 				$url = $fs->pathToUrl($this);
 			else
-        $url = wp_get_attachment_image_url($this->id, $this->size);
+			{
+				$url = wp_get_attachment_image_url($this->id, $this->size);
+			}
+
 
       return $this->fs()->checkURL($url);
   }

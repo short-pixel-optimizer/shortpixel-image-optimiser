@@ -71,32 +71,40 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   }
 
 
-  public function getOptimizeUrls()
+	// Path will only return the filepath.  For reasons, see getOptimizeFileType
+  public function getOptimizeUrls($get_path = false)
   {
      $settings = \wpSPIO()->settings();
 
-     $url = $this->getURL();
+		 if (true === $get_path)
+		 {
 
-     if (! $url) // If the whole image URL can't be found
-     {
-      return array();
-     }
+			 $url = $this->getFullPath();
+		 }
+		 else{
+		 		$url = $this->getURL();
+		 }
+
+		 if (! $url) // If the whole image URL can't be found
+		 {
+			return array();
+		 }
 
      $urls = array();
      if ($this->isProcessable(true))
-      $urls = array($url);
-		else {
-		}
+		 {
+	      $urls = array($url);
+		 }
 
      if ($this->isScaled())
      {
-        $urls = array_merge($urls, $this->original_file->getOptimizeUrls());
+        $urls = array_merge($urls, $this->original_file->getOptimizeUrls($get_path));
      }
 
      foreach($this->thumbnails as $thumbObj)
      {
         if($thumbObj->isThumbnailProcessable())
-          $urls = array_merge($urls, $thumbObj->getOptimizeUrls());
+          $urls = array_merge($urls, $thumbObj->getOptimizeUrls($get_path));
      }
 
      // @todo Check Retina's
@@ -105,7 +113,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
         foreach($this->retinas as $retinaObj)
         {
-           $urls = array_merge($urls, $retinaObj->getOptimizeUrls());
+           $urls = array_merge($urls, $retinaObj->getOptimizeUrls($get_path));
         }
      }
      $urls = array_values(array_unique($urls));
@@ -113,14 +121,17 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   }
 
   // Try to get the URL via WordPress
+	// This is now officially a heavy function.  Take times, other plugins (like s3) might really delay it
   public function getURL()
   {
      $url = $this->fs()->checkURL(wp_get_attachment_url($this->id));
 		 return $url;
   }
 
-  /** Get FileTypes that might be optimized. Checking for setting should go via isProcessableFileType! */
-  public function getOptimizeFileType($type = 'webp')
+  /** Get FileTypes that might be optimized. Checking for setting should go via isProcessableFileType!
+	*  Get path will return the filepath of said files. This is not useful, except for -checking- if it's processable via isProcessableFileType . GetURL can potentially hit performance, and we don't need it in that case.
+	*/
+  public function getOptimizeFileType($type = 'webp', $get_path = false)
   {
       if ($type == 'webp')
       {
@@ -141,21 +152,40 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           {
             if (parent::getOptimizeFileType($type))
 						{
-              $toOptimize[] = $this->getURL(); // $fs->pathToUrl($this);
-						}
-
-          }
+							if (true === $get_path) {
+								$toOptimize[] = $this->getFullPath();
+							} else {
+              	$toOptimize[] = $this->getURL(); // $fs->pathToUrl($this);
+							}
+           	}
+				 }
       }
       if ($this->isScaled() ) // scaled image
       {
         if ($this->original_file->getOptimizeFileType($type) )
-            $toOptimize[] = $this->original_file->getURL(); //$fs->pathToUrl($this->original_file);
+				{
+						if (true === $get_path)
+						{
+							$toOptimize[] = $this->original_file->getFullPath();
+						}
+						else {
+							$toOptimize[] = $this->original_file->getURL();
+						}
+				}
       }
 
       foreach($this->thumbnails as $thumbName => $thumbObj)
       {
           if ($thumbObj->getOptimizeFileType($type))
+					{
+						if (true === $get_path)
+						{
+						  $toOptimize[] = $thumbObj->getFullPath();
+						}
+						else{
               $toOptimize[] = $thumbObj->getURL(); //$fs->pathToUrl($thumbObj);
+						}
+					}
       }
 
       return array_values(array_unique($toOptimize));
@@ -1889,7 +1919,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				$adminNotices = AdminNoticesController::getInstance();
 				$adminNotices->invokeLegacyNotice();
 			}
-			
+
         Log::addDebug("Conversion of legacy: ", array($metadata));
     //  echo "*** EXPORT: "; var_export($metadata); echo " *** ";
        $type = isset($data['type']) ? $this->legacyConvertType($data['type']) : '';
@@ -2084,12 +2114,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			{
 				return $fileType->getFileName();
 			}
+
 			$env = \wpSPIO()->env();
 			$fs = \wpSPIO()->filesystem();
 
 // try the whole thing, but fetching remote URLS, test if really S3 not in case something went wrong with is_virtual, or it's just something messed up.
 			if ($fileObj->is_virtual() && $env->plugin_active('s3-offload') )
 			{
+
+
 				if ($type == 'webp')
 				{
 					$is_double = \wpSPIO()->env()->useDoubleWebpExtension();
@@ -2127,7 +2160,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					 }
 					 else
 					 {
-							$url_exists = $fs->getFile($double_url);
+							$url_exists = $fs->url_exists($double_url);
 							if ($url_exists === true)
 								 return $double_filename;
 					 }

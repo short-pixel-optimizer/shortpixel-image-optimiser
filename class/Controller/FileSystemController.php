@@ -39,6 +39,7 @@ Class FileSystemController extends \ShortPixel\Controller
 		*/
     public function getMediaImage($id)
     {
+
         $filepath = get_attached_file($id);
         $filepath = apply_filters('shortpixel_get_attached_file', $filepath, $id);
 

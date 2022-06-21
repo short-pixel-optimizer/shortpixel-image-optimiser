@@ -147,10 +147,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
           $meta = \wp_get_attachment_metadata($this->post_id);
 
           $fs = \wpSPIO()->filesystem();
-          //$imageObj = $fs->getMediaImage($this->post_id);
-          /*$imageObj = new ImageModel();
-          $imageObj->setByPostID($this->post_id); */
-        //  $imageFile = //$imageObj->getFile();
+
 					$imageObj = $this->imageModel;
 
 					if ($imageObj->isProcessable())
@@ -190,7 +187,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
 					if ($imageObj->is_virtual())
 					{
-						$debugInfo[] = array(__('Is Virtual'), $imageObj->getFullPath() );  
+						$debugInfo[] = array(__('Is Virtual'), $imageObj->getFullPath() );
 					}
 
           $debugInfo[] = array(__('Size and Mime (ImageObj)'), $imageObj->get('width') . 'x' . $imageObj->get('height'). ' (' . $imageObj->get('mime') . ')');

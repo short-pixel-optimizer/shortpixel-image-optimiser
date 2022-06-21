@@ -535,8 +535,10 @@ class FileModel extends \ShortPixel\Model
 
      $this->is_virtual = true;
 
+
      $path = apply_filters('shortpixel/image/urltopath', false, $url);
-     if ($path !== false)
+
+		 if ($path !== false)
      {
           $this->exists = true;
           $this->is_readable = true;

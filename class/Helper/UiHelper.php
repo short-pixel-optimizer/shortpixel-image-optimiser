@@ -115,7 +115,6 @@ class UiHelper
 
 			 }
 
-
 			 if (count($improvs) > 0)
 			 {
 		       $output .= "<div class='thumb-wrapper'>";
@@ -154,7 +153,7 @@ class UiHelper
     }
     if ($imageObj->isOptimized() && $imageObj->isProcessable())
     {
-        $optimizable = $imageObj->getOptimizeURLS();
+        $optimizable = $imageObj->getOptimizeURLS(true);
         // Todo check if Webp / Acif is active, check for unoptimized items
         $processWebp = ($imageObj->isProcessableFileType('webp')) ? true : false;
         $processAvif = ($imageObj->isProcessableFileType('avif')) ? true : false;
@@ -244,8 +243,7 @@ class UiHelper
 
       if ($mediaItem->isOptimized())
       {
-           $optimizable = $mediaItem->getOptimizeURLS();
-           //$webp = $mediaItem->
+           $optimizable = $mediaItem->getOptimizeURLS(true);
 
            if ($mediaItem->isProcessable() && ! $mediaItem->isOptimizePrevented())
            {
@@ -256,8 +254,8 @@ class UiHelper
              }
              else
              {
-                 $optimizableWebp = $mediaItem->isProcessableFileType('webp') ? count($mediaItem->getOptimizeFileType('webp')) : 0;
-                 $optimizableAvif = $mediaItem->isProcessableFileType('avif') ? count($mediaItem->getOptimizeFileType('avif')) : 0;
+                 $optimizableWebp = $mediaItem->isProcessableFileType('webp') ? count($mediaItem->getOptimizeFileType('webp', true)) : 0;
+                 $optimizableAvif = $mediaItem->isProcessableFileType('avif') ? count($mediaItem->getOptimizeFileType('avif', true)) : 0;
 
                  if ($optimizableWebp > 0 && $optimizableAvif > 0)
                    $text  = sprintf(__('Optimize %s webps and %s avif','shortpixel-image-optimiser'),$optimizableWebp, $optimizableAvif);

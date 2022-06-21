@@ -137,7 +137,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         if ($type == 'avif' && ! $settings->createAvif)
             return false;
 
-        $files = $this->getOptimizeFileType($type);
+				// true, will only return paths ( = lighter )
+        $files = $this->getOptimizeFileType($type, true);
 
         if (count($files) > 0)
           return true;
@@ -296,7 +297,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 	  {
 	    $fs = \wpSPIO()->filesystem();
 
-	    if (! is_null($this->getMeta($type))) 
+	    if (! is_null($this->getMeta($type)))
 	    {
 	      $filepath = $this->getFileDir() . $this->getMeta($type);
 	      $file = $fs->getFile($filepath);
