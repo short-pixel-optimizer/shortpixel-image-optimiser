@@ -445,7 +445,7 @@ window.ShortPixelProcessor =
 							{
 									this.HandleItemError(response.result, type);
 							}
-							elseif (! imageHandled)
+							else if (! imageHandled)
 							{
               	imageHandled = this.screen.HandleImage(response, type); // whole response here is single item. (final!)
 							}
