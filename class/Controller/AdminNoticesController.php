@@ -325,6 +325,9 @@ class AdminNoticesController extends \ShortPixel\Controller
       $settings = \wpSPIO()->settings();
 
       $quotaController = QuotaController::getInstance();
+			$noticeController = Notices::getInstance();
+			$statsControl = StatsController::getInstance(); // @todo Implement this. (Figure out what this was )
+
 
       if (! \wpSPIO()->settings()->verifiedKey)
       {
@@ -348,8 +351,6 @@ class AdminNoticesController extends \ShortPixel\Controller
           $quotaController = QuotaController::getInstance();
           $quotaData = $quotaController->getQuota();
 
-          $statsControl = StatsController::getInstance(); // @todo Implement this. (Figure out what this was )
-          $noticeController = Notices::getInstance();
 
           $bulk_notice = $noticeController->getNoticeByID(self::MSG_UPGRADE_BULK);
           $bulk_is_dismissed = ($bulk_notice && $bulk_notice->isDismissed() ) ? true : false;
@@ -365,29 +366,35 @@ class AdminNoticesController extends \ShortPixel\Controller
                             'quotaAvailable' => $available);
 
               //looks like the user hasn't got enough credits to bulk process all media library
-              $message = $this->getBulkUpgradeMessage($data);
-              $notice = Notices::addNormal($message);
-              Notices::makePersistent($notice, self::MSG_UPGRADE_BULK, YEAR_IN_SECONDS, array($this, 'upgradeBulkCallback'));
-
+							if ($bulk_notice === false)
+							{
+              	$message = $this->getBulkUpgradeMessage($data);
+              	$notice = Notices::addNormal($message);
+              	Notices::makePersistent($notice, self::MSG_UPGRADE_BULK, YEAR_IN_SECONDS, array($this, 'upgradeBulkCallback'));
+							}
           }
           //consider the monthly plus 1/6 of the available one-time credits.
           elseif( $this->monthlyUpgradeNeeded($quotaData)) {
-              //looks like the user hasn't got enough credits to process the monthly images, display a notice telling this
-              $message = $this->getMonthlyUpgradeMessage(array('monthAvg' => $this->getMonthAvg(), 'monthlyQuota' => $quotaData->monthly->total ));
 
-              $notice = Notices::addNormal($message);
-              Notices::makePersistent($notice, self::MSG_UPGRADE_MONTH, YEAR_IN_SECONDS);
+							if ($month_notice === false)
+							{
+								//looks like the user hasn't got enough credits to process the monthly images, display a notice telling this
+	              $message = $this->getMonthlyUpgradeMessage(array('monthAvg' => $this->getMonthAvg(), 'monthlyQuota' => $quotaData->monthly->total ));
+	              $notice = Notices::addNormal($message);
+	              Notices::makePersistent($notice, self::MSG_UPGRADE_MONTH, YEAR_IN_SECONDS);
+							}
           }
       }
       elseif ($quotaController->hasQuota() === false)
       {
-        // $stats = $shortpixel->countAllIfNeeded($settings->currentStats, 86400);
-      //   $quotaData = $stats;
-				 Log::addDebug('Over quota detected, loading message (adminnotices)');
-         $message = $this->getQuotaExceededMessage();
 
-         $notice = Notices::addError($message);
-         Notices::makePersistent($notice, self::MSG_QUOTA_REACHED, WEEK_IN_SECONDS);
+				 $notice = $noticeController->getNoticeByID(self::MSG_QUOTA_REACHED);
+				 if ($notice === false)
+				 {
+					$message = $this->getQuotaExceededMessage();
+         	$notice = Notices::addError($message);
+         	Notices::makePersistent($notice, self::MSG_QUOTA_REACHED, WEEK_IN_SECONDS);
+				 }
 
          Notices::removeNoticeByID(self::MSG_UPGRADE_MONTH); // get rid of doubles. reset
          Notices::removeNoticeByID(self::MSG_UPGRADE_BULK);

@@ -54,7 +54,6 @@ class BulkController
            $options['numitems'] = 200;
 
         }
-			//	Log::addTemp('options', $options);
         $Q->setCustomBulk($customOp, $options);
       }
 

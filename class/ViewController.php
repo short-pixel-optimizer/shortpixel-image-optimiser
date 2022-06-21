@@ -75,7 +75,6 @@ class ViewController extends Controller
       // load either param or class template.
       $template = (is_null($template)) ? $this->template : $template;
 
-
       if (is_null($template) )
       {
         return false;

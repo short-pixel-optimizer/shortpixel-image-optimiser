@@ -334,7 +334,6 @@ abstract class Queue
       $stats->bulk_running = (bool) $this->getStatus('bulk_running');
 
 			$customData = $this->getStatus('custom_data');
-			Log::addTemp('customData', $customData);
 
       $stats->total = $stats->in_queue + $stats->fatal_errors + $stats->errors + $stats->done + $stats->in_process;
       if ($stats->total > 0)
