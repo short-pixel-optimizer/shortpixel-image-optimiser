@@ -95,9 +95,9 @@ class ShortPixelPluginRequest {
      *
      */
     private function _collect_server_data() {
-        $this->data['server']['server'] = isset( $_SERVER['SERVER_SOFTWARE'] ) ? $_SERVER['SERVER_SOFTWARE'] : '';
+        $this->data['server']['server'] = isset( $_SERVER['SERVER_SOFTWARE'] ) ? sanitize_text_field($_SERVER['SERVER_SOFTWARE']) : '';
         $this->data['server']['php_version'] = phpversion();
-        $this->data['server']['url'] = home_url();
+        $this->data['server']['url'] = esc_url(home_url());
     }
 
     /**

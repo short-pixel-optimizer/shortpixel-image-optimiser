@@ -344,8 +344,8 @@ namespace ShortPixel\ShortPixelLogger;
          include($template_path);
        }
        else {
-         self::addError("View $template could not be found in " . $template_path,
-         array('class' => get_class($this), 'req' => $_REQUEST));
+         self::addError("View $template for ShortPixelLogger could not be found in " . $template_path,
+         array('class' => get_class($this)));
        }
    }
 

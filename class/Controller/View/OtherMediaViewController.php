@@ -434,9 +434,8 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 			public function doActionColumn($item)
 			{
           ?>
-					<div id='sp-msg-<?php echo $item->get('id') ?>'  class='sp-column-info'><?php
-          //echo $this->getDisplayStatus($item);
-					$this->printItemActions($item);
+					<div id='sp-msg-<?php echo esc_attr($item->get('id')) ?>'  class='sp-column-info'><?php
+							$this->printItemActions($item);
           echo "<div>" .  UiHelper::getStatusText($item) . "</div>";
 
            ?>
@@ -464,7 +463,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
             $link = ($action['type'] == 'js') ? 'javascript:' . $action['function'] : $action['function'];
 
             ?>
-            <a href="<?php echo $link ?>" class="<?php echo $classes ?>"><?php echo $action['text'] ?></a>
+            <a href="<?php echo esc_url($link) ?>" class="<?php echo esc_attr($classes) ?>"><?php echo esc_html($action['text']) ?></a>
 
             <?php
           endforeach;
@@ -501,7 +500,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
               $class = (isset($action['class'])) ? $action['class'] : '';
 
 
-              $link = '<a href="' . esc_url($url) . '" class="action-' . $action_arg . ' ' . $class . '">' . $text . '</a>';
+              $link = '<a href="' . esc_url($url) . '" class="action-' . esc_attr($action_arg) . ' ' . esc_attr($class) . '">' . esc_html($text) . '</a>';
           }
 
           $actions[$index] = $link;

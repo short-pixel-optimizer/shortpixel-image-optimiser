@@ -93,7 +93,7 @@ class ViewController extends Controller
      	if (file_exists($template_path) === false)
 			{
         Log::addError("View $template could not be found in " . $template_path,
-        array('class' => get_class($this), 'req' => $_REQUEST));
+        array('class' => get_class($this)));
       }
       elseif ($unique === false || ! in_array($template, self::$viewsLoaded))
       {

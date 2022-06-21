@@ -304,7 +304,7 @@ class ListMediaViewController extends \ShortPixel\ViewController
       foreach($options as $optname => $optval)
       {
           $selected = ($status == $optname) ? 'selected' : '';
-          echo "<option value='". $optname . "' $selected>" . $optval . "</option>\n";
+          echo "<option value='". esc_attr($optname) . "' $selected >" . esc_html($optval) . "</option>\n";
       }
       echo "</select>";
 

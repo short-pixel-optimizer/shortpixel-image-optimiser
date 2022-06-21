@@ -729,7 +729,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 				 $prepare = array_merge( array(self::IMAGE_TYPE_MAIN), $duplicates);
 
-
 				 $sql = 'SELECT attach_id FROM ' . $wpdb->prefix . 'shortpixel_postmeta WHERE image_type = %d and attach_id in ( ' . $in_str . ') ';
 				 $sql = $wpdb->prepare($sql, $prepare);
 
@@ -1864,6 +1863,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         return false;
       }
 
+
       $data = $metadata['ShortPixel'];
 
       if (count($data) == 0)  // This can happen. Empty array is still nothing to convert.
@@ -1942,9 +1942,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	 				  	$this->image_meta->originalSize = ($this->getFileSize() / (100 - $imp)) * 100;
 				}
 
-       $webp = $this->getWebp();
-       if ($webp)
-        $this->image_meta->webp = $webp->getFileName();
+
+        $this->image_meta->webp = $this->checkLegacyFileTypeFileName($this, 'webp');
+				$this->image_meta->avif = $this->checkLegacyFileTypeFileName($this, 'avif');
+
 
        $this->width = isset($metadata['width']) ? $metadata['width'] : false;
        $this->height = isset($metadata['height']) ? $metadata['height'] : false;
@@ -1983,11 +1984,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
               $thumbnailObj->has_backup = $thumbnailObj->hasBackup();
 
-              $webp = $thumbnailObj->getWebp();
-              if ($webp)
-              {
-                 $thumbnailObj->image_meta->webp = $webp->getFileName();
-              }
+							$thumbnailObj->image_meta->webp = $this->checkLegacyFileTypeFileName($thumbnailObj, 'webp');
+							$thumbnailObj->image_meta->avif = $this->checkLegacyFileTypeFileName($thumbnailObj, 'avif');
 
               if (strpos($thumbname, 'sp-found') !== false) // File is 'unlisted', also save file information.
               {
@@ -2012,7 +2010,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
            $originalFile->image_meta->compressedSize = $originalFile->getFileSize();
            $originalFile->image_meta->did_jpg2png = $did_jpg2png;
        //    $thumbnailObj->image_meta->improvement = -1; // n/a
-           if ($thumbnailObj->hasBackup())
+
+			     if ($originalFile->hasBackup())
            {
              $backup = $originalFile->getBackupFile();
              $originalFile->image_meta->originalSize = $backup->getFileSize();
@@ -2022,11 +2021,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
            $originalFile->image_meta->tsOptimized = $tsOptimized;
            $originalFile->has_backup = $originalFile->hasBackup();
 
-           $webp = $originalFile->getWebp();
-           if ($webp)
-           {
-              $originalFile->image_meta->webp = $webp->getFileName();
-           }
+					 $originalFile->image_meta->webp = $this->checkLegacyFileTypeFileName($originalFile, 'webp');
+					 $originalFile->image_meta->avif = $this->checkLegacyFileTypeFileName($originalFile, 'avif');
+
 
            if (strpos($thumbname, 'sp-found') !== false) // File is 'unlisted', also save file information.
            {
@@ -2079,6 +2076,65 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
       return true;
   }
+
+	private function checkLegacyFileTypeFileName($fileObj, $type)
+	{
+		 	$fileType = $fileObj->getImageType($type);
+			if ($fileType !== false)
+			{
+				return $fileType->getFileName();
+			}
+			$env = \wpSPIO()->env();
+			$fs = \wpSPIO()->filesystem();
+
+// try the whole thing, but fetching remote URLS, test if really S3 not in case something went wrong with is_virtual, or it's just something messed up.
+			if ($fileObj->is_virtual() && $env->plugin_active('s3-offload') )
+			{
+				if ($type == 'webp')
+				{
+					$is_double = \wpSPIO()->env()->useDoubleWebpExtension();
+				}
+				if ($type == 'avif')
+				{
+					$is_double = \wpSPIO()->env()->useDoubleAvifExtension();
+				}
+
+				$url = str_replace('.' . $fileObj->getExtension(), '.' . $type, $fileObj->getURL());
+				$double_url = $fileObj->getURL() . '.' . $type;
+
+				$double_filename = $fileObj->getFileName() . '.' . $type;
+				$filename =  $fileObj->getFileBase() . '.' . $type;
+
+				if ($is_double)
+				{
+					$url_exists = $fs->url_exists($double_url);
+					if ($url_exists === true)
+						return $double_filename;
+				}
+				else
+				{
+					$url_exists = $fs->url_exists($url);
+					if ($url_exists === true)
+						 return $filename;
+				}
+
+				// If double extension is enabled, but no file, check the alternative.
+					 if ($is_double)
+					 {
+							$url_exists = $fs->url_exists($url);
+							if ($url_exists === true)
+								 return $filename;
+					 }
+					 else
+					 {
+							$url_exists = $fs->getFile($double_url);
+							if ($url_exists === true)
+								 return $double_filename;
+					 }
+			} // is_virtual
+
+			return null;
+	}
 
   private function legacyConvertType($string_type)
   {
