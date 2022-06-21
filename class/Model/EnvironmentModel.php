@@ -93,8 +93,11 @@ class EnvironmentModel extends \ShortPixel\Model
 				case 'spai':
 					$plugin = 'shortpixel-adaptive-images/short-pixel-ai.php';
 				break;
+				case 's3-offload':
+				  $plugin = 'amazon-s3-and-cloudfront/wordpress-s3.php';
+				break;
 				default:
-					 $plugin = 'none';
+				 	$plugin = 'none';
 				break;
 		 }
 

@@ -121,20 +121,23 @@ console.log("Screen Init Done", initMedia, initCustom);
 				  var eventName = (action.getAttribute('data-event')) ? action.getAttribute('data-event') : 'click';
 
 					action.addEventListener(eventName, self.DoActionEvent.bind(self));
+					/*
+					This is off, since I can't find any clue that children don't get triggered, but it does create double events when added.
 					if (action.children.length > 0)
 					{
 						 for(var i = 0; i < action.children.length; i++)
 						 {
-							  action.children[i].addEventListener(eventName, self.DoActionEvent.bind(self));
+							 // action.children[i].addEventListener(eventName, self.DoActionEvent.bind(self));
 						 }
 					}
+					*/
       });
-  },
+  }
+
 	this.DoActionEvent = function(event)
 	{
 		var element = event.target;
-		event.preventDefault();
-		event.stopPropagation();
+		var action = element.getAttribute('data-action');
 
 		// Might be the child
 		if (element.getAttribute('data-action') == null)
@@ -148,7 +151,6 @@ console.log("Screen Init Done", initMedia, initCustom);
 		var actionName = element.getAttribute('data-action');
 		var isPanelAction = (actionName == 'open-panel');
 
-
 		if (isPanelAction)
 		{
 			 var doPanel = element.getAttribute('data-panel');
@@ -161,7 +163,6 @@ console.log("Screen Init Done", initMedia, initCustom);
 						this[actionName].call(this,event);
 				}
 		}
-
 	}
 
   this.UpdatePanelStatus = function(status, panelName)
@@ -421,8 +422,7 @@ console.log("Screen Init Done", initMedia, initCustom);
 			 preview.querySelector('.new.preview-image .image.source img').src = originalSrc;
 		}
 		else {
-			 preview.querySelector('.new.preview-image .image.source img').src = placeHolder;
-			 preview.querySelector('.new.preview-image .image.source img').classList.add('notempty');
+			preview.querySelector('.new.preview-image .image.source').style.display = 'none';
 		}
 
 		if (optimizedSrc)
@@ -430,7 +430,9 @@ console.log("Screen Init Done", initMedia, initCustom);
 			 preview.querySelector('.new.preview-image .image.result img').src = optimizedSrc;
 		}
 		else {
-			 preview.querySelector('.new.preview-image .image.result').style.display = 'none';
+			 preview.querySelector('.new.preview-image .image.result img').src = placeHolder;
+			 preview.querySelector('.new.preview-image .image.result img').classList.add('notempty');
+
 		}
 //		currentItem.classList.add('slideleft');
 		currentItem.style.marginLeft = '-' + offset + 'px';

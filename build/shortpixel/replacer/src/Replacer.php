@@ -412,7 +412,6 @@ class Replacer
 	*/
 	private function findNearestSize($sizeName)
 	{
-		 Log::addTemp('Find Nearest: '. $sizeName);
 
 			if (! isset($this->source_metadata['sizes'][$sizeName]) || ! isset($this->target_metadata['width'])) // This can happen with non-image files like PDF.
 			{

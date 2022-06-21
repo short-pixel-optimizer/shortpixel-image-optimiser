@@ -79,7 +79,8 @@ use \ShortPixel\Controller\BulkController as BulkController;
 
 	    <button class="button" type="button" data-action="open-panel" data-panel="dashboard"><?php _e('Back','shortpixel-image-optimiser'); ?></button>
 
-			 <button type="button" type="button" class="button disabled button-primary" disabled id='bulk-migrate-button' data-action="BulkMigrateAll"  ><?php _e('Search and migrate All Images', 'shortpixel-image-optimiser') ?></button>
+			 <button type="button" type="button" class="button disabled button-primary" disabled id='bulk-migrate-button' data-action="BulkMigrateAll"  ><?php _e('Search and migrate All Images', 'shortpixel-image-optimiser') ?>
+			 </button>
 
 	  </nav>
 	</div>

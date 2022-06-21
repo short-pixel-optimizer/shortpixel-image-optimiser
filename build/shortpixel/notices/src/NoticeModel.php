@@ -279,6 +279,7 @@ class NoticeModel //extends ShortPixelModel
                     var ev = event.detail;
                     var target = event.target;
                     var parent = target.parentElement;
+                    console.log(ev);
                     var data = {
                       'plugin_action': 'dismiss',
                       'action' : '$this->notice_action',

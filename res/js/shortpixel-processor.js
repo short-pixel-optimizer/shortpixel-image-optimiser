@@ -99,7 +99,7 @@ window.ShortPixelProcessor =
 
 
         this.tooltip = new ShortPixelToolTip({}, this);
-				
+
         if (typeof ShortPixelScreen == 'undefined')
         {
            console.error('Missing Screen!');
@@ -411,6 +411,7 @@ window.ShortPixelProcessor =
          // If there are items, give them to the screen for display of optimization, waiting status etc.
 				 var imageHandled = false;  // Only post one image per result-set to the ImageHandler (on bulk), to prevent flooding.
 
+				 // @todo Make sure that .result and .results can be iterated the same.
          if (typeof response.results !== 'undefined' && response.results !== null)
          {
              for (var i = 0; i < response.results.length; i++)
@@ -436,9 +437,10 @@ window.ShortPixelProcessor =
          if (typeof response.result !== 'undefined' && response.result !== null)
          {
               if (response.result.is_error)
-                this.HandleItemError(response.result, type);
-
-							if (! imageHandled)
+							{
+									this.HandleItemError(response.result, type);
+							}
+							elseif (! imageHandled)
 							{
               	imageHandled = this.screen.HandleImage(response, type); // whole response here is single item. (final!)
 							}
@@ -500,11 +502,8 @@ window.ShortPixelProcessor =
           else if (qstatus == "PREPARING_DONE")
           {
               console.log('Processor: Preparing is done');
-              //this.tooltip.ProcessEnd();
               this.StopProcess();
 
-              //if (typeof this.screen.preparingDone == 'function')
-               // this.screen.PreparingDone();
           }
 
           // React to status of the queue.
@@ -512,6 +511,7 @@ window.ShortPixelProcessor =
            this.screen.QueueStatus(qstatus, data);
       }
     },
+
     HandleItemError : function(result, type)
     {
         console.log('Handle Item Error', result, type);

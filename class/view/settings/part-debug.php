@@ -161,13 +161,13 @@ $env = \wpSPIO()->env();
 			foreach($queues as $name => $queue):
 					$stats = $queue->getStats();
 					echo "<div>";
-						echo "<span>" . $name . '</span>';
-						echo "<span>" .  $stats->in_queue . '</span>';
-						echo "<span>" .  $stats->in_process . '</span>';
-						echo "<span>" .  $stats->errors . '</span>';
-						echo "<span>" .  $stats->fatal_errors . '</span>';
-						echo "<span>" .  $stats->done . '</span>';
-						echo "<span>" .  $stats->total . '</span>';
+						echo "<span>" .  esc_html($name) . '</span>';
+						echo "<span>" .  esc_html($stats->in_queue) . '</span>';
+						echo "<span>" .  esc_html($stats->in_process) . '</span>';
+						echo "<span>" .  esc_html($stats->errors) . '</span>';
+						echo "<span>" .  esc_html($stats->fatal_errors) . '</span>';
+						echo "<span>" .  esc_html($stats->done) . '</span>';
+						echo "<span>" .  esc_html($stats->total) . '</span>';
 
 					echo "</div>";
 				?>

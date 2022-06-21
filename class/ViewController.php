@@ -75,7 +75,6 @@ class ViewController extends Controller
       // load either param or class template.
       $template = (is_null($template)) ? $this->template : $template;
 
-
       if (is_null($template) )
       {
         return false;
@@ -93,7 +92,7 @@ class ViewController extends Controller
      	if (file_exists($template_path) === false)
 			{
         Log::addError("View $template could not be found in " . $template_path,
-        array('class' => get_class($this), 'req' => $_REQUEST));
+        array('class' => get_class($this)));
       }
       elseif ($unique === false || ! in_array($template, self::$viewsLoaded))
       {

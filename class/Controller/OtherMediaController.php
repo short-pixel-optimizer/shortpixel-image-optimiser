@@ -377,7 +377,6 @@ class OtherMediaController extends \ShortPixel\Controller
           if( count($subdirs) > 0 ) {
               echo "<ul class='jqueryFileTree'>";
               foreach($subdirs as $dir ) {
-
                   $returnDir = substr($dir->getPath(), strlen($rootDirObj->getPath())); // relative to root.
                   $dirpath = $dir->getPath();
                   $dirname = $dir->getName();
@@ -389,7 +388,7 @@ class OtherMediaController extends \ShortPixel\Controller
 
                   if( $dir->exists()  ) {
                       //KEEP the spaces in front of the rel values - it's a trick to make WP Hide not replace the wp-content path
-                          echo "<li class='directory collapsed'><a rel=' " .$htmlRel. "'>" . $htmlName . "</a></li>";
+                          echo "<li class='directory collapsed'><a rel=' " .esc_attr($htmlRel) . "'>" . esc_html($htmlName) . "</a></li>";
                   }
 
               }
