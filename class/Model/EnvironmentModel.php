@@ -67,7 +67,7 @@ class EnvironmentModel extends \ShortPixel\Model
   {
     if (count($this->disabled_functions) == 0)
     {
-      $disabled = ini_get('disable_functions');			
+      $disabled = ini_get('disable_functions');
       $this->disabled_functions = explode(',', $disabled);
     }
 
@@ -129,8 +129,8 @@ class EnvironmentModel extends \ShortPixel\Model
 
   private function setServer()
   {
-    $this->is_nginx = strpos(strtolower($_SERVER["SERVER_SOFTWARE"]), 'nginx') !== false ? true : false;
-    $this->is_apache = strpos(strtolower($_SERVER["SERVER_SOFTWARE"]), 'apache') !== false ? true : false;
+    $this->is_nginx = ! empty($_SERVER["SERVER_SOFTWARE"]) && strpos(strtolower($_SERVER["SERVER_SOFTWARE"]), 'nginx') !== false ? true : false;
+    $this->is_apache = ! empty($_SERVER["SERVER_SOFTWARE"]) && strpos(strtolower($_SERVER["SERVER_SOFTWARE"]), 'apache') !== false ? true : false;
     $this->is_gd_installed = function_exists('imagecreatefrompng') && function_exists('imagejpeg');
     $this->is_curl_installed = function_exists('curl_init');
   }

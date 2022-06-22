@@ -328,14 +328,14 @@ class OtherMediaController extends \ShortPixel\Controller
     public function ajaxBrowseContent()
     {
       if ( ! $this->userIsAllowed )  {
-          wp_die(__('You do not have sufficient permissions to access this page.','shortpixel-image-optimiser'));
+          wp_die(esc_html(__('You do not have sufficient permissions to access this page.','shortpixel-image-optimiser')));
       }
       $fs = \wpSPIO()->filesystem();
       $rootDirObj = $fs->getWPFileBase();
       $path = $rootDirObj->getPath();
 
-
-      $postDir = isset($_POST['dir']) ? trim(sanitize_text_field($_POST['dir'])) : null;
+			// @todo Add Nonce here
+      $postDir = isset($_POST['dir']) ? trim(sanitize_text_field(wp_unslash($_POST['dir']))) : null;
       if (! is_null($postDir))
       {
          $postDir = rawurldecode($postDir);
@@ -355,7 +355,7 @@ class OtherMediaController extends \ShortPixel\Controller
 
       if ($dirObj->getPath() !== $rootDirObj->getPath() && ! $dirObj->isSubFolderOf($rootDirObj))
       {
-        exit( __('This directory seems not part of WordPress', 'shortpixel-image-optimiser'));
+        exit(esc_html(__('This directory seems not part of WordPress', 'shortpixel-image-optimiser')));
       }
 
       if( $dirObj->exists() ) {
@@ -398,7 +398,7 @@ class OtherMediaController extends \ShortPixel\Controller
           elseif ($_POST['dir'] == '/')
           {
             echo "<ul class='jqueryFileTree'>";
-            _e('No Directories found that can be added to Custom Folders', 'shortpixel-image-optimiser');
+            esc_html_e('No Directories found that can be added to Custom Folders', 'shortpixel-image-optimiser');
             echo "</ul>";
           }
       }

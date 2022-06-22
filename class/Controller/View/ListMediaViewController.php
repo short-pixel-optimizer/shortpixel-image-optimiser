@@ -197,9 +197,11 @@ class ListMediaViewController extends \ShortPixel\ViewController
   public function filterBy($vars)
   {
 		// Must return postID's  as ID
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
     if ( 'upload.php' == $GLOBALS['pagenow'] && isset( $_GET['shortpixel_status'] ) ) {
 
-      $status = sanitize_text_field($_GET['shortpixel_status']);
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
+      $status = sanitize_text_field(wp_unslash($_GET['shortpixel_status']));
 
 			if ($status == 'all')
 			{
@@ -300,10 +302,10 @@ class ListMediaViewController extends \ShortPixel\ViewController
         //  'error' => __('Errors', 'shortpixel-image-optimiser'),
       );
 
-      echo "<select name='shortpixel_status' id='shortpixel_status'>\n";
+      echo  "<select name='shortpixel_status' id='shortpixel_status'>\n";
       foreach($options as $optname => $optval)
       {
-          $selected = ($status == $optname) ? 'selected' : '';
+          $selected = ($status == $optname) ? esc_attr('selected') : '';
           echo "<option value='". esc_attr($optname) . "' $selected >" . esc_html($optval) . "</option>\n";
       }
       echo "</select>";

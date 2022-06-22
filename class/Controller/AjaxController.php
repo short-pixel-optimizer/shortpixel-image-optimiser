@@ -50,8 +50,10 @@ class AjaxController
     public function checkProcessorKey()
     {
       $processKey = $this->getProcessorKey();
-      $bulkSecret = isset($_POST['bulk-secret']) ? sanitize_text_field($_POST['bulk-secret']) : false;
-      $isBulk = isset($_POST['isBulk']) ? filter_var(sanitize_text_field($_POST['isBulk']), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) : false;
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- Nonce is checked
+      $bulkSecret = isset($_POST['bulk-secret']) ? sanitize_text_field(wp_unslash($_POST['bulk-secret'])) : false;
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- Nonce is checked
+      $isBulk = isset($_POST['isBulk']) ? filter_var(sanitize_text_field(wp_unslash($_POST['isBulk'])), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) : false;
 
       $is_processor = false;
       if ($processKey == false && $bulkSecret !== false)
@@ -110,8 +112,9 @@ class AjaxController
     public function ajax_getItemView()
     {
         $this->checkNonce('item_view');
-
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- Nonce is checked
           $type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- Nonce is checked
           $id = isset($_POST['id']) ? intval($_POST['id']) : false;
 					$result = '';
 
@@ -160,8 +163,11 @@ class AjaxController
 				}
 
         // Notice that POST variables are always string, so 'true', not true.
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- Nonce is checked
         $isBulk = (isset($_POST['isBulk']) && $_POST['isBulk'] === 'true') ? true : false;
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- Nonce is checked
         $queue = (isset($_POST['queues'])) ? sanitize_text_field($_POST['queues']) : 'media,custom';
+
         $queues = array_filter(explode(',', $queue), 'trim');
 
         $control = new OptimizeController();
@@ -177,7 +183,9 @@ class AjaxController
     {
         $this->checkNonce('ajax_request');
 
+			  // phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- Nonce is checked
         $action = isset($_POST['screen_action']) ? sanitize_text_field($_POST['screen_action']) : false;
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- Nonce is checked
         $typeArray = isset($_POST['type'])  ? array(sanitize_text_field($_POST['type'])) : array('media', 'custom');
         $id = isset($_POST['id']) ? intval($_POST['id']) : false;
 

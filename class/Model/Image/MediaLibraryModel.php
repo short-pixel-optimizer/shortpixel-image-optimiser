@@ -1893,7 +1893,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         return false;
       }
 
-
       $data = $metadata['ShortPixel'];
 
       if (count($data) == 0)  // This can happen. Empty array is still nothing to convert.
@@ -1939,11 +1938,18 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        if ($status == self::FILE_STATUS_SUCCESS)
        {
          //strtotime($tsOptimized)
-         $newdate = \DateTime::createFromFormat('Y-m-d H:i:s', $data['date']);
+				 $thedate = (isset($data['date'])) ? $data['date'] : false;
+				 $newdate = \DateTime::createFromFormat('Y-m-d H:i:s', $thedate);
+
+				 if ($newdate === false)
+				 {
+					 $newdate = \DateTime::createFromFormat('Y-m-d H:i:s', get_post_time('Y-m-d H:i:s', false, $this->id));
+				 }
+
          $newdate = $newdate->getTimestamp();
 
-        $tsOptimized = $newdate;
-        $this->image_meta->tsOptimized = $tsOptimized;
+         $tsOptimized = $newdate;
+         $this->image_meta->tsOptimized = $tsOptimized;
        }
 
        $this->image_meta->wasConverted = true;

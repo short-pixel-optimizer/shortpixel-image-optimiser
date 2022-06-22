@@ -5,25 +5,24 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 ?>
 
-<div id='sp-msg-<?php echo($view->id);?>' class='column-wp-shortPixel view-edit-media'>
+<div id='sp-msg-<?php echo( esc_attr($view->id) );?>' class='column-wp-shortPixel view-edit-media'>
 <?php // Debug Data
 if (! is_null($view->debugInfo) && is_array($view->debugInfo) && count($view->debugInfo) > 0 ):  ?>
       <div class='debugInfo' id='debugInfo'>
-        <a class='debugModal' data-modal="debugInfo" ><?php _e('Debug Window', 'shortpixel-image-optimiser') ?></a>
+        <a class='debugModal' data-modal="debugInfo" ><?php esc_html_e('Debug Window', 'shortpixel-image-optimiser') ?></a>
         <div class='content wrapper'>
           <?php foreach($view->debugInfo as $index => $item): ?>
-          <ul class="debug-<?php echo $index ?>">
-            <li><strong><?php echo $item[0]; ?></strong>
+          <ul class="debug-<?php echo esc_attr($index) ?>">
+            <li><strong><?php echo wp_kses($item[0], wp_kses_allowed_html()); ?></strong>
               <?php
               if (is_array($item[1]) || is_object($item[1]))
-                echo "<PRE>" . print_r($item[1], true) . "</PRE>";
+                echo "<PRE>" . wp_kses(print_r($item[1], true), wp_kses_allowed_html()) . "</PRE>";
               else
-                echo $item[1];
+                echo wp_kses($item[1], $this->allowedHtml());
               ?>
             </li>
           </ul>
           <?php endforeach; ?>
-          <p>&nbsp;</p>
           <p>&nbsp;</p>
        </div>
     </div>
@@ -48,13 +47,12 @@ if (! is_null($view->debugInfo) && is_array($view->debugInfo) && count($view->de
         $link = ($action['type'] == 'js') ? 'javascript:' . $action['function'] : $action['function'];
 
         ?>
-        <a href="<?php echo $link ?>" class="<?php echo $classes ?>"><?php echo $action['text'] ?></a>
+        <a href="<?php echo esc_url($link) ?>" class="<?php echo esc_attr($classes) ?>"><?php echo esc_html($action['text']) ?></a>
 
         <?php
       endforeach;
 
     endif;
-
 
     ?>
 
@@ -62,21 +60,19 @@ if (! is_null($view->debugInfo) && is_array($view->debugInfo) && count($view->de
     <ul class='edit-media-stats'>
     <?php foreach($view->stats as $index => $data)
     { ?>
-       <li><span><?php echo $data[0] ?></span> <span><?php echo $data[1] ?></span></li>
+       <li><span><?php echo esc_html($data[0]) ?></span> <span><?php echo esc_html($data[1]) ?></span></li>
     <?php } ?>
     </ul>
     <?php endif; ?>
   </div>
 </div>
 
-  <div id="sp-message-<?php echo($this->view->id); ?>" class='messages'>
+  <div id="sp-message-<?php echo( esc_attr($this->view->id) ); ?>" class='messages'>
   <?php if (! is_null($view->status_message)): ?>
-  <?php echo $view->status_message; ?>
+  <?php echo esc_html($view->status_message); ?>
   <?php endif; ?>
   </div>
 
   <div id='shortpixel-errorbox' class="errorbox">&nbsp;</div>
-
-
 
 <?php $this->loadView('snippets/part-comparer'); ?>

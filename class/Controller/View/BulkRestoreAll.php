@@ -15,7 +15,6 @@ class BulkRestoreAll extends \ShortPixel\ViewController
     public function __construct()
     {
         parent::__construct();
-
     }
 
     public function load()
@@ -68,23 +67,6 @@ class BulkRestoreAll extends \ShortPixel\ViewController
 
     }
 
-    public function setupBulk()
-    {
-        // Not doing this, since it's deliverd from bulk_view_controller. Yes, this is hacky. Prob. controller should merge.
-      //  $this->checkPost(); // check if any POST vars are there ( which should be if custom restore is on )
-      $selected_folders = isset($_POST['selected_folders']) ? $_POST['selected_folders'] : array();
-
-      // handle the custom folders if there are any.
-      if (count($selected_folders) > 0)
-      {
-          $spMetaDao = \wpSPIO()->getShortPixel()->getSpMetaDao();
-
-          foreach($selected_folders as $folder_id)
-          {
-            $spMetaDao->setBulkRestore($folder_id);
-          }
-      }
-    }
 
 
 }

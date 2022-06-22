@@ -45,15 +45,17 @@ class ViewController extends Controller
   */
   protected function checkPost()
   {
-    if (count($_POST) == 0) // no post, nothing to check, return silent.
-      return true;
 
-    if (! isset($_POST['sp-nonce']) || ! wp_verify_nonce( $_POST['sp-nonce'], $this->form_action))
+    if (! isset($_POST['sp-nonce']) || ! wp_verify_nonce( sanitize_key($_POST['sp-nonce']), $this->form_action))
     {
       Log::addInfo('Check Post fails nonce check, action : ' . $this->form_action, array($_POST) );
       return false;
     }
-    else if (isset($_POST) && count($_POST) > 0)
+		elseif(count($_POST) == 0) // no post, nothing to check, return silent.
+		{
+			return true;
+		}
+    elseif (isset($_POST) && count($_POST) > 0)
     {
       check_admin_referer( $this->form_action, 'sp-nonce' ); // extra check, when we are wrong here, it dies.
       unset($_POST['sp-nonce']);
@@ -145,6 +147,12 @@ class ViewController extends Controller
   {
     $this->url = $url;
   }
+
+	public function allowedHtml()
+	{
+		 $html = wp_kses_allowed_html();
+		 echo "<PRE>"; var_dump($html); echo "</PRE>"; 
+	}
 
 
 
