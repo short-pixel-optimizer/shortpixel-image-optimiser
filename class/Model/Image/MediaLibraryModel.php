@@ -1889,7 +1889,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				$adminNotices = AdminNoticesController::getInstance();
 				$adminNotices->invokeLegacyNotice();
 			}
-			
+
         Log::addDebug("Conversion of legacy: ", array($metadata));
     //  echo "*** EXPORT: "; var_export($metadata); echo " *** ";
        $type = isset($data['type']) ? $this->legacyConvertType($data['type']) : '';
@@ -1906,14 +1906,21 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
        $tsAdded = time();
 
-       if ($status == self::FILE_STATUS_SUCCESS)
+			 if ($status == self::FILE_STATUS_SUCCESS)
        {
          //strtotime($tsOptimized)
-         $newdate = \DateTime::createFromFormat('Y-m-d H:i:s', $data['date']);
+				 $thedate = (isset($data['date'])) ? $data['date'] : false;
+				 $newdate = \DateTime::createFromFormat('Y-m-d H:i:s', $thedate);
+
+				 if ($newdate === false)
+				 {
+					 $newdate = \DateTime::createFromFormat('Y-m-d H:i:s', get_post_time('Y-m-d H:i:s', false, $this->id));
+				 }
+
          $newdate = $newdate->getTimestamp();
 
-        $tsOptimized = $newdate;
-        $this->image_meta->tsOptimized = $tsOptimized;
+         $tsOptimized = $newdate;
+         $this->image_meta->tsOptimized = $tsOptimized;
        }
 
        $this->image_meta->wasConverted = true;
