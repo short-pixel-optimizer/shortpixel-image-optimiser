@@ -234,9 +234,9 @@ class NoticeModel //extends ShortPixelModel
                                 document.getElementById('button-$id').onclick = function()
                                 {
                                   var el = document.getElementById('$id');
-                           				$(el).fadeTo(100,0,function() {
-                               		$(el).slideUp(100, 0, function () {
-                                  $(el).remove();
+                           				jQuery(el).fadeTo(100,0,function() {
+                               		jQuery(el).slideUp(100, 0, function () {
+                                  jQuery(el).remove();
                                })
                            });
                          } </script>";
@@ -289,9 +289,9 @@ class NoticeModel //extends ShortPixelModel
                     data.id = parent.getAttribute('id');
                     jQuery.post($url,data);
 
-                    $(parent).fadeTo(100,0,function() {
-                        $(parent).slideUp(100, 0, function () {
-                            $(parent).remove();
+                    jQuery(parent).fadeTo(100,0,function() {
+                        jQuery(parent).slideUp(100, 0, function () {
+                            jQuery(parent).remove();
                         })
                     });
           }";
