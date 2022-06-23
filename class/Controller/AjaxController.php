@@ -50,9 +50,9 @@ class AjaxController
     public function checkProcessorKey()
     {
       $processKey = $this->getProcessorKey();
-				// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- Nonce is checked
+				// phpcs:ignore   -- Nonce is checked
       $bulkSecret = isset($_POST['bulk-secret']) ? sanitize_text_field(wp_unslash($_POST['bulk-secret'])) : false;
-			// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- Nonce is checked
+			// phpcs:ignore   -- Nonce is checked
       $isBulk = isset($_POST['isBulk']) ? filter_var(sanitize_text_field(wp_unslash($_POST['isBulk'])), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) : false;
 
       $is_processor = false;
@@ -112,9 +112,9 @@ class AjaxController
     public function ajax_getItemView()
     {
         $this->checkNonce('item_view');
-				// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- Nonce is checked
+				// phpcs:ignore   -- Nonce is checked
           $type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';
-				// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- Nonce is checked
+				// phpcs:ignore   -- Nonce is checked
           $id = isset($_POST['id']) ? intval($_POST['id']) : false;
 					$result = '';
 
