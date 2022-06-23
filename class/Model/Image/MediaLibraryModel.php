@@ -1935,7 +1935,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
        $tsAdded = time();
 
-       if ($status == self::FILE_STATUS_SUCCESS)
+			 if ($status == self::FILE_STATUS_SUCCESS)
        {
          //strtotime($tsOptimized)
 				 $thedate = (isset($data['date'])) ? $data['date'] : false;
