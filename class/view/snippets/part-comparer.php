@@ -9,7 +9,7 @@ namespace ShortPixel;
     <div id="spUploadCompare" class="shortpixel-modal shortpixel-hide">
       <div class="sp-modal-title">
         <button type="button" class="sp-close-button">&times;</button>
-        <?php _e('Compare Images', 'shortpixel-image-optimiser');?>
+        <?php esc_html_e('Compare Images', 'shortpixel-image-optimiser');?>
       </div>
       <div class="sp-modal-body sptw-modal-spinner" style="height:400px;padding:0;">
         <div class="shortpixel-slider" style="z-index:2000;">

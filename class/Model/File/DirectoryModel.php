@@ -155,7 +155,8 @@ class DirectoryModel extends \ShortPixel\Model
   */
   public function getRelativePath()
   {
-     $upload_dir = wp_upload_dir(null, false);
+		// not used anywhere in directory. 
+    // $upload_dir = wp_upload_dir(null, false);
 
      $install_dir = get_home_path();
      if($install_dir == '/') {
@@ -451,7 +452,7 @@ class DirectoryModel extends \ShortPixel\Model
         $size = 0;
         $files = $this->getFiles();
 
-        // GetFiles can return Boolean false on missing directory. 
+        // GetFiles can return Boolean false on missing directory.
         if (! is_array($files))
         {
            return $size;

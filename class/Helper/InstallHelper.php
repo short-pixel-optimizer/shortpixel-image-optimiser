@@ -78,7 +78,8 @@ class InstallHelper
 		$env = \wpSPIO()->env();
 		$settings = \wpSPIO()->settings();
 
-		$nonce = $_POST['tools-nonce'];
+
+		$nonce = (isset($_POST['tools-nonce'])) ? sanitize_key($_POST['tools-nonce']) : null;
 		if ( ! wp_verify_nonce( $nonce, 'remove-all' ) ) {
           wp_nonce_ays( '' );
     }
@@ -106,16 +107,17 @@ class InstallHelper
 
   public static function deactivateConflictingPlugin()
   {
-    if ( ! wp_verify_nonce( $_GET['_wpnonce'], 'sp_deactivate_plugin_nonce' ) ) {
+    if ( ! isset($_GET['_wpnonce']) || ! wp_verify_nonce( sanitize_key($_GET['_wpnonce']), 'sp_deactivate_plugin_nonce' ) ) {
           wp_nonce_ays( 'Nononce' );
     }
 
     $referrer_url = wp_get_referer();
     $conflict = \ShortPixelTools::getConflictingPlugins();
     $url = wp_get_referer();
-		$plugin = sanitize_text_field($_GET['plugin']); // our target.
+		$plugin = (isset($_GET['plugin'])) ? sanitize_text_field(wp_unslash($_GET['plugin'])) : null; // our target.
 
-	  deactivate_plugins($plugin);
+		if (! is_null($plugin))
+	  	deactivate_plugins($plugin);
 
     wp_safe_redirect($url);
     die();

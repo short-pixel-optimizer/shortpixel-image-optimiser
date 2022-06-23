@@ -48,6 +48,7 @@ class ShortPixelPlugin {
 
 	/** LowInit after all Plugins are loaded. Core WP function can still be missing. This should mostly add hooks */
 	public function lowInit() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
 		if ( isset( $_REQUEST['noheader'] ) ) {
 			$this->is_noheaders = true;
 		}
@@ -320,7 +321,8 @@ class ShortPixelPlugin {
 
 		wp_register_script( 'shortpixel-screen-bulk', plugins_url( '/res/js/screens/screen-bulk.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery', 'shortpixel-processor' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
-		$panel = isset( $_GET['panel'] ) ? sanitize_text_field( $_GET['panel'] ) : false;
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
+		$panel = isset( $_GET['panel'] ) ? sanitize_text_field( wp_unslash($_GET['panel']) ) : false;
 
 		$bulkLocalize = array(
 			'endBulk'   => __( 'This will stop the bulk processing and take you back to the start. Are you sure you want to do this?', 'shortpixel-image-optimiser' ),
@@ -540,8 +542,10 @@ class ShortPixelPlugin {
 		global $plugin_page;
 		// $this->initPluginRunTime(); // Not in use currently.
 		$default_action = 'load'; // generic action on controller.
-		$action         = isset( $_REQUEST['sp-action'] ) ? sanitize_text_field( $_REQUEST['sp-action'] ) : $default_action;
-		$template_part  = isset( $_GET['part'] ) ? sanitize_text_field( $_GET['part'] ) : false;
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
+		$action         = isset( $_REQUEST['sp-action'] ) ? sanitize_text_field( wp_unslash($_REQUEST['sp-action']) ) : $default_action;
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
+		$template_part  = isset( $_GET['part'] ) ? sanitize_text_field( wp_unslash($_GET['part']) ) : false;
 
 		$controller = false;
 
@@ -553,20 +557,12 @@ class ShortPixelPlugin {
 				$controller = 'ShortPixel\Controller\SettingsController';
                 break;
             case 'wp-short-pixel-custom': // other media
-				/*  $this->load_style('shortpixel-othermedia'); */
+
 				$controller = 'ShortPixel\Controller\View\OtherMediaViewController';
                 break;
-            case 'wp-short-pixel-bulk':
-				if ( $template_part ) {
-					switch ( $template_part ) {
-						case 'bulk-restore-all':
-							$controller = '\ShortPixel\Controller\View\BulkRestoreAll';
-						    break;
-					}
-				} else {
+        case 'wp-short-pixel-bulk':
 					$controller = '\ShortPixel\Controller\View\BulkViewController';
-				}
-                break;
+               break;
             case null:
             default:
                 switch ( $screen_id ) {

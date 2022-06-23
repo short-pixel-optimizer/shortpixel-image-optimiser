@@ -148,12 +148,6 @@ class ViewController extends Controller
     $this->url = $url;
   }
 
-	public function allowedHtml()
-	{
-		 $html = wp_kses_allowed_html();
-		 echo "<PRE>"; var_dump($html); echo "</PRE>"; 
-	}
-
 
 
 } // controller

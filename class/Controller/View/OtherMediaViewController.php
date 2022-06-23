@@ -345,10 +345,10 @@ class OtherMediaViewController extends \ShortPixel\ViewController
            $total_pages_before = '<span class="paging-input">';
            $total_pages_after  = '</span></span>';
 
-           $current_url = remove_query_arg( 'paged', $this->getPageURL()); // has url
+           $current_url = esc_url(remove_query_arg( 'paged', $this->getPageURL())); // has url
 
-           $output = '<form method="GET" action="'. $current_url . '">'; //'<span class="pagination-links">';
-           $output .= '<span class="displaying-num">'. sprintf(__('%d Images', 'shortpixel-image-optimiser'), $this->total_items) . '</span>';
+           $output = '<form method="GET" action="'. esc_attr($current_url) . '">'; //'<span class="pagination-links">';
+           $output .= '<span class="displaying-num">'. sprintf(esc_html__('%d Images', 'shortpixel-image-optimiser'), $this->total_items) . '</span>';
 
            if ( $disable_first ) {
                     $page_links[] = '<span class="tablenav-pages-navspan button disabled" aria-hidden="true">&laquo;</span>';
@@ -356,7 +356,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
                     $page_links[] = sprintf(
                         "<a class='first-page button' href='%s'><span class='screen-reader-text'>%s</span><span aria-hidden='true'>%s</span></a>",
                         esc_url( $current_url ),
-                        __( 'First page' ),
+                        esc_html__( 'First page' ),
                         '&laquo;'
                     );
                 }
@@ -367,14 +367,14 @@ class OtherMediaViewController extends \ShortPixel\ViewController
                 $page_links[] = sprintf(
                     "<a class='prev-page button' href='%s'><span class='screen-reader-text'>%s</span><span aria-hidden='true'>%s</span></a>",
                     esc_url( add_query_arg( 'paged', max( 1, $current - 1 ), $current_url ) ),
-                    __( 'Previous page' ),
+                    esc_html__( 'Previous page' ),
                     '&lsaquo;'
                 );
             }
 
             $html_current_page = sprintf(
                 "%s<input class='current-page' id='current-page-selector' type='text' name='paged' value='%s' size='%d' aria-describedby='table-paging' /><span class='tablenav-paging-text'>",
-                '<label for="current-page-selector" class="screen-reader-text">' . __( 'Current Page' ) . '</label>',
+                '<label for="current-page-selector" class="screen-reader-text">' . esc_html__( 'Current Page' ) . '</label>',
                 $current,
                 strlen( $pages )
             );
@@ -556,7 +556,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
               {
                 $sorturl = add_query_arg('order', 'asc', $sorturl);
               }
-              $output = '<a href="' . esc_url($sorturl) . '"><span>' . $title . '</span><span class="sorting-indicator '. $sorted . '">&nbsp;</span></a>';
+              $output = '<a href="' . esc_url($sorturl) . '"><span>' . esc_html($title) . '</span><span class="sorting-indicator '. esc_attr($sorted) . '">&nbsp;</span></a>';
           }
           else
           {

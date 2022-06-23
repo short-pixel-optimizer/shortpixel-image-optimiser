@@ -7,7 +7,8 @@ class gravityForms
 
   public function __construct()
   {
-    add_filter( 'gform_save_field_value', array($this,'shortPixelGravityForms'), 10, 5 );
+		// @todo All this off, because it can only fatal error. 
+   // add_filter( 'gform_save_field_value', array($this,'shortPixelGravityForms'), 10, 5 );
   }
 
   function shortPixelGravityForms( $value, $lead, $field, $form ) {

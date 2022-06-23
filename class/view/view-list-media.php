@@ -2,10 +2,8 @@
 namespace ShortPixel;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
-
-
 ?>
-<div class='sp-column-info' id='sp-msg-<?php echo($this->view->mediaItem->get('id') );?>'>
+<div class='sp-column-info' id='sp-msg-<?php echo esc_attr($this->view->mediaItem->get('id') );?>'>
 <?php if (property_exists($this->view,'text') && strlen($this->view->text) > 0):  ?>
       <p><?php  echo $this->view->text;  ?></p>
 <?php endif;
@@ -31,6 +29,3 @@ if (isset($this->view->list_actions))
 }
 ?>
 </div>
-
-
-<?php //$this->loadView('snippets/part-comparer'); ?>

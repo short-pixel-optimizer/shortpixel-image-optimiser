@@ -37,7 +37,7 @@ class UiHelper
     foreach($actions as $actionName => $actionData)
     {
         $link = ($actionData['type'] == 'js') ? 'javascript:' . $actionData['function'] : $actionData['function'];
-        $output .= "<a href='" . $link . "' class='$actionName' >" . $actionData['text'] . "</a>";
+        $output .= "<a href='" . $link . "' class='" . esc_attr($actionName) . "' >" . esc_html($actionData['text']) . "</a>";
 
     }
 

@@ -13,12 +13,12 @@ if (! is_null($view->debugInfo) && is_array($view->debugInfo) && count($view->de
         <div class='content wrapper'>
           <?php foreach($view->debugInfo as $index => $item): ?>
           <ul class="debug-<?php echo esc_attr($index) ?>">
-            <li><strong><?php echo wp_kses($item[0], wp_kses_allowed_html()); ?></strong>
+            <li><strong><?php echo $item[0]; ?></strong>
               <?php
               if (is_array($item[1]) || is_object($item[1]))
-                echo "<PRE>" . wp_kses(print_r($item[1], true), wp_kses_allowed_html()) . "</PRE>";
+                echo "<PRE>" . print_r($item[1], true) . "</PRE>";
               else
-                echo wp_kses($item[1], $this->allowedHtml());
+                echo $item[1];
               ?>
             </li>
           </ul>
@@ -60,7 +60,7 @@ if (! is_null($view->debugInfo) && is_array($view->debugInfo) && count($view->de
     <ul class='edit-media-stats'>
     <?php foreach($view->stats as $index => $data)
     { ?>
-       <li><span><?php echo esc_html($data[0]) ?></span> <span><?php echo esc_html($data[1]) ?></span></li>
+       <li><span><?php echo $data[0] ?></span> <span><?php echo $data[1] ?></span></li>
     <?php } ?>
     </ul>
     <?php endif; ?>

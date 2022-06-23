@@ -1,15 +1,13 @@
 <?php
-
 namespace ShortPixel;
-
 ?>
 <section class="panel process" data-panel="process" >
   <div class="panel-container">
 
-    <h3 class="heading"><span><img src="<?php echo \wpSPIO()->plugin_url('res/img/robo-slider.png'); ?>"></span>
-      <?php _e('ShortPixel Bulk Process is in progress','shortpixel-image-optimiser'); ?>
+    <h3 class="heading"><span><img src="<?php echo esc_url(\wpSPIO()->plugin_url('res/img/robo-slider.png')); ?>"></span>
+      <?php esc_html_e('ShortPixel Bulk Process is in progress','shortpixel-image-optimiser'); ?>
       <div class='average-optimization'>
-          <p><?php _e('Average this run','shortpixel-image-optimiser'); ?></p>
+          <p><?php esc_html_e('Average this run','shortpixel-image-optimiser'); ?></p>
           <svg class="opt-circle-average" viewBox="-10 0 150 140">
                         <path class="trail" d="
                             M 50,50
@@ -25,13 +23,13 @@ namespace ShortPixel;
                             a 46,46 0 1 1 0,-92
                             " stroke-width="16" fill-opacity="0" style="stroke-dasharray: 289.027px, 289.027px; stroke-dashoffset: 180px;">
                         </path>
-                        <text class="text" x="50" y="50"><?php _e('N/A', 'shortpixel-image-optimiser'); ?></text>
+                        <text class="text" x="50" y="50"><?php esc_html_e('N/A', 'shortpixel-image-optimiser'); ?></text>
                     </svg>
 
       </div>
     </h3>
 
-    <p class='description'><?php _e('ShortPixel is processing your images. Please keep this window open to complete the process.', 'shortpixel-image-optimiser'); ?> </p>
+    <p class='description'><?php esc_html_e('ShortPixel is processing your images. Please keep this window open to complete the process.', 'shortpixel-image-optimiser'); ?> </p>
 
     <?php $this->loadView('bulk/part-progressbar', false); ?>
 
@@ -39,7 +37,7 @@ namespace ShortPixel;
 		<span class='hidden' data-check-media-total data-stats-media="total">0</span>
     <div class='bulk-summary' data-check-visibility data-control="data-check-media-total">
       <div class='heading'>
-        <span><i class='dashicons dashicons-images-alt2'>&nbsp;</i> <?php _e('Media Library' ,'shortpixel-image-optimiser'); ?></span>
+        <span><i class='dashicons dashicons-images-alt2'>&nbsp;</i> <?php esc_html_e('Media Library' ,'shortpixel-image-optimiser'); ?></span>
         <span>
               <span class='line-progressbar'>
                 <span class='done-text'><i data-stats-media="percentage_done"></i> %</span>
@@ -49,17 +47,17 @@ namespace ShortPixel;
 							<span class='dashicons spin dashicons-update line-progressbar-spinner' data-check-visibility data-control="data-check-media-in_process">&nbsp;</span>
 
         </span>
-        <span><?php _e('Processing', 'shortpixel-image-optimiser') ?>: <i data-stats-media="in_process" data-check-media-in_process >-</i></span>
+        <span><?php esc_html_e('Processing', 'shortpixel-image-optimiser') ?>: <i data-stats-media="in_process" data-check-media-in_process >-</i></span>
       </div>
 
       <div>
-        <span><?php _e('Processed', 'shortpixel-image-optimiser'); ?>: <i data-stats-media="done">-</i></span>
+        <span><?php esc_html_e('Processed', 'shortpixel-image-optimiser'); ?>: <i data-stats-media="done">-</i></span>
 
-        <span><?php _e('Waiting','shortpixel-image-optimiser'); ?>: <i data-stats-media="in_queue">-</i></span>
-        <span><?php _e('Errors','shortpixel-image-optimiser') ?>: <i data-check-media-fatalerrors data-stats-media="fatal_errors" class='error'>- </i>
-					<span class="display-error-box" data-check-visibility data-control="data-check-media-fatalerrors" ><label title="<?php _e('Show Errors', 'shortpixel-image-optimiser'); ?>">
+        <span><?php esc_html_e('Waiting','shortpixel-image-optimiser'); ?>: <i data-stats-media="in_queue">-</i></span>
+        <span><?php esc_html_e('Errors','shortpixel-image-optimiser') ?>: <i data-check-media-fatalerrors data-stats-media="fatalesc_html_errors" class='error'>- </i>
+					<span class="display-error-box" data-check-visibility data-control="data-check-media-fatalerrors" ><label title="<?php esc_html_e('Show Errors', 'shortpixel-image-optimiser'); ?>">
 						<input type="checkbox" name="show-errors" value="show" data-action='ToggleErrorBox' data-errorbox='media' data-event='change'>
-							<?php _e('Show Errors','shortpixel-image-optimiser'); ?></label>
+							<?php esc_html_e('Show Errors','shortpixel-image-optimiser'); ?></label>
 				 </span>
 
 				</span>
@@ -82,7 +80,7 @@ namespace ShortPixel;
 
     <div class='bulk-summary' data-check-visibility data-control="data-check-custom-total">
       <div class='heading'>
-        <span><i class='dashicons dashicons-open-folder'>&nbsp;</i> <?php _e('Custom Media', 'shortpixel-image-optimiser'); ?> </span>
+        <span><i class='dashicons dashicons-open-folder'>&nbsp;</i> <?php esc_html_e('Custom Media', 'shortpixel-image-optimiser'); ?> </span>
         <span>
               <span class='line-progressbar'>
                 <span class='done-text'><i data-stats-custom="percentage_done"></i> %</span>
@@ -91,17 +89,17 @@ namespace ShortPixel;
 							<span class='dashicons spin dashicons-update line-progressbar-spinner' data-check-visibility data-control="data-check-custom-in_process">&nbsp;</span>
 
         </span>
-  			<span><?php _e('Processing', 'shortpixel-image-optimiser') ?>: <i data-stats-custom="in_process" data-check-custom-in_process>-</i></span>
+  			<span><?php esc_html_e('Processing', 'shortpixel-image-optimiser') ?>: <i data-stats-custom="in_process" data-check-custom-in_process>-</i></span>
 
       </div>
       <div>
-        <span><?php _e('Processed','shortpixel-image-optimiser'); ?>: <i data-stats-custom="done">-</i></span>
+        <span><?php esc_html_e('Processed','shortpixel-image-optimiser'); ?>: <i data-stats-custom="done">-</i></span>
 
-        <span><?php _e('Waiting','shortpixel-image-optimiser'); ?>: <i data-stats-custom="in_queue">-</i></span>
-        <span><?php _e('Errors') ?>: <i data-check-custom-fatalerrors  data-stats-custom="fatal_errors" class='error'>-</i>
+        <span><?php esc_html_e('Waiting','shortpixel-image-optimiser'); ?>: <i data-stats-custom="in_queue">-</i></span>
+        <span><?php esc_html_e('Errors') ?>: <i data-check-custom-fatalerrors  data-stats-custom="fatalesc_html_errors" class='error'>-</i>
 
-					<span class="display-error-box" data-check-visibility data-control="data-check-custom-fatalerrors" ><label title="<?php _e('Show Errors', 'shortpixel-image-optimiser'); ?>">
-						<input type="checkbox" name="show-errors" value="show" data-action='ToggleErrorBox' data-errorbox='custom' data-event='change'><?php _e('Show Errors','shortpixel-image-optimiser'); ?></label>
+					<span class="display-error-box" data-check-visibility data-control="data-check-custom-fatalerrors" ><label title="<?php esc_html_e('Show Errors', 'shortpixel-image-optimiser'); ?>">
+						<input type="checkbox" name="show-errors" value="show" data-action='ToggleErrorBox' data-errorbox='custom' data-event='change'><?php esc_html_e('Show Errors','shortpixel-image-optimiser'); ?></label>
 				 </span>
 				</span>
 
@@ -121,19 +119,19 @@ namespace ShortPixel;
 
 		<nav>
 			<button class='button stop' type='button' data-action="StopBulk" >
-					<?php _e('Stop Bulk Processing' ,'shortpixel-image-optimiser'); ?>
+					<?php esc_html_e('Stop Bulk Processing' ,'shortpixel-image-optimiser'); ?>
 			</button>
 			<button class='button pause' type='button' data-action="PauseBulk" id="PauseBulkButton">
-				<?php _e('Pause Bulk Processing' ,'shortpixel-image-optimiser') ?>
+				<?php esc_html_e('Pause Bulk Processing' ,'shortpixel-image-optimiser') ?>
 			</button>
 			<button class='button button-primary resume' type='button' data-action='ResumeBulk' id="ResumeBulkButton">
-				<?php _e('Resume Bulk Processing','shortpixel-image-optimiser'); ?>
+				<?php esc_html_e('Resume Bulk Processing','shortpixel-image-optimiser'); ?>
 			</button>
 
 		</nav>
 
     <div class='image-preview-section hidden'> <!-- /hidden -->
-			 <div class='title'><?php _e('Just Optimized', 'shortpixel-image-optimiser'); ?></div>
+			 <div class='title'><?php esc_html_e('Just Optimized', 'shortpixel-image-optimiser'); ?></div>
        <div class="image-preview-line">
         <!-- <strong data-result="queuetype"></strong>  -->
 				<span>&nbsp;</span> <!-- Spacer for flex -->
@@ -159,18 +157,18 @@ namespace ShortPixel;
       </div>
 
       <div class="preview-wrapper">
-			 <div class="slide-mask" id="preview-structure" data-placeholder="<?php echo \wpSPIO()->plugin_url('res/img/bulk/placeholder.svg'); ?>">
+			 <div class="slide-mask" id="preview-structure" data-placeholder="<?php echo esc_url(\wpSPIO()->plugin_url('res/img/bulk/placeholder.svg')); ?>">
 
 					<div class='current preview-image'>
 		        <div class="image source">
-		          <img src="<?php echo \wpSPIO()->plugin_url('res/img/bulk/placeholder.svg'); ?>" >
-		          <p><?php _e('Original Image', 'shortpixel-image-optimiser'); ?></p>
+		          <img src="<?php echo esc_url(\wpSPIO()->plugin_url('res/img/bulk/placeholder.svg')); ?>" >
+		          <p><?php esc_html_e('Original Image', 'shortpixel-image-optimiser'); ?></p>
 							<?php $this->loadView('snippets/part-svgloader', false); ?>
 		        </div>
 
 		        <div class="image result">
-		          <img src="<?php echo \wpSPIO()->plugin_url('res/img/bulk/placeholder.svg'); ?>" >
-						<p><?php _e('Optimized Image', 'shortpixel-image-optimiser'); ?></p>
+		          <img src="<?php echo esc_url(\wpSPIO()->plugin_url('res/img/bulk/placeholder.svg')); ?>" >
+						<p><?php esc_html_e('Optimized Image', 'shortpixel-image-optimiser'); ?></p>
 						<?php $this->loadView('snippets/part-svgloader', false); ?>
 		        </div>
 					</div>
@@ -178,15 +176,15 @@ namespace ShortPixel;
 					<div class='new preview-image'>
 
 							<div class="image source">
-								<img src="<?php echo \wpSPIO()->plugin_url('res/img/bulk/placeholder.svg'); ?>" >
+								<img src="<?php echo esc_url(\wpSPIO()->plugin_url('res/img/bulk/placeholder.svg')); ?>" >
 								<?php $this->loadView('snippets/part-svgloader', false); ?>
-								<p><?php _e('Original Image','shortpixel-image-optimiser'); ?></p>
+								<p><?php esc_html_e('Original Image','shortpixel-image-optimiser'); ?></p>
 							</div>
 
 							<div class="image result">
-								<img src="<?php echo \wpSPIO()->plugin_url('res/img/bulk/placeholder.svg'); ?>" >
+								<img src="<?php echo esc_url(\wpSPIO()->plugin_url('res/img/bulk/placeholder.svg')); ?>" >
 								<?php $this->loadView('snippets/part-svgloader', false); ?>
-							<p><?php _e('Optimized Image','shortpixel-image-optimiser'); ?></p>
+							<p><?php esc_html_e('Optimized Image','shortpixel-image-optimiser'); ?></p>
 							</div>
 					</div>
 	      </div> <!-- slidemask -->
@@ -195,8 +193,6 @@ namespace ShortPixel;
 
 		<div id="preloader" class="hidden">
 
-
-  </div>
-
+  	</div>
 
 </section>

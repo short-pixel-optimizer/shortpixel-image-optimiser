@@ -22,6 +22,8 @@
 						 <exclude name="Generic.WhiteSpace.DisallowSpaceIndent.SpacesUsed" />
 						 <exclude name="WordPress.Files.FileName.InvalidClassFileName" />
 						 <exclude name="WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase" />
+						 <exclude name="WordPress.WhiteSpace.ControlStructureSpacing.NoSpaceAfterOpenParenthesis" />
+						 <exclude name="WordPress.WhiteSpace.ControlStructureSpacing.OpenBraceNotSameLine" />
 
 				</rule>
 

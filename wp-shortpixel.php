@@ -16,7 +16,7 @@ if (function_exists('wpSPIO'))
 {
     add_action('admin_notices', function () {
       echo '<div class="error"><h4>';
-      printf(__('ShortPixel plugin already loaded. You might have two versions active. Not loaded: %s', 'shortpixel-image-optimiser'), __FILE__);
+      printf(esc_html__('ShortPixel plugin already loaded. You might have two versions active. Not loaded: %s', 'shortpixel-image-optimiser'), __FILE__);
       echo '</h4></div>';
     });
     return;
@@ -69,7 +69,6 @@ define('SHORTPIXEL_BACKUP_URL',
     . '/' . SHORTPIXEL_BACKUP);
 
 
-//define("SHORTPIXEL_EXPERIMENTAL_SECURICACHE", true);  // tries to add timestamps to URLS, to prevent hitting the cache.
 //define('SHORTPIXEL_SILENT_MODE', true); // no global notifications. Can lead to data damage. After setting, reactivate plugin.
 
 // Starting logging services, early as possible.

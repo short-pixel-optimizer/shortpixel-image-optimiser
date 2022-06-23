@@ -347,7 +347,7 @@ class SettingsController extends \ShortPixel\ViewController
           }
 
 
-					// Every save, force load the quota. One reason, because of the HTTP Auth settings refresh. 
+					// Every save, force load the quota. One reason, because of the HTTP Auth settings refresh.
 					$this->loadQuotaData(true);
 
           // end
@@ -706,7 +706,6 @@ class SettingsController extends \ShortPixel\ViewController
           unset($post['addCustomFolder']);
 
           if(isset($post['removeFolder']) && intval($post['removeFolder']) > 0) {
-              //$metaDao = $this->shortPixel->getSpMetaDao();
               $folder_id = intval($post['removeFolder']);
               $otherMedia = OtherMediaController::getInstance();
               $dirObj = $otherMedia->getFolderByID($folder_id);

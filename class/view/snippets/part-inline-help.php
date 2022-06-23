@@ -1,3 +1,7 @@
+<?php
+namespace ShortPixel;
+
+?>
 
 <div id="spioHelpShade" class="spio-modal-shade" style="display:none;">
 			 <div id="spioHelp" class="spio-modal spio-hide" style="min-width:610px;margin-left:-305px;">
