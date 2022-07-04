@@ -411,9 +411,30 @@ class UiHelper
       {
 
           $retry = self::getAction('retry', $mediaItem->get('id'));
+
+
+					$redo_legacy = false;
+ 					$was_converted = get_post_meta($mediaItem->get('id'), '_shortpixel_was_converted', true);
+					$updateTs = 1656892800; // July 4th 2022 - 00:00 GMT
+					if ($was_converted < $updateTs)
+					{
+						$redo_legacy = self::getAction('redo_legacy', $mediaItem->get('id'));
+					}
+
           $text .= "<div class='shortpixel-image-error'>" . esc_html($mediaItem->isOptimizePrevented());
           $text .= "<span class='shortpixel-error-reset'>" . sprintf(__('After you have fixed this issue, you can %s click here to retry %s', 'shortpixel-image-optimiser'), '<a href="javascript:' . $retry['function'] . '">', '</a>');
+
           $text .= '</div>';
+
+
+					if ($redo_legacy !== false)
+					{
+						$text .= "<div class='shortpixel-image-error'><span class='shortpixel-error-reset'>";
+
+						$text .= sprintf(esc_html__('It seems you have older converted legacy data, which might cause this issue. You can try to %s %s %s . If nothing changes, this is not the cause. ','shortpixel-image-optimiser'), '<a href="javascript:' . $redo_legacy['function'] . '">', $redo_legacy['text'], '</a>');
+						$text .= "</span></div>";
+					}
+
       }
 
     return $text;
@@ -445,6 +466,12 @@ class UiHelper
          $action['text'] = __('Retry', 'shortpixel-image-optimiser') ;
          $action['display'] = 'button';
      break;
+		 case 'redo_legacy':
+		 			$action['function'] = 'window.ShortPixelProcessor.screen.RedoLegacy(' . $id . ');';
+		 			$action['type']  = 'js';
+		 			$action['text'] = __('Redo Conversion', 'shortpixel-image-optimiser') ;
+		 			$action['display'] = 'button';
+		 break;
 
      case 'restore':
          $action['function'] = 'window.ShortPixelProcessor.screen.RestoreItem(' . $id . ');';

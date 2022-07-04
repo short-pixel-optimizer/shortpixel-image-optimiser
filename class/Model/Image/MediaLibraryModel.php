@@ -812,34 +812,36 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					$extra_info = json_decode($record->extra_info);
 
 					// @todo Extra info should probably be stored as JSON?
-					foreach($extra_info as $name => $val)
+					if (! is_null($extra_info))
 					{
-						 $data->$name = $val;
-					}
+						foreach($extra_info as $name => $val)
+						{
+							 $data->$name = $val;
+						}
 
-					if ($record->parent == 0)
-					{
-						// Database ID should probably also be stored for the thumbnails, so updating / insert into the database will be easier. We have a free primary key, so why not use it?
-							$metadata->image_meta  = $data;
-					}
-					elseif($record->parent > 0)  // Thumbnails
-					{
-						 switch($record->image_type)
-						 {
-							 	 case self::IMAGE_TYPE_THUMB:
-								 	$metadata->thumbnails[$record->size] = $data;
-								 break;
-								 case self::IMAGE_TYPE_RETINA:
-								 	$metadata->retinas[$record->size] = $data;
-								 break;
-								 case self::IMAGE_TYPE_ORIGINAL:
-								 	$metadata->original_file = $data;
-								 break;
-						 }
+						if ($record->parent == 0)
+						{
+							// Database ID should probably also be stored for the thumbnails, so updating / insert into the database will be easier. We have a free primary key, so why not use it?
+								$metadata->image_meta  = $data;
+						}
+						elseif($record->parent > 0)  // Thumbnails
+						{
+							 switch($record->image_type)
+							 {
+								 	 case self::IMAGE_TYPE_THUMB:
+									 	$metadata->thumbnails[$record->size] = $data;
+									 break;
+									 case self::IMAGE_TYPE_RETINA:
+									 	$metadata->retinas[$record->size] = $data;
+									 break;
+									 case self::IMAGE_TYPE_ORIGINAL:
+									 	$metadata->original_file = $data;
+									 break;
+							 }
 
-					}
-
-		 }
+						}
+				} // extra info if
+		 } // loop
 
 		 return $metadata;
 	}
@@ -1899,7 +1901,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         return false;
 
 			// Waiting for processing is a state where it's not optimized, or should be.
-			if (count($data) == 1 && isset($data['WaitingProcessing']))
+			// The last check is because it seems that it can be both improved and waiting something ( sigh ) // 04/07/22
+			if (count($data) == 1 && isset($data['WaitingProcessing']) && ! isset($data['ShortPixelImprovement']))
 			{
 				 return false;
 			}
@@ -1908,8 +1911,21 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       $was_converted = get_post_meta($this->id, '_shortpixel_was_converted', true);
       if ($was_converted == true || is_numeric($was_converted))
       {
-        Log::addDebug('No SPIO5 metadata, but this item was converted, not converting again');
-        return false;
+				$updateTs = 1656892800; // July 4th 2022 - 00:00 GMT
+				if ($was_converted < $updateTs && $this->hasBackup())
+				{
+					$this->resetPrevent();  // reset any prevented optimized. This would have prob. thrown a backup issue.
+					if ($this->isProcessable())
+					{
+						 $this->deleteMeta();
+						 Log::addDebug('Conversion pre-bug detected with backup and still processable. Trying to fix by redoing legacy.');
+					}
+
+				}
+				else {
+				   Log::addDebug('No SPIO5 metadata, but this item was converted, not converting again');
+					 return false;
+				}
       }
 
 			$quotaController = QuotaController::getInstance();
@@ -1920,7 +1936,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			}
 
         Log::addDebug("Conversion of legacy: ", array($metadata));
-    //  echo "*** EXPORT: "; var_export($metadata); echo " *** ";
+
        $type = isset($data['type']) ? $this->legacyConvertType($data['type']) : '';
 
        $improvement = (isset($metadata['ShortPixelImprovement']) && is_numeric($metadata['ShortPixelImprovement']) && $metadata['ShortPixelImprovement'] > 0) ? $metadata['ShortPixelImprovement'] : 0;

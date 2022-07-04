@@ -222,7 +222,6 @@ var ShortPixelScreen = function (MainScreen, processor)
         data.id = id;
         data.type = 'media';
         data.screen_action = 'restoreItem';
-        //data.callback = 'this.loadItemView';
         // AjaxRequest should return result, which will go through Handleresponse, then LoadiTemView.
         this.processor.AjaxRequest(data);
         //var id = data.id;
@@ -241,6 +240,24 @@ var ShortPixelScreen = function (MainScreen, processor)
 
         this.processor.AjaxRequest(data);
     }
+		this.RedoLegacy = function(id)
+		{
+			var data = {
+				 id: id,
+				 type: 'media',
+				 screen_action: 'redoLegacy',
+			}
+				data.callback = 'shortpixel.LoadItemView';
+
+  		window.addEventListener('shortpixel.LoadItemView', function (e) {
+					var itemData = { id: e.detail.media.id, type: 'media' };
+					this.processor.timesEmpty = 0; // reset the defer on this.
+					this.processor.LoadItemView(itemData);
+
+			}.bind(this), {'once': true} );
+
+			this.processor.AjaxRequest(data);
+		}
     this.Optimize = function (id)
     {
 

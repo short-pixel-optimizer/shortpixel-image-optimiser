@@ -381,7 +381,7 @@ window.ShortPixelProcessor =
 							 this.Debug(message, 'error');
 						}
 
-						if (this.workerErrors >= 3)
+						if (this.workerErrors >= 5)
 						{
 							this.StopProcess();
 							this.ShutDownWorker();
