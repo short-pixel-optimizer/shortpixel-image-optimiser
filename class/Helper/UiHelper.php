@@ -416,9 +416,14 @@ class UiHelper
 					$redo_legacy = false;
  					$was_converted = get_post_meta($mediaItem->get('id'), '_shortpixel_was_converted', true);
 					$updateTs = 1656892800; // July 4th 2022 - 00:00 GMT
+
 					if ($was_converted < $updateTs)
 					{
-						$redo_legacy = self::getAction('redo_legacy', $mediaItem->get('id'));
+						$meta = $mediaItem->getWPMetaData();
+						if (is_array($meta) && isset($meta['ShortPixel']))
+						{
+							$redo_legacy = self::getAction('redo_legacy', $mediaItem->get('id'));
+						}
 					}
 
           $text .= "<div class='shortpixel-image-error'>" . esc_html($mediaItem->isOptimizePrevented());
