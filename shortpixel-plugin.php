@@ -132,6 +132,7 @@ class ShortPixelPlugin {
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_scripts' ) ); // admin scripts
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_styles' ) ); // admin styles
 		add_action( 'admin_enqueue_scripts', array( $this, 'load_admin_scripts' ), 90 ); // loader via route.
+		add_action( 'enqueue_block_assets', array($this, 'load_admin_scripts'), 90);
 		// defer notices a little to allow other hooks ( notable adminnotices )
 
 		$optimizeController = new OptimizeController();
@@ -472,7 +473,10 @@ class ShortPixelPlugin {
 	/** This is separated from route to load in head, preventing unstyled content all the time */
 	public function load_admin_scripts( $hook_suffix ) {
 		global $plugin_page;
-		$screen_id = \wpSPIO()->env()->screen_id;
+		$screen_id = $this->env()->screen_id;
+
+//var_dump(\wpSPIO()->env()->is_screen_to_use);
+//exit($screen_id);
 
 		// $load = array();
 		$load_processor = array( 'shortpixel', 'shortpixel-processor' );  // a whole suit needed for processing, not more. Always needs a screen as well!
@@ -529,7 +533,17 @@ class ShortPixelPlugin {
 
 			$this->load_style( 'shortpixel' );
 			$this->load_style( 'shortpixel-nextgen' );
-
+		}
+		elseif ( $this->env()->is_gutenberg_editor === true)
+		{
+			$this->load_script( $load_processor );
+			$this->load_script( 'shortpixel-screen-nolist' ); // screen
+		}
+		elseif (true === \wpSPIO()->env()->is_screen_to_use  )
+		{
+			// If our screen, but we don't have a specific handler for it, do the no-list screen.
+			$this->load_script( $load_processor );
+			$this->load_script( 'shortpixel-screen-nolist' ); // screen
 		}
 
 	}
