@@ -47,7 +47,7 @@ if (! is_null($view->debugInfo) && is_array($view->debugInfo) && count($view->de
         $link = ($action['type'] == 'js') ? 'javascript:' . $action['function'] : $action['function'];
 
         ?>
-        <a href="<?php echo esc_url($link) ?>" class="<?php echo esc_attr($classes) ?>"><?php echo esc_html($action['text']) ?></a>
+        <a href="<?php echo $link ?>" class="<?php echo esc_attr($classes) ?>"><?php echo esc_html($action['text']) ?></a>
 
         <?php
       endforeach;
