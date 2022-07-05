@@ -232,10 +232,7 @@ class ListMediaViewController extends \ShortPixel\ViewController
 	public function parseQuery($request, $wpquery)
 	{
 		global $wpdb;
-	//	echo "<PRE style='margin-left: 400px; '>"; var_dump($wpquery->query_vars); var_dump($request); echo "</PRE>";
 
-		 // @todo The order is not working. Can be made to work but already is not scaling in performance ( very heavy )
-		 // @todo2 Unoptimized can only work in case of restore but not new files, because those are not in the database yet!
 		 if (isset($wpquery->query_vars['shortpixel-filter']) || isset($wpquery->query_vars['shortpixel-order']) )
 		 {
 			  $filter = isset($wpquery->query_vars['shortpixel-filter']) ? $wpquery->query_vars['shortpixel-filter'] : false ;
@@ -256,14 +253,14 @@ class ListMediaViewController extends \ShortPixel\ViewController
 
 				if ($filter && $filter == 'optimized')
 				{
-					$sql = ' SELECT attach_id AS ID FROM ' . $tableName;
+					$sql = ' SELECT * FROM ' . $tableName;
 					$sql .= ' INNER JOIN ' . $wpdb->posts . ' ON ' . $wpdb->posts . '.ID = ' . $tableName . '.attach_id ';
 
 					$sql .= 'WHERE image_type = %d AND status =  %d';
 					$sql = $wpdb->prepare($sql, MediaLibraryModel::IMAGE_TYPE_MAIN,  $fileStatus);
 					$sql .= ' AND ' . $post_where; // glue back the orders, and the all.
 				}
-				if ($filter == 'unoptimized')
+				if ($filter && $filter == 'unoptimized')
 				{
 					 $where = " AND " . $wpdb->posts . '.ID not in ( SELECT attach_id FROM ' . $tableName . " WHERE parent = %d and status = %d) ";
 					 $where = $wpdb->prepare($where, MediaLibraryModel::IMAGE_TYPE_MAIN, ImageModel::FILE_STATUS_SUCCESS);
