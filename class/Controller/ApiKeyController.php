@@ -31,6 +31,11 @@ class ApiKeyController extends \ShortPixel\Controller
       $this->model->loadKey();
     }
 
+		public function getKeyModel()
+		{
+			 return $this->model;
+		}
+
     public function getKeyForDisplay()
     {
        if (! $this->model->is_hidden())
