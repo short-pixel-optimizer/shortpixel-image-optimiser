@@ -301,7 +301,7 @@ class AjaxController
     * @todo Test if it works with plugin intergration
     *
     */
-    public function onWpLrUpdateMedia()
+    public function onWpLrUpdateMedia($imageId)
     {
       $meta = wp_get_attachment_metadata($imageId);
       if(is_array($meta)) {
@@ -313,16 +313,14 @@ class AjaxController
       }
 
       // Get and remove Meta
-      $mediaItem = \wpSPIO()->filesystem->getImage($imageId, 'media');
+      $mediaItem = \wpSPIO()->filesystem()->getImage($imageId, 'media');
       $mediaItem->deleteMeta();
 
       // Optimize
-      $control = new OptimizeController();
-      $json = new \stdClass;
-      $json->$type = new \stdClass;
+      $control = new OptimizeController();;
 
-      $json->$type = $control->addItemToQueue($mediaItem);
-      return $json;
+      $json = $control->addItemToQueue($mediaItem);
+      //return $json;
 
     }
 
