@@ -300,6 +300,7 @@ window.ShortPixelProcessor =
       if (data.status == true && data.response) // data status is from shortpixel worker, not the response object
       {
           var response = data.response;
+					this.workerErrors = 0;
           if ( response.callback)
           {
               console.log('Running callback : ' + response.callback);
