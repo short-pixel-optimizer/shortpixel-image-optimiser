@@ -402,7 +402,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   {
       $return = true;
 			$wpmeta = wp_get_attachment_metadata($this->get('id'));
-			Log::addTemp('PRE_META STUFF', $wpmeta);
 
 
       if (! $this->isOptimized() && isset($tempFiles[$this->getFileName()]) ) // main file might not be contained in results
@@ -441,26 +440,22 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       // If thumbnails should not be optimized, they should not be in result Array.
       foreach($this->thumbnails as $thumbnail)
       {
-				Log::addTemp('Checking thumb: ' . $thumbnail->getFileName() );
 				 // Check if thumbnail is in the tempfiles return set. This might not always be the case
 				 if (! isset($tempFiles[$thumbnail->getFileName()]) )
 				 {
 					  continue;
 				 }
 
-				 Log::addTemp('Thumnail found' . $thumbnail->getFileName());
 				 $thumbnail->setMeta('compressionType', $compressionType);
 
          $thumbnail->handleOptimizedFileType($tempFiles); // check for webps /etc
 
          if ($thumbnail->isOptimized())
          {
-					 	Log::addTemp('Is Optimized');
 					  continue;
 				 }
          if (!$thumbnail->isProcessable())
 				 {
-					 Log::addTemp('Is Processable');
            continue; // when excluded.
 				 }
          $filebase = $thumbnail->getFileBase();
@@ -468,7 +463,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
          if (isset($optimized[$filebase])) // double sizes.
          {
-					 Log::addTemp("is in optimized");
 					 $databaseID = $thumbnail->getMeta('databaseID');
            $thumbnail->setMetaObj($optimized[$filebase]);
 					 $thumbnail->setMeta('databaseID', $databaseID);  // keep dbase id the same, otherwise it won't write this thumb to DB due to same ID.
@@ -476,14 +470,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
          }
          else
          {
-					 Log::addTemp('Sending to ImageModel');
           $result = $thumbnail->handleOptimized($tempFiles);
          }
 
 				 // Always update the WP meta - except for unlisted files.
 				 if ($thumbnail->getMeta('file') === null)
 				 {
-					 Log::addTemp('thumbnail is null - ' . $thumbnail->getFileName(), var_export($thumbnail->getMeta('file'), true) );
 
 						 $size = $thumbnail->get('size');
 						 if ($thumbnail->getMeta('resize') == true)
@@ -492,7 +484,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 									$wpmeta['sizes'][$size]['height']  = $thumbnail->get('height');
 						 }
 
-						 Log::addTemp('Adding unholy size ' . $size);
 						 	$wpmeta['sizes'][$size]['filesize'] = $thumbnail->getFileSize();
 
 				 }
@@ -530,7 +521,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       }
 
       $this->saveMeta();
-			Log::addTemp('saving WPMETa', $wpmeta);
 			update_post_meta($this->get('id'), '_wp_attachment_metadata', $wpmeta);
 
 
@@ -2412,7 +2402,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
             $thumbObj->setMeta('file', $thumbObj->getFileName() );
             $this->thumbnails[$unName] = $thumbObj;
             $added = true;
-						Log::addTemp('Added Unlisted:' . $unName);
           }
           else
           {
