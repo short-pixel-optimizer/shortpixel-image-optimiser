@@ -58,6 +58,7 @@ abstract class Queue
 
     public function resetQueue()
     {
+			 Log::addTemp('Resetting Queue: ' . $this->getQueueName());
        $this->q->resetQueue();
     }
 
