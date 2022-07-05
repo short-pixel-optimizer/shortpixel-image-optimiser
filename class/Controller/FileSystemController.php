@@ -17,6 +17,8 @@ use ShortPixel\Model\Image\CustomImageModel as CustomImageModel;
 Class FileSystemController extends \ShortPixel\Controller
 {
     protected $env;
+		static $mediaItems = array();
+		static $customItems = array();
 
     public function __construct()
     {
@@ -39,6 +41,10 @@ Class FileSystemController extends \ShortPixel\Controller
 		*/
     public function getMediaImage($id)
     {
+				if (isset(self::$mediaItems[$id]))
+				{
+					 return self::$mediaItems[$id];
+				}
 
         $filepath = get_attached_file($id);
         $filepath = apply_filters('shortpixel_get_attached_file', $filepath, $id);
@@ -48,6 +54,11 @@ Class FileSystemController extends \ShortPixel\Controller
           return false;
 
         $imageObj = new MediaLibraryModel($id, $filepath);
+
+				if (is_object($imageObj))
+				{
+					 self::$mediaItems[$id] = $imageObj;
+				}
         return $imageObj;
     }
 
@@ -56,7 +67,18 @@ Class FileSystemController extends \ShortPixel\Controller
 		*/
     public function getCustomImage($id)
     {
+				if (isset(self::$customItems[$id]))
+				{
+				 return self::$customItems[$id];
+				}
+
         $imageObj = new CustomImageModel($id);
+
+				if (is_object($imageObj))
+				{
+					 self::$customItems[$id] = $imageObj; 
+				}
+
         return $imageObj;
     }
 
