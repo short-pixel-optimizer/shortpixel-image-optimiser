@@ -303,22 +303,23 @@ class AjaxController
     */
     public function onWpLrUpdateMedia($imageId)
     {
-      $meta = wp_get_attachment_metadata($imageId);
+     /*
+		 Should be handled by OnDelete.
+		 $meta = wp_get_attachment_metadata($imageId);
       if(is_array($meta)) {
 						// get rid of legacy data, otherwise it will convert
            if (isset($meta['ShortPixel']))
             unset($meta['ShortPixel']);
 
            update_post_meta($imageId, '_wp_attachment_metadata', $meta);
-      }
+      } */
 
       // Get and remove Meta
       $mediaItem = \wpSPIO()->filesystem()->getImage($imageId, 'media');
-      $mediaItem->deleteMeta();
+      $mediaItem->onDelete();
 
       // Optimize
-      $control = new OptimizeController();;
-
+      $control = new OptimizeController();
       $json = $control->addItemToQueue($mediaItem);
       //return $json;
 
