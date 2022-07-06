@@ -28,6 +28,7 @@ class AdminNoticesController extends \ShortPixel\Controller
     //const MSG_NO_
     const MSG_QUOTA_REACHED = 'QuotaReached100';
     const MSG_UPGRADE_MONTH = 'UpgradeNotice200';  // When processing more than the subscription allows on average..
+		// @todo This one has been removed for now. Cleanup later on the line 
     const MSG_UPGRADE_BULK = 'UpgradeNotice201'; // when there is no enough for a bulk run.
 
     const MSG_NO_APIKEY = 'ApiNotice300'; // API Key not found
@@ -351,30 +352,10 @@ class AdminNoticesController extends \ShortPixel\Controller
           $quotaController = QuotaController::getInstance();
           $quotaData = $quotaController->getQuota();
 
-
-          $bulk_notice = $noticeController->getNoticeByID(self::MSG_UPGRADE_BULK);
-          $bulk_is_dismissed = ($bulk_notice && $bulk_notice->isDismissed() ) ? true : false;
-
           $month_notice = $noticeController->getNoticeByID(self::MSG_UPGRADE_MONTH);
 
-          //this is for bulk page - alert on the total credits for total images
-          if(! $bulk_is_dismissed && $env->is_bulk_page && $this->bulkUpgradeNeeded()) {
-
-             $todo = $statsControl->find('total', 'itemsTotal') + $statsControl->find('total', 'thumbsTotal');
-             $available = $quotaController->getAvailableQuota();
-             $data = array('filesTodo' => $todo,
-                            'quotaAvailable' => $available);
-
-              //looks like the user hasn't got enough credits to bulk process all media library
-							if ($bulk_notice === false)
-							{
-              	$message = $this->getBulkUpgradeMessage($data);
-              	$notice = Notices::addNormal($message);
-              	Notices::makePersistent($notice, self::MSG_UPGRADE_BULK, YEAR_IN_SECONDS, array($this, 'upgradeBulkCallback'));
-							}
-          }
           //consider the monthly plus 1/6 of the available one-time credits.
-          elseif( $this->monthlyUpgradeNeeded($quotaData)) {
+          if( $this->monthlyUpgradeNeeded($quotaData)) {
 
 							if ($month_notice === false)
 							{
@@ -472,7 +453,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 						elseif ($viewMode !== "list")
 						{
 								// @todo The notice is user-dependent but the notice is dismissed installation-wide.
-								
+
 							  $message = __('You can see ShortPixel Image Optimiser actions and data only via the list view. Switch to the list view to use the plugin via the media library', 'shortpixel-image-optimiser');
 								$new_notice = Notices::addNormal($message);
 								Notices::makePersistent($new_notice, self::MSG_LISTVIEW_ACTIVE, YEAR_IN_SECONDS);
