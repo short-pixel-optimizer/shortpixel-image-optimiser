@@ -86,8 +86,16 @@ class NextGenController
   public function isNextGenScreen()
   {
       $screens = $this->add_screen_loads(array());
-
+			if (! is_admin())
+			{
+				 return false;
+			}
+			if (! function_exists('get_current_screen'))
+			{
+				 return false;
+			}
       $screen = get_current_screen();
+
 
       if (in_array($screen->id, $screens))
         return true;
