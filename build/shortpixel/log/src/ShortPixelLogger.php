@@ -49,16 +49,19 @@ namespace ShortPixel\ShortPixelLogger;
       $ns = __NAMESPACE__;
       $this->namespace = substr($ns, 0, strpos($ns, '\\')); // try to get first part of namespace
 
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
       if (isset($_REQUEST['SHORTPIXEL_DEBUG'])) // manual takes precedence over constants
       {
         $this->is_manual_request = true;
         $this->is_active = true;
 
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
         if ($_REQUEST['SHORTPIXEL_DEBUG'] === 'true')
         {
           $this->logLevel = DebugItem::LEVEL_INFO;
         }
         else {
+					// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
           $this->logLevel = intval($_REQUEST['SHORTPIXEL_DEBUG']);
         }
 

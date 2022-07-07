@@ -24,7 +24,6 @@ class SettingsController extends \ShortPixel\ViewController
      protected $hide_api_key;
      protected $has_nextgen;
      protected $do_redirect = false;
-     protected $postkey_needs_validation = false;
 
      protected $quotaData = null;
 
@@ -42,9 +41,12 @@ class SettingsController extends \ShortPixel\ViewController
       public function __construct()
       {
           $this->model = \wpSPIO()->settings();
-          $this->keyModel = new ApiKeyModel();
 
-          $this->keyModel->loadKey();
+					//@todo Streamline this mess. Should run through controller mostly. Risk of desync otherwise.
+					$keyControl = ApiKeyController::getInstance();
+          $this->keyModel = $keyControl->getKeyModel(); //new ApiKeyModel();
+
+         // $this->keyModel->loadKey();
           $this->is_verifiedkey = $this->keyModel->is_verified();
           $this->is_constant_key = $this->keyModel->is_constant();
           $this->hide_api_key = $this->keyModel->is_hidden();
@@ -194,14 +196,8 @@ class SettingsController extends \ShortPixel\ViewController
 
 			public function action_debug_redirectBulk()
 			{
-				$opt = new OptimizeController();
-	 			$opt->setBulk(true);
 
-	 		 	$bulkMedia = $opt->getQueue('media');
-	 			$bulkCustom = $opt->getQueue('custom');
-
-				$bulkMedia->resetQueue();
-				$bulkCustom->resetQueue();
+	 			OptimizeController::resetQueues();
 
 				$action = isset($_REQUEST['bulk']) ? sanitize_text_field($_REQUEST['bulk']) : null;
 
@@ -314,7 +310,6 @@ class SettingsController extends \ShortPixel\ViewController
 
       public function processSave()
       {
-
           // Split this in the several screens. I.e. settings, advanced, Key Request IF etc.
           if (isset($this->postData['includeNextGen']) && $this->postData['includeNextGen'] == 1)
           {
@@ -353,7 +348,8 @@ class SettingsController extends \ShortPixel\ViewController
           }
 
 
-					// Every save, force load the quota. One reason, because of the HTTP Auth settings refresh. 
+					// Every save, force load the quota. One reason, because of the HTTP Auth settings refresh.
+					Log::addTemp('calling load Quota');
 					$this->loadQuotaData(true);
 
           // end
@@ -688,14 +684,7 @@ class SettingsController extends \ShortPixel\ViewController
           // must be an array
           $post['excludeSizes'] = (isset($post['excludeSizes']) && is_array($post['excludeSizes']) ? $post['excludeSizes']: array());
 
-          // key check, if validate is set to valid, check the key
-          if (isset($post['validate']))
-          {
-            if ($post['validate'] == 'validate')
-              $this->postkey_needs_validation = true;
 
-            unset($post['validate']);
-          }
 
           // when adding a new custom folder
           if (isset($post['addCustomFolder']) && strlen($post['addCustomFolder']) > 0)
@@ -712,7 +701,6 @@ class SettingsController extends \ShortPixel\ViewController
           unset($post['addCustomFolder']);
 
           if(isset($post['removeFolder']) && intval($post['removeFolder']) > 0) {
-              //$metaDao = $this->shortPixel->getSpMetaDao();
               $folder_id = intval($post['removeFolder']);
               $otherMedia = OtherMediaController::getInstance();
               $dirObj = $otherMedia->getFolderByID($folder_id);

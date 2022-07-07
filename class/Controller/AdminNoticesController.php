@@ -28,6 +28,7 @@ class AdminNoticesController extends \ShortPixel\Controller
     //const MSG_NO_
     const MSG_QUOTA_REACHED = 'QuotaReached100';
     const MSG_UPGRADE_MONTH = 'UpgradeNotice200';  // When processing more than the subscription allows on average..
+		// @todo This one has been removed for now. Cleanup later on the line 
     const MSG_UPGRADE_BULK = 'UpgradeNotice201'; // when there is no enough for a bulk run.
 
     const MSG_NO_APIKEY = 'ApiNotice300'; // API Key not found
@@ -182,7 +183,6 @@ class AdminNoticesController extends \ShortPixel\Controller
        $this->doUnlistedNotices();
        $this->doQuotaNotices();
        $this->doIntegrationNotices();
-       $this->doHelpOptInNotices();
        $this->doRemoteNotices();
 
 			 $this->doListViewNotice();
@@ -334,6 +334,7 @@ class AdminNoticesController extends \ShortPixel\Controller
         return; // no key, no quota.
       }
 
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
       if(isset($_GET['checkquota'])) {
           //$shortpixel->getQuotaInformation();
           $quota = $quotaController->getQuota();
@@ -351,30 +352,10 @@ class AdminNoticesController extends \ShortPixel\Controller
           $quotaController = QuotaController::getInstance();
           $quotaData = $quotaController->getQuota();
 
-
-          $bulk_notice = $noticeController->getNoticeByID(self::MSG_UPGRADE_BULK);
-          $bulk_is_dismissed = ($bulk_notice && $bulk_notice->isDismissed() ) ? true : false;
-
           $month_notice = $noticeController->getNoticeByID(self::MSG_UPGRADE_MONTH);
 
-          //this is for bulk page - alert on the total credits for total images
-          if(! $bulk_is_dismissed && $env->is_bulk_page && $this->bulkUpgradeNeeded()) {
-
-             $todo = $statsControl->find('total', 'itemsTotal') + $statsControl->find('total', 'thumbsTotal');
-             $available = $quotaController->getAvailableQuota();
-             $data = array('filesTodo' => $todo,
-                            'quotaAvailable' => $available);
-
-              //looks like the user hasn't got enough credits to bulk process all media library
-							if ($bulk_notice === false)
-							{
-              	$message = $this->getBulkUpgradeMessage($data);
-              	$notice = Notices::addNormal($message);
-              	Notices::makePersistent($notice, self::MSG_UPGRADE_BULK, YEAR_IN_SECONDS, array($this, 'upgradeBulkCallback'));
-							}
-          }
           //consider the monthly plus 1/6 of the available one-time credits.
-          elseif( $this->monthlyUpgradeNeeded($quotaData)) {
+          if( $this->monthlyUpgradeNeeded($quotaData)) {
 
 							if ($month_notice === false)
 							{
@@ -402,19 +383,6 @@ class AdminNoticesController extends \ShortPixel\Controller
 
     }
 
-
-    protected function doHelpOptInNotices()
-    {
-       return; // this is disabled pending review.
-        $settings = \wpSPIO()->settings();
-        $optin = $settings->helpscoutOptin;
-
-        if ($optin == -1)
-        {
-            $message = $this->getHelpOptinMessage();
-            Notices::addNormal($message);
-        }
-    }
 
     protected function doRemoteNotices()
     {
@@ -484,6 +452,8 @@ class AdminNoticesController extends \ShortPixel\Controller
 						}
 						elseif ($viewMode !== "list")
 						{
+								// @todo The notice is user-dependent but the notice is dismissed installation-wide.
+
 							  $message = __('You can see ShortPixel Image Optimiser actions and data only via the list view. Switch to the list view to use the plugin via the media library', 'shortpixel-image-optimiser');
 								$new_notice = Notices::addNormal($message);
 								Notices::makePersistent($new_notice, self::MSG_LISTVIEW_ACTIVE, YEAR_IN_SECONDS);
@@ -704,30 +674,11 @@ class AdminNoticesController extends \ShortPixel\Controller
         if(is_wp_error( $proposal )) {
             $proposal = array('body' => __('Error. Could not contact ShortPixel server for proposal', 'shortpixel-image-optimiser'));
         }
-        die($proposal['body']);
+        die( $proposal['body'] );
 
     }
 
-    protected function getHelpOptinMessage()
-    {
-
-      //onclick='ShortPixel.optInHelp(0)'
-       $message = __('ShortPixel needs to ask permission to load the help functionality');
-       $message .= "<div><button type='button' id='sp-helpscout-disallow' class='button button-primary' >" . __('No, I don\'t need help', 'shortpixel-image-optimiser') . "</button> &nbsp;&nbsp;";
-       $message .= "<button type='button' id='sp-helpscout-allow' class='button button-primary'>" . __('Yes, load the help widget', 'shortpixel-image-optimiser') . "</button></div>";
-
-       $message .= "<p>" . __('ShortPixel uses third party services Helpscout and Quriobot to access our help easier. By giving permission you agree to opt-in and load these service on ShortPixel related pages', 'shortpixel-image-optimiser');
-
-       $message .= "<script>window.addEventListener('load', function(){
-            document.getElementById('sp-helpscout-allow').addEventListener('click', ShortPixel.optInHelp, {once: true} );
-            document.getElementById('sp-helpscout-allow').toggleParam = 'on';
-            document.getElementById('sp-helpscout-disallow').addEventListener('click', ShortPixel.optInHelp, {once: true} );
-            document.getElementById('sp-helpscout-disallow').toggleParam = 'off';
-       }); </script>";
-       return $message;
-    }
-
-    private function get_remote_notices()
+   private function get_remote_notices()
    {
         $transient_name = 'shortpixel_remote_notice';
         $transient_duration = DAY_IN_SECONDS;

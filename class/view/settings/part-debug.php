@@ -14,14 +14,14 @@ $env = \wpSPIO()->env();
 
 ?>
 
-<section id="tab-debug" <?php echo ($this->display_part == 'debug') ? ' class="sel-tab" ' :''; ?>>
+<section id="tab-debug" class="<?php echo esc_attr(($this->display_part == 'debug') ? ' sel-tab ' :''); ?>">
   <h2><a class='tab-link' href='javascript:void(0);' data-id="tab-debug">
-    <?php _e('Debug','shortpixel-image-optimiser');?></a>
+    <?php esc_html_e('Debug','shortpixel-image-optimiser');?></a>
   </h2>
 
 <div class="wp-shortpixel-options wp-shortpixel-tab-content" style="visibility: hidden">
   <div class='env'>
-    <h3><?php _e('Environment', 'shortpixel'); ?></h3>
+    <h3><?php esc_html_e('Environment', 'shortpixel'); ?></h3>
     <div class='flex'>
       <span>NGINX</span><span><?php var_export($this->is_nginx); ?></span>
       <span>KeyVerified</span><span><?php var_export($this->is_verifiedkey); ?></span>
@@ -37,17 +37,27 @@ $env = \wpSPIO()->env();
 			<span>GD Installed</span><span><?php var_export($env->is_gd_installed); ?></span>
 			<span>Curl Installed</span><span><?php var_export($env->is_curl_installed); ?></span>
 		</div>
+
+		<div class='flex'>
+				<span>Uploads Base</span><span><?php echo esc_html((defined('SHORTPIXEL_UPLOADS_BASE')) ? SHORTPIXEL_UPLOADS_BASE : 'not defined'); ?></span>
+				<span>Uploads Name</span><span><?php echo esc_html((defined('SHORTPIXEL_UPLOADS_NAME')) ? SHORTPIXEL_UPLOADS_NAME : 'not defined'); ?></span>
+				<span>Backup Folder</span><span><?php echo esc_html((defined('SHORTPIXEL_BACKUP_FOLDER')) ? SHORTPIXEL_BACKUP_FOLDER : 'not defined'); ?></span>
+				<span>Backup URL</span><span><?php echo esc_html((defined('SHORTPIXEL_BACKUP_URL')) ? SHORTPIXEL_BACKUP_URL : 'not defined'); ?></span>
+
+
+
+		</div>
   </div>
 
   <div class='settings'>
-    <h3><?php _e('Settings', 'shortpixel'); ?></h3>
+    <h3><?php esc_html_e('Settings', 'shortpixel'); ?></h3>
     <?php $local = $this->view->data;
       $local->apiKey = strlen($local->apiKey) . ' chars'; ?>
     <pre><?php var_export($local); ?></pre>
   </div>
 
   <div class='quotadata'>
-    <h3><?php _e('Quota Data', 'shortpixel'); ?></h3>
+    <h3><?php esc_html_e('Quota Data', 'shortpixel'); ?></h3>
     <pre><?php var_export($this->quotaData); ?></pre>
   </div>
 
@@ -59,35 +69,35 @@ $env = \wpSPIO()->env();
       </form>
   </div>
   <div class="stats env">
-      <h3><?php _e('Stats', 'shortpixel-image-optimiser'); ?></h3>
+      <h3><?php esc_html_e('Stats', 'shortpixel-image-optimiser'); ?></h3>
       <h4>Media</h4>
       <div class='flex'>
         <?php $statsControl = StatsController::getInstance();
         ?>
-        <span>Items</span><span><?php echo $statsControl->find('media', 'items'); ?></span>
-        <span>Thumbs</span><span><?php echo $statsControl->find('media', 'thumbs'); ?></span>
-        <span>Images</span><span><?php echo $statsControl->find('media', 'images'); ?></span>
-        <span>ItemsTotal</span><span><?php echo $statsControl->find('media', 'itemsTotal'); ?></span>
-        <span>ThumbsTotal</span><span><?php echo $statsControl->find('media', 'thumbsTotal'); ?></span>
+        <span>Items</span><span><?php echo esc_html($statsControl->find('media', 'items')); ?></span>
+        <span>Thumbs</span><span><?php echo esc_html($statsControl->find('media', 'thumbs')); ?></span>
+        <span>Images</span><span><?php echo esc_html($statsControl->find('media', 'images')); ?></span>
+        <span>ItemsTotal</span><span><?php echo esc_html($statsControl->find('media', 'itemsTotal')); ?></span>
+        <span>ThumbsTotal</span><span><?php echo esc_html($statsControl->find('media', 'thumbsTotal')); ?></span>
      </div>
      <h4>Custom</h4>
      <div class='flex'>
-       <span>Custom Optimized</span><span><?php echo $statsControl->find('custom', 'items'); ?></span>
-       <span>Custom itemsTotal</span><span><?php echo $statsControl->find('custom', 'itemsTotal'); ?>
+       <span>Custom Optimized</span><span><?php echo esc_html($statsControl->find('custom', 'items')); ?></span>
+       <span>Custom itemsTotal</span><span><?php echo esc_html($statsControl->find('custom', 'itemsTotal')); ?>
        </span>
      </div>
      <h4>Total</h4>
      <div class='flex'>
-        <span>Items</span><span><?php echo $statsControl->find('total', 'items'); ?></span>
-        <span>Images</span><span><?php echo $statsControl->find('total', 'images'); ?></span>
-        <span>Thumbs</span><span><?php echo $statsControl->find('total', 'thumbs'); ?></span>
+        <span>Items</span><span><?php echo esc_html($statsControl->find('total', 'items')); ?></span>
+        <span>Images</span><span><?php echo esc_html($statsControl->find('total', 'images')); ?></span>
+        <span>Thumbs</span><span><?php echo esc_html($statsControl->find('total', 'thumbs')); ?></span>
      </div>
      <h4>Period</h4>
      <div class='flex'>
-        <span>Month #1 </span><span><?php echo $statsControl->find('period', 'months', '1'); ?></span>
-        <span>Month #2 </span><span><?php echo $statsControl->find('period', 'months', '2'); ?></span>
-        <span>Month #3 </span><span><?php echo $statsControl->find('period', 'months', '3'); ?></span>
-        <span>Month #4 </span><span><?php echo $statsControl->find('period', 'months', '4'); ?></span>
+        <span>Month #1 </span><span><?php echo esc_html($statsControl->find('period', 'months', '1')); ?></span>
+        <span>Month #2 </span><span><?php echo esc_html($statsControl->find('period', 'months', '2')); ?></span>
+        <span>Month #3 </span><span><?php echo esc_html($statsControl->find('period', 'months', '3')); ?></span>
+        <span>Month #4 </span><span><?php echo esc_html($statsControl->find('period', 'months', '4')); ?></span>
   	</div>
 	</div> <!-- stats -->
 
@@ -102,7 +112,7 @@ $env = \wpSPIO()->env();
     $notices = $noticeController->getNotices();
   ?>
 
-  <h3>Notices (<?php echo count($notices); ?>)</h3>
+  <h3>Notices (<?php echo esc_html(count($notices)); ?>)</h3>
   <div class='table notices'>
 
     <div class='head'>
@@ -112,7 +122,7 @@ $env = \wpSPIO()->env();
   <?php foreach ($notices as $noticeObj): ?>
 
   <div>
-      <span><?php echo $noticeObj->getID(); ?></span>
+      <span><?php echo esc_html($noticeObj->getID()); ?></span>
       <span><?php echo ($noticeObj->isDone()) ? 'Y' : 'N'; ?> </span>
       <span><?php echo ($noticeObj->isDismissed()) ? 'Y' : 'N'; ?> </span>
       <span><?php echo ($noticeObj->isPersistent()) ? 'Y' : 'N'; ?> </span>
@@ -182,7 +192,7 @@ $env = \wpSPIO()->env();
 					<option>All</option>
 					<?php foreach($queues as $name => $q)
 					{
-						 echo "<option>$name</option>";
+						 echo "<option>" . esc_attr($name) . "</option>";
 					}
 					?>
 			</select>

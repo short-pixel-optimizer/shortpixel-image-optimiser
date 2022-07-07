@@ -3,7 +3,7 @@ namespace ShortPixel;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 
-
+// @todo Clean up unused lines in this file. (cloudflare)
 class CloudFlareAPI {
     private $email; // $_cloudflareEmail
     private $authkey; // $_cloudflareAuthKey
@@ -80,7 +80,6 @@ class CloudFlareAPI {
      */
     private function start_cloudflare_cache_purge_process( $imageItem ) {
 
-        //@TODO Also add the WebP and/or AVIF URLs to the purge list, for both Media Library and Custom Media items
 
         // Fetch CloudFlare API credentials
         /*$cloudflare_auth_email = $this->_cloudflareEmail;

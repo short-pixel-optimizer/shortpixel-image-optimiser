@@ -294,7 +294,7 @@ class ApiKeyModel extends \ShortPixel\Model
     if(! \wpSPIO()->env()->is_ajaxcall && !$this->redirectedSettings && !$this->verifiedKey && (!function_exists("is_multisite") || ! is_multisite())) {
       $this->redirectedSettings = 1;
       $this->update();
-      wp_redirect(admin_url("options-general.php?page=wp-shortpixel-settings"));
+      wp_safe_redirect(admin_url("options-general.php?page=wp-shortpixel-settings"));
       exit();
     }
 

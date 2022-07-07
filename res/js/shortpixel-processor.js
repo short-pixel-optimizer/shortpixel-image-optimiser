@@ -21,7 +21,7 @@ window.ShortPixelProcessor =
     isActive: false,
     defaultInterval: 3000, // @todo customize this from backend var, hook filter.  default is onload interval
     interval: 3000, // is current interval. When nothing to be done increases
-    deferInterval: 60000, // how long to wait between interval to check for new items.
+    deferInterval: 15000, // how long to wait between interval to check for new items.
     screen: null, // UI Object
     tooltip: null,
     isBulkPage: false,
@@ -205,7 +205,9 @@ window.ShortPixelProcessor =
     Process: function()
     {
         if (this.worker === null)
+				{
            this.LoadWorker(); // JIT worker loading
+				}
 
         //this.tooltip.DoingProcess();
         this.worker.postMessage({action: 'process', 'nonce' : this.nonce['process']});
@@ -226,7 +228,7 @@ window.ShortPixelProcessor =
         //if (this.timesEmpty >= 5) // conflicts with the stop defer.
         //   this.interval = 2000 + (this.timesEmpty * 1000);  // every time it turns up empty, second slower.
 
-        console.log('Processor: Run Process');
+        console.log('Processor: Run Process in ' + this.interval);
 
         this.timer = window.setTimeout(this.Process.bind(this), this.interval);
     },
@@ -298,6 +300,7 @@ window.ShortPixelProcessor =
       if (data.status == true && data.response) // data status is from shortpixel worker, not the response object
       {
           var response = data.response;
+					this.workerErrors = 0;
           if ( response.callback)
           {
               console.log('Running callback : ' + response.callback);
@@ -379,8 +382,11 @@ window.ShortPixelProcessor =
 							 this.Debug(message, 'error');
 						}
 
-						if (this.workerErrors >= 3)
+						if (this.workerErrors >= 5)
+						{
 							this.StopProcess();
+							this.ShutDownWorker();
+						}
 						else
 							this.StopProcess({ defer: true });
 
@@ -474,7 +480,7 @@ window.ShortPixelProcessor =
 
       if (combinedStatus == 100)
 			{
-
+					this.StopProcess({ defer: true });
 		       return false; // no status in this request.
 			}
 

@@ -37,7 +37,7 @@ class UiHelper
     foreach($actions as $actionName => $actionData)
     {
         $link = ($actionData['type'] == 'js') ? 'javascript:' . $actionData['function'] : $actionData['function'];
-        $output .= "<a href='" . $link . "' class='$actionName' >" . $actionData['text'] . "</a>";
+        $output .= "<a href='" . $link . "' class='" . esc_attr($actionName) . "' >" . esc_html($actionData['text']) . "</a>";
 
     }
 
@@ -115,7 +115,6 @@ class UiHelper
 
 			 }
 
-
 			 if (count($improvs) > 0)
 			 {
 		       $output .= "<div class='thumb-wrapper'>";
@@ -154,7 +153,7 @@ class UiHelper
     }
     if ($imageObj->isOptimized() && $imageObj->isProcessable())
     {
-        $optimizable = $imageObj->getOptimizeURLS();
+        $optimizable = $imageObj->getOptimizeURLS(true);
         // Todo check if Webp / Acif is active, check for unoptimized items
         $processWebp = ($imageObj->isProcessableFileType('webp')) ? true : false;
         $processAvif = ($imageObj->isProcessableFileType('avif')) ? true : false;
@@ -244,8 +243,7 @@ class UiHelper
 
       if ($mediaItem->isOptimized())
       {
-           $optimizable = $mediaItem->getOptimizeURLS();
-           //$webp = $mediaItem->
+           $optimizable = $mediaItem->getOptimizeURLS(true);
 
            if ($mediaItem->isProcessable() && ! $mediaItem->isOptimizePrevented())
            {
@@ -256,8 +254,8 @@ class UiHelper
              }
              else
              {
-                 $optimizableWebp = $mediaItem->isProcessableFileType('webp') ? count($mediaItem->getOptimizeFileType('webp')) : 0;
-                 $optimizableAvif = $mediaItem->isProcessableFileType('avif') ? count($mediaItem->getOptimizeFileType('avif')) : 0;
+                 $optimizableWebp = $mediaItem->isProcessableFileType('webp') ? count($mediaItem->getOptimizeFileType('webp', true)) : 0;
+                 $optimizableAvif = $mediaItem->isProcessableFileType('avif') ? count($mediaItem->getOptimizeFileType('avif', true)) : 0;
 
                  if ($optimizableWebp > 0 && $optimizableAvif > 0)
                    $text  = sprintf(__('Optimize %s webps and %s avif','shortpixel-image-optimiser'),$optimizableWebp, $optimizableAvif);
@@ -390,11 +388,10 @@ class UiHelper
     {
        $text = UiHelper::renderSuccessText($mediaItem);
     }
-    elseif (! $mediaItem->isProcessable(true) && ! $mediaItem->isOptimized())
+    elseif (! $mediaItem->isProcessable() && ! $mediaItem->isOptimized())
     {
        $text = __('Not Processable: ','shortpixel_image_optimiser');
        $text  .= $mediaItem->getProcessableReason();
-
     }
     elseif (! $mediaItem->exists())
     {
@@ -413,9 +410,35 @@ class UiHelper
       {
 
           $retry = self::getAction('retry', $mediaItem->get('id'));
+
+
+					$redo_legacy = false;
+ 					$was_converted = get_post_meta($mediaItem->get('id'), '_shortpixel_was_converted', true);
+					$updateTs = 1656892800; // July 4th 2022 - 00:00 GMT
+
+					if ($was_converted < $updateTs)
+					{
+						$meta = $mediaItem->getWPMetaData();
+						if (is_array($meta) && isset($meta['ShortPixel']))
+						{
+							$redo_legacy = self::getAction('redo_legacy', $mediaItem->get('id'));
+						}
+					}
+
           $text .= "<div class='shortpixel-image-error'>" . esc_html($mediaItem->isOptimizePrevented());
           $text .= "<span class='shortpixel-error-reset'>" . sprintf(__('After you have fixed this issue, you can %s click here to retry %s', 'shortpixel-image-optimiser'), '<a href="javascript:' . $retry['function'] . '">', '</a>');
+
           $text .= '</div>';
+
+
+					if ($redo_legacy !== false)
+					{
+						$text .= "<div class='shortpixel-image-error'><span class='shortpixel-error-reset'>";
+
+						$text .= sprintf(esc_html__('It seems you have older converted legacy data, which might cause this issue. You can try to %s %s %s . If nothing changes, this is not the cause. ','shortpixel-image-optimiser'), '<a href="javascript:' . $redo_legacy['function'] . '">', $redo_legacy['text'], '</a>');
+						$text .= "</span></div>";
+					}
+
       }
 
     return $text;
@@ -447,6 +470,12 @@ class UiHelper
          $action['text'] = __('Retry', 'shortpixel-image-optimiser') ;
          $action['display'] = 'button';
      break;
+		 case 'redo_legacy':
+		 			$action['function'] = 'window.ShortPixelProcessor.screen.RedoLegacy(' . $id . ');';
+		 			$action['type']  = 'js';
+		 			$action['text'] = __('Redo Conversion', 'shortpixel-image-optimiser') ;
+		 			$action['display'] = 'button';
+		 break;
 
      case 'restore':
          $action['function'] = 'window.ShortPixelProcessor.screen.RestoreItem(' . $id . ');';
@@ -488,7 +517,7 @@ class UiHelper
      break;
 
      case 'extendquota':
-        $action['function'] = 'https://shortpixel.com/login'. $keyControl->getKeyForDisplay();
+        $action['function'] = 'https://shortpixel.com/login/'. $keyControl->getKeyForDisplay();
         $action['type'] = 'button';
         $action['text'] = __('Extend Quota','shortpixel-image-optimiser');
         $action['display'] = 'button';

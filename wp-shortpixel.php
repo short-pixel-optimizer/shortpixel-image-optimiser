@@ -3,7 +3,7 @@
  * Plugin Name: ShortPixel Image Optimizer
  * Plugin URI: https://shortpixel.com/
  * Description: ShortPixel optimizes images automatically, while guarding the quality of your images. Check your <a href="/wp-admin/options-general.php?page=wp-shortpixel-settings" target="_blank">Settings &gt; ShortPixel</a> page on how to start optimizing your image library and make your website load faster.
- * Version: 5.0.4
+ * Version: 5.0.5
  * Author: ShortPixel
  * Author URI: https://shortpixel.com
  * GitHub Plugin URI: https://github.com/short-pixel-optimizer/shortpixel-image-optimiser
@@ -16,21 +16,22 @@ if (function_exists('wpSPIO'))
 {
     add_action('admin_notices', function () {
       echo '<div class="error"><h4>';
-      printf(__('ShortPixel plugin already loaded. You might have two versions active. Not loaded: %s', 'shortpixel-image-optimiser'), __FILE__);
+      printf(esc_html__('ShortPixel plugin already loaded. You might have two versions active. Not loaded: %s', 'shortpixel-image-optimiser'), __FILE__);
       echo '</h4></div>';
     });
     return;
 }
 
 if (! defined('SHORTPIXEL_RESET_ON_ACTIVATE'))
-  define('SHORTPIXEL_RESET_ON_ACTIVATE', false); //if true TODO set false
+  define('SHORTPIXEL_RESET_ON_ACTIVATE', false);
+
 //define('SHORTPIXEL_DEBUG', true);
 //define('SHORTPIXEL_DEBUG_TARGET', true);
 
 define('SHORTPIXEL_PLUGIN_FILE', __FILE__);
 define('SHORTPIXEL_PLUGIN_DIR', __DIR__);
 
-define('SHORTPIXEL_IMAGE_OPTIMISER_VERSION', "5.0.4");
+define('SHORTPIXEL_IMAGE_OPTIMISER_VERSION', "5.0.5");
 
 define('SHORTPIXEL_BACKUP', 'ShortpixelBackups');
 define('SHORTPIXEL_MAX_FAIL_RETRIES', 3);
@@ -68,7 +69,6 @@ define('SHORTPIXEL_BACKUP_URL',
     . '/' . SHORTPIXEL_BACKUP);
 
 
-//define("SHORTPIXEL_EXPERIMENTAL_SECURICACHE", true);  // tries to add timestamps to URLS, to prevent hitting the cache.
 //define('SHORTPIXEL_SILENT_MODE', true); // no global notifications. Can lead to data damage. After setting, reactivate plugin.
 
 // Starting logging services, early as possible.

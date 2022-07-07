@@ -314,28 +314,48 @@ class OtherMediaController extends \ShortPixel\Controller
     {
       $fs = \wpSPIO()->filesystem();
       $uploadDir = $fs->getWPUploadBase();
+		  $wpUploadDir = wp_upload_dir(null, false);
 
-        // if it's the uploads base dir, the media library would be included, so don't allow.
+			$is_year_based = (isset($wpUploadDir['subdir']) && strlen(trim($wpUploadDir['subdir'])) > 0) ? true : false;
+
+        // if it's the uploads base dir, check if the library is year-based, then allow. If all files are in uploads root, don't allow.
       if ($directory->getPath() == $uploadDir->getPath() )
+			{
+				 if ($is_year_based)
+				 {
+					 	return false;
+				 }
          return true;
-      elseif (! $directory->isSubFolderOf($uploadDir))// The easy check. No subdir, no problem.
-           return false;
-      elseif (is_numeric($directory->getName() )) // upload subdirs come in variation of year or month, both numeric.
-          return true;
+			}
+      elseif (! $directory->isSubFolderOf($uploadDir))// The easy check. No subdir of uploads, no problem.
+			{
+         return false;
+			}
+      elseif ($directory->isSubFolderOf($uploadDir)) // upload subdirs come in variation of year or month, both numeric. Exclude the WP-based years
+      {
+					$name = $directory->getName();
+					if (is_numeric($name) && strlen($name) == 4) // exclude year based stuff.
+				  {
+						return true;
+					}
+					else {
+						return false;
+					}
+			}
     }
 
 
     public function ajaxBrowseContent()
     {
       if ( ! $this->userIsAllowed )  {
-          wp_die(__('You do not have sufficient permissions to access this page.','shortpixel-image-optimiser'));
+          wp_die(esc_html(__('You do not have sufficient permissions to access this page.','shortpixel-image-optimiser')));
       }
       $fs = \wpSPIO()->filesystem();
       $rootDirObj = $fs->getWPFileBase();
       $path = $rootDirObj->getPath();
 
-
-      $postDir = isset($_POST['dir']) ? trim(sanitize_text_field($_POST['dir'])) : null;
+			// @todo Add Nonce here
+      $postDir = isset($_POST['dir']) ? trim(sanitize_text_field(wp_unslash($_POST['dir']))) : null;
       if (! is_null($postDir))
       {
          $postDir = rawurldecode($postDir);
@@ -348,14 +368,13 @@ class OtherMediaController extends \ShortPixel\Controller
 
              $path .= '/' . $child;
          }
-
       }
 
       $dirObj = $fs->getDirectory($path);
 
       if ($dirObj->getPath() !== $rootDirObj->getPath() && ! $dirObj->isSubFolderOf($rootDirObj))
       {
-        exit( __('This directory seems not part of WordPress', 'shortpixel-image-optimiser'));
+        exit(esc_html(__('This directory seems not part of WordPress', 'shortpixel-image-optimiser')));
       }
 
       if( $dirObj->exists() ) {
@@ -368,7 +387,8 @@ class OtherMediaController extends \ShortPixel\Controller
           foreach($subdirs as $index => $dir) // weed out the media library subdirectories.
           {
             $dirname = $dir->getName();
-            if($dirname == 'ShortpixelBackups' || $this->checkifMediaLibrary($dir))
+						// @todo This should probably be checked via getBackupDirectory or so, not hardcoded ShortipxelBackups
+            if($dirname == 'ShortpixelBackups' || $this->checkifMediaLibrary($dir) )
             {
                unset($subdirs[$index]);
             }
@@ -386,7 +406,7 @@ class OtherMediaController extends \ShortPixel\Controller
                   $htmlName	= htmlentities($dirname);
                   //$ext	= preg_replace('/^.*\./', '', $file);
 
-                  if( $dir->exists()  ) {
+                  if( $dir->exists() ) {
                       //KEEP the spaces in front of the rel values - it's a trick to make WP Hide not replace the wp-content path
                           echo "<li class='directory collapsed'><a rel=' " .esc_attr($htmlRel) . "'>" . esc_html($htmlName) . "</a></li>";
                   }
@@ -398,7 +418,7 @@ class OtherMediaController extends \ShortPixel\Controller
           elseif ($_POST['dir'] == '/')
           {
             echo "<ul class='jqueryFileTree'>";
-            _e('No Directories found that can be added to Custom Folders', 'shortpixel-image-optimiser');
+            esc_html_e('No Directories found that can be added to Custom Folders', 'shortpixel-image-optimiser');
             echo "</ul>";
           }
       }

@@ -371,7 +371,7 @@ class SpioCommandBase
 							\WP_CLI::error($result->message, false);
 						}
 						else {
-							\WP_CLI::line($result->message);							
+							\WP_CLI::line($result->message);
 						}
 				 }
 
@@ -461,6 +461,34 @@ class SpioCommandBase
 				$items[] = array('setting' => 'Creates Avif', 'value' =>  $this->textBoolean($settings->createAvif));
 
 				\WP_CLI\Utils\format_items('table', $items, $fields);
+		}
+
+		/**
+		*	 Clears the Queue(s)
+		*
+		*
+		* [--queue=<name>]
+		* : Either 'media' or 'custom' . Omit to run both.
+		* ---
+		* default: media,custom
+		* options:
+		*   - media
+		*   - custom
+		*
+		*/
+		public function clear($args, $assoc)
+		{
+			  $queues = $this->getQueueArgument($assoc);
+				$optimizeController = $this->getOptimizeController();
+
+				foreach($queues as $type)
+				{
+					$queue = $optimizeController->getQueue($type);
+					$queue->resetQueue();
+				}
+
+				\WP_CLI::Success(__('Queue(s) cleared', 'shortpixel-image-optimiser'));
+
 		}
 
     //  Colored is buggy, so off for now -> https://github.com/wp-cli/php-cli-tools/issues/134

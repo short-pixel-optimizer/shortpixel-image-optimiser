@@ -14,10 +14,12 @@ class Spai
 		{
 			  if (\wpSPIO()->env()->plugin_active('spai'))
 				{
-					 // Prevent SPAI doing its stuff to our JSON returns. 
+					 // Prevent SPAI doing its stuff to our JSON returns.
 					 $hook_upon = array('shortpixel_image_processing', 'shortpixel_ajaxRequest');
 					 if (wp_doing_ajax() &&
+					 			// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
 					 		 isset($_REQUEST['action']) &&
+							 // phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
 							 in_array($_REQUEST['action'], $hook_upon)			 )
 					 {
 						 	$this->preventCache();

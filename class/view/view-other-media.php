@@ -8,6 +8,7 @@ use ShortPixel\Helper\UiHelper as UiHelper;
 
 $fs = \wpSPIO()->filesystem();
 
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
 if ( isset($_GET['noheader']) ) {
     require_once(ABSPATH . 'wp-admin/admin-header.php');
 }
@@ -16,7 +17,7 @@ if ( isset($_GET['noheader']) ) {
 ?>
 <div class="wrap shortpixel-other-media">
     <h2>
-        <?php _e('Custom Media optimized by ShortPixel','shortpixel-image-optimiser');?>
+        <?php esc_html_e('Custom Media optimized by ShortPixel','shortpixel-image-optimiser');?>
     </h2>
 
     <div class='toolbar'>
@@ -24,8 +25,8 @@ if ( isset($_GET['noheader']) ) {
           <?php
           $nonce = wp_create_nonce( 'refresh_folders' );
           ?>
-            <a href="<?php echo admin_url('upload.php?page=wp-short-pixel-custom&sp-action=action_refreshfolders&_wpnonce=' . $nonce); ?>" id="refresh" class="button button-primary" title="<?php _e('Refresh custom folders content','shortpixel-image-optimiser');?>">
-                <?php _e('Refresh folders','shortpixel-image-optimiser');?>
+            <a href="<?php echo esc_url(admin_url('upload.php?page=wp-short-pixel-custom&sp-action=action_refreshfolders&_wpnonce=' . $nonce)); ?>" id="refresh" class="button button-primary" title="<?php esc_attr_e('Refresh custom folders content','shortpixel-image-optimiser');?>">
+                <?php esc_attr_e('Refresh folders','shortpixel-image-optimiser');?>
             </a>
         </div>
 			<hr class='wp-header-end' />
@@ -33,16 +34,15 @@ if ( isset($_GET['noheader']) ) {
       <div class="searchbox">
             <form method="get">
                 <input type="hidden" name="page" value="wp-short-pixel-custom" />
-                <input type='hidden' name='order' value="<?php echo $this->order ?>" />
-                <input type="hidden" name="orderby" value="<?php echo $this->orderby ?>" />
+                <input type='hidden' name='order' value="<?php echo esc_attr($this->order) ?>" />
+                <input type="hidden" name="orderby" value="<?php echo esc_attr($this->orderby) ?>" />
 
                 <p class="search-form">
-                  <label><?php _e('Search', 'shortpixel-image-optimiser'); ?></label>
-                  <input type="text" name="s" value="<?php echo $this->search ?>" />
+                  <label><?php esc_html_e('Search', 'shortpixel-image-optimiser'); ?></label>
+                  <input type="text" name="s" value="<?php echo esc_attr($this->search) ?>" />
 
                 </p>
-                <?php //$customMediaListTable->search_box("Search", "sp_search_file");
-                ?>
+
             </form>
       </div>
   </div>
@@ -54,11 +54,11 @@ if ( isset($_GET['noheader']) ) {
 
 					if ($this->show_hidden)
 					{
-						 printf('<a href="%s">%s</a>', esc_url(add_query_arg('show_hidden',false)), __('Back to normal items', 'shortpixel-image-optimiser'));
+						 printf('<a href="%s">%s</a>', esc_url(add_query_arg('show_hidden',false)), esc_html__('Back to normal items', 'shortpixel-image-optimiser'));
 					}
 					else
 					{
-						 printf('<a href="%s">%s</a>', esc_url(add_query_arg('show_hidden',true)), __('Show hidden items', 'shortpixel-image-optimiser'));
+						 printf('<a href="%s">%s</a>', esc_url(add_query_arg('show_hidden',true)), esc_html__('Show hidden items', 'shortpixel-image-optimiser'));
 					}
 
 		     endif; ?>
@@ -74,7 +74,7 @@ if ( isset($_GET['noheader']) ) {
         <?php foreach($this->view->headings as $hname => $heading):
             $isSortable = $heading['sortable'];
         ?>
-          <span class='heading <?php echo $hname ?>'>
+          <span class='heading <?php echo esc_attr($hname) ?>'>
               <?php echo $this->getDisplayHeading($heading); ?>
           </span>
 
@@ -85,9 +85,9 @@ if ( isset($_GET['noheader']) ) {
           <div class='no-items'> <p>
             <?php
             if ($this->search === false):
-              echo(__('No images available. Go to <a href="options-general.php?page=wp-shortpixel-settings&part=adv-settings">Advanced Settings</a> to configure additional folders to be optimized.','shortpixel-image-optimiser'));
+              printf(esc_html__('No images available. Go to %s Advanced Settings %s to configure additional folders to be optimized.','shortpixel-image-optimiser'), '<a href="options-general.php?page=wp-shortpixel-settings&part=adv-settings">', '</a>');
              else:
-               echo __('Your search query didn\'t result in any images. ', 'shortpixel-image-optimiser');
+               echo esc_html__('Your search query didn\'t result in any images. ', 'shortpixel-image-optimiser');
             endif; ?>
           </p>
           </div>
@@ -102,7 +102,7 @@ if ( isset($_GET['noheader']) ) {
 
           ?>
 
-        <div class='item item-<?php echo $item->get('id') ?>'>
+        <div class='item item-<?php echo esc_attr($item->get('id')) ?>'>
             <?php
             //  $itemFile = $fs->getFile($item->path);
               $filesize = $item->getFileSize();
@@ -118,14 +118,15 @@ if ( isset($_GET['noheader']) ) {
               $is_heavy = ($filesize >= 500000 && $filesize > 0);
 
             ?>
-            <span><a href="<?php echo($img_url);?>" target="_blank">
+            <span><a href="<?php echo esc_attr($img_url); ?>" target="_blank">
                 <div class='thumb' <?php if($is_heavy)
 								{
-								 	echo('title="' . __('This image is heavy and it would slow this page down if displayed here. Click to open it in a new browser tab.', 'shortpixel-image-optimiser') . '"');
+								 	echo('title="' . esc_attr__('This image is heavy and it would slow this page down if displayed here. Click to open it in a new browser tab.', 'shortpixel-image-optimiser') . '"');
 								}
-                ?> style="background-image:url('<?php echo($is_heavy ? wpSPIO()->plugin_url('res/img/heavy-image@2x.png') : $img_url) ?>')"></div>
+                ?> style="background-image:url('<?php echo($is_heavy ? esc_url(wpSPIO()->plugin_url('res/img/heavy-image@2x.png')) : esc_url($img_url)) ?>')">
+							</div>
                 </a></span>
-            <span class='filename'><?php echo $item->getFileName() ?>
+            <span class='filename'><?php echo esc_html($item->getFileName()) ?>
                 <div class="row-actions"><?php
                 $numberActions = count($rowActions);
                 for ($i = 0; $i < $numberActions; $i++)
@@ -135,12 +136,12 @@ if ( isset($_GET['noheader']) ) {
                       echo '|';
                 }
                 ?>
-								<span class='item-id'>#<?php echo $item->get('id'); ?></span>
+								<span class='item-id'>#<?php echo esc_attr($item->get('id')); ?></span>
 							</div>
             </span>
-            <span class='folderpath'><?php echo (string) $item->getFileDir(); ?></span>
-            <span class='mediatype'><?php echo $media_type ?></span>
-            <span class="date"><?php echo $display_date ?></span>
+            <span class='folderpath'><?php echo  esc_html( (string) $item->getFileDir()); ?></span>
+            <span class='mediatype'><?php echo esc_html($media_type) ?></span>
+            <span class="date"><?php echo esc_html($display_date) ?></span>
 
             <span >
 								<?php $this->doActionColumn($item); ?>

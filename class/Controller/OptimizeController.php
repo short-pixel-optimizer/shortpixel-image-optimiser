@@ -289,7 +289,6 @@ class OptimizeController
         $data->media->stats = $mediaQ->getStats();
         $data->custom->stats = $customQ->getStats();
 
-
         $data->total = $this->calculateStatsTotals($data);
 				$data = $this->numberFormatStats($data);
 
@@ -653,9 +652,6 @@ class OptimizeController
  						  $api = $this->getAPI();
 							$newItem = new \stdClass;
 							$newItem->urls = $imageItem->getOptimizeUrls();
-
-							//$webps = ($imageItem->isProcessableFileType('webp')) ? $imageItem->getOptimizeFileType('webp') : array();
-							//$avifs = ($imageItem->isProcessableFileType('avigetQueueNamef')) ? $imageItem->getOptimizeFileType('avif') : array();
 
 							// Add to URLs also the possiblity of images with only webp / avif needs. Otherwise URLs would end up emtpy.
 							//$newItem->urls = array_merge($newItem->urls, $webps, $avifs);

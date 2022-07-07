@@ -58,6 +58,7 @@ abstract class Queue
 
     public function resetQueue()
     {
+			 Log::addTemp('Resetting Queue: ' . $this->getQueueName());
        $this->q->resetQueue();
     }
 
@@ -179,8 +180,6 @@ abstract class Queue
           $queue = array();
           $imageCount = $webpCount = $avifCount = $baseCount = 0;
 
-          //$customData = $this->getStatus('custom_data');
-
           $operation = $this->getCustomDataItem('customOperation'); // false or value (or null)
 
 					if (is_null($operation))
@@ -245,6 +244,7 @@ abstract class Queue
                    }
 									 else
 									 {
+										 Log::addTemp('MediaItem not is processable');
 												$response = array(
 							 					 	'is_error' => true,
 							 						'item_type' => ResponseController::ISSUE_QUEUE_FAILED,

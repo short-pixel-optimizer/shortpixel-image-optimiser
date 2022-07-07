@@ -30,6 +30,7 @@ class EnvironmentModel extends \ShortPixel\Model
     private $screen_is_set = false;
     public $is_screen_to_use = false; // where shortpixel optimizer loads
     public $is_our_screen = false; // where shortpixel hooks in more complicated functions.
+		public $is_gutenberg_editor = false;
     public $is_bulk_page = false; // ShortPixel bulk screen.
     public $screen_id = false;
 
@@ -67,7 +68,7 @@ class EnvironmentModel extends \ShortPixel\Model
   {
     if (count($this->disabled_functions) == 0)
     {
-      $disabled = ini_get('disable_functions');			
+      $disabled = ini_get('disable_functions');
       $this->disabled_functions = explode(',', $disabled);
     }
 
@@ -129,8 +130,8 @@ class EnvironmentModel extends \ShortPixel\Model
 
   private function setServer()
   {
-    $this->is_nginx = strpos(strtolower($_SERVER["SERVER_SOFTWARE"]), 'nginx') !== false ? true : false;
-    $this->is_apache = strpos(strtolower($_SERVER["SERVER_SOFTWARE"]), 'apache') !== false ? true : false;
+    $this->is_nginx = ! empty($_SERVER["SERVER_SOFTWARE"]) && strpos(strtolower(wp_unslash($_SERVER["SERVER_SOFTWARE"])), 'nginx') !== false ? true : false;
+    $this->is_apache = ! empty($_SERVER["SERVER_SOFTWARE"]) && strpos(strtolower(wp_unslash($_SERVER["SERVER_SOFTWARE"])), 'apache') !== false ? true : false;
     $this->is_gd_installed = function_exists('imagecreatefrompng') && function_exists('imagejpeg');
     $this->is_curl_installed = function_exists('curl_init');
   }
@@ -209,6 +210,10 @@ class EnvironmentModel extends \ShortPixel\Model
        if ($screen->id == 'media_page_wp-short-pixel-bulk')
         $this->is_bulk_page = true;
     }
+		elseif (is_object($screen) && method_exists( $screen, 'is_block_editor' ) && $screen->is_block_editor() ) {
+			  $this->is_screen_to_use = true;
+				$this->is_gutenberg_editor = true;
+	  }
 
     $this->screen_is_set = true;
   }

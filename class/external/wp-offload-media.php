@@ -21,6 +21,8 @@ class wpOffload
     protected $is_cname = false;
     protected $cname;
 
+		private $sources; // cache for url > source_id lookup, to prevent duplicate queries.
+
     // if might have to do these checks many times for each thumbnails, keep it fastish.
     //protected $retrievedCache = array();
 
@@ -94,8 +96,6 @@ class wpOffload
       add_filter('shortpixel/front/webp_notfound', array($this, 'fixWebpRemotePath'), 10, 4);
 
     }
-
-
 
     public function returnOriginalFile($file, $attach_id)
     {
@@ -183,31 +183,105 @@ class wpOffload
         return $mediaItem;
     }
 
+		private function sourceCache($url, $source_id = null)
+		{
+			if ($source_id === null && isset($this->sources[$url]))
+			{
+				$source_id = $this->sources[$url];
+				return $source_id;
+			}
+			elseif ($source_id !== null)
+			{
+				 if (! isset($this->sources[$url]))
+				 {
+					  $this->sources[$url]  = $source_id;
+				 }
+				 return $source_id;
+			}
+
+			return false;
+		}
 
     public function checkIfOffloaded($bool, $url)
     {
-      $source_id = $this->getSourceIDByURL($url);
+
+			$source_id = $this->sourceCache($url);
+
+
+			if (false === $source_id)
+			{
+				$extension = substr($url, strrpos($url, '.') + 1);
+				// If these filetypes are not in the cache, they cannot be found via geSourceyIDByUrl method ( not in path DB ), so it's pointless to try. If they are offloaded, at some point the extra-info might load.
+				if ($extension == 'webp' || $extension == 'avif')
+				{
+					return false;
+				}
+
+     		$source_id = $this->getSourceIDByURL($url);
+			}
 
       if ($source_id !== false)
+			{
         return true;
+			}
       else
         return false;
     }
 
     protected function getSourceIDByURL($url)
     {
-      $class = $this->getMediaClass();
-      $source = $class::get_item_source_by_remote_url($url);
 
-			$source_id = isset($source['id']) ? intval($source['id']) : false;
+			$source_id = $this->sourceCache($url); // check cache first.
 
-      if ($source_id !== false)
-        return $source_id;
-      else
-      {
-        $source_id = $this->checkIfThumbnail($url); // can be item or false.
-        return $source_id;
+			if (false === $source_id) // check on the raw url.
+			{
+      	$class = $this->getMediaClass();
+      	$source = $class::get_item_source_by_remote_url($url);
+				$source_id = isset($source['id']) ? intval($source['id']) : false;
+			}
+
+			if (false === $source_id) // check now via the thumbnail hocus.
+			{
+				$pattern = '/(.*)-\d+[xX]\d+(\.\w+)/m';
+				$url = preg_replace($pattern, '$1$2', $url);
+
+				$source_id = $this->sourceCache($url); // check cache first.
+
+				if (false === $source_id)
+				{
+					$source = $class::get_item_source_by_remote_url($url);
+					$source_id = isset($source['id']) ? intval($source['id']) : false;
+				}
+
       }
+
+			if ($source_id !== false)
+			{
+
+				$this->sourceCache($url, $source_id);  // cache it.
+
+				// get item
+				$item = $this->getItemById($source_id);
+				if (is_object($item) && method_exists($item, 'extra_info'))
+				{
+					$baseUrl = str_replace(basename($url),'', $url);
+					$extra_info = $item->extra_info();
+
+					if (isset($extra_info['objects']))
+					{
+						foreach($extra_info['objects'] as $extraItem)
+						{
+							 if (is_array($extraItem) && isset($extraItem['source_file']))
+							 {
+								 // Add source stuff into cache.
+								  $this->sourceCache($baseUrl . $extraItem['source_file'], $source_id);
+							 }
+						}
+					}
+				}
+
+				return $source_id;
+			}
 
       return false;
     }
@@ -216,16 +290,12 @@ class wpOffload
     private function checkIfThumbnail($original_url)
     {
         //$result = \attachment_url_to_postid($url);
-        $pattern = '/(.*)-\d+[xX]\d+(\.\w+)/m';
-        $url = preg_replace($pattern, '$1$2', $original_url);
-
-        $class = $this->getMediaClass();
-        $source = $class::get_item_source_by_remote_url($url);
-
-				$source_id = isset($source['id']) ? intval($source['id']) : false;
 
         if ($source_id !== false)
+				{
+					$this->sourceCache($url, $source_id);
           return $source_id;
+				}
         else
           return false;
 

@@ -159,6 +159,7 @@ class QuotaController
         {
           $keyControl = ApiKeyController::getInstance();
           $apiKey = $keyControl->forceGetApiKey();
+					Log::addTemp('ApiKey for remoteQuota ' . $apiKey);
         }
 
 
@@ -175,12 +176,11 @@ class QuotaController
           );
           $argsStr = "?key=".$apiKey;
 
-          //if($appendUserAgent) { // See no reason why not(?)
-              $args['body']['useragent'] = "Agent" . urlencode($_SERVER['HTTP_USER_AGENT']);
-              $argsStr .= "&useragent=Agent".$args['body']['useragent'];
-          //}
+					$serverAgent = isset($_SERVER['HTTP_USER_AGENT']) ? urlencode(sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT']))) : '';
+          $args['body']['useragent'] = "Agent" . $serverAgent;
+          $argsStr .= "&useragent=Agent".$args['body']['useragent'];
 
-          // Only used for keyValidation!
+          // Only used for keyValidation
           if($validate) {
 
               $statsController = StatsController::getInstance();

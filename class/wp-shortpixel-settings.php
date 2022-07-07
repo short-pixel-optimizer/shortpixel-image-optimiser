@@ -45,7 +45,7 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         'excludePatterns' => array('key' => 'wp-short-pixel-exclude-patterns', 'default' => array(), 'group' => 'options'),
         'png2jpg' => array('key' => 'wp-short-pixel-png2jpg', 'default' => 0, 'group' => 'options'),
         'excludeSizes' => array('key' => 'wp-short-pixel-excludeSizes', 'default' => array(), 'group' => 'options'),
-				'currentVersion' => array('key' => 'wp-short-pixel-currentVersion', 'default' => null, 'group' => 'options'), 
+				'currentVersion' => array('key' => 'wp-short-pixel-currentVersion', 'default' => null, 'group' => 'options'),
 
         //CloudFlare
         'cloudflareEmail'   => array( 'key' => 'wp-short-pixel-cloudflareAPIEmail', 'default' => '', 'group' => 'options'),
@@ -225,9 +225,9 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         }
         $trace = debug_backtrace();
         trigger_error(
-            'Undefined property via __get(): ' . $name .
-            ' in ' . $trace[0]['file'] .
-            ' on line ' . $trace[0]['line'],
+            'Undefined property via __get(): ' . esc_html($name) .
+            ' in ' . esc_html($trace[0]['file']) .
+            ' on line ' . esc_html($trace[0]['line']),
             E_USER_NOTICE);
         return null;
     }
@@ -309,33 +309,4 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         }
     }
 
-    public function ajax_helpscoutOptin()
-    {
-       $toggle = isset($_POST['toggle']) ? sanitize_text_field($_POST['toggle']) : false;
-       $response = array('Status' => 'fail');
-       $settings = \wpSPIO()->settings();
-
-       if (! $toggle)
-       {
-           $response['Status'] = 'No Toggle';
-       }
-
-       if ($toggle == 'off')
-       {
-         $settings->helpscoutOptin = 0;
-         $response['Status'] = 'success';
-       }
-       elseif($toggle == 'on')
-       {
-         $settings->helpscoutOptin = 1;
-         $response['Status'] = 'success';
-       }
-       else
-       {
-         $response['Status'] = 'No valid Toggle';
-       }
-
-       wp_send_json($response);
-       exit();
-    }
 } // class

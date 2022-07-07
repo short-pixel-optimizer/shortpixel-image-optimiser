@@ -41,6 +41,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
       parent::__construct($path, $post_id, null);
 
+
       // WP 5.3 and higher. Check for original file.
       if (function_exists('wp_get_original_image_path'))
       {
@@ -71,32 +72,40 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   }
 
 
-  public function getOptimizeUrls()
+	// Path will only return the filepath.  For reasons, see getOptimizeFileType
+  public function getOptimizeUrls($get_path = false)
   {
      $settings = \wpSPIO()->settings();
 
-     $url = $this->getURL();
+		 if (true === $get_path)
+		 {
 
-     if (! $url) // If the whole image URL can't be found
-     {
-      return array();
-     }
+			 $url = $this->getFullPath();
+		 }
+		 else{
+		 		$url = $this->getURL();
+		 }
+
+		 if (! $url) // If the whole image URL can't be found
+		 {
+			return array();
+		 }
 
      $urls = array();
      if ($this->isProcessable(true))
-      $urls = array($url);
-		else {
-		}
+		 {
+	      $urls = array($url);
+		 }
 
      if ($this->isScaled())
      {
-        $urls = array_merge($urls, $this->original_file->getOptimizeUrls());
+        $urls = array_merge($urls, $this->original_file->getOptimizeUrls($get_path));
      }
 
      foreach($this->thumbnails as $thumbObj)
      {
         if($thumbObj->isThumbnailProcessable())
-          $urls = array_merge($urls, $thumbObj->getOptimizeUrls());
+          $urls = array_merge($urls, $thumbObj->getOptimizeUrls($get_path));
      }
 
      // @todo Check Retina's
@@ -105,7 +114,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
         foreach($this->retinas as $retinaObj)
         {
-           $urls = array_merge($urls, $retinaObj->getOptimizeUrls());
+           $urls = array_merge($urls, $retinaObj->getOptimizeUrls($get_path));
         }
      }
      $urls = array_values(array_unique($urls));
@@ -113,14 +122,17 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   }
 
   // Try to get the URL via WordPress
+	// This is now officially a heavy function.  Take times, other plugins (like s3) might really delay it
   public function getURL()
   {
      $url = $this->fs()->checkURL(wp_get_attachment_url($this->id));
 		 return $url;
   }
 
-  /** Get FileTypes that might be optimized. Checking for setting should go via isProcessableFileType! */
-  public function getOptimizeFileType($type = 'webp')
+  /** Get FileTypes that might be optimized. Checking for setting should go via isProcessableFileType!
+	*  Get path will return the filepath of said files. This is not useful, except for -checking- if it's processable via isProcessableFileType . GetURL can potentially hit performance, and we don't need it in that case.
+	*/
+  public function getOptimizeFileType($type = 'webp', $get_path = false)
   {
       if ($type == 'webp')
       {
@@ -141,21 +153,40 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           {
             if (parent::getOptimizeFileType($type))
 						{
-              $toOptimize[] = $this->getURL(); // $fs->pathToUrl($this);
-						}
-
-          }
+							if (true === $get_path) {
+								$toOptimize[] = $this->getFullPath();
+							} else {
+              	$toOptimize[] = $this->getURL(); // $fs->pathToUrl($this);
+							}
+           	}
+				 }
       }
       if ($this->isScaled() ) // scaled image
       {
         if ($this->original_file->getOptimizeFileType($type) )
-            $toOptimize[] = $this->original_file->getURL(); //$fs->pathToUrl($this->original_file);
+				{
+						if (true === $get_path)
+						{
+							$toOptimize[] = $this->original_file->getFullPath();
+						}
+						else {
+							$toOptimize[] = $this->original_file->getURL();
+						}
+				}
       }
 
       foreach($this->thumbnails as $thumbName => $thumbObj)
       {
           if ($thumbObj->getOptimizeFileType($type))
+					{
+						if (true === $get_path)
+						{
+						  $toOptimize[] = $thumbObj->getFullPath();
+						}
+						else{
               $toOptimize[] = $thumbObj->getURL(); //$fs->pathToUrl($thumbObj);
+						}
+					}
       }
 
       return array_values(array_unique($toOptimize));
@@ -367,22 +398,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
   }
 
-  /* Sanity check in process. Should only be called upon special request, or with single image displays. Should check and recheck stats, thumbs, unlistedthumbs and all assumptions of data that might corrupt or change outside of this plugin */
-  public function reAcquire()
-  {
-      $this->addUnlisted();
-      //$this->reCheckThumbnails();
-      if (\wpSPIO()->settings()->optimizeRetina)
-        $this->retinas = $this->getRetinas();
-
-      $this->webps = $this->getWebps();
-
-  }
-
   public function handleOptimized($tempFiles)
   {
       $return = true;
 			$wpmeta = wp_get_attachment_metadata($this->get('id'));
+
 
       if (! $this->isOptimized() && isset($tempFiles[$this->getFileName()]) ) // main file might not be contained in results
       {
@@ -431,11 +451,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
          $thumbnail->handleOptimizedFileType($tempFiles); // check for webps /etc
 
          if ($thumbnail->isOptimized())
-          continue;
-
+         {
+					  continue;
+				 }
          if (!$thumbnail->isProcessable())
+				 {
            continue; // when excluded.
-
+				 }
          $filebase = $thumbnail->getFileBase();
          $result = false;
 
@@ -451,16 +473,20 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           $result = $thumbnail->handleOptimized($tempFiles);
          }
 
-				 // Always update the WP meta.
-				 $size = $thumbnail->get('size');
-				 if ($thumbnail->getMeta('resize') == true)
+				 // Always update the WP meta - except for unlisted files.
+				 if ($thumbnail->getMeta('file') === null)
 				 {
 
-							$wpmeta['sizes'][$size]['width'] = $thumbnail->get('width');
-							$wpmeta['sizes'][$size]['height']  = $thumbnail->get('height');
-				 }
+						 $size = $thumbnail->get('size');
+						 if ($thumbnail->getMeta('resize') == true)
+						 {
+									$wpmeta['sizes'][$size]['width'] = $thumbnail->get('width');
+									$wpmeta['sizes'][$size]['height']  = $thumbnail->get('height');
+						 }
 
-				 $wpmeta['sizes'][$size]['filesize'] = $thumbnail->getFileSize();
+						 	$wpmeta['sizes'][$size]['filesize'] = $thumbnail->getFileSize();
+
+				 }
 
          if ($result)
          {
@@ -782,34 +808,36 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					$extra_info = json_decode($record->extra_info);
 
 					// @todo Extra info should probably be stored as JSON?
-					foreach($extra_info as $name => $val)
+					if (! is_null($extra_info))
 					{
-						 $data->$name = $val;
-					}
+						foreach($extra_info as $name => $val)
+						{
+							 $data->$name = $val;
+						}
 
-					if ($record->parent == 0)
-					{
-						// Database ID should probably also be stored for the thumbnails, so updating / insert into the database will be easier. We have a free primary key, so why not use it?
-							$metadata->image_meta  = $data;
-					}
-					elseif($record->parent > 0)  // Thumbnails
-					{
-						 switch($record->image_type)
-						 {
-							 	 case self::IMAGE_TYPE_THUMB:
-								 	$metadata->thumbnails[$record->size] = $data;
-								 break;
-								 case self::IMAGE_TYPE_RETINA:
-								 	$metadata->retinas[$record->size] = $data;
-								 break;
-								 case self::IMAGE_TYPE_ORIGINAL:
-								 	$metadata->original_file = $data;
-								 break;
-						 }
+						if ($record->parent == 0)
+						{
+							// Database ID should probably also be stored for the thumbnails, so updating / insert into the database will be easier. We have a free primary key, so why not use it?
+								$metadata->image_meta  = $data;
+						}
+						elseif($record->parent > 0)  // Thumbnails
+						{
+							 switch($record->image_type)
+							 {
+								 	 case self::IMAGE_TYPE_THUMB:
+									 	$metadata->thumbnails[$record->size] = $data;
+									 break;
+									 case self::IMAGE_TYPE_RETINA:
+									 	$metadata->retinas[$record->size] = $data;
+									 break;
+									 case self::IMAGE_TYPE_ORIGINAL:
+									 	$metadata->original_file = $data;
+									 break;
+							 }
 
-					}
-
-		 }
+						}
+				} // extra info if
+		 } // loop
 
 		 return $metadata;
 	}
@@ -1154,6 +1182,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         return $bool;
 			}
 
+			// The exclude size on the main image - via regex - if fails, prevents the whole thing from optimization.
+			if ($this->processable_status == ImageModel::P_EXCLUDE_SIZE)
+			{
+				 return $bool;
+			}
+
       if (! $bool) // if parent is not processable, check if thumbnails are, can still have a work to do.
       {
 
@@ -1363,6 +1397,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
             //$meta = $meta? $meta : wp_get_attachment_metadata($ID);
             $width = $this->get('width');
             $height = $this->get('height');
+
+			//		echo 'w/h'; print_r($width); echo ' '; print_r($height);
+			Log::addTemp('Excluded w/h check ' .  $width . ' ' . $height);
+	//		Log::addTemp('Check via', debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3));
+
             if( $width && $height
                  && $this->isProcessableSize($width, $height, $item["value"]) === false){
                    $this->processable_status = self::P_EXCLUDE_SIZE;
@@ -1550,6 +1589,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		// ** Warning - This will also reset metadata
     $bool = parent::restore();
 
+
 		if ($is_resized)
 		{
 			$wpmeta['width'] = $this->get('width');
@@ -1582,7 +1622,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           $filebase = $thumbObj->getFileBase();
 					$is_resized = $thumbObj->getMeta('resize');
 					$size = $thumbObj->get('size');
+					$unlisted_file = $thumbObj->getMeta('file');
 
+					// **** AFTER THIS IMAGE DATA IS WIPED! **** /
           if (isset($restored[$filebase]))
           {
             $bool = true;  // this filebase already restored. In case of duplicate sizes.
@@ -1593,13 +1635,17 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
             $bool = $thumbObj->restore(); // resets metadata
 					}
 
-					if ($is_resized)
+					if ($unlisted_file === null)
 					{
-							$wpmeta['sizes'][$size]['width'] = $thumbObj->get('width');
-							$wpmeta['sizes'][$size]['height']  = $thumbObj->get('height');
-					}
 
-					$wpmeta['sizes'][$size]['filesize'] = $thumbObj->getFileSize();
+						if ($is_resized)
+						{
+								$wpmeta['sizes'][$size]['width'] = $thumbObj->get('width');
+								$wpmeta['sizes'][$size]['height']  = $thumbObj->get('height');
+						}
+
+						$wpmeta['sizes'][$size]['filesize'] = $thumbObj->getFileSize();
+					}
 
           if (! $bool)
 					{
@@ -1863,14 +1909,14 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         return false;
       }
 
-
       $data = $metadata['ShortPixel'];
 
       if (count($data) == 0)  // This can happen. Empty array is still nothing to convert.
         return false;
 
 			// Waiting for processing is a state where it's not optimized, or should be.
-			if (count($data) == 1 && isset($data['WaitingProcessing']))
+			// The last check is because it seems that it can be both improved and waiting something ( sigh ) // 04/07/22
+			if (count($data) == 1 && isset($data['WaitingProcessing']) && ! isset($data['ShortPixelImprovement']))
 			{
 				 return false;
 			}
@@ -1879,8 +1925,21 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       $was_converted = get_post_meta($this->id, '_shortpixel_was_converted', true);
       if ($was_converted == true || is_numeric($was_converted))
       {
-        Log::addDebug('No SPIO5 metadata, but this item was converted, not converting again');
-        return false;
+				$updateTs = 1656892800; // July 4th 2022 - 00:00 GMT
+				if ($was_converted < $updateTs && $this->hasBackup())
+				{
+					$this->resetPrevent();  // reset any prevented optimized. This would have prob. thrown a backup issue.
+					if ($this->isProcessable())
+					{
+						 $this->deleteMeta();
+						 Log::addDebug('Conversion pre-bug detected with backup and still processable. Trying to fix by redoing legacy.');
+					}
+
+				}
+				else {
+				   Log::addDebug('No SPIO5 metadata, but this item was converted, not converting again');
+					 return false;
+				}
       }
 
 			$quotaController = QuotaController::getInstance();
@@ -1891,7 +1950,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			}
 
         Log::addDebug("Conversion of legacy: ", array($metadata));
-    //  echo "*** EXPORT: "; var_export($metadata); echo " *** ";
+
        $type = isset($data['type']) ? $this->legacyConvertType($data['type']) : '';
 
        $improvement = (isset($metadata['ShortPixelImprovement']) && is_numeric($metadata['ShortPixelImprovement']) && $metadata['ShortPixelImprovement'] > 0) ? $metadata['ShortPixelImprovement'] : 0;
@@ -2091,12 +2150,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			{
 				return $fileType->getFileName();
 			}
+
 			$env = \wpSPIO()->env();
 			$fs = \wpSPIO()->filesystem();
 
 // try the whole thing, but fetching remote URLS, test if really S3 not in case something went wrong with is_virtual, or it's just something messed up.
 			if ($fileObj->is_virtual() && $env->plugin_active('s3-offload') )
 			{
+
+
 				if ($type == 'webp')
 				{
 					$is_double = \wpSPIO()->env()->useDoubleWebpExtension();
@@ -2134,7 +2196,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					 }
 					 else
 					 {
-							$url_exists = $fs->getFile($double_url);
+							$url_exists = $fs->url_exists($double_url);
 							if ($url_exists === true)
 								 return $double_filename;
 					 }
@@ -2334,6 +2396,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       $added = false;
       foreach($unlisted as $unName)
       {
+				  if (isset($this->thumbnails[$unName]))
+					{
+						continue; // don't re-add if not needed.
+					}
           $thumbObj = $this->getThumbnailModel($path . $unName, $unName);
           if ($thumbObj->getExtension() == 'webp' || $thumbObj->getExtension() == 'avif') // ignore webp/avif files.
           {
@@ -2354,8 +2420,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           }
       }
 
-      if ($added)
-        $this->saveMeta(); // Save it when we are adding images.
+      //if ($added)
+       // $this->saveMeta(); // Save it when we are adding images.
 
 			self::$unlistedChecked[] = $this->get('id');
   }

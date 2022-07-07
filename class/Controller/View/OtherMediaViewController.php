@@ -36,11 +36,17 @@ class OtherMediaViewController extends \ShortPixel\ViewController
         parent::__construct();
         $this->setActions(); // possible actions for ROWS only..
 
+				// 2015: https://github.com/WordPress/WordPress-Coding-Standards/issues/426 !
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
         $this->currentPage = isset($_GET['paged']) ? intval($_GET['paged']) : 1;
-        $this->orderby = ( ! empty( $_GET['orderby'] ) ) ? $this->filterAllowedOrderBy(sanitize_text_field($_GET['orderby'])) : 'id';
-        $this->order = ( ! empty($_GET['order'] ) ) ? sanitize_text_field($_GET['order']) : 'desc'; // If no order, default to asc
-        $this->search =  (isset($_GET["s"]) && strlen($_GET["s"]))  ? sanitize_text_field($_GET['s']) : false;
-				$this->show_hidden = isset($_GET['show_hidden']) ? sanitize_text_field($_GET['show_hidden']) : false;
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
+        $this->orderby = ( ! empty( $_GET['orderby'] ) ) ? $this->filterAllowedOrderBy(sanitize_text_field(wp_unslash($_GET['orderby']))) : 'id';
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
+        $this->order = ( ! empty($_GET['order'] ) ) ? sanitize_text_field( wp_unslash($_GET['order'])) : 'desc'; // If no order, default to asc
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
+        $this->search =  (isset($_GET["s"]) && strlen($_GET["s"]) > 0)  ? sanitize_text_field( wp_unslash($_GET['s'])) : false;
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
+				$this->show_hidden = isset($_GET['show_hidden']) ? sanitize_text_field(wp_unslash($_GET['show_hidden'])) : false;
 
       }
 
@@ -61,7 +67,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 
 			public function action_refreshfolders()
 			{
-				   if (wp_verify_nonce( $_REQUEST['_wpnonce'], 'refresh_folders'))
+				   if (isset($_REQUEST['_wpnonce']) && wp_verify_nonce( sanitize_key($_REQUEST['_wpnonce']), 'refresh_folders'))
 					 {
 						 	 $otherMediaController = OtherMediaController::getInstance();
 							 $otherMediaController->refreshFolders(true);
@@ -206,8 +212,12 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 
       protected function getFilter() {
           $filter = array();
-          if(isset($_GET["s"]) && strlen($_GET["s"])) {
-              $filter['path'] = (object)array("operator" => "like", "value" =>"'%" . esc_sql($_GET["s"]) . "%'");
+
+					// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
+					$search = (isset($_GET['s'])) ? sanitize_text_field(wp_unslash($_GET['s'])) : '';
+          if(strlen($search) > 0) {
+						// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
+              $filter['path'] = (object)array("operator" => "like", "value" =>"'%" . esc_sql($search) . "%'");
           }
           return $filter;
       }
@@ -335,10 +345,10 @@ class OtherMediaViewController extends \ShortPixel\ViewController
            $total_pages_before = '<span class="paging-input">';
            $total_pages_after  = '</span></span>';
 
-           $current_url = remove_query_arg( 'paged', $this->getPageURL()); // has url
+           $current_url = esc_url(remove_query_arg( 'paged', $this->getPageURL())); // has url
 
-           $output = '<form method="GET" action="'. $current_url . '">'; //'<span class="pagination-links">';
-           $output .= '<span class="displaying-num">'. sprintf(__('%d Images', 'shortpixel-image-optimiser'), $this->total_items) . '</span>';
+           $output = '<form method="GET" action="'. esc_attr($current_url) . '">'; //'<span class="pagination-links">';
+           $output .= '<span class="displaying-num">'. sprintf(esc_html__('%d Images', 'shortpixel-image-optimiser'), $this->total_items) . '</span>';
 
            if ( $disable_first ) {
                     $page_links[] = '<span class="tablenav-pages-navspan button disabled" aria-hidden="true">&laquo;</span>';
@@ -346,7 +356,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
                     $page_links[] = sprintf(
                         "<a class='first-page button' href='%s'><span class='screen-reader-text'>%s</span><span aria-hidden='true'>%s</span></a>",
                         esc_url( $current_url ),
-                        __( 'First page' ),
+                        esc_html__( 'First page' ),
                         '&laquo;'
                     );
                 }
@@ -357,14 +367,14 @@ class OtherMediaViewController extends \ShortPixel\ViewController
                 $page_links[] = sprintf(
                     "<a class='prev-page button' href='%s'><span class='screen-reader-text'>%s</span><span aria-hidden='true'>%s</span></a>",
                     esc_url( add_query_arg( 'paged', max( 1, $current - 1 ), $current_url ) ),
-                    __( 'Previous page' ),
+                    esc_html__( 'Previous page' ),
                     '&lsaquo;'
                 );
             }
 
             $html_current_page = sprintf(
                 "%s<input class='current-page' id='current-page-selector' type='text' name='paged' value='%s' size='%d' aria-describedby='table-paging' /><span class='tablenav-paging-text'>",
-                '<label for="current-page-selector" class="screen-reader-text">' . __( 'Current Page' ) . '</label>',
+                '<label for="current-page-selector" class="screen-reader-text">' . esc_html__( 'Current Page' ) . '</label>',
                 $current,
                 strlen( $pages )
             );
@@ -462,8 +472,9 @@ class OtherMediaViewController extends \ShortPixel\ViewController
             $classes = ($action['display'] == 'button') ? " button-smaller button-primary $actionName " : "$actionName";
             $link = ($action['type'] == 'js') ? 'javascript:' . $action['function'] : $action['function'];
 
+						// @todo Esc url is not successfull with JS links
             ?>
-            <a href="<?php echo esc_url($link) ?>" class="<?php echo esc_attr($classes) ?>"><?php echo esc_html($action['text']) ?></a>
+            <a href="<?php echo $link ?>" class="<?php echo esc_attr($classes) ?>"><?php echo esc_html($action['text']) ?></a>
 
             <?php
           endforeach;
@@ -472,9 +483,10 @@ class OtherMediaViewController extends \ShortPixel\ViewController
       }
 
 
-      // Used for row actions at the moment.
+      // Used for row actions at the moment. Action under the image.
       protected function renderActions($actions, $item, $forceSingular = false)
       {
+
 
         foreach($actions as $index => $action)
         {
@@ -498,7 +510,6 @@ class OtherMediaViewController extends \ShortPixel\ViewController
               if (isset($action['type']))
                 $url = add_query_arg('type', $action['type'], $url);
               $class = (isset($action['class'])) ? $action['class'] : '';
-
 
               $link = '<a href="' . esc_url($url) . '" class="action-' . esc_attr($action_arg) . ' ' . esc_attr($class) . '">' . esc_html($text) . '</a>';
           }
@@ -546,7 +557,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
               {
                 $sorturl = add_query_arg('order', 'asc', $sorturl);
               }
-              $output = '<a href="' . esc_url($sorturl) . '"><span>' . $title . '</span><span class="sorting-indicator '. $sorted . '">&nbsp;</span></a>';
+              $output = '<a href="' . esc_url($sorturl) . '"><span>' . esc_html($title) . '</span><span class="sorting-indicator '. esc_attr($sorted) . '">&nbsp;</span></a>';
           }
           else
           {

@@ -101,7 +101,7 @@ var SpWorker = {
       {
 					if (this && ! this.stopped)
 					{
-						console.error('Worker.js reporting issue');
+						console.error('Worker.js reporting issue', response);
           	postMessage({'status' : false, message: response.status + ' ' + response.statusText});
 					}
       }
