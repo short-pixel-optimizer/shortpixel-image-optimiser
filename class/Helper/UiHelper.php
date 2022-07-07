@@ -517,7 +517,7 @@ class UiHelper
      break;
 
      case 'extendquota':
-        $action['function'] = 'https://shortpixel.com/login'. $keyControl->getKeyForDisplay();
+        $action['function'] = 'https://shortpixel.com/login/'. $keyControl->getKeyForDisplay();
         $action['type'] = 'button';
         $action['text'] = __('Extend Quota','shortpixel-image-optimiser');
         $action['display'] = 'button';
