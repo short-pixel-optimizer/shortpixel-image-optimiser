@@ -1182,6 +1182,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         return $bool;
 			}
 
+			// The exclude size on the main image - via regex - if fails, prevents the whole thing from optimization.
+			if ($this->processable_status == ImageModel::P_EXCLUDE_SIZE)
+			{
+				 return $bool;
+			}
+
       if (! $bool) // if parent is not processable, check if thumbnails are, can still have a work to do.
       {
 
@@ -1391,6 +1397,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
             //$meta = $meta? $meta : wp_get_attachment_metadata($ID);
             $width = $this->get('width');
             $height = $this->get('height');
+
+			//		echo 'w/h'; print_r($width); echo ' '; print_r($height);
+			Log::addTemp('Excluded w/h check ' .  $width . ' ' . $height);
+	//		Log::addTemp('Check via', debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3));
+
             if( $width && $height
                  && $this->isProcessableSize($width, $height, $item["value"]) === false){
                    $this->processable_status = self::P_EXCLUDE_SIZE;

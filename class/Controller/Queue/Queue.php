@@ -244,6 +244,7 @@ abstract class Queue
                    }
 									 else
 									 {
+										 Log::addTemp('MediaItem not is processable');
 												$response = array(
 							 					 	'is_error' => true,
 							 						'item_type' => ResponseController::ISSUE_QUEUE_FAILED,

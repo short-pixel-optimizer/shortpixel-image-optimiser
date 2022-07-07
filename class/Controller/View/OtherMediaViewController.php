@@ -472,8 +472,9 @@ class OtherMediaViewController extends \ShortPixel\ViewController
             $classes = ($action['display'] == 'button') ? " button-smaller button-primary $actionName " : "$actionName";
             $link = ($action['type'] == 'js') ? 'javascript:' . $action['function'] : $action['function'];
 
+						// @todo Esc url is not successfull with JS links
             ?>
-            <a href="<?php echo esc_url($link) ?>" class="<?php echo esc_attr($classes) ?>"><?php echo esc_html($action['text']) ?></a>
+            <a href="<?php echo $link ?>" class="<?php echo esc_attr($classes) ?>"><?php echo esc_html($action['text']) ?></a>
 
             <?php
           endforeach;
@@ -482,9 +483,10 @@ class OtherMediaViewController extends \ShortPixel\ViewController
       }
 
 
-      // Used for row actions at the moment.
+      // Used for row actions at the moment. Action under the image.
       protected function renderActions($actions, $item, $forceSingular = false)
       {
+
 
         foreach($actions as $index => $action)
         {
@@ -508,7 +510,6 @@ class OtherMediaViewController extends \ShortPixel\ViewController
               if (isset($action['type']))
                 $url = add_query_arg('type', $action['type'], $url);
               $class = (isset($action['class'])) ? $action['class'] : '';
-
 
               $link = '<a href="' . esc_url($url) . '" class="action-' . esc_attr($action_arg) . ' ' . esc_attr($class) . '">' . esc_html($text) . '</a>';
           }

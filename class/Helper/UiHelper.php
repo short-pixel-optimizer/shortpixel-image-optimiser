@@ -388,11 +388,10 @@ class UiHelper
     {
        $text = UiHelper::renderSuccessText($mediaItem);
     }
-    elseif (! $mediaItem->isProcessable(true) && ! $mediaItem->isOptimized())
+    elseif (! $mediaItem->isProcessable() && ! $mediaItem->isOptimized())
     {
        $text = __('Not Processable: ','shortpixel_image_optimiser');
        $text  .= $mediaItem->getProcessableReason();
-
     }
     elseif (! $mediaItem->exists())
     {
