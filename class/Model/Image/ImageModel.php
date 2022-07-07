@@ -95,7 +95,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
       $this->width = false;  // to prevent is_null check on get to loop if something is off.
       $this->height = false;
 
-      if (! $this->isExtensionExcluded() && $this->isImage() && $this->is_readable() && ! $this->is_virtual())
+      if (! $this->isExtensionExcluded() && $this->isImage() && $this->is_readable() && ! $this->is_virtual() )
       {
          list($width, $height) = @getimagesize($this->getFullPath());
          if ($width)
