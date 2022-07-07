@@ -116,10 +116,9 @@ class NextGenController
   {
 
     $use_screens[] = 'toplevel_page_nextgen-gallery'; // toplevel
-    $use_screens[] = 'gallery_page_ngg_addgallery';  // add gallery
-    $use_screens[] = 'nggallery-manage-gallery'; // manage gallery - might be old
+    $use_screens[] = 'nextgen-gallery_page_ngg_addgallery';  // add gallery
+    $use_screens[] = 'nextgen-gallery_page_nggallery-manage-album'; // manage album
     $use_screens[] = 'nextgen-gallery_page_nggallery-manage-gallery'; // manage toplevel gallery
-    $use_screens[] = 'gallery_page_nggallery-manage-album'; // manage album
     $use_screens[] = 'nggallery-manage-images'; // images in gallery overview
 
     return $use_screens;

@@ -21,7 +21,7 @@ window.ShortPixelProcessor =
     isActive: false,
     defaultInterval: 3000, // @todo customize this from backend var, hook filter.  default is onload interval
     interval: 3000, // is current interval. When nothing to be done increases
-    deferInterval: 60000, // how long to wait between interval to check for new items.
+    deferInterval: 15000, // how long to wait between interval to check for new items.
     screen: null, // UI Object
     tooltip: null,
     isBulkPage: false,

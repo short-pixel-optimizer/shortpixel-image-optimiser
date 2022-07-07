@@ -188,8 +188,6 @@ class EnvironmentModel extends \ShortPixel\Model
           $this->is_screen_to_use = true;
     }
 
-
-
     // Our pages.
     $pages = \wpSPIO()->get_admin_pages();
     // the main WP pages where SPIO hooks a lot of functions into, our operating area.
