@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compressor, ima
 Requires at least: 4.8.0
 Tested up to: 6.0
 Requires PHP: 5.6
-Stable tag: 5.0.4
+Stable tag: 5.0.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -308,6 +308,26 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 9. Check other optimized images status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 5.0.5 =
+Release date July 7th, 2022
+* Fix: in some cases the legacy optimization data was not migrated properly, resulting in backup-related errors;
+* Fix: added the possibility to redo the migration of the optimization data when the backups exist;
+* Fix: significantly reduced the number of queries when WP Offload Media is in use, as this was causing slowness in some cases;
+* Fix: the automatic processing now works correctly when using the block editor as well as on other pages where it was broken;
+* Fix: the unlisted thumbnails were not processed correctly and showed up as not optimized;
+* Fix: the integration with the Photo Engine and WP/LR Sync plugins works properly again;
+* Fix: the filter in the Media Library was making the image name go away;
+* Fix: changing the API Key now resets correctly the credits information;
+* Fix: removed a persistent notification about a potential insufficient quota;
+* Fix: the "Optimize now" button works correctly in Custom Media;
+* Fix: the "Extend quota" button works correctly in the Media Library;
+* Fix: other folders from the `wp-content/uplods` folder can now be added as Custom Media folders;
+* Fix: the size exclusions were not working as expected for thumbnails;
+* Fix: updated various pieces of code in accordance with the WordPress Coding Standards;
+* Tweak: the wait time between checking if there is anything to optimize has been lowered;
+* Tweak: added a `clear` function for WP-CLI, to clear the existing queue(s);
+* Language: 3 new string added, 0 updated, 0 fuzzed, and 7 obsoleted.
 
 = 5.0.4 =
 Release date June 22nd, 2022
