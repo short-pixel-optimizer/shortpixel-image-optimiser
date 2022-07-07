@@ -486,6 +486,9 @@ class SpioCommandBase
 					$queue = $optimizeController->getQueue($type);
 					$queue->resetQueue();
 				}
+
+				\WP_CLI::Success(__('Queue(s) cleared', 'shortpixel-image-optimiser'));
+
 		}
 
     //  Colored is buggy, so off for now -> https://github.com/wp-cli/php-cli-tools/issues/134
