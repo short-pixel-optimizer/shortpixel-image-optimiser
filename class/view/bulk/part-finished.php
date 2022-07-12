@@ -41,15 +41,15 @@ namespace ShortPixel;
                 <span class='done' data-stats-media="percentage_done" data-presentation="css.width.percentage"></span>
               </span>
         </span>
-        <span><?php esc_html_e('Processing','shortpixel-image-optimiser') ?>: <i data-stats-media="in_process">-</i></span>
+        <span><?php esc_html_e('Processing','shortpixel-image-optimiser') ?>: <i data-stats-media="in_process">0</i></span>
 
       </div>
 
       <div>
-        <span><?php esc_html_e('Processed','shortpixel-image-optimiser'); ?>: <i data-stats-media="done">-</i></span>
+        <span><?php esc_html_e('Processed','shortpixel-image-optimiser'); ?>: <i data-stats-media="done">0</i></span>
 
-        <span><?php esc_html_e('Images Left','shortpixel-image-optimiser'); ?>: <i data-stats-media="in_queue">-</i></span>
-        <span><?php esc_html_e('Errors','shortpixel-image-optimiser'); ?>: <i data-check-media-fatalerrors data-stats-media="fatal_errors" class='error'>- </i>
+        <span><?php esc_html_e('Images Left','shortpixel-image-optimiser'); ?>: <i data-stats-media="in_queue">0</i></span>
+        <span><?php esc_html_e('Errors','shortpixel-image-optimiser'); ?>: <i data-check-media-fatalerrors data-stats-media="fatal_errors" class='error'>0 </i>
 					<span class="display-error-box" data-check-visibility data-control="data-check-media-fatalerrors" ><label title="<?php esc_html_e('Show Errors', 'shortpixel-image-optimiser'); ?>">
 						<input type="checkbox" name="show-errors" value="show" data-action='ToggleErrorBox' data-errorbox='media' data-event='change'><?php esc_html_e('Show Errors','shortpixel-image-optimiser'); ?></label>
 				 </span>
