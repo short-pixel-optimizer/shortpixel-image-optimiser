@@ -76,7 +76,7 @@ Class FileSystemController extends \ShortPixel\Controller
 
 				if (is_object($imageObj))
 				{
-					 self::$customItems[$id] = $imageObj; 
+					 self::$customItems[$id] = $imageObj;
 				}
 
         return $imageObj;
@@ -404,7 +404,7 @@ Class FileSystemController extends \ShortPixel\Controller
       }
 
       Log::addDebug('Remote Download attempt result', array($url, $destinationPath));
-      if ($destinationPath->exists())
+      if ($destinationFile->exists())
         return true;
       else
         return false;
