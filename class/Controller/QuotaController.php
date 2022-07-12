@@ -159,7 +159,6 @@ class QuotaController
         {
           $keyControl = ApiKeyController::getInstance();
           $apiKey = $keyControl->forceGetApiKey();
-					Log::addTemp('ApiKey for remoteQuota ' . $apiKey);
         }
 
 

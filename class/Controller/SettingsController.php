@@ -349,7 +349,6 @@ class SettingsController extends \ShortPixel\ViewController
 
 
 					// Every save, force load the quota. One reason, because of the HTTP Auth settings refresh.
-					Log::addTemp('calling load Quota');
 					$this->loadQuotaData(true);
 
           // end
