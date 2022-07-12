@@ -145,9 +145,15 @@ class QuotaController
 
         $settings->prioritySkip = array();
         $settings->dismissedNotices = $dismissed;
+
         AdminNoticesController::resetAPINotices();
-        AdminNoticesController::resetQuotaNotices();
-        Log::addDebug('Reset Quota Exceeded and reset Notices');
+
+				// Only reset after a quotaExceeded situation, otherwise it keeps popping.
+				if ($settings->quotaExceeded == 1)
+				{
+						AdminNoticesController::resetQuotaNotices();
+				}
+				Log::addDebug('Reset Quota Exceeded and reset Notices');
        	$settings->quotaExceeded = 0;
     }
 

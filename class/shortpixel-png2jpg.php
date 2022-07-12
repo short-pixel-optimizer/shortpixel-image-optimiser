@@ -45,8 +45,8 @@ class ShortPixelPng2Jpg {
 					 return false;
 				}
 
+					$this->raiseMemoryLimit();
           $this->current_image = $this->getPNGImage($imageObj);
-          $this->raiseMemoryLimit();
 
           if (is_null($this->current_image)) // image creation failed. @todo Error back
              return false;
@@ -207,7 +207,7 @@ class ShortPixelPng2Jpg {
 
         $x = imagesx($img);
         $y = imagesy($img);
-        Log::addDebug("PNG2JPG doConvert width $x height $y");
+        Log::addDebug("PNG2JPG doConvert width $x height $y", memory_get_usage());
         $bg = imagecreatetruecolor($x, $y);
         if(!$bg)
         {
