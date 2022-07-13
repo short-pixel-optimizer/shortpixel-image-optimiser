@@ -545,6 +545,10 @@ window.ShortPixelProcessor =
 
        this.worker.postMessage({action: 'ajaxRequest', 'nonce' : this.nonce['ajaxRequest'], 'data': data });
     },
+		GetPluginUrl: function()
+		{
+			 return ShortPixelConstants[0].WP_PLUGIN_URL;
+		},
     Debug: function (message, messageType)
     {
       if (typeof messageType == 'undefined')

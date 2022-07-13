@@ -320,6 +320,14 @@ class ShortPixelPlugin {
 
 		wp_register_script( 'shortpixel-screen-nolist', plugins_url( '/res/js/screens/screen-nolist.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery', 'shortpixel-processor' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
+	  $screen_localize = array(
+			'startAction' => __('Processing... ','shortpixel-image-optimiser'),
+			
+		) ;
+
+		wp_localize_script( 'shortpixel-screen-media', 'spio_screenStrings', $screen_localize);
+		wp_localize_script( 'shortpixel-screen-custom', 'spio_screenStrings', $screen_localize);
+
 		wp_register_script( 'shortpixel-screen-bulk', plugins_url( '/res/js/screens/screen-bulk.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery', 'shortpixel-processor' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form

@@ -45,6 +45,13 @@
 
 } // view-edit-media
 
+.spio-message
+{
+	img {
+		 @include loadspinner;
+		 vertical-align: top;
+	}
+}
 	// Loads on the bottom body part, load strict
     .shortpixel-modal-active .debug-modal.debugInfo // Modal open
     {
