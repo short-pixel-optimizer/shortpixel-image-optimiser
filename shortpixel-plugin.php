@@ -284,6 +284,17 @@ class ShortPixelPlugin {
 		wp_register_script( 'shortpixel-debug', plugins_url( '/res/js/debug.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery', 'jquery-ui-draggable' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
 		wp_register_script( 'shortpixel-tooltip', plugins_url( '/res/js/shortpixel-tooltip.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
+
+		$tooltip_localize = array(
+			'processing' => __('Processing... ','shortpixel-image-optimiser'),
+			'pause' =>  __('Click to pause', 'shortpixel-image-optimiser'),
+			'resume' => __('Click to resume', 'shortpixel-image-optimiser'),
+			'item' => __('item in queue', 'shortpixel-image-optimiser'),
+			'items' => __('items in queue', 'shortpixel-image-optimiser'),
+		);
+
+		wp_localize_script( 'shortpixel-tooltip', 'spio_tooltipStrings', $tooltip_localize);
+
 		wp_register_script( 'shortpixel-settings', plugins_url( 'res/js/shortpixel-settings.js', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
 		wp_register_script( 'shortpixel-processor', plugins_url( '/res/js/shortpixel-processor.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery', 'shortpixel-tooltip' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
@@ -322,7 +333,7 @@ class ShortPixelPlugin {
 
 	  $screen_localize = array(
 			'startAction' => __('Processing... ','shortpixel-image-optimiser'),
-			
+
 		) ;
 
 		wp_localize_script( 'shortpixel-screen-media', 'spio_screenStrings', $screen_localize);
