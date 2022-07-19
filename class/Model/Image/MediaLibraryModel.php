@@ -2092,7 +2092,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        {
          $originalFile = $this->original_file;
 
-         if (isset($metadata['original_image']))
+         if (isset($metadata['original_image']) || $originalFile->hasBackup())
          {
 
            $originalFile->image_meta->status = $status;
