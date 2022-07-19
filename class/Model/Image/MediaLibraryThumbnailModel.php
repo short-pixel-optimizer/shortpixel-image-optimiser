@@ -167,6 +167,8 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 				// So get it from intermediate and if that doesn't work, default to pathToUrl - better than nothing.
 				// https://app.asana.com/0/1200110778640816/1202589533659780
 				$size_array = image_get_intermediate_size($this->id, $this->size);
+				$file_url     = wp_get_attachment_url( $post_id );
+
 				if ($size_array === false)
 				{
 					 $url = $fs->pathToUrl($this);
@@ -174,6 +176,13 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 				elseif (isset($size_array['url']))
 				{
 					 $url = $size_array['url'];
+					 // Even this can go wrong :/
+					 if (strpos($url, $this->getFileName() ) === false)
+					 {
+						 // Taken from image_get_intermediate_size if somebody still messes with the filters.
+							$mainurl = wp_get_attachment_url( $this->id);
+							$url = path_join( dirname( $mainurl ), $this->getFileName() );
+					 }
 				}
 				else {
 						return false;
