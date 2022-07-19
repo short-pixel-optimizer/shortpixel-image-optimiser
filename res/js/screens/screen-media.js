@@ -274,6 +274,7 @@ var ShortPixelScreen = function (MainScreen, processor)
 					var itemData = { id: e.detail.media.id, type: 'media' };
 					this.processor.timesEmpty = 0; // reset the defer on this.
 					this.processor.LoadItemView(itemData);
+					this.UpdateMessage(itemData.id, '');
 
 			}.bind(this), {'once': true} );
 

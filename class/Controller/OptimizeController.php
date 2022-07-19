@@ -420,12 +420,11 @@ class OptimizeController
                  $imageObj->restore();
               break;
               case 'migrate':
-                // Loading the item should already be enough to trigger.
+									$imageObj->migrate(); // hard migrate in bulk, to check if all is there / resync on problems.
               break;
 							case 'png2jpg':
 								$item = $this->convertPNG($item, $q);
 								$item->result->is_done = false;  // if not, finished to newly enqueued
-								// @todo Tell ResponseControllers about those actions
 							break;
 							case 'removeLegacy':
 									 $imageObj->removeLegacyShortPixel();
@@ -578,7 +577,6 @@ class OptimizeController
                  $item->result->apiStatus = ApiController::STATUS_SUCCESS;
                  $item->fileStatus = ImageModel::FILE_STATUS_SUCCESS;
 
-               //  $item->result->message = sprintf(__('Image %s optimized', 'shortpixel-image-optimiser'), $imageItem->getFileName());
                  do_action('shortpixel_image_optimised', $imageItem->get('id'));
 								 do_action('shortpixel/image/optimised', $imageItem);
                }

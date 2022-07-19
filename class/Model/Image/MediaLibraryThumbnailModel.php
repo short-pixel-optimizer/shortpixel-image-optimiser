@@ -167,7 +167,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 				// So get it from intermediate and if that doesn't work, default to pathToUrl - better than nothing.
 				// https://app.asana.com/0/1200110778640816/1202589533659780
 				$size_array = image_get_intermediate_size($this->id, $this->size);
-				$file_url     = wp_get_attachment_url( $post_id );
 
 				if ($size_array === false)
 				{
@@ -288,6 +287,35 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
         }
       }
   }
+
+	public function hasDBRecord()
+	{
+			global $wpdb;
+
+			$size = (! $this->is_main_file) ? $this->size : null;
+
+			if (is_null($size))
+			{
+				$sql = 'SELECT id FROM ' . $wpdb->prefix . 'shortpixel_postmeta WHERE attach_id = %d AND size IS NULL';
+				$sql = $wpdb->prepare($sql, $this->id);
+			}
+			else {
+				$sql = 'SELECT id FROM ' . $wpdb->prefix . 'shortpixel_postmeta WHERE attach_id = %d AND size = %s';
+				$sql = $wpdb->prepare($sql, $this->id, $size);
+			}
+
+
+			$id = $wpdb->get_var($sql);
+
+			if (is_null($id))
+			{
+				 return false;
+			}
+			elseif (is_numeric($id)) {
+				return true;
+			}
+
+	}
 
   public function restore()
   {

@@ -550,6 +550,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                        $this->setMeta('resizeWidth', $this->get('width') );
                        $this->setMeta('resizeHeight', $this->get('height') );
                        $this->setMeta('resize', true);
+											 $resizeType = ($settings->resizeType == 1) ? __('Cover', 'shortpixel-image-optimiser') : __('Contain', 'shortpixel-image-optimiser');
+											 $this->setMeta('resizeType', $resizeType);
                    }
                    else
                      $this->setMeta('resize', false);

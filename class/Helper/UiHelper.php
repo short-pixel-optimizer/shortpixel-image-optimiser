@@ -319,6 +319,10 @@ class UiHelper
 						}
         } // hasBackup
 
+				if (\wpSPIO()->env()->is_debug && $mediaItem->get('type') == 'media')
+				{
+					 $list_actions['redo_legacy'] = self::getAction('redo_legacy', $id);
+				}
       } //isOptimized
 
       if(! $quotaControl->hasQuota())
@@ -515,7 +519,6 @@ class UiHelper
         $action['text'] = __('Re-optimize Lossless','shortpixel-image-optimiser');
         $action['display'] = 'inline';
      break;
-
      case 'extendquota':
         $action['function'] = 'https://shortpixel.com/login/'. $keyControl->getKeyForDisplay();
         $action['type'] = 'button';
@@ -527,7 +530,6 @@ class UiHelper
         $action['type'] = 'js';
         $action['display'] = 'button';
         $action['text'] = __('Check&nbsp;&nbsp;Quota','shortpixel-image-optimiser');
-
      break;
    }
 
