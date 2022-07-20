@@ -271,11 +271,11 @@ class ShortPixelFeedback {
 
                     formContainer.on('click', '#shortpixel-deactivate-submit-form', function(e){
                         e.preventDefault();
-                        if( formContainer.find('#shortpixel-keep-settings:checked').length ) {
+                       // if( formContainer.find('#shortpixel-keep-settings:checked').length ) {
                             window.location.href = url;
-                        } else {
+                       /* } else {
                             SubmitFeedback({}, formContainer);
-                        }
+                        } */
                     });
 
                     // If we click outside the form, the form will close
