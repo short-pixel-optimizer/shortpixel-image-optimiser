@@ -480,14 +480,14 @@ class FileModel extends \ShortPixel\Model
       return false;
 
     $path = wp_normalize_path($path);
-		//$abspath = $fs->getWPAbsPath();
+		$abspath = $fs->getWPAbsPath();
 
     if ( is_file($path) && ! is_dir($path) ) // if path and file exist, all should be okish.
     {
       return $path;
     }
 		// If attempted file does not exist, but the file is in a dir that exists, that is good enough.
-		elseif ( ! is_dir($path) && is_dir(dirname($path)))
+		elseif ( ! is_dir($path) && is_dir(dirname($path)) )
 		{
 			 return $path;
 		}
