@@ -126,7 +126,8 @@ class EditMediaViewController extends \ShortPixel\ViewController
         {
             $from = $imageObj->getMeta('originalWidth') . 'x' . $imageObj->getMeta('originalHeight');
             $to  = $imageObj->getMeta('resizeWidth') . 'x' . $imageObj->getMeta('resizeHeight');
-            $stats[] = array(sprintf(__('Resized %s to %s'), $from, $to), '');
+						$type = ($imageObj->getMeta('resizeType') !== null) ? '(' . $imageObj->getMeta('resizeType') . ')' : '';
+            $stats[] = array(sprintf(__('Resized %s %s to %s'), $type, $from, $to), '');
         }
 
         $tsOptimized = $imageObj->getMeta('tsOptimized');
