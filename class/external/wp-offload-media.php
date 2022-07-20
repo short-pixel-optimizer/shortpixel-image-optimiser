@@ -664,10 +664,15 @@ class wpOffload
     }
 
     // GetbyURL can't find thumbnails, only the main image. We are going to assume, if imagebase is ok, the webp might be there.
-    public function fixWebpRemotePath($bool, $file, $url, $imagebase)
+    public function fixWebpRemotePath($bool, $fileObj, $url, $imagebaseDir)
     {
-        if (strpos($url, $imagebase ) !== false)
-          return $file;
+				if (! is_object($imagebaseDir))
+				{
+						return $bool;
+				}
+
+        if (strpos($url, $imagebaseDir->getPath() ) !== false)
+          return $fileObj;
         else
           return $bool;
     }

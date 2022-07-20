@@ -159,6 +159,7 @@ class ShortPixelImgToPictureWebp
         $srcsetInfo = $this->lazyGet($img, 'srcset');
         $sizesInfo = $this->lazyGet($img, 'sizes');
 
+				// FILTERS : FileDir (OBJECT) - URL
         $imageBase = apply_filters( 'shortpixel_webp_image_base', $this->getImageBase($srcInfo['value']), $srcInfo['value']);
 
         if($imageBase === false) {
@@ -236,6 +237,7 @@ class ShortPixelImgToPictureWebp
                 {
                   if (! $thisfile->exists())
                   {
+										// FILTER: boolean, object, string, filedir
                     $thisfile = $fileWebp_exists = apply_filters('shortpixel/front/webp_notfound', false, $thisfile, $fileurl, $imageBase);
                   }
 
