@@ -259,8 +259,6 @@ console.log("Screen Init Done", initMedia, initCustom);
 		 if (document.getElementById('thumbnails_checkbox') !== null)
 		 		data.thumbsActive = (document.getElementById('thumbnails_checkbox').checked) ? true : false;
 
-
-     //this.SwitchPanel('selection');
      this.UpdatePanelStatus('loading', 'selection');
 
      // Prepare should happen after selecting what the optimize.
@@ -275,13 +273,15 @@ console.log("Screen Init Done", initMedia, initCustom);
 
 
       this.processor.SetInterval(200); // do this faster.
-      // Show stats
+      // CheckActive. Both Resume and Run call to processor process run.
       if (! this.processor.CheckActive())
       {
          this.processor.ResumeProcess();
-        //this.processor.isManualPaused = false; // force run
       }
-      this.processor.RunProcess();
+			else
+			{
+				this.processor.RunProcess();
+			}
       return false;
 
       // Run process.run process from now for prepare ( until prepare done? )
