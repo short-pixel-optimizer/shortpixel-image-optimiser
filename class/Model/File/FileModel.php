@@ -480,17 +480,23 @@ class FileModel extends \ShortPixel\Model
       return false;
 
     $path = wp_normalize_path($path);
-		$abspath = $fs->getWPAbsPath();
+		//$abspath = $fs->getWPAbsPath();
 
     if ( is_file($path) && ! is_dir($path) ) // if path and file exist, all should be okish.
     {
       return $path;
     }
+		// If attempted file does not exist, but the file is in a dir that exists, that is good enough.
+		elseif ( ! is_dir($path) && is_dir(dirname($path)))
+		{
+			 return $path;
+		}
+		// If path is not in the abspath, it might be relative.
     elseif (strpos($path, $abspath->getPath()) === false)
     {
 	    // if path does not contain basepath.
-	    $uploadDir = $fs->getWPUploadBase();
-	    $abspath = $fs->getWPAbsPath();
+	    //$uploadDir = $fs->getWPUploadBase();
+	    //$abspath = $fs->getWPAbsPath();
 
       $path = $this->relativeToFullPath($path);
     }
