@@ -578,13 +578,13 @@ class wpOffload
             $newPaths[$size . '_webp'] =  $webpformat1;
          }
          else {
-           $newPaths[$size . '_webp1'] =  $webpformat1;
+           $newPaths[$size . '_webp'] =  $webpformat1;
          }
 
          if ($check_exists)
          {
            if(file_exists($webpformat2))
-            $newPaths[$size . '_webp'] =  $webpformat2;
+            $newPaths[$size . '_webp2'] =  $webpformat2;
          }
          else {
            $newPaths[$size . '_webp2'] =  $webpformat2;
