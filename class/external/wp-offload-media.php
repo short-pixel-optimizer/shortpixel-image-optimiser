@@ -57,11 +57,12 @@ class wpOffload
         $this->offloading = false;
       }
 
-      if ('cloudfront' === $this->as3cf->get_setting( 'domain' ))
+    /*	// Lets see if this can be without  
+			if ('cloudfront' === $this->as3cf->get_setting( 'domain' ))
       {
         $this->is_cname = true;
         $this->cname = $this->as3cf->get_setting( 'cloudfront' );
-      }
+      } */
 
   //    $provider = $this->as3cf->get_provider();
       add_action('shortpixel/image/optimised', array($this, 'image_upload'), 10);
