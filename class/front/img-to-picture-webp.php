@@ -223,6 +223,11 @@ class ShortPixelImgToPictureWebp
                 $extension = $fsFile->getExtension(); // trigger setFileinfo, which will resolve URL -> Path
 
                 $mime = $fsFile->getMime();
+								// Can happen when file is virtual, or other cases. Just assume this type. 
+								if ($mime === false)
+								{
+									 $mime = 'image/' .  $extension;
+								}
 
                 $fileWebp = $fs->getFile($imageBase . $fsFile->getFileBase() . '.webp');
                 $fileWebpCompat = $fs->getFile($imageBase . $fsFile->getFileName() . '.webp');

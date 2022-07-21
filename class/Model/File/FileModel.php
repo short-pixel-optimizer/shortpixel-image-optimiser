@@ -415,7 +415,7 @@ class FileModel extends \ShortPixel\Model
     if (is_null($this->mime))
         $this->setFileInfo();
 
-    if ($this->exists())
+    if ($this->exists() && ! $this->is_virtual() )
     {
         $this->mime = wp_get_image_mime($this->fullpath);
     }

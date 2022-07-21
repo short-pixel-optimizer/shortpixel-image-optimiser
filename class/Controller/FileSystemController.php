@@ -263,7 +263,7 @@ Class FileSystemController extends \ShortPixel\Controller
 						// Multisite backups are stored under uploads/ShortpixelBackups/etc , but basedir would include uploads/sites/2 etc, not matching above
 						// If this is case, test if removing the last two directories will result in a 'clean' uploads reference.
 						// This is used by getting preview path ( backup pathToUrl) in bulk and for comparer..
-					  elseif ($is_multi_site && ! $is_main_site && strpos('/sites/') !== false && 0 === strpos($filepath, dirname(dirname($uploads['basedir']))) )
+					  elseif ($is_multi_site && ! $is_main_site && strpos($filepath, '/sites/') !== false && 0 === strpos($filepath, dirname(dirname($uploads['basedir']))) )
 						{
 								$url = str_replace( dirname(dirname($uploads['basedir'])), dirname(dirname($uploads['baseurl'])), $filepath );
 
