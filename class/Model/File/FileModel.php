@@ -541,7 +541,7 @@ class FileModel extends \ShortPixel\Model
 
      $this->is_virtual = true;
 
-
+		 // This filter checks if some supplier will be able to handle the file when needed. 
      $path = apply_filters('shortpixel/image/urltopath', false, $url);
 
 		 if ($path !== false)

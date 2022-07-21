@@ -57,7 +57,7 @@ class wpOffload
         $this->offloading = false;
       }
 
-    /*	// Lets see if this can be without  
+    /*	// Lets see if this can be without
 			if ('cloudfront' === $this->as3cf->get_setting( 'domain' ))
       {
         $this->is_cname = true;
@@ -79,7 +79,6 @@ class wpOffload
 			//	add_filter('as3cf_remove_source_files_from_provider', array($this, 'remove_webp_paths'), 10);
 				add_action('shortpixel/image/convertpng2jpg_success', array($this, 'image_converted'), 10);
 				add_filter('as3cf_remove_source_files_from_provider', array($this, 'remove_webp_paths'));
-				add_filter('as3cf_remove_attachment_paths', array($this, 'remove_webp_paths'));
 
 			}
 			else {
@@ -653,19 +652,21 @@ class wpOffload
 		// @param $imagebaseDir DirectoryModel  The remote path / path this all takes place at.
     public function fixWebpRemotePath($bool, $fileObj, $url, $imagebaseDir)
     {
+			 return false;
+			 /*
 				if (! is_object($imagebaseDir))
 				{
 						return $bool;
 				}
 
 				// Check if main file is offloaded. This should also trigger sourceCache.
-				if ($this->checkifOffloaded($url) && $this->checkIfOffloaded($fileObj->getFullPath()) )
+				if ($this->checkifOffloaded($bool, $url) && $this->checkIfOffloaded($bool, $fileObj->getFullPath()) )
 				{
 					 return $fileObj;
 				}
 				else {
 					 	return false;
-				}
+				} */
 
 /*        if (strpos($url, $imagebaseDir->getPath() ) !== false)
           return $fileObj;
