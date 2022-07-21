@@ -607,7 +607,10 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
     public function handleOptimizedFileType($downloadResults)
     {
-          $webpFile = $this->getFileBase() . '.webp';
+
+				$filebase = $this->getFileBase();
+
+          $webpFile = $filebase . '.webp';
 
           if (isset($downloadResults[$webpFile]) && isset($downloadResults[$webpFile]->file)) // check if there is webp with same filename
           {
@@ -618,7 +621,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                 $this->setMeta('webp', $webpResult->getFileName());
           }
 
-          $avifFile = $this->getFileBase() . '.avif';
+          $avifFile = $filebase . '.avif';
 
           if (isset($downloadResults[$avifFile]) && isset($downloadResults[$avifFile]->file)) // check if there is webp with same filename
           {
@@ -784,12 +787,24 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     protected function handleWebp(FileModel $tempFile)
     {
          $fs = \wpSPIO()->filesystem();
-            $target = $fs->getFile( (string) $this->getFileDir() . $this->getFileBase() . '.webp');
+				 if ($this->is_virtual())
+				 {
+					 	$fullpath = apply_filters('shortpixel/file/virtual/translate', $this->getFullPath(), $this);
+						$fileObj = $fs->getFile($fullpath);
+						$fileDir = $fileObj->getFileDir();
+				 }
+				 else {
+				 		$fileDir = $this->getFileDir();
+				 }
+
+         $target = $fs->getFile( (string) $fileDir . $this->getFileBase() . '.webp');
+
 
             // only copy when this constant is set.
             if( (defined('SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION') && SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION) == true ) {
                  $target = $fs->getFile((string) $this->getFileDir() . $this->getFileName() . '.webp'); // double extension, if exists.
             }
+
 
 
             $result = false;
@@ -817,7 +832,17 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     protected function handleAvif(FileModel $tempFile)
     {
          $fs = \wpSPIO()->filesystem();
-            $target = $fs->getFile( (string) $this->getFileDir() . $this->getFileBase() . '.avif');
+				 if ($this->is_virtual())
+				 {
+						$fullpath = apply_filters('shortpixel/file/virtual/translate', $this->getFullPath(), $this);
+						$fileObj = $fs->getFile($fullpath);
+						$fileDir = $fileObj->getFileDir();
+				 }
+				 else {
+						$fileDir = $this->getFileDir();
+				 }
+
+            $target = $fs->getFile( (string) $fileDir . $this->getFileBase() . '.avif');
 
 						// only copy when this constant is set.
             if( (defined('SHORTPIXEL_USE_DOUBLE_AVIF_EXTENSION') && SHORTPIXEL_USE_DOUBLE_AVIF_EXTENSION) == true ) {

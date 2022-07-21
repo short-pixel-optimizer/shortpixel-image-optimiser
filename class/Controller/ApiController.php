@@ -592,10 +592,13 @@ class ApiController
 
 					if ($fail)
 					{
+
+							Log::addError('[Fatal] Failed downloading file ', $error_message);
           		return $this->returnFailure($error, __('Error downloading file','shortpixel-image-optimiser') . " ({$optimizedUrl}) " . $error_message);
 					}
 					else
 					{
+							Log::addWarn('Failed downloading file ', $error_message);
 					    return $this->returnRetry($error, __('Error downloading file','shortpixel-image-optimiser') . " ({$optimizedUrl}) " . $error_message);
 					}
       }

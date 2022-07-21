@@ -681,6 +681,7 @@ class FileModel extends \ShortPixel\Model
           'exists' => $this->exists,
           'is_writable' => $this->is_writable,
           'is_readable' => $this->is_readable,
+					'is_virtual' => $this->is_virtual,
        ];
     }
 
