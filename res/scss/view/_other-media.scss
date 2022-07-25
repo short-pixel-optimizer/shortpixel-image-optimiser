@@ -9,4 +9,14 @@
 		    text-align: right;
 			}
 	}
+
+	.message
+	{
+		font-weight: 700;
+		margin: 8px 0;
+		img {
+			 @include loadspinner;
+			 vertical-align: top;
+		}
+	}
 }

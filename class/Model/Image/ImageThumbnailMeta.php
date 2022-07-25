@@ -18,6 +18,7 @@ class ImageThumbnailMeta
   public $resize;
   public $resizeWidth;
   public $resizeHeight;
+	public $resizeType;
   public $originalWidth;
   public $originalHeight;
 
@@ -25,6 +26,7 @@ class ImageThumbnailMeta
   public $tsOptimized;
   public $webp;
   public $avif;
+
 
   public $file; // **Only for unlisted images. This defines an unlisted image */
 

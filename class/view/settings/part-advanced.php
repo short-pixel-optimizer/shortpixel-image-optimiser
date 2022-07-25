@@ -365,8 +365,9 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
 																	 '<strong>', '</strong>',
 																	 '<strong>', '</strong>',
 																	 '<strong>', '</strong>',
-																	 '<strong>', '</strong>',
-																 );?>
+																	 '<strong>', '</strong>'
+																 );
+													?>
                     </p>
                 </td>
             </tr>

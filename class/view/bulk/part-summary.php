@@ -98,7 +98,7 @@ namespace ShortPixel;
 
     <div class="over-quota" data-check-visibility="false" data-control="data-quota-remaining" data-control-check="data-check-total-total">
       <span><img src="<?php echo esc_url(wpSPIO()->plugin_url('res/img/bulk/over-quota.svg')) ?>" /></span>
-			<p><?php printf(esc_html_e('In your ShortPixel account you %shave only %s credits available %s, but you have chosen %s  images to be optimized in this bulk process. You can either go back and select less images, or you can upgrade to a higher plan or buy one-time credits.','shortpixel-image-optimiser'), '<span class="red">', esc_html($this->formatNumber($quotaData->total->remaining, 0)), '</span>', '<b data-stats-total="images-images">0</b>'); ?>
+			<p><?php printf(esc_html('In your ShortPixel account you %shave only %s credits available %s, but you have chosen %s  images to be optimized in this bulk process. You can either go back and select less images, or you can upgrade to a higher plan or buy one-time credits.','shortpixel-image-optimiser'), '<span class="red">', esc_html($this->formatNumber($quotaData->total->remaining, 0)), '</span>', '<b data-stats-total="images-images">0</b>'); ?>
 
        <button type="button" class="button" onClick="ShortPixel.proposeUpgrade();"><?php esc_html_e('Show me the best options') ?></button>
      </p>

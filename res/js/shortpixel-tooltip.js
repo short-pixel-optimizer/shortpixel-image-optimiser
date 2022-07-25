@@ -2,6 +2,7 @@
 
 var ShortPixelToolTip = function(reserved, processor)
 {
+		this.strings = '';
 
     this.Init = function()
     {
@@ -23,6 +24,7 @@ var ShortPixelToolTip = function(reserved, processor)
             this.ProcessPause();
         }
 
+			this.strings = spio_tooltipStrings;
 
       window.addEventListener('shortpixel.processor.paused', this.ProcessChange.bind(this));
     }
@@ -66,6 +68,7 @@ var ShortPixelToolTip = function(reserved, processor)
         var toolTip = this.GetToolTip();
 				if (toolTip === null)
 					return false;
+
         var statTip = toolTip.querySelector('.stats');
 
         if (statTip == null)
@@ -84,6 +87,24 @@ var ShortPixelToolTip = function(reserved, processor)
 
 				var number = parseInt(inqueue) + parseInt(inprocess);
         statTip.textContent = this.FormatNumber(number);
+
+				// Updating the titles.
+
+			  var itemTitle = statTip.textContent + ' ';
+				itemTitle +=  (number == 1) ? this.strings.item : this.strings.items;
+
+				if (toolTip.querySelector('#short-pixel-notice-toolbar') !== null)
+				{
+					toolTip.querySelector('#short-pixel-notice-toolbar').title = this.strings.processing + ' ' + itemTitle;
+				}
+				if (toolTip.querySelector('.dashicons.pause') !== null)
+				{
+					toolTip.querySelector('.dashicons.pause').title = itemTitle + '\n\n' + this.strings.pause;
+				}
+				if (toolTip.querySelector('.dashicons.play') !== null)
+				{
+					toolTip.querySelector('.dashicons.play').title = itemTitle + '\n\n' + this.strings.resume;
+				}
 
         if (statTip.classList.contains('hidden') && number > 0)
           statTip.classList.remove('hidden');

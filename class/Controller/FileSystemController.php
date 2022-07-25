@@ -76,7 +76,7 @@ Class FileSystemController extends \ShortPixel\Controller
 
 				if (is_object($imageObj))
 				{
-					 self::$customItems[$id] = $imageObj; 
+					 self::$customItems[$id] = $imageObj;
 				}
 
         return $imageObj;
@@ -250,12 +250,23 @@ Class FileSystemController extends \ShortPixel\Controller
       $filepath = $file->getFullPath();
       $directory = $file->getFileDir();
 
+			$is_multi_site = $this->env->is_multisite;
+			$is_main_site =  $this->env->is_mainsite;
+
       // stolen from wp_get_attachment_url
       if ( ( $uploads = wp_get_upload_dir() ) && (false === $uploads['error'] || strlen(trim($uploads['error'])) == 0  )  ) {
             // Check that the upload base exists in the file location.
-            if ( 0 === strpos( $filepath, $uploads['basedir'] ) ) {
+            if ( 0 === strpos( $filepath, $uploads['basedir'] ) ) { // Simple as it should, filepath and basedir share.
                 // Replace file location with url location.
                 $url = str_replace( $uploads['basedir'], $uploads['baseurl'], $filepath );
+						}
+						// Multisite backups are stored under uploads/ShortpixelBackups/etc , but basedir would include uploads/sites/2 etc, not matching above
+						// If this is case, test if removing the last two directories will result in a 'clean' uploads reference.
+						// This is used by getting preview path ( backup pathToUrl) in bulk and for comparer..
+					  elseif ($is_multi_site && ! $is_main_site  && 0 === strpos($filepath, dirname(dirname($uploads['basedir']))) )
+						{
+								$url = str_replace( dirname(dirname($uploads['basedir'])), dirname(dirname($uploads['baseurl'])), $filepath );
+
             } elseif ( false !== strpos( $filepath, 'wp-content/uploads' ) ) {
                 // Get the directory name relative to the basedir (back compat for pre-2.7 uploads)
                 $url = trailingslashit( $uploads['baseurl'] . '/' . _wp_get_attachment_relative_path( $filepath ) ) . wp_basename( $filepath );
@@ -273,12 +284,12 @@ Class FileSystemController extends \ShortPixel\Controller
           // This is SITE URL, for the same reason it should be home_url in FILEMODEL. The difference is when the site is running on a subdirectory
           // (1) ** This is a fix for a real-life issue, do not change if this causes issues, another fix is needed then.
 		  // (2) ** Also a real life fix when a path is /wwwroot/assets/sites/2/ etc, in get site url, the home URL is the site URL, without appending the sites stuff. Fails on original image.
-		    if ($this->env->is_multisite && ! $this->env->is_mainsite)
-			{
-				$wp_home_path = wp_normalize_path(trailingslashit($uploads['basedir']));
-				$home_url = trailingslashit($uploads['baseurl']);
-			}
-			else
+		    if ($is_multi_site && ! $is_main_site)
+				{
+					$wp_home_path = wp_normalize_path(trailingslashit($uploads['basedir']));
+					$home_url = trailingslashit($uploads['baseurl']);
+				}
+				else
           $home_url = trailingslashit(get_site_url()); // (1)
           $url = str_replace($wp_home_path, $home_url, $filepath);
         }
@@ -404,7 +415,7 @@ Class FileSystemController extends \ShortPixel\Controller
       }
 
       Log::addDebug('Remote Download attempt result', array($url, $destinationPath));
-      if ($destinationPath->exists())
+      if ($destinationFile->exists())
         return true;
       else
         return false;

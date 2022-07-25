@@ -28,6 +28,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   private static $unlistedChecked = array(); // limit checking unlisted.
 
   private $optimizePrevented; // cache if there is any reason to prevent optimizing
+	private $justConverted = false; // check if conversion happened on same run, to prevent double runs.
 
 	const IMAGE_TYPE_MAIN = 0;
 	const IMAGE_TYPE_THUMB = 1;
@@ -1398,9 +1399,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
             $width = $this->get('width');
             $height = $this->get('height');
 
-			//		echo 'w/h'; print_r($width); echo ' '; print_r($height);
-			Log::addTemp('Excluded w/h check ' .  $width . ' ' . $height);
-	//		Log::addTemp('Check via', debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3));
 
             if( $width && $height
                  && $this->isProcessableSize($width, $height, $item["value"]) === false){
@@ -1899,6 +1897,23 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		return $updated;
 	}
 
+	// Function to be called only by migrate all bulk and certain debug cases.
+	public function migrate()
+	{
+		$this->resetPrevent();
+
+		// Don't double.
+		if ($this->justConverted === true)
+			return;
+
+		delete_post_meta($this->id, '_shortpixel_was_converted');
+		$result = $this->checkLegacy();
+		if ($result)
+		{
+			$this->saveMeta();
+		}
+	}
+
   // Convert from old metadata if needed.
   private function checkLegacy()
   {
@@ -1965,59 +1980,61 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
        $tsAdded = time();
 
-			 if ($status == self::FILE_STATUS_SUCCESS)
-       {
-         //strtotime($tsOptimized)
-				 $thedate = (isset($data['date'])) ? $data['date'] : false;
-				 $newdate = \DateTime::createFromFormat('Y-m-d H:i:s', $thedate);
+			 if ($this->hasDBRecord() === false)
+			 {
+				 if ($status == self::FILE_STATUS_SUCCESS)
+	       {
+	         //strtotime($tsOptimized)
+					 $thedate = (isset($data['date'])) ? $data['date'] : false;
+					 $newdate = \DateTime::createFromFormat('Y-m-d H:i:s', $thedate);
 
-				 if ($newdate === false)
-				 {
-					 $newdate = \DateTime::createFromFormat('Y-m-d H:i:s', get_post_time('Y-m-d H:i:s', false, $this->id));
-				 }
+					 if ($newdate === false)
+					 {
+						 $newdate = \DateTime::createFromFormat('Y-m-d H:i:s', get_post_time('Y-m-d H:i:s', false, $this->id));
+					 }
 
-         $newdate = $newdate->getTimestamp();
+	         $newdate = $newdate->getTimestamp();
 
-         $tsOptimized = $newdate;
-         $this->image_meta->tsOptimized = $tsOptimized;
-       }
+	         $tsOptimized = $newdate;
+	         $this->image_meta->tsOptimized = $tsOptimized;
+	       }
 
-       $this->image_meta->wasConverted = true;
-       $this->image_meta->status = $status;
-       //$this->image_meta->type = $type;
-       $this->image_meta->improvement = $improvement;
-       $this->image_meta->compressionType = $type;
-       $this->image_meta->compressedSize = $this->getFileSize();
-     //  $this->image_meta->retries = $retries;
-       $this->image_meta->tsAdded = $tsAdded;
-     //  $this->image_meta->has_backup = $this->hasBackup();
-       $this->image_meta->errorMessage = $error_message;
+	       $this->image_meta->wasConverted = true;
+	       $this->image_meta->status = $status;
+	       //$this->image_meta->type = $type;
+	       $this->image_meta->improvement = $improvement;
+	       $this->image_meta->compressionType = $type;
+	       $this->image_meta->compressedSize = $this->getFileSize();
+	     //  $this->image_meta->retries = $retries;
+	       $this->image_meta->tsAdded = $tsAdded;
+	     //  $this->image_meta->has_backup = $this->hasBackup();
+	       $this->image_meta->errorMessage = $error_message;
 
-       $this->image_meta->did_keepExif = $exifkept;
+	       $this->image_meta->did_keepExif = $exifkept;
 
-	      if ($this->hasBackup())
-	      {
-	        $backup = $this->getBackupFile();
-	        $this->image_meta->originalSize = $backup->getFileSize();
-	      }
-				elseif ( isset($metadata['ShortPixelImprovement']))
-				{
-					 // If the improvement is set, calculate back originalsize.
-					 $imp = intval($metadata['ShortPixelImprovement']); // try to make int. Legacy can contain errors / message / crap here.
-	 			   if ($imp > 0)
-	 				  	$this->image_meta->originalSize = ($this->getFileSize() / (100 - $imp)) * 100;
-				}
-
-
-        $this->image_meta->webp = $this->checkLegacyFileTypeFileName($this, 'webp');
-				$this->image_meta->avif = $this->checkLegacyFileTypeFileName($this, 'avif');
+		      if ($this->hasBackup())
+		      {
+		        $backup = $this->getBackupFile();
+		        $this->image_meta->originalSize = $backup->getFileSize();
+		      }
+					elseif ( isset($metadata['ShortPixelImprovement']))
+					{
+						 // If the improvement is set, calculate back originalsize.
+						 $imp = intval($metadata['ShortPixelImprovement']); // try to make int. Legacy can contain errors / message / crap here.
+		 			   if ($imp > 0)
+		 				  	$this->image_meta->originalSize = ($this->getFileSize() / (100 - $imp)) * 100;
+					}
 
 
-       $this->width = isset($metadata['width']) ? $metadata['width'] : false;
-       $this->height = isset($metadata['height']) ? $metadata['height'] : false;
+	        $this->image_meta->webp = $this->checkLegacyFileTypeFileName($this, 'webp');
+					$this->image_meta->avif = $this->checkLegacyFileTypeFileName($this, 'avif');
 
-			 $this->recordChanged(true);
 
+	       $this->width = isset($metadata['width']) ? $metadata['width'] : false;
+	       $this->height = isset($metadata['height']) ? $metadata['height'] : false;
+
+				 $this->recordChanged(true);
+			 }
 
        if (isset($metadata['ShortPixelPng2Jpg']))
        {
@@ -2031,12 +2048,19 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
        foreach($this->thumbnails as $thumbname => $thumbnailObj) // ThumbnailModel
        {
-          if (in_array($thumbnailObj->getFileName(), $optimized_thumbnails))
+				  if ($thumbnailObj->hasDBRecord() === true)
+					{
+						continue;
+					}
+
+          if (in_array($thumbnailObj->getFileName(), $optimized_thumbnails) || $thumbnailObj->hasBackup() )
           {
               $thumbnailObj->image_meta->status = $status;
               $thumbnailObj->image_meta->compressionType = $type;
               $thumbnailObj->image_meta->compressedSize = $thumbnailObj->getFileSize();
               $thumbnailObj->image_meta->did_jpg2png = $did_jpg2png;
+
+
           //    $thumbnailObj->image_meta->improvement = -1; // n/a
               if ($thumbnailObj->hasBackup())
               {
@@ -2064,11 +2088,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           }
        }
 
-       if ($this->isScaled())
+       if ($this->isScaled() && $this->original_file->hasDBRecord() === false)
        {
          $originalFile = $this->original_file;
 
-         if (isset($metadata['original_image']))
+         if (isset($metadata['original_image']) || $originalFile->hasBackup())
          {
 
            $originalFile->image_meta->status = $status;
@@ -2097,6 +2121,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
            }
 
 					  $originalFile->recordChanged(true);
+						$this->original_file = $originalFile;
           }
        }
 
@@ -2140,6 +2165,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        update_post_meta($this->id, '_shortpixel_was_converted', time());
        delete_post_meta($this->id, '_shortpixel_status');
 
+			 $this->justConverted = true;
       return true;
   }
 

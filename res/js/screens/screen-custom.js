@@ -6,12 +6,14 @@ var ShortPixelScreen = function (MainScreen, processor)
     this.isMedia = true;
     this.processor = processor;
 
+		this.strings = '';
 
     this.Init = function()
     {
 					window.addEventListener('shortpixel.custom.resumeprocessing', this.processor.ResumeProcess.bind(this.processor));
 					window.addEventListener('shortpixel.RenderItemView', this.RenderItemView.bind(this) );
 
+					this.strings = spio_screenStrings;
     },
     this.HandleImage = function(resultItem, type)
     {
@@ -94,6 +96,19 @@ var ShortPixelScreen = function (MainScreen, processor)
         this.processor.Debug('Update Message Column not found' + id);
        }
     }
+		this.SetMessageProcessing = function(id)
+		{
+				var message = this.strings.startAction;
+
+				var loading = document.createElement('img');
+				loading.width = 20;
+				loading.height = 20;
+				loading.src = this.processor.GetPluginUrl() + '/res/img/bulk/loading-hourglass.svg';
+
+
+				message += loading.outerHTML;
+				this.UpdateMessage(id, message);
+		}
 
     this.UpdateStats = function(stats, type)
     {
@@ -205,6 +220,7 @@ var ShortPixelScreen = function (MainScreen, processor)
         data.screen_action = 'restoreItem';
         //data.callback = 'this.loadItemView';
         // AjaxRequest should return result, which will go through Handleresponse, then LoadiTemView.
+				this.SetMessageProcessing(id);
         this.processor.AjaxRequest(data);
         //var id = data.id;
     }
@@ -220,6 +236,7 @@ var ShortPixelScreen = function (MainScreen, processor)
 			 if (! this.processor.CheckActive())
 			     data.callback = 'shortpixel.custom.resumeprocessing';
 
+ 			 	this.SetMessageProcessing(id);
         this.processor.AjaxRequest(data);
     }
     this.Optimize = function (id)
@@ -234,6 +251,7 @@ var ShortPixelScreen = function (MainScreen, processor)
 			 if (! this.processor.CheckActive())
 			     data.callback = 'shortpixel.custom.resumeprocessing';
 
+			 this.SetMessageProcessing(id);
        this.processor.AjaxRequest(data);
     }
 

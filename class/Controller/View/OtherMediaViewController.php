@@ -29,12 +29,10 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 			protected $show_hidden = false;
 			protected $has_hidden_items = false;
 
-      protected $actions = array();
-
       public function __construct()
       {
         parent::__construct();
-        $this->setActions(); // possible actions for ROWS only..
+
 
 				// 2015: https://github.com/WordPress/WordPress-Coding-Standards/issues/426 !
 				// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
@@ -80,28 +78,6 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 					 $this->load();
 			}
 
-
-      /** Sets all possible actions and it's links. Doesn't check what can be loaded per individual case. */
-
-      protected function setActions()
-      {
-        $nonce = wp_create_nonce( 'sp_custom_action' );
-        $keyControl = ApiKeyController::getInstance();
-
-        $actions = array(
-          'optimize' => array('action' => 'optimize', '_wpnonce' => $nonce , 'text' => __('Optimize now','shortpixel-image-optimiser'), 'class' => ''),
-
-            'quota' => array('action' => 'check-quota', '_wpnonce' => $nonce, 'text' =>__('Check quota','shortpixel-image-optimiser'), 'class' => 'button button-smaller'),
-            'extend-quota' => array('link' => '<a href="https://shortpixel.com/login/' . $keyControl->getKeyForDisplay() . '" target="_blank" class="button-primary button-smaller">' . __('Extend Quota','shortpixel-image-optimiser') . '</a>'),
-
-
-            'view' => array('link' => '<a href="%%item_url%%" target="_blank">%%text%%</a>', 'text' => __('View','shortpixel-image-optimiser')),
-
-
-
-        );
-        $this->actions = $actions;
-      }
 
       protected function getHeadings()
       {
@@ -421,23 +397,26 @@ class OtherMediaViewController extends \ShortPixel\ViewController
       */
       protected function getRowActions($item)
       {
-          $thisActions = array();
-          $thisActions[] = $this->actions['view']; // always .
+
           $settings = \wpSPIO()->settings();
 
           $keyControl = ApiKeyController::getInstance();
 
-          if ($settings->quotaExceeded || ! $keyControl->keyIsVerified() )
-          {
-            return $this->renderActions($thisActions, $item); // nothing more.
-          }
 
-					if ($item->isProcessable())
-					{
-					  	$thisActions[] = $this->actions['optimize'];
-					}
+					$actions = UIHelper::getActions($item);
 
-          return $this->renderActions($thisActions, $item);
+					$viewAction = array('view' => array(
+						 'function' => $item->getUrl(),
+						 'type' => 'link',
+						 'text' => __('View', 'shortpixel-image-optimiser'),
+						 'display' => 'inline',
+
+					));
+
+					if ($settings->quotaExceeded || ! $keyControl->keyIsVerified() )
+						$this->view->actions = $viewAction;
+					else
+						$this->view->actions = array_merge($viewAction,$actions);
       }
 
 			// Function to sync output exactly with Media Library functions for consistency
@@ -471,6 +450,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
           foreach($actions as $actionName => $action):
             $classes = ($action['display'] == 'button') ? " button-smaller button-primary $actionName " : "$actionName";
             $link = ($action['type'] == 'js') ? 'javascript:' . $action['function'] : $action['function'];
+						$newtab  = ($actionName == 'extendquota') ? 'target="_blank"' : '';
 
 						// @todo Esc url is not successfull with JS links
             ?>
@@ -482,47 +462,6 @@ class OtherMediaViewController extends \ShortPixel\ViewController
         echo $list_actions;
       }
 
-
-      // Used for row actions at the moment. Action under the image.
-      protected function renderActions($actions, $item, $forceSingular = false)
-      {
-
-
-        foreach($actions as $index => $action)
-        {
-          $text = isset($action['text']) ? $action['text'] : '';
-
-          if (isset($action['link']))
-          {
-             $fs = \wpSPIO()->filesystem();
-             $item_url = $fs->pathToUrl($item);
-
-             $link = $action['link'];
-             $link = str_replace('%%item_id%%', $item->get('id'), $link);
-             $link = str_replace('%%text%%', $text, $link);
-             $link = str_replace('%%item_url%%', $item_url, $link);
-          }
-          else
-          {
-              $action_arg = $action['action']; //
-              $nonce = $action['_wpnonce'];
-              $url = $this->getPageURL(array('action' => $action_arg, '_wpnonce' => $nonce, 'item_id' => $item->get('id') ));
-              if (isset($action['type']))
-                $url = add_query_arg('type', $action['type'], $url);
-              $class = (isset($action['class'])) ? $action['class'] : '';
-
-              $link = '<a href="' . esc_url($url) . '" class="action-' . esc_attr($action_arg) . ' ' . esc_attr($class) . '">' . esc_html($text) . '</a>';
-          }
-
-          $actions[$index] = $link;
-        }
-
-        if ($forceSingular)
-        {
-          array_unshift($actions, 'render-loose');
-        }
-        return $actions;
-      }
 
       protected function getDisplayHeading($heading)
       {

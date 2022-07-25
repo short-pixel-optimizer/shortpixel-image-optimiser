@@ -220,10 +220,6 @@ class ListMediaViewController extends \ShortPixel\ViewController
 
 			$vars['shortpixel-filter']  = $filter;
 
-			if (isset($vars['post_type']))
-			{
-				 unset($vars['post_type']); // no need to query this when going custom.
-			}
     }
 
     return $vars;

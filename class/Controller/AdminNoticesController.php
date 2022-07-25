@@ -28,7 +28,7 @@ class AdminNoticesController extends \ShortPixel\Controller
     //const MSG_NO_
     const MSG_QUOTA_REACHED = 'QuotaReached100';
     const MSG_UPGRADE_MONTH = 'UpgradeNotice200';  // When processing more than the subscription allows on average..
-		// @todo This one has been removed for now. Cleanup later on the line 
+		// @todo This one has been removed for now. Cleanup later on the line
     const MSG_UPGRADE_BULK = 'UpgradeNotice201'; // when there is no enough for a bulk run.
 
     const MSG_NO_APIKEY = 'ApiNotice300'; // API Key not found
@@ -360,7 +360,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 							if ($month_notice === false)
 							{
 								//looks like the user hasn't got enough credits to process the monthly images, display a notice telling this
-	              $message = $this->getMonthlyUpgradeMessage(array('monthAvg' => $this->getMonthAvg(), 'monthlyQuota' => $quotaData->monthly->total ));
+	              $message = $this->getMonthlyUpgradeMessage(array('monthAvg' => $this->getMonthAvg(), 'monthlyQuota' => $quotaData->monthly->total, 'onetimeTotal' => $quotaData->onetime->remaining ));
 	              $notice = Notices::addNormal($message);
 	              Notices::makePersistent($notice, self::MSG_UPGRADE_MONTH, YEAR_IN_SECONDS);
 							}
@@ -549,8 +549,8 @@ class AdminNoticesController extends \ShortPixel\Controller
 
     protected function getMonthlyUpgradeMessage($extra)
     {
-      $message = '<p>' . sprintf(__("You are adding an average of <strong>%d images and thumbnails every month</strong> to your Media Library and you have <strong>a plan of %d images/month</strong>."
-            . " You might need to upgrade your plan in order to have all your images optimized.", 'shortpixel-image-optimiser'), $extra['monthAvg'], $extra['monthlyQuota']) . '</p>';
+      $message = '<p>' . sprintf(__("You are adding an average of <strong>%d images and thumbnails every month</strong> to your Media Library and you have <strong>a plan of %d images/month (and %d one-time images)</strong>.%s"
+            . " You might need to upgrade your plan in order to have all your images optimized.", 'shortpixel-image-optimiser'), $extra['monthAvg'], $extra['monthlyQuota'], $extra['onetimeTotal'], '<br>') . '</p>';
       $message .= '  <button class="button button-primary" id="shortpixel-upgrade-advice" onclick="ShortPixel.proposeUpgrade()" style="margin-right:10px;"><strong>' .  __('Show me the best available options', 'shortpixel-image-optimiser') . '</strong></button>';
       $this->proposeUpgradePopup();
       return $message;
@@ -720,13 +720,16 @@ class AdminNoticesController extends \ShortPixel\Controller
         return $notices;
    }
 
-    protected function monthlyUpgradeNeeded($quotaData) {
+    protected function monthlyUpgradeNeeded($quotaData)
+		{
+
 
 				if  (isset($quotaData->monthly->total))
 				{
 						$monthAvg = $this->getMonthAvg($quotaData);
 						// +20 I suspect to not trigger on very low values of monthly use(?)
-						$threshold = $quotaData->monthly->total + $quotaData->onetime->remaining/6+20;
+						$threshold = $quotaData->monthly->total + ($quotaData->onetime->remaining / 6 ) +20;
+
 						if ($monthAvg > $threshold)
 						{
 								return true;
@@ -749,6 +752,8 @@ class AdminNoticesController extends \ShortPixel\Controller
 
     protected function getMonthAvg() {
         $stats = StatsController::getInstance();
+
+				return 100000;
 
 				// Count how many months have some optimized images.
         for($i = 4, $count = 0; $i>=1; $i--) {

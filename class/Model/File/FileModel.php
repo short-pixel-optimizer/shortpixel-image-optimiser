@@ -415,7 +415,7 @@ class FileModel extends \ShortPixel\Model
     if (is_null($this->mime))
         $this->setFileInfo();
 
-    if ($this->exists())
+    if ($this->exists() && ! $this->is_virtual() )
     {
         $this->mime = wp_get_image_mime($this->fullpath);
     }
@@ -486,11 +486,17 @@ class FileModel extends \ShortPixel\Model
     {
       return $path;
     }
+		// If attempted file does not exist, but the file is in a dir that exists, that is good enough.
+		elseif ( ! is_dir($path) && is_dir(dirname($path)) )
+		{
+			 return $path;
+		}
+		// If path is not in the abspath, it might be relative.
     elseif (strpos($path, $abspath->getPath()) === false)
     {
 	    // if path does not contain basepath.
-	    $uploadDir = $fs->getWPUploadBase();
-	    $abspath = $fs->getWPAbsPath();
+	    //$uploadDir = $fs->getWPUploadBase();
+	    //$abspath = $fs->getWPAbsPath();
 
       $path = $this->relativeToFullPath($path);
     }
@@ -535,7 +541,7 @@ class FileModel extends \ShortPixel\Model
 
      $this->is_virtual = true;
 
-
+		 // This filter checks if some supplier will be able to handle the file when needed. 
      $path = apply_filters('shortpixel/image/urltopath', false, $url);
 
 		 if ($path !== false)
@@ -675,6 +681,7 @@ class FileModel extends \ShortPixel\Model
           'exists' => $this->exists,
           'is_writable' => $this->is_writable,
           'is_readable' => $this->is_readable,
+					'is_virtual' => $this->is_virtual,
        ];
     }
 

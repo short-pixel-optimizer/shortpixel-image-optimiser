@@ -223,6 +223,9 @@ jQuery(document).ready(function(jq) {
 		this.modals.push(modal);
 		this.currentModal = modal;
 
+
+		document.querySelector('.debug-modal .modal_close').addEventListener('click', this.close.bind(this), { once: true} );
+
 		return this;
 
 	}

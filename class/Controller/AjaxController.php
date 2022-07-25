@@ -498,9 +498,11 @@ class AjaxController
 
 		//	$this->ajax_getItemView();
 
-			$mediaItem->deleteMeta(); // also does reset prevent.
-			delete_post_meta($id, '_shortpixel_was_converted');
+		// Changed since updated function should detect what is what. 
+		//	$mediaItem->deleteMeta(); // also does reset prevent.
+		//	delete_post_meta($id, '_shortpixel_was_converted');
 
+			$mediaItem->migrate();
 			//$mediaItem = $this->getMediaItem($id, $type);
 
 /*			$json->status = true;

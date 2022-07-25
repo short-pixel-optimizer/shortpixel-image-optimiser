@@ -243,7 +243,7 @@ class AdminController extends \ShortPixel\Controller
         $extraClasses = " shortpixel-hide";
         /*translators: toolbar icon tooltip*/
         $id = 'short-pixel-notice-toolbar';
-        $tooltip = __('ShortPixel optimizing...','shortpixel-image-optimiser') . " " . __('Please do not close this admin page.','shortpixel-image-optimiser');
+        $tooltip = __('ShortPixel optimizing...','shortpixel-image-optimiser');
         $icon = "shortpixel.png";
         $successLink = $link = admin_url(current_user_can( 'edit_others_posts')? 'upload.php?page=wp-short-pixel-bulk' : 'upload.php');
         $blank = "";

@@ -128,13 +128,24 @@ if ( isset($_GET['noheader']) ) {
                 </a></span>
             <span class='filename'><?php echo esc_html($item->getFileName()) ?>
                 <div class="row-actions"><?php
-                $numberActions = count($rowActions);
-                for ($i = 0; $i < $numberActions; $i++)
-                {
-                    echo $rowActions[$i];
-                    if ($i < ($numberActions-1) )
-                      echo '|';
-                }
+								if (isset($this->view->actions)):
+									$i = 0;
+								  foreach($this->view->actions as $actionName => $action):
+								    $classes = ''; // ($action['display'] == 'button') ? " button-smaller button-primary $actionName " : "$actionName";
+								    $link = ($action['type'] == 'js') ? 'javascript:' . $action['function'] : $action['function'];
+										$newtab  = ($actionName == 'extendquota' || $actionName == 'view') ? 'target="_blank"' : '';
+
+										if ($i > 0)
+											echo "|";
+								    ?>
+								   	<a href="<?php echo $link ?>" <?php echo esc_attr($newtab); ?> class="<?php echo $classes ?>"><?php echo $action['text'] ?></a>
+								    <?php
+										$i++;
+								  endforeach;
+
+								endif;
+
+
                 ?>
 								<span class='item-id'>#<?php echo esc_attr($item->get('id')); ?></span>
 							</div>
