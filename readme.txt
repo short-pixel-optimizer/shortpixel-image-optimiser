@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compressor, ima
 Requires at least: 4.8.0
 Tested up to: 6.0
 Requires PHP: 5.6
-Stable tag: 5.0.5
+Stable tag: 5.0.6
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -308,6 +308,27 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 9. Check other optimized images status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 5.0.6 =
+Release date July 25th, 2022
+* Fix: the "Search and Migrate All" tool now contains a fix for many cases where the message "Could not create backup" shows up;
+* Fix: a fatal error was crashing the plugin settings in PHP 7.2;
+* Fix: in certain cases, the optimization was looping due to WooCommerce's thumbnail system;
+* Fix: in some cases, WooCommerce as well as other plugins were returning a wrong thumbnail URL and this case was not treated properly;
+* Fix: optimization wasn't working correctly for multisite installs with the very old `blogs.dir` setup;
+* Fix: some notifications could not be properly dismissed (sorry for that!);
+* Fix: the integration with WP Offload Media has been enhanced for the case where the media files are not stored anymore on the local server;
+* Fix: some errors were showing up in certain cases where the next generation image delivery was active together with the WP Offload Media plugin;
+* Fix: the error box was not showing up anymore at the end of the bulk processing, or it was displaying wrong counts;
+* Fix: the "Optimize Now" action from the Custom Media had a wrong link;
+* Fix: in some cases, the bulk processing wasn't displaying the correct step for migration/restore operations;
+* Fix: the deactivation feedback was sent even if no selection was made in the pop-up;
+* Fix: the optimized/unoptimized filter was also displaying private posts;
+* Fix: various small fixes and code improvements to make the ShortPixel support team's lives easier;
+* Tweak: added a "processing" message when a new action is manually requested by the user;
+* Tweak: added a tool-tip for the number of items currently in the processing queue;
+* Tweak: added the resize type (cover/contain) on the image edit screen;
+* Language: 10 new strings added, 2 updated, 0 fuzzed, and 6 obsoleted.
 
 = 5.0.5 =
 Release date July 7th, 2022
