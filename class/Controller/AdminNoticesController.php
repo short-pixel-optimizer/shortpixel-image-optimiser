@@ -752,9 +752,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 
     protected function getMonthAvg() {
         $stats = StatsController::getInstance();
-
-				return 100000;
-
+				
 				// Count how many months have some optimized images.
         for($i = 4, $count = 0; $i>=1; $i--) {
             if($count == 0 && $stats->find('period', 'months', $i) == 0)
