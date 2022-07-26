@@ -486,7 +486,7 @@ class WPQ implements Queue
   {
     $this->status = get_option($this->statusName);
 
-    if (! $this->status || ! is_object($this->status))
+    if (! $this->status || ! is_object($this->status) && ! is_array($this->status))
       $this->createStatus();
 
 

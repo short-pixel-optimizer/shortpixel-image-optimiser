@@ -1,7 +1,5 @@
 <?php
 namespace ShortPixel\Notices;
-use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-
 
 class NoticeModel //extends ShortPixelModel
 {
@@ -115,9 +113,6 @@ class NoticeModel //extends ShortPixelModel
       {
         $this->callback = $callback;
       }
-			else {
-				Log::addWarn('Callback seems not callable', $callback);
-			}
   }
 
   public static function setIcon($notice_type, $icon)
