@@ -471,6 +471,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 												'is_error' => true,
 												'issue_type' => ResponseController::ISSUE_BACKUP_CREATE,
 												'message' => __('Could not create backup. Please check file permissions', 'shortpixel-image-optimiser'),
+												'fileName' => $this->getFileName(),
 										);
 
 										ResponseController::addData($this->get('id'), $response);
@@ -516,7 +517,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
                 $optimizedSize  = $tempFile->getFileSize();
                 $this->setImageSize();
-              }
+              } // else
 
               if ($copyok)
               {
@@ -583,6 +584,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 										'is_error' => true,
 										'issue_type' => ResponseController::ISSUE_BACKUP_CREATE,
 										'message' => __('Could not copy optimized image from temporary files. Check file permissions', 'shortpixel-image-optimiser'),
+										'fileName' => $this->getFileName(),
 								);
 
 								ResponseController::addData($this->get('id'), $response);;
@@ -600,6 +602,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 					 'is_error' => true,
 					 'issue_type' => ResponseController::ISSUE_OPTIMIZED_NOFILE,
 					 'message' => __('Image is reporting as optimized, but file couldn\'t be found in the downloaded files', 'shortpixel-image-optimiser'),
+					 'fileName' => $this->getFileName(),
 
 				);
 
@@ -956,6 +959,11 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 								$this->error_message = __('Backup already exists, but image is recoverable and the plugin will rollback. Will retry to optimize again. ', 'shortpixel-image-optimiser');
             }
+						elseif ($backupFile->getFileSize() > $this->getFileSize() && ! $backupFile->is_virtual() ) // Where there is a backup and it's bigger, assume some hickup, but there is backup so hooray
+						{
+						 		Log::addWarn('Backup already exists. Backup file is bigger, so assume that all is good with backup and proceed');
+							 return true; // ok it.
+						}
             else
             {
               $this->preventNextTry(__('Fatal Issue: The Backup file already exists. The backup seems not restorable, or the original file is bigger than the backup, indicating an error.', 'shortpixel-image-optimiser'));

@@ -64,7 +64,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
       $filepath = (string) $this->getFileDir();
       $extension = $this->getExtension();
 
-      $retina = new MediaLibraryThumbnailModel($filepath . $filebase . '@2x.' . $extension); // mind the dot in after 2x
+      $retina = new MediaLibraryThumbnailModel($filepath . $filebase . '@2x.' . $extension, $this->id, $this->size); // mind the dot in after 2x
 
       if ($retina->exists())
         return $retina;

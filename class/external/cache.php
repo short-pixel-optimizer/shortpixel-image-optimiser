@@ -67,15 +67,13 @@ class cacheRemover
     */
     public function flushCache($imageItem)
     {
-        if ($imageItem->getType() == 'custom')
+        if ($imageItem->get('type') == 'custom')
 				{
 					$post_id = 0;
 				}
 				else {
 					$post_id = $imageItem->get('id');
 				}
-
-				Log::addTemp('Post ID on Cache Remover - ' . $post_id);
 
         // important - first check the available cache plugins
         $this->checkCaches();

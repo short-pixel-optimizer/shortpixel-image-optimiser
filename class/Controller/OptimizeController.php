@@ -520,8 +520,8 @@ class OptimizeController
       }
       else
 			{
-        $item->result->filename = $imageItem->getFileName();
-				ResponseController::addData($item->item_id, 'fileName', $imageItem->getFileName());
+        //$item->result->filename = $imageItem->getFileName();
+				//ResponseController::addData($item->item_id, 'fileName', $imageItem->getFileName());
 			}
 
       $result = $item->result;
