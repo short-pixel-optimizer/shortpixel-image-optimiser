@@ -66,6 +66,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     protected $processable_status = 0;
 		protected $restorable_status = 0;
 
+		// Public var that can be set by OptimizeController to prevent double queries.
+		public $is_in_queue;
+
     //protected $is_optimized = false;
   //  protected $is_image = false;
 

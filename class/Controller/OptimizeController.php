@@ -150,21 +150,29 @@ class OptimizeController
         return $json;
     }
 
-		/** Check if item is in queue.
+		/** Check if item is in queue. || Only checks the single queue!
 		* @param Object $mediaItem
 		*/
 		public function isItemInQueue($mediaItem)
 		{
+				if (! is_null($mediaItem->is_in_queue))
+					return $mediaItem->is_in_queue;
+
 				$type = $mediaItem->get('type');
+
 			  $q = $this->getQueue($type);
 
 				$result = $q->getShortQ()->getItem($mediaItem->get('id'));
 
-				if (is_object($result))
-					 return true;
-				else
-					 return false;
 
+				if (is_object($result))
+					 $bool = true;
+				else
+					 $bool = false;
+
+			  // Preventing double queries here 
+				$mediaItem->is_in_queue = $bool;
+				return $bool;
 		}
 
 		/** Restores an item
