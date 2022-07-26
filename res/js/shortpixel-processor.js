@@ -300,7 +300,9 @@ window.ShortPixelProcessor =
       if (data.status == true && data.response) // data status is from shortpixel worker, not the response object
       {
           var response = data.response;
+					var handledError = false; // prevent passing to regular queueHandler is some action is taken.
 					this.workerErrors = 0;
+
           if ( response.callback)
           {
               console.log('Running callback : ' + response.callback);
@@ -312,11 +314,13 @@ window.ShortPixelProcessor =
           }
           if ( response.status == false)
           {
+
              // This is error status, or a usual shutdown, i.e. when process is in another browser.
              var error = this.aStatusError[response.error];
              if (error == 'PROCESSOR_ACTIVE')
              {
                this.Debug(response.message);
+							 handledError = true;
                this.StopProcess();
              }
              else if (error == 'NONCE_FAILED')
@@ -331,12 +335,18 @@ window.ShortPixelProcessor =
 								this.screen.HandleError(response);
                 this.Debug('No Quota - CheckResponse handler');
 								this.PauseProcess();
+								handledError = true;
              }
              else if (response.error < 0) // something happened.
              {
                this.StopProcess();
+							 handledError = true;
+							 console.error('Some unknown error occured!', response.error, response);
              }
-           }
+
+						 if (handledError == true)
+						 	 	return; 
+           } // status false handler.
 
            // Check the screen if we are custom or media ( or bulk ) . Check the responses for each of those.
            if (typeof response.custom == 'object' && response.custom !== null)

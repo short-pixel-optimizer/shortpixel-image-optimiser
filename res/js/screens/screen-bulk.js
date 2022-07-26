@@ -618,9 +618,9 @@ console.log("Screen Init Done", initMedia, initCustom);
 			 }
 
 			 var error = this.processor.aStatusError[result.error];
-
 			 if (error == 'NOQUOTA')
 			 {
+				 
 						 this.ToggleOverQuotaNotice(true);
 			 }
 

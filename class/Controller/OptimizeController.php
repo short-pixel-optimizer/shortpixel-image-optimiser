@@ -170,7 +170,7 @@ class OptimizeController
 				else
 					 $bool = false;
 
-			  // Preventing double queries here 
+			  // Preventing double queries here
 				$mediaItem->is_in_queue = $bool;
 				return $bool;
 		}
@@ -346,6 +346,7 @@ class OptimizeController
 					// Break out of quota if we are on normal operations.
 					if (false === $isCustomOperation )
 					{
+						$quotaControl->forceCheckRemoteQuota(); // on next load check if something happenend when out and asking.
 	          $json = $this->getJsonResponse();
 	          $json->error = AjaxController::NOQUOTA;
 	          $json->status = false;
