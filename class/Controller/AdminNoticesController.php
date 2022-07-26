@@ -44,6 +44,7 @@ class AdminNoticesController extends \ShortPixel\Controller
     private $remote_message_endpoint = 'https://api.shortpixel.com/v2/notices.php';
     private $remote_readme_endpoint = 'https://plugins.svn.wordpress.org/shortpixel-image-optimiser/trunk/readme.txt';
 
+
     public function __construct()
     {
       add_action('admin_notices', array($this, 'displayNotices'), 50); // notices occured before page load
@@ -328,6 +329,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 			$noticeController = Notices::getInstance();
 			$statsControl = StatsController::getInstance(); // @todo Implement this. (Figure out what this was )
 
+			$callback = array(AdminNoticesController::getInstance(), 'proposeUpgradePopup');
 
       if (! \wpSPIO()->settings()->verifiedKey)
       {
@@ -362,7 +364,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 								//looks like the user hasn't got enough credits to process the monthly images, display a notice telling this
 	              $message = $this->getMonthlyUpgradeMessage(array('monthAvg' => $this->getMonthAvg(), 'monthlyQuota' => $quotaData->monthly->total, 'onetimeTotal' => $quotaData->onetime->remaining ));
 	              $notice = Notices::addNormal($message);
-	              Notices::makePersistent($notice, self::MSG_UPGRADE_MONTH, YEAR_IN_SECONDS);
+	              Notices::makePersistent($notice, self::MSG_UPGRADE_MONTH, YEAR_IN_SECONDS, $callback);
 							}
           }
       }
@@ -374,7 +376,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 				 {
 					$message = $this->getQuotaExceededMessage();
          	$notice = Notices::addError($message);
-         	Notices::makePersistent($notice, self::MSG_QUOTA_REACHED, WEEK_IN_SECONDS);
+         	Notices::makePersistent($notice, self::MSG_QUOTA_REACHED, WEEK_IN_SECONDS, $callback);
 				 }
 
          Notices::removeNoticeByID(self::MSG_UPGRADE_MONTH); // get rid of doubles. reset
@@ -538,6 +540,7 @@ class AdminNoticesController extends \ShortPixel\Controller
         return $message;
     }
 
+/* Seems unused   @todo Remove in a few versions
     protected function getBulkUpgradeMessage($extra)
     {
       $message = '<p>' . sprintf(__("You currently have <strong>%d images and thumbnails to optimize</strong> but you only have <strong>%d images</strong> available in your current plan."
@@ -546,13 +549,12 @@ class AdminNoticesController extends \ShortPixel\Controller
        $this->proposeUpgradePopup();
       return $message;
     }
-
+*/
     protected function getMonthlyUpgradeMessage($extra)
     {
       $message = '<p>' . sprintf(__("You are adding an average of <strong>%d images and thumbnails every month</strong> to your Media Library and you have <strong>a plan of %d images/month (and %d one-time images)</strong>.%s"
             . " You might need to upgrade your plan in order to have all your images optimized.", 'shortpixel-image-optimiser'), $extra['monthAvg'], $extra['monthlyQuota'], $extra['onetimeTotal'], '<br>') . '</p>';
       $message .= '  <button class="button button-primary" id="shortpixel-upgrade-advice" onclick="ShortPixel.proposeUpgrade()" style="margin-right:10px;"><strong>' .  __('Show me the best available options', 'shortpixel-image-optimiser') . '</strong></button>';
-      $this->proposeUpgradePopup();
       return $message;
     }
 
@@ -623,12 +625,10 @@ class AdminNoticesController extends \ShortPixel\Controller
           </div>';
 
 				$message .= '</div>'; /// closing div
-        $this->proposeUpgradePopup();
         return $message;
     }
 
-    protected function proposeUpgradePopup() {
-      		// @todo LoadView Snippet here.
+    public function proposeUpgradePopup() {
 					$view = new ViewController();
 					$view->loadView('snippets/part-upgrade-options');
     }
@@ -722,8 +722,6 @@ class AdminNoticesController extends \ShortPixel\Controller
 
     protected function monthlyUpgradeNeeded($quotaData)
 		{
-
-
 				if  (isset($quotaData->monthly->total))
 				{
 						$monthAvg = $this->getMonthAvg($quotaData);
@@ -752,7 +750,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 
     protected function getMonthAvg() {
         $stats = StatsController::getInstance();
-				
+
 				// Count how many months have some optimized images.
         for($i = 4, $count = 0; $i>=1; $i--) {
             if($count == 0 && $stats->find('period', 'months', $i) == 0)

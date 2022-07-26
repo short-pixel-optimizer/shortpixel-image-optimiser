@@ -407,6 +407,17 @@ abstract class Queue
         $this->getShortQ()->setStatus('custom_data', $customData);
     }
 
+		// Return if this queue has any special operation outside of normal optimizing.
+		// Use to give the go processing when out of credits (ie)
+		public function isCustomOperation()
+		{
+			if ($this->getCustomDataItem('customOperation'))
+			{
+				return true;
+			}
+			return false;
+		}
+
     public function getCustomDataItem($name)
     {
         $customData = $this->getStatus('custom_data');

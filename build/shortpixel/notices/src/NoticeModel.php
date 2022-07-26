@@ -1,5 +1,7 @@
 <?php
 namespace ShortPixel\Notices;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+
 
 class NoticeModel //extends ShortPixelModel
 {
@@ -113,6 +115,9 @@ class NoticeModel //extends ShortPixelModel
       {
         $this->callback = $callback;
       }
+			else {
+				Log::addWarn('Callback seems not callable', $callback);
+			}
   }
 
   public static function setIcon($notice_type, $icon)
@@ -234,9 +239,9 @@ class NoticeModel //extends ShortPixelModel
                                 document.getElementById('button-$id').onclick = function()
                                 {
                                   var el = document.getElementById('$id');
-                           				jQuery(el).fadeTo(100,0,function() {
-                               		jQuery(el).slideUp(100, 0, function () {
-                                  jQuery(el).remove();
+                           				$(el).fadeTo(100,0,function() {
+                               		$(el).slideUp(100, 0, function () {
+                                  $(el).remove();
                                })
                            });
                          } </script>";
@@ -289,9 +294,9 @@ class NoticeModel //extends ShortPixelModel
                     data.id = parent.getAttribute('id');
                     jQuery.post($url,data);
 
-                    jQuery(parent).fadeTo(100,0,function() {
-                        jQuery(parent).slideUp(100, 0, function () {
-                            jQuery(parent).remove();
+                    $(parent).fadeTo(100,0,function() {
+                        $(parent).slideUp(100, 0, function () {
+                            $(parent).remove();
                         })
                     });
           }";

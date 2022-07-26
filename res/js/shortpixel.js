@@ -634,7 +634,7 @@ var ShortPixel = function() {
             },
 						complete: function(response, status)
 						{
-							 console.log(response, status);
+							 //console.log(response, status);
 
 						}
         });

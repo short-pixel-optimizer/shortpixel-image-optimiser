@@ -308,8 +308,8 @@ class OptimizeController
     */
     public function processQueue($queueTypes = array())
     {
-
         $keyControl = ApiKeyController::getInstance();
+
         if ($keyControl->keyIsVerified() === false)
         {
            $json = $this->getJsonResponse();
@@ -323,11 +323,27 @@ class OptimizeController
         $quotaControl = QuotaController::getInstance();
         if ($quotaControl->hasQuota() === false)
         {
-          $json = $this->getJsonResponse();
-          $json->error = AjaxController::NOQUOTA;
-          $json->status = false;
-          $json->message =   __('Quota Exceeded','shortpixel-image-optimiser');
-          return $json;
+					// If we are doing something special (restore, migrate etc), it should runs without credits, so we shouldn't be using any.
+					$isCustomOperation = false;
+					foreach($queueTypes as $qType)
+					{
+						$queue = $this->getQueue($qType);
+						if ($queue && true === $queue->isCustomOperation())
+						{
+								$isCustomOperation = true;
+								break;
+						}
+					}
+
+					// Break out of quota if we are on normal operations.
+					if (false === $isCustomOperation )
+					{
+	          $json = $this->getJsonResponse();
+	          $json->error = AjaxController::NOQUOTA;
+	          $json->status = false;
+	          $json->message =   __('Quota Exceeded','shortpixel-image-optimiser');
+	          return $json;
+					}
         }
 
         // @todo Here prevent bulk from running when running flag is off
