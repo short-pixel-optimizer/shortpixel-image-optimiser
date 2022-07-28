@@ -18,6 +18,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
   public $mime; */
   protected $prevent_next_try = false;
   protected $is_main_file = false;
+	protected $is_retina = false; // diffentiate from thumbnail / retina.
   protected $id; // this is the parent attachment id
   protected $size; // size of image in WP, if applicable.
 
@@ -47,6 +48,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
       'image_meta' => $this->image_meta,
       'name' => $this->name,
       'path' => $this->getFullPath(),
+			'size' => $this->size,
       'exists' => ($this->exists()) ? 'yes' : 'no',
 
     );
@@ -65,6 +67,8 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
       $extension = $this->getExtension();
 
       $retina = new MediaLibraryThumbnailModel($filepath . $filebase . '@2x.' . $extension, $this->id, $this->size); // mind the dot in after 2x
+			$retina->setName($this->size);
+			$retina->is_retina = true;
 
       if ($retina->exists())
         return $retina;
@@ -153,7 +157,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
   {
 			$fs = \wpSPIO()->filesystem();
 
-      if ($this->size == 'original')
+      if ($this->size == 'original' && ! $this->get('is_retina'))
 			{
         $url = wp_get_original_image_url($this->id);
 			}
@@ -221,7 +225,10 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 			// if thumbnail processing is off, thumbs are never processable.
 			// This is also used by main file, so check for that!
       if ( $this->excludeThumbnails() && $this->is_main_file === false)
+			{
+				$this->processable_status = self::P_EXCLUDE_SIZE;
         return false;
+			}
       else
       {
         $bool = parent::isProcessable();
@@ -246,14 +253,15 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
   // !Important . This doubles as  checking excluded image sizes.
   protected function isSizeExcluded()
   {
+
     $excludeSizes = \wpSPIO()->settings()->excludeSizes;
     if (is_array($excludeSizes) && in_array($this->name, $excludeSizes))
+		{
+			$this->processable_status = self::P_EXCLUDE_SIZE;
       return true;
-
-    return false;
-  }
-
-
+		}
+		return false;
+	}
 
   protected function excludeThumbnails()
   {
@@ -292,18 +300,9 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 	{
 			global $wpdb;
 
-			$size = (! $this->is_main_file) ? $this->size : null;
 
-			if (is_null($size))
-			{
-				$sql = 'SELECT id FROM ' . $wpdb->prefix . 'shortpixel_postmeta WHERE attach_id = %d AND size IS NULL';
-				$sql = $wpdb->prepare($sql, $this->id);
-			}
-			else {
-				$sql = 'SELECT id FROM ' . $wpdb->prefix . 'shortpixel_postmeta WHERE attach_id = %d AND size = %s';
-				$sql = $wpdb->prepare($sql, $this->id, $size);
-			}
-
+			$sql = 'SELECT id FROM ' . $wpdb->prefix . 'shortpixel_postmeta WHERE attach_id = %d AND size = %s';
+			$sql = $wpdb->prepare($sql, $this->id, $this->size);
 
 			$id = $wpdb->get_var($sql);
 

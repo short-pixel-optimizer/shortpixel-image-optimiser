@@ -110,14 +110,18 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
      }
 
      // @todo Check Retina's
-    if ($settings->optimizeRetina)
-    {
 
+    if ($settings->optimizeRetina && ! is_null($this->retinas))
+    {
         foreach($this->retinas as $retinaObj)
         {
+					if ($retinaObj->isThumbnailProcessable())
            $urls = array_merge($urls, $retinaObj->getOptimizeUrls($get_path));
         }
+
      }
+
+
      $urls = array_values(array_unique($urls));
      return $urls;
   }
@@ -190,19 +194,22 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					}
       }
 
-			foreach($this->retinas as $retinaName => $retinaObj)
-      {
-          if ($retinaObj->getOptimizeFileType($type))
-					{
-						if (true === $get_path)
+			if (! is_null($this->retinas))
+			{
+				foreach($this->retinas as $retinaName => $retinaObj)
+	      {
+	          if ($retinaObj->getOptimizeFileType($type))
 						{
-						  $toOptimize[] = $retinaObj->getFullPath();
+							if (true === $get_path)
+							{
+							  $toOptimize[] = $retinaObj->getFullPath();
+							}
+							else{
+	              $toOptimize[] = $retinaObj->getURL(); //$fs->pathToUrl($thumbObj);
+							}
 						}
-						else{
-              $toOptimize[] = $retinaObj->getURL(); //$fs->pathToUrl($thumbObj);
-						}
-					}
-      }
+	      }
+			}
 
       return array_values(array_unique($toOptimize));
       //foreach($types as $index => $)
@@ -301,9 +308,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
                $thumbObj = $this->getThumbnailModel($this->getFileDir() . $data['file'], $name);
 
                $meta = new ImageThumbnailMeta();
-               $thumbObj->setName($name);
                $meta->originalWidth = (isset($data['width'])) ? $data['width'] : null; // get from WP
                $meta->originalHeight = (isset($data['height'])) ? $data['height'] : null;
+							 $thumbObj->setName($name); // name is size mostly
                $thumbObj->setMetaObj($meta);
                $thumbnails[$name] = $thumbObj;
              }
@@ -372,11 +379,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
          if ($webp)
           $webps[$thumbname] = $webp;
       }
-			foreach ($this->retinas as $retinaName => $retinaObj)
+
+			if (! is_null($this->retinas))
 			{
-				 $webp = $retinaObj->getWebp();
-				 if ($webp)
-				 		$webps['retina-' . $retinaName]  = $webp; // adding a prefix to make sure it will not overwrite thumbnames, they share the same name.
+				foreach ($this->retinas as $retinaName => $retinaObj)
+				{
+					 $webp = $retinaObj->getWebp();
+					 if ($webp)
+					 		$webps['retina-' . $retinaName]  = $webp; // adding a prefix to make sure it will not overwrite thumbnames, they share the same name.
+				}
 			}
       if ($this->isScaled())
       {
@@ -402,12 +413,17 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
          if ($avif)
           $avifs[$thumbname] = $avif;
       }
-			foreach ($this->retinas as $retinaName => $retinaObj)
+
+			if (! is_null($this->retinas))
 			{
-				 $avif = $retinaObj->getAvif();
-				 if ($avif)
-						$avifs['retina-' . $retinaName]  = $avif; // adding a prefix to make sure it will not overwrite thumbnames, they share the same name.
+				foreach ($this->retinas as $retinaName => $retinaObj)
+				{
+					 $avif = $retinaObj->getAvif();
+					 if ($avif)
+							$avifs['retina-' . $retinaName]  = $avif; // adding a prefix to make sure it will not overwrite thumbnames, they share the same name.
+				}
 			}
+
       if ($this->isScaled())
       {
         $avif = $this->original_file->getAvif();
@@ -674,7 +690,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   }
 
 
-  /** @param String Full Path to the Thumbnail File
+  /** Function to go from path -> thumbnail mode.  This should be used for unlisted etc, but nothing that already is loaded in thumbnails.
+	*  @param String Full Path to the Thumbnail File
   *   @return Object ThumbnailModel
   * */
   private function getThumbnailModel($path, $size)
@@ -776,6 +793,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
                     $retMeta = new ImageThumbnailMeta();
                     $retMeta->fromClass($retinaMeta);
                     $retinaObj->setMetaObj($retMeta);
+										$retinaObj->setName($name);
+										$retinaObj->is_retina = true;
+
                     $this->retinas[$name] = $retinaObj;
                   }
               }
@@ -1726,6 +1746,17 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           elseif ($thumbObj->isRestorable())
 					{
             $bool = $thumbObj->restore(); // resets metadata
+						if (! $bool)
+						{
+							$cleanRestore = false;
+						}
+						else
+						{
+							 $restored[$filebase] = true;
+						}
+					}
+					else {
+						Log::addWarn('Thumbnail not restorable ' . $size,  $this->getReason('restorable'));
 					}
 
 					if ($unlisted_file === null)
@@ -1740,16 +1771,43 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						$wpmeta['sizes'][$size]['filesize'] = $thumbObj->getFileSize();
 					}
 
-          if (! $bool)
-					{
-            $cleanRestore = false;
-					}
-          else
-          {
-             $restored[$filebase] = true;
-          }
-
     }
+
+		if (! is_null($this->retinas))
+		{
+			$restored = array();
+
+			foreach($this->retinas as $name => $retinaObj)
+			{
+					$filebase = $retinaObj->getFileBase();
+					$size = $retinaObj->get('size');
+
+					if (isset($restored[$filebase]))
+          {
+            $bool = true;  // this filebase already restored. In case of duplicate sizes.
+            $retinaObj->image_meta = new ImageThumbnailMeta();
+          }
+				  elseif ($retinaObj->isRestorable())
+					{
+						 Log::addTemp('Restoring retina size ' . $size . ' ' . $retinaObj->getFullPath());
+						 $bool = $retinaObj->restore();
+
+						 if (! $bool)
+						 {
+							 $cleanRestore = false;
+						 }
+						 else
+						 {
+								$restored[$filebase] = true;
+						 }
+					}
+
+
+			}
+
+
+
+		}
 
     if ($this->isScaled() )
     {
@@ -1819,6 +1877,28 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			// @todo Restore can be false if last item failed, which doesn't sound right.
 	    return $bool;
   }
+
+	// This is check for the mainFile.
+	public function hasDBRecord()
+	{
+
+			global $wpdb;
+
+				$sql = 'SELECT id FROM ' . $wpdb->prefix . 'shortpixel_postmeta WHERE attach_id = %d AND size IS NULL and image_type = %d';
+				$sql = $wpdb->prepare($sql, $this->id, self::IMAGE_TYPE_MAIN);
+
+			$id = $wpdb->get_var($sql);
+
+			if (is_null($id))
+			{
+				 return false;
+			}
+			elseif (is_numeric($id)) {
+				return true;
+			}
+
+	}
+
 
 	/** New Setup of RestorePNG2JPG. Runs after copying backupfile back to uploads.
 	*/
@@ -2231,38 +2311,52 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
        if (isset($data['retinasOpt']))
        {
-           $count = $data['retinasOpt'];
+           $count = $data['retinasOpt']; // a number.
+					 $addedCounter = 0;
 
+					 $retinasOpt = $data['retinasOpt'];
            $retinas = $this->getRetinas();
 
            foreach($retinas as $index => $retinaObj) // Thumbnail Model
            {
+		 					if ($retinaObj->hasDBRecord() === true)
+		  				{
+		  						continue;
+		  				}
 
-              $retinaObj->image_meta->status = $status;
-              $retinaObj->image_meta->compressionType = $type;
-              if ($status == self::FILE_STATUS_SUCCESS)
-                $retinaObj->image_meta->compressedSize = $retinaObj->getFileSize();
-              else
-                $retinaObj->image_meta->originalSize = $retinaObj->getFileSize();
-            //  $retinaObj->image_meta->improvement = -1; // n/a
-              $retinaObj->image_meta->tsAdded = $tsAdded;
-              $retinaObj->image_meta->tsOptimized = $tsOptimized;
-              $retinaObj->image_meta->did_jpg2png = $did_jpg2png;
-              if ($retinaObj->hasBackup())
-              {
-                $retinaObj->has_backup = true;
-                if ($status == self::FILE_STATUS_SUCCESS)
-                  $retinaObj->image_meta->originalSize = $retinaObj->getBackupFile()->getFileSize();
-              }
+							// Check if thumbnail ('parent') is Optimized, if so, then retina probably should be optimized as well.
+							if ( (isset($this->thumbnails[$index]) &&
+										is_object($this->thumbnails[$index]) &&
+									  $this->thumbnails[$index]->isOptimized) || $retinaObj->hasBackup() )
+							{
+		              $retinaObj->image_meta->status = $status;
+		              $retinaObj->image_meta->compressionType = $type;
+		              if ($status == self::FILE_STATUS_SUCCESS)
+		                $retinaObj->image_meta->compressedSize = $retinaObj->getFileSize();
+		              else
+		                $retinaObj->image_meta->originalSize = $retinaObj->getFileSize();
+		            //  $retinaObj->image_meta->improvement = -1; // n/a
+		              $retinaObj->image_meta->tsAdded = $tsAdded;
+		              $retinaObj->image_meta->tsOptimized = $tsOptimized;
+		              $retinaObj->image_meta->did_jpg2png = $did_jpg2png;
+		              if ($retinaObj->hasBackup())
+		              {
+		                $retinaObj->has_backup = true;
+		                if ($status == self::FILE_STATUS_SUCCESS)
+		                  $retinaObj->image_meta->originalSize = $retinaObj->getBackupFile()->getFileSize();
+		              }
 
-							$retinaObj->recordChanged(true);
-              $retinas[$index] = $retinaObj;
-           }
-           $this->retinas = $retinas;
-           if ($count !== count($retinas))
-           {
-              Log::addWarning("Conversion: $count retinas expected in legacy, " . count($retinas) . 'found', $retinas);
-           }
+									$retinaObj->recordChanged(true);
+		              $retinas[$index] = $retinaObj;
+									$addedCounter++;
+		           }
+						 } // foreach
+
+	           $this->retinas = $retinas;
+	           if ($count !== $addedCounter)
+	           {
+	              Log::addWarning("Conversion: $count retinas expected in legacy, " . $addedCounter . 'found. This can be due to overlapping image sizes.');
+	           }
        }
 
 
