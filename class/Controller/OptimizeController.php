@@ -162,13 +162,7 @@ class OptimizeController
 
 			  $q = $this->getQueue($type);
 
-				$result = $q->getShortQ()->getItem($mediaItem->get('id'));
-
-
-				if (is_object($result))
-					 $bool = true;
-				else
-					 $bool = false;
+				$bool = $q->isItemInQueue($mediaItem->get('id'));
 
 			  // Preventing double queries here
 				$mediaItem->is_in_queue = $bool;

@@ -29,13 +29,6 @@ abstract class Queue
     const RESULT_UNKNOWN = -10;
 
 
-    /* Result status (per item) to communicate back to frontend */
-/*    const FILE_NOTEXISTS = -1;
-    const FILE_ALREADYOPTIMIZED = -2;
-    const FILE_OK = 1;
-    const FILE_SUCCESS = 2;
-    const FILE_WAIT = 3; */
-
     abstract protected function prepare();
     abstract public function getType();
 
@@ -614,6 +607,18 @@ abstract class Queue
     {
 
     }
+
+		// Check if item is in queue. Considered not in queue if status is done.
+		public function isItemInQueue($item_id)
+		{
+				$itemObj = $this->q->getItem($item_id);
+
+				if (is_object($itemObj) && intval($itemObj->status) <> ShortQ::QSTATUS_DONE)
+				{
+					return true;
+				}
+				return false;
+		}
 
     public function itemFailed($item, $fatal = false)
     {
