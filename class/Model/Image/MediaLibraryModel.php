@@ -1516,7 +1516,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
             $width = $this->get('width');
             $height = $this->get('height');
 
-
             if( $width && $height
                  && $this->isProcessableSize($width, $height, $item["value"]) === false){
                    $this->processable_status = self::P_EXCLUDE_SIZE;

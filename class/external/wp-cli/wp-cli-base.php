@@ -380,7 +380,7 @@ class SpioCommandBase
 		protected function displayStatsLine($name, $stats)
 		{
 
-				$line = sprintf('Current Status for %s : (%d\%d) Done (%d%%), %d awaiting %d errors --', $name, $stats->done, $stats->total, $stats->percentage_done, ( $stats->in_process + $stats->in_queue ), $stats->fatal_errors);
+				$line = sprintf('Current Status for %s : (%s\%s) Done (%s%%), %s awaiting %s errors --', $name, $stats->done, $stats->total, $stats->percentage_done, ( $stats->awaiting ), $stats->fatal_errors);
 
 				\WP_CLI::line($line);
 		}
@@ -400,9 +400,8 @@ class SpioCommandBase
 	 */
 		public function status($args, $assoc)
 		{
-				$queue = $this->getQueueArgument($assoc);
 
-				$startupData = $this->getStatus();
+				$queue = $this->getQueueArgument($assoc);
 
 				$items = array();
 				$fields = array('queue name', 'in queue', 'in process', 'fatal errors', 'done', 'total', 'preparing', 'running', 'finished');

@@ -68,9 +68,6 @@ class EditMediaViewController extends \ShortPixel\ViewController
 						return false;
 					}
 
-
-
-
           $this->view->status_message = null;
 
           $this->view->text = UiHelper::getStatusText($this->imageModel);
@@ -262,7 +259,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
               $url = $thumbObj->getURL(); //$fs->pathToURL($thumbObj); //wp_get_attachment_image_src($this->post_id, $size);
               $filename = $thumbObj->getFullPath();
 							$backup = $thumbObj->hasBackup() ? $thumbObj->getBackupFile()->getFullPath() : 'n/a';
-            
+
               $width = $thumbObj->get('width');
               $height = $thumbObj->get('height');
 

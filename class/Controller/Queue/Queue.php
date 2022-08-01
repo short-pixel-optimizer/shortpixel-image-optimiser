@@ -328,6 +328,8 @@ abstract class Queue
       $stats->is_finished = (bool) $this->getStatus('finished');
       $stats->in_queue = (int) $this->getStatus('items');
       $stats->in_process = (int) $this->getStatus('in_process');
+			$stats->awaiting = $stats->in_queue + $stats->in_process; // calculation used for WP-CLI.
+
       $stats->errors = (int) $this->getStatus('errors');
       $stats->fatal_errors = (int) $this->getStatus('fatal_errors');
       $stats->done = (int) $this->getStatus('done');
@@ -372,7 +374,6 @@ abstract class Queue
           $count->images_avif = $customData->avifCount;
 					$count->images_basecount = $customData->baseCount;
         }
-
 
         return $count;
     }

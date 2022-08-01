@@ -608,7 +608,10 @@ class UiHelper
 
 	public static function formatNumber($number, $precision = 2)
 	{
-		  return  number_format_i18n( (int) $number, $precision);
+			$number =  number_format_i18n( (int) $number, $precision);
+			// Some locale's have no-breaking-space as thousands separator. This doesn't work well in JS / Cron Shell so replace with space. 
+			$number = str_replace('&nbsp;', ' ', $number);
+		  return $number;
 	}
 
 	protected static function convertImageTypeName($name, $type)
