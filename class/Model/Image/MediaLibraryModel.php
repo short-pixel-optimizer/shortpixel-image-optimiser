@@ -1507,6 +1507,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
     if (! $excludePatterns || ! is_array($excludePatterns) ) // no patterns, nothing excluded
       return false;
 
+		$bool = false;
+
     foreach($excludePatterns as $item) {
         $type = trim($item["type"]);
         if($type == "size") {
@@ -1518,19 +1520,20 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
             if( $width && $height
                  && $this->isProcessableSize($width, $height, $item["value"]) === false){
                    $this->processable_status = self::P_EXCLUDE_SIZE;
-                  return true;
+                  return true; // exit directly because we have our exclusion
               }
             else
-                return false;
+                $bool = false; // continue and check all patterns, there might be multiple.
           }
      }
+
+		 return $bool;
 
   }
 
   private function isProcessableSize($width, $height, $excludePattern) {
 
       $ranges = preg_split("/(x|×|X)/",$excludePattern);
-
       $widthBounds = explode("-", $ranges[0]);
       $minWidth = intval($widthBounds[0]);
       $maxWidth = (!isset($widthBounds[1])) ? intval($widthBounds[0]) : intval($widthBounds[1]);
