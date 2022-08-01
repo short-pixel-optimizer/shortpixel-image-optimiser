@@ -1287,7 +1287,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			}
 
 			// The exclude size on the main image - via regex - if fails, prevents the whole thing from optimization.
-			if ($this->processable_status == ImageModel::P_EXCLUDE_SIZE)
+			if ($this->processable_status == ImageModel::P_EXCLUDE_SIZE || $this->processable_status == ImageModel::P_EXCLUDE_PATH)
 			{
 				 return $bool;
 			}

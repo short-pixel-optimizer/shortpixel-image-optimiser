@@ -879,6 +879,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                 if ($type == 'regex-name' || $type == 'regex-path')
                 {
                     $result = $this->matchExludeRegexPattern($target, $pattern);
+										Log::addTemp('Exclude RegeX result', $result);
                 }
                 else {
                     $result =  $this->matchExcludePattern($target, $pattern);
@@ -921,7 +922,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
       if(strlen($pattern) == 0)  // can happen on faulty input in settings.
         return false;
 
-      $m = preg_match($pattern,  $target);
+			$matches = array();
+      $m = preg_match($pattern,  $target, $matches);
+
       if ($m !== false && $m > 0) // valid regex, more hits than zero
       {
         return true;
