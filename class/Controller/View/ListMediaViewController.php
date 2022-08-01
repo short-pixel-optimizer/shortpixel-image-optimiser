@@ -249,7 +249,7 @@ class ListMediaViewController extends \ShortPixel\ViewController
 
 				if ($filter && $filter == 'optimized')
 				{
-					$sql = ' SELECT * FROM ' . $tableName;
+					$sql = ' SELECT SQL_CALC_FOUND_ROWS * FROM ' . $tableName;
 					$sql .= ' INNER JOIN ' . $wpdb->posts . ' ON ' . $wpdb->posts . '.ID = ' . $tableName . '.attach_id ';
 
 					$sql .= 'WHERE image_type = %d AND status =  %d';
