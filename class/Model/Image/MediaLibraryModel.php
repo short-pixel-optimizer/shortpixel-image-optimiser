@@ -1789,7 +1789,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           }
 				  elseif ($retinaObj->isRestorable())
 					{
-						 Log::addTemp('Restoring retina size ' . $size . ' ' . $retinaObj->getFullPath());
 						 $bool = $retinaObj->restore();
 
 						 if (! $bool)
