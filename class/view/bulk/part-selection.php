@@ -106,7 +106,7 @@ $approx = $this->view->approx;
 
 		           </div>
 			   <h4><label for="webp_checkbox">
-					 <?php printf(esc_html__('Also create %s WebP %s versions of the images' ,'shortpixel-image-optimiser'), '<b>', '</b>' ); ?>
+					 <?php printf(esc_html__('Also create WebP versions of the images' ,'shortpixel-image-optimiser') ); ?>
 				 </label></h4>
 				<div class="option"><?php esc_html_e('The total number of WebP images will be calculated in the next step.','shortpixel-image-optimiser'); ?></div>
 		       </div>
@@ -121,7 +121,7 @@ $approx = $this->view->approx;
 		           </label>
 
 		         </div>
-		         <h4><label for="avif_checkbox"><?php esc_html_e('Also create AVIF> versions of the images','shortpixel-image-optimiser'); ?></label></h4>
+		         <h4><label for="avif_checkbox"><?php esc_html_e('Also create AVIF versions of the images','shortpixel-image-optimiser'); ?></label></h4>
 				<div class="option"><?php esc_html_e('The total number of AVIF images will be calculated in the next step.','shortpixel-image-optimiser'); ?></div>
 		     </div>
 		 </div>
