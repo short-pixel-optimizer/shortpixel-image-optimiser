@@ -404,6 +404,10 @@ body.debug-model-active {
   display: none !important;
 }
 
+.button-primary.optimize {
+  margin-bottom: 16px;
+}
+
 .switch_button {
   line-height: 12px;
   margin: 2px -5px 10px -5px;

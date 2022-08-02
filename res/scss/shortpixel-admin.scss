@@ -15,6 +15,11 @@
     display: none !important;
 }
 
+// Reserve some space for the processing text on bottom.
+.button-primary.optimize
+{
+	 margin-bottom: 16px;
+}
 
 .switch_button
 {

@@ -265,7 +265,16 @@ Class FileSystemController extends \ShortPixel\Controller
 						// This is used by getting preview path ( backup pathToUrl) in bulk and for comparer..
 					  elseif ($is_multi_site && ! $is_main_site  && 0 === strpos($filepath, dirname(dirname($uploads['basedir']))) )
 						{
+
 								$url = str_replace( dirname(dirname($uploads['basedir'])), dirname(dirname($uploads['baseurl'])), $filepath );
+								$homeUrl = home_url();
+
+								// The result didn't end in a full URL because URL might have less subdirs ( dirname dirname) .
+								// This happens when site has blogd.dir (sigh) on a subdomain . Try to substitue the ABSPATH root with the home_url
+								if (strpos($url, $homeUrl) === false)
+								{
+									 $url = str_replace( trailingslashit(ABSPATH), trailingslashit($homeUrl), $filepath);
+								}
 
             } elseif ( false !== strpos( $filepath, 'wp-content/uploads' ) ) {
                 // Get the directory name relative to the basedir (back compat for pre-2.7 uploads)
