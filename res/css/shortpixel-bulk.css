@@ -546,6 +546,9 @@
 .shortpixel-bulk-wrapper section.panel.selection .optiongroup .option .number {
   font-weight: 700;
 }
+.shortpixel-bulk-wrapper section.panel.selection .count_limited {
+  color: #ff0000;
+}
 .shortpixel-bulk-wrapper section.panel.summary .spio-progressbar .select .line {
   background: #1FBEC9;
 }

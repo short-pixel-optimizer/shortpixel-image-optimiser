@@ -201,7 +201,7 @@ this.SaveOnKey = function()
 		return false; // no form no save.
 
 	window.addEventListener('keydown', function(event) {
-		console.log(event);
+
     if (! (event.key == 's' || event.key == 'S')  && event.ctrlKey)
 		{
 			return true;

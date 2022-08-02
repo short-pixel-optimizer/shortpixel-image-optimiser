@@ -79,6 +79,7 @@ $env = \wpSPIO()->env();
         <span>Images</span><span><?php echo esc_html($statsControl->find('media', 'images')); ?></span>
         <span>ItemsTotal</span><span><?php echo esc_html($statsControl->find('media', 'itemsTotal')); ?></span>
         <span>ThumbsTotal</span><span><?php echo esc_html($statsControl->find('media', 'thumbsTotal')); ?></span>
+
      </div>
      <h4>Custom</h4>
      <div class='flex'>
