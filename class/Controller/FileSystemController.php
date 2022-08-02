@@ -270,7 +270,7 @@ Class FileSystemController extends \ShortPixel\Controller
 								$homeUrl = home_url();
 
 								// The result didn't end in a full URL because URL might have less subdirs ( dirname dirname) .
-								// This happens when site has blogd.dir (sigh) on a subdomain . Try to substitue the ABSPATH root with the home_url
+								// This happens when site has blogs.dir (sigh) on a subdomain . Try to substitue the ABSPATH root with the home_url
 								if (strpos($url, $homeUrl) === false)
 								{
 									 $url = str_replace( trailingslashit(ABSPATH), trailingslashit($homeUrl), $filepath);

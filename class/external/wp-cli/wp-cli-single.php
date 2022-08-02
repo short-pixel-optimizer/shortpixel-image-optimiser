@@ -8,6 +8,9 @@ use ShortPixel\Controller\Queue\Queue as Queue;
 use ShortPixel\Controller\ApiController as ApiController;
 use ShortPixel\Controller\ResponseController as ResponseController;
 
+/**
+* Actions and operations for the ShortPixel Image Optimiser
+*/
 class SpioSingle extends SpioCommandBase
 {
 

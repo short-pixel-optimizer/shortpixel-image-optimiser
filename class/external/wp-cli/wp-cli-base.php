@@ -152,7 +152,7 @@ class SpioCommandBase
    *
    * ## EXAMPLES
    *
-	 * 	 wp spio run 														| Complete all processes
+	 *   wp spio run													  | Complete all processes
    *   wp spio run --ticks=20 --wait=3				| Ticks and wait time.
 	 *   wp spio run --queue=media							| Only run a specific queue.
    *
@@ -385,7 +385,8 @@ class SpioCommandBase
 				\WP_CLI::line($line);
 		}
 
-	 /** Shows the current status of the queue
+	 /**
+	 * Shows the current status of the queue
 	 *
    * [--show-debug]
    * :  Dump more information for debugging
@@ -402,6 +403,8 @@ class SpioCommandBase
 		{
 
 				$queue = $this->getQueueArgument($assoc);
+				$startupData = $this->getStatus();
+
 
 				$items = array();
 				$fields = array('queue name', 'in queue', 'in process', 'fatal errors', 'done', 'total', 'preparing', 'running', 'finished');
@@ -435,7 +438,8 @@ class SpioCommandBase
 				\WP_CLI\Utils\format_items('table', $items, $fields);
 		}
 
-	 /** Shows Key setting that are applied when running via WP_CLI.
+	 /**
+	 * Shows Key setting that are applied when running via WP_CLI.
 	 *
 	 *
    * ---
@@ -463,7 +467,7 @@ class SpioCommandBase
 		}
 
 		/**
-		*	 Clears the Queue(s)
+		* Clears the Queue(s)
 		*
 		*
 		* [--queue=<name>]

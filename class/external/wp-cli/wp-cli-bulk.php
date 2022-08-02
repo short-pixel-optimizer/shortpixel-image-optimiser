@@ -8,7 +8,9 @@ use ShortPixel\Controller\Queue\Queue as Queue;
 use ShortPixel\Controller\ApiController as ApiController;
 use ShortPixel\Controller\ResponseController as ResponseController;
 
-
+/**
+* Actions for running bulk operations from WP-CLI
+*/
 class SpioBulk extends SpioCommandBase
 {
 	   /**

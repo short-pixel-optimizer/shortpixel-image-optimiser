@@ -249,11 +249,6 @@ class WPShortPixelSettings extends \ShortPixel\Model {
 						$default = self::$_optionsMap[$key]['default']; // first do default do to overwrite.
 						$key = self::$_optionsMap[$key]['key'];
         }
-        if(get_option($key) === false) {
-
-            add_option( $key, $default, '', 'no' );
-
-        }
 
         $opt = get_option($key, $default);
 				return $opt;
