@@ -202,7 +202,7 @@ this.SaveOnKey = function()
 
 	window.addEventListener('keydown', function(event) {
 
-    if (! (event.key == 's' || event.key == 'S')  && event.ctrlKey)
+    if (! (event.key == 's' || event.key == 'S')  || ! event.ctrlKey)
 		{
 			return true;
 		}
