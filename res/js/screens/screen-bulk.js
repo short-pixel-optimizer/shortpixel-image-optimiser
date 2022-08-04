@@ -55,6 +55,8 @@ var ShortPixelScreen = function (MainScreen, processor)
       if (isPreparing)
       {
         this.SwitchPanel('selection');
+				this.UpdatePanelStatus('loading', 'selection');
+				this.PrepareBulk();
       }
       else if (isRunning)
       {

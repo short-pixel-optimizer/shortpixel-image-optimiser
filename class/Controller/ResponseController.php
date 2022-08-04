@@ -5,6 +5,7 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Model\ResponseModel as ResponseModel;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 
+
 class ResponseController
 {
 
@@ -148,6 +149,14 @@ class ResponseController
 							$text .= sprintf(__('( %s %d ) ', 'shortpixel-image-optimizer'), (strtolower($item->item_type) == 'media') ?  __('Attachment ID ') : __('Custom Type '), $item->item_id);
 					break;
 			}
+
+			switch($item->apiStatus)
+			{
+				  case ApiController::STATUS_FAIL:
+							$text .= sprintf(__('( %s %d ) ', 'shortpixel-image-optimizer'), (strtolower($item->item_type) == 'media') ?  __('Attachment ID ') : __('Custom Type '), $item->item_id);
+					break;
+			}
+
 
 			if (self::$screenOutput == self::OUTPUT_CLI)
 			{
