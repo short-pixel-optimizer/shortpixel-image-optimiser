@@ -66,7 +66,7 @@ class ApiController
   */
   public function processMediaItem($item, $imageObj)
   {
-		 	if (! $imageObj->isProcessable())
+		 	if (! $imageObj->isProcessable() || $imageObj->isOptimizePrevented() == true)
 			{
 					if ($imageObj->isOptimized())
 					{

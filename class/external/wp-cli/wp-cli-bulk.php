@@ -102,7 +102,7 @@ class SpioBulk extends SpioCommandBase
 							}
 						  elseif ($combined->is_finished)
 							{
-								  if ($created) // means we already ran the whole thing once.
+								  if ($combined->done > 0 || $created == true) // means we already ran the whole thing once.
 									{
 										\WP_CLI::Line('[Auto Bulk] Seems finished and done running');
 										$running = false;

@@ -24,6 +24,8 @@ namespace ShortPixel\ShortPixelLogger;
    protected $format_data = "\t %%data%% ";
 
    protected $hooks = array();
+
+	 private $logFile; // pointer resource to the logFile.
 /*   protected $hooks = array(
       'shortpixel_image_exists' => array('numargs' => 3),
       'shortpixel_webp_image_base' => array('numargs' => 2),
@@ -78,8 +80,6 @@ namespace ShortPixel\ShortPixelLogger;
 
       if (defined('SHORTPIXEL_DEBUG_TARGET') && SHORTPIXEL_DEBUG_TARGET || $this->is_manual_request)
       {
-          //$this->logPath = SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log";
-          //$this->logMode = defined('SHORTPIXEL_LOG_OVERWRITE') ? 0 : FILE_APPEND;
           if (defined('SHORTPIXEL_LOG_OVERWRITE')) // if overwrite, do this on init once.
             file_put_contents($this->logPath,'-- Log Reset -- ' .PHP_EOL);
 
@@ -130,6 +130,7 @@ namespace ShortPixel\ShortPixelLogger;
    public function setLogPath($logPath)
    {
       $this->logPath = $logPath;
+			$this->getWriteFile(true); // reset the writeFile here.
    }
    protected function addLog($message, $level, $data = array())
    {
@@ -187,15 +188,49 @@ namespace ShortPixel\ShortPixelLogger;
 
       $line = $this->formatLine($items);
 
+			$file = $this->getWriteFile();
+
       // try to write to file. Don't write if directory doesn't exists (leads to notices)
-      if ($this->logPath && is_dir(dirname($this->logPath)) )
+      if ($file )
       {
-        file_put_contents($this->logPath,$line, FILE_APPEND);
+				fwrite($file, $line);
+//        file_put_contents($this->logPath,$line, FILE_APPEND);
       }
       else {
-        error_log($line);
+       // error_log($line);
       }
    }
+
+	 protected function getWriteFile($reset = false)
+	 {
+		 	if (! is_null($this->logFile) && $reset === false)
+			{
+					return $this->logFile;
+			}
+			elseif(is_object($this->logFile))
+			{
+				fclose($this->logFile);
+			}
+
+			$logDir = dirname($this->logPath);
+		  if (! is_dir($logDir) || ! is_writable($logDir))
+			{
+				error_log('ShortpixelLogger: Log Directory is not writable');
+				$this->logFile = false;
+				return false;
+			}
+
+			$file = fopen($this->logPath, 'a');
+			if ($file === false)
+			{
+				 error_log('ShortpixelLogger: File could not be opened / created: ' . $this->logPath);
+				 $this->logFile = false;
+				 return $file;
+			}
+
+			$this->logFile = $file;
+			return $file;
+	 }
 
    protected function formatLine($args = array() )
    {

@@ -115,8 +115,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     /* Check if an image in theory could be processed. Check only exclusions, don't check status etc */
     public function isProcessable()
     {
-				$this->processable_status = 0; // reset everytime.
-
         if ( $this->isOptimized() || ! $this->exists()  || $this->isPathExcluded() || $this->isExtensionExcluded() || $this->isSizeExcluded() || (! $this->is_writable() && ! $this->is_virtual()) || $this->isOptimizePrevented() !== false )
         {
           if(! $this->is_writable() && $this->processable_status == 0)
@@ -127,7 +125,10 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
           return false;
         }
         else
+				{
+					$this->processable_status = 0;
           return true;
+				}
     }
 
     public function isProcessableFileType($type = 'webp')
@@ -193,7 +194,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
             $message = __('Image Size Excluded', 'shortpixel-image-optimiser');
          break;
          case self::P_EXCLUDE_PATH:
-            $message = __('Image Path Excluded', 'shortpixel-image-optimiser');
+            $message = __('Image Excluded', 'shortpixel-image-optimiser');
          break;
          case self::P_IS_OPTIMIZED:
             $message = __('Image is already optimized', 'shortpixel-image-optimiser');
@@ -209,7 +210,10 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 				 break;
 				 case self::P_OPTIMIZE_PREVENTED:
 				 		$message = __('Fatal error preventing processing', 'shortpixel-image-optimiser');
+						if (property_exists($this, 'optimizePrevented'))
+						$message = $this->get('optimizePrevented');
 				 break;
+				 // Restorable Reasons 
 				 case self::P_RESTORABLE:
 				 		$message = __('Image restorable', 'shortpixel-image-optimiser');
 				 break;

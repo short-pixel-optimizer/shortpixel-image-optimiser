@@ -22,6 +22,10 @@ class WpCliController
 
     public function __construct()
     {
+				$log = \ShortPixel\ShortPixelLogger\ShortPixelLogger::getInstance();
+				if (\ShortPixel\ShortPixelLogger\ShortPixelLogger::debugIsActive())
+					$log->setLogPath(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log_wpcli");
+
         $this->initCommands();
     }
 
@@ -29,6 +33,8 @@ class WpCliController
     {
         if (is_null(self::$instance))
           self::$instance = new WpCliController();
+
+
 
         return self::$instance;
     }

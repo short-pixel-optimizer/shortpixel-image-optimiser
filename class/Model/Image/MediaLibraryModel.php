@@ -27,7 +27,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
   private static $unlistedChecked = array(); // limit checking unlisted.
 
-  private $optimizePrevented; // cache if there is any reason to prevent optimizing
+  protected $optimizePrevented; // cache if there is any reason to prevent optimizing
 	private $justConverted = false; // check if conversion happened on same run, to prevent double runs.
 
 	const IMAGE_TYPE_MAIN = 0;
@@ -558,48 +558,51 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       }
 
 			/** #### RETINAS ***/
-			foreach($this->retinas as $name => $retinaObj)
+			if (is_array($this->retinas))
 			{
-				if (! isset($tempFiles[$retinaObj->getFileName()]) )
+				foreach($this->retinas as $name => $retinaObj)
 				{
-					 continue;
-				}
+						if (! isset($tempFiles[$retinaObj->getFileName()]) )
+						{
+							 continue;
+						}
 
-				$retinaObj->setMeta('compressionType', $compressionType);
-				$retinaObj->handleOptimizedFileType($tempFiles); // check for webps /etc
+						$retinaObj->setMeta('compressionType', $compressionType);
+						$retinaObj->handleOptimizedFileType($tempFiles); // check for webps /etc
 
-				if ($retinaObj->isOptimized())
-				{
-					 continue;
-				}
-				if (!$retinaObj->isProcessable())
-				{
-					continue; // when excluded.
-				}
-				$filebase = $retinaObj->getFileBase();
-				$result = false;
+						if ($retinaObj->isOptimized())
+						{
+							 continue;
+						}
+						if (!$retinaObj->isProcessable())
+						{
+							continue; // when excluded.
+						}
+						$filebase = $retinaObj->getFileBase();
+						$result = false;
 
-				if (isset($optimized[$filebase])) // double sizes.
-				{
-					$databaseID = $retinaObj->getMeta('databaseID');
-					$retinaObj->setMetaObj($optimized[$filebase]);
-					$retinaObj->setMeta('databaseID', $databaseID);  // keep dbase id the same, otherwise it won't write this thumb to DB due to same ID.
-					$result = false;
-				}
-				else
-				{
-				 $result = $retinaObj->handleOptimized($tempFiles);
-				}
+						if (isset($optimized[$filebase])) // double sizes.
+						{
+							$databaseID = $retinaObj->getMeta('databaseID');
+							$retinaObj->setMetaObj($optimized[$filebase]);
+							$retinaObj->setMeta('databaseID', $databaseID);  // keep dbase id the same, otherwise it won't write this thumb to DB due to same ID.
+							$result = false;
+						}
+						else
+						{
+						 $result = $retinaObj->handleOptimized($tempFiles);
+						}
 
-				if ($result)
-				{
-					 $optimized[$filebase] = $retinaObj->getMetaObj();
-				}
-				elseif ($retinaObj->get('prevent_next_try') !== false) // in case of fatal issues.
-				{
-						 $this->preventNextTry($retinaObj->get('prevent_next_try'));
-						 $return = false; //failed
-				}
+						if ($result)
+						{
+							 $optimized[$filebase] = $retinaObj->getMetaObj();
+						}
+						elseif ($retinaObj->get('prevent_next_try') !== false) // in case of fatal issues.
+						{
+								 $this->preventNextTry($retinaObj->get('prevent_next_try'));
+								 $return = false; //failed
+						}
+				} // retinas loop
 			}
 
       if ($this->isScaled() )
@@ -1153,13 +1156,17 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
          		$thumbnails[$thumbName] = $thumbObj->toClass();
 				 }
       }
-      foreach($this->retinas as $index => $retinaObj)
-      {
-				 if ($retinaObj->getMeta('status') > 0)
-				 {
-         		$retinas[$index] = $retinaObj->toClass();
-				 }
-      }
+
+			if (is_array($this->retinas))
+			{
+				  foreach($this->retinas as $index => $retinaObj)
+		      {
+						 if ($retinaObj->getMeta('status') > 0)
+						 {
+		         		$retinas[$index] = $retinaObj->toClass();
+						 }
+		      }
+			}
 
       if (count($thumbnails) > 0)
         $metadata->thumbnails = $thumbnails;
@@ -1676,7 +1683,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        {
  			   $this->processable_status = self::P_OPTIMIZE_PREVENTED;
          $this->optimizePrevented = $reason;
-         return $reason;
+         return true;
        }
   }
 
@@ -1803,11 +1810,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						 }
 					}
 
-
 			}
-
-
-
 		}
 
     if ($this->isScaled() )

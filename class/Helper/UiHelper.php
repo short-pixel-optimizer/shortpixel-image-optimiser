@@ -202,9 +202,6 @@ class UiHelper
 
   }
 
-
-
-
   public static function compressionTypeToText($type)
   {
      if ($type == ImageModel::COMPRESSION_LOSSLESS )
@@ -241,7 +238,7 @@ class UiHelper
 			if ($id === 0)
 				return array();
 
-      if ($mediaItem->isOptimized())
+      if ($mediaItem->isOptimized() )
       {
            $optimizable = $mediaItem->getOptimizeURLS(true);
 
@@ -410,8 +407,8 @@ class UiHelper
 			 $text = __('This item is waiting to be processed', 'shortpixel-image-optimiser');
 		}
 
-      if ($mediaItem->isOptimizePrevented() !== false)
-      {
+    if ($mediaItem->isOptimizePrevented() !== false)
+    {
 
           $retry = self::getAction('retry', $mediaItem->get('id'));
 
@@ -429,7 +426,7 @@ class UiHelper
 						}
 					}
 
-          $text .= "<div class='shortpixel-image-error'>" . esc_html($mediaItem->isOptimizePrevented());
+          $text .= "<div class='shortpixel-image-error'>" . esc_html($mediaItem->getReason('processable'));
           $text .= "<span class='shortpixel-error-reset'>" . sprintf(__('After you have fixed this issue, you can %s click here to retry %s', 'shortpixel-image-optimiser'), '<a href="javascript:' . $retry['function'] . '">', '</a>');
 
           $text .= '</div>';
@@ -609,7 +606,7 @@ class UiHelper
 	public static function formatNumber($number, $precision = 2)
 	{
 			$number =  number_format_i18n( (int) $number, $precision);
-			// Some locale's have no-breaking-space as thousands separator. This doesn't work well in JS / Cron Shell so replace with space. 
+			// Some locale's have no-breaking-space as thousands separator. This doesn't work well in JS / Cron Shell so replace with space.
 			$number = str_replace('&nbsp;', ' ', $number);
 		  return $number;
 	}

@@ -181,6 +181,8 @@ class OptimizeController
         $json->status = 0;
         $json->result = new \stdClass;
 
+				$item_id = $mediaItem->get('id');
+
         if (! is_object($mediaItem))  // something wrong
         {
 
@@ -191,12 +193,20 @@ class OptimizeController
 					$json->result->is_done = true;
 					$json->result->is_error = true;
 
-					ResponseController::addData($item->item_id, 'message', $item->result->message);
+					ResponseController::addData($item_id, 'is_error', true);
+					ResponseController::addData($item_id, 'is_done', true);
+					ResponseController::addData($item_id, 'message', $item->result->message);
 
-          Log::addWarn('Item with id ' . $json->result->item_id . ' is not restorable,');
+          Log::addWarn('Item with id ' . $item_id . ' is not restorable,');
 
            return $json;
         }
+
+				$data = array(
+					'item_type' => $mediaItem->get('type'),
+					'fileName' => $mediaItem->getFileName(),
+				);
+				ResponseController::addData($item_id, $data);
 
         $item_id = $mediaItem->get('id');
 
@@ -211,7 +221,7 @@ class OptimizeController
 				else
 				{
 					 $result = false;
-					 $json->result->message = $mediaItem->getReason('restorable');
+					 $json->result->message = ResponseController::formatItem($mediaItem->get('id')); // $mediaItem->getReason('restorable');
 				}
 
 				// Compat for ancient WP
@@ -240,10 +250,8 @@ class OptimizeController
         else
         {
 
-					 if (! property_exists($json->result, 'message'))
-					 {
-					 		$json->result->message = __('Item is not restorable', 'shortpixel-image-optimiser');
-				 	 }
+					 $json->result->message = ResponseController::formatItem($mediaItem->get('id'));
+
            $json->result->is_done = true;
            $json->fileStatus = ImageModel::FILE_STATUS_ERROR;
            $json->result->is_error = true;
@@ -515,7 +523,8 @@ class OptimizeController
       else
 			{
         //$item->result->filename = $imageItem->getFileName();
-				//ResponseController::addData($item->item_id, 'fileName', $imageItem->getFileName());
+				// Used in WP-CLI
+				ResponseController::addData($item->item_id, 'fileName', $imageItem->getFileName());
 			}
 
       $result = $item->result;
