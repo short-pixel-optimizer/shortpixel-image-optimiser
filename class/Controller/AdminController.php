@@ -75,6 +75,7 @@ class AdminController extends \ShortPixel\Controller
 					'wait' => 3, // amount of time to wait for next round. Prevents high loads
 					'run_once' => false, //  If true queue must be run at least every few minutes. If false, it tries to complete all.
 					'queues' => array('media','custom'),
+					'bulk' => false,
 				);
 
 				if (wp_doing_cron())
@@ -85,6 +86,10 @@ class AdminController extends \ShortPixel\Controller
 				$args = wp_parse_args($args, $defaults);
 
 			  $control = new OptimizeController();
+				if ($args['bulk'] === true)
+				{
+					 $control->setBulk(true);
+				}
 
 			 	if ($args['run_once'] === true)
 				{
