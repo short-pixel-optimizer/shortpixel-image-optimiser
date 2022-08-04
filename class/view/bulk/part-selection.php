@@ -142,7 +142,7 @@ $approx = $this->view->approx;
        <h4 class='approx'><?php esc_html_e('An estimate of unoptimized images in this installation', 'shortpixel-image-optimiser'); ?> :
 			<span data-check-approx-total><?php echo esc_html($approx->total->images) ?></span> </h4>
 
-       <div><p><?php printf(esc_html_e('In the next step, the plugin will calculate the total number of images to be optimized, and your bulk process will be prepared. The processing %swill not start yet%s, but a summary of the images to be optimized will be displayed.', 'shortpixel-image-optimiser'),'<b>','</b>'); ?></p></div>
+       <div><p><?php printf(__('In the next step, the plugin will calculate the total number of images to be optimized, and your bulk process will be prepared. The processing %s will not start yet %s, but a summary of the images to be optimized will be displayed.', 'shortpixel-image-optimiser'),'<b>','</b>'); ?></p></div>
 		 </div>
 
       <nav>
