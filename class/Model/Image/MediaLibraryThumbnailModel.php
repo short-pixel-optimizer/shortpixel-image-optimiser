@@ -172,7 +172,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 				// https://app.asana.com/0/1200110778640816/1202589533659780
 				$size_array = image_get_intermediate_size($this->id, $this->size);
 
-				if ($size_array === false)
+				if ($size_array === false || ! isset($size_array['url']))
 				{
 					 $url = $fs->pathToUrl($this);
 				}
