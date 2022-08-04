@@ -213,7 +213,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 						if (property_exists($this, 'optimizePrevented'))
 						$message = $this->get('optimizePrevented');
 				 break;
-				 // Restorable Reasons 
+				 // Restorable Reasons
 				 case self::P_RESTORABLE:
 				 		$message = __('Image restorable', 'shortpixel-image-optimiser');
 				 break;
@@ -645,6 +645,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
     public function isRestorable()
     {
+				
         if (! $this->isOptimized())
         {
 					 $this->restorable_status = self::P_NOT_OPTIMIZED;
