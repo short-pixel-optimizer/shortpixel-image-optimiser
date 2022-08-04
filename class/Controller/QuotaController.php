@@ -76,7 +76,7 @@ class QuotaController
 
           $quota = (object) [
               'monthly' => (object) [
-                'text' => sprintf(__('%s/month', 'shortpixel-image-optimiser'), $quotaData['APICallsQuota']),
+                'text' => str_replace('images', 'credits', sprintf(__('%s/month', 'shortpixel-image-optimiser'), $quotaData['APICallsQuota'])),
                 'total' =>  $quotaData['APICallsQuotaNumeric'],
                 'consumed' => $quotaData['APICallsMadeNumeric'],
                 'remaining' => max($quotaData['APICallsQuotaNumeric'] - $quotaData['APICallsMadeNumeric'], 0),
