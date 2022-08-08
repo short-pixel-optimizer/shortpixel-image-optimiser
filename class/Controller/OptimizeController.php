@@ -642,9 +642,6 @@ class OptimizeController
 								$item->result->optimized = $fs->pathToUrl($showItem);
 							}
 
-
-
-
            }
            // This was not a request process, just handle it and mark it as done.
            elseif ($result->apiStatus == ApiController::STATUS_NOT_API)

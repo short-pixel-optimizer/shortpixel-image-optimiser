@@ -2096,6 +2096,47 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		delete_post_meta($this->id, '_shortpixel_was_converted');
 		$result = $this->checkLegacy();
+
+		// Check the whole thing to find any images that have a backup, but are not marked as optimized, and just mark them.
+		if (! $this->isOptimized() && $this->hasBackup() )
+		{
+			$this->setMeta('status', self::FILE_STATUS_SUCCESS);
+			$result = true;
+		}
+		if ($this->hasOriginal())
+		{
+			 $originalFile = $this->getOriginalFile();
+			 if (! $originalFile->isOptimized() && $originalFile->hasBackup() )
+			 {
+				  $originalFile->setMeta('status', self::FILE_STATUS_SUCCESS);
+					$result = true;
+			 }
+		}
+		if (is_array($this->thumbnails) && count($this->thumbnails) > 0)
+		{
+			 foreach($this->thumbnails as $thumbObj)
+			 {
+				   if (! $thumbObj->isOptimized() && $thumbObj->hasBackup())
+					 {
+						  $thumbObj->setMeta('status', self::FILE_STATUS_SUCCESS);
+							$result = true;
+					 }
+			 }
+		}
+		if (is_array($this->retinas) && count($this->retinas) > 0)
+		{
+			 foreach($this->retinas as $retinaObj)
+			 {
+				 	if (! $retinaObj->isOptimized() && $retinaObj->hasBackup())
+					{
+						 $retinaObj->setMeta('status', self::FILE_STATUS_SUCCESS);
+						 $result = true;
+					}
+
+			 }
+		}
+
+
 		if ($result)
 		{
 			$this->saveMeta();
@@ -2146,7 +2187,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       }
 
 			$quotaController = QuotaController::getInstance();
-			if ($quotaController->hasQuota() === false)
+			if ($quotaController->hasQuota() === true)
 			{
 				$adminNotices = AdminNoticesController::getInstance();
 				$adminNotices->invokeLegacyNotice();

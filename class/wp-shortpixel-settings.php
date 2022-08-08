@@ -211,10 +211,9 @@ class WPShortPixelSettings extends \ShortPixel\Model {
 
     public static function onDeactivate() {
         delete_option('wp-short-pixel-activation-notice');
-				delete_option( 'wp-short-pixel-bulk-last-status'); // legacy shizzle
-				delete_option( 'wp-short-pixel-current-total-files');
+				delete_option('wp-short-pixel-bulk-last-status'); // legacy shizzle
+				delete_option('wp-short-pixel-current-total-files');
 				delete_option('wp-short-pixel-remove-settings-on-delete-plugin');
-
     }
 
 

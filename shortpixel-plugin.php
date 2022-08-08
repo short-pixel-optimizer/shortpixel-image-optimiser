@@ -494,16 +494,12 @@ class ShortPixelPlugin {
 		global $plugin_page;
 		$screen_id = $this->env()->screen_id;
 
-//var_dump(\wpSPIO()->env()->is_screen_to_use);
-//exit($screen_id);
 
 		// $load = array();
 		$load_processor = array( 'shortpixel', 'shortpixel-processor' );  // a whole suit needed for processing, not more. Always needs a screen as well!
 		$load_bulk      = array();  // the whole suit needed for bulking.
 
-		if ( $this->env()->is_debug ) {
-			$this->load_script( 'shortpixel-debug' );
-		}
+
 
 		if ( \wpSPIO()->env()->is_screen_to_use ) {
 			$this->load_script( 'shortpixel-tooltip' );
@@ -535,6 +531,10 @@ class ShortPixelPlugin {
 
 			$this->load_style( 'shortpixel-admin' );
 			$this->load_style( 'shortpixel' );
+			
+			if ( $this->env()->is_debug ) {
+				$this->load_script( 'shortpixel-debug' );
+			}
 
 		} elseif ( $plugin_page == 'wp-short-pixel-custom' ) {
 			$this->load_style( 'shortpixel' );

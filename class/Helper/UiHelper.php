@@ -605,7 +605,15 @@ class UiHelper
 
 	public static function formatNumber($number, $precision = 2)
 	{
+			global $wp_locale;
+			$decimalpoint = isset($wp_locale->number_format['decimal_point']) ? $wp_locale->number_format['decimal_point'] : false;
 			$number =  number_format_i18n( (int) $number, $precision);
+
+			// Don't show trailing zeroes if number is a whole unbroken number.
+			if ($decimalpoint !== false && substr($number, strpos($number, $decimalpoint)) == 00)
+			{
+				 $number = number_format_i18n($number, 0);
+			}
 			// Some locale's have no-breaking-space as thousands separator. This doesn't work well in JS / Cron Shell so replace with space.
 			$number = str_replace('&nbsp;', ' ', $number);
 		  return $number;
