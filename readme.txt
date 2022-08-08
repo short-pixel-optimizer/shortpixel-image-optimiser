@@ -32,30 +32,30 @@ Make an instant <a href="https://shortpixel.com/image-compression-test" target="
 
 * popular plugin with over 300,000 active installations - according to WordPress
 * compress JPG (and its variations JPEG, JPEG 2000, JPEG XR), PNG, GIF (still or animated) images and also PDF documents
-i* option to convert any JPEG, PNG or GIF (even animated ones!) to **WebP** and **AVIF** for more Google love. <a href="https://blog.shortpixel.com/how-webp-images-can-speed-up-your-site/" target="_blank">How to enable WebP?</a>. <a href="https://blog.shortpixel.com/what-is-avif-and-why-is-it-good/" target="_blank">What is AVIF and why is it good?</a>.
-* **New!:** full <a href="https://shortpixel.com/knowledge-base/article/537-wp-cli-support-for-shortpixel-image-optimizer" target="_blank">WP-CLI support</a> for background processing, useful especially for sites with a very large Media Library
-* **New!:** easily add <a href="" target="_blank">recurrent cron jobs</a> for background optimization if you have users uploading images from the frontend of your site
+* option to convert any JPEG, PNG or GIF (even animated ones!) to **WebP** and **AVIF** for more Google love. <a href="https://shortpixel.com/blog/how-webp-images-can-speed-up-your-site/" target="_blank">How to enable WebP?</a>. <a href="https://shortpixel.com/blog/what-is-avif-and-why-is-it-good/" target="_blank">What is AVIF and why is it good?</a>.
+* **New!:** full <a href="https://shortpixel.com/knowledge-base/article/537-wp-cli-support-for-shortpixel-image-optimizer" target="_blank">WP-CLI support</a> for background processing, useful especially for websites with a very large Media Library
+* **New!:** Easily add <a href="https://shortpixel.com/knowledge-base/article/543-how-to-schedule-a-cron-event-to-run-shortpixel-image-optimizer" target="_blank">recurrent cron jobs</a> for background optimization. Useful if you have users uploading images via the front end of your website
 * option to automatically convert PNG to JPG if that will result in smaller images. Ideal for large images in PNG format
 * option to include the next generation images (WebP and AVIF) into the front-end pages by using the `<picture>` tag instead of `<img>`, independent from generating them through the plugin
-* compatible with WP Retina 2x - all **retina images** are automatically compressed. <a href="https://blog.shortpixel.com/how-to-use-optimized-retina-images-on-your-wordpress-site-for-best-user-experience-on-apple-devices/" target="_blank">How to benefit from Retina displays?</a>
+* compatible with WP Retina 2x - all **retina images** are automatically compressed. <a href="https://shortpixel.com/blog/how-to-use-optimized-retina-images-on-your-wordpress-site-for-best-user-experience-on-apple-devices/" target="_blank">How to benefit from Retina displays?</a>
 * optimize thumbnails as well as featured images. You can also **select individual thumbnails to exclude** from optimization
-* advanced exclusion possibilites, that allows excluding images by the file name, path, size or complex regex exclusions
+* advanced exclusion options that allow excluding images based on filename, path, size or complex regex exclusions
 * ability to optimize any image on your site including images in **NextGEN Gallery** and any other image galleries or sliders
 * option to scale images down, with 2 different options, which is very useful to automatically resize large images. This applies to the featured images and there is no need for additional plugins like Imsanity
 * CMYK to RGB conversion
 * skip already optimized images
 * **24h <a href="https://wordpress.org/support/plugin/shortpixel-image-optimiser/reviews/?filter=5" target="_blank">stellar support</a>** (24/7) directly from developers.
 * easily **test lossy/glossy/lossless** versions of the images with a single click in your Media Library
-* **great for photographers**: <a href="https://blog.shortpixel.com/how-much-smaller-can-be-images-without-exif-icc/" target="_blank">keep or remove EXIF</a> data from your images, compress photos with lossless option
+* **great for photographers**: <a href="https://shortpixel.com/blog/how-much-smaller-can-be-images-without-exif-icc/" target="_blank">keep or remove EXIF</a> data from your images, compress photos with lossless option
 * works well with both HTTPS and HTTP websites
-* fully tested and compatible with any WordPress multisite install (either with sub-folders or sub-domains)
+* fully compatible with any WordPress multisite install (either with sub-folders or sub-domains)
 * uses progressive JPEG for larger images in order to speed up the image display
 * you can run ShortPixel plugin on **multiple websites** or on a **multisite** with a **single API Key**
 * it is **safe to test** and use the plugin: all the original images are by default saved in a local backup that can be restored with a click, either one by one or in bulk
 * 'Bulk' optimize all the existing images in Media Library or in any gallery with one click
 * works great for **eCommerce websites using WooCommerce** or other plugins
 * works great with NextGEN gallery, Foo Gallery and any other galleries and sliders
-* fully compatible and tested with the <a href="https://wordpress.org/plugins/amazon-s3-and-cloudfront/" target="_blank">WP Offload Media</a> plugin
+* fully compatible with the <a href="https://wordpress.org/plugins/amazon-s3-and-cloudfront/" target="_blank">WP Offload Media</a> plugin
 * compatible with WP Engine hosted websites and all the major hosting providers
 * compatible with WPML and WPML Media plugins
 * no file size limit
@@ -314,6 +314,32 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 9. Check other optimized images status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 5.0.8 =
+Release date August 8th, 2022
+* Fix: the `Previous Bulks` now displays the number of credits used instead of the number of Media Library items, to avoid confusion;
+* Fix: the notification for migrating the old format of optimization information was not getting triggered anymore;
+* Fix: excluded images and/or thumbnails can now be restored from the backup;
+* Fix: added prevention for double database queries when checking if an item is already in the queue;
+* Fix: the bulk restore and bulk migration of optimization data can now be done even if out of credits;
+* Fix: reduced the number of database table checks done on wp-admin pages to the minimum possible;
+* Fix: the out-of-quota message was not always showing up properly;
+* Fix: the bulk migration of the optimization data now marks as optimized the images that have proper backups in place;
+* Fix: the thousands separators are now displayed properly for all languages;
+* Fix: the optimized/unoptimized Media Library filter has proper pagination and also works with WPML;
+* Fix: in case the optimization percentage is an integer, drop the `.00` (83.00% -> 83%);
+* Fix: improved the settings and bulk pages load time for sites with a huge number of items in the Media Library;
+* Fix: properly save the optimization information even if the filename is huge;
+* Fix: the `Optimize now` button wasn't showing up on Custom Media right after restoring an item from the backup;
+* Fix: more fixes for multisite installs where the old `blogs.dir` folder structure is used;
+* Fix: multiple fixes and improvements for WP-CLI, including more detailed embedded docs and examples;
+* Fix: multiple fixes and improvements to the whole exclusions module;
+* Fix: multiple fixes and improvements in handling how retina images are optimized;
+* Fix: various small fixes and improvements to the debug mode of the plugin;
+* Tweak: `CTRL+S` can now be used to save settings (you're welcome!);
+* Tweak: added support for bulk processing via the processing hook;
+* Tweak: various wording and text updates in the plugin and the readme file;
+* Language: 10 new strings added, 8 updated, 0 fuzzed, and 2 obsoleted.
 
 = 5.0.7 =
 Release date July 26th, 2022
