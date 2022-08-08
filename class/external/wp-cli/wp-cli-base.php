@@ -58,12 +58,12 @@ class SpioCommandBase
 
      protected static $runs = 0;
       /**
-     * Add a single item to the queue.
+     * Adds a single item to the queue(s).
      *
      * ## OPTIONS
      *
      * <id>
-     * : MediaLibrary ID
+     * : Media Library ID or Custom Media ID
      *
      *
 	   * [--type=<type>]
@@ -76,12 +76,13 @@ class SpioCommandBase
 	   * ---
 	 	 *
    	 * [--halt]
-   	 * : Stop (don't process the queue) after adding
-	 	 *
+     * : Stops (does not process the queues) after the item is added.
+     *
      *
      * ## EXAMPLES
      *
-     *   wp spio add 1
+     *   wp spio [bulk] add 123
+     *   wp spio [bulk] add 21 --type=custom --halt
      *
      * @when after_wp_load
      */
@@ -132,35 +133,39 @@ class SpioCommandBase
 
 
    /**
-   * Runs the current queue in manual mode. The queue will process amount of ticks ( send and receive images ) and then * stops. Use this if you regularly (every few minutes) want to run the script.
+   * Starts processing what has been added to the processing queue(s), optionally stopping after a specified number of "ticks".
+   *
+         * A tick (or cycle) means a request sent to the API, either to send an image to be processed or to check if the API has completed processing. Use the ticks (cycles) if you want to run the script regularly (every few minutes) want to run the script.
 	 *
-	 * Without defining ticks, the queue will run until all have been processed.
+	 * If you do not define ticks, the queue will run until everything has been processed.
    *
    * ## OPTIONS
    *
    * [--ticks=<number>]
-   * : How much times the queue runs
+   * : How often the queue runs (how many ticks/cycles)
 	 * ---
    *
-   * [--wait=<miliseconds>]
-   * : How much miliseconds to wait for next tick.
+   * [--wait=<seconds>]
+   * : How many seconds the system waits for next tick (cycle).
 	 * ---
 	 * default: 3
 	 * ---
 	 *
-	 *
-   *
    * [--queue=<name>]
-   * : Either 'media' or 'custom' . Omit to run both.
+   * : Either 'media' or 'custom'. Omit the parameter to run both queues.
    * ---
    * default: media,custom
+   * ---
+   * options:
+   *   - media
+   *   - custom
    * ---
    *
    * ## EXAMPLES
    *
-	 *   wp spio run													  | Complete all processes
-   *   wp spio run --ticks=20 --wait=3				| Ticks and wait time.
-	 *   wp spio run --queue=media							| Only run a specific queue.
+   *   wp spio [bulk] run													  | Complete all processes
+   *   wp spio [bulk] run --ticks=20 --wait=3				| Ticks and wait time.
+   *   wp spio [bulk] run --queue=media							| Only run a specific queue.
    *
    *
    * @when after_wp_load
@@ -392,18 +397,16 @@ class SpioCommandBase
 		}
 
 	 /**
-	 * Shows the current status of the queue
+	 * Displays the current status of the processing queue(s)
 	 *
-   * [--show-debug]
-   * :  Dump more information for debugging
+	 * [--show-debug]
+	 * :  Dumps more information for debugging purposes
+	 * ---
 	 *
+	 * ## EXAMPLES
 	 *
-   * ---
-   *
-   * ## EXAMPLES
-   *
-   *   wp spio status [--show-debug]
-   *
+	 *   wp spio [bulk] status [--show-debug]
+	 *
 	 */
 		public function status($args, $assoc)
 		{
@@ -445,14 +448,14 @@ class SpioCommandBase
 		}
 
 	 /**
-	 * Shows Key setting that are applied when running via WP_CLI.
+	 * Displays the key settings that are applied when executing commands with WP-CLI.
 	 *
 	 *
    * ---
    *
    * ## EXAMPLES
    *
-   *   wp settings
+   *   wp spio [bulk] settings
    *
 	 */
 		public function settings()
@@ -477,13 +480,16 @@ class SpioCommandBase
 		*
 		*
 		* [--queue=<name>]
-		* : Either 'media' or 'custom' . Omit to run both.
+		* : Either 'media' or 'custom'. Omit the parameter to clear both queues.
 		* ---
 		* default: media,custom
 		* options:
 		*   - media
 		*   - custom
 		*
+		* ## EXAMPLES
+		*
+		*   wp spio [bulk] clear
 		*/
 		public function clear($args, $assoc)
 		{

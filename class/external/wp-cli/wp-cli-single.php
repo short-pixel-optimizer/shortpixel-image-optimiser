@@ -9,21 +9,21 @@ use ShortPixel\Controller\ApiController as ApiController;
 use ShortPixel\Controller\ResponseController as ResponseController;
 
 /**
-* Actions and operations for the ShortPixel Image Optimiser
+* Actions and operations for the ShortPixel Image Optimizer plugin
 */
 class SpioSingle extends SpioCommandBase
 {
 
     /**
-   * Restores optimized item to original ( if backups are active )
+   * Restores the optimized item to its original state (if backups are active).
    *
    * ## OPTIONS
    *
    * <id>
-   * : MediaLibrary ID
+   * : Media Library ID or Custom Media ID
 	 *
    * [--type=<type>]
-   * : Media | Custom
+   * : media | custom
    * ---
    * default: media
    * options:
@@ -33,8 +33,8 @@ class SpioSingle extends SpioCommandBase
    *
    * ## EXAMPLES
    *
-   *   wp spio restore 1
-	 *   wp spio restore 1 --type=custom
+   *   wp spio restore 123
+   *   wp spio restore 21 --type=custom
    *
    * @when after_wp_load
    */
