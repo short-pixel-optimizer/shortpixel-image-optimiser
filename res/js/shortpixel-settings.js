@@ -50,6 +50,12 @@ var ShortPixelSettings = function()
 				var checked = checkbox.checked;
 			}
 
+			if (target === null)
+			{
+				 console.error('Target element ID not found', checkbox);
+				 return false; 
+			}
+
 			if (checked)
 			{
 			  // target.classList.add('is-visible');

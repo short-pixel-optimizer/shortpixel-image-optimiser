@@ -543,7 +543,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						 }
 
 						 	$wpmeta['sizes'][$size]['filesize'] = $thumbnail->getFileSize();
-
 				 }
 
          if ($result)
@@ -2588,10 +2587,20 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
         $currentFiles = array($this->getFileName());
         foreach($this->thumbnails as $thumbObj)
-          $currentFiles[] = $thumbObj->getFileName();
+				{
+				   $currentFiles[] = $thumbObj->getFileName();
+				}
 
         if ($this->isScaled())
            $currentFiles[] = $this->getOriginalFile()->getFileName();
+
+				if (is_array($this->retinas))
+				{
+					 foreach($this->retinas as $retinaObj)
+					 {
+						  $currentFiles[] = $retinaObj->getFileName();
+					 }
+				}
 
 				$processFiles = array();
 				$unlisted = array();
