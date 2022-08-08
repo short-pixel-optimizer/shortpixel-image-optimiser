@@ -96,6 +96,11 @@
          &:nth-child(odd) {
             background-color: #f9f9f9;
          }
+				 span:last-child
+				 {
+					  min-width: 400px;
+						max-width: 400px;
+				 }
          &:hover
          {
            .row-actions
@@ -177,7 +182,7 @@
 
          }
          .sp-column-info {
-           max-width: 400px;
+         //  max-width: 400px;
 					 width: 100%;
            min-width: 250px;
            display: inline-block;

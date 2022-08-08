@@ -150,21 +150,23 @@ class OptimizeController
         return $json;
     }
 
-		/** Check if item is in queue.
+		/** Check if item is in queue. || Only checks the single queue!
 		* @param Object $mediaItem
 		*/
 		public function isItemInQueue($mediaItem)
 		{
+				if (! is_null($mediaItem->is_in_queue))
+					return $mediaItem->is_in_queue;
+
 				$type = $mediaItem->get('type');
+
 			  $q = $this->getQueue($type);
 
-				$result = $q->getShortQ()->getItem($mediaItem->get('id'));
+				$bool = $q->isItemInQueue($mediaItem->get('id'));
 
-				if (is_object($result))
-					 return true;
-				else
-					 return false;
-
+			  // Preventing double queries here
+				$mediaItem->is_in_queue = $bool;
+				return $bool;
 		}
 
 		/** Restores an item
@@ -179,6 +181,8 @@ class OptimizeController
         $json->status = 0;
         $json->result = new \stdClass;
 
+				$item_id = $mediaItem->get('id');
+
         if (! is_object($mediaItem))  // something wrong
         {
 
@@ -189,12 +193,20 @@ class OptimizeController
 					$json->result->is_done = true;
 					$json->result->is_error = true;
 
-					ResponseController::addData($item->item_id, 'message', $item->result->message);
+					ResponseController::addData($item_id, 'is_error', true);
+					ResponseController::addData($item_id, 'is_done', true);
+					ResponseController::addData($item_id, 'message', $item->result->message);
 
-          Log::addWarn('Item with id ' . $json->result->item_id . ' is not restorable,');
+          Log::addWarn('Item with id ' . $item_id . ' is not restorable,');
 
            return $json;
         }
+
+				$data = array(
+					'item_type' => $mediaItem->get('type'),
+					'fileName' => $mediaItem->getFileName(),
+				);
+				ResponseController::addData($item_id, $data);
 
         $item_id = $mediaItem->get('id');
 
@@ -209,7 +221,7 @@ class OptimizeController
 				else
 				{
 					 $result = false;
-					 $json->result->message = $mediaItem->getReason('restorable');
+					 $json->result->message = ResponseController::formatItem($mediaItem->get('id')); // $mediaItem->getReason('restorable');
 				}
 
 				// Compat for ancient WP
@@ -238,10 +250,8 @@ class OptimizeController
         else
         {
 
-					 if (! property_exists($json->result, 'message'))
-					 {
-					 		$json->result->message = __('Item is not restorable', 'shortpixel-image-optimiser');
-				 	 }
+					 $json->result->message = ResponseController::formatItem($mediaItem->get('id'));
+
            $json->result->is_done = true;
            $json->fileStatus = ImageModel::FILE_STATUS_ERROR;
            $json->result->is_error = true;
@@ -308,8 +318,8 @@ class OptimizeController
     */
     public function processQueue($queueTypes = array())
     {
-
         $keyControl = ApiKeyController::getInstance();
+
         if ($keyControl->keyIsVerified() === false)
         {
            $json = $this->getJsonResponse();
@@ -323,11 +333,28 @@ class OptimizeController
         $quotaControl = QuotaController::getInstance();
         if ($quotaControl->hasQuota() === false)
         {
-          $json = $this->getJsonResponse();
-          $json->error = AjaxController::NOQUOTA;
-          $json->status = false;
-          $json->message =   __('Quota Exceeded','shortpixel-image-optimiser');
-          return $json;
+					// If we are doing something special (restore, migrate etc), it should runs without credits, so we shouldn't be using any.
+					$isCustomOperation = false;
+					foreach($queueTypes as $qType)
+					{
+						$queue = $this->getQueue($qType);
+						if ($queue && true === $queue->isCustomOperation())
+						{
+								$isCustomOperation = true;
+								break;
+						}
+					}
+
+					// Break out of quota if we are on normal operations.
+					if (false === $isCustomOperation )
+					{
+						$quotaControl->forceCheckRemoteQuota(); // on next load check if something happenend when out and asking.
+	          $json = $this->getJsonResponse();
+	          $json->error = AjaxController::NOQUOTA;
+	          $json->status = false;
+	          $json->message =   __('Quota Exceeded','shortpixel-image-optimiser');
+	          return $json;
+					}
         }
 
         // @todo Here prevent bulk from running when running flag is off
@@ -495,7 +522,8 @@ class OptimizeController
       }
       else
 			{
-        $item->result->filename = $imageItem->getFileName();
+        //$item->result->filename = $imageItem->getFileName();
+				// Used in WP-CLI
 				ResponseController::addData($item->item_id, 'fileName', $imageItem->getFileName());
 			}
 
@@ -613,9 +641,6 @@ class OptimizeController
                 $item->result->original = false;
 								$item->result->optimized = $fs->pathToUrl($showItem);
 							}
-
-
-
 
            }
            // This was not a request process, just handle it and mark it as done.

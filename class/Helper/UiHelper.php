@@ -202,9 +202,6 @@ class UiHelper
 
   }
 
-
-
-
   public static function compressionTypeToText($type)
   {
      if ($type == ImageModel::COMPRESSION_LOSSLESS )
@@ -241,7 +238,7 @@ class UiHelper
 			if ($id === 0)
 				return array();
 
-      if ($mediaItem->isOptimized())
+      if ($mediaItem->isOptimized() )
       {
            $optimizable = $mediaItem->getOptimizeURLS(true);
 
@@ -410,8 +407,8 @@ class UiHelper
 			 $text = __('This item is waiting to be processed', 'shortpixel-image-optimiser');
 		}
 
-      if ($mediaItem->isOptimizePrevented() !== false)
-      {
+    if ($mediaItem->isOptimizePrevented() !== false)
+    {
 
           $retry = self::getAction('retry', $mediaItem->get('id'));
 
@@ -429,7 +426,7 @@ class UiHelper
 						}
 					}
 
-          $text .= "<div class='shortpixel-image-error'>" . esc_html($mediaItem->isOptimizePrevented());
+          $text .= "<div class='shortpixel-image-error'>" . esc_html($mediaItem->getReason('processable'));
           $text .= "<span class='shortpixel-error-reset'>" . sprintf(__('After you have fixed this issue, you can %s click here to retry %s', 'shortpixel-image-optimiser'), '<a href="javascript:' . $retry['function'] . '">', '</a>');
 
           $text .= '</div>';
@@ -608,7 +605,18 @@ class UiHelper
 
 	public static function formatNumber($number, $precision = 2)
 	{
-		  return  number_format_i18n( (int) $number, $precision);
+			global $wp_locale;
+			$decimalpoint = isset($wp_locale->number_format['decimal_point']) ? $wp_locale->number_format['decimal_point'] : false;
+			$number =  number_format_i18n( (int) $number, $precision);
+
+			// Don't show trailing zeroes if number is a whole unbroken number.
+			if ($decimalpoint !== false && substr($number, strpos($number, $decimalpoint)) == 00)
+			{
+				 $number = number_format_i18n($number, 0);
+			}
+			// Some locale's have no-breaking-space as thousands separator. This doesn't work well in JS / Cron Shell so replace with space.
+			$number = str_replace('&nbsp;', ' ', $number);
+		  return $number;
 	}
 
 	protected static function convertImageTypeName($name, $type)

@@ -36,7 +36,18 @@ class BulkController
       $optimizeController = new OptimizeController();
       $optimizeController->setBulk(true);
 
+			$fs = \wpSPIO()->filesystem();
+			$backupDir = $fs->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
+			$current_log = $fs->getFile($backupDir->getPath() . 'current_bulk_' . $type . '.log');
+
+			// When starting new bulk remove any open 'current logs';
+			if ($current_log->exists() && $current_log->is_writable())
+			{
+				 $current_log->delete();
+			}
+
       $Q = $optimizeController->getQueue($type);
+
 
       $Q->createNewBulk(array());
 
@@ -105,7 +116,7 @@ class BulkController
 	       $q->startBulk();
 			 }
 
-       return $optimizeControl->processQueue(array($types));
+       return $optimizeControl->processQueue($types);
    }
 
    public function finishBulk($type = 'media')

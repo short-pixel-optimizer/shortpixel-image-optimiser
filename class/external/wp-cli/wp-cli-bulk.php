@@ -8,29 +8,29 @@ use ShortPixel\Controller\Queue\Queue as Queue;
 use ShortPixel\Controller\ApiController as ApiController;
 use ShortPixel\Controller\ResponseController as ResponseController;
 
-
+/**
+* Actions for running bulk operations from WP-CLI
+*/
 class SpioBulk extends SpioCommandBase
 {
 	   /**
-	   * Starts prepared queue. The bulk needs an express command to start running.
-		 * After starting, the queue can be finished by using the run command.
+	   * Starts the prepared queue(s). The bulk needs an express command to start processing.
+		 * Once started, the queue(s) can be processed and finished with the run command.
 	   *
 	   * ## OPTIONS
 
 	   * [--queue=<name>]
-	   * : Either 'media' or 'custom' . Omit to run both.
+	   * : Either 'media' or 'custom'. Omit the parameter to start both queues.
 	   * ---
 	   * default: media,custom
 	   * options:
 	   *   - media
 	   *   - custom
-		 *
 	   * ---
 	   *
 	   * ## EXAMPLES
 	   *
-	   *   wp spio start <ticks=20> <wait=3>
-		 * 	 wp spio start
+	   * wp spio bulk start
 	   *
 	   *
 	   * @when after_wp_load
@@ -54,13 +54,24 @@ class SpioBulk extends SpioCommandBase
 	  }
 
 
-		/**
-		* Automatically Bulk Process all that needs to be done
-		*
-	  * [--queue=<name>]
-	  * : Either 'media' or 'custom' . Omit to run both.
-		*
-		*/
+	   /**
+	   * Automatically Bulk Processes everything that needs to be done.
+	   *
+	   * [--queue=<name>]
+	   * : Either 'media' or 'custom'. Omit the parameter to process both queues.
+	   * ---
+	   * default: media,custom
+	   * options:
+	   *   - media
+	   *   - custom
+	   * ---
+	   *
+	   * ## EXAMPLES
+	   *
+	   * wp spio bulk auto
+	   *
+	   *
+	   */
 		public function auto($args, $assoc)
 		{
 			 	$queue = $this->getQueueArgument($assoc);
@@ -100,7 +111,7 @@ class SpioBulk extends SpioCommandBase
 							}
 						  elseif ($combined->is_finished)
 							{
-								  if ($created) // means we already ran the whole thing once.
+								  if ($combined->done > 0 || $created == true) // means we already ran the whole thing once.
 									{
 										\WP_CLI::Line('[Auto Bulk] Seems finished and done running');
 										$running = false;
@@ -127,18 +138,23 @@ class SpioBulk extends SpioCommandBase
 		}
 
 	 /**
-	 * Enqueues the batch for bulk optimizing the media library
+	 * Creates the queue(s) for bulk optimization of media library and/or custom media items.
 	 *
 	 * ## OPTIONS
 	 *
 	 * [--queue=<name>]
-	 * : Either 'media' or 'custom' . Omit to run both.
+	 * : Either 'media' or 'custom'. Omit the parameter to create both queues.
+	 * ---
+	 * default: media,custom
+	 * options:
+	 *   - media
+	 *   - custom
+	 * ---
 	 *
 	 * ## EXAMPLES
 	 *
-	 *   wp spio bulk create
+	 *  wp spio bulk create
 	 *
-
 	 *
 	 * @when after_wp_load
 	 */
@@ -164,29 +180,28 @@ class SpioBulk extends SpioCommandBase
 			return $stats;
 	  }
 
-		 /**
-   * ## OPTIONS
-   *
-   * <start-id>
-   * : ID to start restore
+	 /**
+	 * ## OPTIONS
+	 *
+	 * <start-id>
+	 * : ID to start restore
 	 *
 	 * <end-id>
 	 * : ID to stop restore
 	 *
-   * [--type=<type>]
-   * : Media | Custom
-   * ---
-   * default: media
-   * options:
-   *   - media
-   *   - custom
-   * ---
-   *
+	 * [--type=<type>]
+	 * : media or custom
+	 * ---
+	 * default: media
+	 * options:
+	 *   - media
+	 *   - custom
+	 * ---
+	 *
 	 * ## EXAMPLES
 	 *
 	 *   wp spio bulk restore 0 100
 	 *
-
 	 *
 	 * @when after_wp_load
 	 */
@@ -216,19 +231,24 @@ class SpioBulk extends SpioCommandBase
 				return $optimizeController;
 		}
 
-			/**
-			*	 Prepares items, similar to the run command. If will only run when a queue is in preparing stage and will run until everything is prepared.
-			*
-			*
-			* [--queue=<name>]
-		  * : Either 'media' or 'custom' . Omit to run both.
-		  * ---
-		  * default: media,custom
-		  * options:
-		  *   - media
-		  *   - custom
-			*
-			*/
+		/**
+		* Prepares the items by adding them to the queue(s). It runs only when the queue is in the preparing phase and finishes when everything is prepared.
+		*
+		*
+		* [--queue=<name>]
+		* : Either 'media' or 'custom'. Omit the parameter to run both queues.
+		* ---
+		* default: media,custom
+		* options:
+		*   - media
+		*   - custom
+		* ---
+		*
+		* ## EXAMPLES
+		*
+		*   wp spio bulk prepare
+		*
+		*/
 			public function prepare($args, $assoc)
 			{
 					 $queues = $this->getQueueArgument($assoc);

@@ -103,10 +103,13 @@ class BulkViewController extends \ShortPixel\ViewController
 
     $approx->total->images = $approx->media->total + $approx->custom->images; // $sc->totalImagesToOptimize();
 
+		$approx->media->isLimited = $sc->find('media', 'isLimited');
+
 		// Prevent any guesses to go below zero.
 		foreach($approx->media as $item => $value)
 		{
-			  $approx->media->$item = max($value, 0);
+				if (is_numeric($value))
+			  	$approx->media->$item = max($value, 0);
 		}
     return $approx;
 

@@ -249,12 +249,17 @@ class ListMediaViewController extends \ShortPixel\ViewController
 
 				if ($filter && $filter == 'optimized')
 				{
-					$sql = ' SELECT * FROM ' . $tableName;
+					$where = " AND " . $wpdb->posts . '.ID in ( SELECT attach_id FROM ' . $tableName . " WHERE parent = %d and status = %d) ";
+					$where = $wpdb->prepare($where, MediaLibraryModel::IMAGE_TYPE_MAIN, ImageModel::FILE_STATUS_SUCCESS);
+
+					$sql = substr_replace($request, $where, ($post_pos + strlen($post_pos)) ,0);
+
+					/*$sql = ' SELECT SQL_CALC_FOUND_ROWS * FROM ' . $tableName;
 					$sql .= ' INNER JOIN ' . $wpdb->posts . ' ON ' . $wpdb->posts . '.ID = ' . $tableName . '.attach_id ';
 
 					$sql .= 'WHERE image_type = %d AND status =  %d';
 					$sql = $wpdb->prepare($sql, MediaLibraryModel::IMAGE_TYPE_MAIN,  $fileStatus);
-					$sql .= ' AND ' . $post_where; // glue back the orders, and the all.
+					$sql .= ' AND ' . $post_where; // glue back the orders, and the all. */
 				}
 				if ($filter && $filter == 'unoptimized')
 				{

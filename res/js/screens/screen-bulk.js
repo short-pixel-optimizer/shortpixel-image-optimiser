@@ -55,6 +55,8 @@ var ShortPixelScreen = function (MainScreen, processor)
       if (isPreparing)
       {
         this.SwitchPanel('selection');
+				this.UpdatePanelStatus('loading', 'selection');
+				this.PrepareBulk();
       }
       else if (isRunning)
       {
@@ -582,7 +584,11 @@ console.log("Screen Init Done", initMedia, initCustom);
                 else
                 {
                   if (value !== false)
-                    element.textContent = value;
+									{
+
+										element.textContent = value;
+
+									}
                 }
 
           });
@@ -618,9 +624,9 @@ console.log("Screen Init Done", initMedia, initCustom);
 			 }
 
 			 var error = this.processor.aStatusError[result.error];
-
 			 if (error == 'NOQUOTA')
 			 {
+
 						 this.ToggleOverQuotaNotice(true);
 			 }
 

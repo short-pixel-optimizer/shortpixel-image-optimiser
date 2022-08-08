@@ -35,7 +35,13 @@ $approx = $this->view->approx;
 					 <h2><?php esc_html_e('Optimize:','shortpixel-image-optimiser'); ?> </h2>
 					 <p><?php printf(esc_html__('ShortPixel has %sestimated%s the number of images that can still be optimized. %sAfter you select the options, the plugin will calculate exactly how many images to optimize.','shortpixel-image-optimiser'), '<b>','</b>', '<br />'); ?></p>
 
+					 <?php if ($approx->media->isLimited): ?>
+						 <h4 class='count_limited'><?php esc_html_e('Shortpixel has detected a high number of images. This estimates are limited for performance reasons. On the next step an accurate count will be produced', 'shortpixel-image-optimiser'); ?></h4>
+					 <?php endif; ?>
+
+
 	         <div class="media-library optiongroup">
+
 
 	            <div class='switch_button'>
 	              <label>
@@ -50,6 +56,7 @@ $approx = $this->view->approx;
 	              <label><?php esc_html_e('Images (estimate)', 'shortpixel-image-optimiser'); ?></label>
 	              <span class="number" ><?php echo esc_html($approx->media->items) ?></span>
 	            </div>
+
 							<?php if (\wpSPIO()->settings()->processThumbnails == 1): ?>
 		            <div class='option'>
 		              <label><?php esc_html_e('Thumbnails (estimate)','shortpixel-image-optimiser'); ?></label> <span class="number" ><?php echo esc_html($approx->media->thumbs) ?> </span>
@@ -106,7 +113,7 @@ $approx = $this->view->approx;
 
 		           </div>
 			   <h4><label for="webp_checkbox">
-					 <?php printf(esc_html__('Also create %s WebP %s versions of the images' ,'shortpixel-image-optimiser'), '<b>', '</b>' ); ?>
+					 <?php printf(esc_html__('Also create WebP versions of the images' ,'shortpixel-image-optimiser') ); ?>
 				 </label></h4>
 				<div class="option"><?php esc_html_e('The total number of WebP images will be calculated in the next step.','shortpixel-image-optimiser'); ?></div>
 		       </div>
@@ -121,7 +128,7 @@ $approx = $this->view->approx;
 		           </label>
 
 		         </div>
-		         <h4><label for="avif_checkbox"><?php esc_html_e('Also create AVIF> versions of the images','shortpixel-image-optimiser'); ?></label></h4>
+		         <h4><label for="avif_checkbox"><?php esc_html_e('Also create AVIF versions of the images','shortpixel-image-optimiser'); ?></label></h4>
 				<div class="option"><?php esc_html_e('The total number of AVIF images will be calculated in the next step.','shortpixel-image-optimiser'); ?></div>
 		     </div>
 		 </div>
@@ -135,7 +142,7 @@ $approx = $this->view->approx;
        <h4 class='approx'><?php esc_html_e('An estimate of unoptimized images in this installation', 'shortpixel-image-optimiser'); ?> :
 			<span data-check-approx-total><?php echo esc_html($approx->total->images) ?></span> </h4>
 
-       <div><p><?php printf(esc_html_e('In the next step, the plugin will calculate the total number of images to be optimized, and your bulk process will be prepared. The processing %swill not start yet%s, but a summary of the images to be optimized will be displayed.', 'shortpixel-image-optimiser'),'<b>','</b>'); ?></p></div>
+       <div><p><?php printf(__('In the next step, the plugin will calculate the total number of images to be optimized, and your bulk process will be prepared. The processing %s will not start yet %s, but a summary of the images to be optimized will be displayed.', 'shortpixel-image-optimiser'),'<b>','</b>'); ?></p></div>
 		 </div>
 
       <nav>

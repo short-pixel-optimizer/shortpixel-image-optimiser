@@ -321,54 +321,70 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
 			<div class="option-content">
 				<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/88-how-to-exclude-images-from-being-optimized"></span></div>
 
+				<p class="settings-info" data-toggle="exclude-settings-expanded">
+						<?php
+						printf(esc_html__('Use this section to exclude images based on patterns (separated by commas). A pattern consists of a %s type:value %s pair and the accepted types are %s "name", "path", "size", "regex-name" and "regex-path" %s. A file is excluded if it matches any of the patterns. Examples can be found in the collapsible area below the exclusion list.','shortpixel-image-optimiser'),
+							'<b>','</b>',
+							'<b>','</b>'
+						);
+				 ?>
+				 <br /><br />
+
+			 </p>
+
                     <textarea name="excludePatterns" type="text" id="excludePatterns" placeholder="<?php
                         esc_html_e('name:keepbig, path:/full/path/to/exclude/, regex-name:/valid_regex/, size:1000x2000','shortpixel-image-optimiser');?>" rows="4" cols="60"><?php echo esc_html( $excludePatterns );?></textarea>
 
 			</div>
-                    <p class="settings-info">
-                        <?php
-												// Hear you like strong, so I put some strong in your strong.
-												 printf(esc_html__('Add patterns separated by comma. A pattern consist of a %stype:value%s pair; the accepted types are
-                                  %s"name"%s, %s"path"%s, %s"size"%s, %s"regex-name"%s and %s"regex-path"%s.
-                                   A file is excluded if it matches any of the patterns. %s
 
-                                   %s For a %s"name"%s pattern only the filename is matched, for %s"path"%s,
-                                   the whole path will be matched (useful for excluding certain (sub)-directories altoghether).
-                                   %s %s
-                                   %s"regex-path"%s and %s"regex-name"%s work the same, except it requires a valid regular expression, contained between slashes. Special characters should be escaped by adding \ in front of them.
-                                   %s %s
-
-																	 For the %s"size"%s type, which applies only to Media Library images, %sthe main images (not thumbnails)%s that have the size in the specified range are excluded.
-                                   The format for the "size" exclude is: %sminWidth%s- %smaxWidth%sx%sminHeight%s%s>maxHeight%s, for example %ssize:1000-1100x2000-2200%s. You can also specify a precise size, such as %s1000x2000%s.','shortpixel-image-optimiser'),
-																	 '<strong>', '</strong>',
-																	 '<strong>', '</strong>',
-																	 '<strong>', '</strong>',
-																	 '<strong>', '</strong>',
-																	 '<strong>', '</strong>',
-																	 '<strong>', '</strong>',
-																	 '<br>',
-																	 '<br>',
-																	 '<strong>', '</strong>',
-																	 '<strong>', '</strong>',
-																	 '<strong>', '</strong>',
-																	 '<strong>', '</strong>',
-																	 '<br>',
-																	 '<br>',
-																	 '<strong>', '</strong>',
-																	 '<strong>', '</strong>',
-																	 '<br>',
-																	 '<br>',
-																	 '<strong>', '</strong>',
-																	 '<strong>', '</strong>',
-																	 '<strong>', '</strong>',
-																	 '<strong>', '</strong>',
-																	 '<strong>', '</strong>',
-																	 '<strong>', '</strong>',
-																	 '<strong>', '</strong>',
-																	 '<strong>', '</strong>'
-																 );
-													?>
+									 <p  class="settings-info">
+										 										 <label><input type='checkbox' class='shortpixel-hide' data-toggle='exclude-settings-expanded'> >> <?php		printf(esc_html__('See examples')); ?></label>
                     </p>
+
+										<div class='exclude-settings-expanded toggleTarget ' id="exclude-settings-expanded">
+											<p  class="settings-info">
+											<?php
+													printf(esc_html__('For the pattern %s"name"%s, only the file name is matched, e.g. the pattern %sname:flower.jpg%s tells ShortPixel to exclude all JPEG images ending in “flower” (lowercase). At the same time, the pattern %sname:logo%s,excludes all images – PNG/JPEG/GIF – that contain the word “logo”  in their name: “nicelogo.jpg”, “alllogos.png”, “logo.gif”.', 'shortpixel-image-optimiser'),
+													'<b>','</b>',
+													'<b>','</b>',
+													'<b>','</b>'
+													);
+											?>
+
+										</p>
+										<br />
+										<p  class="settings-info">
+											<?php
+													printf(esc_html__('For the %s"path"%s pattern, the entire path is matched (useful to exclude certain (sub)-directories altogether). For example, %spath:2022%s excludes all images uploaded in 2022, but also excludes images that contain 2022 in the filename (since this is also part of the path). If you want to exclude only the images uploaded in 2022, use %spath:/2022/%s instead.','shortpixel-image-optimiser'),
+													'<b>','</b>',
+													'<b>','</b>',
+													'<b>','</b>'
+													);
+													?>
+												</p>
+												<br />
+												<p  class="settings-info">
+											<?php
+													printf(esc_html__('%s"regex-path"%s and %s"regex-name"%s work the same way, but require a valid regular expression placed between slashes. Special characters should be escaped by prefixing them with \ . For example %sregex-name:/[0-9]+[^\/]*\.(PNG|png)/%s excludes all PNG images that have a numeric prefix.','shortpixel-image-optimiser'),
+													'<b>','</b>',
+													'<b>','</b>',
+													'<b>','</b>'
+												);
+												?>
+											</p>
+											<br />
+											<p  class="settings-info">
+												<?php
+													printf(esc_html__('The %s"size"%s type, which applies only to Media Library images, excludes the main images (not thumbnails) whose size is in the specified range. The format for the "size" exclusion type is: %sminWidth-maxWidthxminHeight-maxHeight%s, for example %ssize:1000-1100x2000-2200%s. You can also specify a exact size, for example, %s1000x2000%s.','shortpixel-image-optimiser'),
+													'<b>','</b>',
+													'<b>','</b>',
+													'<b>','</b>',
+													'<b>','</b>'
+												);
+												?>
+											</p>
+
+									</div>
                 </td>
             </tr>
             <tr>

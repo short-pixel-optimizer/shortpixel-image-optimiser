@@ -70,6 +70,10 @@
 .shortpixel-other-media .list-overview .item:nth-child(odd) {
   background-color: #f9f9f9;
 }
+.shortpixel-other-media .list-overview .item span:last-child {
+  min-width: 400px;
+  max-width: 400px;
+}
 .shortpixel-other-media .list-overview .item:hover .row-actions {
   left: 0;
   color: #bbb;
@@ -126,7 +130,6 @@
   display: block;
 }
 .shortpixel-other-media .list-overview .item .sp-column-info {
-  max-width: 400px;
   width: 100%;
   min-width: 250px;
   display: inline-block;

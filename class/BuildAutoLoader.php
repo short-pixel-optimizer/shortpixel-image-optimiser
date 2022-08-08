@@ -69,6 +69,7 @@ class BuildAutoLoader
       'class/external/custom-suffixes.php',
       'class/external/pantheon.php',
 			'class/external/spai.php',
+			'class/external/cache.php', 
     );
 
     echo "Build Plugin.JSON ";

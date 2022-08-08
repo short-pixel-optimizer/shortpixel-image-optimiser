@@ -184,7 +184,7 @@ class EnvironmentModel extends \ShortPixel\Model
     $use_screens = apply_filters('shortpixel/init/optimize_on_screens', $use_screens);
 
     $this->screen_id = $screen->id;
-    if(in_array($screen->id, $use_screens)) {
+    if(is_array($use_screens) && in_array($screen->id, $use_screens)) {
           $this->is_screen_to_use = true;
     }
 

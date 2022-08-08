@@ -6,8 +6,8 @@ var ShortPixelSettings = function()
 
 	 this.Init = function()
 	 {
-		 	console.log('Init Settings');
 			this.InitActions();
+			this.SaveOnKey();
 	 }
 
 	this.InitActions = function()
@@ -30,7 +30,10 @@ var ShortPixelSettings = function()
 					modal.addEventListener('click', self.OpenModal.bind(self));
 			});
 
+
+
 	}
+
 
 	this.DoToggleAction = function(event)
 	{
@@ -45,6 +48,12 @@ var ShortPixelSettings = function()
 			}
 			else {
 				var checked = checkbox.checked;
+			}
+
+			if (target === null)
+			{
+				 console.error('Target element ID not found', checkbox);
+				 return false; 
 			}
 
 			if (checked)
@@ -191,8 +200,28 @@ this.ReceiveModal = function(elem)
 
 }
 
+this.SaveOnKey = function()
+{
+	var saveForm = document.getElementById('wp_shortpixel_options');
+	if (saveForm === null)
+		return false; // no form no save.
+
+	window.addEventListener('keydown', function(event) {
+
+    if (! (event.key == 's' || event.key == 'S')  || ! event.ctrlKey)
+		{
+			return true;
+		}
+		document.getElementById('wp_shortpixel_options').submit();
+    event.preventDefault();
+    return false;
+	});
+}
+
+
  	this.Init();
 } // SPSettings
+
 
 document.addEventListener("DOMContentLoaded", function(){
 	  var s = new ShortPixelSettings();

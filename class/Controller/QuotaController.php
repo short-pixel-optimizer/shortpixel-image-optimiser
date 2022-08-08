@@ -76,7 +76,7 @@ class QuotaController
 
           $quota = (object) [
               'monthly' => (object) [
-                'text' => sprintf(__('%s/month', 'shortpixel-image-optimiser'), $quotaData['APICallsQuota']),
+                'text' =>  sprintf(__('%s/month', 'shortpixel-image-optimiser'), $quotaData['APICallsQuota']),
                 'total' =>  $quotaData['APICallsQuotaNumeric'],
                 'consumed' => $quotaData['APICallsMadeNumeric'],
                 'remaining' => max($quotaData['APICallsQuotaNumeric'] - $quotaData['APICallsMadeNumeric'], 0),
@@ -302,10 +302,10 @@ class QuotaController
 
           $dataArray = array(
               "APIKeyValid" => true,
-              "APICallsMade" => number_format($data->APICallsMade) . __(' images','shortpixel-image-optimiser'),
-              "APICallsQuota" => number_format($data->APICallsQuota) . __(' images','shortpixel-image-optimiser'),
-              "APICallsMadeOneTime" => number_format($data->APICallsMadeOneTime) . __(' images','shortpixel-image-optimiser'),
-              "APICallsQuotaOneTime" => number_format($data->APICallsQuotaOneTime) . __(' images','shortpixel-image-optimiser'),
+              "APICallsMade" => number_format($data->APICallsMade) . __(' credits','shortpixel-image-optimiser'),
+              "APICallsQuota" => number_format($data->APICallsQuota) . __(' credits','shortpixel-image-optimiser'),
+              "APICallsMadeOneTime" => number_format($data->APICallsMadeOneTime) . __(' credits','shortpixel-image-optimiser'),
+              "APICallsQuotaOneTime" => number_format($data->APICallsQuotaOneTime) . __(' credits','shortpixel-image-optimiser'),
               "APICallsMadeNumeric" => (int) max($data->APICallsMade, 0),
               "APICallsQuotaNumeric" => (int) max($data->APICallsQuota, 0),
               "APICallsMadeOneTimeNumeric" =>  (int) max($data->APICallsMadeOneTime, 0),

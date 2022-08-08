@@ -211,10 +211,9 @@ class WPShortPixelSettings extends \ShortPixel\Model {
 
     public static function onDeactivate() {
         delete_option('wp-short-pixel-activation-notice');
-				delete_option( 'wp-short-pixel-bulk-last-status'); // legacy shizzle
-				delete_option( 'wp-short-pixel-current-total-files');
+				delete_option('wp-short-pixel-bulk-last-status'); // legacy shizzle
+				delete_option('wp-short-pixel-current-total-files');
 				delete_option('wp-short-pixel-remove-settings-on-delete-plugin');
-
     }
 
 
@@ -248,11 +247,6 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         if(isset(self::$_optionsMap[$key]['key'])) { //first try our name
 						$default = self::$_optionsMap[$key]['default']; // first do default do to overwrite.
 						$key = self::$_optionsMap[$key]['key'];
-        }
-        if(get_option($key) === false) {
-
-            add_option( $key, $default, '', 'no' );
-
         }
 
         $opt = get_option($key, $default);

@@ -204,10 +204,9 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
        if ($bool)
 			 {
 				 $this->setMeta('status', ImageModel::FILE_STATUS_UNPROCESSED);
-				 $this->setMeta('compressed_size', 0);
-				 $this->setMeta('compression_type', null);
-				 $this->setMeta('backup', null);
-				 $this->setMeta('retries', 0);
+				 $this->setMeta('compressedSize', 0);
+				 $this->setMeta('compressionType', null);
+
 
         $this->saveMeta();
 

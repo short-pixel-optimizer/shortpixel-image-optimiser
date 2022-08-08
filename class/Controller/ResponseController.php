@@ -5,6 +5,7 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Model\ResponseModel as ResponseModel;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 
+
 class ResponseController
 {
 
@@ -31,8 +32,9 @@ class ResponseController
 		const OUTPUT_CLI = 3;  // Has no context, needs more information
 
 
-		/**
+		/** Correlates type of item with the queue being used.  Be aware that usage *outside* the queue system needs to manually set type
 		* @param Object QueueObject being used.
+		*
 		*/
 		public static function setQ($q)
 		{
@@ -56,14 +58,17 @@ class ResponseController
 
 		public static function getResponseItem($item_id)
 		{
-				$itemType = self::$queueType;
-				if (is_null($itemType)) // fail-safe
+				if (is_null(self::$queueType)) // fail-safe
+				{
 					$itemType = "Unknown";
+				}
+				else {
+					$itemType = self::$queueType;
+				}
 
 				if (isset(self::$items[$itemType][$item_id]))
 				{
 					 $item = self::$items[$itemType][$item_id];
-
 				}
 				else {
 						$item = new ResponseModel($item_id, $itemType);
@@ -74,7 +79,7 @@ class ResponseController
 
 		protected static function updateResponseItem($item)
 		{
-				$itemType = self::$queueType;
+				$itemType = $item->item_type;
 			  self::$items[$itemType][$item->item_id] = $item;
 		}
 
@@ -88,6 +93,14 @@ class ResponseController
 			}
 			else {
 				$data = $name;
+			}
+
+
+			$item_type = (array_key_exists('item_type', $data)) ? $data['item_type'] : false;
+			// If no queue / queue type is set, set it if item type is passed to ResponseController.  For items outside the queue system.
+			if ($item_type && is_null(self::$queueType))
+			{
+				 self::$queueType = $item_type;
 			}
 
 			$resp = self::getResponseItem($item_id); // responseModel
@@ -136,6 +149,14 @@ class ResponseController
 							$text .= sprintf(__('( %s %d ) ', 'shortpixel-image-optimizer'), (strtolower($item->item_type) == 'media') ?  __('Attachment ID ') : __('Custom Type '), $item->item_id);
 					break;
 			}
+
+			switch($item->apiStatus)
+			{
+				  case ApiController::STATUS_FAIL:
+							$text .= sprintf(__('( %s %d ) ', 'shortpixel-image-optimizer'), (strtolower($item->item_type) == 'media') ?  __('Attachment ID ') : __('Custom Type '), $item->item_id);
+					break;
+			}
+
 
 			if (self::$screenOutput == self::OUTPUT_CLI)
 			{

@@ -152,18 +152,13 @@ class InstallHelper
 			global $wpdb;
     	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 
-			if (self::checkTableExists('shortpixel_folders') === false)
-	    {
-					dbDelta(self::getFolderTableSQL());
-			}
-			if (self::checkTableExists('shortpixel_meta') === false)
-			{
-	 	    	dbDelta(self::getMetaTableSQL());
-			}
-			if (self::checkTableExists('shortpixel_postmeta') === false)
-			{
-					dbDelta(self::getPostMetaSQL());
-			}
+
+			dbDelta(self::getFolderTableSQL());
+
+	    	dbDelta(self::getMetaTableSQL());
+
+			dbDelta(self::getPostMetaSQL());
+
 
 			self::checkIndexes();
 	}
@@ -291,7 +286,7 @@ class InstallHelper
 			 attach_id bigint unsigned NOT NULL,
 			 parent bigint unsigned NOT NULL,
 			 image_type tinyint default 0,
-			 size varchar(50),
+			 size varchar(150),
 			 status tinyint default 0,
 			 compression_type tinyint,
 			 compressed_size  int,

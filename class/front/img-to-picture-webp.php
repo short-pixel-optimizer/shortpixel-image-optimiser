@@ -17,7 +17,6 @@ class ShortPixelImgToPictureWebp
             return $content; // . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!--  -->' : '');
         }
 
-
         $new_content = $this->testPictures($content);
         if ($new_content !== false)
         {
@@ -36,7 +35,7 @@ class ShortPixelImgToPictureWebp
         // [BS] No callback because we need preg_match_all
         $content = $this->testInlineStyle($content);
       //  $content = preg_replace_callback('/background.*[^:]url\([\'|"](.*)[\'|"]\)[,;]/imU',array('self', 'convertInlineStyle'), $content);
-        Log::addDebug('SPDBG WebP process done');
+      //  Log::addDebug('SPDBG WebP process done');
 
         return $content; // . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG WebP converted -->' : '');
 
@@ -216,7 +215,7 @@ class ShortPixelImgToPictureWebp
                   continue;
                 $condition = isset($parts[1]) ? ' ' . $parts[1] : '';
 
-                Log::addDebug('Running item - ' . $item, $fileurl);
+           //     Log::addDebug('Running item - ' . $item, $fileurl);
 
                 $fsFile = $fs->getFile($fileurl);
                 $extension = $fsFile->getExtension(); // trigger setFileinfo, which will resolve URL -> Path

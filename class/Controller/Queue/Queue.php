@@ -29,13 +29,6 @@ abstract class Queue
     const RESULT_UNKNOWN = -10;
 
 
-    /* Result status (per item) to communicate back to frontend */
-/*    const FILE_NOTEXISTS = -1;
-    const FILE_ALREADYOPTIMIZED = -2;
-    const FILE_OK = 1;
-    const FILE_SUCCESS = 2;
-    const FILE_WAIT = 3; */
-
     abstract protected function prepare();
     abstract public function getType();
 
@@ -328,6 +321,8 @@ abstract class Queue
       $stats->is_finished = (bool) $this->getStatus('finished');
       $stats->in_queue = (int) $this->getStatus('items');
       $stats->in_process = (int) $this->getStatus('in_process');
+			$stats->awaiting = $stats->in_queue + $stats->in_process; // calculation used for WP-CLI.
+
       $stats->errors = (int) $this->getStatus('errors');
       $stats->fatal_errors = (int) $this->getStatus('fatal_errors');
       $stats->done = (int) $this->getStatus('done');
@@ -373,7 +368,6 @@ abstract class Queue
 					$count->images_basecount = $customData->baseCount;
         }
 
-
         return $count;
     }
 
@@ -406,6 +400,17 @@ abstract class Queue
 
         $this->getShortQ()->setStatus('custom_data', $customData);
     }
+
+		// Return if this queue has any special operation outside of normal optimizing.
+		// Use to give the go processing when out of credits (ie)
+		public function isCustomOperation()
+		{
+			if ($this->getCustomDataItem('customOperation'))
+			{
+				return true;
+			}
+			return false;
+		}
 
     public function getCustomDataItem($name)
     {
@@ -602,6 +607,18 @@ abstract class Queue
     {
 
     }
+
+		// Check if item is in queue. Considered not in queue if status is done.
+		public function isItemInQueue($item_id)
+		{
+				$itemObj = $this->q->getItem($item_id);
+
+				if (is_object($itemObj) && intval($itemObj->status) <> ShortQ::QSTATUS_DONE)
+				{
+					return true;
+				}
+				return false;
+		}
 
     public function itemFailed($item, $fatal = false)
     {

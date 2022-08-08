@@ -157,11 +157,6 @@ class AjaxController
         $this->checkProcessorKey();
 
 
-				if ($this->getProcessorKey() == 'shortpixel-test')
-				{
-						$this->returnTestData();
-				}
-
         // Notice that POST variables are always string, so 'true', not true.
 				// phpcs:ignore -- Nonce is checked
         $isBulk = (isset($_POST['isBulk']) && $_POST['isBulk'] === 'true') ? true : false;
@@ -498,7 +493,7 @@ class AjaxController
 
 		//	$this->ajax_getItemView();
 
-		// Changed since updated function should detect what is what. 
+		// Changed since updated function should detect what is what.
 		//	$mediaItem->deleteMeta(); // also does reset prevent.
 		//	delete_post_meta($id, '_shortpixel_was_converted');
 
@@ -732,16 +727,6 @@ class AjaxController
         exit();
     }
 
-		private function returnTestData()
-		{
-				$is_error = rand(1, 10);
-				$path = \wpSPIO()->plugin_path('tests/jsonresults/');
-				$json = file_get_contents($path . 'error.json');
-				$json = json_decode($json);
-				wp_send_json($json);
-
-
-		}
 
 		private function removeAllData($json, $data)
 		{
