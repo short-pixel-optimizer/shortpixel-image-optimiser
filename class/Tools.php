@@ -242,14 +242,7 @@ static public function DBtoTimestamp($date)
                     )
             ));
         }
-        if(!$settings->frontBootstrap){
-            $conflictPlugins['Bulk Images to Posts Frontend'] = array (
-                'action'=>'Change Setting',
-                'data'=>'bulk-images-to-posts-front/bulk-images-to-posts.php',
-                'href'=>'options-general.php?page=wp-shortpixel-settings&part=adv-settings#siteAuthUser',
-                'details' => __('This plugin is uploading images in front-end so please activate the "Process in front-end" advanced option in ShortPixel in order to have your images optimized.','shortpixel-image-optimiser')
-            );
-        }
+
 
         $found = array();
         foreach($conflictPlugins as $name => $path) {

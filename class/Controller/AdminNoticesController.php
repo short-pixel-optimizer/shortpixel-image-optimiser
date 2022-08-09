@@ -160,7 +160,7 @@ class AdminNoticesController extends \ShortPixel\Controller
             || $notice->getID() == AdminNoticesController::MSG_UPGRADE_BULK)
             {
               wp_enqueue_script('jquery.knob.min.js');
-              wp_enqueue_script('jquery.tooltip.min.js');
+              //wp_enqueue_script('jquery.tooltip.min.js');
               wp_enqueue_script('shortpixel');
             //  \wpSPIO()->load_style('shortpixel-modal');
             }
@@ -294,7 +294,6 @@ class AdminNoticesController extends \ShortPixel\Controller
 			$noticeController = Notices::getInstance();
 
 					$notice = $noticeController->getNoticeByID(self::MSG_CONVERT_LEGACY);
-					Log::addTemp('Legacy Notice', $notice);
 					// If already in system, don't bother doing it again.
 					if ($notice !== false)
 						return;

@@ -395,7 +395,6 @@ class SettingsController extends \ShortPixel\ViewController
          $this->view->cloudflare_constant = defined('SHORTPIXEL_CFTOKEN') ? true : false;
 
          $settings = \wpSPIO()->settings();
-         $this->view->dismissedNotices = $settings->dismissedNotices;
 
 				 if ($this->view->data->createAvif == 1)
            $this->avifServerCheck();
@@ -734,11 +733,6 @@ class SettingsController extends \ShortPixel\ViewController
 
           parent::processPostData($post);
 
-					// Unset front optimization when automedialib. is off
-					if ($this->postData['autoMediaLibrary'] == 0)
-					{
-						 $this->postData['frontBootstrap'] = 0;
-					}
 
       }
 

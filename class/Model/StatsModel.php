@@ -118,7 +118,9 @@ class StatsModel
   public function reset()
   {
       $this->stats = $this->defaults;
-      $this->save();
+			\wpSPIO()->settings()->deleteOption('currentStats');
+
+  //    $this->save();
   }
 
   // @todo This is not functional
@@ -225,7 +227,11 @@ class StatsModel
 
           if ($data >= 0)
           {
-             $this->stats['media'][$path[1]] = $data;
+						 if (is_numeric($data))
+						 {
+							  $data = max($data, 0);
+						 }
+             $this->stats['media'][$path[1]] = $data; // never allow any data below zero.
              $this->save();
           }
       }

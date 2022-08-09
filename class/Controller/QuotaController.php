@@ -141,10 +141,6 @@ class QuotaController
     private function resetQuotaExceeded()
     {
         $settings = \wpSPIO()->settings();
-        $dismissed = $settings->dismissedNotices ? $settings->dismissedNotices : array();
-
-        $settings->prioritySkip = array();
-        $settings->dismissedNotices = $dismissed;
 
         AdminNoticesController::resetAPINotices();
 
