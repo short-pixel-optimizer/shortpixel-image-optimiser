@@ -614,7 +614,7 @@ abstract class Queue
 				$itemObj = $this->q->getItem($item_id);
 
 				$notQ = array(ShortQ::QSTATUS_DONE, ShortQ::QSTATUS_FATAL);
-				if (is_object($itemObj) && ! in_array(intval($itemObj->status), $notQ) );
+				if (is_object($itemObj) && in_array(floor($itemObj->status), $notQ) === false )
 				{
 					return true;
 				}

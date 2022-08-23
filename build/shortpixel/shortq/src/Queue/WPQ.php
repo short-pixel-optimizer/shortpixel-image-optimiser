@@ -103,7 +103,6 @@ class WPQ implements Queue
       }
       if (count($items) > 0 && true === $updateStatus)
       {
-				Log::addTemp('AddItems Preparing True');
         $this->setStatus('preparing', true, false);
         $this->setStatus('finished', false, false); // can't be finished when adding items.
       }
