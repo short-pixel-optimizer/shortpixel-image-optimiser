@@ -74,10 +74,11 @@ class WPQ implements Queue
   /** Prepare items for enqueue, if you want to deliver items in batch, but not flush to storage directly
   *    Every Item needs to have an (item)_id and (item)_value. That's the only thing remote app should be aware of.
   *    @param Array Item Array with fields: id, value [order]
+	* 	 @param bool If status should be updated due to adding items.
   *
   *
   */
-  public function addItems($items)
+  public function addItems($items, $updateStatus = true)
   {
       foreach($items as $item)
       {
@@ -100,8 +101,9 @@ class WPQ implements Queue
         $this->items[] = $itemObj;
 
       }
-      if (count($items) > 0)
+      if (count($items) > 0 && true === $updateStatus)
       {
+				Log::addTemp('AddItems Preparing True');
         $this->setStatus('preparing', true, false);
         $this->setStatus('finished', false, false); // can't be finished when adding items.
       }

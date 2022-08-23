@@ -73,16 +73,16 @@ abstract class Queue
     public function addSingleItem(ImageModel $imageModel)
     {
 
-       $preparing = $this->getStatus('preparing');
+      // $preparing = $this->getStatus('preparing');
 
        $qItem = $this->imageModelToQueue($imageModel);
        $counts = $qItem->counts;
 
        $item = array('id' => $imageModel->get('id'), 'value' => $qItem, 'item_count' => $counts->creditCount);
-       $this->q->addItems(array($item));
+       $this->q->addItems(array($item), false);
        $numitems = $this->q->withRemoveDuplicates()->enqueue(); // enqueue returns numitems
 
-       $this->q->setStatus('preparing', $preparing); // add single should not influence preparing status.
+      // $this->q->setStatus('preparing', $preparing, true); // add single should not influence preparing status.
        $result = new \stdClass;
        $result = $this->getQStatus($result, $numitems);
        $result->numitems = $numitems;
@@ -613,7 +613,8 @@ abstract class Queue
 		{
 				$itemObj = $this->q->getItem($item_id);
 
-				if (is_object($itemObj) && intval($itemObj->status) <> ShortQ::QSTATUS_DONE)
+				$notQ = array(ShortQ::QSTATUS_DONE, ShortQ::QSTATUS_FATAL);
+				if (is_object($itemObj) && ! in_array(intval($itemObj->status), $notQ) );
 				{
 					return true;
 				}

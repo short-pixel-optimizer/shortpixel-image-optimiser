@@ -303,7 +303,11 @@ class ApiController
 
                   return $this->returnRetry( self::STATUS_QUOTA_EXCEEDED, __('Quota exceeded.','shortpixel-image-optimiser'));
                   break;
+							case -306:
+									return $this->returnFailure( self::STATUS_FAIL, __('Files need to be from a single domain per request.', 'shortpixel-image-optimiser'));
+							break;
               case -401: // Invalid Api Key
+							case -402: // Wrong API key
                   return $this->returnFailure( self::STATUS_NO_KEY, $status->Message);
               break;
               case -404: // Maximum number in optimization queue (remote)
