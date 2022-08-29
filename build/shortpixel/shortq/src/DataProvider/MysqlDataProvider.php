@@ -399,6 +399,12 @@ class MysqlDataProvider implements DataProvider
       else
           $placeholders = array($this->timestamptoSQL());
 
+			// Certain older SQL servers like to auto-update created date, creating a mess. 
+			if (! isset($data['created']))
+			{
+				 $update_sql .= ', created = created';
+			}
+
       foreach($data as $field => $value)
       {
         $update_sql .= ' ,' . $field . ' = %s ';

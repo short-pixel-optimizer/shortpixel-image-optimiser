@@ -19,7 +19,7 @@ class WPShortPixelSettings extends \ShortPixel\Model {
     private static $_optionsMap = array(
         //This one is accessed also directly via get_option
         'frontBootstrap' => array('key' => 'wp-short-pixel-front-bootstrap', 'default' => null, 'group' => 'options'), //set to 1 when need the plugin active for logged in user in the front-end
-        'lastBackAction' => array('key' => 'wp-short-pixel-last-back-action', 'default' => null, 'group' => 'state'), //when less than 10 min. passed from this timestamp, the front-bootstrap is ineffective.
+      //  'lastBackAction' => array('key' => 'wp-short-pixel-last-back-action', 'default' => null, 'group' => 'state'), //when less than 10 min. passed from this timestamp, the front-bootstrap is ineffective.
 
         //optimization options
         'apiKey' => array('key' => 'wp-short-pixel-apiKey', 'default' => '', 'group' => 'options'),
@@ -59,7 +59,7 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         'customBulkPaused' => array('key' => 'wp-short-pixel-custom-bulk-paused', 'default' => false, 'group' => 'options'),
 
         //uninstall
-        'removeSettingsOnDeletePlugin' => array('key' => 'wp-short-pixel-remove-settings-on-delete-plugin', 'default' => false, 'group' => 'options'),
+  //      'removeSettingsOnDeletePlugin' => array('key' => 'wp-short-pixel-remove-settings-on-delete-plugin', 'default' => false, 'group' => 'options'),
 
         //stats, notices, etc.
 				// @todo Most of this can go. See state machine comment.
@@ -77,38 +77,38 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         'downloadProto' => array('key' => 'wp-short-pixel-download-protocol', 'default' => null, 'group' => 'state'),
 
 				'downloadArchive' => array('key' => 'wp-short-pixel-download-archive', 'default' => -1, 'group' => 'state'),
-        'mediaAlert' => array('key' => 'wp-short-pixel-media-alert', 'default' => null, 'group' => 'state'),
-        'dismissedNotices' => array('key' => 'wp-short-pixel-dismissed-notices', 'default' => array(), 'group' => 'state'),
+       // 'mediaAlert' => array('key' => 'wp-short-pixel-media-alert', 'default' => null, 'group' => 'state'),
+       // 'dismissedNotices' => array('key' => 'wp-short-pixel-dismissed-notices', 'default' => array(), 'group' => 'state'),
         'activationDate' => array('key' => 'wp-short-pixel-activation-date', 'default' => null, 'group' => 'state'),
-        'activationNotice' => array('key' => 'wp-short-pixel-activation-notice', 'default' => null, 'group' => 'state'),
+        //'activationNotice' => array('key' => 'wp-short-pixel-activation-notice', 'default' => null, 'group' => 'state'),
         'mediaLibraryViewMode' => array('key' => 'wp-short-pixel-view-mode', 'default' => false, 'group' => 'state'),
         'redirectedSettings' => array('key' => 'wp-short-pixel-redirected-settings', 'default' => null, 'group' => 'state'),
         'convertedPng2Jpg' => array('key' => 'wp-short-pixel-converted-png2jpg', 'default' => array(), 'group' => 'state'),
-        'helpscoutOptin' => array('key' => 'wp-short-pixel-helpscout-optin', 'default' => -1, 'group' => 'state'),
+        //'helpscoutOptin' => array('key' => 'wp-short-pixel-helpscout-optin', 'default' => -1, 'group' => 'state'),
 
 
         //bulk state machine
 				// @todo These options can all go.  Add as well to onDeactivate / onActivate deletions.
-        'bulkType' => array('key' => 'wp-short-pixel-bulk-type', 'default' => null, 'group' => 'bulk'),
-        'bulkLastStatus' => array('key' => 'wp-short-pixel-bulk-last-status', 'default' => null, 'group' => 'bulk'),
-        'startBulkId' => array('key' => 'wp-short-pixel-query-id-start', 'default' => 0, 'group' => 'bulk'),
-        'stopBulkId' => array('key' => 'wp-short-pixel-query-id-stop', 'default' => 0, 'group' => 'bulk'),
-        'bulkCount' => array('key' => 'wp-short-pixel-bulk-count', 'default' => 0, 'group' => 'bulk'),
-        'bulkPreviousPercent' => array('key' => 'wp-short-pixel-bulk-previous-percent', 'default' => 0, 'group' => 'bulk'),
-        'bulkCurrentlyProcessed' => array('key' => 'wp-short-pixel-bulk-processed-items', 'default' => 0, 'group' => 'bulk'),
-        'bulkAlreadyDoneCount' => array('key' => 'wp-short-pixel-bulk-done-count', 'default' => 0, 'group' => 'bulk'),
-        'lastBulkStartTime' => array('key' => 'wp-short-pixel-last-bulk-start-time', 'default' => 0, 'group' => 'bulk'),
-        'lastBulkSuccessTime' => array('key' => 'wp-short-pixel-last-bulk-success-time', 'default' => 0, 'group' => 'bulk'),
-        'bulkRunningTime' => array('key' => 'wp-short-pixel-bulk-running-time', 'default' => 0, 'group' => 'bulk'),
-        'cancelPointer' => array('key' => 'wp-short-pixel-cancel-pointer', 'default' => 0, 'group' => 'bulk'),
-        'skipToCustom' => array('key' => 'wp-short-pixel-skip-to-custom', 'default' => null, 'group' => 'bulk'),
-        'bulkEverRan' => array('key' => 'wp-short-pixel-bulk-ever-ran', 'default' => false, 'group' => 'bulk'),
-        'flagId' => array('key' => 'wp-short-pixel-flag-id', 'default' => 0, 'group' => 'bulk'),
-        'failedImages' => array('key' => 'wp-short-pixel-failed-imgs', 'default' => 0, 'group' => 'bulk'),
-        'bulkProcessingStatus' => array('key' => 'bulkProcessingStatus', 'default' => null, 'group' => 'bulk'),
+     //   'bulkType' => array('key' => 'wp-short-pixel-bulk-type', 'default' => null, 'group' => 'bulk'),
+     //   'bulkLastStatus' => array('key' => 'wp-short-pixel-bulk-last-status', 'default' => null, 'group' => 'bulk'),
+      //  'startBulkId' => array('key' => 'wp-short-pixel-query-id-start', 'default' => 0, 'group' => 'bulk'),
+       // 'stopBulkId' => array('key' => 'wp-short-pixel-query-id-stop', 'default' => 0, 'group' => 'bulk'),
+       // 'bulkCount' => array('key' => 'wp-short-pixel-bulk-count', 'default' => 0, 'group' => 'bulk'),
+      //  'bulkPreviousPercent' => array('key' => 'wp-short-pixel-bulk-previous-percent', 'default' => 0, 'group' => 'bulk'),
+      //  'bulkCurrentlyProcessed' => array('key' => 'wp-short-pixel-bulk-processed-items', 'default' => 0, 'group' => 'bulk'),
+       // 'bulkAlreadyDoneCount' => array('key' => 'wp-short-pixel-bulk-done-count', 'default' => 0, 'group' => 'bulk'),
+       // 'lastBulkStartTime' => array('key' => 'wp-short-pixel-last-bulk-start-time', 'default' => 0, 'group' => 'bulk'),
+       // 'lastBulkSuccessTime' => array('key' => 'wp-short-pixel-last-bulk-success-time', 'default' => 0, 'group' => 'bulk'),
+       // 'bulkRunningTime' => array('key' => 'wp-short-pixel-bulk-running-time', 'default' => 0, 'group' => 'bulk'),
+      //  'cancelPointer' => array('key' => 'wp-short-pixel-cancel-pointer', 'default' => 0, 'group' => 'bulk'),
+      //  'skipToCustom' => array('key' => 'wp-short-pixel-skip-to-custom', 'default' => null, 'group' => 'bulk'),
+      //  'bulkEverRan' => array('key' => 'wp-short-pixel-bulk-ever-ran', 'default' => false, 'group' => 'bulk'),
+     //   'flagId' => array('key' => 'wp-short-pixel-flag-id', 'default' => 0, 'group' => 'bulk'),
+      //  'failedImages' => array('key' => 'wp-short-pixel-failed-imgs', 'default' => 0, 'group' => 'bulk'),
+      //  'bulkProcessingStatus' => array('key' => 'bulkProcessingStatus', 'default' => null, 'group' => 'bulk'),
 
         //'priorityQueue' => array('key' => 'wp-short-pixel-priorityQueue', 'default' => array()),
-        'prioritySkip' => array('key' => 'wp-short-pixel-prioritySkip', 'default' => array(), 'group' => 'state'),
+       // 'prioritySkip' => array('key' => 'wp-short-pixel-prioritySkip', 'default' => array(), 'group' => 'state'),
 
         //'' => array('key' => 'wp-short-pixel-', 'default' => null),
     );
@@ -147,7 +147,7 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         'savedSpace' => array('s' => 'skip'),
         'fileCount' => array('s' => 'skip'), // int
         'under5Percent' => array('s' => 'skip'), // int
-        'helpscoutOptin' => array('s' => 'boolean'), // checkbox
+      //  'helpscoutOptin' => array('s' => 'boolean'), // checkbox
     );
 
       public function __construct() {
@@ -188,9 +188,11 @@ class WPShortPixelSettings extends \ShortPixel\Model {
             update_option('wp-short-pixel-activation-notice', true, 'no');
         }
         update_option( 'wp-short-pixel-activation-date', time(), 'no');
-        delete_option( 'wp-short-pixel-bulk-last-status'); // legacy shizzle
+
+			  delete_option( 'wp-short-pixel-bulk-last-status'); // legacy shizzle
         delete_option( 'wp-short-pixel-current-total-files');
 				delete_option('wp-short-pixel-remove-settings-on-delete-plugin');
+
         delete_option(self::$_optionsMap['removeSettingsOnDeletePlugin']['key']);
 
         // Dismissed now via Notices Controller.
@@ -200,20 +202,64 @@ class WPShortPixelSettings extends \ShortPixel\Model {
             update_option('wp-short-pixel-dismissed-notices', $dismissed, 'no');
         } */
 
-        $formerPrio = get_option('wp-short-pixel-priorityQueue');
+        //$formerPrio = get_option('wp-short-pixel-priorityQueue');
       //  $qGet = (! defined('SHORTPIXEL_NOFLOCK')) ?  ShortPixelQueue::get() : ShortPixelQueueDB::get();
       /*  if(is_array($formerPrio) && !count($qGet)) {
 
           (! defined('SHORTPIXEL_NOFLOCK')) ? ShortPixelQueue::set($formerPrio) : ShortPixelQueueDB::set($formerPrio); */
-          delete_option('wp-short-pixel-priorityQueue');
+       //   delete_option('wp-short-pixel-priorityQueue');
       //  }
     }
 
     public static function onDeactivate() {
+
         delete_option('wp-short-pixel-activation-notice');
 				delete_option('wp-short-pixel-bulk-last-status'); // legacy shizzle
 				delete_option('wp-short-pixel-current-total-files');
 				delete_option('wp-short-pixel-remove-settings-on-delete-plugin');
+
+				// Bulk State machine legacy
+				$bulkLegacyOptions = array(
+						'wp-short-pixel-bulk-type',
+						'wp-short-pixel-bulk-last-status',
+						'wp-short-pixel-query-id-start',
+						'wp-short-pixel-query-id-stop',
+						'wp-short-pixel-bulk-count',
+						'wp-short-pixel-bulk-previous-percent',
+						'wp-short-pixel-bulk-processed-items',
+						'wp-short-pixel-bulk-done-count',
+						'wp-short-pixel-last-bulk-start-time',
+						'wp-short-pixel-last-bulk-success-time',
+						'wp-short-pixel-bulk-running-time',
+						'wp-short-pixel-cancel-pointer',
+						'wp-short-pixel-skip-to-custom',
+						'wp-short-pixel-bulk-ever-ran',
+						'wp-short-pixel-flag-id',
+						'wp-short-pixel-failed-imgs',
+						'bulkProcessingStatus',
+						'wp-short-pixel-prioritySkip',
+				);
+
+				$removedStats = array(
+						'wp-short-pixel-helpscout-optin',
+						'wp-short-pixel-activation-notice',
+						'wp-short-pixel-dismissed-notices',
+						'wp-short-pixel-media-alert',
+				);
+
+				$removedOptions = array(
+						'wp-short-pixel-remove-settings-on-delete-plugin',
+						'wp-short-pixel-custom-bulk-paused',
+						'wp-short-pixel-last-back-action',
+						'wp-short-pixel-front-bootstrap',
+				);
+
+				$toRemove = array_merge($bulkLegacyOptions, $removedStats, $removedOptions);
+
+				foreach($toRemove as $option)
+				{
+					 delete_option($option);
+				}
     }
 
 
@@ -240,6 +286,16 @@ class WPShortPixelSettings extends \ShortPixel\Model {
             }
         }
     }
+
+		// Remove option. Only deletes with defined key!
+		public function deleteOption($key)
+		{
+			  if(isset(self::$_optionsMap[$key]) && isset(self::$_optionsMap[$key]['key']))
+				{
+						$deleteKey = self::$_optionsMap[$key]['key'];
+						delete_option($deleteKey);
+				}
+		}
 
     public static function getOpt($key, $default = null) {
 

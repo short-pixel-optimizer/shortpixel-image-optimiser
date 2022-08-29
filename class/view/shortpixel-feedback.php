@@ -315,11 +315,6 @@ class ShortPixelFeedback {
 
         check_ajax_referer( 'shortpixel_deactivate_plugin', 'security' );
 
-				$keep_settings = isset($_POST['keep-settings']) ? intval($_POST['keep-settings']) : null;
-
-				if(is_null($keep_settings) === false) {
-            \wpSPIO()->settings()->removeSettingsOnDeletePlugin = 1 - $keep_settings;
-        }
 
 				Log::addDebug('Deactive Plugin Callback POST', $_POST);
 

@@ -645,7 +645,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
     public function isRestorable()
     {
-				
+
         if (! $this->isOptimized())
         {
 					 $this->restorable_status = self::P_NOT_OPTIMIZED;
@@ -884,7 +884,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                 if ($type == 'regex-name' || $type == 'regex-path')
                 {
                     $result = $this->matchExludeRegexPattern($target, $pattern);
-										Log::addTemp('Exclude RegeX result', $result);
                 }
                 else {
                     $result =  $this->matchExcludePattern($target, $pattern);

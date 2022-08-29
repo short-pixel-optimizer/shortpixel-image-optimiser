@@ -228,7 +228,8 @@ var ShortPixelScreen = function (MainScreen, processor)
             var id = data.media.id;
 
             var element = document.getElementById('sp-msg-' + id);
-            element.outerHTML = data.media.itemView;
+						if (element !== null) // Could be other page / not visible / whatever.
+            	element.outerHTML = data.media.itemView;
         }
         return false; // callback shouldn't do more, see processor.
     }

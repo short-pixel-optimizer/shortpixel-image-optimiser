@@ -28,7 +28,6 @@ class InstallHelper
 
       AdminNoticesController::resetAllNotices();
       \WPShortPixelSettings::onActivate();
-      OptimizeController::resetQueues();
 
 			$settings->currentVersion = SHORTPIXEL_IMAGE_OPTIMISER_VERSION;
   }

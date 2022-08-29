@@ -94,10 +94,9 @@ class NextGenController
 			{
 				 return false;
 			}
-      $screen = get_current_screen();
+			$screen_id = \wpSPIO()->env()->screen_id;
 
-
-      if (in_array($screen->id, $screens))
+      if (in_array($screen_id, $screens))
         return true;
       else
         return false;

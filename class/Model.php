@@ -11,8 +11,9 @@ abstract class Model
     $data = array();
     foreach($this->model as $item => $options)
     {
-      $data[$item] = $this->{$item};
 			
+      $data[$item] = $this->{$item};
+
     }
     return $data;
   }

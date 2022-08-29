@@ -184,8 +184,8 @@ class ShortPixelPlugin {
 
 		add_filter( 'plugin_action_links_' . plugin_basename( SHORTPIXEL_PLUGIN_FILE ), array( $admin, 'generatePluginLinks' ) );// for plugin settings page
 
-		// for cleaning up the WebP images when an attachment is deleted
-		add_action( 'delete_attachment', array( $admin, 'onDeleteAttachment' ) );
+		// for cleaning up the WebP images when an attachment is deleted . Loading this early because it's possible other plugins delete files in the uploads, but we need those to remove backups.
+		add_action( 'delete_attachment', array( $admin, 'onDeleteAttachment' ), 5 );
 		add_action( 'mime_types', array( $admin, 'addMimes' ) );
 
 		// integration with WP/LR Sync plugin
@@ -279,7 +279,7 @@ class ShortPixelPlugin {
 
 		wp_register_script( 'jquery.knob.min.js', plugins_url( '/res/js/jquery.knob.min.js', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
-		wp_register_script( 'jquery.tooltip.min.js', plugins_url( '/res/js/jquery.tooltip.min.js', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
+		//wp_register_script( 'jquery.tooltip.min.js', plugins_url( '/res/js/jquery.tooltip.min.js', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
 		wp_register_script( 'shortpixel-debug', plugins_url( '/res/js/debug.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery', 'jquery-ui-draggable' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
@@ -363,7 +363,6 @@ class ShortPixelPlugin {
 				'WP_PLUGIN_URL'     => plugins_url( '', SHORTPIXEL_PLUGIN_FILE ),
 				'WP_ADMIN_URL'      => admin_url(),
 				'API_IS_ACTIVE'     => $keyControl->keyIsVerified(),
-				'FRONT_BOOTSTRAP'   => $settings->frontBootstrap && ( ! isset( $settings->lastBackAction ) || ( time() - $settings->lastBackAction > 600 ) ) ? 1 : 0,
 				'AJAX_URL'          => admin_url( 'admin-ajax.php' ),
 				'BULK_SECRET'       => $secretKey,
 				'nonce_ajaxrequest' => wp_create_nonce( 'ajax_request' ),
@@ -500,17 +499,15 @@ class ShortPixelPlugin {
 		$load_bulk      = array();  // the whole suit needed for bulking.
 
 
-
 		if ( \wpSPIO()->env()->is_screen_to_use ) {
 			$this->load_script( 'shortpixel-tooltip' );
 			$this->load_style( 'shortpixel-toolbar' );
-
 		}
 
 		if ( $plugin_page == 'wp-shortpixel-settings' ) {
 			$this->load_script( $load_processor );
 			$this->load_script( 'shortpixel-screen-nolist' ); // screen
-			$this->load_script( 'jquery.tooltip.min.js' );
+			//$this->load_script( 'jquery.tooltip.min.js' );
 			$this->load_script( 'sp-file-tree' );
 			$this->load_script( 'shortpixel-settings' );
 
@@ -531,7 +528,7 @@ class ShortPixelPlugin {
 
 			$this->load_style( 'shortpixel-admin' );
 			$this->load_style( 'shortpixel' );
-			
+
 			if ( $this->env()->is_debug ) {
 				$this->load_script( 'shortpixel-debug' );
 			}
@@ -541,7 +538,6 @@ class ShortPixelPlugin {
 			$this->load_style( 'shortpixel-admin' );
 
 			$this->load_style( 'shortpixel-othermedia' );
-
 			$this->load_script( $load_processor );
 			$this->load_script( 'shortpixel-screen-custom' ); // screen
 

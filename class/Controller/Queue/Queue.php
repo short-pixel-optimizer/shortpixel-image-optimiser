@@ -73,16 +73,16 @@ abstract class Queue
     public function addSingleItem(ImageModel $imageModel)
     {
 
-       $preparing = $this->getStatus('preparing');
+      // $preparing = $this->getStatus('preparing');
 
        $qItem = $this->imageModelToQueue($imageModel);
        $counts = $qItem->counts;
 
        $item = array('id' => $imageModel->get('id'), 'value' => $qItem, 'item_count' => $counts->creditCount);
-       $this->q->addItems(array($item));
+       $this->q->addItems(array($item), false);
        $numitems = $this->q->withRemoveDuplicates()->enqueue(); // enqueue returns numitems
 
-       $this->q->setStatus('preparing', $preparing); // add single should not influence preparing status.
+      // $this->q->setStatus('preparing', $preparing, true); // add single should not influence preparing status.
        $result = new \stdClass;
        $result = $this->getQStatus($result, $numitems);
        $result->numitems = $numitems;
@@ -332,9 +332,12 @@ abstract class Queue
 
       $stats->total = $stats->in_queue + $stats->fatal_errors + $stats->errors + $stats->done + $stats->in_process;
       if ($stats->total > 0)
-        $stats->percentage_done = round((100 / $stats->total) * ($stats->done + $stats->fatal_errors));
-      else
+			{
+        $stats->percentage_done = round(round((100 / $stats->total) * ($stats->done + $stats->fatal_errors)), 0, PHP_ROUND_HALF_DOWN);
+			}
+			else
         $stats->percentage_done = 100; // no items means all done.
+
 
       if (! $stats->is_running)
       {
@@ -613,7 +616,8 @@ abstract class Queue
 		{
 				$itemObj = $this->q->getItem($item_id);
 
-				if (is_object($itemObj) && intval($itemObj->status) <> ShortQ::QSTATUS_DONE)
+				$notQ = array(ShortQ::QSTATUS_DONE, ShortQ::QSTATUS_FATAL);
+				if (is_object($itemObj) && in_array(floor($itemObj->status), $notQ) === false )
 				{
 					return true;
 				}
