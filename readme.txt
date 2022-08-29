@@ -12,19 +12,19 @@ Speed up your website & boost your SEO by compressing old & new images and PDFs.
 
 == Description ==
 
-**A freemium, easy to use, comprehensive, stable and frequently updated image compression plugin supported by the friendly team that created it.  :)**
+**A freemium, easy to use, comprehensive, stable, and frequently updated image compression plugin supported by the friendly team that created it.  :)**
 
-Increase your website's SEO ranking, number of visitors and ultimately your sales by optimising any image or PDF document on your website.
-ShortPixel is an easy to use, lightweight, install-and-forget-about-it <a href="https://shortpixel.com" target="_blank">image optimization</a> plugin that can compress all your past images and PDF documents with a single click. New images are automatically resized/rescaled and optimized on the fly, in the background. It's also compatible with any gallery, slider or ecommerce plugin.
+Increase your website's SEO ranking, number of visitors, and ultimately your sales by optimising any image or PDF document on your website.
+ShortPixel is an easy to use, lightweight, install-and-forget-about-it <a href="https://shortpixel.com" target="_blank">image optimization</a> plugin that can compress all your past images and PDF documents with a single click. New images are automatically resized/rescaled and optimized on the fly, in the background. It's also compatible with any gallery, slider or eCommerce plugin.
 
 **Ready for a quick DEMO? Test our plugin <a href="https://demo.tastewp.com/shortpixel-image-optimiser" target="_blank">here</a> and <a href="https://wpsandbox.net/" target="_blank">here</a>.**
 Or you can create a staging copy of your site using <a href="https://wp-staging.com/" target="_blank">WP Staging</a> and test it there.
 
 Short Pixel uses minimal resources and works well with any shared, cloud, VPS or dedicated web hosting. It can optimize any image you have on your website even the images that aren't listed in Media Library like those in galleries like <a href="https://wordpress.org/plugins/nextgen-gallery/" target="_blank">NextGEN</a>, <a href="https://wordpress.org/plugins/modula-best-grid-gallery/" target="_blank">Modula</a> or added directly via FTP!
 
-Both lossy and lossless image compression are available for the most common image types (JPG, PNG, GIF, WebP and AVIF) plus PDF files.
-We also offer **glossy** JPEG compression which is a very high quality lossy optimization algorithm. Specially designed for photographers!
-Optimized images mean better user experience, better PageSpeed Insights or GTmetrix results, better Google PageRank and more visitors.
+Both lossy and lossless image compression are available for the most common image types (JPG, PNG, GIF, WebP, and AVIF) plus PDF files.
+We also offer **glossy** JPEG compression which is a very high-quality lossy optimization algorithm. Specially designed for photographers!
+Optimized images mean better user experience, better PageSpeed Insights or GTmetrix results, better Google PageRank, and more visitors.
 
 Make an instant <a href="https://shortpixel.com/image-compression-test" target="_blank">image compression test</a> of your site or <a href="https://shortpixel.com/online-image-compression" target="_blank">compress some images</a> to test our optimization algorithms.
 
@@ -148,14 +148,14 @@ Let's get the ShortPixel plugin running on your WordPress website:
 
 = A credit = an optimized image? =
     Yes, that is correct.
-    But please note that usually an image in Media Library has 3, 5 or more associated thumbs. Each optimized thumb requires a credit. In the rare cases when ShortPixel does not optimise the image (lossy) with at least 5%, the credit will not be consumed, though.
+    But please note that usually, an image in Media Library has 5 or more associated thumbs. Each optimized thumbnail requires a credit. In the rare cases when ShortPixel does not optimise the image (lossy) with at least 5%, the credit will not be consumed, though.
 
 = Can I restore my images? What happens with the originals? =
     If you choose the "Image backup" option in Settings/ShortPixel then the original version of any optimized image or PDF will be saved in the backup folder.
-    The original image is needed if you want to restore an image or if you want to convert an image from lossy/glossy to lossless or viceversa.
+    The original image is needed if you want to restore an image or if you want to convert an image from lossy/glossy to lossless or vice-versa.
 
 = What types of formats can be optimized? =
-    ShortPixel optimises JPEG (JPG, JPEG, JPEG 2000, JPEG XR), PNG, GIF (animated and still) and PDF type of files.
+    ShortPixel optimises JPEG (JPG, JPEG, JPEG 2000, JPEG XR), PNG, GIF (animated and still), and PDF type of files.
 
 = Do you have one-time plans? =
     Yes we do.
@@ -166,13 +166,13 @@ Let's get the ShortPixel plugin running on your WordPress website:
     If you choose the backup option then the originals will be saved in a separate folder so you can restore them should you ever need/want to do that.
 
 = How does the plugin work? =
-    Our light-weight plugin sends the original images to our Image Optimization Cloud where they are compressed. ShortPixel then downloads the optimized images and the unoptimized originals are replaced with the optimised versions.
+    Our lightweight plugin sends the original images to our Image Optimization Cloud where they are compressed. ShortPixel then downloads the optimized images and the unoptimized originals are replaced with the optimised versions.
 
 = Do you optimize images in the cloud? =
-    Yes, all the images processsed by ShortPixel are optimized in the Cloud. This takes the load off of your server and allows us to produce the best results.
+    Yes, all the images processed by ShortPixel are optimized in the Cloud. This takes the load off of your server and allows us to produce the best results.
 
 = What payment methods are accepted? =
-    We accept payments via card (Mastercard, Visa, Maestro, American Express, Discover, Diners Club, JCB, UnionPay), PayPal and Apple Pay.
+    We accept payments via card (Mastercard, Visa, Maestro, American Express, Discover, Diners Club, JCB, UnionPay), PayPal, and Apple Pay.
 
 = How do I activate the API key on a multisite? =
     You have to activate the plugin in the network admin and then activate it manually on each individual site in the multisite. Once you have done that, the Settings menu appears and you can add the API key for each individual site.
@@ -182,7 +182,7 @@ Let's get the ShortPixel plugin running on your WordPress website:
 where `APIKEY` is the API Key received upon sign up.
     If configured that way, the API key will be used for all the sites of the multisite but will only be visible on the main site’s Settings page, being hidden for the rest of the sites.
 
-= I am not the only one working in the WordPress Dashboard. How can I hide my API key? =
+= I am not the only one working on the WordPress Dashboard. How can I hide my API key? =
     There is a simple way to hide the API key, all you need to do is to add these two lines in your wp-config.php:
 
 `define('SHORTPIXEL_API_KEY', '<<your api key here>>');`
@@ -192,9 +192,9 @@ where `APIKEY` is the API Key received upon sign up.
     A credit is used each time ShortPixel optimizes an image or thumbnail by at least 5%. If we're not able to optimize an image or thumbnail by at least 5% then no credit will be used :-)
     Please also note that usually images in your Media Library have 3-5 thumbs associated and a credit will be used for each featured image or associated thumbnail that is optimized.
 
-= Why shall I use a wordpress plugin and not an offline tool? =
+= Why shall I use a WordPress plugin and not an offline tool? =
     Because ShortPixel algorithms were perfected while optimizing over 3.5 billion real-life images.
-    ShortPixel not only offers the best compression for JPEG, PNG, GIF and PDF files but it also saves you a lot of time. You just install it on your site and then ShortPixel will take care that all the images on your site are immediately optimized after upload.
+    ShortPixel not only offers the best compression for JPEG, PNG, GIF, and PDF files but it also saves you a lot of time. You just install it on your site and then ShortPixel will take care that all the images on your site are immediately optimized after upload.
 
 = Does optimizing images affect my ALT tags? =
     No, ShortPixel only optimizes images, it won't touch anything else like your HTML/CSS.
@@ -205,13 +205,13 @@ where `APIKEY` is the API Key received upon sign up.
 
 = Do I have to pay monthly or one time? =
     We have both options available.
-    One-time credits never expire are a bit more expensive. Check out our prices <a href="https://shortpixel.com/pricing" >here</a>
+    One-time credits never expire and are a bit more expensive. Check out our prices <a href="https://shortpixel.com/pricing" >here</a>
 
 = When can I cancel a monthly plan? =
     Whenever you want.
     The credits you still have available for the current billing period will still be available until the end of the billing period. At the end of it, you won't be billed again and the plan will be reset to the free plan.
 
-= When credits expire? =
+= When do credits expire? =
     Monthly credits expire after 30 days while one-time credits never expire.
 
 = Do you have an API? =
@@ -219,7 +219,7 @@ where `APIKEY` is the API Key received upon sign up.
     You can learn more about it here:
     <a href="https://shortpixel.com/api-tools">https://shortpixel.com/api-tools</a>
 
-= Can I use ShortPixel WP plugin on a localhost installation? =
+= Can I use the ShortPixel WP plugin on a localhost installation? =
     Unfortunately not :-(
     But you can use either our command line tool or our web tool
     <a href="https://shortpixel.com/web-tool-docs">https://shortpixel.com/web-tool-docs</a>
@@ -250,8 +250,15 @@ before restoring an image from backup;
 `do_action("shortpixel_after_restore_image", $post_id);`
 after succesful restore;
 
+For version 4.22.10 and earlier:
+
 `apply_filters("shortpixel_backup_folder", $backup_folder, $main_file_path, $sizes);`
 just before returning the ShortPixel backup folder, usually /wp-content/uploads/ShortpixelBackups. The `$sizes` are the sizes array from metadata;
+
+For version 5.0.0 and later:
+
+`$directory = apply_filters("shortpixel/file/backup_folder", $directory, $file);`
+just before returning the ShortPixel backup folder, usually /wp-content/uploads/ShortpixelBackups).
 
 `apply_filters('shortpixel_image_exists', file_exists($path), $path, $post_id);`
 post ID is not always set, only if it's an image from Media Library;
@@ -259,17 +266,38 @@ post ID is not always set, only if it's an image from Media Library;
 `apply_filters('shortpixel_image_urls', $URLs, $post_id);`
 filters the URLs that will be sent to optimisation, `$URLs` is a plain array;
 
+<strong>The filter below is deprecated starting with version 5.0.0!</strong>
+
 `apply_filters('shortpixel/db/chunk_size', $chunk);`
-the `$chunk` is the value ShortPixel chooses to use as number of selected records in one query (based on total table size), some hosts work better with a different value;
+the `$chunk` is the value ShortPixel chooses to use as the number of selected records in one query (based on total table size), some hosts work better with a different value;
 
 `apply_filters('shortpixel/backup/paths', $PATHs, $mainPath);`
 filters the array of paths of the images sent for backup and can be used to exclude certain paths/images/thumbs from being backed up, based on the image path. `$mainPath` is the path of the main image, while `$PATHs` is an array with all files to be backed up (including thumbnails);
 
 `apply_filters('shortpixel/settings/image_sizes', $sizes);`
-filters the array (`$sizes`) of image sizes which can be excluded from processing (displayed in the plugin Advanced settings);
+filters the array (`$sizes`) of image sizes that can be excluded from processing (displayed in the plugin Advanced settings);
 
 `apply_filters('shortpixel/api/request', $requestParameters, $item_id);`
 filters the parameters sent to the optimization API (through `$requestParameters`), described in detail here: <a href="https://shortpixel.com/api-docs" target="_blank">ShortPixel Reducer API</a>; `$item_id` contains the ID of the Media Library item, or the ID of the Custom Media item (when used). In short, this filter can be used to alter any parameters sent to the API, depending on the needs. For example, you can set different resize parameters for different post types, different compression levels, remove EXIF or not, covert WebP/AVIF, and basically any other parameter that is sent to the API for a specific image (together with all its thumbnails).
+
+This filter enables the background ShortPixel processing in additional pages (see <a href="https://shortpixel.com/knowledge-base/article/334-on-what-pages-does-spio-optimize-images" target="_blank">here</a> the original list). Here's an example of this filter that enables the processing on the Comments screen (to be placed in your functions.php file):
+
+`
+add_filter('shortpixel/init/optimize_on_screens', function ($screens) {
+	$screens[] = 'edit-comments';
+	return $screens;
+});
+`
+The `edit-comments` is the ID of the screen where you want to enable the processing.
+
+If you want to add multiple pages, here's what the snippet looks like:
+
+`
+add_filter('shortpixel/init/optimize_on_screens', function ($screens) {
+	$screens = array('edit-comments', 'plugins', 'another-custom-post-type-page');
+	return $screens;
+	});
+`
 
 In order to define custom thumbnails to be picked up by the optimization you have two options, both comma separated defines:
 
@@ -281,7 +309,7 @@ will handle custom thumbnails like image-100x100_tl.jpg;
 
 `define('SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION', true);`
 `define('SHORTPIXEL_USE_DOUBLE_AVIF_EXTENSION', true);`
-will tell the plugin to create double extensions for the WebP/AVIF image counterparts, for example image.jpg.webp/image.jpg.avif for image.jpg;
+will tell the plugin to create double extensions for the WebP/AVIF image counterparts, for example, image.jpg.webp/image.jpg.avif for image.jpg;
 
 Hide the Cloudflare settings by defining these constants in wp-config.php:
 
@@ -299,19 +327,17 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 
 2. Activate your API key in the plugin Settings. (Settings>ShortPixel)
 
-3. Check out the main settings after API key activated. (Settings>ShortPixel)
+3. Check out the main settings after the API key is activated. (Settings>ShortPixel)
 
 4. Tweak it using Advanced settings. (Settings>ShortPixel)
 
 5. Compress all your past images with one click. (Media>Bulk ShortPixel)
 
-6. Check your stats: number of processed files, saved space, average compression, saved bandwidth, remaining images. (Settings>ShortPixel)
+6. Check image optimization status, and restore or reoptimize the image. (Media>Library)
 
-7. Check images optimization status, restore or reoptimize the image. (Media>Library)
+7. Check image optimisation details. (Media>Library->Edit)
 
-8. Check image optimisation details. (Media>Library->Edit)
-
-9. Check other optimized images status - themes or other plugins' images. (Media>Other Media)
+8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
 
