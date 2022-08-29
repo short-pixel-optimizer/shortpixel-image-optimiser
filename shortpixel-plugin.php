@@ -499,11 +499,9 @@ class ShortPixelPlugin {
 		$load_bulk      = array();  // the whole suit needed for bulking.
 
 
-
 		if ( \wpSPIO()->env()->is_screen_to_use ) {
 			$this->load_script( 'shortpixel-tooltip' );
 			$this->load_style( 'shortpixel-toolbar' );
-
 		}
 
 		if ( $plugin_page == 'wp-shortpixel-settings' ) {
@@ -540,7 +538,6 @@ class ShortPixelPlugin {
 			$this->load_style( 'shortpixel-admin' );
 
 			$this->load_style( 'shortpixel-othermedia' );
-
 			$this->load_script( $load_processor );
 			$this->load_script( 'shortpixel-screen-custom' ); // screen
 
