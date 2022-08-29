@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compressor, ima
 Requires at least: 4.8.0
 Tested up to: 6.0
 Requires PHP: 5.6
-Stable tag: 5.0.8
+Stable tag: 5.0.9
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -340,6 +340,20 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 5.0.9 =
+Release date August 29th, 2022
+* Fix: one of the processing queues was flooded in certain situations, on sites with many concurrent editors;
+* Fix: the file name was missing in the bulk processing preview;
+* Fix: the queues were deleted when activating the plugin; now they are preserved and bulk processing can continue after updating/reactivating the plugin;
+* Fix: retina backups were not removed when an image was deleted from the Media Library;
+* Fix: NGG screen check caused processor to load on plugin/dashboard pages;
+* Fix: stats were saved incorrectly when the plugin was deactivated;
+* Fix: some PHP notices were displayed due to numbering format for Polish language;
+* Fix: various minor fixes, error code handling and code cleanup;
+* Fix: screenshots were updated to reflect the latest version of the plugin;
+* Fix: updates to wording throughout the plugin and in the readme file;
+* Language: 1 new string added, 0 updated, 0 fuzzed, and 1 deprecated.
 
 = 5.0.8 =
 Release date August 8th, 2022
