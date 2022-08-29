@@ -522,7 +522,8 @@ class OptimizeController
       }
       else
 			{
-        //$item->result->filename = $imageItem->getFileName();
+				// This used in bulk preview for formatting filename.
+        $item->result->filename = $imageItem->getFileName();
 				// Used in WP-CLI
 				ResponseController::addData($item->item_id, 'fileName', $imageItem->getFileName());
 			}
