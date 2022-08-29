@@ -184,8 +184,8 @@ class ShortPixelPlugin {
 
 		add_filter( 'plugin_action_links_' . plugin_basename( SHORTPIXEL_PLUGIN_FILE ), array( $admin, 'generatePluginLinks' ) );// for plugin settings page
 
-		// for cleaning up the WebP images when an attachment is deleted
-		add_action( 'delete_attachment', array( $admin, 'onDeleteAttachment' ) );
+		// for cleaning up the WebP images when an attachment is deleted . Loading this early because it's possible other plugins delete files in the uploads, but we need those to remove backups.
+		add_action( 'delete_attachment', array( $admin, 'onDeleteAttachment' ), 5 );
 		add_action( 'mime_types', array( $admin, 'addMimes' ) );
 
 		// integration with WP/LR Sync plugin

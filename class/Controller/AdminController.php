@@ -220,6 +220,7 @@ class AdminController extends \ShortPixel\Controller
         try
         {
           $imageObj = $fs->getImage($post_id, 'media');
+					Log::addDebug('OnDelete ImageObj', $imageObj);
           if ($imageObj !== false)
             $result = $imageObj->onDelete();
         }

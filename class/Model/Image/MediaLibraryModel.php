@@ -705,7 +705,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   protected function loadMeta()
   {
 			$metadata = $this->getDBMeta();
-
       $settings = \wpSPIO()->settings();
 
       $this->image_meta = new ImageMeta();
@@ -884,7 +883,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		 // Thumbnails
 
-		// Mimic the previous SPixel solution regarding the return Metadata Object needed, with all thunbnails there.
+		// Mimic the previous SPixel solution regarding the return Metadata Object needed, with all thumbnails there.
 		 $metadata = new \stdClass;
 		 $metadata->image_meta = new \stdClass;
 		 $metadata->thumbnails = array();
@@ -1243,6 +1242,18 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				 if ($fileDelete === true)
 				 		$originalFile->onDelete($fileDelete);
       }
+
+			if (! is_null($this->retinas))
+			{
+				foreach($this->retinas as $retinaObj)
+				{
+					if ($fileDelete === true)
+					{
+						$retinaObj->onDelete($fileDelete);
+					}
+				}
+			}
+
 
 		 	$this->removeLegacy();
       $this->deleteMeta();
