@@ -958,7 +958,16 @@ class OptimizeController
             {
 							 if ($key == 'percentage_done')
 							 {
-								 	$object->stats->$key = (($object->stats->$key + $value) / 2); //exceptionnes.
+								  if (property_exists($results->custom->stats, 'total') && $results->custom->stats->total == 0)
+										 $perc = $value;
+								  elseif(property_exists($results->media->stats, 'total') && $results->media->stats->total == 0)
+									{
+										 $perc = $object->stats->$key;
+									}
+									else
+								 		$perc = round(($object->stats->$key + $value) / 2); //exceptionnes.
+
+									$object->stats->$key  = $perc;
 							 }
                elseif (is_numeric($object->stats->$key)) // add only if number.
                {
