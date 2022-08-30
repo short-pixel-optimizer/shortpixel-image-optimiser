@@ -149,6 +149,28 @@ namespace ShortPixel;
                 </td>
             </tr>
 
+						<tr>
+                <th scope="row"><?php esc_html_e('Enable Smartcrop:','shortpixel-image-optimiser');?></th>
+                <td>
+
+										<div class='switch_button'>
+										 <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/511-settings-also-include-thumbnails"></span></div>
+				              <label>
+				                <input type="checkbox" class="switch" name="useSmartcrop" value="1" <?php checked($view->data->useSmartcrop, '1');?>>
+				                <div class="the_switch">&nbsp; </div>
+												<?php printf(esc_html__('Use %s Smartcropping .%s ','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
+									    </label>
+				            </div>
+
+                    <p class="settings-info">
+                        <?php printf(esc_html__('ShortPixel Smartcrop feature will create better thumbnails via intelligent AI. Thumbnails generated will focus on the focus content while cropping out background noise','shortpixel-image-optimiser'), '<br>'); ?>
+                    </p>
+
+                </td>
+            </tr>
+
+
+
             <tr>
                 <th scope="row"><?php esc_html_e('Backup','shortpixel-image-optimiser');?></th>
                 <td>

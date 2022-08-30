@@ -78,7 +78,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
           $url = $this->getURL();
 
         if ($this->isProcessable(true))
-          return array($url);
+          return array('main' => $url);
 
         return array();
     }

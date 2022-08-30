@@ -30,11 +30,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   protected $optimizePrevented; // cache if there is any reason to prevent optimizing
 	private $justConverted = false; // check if conversion happened on same run, to prevent double runs.
 
-	const IMAGE_TYPE_MAIN = 0;
-	const IMAGE_TYPE_THUMB = 1;
-	const IMAGE_TYPE_ORIGINAL = 2;
-	const IMAGE_TYPE_RETINA = 3;
-	const IMAGE_TYPE_DUPLICATE = 4;
 
   public function __construct($post_id, $path)
   {
@@ -95,7 +90,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
      $urls = array();
      if ($this->isProcessable(true))
 		 {
-	      $urls = array($url);
+	      $urls = array('main' => $url);
 		 }
 
      if ($this->isScaled())
@@ -2031,9 +2026,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
     $res = \wp_create_image_subsizes($fullpath, $this->id);
 
     remove_filter('as3cf_wait_for_generate_attachment_metadata', array($this, 'returnTrue'));
-
   }
-
 
   public function returnTrue()
   {
@@ -2545,6 +2538,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       );
 
   }
+
+	private function getAllThumbnails()
+	{
+
+	}
 
   /** Adds Unlisted Image to the Media Library Item
   * This function is called in IsProcessable

@@ -51,6 +51,12 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		const P_BACKUP_NOT_EXISTS = 110;
 		const P_NOT_OPTIMIZED = 111;
 
+		const IMAGE_TYPE_MAIN = 0;
+		const IMAGE_TYPE_THUMB = 1;
+		const IMAGE_TYPE_ORIGINAL = 2;
+		const IMAGE_TYPE_RETINA = 3;
+		const IMAGE_TYPE_DUPLICATE = 4;
+
     protected $image_meta; // metadata Object of the image.
 		protected $recordChanged = false;
 

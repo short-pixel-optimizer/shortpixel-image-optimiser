@@ -393,7 +393,7 @@ Class FileSystemController extends \ShortPixel\Controller
     public function downloadFile($url, $destinationPath)
     {
       $downloadTimeout = max(SHORTPIXEL_MAX_EXECUTION_TIME - 10, 15);
-      $fs = \wpSPIO()->filesystem();
+      $fs = \wpSPIO()->filesystem(); // @todo change this all to $this 
     //  $fs = \wpSPIO()->fileSystem();
       $destinationFile = $fs->getFile($destinationPath);
 
