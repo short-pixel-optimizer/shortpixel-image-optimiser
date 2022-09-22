@@ -1097,16 +1097,16 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 			$settings = \wpSPIO()->settings();
 
 		 $resize = false;
-		 $hasResizeSizes = false;
+		 $hasResizeSizes = (intval($settings->resizeImages) > 0) ? true : false;
+
 
 		 if ($settings->useSmartcrop == true)
 		 {
 		 	$resize = 4 ;
 		 }
-		 elseif ( intval($settings->resizeImages) > 0 )
+		 elseif ( $hasResizeSizes)
 		 {
 		 	$resize = $settings->resizeImages ? 1 + 2 * ($settings->resizeType == 'inner' ? 1 : 0) : 0;
-			$hasResizeSizes = true;
 		 }
 
 
