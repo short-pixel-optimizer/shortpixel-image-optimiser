@@ -500,18 +500,18 @@ abstract class Queue
 				foreach($data['params'] as $sizeName => $param)
 				{
 						$plus = false;
-						$convertTo = '';
+						$convertTo = array();
 						if ($param['image'] === true)
 						{
 							 $plus = true;
 						}
 					  if ($param['webp'] === true)
 						{
-							 $convertTo = ($plus === true) ? '+webp' : 'webp';
+							 $convertTo[] = ($plus === true) ? '+webp' : 'webp';
 						}
 						if ($param['avif'] === true)
 						{
-							$convertTo = ($plus === true) ? '+avif' : 'avif';
+							$convertTo[] = ($plus === true) ? '+avif' : 'avif';
 						}
 
 						foreach($removeKeys as $key)
@@ -522,8 +522,11 @@ abstract class Queue
 							 }
 						}
 
-						if (trim(strlen($convertTo)) > 0)
+						if (count($convertTo) > 0)
+						{
+							$convertTo = implode('|', $convertTo);
 							$data['params'][$sizeName]['convertto'] = $convertTo;
+						}
 				}
 
 
