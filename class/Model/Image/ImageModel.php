@@ -1096,24 +1096,39 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		{
 			$settings = \wpSPIO()->settings();
 
+		 $resize = false;
+		 $hasResizeSizes = false;
 
 		 if ($settings->useSmartcrop == true)
-		 	$resize = 4 ;
-		 else
-		 	$resize = $settings->resizeImages ? 1 + 2 * ($settings->resizeType == 'inner' ? 1 : 0) : 0;
-
-		 $resize_width = $settings->resizeWidth;
-		 $resize_height = $settings->resizeHeight;
-
-		 // If retina, allowed resize sizes is doubled, otherwise big image / big retina would end up same sizes.
-		 if ($this->get('imageType') == self::IMAGE_TYPE_RETINA)
 		 {
-			  $resize_width = $resize_width * 2;
-				$resize_height = $resize_height * 2;
+		 	$resize = 4 ;
+		 }
+		 elseif ( intval($settings->resizeImages) > 0 )
+		 {
+		 	$resize = $settings->resizeImages ? 1 + 2 * ($settings->resizeType == 'inner' ? 1 : 0) : 0;
+			$hasResizeSizes = true;
 		 }
 
-		 $width =  ($this->get('width') <= $resize_width) ? $this->get('width') : $resize_width;
-		 $height =  ($this->get('height') <= $resize_height) ? $this->get('height') : $resize_height;
+
+		 $resize_width = $resize_height = 0; // can be not set.
+		 $width = $this->get('width');
+		 $height = $this->get('height');
+
+ 		 if ($hasResizeSizes)
+		 {
+		 	$resize_width = $settings->resizeWidth;
+		 	$resize_height = $settings->resizeHeight;
+			// If retina, allowed resize sizes is doubled, otherwise big image / big retina would end up same sizes.
+			if ($this->get('imageType') == self::IMAGE_TYPE_RETINA)
+			{
+				 $resize_width = $resize_width * 2;
+				 $resize_height = $resize_height * 2;
+			}
+
+			$width =  ( $this->get('width') <= $resize_width) ? $this->get('width') : $resize_width;
+			$height = ($this->get('height') <= $resize_height) ? $this->get('height') : $resize_height;
+
+		 }
 
 		 $result = array('resize' => $resize, 'resize_width' => $width, 'resize_height' => $height);
 
