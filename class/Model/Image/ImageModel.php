@@ -1100,7 +1100,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		 $hasResizeSizes = (intval($settings->resizeImages) > 0) ? true : false;
 
 
-		 if ($settings->useSmartcrop == true)
+		 if ($settings->useSmartcrop == true && $this->getExtension() !== 'pdf')
 		 {
 		 	$resize = 4 ;
 		 }
