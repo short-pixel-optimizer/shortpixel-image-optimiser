@@ -676,8 +676,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     public function handleOptimizedFileType($downloadResult)
     {
 
-				$filebase = $this->getFileBase();
-			  $webpFile = $filebase . '.webp';
+				//$filebase = $this->getFileBase();
+			  //$webpFile = $filebase . '.webp';
 
           if (isset($downloadResult['webp']) && isset($downloadResult['webp']->file)) // check if there is webp with same filename
           {
@@ -688,13 +688,13 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                 $this->setMeta('webp', $webpResult->getFileName());
           }
 
-          $avifFile = $filebase . '.avif';
+         // $avifFile = $filebase . '.avif';
 
-          if (isset($downloadResult['avif']) && isset($downloadResults['avif']->file)) // check if there is webp with same filename
+          if (isset($downloadResult['avif']) && isset($downloadResult['avif']->file)) // check if there is webp with same filename
           {
-             $avifResult = $this->handleAvif($downloadResults['avif']->file);
+             $avifResult = $this->handleAvif($downloadResult['avif']->file);
               if ($avifResult === false)
-                Log::addWarn('Avif available, but copy failed ' . $downloadResults['avif']->file->getFullPath());
+                Log::addWarn('Avif available, but copy failed ' . $downloadResult['avif']->file->getFullPath());
               else
                 $this->setMeta('avif', $avifResult->getFileName());
           }

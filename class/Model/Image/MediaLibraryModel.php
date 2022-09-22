@@ -76,7 +76,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		$settings = \wpSPIO()->settings();
 
-		 $url = $this->getURL();
+		$url = $this->getURL();
+
 
 
 		 if (! $url) // If the whole image URL can't be found
@@ -86,6 +87,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		 $isSmartCrop = ($settings->useSmartcrop == true) ? true : false;
 		 $doubles = array(); // check via hash if same command / result is there.
+
+		 // Use URL of biggest image.
+		 if ($isSmartCrop === true)
+		    $url = $this->getOriginalFile()->getURL();
 
      if ($this->isProcessable(true) || $this->isProcessableAnyFileType())
 		 {
@@ -106,13 +111,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			 if ($thumbObj->isThumbnailProcessable() || $thumbObj->isProcessableAnyFileType() )
 			 {
 
-				 if ($isSmartCrop)
+				 if (! $isSmartCrop)
 				 {
-				 	$url = ($this->isScaled()) ? $this->original_file->getOptimizeUrls() : $url;
-			   }
-				 else {
 				 	$url = $thumbObj->getOptimizeUrls();
-				 }
+			   }
 
 				 $paramList = $thumbObj->createParamList();
 				 $hash = md5( serialize($paramList) . $url);
@@ -173,7 +175,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	}
 
 
-	
+
 
 
   // Try to get the URL via WordPress
@@ -573,7 +575,6 @@ Log::addTemp('Files for Optimization', $files);
 				 $resultObj = $files[$sizeName];
 				 $thumbnail = $thumbObjs[$sizeName];
 
-				 $thumbnail->setMeta('compressionType', $compressionType);
          $thumbnail->handleOptimizedFileType($resultObj); // check for webps /etc
 
          if ($thumbnail->isOptimized())
@@ -584,7 +585,7 @@ Log::addTemp('Files for Optimization', $files);
 				 {
            continue; // when excluded.
 				 }
-         $filebase = $thumbnail->getFileBase();
+         //$filebase = $thumbnail->getFileBase();
          $result = false;
 
   /*      if (isset($optimized[$filebase])) // double sizes.
@@ -596,6 +597,7 @@ Log::addTemp('Files for Optimization', $files);
          }
          else
          { */
+				 $thumbnail->setMeta('compressionType', $compressionType);
           $result = $thumbnail->handleOptimized($resultObj);
       //   }
 

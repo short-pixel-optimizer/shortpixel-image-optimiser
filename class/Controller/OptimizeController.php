@@ -596,6 +596,9 @@ class OptimizeController
               $optimizeResult = $imageItem->handleOptimized($result->files); // returns boolean or null
               $item->result->improvements = $imageItem->getImprovements();
 
+
+
+
               if ($optimizeResult)
               {
                  $item->result->apiStatus = ApiController::STATUS_SUCCESS;
@@ -726,6 +729,13 @@ class OptimizeController
             //  $q->itemFailed($item, false); // register as failed, retry in x time, q checks timeouts
           }
       }
+
+			// Not relevant for further returning.
+			if (property_exists($item, 'paramlist'))
+				 unset($item->paramlist);
+
+			if (property_exists($item, 'returndatalist'))
+				 unset($item->returndatalist);
 
 			// Cleaning up the debugger.
 			$debugItem = clone $item;
