@@ -492,8 +492,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       $return = true;
 			$wpmeta = wp_get_attachment_metadata($this->get('id'));
 
-			//Log::addTemp('HandleOptimized - Data', $optimizeData);
-
 			if (isset($optimizeData['files']) && isset($optimizeData['data']))
 			{
 				 $files = $optimizeData['files'];
@@ -504,7 +502,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			}
 
 			$optimized = array();
-
 
 			// Main file has a 0 index.
 			$mainFile = (isset($files) && isset($files[0])) ? $files[0] : false;

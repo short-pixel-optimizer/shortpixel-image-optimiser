@@ -285,7 +285,7 @@ class InstallHelper
 			 attach_id bigint unsigned NOT NULL,
 			 parent bigint unsigned NOT NULL,
 			 image_type tinyint default 0,
-			 size varchar(150),
+			 size varchar(200),
 			 status tinyint default 0,
 			 compression_type tinyint,
 			 compressed_size  int,
