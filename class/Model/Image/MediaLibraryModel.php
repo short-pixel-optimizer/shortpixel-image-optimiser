@@ -89,7 +89,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		 $doubles = array(); // check via hash if same command / result is there.
 
 		 // Use URL of biggest image.
-		 if ($isSmartCrop === true)
+		 if ($isSmartCrop === true && $this->isScaled())
 		    $url = $this->getOriginalFile()->getURL();
 
      if ($this->isProcessable(true) || $this->isProcessableAnyFileType())
