@@ -3,6 +3,7 @@ namespace ShortPixel\Controller\View;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Helper\UiHelper as UiHelper;
+use ShortPixel\Controller\OptimizeController as OptimizeController;
 
 
 //use ShortPixel\Model\ImageModel as ImageModel;
@@ -152,14 +153,16 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
 					if ($imageObj->isProcessable())
 					{
-						 $urls = $imageObj->getOptimizeUrls();
+						 //$urls = $imageObj->getOptimizeUrls();
+						 $optimizeData = $imageObj->getOptimizeData();
+						 $urls = $optimizeData['urls'];
 
-						 if ($imageObj->isProcessableFileType('webp'))
+						 /* if ($imageObj->isProcessableFileType('webp'))
 						 {
 							$diff = array_diff($imageObj->getOptimizeFileType('webp'), $urls); // diff from mains.
 							foreach($diff as $i => $v)
 							{
-								$diff[$i] = " [webp] " . $v;
+								$diff[$i] = " +[webp] " . $v;
 							}
 						 	$urls = array_merge($urls, $diff);
 						 }
@@ -168,10 +171,12 @@ class EditMediaViewController extends \ShortPixel\ViewController
 						 	$diff = array_diff($imageObj->getOptimizeFileType('avif'), $urls); // diff from mains.
 							foreach($diff as $i => $v)
 							{
-								$diff[$i] = " [avif] " . $v;
+								$diff[$i] = " +[avif] " . $v;
 							}
-						 	$urls = array_merge($urls, $diff);
-						 }
+						 	 $urls = array_merge($urls, $diff);
+						 } */
+
+
 					}
 
 					$thumbnails = $imageObj->get('thumbnails');
@@ -207,11 +212,19 @@ class EditMediaViewController extends \ShortPixel\ViewController
 					{
 						 $debugInfo[] = array(__('To Optimize URLS'),  $urls);
 					}
+					if (isset($optimizeData))
+					{
+						 $debugInfo[] = array(__('Optimize Data'), $optimizeData);
+
+						 $optControl = new optimizeController();
+						 $q = $optControl->getQueue($imageObj->get('type'));
+
+						 $debugInfo[] = array(__('Image to Queue'), $q->_debug_imageModelToQueue($imageObj) );
+					}
 
           $debugInfo['imagemetadata'] = array(__('ImageModel Metadata (ShortPixel)'), $imageObj);
 					$debugInfo[] = array('', '<hr>');
 
-          //$debugInfo['shortpixeldata'] = array(__('Data'), $this->data);
           $debugInfo['wpmetadata'] = array(__('WordPress Get Attachment Metadata'), $meta );
 					$debugInfo[] = array('', '<hr>');
 

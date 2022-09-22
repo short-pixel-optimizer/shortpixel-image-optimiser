@@ -291,6 +291,7 @@ class SettingsController extends \ShortPixel\ViewController
 								 $message = sprintf(__('All items in the %s queue have been removed and the process is stopped', 'shortpixel-image-optimiser'), $queue);
  						 }
 
+
 						 Notice::addSuccess($message);
 			 }
 
@@ -356,7 +357,12 @@ class SettingsController extends \ShortPixel\ViewController
           if ($this->do_redirect)
             $this->doRedirect('bulk');
           else {
-						Notice::addSuccess(__('Settings Saved', 'shortpixel-image-optimiser'));
+						
+						$noticeController = Notice::getInstance();
+						$notice = Notice::addSuccess(__('Settings Saved', 'shortpixel-image-optimiser'));
+						$notice->is_removable = false;
+						$noticeController->update();
+
             $this->doRedirect();
           }
       }

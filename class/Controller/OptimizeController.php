@@ -564,19 +564,14 @@ class OptimizeController
 					);
 					ResponseController::addData($item->item_id, $response);
 
-
           if ($result->is_done )
           {
              $q->itemFailed($item, true);
              $this->HandleItemError($item, $qtype);
 
 						 ResponseController::addData($item->item_id, 'is_done', true);
-
           }
-          else
-          {
 
-          }
       }
       elseif ($result->is_done)
       {
@@ -672,7 +667,7 @@ class OptimizeController
          {
            if ($imageItem->isProcessable() && $result->apiStatus !== ApiController::STATUS_NOT_API)
            {
-              Log::addDebug('Item with ID' . $imageItem->item_id . ' still has processables (with dump)');
+              Log::addDebug('Item with ID' . $imageItem->item_id . ' still has processables (with dump)', $imageItem->getOptimizeUrls());
  						  $api = $this->getAPI();
 							$newItem = new \stdClass;
 							$newItem->urls = $imageItem->getOptimizeUrls();

@@ -44,7 +44,14 @@ class AdminController extends \ShortPixel\Controller
 					 return $meta;
 				}
 
+// todo add check here for mediaitem
         $mediaItem = \wpSPIO()->filesystem()->getImage($id, 'media');
+
+				if ($mediaItem === false)
+				{
+					 Log::addError('Handle Image Upload Hook triggered, by error in image :' . $id );
+					 return $meta;
+				}
 
 				if ($mediaItem->getExtension()  == 'pdf')
 				{

@@ -55,33 +55,40 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
     }
 
 
-  public function getOptimizePaths()
-    {
-      if (! $this->isProcessable())
-        return array();
-
-       $paths = array();
-
-       if (! $this->image_meta->status == self::FILE_STATUS_SUCCESS)
-            $paths = array($this->getFullPath());
-
-        return $paths;
-    }
-
     public function getOptimizeUrls()
     {
 
-        $fs = \wpSPIO()->filesystem();
+			$data = $this->getOptimizeData();
+			return array_values($data['urls']);
+
+    }
+
+		public function getOptimizeData()
+		{
+				$parameters = array(
+						'urls' => array(),
+						'params' => array(),
+						'returnParams' => array(),
+				);
+
+				$fs = \wpSPIO()->filesystem();
         if ($this->is_virtual())
           $url = $this->getFullPath();
         else
           $url = $this->getURL();
 
         if ($this->isProcessable(true))
-          return array('main' => $url);
+				{
+          $parameters['urls'][0] =  $url;
+					$parameters['paths'][0] = $this->getFullPath();
+					$parameters['params'][0] = $this->createParamList();
+					$parameters['returnParams']['sizes'][0] =  $this->getFileName();
+  			}
 
-        return array();
-    }
+
+				return $parameters;
+		}
+
 
 		public function getURL()
 		{
@@ -223,6 +230,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 				  $return = false;
 			 }
 
+			 $this->dropFromQueue();
 			 do_action('shortpixel/image/after_restore', $this, $this->id, $bool);
 
        return $return;
@@ -234,16 +242,27 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         return false;
     }
 
-    public function handleOptimized($downloadResults)
+    public function handleOptimized($optimizeData)
     {
 			 $bool = true;
 
+			 if (isset($optimizeData['files']) && isset($optimizeData['data']))
+ 			{
+ 				 $files = $optimizeData['files'];
+ 				 $data = $optimizeData['data'];
+ 			}
+ 			else {
+ 				Log::addError('Something went wrong with handleOptimized', $optimizeData);
+ 			}
+
+
+
 			 if (! $this->isOptimized() ) // main file might not be contained in results
 			 {
-       		$bool = parent::handleOptimized($downloadResults);
+       		$bool = parent::handleOptimized($files[0]);
 			 }
 
-       $this->handleOptimizedFileType($downloadResults);
+       $this->handleOptimizedFileType($files[0]);
 
        if ($bool)
        {
@@ -251,8 +270,12 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
          $this->saveMeta();
        }
 
+			 $this->deleteTempFiles($files);
+
        return $bool;
     }
+
+
 
     public function loadMeta()
     {

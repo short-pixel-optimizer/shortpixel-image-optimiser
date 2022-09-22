@@ -195,8 +195,10 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         delete_option( 'wp-short-pixel-current-total-files');
 				delete_option('wp-short-pixel-remove-settings-on-delete-plugin');
 
-        delete_option(self::$_optionsMap['removeSettingsOnDeletePlugin']['key']);
-
+				if (isset(self::$_optionsMap['removeSettingsOnDeletePlugin']) && isset(self::$_optionsMap['removeSettingsOnDeletePlugin']['key']))
+				{
+        	delete_option(self::$_optionsMap['removeSettingsOnDeletePlugin']['key']);
+				}
         // Dismissed now via Notices Controller.
       /*  $dismissed = get_option('wp-short-pixel-dismissed-notices', array());
         if(isset($dismissed['compat'])) {

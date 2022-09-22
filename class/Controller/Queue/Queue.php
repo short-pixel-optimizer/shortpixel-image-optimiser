@@ -467,32 +467,79 @@ abstract class Queue
         $item = new \stdClass;
         $item->compressionType = \wpSPIO()->settings()->compressionType;
 
-        $urls = $imageModel->getOptimizeUrls();
-				$imagePreview = UIHelper::findBestPreview($imageModel, 800, true);
-				$imagePreviewURL = (is_object($imagePreview)) ? $imagePreview->getURL() : false;
+//        $urls = $imageModel->getOptimizeUrls();
+				$data = $imageModel->getOptimizeData();
+				$urls = $data['urls'];
+				$params = $data['params'];
+
+		//		$imagePreview = UIHelper::findBestPreview($imageModel, 800, true);
+		//		$imagePreviewURL = (is_object($imagePreview)) ? $imagePreview->getURL() : false;
+
+				list($u, $baseCount) = $imageModel->getCountOptimizeData('thumbnails');
+				list($u, $webpCount) = $imageModel->getCountOptimizeData('webp');
+				list($u, $avifCount) = $imageModel->getCountOptimizeData('avif');
 
         $counts = new \stdClass;
-        $counts->creditCount = 0;  // count the used credits for this item.
-				$counts->baseCount = 0; // count the base images.
-        $counts->avifCount = 0;
-        $counts->webpCount = 0;
+        $counts->creditCount = $baseCount + $webpCount + $avifCount;  // count the used credits for this item.
+				$counts->baseCount = $baseCount; // count the base images.
+        $counts->avifCount = $avifCount;
+        $counts->webpCount = $webpCount;
         //$creditCount = 0;
 
-        $webps = ($imageModel->isProcessableFileType('webp')) ? $imageModel->getOptimizeFileType('webp') : null;
-        $avifs = ($imageModel->isProcessableFileType('avif')) ? $imageModel->getOptimizeFileType('avif') : null;
+      //  $webps = ($imageModel->isProcessableFileType('webp')) ? $imageModel->getOptimizeFileType('webp') : null;
+      //  $avifs = ($imageModel->isProcessableFileType('avif')) ? $imageModel->getOptimizeFileType('avif') : null;
 
-        $hasUrls = (count($urls) > 0) ? true : false;
+			 	$removeKeys = array('image', 'webp', 'avif'); // keys not native to API / need to be removed.
+
+				// Is UI info, not for processing.
+				if (isset($data['params']['paths']))
+				{
+					 unset($data['params']['paths']);
+				}
+
+				foreach($data['params'] as $sizeName => $param)
+				{
+						$plus = false;
+						$convertTo = '';
+						if ($param['image'] === true)
+						{
+							 $plus = true;
+						}
+					  if ($param['webp'] === true)
+						{
+							 $convertTo = ($plus === true) ? '+webp' : 'webp';
+						}
+						if ($param['avif'] === true)
+						{
+							$convertTo = ($plus === true) ? '+avif' : 'avif';
+						}
+
+						foreach($removeKeys as $key)
+						{
+							 if (isset($param[$key]))
+							 {
+								  unset($data['params'][$sizeName][$key]);
+							 }
+						}
+
+						if (trim(strlen($convertTo)) > 0)
+							$data['params'][$sizeName]['convertto'] = $convertTo;
+				}
+
+
+
+
+      /*  $hasUrls = (count($urls) > 0) ? true : false;
         $hasWebps = (! is_null($webps) && count($webps) > 0) ? true : false;
         $hasAvifs = (! is_null($avifs) && count($avifs) > 0) ? true : false;
         $flags = array();
         $items = array();
 
-        $webpLeft = $avifLeft = false;
+        $webpLeft = $avifLeft = false; */
 
-        if (is_null($webps) && is_null($avifs))
+        /*if (is_null($webps) && is_null($avifs))
         {
            // nothing.
-          // $items[] = $item;
             $counts->creditCount += count($urls);
 						$counts->baseCount += count($urls);
 
@@ -569,11 +616,9 @@ abstract class Queue
                 }
             }
 
-        }
+        } */
 
-      //  $paths = $imageModel->getOptimizePaths();
-        //Log::addDebug('AvifL on ' . $imageModel->get('id') . ' ', array($avifLeft, $urls));
-        if ($imageModel->get('do_png2jpg') && $hasUrls)  // Flag is set in Is_Processable in mediaLibraryModel, when settings are on, image is png.
+        if ($imageModel->get('do_png2jpg') && $baseCount > 0)  // Flag is set in Is_Processable in mediaLibraryModel, when settings are on, image is png.
         {
           $item->png2jpg = $imageModel->get('do_png2jpg');
         }
@@ -583,16 +628,31 @@ abstract class Queue
 				{
           $item->compressionType = $imageModel->getMeta('compressionType');
 				}
-        $item->flags = $flags;
 
         // Former securi function, add timestamp to all URLS, for cache busting.
-        $urls = $this->timestampURLS($urls, $imageModel->get('id'));
+        $urls = $this->timestampURLS( array_values($urls), $imageModel->get('id'));
+
         $item->urls = apply_filters('shortpixel_image_urls', $urls, $imageModel->get('id'));
-				$item->preview = $imagePreviewURL;
+				if (count($data['params']) > 0)
+				{
+					$item->paramlist= array_values($data['params']);
+				}
+
+				if (count($data['returnParams']) > 0)
+				{
+					 $item->returndatalist = $data['returnParams'];
+				}
+		//		$item->preview = $imagePreviewURL;
         $item->counts = $counts;
 
         return $item;
     }
+
+		// @internal
+		public function _debug_imageModelToQueue($imageModel)
+		{
+			 return $this->imageModelToQueue($imageModel);
+		}
 
     protected function timestampURLS($urls, $id)
     {
