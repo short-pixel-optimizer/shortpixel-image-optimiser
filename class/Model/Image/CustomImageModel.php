@@ -77,7 +77,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         else
           $url = $this->getURL();
 
-        if ($this->isProcessable(true))
+        if ($this->isProcessable(true) || $this->isProcessableAnyFileType())
 				{
           $parameters['urls'][0] =  $url;
 					$parameters['paths'][0] = $this->getFullPath();

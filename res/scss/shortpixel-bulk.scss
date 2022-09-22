@@ -946,22 +946,25 @@
         .image-preview-line
         {
            display: flex;
-           width: 90%;
+           width: 100%;
            justify-content: space-between;
            align-items: center;
-           margin: 15px auto;
+        //  margin: 15px auto;
         //   max-width: 300px;
 
 					[data-result="filename"]
 					{
 						overflow: hidden;
 						font-weight: 700;
+						margin-top: -12px;
 					}
 
            .opt-circle-image {
                width: 55px;
                height: 55px;
                float: right;
+							 margin-top: 12px;
+							 margin-right: 5%;
                //margin-right: 35px;
                .trail {
                  stroke: #ddd;
