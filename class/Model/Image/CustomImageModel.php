@@ -123,6 +123,12 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
     {
         $bool = parent::isProcessable();
 
+				// The exclude size on the  image - via regex - if fails, prevents the whole thing from optimization.
+				if ($this->processable_status == ImageModel::P_EXCLUDE_SIZE || $this->processable_status == ImageModel::P_EXCLUDE_PATH)
+				{
+					 return $bool;
+				}
+
         if ($bool === false && $strict === false)
         {
           // Todo check if Webp / Acif is active, check for unoptimized items
