@@ -57,7 +57,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		const IMAGE_TYPE_RETINA = 3;
 		const IMAGE_TYPE_DUPLICATE = 4;
 
-		const FILETYPE_BIGGER = -1;
+		const FILETYPE_BIGGER = -10;
 
     protected $image_meta; // metadata Object of the image.
 		protected $recordChanged = false;
@@ -153,7 +153,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 				$imgObj = $this->getImageType($type);
 
 				// if this image doesn't have webp / avif, it can be processed.
-        if ($imgObj === false)
+        if ($imgObj === false && $this->getMeta($type) !== self::FILETYPE_BIGGER)
           return true;
         else
           return false;
@@ -370,6 +370,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 	  protected function getImageType($type = 'webp')
 	  {
 	    $fs = \wpSPIO()->filesystem();
+			if ($this->getMeta($type) === self::FILETYPE_BIGGER)
+				return false;
 
 	    if (! is_null($this->getMeta($type)))
 	    {
@@ -676,10 +678,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     public function handleOptimizedFileType($downloadResult)
     {
 
-				//$filebase = $this->getFileBase();
-			  //$webpFile = $filebase . '.webp';
-
-          if (isset($downloadResult['webp']) && isset($downloadResult['webp']->file)) // check if there is webp with same filename
+          if (isset($downloadResult['webp']) && property_exists($downloadResult['webp'],'file')) // check if there is webp with same filename
           {
              $webpResult = $this->handleWebp($downloadResult['webp']->file);
               if ($webpResult === false)
@@ -687,10 +686,16 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
               else
                 $this->setMeta('webp', $webpResult->getFileName());
           }
+					elseif(isset($downloadResult['webp']) && property_exists($downloadResult['webp'], 'apiStatus'))
+					{
+						Log::addTemp('Bigger Webp than main file detected!' . $this->getFileName());
+						 if ($downloadResult['webp']->apiStatus == API::STATUS_OPTIMIZED_BIGGER)
+						 {
+							  $this->setMeta('webp', self::FILETYPE_BIGGER);
+						 }
+					}
 
-         // $avifFile = $filebase . '.avif';
-
-          if (isset($downloadResult['avif']) && isset($downloadResult['avif']->file)) // check if there is webp with same filename
+          if (isset($downloadResult['avif']) && property_exists($downloadResult['avif'], 'file')) // check if there is webp with same filename
           {
              $avifResult = $this->handleAvif($downloadResult['avif']->file);
               if ($avifResult === false)
@@ -698,6 +703,15 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
               else
                 $this->setMeta('avif', $avifResult->getFileName());
           }
+					elseif(isset($downloadResult['avif']) && property_exists($downloadResult['avif'], 'apiStatus'))
+					{
+						Log::addTemp('Bigger Avif than main file detected!' . $this->getFileName());
+
+						 if ($downloadResult['avif']->apiStatus == API::STATUS_OPTIMIZED_BIGGER)
+						 {
+								$this->setMeta('avif', self::FILETYPE_BIGGER);
+						 }
+					}
     }
 
     public function isRestorable()

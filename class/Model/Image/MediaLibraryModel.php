@@ -78,8 +78,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		$url = $this->getURL();
 
-
-
 		 if (! $url) // If the whole image URL can't be found
 		 {
 			return $parameters;
@@ -90,7 +88,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		 // Use URL of biggest image.
 		 if ($isSmartCrop === true && $this->isScaled())
+		 {
 		    $url = $this->getOriginalFile()->getURL();
+		 }
 
      if ($this->isProcessable(true) || $this->isProcessableAnyFileType())
 		 {
@@ -113,7 +113,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 				 if (! $isSmartCrop)
 				 {
-				 	$url = $thumbObj->getOptimizeUrls();
+				 	$url = $thumbObj->getURL();
 			   }
 
 				 $paramList = $thumbObj->createParamList();
@@ -863,6 +863,7 @@ Log::addTemp('Files for Optimization', $files);
                //$meta->fromClass($thumbMeta); // Load Thumbnail data from our saved Meta in model
                $thumbObj->setMetaObj($newMeta);
                $thumbObj->setName($name);
+
                if ($thumbObj->exists()) // if we exist.
                {
                 $thumbnails[$name] = $thumbObj;

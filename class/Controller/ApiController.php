@@ -15,8 +15,11 @@ class ApiController
     const STATUS_SKIP = -4;
     const STATUS_NOT_FOUND = -5;
     const STATUS_NO_KEY = -6;
-    const STATUS_RETRY = -7;
-    const STATUS_SEARCHING = -8; // when the Queue is looping over images, but in batch none were   found.
+   // const STATUS_RETRY = -7;
+   // const STATUS_SEARCHING = -8; // when the Queue is looping over images, but in batch none were   found.
+	 const STATUS_OPTIMIZED_BIGGER = -9;
+
+
     const STATUS_QUEUE_FULL = -404;
     const STATUS_MAINTENANCE = -500;
 		const STATUS_CONNECTION_ERROR = -503; // Not official, error connection in WP.
@@ -482,7 +485,10 @@ class ApiController
           $fileSize = "LosslessSize";
       }
       $webpType = "WebP" . $fileType;
+			$webpTypeSize = 'WebP' . $fileSize;
+
       $avifType = "AVIF" . $fileType;
+			$avifTypeSize = "AVIF" .  $fileSize;
 
 			$dataList = $returnDataList['sizes']; // sizes have all images that should be downloaded
 			$dataListKeys = array_keys($dataList); // The imageThumbnail Name
@@ -539,15 +545,20 @@ class ApiController
                   // ** Download Webp files if they are returned **/
                   if (isset($fileData->$webpType) && $fileData->$webpType != 'NA')
                   {
-                    $webpName = $originalFile->getFileBase() . '.webp'; //basename(parse_url($fileData->$webpType, PHP_URL_PATH));
+                    $webpName = $originalFile->getFileBase() . '.webp';
+										$webpDownloadResult = false;
 
-                    if($archive) { // swallow pride here, or fix this.
+										if ($fileData->$webpTypeSize > $fileData->$fileSize) // if file is bigger.
+										{
+											$results[$imageName]['webp'] = $this->returnOk(self::STATUS_OPTIMIZED_BIGGER, __('Special file type bigger than core file','shortpixel-image-optimiser'));
+										}
+                    elseif($archive) { // swallow pride here, or fix this.
                         $webpDownloadResult = $this->fromArchive($archive['Path'], $fileData->$webpType, false,false);
                     } else {
                         $webpDownloadResult = $this->handleDownload($fileData->$webpType, false, false);
                     }
 
-                    if ( $webpDownloadResult->apiStatus == self::STATUS_SUCCESS)
+                    if ($webpDownloadResult && $webpDownloadResult->apiStatus == self::STATUS_SUCCESS)
                     {
                        Log::addDebug('Downloaded Webp : ' . $fileData->$webpType);
 											 $results[$imageName]['webp']  = $webpDownloadResult;
@@ -558,9 +569,13 @@ class ApiController
                   // ** Download Webp files if they are returned **/
                   if (isset($fileData->$avifType) && $fileData->$avifType !== 'NA')
                   {
-                    $avifName = $originalFile->getFileBase() . '.avif'; ;
+                    $avifName = $originalFile->getFileBase() . '.avif';
 
-                    if($archive) { // swallow pride here, or fix this.
+										if ($fileData->$avifTypeSize > $fileData->$fileSize) // if file is bigger.
+										{
+											$results[$imageName]['avif'] = $this->returnOk(self::STATUS_OPTIMIZED_BIGGER, __('Special file type bigger than core file','shortpixel-image-optimiser'));
+										}
+                    elseif($archive) { // swallow pride here, or fix this.
                         $avifDownloadResult = $this->fromArchive($archive['Path'], $fileData->$avifType, false,false);
                     } else {
                         $avifDownloadResult = $this->handleDownload($fileData->$avifType, false, false);

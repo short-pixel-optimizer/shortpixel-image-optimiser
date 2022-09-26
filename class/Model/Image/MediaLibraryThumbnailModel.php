@@ -135,6 +135,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
 
 	// get_path param see MediaLibraryModel
+	// This should be unused at the moment!
   public function getOptimizeUrls()
   {
     if (! $this->isProcessable() )
@@ -257,6 +258,15 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
       return true;
 		}
 		return false;
+	}
+
+	public function isProcessableFileType($type = 'webp')
+	{
+			// Prevent webp / avif processing for thumbnails if this is off. Exclude main file
+		  if ($this->excludeThumbnails() === true && $this->is_main_file === false )
+				return false;
+
+			return parent::isProcessableFileType($type);
 	}
 
   protected function excludeThumbnails()
