@@ -144,6 +144,10 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     {
         $settings = \WPSPIO()->settings();
 
+				// Pdf, no special files.
+				if ($this->getExtension() == 'pdf')
+					return false;
+
         if ($type == 'webp' && ! $settings->createWebp)
           return false;
 
