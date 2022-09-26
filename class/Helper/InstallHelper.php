@@ -269,6 +269,7 @@ class InstallHelper
           message varchar(255),
           ts_added timestamp,
           ts_optimized timestamp,
+					extra_info LONGTEXT,
           PRIMARY KEY sp_id (id)
         ) $charsetCollate;";
 

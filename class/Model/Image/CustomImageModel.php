@@ -3,6 +3,8 @@ namespace ShortPixel\Model\Image;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
 
+use ShortPixel\Controller\ApiController as API;
+
 
 // @todo Custom Model for adding files, instead of meta DAO.
 class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
@@ -341,6 +343,24 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         $optimizedDate = \ShortPixelTools::DBtoTimestamp($imagerow->ts_optimized);
         $metaObj->tsOptimized = $optimizedDate;
 
+				$extraInfo = property_exists($imagerow, 'extra_info') ? $imagerow->extra_info : null;
+
+				if (! is_null($extraInfo))
+				{
+					$data = json_decode($extraInfo, true);
+
+					if (isset($data['webpStatus']))
+					{
+						 $this->setMeta('webp', $data['webpStatus']);
+					}
+					if (isset($data['avifStatus']))
+					{
+						 $this->setMeta('avif', $data['avifStatus']);
+					}
+
+
+				}
+
         $this->image_meta = $metaObj;
     }
 
@@ -432,6 +452,24 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
       $added = new \DateTime();
       $added->setTimeStamp($metaObj->tsAdded);
 
+			$extra_info = array();
+			if ($this->getMeta('webp') === self::FILETYPE_BIGGER)
+			{
+				 $extra_info['webpStatus']  = self::FILETYPE_BIGGER;
+			}
+			if ($this->getMeta('avif') === self::FILETYPE_BIGGER)
+			{
+				 $extra_info['avifStatus']  = self::FILETYPE_BIGGER;
+			}
+
+			if (count($extra_info) > 0)
+			{
+				 $extra_info = json_encode($extra_info);
+			}
+			else {
+				 $extra_info = null;
+			}
+
        $data = array(
             'folder_id' => $this->folder_id,
             'compressed_size' => $metaObj->compressedSize,
@@ -450,6 +488,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
             'path' => $this->getFullPath(),
 						'name' => $this->getFileName(),
             'path_md5' => md5($this->getFullPath()), // this is legacy
+						'extra_info' => $extra_info,
        );
        // The keys are just for readability.
        $format = array(
@@ -470,6 +509,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
             'path' => '%s',
 						'name' => '%s',
             'path_md5' => '%s' , // this is legacy
+						'extra_info' => '%s',
        );
 
 
