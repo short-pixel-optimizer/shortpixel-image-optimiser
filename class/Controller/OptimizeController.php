@@ -424,7 +424,11 @@ class OptimizeController
 			$qtype = strtolower($qtype);
 
 			$imageObj = $fs->getImage($item->item_id, $qtype);
+			if (is_object($imageObj))
+			{
+				ResponseController::addData($item->item_id, 'fileName', $imageObj->getFileName());
 
+			}
 			// @todo Figure out why this isn't just on action regime as well.
 			if (property_exists($item, 'png2jpg'))
 			{

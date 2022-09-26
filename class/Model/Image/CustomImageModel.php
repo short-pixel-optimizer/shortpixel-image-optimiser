@@ -541,8 +541,13 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
          $improvements['main'] = array($perc, $size);
          $count++;
       } */
-      $improvements['main'] = array($this->getImprovement(), 0);
-			$improvements['totalpercentage'] = round($this->getImprovement()); // the same.
+			$improvement = $this->getImprovement();
+			if (is_null($improvement)) // getImprovement can return null.
+			{
+				$improvement = 0;
+			}
+      $improvements['main'] = array($improvement, 0);
+			$improvements['totalpercentage'] = round($improvement); // the same.
 
       return $improvements;
 

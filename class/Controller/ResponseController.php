@@ -95,7 +95,6 @@ class ResponseController
 				$data = $name;
 			}
 
-
 			$item_type = (array_key_exists('item_type', $data)) ? $data['item_type'] : false;
 			// If no queue / queue type is set, set it if item type is passed to ResponseController.  For items outside the queue system.
 			if ($item_type && is_null(self::$queueType))
@@ -109,6 +108,7 @@ class ResponseController
 			{
 					if (property_exists($resp, $prop))
 					{
+						 
 						 $resp->$prop = $val;
 					}
 					else {

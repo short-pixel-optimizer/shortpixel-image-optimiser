@@ -2443,42 +2443,44 @@ Log::addTemp('Files for Optimization', $files);
 					 $retinasOpt = $data['retinasOpt'];
            $retinas = $this->getRetinas();
 
-           foreach($retinas as $index => $retinaObj) // Thumbnail Model
-           {
-		 					if ($retinaObj->hasDBRecord() === true)
-		  				{
-		  						continue;
-		  				}
+					 if ( intval($retinasOpt) > 0 && is_array($retinas))
+					 {
+	           foreach($retinas as $index => $retinaObj) // Thumbnail Model
+	           {
+			 					if ($retinaObj->hasDBRecord() === true)
+			  				{
+			  						continue;
+			  				}
 
-							// Check if thumbnail ('parent') is Optimized, if so, then retina probably should be optimized as well.
-							if ( (isset($this->thumbnails[$index]) &&
-										is_object($this->thumbnails[$index]) &&
-									  $this->thumbnails[$index]->isOptimized) || $retinaObj->hasBackup() )
-							{
-		              $retinaObj->image_meta->status = $status;
-		              $retinaObj->image_meta->compressionType = $type;
-		              if ($status == self::FILE_STATUS_SUCCESS)
-		                $retinaObj->image_meta->compressedSize = $retinaObj->getFileSize();
-		              else
-		                $retinaObj->image_meta->originalSize = $retinaObj->getFileSize();
-		            //  $retinaObj->image_meta->improvement = -1; // n/a
-		              $retinaObj->image_meta->tsAdded = $tsAdded;
-		              $retinaObj->image_meta->tsOptimized = $tsOptimized;
-		              $retinaObj->image_meta->did_jpg2png = $did_jpg2png;
-		              if ($retinaObj->hasBackup())
-		              {
-		                $retinaObj->has_backup = true;
-		                if ($status == self::FILE_STATUS_SUCCESS)
-		                  $retinaObj->image_meta->originalSize = $retinaObj->getBackupFile()->getFileSize();
-		              }
+								// Check if thumbnail ('parent') is Optimized, if so, then retina probably should be optimized as well.
+								if ( (isset($this->thumbnails[$index]) &&
+											is_object($this->thumbnails[$index]) &&
+										  $this->thumbnails[$index]->isOptimized) || $retinaObj->hasBackup() )
+								{
+			              $retinaObj->image_meta->status = $status;
+			              $retinaObj->image_meta->compressionType = $type;
+			              if ($status == self::FILE_STATUS_SUCCESS)
+			                $retinaObj->image_meta->compressedSize = $retinaObj->getFileSize();
+			              else
+			                $retinaObj->image_meta->originalSize = $retinaObj->getFileSize();
+			            //  $retinaObj->image_meta->improvement = -1; // n/a
+			              $retinaObj->image_meta->tsAdded = $tsAdded;
+			              $retinaObj->image_meta->tsOptimized = $tsOptimized;
+			              $retinaObj->image_meta->did_jpg2png = $did_jpg2png;
+			              if ($retinaObj->hasBackup())
+			              {
+			                $retinaObj->has_backup = true;
+			                if ($status == self::FILE_STATUS_SUCCESS)
+			                  $retinaObj->image_meta->originalSize = $retinaObj->getBackupFile()->getFileSize();
+			              }
 
-									$retinaObj->recordChanged(true);
-		              $retinas[$index] = $retinaObj;
-									$addedCounter++;
-		           }
-						 } // foreach
-
-	           $this->retinas = $retinas;
+										$retinaObj->recordChanged(true);
+			              $retinas[$index] = $retinaObj;
+										$addedCounter++;
+			           }
+							 } // foreach
+							 $this->retinas = $retinas;
+						 } // is array.
 	           if ($count !== $addedCounter)
 	           {
 	              Log::addWarning("Conversion: $count retinas expected in legacy, " . $addedCounter . 'found. This can be due to overlapping image sizes.');
