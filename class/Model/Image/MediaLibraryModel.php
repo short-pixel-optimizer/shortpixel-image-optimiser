@@ -2427,7 +2427,10 @@ Log::addTemp('Files for Optimization', $files);
            }
 
            $originalFile->image_meta->tsAdded = $tsAdded;
-           $originalFile->image_meta->tsOptimized = $tsOptimized;
+				   if (isset($tsOptimized))
+				 	 {
+						 $originalFile->image_meta->tsOptimized = $tsOptimized;
+					 }
            $originalFile->has_backup = $originalFile->hasBackup();
 
 					 $originalFile->image_meta->webp = $this->checkLegacyFileTypeFileName($originalFile, 'webp');
@@ -2474,8 +2477,11 @@ Log::addTemp('Files for Optimization', $files);
 			                $retinaObj->image_meta->originalSize = $retinaObj->getFileSize();
 			            //  $retinaObj->image_meta->improvement = -1; // n/a
 			              $retinaObj->image_meta->tsAdded = $tsAdded;
-			              $retinaObj->image_meta->tsOptimized = $tsOptimized;
-			              $retinaObj->image_meta->did_jpg2png = $did_jpg2png;
+										if (isset($tsOptimized))
+										{
+			              	$retinaObj->image_meta->tsOptimized = $tsOptimized;
+										}
+										$retinaObj->image_meta->did_jpg2png = $did_jpg2png;
 			              if ($retinaObj->hasBackup())
 			              {
 			                $retinaObj->has_backup = true;

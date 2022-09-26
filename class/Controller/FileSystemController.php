@@ -152,7 +152,8 @@ Class FileSystemController extends \ShortPixel\Controller
          $filepath = apply_filters('shortpixel/file/virtual/translate', $filepath, $file);
       }
 
-      if ($filepath !== $file->getFullPath())
+			//  translate can return false if not properly offloaded / not found there. 
+      if ($filepath !== $file->getFullPath() && $filepath !== false)
       {
          $file = $this->getFile($filepath);
       }
@@ -393,7 +394,7 @@ Class FileSystemController extends \ShortPixel\Controller
     public function downloadFile($url, $destinationPath)
     {
       $downloadTimeout = max(SHORTPIXEL_MAX_EXECUTION_TIME - 10, 15);
-      $fs = \wpSPIO()->filesystem(); // @todo change this all to $this 
+      $fs = \wpSPIO()->filesystem(); // @todo change this all to $this
     //  $fs = \wpSPIO()->fileSystem();
       $destinationFile = $fs->getFile($destinationPath);
 

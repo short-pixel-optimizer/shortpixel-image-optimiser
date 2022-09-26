@@ -530,7 +530,6 @@ class FileModel extends \ShortPixel\Model
      {
        // try to replace URL for Path
        $abspath =  \wpSPIO()->filesystem()->getWPAbsPath();
-			 Log::addTemp('RtrimGetPath', rtrim($abspath->getPath(),'/'));
        $path = str_replace($site_url, rtrim($abspath->getPath(),'/'), $url);
 
 
