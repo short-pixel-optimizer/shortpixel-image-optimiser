@@ -513,7 +513,7 @@ class ApiController
 					$fileName = $dataListValues[$i];
 
 					$returnFileSize = isset($dataListFileSizes[$imageName]) ? $dataListFileSizes[$imageName] : null;
-					Log::addTemp('Return File Size', $returnFileSize);
+					
 
           if(!isset($fileData->Status)) continue; //if optimized images archive is activated, last entry of APIResponse if the Archive data.
 

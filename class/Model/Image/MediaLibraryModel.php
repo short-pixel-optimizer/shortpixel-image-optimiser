@@ -562,8 +562,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						$data['sizes'][$doubleName] = $doubleObj->getFileName();
 				 }
 			}
-Log::addTemp('Sizes for Optimization', $data['sizes']);
-Log::addTemp('Files for Optimization', $files);
+
 
       foreach($data['sizes'] as $sizeName => $fileName)
       {

@@ -688,7 +688,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
           }
 					elseif(isset($downloadResult['webp']) && property_exists($downloadResult['webp'], 'apiStatus'))
 					{
-						Log::addTemp('Bigger Webp than main file detected!' . $this->getFileName());
 						 if ($downloadResult['webp']->apiStatus == API::STATUS_OPTIMIZED_BIGGER)
 						 {
 							  $this->setMeta('webp', self::FILETYPE_BIGGER);
@@ -705,7 +704,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
           }
 					elseif(isset($downloadResult['avif']) && property_exists($downloadResult['avif'], 'apiStatus'))
 					{
-						Log::addTemp('Bigger Avif than main file detected!' . $this->getFileName());
 
 						 if ($downloadResult['avif']->apiStatus == API::STATUS_OPTIMIZED_BIGGER)
 						 {

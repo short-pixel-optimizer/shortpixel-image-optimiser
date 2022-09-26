@@ -105,7 +105,6 @@ class ListMediaViewController extends \ShortPixel\ViewController
 						break;
 				 }
 
-				 Log::addTemp($res);
 		 }
 
 	}
