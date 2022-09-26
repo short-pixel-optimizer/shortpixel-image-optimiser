@@ -135,8 +135,9 @@ class UiHelper
 		                      </div>";
 
 		       }
-		       $output .=  "</div></div> <!-- thumb optimized -->";
+		       $output .=  "</div> <!-- /thumb-wrapper -->";
 				}
+				$output .= "</div> <!-- /thumb optimized -->";
     }
 
     if ($retinasDone > 0)

@@ -320,6 +320,9 @@ class ApiController
 				if (isset($returnDataList['duplicates']) && is_object($returnDataList['duplicates']))
 							$returnDataList['duplicates'] = (array) $returnDataList['duplicates'];
 
+				if (isset($returnDataList['fileSizes']) && is_object($returnDataList['fileSizes']))
+										$returnDataList['fileSizes'] = (array) $returnDataList['fileSizes'];
+
 				unset($APIresponse['returndatalist']);
 			}
 			else {
@@ -494,6 +497,12 @@ class ApiController
 			$dataListKeys = array_keys($dataList); // The imageThumbnail Name
 			$dataListValues = array_values($dataList); // The FileName.
 
+			$dataListFileSizes = array();
+			if (isset($returnDataList['fileSizes']))
+			{
+				$dataListFileSizes = $returnDataList['fileSizes'];
+			}
+
       $tempFiles = $responseFiles = $results = array();
 
       //download each file from array and process it
@@ -503,13 +512,17 @@ class ApiController
 					$imageName = $dataListKeys[$i];
 					$fileName = $dataListValues[$i];
 
+					$returnFileSize = isset($dataListFileSizes[$imageName]) ? $dataListFileSizes[$imageName] : null;
+					Log::addTemp('Return File Size', $returnFileSize);
 
           if(!isset($fileData->Status)) continue; //if optimized images archive is activated, last entry of APIResponse if the Archive data.
 
           //file was processed OK
           if ($fileData->Status->Code == self::STATUS_SUCCESS )
           {
-                $downloadResult = $this->handleDownload($fileData->$fileType, $fileData->$fileSize, $fileData->OriginalSize
+
+								$OriginalFileSize = (! is_null($returnFileSize)) ? $returnFileSize : $fileData->OriginalSize;
+                $downloadResult = $this->handleDownload($fileData->$fileType, $fileData->$fileSize, $OriginalFileSize
                 );
                 $archive = false;
 
@@ -517,10 +530,19 @@ class ApiController
               * @todo Write Unit Test for Status_unchanged
               * But it should still be regarded as File Done. This can happen on very small file ( 6pxX6px ) which will not optimize.
               */
-              if ($downloadResult->apiStatus == self::STATUS_SUCCESS || $downloadResult->apiStatus == self::STATUS_UNCHANGED )
+              if ($downloadResult->apiStatus == self::STATUS_SUCCESS || $downloadResult->apiStatus == self::STATUS_UNCHANGED || $downloadResult->apiStatus == self::STATUS_OPTIMIZED_BIGGER )
               {
                   // Removes any query ?strings and returns just filename of originalURL
                   $originalURL = $fileData->OriginalURL;
+
+									// If the optimized result is bigger, it won'ty be replaced.  Check the webp / avif files against original FileSize.
+									if ( $downloadResult->apiStatus === self::STATUS_OPTIMIZED_BIGGER)
+									{
+										$checkFileSize = $OriginalFileSize;
+									}
+									else {
+										$checkFileSize = $fileData->$fileSize;
+									}
 
                   if (strpos($fileData->OriginalURL, '?') !== false)
                   {
@@ -537,8 +559,8 @@ class ApiController
 //                  $results[$originalName] = $downloadResult;
 
                   // Handle Stats
-                  $savedSpace += $fileData->OriginalSize - $fileData->$fileSize;
-                  $originalSpace += $fileData->OriginalSize;
+                  $savedSpace += $OriginalFileSize - $fileData->$fileSize;
+                  $originalSpace += $OriginalFileSize;
                   $optimizedSpace += $fileData->$fileSize;
                   $fileCount++;
 
@@ -548,7 +570,7 @@ class ApiController
                     $webpName = $originalFile->getFileBase() . '.webp';
 										$webpDownloadResult = false;
 
-										if ($fileData->$webpTypeSize > $fileData->$fileSize) // if file is bigger.
+										if ($fileData->$webpTypeSize > $checkFileSize) // if file is bigger.
 										{
 											$results[$imageName]['webp'] = $this->returnOk(self::STATUS_OPTIMIZED_BIGGER, __('Special file type bigger than core file','shortpixel-image-optimiser'));
 										}
@@ -571,7 +593,7 @@ class ApiController
                   {
                     $avifName = $originalFile->getFileBase() . '.avif';
 
-										if ($fileData->$avifTypeSize > $fileData->$fileSize) // if file is bigger.
+										if ($fileData->$avifTypeSize > $checkFileSize) // if file is bigger.
 										{
 											$results[$imageName]['avif'] = $this->returnOk(self::STATUS_OPTIMIZED_BIGGER, __('Special file type bigger than core file','shortpixel-image-optimiser'));
 										}
@@ -647,10 +669,15 @@ class ApiController
       //if there is no improvement in size then we do not download this file, except (sigh) when the fileType is heic since it converts.
       if (($optimizedSize !== false && $originalSize !== false) && $originalSize == $optimizedSize && strpos($optimizedUrl, 'heic') === false )
       {
-
 				  Log::addDebug('Optimize and Original size seems the same');
           return $this->returnRetry(self::STATUS_UNCHANGED, __("File wasn't optimized so we do not download it.", 'shortpixel-image-optimiser'));
       }
+			elseif (($optimizedSize !== false && $originalSize !== false) && $optimizedSize > $originalSize )
+			{
+					Log::addDebug('Optimized size is bigger than original : Original: ' . $originalSize . ' Optimized: ' . $optimizedSize . ' ( ' . $optimizedUrl . ')' );
+					return $this->returnRetry(self::STATUS_OPTIMIZED_BIGGER, __("Result was bigger so we do not download it.", 'shortpixel-image-optimiser'));
+			}
+
       $correctFileSize = $optimizedSize;
       $fileURL = $this->setPreferredProtocol(urldecode($optimizedUrl));
 

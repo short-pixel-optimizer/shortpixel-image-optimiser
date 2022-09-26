@@ -530,6 +530,7 @@ class FileModel extends \ShortPixel\Model
      {
        // try to replace URL for Path
        $abspath =  \wpSPIO()->filesystem()->getWPAbsPath();
+			 Log::addTemp('RtrimGetPath', rtrim($abspath->getPath(),'/'));
        $path = str_replace($site_url, rtrim($abspath->getPath(),'/'), $url);
 
 
@@ -541,7 +542,7 @@ class FileModel extends \ShortPixel\Model
 
      $this->is_virtual = true;
 
-		 // This filter checks if some supplier will be able to handle the file when needed. 
+		 // This filter checks if some supplier will be able to handle the file when needed.
      $path = apply_filters('shortpixel/image/urltopath', false, $url);
 
 		 if ($path !== false)

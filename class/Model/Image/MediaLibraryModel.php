@@ -100,6 +100,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				$parameters['params'][0] = $paramList;
 				$parameters['returnParams']['sizes'][0] = $this->getFileName();
 
+				if ($isSmartCrop)
+				{
+					 $parameters['returnParams']['fileSizes'][0] = $this->getFileSize();
+				}
+
 				$hash = md5( serialize($paramList) . $url);
 				$doubles[$hash] = 0;
 		 }
@@ -159,6 +164,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					 $parameters['paths'][$name] =  $thumbObj->getFullPath();
 					 $parameters['params'][$name] = $paramList;
 					 $parameters['returnParams']['sizes'][$name] = $thumbObj->getFileName();
+					 if ($isSmartCrop)
+					 {
+							$parameters['returnParams']['fileSizes'][$name] = $thumbObj->getFileSize();
+					 }
 					 $doubles[$hash]  = $name;
 			 	}
 

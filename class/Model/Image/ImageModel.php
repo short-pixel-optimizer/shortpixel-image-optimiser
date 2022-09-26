@@ -550,7 +550,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
           $originalSize = $this->getFileSize();
 
-          if ($resultObj->apiStatus == API::STATUS_UNCHANGED)
+          if ($resultObj->apiStatus == API::STATUS_UNCHANGED || $resultObj->apiStatus == API::STATUS_OPTIMIZED_BIGGER)
           {
             $copyok = true;
             $optimizedSize = $this->getFileSize();
@@ -1113,16 +1113,17 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		 $resize = false;
 		 $hasResizeSizes = (intval($settings->resizeImages) > 0) ? true : false;
 
+		 $useSmartcrop = false;
 
 		 if ($settings->useSmartcrop == true && $this->getExtension() !== 'pdf')
 		 {
 		 	$resize = 4 ;
+			$useSmartcrop = true;
 		 }
 		 elseif ( $hasResizeSizes)
 		 {
 		 	$resize = $settings->resizeImages ? 1 + 2 * ($settings->resizeType == 'inner' ? 1 : 0) : 0;
 		 }
-
 
 		 $resize_width = $resize_height = 0; // can be not set.
 		 $width = $this->get('width');
@@ -1149,7 +1150,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		 $result['image'] = $this->isProcessable(true);
 		 $result['webp']  = $this->isProcessableFileType('webp');
 		 $result['avif']  = $this->isProcessableFileType('avif');
-
 
 		 return $result;
 
