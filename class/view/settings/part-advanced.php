@@ -258,7 +258,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
 
 								 <?php  if(!$this->is_gd_installed):
 								  ?>
-									 <div style="color:red;"><?php esc_html__('You need PHP GD with support for JPEG and PNG files for this feature. Please ask your hosting 	provider to install it.','shortpixel-image-optimiser');  ?>
+									 <div style="color:red;"><?php esc_html_e('You need PHP GD with support for JPEG and PNG files for this feature. Please ask your hosting 	provider to install it.','shortpixel-image-optimiser');  ?>
 									 </div>
 								 <?php endif; ?>
 
