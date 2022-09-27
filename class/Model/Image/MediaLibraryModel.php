@@ -195,7 +195,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		 return $url;
   }
 
- 
+
   public function getWPMetaData()
   {
       if (is_null($this->wp_metadata))
@@ -1193,9 +1193,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
       }
 
-			if ($this->isProcessableAnyFileType() === true)
+			// First test if this file isn't unprocessable for any other reason, then check.
+			if (($this->isProcessable(true) || $this->isOptimized() ) && $this->isProcessableAnyFileType() === true)
 			{
-				 return true;
+				 $bool = true;
 			}
 
       return $bool;
