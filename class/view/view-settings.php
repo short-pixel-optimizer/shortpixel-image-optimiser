@@ -78,6 +78,7 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
     ?>
 
 </article>
+<?php $this->loadView('settings/part-wso'); ?>
 
 <?php $this->loadView('snippets/part-inline-help'); ?>
 <?php $this->loadView('snippets/part-inline-modal'); ?>

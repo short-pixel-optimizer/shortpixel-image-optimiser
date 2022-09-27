@@ -572,7 +572,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					  continue;
 				 }
 
-				 if ($sizeName == 0)
+				 if (is_numeric($sizeName) && intval($sizeName) === 0)
 				 {
 				 	continue;
 				 }

@@ -69,6 +69,9 @@ class EditMediaViewController extends \ShortPixel\ViewController
 						return false;
 					}
 
+
+var_dump(('medium' == 0));
+
           $this->view->status_message = null;
 
           $this->view->text = UiHelper::getStatusText($this->imageModel);

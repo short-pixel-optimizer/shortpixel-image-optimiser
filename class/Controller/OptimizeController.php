@@ -589,8 +589,6 @@ class OptimizeController
              $imageItem->setMeta('compressionType', $item->compressionType);
            }
 
-           	Log::addDebug('*** HandleAPIResult: Handle Optimized ** ', array_keys($result->files) );
-
 					 if (count($result->files) > 0 )
            {
 						 	// Dump Stats, Dump Quota. Refresh
