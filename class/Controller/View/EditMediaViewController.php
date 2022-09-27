@@ -69,9 +69,6 @@ class EditMediaViewController extends \ShortPixel\ViewController
 						return false;
 					}
 
-
-var_dump(('medium' == 0));
-
           $this->view->status_message = null;
 
           $this->view->text = UiHelper::getStatusText($this->imageModel);
@@ -160,26 +157,6 @@ var_dump(('medium' == 0));
 						 $optimizeData = $imageObj->getOptimizeData();
 						 $urls = $optimizeData['urls'];
 
-						 /* if ($imageObj->isProcessableFileType('webp'))
-						 {
-							$diff = array_diff($imageObj->getOptimizeFileType('webp'), $urls); // diff from mains.
-							foreach($diff as $i => $v)
-							{
-								$diff[$i] = " +[webp] " . $v;
-							}
-						 	$urls = array_merge($urls, $diff);
-						 }
-						 if ($imageObj->isProcessableFileType('avif'))
-						 {
-						 	$diff = array_diff($imageObj->getOptimizeFileType('avif'), $urls); // diff from mains.
-							foreach($diff as $i => $v)
-							{
-								$diff[$i] = " +[avif] " . $v;
-							}
-						 	 $urls = array_merge($urls, $diff);
-						 } */
-
-
 					}
 
 					$thumbnails = $imageObj->get('thumbnails');
@@ -188,9 +165,6 @@ var_dump(('medium' == 0));
 					$restorable = ($imageObj->isRestorable()) ? '<span class="green">Yes</span>' : '<span class="red">No</span> (' . $imageObj->getReason('restorable') . ')';
 
 					$hasrecord = ($imageObj->hasDBRecord()) ? '<span class="green">Yes</span>' : '<span class="red">No</span> ';
-        //  $sizes = isset($this->data['sizes']) ? $this->data['sizes'] : array();
-
-          //$debugMeta = $imageObj->debugGetImageMeta();
 
           $debugInfo = array();
           $debugInfo[] = array(__('URL (get attachment URL)', 'shortpixel_image_optiser'), wp_get_attachment_url($this->post_id));

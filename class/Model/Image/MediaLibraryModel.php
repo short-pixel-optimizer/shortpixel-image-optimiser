@@ -128,7 +128,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				 {
 					  $doubleName = $doubles[$hash];
 
-						if ($doubleName == 0)
+						if (is_numeric($doubleName) && intval($doubleName) === 0)
 						{
 							 $compareObj = $this;
 						}
@@ -195,88 +195,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		 return $url;
   }
 
-  /** Get FileTypes that might be optimized. Checking for setting should go via isProcessableFileType!
-	*  Get path will return the filepath of said files. This is not useful, except for -checking- if it's processable via isProcessableFileType . GetURL can potentially hit performance, and we don't need it in that case.
-	*/
-	/*
-  public function getOptimizeFileType($type = 'webp', $get_path = false)
-  {
-      if ($type == 'webp')
-      {
-        $types = $this->getWebps();
-      }
-      elseif ($type == 'avif')
-      {
-          $types = $this->getAvifs();
-      }
-
-      $toOptimize = array();
-
-      // main file.
-      if (! isset($types[0]))
-      {
-          // The isProcessable(true) is very important, since non-strict calls of this function check this function as well ( resulting in loop )
-          if ($this->isProcessable(true) || $this->isOptimized())
-          {
-            if (parent::getOptimizeFileType($type))
-						{
-							if (true === $get_path) {
-								$toOptimize[] = $this->getFullPath();
-							} else {
-              	$toOptimize[] = $this->getURL(); // $fs->pathToUrl($this);
-							}
-           	}
-				 }
-      }
-      if ($this->isScaled() ) // scaled image
-      {
-        if ($this->original_file->getOptimizeFileType($type) )
-				{
-						if (true === $get_path)
-						{
-							$toOptimize[] = $this->original_file->getFullPath();
-						}
-						else {
-							$toOptimize[] = $this->original_file->getURL();
-						}
-				}
-      }
-
-      foreach($this->thumbnails as $thumbName => $thumbObj)
-      {
-          if ($thumbObj->getOptimizeFileType($type))
-					{
-						if (true === $get_path)
-						{
-						  $toOptimize[] = $thumbObj->getFullPath();
-						}
-						else{
-              $toOptimize[] = $thumbObj->getURL(); //$fs->pathToUrl($thumbObj);
-						}
-					}
-      }
-
-			if (! is_null($this->retinas))
-			{
-				foreach($this->retinas as $retinaName => $retinaObj)
-	      {
-	          if ($retinaObj->getOptimizeFileType($type))
-						{
-							if (true === $get_path)
-							{
-							  $toOptimize[] = $retinaObj->getFullPath();
-							}
-							else{
-	              $toOptimize[] = $retinaObj->getURL(); //$fs->pathToUrl($thumbObj);
-							}
-						}
-	      }
-			}
-
-      return array_values(array_unique($toOptimize));
-      //foreach($types as $index => $)
-  }
-*/
+ 
   public function getWPMetaData()
   {
       if (is_null($this->wp_metadata))
@@ -590,21 +509,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				 {
            continue; // when excluded.
 				 }
-         //$filebase = $thumbnail->getFileBase();
+
          $result = false;
 
-  /*      if (isset($optimized[$filebase])) // double sizes.
-         {
-					 $databaseID = $thumbnail->getMeta('databaseID');
-           $thumbnail->setMetaObj($optimized[$filebase]);
-					 $thumbnail->setMeta('databaseID', $databaseID);  // keep dbase id the same, otherwise it won't write this thumb to DB due to same ID.
-					 $result = false;
-         }
-         else
-         { */
+
 				 $thumbnail->setMeta('compressionType', $compressionType);
           $result = $thumbnail->handleOptimized($resultObj);
-      //   }
 
 				 // Always update the WP meta - except for unlisted files.
 				 if ($thumbnail->get('imageType') == self::IMAGE_TYPE_THUMB && $thumbnail->getMeta('file') === null)
@@ -620,10 +530,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						 	$wpmeta['sizes'][$size]['filesize'] = $thumbnail->getFileSize();
 				 }
 
-/*         if ($result)
-         {
-            $optimized[$filebase] = $thumbnail->getMetaObj();
-         } */
+
          if ($thumbnail->get('prevent_next_try') !== false) // in case of fatal issues.
          {
               $this->preventNextTry($thumbnail->get('prevent_next_try'));
@@ -649,79 +556,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			// Remove Temp Files
 			$this->deleteTempFiles($files);
 			$this->flushOptimizeData();
-
-			/** #### RETINAS ***/
-			/*if (is_array($this->retinas))
-			{
-				foreach($this->retinas as $name => $retinaObj)
-				{
-						if (! isset($tempFiles[$retinaObj->getFileName()]) )
-						{
-							 continue;
-						}
-
-						$retinaObj->setMeta('compressionType', $compressionType);
-						$retinaObj->handleOptimizedFileType($tempFiles); // check for webps /etc
-
-						if ($retinaObj->isOptimized())
-						{
-							 continue;
-						}
-						if (!$retinaObj->isProcessable())
-						{
-							continue; // when excluded.
-						}
-						$filebase = $retinaObj->getFileBase();
-						$result = false;
-
-						if (isset($optimized[$filebase])) // double sizes.
-						{
-							$databaseID = $retinaObj->getMeta('databaseID');
-							$retinaObj->setMetaObj($optimized[$filebase]);
-							$retinaObj->setMeta('databaseID', $databaseID);  // keep dbase id the same, otherwise it won't write this thumb to DB due to same ID.
-							$result = false;
-						}
-						else
-						{
-						 $result = $retinaObj->handleOptimized($tempFiles);
-						}
-
-						if ($result)
-						{
-							 $optimized[$filebase] = $retinaObj->getMetaObj();
-						}
-						elseif ($retinaObj->get('prevent_next_try') !== false) // in case of fatal issues.
-						{
-								 $this->preventNextTry($retinaObj->get('prevent_next_try'));
-								 $return = false; //failed
-						}
-				} // retinas loop
-			}
-*/
-  /*    if ($this->isScaled() && isset($files[1]) )
-      {
-
-					$resultObj = $files[1];
-
-          $original_file = $this->getOriginalFile();
-          $original_file->handleOptimizedFileType($resultObj); // @todo Find out why this is before handleOptimized
-					$original_file->setMeta('compressionType', $compressionType);
-
-
-          if (! $original_file->isOptimized())
-          {
-
-            $result = $original_file->handleOptimized($resultObj);
-
-            if (! $result &&  $original_file->get('prevent_next_try') !== false)
-            {
-                $this->preventNextTry($original_file->get('prevent_next_try'));
-                $return = false; // failed.
-            }
-
-          }
-         // $this->original_file = $original_file;
-      } */
 
       $this->saveMeta();
 			update_post_meta($this->get('id'), '_wp_attachment_metadata', $wpmeta);
@@ -1077,31 +911,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			$records[] = $this->createRecord($thumbObj->toClass(), $type, $name);
 
 		}
-/*
-		 if (property_exists($metadata, 'thumbnails'))
-		 {
-				 foreach($metadata->thumbnails as $name => $thumbData)
-				 {
-							$records[] = $this->createRecord($thumbData, self::IMAGE_TYPE_THUMB, $name);
-				 }
-	 	 }
 
-		 if (property_exists($metadata, 'retinas'))
-		 {
-				 foreach($metadata->retinas as $name => $retData)
-				 {
-					 	$records[] = $this->createRecord($retData, self::IMAGE_TYPE_RETINA, $name);
-				 }
-		 }
-
-		 if ($this->isScaled() && property_exists($metadata, 'original_file'))
-		 {
-			  $orData = $metadata->original_file;
-				$records[] = $this->createRecord($orData, self::IMAGE_TYPE_ORIGINAL);
-		 }
-		 // @todo II -> figure out how to store thumbnails.  Probably either per thumbnails check if it exists in the database and then update or delete.
-		 //  This should include a check to see if there are thumbnail sizes no longer in the thumbnails array, probably they should be removed.
-*/
 		 $this->cleanupDatabase($records);
 
 	}
@@ -1217,14 +1027,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			$data->attach_id = $duplicate_id;
 			$imageType = self::IMAGE_TYPE_DUPLICATE;
 
-/*
-			$data->status = $this->getMeta('status');
-			$data->tsOptimized = $this->getMeta('tsOptimized');
-			$data->tsAdded = $this->getMeta('tsAdded');
-			$data->compressionType = $this->getMeta('compressionType');
-			$data->originalSize = $this->getMeta('originalSize');
-			$data->compressedSize = $this->getMeta('compressedSize');
-*/
+
 			$data->status = null;
 			$data->tsOptimized = null;
 			$data->tsAdded = null;
@@ -1265,28 +1068,16 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	   global $wpdb;
 
 		 $this->saveDBMeta();
-     // There is no point checking for errors since false is returned on both failure and no field changed.
-     //update_post_meta($this->id, '_shortpixel_meta', $metadata);
 
-     /* if ($this->isOptimized())
-     {
-        update_post_meta($this->id, '_shortpixel_optimized', $this->getImprovement() );
-        update_post_meta($this->id, '_shortpixel_optdate', $this->getMeta('tsOptimized'));
-     } */
   }
 
   /** Delete the ShortPixel Meta. */
   public function deleteMeta()
   {
 		global $wpdb;
-    // $bool = delete_post_meta($this->id, '_shortpixel_meta');
-     //if (! $bool)
-     // Log::addWarn('Delete Post Meta failed');
 
-     //delete_post_meta($this->id, '_shortpixel_optimized');
      $this->resetPrevent();
-		 //delete_post_meta($this->id, '_shortpixel_was_converted');
-     //delete_post_meta($this->id, '_shortpixel_optdate');
+
 
 		 $sql = 'DELETE FROM ' . $wpdb->prefix . 'shortpixel_postmeta WHERE attach_id = %s';
 		 $sql = $wpdb->prepare($sql, $this->id);
@@ -2027,10 +1818,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 									}
 							}
 
-              //  $thumbObj->delete(); // delete the jpg
-								$toRemove[] = $thumbObj;
-               // $thumbObj->resetStatus();
-							//	$thumbObj->image_meta = new ImageThumbnailMeta();
+							$toRemove[] = $thumbObj;
+
     		}
 
 		    if ($this->isScaled())
@@ -2051,9 +1840,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						}
 
 						$toRemove[] = $originalFile;
-//						$originalFile->delete(); // should be .jpg file.
-//			      $originalFile->resetStatus();
-//						$originalFile->image_meta = new ImageThumbnailMeta();
+
 		    }
 
 				// Fullpath now will still be .jpg
