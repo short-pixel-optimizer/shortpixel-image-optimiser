@@ -513,7 +513,7 @@ class ApiController
 					$fileName = $dataListValues[$i];
 
 					$returnFileSize = isset($dataListFileSizes[$imageName]) ? $dataListFileSizes[$imageName] : null;
-					
+
 
           if(!isset($fileData->Status)) continue; //if optimized images archive is activated, last entry of APIResponse if the Archive data.
 
@@ -672,11 +672,11 @@ class ApiController
 				  Log::addDebug('Optimize and Original size seems the same');
           return $this->returnRetry(self::STATUS_UNCHANGED, __("File wasn't optimized so we do not download it.", 'shortpixel-image-optimiser'));
       }
-			elseif (($optimizedSize !== false && $originalSize !== false) && $optimizedSize > $originalSize )
+			/*elseif (($optimizedSize !== false && $originalSize !== false) && $optimizedSize > $originalSize )
 			{
 					Log::addDebug('Optimized size is bigger than original : Original: ' . $originalSize . ' Optimized: ' . $optimizedSize . ' ( ' . $optimizedUrl . ')' );
 					return $this->returnRetry(self::STATUS_OPTIMIZED_BIGGER, __("Result was bigger so we do not download it.", 'shortpixel-image-optimiser'));
-			}
+			} */
 
       $correctFileSize = $optimizedSize;
       $fileURL = $this->setPreferredProtocol(urldecode($optimizedUrl));
