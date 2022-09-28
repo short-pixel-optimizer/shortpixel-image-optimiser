@@ -618,8 +618,10 @@ class UiHelper
 			$decimalpoint = isset($wp_locale->number_format['decimal_point']) ? $wp_locale->number_format['decimal_point'] : false;
 			$number =  number_format_i18n( (float) $number, $precision);
 
+ 			$hasDecimal = (strpos($number, $decimalpoint) === false) ? false : true;
+
 			// Don't show trailing zeroes if number is a whole unbroken number. -> string comparison because number_format_i18n returns string.
-			if ($decimalpoint !== false && substr($number, strpos($number, $decimalpoint) + 1) === '00')
+			if ($decimalpoint !== false && $hasDecimal && substr($number, strpos($number, $decimalpoint) + 1) === '00')
 			{
 				 $number = substr($number, 0, strpos($number, $decimalpoint));
 			}

@@ -366,9 +366,9 @@ abstract class Queue
         $count->images_avif = 0;
         if (is_object($customData))
         {
-          $count->images_webp = $customData->webpCount;
-          $count->images_avif = $customData->avifCount;
-					$count->images_basecount = $customData->baseCount;
+          $count->images_webp = (int) $customData->webpCount;
+          $count->images_avif = (int) $customData->avifCount;
+					$count->images_basecount = (int) $customData->baseCount;
         }
 
         return $count;

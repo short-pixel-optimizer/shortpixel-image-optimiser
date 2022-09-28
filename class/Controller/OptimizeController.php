@@ -287,7 +287,6 @@ class OptimizeController
     /** Returns the state of the queue so the startup JS can decide if something is going on and what.  **/
     public function getStartupData()
     {
-
         $mediaQ = $this->getQueue('media');
         $customQ = $this->getQueue('custom');
 
@@ -303,7 +302,6 @@ class OptimizeController
 				$data = $this->numberFormatStats($data);
 
         return $data;
-
     }
 
 
