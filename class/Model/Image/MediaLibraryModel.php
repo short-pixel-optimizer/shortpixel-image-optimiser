@@ -92,7 +92,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		    $url = $this->getOriginalFile()->getURL();
 		 }
 
-     if ($this->isProcessable(true) || $this->isProcessableAnyFileType())
+     if ($this->isProcessable(true) || ($this->isProcessableAnyFileType() && $this->isOptimized()) )
 		 {
 				$paramList = $this->createParamList();
 				$parameters['urls'][0] = $url;
@@ -110,10 +110,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		 }
 
 		 $thumbObjs = $this->getThumbObjects();
+		 $unProcessable = array();
 
 		 foreach($thumbObjs as $name => $thumbObj)
 		 {
-			 if ($thumbObj->isThumbnailProcessable() || $thumbObj->isProcessableAnyFileType() )
+			 if ($thumbObj->isThumbnailProcessable() || ($thumbObj->isProcessableAnyFileType() && $thumbObj->isOptimized()) )
 			 {
 
 				 if (! $isSmartCrop)
@@ -122,7 +123,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			   }
 
 				 $paramList = $thumbObj->createParamList();
-				 $hash = md5( serialize($paramList) . $url);
+				 $hash = md5( serialize($paramList) . $url); // Hash the paramlist + url to find identical results.
 
 				 if (isset($doubles[$hash]))
 				 {
@@ -142,7 +143,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						}
 						else
 						{
-
+							// Check if in a duplicate item is in doubles, so we don't double-double it.
 							$aDuplicate = false;
 							foreach($parameters['returnParams']['doubles'] as $doubleNameInDoubles => $unneeded)
 							{
@@ -172,6 +173,25 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			 	}
 
 			 }
+			 else {
+				 	// Save rejected thumbs, because they might be a duplicate of something that goes on the processing.
+				  $unProcessable[] = $thumbObj;
+			 }
+		 }
+
+		// If one or more thumbnails were not processable, still check them against the process list in case identical sizes are being processed and it should be marked as a duplicate.
+		 if (isset($parameters['paths']) && count($unProcessable) > 0)
+		 {
+			   $pathVal = array_values($parameters['paths']);
+				 $pathLookup = array_flip($parameters['paths']); // lookup fullpath -> size.
+
+				 foreach($unProcessable as $thumbObj)
+				 {
+					  if (in_array($thumbObj->getFullPath(), $pathVal) === true)
+						{
+							 $parameters['returnParams']['duplicates'][$thumbObj->get('name')] = $pathLookup[$thumbObj->getFullPath()];
+						}
+				 }
 		 }
 
 		 $this->optimizeData = $parameters;

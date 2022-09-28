@@ -249,7 +249,13 @@ class UiHelper
              $action = self::getAction('optimizethumbs', $id);
              if ($optimizable > 0)
              {
-               $action['text']  = sprintf(__('Optimize %s  thumbnails','shortpixel-image-optimiser'),$optimizable);
+							 $total = $optimizable + $optimizableWebp + $optimizableAvif;
+							 if ($optimizableWebp > 0 || $optimizableAvif > 0)
+							 	   $itemText = __('items', 'shortpixel-image-optimiser');
+								else {
+									 $itemText = __('thumbnails', 'shortpixel-image-optimiser');
+								}
+               $action['text']  = sprintf(__('Optimize %s  %s','shortpixel-image-optimiser'),$total, $itemText);
              }
              else
              {
