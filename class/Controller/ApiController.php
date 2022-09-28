@@ -294,7 +294,6 @@ class ApiController
   {
 
     $APIresponse = $this->parseResponse($response);//get the actual response from API, its an array
-		Log::addTemp('APIRESPONSE', $APIresponse);
     $settings = \wpSPIO()->settings();
 
 		// Don't know if it's this or that.
@@ -306,6 +305,21 @@ class ApiController
 		elseif( property_exists($APIresponse[0], 'Status'))
 		{
 			$status = $APIresponse[0]->Status;
+		}
+		elseif ( is_array($APIresponse)) // This is a workaround for some obscure PHP 5.6 bug. @todo Remove when dropping support PHP < 7.
+		{
+			 foreach($APIresponse as $key => $data)
+			 {
+				 // Running the whole array, because handleSuccess enums on key index as well :/
+				  if (property_exists($data, 'Status'))
+					{
+						 if ($status === false)
+						 {
+						 	$status = $data->Status;
+						 }
+						 $APIresponse[$key] = $data; // reset it, so it can read the index.  This should be 0.
+					}
+			 }
 		}
 
 			if (isset($APIresponse['returndatalist']))
@@ -473,7 +487,7 @@ class ApiController
   private function handleSuccess($item, $response, $returnDataList)
   {
       Log::addDebug('ShortPixel API : Handling Success!', $response);
-			Log::addTemp('Return data', $returnDataList);
+
       $settings = \wpSPIO()->settings();
       $fs = \wpSPIO()->fileSystem();
 
@@ -504,6 +518,7 @@ class ApiController
 			}
 
       $tempFiles = $responseFiles = $results = array();
+
 
       //download each file from array and process it
       for ($i = 0; $i < count($response); $i++ )
@@ -649,7 +664,6 @@ class ApiController
 						'data' => $returnDataList,
 			);
 
-			Log::addTemp('Return success data', $return);
       return $this->returnSuccess($return, self::STATUS_SUCCESS, false);
   }
 
