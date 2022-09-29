@@ -82,6 +82,18 @@ Class FileSystemController extends \ShortPixel\Controller
         return $imageObj;
     }
 
+		// Use sporadically, every time an angel o performance dies.
+		// Required for files that change i.e. enable media replace or other filesystem changing operation.
+		public function flushImageCache()
+		{
+				if (is_null($id))
+				{
+					 self::$mediaItems = array();
+					 self::$customItems = array();
+				}
+
+		}
+
     /** Gets a custom Image Model without being in the database. This is used to check if path is a proper customModel path ( not mediaLibrary ) and see if the file should be included per excusion rules */
     public function getCustomStub( $path, $load = true)
     {
@@ -152,7 +164,7 @@ Class FileSystemController extends \ShortPixel\Controller
          $filepath = apply_filters('shortpixel/file/virtual/translate', $filepath, $file);
       }
 
-			//  translate can return false if not properly offloaded / not found there. 
+			//  translate can return false if not properly offloaded / not found there.
       if ($filepath !== $file->getFullPath() && $filepath !== false)
       {
          $file = $this->getFile($filepath);

@@ -45,7 +45,9 @@ class AdminController extends \ShortPixel\Controller
 				}
 
 // todo add check here for mediaitem
-        $mediaItem = \wpSPIO()->filesystem()->getImage($id, 'media');
+			  $fs = \wpSPIO()->filesystem();
+				$fs->flushImageCache(); // it's possible file just changed by external plugin.
+        $mediaItem = $fs->getImage($id, 'media');
 
 				if ($mediaItem === false)
 				{
@@ -67,6 +69,9 @@ class AdminController extends \ShortPixel\Controller
 				{
         	$control = new OptimizeController();
         	$control->addItemToQueue($mediaItem);
+				}
+				else {
+					Log::addWarn('Passed mediaItem is not processable', $mediaItem);
 				}
         return $meta; // It's a filter, otherwise no thumbs
     }
