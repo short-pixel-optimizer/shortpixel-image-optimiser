@@ -410,7 +410,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                             $folder_id = $dirObj->get('id');
 
 
-                            $type_display = ($dirObj->get('is_nextgen') ) ? __('Nextgen', 'shortpixel-image-optimiser') . "<br>" : "";
+                            $type_display = ($dirObj->get('is_nextgen') ) ? __('Nextgen', 'shortpixel-image-optimiser') . ":" : "";
                             $stat = $dirObj->getStats();
 
                             $fullstatus = esc_html__("Optimized",'shortpixel-image-optimiser') . ": " . $stat->Optimized . ", "
