@@ -67,7 +67,6 @@ class InstallHelper
  //   $env = \wpSPIO()->env();
 
     OptimizeController::uninstallPlugin();
-    BulkController::uninstallPlugin();
 		ApiKeyController::uninstallPlugin();
   }
 
@@ -86,6 +85,8 @@ class InstallHelper
 		self::deactivatePlugin(); // deactivate
 		self::uninstallPlugin(); // uninstall
 
+		// Bulk Log
+		BulkController::uninstallPlugin();
 
 		$settings::resetOptions();
 

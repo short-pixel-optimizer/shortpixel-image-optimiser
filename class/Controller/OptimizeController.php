@@ -272,8 +272,11 @@ class OptimizeController
 
       if ($json->status == 1) // successfull restore.
       {
+					$fs = \wpSPIO()->filesystem();
+					$fs->flushImageCache();
+
           // Hard reload since metadata probably removed / changed but still loaded, which might enqueue wrong files.
-            $mediaItem = \wpSPIO()->filesystem()->getImage($mediaItem->get('id'), $mediaItem->get('type'));
+            $mediaItem = $fs->getImage($mediaItem->get('id'), $mediaItem->get('type'));
 
             $mediaItem->setMeta('compressionType', $compressionType);
             $json = $this->addItemToQueue($mediaItem);
