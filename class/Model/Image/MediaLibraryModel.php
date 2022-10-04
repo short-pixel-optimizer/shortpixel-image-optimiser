@@ -439,6 +439,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   {
       $return = true;
 			$wpmeta = wp_get_attachment_metadata($this->get('id'));
+			$WPMLduplicates = $this->getWPMLDuplicates();
 
 			if (isset($optimizeData['files']) && isset($optimizeData['data']))
 			{
@@ -581,8 +582,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			update_post_meta($this->get('id'), '_wp_attachment_metadata', $wpmeta);
 
 
-			$duplicates = $this->getWPMLDuplicates();
-			if (is_array($duplicates) && count($duplicates) > 0)
+
+			if (is_array($WPMLduplicates) && count($WPMLduplicates) > 0)
 			{
 				// Run the WPML duplicates
 				foreach($duplicates as $duplicate_id)
@@ -1584,6 +1585,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
     $cleanRestore = true;
 		$wpmeta = wp_get_attachment_metadata($this->get('id'));
 
+		// Get them early in case the filename changes ( ie png to jpg ) because it will stop getting it.
+		$WPMLduplicates = $this->getWPMLDuplicates();
+
+
 		$did_png2jpg = $this->getMeta('did_png2jpg');
 		$is_resized = $this->getMeta('resize');
 
@@ -1729,8 +1734,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         do_action('shortpixel_after_restore_image', $this->id, $cleanRestore); // legacy
 				do_action('shortpixel/image/after_restore', $this, $this->id, $cleanRestore);
 
-				$duplicates = $this->getWPMLDuplicates();
-				if (is_array($duplicates) && count($duplicates) > 0 )
+				if (is_array($WPMLduplicates) && count($WPMLduplicates) > 0 )
 				{
 					$current_id = $this->id;
 

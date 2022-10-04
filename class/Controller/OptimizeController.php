@@ -495,6 +495,7 @@ class OptimizeController
 
 			// Regardless if it worked or not, requeue the item otherwise it will keep trying to convert due to the flag.
       $imageObj = $fs->getMediaImage($item->item_id);
+
       $this->addItemToQueue($imageObj);
 
       return $item;
