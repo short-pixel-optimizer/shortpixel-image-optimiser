@@ -586,7 +586,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			if (is_array($WPMLduplicates) && count($WPMLduplicates) > 0)
 			{
 				// Run the WPML duplicates
-				foreach($duplicates as $duplicate_id)
+				foreach($WPMLduplicates as $duplicate_id)
 				{
 						// Save the exact same data under another post.
 						$this->createDuplicateRecord($duplicate_id);
@@ -1112,7 +1112,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	// FileDelete param for subclass compat.
   public function onDelete($fileDelete = false)
   {
-			$duplicates = $this->getWPMLDuplicates();
+			$WPMLduplicates = $this->getWPMLDuplicates();
 
 			$fileDelete = (count($duplicates) == 0) ? true : false;
 
@@ -1147,6 +1147,19 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		 	$this->removeLegacy();
       $this->deleteMeta();
 			$this->dropFromQueue();
+
+			$current_id = $this->id;
+
+			if (is_array($WPMLduplicates) && count($WPMLduplicates) > 0)
+			{
+				foreach($WPMLduplicates as $duplicate_id)
+				{
+					  $this->id = $duplicate_id;
+						$this->removeLegacy();
+						$this->deleteMeta();
+						$this->dropFromQueue();
+				}
+			}
   }
 
 	public function dropFromQueue()
@@ -1316,7 +1329,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         {
             $file = $fs->getFile($thumbObj->getFileDir() . $thumbObj->getFileBase() . '.jpg');
             $thumbObj->setMeta('did_png2jpg', true);
-						$thumbObj->setMeta('status', ImageModel::FILE_STATUS_PENDING);
 
             if ($file->exists()) // if new exists, remove old
             {
@@ -1329,19 +1341,16 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		    if ($this->isScaled())
 		    {
+						 $file = $fs->getFile($originalFile->getFileDir() . $originalFile->getFileBase() . '.jpg');
+	           $originalFile->setMeta('did_png2jpg', true);
 
-		       $originalFile = $this->getOriginalFile();
-					 $file = $fs->getFile($originalFile->getFileDir() . $originalFile->getFileBase() . '.jpg');
-           $originalFile->setMeta('did_png2jpg', true);
-					 $originalFile->setMeta('status', ImageModel::FILE_STATUS_PENDING);
-
-            if ($file->exists()) // if new exists, remove old
-            {
-                $originalFile->delete(); // remove the old file.
-                $originalFile->fullpath = $file->getFullPath();
-                $originalFile->resetStatus();
-                $originalFile->setFileInfo();
-            }
+	            if ($file->exists()) // if new exists, remove old
+	            {
+	                $originalFile->delete(); // remove the old file.
+	                $originalFile->fullpath = $file->getFullPath();
+	                $originalFile->resetStatus();
+	                $originalFile->setFileInfo();
+	            }
 				}
 
         // Update
@@ -1351,7 +1360,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 					if ($settings->backupImages == 1)
 					{
-
 						 // When failed, delete the backups. This can't be done via restore since image is not optimized.
 						 $backupFile = $this->getBackupFile();
 						 if ($backupFile->exists())
@@ -1374,9 +1382,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 						 }
 					}
-
 					// Prevent from retrying next time, since stuff will be requeued.
-
 			}
 
 			$this->setMeta('tried_png2jpg', true);
@@ -1738,7 +1744,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				{
 					$current_id = $this->id;
 
-					foreach($duplicates as $duplicate_id)
+					foreach($WPMLduplicates as $duplicate_id)
 					{
 						 $this->id = $duplicate_id;
 						 $this->removeLegacy();
