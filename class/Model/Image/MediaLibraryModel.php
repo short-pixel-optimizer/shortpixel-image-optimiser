@@ -492,7 +492,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			$thumbObjs = $this->getThumbObjects();
 
 			// Add doubles to the processing list. Doubles are sizes with the same result, but should be copied to it's respective thumbnail file + backup.
-
 			if (isset($data['doubles']))
 			{
 				 foreach($data['doubles'] as $doubleName => $doubleRef)
@@ -502,7 +501,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						$data['sizes'][$doubleName] = $doubleObj->getFileName();
 				 }
 			}
-
 
       foreach($data['sizes'] as $sizeName => $fileName)
       {
@@ -532,7 +530,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				 }
 
          $result = false;
-
 
 				 $thumbnail->setMeta('compressionType', $compressionType);
           $result = $thumbnail->handleOptimized($resultObj);
@@ -581,8 +578,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       $this->saveMeta();
 			update_post_meta($this->get('id'), '_wp_attachment_metadata', $wpmeta);
 
-
-
 			if (is_array($WPMLduplicates) && count($WPMLduplicates) > 0)
 			{
 				// Run the WPML duplicates
@@ -596,7 +591,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 						update_post_meta($duplicate_id, '_wp_attachment_metadata', $duplicate_meta);
 				}
-
 			}
 
       return $return;
@@ -1114,7 +1108,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   {
 			$WPMLduplicates = $this->getWPMLDuplicates();
 
-			$fileDelete = (count($duplicates) == 0) ? true : false;
+			$fileDelete = (count($WPMLduplicates) == 0) ? true : false;
 
 			if ($fileDelete === true)
       	parent::onDelete();
@@ -1150,7 +1144,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 			$current_id = $this->id;
 
-			if (is_array($WPMLduplicates) && count($WPMLduplicates) > 0)
+			/* perhaps not needed if (is_array($WPMLduplicates) && count($WPMLduplicates) > 0)
 			{
 				foreach($WPMLduplicates as $duplicate_id)
 				{
@@ -1159,7 +1153,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						$this->deleteMeta();
 						$this->dropFromQueue();
 				}
-			}
+			} */
   }
 
 	public function dropFromQueue()
@@ -1362,7 +1356,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					{
 						 // When failed, delete the backups. This can't be done via restore since image is not optimized.
 						 $backupFile = $this->getBackupFile();
-						 if ($backupFile->exists())
+						 if (is_object($backupFile) && $backupFile->exists())
 						 {
 							 $backupFile->delete();
 						 }
@@ -1377,7 +1371,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						 if ($this->isScaled())
 						 {
 								$backupFile = $this->getOriginalFile()->getBackupFile();
-								if ($backupFile->exists())
+								if (is_object($backupFile) && $backupFile->exists())
 									 $backupFile->delete();
 
 						 }
@@ -1418,7 +1412,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
      }
 
 		 return $bool;
-
   }
 
   private function isProcessableSize($width, $height, $excludePattern) {
