@@ -1046,10 +1046,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	{
 		  $data = new \StdClass;
 
-			$data->parent = ($parent == null) ? $this->id : $parent;
+			$data->parent = ($parent === null) ? $this->id : $parent;
 			$data->attach_id = $duplicate_id;
 			$imageType = self::IMAGE_TYPE_DUPLICATE;
-
 
 			$data->status = null;
 			$data->tsOptimized = null;
@@ -1058,8 +1057,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			$data->originalSize = null;
 			$data->compressedSize = null;
 
+			$this->parent = $data->parent;
 
-			$this->createRecord($data, $imageType);
+		  $this->createRecord($data, $imageType);
 	}
 
 	private function cleanupDatabase($records)
