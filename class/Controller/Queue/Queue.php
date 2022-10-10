@@ -735,7 +735,7 @@ abstract class Queue
 				 $duplicateActive = false;
 				 foreach($WPMLduplicates as $duplicate_id)
 				 {
-					  if (in_array($duplicte_id, $qitems))
+					  if (in_array($duplicate_id, $qitems))
 						{
 							Log::addDebug('Duplicate Item is in queue already, skipping (ar). Duplicate:' . $duplicate_id);
 							$duplicateActive = true;
