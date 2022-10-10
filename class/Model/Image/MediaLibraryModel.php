@@ -441,6 +441,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       $return = true;
 			$wpmeta = wp_get_attachment_metadata($this->get('id'));
 			$WPMLduplicates = $this->getWPMLDuplicates();
+			$fs = \wpSPIO()->filesystem();
 
 			if (isset($optimizeData['files']) && isset($optimizeData['data']))
 			{
@@ -584,8 +585,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				// Run the WPML duplicates
 				foreach($WPMLduplicates as $duplicate_id)
 				{
-						// Save the exact same data under another post. Don't duplicate it, when already there. 
-						if ($this->hasParent() === false)
+						$duplicateObj = $fs->getImage($duplicate_id, 'media');
+						// Save the exact same data under another post. Don't duplicate it, when already there.
+						if ($duplicateObj->getParent() === false)
 							$this->createDuplicateRecord($duplicate_id);
 
 						$duplicate_meta = wp_get_attachment_metadata($duplicate_id);
@@ -798,10 +800,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		 }
 		 elseif (count($meta) == 1 && $meta[0]->image_type == self::IMAGE_TYPE_DUPLICATE)
 		 {
-				$duplicate_id = $meta[0]->parent;
+				$duplicate_id = (int) $meta[0]->parent;
 				$sqlPrep = $wpdb->prepare($sqlQuery, $duplicate_id);
 				$meta = $wpdb->get_results($sqlPrep);
-				$this->parent = $duplicate_id;
+				$this->parent =  $duplicate_id;
 
 		 }
 		 elseif (count($meta) == 0) // no records, no object.

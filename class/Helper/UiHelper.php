@@ -647,7 +647,7 @@ class UiHelper
 		}
 		else
 		{
-			 return substr($name, 0, strpos($name, '.')) . '.' . $type;
+			 return substr($name, 0, strrpos($name, '.')) . '.' . $type;
 		}
 
 	}
