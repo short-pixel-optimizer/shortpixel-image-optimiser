@@ -126,6 +126,13 @@ class OptimizeController
           $json->result->is_done = true;
           $json->result->fileStatus = ImageModel::FILE_STATUS_ERROR;
         }
+				elseif($queue->isDuplicateActive($mediaItem))
+				{
+					$json->result->fileStatus = ImageModel::FILE_STATUS_UNPROCESSED;
+					$json->result->is_error = false;
+					$json->result->is_done = true;
+					$json->result->message = __('A duplicate of this item is already active in queue. ', 'shortpixel-image-optimiser');
+				}
         else
         {
           $result = $queue->addSingleItem($mediaItem); // 1 if ok, 0 if not found, false is not processable

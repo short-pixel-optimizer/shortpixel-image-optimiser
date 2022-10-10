@@ -72,9 +72,6 @@ abstract class Queue
     */
     public function addSingleItem(ImageModel $imageModel)
     {
-
-      // $preparing = $this->getStatus('preparing');
-
        $qItem = $this->imageModelToQueue($imageModel);
        $counts = $qItem->counts;
 
@@ -85,12 +82,13 @@ abstract class Queue
 				  $media_id = $imageModel->getParent();
 			 }
 
+			 $result = new \stdClass;
+
        $item = array('id' => $media_id, 'value' => $qItem, 'item_count' => $counts->creditCount);
        $this->q->addItems(array($item), false);
        $numitems = $this->q->withRemoveDuplicates()->enqueue(); // enqueue returns numitems
 
       // $this->q->setStatus('preparing', $preparing, true); // add single should not influence preparing status.
-       $result = new \stdClass;
        $result = $this->getQStatus($result, $numitems);
        $result->numitems = $numitems;
 
@@ -210,6 +208,12 @@ abstract class Queue
 										{
 											continue;
 										}
+
+										if ($this->isDuplicateActive($mediaItem))
+										{
+											 continue;
+										}
+
                     $qObject = $this->imageModelToQueue($mediaItem);
 
                     $counts = $qObject->counts;
@@ -220,7 +224,7 @@ abstract class Queue
 						 				  $media_id = $mediaItem->getParent();
 						 			 }
 
-                      $queue[] = array('id' => $media_id, 'value' => $qObject, 'item_count' => $counts->creditCount);
+                    $queue[] = array('id' => $media_id, 'value' => $qObject, 'item_count' => $counts->creditCount);
 
                     $imageCount += $counts->creditCount;
                     $webpCount += $counts->webpCount;
@@ -710,6 +714,32 @@ abstract class Queue
         $this->q->itemFailed($qItem, $fatal);
         $this->q->updateItemValue($qItem);
     }
+
+		public function isDuplicateActive($mediaItem)
+		{
+			if ($mediaItem->get('type') === 'custom')
+				return false;
+				
+			$WPMLduplicates = $mediaItem->getWPMLDuplicates();
+			if (is_array($WPMLduplicates) && count($WPMLduplicates) > 0)
+			{
+				 $duplicateActive = false;
+				 foreach($WPMLduplicates as $duplicate_id)
+				 {
+						if ($this->isItemInQueue($duplicate_id))
+						{
+							 Log::addDebug('Duplicate Item is in queue already, skipping. Duplicate:' . $duplicate_id);
+							 $duplicateActive = true;
+							 break;
+						}
+				 }
+				 if (true === $duplicateActive)
+				 {
+						return $duplicateActive;
+				 }
+			}
+			return false;
+		}
 
     public function itemDone ($item)
     {
