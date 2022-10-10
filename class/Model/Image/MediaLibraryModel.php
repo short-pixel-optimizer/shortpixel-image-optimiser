@@ -584,8 +584,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				// Run the WPML duplicates
 				foreach($WPMLduplicates as $duplicate_id)
 				{
-						// Save the exact same data under another post.
-						$this->createDuplicateRecord($duplicate_id);
+						// Save the exact same data under another post. Don't duplicate it, when already there. 
+						if ($this->hasParent() === false)
+							$this->createDuplicateRecord($duplicate_id);
 
 						$duplicate_meta = wp_get_attachment_metadata($duplicate_id);
 						$duplicate_meta = array_merge($duplicate_meta, $wpmeta);
@@ -1478,7 +1479,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 
 	// Check if this Image has a Parent indicating it's a WPML Duplicate.
-	public function hasParent()
+	public function getParent()
 	{
 			if (is_null($this->parent))
 			{

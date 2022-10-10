@@ -185,6 +185,11 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
           $debugInfo[] = array(__('WPML Duplicates'), json_encode($imageObj->getWPMLDuplicates()) );
 
+					if ($imageObj->hasParent !== false)
+					{
+						 $debugInfo[] = array('', __('This item is a WPML duplicate'));
+					}
+
 					if (isset($urls))
 					{
 						 $debugInfo[] = array(__('To Optimize URLS'),  $urls);
