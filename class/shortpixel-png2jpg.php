@@ -98,8 +98,6 @@ class ShortPixelPng2Jpg {
 							  return true;
              } // success
 
-
-
           } // result.
 					else
 					{
@@ -456,6 +454,9 @@ class ShortPixelPng2Jpg {
 					 {
 						  update_attached_file($duplicate_id, $newFile->getFullPath() );
 							wp_update_attachment_metadata($duplicate_id, $new_metadata);
+
+							$post_ar["ID"]  = $duplicate_id;
+							wp_update_post($post_ar);
 					 }
 				}
 

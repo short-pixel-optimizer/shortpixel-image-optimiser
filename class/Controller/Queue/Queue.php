@@ -78,7 +78,14 @@ abstract class Queue
        $qItem = $this->imageModelToQueue($imageModel);
        $counts = $qItem->counts;
 
-       $item = array('id' => $imageModel->get('id'), 'value' => $qItem, 'item_count' => $counts->creditCount);
+			 $media_id = $imageModel->get('id');
+			 // Check if this is a duplicate existing.
+			 if ($imageModel->getParent() !== false)
+			 {
+				  $media_id = $imageModel->getParent();
+			 }
+
+       $item = array('id' => $media_id, 'value' => $qItem, 'item_count' => $counts->creditCount);
        $this->q->addItems(array($item), false);
        $numitems = $this->q->withRemoveDuplicates()->enqueue(); // enqueue returns numitems
 
@@ -207,7 +214,13 @@ abstract class Queue
 
                     $counts = $qObject->counts;
 
-                      $queue[] = array('id' => $mediaItem->get('id'), 'value' => $qObject, 'item_count' => $counts->creditCount);
+									 $media_id = $mediaItem->get('id');
+									 if ($mediaItem->getParent() !== false)
+						 			 {
+						 				  $media_id = $mediaItem->getParent();
+						 			 }
+
+                      $queue[] = array('id' => $media_id, 'value' => $qObject, 'item_count' => $counts->creditCount);
 
                     $imageCount += $counts->creditCount;
                     $webpCount += $counts->webpCount;

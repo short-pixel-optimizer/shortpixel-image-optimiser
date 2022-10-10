@@ -21,6 +21,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   protected $do_png2jpg = false; // option to flag this one should be checked / converted to jpg.
 
   protected $wp_metadata;
+	private $parent; // In case of WPML Duplicates
 
   protected $type = 'media';
   protected $is_main_file = true; // for checking
@@ -799,6 +800,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				$duplicate_id = $meta[0]->parent;
 				$sqlPrep = $wpdb->prepare($sqlQuery, $duplicate_id);
 				$meta = $wpdb->get_results($sqlPrep);
+				$this->parent = $duplicate_id;
 
 		 }
 		 elseif (count($meta) == 0) // no records, no object.
@@ -1414,7 +1416,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		 return $bool;
   }
 
-  private function isProcessableSize($width, $height, $excludePattern) {
+  private function isProcessableSize($width, $height, $excludePattern)
+	{
 
       $ranges = preg_split("/(x|×|X)/",$excludePattern);
       $widthBounds = explode("-", $ranges[0]);
@@ -1472,6 +1475,24 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       else
         return false;
   }
+
+
+	// Check if this Image has a Parent indicating it's a WPML Duplicate.
+	public function hasParent()
+	{
+			if (is_null($this->parent))
+			{
+				 return false;
+			}
+			if (is_numeric($this->parent))
+			{
+				 return $this->parent;
+			}
+
+			// Dunno.
+			return false;
+	}
+
 
 	/**  Try to find language duplicates in WPML and add the same status to it.
 	** @integration WPML
@@ -1826,19 +1847,24 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					return false;
 			}
 
+			$thumbObjs = $this->getThumbObjects();
 
-    	foreach($this->thumbnails as $thumbObj)
+
+    	foreach($thumbObjs as $thumbObj)
     	{
 							if ($thumbObj->hasBackup())
 							{
 									$backupFile = $thumbObj->getBackupFile();
 
-									$backupFile->delete();
-
-									$backupFileJPG = $fs->getFile($backupFile->getFileDir() . $backupFile->getFileBase() . '.jpg');
-									if ($backupFileJPG->exists())
+									if (is_object($backupFile))
 									{
-										 $backupFileJPG->delete();
+										$backupFile->delete();
+
+										$backupFileJPG = $fs->getFile($backupFile->getFileDir() . $backupFile->getFileBase() . '.jpg');
+										if (is_object($backupFileJPG) && $backupFileJPG->exists())
+										{
+											 $backupFileJPG->delete();
+										}
 									}
 							}
 
@@ -1846,7 +1872,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
     		}
 
-		    if ($this->isScaled())
+		  /*  if ($this->isScaled())
 		    {
 
 		       	$originalFile = $this->getOriginalFile();
@@ -1865,7 +1891,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 						$toRemove[] = $originalFile;
 
-		    }
+		    } */
 
 				// Fullpath now will still be .jpg
 				// PNGconvert is first, because some plugins check for _attached_file metadata and prevent deleting files if still connected to media library. Exmaple: polylang.
