@@ -388,7 +388,14 @@ class UiHelper
 		// This basically happens when a NextGen gallery is not added to Custom Media.
 		elseif ($mediaItem->get('id') === 0)
 		{
-			 $text = __('This image was not found in our database. Refresh folders, or add this gallery', 'shortpixel-image-optimiser');
+			 if ($mediaItem->isProcessable(true) === false)
+			 {
+				 $text = __('Not Processable: ','shortpixel_image_optimiser');
+				 $text  .= $mediaItem->getProcessableReason();
+			 }
+			 else {
+				 $text = __('This image was not found in our database. Refresh folders, or add this gallery', 'shortpixel-image-optimiser');
+			 }
 		}
     elseif ($mediaItem->isOptimized())
     {

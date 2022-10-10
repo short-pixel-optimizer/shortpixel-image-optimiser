@@ -269,7 +269,7 @@ class NextGenController
 
     if ($this->optimizeNextGen() === true) {
           $imageFsPath = $this->getImageAbspath($image);
-          $otherMedia->addImage($imageFsPath);
+          $otherMedia->addImage($imageFsPath, array('is_nextgen' => true));
       }
   }
 
