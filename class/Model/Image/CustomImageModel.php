@@ -283,8 +283,6 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
        return $bool;
     }
 
-
-
     public function loadMeta()
     {
 
@@ -363,6 +361,11 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
         $this->image_meta = $metaObj;
     }
+
+		public function getParent()
+		{
+			 return false; // no parents here
+		}
 
     /** Load a CustomImageModel as Stub ( to be added ) . Checks if the image is already added as well
 		 *
