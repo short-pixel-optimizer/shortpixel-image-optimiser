@@ -39,9 +39,9 @@ Class FileSystemController extends \ShortPixel\Controller
     /** Get MediaLibraryModel for a Post_id
 		* @param int $id
 		*/
-    public function getMediaImage($id)
+    public function getMediaImage($id, $useCache = true)
     {
-				if (isset(self::$mediaItems[$id]))
+				if ($useCache === true && isset(self::$mediaItems[$id]))
 				{
 					 return self::$mediaItems[$id];
 				}
@@ -65,9 +65,9 @@ Class FileSystemController extends \ShortPixel\Controller
 		/**
 		* @param int $id
 		*/
-    public function getCustomImage($id)
+    public function getCustomImage($id, $useCache = true)
     {
-				if (isset(self::$customItems[$id]))
+				if ($useCache === true && isset(self::$customItems[$id]))
 				{
 				 return self::$customItems[$id];
 				}
@@ -102,15 +102,15 @@ Class FileSystemController extends \ShortPixel\Controller
 		* int $id
 		* string $type
 		*/
-    public function getImage( $id,  $type)
+    public function getImage( $id,  $type, $useCache = true)
     {
 			// False, OptimizeController does a hard check for false.
       $imageObj = false;
 
       if ($type == 'media')
-        $imageObj = $this->getMediaImage($id);
+        $imageObj = $this->getMediaImage($id, $useCache);
       elseif($type == 'custom')
-        $imageObj = $this->getCustomImage($id);
+        $imageObj = $this->getCustomImage($id, $useCache);
       else
         Log::addError('FileSystemController GetImage - no correct type given: ' . $type);
 

@@ -585,11 +585,14 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				// Run the WPML duplicates
 				foreach($WPMLduplicates as $duplicate_id)
 				{
-						$duplicateObj = $fs->getImage($duplicate_id, 'media');
+						// Get this Object cacheless, because it can create records when loading.
+						$duplicateObj = $fs->getImage($duplicate_id, 'media', false);
+
 						// Save the exact same data under another post. Don't duplicate it, when already there.
 						if ($duplicateObj->getParent() === false)
+						{
 							$this->createDuplicateRecord($duplicate_id);
-
+						}
 						$duplicate_meta = wp_get_attachment_metadata($duplicate_id);
 						$duplicate_meta = array_merge($duplicate_meta, $wpmeta);
 
