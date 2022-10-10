@@ -209,7 +209,7 @@ abstract class Queue
 											continue;
 										}
 
-										if ($this->isDuplicateActive($mediaItem))
+										if ($this->isDuplicateActive($mediaItem, $queue))
 										{
 											 continue;
 										}
@@ -231,7 +231,7 @@ abstract class Queue
                     $avifCount += $counts->avifCount;
 										$baseCount += $counts->baseCount; // base images (all minus webp/avif)
 
-                    do_action('shortpixel_start_image_optimisation', $mediaItem->get('id'), $mediaItem);
+                    do_action('shortpixel_start_image_optimisation', $media_id, $mediaItem);
 
                 }
                 else
@@ -715,20 +715,35 @@ abstract class Queue
         $this->q->updateItemValue($qItem);
     }
 
-		public function isDuplicateActive($mediaItem)
+		public function isDuplicateActive($mediaItem, $queue = array() )
 		{
 			if ($mediaItem->get('type') === 'custom')
 				return false;
-				
+
 			$WPMLduplicates = $mediaItem->getWPMLDuplicates();
+			$qitems = array();
+			if (count($queue) > 0)
+			{
+				 foreach($queue as $qitem)
+				 {
+					  $qitems[] = $qitem['id'];
+				 }
+			}
+
 			if (is_array($WPMLduplicates) && count($WPMLduplicates) > 0)
 			{
 				 $duplicateActive = false;
 				 foreach($WPMLduplicates as $duplicate_id)
 				 {
-						if ($this->isItemInQueue($duplicate_id))
+					  if (in_array($duplicte_id, $qitems))
 						{
-							 Log::addDebug('Duplicate Item is in queue already, skipping. Duplicate:' . $duplicate_id);
+							Log::addDebug('Duplicate Item is in queue already, skipping (ar). Duplicate:' . $duplicate_id);
+							$duplicateActive = true;
+							break;
+						}
+						elseif ($this->isItemInQueue($duplicate_id))
+						{
+							 Log::addDebug('Duplicate Item is in queue already, skipping (db). Duplicate:' . $duplicate_id);
 							 $duplicateActive = true;
 							 break;
 						}
