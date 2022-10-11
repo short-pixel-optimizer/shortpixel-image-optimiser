@@ -40,7 +40,7 @@ class AjaxController
       $bulkSecret = $cacheControl->getItem('bulk-secret');
 
       $secretKey = $bulkSecret->getValue();
-      if (is_null($secretKey) || strlen($secretKey) == 0)
+      if (is_null($secretKey) || strlen($secretKey) == 0 || $secretKey === 'null')
       {
         $secretKey = false;
       }

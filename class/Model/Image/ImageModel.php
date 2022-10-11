@@ -86,7 +86,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
     abstract protected function saveMeta();
     abstract protected function loadMeta();
-    abstract protected function isSizeExcluded();
 
     abstract protected function getImprovements();
    // abstract protected function getOptimizeFileType();
@@ -1008,6 +1007,59 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
       return false;
     }
+
+		protected function isSizeExcluded()
+		{
+			$excludePatterns = \wpSPIO()->settings()->excludePatterns;
+
+			if (! $excludePatterns || ! is_array($excludePatterns) ) // no patterns, nothing excluded
+				return false;
+
+			$bool = false;
+
+			foreach($excludePatterns as $item) {
+					$type = trim($item["type"]);
+					if($type == "size") {
+							//$meta = $meta? $meta : wp_get_attachment_metadata($ID);
+							$width = $this->get('width');
+							$height = $this->get('height');
+
+							if( $width && $height
+									 && $this->isProcessableSize($width, $height, $item["value"]) === false){
+										 $this->processable_status = self::P_EXCLUDE_SIZE;
+										return true; // exit directly because we have our exclusion
+								}
+							else
+									$bool = false; // continue and check all patterns, there might be multiple.
+						}
+			 }
+
+			 return $bool;
+		}
+
+		private function isProcessableSize($width, $height, $excludePattern)
+		{
+
+				$ranges = preg_split("/(x|×|X)/",$excludePattern);
+				$widthBounds = explode("-", $ranges[0]);
+				$minWidth = intval($widthBounds[0]);
+				$maxWidth = (!isset($widthBounds[1])) ? intval($widthBounds[0]) : intval($widthBounds[1]);
+
+				$heightBounds = isset($ranges[1]) ? explode("-", $ranges[1]) : false;
+				$minHeight = $maxHeight = 0;
+				if ($heightBounds)
+				{
+					$minHeight = intval($heightBounds[0]);
+					$maxHeight = (!isset($heightBounds[1])) ? intval($heightBounds[0]) : intval($heightBounds[1]);
+				}
+
+				if(   $width >= $minWidth && $width <= $maxWidth
+					 && ( $heightBounds === false
+							 || ($height >= $minHeight && $height <= $maxHeight) )) {
+						return false;
+				}
+				return true;
+		}
 
     /** Convert Image Meta to A Class */
     protected function toClass()

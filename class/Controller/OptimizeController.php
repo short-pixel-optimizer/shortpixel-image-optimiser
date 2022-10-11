@@ -503,6 +503,9 @@ class OptimizeController
 			// Regardless if it worked or not, requeue the item otherwise it will keep trying to convert due to the flag.
       $imageObj = $fs->getMediaImage($item->item_id);
 
+			// Keep compressiontype from object, set in queue, imageModelToQueue
+			$imageObj->setMeta('compressionType', $item->compressionType);
+
       $this->addItemToQueue($imageObj);
 
       return $item;

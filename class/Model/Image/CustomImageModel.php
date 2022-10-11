@@ -244,12 +244,6 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
        return $return;
     }
 
-    // Placeholder function. I think this functionality was not available before
-    public function isSizeExcluded()
-    {
-        return false;
-    }
-
     public function handleOptimized($optimizeData)
     {
 			 $bool = true;
