@@ -28,6 +28,12 @@ Optimized images mean better user experience, better PageSpeed Insights or GTmet
 
 Make an instant <a href="https://shortpixel.com/image-compression-test" target="_blank">image compression test</a> of your site or <a href="https://shortpixel.com/online-image-compression" target="_blank">compress some images</a> to test our optimization algorithms.
 
+**New! Smart Cropping**
+
+With this new feature, all thumbnails used on your website are not only optimized, but also regenerated to fully display the subject of the image.
+All thumbnails fully display the subject and look consistent as well. The new thumbnails look sharper (and can be slightly bigger) than the ones created by WordPress. Ideal for e-commerce and other websites where the images are paramount to selling the products or to support the content. See <a href="https://shortpixel.com/knowledge-base/article/182-what-is-smart-cropping" target="_blank">an example</a>.
+
+
 **Why is ShortPixel the best choice when it comes to image optimization or PDF compression?**
 
 * popular plugin with over 300,000 active installations - according to WordPress
@@ -35,6 +41,7 @@ Make an instant <a href="https://shortpixel.com/image-compression-test" target="
 * option to convert any JPEG, PNG or GIF (even animated ones!) to **WebP** and **AVIF** for more Google love. <a href="https://shortpixel.com/blog/how-webp-images-can-speed-up-your-site/" target="_blank">How to enable WebP?</a>. <a href="https://shortpixel.com/blog/what-is-avif-and-why-is-it-good/" target="_blank">What is AVIF and why is it good?</a>.
 * **New!:** full <a href="https://shortpixel.com/knowledge-base/article/537-wp-cli-support-for-shortpixel-image-optimizer" target="_blank">WP-CLI support</a> for background processing, useful especially for websites with a very large Media Library
 * **New!:** Easily add <a href="https://shortpixel.com/knowledge-base/article/543-how-to-schedule-a-cron-event-to-run-shortpixel-image-optimizer" target="_blank">recurrent cron jobs</a> for background optimization. Useful if you have users uploading images via the front end of your website
+* **New!:** Smart Cropping. Generate subject-centered thumbnails using ShortPixel's AI engine 
 * option to automatically convert PNG to JPG if that will result in smaller images. Ideal for large images in PNG format
 * option to include the next generation images (WebP and AVIF) into the front-end pages by using the `<picture>` tag instead of `<img>`, independent from generating them through the plugin
 * compatible with WP Retina 2x - all **retina images** are automatically compressed. <a href="https://shortpixel.com/blog/how-to-use-optimized-retina-images-on-your-wordpress-site-for-best-user-experience-on-apple-devices/" target="_blank">How to benefit from Retina displays?</a>
