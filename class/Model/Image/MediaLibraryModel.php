@@ -537,10 +537,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           $result = $thumbnail->handleOptimized($resultObj);
 
 				 // Always update the WP meta - except for unlisted files.
+				 Log::addTemp('Check for adding WPMETA', $thumbnail->getMetaObj());
 				 if ($thumbnail->get('imageType') == self::IMAGE_TYPE_THUMB && $thumbnail->getMeta('file') === null)
 				 {
 
 						 $size = $thumbnail->get('size');
+						 Log::addTemp('Setting data for size : ' . $size);
 						 if ($thumbnail->getMeta('resize') == true)
 						 {
 									$wpmeta['sizes'][$size]['width'] = $thumbnail->get('width');

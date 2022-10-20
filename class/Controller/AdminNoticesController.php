@@ -36,6 +36,7 @@ class AdminNoticesController extends \ShortPixel\Controller
     const MSG_NO_APIKEY_REPEAT_LONG = 'ApiNotice302'; // Last Repeat.
 
     const MSG_INTEGRATION_NGGALLERY = 'IntNotice400';
+		const MSG_FEATURE_SMARTCROP = 'FeaNotice100';
 
 		const MSG_CONVERT_LEGACY = 'LegNotice100';
 
@@ -193,6 +194,8 @@ class AdminNoticesController extends \ShortPixel\Controller
     protected function doIntegrationNotices()
     {
         $settings= \wpSPIO()->settings();
+				$noticeController = Notices::getInstance();
+
         if (! \wpSPIO()->settings()->verifiedKey)
         {
           return; // no key, no integrations.
@@ -205,6 +208,26 @@ class AdminNoticesController extends \ShortPixel\Controller
             $notice = Notices::addNormal($message);
             Notices::makePersistent($notice, self::MSG_INTEGRATION_NGGALLERY, YEAR_IN_SECONDS);
         }
+
+				$smartcropNotice = $noticeController->getNoticeByID(self::MSG_FEATURE_SMARTCROP);
+				if ($smartcropNotice === false || $smartcropNotice->isDismissed() === false)
+				{
+					 $link = 'https://shortpixel.com/knowledge-base/article/182-what-is-smart-cropping';
+					 $link2 = 'https://shortpixel.com/blog/how-to-smart-crop-wordpress-images/#how-to-crop-wordpress-images-automatically-smart-solution';
+					 $link3 = esc_url(admin_url('options-general.php?page=wp-shortpixel-settings'));
+
+					 $message = sprintf(__('%s With ShortPixel you can now %ssmartly crop%s the thumbnails on your website. This is especially useful for eCommerce websites %s(read more)%s. %s %s Activate the option in the %sShortPixel Settings%s page. %s', 'shortpixel-image-optimiser'),
+					  '<p>' ,
+					 	'<a href="' . $link . '" target="_blank">', '</a>',
+						'<a href="' . $link2 . '" target="_blank">', '</a>',
+						'</p>', '<p>',
+ 						'<a href="' . $link3 . '" >', '</a>',
+						'</p>',
+					);
+					$notice = Notices::addNormal($message);
+					Notices::makePersistent($notice, self::MSG_FEATURE_SMARTCROP, YEAR_IN_SECONDS);
+				}
+
 
     }
 
