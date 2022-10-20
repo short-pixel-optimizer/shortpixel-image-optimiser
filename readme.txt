@@ -2,9 +2,9 @@
 Contributors: ShortPixel
 Tags: convert webp, optimize images, image optimization, resize, compressor, image, avif, compression, optimize, image optimiser, image compression, compress pdf, compress jpg, compress png, performance, photography, smush, scale, pictures
 Requires at least: 4.8.0
-Tested up to: 6.0
+Tested up to: 6.1
 Requires PHP: 5.6
-Stable tag: 5.0.9
+Stable tag: 5.1.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -347,6 +347,23 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 5.1.0 =
+Release date October 20th, 2022
+* New: added SmartCropping, especially useful for eCommerce sites;
+* New: if the WebP/AVIF files are larger than the JPG/PNG/GIF version, they are no longer generated to ensure that the smallest file is always delivered;
+* Fix: various DB-related settings were adjusted for files with very long names and to keep AVIF/WebP optimization data correct;
+* Fix: bulk processing history was lost when deleting the plugin;
+* Fix: the file name in the bulk preview was added back;
+* Fix: various situations and edge cases with WPML are now fixed;
+* Fix: when a Custom Media item was excluded, there was no clear message next to it;
+* Fix: added a check to prevent re-optimization when using bulk actions in the Media Library;
+* Fix: the deactivation pop-up is also displayed in a multisite environment;
+* Fix: minor wording and CSS fixes in the plugin settings and notifications;
+* Fix: if there are still images to optimize and/or generate, all of them are counted and displayed correctly in the Media Library;
+* Tweak: added check of necessary GD library functions to use PNG to JPG conversion;
+* Compat: in some very special cases an error was triggered when the YITH Watermark Premium plugin was enabled;
+* Language: 20 new strings added, 2 updated, 1 fuzzed, and 2 deprecated.
 
 = 5.0.9 =
 Release date August 29th, 2022
