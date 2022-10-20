@@ -222,7 +222,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 						'<a href="' . $link2 . '" target="_blank">', '</a>',
 						'</p>', '<p>',
  						'<a href="' . $link3 . '" >', '</a>',
-						'</p>',
+						'</p>'
 					);
 					$notice = Notices::addNormal($message);
 					Notices::makePersistent($notice, self::MSG_FEATURE_SMARTCROP, YEAR_IN_SECONDS);
