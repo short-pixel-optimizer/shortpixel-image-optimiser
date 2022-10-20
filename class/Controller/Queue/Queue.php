@@ -347,6 +347,8 @@ abstract class Queue
 
 			$customData = $this->getStatus('custom_data');
 
+
+
       $stats->total = $stats->in_queue + $stats->fatal_errors + $stats->errors + $stats->done + $stats->in_process;
       if ($stats->total > 0)
 			{

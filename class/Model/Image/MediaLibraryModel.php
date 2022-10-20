@@ -537,12 +537,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           $result = $thumbnail->handleOptimized($resultObj);
 
 				 // Always update the WP meta - except for unlisted files.
-				 Log::addTemp('Check for adding WPMETA', $thumbnail->getMetaObj());
 				 if ($thumbnail->get('imageType') == self::IMAGE_TYPE_THUMB && $thumbnail->getMeta('file') === null)
 				 {
 
 						 $size = $thumbnail->get('size');
-						 Log::addTemp('Setting data for size : ' . $size);
 						 if ($thumbnail->getMeta('resize') == true)
 						 {
 									$wpmeta['sizes'][$size]['width'] = $thumbnail->get('width');
@@ -1550,8 +1548,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
   /** Removed the current attachment, with hopefully removing everything we set.
   */
-  public function restore()
+  public function restore($args = array())
   {
+		$defaults = array(
+			'keep_in_queue' => false, // used for bulk restore.
+		);
+
+		$args = wp_parse_args($args, $defaults);
 
     $fs = \wpSPIO()->filesystem();
 
@@ -1703,7 +1706,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           $this->saveMeta(); // Save if something is not restored.
 				}
 
-				$this->dropFromQueue();
+				if ($args['keep_in_queue'] === false)
+				{
+					$this->dropFromQueue();
+				}
+
 				update_post_meta($this->get('id'), '_wp_attachment_metadata', $wpmeta);
 
 
