@@ -126,6 +126,13 @@ class OptimizeController
           $json->result->is_done = true;
           $json->result->fileStatus = ImageModel::FILE_STATUS_ERROR;
         }
+				elseif($queue->isDuplicateActive($mediaItem))
+				{
+					$json->result->fileStatus = ImageModel::FILE_STATUS_UNPROCESSED;
+					$json->result->is_error = false;
+					$json->result->is_done = true;
+					$json->result->message = __('A duplicate of this item is already active in queue. ', 'shortpixel-image-optimiser');
+				}
         else
         {
           $result = $queue->addSingleItem($mediaItem); // 1 if ok, 0 if not found, false is not processable
@@ -272,8 +279,11 @@ class OptimizeController
 
       if ($json->status == 1) // successfull restore.
       {
+					$fs = \wpSPIO()->filesystem();
+					$fs->flushImageCache();
+
           // Hard reload since metadata probably removed / changed but still loaded, which might enqueue wrong files.
-            $mediaItem = \wpSPIO()->filesystem()->getImage($mediaItem->get('id'), $mediaItem->get('type'));
+            $mediaItem = $fs->getImage($mediaItem->get('id'), $mediaItem->get('type'));
 
             $mediaItem->setMeta('compressionType', $compressionType);
             $json = $this->addItemToQueue($mediaItem);
@@ -287,7 +297,6 @@ class OptimizeController
     /** Returns the state of the queue so the startup JS can decide if something is going on and what.  **/
     public function getStartupData()
     {
-
         $mediaQ = $this->getQueue('media');
         $customQ = $this->getQueue('custom');
 
@@ -303,7 +312,6 @@ class OptimizeController
 				$data = $this->numberFormatStats($data);
 
         return $data;
-
     }
 
 
@@ -424,7 +432,11 @@ class OptimizeController
 			$qtype = strtolower($qtype);
 
 			$imageObj = $fs->getImage($item->item_id, $qtype);
+			if (is_object($imageObj))
+			{
+				ResponseController::addData($item->item_id, 'fileName', $imageObj->getFileName());
 
+			}
 			// @todo Figure out why this isn't just on action regime as well.
 			if (property_exists($item, 'png2jpg'))
 			{
@@ -444,7 +456,8 @@ class OptimizeController
            switch($item->action)
            {
               case 'restore';
-                 $imageObj->restore();
+//							 Log::addError('Restore tick is off in sendToProcessing!');
+                 $imageObj->restore(array('keep_in_queue' => true));
               break;
               case 'migrate':
 									$imageObj->migrate(); // hard migrate in bulk, to check if all is there / resync on problems.
@@ -490,6 +503,10 @@ class OptimizeController
 
 			// Regardless if it worked or not, requeue the item otherwise it will keep trying to convert due to the flag.
       $imageObj = $fs->getMediaImage($item->item_id);
+
+			// Keep compressiontype from object, set in queue, imageModelToQueue
+			$imageObj->setMeta('compressionType', $item->compressionType);
+
       $this->addItemToQueue($imageObj);
 
       return $item;
@@ -564,19 +581,14 @@ class OptimizeController
 					);
 					ResponseController::addData($item->item_id, $response);
 
-
           if ($result->is_done )
           {
              $q->itemFailed($item, true);
              $this->HandleItemError($item, $qtype);
 
 						 ResponseController::addData($item->item_id, 'is_done', true);
-
           }
-          else
-          {
 
-          }
       }
       elseif ($result->is_done)
       {
@@ -590,8 +602,6 @@ class OptimizeController
              $imageItem->setMeta('compressionType', $item->compressionType);
            }
 
-           	Log::addDebug('*** HandleAPIResult: Handle Optimized ** ', array_keys($result->files) );
-
 					 if (count($result->files) > 0 )
            {
 						 	// Dump Stats, Dump Quota. Refresh
@@ -600,6 +610,9 @@ class OptimizeController
 
               $optimizeResult = $imageItem->handleOptimized($result->files); // returns boolean or null
               $item->result->improvements = $imageItem->getImprovements();
+
+
+
 
               if ($optimizeResult)
               {
@@ -672,7 +685,7 @@ class OptimizeController
          {
            if ($imageItem->isProcessable() && $result->apiStatus !== ApiController::STATUS_NOT_API)
            {
-              Log::addDebug('Item with ID' . $imageItem->item_id . ' still has processables (with dump)');
+              Log::addDebug('Item with ID' . $imageItem->item_id . ' still has processables (with dump)', $imageItem->getOptimizeUrls());
  						  $api = $this->getAPI();
 							$newItem = new \stdClass;
 							$newItem->urls = $imageItem->getOptimizeUrls();
@@ -731,6 +744,13 @@ class OptimizeController
             //  $q->itemFailed($item, false); // register as failed, retry in x time, q checks timeouts
           }
       }
+
+			// Not relevant for further returning.
+			if (property_exists($item, 'paramlist'))
+				 unset($item->paramlist);
+
+			if (property_exists($item, 'returndatalist'))
+				 unset($item->returndatalist);
 
 			// Cleaning up the debugger.
 			$debugItem = clone $item;

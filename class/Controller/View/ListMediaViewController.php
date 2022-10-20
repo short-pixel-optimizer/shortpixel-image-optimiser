@@ -78,18 +78,30 @@ class ListMediaViewController extends \ShortPixel\ViewController
 		 foreach($items as $item_id)
 		 {
 			 	 $mediaItem = $fs->getMediaImage($item_id);
+
 			   switch($plugin_action)
 				 {
 					 	case 'optimize':
-							 $res = $optimizeController->addItemToQueue($mediaItem);
+							 if ($mediaItem->isProcessable())
+							 	$res = $optimizeController->addItemToQueue($mediaItem);
 						break;
 						case 'glossy':
 						case 'lossy':
 						case 'lossless':
-							 	$res = $optimizeController->reOptimizeItem($mediaItem, $targetCompressionType);
+								if ($mediaItem->isOptimized() && $mediaItem->getMeta('compressionType') == $targetCompressionType  )
+								{
+									// do nothing if already done w/ this compression.
+								}
+								elseif(! $mediaItem->isOptimized())
+								{
+									$res = $optimizeController->addItemToQueue($mediaItem);
+								}
+								else
+							 		$res = $optimizeController->reOptimizeItem($mediaItem, $targetCompressionType);
 						break;
 						case 'restore';
-								$res = $optimizeController->restoreItem($mediaItem);
+								if ($mediaItem->isOptimized())
+									$res = $optimizeController->restoreItem($mediaItem);
 						break;
 				 }
 

@@ -111,6 +111,11 @@ class BulkViewController extends \ShortPixel\ViewController
 				if (is_numeric($value))
 			  	$approx->media->$item = max($value, 0);
 		}
+		foreach($approx->total as $item => $value)
+		{
+				if (is_numeric($value))
+					$approx->total->$item = max($value, 0);
+		}
     return $approx;
 
   }

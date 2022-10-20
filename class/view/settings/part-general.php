@@ -149,6 +149,28 @@ namespace ShortPixel;
                 </td>
             </tr>
 
+						<tr>
+                <th scope="row"><?php esc_html_e('Enable SmartCrop:','shortpixel-image-optimiser');?></th>
+                <td>
+
+										<div class='switch_button'>
+										 <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/182-what-is-smart-cropping"></span></div>
+				              <label>
+				                <input type="checkbox" class="switch" name="useSmartcrop" value="1" <?php checked($view->data->useSmartcrop, '1');?>>
+				                <div class="the_switch">&nbsp; </div>
+												<?php printf(esc_html__('Enable %s Smartcropping %s option.','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
+									    </label>
+				            </div>
+
+                    <p class="settings-info">
+                        <?php printf(esc_html__('Generate subject-centered thumbnails using ShortPixel\'s AI engine (%sexample%s). The new thumbnails look sharper (and can be slightly bigger) than the ones created by WordPress. Ideal for e-commerce websites and blogs where the images sell the products/content.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/182-what-is-smart-cropping" target="_blank">', '</a>'); ?>
+                    </p>
+
+                </td>
+            </tr>
+
+
+
             <tr>
                 <th scope="row"><?php esc_html_e('Backup','shortpixel-image-optimiser');?></th>
                 <td>

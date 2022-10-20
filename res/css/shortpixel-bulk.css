@@ -820,19 +820,21 @@
 }
 .shortpixel-bulk-wrapper section.panel.process .image-preview-section .image-preview-line, .shortpixel-bulk-wrapper section.panel.finished .image-preview-section .image-preview-line {
   display: flex;
-  width: 90%;
+  width: 100%;
   justify-content: space-between;
   align-items: center;
-  margin: 15px auto;
 }
 .shortpixel-bulk-wrapper section.panel.process .image-preview-section .image-preview-line [data-result=filename], .shortpixel-bulk-wrapper section.panel.finished .image-preview-section .image-preview-line [data-result=filename] {
   overflow: hidden;
   font-weight: 700;
+  margin-top: -12px;
 }
 .shortpixel-bulk-wrapper section.panel.process .image-preview-section .image-preview-line .opt-circle-image, .shortpixel-bulk-wrapper section.panel.finished .image-preview-section .image-preview-line .opt-circle-image {
   width: 55px;
   height: 55px;
   float: right;
+  margin-top: 12px;
+  margin-right: 5%;
 }
 .shortpixel-bulk-wrapper section.panel.process .image-preview-section .image-preview-line .opt-circle-image .trail, .shortpixel-bulk-wrapper section.panel.finished .image-preview-section .image-preview-line .opt-circle-image .trail {
   stroke: #ddd;

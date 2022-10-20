@@ -98,8 +98,6 @@ class ShortPixelPng2Jpg {
 							  return true;
              } // success
 
-
-
           } // result.
 					else
 					{
@@ -406,6 +404,8 @@ class ShortPixelPng2Jpg {
         $newFile = $params['file'];
         $attach_id = $imageObj->get('id');
 
+				$WPMLduplicates = $imageObj->getWPMLDuplicates();
+
 				// This action prevents images from being regenerated on the thumbnail hook.
 			  	do_action('shortpixel-thumbnails-before-regenerate', $attach_id );
 
@@ -446,6 +446,19 @@ class ShortPixelPng2Jpg {
         Log::addDebug('Png2Jpg New Metadata' . $attach_id, $new_metadata);
 		//		wp_update_post(array('ID' => $attach_id, 'post_mime_type' => 'image/jpeg' ));
         $bool = wp_update_attachment_metadata($attach_id, $new_metadata);
+
+
+				if (is_array($WPMLduplicates) && count($WPMLduplicates) > 0)
+				{
+					 foreach ($WPMLduplicates as $duplicate_id)
+					 {
+						  update_attached_file($duplicate_id, $newFile->getFullPath() );
+							wp_update_attachment_metadata($duplicate_id, $new_metadata);
+
+							$post_ar["ID"]  = $duplicate_id;
+							wp_update_post($post_ar);
+					 }
+				}
 
         return $new_metadata;
 

@@ -40,7 +40,7 @@ class AjaxController
       $bulkSecret = $cacheControl->getItem('bulk-secret');
 
       $secretKey = $bulkSecret->getValue();
-      if (is_null($secretKey) || strlen($secretKey) == 0)
+      if (is_null($secretKey) || strlen($secretKey) == 0 || $secretKey === 'null')
       {
         $secretKey = false;
       }
@@ -150,12 +150,10 @@ class AjaxController
           $this->send($json);
     }
 
-
     public function ajax_processQueue()
     {
         $this->checkNonce('processing');
         $this->checkProcessorKey();
-
 
         // Notice that POST variables are always string, so 'true', not true.
 				// phpcs:ignore -- Nonce is checked
@@ -171,8 +169,6 @@ class AjaxController
 
         $this->send($result);
     }
-
-
 
     public function ajaxRequest()
     {
@@ -265,7 +261,6 @@ class AjaxController
     public function getMediaItem($id, $type)
     {
       $fs = \wpSPIO()->filesystem();
-
       return $fs->getImage($id, $type);
 
     }
@@ -329,6 +324,7 @@ class AjaxController
       $control = new OptimizeController();
 
       $json->$type = $control->restoreItem($mediaItem);
+
 
       return $json;
     }

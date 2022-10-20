@@ -155,7 +155,7 @@ class DirectoryModel extends \ShortPixel\Model
   */
   public function getRelativePath()
   {
-		// not used anywhere in directory. 
+		// not used anywhere in directory.
     // $upload_dir = wp_upload_dir(null, false);
 
      $install_dir = get_home_path();
@@ -399,7 +399,6 @@ class DirectoryModel extends \ShortPixel\Model
   */
   public function getSubDirectories()
   {
-    $fs = \wpSPIO()->fileSystem();
 
     if (! $this->exists() || ! $this->is_readable())
     {

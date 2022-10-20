@@ -26,6 +26,7 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         'verifiedKey' => array('key' => 'wp-short-pixel-verifiedKey', 'default' => false, 'group' => 'options'),
         'compressionType' => array('key' => 'wp-short-pixel-compression', 'default' => 1, 'group' => 'options'),
         'processThumbnails' => array('key' => 'wp-short-process_thumbnails', 'default' => 1, 'group' => 'options'),
+				'useSmartcrop' => array('key' => 'wpspio-usesmartcrop', 'default' => 0, 'group' => 'options'),
         'keepExif' => array('key' => 'wp-short-pixel-keep-exif', 'default' => 0, 'group' => 'options'),
         'CMYKtoRGBconversion' => array('key' => 'wp-short-pixel_cmyk2rgb', 'default' => 1, 'group' => 'options'),
         'createWebp' => array('key' => 'wp-short-create-webp', 'default' => null, 'group' => 'options'),
@@ -121,6 +122,7 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         'resizeWidth' => array('s' => 'int'), // int
         'resizeHeight' => array('s' => 'int'), // int
         'processThumbnails' => array('s' => 'boolean'), // checkbox
+				'useSmartcrop' => array('s' => 'boolean'),
         'backupImages' => array('s' => 'boolean'), // checkbox
         'keepExif' => array('s' => 'int'), // checkbox
         'resizeImages' => array('s' => 'boolean'),
@@ -193,8 +195,10 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         delete_option( 'wp-short-pixel-current-total-files');
 				delete_option('wp-short-pixel-remove-settings-on-delete-plugin');
 
-        delete_option(self::$_optionsMap['removeSettingsOnDeletePlugin']['key']);
-
+				if (isset(self::$_optionsMap['removeSettingsOnDeletePlugin']) && isset(self::$_optionsMap['removeSettingsOnDeletePlugin']['key']))
+				{
+        	delete_option(self::$_optionsMap['removeSettingsOnDeletePlugin']['key']);
+				}
         // Dismissed now via Notices Controller.
       /*  $dismissed = get_option('wp-short-pixel-dismissed-notices', array());
         if(isset($dismissed['compat'])) {

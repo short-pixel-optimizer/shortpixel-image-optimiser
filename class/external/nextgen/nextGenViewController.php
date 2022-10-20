@@ -35,6 +35,8 @@ class NextGenViewController extends \ShortPixel\ViewController
 
 		 	 wp_enqueue_style('dashicons');
 			 $this->loadView('snippets/part-comparer');
+
+
        return __('ShortPixel Compression','shortpixel-image-optimiser');
    }
 

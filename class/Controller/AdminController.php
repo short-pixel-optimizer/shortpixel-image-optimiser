@@ -44,7 +44,16 @@ class AdminController extends \ShortPixel\Controller
 					 return $meta;
 				}
 
-        $mediaItem = \wpSPIO()->filesystem()->getImage($id, 'media');
+// todo add check here for mediaitem
+			  $fs = \wpSPIO()->filesystem();
+				$fs->flushImageCache(); // it's possible file just changed by external plugin.
+        $mediaItem = $fs->getImage($id, 'media');
+
+				if ($mediaItem === false)
+				{
+					 Log::addError('Handle Image Upload Hook triggered, by error in image :' . $id );
+					 return $meta;
+				}
 
 				if ($mediaItem->getExtension()  == 'pdf')
 				{
@@ -60,6 +69,9 @@ class AdminController extends \ShortPixel\Controller
 				{
         	$control = new OptimizeController();
         	$control->addItemToQueue($mediaItem);
+				}
+				else {
+					Log::addWarn('Passed mediaItem is not processable', $mediaItem);
 				}
         return $meta; // It's a filter, otherwise no thumbs
     }

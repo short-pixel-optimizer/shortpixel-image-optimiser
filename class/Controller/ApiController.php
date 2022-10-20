@@ -15,8 +15,11 @@ class ApiController
     const STATUS_SKIP = -4;
     const STATUS_NOT_FOUND = -5;
     const STATUS_NO_KEY = -6;
-    const STATUS_RETRY = -7;
-    const STATUS_SEARCHING = -8; // when the Queue is looping over images, but in batch none were   found.
+   // const STATUS_RETRY = -7;
+   // const STATUS_SEARCHING = -8; // when the Queue is looping over images, but in batch none were   found.
+	 const STATUS_OPTIMIZED_BIGGER = -9;
+
+
     const STATUS_QUEUE_FULL = -404;
     const STATUS_MAINTENANCE = -500;
 		const STATUS_CONNECTION_ERROR = -503; // Not official, error connection in WP.
@@ -66,7 +69,12 @@ class ApiController
   */
   public function processMediaItem($item, $imageObj)
   {
-		 	if (! $imageObj->isProcessable() || $imageObj->isOptimizePrevented() == true)
+		 	if (! is_object($imageObj))
+			{
+				$item->result = $this->returnFailure(self::STATUS_FAIL, __('Item seems invalid, removed or corrupted.', 'shortpixel-image-optimiser'));
+				return $item;
+			}
+		 	elseif (! $imageObj->isProcessable() || $imageObj->isOptimizePrevented() == true)
 			{
 					if ($imageObj->isOptimized())
 					{
@@ -92,6 +100,9 @@ class ApiController
       $requestArgs['item_id'] = $item->item_id;
       $requestArgs['refresh'] = (property_exists($item, 'refresh') && $item->refresh) ? true : false;
       $requestArgs['flags'] = (property_exists($item, 'flags')) ? $item->flags : array();
+
+			$requestArgs['paramlist']  = property_exists($item, 'paramlist') ? $item->paramlist : null;
+			$requestArgs['returndatalist']  = property_exists($item, 'returndatalist') ? $item->returndatalist : null;
 
       $request = $this->getRequest($requestArgs);
       $item = $this->doRequest($item, $request);
@@ -146,6 +157,8 @@ class ApiController
 
     $defaults = array(
           'urls' => null,
+					'paramlist' => null,
+					'returndatalist' => null,
           'compressionType' => $settings->compressionType,
           'blocking' => true,
           'item_id' => null,
@@ -169,6 +182,16 @@ class ApiController
         'urllist' => $args['urls'],
     );
 
+		if (! is_null($args['paramlist']))
+		{
+			 $requestParameters['paramlist'] = $args['paramlist'];
+		}
+
+		if (! is_null($args['returndatalist']))
+		{
+			 $requestParameters['returndatalist'] = $args['returndatalist'];
+		}
+
 
     if(/*false &&*/ $settings->downloadArchive == self::DOWNLOAD_ARCHIVE && class_exists('PharData')) {
         $requestParameters['group'] = $args['item_id'];
@@ -178,6 +201,7 @@ class ApiController
     }
 
 		$requestParameters = apply_filters('shortpixel/api/request', $requestParameters, $args['item_id']);
+
 
     $arguments = array(
         'method' => 'POST',
@@ -206,8 +230,11 @@ class ApiController
 	*/
   protected function doRequest($item, $requestParameters )
   {
+
+
     $response = wp_remote_post($this->apiEndPoint, $requestParameters );
     Log::addDebug('ShortPixel API Request sent', $requestParameters['body']);
+
 
 
     //only if $Blocking is true analyze the response
@@ -255,6 +282,7 @@ class ApiController
   private function parseResponse($response)
   {
     $data = $response['body'];
+
     $data = json_decode($data);
     return (array)$data;
   }
@@ -278,6 +306,42 @@ class ApiController
 		{
 			$status = $APIresponse[0]->Status;
 		}
+		elseif ( is_array($APIresponse)) // This is a workaround for some obscure PHP 5.6 bug. @todo Remove when dropping support PHP < 7.
+		{
+			 foreach($APIresponse as $key => $data)
+			 {
+				 // Running the whole array, because handleSuccess enums on key index as well :/
+				  if (property_exists($data, 'Status'))
+					{
+						 if ($status === false)
+						 {
+						 	$status = $data->Status;
+						 }
+						 $APIresponse[$key] = $data; // reset it, so it can read the index.  This should be 0.
+					}
+			 }
+		}
+
+			if (isset($APIresponse['returndatalist']))
+			{
+				$returnDataList = (array) $APIresponse['returndatalist'];
+				if (isset($returnDataList['sizes']) && is_object($returnDataList['sizes']))
+					$returnDataList['sizes'] = (array) $returnDataList['sizes'];
+
+				if (isset($returnDataList['doubles']) && is_object($returnDataList['doubles']))
+						$returnDataList['doubles'] = (array) $returnDataList['doubles'];
+
+				if (isset($returnDataList['duplicates']) && is_object($returnDataList['duplicates']))
+							$returnDataList['duplicates'] = (array) $returnDataList['duplicates'];
+
+				if (isset($returnDataList['fileSizes']) && is_object($returnDataList['fileSizes']))
+										$returnDataList['fileSizes'] = (array) $returnDataList['fileSizes'];
+
+				unset($APIresponse['returndatalist']);
+			}
+			else {
+				$returnDataList = array();
+			}
 
     // This is only set if something is up, otherwise, ApiResponse returns array
     if (is_object($status))
@@ -368,7 +432,7 @@ class ApiController
         case self::STATUS_SUCCESS:
 
             //handle image has been processed
-            return $this->handleSuccess($item, $APIresponse);
+            return $this->handleSuccess($item, $APIresponse, $returnDataList);
         default:
 
 						// Theoretically this should not be needed.
@@ -420,9 +484,10 @@ class ApiController
   * @param Object $response The API Response with opt. info.
   * @return ObjectArray $results The Result of the optimization
   */
-  private function handleSuccess($item, $response)
+  private function handleSuccess($item, $response, $returnDataList)
   {
       Log::addDebug('ShortPixel API : Handling Success!', $response);
+
       $settings = \wpSPIO()->settings();
       $fs = \wpSPIO()->fileSystem();
 
@@ -437,20 +502,42 @@ class ApiController
           $fileSize = "LosslessSize";
       }
       $webpType = "WebP" . $fileType;
-      $avifType = "AVIF" . $fileType;
+			$webpTypeSize = 'WebP' . $fileSize;
 
+      $avifType = "AVIF" . $fileType;
+			$avifTypeSize = "AVIF" .  $fileSize;
+
+			$dataList = $returnDataList['sizes']; // sizes have all images that should be downloaded
+			$dataListKeys = array_keys($dataList); // The imageThumbnail Name
+			$dataListValues = array_values($dataList); // The FileName.
+
+			$dataListFileSizes = array();
+			if (isset($returnDataList['fileSizes']))
+			{
+				$dataListFileSizes = $returnDataList['fileSizes'];
+			}
 
       $tempFiles = $responseFiles = $results = array();
 
+
       //download each file from array and process it
-      foreach ($response as $fileData )
+      for ($i = 0; $i < count($response); $i++ )
       {
+					$fileData = $response[$i];
+					$imageName = $dataListKeys[$i];
+					$fileName = $dataListValues[$i];
+
+					$returnFileSize = isset($dataListFileSizes[$imageName]) ? $dataListFileSizes[$imageName] : null;
+
+
           if(!isset($fileData->Status)) continue; //if optimized images archive is activated, last entry of APIResponse if the Archive data.
 
           //file was processed OK
           if ($fileData->Status->Code == self::STATUS_SUCCESS )
           {
-                $downloadResult = $this->handleDownload($fileData->$fileType, $fileData->$fileSize, $fileData->OriginalSize
+
+								$OriginalFileSize = (! is_null($returnFileSize)) ? $returnFileSize : $fileData->OriginalSize;
+                $downloadResult = $this->handleDownload($fileData->$fileType, $fileData->$fileSize, $OriginalFileSize
                 );
                 $archive = false;
 
@@ -458,10 +545,19 @@ class ApiController
               * @todo Write Unit Test for Status_unchanged
               * But it should still be regarded as File Done. This can happen on very small file ( 6pxX6px ) which will not optimize.
               */
-              if ($downloadResult->apiStatus == self::STATUS_SUCCESS || $downloadResult->apiStatus == self::STATUS_UNCHANGED )
+              if ($downloadResult->apiStatus == self::STATUS_SUCCESS || $downloadResult->apiStatus == self::STATUS_UNCHANGED || $downloadResult->apiStatus == self::STATUS_OPTIMIZED_BIGGER )
               {
                   // Removes any query ?strings and returns just filename of originalURL
                   $originalURL = $fileData->OriginalURL;
+
+									// If the optimized result is bigger, it won'ty be replaced.  Check the webp / avif files against original FileSize.
+									if ( $downloadResult->apiStatus === self::STATUS_OPTIMIZED_BIGGER)
+									{
+										$checkFileSize = $OriginalFileSize;
+									}
+									else {
+										$checkFileSize = $fileData->$fileSize;
+									}
 
                   if (strpos($fileData->OriginalURL, '?') !== false)
                   {
@@ -473,38 +569,50 @@ class ApiController
 
                   // Put it in Results.
                   $originalName = $originalFile->getFileName();
-                  $results[$originalName] = $downloadResult;
+									$results[$imageName] = array('img' => $downloadResult,
+																							 'debug-fileName' => $fileName); // This fileName is only for debugging purposes, should not be used.
+//                  $results[$originalName] = $downloadResult;
 
                   // Handle Stats
-                  $savedSpace += $fileData->OriginalSize - $fileData->$fileSize;
-                  $originalSpace += $fileData->OriginalSize;
+                  $savedSpace += $OriginalFileSize - $fileData->$fileSize;
+                  $originalSpace += $OriginalFileSize;
                   $optimizedSpace += $fileData->$fileSize;
                   $fileCount++;
 
                   // ** Download Webp files if they are returned **/
                   if (isset($fileData->$webpType) && $fileData->$webpType != 'NA')
                   {
-                    $webpName = $originalFile->getFileBase() . '.webp'; //basename(parse_url($fileData->$webpType, PHP_URL_PATH));
+                    $webpName = $originalFile->getFileBase() . '.webp';
+										$webpDownloadResult = false;
 
-                    if($archive) { // swallow pride here, or fix this.
+										if ($fileData->$webpTypeSize > $checkFileSize) // if file is bigger.
+										{
+											$results[$imageName]['webp'] = $this->returnOk(self::STATUS_OPTIMIZED_BIGGER, __('Special file type bigger than core file','shortpixel-image-optimiser'));
+										}
+                    elseif($archive) { // swallow pride here, or fix this.
                         $webpDownloadResult = $this->fromArchive($archive['Path'], $fileData->$webpType, false,false);
                     } else {
                         $webpDownloadResult = $this->handleDownload($fileData->$webpType, false, false);
                     }
 
-                    if ( $webpDownloadResult->apiStatus == self::STATUS_SUCCESS)
+                    if ($webpDownloadResult && $webpDownloadResult->apiStatus == self::STATUS_SUCCESS)
                     {
                        Log::addDebug('Downloaded Webp : ' . $fileData->$webpType);
-                       $results[$webpName] = $webpDownloadResult;
+											 $results[$imageName]['webp']  = $webpDownloadResult;
+//                       $results[$webpName] = $webpDownloadResult;
                     }
                   }
 
                   // ** Download Webp files if they are returned **/
                   if (isset($fileData->$avifType) && $fileData->$avifType !== 'NA')
                   {
-                    $avifName = $originalFile->getFileBase() . '.avif'; ;
+                    $avifName = $originalFile->getFileBase() . '.avif';
 
-                    if($archive) { // swallow pride here, or fix this.
+										if ($fileData->$avifTypeSize > $checkFileSize) // if file is bigger.
+										{
+											$results[$imageName]['avif'] = $this->returnOk(self::STATUS_OPTIMIZED_BIGGER, __('Special file type bigger than core file','shortpixel-image-optimiser'));
+										}
+                    elseif($archive) { // swallow pride here, or fix this.
                         $avifDownloadResult = $this->fromArchive($archive['Path'], $fileData->$avifType, false,false);
                     } else {
                         $avifDownloadResult = $this->handleDownload($fileData->$avifType, false, false);
@@ -513,7 +621,9 @@ class ApiController
                     if ( $avifDownloadResult->apiStatus == self::STATUS_SUCCESS)
                     {
                        Log::addDebug('Downloaded Avif : ' . $fileData->$avifType);
-                       $results[$avifName] = $avifDownloadResult;
+
+                       //$results[$avifName] = $avifDownloadResult;
+											 $results[$imageName]['avif']  = $avifDownloadResult;
                     }
                   }
 
@@ -548,9 +658,15 @@ class ApiController
       Log::addDebug("Adding $fileCount files to stats, $originalSpace went to $optimizedSpace ($savedSpace)");
 
       // *******************************
+			$returndata = (isset($response['returndatalist'])) ? $response['returndatalist'] : array();
+			$return = array(
+						'files' => $results,
+						'data' => $returnDataList,
+			);
 
-      return $this->returnSuccess($results, self::STATUS_SUCCESS, false);
+      return $this->returnSuccess($return, self::STATUS_SUCCESS, false);
   }
+
 
   /**
    * handles the download of an optimized image from ShortPixel API
@@ -567,10 +683,15 @@ class ApiController
       //if there is no improvement in size then we do not download this file, except (sigh) when the fileType is heic since it converts.
       if (($optimizedSize !== false && $originalSize !== false) && $originalSize == $optimizedSize && strpos($optimizedUrl, 'heic') === false )
       {
-
 				  Log::addDebug('Optimize and Original size seems the same');
           return $this->returnRetry(self::STATUS_UNCHANGED, __("File wasn't optimized so we do not download it.", 'shortpixel-image-optimiser'));
       }
+			/*elseif (($optimizedSize !== false && $originalSize !== false) && $optimizedSize > $originalSize )
+			{
+					Log::addDebug('Optimized size is bigger than original : Original: ' . $originalSize . ' Optimized: ' . $optimizedSize . ' ( ' . $optimizedUrl . ')' );
+					return $this->returnRetry(self::STATUS_OPTIMIZED_BIGGER, __("Result was bigger so we do not download it.", 'shortpixel-image-optimiser'));
+			} */
+
       $correctFileSize = $optimizedSize;
       $fileURL = $this->setPreferredProtocol(urldecode($optimizedUrl));
 

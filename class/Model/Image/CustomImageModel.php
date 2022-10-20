@@ -3,6 +3,8 @@ namespace ShortPixel\Model\Image;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
 
+use ShortPixel\Controller\ApiController as API;
+
 
 // @todo Custom Model for adding files, instead of meta DAO.
 class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
@@ -55,33 +57,40 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
     }
 
 
-  public function getOptimizePaths()
-    {
-      if (! $this->isProcessable())
-        return array();
-
-       $paths = array();
-
-       if (! $this->image_meta->status == self::FILE_STATUS_SUCCESS)
-            $paths = array($this->getFullPath());
-
-        return $paths;
-    }
-
     public function getOptimizeUrls()
     {
 
-        $fs = \wpSPIO()->filesystem();
+			$data = $this->getOptimizeData();
+			return array_values($data['urls']);
+
+    }
+
+		public function getOptimizeData()
+		{
+				$parameters = array(
+						'urls' => array(),
+						'params' => array(),
+						'returnParams' => array(),
+				);
+
+				$fs = \wpSPIO()->filesystem();
         if ($this->is_virtual())
           $url = $this->getFullPath();
         else
           $url = $this->getURL();
 
-        if ($this->isProcessable(true))
-          return array($url);
+        if ($this->isProcessable(true) || $this->isProcessableAnyFileType())
+				{
+          $parameters['urls'][0] =  $url;
+					$parameters['paths'][0] = $this->getFullPath();
+					$parameters['params'][0] = $this->createParamList();
+					$parameters['returnParams']['sizes'][0] =  $this->getFileName();
+  			}
 
-        return array();
-    }
+
+				return $parameters;
+		}
+
 
 		public function getURL()
 		{
@@ -115,6 +124,12 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
     public function isProcessable($strict = false)
     {
         $bool = parent::isProcessable();
+
+				// The exclude size on the  image - via regex - if fails, prevents the whole thing from optimization.
+				if ($this->processable_status == ImageModel::P_EXCLUDE_SIZE || $this->processable_status == ImageModel::P_EXCLUDE_PATH)
+				{
+					 return $bool;
+				}
 
         if ($bool === false && $strict === false)
         {
@@ -223,33 +238,41 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 				  $return = false;
 			 }
 
+			 $this->dropFromQueue();
 			 do_action('shortpixel/image/after_restore', $this, $this->id, $bool);
 
        return $return;
     }
 
-    // Placeholder function. I think this functionality was not available before
-    public function isSizeExcluded()
-    {
-        return false;
-    }
-
-    public function handleOptimized($downloadResults)
+    public function handleOptimized($optimizeData)
     {
 			 $bool = true;
 
+			 if (isset($optimizeData['files']) && isset($optimizeData['data']))
+ 			{
+ 				 $files = $optimizeData['files'];
+ 				 $data = $optimizeData['data'];
+ 			}
+ 			else {
+ 				Log::addError('Something went wrong with handleOptimized', $optimizeData);
+ 			}
+
+
+
 			 if (! $this->isOptimized() ) // main file might not be contained in results
 			 {
-       		$bool = parent::handleOptimized($downloadResults);
+       		$bool = parent::handleOptimized($files[0]);
 			 }
 
-       $this->handleOptimizedFileType($downloadResults);
+       $this->handleOptimizedFileType($files[0]);
 
        if ($bool)
        {
          $this->setMeta('customImprovement', parent::getImprovement());
          $this->saveMeta();
        }
+
+			 $this->deleteTempFiles($files);
 
        return $bool;
     }
@@ -312,8 +335,31 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         $optimizedDate = \ShortPixelTools::DBtoTimestamp($imagerow->ts_optimized);
         $metaObj->tsOptimized = $optimizedDate;
 
+				$extraInfo = property_exists($imagerow, 'extra_info') ? $imagerow->extra_info : null;
+
+				if (! is_null($extraInfo))
+				{
+					$data = json_decode($extraInfo, true);
+
+					if (isset($data['webpStatus']))
+					{
+						 $this->setMeta('webp', $data['webpStatus']);
+					}
+					if (isset($data['avifStatus']))
+					{
+						 $this->setMeta('avif', $data['avifStatus']);
+					}
+
+
+				}
+
         $this->image_meta = $metaObj;
     }
+
+		public function getParent()
+		{
+			 return false; // no parents here
+		}
 
     /** Load a CustomImageModel as Stub ( to be added ) . Checks if the image is already added as well
 		 *
@@ -403,6 +449,24 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
       $added = new \DateTime();
       $added->setTimeStamp($metaObj->tsAdded);
 
+			$extra_info = array();
+			if ($this->getMeta('webp') === self::FILETYPE_BIGGER)
+			{
+				 $extra_info['webpStatus']  = self::FILETYPE_BIGGER;
+			}
+			if ($this->getMeta('avif') === self::FILETYPE_BIGGER)
+			{
+				 $extra_info['avifStatus']  = self::FILETYPE_BIGGER;
+			}
+
+			if (count($extra_info) > 0)
+			{
+				 $extra_info = json_encode($extra_info);
+			}
+			else {
+				 $extra_info = null;
+			}
+
        $data = array(
             'folder_id' => $this->folder_id,
             'compressed_size' => $metaObj->compressedSize,
@@ -421,6 +485,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
             'path' => $this->getFullPath(),
 						'name' => $this->getFileName(),
             'path_md5' => md5($this->getFullPath()), // this is legacy
+						'extra_info' => $extra_info,
        );
        // The keys are just for readability.
        $format = array(
@@ -441,6 +506,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
             'path' => '%s',
 						'name' => '%s',
             'path_md5' => '%s' , // this is legacy
+						'extra_info' => '%s',
        );
 
 
@@ -518,8 +584,13 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
          $improvements['main'] = array($perc, $size);
          $count++;
       } */
-      $improvements['main'] = array($this->getImprovement(), 0);
-			$improvements['totalpercentage'] = round($this->getImprovement()); // the same.
+			$improvement = $this->getImprovement();
+			if (is_null($improvement)) // getImprovement can return null.
+			{
+				$improvement = 0;
+			}
+      $improvements['main'] = array($improvement, 0);
+			$improvements['totalpercentage'] = round($improvement); // the same.
 
       return $improvements;
 

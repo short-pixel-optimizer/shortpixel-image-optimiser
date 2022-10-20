@@ -39,9 +39,9 @@ Class FileSystemController extends \ShortPixel\Controller
     /** Get MediaLibraryModel for a Post_id
 		* @param int $id
 		*/
-    public function getMediaImage($id)
+    public function getMediaImage($id, $useCache = true)
     {
-				if (isset(self::$mediaItems[$id]))
+				if ($useCache === true && isset(self::$mediaItems[$id]))
 				{
 					 return self::$mediaItems[$id];
 				}
@@ -65,9 +65,9 @@ Class FileSystemController extends \ShortPixel\Controller
 		/**
 		* @param int $id
 		*/
-    public function getCustomImage($id)
+    public function getCustomImage($id, $useCache = true)
     {
-				if (isset(self::$customItems[$id]))
+				if ($useCache === true && isset(self::$customItems[$id]))
 				{
 				 return self::$customItems[$id];
 				}
@@ -82,6 +82,14 @@ Class FileSystemController extends \ShortPixel\Controller
         return $imageObj;
     }
 
+		// Use sporadically, every time an angel o performance dies.
+		// Required for files that change i.e. enable media replace or other filesystem changing operation.
+		public function flushImageCache()
+		{
+					 self::$mediaItems = array();
+					 self::$customItems = array();
+		}
+
     /** Gets a custom Image Model without being in the database. This is used to check if path is a proper customModel path ( not mediaLibrary ) and see if the file should be included per excusion rules */
     public function getCustomStub( $path, $load = true)
     {
@@ -94,15 +102,15 @@ Class FileSystemController extends \ShortPixel\Controller
 		* int $id
 		* string $type
 		*/
-    public function getImage( $id,  $type)
+    public function getImage( $id,  $type, $useCache = true)
     {
 			// False, OptimizeController does a hard check for false.
       $imageObj = false;
 
       if ($type == 'media')
-        $imageObj = $this->getMediaImage($id);
+        $imageObj = $this->getMediaImage($id, $useCache);
       elseif($type == 'custom')
-        $imageObj = $this->getCustomImage($id);
+        $imageObj = $this->getCustomImage($id, $useCache);
       else
         Log::addError('FileSystemController GetImage - no correct type given: ' . $type);
 
@@ -152,7 +160,8 @@ Class FileSystemController extends \ShortPixel\Controller
          $filepath = apply_filters('shortpixel/file/virtual/translate', $filepath, $file);
       }
 
-      if ($filepath !== $file->getFullPath())
+			//  translate can return false if not properly offloaded / not found there.
+      if ($filepath !== $file->getFullPath() && $filepath !== false)
       {
          $file = $this->getFile($filepath);
       }
@@ -393,7 +402,7 @@ Class FileSystemController extends \ShortPixel\Controller
     public function downloadFile($url, $destinationPath)
     {
       $downloadTimeout = max(SHORTPIXEL_MAX_EXECUTION_TIME - 10, 15);
-      $fs = \wpSPIO()->filesystem();
+      $fs = \wpSPIO()->filesystem(); // @todo change this all to $this
     //  $fs = \wpSPIO()->fileSystem();
       $destinationFile = $fs->getFile($destinationPath);
 

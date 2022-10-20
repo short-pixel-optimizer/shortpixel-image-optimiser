@@ -36,6 +36,7 @@ class AdminNoticesController extends \ShortPixel\Controller
     const MSG_NO_APIKEY_REPEAT_LONG = 'ApiNotice302'; // Last Repeat.
 
     const MSG_INTEGRATION_NGGALLERY = 'IntNotice400';
+		const MSG_FEATURE_SMARTCROP = 'FeaNotice100';
 
 		const MSG_CONVERT_LEGACY = 'LegNotice100';
 
@@ -193,6 +194,8 @@ class AdminNoticesController extends \ShortPixel\Controller
     protected function doIntegrationNotices()
     {
         $settings= \wpSPIO()->settings();
+				$noticeController = Notices::getInstance();
+
         if (! \wpSPIO()->settings()->verifiedKey)
         {
           return; // no key, no integrations.
@@ -205,6 +208,26 @@ class AdminNoticesController extends \ShortPixel\Controller
             $notice = Notices::addNormal($message);
             Notices::makePersistent($notice, self::MSG_INTEGRATION_NGGALLERY, YEAR_IN_SECONDS);
         }
+
+				$smartcropNotice = $noticeController->getNoticeByID(self::MSG_FEATURE_SMARTCROP);
+				if ($smartcropNotice === false || $smartcropNotice->isDismissed() === false)
+				{
+					 $link = 'https://shortpixel.com/knowledge-base/article/182-what-is-smart-cropping';
+					 $link2 = 'https://shortpixel.com/blog/how-to-smart-crop-wordpress-images/#how-to-crop-wordpress-images-automatically-smart-solution';
+					 $link3 = esc_url(admin_url('options-general.php?page=wp-shortpixel-settings'));
+
+					 $message = sprintf(__('%s With ShortPixel you can now %ssmartly crop%s the thumbnails on your website. This is especially useful for eCommerce websites %s(read more)%s. %s %s Activate the option in the %sShortPixel Settings%s page. %s', 'shortpixel-image-optimiser'),
+					  '<p>' ,
+					 	'<a href="' . $link . '" target="_blank">', '</a>',
+						'<a href="' . $link2 . '" target="_blank">', '</a>',
+						'</p>', '<p>',
+ 						'<a href="' . $link3 . '" >', '</a>',
+						'</p>',
+					);
+					$notice = Notices::addNormal($message);
+					Notices::makePersistent($notice, self::MSG_FEATURE_SMARTCROP, YEAR_IN_SECONDS);
+				}
+
 
     }
 
@@ -463,7 +486,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 						{
 								// @todo The notice is user-dependent but the notice is dismissed installation-wide.
 
-							  $message = __('You can see ShortPixel Image Optimiser actions and data only via the list view. Switch to the list view to use the plugin via the media library', 'shortpixel-image-optimiser');
+							  $message = sprintf(__('You can see ShortPixel Image Optimiser actions and data only via the list view. Switch to the list view to use the plugin via the media library.  Click to %s switch to the list view %s now. ', 'shortpixel-image-optimiser'), '<a href="' . admin_url('upload.php?mode=list') . '">','</a>');
 								$new_notice = Notices::addNormal($message);
 								Notices::makePersistent($new_notice, self::MSG_LISTVIEW_ACTIVE, YEAR_IN_SECONDS);
 						}
@@ -508,8 +531,7 @@ class AdminNoticesController extends \ShortPixel\Controller
       $message = "<p>" . __('In order to start the optimization process, you need to validate your API Key in the '
               . '<a href="options-general.php?page=wp-shortpixel-settings">ShortPixel Settings</a> page in your WordPress Admin.','shortpixel-image-optimiser') . "
       </p>
-      <p>" .  __('If you don’t have an API Key, you can get one delivered to your inbox, for free.','shortpixel-image-optimiser') . "</p>
-      <p>" .  __('Please <a href="https://shortpixel.com/wp-apikey" target="_blank">sign up to get your API key.</a>','shortpixel-image-optimiser') . "</p>";
+      <p>" .  __('If you don’t have an API Key, just fill out the form and a key will be created.','shortpixel-image-optimiser') . "</p>";
 
       return $message;
     }

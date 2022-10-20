@@ -3,6 +3,7 @@ namespace ShortPixel\Controller\View;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Helper\UiHelper as UiHelper;
+use ShortPixel\Controller\OptimizeController as OptimizeController;
 
 
 //use ShortPixel\Model\ImageModel as ImageModel;
@@ -134,6 +135,12 @@ class EditMediaViewController extends \ShortPixel\ViewController
         if ($tsOptimized !== null)
           $stats[] = array(__("Optimized on :", 'shortpixel-image-optimiser') . "<br /> ", UiHelper::formatTS($tsOptimized) );
 
+				if ($imageObj->isOptimized())
+				{
+					$stats[] = array( sprintf(__('%s %s Read more about theses stats %s ', 'shortpixel-image-optimiser'), '
+					<p><img alt=' . esc_html('Info Icon', 'shortpixel-image-optimiser')  . ' src=' . esc_url( wpSPIO()->plugin_url('res/img/info-icon.png' )) . ' style="margin-bottom: -4px;"/>', '<a href="https://shortpixel.com/knowledge-base/article/553-the-stats-from-the-shortpixel-column-in-the-media-library-explained" target="_blank">', '</a></p>'), '');
+				}
+				
         return $stats;
       }
 
@@ -152,36 +159,18 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
 					if ($imageObj->isProcessable())
 					{
-						 $urls = $imageObj->getOptimizeUrls();
+						 //$urls = $imageObj->getOptimizeUrls();
+						 $optimizeData = $imageObj->getOptimizeData();
+						 $urls = $optimizeData['urls'];
 
-						 if ($imageObj->isProcessableFileType('webp'))
-						 {
-							$diff = array_diff($imageObj->getOptimizeFileType('webp'), $urls); // diff from mains.
-							foreach($diff as $i => $v)
-							{
-								$diff[$i] = " [webp] " . $v;
-							}
-						 	$urls = array_merge($urls, $diff);
-						 }
-						 if ($imageObj->isProcessableFileType('avif'))
-						 {
-						 	$diff = array_diff($imageObj->getOptimizeFileType('avif'), $urls); // diff from mains.
-							foreach($diff as $i => $v)
-							{
-								$diff[$i] = " [avif] " . $v;
-							}
-						 	$urls = array_merge($urls, $diff);
-						 }
 					}
 
 					$thumbnails = $imageObj->get('thumbnails');
 					$processable = ($imageObj->isProcessable()) ? '<span class="green">Yes</span>' : '<span class="red">No</span> (' . $imageObj->getReason('processable') . ')';
+					$anyFileType = ($imageObj->isProcessableAnyFileType()) ? '<span class="green">Yes</span>' : '<span class="red">No</span>';
 					$restorable = ($imageObj->isRestorable()) ? '<span class="green">Yes</span>' : '<span class="red">No</span> (' . $imageObj->getReason('restorable') . ')';
 
 					$hasrecord = ($imageObj->hasDBRecord()) ? '<span class="green">Yes</span>' : '<span class="red">No</span> ';
-        //  $sizes = isset($this->data['sizes']) ? $this->data['sizes'] : array();
-
-          //$debugMeta = $imageObj->debugGetImageMeta();
 
           $debugInfo = array();
           $debugInfo[] = array(__('URL (get attachment URL)', 'shortpixel_image_optiser'), wp_get_attachment_url($this->post_id));
@@ -195,23 +184,35 @@ class EditMediaViewController extends \ShortPixel\ViewController
           $debugInfo[] = array(__('Size and Mime (ImageObj)'), $imageObj->get('width') . 'x' . $imageObj->get('height'). ' (' . $imageObj->get('mime') . ')');
           $debugInfo[] = array(__('Status (ShortPixel)'), $imageObj->getMeta('status') . ' '   );
 
-
-
 					$debugInfo[] = array(__('Processable'), $processable);
+					$debugInfo[] = array(__('Avif/Webp needed'), $anyFileType);
 					$debugInfo[] = array(__('Restorable'), $restorable);
 					$debugInfo[] = array(__('Record'), $hasrecord);
 
           $debugInfo[] = array(__('WPML Duplicates'), json_encode($imageObj->getWPMLDuplicates()) );
 
+					if ($imageObj->getParent() !== false)
+					{
+						 $debugInfo[] = array(__('WPML duplicate - Parent: '), $imageObj->getParent());
+					}
+
 					if (isset($urls))
 					{
 						 $debugInfo[] = array(__('To Optimize URLS'),  $urls);
+					}
+					if (isset($optimizeData))
+					{
+						 $debugInfo[] = array(__('Optimize Data'), $optimizeData);
+
+						 $optControl = new optimizeController();
+						 $q = $optControl->getQueue($imageObj->get('type'));
+
+						 $debugInfo[] = array(__('Image to Queue'), $q->_debug_imageModelToQueue($imageObj) );
 					}
 
           $debugInfo['imagemetadata'] = array(__('ImageModel Metadata (ShortPixel)'), $imageObj);
 					$debugInfo[] = array('', '<hr>');
 
-          //$debugInfo['shortpixeldata'] = array(__('Data'), $this->data);
           $debugInfo['wpmetadata'] = array(__('WordPress Get Attachment Metadata'), $meta );
 					$debugInfo[] = array('', '<hr>');
 

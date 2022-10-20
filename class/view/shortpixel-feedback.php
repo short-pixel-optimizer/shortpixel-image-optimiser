@@ -25,6 +25,7 @@ class ShortPixelFeedback {
 
         // Deactivation
         add_filter( 'plugin_action_links_' . plugin_basename( $this->plugin_file ), array( $this, 'filterActionLinks') );
+				add_filter('network_admin_plugin_action_links_' . plugin_basename( $this->plugin_file ), array( $this, 'filterActionLinks'));
         add_action( 'admin_footer-plugins.php', array( $this, 'goodbyeAjax') );
         add_action( 'wp_ajax_shortpixel_deactivate_plugin', array( $this, 'deactivatePluginCallback') );
 
@@ -37,6 +38,7 @@ class ShortPixelFeedback {
     public function filterActionLinks( $links ) {
 
         if( isset( $links['deactivate'] ) ) {
+
             $deactivation_link = $links['deactivate'];
             // Insert an onClick action to allow form before deactivating
             $deactivation_link = str_replace( '<a ',

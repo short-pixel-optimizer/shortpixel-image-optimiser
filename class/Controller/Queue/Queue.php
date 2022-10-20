@@ -72,18 +72,23 @@ abstract class Queue
     */
     public function addSingleItem(ImageModel $imageModel)
     {
-
-      // $preparing = $this->getStatus('preparing');
-
        $qItem = $this->imageModelToQueue($imageModel);
        $counts = $qItem->counts;
 
-       $item = array('id' => $imageModel->get('id'), 'value' => $qItem, 'item_count' => $counts->creditCount);
+			 $media_id = $imageModel->get('id');
+			 // Check if this is a duplicate existing.
+			 if ($imageModel->getParent() !== false)
+			 {
+				  $media_id = $imageModel->getParent();
+			 }
+
+			 $result = new \stdClass;
+
+       $item = array('id' => $media_id, 'value' => $qItem, 'item_count' => $counts->creditCount);
        $this->q->addItems(array($item), false);
        $numitems = $this->q->withRemoveDuplicates()->enqueue(); // enqueue returns numitems
 
       // $this->q->setStatus('preparing', $preparing, true); // add single should not influence preparing status.
-       $result = new \stdClass;
        $result = $this->getQStatus($result, $numitems);
        $result->numitems = $numitems;
 
@@ -203,18 +208,30 @@ abstract class Queue
 										{
 											continue;
 										}
+
+										if ($this->isDuplicateActive($mediaItem, $queue))
+										{
+											 continue;
+										}
+
                     $qObject = $this->imageModelToQueue($mediaItem);
 
                     $counts = $qObject->counts;
 
-                      $queue[] = array('id' => $mediaItem->get('id'), 'value' => $qObject, 'item_count' => $counts->creditCount);
+									 $media_id = $mediaItem->get('id');
+									 if ($mediaItem->getParent() !== false)
+						 			 {
+						 				  $media_id = $mediaItem->getParent();
+						 			 }
+
+                    $queue[] = array('id' => $media_id, 'value' => $qObject, 'item_count' => $counts->creditCount);
 
                     $imageCount += $counts->creditCount;
                     $webpCount += $counts->webpCount;
                     $avifCount += $counts->avifCount;
 										$baseCount += $counts->baseCount; // base images (all minus webp/avif)
 
-                    do_action('shortpixel_start_image_optimisation', $mediaItem->get('id'), $mediaItem);
+                    do_action('shortpixel_start_image_optimisation', $media_id, $mediaItem);
 
                 }
                 else
@@ -330,6 +347,8 @@ abstract class Queue
 
 			$customData = $this->getStatus('custom_data');
 
+
+
       $stats->total = $stats->in_queue + $stats->fatal_errors + $stats->errors + $stats->done + $stats->in_process;
       if ($stats->total > 0)
 			{
@@ -366,9 +385,9 @@ abstract class Queue
         $count->images_avif = 0;
         if (is_object($customData))
         {
-          $count->images_webp = $customData->webpCount;
-          $count->images_avif = $customData->avifCount;
-					$count->images_basecount = $customData->baseCount;
+          $count->images_webp = (int) $customData->webpCount;
+          $count->images_avif = (int) $customData->avifCount;
+					$count->images_basecount = (int) $customData->baseCount;
         }
 
         return $count;
@@ -467,32 +486,82 @@ abstract class Queue
         $item = new \stdClass;
         $item->compressionType = \wpSPIO()->settings()->compressionType;
 
-        $urls = $imageModel->getOptimizeUrls();
-				$imagePreview = UIHelper::findBestPreview($imageModel, 800, true);
-				$imagePreviewURL = (is_object($imagePreview)) ? $imagePreview->getURL() : false;
+//        $urls = $imageModel->getOptimizeUrls();
+				$data = $imageModel->getOptimizeData();
+				$urls = $data['urls'];
+				$params = $data['params'];
+
+		//		$imagePreview = UIHelper::findBestPreview($imageModel, 800, true);
+		//		$imagePreviewURL = (is_object($imagePreview)) ? $imagePreview->getURL() : false;
+
+				list($u, $baseCount) = $imageModel->getCountOptimizeData('thumbnails');
+				list($u, $webpCount) = $imageModel->getCountOptimizeData('webp');
+				list($u, $avifCount) = $imageModel->getCountOptimizeData('avif');
 
         $counts = new \stdClass;
-        $counts->creditCount = 0;  // count the used credits for this item.
-				$counts->baseCount = 0; // count the base images.
-        $counts->avifCount = 0;
-        $counts->webpCount = 0;
+        $counts->creditCount = $baseCount + $webpCount + $avifCount;  // count the used credits for this item.
+				$counts->baseCount = $baseCount; // count the base images.
+        $counts->avifCount = $avifCount;
+        $counts->webpCount = $webpCount;
         //$creditCount = 0;
 
-        $webps = ($imageModel->isProcessableFileType('webp')) ? $imageModel->getOptimizeFileType('webp') : null;
-        $avifs = ($imageModel->isProcessableFileType('avif')) ? $imageModel->getOptimizeFileType('avif') : null;
+      //  $webps = ($imageModel->isProcessableFileType('webp')) ? $imageModel->getOptimizeFileType('webp') : null;
+      //  $avifs = ($imageModel->isProcessableFileType('avif')) ? $imageModel->getOptimizeFileType('avif') : null;
 
-        $hasUrls = (count($urls) > 0) ? true : false;
+			 	$removeKeys = array('image', 'webp', 'avif'); // keys not native to API / need to be removed.
+
+				// Is UI info, not for processing.
+				if (isset($data['params']['paths']))
+				{
+					 unset($data['params']['paths']);
+				}
+
+				foreach($data['params'] as $sizeName => $param)
+				{
+						$plus = false;
+						$convertTo = array();
+						if ($param['image'] === true)
+						{
+							 $plus = true;
+						}
+					  if ($param['webp'] === true)
+						{
+							 $convertTo[] = ($plus === true) ? '+webp' : 'webp';
+						}
+						if ($param['avif'] === true)
+						{
+							$convertTo[] = ($plus === true) ? '+avif' : 'avif';
+						}
+
+						foreach($removeKeys as $key)
+						{
+							 if (isset($param[$key]))
+							 {
+								  unset($data['params'][$sizeName][$key]);
+							 }
+						}
+
+						if (count($convertTo) > 0)
+						{
+							$convertTo = implode('|', $convertTo);
+							$data['params'][$sizeName]['convertto'] = $convertTo;
+						}
+				}
+
+
+
+
+      /*  $hasUrls = (count($urls) > 0) ? true : false;
         $hasWebps = (! is_null($webps) && count($webps) > 0) ? true : false;
         $hasAvifs = (! is_null($avifs) && count($avifs) > 0) ? true : false;
         $flags = array();
         $items = array();
 
-        $webpLeft = $avifLeft = false;
+        $webpLeft = $avifLeft = false; */
 
-        if (is_null($webps) && is_null($avifs))
+        /*if (is_null($webps) && is_null($avifs))
         {
            // nothing.
-          // $items[] = $item;
             $counts->creditCount += count($urls);
 						$counts->baseCount += count($urls);
 
@@ -569,11 +638,9 @@ abstract class Queue
                 }
             }
 
-        }
+        } */
 
-      //  $paths = $imageModel->getOptimizePaths();
-        //Log::addDebug('AvifL on ' . $imageModel->get('id') . ' ', array($avifLeft, $urls));
-        if ($imageModel->get('do_png2jpg') && $hasUrls)  // Flag is set in Is_Processable in mediaLibraryModel, when settings are on, image is png.
+        if ($imageModel->get('do_png2jpg') && $baseCount > 0)  // Flag is set in Is_Processable in mediaLibraryModel, when settings are on, image is png.
         {
           $item->png2jpg = $imageModel->get('do_png2jpg');
         }
@@ -583,16 +650,31 @@ abstract class Queue
 				{
           $item->compressionType = $imageModel->getMeta('compressionType');
 				}
-        $item->flags = $flags;
 
         // Former securi function, add timestamp to all URLS, for cache busting.
-        $urls = $this->timestampURLS($urls, $imageModel->get('id'));
+        $urls = $this->timestampURLS( array_values($urls), $imageModel->get('id'));
+
         $item->urls = apply_filters('shortpixel_image_urls', $urls, $imageModel->get('id'));
-				$item->preview = $imagePreviewURL;
+				if (count($data['params']) > 0)
+				{
+					$item->paramlist= array_values($data['params']);
+				}
+
+				if (count($data['returnParams']) > 0)
+				{
+					 $item->returndatalist = $data['returnParams'];
+				}
+		//		$item->preview = $imagePreviewURL;
         $item->counts = $counts;
 
         return $item;
     }
+
+		// @internal
+		public function _debug_imageModelToQueue($imageModel)
+		{
+			 return $this->imageModelToQueue($imageModel);
+		}
 
     protected function timestampURLS($urls, $id)
     {
@@ -634,6 +716,47 @@ abstract class Queue
         $this->q->itemFailed($qItem, $fatal);
         $this->q->updateItemValue($qItem);
     }
+
+		public function isDuplicateActive($mediaItem, $queue = array() )
+		{
+			if ($mediaItem->get('type') === 'custom')
+				return false;
+
+			$WPMLduplicates = $mediaItem->getWPMLDuplicates();
+			$qitems = array();
+			if (count($queue) > 0)
+			{
+				 foreach($queue as $qitem)
+				 {
+					  $qitems[] = $qitem['id'];
+				 }
+			}
+
+			if (is_array($WPMLduplicates) && count($WPMLduplicates) > 0)
+			{
+				 $duplicateActive = false;
+				 foreach($WPMLduplicates as $duplicate_id)
+				 {
+					  if (in_array($duplicate_id, $qitems))
+						{
+							Log::addDebug('Duplicate Item is in queue already, skipping (ar). Duplicate:' . $duplicate_id);
+							$duplicateActive = true;
+							break;
+						}
+						elseif ($this->isItemInQueue($duplicate_id))
+						{
+							 Log::addDebug('Duplicate Item is in queue already, skipping (db). Duplicate:' . $duplicate_id);
+							 $duplicateActive = true;
+							 break;
+						}
+				 }
+				 if (true === $duplicateActive)
+				 {
+						return $duplicateActive;
+				 }
+			}
+			return false;
+		}
 
     public function itemDone ($item)
     {

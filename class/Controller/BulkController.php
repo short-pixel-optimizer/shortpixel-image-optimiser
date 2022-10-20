@@ -240,6 +240,7 @@ class BulkController
           delete_option(self::$logName);
    }
 
+	 // Removes Bulk Log . 
    public static function uninstallPlugin()
    {
       delete_option(self::$logName);

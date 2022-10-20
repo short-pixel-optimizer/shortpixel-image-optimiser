@@ -208,7 +208,7 @@ var ShortPixelScreen = function (MainScreen, processor)
             element.outerHTML = data.custom.itemView;
 
         }
-        return true;
+        return false;
     }
 
     this.RestoreItem = function(id)

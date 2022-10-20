@@ -258,7 +258,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
 
 								 <?php  if(!$this->is_gd_installed):
 								  ?>
-									 <div style="color:red;"><?php esc_html__('You need PHP GD with support for JPEG and PNG files for this feature. Please ask your hosting 	provider to install it.','shortpixel-image-optimiser');  ?>
+									 <div style="color:red;"><?php esc_html_e('You need PHP GD with support for JPEG and PNG files for this feature. Please ask your hosting 	provider to install it.','shortpixel-image-optimiser');  ?>
 									 </div>
 								 <?php endif; ?>
 
@@ -410,7 +410,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                             $folder_id = $dirObj->get('id');
 
 
-                            $type_display = ($dirObj->get('is_nextgen') ) ? __('Nextgen', 'shortpixel-image-optimiser') . "<br>" : "";
+                            $type_display = ($dirObj->get('is_nextgen') ) ? __('Nextgen', 'shortpixel-image-optimiser') . ":" : "";
                             $stat = $dirObj->getStats();
 
                             $fullstatus = esc_html__("Optimized",'shortpixel-image-optimiser') . ": " . $stat->Optimized . ", "

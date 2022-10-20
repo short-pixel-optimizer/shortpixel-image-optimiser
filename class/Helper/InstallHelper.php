@@ -67,7 +67,6 @@ class InstallHelper
  //   $env = \wpSPIO()->env();
 
     OptimizeController::uninstallPlugin();
-    BulkController::uninstallPlugin();
 		ApiKeyController::uninstallPlugin();
   }
 
@@ -86,6 +85,8 @@ class InstallHelper
 		self::deactivatePlugin(); // deactivate
 		self::uninstallPlugin(); // uninstall
 
+		// Bulk Log
+		BulkController::uninstallPlugin();
 
 		$settings::resetOptions();
 
@@ -269,6 +270,7 @@ class InstallHelper
           message varchar(255),
           ts_added timestamp,
           ts_optimized timestamp,
+					extra_info LONGTEXT,
           PRIMARY KEY sp_id (id)
         ) $charsetCollate;";
 
@@ -285,7 +287,7 @@ class InstallHelper
 			 attach_id bigint unsigned NOT NULL,
 			 parent bigint unsigned NOT NULL,
 			 image_type tinyint default 0,
-			 size varchar(150),
+			 size varchar(200),
 			 status tinyint default 0,
 			 compression_type tinyint,
 			 compressed_size  int,
