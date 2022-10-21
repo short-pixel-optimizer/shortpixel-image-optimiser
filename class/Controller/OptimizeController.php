@@ -456,7 +456,8 @@ class OptimizeController
            switch($item->action)
            {
               case 'restore';
-                 $imageObj->restore();
+//							 Log::addError('Restore tick is off in sendToProcessing!');
+                 $imageObj->restore(array('keep_in_queue' => true));
               break;
               case 'migrate':
 									$imageObj->migrate(); // hard migrate in bulk, to check if all is there / resync on problems.

@@ -1548,8 +1548,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
   /** Removed the current attachment, with hopefully removing everything we set.
   */
-  public function restore()
+  public function restore($args = array())
   {
+		$defaults = array(
+			'keep_in_queue' => false, // used for bulk restore.
+		);
+
+		$args = wp_parse_args($args, $defaults);
 
     $fs = \wpSPIO()->filesystem();
 
@@ -1701,7 +1706,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           $this->saveMeta(); // Save if something is not restored.
 				}
 
-				$this->dropFromQueue();
+				if ($args['keep_in_queue'] === false)
+				{
+					$this->dropFromQueue();
+				}
+
 				update_post_meta($this->get('id'), '_wp_attachment_metadata', $wpmeta);
 
 
