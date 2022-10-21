@@ -208,10 +208,16 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
     }
 
-    public function restore()
+    public function restore($args = array())
     {
        do_action('shortpixel_before_restore_image', $this->get('id'));
        do_action('shortpixel/image/before_restore', $this);
+
+			 $defaults = array(
+	 			'keep_in_queue' => false, // used for bulk restore.
+	 		);
+
+	 		$args = wp_parse_args($args, $defaults);
 
        $bool = parent::restore();
 
@@ -238,7 +244,10 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 				  $return = false;
 			 }
 
-			 $this->dropFromQueue();
+			 if ($args['keep_in_queue'] === false)
+			 {
+				 $this->dropFromQueue();
+			 }
 			 do_action('shortpixel/image/after_restore', $this, $this->id, $bool);
 
        return $return;
