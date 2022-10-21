@@ -32,24 +32,24 @@
 									white-space: nowrap;
 									display: inline-block;
 							}
-              .optimize-bar {
+             .optimize-bar {
                   float: right;
-									width: 110px;
-									margin-left: 8px;
+                  margin-left: 8px;
+                  border-radius: 5px;
+                  overflow: hidden;
+                  height: 10px;
+                  margin-top: 4px;
+
                    .point
                    {
-                      width: 8px;
-                      height: 8px;
+                      width: 10px;
+                      height: 10px;
 
                       display: inline-block;
-                      border: 1px solid #ccc;
-                      margin-left: 1px;
-                      background: #ccc;
-                      vertical-align: middle;
+                      background: #d6d8d9;
 
                       &.checked {
-                        background: green;
-                        box-shadow: 1px 1px 1px green;
+                        background: #1abdca;
                       }
                    }
               }
