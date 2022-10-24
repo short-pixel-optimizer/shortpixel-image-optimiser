@@ -224,8 +224,6 @@ class EnvironmentModel extends \ShortPixel\Model
     $this->has_nextgen = $ng->has_nextgen();
   }
 
-
-
   //set default move as "list". only set once, it won't try to set the default mode again.
   public function setDefaultViewModeList()
   {

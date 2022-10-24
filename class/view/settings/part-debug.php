@@ -117,16 +117,25 @@ $env = \wpSPIO()->env();
   <div class='table notices'>
 
     <div class='head'>
-      <span>ID</span><span>Done</span><span>Dismissed</span><span>Persistent</span>
+      <span>ID</span><span>Done</span><span>Dismissed</span><span>Persistent</span><span>Exclude</span><span>Include</span>
     </div>
 
-  <?php foreach ($notices as $noticeObj): ?>
+  <?php foreach ($notices as $noticeObj):
+			$exclude = $noticeObj->_debug_getvar('exclude_screens');
+			$include = $noticeObj->_debug_getvar('include_screens');
+
+			$exclude = is_array($exclude) ? implode(',', $exclude) : $exclude;
+			$include = is_array($include) ? implode(',', $include) : $include;
+
+	?>
 
   <div>
       <span><?php echo esc_html($noticeObj->getID()); ?></span>
       <span><?php echo ($noticeObj->isDone()) ? 'Y' : 'N'; ?> </span>
       <span><?php echo ($noticeObj->isDismissed()) ? 'Y' : 'N'; ?> </span>
       <span><?php echo ($noticeObj->isPersistent()) ? 'Y' : 'N'; ?> </span>
+			<span><?php echo $exclude ?></span>
+			<span><?php echo $include ?></span>
 
   </div>
 

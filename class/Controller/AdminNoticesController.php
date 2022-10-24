@@ -49,7 +49,7 @@ class AdminNoticesController extends \ShortPixel\Controller
     public function __construct()
     {
       add_action('admin_notices', array($this, 'displayNotices'), 50); // notices occured before page load
-        add_action('admin_footer', array($this, 'displayNotices'));  // called in views.
+      add_action('admin_footer', array($this, 'displayNotices'));  // called in views.
 
       add_action('in_plugin_update_message-' . plugin_basename(SHORTPIXEL_PLUGIN_FILE), array($this, 'pluginUpdateMessage') , 50, 2 );
 
@@ -124,6 +124,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 
 			$access = AccessModel::getInstance();
 			$screen = get_current_screen();
+			$screen_id = \wpSPIO()->env()->screen_id;
 
       $noticeControl = Notices::getInstance();
       $noticeControl->loadIcons(array(
@@ -143,8 +144,8 @@ class AdminNoticesController extends \ShortPixel\Controller
 
           foreach($notices as $notice)
           {
-							// Ugly exception for listView Notice. If happens more, notices should extended to include screen check.
-						if ($notice->getID() == AdminNoticesController::MSG_LISTVIEW_ACTIVE && \wpSPIO()->env()->screen_id !== 'upload' )
+
+						if ($notice->checkScreen($screen_id) === false)
 						{
 							 continue;
 						}
@@ -209,6 +210,7 @@ class AdminNoticesController extends \ShortPixel\Controller
             Notices::makePersistent($notice, self::MSG_INTEGRATION_NGGALLERY, YEAR_IN_SECONDS);
         }
 
+
 				$smartcropNotice = $noticeController->getNoticeByID(self::MSG_FEATURE_SMARTCROP);
 				if ($smartcropNotice === false || $smartcropNotice->isDismissed() === false)
 				{
@@ -225,6 +227,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 						'</p>'
 					);
 					$notice = Notices::addNormal($message);
+					$notice->limitScreens('exclude', 'settings_page_wp-shortpixel-settings');
 					Notices::makePersistent($notice, self::MSG_FEATURE_SMARTCROP, YEAR_IN_SECONDS);
 				}
 
@@ -464,6 +467,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 
 	 protected function doListViewNotice()
 	 {
+		  // Don't check for this, when not on this screen.
 	   	$screen_id = \wpSPIO()->env()->screen_id;
 			if ($screen_id !== 'upload')
 			{
@@ -488,6 +492,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 
 							  $message = sprintf(__('You can see ShortPixel Image Optimiser actions and data only via the list view. Switch to the list view to use the plugin via the media library.  Click to %s switch to the list view %s now. ', 'shortpixel-image-optimiser'), '<a href="' . admin_url('upload.php?mode=list') . '">','</a>');
 								$new_notice = Notices::addNormal($message);
+								$new_notice->limitScreens('include', 'upload');
 								Notices::makePersistent($new_notice, self::MSG_LISTVIEW_ACTIVE, YEAR_IN_SECONDS);
 						}
 						else
