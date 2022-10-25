@@ -4,17 +4,6 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 // @todo In time this should be moved to a helper class
 class ShortPixelTools {
-/*    public static function parseJSON($data) {
-        if ( function_exists('json_decode') ) {
-            $data = json_decode( $data );
-        } else {
-            require_once( 'JSON/JSON.php' );
-            $json = new Services_JSON( );
-            $data = $json->decode( $data );
-        }
-        return $data;
-    }*/
-
     /** Find if a certain plugin is active
     * @param String $plugin The name of plugin being searched for
     * @return Boolean Active or not
@@ -84,39 +73,6 @@ static public function DBtoTimestamp($date)
 		return strtotime($date);
 }
 
-    public static function commonPrefix($str1, $str2) {
-        $limit = min(strlen($str1), strlen($str2));
-        for ($i = 0; $i < $limit && $str1[$i] === $str2[$i]; $i++);
-        return substr($str1, 0, $i);
-    }
-
-    /**
-     * This is a simplified wp_send_json made compatible with WP 3.2.x to 3.4.x
-     * @param type $response
-     */
-    public static function sendJSON($response) {
-        @header( 'Content-Type: application/json; charset=' . get_option( 'blog_charset' ) );
-        die(json_encode($response));
-        //wp_send_json($response); // send json proper, dies.
-    }
-
-
-
-    /**
-     * finds if an array contains an item, comparing the property given as key
-     * @param $item
-     * @param $arr
-     * @param $key
-     * @return the position that was removed, false if not found
-     */
-    public static function findItem($item, $arr, $key) {
-        foreach($arr as $elm) {
-            if($elm[$key] == $item) {
-                return $elm;
-            }
-        }
-        return false;
-    }
 
 
     public static function getConflictingPlugins() {

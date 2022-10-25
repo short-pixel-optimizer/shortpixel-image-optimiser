@@ -3,7 +3,7 @@ namespace ShortPixel;
 use ShortPixel\Notices\NoticeController as NoticeController;
 use Shortpixel\Controller\StatsController as StatsController;
 use Shortpixel\Controller\OptimizeController as OptimizeController;
-
+use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
 
 $opt = new OptimizeController();
 
@@ -63,7 +63,7 @@ $env = \wpSPIO()->env();
 
 
   <div class='debug-quota'>
-    <form method="POST" action="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_resetquota'))) ?>">
+    <form method="POST" action="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_resetquota'), $this->url)) ?>">
 
       <button class='button' type='submit'>Clear Quota Data</button>
       </form>
@@ -103,7 +103,7 @@ $env = \wpSPIO()->env();
 	</div> <!-- stats -->
 
   <div class='debug-stats'>
-    <form method="POST" action="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_resetStats'))) ?>"
+    <form method="POST" action="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_resetStats'), $this->url)) ?>"
       id="shortpixel-form-debug-stats">
       <button class='button' type='submit'>Clear statistics cache</button>
       </form>
@@ -144,11 +144,31 @@ $env = \wpSPIO()->env();
   </div>
 
   <div class='debug-notices'>
-    <form method="POST" action="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_resetNotices'))) ?>"
+    <form method="POST" action="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_resetNotices'),$this->url)) ?>"
       id="shortpixel-form-debug-stats">
       <button class='button' type='submit'>Reset Notices</button>
       </form>
   </div>
+
+	<div class='trigger-notices'>
+		<form method="POST" action="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_triggerNotice'), $this->url)) ?>"
+      id="shortpixel-form-debug-stats">
+			<?php
+				$controller = AdminNoticesController::getInstance();
+				$notices = $controller->getAllNotices();
+			//	$refl = new \ReflectionClass('ShortPixel\Controller\AdminNoticesController');
+			//	$constants = $refl->getConstants();
+		 ?>
+				<select name="notice_constant">
+					 <option value="trigger-all">Trigger All</option>
+					<?php foreach($notices as $key => $noticeObj)
+						echo "<option value='$key'>$key </option>";
+						?>
+				</select>
+				<button class="button" type="submit">Trigger this Notice</button>
+
+		</form>
+	</div>
 
   <p>&nbsp;</p>
 
@@ -195,7 +215,7 @@ $env = \wpSPIO()->env();
 			<?php endforeach; ?>
 
   <div class='debug-queue'>
-    <form method="POST" action="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_resetQueue'))) ?>"
+    <form method="POST" action="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_resetQueue'),$this->url)) ?>"
       id="shortpixel-form-reset-queue">
       <button class='button' type='submit'>Reset ShortQ</button>
 			<select name="queue">
@@ -212,7 +232,7 @@ $env = \wpSPIO()->env();
 
 <p></p>
 <div class='debug-key'>
-	<form method="POST" action="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_removeProcessorKey'))) ?>"
+	<form method="POST" action="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_removeProcessorKey'),$this->url)) ?>"
 		id="shortpixel-form-debug-stats">
 		<button class='button' type='submit'>Reset Processor Key</button>
 		</form>

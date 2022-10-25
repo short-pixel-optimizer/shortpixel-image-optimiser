@@ -20,30 +20,57 @@ class AdminNoticesController extends \ShortPixel\Controller
 {
     protected static $instance;
 
+		protected $definedNotices = array( // NoticeModels by Class.  This is not optimal but until solution found, workable.
+				'CompatNotice',
+				'UnlistedNotice',
+				'AvifNotice',
+				'QuotaNoticeMonth',
+				'QuotaNoticeReached',
+				'ApiNotice',
+				'ApiNoticeRepeat',
+				'ApiNoticeRepeatLong',
+				'NextgenNotice',
+				'SmartcropNotice',
+				'LegacyNotice',
+				'ListviewNotice'
+		);
+		protected $adminNotices; // Models
+
+
+//Added
     const MSG_COMPAT = 'Error100';  // Plugin Compatility, warn for the ones that disturb functions.
-    const MSG_FILEPERMS = 'Error101'; // File Permission check, if Queue is file-based.
+//Added
     const MSG_UNLISTED_FOUND = 'Error102'; // SPIO found unlisted images, but this setting is not on
+//Added
 		const MSG_AVIF_ERROR = 'Error103'; // Detected unexpected or wrong AVIF headers when avif is on.
 
     //const MSG_NO_
+//Added
     const MSG_QUOTA_REACHED = 'QuotaReached100';
+//Added
     const MSG_UPGRADE_MONTH = 'UpgradeNotice200';  // When processing more than the subscription allows on average..
 		// @todo This one has been removed for now. Cleanup later on the line
-    const MSG_UPGRADE_BULK = 'UpgradeNotice201'; // when there is no enough for a bulk run.
+// Seemingly not in use.
+  //  const MSG_UPGRADE_BULK = 'UpgradeNotice201'; // when there is no enough for a bulk run.
 
+//Added (all)
     const MSG_NO_APIKEY = 'ApiNotice300'; // API Key not found
     const MSG_NO_APIKEY_REPEAT = 'ApiNotice301';  // First Repeat.
     const MSG_NO_APIKEY_REPEAT_LONG = 'ApiNotice302'; // Last Repeat.
 
+//Added (all)
     const MSG_INTEGRATION_NGGALLERY = 'IntNotice400';
 		const MSG_FEATURE_SMARTCROP = 'FeaNotice100';
 
+//Added
 		const MSG_CONVERT_LEGACY = 'LegNotice100';
 
+//Added
 		const MSG_LISTVIEW_ACTIVE = 'UxNotice100';
 
     private $remote_message_endpoint = 'https://api.shortpixel.com/v2/notices.php';
     private $remote_readme_endpoint = 'https://plugins.svn.wordpress.org/shortpixel-image-optimiser/trunk/readme.txt';
+
 
 
     public function __construct()
@@ -158,8 +185,8 @@ class AdminNoticesController extends \ShortPixel\Controller
 							 continue;
 						}
 
-            if ($notice->getID() == AdminNoticesController::MSG_QUOTA_REACHED || $notice->getID() == AdminNoticesController::MSG_UPGRADE_MONTH
-            || $notice->getID() == AdminNoticesController::MSG_UPGRADE_BULK)
+						// Todo change this to new keys
+            if ($notice->getID() == AdminNoticesController::MSG_QUOTA_REACHED || $notice->getID() == AdminNoticesController::MSG_UPGRADE_MONTH) //|| $notice->getID() == AdminNoticesController::MSG_UPGRADE_BULK
             {
               wp_enqueue_script('jquery.knob.min.js');
               //wp_enqueue_script('jquery.tooltip.min.js');
@@ -181,17 +208,46 @@ class AdminNoticesController extends \ShortPixel\Controller
             return; // suppress all when not our screen.
       }
 
-       $this->doAPINotices();
+			$this->loadNotices();
+
+     /*  $this->doAPINotices();
        $this->doCompatNotices();
        $this->doUnlistedNotices();
        $this->doQuotaNotices();
        $this->doIntegrationNotices();
        $this->doRemoteNotices();
 
-			 $this->doListViewNotice();
+			 $this->doListViewNotice(); */
     }
 
+		protected function loadNotices()
+		{
+			 foreach($this->definedNotices as $className)
+			 {
+				  $ns = '\ShortPixel\Model\AdminNotices\\' . $className;
+				  $class = new $ns();
+					$this->adminNotices[$class->getKey()] = $class;
+			 }
+		}
 
+		public function getNoticeByKey($key)
+		{
+	//	echo "<PRE> GetbyKey AdminNoticesController: ";	var_dump($this->adminNotices); echo "</PRE>";
+			 if (isset($this->adminNotices[$key]))
+			 {
+			 	 return $this->adminNotices[$key];
+			 }
+			 else {
+			 	  return false;
+			 }
+		}
+
+		public function getAllNotices()
+		{
+			 return $this->adminNotices;
+		}
+
+/*
     protected function doIntegrationNotices()
     {
         $settings= \wpSPIO()->settings();
@@ -233,8 +289,10 @@ class AdminNoticesController extends \ShortPixel\Controller
 
 
     }
+*/
 
     /** Load the various messages about the lack of API-keys in the plugin */
+		/*
     protected function doAPINotices()
     {
         if (\wpSPIO()->settings()->verifiedKey)
@@ -271,9 +329,6 @@ class AdminNoticesController extends \ShortPixel\Controller
         // The trick is that after X amount of time, the first message is replaced by one of those.
         if ($notice_dismissed && ! $notice_dismissed_repeat && $now > $activationDate + (6 * HOUR_IN_SECONDS)) // after 6 hours.
         {
-          //$notice->messageType = Notices::NOTICE_WARNING;
-        //  $notice->
-           //Notices::removeNoticeByID(self::MSG_NO_APIKEY); // remove the previous one.
            $message = __("Action needed. Please <a href='https://shortpixel.com/wp-apikey' target='_blank'>get your API key</a> to activate your ShortPixel plugin.",'shortpixel-image-optimiser');
 
            $notice = Notices::addWarning($message);
@@ -281,7 +336,6 @@ class AdminNoticesController extends \ShortPixel\Controller
         }
         elseif ($notice_dismissed_repeat && $notice_dismissed && ! $notice_dismissed_long && $now > $activationDate + (3 * DAY_IN_SECONDS) ) // after 3 days
         {
-        //  Notices::removeNoticeByID(self::MSG_NO_APIKEY); // remove the previous one.
           $message = __("Your image gallery is not optimized. It takes 2 minutes to <a href='https://shortpixel.com/wp-apikey' target='_blank'>get your API key</a> and activate your ShortPixel plugin.",'shortpixel-image-optimiser') . "<BR><BR>";
 
           $notice = Notices::addWarning($message);
@@ -290,8 +344,8 @@ class AdminNoticesController extends \ShortPixel\Controller
         }
 
     }
-
-    protected function doCompatNotices()
+*/
+    /*protected function doCompatNotices()
     {
       $noticeController = Notices::getInstance();
 
@@ -312,12 +366,18 @@ class AdminNoticesController extends \ShortPixel\Controller
           $notice = Notices::addWarning($this->getConflictMessage($conflictPlugins));
           Notices::makePersistent($notice, self::MSG_COMPAT, YEAR_IN_SECONDS);
       }
-    }
+    } */
 
 		// Called by MediaLibraryModel
 		public function invokeLegacyNotice()
 		{
-			$noticeController = Notices::getInstance();
+			$noticeModel = $this->getNoticeByKey('MSG_CONVERT_LEGACY');
+			if (! $noticeModel->isDismissed())
+			{
+				 $noticeModel->addManual();
+			}
+
+			/*$noticeController = Notices::getInstance();
 
 					$notice = $noticeController->getNoticeByID(self::MSG_CONVERT_LEGACY);
 					// If already in system, don't bother doing it again.
@@ -339,10 +399,11 @@ class AdminNoticesController extends \ShortPixel\Controller
 
 					$notice = Notices::addNormal($message);
 					Notices::makePersistent($notice, self::MSG_CONVERT_LEGACY, YEAR_IN_SECONDS);
+					*/
 
 		}
 
-    protected function doUnlistedNotices()
+   /* protected function doUnlistedNotices()
     {
       $settings = \wpSPIO()->settings();
       if ($settings->optimizeUnlisted)
@@ -352,7 +413,7 @@ class AdminNoticesController extends \ShortPixel\Controller
           $notice = Notices::addNormal($this->getUnlistedMessage($settings->currentStats['foundUnlistedThumbs']));
           Notices::makePersistent($notice, self::MSG_UNLISTED_FOUND, YEAR_IN_SECONDS);
       }
-    }
+    } */
 
     protected function doQuotaNotices()
     {
@@ -360,7 +421,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 
       $quotaController = QuotaController::getInstance();
 			$noticeController = Notices::getInstance();
-			$statsControl = StatsController::getInstance(); // @todo Implement this. (Figure out what this was )
+		//	$statsControl = StatsController::getInstance(); // @todo Implement this. (Figure out what this was )
 
 			$callback = array(AdminNoticesController::getInstance(), 'proposeUpgradePopup');
 
@@ -384,7 +445,7 @@ class AdminNoticesController extends \ShortPixel\Controller
       {
           $env = \wpSPIO()->env();
 
-          $quotaController = QuotaController::getInstance();
+         // $quotaController = QuotaController::getInstance();
           $quotaData = $quotaController->getQuota();
 
           $month_notice = $noticeController->getNoticeByID(self::MSG_UPGRADE_MONTH);
@@ -531,6 +592,7 @@ class AdminNoticesController extends \ShortPixel\Controller
         return $message;
     } */
 
+/*
     public function getActivationNotice()
     {
       $message = "<p>" . __('In order to start the optimization process, you need to validate your API Key in the '
@@ -540,8 +602,9 @@ class AdminNoticesController extends \ShortPixel\Controller
 
       return $message;
     }
+*/
 
-    protected function getConflictMessage($conflicts)
+    /*protected function getConflictMessage($conflicts)
     {
       $message = __("The following plugins are not compatible with ShortPixel and may lead to unexpected results: ",'shortpixel-image-optimiser');
       $message .= '<ul class="sp-conflict-plugins">';
@@ -561,7 +624,8 @@ class AdminNoticesController extends \ShortPixel\Controller
 
       return $message;
     }
-
+*/
+/*
     protected function getUnlistedMessage($unlisted)
     {
       $message = __("<p>ShortPixel found thumbnails which are not registered in the metadata but present alongside the other thumbnails. These thumbnails could be created and needed by some plugin or by the theme. Let ShortPixel optimize them as well?</p>", 'shortpixel-image-optimiser');
@@ -573,7 +637,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 
         return $message;
     }
-
+*/
 /* Seems unused   @todo Remove in a few versions
     protected function getBulkUpgradeMessage($extra)
     {
@@ -592,6 +656,7 @@ class AdminNoticesController extends \ShortPixel\Controller
       return $message;
     }
 
+/*
     protected function getQuotaExceededMessage()
     {
       $statsControl = StatsController::getInstance();
@@ -661,7 +726,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 				$message .= '</div>'; /// closing div
         return $message;
     }
-
+*/
     public function proposeUpgradePopup() {
 					$view = new ViewController();
 					$view->loadView('snippets/part-upgrade-options');
