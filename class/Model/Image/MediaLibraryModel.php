@@ -8,6 +8,7 @@ use ShortPixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Controller\QuotaController as QuotaController;
 
 use ShortPixel\Helper\InstallHelper as InstallHelper;
+use ShortPixel\Helper\UtilHelper as UtilHelper;
 
 class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailModel
 {
@@ -49,7 +50,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       }
 
       if (! $this->isExtensionExcluded())
-        $this->loadMeta();
+      {
+				 $this->loadMeta();
+				 $this->checkUnlistedForNotice();
+			}
 
   }
 
@@ -863,8 +867,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					$data->originalSize = $record->original_size;
 
 					// @todo This needs to be Mysql TimeStamp -> Unix TS-ilized.
-					$data->tsAdded = \ShortPixelTools::DBtoTimestamp($record->tsAdded);
-					$data->tsOptimized = \ShortPixelTools::DBtoTimestamp($record->tsOptimized);
+					$data->tsAdded = UtilHelper::DBtoTimestamp($record->tsAdded);
+					$data->tsOptimized = UtilHelper::DBtoTimestamp($record->tsOptimized);
 
 					// [...]
 					$extra_info = json_decode($record->extra_info);
@@ -968,8 +972,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				'compression_type' => $data->compressionType,
 				'compressed_size' => $data->compressedSize,
 				'original_size' => $data->originalSize,
-				'tsAdded' => \ShortPixelTools::timestampToDB($data->tsAdded),
-				'tsOptimized' => \ShortPixelTools::timestampToDB($data->tsOptimized),
+				'tsAdded' => UtilHelper::timestampToDB($data->tsAdded),
+				'tsOptimized' => UtilHelper::timestampToDB($data->tsOptimized),
 		 );
 
 		 unset($data->status);
@@ -2434,11 +2438,46 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
   }
 
+	// Check for UnlistedNotice.  Check if in this image has unlisted without adding them
+	public function checkUnlistedForNotice()
+	{
+			$settings = \wpSPIO()->settings();
+			$control = AdminNoticesController::getInstance();
+			$notice =  $control->getNoticeByKey('MSG_UNLISTED_FOUND');
+
+			// already active
+			if ($settings->optimizeUnlisted === true)
+				return;
+
+			// already notice.
+			if (is_object($notice->getNoticeObj()))
+			{
+				 return;
+			}
+
+			// todo get counter to indicate
+
+			// check unlisted.
+			$unlisted = $this->addUnlisted(true);
+			var_dump($unlisted);
+			if (is_array($unlisted) && count($unlisted) > 0)
+			{
+					// trigger notice.
+					$args = array(
+						'count' => count($unlisted),
+						'filelist' => $unlisted,
+						'name' => $this->getFileName(),
+						'id' => $this->get('id'),
+					);
+					$notice->addManual($args);
+
+			}
+	}
 
   /** Adds Unlisted Image to the Media Library Item
   * This function is called in IsProcessable
   */
-  protected function addUnlisted()
+  protected function addUnlisted($check_only = false)
   {
        // Setting must be active.
        /*if (! \wpSPIO()->settings()->optimizeUnlisted )
@@ -2447,7 +2486,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			$searchUnlisted = \wpSPIO()->settings()->optimizeUnlisted;
 
       // Don't check this more than once per run-time.
-      if ( in_array($this->get('id'), self::$unlistedChecked ))
+      if ( in_array($this->get('id'), self::$unlistedChecked ) && $check_only === false)
       {
           return;
       }
@@ -2479,7 +2518,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       }
 
 			// if all have nothing to do, do nothing.
-			if ($searchUnlisted == false && count($searchSuffixes) == 0 && count($searchInfixes) == 0)
+			if ($searchUnlisted == false && count($searchSuffixes) == 0 && count($searchInfixes) == 0 && $check_only === false)
 			{
 				 self::$unlistedChecked[] = $this->get('id');
 				 return;
@@ -2512,7 +2551,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   			$all_files = scandir($this->getFileDir(),  SCANDIR_SORT_NONE);
 				$all_files = array_diff($all_files, $currentFiles);
 
-
 				foreach($processFiles as $mediaItem)
 				{
 
@@ -2520,7 +2558,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	        $ext = $mediaItem->getExtension();
 	        $path = (string) $mediaItem->getFileDir();
 
-					if ($searchUnlisted)
+					if ($searchUnlisted || $check_only === true)
 					{
 	        	$pattern = '/^' . preg_quote($base, '/') . '-\d+x\d+\.'. $ext .'/';
 	        	$thumbs = array();
@@ -2572,6 +2610,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
       // Quality check on the thumbs. Must exist,  must be same extension.
       $added = false;
+
+			if ($check_only === true)
+			{
+					return $unlisted;
+			}
+
       foreach($unlisted as $unName)
       {
 				  if (isset($this->thumbnails[$unName]))

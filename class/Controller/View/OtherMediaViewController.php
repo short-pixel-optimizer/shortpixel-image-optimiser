@@ -516,7 +516,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
         $date = new \DateTime();
         $date->setTimestamp($timestamp);
 
-        $display_date = \ShortPixelTools::format_nice_date($date);
+        $display_date = UiHelper::formatDate($date);
 
          return $display_date;
       }

@@ -90,7 +90,7 @@ class ViewController extends Controller
       $view = $this->view;
       $controller = $this;
 
-      $template_path = \ShortPixelTools::getPluginPath() . 'class/view/' . $template  . '.php';
+      $template_path = \wpSPIO()->plugin_path('class/view/' . $template  . '.php');
      	if (file_exists($template_path) === false)
 			{
         Log::addError("View $template could not be found in " . $template_path,

@@ -8,6 +8,8 @@ use ShortPixel\Controller\FileSystemController as FileSystemController;
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
 use ShortPixel\Controller\StatsController as StatsController;
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
+use ShortPixel\Helper\UtilHelper as UtilHelper;
+
 
 class InstallHelper
 {
@@ -21,7 +23,7 @@ class InstallHelper
       $env = wpSPIO()->env();
 
       if(\WPShortPixelSettings::getOpt('deliverWebp') == 3 && ! $env->is_nginx) {
-          \ShortPixelTools::alterHtaccess(true,true); //add the htaccess lines
+          UtilHelper::alterHtaccess(true,true); //add the htaccess lines
       }
 
       self::checkTables();
@@ -42,7 +44,7 @@ class InstallHelper
 
     if (! $env->is_nginx)
 		{
-      \ShortPixelTools::alterHtaccess(false, false);
+      UtilHelper::alterHtaccess(false, false);
 		}
 
     // save remove.
@@ -112,7 +114,6 @@ class InstallHelper
     }
 
     $referrer_url = wp_get_referer();
-    $conflict = \ShortPixelTools::getConflictingPlugins();
     $url = wp_get_referer();
 		$plugin = (isset($_GET['plugin'])) ? sanitize_text_field(wp_unslash($_GET['plugin'])) : null; // our target.
 

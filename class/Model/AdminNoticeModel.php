@@ -49,8 +49,12 @@ abstract class AdminNoticeModel
 	 }
 
 	 // For when trigger condition is not applicable.
-	 public function addManual()
+	 public function addManual($args = array())
 	 {
+		  foreach($args as $key => $val)
+			{
+				 $this->addData($key, $val);
+			}
 		 	$this->add();
 	 }
 

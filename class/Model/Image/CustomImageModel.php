@@ -2,6 +2,7 @@
 namespace ShortPixel\Model\Image;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
+use ShortPixel\Helper\UtilHelper as UtilHelper;
 
 use ShortPixel\Controller\ApiController as API;
 
@@ -338,10 +339,10 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
         //$metaObj->has_backup = (intval($imagerow->backup) == 1) ? true : false;
 
-        $addedDate = \ShortPixelTools::DBtoTimestamp($imagerow->ts_added);
+        $addedDate = UtilHelper::DBtoTimestamp($imagerow->ts_added);
         $metaObj->tsAdded = $addedDate;
 
-        $optimizedDate = \ShortPixelTools::DBtoTimestamp($imagerow->ts_optimized);
+        $optimizedDate = UtilHelper::DBtoTimestamp($imagerow->ts_optimized);
         $metaObj->tsOptimized = $optimizedDate;
 
 				$extraInfo = property_exists($imagerow, 'extra_info') ? $imagerow->extra_info : null;
@@ -489,8 +490,8 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
             'status' => $metaObj->status,
             'retries' => 0, // this is unused / legacy
             'message' => $message, // this is used for improvement line.
-            'ts_added' => \ShortPixelTools::timestampToDB($metaObj->tsAdded),
-            'ts_optimized' => \ShortPixelTools::timestampToDB($metaObj->tsOptimized),
+            'ts_added' => UtiHelper::timestampToDB($metaObj->tsAdded),
+            'ts_optimized' => UtilHelper::timestampToDB($metaObj->tsOptimized),
             'path' => $this->getFullPath(),
 						'name' => $this->getFileName(),
             'path_md5' => md5($this->getFullPath()), // this is legacy

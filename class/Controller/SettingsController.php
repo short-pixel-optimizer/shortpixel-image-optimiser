@@ -3,6 +3,7 @@ namespace ShortPixel\Controller;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notice;
 use ShortPixel\Helper\UiHelper as UiHelper;
+use ShortPixel\Helper\UtilHelper as UtilHelper;
 use ShortPixel\Helper\InstallHelper as InstallHelper;
 
 use ShortPixel\Model\ApiKeyModel as ApiKeyModel;
@@ -778,7 +779,7 @@ class SettingsController extends \ShortPixel\ViewController
       {
         $deliverwebp = 0;
         if (! $this->is_nginx)
-          \ShortPixelTools::alterHtaccess(false, false); // always remove the statements.
+          UtilHelper::alterHtaccess(false, false); // always remove the statements.
 
 			  $webpOn = isset($post['createWebp']) && $post['createWebp'] == 1;
 				$avifOn = isset($post['createAvif']) && $post['createAvif'] == 1;
@@ -809,7 +810,7 @@ class SettingsController extends \ShortPixel\ViewController
 
         if (! $this->is_nginx && $deliverwebp == 3) // deliver webp/avif via htaccess, write rules
         {
-          \ShortPixelTools::alterHtaccess(true, true);
+          UtilHelper::alterHtaccess(true, true);
         }
 
          $post['deliverWebp'] = $deliverwebp;
