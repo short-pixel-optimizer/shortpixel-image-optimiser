@@ -2434,10 +2434,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
   }
 
-	private function getAllThumbnails()
-	{
-
-	}
 
   /** Adds Unlisted Image to the Media Library Item
   * This function is called in IsProcessable

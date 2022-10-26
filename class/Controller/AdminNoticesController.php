@@ -36,36 +36,24 @@ class AdminNoticesController extends \ShortPixel\Controller
 		);
 		protected $adminNotices; // Models
 
-
-//Added
     const MSG_COMPAT = 'Error100';  // Plugin Compatility, warn for the ones that disturb functions.
-//Added
     const MSG_UNLISTED_FOUND = 'Error102'; // SPIO found unlisted images, but this setting is not on
-//Added
 		const MSG_AVIF_ERROR = 'Error103'; // Detected unexpected or wrong AVIF headers when avif is on.
 
     //const MSG_NO_
-//Added
     const MSG_QUOTA_REACHED = 'QuotaReached100';
-//Added
     const MSG_UPGRADE_MONTH = 'UpgradeNotice200';  // When processing more than the subscription allows on average..
-		// @todo This one has been removed for now. Cleanup later on the line
-// Seemingly not in use.
-  //  const MSG_UPGRADE_BULK = 'UpgradeNotice201'; // when there is no enough for a bulk run.
 
-//Added (all)
+
     const MSG_NO_APIKEY = 'ApiNotice300'; // API Key not found
     const MSG_NO_APIKEY_REPEAT = 'ApiNotice301';  // First Repeat.
     const MSG_NO_APIKEY_REPEAT_LONG = 'ApiNotice302'; // Last Repeat.
 
-//Added (all)
     const MSG_INTEGRATION_NGGALLERY = 'IntNotice400';
 		const MSG_FEATURE_SMARTCROP = 'FeaNotice100';
 
-//Added
 		const MSG_CONVERT_LEGACY = 'LegNotice100';
 
-//Added
 		const MSG_LISTVIEW_ACTIVE = 'UxNotice100';
 
     private $remote_message_endpoint = 'https://api.shortpixel.com/v2/notices.php';
@@ -104,42 +92,32 @@ class AdminNoticesController extends \ShortPixel\Controller
     /** Triggered when plugin is activated */
     public static function resetCompatNotice()
     {
-        Notices::removeNoticeByID(self::MSG_COMPAT);
+        Notices::removeNoticeByID('MSG_COMPAT');
     }
 
     public static function resetAPINotices()
     {
-      Notices::removeNoticeByID(self::MSG_NO_APIKEY);
-      Notices::removeNoticeByID(self::MSG_NO_APIKEY_REPEAT);
-      Notices::removeNoticeByID(self::MSG_NO_APIKEY_REPEAT_LONG);
+      Notices::removeNoticeByID('MSG_NO_APIKEY');
+      Notices::removeNoticeByID('MSG_NO_APIKEY_REPEAT');
+      Notices::removeNoticeByID('MSG_NO_APIKEY_REPEAT_LONG');
     }
 
     public static function resetQuotaNotices()
     {
-      Notices::removeNoticeByID(self::MSG_UPGRADE_MONTH);
-      Notices::removeNoticeByID(self::MSG_UPGRADE_BULK);
-      Notices::removeNoticeBYID(self::MSG_QUOTA_REACHED);
+      Notices::removeNoticeByID('MSG_UPGRADE_MONTH');
+      Notices::removeNoticeByID('MSG_UPGRADE_BULK');
+      Notices::removeNoticeBYID('MSG_QUOTA_REACHED');
     }
 
     public static function resetIntegrationNotices()
     {
-      Notices::removeNoticeByID(self::MSG_INTEGRATION_NGGALLERY);
+      Notices::removeNoticeByID('MSG_INTEGRATION_NGGALLERY');
     }
 
 		public static function resetLegacyNotice()
 		{
-			Notices::removeNoticeByID(self::MSG_CONVERT_LEGACY);
+			Notices::removeNoticeByID('MSG_CONVERT_LEGACY');
 		}
-
-    /** ReInstates A Persistent Notice manually */
-    public static function reInstateQuotaExceeded()
-    {
-      //$noticeControl = Notices::getInstance();
-      //$notice = $noticeControl->getNoticeByID(self::MSG_QUOTA_REACHED);
-      Notices::removeNoticeByID(self::MSG_QUOTA_REACHED);
-      //$notice->unDismiss();
-      //$noticeControl->update();
-    }
 
     public function displayNotices()
     {
@@ -186,12 +164,10 @@ class AdminNoticesController extends \ShortPixel\Controller
 						}
 
 						// Todo change this to new keys
-            if ($notice->getID() == AdminNoticesController::MSG_QUOTA_REACHED || $notice->getID() == AdminNoticesController::MSG_UPGRADE_MONTH) //|| $notice->getID() == AdminNoticesController::MSG_UPGRADE_BULK
+            if ($notice->getID() == 'MSG_QUOTA_REACHED' || $notice->getID() == 'MSG_UPGRADE_MONTH') //|| $notice->getID() == AdminNoticesController::MSG_UPGRADE_BULK
             {
               wp_enqueue_script('jquery.knob.min.js');
-              //wp_enqueue_script('jquery.tooltip.min.js');
               wp_enqueue_script('shortpixel');
-            //  \wpSPIO()->load_style('shortpixel-modal');
             }
           }
         }
@@ -210,14 +186,6 @@ class AdminNoticesController extends \ShortPixel\Controller
 
 			$this->loadNotices();
 
-     /*  $this->doAPINotices();
-       $this->doCompatNotices();
-       $this->doUnlistedNotices();
-       $this->doQuotaNotices();
-       $this->doIntegrationNotices();
-       $this->doRemoteNotices();
-
-			 $this->doListViewNotice(); */
     }
 
 		protected function loadNotices()
@@ -232,7 +200,6 @@ class AdminNoticesController extends \ShortPixel\Controller
 
 		public function getNoticeByKey($key)
 		{
-	//	echo "<PRE> GetbyKey AdminNoticesController: ";	var_dump($this->adminNotices); echo "</PRE>";
 			 if (isset($this->adminNotices[$key]))
 			 {
 			 	 return $this->adminNotices[$key];
@@ -247,126 +214,6 @@ class AdminNoticesController extends \ShortPixel\Controller
 			 return $this->adminNotices;
 		}
 
-/*
-    protected function doIntegrationNotices()
-    {
-        $settings= \wpSPIO()->settings();
-				$noticeController = Notices::getInstance();
-
-        if (! \wpSPIO()->settings()->verifiedKey)
-        {
-          return; // no key, no integrations.
-        }
-
-        if (\wpSPIO()->env()->has_nextgen && ! $settings->includeNextGen)
-        {
-            $url = esc_url(admin_url('options-general.php?page=wp-shortpixel-settings&part=adv-settings'));
-            $message = sprintf(__('It seems you are using NextGen Gallery. You can optimize your galleries with ShortPixel, but this is currently not enabled. To enable, %sgo to settings and enable%s it!', 'shortpixel_image_optimiser'), '<a href="' . $url . '">', '</a>');
-            $notice = Notices::addNormal($message);
-            Notices::makePersistent($notice, self::MSG_INTEGRATION_NGGALLERY, YEAR_IN_SECONDS);
-        }
-
-
-				$smartcropNotice = $noticeController->getNoticeByID(self::MSG_FEATURE_SMARTCROP);
-				if ($smartcropNotice === false || $smartcropNotice->isDismissed() === false)
-				{
-					 $link = 'https://shortpixel.com/knowledge-base/article/182-what-is-smart-cropping';
-					 $link2 = 'https://shortpixel.com/blog/how-to-smart-crop-wordpress-images/#how-to-crop-wordpress-images-automatically-smart-solution';
-					 $link3 = esc_url(admin_url('options-general.php?page=wp-shortpixel-settings'));
-
-					 $message = sprintf(__('%s With ShortPixel you can now %ssmartly crop%s the thumbnails on your website. This is especially useful for eCommerce websites %s(read more)%s. %s %s Activate the option in the %sShortPixel Settings%s page. %s', 'shortpixel-image-optimiser'),
-					  '<p>' ,
-					 	'<a href="' . $link . '" target="_blank">', '</a>',
-						'<a href="' . $link2 . '" target="_blank">', '</a>',
-						'</p>', '<p>',
- 						'<a href="' . $link3 . '" >', '</a>',
-						'</p>'
-					);
-					$notice = Notices::addNormal($message);
-					$notice->limitScreens('exclude', 'settings_page_wp-shortpixel-settings');
-					Notices::makePersistent($notice, self::MSG_FEATURE_SMARTCROP, YEAR_IN_SECONDS);
-				}
-
-
-    }
-*/
-
-    /** Load the various messages about the lack of API-keys in the plugin */
-		/*
-    protected function doAPINotices()
-    {
-        if (\wpSPIO()->settings()->verifiedKey)
-        {
-            return; // all fine.
-        }
-
-        $activationDate = \wpSPIO()->settings()->activationDate;
-        $noticeController = Notices::getInstance();
-        $now = time();
-
-        if (! $activationDate)
-        {
-           $activationDate = $now;
-           \wpSPIO()->settings()->activationDate = $activationDate;
-        }
-
-        $notice = $noticeController->getNoticeByID(self::MSG_NO_APIKEY);
-        $notice_repeat = $noticeController->getNoticeByID(self::MSG_NO_APIKEY_REPEAT);
-        $notice_long = $noticeController->getNoticeByID(self::MSG_NO_APIKEY_REPEAT_LONG);
-
-        $notice_dismissed = ($notice && $notice->isDismissed()) ? true : false;
-        $notice_dismissed_repeat = ($notice_repeat && $notice_repeat->isDismissed()) ? true : false;
-        $notice_dismissed_long = ($notice_long && $notice_long->isDismissed()) ? true : false;
-
-        if (! $notice)
-        {
-          // If no key is activated, load the general one.
-          $message = $this->getActivationNotice();
-          $notice = Notices::addNormal($message);
-          Notices::makePersistent($notice, self::MSG_NO_APIKEY, YEAR_IN_SECONDS);
-        }
-
-        // The trick is that after X amount of time, the first message is replaced by one of those.
-        if ($notice_dismissed && ! $notice_dismissed_repeat && $now > $activationDate + (6 * HOUR_IN_SECONDS)) // after 6 hours.
-        {
-           $message = __("Action needed. Please <a href='https://shortpixel.com/wp-apikey' target='_blank'>get your API key</a> to activate your ShortPixel plugin.",'shortpixel-image-optimiser');
-
-           $notice = Notices::addWarning($message);
-           Notices::makePersistent($notice, self::MSG_NO_APIKEY_REPEAT, YEAR_IN_SECONDS);
-        }
-        elseif ($notice_dismissed_repeat && $notice_dismissed && ! $notice_dismissed_long && $now > $activationDate + (3 * DAY_IN_SECONDS) ) // after 3 days
-        {
-          $message = __("Your image gallery is not optimized. It takes 2 minutes to <a href='https://shortpixel.com/wp-apikey' target='_blank'>get your API key</a> and activate your ShortPixel plugin.",'shortpixel-image-optimiser') . "<BR><BR>";
-
-          $notice = Notices::addWarning($message);
-          Notices::makePersistent($notice, self::MSG_NO_APIKEY_REPEAT_LONG, YEAR_IN_SECONDS);
-
-        }
-
-    }
-*/
-    /*protected function doCompatNotices()
-    {
-      $noticeController = Notices::getInstance();
-
-      $notice = $noticeController->getNoticeByID(self::MSG_COMPAT);
-      $conflictPlugins = \ShortPixelTools::getConflictingPlugins();
-
-      if ($notice)
-      {
-        if (count($conflictPlugins) == 0)
-          Notices::removeNoticeByID(self::MSG_COMPAT); // remove when not actual anymore.
-        if ($notice->isDismissed() )
-          return;  // notice not wanted, don't bother.
-      }
-
-      // If this notice is not already out there, and there are conflicting plugins, go for display.
-      if (count($conflictPlugins) > 0)
-      {
-          $notice = Notices::addWarning($this->getConflictMessage($conflictPlugins));
-          Notices::makePersistent($notice, self::MSG_COMPAT, YEAR_IN_SECONDS);
-      }
-    } */
 
 		// Called by MediaLibraryModel
 		public function invokeLegacyNotice()
@@ -377,107 +224,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 				 $noticeModel->addManual();
 			}
 
-			/*$noticeController = Notices::getInstance();
-
-					$notice = $noticeController->getNoticeByID(self::MSG_CONVERT_LEGACY);
-					// If already in system, don't bother doing it again.
-					if ($notice !== false)
-						return;
-
-					$message = '<p><strong>' .  __('ShortPixel found items in media library with a legacy optimization format!', 'shortpixel-image-optimiser') . '</strong></p>';
-
-					$message .= '<p>' . __('Prior to version 5.0, a different format was used to store ShortPixel optimization information. ShortPixel automatically migrates the media library items to the new format when they are opened. %s Please check if your images contain the optimization information after the migration. %s Read more %s', 'shortpixel-image-optimiser') . '</p>';
-
-					$message .=  '<p>' . __('It is recommended to migrate all items to the modern format by clicking on the button below.', 'shortpixel-image-optimser') . '</p>';
-					$message .= '<p><a href="%s" class="button button-primary">%s</a></p>';
-
-					$read_link = esc_url('https://shortpixel.com/knowledge-base/article/539-spio-5-tells-me-to-convert-legacy-data-what-is-this');
-					$action_link = esc_url(admin_url('upload.php?page=wp-short-pixel-bulk&panel=bulk-migrate'));
-					$action_name = __('Migrate legacy data', 'shortpixel-image-optimiser');
-
-					$message = sprintf($message, '<br>', '<a href="' . $read_link . '" target="_blank">', '</a>', $action_link, $action_name);
-
-					$notice = Notices::addNormal($message);
-					Notices::makePersistent($notice, self::MSG_CONVERT_LEGACY, YEAR_IN_SECONDS);
-					*/
-
 		}
-
-   /* protected function doUnlistedNotices()
-    {
-      $settings = \wpSPIO()->settings();
-      if ($settings->optimizeUnlisted)
-        return;
-
-      if(isset($settings->currentStats['foundUnlistedThumbs']) && is_array($settings->currentStats['foundUnlistedThumbs'])) {
-          $notice = Notices::addNormal($this->getUnlistedMessage($settings->currentStats['foundUnlistedThumbs']));
-          Notices::makePersistent($notice, self::MSG_UNLISTED_FOUND, YEAR_IN_SECONDS);
-      }
-    } */
-
-    protected function doQuotaNotices()
-    {
-      $settings = \wpSPIO()->settings();
-
-      $quotaController = QuotaController::getInstance();
-			$noticeController = Notices::getInstance();
-		//	$statsControl = StatsController::getInstance(); // @todo Implement this. (Figure out what this was )
-
-			$callback = array(AdminNoticesController::getInstance(), 'proposeUpgradePopup');
-
-      if (! \wpSPIO()->settings()->verifiedKey)
-      {
-        return; // no key, no quota.
-      }
-
-			// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
-      if(isset($_GET['checkquota'])) {
-          //$shortpixel->getQuotaInformation();
-          $quota = $quotaController->getQuota();
-      }
-
-
-      /**  Comment for historical reasons, this seems strange in the original, excluding.
-      * isset($this->_settings->currentStats['optimizePdfs'])
-      * && $this->_settings->currentStats['optimizePdfs'] == $this->_settings->optimizePdfs )
-      */
-      if($quotaController->hasQuota() === true)
-      {
-          $env = \wpSPIO()->env();
-
-         // $quotaController = QuotaController::getInstance();
-          $quotaData = $quotaController->getQuota();
-
-          $month_notice = $noticeController->getNoticeByID(self::MSG_UPGRADE_MONTH);
-
-          //consider the monthly plus 1/6 of the available one-time credits.
-          if( $this->monthlyUpgradeNeeded($quotaData)) {
-
-							if ($month_notice === false)
-							{
-								//looks like the user hasn't got enough credits to process the monthly images, display a notice telling this
-	              $message = $this->getMonthlyUpgradeMessage(array('monthAvg' => $this->getMonthAvg(), 'monthlyQuota' => $quotaData->monthly->total, 'onetimeTotal' => $quotaData->onetime->remaining ));
-	              $notice = Notices::addNormal($message);
-	              Notices::makePersistent($notice, self::MSG_UPGRADE_MONTH, YEAR_IN_SECONDS, $callback);
-							}
-          }
-      }
-      elseif ($quotaController->hasQuota() === false)
-      {
-
-				 $notice = $noticeController->getNoticeByID(self::MSG_QUOTA_REACHED);
-				 if ($notice === false)
-				 {
-					$message = $this->getQuotaExceededMessage();
-         	$notice = Notices::addError($message);
-         	Notices::makePersistent($notice, self::MSG_QUOTA_REACHED, WEEK_IN_SECONDS, $callback);
-				 }
-
-         Notices::removeNoticeByID(self::MSG_UPGRADE_MONTH); // get rid of doubles. reset
-         Notices::removeNoticeByID(self::MSG_UPGRADE_BULK);
-      }
-
-    }
 
 
     protected function doRemoteNotices()
@@ -526,207 +273,6 @@ class AdminNoticesController extends \ShortPixel\Controller
 
    }
 
-	 protected function doListViewNotice()
-	 {
-		  // Don't check for this, when not on this screen.
-	   	$screen_id = \wpSPIO()->env()->screen_id;
-			if ($screen_id !== 'upload')
-			{
-				return;
-			}
-
-     $noticeController = Notices::getInstance();
-
-      if ( function_exists('wp_get_current_user') ) {
-            $current_user = wp_get_current_user();
-            $currentUserID = $current_user->ID;
-            $viewMode = get_user_meta($currentUserID, "wp_media_library_mode", true);
-
-						if ($viewMode === "" || strlen($viewMode) == 0)
-						{
-								// If nothing is set, set it for them.
-								update_user_meta($currentUserID, 'wp_media_library_mode', 'list');
-						}
-						elseif ($viewMode !== "list")
-						{
-								// @todo The notice is user-dependent but the notice is dismissed installation-wide.
-
-							  $message = sprintf(__('You can see ShortPixel Image Optimiser actions and data only via the list view. Switch to the list view to use the plugin via the media library.  Click to %s switch to the list view %s now. ', 'shortpixel-image-optimiser'), '<a href="' . admin_url('upload.php?mode=list') . '">','</a>');
-								$new_notice = Notices::addNormal($message);
-								$new_notice->limitScreens('include', 'upload');
-								Notices::makePersistent($new_notice, self::MSG_LISTVIEW_ACTIVE, YEAR_IN_SECONDS);
-						}
-						else
-						{
-							$noticeObj = $noticeController->getNoticeByID(self::MSG_LISTVIEW_ACTIVE);
-							if ($noticeObj !== false)
-							{
-									Notices::removeNoticeByID(self::MSG_LISTVIEW_ACTIVE);
-							}
-						}
-
-        }
-	 }
-
-    // Callback to check if we are on the correct page.
-    public function upgradeBulkCallback($notice)
-    {
-      if (! \wpSPIO()->env()->is_bulk_page)
-			{
-        return false;
-			}
-    }
-
-  /*  protected function getPluginUpdateMessage($new_version)
-    {
-        $message = false;
-        if (version_compare(SHORTPIXEL_IMAGE_OPTIMISER_VERSION, $new_version, '>=') ) // already installed 'new version'
-        {
-            return false;
-        }
-        elseif (version_compare($new_version, '5.0', '>=') && version_compare(SHORTPIXEL_IMAGE_OPTIMISER_VERSION, '5.0','<'))
-        {
-             $message = __('<h4>Version 5.0</h4> Warning, Version 5 is a major update. It\'s strongly recommend to backup your site and proceed with caution. Please report issues via our support channels', 'shortpixel-image-optimiser');
-        }
-
-        return $message;
-    } */
-
-/*
-    public function getActivationNotice()
-    {
-      $message = "<p>" . __('In order to start the optimization process, you need to validate your API Key in the '
-              . '<a href="options-general.php?page=wp-shortpixel-settings">ShortPixel Settings</a> page in your WordPress Admin.','shortpixel-image-optimiser') . "
-      </p>
-      <p>" .  __('If you don’t have an API Key, just fill out the form and a key will be created.','shortpixel-image-optimiser') . "</p>";
-
-      return $message;
-    }
-*/
-
-    /*protected function getConflictMessage($conflicts)
-    {
-      $message = __("The following plugins are not compatible with ShortPixel and may lead to unexpected results: ",'shortpixel-image-optimiser');
-      $message .= '<ul class="sp-conflict-plugins">';
-      foreach($conflicts as $plugin) {
-          //ShortPixelVDD($plugin);
-          $action = $plugin['action'];
-          $link = ( $action == 'Deactivate' )
-              ? wp_nonce_url( admin_url( 'admin-post.php?action=shortpixel_deactivate_conflict_plugin&plugin=' . urlencode( $plugin['path'] ) ), 'sp_deactivate_plugin_nonce' )
-              : $plugin['href'];
-          $message .= '<li class="sp-conflict-plugins-list"><strong>' . $plugin['name'] . '</strong>';
-          $message .= '<a href="' . $link . '" class="button button-primary">' . $action . '</a>';
-
-          if($plugin['details']) $message .= '<br>';
-          if($plugin['details']) $message .= '<span>' . $plugin['details'] . '</span>';
-      }
-      $message .= "</ul>";
-
-      return $message;
-    }
-*/
-/*
-    protected function getUnlistedMessage($unlisted)
-    {
-      $message = __("<p>ShortPixel found thumbnails which are not registered in the metadata but present alongside the other thumbnails. These thumbnails could be created and needed by some plugin or by the theme. Let ShortPixel optimize them as well?</p>", 'shortpixel-image-optimiser');
-      $message .= '<p>' . __("For example, the image", 'shortpixel-image-optimiser') . '
-          <a href="post.php?post=' . $unlisted->id . '&action=edit" target="_blank">
-              ' . $unlisted->name . '
-          </a> has also these thumbs not listed in metadata: '  . (implode(', ', $unlisted->unlisted)) . '
-          </p>';
-
-        return $message;
-    }
-*/
-/* Seems unused   @todo Remove in a few versions
-    protected function getBulkUpgradeMessage($extra)
-    {
-      $message = '<p>' . sprintf(__("You currently have <strong>%d images and thumbnails to optimize</strong> but you only have <strong>%d images</strong> available in your current plan."
-            . " You might need to upgrade your plan in order to have all your images optimized.", 'shortpixel-image-optimiser'), $extra['filesTodo'], $extra['quotaAvailable']) . '</p>';
-      $message .= '<p><button class="button button-primary" id="shortpixel-upgrade-advice" onclick="ShortPixel.proposeUpgrade()" style="margin-right:10px;"><strong>' .  __('Show me the best available options', 'shortpixel-image-optimiser') . '</strong></button></p>';
-       $this->proposeUpgradePopup();
-      return $message;
-    }
-*/
-    protected function getMonthlyUpgradeMessage($extra)
-    {
-      $message = '<p>' . sprintf(__("You are adding an average of <strong>%d images and thumbnails every month</strong> to your Media Library and you have <strong>a plan of %d images/month (and %d one-time images)</strong>.%s"
-            . " You might need to upgrade your plan in order to have all your images optimized.", 'shortpixel-image-optimiser'), $extra['monthAvg'], $extra['monthlyQuota'], $extra['onetimeTotal'], '<br>') . '</p>';
-      $message .= '  <button class="button button-primary" id="shortpixel-upgrade-advice" onclick="ShortPixel.proposeUpgrade()" style="margin-right:10px;"><strong>' .  __('Show me the best available options', 'shortpixel-image-optimiser') . '</strong></button>';
-      return $message;
-    }
-
-/*
-    protected function getQuotaExceededMessage()
-    {
-      $statsControl = StatsController::getInstance();
-      $averageCompression = $statsControl->getAverageCompression();
-      $quotaController = QuotaController::getInstance();
-
-      $keyControl = ApiKeyController::getInstance();
-
-      //$keyModel->loadKey();
-
-      $login_url = 'https://shortpixel.com/login/';
-      $friend_url = $login_url;
-
-      if ($keyControl->getKeyForDisplay())
-      {
-        $login_url .= $keyControl->getKeyForDisplay() . '/';
-        $friend_url = $login_url . 'tell-a-friend';
-      }
-
-     $message = '<div class="sp-quota-exceeded-alert"  id="short-pixel-notice-exceed">';
-
-     if($averageCompression) {
-
-          $message .= '<div style="float:right;">
-              <div class="bulk-progress-indicator" style="height: 110px">
-                  <div style="margin-bottom:5px">' . __('Average image<br>reduction so far:','shortpixel-image-optimiser') . '</div>
-                  <div id="sp-avg-optimization"><input type="text" id="sp-avg-optimization-dial" value="' . round($averageCompression) . '" class="dial percentDial" data-dialsize="60"></div>
-                  <script>
-                      jQuery(function() {
-													if (ShortPixel)
-													{
-                          	ShortPixel.percentDial("#sp-avg-optimization-dial", 60);
-													}
-                      });
-                  </script>
-              </div>
-          </div>';
-
-    }
-
-        $message .= '<h3>' . __('Quota Exceeded','shortpixel-image-optimiser') . '</h3>';
-
-        $quota = $quotaController->getQuota();
-
-        $creditsUsed = number_format($quota->monthly->consumed + $quota->onetime->consumed);
-        $totalOptimized = $statsControl->find('total', 'images');
-        $totalImagesToOptimize = number_format($statsControl->totalImagesToOptimize());
-
-        $message .= '<p>' . sprintf(__('The plugin has optimized <strong>%s images</strong> and stopped because it reached the available quota limit.','shortpixel-image-optimiser'),
-              $creditsUsed);
-
-        if($totalImagesToOptimize > 0) {
-
-              $message .= sprintf(__('<strong> %s images and thumbnails</strong> are not yet optimized by ShortPixel.','shortpixel-image-optimiser'), $totalImagesToOptimize  );
-          }
-
-         $message .= '</p>
-            <div>
-              <button class="button button-primary" type="button" id="shortpixel-upgrade-advice" onclick="ShortPixel.proposeUpgrade()" style="margin-right:10px;"><strong>' .  __('Show me the best available options', 'shortpixel-image-optimiser') . '</strong></button>
-              <a class="button button-primary" href="' . $login_url . '"
-                 title="' . __('Go to my account and select a plan','shortpixel-image-optimiser') . '" target="_blank" style="margin-right:10px;">
-                  <strong>' . __('Upgrade','shortpixel-image-optimiser') . '</strong>
-              </a>
-              <button type="button" name="checkQuota" class="button" onclick="ShortPixel.checkQuota()">'.  __('Confirm New Credits','shortpixel-image-optimiser') . '</button>
-          </div>';
-
-				$message .= '</div>'; /// closing div
-        return $message;
-    }
-*/
     public function proposeUpgradePopup() {
 					$view = new ViewController();
 					$view->loadView('snippets/part-upgrade-options');
@@ -819,49 +365,8 @@ class AdminNoticesController extends \ShortPixel\Controller
         return $notices;
    }
 
-    protected function monthlyUpgradeNeeded($quotaData)
-		{
-				if  (isset($quotaData->monthly->total))
-				{
-						$monthAvg = $this->getMonthAvg($quotaData);
-						// +20 I suspect to not trigger on very low values of monthly use(?)
-						$threshold = $quotaData->monthly->total + ($quotaData->onetime->remaining / 6 ) +20;
 
-						if ($monthAvg > $threshold)
-						{
-								return true;
-						}
-				}
-				return false;
-    }
 
-    protected function bulkUpgradeNeeded() {
-
-        $quotaController = QuotaController::getInstance(); //$stats;
-        $stats = StatsController::getInstance();
-
-        $to_process = $stats->totalImagesToOptimize(); // $stats->find('total', 'imagesTotal') - $stats->find('total', 'images');
-
-        return $to_process > $quotaController->getAvailableQuota();
-
-        //return $to_process > $quotaData->monthly->total +  + $quotaData['APICallsQuotaOneTimeNumeric'] - $quotaData['APICallsMadeNumeric'] - $quotaData['APICallsMadeOneTimeNumeric'];
-    }
-
-    protected function getMonthAvg() {
-        $stats = StatsController::getInstance();
-
-				// Count how many months have some optimized images.
-        for($i = 4, $count = 0; $i>=1; $i--) {
-            if($count == 0 && $stats->find('period', 'months', $i) == 0)
-						{
-							continue;
-						}
-            $count++;
-
-        }
-				// Sum last 4 months, and divide by number of active months to get number of avg per active month.
-        return ($stats->find('period', 'months', 1) + $stats->find('period', 'months', 2) + $stats->find('period', 'months', 3) + $stats->find('period', 'months', 4) / max(1,$count));
-    }
 
 
     public function pluginUpdateMessage($data, $response)
