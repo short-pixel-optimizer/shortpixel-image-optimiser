@@ -251,6 +251,34 @@ class SettingsController extends \ShortPixel\ViewController
           $this->load();
       }
 
+			public function action_debug_triggerNotice()
+			{
+				$key = isset($_REQUEST['notice_constant']) ? sanitize_text_field($_REQUEST['notice_constant']) : false;
+
+				if ($key !== false)
+				{
+					$adminNoticesController = AdminNoticesController::getInstance();
+
+					if ($key == 'trigger-all')
+					{
+						$notices = $adminNoticesController->getAllNotices();
+						foreach($notices as $noticeObj)
+						{
+							 $noticeObj->addManual();
+						}
+					}
+					else
+					{
+						$model = $adminNoticesController->getNoticeByKey($key);
+						if ($model)
+							$model->addManual();
+					}
+				}
+				$this->load();
+
+			}
+
+
 			public function action_debug_resetQueue()
 			{
 				 $queue = isset($_REQUEST['queue']) ? sanitize_text_field($_REQUEST['queue']) : null;
@@ -309,6 +337,7 @@ class SettingsController extends \ShortPixel\ViewController
 			}
 
 
+
       public function processSave()
       {
           // Split this in the several screens. I.e. settings, advanced, Key Request IF etc.
@@ -357,7 +386,7 @@ class SettingsController extends \ShortPixel\ViewController
           if ($this->do_redirect)
             $this->doRedirect('bulk');
           else {
-						
+
 						$noticeController = Notice::getInstance();
 						$notice = Notice::addSuccess(__('Settings Saved', 'shortpixel-image-optimiser'));
 						$notice->is_removable = false;

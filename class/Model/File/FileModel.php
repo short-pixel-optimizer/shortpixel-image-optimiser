@@ -17,6 +17,7 @@ class FileModel extends \ShortPixel\Model
 
   // File info
   protected $fullpath = null;
+	protected $rawfullpath = null;
   protected $filename = null; // filename + extension
   protected $filebase = null; // filename without extension
   protected $directory = null;
@@ -42,6 +43,7 @@ class FileModel extends \ShortPixel\Model
   public function __construct($path)
   {
     $this->fullpath = trim($path);
+		$this->rawfullpath = $this->fullpath;
     $fs = \wpSPIO()->filesystem();
     if ($fs->pathIsUrl($path)) // Asap check for URL's to prevent remote wrappers from running.
     {
@@ -382,7 +384,7 @@ class FileModel extends \ShortPixel\Model
 	// So far, testing use for file Filter */
 	public function getRawFullPath()
 	{
-			return $this->fullpath;
+			return $this->rawfullpath;
 	}
 
   public function getFileName()
@@ -479,7 +481,7 @@ class FileModel extends \ShortPixel\Model
     if ($path === false) // don't process further
       return false;
 
-    $path = wp_normalize_path($path);
+  //  $path = wp_normalize_path($path);
 		$abspath = $fs->getWPAbsPath();
 
     if ( is_file($path) && ! is_dir($path) ) // if path and file exist, all should be okish.
