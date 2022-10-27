@@ -318,7 +318,7 @@ class QuotaController
 
 					//reset quota exceeded flag -> user is allowed to process more images.
 
-          if ( $dataArray['APICallsRemaining'] > 0)
+          if ( $dataArray['APICallsRemaining'] > 0 || $dataArray['Unlimited'])
 					{
               $this->resetQuotaExceeded();
 					}
