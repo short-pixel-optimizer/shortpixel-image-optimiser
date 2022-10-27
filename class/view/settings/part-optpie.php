@@ -12,9 +12,9 @@ if( $total  >0 ) {
 
 <?php if ( round($view->averageCompression) > 20): ?>
 	<div class="sp-bulk-summary">
-			<span><?php esc_html_e('Average optimization', 'shortpixel-image-optimiser'); ?></span>
+			<span><?php esc_html_e('Average optimization', 'shortpixel-image-optimiser'); ?></span><br>
 			<a title="<?php esc_html_e('Average optimization', 'shortpixel-image-optimiser'); ?>">
-			<svg class="opt-circle-average" viewBox="-10 0 150 140">
+			<svg class="opt-circle-average" viewBox="-10 0 120 100">
 										<path class="trail" d="
 												M 50,50
 												m 0,-46

@@ -1,1 +1,7 @@
-{"version":3,"sourceRoot":"","sources":["../scss/shortpixel-nextgen.scss"],"names":[],"mappings":"AACA;EAEE;;AAEE;EACI;EACA;;AAEN;EACE;EACA;EACA;EACA;;AAEF;EACC;;AAED;EAEE;EACA;EACA;EACA","file":"shortpixel-nextgen.css"}
+{
+"version": 3,
+"mappings": "AACA,iCACA;EACE,QAAQ,EAAE,QAAQ;EAEhB,iDAAgB;IACZ,SAAS,EAAE,KAAK;IAChB,aAAa,EAAE,GAAG;EAExB,oDAAmB;IACjB,KAAK,EAAE,KAAK;IACZ,QAAQ,EAAE,QAAQ;IAClB,KAAK,EAAE,IAAI;IACX,GAAG,EAAE,CAAC;EAER,yCAAQ;IACP,gBAAgB,EAAE,KAAK;EAExB,oDACA;IACE,WAAW,EAAE,SAAS;IACtB,KAAK,EAAE,IAAI;IACX,MAAM,EAAE,IAAI;IACZ,SAAS,EAAE,IAAI",
+"sources": ["../scss/shortpixel-nextgen.scss"],
+"names": [],
+"file": "shortpixel-nextgen.css"
+}

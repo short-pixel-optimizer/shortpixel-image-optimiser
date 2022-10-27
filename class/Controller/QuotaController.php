@@ -75,6 +75,7 @@ class QuotaController
           $DaysToReset =  30 - ( (int) (  ( $DateNow  - $DateSubscription) / 84600) % 30);
 
           $quota = (object) [
+              'unlimited' => $quotaData['Unlimited'],
               'monthly' => (object) [
                 'text' =>  sprintf(__('%s/month', 'shortpixel-image-optimiser'), $quotaData['APICallsQuota']),
                 'total' =>  $quotaData['APICallsQuotaNumeric'],
@@ -306,6 +307,8 @@ class QuotaController
               "APICallsQuotaNumeric" => (int) max($data->APICallsQuota, 0),
               "APICallsMadeOneTimeNumeric" =>  (int) max($data->APICallsMadeOneTime, 0),
               "APICallsQuotaOneTimeNumeric" => (int) max($data->APICallsQuotaOneTime, 0),
+
+              "Unlimited" => ($data->Unlimited == 'true'),
 
               "APILastRenewalDate" => $data->DateSubscription,
               "DomainCheck" => (isset($data->DomainCheck) ? $data->DomainCheck : null)

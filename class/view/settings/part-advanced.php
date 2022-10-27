@@ -16,7 +16,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
     if( $this->is_nginx ){
         $deliverWebpUnaltered = '';                         // Uncheck
         $deliverWebpUnalteredDisabled = 'disabled';         // Disable
-        $deliverWebpUnalteredLabel = __('It looks like you\'re running your site on an NGINX server. This means that you can only achieve this functionality by directly configuring the server config files. Please, follow this link for instructions:','shortpixel-image-optimiser')." <a class=\"shortpixel-help-link\" href=\"https://shortpixel.com/knowledge-base/article/111-configure-nginx-to-transparently-serve-webp-files-when-supported\" target=\"_blank\" data-beacon-article=\"5bfeb9de2c7d3a31944e78ee\"><span class=\"dashicons dashicons-editor-help\"></span></a>";
+        $deliverWebpUnalteredLabel = __('It looks like you\'re running your site on an NGINX server. This means that you can only achieve this functionality by directly configuring the server config files. Please follow this link for instructions:','shortpixel-image-optimiser')." <a class=\"shortpixel-help-link\" href=\"https://shortpixel.com/knowledge-base/article/111-configure-nginx-to-transparently-serve-webp-files-when-supported\" target=\"_blank\" data-beacon-article=\"5bfeb9de2c7d3a31944e78ee\"><span class=\"dashicons dashicons-editor-help\"></span></a>";
         $deliverAVIFLabel = __('<strong>It looks like you\'re running your site on an NGINX server. You may need additional configuration for the AVIF delivery to work as expected</strong>','shortpixel-image-optimiser')." <a class=\"shortpixel-help-link\" href=\"https://shortpixel.com/knowledge-base/article/499-how-do-i-configure-my-web-server-to-deliver-avif-images/\" target=\"_blank\"><span class=\"dashicons dashicons-editor-help\"></span></a>";
     } else {
         if( !$this->is_htaccess_writable ){
@@ -53,8 +53,8 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
             <tr>
                 <th scope="row"><?php esc_html_e('Next Generation Images','shortpixel-image-optimiser');?></th>
                 <td>
+                    <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/286-how-to-serve-webp-files-using-spio"></span></div>
 									 <div class='switch_button'>
-										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/286-how-to-serve-webp-files-using-spio"></span></div>
 										 <label>
 											 <input type="checkbox" class="switch" name="createWebp" value="1" <?php checked( $view->data->createWebp, "1" );?>>
 											 <div class="the_switch">&nbsp; </div>
@@ -64,8 +64,8 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
 
                     <p>&nbsp;</p>
 
+                    <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/467-how-to-create-and-serve-avif-files-using-shortpixel-image-optimizer"></span></div>
 									 <div class='switch_button'>
-										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/467-how-to-create-and-serve-avif-files-using-shortpixel-image-optimizer"></span></div>
 										 <label>
 											 <input type="checkbox" class="switch" name="createAvif" value="1" <?php checked( $view->data->createAvif, "1" );?>>
 											 <div class="the_switch">&nbsp; </div>
@@ -74,8 +74,8 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
 									 </div>
 
 
-                   <?php if($deliverAVIFLabel || true){ ?>
-                                <p class="sp-notice">
+                   <?php if(strlen($deliverAVIFLabel)){ ?>
+                                <p class="sp-notice sp-notice-warning">
                                <?php echo ( $deliverAVIFLabel );?>
                                 </p>
                    <?php } ?>
@@ -83,8 +83,8 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                     <p>&nbsp;</p>
 
                     <div class="deliverWebpSettings">
+                        <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/126-which-webp-files-delivery-method-is-the-best-for-me"></span></div>
 											 <div class='switch_button'>
-												<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/126-which-webp-files-delivery-method-is-the-best-for-me"></span></div>
 												 <label>
 													 <input type="checkbox" class="switch" name="deliverWebp" data-toggle="deliverTypes" value="1" <?php checked( ($view->data->deliverWebp > 0), true);?>>
 													 <div class="the_switch">&nbsp; </div>
@@ -132,8 +132,8 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                                 <label for="deliverWebpUnaltered">
                                     <?php esc_html_e('Without altering the page code (via .htaccess)','shortpixel-image-optimiser')?>
                                 </label>
-                                <?php if($deliverWebpUnalteredLabel){ ?>
-                                    <p class="sp-notice"><strong>
+                                <?php if(strlen($deliverWebpUnalteredLabel)){ ?>
+                                    <p class="sp-notice sp-notice-warning"><strong>
                                         <?php echo( $deliverWebpUnalteredLabel );?>
 																			</strong>
                                     </p>
@@ -146,9 +146,8 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
             <tr>
                 <th scope="row"><?php esc_html_e('Optimize media on upload','shortpixel-image-optimiser');?></th>
                 <td>
-
+                    <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/521-settings-optimize-media-on-upload"></span></div>
 									 <div class='switch_button'>
-									<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/521-settings-optimize-media-on-upload"></span></div>
 										 <label>
 											 <input type="checkbox" class="switch" name="autoMediaLibrary" id='autoMediaLibrary' value="1" <?php checked( $view->data->autoMediaLibrary, "1" );?>>
 											 <div class="the_switch">&nbsp; </div>
@@ -174,7 +173,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
 						<tr>
 							<th scope='row'>&nbsp;</th>
 							<td>
-										 <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.helpscoutdocs.com/article/536-why-is-the-option-process-in-the-front-end-gone"></span></div>
+                             <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.helpscoutdocs.com/article/536-why-is-the-option-process-in-the-front-end-gone"></span></div>
 								<div class='view-notice warning'><p><?php esc_html_e('Important. From version 5 the front processing option is no longer available. There will be no processing on the frontend. To enable optimizing images without visiting the backend, please see the options available for command line optimization.', 'shortpixel-image-optimiser') ?></p>
 									<p><?php esc_html_e('To turn off this message, click the checkbox and save settings', 'shortpixel-image-optimiser'); ?></p>
 								</div>
@@ -204,8 +203,8 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
             <tr>
                 <th scope="row"><?php esc_html_e('Optimize PDFs','shortpixel-image-optimiser');?></th>
                 <td>
+                    <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/520-settings-optimize-pdfs"></span></div>
 									 <div class='switch_button'>
-										 <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/520-settings-optimize-pdfs"></span></div>
 
 										 <label>
 											 <input type="checkbox" class="switch" name="optimizePdfs" value="1" <?php checked( $view->data->optimizePdfs, "1" );?>>
@@ -219,8 +218,8 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
             <tr>
                 <th scope="row"><?php esc_html_e('Optimize Retina images','shortpixel-image-optimiser');?></th>
                 <td>
+                    <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/518-settings-optimize-retina-images"></span></div>
 									 <div class='switch_button'>
-										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/518-settings-optimize-retina-images"></span></div>
 										 <label>
 											 <input type="checkbox" class="switch" name="optimizeRetina" value="1" <?php checked( $view->data->optimizeRetina, "1" );?>>
 											 <div class="the_switch">&nbsp; </div>
@@ -232,10 +231,8 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
             <tr>
                 <th scope="row"><?php esc_html_e('Optimize other thumbnails','shortpixel-image-optimiser');?></th>
                 <td>
-
-
+                    <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/519-settings---optimize-other-thumbs"></span></div>
 									 <div class='switch_button'>
- 										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/519-settings---optimize-other-thumbs"></span></div>
 										 <label>
 											 <input type="checkbox" class="switch" name="optimizeUnlisted" value="1" <?php checked( $view->data->optimizeUnlisted, "1" );?>>
 											 <div class="the_switch">&nbsp; </div>
@@ -247,8 +244,8 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
             <tr>
                 <th scope="row"><?php esc_html_e('Convert PNG images to JPEG','shortpixel-image-optimiser');?></th>
                 <td>
+                    <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/516-settings-convert-png-images-to-jpeg"></span></div>
 									 <div class='switch_button option-png2jpg'>
- 										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/516-settings-convert-png-images-to-jpeg"></span></div>
 										 <label>
 											 <input type="checkbox" class="switch" name="png2jpg" value="1" <?php checked( ($view->data->png2jpg > 0), true);?> <?php echo($this->is_gd_installed ? '' : 'disabled') ?> data-toggle="png2jpgforce">
 											 <div class="the_switch">&nbsp; </div>
@@ -283,8 +280,8 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
             <tr>
                 <th scope="row"><?php esc_html_e('CMYK to RGB conversion','shortpixel-image-optimiser');?></th>
                 <td>
+                    <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/517-settings---cmyk-to-rgb-conversion"></span></div>
 									 <div class='switch_button'>
-	 										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/517-settings---cmyk-to-rgb-conversion"></span></div>
 										 <label>
 											 <input type="checkbox" class="switch" name="cmyk2rgb" value="1" <?php checked( $view->data->CMYKtoRGBconversion, "1" );?>>
 											 <div class="the_switch">&nbsp; </div>
@@ -297,12 +294,12 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
             <tr>
                 <th scope="row"><label for="excludeSizes"><?php esc_html_e('Exclude thumbnail sizes','shortpixel-image-optimiser');?></label></th>
                 <td>
+                    <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/113-how-can-i-optimize-only-certain-thumbnail-sizes"></span></div>
 									<div class="option-content">
-										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/113-how-can-i-optimize-only-certain-thumbnail-sizes"></span></div>
 
 
                     <?php foreach($view->allThumbSizes as $sizeKey => $sizeVal) {?>
-                        <span style="margin-right: 20px;white-space:nowrap">
+                        <span style="margin-right: 20px; white-space:nowrap; line-height: 24px;">
                           <label>
 
                             <input name="excludeSizes[]" type="checkbox" id="excludeSizes_<?php echo esc_attr($sizeKey);?>" <?php
@@ -514,10 +511,11 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                 <th scope="row"><label for="authentication"><?php esc_html_e('HTTP AUTH credentials','shortpixel-image-optimiser');?></label></th>
                 <td>
 									<?php if (! defined('SHORTPIXEL_HTTP_AUTH_USER')): ?>
-		                  <input name="siteAuthUser" type="text" id="siteAuthUser" value="<?php echo( esc_html(wp_unslash($view->data->siteAuthUser )));?>" class="regular-text" placeholder="<?php esc_html_e('User','shortpixel-image-optimiser');?>"><br>
-	                    <input name="siteAuthPass" type="text" id="siteAuthPass" value="<?php echo( esc_html(wp_unslash($view->data->siteAuthPass )));?>" class="regular-text" placeholder="<?php esc_html_e('Password','shortpixel-image-optimiser');?>">
+		                  <input name="siteAuthUser" type="text" id="siteAuthUser" value="<?php echo( esc_html(wp_unslash($view->data->siteAuthUser )));?>" class="regular-text" placeholder="<?php esc_html_e('User','shortpixel-image-optimiser');?>" style="margin-bottom: 8px"><br>
+	                    <input name="siteAuthPass" type="text" id="siteAuthPass" value="<?php echo( esc_html(wp_unslash($view->data->siteAuthPass )));?>" class="regular-text" placeholder="<?php esc_html_e('Password','shortpixel-image-optimiser');?>" style="margin-bottom: 8px">
 	                    <p class="settings-info">
-	                        <?php esc_html_e('Only fill in these fields if your site (front-end) is not publicly accessible and visitors need a user/pass to connect to it. If you don\'t know what is this then just <strong>leave the fields empty</strong>.','shortpixel-image-optimiser');?>
+	                        <?php printf(esc_html__('Only fill in these fields if your site (front-end) is not publicly accessible and visitors need a user/pass to connect to it. 
+                                    If you don\'t know what is this then just %sleave the fields empty%s.','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
 	                    </p>
 									<?php else:  ?>
 												<p><?php esc_html_e('The HTTP AUTH credentials have been defined in the wp-config file.', 'shortpixel-image-optimiser'); ?></p>

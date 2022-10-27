@@ -70,6 +70,7 @@ namespace ShortPixel;
                     <label for="compressionType"><?php esc_html_e('Compression type:','shortpixel-image-optimiser');?></label>
                 </th>
                 <td>
+                    <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/11-lossy-glossy-or-lossless-which-one-is-the-best-for-me"></span></div>
 
 										<input type="hidden" id="compressionType-database" value="<?php echo esc_attr($view->data->compressionType) ?>">
                     <div class="shortpixel-compression">
@@ -88,7 +89,6 @@ namespace ShortPixel;
 
                       <?php printf(esc_html__('%s Run a few tests%s to help you decide.', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/online-image-compression" style="margin-left:20px;" target="_blank">', '</a>'); ?>
 
-										 <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/11-lossy-glossy-or-lossless-which-one-is-the-best-for-me"></span></div>
 
                         <p class="settings-info shortpixel-radio-info shortpixel-radio-lossy" <?php echo( $view->data->compressionType == 1 ? "" : 'style="display:none"' );?>>
                             <?php printf(esc_html__('%sLossy compression (recommended): %s offers the best compression rate. %s This is the recommended option for most users, producing results that look the same as the original to the human eye.','shortpixel-image-optimiser'),'<b>','</b>', '<br />');?>
@@ -132,9 +132,8 @@ namespace ShortPixel;
             <tr>
                 <th scope="row"><?php esc_html_e('Thumbnail compression:','shortpixel-image-optimiser');?></th>
                 <td>
-
+                    <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/511-settings-also-include-thumbnails"></span></div>
 										<div class='switch_button'>
-										 <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/511-settings-also-include-thumbnails"></span></div>
 				              <label>
 				                <input type="checkbox" class="switch" name="processThumbnails" value="1" <?php checked($view->data->processThumbnails, '1');?>>
 				                <div class="the_switch">&nbsp; </div>
@@ -152,13 +151,12 @@ namespace ShortPixel;
 						<tr>
                 <th scope="row"><?php esc_html_e('Enable SmartCrop:','shortpixel-image-optimiser');?></th>
                 <td>
-
-										<div class='switch_button'>
-										 <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/182-what-is-smart-cropping"></span></div>
+                    <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/182-what-is-smart-cropping"></span></div>
+                    <div class='switch_button'>
 				              <label>
 				                <input type="checkbox" class="switch" name="useSmartcrop" value="1" <?php checked($view->data->useSmartcrop, '1');?>>
 				                <div class="the_switch">&nbsp; </div>
-												<?php printf(esc_html__('Enable %s Smartcropping %s option.','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
+												<?php printf(esc_html__('Enable %s Smart cropping %s of the images where applicable.','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
 									    </label>
 				            </div>
 
@@ -196,10 +194,8 @@ namespace ShortPixel;
             <tr>
                 <th scope="row"><?php esc_html_e('Remove EXIF','shortpixel-image-optimiser');?></th>
                 <td>
-
+                    <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/483-spai-remove-exif"></span></div>
 									<div class='switch_button'>
-										<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/483-spai-remove-exif">
-	 								 </span></div>
 										<label>
 											<input type="checkbox" class="switch" name="removeExif" value="1" <?php checked($view->data->keepExif, 0);?>>
 											<div class="the_switch">&nbsp; </div>

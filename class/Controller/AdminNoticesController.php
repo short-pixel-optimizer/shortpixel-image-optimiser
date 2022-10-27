@@ -751,7 +751,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 
     protected function monthlyUpgradeNeeded($quotaData)
 		{
-				if  (isset($quotaData->monthly->total))
+				if  ( isset($quotaData->monthly->total) && !$this->quotaData->unlimited)
 				{
 						$monthAvg = $this->getMonthAvg($quotaData);
 						// +20 I suspect to not trigger on very low values of monthly use(?)
