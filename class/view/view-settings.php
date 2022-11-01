@@ -22,20 +22,24 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
         <?php esc_html_e('ShortPixel account','shortpixel-image-optimiser');?>
     </a>
   </div>
-    <div class="spio-status-box">
-        <div class='pie-wrapper'><?php	$this->loadView('settings/part-optpie'); ?></div>
 
+    <?php if ( round($view->averageCompression) > 20 || (!is_null($this->quotaData) && !$this->quotaData->unlimited)): ?>
+        <div class="spio-status-box">
+            <?php if ( round($view->averageCompression) > 20): ?>
+                <div class='pie-wrapper'><?php	$this->loadView('settings/part-optpie'); ?></div>
+            <?php endif; ?>
 
-        <?php if (! is_null($this->quotaData) && !$this->quotaData->unlimited): ?>
-            <div class='quota-remaining'>
-                <a href="https://shortpixel.com/<?php
-                echo esc_attr(($view->data->apiKey ? "login/". $view->data->apiKey . "/dashboard" : "login"));
-                ?>" target="_blank">
-                    <?php printf(esc_html__('%s Credits remaining', 'shortpixel-image-optimiser'),  esc_html($this->formatNumber(max(0, $this->quotaData->total->remaining), 0))); ?>
-                </a>
-            </div>
-        <?php endif; ?>
-    </div>
+            <?php if (!is_null($this->quotaData) && !$this->quotaData->unlimited): ?>
+                <div class='quota-remaining'>
+                    <a href="https://shortpixel.com/<?php
+                    echo esc_attr(($view->data->apiKey ? "login/". $view->data->apiKey . "/dashboard" : "login"));
+                    ?>" target="_blank">
+                        <?php printf(esc_html__('%s Credits remaining', 'shortpixel-image-optimiser'),  esc_html($this->formatNumber(max(0, $this->quotaData->total->remaining), 0))); ?>
+                    </a>
+                </div>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
 </div>
 
 <hr class='wp-header-end'>
