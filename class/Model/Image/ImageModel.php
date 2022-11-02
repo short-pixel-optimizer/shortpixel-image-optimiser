@@ -631,10 +631,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                  $this->setMeta('resize', false);
              }
 
-
-             /*if ($tempFile)
-              $tempFile->delete();
-						*/
 						 if (isset($wasHeic) && $wasHeic == true)
 						 {
 							  $heicFile = $fs->getFile($heicPath);
@@ -643,8 +639,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 									$heicFile->delete(); // the original heic -file should not linger in uploads.
 								}
 						 }
-
-
           }
           else
           {

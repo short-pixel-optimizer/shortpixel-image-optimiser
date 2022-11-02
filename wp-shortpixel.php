@@ -44,7 +44,9 @@ if(!defined('SHORTPIXEL_USE_DOUBLE_AVIF_EXTENSION')) { //can be defined in wp-co
     define('SHORTPIXEL_USE_DOUBLE_AVIF_EXTENSION', false);
 }
 
-define('SHORTPIXEL_API', 'api.shortpixel.com');
+//define('SHORTPIXEL_API', 'api.shortpixel.com');
+// @todo Remove this
+define('SHORTPIXEL_API', 'dev2api2.shortpixel.com');
 
 $max_exec = intval(ini_get('max_execution_time'));
 if ($max_exec === 0) // max execution time of zero means infinite. Quantify.

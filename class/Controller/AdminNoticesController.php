@@ -36,30 +36,8 @@ class AdminNoticesController extends \ShortPixel\Controller
     );
     protected $adminNotices; // Models
 
-    const MSG_COMPAT = 'Error100';  // Plugin Compatility, warn for the ones that disturb functions.
-    const MSG_UNLISTED_FOUND = 'Error102'; // SPIO found unlisted images, but this setting is not on
-    const MSG_AVIF_ERROR = 'Error103'; // Detected unexpected or wrong AVIF headers when avif is on.
-
-    //const MSG_NO_
-    const MSG_QUOTA_REACHED = 'QuotaReached100';
-    const MSG_UPGRADE_MONTH = 'UpgradeNotice200';  // When processing more than the subscription allows on average..
-
-
-    const MSG_NO_APIKEY = 'ApiNotice300'; // API Key not found
-    const MSG_NO_APIKEY_REPEAT = 'ApiNotice301';  // First Repeat.
-    const MSG_NO_APIKEY_REPEAT_LONG = 'ApiNotice302'; // Last Repeat.
-
-    const MSG_INTEGRATION_NGGALLERY = 'IntNotice400';
-    const MSG_FEATURE_SMARTCROP = 'FeaNotice100';
-
-    const MSG_CONVERT_LEGACY = 'LegNotice100';
-
-    const MSG_LISTVIEW_ACTIVE = 'UxNotice100';
-
     private $remote_message_endpoint = 'https://api.shortpixel.com/v2/notices.php';
     private $remote_readme_endpoint = 'https://plugins.svn.wordpress.org/shortpixel-image-optimiser/trunk/readme.txt';
-
-
 
     public function __construct()
     {
@@ -74,6 +52,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 
         add_action('admin_notices', array($this, 'check_admin_notices'), 5); // run before the plugin admin notices
 
+				$this->initNotices();
     }
 
     public static function getInstance()
@@ -184,11 +163,10 @@ class AdminNoticesController extends \ShortPixel\Controller
                 return; // suppress all when not our screen.
         }
 
-        $this->loadNotices();
-
+       $this->loadNotices();
     }
 
-    protected function loadNotices()
+    protected function initNotices()
     {
         foreach($this->definedNotices as $className)
         {
@@ -197,6 +175,14 @@ class AdminNoticesController extends \ShortPixel\Controller
             $this->adminNotices[$class->getKey()] = $class;
         }
     }
+
+		protected function loadNotices()
+		{
+			 foreach($this->adminNotices as $key => $class)
+			 {
+				  $class->load();
+			 }
+		}
 
     public function getNoticeByKey($key)
     {

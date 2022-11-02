@@ -5,7 +5,7 @@ class ApiNotice extends \ShortPixel\Model\AdminNoticeModel
 {
 	protected $key = 'MSG_NO_APIKEY';
 
-	public function __construct()
+	public function load()
 	{
 		$activationDate = \wpSPIO()->settings()->activationDate;
 		if (! $activationDate)
@@ -14,7 +14,7 @@ class ApiNotice extends \ShortPixel\Model\AdminNoticeModel
 			 \wpSPIO()->settings()->activationDate = $activationDate;
 		}
 
-		parent::__construct();
+		parent::load();
 	}
 
 	protected function checkTrigger()

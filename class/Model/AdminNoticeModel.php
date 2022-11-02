@@ -19,7 +19,14 @@ abstract class AdminNoticeModel
 
 	 protected $data;
 
+	 // No stuff loading here, low init
 	 public function __construct()
+	 {
+
+	 }
+
+	 // The main init, ty. 
+	 public function load()
 	 {
 		 $noticeController = Notices::getInstance();
 		 $notice = $noticeController->getNoticeByID($this->key);

@@ -8,10 +8,10 @@ class QuotaNoticeMonth extends \ShortPixel\Model\AdminNoticeModel
 {
 	protected $key = 'MSG_UPGRADE_MONTH';
 
-	public function __construct()
+	public function load()
 	{
 		 $this->callback = array(AdminNoticesController::getInstance(), 'proposeUpgradePopup');
-		 parent::__construct();
+		 parent::load();
 	}
 
 	protected function checkTrigger()

@@ -3,18 +3,11 @@ namespace ShortPixel\Model\AdminNotices;
 
 class UnlistedNotice extends \ShortPixel\Model\AdminNoticeModel
 {
+
 	protected $key = 'MSG_UNLISTED_FOUND';
 
 	protected function checkTrigger()
 	{
-		/*$settings = \wpSPIO()->settings();
-		if ($settings->optimizeUnlisted)
-			return false;
-
-		if(isset($settings->currentStats['foundUnlistedThumbs']) && is_array($settings->currentStats['foundUnlistedThumbs'])) {
-				return true;
-		} */
-
 		return false;
 	}
 
@@ -38,7 +31,7 @@ class UnlistedNotice extends \ShortPixel\Model\AdminNoticeModel
 				</a> has also these thumbs not listed in metadata: '  . (implode(', ', $unlistedFiles)) . '
 				</p>';
 
-		$message .= '<p>' . sprintf(__('You can enable optimizing %s Unlisted Images %s in the %s settings %s', 'shortpixel-image-optimiser'), '<b>', '</b>', '<a href="'. $admin_url . '">','</a>') . '</p>';		
+		$message .= '<p>' . sprintf(__('You can enable optimizing %s Unlisted Images %s in the %s settings %s', 'shortpixel-image-optimiser'), '<b>', '</b>', '<a href="'. $admin_url . '">','</a>') . '</p>';
 
 		return $message;
 

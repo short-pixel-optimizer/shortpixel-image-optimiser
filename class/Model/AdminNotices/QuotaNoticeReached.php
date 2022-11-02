@@ -12,10 +12,10 @@ class QuotaNoticeReached extends \ShortPixel\Model\AdminNoticeModel
 	protected $errorLevel = 'error';
 
 
-	public function __construct()
+	public function load()
 	{
 		 $this->callback = array(AdminNoticesController::getInstance(), 'proposeUpgradePopup');
-		 parent::__construct();
+		 parent::load();
 	}
 
 	protected function checkTrigger()
