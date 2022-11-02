@@ -25,21 +25,23 @@ abstract class AdminNoticeModel
 
 	 }
 
-	 // The main init, ty. 
+	 // The main init, ty.
 	 public function load()
 	 {
 		 $noticeController = Notices::getInstance();
 		 $notice = $noticeController->getNoticeByID($this->key);
 
 		 if (is_object($notice))
+		 {
 		 	$this->notice = $notice;
+		 }
 
 		 if (is_object($notice) && $notice->isDismissed())
 		 {
 			 return;
 		 }
 
-		 if (is_null($notice) && $this->checkTrigger() === true)
+		 if (is_null($this->notice) && $this->checkTrigger() === true)
 		 {
 			  $this->add();
 		 }
