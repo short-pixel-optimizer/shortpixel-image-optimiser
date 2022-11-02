@@ -371,7 +371,7 @@
        {
             background: url('../img/bulk/dashboard-background.svg') no-repeat;
             background-size: cover;
-            background-position: left center;
+            background-position: center;
             background-color: #116C7D;
             text-align: center;
             height: 150px;
@@ -474,6 +474,7 @@
           flex-direction: row;
           width: 90%;
           justify-content: space-around;
+            margin: 0 auto;
 
           >div
           {
@@ -488,6 +489,11 @@
           {
             background: linear-gradient(90deg, rgba(204,204,204,100) 0%, rgba(204,204,204,100) 49.9%, rgba(255,255,255,1) 51%, rgba(255,255,255,1) 100%);
           }
+          >div.select .line
+          {
+            width: 50%;
+            left: 50%;
+          }
 
           .line  {
             background: #ccc;
@@ -497,7 +503,7 @@
             box-sizing: border-box;
             display: inline-block;
             position: absolute;
-            top: 40%;
+            top: 22px;
             z-index: 1;
             transition: color 1s ease-in;
 

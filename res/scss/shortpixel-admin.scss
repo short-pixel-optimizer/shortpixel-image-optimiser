@@ -36,7 +36,7 @@
 		}
 	}
 	input { display: none;
-		&:checked ~ .the_switch { background: #1fbec9; } // background of bar when active
+		&:checked ~ .the_switch { background: #7cdce4; } // background of bar when active
 		&:checked ~ .the_switch:after {
 			left: 20px;
 			background: #1caecb; // color of circle when active
@@ -61,7 +61,7 @@
 		&:after {
 			position: absolute;
 			left: -2px;
-			top: -4px;
+			top: -5px;
 			display: block;
 			width: 20px;
 			height: 20px;

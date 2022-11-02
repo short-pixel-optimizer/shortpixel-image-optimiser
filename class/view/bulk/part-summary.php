@@ -15,7 +15,9 @@ namespace ShortPixel;
 
     <div class='summary-list'>
       <h3><?php esc_html_e('Review and start the Bulk Process', 'shortpixel-image-optimiser'); ?>
-        <span><img src="<?php echo esc_url(wpSPIO()->plugin_url('res/img/bulk/robot-book-summary.svg')); ?>" /></span>
+        <span>
+            <img src="<?php echo esc_url(wpSPIO()->plugin_url('res/img/robo-notes.png')); ?>" style="transform: scale(-1, 1);height: 50px;"/>
+        </span>
       </h3>
       <div class="section-wrapper" data-check-visibility data-control="data-check-media-total">
       <h4><span class='dashicons dashicons-images-alt2'>&nbsp;</span>
@@ -59,20 +61,19 @@ namespace ShortPixel;
         <div><span><?php esc_html_e('Total from Custom Media','shortpixel-image-optimiser'); ?></span><span  data-stats-custom="images-images">0</span></div>
       </div>
     </div>
-
-
+    <?php
+    $quotaData = $this->view->quotaData;
+    ?>
     <div class="totals">
-		<?php esc_html_e('Total credits needed','shortpixel-image-optimiser') ?>: <span class="number" data-stats-total="images-images" data-check-total-total >0</span>
+		<?php
+        $quotaData->unlimited ? esc_html_e('Total','shortpixel-image-optimiser') : esc_html_e('Total credits needed','shortpixel-image-optimiser');
+        ?>: <span class="number" data-stats-total="images-images" data-check-total-total >0</span>
 
        <span class='number'></span>
     </div>
 
   </div>
-
-  <?php
-    $quotaData = $this->view->quotaData;
-  ?>
-
+  <?php if(!$quotaData->unlimited) { ?>
     <div class="credits">
       <p class='heading'><span><?php esc_html_e('Your ShortPixel Credits Available', 'shortpixel-image-optimiser'); ?></span>
         <span><?php echo esc_html($this->formatNumber($quotaData->total->remaining, 0)) ?></span>
@@ -98,17 +99,18 @@ namespace ShortPixel;
 
     <div class="over-quota" data-check-visibility="false" data-control="data-quota-remaining" data-control-check="data-check-total-total">
       <span><img src="<?php echo esc_url(wpSPIO()->plugin_url('res/img/bulk/over-quota.svg')) ?>" /></span>
-			<p><?php printf(esc_html('In your ShortPixel account you %shave only %s credits available %s, but you have chosen %s  images to be optimized in this bulk process. You can either go back and select less images, or you can upgrade to a higher plan or buy one-time credits.','shortpixel-image-optimiser'), '<span class="red">', esc_html($this->formatNumber($quotaData->total->remaining, 0)), '</span>', '<b data-stats-total="images-images">0</b>'); ?>
+            <p><?php printf(esc_html('In your ShortPixel account you %shave only %s credits available %s, but you have chosen %s  images to be optimized in this bulk process. You can either go back and select less images, or you can upgrade to a higher plan or buy one-time credits.','shortpixel-image-optimiser'), '<span class="red">', esc_html($this->formatNumber($quotaData->total->remaining, 0)), '</span>', '<b data-stats-total="images-images">0</b>'); ?>
 
        <button type="button" class="button" onClick="ShortPixel.proposeUpgrade();"><?php esc_html_e('Show me the best options') ?></button>
      </p>
 
        <span class='hidden' data-quota-remaining><?php
-			 // This is hidden check, no number format.
-			 	echo esc_html($quotaData->total->remaining);
-			 ?></span>
+             // This is hidden check, no number format.
+                echo esc_html($quotaData->total->remaining);
+             ?></span>
     </div>
-		<?php $this->loadView('snippets/part-upgrade-options'); ?>
+    <?php $this->loadView('snippets/part-upgrade-options'); ?>
+    <?php } ?>
 
     <div class='no-images' data-check-visibility="false" data-control="data-check-total-total">
         <?php esc_html_e('The current selection contains no images. The bulk process cannot start.', 'shortpixel-image-optimiser'); ?>

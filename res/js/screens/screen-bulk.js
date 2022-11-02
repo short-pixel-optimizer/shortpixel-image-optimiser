@@ -826,7 +826,7 @@ console.log("Screen Init Done", initMedia, initCustom);
       {
 
           var control = element.getAttribute('data-control');
-          var hasCompareControl = element.hasAttribute('data-control-check');
+              var hasCompareControl = element.hasAttribute('data-control-check');
 
 
           var checker = document.querySelector('[' + control + ']');
@@ -834,7 +834,7 @@ console.log("Screen Init Done", initMedia, initCustom);
           // basic check if value > 0
           if (checker == null)
           {
-            console.error('Control named ' + control + ' on ' + element.innerHTML + ' didn\'t find reference value element ');
+            console.log('Control named ' + control + ' on ' + element.innerHTML + ' didn\'t find reference value element ');
             return;
           }
 
@@ -842,8 +842,9 @@ console.log("Screen Init Done", initMedia, initCustom);
           if ( hasCompareControl)
           {
             var compareControl = document.querySelector('[' + element.getAttribute('data-control-check') + ']');
-            var compareValue = parseInt(compareControl.innerHTML);
-
+            if (compareControl !== null) {
+                var compareValue = parseInt(compareControl.innerHTML);
+            }
           }
           if (isNaN(value))
           {

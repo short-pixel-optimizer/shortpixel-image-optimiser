@@ -51,7 +51,7 @@ class QuotaNoticeMonth extends \ShortPixel\Model\AdminNoticeModel
 
 	protected function CheckUpgradeNeeded($quotaData)
 	{
-			if  (isset($quotaData->monthly->total))
+			if  (isset($quotaData->monthly->total) && !$quotaData->unlimited)
 			{
 					$monthAvg = $this->getMonthAvg($quotaData);
 					// +20 I suspect to not trigger on very low values of monthly use(?)
