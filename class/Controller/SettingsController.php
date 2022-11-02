@@ -56,7 +56,6 @@ class SettingsController extends \ShortPixel\ViewController
           parent::__construct();
       }
 
-
       // default action of controller
       public function load()
       {

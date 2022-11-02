@@ -24,7 +24,8 @@ abstract class AdminNoticeModel
 		 $noticeController = Notices::getInstance();
 		 $notice = $noticeController->getNoticeByID($this->key);
 
-		 $this->notice = $notice;
+		 if (is_object($notice))
+		 	$this->notice = $notice;
 
 		 if (is_object($notice) && $notice->isDismissed())
 		 {
