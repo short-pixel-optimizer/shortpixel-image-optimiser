@@ -2434,9 +2434,17 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			}
 
 			// todo get counter to indicate
+			$counter = $settings->unlistedCounter;
+
+			if ($counter < 100)
+			{
+				 $settings->unlistedCounter++;
+				 return;
+			}
 
 			// check unlisted.
 			$unlisted = $this->addUnlisted(true);
+
 
 			if (is_array($unlisted) && count($unlisted) > 0)
 			{
@@ -2450,6 +2458,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					$notice->addManual($args);
 
 			}
+			$settings->unlistedCounter = 0;
 	}
 
   /** Adds Unlisted Image to the Media Library Item
