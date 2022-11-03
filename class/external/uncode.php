@@ -27,6 +27,17 @@ class UncodeController
 						$backupObj->delete();
 				}
 
+				// Check Webp
+				$webpObj = $fs->getFile( (string) $fileObj->getFileDir() . $fileObj->getFileBase() . '.webp');
+				Log::addTemp('Webp file path ' . $webpObj->getFullPath(), $webpObj);
+				if ($webpObj->exists())
+					 $webpObj->delete();
+
+			  // Check Avif
+ 				$avifObj = $fs->getFile( (string) $fileObj->getFileDir() . $fileObj->getFileBase() . '.avif');
+ 				if ($avifObj->exists())
+ 					 $avifObj->delete();
+
 	 }
 }
 
