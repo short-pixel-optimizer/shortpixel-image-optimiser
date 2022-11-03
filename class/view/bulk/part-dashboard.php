@@ -26,7 +26,7 @@ namespace ShortPixel;
    <?php if ($this->view->error): ?>
      <div class='bulk error'>
         <h3><?php echo esc_html($this->view->errorTitle); ?></h3>
-        <p><?php echo esc_html($this->view->errorContent); ?></p>
+        <p><?php echo $this->view->errorContent; ?></p>
         <?php if (property_exists($this->view, 'errorText')): ?>
             <p class='text'><?php echo esc_html($this->view->errorText) ?></p>
         <?php endif; ?>
