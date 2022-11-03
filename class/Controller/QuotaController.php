@@ -67,7 +67,7 @@ class QuotaController
 
     public function getQuota()
     {
-          /*'quotaAvailable' => max(0, $quotaData['APICallsQuotaNumeric'] + $quotaData['APICallsQuotaOneTimeNumeric'] - $quotaData['APICallsMadeNumeric'] - $quotaData['APICallsMadeOneTimeNumeric']))); */
+
           $quotaData = $this->getQuotaData();
           $DateNow = time();
 

@@ -74,24 +74,11 @@ class AvifNotice extends \ShortPixel\Model\AdminNoticeModel
 						  $this->addManual();
 					 }
 
-//					 $noticeController = Notice::getInstance();
-//					 $notice = $noticeController->getNoticeByID(AdminNoticesController::MSG_AVIF_ERROR);
-/*					 if ($notice && $notice->isDismissed() === true)
-					 {
-						 // Do Nothing
-					 }
-					 else
-					 {
-							$notice = Notice::addError('<h4>' . $error_message . '</h4><p>' . $error_detail . '</p><p class="small">' . __('Returned Headers for :<br>', 'shortpixel-image-optimiser') . print_r($headers, true) .  '</p>');
-							Notice::makePersistent($notice, AdminNoticesController::MSG_AVIF_ERROR, MONTH_IN_SECONDS);
-					 }
-*/
 			 }
 			 else
 			 {
-				 		$this->reset();;
-//						 Notice::removeNoticeByID(AdminNoticesController::MSG_AVIF_ERROR);
-
+				 		$this->reset();
+						
 						 $item = $cache->getItem('avif_server_check');
 						 $item->setValue(time());
 						 $item->setExpires(MONTH_IN_SECONDS);

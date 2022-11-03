@@ -7,10 +7,9 @@ use ShortPixel\Helper\UtilHelper as UtilHelper;
 use ShortPixel\Helper\InstallHelper as InstallHelper;
 
 use ShortPixel\Model\ApiKeyModel as ApiKeyModel;
-
+use ShortPixel\Model\AccessModel as AccessModel;
 
 use ShortPixel\NextGenController as NextGenController;
-
 
 class SettingsController extends \ShortPixel\ViewController
 {
@@ -73,6 +72,11 @@ class SettingsController extends \ShortPixel\ViewController
         $this->load_settings();
       }
 
+			public function access()
+			{
+				 return AccessModel::getInstance();
+			}
+
       // this is the nokey form, submitting api key
       public function action_addkey()
       {
@@ -116,6 +120,15 @@ class SettingsController extends \ShortPixel\ViewController
 	            $this->load(); // already verified?
 							return;
 	        }
+
+					$bodyArgs = array(
+							'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
+							'email' => $email,
+							'ip' => isset($_SERVER["HTTP_X_FORWARDED_FOR"]) ? sanitize_text_field($_SERVER["HTTP_X_FORWARDED_FOR"]) : sanitize_text_field($_SERVER['REMOTE_ADDR']),
+					);
+
+					$affiliate = apply_filters('shortpixel/settings/affiliate', ''); // /af/bla35
+
 	        $params = array(
 	            'method' => 'POST',
 	            'timeout' => 10,
@@ -124,14 +137,10 @@ class SettingsController extends \ShortPixel\ViewController
 	            'blocking' => true,
 	            'sslverify' => false,
 	            'headers' => array(),
-	            'body' => array(
-	                'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
-	                'email' => $email,
-	                'ip' => isset($_SERVER["HTTP_X_FORWARDED_FOR"]) ? sanitize_text_field($_SERVER["HTTP_X_FORWARDED_FOR"]) : sanitize_text_field($_SERVER['REMOTE_ADDR']),
-	            )
+	            'body' => $bodyArgs,
 	        );
 
-	        $newKeyResponse = wp_remote_post("https://shortpixel.com/free-sign-up-plugin", $params);
+	        $newKeyResponse = wp_remote_post("https://shortpixel.com/free-sign-up-plugin" . $affiliate, $params);
 
 					$errorText = __("There was problem requesting a new code. Server response: ", 'shortpixel-image-optimiser');
 
@@ -410,10 +419,8 @@ class SettingsController extends \ShortPixel\ViewController
 
          $this->view->data->apiKey = $keyController->getKeyForDisplay();
 
-
          $this->loadStatistics();
 				 $this->checkCloudFlare();
-
 
          $statsControl = StatsController::getInstance();
 
@@ -437,80 +444,13 @@ class SettingsController extends \ShortPixel\ViewController
          $this->loadView('view-settings');
       }
 
-			  protected function avifServerCheck()
+			 protected function avifServerCheck()
       {
-          $cache = new CacheController();
-          if (apply_filters('shortpixel/avifcheck/override', false) === true)
-          { return; }
+    			$noticeControl = AdminNoticesController::getInstance();
+					$notice = $noticeControl->getNoticeByKey('MSG_AVIF_ERROR');
 
-          if ($cache->getItem('avif_server_check')->exists() === false)
-          {
-             $url = \WPSPIO()->plugin_url('res/img/test.avif');
-             $headers = get_headers($url);
-             $is_error = true;
+					$notice->check();
 
-             // Defaults.
-             $error_message = __('Avif server test failed. Your server might not be configured to display AVIF files properly. Serving Avif might cause your images to not load. Check your images, disable the AVIF option or update your web server configuration.', 'shortpixel-image-optimiser');
-             $error_detail = __('The request did not return valid HTTP Headers. Check if the plugin is allowed to get ' . $url, 'shortpixel-image-optimiser');
-
-             $contentType = null;
-             $response = $headers[0];
-
-             if (is_array($headers) )
-             {
-                foreach($headers as $index => $header)
-                {
-                    if ( strpos(strtolower($header), 'content-type') !== false )
-										{
-											// This is another header that can interrupt.
-											if (strpos(strtolower($header), 'x-content-type-options') === false)
-											{
-                      	$contentType = $header;
-											}
-										}
-                }
-
-                // http not ok, redirect etc. Shouldn't happen.
-                 if (is_null($response) || strpos($response, '200') === false)
-                 {
-                   $error_detail = sprintf(__('The AVIF check could not be completed, because the plugin couldn\'t fetch  %s %s %s. %s Please check the security/firewall settings and try again', 'shortpixel-image-optimiser'), '<a href="' . $url . '">', $url, '</a>', '<br>');
-                 }
-                 elseif(is_null($contentType) || strpos($contentType, 'avif') === false)
-                 {
-                   $error_detail = sprintf(__('The necessary Content-type header for AVIF files wasn\'t found, please check this with your Hosting and/or CDN provider. For more details about how to fix this, %s check this article %s', 'shortpixel_image_optimiser'), '<a href="https://shortpixel.com/blog/avif-mime-type-delivery-apache-nginx/" target="_blank"> ', '</a>');
-
-                 }
-                 else
-                 {
-                    $is_error = false;
-                 }
-             }
-
-             if ($is_error)
-             {
-							   $noticeController = Notice::getInstance();
-					       $notice = $noticeController->getNoticeByID(AdminNoticesController::MSG_AVIF_ERROR);
-								 if ($notice && $notice->isDismissed() === true)
-							 	 {
-									 // Do Nothing
-								 }
-								 else
-								 {
-		                $notice = Notice::addError('<h4>' . $error_message . '</h4><p>' . $error_detail . '</p><p class="small">' . __('Returned Headers for :<br>', 'shortpixel-image-optimiser') . print_r($headers, true) .  '</p>');
-		                Notice::makePersistent($notice, AdminNoticesController::MSG_AVIF_ERROR, MONTH_IN_SECONDS);
-								 }
-
-             }
-             else
-             {
-									 Notice::removeNoticeByID(AdminNoticesController::MSG_AVIF_ERROR);
-
-                   $item = $cache->getItem('avif_server_check');
-                   $item->setValue(time());
-                   $item->setExpires(WEEK_IN_SECONDS);
-                   $cache->storeItemObject($item );
-             }
-          }
       }
 
       protected function loadStatistics()

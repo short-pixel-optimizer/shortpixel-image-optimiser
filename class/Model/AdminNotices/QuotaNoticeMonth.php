@@ -80,4 +80,20 @@ class QuotaNoticeMonth extends \ShortPixel\Model\AdminNoticeModel
 			// Sum last 4 months, and divide by number of active months to get number of avg per active month.
 			return ($stats->find('period', 'months', 1) + $stats->find('period', 'months', 2) + $stats->find('period', 'months', 3) + $stats->find('period', 'months', 4) / max(1,$count));
 	}
-}
+
+	protected function monthlyUpgradeNeeded($quotaData)
+	{
+			if  (isset($quotaData->monthly->total))
+			{
+					$monthAvg = $this->getMonthAverage($quotaData);
+					// +20 I suspect to not trigger on very low values of monthly use(?)
+					$threshold = $quotaData->monthly->total + ($quotaData->onetime->remaining / 6 ) +20;
+
+					if ($monthAvg > $threshold)
+					{
+							return true;
+					}
+			}
+			return false;
+	}
+} // class

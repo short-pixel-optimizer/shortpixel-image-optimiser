@@ -22,7 +22,6 @@ class QuotaNoticeReached extends \ShortPixel\Model\AdminNoticeModel
 	{
 			$quotaController = QuotaController::getInstance();
 
- var_dump($quotaController->hasQuota());
 			if ($quotaController->hasQuota() === true)
 				return false;
 

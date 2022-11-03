@@ -63,11 +63,20 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
 									 </div>
 
                     <p>&nbsp;</p>
+										<?php
+											$avifEnabled = $this->access()->isFeatureAvailable('avif');
+											$createAvifChecked = ($view->data->createAvif == 1 && $avifEnabled === true) ? true : false;
+											$disabled = ($avifEnabled === false) ? 'disabled' : '';
+											if ($avifEnabled == false)
+											{
+												 $deliverAVIFLabel = __('Creation of AVIF-files is not available with this license type', 'shortpixel-image-optimiser');
+											}
+										?>
 
                     <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/467-how-to-create-and-serve-avif-files-using-shortpixel-image-optimizer"></span></div>
 									 <div class='switch_button'>
 										 <label>
-											 <input type="checkbox" class="switch" name="createAvif" value="1" <?php checked( $view->data->createAvif, "1" );?>>
+											 <input type="checkbox" class="switch" name="createAvif" value="1" <?php echo $disabled ?> <?php checked( $createAvifChecked );?>>
 											 <div class="the_switch">&nbsp; </div>
 											 <?php printf(esc_html__('Create %s AVIF versions %s of the images, with the additional cost of 1 credit = 1 image or thumbnail.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/blog/what-is-avif-and-why-is-it-good/" target="_blank">', '</a>');?>
 										 </label>
@@ -514,7 +523,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
 		                  <input name="siteAuthUser" type="text" id="siteAuthUser" value="<?php echo( esc_html(wp_unslash($view->data->siteAuthUser )));?>" class="regular-text" placeholder="<?php esc_html_e('User','shortpixel-image-optimiser');?>" style="margin-bottom: 8px"><br>
 	                    <input name="siteAuthPass" type="text" id="siteAuthPass" value="<?php echo( esc_html(wp_unslash($view->data->siteAuthPass )));?>" class="regular-text" placeholder="<?php esc_html_e('Password','shortpixel-image-optimiser');?>" style="margin-bottom: 8px">
 	                    <p class="settings-info">
-	                        <?php printf(esc_html__('Only fill in these fields if your site (front-end) is not publicly accessible and visitors need a user/pass to connect to it. 
+	                        <?php printf(esc_html__('Only fill in these fields if your site (front-end) is not publicly accessible and visitors need a user/pass to connect to it.
                                     If you don\'t know what is this then just %sleave the fields empty%s.','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
 	                    </p>
 									<?php else:  ?>
