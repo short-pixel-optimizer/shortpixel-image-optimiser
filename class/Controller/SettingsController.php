@@ -147,10 +147,12 @@ class SettingsController extends \ShortPixel\ViewController
 	        if ( is_object($newKeyResponse) && get_class($newKeyResponse) == 'WP_Error' ) {
 	            //die(json_encode((object)array('Status' => 'fail', 'Details' => '503')));
 							Notice::addError($errorText . $newKeyResponse->get_error_message() );
+							$this->doRedirect(); // directly redirect because other data / array is not set.
 	        }
 	        elseif ( isset($newKeyResponse['response']['code']) && $newKeyResponse['response']['code'] <> 200 ) {
 	            //die(json_encode((object)array('Status' => 'fail', 'Details' =>
 							Notice::addError($errorText . $newKeyResponse['response']['code']);
+							$this->doRedirect(); // strange http status, redirect with error. 
 	        }
 					$body = $newKeyResponse['body'];
         	$body = json_decode($body);
