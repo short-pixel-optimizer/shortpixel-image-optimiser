@@ -123,6 +123,8 @@ class SettingsController extends \ShortPixel\ViewController
 							'ip' => isset($_SERVER["HTTP_X_FORWARDED_FOR"]) ? sanitize_text_field($_SERVER["HTTP_X_FORWARDED_FOR"]) : sanitize_text_field($_SERVER['REMOTE_ADDR']),
 					);
 
+					$affl_id = false;
+					$affl_id = (defined('SHORTPIXEL_AFFILIATE_ID')) ? SHORTPIXEL_AFFILIATE_ID : false;
 					$affl_id = apply_filters('shortpixel/settings/affiliate', false); // /af/bla35
 					if ($affl_id !== false)
 					{
