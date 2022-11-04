@@ -40,11 +40,12 @@
     .settings_page_wp-shortpixel-settings .top-menu .spio-status-box {
       text-align: center;
       position: absolute;
-      top: -40px;
+      top: -49px;
       right: 0;
       padding: 5px 10px;
       background: white;
-      box-shadow: 0 3px 3px rgba(0, 0, 0, 0.1); }
+      box-shadow: 0 3px 3px rgba(0, 0, 0, 0.1);
+      z-index: 1; }
     .settings_page_wp-shortpixel-settings .top-menu .pie-wrapper {
       flex: 4 2 auto;
       min-width: 100px;
