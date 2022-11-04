@@ -125,7 +125,8 @@ class SettingsController extends \ShortPixel\ViewController
 
 					$affl_id = false;
 					$affl_id = (defined('SHORTPIXEL_AFFILIATE_ID')) ? SHORTPIXEL_AFFILIATE_ID : false;
-					$affl_id = apply_filters('shortpixel/settings/affiliate', false); // /af/bla35
+					$affl_id = apply_filters('shortpixel/settings/affiliate', $affl_id); // /af/bla35
+
 					if ($affl_id !== false)
 					{
 						 $bodyArgs['affiliate'] = $affl_id;
