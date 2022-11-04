@@ -93,12 +93,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		 $isSmartCrop = ($settings->useSmartcrop == true && $this->getExtension() !== 'pdf') ? true : false;
 		 $doubles = array(); // check via hash if same command / result is there.
 
-		 // Use URL of biggest image.
-		 /*if ($isSmartCrop === true && $this->isScaled())
-		 {
-		    $url = $this->getOriginalFile()->getURL();
-		 } */
-
      if ($this->isProcessable(true) || ($this->isProcessableAnyFileType() && $this->isOptimized()) )
 		 {
 				$paramList = $this->createParamList();

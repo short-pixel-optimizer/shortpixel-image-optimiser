@@ -221,7 +221,8 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
   {
 			// if thumbnail processing is off, thumbs are never processable.
 			// This is also used by main file, so check for that!
-      if ( $this->excludeThumbnails() && $this->is_main_file === false)
+
+      if ( $this->excludeThumbnails() && $this->is_main_file === false && $this->get('imageType') !== self::IMAGE_TYPE_ORIGINAL)
 			{
 				$this->processable_status = self::P_EXCLUDE_SIZE;
         return false;
