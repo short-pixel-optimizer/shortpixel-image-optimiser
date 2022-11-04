@@ -116,7 +116,7 @@ class NoticeModel //extends ShortPixelModel
 				 $this->$var = array_merge($this->$var, $screens);
 			}
 			else {
-				 $this->$var[] = $screens;
+				 $this->{$var}[] = $screens; // strange syntax is PHP 5.6 compat.
 			}
 	}
 

@@ -44,7 +44,6 @@ class ListviewNotice extends \ShortPixel\Model\AdminNoticeModel
 			{
 				if (is_object($this->getNoticeObj()))
 					$this->reset();
-
 			}
 
 	}
