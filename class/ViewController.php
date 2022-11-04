@@ -2,6 +2,9 @@
 namespace ShortPixel;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
+use ShortPixel\Model\AccessModel as AccessModel;
+
+
 class ViewController extends Controller
 {
   protected static $controllers = array();
@@ -67,6 +70,10 @@ class ViewController extends Controller
 		return true;
 	}
 
+	public function access()
+	{
+		 return AccessModel::getInstance();
+	}
 
   /** Loads a view
   *

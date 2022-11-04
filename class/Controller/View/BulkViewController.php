@@ -12,6 +12,9 @@ use ShortPixel\Controller\StatsController as StatsController;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 use ShortPixel\Helper\UiHelper as UiHelper;
 
+use ShortPixel\Model\AccessModel as AccessModel;
+
+
 class BulkViewController extends \ShortPixel\ViewController
 {
 

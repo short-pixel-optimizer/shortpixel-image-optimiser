@@ -72,10 +72,6 @@ class SettingsController extends \ShortPixel\ViewController
         $this->load_settings();
       }
 
-			public function access()
-			{
-				 return AccessModel::getInstance();
-			}
 
       // this is the nokey form, submitting api key
       public function action_addkey()
@@ -127,7 +123,11 @@ class SettingsController extends \ShortPixel\ViewController
 							'ip' => isset($_SERVER["HTTP_X_FORWARDED_FOR"]) ? sanitize_text_field($_SERVER["HTTP_X_FORWARDED_FOR"]) : sanitize_text_field($_SERVER['REMOTE_ADDR']),
 					);
 
-					$affiliate = apply_filters('shortpixel/settings/affiliate', ''); // /af/bla35
+					$affl_id = apply_filters('shortpixel/settings/affiliate', false); // /af/bla35
+					if ($affl_id !== false)
+					{
+						 $bodyArgs['affl_id'] = $affl_id;
+ 					}
 
 	        $params = array(
 	            'method' => 'POST',
@@ -140,7 +140,7 @@ class SettingsController extends \ShortPixel\ViewController
 	            'body' => $bodyArgs,
 	        );
 
-	        $newKeyResponse = wp_remote_post("https://shortpixel.com/free-sign-up-plugin" . $affiliate, $params);
+	        $newKeyResponse = wp_remote_post("https://shortpixel.com/free-sign-up-plugin", $params);
 
 					$errorText = __("There was problem requesting a new code. Server response: ", 'shortpixel-image-optimiser');
 
@@ -152,7 +152,7 @@ class SettingsController extends \ShortPixel\ViewController
 	        elseif ( isset($newKeyResponse['response']['code']) && $newKeyResponse['response']['code'] <> 200 ) {
 	            //die(json_encode((object)array('Status' => 'fail', 'Details' =>
 							Notice::addError($errorText . $newKeyResponse['response']['code']);
-							$this->doRedirect(); // strange http status, redirect with error. 
+							$this->doRedirect(); // strange http status, redirect with error.
 	        }
 					$body = $newKeyResponse['body'];
         	$body = json_decode($body);
