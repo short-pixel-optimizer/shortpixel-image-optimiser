@@ -69,7 +69,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
 											$disabled = ($avifEnabled === false) ? 'disabled' : '';
 											if ($avifEnabled == false)
 											{
-												 $deliverAVIFLabel = __('Creation of AVIF-files is not available with this license type', 'shortpixel-image-optimiser');
+												 $deliverAVIFLabel = __('The creation of AVIF files is not possible with this license type.', 'shortpixel-image-optimiser');
 											}
 										?>
 
