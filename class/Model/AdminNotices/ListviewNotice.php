@@ -52,7 +52,7 @@ class ListviewNotice extends \ShortPixel\Model\AdminNoticeModel
 	protected function getMessage()
 	{
 
-		$message = sprintf(__('You can see ShortPixel Image Optimiser actions and data only via the list view. Switch to the list view to use the plugin via the media library.  Click to %s switch to the list view %s now. ', 'shortpixel-image-optimiser'), '<a href="' . admin_url('upload.php?mode=list') . '">','</a>');
+		$message = sprintf(__('You can see the actions and data of ShortPixel Image Optimiser only through the list view. Switch to the list view to use the plugin via the media library.  Click to%s switch to the list view%s now. ', 'shortpixel-image-optimiser'), '<a href="' . admin_url('upload.php?mode=list') . '">','</a>');
 
 		return $message;
 

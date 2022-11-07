@@ -26,7 +26,7 @@ class CompatNotice extends \ShortPixel\Model\AdminNoticeModel
 		if (! is_array($conflicts))
 			$conflicts = array();
 
-		$message = __("The following plugins are not compatible with ShortPixel and may lead to unexpected results: ",'shortpixel-image-optimiser');
+		$message = __("The following plugins are not compatible with ShortPixel and may cause unexpected results: ",'shortpixel-image-optimiser');
 		$message .= '<ul class="sp-conflict-plugins">';
 		foreach($conflicts as $plugin) {
 				//ShortPixelVDD($plugin);

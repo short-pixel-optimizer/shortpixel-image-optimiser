@@ -58,7 +58,7 @@ class QuotaNoticeReached extends \ShortPixel\Model\AdminNoticeModel
 
 				$message .= '<div style="float:right;">
 						<div class="bulk-progress-indicator" style="height: 110px">
-								<div style="margin-bottom:5px">' . __('Average image<br>reduction so far:','shortpixel-image-optimiser') . '</div>
+								<div style="margin-bottom:5px">' . __('Average image<br>reduction until now:','shortpixel-image-optimiser') . '</div>
 								<div id="sp-avg-optimization"><input type="text" id="sp-avg-optimization-dial" value="' . round($averageCompression) . '" class="dial percentDial" data-dialsize="60"></div>
 								<script>
 										jQuery(function() {
@@ -81,22 +81,22 @@ class QuotaNoticeReached extends \ShortPixel\Model\AdminNoticeModel
 			$totalOptimized = $statsControl->find('total', 'images');
 			$totalImagesToOptimize = number_format($statsControl->totalImagesToOptimize());
 
-			$message .= '<p>' . sprintf(__('The plugin has optimized <strong>%s images</strong> and stopped because it reached the available quota limit.','shortpixel-image-optimiser'),
+			$message .= '<p>' . sprintf(__('The plugin has optimized <strong>%s images</strong> and has been stopped because it has reached the available quota limit.','shortpixel-image-optimiser'),
 						$creditsUsed);
 
 			if($totalImagesToOptimize > 0) {
 
-						$message .= sprintf(__('<strong> %s images and thumbnails</strong> are not yet optimized by ShortPixel.','shortpixel-image-optimiser'), $totalImagesToOptimize  );
+						$message .= sprintf(__('<strong> %s images and thumbnails</strong> have not been optimized by ShortPixel yet.','shortpixel-image-optimiser'), $totalImagesToOptimize  );
 				}
 
 			 $message .= '</p>
 					<div>
 						<button class="button button-primary" type="button" id="shortpixel-upgrade-advice" onclick="ShortPixel.proposeUpgrade()" style="margin-right:10px;"><strong>' .  __('Show me the best available options', 'shortpixel-image-optimiser') . '</strong></button>
 						<a class="button button-primary" href="' . $login_url . '"
-							 title="' . __('Go to my account and select a plan','shortpixel-image-optimiser') . '" target="_blank" style="margin-right:10px;">
+							 title="' . __('Go to My Account and choose a plan','shortpixel-image-optimiser') . '" target="_blank" style="margin-right:10px;">
 								<strong>' . __('Upgrade','shortpixel-image-optimiser') . '</strong>
 						</a>
-						<button type="button" name="checkQuota" class="button" onclick="ShortPixel.checkQuota()">'.  __('Confirm New Credits','shortpixel-image-optimiser') . '</button>
+						<button type="button" name="checkQuota" class="button" onclick="ShortPixel.checkQuota()">'.  __('Confirm new credits','shortpixel-image-optimiser') . '</button>
 				</div>';
 
 			$message .= '</div>'; /// closing div

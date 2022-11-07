@@ -30,10 +30,10 @@ class ApiNotice extends \ShortPixel\Model\AdminNoticeModel
 
 	protected function getMessage()
 	{
-		$message = "<p>" . __('In order to start the optimization process, you need to validate your API Key in the '
-						. '<a href="options-general.php?page=wp-shortpixel-settings">ShortPixel Settings</a> page in your WordPress Admin.','shortpixel-image-optimiser') . "
+		$message = "<p>" . __('To start the optimization process, you need to validate your API key on the '
+						. '<a href="options-general.php?page=wp-shortpixel-settings">ShortPixel Settings</a> page in your WordPress admin.','shortpixel-image-optimiser') . "
 		</p>
-		<p>" .  __('If you don’t have an API Key, just fill out the form and a key will be created.','shortpixel-image-optimiser') . "</p>";
+		<p>" .  __('If you do not have an API key yet, just fill out the form and a key will be created.','shortpixel-image-optimiser') . "</p>";
 
 		return $message;
 	}
