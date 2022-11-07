@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compressor, ima
 Requires at least: 4.8.0
 Tested up to: 6.1
 Requires PHP: 5.6
-Stable tag: 5.1.1
+Stable tag: 5.1.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -347,6 +347,21 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 5.1.2 =
+Release date November 7, 2022
+* Fix: when converting PNG to JPG, the PNG path was saved in the post editor, which could result in broken images;
+* Fix: the bulk restore of Custom Media was performed without saving it to the previous bulks history;
+* Fix: various wording updates and fixes throughout the plugin code;
+* Fix: PNG to JPG conversion failed under certain Windows environments due to wrong path construction;
+* Fix: the plugin now works with thumbs that have a numeric name (e.g. `0`);
+* Fix: on certain hosting restrictions, requesting a new API key caused a fatal error;
+* Fix: the original image was not processed when thumbnail processing was turned off;
+* Compat: added compatibility with the Uncode theme's adaptive images feature;
+* Tweak: minor updates to the settings and Media Library layout for new plans that will be introduced soon;
+* Tweak: added filter/constant that can be used by affiliates;
+* Tweak: reworked plugin notification system to make it more robust and reliable;
+* Language: 44 new strings added, 2 updated, 0 fuzzed, and 39 deprecated.
 
 = 5.1.1 =
 Release date October 20th, 2022

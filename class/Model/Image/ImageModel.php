@@ -5,7 +5,8 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\ResponseController as ResponseController;
 use ShortPixel\Controller\ApiController as API;
 
-use \Shortpixel\Model\File\FileModel as FileModel;
+use Shortpixel\Model\File\FileModel as FileModel;
+use ShortPixel\Model\AccessModel as AccessModel;
 /* ImageModel class.
 *
 *
@@ -142,6 +143,11 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     public function isProcessableFileType($type = 'webp')
     {
         $settings = \WPSPIO()->settings();
+
+				if ( AccessModel::getInstance()->isFeatureAvailable($type) === false)
+				{
+					 return false;
+				}
 
 				// Pdf, no special files.
 				if ($this->getExtension() == 'pdf')
@@ -631,10 +637,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                  $this->setMeta('resize', false);
              }
 
-
-             /*if ($tempFile)
-              $tempFile->delete();
-						*/
 						 if (isset($wasHeic) && $wasHeic == true)
 						 {
 							  $heicFile = $fs->getFile($heicPath);
@@ -643,8 +645,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 									$heicFile->delete(); // the original heic -file should not linger in uploads.
 								}
 						 }
-
-
           }
           else
           {

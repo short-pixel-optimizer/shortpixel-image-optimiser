@@ -637,6 +637,26 @@ class UiHelper
 		  return $number;
 	}
 
+	public static function formatDate( $date ) {
+
+	if ( '0000-00-00 00:00:00' === $date->format('Y-m-d ') ) {
+			$h_time = '';
+	} else {
+			$time   = $date->format('U'); //get_post_time( 'G', true, $post, false );
+			if ( ( abs( $t_diff = time() - $time ) ) < DAY_IN_SECONDS ) {
+					if ( $t_diff < 0 ) {
+							$h_time = sprintf( __( '%s from now' ), human_time_diff( $time ) );
+					} else {
+							$h_time = sprintf( __( '%s ago' ), human_time_diff( $time ) );
+					}
+			} else {
+					$h_time = $date->format( 'Y/m/d' );
+			}
+	}
+
+	return $h_time;
+}
+
 	protected static function convertImageTypeName($name, $type)
 	{
 		if ($type == 'webp')

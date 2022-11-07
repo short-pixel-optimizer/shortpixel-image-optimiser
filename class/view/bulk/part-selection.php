@@ -118,19 +118,33 @@ $approx = $this->view->approx;
 				<div class="option"><?php esc_html_e('The total number of WebP images will be calculated in the next step.','shortpixel-image-optimiser'); ?></div>
 		       </div>
 
+
+					 <?php
+					 $avifEnabled = $this->access()->isFeatureAvailable('avif');
+					 $createAvifChecked = (\wpSPIO()->settings()->createAvif == 1 && $avifEnabled === true) ? true : false;
+					 $disabled = ($avifEnabled === false) ? 'disabled' : '';
+					 ?>
+
+
 		       <div class='optiongroup'>
 		         <div class='switch_button'>
 
 		           <label>
-		             <input type="checkbox" class="switch" id="avif_checkbox" name="avif_checkbox"
-		              <?php checked(\wpSPIO()->settings()->createAvif); ?>  />
+		             <input type="checkbox" class="switch" id="avif_checkbox" name="avif_checkbox" <?php echo $disabled ?>
+		              <?php checked($createAvifChecked); ?>  />
 		             <div class="the_switch">&nbsp; </div>
 		           </label>
 
 		         </div>
 		         <h4><label for="avif_checkbox"><?php esc_html_e('Also create AVIF versions of the images','shortpixel-image-optimiser'); ?></label></h4>
+				<?php if ($avifEnabled == true): ?>
 				<div class="option"><?php esc_html_e('The total number of AVIF images will be calculated in the next step.','shortpixel-image-optimiser'); ?></div>
 		     </div>
+			<?php else : ?>
+				<div class="option"><?php esc_html_e('The creation of AVIF files is not possible with this license type.','shortpixel-image-optimiser'); ?></div>
+				 </div>
+			<?php endif;  ?>
+
 		 </div>
 
  	 	 <div class="option-block">

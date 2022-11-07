@@ -459,10 +459,5 @@ class StatsModel
 
   }
 
-  //public function from
-
-
-
-
 
 } // class

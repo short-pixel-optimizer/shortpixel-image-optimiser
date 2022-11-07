@@ -36,49 +36,54 @@
 	}
   .top-menu
   {
-    font-size: 18px;
-		display: flex;
-		width: 100%;
-		min-height: 50px;
-		align-items: center;
-		margin: 15px 0;
+      font-size: 18px;
+	  display: flex;
+	  width: 100%;
+	  min-height: 50px;
+	  align-items: center;
+	  margin: 15px 0;
+	  position: relative;
+	  @include breakpoint(0, 1200px)
+	  {
+		  margin-bottom: 50px;
+	  }
 
 		.links
 		{
-	    a { font-size: 18px; margin-right: 8px; }
-			flex: 12 4 auto;
-//		flex-grow: 14;
 
+	    	a { font-size: 18px; margin-right: 8px; white-space: nowrap; line-height: 26px;}
+			padding-right: 195px;
+			flex: 12 4 auto;
 		}
 		.quota-remaining
 		{
 			 //float: right;
-			 flex: 2 1 2;
-			 text-align: center;
+			font-size: 13px;
+		}
+	    .spio-status-box {
+			text-align: center;
+			position: absolute;
+			top: -49px;
+			right: 0;
+			padding: 5px 10px;
+			background: white;
+			box-shadow: 0 3px 3px rgba(0,0,0,0.1);
+			z-index: 1;
 		}
 		.pie-wrapper
 		{
-			position: relative;
 			flex: 4 2 auto;
 			min-width: 100px;
 			display: inline-block;
 //			flex-grow: 2;
-			@include breakpoint(0, 1100px)
-			{
-					display: none;
-			}
 		}
 		div.sp-bulk-summary {
-				position: absolute;
-				top: -55px;
-				right: -25px;
 
 				z-index: 10;
 
 				.opt-circle-average {
 						width: 100px;
 						height: 100px;
-						float: right;
 					 // margin-right: 35px;
 						.trail {
 							stroke: #ddd;
@@ -99,20 +104,13 @@
 
 				}
 				span {
-					display: none;
 					margin: 0;
-					font-size: 11px;
-					position: absolute;
-				//	width: 100%;
-
-					bottom: 45px;
-					//left: -15px;
+					font-size: 12px;
 					padding: 4px 8px;
-					color: #fff;
-					background: rgba($color-darkest, 0.5);
 					font-weight: 700;
 					border-radius: 3px;
 					white-space: nowrap;
+					color: #0f6a7d;
 				}
 				@include breakpoint(0,1500px)
 				{
@@ -120,10 +118,6 @@
 					.opt-circle-average {
 							width: 100px;
 							height: 100px;
-					}
-					span
-					{
-						display: none;
 					}
 				}
 		} // optimized thing
@@ -222,6 +216,10 @@
       margin: 0;
       color: #999;
       background-color: #ddd;
+		@include breakpoint(0, 991px)
+		{
+			width: 140px;
+		}
       /* border-radius: 5px 5px 0 0; */
       a {
           display: block;
@@ -243,19 +241,36 @@
 
   article.sp-tabs section:nth-of-type(2) h2 {
       left: 192px;
+	  @include breakpoint(0, 991px)
+	  {
+		  left: 152px;
+	  }
   }
   article.sp-tabs section:nth-of-type(3) h2 {
       left: 374px;
+	  @include breakpoint(0, 991px)
+	  {
+		  left: 294px;
+	  }
   }
   article.sp-tabs section:nth-of-type(4) h2 {
       left: 556px;
+	  @include breakpoint(0, 991px)
+	  {
+		  left: 436px;
+	  }
   }
   article.sp-tabs section:nth-of-type(5) h2 {
       left: 738px;
+	  @include breakpoint(0, 991px)
+	  {
+		  left: 578px;
+	  }
   }
   article.sp-tabs section:nth-of-type(6) h2 {
       left: 920px;
   }
+
 	//debug-tab is now after the other tabs, because of form issues.
 	article.sp-tabs section#tab-debug {
 
@@ -291,7 +306,7 @@
      .table.notices {
         > div > span
         {
-           width: 25%;
+           width: 18%;
            text-align: center;
         }
      }

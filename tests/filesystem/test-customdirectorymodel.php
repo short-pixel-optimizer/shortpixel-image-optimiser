@@ -10,7 +10,7 @@ class CustomDirectoryModelTest extends WP_UnitTestCase
   public function testCreateTable()
   {
 
-    $reflector = new ReflectionClass( 'DirectyOtherMediaModel' );
+    $reflector = new ReflectionClass( 'DirectoryOtherMediaModel' );
 
     $hasTableMethod = $reflector->getMethod( 'hasFolderTable' );
     $hasTableMethod->setAccessible( true );

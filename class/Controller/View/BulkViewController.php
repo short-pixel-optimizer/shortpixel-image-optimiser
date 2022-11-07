@@ -12,6 +12,9 @@ use ShortPixel\Controller\StatsController as StatsController;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 use ShortPixel\Helper\UiHelper as UiHelper;
 
+use ShortPixel\Model\AccessModel as AccessModel;
+
+
 class BulkViewController extends \ShortPixel\ViewController
 {
 
@@ -46,7 +49,7 @@ class BulkViewController extends \ShortPixel\ViewController
 
         $this->view->error = true;
         $this->view->errorTitle = __('Missing API Key', 'shortpixel_image_optimiser');
-        $this->view->errorContent = $adminNoticesController->getActivationNotice();
+        $this->view->errorContent = $this->getActivationNotice();
         $this->view->showError = 'key';
     }
     elseif ( ! $quota->hasQuota())
@@ -69,6 +72,16 @@ class BulkViewController extends \ShortPixel\ViewController
     $this->loadView();
 
   }
+
+	// Double with ApiNotice . @todo Fix.
+	protected function getActivationNotice()
+	{
+		$message = "<p>" . __('In order to start the optimization process, you need to validate your API Key in the '
+						. '<a href="options-general.php?page=wp-shortpixel-settings">ShortPixel Settings</a> page in your WordPress Admin.','shortpixel-image-optimiser') . "
+		</p>
+		<p>" .  __('If you don’t have an API Key, just fill out the form and a key will be created.','shortpixel-image-optimiser') . "</p>";
+		return $message;
+	}
 
   protected function getApproxData()
   {

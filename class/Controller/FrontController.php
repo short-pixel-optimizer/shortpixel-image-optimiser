@@ -2,6 +2,7 @@
 namespace ShortPixel\Controller;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
+use ShortPixel\Helper\UtilHelper as UtilHelper;
 
 use ShortPixel\ShortPixelImgToPictureWebp as ShortPixelImgToPictureWebp;
 
@@ -29,13 +30,13 @@ class FrontController extends \ShortPixel\Controller
     $webp_option = \wpSPIO()->settings()->deliverWebp;
 
     if ( $webp_option ) {  // @tood Replace this function with the one in ENV.
-        if(\ShortPixelTools::shortPixelIsPluginActive('shortpixel-adaptive-images/short-pixel-ai.php')) {
+        if(UtilHelper::shortPixelIsPluginActive('shortpixel-adaptive-images/short-pixel-ai.php')) {
             Notices::addWarning(__('Please deactivate the ShortPixel Image Optimizer\'s
                 <a href="options-general.php?page=wp-shortpixel-settings&part=adv-settings">Deliver the next generation versions of the images in the front-end</a>
                 option when the ShortPixel Adaptive Images plugin is active.','shortpixel-image-optimiser'), true);
         }
         elseif( $webp_option == self::WEBP_GLOBAL ){
-            //add_action( 'wp_head', array($this, 'addPictureJs') ); // adds polyfill JS to the header || Removed. Browsers without picture support? 
+            //add_action( 'wp_head', array($this, 'addPictureJs') ); // adds polyfill JS to the header || Removed. Browsers without picture support?
             add_action( 'init',  array($this, 'startOutputBuffer'), 1 ); // start output buffer to capture content
         } elseif ($webp_option == self::WEBP_WP){
             add_filter( 'the_content', array($this, 'convertImgToPictureAddWebp'), 10000 ); // priority big, so it will be executed last
@@ -57,7 +58,7 @@ class FrontController extends \ShortPixel\Controller
 					// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
           return $content . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG is AMP -->' : '');
       }
-      require_once(\ShortPixelTools::getPluginPath() . 'class/front/img-to-picture-webp.php');
+      require_once(\wpSPIO()->plugin_path('class/front/img-to-picture-webp.php'));
 
       $webpObj = new ShortPixelImgToPictureWebp();
       return $webpObj->convert($content);

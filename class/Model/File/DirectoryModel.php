@@ -32,7 +32,7 @@ class DirectoryModel extends \ShortPixel\Model
   */
   public function __construct($path)
   {
-      $path = wp_normalize_path($path);
+      //$path = wp_normalize_path($path);
       $fs = \wpSPIO()->filesystem();
 
       if ($fs->pathIsUrl($path))

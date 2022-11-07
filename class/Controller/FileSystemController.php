@@ -236,10 +236,14 @@ Class FileSystemController extends \ShortPixel\Controller
 				if (defined('UPLOADS')) // if this is set, lead.
 					$abspath = trailingslashit(ABSPATH) . UPLOADS;
 
+//	$abspath = wp_normalize_path($abspath);
         $abspath = apply_filters('shortpixel/filesystem/abspath', $abspath );
+
 
         return $this->getDirectory($abspath);
     }
+
+
 
     /** Not in use yet, do not use. Future replacement. */
     public function checkBackUpFolder($folder = SHORTPIXEL_BACKUP_FOLDER)
@@ -304,7 +308,7 @@ Class FileSystemController extends \ShortPixel\Controller
 		  // (2) ** Also a real life fix when a path is /wwwroot/assets/sites/2/ etc, in get site url, the home URL is the site URL, without appending the sites stuff. Fails on original image.
 		    if ($is_multi_site && ! $is_main_site)
 				{
-					$wp_home_path = wp_normalize_path(trailingslashit($uploads['basedir']));
+					$wp_home_path = trailingslashit($uploads['basedir']);
 					$home_url = trailingslashit($uploads['baseurl']);
 				}
 				else

@@ -67,6 +67,13 @@ class AdminController extends \ShortPixel\Controller
 
 				if ($mediaItem->isProcessable())
 				{
+					if ($mediaItem->get('do_png2jpg') === true)
+					{
+						$mediaItem->convertPNG();
+						$fs->flushImageCache(); // Flush it to reflect new status.
+						$mediaItem = $fs->getImage($id, 'media');
+						$meta = wp_get_attachment_metadata($id); // reset the metadata because we are on the hook.
+					}
         	$control = new OptimizeController();
         	$control->addItemToQueue($mediaItem);
 				}

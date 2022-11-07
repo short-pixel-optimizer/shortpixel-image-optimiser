@@ -140,7 +140,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 					$stats[] = array( sprintf(__('%s %s Read more about theses stats %s ', 'shortpixel-image-optimiser'), '
 					<p><img alt=' . esc_html('Info Icon', 'shortpixel-image-optimiser')  . ' src=' . esc_url( wpSPIO()->plugin_url('res/img/info-icon.png' )) . ' style="margin-bottom: -4px;"/>', '<a href="https://shortpixel.com/knowledge-base/article/553-the-stats-from-the-shortpixel-column-in-the-media-library-explained" target="_blank">', '</a></p>'), '');
 				}
-				
+
         return $stats;
       }
 
@@ -220,7 +220,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
           {
             $backupFile = $imageObj->getBackupFile();
             $debugInfo[] = array(__('Backup Folder'), (string) $backupFile->getFileDir() );
-            $debugInfo[] = array(__('Backup File'), (string) $backupFile . '(' . \ShortPixelTools::formatBytes($backupFile->getFileSize()) . ')' );
+            $debugInfo[] = array(__('Backup File'), (string) $backupFile . '(' . UiHelper::formatBytes($backupFile->getFileSize()) . ')' );
           }
           else {
             $debugInfo[] =  array(__("No Main File Backup Available"), '');
@@ -229,10 +229,10 @@ class EditMediaViewController extends \ShortPixel\ViewController
           if ($or = $imageObj->hasOriginal())
           {
              $original = $imageObj->getOriginalFile();
-             $debugInfo[] = array(__('Has Original File: '), $original->getFullPath()  . '(' . \ShortPixelTools::formatBytes($original->getFileSize()) . ')');
+             $debugInfo[] = array(__('Has Original File: '), $original->getFullPath()  . '(' . UiHelper::formatBytes($original->getFileSize()) . ')');
              $orbackup = $original->getBackupFile();
              if ($orbackup)
-              $debugInfo[] = array(__('Has Backup Original Image'), $orbackup->getFullPath() . '(' . \ShortPixelTools::formatBytes($orbackup->getFileSize()) . ')');
+              $debugInfo[] = array(__('Has Backup Original Image'), $orbackup->getFullPath() . '(' . UiHelper::formatBytes($orbackup->getFileSize()) . ')');
 						$debugInfo[] = array('', '<hr>');
 
           }
