@@ -21,12 +21,22 @@ class SmartcropNotice extends \ShortPixel\Model\AdminNoticeModel
 			return false; // no key, no integrations.
 		}
 
-		if (\wpSPIO()->env()->has_nextgen && ! $settings->includeNextGen)
+		if (! $settings->useSmartcrop)
 		{
 			 return true;
 		}
 
 		return false;
+	}
+
+	protected function checkReset()
+	{
+		$settings = \wpSPIO()->settings();
+		 if ($settings->useSmartcrop == true)
+		 {
+			  return true;
+		 }
+		 return false;
 	}
 
 	protected function getMessage()

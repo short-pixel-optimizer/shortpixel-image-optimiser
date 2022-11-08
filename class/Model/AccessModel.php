@@ -47,7 +47,7 @@ class AccessModel
 	}
 
 	/** Check for allowing a notice
-	*  @param $notice Object of type notice.  Currently unused, future provision.
+	*  @param $notice Object of type notice.
 	*/
 	public function noticeIsAllowed($notice)
 	{
@@ -84,7 +84,6 @@ class AccessModel
 	public function isFeatureAvailable($name)
 	{
 		 $available = true;
-
 		 switch($name)
 		 {
 			  case 'avif':

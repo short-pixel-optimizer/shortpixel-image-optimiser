@@ -67,9 +67,13 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
 											$avifEnabled = $this->access()->isFeatureAvailable('avif');
 											$createAvifChecked = ($view->data->createAvif == 1 && $avifEnabled === true) ? true : false;
 											$disabled = ($avifEnabled === false) ? 'disabled' : '';
+											$avifEnabledNotice = false;
 											if ($avifEnabled == false)
 											{
-												 $deliverAVIFLabel = __('Creation of AVIF-files is not available with this license type', 'shortpixel-image-optimiser');
+												 $avifEnabledNotice = '<div class="sp-notice sp-notice-warning  avifNoticeDisabled">';
+												 $avifEnabledNotice .=  __('Creation of AVIF-files is not available with this license type', 'shortpixel-image-optimiser') ;
+												 $avifEnabledNotice .=  '<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/555-how-does-the-unlimited-plan-work"></span></div>';
+												 $avifEnabledNotice .= '</div>';
 											}
 										?>
 
@@ -88,6 +92,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                                <?php echo ( $deliverAVIFLabel );?>
                                 </p>
                    <?php } ?>
+									 <?php if ($avifEnabledNotice !== false) {  echo $avifEnabledNotice;  } ?>
 
                     <p>&nbsp;</p>
 

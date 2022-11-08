@@ -141,7 +141,7 @@ $approx = $this->view->approx;
 				<div class="option"><?php esc_html_e('The total number of AVIF images will be calculated in the next step.','shortpixel-image-optimiser'); ?></div>
 		     </div>
 			<?php else : ?>
-				<div class="option"><?php esc_html_e('Creation of AVIF-files is not available with this license type','shortpixel-image-optimiser'); ?></div>
+				<div class="option warning"><?php esc_html_e('Creation of AVIF-files is not available with this license type','shortpixel-image-optimiser'); ?></div>
 				 </div>
 			<?php endif;  ?>
 

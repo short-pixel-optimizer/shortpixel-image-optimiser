@@ -38,12 +38,16 @@ abstract class AdminNoticeModel
 
 		 if (is_object($notice) && $notice->isDismissed())
 		 {
-			 return;
+			 return false;
 		 }
 
 		 if (is_null($this->notice) && $this->checkTrigger() === true)
 		 {
 			  $this->add();
+		 }
+		 elseif ( is_object($this->notice) && $this->checkReset() === true)
+		 {
+			  $this->reset();
 		 }
 	 }
 
@@ -56,6 +60,11 @@ abstract class AdminNoticeModel
 	 {
 		  $key = (is_null($key)) ? $this->key : $key;
 		 	Notices::removeNoticeByID($key);
+	 }
+
+	 protected function checkReset()
+	 {
+		  return false;
 	 }
 
 	 // For when trigger condition is not applicable.
