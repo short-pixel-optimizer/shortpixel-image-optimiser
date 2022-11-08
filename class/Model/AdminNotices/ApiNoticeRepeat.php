@@ -44,7 +44,7 @@ class ApiNoticeRepeat extends \ShortPixel\Model\AdminNoticeModel
 
 	protected function getMessage()
 	{
-		$message = __("Action needed. Please <a href='https://shortpixel.com/wp-apikey' target='_blank'>get your API key</a> to activate your ShortPixel plugin.",'shortpixel-image-optimiser');
+		$message = __("Action required! Please <a href='https://shortpixel.com/wp-apikey' target='_blank'>get your API key</a> to activate your ShortPixel plugin.",'shortpixel-image-optimiser');
 
 		return $message;
 	}

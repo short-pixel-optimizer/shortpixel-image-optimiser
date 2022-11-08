@@ -2,6 +2,8 @@
 namespace ShortPixel\Model\AdminNotices;
 
 use \ShortPixel\Controller\CacheController as CacheController;
+use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+
 
 class AvifNotice extends \ShortPixel\Model\AdminNoticeModel
 {
@@ -23,16 +25,19 @@ class AvifNotice extends \ShortPixel\Model\AdminNoticeModel
 		if (apply_filters('shortpixel/avifcheck/override', false) === true)
 		{ return; }
 
+		Log::addTemp('Checking Avif');
+
 		if ($cache->getItem('avif_server_check')->exists() === false)
 		{
 			 $url = \WPSPIO()->plugin_url('res/img/test.avif');
 			 $headers = get_headers($url);
 			 $is_error = true;
 
+Log::addTemp('Avif check headers', $headers);
 			 $this->addData('headers', $headers);
 			 // Defaults.
-			 $this->error_message = __('Avif server test failed. Your server might not be configured to display AVIF files properly. Serving Avif might cause your images to not load. Check your images, disable the AVIF option or update your web server configuration.', 'shortpixel-image-optimiser');
-			 $this->error_detail = __('The request did not return valid HTTP Headers. Check if the plugin is allowed to get ' . $url, 'shortpixel-image-optimiser');
+			 $this->error_message = __('AVIF server test failed. Your server may not be configured to display AVIF files correctly. Serving AVIF might cause your images not to load. Check your images, disable the AVIF option, or update your web server configuration.', 'shortpixel-image-optimiser');
+			 $this->error_detail = __('The request did not return valid HTTP headers. Check if the plugin is allowed to access ' . $url, 'shortpixel-image-optimiser');
 
 			 $contentType = null;
 			 $response = $headers[0];
@@ -51,15 +56,16 @@ class AvifNotice extends \ShortPixel\Model\AdminNoticeModel
 							}
 					}
 
+			Log::addTemp('ContentType', $contentType);
+
 					// http not ok, redirect etc. Shouldn't happen.
 					 if (is_null($response) || strpos($response, '200') === false)
 					 {
-						 $this->error_detail = sprintf(__('The AVIF check could not be completed, because the plugin couldn\'t fetch  %s %s %s. %s Please check the security/firewall settings and try again', 'shortpixel-image-optimiser'), '<a href="' . $url . '">', $url, '</a>', '<br>');
+						 $this->error_detail = sprintf(__('AVIF check could not be completed because the plugin could not retrieve %s %s %s. %s Please check the security/firewall settings and try again', 'shortpixel-image-optimiser'), '<a href="' . $url . '">', $url, '</a>', '<br>');
 					 }
 					 elseif(is_null($contentType) || strpos($contentType, 'avif') === false)
 					 {
-						 $this->error_detail = sprintf(__('The necessary Content-type header for AVIF files wasn\'t found, please check this with your Hosting and/or CDN provider. For more details about how to fix this, %s check this article %s', 'shortpixel_image_optimiser'), '<a href="https://shortpixel.com/blog/avif-mime-type-delivery-apache-nginx/" target="_blank"> ', '</a>');
-
+						 $this->error_detail = sprintf(__('The required Content-type header for AVIF files was not found. Please check this with your hosting and/or CDN provider. For more details on how to fix this issue, %s see this article %s', 'shortpixel_image_optimiser'), '<a href="https://shortpixel.com/blog/avif-mime-type-delivery-apache-nginx/" target="_blank"> ', '</a>');
 					 }
 					 else
 					 {
@@ -69,7 +75,7 @@ class AvifNotice extends \ShortPixel\Model\AdminNoticeModel
 
 			 if ($is_error)
 			 {
-				   if (! is_null($this->notice) && ! $this->notice->isDismissed() === true)
+				   if (is_null($this->notice) || $this->notice->isDismissed() === false)
 					 {
 						  $this->addManual();
 					 }
@@ -78,7 +84,7 @@ class AvifNotice extends \ShortPixel\Model\AdminNoticeModel
 			 else
 			 {
 				 		$this->reset();
-						
+
 						 $item = $cache->getItem('avif_server_check');
 						 $item->setValue(time());
 						 $item->setExpires(MONTH_IN_SECONDS);
@@ -91,7 +97,7 @@ class AvifNotice extends \ShortPixel\Model\AdminNoticeModel
 	protected function getMessage()
 	{
 			$headers = $this->getData('headers');
-			$message = '<h4>' . $this->error_message . '</h4><p>' . $this->error_detail . '</p><p class="small">' . __('Returned Headers for :<br>', 'shortpixel-image-optimiser') . print_r($headers, true) .  '</p>';
+			$message = '<h4>' . $this->error_message . '</h4><p>' . $this->error_detail . '</p><p class="small">' . __('Returned headers for:<br>', 'shortpixel-image-optimiser') . print_r($headers, true) .  '</p>';
 			return $message;
 	}
 }

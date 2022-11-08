@@ -41,8 +41,8 @@ class QuotaNoticeMonth extends \ShortPixel\Model\AdminNoticeModel
 		$month_total = $quotaData->monthly->total;// $this->getData('month_total');
 		$onetime_remaining = $quotaData->onetime->remaining; //$this->getData('onetime_remaining'); */
 
-		$message = '<p>' . sprintf(__("You are adding an average of <strong>%d images and thumbnails every month</strong> to your Media Library and you have <strong>a plan of %d images/month (and %d one-time images)</strong>.%s"
-					. " You might need to upgrade your plan in order to have all your images optimized.", 'shortpixel-image-optimiser'), $average, $month_total, $onetime_remaining, '<br>') . '</p>';
+		$message = '<p>' . sprintf(__("You add an average of <strong>%d images and thumbnails</strong> to your Media Library every month and you have <strong>a plan of %d images/month (and %d one-time images)</strong>.%s"
+					. " You may need to upgrade your plan to have all your images optimized.", 'shortpixel-image-optimiser'), $average, $month_total, $onetime_remaining, '<br>') . '</p>';
 
 		$message .= '  <button class="button button-primary" id="shortpixel-upgrade-advice" onclick="ShortPixel.proposeUpgrade()" style="margin-right:10px;"><strong>' .  __('Show me the best available options', 'shortpixel-image-optimiser') . '</strong></button>';
 

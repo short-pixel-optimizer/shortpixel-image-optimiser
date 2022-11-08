@@ -45,7 +45,7 @@ class SmartcropNotice extends \ShortPixel\Model\AdminNoticeModel
 		$link2 = 'https://shortpixel.com/blog/how-to-smart-crop-wordpress-images/#how-to-crop-wordpress-images-automatically-smart-solution';
 		$link3 = esc_url(admin_url('options-general.php?page=wp-shortpixel-settings'));
 
-		$message = sprintf(__('%s With ShortPixel you can now %ssmartly crop%s the thumbnails on your website. This is especially useful for eCommerce websites %s(read more)%s. %s %s Activate the option in the %sShortPixel Settings%s page. %s', 'shortpixel-image-optimiser'),
+		$message = sprintf(__('%s With ShortPixel you can now %ssmartly crop%s thumbnails on your website. This is especially useful for eCommerce websites %s(read more)%s. %s %s Enable the option on the %sShortPixel Settings%s page. %s', 'shortpixel-image-optimiser'),
 		 '<p>' ,
 		 '<a href="' . $link . '" target="_blank">', '</a>',
 		 '<a href="' . $link2 . '" target="_blank">', '</a>',
