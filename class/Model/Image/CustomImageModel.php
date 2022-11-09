@@ -490,7 +490,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
             'status' => $metaObj->status,
             'retries' => 0, // this is unused / legacy
             'message' => $message, // this is used for improvement line.
-            'ts_added' => UtiHelper::timestampToDB($metaObj->tsAdded),
+            'ts_added' => UtilHelper::timestampToDB($metaObj->tsAdded),
             'ts_optimized' => UtilHelper::timestampToDB($metaObj->tsOptimized),
             'path' => $this->getFullPath(),
 						'name' => $this->getFileName(),

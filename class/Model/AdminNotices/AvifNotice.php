@@ -2,6 +2,8 @@
 namespace ShortPixel\Model\AdminNotices;
 
 use \ShortPixel\Controller\CacheController as CacheController;
+use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+
 
 class AvifNotice extends \ShortPixel\Model\AdminNoticeModel
 {
@@ -23,12 +25,15 @@ class AvifNotice extends \ShortPixel\Model\AdminNoticeModel
 		if (apply_filters('shortpixel/avifcheck/override', false) === true)
 		{ return; }
 
+		Log::addTemp('Checking Avif');
+
 		if ($cache->getItem('avif_server_check')->exists() === false)
 		{
 			 $url = \WPSPIO()->plugin_url('res/img/test.avif');
 			 $headers = get_headers($url);
 			 $is_error = true;
 
+Log::addTemp('Avif check headers', $headers);
 			 $this->addData('headers', $headers);
 			 // Defaults.
 			 $this->error_message = __('AVIF server test failed. Your server may not be configured to display AVIF files correctly. Serving AVIF might cause your images not to load. Check your images, disable the AVIF option, or update your web server configuration.', 'shortpixel-image-optimiser');
@@ -51,6 +56,8 @@ class AvifNotice extends \ShortPixel\Model\AdminNoticeModel
 							}
 					}
 
+			Log::addTemp('ContentType', $contentType);
+
 					// http not ok, redirect etc. Shouldn't happen.
 					 if (is_null($response) || strpos($response, '200') === false)
 					 {
@@ -59,7 +66,6 @@ class AvifNotice extends \ShortPixel\Model\AdminNoticeModel
 					 elseif(is_null($contentType) || strpos($contentType, 'avif') === false)
 					 {
 						 $this->error_detail = sprintf(__('The required Content-type header for AVIF files was not found. Please check this with your hosting and/or CDN provider. For more details on how to fix this issue, %s see this article %s', 'shortpixel_image_optimiser'), '<a href="https://shortpixel.com/blog/avif-mime-type-delivery-apache-nginx/" target="_blank"> ', '</a>');
-
 					 }
 					 else
 					 {
@@ -69,7 +75,7 @@ class AvifNotice extends \ShortPixel\Model\AdminNoticeModel
 
 			 if ($is_error)
 			 {
-				   if (! is_null($this->notice) && ! $this->notice->isDismissed() === true)
+				   if (is_null($this->notice) || $this->notice->isDismissed() === false)
 					 {
 						  $this->addManual();
 					 }
@@ -78,7 +84,7 @@ class AvifNotice extends \ShortPixel\Model\AdminNoticeModel
 			 else
 			 {
 				 		$this->reset();
-						
+
 						 $item = $cache->getItem('avif_server_check');
 						 $item->setValue(time());
 						 $item->setExpires(MONTH_IN_SECONDS);

@@ -11,6 +11,16 @@ class ListviewNotice extends \ShortPixel\Model\AdminNoticeModel
 		 parent::__construct();
 	}
 
+	/*public function load()
+	{
+		 parent::load();
+		 // Reset this notice even when dismissed when condition changed.
+		  if ($this->isDismissed() && $this->checkReset() === true)
+			{
+				$this->reset();
+			}
+	} */
+
 	protected function checkTrigger()
 	{
 		// Don't check for this, when not on this screen.
@@ -46,6 +56,27 @@ class ListviewNotice extends \ShortPixel\Model\AdminNoticeModel
 					$this->reset();
 			}
 
+			return false;
+	}
+
+	protected function checkReset()
+	{
+		if (! function_exists('wp_get_current_user') )
+		{
+			return false;
+
+		}
+
+			$current_user = wp_get_current_user();
+			$currentUserID = $current_user->ID;
+			$viewMode = get_user_meta($currentUserID, "wp_media_library_mode", true);
+
+			if ($viewMode == 'list')
+			{
+				 return true;
+			}
+
+			return false;
 	}
 
 
