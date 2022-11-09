@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compressor, ima
 Requires at least: 4.8.0
 Tested up to: 6.1
 Requires PHP: 5.6
-Stable tag: 5.1.2
+Stable tag: 5.1.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -347,6 +347,13 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 5.1.3 =
+Release date November 9, 2022
+* Fix: a typo related to Custom Media that caused an error when adding a new Custom Media folder;
+* Fix: some minor cosmetic fixes on the settings and bulk processing pages for new plans;
+* Fix: the notification about the ShortPixel column in List view is now displayed when you switch back to the Grid view in Media Library;
+* Language: 1 new string added, 0 updated, 0 fuzzed, and 0 deprecated.
 
 = 5.1.2 =
 Release date November 7, 2022
