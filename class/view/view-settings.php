@@ -2,6 +2,8 @@
 namespace ShortPixel;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
+// #Todo Move this to some env or more appropiate place.
+$is_unlimited= (!is_null($this->quotaData) && $this->quotaData->unlimited) ? true : false;
 
 ?>
 <div class="wrap is-shortpixel-settings-page">
@@ -11,9 +13,11 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 <div class='top-menu'>
 
   <div class='links'>
+		<?php if (! $is_unlimited): ?> 
     <a href="https://shortpixel.com/<?php
         echo esc_attr(($view->data->apiKey ? "login/". $view->data->apiKey : "pricing"));
     ?>" target="_blank"><?php esc_html_e( 'Buy credits', 'shortpixel-image-optimiser' );?></a> |
+	  <?php endif; ?>
     <a href="https://shortpixel.com/knowledge-base/" target="_blank"><?php esc_html_e('Knowledge Base','shortpixel-image-optimiser');?></a> |
     <a href="https://shortpixel.com/contact" target="_blank"><?php esc_html_e('Contact Support','shortpixel-image-optimiser');?></a> |
     <a href="https://shortpixel.com/<?php
@@ -23,18 +27,26 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
     </a>
   </div>
 
-    <?php if ( round($view->averageCompression) > 20 || (!is_null($this->quotaData) && !$this->quotaData->unlimited)): ?>
+    <?php if ( round($view->averageCompression) > 20 ): ?>
         <div class="spio-status-box">
             <?php if ( round($view->averageCompression) > 20): ?>
                 <div class='pie-wrapper'><?php	$this->loadView('settings/part-optpie'); ?></div>
             <?php endif; ?>
 
-            <?php if (!is_null($this->quotaData) && !$this->quotaData->unlimited): ?>
+            <?php if (!is_null($this->quotaData)): ?>
                 <div class='quota-remaining'>
                     <a href="https://shortpixel.com/<?php
                     echo esc_attr(($view->data->apiKey ? "login/". $view->data->apiKey . "/dashboard" : "login"));
                     ?>" target="_blank">
-                        <?php printf(esc_html__('%s Credits remaining', 'shortpixel-image-optimiser'),  esc_html($this->formatNumber(max(0, $this->quotaData->total->remaining), 0))); ?>
+												 <?php if ($is_unlimited)
+												 {
+													 printf(esc_html__('Shortpixel Unlimited', 'shortpixel-image-optimiser'));
+												 }
+												 else
+                         {
+													 printf(esc_html__('%s Credits remaining', 'shortpixel-image-optimiser'),  esc_html($this->formatNumber(max(0, $this->quotaData->total->remaining), 0)));
+												 }
+												 ?>
                     </a>
                 </div>
             <?php endif; ?>

@@ -53,7 +53,7 @@ var ShortPixelSettings = function()
 			if (target === null)
 			{
 				 console.error('Target element ID not found', checkbox);
-				 return false; 
+				 return false;
 			}
 
 			if (checked)
@@ -124,7 +124,6 @@ this.OpenModal = function(elem)
 		var body = modal.querySelector('.spio-modal-body');
 		body.innerHTML = ('afterbegin', targetElem.innerHTML); //.cloneNode()
 		body.style.background = '#fff';
-
 		shade.addEventListener('click', this.CloseModal.bind(this), {'once': true} );
 
 		modal.querySelector('.spio-close-help-button').addEventListener('click', this.CloseModal.bind(this), {'once': true});

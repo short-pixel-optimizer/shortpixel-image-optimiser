@@ -84,6 +84,7 @@ class AccessModel
 	public function isFeatureAvailable($name)
 	{
 		 $available = true;
+
 		 switch($name)
 		 {
 			  case 'avif':

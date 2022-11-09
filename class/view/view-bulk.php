@@ -25,7 +25,6 @@ namespace ShortPixel;
 
   $this->loadView('bulk/part-bulk-special');
 
-  if (\wpSPIO()->env()->is_debug)
   ?>
 
   </div>
