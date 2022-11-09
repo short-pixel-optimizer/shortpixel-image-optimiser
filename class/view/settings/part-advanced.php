@@ -71,7 +71,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
 											if ($avifEnabled == false)
 											{
 												 $avifEnabledNotice = '<div class="sp-notice sp-notice-warning  avifNoticeDisabled">';
-												 $avifEnabledNotice .=  __('Creation of AVIF-files is not available with this license type', 'shortpixel-image-optimiser') ;
+												 $avifEnabledNotice .=  __('The creation of AVIF files is not possible with this license type.', 'shortpixel-image-optimiser') ;
 												 $avifEnabledNotice .=  '<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/555-how-does-the-unlimited-plan-work"></span></div>';
 												 $avifEnabledNotice .= '</div>';
 											}
