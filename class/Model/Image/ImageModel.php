@@ -149,15 +149,15 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 					 return false;
 				}
 
-				// Pdf, no special files.
-				if ($this->getExtension() == 'pdf')
-					return false;
-
-        if ($type == 'webp' && ! $settings->createWebp)
+				if ($type == 'webp' && ! $settings->createWebp)
           return false;
 
         if ($type == 'avif' && ! $settings->createAvif)
             return false;
+
+				// Pdf, no special files.
+				if ($this->getExtension() == 'pdf')
+					return false;
 
 				$imgObj = $this->getImageType($type);
 
@@ -407,7 +407,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 	    	$file = $fs->getFile($filepath);
 
 			// If double extension is enabled, but no file, check the alternative.
-			if (! $file->exists()  && ! $file->is_virtual())
+			if (! $file->is_virtual() && ! $file->exists())
 			{
 				 if ($is_double)
 				 		$file = $fs->getFile($filepath);

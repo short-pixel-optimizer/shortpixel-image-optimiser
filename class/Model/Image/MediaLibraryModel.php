@@ -488,6 +488,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			// #### THUMBNAILS ####
 			$thumbObjs = $this->getThumbObjects();
 
+		 Log::addTemp('HadleOPt Thumbs', $thumbObjs);
+
 			// Add doubles to the processing list. Doubles are sizes with the same result, but should be copied to it's respective thumbnail file + backup.
 			if (isset($data['doubles']))
 			{
@@ -514,9 +516,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 				 $resultObj = $files[$sizeName];
 				 $thumbnail = $thumbObjs[$sizeName];
+				 Log::addTemp('HandleOPt result', $resultObj);
 
-				 //Log::addTemp('Handle Optimize thumbnail', $thumbnail);
-				 //Log::add
 
          $thumbnail->handleOptimizedFileType($resultObj); // check for webps /etc
 
@@ -2463,7 +2464,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        // Setting must be active.
        /*if (! \wpSPIO()->settings()->optimizeUnlisted )
          return; */
-
 			$searchUnlisted = \wpSPIO()->settings()->optimizeUnlisted;
 
       // Don't check this more than once per run-time.
@@ -2576,13 +2576,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	                      $thumbs = array_values(preg_grep($pattern, $all_files));
 	                      if (count($thumbs) > 0)
 	                        $unlisted = array_merge($unlisted, $thumbs);
-	                    //  $thumbs = array_merge($thumbs, self::getFilesByPattern($dirPath, $pattern));
 
-	                      /*foreach($thumbsCandidates as $th) {
-	                          if(preg_match($pattern, $th)) {
-	                              $thumbs[]= $th;
-	                          }
-	                      } */
 	                  }
 	                }
 	            }
@@ -2592,10 +2586,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       // Quality check on the thumbs. Must exist,  must be same extension.
       $added = false;
 
-			if ($check_only === true)
-			{
-					return $unlisted;
-			}
+			$foundUnlisted = array(); // found and ready. Used for notice / check only
 
       foreach($unlisted as $unName)
       {
@@ -2610,12 +2601,19 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           }
           elseif ($thumbObj->is_readable()) // exclude webps
           {
-            $thumbObj->setName($unName);
-            $thumbObj->setMeta('originalWidth', $thumbObj->get('width'));
-            $thumbObj->setMeta('originalHeight', $thumbObj->get('height'));
-            $thumbObj->setMeta('file', $thumbObj->getFileName() );
-            $this->thumbnails[$unName] = $thumbObj;
-            $added = true;
+						if (true === $check_only)
+						{
+								$foundUnlisted[] = $unName;
+						}
+						else {
+	            $thumbObj->setName($unName);
+	            $thumbObj->setMeta('originalWidth', $thumbObj->get('width'));
+	            $thumbObj->setMeta('originalHeight', $thumbObj->get('height'));
+	            $thumbObj->setMeta('file', $thumbObj->getFileName() );
+	            $this->thumbnails[$unName] = $thumbObj;
+	            $added = true;
+						}
+
           }
           else
           {
@@ -2623,9 +2621,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           }
       }
 
-      //if ($added)
-       // $this->saveMeta(); // Save it when we are adding images.
-
+			if (true === $check_only)
+			{
+				 return $foundUnlisted;
+			}
 			self::$unlistedChecked[] = $this->get('id');
   }
 

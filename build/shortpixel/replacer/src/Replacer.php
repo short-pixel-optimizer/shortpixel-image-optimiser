@@ -38,9 +38,19 @@ class Replacer
 			$this->source_url = $url;
 	}
 
+	public function getSource()
+	{
+		return $this->source_url;
+	}
+
 	public function setTarget($url)
 	{
 		  $this->target_url = $url;
+	}
+
+	public function getTarget()
+	{
+		 return $this->target_url;
 	}
 
 	public function setSourceMeta($meta)
