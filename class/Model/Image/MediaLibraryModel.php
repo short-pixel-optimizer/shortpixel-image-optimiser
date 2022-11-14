@@ -316,7 +316,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 	      if ($main)
 				{
-	        $this->retinas[$this->mainImageKey] = $main; // on purpose not a string, but number to prevent any custom image sizes to get overwritten.
+					$main->setName($this->mainImageKey);
+	        $this->retinas[$this->mainImageKey] = $main; // to prevent any custom image sizes to get overwritten.
 				}
 			}
 
@@ -324,7 +325,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       {
         $retscaled = $this->original_file->getRetina();
         if ($retscaled)
+				{
+					$retscaled->setName($this->originalImageKey);
           $this->retinas[$this->originalImageKey] = $retscaled; //see main
+				}
       }
 
       foreach ($this->thumbnails as $thumbname => $thumbObj)
@@ -2059,7 +2063,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				$adminNotices->invokeLegacyNotice();
 			}
 
-        Log::addDebug("Conversion of legacy: ", array($metadata));
+        Log::addDebug("Conversion of legacy: " . $this->get('id'), array($metadata));
 
        $type = isset($data['type']) ? $this->legacyConvertType($data['type']) : '';
 
