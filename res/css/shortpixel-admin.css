@@ -168,6 +168,9 @@
 .sp-column-info .thumbnails.optimized .thumb-wrapper .thumb .optimize-bar .point.checked {
   background: #1abdca;
 }
+.sp-column-info .thumbnails.optimized .thumb-wrapper .thumb .cutoff {
+  float: right;
+}
 .sp-column-info .thumbnails.optimized:hover .thumb-wrapper {
   display: block;
 }

@@ -96,14 +96,28 @@ class UiHelper
 
     if (isset($improvements['thumbnails']))
     {
+
        $output .= '<div class="thumbnails optimized">';
        if ($thumbsTotal > $thumbsDone)
          $output .= '<div class="totals">' . sprintf(__('+%s of %s thumbnails optimized','shortpixel-image-optimiser'), self::formatNumber($thumbsDone,0), self::formatNumber($thumbsTotal,0)) . '</div>';
        elseif ($thumbsDone > 0)
          $output .= '<div class="totals">' . sprintf(__('+%s thumbnails optimized','shortpixel-image-optimiser'), self::formatNumber($thumbsDone, 0)) . '</div>';
 
-
 			 $improvs = array();
+
+			 uasort($improvements['thumbnails'], function ($a, $b) {
+				 	return $b[0] <=> $a[0];
+			 });
+
+			 $cutoff = false;
+			 $thumbCount = count($improvements['thumbnails']);
+			 if ($thumbCount > 20)
+			 {
+				  $improvements['thumbnails'] =  array_slice($improvements['thumbnails'], 0, 15, true);
+					$cutoff = true;
+			 }
+
+
 			 // Quality Check
 			 foreach($improvements['thumbnails'] as $thumbName => $thumbStat)
 			 {
@@ -135,6 +149,10 @@ class UiHelper
 		                      </div>";
 
 		       }
+					 if (true === $cutoff)
+					 {
+						 $output .= '<div class="thumb"><span class="cutoff">' . sprintf(__('+ %d more', 'shortpixel-image-optimiser'), ($thumbCount - 15)) . '</span></div>';
+					 }
 		       $output .=  "</div> <!-- /thumb-wrapper -->";
 				}
 				$output .= "</div> <!-- /thumb optimized -->";
@@ -157,16 +175,37 @@ class UiHelper
         list($urls, $optimizable) = $imageObj->getCountOptimizeData('thumbnails');
 				list($webpUrls, $webpCount)   =  $imageObj->getCountOptimizeData('webp');
 				list($avifUrls, $avifCount)   =  $imageObj->getCountOptimizeData('avif');
+
+				$maxList = 10;
         // Todo check if Webp / Acif is active, check for unoptimized items
        // $processWebp = ($imageObj->isProcessableFileType('webp')) ? true : false;
        // $processAvif = ($imageObj->isProcessableFileType('avif')) ? true : false;
 
+			 if (count($urls) > $maxList)
+			 {
+				  $urls = array_slice($urls, 0, $maxList, true);
+					$urls[] = '...';
+			 }
+			 if (count($webpUrls) > $maxList)
+			 {
+				  $webpUrls = array_slice($webpUrls, 0, $maxList, true);
+					$webpUrls[] = '...';
+			 }
+			 if (count($avifUrls) > $maxList)
+			 {
+				  $avifUrls = array_slice($avifUrls, 0, $maxList, true);
+					$avifUrls[] = '...';
+			 }
+
         if ($optimizable > 0)
         {
-           $output .= '<div class="thumbs-todo"><h4>' . sprintf(__('%d to optimize', 'shortpixel-image-optimiser'), $optimizable) . '</h4>';
+           $output .= '<div class="thumbs-todo"><h4>' . sprintf(__('%d images to optimize', 'shortpixel-image-optimiser'), $optimizable) . '</h4>';
              $output .= "<span>";
                foreach($urls as $optObj)
                {
+								 if ($optObj === '...')
+									$output .= $optObj;
+								 else
                   $output .= substr($optObj, strrpos($optObj, '/')+1) . '<br>';
                }
              $output .= "</span>";
@@ -180,7 +219,10 @@ class UiHelper
              $output .= "<span>";
                foreach($webpUrls as $optObj)
                {
-                  $output .= self::convertImageTypeName(substr($optObj, strrpos($optObj, '/')+1), 'webp') . '<br>';
+								  if ($optObj === '...')
+									 $output .= $optObj;
+									else
+                  	$output .= self::convertImageTypeName(substr($optObj, strrpos($optObj, '/')+1), 'webp') . '<br>';
                }
              $output .= "</span>";
            $output .= '</div>';
