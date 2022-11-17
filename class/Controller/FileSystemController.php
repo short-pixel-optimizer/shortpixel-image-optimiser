@@ -59,6 +59,7 @@ Class FileSystemController extends \ShortPixel\Controller
 				{
 					 self::$mediaItems[$id] = $imageObj;
 				}
+
         return $imageObj;
     }
 

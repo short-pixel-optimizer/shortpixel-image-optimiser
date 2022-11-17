@@ -355,7 +355,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 				{
 					 $urls[] = $optimizeData['paths'][$sizeName];
 				}
-
 				return array($urls, $count);
 
 		}
@@ -368,9 +367,15 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 	    if (! is_null($this->getMeta($type)))
 	    {
+				// Filter to disable assumption(s) on the file basis of imageType.  Active when something has manually been deleted.
+				$metaCheck = apply_filters('shortpixel/image/filecheck', false);
 	      $filepath = $this->getFileDir() . $this->getMeta($type);
 	      $file = $fs->getFile($filepath);
-	      return $file;
+
+				if ($metaCheck === false)
+				{
+					 return $file;
+				}
 	    }
 
 			if ($type == 'webp')

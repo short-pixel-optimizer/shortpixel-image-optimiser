@@ -1228,6 +1228,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
             if ($bool === true) // Is Processable just needs one job
               return true;
+
+						$bool = $thumbnail->isProcessableAnyFileType();
+
+						if ($bool === true) // Is Processable just needs one job
+              return true;
+
           }
 
       }

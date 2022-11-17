@@ -170,11 +170,13 @@ class UiHelper
     {
         $output .=  '<div class="filetype avif">' . sprintf(__('+%s Avif images ','shortpixel-image-optimiser') , $avifsTotal) . '</div>';
     }
+
     if ($imageObj->isOptimized() && $imageObj->isProcessable())
     {
         list($urls, $optimizable) = $imageObj->getCountOptimizeData('thumbnails');
 				list($webpUrls, $webpCount)   =  $imageObj->getCountOptimizeData('webp');
 				list($avifUrls, $avifCount)   =  $imageObj->getCountOptimizeData('avif');
+
 
 				$maxList = 10;
         // Todo check if Webp / Acif is active, check for unoptimized items
