@@ -492,8 +492,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			// #### THUMBNAILS ####
 			$thumbObjs = $this->getThumbObjects();
 
-		 Log::addTemp('HadleOPt Thumbs', $thumbObjs);
-
 			// Add doubles to the processing list. Doubles are sizes with the same result, but should be copied to it's respective thumbnail file + backup.
 			if (isset($data['doubles']))
 			{
@@ -520,8 +518,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 				 $resultObj = $files[$sizeName];
 				 $thumbnail = $thumbObjs[$sizeName];
-				 Log::addTemp('HandleOPt result', $resultObj);
-
 
          $thumbnail->handleOptimizedFileType($resultObj); // check for webps /etc
 

@@ -18,6 +18,7 @@ class ShortPixelImgToPictureWebp
         }
 
         $new_content = $this->testPictures($content);
+
         if ($new_content !== false)
         {
           $content = $new_content;
@@ -128,7 +129,6 @@ class ShortPixelImgToPictureWebp
     protected function convertImage($match)
     {
         $fs = \wpSPIO()->filesystem();
-
         // Do nothing with images that have the 'sp-no-webp' class.
         if (strpos($match[0], 'sp-no-webp') || strpos($match[0], 'rev-sildebg')) {
             Log::addInfo('SPDBG convertImage skipped, sp-no-webp found');
@@ -136,7 +136,6 @@ class ShortPixelImgToPictureWebp
         }
 
         $img = $this->get_attributes($match[0]);
-
         if(isset($img['style']) && strpos($img['style'], 'background') !== false) {
             //don't replace for <img>'s that have background
             return $match[0];
@@ -162,7 +161,7 @@ class ShortPixelImgToPictureWebp
         $imageBase = apply_filters( 'shortpixel_webp_image_base', $this->getImageBase($srcInfo['value']), $srcInfo['value']);
 
         if($imageBase === false) {
-            Log::addInfo('SPDBG baseurl doesn\'t match ' . $srcInfo['value'], array($imageBase) );
+            Log::addDebug('SPDBG baseurl doesn\'t match ' . $srcInfo['value'], array($imageBase) );
             return $match[0]; // . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG baseurl doesn\'t match ' . $src . '  -->' : '');
         }
 
@@ -204,7 +203,7 @@ class ShortPixelImgToPictureWebp
         }
 
           //  $defs = explode(",", $srcset);
-          $mime = ''; // inint
+          $mime = ''; // is_infinite
 
         foreach ($definitions as $item) {
                 $parts = preg_split('/\s+/', trim($item));
@@ -251,6 +250,9 @@ class ShortPixelImgToPictureWebp
                        $srcsetWebP[] = $fileurl_base . $thisfile->getFileName() . $condition;
                        break;
                   }
+									else {
+											$srcsetWebP[] = $fileurl . $condition;
+									}
                 }
 
 								//@todo This will not work with offloaded avifs.
@@ -264,8 +266,8 @@ class ShortPixelImgToPictureWebp
 
 
         if (count($srcsetWebP) == 0 && count($srcsetAvif) == 0) {
+
             return $match[0]; //. (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG no srcsetWebP found (' . $srcsetWebP . ') -->' : '');
-            Log::addInfo(' SPDBG no srcsetWebP found (' . $srcsetWebP . ')');
         }
 
         //add the exclude class so if this content is processed again in other filter, the img is not converted again in picture
@@ -288,7 +290,6 @@ class ShortPixelImgToPictureWebp
 
       //  $srcsetWebP = implode(',', $srcsetWebP);
 
-
         $output = '<picture ' . $this->create_attributes($imgpicture) . '>';
 
         if (is_array($srcsetAvif) && count($srcsetAvif) > 0)
@@ -305,7 +306,6 @@ class ShortPixelImgToPictureWebp
         .'<img ' . $srcPrefix . 'src="' . $src . '" ' . $this->create_attributes($img) . $idAttr . $altAttr . $heightAttr . $widthAttr
             . (strlen($srcset) ? ' srcset="' . $srcset . '"': '') . (strlen($sizes) ? ' sizes="' . $sizes . '"': '') . '>'
         .'</picture>';
-
         return $output;
     }
 

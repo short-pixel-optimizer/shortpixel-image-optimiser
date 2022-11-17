@@ -888,6 +888,7 @@ class ApiController
 		  $percentage = apply_filters('shortpixel/api/filesizeMargin', 5);
 
 			$increase = (($resultSize - $fileSize) / $fileSize) * 100;
+
 			if ($increase <= $percentage)
 				return true;
 

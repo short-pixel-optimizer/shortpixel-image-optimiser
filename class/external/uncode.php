@@ -29,7 +29,6 @@ class UncodeController
 
 				// Check Webp
 				$webpObj = $fs->getFile( (string) $fileObj->getFileDir() . $fileObj->getFileBase() . '.webp');
-				Log::addTemp('Webp file path ' . $webpObj->getFullPath(), $webpObj);
 				if ($webpObj->exists())
 					 $webpObj->delete();
 
