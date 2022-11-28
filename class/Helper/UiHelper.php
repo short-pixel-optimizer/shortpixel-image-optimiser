@@ -104,8 +104,7 @@ class UiHelper
          $output .= '<div class="totals">' . sprintf(__('+%s thumbnails optimized','shortpixel-image-optimiser'), self::formatNumber($thumbsDone, 0)) . '</div>';
 
 			 $improvs = array();
-
-
+			 
 				 uasort($improvements['thumbnails'], function ($a, $b) {
 					 	//return $b[0] <=> $a[0]; // @todo Efficient code to use once PHP 5 support is done.
 						if ($a == $b) {

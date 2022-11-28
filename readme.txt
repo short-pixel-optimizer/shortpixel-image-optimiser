@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compressor, ima
 Requires at least: 4.8.0
 Tested up to: 6.1
 Requires PHP: 5.6
-Stable tag: 5.1.3
+Stable tag: 5.1.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Speed up your website & boost your SEO by compressing old & new images and PDFs.
 
 == Description ==
 
-**A freemium, easy to use, comprehensive, stable, and frequently updated image compression plugin supported by the friendly team that created it.  :)**
+**An easy-to-use, comprehensive, lightweight, stable and frequently updated freemium image compression plugin supported by the friendly team that created it.**
 
 Increase your website's SEO ranking, number of visitors, and ultimately your sales by optimising any image or PDF document on your website.
 ShortPixel is an easy to use, lightweight, install-and-forget-about-it <a href="https://shortpixel.com" target="_blank">image optimization</a> plugin that can compress all your past images and PDF documents with a single click. New images are automatically resized/rescaled and optimized on the fly, in the background. It's also compatible with any gallery, slider or eCommerce plugin.
@@ -27,6 +27,12 @@ We also offer **glossy** JPEG compression which is a very high-quality lossy opt
 Optimized images mean better user experience, better PageSpeed Insights or GTmetrix results, better Google PageRank, and more visitors.
 
 Make an instant <a href="https://shortpixel.com/image-compression-test" target="_blank">image compression test</a> of your site or <a href="https://shortpixel.com/online-image-compression" target="_blank">compress some images</a> to test our optimization algorithms.
+
+**<a href="https://shortpixel.com/spio-unlimited/" target="_blank">New Plan: ShortPixel Unlimited</a>**
+
+This is the perfect monthly plan for single website owners.
+It allows you to optimize an unlimited number of images with ShortPixel Image Optimizer on your website.
+Read more details on our <a href="https://shortpixel.com/knowledge-base/article/555-how-does-the-unlimited-plan-work" target="_blank">dedicated page</a>.
 
 **New! Smart Cropping**
 
@@ -278,8 +284,18 @@ filters the URLs that will be sent to optimisation, `$URLs` is a plain array;
 `apply_filters('shortpixel/db/chunk_size', $chunk);`
 the `$chunk` is the value ShortPixel chooses to use as the number of selected records in one query (based on total table size), some hosts work better with a different value;
 
+For version 4.22.10 and earlier:
+
 `apply_filters('shortpixel/backup/paths', $PATHs, $mainPath);`
 filters the array of paths of the images sent for backup and can be used to exclude certain paths/images/thumbs from being backed up, based on the image path. `$mainPath` is the path of the main image, while `$PATHs` is an array with all files to be backed up (including thumbnails);
+
+For version 5.0.0 and later:
+
+`apply_filters('shortpixel/image/skip_backup', false, $this->getFullPath(), $this->is_main_file)`
+filters the images that are skipped or not from the backup. Return true for the type of images to be skipped in the backup. If you check if `is_main_file` is true and return false (do not skip backup), while while otherwise returning true, the backup will be kept only for the main image. We suggest using it in conjuction with this action that fires right after the restore from backup is done:
+
+`do_action('shortpixel/image/after_restore', $this, $this->id, $cleanRestore);`
+This action can be used to cleanup the meta data from the database, regenerate thumbnails after restoring the main file, writing the updated meta data, etc.
 
 `apply_filters('shortpixel/settings/image_sizes', $sizes);`
 filters the array (`$sizes`) of image sizes that can be excluded from processing (displayed in the plugin Advanced settings);
@@ -305,6 +321,9 @@ add_filter('shortpixel/init/optimize_on_screens', function ($screens) {
 	return $screens;
 	});
 `
+
+`add_filter('shortpixel/image/filecheck', function () { return true; });`
+This filter forces a file check for WebP/AVIF in case they were manually removed from disk.
 
 In order to define custom thumbnails to be picked up by the optimization you have two options, both comma separated defines:
 
@@ -347,6 +366,19 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 5.1.4 =
+Release date November 28, 2022
+* New: added a filter to force a file check for WebP/AVIF if they were manually deleted from disk;
+* Fix: if only small WebPs are available, include the JPG version in the `picture` tag to avoid blurry images;
+* Fix: the notification about unlisted thumbnails incorrectly reported WebP and AVIF files;
+* Fix: improved integration with WP Offload Media by including Retina images in virtual/offload file checks;
+* Fix: if the main file was optimized but some thumbnails did not have WebP/AVIF, it was not displayed correctly in the UI;
+* Fix: added a % margin when generating WebPs/AVIF, so that files that are only a few bytes larger are also generated;
+* Fix: when running WP-CLI, the percentage of finished items in the total was calculated incorrectly;
+* Fix: the settings page crashed in certain cases for new accounts;
+* Tweak: various CSS fixes and improvements on the Media Library, especially for cases with many thumbnails;
+* Language: 2 new strings added, 2 updated, 0 fuzzed, and 0 deprecated.
 
 = 5.1.3 =
 Release date November 9, 2022
