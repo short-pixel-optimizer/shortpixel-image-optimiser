@@ -149,15 +149,15 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 					 return false;
 				}
 
-				// Pdf, no special files.
-				if ($this->getExtension() == 'pdf')
-					return false;
-
-        if ($type == 'webp' && ! $settings->createWebp)
+				if ($type == 'webp' && ! $settings->createWebp)
           return false;
 
         if ($type == 'avif' && ! $settings->createAvif)
             return false;
+
+				// Pdf, no special files.
+				if ($this->getExtension() == 'pdf')
+					return false;
 
 				$imgObj = $this->getImageType($type);
 
@@ -341,39 +341,22 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 				$count = 0;
 				$urls = array();
 				$i = 0;
-				foreach($optimizeData['params'] as $sizeName => $data)
+
+				$params = $optimizeData['params'];
+
+				if ($param == 'thumbnails')
+					$param = 'image';
+
+				// Take the optimizeData and take key - param column, then check if the param (image/webp/avif) is true (filter) .
+				$combinedArray = array_filter(array_combine(array_keys($params), array_column($params, $param)));
+
+				$count = count($combinedArray);
+				foreach($combinedArray as $sizeName => $unneeded)
 				{
-
-					switch($param)
-					{
-						 case 'thumbnails';
-								if (isset($data['image']) && $data['image'] === true)
-								{
-									$count++;
-									$urls[] = $optimizeData['paths'][$sizeName];
-								}
-						 break;
-						 case 'webp';
-								if (isset($data['webp']) && $data['webp'] === true)
-								{
-									$count++;
-									$urls[] = $optimizeData['paths'][$sizeName];
-								}
-						 break;
-						 case 'avif';
-								if (isset($data['avif']) && $data['avif'] === true)
-								{
-									$count++;
-									$urls[] = $optimizeData['paths'][$sizeName];
-								}
-						 break;
-
-						 $i++;
-					}
+					 $urls[] = $optimizeData['paths'][$sizeName];
 				}
-
-
 				return array($urls, $count);
+
 		}
 
 	  protected function getImageType($type = 'webp')
@@ -384,9 +367,15 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 	    if (! is_null($this->getMeta($type)))
 	    {
+				// Filter to disable assumption(s) on the file basis of imageType.  Active when something has manually been deleted.
+				$metaCheck = apply_filters('shortpixel/image/filecheck', false);
 	      $filepath = $this->getFileDir() . $this->getMeta($type);
 	      $file = $fs->getFile($filepath);
-	      return $file;
+
+				if ($metaCheck === false)
+				{
+					 return $file;
+				}
 	    }
 
 			if ($type == 'webp')
@@ -407,7 +396,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 	    	$file = $fs->getFile($filepath);
 
 			// If double extension is enabled, but no file, check the alternative.
-			if (! $file->exists()  && ! $file->is_virtual())
+			if (! $file->is_virtual() && ! $file->exists())
 			{
 				 if ($is_double)
 				 		$file = $fs->getFile($filepath);

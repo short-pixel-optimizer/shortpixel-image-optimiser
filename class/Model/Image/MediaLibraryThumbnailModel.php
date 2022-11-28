@@ -68,9 +68,21 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
   public function getRetina()
   {
-      $filebase = $this->getFileBase();
-      $filepath = (string) $this->getFileDir();
-      $extension = $this->getExtension();
+			if ($this->is_virtual())
+			{
+				$fs = \wpSPIO()->filesystem();
+				$filepath = apply_filters('shortpixel/file/virtual/translate', $this->getFullPath(), $this);
+				$virtualFile = $fs->getFile($filepath);
+
+				$filebase = $virtualFile->getFileBase();
+	      $filepath = (string) $virtualFile->getFileDir();
+	      $extension = $virtualFile->getExtension();				
+			}
+			else {
+				$filebase = $this->getFileBase();
+	      $filepath = (string) $this->getFileDir();
+	      $extension = $this->getExtension();
+			}
 
       $retina = new MediaLibraryThumbnailModel($filepath . $filebase . '@2x.' . $extension, $this->id, $this->size); // mind the dot in after 2x
 			$retina->setName($this->size);

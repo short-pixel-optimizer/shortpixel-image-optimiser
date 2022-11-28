@@ -73,7 +73,12 @@ namespace ShortPixel;
     </div>
 
   </div>
-  <?php if(!$quotaData->unlimited) { ?>
+  <?php
+		if(true === $quotaData->unlimited): ?>
+		<div class='credits'>
+				<p><span><?php _e('This site is currently on the ShortPixel Unlimited plan, so you do not have to worry about credits. Enjoy!', 'shortpixel-image-optimiser'); ?></span></p>
+		</div>
+	<?php else: ?>
     <div class="credits">
       <p class='heading'><span><?php esc_html_e('Your ShortPixel Credits Available', 'shortpixel-image-optimiser'); ?></span>
         <span><?php echo esc_html($this->formatNumber($quotaData->total->remaining, 0)) ?></span>
@@ -110,7 +115,8 @@ namespace ShortPixel;
              ?></span>
     </div>
     <?php $this->loadView('snippets/part-upgrade-options'); ?>
-    <?php } ?>
+	<?php endif;
+	 ?>
 
     <div class='no-images' data-check-visibility="false" data-control="data-check-total-total">
         <?php esc_html_e('The current selection contains no images. The bulk process cannot start.', 'shortpixel-image-optimiser'); ?>

@@ -391,7 +391,7 @@ class SpioCommandBase
 		protected function displayStatsLine($name, $stats)
 		{
 
-				$line = sprintf('Current Status for %s : (%s\%s) Done (%s%%), %s awaiting %s errors --', $name, $stats->done, $stats->total, $stats->percentage_done, ( $stats->awaiting ), $stats->fatal_errors);
+				$line = sprintf('Current Status for %s : (%s\%s) Done (%s%%), %s awaiting %s errors --', $name, ($stats->done + $stats->fatal_errors), $stats->total, $stats->percentage_done, ( $stats->awaiting ), $stats->fatal_errors);
 
 				\WP_CLI::line($line);
 		}
@@ -445,6 +445,7 @@ class SpioCommandBase
 
 				\WP_CLI::Line("--- Current Status ---");
 				\WP_CLI\Utils\format_items('table', $items, $fields);
+				\WP_CLI::Line($this->displayStatsLine('Total', $startupData->total->stats));
 		}
 
 	 /**

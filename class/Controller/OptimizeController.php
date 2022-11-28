@@ -985,8 +985,13 @@ class OptimizeController
 										 $perc = $object->stats->$key;
 									}
 									else
-								 		$perc = round(($object->stats->$key + $value) / 2); //exceptionnes.
-
+									{
+										$total = $results->custom->stats->total + $results->media->stats->total;
+										$done = $results->custom->stats->done + $results->media->stats->done;
+										$fatal = $results->custom->stats->fatal_errors + $results->media->stats->fatal_errors;
+										$perc = round((100 / $total) * ($done + $fatal), 0, PHP_ROUND_HALF_DOWN);
+								 //		$perc = round(($object->stats->$key + $value) / 2); //exceptionnes.
+									}
 									$object->stats->$key  = $perc;
 							 }
                elseif (is_numeric($object->stats->$key)) // add only if number.

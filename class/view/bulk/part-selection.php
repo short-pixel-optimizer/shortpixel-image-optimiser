@@ -141,7 +141,8 @@ $approx = $this->view->approx;
 				<div class="option"><?php esc_html_e('The total number of AVIF images will be calculated in the next step.','shortpixel-image-optimiser'); ?></div>
 		     </div>
 			<?php else : ?>
-				<div class="option warning"><?php esc_html_e('The creation of AVIF files is not possible with this license type.','shortpixel-image-optimiser'); ?>
+				<div class="option warning"><?php printf(esc_html__('The creation of AVIF files is not possible with this license type. %s Read more %s ','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/555-how-does-the-unlimited-plan-work" target="_blank">', '</a>'); ?>
+
 
 				</div>
 				 </div>

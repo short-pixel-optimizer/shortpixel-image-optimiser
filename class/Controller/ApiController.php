@@ -585,7 +585,7 @@ class ApiController
                     $webpName = $originalFile->getFileBase() . '.webp';
 										$webpDownloadResult = false;
 
-										if ($fileData->$webpTypeSize > $checkFileSize) // if file is bigger.
+										if (false === $this->checkFileSizeMargin($checkFileSize, $fileData->$webpTypeSize)) // if file is bigger.
 										{
 											$results[$imageName]['webp'] = $this->returnOk(self::STATUS_OPTIMIZED_BIGGER, __('Special file type bigger than core file','shortpixel-image-optimiser'));
 										}
@@ -608,7 +608,7 @@ class ApiController
                   {
                     $avifName = $originalFile->getFileBase() . '.avif';
 
-										if ($fileData->$avifTypeSize > $checkFileSize) // if file is bigger.
+										if ($this->checkFileSizeMargin($checkFileSize, $fileData->$avifTypeSize)) // if file is bigger.
 										{
 											$results[$imageName]['avif'] = $this->returnOk(self::STATUS_OPTIMIZED_BIGGER, __('Special file type bigger than core file','shortpixel-image-optimiser'));
 										}
@@ -878,6 +878,26 @@ class ApiController
 
       return $result;
   }
+
+	private function checkFileSizeMargin($fileSize, $resultSize)
+	{
+			// This is ok.
+			if ($fileSize >= $resultSize)
+				return true;
+
+		  $percentage = apply_filters('shortpixel/api/filesizeMargin', 5);
+
+			$increase = (($resultSize - $fileSize) / $fileSize) * 100;
+
+			if ($increase <= $percentage)
+				return true;
+
+		  return false;
+
+
+
+
+	}
 
 
 

@@ -25,7 +25,6 @@ class AvifNotice extends \ShortPixel\Model\AdminNoticeModel
 		if (apply_filters('shortpixel/avifcheck/override', false) === true)
 		{ return; }
 
-		Log::addTemp('Checking Avif');
 
 		if ($cache->getItem('avif_server_check')->exists() === false)
 		{
@@ -33,7 +32,6 @@ class AvifNotice extends \ShortPixel\Model\AdminNoticeModel
 			 $headers = get_headers($url);
 			 $is_error = true;
 
-Log::addTemp('Avif check headers', $headers);
 			 $this->addData('headers', $headers);
 			 // Defaults.
 			 $this->error_message = __('AVIF server test failed. Your server may not be configured to display AVIF files correctly. Serving AVIF might cause your images not to load. Check your images, disable the AVIF option, or update your web server configuration.', 'shortpixel-image-optimiser');
@@ -55,8 +53,6 @@ Log::addTemp('Avif check headers', $headers);
 								}
 							}
 					}
-
-			Log::addTemp('ContentType', $contentType);
 
 					// http not ok, redirect etc. Shouldn't happen.
 					 if (is_null($response) || strpos($response, '200') === false)

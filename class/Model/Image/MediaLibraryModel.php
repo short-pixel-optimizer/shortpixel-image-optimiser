@@ -316,7 +316,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 	      if ($main)
 				{
-	        $this->retinas[$this->mainImageKey] = $main; // on purpose not a string, but number to prevent any custom image sizes to get overwritten.
+					$main->setName($this->mainImageKey);
+	        $this->retinas[$this->mainImageKey] = $main; // to prevent any custom image sizes to get overwritten.
 				}
 			}
 
@@ -324,7 +325,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       {
         $retscaled = $this->original_file->getRetina();
         if ($retscaled)
+				{
+					$retscaled->setName($this->originalImageKey);
           $this->retinas[$this->originalImageKey] = $retscaled; //see main
+				}
       }
 
       foreach ($this->thumbnails as $thumbname => $thumbObj)
@@ -514,9 +518,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 				 $resultObj = $files[$sizeName];
 				 $thumbnail = $thumbObjs[$sizeName];
-
-				 //Log::addTemp('Handle Optimize thumbnail', $thumbnail);
-				 //Log::add
 
          $thumbnail->handleOptimizedFileType($resultObj); // check for webps /etc
 
@@ -1223,6 +1224,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
             if ($bool === true) // Is Processable just needs one job
               return true;
+
+						if ($thumbnail->isOptimized() && true === $thumbnail->isProcessableAnyFileType())
+              return true;
+
           }
 
       }
@@ -2058,7 +2063,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				$adminNotices->invokeLegacyNotice();
 			}
 
-        Log::addDebug("Conversion of legacy: ", array($metadata));
+        Log::addDebug("Conversion of legacy: " . $this->get('id'), array($metadata));
 
        $type = isset($data['type']) ? $this->legacyConvertType($data['type']) : '';
 
@@ -2463,7 +2468,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        // Setting must be active.
        /*if (! \wpSPIO()->settings()->optimizeUnlisted )
          return; */
-
 			$searchUnlisted = \wpSPIO()->settings()->optimizeUnlisted;
 
       // Don't check this more than once per run-time.
@@ -2576,13 +2580,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	                      $thumbs = array_values(preg_grep($pattern, $all_files));
 	                      if (count($thumbs) > 0)
 	                        $unlisted = array_merge($unlisted, $thumbs);
-	                    //  $thumbs = array_merge($thumbs, self::getFilesByPattern($dirPath, $pattern));
 
-	                      /*foreach($thumbsCandidates as $th) {
-	                          if(preg_match($pattern, $th)) {
-	                              $thumbs[]= $th;
-	                          }
-	                      } */
 	                  }
 	                }
 	            }
@@ -2592,10 +2590,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       // Quality check on the thumbs. Must exist,  must be same extension.
       $added = false;
 
-			if ($check_only === true)
-			{
-					return $unlisted;
-			}
+			$foundUnlisted = array(); // found and ready. Used for notice / check only
 
       foreach($unlisted as $unName)
       {
@@ -2610,12 +2605,19 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           }
           elseif ($thumbObj->is_readable()) // exclude webps
           {
-            $thumbObj->setName($unName);
-            $thumbObj->setMeta('originalWidth', $thumbObj->get('width'));
-            $thumbObj->setMeta('originalHeight', $thumbObj->get('height'));
-            $thumbObj->setMeta('file', $thumbObj->getFileName() );
-            $this->thumbnails[$unName] = $thumbObj;
-            $added = true;
+						if (true === $check_only)
+						{
+								$foundUnlisted[] = $unName;
+						}
+						else {
+	            $thumbObj->setName($unName);
+	            $thumbObj->setMeta('originalWidth', $thumbObj->get('width'));
+	            $thumbObj->setMeta('originalHeight', $thumbObj->get('height'));
+	            $thumbObj->setMeta('file', $thumbObj->getFileName() );
+	            $this->thumbnails[$unName] = $thumbObj;
+	            $added = true;
+						}
+
           }
           else
           {
@@ -2623,9 +2625,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           }
       }
 
-      //if ($added)
-       // $this->saveMeta(); // Save it when we are adding images.
-
+			if (true === $check_only)
+			{
+				 return $foundUnlisted;
+			}
 			self::$unlistedChecked[] = $this->get('id');
   }
 
