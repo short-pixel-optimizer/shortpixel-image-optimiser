@@ -284,6 +284,7 @@ class FileModel extends \ShortPixel\Model
   {
       $sourcePath = $this->getFullPath();
       $destinationPath = $destination->getFullPath();
+			
       Log::addDebug("Copy from $sourcePath to $destinationPath ");
 
       if (! strlen($sourcePath) > 0 || ! strlen($destinationPath) > 0)

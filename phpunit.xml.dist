@@ -17,9 +17,10 @@
 		<testsuite name="queue">
 			<directory prefix="test-" suffix=".php">./tests/queue</directory>
 		</testsuite>
-		<testsuite name="response">
-			<file>./tests/test-responsecontroller.php</file>
+		<testsuite name="model">
+			<directory prefix="test-" suffix=".php">./tests/Model</directory>
 		</testsuite>
+
 
 	</testsuites>
 </phpunit>

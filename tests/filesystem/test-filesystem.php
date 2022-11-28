@@ -12,14 +12,14 @@ class FileSystemTest extends  WP_UnitTestCase
   protected $upload_dir;
 
 // https://make.wordpress.org/core/handbook/testing/automated-testing/writing-phpunit-tests/#shared-setup-between-related-tests
-  public function setUp()
+  public function setUp() :void
   {
     parent::setUp();
     $this->fs = \wpSPIO()->filesystem();
     $this->root = vfsStream::setup('root', null, $this->getTestFiles() );
   }
 
-  public function tearDown()
+  public function tearDown() :void
   {
       $uploaddir = wp_upload_dir();
       $dir = $uploaddir['basedir'];

@@ -20,17 +20,10 @@
 	"phpunit/phpunit": "^9",
 	"mikey179/vfsstream": "^1",
 	"10up/wp_mock": "0.4.2",
-      "lucatume/wp-browser": "^2.5",
-      "codeception/module-asserts": "^1.0",
-    "codeception/module-phpbrowser": "^1.0",
-    "codeception/module-webdriver": "^1.0",
-    "codeception/module-db": "^1.0",
-    "codeception/module-filesystem": "^1.0",
-    "codeception/module-cli": "^1.0",
-    "codeception/util-universalframework": "^1.0"
+      "yoast/phpunit-polyfills" : "1.0.3"
     },
    "autoload": {
-       "psr-4": { "ShortPixel\\" : "class" }
+       "psr-4": { "ShortPixel\\" : "class" , "ShortPixel\\Tests\\" : "tests"}
    },
     "scripts": {
         "post-update-cmd" : "\\ShortPixel\\Build\\Build::BuildIt",

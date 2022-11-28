@@ -1,5 +1,7 @@
 <?php
 namespace ShortPixel\Model\Image;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+
 
 class ImageThumbnailMeta
 {

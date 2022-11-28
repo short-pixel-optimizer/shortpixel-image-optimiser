@@ -10,6 +10,8 @@ use ShortPixel\Controller\QuotaController as QuotaController;
 use ShortPixel\Helper\InstallHelper as InstallHelper;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
 
+use ShortPixel\Model\Converter\MediaLibraryPNGConverter as PNGConverter;
+
 class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailModel
 {
 
@@ -1195,8 +1197,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       $bool = parent::isProcessable();
 
       $settings = \wpSPIO()->settings();
+			$converter = new PNGConverter($this);
 
-      if ($this->getExtension() == 'png' && $settings->png2jpg && $this->getMeta('tried_png2jpg') == false)
+      if ($converter->isConvertable() && $this->getMeta('tried_png2jpg') == false)
 			{
         $this->do_png2jpg = true;
 			}
@@ -1273,6 +1276,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
   public function convertPNG()
   {
+		Log::addTemp('ConvertPNG function ' . $this->id);
       $settings = \wpSPIO()->settings();
       $bool = false;
 			$fs = \wpSPIO()->filesystem();
@@ -1281,7 +1285,16 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       {
           if ($settings->backupImages == 1)
           {
-             $backupok = $this->createBackup();
+						Log::addTemp('Creating backup for PNG');
+						// only one file needed.
+						if ($this->isScaled())
+						{
+							 $backupok = $this->getOriginalFile()->createBackup();
+						}
+						else {
+								$backupok = $this->createBackup();
+						}
+
              if (! $backupok)
              {
 							 $response = array(
@@ -1298,24 +1311,16 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
                return false;
              }
 
-						 foreach($this->thumbnails as $thumbnail)
-						 {
-							  $thumbnail->createBackup();
-						 }
-
-						 if ($this->isScaled())
-						 {
-							  $this->getOriginalFile()->createBackup();
-						 }
-
           }
 
-          $pngConvert = new ShortPixelPng2Jpg();
-          $bool = $pngConvert->convert($this);
+          $converter = new PNGConverter($this);
+          $bool = $converter->convert();
+					Log::addTemp('Converter Response', $bool);
       }
 
       if ($bool === true)
       {
+				Log::addTemp('Converter Success ' . $this->id);
         $this->setMeta('did_png2jpg', true);
         $mainfile = \wpSPIO()->filesystem()->getfile($this->getFileDir() . $this->getFileBase() . '.jpg');
 
@@ -1360,7 +1365,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
         // Update
       }
-			else  // false didn't work. This can also be for legimate reasons as big jpg, or transparency.
+			 // false didn't work. This can also be for legimate reasons as big jpg, or transparency. Check if extension still is PNG. If this is the reason it might remove backups for no reason.
+			elseif ('png' == $this->getExtension() )
 			{
 
 					if ($settings->backupImages == 1)
@@ -1777,6 +1783,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	*/
 	protected function restorePNG2JPG()
 	{
+		Log::addTemp('Restoring PNG 2 JPG ');
 			$fs = \wpSPIO()->filesystem();
 
 			// ImageModel restore, restored png file to .jpg file ( due to $this)
@@ -1839,8 +1846,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 				// Fullpath now will still be .jpg
 				// PNGconvert is first, because some plugins check for _attached_file metadata and prevent deleting files if still connected to media library. Exmaple: polylang.
-				$pngConvert = new ShortPixelPng2Jpg();
-				$pngConvert->restorePng2Jpg($this);
+				$converter = new PNGConverter($this);
+				$converter->restore();
 
 				foreach($toRemove as $fileObj)
 				{

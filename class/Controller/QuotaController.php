@@ -206,7 +206,7 @@ class QuotaController
 						$args['body']['pass'] = stripslashes(SHORTPIXEL_HTTP_AUTH_PASSWORD);
 						$argsStr .= '&user=' . urlencode($args['body']['user']) . '&pass=' . urlencode($args['body']['pass']);
 					}
-          elseif(strlen($settings->siteAuthUser)) {
+          elseif(! is_null($settings->siteAuthUser) && strlen($settings->siteAuthUser)) {
 
               $args['body']['user'] = stripslashes($settings->siteAuthUser);
               $args['body']['pass'] = stripslashes($settings->siteAuthPass);

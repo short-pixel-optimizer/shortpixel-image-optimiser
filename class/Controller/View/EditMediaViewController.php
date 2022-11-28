@@ -118,7 +118,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
           $stats[] = array(__('EXIF removed', 'shortpixel-image-optimiser'), '');
         }
 
-        if ($did_png2jpg == true)
+        if (true === $did_png2jpg )
         {
           $stats[] = array(  __('Converted from PNG','shortpixel-image-optimiser'), '');
         }
