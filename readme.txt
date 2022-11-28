@@ -292,9 +292,10 @@ filters the array of paths of the images sent for backup and can be used to excl
 For version 5.0.0 and later:
 
 `apply_filters('shortpixel/image/skip_backup', false, $this->getFullPath(), $this->is_main_file)`
-filters the images that are skipped or not from the backup. Return true for the type of images to be skipped in the backup. If you check if `is_main_file` is true and return false (do not skip backup), while while otherwise returning true, the backup will be kept only for the main image. We suggest using it in conjuction with this action that fires right after the restore from backup is done (to cleanup the meta data from the database, regenerate thumbnails after restoring the main file, etc.):
+filters the images that are skipped or not from the backup. Return true for the type of images to be skipped in the backup. If you check if `is_main_file` is true and return false (do not skip backup), while while otherwise returning true, the backup will be kept only for the main image. We suggest using it in conjuction with this action that fires right after the restore from backup is done:
 
 `do_action('shortpixel/image/after_restore', $this, $this->id, $cleanRestore);`
+This action can be used to cleanup the meta data from the database, regenerate thumbnails after restoring the main file, writing the updated meta data, etc.
 
 `apply_filters('shortpixel/settings/image_sizes', $sizes);`
 filters the array (`$sizes`) of image sizes that can be excluded from processing (displayed in the plugin Advanced settings);
