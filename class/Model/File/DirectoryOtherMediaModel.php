@@ -280,7 +280,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
        {
 				 if ($silent === false)
 			 	 {
-          Notice::addError( sprintf(__('The %s folder cannot be processed as it\'s not inside the root path of your website (%s).','shortpixel-image-optimiser'),$directory->getPath(), $rootDir->getPath()));
+          Notice::addError( sprintf(__('The %s folder cannot be processed as it\'s not inside the root path of your website (%s).','shortpixel-image-optimiser'),$this->getPath(), $rootDir->getPath()));
 				}
           return false;
        }
