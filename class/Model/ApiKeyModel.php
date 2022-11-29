@@ -108,6 +108,8 @@ class ApiKeyModel extends \ShortPixel\Model
   public function checkKey($key)
   {
 
+			$valid = false;
+			
       if (strlen($key) == 0)
       {
         // first-timers, redirect to nokey screen

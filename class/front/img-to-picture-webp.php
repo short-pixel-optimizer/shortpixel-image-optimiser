@@ -191,6 +191,9 @@ class ShortPixelImgToPictureWebp
 
         $srcsetWebP = array();
         $srcsetAvif = array();
+				// Count real instances of either of them, without fillers.
+				$webpCount = $avifCount = 0;
+
 
         $imagePaths = array();
 
@@ -206,13 +209,17 @@ class ShortPixelImgToPictureWebp
           $mime = ''; // is_infinite
 
         foreach ($definitions as $item) {
+
                 $parts = preg_split('/\s+/', trim($item));
 
                 $fileurl = $parts[0];
                 // A source that starts with data:, will not need processing.
                 if (strpos($fileurl, 'data:') === 0)
                   continue;
-                $condition = isset($parts[1]) ? ' ' . $parts[1] : '';
+
+								// The space if not set is required, otherwise it will not work.
+                $condition = isset($parts[1]) ? ' ' . $parts[1] : ' ';
+						//		$condition = '';
 
            //     Log::addDebug('Running item - ' . $item, $fileurl);
 
@@ -235,6 +242,9 @@ class ShortPixelImgToPictureWebp
 
                 $fileAvif = $fs->getFile($imageBase . $fsFile->getFileBase() . '.avif');
 
+
+
+
                 foreach($files as $thisfile)
                 {
                   if (! $thisfile->exists())
@@ -247,6 +257,8 @@ class ShortPixelImgToPictureWebp
                   {
                       // base url + found filename + optional condition ( in case of sourceset, as in 1400w or similar)
                       Log::addDebug('Adding new URL', $fileurl_base . $thisfile->getFileName() . $condition);
+											$webpCount++;
+
                        $srcsetWebP[] = $fileurl_base . $thisfile->getFileName() . $condition;
                        break;
                   }
@@ -260,12 +272,11 @@ class ShortPixelImgToPictureWebp
                 {
                    $fileurl_base = str_replace($fsFile->getFileName(), '', $fileurl);
                    $srcsetAvif[] = $fileurl_base . $fileAvif->getFileName() . $condition;
+									 $avifCount++;
                 }
         }
 
-
-
-        if (count($srcsetWebP) == 0 && count($srcsetAvif) == 0) {
+        if ($webpCount == 0 && $avifCount == 0) {
 
             return $match[0]; //. (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG no srcsetWebP found (' . $srcsetWebP . ') -->' : '');
         }
@@ -292,14 +303,14 @@ class ShortPixelImgToPictureWebp
 
         $output = '<picture ' . $this->create_attributes($imgpicture) . '>';
 
-        if (is_array($srcsetAvif) && count($srcsetAvif) > 0)
+        if (is_array($srcsetAvif) && $avifCount > 0)
         {
-            $srcsetAvif = implode(',', $srcsetAvif);
+            $srcsetAvif = implode(',', array_unique($srcsetAvif));
             $output .= '<source ' . $srcsetPrefix . 'srcset="' . $srcsetAvif . '"' . ($sizes ? ' ' . $sizesPrefix . 'sizes="' . $sizes . '"' : '') . ' type="image/avif">';
         }
-        if (is_array($srcsetWebP) && count($srcsetWebP) > 0)
+        if (is_array($srcsetWebP) && $webpCount > 0)
         {
-          $srcsetWebP = implode(',', $srcsetWebP);
+          $srcsetWebP = implode(',', array_unique($srcsetWebP));
           $output .= '<source ' . $srcsetPrefix . 'srcset="' . $srcsetWebP . '"' . ($sizes ? ' ' . $sizesPrefix .  'sizes="' . $sizes . '"' : '') . ' type="image/webp">';
         }
         $output .= '<source ' . $srcsetPrefix . 'srcset="' . $srcset . '"' . ($sizes ? ' ' . $sizesPrefix . 'sizes="' . $sizes . '"' : '') . ' type="' . $mime  . '">'

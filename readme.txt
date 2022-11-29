@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compressor, ima
 Requires at least: 4.8.0
 Tested up to: 6.1
 Requires PHP: 5.6
-Stable tag: 5.1.4
+Stable tag: 5.1.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -292,9 +292,10 @@ filters the array of paths of the images sent for backup and can be used to excl
 For version 5.0.0 and later:
 
 `apply_filters('shortpixel/image/skip_backup', false, $this->getFullPath(), $this->is_main_file)`
-filters the images that are skipped or not from the backup. Return true for the type of images to be skipped in the backup. If you check if `is_main_file` is true and return false (do not skip backup), while while otherwise returning true, the backup will be kept only for the main image. We suggest using it in conjuction with this action that fires right after the restore from backup is done (to cleanup the meta data from the database, regenerate thumbnails after restoring the main file, etc.):
+filters the images that are skipped or not from the backup. Return true for the type of images to be skipped in the backup. If you check if `is_main_file` is true and return false (do not skip backup), while while otherwise returning true, the backup will be kept only for the main image. We suggest using it in conjuction with this action that fires right after the restore from backup is done:
 
 `do_action('shortpixel/image/after_restore', $this, $this->id, $cleanRestore);`
+This action can be used to cleanup the meta data from the database, regenerate thumbnails after restoring the main file, writing the updated meta data, etc.
 
 `apply_filters('shortpixel/settings/image_sizes', $sizes);`
 filters the array (`$sizes`) of image sizes that can be excluded from processing (displayed in the plugin Advanced settings);
@@ -365,6 +366,13 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 5.1.5 =
+Release date November 29, 2022
+* Fix: WebP/AVIF delivery now works correctly, without affecting SVG files or other images or requests (e.g. in WooCommerce). Sorry about this!;
+* Fix: a PHP warning was displayed if no valid API key was added;
+* Fix: error in Custom Media if the folder is not in the root directory;
+* Language: 0 new strings added, 0 updated, 0 fuzzed, and 0 deprecated.
 
 = 5.1.4 =
 Release date November 28, 2022
