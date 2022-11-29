@@ -296,21 +296,17 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
     return $thumbnails;
   }
 
-  protected function getRetinas()
-  {
-			if (is_null($this->retinas))
-			{
-				$this->addRetinas();
-			}
 
-			return $this->retinas;
-  }
-
-	protected function addRetinas()
+	protected function getRetinas()
 	{
 			// Don't load retina's if option is off.
 			if (! \wpSPIO()->settings()->optimizeRetina)
 				return;
+
+			if (! is_null($this->retinas))
+			{
+				return $this->retinas;
+			}
 
 			if (! isset($this->retinas[$this->mainImageKey]))
 			{
@@ -342,6 +338,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	           $this->retinas[$retinaObj->get('name')] = $retinaObj;
 				}
       }
+
+			return $this->retinas;
 
   }
 
@@ -1199,7 +1197,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       $settings = \wpSPIO()->settings();
 			$converter = new PNGConverter($this);
 
-      if ($converter->isConvertable() && $this->getMeta('tried_png2jpg') == false)
+      if ($converter->isConvertable() && $converter->hasTried($this->getMeta('tried_png2jpg')) == false)
 			{
         $this->do_png2jpg = true;
 			}
@@ -1281,11 +1279,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       $bool = false;
 			$fs = \wpSPIO()->filesystem();
 
+			$converter = new PNGConverter($this);
+
+
       if ($this->getExtension() == 'png')
       {
           if ($settings->backupImages == 1)
           {
-						Log::addTemp('Creating backup for PNG');
 						// only one file needed.
 						if ($this->isScaled())
 						{
@@ -1305,7 +1305,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 								ResponseController::addData($this->get('id'), $response);
 
 								// Bail out with setting flag, so not to repeat.
-							 $this->setMeta('tried_png2jpg', true);
+							 $this->setMeta('tried_png2jpg', $converter->getCheckSum() );
 							 $this->saveMeta();
 
                return false;
@@ -1313,14 +1313,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
           }
 
-          $converter = new PNGConverter($this);
           $bool = $converter->convert();
-					Log::addTemp('Converter Response', $bool);
       }
 
       if ($bool === true)
       {
-				Log::addTemp('Converter Success ' . $this->id);
+				// If true, this will loop through OLD metadata currently loaded
         $this->setMeta('did_png2jpg', true);
         $mainfile = \wpSPIO()->filesystem()->getfile($this->getFileDir() . $this->getFileBase() . '.jpg');
 
@@ -1334,8 +1332,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
         // After Convert, reload new meta.
         $this->thumbnails = $this->loadThumbnailsFromWP();
+				$this->retinas = null;
 
-        foreach($this->thumbnails as $thumbObj)
+				$thumbnails = $this->getThumbObjects();
+
+        foreach($thumbnails as $thumbObj)
         {
             $file = $fs->getFile($thumbObj->getFileDir() . $thumbObj->getFileBase() . '.jpg');
             $thumbObj->setMeta('did_png2jpg', true);
@@ -1349,22 +1350,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
             }
         }
 
-		    if ($this->isScaled())
-		    {
-						 $file = $fs->getFile($originalFile->getFileDir() . $originalFile->getFileBase() . '.jpg');
-	           $originalFile->setMeta('did_png2jpg', true);
 
-	            if ($file->exists()) // if new exists, remove old
-	            {
-	                $originalFile->delete(); // remove the old file.
-	                $originalFile->fullpath = $file->getFullPath();
-	                $originalFile->resetStatus();
-	                $originalFile->setFileInfo();
-	            }
-				}
+				$this->wp_metadata = null;  // Remove caching on this one.
 
         // Update
-      }
+      } // bool == true
 			 // false didn't work. This can also be for legimate reasons as big jpg, or transparency. Check if extension still is PNG. If this is the reason it might remove backups for no reason.
 			elseif ('png' == $this->getExtension() )
 			{
@@ -1396,7 +1386,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					// Prevent from retrying next time, since stuff will be requeued.
 			}
 
-			$this->setMeta('tried_png2jpg', true);
+			$this->setMeta('tried_png2jpg', $converter->getCheckSum());
 			$this->saveMeta();
 
       return $bool;
@@ -1571,6 +1561,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
     $cleanRestore = true;
 		$wpmeta = wp_get_attachment_metadata($this->get('id'));
+
+Log::addTemp('Restore, get WPMeta', $wpmeta);
+Log::addTemp('Restore, get WPMeta INTERNAL', $this->getWPMetaData());
 
 		// Get them early in case the filename changes ( ie png to jpg ) because it will stop getting it.
 		$WPMLduplicates = $this->getWPMLDuplicates();
@@ -1858,7 +1851,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					 	$fileObj->image_meta = new ImageThumbNailMeta();
 					 }
 				}
+
 				$this->wp_metadata = null;  // restore changes the metadata.
+				$this->thumbnails = $this->loadThumbnailsFromWP();
+				$this->retinas = null;
 
 				return true;
 	}
@@ -1902,10 +1898,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	private function getThumbObjects()
 	{
 			$objects = $this->thumbnails;
+			$retinas = $this->getRetinas();
 
-			if (! is_null($this->retinas) && is_array($this->retinas))
+			if (! is_null($retinas) && is_array($retinas))
 			{
-					foreach($this->retinas as $retinaObj)
+					foreach($retinas as $retinaObj)
 					{
 						 $objects['retina_' . $retinaObj->get('name')] = $retinaObj;
 					}
@@ -1925,7 +1922,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	{
 			// Load items that might be not recorded when loading.
 			$this->addUnlisted();
-			$this->addRetinas();
+			$this->getRetinas();
 	}
 
 	private function generateThumbnails()
