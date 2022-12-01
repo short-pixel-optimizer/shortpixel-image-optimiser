@@ -214,13 +214,36 @@ class PNGConverterTest extends SPIO_UnitTestCase
   }
 
 	//@todo Add here testcases for conversion with scaled.
+	/* Here i figured out PNG files never scale :/
 	public function testMediaLibraryConversionWithScaled()
 	{
 		 	$mediaObj =  $this->getMediaImage('icecream-cropped-scaling.png');
 
+			$this->settings()->png2jpg = 2; // burn!.
+			$this->settings()->backupImages = 1; // backup on.
+
+			$bool = $mediaObj->convertPNG();
+	    $this->assertTrue($bool);
+			$this->assetTrue($mediaObj->isScaled());
+
+			var_dump($mediaObj->getBackupFile());
+
+			$this->assertEquals('jpg', $mediaObj->getExtension());
+			$this->assertFalse($mediaObj->hasBackup());
+
+			$orFile = $mediaObj->getOriginalFile();
+
+			$this->assertIsObject($orFile);
+			$this->assertTrue($orFile->hasBackup());
+
+			$mediaObj->restore();
+
+			$mediaObj =  $this->getMediaImage('icecream-cropped-scaling.png');
+			$this->assertEquals('png', $mediaObj->getExtension());
+
 	}
 
-
+*/
 
 
 }  // class

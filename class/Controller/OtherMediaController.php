@@ -160,6 +160,7 @@ class OtherMediaController extends \ShortPixel\Controller
        $fs = \wpSPIO()->filesystem();
        $directory = new DirectoryOtherMediaModel($path);
 
+Log::addTemp('Add Directory, checking this: ' . $path);
 			 // Check if this directory is allowed.
 			 if ($this->checkDirectoryRecursive($directory) === false)
 			 {
@@ -333,6 +334,12 @@ class OtherMediaController extends \ShortPixel\Controller
 			}
       elseif ($directory->isSubFolderOf($uploadDir)) // upload subdirs come in variation of year or month, both numeric. Exclude the WP-based years
       {
+					// Only check if direct subdir of /uploads/ is a number-based directory name. Don't bother with deeply nested dirs with accidental year.
+					if ($directory->getParent()->getPath() !== $uploadDir->getPath())
+					{
+							return false;
+					}
+
 					$name = $directory->getName();
 					if (is_numeric($name) && strlen($name) == 4) // exclude year based stuff.
 				  {

@@ -458,21 +458,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
       if (! $this->isOptimized() && isset($mainFile['img']) ) // main file might not be contained in results
       {
-					if ($this->getExtension() == 'heic')
-					{
-						 $isHeic = true;
-					}
+
 
           $result = parent::handleOptimized($mainFile);
           if (! $result)
           {
              return false;
           }
-
-					if (isset($isHeic) && $isHeic == true)
-					{
-						  $metadata = $this->generateThumbnails();
-					}
 
 					if ($this->getMeta('resize') == true)
 					{

@@ -680,8 +680,8 @@ class ApiController
       $downloadTimeout = max(ini_get('max_execution_time') - 10, 15);
       $fs = \wpSPIO()->filesystem();
 
-      //if there is no improvement in size then we do not download this file, except (sigh) when the fileType is heic since it converts.
-      if (($optimizedSize !== false && $originalSize !== false) && $originalSize == $optimizedSize && strpos($optimizedUrl, 'heic') === false )
+      //if there is no improvement in size then we do not download this file.
+      if (($optimizedSize !== false && $originalSize !== false) && $originalSize == $optimizedSize )
       {
 				  Log::addDebug('Optimize and Original size seems the same');
           return $this->returnRetry(self::STATUS_UNCHANGED, __("File wasn't optimized so we do not download it.", 'shortpixel-image-optimiser'));

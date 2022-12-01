@@ -455,8 +455,11 @@ class WPQ implements Queue
   {
       $queue_status = new Status(); // this is a per-q status
 
-      if (! isset($this->status))
-        $this->status = array('queues');
+      if (is_null($this->status))
+			{
+				$this->status = array();
+				$this->status['queues']  = array();
+			}
 
       $this->createQueue();
 
@@ -485,11 +488,12 @@ class WPQ implements Queue
 
   private function loadStatus()
   {
-    $this->status = get_option($this->statusName);
+    $this->status = get_option($this->statusName, null);
 
-    if (! $this->status || ! is_object($this->status) && ! is_array($this->status))
+    if (! $this->status || is_null($this->status) || (! is_object($this->status) && ! is_array($this->status) ))
+		{
       $this->createStatus();
-
+		}
 
     if (! isset($this->status['queues'][$this->qName]))
       $this->createQueue();
@@ -513,9 +517,7 @@ class WPQ implements Queue
 		 {
 			  unset($status['queues'][$this->qName]);
 		 }
-		else {
-	     	$status['queues'][$this->qName] = $this->currentStatus();
-		 }
+
      update_option($this->statusName, $status);
   }
 
