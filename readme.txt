@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compressor, ima
 Requires at least: 4.8.0
 Tested up to: 6.1
 Requires PHP: 5.6
-Stable tag: 5.1.4
+Stable tag: 5.1.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -366,6 +366,13 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 5.1.5 =
+Release date November 29, 2022
+* Fix: WebP/AVIF delivery now works correctly, without affecting SVG files or other images or requests (e.g. in WooCommerce). Sorry about this!;
+* Fix: a PHP warning was displayed if no valid API key was added;
+* Fix: error in Custom Media if the folder is not in the root directory;
+* Language: 0 new strings added, 0 updated, 0 fuzzed, and 0 deprecated.
 
 = 5.1.4 =
 Release date November 28, 2022
