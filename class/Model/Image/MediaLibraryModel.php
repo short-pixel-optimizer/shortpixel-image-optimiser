@@ -32,7 +32,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   private static $unlistedChecked = array(); // limit checking unlisted.
 
   protected $optimizePrevented; // cache if there is any reason to prevent optimizing
-	private $justConverted = false; // check if conversion happened on same run, to prevent double runs.
+	private $justConverted = false; // check if legacy conversion happened on same run, to prevent double runs.
 
 	private $optimizeData; // cache to prevent running this more than once per run.
 
@@ -1264,9 +1264,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       return $bool;
   }
 
+// Todo move this to a general converter(?)
   public function convertPNG()
   {
-		Log::addTemp('ConvertPNG function ' . $this->id);
       $settings = \wpSPIO()->settings();
       $bool = false;
 			$fs = \wpSPIO()->filesystem();
@@ -1554,8 +1554,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
     $cleanRestore = true;
 		$wpmeta = wp_get_attachment_metadata($this->get('id'));
 
-Log::addTemp('Restore, get WPMeta', $wpmeta);
-Log::addTemp('Restore, get WPMeta INTERNAL', $this->getWPMetaData());
 
 		// Get them early in case the filename changes ( ie png to jpg ) because it will stop getting it.
 		$WPMLduplicates = $this->getWPMLDuplicates();
@@ -1768,7 +1766,6 @@ Log::addTemp('Restore, get WPMeta INTERNAL', $this->getWPMetaData());
 	*/
 	protected function restorePNG2JPG()
 	{
-		Log::addTemp('Restoring PNG 2 JPG ');
 			$fs = \wpSPIO()->filesystem();
 
 			// ImageModel restore, restored png file to .jpg file ( due to $this)

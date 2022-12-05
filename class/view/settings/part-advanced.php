@@ -420,24 +420,23 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                         foreach($view->customFolders as $index => $dirObj) {
                             $folder_id = $dirObj->get('id');
 
-
                             $type_display = ($dirObj->get('is_nextgen') ) ? __('Nextgen', 'shortpixel-image-optimiser') . ":" : "";
                             $stat = $dirObj->getStats();
 
-                            $fullstatus = esc_html__("Optimized",'shortpixel-image-optimiser') . ": " . $stat->Optimized . ", "
-                                  . " " . esc_html__("Waiting",'shortpixel-image-optimiser') . ": " . $stat->Waiting . ""
+                            $fullstatus = esc_html__("Optimized",'shortpixel-image-optimiser') . ": " . $stat['optimized'] . ", "
+                                  . " " . esc_html__("Waiting",'shortpixel-image-optimiser') . ": " . $stat['waiting'] . ""
                                   ;
 
-                            if ($stat->Total == 0)
+                            if ($stat['total'] == 0)
                             {
                               $optimize_status = __("Empty",'shortpixel-image-optimiser');
                               $fullstatus = '';
                             }
-                            elseif ($stat->Total == $stat->Optimized)
+                            elseif ($stat['total'] == $stat['optimized'])
                             {
                               $optimize_status = __("Optimized",'shortpixel-image-optimiser');
                             }
-                            elseif ($stat->Optimized > 0)
+                            elseif ($stat['optimized'] > 0)
                             {
                                $optimize_status = __("Pending",'shortpixel-image-optimiser');
                             }
@@ -462,7 +461,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                             <div>
                                 <span class='folder folder-<?php echo esc_attr($dirObj->get('id')) ?>'><?php echo esc_html($dirObj->getPath()); ?></span>
                                 <span>
-                                    <?php if(!($stat->Total == 0)) { ?>
+                                    <?php if(!($stat['total'] == 0)) { ?>
                                     <span title="<?php echo esc_attr($fullstatus); ?>" class='info-icon'>
                                         <img alt='<?php esc_html_e('Info Icon', 'shortpixel-image-optimiser') ?>' src='<?php echo esc_url( wpSPIO()->plugin_url('res/img/info-icon.png' ));?>' style="margin-bottom: -2px;"/>
                                     </span>&nbsp;<?php  }
@@ -470,7 +469,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                                     ?>
                                 </span>
                                 <span>
-                                    <?php echo esc_html($stat->Total); ?> files
+                                    <?php echo esc_html($stat['total']); ?> files
                                 </span>
                                 <span>
                                     <?php echo esc_html(UiHelper::formatTS($dirObj->get('updated'))) ?>

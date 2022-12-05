@@ -24,9 +24,6 @@ class MediaLibraryPNGConverter extends PNGConverter
 		$this->source_url = $url;
 		$this->replacer->setSource($url);
 
-		Log::addTemp('Setup Replacer setting source - ' . $url);
-
-Log::addTemp('Setup, source metadata', $this->imageModel->getWPMetaData());
 		$this->replacer->setSourceMeta($this->imageModel->getWPMetaData());
 
 	}
@@ -46,7 +43,6 @@ Log::addTemp('Setup, source metadata', $this->imageModel->getWPMetaData());
 			$newFile = $this->newFile;
 			$attach_id = $this->imageModel->get('id');
 
-Log::addTemp('starting to updateMetadata for ', $newFile);
 			$WPMLduplicates = $this->imageModel->getWPMLDuplicates();
 
 			// This action prevents images from being regenerated on the thumbnail hook.

@@ -670,7 +670,7 @@ class SettingsController extends \ShortPixel\ViewController
           {
             $folderpath = sanitize_text_field(stripslashes($post['addCustomFolder']));
 
-            $otherMedia = OtherMediaController::getInstance();;
+            $otherMedia = OtherMediaController::getInstance();
             $result = $otherMedia->addDirectory($folderpath);
             if ($result)
             {

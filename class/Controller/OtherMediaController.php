@@ -160,7 +160,6 @@ class OtherMediaController extends \ShortPixel\Controller
        $fs = \wpSPIO()->filesystem();
        $directory = new DirectoryOtherMediaModel($path);
 
-Log::addTemp('Add Directory, checking this: ' . $path);
 			 // Check if this directory is allowed.
 			 if ($this->checkDirectoryRecursive($directory) === false)
 			 {
@@ -265,7 +264,7 @@ Log::addTemp('Add Directory, checking this: ' . $path);
  			// a little PHP 5.5. compat.
 			if (is_null($expires))
 			{
-				$expires = 5 * MINUTE_IN_SECONDS;
+				$expires = HOUR_IN_SECONDS;
 			}
 
 			if (! $this->hasFoldersTable())
@@ -287,7 +286,7 @@ Log::addTemp('Add Directory, checking this: ' . $path);
       foreach($customFolders as $directory) {
 
 				$stats = $directory->getStats();
-				$forcenow = ($force || $stats->Total === 0) ? true : false;
+				$forcenow = ($force || $stats['total'] === 0) ? true : false;
 	      $directory->refreshFolder($forcenow);
       } // folders
 

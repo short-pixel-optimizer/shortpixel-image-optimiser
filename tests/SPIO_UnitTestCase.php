@@ -98,7 +98,6 @@ class SPIO_UnitTestCase extends \WP_UnitTestCase_Base
 	  public function getMediaImage($fileName)
 		{
 			 	$attach_id = $this->getAttachmentAsset($fileName);
-				Log::addTemp('Getting with AttachID ' . $attach_id . ' ' . $fileName);
 				return $this->filesystem()->getMediaImage($attach_id);
 		}
 

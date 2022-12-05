@@ -78,7 +78,7 @@ abstract class PNGConverter
 
 		public function hasTried($checksum)
 		{
-			
+
 			 if ( intval($checksum) == $this->getCheckSum())
 			 {
 				  return true;
@@ -219,7 +219,6 @@ abstract class PNGConverter
 			$this->setupReplacer();
 
 			$oldFileName = $this->imageModel->getFileName(); // Old File Name, Still .jpg
-			Log::addTemp('Old FileName', $oldFileName);
 			$newFileName =  $this->imageModel->getFileBase() . '.png';
 
 			if ($this->imageModel->isScaled())
