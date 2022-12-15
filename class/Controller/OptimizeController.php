@@ -16,6 +16,7 @@ use ShortPixel\Controller\ResponseController as ResponseController;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\Helper\UiHelper as UiHelper;
 
+use ShortPixel\Helper\DownloadHelper as DownloadHelper;
 
 class OptimizeController
 {
@@ -297,8 +298,13 @@ class OptimizeController
     /** Returns the state of the queue so the startup JS can decide if something is going on and what.  **/
     public function getStartupData()
     {
+
         $mediaQ = $this->getQueue('media');
         $customQ = $this->getQueue('custom');
+
+				// Clean queue upon starting a load.
+				$mediaQ->cleanQueue();
+				$customQ->cleanQueue();
 
         $data = new \stdClass;
         $data->media = new \stdClass;
@@ -437,12 +443,13 @@ class OptimizeController
 				ResponseController::addData($item->item_id, 'fileName', $imageObj->getFileName());
 
 			}
-			// @todo Figure out why this isn't just on action regime as well.
-			if (property_exists($item, 'png2jpg'))
+
+			// If item is blocked (handling success), skip over. This can happen if internet is slow or process too fast.
+			if (property_exists($item, 'blocked') && true === $item->blocked )
 			{
-				 $item->action = 'png2jpg';
+					$item = $this->handleAPIResult($item, $q);
 			}
-      if (property_exists($item, 'action'))
+      elseif (property_exists($item, 'action'))
       {
             $item->result = new \stdClass;
             $item->result->is_done = true; // always done
@@ -491,7 +498,7 @@ class OptimizeController
 			 	 return $item; //$this->handleAPIResult($item, $mediaQ);
 			 }
 
-      $bool = $imageObj->convertPNG();
+      $bool = $imageObj->convert();
 
 			if ($bool)
 			{
@@ -537,6 +544,12 @@ class OptimizeController
 
 				ResponseController::addData($item->item_id, 'message', $item->result->message);
       }
+			elseif(property_exists($item, 'blocked') && true === $item->blocked)
+			{
+				$item->result = new \stdClass;
+				$item->result->apiStatus == ApiController::STATUS_UNCHANGED;
+				Log::addWarn('Encountered blocked item, processing success? ', $item);
+			}
       else
 			{
 				// This used in bulk preview for formatting filename.
@@ -592,8 +605,9 @@ class OptimizeController
       }
       elseif ($result->is_done)
       {
-         if ($result->apiStatus == ApiController::STATUS_SUCCESS )
+         if ($result->apiStatus == ApiController::STATUS_SUCCESS ) // Is done and with success
          {
+
            $tempFiles = array();
 
            // Set the metadata decided on APItime.
@@ -604,15 +618,10 @@ class OptimizeController
 
 					 if (count($result->files) > 0 )
            {
-						 	// Dump Stats, Dump Quota. Refresh
-							$quotaController->forceCheckRemoteQuota();
-							$statsController->reset();
+              //$optimizeResult = $imageItem->handleOptimized($result->files); // returns boolean or null
+							$optimizeResult = $this->handleOptimizedItem($q, $item, $imageItem, $result->files);
 
-              $optimizeResult = $imageItem->handleOptimized($result->files); // returns boolean or null
               $item->result->improvements = $imageItem->getImprovements();
-
-
-
 
               if ($optimizeResult)
               {
@@ -656,6 +665,12 @@ class OptimizeController
 								$item->result->optimized = $fs->pathToUrl($showItem);
 							}
 
+							// Dump Stats, Dump Quota. Refresh
+							$quotaController->forceCheckRemoteQuota();
+							$statsController->reset();
+
+							$this->deleteTempFiles($item);
+
            }
            // This was not a request process, just handle it and mark it as done.
            elseif ($result->apiStatus == ApiController::STATUS_NOT_API)
@@ -672,7 +687,8 @@ class OptimizeController
               $item->result->apiStatus = ApiController::STATUS_FAIL;
            }
 
-         }
+
+         }  // Is Done / Handle Success
 
 				 // This is_error can happen not from api, but from handleOptimized
          if ($item->result->is_error)
@@ -709,12 +725,27 @@ class OptimizeController
       }
       else
       {
-          if ($result->apiStatus == ApiController::STATUS_UNCHANGED)
+          if ($result->apiStatus == ApiController::STATUS_UNCHANGED || $result->apiStatus === Apicontroller::STATUS_PARTIAL_SUCCESS)
           {
               $item->fileStatus = ImageModel::FILE_STATUS_PENDING;
 							$retry_limit = $q->getShortQ()->getOption('retry_limit');
 
+							if ($result->apiStatus === ApiController::STATUS_PARTIAL_SUCCESS)
+							{
+									Log::addTemp('Handling Partial Success', );
+									if (count($result->files) > 0 )
+									{
+										 //$optimizeResult = $imageItem->handleOptimized($result->files); // returns boolean or null
+										 $optimizeResult = $this->handleOptimizedItem($q, $item, $imageItem, $result->files);
+									}
+									else {
+										Log::addWarn('Status is partial success, but no files followed. ');
+									}
 
+									// Let frontend follow unchanged / waiting procedure.
+									$result->apiStatus = ApiController::STATUS_UNCHANGED;
+
+							}
 							// Try to replace the item ID with the filename.
 						//	$item->result->message = substr_replace( $item->result->message,  $imageItem->getFileName() . ' ', strpos($item->result->message, '#' . $item->item_id), 0);
              // $item->result->message .= sprintf(__('(cycle %d)', 'shortpixel-image-optimiser'), intval($item->tries) );
@@ -725,6 +756,7 @@ class OptimizeController
 
 									$item->result->apiStatus = ApiController::ERR_TIMEOUT;
 									$message = __('Retry Limit reached. Image might be too large, limit too low or network issues.  ', 'shortpixel-image-optimiser');
+									$item->result->message = $message;
 
 									ResponseController::addData($item->item_id, 'message', $message);
 									ResponseController::addData($item->item_id, 'is_error', true);
@@ -734,6 +766,8 @@ class OptimizeController
 									$item->result->is_done = true;
 
 									$this->HandleItemError($item, $qtype);
+
+									// @todo Remove temp files here
 							}
 							else {
 									ResponseController::addData($item->item_id, 'message', $item->result->message); // item is waiting base line here.
@@ -782,6 +816,76 @@ class OptimizeController
       return $item;
 
     }
+
+
+		protected function handleOptimizedItem($q, $item, $mediaObj, $successData)
+		{
+				$imageArray = $successData['files'];
+
+				$downloadHelper = DownloadHelper::getInstance();
+
+				$item->blocked = true;
+				$q->updateItem($item);
+				Log::addTemp('Handling Success- item blocked');
+
+				if (! property_exists($item, 'files'))
+				{
+					$item->files = array();
+				}
+
+				foreach($imageArray as $imageName => $image)
+				{
+					 if (! isset($item->files[$imageName]))
+					 {
+						 $item->files[$imageName]  = array();
+
+					 }
+
+					 if (isset($item->files[$imageName]['image']) && file_exists($item->files[$imageName]['image']))
+					 {
+						 Log::addTemp('File already present in Item - Files so should be done.');
+						 //$imageArray['image']['file'] = $item->files[$imageName]['image']; //already done, supposed.
+						  // All good.
+					 }
+					 elseif ($image['image']['status'] == ApiController::STATUS_SUCCESS)
+					 {
+						  $tempFile = $downloadHelper->downloadFile($image['image']['url']);
+							$item->files[$imageName]['image'] = $tempFile->getFullPath();
+							$imageArray[$imageName]['image']['file'] = $tempFile->getFullPath();
+					 }
+
+					 if (! isset($item->files[$imageName]['webp']) &&  $image['webp']['status'] == ApiController::STATUS_SUCCESS)
+					 {
+						 $tempFile = $downloadHelper->downloadFile($image['webp']['url']);
+						 $item->files[$imageName]['webp'] = $tempFile->getFullPath();
+						 $imageArray[$imageName]['webp']['file'] = $tempFile->getFullPath();
+
+					 }
+					 elseif ($image['webp']['status'] == ApiController::STATUS_OPTIMIZED_BIGGER) {
+					 		$item->files[$imageName]['webp'] = ApiController::STATUS_OPTIMIZED_BIGGER;
+
+					 }
+
+					 if (! isset($item->files[$imageName]['avif']) && $image['avif']['status'] == ApiController::STATUS_SUCCESS)
+					 {
+						 $tempFile = $downloadHelper->downloadFile($image['avif']['url']);
+						 $item->files[$imageName]['avif'] = $tempFile->getFullPath();
+						 $imageArray[$imageName]['avif']['file'] = $tempFile->getFullPath();
+
+					 }
+
+				}
+
+				$successData['files']  = $imageArray;
+				Log::addTemp('SuccessData / OPtimizeContrller ', $successData);
+				$optimizedResult = $mediaObj->handleOptimized($successData);
+
+				Log::addTemp('Handling Success Done, deblocking');
+				$item->blocked = false;
+				$q->updateItem($item);
+
+				return $optimizedResult;
+		}
 
 
     /**
@@ -1054,6 +1158,31 @@ class OptimizeController
 					}
 			 }
 			 return $results;
+		}
+
+		protected function deleteTempFiles($item)
+		{
+				if (! property_exists($item, 'files'))
+				{
+					return false;
+				}
+
+				$files = $item->files;
+				$fs = \wpSPIO()->filesystem();
+
+				foreach($files as $name => $data)
+				{
+						foreach($data as $tmpPath)
+						{
+							 if (is_numeric($tmpPath)) // Happens when result is bigger status is set.
+							 	continue;
+
+								$tmpFile = $fs->getFile($tmpPath);
+								if ($tmpFile->exists())
+									$tmpFile->delete();
+						}
+				}
+
 		}
 
     public static function resetQueues()

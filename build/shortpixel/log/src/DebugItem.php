@@ -53,13 +53,14 @@ class DebugItem
 						if ($count !== false)
 							$firstLine .= ' (' . $count . ')';
 
-						$this->data[] = $firstLine;
+							$this->data[] = var_export($data, true);
+			//			$this->data[] = $firstLine;
 
             foreach($data as $index => $item)
             {
               if (is_object($item) || is_array($item))
               {
-                $this->data[] = print_r($index, true) . ' ( ' . ucfirst(gettype($item)) . ') => ' . print_r($item, true);
+             //   	$this->data[] = print_r($index, true) . ' ( ' . ucfirst(gettype($item)) . ') => ' . print_r($item, true);
               }
             }
           }

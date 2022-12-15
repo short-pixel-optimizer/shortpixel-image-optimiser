@@ -3,8 +3,7 @@ namespace ShortPixel\Model\Converter;
 use ShortPixel\Replacer\Replacer as Replacer;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
-
-class MediaLibraryPNGConverter extends PNGConverter
+abstract class MediaLibraryConverter extends Converter
 {
 	protected $source_url;
 

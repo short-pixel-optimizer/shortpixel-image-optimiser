@@ -5,6 +5,7 @@ use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\CacheController as CacheController;
 use ShortPixel\Controller\ResponseController as ResponseController;
+use ShortPixel\Model\Converter\Converter as Converter;
 
 use ShortPixel\Helper\UiHelper as UiHelper;
 
@@ -118,6 +119,7 @@ abstract class Queue
             $result->qstatus = self::RESULT_PREPARING;
             $result->items = $prepared['items']; // number of items.
             $result->images = $prepared['images'];
+						Log::addTemp('Preparing', $prepared);
             if ($prepared['items'] == 0)
             {
 
@@ -461,6 +463,11 @@ abstract class Queue
         $item->item_id = $qItem->item_id;
         $item->tries = $qItem->tries;
 
+				if (property_exists($item, 'files'))
+				{ // This must be array & shite.
+					$item->files = json_decode(json_encode($item->files), true);
+				}
+
         return $item;
     }
 
@@ -548,101 +555,12 @@ abstract class Queue
 						}
 				}
 
-
-
-
-      /*  $hasUrls = (count($urls) > 0) ? true : false;
-        $hasWebps = (! is_null($webps) && count($webps) > 0) ? true : false;
-        $hasAvifs = (! is_null($avifs) && count($avifs) > 0) ? true : false;
-        $flags = array();
-        $items = array();
-
-        $webpLeft = $avifLeft = false; */
-
-        /*if (is_null($webps) && is_null($avifs))
+				//$converter =
+				// @todo Adapt this.
+				$converter = Converter::getConverter($imageModel);
+        if ($baseCount > 0 && is_object($converter) && $converter->isConvertable()  && $converter->isConverterFor('png'))  // Flag is set in Is_Processable in mediaLibraryModel, when settings are on, image is png.
         {
-           // nothing.
-            $counts->creditCount += count($urls);
-						$counts->baseCount += count($urls);
-
-        }
-        else
-        {
-            if ($hasUrls) // if original urls needs optimizing.
-            {
-                $counts->creditCount += count($urls);
-								$counts->baseCount += count($urls);
-
-                if ($hasWebps && count($urls) == count($webps))
-                {
-                   $flags[] = '+webp'; // original + format
-                   $counts->creditCount += count($webps);
-                   $counts->webpCount += count($webps);
-                }
-                elseif($hasWebps)
-								{
-                  $webpLeft = true; // or indicate this should go separate ( not full )
-									$counts->creditCount += count($webps); // add count since this will be requeued when main part is done, causing more credit cost while running.
-									$counts->webpCount += count($webps);
-								}
-
-                if ($hasAvifs && count($urls) == count($avifs))
-                {
-                   $flags[] = '+avif';
-                   $counts->creditCount += count($avifs);
-                   $counts->avifCount += count($avifs);
-                }
-                elseif($hasAvifs)
-								{
-                  $avifLeft = true;
-                  $counts->creditCount += count($avifs); // add counts
-                  $counts->avifCount += count($avifs);
-								}
-
-            }
-            elseif(! $hasUrls && $hasWebps || $hasAvifs) // if only webp / avif needs doing.
-            {
-                if ($hasWebps && $hasAvifs)
-                {
-                    if (count($webps) == count($avifs))
-                    {
-                        $flags[] = 'avif';
-                        $flags[] = 'webp';
-                        $counts->creditCount += count($webps) * 2;
-                        $counts->webpCount += count($webps);
-                        $counts->avifCount += count($avifs);
-                        $urls = $webps; // Main URLS not available, but needs queuing.
-                    }
-                    else
-                    {
-                      $flags[] = 'webp';
-                      $avifLeft = true;
-                      $counts->creditCount += count($webps);
-                      $counts->webpCount += count($webps);
-                      $urls = $webps;
-                    }
-                }
-                elseif($hasWebps && ! $hasAvifs)
-                {
-                    $flags[] = 'webp';
-                    $counts->creditCount += count($webps);
-                    $counts->webpCount += count($webps);
-                    $urls = $webps;
-                }
-                elseif($hasAvifs && ! $hasWebps)
-                {
-                    $flags[] = 'avif';
-                    $counts->creditCount += count($avifs);
-                    $counts->avifCount += count($avifs);
-                    $urls = $avifs;
-                }
-            }
-
-        } */
-
-        if ($imageModel->get('do_png2jpg') && $baseCount > 0)  // Flag is set in Is_Processable in mediaLibraryModel, when settings are on, image is png.
-        {
-          $item->png2jpg = $imageModel->get('do_png2jpg');
+          $item->action = 'png2jpg';
         }
 
 				// CompressionType can be integer, but not empty string. In cases empty string might happen, causing lossless optimization, which is not correct.
@@ -716,6 +634,12 @@ abstract class Queue
         $this->q->itemFailed($qItem, $fatal);
         $this->q->updateItemValue($qItem);
     }
+
+		public function updateItem($item)
+		{
+			$qItem = $this->mediaItemToQueue($item); // convert again
+			$this->q->updateItemValue($qItem);
+		}
 
 		public function isDuplicateActive($mediaItem, $queue = array() )
 		{

@@ -10,6 +10,7 @@ class SPIO_UnitTestCase extends \WP_UnitTestCase_Base
 		protected static $attachmentAssets = array();
 
 		protected static $attachments = array(); // the loaded attachments.
+		protected static $reflectionClasses = array(); // reflection classes used.
 
 		public static function wpSetUpBeforeClass($factory)
 		{
@@ -44,17 +45,25 @@ class SPIO_UnitTestCase extends \WP_UnitTestCase_Base
 				 wp_delete_attachment($attach_id, true);
 			}
 
-	    // wipe the dir.
-	    foreach (new \DirectoryIterator($path) as $fileInfo) {
-	    if(!$fileInfo->isDot()) {
-	        unlink($fileInfo->getPathname());
-	    		}
-	    }
-
+			if (false !== $path)
+			{
+		    // wipe the dir.
+		    foreach (new \DirectoryIterator($path) as $fileInfo) {
+		    if(!$fileInfo->isDot()) {
+		        unlink($fileInfo->getPathname());
+		    		}
+		    }
+			}
 			$backupDir = \wpSPIO()->filesystem()->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
 			$backupDir->recursiveDelete();
 
 			self::wipeDatabase();
+		}
+
+		// Snake thing for Wp
+		public function setUp() : void
+		{
+			Log::addDebug('*********** TEST NAME : ' . $this->getName());
 		}
 
 		// Remove our data after test is done, otherwise this can influence.
@@ -99,6 +108,17 @@ class SPIO_UnitTestCase extends \WP_UnitTestCase_Base
 		{
 			 	$attach_id = $this->getAttachmentAsset($fileName);
 				return $this->filesystem()->getMediaImage($attach_id);
+		}
+
+		public function getProtectedMethod($className, $methodName)
+		{
+ 		 	$classNamespace = static::$reflectionClasses[$className];
+
+			$refWPQ = new \ReflectionClass($classNamespace);
+			$getMethod = $refWPQ->getMethod($methodName);
+			$getMethod->setAccessible(true);
+
+			return $getMethod;
 		}
 
 

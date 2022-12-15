@@ -135,7 +135,7 @@ class  MediaLibraryModelConversionTest extends WP_UnitTestCase
 
       $metadata = $saveMethod->invoke($mm);
 
-      $this->assertTrue($mm->getMeta('did_png2jpg'));
+      $this->assertTrue($mm->getMeta()->convertMeta()->isConverted());
     //  $this->assertEquals('png', $mm->getExtension());
       $this->assertEquals(2, $mm->getMeta('status'));
 

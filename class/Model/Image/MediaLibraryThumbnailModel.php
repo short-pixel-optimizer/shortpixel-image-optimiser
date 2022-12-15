@@ -76,7 +76,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
 				$filebase = $virtualFile->getFileBase();
 	      $filepath = (string) $virtualFile->getFileDir();
-	      $extension = $virtualFile->getExtension();				
+	      $extension = $virtualFile->getExtension();
 			}
 			else {
 				$filebase = $this->getFileBase();
@@ -289,22 +289,23 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
   public function hasBackup()
   {
-
-      if (! $this->getMeta('did_png2jpg'))
+      if (! $this->is_main_file || false === $this->getMeta()->convertMeta()->isConverted())
       {
           return parent::hasBackup();
       }
-      else
+      elseif ($this->is_main_file)
       {
         $directory = $this->getBackupDirectory();
+				$converted_ext = $this->getMeta()->convertMeta()->getFileFormat();
+
         if (! $directory)
           return false;
 
-        $backupFile =  $directory . $this->getFileBase() . '.png';
+        $backupFile =  $directory . $this->getFileBase() . '.' . $converted_ext;
 				// Issue with PNG not being scaled on the main file.
 				if (! file_exists($backupFile) && $this->is_main_file == true && $this->isScaled())
 				{
-					 $backupFile = $directory . $this->getOriginalFile()->getFileBase() . '.png';
+					 $backupFile = $directory . $this->getOriginalFile()->getFileBase() . '.' . $converted_ext;
 				}
 
         if (file_exists($backupFile) && ! is_dir($backupFile) )
@@ -349,7 +350,14 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
 		if ($bool === true)
 		{
-			 $this->image_meta = new ImageThumbNailMeta();
+			 if ($this->is_main_file)
+			 {
+					$this->image_meta = new ImageMeta();
+			 }
+			 else
+			 {
+				 $this->image_meta = new ImageThumbNailMeta();				 
+			 }
 		}
 
 		return $bool;
@@ -394,7 +402,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
   */
   public function getBackupFile()
   {
-    if (! $this->getMeta('did_png2jpg'))
+    if (! $this->is_main_file || false === $this->getMeta()->convertMeta()->isConverted())
     {
         return parent::getBackupFile();
     }
@@ -403,12 +411,14 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
      if ($this->hasBackup())
 		 {
 			  $directory = $this->getBackupDirectory();
-			  $backupFile = $directory . $this->getFileBase() . '.png';
+				$converted_ext = $this->getMeta()->convertMeta()->getFileFormat();
+
+			  $backupFile = $directory . $this->getFileBase() . '.' . $converted_ext;
 
 				/* Because WP doesn't support big PNG with scaled for some reason, it's possible it doesn't create them. Which means we end up with a scaled images without backup */
  				if (! file_exists($backupFile) && $this->isScaled())
  				{
- 					 $backupFile = $directory . $this->getOriginalFile()->getFileBase() . '.png';
+ 					 $backupFile = $directory . $this->getOriginalFile()->getFileBase() . '.' . $converted_ext;
  				}
 
 				return new FileModel($backupFile);

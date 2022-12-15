@@ -7,7 +7,9 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 class ApiController
 {
     const STATUS_ENQUEUED = 10;
-    const STATUS_SUCCESS = 2;
+		const STATUS_PARTIAL_SUCCESS = 3;
+		const STATUS_SUCCESS = 2;
+		const STATUS_WAITING = 1;
     const STATUS_UNCHANGED = 0;
     const STATUS_ERROR = -1;
     const STATUS_FAIL = -2;
@@ -98,7 +100,7 @@ class ApiController
         $requestArgs['compressionType'] = $item->compressionType;
       $requestArgs['blocking'] =  ($item->tries == 0) ? false : true;
       $requestArgs['item_id'] = $item->item_id;
-      $requestArgs['refresh'] = (property_exists($item, 'refresh') && $item->refresh) ? true : false;
+      $requestArgs['refresh'] = (property_exists($item, 'refresh') && $item->refresh) || $item->tries == 0 ? true : false;
       $requestArgs['flags'] = (property_exists($item, 'flags')) ? $item->flags : array();
 
 			$requestArgs['paramlist']  = property_exists($item, 'paramlist') ? $item->paramlist : null;
@@ -230,12 +232,8 @@ class ApiController
 	*/
   protected function doRequest($item, $requestParameters )
   {
-
-
     $response = wp_remote_post($this->apiEndPoint, $requestParameters );
     Log::addDebug('ShortPixel API Request sent', $requestParameters['body']);
-
-
 
     //only if $Blocking is true analyze the response
     if ( $requestParameters['blocking'] )
@@ -265,9 +263,6 @@ class ApiController
 			 		Log::addWarn('DOREQUEST sent item non-blocking with multiple tries!', $item);
 			 }
 
-			 // Non-blocking shouldn't have tries.
-       /*$text = ($item->tries > 0) ? sprintf(__('(Api DoRequest) Item is waiting for results ( pass %d )', 'shortpixel-image-optimiser'), $item->tries) : __('(Api DoRequest) Item is waiting for results', 'shortpixel-image-optimiser');
-			 */
 			 $urls = count($item->urls);
 			 $flags = property_exists($item, 'flags') ? $item->flags : array();
 			 $flags = implode("|", $flags);
@@ -293,6 +288,7 @@ class ApiController
   private function handleResponse($item, $response)
   {
 
+Log::addTemp('HandleResponse Item', $item);
     $APIresponse = $this->parseResponse($response);//get the actual response from API, its an array
     $settings = \wpSPIO()->settings();
 
@@ -316,6 +312,7 @@ class ApiController
 						 if ($status === false)
 						 {
 						 	$status = $data->Status;
+							break;
 						 }
 						 $APIresponse[$key] = $data; // reset it, so it can read the index.  This should be 0.
 					}
@@ -385,25 +382,52 @@ class ApiController
 
     $neededURLS = $item->urls; // URLS we are waiting for.
 
-
     if ( isset($APIresponse[0]) ) //API returned image details
     {
 				$analyze = array('total' => count($item->urls), 'ready' => 0, 'waiting' => 0);
 				$waitingDebug = array();
-				foreach($APIresponse as $imageObject) // loop for analyzing
+
+				$imageList = array();
+				$partialSuccess = false;
+				$imageNames = array_keys($returnDataList['sizes']);
+				$fileNames = array_values($returnDataList['sizes']);
+
+				foreach($APIresponse as $index => $imageObject)
 				{
-					if (property_exists($imageObject, 'Status'))
-					{
-					 	if ($imageObject->Status->Code == self::STATUS_SUCCESS)
-					 	{
-					 	  	$analyze['ready']++;
-					 	}
-						elseif ($imageObject->Status->Code == 0 || $imageObject->Status->Code == 1) // unchanged /waiting
+						if (! property_exists($imageObject, 'Status'))
+						{
+							Log::addWarn('Result without Status', $imageObject);
+							continue; // can't do nothing with that, probably not an image.
+						}
+						elseif ($imageObject->Status->Code == self::STATUS_UNCHANGED || $imageObject->Status->Code == self::STATUS_WAITING)
 						{
 							 $analyze['waiting']++;
-						//	 $waitingDebug[] = $imageObj->
+							 $partialSuccess = true; // Not the whole job has been done.
 						}
-					}
+						elseif ($imageObject->Status->Code == self::STATUS_SUCCESS)
+						{
+							Log::addTemp('Status success in API Controller');
+							 $analyze['ready']++;
+							 $imageName = $imageNames[$index];
+							 $fileName = $fileNames[$index];
+							 $data = array(
+								 'fileName' => $fileName,
+								 'imageName' => $imageName,
+							 );
+
+							 if (isset($returnDataList['fileSizes']))
+							 {
+								 $data['fileSize'] = $returnDataList['fileSizes'][$index];
+							 }
+
+							 if (! isset($item->files[$imageName]))
+							 {
+							 	$imageList[$imageName] = $this->handleNewSuccess($item, $imageObject, $data);
+							 }
+							 else {
+							 }
+						}
+
 				}
 
 				$imageData = array(
@@ -411,45 +435,41 @@ class ApiController
 						'images_waiting' => $analyze['waiting'],
 						'images_total' => $analyze['total']
 				);
-
-
 				ResponseController::addData($item->item_id, $imageData);
 
-				// This part makes sure that all the sizes were processed and ready to be downloaded. If ones is missing, we wait more.
-        foreach ( $APIresponse as $imageObject ) {
+				if (count($imageList) > 0)
+				{
+						$data = array(
+							'files' => $imageList,
+							'data' => $returnDataList,
+						);
+					  if (false === $partialSuccess)
+						{
+							return $this->returnSuccess($data, self::STATUS_SUCCESS, false);
+						}
+						else {
+							return $this->returnSuccess($data, self::STATUS_PARTIAL_SUCCESS, false);
+						}
+				}
+				elseif ($analyze['waiting'] > 0) {
+					return $this->returnOK(self::STATUS_UNCHANGED, sprintf(__('Item is waiting', 'shortpixel-image-optimiser')));
+				}
+				else {
+					// Theoretically this should not be needed.
+					Log::addWarn('ApiController Response not handled before default case');
+					if ( isset($APIresponse[0]->Status->Message) ) {
 
-          // If status is still waiting. Check if the return URL is one we sent.
-            if ( isset($imageObject->Status) && ( $imageObject->Status->Code == 0 || $imageObject->Status->Code == 1 ) && in_array($imageObject->OriginalURL, $neededURLS)) {
+							$err = array("Status" => self::STATUS_FAIL, "Code" => (isset($APIresponse[0]->Status->Code) ? $APIresponse[0]->Status->Code : self::ERR_UNKNOWN),
+													 "Message" => __('There was an error and your request was not processed.','shortpixel-image-optimiser')
+																				. " (" . wp_basename($APIresponse[0]->OriginalURL) . ": " . $APIresponse[0]->Status->Message . ")");
+							return $this->returnRetry($err['Code'], $err['Message']);
+					} else {
+							$err = array("Status" => self::STATUS_FAIL, "Message" => __('There was an error and your request was not processed.','shortpixel-image-optimiser'),
+													 "Code" => (isset($APIresponse[0]->Status->Code) ? $APIresponse[0]->Status->Code : self::ERR_UNKNOWN));
+							return $this->returnRetry($err['Code'], $err['Message']);
+					}
+				}
 
-							//	ResponseController:: @todo See what needs this doing.
-                return $this->returnOK(self::STATUS_UNCHANGED, sprintf(__('Item is waiting', 'shortpixel-image-optimiser')));
-            }
-        }
-
-        $firstImage = $APIresponse[0];//extract as object first image
-        switch($firstImage->Status->Code)
-        {
-        case self::STATUS_SUCCESS:
-
-            //handle image has been processed
-            return $this->handleSuccess($item, $APIresponse, $returnDataList);
-        default:
-
-						// Theoretically this should not be needed.
-						Log::addWarn('ApiController Response not handled before default case');
-            if ( isset($APIresponse[0]->Status->Message) ) {
-
-                $err = array("Status" => self::STATUS_FAIL, "Code" => (isset($APIresponse[0]->Status->Code) ? $APIresponse[0]->Status->Code : self::ERR_UNKNOWN),
-                             "Message" => __('There was an error and your request was not processed.','shortpixel-image-optimiser')
-                                          . " (" . wp_basename($APIresponse[0]->OriginalURL) . ": " . $APIresponse[0]->Status->Message . ")");
-                return $this->returnRetry($err['Code'], $err['Message']);
-            } else {
-                $err = array("Status" => self::STATUS_FAIL, "Message" => __('There was an error and your request was not processed.','shortpixel-image-optimiser'),
-                             "Code" => (isset($APIresponse[0]->Status->Code) ? $APIresponse[0]->Status->Code : self::ERR_UNKNOWN));
-                return $this->returnRetry($err['Code'], $err['Message']);
-            }
-
-        }
     } // ApiResponse[0]
 
     // If this code reaches here, something is wrong.
@@ -477,6 +497,107 @@ class ApiController
   // handleResponse function
 
 
+	private function handleNewSuccess($item, $fileData, $data)
+	{
+		 Log::addTemp('FileData', $fileData);
+			$compressionType = property_exists($item, 'compressionType') ? $item->compressionType : $settings->compressionType;
+			//$savedSpace =  $originalSpace =  $optimizedSpace = $fileCount  = 0;
+
+			$defaults = array(
+					'fileName' => false,
+					'imageName' => false,
+					'fileSize' => false,
+			);
+
+			$data = wp_parse_args($data, $defaults);
+
+			if (false === $data['fileName'] || false === $data['imageName'])
+			{
+				 Log::addError('Failure! HandleSuccess did not receive filename or imagename! ', $data);
+				 Log::addError('Error Item:', $item);
+
+				 return $this->returnFailure(self::STATUS_FAIL, __('Internal error, missing variables'));
+			}
+
+			$originalFileSize = (false === $data['fileSize']) ? intval($fileData->OriginalSize) : $data['fileSize'];
+
+		 	$image = array(
+				 'image' => array(
+				 'url' => false,
+				 'originalSize' => $originalFileSize,
+				 'optimizedSize' => false,
+				 'status' => self::STATUS_SUCCESS,
+				  ),
+					'webp' => array(
+				 'url' => false,
+				 'size' => false,
+				 'status' => self::STATUS_SKIP,
+			 		),
+					'avif' => array(
+				 'url' => false,
+				 'size' => false,
+				 'status' => self::STATUS_SKIP,
+			 		),
+			);
+
+			$fileType = ($compressionType > 0) ? 'LossyURL' : 'LosslessURL';
+			$fileSize = ($compressionType > 0) ? 'LossySize' : 'LosslessSize';
+
+			$image['image']['url'] = $fileData->$fileType;
+			$image['image']['optimizedSize']  = intval($fileData->$fileSize);
+
+			$checkFileSize = intval($fileData->$fileSize); // Size of optimized image to check against Avif/Webp
+
+			if (false === $this->checkFileSizeMargin($originalFileSize, $checkFileSize))
+			{
+				 $image['image']['status'] = self::STATUS_OPTIMIZED_BIGGER;
+				 $checkFileSize = $originalFileSize;
+			}
+
+			if (property_exists($fileData, "WebP" . $fileType))
+			{
+				$type = "WebP" . $fileType;
+				$size = "WebP" . $fileSize;
+
+				if ($fileData->$type != 'NA')
+				{
+						$image['webp']['url'] = $fileData->$type;
+						$image['webp']['size'] = $fileData->$size;
+						if (false === $this->checkFileSizeMargin($checkFileSize, $fileData->$size))
+						{
+							$image['webp']['status'] = self::STATUS_OPTIMIZED_BIGGER;
+						}
+						else {
+							$image['webp']['status'] = self::STATUS_SUCCESS;
+						}
+				}
+
+
+			}
+
+			if (property_exists($fileData, "AVIF" . $fileType))
+			{
+				$type = "AVIF" . $fileType;
+				$size = "AVIF" . $fileSize;
+
+				if ($fileData->$type != 'NA')
+				{
+						$image['avif']['url'] = $fileData->$type;
+						$image['avif']['size'] = $fileData->$size;
+						if (false === $this->checkFileSizeMargin($checkFileSize, $fileData->$size,))
+						{
+							$image['avif']['status'] = self::STATUS_OPTIMIZED_BIGGER;
+						}
+						else {
+							$image['avif']['status'] = self::STATUS_SUCCESS;
+						}
+				}
+
+			}
+
+			return $image;
+	}
+
 
   /*  HandleSucces
   *
@@ -487,11 +608,13 @@ class ApiController
   private function handleSuccess($item, $response, $returnDataList)
   {
       Log::addDebug('ShortPixel API : Handling Success!', $response);
+			Log::addTemp('Return data List', $returnDataList);
+			Log::addTemp('Item', $item);
 
       $settings = \wpSPIO()->settings();
       $fs = \wpSPIO()->fileSystem();
 
-      $counter = $savedSpace =  $originalSpace =  $optimizedSpace = $fileCount /* = $averageCompression */ = 0;
+      $savedSpace =  $originalSpace =  $optimizedSpace = $fileCount  = 0;
       $compressionType = property_exists($item, 'compressionType') ? $item->compressionType : $settings->compressionType;
 
       if($compressionType > 0) {
@@ -519,7 +642,6 @@ class ApiController
 
       $tempFiles = $responseFiles = $results = array();
 
-
       //download each file from array and process it
       for ($i = 0; $i < count($response); $i++ )
       {
@@ -529,13 +651,11 @@ class ApiController
 
 					$returnFileSize = isset($dataListFileSizes[$imageName]) ? $dataListFileSizes[$imageName] : null;
 
-
           if(!isset($fileData->Status)) continue; //if optimized images archive is activated, last entry of APIResponse if the Archive data.
 
           //file was processed OK
           if ($fileData->Status->Code == self::STATUS_SUCCESS )
           {
-
 								$OriginalFileSize = (! is_null($returnFileSize)) ? $returnFileSize : $fileData->OriginalSize;
                 $downloadResult = $this->handleDownload($fileData->$fileType, $fileData->$fileSize, $OriginalFileSize
                 );
@@ -629,7 +749,6 @@ class ApiController
 
               }
               else {  // Some error
-                //  self::cleanupTemporaryFiles($archive, $tempFiles);
 								if (property_exists($downloadResult, 'file')) // delete Temp File if there.
 								{
 									 if ($downloadResult->file->exists())
@@ -640,10 +759,7 @@ class ApiController
               }
 
           }
-          else { //there was an error while trying to download a file
-              $tempFiles[$counter] = "";
-          }
-          $counter++;
+
       }
 
       // Update File Stats
@@ -870,8 +986,11 @@ class ApiController
       $result = $this->getResultObject();
       $result->apiStatus = $status;
       $result->message = $message;
-      $result->is_done = true;
-      if (is_array($file))
+
+			if (self::STATUS_SUCCESS === $status)
+      	$result->is_done = true;
+
+			if (is_array($file))
         $result->files = $file;
       else
         $result->file = $file; // this file is being used in imageModel
@@ -879,8 +998,10 @@ class ApiController
       return $result;
   }
 
+	// If this returns false, the resultSize is bigger, thus should be oversize.
 	private function checkFileSizeMargin($fileSize, $resultSize)
 	{
+		 Log::addTemp(" Check FileSize - original $fileSize - result $resultSize");
 			// This is ok.
 			if ($fileSize >= $resultSize)
 				return true;
@@ -893,10 +1014,6 @@ class ApiController
 				return true;
 
 		  return false;
-
-
-
-
 	}
 
 

@@ -9,11 +9,10 @@
 
  use ShortPixel\Controller\ResponseController as ResponseController;
 
-abstract class PNGConverter
+class PNGConverter extends MediaLibraryConverter
 {
 		protected $instance;
 
-		protected $imageModel;  // The current ImageModel from SPIO
     protected $current_image; // The current PHP image resource in memory
 		protected $newFile; // The newFile Object.
 		protected $replacer; // Replacer class Object.
@@ -26,17 +25,13 @@ abstract class PNGConverter
 		protected $settingCheckSum;
 
 
-		abstract protected function updateMetaData($params);
-		abstract protected function setupReplacer();
-		abstract protected function setTarget($file);
-
-
-		public function __construct(ImageModel $imageModel)
+		public function __construct($imageModel)
 		{
+			parent::__construct($imageModel);
+
 			$settings = \wpSPIO()->settings();
 			$env = \wpSPIO()->env();
 
-			$this->imageModel = $imageModel;
 
 			$this->converterActive = (intval($settings->png2jpg) > 0) ? true : false;
 
@@ -56,22 +51,31 @@ abstract class PNGConverter
 
 		public function isConvertable()
 		{
+				$imageModel = $this->imageModel;
+
 				// Settings
 			  if ($this->converterActive === false)
 				{
 					return false;
 				}
+
 				// Extension
-				if ($this->imageModel->getExtension() != 'png') // not a png ext. fail silently.
+				if ($imageModel->getExtension() !== 'png') // not a png ext. fail silently.
 				{
 					return false;
 				}
 
 				// Existence
-				if (! $this->imageModel->exists())
+				if (! $imageModel->exists())
 				{
 					 return false;
 				}
+
+				if (true === $imageModel->getMeta()->convertMeta()->isConverted() || false !== $imageModel->getMeta()->convertMeta()->didTry() )
+				{
+					return false;
+				}
+
 
 				return true;
 		}
@@ -99,6 +103,7 @@ abstract class PNGConverter
 
 			 if ($this->forceConvertTransparent === false && $this->isTransparent())
 			 {
+				 	$this->imageModel->getMeta()->convertMeta()->setError(self::ERROR_TRANSPARENT);
 
 					return false;
 			 }
@@ -150,6 +155,7 @@ abstract class PNGConverter
 			{
 				Log::addError('ImageCreateTrueColor failed');
 				$msg = __('Creating an TrueColor Image failed - Possible library error', 'shortpixel-image-optimiser');
+				$this->imageModel->getMeta()->convertMeta()->setError(self::ERROR_LIBRARY);
 				ResponseController::addData($this->imageModel->get('id'), 'message', $msg);
 				return false;
 			}
@@ -164,6 +170,8 @@ abstract class PNGConverter
 			if (false === $replacementPath)
 			{
 				Log::addWarn('Png2Jpg replacement path failed');
+				$this->imageModel->getMeta()->convertMeta()->setError(self::ERROR_PATHFAIL);
+
 				return false; // @todo Add ResponseController something here.
 			}
 
@@ -187,6 +195,8 @@ abstract class PNGConverter
 							$msg = __('Converted file is larger. Keeping original file', 'shortpixel-image-optimiser');
 							ResponseController::addData($this->imageModel->get('id'), 'message', $msg);
 							$newFile->delete();
+							$this->imageModel->getMeta()->convertMeta()->setError(self::ERROR_RESULTLARGER);
+
 							return false;
 					}
 					elseif (! $newFile->exists())
@@ -194,6 +204,8 @@ abstract class PNGConverter
 						 Log::addWarn('PNG imagejpeg file not written!', $uniqueFile->getFileName() );
 						 $msg = __('Error - PNG file not written', 'shortpixel-image-optimiser');
 						 ResponseController::addData($this->imageModel->get('id'), 'message', $msg);
+						 $this->imageModel->getMeta()->convertMeta()->setError(self::ERROR_WRITEERROR);
+
 						 return false;
 					}
 					else {
@@ -228,7 +240,6 @@ abstract class PNGConverter
 			}
 
 			$fsNewFile = $fs->getFile($this->imageModel->getFileDir() . $newFileName);
-
 
 			//$newUrl = str_replace($oldFileName, $fsNewFile->getFileName(), $url);
 

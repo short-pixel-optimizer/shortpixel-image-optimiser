@@ -42,8 +42,13 @@ class FileModel extends \ShortPixel\Model
   /** Creates a file model object. FileModel files don't need to exist on FileSystem */
   public function __construct($path)
   {
-    $this->fullpath = trim($path);
-		$this->rawfullpath = $this->fullpath;
+		$this->rawfullpath = $path;
+
+		if (strlen($path) > 0)
+			$path = trim($path);
+
+		$this->fullpath = $path;
+
     $fs = \wpSPIO()->filesystem();
     if ($fs->pathIsUrl($path)) // Asap check for URL's to prevent remote wrappers from running.
     {
@@ -284,7 +289,7 @@ class FileModel extends \ShortPixel\Model
   {
       $sourcePath = $this->getFullPath();
       $destinationPath = $destination->getFullPath();
-			
+
       Log::addDebug("Copy from $sourcePath to $destinationPath ");
 
       if (! strlen($sourcePath) > 0 || ! strlen($destinationPath) > 0)

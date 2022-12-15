@@ -558,7 +558,7 @@ var ShortPixel = function() {
             e.preventDefault();
             //install (lazily) a window click event to close the menus
             if(!this.menuCloseEvent) {
-                jQuery(window).click(function(e){
+                jQuery(window).on('click', function(e){
                     if (!e.target.matches('.sp-dropbtn')) {
                         jQuery('.sp-dropdown.sp-show').removeClass('sp-show');
                     }

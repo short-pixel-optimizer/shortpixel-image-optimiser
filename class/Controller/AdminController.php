@@ -5,6 +5,7 @@ use ShortPixel\Notices\NoticeController as Notices;
 use ShortPixel\Controller\Queue\Queue as Queue;
 
 use \ShortPixel\ShortPixelPng2Jpg as ShortPixelPng2Jpg;
+use ShortPixel\Model\Converter\Converter as Converter;
 
 use ShortPixel\Model\AccessModel as AccessModel;
 
@@ -67,13 +68,16 @@ class AdminController extends \ShortPixel\Controller
 
 				if ($mediaItem->isProcessable())
 				{
-					if ($mediaItem->get('do_png2jpg') === true)
+
+					$converter = Converter::getConverter();
+					if (is_object($converter) && $converter->isConvertable())
 					{
-						$mediaItem->convertPNG();
-						$fs->flushImageCache(); // Flush it to reflect new status.
-						$mediaItem = $fs->getImage($id, 'media');
-						$meta = wp_get_attachment_metadata($id); // reset the metadata because we are on the hook.
+						 	$mediaItem->convert();
+							$fs->flushImageCache(); // Flush it to reflect new status.
+							$mediaItem = $fs->getImage($id, 'media');
+							$meta = wp_get_attachment_metadata($id); // reset the metadata because we are on the hook.
 					}
+
         	$control = new OptimizeController();
         	$control->addItemToQueue($mediaItem);
 				}
@@ -152,20 +156,6 @@ class AdminController extends \ShortPixel\Controller
 				}
 		}
 
-
-    /** For conversion
-    * @hook wp_handle_upload
-    */
-    public function handlePng2JpgHook($id)
-    {
-
-      $mediaItem = \wpSPIO()->filesystem()->getImage($id, 'media');
-      // IsProcessable sets do_png2jpg flag.
-      if ($mediaItem->isProcessable() && $mediaItem->get('do_png2jpg') == true)
-      {
-          $mediaItem->convertPNG();
-      }
-    }
 
     /**
 		* When replacing happens.

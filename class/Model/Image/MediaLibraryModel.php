@@ -10,7 +10,7 @@ use ShortPixel\Controller\QuotaController as QuotaController;
 use ShortPixel\Helper\InstallHelper as InstallHelper;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
 
-use ShortPixel\Model\Converter\MediaLibraryPNGConverter as PNGConverter;
+use ShortPixel\Model\Converter\Converter as Converter;
 
 class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailModel
 {
@@ -21,7 +21,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   protected $original_file = false; // the original instead of the possibly _scaled one created by WP 5.3
 
   protected $is_scaled = false; // if this is WP 5.3 scaled
-  protected $do_png2jpg = false; // option to flag this one should be checked / converted to jpg.
+  //protected $do_png2jpg = false; // option to flag this one should be checked / converted to jpg.
 
   protected $wp_metadata;
 	private $parent; // In case of WPML Duplicates
@@ -435,12 +435,14 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
   }
 
-  public function handleOptimized($optimizeData)
+  public function handleOptimized($optimizeData, $args = array())
   {
       $return = true;
 			$wpmeta = wp_get_attachment_metadata($this->get('id'));
 			$WPMLduplicates = $this->getWPMLDuplicates();
 			$fs = \wpSPIO()->filesystem();
+
+			Log::addTemp('HANDLE OPTIMIZED - OptimizeData', $optimizeData);
 
 			if (isset($optimizeData['files']) && isset($optimizeData['data']))
 			{
@@ -455,12 +457,14 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 			// Main file has a  index.
 			$mainFile = (isset($files) && isset($files[$this->mainImageKey])) ? $files[$this->mainImageKey] : false;
+			$isConverted = $this->getMeta()->convertMeta()->isConverted();
 
-      if (! $this->isOptimized() && isset($mainFile['img']) ) // main file might not be contained in results
+			$args['isConverted'] = $isConverted;
+
+
+      if (! $this->isOptimized() && isset($mainFile['image']) ) // main file might not be contained in results
       {
-
-
-          $result = parent::handleOptimized($mainFile);
+          $result = parent::handleOptimized($mainFile, $args);
           if (! $result)
           {
              return false;
@@ -508,10 +512,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				 	continue;
 				 }
 
-				 $resultObj = $files[$sizeName];
+				 $resultData = $files[$sizeName];
 				 $thumbnail = $thumbObjs[$sizeName];
 
-         $thumbnail->handleOptimizedFileType($resultObj); // check for webps /etc
+         $thumbnail->handleOptimizedFileType($resultData); // check for webps /etc
 
          if ($thumbnail->isOptimized())
          {
@@ -525,7 +529,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
          $result = false;
 
 				 $thumbnail->setMeta('compressionType', $compressionType);
-          $result = $thumbnail->handleOptimized($resultObj);
+          $result = $thumbnail->handleOptimized($resultData, $args);
 
 				 // Always update the WP meta - except for unlisted files.
 				 if ($thumbnail->get('imageType') == self::IMAGE_TYPE_THUMB && $thumbnail->getMeta('file') === null)
@@ -565,7 +569,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			}
 
 			// Remove Temp Files
-			$this->deleteTempFiles($files);
+			//$this->deleteTempFiles($files);
 			$this->flushOptimizeData();
 
       $this->saveMeta();
@@ -713,9 +717,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
                $newMeta = new ImageThumbnailMeta();
                $newMeta->fromClass($thumbMeta);
-               //$thumbObj = $this->getThumbnailModel($this->getFileDir() . $thumbmeta['file']);
-               //$meta = new ImageThumbnailMeta();
-               //$meta->fromClass($thumbMeta); // Load Thumbnail data from our saved Meta in model
                $thumbObj->setMetaObj($newMeta);
                $thumbObj->setName($name);
 
@@ -906,8 +907,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 	protected function saveDBMeta()
 	{
-		 //global $wpdb;
-
 	  $records = array();
 		$records[] = $this->createRecord($this->toClass(), self::IMAGE_TYPE_MAIN);
 
@@ -1187,12 +1186,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       $bool = parent::isProcessable();
 
       $settings = \wpSPIO()->settings();
-			$converter = new PNGConverter($this);
-
-      if ($converter->isConvertable() && $converter->hasTried($this->getMeta('tried_png2jpg')) == false)
-			{
-        $this->do_png2jpg = true;
-			}
 
       if($strict)
 			{
@@ -1265,14 +1258,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   }
 
 // Todo move this to a general converter(?)
-  public function convertPNG()
+  public function convert()
   {
       $settings = \wpSPIO()->settings();
       $bool = false;
 			$fs = \wpSPIO()->filesystem();
-
-			$converter = new PNGConverter($this);
-
 
       if ($this->getExtension() == 'png')
       {
@@ -1297,7 +1287,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 								ResponseController::addData($this->get('id'), $response);
 
 								// Bail out with setting flag, so not to repeat.
-							 $this->setMeta('tried_png2jpg', $converter->getCheckSum() );
+							 $this->getMeta()->convertMeta()->setTried($converter->getCheckSum());
+							 $this->getMeta()->convertMeta()->setError(self::ERROR_BACKUPERROR);
+
 							 $this->saveMeta();
 
                return false;
@@ -1305,81 +1297,89 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
           }
 
-          $bool = $converter->convert();
-      }
-
-      if ($bool === true)
-      {
-				// If true, this will loop through OLD metadata currently loaded
-        $this->setMeta('did_png2jpg', true);
-        $mainfile = \wpSPIO()->filesystem()->getfile($this->getFileDir() . $this->getFileBase() . '.jpg');
-
-        if ($mainfile->exists()) // if new exists, remove old
-        {
-            $this->delete(); // remove the old file.
-            $this->fullpath = $mainfile->getFullPath();
-            $this->resetStatus();
-            $this->setFileInfo();
-        }
-
-        // After Convert, reload new meta.
-        $this->thumbnails = $this->loadThumbnailsFromWP();
-				$this->retinas = null;
-
-				$thumbnails = $this->getThumbObjects();
-
-        foreach($thumbnails as $thumbObj)
-        {
-            $file = $fs->getFile($thumbObj->getFileDir() . $thumbObj->getFileBase() . '.jpg');
-            $thumbObj->setMeta('did_png2jpg', true);
-
-            if ($file->exists()) // if new exists, remove old
-            {
-                $thumbObj->delete(); // remove the old file.
-                $thumbObj->fullpath = $file->getFullPath();
-                $thumbObj->resetStatus();
-                $thumbObj->setFileInfo();
-            }
-        }
-
-
-				$this->wp_metadata = null;  // Remove caching on this one.
-
-        // Update
-      } // bool == true
-			 // false didn't work. This can also be for legimate reasons as big jpg, or transparency. Check if extension still is PNG. If this is the reason it might remove backups for no reason.
-			elseif ('png' == $this->getExtension() )
-			{
-
-					if ($settings->backupImages == 1)
+					$converter = Converter::getConverter($this);
+					if (false === $converter)
 					{
-						 // When failed, delete the backups. This can't be done via restore since image is not optimized.
-						 $backupFile = $this->getBackupFile();
-						 if (is_object($backupFile) && $backupFile->exists())
-						 {
-							 $backupFile->delete();
-						 }
-
-						 foreach($this->thumbnails as $thumbnail)
-						 {
-								$backupFile = $thumbnail->getBackupFile();
-								// check if there is backup and if file exists.
-								if (is_object($backupFile) && $backupFile->exists())
-									 $backupFile->delete();
-						 }
-						 if ($this->isScaled())
-						 {
-								$backupFile = $this->getOriginalFile()->getBackupFile();
-								if (is_object($backupFile) && $backupFile->exists())
-									 $backupFile->delete();
-
-						 }
+						 Log::addError('Converter on Convert function returned false ' . $this->get('id'));
+						 return false;
 					}
-					// Prevent from retrying next time, since stuff will be requeued.
-			}
+          $bool = $converter->convert();
+					if ($bool === true)
+					{
+					 // If true, this will loop through OLD metadata currently loaded
+						//$this->setMeta('did_png2jpg', true);
+					 $this->getMeta()->convertMeta()->setConversionDone();
 
-			$this->setMeta('tried_png2jpg', $converter->getCheckSum());
-			$this->saveMeta();
+						$mainfile = \wpSPIO()->filesystem()->getfile($this->getFileDir() . $this->getFileBase() . '.jpg');
+
+						if ($mainfile->exists()) // if new exists, remove old
+						{
+								$this->delete(); // remove the old file.
+								$this->fullpath = $mainfile->getFullPath();
+								$this->resetStatus();
+								$this->setFileInfo();
+						}
+
+						// After Convert, reload new meta.
+						$this->thumbnails = $this->loadThumbnailsFromWP();
+					 $this->retinas = null;
+
+					 $thumbnails = $this->getThumbObjects();
+
+						foreach($thumbnails as $thumbObj)
+						{
+								$file = $fs->getFile($thumbObj->getFileDir() . $thumbObj->getFileBase() . '.jpg');
+
+								if ($file->exists()) // if new exists, remove old
+								{
+										$thumbObj->delete(); // remove the old file.
+										$thumbObj->fullpath = $file->getFullPath();
+										$thumbObj->resetStatus();
+										$thumbObj->setFileInfo();
+								}
+						}
+
+
+					 $this->wp_metadata = null;  // Remove caching on this one.
+
+						// Update
+					} // bool == true
+					// false didn't work. This can also be for legimate reasons as big jpg, or transparency. Check if extension still is PNG. If this is the reason it might remove backups for no reason.
+				 else  // failed.
+				 {
+
+						 if ($settings->backupImages == 1)
+						 {
+								// When failed, delete the backups. This can't be done via restore since image is not optimized.
+								$backupFile = $this->getBackupFile();
+								if (is_object($backupFile) && $backupFile->exists())
+								{
+									$backupFile->delete();
+								}
+
+								foreach($this->thumbnails as $thumbnail)
+								{
+									 $backupFile = $thumbnail->getBackupFile();
+									 // check if there is backup and if file exists.
+									 if (is_object($backupFile) && $backupFile->exists())
+											$backupFile->delete();
+								}
+								if ($this->isScaled())
+								{
+									 $backupFile = $this->getOriginalFile()->getBackupFile();
+									 if (is_object($backupFile) && $backupFile->exists())
+											$backupFile->delete();
+
+								}
+						 }
+						 // Prevent from retrying next time, since stuff will be requeued.
+				 }
+
+				 $this->getMeta()->convertMeta()->setTried($converter->getCheckSum());
+				 $this->saveMeta();
+      } // ISPNG
+
+
 
       return $bool;
   } // convertPNG
@@ -1559,10 +1559,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$WPMLduplicates = $this->getWPMLDuplicates();
 
 
-		$did_png2jpg = $this->getMeta('did_png2jpg');
 		$is_resized = $this->getMeta('resize');
+		$convertMeta = $this->getMeta()->convertMeta();
+		$was_converted = $convertMeta->isConverted();
+		$converter = Converter::getConverter($this); // ugly, but no way around.
 
-		// ** Warning - This will also reset metadata
+		// ** Warning - This will also reset metadata ****
     $bool = parent::restore();
 
 
@@ -1574,15 +1576,24 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$wpmeta['filesize'] = $this->getFileSize();
 
 
-		if ($did_png2jpg)
+		if ($was_converted)
 		{
+			 Log::addTemp('This is converted', $bool);
 			 if ($bool)
 			 {
-			 	$bool = $this->restorePNG2JPG();
+			 	$bool = $this->restoreConversion($convertMeta, $converter);
 				$wpmeta = wp_get_attachment_metadata($this->get('id')); // png2jpg resets WP metadata.
+				$this->resetStatus();
+				$this->setFileInfo();
 			 }
 			 else
+			 {
+				 Log::addTemp('Main conversion issue!');
 			 	 return $bool;
+			 }
+		}
+		else {
+			Log::addTemp('This item seems not converted', $this->getMeta());
 		}
 
 
@@ -1633,6 +1644,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 						$wpmeta['sizes'][$size]['filesize'] = $thumbObj->getFileSize();
 					}
+
+					$thumbObj->resetStatus();
+					$thumbObj->setFileInfo();
 
     }
 
@@ -1763,38 +1777,43 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 
 	/** New Setup of RestorePNG2JPG. Runs after copying backupfile back to uploads.
+	* Important: The metadata will be CLEARED already
 	*/
-	protected function restorePNG2JPG()
+	protected function restoreConversion($convertMeta, $converter)
 	{
 			$fs = \wpSPIO()->filesystem();
-
+Log::addTemp('restore Conversion ', $convertMeta);
+			$ext = $convertMeta->getFileFormat();
 			// ImageModel restore, restored png file to .jpg file ( due to $this)
 			// File has just been restored, but it will be wrong extension in uploads
 			//
 		//	$backupFile = //$this->getBackupFile(); // Should return as PNG file
 
-		 	$destination = $fs->getFile($this->getFileDir() . $this->getFileBase() . '.png');
+		 	$destination = $fs->getFile($this->getFileDir() . $this->getFileBase() . '.' . $ext);
 
 			// If scaled in the name, revert to originalFile.
 			if ($this->isScaled())
 			{
 					$originalFile = $this->getOriginalFile();
-					$destination = $fs->getFile($this->getFileDir() . $originalFile->getFileBase() . '.png');
+					$destination = $fs->getFile($this->getFileDir() . $originalFile->getFileBase() . '.' . $ext);
 
 			}
 
 			// We can't remove files until the end of process because some plugins will block it.
 			$toRemove = array();
+			Log::addTemp('Destination conversion: ', $destination);
 
 			// Destination is image.png, the original.
 			if (! $destination->exists())
 			{
 					// This is a PNG content file, that has been restored as a .jpg file which is now main.
 					$this->copy($destination);
+
 					$toRemove[] = $this;
 			}
 			else
 			{
+				 Log::addError('Restoring Converted image not possible, target already exists');
 					ResponseController::addData('message', __('Restore PNG2JPG : Restoring to target that already exists', 'shortpixel-image-optimiser'));
 					ResponseController::addData('is_error', true);
 
@@ -1828,7 +1847,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 				// Fullpath now will still be .jpg
 				// PNGconvert is first, because some plugins check for _attached_file metadata and prevent deleting files if still connected to media library. Exmaple: polylang.
-				$converter = new PNGConverter($this);
 				$converter->restore();
 
 				foreach($toRemove as $fileObj)
@@ -2131,6 +2149,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        if (isset($metadata['ShortPixelPng2Jpg']))
        {
            $this->image_meta->did_png2jpg = true; //setMeta('did_png2jpg', true);
+					 $this->getMeta()->convertMeta()->setFileFormat('png');
+					 $this->getMeta()->convertMeta()->setConversionDone();
            $did_jpg2png = true;
        }
        else
@@ -2150,7 +2170,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
               $thumbnailObj->image_meta->status = $status;
               $thumbnailObj->image_meta->compressionType = $type;
               $thumbnailObj->image_meta->compressedSize = $thumbnailObj->getFileSize();
-              $thumbnailObj->image_meta->did_jpg2png = $did_jpg2png;
+							if (true == $did_jpg2png)
+							{
+								$thumbnailObj->convertMeta()->setConversionDone();
+							}
 
 
           //    $thumbnailObj->image_meta->improvement = -1; // n/a
@@ -2190,8 +2213,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
            $originalFile->image_meta->status = $status;
            $originalFile->image_meta->compressionType = $type;
            $originalFile->image_meta->compressedSize = $originalFile->getFileSize();
-           $originalFile->image_meta->did_jpg2png = $did_jpg2png;
-       //    $thumbnailObj->image_meta->improvement = -1; // n/a
+					 if (true == $did_jpg2png)
+					 {
+						 $originalFile->convertMeta()->setConversionDone();
+					 }
 
 			     if ($originalFile->hasBackup())
            {
@@ -2254,7 +2279,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 										{
 			              	$retinaObj->image_meta->tsOptimized = $tsOptimized;
 										}
-										$retinaObj->image_meta->did_jpg2png = $did_jpg2png;
+
+										if (true == $did_jpg2png)
+										{
+											$retinaObj->convertMeta()->setConversionDone();
+										}
+
 			              if ($retinaObj->hasBackup())
 			              {
 			                $retinaObj->has_backup = true;
@@ -2274,7 +2304,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	              Log::addWarning("Conversion: $count retinas expected in legacy, " . $addedCounter . 'found. This can be due to overlapping image sizes.');
 	           }
        }
-
 
        update_post_meta($this->id, '_shortpixel_was_converted', time());
        delete_post_meta($this->id, '_shortpixel_status');

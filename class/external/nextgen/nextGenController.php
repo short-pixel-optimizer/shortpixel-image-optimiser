@@ -257,17 +257,18 @@ class NextGenController
 					else
 					{
           	$directory = $otherMedia->addDirectory($gallery->getPath());
+						if (! $directory)
+						{
+							Log::addWarn('Could not add this directory' . $gallery->getPath() );
+						}
+						else
+						{
+							 $directory->set('status', DirectoryOtherMediaModel::DIRECTORY_STATUS_NEXTGEN);
+							 $directory->save();
+						}
 					}
 
-          if (! $directory)
-					{
-            Log::addWarn('Could not add this directory' . $gallery->getPath() );
-					}
-          else
-          {
-             $directory->set('status', DirectoryOtherMediaModel::DIRECTORY_STATUS_NEXTGEN);
-             $directory->save();
-          }
+
       }
 
       if (count($ngGalleries) > 0)
@@ -296,7 +297,7 @@ class NextGenController
 
   public function resetNotification()
   {
-    Notice::removeNoticeByID(AdminNoticesController::MSG_INTEGRATION_NGGALLERY);
+    Notice::removeNoticeByID('MSG_INTEGRATION_NGGALLERY');
   }
 
   public function onDeleteImage($nggId, $size)

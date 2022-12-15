@@ -254,7 +254,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
        return $return;
     }
 
-    public function handleOptimized($optimizeData)
+    public function handleOptimized($optimizeData, $args = array())
     {
 			 $bool = true;
 
@@ -282,7 +282,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
          $this->saveMeta();
        }
 
-			 $this->deleteTempFiles($files);
+	//		 $this->deleteTempFiles($files);
 
        return $bool;
     }

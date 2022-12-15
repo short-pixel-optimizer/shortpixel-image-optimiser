@@ -5,7 +5,8 @@ use ShortPixel\Tests\SPIO_UnitTestCase as SPIO_UnitTestCase;
 use ShortPixel\Controller\ResponseController as ResponseController;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
-use ShortPixel\Model\Converter\MediaLibraryPNGConverter as PNGConverter;
+use ShortPixel\Model\Converter\Converter as Converter;
+use ShortPixel\Model\Converter\PNGConverter as PNGConverter;
 
 class PNGConverterTest extends SPIO_UnitTestCase
 {
@@ -15,15 +16,32 @@ class PNGConverterTest extends SPIO_UnitTestCase
 	protected $model;
 
 	protected static $attachmentAssets = array('png-test.png', 'png-transparant.png', 'desk.png', 'icecream-cropped-scaling.png');
-
+  protected static $reflectionClasses = array(
+		 'pngconverter' => 'ShortPixel\Model\Converter\PNGConverter',
+		 'mediaLibraryModel' => 'ShortPixel\Model\Image\MediaLibraryModel'
+	);
 
   public function setUp() :void
   {
+		parent::setUp();
     $this->settings()::resetOptions();
 
   //  $this->root = vfsStream::setup('root', null, $this->getTestFiles() );
     // Need an function to empty uploads
   }
+
+	public function testGetConverter()
+	{
+		$this->settings()->png2jpg = 1;
+
+		$image = $this->getMediaImage('png-test.png');
+
+		$converter = Converter::getConverter($image);
+
+		$this->assertIsObject($converter);
+		$this->assertEquals($image->getMeta()->convertMeta()->getFileFormat(), 'png');
+
+	}
 
   public function testgetPNGImage()
   {
@@ -32,12 +50,12 @@ class PNGConverterTest extends SPIO_UnitTestCase
 
 			$image = $this->getMediaImage('png-test.png');
 
-
       $converter = new PNGConverter($image);
-      $refWPQ = new \ReflectionClass('ShortPixel\Model\Converter\MediaLibraryPNGConverter');
+			$getMethod = $this->getProtectedMethod('pngconverter', 'getPNGImage');
+   /*   $refWPQ = new \ReflectionClass('ShortPixel\Model\Converter\PNGConverter');
       $getMethod = $refWPQ->getMethod('getPNGImage');
       $getMethod->setAccessible(true);
-
+*/
 
 			// Is Convertable sets required imageModel
 			$this->assertTrue( $converter->isConvertable());
@@ -54,17 +72,12 @@ class PNGConverterTest extends SPIO_UnitTestCase
 
   public function testPNGTransparent()
   {
-
-
-    $refWPQ = new \ReflectionClass('ShortPixel\Model\Converter\MediaLibraryPNGConverter');
-    $transMethod = $refWPQ->getMethod('isTransParent');
-    $transMethod->setAccessible(true);
+		$transMethod = $this->getProtectedMethod('pngconverter', 'isTransParent');
 
 		$image = $this->getMediaImage('png-test.png');
-		$converter = new PNGConverter($image);
+		$converter = Converter::getConverter($image);
 		//$this->assertTrue( $converter->isConvertable());
 		$this->assertFalse( $transMethod->invoke($converter));
-
 
 		$image_trans = $this->getMediaImage('png-transparant.png');
 		$converter = new PNGConverter($image_trans);
@@ -82,15 +95,17 @@ class PNGConverterTest extends SPIO_UnitTestCase
     $settings->png2jpg = 0; // off
 
 		$image = $this->getMediaImage('png-test.png');
-		$converter = new PNGConverter($image);
+		$converter = Converter::getConverter($image);
 
 		$this->assertFalse($converter->convert());
+		$this->assertFalse($image->getMeta()->convertMeta()->didTry());
+		$this->assertFalse($image->getMeta()->convertMeta()->getError());
 
 		$settings->png2jpg = 1;
     $settings->backupImages = 0; // test one without backup.
 
     // Second one should work.  Without Backup.
-		$converter = new PNGConverter($image);
+		$converter = Converter::getConverter($image);
     $result = $converter->convert();
 
     $this->assertTrue($result);
@@ -101,6 +116,7 @@ class PNGConverterTest extends SPIO_UnitTestCase
     $this->assertEquals('jpg', $image->getExtension());
     $this->assertEquals('png-test.jpg', $image->getFileName());
     $this->assertEquals('png-test', $image->getFileBase());
+		$this->assertFileExists($image->getFullPath());
 
     $this->assertEquals($image->getFullPath(), get_attached_file($attach_id));
 
@@ -110,6 +126,8 @@ class PNGConverterTest extends SPIO_UnitTestCase
     // @todo Test thumbnails, see if generated
     $imageObj = $this->filesystem()->getMediaImage($this->getAttachmentAsset('png-test.png'));
 
+		// @todo Test if convert object restore works well
+
   }
 
 	public function testConvertTransparent()
@@ -117,17 +135,19 @@ class PNGConverterTest extends SPIO_UnitTestCase
 		$this->settings()->png2jpg = 1; // no transparency.
 
 		$image_trans = $this->getMediaImage('png-transparant.png');
-		$converter = new PNGConverter($image_trans);
+		$converter = Converter::getConverter($image_trans);
 
 		// Should fail.  (transparency)
 		$result = $converter->convert();
 		$this->assertFalse($result);
+		$this->assertEquals(Converter::ERROR_TRANSPARENT, $image_trans->getMeta()->convertMeta()->getError());
 
 		// Test. With Force transparency, with backup.
     $this->settings()->png2jpg = 2;
     $this->settings()->backupImages = 1; // test one with backup.
 
-		$converter = new PNGConverter($image_trans);
+		$converter = Converter::getConverter($image_trans);
+
 		 $result = $converter->convert();
 
      $this->assertTrue($result);
@@ -159,10 +179,10 @@ class PNGConverterTest extends SPIO_UnitTestCase
     $this->assertEquals('png', $mediaObj->getExtension() );
 
     $this->assertTrue($mediaObj->isProcessable());  // This set png2jpg is setting active.
-		$this->assertFalse($mediaObj->getMeta('tried_png2jpg'), 'triedpng2jpg');
-    $this->assertTrue($mediaObj->get('do_png2jpg'), 'is' . $mediaObj->get('do_png2jpg'));
+		$this->assertFalse($mediaObj->getMeta()->convertMeta()->didTry(), 'didTry');
+//    $this->assertTrue($mediaObj->isConvertable(), 'is' . $mediaObj->get('do_png2jpg'));
 
-    $bool = $mediaObj->convertPNG();
+    $bool = $mediaObj->convert();
     $this->assertTrue($bool);
 
     $this->assertFileDoesNotExist($oldfullpath);
@@ -170,7 +190,7 @@ class PNGConverterTest extends SPIO_UnitTestCase
     // basically the old object stops existing.
     $this->assertEquals('jpg', $mediaObj->getExtension());
     $this->assertTrue($mediaObj->exists());
-    $this->assertTrue($mediaObj->getMeta('did_png2jpg'));
+    $this->assertTrue($mediaObj->getMeta()->convertMeta()->isConverted() );
     $this->assertFileDoesNotExist($mediaObj->getFileDir() . $mediaObj->getFileBase() . '.png');
 		$this->assertTrue($mediaObj->hasBackup());
 
@@ -180,27 +200,39 @@ class PNGConverterTest extends SPIO_UnitTestCase
     {
        $this->assertEquals('jpg', $thumbObj->getExtension());
        $this->assertTrue($thumbObj->exists(), $thumbObj->getFullPath());
-       $this->assertTrue($thumbObj->getMeta('did_png2jpg'));
        $this->assertFileDoesNotExist($thumbObj->getFileDir() . $thumbObj->getFileBase() . '.png');
 			 $this->assertFalse($thumbObj->hasBackup(), $thumbObj->getBackupFile() );
     }
 
     // Retry on already converted, should fail because converted.
-    $bool = $mediaObj->convertPNG();
+    $bool = $mediaObj->convert();
     $this->assertFalse($bool);
 		$this->assertTrue($mediaObj->hasBackup());
+		$this->assertTrue($mediaObj->getMeta()->convertMeta()->isConverted());
 
+		// Flush, reget and check metadata.
+		$converter = Converter::getConverter($mediaObj);
+
+		$this->filesystem()->flushImageCache();
+		$mediaObj =  $this->getMediaImage('desk.png');
+
+		$this->assertEquals($converter->getCheckSum(), $mediaObj->getMeta()->convertMeta()->didTry());
+		$this->assertTrue($mediaObj->getMeta()->convertMeta()->isConverted());
+
+		// Restoring
+		$getMethod = $this->getProtectedMethod('mediaLibraryModel', 'restoreConversion');
 
     // Restore backup, check if it's jpg.
-    $mediaObj->restore();
+		$getMethod->invoke($mediaObj, $mediaObj->getMeta()->convertMeta(), $converter );
+
+//    $mediaObj->restoreConversion();
 
 		$mediaObj =  $this->getMediaImage('desk.png');
 
+
+		$this->assertFileExists($oldfullpath);
     $this->assertEquals('png', $mediaObj->getExtension(), $mediaObj);
     $this->assertTrue($mediaObj->exists());
-    $this->assertFalse($mediaObj->getMeta('did_png2jpg'));
-    $this->assertFileDoesNotExist($mediaObj->getFileDir() . $mediaObj->getFileBase() . '.jpg');
-		$this->assertFalse($mediaObj->hasBackup());
 
 		$thumbnails = $mediaObj->get('thumbnails');
 
@@ -208,9 +240,10 @@ class PNGConverterTest extends SPIO_UnitTestCase
     {
        $this->assertEquals('png', $thumbObj->getExtension());
        $this->assertTrue($thumbObj->exists());
-       $this->assertFalse($thumbObj->getMeta('did_png2jpg'));
        $this->assertFileDoesNotExist($thumbObj->getFileDir() . $thumbObj->getFileBase() . '.jpg');
     }
+
+
   }
 
 	//@todo Add here testcases for conversion with scaled.

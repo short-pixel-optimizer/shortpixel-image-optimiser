@@ -69,7 +69,7 @@ class SpioSingle extends SpioCommandBase
 
 			$this->showResponses();
 
-	 		if (property_exists($result,'message' && strlen($result->message) > 0))
+	 		if (property_exists($result,'message') && ! is_null($result->message) && strlen($result->message) > 0)
 				 $message = $result->message;
 			elseif (property_exists($result, 'result') && property_exists($result->result, 'message'))
 				 $message = $result->result->message;

@@ -509,17 +509,24 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     *
     * @param Array TemporaryFiles . Files from API optimizer with KEY of filename and FileModel Temporary File
     */
-    public function handleOptimized($results)
+    public function handleOptimized($results, $args = array())
     {
         $settings = \wpSPIO()->settings();
         $fs = \wpSPIO()->filesystem();
 
-				$resultObj = $results['img'];
+				$defaults = array('isConverted' => false,
+				);
+
+				$args = wp_parse_args($args, $defaults);
+
+				$tempFile = $fs->getFile($results['image']['file']);
+				$status = $results['image']['status'];
+
 
           if ($settings->backupImages)
           {
 							// If conversion to jpg is done, this function also does the backup.
-							if ($this->getMeta('did_png2jpg') === true)
+							if (true === $args['isConverted'])
 							{
 									 $backupok = true;
 							}
@@ -530,7 +537,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
               if (! $backupok)
               {
-                Log::addError('Backup Not OK - ' . $this->getFileName());
+                Log::addError('Backup Not OK - ' . $this->getFileName(), $args);
 
 								$response = array(
 										'is_error' => true,
@@ -548,7 +555,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
           $originalSize = $this->getFileSize();
 
-          if ($resultObj->apiStatus == API::STATUS_UNCHANGED || $resultObj->apiStatus == API::STATUS_OPTIMIZED_BIGGER)
+          if ($status == API::STATUS_UNCHANGED || $status == API::STATUS_OPTIMIZED_BIGGER)
           {
             $copyok = true;
             $optimizedSize = $this->getFileSize();
@@ -556,7 +563,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
           }
           else
           {
-            $tempFile = $resultObj->file;
 
             if ($this->is_virtual())
             {
@@ -649,35 +655,39 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
     public function handleOptimizedFileType($downloadResult)
     {
+				 $fs = \wpSPIO()->filesystem();
 
-          if (isset($downloadResult['webp']) && property_exists($downloadResult['webp'],'file')) // check if there is webp with same filename
+          if (isset($downloadResult['webp']) && isset($downloadResult['webp']['file'])) // check if there is webp with same filename
           {
-             $webpResult = $this->handleWebp($downloadResult['webp']->file);
+						$tmpFile = $fs->getFile($downloadResult['webp']['file']);
+
+             $webpResult = $this->handleWebp($tmpFile);
               if ($webpResult === false)
                 Log::addWarn('Webps available, but copy failed ' . $downloadResults['webp']->file->getFullPath());
               else
                 $this->setMeta('webp', $webpResult->getFileName());
           }
-					elseif(isset($downloadResult['webp']) && property_exists($downloadResult['webp'], 'apiStatus'))
+					elseif(isset($downloadResult['webp']) && isset($downloadResult['webp']['status']))
 					{
-						 if ($downloadResult['webp']->apiStatus == API::STATUS_OPTIMIZED_BIGGER)
+						 if ($downloadResult['webp']['status'] == API::STATUS_OPTIMIZED_BIGGER)
 						 {
 							  $this->setMeta('webp', self::FILETYPE_BIGGER);
 						 }
 					}
 
-          if (isset($downloadResult['avif']) && property_exists($downloadResult['avif'], 'file')) // check if there is webp with same filename
+          if (isset($downloadResult['avif']) && isset($downloadResult['avif']['file'])) // check if there is webp with same filename
           {
-             $avifResult = $this->handleAvif($downloadResult['avif']->file);
+						 $tmpFile = $fs->getFile($downloadResult['avif']['file']);
+             $avifResult = $this->handleAvif($tmpFile);
               if ($avifResult === false)
-                Log::addWarn('Avif available, but copy failed ' . $downloadResult['avif']->file->getFullPath());
+                Log::addWarn('Avif available, but copy failed ' . $tmpFile->getFullPath());
               else
                 $this->setMeta('avif', $avifResult->getFileName());
           }
-					elseif(isset($downloadResult['avif']) && property_exists($downloadResult['avif'], 'apiStatus'))
+					elseif(isset($downloadResult['avif']) && isset($downloadResult['avif']['status']))
 					{
 
-						 if ($downloadResult['avif']->apiStatus == API::STATUS_OPTIMIZED_BIGGER)
+						 if ($downloadResult['avif']['status'] == API::STATUS_OPTIMIZED_BIGGER)
 						 {
 								$this->setMeta('avif', self::FILETYPE_BIGGER);
 						 }
@@ -738,7 +748,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     {
         if (! $this->isRestorable())
         {
-            Log::addWarn('Trying restore action on non-restorable: ' . $this->getFullPath());
+            Log::addWarn('Trying restore action on non-restorable: ' . $this->getFullPath(), $this->getReason('restorable'));
             return false; // no backup / everything not writable.
         }
 
@@ -1187,34 +1197,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 		}
 
-		protected function deleteTempFiles($files)
-		{
-			  foreach($files as $name => $data)
-				{
-					  if (isset($data['img']) && property_exists($data['img'], 'file'))
-						{
-							 if ($data['img']->file->exists())
-							 {
-							 	$data['img']->file->delete();
-							 }
-						}
-						if (isset($data['webp']) && property_exists($data['webp'], 'file'))
-						{
-							if ($data['webp']->file->exists())
-							{
-							 $data['webp']->file->delete();
-						  }
-						}
-						if (isset($data['avif']) && property_exists($data['avif'], 'file'))
-						{
-							if ($data['avif']->file->exists())
-							{
-							 $data['avif']->file->delete();
-						  }
-						}
 
-				}
-
-		}
 
 } // model
