@@ -48,8 +48,9 @@ class BulkController
 
       $Q = $optimizeController->getQueue($type);
 
+      $Q->createNewBulk();
 
-      $Q->createNewBulk(array());
+			$Q = $optimizeController->getQueue($type);
 
       if (! is_null($customOp))
       {
@@ -240,7 +241,7 @@ class BulkController
           delete_option(self::$logName);
    }
 
-	 // Removes Bulk Log . 
+	 // Removes Bulk Log .
    public static function uninstallPlugin()
    {
       delete_option(self::$logName);

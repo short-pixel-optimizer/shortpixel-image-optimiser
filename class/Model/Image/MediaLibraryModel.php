@@ -442,8 +442,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			$WPMLduplicates = $this->getWPMLDuplicates();
 			$fs = \wpSPIO()->filesystem();
 
-			Log::addTemp('HANDLE OPTIMIZED - OptimizeData', $optimizeData);
-
 			if (isset($optimizeData['files']) && isset($optimizeData['data']))
 			{
 				 $files = $optimizeData['files'];
@@ -1578,7 +1576,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		if ($was_converted)
 		{
-			 Log::addTemp('This is converted', $bool);
 			 if ($bool)
 			 {
 			 	$bool = $this->restoreConversion($convertMeta, $converter);
@@ -1588,12 +1585,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			 }
 			 else
 			 {
-				 Log::addTemp('Main conversion issue!');
 			 	 return $bool;
 			 }
-		}
-		else {
-			Log::addTemp('This item seems not converted', $this->getMeta());
 		}
 
 
@@ -1782,7 +1775,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	protected function restoreConversion($convertMeta, $converter)
 	{
 			$fs = \wpSPIO()->filesystem();
-Log::addTemp('restore Conversion ', $convertMeta);
 			$ext = $convertMeta->getFileFormat();
 			// ImageModel restore, restored png file to .jpg file ( due to $this)
 			// File has just been restored, but it will be wrong extension in uploads
@@ -1801,7 +1793,6 @@ Log::addTemp('restore Conversion ', $convertMeta);
 
 			// We can't remove files until the end of process because some plugins will block it.
 			$toRemove = array();
-			Log::addTemp('Destination conversion: ', $destination);
 
 			// Destination is image.png, the original.
 			if (! $destination->exists())

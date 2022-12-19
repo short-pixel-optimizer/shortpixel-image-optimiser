@@ -359,11 +359,9 @@ class AjaxController
     {
         $bulkControl = BulkController::getInstance();
         $stats = $bulkControl->createNewBulk('media');
-
         $json->media->stats = $stats;
 
         $stats = $bulkControl->createNewBulk('custom');
-
         $json->custom->stats = $stats;
 
         $json = $this->applyBulkSelection($json, $data);

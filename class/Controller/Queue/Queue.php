@@ -33,9 +33,10 @@ abstract class Queue
     abstract protected function prepare();
     abstract public function getType();
 
-    public function createNewBulk($args)
+    public function createNewBulk()
     {
-        $this->resetQueue();
+				$this->resetQueue();
+
         $this->q->setStatus('preparing', true, false);
 				$this->q->setStatus('finished', false, false);
         $this->q->setStatus('bulk_running', true, true);
@@ -50,15 +51,15 @@ abstract class Queue
         $this->q->setStatus('running', true, true);
     }
 
-    public function resetQueue()
-    {
-       $this->q->resetQueue();
-    }
-
     public function cleanQueue()
     {
        $this->q->cleanQueue();
     }
+
+		public function resetQueue()
+		{
+			$this->q->resetQueue();
+		}
 
     // gateway to set custom options for queue.
     public function setOptions($options)
@@ -119,7 +120,6 @@ abstract class Queue
             $result->qstatus = self::RESULT_PREPARING;
             $result->items = $prepared['items']; // number of items.
             $result->images = $prepared['images'];
-						Log::addTemp('Preparing', $prepared);
             if ($prepared['items'] == 0)
             {
 
@@ -439,7 +439,7 @@ abstract class Queue
     public function getCustomDataItem($name)
     {
         $customData = $this->getStatus('custom_data');
-        if (property_exists($customData, $name))
+        if (is_object($customData) && property_exists($customData, $name))
         {
            return $customData->$name;
         }

@@ -288,7 +288,6 @@ class ApiController
   private function handleResponse($item, $response)
   {
 
-Log::addTemp('HandleResponse Item', $item);
     $APIresponse = $this->parseResponse($response);//get the actual response from API, its an array
     $settings = \wpSPIO()->settings();
 
@@ -406,7 +405,6 @@ Log::addTemp('HandleResponse Item', $item);
 						}
 						elseif ($imageObject->Status->Code == self::STATUS_SUCCESS)
 						{
-							Log::addTemp('Status success in API Controller');
 							 $analyze['ready']++;
 							 $imageName = $imageNames[$index];
 							 $fileName = $fileNames[$index];
@@ -417,7 +415,7 @@ Log::addTemp('HandleResponse Item', $item);
 
 							 if (isset($returnDataList['fileSizes']))
 							 {
-								 $data['fileSize'] = $returnDataList['fileSizes'][$index];
+								 $data['fileSize'] = $returnDataList['fileSizes'][$imageName];
 							 }
 
 							 if (! isset($item->files[$imageName]))
@@ -499,7 +497,6 @@ Log::addTemp('HandleResponse Item', $item);
 
 	private function handleNewSuccess($item, $fileData, $data)
 	{
-		 Log::addTemp('FileData', $fileData);
 			$compressionType = property_exists($item, 'compressionType') ? $item->compressionType : $settings->compressionType;
 			//$savedSpace =  $originalSpace =  $optimizedSpace = $fileCount  = 0;
 
@@ -608,8 +605,6 @@ Log::addTemp('HandleResponse Item', $item);
   private function handleSuccess($item, $response, $returnDataList)
   {
       Log::addDebug('ShortPixel API : Handling Success!', $response);
-			Log::addTemp('Return data List', $returnDataList);
-			Log::addTemp('Item', $item);
 
       $settings = \wpSPIO()->settings();
       $fs = \wpSPIO()->fileSystem();
@@ -1001,7 +996,6 @@ Log::addTemp('HandleResponse Item', $item);
 	// If this returns false, the resultSize is bigger, thus should be oversize.
 	private function checkFileSizeMargin($fileSize, $resultSize)
 	{
-		 Log::addTemp(" Check FileSize - original $fileSize - result $resultSize");
 			// This is ok.
 			if ($fileSize >= $resultSize)
 				return true;

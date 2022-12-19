@@ -732,7 +732,6 @@ class OptimizeController
 
 							if ($result->apiStatus === ApiController::STATUS_PARTIAL_SUCCESS)
 							{
-									Log::addTemp('Handling Partial Success', );
 									if (count($result->files) > 0 )
 									{
 										 //$optimizeResult = $imageItem->handleOptimized($result->files); // returns boolean or null
@@ -826,7 +825,6 @@ class OptimizeController
 
 				$item->blocked = true;
 				$q->updateItem($item);
-				Log::addTemp('Handling Success- item blocked');
 
 				if (! property_exists($item, 'files'))
 				{
@@ -843,7 +841,6 @@ class OptimizeController
 
 					 if (isset($item->files[$imageName]['image']) && file_exists($item->files[$imageName]['image']))
 					 {
-						 Log::addTemp('File already present in Item - Files so should be done.');
 						 //$imageArray['image']['file'] = $item->files[$imageName]['image']; //already done, supposed.
 						  // All good.
 					 }
@@ -877,10 +874,8 @@ class OptimizeController
 				}
 
 				$successData['files']  = $imageArray;
-				Log::addTemp('SuccessData / OPtimizeContrller ', $successData);
 				$optimizedResult = $mediaObj->handleOptimized($successData);
 
-				Log::addTemp('Handling Success Done, deblocking');
 				$item->blocked = false;
 				$q->updateItem($item);
 

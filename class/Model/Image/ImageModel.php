@@ -519,7 +519,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 				$args = wp_parse_args($args, $defaults);
 
-				$tempFile = $fs->getFile($results['image']['file']);
 				$status = $results['image']['status'];
 
 
@@ -563,6 +562,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
           }
           else
           {
+						$tempFile = $fs->getFile($results['image']['file']);
 
             if ($this->is_virtual())
             {
