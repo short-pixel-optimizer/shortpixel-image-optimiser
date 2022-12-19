@@ -69,7 +69,7 @@ class AdminController extends \ShortPixel\Controller
 				if ($mediaItem->isProcessable())
 				{
 
-					$converter = Converter::getConverter();
+					$converter = Converter::getConverter($mediaItem);
 					if (is_object($converter) && $converter->isConvertable())
 					{
 						 	$mediaItem->convert();

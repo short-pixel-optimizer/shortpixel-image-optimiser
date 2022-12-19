@@ -124,6 +124,13 @@ class EditMediaViewController extends \ShortPixel\ViewController
 					$ext = $imageObj->getMeta()->convertMeta()->getFileFormat();
           $stats[] = array(  sprintf(__('Converted from %s','shortpixel-image-optimiser'), $ext), '');
         }
+				elseif (false !== $imageObj->getMeta()->convertMeta()->didTry()) {
+					$ext = $imageObj->getMeta()->convertMeta()->getFileFormat();
+					$error = $imageObj->getMeta()->convertMeta()->getError(); // error code.
+					$stats[] = array(UiHelper::getConvertErrorReason($error, $ext), '');
+
+
+				}
 
         if ($resize == true)
         {

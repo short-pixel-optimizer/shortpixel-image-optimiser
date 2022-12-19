@@ -289,7 +289,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
   public function hasBackup()
   {
-      if (! $this->is_main_file || false === $this->getMeta()->convertMeta()->isConverted())
+      if (! $this->is_main_file || ($this->is_main_file && false === $this->getMeta()->convertMeta()->isConverted()))
       {
           return parent::hasBackup();
       }
@@ -356,7 +356,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 			 }
 			 else
 			 {
-				 $this->image_meta = new ImageThumbNailMeta();				 
+				 $this->image_meta = new ImageThumbNailMeta();
 			 }
 		}
 
