@@ -1255,8 +1255,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       return $bool;
   }
 
-// Todo move this to a general converter(?)
-  public function convert()
+  public function convert($args = array())
   {
       $settings = \wpSPIO()->settings();
       $bool = false;
@@ -1301,7 +1300,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						 Log::addError('Converter on Convert function returned false ' . $this->get('id'));
 						 return false;
 					}
-          $bool = $converter->convert();
+          $bool = $converter->convert($args);
 					if ($bool === true)
 					{
 					 // If true, this will loop through OLD metadata currently loaded

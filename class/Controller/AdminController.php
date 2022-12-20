@@ -68,13 +68,12 @@ class AdminController extends \ShortPixel\Controller
 
 				if ($mediaItem->isProcessable())
 				{
-
 					$converter = Converter::getConverter($mediaItem);
 					if (is_object($converter) && $converter->isConvertable())
 					{
-							// @todo Limit newly uploaded image replacer to the post, since it is new, not elsewhere in system. Performance.
-							// Get content post : get_post_parent($id)						
-						 	$mediaItem->convert();
+							$args = array('runReplacer' => false);
+
+						 	$mediaItem->convert($args);
 							$fs->flushImageCache(); // Flush it to reflect new status.
 							$mediaItem = $fs->getImage($id, 'media');
 							$meta = wp_get_attachment_metadata($id); // reset the metadata because we are on the hook.

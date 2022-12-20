@@ -126,7 +126,7 @@ class PNGConverter extends MediaLibraryConverter
 					{
 						$result = $this->replacer->replace();
 					}
-					
+
 					if (is_array($result))
 					{
 							foreach($result as $error)
