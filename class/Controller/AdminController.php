@@ -72,6 +72,8 @@ class AdminController extends \ShortPixel\Controller
 					$converter = Converter::getConverter($mediaItem);
 					if (is_object($converter) && $converter->isConvertable())
 					{
+							// @todo Limit newly uploaded image replacer to the post, since it is new, not elsewhere in system. Performance.
+							// Get content post : get_post_parent($id)						
 						 	$mediaItem->convert();
 							$fs->flushImageCache(); // Flush it to reflect new status.
 							$mediaItem = $fs->getImage($id, 'media');

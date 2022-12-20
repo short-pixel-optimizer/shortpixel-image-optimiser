@@ -18,7 +18,7 @@ abstract class Converter
 		protected $imageModel;  // The current ImageModel from SPIO
 
 		// Method specific
-		abstract public function convert();
+		abstract public function convert($args = array());
 		abstract public function isConvertable();
 		abstract public function restore();
 		abstract public function getCheckSum();

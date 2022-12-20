@@ -90,12 +90,18 @@ class PNGConverter extends MediaLibraryConverter
 			 return false;
 		}
 
-		public function convert()
+		public function convert($args = array())
 		{
 			 if (! $this->isConvertable($this->imageModel))
 			 {
 				 return false;
 			 }
+
+			 $defaults = array(
+				 	'runReplacer' => true, // The replacer doesn't need running when the file is just uploaded and doing in handle upload hook.
+			 );
+
+			 $args = wp_parse_args($args, $defaults);
 
 			 $this->setupReplacer();
 
@@ -114,8 +120,13 @@ class PNGConverter extends MediaLibraryConverter
 			 {
 				  $params = array('success' => true);
         	$this->updateMetaData($params);
-					$result = $this->replacer->replace();
 
+					$result = true;
+					if (true === $args['runReplacer'])
+					{
+						$result = $this->replacer->replace();
+					}
+					
 					if (is_array($result))
 					{
 							foreach($result as $error)
