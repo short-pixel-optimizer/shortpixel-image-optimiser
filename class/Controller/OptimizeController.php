@@ -547,7 +547,9 @@ class OptimizeController
 			elseif(property_exists($item, 'blocked') && true === $item->blocked)
 			{
 				$item->result = new \stdClass;
-				$item->result->apiStatus == ApiController::STATUS_UNCHANGED;
+				$item->result->apiStatus = ApiController::STATUS_UNCHANGED;
+				$item->result->is_done = false;
+				$item->result->is_error = false;
 				Log::addWarn('Encountered blocked item, processing success? ', $item);
 			}
       else
@@ -874,6 +876,17 @@ class OptimizeController
 				}
 
 				$successData['files']  = $imageArray;
+
+				$converter = Converter::getConverter($mediaObj);
+				if (is_object($converter) && $converter->isConverterFor('heic') )
+				{
+						// @todo  Move heic to JPG via uniqueFile and such
+
+						// @todo If image name is not the same check webp / avif and move them to new filename as well.
+
+						// @todo Generate imagemetadata.
+				}
+
 				$optimizedResult = $mediaObj->handleOptimized($successData);
 
 				$item->blocked = false;

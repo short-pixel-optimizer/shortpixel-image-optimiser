@@ -85,6 +85,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		$settings = \wpSPIO()->settings();
 
+
 		$url = $this->getURL();
 
 		 if (! $url) // If the whole image URL can't be found
@@ -103,7 +104,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				$parameters['params'][$this->mainImageKey] = $paramList;
 				$parameters['returnParams']['sizes'][$this->mainImageKey] = $this->getFileName();
 
-				if ($isSmartCrop)
+				if ($isSmartCrop )
 				{
 					 $parameters['returnParams']['fileSizes'][$this->mainImageKey] = $this->getFileSize();
 				}
@@ -113,6 +114,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		 }
 
 		 $thumbObjs = $this->getThumbObjects();
+
 		 $unProcessable = array();
 
 		 foreach($thumbObjs as $name => $thumbObj)
@@ -128,6 +130,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				 $paramList = $thumbObj->createParamList();
 				 $hash = md5( serialize($paramList) . $url); // Hash the paramlist + url to find identical results.
 
+// This thing fly to sep function? Retutrn liast  duplicat/double name => name
 				 if (isset($doubles[$hash]))
 				 {
 					  $doubleName = $doubles[$hash];
@@ -201,6 +204,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
      return $parameters;
   }
 
+
+
 	public function flushOptimizeData()
 	{
 		 $this->optimizeData = null;
@@ -238,8 +243,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   protected function loadThumbnailsFromWP()
   {
     $wpmeta = $this->getWPMetaData();
-
     $width = null; $height = null;
+
     if (! isset($wpmeta['width']))
     {
        if ($this->getExtension == 'pdf')
@@ -459,7 +464,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 			$args['isConverted'] = $isConverted;
 
-
       if (! $this->isOptimized() && isset($mainFile['image']) ) // main file might not be contained in results
       {
           $result = parent::handleOptimized($mainFile, $args);
@@ -478,7 +482,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       }
 
       $this->handleOptimizedFileType($mainFile);
-
 
 			$compressionType = $this->getMeta('compressionType'); // CompressionType not set on subimages etc.
 
@@ -567,7 +570,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			}
 
 			// Remove Temp Files
-			//$this->deleteTempFiles($files);
 			$this->flushOptimizeData();
 
       $this->saveMeta();

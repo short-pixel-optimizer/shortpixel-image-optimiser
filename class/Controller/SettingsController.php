@@ -431,7 +431,7 @@ class SettingsController extends \ShortPixel\ViewController
 
          $this->view->minSizes = $this->getMaxIntermediateImageSize();
          $this->view->customFolders= $this->loadCustomFolders();
-         $this->view->allThumbSizes = $this->getAllThumbnailSizes();
+         $this->view->allThumbSizes = UtilHelper::getWordPressImageSizes();
          $this->view->averageCompression = $statsControl->getAverageCompression();
          $this->view->savedBandwidth = UiHelper::formatBytes( intval($this->view->data->savedSpace) * 10000,2);
          //$this->view->resources = wp_remote_post($this->model->httpProto . "://shortpixel.com/resources-frag");
@@ -533,27 +533,6 @@ class SettingsController extends \ShortPixel\ViewController
 					}
 
           return false;
-      }
-
-      private function getAllThumbnailSizes()
-      {
-        global $_wp_additional_image_sizes;
-
-        $sizes_names = get_intermediate_image_sizes();
-        $sizes = array();
-        foreach ( $sizes_names as $size ) {
-            $sizes[ $size ][ 'width' ] = intval( get_option( "{$size}_size_w" ) );
-            $sizes[ $size ][ 'height' ] = intval( get_option( "{$size}_size_h" ) );
-            $sizes[ $size ][ 'crop' ] = get_option( "{$size}_crop" ) ? get_option( "{$size}_crop" ) : false;
-        }
-        if(function_exists('wp_get_additional_image_sizes')) {
-            $sizes = array_merge($sizes, wp_get_additional_image_sizes());
-        } elseif(is_array($_wp_additional_image_sizes)) {
-            $sizes = array_merge($sizes, $_wp_additional_image_sizes);
-        }
-
-        $sizes = apply_filters('shortpixel/settings/image_sizes', $sizes);
-        return $sizes;
       }
 
       protected function getMaxIntermediateImageSize() {

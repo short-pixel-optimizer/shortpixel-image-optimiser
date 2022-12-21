@@ -199,6 +199,7 @@ class AjaxController
           unset($data['typeArray']);
         }
 
+				Log::addInfo('AjaxController: Action detected :' . $action);
         switch($action)
         {
            case 'restoreItem':

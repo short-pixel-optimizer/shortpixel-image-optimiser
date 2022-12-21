@@ -31,6 +31,27 @@ class UtilHelper
 				return strtotime($date);
 		}
 
+		public static function getWordPressImageSizes()
+		{
+			global $_wp_additional_image_sizes;
+
+			$sizes_names = get_intermediate_image_sizes();
+			$sizes = array();
+			foreach ( $sizes_names as $size ) {
+					$sizes[ $size ][ 'width' ] = intval( get_option( "{$size}_size_w" ) );
+					$sizes[ $size ][ 'height' ] = intval( get_option( "{$size}_size_h" ) );
+					$sizes[ $size ][ 'crop' ] = get_option( "{$size}_crop" ) ? get_option( "{$size}_crop" ) : false;
+			}
+			if(function_exists('wp_get_additional_image_sizes')) {
+					$sizes = array_merge($sizes, wp_get_additional_image_sizes());
+			} elseif(is_array($_wp_additional_image_sizes)) {
+					$sizes = array_merge($sizes, $_wp_additional_image_sizes);
+			}
+
+			$sizes = apply_filters('shortpixel/settings/image_sizes', $sizes);
+			return $sizes;
+		}
+
 		public static function alterHtaccess($webp = false, $avif = false){
          // [BS] Backward compat. 11/03/2019 - remove possible settings from root .htaccess
          /* Plugin init is before loading these admin scripts. So it can happen misc.php is not yet loaded */

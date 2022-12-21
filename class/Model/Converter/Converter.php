@@ -43,6 +43,7 @@ abstract class Converter
 			 return false;
 		}
 
+
 		public static function getConverter($imageModel)
 		{
 			  $extension = $imageModel->getExtension();

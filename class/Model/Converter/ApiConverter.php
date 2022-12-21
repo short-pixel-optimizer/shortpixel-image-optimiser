@@ -1,8 +1,13 @@
 <?php
 namespace ShortPixel\Model\Converter;
 
-class ApiConverter extends MediaLibraryConverterer
+use ShortPixel\Helper\UtilHelper as UtilHelper;
+
+class ApiConverter extends MediaLibraryConverter
 {
+
+	protected $requestAPIthumbnails = true;
+
 
 		public function isConvertable()
 		{
@@ -12,15 +17,20 @@ class ApiConverter extends MediaLibraryConverterer
 			 {
 				  return true;
 			 }
+
+			 if (true === $imageModel->getMeta()->convertMeta()->isConverted())
+			 {
+				  return false;
+			 }
 		}
 
 		// Do Nothing because conversion is on API level
-		public function convert()
+		public function convert($args = array())
 		{
-
 
 		}
 
+		// Restore from original file. Search and replace everything else to death.
 		public function restore()
 		{
 
@@ -30,4 +40,10 @@ class ApiConverter extends MediaLibraryConverterer
 		{
 			 return 1; // done or not.
 		}
+
+
+
+
+
+
 }

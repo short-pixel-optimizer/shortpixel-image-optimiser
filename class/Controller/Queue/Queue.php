@@ -510,10 +510,6 @@ abstract class Queue
 				$counts->baseCount = $baseCount; // count the base images.
         $counts->avifCount = $avifCount;
         $counts->webpCount = $webpCount;
-        //$creditCount = 0;
-
-      //  $webps = ($imageModel->isProcessableFileType('webp')) ? $imageModel->getOptimizeFileType('webp') : null;
-      //  $avifs = ($imageModel->isProcessableFileType('avif')) ? $imageModel->getOptimizeFileType('avif') : null;
 
 			 	$removeKeys = array('image', 'webp', 'avif'); // keys not native to API / need to be removed.
 
@@ -558,11 +554,18 @@ abstract class Queue
 				//$converter =
 				// @todo Adapt this.
 				$converter = Converter::getConverter($imageModel);
-        if ($baseCount > 0 && is_object($converter) && $converter->isConvertable()  && $converter->isConverterFor('png'))  // Flag is set in Is_Processable in mediaLibraryModel, when settings are on, image is png.
-        {
-          $item->action = 'png2jpg';
-        }
 
+				if ($baseCount > 0 && is_object($converter) && $converter->isConvertable())
+				{
+		        if ($converter->isConverterFor('png'))  // Flag is set in Is_Processable in mediaLibraryModel, when settings are on, image is png.
+		        {
+		          $item->action = 'png2jpg';
+		        }
+						elseif($converter->isConverterFor('heic'))
+						{
+//							 //@todo Force api to do lossless and skip on webp / avif because thumbnails will otherwise be derived of compress image. 
+						}
+				}
 				// CompressionType can be integer, but not empty string. In cases empty string might happen, causing lossless optimization, which is not correct.
         if (! is_null($imageModel->getMeta('compressionType')) && is_int($imageModel->getMeta('compressionType')))
 				{

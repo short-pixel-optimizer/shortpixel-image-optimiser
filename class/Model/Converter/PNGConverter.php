@@ -56,6 +56,7 @@ class PNGConverter extends MediaLibraryConverter
 				// Settings
 			  if ($this->converterActive === false)
 				{
+
 					return false;
 				}
 
@@ -71,7 +72,7 @@ class PNGConverter extends MediaLibraryConverter
 					 return false;
 				}
 
-				if (true === $imageModel->getMeta()->convertMeta()->isConverted() || false !== $imageModel->getMeta()->convertMeta()->didTry() )
+				if (true === $imageModel->getMeta()->convertMeta()->isConverted() || true === $this->hasTried($imageModel->getMeta()->convertMeta()->didTry()) )
 				{
 					return false;
 				}
@@ -80,10 +81,9 @@ class PNGConverter extends MediaLibraryConverter
 				return true;
 		}
 
-		public function hasTried($checksum)
+		protected function hasTried($checksum)
 		{
-
-			 if ( intval($checksum) == $this->getCheckSum())
+			 if ( intval($checksum) === $this->getCheckSum())
 			 {
 				  return true;
 			 }
@@ -145,7 +145,7 @@ class PNGConverter extends MediaLibraryConverter
 
 		public function getCheckSum()
 		{
-			 return $this->settingCheckSum;
+			 return intval($this->settingCheckSum);
 		}
 
 
