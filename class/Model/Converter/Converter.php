@@ -2,6 +2,9 @@
 namespace ShortPixel\Model\Converter;
 use ShortPixel\Replacer\Replacer as Replacer;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+use ShortPixel\Model\File\DirectoryModel as DirectoryModel;
+use ShortPixel\Model\File\FileModel as FileModel;
+use ShortPixel\Controller\ResponseController as ResponseController;
 
 
 abstract class Converter
@@ -43,8 +46,8 @@ abstract class Converter
 			 return false;
 		}
 
-
-		public static function getConverter($imageModel)
+		// ForConversion:  Return empty if file can't be converted or is already converrted
+		public static function getConverter($imageModel, $forConversion = false)
 		{
 			  $extension = $imageModel->getExtension();
 
@@ -56,6 +59,11 @@ abstract class Converter
 				if ($imageModel->get('type') == 'custom')
 				{
 					return false;
+				}
+
+				if (true === $forConversion) // don't check more.
+				{
+					 return $converter;
 				}
 
 				if (false === $converter)
@@ -73,6 +81,59 @@ abstract class Converter
 
 				return $converter;
 		}
+
+		/** Own function to get a unique filename since the WordPress wp_unique_filename seems to not function properly w/ thumbnails */
+    protected function unique_file(DirectoryModel $dir, FileModel $file, $number = 0)
+    {
+      if (! $file->exists())
+        return $file;
+
+      $number = 0;
+      $fs = \wpSPIO()->filesystem();
+
+      $base = $file->getFileBase();
+      $ext = $file->getExtension();
+
+      while($file->exists())
+      {
+        $number++;
+        $numberbase = $base . '-' . $number;
+        Log::addDebug('check for unique file -- ' . $dir->getPath() . $numberbase . '.' . $ext);
+        $file = $fs->getFile($dir->getPath() . $numberbase . '.' . $ext);
+      }
+
+      return $file;
+    }
+
+		protected function getReplacementPath()
+		{
+			$fs = \wpSPIO()->filesystem();
+
+			$filename = $this->imageModel->getFileName();
+			$newFileName = $this->imageModel->getFileBase() . '.jpg'; // convert extension to .png
+
+			$fsNewFile = $fs->getFile($this->imageModel->getFileDir() . $newFileName);
+
+			$uniqueFile = $this->unique_file( $this->imageModel->getFileDir(), $fsNewFile);
+			$newPath =  $uniqueFile->getFullPath(); //(string) $fsFile->getFileDir() . $uniquepath;
+
+			if (! $this->imageModel->getFileDir()->is_writable())
+			{
+					Log::addWarn('Replacement path for PNG not writable ' . $this->imageModel->getFileDir()->getPath());
+					$msg = __('Replacement path for PNG not writable', 'shortpixel-image-optimiser');
+					ResponseController::addData($this->imageModel->get('id'), 'message', $msg);
+
+
+				return false;
+			}
+
+			$this->setTarget($uniqueFile);
+
+			return $newPath;
+
+		}
+
+
 
 		private static function getConverterByExt($ext, $imageModel)
 		{

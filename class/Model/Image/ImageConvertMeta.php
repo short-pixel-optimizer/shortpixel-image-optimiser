@@ -10,6 +10,7 @@ class ImageConvertMeta
 	// protected $doConversion = false;
 	 protected $triedConversion = false;
 	 protected $errorReason = false;
+	 protected $omitBackup = true; // Don't backup the converted image (again), keeping only the original format.
 
 	 public function __construct()
 	 {
@@ -47,10 +48,10 @@ class ImageConvertMeta
 		  $this->triedConversion = $value;
 	 }
 
-	 public function setConversionDone()
+	 public function setConversionDone($omitBackup = true)
 	 {
 		  $this->isConverted = true;
-
+			$this->omitBackup = $omitBackup;
 	 }
 
 	 public function setError($code)
@@ -72,6 +73,11 @@ class ImageConvertMeta
 	 public function getFileFormat()
 	 {
 		  return $this->fileFormat;
+	 }
+
+	 public function omitBackup()
+	 {
+		  return $this->omitBackup;
 	 }
 
 	 public function fromClass($object)

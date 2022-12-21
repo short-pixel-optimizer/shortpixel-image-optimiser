@@ -20,6 +20,7 @@ class ApiController
    // const STATUS_RETRY = -7;
    // const STATUS_SEARCHING = -8; // when the Queue is looping over images, but in batch none were   found.
 	 const STATUS_OPTIMIZED_BIGGER = -9;
+	 const STATUS_CONVERTED = -10;
 
 
     const STATUS_QUEUE_FULL = -404;
@@ -497,6 +498,8 @@ class ApiController
 
 	private function handleNewSuccess($item, $fileData, $data)
 	{
+			Log::addTemp('Handle New Success', $fileData);
+			Log::addTemp('Data', $data);
 			$compressionType = property_exists($item, 'compressionType') ? $item->compressionType : $settings->compressionType;
 			//$savedSpace =  $originalSpace =  $optimizedSpace = $fileCount  = 0;
 

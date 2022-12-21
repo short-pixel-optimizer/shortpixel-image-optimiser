@@ -128,7 +128,14 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 			}
 
 			// minimally reset all the metadata.
-			$this->image_meta = new ImageThumbnailMeta();
+			if ($this->is_main_file)
+			{
+				 $this->image_meta = new ImageMeta();
+			}
+			else {
+					$this->image_meta = new ImageThumbnailMeta();
+			}
+
 			return $bool;
   }
 
@@ -287,9 +294,24 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
     return (! \wpSPIO()->settings()->processThumbnails);
   }
 
-  public function hasBackup()
+  public function hasBackup($args = array())
   {
-      if (! $this->is_main_file || ($this->is_main_file && false === $this->getMeta()->convertMeta()->isConverted()))
+			$defaults = array(
+				'forceConverted' => false,
+			);
+			$args = wp_parse_args($args, $defaults);
+
+			// When main file and converted and omitBackup is true ( only original backup ) and not forced.
+			$loadRegular= $this->is_main_file && (false === $this->getMeta()->convertMeta()->isConverted() ||
+			false === $this->getMeta()->convertMeta()->omitBackup()) && false === $args['forceConverted'];
+
+if (true === $loadRegular)
+{
+	Log::addTemp('LoadRegularr');
+}else {
+	Log::addTemp('Loading other file format');
+}
+      if (! $this->is_main_file || $loadRegular)
       {
           return parent::hasBackup();
       }
@@ -307,7 +329,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 				{
 					 $backupFile = $directory . $this->getOriginalFile()->getFileBase() . '.' . $converted_ext;
 				}
-
+Log::addTemp('BackupFile', $backupFile);
         if (file_exists($backupFile) && ! is_dir($backupFile) )
           return true;
         else {
@@ -400,15 +422,25 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
   * This file might not be writable.
   * To get writable directory reference to backup, use FileSystemController
   */
-  public function getBackupFile()
+  public function getBackupFile($args = array())
   {
-    if (! $this->is_main_file || false === $this->getMeta()->convertMeta()->isConverted())
+
+		$defaults = array(
+			'forceConverted' => false,
+		);
+		$args = wp_parse_args($args, $defaults);
+
+		// When main file and converted and omitBackup is true ( only original backup ) and not forced.
+		$loadRegular= $this->is_main_file && (false === $this->getMeta()->convertMeta()->isConverted() ||
+		false === $this->getMeta()->convertMeta()->omitBackup()) && false === $args['forceConverted'];
+
+		if (! $this->is_main_file || $loadRegular )
     {
         return parent::getBackupFile();
     }
     else
     {
-     if ($this->hasBackup())
+     if ($this->hasBackup($args))
 		 {
 			  $directory = $this->getBackupDirectory();
 				$converted_ext = $this->getMeta()->convertMeta()->getFileFormat();

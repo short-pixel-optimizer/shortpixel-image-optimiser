@@ -101,6 +101,15 @@ class PNGConverter extends MediaLibraryConverter
 				 	'runReplacer' => true, // The replacer doesn't need running when the file is just uploaded and doing in handle upload hook.
 			 );
 
+			 $conversionArgs = array('checksum' => $this->getCheckSum());
+
+			 $prepared = $this->imageModel->conversionPrepare($conversionArgs);
+ 			 if (false === $prepared)
+ 			 {
+				  return false;
+			 }
+
+
 			 $args = wp_parse_args($args, $defaults);
 
 			 $this->setupReplacer();
@@ -110,7 +119,7 @@ class PNGConverter extends MediaLibraryConverter
 			 if ($this->forceConvertTransparent === false && $this->isTransparent())
 			 {
 				 	$this->imageModel->getMeta()->convertMeta()->setError(self::ERROR_TRANSPARENT);
-
+					$this->imageModel->conversionFailed($conversionArgs);
 					return false;
 			 }
 
@@ -136,10 +145,11 @@ class PNGConverter extends MediaLibraryConverter
 					// new hook.
 					do_action('shortpixel/image/convertpng2jpg_success', $this->imageModel);
 
+					$this->imageModel->conversionSuccess($conversionArgs);
 					return true;
 			 }
 
-
+			 $this->imageModel->conversionFailed($conversionArgs);
 			 return false;
 		}
 
@@ -252,9 +262,6 @@ class PNGConverter extends MediaLibraryConverter
 
 			$fsNewFile = $fs->getFile($this->imageModel->getFileDir() . $newFileName);
 
-			//$newUrl = str_replace($oldFileName, $fsNewFile->getFileName(), $url);
-
-		//	$params['file'] = $fsNewFile;
 			$this->newFile = $fsNewFile;
 			$this->setTarget($fsNewFile);
 
@@ -262,45 +269,10 @@ class PNGConverter extends MediaLibraryConverter
 			$result = $this->replacer->replace();
 
 			$fs->flushImageCache();
-/*
-			if ($result !== false)
-			{
-				$this->replacer->setTarget($newUrl);
-				$this->replacer->setTargetMeta($result);
-				$this->replacer->replace();
-			}
-
-*/
 
 		}
 
-		protected function getReplacementPath()
-		{
-			$fs = \wpSPIO()->filesystem();
 
-			$filename = $this->imageModel->getFileName();
-			$newFileName = $this->imageModel->getFileBase() . '.jpg'; // convert extension to .png
-
-			$fsNewFile = $fs->getFile($this->imageModel->getFileDir() . $newFileName);
-
-			$uniqueFile = $this->unique_file( $this->imageModel->getFileDir(), $fsNewFile);
-			$newPath =  $uniqueFile->getFullPath(); //(string) $fsFile->getFileDir() . $uniquepath;
-
-			if (! $this->imageModel->getFileDir()->is_writable())
-			{
-					Log::addWarn('Replacement path for PNG not writable ' . $this->imageModel->getFileDir()->getPath());
-					$msg = __('Replacement path for PNG not writable', 'shortpixel-image-optimiser');
-					ResponseController::addData($this->imageModel->get('id'), 'message', $msg);
-
-
-				return false;
-			}
-
-			$this->setTarget($uniqueFile);
-
-			return $newPath;
-
-		}
 
 		protected function isTransparent() {
 				$isTransparent = false;
@@ -371,28 +343,7 @@ class PNGConverter extends MediaLibraryConverter
 			return $this->current_image;
 		}
 
-		/** Own function to get a unique filename since the WordPress wp_unique_filename seems to not function properly w/ thumbnails */
-    private function unique_file(DirectoryModel $dir, FileModel $file, $number = 0)
-    {
-      if (! $file->exists())
-        return $file;
 
-      $number = 0;
-      $fs = \wpSPIO()->filesystem();
-
-      $base = $file->getFileBase();
-      $ext = $file->getExtension();
-
-      while($file->exists())
-      {
-        $number++;
-        $numberbase = $base . '-' . $number;
-        Log::addDebug('check for unique file -- ' . $dir->getPath() . $numberbase . '.' . $ext);
-        $file = $fs->getFile($dir->getPath() . $numberbase . '.' . $ext);
-      }
-
-      return $file;
-    }
 
 		// Try to increase limits when doing heavy processing
     private function raiseMemoryLimit()

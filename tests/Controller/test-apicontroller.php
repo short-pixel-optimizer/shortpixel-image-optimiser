@@ -148,7 +148,7 @@ class ApiControllerTest extends SPIO_UnitTestCase
 
 			 $result = $method->invoke($apiController, $item, $response);
 
-			 
+
 	 }
 
 	 public function testItemErrors()
@@ -199,7 +199,6 @@ class ApiControllerTest extends SPIO_UnitTestCase
 			// Test with two items
 			$itemResponse = $this->getBasicResponse(2);
 			$item = $this->getItem(2);
-			//echo "<PRE>"; var_dump($itemResponse); echo "</PRE>";
 
 			$response = array('body' => json_encode($itemResponse));
 			$result = $method->invoke($apiController, $item, $response);

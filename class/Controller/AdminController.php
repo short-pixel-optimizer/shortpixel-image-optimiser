@@ -68,13 +68,13 @@ class AdminController extends \ShortPixel\Controller
 
 				if ($mediaItem->isProcessable())
 				{
-					$converter = Converter::getConverter($mediaItem);
+					$converter = Converter::getConverter($mediaItem, true);
 					if (is_object($converter) && $converter->isConvertable())
 					{
 							$args = array('runReplacer' => false);
 
-						 	$mediaItem->convert($args);
-							$fs->flushImageCache(); // Flush it to reflect new status.
+						 	$converter->convert($args);
+							//$fs->flushImageCache(); // Flush it to reflect new status.
 							$mediaItem = $fs->getImage($id, 'media');
 							$meta = wp_get_attachment_metadata($id); // reset the metadata because we are on the hook.
 					}

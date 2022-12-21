@@ -242,6 +242,15 @@ class EditMediaViewController extends \ShortPixel\ViewController
             $debugInfo[] =  array(__("No Main File Backup Available"), '');
           }
 
+					if ($imageObj->getMeta()->convertMeta()->isConverted())
+					{
+
+							$convertedBackup = ($imageObj->hasBackup(array('forceConverted' => true))) ? '<span class="green">Yes</span>' : '<span class="red">No</span>';
+							$backup = $imageObj->getBackupFile(array('forceConverted' => true));
+						 $debugInfo[] = array('Has converted backup', $convertedBackup);
+						 $debugInfo[] = array('Backup: ', $backup->getFullPath() );
+				}
+
           if ($or = $imageObj->hasOriginal())
           {
              $original = $imageObj->getOriginalFile();
@@ -276,6 +285,8 @@ class EditMediaViewController extends \ShortPixel\ViewController
               $url = $thumbObj->getURL(); //$fs->pathToURL($thumbObj); //wp_get_attachment_image_src($this->post_id, $size);
               $filename = $thumbObj->getFullPath();
 							$backup = $thumbObj->hasBackup() ? $thumbObj->getBackupFile()->getFullPath() : 'n/a';
+
+
 
               $width = $thumbObj->get('width');
               $height = $thumbObj->get('height');

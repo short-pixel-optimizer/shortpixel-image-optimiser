@@ -553,7 +553,7 @@ abstract class Queue
 
 				//$converter =
 				// @todo Adapt this.
-				$converter = Converter::getConverter($imageModel);
+				$converter = Converter::getConverter($imageModel, true);
 
 				if ($baseCount > 0 && is_object($converter) && $converter->isConvertable())
 				{
@@ -563,7 +563,26 @@ abstract class Queue
 		        }
 						elseif($converter->isConverterFor('heic'))
 						{
-//							 //@todo Force api to do lossless and skip on webp / avif because thumbnails will otherwise be derived of compress image. 
+							  foreach($data['params'] as $sizeName => $sizeData)
+								{
+									 if (isset($sizeData['convertto']))
+									 {
+										  $data['params'][$sizeName]['convertto'] = 'jpg';
+									 }
+								}
+								//Lossless because thumbnails will otherwise be derived of compressed image, leaving to double compr..
+								if (property_exists($item, 'compressionType'))
+								{
+									 $item->compressionTypeRequested = $item->compressionType;
+								}
+								// For some reason when converting, it output the converted file only on the Lossy Output :/
+								$item->compressionType = ImageModel::COMPRESSION_LOSSY;
+
+								// Reset counts
+								$counts->baseCount = 1; // count the base images.
+								$counts->avifCount = 0;
+								$counts->webpCount = 0;
+								$counts->creditCount = 1;
 						}
 				}
 				// CompressionType can be integer, but not empty string. In cases empty string might happen, causing lossless optimization, which is not correct.
@@ -588,6 +607,7 @@ abstract class Queue
 		//		$item->preview = $imagePreviewURL;
         $item->counts = $counts;
 
+Log::addTemp('Item Result of To Queue', $item);
         return $item;
     }
 

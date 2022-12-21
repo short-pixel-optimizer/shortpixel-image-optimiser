@@ -616,7 +616,7 @@ class UiHelper
 				$reason = __('Image is transparent', 'shortpixel-image-optimiser');
 			break;
 			default:
-				$reason = sprintf(__('Unknown error %s', 'shortpixel-image-optimiser'), $error);  
+				$reason = sprintf(__('Unknown error %s', 'shortpixel-image-optimiser'), $error);
 			break;
 		}
 

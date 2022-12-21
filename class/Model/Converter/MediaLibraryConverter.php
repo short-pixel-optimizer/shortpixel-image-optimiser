@@ -61,7 +61,7 @@ abstract class MediaLibraryConverter extends Converter
 			$result = wp_update_post($post_ar);
 			if ($result === 0 || is_wp_error($result))
 			{
-				Log::addError('Issue updating WP Post png2jpg - ' . $attach_id);
+				Log::addError('Issue updating WP Post converter - ' . $attach_id);
 				return false;
 			}
 
@@ -81,7 +81,7 @@ abstract class MediaLibraryConverter extends Converter
 				$new_metadata = array_merge($metadata, $new_metadata); // merge to preserve other custom metadata
 
 			}
-			Log::addDebug('Png2Jpg New Metadata RESULT' . $attach_id, $new_metadata);
+			Log::addDebug('New Metadata RESULT #' . $attach_id, $new_metadata);
 	//		wp_update_post(array('ID' => $attach_id, 'post_mime_type' => 'image/jpeg' ));
 			$bool = wp_update_attachment_metadata($attach_id, $new_metadata);
 
