@@ -18,6 +18,8 @@ use ShortPixel\Helper\UiHelper as UiHelper;
 
 use ShortPixel\Helper\DownloadHelper as DownloadHelper;
 
+use ShortPixel\Model\Converter\Converter as Converter;
+
 class OptimizeController
 {
     //protected static $instance;
