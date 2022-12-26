@@ -313,6 +313,7 @@ class ShortPixelPlugin {
             )
         );
 
+
 		/*** SCREENS */
 		wp_register_script( 'shortpixel-screen-media', plugins_url( '/res/js/screens/screen-media.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery', 'shortpixel-processor' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
@@ -489,12 +490,12 @@ class ShortPixelPlugin {
 
 
 		if ( \wpSPIO()->env()->is_screen_to_use ) {
-			$this->load_script( 'shortpixel-tooltip' );
+			$this->load_script( $load_processor );
 			$this->load_style( 'shortpixel-toolbar' );
 		}
 
 		if ( $plugin_page == 'wp-shortpixel-settings' ) {
-			$this->load_script( $load_processor );
+
 			$this->load_script( 'shortpixel-screen-nolist' ); // screen
 			//$this->load_script( 'jquery.tooltip.min.js' );
 			$this->load_script( 'sp-file-tree' );
@@ -506,13 +507,13 @@ class ShortPixelPlugin {
 			$this->load_style( 'shortpixel-settings' );
 
 		} elseif ( $plugin_page == 'wp-short-pixel-bulk' ) {
-			$this->load_script( $load_processor );
+			//$this->load_script( $load_processor );
 			$this->load_script( 'shortpixel-screen-bulk' );
 
 			$this->load_style( 'shortpixel-admin' );
 			$this->load_style( 'shortpixel-bulk' );
 		} elseif ( $screen_id == 'upload' || $screen_id == 'attachment' ) {
-			$this->load_script( $load_processor );
+			//$this->load_script( $load_processor );
 			$this->load_script( 'shortpixel-screen-media' ); // screen
 
 			$this->load_style( 'shortpixel-admin' );
@@ -527,11 +528,11 @@ class ShortPixelPlugin {
 			$this->load_style( 'shortpixel-admin' );
 
 			$this->load_style( 'shortpixel-othermedia' );
-			$this->load_script( $load_processor );
+			//$this->load_script( $load_processor );
 			$this->load_script( 'shortpixel-screen-custom' ); // screen
 
 		} elseif ( NextGenController::getInstance()->isNextGenScreen() ) {
-			$this->load_script( $load_processor );
+			//$this->load_script( $load_processor );
 			$this->load_script( 'shortpixel-screen-custom' ); // screen
 			$this->load_style( 'shortpixel-admin' );
 
@@ -546,7 +547,7 @@ class ShortPixelPlugin {
 		elseif (true === \wpSPIO()->env()->is_screen_to_use  )
 		{
 			// If our screen, but we don't have a specific handler for it, do the no-list screen.
-			$this->load_script( $load_processor );
+			//$this->load_script( $load_processor );
 			$this->load_script( 'shortpixel-screen-nolist' ); // screen
 		}
 
