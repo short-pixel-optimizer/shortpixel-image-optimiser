@@ -570,6 +570,8 @@ class ShortPixelPlugin {
 		$url       = menu_page_url( $plugin_page, false );
 		$screen_id = \wpSPIO()->env()->screen_id;
 
+	//	Log::addTemp('Routing to page: ' . $plugin_page,  debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10));
+
         switch ( $plugin_page ) {
             case 'wp-shortpixel-settings': // settings
 				$controller = 'ShortPixel\Controller\SettingsController';
