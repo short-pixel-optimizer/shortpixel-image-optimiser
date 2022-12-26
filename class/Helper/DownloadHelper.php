@@ -5,8 +5,6 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 class DownloadHelper
 {
-
-
 		  private static $instance;
 
 			public function __construct()

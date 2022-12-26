@@ -650,6 +650,15 @@ class OptimizeController
 								 $item->result->apiStatus = ApiController::STATUS_CONVERTED;
 								 $item->fileStatus = ImageModel::FILE_STATUS_SUCCESS;
 
+								 $fs = \wpSPIO()->filesystem();
+		 						 $imageItem = $fs->getMediaImage($item->item_id);
+
+								 if (property_exists($item, 'compressionTypeRequested'))
+								 {
+										$item->compressionType = $item->compressionTypeRequested;
+								 }
+								 // Keep compressiontype from object, set in queue, imageModelToQueue
+								 $imageItem->setMeta('compressionType', $item->compressionType);
 							 }
                else
                {
@@ -719,7 +728,7 @@ class OptimizeController
          }
          else
          {
-           if ($imageItem->isProcessable() && $result->apiStatus !== ApiController::STATUS_NOT_API && $result->apiStatus !== ApiController::STATUS_CONVERTED)
+           if ($imageItem->isProcessable() && $result->apiStatus !== ApiController::STATUS_NOT_API)
            {
               Log::addDebug('Item with ID' . $imageItem->item_id . ' still has processables (with dump)', $imageItem->getOptimizeUrls());
  						  $api = $this->getAPI();
@@ -727,7 +736,6 @@ class OptimizeController
 							$newItem->urls = $imageItem->getOptimizeUrls();
 
 							// Add to URLs also the possiblity of images with only webp / avif needs. Otherwise URLs would end up emtpy.
-							//$newItem->urls = array_merge($newItem->urls, $webps, $avifs);
 
 							// It can happen that only webp /avifs are left for this image. This can't influence the API cache, so dump is not needed. Just don't send empty URLs for processing here.
 							if (count($newItem->urls) > 0)
@@ -905,15 +913,6 @@ class OptimizeController
 					{
 						Log::addTemp('Result Oooooptimized!');
 
-						$fs = \wpSPIO()->filesystem();
-						$imageObj = $fs->getMediaImage($item->item_id);
-						if (property_exists($item, 'compressionTypeRequested'))
-						{
-							 $item->compressionType = $item->compressionTypeRequested;
-						}
-					 	// Keep compressiontype from object, set in queue, imageModelToQueue
-					 	$imageObj->setMeta('compressionType', $item->compressionType);
-						$this->addItemToQueue($imageObj);
 						ResponseController::addData($item->item_id, 'message', __('File Converted', 'shortpixel-image-optimiser'));
 
 						$status = ApiController::STATUS_CONVERTED;
@@ -924,7 +923,8 @@ class OptimizeController
 					}
 
 				}
-				else {
+				else
+				{
 					$optimizedResult = $mediaObj->handleOptimized($successData);
 					if (true === $optimizedResult)
 					  $status = ApiController::STATUS_SUCCESS;
@@ -933,12 +933,9 @@ class OptimizeController
 					}
 				}
 
+				$item->blocked = false;
+				$q->updateItem($item);
 
-				if ($status !== ApiController::STATUS_CONVERTED)
-				{
-					$item->blocked = false;
-					$q->updateItem($item);
-				}
 				Log::addTemp('Returning Optimize Item Status' . $status);
 				return $status;
 		}

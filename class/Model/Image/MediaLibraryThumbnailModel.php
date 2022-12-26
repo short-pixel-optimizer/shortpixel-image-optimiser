@@ -374,7 +374,21 @@ Log::addTemp('BackupFile', $backupFile);
 		{
 			 if ($this->is_main_file)
 			 {
-					$this->image_meta = new ImageMeta();
+				 	// If item is converted and will not be moved back to original format ( but converted ) , keep the convert metadata
+				  if (true === $this->getMeta()->convertMeta()->isConverted() && false === $this->getMeta()->convertMeta()->omitBackup() )
+					{
+							Log::addTemp('Is Converted, Omit Backup false');
+							$convertMeta = clone $this->getMeta()->convertMeta();
+							$imageMeta = new ImageMeta();
+							$imageMeta->convertMeta()->fromClass($convertMeta);
+							Log::addTemp('Added convertMeta', $imageMeta);
+							$bool = false; // Prevent cleanRestore from deleting the metadata. 
+					}
+					else {
+							$imageMeta = new ImageMeta();
+					}
+
+					$this->image_meta = $imageMeta;
 			 }
 			 else
 			 {

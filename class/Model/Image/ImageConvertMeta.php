@@ -10,7 +10,7 @@ class ImageConvertMeta
 	// protected $doConversion = false;
 	 protected $triedConversion = false;
 	 protected $errorReason = false;
-	 protected $omitBackup = true; // Don't backup the converted image (again), keeping only the original format.
+	 protected $omitBackup = true; // Don't backup the converted image (again), keeping only the original format. if not, make a backup of the converted file and treat that as the default backup/restore
 
 	 public function __construct()
 	 {

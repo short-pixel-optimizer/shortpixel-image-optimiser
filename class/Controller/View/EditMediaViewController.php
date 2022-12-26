@@ -244,11 +244,11 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
 					if ($imageObj->getMeta()->convertMeta()->isConverted())
 					{
-
 							$convertedBackup = ($imageObj->hasBackup(array('forceConverted' => true))) ? '<span class="green">Yes</span>' : '<span class="red">No</span>';
 							$backup = $imageObj->getBackupFile(array('forceConverted' => true));
 						 $debugInfo[] = array('Has converted backup', $convertedBackup);
-						 $debugInfo[] = array('Backup: ', $backup->getFullPath() );
+						 if (is_object($backup))
+						 	$debugInfo[] = array('Backup: ', $backup->getFullPath() );
 				}
 
           if ($or = $imageObj->hasOriginal())
