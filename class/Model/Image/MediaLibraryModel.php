@@ -521,6 +521,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				 $resultData = $files[$sizeName];
 				 $thumbnail = $thumbObjs[$sizeName];
 
+				 if (! is_object($thumbnail))
+ 			 	 {
+					 	Log::addError('Thumbnail with size name'  . $sizeName . ' is not registered in this image. This should not happen, skipping.', $thumbsObjs);
+						Log::addError('OptimizeData', $optimizeData);
+						continue;
+ 			 	 }
+
          $thumbnail->handleOptimizedFileType($resultData); // check for webps /etc
 
          if ($thumbnail->isOptimized())
