@@ -2811,4 +2811,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			self::$unlistedChecked[] = $this->get('id');
   }
 
+	// If image is flushed and then reloaded, the unlisted items might go omit, if these are not loaded again.
+	public static function onFlushImageCache()
+	{
+		 self::$unlistedChecked = array();
+	}
+
 } // class

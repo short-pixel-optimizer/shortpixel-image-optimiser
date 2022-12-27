@@ -89,6 +89,7 @@ Class FileSystemController extends \ShortPixel\Controller
 		{
 					 self::$mediaItems = array();
 					 self::$customItems = array();
+					 MediaLibraryModel::onFlushImageCache();
 		}
 
     /** Gets a custom Image Model without being in the database. This is used to check if path is a proper customModel path ( not mediaLibrary ) and see if the file should be included per excusion rules */
