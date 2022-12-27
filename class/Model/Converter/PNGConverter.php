@@ -109,7 +109,6 @@ class PNGConverter extends MediaLibraryConverter
 				  return false;
 			 }
 
-
 			 $args = wp_parse_args($args, $defaults);
 
 			 $this->setupReplacer();
@@ -123,6 +122,7 @@ class PNGConverter extends MediaLibraryConverter
 					return false;
 			 }
 
+			 Log::addDebug('Starting PNG conversion of #' . $this->imageModel->get('id'));
 			 $bool = $this->run();
 
 			 if (true === $bool)
@@ -172,10 +172,18 @@ class PNGConverter extends MediaLibraryConverter
 			Log::addDebug("PNG2JPG doConvert width $width height $height", memory_get_usage());
 			$bg = imagecreatetruecolor($width, $height);
 
-			if(!$bg)
+			if(false === $bg || false === $img)
 			{
 				Log::addError('ImageCreateTrueColor failed');
-				$msg = __('Creating an TrueColor Image failed - Possible library error', 'shortpixel-image-optimiser');
+				if (false === $bg)
+				{
+					$msg = __('Creating an TrueColor Image failed - Possible library error', 'shortpixel-image-optimiser');
+				}
+				elseif (false === $img)
+				{
+					$msg = __('Image source failed - Check if source image is PNG and library is working', 'shortpixel-image-optimiser');
+				}
+
 				$this->imageModel->getMeta()->convertMeta()->setError(self::ERROR_LIBRARY);
 				ResponseController::addData($this->imageModel->get('id'), 'message', $msg);
 				return false;
