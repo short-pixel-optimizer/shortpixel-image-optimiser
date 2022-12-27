@@ -999,7 +999,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 			foreach($excludePatterns as $item) {
 					$type = trim($item["type"]);
 					if($type == "size") {
-							//$meta = $meta? $meta : wp_get_attachment_metadata($ID);
+
 							$width = $this->get('width');
 							$height = $this->get('height');
 
@@ -1018,7 +1018,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 		private function isProcessableSize($width, $height, $excludePattern)
 		{
-
 				$ranges = preg_split("/(x|×|X)/",$excludePattern);
 				$widthBounds = explode("-", $ranges[0]);
 				$minWidth = intval($widthBounds[0]);
@@ -1026,6 +1025,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 				$heightBounds = isset($ranges[1]) ? explode("-", $ranges[1]) : false;
 				$minHeight = $maxHeight = 0;
+
 				if ($heightBounds)
 				{
 					$minHeight = intval($heightBounds[0]);
