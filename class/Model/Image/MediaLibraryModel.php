@@ -1120,11 +1120,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			if (true === $isConverted)
 			{
 				 $args = array('forceConverted' => true);
-				 Log::addTemp('Checking Converted Backups');
 				 if ($this->hasBackup($args))
 				 {
 					  $file = $this->getBackupFile($args);
-						Log::addTemp('HasBkup', $file);
 
 						if ($file->exists())
 							$file->delete();
@@ -1734,9 +1732,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		// Loading this early because of all the resetting.
 		$webps = $this->getWebps();
 		$avifs = $this->getAvifs();
-
-		Log::addTemp('Restoring Webps', $webps);
-
 
 		if ($was_converted)
 		{

@@ -70,18 +70,12 @@ class NextGenController
 
   public function optimizeNextGen()
   {
-		 if ($this->enableOverride === true)
+		 if (true === $this->enableOverride || \wpSPIO()->settings()->includeNextGen == 1)
 		 {
 		 	 return true;
 		 }
-     elseif (\wpSPIO()->settings()->includeNextGen == 1)
-    {
-			 return true;
-		}
-    else
-		{
-      return false;
-		}
+
+     return false;
   }
 
   public function isNextGenScreen()
@@ -235,7 +229,7 @@ class NextGenController
    public function addNextGenGalleriesToCustom($silent = true) {
       $fs = \wpSPIO()->filesystem();
       $homepath = $fs->getWPFileBase();
-      $folderMsg = "";
+
       //add the NextGen galleries to custom folders
       $ngGalleries = $this->getGalleries(); // DirectoryModel return.
 
@@ -256,6 +250,11 @@ class NextGenController
           }
 					else
 					{
+						// Try to silently fail this if directory is not allowed.
+						if (false === $folder->checkDirectory(true))
+						{
+							continue;
+						}
           	$directory = $otherMedia->addDirectory($gallery->getPath());
 						if (! $directory)
 						{
@@ -277,10 +276,7 @@ class NextGenController
         $settings = \wpSPIO()->settings();
         $settings->hasCustomFolders = time();
       }
-      if (! $silent && (strlen(trim($folderMsg)) > 0 && $folderMsg !== false))
-      {
-          Notice::addNormal($folderMsg);
-      }
+
 
   }
 
@@ -291,6 +287,7 @@ class NextGenController
 
     if ($this->optimizeNextGen() === true) {
           $imageFsPath = $this->getImageAbspath($image);
+
           $otherMedia->addImage($imageFsPath, array('is_nextgen' => true));
       }
   }

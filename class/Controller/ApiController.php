@@ -498,8 +498,7 @@ class ApiController
 
 	private function handleNewSuccess($item, $fileData, $data)
 	{
-			Log::addTemp('Handle New Success', $fileData);
-			Log::addTemp('Data', $data);
+
 			$compressionType = property_exists($item, 'compressionType') ? $item->compressionType : $settings->compressionType;
 			//$savedSpace =  $originalSpace =  $optimizedSpace = $fileCount  = 0;
 

@@ -1,5 +1,4 @@
 <?php
-
 namespace ShortPixel\Helper;
 
 // Our newest Tools class
@@ -52,7 +51,15 @@ class UtilHelper
 			return $sizes;
 		}
 
-		public static function alterHtaccess($webp = false, $avif = false){
+		// wp_normalize_path doesn't work for windows installs in some situations, so we can use it, but we still want some of the functions.
+		public static function spNormalizePath($path)
+		{
+				$path = preg_replace( '|(?<=.)/+|', '/', $path );
+				return $path;
+		}
+
+		public static function alterHtaccess($webp = false, $avif = false)
+		{
          // [BS] Backward compat. 11/03/2019 - remove possible settings from root .htaccess
          /* Plugin init is before loading these admin scripts. So it can happen misc.php is not yet loaded */
          if (! function_exists('insert_with_markers'))
@@ -157,5 +164,5 @@ class UtilHelper
                insert_with_markers( trailingslashit(WP_CONTENT_DIR) . '.htaccess', 'ShortPixelWebp', $rules);
 
            }
-       }
-}
+    }
+} // class

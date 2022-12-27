@@ -253,6 +253,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
 			if (! $this->checkDirectory(true))
 			{
+				Log::addWarn('Refreshing directory, something wrong in checkDirectory ' . $this->getPath());
 				return false;
 			}
 
@@ -278,7 +279,6 @@ class DirectoryOtherMediaModel extends DirectoryModel
 			$filter['include_files'] = ImageModel::PROCESSABLE_EXTENSIONS;
 
       $files = $fs->getFilesRecursive($this, $filter);
-
 
       \wpSPIO()->settings()->hasCustomFolders = time(); // note, check this against bulk when removing. Custom Media Bulk depends on having a setting.
     	$result = $this->addImages($files);
@@ -354,7 +354,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
 						 {
 							 if ($silent === false)
 							 {
-							  Notice::addError(__('This folder is a subfolder of an already existing Other Media folder. It cannot be added', 'shortpixel-image-optimiser'));
+							  Notice::addError(sprintf(__('This folder is a subfolder of an already existing Other Media folder. Folder %s can not be added', 'shortpixel-image-optimiser'), $this->getPath() ));
 							 }
 								return false;
 						 }

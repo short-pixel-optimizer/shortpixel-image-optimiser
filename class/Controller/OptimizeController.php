@@ -859,7 +859,6 @@ class OptimizeController
 					$item->files = array();
 				}
 
-				Log::addTemp('SuccessData', $successData);
 				foreach($imageArray as $imageName => $image)
 				{
 					 if (! isset($item->files[$imageName]))
@@ -911,7 +910,6 @@ class OptimizeController
 					$optimizedResult = $converter->handleConverted($successData);
 					if (true === $optimizedResult)
 					{
-						Log::addTemp('Result Oooooptimized!');
 
 						ResponseController::addData($item->item_id, 'message', __('File Converted', 'shortpixel-image-optimiser'));
 
@@ -936,7 +934,6 @@ class OptimizeController
 				$item->blocked = false;
 				$q->updateItem($item);
 
-				Log::addTemp('Returning Optimize Item Status' . $status);
 				return $status;
 		}
 

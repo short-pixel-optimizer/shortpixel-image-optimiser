@@ -305,12 +305,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 			$loadRegular= $this->is_main_file && (false === $this->getMeta()->convertMeta()->isConverted() ||
 			false === $this->getMeta()->convertMeta()->omitBackup()) && false === $args['forceConverted'];
 
-if (true === $loadRegular)
-{
-	Log::addTemp('LoadRegularr');
-}else {
-	Log::addTemp('Loading other file format');
-}
       if (! $this->is_main_file || $loadRegular)
       {
           return parent::hasBackup();
@@ -329,7 +323,6 @@ if (true === $loadRegular)
 				{
 					 $backupFile = $directory . $this->getOriginalFile()->getFileBase() . '.' . $converted_ext;
 				}
-Log::addTemp('BackupFile', $backupFile);
         if (file_exists($backupFile) && ! is_dir($backupFile) )
           return true;
         else {
@@ -377,12 +370,10 @@ Log::addTemp('BackupFile', $backupFile);
 				 	// If item is converted and will not be moved back to original format ( but converted ) , keep the convert metadata
 				  if (true === $this->getMeta()->convertMeta()->isConverted() && false === $this->getMeta()->convertMeta()->omitBackup() )
 					{
-							Log::addTemp('Is Converted, Omit Backup false');
 							$convertMeta = clone $this->getMeta()->convertMeta();
 							$imageMeta = new ImageMeta();
 							$imageMeta->convertMeta()->fromClass($convertMeta);
-							Log::addTemp('Added convertMeta', $imageMeta);
-							$bool = false; // Prevent cleanRestore from deleting the metadata. 
+							$bool = false; // Prevent cleanRestore from deleting the metadata.
 					}
 					else {
 							$imageMeta = new ImageMeta();

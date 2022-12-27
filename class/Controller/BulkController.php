@@ -137,7 +137,6 @@ class BulkController
 			 	AdminNoticesController::resetLegacyNotice();
 		 }
 
-		 Log::addTemp('Resetting QUeue');
      $q->resetQueue();
    }
 

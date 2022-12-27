@@ -107,8 +107,7 @@ class ApiConverter extends MediaLibraryConverter
 				 Log::addError('MainFile not set during success Api Conversion');
 				 return false;
 			}
-			Log::addTemp('MainFile', $mainFile);
-			Log::addTemp('replacementPath', $replacementPath);
+
 
 			$tempFile = $fs->getFile($mainFile['image']['file']);
 

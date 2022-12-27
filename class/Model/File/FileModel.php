@@ -2,6 +2,9 @@
 namespace ShortPixel\Model\File;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
+use ShortPixel\Helper\UtilHelper as UtilHelper;
+
+
 /* FileModel class.
 *
 *
@@ -488,6 +491,9 @@ class FileModel extends \ShortPixel\Model
       return false;
 
   //  $path = wp_normalize_path($path);
+
+		$path = UtilHelper::spNormalizePath($path);
+
 		$abspath = $fs->getWPAbsPath();
 
     if ( is_file($path) && ! is_dir($path) ) // if path and file exist, all should be okish.
@@ -518,7 +524,6 @@ class FileModel extends \ShortPixel\Model
 
     return $path;
   }
-
 
 
   /** Resolve an URL to a local path

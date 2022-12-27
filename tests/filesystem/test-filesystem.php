@@ -55,7 +55,7 @@ class FileSystemTest extends  WP_UnitTestCase
 
   private function getTestFiles()
   {
-    $content = file_get_contents(__DIR__ . '/assets/test-image.jpg');
+    $content = file_get_contents( dirname(__DIR__,1) . '/Assets/test-image.jpg');
 
     $ar = array(
         'images' => array('image1.jpg' => $content, 'image2.jpg' => $content, 'image3.png' => $content,
@@ -209,21 +209,18 @@ class FileSystemTest extends  WP_UnitTestCase
     $directory = $this->fs->getDirectory($dirpath);
 
     $this->assertEquals($good_result, $directory->getRelativePath(), $dirpath);
-    $this->assertEquals($good_result, ShortPixelMetaFacade::returnSubDir($dirpath), ShortPixelMetaFacade::returnSubDir($dirpath));
 
     // Test with non-installation basedir.
     $dirpath2 = '/var/www/nothere/wp-content/uploads/2019/08/';
     $directory2 =  $this->fs->getDirectory($dirpath2);
 
     $this->assertEquals($good_result, $directory2->getRelativePath());
-    $this->assertEquals($good_result, ShortPixelMetaFacade::returnSubDir($dirpath2), ShortPixelMetaFacade::returnSubDir($dirpath2));
 
     // Test with URL, or whatever.
     $dirpath3 = 's3:/localbucket/wp-content/uploads/2019/08/64NrYkvZOrU-200x300.jpg';
     $directory3 =  $this->fs->getDirectory($dirpath3);
 
     $this->assertEquals($good_result, $directory3->getRelativePath(), $directory3->getPath());
-    $this->assertEquals($good_result, ShortPixelMetaFacade::returnSubDir($dirpath3), ShortPixelMetaFacade::returnSubDir($dirpath3));
 
     // Test with Upload Dir not based on month/year.
     $dirpath4 = $basedir . '/64NrYkvZOrU-200x300.jpg';
@@ -231,7 +228,6 @@ class FileSystemTest extends  WP_UnitTestCase
     $directory4 =  $this->fs->getDirectory($dirpath4);
 
     $this->assertEquals($good_result4, $directory4->getRelativePath(), $directory4->getPath());
-    $this->assertEquals($good_result4, ShortPixelMetaFacade::returnSubDir($dirpath4), ShortPixelMetaFacade::returnSubDir($dirpath4));
 
     // unknown host, based on uploads
     $dirpath5 = '/var/unknown/uploads/2019/08/bla.jpg';
@@ -239,7 +235,6 @@ class FileSystemTest extends  WP_UnitTestCase
     $directory5 = $this->fs->getDirectory($dirpath5);
 
     $this->assertEquals($good_result5, $directory5->getRelativePath(), $directory5->getRelativePath());
-    $this->assertEquals($good_result5, ShortPixelMetaFacade::returnSubDir($dirpath5), ShortPixelMetaFacade::returnSubDir($dirpath5));
 
     //upload_dir
   }
@@ -492,7 +487,7 @@ class FileSystemTest extends  WP_UnitTestCase
   {
     // Setup a test file.
     $post = $this->factory->post->create_and_get();
-    $attachment_id = $this->factory->attachment->create_upload_object( __DIR__ . '/assets/test-image.jpg', $post->ID );
+    $attachment_id = $this->factory->attachment->create_upload_object( dirname(__DIR__,1) . '/assets/test-image.jpg', $post->ID );
 
     $fullfilepath = get_attached_file($attachment_id);
     $abspath = $this->fs->getWPUploadBase();

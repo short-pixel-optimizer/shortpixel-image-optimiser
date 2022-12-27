@@ -607,7 +607,6 @@ abstract class Queue
 		//		$item->preview = $imagePreviewURL;
         $item->counts = $counts;
 
-Log::addTemp('Item Result of To Queue', $item);
         return $item;
     }
 
