@@ -58,7 +58,7 @@ class SpioCommandBase
 
      protected static $runs = 0;
       /**
-     * Adds a single item to the queue(s).
+     * Adds a single item to the queue(s), then processes the queue(s).
      *
      * ## OPTIONS
      *
