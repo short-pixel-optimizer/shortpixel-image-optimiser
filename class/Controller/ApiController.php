@@ -583,7 +583,7 @@ class ApiController
 				{
 						$image['avif']['url'] = $fileData->$type;
 						$image['avif']['size'] = $fileData->$size;
-						if (false === $this->checkFileSizeMargin($checkFileSize, $fileData->$size,))
+						if (false === $this->checkFileSizeMargin($checkFileSize, $fileData->$size))
 						{
 							$image['avif']['status'] = self::STATUS_OPTIMIZED_BIGGER;
 						}
