@@ -28,6 +28,7 @@ abstract class Converter
 
 		// Media Library specific
 		abstract protected function updateMetaData($params);
+		abstract public function getUpdatedMeta();
 		abstract protected function setupReplacer();
 		abstract protected function setTarget($file);
 
@@ -61,8 +62,16 @@ abstract class Converter
 					return false;
 				}
 
+				// Second option for conversion is image who have been placeholdered.
+				if (true === $imageModel->getMeta()->convertMeta()->hasPlaceHolder() && false === $imageModel->getMeta()->convertMeta()->isConverted() && ! is_null($imageModel->getMeta()->convertMeta()->getFileFormat()))
+				{
+					 $converter = self::getConverterByExt($imageModel->getMeta()->convertMeta()->getFileFormat(), $imageModel);
+
+				}
+
 				if (true === $forConversion) // don't check more.
 				{
+
 					 return $converter;
 				}
 

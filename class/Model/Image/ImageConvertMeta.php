@@ -7,6 +7,7 @@ class ImageConvertMeta
 
 	 protected $fileFormat; // png / heic etc
 	 protected $isConverted = false;
+	 protected $placeholder;
 	// protected $doConversion = false;
 	 protected $triedConversion = false;
 	 protected $errorReason = false;
@@ -78,6 +79,17 @@ class ImageConvertMeta
 	 public function omitBackup()
 	 {
 		  return $this->omitBackup;
+	 }
+
+	 // bool for now, otherwise if needed.
+	 public function setPlaceHolder($placeholder = true)
+	 {
+		 	$this->placeholder = $placeholder;
+	 }
+
+	 public function hasPlaceHolder()
+	 {
+		  return $this->placeholder; 
 	 }
 
 	 public function fromClass($object)

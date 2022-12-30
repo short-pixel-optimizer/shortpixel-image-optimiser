@@ -8,6 +8,13 @@ abstract class MediaLibraryConverter extends Converter
 	protected $source_url;
 
 
+	public function getUpdatedMeta()
+	{
+		 $id = $this->imageModel->get('id');
+		 $meta = wp_get_attachment_metadata($id); // reset the metadata because we are on the hook.
+		 return $meta;
+	}
+	
 	protected function setupReplacer()
 	{
 		$this->replacer = new Replacer();
@@ -30,6 +37,7 @@ abstract class MediaLibraryConverter extends Converter
 	protected function setTarget($newFile)
 	{
 		$fs = \wpSPIO()->filesystem();
+		$this->newFile = $newFile; // set target newFile.
 
 		$url = $fs->pathToUrl($this->imageModel);
 		$newUrl = str_replace($this->imageModel->getFileName(), $newFile->getFileName(), $url);
@@ -39,6 +47,14 @@ abstract class MediaLibraryConverter extends Converter
 
 	protected function updateMetaData($params)
 	{
+			$defaults = array(
+				 'success' => false,
+				 'restore' => false,
+				 'generate_metadata' => true,
+			);
+
+			$params = wp_parse_args($params, $defaults);
+
 			$newFile = $this->newFile;
 			$attach_id = $this->imageModel->get('id');
 
@@ -53,9 +69,9 @@ abstract class MediaLibraryConverter extends Converter
 				return false;
 
 			// Update post mime on attachment
-			if (isset($params['success']))
+			if (isset($params['success']) && true === $params['success'])
 				$post_ar = array('ID' => $attach_id, 'post_mime_type' => 'image/jpeg');
-			elseif ( isset($params['restore']) )
+			elseif ( isset($params['restore']) && true === $params['restore'] )
 				$post_ar = array('ID' => $attach_id, 'post_mime_type' => 'image/png');
 
 			$result = wp_update_post($post_ar);
@@ -67,7 +83,13 @@ abstract class MediaLibraryConverter extends Converter
 
 			$metadata = wp_get_attachment_metadata($attach_id);
 
-			$new_metadata = wp_generate_attachment_metadata($attach_id, $newFile->getFullPath());
+			if (true === $params['generate_metadata'])
+			{
+				$new_metadata = wp_generate_attachment_metadata($attach_id, $newFile->getFullPath());
+			}
+			else {
+				$new_metadata = array();
+			}
 
 			// Metadata might not be array when add_attachment is calling this hook via AdminController ( PNG2JPG)
 			if (is_array($metadata))
@@ -83,8 +105,11 @@ abstract class MediaLibraryConverter extends Converter
 			}
 			Log::addDebug('New Metadata RESULT #' . $attach_id, $new_metadata);
 	//		wp_update_post(array('ID' => $attach_id, 'post_mime_type' => 'image/jpeg' ));
-			$bool = wp_update_attachment_metadata($attach_id, $new_metadata);
 
+			if (is_array($new_metadata) && count($new_metadata) > 0)
+			{
+				$bool = wp_update_attachment_metadata($attach_id, $new_metadata);
+			}
 
 			if (is_array($WPMLduplicates) && count($WPMLduplicates) > 0)
 			{
@@ -103,5 +128,6 @@ abstract class MediaLibraryConverter extends Converter
 
 
 	}
+
 
 } // class

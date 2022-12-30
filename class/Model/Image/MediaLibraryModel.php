@@ -219,6 +219,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   public function getURL()
   {
      $url = $this->fs()->checkURL(wp_get_attachment_url($this->id));
+		 if (true === $this->getMeta()->convertMeta()->hasPlaceHolder())
+		 {
+			  $url = str_replace($this->getExtension(), $this->getMeta()->convertMeta()->getFileFormat(), $url); 
+		 }
+
 		 return $url;
   }
 

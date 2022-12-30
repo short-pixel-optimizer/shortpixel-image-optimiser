@@ -910,10 +910,9 @@ class OptimizeController
 					$optimizedResult = $converter->handleConverted($successData);
 					if (true === $optimizedResult)
 					{
-
 						ResponseController::addData($item->item_id, 'message', __('File Converted', 'shortpixel-image-optimiser'));
-
 						$status = ApiController::STATUS_CONVERTED;
+
 					}
 					else {
 						$q->itemFailed($item, true);

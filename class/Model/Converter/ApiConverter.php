@@ -20,15 +20,58 @@ class ApiConverter extends MediaLibraryConverter
 				  return true;
 			 }
 
+			 if (false === $this->imageModel->getMeta()->convertMeta()->isConverted() && true === $this->imageModel->getMeta()->convertMeta()->hasPlaceHolder())
+			 {
+				 return true;
+			 }
+
 			 if (true === $this->imageModel->getMeta()->convertMeta()->isConverted())
 			 {
 				  return false;
 			 }
 		}
 
-		// Do Nothing because conversion is on API level
+		// Create placeholder here.
 		public function convert($args = array())
 		{
+			$defaults = array(
+				 'runReplacer' => true, // The replacer doesn't need running when the file is just uploaded and doing in handle upload hook.
+			);
+
+			$args = wp_parse_args($args, $defaults);
+
+				Log::addTemp('CONVERSION OF API FORMAT HERE' );
+				$this->setupReplacer();
+
+				$fs = \wpSPIO()->filesystem();
+
+				$placeholderFile = $fs->getFile(\wpSPIO()->plugin_path('res/img/fileformat-placeholder.jpg'));
+				$destinationFile = $fs->getFile($this->imageModel->getFileDir() . $this->imageModel->getFileBase() . '.jpg');
+
+				$copyok = $placeholderFile->copy($destinationFile);
+
+				if ($copyok)
+				{
+					$this->imageModel->getMeta()->convertMeta()->setFileFormat('heic');
+					$this->imageModel->getMeta()->convertMeta()->setPlaceHolder(true);
+					$this->imageModel->saveMeta();
+
+					$this->setTarget($destinationFile);
+					$params = array('success' => true, 'generate_metadata' => false);
+					$this->updateMetaData($params);
+
+					$fs->flushImage($this->imageModel->get('id'));
+
+					if (true === $args['runReplacer'])
+					{
+						$result = $this->replacer->replace();
+					}
+
+				}
+				else {
+					return false;
+				}
+
 				return true;
 		}
 
@@ -71,6 +114,29 @@ class ApiConverter extends MediaLibraryConverter
 		{
 			$this->setupReplacer();
 			$fs = \wpSPIO()->filesystem();
+
+			if (true === $this->imageModel->getMeta()->convertMeta()->hasPlaceHolder())
+			{
+				 $this->imageModel->getMeta()->convertMeta()->setPlaceHolder(false);
+
+				 $attach_id = $this->imageModel->get('id');
+				 $placeHolderFile = $fs->getFile($this->imageModel->getFileDir() . $this->imageModel->getFileBase() . '.' . $this->imageModel->getMeta()->convertMeta()->getFileFormat());
+
+				 $this->newFile = $placeHolderFile;
+
+				 $this->imageModel->delete();
+				 $this->imageModel->saveMeta();
+
+				 $params = array('success' => true, 'generate_metadata' => false);
+				 $this->updateMetaData($params);
+
+				 $fs->flushImage($this->imageModel);
+
+				 $this->imageModel = $fs->getMediaImage($attach_id);
+				 // Might delete the main file ( placeholder )
+
+
+			}
 
 			// @todo  Move heic to JPG via uniqueFile and such
 			$replacementPath = $this->getReplacementPath();

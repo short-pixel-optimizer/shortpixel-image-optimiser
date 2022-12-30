@@ -68,6 +68,7 @@ class AdminController extends \ShortPixel\Controller
 
 				if ($mediaItem->isProcessable())
 				{
+					Log::addTemp('METADATYA', $meta);
 					$converter = Converter::getConverter($mediaItem, true);
 					if (is_object($converter) && $converter->isConvertable())
 					{
@@ -76,7 +77,8 @@ class AdminController extends \ShortPixel\Controller
 						 	$converter->convert($args);
 							//$fs->flushImageCache(); // Flush it to reflect new status.
 							$mediaItem = $fs->getImage($id, 'media');
-							$meta = wp_get_attachment_metadata($id); // reset the metadata because we are on the hook.
+							$meta = $converter->getUpdatedMeta();
+//							$meta = wp_get_attachment_metadata($id); // reset the metadata because we are on the hook.
 					}
 
         	$control = new OptimizeController();
@@ -85,6 +87,7 @@ class AdminController extends \ShortPixel\Controller
 				else {
 					Log::addWarn('Passed mediaItem is not processable', $mediaItem);
 				}
+				Log::addTemp('returning meta', $meta);
         return $meta; // It's a filter, otherwise no thumbs
     }
 

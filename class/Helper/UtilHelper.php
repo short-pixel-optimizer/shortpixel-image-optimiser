@@ -58,6 +58,18 @@ class UtilHelper
 				return $path;
 		}
 
+		// Copy of private https://developer.wordpress.org/reference/functions/_wp_relative_upload_path/
+		public static function getRelativeUploadPath($path)
+		{
+				$new_path = $path;
+						$uploads = wp_get_upload_dir();
+				if ( 0 === strpos( $new_path, $uploads['basedir'] ) ) {
+						$new_path = str_replace( $uploads['basedir'], '', $new_path );
+						$new_path = ltrim( $new_path, '/' );
+				}
+			return $new_path;
+		}
+
 		public static function alterHtaccess($webp = false, $avif = false)
 		{
          // [BS] Backward compat. 11/03/2019 - remove possible settings from root .htaccess
