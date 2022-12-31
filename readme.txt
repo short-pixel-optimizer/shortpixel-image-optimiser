@@ -1,18 +1,18 @@
-=== ShortPixel Image Optimizer ===
+=== ShortPixel Image Optimizer - Optimize Images, Convert WebP & AVIF ===
 Contributors: ShortPixel
 Tags: convert webp, optimize images, image optimization, resize, compressor, image, avif, compression, optimize, image optimiser, image compression, compress pdf, compress jpg, compress png, performance, photography, smush, scale, pictures
 Requires at least: 4.8.0
 Tested up to: 6.1
 Requires PHP: 5.6
-Stable tag: 5.1.5
+Stable tag: 5.1.6
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Speed up your website & boost your SEO by compressing old & new images and PDFs. Optimize and convert WebP & AVIF.
+Optimize images & PDFs smartly. Create and compress next-gen WebP and AVIF formats. Smart crop and resize.
 
 == Description ==
 
-**An easy-to-use, comprehensive, lightweight, stable and frequently updated freemium image compression plugin supported by the friendly team that created it.**
+**Optimize images and create WebP/AVIF versions with an easy-to-use, comprehensive, lightweight, stable and frequently updated freemium image compression plugin supported by the friendly team that created it.**
 
 Increase your website's SEO ranking, number of visitors, and ultimately your sales by optimising any image or PDF document on your website.
 ShortPixel is an easy to use, lightweight, install-and-forget-about-it <a href="https://shortpixel.com" target="_blank">image optimization</a> plugin that can compress all your past images and PDF documents with a single click. New images are automatically resized/rescaled and optimized on the fly, in the background. It's also compatible with any gallery, slider or eCommerce plugin.
@@ -366,6 +366,11 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 5.1.6 =
+Release date December 31, 2022
+* Fix: in some cases, AVIF files were not cropped correctly;
+* Language: 0 new strings added, 0 updated, 0 fuzzed, and 0 deprecated.
 
 = 5.1.5 =
 Release date November 29, 2022
