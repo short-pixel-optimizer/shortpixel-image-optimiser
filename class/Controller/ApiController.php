@@ -666,6 +666,7 @@ class ApiController
               {
                   // Removes any query ?strings and returns just filename of originalURL
                   $originalURL = $fileData->OriginalURL;
+									Log::addTemp('Handling success ', $fileData);
 
 									// If the optimized result is bigger, it won'ty be replaced.  Check the webp / avif files against original FileSize.
 									if ( $downloadResult->apiStatus === self::STATUS_OPTIMIZED_BIGGER)
@@ -725,7 +726,7 @@ class ApiController
                   {
                     $avifName = $originalFile->getFileBase() . '.avif';
 
-										if ($this->checkFileSizeMargin($checkFileSize, $fileData->$avifTypeSize)) // if file is bigger.
+										if (false === $this->checkFileSizeMargin($checkFileSize, $fileData->$avifTypeSize)) // if file is bigger.
 										{
 											$results[$imageName]['avif'] = $this->returnOk(self::STATUS_OPTIMIZED_BIGGER, __('Special file type bigger than core file','shortpixel-image-optimiser'));
 										}
@@ -737,7 +738,7 @@ class ApiController
 
                     if ( $avifDownloadResult->apiStatus == self::STATUS_SUCCESS)
                     {
-                       Log::addDebug('Downloaded Avif : ' . $fileData->$avifType);
+                       Log::addDebug('Downloaded Avif for : ' . $imageName  . ' ' . $fileData->$avifType);
 
                        //$results[$avifName] = $avifDownloadResult;
 											 $results[$imageName]['avif']  = $avifDownloadResult;
