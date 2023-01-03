@@ -312,7 +312,6 @@ class ApiController
 						 if ($status === false)
 						 {
 						 	$status = $data->Status;
-							break;
 						 }
 						 $APIresponse[$key] = $data; // reset it, so it can read the index.  This should be 0.
 					}
@@ -382,7 +381,7 @@ class ApiController
 
     $neededURLS = $item->urls; // URLS we are waiting for.
 
-    if ( isset($APIresponse[0]) ) //API returned image details
+    if ( is_array($APIresponse) && isset($APIresponse[0]) ) //API returned image details
     {
 				$analyze = array('total' => count($item->urls), 'ready' => 0, 'waiting' => 0);
 				$waitingDebug = array();
