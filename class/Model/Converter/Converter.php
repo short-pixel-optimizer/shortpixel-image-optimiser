@@ -66,12 +66,10 @@ abstract class Converter
 				if (true === $imageModel->getMeta()->convertMeta()->hasPlaceHolder() && false === $imageModel->getMeta()->convertMeta()->isConverted() && ! is_null($imageModel->getMeta()->convertMeta()->getFileFormat()))
 				{
 					 $converter = self::getConverterByExt($imageModel->getMeta()->convertMeta()->getFileFormat(), $imageModel);
-
 				}
 
 				if (true === $forConversion) // don't check more.
 				{
-
 					 return $converter;
 				}
 

@@ -307,6 +307,7 @@ class ApiController
 			 foreach($APIresponse as $key => $data)
 			 {
 				 // Running the whole array, because handleSuccess enums on key index as well :/
+				 // we are not just looking for status here, but also replacing the whole array, because of obscure bug. 
 				  if (property_exists($data, 'Status'))
 					{
 						 if ($status === false)

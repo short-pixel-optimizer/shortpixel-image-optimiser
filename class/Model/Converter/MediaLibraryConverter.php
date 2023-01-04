@@ -14,7 +14,7 @@ abstract class MediaLibraryConverter extends Converter
 		 $meta = wp_get_attachment_metadata($id); // reset the metadata because we are on the hook.
 		 return $meta;
 	}
-	
+
 	protected function setupReplacer()
 	{
 		$this->replacer = new Replacer();
@@ -56,6 +56,13 @@ abstract class MediaLibraryConverter extends Converter
 			$params = wp_parse_args($params, $defaults);
 
 			$newFile = $this->newFile;
+
+			if (! is_object($newFile))
+			{
+				 Log::addError('Update metadata failed. NewFile not properly set', $newFile);
+				 return false;
+			}
+
 			$attach_id = $this->imageModel->get('id');
 
 			$WPMLduplicates = $this->imageModel->getWPMLDuplicates();

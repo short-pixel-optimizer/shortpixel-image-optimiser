@@ -6,6 +6,7 @@ use ShortPixel\Controller\Queue\Queue as Queue;
 
 use \ShortPixel\ShortPixelPng2Jpg as ShortPixelPng2Jpg;
 use ShortPixel\Model\Converter\Converter as Converter;
+use ShortPixel\Model\Converter\ApiConverter as ApiConverter;
 
 use ShortPixel\Model\AccessModel as AccessModel;
 
@@ -94,6 +95,39 @@ class AdminController extends \ShortPixel\Controller
 		public function preventImageHook($id)
 		{
 			  self::$preventUploadHook[] = $id;
+		}
+
+		// Placeholder function for heic and such, return placeholder URL in image to help w/ database replacements after conversion.
+		public function checkPlaceHolder($url, $post_id)
+		{
+			 if (false === strpos($url, 'heic'))
+			 	 return $url;
+
+			$extension = pathinfo($url,  PATHINFO_EXTENSION);
+			if (false === in_array($extension, ApiConverter::CONVERTABLE_EXTENSIONS))
+			{
+				 return $url;
+			}
+
+			$fs = \wpSPIO()->filesystem();
+			$mediaImage = $fs->getImage($post_id, 'media');
+
+			if (false === $mediaImage)
+			{
+				 return $url;
+			}
+Log::addTemp('URL', $url);
+Log::addTemp('CVMETA', $mediaImage->getMeta()->convertMeta());
+			if (false === $mediaImage->getMeta()->convertMeta()->hasPlaceholder())
+			{
+				return $url;
+			}
+
+Log::addTemp('URL2', $url);
+			$url = str_replace($extension, 'jpg', $url);
+			Log::addTemp('URL3', $url);
+
+			return $url;
 		}
 
 		public function processQueueHook($args = array())

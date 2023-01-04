@@ -148,8 +148,11 @@ class ShortPixelPlugin {
 		// Handle for EMR
 		add_action( 'wp_handle_replace', array( $admin, 'handleReplaceHook' ) );
 
-			// Action / hook for who wants to use CRON. Please refer to manual / support to prevent loss of credits.
-			add_action( 'shortpixel/hook/processqueue', array( $admin, 'processQueueHook' ) );
+		// Action / hook for who wants to use CRON. Please refer to manual / support to prevent loss of credits.
+		add_action( 'shortpixel/hook/processqueue', array( $admin, 'processQueueHook' ) );
+
+		// Placeholder function for heic and such, return placeholder URL in image to help w/ database replacements after conversion.
+		add_filter('wp_get_attachment_url', array($admin, 'checkPlaceHolder'), 10, 2);
 
 		if ( $this->env()->is_autoprocess ) {
 			// compat filter to shortcircuit this in cases.  (see external - visualcomposer)

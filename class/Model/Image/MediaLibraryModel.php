@@ -221,7 +221,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
      $url = $this->fs()->checkURL(wp_get_attachment_url($this->id));
 		 if (true === $this->getMeta()->convertMeta()->hasPlaceHolder())
 		 {
-			  $url = str_replace($this->getExtension(), $this->getMeta()->convertMeta()->getFileFormat(), $url); 
+			  $extension = pathinfo($url, PATHINFO_EXTENSION);
+			  $url = str_replace($extension, $this->getMeta()->convertMeta()->getFileFormat(), $url);
 		 }
 
 		 return $url;
@@ -1322,7 +1323,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 					// Bail out with setting flag, so not to repeat.
 				 $this->getMeta()->convertMeta()->setTried($args['checksum']);
-				 $this->getMeta()->convertMeta()->setError(self::ERROR_BACKUPERROR);
+				 $this->getMeta()->convertMeta()->setError(Converter::ERROR_BACKUPERROR);
 
 				 $this->saveMeta();
 

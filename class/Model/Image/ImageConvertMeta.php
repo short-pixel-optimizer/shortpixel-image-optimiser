@@ -7,7 +7,7 @@ class ImageConvertMeta
 
 	 protected $fileFormat; // png / heic etc
 	 protected $isConverted = false;
-	 protected $placeholder;
+	 protected $placeholder = false;
 	// protected $doConversion = false;
 	 protected $triedConversion = false;
 	 protected $errorReason = false;
@@ -89,7 +89,7 @@ class ImageConvertMeta
 
 	 public function hasPlaceHolder()
 	 {
-		  return $this->placeholder; 
+		  return $this->placeholder;
 	 }
 
 	 public function fromClass($object)

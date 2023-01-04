@@ -47,6 +47,12 @@ class FileModel extends \ShortPixel\Model
   {
 		$this->rawfullpath = $path;
 
+		if (is_null($path))
+		{
+			 Log::addWarn('FileModel: Loading null path! ');
+			 return false;
+		}
+
 		if (strlen($path) > 0)
 			$path = trim($path);
 

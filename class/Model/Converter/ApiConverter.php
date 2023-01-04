@@ -8,6 +8,9 @@ use ShortPixel\Helper\UtilHelper as UtilHelper;
 class ApiConverter extends MediaLibraryConverter
 {
 
+	const CONVERTABLE_EXTENSIONS = array( 'heic');
+
+
 	protected $requestAPIthumbnails = true;
 
 
@@ -15,7 +18,7 @@ class ApiConverter extends MediaLibraryConverter
 		{
 			 $extension = $this->imageModel->getExtension();
 
-			 if (in_array($extension, self::CONVERTABLE_EXTENSIONS) && $extension !== 'png')
+			 if (in_array($extension, static::CONVERTABLE_EXTENSIONS) && $extension !== 'png')
 			 {
 				  return true;
 			 }
@@ -57,10 +60,10 @@ class ApiConverter extends MediaLibraryConverter
 					$this->imageModel->saveMeta();
 
 					$this->setTarget($destinationFile);
-					$params = array('success' => true, 'generate_metadata' => false);
-					$this->updateMetaData($params);
+				//	$params = array('success' => true, 'generate_metadata' => false);
+				//	$this->updateMetaData($params);
 
-					$fs->flushImage($this->imageModel->get('id'));
+					$fs->flushImage($this->imageModel);
 
 					if (true === $args['runReplacer'])
 					{
@@ -72,6 +75,7 @@ class ApiConverter extends MediaLibraryConverter
 					return false;
 				}
 
+Log::addTemp('PlaceHolder Created', $this->imageModel);
 				return true;
 		}
 
@@ -115,44 +119,37 @@ class ApiConverter extends MediaLibraryConverter
 			$this->setupReplacer();
 			$fs = \wpSPIO()->filesystem();
 
-			if (true === $this->imageModel->getMeta()->convertMeta()->hasPlaceHolder())
-			{
-				 $this->imageModel->getMeta()->convertMeta()->setPlaceHolder(false);
-
-				 $attach_id = $this->imageModel->get('id');
-				 $placeHolderFile = $fs->getFile($this->imageModel->getFileDir() . $this->imageModel->getFileBase() . '.' . $this->imageModel->getMeta()->convertMeta()->getFileFormat());
-
-				 $this->newFile = $placeHolderFile;
-
-				 $this->imageModel->delete();
-				 $this->imageModel->saveMeta();
-
-				 $params = array('success' => true, 'generate_metadata' => false);
-				 $this->updateMetaData($params);
-
-				 $fs->flushImage($this->imageModel);
-
-				 $this->imageModel = $fs->getMediaImage($attach_id);
-				 // Might delete the main file ( placeholder )
-
-
-			}
-
-			// @todo  Move heic to JPG via uniqueFile and such
-			$replacementPath = $this->getReplacementPath();
-			if (false === $replacementPath)
-			{
-				Log::addWarn('ApiConverter replacement path failed');
-				$this->imageModel->getMeta()->convertMeta()->setError(self::ERROR_PATHFAIL);
-
-				return false; // @todo Add ResponseController something here.
-			}
-
-			// backup basically.
+			// Backup basically. Do this first.
 			$prepared = $this->imageModel->conversionPrepare();
 			if (false === $prepared)
 			{
 				 return false;
+			}
+
+			// If -sigh- file has a placeholder, then do something with that.
+			if (true === $this->imageModel->getMeta()->convertMeta()->hasPlaceHolder())
+			{
+				 $this->imageModel->getMeta()->convertMeta()->setPlaceHolder(false);
+
+		//		 $attach_id = $this->imageModel->get('id');
+				 $placeHolderFile = $fs->getFile($this->imageModel->getFileDir() . $this->imageModel->getFileBase() . '.' . $this->imageModel->getMeta()->convertMeta()->getFileFormat());
+
+				 //$this->newFile = $placeHolderFile;
+				 $this->source_url = $fs->pathToUrl($placeHolderFile);
+				 $this->replacer->setSource($this->source_url);
+
+//				 $this->imageModel->delete(); // Remove the HEIC file
+//				 $this->imageModel->saveMeta();
+
+				 $placeHolderFile->delete();
+
+				// $params = array('success' => true, 'generate_metadata' => false);
+				// $this->updateMetaData($params);
+
+	//			 $fs->flushImage($this->imageModel);
+
+	//			 $this->imageModel = $fs->getMediaImage($attach_id);
+
 			}
 
 			if (isset($optimizeData['files']) && isset($optimizeData['data']))
@@ -174,27 +171,25 @@ class ApiConverter extends MediaLibraryConverter
 				 return false;
 			}
 
-
 			$tempFile = $fs->getFile($mainFile['image']['file']);
 
-			$replacementFile = $fs->getFile($replacementPath);
-
+			$replacementFile = $fs->getFile($this->imageModel->getFileDir() . $this->imageModel->getFileBase() . '.jpg');
 			$res = $tempFile->copy($replacementFile);
 
 			if (true === $res)
 			{
-				 $this->newFile = $fs->getFile($replacementPath);
+				 $this->newFile = $replacementFile;
 				 $tempFile->delete();
 
 				 $params = array('success' => true);
 				 $this->updateMetaData($params);
 
 				 $result = true;
-				 /*
-				 if (true === $args['runReplacer'])
-				 {
+
+				// if (true === $args['runReplacer'])
+			//	 {
 					 $result = $this->replacer->replace();
-				 } */
+			//	 }
 
 				 // Conversion done, but backup results.
 				 $this->imageModel->conversionSuccess(array('omit_backup' => false));
