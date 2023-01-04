@@ -869,23 +869,27 @@ class OptimizeController
 
 					 if (isset($item->files[$imageName]['image']) && file_exists($item->files[$imageName]['image']))
 					 {
-						 //$imageArray['image']['file'] = $item->files[$imageName]['image']; //already done, supposed.
 						  // All good.
 					 }
 					 elseif ($image['image']['status'] == ApiController::STATUS_SUCCESS)
 					 {
 						  $tempFile = $downloadHelper->downloadFile($image['image']['url']);
-							$item->files[$imageName]['image'] = $tempFile->getFullPath();
-							$imageArray[$imageName]['image']['file'] = $tempFile->getFullPath();
+							if (is_object($tempFile))
+							{
+								$item->files[$imageName]['image'] = $tempFile->getFullPath();
+								$imageArray[$imageName]['image']['file'] = $tempFile->getFullPath();
+							}
 					 }
 
 					 if (! isset($item->files[$imageName]['webp']) &&  $image['webp']['status'] == ApiController::STATUS_SUCCESS)
 					 {
 						 $tempFile = $downloadHelper->downloadFile($image['webp']['url']);
-						 $item->files[$imageName]['webp'] = $tempFile->getFullPath();
-						 $imageArray[$imageName]['webp']['file'] = $tempFile->getFullPath();
-
-					 }
+						 if (is_object($tempFile))
+						 {
+						 		$item->files[$imageName]['webp'] = $tempFile->getFullPath();
+						 		$imageArray[$imageName]['webp']['file'] = $tempFile->getFullPath();
+					 		}
+				 	 }
 					 elseif ($image['webp']['status'] == ApiController::STATUS_OPTIMIZED_BIGGER) {
 					 		$item->files[$imageName]['webp'] = ApiController::STATUS_OPTIMIZED_BIGGER;
 
@@ -894,11 +898,16 @@ class OptimizeController
 					 if (! isset($item->files[$imageName]['avif']) && $image['avif']['status'] == ApiController::STATUS_SUCCESS)
 					 {
 						 $tempFile = $downloadHelper->downloadFile($image['avif']['url']);
-						 $item->files[$imageName]['avif'] = $tempFile->getFullPath();
-						 $imageArray[$imageName]['avif']['file'] = $tempFile->getFullPath();
+						 if (is_object($tempFile))
+						 {
+						 		$item->files[$imageName]['avif'] = $tempFile->getFullPath();
+						 		$imageArray[$imageName]['avif']['file'] = $tempFile->getFullPath();
+						 }
+					 }
+					 elseif ($image['avif']['status'] == ApiController::STATUS_OPTIMIZED_BIGGER) {
+					 		$item->files[$imageName]['avif'] = ApiController::STATUS_OPTIMIZED_BIGGER;
 
 					 }
-
 				}
 
 				$successData['files']  = $imageArray;

@@ -2,6 +2,8 @@
 namespace ShortPixel\Helper;
 
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\Controller\ResponseController as ResponseController;
+
 
 class DownloadHelper
 {
@@ -48,9 +50,17 @@ class DownloadHelper
 
 					if(is_wp_error( $tempFile ))
 		      { //try to switch the default protocol
-		          $fileURL = $this->setPreferredProtocol(urldecode($optimizedUrl), true); //force recheck of the protocol
+		          $fileURL = $this->setPreferredProtocol(urldecode($fileURL), true); //force recheck of the protocol
 		          $tempFile = \download_url($fileURL, $downloadTimeout);
 		      }
+
+					if (is_wp_error($tempFile))
+					{
+						Log::addError('Failed to download File', $tempFile);
+						ResponseController::addData('is_error', true);
+						Responsecontroller::addData('message', $tempFile->get_error_message());
+						return false;
+					}
 
 					$fs = \wpSPIO()->filesystem();
 					$file = $fs->getFile($tempFile);
