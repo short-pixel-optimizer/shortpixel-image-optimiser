@@ -576,8 +576,6 @@ class ApiController
 							$image['webp']['status'] = self::STATUS_SUCCESS;
 						}
 				}
-
-
 			}
 
 			if (property_exists($fileData, "AVIF" . $fileType))

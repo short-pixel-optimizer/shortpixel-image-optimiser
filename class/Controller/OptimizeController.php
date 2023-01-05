@@ -633,6 +633,7 @@ class OptimizeController
 					 if (count($result->files) > 0 )
            {
               //$optimizeResult = $imageItem->handleOptimized($result->files); // returns boolean or null
+
 							$status = $this->handleOptimizedItem($q, $item, $imageItem, $result->files);
 
               $item->result->improvements = $imageItem->getImprovements();
