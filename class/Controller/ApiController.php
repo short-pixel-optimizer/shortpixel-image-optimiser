@@ -545,6 +545,12 @@ class ApiController
 			$image['image']['url'] = $fileData->$fileType;
 			$image['image']['optimizedSize']  = intval($fileData->$fileSize);
 
+			// Don't download if the originalSize / OptimizedSize is the same ( same image ) . This can be non-opt result or it was not asked to be optimized( webp/avif only job i.e. )
+			if ($image['image']['originalSize'] == $image['image']['optimizedSize'])
+			{
+				$image['image']['status'] = self::STATUS_UNCHANGED;
+			}
+
 			$checkFileSize = intval($fileData->$fileSize); // Size of optimized image to check against Avif/Webp
 
 			if (false === $this->checkFileSizeMargin($originalFileSize, $checkFileSize))
