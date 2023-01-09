@@ -33,11 +33,12 @@ class NextGenController
     {
       add_action('ngg_update_addgallery_page', array( $this, 'addNextGenGalleriesToCustom'));
       add_action('ngg_added_new_image', array($this,'handleImageUpload'));
-      add_action('ngg_delete_image', array($this, 'OnDeleteImage'),10, 2); // this works only on single images!
     }
 
     if ($this->has_nextgen())
     {
+			add_action('ngg_delete_image', array($this, 'OnDeleteImage'),10, 2); // this works only on single images!
+
       add_action('shortpixel/othermedia/folder/load', array($this, 'loadFolder'), 10, 2);
 			add_action('shortpixel/othermedia/addfiles', array($this, 'checkAddFiles'), 10, 3);
 
@@ -301,6 +302,10 @@ class NextGenController
   {
       $image = $this->getNGImageByID($nggId);
       $path  = $this->getImageAbspath($image);
+
+			$otherMediaController = OtherMediaController::getInstance();
+			$mediaItem = $otherMediaController->getCustomImageByPath($path);
+			$mediaItem->onDelete();
   }
 
   public function updateImageSize($nggId, $path) {

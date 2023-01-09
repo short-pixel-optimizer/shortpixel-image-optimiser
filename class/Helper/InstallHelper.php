@@ -28,7 +28,7 @@ class InstallHelper
 
       self::checkTables();
 
-      AdminNoticesController::resetAllNotices();
+      AdminNoticesController::resetOldNotices();
       \WPShortPixelSettings::onActivate();
 
 			$settings->currentVersion = SHORTPIXEL_IMAGE_OPTIMISER_VERSION;

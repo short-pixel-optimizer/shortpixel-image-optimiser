@@ -43,7 +43,6 @@ class ApiConverter extends MediaLibraryConverter
 
 			$args = wp_parse_args($args, $defaults);
 
-				Log::addTemp('CONVERSION OF API FORMAT HERE' );
 				$this->setupReplacer();
 
 				$fs = \wpSPIO()->filesystem();
@@ -75,7 +74,6 @@ class ApiConverter extends MediaLibraryConverter
 					return false;
 				}
 
-Log::addTemp('PlaceHolder Created', $this->imageModel);
 				return true;
 		}
 

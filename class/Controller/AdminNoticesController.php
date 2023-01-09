@@ -30,9 +30,10 @@ class AdminNoticesController extends \ShortPixel\Controller
         'ApiNoticeRepeat',
         'ApiNoticeRepeatLong',
         'NextgenNotice',
-        'SmartcropNotice',
+   //     'SmartcropNotice',
         'LegacyNotice',
-        'ListviewNotice'
+        'ListviewNotice',
+				'HeicFeatureNotice',
     );
     protected $adminNotices; // Models
 
@@ -67,6 +68,13 @@ class AdminNoticesController extends \ShortPixel\Controller
     {
         Notices::resetNotices();
     }
+
+		// Notices no longer in use.
+		public static function resetOldNotices()
+		{
+			Notices::removeNoticeByID('MSG_FEATURE_SMARTCROP');
+
+		}
 
     /** Triggered when plugin is activated */
     public static function resetCompatNotice()

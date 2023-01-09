@@ -69,7 +69,6 @@ class AdminController extends \ShortPixel\Controller
 
 				if ($mediaItem->isProcessable())
 				{
-					Log::addTemp('METADATYA', $meta);
 					$converter = Converter::getConverter($mediaItem, true);
 					if (is_object($converter) && $converter->isConvertable())
 					{
@@ -88,7 +87,6 @@ class AdminController extends \ShortPixel\Controller
 				else {
 					Log::addWarn('Passed mediaItem is not processable', $mediaItem);
 				}
-				Log::addTemp('returning meta', $meta);
         return $meta; // It's a filter, otherwise no thumbs
     }
 
@@ -116,16 +114,13 @@ class AdminController extends \ShortPixel\Controller
 			{
 				 return $url;
 			}
-Log::addTemp('URL', $url);
-Log::addTemp('CVMETA', $mediaImage->getMeta()->convertMeta());
+
 			if (false === $mediaImage->getMeta()->convertMeta()->hasPlaceholder())
 			{
 				return $url;
 			}
 
-Log::addTemp('URL2', $url);
 			$url = str_replace($extension, 'jpg', $url);
-			Log::addTemp('URL3', $url);
 
 			return $url;
 		}
@@ -235,7 +230,7 @@ Log::addTemp('URL2', $url);
         return $links;
     }
 
-    /** If webp generating functionality is on, give mime-permissions for webp extension
+    /** Allow certain mime-types if we will be using those.
     *
     */
     public function addMimes($mimes)
@@ -251,6 +246,17 @@ Log::addTemp('URL2', $url);
             if (! isset($mimes['avif']))
               $mimes['avif'] = 'image/avif';
         }
+
+				if (! isset($mimes['heic']))
+				{
+					$mimes['heic'] = 'image/heic';
+				}
+
+				if (! isset($mimes['heif']))
+				{
+					$mimes['heif'] = 'image/heif';
+				}
+
         return $mimes;
     }
 
