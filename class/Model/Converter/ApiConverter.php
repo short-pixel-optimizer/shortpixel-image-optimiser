@@ -47,7 +47,7 @@ class ApiConverter extends MediaLibraryConverter
 
 				$fs = \wpSPIO()->filesystem();
 
-				$placeholderFile = $fs->getFile(\wpSPIO()->plugin_path('res/img/fileformat-placeholder.jpg'));
+				$placeholderFile = $fs->getFile(\wpSPIO()->plugin_path('res/img/fileformat-heic-placeholder.jpg'));
 				$destinationFile = $fs->getFile($this->imageModel->getFileDir() . $this->imageModel->getFileBase() . '.jpg');
 
 				$copyok = $placeholderFile->copy($destinationFile);

@@ -49,8 +49,9 @@ class DirectoryModel extends \ShortPixel\Model
         $this->exists = true;
       }
 
-			//$path = wp_normalize_path($path);
-			$path = UtilHelper::spNormalizePath($path);
+			// On virtual situation this would remove the slashes on :// , causing issues with offload et al.
+			if (false === $this->is_virtual)
+			 	$path = UtilHelper::spNormalizePath($path);
 
       if (! $this->is_virtual() && ! is_dir($path) ) // path is wrong, *or* simply doesn't exist.
       {

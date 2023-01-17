@@ -4,6 +4,8 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notice;
 
 use ShortPixel\Controller\QuotaController as QuotaController;
+use ShortPixel\Controller\ResponseController as ResponseController;
+
 
 // @integration WP Offload Media Lite
 class wpOffload
@@ -47,6 +49,10 @@ class wpOffload
 			{
 				 $this->useHandlers = true; // we have a new version
 			}
+			else {
+				Notice::addWarning(__('Your S3-Offload plugin version doesn\'t seem to be compatible. Please upgrade the S3-Offload plugin', 'shortpixel-image-optimiser'), true);
+				return false;
+			}
 
       $this->as3cf = $as3cf;
       $this->active = true;
@@ -67,27 +73,24 @@ class wpOffload
   //    $provider = $this->as3cf->get_provider();
       add_action('shortpixel/image/optimised', array($this, 'image_upload'), 10);
       add_action('shortpixel/image/after_restore', array($this, 'image_restore'), 10, 3); // hit this when restoring.
+			add_action('shortpixel-thumbnails-before-regenerate', array($this, 'remove_remote'), 10);
 
-      add_action('shortpixel_restore_after_pathget', array($this, 'remove_remote')); // not optimal -> has to do w/ doRestore and when URL/PATH is available when not on server .
+     // add_action('shortpixel_restore_after_pathget', array($this, 'remove_remote')); // not optimal -> has to do w/ doRestore and when URL/PATH is available when not on server .
 
       // Seems this better served by _after? If it fails, it's removed from remote w/o filechange.
     //  add_action('shortpixel/image/convertpng2jpg_before', array($this, 'remove_remote'));
       add_filter('as3cf_attachment_file_paths', array($this, 'add_webp_paths'));
 
-			if ($this->useHandlers)
-			{
+
 			//	add_filter('as3cf_remove_source_files_from_provider', array($this, 'remove_webp_paths'), 10);
 				add_action('shortpixel/image/convertpng2jpg_success', array($this, 'image_converted'), 10);
 				add_filter('as3cf_remove_source_files_from_provider', array($this, 'remove_webp_paths'));
 
-			}
-			else {
-      	add_filter('as3cf_remove_attachment_paths', array($this, 'remove_webp_paths'));
-				add_action('shortpixel/image/convertpng2jpg_after', array($this, 'image_converted_legacy'), 10, 2);
-			}
 
-      add_filter('shortpixel/restore/targetfile', array($this, 'returnOriginalFile'),10,2);
-      add_filter('as3cf_pre_update_attachment_metadata', array($this, 'preventInitialUpload'), 10,4);
+    //  add_filter('shortpixel/restore/targetfile', array($this, 'returnOriginalFile'),10,2);
+    //  add_filter('as3cf_pre_update_attachment_metadata', array($this, 'preventInitialUpload'), 10,4);
+		 add_filter('as3cf_pre_handle_item_upload', array($this, 'preventInitialUploadHandler'), 10,3);
+
 
       //add_filter('shortpixel_get_attached_file', array($this, 'get_raw_attached_file'),10, 2);
     //  add_filter('shortpixel_get_original_image_path', array($this, 'get_raw_original_path'), 10, 2);
@@ -127,8 +130,12 @@ class wpOffload
     */
     public function image_restore($mediaItem, $id, $clean)
     {
-      if (! $clean)
+
+      if (false === $clean)
+			{
+				Log::addDebug('Restore was not clean ' . $id);
         return false; // don't do anything until we have restored all ( for now )
+			}
 
       $settings = \wpSPIO()->settings();
 
@@ -147,38 +154,27 @@ class wpOffload
 
     public function remove_remote($id)
     {
-      $item = $this->getItemById($id); // MediaItem is AS3CF Object
-      if ($item === false)
+      $a3cfItem = $this->getItemById($id); // MediaItem is AS3CF Object
+      if ($a3cfItem === false)
       {
         Log::addDebug('S3-Offload MediaItem not remote - ' . $id);
         return false;
       }
 
-			// Backwards compat.
-			if ($this->useHandlers)
-			{
 				$remove = \DeliciousBrains\WP_Offload_Media\Items\Remove_Provider_Handler::get_item_handler_key_name();
 				$itemHandler = $this->as3cf->get_item_handler($remove);
-			//	$files = $a3cfItem->offloaded_files();
-				$result = $itemHandler->handle($item, array( 'verify_exists_on_local' => false)); //handle it then.
-			//	$result = $itemHandler->handle($item, array( 'verify_exists_on_local' => false, 'offloaded_files' => $files )); //handle it then.
 
-			}
-			else // compat.
-			{
-					$this->as3cf->remove_attachment_files_from_provider($id, $item);
-			}
-
+				$result = $itemHandler->handle($a3cfItem, array( 'verify_exists_on_local' => false)); //handle it then.
     }
 
 
     /** @return Returns S3Ofload MediaItem, or false when this does not exist */
-    protected function getItemById($id)
+    protected function getItemById($id, $create = false)
     {
 				$class = $this->getMediaClass();
 			  $mediaItem = $class::get_by_source_id($id);
 
-				if ($this->useHandlers && $mediaItem === false)
+				if (true === $create && $mediaItem === false)
 				{
 					 $mediaItem = $class::create_from_source_id($id);
 				}
@@ -239,8 +235,17 @@ class wpOffload
 			if (false === $source_id) // check on the raw url.
 			{
       	$class = $this->getMediaClass();
+
+				$parsedUrl = parse_url($url);
+
+				if (! isset($parsedUrl['scheme']) || ! in_array($parsedUrl['scheme'], array('http','https')))
+				{
+					 $url = 'http://' . $url; //str_replace($parsedUrl['scheme'], 'https', $url);
+				}
+
       	$source = $class::get_item_source_by_remote_url($url);
 				$source_id = isset($source['id']) ? intval($source['id']) : false;
+
 			}
 
 			if (false === $source_id) // check now via the thumbnail hocus.
@@ -341,120 +346,26 @@ class wpOffload
     {
         $fs = \wpSPIO()->fileSystem();
 
-				// Do nothing if not successfull
-				if ($params['success'] === false)
-					return;
-
 				$id = $mediaItem->get('id');
 				$this->remove_remote($id);
-
-				$item = $this->getItemById($id, $mediaItem);
-				$item->delete();
-
 				$this->image_upload($mediaItem);
-				return;
-        // delete the old file
-       // $item = $this->getItemById($id);
-       // if ($mediaItem === false) // mediaItem seems not present. Probably not a remote file
-       //   return;
 
-        //$providerFile = $fs->getFile($providerSourcePath);
-        //$newFile = $fs->getFile($this->returnOriginalFile(null, $id));
-
-
-        // convert
-        if ($providerFile->getExtension() !== $newFile->getExtension())
-        {
-          $data = $mediaItem->key_values(true);
-          $record_id = $data['id'];
-
-          $data['path'] = str_replace($providerFile->getFileName(), $newFile->getFileName(), $data['path']);
-
-
-					//$provider, $region, $bucket, $path, $is_private, $source_id, $source_path, $original_filename = null, $private_sizes = array(), $id = null
-					$class = $this->getMediaClass();
-          $newItem = new $class($data['provider'], $data['region'], $data['bucket'], $data['path'], $data['is_private'], $data['source_id'], $data['source_path'], $newFile->getFileName(), $data['extra_info'], $record_id );
-
-          $newItem->save();
-
-            Log::addDebug('S3Offload - Uploading converted file ');
-        }
-
-        // upload
-        $this->image_upload($mediaItem); // delete and reupload
     }
 
-
-    public function image_converted_legacy($id)
-    {
-        $fs = \wpSPIO()->fileSystem();
-
-        // Don't offload when setting is off.
-        // delete the old file.
-      //  $provider_object = $this->as3cf->get_attachment_provider_info($id);
-
-  //      $this->as3cf->remove_attachment_files_from_provider($id, $provider_object);
-        // get some new ones.
-
-        // delete the old file
-        $item = $this->getItemById($id);
-        if ($item === false) // mediaItem seems not present. Probably not a remote file
-          return;
-
-        $this->as3cf->remove_attachment_files_from_provider($id, $item);
-        $providerSourcePath = $item->source_path();
-
-        //$providerFile = $fs->getFile($provider_object['key']);
-        $providerFile = $fs->getFile($providerSourcePath);
-        $newFile = $fs->getFile($this->returnOriginalFile(null, $id));
-
-        // convert
-        //$newfilemeta = $provider_object['key'];
-        if ($providerFile->getExtension() !== $newFile->getExtension())
-        {
-          //  $newfilemeta = str_replace($providerFile->getFileName(), $newFile->getFileName(), $newfilemeta);
-          $data = $item->key_values(true);
-          $record_id = $data['id'];
-/*          $data['path']
-          $data['original_path']
-          $data['original_source_path']
-          $data['source_path'] */
-
-          $data['path'] = str_replace($providerFile->getFileName(), $newFile->getFileName(), $data['path']);
-          /*$data['original_path'] = str_replace($providerFile->getFileName(), $newFile->getFileName(), $data['original_path']);
-          $data['source_path'] = str_replace($providerFile->getFileName(), $newFile->getFileName(), $data['source_path']);
-          $data['original_source_path'] = str_replace($providerFile->getFileName(), $newFile->getFileName(), $data['original_source_path']);
-*/
-
-
-//$provider, $region, $bucket, $path, $is_private, $source_id, $source_path, $original_filename = null, $private_sizes = array(), $id = null
-          $newItem = new $this->itemClassName($data['provider'], $data['region'], $data['bucket'], $data['path'], $data['is_private'], $data['source_id'], $data['source_path'], $newFile->getFileName(), $data['extra_info'], $record_id );
-
-          $newItem->save();
-
-            Log::addDebug('S3Offload - Uploading converted file ');
-        }
-
-				$mediaItem = $fs->getImage($post_id, 'media');
-
-        // upload
-        $this->image_upload($mediaItem); // delete and reupload
-    }
-
-
-    public function image_upload($imageItem)
+    public function image_upload($mediaLibraryObject)
     {
         if (! $this->offloading)
-          return false;
-
+				{
+				  return false;
+				}
 				// Only medialibrary offloading supported.
-				if ('media' !== $imageItem->get('type') )
+				if ('media' !== $mediaLibraryObject->get('type') )
 				{
 					 return false;
 				}
 
-				$id = $imageItem->get('id');
-        $item = $this->getItemById($id);
+				$id = $mediaLibraryObject->get('id');
+        $item = $this->getItemById($id, true);
 
         if ( $item === false && ! $this->as3cf->get_setting( 'copy-to-s3' ) ) {
           // abort if not already uploaded to provider and the copy setting is off
@@ -462,12 +373,11 @@ class wpOffload
           return false;
         }
 
-        if ($this->useHandlers)
-        {
+ 					// Add Web/Avifs back under new method.
+					$this->shouldPrevent = false;
 
-					// Add Web/Avifs back under new method.
 
-					$fullPaths = $item->full_source_paths();
+				/*	$fullPaths = $item->full_source_paths();
 					$extra_info = $item->extra_info();
 
 					$file_paths = $this->add_webp_paths($fullPaths);
@@ -494,15 +404,27 @@ class wpOffload
 						 $item->set_extra_info($extra_info);
 					}
 
+					$offloaded_files = $item->offloaded_files();
 					// This should load the A3cf UploadHandler
 					$upload = \DeliciousBrains\WP_Offload_Media\Items\Upload_Handler::get_item_handler_key_name();
-          $itemHandler = $this->as3cf->get_item_handler($upload);
+          $itemHandler = $this->as3cf->get_item_handler($upload, array( 'offloaded_files' => $offloaded_files ));
 
           $result = $itemHandler->handle($item); //handle it then.
-        }
-        else {
-					   $this->as3cf->upload_attachment($id);
-        }
+
+					if (is_wp_error($result))
+					{
+						 ResponseController::addData('is_error', true);
+						 ResponseController::addData('message', 'Offload failed, please checks debug logs when available');
+						 Log::addError('Failed offload result', $result);
+					}
+					*/
+
+					// The Handler doesn't work properly /w local removal if not the exact correct files are passed (?) . Offload does this probably via update metadata function, so let them sort it out with this . (until it breaks)
+					$meta = wp_get_attachment_metadata($id);
+					wp_update_attachment_metadata($id, $meta);
+
+					$this->shouldPrevent = true;
+
     }
 
     /** This function will cut out the initial upload to S3Offload and rely solely on the image_upload function provided here, after shortpixel optimize.
@@ -511,6 +433,7 @@ class wpOffload
     */
     public function preventInitialUpload($bool, $data, $post_id, $old_provider_object)
     {
+
         $fs = \wpSPIO()->filesystem();
 				$settings = \WPSPIO()->settings();
 
@@ -539,12 +462,56 @@ class wpOffload
 							 return false;
 						}
 
-            Log::addDebug('Preventing Initial Upload', $post_id);
+            Log::addDebug('Preventing Initial Upload: ' . $post_id);
             return true;
           }
         }
         return $bool;
     }
+
+		/** This function will cut out the initial upload to S3Offload . This cuts it off in the new handle area, leaving other updating in tact.
+		*/
+		public function preventInitialUploadHandler($bool, $as3cf_item, $options)
+		{
+
+				$fs = \wpSPIO()->filesystem();
+				$settings = \WPSPIO()->settings();
+
+				$post_id = $as3cf_item->source_id();
+
+				$quotaController = quotaController::getInstance();
+				if ($quotaController->hasQuota() === false)
+				{
+					return false;
+				}
+
+				if (! $this->offloading)
+					return false;
+
+				if ($this->shouldPrevent === false) // if false is returned, it's NOT prevented, so on-going.
+						return false;
+
+				if (\wpSPIO()->env()->is_autoprocess)
+				{
+					// Don't prevent whaffever if shortpixel is already done. This can be caused by plugins doing a metadata update, we don't care then.
+					$mediaItem = $fs->getImage($post_id, 'media');
+					if ($mediaItem && ! $mediaItem->isOptimized())
+					{
+
+						$image_file = $mediaItem->getFileName();
+						if ($mediaItem->getExtension() == 'pdf' && ! $settings->optimizePdfs  )
+						{
+							 Log::addDebug('S3 Prevent Initial Upload detected PDF, which will not be optimized', $post_id);
+							 return false;
+						}
+
+						Log::addDebug('Preventing Initial Upload: ' . $post_id);
+						$error = new \WP_Error( 'upload-prevented', 'No offfloading at this time, thanks' );
+						return $error;
+					}
+				}
+				return $bool;
+		}
 
     private function getWebpPaths($paths, $check_exists = true)
     {
@@ -600,7 +567,6 @@ class wpOffload
 				 else {
 				 	 $newPaths[$size . '_avif'] = $avifformat;
 				 }
-
       }
 
       return $newPaths;

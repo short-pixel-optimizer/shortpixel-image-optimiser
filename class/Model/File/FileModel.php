@@ -59,9 +59,9 @@ class FileModel extends \ShortPixel\Model
 		$this->fullpath = $path;
 
     $fs = \wpSPIO()->filesystem();
+
     if ($fs->pathIsUrl($path)) // Asap check for URL's to prevent remote wrappers from running.
     {
-
       $this->UrlToPath($path);
     }
   }
@@ -246,9 +246,15 @@ class FileModel extends \ShortPixel\Model
 
   public function getFileSize()
   {
-    if ($this->exists())
+    if ($this->exists() && false === $this->is_virtual() )
+		{
       return filesize($this->fullpath);
-    else
+		}
+    elseif (true === $this->is_virtual())
+		{
+			 return -1;
+		}
+		else
       return 0;
   }
 
@@ -491,6 +497,7 @@ class FileModel extends \ShortPixel\Model
     if ($fs->pathIsUrl($path))
     {
       $path = $this->UrlToPath($path);
+
     }
 
     if ($path === false) // don't process further
@@ -551,9 +558,9 @@ class FileModel extends \ShortPixel\Model
        $abspath =  \wpSPIO()->filesystem()->getWPAbsPath();
        $path = str_replace($site_url, rtrim($abspath->getPath(),'/'), $url);
 
-
        if (! $fs->pathIsUrl($path)) // test again.
        {
+
         return $path;
        }
      }

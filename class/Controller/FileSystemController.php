@@ -421,6 +421,7 @@ Class FileSystemController extends \ShortPixel\Controller
 
     }
 
+		// @todo Deprecate this, move some functs perhaps to DownloadHelper.
     public function downloadFile($url, $destinationPath)
     {
       $downloadTimeout = max(SHORTPIXEL_MAX_EXECUTION_TIME - 10, 15);

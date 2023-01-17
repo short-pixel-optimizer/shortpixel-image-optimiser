@@ -46,13 +46,25 @@ class DownloadHelper
 					$downloadTimeout = max(ini_get('max_execution_time') - 10, 15);
 					$tempFile = \download_url($fileURL, $downloadTimeout);
 
-		      Log::addInfo('Downloading ' . $fileURL . ' to : '.json_encode($tempFile));
+		      Log::addInfo(' Download ' . $fileURL . ' to : '. json_encode($tempFile));
 
 					if(is_wp_error( $tempFile ))
 		      { //try to switch the default protocol
 		          $fileURL = $this->setPreferredProtocol(urldecode($fileURL), true); //force recheck of the protocol
 		          $tempFile = \download_url($fileURL, $downloadTimeout);
 		      }
+
+					if (is_wp_error($tempFile))
+					{
+						$tmpfname = tempnam(sys_get_temp_dir(), 'spiotmp');
+
+						$args_for_get = array(
+							'stream' => true,
+							'filename' => $tmpfname,
+						);
+
+						$tempFile = wp_remote_get( $url, $args_for_get );
+					}
 
 					if (is_wp_error($tempFile))
 					{

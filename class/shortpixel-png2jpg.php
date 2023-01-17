@@ -396,6 +396,7 @@ class ShortPixelPng2Jpg {
 				 	}
 		}
 
+/*
     protected function updateMetaData($params, ImageModel $imageObj)
     {
         if (! isset($params['success']) && ! isset($params['restore']))
@@ -463,7 +464,7 @@ class ShortPixelPng2Jpg {
         return $new_metadata;
 
     }
-
+*/
 
     // Try to increase limits when doing heavy processing
     private function raiseMemoryLimit()

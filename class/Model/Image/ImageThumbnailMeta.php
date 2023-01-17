@@ -42,6 +42,7 @@ class ImageThumbnailMeta
      $this->tsAdded = time(); // default
   }
 
+
   /** Load data from basic class to prevent issues when class definitions changes over time */
   public function fromClass($object)
   {

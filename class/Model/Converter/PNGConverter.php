@@ -9,6 +9,9 @@
 
  use ShortPixel\Controller\ResponseController as ResponseController;
 
+ use ShortPixel\Helper\DownloadHelper as DownloadHelper;
+
+
 class PNGConverter extends MediaLibraryConverter
 {
 		protected $instance;
@@ -142,14 +145,20 @@ class PNGConverter extends MediaLibraryConverter
 								 Notices::addError($error);
 					}
 
+
+					$this->imageModel->conversionSuccess($conversionArgs);
+
 					// new hook.
 					do_action('shortpixel/image/convertpng2jpg_success', $this->imageModel);
 
-					$this->imageModel->conversionSuccess($conversionArgs);
 					return true;
 			 }
 
 			 $this->imageModel->conversionFailed($conversionArgs);
+
+			 //legacy. Note at this point metadata has not been updated.
+			 do_action('shortpixel/image/convertpng2jpg_after', $this->imageModel, $replacementPath);
+
 			 return false;
 		}
 
@@ -168,6 +177,16 @@ class PNGConverter extends MediaLibraryConverter
 
 			$width = $this->imageModel->get('width');
 			$height = $this->imageModel->get('height');
+
+			// If imageModel doesn't have proper width / height set. This can happen with remote files.
+			if (! is_int($width) && ! $width > 0)
+			{
+				 $width = imagesx($img);
+			}
+			if (! is_int($height) && ! $height > 0)
+			{
+				 $height = imagesx($img);
+			}
 
 			Log::addDebug("PNG2JPG doConvert width $width height $height", memory_get_usage());
 			$bg = imagecreatetruecolor($width, $height);
@@ -247,14 +266,14 @@ class PNGConverter extends MediaLibraryConverter
 
 			$fs->flushImageCache();
 
-			//legacy. Note at this point metadata has not been updated.
-			do_action('shortpixel/image/convertpng2jpg_after', $this->imageModel, $replacementPath);
 			return true;
 		}
 
 		public function restore()
 		{
-			$params = array('restore' => true);
+			$params = array(
+				'restore' => true,
+			);
 			$fs = \wpSPIO()->filesystem();
 
 			$this->setupReplacer();
@@ -279,8 +298,6 @@ class PNGConverter extends MediaLibraryConverter
 			$fs->flushImageCache();
 
 		}
-
-
 
 		protected function isTransparent() {
 				$isTransparent = false;
@@ -338,7 +355,28 @@ class PNGConverter extends MediaLibraryConverter
 				 return $this->current_image;
 			}
 
-			$image = @imagecreatefrompng($this->imageModel->getFullPath());
+			if ($this->imageModel->isScaled())
+			{
+				$imagePath = $this->imageModel->getOriginalFile()->getFullPath();
+			}
+			else {
+				$imagePath = $this->imageModel->getFullPath();
+			}
+
+			if (true === $this->imageModel->is_virtual())
+			{
+				$downloadHelper = DownloadHelper::getInstance();
+				Log::addDebug('PNG converter: Item is remote, attempting to download');
+
+				$tempFile = $downloadHelper->downloadFile($this->imageModel->getURL());
+				if (is_object($tempFile))
+				{
+					 $imagePath = $tempFile->getFullPath();
+				}
+			}
+
+
+			$image = @imagecreatefrompng($imagePath);
 			if (! $image)
 			{
 				$this->current_image = false;

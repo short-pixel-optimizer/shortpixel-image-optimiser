@@ -34,11 +34,8 @@ class HeicFeatureNotice extends \ShortPixel\Model\AdminNoticeModel
 	//	$message =
 		$message = sprintf(__('Do you have an iPhone? Now you can upload native iPhone HEIC images directly to your WordPress. %s ShortPixel takes care of automagically converting HEIC images to JPEGs and optimizes them as well.  %sRead more here%s.', 'shortpixel-image-optimiser'),
 		 '<br><br>' ,
-		 '<a href="' . $link . '" target="_blank">', '</a>',
-		// '<a href="' . $link2 . '" target="_blank">', '</a>',
-		// '</p>', '<p>',
-	//	 '<a href="' . $link3 . '" >', '</a>',
-		// '</p>'
+		 '<a href="' . $link . '" target="_blank">', '</a>'
+
 	 );
 		return $message;
 

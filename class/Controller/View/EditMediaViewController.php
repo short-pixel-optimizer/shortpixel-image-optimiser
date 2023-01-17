@@ -69,6 +69,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 						return false;
 					}
 
+
           $this->view->status_message = null;
 
           $this->view->text = UiHelper::getStatusText($this->imageModel);
@@ -187,7 +188,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
 					if ($imageObj->is_virtual())
 					{
-						$debugInfo[] = array(__('Is Virtual'), $imageObj->getFullPath() );
+						$debugInfo[] = array(__('Is Virtual true: '), $imageObj->getFullPath() );
 					}
 
           $debugInfo[] = array(__('Size and Mime (ImageObj)'), $imageObj->get('width') . 'x' . $imageObj->get('height'). ' (' . $imageObj->get('mime') . ')');

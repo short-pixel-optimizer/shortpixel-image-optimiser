@@ -488,17 +488,17 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
             $optimized = $this->getMeta('compressedSize');
 
             //$diff = $original - $optimized;
-            if ($original == 0 || $optimized == 0)
+            if ($original <= 0 || $optimized <= 0)
               return null;
 
             if (! $int)
-              return number_format(100.0 * (1.0 - $optimized / $original), 2);
+              return round(100.0 * (1.0 - $optimized / $original), 2);
             else
               return $original - $optimized;
 
         }
         else
-          return null;
+          return 0;
     }
 
 
@@ -507,8 +507,32 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     * - This function doesn't handle any specifics like custom / thumbnails or anything else, just for a general image
     * - This function doesn't save metadata, that's job of subclass
     *
-    * @param Array TemporaryFiles . Files from API optimizer with KEY of filename and FileModel Temporary File
+    * @param Array Result Array. One image result array. ie.
+		*
     */
+		/*
+						[image] => Array
+                (
+                    [url] =>
+                    [originalSize] => 46188
+                    [optimizedSize] => 21200
+                    [status] => 2
+                )
+
+            [webp] => Array
+                (
+                    [url] =>
+                    [size] => 14280
+                    [status] => 2
+                )
+
+            [avif] => Array
+                (
+                    [url] =>
+                    [size] => 14094
+                    [status] => 2
+                )
+		*/
     public function handleOptimized($results, $args = array())
     {
         $settings = \wpSPIO()->settings();
@@ -552,7 +576,13 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
               }
           }
 
-          $originalSize = $this->getFileSize();
+					if (true === $this->is_virtual())
+					{
+						$originalSize = $results['image']['originalSize'];
+					}
+					else {
+						$originalSize = $this->getFileSize();
+					}
 
           if ($status == API::STATUS_UNCHANGED || $status == API::STATUS_OPTIMIZED_BIGGER)
           {

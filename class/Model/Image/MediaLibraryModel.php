@@ -225,6 +225,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			  $url = str_replace($extension, $this->getMeta()->convertMeta()->getFileFormat(), $url);
 		 }
 
+//var_dump(wp_get_attachment_url($this->id));
 		 return $url;
   }
 
@@ -296,7 +297,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
              if (isset($data['file']))
              {
                $thumbObj = $this->getThumbnailModel($this->getFileDir() . $data['file'], $name);
-
                $meta = new ImageThumbnailMeta();
                $meta->originalWidth = (isset($data['width'])) ? $data['width'] : null; // get from WP
                $meta->originalHeight = (isset($data['height'])) ? $data['height'] : null;
@@ -627,8 +627,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         {
            $perc = $this->getImprovement();
            $size = $this->getImprovement(true);
-           $totalsize += $size;
-           $totalperc += $perc;
+					 if (! is_null($size))
+           	$totalsize += $size;
+					 if (! is_null($perc))
+					 	$totalperc += $perc;
+
            $improvements['main'] = array($perc, $size);
            $count++;
         }
@@ -644,8 +647,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
            }
            $perc = $thumbObj->getImprovement();
            $size = $thumbObj->getImprovement(true);
-           $totalsize += $size;
-           $totalperc += $perc;
+					 if (! is_null($size))
+					 {
+           	$totalsize += $size;
+					 }
+					 if (! is_null($perc))
+					 {
+           	$totalperc += $perc;
+				 	 }
+
            $improvements['thumbnails'][$thumbObj->name] = array($perc, $size);
            $count++;
         }
@@ -1088,7 +1098,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		 $sql = 'DELETE FROM ' . $wpdb->prefix . 'shortpixel_postmeta WHERE attach_id = %d and id not in (' . $in_str . ') ';
 		 $sql = $wpdb->prepare($sql, $prepare);
 
-	//	 Log::addDebug('Cleaning up: ', $records);
+//		 Log::addTemp('Cleaning up: ', $records);
 		 $wpdb->query($sql);
 	}
 
@@ -1332,6 +1342,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		}
 
+		// Saving Meta to keep filesizes in case everything is offload-deleted.
+		$this->saveMeta();
+
 		 return true;
 	}
 
@@ -1394,6 +1407,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				 $this->setFileInfo();
 		 }
 
+
 		 // After Convert, reload new meta.
 		$this->thumbnails = $this->loadThumbnailsFromWP();
 		$this->retinas = null;
@@ -1411,6 +1425,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						 $thumbObj->resetStatus();
 						 $thumbObj->setFileInfo();
 				 }
+
 		 }
 
 		$this->wp_metadata = null;  // Remove caching on this one.
@@ -1757,7 +1772,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			 }
 			 else
 			 {
-			 	 return $bool;
+		 	 	return $bool;
 			 }
 		}
 
@@ -1968,7 +1983,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			if (! $destination->exists())
 			{
 					// This is a PNG content file, that has been restored as a .jpg file which is now main.
-					$this->copy($destination);
+					$copyok = $this->copy($destination);
+					if (false === $copyok)
+					{
+						 Log::addError('Copy to destination failed!');
+						 ResponseController::addData('message', __('Restore PNG2JPG : Copying PNG to destination failed', 'shortpixel-image-optimiser'));
+						 ResponseController::addData('is_error', true);
+					}
 
 					$toRemove[] = $this;
 			}
@@ -2012,8 +2033,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 				foreach($toRemove as $fileObj)
 				{
-					 $fileObj->delete();
-					 $fileObj->resetStatus();
+					 if (false === $this->is_virtual())
+					 {
+						 $fileObj->delete();
+						 $fileObj->resetStatus();
+					 }
+
 					 if ($fileObj->get('is_main_file') == false)
 					 {
 					 	$fileObj->image_meta = new ImageThumbNailMeta();

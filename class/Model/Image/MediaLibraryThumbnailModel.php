@@ -24,6 +24,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
   public function __construct($path, $id, $size)
   {
+
         parent::__construct($path);
         $this->image_meta = new ImageThumbnailMeta();
         $this->id = $id;

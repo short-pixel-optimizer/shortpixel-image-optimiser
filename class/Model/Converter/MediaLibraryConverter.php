@@ -56,6 +56,7 @@ abstract class MediaLibraryConverter extends Converter
 			$params = wp_parse_args($params, $defaults);
 
 			$newFile = $this->newFile;
+			$fullPath = $newFile->getFullPath();
 
 			if (! is_object($newFile))
 			{
@@ -72,7 +73,7 @@ abstract class MediaLibraryConverter extends Converter
 
 			// Update attached_file
 			$bool = update_attached_file($attach_id, $newFile->getFullPath() );
-			if (! $bool)
+			if (false === $bool)
 				return false;
 
 			// Update post mime on attachment
@@ -110,8 +111,6 @@ abstract class MediaLibraryConverter extends Converter
 				$new_metadata = array_merge($metadata, $new_metadata); // merge to preserve other custom metadata
 
 			}
-			Log::addDebug('New Metadata RESULT #' . $attach_id, $new_metadata);
-	//		wp_update_post(array('ID' => $attach_id, 'post_mime_type' => 'image/jpeg' ));
 
 			if (is_array($new_metadata) && count($new_metadata) > 0)
 			{
@@ -131,7 +130,6 @@ abstract class MediaLibraryConverter extends Converter
 			}
 
 			$this->replacer->setTargetMeta($new_metadata);
-			//return $new_metadata;
 
 
 	}
