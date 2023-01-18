@@ -175,14 +175,14 @@ namespace ShortPixel;
 
 
 										 <div class='switch_button'>
-											 <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/515-settings-image-backup"></span></div>
+
 											 <label>
 												 <input type="checkbox" class="switch" name="backupImages" value="1" <?php checked($view->data->backupImages, '1');?>>
 												 <div class="the_switch">&nbsp; </div>
 												<?php esc_html_e('Create a backup of the original images, saved on your server in /wp-content/uploads/ShortpixelBackups/.','shortpixel-image-optimiser');?>
 											 </label>
 										 </div>
-
+											 <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/515-settings-image-backup"></span></div>
 	                    <p class="settings-info"><?php esc_html_e('You can remove the backup folder at any moment but it is best to keep a local/cloud copy, in case you want to restore the optimized files to originals or re-optimize the images using a different compression type.','shortpixel-image-optimiser');?></p>
                 </td>
             </tr>

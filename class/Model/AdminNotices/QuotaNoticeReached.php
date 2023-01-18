@@ -48,7 +48,7 @@ class QuotaNoticeReached extends \ShortPixel\Model\AdminNoticeModel
 
 		if ($keyControl->getKeyForDisplay())
 		{
-			$login_url .= $keyControl->getKeyForDisplay() . '/';
+			$login_url .= $keyControl->getKeyForDisplay() . '/spio-unlimited';
 			$friend_url = $login_url . 'tell-a-friend';
 		}
 
@@ -89,15 +89,15 @@ class QuotaNoticeReached extends \ShortPixel\Model\AdminNoticeModel
 						$message .= sprintf(__('<strong> %s images and thumbnails</strong> have not been optimized by ShortPixel yet.','shortpixel-image-optimiser'), $totalImagesToOptimize  );
 				}
 
-			 $message .= '</p>
+			 $message .= sprintf('</p>
 					<div>
 						<button class="button button-primary" type="button" id="shortpixel-upgrade-advice" onclick="ShortPixel.proposeUpgrade()" style="margin-right:10px;"><strong>' .  __('Show me the best available options', 'shortpixel-image-optimiser') . '</strong></button>
-						<a class="button button-primary" href="' . $login_url . '"
+						<a class="button button-primary" href="%s"
 							 title="' . __('Go to My Account and choose a plan','shortpixel-image-optimiser') . '" target="_blank" style="margin-right:10px;">
 								<strong>' . __('Upgrade','shortpixel-image-optimiser') . '</strong>
 						</a>
 						<button type="button" name="checkQuota" class="button" onclick="ShortPixel.checkQuota()">'.  __('Confirm new credits','shortpixel-image-optimiser') . '</button>
-				</div>';
+				</div>', $login_url);
 
 			$message .= '</div>'; /// closing div
 			return $message;
