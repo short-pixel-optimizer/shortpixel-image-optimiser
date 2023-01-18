@@ -347,6 +347,13 @@
 .shortpixel-bulk-wrapper section.panel.dashboard .bulk-wrapper button span {
   margin-right: 16px;
 }
+.shortpixel-bulk-wrapper section.panel.dashboard .dashboard-text {
+  margin: 0 auto;
+  width: 50%;
+}
+.shortpixel-bulk-wrapper section.panel.dashboard .dashboard-text p {
+  line-height: 25px;
+}
 .shortpixel-bulk-wrapper section.panel.dashboard .dashboard-log {
   display: table;
   width: 80%;
@@ -805,6 +812,10 @@
   bottom: 0;
   background: #1FBEC9;
 }
+.shortpixel-bulk-wrapper section.panel.process .bulk-summary .line-progressbar .finished-paragraph, .shortpixel-bulk-wrapper section.panel.finished .bulk-summary .line-progressbar .finished-paragraph {
+  font-size: 14px;
+  line-height: 25px;
+}
 .shortpixel-bulk-wrapper section.panel.process .bulk-summary .line-progressbar label input[type=checkbox], .shortpixel-bulk-wrapper section.panel.finished .bulk-summary .line-progressbar label input[type=checkbox] {
   margin-right: 8px;
 }
@@ -927,6 +938,10 @@
 .shortpixel-bulk-wrapper section.panel.process .image-preview-section .preview-wrapper .image.result, .shortpixel-bulk-wrapper section.panel.finished .image-preview-section .preview-wrapper .image.result {
   margin-left: 8px;
 }
+.shortpixel-bulk-wrapper section.panel.process .image-preview-section .preview-wrapper .image.result p, .shortpixel-bulk-wrapper section.panel.finished .image-preview-section .preview-wrapper .image.result p {
+  font-weight: 700;
+  font-size: 14px;
+}
 .shortpixel-bulk-wrapper section.panel.process nav, .shortpixel-bulk-wrapper section.panel.finished nav {
   width: 80%;
   margin-top: 35px;
@@ -982,6 +997,7 @@
 .shortpixel-bulk-wrapper .bulk-special-wrapper h4.warning {
   float: left;
   margin: 25px;
+  min-height: 50px;
 }
 .shortpixel-bulk-wrapper .bulk-special-wrapper .warning {
   color: #ff0000;

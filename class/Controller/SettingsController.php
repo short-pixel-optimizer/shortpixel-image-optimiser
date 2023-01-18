@@ -210,8 +210,9 @@ class SettingsController extends \ShortPixel\ViewController
 
 			public function action_debug_redirectBulk()
 			{
+				$this->checkPost();
 
-	 			OptimizeController::resetQueues();
+				OptimizeController::resetQueues();
 
 				$action = isset($_REQUEST['bulk']) ? sanitize_text_field($_REQUEST['bulk']) : null;
 
@@ -238,35 +239,39 @@ class SettingsController extends \ShortPixel\ViewController
       public function action_debug_resetStats()
       {
           $this->loadEnv();
+					$this->checkPost();
           $statsController = StatsController::getInstance();
           $statsController->reset();
 
-          $this->load();
+					$this->doRedirect();
       }
 
       public function action_debug_resetquota()
       {
 
           $this->loadEnv();
-
+					$this->checkPost();
           $quotaController = QuotaController::getInstance();
           $quotaController->forceCheckRemoteQuota();
 
-          $this->load();
+          $this->doRedirect();
       }
 
       public function action_debug_resetNotices()
       {
+
           $this->loadEnv();
+					$this->checkPost();
           Notice::resetNotices();
           $nControl = new Notice(); // trigger reload.
 
 
-          $this->load();
+          $this->doRedirect();
       }
 
 			public function action_debug_triggerNotice()
 			{
+				$this->checkPost();
 				$key = isset($_REQUEST['notice_constant']) ? sanitize_text_field($_REQUEST['notice_constant']) : false;
 
 				if ($key !== false)
@@ -288,7 +293,7 @@ class SettingsController extends \ShortPixel\ViewController
 							$model->addManual();
 					}
 				}
-				$this->load();
+				$this->doRedirect();
 
 			}
 
@@ -297,6 +302,7 @@ class SettingsController extends \ShortPixel\ViewController
 			{
 				 $queue = isset($_REQUEST['queue']) ? sanitize_text_field($_REQUEST['queue']) : null;
 				 $this->loadEnv();
+				 $this->checkPost();
 
 				 if (! is_null($queue))
 				 {
@@ -338,12 +344,13 @@ class SettingsController extends \ShortPixel\ViewController
 			 }
 
 
-				 $this->load();
+				$this->doRedirect();
 			}
 
 			public function action_debug_removeProcessorKey()
 			{
 				//$this->loadEnv();
+				$this->checkPost();
 
 				$cacheControl = new CacheController();
 				$cacheControl->deleteItem('bulk-secret');

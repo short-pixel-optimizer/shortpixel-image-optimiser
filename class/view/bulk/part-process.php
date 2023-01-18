@@ -168,7 +168,9 @@ namespace ShortPixel;
 
 		        <div class="image result">
 		          <img src="<?php echo esc_url(\wpSPIO()->plugin_url('res/img/bulk/placeholder.svg')); ?>" >
-						<p><?php esc_html_e('Optimized Image', 'shortpixel-image-optimiser'); ?></p>
+						<p><?php esc_html_e('Optimized Image', 'shortpixel-image-optimiser'); ?>
+								- <span data-result="improvements-totalpercentage"></span>% <?php _e('smaller', 'shortpixel-image-optimiser'); ?>
+						</p>
 						<?php $this->loadView('snippets/part-svgloader', false); ?>
 		        </div>
 					</div>
@@ -184,7 +186,9 @@ namespace ShortPixel;
 							<div class="image result">
 								<img src="<?php echo esc_url(\wpSPIO()->plugin_url('res/img/bulk/placeholder.svg')); ?>" >
 								<?php $this->loadView('snippets/part-svgloader', false); ?>
-							<p><?php esc_html_e('Optimized Image','shortpixel-image-optimiser'); ?></p>
+							<p><?php esc_html_e('Optimized Image','shortpixel-image-optimiser'); ?>
+								- <span data-result="improvements-totalpercentage"></span>% <?php _e('smaller', 'shortpixel-image-optimiser'); ?>
+							</p>
 							</div>
 					</div>
 	      </div> <!-- slidemask -->

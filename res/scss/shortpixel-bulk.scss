@@ -422,7 +422,15 @@
                  // vertical-align: middle;
                }
             }
-       }
+       } // bulk wrapper
+
+			 .dashboard-text {
+				  margin: 0 auto;
+					width: 50%;
+					p {
+						line-height: 25px;
+					}
+			 }
 
        .dashboard-log
        {
@@ -888,6 +896,7 @@
            background: #F6F9FF;
            border: 1px solid #EBF5FF;
         }
+
         .line-progressbar
         {
           width: 100px;
@@ -921,6 +930,13 @@
             background: #1FBEC9;
 
           }
+					.finished-paragraph
+					{
+							font-size: 14px;
+							line-height: 25px;
+
+					}
+
 					label {
 						input[type="checkbox"]
 						{
@@ -1091,6 +1107,10 @@
            .image.result,
            {
              margin-left: 8px;
+						 p {
+							 	font-weight: 700;
+								font-size: 14px;
+						 }
            }
          }
       }
@@ -1163,6 +1183,7 @@
 						{
 							 float: left;
 							 margin: 25px;
+							 min-height: 50px;
 						}
 
 			 	}
