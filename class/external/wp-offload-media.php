@@ -229,7 +229,6 @@ class wpOffload
 
     protected function getSourceIDByURL($url)
     {
-
 			$source_id = $this->sourceCache($url); // check cache first.
 
 			if (false === $source_id) // check on the raw url.
@@ -245,7 +244,6 @@ class wpOffload
 
       	$source = $class::get_item_source_by_remote_url($url);
 				$source_id = isset($source['id']) ? intval($source['id']) : false;
-
 			}
 
 			if (false === $source_id) // check now via the thumbnail hocus.
@@ -262,6 +260,33 @@ class wpOffload
 				}
 
       }
+
+			// Check issue with double extensions. If say double webp/avif is on, the double extension causes the URL not to be found (ie .jpg)
+			if (false === $source_id)
+			{
+				 if (substr_count($parsedUrl['path'], '.') > 1)
+				 {
+					  // Get extension
+						$ext = substr(strrchr($url, '.'), 1);
+
+						// Remove all extensions from the URL
+					  $checkurl = substr($url, 0, strpos($url,'.')) ;
+
+						// Add back the last one.
+						$checkurl .= '.' . $ext;
+
+						// Retry
+						$source_id = $this->sourceCache($checkurl); // check cache first.
+
+						if (false === $source_id)
+						{
+							$source = $class::get_item_source_by_remote_url($url);
+							$source_id = isset($source['id']) ? intval($source['id']) : false;
+						}
+
+
+				 }
+			}
 
 			if ($source_id !== false)
 			{
@@ -536,7 +561,8 @@ class wpOffload
          $webpformat1 = $basepath . $file->getFileName() . '.webp';
          $webpformat2 = $basepath . $file->getFileBase() . '.webp';
 
-         $avifformat =  $basepath . $file->getFileBase() . '.avif';
+         $avifformat =  $basepath . $file->getFileName() . '.avif';
+				 $avifformat2 = $basepath . $file->getFileBase() . '.avif';
 
 
          if ($check_exists)
@@ -567,6 +593,17 @@ class wpOffload
 				 else {
 				 	 $newPaths[$size . '_avif'] = $avifformat;
 				 }
+
+				 if ($check_exists)
+				 {
+						if (file_exists($avifformat2))
+						{
+							 $newPaths[$size . '_avif2'] = $avifformat2;
+						}
+				 }
+				else {
+					$newPaths[$size . '_avif2'] = $avifformat2;
+				}
       }
 
       return $newPaths;
@@ -578,7 +615,7 @@ class wpOffload
     public function add_webp_paths($paths)
     {
         $paths = $this->getWebpPaths($paths, true);
-				 //Log::addDebug('Add S3 Paths', array($paths));
+				 //Log::addDebug('Add S3 Paths - ', array($paths));
         return $paths;
     }
 
@@ -586,7 +623,7 @@ class wpOffload
     public function remove_webp_paths($paths)
     {
       $paths = $this->getWebpPaths($paths, false);
-      Log::addDebug('Remove S3 Paths', array($paths));
+      //Log::addDebug('Remove S3 Paths', array($paths));
 
       return $paths;
     }
