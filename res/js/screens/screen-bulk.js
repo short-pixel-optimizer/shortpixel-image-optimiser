@@ -838,12 +838,12 @@ console.log("Screen Init Done", initMedia, initCustom);
             return;
           }
 
-          var value = parseInt(checker.innerHTML);
+          var value = self.ParseNumber(checker.innerHTML);
           if ( hasCompareControl)
           {
             var compareControl = document.querySelector('[' + element.getAttribute('data-control-check') + ']');
             if (compareControl !== null) {
-                var compareValue = parseInt(compareControl.innerHTML);
+                var compareValue = self.ParseNumber(compareControl.innerHTML);
             }
           }
           if (isNaN(value))
@@ -1125,6 +1125,13 @@ console.log("Screen Init Done", initMedia, initCustom);
 
 		 var shade = document.getElementById('LogModal-Shade');
 		 shade.style.display = 'none';
+	}
+
+	// @todo Find a better home for this. Global screen class?
+	this.ParseNumber = function(str)
+	{
+		 str = str.replace(',','', str).replace('.','',str);
+		 return parseInt(str);
 	}
 
   //this.CheckSelectionScreen()  = function()

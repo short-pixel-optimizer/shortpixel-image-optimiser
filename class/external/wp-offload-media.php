@@ -445,6 +445,8 @@ class wpOffload
 					*/
 
 					// The Handler doesn't work properly /w local removal if not the exact correct files are passed (?) . Offload does this probably via update metadata function, so let them sort it out with this . (until it breaks)
+
+					Log::addTemp('Sending for offload');
 					$meta = wp_get_attachment_metadata($id);
 					wp_update_attachment_metadata($id, $meta);
 
