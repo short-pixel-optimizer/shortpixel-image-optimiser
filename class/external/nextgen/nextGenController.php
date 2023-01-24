@@ -300,13 +300,33 @@ class NextGenController
 
   public function onDeleteImage($nggId, $size)
   {
-      $image = $this->getNGImageByID($nggId);
-      $path  = $this->getImageAbspath($image);
 
-			$otherMediaController = OtherMediaController::getInstance();
-			$mediaItem = $otherMediaController->getCustomImageByPath($path);
-			$mediaItem->onDelete();
+	  	$image = $this->getNGImageByID($nggId);
+
+			$paths = array();
+
+			if ($size === false)
+			{
+				$imageSizes = $this->getImageSizes($image);
+				foreach($imageSizes as $size)
+				{
+					$paths[] = $this->getImageAbspath($image, $size);
+
+				}
+			}
+			else {
+				$paths = array_merge($paths, $this->getImageAbspath($image, $size));
+			}
+
+			foreach($paths as $path)
+			{
+				$otherMediaController = OtherMediaController::getInstance();
+				$mediaItem = $otherMediaController->getCustomImageByPath($path);
+				$mediaItem->onDelete();
+			}
   }
+
+
 
   public function updateImageSize($nggId, $path) {
 
@@ -335,8 +355,15 @@ class NextGenController
 
   protected function getImageAbspath($image, $size = 'full') {
       $storage = \C_Gallery_Storage::get_instance();
-      return $storage->get_image_abspath($image);
+      return $storage->get_image_abspath($image, $size);
   }
+
+  protected function getImageSizes($image)
+	{
+		 $storage = \C_Gallery_Storage::get_instance();
+
+		 return $storage->get_image_sizes($image);
+	}
 
 } // class.
 
