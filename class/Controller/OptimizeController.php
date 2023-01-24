@@ -532,7 +532,7 @@ class OptimizeController
 			$mediaQ->updateItem($item);
 
 // @todo Turn this back on!
-    //  $this->addItemToQueue($imageObj);
+      $this->addItemToQueue($imageObj);
 
       return $item;
     }
