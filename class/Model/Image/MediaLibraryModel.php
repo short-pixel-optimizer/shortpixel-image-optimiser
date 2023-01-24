@@ -1097,7 +1097,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		 $sql = 'DELETE FROM ' . $wpdb->prefix . 'shortpixel_postmeta WHERE attach_id = %d and id not in (' . $in_str . ') ';
 		 $sql = $wpdb->prepare($sql, $prepare);
 
-//		 Log::addTemp('Cleaning up: ', $records);
 		 $wpdb->query($sql);
 	}
 

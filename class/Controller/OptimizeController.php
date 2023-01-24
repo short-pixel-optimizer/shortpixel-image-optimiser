@@ -490,6 +490,9 @@ class OptimizeController
 
     protected function convertPNG($item, $mediaQ)
     {
+			$item->blocked = true;
+			$q->updateItem($item);
+
       $settings = \wpSPIO()->settings();
       $fs = \wpSPIO()->filesystem();
 
@@ -497,6 +500,9 @@ class OptimizeController
 
 			 if ($imageObj === false) // not exist error.
 			 {
+				 $item->blocked = false;
+				 $q->updateItem($item);
+
 			 	 return $item; //$this->handleAPIResult($item, $mediaQ);
 			 }
 
@@ -525,7 +531,11 @@ class OptimizeController
 			// Keep compressiontype from object, set in queue, imageModelToQueue
 			$imageObj->setMeta('compressionType', $item->compressionType);
 
-      $this->addItemToQueue($imageObj);
+			$item->blocked = false;
+			$q->updateItem($item);
+
+// @todo Turn this back on!
+    //  $this->addItemToQueue($imageObj);
 
       return $item;
     }
@@ -696,7 +706,6 @@ class OptimizeController
 							}
 
 							// Dump Stats, Dump Quota. Refresh
-							Log::addTemp('OptimizeController forceCheckQuota');
 							//$quotaController->forceCheckRemoteQuota();
 							$statsController->reset();
 

@@ -96,8 +96,6 @@ abstract class MediaLibraryConverter extends Converter
 				$post_ar = array('ID' => $attach_id, 'post_mime_type' => 'image/png', 'guid' => $newGuid);
 			}
 
-			Log::addTemp('POST ARRAY', $post_ar);
-
 			$result = wp_update_post($post_ar);
 
 			if ($result === 0 || is_wp_error($result))
@@ -113,7 +111,6 @@ abstract class MediaLibraryConverter extends Converter
 				$attachment = get_post( $attach_id );
 				Log::addTemp('Starting generate ' . var_export(file_exists($newFile->getFullPath()), true));
 				Log::addTemp('Attachment ', $attachment);
-				Log::addTemp('Post Mime ', get_post_mime_type( $attachment ));
 				$new_metadata = wp_generate_attachment_metadata($attach_id, $newFile->getFullPath());
 				Log::addTemp('Newfile -- ' . var_export(file_exists($newFile->getFullPath()), true), $newFile->getFullPath());
 				Log::addTemp('New Metadata generated', $new_metadata);
@@ -139,8 +136,11 @@ abstract class MediaLibraryConverter extends Converter
 
 			if (is_array($new_metadata) && count($new_metadata) > 0)
 			{
-				Log::addTemp('Update Metadata 2');
+				Log::addTemp('Update Metadata after preventing offload');
 				$bool = wp_update_attachment_metadata($attach_id, $new_metadata);
+			}
+			else {
+				Log::addTemp('No New Metadata, not updated');
 			}
 
 			if (is_array($WPMLduplicates) && count($WPMLduplicates) > 0)
@@ -157,7 +157,7 @@ abstract class MediaLibraryConverter extends Converter
 
 			$this->replacer->setTargetMeta($new_metadata);
 
-			Log::addTemp('Return UpdateMetadsta');
+			Log::addTemp('Return UpdateMetaData function');
 	}
 
 

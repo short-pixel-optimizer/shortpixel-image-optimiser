@@ -87,7 +87,7 @@ class wpOffload
 
 
 			//	add_filter('as3cf_remove_source_files_from_provider', array($this, 'remove_webp_paths'), 10);
-				add_action('shortpixel/image/convertpng2jpg_success', array($this, 'image_converted'), 10);
+	//		add_action('shortpixel/image/convertpng2jpg_success', array($this, 'image_converted'), 10);
 				add_filter('as3cf_remove_source_files_from_provider', array($this, 'remove_webp_paths'));
 
 
@@ -134,15 +134,14 @@ class wpOffload
 		// This is used in the converted. Might be deployed elsewhere for better control.
 		public function preventOffload($attach_id)
 		{
+			 Log::addTemp('Turning Prevent Offload on ' . $attach_id);
 			 self::$offloadPrevented[$attach_id] = true;
-			 Log::addTemp('Offload Prevent Set: ', self::$offloadPrevented );
-
 		}
 
 		public function preventOffloadOff($attach_id)
 		{
+			  Log::addTemp('Turning Offload Prevent off' . $attach_id);
 			  unset(self::$offloadPrevented[$attach_id]);
-				Log::addTemp('Offload Prevent Removed: ', self::$offloadPrevented );
 		}
 
 		// When Offload is not offloaded but is created during the process of generate metadata in WP, wp_create_image_subsizes fires an update metadata after just moving the upload, before making any thumbnails.  If this is the case and the file has an -scaled / original image setup, the original_source_path becomes the same as the source_path which creates issue later on when dealing with optimizing it, if the file is deleted on local server.  Prevent this, and lean on later update metadata.
@@ -150,6 +149,7 @@ class wpOffload
 		{
 			if (isset(self::$offloadPrevented[$post_id]))
 			{
+				Log::addTemp('Prevented UpdateMetaData on static prevent');
 					return true ; // return true to cancel.
 			}
 
@@ -195,6 +195,7 @@ class wpOffload
         return false;
       }
 
+			Log::addTemp('Offload removing remote ' . $id);
 				$remove = \DeliciousBrains\WP_Offload_Media\Items\Remove_Provider_Handler::get_item_handler_key_name();
 				$itemHandler = $this->as3cf->get_item_handler($remove);
 
@@ -380,15 +381,12 @@ class wpOffload
       }
        $item = $this->getItemById($source_id);
 
-Log::addTemp('Translate URL ' . $url);
        $original_path = $item->original_source_path(); // $values['original_source_path'];
 
        if (wp_basename($url) !== wp_basename($original_path)) // thumbnails translate to main file.
        {
           $original_path = str_replace(wp_basename($original_path), wp_basename($url), $original_path);
        }
-
-			 Log::addTemp("Translated file " . $original_path );
 
        $fs = \wpSPIO()->filesystem();
        $base = $fs->getWPUploadBase();
@@ -407,7 +405,8 @@ Log::addTemp('Translate URL ' . $url);
         $fs = \wpSPIO()->fileSystem();
 
 				$id = $mediaItem->get('id');
-				$this->remove_remote($id);
+				Log::addTemp('Image Converted function');
+				//$this->remove_remote($id);
 				$this->image_upload($mediaItem);
 
     }
@@ -481,8 +480,9 @@ Log::addTemp('Translate URL ' . $url);
 
 					// The Handler doesn't work properly /w local removal if not the exact correct files are passed (?) . Offload does this probably via update metadata function, so let them sort it out with this . (until it breaks)
 
-					Log::addTemp('Sending for offload', $meta);
 					$meta = wp_get_attachment_metadata($id);
+					Log::addTemp('Sending for offload', $meta);
+
 					wp_update_attachment_metadata($id, $meta);
 
 					$this->shouldPrevent = true;
@@ -511,6 +511,7 @@ echo "</PRE>";
 		public function checkScaledUrl($filepath, $id)
 		{
 				// Original filepath can never have a scaled in there.
+				// @todo This should probably check -scaled.<extension> as string end preventing issues.
 				if (strpos($filepath, '-scaled') !== false)
 				{
 					$filepath = str_replace('-scaled', '', $filepath);
@@ -584,7 +585,6 @@ echo "</PRE>";
 				if ($this->shouldPrevent === false) // if false is returned, it's NOT prevented, so on-going.
 						return false;
 
-				Log::addTemp('Checking static prevent of id '  . $post_id);
 				if (isset(self::$offloadPrevented[$post_id]))
 				{
 					Log::addDebug('Offload Prevented via static for '. $post_id);
@@ -592,7 +592,7 @@ echo "</PRE>";
 					return $error;
 				}
 
-				if (\wpSPIO()->env()->is_autoprocess)
+				/* if (\wpSPIO()->env()->is_autoprocess)
 				{
 					// Don't prevent whaffever if shortpixel is already done. This can be caused by plugins doing a metadata update, we don't care then.
 					$mediaItem = $fs->getImage($post_id, 'media');
@@ -610,7 +610,7 @@ echo "</PRE>";
 						$error = new \WP_Error( 'upload-prevented', 'No offloading at this time, thanks' );
 						return $error;
 					}
-				}
+				} */
 				Log::addDebug('Not preventing S3 Offload');
 				return $bool;
 		}
