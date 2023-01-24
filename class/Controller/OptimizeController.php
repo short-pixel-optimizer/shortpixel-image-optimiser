@@ -488,7 +488,7 @@ class OptimizeController
     protected function convertPNG($item, $mediaQ)
     {
 			$item->blocked = true;
-			$q->updateItem($item);
+			$mediaQ->updateItem($item);
 
       $settings = \wpSPIO()->settings();
       $fs = \wpSPIO()->filesystem();
@@ -529,7 +529,7 @@ class OptimizeController
 			$imageObj->setMeta('compressionType', $item->compressionType);
 
 			$item->blocked = false;
-			$q->updateItem($item);
+			$mediaQ->updateItem($item);
 
 // @todo Turn this back on!
     //  $this->addItemToQueue($imageObj);
