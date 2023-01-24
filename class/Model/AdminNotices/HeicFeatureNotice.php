@@ -31,12 +31,14 @@ class HeicFeatureNotice extends \ShortPixel\Model\AdminNoticeModel
 	{
 		$link = 'https://shortpixel.com/knowledge-base/article/566-heic-apple-images-support-in-shortpixel-image-optimizer';
 
-	//	$message =
-		$message = sprintf(__('Do you have an iPhone? Now you can upload native iPhone HEIC images directly to your WordPress. %s ShortPixel takes care of automagically converting HEIC images to JPEGs and optimizes them as well.  %sRead more here%s.', 'shortpixel-image-optimiser'),
+		$message = sprintf(__('Do you have an iOS device %s? Now you can upload native iPhone HEIC images directly to your WordPress site. ShortPixel takes care of automagically converting HEIC images to JPEGs and optimizes them as well %s. %s  %sRead more here%s.', 'shortpixel-image-optimiser'),
+		'&#x1F4F1;',
+		'&#x1F389;',
 		 '<br><br>' ,
 		 '<a href="' . $link . '" target="_blank">', '</a>'
 
 	 );
+
 		return $message;
 
 	}
