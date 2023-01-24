@@ -574,6 +574,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			// Add duplicates. Duplicates are metadata sizes that have a same file ( identical ) defined pointing.
 			if (isset($data['duplicates']))
 			{
+				
 				 foreach($data['duplicates'] as $duplicateName => $duplicateRef)
 				 {
 					  $thumbnail = $thumbObjs[$duplicateName];

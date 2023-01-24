@@ -42,7 +42,7 @@ namespace ShortPixel;
 			?>
 			<br>
 		<?php
-			printf(__('We have been working on improving ShortPixel every day for over 7 years. It is very motivating for us when customers take a minute to leave us a review. We thank you for that! %s', 'shortpixel-image-optimiser'), '&#x1F64C;');
+			printf(__('We have been working on improving ShortPixel every day for over 7 years. It is very motivating for us when customers take a minute to leave us a %sreview%s. We thank you for that! %s', 'shortpixel-image-optimiser'), '<a href="https://wordpress.org/support/plugin/shortpixel-image-optimiser/reviews/?filter=5" target="_blank">','</a>', '&#x1F64C;');
 		?>
 		</p>
 	</div>
