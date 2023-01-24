@@ -130,6 +130,15 @@ var ShortPixel = function() {
 
     }
 
+		function checkSmartCropWarning()
+		{
+			if (jQuery('input[name="useSmartcrop"]').is(':checked') && jQuery('.smartcrop_warning').data('smartcrop') == 1 )
+        jQuery('.smartcrop_warning').fadeIn();
+      else
+        jQuery('.smartcrop_warning').fadeOut();
+
+		}
+
     function checkBackUpWarning()
     {
       if (! jQuery('input[name="backupImages"]').is(':checked') )
@@ -224,6 +233,14 @@ var ShortPixel = function() {
            ShortPixel.checkBackUpWarning();
         });
         ShortPixel.checkBackUpWarning();
+
+				jQuery('input[name="useSmartcrop"]').on('change', function()
+        {
+           ShortPixel.checkSmartCropWarning();
+        });
+        ShortPixel.checkSmartCropWarning();
+
+
 
     }
 
@@ -720,6 +737,7 @@ var ShortPixel = function() {
         convertPunycode     : convertPunycode,
         checkExifWarning    : checkExifWarning,
         checkBackUpWarning  : checkBackUpWarning,
+				checkSmartCropWarning: checkSmartCropWarning,
         comparerData        : {
             cssLoaded   : false,
             jsLoaded    : false,

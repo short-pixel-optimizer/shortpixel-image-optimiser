@@ -167,7 +167,17 @@ namespace ShortPixel;
                 </td>
             </tr>
 
-
+						<?php
+						$smartcrop = (true === \wpSPIO()->env()->plugin_active('s3-offload')) ? 1 : 0; ?>
+						<tr class='smartcrop_warning view-notice-row' data-smartcrop="<?php echo esc_attr($smartcrop) ?>" >
+								<th scope="row">&nbsp;</th>
+								<td>
+									<div class='view-notice warning'><p>
+										<?php esc_html_e('It looks like you have the Offload Media plugin enabled. Please note that SmartCropping will not work if you have set the Offload Media plugin to remove files from the server, and strange effects may occur! We recommend you to disable this option in this case.', 'shortpixel-image-optimiser'); ?>
+									</p>
+								</div>
+								</td>
+						</tr>
 
             <tr>
                 <th scope="row"><?php esc_html_e('Backup','shortpixel-image-optimiser');?></th>
@@ -191,6 +201,7 @@ namespace ShortPixel;
               <th scope='row'>&nbsp;</th>
               <td><div class='view-notice warning'><p><?php esc_html_e('Make sure you have a backup in place. When optimizing, ShortPixel will overwrite your images without recovery, which may result in lost images.', 'shortpixel-image-optimiser') ?></p></div></td>
             </tr>
+
             <tr>
                 <th scope="row"><?php esc_html_e('Remove EXIF','shortpixel-image-optimiser');?></th>
                 <td>
