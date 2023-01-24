@@ -100,7 +100,6 @@ class OptimizeController
 					 return $json;
 				}
 
-
         $id = $mediaItem->get('id');
         $type = $mediaItem->get('type');
 
@@ -119,7 +118,6 @@ class OptimizeController
           $json->result->is_done = true;
           $json->result->message = __('Error - item could not be found', 'shortpixel-image-optimiser');
           $json->result->fileStatus = ImageModel::FILE_STATUS_ERROR;
-          //return $json;
         }
 
         if (! $mediaItem->isProcessable())
@@ -432,7 +430,6 @@ class OptimizeController
 		*/
     public function sendToProcessing($item, $q)
     {
-
       $api = $this->getAPI();
 
 			$fs = \wpSPIO()->filesystem();

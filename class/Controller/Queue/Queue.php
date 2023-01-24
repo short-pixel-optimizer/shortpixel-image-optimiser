@@ -575,8 +575,8 @@ abstract class Queue
 								{
 									 $item->compressionTypeRequested = $item->compressionType;
 								}
-								// For some reason when converting, it output the converted file only on the Lossy Output :/
-								$item->compressionType = ImageModel::COMPRESSION_LOSSY;
+								// Process Heic as Lossless so we don't have double opts. 
+								$item->compressionType = ImageModel::COMPRESSION_LOSSLESS;
 
 								// Reset counts
 								$counts->baseCount = 1; // count the base images.
