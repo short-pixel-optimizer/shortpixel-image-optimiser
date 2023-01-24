@@ -225,7 +225,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			  $url = str_replace($extension, $this->getMeta()->convertMeta()->getFileFormat(), $url);
 		 }
 
-//var_dump(wp_get_attachment_url($this->id));
 		 return $url;
   }
 
@@ -1399,7 +1398,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		 $this->getMeta()->convertMeta()->setConversionDone($args['omit_backup']);
 		 $mainfile = \wpSPIO()->filesystem()->getfile($this->getFileDir() . $this->getFileBase() . '.jpg');
 
-		 if ($mainfile->exists()) // if new exists, remove old
+//Log::addTemp('Conversion success check -- ' . var_export($mainfile->is_virtual(), true) . ' ' . var_export($mainfile->exists(), true) .  ' ' . var_export($this->exists(), true) );
+//Log::addTemp('Conversion success  ' . $this->getFullPath() . ' ' . $mainfile->getFullPath());
+		 if ($this->exists()) // success, remove converted file.
 		 {
 				 $this->delete(); // remove the old file.
 				 $this->fullpath = $mainfile->getFullPath();
@@ -1779,6 +1780,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
     if (! $bool)
     {
+			Log::addTemp('Bool is false before doing thumbnails');
        $cleanRestore = false;
     }
 
@@ -1802,6 +1804,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
             $bool = $thumbObj->restore(); // resets metadata
 						if (! $bool)
 						{
+							Log::addTemp('Clean restore failed on ', $thumbObj);
 							$cleanRestore = false;
 						}
 						else
@@ -1872,10 +1875,16 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
     }
 
         foreach($webps as $webpFile)
-            $webpFile->delete();
+				{
+						if ($webpFile->exists() && false === $webpFile->is_virtual())
+            	$webpFile->delete();
+				}
 
         foreach($avifs as $avifFile)
-            $avifFile->delete();
+				{
+						if ($avifFile->exists() && false === $avifFile->is_virtual())
+            	$avifFile->delete();
+				}
 
 				// Any legacy will have false information by now; remove.
 				$this->removeLegacy();
@@ -2003,7 +2012,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			}
 
 			$thumbObjs = $this->getThumbObjects();
-
 
     	foreach($thumbObjs as $thumbObj)
     	{

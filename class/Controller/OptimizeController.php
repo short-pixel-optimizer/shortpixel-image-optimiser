@@ -696,7 +696,8 @@ class OptimizeController
 							}
 
 							// Dump Stats, Dump Quota. Refresh
-							$quotaController->forceCheckRemoteQuota();
+							Log::addTemp('OptimizeController forceCheckQuota');
+							//$quotaController->forceCheckRemoteQuota();
 							$statsController->reset();
 
 							$this->deleteTempFiles($item);

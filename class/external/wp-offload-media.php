@@ -25,6 +25,8 @@ class wpOffload
 
 		private $sources; // cache for url > source_id lookup, to prevent duplicate queries.
 
+		private static $offloadPrevented = array();
+
     // if might have to do these checks many times for each thumbnails, keep it fastish.
     //protected $retrievedCache = array();
 
@@ -74,6 +76,8 @@ class wpOffload
       add_action('shortpixel/image/optimised', array($this, 'image_upload'), 10);
       add_action('shortpixel/image/after_restore', array($this, 'image_restore'), 10, 3); // hit this when restoring.
 			add_action('shortpixel-thumbnails-before-regenerate', array($this, 'remove_remote'), 10);
+			add_action('shortpixel/converter/prevent-offload', array($this, 'preventOffload'), 10);
+			add_action('shortpixel/converter/prevent-offload-off', array($this, 'preventOffloadOff'), 10);
 
      // add_action('shortpixel_restore_after_pathget', array($this, 'remove_remote')); // not optimal -> has to do w/ doRestore and when URL/PATH is available when not on server .
 
@@ -88,14 +92,18 @@ class wpOffload
 
 
     //  add_filter('shortpixel/restore/targetfile', array($this, 'returnOriginalFile'),10,2);
-    //  add_filter('as3cf_pre_update_attachment_metadata', array($this, 'preventInitialUpload'), 10,4);
+     add_filter('as3cf_pre_update_attachment_metadata', array($this, 'preventUpdateMetaData'), 10,4);
 		 add_filter('as3cf_pre_handle_item_upload', array($this, 'preventInitialUploadHandler'), 10,3);
 
+		 //add_filter('as3cf_get_attached_file', array($this, 'fixScaledUrl'), 10, 4);
+		 add_filter('shortpixel_get_original_image_path', array($this, 'checkScaledUrl'), 10,2);
+		// add_filter('as3cf_get_attached_file_noop', array($this, 'fixScaledUrl'), 10,4);
 
       //add_filter('shortpixel_get_attached_file', array($this, 'get_raw_attached_file'),10, 2);
     //  add_filter('shortpixel_get_original_image_path', array($this, 'get_raw_original_path'), 10, 2);
       add_filter('shortpixel/image/urltopath', array($this, 'checkIfOffloaded'), 10,2);
       add_filter('shortpixel/file/virtual/translate', array($this, 'getLocalPathByURL'));
+
 
       // for webp picture paths rendered via output
      // add_filter('shortpixel_webp_image_base', array($this, 'checkWebpRemotePath'), 10, 2);
@@ -123,6 +131,32 @@ class wpOffload
 			return $class;
 		}
 
+		// This is used in the converted. Might be deployed elsewhere for better control.
+		public function preventOffload($attach_id)
+		{
+			 self::$offloadPrevented[$attach_id] = true;
+			 Log::addTemp('Offload Prevent Set: ', self::$offloadPrevented );
+
+		}
+
+		public function preventOffloadOff($attach_id)
+		{
+			  unset(self::$offloadPrevented[$attach_id]);
+				Log::addTemp('Offload Prevent Removed: ', self::$offloadPrevented );
+		}
+
+		// When Offload is not offloaded but is created during the process of generate metadata in WP, wp_create_image_subsizes fires an update metadata after just moving the upload, before making any thumbnails.  If this is the case and the file has an -scaled / original image setup, the original_source_path becomes the same as the source_path which creates issue later on when dealing with optimizing it, if the file is deleted on local server.  Prevent this, and lean on later update metadata.
+		public function preventUpdateMetaData($bool, $data, $post_id, $old_provider_object)
+		{
+			if (isset(self::$offloadPrevented[$post_id]))
+			{
+					return true ; // return true to cancel.
+			}
+
+			return $bool;
+
+		}
+
     /**
     * @param $id attachment id (WP)
     * @param $mediaItem  MediaLibraryModel SPIO
@@ -131,11 +165,11 @@ class wpOffload
     public function image_restore($mediaItem, $id, $clean)
     {
 
-      if (false === $clean)
+      /*if (false === $clean)
 			{
 				Log::addDebug('Restore was not clean ' . $id);
         return false; // don't do anything until we have restored all ( for now )
-			}
+			} */
 
       $settings = \wpSPIO()->settings();
 
@@ -340,20 +374,21 @@ class wpOffload
     {
        $source_id = $this->getSourceIDByURL($url);
 
-
        if ($source_id == false)
        {
         return false;
       }
        $item = $this->getItemById($source_id);
 
-
+Log::addTemp('Translate URL ' . $url);
        $original_path = $item->original_source_path(); // $values['original_source_path'];
 
        if (wp_basename($url) !== wp_basename($original_path)) // thumbnails translate to main file.
        {
           $original_path = str_replace(wp_basename($original_path), wp_basename($url), $original_path);
        }
+
+			 Log::addTemp("Translated file " . $original_path );
 
        $fs = \wpSPIO()->filesystem();
        $base = $fs->getWPUploadBase();
@@ -446,7 +481,7 @@ class wpOffload
 
 					// The Handler doesn't work properly /w local removal if not the exact correct files are passed (?) . Offload does this probably via update metadata function, so let them sort it out with this . (until it breaks)
 
-					Log::addTemp('Sending for offload');
+					Log::addTemp('Sending for offload', $meta);
 					$meta = wp_get_attachment_metadata($id);
 					wp_update_attachment_metadata($id, $meta);
 
@@ -454,10 +489,41 @@ class wpOffload
 
     }
 
+		// WP Offload -for some reason - returns the same result of get_attached_file and wp_get_original_image_path , which are different files (one scaled) which then causes a wrong copy action after optimizing the image ( wrong destination download of the remote file ).   This happens if offload with delete is on.  Attempt to fix the URL to reflect the differences between -scaled and not.
+		/*public function fixScaledUrl( $url, $file, $attachment_id, $as3cf_item)
+		{
+			echo "<PRE>";
+			var_dump($url, $file);
+
+			// URL has scaled. File doesn't.
+			if (strpos($url, '-scaled') !== false && strpos($file, '-scaled') === false)
+			{
+
+					$url = str_replace('-scaled', '', $url);
+		//			echo "REPLACING";
+			}
+var_dump($url);
+echo "</PRE>";
+			 return $url;
+		} */
+
+		// WP Offload -for some reason - returns the same result of get_attached_file and wp_get_original_image_path , which are different files (one scaled) which then causes a wrong copy action after optimizing the image ( wrong destination download of the remote file ).   This happens if offload with delete is on.  Attempt to fix the URL to reflect the differences between -scaled and not.
+		public function checkScaledUrl($filepath, $id)
+		{
+				// Original filepath can never have a scaled in there.
+				if (strpos($filepath, '-scaled') !== false)
+				{
+					$filepath = str_replace('-scaled', '', $filepath);
+				}
+	//		 var_dump($filepath);
+			 return $filepath;
+		}
+
     /** This function will cut out the initial upload to S3Offload and rely solely on the image_upload function provided here, after shortpixel optimize.
     * Function will only work when plugin is set to auto-optimize new entries to the media library
     * Since S3-Offload 2.3 this will be called on every thumbnail ( changes in WP 5.3 )
     */
+		/*
     public function preventInitialUpload($bool, $data, $post_id, $old_provider_object)
     {
 
@@ -494,7 +560,7 @@ class wpOffload
           }
         }
         return $bool;
-    }
+    } */
 
 		/** This function will cut out the initial upload to S3Offload . This cuts it off in the new handle area, leaving other updating in tact.
 		*/
@@ -518,6 +584,14 @@ class wpOffload
 				if ($this->shouldPrevent === false) // if false is returned, it's NOT prevented, so on-going.
 						return false;
 
+				Log::addTemp('Checking static prevent of id '  . $post_id);
+				if (isset(self::$offloadPrevented[$post_id]))
+				{
+					Log::addDebug('Offload Prevented via static for '. $post_id);
+					$error = new \WP_Error( 'upload-prevented', 'No offloading at this time, thanks' );
+					return $error;
+				}
+
 				if (\wpSPIO()->env()->is_autoprocess)
 				{
 					// Don't prevent whaffever if shortpixel is already done. This can be caused by plugins doing a metadata update, we don't care then.
@@ -533,10 +607,11 @@ class wpOffload
 						}
 
 						Log::addDebug('Preventing Initial Upload: ' . $post_id);
-						$error = new \WP_Error( 'upload-prevented', 'No offfloading at this time, thanks' );
+						$error = new \WP_Error( 'upload-prevented', 'No offloading at this time, thanks' );
 						return $error;
 					}
 				}
+				Log::addDebug('Not preventing S3 Offload');
 				return $bool;
 		}
 

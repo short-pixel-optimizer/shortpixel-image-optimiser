@@ -46,7 +46,7 @@ class DownloadHelper
 					$downloadTimeout = max(ini_get('max_execution_time') - 10, 15);
 					$tempFile = \download_url($fileURL, $downloadTimeout);
 
-		      Log::addInfo(' Download ' . $fileURL . ' to : '. json_encode($tempFile));
+		      Log::addInfo(' Download ' . $fileURL . ' to : '. json_encode($tempFile) . '  (timeout: )' . $downloadTimeout);
 
 					if(is_wp_error( $tempFile ))
 		      { //try to switch the default protocol
@@ -61,6 +61,7 @@ class DownloadHelper
 						$args_for_get = array(
 							'stream' => true,
 							'filename' => $tmpfname,
+							'timeout' => $downloadTimeout, 
 						);
 
 						$tempFile = wp_remote_get( $url, $args_for_get );

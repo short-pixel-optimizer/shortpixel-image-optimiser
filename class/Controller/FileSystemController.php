@@ -432,6 +432,7 @@ Class FileSystemController extends \ShortPixel\Controller
       $args_for_get = array(
         'stream' => true,
         'filename' => $destinationPath,
+				'timeout' => $downloadTimeout,
       );
 
       $response = wp_remote_get( $url, $args_for_get );

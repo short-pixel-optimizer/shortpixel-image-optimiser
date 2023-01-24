@@ -69,6 +69,8 @@ class EditMediaViewController extends \ShortPixel\ViewController
 						return false;
 					}
 
+			//		var_dump($this->imageModel->getOriginalFile());
+					//var_dump(\wp_get_original_image_path($this->post_id));
 
           $this->view->status_message = null;
 

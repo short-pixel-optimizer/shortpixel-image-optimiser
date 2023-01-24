@@ -68,21 +68,38 @@ abstract class MediaLibraryConverter extends Converter
 
 			$WPMLduplicates = $this->imageModel->getWPMLDuplicates();
 
+			$attachment = get_post($attach_id);
+
+			$guid = $attachment->guid;
+
 			// This action prevents images from being regenerated on the thumbnail hook.
 				do_action('shortpixel-thumbnails-before-regenerate', $attach_id );
+				do_action('shortpixel/converter/prevent-offload', $attach_id);
 
 			// Update attached_file
 			$bool = update_attached_file($attach_id, $newFile->getFullPath() );
 			if (false === $bool)
 				return false;
 
+
 			// Update post mime on attachment
 			if (isset($params['success']) && true === $params['success'])
-				$post_ar = array('ID' => $attach_id, 'post_mime_type' => 'image/jpeg');
+			{
+				$newExt = $this->imageModel->getMeta()->convertMeta()->getFileFormat();
+				$newGuid = str_replace($guid, $newExt, 'jpg'); // This probable doesn't work bcause doesn't update Guid with this function.
+				$post_ar = array('ID' => $attach_id, 'post_mime_type' => 'image/jpeg', 'guid' => $newGuid);
+			}
 			elseif ( isset($params['restore']) && true === $params['restore'] )
-				$post_ar = array('ID' => $attach_id, 'post_mime_type' => 'image/png');
+			{
+				$oldExt = $this->imageModel->getMeta()->convertMeta()->getFileFormat();
+				$newGuid = str_replace($guid, 'jpg', $oldExt);
+				$post_ar = array('ID' => $attach_id, 'post_mime_type' => 'image/png', 'guid' => $newGuid);
+			}
+
+			Log::addTemp('POST ARRAY', $post_ar);
 
 			$result = wp_update_post($post_ar);
+
 			if ($result === 0 || is_wp_error($result))
 			{
 				Log::addError('Issue updating WP Post converter - ' . $attach_id);
@@ -93,7 +110,12 @@ abstract class MediaLibraryConverter extends Converter
 
 			if (true === $params['generate_metadata'])
 			{
+				$attachment = get_post( $attach_id );
+				Log::addTemp('Starting generate ' . var_export(file_exists($newFile->getFullPath()), true));
+				Log::addTemp('Attachment ', $attachment);
+				Log::addTemp('Post Mime ', get_post_mime_type( $attachment ));
 				$new_metadata = wp_generate_attachment_metadata($attach_id, $newFile->getFullPath());
+				Log::addTemp('Newfile -- ' . var_export(file_exists($newFile->getFullPath()), true), $newFile->getFullPath());
 				Log::addTemp('New Metadata generated', $new_metadata);
 			}
 			else {
@@ -113,8 +135,11 @@ abstract class MediaLibraryConverter extends Converter
 
 			}
 
+			do_action('shortpixel/converter/prevent-offload-off', $attach_id);
+
 			if (is_array($new_metadata) && count($new_metadata) > 0)
 			{
+				Log::addTemp('Update Metadata 2');
 				$bool = wp_update_attachment_metadata($attach_id, $new_metadata);
 			}
 
@@ -132,7 +157,7 @@ abstract class MediaLibraryConverter extends Converter
 
 			$this->replacer->setTargetMeta($new_metadata);
 
-
+			Log::addTemp('Return UpdateMetadsta');
 	}
 
 
