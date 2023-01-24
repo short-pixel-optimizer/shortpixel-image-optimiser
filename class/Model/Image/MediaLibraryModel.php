@@ -574,7 +574,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			// Add duplicates. Duplicates are metadata sizes that have a same file ( identical ) defined pointing.
 			if (isset($data['duplicates']))
 			{
-				
+
 				 foreach($data['duplicates'] as $duplicateName => $duplicateRef)
 				 {
 					  $thumbnail = $thumbObjs[$duplicateName];
@@ -1339,6 +1339,16 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				 return false;
 			 }
 
+			 $thumbObjs = $this->getThumbObjects();
+			 foreach($thumbObjs as $thumbObj)
+			 {
+				 $result = $thumbObj->createBackup();
+				 if (false === $result)
+				 {
+					  Log::addWarning('Backup failed on Thumbitem ' . $thumbObj->getFullPath());
+				 }
+			 }
+
 		}
 
 		// Saving Meta to keep filesizes in case everything is offload-deleted.
@@ -1363,20 +1373,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				 $backupFile->delete();
 			 }
 
-			 foreach($this->thumbnails as $thumbnail)
+			 $thumbObjs = $this->getThumbObjects();
+			 foreach($thumbObjs as $thumbnail)
 			 {
 					$backupFile = $thumbnail->getBackupFile();
 					// check if there is backup and if file exists.
 					if (is_object($backupFile) && $backupFile->exists())
 						 $backupFile->delete();
 			 }
-			 if ($this->isScaled())
-			 {
-					$backupFile = $this->getOriginalFile()->getBackupFile();
-					if (is_object($backupFile) && $backupFile->exists())
-						 $backupFile->delete();
 
-			 }
 		}
 		// Prevent from retrying next time, since stuff will be requeued.
 		$this->getMeta()->convertMeta()->setTried($args['checksum']);
@@ -1905,7 +1910,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 				update_post_meta($this->get('id'), '_wp_attachment_metadata', $wpmeta);
 
-
         do_action('shortpixel_after_restore_image', $this->id, $cleanRestore); // legacy
 				do_action('shortpixel/image/after_restore', $this, $this->id, $cleanRestore);
 
@@ -2021,7 +2025,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 									if (is_object($backupFile))
 									{
-										$backupFile->delete();
+										// This should delete in restore function.
+										//$backupFile->delete();
 
 										$backupFileJPG = $fs->getFile($backupFile->getFileDir() . $backupFile->getFileBase() . '.jpg');
 										if (is_object($backupFileJPG) && $backupFileJPG->exists())
