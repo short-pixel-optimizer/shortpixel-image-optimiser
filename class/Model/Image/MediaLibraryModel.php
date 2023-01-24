@@ -1424,7 +1424,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		 {
 				 $file = $fs->getFile($thumbObj->getFileDir() . $thumbObj->getFileBase() . '.jpg');
 
-				 if ($file->exists()) // if new exists, remove old
+				 if ($thumbObj->exists()) // if new exists, remove old
 				 {
 						 $thumbObj->delete(); // remove the old file.
 						 $thumbObj->fullpath = $file->getFullPath();

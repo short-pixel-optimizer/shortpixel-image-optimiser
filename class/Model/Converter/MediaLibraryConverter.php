@@ -132,7 +132,10 @@ abstract class MediaLibraryConverter extends Converter
 
 			}
 
-			do_action('shortpixel/converter/prevent-offload-off', $attach_id);
+			if (isset($params['success']) && true === $params['success'])
+			{
+				do_action('shortpixel/converter/prevent-offload-off', $attach_id);
+			}
 
 			if (is_array($new_metadata) && count($new_metadata) > 0)
 			{
@@ -141,6 +144,12 @@ abstract class MediaLibraryConverter extends Converter
 			}
 			else {
 				Log::addTemp('No New Metadata, not updated');
+			}
+
+			// Restore -sigh- fires off a later signal, because on the succesHandler in MediaLIbraryModel it may copy back backups.
+			if (isset($params['restore']) && true === $params['restore'])
+			{
+				do_action('shortpixel/converter/prevent-offload-off', $attach_id);
 			}
 
 			if (is_array($WPMLduplicates) && count($WPMLduplicates) > 0)
