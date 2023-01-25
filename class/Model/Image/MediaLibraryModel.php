@@ -56,9 +56,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         $this->setOriginalFile();
       }
 
-      if (! $this->isExtensionExcluded())
+			if ($this->id > 0)
+			 	$this->loadMeta();
+
+      if (false === $this->isExtensionExcluded())
       {
-				 $this->loadMeta();
 				 $this->checkUnlistedForNotice();
 			}
 
@@ -702,6 +704,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       }
       elseif (is_object($metadata) )
       {
+					Log::addTemp('Load Meta', var_export($metadata->image_meta, true));
           $this->image_meta->fromClass($metadata->image_meta);
 
           // Loads thumbnails from the WordPress installation to ensure fresh list, discover later added, etc.
@@ -888,6 +891,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 					// [...]
 					$extra_info = json_decode($record->extra_info);
+					Log::addTemp('Extra_INFO', var_export($extra_info, true));
 
 					// @todo Extra info should probably be stored as JSON?
 					if (! is_null($extra_info))

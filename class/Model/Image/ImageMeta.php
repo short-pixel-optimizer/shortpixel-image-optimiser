@@ -21,6 +21,7 @@ class ImageMeta extends ImageThumbnailMeta
 	{
 		if (property_exists($object, 'convertMeta'))
 		{
+			
 			$this->convertMeta->fromClass($object->convertMeta);
 			unset($object->convertMeta);
 		}

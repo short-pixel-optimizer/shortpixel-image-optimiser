@@ -82,6 +82,7 @@ class ApiConverter extends MediaLibraryConverter
 
 				}
 				else {
+					Log::addError('Failed to copy placeholder');
 					return false;
 				}
 
@@ -175,7 +176,6 @@ class ApiConverter extends MediaLibraryConverter
 			}
 
 			$tempFile = $fs->getFile($mainFile['image']['file']);
-			Log::addTemp('MainFile Debug INfo', $mainFile);
 
 			$replacementFile = $fs->getFile($this->imageModel->getFileDir() . $this->imageModel->getFileBase() . '.jpg');
 			$res = $tempFile->copy($replacementFile);

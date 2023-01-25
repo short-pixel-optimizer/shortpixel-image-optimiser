@@ -857,7 +857,6 @@ class OptimizeController
 		protected function handleOptimizedItem($q, $item, $mediaObj, $successData)
 		{
 				$imageArray = $successData['files'];
-				Log::addTemp('Handle Optimized Item', $imageArray);
 
 				$downloadHelper = DownloadHelper::getInstance();
 				$converter = Converter::getConverter($mediaObj, true);
@@ -881,7 +880,7 @@ class OptimizeController
 					 {
 						  // All good.
 					 }
-					 // If status is success.  When converting (API) allow files that are bigger 
+					 // If status is success.  When converting (API) allow files that are bigger
 					 elseif ($image['image']['status'] == ApiController::STATUS_SUCCESS ||
 					 				($image['image']['status'] == ApiController::STATUS_OPTIMIZED_BIGGER && is_object($converter))
 									)

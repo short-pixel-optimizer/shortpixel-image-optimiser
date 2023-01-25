@@ -18,22 +18,6 @@ class ImageConvertMeta
 
 	 }
 
-	 public function load($data)
-	 {
-		  foreach($data as $name => $val)
-			{
-				 if (property_exists($this, $name))
-				 {
-					  $this->$name = $val;
-				 }
-			}
-	 }
-
-	 public function save()
-	 {
-		  return $convertData;
-	 }
-
 	 public function isConverted()
 	 {
 		 	return $this->isConverted;
@@ -102,7 +86,6 @@ class ImageConvertMeta
         }
      	}
   	}
-
 
 	 public function toClass()
 	 {

@@ -164,8 +164,6 @@ class QuotaController
           $apiKey = $keyControl->forceGetApiKey();
         }
 
-				Log::addTemp('Get Remove quota check ', debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 6));
-
 
         $settings = \wpSPIO()->settings();
 

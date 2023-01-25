@@ -989,6 +989,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 				// If extension not in allowed list, check converters.
 				$converter = Converter::getConverter($this, true);
+
 				if (is_object($converter))
 				{
 						// Yes can convert, so do not exclude.
