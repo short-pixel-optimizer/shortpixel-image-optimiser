@@ -168,7 +168,7 @@ class ApiConverter extends MediaLibraryConverter
 				 return false;
 			}
 
-			if (! isset($mainFile['image']) || ! isset($mainFile['image']['files']))
+			if (! isset($mainFile['image']) || ! isset($mainFile['image']['file']))
 			{
 				 Log::addError('Optimizer didn\'t return file', $mainFile);
 				 return false;
