@@ -364,7 +364,8 @@ class FileModel extends \ShortPixel\Model
   {
      if ($this->exists())
 		 {
-      \wp_delete_file($this->fullpath);  // delete file hook via wp_delete_file
+				Log::addDebug('Deleting file ' . $this->fullpath);
+      	\wp_delete_file($this->fullpath);  // delete file hook via wp_delete_file
 		 }
 		 else
 		 {

@@ -10,24 +10,35 @@ class ApiConverter extends MediaLibraryConverter
 
 	const CONVERTABLE_EXTENSIONS = array( 'heic');
 
-
 	protected $requestAPIthumbnails = true;
 
 
 		public function isConvertable()
 		{
+			 $fs = \wpSPIO()->filesystem();
 			 $extension = $this->imageModel->getExtension();
 
+			 // Don't allow to convert if target exists to prevent overwrites.
+			 $replacement = $fs->getFile($this->imageModel->getFileDir() . $this->imageModel->getFileBase() . '.jpg');
+
+			 if ($replacement->exists() && false === $this->imageModel->getMeta()->convertMeta()->hasPlaceHolder())
+			 {
+				 return false;
+			 }
+
+			 // If extension is in list of allowed Api Converts.
 			 if (in_array($extension, static::CONVERTABLE_EXTENSIONS) && $extension !== 'png')
 			 {
 				  return true;
 			 }
 
+			 // If file has not been converted in terms of file, but has a placeholder - process ongoing, so continue;
 			 if (false === $this->imageModel->getMeta()->convertMeta()->isConverted() && true === $this->imageModel->getMeta()->convertMeta()->hasPlaceHolder())
 			 {
 				 return true;
 			 }
 
+			 // File has been converted, not converting again.
 			 if (true === $this->imageModel->getMeta()->convertMeta()->isConverted())
 			 {
 				  return false;
@@ -41,7 +52,7 @@ class ApiConverter extends MediaLibraryConverter
 				 'runReplacer' => true, // The replacer doesn't need running when the file is just uploaded and doing in handle upload hook.
 			);
 
-			$args = wp_parse_args($args, $defaults);
+				$args = wp_parse_args($args, $defaults);
 
 				$this->setupReplacer();
 
@@ -132,22 +143,10 @@ class ApiConverter extends MediaLibraryConverter
 		//		 $attach_id = $this->imageModel->get('id');
 				 $placeHolderFile = $fs->getFile($this->imageModel->getFileDir() . $this->imageModel->getFileBase() . '.' . $this->imageModel->getMeta()->convertMeta()->getFileFormat());
 
-				 //$this->newFile = $placeHolderFile;
 				 $this->source_url = $fs->pathToUrl($placeHolderFile);
 				 $this->replacer->setSource($this->source_url);
 
-//				 $this->imageModel->delete(); // Remove the HEIC file
-//				 $this->imageModel->saveMeta();
-
 				 $placeHolderFile->delete();
-
-				// $params = array('success' => true, 'generate_metadata' => false);
-				// $this->updateMetaData($params);
-
-	//			 $fs->flushImage($this->imageModel);
-
-	//			 $this->imageModel = $fs->getMediaImage($attach_id);
-
 			}
 
 			if (isset($optimizeData['files']) && isset($optimizeData['data']))
@@ -170,6 +169,7 @@ class ApiConverter extends MediaLibraryConverter
 			}
 
 			$tempFile = $fs->getFile($mainFile['image']['file']);
+			Log::addTemp('MainFile Debug INfo', $mainfile);
 
 			$replacementFile = $fs->getFile($this->imageModel->getFileDir() . $this->imageModel->getFileBase() . '.jpg');
 			$res = $tempFile->copy($replacementFile);

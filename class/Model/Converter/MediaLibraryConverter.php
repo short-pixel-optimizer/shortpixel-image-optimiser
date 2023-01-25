@@ -109,11 +109,9 @@ abstract class MediaLibraryConverter extends Converter
 			if (true === $params['generate_metadata'])
 			{
 				$attachment = get_post( $attach_id );
-				Log::addTemp('Starting generate ' . var_export(file_exists($newFile->getFullPath()), true));
-				Log::addTemp('Attachment ', $attachment);
+
 				$new_metadata = wp_generate_attachment_metadata($attach_id, $newFile->getFullPath());
-				Log::addTemp('Newfile -- ' . var_export(file_exists($newFile->getFullPath()), true), $newFile->getFullPath());
-				Log::addTemp('New Metadata generated', $new_metadata);
+
 			}
 			else {
 				$new_metadata = array();
@@ -139,11 +137,7 @@ abstract class MediaLibraryConverter extends Converter
 
 			if (is_array($new_metadata) && count($new_metadata) > 0)
 			{
-				Log::addTemp('Update Metadata after preventing offload');
 				$bool = wp_update_attachment_metadata($attach_id, $new_metadata);
-			}
-			else {
-				Log::addTemp('No New Metadata, not updated');
 			}
 
 			// Restore -sigh- fires off a later signal, because on the succesHandler in MediaLIbraryModel it may copy back backups.

@@ -7,6 +7,9 @@ use ShortPixel\Controller\ApiController as API;
 
 use Shortpixel\Model\File\FileModel as FileModel;
 use ShortPixel\Model\AccessModel as AccessModel;
+
+use ShortPixel\Model\Converter\Converter as Converter;
+
 /* ImageModel class.
 *
 *
@@ -33,7 +36,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     const COMPRESSION_GLOSSY = 2;
 
     // Extension that we process .
-    const PROCESSABLE_EXTENSIONS = array('jpg', 'jpeg', 'gif', 'png', 'pdf', 'heic');
+    const PROCESSABLE_EXTENSIONS = array('jpg', 'jpeg', 'gif', 'png', 'pdf');
 
     //
     const P_PROCESSABLE = 0;
@@ -124,7 +127,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     /* Check if an image in theory could be processed. Check only exclusions, don't check status etc */
     public function isProcessable()
     {
-        if ( $this->isOptimized() || ! $this->exists()  || $this->isPathExcluded() || $this->isExtensionExcluded() || $this->isSizeExcluded() || (! $this->is_writable() && ! $this->is_virtual()) || $this->isOptimizePrevented() !== false )
+        if ( $this->isOptimized() || ! $this->exists()  || $this->isPathExcluded() || $this->isExtensionExcluded() || $this->isSizeExcluded() || (! $this->is_writable() && ! $this->is_virtual()) || $this->isOptimizePrevented() !== false  )
         {
           if(! $this->is_writable() && $this->processable_status == 0)
 					{
@@ -976,13 +979,24 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         return false;
     }
 
+		// Checks Processable extensions. The other way of approval is having the file be convertable.
     protected function isExtensionExcluded()
     {
-
         if (in_array( strtolower($this->getExtension()) , self::PROCESSABLE_EXTENSIONS))
         {
             return false;
         }
+
+				// If extension not in allowed list, check converters.
+				$converter = Converter::getConverter($this, true);
+				if (is_object($converter))
+				{
+						// Yes can convert, so do not exclude.
+						if (true === $converter->isConvertable())
+						{
+							 return false;
+						}
+				}
 
         $this->processable_status = self::P_EXCLUDE_EXTENSION;
         return true;

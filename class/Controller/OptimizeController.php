@@ -504,12 +504,13 @@ class OptimizeController
 			 }
 
 				$converter = Converter::getConverter($imageObj, true);
+				$bool = false; // init
 				if (false === $converter)
 				{
 					 Log::addError('Converter on Convert function returned false ' . $imageObj->get('id'));
 					 $bool = false;
 				}
-				else
+				elseif ($converter->isConvertable())
 				{
 					$bool = $converter->convert();
 				}
@@ -856,6 +857,7 @@ class OptimizeController
 		protected function handleOptimizedItem($q, $item, $mediaObj, $successData)
 		{
 				$imageArray = $successData['files'];
+				Log::addTemp('Handle Optimized Item', $imageArray);
 
 				$downloadHelper = DownloadHelper::getInstance();
 
@@ -932,6 +934,7 @@ class OptimizeController
 
 					}
 					else {
+						ResponseController::addData($item->item_id, 'message', __('File conversion failed.', 'shortpixel-image-optimiser'));
 						$q->itemFailed($item, true);
 						$status = ApiController::STATUS_FAIL;
 					}

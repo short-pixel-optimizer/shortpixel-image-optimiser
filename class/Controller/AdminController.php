@@ -75,10 +75,8 @@ class AdminController extends \ShortPixel\Controller
 							$args = array('runReplacer' => false);
 
 						 	$converter->convert($args);
-							//$fs->flushImageCache(); // Flush it to reflect new status.
 							$mediaItem = $fs->getImage($id, 'media');
 							$meta = $converter->getUpdatedMeta();
-//							$meta = wp_get_attachment_metadata($id); // reset the metadata because we are on the hook.
 					}
 
         	$control = new OptimizeController();
@@ -273,7 +271,7 @@ class AdminController extends \ShortPixel\Controller
         try
         {
           $imageObj = $fs->getImage($post_id, 'media');
-					Log::addDebug('OnDelete ImageObj', $imageObj);
+					//Log::addDebug('OnDelete ImageObj', $imageObj);
           if ($imageObj !== false)
             $result = $imageObj->onDelete();
         }
