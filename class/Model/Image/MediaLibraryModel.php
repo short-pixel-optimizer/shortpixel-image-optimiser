@@ -891,7 +891,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 					// [...]
 					$extra_info = json_decode($record->extra_info);
-					Log::addTemp('Extra_INFO', var_export($extra_info, true));
 
 					// @todo Extra info should probably be stored as JSON?
 					if (! is_null($extra_info))

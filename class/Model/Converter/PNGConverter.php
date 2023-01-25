@@ -59,7 +59,6 @@ class PNGConverter extends MediaLibraryConverter
 				// Settings
 			  if ($this->converterActive === false)
 				{
-
 					return false;
 				}
 
