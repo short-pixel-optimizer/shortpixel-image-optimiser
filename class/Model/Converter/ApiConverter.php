@@ -168,8 +168,14 @@ class ApiConverter extends MediaLibraryConverter
 				 return false;
 			}
 
+			if (! isset($mainFile['image']) || ! isset($mainFile['image']['files']))
+			{
+				 Log::addError('Optimizer didn\'t return file', $mainFile);
+				 return false;
+			}
+
 			$tempFile = $fs->getFile($mainFile['image']['file']);
-			Log::addTemp('MainFile Debug INfo', $mainfile);
+			Log::addTemp('MainFile Debug INfo', $mainFile);
 
 			$replacementFile = $fs->getFile($this->imageModel->getFileDir() . $this->imageModel->getFileBase() . '.jpg');
 			$res = $tempFile->copy($replacementFile);

@@ -860,6 +860,7 @@ class OptimizeController
 				Log::addTemp('Handle Optimized Item', $imageArray);
 
 				$downloadHelper = DownloadHelper::getInstance();
+				$converter = Converter::getConverter($mediaObj, true);
 
 				$item->blocked = true;
 				$q->updateItem($item);
@@ -874,14 +875,16 @@ class OptimizeController
 					 if (! isset($item->files[$imageName]))
 					 {
 						 $item->files[$imageName]  = array();
-
 					 }
 
 					 if (isset($item->files[$imageName]['image']) && file_exists($item->files[$imageName]['image']))
 					 {
 						  // All good.
 					 }
-					 elseif ($image['image']['status'] == ApiController::STATUS_SUCCESS)
+					 // If status is success.  When converting (API) allow files that are bigger 
+					 elseif ($image['image']['status'] == ApiController::STATUS_SUCCESS ||
+					 				($image['image']['status'] == ApiController::STATUS_OPTIMIZED_BIGGER && is_object($converter))
+									)
 					 {
 						  $tempFile = $downloadHelper->downloadFile($image['image']['url']);
 							if (is_object($tempFile))
@@ -890,6 +893,7 @@ class OptimizeController
 								$imageArray[$imageName]['image']['file'] = $tempFile->getFullPath();
 							}
 					 }
+
 
 					 if (! isset($item->files[$imageName]['webp']) &&  $image['webp']['status'] == ApiController::STATUS_SUCCESS)
 					 {
@@ -902,7 +906,6 @@ class OptimizeController
 				 	 }
 					 elseif ($image['webp']['status'] == ApiController::STATUS_OPTIMIZED_BIGGER) {
 					 		$item->files[$imageName]['webp'] = ApiController::STATUS_OPTIMIZED_BIGGER;
-
 					 }
 
 					 if (! isset($item->files[$imageName]['avif']) && $image['avif']['status'] == ApiController::STATUS_SUCCESS)
