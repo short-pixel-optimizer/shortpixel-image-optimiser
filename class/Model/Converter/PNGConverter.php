@@ -99,11 +99,30 @@ class PNGConverter extends MediaLibraryConverter
 				 return false;
 			 }
 
+			 $fs = \wpSPIO()->filesystem();
+
+
 			 $defaults = array(
 				 	'runReplacer' => true, // The replacer doesn't need running when the file is just uploaded and doing in handle upload hook.
 			 );
 
 			 $conversionArgs = array('checksum' => $this->getCheckSum());
+
+			 $this->setupReplacer();
+			 $this->raiseMemoryLimit();
+
+			 $replacementPath = $this->getReplacementPath();
+			 if (false === $replacementPath)
+			 {
+				 Log::addWarn('ApiConverter replacement path failed');
+				 $this->imageModel->getMeta()->convertMeta()->setError(self::ERROR_PATHFAIL);
+
+				 return false; // @todo Add ResponseController something here.
+			 }
+
+			 $replaceFile = $fs->getFile($replacementPath);
+			 Log::addDebug('Image replacement base : ' . $replaceFile->getFileBase());
+			 $this->imageModel->getMeta()->convertMeta()->setReplacementImageBase($replaceFile->getFileBase());
 
 			 $prepared = $this->imageModel->conversionPrepare($conversionArgs);
  			 if (false === $prepared)
@@ -113,9 +132,6 @@ class PNGConverter extends MediaLibraryConverter
 
 			 $args = wp_parse_args($args, $defaults);
 
-			 $this->setupReplacer();
-
-			 $this->raiseMemoryLimit();
 
 			 if ($this->forceConvertTransparent === false && $this->isTransparent())
 			 {
@@ -156,7 +172,7 @@ class PNGConverter extends MediaLibraryConverter
 			 $this->imageModel->conversionFailed($conversionArgs);
 
 			 //legacy. Note at this point metadata has not been updated.
-			 do_action('shortpixel/image/convertpng2jpg_after', $this->imageModel, $replacementPath);
+			 do_action('shortpixel/image/convertpng2jpg_after', $this->imageModel, $args);
 
 			 return false;
 		}

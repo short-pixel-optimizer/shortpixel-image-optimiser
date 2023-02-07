@@ -8,6 +8,7 @@ class ImageConvertMeta
 	 protected $fileFormat; // png / heic etc
 	 protected $isConverted = false;
 	 protected $placeholder = false;
+	 protected $replacementImageBase = false;
 	// protected $doConversion = false;
 	 protected $triedConversion = false;
 	 protected $errorReason = false;
@@ -75,6 +76,19 @@ class ImageConvertMeta
 	 {
 		  return $this->placeholder;
 	 }
+
+	 public function setReplacementImageBase($name)
+	 {
+		  $this->replacementImageBase = $name;
+
+	 }
+
+	 public function getReplacementImageBase()
+	 {
+		  return $this->replacementImageBase;
+
+	 }
+
 
 	 public function fromClass($object)
    {

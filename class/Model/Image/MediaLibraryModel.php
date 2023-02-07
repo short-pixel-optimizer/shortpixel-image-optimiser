@@ -704,7 +704,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       }
       elseif (is_object($metadata) )
       {
-					Log::addTemp('Load Meta', var_export($metadata->image_meta, true));
           $this->image_meta->fromClass($metadata->image_meta);
 
           // Loads thumbnails from the WordPress installation to ensure fresh list, discover later added, etc.
@@ -1137,11 +1136,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			$WPMLduplicates = $this->getWPMLDuplicates();
 
 			$fileDelete = (count($WPMLduplicates) == 0) ? true : false;
+			$fs = \wpSPIO()->filesystem();
 
 			// Load before removing meta.
 			$isConverted = $this->getMeta()->convertMeta()->isConverted();
 
 
+			// If file is converted, the backup path can live somewhere else ( on the converted item ), so search in this context instead of imagemodel which will only look for same extension backups.
 			if (true === $isConverted)
 			{
 				 $args = array('forceConverted' => true);
@@ -1152,8 +1153,32 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						if ($file->exists())
 							$file->delete();
 				 }
+
+				 $thumbObjs = $this->getThumbObjects();
+				 foreach($thumbObjs as $thumbObj)
+				 {
+					  if ($thumbObj->hasBackup($args))
+						{
+							 $file = $thumbObj->getBackupFile($args);
+							 if ($file->exists())
+							 {
+								  $file->delete();
+							 }
+						}
+				 }
+
+
 			}
 
+			if (true === $this->getMeta()->convertMeta()->hasPlaceHolder())
+			{
+		 				$placeholderFile = $fs->getFile($this->getFileDir() . $this->getMeta()->convertMeta()->getReplacementImageName());
+
+						if (true === $placeholderFile->exists())
+						{
+								$placeholderFile->delete();
+						}
+			}
 
 			if ($fileDelete === true)
 			   	parent::onDelete();
@@ -1305,12 +1330,17 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       return $bool;
   }
 
+
+
   public function conversionPrepare($args = array())
 	{
 		$settings = \wpSPIO()->settings();
 		$bool = false;
 
-		$defaults = array('checksum' => 1);
+		$defaults = array(
+			'checksum' => 1,
+			'replacementPath' => null,
+		);
 		$args = wp_parse_args($args, $defaults);
 
 		if ($settings->backupImages == 1)
@@ -1388,6 +1418,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		}
 		// Prevent from retrying next time, since stuff will be requeued.
 		$this->getMeta()->convertMeta()->setTried($args['checksum']);
+		$this->getMeta()->convertMeta()->setReplacementImageBase(false);
+
 		$this->flushOptimizeData();
 		$this->saveMeta();
 
@@ -1414,7 +1446,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				 $this->setFileInfo();
 		 }
 
-
 		 // After Convert, reload new meta.
 		$this->thumbnails = $this->loadThumbnailsFromWP();
 		$this->retinas = null;
@@ -1440,6 +1471,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$fs->flushImageCache();
 		$this->flushOptimizeData();
 		$this->getMeta()->convertMeta()->setTried($args['checksum']);
+		$this->getMeta()->convertMeta()->setReplacementImageBase(false);
+
 		$this->saveMeta();
 	}
 
@@ -1620,7 +1653,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$is_resized = $this->getMeta('resize');
 		$convertMeta = $this->getMeta()->convertMeta();
 		$was_converted = $convertMeta->isConverted() && true == $convertMeta->omitBackup();
-		$converter = Converter::getConverter($this); // ugly, but no way around.
+		$converter = Converter::getConverter( clone $this); // ugly, but no way around.
 
 		// ** Warning - This will also reset metadata ****
     $bool = parent::restore();
@@ -1896,7 +1929,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 									if (is_object($backupFile))
 									{
 										// This should delete in restore function.
-										//$backupFile->delete();
+										$backupFile->delete();
 
 										$backupFileJPG = $fs->getFile($backupFile->getFileDir() . $backupFile->getFileBase() . '.jpg');
 										if (is_object($backupFileJPG) && $backupFileJPG->exists())

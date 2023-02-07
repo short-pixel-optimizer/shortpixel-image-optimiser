@@ -570,12 +570,17 @@ abstract class Queue
 										  $data['params'][$sizeName]['convertto'] = 'jpg';
 									 }
 								}
+
+								// Run converter to create backup and make placeholder to block similar heics from overwriting.
+								$args = array('runReplacer' => false);
+								$converter->convert($args);
+
 								//Lossless because thumbnails will otherwise be derived of compressed image, leaving to double compr..
 								if (property_exists($item, 'compressionType'))
 								{
 									 $item->compressionTypeRequested = $item->compressionType;
 								}
-								// Process Heic as Lossless so we don't have double opts. 
+								// Process Heic as Lossless so we don't have double opts.
 								$item->compressionType = ImageModel::COMPRESSION_LOSSLESS;
 
 								// Reset counts

@@ -69,8 +69,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 						return false;
 					}
 
-			//		var_dump($this->imageModel->getOriginalFile());
-					//var_dump(\wp_get_original_image_path($this->post_id));
+
 
           $this->view->status_message = null;
 
@@ -235,15 +234,24 @@ class EditMediaViewController extends \ShortPixel\ViewController
           $debugInfo['wpmetadata'] = array(__('WordPress Get Attachment Metadata'), $meta );
 					$debugInfo[] = array('', '<hr>');
 
-          if ($imageObj->hasBackup())
-          {
-            $backupFile = $imageObj->getBackupFile();
+
+						if ($imageObj->hasBackup())
+            	$backupFile = $imageObj->getBackupFile();
+						else {
+							 $backupFile = $fs->getFile($fs->getBackupDirectory($imageObj) . $imageObj->getBackupFileName());
+						}
+
             $debugInfo[] = array(__('Backup Folder'), (string) $backupFile->getFileDir() );
-            $debugInfo[] = array(__('Backup File'), (string) $backupFile . '(' . UiHelper::formatBytes($backupFile->getFileSize()) . ')' );
-          }
-          else {
+						if ($imageObj->hasBackup())
+							$backupText = __('Backup File :');
+						else {
+							$backupText = __('Target Backup File after optimization (no backup) ');
+						}
+            $debugInfo[] = array( $backupText, (string) $backupFile . '(' . UiHelper::formatBytes($backupFile->getFileSize()) . ')' );
+
             $debugInfo[] =  array(__("No Main File Backup Available"), '');
-          }
+
+
 
 					if ($imageObj->getMeta()->convertMeta()->isConverted())
 					{
@@ -287,9 +295,18 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
               $url = $thumbObj->getURL(); //$fs->pathToURL($thumbObj); //wp_get_attachment_image_src($this->post_id, $size);
               $filename = $thumbObj->getFullPath();
-							$backup = $thumbObj->hasBackup() ? $thumbObj->getBackupFile()->getFullPath() : 'n/a';
 
-
+							$backupFile = $thumbObj->getBackupFile();
+							if ($thumbObj->hasBackup())
+							{
+								$backup = $backupFile->getFullPath();
+								$backupText = __('Backup File :');
+							}
+							else {
+								$backupFile = $fs->getFile($fs->getBackupDirectory($thumbObj) . $thumbObj->getBackupFileName());
+								$backup = $backupFile->getFullPath();
+								$backupText = __('Target Backup File after optimization (no backup) ');
+							}
 
               $width = $thumbObj->get('width');
               $height = $thumbObj->get('height');
@@ -301,7 +318,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 					$dbid = $thumbObj->getMeta('databaseID');
 
               $debugInfo[] = array('', "<div class='$size previewwrapper'><img src='" . $url . "'><p class='label'>
-							<b>URL:</b> $url ( $display_size - $width X $height ) <br><b>FileName:</b>  $filename <br> <b>Backup:</b> $backup </p>
+							<b>URL:</b> $url ( $display_size - $width X $height ) <br><b>FileName:</b>  $filename <br> <b> $backupText </b> $backup </p>
 							<p><b>Processable: </b> $processable <br> <b>Restorable:</b>  $restorable <br> <b>Record:</b> $hasrecord ($dbid) </p>
 							<hr></div>");
             }

@@ -1151,7 +1151,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
           return false;
        }
 
-       $backupFile = $fs->getFile($directory . $this->getFileName());
+       $backupFile = $fs->getFile($directory . $this->getBackupFileName());
 
        // Same file exists as backup already, don't overwrite in that case.
        if ($backupFile->exists() && $this->hasBackup() && $backupFile->getFileSize() == $this->getFileSize())

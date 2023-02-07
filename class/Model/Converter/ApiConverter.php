@@ -18,14 +18,6 @@ class ApiConverter extends MediaLibraryConverter
 			 $fs = \wpSPIO()->filesystem();
 			 $extension = $this->imageModel->getExtension();
 
-			 // Don't allow to convert if target exists to prevent overwrites.
-			 $replacement = $fs->getFile($this->imageModel->getFileDir() . $this->imageModel->getFileBase() . '.jpg');
-
-			 if ($replacement->exists() && false === $this->imageModel->getMeta()->convertMeta()->hasPlaceHolder())
-			 {
-				 return false;
-			 }
-
 			 // If extension is in list of allowed Api Converts.
 			 if (in_array($extension, static::CONVERTABLE_EXTENSIONS) && $extension !== 'png')
 			 {
@@ -59,15 +51,41 @@ class ApiConverter extends MediaLibraryConverter
 				$fs = \wpSPIO()->filesystem();
 
 				$placeholderFile = $fs->getFile(\wpSPIO()->plugin_path('res/img/fileformat-heic-placeholder.jpg'));
-				$destinationFile = $fs->getFile($this->imageModel->getFileDir() . $this->imageModel->getFileBase() . '.jpg');
 
+
+				// @todo Check replacementpath here. Rename main file - and backup - if numeration is needed.
+				// @todo Also placeholder probably needs to be done each time to block current job in progress.
+				$replacementPath = $this->getReplacementPath();
+				if (false === $replacementPath)
+				{
+					Log::addWarn('ApiConverter replacement path failed');
+					$this->imageModel->getMeta()->convertMeta()->setError(self::ERROR_PATHFAIL);
+
+					return false; // @todo Add ResponseController something here.
+				}
+
+				$replaceFile = $fs->getFile($replacementPath);
+				// If filebase (filename without extension) is not the same, this indicates that a double is there and it's enumerated. Move backup accordingly.
+
+				$destinationFile = $fs->getFile($replacementPath);
 				$copyok = $placeholderFile->copy($destinationFile);
 
 				if ($copyok)
 				{
 					$this->imageModel->getMeta()->convertMeta()->setFileFormat('heic');
 					$this->imageModel->getMeta()->convertMeta()->setPlaceHolder(true);
+					$this->imageModel->getMeta()->convertMeta()->setReplacementImageBase($destinationFile->getFileBase());
 					$this->imageModel->saveMeta();
+
+
+					// @todo Wip . Moved from handleConverted.
+					// Backup basically. Do this first.
+					$conversion_args = array('replacementPath' => $replacementPath);
+					$prepared = $this->imageModel->conversionPrepare($conversion_args);
+					if (false === $prepared)
+					{
+						 return false;
+					}
 
 					$this->setTarget($destinationFile);
 				//	$params = array('success' => true, 'generate_metadata' => false);
@@ -129,26 +147,46 @@ class ApiConverter extends MediaLibraryConverter
 			$this->setupReplacer();
 			$fs = \wpSPIO()->filesystem();
 
-			// Backup basically. Do this first.
-			$prepared = $this->imageModel->conversionPrepare();
-			if (false === $prepared)
+
+/*			$replacementPath = $this->getReplacementPath();
+			if (false === $replacementPath)
 			{
-				 return false;
+				Log::addWarn('ApiConverter replacement path failed');
+				$this->imageModel->getMeta()->convertMeta()->setError(self::ERROR_PATHFAIL);
+
+				return false; // @todo Add ResponseController something here.
+			}
+
+			$replacementFile = $fs->getFile($replacementPath);
+*/
+			$replacementBase = $this->imageModel->getMeta()->convertMeta()->getReplacementImageBase();
+			if (false === $replacementBase)
+			{
+				$replacementPath = $this->getReplacementPath();
+				$replacementFile = $fs->getFile($replacementPath);
+			}
+			else {
+				$replacementPath = $replacementBase . '.jpg';
+				$replacementFile = $fs->getFile($this->imageModel->getFileDir() . $replacementPath);
 			}
 
 			// If -sigh- file has a placeholder, then do something with that.
 			if (true === $this->imageModel->getMeta()->convertMeta()->hasPlaceHolder())
 			{
 				 $this->imageModel->getMeta()->convertMeta()->setPlaceHolder(false);
+				// $this->imageModel->getMeta()->convertMeta()->setReplacementImageBase(false);
 
 		//		 $attach_id = $this->imageModel->get('id');
-				 $placeHolderFile = $fs->getFile($this->imageModel->getFileDir() . $this->imageModel->getFileBase() . '.' . $this->imageModel->getMeta()->convertMeta()->getFileFormat());
 
-				 $this->source_url = $fs->pathToUrl($placeHolderFile);
+				// ReplacementFile as source should not point to the placeholder file
+				 $this->source_url = $fs->pathToUrl($replacementFile);
 				 $this->replacer->setSource($this->source_url);
 
-				 $placeHolderFile->delete();
+				 Log::addTemp('Deleting ' . $replacementFile->getFullPath());
+				 $replacementFile->delete();
 			}
+
+
 
 			if (isset($optimizeData['files']) && isset($optimizeData['data']))
 			{
@@ -177,7 +215,6 @@ class ApiConverter extends MediaLibraryConverter
 
 			$tempFile = $fs->getFile($mainFile['image']['file']);
 
-			$replacementFile = $fs->getFile($this->imageModel->getFileDir() . $this->imageModel->getFileBase() . '.jpg');
 			$res = $tempFile->copy($replacementFile);
 
 			if (true === $res)

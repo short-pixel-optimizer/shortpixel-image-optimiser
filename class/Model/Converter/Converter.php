@@ -130,7 +130,6 @@ abstract class Converter
 					$msg = __('Replacement path for PNG not writable', 'shortpixel-image-optimiser');
 					ResponseController::addData($this->imageModel->get('id'), 'message', $msg);
 
-
 				return false;
 			}
 

@@ -206,7 +206,7 @@ class FileModel extends \ShortPixel\Model
       if (! $directory)
         return false;
 
-      $backupFile =  $directory . $this->getFileName();
+      $backupFile =  $directory . $this->getBackupFileName();
 
       if (file_exists($backupFile) && ! is_dir($backupFile) )
         return true;
@@ -222,10 +222,16 @@ class FileModel extends \ShortPixel\Model
   public function getBackupFile()
   {
      if ($this->hasBackup())
-        return new FileModel($this->getBackupDirectory() . $this->getFileName() );
+        return new FileModel($this->getBackupDirectory() . $this->getBackupFileName() );
      else
        return false;
   }
+
+	/** Function returns the filename for the backup.  This is an own function so it's possible to manipulate backup file name if needed, i.e. conversion or enumeration */
+	public function getBackupFileName()
+	{
+		 return $this->getFileName();
+	}
 
   /** Returns the Directory Model this file resides in
   *
