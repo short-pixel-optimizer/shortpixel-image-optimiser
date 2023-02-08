@@ -39,6 +39,11 @@ class HeicFeatureNotice extends \ShortPixel\Model\AdminNoticeModel
 
 	 );
 
+	  if (\wpSPIO()->env()->checkPHPVersion('7.0'))
+		{
+				$message .= '<p style="color:#ff0000; font-weight: 700">' . sprintf(__('Your PHP version (%s) is very outdated. Heic and other new features might not work. It\'s strongly recommended to upgrade your PHP version', 'shortpixel_image_optimiser'), PHP_VERSION) . '</p>';
+		}
+
 		return $message;
 
 	}

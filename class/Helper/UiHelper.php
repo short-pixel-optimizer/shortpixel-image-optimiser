@@ -129,7 +129,6 @@ class UiHelper
 					{
 						 $improvs[$thumbName] = $stat; //self::formatNumber($stat,2);
 					}
-
 			 }
 
 			 if (count($improvs) > 0)
