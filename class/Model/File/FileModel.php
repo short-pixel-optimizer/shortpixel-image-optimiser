@@ -30,6 +30,7 @@ class FileModel extends \ShortPixel\Model
   // File Status
   protected $exists = null;
   protected $is_writable = null;
+	protected $is_directory_writable = null;
   protected $is_readable = null;
   protected $is_file = null;
   protected $is_virtual = false;
@@ -97,6 +98,7 @@ class FileModel extends \ShortPixel\Model
   public function resetStatus()
   {
       $this->is_writable = null;
+			$this->is_directory_writable = null;
       $this->is_readable = null;
       $this->is_file = null;
       $this->exists = null;
@@ -138,6 +140,28 @@ class FileModel extends \ShortPixel\Model
 
     return $this->is_writable;
   }
+
+	public function is_directory_writable()
+	{
+		if ($this->is_virtual())
+		{
+			 $this->is_directory_writable = false;  // can't write to remote files
+		}
+		elseif (is_null($this->is_directory_writable))
+		{
+			$directory = $this->getFileDir();
+			if ($directory->exists())
+			{
+				$this->is_directory_writable = $directory->is_writable();
+			}
+			else {
+				$this->is_directory_writable = false;
+			}
+
+		}
+
+		return $this->is_directory_writable;
+	}
 
   public function is_readable()
   {

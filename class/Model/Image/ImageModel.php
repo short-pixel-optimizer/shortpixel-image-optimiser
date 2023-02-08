@@ -49,6 +49,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		const P_BACKUPDIR_NOTWRITABLE = 7;
 		const P_BACKUP_EXISTS = 8;
 		const P_OPTIMIZE_PREVENTED = 9;
+		const P_DIRECTORY_NOTWRITABLE = 10;
+
 
 		// For restorable status
 		const P_RESTORABLE = 109;
@@ -127,13 +129,16 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     /* Check if an image in theory could be processed. Check only exclusions, don't check status etc */
     public function isProcessable()
     {
-        if ( $this->isOptimized() || ! $this->exists()  || $this->isPathExcluded() || $this->isExtensionExcluded() || $this->isSizeExcluded() || (! $this->is_writable() && ! $this->is_virtual()) || $this->isOptimizePrevented() !== false  )
+        if ( $this->isOptimized() || ! $this->exists()  || $this->isPathExcluded() || $this->isExtensionExcluded() || $this->isSizeExcluded() || (! $this->is_writable() && ! $this->is_virtual()) || (! $this->is_directory_writable() && ! $this->is_virtual()) || $this->isOptimizePrevented() !== false  )
         {
           if(! $this->is_writable() && $this->processable_status == 0)
 					{
             $this->processable_status = self::P_FILE_NOTWRITABLE;
 					}
-
+					elseif(! $this->is_directory_writable() && $this->processable_status == 0)
+					{
+            $this->processable_status = self::P_DIRECTORY_NOTWRITABLE;
+					}
           return false;
         }
         else
@@ -236,6 +241,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
          case self::P_FILE_NOTWRITABLE:
             $message = sprintf(__('Image %s is not writable in %s', 'shortpixel-image-optimiser'), $this->getFileName(), (string) $this->getFileDir());
          break;
+				 case self::P_DIRECTORY_NOTWRITABLE:
+						$message = sprintf(__('Image directory %s is not writable', 'shortpixel-image-optimiser'), (string) $this->getFileDir());
+				 break;
 				 case self::P_BACKUPDIR_NOTWRITABLE:
 				 		$message = __('Backup directory is not writable', 'shortpixel-image-optimiser');
 				 break;
@@ -696,7 +704,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
              $webpResult = $this->handleWebp($tmpFile);
               if ($webpResult === false)
-                Log::addWarn('Webps available, but copy failed ' . $downloadResults['webp']->file->getFullPath());
+                Log::addWarn('Webps available, but copy failed ' . $downloadResults['webp']['file']->getFullPath());
               else
                 $this->setMeta('webp', $webpResult->getFileName());
           }
@@ -736,7 +744,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 					 $this->restorable_status = self::P_NOT_OPTIMIZED;
            return false;  // not optimized, done.
         }
-        elseif ($this->hasBackup() && ($this->is_virtual() || $this->is_writable()) )
+        elseif ($this->hasBackup() && ($this->is_virtual() || ($this->is_writable() && $this->is_directory_writable()) ))
         {
 					$this->restorable_status = self::P_RESTORABLE;
           return true;
@@ -745,7 +753,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         {
           if (! $this->is_writable())
           {
-
 						  $response = array(
 									'is_error' => true,
 									'issue_type' => ResponseController::ISSUE_FILE_NOTWRITABLE,
@@ -757,7 +764,20 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 							$this->restorable_status = self::P_FILE_NOTWRITABLE;
               Log::addWarn('Restore - Not Writable ' . $this->getFullPath() );
           }
-          if (! $this->hasBackup())
+					elseif (! $this->is_directory_writable())
+					{
+							$response = array(
+									'is_error' => true,
+									'issue_type' => ResponseController::ISSUE_DIRECTORY_NOTWRITABLE,
+									'message' => __('This file can\'t be restored, directory is not writable', 'shortpixel-image-optimiser'),
+
+							);
+							ResponseController::addData($this->get('id'), $response);
+
+							$this->restorable_status = self::P_DIRECTORY_NOTWRITABLE;
+							Log::addWarn('Restore - Directory noot Writable ' . $this->getFileDir() );
+					}
+          elseif (! $this->hasBackup())
 					{
 						$this->restorable_status = self::P_BACKUP_NOT_EXISTS;
 						$response = array(
@@ -911,9 +931,10 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
               $result = true; // if already exists, all fine by us.
 						}
 
-            if (! $result)
+            if (false === $result)
 						{
               Log::addWarn('Could not copy Webp to destination ' . $target->getFullPath() );
+							return false;
 						}
             return $target;
       //   }
