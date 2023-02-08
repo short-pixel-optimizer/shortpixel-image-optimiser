@@ -1688,7 +1688,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
     if (! $bool)
     {
-			Log::addTemp('Bool is false before doing thumbnails');
        $cleanRestore = false;
     }
 
@@ -1712,7 +1711,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
             $bool = $thumbObj->restore(); // resets metadata
 						if (! $bool)
 						{
-							Log::addTemp('Clean restore failed on ', $thumbObj);
 							$cleanRestore = false;
 						}
 						else

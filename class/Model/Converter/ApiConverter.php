@@ -182,7 +182,6 @@ class ApiConverter extends MediaLibraryConverter
 				 $this->source_url = $fs->pathToUrl($replacementFile);
 				 $this->replacer->setSource($this->source_url);
 
-				 Log::addTemp('Deleting ' . $replacementFile->getFullPath());
 				 $replacementFile->delete();
 			}
 

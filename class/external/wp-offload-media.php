@@ -134,13 +134,11 @@ class wpOffload
 		// This is used in the converted. Might be deployed elsewhere for better control.
 		public function preventOffload($attach_id)
 		{
-			 Log::addTemp('Turning Prevent Offload on ' . $attach_id);
 			 self::$offloadPrevented[$attach_id] = true;
 		}
 
 		public function preventOffloadOff($attach_id)
 		{
-			  Log::addTemp('Turning Offload Prevent off' . $attach_id);
 			  unset(self::$offloadPrevented[$attach_id]);
 		}
 
@@ -149,7 +147,6 @@ class wpOffload
 		{
 			if (isset(self::$offloadPrevented[$post_id]))
 			{
-				Log::addTemp('Prevented UpdateMetaData on static prevent');
 					return true ; // return true to cancel.
 			}
 
@@ -195,7 +192,6 @@ class wpOffload
         return false;
       }
 
-			Log::addTemp('Offload removing remote ' . $id);
 				$remove = \DeliciousBrains\WP_Offload_Media\Items\Remove_Provider_Handler::get_item_handler_key_name();
 				$itemHandler = $this->as3cf->get_item_handler($remove);
 
@@ -405,7 +401,6 @@ class wpOffload
         $fs = \wpSPIO()->fileSystem();
 
 				$id = $mediaItem->get('id');
-				Log::addTemp('Image Converted function');
 				//$this->remove_remote($id);
 				$this->image_upload($mediaItem);
 
@@ -481,7 +476,6 @@ class wpOffload
 					// The Handler doesn't work properly /w local removal if not the exact correct files are passed (?) . Offload does this probably via update metadata function, so let them sort it out with this . (until it breaks)
 
 					$meta = wp_get_attachment_metadata($id);
-					Log::addTemp('Sending for offload', $meta);
 
 					wp_update_attachment_metadata($id, $meta);
 

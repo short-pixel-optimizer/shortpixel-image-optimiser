@@ -31,6 +31,7 @@ class Replacer
 	{
 			Modules\Elementor::getInstance();
 			Modules\WpBakery::getInstance();
+			Modules\YoastSeo::getInstance();
 	}
 
 	public function setSource($url)

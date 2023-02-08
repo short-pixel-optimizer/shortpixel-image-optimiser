@@ -160,7 +160,6 @@ abstract class MediaLibraryConverter extends Converter
 
 			$this->replacer->setTargetMeta($new_metadata);
 
-			Log::addTemp('Return UpdateMetaData function');
 	}
 
 

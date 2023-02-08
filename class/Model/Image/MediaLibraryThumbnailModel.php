@@ -474,7 +474,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
       $fs = \wpSPIO()->filesystem();
       $filepath = apply_filters('shortpixel/file/virtual/translate', $this->getFullPath(), $this);
 
-			Log::addTemp('Downloading ' . $this->getURL()  . ' to ' . $filepath . ' for backup', $this->getFullPath());
       $result = $fs->downloadFile($this->getURL(), $filepath); // download remote file for backup.
 
       if ($result == false)
