@@ -475,7 +475,7 @@ class WPQ implements Queue
 			{
 				$this->status = array();
 				$this->status['queues']  = array();
-				$this->DataProvider->install();
+				$this->DataProvider->install(true);
 			}
 
 			$this->currentStatus = new Status();

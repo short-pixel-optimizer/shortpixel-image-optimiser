@@ -510,7 +510,7 @@ class MysqlDataProvider implements DataProvider
 
    public function install($nocheck = false)
    {
-     if ($nocheck == false && $this->check())
+     if ($nocheck === false && true === $this->check())
         return true;
 
      require_once(ABSPATH . 'wp-admin/includes/upgrade.php');

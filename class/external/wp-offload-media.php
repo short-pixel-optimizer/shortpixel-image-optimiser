@@ -483,23 +483,6 @@ class wpOffload
 
     }
 
-		// WP Offload -for some reason - returns the same result of get_attached_file and wp_get_original_image_path , which are different files (one scaled) which then causes a wrong copy action after optimizing the image ( wrong destination download of the remote file ).   This happens if offload with delete is on.  Attempt to fix the URL to reflect the differences between -scaled and not.
-		/*public function fixScaledUrl( $url, $file, $attachment_id, $as3cf_item)
-		{
-			echo "<PRE>";
-			var_dump($url, $file);
-
-			// URL has scaled. File doesn't.
-			if (strpos($url, '-scaled') !== false && strpos($file, '-scaled') === false)
-			{
-
-					$url = str_replace('-scaled', '', $url);
-		//			echo "REPLACING";
-			}
-var_dump($url);
-echo "</PRE>";
-			 return $url;
-		} */
 
 		// WP Offload -for some reason - returns the same result of get_attached_file and wp_get_original_image_path , which are different files (one scaled) which then causes a wrong copy action after optimizing the image ( wrong destination download of the remote file ).   This happens if offload with delete is on.  Attempt to fix the URL to reflect the differences between -scaled and not.
 		public function checkScaledUrl($filepath, $id)
@@ -510,7 +493,6 @@ echo "</PRE>";
 				{
 					$filepath = str_replace('-scaled', '', $filepath);
 				}
-	//		 var_dump($filepath);
 			 return $filepath;
 		}
 
