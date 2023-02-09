@@ -399,7 +399,7 @@ class MysqlDataProvider implements DataProvider
       else
           $placeholders = array($this->timestamptoSQL());
 
-			// Certain older SQL servers like to auto-update created date, creating a mess. 
+			// Certain older SQL servers like to auto-update created date, creating a mess.
 			if (! isset($data['created']))
 			{
 				 $update_sql .= ', created = created';
@@ -525,7 +525,7 @@ class MysqlDataProvider implements DataProvider
                 plugin_slug VARCHAR(30) NOT NULL,
                 status int(11) NOT NULL DEFAULT 0,
                 list_order int(11) NOT NULL,
-                item_id INT NOT NULL,
+                item_id bigint unsigned NOT NULL,
                 item_count INT DEFAULT 1,
                 value longtext NOT NULL,
                 tries int(11) NOT NULL DEFAULT 0,

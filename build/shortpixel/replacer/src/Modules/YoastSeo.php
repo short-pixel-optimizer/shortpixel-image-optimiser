@@ -42,7 +42,6 @@ class YoastSeo
 			{
 						$querySQL = $sql . ' twitter_image like %s or open_graph_image like %s ';
 						$querySQL = $wpdb->prepare($querySQL, '%' . $base . '%', '%' . $base . '%');
-						Log::addtemp($querySQL);
 
 						$wpdb->query($querySQL);
 			}
@@ -51,7 +50,6 @@ class YoastSeo
 			{
 						$querySQL = $sql . ' twitter_image like %s or open_graph_image like %s ';
 						$querySQL = $wpdb->prepare($querySQL, '%' . $file . '%', '%' . $file . '%');
-						Log::addtemp($querySQL);
 
 						$wpdb->query($querySQL);
 			}
