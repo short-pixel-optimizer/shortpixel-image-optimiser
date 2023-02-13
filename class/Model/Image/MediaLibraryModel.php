@@ -2187,6 +2187,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			}
 
         Log::addDebug("Conversion of legacy: " . $this->get('id'), array($metadata));
+				Log::addTemp('Trace', debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 7));
 
        $type = isset($data['type']) ? $this->legacyConvertType($data['type']) : '';
 
@@ -2289,17 +2290,20 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 
           //    $thumbnailObj->image_meta->improvement = -1; // n/a
-              if ($thumbnailObj->hasBackup(array('noConversionCheck' => true)));
+              if ($thumbnailObj->hasBackup(array('noConversionCheck' => true)))
               {
                 $backup = $thumbnailObj->getBackupFile(array('noConversionCheck' => true));
                 $thumbnailObj->image_meta->originalSize = $backup->getFileSize();
+								$thumbnailObj->has_backup = true;
               }
+							else
+							{
+								$thumbnailObj->has_backup = false;
+							}
 
               $thumbnailObj->image_meta->tsAdded = $tsAdded;
               if (isset($tsOptimized))
                 $thumbnailObj->image_meta->tsOptimized = $tsOptimized;
-
-              $thumbnailObj->has_backup = $thumbnailObj->hasBackup(array('noConversionCheck' => true));
 
 							$thumbnailObj->image_meta->webp = $this->checkLegacyFileTypeFileName($thumbnailObj, 'webp');
 							$thumbnailObj->image_meta->avif = $this->checkLegacyFileTypeFileName($thumbnailObj, 'avif');
@@ -2334,14 +2338,17 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
            {
              $backup = $originalFile->getBackupFile(array('noConversionCheck' => true));
              $originalFile->image_meta->originalSize = $backup->getFileSize();
+						 $originalFile->has_backup = true;
            }
+					 else {
+					 	$originalFile->has_backup = false;
+					 }
 
            $originalFile->image_meta->tsAdded = $tsAdded;
 				   if (isset($tsOptimized))
 				 	 {
 						 $originalFile->image_meta->tsOptimized = $tsOptimized;
 					 }
-           $originalFile->has_backup = $originalFile->hasBackup(array('noConversionCheck' => true));
 
 					 $originalFile->image_meta->webp = $this->checkLegacyFileTypeFileName($originalFile, 'webp');
 					 $originalFile->image_meta->avif = $this->checkLegacyFileTypeFileName($originalFile, 'avif');
