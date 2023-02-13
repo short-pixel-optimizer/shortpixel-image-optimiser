@@ -224,6 +224,11 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 	public function getBackupFileName()
 	{
 			$mainFile = ($this->is_main_file) ? $this : $this->getMainFile();
+			if (false == $mainFile)
+			{
+				return parent::getBackupFileName();
+			}
+
 		  if ($mainFile->getMeta()->convertMeta()->getReplacementImageBase() !== false)
 			{
 				 if ($this->is_main_file)
@@ -330,13 +335,18 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 			);
 			$args = wp_parse_args($args, $defaults);
 
+			// @todo This can probably go.
 			if (true === $args['noConversionCheck'])
 			{
 				return parent::getBackupFile();
 			}
 
-
 			$mainFile = ($this->is_main_file) ? $this : $this->getMainFile();
+			if (false == $mainFile)
+			{
+				return parent::getBackupFile();
+
+			}
 
 			// When main file and converted and omitBackup is true ( only original backup ) and not forced.
 			$loadRegular= (false === $mainFile->getMeta()->convertMeta()->isConverted() ||
@@ -447,7 +457,11 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 		}
 
 		$mainFile = ($this->is_main_file) ? $this : $this->getMainFile();
+		if (false == $mainFile)
+		{
+			return parent::getBackupFile();
 
+		}
 		// When main file and converted and omitBackup is true ( only original backup ) and not forced.
 		$loadRegular= (false === $mainFile->getMeta()->convertMeta()->isConverted() ||
 		false === $mainFile->getMeta()->convertMeta()->omitBackup()) && false === $args['forceConverted'];
@@ -518,7 +532,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 	private function getMainFile()
 	{
 			$fs = \wpSPIO()->filesystem();
-			return $fs->getMediaImage($this->id);
+			return $fs->getMediaImage($this->id, true, true);
 	}
 
 

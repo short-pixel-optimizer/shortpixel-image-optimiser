@@ -38,13 +38,18 @@ Class FileSystemController extends \ShortPixel\Controller
 
     /** Get MediaLibraryModel for a Post_id
 		* @param int $id
+		* @param bool $useCache  If false then it will require a fresh copt from database. Use when meta has changed / saved
+		* @param bool $cacheOnly Prevent fetching from Database. Used for checkLegacy and other places where conflicts with mainFile arise, checking for backups.
 		*/
-    public function getMediaImage($id, $useCache = true)
+    public function getMediaImage($id, $useCache = true, $cacheOnly = false)
     {
 				if ($useCache === true && isset(self::$mediaItems[$id]))
 				{
 					 return self::$mediaItems[$id];
 				}
+
+				if (true === $cacheOnly)
+					return false; 
 
         $filepath = get_attached_file($id);
         $filepath = apply_filters('shortpixel_get_attached_file', $filepath, $id);
