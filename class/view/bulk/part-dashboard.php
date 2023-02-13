@@ -24,7 +24,7 @@ namespace ShortPixel;
 
 				<p class='description'><?php
 					printf(__('If you have any question don\'t hesitate to %s contact us %s %s, we are friendly and helpful, 24/7. %s
-	Also, if you have a minute please leave a %s review %s for us, it always bring joy to our team! %s','shortpixel-image-optimiser'),
+	Also, if you have a minute please leave a %s review %s for us, it always brings joy to our team! %s','shortpixel-image-optimiser'),
 					'<a href="https://shortpixel.com/contact" target="_blank">',
 					'</a>',
 					'&#x1F4AC;',

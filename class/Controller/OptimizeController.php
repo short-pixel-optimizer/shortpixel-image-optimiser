@@ -152,7 +152,7 @@ class OptimizeController
             $json->qstatus = $result->qstatus;
             $json->result->fileStatus = ImageModel::FILE_STATUS_PENDING;
             $json->result->is_error = false;
-            $json->result->message = __('Item added to queue and will be optimized on the next run', 'shortpixel-image-optimiser');
+            $json->result->message = __('Item has been added to the queue and will be optimized on the next run', 'shortpixel-image-optimiser');
         }
 
         return $json;

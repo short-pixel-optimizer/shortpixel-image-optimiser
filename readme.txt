@@ -367,6 +367,38 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 
 == Changelog ==
 
+= 5.2.0 =
+Release date January 23, 2023
+* New: added support for automatic conversion of HEIC files (Apple image format for iOS devices) to JPG;
+* New: the conversion from PNG to JPG has been completely reworked, making it more robust and stable;
+* Compat: the integration with WP Offload Media has been updated, according to the latest version;
+* Tweak: fractional optimization is now possible, especially useful for images with many thumbnails;
+* Tweak: Custom Media stats are now retrieved with only one DB query, speeding up the settings page;
+* Tweak: if a PNG is not converted, there is now a reason in the ShortPixel box on the Edit Media screen;
+* Tweak: notifications are no longer reset when the plugin is activated/updated, preventing the same notifications from reappearing;
+* Fix: security hardening for the settings controller and debug functions;
+* Fix: a 4-digit Custom Media folder could not be added due to Media Library exclusions;
+* Fix: a check is now performed before adding a NextGen gallery to Custom Media, to avoid duplicates;
+* Fix: a failed PNG conversion to JPG can now be retried;
+* Fix: credits can no longer be purchased from a sub-account;
+* Fix: when converting a large PNG to JPG, the resulting scaled JPG was not optimized properly; 
+* Fix: size exclusions work as expected again;
+* Fix: when credits are insufficient for the entire bulk, a notification is displayed again;
+* Fix: page selection on the Custom Media screen now works as expected again;
+* Fix: NextGen Gallery pages no longer crash due to jQuery errors;
+* Fix: NextGen galleries are no longer added twice, a check for double slashes has been added;
+* Fix: when an image is deleted from NextGen Gallery, the WebP/AVIF files are also removed;
+* Fix: notification for list view mode in Media Library works again;
+* Fix: various fixes and updates to the plugin's CSS and text;
+* Language: 31 new strings added, 8 updated, 0 fuzzed, and 15 deprecated.
+
+
+
+still to fix:
+- brgins instead of bring (bulk)
+- images plus thumbs (on the bulk summary)
+- spaces and dots on the next-gen images (advanced settings)
+
 = 5.1.6 =
 Release date December 31, 2022
 * Fix: in some cases, AVIF files were not cropped correctly;
