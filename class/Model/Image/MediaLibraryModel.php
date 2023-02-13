@@ -695,7 +695,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           $this->thumbnails = $this->loadThumbnailsFromWP();
 
           $result = $this->checkLegacy();
-
           if ($result)
           {
             $this->saveMeta();
@@ -1035,8 +1034,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		 if ($insert === true)
 		 {
-			  $wpdb->insert($table, $fields, $format);
+			  $result = $wpdb->insert($table, $fields, $format);
 				$database_id = $wpdb->insert_id;
+
+				if (false === $result)
+				{
+					 Log::addError('Database error inserting metadata: ',$fields);
+				}
 
 				switch($imageType)
 				{
@@ -1055,9 +1059,16 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				}
 		 }
 		 else {
-			 	$wpdb->update($table, $fields,  array('id' => $databaseID),$format, array('%d'));
+			 	$result = $wpdb->update($table, $fields,  array('id' => $databaseID),$format, array('%d'));
 				$database_id = $databaseID;
+				if (false === $result)
+				{
+					 Log::addError('Database error updating metadata: ',$fields);
+				}
+
 		 }
+
+
 
 		 return $database_id;
 	}
@@ -2137,6 +2148,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       $data = $metadata['ShortPixel'];
 
       if (count($data) == 0)  // This can happen. Empty array is still nothing to convert.
+
         return false;
 
 			// Waiting for processing is a state where it's not optimized, or should be.
@@ -2277,7 +2289,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 
           //    $thumbnailObj->image_meta->improvement = -1; // n/a
-              if ($thumbnailObj->hasBackup())
+              if ($thumbnailObj->hasBackup(array('noConversionCheck' => true)));
               {
                 $backup = $thumbnailObj->getBackupFile();
                 $thumbnailObj->image_meta->originalSize = $backup->getFileSize();

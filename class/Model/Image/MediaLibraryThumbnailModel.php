@@ -326,8 +326,15 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
   {
 			$defaults = array(
 				'forceConverted' => false,
+				'noConversionCheck' => false,  // do not check on mainfile, this loops when used in loadMeta / legacyConversion
 			);
 			$args = wp_parse_args($args, $defaults);
+
+			if (true === $args['noConversionCheck'])
+			{
+				return parent::getBackupFile();
+			}
+
 
 			$mainFile = ($this->is_main_file) ? $this : $this->getMainFile();
 
@@ -430,8 +437,14 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
 		$defaults = array(
 			'forceConverted' => false,
+			'noConversionCheck' => false,  // do not check on mainfile, this loops when used in loadMeta / legacyConversion
 		);
 		$args = wp_parse_args($args, $defaults);
+
+		if (true === $args['noConversionCheck'])
+		{
+			return parent::getBackupFile();
+		}
 
 		$mainFile = ($this->is_main_file) ? $this : $this->getMainFile();
 
