@@ -2163,7 +2163,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       if ($was_converted == true || is_numeric($was_converted))
       {
 				$updateTs = 1656892800; // July 4th 2022 - 00:00 GMT
-				if ($was_converted < $updateTs && $this->hasBackup())
+				if ($was_converted < $updateTs && $this->hasBackup(array('noConversionCheck' => true)))
 				{
 					$this->resetPrevent();  // reset any prevented optimized. This would have prob. thrown a backup issue.
 					if ($this->isProcessable())
@@ -2234,9 +2234,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 	       $this->image_meta->did_keepExif = $exifkept;
 
-		      if ($this->hasBackup())
+		      if ($this->hasBackup(array('noConversionCheck' => true)))
 		      {
-		        $backup = $this->getBackupFile();
+		        $backup = $this->getBackupFile(array('noConversionCheck' => true));
 		        $this->image_meta->originalSize = $backup->getFileSize();
 		      }
 					elseif ( isset($metadata['ShortPixelImprovement']))
@@ -2277,7 +2277,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						continue;
 					}
 
-          if (in_array($thumbnailObj->getFileName(), $optimized_thumbnails) || $thumbnailObj->hasBackup() )
+          if (in_array($thumbnailObj->getFileName(), $optimized_thumbnails) || $thumbnailObj->hasBackup(array('noConversionCheck' => true)) )
           {
               $thumbnailObj->image_meta->status = $status;
               $thumbnailObj->image_meta->compressionType = $type;
