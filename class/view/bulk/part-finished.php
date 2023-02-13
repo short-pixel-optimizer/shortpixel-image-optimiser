@@ -34,7 +34,7 @@ namespace ShortPixel;
 
 		<div class='bulk-summary'>
 		<p class='finished-paragraph'>
-			<?php printf(__('Congratulations, ShortPixel has optimized %s %s images %s for your website! Yay to faster loading websites! %s', 'shortpixel-image-optimiser'), '<b>', '<span data-stats-total="total"></span>','</b>', '&#x1F389;');
+			<?php printf(__('Congratulations, ShortPixel has optimized %s %s images and thumbs %s for your website! Yay to faster loading websites! %s', 'shortpixel-image-optimiser'), '<b>', '<span data-stats-total="total"></span>','</b>', '&#x1F389;');
 			?>
 			<br>
 			<?php
