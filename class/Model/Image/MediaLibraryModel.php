@@ -2291,7 +2291,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           //    $thumbnailObj->image_meta->improvement = -1; // n/a
               if ($thumbnailObj->hasBackup(array('noConversionCheck' => true)));
               {
-                $backup = $thumbnailObj->getBackupFile();
+                $backup = $thumbnailObj->getBackupFile(array('noConversionCheck' => true));
                 $thumbnailObj->image_meta->originalSize = $backup->getFileSize();
               }
 
@@ -2299,7 +2299,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
               if (isset($tsOptimized))
                 $thumbnailObj->image_meta->tsOptimized = $tsOptimized;
 
-              $thumbnailObj->has_backup = $thumbnailObj->hasBackup();
+              $thumbnailObj->has_backup = $thumbnailObj->hasBackup(array('noConversionCheck' => true));
 
 							$thumbnailObj->image_meta->webp = $this->checkLegacyFileTypeFileName($thumbnailObj, 'webp');
 							$thumbnailObj->image_meta->avif = $this->checkLegacyFileTypeFileName($thumbnailObj, 'avif');
@@ -2319,7 +2319,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        {
          $originalFile = $this->original_file;
 
-         if (isset($metadata['original_image']) || $originalFile->hasBackup())
+         if (isset($metadata['original_image']) || $originalFile->hasBackup(array('noConversionCheck' => true)))
          {
 
            $originalFile->image_meta->status = $status;
@@ -2330,9 +2330,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						 $originalFile->convertMeta()->setConversionDone();
 					 }
 
-			     if ($originalFile->hasBackup())
+			     if ($originalFile->hasBackup(array('noConversionCheck' => true)))
            {
-             $backup = $originalFile->getBackupFile();
+             $backup = $originalFile->getBackupFile(array('noConversionCheck' => true));
              $originalFile->image_meta->originalSize = $backup->getFileSize();
            }
 
@@ -2341,7 +2341,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				 	 {
 						 $originalFile->image_meta->tsOptimized = $tsOptimized;
 					 }
-           $originalFile->has_backup = $originalFile->hasBackup();
+           $originalFile->has_backup = $originalFile->hasBackup(array('noConversionCheck' => true));
 
 					 $originalFile->image_meta->webp = $this->checkLegacyFileTypeFileName($originalFile, 'webp');
 					 $originalFile->image_meta->avif = $this->checkLegacyFileTypeFileName($originalFile, 'avif');
@@ -2377,7 +2377,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 								// Check if thumbnail ('parent') is Optimized, if so, then retina probably should be optimized as well.
 								if ( (isset($this->thumbnails[$index]) &&
 											is_object($this->thumbnails[$index]) &&
-										  $this->thumbnails[$index]->isOptimized) || $retinaObj->hasBackup() )
+										  $this->thumbnails[$index]->isOptimized) || $retinaObj->hasBackup(array('noConversionCheck' => true)) )
 								{
 			              $retinaObj->image_meta->status = $status;
 			              $retinaObj->image_meta->compressionType = $type;
@@ -2397,11 +2397,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 											$retinaObj->convertMeta()->setConversionDone();
 										}
 
-			              if ($retinaObj->hasBackup())
+			              if ($retinaObj->hasBackup(array('noConversionCheck' => true)))
 			              {
 			                $retinaObj->has_backup = true;
 			                if ($status == self::FILE_STATUS_SUCCESS)
-			                  $retinaObj->image_meta->originalSize = $retinaObj->getBackupFile()->getFileSize();
+			                  $retinaObj->image_meta->originalSize = $retinaObj->getBackupFile(array('noConversionCheck' => true))->getFileSize();
 			              }
 
 										$retinaObj->recordChanged(true);
