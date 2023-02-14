@@ -73,7 +73,10 @@ var ShortPixel = function() {
     }
 
     function isEmailValid(email) {
-        return /^\w+([\.+-]?\w+)*@\w+([\.-]?\w+)*(\.\w{1,63})+$/.test(email);
+      //  return /^\w+([\.+-]?\w+)*@\w+([\.-]?\w+)*(\.\w{1,63})+$/.test(email);
+
+				var regex = /^\S+@\S+\.\S+$/;
+					return regex.test(email);
     }
 
     function updateSignupEmail() {
