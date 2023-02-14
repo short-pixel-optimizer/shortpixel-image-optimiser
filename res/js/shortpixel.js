@@ -17,6 +17,8 @@ setTimeout(delayedInit, 10000);
 
 var ShortPixel = function() {
 
+	 var updateTimer;
+
 	// The InitSettings usually runs before these settings, making everything complicated (@todo)
     function init() {
 
@@ -75,6 +77,11 @@ var ShortPixel = function() {
     }
 
     function updateSignupEmail() {
+
+				clearTimeout( ShortPixel.updateTimer );
+
+				ShortPixel.updateTimer = setTimeout( function() {
+
         var email = jQuery('#pluginemail').val().trim();
 				var $submit = jQuery('#request_key');
 				var isValid = ShortPixel.isEmailValid(email)
@@ -89,6 +96,7 @@ var ShortPixel = function() {
 					  $submit.addClass('disabled');
 				}
         jQuery('#request_key').attr('href', jQuery('#request_key').attr('href').split('?')[0] + '?pluginemail=' + email);
+			}, 1000);
     }
 
     function validateKey(button){
