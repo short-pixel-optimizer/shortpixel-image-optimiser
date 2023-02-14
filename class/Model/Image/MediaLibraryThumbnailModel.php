@@ -240,9 +240,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 					 return $name;
 				}
 			}
-			/*elseif {
 
-			} */
 
 			return parent::getBackupFileName();
 	}
@@ -338,13 +336,13 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 			// @todo This can probably go.
 			if (true === $args['noConversionCheck'])
 			{
-				return parent::getBackupFile();
+				return parent::hasBackup();
 			}
 
 			$mainFile = ($this->is_main_file) ? $this : $this->getMainFile();
 			if (false == $mainFile)
 			{
-				return parent::getBackupFile();
+				return parent::hasBackup();
 
 			}
 
