@@ -153,12 +153,18 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
         } */
 
-				// From above to below was implemented because it could not detect file not writable / directory not writable issues if there was any option to generate webp in the settings. Should check for all those file issues first.  
+				// From above to below was implemented because it could not detect file not writable / directory not writable issues if there was any option to generate webp in the settings. Should check for all those file issues first.
 
 				// First test if this file isn't unprocessable for any other reason, then check.
 				if (($this->isProcessable(true) || $this->isOptimized() ) && $this->isProcessableAnyFileType() === true)
 				{
-					 $bool = true;
+					if (false === $this->is_directory_writable())
+					{
+					 	$bool = false;
+					}
+					else {
+						$bool = true;
+					}
 				}
 
         return $bool;

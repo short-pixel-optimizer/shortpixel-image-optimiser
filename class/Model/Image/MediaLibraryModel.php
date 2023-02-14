@@ -1305,7 +1305,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			// First test if this file isn't unprocessable for any other reason, then check.
 			if (($this->isProcessable(true) || $this->isOptimized() ) && $this->isProcessableAnyFileType() === true)
 			{
-				 $bool = true;
+				if (false === $this->is_directory_writable())
+				{
+					$bool = false;
+				}
+				else {
+					$bool = true;
+				}
 			}
 
       return $bool;
