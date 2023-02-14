@@ -2187,7 +2187,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			}
 
         Log::addDebug("Conversion of legacy: " . $this->get('id'), array($metadata));
-				Log::addTemp('Trace', debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 7));
 
        $type = isset($data['type']) ? $this->legacyConvertType($data['type']) : '';
 
