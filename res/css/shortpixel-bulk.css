@@ -347,6 +347,13 @@
 .shortpixel-bulk-wrapper section.panel.dashboard .bulk-wrapper button span {
   margin-right: 16px;
 }
+.shortpixel-bulk-wrapper section.panel.dashboard .dashboard-text {
+  margin: 0 auto;
+  width: 50%;
+}
+.shortpixel-bulk-wrapper section.panel.dashboard .dashboard-text p {
+  line-height: 25px;
+}
 .shortpixel-bulk-wrapper section.panel.dashboard .dashboard-log {
   display: table;
   width: 80%;
@@ -733,12 +740,13 @@
   font-size: 13px;
   position: absolute;
   bottom: 45px;
-  left: 0;
+  left: -15px;
   padding: 6px 10px;
   color: #fff;
   background: rgba(15, 106, 125, 0.5);
   font-weight: 700;
   border-radius: 3px;
+  white-space: nowrap;
 }
 .shortpixel-bulk-wrapper section.panel.process .average-optimization .opt-circle-average, .shortpixel-bulk-wrapper section.panel.finished .average-optimization .opt-circle-average {
   width: 150px;
@@ -804,6 +812,10 @@
   top: 0;
   bottom: 0;
   background: #1FBEC9;
+}
+.shortpixel-bulk-wrapper section.panel.process .bulk-summary .line-progressbar .finished-paragraph, .shortpixel-bulk-wrapper section.panel.finished .bulk-summary .line-progressbar .finished-paragraph {
+  font-size: 14px;
+  line-height: 25px;
 }
 .shortpixel-bulk-wrapper section.panel.process .bulk-summary .line-progressbar label input[type=checkbox], .shortpixel-bulk-wrapper section.panel.finished .bulk-summary .line-progressbar label input[type=checkbox] {
   margin-right: 8px;
@@ -927,6 +939,10 @@
 .shortpixel-bulk-wrapper section.panel.process .image-preview-section .preview-wrapper .image.result, .shortpixel-bulk-wrapper section.panel.finished .image-preview-section .preview-wrapper .image.result {
   margin-left: 8px;
 }
+.shortpixel-bulk-wrapper section.panel.process .image-preview-section .preview-wrapper .image.result p, .shortpixel-bulk-wrapper section.panel.finished .image-preview-section .preview-wrapper .image.result p {
+  font-weight: 700;
+  font-size: 14px;
+}
 .shortpixel-bulk-wrapper section.panel.process nav, .shortpixel-bulk-wrapper section.panel.finished nav {
   width: 80%;
   margin-top: 35px;
@@ -982,6 +998,7 @@
 .shortpixel-bulk-wrapper .bulk-special-wrapper h4.warning {
   float: left;
   margin: 25px;
+  min-height: 50px;
 }
 .shortpixel-bulk-wrapper .bulk-special-wrapper .warning {
   color: #ff0000;

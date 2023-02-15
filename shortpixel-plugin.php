@@ -10,8 +10,6 @@ use ShortPixel\Controller\AdminController as AdminController;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 use ShortPixel\NextGenController as NextGenController;
 
-// use ShortPixel\Controller;
-
 use ShortPixel\Controller\Queue\MediaLibraryQueue as MediaLibraryQueue;
 use ShortPixel\Controller\Queue\CustomQueue as CustomQueue;
 
@@ -148,23 +146,15 @@ class ShortPixelPlugin {
 		// Handle for EMR
 		add_action( 'wp_handle_replace', array( $admin, 'handleReplaceHook' ) );
 
-			// Action / hook for who wants to use CRON. Please refer to manual / support to prevent loss of credits.
-			add_action( 'shortpixel/hook/processqueue', array( $admin, 'processQueueHook' ) );
+		// Action / hook for who wants to use CRON. Please refer to manual / support to prevent loss of credits.
+		add_action( 'shortpixel/hook/processqueue', array( $admin, 'processQueueHook' ) );
+
+		// Placeholder function for heic and such, return placeholder URL in image to help w/ database replacements after conversion.
+		add_filter('wp_get_attachment_url', array($admin, 'checkPlaceHolder'), 10, 2);
 
 		if ( $this->env()->is_autoprocess ) {
 			// compat filter to shortcircuit this in cases.  (see external - visualcomposer)
 			if ( apply_filters( 'shortpixel/init/automedialibrary', true ) ) {
-				if ( $this->settings()->png2jpg ) {
-
-							/*
-							This processing off because it doesn't make sense to already start this before optimizing, which will happen via queue.
-					add_action( 'add_attachment', array($admin,'handlePng2JpgHook'));
-					add_action( 'wp_handle_upload', array($admin,'handlePng2JpgHook'));
-
-					// @integration MediaPress
-					add_action( 'mpp_handle_upload', array($admin,'handlePng2JpgHook'));
-							*/
-				}
 
       			add_action( 'shortpixel-thumbnails-before-regenerate', array( $admin, 'preventImageHook' ), 10, 1 );
 
@@ -323,6 +313,7 @@ class ShortPixelPlugin {
 
             )
         );
+
 
 		/*** SCREENS */
 		wp_register_script( 'shortpixel-screen-media', plugins_url( '/res/js/screens/screen-media.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery', 'shortpixel-processor' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
@@ -500,12 +491,12 @@ class ShortPixelPlugin {
 
 
 		if ( \wpSPIO()->env()->is_screen_to_use ) {
-			$this->load_script( 'shortpixel-tooltip' );
+			$this->load_script( $load_processor );
 			$this->load_style( 'shortpixel-toolbar' );
 		}
 
 		if ( $plugin_page == 'wp-shortpixel-settings' ) {
-			$this->load_script( $load_processor );
+
 			$this->load_script( 'shortpixel-screen-nolist' ); // screen
 			//$this->load_script( 'jquery.tooltip.min.js' );
 			$this->load_script( 'sp-file-tree' );
@@ -517,13 +508,13 @@ class ShortPixelPlugin {
 			$this->load_style( 'shortpixel-settings' );
 
 		} elseif ( $plugin_page == 'wp-short-pixel-bulk' ) {
-			$this->load_script( $load_processor );
+			//$this->load_script( $load_processor );
 			$this->load_script( 'shortpixel-screen-bulk' );
 
 			$this->load_style( 'shortpixel-admin' );
 			$this->load_style( 'shortpixel-bulk' );
 		} elseif ( $screen_id == 'upload' || $screen_id == 'attachment' ) {
-			$this->load_script( $load_processor );
+			//$this->load_script( $load_processor );
 			$this->load_script( 'shortpixel-screen-media' ); // screen
 
 			$this->load_style( 'shortpixel-admin' );
@@ -538,11 +529,11 @@ class ShortPixelPlugin {
 			$this->load_style( 'shortpixel-admin' );
 
 			$this->load_style( 'shortpixel-othermedia' );
-			$this->load_script( $load_processor );
+			//$this->load_script( $load_processor );
 			$this->load_script( 'shortpixel-screen-custom' ); // screen
 
 		} elseif ( NextGenController::getInstance()->isNextGenScreen() ) {
-			$this->load_script( $load_processor );
+			//$this->load_script( $load_processor );
 			$this->load_script( 'shortpixel-screen-custom' ); // screen
 			$this->load_style( 'shortpixel-admin' );
 
@@ -557,7 +548,7 @@ class ShortPixelPlugin {
 		elseif (true === \wpSPIO()->env()->is_screen_to_use  )
 		{
 			// If our screen, but we don't have a specific handler for it, do the no-list screen.
-			$this->load_script( $load_processor );
+			//$this->load_script( $load_processor );
 			$this->load_script( 'shortpixel-screen-nolist' ); // screen
 		}
 

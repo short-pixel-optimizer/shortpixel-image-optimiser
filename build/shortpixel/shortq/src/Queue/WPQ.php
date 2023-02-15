@@ -12,7 +12,8 @@ class WPQ implements Queue
   protected $pSlug; // plugin slug
   protected $DataProvider;
 
-  protected $status;
+  protected $status; // the status, the whole status and nothing but.
+	protected $currentStatus; // working status, current queue name.
   protected $items = array();
 
   protected $options;
@@ -195,7 +196,7 @@ class WPQ implements Queue
     // Check if anything has a timeout, do that first.
     $this->inProcessTimeout();
 
-    if ($this->currentStatus()->get('items') <= 0)
+    if ($this->currentStatus->get('items') <= 0)
     {
       $still_here = $this->checkQueue();
        // @todo if there is queue todo, update items, and go.
@@ -408,7 +409,7 @@ class WPQ implements Queue
   public function resetQueue()
   {
      $this->DataProvider->removeRecords(array('all' => true));
-     $this->status['queues'][$this->qName] = new Status();
+     $this->currentStatus = new Status();
      $this->saveStatus();
   }
 
@@ -422,22 +423,24 @@ class WPQ implements Queue
   /** @todo Users must be able to control preparing / running status controls for resume / play the queue, but possibly not the counts.  */
   public function setStatus($name, $value, $savenow = true)
   {
-    $r = $this->currentStatus()->set($name, $value);
-    $this->currentStatus()->set('last_update', time());
+    $r = $this->currentStatus->set($name, $value);
+    $this->currentStatus->set('last_update', time());
+		$bool = true;
 
     if (! $r)
-      return false;
+      $bool = false;
 
     if ($savenow)
       $this->saveStatus(); // for now.
 
-    return true;
+
+    return $bool;
   }
 
   /** Addition of substraction for the counters */
   public function setStatusCount($name, $change, $savenow = true)
   {
-      if (! $this->currentStatus()->isCounter($name))
+      if (! $this->currentStatus->isCounter($name))
       {
         return false;
       }
@@ -448,75 +451,80 @@ class WPQ implements Queue
 
 
   /** Creates a Queue Data Array to keep
-  *  This is intended as a run-once affair. Last Run, Average Ask should be kept.
-  *
   */
+	/*
   private function createStatus()
   {
-      $queue_status = new Status(); // this is a per-q status
 
-      if (! isset($this->status))
-        $this->status = array('queues');
 
-      $this->createQueue();
-
-      $this->DataProvider->install();
-  }
+  } */
 
   /** Get the current status of this slug / queue */
-  protected function currentStatus()
+/*  protected function currentStatus()
   {
 		 // This can happen when uninstalling/ removing queues.
 		 if (! isset($this->status['queues']) || ! isset($this->status['queues'][$this->qName]))
 		 		return false;
 		else
-     return $this->status['queues'][$this->qName];
-  }
+     		return $this->status['queues'][$this->qName];
+  } */
 
   private function createQueue()
   {
-      if (! isset($this->status['queues'][$this->qName]) || $this->status['queues'][$this->qName] === false)
-      {
-        $this->status['queues'][$this->qName] = new Status();
+			if (is_null($this->status))
+			{
+				$this->status = array();
+				$this->status['queues']  = array();
+				$this->DataProvider->install(true);
+			}
 
-        $this->saveStatus();
-      }
+			$this->currentStatus = new Status();
+      $this->saveStatus();
+
   }
 
   private function loadStatus()
   {
-    $this->status = get_option($this->statusName);
+    $this->status = get_option($this->statusName, null);
 
-    if (! $this->status || ! is_object($this->status) && ! is_array($this->status))
-      $this->createStatus();
-
-
-    if (! isset($this->status['queues'][$this->qName]))
+    if (false === $this->status || is_null($this->status) || (! is_object($this->status) && ! is_array($this->status) ))
+		{
       $this->createQueue();
-
+		}
+    elseif (! isset($this->status['queues'][$this->qName]))
+		{
+      $this->createQueue();
+		}
+		else {
+			// ONLY status this reference.
+			$this->currentStatus = $this->status['queues'][$this->qName];
+		}
   }
 
   public function getStatus($item = false)
   {
-      if (! $item)
-        return $this->currentStatus();
+			if (is_null($this->currentStatus))
+				return false;
+      elseif (! $item)
+        return $this->currentStatus;
       else
-        return $this->currentStatus()->get($item);
+        return $this->currentStatus->get($item);
   }
 
   protected function saveStatus()
   {
-    // $this->status[$this->pSlug]['queues'][$this->qName] = $this->currentStatus;
      $status = get_option($this->statusName);  // two different Q's can run simulanously.
-		 $currentStatus = $this->currentStatus();
+
+
+		 $currentStatus =  $this->currentStatus;
 		 if( $currentStatus === false && isset($status['queues'][$this->qName]) ) // Don't save status which has been removed.
 		 {
 			  unset($status['queues'][$this->qName]);
 		 }
-		else {
-	     	$status['queues'][$this->qName] = $this->currentStatus();
+		 else {
+			 $status['queues'][$this->qName]  = $currentStatus;
 		 }
-     update_option($this->statusName, $status);
+     $res = update_option($this->statusName, $status);
   }
 
   /** Check Queue. This function intends to keep internal counts consistent with dataprovider without doing queries every run .
@@ -564,8 +572,8 @@ class WPQ implements Queue
     if($update_at_end)
     {
       $this->resetInternalCounts(); // retrieve accurate count from dataSource.
-      $tasks_open = $this->currentStatus()->get('items');
-      $tasks_inprocess = $this->currentStatus()->get('in_process');
+      $tasks_open = $this->currentStatus->get('items');
+      $tasks_inprocess = $this->currentStatus->get('in_process');
     }
 
     if ($tasks_open > 0 || $tasks_inprocess > 0)

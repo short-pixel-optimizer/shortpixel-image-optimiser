@@ -2,6 +2,9 @@
 namespace ShortPixel\Model\File;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
+use ShortPixel\Helper\UtilHelper as UtilHelper;
+
+
 /* FileModel class.
 *
 *
@@ -27,6 +30,7 @@ class FileModel extends \ShortPixel\Model
   // File Status
   protected $exists = null;
   protected $is_writable = null;
+	protected $is_directory_writable = null;
   protected $is_readable = null;
   protected $is_file = null;
   protected $is_virtual = false;
@@ -42,12 +46,23 @@ class FileModel extends \ShortPixel\Model
   /** Creates a file model object. FileModel files don't need to exist on FileSystem */
   public function __construct($path)
   {
-    $this->fullpath = trim($path);
-		$this->rawfullpath = $this->fullpath;
+		$this->rawfullpath = $path;
+
+		if (is_null($path))
+		{
+			 Log::addWarn('FileModel: Loading null path! ');
+			 return false;
+		}
+
+		if (strlen($path) > 0)
+			$path = trim($path);
+
+		$this->fullpath = $path;
+
     $fs = \wpSPIO()->filesystem();
+
     if ($fs->pathIsUrl($path)) // Asap check for URL's to prevent remote wrappers from running.
     {
-
       $this->UrlToPath($path);
     }
   }
@@ -83,6 +98,7 @@ class FileModel extends \ShortPixel\Model
   public function resetStatus()
   {
       $this->is_writable = null;
+			$this->is_directory_writable = null;
       $this->is_readable = null;
       $this->is_file = null;
       $this->exists = null;
@@ -124,6 +140,28 @@ class FileModel extends \ShortPixel\Model
 
     return $this->is_writable;
   }
+
+	public function is_directory_writable()
+	{
+		if ($this->is_virtual())
+		{
+			 $this->is_directory_writable = false;  // can't write to remote files
+		}
+		elseif (is_null($this->is_directory_writable))
+		{
+			$directory = $this->getFileDir();
+			if ($directory->exists())
+			{
+				$this->is_directory_writable = $directory->is_writable();
+			}
+			else {
+				$this->is_directory_writable = false;
+			}
+
+		}
+
+		return $this->is_directory_writable;
+	}
 
   public function is_readable()
   {
@@ -192,7 +230,7 @@ class FileModel extends \ShortPixel\Model
       if (! $directory)
         return false;
 
-      $backupFile =  $directory . $this->getFileName();
+      $backupFile =  $directory . $this->getBackupFileName();
 
       if (file_exists($backupFile) && ! is_dir($backupFile) )
         return true;
@@ -208,10 +246,16 @@ class FileModel extends \ShortPixel\Model
   public function getBackupFile()
   {
      if ($this->hasBackup())
-        return new FileModel($this->getBackupDirectory() . $this->getFileName() );
+        return new FileModel($this->getBackupDirectory() . $this->getBackupFileName() );
      else
        return false;
   }
+
+	/** Function returns the filename for the backup.  This is an own function so it's possible to manipulate backup file name if needed, i.e. conversion or enumeration */
+	public function getBackupFileName()
+	{
+		 return $this->getFileName();
+	}
 
   /** Returns the Directory Model this file resides in
   *
@@ -232,9 +276,15 @@ class FileModel extends \ShortPixel\Model
 
   public function getFileSize()
   {
-    if ($this->exists())
+    if ($this->exists() && false === $this->is_virtual() )
+		{
       return filesize($this->fullpath);
-    else
+		}
+    elseif (true === $this->is_virtual())
+		{
+			 return -1;
+		}
+		else
       return 0;
   }
 
@@ -284,6 +334,7 @@ class FileModel extends \ShortPixel\Model
   {
       $sourcePath = $this->getFullPath();
       $destinationPath = $destination->getFullPath();
+
       Log::addDebug("Copy from $sourcePath to $destinationPath ");
 
       if (! strlen($sourcePath) > 0 || ! strlen($destinationPath) > 0)
@@ -343,7 +394,7 @@ class FileModel extends \ShortPixel\Model
   {
      if ($this->exists())
 		 {
-      \wp_delete_file($this->fullpath);  // delete file hook via wp_delete_file
+      	\wp_delete_file($this->fullpath);  // delete file hook via wp_delete_file
 		 }
 		 else
 		 {
@@ -476,12 +527,16 @@ class FileModel extends \ShortPixel\Model
     if ($fs->pathIsUrl($path))
     {
       $path = $this->UrlToPath($path);
+
     }
 
     if ($path === false) // don't process further
       return false;
 
   //  $path = wp_normalize_path($path);
+
+		$path = UtilHelper::spNormalizePath($path);
+
 		$abspath = $fs->getWPAbsPath();
 
     if ( is_file($path) && ! is_dir($path) ) // if path and file exist, all should be okish.
@@ -514,7 +569,6 @@ class FileModel extends \ShortPixel\Model
   }
 
 
-
   /** Resolve an URL to a local path
   *  This partially comes from WordPress functions attempting the same
   * @param String $url  The URL to resolve
@@ -534,9 +588,9 @@ class FileModel extends \ShortPixel\Model
        $abspath =  \wpSPIO()->filesystem()->getWPAbsPath();
        $path = str_replace($site_url, rtrim($abspath->getPath(),'/'), $url);
 
-
        if (! $fs->pathIsUrl($path)) // test again.
        {
+
         return $path;
        }
      }

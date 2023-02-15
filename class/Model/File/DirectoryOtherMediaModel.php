@@ -27,7 +27,9 @@ class DirectoryOtherMediaModel extends DirectoryModel
   protected $in_db = false;
   protected $is_removed = false;
 
-  protected $stats;
+  //protected $stats;
+
+	protected static $stats;
 
   const DIRECTORY_STATUS_REMOVED = -1;
   const DIRECTORY_STATUS_NORMAL = 0;
@@ -74,24 +76,48 @@ class DirectoryOtherMediaModel extends DirectoryModel
      return null;
   }
 
+	public static function getAllStats()
+	{
+			if (is_null(self::$stats))
+			{
+				global $wpdb;
+			 	$sql = 'SELECT SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) optimized, SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END) waiting, count(*) total, folder_id FROM  ' . $wpdb->prefix . 'shortpixel_meta GROUP BY folder_id';
+
+				$result = $wpdb->get_results($sql, ARRAY_A);
+
+				$stats = array();
+				foreach($result as $data)
+				{
+					 $folder_id = $data['folder_id'];
+					 unset($data['folder_id']);
+					 $stats[$folder_id] = $data;
+				}
+
+				self::$stats = $stats;
+			}
+
+		 return self::$stats;
+	}
+
   public function getStats()
   {
-    if (is_null($this->stats))
-    {
-      global $wpdb;
+			$stats = self::getAllStats();  // Querying all stats is more efficient than one-by-one
 
-      $sql = "SELECT SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) Optimized, "
-          . "SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END) Waiting, count(*) Total "
-          . "FROM  " . $wpdb->prefix . "shortpixel_meta "
-          . "WHERE folder_id = %d";
-      $sql = $wpdb->prepare($sql, $this->id);
+			if (isset($stats[$this->id]))
+			{
+				 return $stats[$this->id];
+			}
+			else {
+				global $wpdb;
+	      $sql = "SELECT SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) optimized, "
+	          . "SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END) waiting, count(*) total "
+	          . "FROM  " . $wpdb->prefix . "shortpixel_meta "
+	          . "WHERE folder_id = %d";
+	      $sql = $wpdb->prepare($sql, $this->id);
+	      $res = $wpdb->get_row($sql, ARRAY_A);
+				return $res;
+			}
 
-      $res = $wpdb->get_row($sql);
-      $this->stats = $res;
-
-    }
-
-    return $this->stats;
   }
 
   public function save()
@@ -118,11 +144,19 @@ class DirectoryOtherMediaModel extends DirectoryModel
         }
         else // Add new
         {
-            $this->id = $wpdb->insert($table, $data);
-						if ($this->id !== false)
+					 // Fallback.  In case some other process adds it. This happens with Nextgen.
+						if (true === $this->loadFolderByPath($this->getPath()))
 						{
-							$is_new = true;
-							$result = $this->id;
+								$result = $wpdb->update($table, $data, array('id' => $this->id), $format);
+						}
+						else
+						{
+							$this->id = $wpdb->insert($table, $data);
+							if ($this->id !== false)
+							{
+								$is_new = true;
+								$result = $this->id;
+							}
 						}
         }
 
@@ -219,6 +253,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
 			if (! $this->checkDirectory(true))
 			{
+				Log::addWarn('Refreshing directory, something wrong in checkDirectory ' . $this->getPath());
 				return false;
 			}
 
@@ -245,13 +280,13 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
       $files = $fs->getFilesRecursive($this, $filter);
 
-
       \wpSPIO()->settings()->hasCustomFolders = time(); // note, check this against bulk when removing. Custom Media Bulk depends on having a setting.
     	$result = $this->addImages($files);
 
-      $this->stats = null; //reset
+    	// Reset stat.
+			unset(self::$stats[$this->id]);
       $stats = $this->getStats();
-      $this->fileCount = $stats->Total;
+      $this->fileCount = $stats['total'];
 
       $this->save();
 
@@ -319,7 +354,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
 						 {
 							 if ($silent === false)
 							 {
-							  Notice::addError(__('This folder is a subfolder of an already existing Other Media folder. It cannot be added', 'shortpixel-image-optimiser'));
+							  Notice::addError(sprintf(__('This folder is a subfolder of an already existing Other Media folder. Folder %s can not be added', 'shortpixel-image-optimiser'), $this->getPath() ));
 							 }
 								return false;
 						 }
@@ -433,7 +468,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
       $fs = \wpSPIO()->filesystem();
 
-			Log::addDebug('activeFolders', $activeFolders);
+		//	Log::addDebug('activeFolders', $activeFolders);
 
       foreach($files as $fileObj)
       {

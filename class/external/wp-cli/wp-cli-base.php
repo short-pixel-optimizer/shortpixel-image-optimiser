@@ -58,7 +58,7 @@ class SpioCommandBase
 
      protected static $runs = 0;
       /**
-     * Adds a single item to the queue(s).
+     * Adds a single item to the queue(s), then processes the queue(s).
      *
      * ## OPTIONS
      *
@@ -115,11 +115,14 @@ class SpioCommandBase
 				{
 
           \WP_CLI::Success($result->result->message);
-					\WP_CLI::Line (__('You can optimize images via the run command', 'shortpixel-image-optimiser'));
+
 
 					if (! isset($assoc['halt']))
 					{
 							$this->run($args, $assoc);
+					}
+					else {
+						\WP_CLI::Line (__('You can optimize images via the run command', 'shortpixel-image-optimiser'));						
 					}
 				}
         elseif ($result->status == 0)

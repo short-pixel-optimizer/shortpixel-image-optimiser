@@ -1,5 +1,7 @@
 <?php
 namespace ShortPixel\Model\AdminNotices;
+use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+
 
 class ListviewNotice extends \ShortPixel\Model\AdminNoticeModel
 {
@@ -36,14 +38,12 @@ class ListviewNotice extends \ShortPixel\Model\AdminNoticeModel
 
 		}
 
-			$current_user = wp_get_current_user();
-			$currentUserID = $current_user->ID;
-			$viewMode = get_user_meta($currentUserID, "wp_media_library_mode", true);
+			$viewMode = get_user_option('media_library_mode', get_current_user_id() );
 
 			if ($viewMode === "" || strlen($viewMode) == 0)
 			{
 					// If nothing is set, set it for them.
-					update_user_meta($currentUserID, 'wp_media_library_mode', 'list');
+						update_user_option( get_current_user_id(), 'media_library_mode', 'list' );
 					return false;
 			}
 			elseif ($viewMode !== "list")

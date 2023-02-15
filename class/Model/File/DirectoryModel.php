@@ -2,6 +2,8 @@
 namespace ShortPixel\Model\File;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
+use ShortPixel\Helper\UtilHelper as UtilHelper;
+
 /* Model for Directories
 *
 * For all low-level operations on directories
@@ -32,7 +34,6 @@ class DirectoryModel extends \ShortPixel\Model
   */
   public function __construct($path)
   {
-      //$path = wp_normalize_path($path);
       $fs = \wpSPIO()->filesystem();
 
       if ($fs->pathIsUrl($path))
@@ -47,6 +48,10 @@ class DirectoryModel extends \ShortPixel\Model
         $this->is_readable = true; // assume
         $this->exists = true;
       }
+
+			// On virtual situation this would remove the slashes on :// , causing issues with offload et al.
+			if (false === $this->is_virtual)
+			 	$path = UtilHelper::spNormalizePath($path);
 
       if (! $this->is_virtual() && ! is_dir($path) ) // path is wrong, *or* simply doesn't exist.
       {
@@ -272,7 +277,7 @@ class DirectoryModel extends \ShortPixel\Model
      }
      if ($this->exists() && $check_writable && ! $this->is_writable())
      {
-       chmod($this->path, $this->permission);
+       chmod($this->path, $permission);
 			 if (! $this->is_writable()) // perhaps parent permission is no good.
 			 {
 			 		chmod($this->path, $this->new_directory_permission);

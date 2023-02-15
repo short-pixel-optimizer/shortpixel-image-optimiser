@@ -81,6 +81,16 @@ class EnvironmentModel extends \ShortPixel\Model
     return false;
   }
 
+	public function checkPHPVersion($needed)
+	{
+
+		 if (version_compare(PHP_VERSION, $needed) >= 0 )
+		 {
+			 return true;
+		 }
+		 return false;
+	}
+
 	public function plugin_active($name)
 	{
 		 switch($name)

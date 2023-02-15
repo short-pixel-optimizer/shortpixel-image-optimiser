@@ -1,5 +1,4 @@
 <?php
-
 namespace ShortPixel\Helper;
 
 // Our newest Tools class
@@ -31,7 +30,48 @@ class UtilHelper
 				return strtotime($date);
 		}
 
-		public static function alterHtaccess($webp = false, $avif = false){
+		public static function getWordPressImageSizes()
+		{
+			global $_wp_additional_image_sizes;
+
+			$sizes_names = get_intermediate_image_sizes();
+			$sizes = array();
+			foreach ( $sizes_names as $size ) {
+					$sizes[ $size ][ 'width' ] = intval( get_option( "{$size}_size_w" ) );
+					$sizes[ $size ][ 'height' ] = intval( get_option( "{$size}_size_h" ) );
+					$sizes[ $size ][ 'crop' ] = get_option( "{$size}_crop" ) ? get_option( "{$size}_crop" ) : false;
+			}
+			if(function_exists('wp_get_additional_image_sizes')) {
+					$sizes = array_merge($sizes, wp_get_additional_image_sizes());
+			} elseif(is_array($_wp_additional_image_sizes)) {
+					$sizes = array_merge($sizes, $_wp_additional_image_sizes);
+			}
+
+			$sizes = apply_filters('shortpixel/settings/image_sizes', $sizes);
+			return $sizes;
+		}
+
+		// wp_normalize_path doesn't work for windows installs in some situations, so we can use it, but we still want some of the functions.
+		public static function spNormalizePath($path)
+		{
+				$path = preg_replace( '|(?<=.)/+|', '/', $path );
+				return $path;
+		}
+
+		// Copy of private https://developer.wordpress.org/reference/functions/_wp_relative_upload_path/
+		public static function getRelativeUploadPath($path)
+		{
+				$new_path = $path;
+						$uploads = wp_get_upload_dir();
+				if ( 0 === strpos( $new_path, $uploads['basedir'] ) ) {
+						$new_path = str_replace( $uploads['basedir'], '', $new_path );
+						$new_path = ltrim( $new_path, '/' );
+				}
+			return $new_path;
+		}
+
+		public static function alterHtaccess($webp = false, $avif = false)
+		{
          // [BS] Backward compat. 11/03/2019 - remove possible settings from root .htaccess
          /* Plugin init is before loading these admin scripts. So it can happen misc.php is not yet loaded */
          if (! function_exists('insert_with_markers'))
@@ -136,5 +176,5 @@ class UtilHelper
                insert_with_markers( trailingslashit(WP_CONTENT_DIR) . '.htaccess', 'ShortPixelWebp', $rules);
 
            }
-       }
-}
+    }
+} // class

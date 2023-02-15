@@ -345,7 +345,7 @@ window.ShortPixelProcessor =
              }
 
 						 if (handledError == true)
-						 	 	return; 
+						 	 	return;
            } // status false handler.
 
            // Check the screen if we are custom or media ( or bulk ) . Check the responses for each of those.
@@ -519,7 +519,6 @@ window.ShortPixelProcessor =
           {
               console.log('Processor: Preparing is done');
               this.StopProcess();
-
           }
 
           // React to status of the queue.

@@ -38,13 +38,18 @@ Class FileSystemController extends \ShortPixel\Controller
 
     /** Get MediaLibraryModel for a Post_id
 		* @param int $id
+		* @param bool $useCache  If false then it will require a fresh copt from database. Use when meta has changed / saved
+		* @param bool $cacheOnly Prevent fetching from Database. Used for checkLegacy and other places where conflicts with mainFile arise, checking for backups.
 		*/
-    public function getMediaImage($id, $useCache = true)
+    public function getMediaImage($id, $useCache = true, $cacheOnly = false)
     {
 				if ($useCache === true && isset(self::$mediaItems[$id]))
 				{
 					 return self::$mediaItems[$id];
 				}
+
+				if (true === $cacheOnly)
+					return false; 
 
         $filepath = get_attached_file($id);
         $filepath = apply_filters('shortpixel_get_attached_file', $filepath, $id);
@@ -89,6 +94,23 @@ Class FileSystemController extends \ShortPixel\Controller
 		{
 					 self::$mediaItems = array();
 					 self::$customItems = array();
+					 MediaLibraryModel::onFlushImageCache();
+		}
+
+		public function flushImage($imageObj)
+		{
+				$id = $imageObj->get('id');
+				 $type = $imageObj->get('type');
+
+				if ('media' == $type && isset(self::$mediaItems[$id]))
+				{
+					 unset(self::$mediaItems[$id]);
+					 MediaLibraryModel::onFlushImageCache();
+				}
+				if ('custom' == $type && isset(self::$customItems[$id]))
+				{
+					 unset(self::$customItems[$id]);
+				}
 		}
 
     /** Gets a custom Image Model without being in the database. This is used to check if path is a proper customModel path ( not mediaLibrary ) and see if the file should be included per excusion rules */
@@ -404,6 +426,7 @@ Class FileSystemController extends \ShortPixel\Controller
 
     }
 
+		// @todo Deprecate this, move some functs perhaps to DownloadHelper.
     public function downloadFile($url, $destinationPath)
     {
       $downloadTimeout = max(SHORTPIXEL_MAX_EXECUTION_TIME - 10, 15);
@@ -414,6 +437,7 @@ Class FileSystemController extends \ShortPixel\Controller
       $args_for_get = array(
         'stream' => true,
         'filename' => $destinationPath,
+				'timeout' => $downloadTimeout,
       );
 
       $response = wp_remote_get( $url, $args_for_get );

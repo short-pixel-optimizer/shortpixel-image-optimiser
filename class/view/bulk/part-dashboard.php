@@ -19,9 +19,26 @@ namespace ShortPixel;
         </button>
       </div>
 
-      <p class='description'><?php esc_html_e('Here you can (re)optimize your Media Library or Custom Media folders from your website.', 'shortpixel-image-optimiser'); ?></p>
+			<div class='dashboard-text'>
+	      <p class='description'><?php esc_html_e('Here you can (re)optimize your Media Library or Custom Media folders from your website.', 'shortpixel-image-optimiser'); ?></p>
 
-   </div>
+				<p class='description'><?php
+					printf(__('If you have any question don\'t hesitate to %s contact us %s %s, we are friendly and helpful, 24/7. %s
+	Also, if you have a minute please leave a %s review %s for us, it always brings joy to our team! %s','shortpixel-image-optimiser'),
+					'<a href="https://shortpixel.com/contact" target="_blank">',
+					'</a>',
+					'&#x1F4AC;',
+					'<br>',
+					'<a href="https://wordpress.org/support/plugin/shortpixel-image-optimiser/reviews/?filter=5" target="_blank">',
+					'</a>',
+					'&#x1F913');
+				?>
+
+				</p>
+			</div>
+ </div>
+
+
 
    <?php if ($this->view->error): ?>
      <div class='bulk error'>

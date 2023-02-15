@@ -31,6 +31,7 @@ class Replacer
 	{
 			Modules\Elementor::getInstance();
 			Modules\WpBakery::getInstance();
+			Modules\YoastSeo::getInstance();
 	}
 
 	public function setSource($url)
@@ -366,6 +367,18 @@ class Replacer
 	    return $content;
 	}
 
+	private function change_key($arr, $set) {
+        if (is_array($arr) && is_array($set)) {
+    		$newArr = array();
+    		foreach ($arr as $k => $v) {
+    		    $key = array_key_exists( $k, $set) ? $set[$k] : $k;
+    		    $newArr[$key] = is_array($v) ? $this->change_key($v, $set) : $v;
+    		}
+    		return $newArr;
+    	}
+    	return $arr;
+  }
+	
 	private function getRelativeURLS()
   {
       $dataArray = array(

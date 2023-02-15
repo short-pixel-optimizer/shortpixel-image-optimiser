@@ -51,7 +51,7 @@ $queueRunning = $bulk->isAnyBulkRunning();
 			<div class='name'><?php esc_html_e('Clear Queue','shortpixel-image-optimiser'); ?></div>
 			<div class='field'>
 
-				<a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_resetQueue', 'queue' => 'all', 'part' => 'tools'), $url)); ?>" class="button"><?php esc_html_e('Clear the Queue','shortpixel-image-optimiser'); ?></a>
+				<a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_resetQueue', 'queue' => 'all', 'part' => 'tools', 'noheader' => true), $url)); ?>" class="button"><?php esc_html_e('Clear the Queue','shortpixel-image-optimiser'); ?></a>
 				<p class='settings-info'><?php esc_html_e('Removes all items currently waiting or being processed from all queues. This stops all optimization processes in the entire installation.', 'shortpixel-image-optimiser'); ?> </p>
 
 			</div>

@@ -199,6 +199,7 @@ class AjaxController
           unset($data['typeArray']);
         }
 
+				Log::addInfo('AjaxController: Action detected :' . $action);
         switch($action)
         {
            case 'restoreItem':
@@ -359,11 +360,9 @@ class AjaxController
     {
         $bulkControl = BulkController::getInstance();
         $stats = $bulkControl->createNewBulk('media');
-
         $json->media->stats = $stats;
 
         $stats = $bulkControl->createNewBulk('custom');
-
         $json->custom->stats = $stats;
 
         $json = $this->applyBulkSelection($json, $data);

@@ -264,7 +264,7 @@ class OtherMediaController extends \ShortPixel\Controller
  			// a little PHP 5.5. compat.
 			if (is_null($expires))
 			{
-				$expires = 5 * MINUTE_IN_SECONDS;
+				$expires = HOUR_IN_SECONDS;
 			}
 
 			if (! $this->hasFoldersTable())
@@ -286,7 +286,7 @@ class OtherMediaController extends \ShortPixel\Controller
       foreach($customFolders as $directory) {
 
 				$stats = $directory->getStats();
-				$forcenow = ($force || $stats->Total === 0) ? true : false;
+				$forcenow = ($force || $stats['total'] === 0) ? true : false;
 	      $directory->refreshFolder($forcenow);
       } // folders
 
@@ -333,6 +333,12 @@ class OtherMediaController extends \ShortPixel\Controller
 			}
       elseif ($directory->isSubFolderOf($uploadDir)) // upload subdirs come in variation of year or month, both numeric. Exclude the WP-based years
       {
+					// Only check if direct subdir of /uploads/ is a number-based directory name. Don't bother with deeply nested dirs with accidental year.
+					if ($directory->getParent()->getPath() !== $uploadDir->getPath())
+					{
+							return false;
+					}
+
 					$name = $directory->getName();
 					if (is_numeric($name) && strlen($name) == 4) // exclude year based stuff.
 				  {

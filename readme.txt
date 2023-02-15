@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compressor, ima
 Requires at least: 4.8.0
 Tested up to: 6.1
 Requires PHP: 5.6
-Stable tag: 5.1.6
+Stable tag: 5.2.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -34,7 +34,10 @@ This is the perfect monthly plan for single website owners.
 It allows you to optimize an unlimited number of images with ShortPixel Image Optimizer on your website.
 Read more details on our <a href="https://shortpixel.com/knowledge-base/article/555-how-does-the-unlimited-plan-work" target="_blank">dedicated page</a>.
 
-**New! Smart Cropping**
+**New! HEIC file support**
+With ShortPixel you can now add images in Apple format (HEIC) directly from your iPhone. They will be automatically converted to JPG and then optimized according to your settings. Easy! <a href="https://shortpixel.com/knowledge-base/article/566-heic-apple-images-support-in-shortpixel-image-optimizer" target="_blank">Read more</a>.
+
+**Smart Cropping**
 
 With this new feature, all thumbnails used on your website are not only optimized, but also regenerated to fully display the subject of the image.
 All thumbnails fully display the subject and look consistent as well. The new thumbnails look sharper (and can be slightly bigger) than the ones created by WordPress. Ideal for e-commerce and other websites where the images are paramount to selling the products or to support the content. See <a href="https://shortpixel.com/knowledge-base/article/182-what-is-smart-cropping" target="_blank">an example</a>.
@@ -366,6 +369,35 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 5.2.0 =
+Release date February 15, 2023
+* New: added support for automatic conversion of HEIC files (Apple image format for iOS devices) to JPG;
+* New: the conversion from PNG to JPG has been completely reworked, making it more robust and stable;
+* Compat: the integration with WP Offload Media has been updated, according to the latest version;
+* Compat: fully tested and working with PHP 8.1;
+* Tweak: fractional optimization is now possible, especially useful for images with many thumbnails;
+* Tweak: Custom Media stats are now retrieved with only one DB query, speeding up the settings page;
+* Tweak: if a PNG is not converted, there is now a reason in the ShortPixel box on the Edit Media screen;
+* Tweak: notifications are no longer reset when the plugin is activated/updated, preventing the same notifications from reappearing;
+* Fix: security hardening for the settings controller and debug functions;
+* Fix: a 4-digit Custom Media folder could not be added due to Media Library exclusions;
+* Fix: a check is now performed before adding a NextGen gallery to Custom Media, to avoid duplicates;
+* Fix: a failed PNG conversion to JPG can now be retried;
+* Fix: credits can no longer be purchased from a sub-account;
+* Fix: when converting a large PNG to JPG, the resulting scaled JPG was not optimized properly; 
+* Fix: size exclusions work as expected again;
+* Fix: when credits are insufficient for the entire bulk, a notification is displayed again;
+* Fix: page selection on the Custom Media screen now works as expected again;
+* Fix: NextGen Gallery pages no longer crash due to jQuery errors;
+* Fix: NextGen galleries are no longer added twice, a check for double slashes has been added;
+* Fix: if a PNG image has the same filename as a JPG image after conversion, it's now renamed correctly to avoid conflicts;
+* Fix: when an image is deleted from NextGen Gallery, the WebP/AVIF files are also removed;
+* Fix: if an optimized image is in a folder without write permissions, WebP/AVIF generation is no longer attempted;
+* Fix: when entering a very long email address, the browser no longer hangs;
+* Fix: notification for list view mode in Media Library works again;
+* Fix: various fixes and updates to the plugin's CSS and text;
+* Language: 31 new strings added, 8 updated, 0 fuzzed, and 15 deprecated.
 
 = 5.1.6 =
 Release date December 31, 2022

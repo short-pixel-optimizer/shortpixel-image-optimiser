@@ -8,7 +8,6 @@ use ShortPixel\Controller\OptimizeController as OptimizeController;
 
 use ShortPixel\Model\AccessModel as AccessModel;
 
-
 class UiHelper
 {
 
@@ -104,14 +103,14 @@ class UiHelper
          $output .= '<div class="totals">' . sprintf(__('+%s thumbnails optimized','shortpixel-image-optimiser'), self::formatNumber($thumbsDone, 0)) . '</div>';
 
 			 $improvs = array();
-	    
-			 uasort($improvements['thumbnails'], function ($a, $b) {
-					//return $b[0] <=> $a[0]; // @todo Efficient code to use once PHP 5 support is done.
-					if ($a == $b) {
-						return 0;
-					}
-					return ($b < $a) ? -1 : 1;
-			 });
+
+				 uasort($improvements['thumbnails'], function ($a, $b) {
+					 	//return $b[0] <=> $a[0]; // @todo Efficient code to use once PHP 5 support is done.
+						if ($a == $b) {
+							return 0;
+						}
+						return ($b < $a) ? -1 : 1;
+				 });
 
 			 $cutoff = false;
 			 $thumbCount = count($improvements['thumbnails']);
@@ -130,7 +129,6 @@ class UiHelper
 					{
 						 $improvs[$thumbName] = $stat; //self::formatNumber($stat,2);
 					}
-
 			 }
 
 			 if (count($improvs) > 0)
@@ -451,6 +449,7 @@ class UiHelper
     }
     elseif (! $mediaItem->isProcessable() && ! $mediaItem->isOptimized())
     {
+
        $text = __('Not Processable: ','shortpixel_image_optimiser');
        $text  .= $mediaItem->getProcessableReason();
     }
@@ -469,10 +468,7 @@ class UiHelper
 
     if ($mediaItem->isOptimizePrevented() !== false)
     {
-
           $retry = self::getAction('retry', $mediaItem->get('id'));
-
-
 					$redo_legacy = false;
 
 					if ($mediaItem->get('type') == 'media')
@@ -596,6 +592,38 @@ class UiHelper
 
    return $action;
   }
+
+	public static function getConvertErrorReason($error)
+	{
+		switch($error)
+		{
+			case -1: //ERROR_LIBRARY:
+				$reason = __('PNG Library is not present or not working', 'shortpixel-image-optimiser');
+			break;
+			case -2: //ERROR_PATHFAIL:
+				$reason = __('Could not create path', 'shortpixel-image-optimiser');
+			break;
+			case -3: //ERROR_RESULTLARGER:
+				$reason  = __('Result file is larger','shortpixel-image-optimiser');
+			break;
+			case -4: // ERROR_WRITEERROR
+				$reason = __('Could not write result file', 'shortpixel-image-optimiser');
+			break;
+			case -5: // ERROR_BACKUPERROR
+				$reason = __('Could not create backup', 'shortpixel-image-optimiser');
+			break;
+			case -6:  // ERROR_TRANSPARENT
+				$reason = __('Image is transparent', 'shortpixel-image-optimiser');
+			break;
+			default:
+				$reason = sprintf(__('Unknown error %s', 'shortpixel-image-optimiser'), $error);
+			break;
+		}
+
+
+		$message = sprintf(__('Not converted: %s ', 'shortpixel-image-optimiser'), $reason);
+		return $message;
+	}
 
 	public static function getKBSearchLink($subject)
 	{

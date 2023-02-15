@@ -17,7 +17,7 @@ class MediaLibraryModelTest extends  WP_UnitTestCase
   private $className = '\ShortPixel\Model\Image\MediaLibraryModel';
 
 
-  public function setUp()
+  public function setUp() :void
   {
 
     WPShortPixelSettings::resetOptions();

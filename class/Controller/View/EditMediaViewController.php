@@ -69,6 +69,8 @@ class EditMediaViewController extends \ShortPixel\ViewController
 						return false;
 					}
 
+
+
           $this->view->status_message = null;
 
           $this->view->text = UiHelper::getStatusText($this->imageModel);
@@ -105,7 +107,8 @@ class EditMediaViewController extends \ShortPixel\ViewController
         $stats = array();
         $imageObj = $this->imageModel;
         $did_keepExif = $imageObj->getMeta('did_keepExif');
-        $did_png2jpg = $imageObj->getMeta('did_png2jpg');
+
+				$did_convert = $imageObj->getMeta()->convertMeta()->isConverted();
         $resize = $imageObj->getMeta('resize');
 
 				// Not optimized, not data.
@@ -118,10 +121,18 @@ class EditMediaViewController extends \ShortPixel\ViewController
           $stats[] = array(__('EXIF removed', 'shortpixel-image-optimiser'), '');
         }
 
-        if ($did_png2jpg == true)
+        if (true === $did_convert )
         {
-          $stats[] = array(  __('Converted from PNG','shortpixel-image-optimiser'), '');
+					$ext = $imageObj->getMeta()->convertMeta()->getFileFormat();
+          $stats[] = array(  sprintf(__('Converted from %s','shortpixel-image-optimiser'), $ext), '');
         }
+				elseif (false !== $imageObj->getMeta()->convertMeta()->didTry()) {
+					$ext = $imageObj->getMeta()->convertMeta()->getFileFormat();
+					$error = $imageObj->getMeta()->convertMeta()->getError(); // error code.
+					$stats[] = array(UiHelper::getConvertErrorReason($error, $ext), '');
+
+
+				}
 
         if ($resize == true)
         {
@@ -178,7 +189,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
 					if ($imageObj->is_virtual())
 					{
-						$debugInfo[] = array(__('Is Virtual'), $imageObj->getFullPath() );
+						$debugInfo[] = array(__('Is Virtual true: '), $imageObj->getFullPath() );
 					}
 
           $debugInfo[] = array(__('Size and Mime (ImageObj)'), $imageObj->get('width') . 'x' . $imageObj->get('height'). ' (' . $imageObj->get('mime') . ')');
@@ -188,6 +199,13 @@ class EditMediaViewController extends \ShortPixel\ViewController
 					$debugInfo[] = array(__('Avif/Webp needed'), $anyFileType);
 					$debugInfo[] = array(__('Restorable'), $restorable);
 					$debugInfo[] = array(__('Record'), $hasrecord);
+
+					if ($imageObj->getMeta()->convertMeta()->didTry())
+					{
+						 $debugInfo[] = array(__('Converted'), ($imageObj->getMeta()->convertMeta()->isConverted() ?'<span class="green">Yes</span>' : '<span class="red">No</span> '));
+						 $debugInfo[] = array(__('Checksum'), $imageObj->getMeta()->convertMeta()->didTry());
+						 $debugInfo[] = array(__('Error'), $imageObj->getMeta()->convertMeta()->getError());
+					}
 
           $debugInfo[] = array(__('WPML Duplicates'), json_encode($imageObj->getWPMLDuplicates()) );
 
@@ -216,15 +234,33 @@ class EditMediaViewController extends \ShortPixel\ViewController
           $debugInfo['wpmetadata'] = array(__('WordPress Get Attachment Metadata'), $meta );
 					$debugInfo[] = array('', '<hr>');
 
-          if ($imageObj->hasBackup())
-          {
-            $backupFile = $imageObj->getBackupFile();
+
+						if ($imageObj->hasBackup())
+            	$backupFile = $imageObj->getBackupFile();
+						else {
+							 $backupFile = $fs->getFile($fs->getBackupDirectory($imageObj) . $imageObj->getBackupFileName());
+						}
+
             $debugInfo[] = array(__('Backup Folder'), (string) $backupFile->getFileDir() );
-            $debugInfo[] = array(__('Backup File'), (string) $backupFile . '(' . UiHelper::formatBytes($backupFile->getFileSize()) . ')' );
-          }
-          else {
+						if ($imageObj->hasBackup())
+							$backupText = __('Backup File :');
+						else {
+							$backupText = __('Target Backup File after optimization (no backup) ');
+						}
+            $debugInfo[] = array( $backupText, (string) $backupFile . '(' . UiHelper::formatBytes($backupFile->getFileSize()) . ')' );
+
             $debugInfo[] =  array(__("No Main File Backup Available"), '');
-          }
+
+
+
+					if ($imageObj->getMeta()->convertMeta()->isConverted())
+					{
+							$convertedBackup = ($imageObj->hasBackup(array('forceConverted' => true))) ? '<span class="green">Yes</span>' : '<span class="red">No</span>';
+							$backup = $imageObj->getBackupFile(array('forceConverted' => true));
+						 $debugInfo[] = array('Has converted backup', $convertedBackup);
+						 if (is_object($backup))
+						 	$debugInfo[] = array('Backup: ', $backup->getFullPath() );
+				}
 
           if ($or = $imageObj->hasOriginal())
           {
@@ -259,7 +295,18 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
               $url = $thumbObj->getURL(); //$fs->pathToURL($thumbObj); //wp_get_attachment_image_src($this->post_id, $size);
               $filename = $thumbObj->getFullPath();
-							$backup = $thumbObj->hasBackup() ? $thumbObj->getBackupFile()->getFullPath() : 'n/a';
+
+							$backupFile = $thumbObj->getBackupFile();
+							if ($thumbObj->hasBackup())
+							{
+								$backup = $backupFile->getFullPath();
+								$backupText = __('Backup File :');
+							}
+							else {
+								$backupFile = $fs->getFile($fs->getBackupDirectory($thumbObj) . $thumbObj->getBackupFileName());
+								$backup = $backupFile->getFullPath();
+								$backupText = __('Target Backup File after optimization (no backup) ');
+							}
 
               $width = $thumbObj->get('width');
               $height = $thumbObj->get('height');
@@ -271,7 +318,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 					$dbid = $thumbObj->getMeta('databaseID');
 
               $debugInfo[] = array('', "<div class='$size previewwrapper'><img src='" . $url . "'><p class='label'>
-							<b>URL:</b> $url ( $display_size - $width X $height ) <br><b>FileName:</b>  $filename <br> <b>Backup:</b> $backup </p>
+							<b>URL:</b> $url ( $display_size - $width X $height ) <br><b>FileName:</b>  $filename <br> <b> $backupText </b> $backup </p>
 							<p><b>Processable: </b> $processable <br> <b>Restorable:</b>  $restorable <br> <b>Record:</b> $hasrecord ($dbid) </p>
 							<hr></div>");
             }

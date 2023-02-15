@@ -5,6 +5,8 @@ use ShortPixel\Notices\NoticeController as Notices;
 use ShortPixel\Controller\Queue\Queue as Queue;
 
 use \ShortPixel\ShortPixelPng2Jpg as ShortPixelPng2Jpg;
+use ShortPixel\Model\Converter\Converter as Converter;
+use ShortPixel\Model\Converter\ApiConverter as ApiConverter;
 
 use ShortPixel\Model\AccessModel as AccessModel;
 
@@ -67,13 +69,16 @@ class AdminController extends \ShortPixel\Controller
 
 				if ($mediaItem->isProcessable())
 				{
-					if ($mediaItem->get('do_png2jpg') === true)
+					$converter = Converter::getConverter($mediaItem, true);
+					if (is_object($converter) && $converter->isConvertable())
 					{
-						$mediaItem->convertPNG();
-						$fs->flushImageCache(); // Flush it to reflect new status.
-						$mediaItem = $fs->getImage($id, 'media');
-						$meta = wp_get_attachment_metadata($id); // reset the metadata because we are on the hook.
+							$args = array('runReplacer' => false);
+
+						 	$converter->convert($args);
+							$mediaItem = $fs->getImage($id, 'media');
+							$meta = $converter->getUpdatedMeta();
 					}
+
         	$control = new OptimizeController();
         	$control->addItemToQueue($mediaItem);
 				}
@@ -86,6 +91,36 @@ class AdminController extends \ShortPixel\Controller
 		public function preventImageHook($id)
 		{
 			  self::$preventUploadHook[] = $id;
+		}
+
+		// Placeholder function for heic and such, return placeholder URL in image to help w/ database replacements after conversion.
+		public function checkPlaceHolder($url, $post_id)
+		{
+			 if (false === strpos($url, 'heic'))
+			 	 return $url;
+
+			$extension = pathinfo($url,  PATHINFO_EXTENSION);
+			if (false === in_array($extension, ApiConverter::CONVERTABLE_EXTENSIONS))
+			{
+				 return $url;
+			}
+
+			$fs = \wpSPIO()->filesystem();
+			$mediaImage = $fs->getImage($post_id, 'media');
+
+			if (false === $mediaImage)
+			{
+				 return $url;
+			}
+
+			if (false === $mediaImage->getMeta()->convertMeta()->hasPlaceholder())
+			{
+				return $url;
+			}
+
+			$url = str_replace($extension, 'jpg', $url);
+
+			return $url;
 		}
 
 		public function processQueueHook($args = array())
@@ -153,20 +188,6 @@ class AdminController extends \ShortPixel\Controller
 		}
 
 
-    /** For conversion
-    * @hook wp_handle_upload
-    */
-    public function handlePng2JpgHook($id)
-    {
-
-      $mediaItem = \wpSPIO()->filesystem()->getImage($id, 'media');
-      // IsProcessable sets do_png2jpg flag.
-      if ($mediaItem->isProcessable() && $mediaItem->get('do_png2jpg') == true)
-      {
-          $mediaItem->convertPNG();
-      }
-    }
-
     /**
 		* When replacing happens.
     * @hook wp_handle_replace
@@ -207,7 +228,7 @@ class AdminController extends \ShortPixel\Controller
         return $links;
     }
 
-    /** If webp generating functionality is on, give mime-permissions for webp extension
+    /** Allow certain mime-types if we will be using those.
     *
     */
     public function addMimes($mimes)
@@ -223,6 +244,17 @@ class AdminController extends \ShortPixel\Controller
             if (! isset($mimes['avif']))
               $mimes['avif'] = 'image/avif';
         }
+
+				if (! isset($mimes['heic']))
+				{
+					$mimes['heic'] = 'image/heic';
+				}
+
+				if (! isset($mimes['heif']))
+				{
+					$mimes['heif'] = 'image/heif';
+				}
+
         return $mimes;
     }
 
@@ -239,7 +271,7 @@ class AdminController extends \ShortPixel\Controller
         try
         {
           $imageObj = $fs->getImage($post_id, 'media');
-					Log::addDebug('OnDelete ImageObj', $imageObj);
+					//Log::addDebug('OnDelete ImageObj', $imageObj);
           if ($imageObj !== false)
             $result = $imageObj->onDelete();
         }

@@ -126,13 +126,20 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
     {
         $bool = parent::isProcessable();
 
+				if($strict)
+				{
+					return $bool;
+				}
+
 				// The exclude size on the  image - via regex - if fails, prevents the whole thing from optimization.
 				if ($this->processable_status == ImageModel::P_EXCLUDE_SIZE || $this->processable_status == ImageModel::P_EXCLUDE_PATH)
 				{
 					 return $bool;
 				}
 
-        if ($bool === false && $strict === false)
+
+
+      /*  if ($bool === false && $strict === false)
         {
           // Todo check if Webp / Acif is active, check for unoptimized items
           if ($this->isProcessableFileType('webp'))
@@ -144,7 +151,22 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
              $bool = true;
 					}
 
-        }
+        } */
+
+				// From above to below was implemented because it could not detect file not writable / directory not writable issues if there was any option to generate webp in the settings. Should check for all those file issues first.
+
+				// First test if this file isn't unprocessable for any other reason, then check.
+				if (($this->isProcessable(true) || $this->isOptimized() ) && $this->isProcessableAnyFileType() === true)
+				{
+					if (false === $this->is_directory_writable())
+					{
+					 	$bool = false;
+					}
+					else {
+						$bool = true;
+					}
+				}
+
         return $bool;
     }
 
@@ -254,7 +276,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
        return $return;
     }
 
-    public function handleOptimized($optimizeData)
+    public function handleOptimized($optimizeData, $args = array())
     {
 			 $bool = true;
 
@@ -282,7 +304,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
          $this->saveMeta();
        }
 
-			 $this->deleteTempFiles($files);
+	//		 $this->deleteTempFiles($files);
 
        return $bool;
     }

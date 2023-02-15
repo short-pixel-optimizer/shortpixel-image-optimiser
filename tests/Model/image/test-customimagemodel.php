@@ -12,7 +12,7 @@ class CustomImageModelTest extends  WP_UnitTestCase
   static $fs;
   static $imagePath;
 
-  public function setUp()
+  public function setUp() :void
   {
 
     WPShortPixelSettings::resetOptions();

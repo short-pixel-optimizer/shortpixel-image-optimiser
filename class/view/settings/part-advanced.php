@@ -45,6 +45,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
         $excludePatterns = substr($excludePatterns, 0, -2);
     }
 
+
     ?>
 
     <div class="wp-shortpixel-options wp-shortpixel-tab-content" style='visibility: hidden'>
@@ -58,7 +59,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
 										 <label>
 											 <input type="checkbox" class="switch" name="createWebp" value="1" <?php checked( $view->data->createWebp, "1" );?>>
 											 <div class="the_switch">&nbsp; </div>
-											  <?php printf(esc_html__('Create %s WebP versions %s of the images, with the additional cost of 1 credit = 1 image or thumbnail.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/blog/how-webp-images-can-speed-up-your-site/" target="_blank">', '</a>' );?>
+											  <?php printf(esc_html__('Create %s WebP versions %s of the images. Each image/thumbnail will use an additional credit unless you use the %s Unlimited plan. %s','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/blog/how-webp-images-can-speed-up-your-site/" target="_blank">', '</a>', '<a href="https://shortpixel.com/knowledge-base/article/555-how-does-the-unlimited-plan-work" target="_blank">', '</a>' );?>
 										 </label>
 									 </div>
 
@@ -82,7 +83,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
 										 <label>
 											 <input type="checkbox" class="switch" name="createAvif" value="1" <?php echo $disabled ?> <?php checked( $createAvifChecked );?>>
 											 <div class="the_switch">&nbsp; </div>
-											 <?php printf(esc_html__('Create %s AVIF versions %s of the images, with the additional cost of 1 credit = 1 image or thumbnail.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/blog/what-is-avif-and-why-is-it-good/" target="_blank">', '</a>');?>
+											 <?php printf(esc_html__('Create %s AVIF versions %s of the images. Each image/thumbnail will use an additional credit unless you use the %s Unlimited plan. %s','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/blog/what-is-avif-and-why-is-it-good/" target="_blank">', '</a>', '<a href="https://shortpixel.com/knowledge-base/article/555-how-does-the-unlimited-plan-work" target="_blank">', '</a>');?>
 										 </label>
 									 </div>
 
@@ -420,24 +421,23 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                         foreach($view->customFolders as $index => $dirObj) {
                             $folder_id = $dirObj->get('id');
 
-
                             $type_display = ($dirObj->get('is_nextgen') ) ? __('Nextgen', 'shortpixel-image-optimiser') . ":" : "";
                             $stat = $dirObj->getStats();
 
-                            $fullstatus = esc_html__("Optimized",'shortpixel-image-optimiser') . ": " . $stat->Optimized . ", "
-                                  . " " . esc_html__("Waiting",'shortpixel-image-optimiser') . ": " . $stat->Waiting . ""
+                            $fullstatus = esc_html__("Optimized",'shortpixel-image-optimiser') . ": " . $stat['optimized'] . ", "
+                                  . " " . esc_html__("Waiting",'shortpixel-image-optimiser') . ": " . $stat['waiting'] . ""
                                   ;
 
-                            if ($stat->Total == 0)
+                            if ($stat['total'] == 0)
                             {
                               $optimize_status = __("Empty",'shortpixel-image-optimiser');
                               $fullstatus = '';
                             }
-                            elseif ($stat->Total == $stat->Optimized)
+                            elseif ($stat['total'] == $stat['optimized'])
                             {
                               $optimize_status = __("Optimized",'shortpixel-image-optimiser');
                             }
-                            elseif ($stat->Optimized > 0)
+                            elseif ($stat['optimized'] > 0)
                             {
                                $optimize_status = __("Pending",'shortpixel-image-optimiser');
                             }
@@ -462,7 +462,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                             <div>
                                 <span class='folder folder-<?php echo esc_attr($dirObj->get('id')) ?>'><?php echo esc_html($dirObj->getPath()); ?></span>
                                 <span>
-                                    <?php if(!($stat->Total == 0)) { ?>
+                                    <?php if(!($stat['total'] == 0)) { ?>
                                     <span title="<?php echo esc_attr($fullstatus); ?>" class='info-icon'>
                                         <img alt='<?php esc_html_e('Info Icon', 'shortpixel-image-optimiser') ?>' src='<?php echo esc_url( wpSPIO()->plugin_url('res/img/info-icon.png' ));?>' style="margin-bottom: -2px;"/>
                                     </span>&nbsp;<?php  }
@@ -470,7 +470,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
                                     ?>
                                 </span>
                                 <span>
-                                    <?php echo esc_html($stat->Total); ?> files
+                                    <?php echo esc_html($stat['total']); ?> files
                                 </span>
                                 <span>
                                     <?php echo esc_html(UiHelper::formatTS($dirObj->get('updated'))) ?>

@@ -23,6 +23,8 @@ class ResponseController
 		const ISSUE_OPTIMIZED_NOFILE = 12; // Issues with missing files
 		const ISSUE_QUEUE_FAILED = 13;  // Issues with enqueueing items ( Queue )
 		const ISSUE_FILE_NOTWRITABLE = 20; // Issues with file writing
+		const ISSUE_DIRECTORY_NOTWRITABLE = 30; // Issues with directory writing
+
 
 		const ISSUE_API = 50; // Issues with API - general
 		const ISSUE_QUOTA = 100; // Issues with Quota.
@@ -108,7 +110,7 @@ class ResponseController
 			{
 					if (property_exists($resp, $prop))
 					{
-						 
+
 						 $resp->$prop = $val;
 					}
 					else {

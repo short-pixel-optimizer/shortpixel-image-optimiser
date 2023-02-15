@@ -210,8 +210,9 @@ class SettingsController extends \ShortPixel\ViewController
 
 			public function action_debug_redirectBulk()
 			{
+				$this->checkPost();
 
-	 			OptimizeController::resetQueues();
+				OptimizeController::resetQueues();
 
 				$action = isset($_REQUEST['bulk']) ? sanitize_text_field($_REQUEST['bulk']) : null;
 
@@ -238,35 +239,39 @@ class SettingsController extends \ShortPixel\ViewController
       public function action_debug_resetStats()
       {
           $this->loadEnv();
+					$this->checkPost();
           $statsController = StatsController::getInstance();
           $statsController->reset();
 
-          $this->load();
+					$this->doRedirect();
       }
 
       public function action_debug_resetquota()
       {
 
           $this->loadEnv();
-
+					$this->checkPost();
           $quotaController = QuotaController::getInstance();
           $quotaController->forceCheckRemoteQuota();
 
-          $this->load();
+          $this->doRedirect();
       }
 
       public function action_debug_resetNotices()
       {
+
           $this->loadEnv();
+					$this->checkPost();
           Notice::resetNotices();
           $nControl = new Notice(); // trigger reload.
 
 
-          $this->load();
+          $this->doRedirect();
       }
 
 			public function action_debug_triggerNotice()
 			{
+				$this->checkPost();
 				$key = isset($_REQUEST['notice_constant']) ? sanitize_text_field($_REQUEST['notice_constant']) : false;
 
 				if ($key !== false)
@@ -288,7 +293,7 @@ class SettingsController extends \ShortPixel\ViewController
 							$model->addManual();
 					}
 				}
-				$this->load();
+				$this->doRedirect();
 
 			}
 
@@ -297,6 +302,7 @@ class SettingsController extends \ShortPixel\ViewController
 			{
 				 $queue = isset($_REQUEST['queue']) ? sanitize_text_field($_REQUEST['queue']) : null;
 				 $this->loadEnv();
+				 $this->checkPost();
 
 				 if (! is_null($queue))
 				 {
@@ -338,12 +344,13 @@ class SettingsController extends \ShortPixel\ViewController
 			 }
 
 
-				 $this->load();
+				$this->doRedirect();
 			}
 
 			public function action_debug_removeProcessorKey()
 			{
 				//$this->loadEnv();
+				$this->checkPost();
 
 				$cacheControl = new CacheController();
 				$cacheControl->deleteItem('bulk-secret');
@@ -359,7 +366,7 @@ class SettingsController extends \ShortPixel\ViewController
           {
               $nextgen = NextGenController::getInstance();
               $previous = $this->model->includeNextGen;
-              $nextgen->enableNextGen($previous);
+              $nextgen->enableNextGen(true);
 
               // Reset any integration notices when updating settings.
               AdminNoticesController::resetIntegrationNotices();
@@ -431,7 +438,7 @@ class SettingsController extends \ShortPixel\ViewController
 
          $this->view->minSizes = $this->getMaxIntermediateImageSize();
          $this->view->customFolders= $this->loadCustomFolders();
-         $this->view->allThumbSizes = $this->getAllThumbnailSizes();
+         $this->view->allThumbSizes = UtilHelper::getWordPressImageSizes();
          $this->view->averageCompression = $statsControl->getAverageCompression();
          $this->view->savedBandwidth = UiHelper::formatBytes( intval($this->view->data->savedSpace) * 10000,2);
          //$this->view->resources = wp_remote_post($this->model->httpProto . "://shortpixel.com/resources-frag");
@@ -533,27 +540,6 @@ class SettingsController extends \ShortPixel\ViewController
 					}
 
           return false;
-      }
-
-      private function getAllThumbnailSizes()
-      {
-        global $_wp_additional_image_sizes;
-
-        $sizes_names = get_intermediate_image_sizes();
-        $sizes = array();
-        foreach ( $sizes_names as $size ) {
-            $sizes[ $size ][ 'width' ] = intval( get_option( "{$size}_size_w" ) );
-            $sizes[ $size ][ 'height' ] = intval( get_option( "{$size}_size_h" ) );
-            $sizes[ $size ][ 'crop' ] = get_option( "{$size}_crop" ) ? get_option( "{$size}_crop" ) : false;
-        }
-        if(function_exists('wp_get_additional_image_sizes')) {
-            $sizes = array_merge($sizes, wp_get_additional_image_sizes());
-        } elseif(is_array($_wp_additional_image_sizes)) {
-            $sizes = array_merge($sizes, $_wp_additional_image_sizes);
-        }
-
-        $sizes = apply_filters('shortpixel/settings/image_sizes', $sizes);
-        return $sizes;
       }
 
       protected function getMaxIntermediateImageSize() {
@@ -670,7 +656,7 @@ class SettingsController extends \ShortPixel\ViewController
           {
             $folderpath = sanitize_text_field(stripslashes($post['addCustomFolder']));
 
-            $otherMedia = OtherMediaController::getInstance();;
+            $otherMedia = OtherMediaController::getInstance();
             $result = $otherMedia->addDirectory($folderpath);
             if ($result)
             {

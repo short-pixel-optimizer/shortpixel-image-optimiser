@@ -422,7 +422,15 @@
                  // vertical-align: middle;
                }
             }
-       }
+       } // bulk wrapper
+
+			 .dashboard-text {
+				  margin: 0 auto;
+					width: 50%;
+					p {
+						line-height: 25px;
+					}
+			 }
 
        .dashboard-log
        {
@@ -841,12 +849,13 @@
 				//	width: 100%;
 
 					bottom: 45px;
-					left: 0;
+					left: -15px;
 					padding: 6px 10px;
 					color: #fff;
 					background: rgba($color-darkest, 0.5);
 					font-weight: 700;
 					border-radius: 3px;
+					white-space: nowrap;
 
         }
         .opt-circle-average {
@@ -888,6 +897,7 @@
            background: #F6F9FF;
            border: 1px solid #EBF5FF;
         }
+
         .line-progressbar
         {
           width: 100px;
@@ -921,6 +931,13 @@
             background: #1FBEC9;
 
           }
+					.finished-paragraph
+					{
+							font-size: 14px;
+							line-height: 25px;
+
+					}
+
 					label {
 						input[type="checkbox"]
 						{
@@ -1091,6 +1108,10 @@
            .image.result,
            {
              margin-left: 8px;
+						 p {
+							 	font-weight: 700;
+								font-size: 14px;
+						 }
            }
          }
       }
@@ -1163,6 +1184,7 @@
 						{
 							 float: left;
 							 margin: 25px;
+							 min-height: 50px;
 						}
 
 			 	}

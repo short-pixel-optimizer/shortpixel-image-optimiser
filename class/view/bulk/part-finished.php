@@ -7,7 +7,7 @@ namespace ShortPixel;
     <h3 class="heading"><span><img src="<?php echo \wpSPIO()->plugin_url('res/img/robo-slider.png'); ?>"></span>
       <?php esc_html_e('The ShortPixel Bulk Processing is finished' ,'shortpixel-image-optimiser'); ?>
       <div class='average-optimization'>
-          <p><?php esc_html_e('Average this run','shortpixel-image-optimiser'); ?></p>
+          <p><?php esc_html_e('Average Optimization','shortpixel-image-optimiser'); ?></p>
           <svg class="opt-circle-average" viewBox="-10 0 150 140">
                         <path class="trail" d="
                             M 50,50
@@ -31,6 +31,21 @@ namespace ShortPixel;
 
     <?php $this->loadView('bulk/part-progressbar', false); ?>
 		<span class='hidden' data-check-media-total data-stats-media="total">0</span>
+
+		<div class='bulk-summary'>
+		<p class='finished-paragraph'>
+			<?php printf(__('Congratulations, ShortPixel has optimized %s %s images and thumbs %s for your website! Yay to faster loading websites! %s', 'shortpixel-image-optimiser'), '<b>', '<span data-stats-total="total"></span>','</b>', '&#x1F389;');
+			?>
+			<br>
+			<?php
+			printf(__('ShortPixel plugins are installed on hundreds of thousands of websites and we save our users over 500 GB by optimizing over 15 million images. Each and every day! %s', 'shortpixel-image-optimiser'), '&#x1F4AA;');
+			?>
+			<br>
+		<?php
+			printf(__('We have been working on improving ShortPixel every day for over 7 years. It is very motivating for us when customers take a minute to leave us a %sreview%s. We thank you for that! %s', 'shortpixel-image-optimiser'), '<a href="https://wordpress.org/support/plugin/shortpixel-image-optimiser/reviews/?filter=5" target="_blank">','</a>', '&#x1F64C;');
+		?>
+		</p>
+	</div>
 
     <div class='bulk-summary' data-check-visibility data-control="data-check-media-total">
       <div class='heading'>

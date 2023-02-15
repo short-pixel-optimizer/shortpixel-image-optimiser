@@ -17,6 +17,8 @@ setTimeout(delayedInit, 10000);
 
 var ShortPixel = function() {
 
+	 var updateTimer;
+
 	// The InitSettings usually runs before these settings, making everything complicated (@todo)
     function init() {
 
@@ -71,10 +73,18 @@ var ShortPixel = function() {
     }
 
     function isEmailValid(email) {
-        return /^\w+([\.+-]?\w+)*@\w+([\.-]?\w+)*(\.\w{1,63})+$/.test(email);
+      //  return /^\w+([\.+-]?\w+)*@\w+([\.-]?\w+)*(\.\w{1,63})+$/.test(email);
+
+				var regex = /^\S+@\S+\.\S+$/;
+					return regex.test(email);
     }
 
     function updateSignupEmail() {
+
+				clearTimeout( ShortPixel.updateTimer );
+
+				ShortPixel.updateTimer = setTimeout( function() {
+
         var email = jQuery('#pluginemail').val().trim();
 				var $submit = jQuery('#request_key');
 				var isValid = ShortPixel.isEmailValid(email)
@@ -89,6 +99,7 @@ var ShortPixel = function() {
 					  $submit.addClass('disabled');
 				}
         jQuery('#request_key').attr('href', jQuery('#request_key').attr('href').split('?')[0] + '?pluginemail=' + email);
+			}, 1000);
     }
 
     function validateKey(button){
@@ -129,6 +140,15 @@ var ShortPixel = function() {
         jQuery('.exif_imagick_warning').fadeOut();
 
     }
+
+		function checkSmartCropWarning()
+		{
+			if (jQuery('input[name="useSmartcrop"]').is(':checked') && jQuery('.smartcrop_warning').data('smartcrop') == 1 )
+        jQuery('.smartcrop_warning').fadeIn();
+      else
+        jQuery('.smartcrop_warning').fadeOut();
+
+		}
 
     function checkBackUpWarning()
     {
@@ -224,6 +244,14 @@ var ShortPixel = function() {
            ShortPixel.checkBackUpWarning();
         });
         ShortPixel.checkBackUpWarning();
+
+				jQuery('input[name="useSmartcrop"]').on('change', function()
+        {
+           ShortPixel.checkSmartCropWarning();
+        });
+        ShortPixel.checkSmartCropWarning();
+
+
 
     }
 
@@ -558,7 +586,7 @@ var ShortPixel = function() {
             e.preventDefault();
             //install (lazily) a window click event to close the menus
             if(!this.menuCloseEvent) {
-                jQuery(window).click(function(e){
+                jQuery(window).on('click', function(e){
                     if (!e.target.matches('.sp-dropbtn')) {
                         jQuery('.sp-dropdown.sp-show').removeClass('sp-show');
                     }
@@ -720,6 +748,7 @@ var ShortPixel = function() {
         convertPunycode     : convertPunycode,
         checkExifWarning    : checkExifWarning,
         checkBackUpWarning  : checkBackUpWarning,
+				checkSmartCropWarning: checkSmartCropWarning,
         comparerData        : {
             cssLoaded   : false,
             jsLoaded    : false,

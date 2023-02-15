@@ -34,6 +34,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
         parent::__construct();
 
 
+
 				// 2015: https://github.com/WordPress/WordPress-Coding-Standards/issues/426 !
 				// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
         $this->currentPage = isset($_GET['paged']) ? intval($_GET['paged']) : 1;
@@ -203,6 +204,9 @@ class OtherMediaViewController extends \ShortPixel\ViewController
           global $wpdb;
 
           $page = $this->currentPage;
+					if ($page <= 0)
+						$page = 1;
+						
           $controller = OtherMediaController::getInstance();
 
 					$hidden_ids = $controller->getHiddenDirectoryIDS();
@@ -251,7 +255,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
       }
 
 
-      protected function getPageURL($args = array())
+      private function getPageArgs($args = array())
       {
         $defaults = array(
             'orderby' => $this->orderby,
@@ -260,12 +264,9 @@ class OtherMediaViewController extends \ShortPixel\ViewController
             'paged' => $this->currentPage
         );
 
-        // Try with controller URL, if not present, try with upload URL and page param.
-        $admin_url = admin_url('upload.php');
-        $url = (is_null($this->url)) ?  add_query_arg('page','wp-short-pixel-custom', $admin_url) : $this->url; // has url
 
         $page_args = array_filter(wp_parse_args($args, $defaults));
-        return add_query_arg($page_args, $url); // has url
+        return $page_args; // has url
 
       }
 
@@ -321,9 +322,26 @@ class OtherMediaViewController extends \ShortPixel\ViewController
            $total_pages_before = '<span class="paging-input">';
            $total_pages_after  = '</span></span>';
 
-           $current_url = esc_url(remove_query_arg( 'paged', $this->getPageURL())); // has url
+           $page_args =$this->getPageArgs(); // has url
+					 if (isset($page_args['paged']))
+					 	unset($page_args['paged']);
 
-           $output = '<form method="GET" action="'. esc_attr($current_url) . '">'; //'<span class="pagination-links">';
+
+
+					 // Try with controller URL, if not present, try with upload URL and page param.
+	         $admin_url = admin_url('upload.php');
+	         $url = (is_null($this->url)) ?  add_query_arg('page','wp-short-pixel-custom', $admin_url) : $this->url; // has url
+					 $current_url = add_query_arg($page_args, $url);
+
+					 $url = remove_query_arg('page', $url);
+					 $page_args['page'] = 'wp-short-pixel-custom';
+
+
+           $output = '<form method="GET" action="'. esc_attr($url) . '">';
+					 foreach($page_args as $arg => $val)
+					 {
+						  $output .= sprintf('<input type="hidden" name="%s" value="%s">', $arg, $val);
+					 }
            $output .= '<span class="displaying-num">'. sprintf(esc_html__('%d Images', 'shortpixel-image-optimiser'), $this->total_items) . '</span>';
 
            if ( $disable_first ) {

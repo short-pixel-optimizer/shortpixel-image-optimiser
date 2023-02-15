@@ -49,20 +49,21 @@ class ViewController extends Controller
   protected function checkPost()
   {
 
-    if (! isset($_POST['sp-nonce']) || ! wp_verify_nonce( sanitize_key($_POST['sp-nonce']), $this->form_action))
-    {
-      Log::addInfo('Check Post fails nonce check, action : ' . $this->form_action, array($_POST) );
-      return false;
-    }
-		elseif(count($_POST) == 0) // no post, nothing to check, return silent.
+		if(count($_POST) === 0) // no post, nothing to check, return silent.
 		{
 			return true;
 		}
+    elseif (! isset($_POST['sp-nonce']) || ! wp_verify_nonce( sanitize_key($_POST['sp-nonce']), $this->form_action))
+    {
+      Log::addInfo('Check Post fails nonce check, action : ' . $this->form_action, array($_POST) );
+			exit('Nonce Failed');
+      return false;
+    }
     elseif (isset($_POST) && count($_POST) > 0)
     {
       check_admin_referer( $this->form_action, 'sp-nonce' ); // extra check, when we are wrong here, it dies.
-      unset($_POST['sp-nonce']);
-      unset($_POST['_wp_http_referer']);
+     // unset($_POST['sp-nonce']);
+     // unset($_POST['_wp_http_referer']);
       $this->is_form_submit = true;
       $this->processPostData($_POST);
 

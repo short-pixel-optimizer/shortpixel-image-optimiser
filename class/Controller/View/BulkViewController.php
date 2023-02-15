@@ -65,7 +65,7 @@ class BulkViewController extends \ShortPixel\ViewController
 		$this->view->mediaErrorLog = $this->loadCurrentLog('media');
 		$this->view->customErrorLog = $this->loadCurrentLog('custom');
 
-		$this->view->buyMoreHref = 'https://shortpixel.com/' . ($keyControl->getKeyForDisplay() ? 'login/' . $keyControl->getKeyForDisplay() : 'pricing');
+		$this->view->buyMoreHref = 'https://shortpixel.com/' . ($keyControl->getKeyForDisplay() ? 'login/' . $keyControl->getKeyForDisplay() . '/spio-unlimited' : 'pricing');
 
 
 
