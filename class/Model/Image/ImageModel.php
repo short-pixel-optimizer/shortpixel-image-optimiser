@@ -556,7 +556,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 				$status = $results['image']['status'];
 
-
           if ($settings->backupImages)
           {
 							// If conversion to jpg is done, this function also does the backup.
