@@ -218,10 +218,19 @@ console.log("Screen Init Done", initMedia, initCustom);
         return; // no switching needed.
       }
 
-  //    this.panels.forEach(function(panel, index)
-      for (var panelName in this.panels)
+			// This detour is due to the issue that other plugins can attach prototype functions to array and this would return here.
+			var panelKeys = Object.keys(this.panels);
+			for (var i = 0; i < panelKeys.length; i++)
       {
+				 var panelName = panelKeys[i];
          var panel = this.panels[panelName];
+
+				 // Another prevention.
+				 if (typeof panel.classList === 'undefined')
+				 {
+					 continue;
+				 }
+
          panel.classList.remove('active');
          panel.style.display = 'none';
       };
