@@ -36,9 +36,6 @@ class ShortPixelPlugin {
 	protected $admin_pages = array();  // admin page hooks.
 
 	public function __construct() {
-		$this->plugin_path = plugin_dir_path( SHORTPIXEL_PLUGIN_FILE );
-		$this->plugin_url  = plugin_dir_url( SHORTPIXEL_PLUGIN_FILE );
-
 		// $this->initHooks();
 		add_action( 'plugins_loaded', array( $this, 'lowInit' ), 5 ); // early as possible init.
 	}
@@ -46,6 +43,10 @@ class ShortPixelPlugin {
 
 	/** LowInit after all Plugins are loaded. Core WP function can still be missing. This should mostly add hooks */
 	public function lowInit() {
+		
+		$this->plugin_path = plugin_dir_path( SHORTPIXEL_PLUGIN_FILE );
+		$this->plugin_url  = plugin_dir_url( SHORTPIXEL_PLUGIN_FILE );
+
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
 		if ( isset( $_REQUEST['noheader'] ) ) {
 			$this->is_noheaders = true;
@@ -302,7 +303,7 @@ class ShortPixelPlugin {
 				'bulkSecret'        => $secretKey,
 				'isBulkPage'        => (bool) $is_bulk_page,
 				'screenURL'         => false,
-				'workerURL'         => $this->plugin_url( 'res/js/shortpixel-worker.js' ),
+				'workerURL'         => plugins_url( 'res/js/shortpixel-worker.js', SHORTPIXEL_PLUGIN_FILE ),
 				'nonce_process'     => wp_create_nonce( 'processing' ),
 				'nonce_exit'        => wp_create_nonce( 'exit_process' ),
 				'nonce_itemview'    => wp_create_nonce( 'item_view' ),
