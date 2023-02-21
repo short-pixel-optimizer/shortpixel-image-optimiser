@@ -457,6 +457,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			$WPMLduplicates = $this->getWPMLDuplicates();
 			$fs = \wpSPIO()->filesystem();
 
+			Log::addTemp('HandleOptimized ', $optimizeData);
+
 			if (isset($optimizeData['files']) && isset($optimizeData['data']))
 			{
 				 $files = $optimizeData['files'];
@@ -579,8 +581,31 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 				 foreach($data['duplicates'] as $duplicateName => $duplicateRef)
 				 {
-					  $thumbnail = $thumbObjs[$duplicateName];
-						$duplicateObj = $thumbObjs[$duplicateRef];
+					 	if ($duplicateName === $this->mainImageKey)
+						{
+							$thumbnail = $this;
+						}
+						elseif ($duplicateName === $this->originalImageKey)
+						{
+							 $thumbnail = $this->getOriginalFile();
+						}
+						else
+						{
+							$thumbnail = $thumbObjs[$duplicateName];
+						}
+
+						if ($duplicateRef === $this->mainImageKey)
+						{
+							 $duplicateObj = $this;
+						}
+						elseif ($duplicateRef === $this->originalImageKey)
+						{
+							 $duplicateObj = $this->getOriginalFile();
+						}
+						else
+						{
+							 $duplicateObj = $thumbObjs[$duplicateRef];
+						}
 
 						$databaseID = $thumbnail->getMeta('databaseID');
 						$thumbnail->setMetaObj($duplicateObj->getMetaObj());
@@ -2288,10 +2313,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
               $thumbnailObj->image_meta->status = $status;
               $thumbnailObj->image_meta->compressionType = $type;
               $thumbnailObj->image_meta->compressedSize = $thumbnailObj->getFileSize();
-							if (true == $did_jpg2png)
+							/*if (true == $did_jpg2png)
 							{
 								$thumbnailObj->convertMeta()->setConversionDone();
-							}
+							}*/
 
 
           //    $thumbnailObj->image_meta->improvement = -1; // n/a
@@ -2334,10 +2359,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
            $originalFile->image_meta->status = $status;
            $originalFile->image_meta->compressionType = $type;
            $originalFile->image_meta->compressedSize = $originalFile->getFileSize();
-					 if (true == $did_jpg2png)
+					 /*if (true == $did_jpg2png)
 					 {
 						 $originalFile->convertMeta()->setConversionDone();
-					 }
+					 } */
 
 			     if ($originalFile->hasBackup(array('noConversionCheck' => true)))
            {
@@ -2404,10 +2429,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			              	$retinaObj->image_meta->tsOptimized = $tsOptimized;
 										}
 
-										if (true == $did_jpg2png)
+										/*if (true == $did_jpg2png)
 										{
 											$retinaObj->convertMeta()->setConversionDone();
-										}
+										} */
 
 			              if ($retinaObj->hasBackup(array('noConversionCheck' => true)))
 			              {

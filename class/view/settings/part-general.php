@@ -330,7 +330,7 @@ namespace ShortPixel;
                                 <input type="radio" name="resizeType" id="resize_type_inner" value="inner" <?= $view->data->resizeType == 'inner' ? 'checked' : ''; ?>>
                                 <?= esc_html__( 'Contain', 'shortpixel-image-optimiser' ); ?>
                             </label><br>
-                            <div style="display:inline-block;margin-top: 15px;"><a href="https://shortpixel.com/knowledge-base/article/208-can-shortpixel-automatically-resize-new-image-uploads/" class="shortpixel-help-link" target="_blank">
+                            <div style="display:inline-block;margin-top: 15px;"><a href="https://shortpixel.com/knowledge-base/article/208-can-shortpixel-automatically-resize-new-image-uploads" class="shortpixel-help-link" target="_blank">
 
                                     <span class="dashicons dashicons-editor-help"></span><?php esc_html_e('What is this?','shortpixel-image-optimiser');?></a>
                             </div>

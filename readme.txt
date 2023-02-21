@@ -2,9 +2,9 @@
 Contributors: ShortPixel
 Tags: convert webp, optimize images, image optimization, resize, compressor, image, avif, compression, optimize, image optimiser, image compression, compress pdf, compress jpg, compress png, performance, photography, smush, scale, pictures
 Requires at least: 4.8.0
-Tested up to: 6.1
+Tested up to: 6.2
 Requires PHP: 5.6
-Stable tag: 5.2.0
+Stable tag: 5.2.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -369,6 +369,14 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 5.2.1 =
+Release date February 21, 2023
+* Fix: an error was displayed when trying to migrate PNG files saved in the old optimization format;
+* Fix: in some strange cases, the JS worker URL was called with `http` instead of `https`, blocking plugin functionalities;
+* Fix: a JS error affected optimization when another plugin defined prototypes;
+* Fix: if the main image was also detected as a thumbnail an error was thrown;
+* Language: 0 new strings added, 0 updated, 0 fuzzed, and 0 deprecated.
 
 = 5.2.0 =
 Release date February 15, 2023
