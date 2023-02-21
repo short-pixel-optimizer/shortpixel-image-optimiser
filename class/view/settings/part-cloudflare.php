@@ -59,7 +59,7 @@ namespace ShortPixel;
 											<?php else: ?>
 	                      <p class='settings-info'><?php printf(esc_html__('Enter your %s site token %s for authentication. This token needs %s Cache Purge permission %s! ', 'shortpixel-image-optimiser'), '<a href="https://dash.cloudflare.com/profile/api-tokens" target="_blank">', '</a>', '<a href="https://shortpixel.com/knowledge-base/article/325-using-shortpixel-image-optimizer-with-cloudflare-api-token" target="_blank">', '</a>'); ?></p>
 											<?php endif; ?>
-                        <a href="https://shortpixel.com/knowledge-base/article/325-using-shortpixel-image-optimizer-with-cloudflare-api-token/" target="_blank" class="shortpixel-help-link">
+                        <a href="https://shortpixel.com/knowledge-base/article/325-using-shortpixel-image-optimizer-with-cloudflare-api-token" target="_blank" class="shortpixel-help-link">
                             <span class="dashicons dashicons-editor-help"></span><?php esc_html_e('How to set it up','shortpixel-image-optimiser');?>
                         </a>
 
