@@ -507,8 +507,11 @@ class WPQ implements Queue
 				return false;
       elseif (! $item)
         return $this->currentStatus;
-      else
+      elseif (is_object($this->currentStatus))
         return $this->currentStatus->get($item);
+			else {
+				return false;
+			}
   }
 
   protected function saveStatus()

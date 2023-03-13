@@ -532,7 +532,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 				 if (! is_object($thumbnail))
  			 	 {
-					 	Log::addError('Thumbnail with size name'  . $sizeName . ' is not registered in this image. This should not happen, skipping.', $thumbsObjs);
+					 	Log::addError('Thumbnail with size name'  . $sizeName . ' is not registered in this image. This should not happen, skipping.', $thumbObjs);
 						Log::addError('OptimizeData', $optimizeData);
 						continue;
  			 	 }
@@ -2246,10 +2246,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						 $newdate = \DateTime::createFromFormat('Y-m-d H:i:s', get_post_time('Y-m-d H:i:s', false, $this->id));
 					 }
 
-	         $newdate = $newdate->getTimestamp();
-
-	         $tsOptimized = $newdate;
-	         $this->image_meta->tsOptimized = $tsOptimized;
+					 /// If not date could be established just omit.
+					 if ($newdate !== false)
+					 {
+	         	$newdate = $newdate->getTimestamp();
+	         	$tsOptimized = $newdate;
+	         	$this->image_meta->tsOptimized = $tsOptimized;
+					 }
 	       }
 
 	       $this->image_meta->wasConverted = true;

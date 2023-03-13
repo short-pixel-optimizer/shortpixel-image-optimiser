@@ -1002,7 +1002,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		// Checks Processable extensions. The other way of approval is having the file be convertable.
     protected function isExtensionExcluded()
     {
-        if (in_array( strtolower($this->getExtension()) , self::PROCESSABLE_EXTENSIONS))
+
+        if (! is_null($this->getExtension()) && in_array( strtolower($this->getExtension()) , self::PROCESSABLE_EXTENSIONS))
         {
             return false;
         }

@@ -43,7 +43,7 @@ class ShortPixelPlugin {
 
 	/** LowInit after all Plugins are loaded. Core WP function can still be missing. This should mostly add hooks */
 	public function lowInit() {
-		
+
 		$this->plugin_path = plugin_dir_path( SHORTPIXEL_PLUGIN_FILE );
 		$this->plugin_url  = plugin_dir_url( SHORTPIXEL_PLUGIN_FILE );
 
