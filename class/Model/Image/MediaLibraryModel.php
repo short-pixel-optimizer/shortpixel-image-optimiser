@@ -1296,7 +1296,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
       $settings = \wpSPIO()->settings();
 
-      if($strict)
+			// If already true, this item can be processed. No need for further checks.
+      if($strict || true === $bool)
 			{
         return $bool;
 			}
@@ -1332,6 +1333,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			{
 				if (false === $this->is_directory_writable())
 				{
+					$this->processable_status = ImageModel::P_DIRECTORY_NOTWRITABLE;
 					$bool = false;
 				}
 				else {
