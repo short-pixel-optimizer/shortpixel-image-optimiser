@@ -157,6 +157,7 @@ class ShortPixelImgToPictureWebp
         $srcsetInfo = $this->lazyGet($img, 'srcset');
         $sizesInfo = $this->lazyGet($img, 'sizes');
 
+
 				// FILTERS : FileDir (OBJECT) - URL
         $imageBase = apply_filters( 'shortpixel_webp_image_base', $this->getImageBase($srcInfo['value']), $srcInfo['value']);
 
@@ -210,6 +211,7 @@ class ShortPixelImgToPictureWebp
 
         foreach ($definitions as $item) {
 
+								// Split the URL from the size definition ( eg 800w )
                 $parts = preg_split('/\s+/', trim($item));
 
                 $fileurl = $parts[0];
@@ -219,9 +221,6 @@ class ShortPixelImgToPictureWebp
 
 								// The space if not set is required, otherwise it will not work.
                 $condition = isset($parts[1]) ? ' ' . $parts[1] : ' ';
-						//		$condition = '';
-
-           //     Log::addDebug('Running item - ' . $item, $fileurl);
 
                 $fsFile = $fs->getFile($fileurl);
                 $extension = $fsFile->getExtension(); // trigger setFileinfo, which will resolve URL -> Path
@@ -235,15 +234,11 @@ class ShortPixelImgToPictureWebp
 
                 $fileWebp = $fs->getFile($imageBase . $fsFile->getFileBase() . '.webp');
                 $fileWebpCompat = $fs->getFile($imageBase . $fsFile->getFileName() . '.webp');
-                //$fileWebp = $fs->getFile($filepath);
 
                 $fileurl_base = str_replace($fsFile->getFileName(), '', $fileurl);
                 $files = array($fileWebp, $fileWebpCompat);
 
                 $fileAvif = $fs->getFile($imageBase . $fsFile->getFileBase() . '.avif');
-
-
-
 
                 foreach($files as $thisfile)
                 {
@@ -274,6 +269,9 @@ class ShortPixelImgToPictureWebp
                    $srcsetAvif[] = $fileurl_base . $fileAvif->getFileName() . $condition;
 									 $avifCount++;
                 }
+								else { //fallback to jpg
+										$srcsetAvif[] = $fileurl . $condition;
+								}
         }
 
         if ($webpCount == 0 && $avifCount == 0) {
@@ -317,6 +315,7 @@ class ShortPixelImgToPictureWebp
         .'<img ' . $srcPrefix . 'src="' . $src . '" ' . $this->create_attributes($img) . $idAttr . $altAttr . $heightAttr . $widthAttr
             . (strlen($srcset) ? ' srcset="' . $srcset . '"': '') . (strlen($sizes) ? ' sizes="' . $sizes . '"': '') . '>'
         .'</picture>';
+
         return $output;
     }
 
@@ -442,67 +441,14 @@ class ShortPixelImgToPictureWebp
       $fileDir = $fileObj->getFileDir();
 
       return $fileObj->getFileDir();  // Testing, the rest might be unneeded.
-/*
 
-        $urlParsed = parse_url($src);
-        if(!isset($urlParsed['host'])) {
-            if($src[0] == '/') { //absolute URL, current domain
-                $src = get_site_url() . $src;
-            } else {
-                global $wp;
-                $src = trailingslashit(home_url( $wp->request )) . $src;
-            }
-            $urlParsed = parse_url($src);
-        }
-      $updir = wp_upload_dir();
-
-
-      if(substr($src, 0, 2) == '//') {
-          $src = (stripos($_SERVER['SERVER_PROTOCOL'],'https') === false ? 'http:' : 'https:') . $src;
-      }
-      $proto = explode("://", $src);
-      if (count($proto) > 1) {
-          //check that baseurl uses the same http/https proto and if not, change
-          $proto = $proto[0];
-          if (strpos($updir['baseurl'], $proto."://") === false) {
-              $base = explode("://", $updir['baseurl']);
-              if (count($base) > 1) {
-                  $updir['baseurl'] = $proto . "://" . $base[1];
-              }
-          }
-      }
-
-      $imageBase = str_replace($updir['baseurl'], SHORTPIXEL_UPLOADS_BASE, $src);
-
-      if ($imageBase == $src) { //for themes images or other non-uploads paths
-          $imageBase = str_replace(content_url(), WP_CONTENT_DIR, $src);
-      }
-
-      if ($imageBase == $src) { //maybe the site uses a CDN or a subdomain? - Or relative link
-          $baseParsed = parse_url($updir['baseurl']);
-
-          $srcHost = array_reverse(explode('.', $urlParsed['host']));
-          $baseurlHost = array_reverse(explode('.', $baseParsed['host']));
-
-          if ($srcHost[0] == $baseurlHost[0] && $srcHost[1] == $baseurlHost[1]
-              && (strlen($srcHost[1]) > 3 || isset($srcHost[2]) && isset($srcHost[2]) && $srcHost[2] == $baseurlHost[2])) {
-              $baseurl = str_replace($baseParsed['scheme'] . '://' . $baseParsed['host'], $urlParsed['scheme'] . '://' . $urlParsed['host'], $updir['baseurl']);
-              $imageBase = str_replace($baseurl, SHORTPIXEL_UPLOADS_BASE, $src);
-          }
-          if ($imageBase == $src) { //looks like it's an external URL though...
-              return false;
-          }
-      }
-
-       Log::addDebug('Webp Image Base found: ' . $imageBase);
-        $imageBase = trailingslashit(dirname($imageBase));
-        return $imageBase; */
     }
 
     public function get_attributes($image_node)
     {
         if (function_exists("mb_convert_encoding")) {
-            $image_node = mb_convert_encoding($image_node, 'HTML-ENTITIES', 'UTF-8');
+            $image_node = mb_encode_numericentity($image_node, [0x80, 0x10FFFF, 0, ~0], 'UTF-8');
+						//mb_convert_encoding($image_node, 'HTML-ENTITIES', 'UTF-8');
         }
         // [BS] Escape when DOM Module not installed
         if (! class_exists('DOMDocument'))
@@ -543,38 +489,4 @@ class ShortPixelImgToPictureWebp
         return substr($attributes, 0, -1);
     }
 
-    /**
-     * @param $image_url
-     * @return array
-     */
-     /* Seems not in use. @todo be removed later on.
-    public function url_to_attachment_id($image_url)
-    {
-        // Thx to https://github.com/kylereicks/picturefill.js.wp/blob/master/inc/class-model-picturefill-wp.php
-        global $wpdb;
-        $original_image_url = $image_url;
-        $image_url = preg_replace('/^(.+?)(-\d+x\d+)?\.(jpg|jpeg|png|gif)((?:\?|#).+)?$/i', '$1.$3', $image_url);
-        $prefix = $wpdb->prefix;
-        $attachment_id = $wpdb->get_col($wpdb->prepare("SELECT ID FROM " . $prefix . "posts" . " WHERE guid='%s';", $image_url));
-
-        //try the other proto (https - http) if full urls are used
-        if (empty($attachment_id) && strpos($image_url, 'http://') === 0) {
-            $image_url_other_proto =  strpos($image_url, 'https') === 0 ?
-                str_replace('https://', 'http://', $image_url) :
-                str_replace('http://', 'https://', $image_url);
-            $attachment_id = $wpdb->get_col($wpdb->prepare("SELECT ID FROM " . $prefix . "posts" . " WHERE guid='%s';", $image_url_other_proto));
-        }
-
-        //try using only path
-        if (empty($attachment_id)) {
-            $image_path = parse_url($image_url, PHP_URL_PATH); //some sites have different domains in posts guid (site changes, etc.)
-            $attachment_id = $wpdb->get_col($wpdb->prepare("SELECT ID FROM " . $prefix . "posts" . " WHERE guid like'%%%s';", $image_path));
-        }
-
-        //try using the initial URL
-        if (empty($attachment_id)) {
-            $attachment_id = $wpdb->get_col($wpdb->prepare("SELECT ID FROM " . $prefix . "posts" . " WHERE guid='%s';", $original_image_url));
-        }
-        return !empty($attachment_id) ? $attachment_id[0] : false;
-    } */
 }
