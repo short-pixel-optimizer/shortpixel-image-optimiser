@@ -188,6 +188,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 			 foreach($this->adminNotices as $key => $class)
 			 {
 				  $class->load();
+					$this->doRemoteNotices();
 			 }
 		}
 

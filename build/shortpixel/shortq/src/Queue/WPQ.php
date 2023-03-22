@@ -525,6 +525,11 @@ class WPQ implements Queue
 			  unset($status['queues'][$this->qName]);
 		 }
 		 else {
+			 if (false === $status)
+			 {
+				  $status = array();
+					$status['queues'] = array();
+			 }
 			 $status['queues'][$this->qName]  = $currentStatus;
 		 }
      $res = update_option($this->statusName, $status);
