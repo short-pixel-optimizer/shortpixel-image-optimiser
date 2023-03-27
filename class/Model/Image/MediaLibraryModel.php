@@ -2273,7 +2273,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		      if ($this->hasBackup(array('noConversionCheck' => true)))
 		      {
 		        $backup = $this->getBackupFile(array('noConversionCheck' => true));
-		        $this->image_meta->originalSize = $backup->getFileSize();
+						if (is_object($backup))
+		        	$this->image_meta->originalSize = $backup->getFileSize();
 		      }
 					elseif ( isset($metadata['ShortPixelImprovement']))
 					{
@@ -2328,8 +2329,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
               if ($thumbnailObj->hasBackup(array('noConversionCheck' => true)))
               {
                 $backup = $thumbnailObj->getBackupFile(array('noConversionCheck' => true));
-                $thumbnailObj->image_meta->originalSize = $backup->getFileSize();
-								$thumbnailObj->has_backup = true;
+								if (is_object($backup))
+								{
+                	$thumbnailObj->image_meta->originalSize = $backup->getFileSize();
+									$thumbnailObj->has_backup = true;
+								}
               }
 							else
 							{
@@ -2372,8 +2376,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			     if ($originalFile->hasBackup(array('noConversionCheck' => true)))
            {
              $backup = $originalFile->getBackupFile(array('noConversionCheck' => true));
-             $originalFile->image_meta->originalSize = $backup->getFileSize();
-						 $originalFile->has_backup = true;
+						 if (is_object($backup))
+						 {
+             	$originalFile->image_meta->originalSize = $backup->getFileSize();
+						 	$originalFile->has_backup = true;
+						 }
            }
 					 else {
 					 	$originalFile->has_backup = false;
