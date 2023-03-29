@@ -240,6 +240,8 @@ class ShortPixelImgToPictureWebp
 
                 $fileAvif = $fs->getFile($imageBase . $fsFile->getFileBase() . '.avif');
 
+								$lastwebp = false;
+
                 foreach($files as $thisfile)
                 {
                   if (! $thisfile->exists())
@@ -254,11 +256,13 @@ class ShortPixelImgToPictureWebp
                       Log::addDebug('Adding new URL', $fileurl_base . $thisfile->getFileName() . $condition);
 											$webpCount++;
 
-                       $srcsetWebP[] = $fileurl_base . $thisfile->getFileName() . $condition;
+                       $lastwebp = $fileurl_base . $thisfile->getFileName() . $condition;
+											 $srcsetWebP[] = $lastwebp;
                        break;
                   }
 									else {
-											$srcsetWebP[] = $fileurl . $condition;
+											$lastwebp = $fileurl . $condition;
+											$srcsetWebP[] = $lastwebp;
 									}
                 }
 
@@ -266,11 +270,18 @@ class ShortPixelImgToPictureWebp
                 if ($fileAvif->exists())
                 {
                    $fileurl_base = str_replace($fsFile->getFileName(), '', $fileurl);
-                   $srcsetAvif[] = $fileurl_base . $fileAvif->getFileName() . $condition;
-									 $avifCount++;
+									 $srcsetAvif[] = $fileurl_base . $fileAvif->getFileName() . $condition;
+
+  								 $avifCount++;
                 }
 								else { //fallback to jpg
+									if (false !== $lastwebp) // fallback to webp if there is a variant in this run. or jpg if none
+									{
+										 $srcsetAvif[] = $lastwebp;
+									}
+									else {
 										$srcsetAvif[] = $fileurl . $condition;
+									}
 								}
         }
 

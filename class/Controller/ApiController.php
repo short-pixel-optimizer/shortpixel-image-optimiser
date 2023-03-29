@@ -103,7 +103,6 @@ class ApiController
 							if (false !== $parsed_url)
 							{
 								  $url = str_replace($parsed_url['path'], urlencode($parsed_url['path']), $url);
-									Log::addTemp('Encoded url ' .  $url);
 							}
 							$list[] = $url;
 					}
