@@ -528,7 +528,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				 }
 
 				 $resultData = $files[$sizeName];
-				 $thumbnail = $thumbObjs[$sizeName];
+				 $thumbnail = (isset($thumbObjs[$sizeName])) ? $thumbObjs[$sizeName] : false;
 
 				 if (! is_object($thumbnail))
  			 	 {
