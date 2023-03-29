@@ -132,6 +132,7 @@ class AdminNoticesController extends \ShortPixel\Controller
             if (count($notices) > 0)
             {
                 \wpSPIO()->load_style('shortpixel-notices');
+								$noticeControl->admin_notices();
 
                 foreach($notices as $notice)
                 {
