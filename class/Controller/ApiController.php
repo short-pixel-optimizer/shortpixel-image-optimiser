@@ -95,6 +95,20 @@ class ApiController
           $item->result = $this->returnFailure(self::STATUS_FAIL, __('No Urls given for this Item', 'shortpixel-image-optimiser'));
           return $item;
       }
+			else { // if ok, urlencode them.
+					$list = array();
+				  foreach($item->urls as $url)
+					{
+							$parsed_url = parse_url($url);
+							if (false !== $parsed_url)
+							{
+								  $url = str_replace($parsed_url['path'], urlencode($parsed_url['path']), $url);
+									Log::addTemp('Encoded url ' .  $url);
+							}
+							$list[] = $url;
+					}
+					$item->urls = $list;
+			}
 
       $requestArgs = array('urls' => $item->urls); // obligatory
       if (property_exists($item, 'compressionType'))
@@ -141,8 +155,7 @@ class ApiController
 			 			array(
                 'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
                 'key' => $keyControl->forceGetApiKey(),
-                'urllist' => $item->urls	)
-					);
+                'urllist' => $item->urls	)	, JSON_UNESCAPED_UNICODE);
 
 		 Log::addDebug('Dumping Media Item ', $item->urls);
 
@@ -214,7 +227,7 @@ class ApiController
         'httpversion' => '1.0',
         'blocking' => $args['blocking'],
         'headers' => array(),
-        'body' => json_encode($requestParameters),
+        'body' => json_encode($requestParameters, JSON_UNESCAPED_UNICODE),
         'cookies' => array()
     );
     //add this explicitely only for https, otherwise (for http) it slows down the request

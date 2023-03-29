@@ -18,8 +18,6 @@ class WpCliController
     protected static $ticks = 0;
     protected static $emptyq = 0;
 
-		protected $last_combinedStatus;
-
     public function __construct()
     {
 				$log = \ShortPixel\ShortPixelLogger\ShortPixelLogger::getInstance();
@@ -57,6 +55,8 @@ class SpioCommandBase
 {
 
      protected static $runs = 0;
+		 protected $last_combinedStatus;
+
       /**
      * Adds a single item to the queue(s), then processes the queue(s).
      *
@@ -122,7 +122,7 @@ class SpioCommandBase
 							$this->run($args, $assoc);
 					}
 					else {
-						\WP_CLI::Line (__('You can optimize images via the run command', 'shortpixel-image-optimiser'));						
+						\WP_CLI::Line (__('You can optimize images via the run command', 'shortpixel-image-optimiser'));
 					}
 				}
         elseif ($result->status == 0)
