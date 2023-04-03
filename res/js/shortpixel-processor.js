@@ -337,6 +337,12 @@ window.ShortPixelProcessor =
 								this.PauseProcess();
 								handledError = true;
              }
+						 else if (error = 'APIKEY_FAILED')
+						 {
+							 this.StopProcess();
+							 handledError = true;
+							 console.error('No API Key set for this site. See settings');
+						 }
              else if (response.error < 0) // something happened.
              {
                this.StopProcess();
