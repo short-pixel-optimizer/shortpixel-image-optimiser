@@ -349,6 +349,14 @@ abstract class Queue
 
 			$customData = $this->getStatus('custom_data');
 
+			if (! is_null($customData) && false !== $customData )
+			{
+				 if (is_object($customData) && property_exists($customData, 'customOperation'))
+				 {
+					  $stats->customOperation = $customData->customOperation;
+				 }
+			}
+
 
 
       $stats->total = $stats->in_queue + $stats->fatal_errors + $stats->errors + $stats->done + $stats->in_process;
