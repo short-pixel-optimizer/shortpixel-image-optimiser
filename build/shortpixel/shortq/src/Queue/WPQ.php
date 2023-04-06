@@ -599,29 +599,30 @@ class WPQ implements Queue
     $dataQ = $this->DataProvider->itemCount('countbystatus');
     $num_items = $num_done = $num_in_process = $num_errors = $num_fatal = 0;
 
-       foreach($dataQ as $qstatus => $count)
-       {
-
-         switch($qstatus)
-         {
-           case ShortQ::QSTATUS_WAITING:
-             $num_items = $count;
-           break;
-           case ShortQ::QSTATUS_DONE:
-             $num_done = $count;
-           break;
-           case ShortQ::QSTATUS_INPROCESS:
-             $num_in_process = $count;
-           break;
-           case ShortQ::QSTATUS_ERROR:
-             $num_errors = $count;
-           break;
-           case ShortQ::QSTATUS_FATAL;
-              $num_fatal = $count;
-           break;
-         }
-       }
-
+		if (is_array($dataQ))
+		{
+	    foreach($dataQ as $qstatus => $count)
+	    {
+	         switch($qstatus)
+	         {
+	           case ShortQ::QSTATUS_WAITING:
+	             $num_items = $count;
+	           break;
+	           case ShortQ::QSTATUS_DONE:
+	             $num_done = $count;
+	           break;
+	           case ShortQ::QSTATUS_INPROCESS:
+	             $num_in_process = $count;
+	           break;
+	           case ShortQ::QSTATUS_ERROR:
+	             $num_errors = $count;
+	           break;
+	           case ShortQ::QSTATUS_FATAL;
+	              $num_fatal = $count;
+	           break;
+	         }
+	     }
+		 }
 
      $this->setStatus('items', $num_items, false);
      $this->setStatus('done', $num_done, false);

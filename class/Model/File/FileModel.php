@@ -150,7 +150,7 @@ class FileModel extends \ShortPixel\Model
 		elseif (is_null($this->is_directory_writable))
 		{
 			$directory = $this->getFileDir();
-			if ($directory->exists())
+			if (is_object($directory) && $directory->exists())
 			{
 				$this->is_directory_writable = $directory->is_writable();
 			}

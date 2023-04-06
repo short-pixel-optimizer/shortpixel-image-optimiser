@@ -220,7 +220,7 @@ class NoticeController //extends ShortPixelController
 
 					if (! is_null($id))
 					{
-
+						
           	$notice = $this->getNoticeByID($id);
 					}
 					else
@@ -359,7 +359,6 @@ class NoticeController //extends ShortPixelController
   {
      if (file_exists(__DIR__ . '/css/notices.css'))
      {
-			 Log::addDebug('Loading notices styles');
        echo '<style>' . esc_html(file_get_contents(__DIR__ . '/css/notices.css')) . '</style>';
      }
      else {

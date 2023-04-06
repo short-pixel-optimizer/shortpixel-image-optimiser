@@ -94,7 +94,7 @@ class Item
               $jsonObj->was_array = $this->json_was_array;
               $jsonObj->value = $value;
 
-              $value = json_encode($jsonObj,  JSON_UNESCAPED_UNICODE);
+              $value = json_encode($jsonObj, JSON_UNESCAPED_UNICODE);
             }
 
             $this->$name = $value;
