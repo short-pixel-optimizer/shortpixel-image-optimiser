@@ -159,8 +159,9 @@ class AjaxController
 
     public function ajaxRequest()
     {
-
         $this->checkNonce('ajax_request');
+				ErrorController::start(); // Capture fatal errors for us.
+
 
 			  // phpcs:ignore -- Nonce is checked
         $action = isset($_POST['screen_action']) ? sanitize_text_field($_POST['screen_action']) : false;
@@ -272,8 +273,7 @@ class AjaxController
           $json->$type = new \stdClass;
 
           $json->$type = $control->addItemToQueue($mediaItem);
-
-          return $json;
+					return $json;
     }
 
     /* Integration for WP /LR Sync plugin  - https://meowapps.com/plugin/wplr-sync/
@@ -283,16 +283,6 @@ class AjaxController
     */
     public function onWpLrUpdateMedia($imageId)
     {
-     /*
-		 Should be handled by OnDelete.
-		 $meta = wp_get_attachment_metadata($imageId);
-      if(is_array($meta)) {
-						// get rid of legacy data, otherwise it will convert
-           if (isset($meta['ShortPixel']))
-            unset($meta['ShortPixel']);
-
-           update_post_meta($imageId, '_wp_attachment_metadata', $meta);
-      } */
 
       // Get and remove Meta
       $mediaItem = \wpSPIO()->filesystem()->getImage($imageId, 'media');
@@ -301,8 +291,6 @@ class AjaxController
       // Optimize
       $control = new OptimizeController();
       $json = $control->addItemToQueue($mediaItem);
-      //return $json;
-
     }
 
     protected function restoreItem($json, $data)
@@ -314,7 +302,7 @@ class AjaxController
       $control = new OptimizeController();
 
       $json->$type = $control->restoreItem($mediaItem);
-
+			$json->status = true;
 
       return $json;
     }
@@ -329,6 +317,7 @@ class AjaxController
        $control = new OptimizeController();
 
        $json->$type = $control->reOptimizeItem($mediaItem, $compressionType);
+			 $json->status = true;
        return $json;
     }
 

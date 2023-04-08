@@ -447,6 +447,7 @@ class OptimizeController
 
 			}
 
+hark();
 			// If item is blocked (handling success), skip over. This can happen if internet is slow or process too fast.
 			if (property_exists($item, 'blocked') && true === $item->blocked )
 			{
