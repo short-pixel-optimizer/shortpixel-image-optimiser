@@ -1,16 +1,19 @@
 <?php
-
 namespace ShortPixel\Controller;
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
 
 use ShortPixel\Controller\View\ListMediaViewController as ListMediaViewController;
 use ShortPixel\Controller\View\OtherMediaViewController as OtherMediaViewController;
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 
-
 //use ShortPixel\Controller\BulkController as BulkController;
 use ShortPixel\Helper\UiHelper as UiHelper;
 use ShortPixel\Helper\InstallHelper as InstallHelper;
+
 
 // Class for containing all Ajax Related Actions.
 class AjaxController
@@ -90,25 +93,6 @@ class AjaxController
       }
     }
 
-
-    /*
-    OFF for now since Pkey doesn't need reloading every page refresh. It's meant so not all site users will be optimizing all the time overloading the server. It can be assigned to somebody for a bit. On bulk page, it should be released though */
-    /*
-    public function ajax_removeProcessorKey()
-    {
-
-      $this->checkNonce('exit_process');
-      Log::addDebug('Process Exiting');
-
-      $cacheControl = new CacheController();
-      $cacheControl->deleteItem('bulk-secret');
-
-      $json = new \stdClass;
-      $json->status = 0;
-      $this->send($json);
-
-    } */
-
     public function ajax_getItemView()
     {
         $this->checkNonce('item_view');
@@ -155,6 +139,8 @@ class AjaxController
         $this->checkNonce('processing');
         $this->checkProcessorKey();
 
+				ErrorController::start(); // Capture fatal errors for us.
+
         // Notice that POST variables are always string, so 'true', not true.
 				// phpcs:ignore -- Nonce is checked
         $isBulk = (isset($_POST['isBulk']) && $_POST['isBulk'] === 'true') ? true : false;
@@ -162,6 +148,7 @@ class AjaxController
         $queue = (isset($_POST['queues'])) ? sanitize_text_field($_POST['queues']) : 'media,custom';
 
         $queues = array_filter(explode(',', $queue), 'trim');
+
 
         $control = new OptimizeController();
         $control->setBulk($isBulk);
@@ -172,6 +159,7 @@ class AjaxController
 
     public function ajaxRequest()
     {
+
         $this->checkNonce('ajax_request');
 
 			  // phpcs:ignore -- Nonce is checked
@@ -256,6 +244,7 @@ class AjaxController
 
         }
         $this->send($json);
+
 
     }
 

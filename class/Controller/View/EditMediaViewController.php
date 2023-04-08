@@ -4,6 +4,7 @@ use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Helper\UiHelper as UiHelper;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
+use ShortPixel\Controller\ErrorController as ErrorController;
 
 
 //use ShortPixel\Model\ImageModel as ImageModel;

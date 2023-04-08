@@ -1,6 +1,10 @@
 <?php
 namespace ShortPixel;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
+
 use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
@@ -315,23 +319,32 @@ class ShortPixelPlugin {
             )
         );
 
-
 		/*** SCREENS */
-		wp_register_script( 'shortpixel-screen-media', plugins_url( '/res/js/screens/screen-media.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery', 'shortpixel-processor' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
+		wp_register_script('shortpixel-screen-base', plugins_url( '/res/js/screens/screen-base.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery', 'shortpixel-processor' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
-		wp_register_script( 'shortpixel-screen-custom', plugins_url( '/res/js/screens/screen-custom.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery', 'shortpixel-processor' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
+		wp_register_script('shortpixel-screen-item-base', plugins_url( '/res/js/screens/screen-item-base.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery', 'shortpixel-processor', 'shortpixel-screen-base'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
-		wp_register_script( 'shortpixel-screen-nolist', plugins_url( '/res/js/screens/screen-nolist.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery', 'shortpixel-processor' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
+		wp_register_script( 'shortpixel-screen-media', plugins_url( '/res/js/screens/screen-media.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery', 'shortpixel-processor', 'shortpixel-screen-base', 'shortpixel-screen-item-base' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
+
+		wp_register_script( 'shortpixel-screen-custom', plugins_url( '/res/js/screens/screen-custom.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery', 'shortpixel-processor', 'shortpixel-screen-base', 'shortpixel-screen-item-base' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
+
+		wp_register_script( 'shortpixel-screen-nolist', plugins_url( '/res/js/screens/screen-nolist.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery', 'shortpixel-processor', 'shortpixel-screen-base' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
 	  $screen_localize = array(
 			'startAction' => __('Processing... ','shortpixel-image-optimiser'),
-
+			'fatalError' => __('Shortpixel encountered a fatal error when optimizing images. Please check the issue below. If this is caused by a bug please contact our support', 'shortpixel-image-optimiser'),
+			'fatalErrorStop' => __('Shortpixel has encounted multiple errors and has now stopped processing', 'shortpixel-image-optimiser'),
+			'fatalErrorStopText' => __('No items are being processed. To try again after solving the issues, please reload the page ', 'shortpixel-image-optimiser'),
 		) ;
 
-		wp_localize_script( 'shortpixel-screen-media', 'spio_screenStrings', $screen_localize);
-		wp_localize_script( 'shortpixel-screen-custom', 'spio_screenStrings', $screen_localize);
+		//wp_localize_script('shortpixel-screen-base', 'ShortPixelProcessorTranslations', array(
+	//	));
 
-		wp_register_script( 'shortpixel-screen-bulk', plugins_url( '/res/js/screens/screen-bulk.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery', 'shortpixel-processor' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
+
+		wp_localize_script( 'shortpixel-screen-base', 'spio_screenStrings', $screen_localize);
+	//	wp_localize_script( 'shortpixel-screen-custom', 'spio_screenStrings', $screen_localize);
+
+		wp_register_script( 'shortpixel-screen-bulk', plugins_url( '/res/js/screens/screen-bulk.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery', 'shortpixel-processor', 'shortpixel-screen-base'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
 		$panel = isset( $_GET['panel'] ) ? sanitize_text_field( wp_unslash($_GET['panel']) ) : false;
@@ -401,23 +414,10 @@ class ShortPixelPlugin {
 			'originalImage'               => __( 'Original image', 'shortpixel-image-optimiser' ),
 			'optimizedImage'              => __( 'Optimized image', 'shortpixel-image-optimiser' ),
 			'loading'                     => __( 'Loading...', 'shortpixel-image-optimiser' ),
-            // '' => __('', 'shortpixel-image-optimiser' ),
 		);
 
-		/*
-		$actions = array(
-        'nonce_check_quota' => wp_create_nonce('check_quota')
-		); */
 		wp_localize_script( 'shortpixel', '_spTr', $jsTranslation );
 		wp_localize_script( 'shortpixel', 'ShortPixelConstants', $ShortPixelConstants );
-		// wp_localize_script('shortpixel', 'ShortPixelActions', $actions);
-
-		/*
-		if (! \wpSPIO()->env()->is_screen_to_use )
-		{
-		if (! wpSPIO()->env()->is_front) // exeception if this is called to load from your frontie.
-         return; // not ours, don't load JS and such.
-		} */
 
 	}
 

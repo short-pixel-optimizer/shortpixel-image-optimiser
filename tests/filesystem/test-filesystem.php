@@ -31,8 +31,6 @@ class FileSystemTest extends  WP_UnitTestCase
     $backup = $this->fs->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
     $result = $backup->check(true);
 
-    //$this->assertTrue($result);
-  //  $this->assertDirectoryExiHelpscout issuessts(SHORTPIXEL_BACKUP_FOLDER);
   }
 
   public function finishBackups()

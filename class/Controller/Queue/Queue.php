@@ -349,15 +349,11 @@ abstract class Queue
 
 			$customData = $this->getStatus('custom_data');
 
-			if (! is_null($customData) && false !== $customData )
+Log::addTemp('Queue - Custom operation' . var_export($this->isCustomOperation(), true) . ' ' . var_export($this->getCustomDataItem('customOperation'), true) );
+			if ($this->isCustomOperation())
 			{
-				 if (is_object($customData) && property_exists($customData, 'customOperation'))
-				 {
-					  $stats->customOperation = $customData->customOperation;
-				 }
+					  $stats->customOperation = $this->getCustomDataItem('customOperation');
 			}
-
-
 
       $stats->total = $stats->in_queue + $stats->fatal_errors + $stats->errors + $stats->done + $stats->in_process;
       if ($stats->total > 0)

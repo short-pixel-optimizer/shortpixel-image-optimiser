@@ -97,13 +97,23 @@ var SpWorker = {
 
           postMessage({'status' : true, response: json});
       }
-      else
+      else if(this && ! this.stopped)
       {
-					if (this && ! this.stopped)
-					{
-						console.error('Worker.js reporting issue', response);
-          	postMessage({'status' : false, message: response.status + ' ' + response.statusText});
-					}
+				var text = await response.text();
+				var message = {status: false, http_status: response.status, http_text: text, status_text: response.statusText };
+
+				 if (response.status == 500) // fatal error
+				 {
+					 console.error('Worker: Fatal error detected');
+				 }
+				 else if (response.status == 502 || response.status == 503) // server gave up
+				 {
+					 	console.error('Worker: server unavailable or overloaded');
+				 }
+				 else	 {
+					 	console.error('Worker: Unknown error', response);
+				 }
+				 postMessage({'status' : false, message: message});
       }
    },
    SetEnv: function (data)

@@ -27,6 +27,8 @@ class OptimizeController
 
     protected $isBulk = false; // if queueSystem should run on BulkQueues;
 
+		protected static $lastId; // Last item_id received / send. For catching errors.
+
     public function __construct()
     {
 
@@ -332,6 +334,7 @@ class OptimizeController
     */
     public function processQueue($queueTypes = array())
     {
+
         $keyControl = ApiKeyController::getInstance();
 
         if ($keyControl->keyIsVerified() === false)
@@ -431,6 +434,7 @@ class OptimizeController
     public function sendToProcessing($item, $q)
     {
       $api = $this->getAPI();
+			$this->setLastID($item->item_id);
 
 			$fs = \wpSPIO()->filesystem();
 			$qtype = $q->getType();
@@ -857,7 +861,7 @@ class OptimizeController
 		protected function handleOptimizedItem($q, $item, $mediaObj, $successData)
 		{
 				$imageArray = $successData['files'];
-				
+
 				$downloadHelper = DownloadHelper::getInstance();
 				$converter = Converter::getConverter($mediaObj, true);
 
@@ -1092,6 +1096,7 @@ class OptimizeController
     // Communication Part
     protected function getJsonResponse()
     {
+
       $json = new \stdClass;
       $json->status = null;
       $json->result = null;
@@ -1254,6 +1259,16 @@ class OptimizeController
 						}
 				}
 
+		}
+
+		protected function setLastID($item_id)
+		{
+			 self::$lastId = $item_id;
+		}
+
+		public static function getLastId()
+		{
+			 return self::$lastId;
 		}
 
     public static function resetQueues()

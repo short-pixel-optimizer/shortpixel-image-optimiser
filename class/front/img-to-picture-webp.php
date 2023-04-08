@@ -28,17 +28,14 @@ class ShortPixelImgToPictureWebp
           Log::addDebug('Test Pictures returned empty.');
         }
 
-
 			//	preg_match_all
         $content = preg_replace_callback('/<img[^>]*>/i', array($this, 'convertImage'), $content);
         //$content = preg_replace_callback('/background.*[^:](url\(.*\)[,;])/im', array('self', 'convertInlineStyle'), $content);
 
         // [BS] No callback because we need preg_match_all
         $content = $this->testInlineStyle($content);
-      //  $content = preg_replace_callback('/background.*[^:]url\([\'|"](.*)[\'|"]\)[,;]/imU',array('self', 'convertInlineStyle'), $content);
-      //  Log::addDebug('SPDBG WebP process done');
 
-        return $content; // . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG WebP converted -->' : '');
+        return $content;
 
     }
 
