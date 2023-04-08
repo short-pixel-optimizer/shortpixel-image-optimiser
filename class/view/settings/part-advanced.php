@@ -188,7 +188,7 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
 						<tr>
 							<th scope='row'>&nbsp;</th>
 							<td>
-                             <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.helpscoutdocs.com/article/536-why-is-the-option-process-in-the-front-end-gone"></span></div>
+                             <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/536-why-is-the-option-process-in-the-front-end-gone"></span></div>
 								<div class='view-notice warning'><p><?php esc_html_e('Important. From version 5 the front processing option is no longer available. There will be no processing on the frontend. To enable optimizing images without visiting the backend, please see the options available for command line optimization.', 'shortpixel-image-optimiser') ?></p>
 									<p><?php esc_html_e('To turn off this message, click the checkbox and save settings', 'shortpixel-image-optimiser'); ?></p>
 								</div>
