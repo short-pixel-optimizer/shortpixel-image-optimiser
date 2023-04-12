@@ -81,7 +81,6 @@ class MediaLibraryQueue extends Queue
      // Remove failed object, ie if getImage returned false.
      return array_filter($items);
 
-
    }
 
   /* public function queueToMediaItem($queueItem)

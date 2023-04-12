@@ -527,6 +527,10 @@
     transform: rotate(360deg);
   }
 }
+.shortpixel-bulk-wrapper section.panel.selection .load.wrapper .loading.skip {
+  margin: 30px auto;
+  padding-left: 90px;
+}
 .shortpixel-bulk-wrapper section.panel.selection .option-block {
   margin: 0 auto 35px;
   width: 80%;

@@ -608,6 +608,12 @@
 								@include loadspinner;
 						}
          }
+				 .loading.skip  // skip button
+				 {
+					 	margin: 30px auto;
+						padding-left: 90px;
+
+				 }
       }
 
 			.option-block

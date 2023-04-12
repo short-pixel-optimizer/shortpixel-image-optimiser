@@ -106,7 +106,10 @@ window.ShortPixelProcessor =
            return;
         }
         else
+				{
           this.screen = new ShortPixelScreen({}, this);
+					this.screen.Init();
+				}
 
 				// Load the Startup Data (needs screen)
 				this.tooltip.InitStats();
@@ -155,12 +158,14 @@ window.ShortPixelProcessor =
       if (this.isManualPaused)
       {
           this.isActive = false;
+					this.tooltip.ProcessEnd();
         //  this.PauseProcess();
          console.debug('Check Active: Paused');
       }
       if (this.waitingForAction)
       {
           this.isActive = false;
+					this.tooltip.ProcessEnd();
           console.debug('Check Active : Waiting for action');
       }
       return this.isActive;

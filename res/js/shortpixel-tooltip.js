@@ -243,8 +243,9 @@ var ShortPixelToolTip = function(reserved, processor)
     {
         var tooltip = this.GetToolTip();
 				if (tooltip === null)
+				{
 					return false;
-
+				}
         tooltip.classList.add('shortpixel-hide');
         tooltip.classList.remove('shortpixel-processing');
     }

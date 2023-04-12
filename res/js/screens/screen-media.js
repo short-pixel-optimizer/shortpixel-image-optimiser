@@ -7,10 +7,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
     isMedia = true;
 		type = 'media';
 
-		constructor(MainScreen, processor)
-		{
-				super(MainScreen, processor);
-    }
 
     RenderItemView(e)
     {

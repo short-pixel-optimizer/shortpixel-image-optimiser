@@ -14,9 +14,10 @@ class ShortPixelScreen extends ShortPixelScreenBase
 	averageOptimization = 0;
 	numOptimizations = 0;
 
-	constructor(MainScreen, processor)
+	Init()
 	{
-		super(MainScreen, processor);
+	//	super(MainScreen, processor);
+
 
 
 		// Hook up the button and all.
@@ -98,91 +99,6 @@ class ShortPixelScreen extends ShortPixelScreenBase
 			}
 	}
 
-/*
-  Init()
-  {
-    // Hook up the button and all.
-      this.LoadPanels();
-      this.LoadActions();
-
-      window.addEventListener('shortpixel.processor.paused', this.TogglePauseNotice.bind(this));
-      window.addEventListener('shortpixel.processor.responseHandled', this.CheckPanelData.bind(this));
-      window.addEventListener('shortpixel.bulk.onUpdatePanelStatus', this.EventPanelStatusUpdated.bind(this));
-      window.addEventListener('shortpixel.bulk.onSwitchPanel', this.EventPanelSwitched.bind(this));
-			window.addEventListener('shortpixel.reloadscreen', this.ReloadScreen.bind(this));
-
-
-      var processData = ShortPixelProcessorData.startData;
-      var initMedia = processData.media.stats;
-      var initCustom = processData.custom.stats;
-      var initTotal = processData.total.stats;
-      var isPreparing = false;
-      var isRunning = false;
-      var isFinished = false;
-
-      if (initMedia.is_preparing == true || initCustom.is_preparing == true )
-        isPreparing = true;
-      else if (initMedia.is_running == true || initCustom.is_running == true )
-        isRunning = true;
-      else if ( (initMedia.is_finished == true && initMedia.done > 0)  || (initCustom.is_finished == true && initCustom.done > 0) )
-        isFinished = true;
-
-        this.UpdateStats(initMedia, 'media'); // write UI.
-        this.UpdateStats(initCustom, 'custom');
-        this.UpdateStats(initTotal, 'total');
-        this.CheckPanelData();
-
-      if (isPreparing)
-      {
-        this.SwitchPanel('selection');
-				this.UpdatePanelStatus('loading', 'selection');
-				this.PrepareBulk();
-      }
-      else if (isRunning)
-      {
-        this.SwitchPanel('process');
-        this.processor.PauseProcess(); // when loading, default start paused before resume.
-      }
-      else if (isFinished)
-      {
-         this.processor.StopProcess({ waiting: true });
-
-         if (initMedia.done > 0 || initCustom.done > 0)
-         {
-
-           this.SwitchPanel('finished');
-         }
-         else
-         {
-           this.SwitchPanel('dashboard');
-         }
-         //this.SwitchPanel('process');  // needs to run a process and get back stats another try.
-      }
-      else if (initMedia.in_queue > 0 || initCustom.in_queue > 0)
-      {
-        this.SwitchPanel('summary');
-      }
-      else
-      {
-         this.processor.StopProcess({ waiting: true }); // don't go peeking in the queue. // this doesn't work since its' before the init Worker.
-         this.SwitchPanel('dashboard');
-      }
-
-			if (this.processor.isManualPaused)
-			{
-      		var event = new CustomEvent('shortpixel.processor.paused', { detail : {paused: 	this.processor.isManualPaused }});
-			}
-
-			// This var is defined in admin_scripts, localize.
-			if ( typeof shortPixelScreen.panel !== 'undefined')
-			{
-				 this.SwitchPanel(shortPixelScreen.panel);
-			}
-
-console.log("Screen Init Done", initMedia, initCustom);
-
-  }
-*/
   LoadPanels()
   {
       var elements = document.querySelectorAll('section.panel');
@@ -585,11 +501,7 @@ console.log("Screen Init Done", initMedia, initCustom);
       this.processor.AjaxRequest(data);
 
   }
-/*  this.UpdateMessage = function(id, message)
-  {
-     console.log('UpdateMessage', id, message);
 
-  } */
   UpdateStats(stats, type)
   {
       this.UpdateData('stats', stats, type);
@@ -797,6 +709,14 @@ console.log("Screen Init Done", initMedia, initCustom);
     var data = {screen_action: 'finishBulk', callback: 'shortpixel.reloadscreen'}; //
     this.processor.AjaxRequest(data);
   }
+	SkipPreparing()
+	{
+		this.processor.StopProcess({ waiting: true });
+		this.SwitchPanel('summary');
+		this.UpdatePanelStatus('loaded', 'selection');
+		this.processor.SetInterval(-1); // back to default.
+	}
+
 	ReloadScreen(event)
 	{
 		 	//window.trigger('shortpixel.process.stop');
