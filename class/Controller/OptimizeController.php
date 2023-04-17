@@ -10,7 +10,7 @@ use ShortPixel\Controller\AjaxController as AjaxController;
 use ShortPixel\Controller\QuotaController as QuotaController;
 use ShortPixel\Controller\StatsController as StatsController;
 
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\ResponseController as ResponseController;
 
 use ShortPixel\Model\Image\ImageModel as ImageModel;

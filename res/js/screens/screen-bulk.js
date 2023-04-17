@@ -714,6 +714,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
 		this.processor.StopProcess({ waiting: true });
 		this.SwitchPanel('summary');
 		this.UpdatePanelStatus('loaded', 'selection');
+		this.processor.tooltip.ProcessEnd();
 		this.processor.SetInterval(-1); // back to default.
 	}
 

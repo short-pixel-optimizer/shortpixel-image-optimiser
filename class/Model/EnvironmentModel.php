@@ -1,6 +1,6 @@
 <?php
 namespace ShortPixel\Model;
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 /** Loads a few environment variables handy to have nearby
 *

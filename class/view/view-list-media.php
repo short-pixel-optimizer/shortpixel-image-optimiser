@@ -1,6 +1,6 @@
 <?php
 namespace ShortPixel;
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 ?>
 <div class='sp-column-info' id='sp-msg-<?php echo esc_attr($this->view->mediaItem->get('id') );?>'>

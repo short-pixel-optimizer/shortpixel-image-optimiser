@@ -71,7 +71,7 @@ define('SHORTPIXEL_BACKUP_URL',
 
 
 //define('SHORTPIXEL_SILENT_MODE', true); // no global notifications. Can lead to data damage. After setting, reactivate plugin.
-//define('SHORTPIXEL_AFFILIATE_ID'); 
+//define('SHORTPIXEL_AFFILIATE_ID');
 
 // Starting logging services, early as possible.
 if (! defined('SHORTPIXEL_DEBUG'))
@@ -80,10 +80,14 @@ if (! defined('SHORTPIXEL_DEBUG'))
 }
 
 
-$log = \ShortPixel\ShortPixelLogger\ShortPixelLogger::getInstance();
-if (\ShortPixel\ShortPixelLogger\ShortPixelLogger::debugIsActive())
-  $log->setLogPath(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
-
+if (false === defined( 'WP_CLI' ) || false === WP_CLI)
+{
+	$log = \ShortPixel\ShortPixelLogger\ShortPixelLogger::getInstance();
+	if (\ShortPixel\ShortPixelLogger\ShortPixelLogger::debugIsActive() )
+	{
+  	$log->setLogPath(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
+	}
+}
 
 /* Function to reach core function of ShortPixel
 * Use to get plugin url, plugin path, or certain core controllers

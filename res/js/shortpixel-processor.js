@@ -158,7 +158,7 @@ window.ShortPixelProcessor =
       if (this.isManualPaused)
       {
           this.isActive = false;
-					this.tooltip.ProcessEnd();
+				//	this.tooltip.ProcessEnd();
         //  this.PauseProcess();
          console.debug('Check Active: Paused');
       }

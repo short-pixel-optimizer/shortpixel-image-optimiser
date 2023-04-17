@@ -1,6 +1,6 @@
 <?php
 use ShortPixel\Controller\ResponseController as ResponseController;
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use \ShortPixel\Model\Image\MediaLibraryModel as MediaLibraryModel;
 use \ShortPixel\Model\Image\ImageModel as ImageModel;

@@ -2,7 +2,7 @@
 namespace ShortPixel\Controller;
 
 
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 class QuotaController
 {

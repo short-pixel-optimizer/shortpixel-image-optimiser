@@ -1,6 +1,6 @@
 <?php
 namespace ShortPixel\Controller;
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Model\CacheModel as CacheModel;
 // Future replacement for everything that needs temporary storage

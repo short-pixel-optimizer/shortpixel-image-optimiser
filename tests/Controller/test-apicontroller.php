@@ -3,7 +3,7 @@ namespace ShortPixel\Tests\Controller;
 
 use ShortPixel\Tests\SPIO_UnitTestCase as SPIO_UnitTestCase;
 use ShortPixel\Controller\ResponseController as ResponseController;
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\ApiController as ApiController;
 
 class ApiControllerTest extends SPIO_UnitTestCase

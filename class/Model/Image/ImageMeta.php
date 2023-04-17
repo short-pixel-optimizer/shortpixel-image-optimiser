@@ -6,7 +6,7 @@ class ImageMeta extends ImageThumbnailMeta
 {
 
   public $errorMessage;
-  public $wasConverted = false;
+  public $wasConverted = false; // Was converted from legacy format
 
 	protected $convertMeta;
 
@@ -21,7 +21,7 @@ class ImageMeta extends ImageThumbnailMeta
 	{
 		if (property_exists($object, 'convertMeta'))
 		{
-			
+
 			$this->convertMeta->fromClass($object->convertMeta);
 			unset($object->convertMeta);
 		}
@@ -32,7 +32,9 @@ class ImageMeta extends ImageThumbnailMeta
 		}
 		elseif (property_exists($object, 'did_png2jpg')  && $object->did_png2jpg)
 		{
+			 $this->convertMeta()->setFileFormat('png');
 			 $this->convertMeta()->setConversionDone();
+
 		}
 
 		parent::fromClass($object);

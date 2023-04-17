@@ -1,7 +1,7 @@
 <?php
 namespace ShortPixel\Controller;
 
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Model\StatsModel as StatsModel;
 use ShortPixel\Controller\Queue\StatsQueue as StatsQueue;

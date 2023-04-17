@@ -2,7 +2,7 @@
 namespace ShortPixel\Model\AdminNotices;
 
 use \ShortPixel\Controller\CacheController as CacheController;
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 
 class AvifNotice extends \ShortPixel\Model\AdminNoticeModel

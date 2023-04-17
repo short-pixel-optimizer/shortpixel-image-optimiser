@@ -2,7 +2,7 @@
 namespace ShortPixel\Controller\Queue;
 
 use ShortPixel\Model\Image\ImageModel as ImageModel;
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\CacheController as CacheController;
 use ShortPixel\Controller\ResponseController as ResponseController;
 use ShortPixel\Model\Converter\Converter as Converter;

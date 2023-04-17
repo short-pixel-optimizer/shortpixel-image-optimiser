@@ -52,7 +52,7 @@ class ImageConvertMeta
 
 	 public function setFileFormat($ext)
 	 {
-		  if (is_null($this->fileFormat) && false === $this->isConverted())
+		  if (is_null($this->fileFormat))
 		  	$this->fileFormat = $ext;
 	 }
 

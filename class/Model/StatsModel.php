@@ -1,7 +1,7 @@
 <?php
 namespace ShortPixel\Model;
 
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 use ShortPixel\Model\Image\ImageModel as ImageModel;

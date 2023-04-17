@@ -1,6 +1,6 @@
 <?php
 namespace ShortPixel\Model\Image;
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use \ShortPixel\ShortPixelPng2Jpg as ShortPixelPng2Jpg;
 use ShortPixel\Controller\ResponseController as ResponseController;
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
@@ -2295,10 +2295,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
        if (isset($metadata['ShortPixelPng2Jpg']))
        {
+
            $this->image_meta->did_png2jpg = true; //setMeta('did_png2jpg', true);
 					 $this->getMeta()->convertMeta()->setFileFormat('png');
 					 $this->getMeta()->convertMeta()->setConversionDone();
            $did_jpg2png = true;
+					 Log::addTemp('ShortPixel2PNG', $this->getMeta()->convertMeta());
        }
        else
            $did_jpg2png = false;
