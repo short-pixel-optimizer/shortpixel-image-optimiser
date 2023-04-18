@@ -350,7 +350,6 @@ abstract class Queue
 
 			$customData = $this->getStatus('custom_data');
 
-Log::addTemp('Queue - Custom operation' . var_export($this->isCustomOperation(), true) . ' ' . var_export($this->getCustomDataItem('customOperation'), true) );
 			if ($this->isCustomOperation())
 			{
 					  $stats->customOperation = $this->getCustomDataItem('customOperation');

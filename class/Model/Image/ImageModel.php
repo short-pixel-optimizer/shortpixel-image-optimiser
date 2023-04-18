@@ -285,19 +285,31 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
               return false;
         }
 
-				if  (\wpSPIO()->env()->is_function_usable('mime_content_type'))
+				if (! is_null($this->mime))
 				{
-					$this->mime = mime_content_type($this->getFullPath());
+					return $this->mime;
+				}
+
+				if (\wpSPIO()->env()->is_function_usable('finfo_open')) // Faster function for getting mime types
+					 {
+						 $fileinfo = finfo_open(FILEINFO_MIME_TYPE);
+						 $this->mime = finfo_file($fileinfo, $this->getFullPath());
+						 finfo_close($fileinfo);
+					 	 //FILEINFO_MIME_TYPE
+					}
+					elseif(\wpSPIO()->env()->is_function_usable('mime_content_type')) {
+						$this->mime = mime_content_type($this->getFullPath());
+					}
+					else {
+						return true; // assume without check, that extension says what it is.
+						// @todo This should probably trigger a notice in adminNoticesController.
+					}
+
 	        if (strpos($this->mime, 'image') >= 0)
 	           return true;
 	        else
 	          return false;
 
-				}
-				else {
-					return true; // assume without check, that extension says what it is.
-					// @todo This should probably trigger a notice in adminNoticesController.
-				}
     }
 
     public function get($name)
@@ -1232,8 +1244,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 			 if ($hasResizeSizes)
 			 {
-
-
 			 		$resize_width = intval($settings->resizeWidth);
 			 		$resize_height = intval($settings->resizeHeight);
 					// If retina, allowed resize sizes is doubled, otherwise big image / big retina would end up same sizes.
@@ -1244,8 +1254,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 					}
 				}
 
-				$width =  ( $this->get('width') <= $resize_width || $resize_width === 0) ? $width : $resize_width;
-				$height = ($this->get('height') <= $resize_height || $resize_height === 0) ? $height : $resize_height;
+				$width =  ($width <= $resize_width || $resize_width === 0) ? $width : $resize_width;
+				$height = ($height <= $resize_height || $resize_height === 0) ? $height : $resize_height;
 
 			 	$result = array('resize' => $resize, 'resize_width' => $width, 'resize_height' => $height);
 			}

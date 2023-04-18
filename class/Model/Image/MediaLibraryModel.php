@@ -30,6 +30,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   protected $is_main_file = true; // for checking
 
   private static $unlistedChecked = array(); // limit checking unlisted.
+	private static $unlistedNoticeChecked = false; // check for notice only one item per run. This is a performance killer otherwise.
 
   protected $optimizePrevented; // cache if there is any reason to prevent optimizing
 	private $justConverted = false; // check if legacy conversion happened on same run, to prevent double runs.
@@ -2601,8 +2602,16 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   }
 
 	// Check for UnlistedNotice.  Check if in this image has unlisted without adding them
-	public function checkUnlistedForNotice()
+	private function checkUnlistedForNotice()
 	{
+			// Prevent running this more than once per run.
+			if (true === self::$unlistedNoticeChecked )
+			{
+					return;
+			}
+
+			self::$unlistedNoticeChecked = true;
+
 			$settings = \wpSPIO()->settings();
 			$control = AdminNoticesController::getInstance();
 			$notice =  $control->getNoticeByKey('MSG_UNLISTED_FOUND');

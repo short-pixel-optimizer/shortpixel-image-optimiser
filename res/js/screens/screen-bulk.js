@@ -1107,11 +1107,5 @@ class ShortPixelScreen extends ShortPixelScreenBase
 		 shade.style.display = 'none';
 	}
 
-	// @todo Find a better home for this. Global screen class?
-	ParseNumber(str)
-	{
-		 str = str.replace(',','', str).replace('.','',str);
-		 return parseInt(str);
-	}
 
 } // Screen

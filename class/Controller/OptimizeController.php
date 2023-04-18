@@ -1200,8 +1200,7 @@ class OptimizeController
 
 		private function numberFormatStats($results) // run the whole stats thing through the numberFormat.
 		{
-//			 $run = array('media', 'custom', 'total')
-
+			//qn: array('media', 'custom', 'total')
 			 foreach($results as $qn => $item)
 			 {
 				  if (is_object($item) && property_exists($item, 'stats'))

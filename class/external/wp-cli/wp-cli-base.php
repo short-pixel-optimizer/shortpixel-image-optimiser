@@ -44,7 +44,7 @@ class WpCliController
 				\WP_CLI::add_command('spio bulk', '\ShortPixel\SpioBulk');
     }
 
-}
+} // class WpCliController
 
 /**
 * ShortPixel Image Optimizer
@@ -183,6 +183,15 @@ class SpioCommandBase
         else
           $wait = 3;
 
+				// Prepare limit
+				if (isset($assoc['limit']))
+				{
+					$limit = intval($assoc['limit']);
+				}
+				else {
+					 $limit = false;
+				}
+
 				$complete = false;
         if (! isset($assoc['ticks']))
         {
@@ -197,8 +206,24 @@ class SpioCommandBase
            $bool = $this->runClick($queue);
            if ($bool === false)
            {
+						 $this->status($args, $assoc);
              break;
            }
+
+					 if (false !== $limit)
+					 {
+						  $status = $this->getStatus();
+							$total = $this->unFormatNumber($status->total->stats->total);
+							$is_preparing = $status->total->stats->is_preparing;
+							if ($total >= $limit && $is_preparing)
+							{
+								\WP_CLI::log(sprintf('Bulk Preparing is done. Limit reached of %s items (%s items). Use start command to signal ready. Use run to process after starting.', $limit, $status->total->stats->total));
+								$this->status($args, $assoc);
+
+								 $bool = false;
+								 break;
+							}
+					 }
 
            $ticks--;
 
@@ -302,9 +327,6 @@ class SpioCommandBase
 	        else
 	          $combinedStatus = $customStatus;
 
-	      //if ($combinedStatus == 100)
-	      //  return false; // no status in this request.
-
       	if ($combinedStatus == Queue::RESULT_QUEUE_EMPTY)
         {
            \WP_CLI::log('All Queues report processing has finished');
@@ -313,7 +335,7 @@ class SpioCommandBase
         }
         elseif($combinedStatus == Queue::RESULT_PREPARING_DONE)
         {
-           \WP_CLI::log(sprintf('Bulk Preparing is done. %d items. Use start command to signal ready. Use run to process after starting.', $results->total->stats->total));
+           \WP_CLI::log(sprintf('Bulk Preparing is done. %s items. Use start command to signal ready. Use run to process after starting.', $results->total->stats->total));
 					 return false;
         }
 
@@ -591,4 +613,12 @@ class SpioCommandBase
 						return $optimizeController;
 		}
 
-} // Class
+		private function unFormatNumber($string)
+		{
+			 $string = str_replace(',', '', $string);
+			 $string = str_replace('.', '', $string);
+
+			 return $string;
+		}
+
+} // Class SpioCommandBase
