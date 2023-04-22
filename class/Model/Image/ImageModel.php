@@ -69,27 +69,36 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		protected $recordChanged = false;
 
     // ImageModel properties are not stored but is generated data.  Only storage should happen to the values in Meta.
+		/** @var string */
     protected $width;
+
+		/** @var string */
     protected $height;
+
+		/** @var string */
     protected $mime;
    // protected $url; // possibly not in use.
+
+	  /** @var string */
     protected $error_message;
 
+		/** @var int */
     protected $id;
+
+		/** @var string */
 		protected $imageType;
 
+		/** @var int */
     protected $processable_status = 0;
+
+		/** @var int */
 		protected $restorable_status = 0;
 
 		// Public var that can be set by OptimizeController to prevent double queries.
+		/** @var boolean */
 		public $is_in_queue;
 
-    //protected $is_optimized = false;
-  //  protected $is_image = false;
-
     abstract public function getOptimizeUrls();
-
-
     abstract protected function saveMeta();
     abstract protected function loadMeta();
 
@@ -129,7 +138,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     /* Check if an image in theory could be processed. Check only exclusions, don't check status etc */
     public function isProcessable()
     {
-        if ( $this->isOptimized() || ! $this->exists()  || $this->isPathExcluded() || $this->isExtensionExcluded() || $this->isSizeExcluded() || (! $this->is_writable() && ! $this->is_virtual()) || (! $this->is_directory_writable() && ! $this->is_virtual()) || $this->isOptimizePrevented() !== false  )
+        if ( $this->isOptimized() || ! $this->exists()  || $this->isPathExcluded() || $this->isExtensionExcluded() || $this->isSizeExcluded() || (! $this->is_virtual() && ! $this->is_writable()) || (! $this->is_virtual() && ! $this->is_directory_writable())
+				|| $this->isOptimizePrevented() !== false  )
         {
           if(! $this->is_writable() && $this->processable_status == 0)
 					{

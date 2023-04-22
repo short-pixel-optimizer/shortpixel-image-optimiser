@@ -308,7 +308,7 @@ class QuotaController
               "APICallsMadeOneTimeNumeric" =>  (int) max($data->APICallsMadeOneTime, 0),
               "APICallsQuotaOneTimeNumeric" => (int) max($data->APICallsQuotaOneTime, 0),
 
-              "Unlimited" => ($data->Unlimited == 'true') ? true : false,
+              "Unlimited" => (property_exists($data, 'Unlimited') && $data->Unlimited == 'true') ? true : false,
 
               "APILastRenewalDate" => $data->DateSubscription,
               "DomainCheck" => (isset($data->DomainCheck) ? $data->DomainCheck : null)

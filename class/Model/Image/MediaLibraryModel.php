@@ -15,35 +15,53 @@ use ShortPixel\Model\Converter\Converter as Converter;
 class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailModel
 {
 
+	/** @var array */
   protected $thumbnails = array(); // thumbnails of this // MediaLibraryThumbnailModel .
+
+	/** @var array */
   protected $retinas; // retina files - MediaLibraryThumbnailModel (or retina / webp and move to thumbnail? )
   //protected $webps = array(); // webp files -
+
+	/** @var boolean */
   protected $original_file = false; // the original instead of the possibly _scaled one created by WP 5.3
 
+	/** @var boolean */
   protected $is_scaled = false; // if this is WP 5.3 scaled
   //protected $do_png2jpg = false; // option to flag this one should be checked / converted to jpg.
 
   protected $wp_metadata;
 	private $parent; // In case of WPML Duplicates
 
+	/** @var string **/
   protected $type = 'media';
+
+	/** @var boolean */
   protected $is_main_file = true; // for checking
 
+	/** @var array */
   private static $unlistedChecked = array(); // limit checking unlisted.
+
+	/** @var boolean */
 	private static $unlistedNoticeChecked = false; // check for notice only one item per run. This is a performance killer otherwise.
 
+	/** @var boolean */
   protected $optimizePrevented; // cache if there is any reason to prevent optimizing
+
+	/** @var boolean */
 	private $justConverted = false; // check if legacy conversion happened on same run, to prevent double runs.
+
 
 	private $optimizeData; // cache to prevent running this more than once per run.
 
+	/** @var string */
 	protected $mainImageKey = 'shortpixel_main_donotuse';
+
+	/** @var string */
 	protected $originalImageKey = 'shortpixel_original_donotuse';
 
   public function __construct($post_id, $path)
   {
       $this->id = $post_id;
-
 
       parent::__construct($path, $post_id, null);
 
@@ -64,9 +82,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       {
 				 $this->checkUnlistedForNotice();
 			}
-
   }
-
 
 	public function getOptimizeUrls()
 	{
@@ -90,8 +106,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		);
 
 		$settings = \wpSPIO()->settings();
-
-
 		$url = $this->getURL();
 
 		 if (! $url) // If the whole image URL can't be found

@@ -5,25 +5,39 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 class ImageThumbnailMeta
 {
+	/** @var int */
 	public $databaseID = null;
+	/** @var int */
   public $status = 0;
+	/** @var int */
   public $compressionType;
+	/** @var int */
   public $compressedSize;
+	/** @var int */
   public $originalSize;
 //  public $improvement;
 
+	/** @var boolean */
   public $did_keepExif  = false;
+
+	/** @var boolean */
   public $did_cmyk2rgb = false;
 
 	// @todo Find all of those.
  // public $did_png2jpg = false; // Was this replaced?
 //	public $tried_png2jpg = false; // Tried it, might not have working.
 
+	/** @var int */
   public $resize;
+	/** @var int */
   public $resizeWidth;
+	/** @var int */
   public $resizeHeight;
+	/** @var int */
 	public $resizeType;
+	/** @var int  */
   public $originalWidth;
+	/** @var int */
   public $originalHeight;
 
   public $tsAdded;

@@ -65,7 +65,6 @@ class ApiController
       return self::$instance;
   }
 
-
   /*
   * @param Object $item Item of stdClass
   * @return Returns same Item with Result of request
