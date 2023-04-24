@@ -3,9 +3,22 @@ namespace ShortPixel;
 
 class Pantheon {
 
+	public static $is_pantheon = false;
+
 	public function __construct()
 	{
 		add_action( 'shortpixel/image/optimised', array( $this, 'flush_image_caches' ), 10 );
+		if (! defined('SHORTPIXEL_TRUSTED_MODE'))
+		{
+			 define('SHORTPIXEL_TRUSTED_MODE', true);
+		}
+
+		self::$is_pantheon = true;
+	}
+
+	public static function IsActive()
+	{
+		 return self::$is_pantheon; 
 	}
 
 	public function flush_image_caches( $imageItem )

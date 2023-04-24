@@ -607,30 +607,26 @@ class wpOffload
 				$path = $item->path();
 				$source_path = $item->source_path();
 
-				//Log::addTemp('Or source ' . $original_path . ' ' . $original_source_path);
-
 				$wp_original = wp_get_original_image_path($post_id, apply_filters( 'emr_unfiltered_get_attached_file', true ));
 				$wp_original = apply_filters('emr/replace/original_image_path', $wp_original, $post_id);
 				$wp_source = trim(get_attached_file($post_id, apply_filters( 'emr_unfiltered_get_attached_file', true )));
 
 				$updated = false;
 
-				Log::addTemp('Update Original Data', array(
+/*Log::addTemp('Update Original Data', array(
 						'original_path' => $original_path,
 						'original_source_path' => $original_source_path,
 						'path' => $path,
 						'source_path' => $source_path,
 						'wp_original' => $wp_original,
 						'wp_source' => $wp_source,
-				));
+				)); */
 
 				// If image is replaced with another name, the original soruce path will not match.  This could also happen when an image is with -scaled as main is replaced by an image that doesn't have it.  In all cases update the table to reflect proper changes.
 				if (wp_basename($wp_original) !== wp_basename($original_path))
 				{
-					 Log::addTemp('Basename original path not matching');
 
 					 $newpath = str_replace( wp_basename( $original_path ), wp_basename($wp_original), $original_path );
-					 Log::addTemp('newPath', $newpath);
 
 					 $item->set_original_path($newpath);
 

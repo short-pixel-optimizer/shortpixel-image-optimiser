@@ -55,6 +55,7 @@ class BuildAutoLoader
 			'class/external/spai.php',
 			'class/external/cache.php',
 			'class/external/uncode.php',
+			'class/external/query-monitor.php', 
     );
 
     echo "Build Plugin.JSON ";

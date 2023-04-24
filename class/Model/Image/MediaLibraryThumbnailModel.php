@@ -91,7 +91,8 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
 			$retina->is_retina = true;
 
-      if ($retina->exists())
+			$forceCheck = true;
+      if ($retina->exists($forceCheck))
         return $retina;
 
       return false;

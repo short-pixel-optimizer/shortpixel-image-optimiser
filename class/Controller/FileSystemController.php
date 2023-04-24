@@ -49,7 +49,7 @@ Class FileSystemController extends \ShortPixel\Controller
 				}
 
 				if (true === $cacheOnly)
-					return false; 
+					return false;
 
         $filepath = get_attached_file($id);
         $filepath = apply_filters('shortpixel_get_attached_file', $filepath, $id);
@@ -517,6 +517,27 @@ Class FileSystemController extends \ShortPixel\Controller
 				return false;
 			}
 
+		}
+
+		/** Any files / directories loaded while this is active will not check for exists or other filesystem operations
+		*
+		*/
+		public function startTrustedMode()
+		{
+				if (\wpSPIO()->env()->useTrustedMode())
+				{
+			 		FileModel::$TRUSTED_MODE = true;
+					DirectoryModel::$TRUSTED_MODE = true;
+				}
+		}
+
+		public function endTrustedMode()
+		{
+			if (\wpSPIO()->env()->useTrustedMode())
+			{
+				FileModel::$TRUSTED_MODE = false;
+				DirectoryModel::$TRUSTED_MODE = false;
+			}
 		}
 
     /** Old method of getting a subDir. This is messy and hopefully should not be used anymore. It's added here for backward compat in case of exceptions */

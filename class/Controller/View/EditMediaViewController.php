@@ -36,6 +36,9 @@ class EditMediaViewController extends \ShortPixel\ViewController
       {
         if (! $this->hooked)
           $this->loadHooks();
+
+					$fs = \wpSPIO()->filesystem();
+					$fs->startTrustedMode();
       }
 
       public function addMetaBox()

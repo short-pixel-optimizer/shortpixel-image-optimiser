@@ -29,6 +29,10 @@ class ListMediaViewController extends \ShortPixel\ViewController
 
   public function load()
   {
+			$fs = \wpSPIO()->filesystem();
+			$fs->startTrustedMode();
+
+
 			$this->checkAction(); // bulk action checkboxes, y'all
       $this->loadHooks();
   }

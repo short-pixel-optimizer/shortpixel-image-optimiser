@@ -122,6 +122,7 @@ class WPQ implements Queue
       $chunks = array_chunk($this->items, $this->options->enqueue_limit );
       $numitems = $this->getStatus('items');
 
+
       foreach($chunks as $chunknum => $objItems)
       {
         $numitems += $this->DataProvider->enqueue($objItems);

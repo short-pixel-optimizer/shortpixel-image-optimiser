@@ -69,10 +69,8 @@ class PackageLoader
                 $classpaths = array($classpaths);
             }
             spl_autoload_register(function ($classname) use ($namespace, $classpaths, $dir, $psr4) {
-
-							$matches_num = preg_match("#^".preg_quote($namespace)."#", $classname, $matches);
                 // Check if the namespace matches the class we are looking for
-                if ($matches_num) {
+                if (preg_match("#^".preg_quote($namespace)."#", $classname)) {
                     // Remove the namespace from the file path since it's psr4
                     if ($psr4) {
                         $classname = str_replace($namespace, "", $classname);
@@ -88,7 +86,6 @@ class PackageLoader
                         if (file_exists($fullpath)) {
                             include_once $fullpath;
                         }
-
                     }
                 }
             });

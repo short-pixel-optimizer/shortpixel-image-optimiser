@@ -292,6 +292,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
     else
       $height = $wpmeta['height'];
 
+		if (isset($wpmeta['filesize']))
+		{
+			 $this->filesize = $wpmeta['filesize'];
+		}
+
     if (is_null($width) || is_null($height) && ! $this->is_virtual())
     {
        $width = (is_null($width)) ? $this->get('width') : $width;
@@ -318,6 +323,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
                $meta->originalHeight = (isset($data['height'])) ? $data['height'] : null;
 							 $thumbObj->setName($name); // name is size mostly
                $thumbObj->setMetaObj($meta);
+
+							 if (isset($data['filesize']))
+							 	$thumbObj->filesize = $data['filesize'];
+
                $thumbnails[$name] = $thumbObj;
              }
           }
@@ -2315,7 +2324,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					 $this->getMeta()->convertMeta()->setFileFormat('png');
 					 $this->getMeta()->convertMeta()->setConversionDone();
            $did_jpg2png = true;
-					 Log::addTemp('ShortPixel2PNG', $this->getMeta()->convertMeta());
        }
        else
            $did_jpg2png = false;

@@ -200,9 +200,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 
 
-    public function exists()
+    public function exists($forceCheck = false)
     {
-       $result = parent::exists();
+       $result = parent::exists($forceCheck);
        if ($result === false)
        {
           $this->processable_status = self::P_FILE_NOT_EXIST;
@@ -297,7 +297,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 				if (! is_null($this->mime))
 				{
-					return $this->mime;
+					return true;
 				}
 
 				if (\wpSPIO()->env()->is_function_usable('finfo_open')) // Faster function for getting mime types

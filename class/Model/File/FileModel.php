@@ -26,6 +26,7 @@ class FileModel extends \ShortPixel\Model
   protected $directory = null;
   protected $extension = null;
   protected $mime = null;
+	protected $filesize = null;
 
   // File Status
   protected $exists = null;
@@ -41,6 +42,8 @@ class FileModel extends \ShortPixel\Model
 
   const FILE_OK = 1;
   const FILE_UNKNOWN_ERROR = 2;
+
+	public static $TRUSTED_MODE = false;
 
 
   /** Creates a file model object. FileModel files don't need to exist on FileSystem */
@@ -58,6 +61,8 @@ class FileModel extends \ShortPixel\Model
 			$path = trim($path);
 
 		$this->fullpath = $path;
+
+		$this->checkTrustedMode();
 
     $fs = \wpSPIO()->filesystem();
 
@@ -103,11 +108,15 @@ class FileModel extends \ShortPixel\Model
       $this->is_file = null;
       $this->exists = null;
       $this->is_virtual = null;
+			$this->filesize = null;
   }
 
-  public function exists()
+	/**
+	* @param $forceCheck  Forces a filesystem check instead of using cached.  Use very sparingly. Implemented for retina on trusted mode.
+	*/
+  public function exists($forceCheck = false)
   {
-    if (is_null($this->exists))
+    if (true === $forceCheck || is_null($this->exists))
     {
       $this->exists = (@file_exists($this->fullpath) && is_file($this->fullpath));
     }
@@ -276,9 +285,14 @@ class FileModel extends \ShortPixel\Model
 
   public function getFileSize()
   {
-    if ($this->exists() && false === $this->is_virtual() )
+		if (! is_null($this->filesize))
 		{
-      return filesize($this->fullpath);
+			 return $this->filesize;
+		}
+    elseif ($this->exists() && false === $this->is_virtual() )
+		{
+       $this->filesize = filesize($this->fullpath);
+			 return $this->filesize;
 		}
     elseif (true === $this->is_virtual())
 		{
@@ -545,8 +559,13 @@ class FileModel extends \ShortPixel\Model
   //  $path = wp_normalize_path($path);
 
 		$path = UtilHelper::spNormalizePath($path);
-
 		$abspath = $fs->getWPAbsPath();
+
+		// Prevent file operation below if trusted.
+		if (true === self::$TRUSTED_MODE)
+		{
+			 return $path;
+		}
 
     if ( is_file($path) && ! is_dir($path) ) // if path and file exist, all should be okish.
     {
@@ -576,6 +595,27 @@ class FileModel extends \ShortPixel\Model
 
     return $path;
   }
+
+	protected function checkTrustedMode()
+	{
+		// When in trusted mode prevent filesystem checks as much as possible.
+		if (true === self::$TRUSTED_MODE)
+		{
+				$this->exists = true;
+				$this->is_writable = true;
+				$this->is_directory_writable = true;
+				$this->is_readable = true;
+				$this->is_file = true;
+				// Set mime to prevent lookup in IsImage
+				$this->mime = 'image/' . $this->getExtension();
+
+				if (is_null($this->filesize))
+				{
+					$this->filesize = 0; 
+				}
+		}
+
+	}
 
 
   /** Resolve an URL to a local path

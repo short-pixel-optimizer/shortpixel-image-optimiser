@@ -44,6 +44,8 @@ if(!defined('SHORTPIXEL_USE_DOUBLE_AVIF_EXTENSION')) { //can be defined in wp-co
     define('SHORTPIXEL_USE_DOUBLE_AVIF_EXTENSION', false);
 }
 
+
+
 define('SHORTPIXEL_API', 'api.shortpixel.com');
 
 $max_exec = intval(ini_get('max_execution_time'));
@@ -71,7 +73,7 @@ define('SHORTPIXEL_BACKUP_URL',
 
 
 //define('SHORTPIXEL_SILENT_MODE', true); // no global notifications. Can lead to data damage. After setting, reactivate plugin.
-//define('SHORTPIXEL_AFFILIATE_ID');
+//define('SHORTPIXEL_TRUSTED_MODE', false); // doesn't do any file checks on the view-side of things. 
 
 // Starting logging services, early as possible.
 if (! defined('SHORTPIXEL_DEBUG'))
