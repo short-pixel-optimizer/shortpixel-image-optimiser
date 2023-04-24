@@ -47,6 +47,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	/** @var boolean */
   protected $optimizePrevented; // cache if there is any reason to prevent optimizing
 
+	/** @var string */
+	protected $optimizePreventedReason;
+
 	/** @var boolean */
 	private $justConverted = false; // check if legacy conversion happened on same run, to prevent double runs.
 
@@ -1324,6 +1327,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         return $bool;
 			}
 
+			// Never allow optimizePrevented to be processable
+			if (true === $this->isOptimizePrevented())
+			{
+				 return false;
+			}
+
 			// The exclude size on the main image - via regex - if fails, prevents the whole thing from optimization.
 			if ($this->processable_status == ImageModel::P_EXCLUDE_SIZE || $this->processable_status == ImageModel::P_EXCLUDE_PATH)
 			{
@@ -1683,7 +1692,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        else
        {
  			   $this->processable_status = self::P_OPTIMIZE_PREVENTED;
-         $this->optimizePrevented = $reason;
+				 $this->optimizePreventedReason  = $reason;
+         $this->optimizePrevented = true;
          return true;
        }
   }

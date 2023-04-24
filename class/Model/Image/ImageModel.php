@@ -262,8 +262,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 				 break;
 				 case self::P_OPTIMIZE_PREVENTED:
 				 		$message = __('Fatal error preventing processing', 'shortpixel-image-optimiser');
-						if (property_exists($this, 'optimizePrevented'))
-						$message = $this->get('optimizePrevented');
+						if (property_exists($this, 'optimizePreventedReason'))
+						$message = $this->get('optimizePreventedReason');
 				 break;
 				 // Restorable Reasons
 				 case self::P_RESTORABLE:
