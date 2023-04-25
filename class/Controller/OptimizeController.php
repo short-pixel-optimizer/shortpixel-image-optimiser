@@ -851,7 +851,7 @@ class OptimizeController
 			$item->result->message = ResponseController::formatItem($item->item_id);
 
 			if ($item->result->is_error)
-				$item->result->kblink = UIHelper::getKBSearchLink($item->result->message);
+				$item->result->kblink = UiHelper::getKBSearchLink($item->result->message);
 
       return $item;
 
@@ -1212,16 +1212,16 @@ class OptimizeController
 								 {
 									  foreach($value as $key2 => $val2) // embedded 'images' can happen here.
 										{
-										 $value->$key2 = UIHelper::formatNumber($val2, 0);
+										 $value->$key2 = UiHelper::formatNumber($val2, 0);
 										}
 								 }
 								 elseif (strpos($key, 'percentage') !== false)
 								 {
-								 	  $value = UIHelper::formatNumber($value, 2);
+								 	  $value = UiHelper::formatNumber($value, 2);
 								 }
 								 else
 								 {
-								 		$value = UIHelper::formatNumber($value, 0);
+								 		$value = UiHelper::formatNumber($value, 0);
 								 }
 
 								$results->$qn->stats->$key = $value;

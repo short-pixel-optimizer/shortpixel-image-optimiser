@@ -357,7 +357,7 @@ class wpOffload
     }
 
     //** The thumbnails are not recorded by offload, but still offloaded.
-    private function checkIfThumbnail($original_url)
+    /*private function checkIfThumbnail($original_url)
     {
         //$result = \attachment_url_to_postid($url);
 
@@ -369,7 +369,7 @@ class wpOffload
         else
           return false;
 
-    }
+    } */
 
 		// @param s3 based URL that which is needed for finding local path
 		// @return String Filepath.  Translated file path
@@ -730,6 +730,7 @@ class wpOffload
     }
 
 
+/*
     public function checkWebpRemotePath($url, $original)
     {
       if ($url === false)
@@ -747,7 +748,7 @@ class wpOffload
       return $url;
 
     }
-
+*/
 
     // GetbyURL can't find thumbnails, only the main image. Check via extrainfo method if we can find needed filetype
 		// @param $bool Boolean
@@ -756,6 +757,34 @@ class wpOffload
 		// @param $imagebaseDir DirectoryModel  The remote path / path this all takes place at.
     public function fixWebpRemotePath($bool, $fileObj, $url, $imagebaseDir)
     {
+			 $source_id = $this->getSourceIDByURL($url);
+			 if (false === $source_id)
+			 		return false;
+
+			 $item = $this->getItemById($source_id);
+			 $extra_info = $item->extra_info();
+
+			 if (! isset( $extra_info['objects'] ) || ! is_array( $extra_info['objects'] ) )
+			 	return false;
+
+			 $bool = false;
+
+			 foreach($extra_info['objects'] as $data)
+			 {
+				   $sourceFile = $data['source_file'];
+					 if ($sourceFile == $fileObj->getFileName())
+					 {
+						  $bool = true;
+							return $fileObj;
+							break;
+					 }
+			 }
+
+			 return $bool;
+			 //Log::addTemp('Item', $item->extra_info());
+
+
+
 			 return false;
 			 /*
 				if (! is_object($imagebaseDir))
