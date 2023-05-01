@@ -487,11 +487,8 @@ class ShortPixelPlugin {
 		global $plugin_page;
 		$screen_id = $this->env()->screen_id;
 
-
-		// $load = array();
 		$load_processor = array( 'shortpixel', 'shortpixel-processor' );  // a whole suit needed for processing, not more. Always needs a screen as well!
 		$load_bulk      = array();  // the whole suit needed for bulking.
-
 
 		if ( \wpSPIO()->env()->is_screen_to_use ) {
 			$this->load_script( $load_processor );
@@ -501,7 +498,6 @@ class ShortPixelPlugin {
 		if ( $plugin_page == 'wp-shortpixel-settings' ) {
 
 			$this->load_script( 'shortpixel-screen-nolist' ); // screen
-			//$this->load_script( 'jquery.tooltip.min.js' );
 			$this->load_script( 'sp-file-tree' );
 			$this->load_script( 'shortpixel-settings' );
 
@@ -511,13 +507,11 @@ class ShortPixelPlugin {
 			$this->load_style( 'shortpixel-settings' );
 
 		} elseif ( $plugin_page == 'wp-short-pixel-bulk' ) {
-			//$this->load_script( $load_processor );
 			$this->load_script( 'shortpixel-screen-bulk' );
 
 			$this->load_style( 'shortpixel-admin' );
 			$this->load_style( 'shortpixel-bulk' );
 		} elseif ( $screen_id == 'upload' || $screen_id == 'attachment' ) {
-			//$this->load_script( $load_processor );
 			$this->load_script( 'shortpixel-screen-media' ); // screen
 
 			$this->load_style( 'shortpixel-admin' );
@@ -532,7 +526,6 @@ class ShortPixelPlugin {
 			$this->load_style( 'shortpixel-admin' );
 
 			$this->load_style( 'shortpixel-othermedia' );
-			//$this->load_script( $load_processor );
 			$this->load_script( 'shortpixel-screen-custom' ); // screen
 
 		} elseif ( NextGenController::getInstance()->isNextGenScreen() ) {

@@ -26,7 +26,12 @@ $approx = $this->view->approx;
            </span>
          </div>
 				 <div class='loading skip'>
-					 <span><p><button class='button' data-action="SkipPreparing"><?php _e('Start optimization now', 'shortpixel-image-optimiser'); ?></button></p></span>
+					 <span><p><button class='button' data-action="SkipPreparing"><?php _e('Start optimization now', 'shortpixel-image-optimiser'); ?></button></p>
+
+					 </span>
+					 <span>
+	 						 <p><?php _e("Clicking this button will start optimization of the items added to the queue. The remaining items can be processed in a new bulk. After completion, you can start bulk and the system will continue with the unprocessed images.",'shortpixel-image-optimiser'); ?></p>
+						</span>
 				</div>
        </div>
 
