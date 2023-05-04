@@ -139,6 +139,7 @@ class ShortPixelImgToPictureWebp
 
 				if (false === $image->isParseable())
 				{
+					Log::addTemp('Image not parseable', $image->getImageData());
 					 return $raw_image;
 				}
 
@@ -200,7 +201,6 @@ class ShortPixelImgToPictureWebp
                   if ($thisfile !== false)
                   {
                       // base url + found filename + optional condition ( in case of sourceset, as in 1400w or similar)
-                      Log::addDebug('Adding new URL', $image_url_base . $thisfile->getFileName() . $image_condition);
 											$webpCount++;
 
                        $lastwebp = $image_url_base . $thisfile->getFileName() . $image_condition;
@@ -212,7 +212,6 @@ class ShortPixelImgToPictureWebp
 										continue;
 									}
 									else {
-									//	Log::addTemp('Adding Def - ' . $definition);
 											$lastwebp = $definition;
 											$srcsetWebP[] = $lastwebp;
 									}
@@ -223,10 +222,8 @@ class ShortPixelImgToPictureWebp
 									$fileAvif = apply_filters('shortpixel/front/webp_notfound', false, $fileAvif, $image_url, $imageBase);
 								}
 
-								//@todo This will not work with offloaded avifs.
                 if ($fileAvif !== false)
                 {
-                  // $fileurl_base = str_replace($fsFile->getFileName(), '', $fileurl);
 									 $srcsetAvif[] = $image_url_base . $fileAvif->getFileName() . $image_condition;
   								 $avifCount++;
                 }
@@ -242,7 +239,7 @@ class ShortPixelImgToPictureWebp
         }
 
         if ($webpCount == 0 && $avifCount == 0) {
-            return $raw_image; //. (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG no srcsetWebP found (' . $srcsetWebP . ') -->' : '');
+            return $raw_image;
         }
 
 				$args = array();
@@ -253,38 +250,11 @@ class ShortPixelImgToPictureWebp
 				if ($avifCount > 0)
 					$args['avif']  = $srcsetAvif;
 
-//Log::addTemp('Replacementss', $args);
 				$output = $image->parseReplacement($args);
 
 				return $output;
 
     }
-
-    /** Check and remove elements that should not be in the picture tag. Especially items within attributes. */
-/*
-    private function filterForPicture($img)
-    {
-
-      if (isset($img['style']))
-      {
-         $bordercount = substr_count($img['style'], 'border');
-         for ($i = 0; $i <= $bordercount; $i++)
-         {
-           $offset = strpos($img['style'], 'border');
-           $end = strpos($img['style'], ';', $offset);
-
-           $nstyle = substr($img['style'], 0, $offset);
-
-           // if end is false, ; terminator does not exist, assume full string is border.
-           if ($end !== false)
-              $nstyle .= substr($img['style'], ($end+1) ); // do not include ;
-
-              $img['style'] = $nstyle;
-         }
-      }
-
-      return $img;
-    } */
 
     public function testInlineStyle($content)
     {
@@ -305,13 +275,8 @@ class ShortPixelImgToPictureWebp
     */
     public function convertInlineStyle($matches, $content)
     {
-      // ** matches[0] = url('xx') matches[1] the img URL.
-//      preg_match_all('/url\(\'(.*)\'\)/imU', $match, $matches);
 
-  //    if (count($matches)  == 0)
-  //      return $match; // something wrong, escape.
-
-      //$content = $match;
+			$fs = \wpSPIO()->filesystem();
       $allowed_exts = array('jpg', 'jpeg', 'gif', 'png');
       $converted = array();
 
@@ -333,26 +298,40 @@ class ShortPixelImgToPictureWebp
         if (! in_array($ext, $allowed_exts))
           continue;
 
-        $imageBaseURL = str_replace($filename, '', $url);
+        $image_base_url = str_replace($filename, '', $url);
+				$fsFile = $fs->getFile($url);
+				$dir = $fsFile->getFileDir();
+				$imageBase = is_object($dir) ? $dir->getPath() : false;
 
-        $imageBase = static::getImageBase($url);
-
-        if (! $imageBase) // returns false if URL is external, do nothing with that.
+        if (false === $imageBase) // returns false if URL is external, do nothing with that.
           continue;
 
         $checkedFile = false;
-				// @todo File Exists is not acceptable here.
-        if (file_exists($imageBase . $fileonly . '.' . $ext . '.webp'))
+				$fileWebp = $fs->getFile($imageBase . $fsFile->getFileBase() . '.webp');
+				$fileWebpCompat = $fs->getFile($imageBase . $fsFile->getFileName() . '.webp');
+
+        if (true === $fileWebp->exists())
         {
-          $checkedFile = $imageBaseURL . $fileonly . '.' . $ext . '.webp';
+          $checkedFile = $image_base_url . $fsFile->getFileBase()  . '.webp';
         }
-        elseif (file_exists($imageBase . $fileonly . '.webp'))
+        elseif (true === $fileWebpCompat->exists())
         {
-          $checkedFile = $imageBaseURL . $fileonly . '.webp';
+          $checkedFile = $image_base_url . $fsFile->getFileName() . '.webp';
         }
         else
         {
-          Log::addDebug('convertInlineStyle, no webp existing', $checkedFile);
+					$fileWebp_exists = apply_filters('shortpixel/front/webp_notfound', false, $fileWebp, $url, $imageBase);
+					if (false !== $fileWebp_exists)
+					{
+						 $checkedFile = $image_base_url . $fsFile->getFileBase()  . '.webp';
+					}
+					else {
+						$fileWebp_exists = apply_filters('shortpixel/front/webp_notfound', false, $fileWebpCompat, $url, $imageBase);
+						if (false !== $fileWebp_exists)
+						{
+							 $checkedFile = $image_base_url . $fsFile->getFileName()  . '.webp';
+						}
+					}
         }
 
         if ($checkedFile)

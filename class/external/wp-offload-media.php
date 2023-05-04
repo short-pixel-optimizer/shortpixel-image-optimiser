@@ -780,32 +780,10 @@ class wpOffload
 					 }
 			 }
 
+			 Log::addTemp('S3OFF File -- ' . $url . ' ' . $bool); 
+
 			 return $bool;
-			 //Log::addTemp('Item', $item->extra_info());
 
-
-
-			 return false;
-			 /*
-				if (! is_object($imagebaseDir))
-				{
-						return $bool;
-				}
-
-				// Check if main file is offloaded. This should also trigger sourceCache.
-				if ($this->checkifOffloaded($bool, $url) && $this->checkIfOffloaded($bool, $fileObj->getFullPath()) )
-				{
-					 return $fileObj;
-				}
-				else {
-					 	return false;
-				} */
-
-/*        if (strpos($url, $imagebaseDir->getPath() ) !== false)
-          return $fileObj;
-        else
-          return $bool;
-*/
     }
 
 }
