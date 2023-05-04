@@ -212,7 +212,7 @@ class ShortPixelImgToPictureWebp
 										continue;
 									}
 									else {
-										Log::addTemp('Adding Def - ' . $definition);
+									//	Log::addTemp('Adding Def - ' . $definition);
 											$lastwebp = $definition;
 											$srcsetWebP[] = $lastwebp;
 									}
@@ -228,7 +228,6 @@ class ShortPixelImgToPictureWebp
                 {
                   // $fileurl_base = str_replace($fsFile->getFileName(), '', $fileurl);
 									 $srcsetAvif[] = $image_url_base . $fileAvif->getFileName() . $image_condition;
-
   								 $avifCount++;
                 }
 								else { //fallback to jpg
@@ -246,12 +245,15 @@ class ShortPixelImgToPictureWebp
             return $raw_image; //. (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG no srcsetWebP found (' . $srcsetWebP . ') -->' : '');
         }
 
-				$args = array(
-					'webp' => $srcsetWebP,
-					'avif' => $srcsetAvif,
-				);
+				$args = array();
 
-Log::addTemp('Replacementss', $args);
+				if ($webpCount > 0)
+					$args['webp'] = $srcsetWebP;
+
+				if ($avifCount > 0)
+					$args['avif']  = $srcsetAvif;
+
+//Log::addTemp('Replacementss', $args);
 				$output = $image->parseReplacement($args);
 
 				return $output;
@@ -339,6 +341,7 @@ Log::addTemp('Replacementss', $args);
           continue;
 
         $checkedFile = false;
+				// @todo File Exists is not acceptable here.
         if (file_exists($imageBase . $fileonly . '.' . $ext . '.webp'))
         {
           $checkedFile = $imageBaseURL . $fileonly . '.' . $ext . '.webp';
@@ -405,7 +408,6 @@ class FrontImage
 		protected $style;
 		protected $sizes;
 
-
 		// Array of all other attributes.
 		protected $attributes;
 
@@ -418,7 +420,6 @@ class FrontImage
 				$this->loadImageDom();
 		}
 
-
 		public function loadImageDom()
     {
         if (function_exists("mb_convert_encoding")) {
@@ -429,7 +430,6 @@ class FrontImage
         @$dom->loadHTML($this->raw);
         $image = $dom->getElementsByTagName('img')->item(0);
         $attributes = array();
-
 
         /* This can happen with mismatches, or extremely malformed HTML.
         In customer case, a javascript that did  for (i<imgDefer) --- </script> */
@@ -452,9 +452,8 @@ class FrontImage
 					 $this->attributes[$attr->nodeName] = $attr->nodeValue;
         }
 
-			Log::addTemp('Attributes', $this->attributes);
-			Log::addTemp('Srcset', explode(',', $this->srcset));
-
+		//	Log::addTemp('Attributes', $this->attributes);
+			//Log::addTemp('Srcset', explode(',', $this->srcset));
 
 				if (! is_null($this->src))
 				{
@@ -495,7 +494,6 @@ class FrontImage
 			}
 
 			return false;
-
 		}
 
 		public function hasSource()
@@ -555,12 +553,12 @@ class FrontImage
 
 				$output = "<picture>";
 
-				if ($args['avif'] && count($args['avif']) > 0)
+				if (isset($args['avif']) && count($args['avif']) > 0)
 				{
 						$output .= $this->buildSource($args['avif'], 'avif');
 				}
 
-				if ($args['webp'] && count($args['webp']) > 0)
+				if (isset($args['webp']) && count($args['webp']) > 0)
 				{
 						$output .= $this->buildSource($args['webp'], 'webp');
 				}
