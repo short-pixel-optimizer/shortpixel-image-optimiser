@@ -101,7 +101,7 @@ class ApiController
 							$parsed_url = parse_url($url);
 							if (false !== $parsed_url)
 							{
-								  $url = str_replace($parsed_url['path'], urlencode($parsed_url['path']), $url);
+									//$url = $this->encodeURL($parsed_url, $url);
 							}
 							$list[] = $url;
 					}
@@ -286,6 +286,22 @@ class ApiController
     return $item;
   }
 
+	/**
+	* @param $parsed_url Array  Result of parse_url
+	*/
+	private function encodeURL($parsed_url, $url)
+	{
+		//str_replace($parsed_url['path'], urlencode($parsed_url['path']), $url);
+		$path = $parsed_url['path'];
+		//echo strrpos($parsed_url, ',');
+		$filename = substr($path, strrpos($path, '/') + 1); //strrpos($path, '/');
+
+		$path = str_replace($filename, urlencode($filename), $url);
+
+		return $path;
+
+	}
+
   private function parseResponse($response)
   {
     $data = $response['body'];
@@ -365,6 +381,7 @@ class ApiController
               case -201: // Invalid image format
               case -202: // Invalid image or unsupported format
               case -203: // Could not download file
+								// Log::addTemp('');
                  return $this->returnFailure( self::STATUS_ERROR, $status->Message);
               break;
               case -403: // Quota Exceeded
