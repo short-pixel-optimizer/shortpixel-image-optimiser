@@ -134,13 +134,17 @@ class UiHelper
 			 if (count($improvs) > 0)
 			 {
 		       $output .= "<div class='thumb-wrapper'>";
-
+					 $lowrating = 0;
 		       foreach($improvs as $thumbName => $stat)
 		       {
-
 						   $statText = self::formatNumber($stat, 2);
 		           $title =  sprintf(__('%s : %s', 'shortpixel-image-optimiser'), $thumbName, $statText . '%');
 		           $rating = ceil( round($stat) / 10);
+							 if (0 == $rating)
+							 {
+								 	$lowrating++;
+									continue;
+							 }
 
 		           $blocks_on = str_repeat('<span class="point checked">&nbsp;</span>', $rating);
 		           $blocks_off = str_repeat('<span class="point">&nbsp;</span>', (10- $rating));
@@ -149,12 +153,24 @@ class UiHelper
 		                       . "<span class='thumb-name'>" .  $thumbName . '</span>' .
 		                        "<span class='optimize-bar'>" . $blocks_on . $blocks_off . "</span>
 		                      </div>";
-
 		       }
+
+					 if ($lowrating > 0)
+					 {
+						 $blocks_off = str_repeat('<span class="point">&nbsp;</span>', 10);
+
+						 $output .= "<div class='thumb'>"
+												 . "<span class='thumb-name'>" . sprintf(__('+ %d thumbnails ', 'shortpixel-image-optimiser'), $lowrating) . '</span>' .
+													"<span class='optimize-bar'>" . $blocks_off . "</span>
+												</div>";
+					 }
+
 					 if (true === $cutoff)
 					 {
 						 $output .= '<div class="thumb"><span class="cutoff">' . sprintf(__('+ %d more', 'shortpixel-image-optimiser'), ($thumbCount - 15)) . '</span></div>';
 					 }
+
+
 		       $output .=  "</div> <!-- /thumb-wrapper -->";
 				}
 				$output .= "</div> <!-- /thumb optimized -->";

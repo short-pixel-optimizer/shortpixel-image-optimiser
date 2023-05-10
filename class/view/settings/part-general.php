@@ -13,6 +13,29 @@ namespace ShortPixel;
 
     <table class="form-table">
         <tbody>
+					<?php
+ if (true === \wpSPIO()->env()->useTrustedMode())
+					{
+						?>
+						<tr class="trusted-mode-warning">
+							<td colspan='2'>
+								<div class='compression-notice warning'>
+									<p><?php
+											_e('Trusted file mode is active. This means that ShortPixel will depend on the metadata and not check the fileystem while loading the UI. Information may be incorrect and error may occur during optimization ', 'shortpixel-image-optimiser');
+											?></p>
+									<?php if (true === \Shortpixel\Pantheon::IsActive())
+									{
+										echo '<p>'; _e('(You are on Pantheon. This setting was automatically activated)'); echo '</p>';
+									}
+									?>
+
+								</div>
+							</td>
+						</tr>
+
+							<?php
+					}
+					?>
             <tr>
                 <th scope="row"><label for="key"><?php esc_html_e('API Key:','shortpixel-image-optimiser');?></label></th>
                 <td>

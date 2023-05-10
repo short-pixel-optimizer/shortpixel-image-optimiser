@@ -2,7 +2,7 @@
 
 namespace ShortPixel\Controller;
 
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 class ApiController
 {
@@ -65,7 +65,6 @@ class ApiController
       return self::$instance;
   }
 
-
   /*
   * @param Object $item Item of stdClass
   * @return Returns same Item with Result of request
@@ -95,6 +94,19 @@ class ApiController
           $item->result = $this->returnFailure(self::STATUS_FAIL, __('No Urls given for this Item', 'shortpixel-image-optimiser'));
           return $item;
       }
+			else { // if ok, urlencode them.
+					$list = array();
+				  foreach($item->urls as $url)
+					{
+							$parsed_url = parse_url($url);
+							if (false !== $parsed_url)
+							{
+									//$url = $this->encodeURL($parsed_url, $url);
+							}
+							$list[] = $url;
+					}
+					$item->urls = $list;
+			}
 
       $requestArgs = array('urls' => $item->urls); // obligatory
       if (property_exists($item, 'compressionType'))
@@ -141,8 +153,7 @@ class ApiController
 			 			array(
                 'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
                 'key' => $keyControl->forceGetApiKey(),
-                'urllist' => $item->urls	)
-					);
+                'urllist' => $item->urls	)	, JSON_UNESCAPED_UNICODE);
 
 		 Log::addDebug('Dumping Media Item ', $item->urls);
 
@@ -214,7 +225,7 @@ class ApiController
         'httpversion' => '1.0',
         'blocking' => $args['blocking'],
         'headers' => array(),
-        'body' => json_encode($requestParameters),
+        'body' => json_encode($requestParameters, JSON_UNESCAPED_UNICODE),
         'cookies' => array()
     );
     //add this explicitely only for https, otherwise (for http) it slows down the request
@@ -274,6 +285,22 @@ class ApiController
 
     return $item;
   }
+
+	/**
+	* @param $parsed_url Array  Result of parse_url
+	*/
+	private function encodeURL($parsed_url, $url)
+	{
+		//str_replace($parsed_url['path'], urlencode($parsed_url['path']), $url);
+		$path = $parsed_url['path'];
+		//echo strrpos($parsed_url, ',');
+		$filename = substr($path, strrpos($path, '/') + 1); //strrpos($path, '/');
+
+		$path = str_replace($filename, urlencode($filename), $url);
+
+		return $path;
+
+	}
 
   private function parseResponse($response)
   {
@@ -354,6 +381,7 @@ class ApiController
               case -201: // Invalid image format
               case -202: // Invalid image or unsupported format
               case -203: // Could not download file
+								// Log::addTemp('');
                  return $this->returnFailure( self::STATUS_ERROR, $status->Message);
               break;
               case -403: // Quota Exceeded
@@ -670,6 +698,10 @@ class ApiController
 	{
 			// This is ok.
 			if ($fileSize >= $resultSize)
+				return true;
+
+			// Fine suppose, but crashes the increase
+			if ($fileSize == 0)
 				return true;
 
 		  $percentage = apply_filters('shortpixel/api/filesizeMargin', 5);

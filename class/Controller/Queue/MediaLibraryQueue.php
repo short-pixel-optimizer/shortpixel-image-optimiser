@@ -3,7 +3,7 @@ namespace ShortPixel\Controller\Queue;
 
 use ShortPixel\ShortQ\ShortQ as ShortQ;
 use ShortPixel\Controller\CacheController as CacheController;
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 
 class MediaLibraryQueue extends Queue
@@ -80,7 +80,6 @@ class MediaLibraryQueue extends Queue
 
      // Remove failed object, ie if getImage returned false.
      return array_filter($items);
-
 
    }
 

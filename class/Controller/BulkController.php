@@ -4,7 +4,7 @@ namespace ShortPixel\Controller;
 use ShortPixel\Controller\Queue\MediaLibraryQueue as MediaLibraryQueue;
 use ShortPixel\Controller\Queue\CustomQueue as CustomQueue;
 use ShortPixel\Controller\Queue\Queue as Queue;
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 // Class for controlling bulk and reporting.
 class BulkController

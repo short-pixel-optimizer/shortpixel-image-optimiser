@@ -1,6 +1,6 @@
 <?php
 namespace ShortPixel\Controller;
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 
 use ShortPixel\Model\File\DirectoryOtherMediaModel as DirectoryOtherMediaModel;

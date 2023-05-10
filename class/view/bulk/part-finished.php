@@ -6,6 +6,7 @@ namespace ShortPixel;
 
     <h3 class="heading"><span><img src="<?php echo \wpSPIO()->plugin_url('res/img/robo-slider.png'); ?>"></span>
       <?php esc_html_e('The ShortPixel Bulk Processing is finished' ,'shortpixel-image-optimiser'); ?>
+
       <div class='average-optimization'>
           <p><?php esc_html_e('Average Optimization','shortpixel-image-optimiser'); ?></p>
           <svg class="opt-circle-average" viewBox="-10 0 150 140">

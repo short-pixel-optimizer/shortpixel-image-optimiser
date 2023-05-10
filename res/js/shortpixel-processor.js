@@ -95,7 +95,7 @@ window.ShortPixelProcessor =
 
 
         console.log('Start Data from Server', ShortPixelProcessorData.startData, this.interval, this.deferInterval);
-        console.log('remoteSecret ' + this.remoteSecret + ', localsecret: ' + this.localSecret + ' - is this bulk? ' + this.isBulkPage);
+        console.log('remoteSecret ' + this.remoteSecret + ', localsecret: ' + this.localSecret);
 
 
         this.tooltip = new ShortPixelToolTip({}, this);
@@ -106,7 +106,10 @@ window.ShortPixelProcessor =
            return;
         }
         else
+				{
           this.screen = new ShortPixelScreen({}, this);
+					this.screen.Init();
+				}
 
 				// Load the Startup Data (needs screen)
 				this.tooltip.InitStats();
@@ -155,12 +158,14 @@ window.ShortPixelProcessor =
       if (this.isManualPaused)
       {
           this.isActive = false;
+				//	this.tooltip.ProcessEnd();
         //  this.PauseProcess();
          console.debug('Check Active: Paused');
       }
       if (this.waitingForAction)
       {
           this.isActive = false;
+					this.tooltip.ProcessEnd();
           console.debug('Check Active : Waiting for action');
       }
       return this.isActive;
@@ -217,7 +222,6 @@ window.ShortPixelProcessor =
     {
         if (this.timer)
         {
-          console.log('cleared timer #' + this.timer);
           window.clearTimeout(this.timer);
         }
 
@@ -337,6 +341,12 @@ window.ShortPixelProcessor =
 								this.PauseProcess();
 								handledError = true;
              }
+						 else if (error == 'APIKEY_FAILED')
+						 {
+							 this.StopProcess();
+							 handledError = true;
+							 console.error('No API Key set for this site. See settings');
+						 }
              else if (response.error < 0) // something happened.
              {
                this.StopProcess();
@@ -383,24 +393,29 @@ window.ShortPixelProcessor =
 						this.workerErrors++;
 						this.timesEmpty = 0; // don't drag it.
 
-						this.screen.HandleError(data);
-
 						if (data.message)
 						{
-							 var message = String(data.message); // whatever this is, cast to string
-							 this.tooltip.AddNotice(message);
-							 this.Debug(message, 'error');
+							 this.screen.HandleError(data.message);
+							 //var message = String(data.message); // whatever this is, cast to string
+							 //this.tooltip.AddNotice(message);
+							 this.Debug(data.message, 'error');
 						}
 
-						if (this.workerErrors >= 5)
+						if (this.workerErrors >= 3)
 						{
+							this.screen.HandleErrorStop();
+							console.log('Shutting down . Num errors: ' + this.workerErrors);
 							this.StopProcess();
 							this.ShutDownWorker();
 						}
 						else
+						{
 							this.StopProcess({ defer: true });
-
+								console.log('Stop / defer');
+						}
       }
+
+			// Binded to bulk-screen js for checking data.
       var event = new CustomEvent('shortpixel.processor.responseHandled', { detail : {paused: this.isManualPaused}});
       window.dispatchEvent(event);
     },
@@ -537,7 +552,7 @@ window.ShortPixelProcessor =
           this.PauseProcess();
         }
 
-        this.screen.HandleError(result, type);
+        this.screen.HandleItemError(result, type);
 
 
     },
@@ -570,6 +585,7 @@ window.ShortPixelProcessor =
       if (messageType == 'error')
       {
           console.error('Error: ' + message);
+
       }
 
     },

@@ -1,6 +1,6 @@
 <?php
 namespace ShortPixel\Model\Image;
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
 

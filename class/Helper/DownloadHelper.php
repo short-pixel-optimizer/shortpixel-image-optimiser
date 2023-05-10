@@ -1,7 +1,7 @@
 <?php
 namespace ShortPixel\Helper;
 
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\ResponseController as ResponseController;
 
 
@@ -56,12 +56,13 @@ class DownloadHelper
 
 					if (is_wp_error($tempFile))
 					{
-						$tmpfname = tempnam(sys_get_temp_dir(), 'spiotmp');
+						//get_temp_dir
+						$tmpfname = tempnam(get_temp_dir(), 'spiotmp');
 
 						$args_for_get = array(
 							'stream' => true,
 							'filename' => $tmpfname,
-							'timeout' => $downloadTimeout, 
+							'timeout' => $downloadTimeout,
 						);
 
 						$tempFile = wp_remote_get( $url, $args_for_get );

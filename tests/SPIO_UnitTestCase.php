@@ -1,7 +1,7 @@
 <?php
 namespace ShortPixel\Tests;
 
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 
 class SPIO_UnitTestCase extends \WP_UnitTestCase_Base

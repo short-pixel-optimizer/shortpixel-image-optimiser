@@ -1,6 +1,6 @@
 <?php
 namespace ShortPixel\Model\File;
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Helper\UtilHelper as UtilHelper;
 
@@ -27,6 +27,9 @@ class DirectoryModel extends \ShortPixel\Model
 
   protected $new_directory_permission = 0755;
 
+	public static $TRUSTED_MODE = false;
+
+
   /** Creates a directory model object. DirectoryModel directories don't need to exist on FileSystem
   *
   * When a filepath is given, it  will remove the file part.
@@ -48,6 +51,14 @@ class DirectoryModel extends \ShortPixel\Model
         $this->is_readable = true; // assume
         $this->exists = true;
       }
+
+			// When in trusted mode prevent filesystem checks as much as possible.
+			if (true === self::$TRUSTED_MODE)
+			{
+					$this->exists = true; 
+					$this->is_writable = true;
+					$this->is_readable = true;
+			}
 
 			// On virtual situation this would remove the slashes on :// , causing issues with offload et al.
 			if (false === $this->is_virtual)

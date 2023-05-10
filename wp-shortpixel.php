@@ -3,7 +3,7 @@
  * Plugin Name: ShortPixel Image Optimizer
  * Plugin URI: https://shortpixel.com/
  * Description: ShortPixel optimizes images automatically, while guarding the quality of your images. Check your <a href="/wp-admin/options-general.php?page=wp-shortpixel-settings" target="_blank">Settings &gt; ShortPixel</a> page on how to start optimizing your image library and make your website load faster.
- * Version: 5.2.1
+ * Version: 5.2.2
  * Author: ShortPixel - Convert WebP/AVIF & Optimize Images
  * Author URI: https://shortpixel.com
  * GitHub Plugin URI: https://github.com/short-pixel-optimizer/shortpixel-image-optimiser
@@ -31,7 +31,7 @@ if (! defined('SHORTPIXEL_RESET_ON_ACTIVATE'))
 define('SHORTPIXEL_PLUGIN_FILE', __FILE__);
 define('SHORTPIXEL_PLUGIN_DIR', __DIR__);
 
-define('SHORTPIXEL_IMAGE_OPTIMISER_VERSION', "5.2.1");
+define('SHORTPIXEL_IMAGE_OPTIMISER_VERSION', "5.2.2");
 
 define('SHORTPIXEL_BACKUP', 'ShortpixelBackups');
 define('SHORTPIXEL_MAX_FAIL_RETRIES', 3);
@@ -43,6 +43,8 @@ if(!defined('SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION')) { //can be defined in wp-co
 if(!defined('SHORTPIXEL_USE_DOUBLE_AVIF_EXTENSION')) { //can be defined in wp-config.php
     define('SHORTPIXEL_USE_DOUBLE_AVIF_EXTENSION', false);
 }
+
+
 
 define('SHORTPIXEL_API', 'api.shortpixel.com');
 
@@ -71,7 +73,7 @@ define('SHORTPIXEL_BACKUP_URL',
 
 
 //define('SHORTPIXEL_SILENT_MODE', true); // no global notifications. Can lead to data damage. After setting, reactivate plugin.
-//define('SHORTPIXEL_AFFILIATE_ID'); 
+//define('SHORTPIXEL_TRUSTED_MODE', false); // doesn't do any file checks on the view-side of things.
 
 // Starting logging services, early as possible.
 if (! defined('SHORTPIXEL_DEBUG'))
@@ -80,10 +82,14 @@ if (! defined('SHORTPIXEL_DEBUG'))
 }
 
 
-$log = \ShortPixel\ShortPixelLogger\ShortPixelLogger::getInstance();
-if (\ShortPixel\ShortPixelLogger\ShortPixelLogger::debugIsActive())
-  $log->setLogPath(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
-
+if (false === defined( 'WP_CLI' ) || false === WP_CLI)
+{
+	$log = \ShortPixel\ShortPixelLogger\ShortPixelLogger::getInstance();
+	if (\ShortPixel\ShortPixelLogger\ShortPixelLogger::debugIsActive() )
+	{
+  	$log->setLogPath(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
+	}
+}
 
 /* Function to reach core function of ShortPixel
 * Use to get plugin url, plugin path, or certain core controllers

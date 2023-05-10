@@ -1,96 +1,95 @@
 'use strict';
 
-var ShortPixelScreen = function (MainScreen, processor)
+class ShortPixelScreen extends ShortPixelScreenBase
 {
 
-  this.isCustom = true;
-  this.isMedia = true;
-  this.processor = processor;
+  isCustom = true;
+  isMedia = true;
 
-  this.panels = [];
-  this.currentPanel = 'dashboard';
+  panels = [];
+  currentPanel = 'dashboard';
 
-  this.debugCounter = 0;
+  debugCounter = 0;
 
-	this.averageOptimization = 0;
-	this.numOptimizations = 0;
+	averageOptimization = 0;
+	numOptimizations = 0;
 
-  this.Init = function()
-  {
-    // Hook up the button and all.
-      this.LoadPanels();
-      this.LoadActions();
+	Init()
+	{
+	//	super(MainScreen, processor);
 
-      window.addEventListener('shortpixel.processor.paused', this.TogglePauseNotice.bind(this));
-      window.addEventListener('shortpixel.processor.responseHandled', this.CheckPanelData.bind(this));
-      window.addEventListener('shortpixel.bulk.onUpdatePanelStatus', this.EventPanelStatusUpdated.bind(this));
-      window.addEventListener('shortpixel.bulk.onSwitchPanel', this.EventPanelSwitched.bind(this));
+
+
+		// Hook up the button and all.
+			this.LoadPanels();
+			this.LoadActions();
+
+			window.addEventListener('shortpixel.processor.paused', this.TogglePauseNotice.bind(this));
+			window.addEventListener('shortpixel.processor.responseHandled', this.CheckPanelData.bind(this));
+			window.addEventListener('shortpixel.bulk.onUpdatePanelStatus', this.EventPanelStatusUpdated.bind(this));
+			window.addEventListener('shortpixel.bulk.onSwitchPanel', this.EventPanelSwitched.bind(this));
 			window.addEventListener('shortpixel.reloadscreen', this.ReloadScreen.bind(this));
-      /*window.addEventListener('shortpixel.process.stop', function (Event)
-      {
-        Event.preventDefault();
-        this.processor.StopProcess.bind(this.processor)
-      }.bind(this) ); */
 
-      var processData = ShortPixelProcessorData.startData;
-      var initMedia = processData.media.stats;
-      var initCustom = processData.custom.stats;
-      var initTotal = processData.total.stats;
-      var isPreparing = false;
-      var isRunning = false;
-      var isFinished = false;
 
-      if (initMedia.is_preparing == true || initCustom.is_preparing == true )
-        isPreparing = true;
-      else if (initMedia.is_running == true || initCustom.is_running == true )
-        isRunning = true;
-      else if ( (initMedia.is_finished == true && initMedia.done > 0)  || (initCustom.is_finished == true && initCustom.done > 0) )
-        isFinished = true;
+			var processData = ShortPixelProcessorData.startData;
+			var initMedia = processData.media.stats;
+			var initCustom = processData.custom.stats;
+			var initTotal = processData.total.stats;
+			var isPreparing = false;
+			var isRunning = false;
+			var isFinished = false;
 
-        this.UpdateStats(initMedia, 'media'); // write UI.
-        this.UpdateStats(initCustom, 'custom');
-        this.UpdateStats(initTotal, 'total');
-        this.CheckPanelData();
+			if (initMedia.is_preparing == true || initCustom.is_preparing == true )
+				isPreparing = true;
+			else if (initMedia.is_running == true || initCustom.is_running == true )
+				isRunning = true;
+			else if ( (initMedia.is_finished == true && initMedia.done > 0)  || (initCustom.is_finished == true && initCustom.done > 0) )
+				isFinished = true;
 
-      if (isPreparing)
-      {
-        this.SwitchPanel('selection');
+				this.UpdateStats(initMedia, 'media'); // write UI.
+				this.UpdateStats(initCustom, 'custom');
+				this.UpdateStats(initTotal, 'total');
+				this.CheckPanelData();
+
+			if (isPreparing)
+			{
+				this.SwitchPanel('selection');
 				this.UpdatePanelStatus('loading', 'selection');
 				this.PrepareBulk();
-      }
-      else if (isRunning)
-      {
-        this.SwitchPanel('process');
-        this.processor.PauseProcess(); // when loading, default start paused before resume.
-      }
-      else if (isFinished)
-      {
-         this.processor.StopProcess({ waiting: true });
+			}
+			else if (isRunning)
+			{
+				this.SwitchPanel('process');
+				this.processor.PauseProcess(); // when loading, default start paused before resume.
+			}
+			else if (isFinished)
+			{
+				 this.processor.StopProcess({ waiting: true });
 
-         if (initMedia.done > 0 || initCustom.done > 0)
-         {
+				 if (initMedia.done > 0 || initCustom.done > 0)
+				 {
 
-           this.SwitchPanel('finished');
-         }
-         else
-         {
-           this.SwitchPanel('dashboard');
-         }
-         //this.SwitchPanel('process');  // needs to run a process and get back stats another try.
-      }
-      else if (initMedia.in_queue > 0 || initCustom.in_queue > 0)
-      {
-        this.SwitchPanel('summary');
-      }
-      else
-      {
-         this.processor.StopProcess({ waiting: true }); // don't go peeking in the queue. // this doesn't work since its' before the init Worker.
-         this.SwitchPanel('dashboard');
-      }
+					 this.SwitchPanel('finished');
+				 }
+				 else
+				 {
+					 this.SwitchPanel('dashboard');
+				 }
+				 //this.SwitchPanel('process');  // needs to run a process and get back stats another try.
+			}
+			else if (initMedia.in_queue > 0 || initCustom.in_queue > 0)
+			{
+				this.SwitchPanel('summary');
+			}
+			else
+			{
+				 this.processor.StopProcess({ waiting: true }); // don't go peeking in the queue. // this doesn't work since its' before the init Worker.
+				 this.SwitchPanel('dashboard');
+			}
 
 			if (this.processor.isManualPaused)
 			{
-      		var event = new CustomEvent('shortpixel.processor.paused', { detail : {paused: 	this.processor.isManualPaused }});
+					var event = new CustomEvent('shortpixel.processor.paused', { detail : {paused: 	this.processor.isManualPaused }});
 			}
 
 			// This var is defined in admin_scripts, localize.
@@ -98,11 +97,9 @@ var ShortPixelScreen = function (MainScreen, processor)
 			{
 				 this.SwitchPanel(shortPixelScreen.panel);
 			}
+	}
 
-console.log("Screen Init Done", initMedia, initCustom);
-
-  }
-  this.LoadPanels = function()
+  LoadPanels()
   {
       var elements = document.querySelectorAll('section.panel');
       var self = this;
@@ -113,7 +110,8 @@ console.log("Screen Init Done", initMedia, initCustom);
       });
 
   }
-  this.LoadActions = function()
+
+  LoadActions()
   {
       var actions = document.querySelectorAll('[data-action]');
       var self = this;
@@ -136,7 +134,7 @@ console.log("Screen Init Done", initMedia, initCustom);
       });
   }
 
-	this.DoActionEvent = function(event)
+	DoActionEvent()
 	{
 		var element = event.target;
 		var action = element.getAttribute('data-action');
@@ -167,7 +165,7 @@ console.log("Screen Init Done", initMedia, initCustom);
 		}
 	}
 
-  this.UpdatePanelStatus = function(status, panelName)
+  UpdatePanelStatus(status, panelName)
   {
      if (typeof panelName !== 'undefined')
       var panel = this.panels[panelName];
@@ -184,7 +182,7 @@ console.log("Screen Init Done", initMedia, initCustom);
       window.dispatchEvent(event);
   }
 
-  this.ToggleLoading = function(loading)
+  ToggleLoading(loading)
   {
     if (typeof loading == 'undefined' || loading == true)
       var loading = true;
@@ -203,7 +201,7 @@ console.log("Screen Init Done", initMedia, initCustom);
       loader.setAttribute('data-status', 'not-loading');
 
   }
-  this.SwitchPanel = function(targetName)
+  SwitchPanel(targetName)
   {
      console.debug('Switching Panel ' + targetName);
 
@@ -257,7 +255,7 @@ console.log("Screen Init Done", initMedia, initCustom);
        window.dispatchEvent(event);
 
   }
-  this.CreateBulk = function()
+  CreateBulk()
   {
      console.log('Start Bulk');
      var data = {screen_action: 'createBulk', callback: 'shortpixel.PrepareBulk'}; //
@@ -276,7 +274,7 @@ console.log("Screen Init Done", initMedia, initCustom);
      window.addEventListener('shortpixel.PrepareBulk', this.PrepareBulk.bind(this), {'once': true} );
      this.processor.AjaxRequest(data);
   }
-  this.PrepareBulk = function(event)
+  PrepareBulk(event)
   {
       //Remove pause
       if (typeof event == 'object')
@@ -297,7 +295,7 @@ console.log("Screen Init Done", initMedia, initCustom);
 
       // Run process.run process from now for prepare ( until prepare done? )
   }
-  this.QueueStatus = function(qStatus, data)
+  QueueStatus(qStatus, data)
   {
       if (qStatus == 'PREPARING_DONE' || qStatus == 'PREPARING_RECOUNT')
       {
@@ -333,7 +331,7 @@ console.log("Screen Init Done", initMedia, initCustom);
       }
 
   }
-  this.HandleImage = function(resultItem, type)
+  HandleImage(resultItem, type)
   {
 
       var result = resultItem.result;
@@ -404,12 +402,8 @@ console.log("Screen Init Done", initMedia, initCustom);
   }
 
 	// Function to neatly slide the new / old images around.
-	this.HandleImageEffect = function(originalSrc, optimizedSrc)
+	HandleImageEffect(originalSrc, optimizedSrc)
 	{
-		/*if (! originalSrc && ! optimizedSrc)
-		{
-			return false;
-		} */
 
 		var preview = document.getElementById('preview-structure');
 		var offset = preview.offsetWidth;
@@ -420,9 +414,6 @@ console.log("Screen Init Done", initMedia, initCustom);
 		 {
 			  preview.querySelector('.preview-image.old').remove();
 		 }
-
-//		var originalImage = preview.querySelector('.current.preview-image image.source');
-//		var optimizedImage =  preview.querySelector('.current.preview-image image.result');
 
 		var currentItem = preview.children[0];
 		var newItem = preview.children[1];
@@ -446,12 +437,9 @@ console.log("Screen Init Done", initMedia, initCustom);
 			 preview.querySelector('.new.preview-image .image.result img').classList.add('notempty');
 
 		}
-//		currentItem.classList.add('slideleft');
 		currentItem.style.marginLeft = '-' + offset + 'px';
 		setTimeout(function() {
 
-			//.classList.remove('current');
-			//child.classList.add('old');
 			newItem.classList.remove('new');
 			newItem.classList.add('current');
 
@@ -465,15 +453,9 @@ console.log("Screen Init Done", initMedia, initCustom);
 			preview.appendChild(cloneNode);
 		}
 
-		//var ImageSrc = document.querySelector('')
-		// reset display to avoid mismatches.
-//					originalImage.src = originalImage.dataset.placeholder;
-//					optimizedImage.src =  optimizedImage.dataset.placeholder;
-
-
 	}
 
-	this.AddAverageOptimization = function(num)
+	AddAverageOptimization(num)
 	{
 			this.numOptimizations++;
 			this.averageOptimization += num;
@@ -504,7 +486,7 @@ console.log("Screen Init Done", initMedia, initCustom);
 				}
 			}); // circles;
 	}
-  this.DoSelection = function() // action to update response.
+  DoSelection() // action to update response.
   {
       // @todo Check the future of this function, since checking this is now createBulk.
       var data = {screen_action: 'applyBulkSelection'}; //
@@ -519,18 +501,14 @@ console.log("Screen Init Done", initMedia, initCustom);
       this.processor.AjaxRequest(data);
 
   }
-/*  this.UpdateMessage = function(id, message)
-  {
-     console.log('UpdateMessage', id, message);
 
-  } */
-  this.UpdateStats = function(stats, type)
+  UpdateStats(stats, type)
   {
       this.UpdateData('stats', stats, type);
 
   }
   // dataName refers to domain of data i.e. stats, result. Those are mentioned in UI with data-stats-media="total" or data-result
-  this.UpdateData = function(dataName, data, type)
+  UpdateData(dataName, data, type)
   {
       console.log('updating Data :',  dataName, data, type);
 
@@ -603,8 +581,8 @@ console.log("Screen Init Done", initMedia, initCustom);
           });
       }
   }
-	/** HandleError is used for both general error and result errors. The latter have a result object embedded and more information */
-  this.HandleError = function(result, type)
+	/** HandleError is used for item errors. The latter have a result object embedded and more information */
+  HandleItemError(result, type)
   {
 //    console.error(result);
 
@@ -654,7 +632,7 @@ console.log("Screen Init Done", initMedia, initCustom);
 
   }
 
-	this.ToggleErrorBox = function(event)
+	ToggleErrorBox(event)
 	{
 
 		 var type = event.target.getAttribute('data-errorbox');
@@ -692,7 +670,7 @@ console.log("Screen Init Done", initMedia, initCustom);
 			});
 	}
 
-  this.StartBulk = function() // Open panel action
+  StartBulk() // Open panel action
   {
       console.log('Starting to Bulk!');
       var data = {screen_action: 'startBulk', callback: 'shortpixel.bulk.started'}; //
@@ -711,27 +689,36 @@ console.log("Screen Init Done", initMedia, initCustom);
       this.SwitchPanel('process');
 
   }
-  this.PauseBulk = function (event)
+  PauseBulk(event)
   {
      this.processor.tooltip.ToggleProcessing(event);
   }
 
-  this.ResumeBulk = function(event)
+  ResumeBulk(event)
   {
       this.processor.ResumeProcess();
   }
-  this.StopBulk = function(event)
+  StopBulk(event)
   {
       if (confirm(shortPixelScreen.endBulk))
          this.FinishBulk(event);
   }
-  this.FinishBulk = function(event)
+  FinishBulk(event)
   {
 		// Screen needs reloading after doing all to reset all / load the logs.
     var data = {screen_action: 'finishBulk', callback: 'shortpixel.reloadscreen'}; //
     this.processor.AjaxRequest(data);
   }
-	this.ReloadScreen = function(event)
+	SkipPreparing()
+	{
+		this.processor.StopProcess({ waiting: true });
+		this.SwitchPanel('summary');
+		this.UpdatePanelStatus('loaded', 'selection');
+		this.processor.tooltip.ProcessEnd();
+		this.processor.SetInterval(-1); // back to default.
+	}
+
+	ReloadScreen(event)
 	{
 		 	//window.trigger('shortpixel.process.stop');
 			var url = shortPixelScreen.reloadURL;
@@ -741,7 +728,7 @@ console.log("Screen Init Done", initMedia, initCustom);
 
 	}
 
-  this.TogglePauseNotice = function(event)
+  TogglePauseNotice(event)
   {
      var data = event.detail;
 
@@ -779,7 +766,7 @@ console.log("Screen Init Done", initMedia, initCustom);
   }
 
   // Everything that needs to happen when going overQuota.
-	this.ToggleOverQuotaNotice = function(toggle)
+	ToggleOverQuotaNotice (toggle)
 	{
 		 var overQ = document.getElementById('processorOverQuota');
 
@@ -794,29 +781,21 @@ console.log("Screen Init Done", initMedia, initCustom);
 
 	}
 
-  this.EventPanelStatusUpdated = function(event)
+  EventPanelStatusUpdated(event)
   {
      var status = event.detail.status;
      var oldStatus = event.detail.oldStatus;
      var panelName = event.detail.panelName;
 
-     /*if (panelName == 'selection' && status == 'loaded')
-     {
-        //this.CheckSelectionScreen();
-     } */
      console.log('Status Updated', event.detail);
   }
-  this.EventPanelSwitched = function(event)
+  EventPanelSwitched (event)
   {
       // @todo Might not be relevant in new paging order.
      console.log('Panel Switched', event.detail);
      var panelLoad = event.detail.panelLoad;
      var panelUnload = event.detail.panelUnload;
 
-     /*if (panelUnload == 'selection')
-     {
-        this.UpdatePanelStatus('loading', 'selection');
-     } */
   }
   /* Checks number data and shows / hide elements based on that
   * data-check-visibility - will hide/show check against the defined data-control
@@ -825,7 +804,7 @@ console.log("Screen Init Done", initMedia, initCustom);
   * data-control must be 0 /higher than data-check-control to  get the check positive.
 
   */
-  this.CheckPanelData = function() // function to check and hide certain areas if data is not happy.
+  CheckPanelData() // function to check and hide certain areas if data is not happy.
   {
       // Element that should be hidden if referenced number is 0,NaN or elsewhat
       var panelControls = document.querySelectorAll('[data-control]');
@@ -912,7 +891,7 @@ console.log("Screen Init Done", initMedia, initCustom);
 
   }
 
-  this.ToggleButton = function(event)
+  ToggleButton(event)
   {
       var checkbox = event.target;
       var target = document.getElementById(checkbox.getAttribute('data-target'));
@@ -928,7 +907,7 @@ console.log("Screen Init Done", initMedia, initCustom);
       }
   }
 
-  this.BulkRestoreAll = function (event)
+  BulkRestoreAll(event)
   {
     console.log('Start Restore All');
 	//	var media = document.getElementById('restore_media_checkbox');
@@ -961,7 +940,7 @@ console.log("Screen Init Done", initMedia, initCustom);
     this.processor.AjaxRequest(data);
   }
 
-  this.BulkMigrateAll = function (event)
+  BulkMigrateAll(event)
   {
     var data = {screen_action: 'startMigrateAll', callback: 'shortpixel.startMigrateAll'}; //
 
@@ -975,7 +954,7 @@ console.log("Screen Init Done", initMedia, initCustom);
     window.addEventListener('shortpixel.bulk.onSwitchPanel', this.StartBulk.bind(this), {'once': true});
     this.processor.AjaxRequest(data);
   }
-	this.BulkRemoveLegacy = function (event)
+	BulkRemoveLegacy(event)
   {
 
     var data = {screen_action: 'startRemoveLegacy', callback: 'shortpixel.startRemoveLegacy'}; //
@@ -989,7 +968,7 @@ console.log("Screen Init Done", initMedia, initCustom);
     window.addEventListener('shortpixel.bulk.onSwitchPanel', this.StartBulk.bind(this), {'once': true});
     this.processor.AjaxRequest(data);
   }
-	this.StartBulkOperation = function (event)
+	StartBulkOperation(event)
 	{
 		this.PrepareBulk();
 
@@ -999,9 +978,8 @@ console.log("Screen Init Done", initMedia, initCustom);
 
 	}
 
-
 	// Opening of Log files on the dashboard
-	this.OpenLog = function(event)
+	OpenLog(event)
 	{
 		 event.preventDefault();
 
@@ -1030,7 +1008,7 @@ console.log("Screen Init Done", initMedia, initCustom);
     this.processor.AjaxRequest(data);
 	}
 
-	this.GetModal = function()
+	GetModal()
 	{
 			var modal = document.getElementById('LogModal');
 			var wrapper = null;
@@ -1054,7 +1032,7 @@ console.log("Screen Init Done", initMedia, initCustom);
 			return [modal, title, content, wrapper];
 	}
 
-	this.ShowLogModal = function(event)
+	ShowLogModal(event)
 	{
 			var log = event.detail.log;
 
@@ -1067,13 +1045,6 @@ console.log("Screen Init Done", initMedia, initCustom);
 			var shade = document.getElementById('LogModal-Shade');
 			shade.style.display = 'block';
 			shade.addEventListener('click', this.CloseModal.bind(this), {'once': true});
-			if (shade)
-			{
-				// var node = shade.cloneNode(true);
-				// node.style.display = 'block';
-				 //node.id = 'LogModal-Shade-Active';
-				 //document.body.appendChild (node);
-			}
 
 			var modalData = this.GetModal();
 			var modal = modalData[0];
@@ -1126,7 +1097,7 @@ console.log("Screen Init Done", initMedia, initCustom);
 
 	}
 
-	this.CloseModal = function(event)
+	CloseModal(event)
 	{
 		 event.preventDefault();
  		 var modal = document.getElementById('LogModal');
@@ -1136,15 +1107,5 @@ console.log("Screen Init Done", initMedia, initCustom);
 		 shade.style.display = 'none';
 	}
 
-	// @todo Find a better home for this. Global screen class?
-	this.ParseNumber = function(str)
-	{
-		 str = str.replace(',','', str).replace('.','',str);
-		 return parseInt(str);
-	}
-
-  //this.CheckSelectionScreen()  = function()
-
-  this.Init();
 
 } // Screen

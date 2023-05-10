@@ -1,7 +1,7 @@
 <?php
 namespace ShortPixel;
 use ShortPixel\Notices\NoticeController as Notice;
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 $canValidate = false;
 // Several conditions for showing API key.

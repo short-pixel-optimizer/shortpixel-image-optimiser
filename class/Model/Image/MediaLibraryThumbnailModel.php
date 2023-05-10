@@ -1,7 +1,7 @@
 <?php
 
 namespace ShortPixel\Model\Image;
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use \Shortpixel\Model\File\FileModel as FileModel;
 
@@ -91,7 +91,8 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
 			$retina->is_retina = true;
 
-      if ($retina->exists())
+			$forceCheck = true;
+      if ($retina->exists($forceCheck))
         return $retina;
 
       return false;
@@ -361,6 +362,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
         if (! $directory)
           return false;
+
 
         $backupFile =  $directory . $this->getFileBase() . '.' . $converted_ext;
 

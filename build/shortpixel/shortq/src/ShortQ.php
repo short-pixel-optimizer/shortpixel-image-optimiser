@@ -19,6 +19,8 @@ class ShortQ
 
   protected $pluginSlug; // unique plugin name using Q.
   protected $queueName;
+	protected $queue;
+	protected $dataProvider;
 
   protected static $queues = array();
 

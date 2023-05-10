@@ -1,6 +1,6 @@
 <?php
 namespace ShortPixel\Model\AdminNotices;
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 
 class ListviewNotice extends \ShortPixel\Model\AdminNoticeModel

@@ -10,7 +10,7 @@ use ShortPixel\Controller\AjaxController as AjaxController;
 use ShortPixel\Controller\QuotaController as QuotaController;
 use ShortPixel\Controller\StatsController as StatsController;
 
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\ResponseController as ResponseController;
 
 use ShortPixel\Model\Image\ImageModel as ImageModel;
@@ -26,6 +26,8 @@ class OptimizeController
     protected static $results;
 
     protected $isBulk = false; // if queueSystem should run on BulkQueues;
+
+		protected static $lastId; // Last item_id received / send. For catching errors.
 
     public function __construct()
     {
@@ -332,6 +334,7 @@ class OptimizeController
     */
     public function processQueue($queueTypes = array())
     {
+
         $keyControl = ApiKeyController::getInstance();
 
         if ($keyControl->keyIsVerified() === false)
@@ -431,6 +434,7 @@ class OptimizeController
     public function sendToProcessing($item, $q)
     {
       $api = $this->getAPI();
+			$this->setLastID($item->item_id);
 
 			$fs = \wpSPIO()->filesystem();
 			$qtype = $q->getType();
@@ -847,7 +851,7 @@ class OptimizeController
 			$item->result->message = ResponseController::formatItem($item->item_id);
 
 			if ($item->result->is_error)
-				$item->result->kblink = UIHelper::getKBSearchLink($item->result->message);
+				$item->result->kblink = UiHelper::getKBSearchLink($item->result->message);
 
       return $item;
 
@@ -857,7 +861,7 @@ class OptimizeController
 		protected function handleOptimizedItem($q, $item, $mediaObj, $successData)
 		{
 				$imageArray = $successData['files'];
-				
+
 				$downloadHelper = DownloadHelper::getInstance();
 				$converter = Converter::getConverter($mediaObj, true);
 
@@ -1092,6 +1096,7 @@ class OptimizeController
     // Communication Part
     protected function getJsonResponse()
     {
+
       $json = new \stdClass;
       $json->status = null;
       $json->result = null;
@@ -1195,8 +1200,7 @@ class OptimizeController
 
 		private function numberFormatStats($results) // run the whole stats thing through the numberFormat.
 		{
-//			 $run = array('media', 'custom', 'total')
-
+			//qn: array('media', 'custom', 'total')
 			 foreach($results as $qn => $item)
 			 {
 				  if (is_object($item) && property_exists($item, 'stats'))
@@ -1208,16 +1212,16 @@ class OptimizeController
 								 {
 									  foreach($value as $key2 => $val2) // embedded 'images' can happen here.
 										{
-										 $value->$key2 = UIHelper::formatNumber($val2, 0);
+										 $value->$key2 = UiHelper::formatNumber($val2, 0);
 										}
 								 }
 								 elseif (strpos($key, 'percentage') !== false)
 								 {
-								 	  $value = UIHelper::formatNumber($value, 2);
+								 	  $value = UiHelper::formatNumber($value, 2);
 								 }
 								 else
 								 {
-								 		$value = UIHelper::formatNumber($value, 0);
+								 		$value = UiHelper::formatNumber($value, 0);
 								 }
 
 								$results->$qn->stats->$key = $value;
@@ -1254,6 +1258,16 @@ class OptimizeController
 						}
 				}
 
+		}
+
+		protected function setLastID($item_id)
+		{
+			 self::$lastId = $item_id;
+		}
+
+		public static function getLastId()
+		{
+			 return self::$lastId;
 		}
 
     public static function resetQueues()

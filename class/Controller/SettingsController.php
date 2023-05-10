@@ -18,6 +18,8 @@ class SettingsController extends \ShortPixel\ViewController
      protected $is_nginx;
      protected $is_verifiedkey;
      protected $is_htaccess_writable;
+		 protected $is_gd_installed;
+		 protected $is_curl_installed;
      protected $is_multisite;
      protected $is_mainsite;
      protected $is_constant_key;

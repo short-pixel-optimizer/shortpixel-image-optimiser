@@ -120,7 +120,6 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         'savedSpace' => array('s' => 'skip'),
         'fileCount' => array('s' => 'skip'), // int
         'under5Percent' => array('s' => 'skip'), // int
-      //  'helpscoutOptin' => array('s' => 'boolean'), // checkbox
     );
 
       public static function resetOptions() {

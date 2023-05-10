@@ -1,6 +1,6 @@
 <?php
 namespace ShortPixel\Controller\View;
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;

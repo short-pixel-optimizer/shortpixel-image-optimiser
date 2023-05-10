@@ -1,7 +1,7 @@
 <?php
 namespace ShortPixel;
 use ShortPixel\Notices\NoticeController as Notice;
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Model\File\DirectoryOtherMediaModel as DirectoryOtherMediaModel;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
@@ -27,7 +27,7 @@ class NextGenController
 
   public function hooks()
   {
-		$this->view = new NextGenViewController();
+		$controller = new NextGenViewController();
 
     if ($this->optimizeNextGen()) // if optimization is on, hook.
     {
@@ -42,9 +42,9 @@ class NextGenController
       add_action('shortpixel/othermedia/folder/load', array($this, 'loadFolder'), 10, 2);
 			add_action('shortpixel/othermedia/addfiles', array($this, 'checkAddFiles'), 10, 3);
 
-      add_filter( 'ngg_manage_images_columns', array( $this->view, 'nggColumns' ) );
-      add_filter( 'ngg_manage_images_number_of_columns', array( $this->view, 'nggCountColumns' ) );
-      add_filter( 'ngg_manage_images_column_7_header', array( $this->view, 'nggColumnHeader' ) );
+      add_filter( 'ngg_manage_images_columns', array( $controller, 'nggColumns' ) );
+      add_filter( 'ngg_manage_images_number_of_columns', array( $controller, 'nggCountColumns' ) );
+      add_filter( 'ngg_manage_images_column_7_header', array( $controller, 'nggColumnHeader' ) );
       add_filter( 'ngg_manage_images_column_7_content', array( $this, 'loadNextGenItem' ), 10,2 );
 			add_filter('ngg_manage_gallery_fields', array($this, 'refreshFolderOnLoad'), 10, 2);
 

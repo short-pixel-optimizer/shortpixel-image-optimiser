@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compressor, ima
 Requires at least: 4.8.0
 Tested up to: 6.2
 Requires PHP: 5.6
-Stable tag: 5.2.1
+Stable tag: 5.2.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -340,6 +340,12 @@ will handle custom thumbnails like image-100x100_tl.jpg;
 `define('SHORTPIXEL_USE_DOUBLE_AVIF_EXTENSION', true);`
 will tell the plugin to create double extensions for the WebP/AVIF image counterparts, for example, image.jpg.webp/image.jpg.avif for image.jpg;
 
+Enable the "Trusted mode" in case the file system has limitations and is very slow in responding to direct file operations by adding this constant:
+
+`define('SHORTPIXEL_TRUSTED_MODE', true);`
+
+This will simply skip file check operations and if the Media Library loads very slowly or freezes, you might want to try adding the constant above to your wp-config.php file.
+
 Hide the Cloudflare settings by defining these constants in wp-config.php:
 
 `define('SHORTPIXEL_CFTOKEN', 'the Cloudflare API token that has Purge Cache right');`
@@ -369,6 +375,21 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 5.2.2 =
+Release date: May 10, 2023
+* New: If a 5xx error is thrown during optimization, the plugin will attempt to output it for easier debugging;
+* Fix: Added multiple fixes and improvements of the PICTURE tag delivery method, including a more stable fallback mechanism in case WebP/AVIF isn't available;
+* Fix: In some cases, the PICTURE tag delivery wasn't working properly when WP Offload Media was active;
+* Fix: Added a check for old items stuck in the queue to avoid potential errors after plugin updates;
+* Fix: In some cases, when WP Offload Media is active, a "Not processable: Image processable" message was displayed;
+* Fix: Added a check to prevent the main file to be passed as a thumbnail because that could crash the de-duplication mechanism;
+* Tweak: Added a "Trusted mode" for file systems that respond very slowly and slow down or freeze the Media Library;
+* Tweak: Added a button to start earler the optimization for huge sites, where preparing the bulk optimization queue can take a very long time;
+* Tweak: updated styling for various notices to make it unitary;
+* Tweak: thumbnails with ~0% optimization will be grouped toghether and displayed only once;
+* Compat: Fixed a bunch of deprecation notices and warnings on PHP 8.1 and PHP 8.2;
+* Language: 8 new strings added, 0 updated, 0 fuzzed, and 0 deprecated.
 
 = 5.2.1 =
 Release date February 21, 2023

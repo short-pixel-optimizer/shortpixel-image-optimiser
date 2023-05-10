@@ -1,7 +1,7 @@
 <?php
 
 namespace ShortPixel\Controller\View;
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Helper\UiHelper as UiHelper;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
@@ -29,6 +29,10 @@ class ListMediaViewController extends \ShortPixel\ViewController
 
   public function load()
   {
+			$fs = \wpSPIO()->filesystem();
+			$fs->startTrustedMode();
+
+
 			$this->checkAction(); // bulk action checkboxes, y'all
       $this->loadHooks();
   }

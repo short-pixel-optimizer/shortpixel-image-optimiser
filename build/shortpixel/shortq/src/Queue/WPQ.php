@@ -122,6 +122,7 @@ class WPQ implements Queue
       $chunks = array_chunk($this->items, $this->options->enqueue_limit );
       $numitems = $this->getStatus('items');
 
+
       foreach($chunks as $chunknum => $objItems)
       {
         $numitems += $this->DataProvider->enqueue($objItems);
@@ -507,8 +508,11 @@ class WPQ implements Queue
 				return false;
       elseif (! $item)
         return $this->currentStatus;
-      else
+      elseif (is_object($this->currentStatus))
         return $this->currentStatus->get($item);
+			else {
+				return false;
+			}
   }
 
   protected function saveStatus()
@@ -522,6 +526,11 @@ class WPQ implements Queue
 			  unset($status['queues'][$this->qName]);
 		 }
 		 else {
+			 if (false === $status)
+			 {
+				  $status = array();
+					$status['queues'] = array();
+			 }
 			 $status['queues'][$this->qName]  = $currentStatus;
 		 }
      $res = update_option($this->statusName, $status);
@@ -591,29 +600,30 @@ class WPQ implements Queue
     $dataQ = $this->DataProvider->itemCount('countbystatus');
     $num_items = $num_done = $num_in_process = $num_errors = $num_fatal = 0;
 
-       foreach($dataQ as $qstatus => $count)
-       {
-
-         switch($qstatus)
-         {
-           case ShortQ::QSTATUS_WAITING:
-             $num_items = $count;
-           break;
-           case ShortQ::QSTATUS_DONE:
-             $num_done = $count;
-           break;
-           case ShortQ::QSTATUS_INPROCESS:
-             $num_in_process = $count;
-           break;
-           case ShortQ::QSTATUS_ERROR:
-             $num_errors = $count;
-           break;
-           case ShortQ::QSTATUS_FATAL;
-              $num_fatal = $count;
-           break;
-         }
-       }
-
+		if (is_array($dataQ))
+		{
+	    foreach($dataQ as $qstatus => $count)
+	    {
+	         switch($qstatus)
+	         {
+	           case ShortQ::QSTATUS_WAITING:
+	             $num_items = $count;
+	           break;
+	           case ShortQ::QSTATUS_DONE:
+	             $num_done = $count;
+	           break;
+	           case ShortQ::QSTATUS_INPROCESS:
+	             $num_in_process = $count;
+	           break;
+	           case ShortQ::QSTATUS_ERROR:
+	             $num_errors = $count;
+	           break;
+	           case ShortQ::QSTATUS_FATAL;
+	              $num_fatal = $count;
+	           break;
+	         }
+	     }
+		 }
 
      $this->setStatus('items', $num_items, false);
      $this->setStatus('done', $num_done, false);

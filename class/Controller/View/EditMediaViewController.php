@@ -1,9 +1,10 @@
 <?php
 namespace ShortPixel\Controller\View;
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Helper\UiHelper as UiHelper;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
+use ShortPixel\Controller\ErrorController as ErrorController;
 
 
 //use ShortPixel\Model\ImageModel as ImageModel;
@@ -35,6 +36,9 @@ class EditMediaViewController extends \ShortPixel\ViewController
       {
         if (! $this->hooked)
           $this->loadHooks();
+
+					$fs = \wpSPIO()->filesystem();
+					$fs->startTrustedMode();
       }
 
       public function addMetaBox()

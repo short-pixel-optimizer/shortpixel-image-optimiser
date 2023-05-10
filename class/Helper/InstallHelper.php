@@ -1,7 +1,7 @@
 <?php
 namespace ShortPixel\Helper;
 
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Controller\BulkController as BulkController;
 use ShortPixel\Controller\FileSystemController as FileSystemController;

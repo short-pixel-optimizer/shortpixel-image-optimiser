@@ -2,7 +2,7 @@
 namespace ShortPixel\Controller\Queue;
 
 use ShortPixel\Model\Image\ImageModel as ImageModel;
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\CacheController as CacheController;
 use ShortPixel\Controller\ResponseController as ResponseController;
 use ShortPixel\Model\Converter\Converter as Converter;
@@ -278,6 +278,7 @@ abstract class Queue
 			  }
           }
 
+
           $this->q->additems($queue);
           $numitems = $this->q->enqueue();
 
@@ -349,7 +350,10 @@ abstract class Queue
 
 			$customData = $this->getStatus('custom_data');
 
-
+			if ($this->isCustomOperation())
+			{
+					  $stats->customOperation = $this->getCustomDataItem('customOperation');
+			}
 
       $stats->total = $stats->in_queue + $stats->fatal_errors + $stats->errors + $stats->done + $stats->in_process;
       if ($stats->total > 0)

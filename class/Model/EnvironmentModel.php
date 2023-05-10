@@ -1,6 +1,6 @@
 <?php
 namespace ShortPixel\Model;
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 /** Loads a few environment variables handy to have nearby
 *
@@ -280,6 +280,15 @@ class EnvironmentModel extends \ShortPixel\Model
 
       return false;
   }
+
+	public function useTrustedMode()
+	{
+		 if (defined('SHORTPIXEL_TRUSTED_MODE') && true === SHORTPIXEL_TRUSTED_MODE)
+		 {
+			 	return true;
+		 }
+		 return false;
+	}
 
 
 

@@ -1,6 +1,6 @@
 <?php
 namespace ShortPixel;
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 // #Todo Move this to some env or more appropiate place.
 $is_unlimited= (!is_null($this->quotaData) && $this->quotaData->unlimited) ? true : false;

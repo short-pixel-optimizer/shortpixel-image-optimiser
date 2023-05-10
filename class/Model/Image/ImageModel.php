@@ -1,6 +1,6 @@
 <?php
 namespace ShortPixel\Model\Image;
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Controller\ResponseController as ResponseController;
 use ShortPixel\Controller\ApiController as API;
@@ -69,27 +69,36 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		protected $recordChanged = false;
 
     // ImageModel properties are not stored but is generated data.  Only storage should happen to the values in Meta.
+		/** @var string */
     protected $width;
+
+		/** @var string */
     protected $height;
+
+		/** @var string */
     protected $mime;
    // protected $url; // possibly not in use.
+
+	  /** @var string */
     protected $error_message;
 
+		/** @var int */
     protected $id;
+
+		/** @var string */
 		protected $imageType;
 
+		/** @var int */
     protected $processable_status = 0;
+
+		/** @var int */
 		protected $restorable_status = 0;
 
 		// Public var that can be set by OptimizeController to prevent double queries.
+		/** @var boolean */
 		public $is_in_queue;
 
-    //protected $is_optimized = false;
-  //  protected $is_image = false;
-
     abstract public function getOptimizeUrls();
-
-
     abstract protected function saveMeta();
     abstract protected function loadMeta();
 
@@ -129,7 +138,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     /* Check if an image in theory could be processed. Check only exclusions, don't check status etc */
     public function isProcessable()
     {
-        if ( $this->isOptimized() || ! $this->exists()  || $this->isPathExcluded() || $this->isExtensionExcluded() || $this->isSizeExcluded() || (! $this->is_writable() && ! $this->is_virtual()) || (! $this->is_directory_writable() && ! $this->is_virtual()) || $this->isOptimizePrevented() !== false  )
+        if ( $this->isOptimized() || ! $this->exists()  || $this->isPathExcluded() || $this->isExtensionExcluded() || $this->isSizeExcluded() || (! $this->is_virtual() && ! $this->is_writable()) || (! $this->is_virtual() && ! $this->is_directory_writable())
+				|| $this->isOptimizePrevented() !== false  )
         {
           if(! $this->is_writable() && $this->processable_status == 0)
 					{
@@ -190,9 +200,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 
 
-    public function exists()
+    public function exists($forceCheck = false)
     {
-       $result = parent::exists();
+       $result = parent::exists($forceCheck);
        if ($result === false)
        {
           $this->processable_status = self::P_FILE_NOT_EXIST;
@@ -252,8 +262,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 				 break;
 				 case self::P_OPTIMIZE_PREVENTED:
 				 		$message = __('Fatal error preventing processing', 'shortpixel-image-optimiser');
-						if (property_exists($this, 'optimizePrevented'))
-						$message = $this->get('optimizePrevented');
+						if (property_exists($this, 'optimizePreventedReason'))
+						$message = $this->get('optimizePreventedReason');
 				 break;
 				 // Restorable Reasons
 				 case self::P_RESTORABLE:
@@ -285,19 +295,31 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
               return false;
         }
 
-				if  (\wpSPIO()->env()->is_function_usable('mime_content_type'))
+				if (! is_null($this->mime))
 				{
-					$this->mime = mime_content_type($this->getFullPath());
+					return true;
+				}
+
+				if (\wpSPIO()->env()->is_function_usable('finfo_open')) // Faster function for getting mime types
+					 {
+						 $fileinfo = finfo_open(FILEINFO_MIME_TYPE);
+						 $this->mime = finfo_file($fileinfo, $this->getFullPath());
+						 finfo_close($fileinfo);
+					 	 //FILEINFO_MIME_TYPE
+					}
+					elseif(\wpSPIO()->env()->is_function_usable('mime_content_type')) {
+						$this->mime = mime_content_type($this->getFullPath());
+					}
+					else {
+						return true; // assume without check, that extension says what it is.
+						// @todo This should probably trigger a notice in adminNoticesController.
+					}
+
 	        if (strpos($this->mime, 'image') >= 0)
 	           return true;
 	        else
 	          return false;
 
-				}
-				else {
-					return true; // assume without check, that extension says what it is.
-					// @todo This should probably trigger a notice in adminNoticesController.
-				}
     }
 
     public function get($name)
@@ -1002,7 +1024,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		// Checks Processable extensions. The other way of approval is having the file be convertable.
     protected function isExtensionExcluded()
     {
-        if (in_array( strtolower($this->getExtension()) , self::PROCESSABLE_EXTENSIONS))
+
+        if (! is_null($this->getExtension()) && in_array( strtolower($this->getExtension()) , self::PROCESSABLE_EXTENSIONS))
         {
             return false;
         }
@@ -1231,8 +1254,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 			 if ($hasResizeSizes)
 			 {
-
-
 			 		$resize_width = intval($settings->resizeWidth);
 			 		$resize_height = intval($settings->resizeHeight);
 					// If retina, allowed resize sizes is doubled, otherwise big image / big retina would end up same sizes.
@@ -1243,8 +1264,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 					}
 				}
 
-				$width =  ( $this->get('width') <= $resize_width || $resize_width === 0) ? $width : $resize_width;
-				$height = ($this->get('height') <= $resize_height || $resize_height === 0) ? $height : $resize_height;
+				$width =  ($width <= $resize_width || $resize_width === 0) ? $width : $resize_width;
+				$height = ($height <= $resize_height || $resize_height === 0) ? $height : $resize_height;
 
 			 	$result = array('resize' => $resize, 'resize_width' => $width, 'resize_height' => $height);
 			}

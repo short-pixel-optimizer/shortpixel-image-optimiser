@@ -1,6 +1,6 @@
 <?php
 namespace ShortPixel;
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Controller\BulkController as BulkController;
 
@@ -59,6 +59,10 @@ class SpioBulk extends SpioCommandBase
 	   *
 	   * [--queue=<name>]
 	   * : Either 'media' or 'custom'. Omit the parameter to process both queues.
+		 *
+		 * [--limit=<num>]
+		 * : Limit the amount of items being prepared.
+		 *
 	   * ---
 	   * default: media,custom
 	   * options:
@@ -244,6 +248,9 @@ class SpioBulk extends SpioCommandBase
 		*   - custom
 		* ---
 		*
+		* [--limit=<num>]
+		* : Limit the amount of items being prepared.
+		*
 		* ## EXAMPLES
 		*
 		*   wp spio bulk prepare
@@ -263,9 +270,11 @@ class SpioBulk extends SpioCommandBase
 						}
 						else
 						{
-							 $assoc['complete']  = true;
+//							 $assoc['complete']  = true;
+							 //$assoc['ticks']  = 5;
 							 //$assoc['queue'] = $qname;
 							 $assoc['wait'] = 0.5;
+							 print_r($args); print_r($assoc);
 							 $bool = $this->run($args, $assoc);
 						}
 

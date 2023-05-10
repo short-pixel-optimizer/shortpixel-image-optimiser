@@ -1,6 +1,6 @@
 <?php
 namespace ShortPixel\Model;
-use ShortPixel\ShortpixelLogger\ShortPixelLogger as Log;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 
 /* Model for storing cached data
