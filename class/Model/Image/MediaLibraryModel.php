@@ -670,9 +670,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 							$this->createDuplicateRecord($duplicate_id);
 						}
 						$duplicate_meta = wp_get_attachment_metadata($duplicate_id);
-						$duplicate_meta = array_merge($duplicate_meta, $wpmeta);
 
-						update_post_meta($duplicate_id, '_wp_attachment_metadata', $duplicate_meta);
+						// If duplicate metadata doesn't not exist  in error state, array_merge could fail. Just don't update without data as well. 
+						if (is_arry($duplicate_meta))
+						{
+							$duplicate_meta = array_merge($duplicate_meta, $wpmeta);
+							update_post_meta($duplicate_id, '_wp_attachment_metadata', $duplicate_meta);
+						}
 				}
 			}
 
