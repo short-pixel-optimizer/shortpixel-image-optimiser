@@ -534,8 +534,14 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				 foreach($data['doubles'] as $doubleName => $doubleRef)
 				 {
 					  $files[$doubleName] = $files[$doubleRef];
-						$doubleObj = $thumbObjs[$doubleName];
-						$data['sizes'][$doubleName] = $doubleObj->getFileName();
+						if (isset($thumbObjs[$doubleName]))
+						{
+							$doubleObj = $thumbObjs[$doubleName];
+							$data['sizes'][$doubleName] = $doubleObj->getFileName();
+						}
+						else {
+							Log::addError('Double thumb not set in result: ' . $doubleName, $doubleRef);
+						}
 				 }
 			}
 
@@ -616,7 +622,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						}
 						else
 						{
-							$thumbnail = $thumbObjs[$duplicateName];
+							$thumbnail = isset($thumbObjs[$duplicateName]) ? $thumbObjs[$duplicateName] : null;
 						}
 
 						if ($duplicateRef === $this->mainImageKey)
@@ -632,10 +638,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 							 $duplicateObj = $thumbObjs[$duplicateRef];
 						}
 
-						$databaseID = $thumbnail->getMeta('databaseID');
-						$thumbnail->setMetaObj($duplicateObj->getMetaObj());
-						$thumbnail->setMeta('databaseID', $databaseID);  // keep dbase id the same, otherwise it won't write this thumb to DB due to same ID.
-
+						if (is_object($thumbnail) && is_object($duplicateObj))
+						{
+							$databaseID = $thumbnail->getMeta('databaseID');
+							$thumbnail->setMetaObj($duplicateObj->getMetaObj());
+							$thumbnail->setMeta('databaseID', $databaseID);  // keep dbase id the same, otherwise it won't write this thumb to DB due to same ID.
+						}
+						else {
+							Log::AddError('Duplicate Thumbnail not available: ' . $duplicateName . ' or ref ' . $duplicateRef);
+						}
 				 }
 			}
 
@@ -2761,6 +2772,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
   			$all_files = scandir($this->getFileDir(),  SCANDIR_SORT_NONE);
 				$all_files = array_diff($all_files, $currentFiles);
+
 
 				foreach($processFiles as $mediaItem)
 				{
