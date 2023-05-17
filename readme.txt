@@ -377,12 +377,11 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 == Changelog ==
 
 = 5.2.2 =
-Release date May 9, 2023
+Release date: May 10, 2023
 * New: If a 5xx error is thrown during optimization, the plugin will attempt to output it for easier debugging;
 * Fix: Added multiple fixes and improvements of the PICTURE tag delivery method, including a more stable fallback mechanism in case WebP/AVIF isn't available;
 * Fix: In some cases, the PICTURE tag delivery wasn't working properly when WP Offload Media was active;
 * Fix: Added a check for old items stuck in the queue to avoid potential errors after plugin updates;
-* Fix: For certain characters in the filename an "Invalid File Format" error was thrown;
 * Fix: In some cases, when WP Offload Media is active, a "Not processable: Image processable" message was displayed;
 * Fix: Added a check to prevent the main file to be passed as a thumbnail because that could crash the de-duplication mechanism;
 * Tweak: Added a "Trusted mode" for file systems that respond very slowly and slow down or freeze the Media Library;
