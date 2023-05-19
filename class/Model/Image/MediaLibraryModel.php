@@ -671,7 +671,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						}
 						$duplicate_meta = wp_get_attachment_metadata($duplicate_id);
 
-						// If duplicate metadata doesn't not exist  in error state, array_merge could fail. Just don't update without data as well. 
+						// If duplicate metadata doesn't not exist  in error state, array_merge could fail. Just don't update without data as well.
 						if (is_arry($duplicate_meta))
 						{
 							$duplicate_meta = array_merge($duplicate_meta, $wpmeta);
@@ -1716,6 +1716,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   public function resetPrevent()
   {
       delete_post_meta($this->id, '_shortpixel_prevent_optimize');
+			$this->optimizePrevented = null;
   }
 
   /** Removed the current attachment, with hopefully removing everything we set.
