@@ -584,7 +584,7 @@ window.ShortPixelProcessor =
       }
       if (messageType == 'error')
       {
-          console.error('Error: ' + message);
+          console.error('Error: ', message);
 
       }
 

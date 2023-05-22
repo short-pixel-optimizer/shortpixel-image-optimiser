@@ -100,6 +100,14 @@ var SpWorker = {
       else if(this && ! this.stopped)
       {
 				var text = await response.text();
+				if ( typeof text === 'undefined') // if no, try json
+				{
+					 var text = await response.json();
+				}
+				if (typeof text === 'undefined' || text.length === 0) // if still not, then status text perhaps
+				{
+					  var text = response.status + ' ' + response.statusText;
+				}
 				var message = {status: false, http_status: response.status, http_text: text, status_text: response.statusText };
 
 				 if (response.status == 500) // fatal error
