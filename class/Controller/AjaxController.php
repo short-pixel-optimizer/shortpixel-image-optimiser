@@ -162,7 +162,6 @@ class AjaxController
         $this->checkNonce('ajax_request');
 				ErrorController::start(); // Capture fatal errors for us.
 
-
 			  // phpcs:ignore -- Nonce is checked
         $action = isset($_POST['screen_action']) ? sanitize_text_field($_POST['screen_action']) : false;
 				// phpcs:ignore -- Nonce is checked
@@ -237,7 +236,7 @@ class AjaxController
 					 case "redoLegacy":
 					 	  $this->redoLegacy($json, $data);
 					 break;
-
+					 
            default:
               $json->$type->message = __('Ajaxrequest - no action found', 'shorpixel-image-optimiser');
               $json->error = self::NO_ACTION;
@@ -273,6 +272,7 @@ class AjaxController
           $json->$type = new \stdClass;
 
           $json->$type = $control->addItemToQueue($mediaItem);
+					Log::addTemp('OptimizeItem', $json);
 					return $json;
     }
 

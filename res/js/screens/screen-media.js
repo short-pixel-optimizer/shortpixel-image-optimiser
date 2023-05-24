@@ -23,6 +23,22 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
         return false; // callback shouldn't do more, see processor.
     }
 
+		HandleImage(resultItem, type)
+		{
+				var res = super.HandleImage(resultItem, type);
+				var fileStatus = this.processor.fStatus[resultItem.fileStatus];
+
+				// If image editor is active and file is being restored because of this reason ( or otherwise ), remove the warning if this one exists.
+				if (fileStatus == 'FILE_RESTORED')
+				{
+					 var warning = document.getElementById('shortpixel-edit-image-warning');
+					 if (warning !== null)
+					 {
+						  warning.remove();
+					 }
+				}
+		}
+
 		RedoLegacy(id)
 		{
 			var data = {

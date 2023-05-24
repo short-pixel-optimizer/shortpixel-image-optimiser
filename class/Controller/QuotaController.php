@@ -297,6 +297,8 @@ class QuotaController
               return $defaultData;
           }
 
+					Log::addTemp('Remote Quota Raw Data', $data);
+
           $dataArray = array(
               "APIKeyValid" => true,
               "APICallsMade" => number_format($data->APICallsMade) . __(' credits','shortpixel-image-optimiser'),

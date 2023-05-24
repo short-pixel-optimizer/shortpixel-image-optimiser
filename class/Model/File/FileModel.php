@@ -611,7 +611,7 @@ class FileModel extends \ShortPixel\Model
 
 				if (is_null($this->filesize))
 				{
-					$this->filesize = 0; 
+					$this->filesize = 0;
 				}
 		}
 
@@ -631,6 +631,7 @@ class FileModel extends \ShortPixel\Model
      $url = str_replace(array('http:', 'https:'), '', $url);
      $fs = \wpSPIO()->filesystem();
 
+		 // The site URL domain is included in the URL string
      if (strpos($url, $site_url) !== false)
      {
        // try to replace URL for Path
@@ -646,7 +647,9 @@ class FileModel extends \ShortPixel\Model
 
      $this->is_virtual = true;
 
-		 // This filter checks if some supplier will be able to handle the file when needed.
+		 /* This filter checks if some supplier will be able to handle the file when needed.
+		 * Naming is misleading, the filter returns boolean, not a new path.  Use translate filter to correct filepath when needed. 
+		 */
      $path = apply_filters('shortpixel/image/urltopath', false, $url);
 
 		 if ($path !== false)

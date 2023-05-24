@@ -29,6 +29,7 @@ class AccessModel
 					'image_all' =>  'edit_others_posts',
 					'image_user' => 'edit_post',
 					'custom_all' => 'edit_others_posts',
+					'is_admin_user' => 'manage_options', 
 					'actions' => array(),
 			);
 

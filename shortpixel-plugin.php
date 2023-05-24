@@ -11,6 +11,8 @@ use ShortPixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Controller\QuotaController as QuotaController;
 use ShortPixel\Controller\AjaxController as AjaxController;
 use ShortPixel\Controller\AdminController as AdminController;
+use ShortPixel\Controller\ImageEditorController as ImageEditorController;
+
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 use ShortPixel\NextGenController as NextGenController;
 
@@ -18,6 +20,9 @@ use ShortPixel\Controller\Queue\MediaLibraryQueue as MediaLibraryQueue;
 use ShortPixel\Controller\Queue\CustomQueue as CustomQueue;
 
 use ShortPixel\Helper\InstallHelper as InstallHelper;
+
+use ShortPixel\Model\AccessModel as AccessModel;
+
 
 /** Plugin class
  * This class is meant for: WP Hooks, init of runtime and Controller Routing.
@@ -147,6 +152,8 @@ class ShortPixelPlugin {
 		add_action( 'load-post.php', array( $this, 'route' ) );
 
 		$admin = AdminController::getInstance();
+		$imageEditor = ImageEditorController::getInstance();
+		$access = AccessModel::getInstance();
 
 		// Handle for EMR
 		add_action( 'wp_handle_replace', array( $admin, 'handleReplaceHook' ) );
@@ -173,7 +180,7 @@ class ShortPixelPlugin {
 
 		load_plugin_textdomain( 'shortpixel-image-optimiser', false, plugin_basename( dirname( SHORTPIXEL_PLUGIN_FILE ) ) . '/lang' );
 
-		$isAdminUser = current_user_can( 'manage_options' ); // @todo This should be in env
+		$isAdminUser = $access->userIsAllowed('is_admin_user');
 
 		$this->env()->setDefaultViewModeList();// set default mode as list. only @ first run
 
@@ -185,12 +192,16 @@ class ShortPixelPlugin {
 
 		// integration with WP/LR Sync plugin
 		add_action( 'wplr_update_media', array( AjaxController::getInstance(), 'onWpLrUpdateMedia' ), 10, 2 );
-
 		add_action( 'admin_bar_menu', array( $admin, 'toolbar_shortpixel_processing' ), 999 );
+
+		// Image Editor Actions
+		add_filter('load_image_to_edit_path', array($imageEditor, 'getImageForEditor'), 10, 3);
+		add_filter('wp_save_image_editor_file', array($imageEditor, 'saveImageFile'), 10, 5);  // hook when saving
+		add_action('update_post_meta', array($imageEditor, 'checkUpdateMeta'), 10, 4 );
+
 
 		if ( $isAdminUser ) {
 			// toolbar notifications
-			// add_action( 'wp_head', array( $this, 'headCSS')); // for the front-end
 
 			// deactivate conflicting plugins if found
 			add_action( 'admin_post_shortpixel_deactivate_conflict_plugin', array( '\ShortPixel\Helper\InstallHelper', 'deactivateConflictingPlugin' ) );
@@ -269,6 +280,7 @@ class ShortPixelPlugin {
 
 		$quotaController = QuotaController::getInstance();
 
+
 		// FileTree in Settings
 		wp_register_script( 'sp-file-tree', plugins_url( '/res/js/sp-file-tree.min.js', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
@@ -291,6 +303,10 @@ class ShortPixelPlugin {
 		wp_localize_script( 'shortpixel-tooltip', 'spio_tooltipStrings', $tooltip_localize);
 
 		wp_register_script( 'shortpixel-settings', plugins_url( 'res/js/shortpixel-settings.js', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
+
+		wp_register_script('shortpixel-media', plugins_url('res/js/shortpixel-media.js',  SHORTPIXEL_PLUGIN_FILE), array('jquery'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
+
+		wp_localize_script('shortpixel-media', 'spio_media', ImageEditorController::localizeScript());
 
 		wp_register_script( 'shortpixel-processor', plugins_url( '/res/js/shortpixel-processor.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery', 'shortpixel-tooltip' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
@@ -512,7 +528,9 @@ class ShortPixelPlugin {
 			$this->load_style( 'shortpixel-admin' );
 			$this->load_style( 'shortpixel-bulk' );
 		} elseif ( $screen_id == 'upload' || $screen_id == 'attachment' ) {
+
 			$this->load_script( 'shortpixel-screen-media' ); // screen
+			$this->load_script( 'shortpixel-media' );
 
 			$this->load_style( 'shortpixel-admin' );
 			$this->load_style( 'shortpixel' );

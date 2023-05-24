@@ -46,7 +46,9 @@ class BuildAutoLoader
       'class/external/nextgen/nextGenController.php',
       'class/external/nextgen/nextGenViewController.php',
       'class/external/visualcomposer.php',
-      'class/external/wp-offload-media.php',
+			'class/external/offload/Offloader.php', 
+      'class/external/offload/wp-offload-media.php',
+			'class/external/offload/virtual-filesystem.php',
       'class/external/wp-cli/wp-cli-base.php',
 			'class/external/wp-cli/wp-cli-single.php',
 			'class/external/wp-cli/wp-cli-bulk.php',
@@ -55,7 +57,7 @@ class BuildAutoLoader
 			'class/external/spai.php',
 			'class/external/cache.php',
 			'class/external/uncode.php',
-			'class/external/query-monitor.php', 
+			'class/external/query-monitor.php',
     );
 
     echo "Build Plugin.JSON ";

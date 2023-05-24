@@ -138,6 +138,16 @@ class EnvironmentModel extends \ShortPixel\Model
       return false;
   }
 
+	public function hasOffload()
+	{
+			$off = \ShortPixel\External\Offload\Offloader::getInstance();
+			$name = $off->getOffloadName();
+			if (is_null($name))
+				return false;
+			else
+				return true;
+	}
+
   private function setServer()
   {
     $this->is_nginx = ! empty($_SERVER["SERVER_SOFTWARE"]) && strpos(strtolower(wp_unslash($_SERVER["SERVER_SOFTWARE"])), 'nginx') !== false ? true : false;

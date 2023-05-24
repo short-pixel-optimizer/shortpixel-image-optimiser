@@ -86,7 +86,6 @@ class PackageLoader
                         if (file_exists($fullpath)) {
                             include_once $fullpath;
                         }
-												
                     }
                 }
             });

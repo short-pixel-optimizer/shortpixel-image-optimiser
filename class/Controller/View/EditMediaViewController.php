@@ -73,7 +73,10 @@ class EditMediaViewController extends \ShortPixel\ViewController
 						return false;
 					}
 
-
+				//	var_dump(get_post_meta($post->ID, '_wp_attached_file', true));
+				//	var_dump(get_attached_file($post->ID));
+				//	var_dump(wp_get_attachment_url($post->ID));
+				//	var_dump(urlencode_deep(get_attached_file($post->ID)));
 
           $this->view->status_message = null;
 

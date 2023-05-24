@@ -1257,7 +1257,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			}
 
 			if ($fileDelete === true)
-			   	parent::onDelete();
+			   	parent::onDelete($fileDelete);
 
 
       foreach($this->thumbnails as $thumbObj)

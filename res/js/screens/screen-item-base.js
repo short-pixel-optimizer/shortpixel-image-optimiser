@@ -37,7 +37,7 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase
 					{
 						element.innerHTML = '';
 					//  var event = new CustomEvent('shortpixel.loadItemView', {detail: {'type' : type, 'id': result.id }}); // send for new item view.
-					var fileStatus = this.processor.fStatus[resultItem.result.status];
+					var fileStatus = this.processor.fStatus[resultItem.fileStatus];
 
 						if (fileStatus == 'FILE_SUCCESS' || fileStatus == 'FILE_RESTORED' || resultItem.result.is_done == true)
 						{
