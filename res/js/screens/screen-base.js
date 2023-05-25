@@ -24,6 +24,9 @@ class ShortPixelScreenBase
 //	var message = {status: false, http_status: response.status, http_text: text, status_text: response.statusText };
 	HandleError(data)
 	{
+		//if (this.processor.debugIsActive == 'false')
+		//	return; // stay silent when debug is not active.
+
 		var text = String(data.http_text);
 		var title = this.strings.fatalError;
 		var notice = this.GetErrorNotice(title, text);
@@ -57,12 +60,26 @@ class ShortPixelScreenBase
 	GetErrorNotice(title, text)
 	{
 		  var notice = document.createElement('div');
+
+			var button  = document.createElement('button'); // '<button type="button" class="notice-dismiss"></button>';
+			button.classList.add('notice-dismiss');
+			button.type = 'button';
+			button.addEventListener('click', this.EventCloseErrorNotice);
+
 			notice.classList.add('notice', 'notice-error', 'is-dismissible');
 
 			notice.innerHTML += '<p><strong>' + title + '</strong></p>';
 			notice.innerHTML += '<div class="error-details">' + text + '</div>';
+
+			notice.append(button);
+
 			return notice;
 
+	}
+
+	EventCloseErrorNotice(event)
+	{
+			event.target.parentElement.remove();
 	}
 
 	// Search for where to insert the notice before ( ala WP system )
@@ -73,6 +90,11 @@ class ShortPixelScreenBase
 		{
 			 return el;
 		}
+
+		var el = document.querySelector('.wrap');
+		if (el !== null)
+			return el;
+
 
 		var el = document.querySelector('#wpbody-content');
 		if (el !== null)

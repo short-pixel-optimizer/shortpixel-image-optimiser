@@ -7,7 +7,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
-
 class ErrorController
 {
 
@@ -18,7 +17,11 @@ class ErrorController
 
 			public static function start()
 			{
-				 	register_shutdown_function(array(self::class, 'checkErrors'));
+			//	var_dump(\wpSPIO()->env()->is_debug);
+					if (true === \wpSPIO()->env()->is_debug)
+					{
+				 		register_shutdown_function(array(self::class, 'checkErrors'));
+					}
 			}
 
 			public static function checkErrors()

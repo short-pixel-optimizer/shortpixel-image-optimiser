@@ -297,7 +297,12 @@ class WPQ implements Queue
 			 }
     }
 
+		$this->setStatusCount('items', $updated, false);
 
+		if ($this->options->mode == 'wait')
+		{
+			$this->setStatusCount('in_process',- $updated, false);
+		}
 
     return $updated;
   /*  if ($result >= 0)
@@ -317,10 +322,6 @@ class WPQ implements Queue
       {
         $this->setStatusCount('in_process',-1, false);
       }
-      else // no mode, no count, no nothing, mumble.
-      {
-        return false;
-      }
 
       $this->setStatusCount('done', 1, false);
 
@@ -336,6 +337,14 @@ class WPQ implements Queue
     {
         $status = ShortQ::QSTATUS_FATAL;
         $this->setStatusCount('fatal_errors', 1 );
+				if ($this->options->mode == 'direct')
+				{
+					$this->setStatusCount('items', -1, false);
+				}
+				elseif ($this->options->mode == 'wait')
+				{
+					$this->setStatusCount('in_process',-1, false);
+				}
     }
     else
       $this->setStatusCount('errors', 1 );
