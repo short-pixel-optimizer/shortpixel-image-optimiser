@@ -139,7 +139,7 @@ class ShortPixelImgToPictureWebp
 
 				if (false === $image->isParseable())
 				{
-					Log::addTemp('Image not parseable', $image->getImageData());
+					//Log::addTemp('Image not parseable', $image->getImageData());
 					 return $raw_image;
 				}
 
@@ -434,15 +434,10 @@ class FrontImage
 		//	Log::addTemp('Attributes', $this->attributes);
 			//Log::addTemp('Srcset', explode(',', $this->srcset));
 
-				if (! is_null($this->src))
-				{
-					$fs = \wpSPIO()->filesystem();
-		      $fileObj = $fs->getFile($this->src);
-		      $fileDir = $fileObj->getFileDir();
-		      $this->imageBase = $fileObj->getFileDir();
-				}
+				$result = $this->setupSources();
 
-				$this->image_loaded = true;
+				if (true === $result)
+					$this->image_loaded = true;
     }
 
 		public function hasBackground()
@@ -518,7 +513,8 @@ class FrontImage
 
 		public function getImageBase()
 		{
-			 return $this->imageBase->getPath();
+				 if (! is_null($this->imageBase))
+			 		return $this->imageBase->getPath();
 		}
 
 		public function parseReplacement($args)
@@ -549,6 +545,36 @@ class FrontImage
 				return $output;
 		}
 
+
+		protected function setupSources()
+		{
+			$src = null;
+
+			if (! is_null($this->src))
+			{
+				$src = $this->src;
+			}
+			elseif (! is_null($this->srcset))
+			{
+				$parts = preg_split('/\s+/', trim($this->srcset));
+				$image_url = $parts[0];
+				$src = $image_url;
+			}
+
+			if (is_null($src))
+			{
+				 return false;
+			}
+
+			$fs = \wpSPIO()->filesystem();
+			$fileObj = $fs->getFile($src);
+			$fileDir = $fileObj->getFileDir();
+			$this->imageBase = $fileObj->getFileDir();
+
+			return true;
+			// If (! is_hnull $srcset)
+			// Get first item from srcset ( remove the size ? , then feed it to FS, get directory from it.
+		}
 
 		protected function buildSource($sources, $fileFormat)
 		{
@@ -622,7 +648,6 @@ class FrontImage
 		protected function getLazyData($type)
 		{
 				$attributes = $this->attributes;
-
 				$value = $prefix = false;
 
 				if (isset($attributes['data-lazy-' . $type]) && strlen($attributes['data-lazy-' . $type]) > 0)
@@ -632,7 +657,7 @@ class FrontImage
 				}
 				elseif( isset($attributes['data-' . $type]) && strlen($attributes['data-' . $type]) > 0)
 				{
-					 $value = $img['data-' . $type];
+					 $value = $attributes['data-' . $type];
 					 $prefix = 'data-';
 				}
 				elseif(isset($attributes[$type]) && strlen($attributes[$type]) > 0)
@@ -645,4 +670,4 @@ class FrontImage
 
 				return $value;
 		}
-}
+} // class FrontImage

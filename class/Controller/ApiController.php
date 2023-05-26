@@ -412,6 +412,13 @@ class ApiController
 
     if ( is_array($APIresponse) && isset($APIresponse[0]) ) //API returned image details
     {
+
+				if (! isset($returnDataList['sizes']))
+				{
+					   return $this->returnFailure(self::STATUS_FAIL,  __('Item did not return image size information. This might be a failed queue item. Reset the queue if this persists or contact support','shortpixel-image-optimiser'));
+				}
+			//        return $this->returnFailure(self::STATUS_FAIL,  __('Unrecognized API response. Please contact support.','shortpixel-image-optimiser'));
+
 				$analyze = array('total' => count($item->urls), 'ready' => 0, 'waiting' => 0);
 				$waitingDebug = array();
 

@@ -52,6 +52,10 @@ class CacheModel
 
   public function save()
   {
+		 if ($this->expires <= 0)
+		 {
+			 	return; // don't save transients without expiration
+		 }
      $this->exists = set_transient($this->name, $this->value, $this->expires);
   }
 

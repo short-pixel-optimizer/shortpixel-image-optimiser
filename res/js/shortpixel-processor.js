@@ -25,14 +25,15 @@ window.ShortPixelProcessor =
     screen: null, // UI Object
     tooltip: null,
     isBulkPage: false,
-    localSecret: null,
-    remoteSecret: null,
+    localSecret: null, // Local processorkey stored (or empty)
+    remoteSecret: null, // Remote key indicating who has process right ( or null )
     isManualPaused: false,  // tooltip pause :: do not set directly, but only trhough processor functions!
     worker: null,
     timer: null,
     waitingForAction: false, // used if init yields results that should pause the processor.
     timesEmpty: 0, // number of times queue came up empty.
     nonce: [],
+		debugIsActive : false, // indicating is SPIO is in debug mode. Don't report certain things if not.
 		hasStartQuota: false, // if we start without quota, don't notice too much, don't run.
 		workerErrors: 0, // times worker encoutered an error.
     qStatus: { // The Queue returns
@@ -77,6 +78,7 @@ window.ShortPixelProcessor =
         this.isBulkPage = ShortPixelProcessorData.isBulkPage;
         this.localSecret = localStorage.getItem('bulkSecret');
         this.remoteSecret = ShortPixelProcessorData.bulkSecret;
+				this.debugIsActive = ShortPixelProcessorData.debugIsActive;
 
         this.nonce['process'] = ShortPixelProcessorData.nonce_process;
         this.nonce['exit'] = ShortPixelProcessorData.nonce_exit;
@@ -584,7 +586,7 @@ window.ShortPixelProcessor =
       }
       if (messageType == 'error')
       {
-          console.error('Error: ' + message);
+          console.error('Error: ', message);
 
       }
 
