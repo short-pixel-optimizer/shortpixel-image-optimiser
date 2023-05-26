@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compressor, ima
 Requires at least: 4.8.0
 Tested up to: 6.2
 Requires PHP: 5.6
-Stable tag: 5.2.2
+Stable tag: 5.2.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -375,6 +375,18 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 5.2.3 =
+Release date: May 26, 2023
+* Fix: an error was displayed when an image had only a `srcset` (and no `src`) and the PICTURE tag delivery mode was enabled;
+* Fix: a warning was displayed for lazy-loaded images using `data-src`;
+* Fix: if the optimization queue contained an item that was added a long time ago, an error caused the optimization to crash;
+* Fix: If duplicate thumbnails are no longer present in WordPress, they are ignored when trying to optimize;
+* Fix: a typo when checking an array caused an error in certain cases;
+* Fix: text changes on the settings page related to AVIF generation for the Unlimited plan;
+* Fix: in case of a failed backup, the retry mechanism did not actually retry the optimization in all cases;
+* Tweak: the optimization error notification system will only trigger when the plugin's debug mode is enabled;
+* Language: 1 new string added, 1 updated, 0 fuzzed, and 0 deprecated.
 
 = 5.2.2 =
 Release date: May 10, 2023

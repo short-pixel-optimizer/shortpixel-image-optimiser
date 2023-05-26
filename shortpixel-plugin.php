@@ -331,6 +331,7 @@ class ShortPixelPlugin {
 				'startData'         => ( \wpSPIO()->env()->is_screen_to_use ) ? $optimizeController->getStartupData() : false,
 				'interval'          => $interval,
 				'deferInterval'     => $deferInterval,
+				'debugIsActive' 		=> (\wpSPIO()->env()->is_debug) ? 'true' : 'false',
 
             )
         );
