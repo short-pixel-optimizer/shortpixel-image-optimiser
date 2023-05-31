@@ -31,12 +31,28 @@ class Offloader
 
 		public function load()
 		{
-				if (class_exists('\Stack\Config'))
+				$bool = $this->checkVirtualLoaders();
+				if (true === $bool)
 				{
 						$this->offLoadName = 'stack';
  						self::$offload_instance = new VirtualFileSystem();
 				}
 
+		}
+
+		protected function checkVirtualLoaders()
+		{
+			 	if ( class_exists('\Stack\Config') ) // Bitpoke Stack MU
+				{
+						return true;
+				}
+				elseif (defined('STACK_MEDIA_BUCKET'))
+				{
+						return true;
+				}
+
+
+				return false;
 		}
 
 		// If As3cfInit is called check WpOffload runtime. This is later in order than plugins_loaded!

@@ -19,7 +19,7 @@ class VirtualFileSystem
 					add_filter('shortpixel/file/virtual/translate', array($this, 'getLocalPathByURL'));
 		}
 
-		public function checkIfOffloaded($url)
+		public function checkIfOffloaded($bool, $url)
 		{
 			 if (file_exists($url))
 			 {
