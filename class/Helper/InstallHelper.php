@@ -23,7 +23,7 @@ class InstallHelper
       $env = wpSPIO()->env();
 
       if(\WPShortPixelSettings::getOpt('deliverWebp') == 3 && ! $env->is_nginx) {
-          UtilHelper::alterHtaccess(true,true); //add the htaccess lines
+          UtilHelper::alterHtaccess(true,true); //add the htaccess lines. Both are true because even if one option is now off in the past both fileformats could have been generated. 
       }
 
       self::checkTables();
@@ -99,7 +99,9 @@ class InstallHelper
 		$settings::resetOptions();
 
 		if (! $env->is_nginx)
+		{
 			insert_with_markers( get_home_path() . '.htaccess', 'ShortPixelWebp', '');
+		}
 
 		self::removeTables();
 
