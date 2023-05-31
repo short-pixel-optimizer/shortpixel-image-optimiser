@@ -128,7 +128,7 @@ class OptimizeController
           $json->result->is_error = true;
           $json->result->is_done = true;
           $json->result->fileStatus = ImageModel::FILE_STATUS_ERROR;
-					
+
         }
 				elseif($queue->isDuplicateActive($mediaItem))
 				{
@@ -391,8 +391,6 @@ class OptimizeController
 
         $results->total = $this->calculateStatsTotals($results);
 				$results = $this->numberFormatStats($results);
-
-    //    $this->checkCleanQueue($results);
 
         return $results;
     }

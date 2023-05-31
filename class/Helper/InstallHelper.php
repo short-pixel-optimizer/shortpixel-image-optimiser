@@ -70,6 +70,12 @@ class InstallHelper
 
     OptimizeController::uninstallPlugin();
 		ApiKeyController::uninstallPlugin();
+
+		delete_transient('bulk-secret');
+		delete_transient('othermedia_refresh_folder_delay');
+		delete_transient('avif_server_check');
+		delete_transient('quotaData');
+
   }
 
  // Removes everything  of SPIO 5.x .  Not recommended.
