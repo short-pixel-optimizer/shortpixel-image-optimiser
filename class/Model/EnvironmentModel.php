@@ -227,7 +227,8 @@ class EnvironmentModel extends \ShortPixel\Model
        $this->is_screen_to_use = true;
        $this->is_our_screen = true;
 
-       if ($screen->id == 'media_page_wp-short-pixel-bulk')
+			 // Strpos instead of full screen id, because the first page (media_page) is not reliable and can change.
+       if ( strpos($screen->id, 'wp-short-pixel-bulk') !== false)
         $this->is_bulk_page = true;
     }
 		elseif (is_object($screen) && method_exists( $screen, 'is_block_editor' ) && $screen->is_block_editor() ) {
