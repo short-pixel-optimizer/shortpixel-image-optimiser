@@ -37,7 +37,7 @@ class ImageEditorController
 				$mediaImage = $fs->getImage($post_id, 'media');
 				if ($mediaImage)
 				{
-						$local['is_restorable'] = ($mediaImage->isRestorable()) ? 'true' : 'false';
+						$local['is_restorable'] = ($mediaImage->isRestorable() || $mediaImage->isOptimized() ) ? 'true' : 'false';
 						$local['post_id'] = $post_id;
 
 						$local['optimized_text'] = sprintf(__('This image is optimized. It\'s strongly %s recommended %s to restore the image before editing it.  After saving the image all optimization data will be lost. When the image is not restored Shortpixel will re-optimize the result which could result in quality loss', 'shortpixel-image-optimiser'), '<strong>', '</strong>');
@@ -82,10 +82,10 @@ class ImageEditorController
 					$imagepath = $thumbObj->getBackupFile()->getFullPath();
 		}
 
-Log::addTemp('imagePath', $imagepath);
+//Log::addTemp('imagePath', $imagepath);
 		if (true === $optimized_and_backup)
 		{
-			Log::addTemp('Returning ImagePath');
+		//	Log::addTemp('Returning ImagePath');
 			 return $imagepath;
 		}
 
@@ -95,16 +95,12 @@ Log::addTemp('imagePath', $imagepath);
 	public function saveImageFile( $null, $filename, $image, $mime_type, $post_id		)
 	{
 		Log::addTemp('Save Image File');
-			// Check image and if needed,restore backups.
+			// Check image and if needed, delete backups.
 			$fs = \wpSPIO()->filesystem();
 			$mediaImage = $fs->getImage($post_id, 'media');
 
 			if (is_object($mediaImage))
 			{
-				if ($mediaImage->isRestorable())
-				{
-					 $mediaImage->restore();
-				}
 				$mediaImage->onDelete();
 			}
 			return $null;
@@ -112,6 +108,7 @@ Log::addTemp('imagePath', $imagepath);
 
 //'updated_postmeta', $meta_id, $object_id, $meta_key, $meta_value
 	// Detect post meta update, because this is the only we have to detect a restore to oringal.
+	/*
 	public function checkUpdateMeta( $meta_id, $object_id, $meta_key, $meta_value)
 	{
 		 if ($meta_key !== '_wp_attachment_backup_sizes')
@@ -119,11 +116,8 @@ Log::addTemp('imagePath', $imagepath);
 			 return;
 		 }
 
-//		 Log::addTemp('meta is _wp_attachment_backup_sizes');
-
 		 $file = get_attached_file($object_id);
 		 $parts = pathinfo( $file );
-//		 Log::addTemp('File Attach ' . $object_id . ' -- ' . $file . ' ' . basename($file));
 
 		 // make sure that the file is not of 'edited' kind still ( original ) - preg match returns false or 0 if not there
 		 $result = preg_match( '/-e[0-9]{13}\./', basename($file), $matches);
@@ -173,15 +167,7 @@ Log::addTemp('imagePath', $imagepath);
 		 }
 
 	}
-
-
-
-	public function addWarning()
-	{
-			$open = isset( $_GET['image-editor'] );
-		if ($open)
-		 echo 'This is blah!';
-	}
+*/
 
 
 } //class

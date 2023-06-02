@@ -17,7 +17,6 @@ class ErrorController
 
 			public static function start()
 			{
-			//	var_dump(\wpSPIO()->env()->is_debug);
 					if (true === \wpSPIO()->env()->is_debug)
 					{
 				 		register_shutdown_function(array(self::class, 'checkErrors'));

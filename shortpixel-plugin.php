@@ -197,7 +197,7 @@ class ShortPixelPlugin {
 		// Image Editor Actions
 		add_filter('load_image_to_edit_path', array($imageEditor, 'getImageForEditor'), 10, 3);
 		add_filter('wp_save_image_editor_file', array($imageEditor, 'saveImageFile'), 10, 5);  // hook when saving
-		add_action('update_post_meta', array($imageEditor, 'checkUpdateMeta'), 10, 4 );
+	//	add_action('update_post_meta', array($imageEditor, 'checkUpdateMeta'), 10, 4 );
 
 
 		if ( $isAdminUser ) {

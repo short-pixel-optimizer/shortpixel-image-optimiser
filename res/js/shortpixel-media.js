@@ -22,7 +22,6 @@ console.log('shortpixel media load');
 
 		}
 
-
 		function showOptimizeWarning()
 		{
 				var div = document.createElement('div');
