@@ -1,6 +1,9 @@
 <?php
 namespace ShortPixel\External\Offload;
 
+use Shortpixel\Model\File\FileModel as FileModel;
+
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
@@ -241,6 +244,7 @@ class wpOffload
 			{
 				$extension = substr($url, strrpos($url, '.') + 1);
 				// If these filetypes are not in the cache, they cannot be found via geSourceyIDByUrl method ( not in path DB ), so it's pointless to try. If they are offloaded, at some point the extra-info might load.
+
 				if ($extension == 'webp' || $extension == 'avif')
 				{
 					return false;
@@ -251,7 +255,7 @@ class wpOffload
 
       if ($source_id !== false)
 			{
-        return true;
+        return FileModel::$VIRTUAL_REMOTE;
 			}
       else
         return false;
@@ -519,7 +523,14 @@ class wpOffload
 		public function updateOriginalPath($imageModel)
 		{
 				$post_id = $imageModel->get('id');
+
 				$item = $this->getItemById($post_id);
+
+				if (false === $item)
+				{
+					 Log::addWarning('S3 Update Original Path - Item not available ' . $post_id, $imageModel);
+					 return false;
+				}
 
 				$original_path = $item->original_path(); // Original path (non-scaled-)
 				$original_source_path = $item->original_source_path();

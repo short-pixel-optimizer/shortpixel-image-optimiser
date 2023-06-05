@@ -772,7 +772,11 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         }
         else
         {
-          if (! $this->is_writable())
+					if ($this->is_virtual()) // Is_virtual, but no backup found ( see up ) 
+					{
+						$this->restorable_status = self::P_BACKUP_NOT_EXISTS;
+					}
+          elseif (! $this->is_writable())
           {
 						  $response = array(
 									'is_error' => true,
@@ -854,7 +858,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 						 $response = array(
 								 'is_error' => true,
 								 'issue_type' => ResponseController::ISSUE_FILE_NOTWRITABLE,
-								 'message' => __('BackupFile not writable. Check file and/or file permissions', 'shortpixel-image-optimiser'),
+								 'message' => __('The backup file is not writable. Check file and/or file permissions', 'shortpixel-image-optimiser'),
 
 						 );
 						 ResponseController::addData($this->get('id'), $response);

@@ -1,6 +1,8 @@
 <?php
 namespace ShortPixel\External\Offload;
 
+use Shortpixel\Model\File\FileModel as FileModel;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
@@ -23,7 +25,7 @@ class VirtualFileSystem
 		{
 			 if (file_exists($url))
 			 {
-				 return true;
+				 return FileModel::$VIRTUAL_STATELESS;
 			 }
 			 return false;
 

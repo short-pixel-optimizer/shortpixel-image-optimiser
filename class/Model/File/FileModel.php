@@ -45,6 +45,9 @@ class FileModel extends \ShortPixel\Model
 
 	public static $TRUSTED_MODE = false;
 
+	// Constants for is_virtual . Virtual Remote is truly a remote file, not writable from machine. Stateless means it looks remote, but it's a protocol-based filesystem remote or not - that will accept writes / is_writable.
+	public static $VIRTUAL_REMOTE = 1;
+	public static $VIRTUAL_STATELESS = 2;
 
   /** Creates a file model object. FileModel files don't need to exist on FileSystem */
   public function __construct($path)
@@ -128,7 +131,12 @@ class FileModel extends \ShortPixel\Model
 
   public function is_writable()
   {
-    if ($this->is_virtual())
+		// Return when already asked / Stateless might set this
+		if (! is_null($this->is_writable))
+		{
+			 return $this->is_writable;
+		}
+    elseif ($this->is_virtual())
     {
        $this->is_writable = false;  // can't write to remote files
     }
@@ -152,7 +160,12 @@ class FileModel extends \ShortPixel\Model
 
 	public function is_directory_writable()
 	{
-		if ($this->is_virtual())
+		// Return when already asked / Stateless might set this
+		if (! is_null($this->is_directory_writable))
+		{
+			 return $this->is_directory_writable;
+		}
+		elseif ($this->is_virtual())
 		{
 			 $this->is_directory_writable = false;  // can't write to remote files
 		}
@@ -648,22 +661,31 @@ class FileModel extends \ShortPixel\Model
      $this->is_virtual = true;
 
 		 /* This filter checks if some supplier will be able to handle the file when needed.
-		 * Naming is misleading, the filter returns boolean, not a new path.  Use translate filter to correct filepath when needed. 
+		 *   Use translate filter to correct filepath when needed.
+		 * Return could be true, or fileModel virtual constant
 		 */
-     $path = apply_filters('shortpixel/image/urltopath', false, $url);
+     $result = apply_filters('shortpixel/image/urltopath', false, $url);
 
-		 if ($path !== false)
-     {
-          $this->exists = true;
-          $this->is_readable = true;
-          $this->is_file = true;
-     }
-     else
-     {
-         $this->exists = false;
-         $this->is_readable = false;
-         $this->is_file = false;
-     }
+		 if ($result === false)
+		 {
+			 $this->exists = false;
+			 $this->is_readable = false;
+			 $this->is_file = false;
+		 }
+		 else {
+			 $this->exists = true;
+			 $this->is_readable = true;
+			 $this->is_file = true;
+		 }
+
+		 // If return is a stateless server, assume that it's writable and all that.
+		 if ($result === self::$VIRTUAL_STATELESS)
+		 {
+			  $this->is_writable = true;
+				$this->is_directory_writable = true;
+				self::$TRUSTED_MODE = true;
+				$this->checkTrustedMode();
+		 }
 
 
      return false; // seems URL from other server, use virtual mode.

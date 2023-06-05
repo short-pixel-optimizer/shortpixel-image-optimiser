@@ -10,6 +10,11 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase
 	constructor(MainScreen, processor)
 	{
 		super(MainScreen, processor);
+
+	}
+
+	Init()
+	{
 		window.addEventListener('shortpixel.' + this.type + '.resumeprocessing', this.processor.ResumeProcess.bind(this.processor));
 		window.addEventListener('shortpixel.RenderItemView', this.RenderItemView.bind(this) );
 	}

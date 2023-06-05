@@ -41,12 +41,11 @@ class BuildAutoLoader
 
     $externals = array(
       'class/external/cloudflare.php',
-      'class/external/flywheel.php',
       //'class/external/gravityforms.php',
       'class/external/nextgen/nextGenController.php',
       'class/external/nextgen/nextGenViewController.php',
       'class/external/visualcomposer.php',
-			'class/external/offload/Offloader.php', 
+			'class/external/offload/Offloader.php',
       'class/external/offload/wp-offload-media.php',
 			'class/external/offload/virtual-filesystem.php',
       'class/external/wp-cli/wp-cli-base.php',
@@ -58,6 +57,7 @@ class BuildAutoLoader
 			'class/external/cache.php',
 			'class/external/uncode.php',
 			'class/external/query-monitor.php',
+			'class/external/Woocommerce.php',
     );
 
     echo "Build Plugin.JSON ";

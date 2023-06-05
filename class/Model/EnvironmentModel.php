@@ -36,6 +36,7 @@ class EnvironmentModel extends \ShortPixel\Model
 
     // Debug flag
     public $is_debug = false;
+		// Is the plugin configured to automatically optimize on upload hook?
     public $is_autoprocess = false;
 
     protected static $instance;
@@ -106,6 +107,9 @@ class EnvironmentModel extends \ShortPixel\Model
 				break;
 				case 's3-offload':
 				  $plugin = 'amazon-s3-and-cloudfront/wordpress-s3.php';
+				break;
+				case 'woocommerce':
+					 $plugin = 'woocommerce/woocommerce.php';
 				break;
 				default:
 				 	$plugin = 'none';

@@ -88,6 +88,7 @@ class AdminController extends \ShortPixel\Controller
         return $meta; // It's a filter, otherwise no thumbs
     }
 
+
 		public function preventImageHook($id)
 		{
 			  self::$preventUploadHook[] = $id;

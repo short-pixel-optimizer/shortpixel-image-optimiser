@@ -237,7 +237,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 				else {
 //					 $fileBaseNoSize =
 					 $name = str_replace($mainFile->getFileBase(), $mainFile->getMeta()->convertMeta()->getReplacementImageBase(), $this->getFileName());
-					 Log::addDebug('New Thumbnail Backup Name: ' .  $name);
+					
 					 return $name;
 				}
 			}

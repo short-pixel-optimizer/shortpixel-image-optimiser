@@ -563,7 +563,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 				 if (! is_object($thumbnail))
  			 	 {
-					 	Log::addError('Thumbnail with size name'  . $sizeName . ' is not registered in this image. This should not happen, skipping.', $thumbObjs);
+					 	Log::addError('Thumbnail with size name: '  . $sizeName . ' is not registered in this image. This should not happen, skipping.', $thumbObjs);
 						Log::addError('OptimizeData', $optimizeData);
 						continue;
  			 	 }
