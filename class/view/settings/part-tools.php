@@ -57,7 +57,15 @@ $queueRunning = $bulk->isAnyBulkRunning();
 			</div>
 		</div>
 
+		<div class='option'>
+			<div class='name'><?php esc_html_e('Clear Item Blocks ','shortpixel-image-optimiser'); ?></div>
+			<div class='field'>
 
+				<a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_removePrevented', 'queue' => 'all', 'part' => 'tools', 'noheader' => true), $url)); ?>" class="button"><?php esc_html_e('Clear Item Blocks','shortpixel-image-optimiser'); ?></a>
+				<p class='settings-info'><?php printf(esc_html__('Removes blocked on failed items for optimization. Most often when doing backups.  %sImportant!%s The cause of the block should be removed, otherwise data corruption can occur. ','shortpixel-image-optimiser') , '<b>','</b>'); ?> </p>
+
+			</div>
+		</div>
 
 		<hr />
 

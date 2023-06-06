@@ -299,7 +299,6 @@ class SettingsController extends \ShortPixel\ViewController
 
 			}
 
-
 			public function action_debug_resetQueue()
 			{
 				 $queue = isset($_REQUEST['queue']) ? sanitize_text_field($_REQUEST['queue']) : null;
@@ -346,6 +345,24 @@ class SettingsController extends \ShortPixel\ViewController
 			 }
 
 
+				$this->doRedirect();
+			}
+
+			public function action_debug_removePrevented()
+			{
+				$this->loadEnv();
+				$this->checkPost();
+
+				global $wpdb;
+				$sql = 'delete from ' . $wpdb->postmeta . ' where meta_key = %s';
+
+				$sql = $wpdb->prepare($sql, '_shortpixel_prevent_optimize');
+
+				$wpdb->query($sql);
+
+				$message = __('Item blocks have been removed. It is recommended to create a backup before trying to optimize image.', 'shortpixel-image-optimiser');
+
+				Notice::addSuccess($message);
 				$this->doRedirect();
 			}
 

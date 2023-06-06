@@ -259,6 +259,9 @@ class ListMediaViewController extends \ShortPixel\ViewController
 				 default:
 				 	$filter = 'unoptimized';
 				 break;
+				 case 'prevented':
+				 	$filter = 'prevented';
+				 break;
 			}
 
 			$vars['shortpixel-filter']  = $filter;
@@ -271,6 +274,7 @@ class ListMediaViewController extends \ShortPixel\ViewController
 	public function parseQuery($request, $wpquery)
 	{
 		global $wpdb;
+
 
 		 if (isset($wpquery->query_vars['shortpixel-filter']) || isset($wpquery->query_vars['shortpixel-order']) )
 		 {
@@ -285,10 +289,10 @@ class ListMediaViewController extends \ShortPixel\ViewController
 						//fileStatus = ImageModel::FILE_STATUS_UNPROCESSED;
 				}
 
+Log::addTemp('Filter' .  $filter, $request);
 			  $tableName = UtilHelper::getPostMetaTable();
 				$post_pos = strpos($request, '1=1');
 			  $post_where = substr($request, $post_pos);
-
 
 				if ($filter && $filter == 'optimized')
 				{
@@ -304,14 +308,23 @@ class ListMediaViewController extends \ShortPixel\ViewController
 					$sql = $wpdb->prepare($sql, MediaLibraryModel::IMAGE_TYPE_MAIN,  $fileStatus);
 					$sql .= ' AND ' . $post_where; // glue back the orders, and the all. */
 				}
-				if ($filter && $filter == 'unoptimized')
+				elseif ($filter && $filter == 'unoptimized')
 				{
 					 $where = " AND " . $wpdb->posts . '.ID not in ( SELECT attach_id FROM ' . $tableName . " WHERE parent = %d and status = %d) ";
 					 $where = $wpdb->prepare($where, MediaLibraryModel::IMAGE_TYPE_MAIN, ImageModel::FILE_STATUS_SUCCESS);
 
 					  $sql = substr_replace($request, $where, ($post_pos + strlen($post_pos)) ,0);
 				}
+				elseif($filter && $filter == 'prevented')
+				{
+			//		Log::addTemp('Filter: PReVENTED', $sql);
+					 $where = " AND " . $wpdb->posts . '.ID in ( SELECT post_id FROM ' . $wpdb->postmeta . " WHERE meta_key = %s) ";
+					 $where = $wpdb->prepare($where, '_shortpixel_prevent_optimize');
+					 $sql = substr_replace($request, $where, ($post_pos + strlen($post_pos)) ,0);
 
+
+				}
+Log::addTemp('SQL', $sql);
 				return $sql;
 		 }
 
@@ -328,17 +341,12 @@ class ListMediaViewController extends \ShortPixel\ViewController
       if ( $scr->base !== 'upload' ) return;
 
       $status   = filter_input(INPUT_GET, 'shortpixel_status', FILTER_UNSAFE_RAW );
-  //    $selected = (int)$status > 0 ? $status : 0;
-    /*  $args = array(
-          'show_option_none'   => 'ShortPixel',
-          'name'               => 'shortpixel_status',
-          'selected'           => $selected
-      ); */
-//        wp_dropdown_users( $args );
+
       $options = array(
           'all' => __('All Images', 'shortpixel-image-optimiser'),
           'opt' => __('Optimized', 'shortpixel-image-optimiser'),
           'unopt' => __('Unoptimized', 'shortpixel-image-optimiser'),
+					'prevented' => __('Blocked', 'shortpixer-image-optimiser'),
         //  'pending' => __('Pending', 'shortpixel-image-optimiser'),
         //  'error' => __('Errors', 'shortpixel-image-optimiser'),
       );
