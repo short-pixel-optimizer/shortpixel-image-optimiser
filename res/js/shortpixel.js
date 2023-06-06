@@ -32,16 +32,13 @@ var ShortPixel = function() {
                 + '</option><option value="shortpixel-glossy"> → ' + _spTr.redoGlossy
                 + '</option><option value="shortpixel-lossless"> → ' + _spTr.redoLossless
                 + '</option><option value="shortpixel-restore"> → ' + _spTr.restoreOriginal
+								+ '</option><option value="shortpixel-smartcrop"> → ' + _spTr.redoSmartcrop
+								+ '</option><option value="shortpixel-smartcropless"> → ' + _spTr.redoSmartcropless
                 + '</option>');
         }
 
         // Extracting the protected Array from within the 0 element of the parent array
         ShortPixel.setOptions(ShortPixelConstants[0]);
-
-       /* if(jQuery('#backup-folder-size').length) {
-            jQuery('#backup-folder-size').html(ShortPixel.getBackupSize());
-        } */
-
 
 				if (jQuery('#shortpixel-form-request-key').length > 0)
 				{

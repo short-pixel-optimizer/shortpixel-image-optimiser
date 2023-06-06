@@ -404,6 +404,8 @@ class ShortPixelPlugin {
 			'redoLossy'                   => __( 'Re-optimize Lossy', 'shortpixel-image-optimiser' ),
 			'redoGlossy'                  => __( 'Re-optimize Glossy', 'shortpixel-image-optimiser' ),
 			'redoLossless'                => __( 'Re-optimize Lossless', 'shortpixel-image-optimiser' ),
+			'redoSmartcrop' 							=> __( '(Re)-Optimize with smartcrop', 'shortpixel-image-optimiser'),
+			'redoSmartcropless'						=> __( '(Re)-Optimize without smartcrop', 'shortpixel-image-optimiser'),
 			'restoreOriginal'             => __( 'Restore Originals', 'shortpixel-image-optimiser' ),
 			'changeMLToListMode'          => __( 'In order to access the ShortPixel Optimization actions and info, please change to {0}List View{1}List View{2}Dismiss{3}', 'shortpixel-image-optimiser' ),
 			'alertOnlyAppliesToNewImages' => __( 'This type of optimization will apply to new uploaded images. Images that were already processed will not be re-optimized unless you restart the bulk process.', 'shortpixel-image-optimiser' ),
@@ -442,7 +444,7 @@ class ShortPixelPlugin {
 
 		wp_register_style( 'sp-file-tree', plugins_url( '/res/css/sp-file-tree.min.css', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
 
-		wp_register_style( 'shortpixel', plugins_url( '/res/css/short-pixel.css', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
+		//wp_register_style( 'shortpixel', plugins_url( '/res/css/short-pixel.css', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
 
 		// notices. additional styles for SPIO.
 		wp_register_style( 'shortpixel-notices', plugins_url( '/res/css/shortpixel-notices.css', SHORTPIXEL_PLUGIN_FILE ), array( 'shortpixel-admin' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
@@ -519,7 +521,7 @@ class ShortPixelPlugin {
 			$this->load_script( 'shortpixel-settings' );
 
 			$this->load_style( 'shortpixel-admin' );
-			$this->load_style( 'shortpixel' );
+			//$this->load_style( 'shortpixel' );
 			$this->load_style( 'sp-file-tree' );
 			$this->load_style( 'shortpixel-settings' );
 
@@ -534,14 +536,14 @@ class ShortPixelPlugin {
 			$this->load_script( 'shortpixel-media' );
 
 			$this->load_style( 'shortpixel-admin' );
-			$this->load_style( 'shortpixel' );
+		//	$this->load_style( 'shortpixel' );
 
 			if ( $this->env()->is_debug ) {
 				$this->load_script( 'shortpixel-debug' );
 			}
 
 		} elseif ( $plugin_page == 'wp-short-pixel-custom' ) {
-			$this->load_style( 'shortpixel' );
+		//	$this->load_style( 'shortpixel' );
 			$this->load_style( 'shortpixel-admin' );
 
 			$this->load_style( 'shortpixel-othermedia' );
@@ -552,7 +554,7 @@ class ShortPixelPlugin {
 			$this->load_script( 'shortpixel-screen-custom' ); // screen
 			$this->load_style( 'shortpixel-admin' );
 
-			$this->load_style( 'shortpixel' );
+		//	$this->load_style( 'shortpixel' );
 			$this->load_style( 'shortpixel-nextgen' );
 		}
 		elseif ( $this->env()->is_gutenberg_editor === true)

@@ -40,20 +40,15 @@ class Woocommerce
 				// No signal, no run.
 				if (false === self::$SIGNAL)
 				{
-				//	 Log::addTemp('Signal is False');
 					 return $new_sizes;
 				}
 
 				if (count($new_sizes) === 0)
 				{
-					Log::addTemp('New Sizes are 0 - ' . $attach_id);
 					 self::$SIGNAL = false;
 					 return $new_sizes;
 				}
 				$fs = \wpSPIO()->filesystem();
-
-				Log::addTemp('Woocommerce Regen sizes - ' . $attach_id, $new_sizes);
-				//Log::addTemp('Backtrace', debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 15));
 
 				$mediaImage = $fs->getMediaImage($attach_id);
 				$changes = false;
@@ -68,14 +63,12 @@ class Woocommerce
 										$thumbnailObj = $mediaImage->getThumbNail($new_size);
 										if (is_object($thumbnailObj) && $thumbnailObj->isOptimized())
 										{
-												Log::addTemp('Thumbnail is optimized, dropping data ' . $new_size);
 												$thumbnailObj->onDelete();
 												$changes = true;
 										}
 								}
 						}
 						else {
-							 Log::addTemp('Media Item not optimized: ' . $attach_id);
 						}
 				}
 

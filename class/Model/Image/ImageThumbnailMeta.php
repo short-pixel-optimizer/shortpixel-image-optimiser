@@ -23,10 +23,6 @@ class ImageThumbnailMeta
 	/** @var boolean */
   public $did_cmyk2rgb = false;
 
-	// @todo Find all of those.
- // public $did_png2jpg = false; // Was this replaced?
-//	public $tried_png2jpg = false; // Tried it, might not have working.
-
 	/** @var int */
   public $resize;
 	/** @var int */

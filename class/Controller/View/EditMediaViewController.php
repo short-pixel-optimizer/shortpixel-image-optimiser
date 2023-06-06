@@ -177,7 +177,6 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
 					if ($imageObj->isProcessable())
 					{
-						 //$urls = $imageObj->getOptimizeUrls();
 						 $optimizeData = $imageObj->getOptimizeData();
 						 $urls = $optimizeData['urls'];
 

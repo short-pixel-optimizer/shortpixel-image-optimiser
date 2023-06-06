@@ -35,6 +35,10 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     const COMPRESSION_LOSSY = 1;
     const COMPRESSION_GLOSSY = 2;
 
+		const ACTION_SMARTCROP = 100;
+		const ACTION_SMARTCROPLESS = 101;
+
+
     // Extension that we process .
     const PROCESSABLE_EXTENSIONS = array('jpg', 'jpeg', 'gif', 'png', 'pdf');
 
@@ -50,7 +54,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		const P_BACKUP_EXISTS = 8;
 		const P_OPTIMIZE_PREVENTED = 9;
 		const P_DIRECTORY_NOTWRITABLE = 10;
-
 
 		// For restorable status
 		const P_RESTORABLE = 109;
@@ -772,7 +775,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         }
         else
         {
-					if ($this->is_virtual()) // Is_virtual, but no backup found ( see up ) 
+					if ($this->is_virtual()) // Is_virtual, but no backup found ( see up )
 					{
 						$this->restorable_status = self::P_BACKUP_NOT_EXISTS;
 					}
@@ -1230,7 +1233,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
        return \wpSPIO()->filesystem();
     }
 
-		protected function createParamList()
+		protected function createParamList($args = array())
 		{
 			$settings = \wpSPIO()->settings();
 
@@ -1240,7 +1243,15 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 		 $useSmartcrop = false;
 
-		 if ($settings->useSmartcrop == true && $this->getExtension() !== 'pdf')
+		 if (isset($args['smartcrop']) && $this->getExtension() !== 'pdf')
+		 {
+			  $useSmartcrop = $args['smartcrop'];
+		 }
+		 else {
+		 	 $useSmartCrop = $settings->useSmartcrop;
+		 }
+
+		 if ($useSmartcrop == true && $this->getExtension() !== 'pdf')
 		 {
 		 	$resize = 4 ;
 			$useSmartcrop = true;

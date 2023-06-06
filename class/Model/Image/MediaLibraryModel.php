@@ -53,7 +53,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	/** @var boolean */
 	private $justConverted = false; // check if legacy conversion happened on same run, to prevent double runs.
 
-
+	/** @var array */
 	private $optimizeData; // cache to prevent running this more than once per run.
 
 	/** @var string */
@@ -61,6 +61,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 	/** @var string */
 	protected $originalImageKey = 'shortpixel_original_donotuse';
+
+	/** @var array */
+	protected $forceSettings = array();  // option derives from setting or otherwise, request to be forced upon via UI to use specific value.
 
   public function __construct($post_id, $path)
   {
@@ -117,11 +120,20 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		 }
 
 		 $isSmartCrop = ($settings->useSmartcrop == true && $this->getExtension() !== 'pdf') ? true : false;
+		 $paramListArgs = array(); // args for the params, yes.
+
+		 if (isset($this->forceSettings['smartcrop']) && $this->getExtension() !== 'pdf')
+		 {
+			  $isSmartCrop = ($this->forceSettings['smartcrop'] == ImageModel::ACTION_SMARTCROP) ? true : false;
+
+		 }
+		 $paramListArgs['smartcrop'] = $isSmartCrop;
+
 		 $doubles = array(); // check via hash if same command / result is there.
 
      if ($this->isProcessable(true) || ($this->isProcessableAnyFileType() && $this->isOptimized()) )
 		 {
-				$paramList = $this->createParamList();
+				$paramList = $this->createParamList($paramListArgs);
 				$parameters['urls'][$this->mainImageKey] = $url;
 				$parameters['paths'][$this->mainImageKey] = $this->getFullPath();
 				$parameters['params'][$this->mainImageKey] = $paramList;
@@ -150,7 +162,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				 	$url = $thumbObj->getURL();
 			   }
 
-				 $paramList = $thumbObj->createParamList();
+				 $paramList = $thumbObj->createParamList($paramListArgs);
 				 $hash = md5( serialize($paramList) . $url); // Hash the paramlist + url to find identical results.
 
 // This thing fly to sep function? Retutrn liast  duplicat/double name => name
@@ -227,11 +239,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
      return $parameters;
   }
 
-
-
 	public function flushOptimizeData()
 	{
 		 $this->optimizeData = null;
+	}
+
+	public function doSetting($setting, $value)
+	{
+		  $this->forceSettings[$setting] = $value;
+			$this->flushOptimizeData();
 	}
 
   // Try to get the URL via WordPress

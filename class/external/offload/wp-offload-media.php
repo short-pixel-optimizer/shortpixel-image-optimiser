@@ -526,9 +526,8 @@ class wpOffload
 
 				$item = $this->getItemById($post_id);
 
-				if (false === $item)
+				if (false === $item) // item not offloaded.
 				{
-					 Log::addWarning('S3 Update Original Path - Item not available ' . $post_id, $imageModel);
 					 return false;
 				}
 
@@ -543,14 +542,6 @@ class wpOffload
 
 				$updated = false;
 
-/*Log::addTemp('Update Original Data', array(
-						'original_path' => $original_path,
-						'original_source_path' => $original_source_path,
-						'path' => $path,
-						'source_path' => $source_path,
-						'wp_original' => $wp_original,
-						'wp_source' => $wp_source,
-				)); */
 
 				// If image is replaced with another name, the original soruce path will not match.  This could also happen when an image is with -scaled as main is replaced by an image that doesn't have it.  In all cases update the table to reflect proper changes.
 				if (wp_basename($wp_original) !== wp_basename($original_path))

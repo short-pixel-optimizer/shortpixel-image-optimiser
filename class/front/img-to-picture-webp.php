@@ -139,7 +139,6 @@ class ShortPixelImgToPictureWebp
 
 				if (false === $image->isParseable())
 				{
-					//Log::addTemp('Image not parseable', $image->getImageData());
 					 return $raw_image;
 				}
 
@@ -430,9 +429,6 @@ class FrontImage
 
 					 $this->attributes[$attr->nodeName] = $attr->nodeValue;
         }
-
-		//	Log::addTemp('Attributes', $this->attributes);
-			//Log::addTemp('Srcset', explode(',', $this->srcset));
 
 				$result = $this->setupSources();
 

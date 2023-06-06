@@ -357,16 +357,18 @@ class UiHelper
             }
 			 			if ($mediaItem->isRestorable())
 						{
-
-		           switch($mediaItem->getMeta('compressionType'))
+							 $compressionType = $mediaItem->getMeta('compressionType');
+		           switch($compressionType)
 		           {
 		               case ImageModel::COMPRESSION_LOSSLESS:
 		                 $list_actions['reoptimize-lossy'] = self::getAction('reoptimize-lossy', $id);
 		                 $list_actions['reoptimize-glossy'] = self::getAction('reoptimize-glossy', $id);
+
 		               break;
 		               case ImageModel::COMPRESSION_LOSSY:
 		                 $list_actions['reoptimize-lossless'] = self::getAction('reoptimize-lossless', $id);
 		                 $list_actions['reoptimize-glossy'] = self::getAction('reoptimize-glossy', $id);
+
 		               break;
 		               case ImageModel::COMPRESSION_GLOSSY:
 		                 $list_actions['reoptimize-lossy'] = self::getAction('reoptimize-lossy', $id);
@@ -374,7 +376,11 @@ class UiHelper
 		               break;
 		           }
 
-
+							 if ($mediaItem->get('type') === 'media')
+							 {
+							 		$list_actions['reoptimize-smartcrop'] = self::getAction('reoptimize-smartcrop', $id, array('compressionType' => $compressionType));
+							 		$list_actions['reoptimize-smartcropless'] = self::getAction('reoptimize-smartcropless', $id, array('compressionType' => $compressionType));
+								}
 		          		$list_actions['restore'] = self::getAction('restore', $id);
 							} // isRestorable
 						else
@@ -521,10 +527,12 @@ class UiHelper
     return $text;
   }
 
-  public static function getAction($name, $id)
+  public static function getAction($name, $id, $args = array())
   {
      $action = array('function' => '', 'type' => '', 'text' => '', 'display' => '');
      $keyControl = ApiKeyController::getInstance();
+
+		 $compressionType = isset($args['compressionType']) ? $args['compressionType'] : null;
 
     switch($name)
     {
@@ -590,6 +598,18 @@ class UiHelper
         $action['function'] = 'window.ShortPixelProcessor.screen.ReOptimize(' . $id . ',' . ImageModel::COMPRESSION_LOSSLESS . ')';
         $action['type'] = 'js';
         $action['text'] = __('Re-optimize Lossless','shortpixel-image-optimiser');
+        $action['display'] = 'inline';
+     break;
+		 case 'reoptimize-smartcrop':
+        $action['function'] = 'window.ShortPixelProcessor.screen.ReOptimize(' . $id . ',' . $compressionType . ',' . ImageModel::ACTION_SMARTCROP . ')';
+        $action['type'] = 'js';
+        $action['text'] = __('Re-optimize with Smartcrop','shortpixel-image-optimiser');
+        $action['display'] = 'inline';
+     break;
+		 case 'reoptimize-smartcropless':
+        $action['function'] = 'window.ShortPixelProcessor.screen.ReOptimize(' . $id . ',' . $compressionType . ',' . ImageModel::ACTION_SMARTCROPLESS . ')';
+        $action['type'] = 'js';
+        $action['text'] = __('Re-optimize without Smartcrop','shortpixel-image-optimiser');
         $action['display'] = 'inline';
      break;
      case 'extendquota':

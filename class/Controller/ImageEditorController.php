@@ -69,7 +69,6 @@ class ImageEditorController
 		$imagepath = false;
 		if ($size == 'full')
 		{
-				Log::addTemp('Size full');
 				$optimized_and_backup = ($mediaImage->isOptimized() && $mediaImage->hasBackup());
 				if ( true === $optimized_and_backup)
 					$imagepath = $mediaImage->getBackupFile()->getFullPath();
@@ -82,10 +81,8 @@ class ImageEditorController
 					$imagepath = $thumbObj->getBackupFile()->getFullPath();
 		}
 
-//Log::addTemp('imagePath', $imagepath);
 		if (true === $optimized_and_backup)
 		{
-		//	Log::addTemp('Returning ImagePath');
 			 return $imagepath;
 		}
 
@@ -94,7 +91,6 @@ class ImageEditorController
 
 	public function saveImageFile( $null, $filename, $image, $mime_type, $post_id		)
 	{
-		Log::addTemp('Save Image File');
 			// Check image and if needed, delete backups.
 			$fs = \wpSPIO()->filesystem();
 			$mediaImage = $fs->getImage($post_id, 'media');
@@ -105,69 +101,6 @@ class ImageEditorController
 			}
 			return $null;
 	}
-
-//'updated_postmeta', $meta_id, $object_id, $meta_key, $meta_value
-	// Detect post meta update, because this is the only we have to detect a restore to oringal.
-	/*
-	public function checkUpdateMeta( $meta_id, $object_id, $meta_key, $meta_value)
-	{
-		 if ($meta_key !== '_wp_attachment_backup_sizes')
-		 {
-			 return;
-		 }
-
-		 $file = get_attached_file($object_id);
-		 $parts = pathinfo( $file );
-
-		 // make sure that the file is not of 'edited' kind still ( original ) - preg match returns false or 0 if not there
-		 $result = preg_match( '/-e[0-9]{13}\./', basename($file), $matches);
-//		 Log::addTemp('Matches' . $result , $matches);
-		 if ( false === $result || $result === 0  ) {
-			 $fs = \wpSPIO()->filesystem();
-			 $mediaImage = $fs->getImage($object_id, 'media');
-
-
-			// Log::addTemp('meta Value', $meta_value);
-			 Log::addTemp('Result from Get Attached' . $file);
-			 Log::addTemp('Check if can be restored (edited image) -- ' . $mediaImage->getFullPath());
-
-			 // Will remove most of data, and backups if lucky.
-			 if (is_object($mediaImage))
-			 {
-				 Log::addTemp('MediaImage Objet, Ondelete doin');
-				  $mediaImage->onDelete();
-			 }
-
-			 // Just nuke any backup in sight.
-			 if (is_array($meta_value))
-			 {
-				   foreach($meta_value as $name => $data)
-					 {
-						  if (! isset($data['file']))
-							{
-								Log::addTemp('not set file', $data);
-								 continue;
-							}
-							$fileObj = $fs->getFile(path_join($parts['dirname'], $data['file']));
-							if (is_object($fileObj))
-							{
-								 if ($fileObj->hasBackup())
-								 {
-									  $fileObj->getBackupFile()->delete();
-								 }
-							}
-							else {
-							}
-					 }
-			 }
-			 else {
-			 	 	Log::addtEMP('Not arrey, this meta calue');
-			 }
-
-		 }
-
-	}
-*/
 
 
 } //class

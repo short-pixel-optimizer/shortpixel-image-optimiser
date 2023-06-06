@@ -206,7 +206,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
           $page = $this->currentPage;
 					if ($page <= 0)
 						$page = 1;
-						
+
           $controller = OtherMediaController::getInstance();
 
 					$hidden_ids = $controller->getHiddenDirectoryIDS();
@@ -419,7 +419,6 @@ class OtherMediaViewController extends \ShortPixel\ViewController
           $settings = \wpSPIO()->settings();
 
           $keyControl = ApiKeyController::getInstance();
-
 
 					$actions = UIHelper::getActions($item);
 

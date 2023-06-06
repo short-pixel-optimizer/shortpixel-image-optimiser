@@ -32,7 +32,6 @@ class ListMediaViewController extends \ShortPixel\ViewController
 			$fs = \wpSPIO()->filesystem();
 			$fs->startTrustedMode();
 
-
 			$this->checkAction(); // bulk action checkboxes, y'all
       $this->loadHooks();
   }
@@ -43,7 +42,6 @@ class ListMediaViewController extends \ShortPixel\ViewController
 	{
 	   $wp_list_table = _get_list_table('WP_Media_List_Table');
      $action = $wp_list_table->current_action();
-
 
 		 if (! $action)
 		 		return;
@@ -64,7 +62,7 @@ class ListMediaViewController extends \ShortPixel\ViewController
 		 $numItems = count($items);
 	   $plugin_action = str_replace('shortpixel-', '', $action);
 
-		 $targetCompressionType = null;
+		 $targetCompressionType = $targetCrop = null;
 
 		 switch ($plugin_action)
 		 {
@@ -76,6 +74,12 @@ class ListMediaViewController extends \ShortPixel\ViewController
 				break;
 				case "lossless":
 					  $targetCompressionType = ImageModel::COMPRESSION_LOSSLESS;
+				break;
+				case 'smartcrop':
+						$targetCrop = ImageModel::ACTION_SMARTCROP;
+				break;
+				case 'smartcropless':
+						$targetCrop = ImageModel::ACTION_SMARTCROPLESS;
 				break;
 		 }
 
@@ -89,19 +93,42 @@ class ListMediaViewController extends \ShortPixel\ViewController
 							 if ($mediaItem->isProcessable())
 							 	$res = $optimizeController->addItemToQueue($mediaItem);
 						break;
+						case 'smartcrop':
+						case 'smartcropless':
+								if ($mediaItem->isOptimized())
+								{
+										$targetCompressionType = $mediaItem->getMeta('compressionType');
+								}
+								else {
+									$targetCompressionType = \wpSPIO()->settings()->compressionType;
+								}
 						case 'glossy':
 						case 'lossy':
 						case 'lossless':
-								if ($mediaItem->isOptimized() && $mediaItem->getMeta('compressionType') == $targetCompressionType  )
+
+								if ($mediaItem->isOptimized() && $mediaItem->getMeta('compressionType') == $targetCompressionType && is_null($targetCrop)  )
 								{
 									// do nothing if already done w/ this compression.
 								}
 								elseif(! $mediaItem->isOptimized())
 								{
+									$mediaItem->setMeta('compressionType', $targetCompressionType);
+									if (! is_null($targetCrop))
+									{
+										 $mediaItem->doSetting('smartcrop', $targetCrop);
+									}
 									$res = $optimizeController->addItemToQueue($mediaItem);
 								}
 								else
-							 		$res = $optimizeController->reOptimizeItem($mediaItem, $targetCompressionType);
+								{
+									$args = array();
+									if (! is_null($targetCrop))
+									{
+										 $args = array('smartcrop' => $targetCrop);
+									}
+
+							 		$res = $optimizeController->reOptimizeItem($mediaItem, $targetCompressionType, $args);
+								}
 						break;
 						case 'restore';
 								if ($mediaItem->isOptimized())

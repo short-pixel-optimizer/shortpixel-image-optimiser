@@ -22,7 +22,6 @@ class ApiController
 	 const STATUS_OPTIMIZED_BIGGER = -9;
 	 const STATUS_CONVERTED = -10;
 
-
     const STATUS_QUEUE_FULL = -404;
     const STATUS_MAINTENANCE = -500;
 		const STATUS_CONNECTION_ERROR = -503; // Not official, error connection in WP.
@@ -206,16 +205,11 @@ class ApiController
 			 $requestParameters['returndatalist'] = $args['returndatalist'];
 		}
 
-
-    if(/*false &&*/ $settings->downloadArchive == self::DOWNLOAD_ARCHIVE && class_exists('PharData')) {
-        $requestParameters['group'] = $args['item_id'];
-    }
     if($args['refresh']) { // @todo if previous status was ShortPixelAPI::ERR_INCORRECT_FILE_SIZE; then refresh.
         $requestParameters['refresh'] = 1;
     }
 
 		$requestParameters = apply_filters('shortpixel/api/request', $requestParameters, $args['item_id']);
-
 
     $arguments = array(
         'method' => 'POST',
@@ -381,7 +375,6 @@ class ApiController
               case -201: // Invalid image format
               case -202: // Invalid image or unsupported format
               case -203: // Could not download file
-								// Log::addTemp('');
                  return $this->returnFailure( self::STATUS_ERROR, $status->Message);
               break;
               case -403: // Quota Exceeded

@@ -12,19 +12,6 @@ class CustomQueue extends Queue
 
    protected static $instance;
 
-
-   /*public static function getInstance()
-   {
-      if (is_null(self::$instance))
-      {
-         $class = get_called_class();
-         static::$instance = new $class();
-      }
-
-      return static::$instance;
-   } */
-
-
    public function __construct($queueName = 'Custom')
    {
      $shortQ = new ShortQ(static::PLUGIN_SLUG);

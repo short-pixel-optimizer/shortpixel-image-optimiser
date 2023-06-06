@@ -14,6 +14,8 @@ use ShortPixel\Notices\NoticeController as Notices;
 use ShortPixel\Helper\UiHelper as UiHelper;
 use ShortPixel\Helper\InstallHelper as InstallHelper;
 
+use ShortPixel\Model\Image\ImageModel as ImageModel;
+
 
 // Class for containing all Ajax Related Actions.
 class AjaxController
@@ -236,7 +238,7 @@ class AjaxController
 					 case "redoLegacy":
 					 	  $this->redoLegacy($json, $data);
 					 break;
-					 
+
            default:
               $json->$type->message = __('Ajaxrequest - no action found', 'shorpixel-image-optimiser');
               $json->error = self::NO_ACTION;
@@ -272,7 +274,6 @@ class AjaxController
           $json->$type = new \stdClass;
 
           $json->$type = $control->addItemToQueue($mediaItem);
-					Log::addTemp('OptimizeItem', $json);
 					return $json;
     }
 
@@ -312,11 +313,18 @@ class AjaxController
        $id = $data['id'];
        $type = $data['type'];
        $compressionType = isset($_POST['compressionType']) ? intval($_POST['compressionType']) : 0;
+			 $actionType = isset($_POST['actionType']) ? intval($_POST['actionType']) : null;
+
        $mediaItem = $this->getMediaItem($id, $type);
+
+				if ($actionType == ImageModel::ACTION_SMARTCROP || $actionType == ImageModel::ACTION_SMARTCROPLESS)
+				{
+						$args = array('smartcrop' => $actionType);
+				}
 
        $control = new OptimizeController();
 
-       $json->$type = $control->reOptimizeItem($mediaItem, $compressionType);
+       $json->$type = $control->reOptimizeItem($mediaItem, $compressionType, $args);
 			 $json->status = true;
        return $json;
     }

@@ -276,7 +276,7 @@ class OptimizeController
 		*
 		* @param Object $mediaItem
 		*/
-		public function reOptimizeItem($mediaItem, $compressionType)
+		public function reOptimizeItem($mediaItem, $compressionType, $args = array())
     {
       $json = $this->restoreItem($mediaItem);
 
@@ -289,6 +289,11 @@ class OptimizeController
             $mediaItem = $fs->getImage($mediaItem->get('id'), $mediaItem->get('type'));
 
             $mediaItem->setMeta('compressionType', $compressionType);
+
+						if (isset($args['smartcrop']))
+						{
+							 $mediaItem->doSetting('smartcrop', $args['smartcrop']);
+						}
             $json = $this->addItemToQueue($mediaItem);
             return $json;
       }

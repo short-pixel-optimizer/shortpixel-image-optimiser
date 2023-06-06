@@ -204,7 +204,7 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase
 				this.processor.AjaxRequest(data);
 		}
 
-		ReOptimize(id, compression)
+		ReOptimize(id, compression, action)
 		{
 				var data = {
 					 id : id ,
@@ -212,6 +212,11 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase
 					 type: this.type,
 					 screen_action: 'reOptimizeItem'
 				};
+
+				if (typeof action !== 'undefined')
+				{
+					 data.actionType = action;
+				}
 
 			 if (! this.processor.CheckActive())
 					 data.callback = 'shortpixel.' + this.type + '.resumeprocessing';
