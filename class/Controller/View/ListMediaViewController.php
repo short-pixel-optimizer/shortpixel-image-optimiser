@@ -144,7 +144,6 @@ class ListMediaViewController extends \ShortPixel\ViewController
   /** Hooks for the MediaLibrary View */
   protected function loadHooks()
   {
-
     add_filter( 'manage_media_columns', array( $this, 'headerColumns' ) );//add media library column header
     add_action( 'manage_media_custom_column', array( $this, 'doColumn' ), 10, 2 );//generate the media library column
     //Sort and filter on ShortPixel Compression column
@@ -279,17 +278,14 @@ class ListMediaViewController extends \ShortPixel\ViewController
 		 if (isset($wpquery->query_vars['shortpixel-filter']) || isset($wpquery->query_vars['shortpixel-order']) )
 		 {
 			  $filter = isset($wpquery->query_vars['shortpixel-filter']) ? $wpquery->query_vars['shortpixel-filter'] : false ;
-				//$order =  isset($wpquery->query_vars['shortpixel-order']) ? $wpquery->query_vars['shortpixel-order'] : false;
 
 				if ($filter == 'optimized')
 				{
 					 $fileStatus = ImageModel::FILE_STATUS_SUCCESS;
 				}
 				elseif ($filter == 'unoptimized') {
-						//fileStatus = ImageModel::FILE_STATUS_UNPROCESSED;
 				}
 
-Log::addTemp('Filter' .  $filter, $request);
 			  $tableName = UtilHelper::getPostMetaTable();
 				$post_pos = strpos($request, '1=1');
 			  $post_where = substr($request, $post_pos);
@@ -301,12 +297,6 @@ Log::addTemp('Filter' .  $filter, $request);
 
 					$sql = substr_replace($request, $where, ($post_pos + strlen($post_pos)) ,0);
 
-					/*$sql = ' SELECT SQL_CALC_FOUND_ROWS * FROM ' . $tableName;
-					$sql .= ' INNER JOIN ' . $wpdb->posts . ' ON ' . $wpdb->posts . '.ID = ' . $tableName . '.attach_id ';
-
-					$sql .= 'WHERE image_type = %d AND status =  %d';
-					$sql = $wpdb->prepare($sql, MediaLibraryModel::IMAGE_TYPE_MAIN,  $fileStatus);
-					$sql .= ' AND ' . $post_where; // glue back the orders, and the all. */
 				}
 				elseif ($filter && $filter == 'unoptimized')
 				{
@@ -317,14 +307,12 @@ Log::addTemp('Filter' .  $filter, $request);
 				}
 				elseif($filter && $filter == 'prevented')
 				{
-			//		Log::addTemp('Filter: PReVENTED', $sql);
 					 $where = " AND " . $wpdb->posts . '.ID in ( SELECT post_id FROM ' . $wpdb->postmeta . " WHERE meta_key = %s) ";
 					 $where = $wpdb->prepare($where, '_shortpixel_prevent_optimize');
 					 $sql = substr_replace($request, $where, ($post_pos + strlen($post_pos)) ,0);
 
-
 				}
-Log::addTemp('SQL', $sql);
+
 				return $sql;
 		 }
 

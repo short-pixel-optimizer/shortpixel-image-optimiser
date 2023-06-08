@@ -259,6 +259,27 @@ class AdminController extends \ShortPixel\Controller
         return $mimes;
     }
 
+		/** Media library gallery view, attempt to add fields that looks like the SPIO status */
+		public function editAttachmentScreen($fields, $post)
+		{
+				ob_start();
+				ob_end_clean();
+
+				$fields["shortpixel-image-optimiser"] = array(
+							"label" => esc_html__("ShortPixel", "shortpixel-image-optimiser"),
+							"input" => "html",
+							"html" => '<div id="sp-msg-' . $post->ID . '">--</div>',
+						);
+
+				return $fields;
+		}
+
+		public function printComparer()
+		{
+				$view = \ShortPixel\Controller\View\ListMediaViewController::getInstance();
+				$view->loadComparer();
+		}
+
     /** When an image is deleted
     * @hook delete_attachment
     * @param int $post_id  ID of Post

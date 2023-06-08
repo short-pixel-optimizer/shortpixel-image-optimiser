@@ -10,6 +10,7 @@ class ViewController extends Controller
   protected static $controllers = array();
 	protected static $viewsLoaded = array();
 
+	protected static $instance;
 
   protected $model; // connected model to load.
   protected $template = null; // template name to include when loading.
@@ -42,6 +43,13 @@ class ViewController extends Controller
     $this->view->data = null;  // Data(base), to separate from regular view data
 
   }
+
+	public static function getInstance() {
+    if (is_null(static::$instance)) {
+        static::$instance = new static;
+    }
+    return static::$instance;
+}
 
   /* Check if postData has been submitted.
   * This function should always be called at any ACTION function ( load, load_$action etc ).

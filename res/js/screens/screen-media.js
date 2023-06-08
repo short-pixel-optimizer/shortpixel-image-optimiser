@@ -6,11 +6,38 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
     isCustom = true;
     isMedia = true;
 		type = 'media';
-		
+
+		Init()
+		{
+			super.Init();
+			this.ListenGallery();
+
+		}
+
+		ListenGallery()
+		{
+		//		var mediaFrame = document.querySelector('.media-frame-content');
+			  if (typeof wp.media.frame === 'undefined')
+				{
+					 return;
+				}
+				var self = this;
+
+				wp.media.frame.on('edit:attachment', function(model, e) { console.log(model, e);
+							var attach_id = model.id;
+							console.log(attach_id);
+							var data = {}
+							data.id = attach_id;
+							data.type = self.type;
+							self.processor.LoadItemView(data);
+
+				});
+		}
 
     RenderItemView(e)
     {
 				e.preventDefault();
+				console.log(e);
         var data = e.detail;
         if (data.media)
         {
@@ -20,8 +47,13 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 						if (element !== null) // Could be other page / not visible / whatever.
             	element.outerHTML = data.media.itemView;
         }
+				else {
+					console.log('data not found');
+				}
         return false; // callback shouldn't do more, see processor.
     }
+
+
 
 		HandleImage(resultItem, type)
 		{

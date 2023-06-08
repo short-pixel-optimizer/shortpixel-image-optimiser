@@ -146,9 +146,8 @@ class ShortPixelPlugin {
 		$optimizeController = new OptimizeController();
 		add_action( 'shortpixel-thumbnails-regenerated', array( $optimizeController, 'thumbnailsChangedHook' ), 10, 4 );
 
-		// Media Library
+		// Media Library - Actions to route screen
 		add_action( 'load-upload.php', array( $this, 'route' ) );
-
 		add_action( 'load-post.php', array( $this, 'route' ) );
 
 		$admin = AdminController::getInstance();
@@ -160,6 +159,11 @@ class ShortPixelPlugin {
 
 		// Action / hook for who wants to use CRON. Please refer to manual / support to prevent loss of credits.
 		add_action( 'shortpixel/hook/processqueue', array( $admin, 'processQueueHook' ) );
+
+		// Action for media library gallery view
+		add_filter('attachment_fields_to_edit', array($admin, 'editAttachmentScreen'), 10, 2);
+		add_action('print_media_templates', array($admin, 'printComparer'));
+
 
 		// Placeholder function for heic and such, return placeholder URL in image to help w/ database replacements after conversion.
 		add_filter('wp_get_attachment_url', array($admin, 'checkPlaceHolder'), 10, 2);
@@ -604,19 +608,17 @@ class ShortPixelPlugin {
             default:
                 switch ( $screen_id ) {
 					case 'upload':
-                        $controller = '\ShortPixel\Controller\View\ListMediaViewController';
+                  $controller = '\ShortPixel\Controller\View\ListMediaViewController';
                         break;
 					case 'attachment'; // edit-media
-                        $controller = '\ShortPixel\Controller\View\EditMediaViewController';
+                   $controller = '\ShortPixel\Controller\View\EditMediaViewController';
                      break;
-
                 }
                 break;
 
 		}
-
 		if ( $controller !== false ) {
-			$c = new $controller();
+			$c = $controller::getInstance();
 			$c->setControllerURL( $url );
 			if ( method_exists( $c, $action ) ) {
 				$c->$action();

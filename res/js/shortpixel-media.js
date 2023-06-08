@@ -3,13 +3,12 @@
 // This document is jquery because WP emits jquery events on image edit
 jQuery(document).ready(function () {
 
-		jQuery(document).on('image-editor-ui-ready', init);
+		jQuery(document).on('image-editor-ui-ready', Init);
 		var image_post_id;
 		var is_restorable;
 
 
-console.log('shortpixel media load');
-		function init()
+		function Init()
 		{
 			image_post_id = spio_media.post_id;
 			is_restorable = spio_media.is_restorable;
@@ -19,7 +18,6 @@ console.log('shortpixel media load');
 			{
 				 showOptimizeWarning();
 			}
-
 		}
 
 		function showOptimizeWarning()

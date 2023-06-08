@@ -14,16 +14,12 @@ class HeicFeatureNotice extends \ShortPixel\Model\AdminNoticeModel
 	protected function checkTrigger()
 	{
 // always fire(?)
+
 		return true;
 	}
 
 	protected function checkReset()
 	{
-		$settings = \wpSPIO()->settings();
-		 if ($settings->useSmartcrop == true)
-		 {
-			  return true;
-		 }
 		 return false;
 	}
 

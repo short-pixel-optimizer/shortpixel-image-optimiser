@@ -6,9 +6,6 @@ use ShortPixel\Helper\UiHelper as UiHelper;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Controller\ErrorController as ErrorController;
 
-
-//use ShortPixel\Model\ImageModel as ImageModel;
-
 // Future contoller for the edit media metabox view.
 class EditMediaViewController extends \ShortPixel\ViewController
 {
@@ -53,7 +50,6 @@ class EditMediaViewController extends \ShortPixel\ViewController
           );
       }
 
-
       public function dometaBox($post)
       {
           $this->post_id = $post->ID;
@@ -72,11 +68,6 @@ class EditMediaViewController extends \ShortPixel\ViewController
 						$this->loadView();
 						return false;
 					}
-
-				//	var_dump(get_post_meta($post->ID, '_wp_attached_file', true));
-				//	var_dump(get_attached_file($post->ID));
-				//	var_dump(wp_get_attachment_url($post->ID));
-				//	var_dump(urlencode_deep(get_attached_file($post->ID)));
 
           $this->view->status_message = null;
 

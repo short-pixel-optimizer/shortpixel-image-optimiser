@@ -353,7 +353,7 @@ class UiHelper
   			         }
 
   				       if ($showCompare)
-                   $list_actions[] = self::getAction('compare', $id);
+                   $list_actions['comparer'] = self::getAction('compare', $id);
             }
 			 			if ($mediaItem->isRestorable())
 						{

@@ -320,6 +320,24 @@ th.sorted.column-wp-shortPixel a {
   }
 }
 
+.compat-field-shortpixel-image-optimiser {
+  /*	.field, .sp-column-info, .sp-dropdown  {
+  		position: static;
+  	}
+  	*/
+}
+.compat-field-shortpixel-image-optimiser .sp-column-actions {
+  max-width: none;
+}
+.compat-field-shortpixel-image-optimiser .thumb-wrapper {
+  display: none !important;
+}
+.compat-field-shortpixel-image-optimiser .sp-dropdown.sp-show .sp-dropdown-content {
+  display: flex;
+  flex-direction: column;
+  position: static;
+}
+
 div.sp-modal-shade {
   display: none;
   /* Hidden by default */
@@ -351,8 +369,8 @@ div.shortpixel-modal {
   /* Could be more or less, depending on screen size */
   min-width: 300px;
   /* Could be more or less, depending on screen size */
-  z-index: 100001;
-  /* Proper z-index */
+  z-index: 999999;
+  /* Z-index wars :/ */
   position: fixed;
   top: 10%;
   left: 50%;
