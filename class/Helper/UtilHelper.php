@@ -1,6 +1,10 @@
 <?php
 namespace ShortPixel\Helper;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 // Our newest Tools class
 class UtilHelper
 {
@@ -183,7 +187,7 @@ class UtilHelper
    * since the WP rewrite will not be active at that point (overruled) **/
     $rules = str_replace('RewriteEngine On', 'RewriteEngine On' . PHP_EOL . 'RewriteOptions Inherit', $rules);
 
-							// Can shortcircuit (return false) the creation of subdirectory Htaccess files if this causes issues and is not needed. 
+							// Can shortcircuit (return false) the creation of subdirectory Htaccess files if this causes issues and is not needed.
 							 $bool = apply_filters('shortpixel/install/write_deep_htaccess', true);
 
 							 if (true === $bool)

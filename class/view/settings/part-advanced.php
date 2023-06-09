@@ -2,6 +2,9 @@
 namespace ShortPixel;
 use \ShortPixel\Helper\UiHelper as UiHelper;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
 ?>
 <section id="tab-adv-settings" class="clearfix <?php echo esc_attr(($this->display_part == 'adv-settings') ? ' sel-tab ' :''); ?> ">
     <h2><a class='tab-link' href='javascript:void(0);' data-id="tab-adv-settings"><?php esc_html_e('Advanced','shortpixel-image-optimiser');?></a></h2>

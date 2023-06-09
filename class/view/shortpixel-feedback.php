@@ -3,6 +3,9 @@ namespace ShortPixel;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
 /**
  * User: simon
  * Date: 11.04.2018

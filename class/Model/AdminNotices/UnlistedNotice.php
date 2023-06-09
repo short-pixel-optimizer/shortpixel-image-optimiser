@@ -1,6 +1,10 @@
 <?php
 namespace ShortPixel\Model\AdminNotices;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 class UnlistedNotice extends \ShortPixel\Model\AdminNoticeModel
 {
 

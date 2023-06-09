@@ -1,6 +1,10 @@
 <?php
 namespace ShortPixel\Helper;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Controller\BulkController as BulkController;
@@ -23,7 +27,7 @@ class InstallHelper
       $env = wpSPIO()->env();
 
       if(\WPShortPixelSettings::getOpt('deliverWebp') == 3 && ! $env->is_nginx) {
-          UtilHelper::alterHtaccess(true,true); //add the htaccess lines. Both are true because even if one option is now off in the past both fileformats could have been generated. 
+          UtilHelper::alterHtaccess(true,true); //add the htaccess lines. Both are true because even if one option is now off in the past both fileformats could have been generated.
       }
 
       self::checkTables();
@@ -161,13 +165,9 @@ class InstallHelper
 			global $wpdb;
     	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 
-
 			dbDelta(self::getFolderTableSQL());
-
-	    	dbDelta(self::getMetaTableSQL());
-
+	    dbDelta(self::getMetaTableSQL());
 			dbDelta(self::getPostMetaSQL());
-
 
 			self::checkIndexes();
 	}

@@ -5,6 +5,9 @@ use ShortPixel\Notices\NoticeController as Notices;
 
 use ShortPixel\Helper\UiHelper as UiHelper;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
 
 $fs = \wpSPIO()->filesystem();
 

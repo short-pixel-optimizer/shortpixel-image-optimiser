@@ -1,6 +1,10 @@
 <?php
 namespace ShortPixel;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 $bool = apply_filters('shortpixel/settings/no_banner', true);
 if (! $bool )
   return;

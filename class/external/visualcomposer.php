@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 // Visual Composer and compat class.
 class visualComp
 {
@@ -9,7 +13,7 @@ class visualComp
      add_filter('shortpixel/init/automedialibrary', array($this, 'check_vcinline'));
   }
 
-  // autolibrary should not do things when VC is being inline somewhere. 
+  // autolibrary should not do things when VC is being inline somewhere.
   public function check_vcinline($bool)
   {
       if ( function_exists( 'vc_action' ) && vc_action() == 'vc_inline' )

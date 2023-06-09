@@ -1,7 +1,11 @@
 <?php
 namespace ShortPixel\Model\File;
-use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
 
 

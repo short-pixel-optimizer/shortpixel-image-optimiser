@@ -1,6 +1,10 @@
 <?php
 namespace ShortPixel\Model;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\QuotaController as QuotaController;
 
@@ -29,7 +33,7 @@ class AccessModel
 					'image_all' =>  'edit_others_posts',
 					'image_user' => 'edit_post',
 					'custom_all' => 'edit_others_posts',
-					'is_admin_user' => 'manage_options', 
+					'is_admin_user' => 'manage_options',
 					'actions' => array(),
 			);
 

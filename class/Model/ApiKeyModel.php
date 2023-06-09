@@ -1,5 +1,10 @@
 <?php
 namespace ShortPixel\Model;
+
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notice;
 
@@ -109,7 +114,7 @@ class ApiKeyModel extends \ShortPixel\Model
   {
 
 			$valid = false;
-			
+
       if (strlen($key) == 0)
       {
         // first-timers, redirect to nokey screen

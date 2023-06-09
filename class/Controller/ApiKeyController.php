@@ -1,7 +1,11 @@
 <?php
 namespace ShortPixel\Controller;
-use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Model\ApiKeyModel as ApiKeyModel;
 
 /* Main function of this controller is to load key on runtime

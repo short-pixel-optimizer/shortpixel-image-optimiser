@@ -3,6 +3,10 @@ namespace ShortPixel;
 use \ShortPixel\Controller\BulkController as BulkController;
 use \ShortPixel\Helper\UiHelper as UiHelper;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 $url = esc_url_raw(remove_query_arg('part'));
 
 $bulk = BulkController::getInstance();

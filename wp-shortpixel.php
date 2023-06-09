@@ -11,6 +11,11 @@
  * Domain Path: /lang
  */
 
+ if ( ! defined( 'ABSPATH' ) ) {
+ 	exit; // Exit if accessed directly.
+ }
+
+
 // Preventing double load crash.
 if (function_exists('wpSPIO'))
 {

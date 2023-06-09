@@ -1,6 +1,10 @@
 <?php
 namespace ShortPixel\Model\AdminNotices;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 class LegacyNotice extends \ShortPixel\Model\AdminNoticeModel
 {
 	protected $key = 'MSG_CONVERT_LEGACY';
@@ -25,6 +29,6 @@ class LegacyNotice extends \ShortPixel\Model\AdminNoticeModel
 
 		$message = sprintf($message, '<br>', '<a href="' . $read_link . '" target="_blank">', '</a>', $action_link, $action_name);
 
-		return $message; 
+		return $message;
 	}
 }

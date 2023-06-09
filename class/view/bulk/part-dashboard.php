@@ -1,5 +1,9 @@
 <?php
 namespace ShortPixel;
+
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
 ?>
 
 <section class='dashboard panel active' data-panel="dashboard" style='display: block'  >

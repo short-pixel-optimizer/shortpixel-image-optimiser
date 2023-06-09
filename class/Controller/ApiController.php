@@ -1,6 +1,9 @@
 <?php
-
 namespace ShortPixel\Controller;
+
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 

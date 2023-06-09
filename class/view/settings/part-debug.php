@@ -5,6 +5,10 @@ use Shortpixel\Controller\StatsController as StatsController;
 use Shortpixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 $opt = new OptimizeController();
 
 $q = $opt->getQueue('media');

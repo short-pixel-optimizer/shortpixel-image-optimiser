@@ -3,7 +3,6 @@ namespace ShortPixel\External\Offload;
 
 use Shortpixel\Model\File\FileModel as FileModel;
 
-
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }

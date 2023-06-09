@@ -1,6 +1,9 @@
 <?php
 namespace ShortPixel;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
 ?>
 
 <section id="tab-settings" class="<?php echo ($this->display_part == 'settings') ? 'sel-tab' :''; ?>" >

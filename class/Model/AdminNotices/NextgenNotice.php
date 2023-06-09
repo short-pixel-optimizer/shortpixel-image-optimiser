@@ -1,6 +1,10 @@
 <?php
 namespace ShortPixel\Model\AdminNotices;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 class NextgenNotice extends \ShortPixel\Model\AdminNoticeModel
 {
 	protected $key = 'MSG_INTEGRATION_NGGALLERY';
@@ -20,7 +24,7 @@ class NextgenNotice extends \ShortPixel\Model\AdminNoticeModel
 			 return true;
 		}
 
-		return false; 
+		return false;
 	}
 
 	protected function getMessage()

@@ -1,7 +1,11 @@
 <?php
 namespace ShortPixel\Controller;
-use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 /** Class for handling changes done by WP in the Image Edit section. **/
 class ImageEditorController

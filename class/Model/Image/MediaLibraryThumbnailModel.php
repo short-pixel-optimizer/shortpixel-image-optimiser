@@ -1,6 +1,10 @@
 <?php
-
 namespace ShortPixel\Model\Image;
+
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use \Shortpixel\Model\File\FileModel as FileModel;
@@ -237,7 +241,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 				else {
 //					 $fileBaseNoSize =
 					 $name = str_replace($mainFile->getFileBase(), $mainFile->getMeta()->convertMeta()->getReplacementImageBase(), $this->getFileName());
-					
+
 					 return $name;
 				}
 			}

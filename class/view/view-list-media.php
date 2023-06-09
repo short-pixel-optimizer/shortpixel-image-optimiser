@@ -2,6 +2,9 @@
 namespace ShortPixel;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
 ?>
 <div class='sp-column-info' id='sp-msg-<?php echo esc_attr($this->view->mediaItem->get('id') );?>'>
 <?php	if (isset($this->view->list_actions))

@@ -1,5 +1,9 @@
 <?php
 namespace ShortPixel;
+
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
 ?>
 <section class="panel process" data-panel="process" >
   <div class="panel-container">

@@ -1,6 +1,9 @@
 <?php
 namespace ShortPixel;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
 ?>
 
 <div id="spioHelpShade" class="spio-modal-shade" style="display:none;">

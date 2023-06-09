@@ -1,7 +1,11 @@
 <?php
 namespace ShortPixel\Controller;
-use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Model\CacheModel as CacheModel;
 // Future replacement for everything that needs temporary storage
 // Storage agnostic -> called function should not need to know what is stored where, this is job of controller.

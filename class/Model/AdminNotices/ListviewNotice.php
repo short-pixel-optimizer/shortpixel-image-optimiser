@@ -1,7 +1,11 @@
 <?php
 namespace ShortPixel\Model\AdminNotices;
-use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 class ListviewNotice extends \ShortPixel\Model\AdminNoticeModel
 {
