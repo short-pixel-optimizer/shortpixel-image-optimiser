@@ -269,6 +269,23 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		 return $url;
   }
 
+	/** Return all urls of item.  This should -not- be used for optimization. Use getOptimizeUrls(). In use for cache
+	*/
+	public function getAllUrls()
+	{
+		$urls = array();
+		$urls[] = $this->getUrl();
+
+		$thumbs = $this->getThumbObjects();
+		foreach($thumbs as $thumbObj)
+		{
+			 $urls[] = $thumbObj->getUrl();
+		}
+
+		return $urls;
+
+	}
+
   public function getWPMetaData()
   {
       if (is_null($this->wp_metadata))
@@ -1267,10 +1284,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 			if (true === $this->getMeta()->convertMeta()->hasPlaceHolder())
 			{
-					//	$url = $this->getURL();
-					//	$extension = pathinfo($url, PATHINFO_EXTENSION);
 		 				$placeholderFile = $fs->getFile($this->getFileDir() . $this->getMeta()->convertMeta()->getReplacementImageBase() . '.jpg');
-
 						if (true === $placeholderFile->exists())
 						{
 								$placeholderFile->delete();

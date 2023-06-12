@@ -14,7 +14,6 @@ class ViewController extends Controller
   protected static $controllers = array();
 	protected static $viewsLoaded = array();
 
-	protected static $instance;
 
   protected $model; // connected model to load.
   protected $template = null; // template name to include when loading.
@@ -52,6 +51,7 @@ class ViewController extends Controller
     if (is_null(static::$instance)) {
         static::$instance = new static;
     }
+		Log::addTemp('Getting Instance', static::$instance);
     return static::$instance;
 }
 

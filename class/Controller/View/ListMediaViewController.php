@@ -23,6 +23,8 @@ use ShortPixel\Model\Image\MediaLibraryModel as MediaLibraryModel;
 class ListMediaViewController extends \ShortPixel\ViewController
 {
 
+	protected static $instance;
+
   protected $template = 'view-list-media';
 //  protected $model = 'image';
 

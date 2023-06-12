@@ -23,6 +23,9 @@ class EditMediaViewController extends \ShortPixel\ViewController
       protected $imageModel;
       protected $hooked;
 
+			protected static $instance;
+
+
       public function __construct()
       {
         parent::__construct();
@@ -76,8 +79,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
           $this->view->status_message = null;
 
-
-          $this->view->text = UiHelper::getStatusText($this->imageModel);
+         	$this->view->text = UiHelper::getStatusText($this->imageModel);
           $this->view->list_actions = UiHelper::getListActions($this->imageModel);
           if ( count($this->view->list_actions) > 0)
             $this->view->list_actions = UiHelper::renderBurgerList($this->view->list_actions, $this->imageModel);

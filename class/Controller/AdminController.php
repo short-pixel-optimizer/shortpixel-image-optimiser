@@ -281,6 +281,13 @@ class AdminController extends \ShortPixel\Controller
 
 		public function printComparer()
 		{
+
+				$screen_id = \wpSPIO()->env()->screen_id;
+				if ($screen_id !== 'upload')
+				{
+					return false;
+				}
+
 				$view = \ShortPixel\Controller\View\ListMediaViewController::getInstance();
 				$view->loadComparer();
 		}

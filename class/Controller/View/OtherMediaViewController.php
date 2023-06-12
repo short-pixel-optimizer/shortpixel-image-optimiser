@@ -24,6 +24,8 @@ class OtherMediaViewController extends \ShortPixel\ViewController
       //$this->model = new
       protected $template = 'view-other-media';
 
+			protected static $instance;
+
       // Pagination .
       protected $items_per_page = 20;
       protected $currentPage = 1;

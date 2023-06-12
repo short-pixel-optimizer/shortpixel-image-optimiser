@@ -30,6 +30,8 @@ class BulkViewController extends \ShortPixel\ViewController
   protected $pendingMeta;
   protected $selected_folders = array();
 
+	protected static $instance;
+
 
   public function load()
   {
