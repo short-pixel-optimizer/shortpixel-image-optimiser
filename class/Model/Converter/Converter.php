@@ -122,7 +122,7 @@ abstract class Converter
 			$fs = \wpSPIO()->filesystem();
 
 			$filename = $this->imageModel->getFileName();
-			$newFileName = $this->imageModel->getFileBase() . '.jpg'; // convert extension to .png
+			$newFileName = $this->imageModel->getFileBase() . '.jpg'; // convert extension to .jpg
 
 			$fsNewFile = $fs->getFile($this->imageModel->getFileDir() . $newFileName);
 

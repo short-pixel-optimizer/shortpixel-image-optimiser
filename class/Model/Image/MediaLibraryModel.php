@@ -1263,13 +1263,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 							 }
 						}
 				 }
-
-
 			}
 
 			if (true === $this->getMeta()->convertMeta()->hasPlaceHolder())
 			{
-		 				$placeholderFile = $fs->getFile($this->getFileDir() . $this->getMeta()->convertMeta()->getReplacementImageName());
+					//	$url = $this->getURL();
+					//	$extension = pathinfo($url, PATHINFO_EXTENSION);
+		 				$placeholderFile = $fs->getFile($this->getFileDir() . $this->getMeta()->convertMeta()->getReplacementImageBase() . '.jpg');
 
 						if (true === $placeholderFile->exists())
 						{

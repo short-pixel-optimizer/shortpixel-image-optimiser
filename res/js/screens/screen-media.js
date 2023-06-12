@@ -17,7 +17,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		ListenGallery()
 		{
 		//		var mediaFrame = document.querySelector('.media-frame-content');
-			  if (typeof wp.media.frame === 'undefined')
+			  if (typeof (wp.media) === 'undefined'  || typeof wp.media.frame === 'undefined')
 				{
 					 return;
 				}
