@@ -267,8 +267,12 @@ class AdminController extends \ShortPixel\Controller
 		/** Media library gallery view, attempt to add fields that looks like the SPIO status */
 		public function editAttachmentScreen($fields, $post)
 		{
-				ob_start();
-				ob_end_clean();
+				// Prevent this thing running on edit media screen
+				$screen_id = \wpSPIO()->env()->screen_id;
+				if ($screen_id !== 'upload')
+				{
+					return $fields;
+				}
 
 				$fields["shortpixel-image-optimiser"] = array(
 							"label" => esc_html__("ShortPixel", "shortpixel-image-optimiser"),

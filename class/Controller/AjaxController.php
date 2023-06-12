@@ -109,7 +109,7 @@ class AjaxController
              if ($type == 'media')
              {
                ob_start();
-               $control = new ListMediaViewController();
+               $control = ListMediaViewController::getInstance();
                $control->doColumn('wp-shortPixel', $id);
                $result = ob_get_contents();
                ob_end_clean();

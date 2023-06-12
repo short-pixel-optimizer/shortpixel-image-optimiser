@@ -48,7 +48,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
             	element.outerHTML = data.media.itemView;
         }
 				else {
-					console.log('data not found');
+					console.log('Data not found - RenderItemview on media screen');
 				}
         return false; // callback shouldn't do more, see processor.
     }
