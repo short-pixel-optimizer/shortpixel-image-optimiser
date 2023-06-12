@@ -154,7 +154,7 @@ class cacheRemover
 			$urls = $imageItem->getAllUrls();
 			foreach($urls as $url)
 			{
-				 do_action('litespeed_purge_url', $url);
+				 do_action('litespeed_purge_url', $url, false, true);
 			}
   //    do_action('litespeed_media_reset', $post_id);
     }

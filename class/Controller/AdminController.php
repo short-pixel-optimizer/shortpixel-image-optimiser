@@ -267,9 +267,9 @@ class AdminController extends \ShortPixel\Controller
 		/** Media library gallery view, attempt to add fields that looks like the SPIO status */
 		public function editAttachmentScreen($fields, $post)
 		{
-				// Prevent this thing running on edit media screen
+				// Prevent this thing running on edit media screen. The media library grid is before the screen is set, so just check if we are not on the attachment window.
 				$screen_id = \wpSPIO()->env()->screen_id;
-				if ($screen_id !== 'upload')
+				if ($screen_id == 'attachment')
 				{
 					return $fields;
 				}

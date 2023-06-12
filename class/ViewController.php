@@ -51,7 +51,7 @@ class ViewController extends Controller
     if (is_null(static::$instance)) {
         static::$instance = new static;
     }
-		Log::addTemp('Getting Instance', static::$instance);
+
     return static::$instance;
 }
 
