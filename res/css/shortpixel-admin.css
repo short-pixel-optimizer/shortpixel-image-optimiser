@@ -335,7 +335,7 @@ th.sorted.column-wp-shortPixel a {
 .compat-field-shortpixel-image-optimiser .sp-dropdown.sp-show .sp-dropdown-content {
   display: flex;
   flex-direction: column;
-  position: static;
+  position: relative;
 }
 
 div.sp-modal-shade {
