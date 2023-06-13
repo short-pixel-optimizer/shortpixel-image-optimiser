@@ -489,7 +489,10 @@ class UiHelper
     }
 		elseif( $optimizeController->isItemInQueue($mediaItem) === true)
 		{
-			 $text = __('This item is waiting to be processed', 'shortpixel-image-optimiser');
+			 $text = '<p>' . __('This item is waiting to be processed', 'shortpixel-image-optimiser') . '</p>';
+			 $action = self::getAction('cancelOptimize', $mediaItem->get('id'));
+
+			 $text .= '<p><a href="javascript:' . $action['function'] . '">' . $action['text'] . '</a></p>';
 		}
 
     if ($mediaItem->isOptimizePrevented() !== false)
@@ -546,6 +549,12 @@ class UiHelper
          $action['text'] = __('Optimize Now', 'shortpixel-image-optimiser');
          $action['display'] = 'button';
       break;
+			case 'cancelOptimize':
+				 $action['function'] = 'window.ShortPixelProcessor.screen.CancelOptimizeItem(' . $id . ')';
+				 $action['type']  = 'js';
+				 $action['text'] = __('Cancel item optimizartion', 'shortpixel-image-optimiser');
+				 $action['display'] = 'button';
+			break;
       case 'optimizethumbs':
           $action['function'] = 'window.ShortPixelProcessor.screen.Optimize(' . $id . ');';
           $action['type'] = 'js';

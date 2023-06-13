@@ -48,8 +48,6 @@ if(!defined('SHORTPIXEL_USE_DOUBLE_AVIF_EXTENSION')) { //can be defined in wp-co
     define('SHORTPIXEL_USE_DOUBLE_AVIF_EXTENSION', false);
 }
 
-
-
 define('SHORTPIXEL_API', 'api.shortpixel.com');
 
 $max_exec = intval(ini_get('max_execution_time'));

@@ -1290,13 +1290,13 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 			 	$result = array('resize' => $resize, 'resize_width' => $width, 'resize_height' => $height);
 			}
 
+
 		 // Check if the image is not excluded
 		 $imageOk = ($this->isProcessable(true) || $this->isOptimized()) ? true : false ;
 
 		 $result['image'] = $this->isProcessable(true);
 		 $result['webp']  = ($imageOk && $this->isProcessableFileType('webp')) ? true : false;
 		 $result['avif']  = ($imageOk && $this->isProcessableFileType('avif')) ? true : false;
-
 		 return $result;
 
 		}

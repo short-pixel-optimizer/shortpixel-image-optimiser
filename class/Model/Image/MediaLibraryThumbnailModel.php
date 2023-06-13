@@ -82,6 +82,13 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 				$filebase = $virtualFile->getFileBase();
 	      $filepath = (string) $virtualFile->getFileDir();
 	      $extension = $virtualFile->getExtension();
+
+				// This function needs an hard check on file exists, which might not be wanted.
+				if (false === apply_filters('shortpixel/file/virtual/extra_features', true))
+				{
+						return false;
+				}
+
 			}
 			else {
 				$filebase = $this->getFileBase();
@@ -505,7 +512,15 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
       $fs = \wpSPIO()->filesystem();
       $filepath = apply_filters('shortpixel/file/virtual/translate', $this->getFullPath(), $this);
 
-      $result = $fs->downloadFile($this->getURL(), $filepath); // download remote file for backup.
+			$result = false;
+			if ($this->virtual_status == self::$VIRTUAL_REMOTE)
+			{
+      	$result = $fs->downloadFile($this->getURL(), $filepath); // download remote file for backup.
+			}
+			elseif ($this->virtual_status == self::$VIRTUAL_STATELESS)
+			{
+				 $result = $filepath;
+			}
 
       if ($result == false)
       {

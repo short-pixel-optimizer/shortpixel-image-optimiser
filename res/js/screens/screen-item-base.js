@@ -205,6 +205,17 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase
 				this.processor.AjaxRequest(data);
 		}
 
+		CancelOptimizeItem(id)
+		{
+				var data = {};
+				data.id = id;
+				data.type = this.type;
+				data.screen_action = 'cancelOptimize';
+				// AjaxRequest should return result, which will go through Handleresponse, then LoaditemView.
+		//		this.SetMessageProcessing(id);
+				this.processor.AjaxRequest(data);
+		}
+
 		ReOptimize(id, compression, action)
 		{
 				var data = {

@@ -201,6 +201,9 @@ class AjaxController
            case 'optimizeItem':
              $json = $this->optimizeItem($json, $data);
            break;
+					 case 'cancelOptimize':
+					 		$json = $this->cancelOptimize($json, $data);
+					 break;
            case 'createBulk':
              $json = $this->createBulk($json, $data);
            break;
@@ -276,6 +279,27 @@ class AjaxController
           $json->$type = $control->addItemToQueue($mediaItem);
 					return $json;
     }
+
+		public function cancelOptimize($json, $data)
+		{
+			$id = intval($_POST['id']);
+			$type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';
+
+			$mediaItem = $this->getMediaItem($id, $type);
+
+			$mediaItem->dropFromQueue();
+
+			$json->$type->status = 1;
+			$json->$type->fileStatus = ImageModel::FILE_STATUS_SUCCESS; // great success!
+
+			$json->$type->item_id = $id;
+			$json->$type->result = new \stdClass;
+			$json->$type->result->message = __('Item removed from queue', 'shortpixel-image-optimiser');
+			$json->$type->result->is_done = true;
+
+			$json->status = true;
+			return $json;
+		}
 
     /* Integration for WP /LR Sync plugin  - https://meowapps.com/plugin/wplr-sync/
 		* @integration WP / LR Sync

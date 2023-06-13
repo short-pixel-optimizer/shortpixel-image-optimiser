@@ -72,12 +72,11 @@ class Offloader
 					else {
 						  Log::addError('Instance is not null - other virtual component has loaded!');
 					}
-
 		}
 
 		public function getOffloadName()
 		{
-			 return $this->offLoadName;
+			 return $this->offloadName;
 		}
 
 }

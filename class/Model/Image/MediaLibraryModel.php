@@ -344,6 +344,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        $height = (is_null($height)) ? $this->get('height') : $height;
     }
 
+		$this->width = $width;
+		$this->height = $height;
+
     if (is_null($this->getMeta('originalWidth')))
       $this->setMeta('originalWidth',$width);
 
@@ -358,12 +361,17 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           {
              if (isset($data['file']))
              {
+							 $width = (isset($data['width'])) ? $data['width'] : null;
+							 $height = (isset($data['height'])) ? $data['height'] : null;
                $thumbObj = $this->getThumbnailModel($this->getFileDir() . $data['file'], $name);
                $meta = new ImageThumbnailMeta();
-               $meta->originalWidth = (isset($data['width'])) ? $data['width'] : null; // get from WP
-               $meta->originalHeight = (isset($data['height'])) ? $data['height'] : null;
+               $meta->originalWidth = $width; // get from WP
+               $meta->originalHeight = $height;
 							 $thumbObj->setName($name); // name is size mostly
                $thumbObj->setMetaObj($meta);
+
+							 $thumbObj->width = $width; 
+							 $thumbObj->height = $height;
 
 							 if (isset($data['filesize']))
 							 	$thumbObj->filesize = $data['filesize'];
@@ -2752,6 +2760,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       {
           return;
       }
+
+			if ($this->is_virtual() && false === apply_filters('shortpixel/file/virtual/extra_features', true))
+			{
+					return;
+			}
+
 
 			if (defined('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES'))
 			{

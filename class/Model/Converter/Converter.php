@@ -100,6 +100,11 @@ abstract class Converter
       if (! $file->exists())
         return $file;
 
+			if ($file->is_virtual())
+			{
+				 return $file;
+			}
+
       $number = 0;
       $fs = \wpSPIO()->filesystem();
 

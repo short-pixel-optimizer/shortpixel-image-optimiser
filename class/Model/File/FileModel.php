@@ -39,6 +39,7 @@ class FileModel extends \ShortPixel\Model
   protected $is_readable = null;
   protected $is_file = null;
   protected $is_virtual = false;
+	protected $virtual_status = null;
 
   protected $status;
 
@@ -49,7 +50,7 @@ class FileModel extends \ShortPixel\Model
 
 	public static $TRUSTED_MODE = false;
 
-	// Constants for is_virtual . Virtual Remote is truly a remote file, not writable from machine. Stateless means it looks remote, but it's a protocol-based filesystem remote or not - that will accept writes / is_writable.
+	// Constants for is_virtual . Virtual Remote is truly a remote file, not writable from machine. Stateless means it looks remote, but it's a protocol-based filesystem remote or not - that will accept writes / is_writable. Stateless also mean performance issue since it can't be 'translated' to a local path. All communication happens over http wrapper, so check should be very limited.
 	public static $VIRTUAL_REMOTE = 1;
 	public static $VIRTUAL_STATELESS = 2;
 
@@ -698,10 +699,12 @@ class FileModel extends \ShortPixel\Model
 		 {
 			  $this->is_writable = true;
 				$this->is_directory_writable = true;
-				self::$TRUSTED_MODE = true;
-				$this->checkTrustedMode();
+				$this->virtual_status = self::$VIRTUAL_STATELESS;
 		 }
-
+		 elseif ($result === self::$VIRTUAL_REMOTE)
+		 {
+			  $this->virtual_status = self::$VIRTUAL_REMOTE;
+		 }
 
      return false; // seems URL from other server, use virtual mode.
   }
