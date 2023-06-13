@@ -45,6 +45,8 @@ class SettingsController extends \ShortPixel\ViewController
 		 protected $all_display_parts = array('settings', 'adv-settings', 'cloudflare', 'debug', 'tools');
      protected $form_action = 'save-settings';
 
+		 protected static $instance;
+
       public function __construct()
       {
           $this->model = \wpSPIO()->settings();

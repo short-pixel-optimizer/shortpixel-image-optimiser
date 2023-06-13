@@ -11,7 +11,7 @@ class Offloader
 {
 		private static $instance;
 		private static $offload_instance;
-		private $offLoadName;
+		private $offloadName;
 
 		public static function getInstance()
 		{
@@ -34,8 +34,7 @@ class Offloader
 				$bool = $this->checkVirtualLoaders();
 				if (true === $bool)
 				{
-						$this->offLoadName = 'stack';
- 						self::$offload_instance = new VirtualFileSystem();
+ 						self::$offload_instance = new VirtualFileSystem($this->offloadName);
 				}
 
 		}
@@ -44,11 +43,18 @@ class Offloader
 		{
 			 	if ( class_exists('\Stack\Config') ) // Bitpoke Stack MU
 				{
+						$this->offloadName = 'stack';
 						return true;
 				}
 				elseif (defined('STACK_MEDIA_BUCKET'))
 				{
+						$this->offloadName = 'stack';
 						return true;
+				}
+				elseif (class_exists('\S3_Uploads\Plugin'))
+				{
+					 $this->offloadName = 's3-uploads-human';
+					 return true;
 				}
 
 

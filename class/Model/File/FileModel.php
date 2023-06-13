@@ -562,6 +562,7 @@ class FileModel extends \ShortPixel\Model
   protected function processPath($path)
   {
     $original_path = $path;
+
     $fs = \wpSPIO()->filesystem();
 
     if ($fs->pathIsUrl($path))
@@ -618,13 +619,23 @@ class FileModel extends \ShortPixel\Model
 		// When in trusted mode prevent filesystem checks as much as possible.
 		if (true === self::$TRUSTED_MODE)
 		{
+
+				// At this point file info might not be loaded, because it goes w/ construct -> processpath -> urlToPath etc on virtual files. And called via getFileInfo.  Using any of the file info functions can trigger a loop.
+				if (is_null($this->extension))
+				{
+						$extension = pathinfo($this->fullpath, PATHINFO_EXTENSION);
+				}
+				else {
+					$extension = $this->getExtension();
+				}
+
 				$this->exists = true;
 				$this->is_writable = true;
 				$this->is_directory_writable = true;
 				$this->is_readable = true;
 				$this->is_file = true;
 				// Set mime to prevent lookup in IsImage
-				$this->mime = 'image/' . $this->getExtension();
+				$this->mime = 'image/' . $extension;
 
 				if (is_null($this->filesize))
 				{
