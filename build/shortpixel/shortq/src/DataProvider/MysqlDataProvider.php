@@ -222,10 +222,7 @@ class MysqlDataProvider implements DataProvider
      {
        $order = (strtoupper($args['order']) == 'ASC') ? 'ASC ' : 'DESC ';
        $sql .= 'order by ' . $args['orderby'] . ' ' . $order;
-
-      // $prepare[] = $args['orderby'];
      }
-
 
      if ($args['numitems'] > 0)
      {
@@ -262,9 +259,7 @@ class MysqlDataProvider implements DataProvider
    */
    public function alterQueue($data, $fields, $operators)
    {
-
     return $this->updateRecords($data, $fields, $operators);
-
    }
 
    /** Updates one queued item, for instance in case of failing, or status update
@@ -594,9 +589,9 @@ class MysqlDataProvider implements DataProvider
      global $wpdb;
 
      // check if table is there.
-     if (! $override_check)
+     if (false === $override_check)
      {
-       if (! $this->check())
+       if (false === $this->check())
         $this->install();
      }
 

@@ -314,8 +314,8 @@ class OptimizeController
         $customQ = $this->getQueue('custom');
 
 				// Clean queue upon starting a load.
-				$mediaQ->cleanQueue();
-				$customQ->cleanQueue();
+				//$mediaQ->cleanQueue();
+			  //$customQ->cleanQueue();
 
         $data = new \stdClass;
         $data->media = new \stdClass;

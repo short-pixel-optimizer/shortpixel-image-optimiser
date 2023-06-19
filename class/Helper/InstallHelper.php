@@ -18,7 +18,6 @@ use ShortPixel\Helper\UtilHelper as UtilHelper;
 class InstallHelper
 {
 
-
   public static function activatePlugin()
   {
       self::deactivatePlugin();
@@ -34,6 +33,10 @@ class InstallHelper
 
       AdminNoticesController::resetOldNotices();
       \WPShortPixelSettings::onActivate();
+
+      $optimizeController = new OptimizeController();
+      $q = $optimizeController->getQueue('media');
+      $q->getShortQ()->install(); // create table.
 
 			$settings->currentVersion = SHORTPIXEL_IMAGE_OPTIMISER_VERSION;
   }
@@ -64,14 +67,10 @@ class InstallHelper
 
 		// saved in settings object, reset all stats.
  		StatsController::getInstance()->reset();
-
   }
 
   public static function uninstallPlugin()
   {
-   // $settings = \wpSPIO()->settings();
- //   $env = \wpSPIO()->env();
-
     OptimizeController::uninstallPlugin();
 		ApiKeyController::uninstallPlugin();
 

@@ -423,6 +423,7 @@ class WPQ implements Queue
 
   public function cleanQueue()
   {
+
      $this->DataProvider->removeRecords(array('status' => ShortQ::QSTATUS_DONE));
      $this->DataProvider->removeRecords(array('status' => ShortQ::QSTATUS_FATAL));
      $this->resetInternalCounts();
@@ -457,26 +458,6 @@ class WPQ implements Queue
       return $this->setStatus($name, $count + $change, $savenow);
   }
 
-
-  /** Creates a Queue Data Array to keep
-  */
-	/*
-  private function createStatus()
-  {
-
-
-  } */
-
-  /** Get the current status of this slug / queue */
-/*  protected function currentStatus()
-  {
-		 // This can happen when uninstalling/ removing queues.
-		 if (! isset($this->status['queues']) || ! isset($this->status['queues'][$this->qName]))
-		 		return false;
-		else
-     		return $this->status['queues'][$this->qName];
-  } */
-
   private function createQueue()
   {
 			if (is_null($this->status))
@@ -490,6 +471,7 @@ class WPQ implements Queue
       $this->saveStatus();
 
   }
+
 
   private function loadStatus()
   {
@@ -657,18 +639,12 @@ class WPQ implements Queue
      $this->setStatusCount('times_ran', 1, false );
      $this->saveStatus();
 
-    //@todo find some function to remove records, maybe check if all are either DONE OR FATAL
-  /*
-   Not true, if done are removed on queue finish it might impede getting stats from them. Since CheckQueue invokes both finishQueue and resetInternalCounter, removing from DB can end up with a 0 count, because the boss script is aware the queue is already empty.
-    if ($this->options->mode == 'direct') // only direct should be removed straight.
-    {
-       $args = array('status' => QSTATUS_DONE);
-       $this->DataProvider->removeRecords($args);
-    } */
-
-    //@todo find some way to report back what happened recently.
   }
 
+  public function install()
+  {
+			$this->DataProvider->install(true);
+  }
 
   /** Function to call when uninstalling the plugin. This will remove only this current queue
   */

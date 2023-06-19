@@ -62,11 +62,6 @@ class ShortQ
         break;
       }
 
-    /*  if (defined('SHORTPIXEL_DEBUG') && SHORTPIXEL_DEBUG)
-      {
-            $test = new Tests\Tests($newQ);
-      } */
-
       self::$queues[$this->queueName] = $this;
       return $newQ;
   }
