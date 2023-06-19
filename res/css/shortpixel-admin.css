@@ -1,4 +1,5 @@
 .sp-column-info {
+  max-width: 300px;
   /* Dropdown Content (Hidden by Default) */
   /* Links inside the dropdown */
   /* Change color of dropdown links on hover */
@@ -18,6 +19,9 @@
   margin-bottom: 4px;
   min-height: 30px;
   float: right;
+}
+.sp-column-info .thumbnails.optimized {
+  display: inline-block;
 }
 .sp-column-info .sp-dropdown {
   position: relative;
@@ -200,9 +204,6 @@ th.sorted.column-wp-shortPixel a {
 .sp-column-info {
   position: relative;
 }
-.sp-column-info .thumbnails.optimized {
-  position: relative;
-}
 .sp-column-info .thumbnails.optimized .thumb-wrapper {
   background: #fff;
   padding: 8px;
@@ -339,24 +340,16 @@ th.sorted.column-wp-shortPixel a {
 }
 
 div.sp-modal-shade {
-  display: none;
-  /* Hidden by default */
-  position: fixed;
-  /* Stay in place */
-  z-index: 10000;
-  /* Sit on top - blame WP-admin for the z-index battle . */
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 10000; /* Sit on top - blame WP-admin for the z-index battle . */
   left: 0;
   top: 0;
-  width: 100%;
-  /* Full width */
-  height: 100%;
-  /* Full height */
-  overflow: auto;
-  /* Enable scroll if needed */
-  background: black;
-  /* Fallback color */
-  background: rgba(0, 0, 0, 0.4);
-  /* Black w/ opacity */
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background: rgb(0, 0, 0); /* Fallback color */
+  background: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
   opacity: 0.4;
 }
 
@@ -365,12 +358,9 @@ div.shortpixel-modal {
   /*margin: 8% auto;  15% from the top and centered */
   padding: 20px;
   border: 1px solid #888;
-  width: 30%;
-  /* Could be more or less, depending on screen size */
-  min-width: 300px;
-  /* Could be more or less, depending on screen size */
-  z-index: 999999;
-  /* Z-index wars :/ */
+  width: 30%; /* Could be more or less, depending on screen size */
+  min-width: 300px; /* Could be more or less, depending on screen size */
+  z-index: 999999; /* Z-index wars :/ */
   position: fixed;
   top: 10%;
   left: 50%;

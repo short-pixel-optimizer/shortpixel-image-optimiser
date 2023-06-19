@@ -2,6 +2,8 @@
 
 .sp-column-info
 {
+		max-width: 300px; // fix for wide screen when the actions will move
+
 		.sp-column-actions  {
 	    max-width: 140px;
 	    float:right;
@@ -17,6 +19,15 @@
 			 min-height:30px;
 
 			 float:right;
+	 }
+
+	 .thumbnails.optimized
+ 	 {
+		 	display: inline-block;
+			.thumb-wrapper
+			{
+			}
+
 	 }
 	 .sp-dropdown {
 	     position: relative;
