@@ -271,22 +271,11 @@ class SpioBulk extends SpioCommandBase
 						if (! $data->total->stats->is_preparing)
 						{
 							 \WP_CLI::Error("No queues have status preparing, aborting");
-					//		 break;
 						}
 						else
 						{
-//							 $assoc['complete']  = true;
-							 //$assoc['ticks']  = 5;
-							 //$assoc['queue'] = $qname;
 							 $assoc['wait'] = 0.5;
-							 print_r($args); print_r($assoc);
 							 $bool = $this->run($args, $assoc);
 						}
-
-						//$this->showResponses();
 			}
-
-
-
-
 } // CLASS
