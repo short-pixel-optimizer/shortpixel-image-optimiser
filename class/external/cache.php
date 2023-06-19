@@ -151,6 +151,12 @@ class cacheRemover
 
     protected function litespeedReset($imageItem)
     {
+      // Suppress the notices on purge. 
+      if (! defined( 'LITESPEED_PURGE_SILENT' ))
+      {
+         define('LITESPEED_PURGE_SILENT', true);
+      }
+
 			$urls = $imageItem->getAllUrls();
 			foreach($urls as $url)
 			{
