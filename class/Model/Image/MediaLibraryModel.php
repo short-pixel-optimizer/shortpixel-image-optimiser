@@ -370,7 +370,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 							 $thumbObj->setName($name); // name is size mostly
                $thumbObj->setMetaObj($meta);
 
-							 $thumbObj->width = $width; 
+							 $thumbObj->width = $width;
 							 $thumbObj->height = $height;
 
 							 if (isset($data['filesize']))
@@ -428,7 +428,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       }
 
 			return $this->retinas;
-
   }
 
   protected function getWebps()
@@ -2761,11 +2760,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           return;
       }
 
-			if ($this->is_virtual() && false === apply_filters('shortpixel/file/virtual/extra_features', true))
+			if ($this->is_virtual() && false === \wpSPIO()->env()->useVirtualHeavyFunctions() )
 			{
 					return;
 			}
-
 
 			if (defined('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES'))
 			{

@@ -157,6 +157,19 @@ class EnvironmentModel extends \ShortPixel\Model
 				return true;
 	}
 
+  public function getOffloadName()
+  {
+    $off = \ShortPixel\External\Offload\Offloader::getInstance();
+    $name = $off->getOffloadName();
+    return $name;
+  }
+
+  public function useVirtualHeavyFunctions()
+  {
+      $bool = apply_filters('shortpixel/file/virtual/heavy_features', true);
+      return $bool;
+  }
+
   private function setServer()
   {
     $this->is_nginx = ! empty($_SERVER["SERVER_SOFTWARE"]) && strpos(strtolower(wp_unslash($_SERVER["SERVER_SOFTWARE"])), 'nginx') !== false ? true : false;

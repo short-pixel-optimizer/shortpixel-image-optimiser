@@ -35,7 +35,14 @@ $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->u
       <span>Constant key</span><span><?php var_export($this->is_constant_key); ?></span>
       <span>Hide Key</span><span><?php var_export($this->hide_api_key); ?></span>
       <span>Has Nextgen</span><span><?php var_export($this->has_nextgen); ?></span>
-			<span>Has Offload</span><span><?php var_export(\wpSPIO()->env()->hasOffload()); ?></span>
+			<span>Has Offload</span><span><?php
+        $offload = \wpSPIO()->env()->hasOffload();
+        var_export($offload);
+        if (true === $offload)
+        {
+            echo ' (' .  \wpSPIO()->env()->getOffloadName() . ') ';
+        }
+       ?></span>
 
     </div>
 		<div class='flex'>

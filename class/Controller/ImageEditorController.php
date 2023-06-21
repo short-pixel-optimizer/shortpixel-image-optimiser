@@ -41,17 +41,23 @@ class ImageEditorController
 				$mediaImage = $fs->getImage($post_id, 'media');
 				if ($mediaImage)
 				{
-						$local['is_restorable'] = ($mediaImage->isRestorable() || $mediaImage->isOptimized() ) ? 'true' : 'false';
+						$local['is_restorable'] = ($mediaImage->isRestorable() ) ? 'true' : 'false';
+            $local['is_optimized'] = ($mediaImage->isOptimized()) ? 'true' : 'false';
 						$local['post_id'] = $post_id;
 
 						$local['optimized_text'] = sprintf(__('This image is optimized. It\'s strongly %s recommended %s to restore the image before editing it.  After saving the image all optimization data will be lost. When the image is not restored Shortpixel will re-optimize the result which could result in quality loss', 'shortpixel-image-optimiser'), '<strong>', '</strong>');
 						$local['restore_link']  = 'javascript:window.ShortPixelProcessor.screen.RestoreItem(' . $post_id  . ')';
-						$local['restore_link_text'] = __('Restore backup now', 'shortpixel-image-optimiser');
 
+
+            if ($mediaImage->isRestorable())
+            {
+						   $local['restore_link_text'] = __('Restore backup now', 'shortpixel-image-optimiser');
+            }
+            else {
+              $local['restore_link_text'] = __(' (This item is not restorable) ', 'shortpixel-image-optimiser');
+            }
 				}
-
 			}
-
 
 			return $local;
 	}
@@ -103,6 +109,7 @@ class ImageEditorController
 			{
 				$mediaImage->onDelete();
 			}
+
 			return $null;
 	}
 

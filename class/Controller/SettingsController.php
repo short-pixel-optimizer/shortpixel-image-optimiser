@@ -467,10 +467,7 @@ class SettingsController extends \ShortPixel\ViewController
          $this->view->allThumbSizes = UtilHelper::getWordPressImageSizes();
          $this->view->averageCompression = $statsControl->getAverageCompression();
          $this->view->savedBandwidth = UiHelper::formatBytes( intval($this->view->data->savedSpace) * 10000,2);
-         //$this->view->resources = wp_remote_post($this->model->httpProto . "://shortpixel.com/resources-frag");
 
-         /*if (is_wp_error($this->view->resources))
-            $this->view->resources = null; */
 
          $this->view->cloudflare_constant = defined('SHORTPIXEL_CFTOKEN') ? true : false;
 
@@ -547,6 +544,8 @@ class SettingsController extends \ShortPixel\ViewController
           $this->is_multisite = $env->is_multisite;
           $this->is_mainsite = $env->is_mainsite;
           $this->has_nextgen = $env->has_nextgen;
+
+          $this->disable_heavy_features = (\wpSPIO()->env()->hasOffload() && false === \wpSPIO()->env()->useVirtualHeavyFunctions()) ? true : false; 
 
           $this->display_part = (isset($_GET['part']) && in_array($_GET['part'], $this->all_display_parts) ) ? sanitize_text_field($_GET['part']) : 'settings';
       }

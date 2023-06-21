@@ -23,7 +23,7 @@ class VirtualFileSystem
 				//  $fs = \wpSPIO()->fileSystem()->startTrustedMode(); // @todo check if this works trusted mode forever.
 					add_filter('shortpixel/image/urltopath', array($this, 'checkIfOffloaded'), 10,2);
 					add_filter('shortpixel/file/virtual/translate', array($this, 'getLocalPathByURL'));
-					add_filter('shortpixel/file/virtual/extra_features', array($this, 'extraFeatures'));
+					add_filter('shortpixel/file/virtual/heavy_features', array($this, 'extraFeatures'), 10);
 		}
 
 		public function checkIfOffloaded($bool, $url)
@@ -47,7 +47,7 @@ class VirtualFileSystem
 			 return $path;
 		}
 
-		// Features like addUNlisted and retina's ( check outside the WP metadata realm ) add a lot of extra time to stateless / remote filesystems.  Disable by default to prevent pages from not loading. 
+		// Features like addUNlisted and retina's ( check outside the WP metadata realm ) add a lot of extra time to stateless / remote filesystems.  Disable by default to prevent pages from not loading.
 		public function extraFeatures()
 		{
 			 return false;

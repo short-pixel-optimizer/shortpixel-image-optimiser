@@ -84,7 +84,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 	      $extension = $virtualFile->getExtension();
 
 				// This function needs an hard check on file exists, which might not be wanted.
-				if (false === apply_filters('shortpixel/file/virtual/extra_features', true))
+				if (false === \wpSPIO()->env()->useVirtualHeavyFunctions())
 				{
 						return false;
 				}

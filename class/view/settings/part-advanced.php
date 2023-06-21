@@ -38,8 +38,6 @@ if ( ! defined( 'ABSPATH' ) ) {
         }
     }
 
-
-
     $excludePatterns = '';
     if($view->data->excludePatterns) {
         foreach($view->data->excludePatterns as $item) {
@@ -47,8 +45,6 @@ if ( ! defined( 'ABSPATH' ) ) {
         }
         $excludePatterns = substr($excludePatterns, 0, -2);
     }
-
-
     ?>
 
     <div class="wp-shortpixel-options wp-shortpixel-tab-content" style='visibility: hidden'>
@@ -89,7 +85,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 											 <?php printf(esc_html__('Create %s AVIF versions %s of the images. Each image/thumbnail will use an additional credit. ','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/blog/what-is-avif-and-why-is-it-good/" target="_blank">', '</a>');?>
 										 </label>
 									 </div>
-
 
                    <?php if(strlen($deliverAVIFLabel)){ ?>
                                 <p class="sp-notice sp-notice-warning">
@@ -246,6 +241,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 									 </div>
                 </td>
             </tr>
+
+            <?php if (true === $this->disable_heavy_features): ?>
+            <tr class="heavy-feature-virtual retina view-notice-row">
+              <th scope="row">&nbsp;</th>
+              <td>
+                <div class='heavy-feature-virtual warning view-notice'>
+                  <p><?php printf(esc_html__('This feature has been disabled on offload mode for performance reasons. You can turn it back on using a %s filter hook %s ', 'shortpixel-image-optimiser' ),'<a href="">', '</a>'); ?></p>
+                </div>
+              </td>
+            </tr>
+          <?php endif; ?>
+
             <tr>
                 <th scope="row"><?php esc_html_e('Optimize other thumbnails','shortpixel-image-optimiser');?></th>
                 <td>
@@ -259,6 +266,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 									 </div>
                 </td>
             </tr>
+
+            <?php if (true === $this->disable_heavy_features): ?>
+            <tr class="heavy-feature-virtual unlisted view-notice-row ">
+              <th scope="row">&nbsp;</th>
+              <td>
+                <div class='heavy-feature-virtual warning view-notice'>
+                  <p><?php printf(esc_html__('This feature has been disabled on offload mode for performance reasons. You can turn it back on using a %s filter hook %s ', 'shortpixel-image-optimiser' ),'<a href="">', '</a>'); ?></p>
+                </div>
+              </td>
+            </tr>
+          <?php endif; ?>
+
             <tr>
                 <th scope="row"><?php esc_html_e('Convert PNG images to JPEG','shortpixel-image-optimiser');?></th>
                 <td>
@@ -344,7 +363,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 						);
 				 ?>
 				 <br /><br />
-
 			 </p>
 
                     <textarea name="excludePatterns" type="text" id="excludePatterns" placeholder="<?php
