@@ -66,7 +66,7 @@ class Offloader
 		{
 					if (is_null(self::$offload_instance))
 					{
-							$this->offLoadName = 'wp-offload';
+							$this->offloadName = 'wp-offload';
 						  self::$offload_instance = new wpOffload($as3cf);
 					}
 					else {

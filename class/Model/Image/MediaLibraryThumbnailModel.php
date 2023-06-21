@@ -56,6 +56,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
       'path' => $this->getFullPath(),
 			'size' => $this->size,
       'exists' => ($this->exists()) ? 'yes' : 'no',
+      'is_virtual' => ($this->is_virtual()) ? 'yes' : 'no', 
 
     );
   }

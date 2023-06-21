@@ -29,7 +29,7 @@ class wpOffload
     protected $is_cname = false;
     protected $cname;
 
-		private $sources; // cache for url > source_id lookup, to prevent duplicate queries.
+		private static $sources; // cache for url > source_id lookup, to prevent duplicate queries.
 
 		private static $offloadPrevented = array();
 
@@ -39,7 +39,6 @@ class wpOffload
     public function __construct($as3cf)
     {
        // This must be called before WordPress' init.
-     //  add_action('as3cf_init', array($this, 'init'));
 		 	  $this->init($as3cf);
     }
 
@@ -215,23 +214,29 @@ class wpOffload
         return $mediaItem;
     }
 
+		/** Cache source requests to improve performance
+		* @param $url string  The URL that is being checked
+		* @param $source_id int  Source ID of the item URL to be cached
+		* @return int|boolean|null  Returns source_if or false ( not offloaded ) if found, returns null if not sourcecached.
+		*/
 		private function sourceCache($url, $source_id = null)
 		{
-			if ($source_id === null && isset($this->sources[$url]))
+			if ($source_id === null && isset(static::$sources[$url]))
 			{
-				$source_id = $this->sources[$url];
+				$source_id = static::$sources[$url];
 				return $source_id;
 			}
 			elseif ($source_id !== null)
 			{
-				 if (! isset($this->sources[$url]))
+				 if (! isset(static::$sources[$url]))
 				 {
-					  $this->sources[$url]  = $source_id;
+					  static::$sources[$url]  = $source_id;
 				 }
+
 				 return $source_id;
 			}
 
-			return false;
+			return null;
 		}
 
     public function checkIfOffloaded($bool, $url)
@@ -239,7 +244,9 @@ class wpOffload
 
 			$source_id = $this->sourceCache($url);
 
-			if (false === $source_id)
+			$orig_url = $url;
+
+			if (is_null($source_id))
 			{
 				$extension = substr($url, strrpos($url, '.') + 1);
 				// If these filetypes are not in the cache, they cannot be found via geSourceyIDByUrl method ( not in path DB ), so it's pointless to try. If they are offloaded, at some point the extra-info might load.
@@ -263,8 +270,16 @@ class wpOffload
     protected function getSourceIDByURL($url)
     {
 			$source_id = $this->sourceCache($url); // check cache first.
+			$cacheHit = false; // prevent a cache hit to be cached again.
+			$raw_url = $url; // keep raw. If resolved, add the raw url to the cache.
 
-			if (false === $source_id) // check on the raw url.
+			// If in cache, we are done.
+			if (! is_null($source_id))
+			{
+				return $source_id;
+			}
+
+			if (is_null($source_id)) // check on the raw url.
 			{
       	$class = $this->getMediaClass();
 
@@ -275,27 +290,41 @@ class wpOffload
 					 $url = 'http://' . $url; //str_replace($parsedUrl['scheme'], 'https', $url);
 				}
 
-      	$source = $class::get_item_source_by_remote_url($url);
-				$source_id = isset($source['id']) ? intval($source['id']) : false;
+				$source_id = $this->sourceCache($url);
+
+				if(is_null($source_id))
+				{
+      		$source = $class::get_item_source_by_remote_url($url);
+					$source_id = isset($source['id']) ? intval($source['id']) : null;
+				}
+				else {
+					$cacheHit = true; // hit the cache. Yeah.
+					$this->sourceCache($raw_url, $source_id);
+				}
 			}
 
-			if (false === $source_id) // check now via the thumbnail hocus.
+
+			if (is_null($source_id)) // check now via the thumbnail hocus.
 			{
 				$pattern = '/(.*)-\d+[xX]\d+(\.\w+)/m';
 				$url = preg_replace($pattern, '$1$2', $url);
 
 				$source_id = $this->sourceCache($url); // check cache first.
 
-				if (false === $source_id)
+				if (is_null($source_id))
 				{
 					$source = $class::get_item_source_by_remote_url($url);
-					$source_id = isset($source['id']) ? intval($source['id']) : false;
+					$source_id = isset($source['id']) ? intval($source['id']) : null;
+				}
+				else {
+					$cacheHit = true;
+					$this->sourceCache($raw_url , $source_id);
 				}
 
       }
 
 			// Check issue with double extensions. If say double webp/avif is on, the double extension causes the URL not to be found (ie .jpg)
-			if (false === $source_id)
+			if (is_null($source_id))
 			{
 				 if (substr_count($parsedUrl['path'], '.') > 1)
 				 {
@@ -311,19 +340,31 @@ class wpOffload
 						// Retry
 						$source_id = $this->sourceCache($checkurl); // check cache first.
 
-						if (false === $source_id)
+						if (is_null($source_id))
 						{
 							$source = $class::get_item_source_by_remote_url($url);
-							$source_id = isset($source['id']) ? intval($source['id']) : false;
+							$source_id = isset($source['id']) ? intval($source['id']) : null;
+						}
+						else {
+							$cacheHit = true;
+							$this->sourceCache($raw_url , $source_id);
 						}
 
 				 }
 			}
 
-			if ($source_id !== false)
+			if(is_null($source_id))
 			{
+				 $source_id = false;
+			}
 
+			if (false === $cacheHit)
+			{
 				$this->sourceCache($url, $source_id);  // cache it.
+			}
+
+			if ($source_id !== false && false === $cacheHit)
+			{
 
 				// get item
 				$item = $this->getItemById($source_id);
@@ -357,10 +398,11 @@ class wpOffload
     {
        $source_id = $this->getSourceIDByURL($url);
 
-       if ($source_id == false)
+       if ($source_id === false)
        {
         return false;
       }
+
        $item = $this->getItemById($source_id);
 
        $original_path = $item->original_source_path(); // $values['original_source_path'];
@@ -415,49 +457,6 @@ class wpOffload
 
  					// Add Web/Avifs back under new method.
 					$this->shouldPrevent = false;
-
-
-				/*	$fullPaths = $item->full_source_paths();
-					$extra_info = $item->extra_info();
-
-					$file_paths = $this->add_webp_paths($fullPaths);
-
-					if (! isset($extra_info['objects']))
-					 	$extra_info['objects']= array();
-
-
-					foreach ( $file_paths as $size => $size_file_path ) {
-						if ( $size === 'file' ) {
-							continue;
-						}
-
-						$new_object = array(
-							'source_file' => wp_basename( $size_file_path ),
-							'is_private'  => false,
-						);
-
-						$extra_info['objects'][ $size ] = $new_object;
-					}
-
-					if (count($file_paths) > 0)
-					{
-						 $item->set_extra_info($extra_info);
-					}
-
-					$offloaded_files = $item->offloaded_files();
-					// This should load the A3cf UploadHandler
-					$upload = \DeliciousBrains\WP_Offload_Media\Items\Upload_Handler::get_item_handler_key_name();
-          $itemHandler = $this->as3cf->get_item_handler($upload, array( 'offloaded_files' => $offloaded_files ));
-
-          $result = $itemHandler->handle($item); //handle it then.
-
-					if (is_wp_error($result))
-					{
-						 ResponseController::addData('is_error', true);
-						 ResponseController::addData('message', 'Offload failed, please checks debug logs when available');
-						 Log::addError('Failed offload result', $result);
-					}
-					*/
 
 					// The Handler doesn't work properly /w local removal if not the exact correct files are passed (?) . Offload does this probably via update metadata function, so let them sort it out with this . (until it breaks)
 

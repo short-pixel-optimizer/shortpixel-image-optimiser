@@ -2680,6 +2680,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
       return array(
         'id' => $this->id,
+        'exists' => ($this->exists()) ? 'yes' : 'no',
+        'is_virtual' => ($this->is_virtual()) ? 'yes' : 'no',
         'image_meta' => $this->image_meta,
         'thumbnails' => $this->thumbnails,
         'retinas' => $this->retinas,
