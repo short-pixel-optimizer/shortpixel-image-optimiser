@@ -41,7 +41,7 @@ jQuery(document).ready(function () {
 
 
 //jQuery(document).ready(function () {
-(function( $, _ ) {
+(function( $) {
 
 	var ShortPixelFilter = wp.media.view.AttachmentFilters.extend
 	({
@@ -50,14 +50,17 @@ jQuery(document).ready(function () {
 		createFilters: function() {
 			 var filters = {};
 
-			 _(spio_media.mediafilters.optimized).each(function (option, key)
+			 var optimizedfilter = spio_media.mediafilters.optimized;
+			 console.log(optimizedfilter);
+		//	 optimizedfilter.forEach(function (option, key)
+			 	for (const [key,value] of Object.entries(optimizedfilter))
 			 {
 				  filters[key] =  {
-						 text: option,
+						 text: value,
 						 props: { 'shortpixel_status': key },
 						 priority: 10,
 					}
-			 });
+			 };
 
 			 this.filters = filters;
 		}
@@ -84,6 +87,6 @@ jQuery(document).ready(function () {
 		}
 	});
 
-})( jQuery, _ );
+})( jQuery);
 
 //}); // jquery  - Attachmentfilters
