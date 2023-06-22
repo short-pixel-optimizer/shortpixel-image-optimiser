@@ -37,4 +37,53 @@ jQuery(document).ready(function () {
 					jQuery('.imgedit-menu').append(div);
 		}
 
-});
+}); // jquery - imageEdit
+
+
+//jQuery(document).ready(function () {
+(function( $, _ ) {
+
+	var ShortPixelFilter = wp.media.view.AttachmentFilters.extend
+	({
+		id: 'shortpixel-media-filter',
+
+		createFilters: function() {
+			 var filters = {};
+
+			 _(spio_media.mediafilters.optimized).each(function (option, key)
+			 {
+				  filters[key] =  {
+						 text: option,
+						 props: { 'shortpixel_status': key },
+						 priority: 10,
+					}
+			 });
+
+			 this.filters = filters;
+		}
+
+	}); // ShortPixelFilter
+
+	var AttachmentsBrowser = wp.media.view.AttachmentsBrowser;
+
+	wp.media.view.AttachmentsBrowser = wp.media.view.AttachmentsBrowser.extend({
+		createToolbar: function() {
+
+			// Make sure to load the original toolbar
+			AttachmentsBrowser.prototype.createToolbar.call( this );
+
+			this.toolbar.set(
+				'ShortPixelFilter',
+				new ShortPixelFilter({
+					controller: this.controller,
+					model:      this.collection.props,
+					priority:   -80
+				})
+				.render()
+			);
+		}
+	});
+
+})( jQuery, _ );
+
+//}); // jquery  - Attachmentfilters

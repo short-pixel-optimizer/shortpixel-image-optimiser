@@ -155,12 +155,6 @@ class ListMediaViewController extends \ShortPixel\ViewController
     //Sort and filter on ShortPixel Compression column
     //add_filter( 'manage_upload_sortable_columns', array( $this, 'registerSortable') );
 
-		// Keep noses out of the rest.
-		if (\wpSPIO()->env()->is_screen_to_use)
-		{
-			add_filter( 'request', array( $this, 'filterBy') );
-			add_action('posts_request', array($this, 'parseQuery'), 10, 2);
-		}
     add_action('restrict_manage_posts', array( $this, 'mediaAddFilterDropdown'));
 
     add_action('loop_end', array($this, 'loadComparer'));
@@ -276,10 +270,10 @@ class ListMediaViewController extends \ShortPixel\ViewController
     return $vars;
   }
 
+  /* @handles posts_request */
 	public function parseQuery($request, $wpquery)
 	{
 		global $wpdb;
-
 
 		 if (isset($wpquery->query_vars['shortpixel-filter']) || isset($wpquery->query_vars['shortpixel-order']) )
 		 {
@@ -338,8 +332,8 @@ class ListMediaViewController extends \ShortPixel\ViewController
 
       $options = array(
           'all' => __('All Images', 'shortpixel-image-optimiser'),
-          'opt' => __('Optimized', 'shortpixel-image-optimiser'),
-          'unopt' => __('Unoptimized', 'shortpixel-image-optimiser'),
+          'optimized' => __('Optimized', 'shortpixel-image-optimiser'),
+          'unoptimized' => __('Unoptimized', 'shortpixel-image-optimiser'),
 					'prevented' => __('Blocked', 'shortpixer-image-optimiser'),
         //  'pending' => __('Pending', 'shortpixel-image-optimiser'),
         //  'error' => __('Errors', 'shortpixel-image-optimiser'),

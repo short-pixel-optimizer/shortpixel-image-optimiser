@@ -30,7 +30,6 @@ class ImageEditorController
 	public static function localizeScript()
 	{
 		  $local = array(
-					'test' => 'test',
 			);
 
 			$fs = \wpSPIO()->filesystem();

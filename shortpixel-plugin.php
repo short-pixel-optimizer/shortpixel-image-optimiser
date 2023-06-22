@@ -203,7 +203,6 @@ class ShortPixelPlugin {
 		add_filter('wp_save_image_editor_file', array($imageEditor, 'saveImageFile'), 10, 5);  // hook when saving
 	//	add_action('update_post_meta', array($imageEditor, 'checkUpdateMeta'), 10, 4 );
 
-
 		if ( $isAdminUser ) {
 			// toolbar notifications
 
@@ -219,6 +218,11 @@ class ShortPixelPlugin {
 				require_once 'class/view/shortpixel-feedback.php';
 				new ShortPixelFeedback( SHORTPIXEL_PLUGIN_FILE, 'shortpixel-image-optimiser' );
 			}
+		}
+
+		if (is_admin())
+		{
+			  add_filter('pre_get_posts', array($admin, 'filter_listener'));
 		}
 
 	}
@@ -310,7 +314,18 @@ class ShortPixelPlugin {
 
 		wp_register_script('shortpixel-media', plugins_url('res/js/shortpixel-media.js',  SHORTPIXEL_PLUGIN_FILE), array('jquery'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
-		wp_localize_script('shortpixel-media', 'spio_media', ImageEditorController::localizeScript());
+		// This filter is from ListMediaViewController for the media library grid display, executive script in shortpixel-media.js.
+
+		$filters = array('optimized' => array(
+					'all' => __('All Images', 'shortpixel-image-optimiser'),
+					'optimized' => __('Optimized', 'shortpixel-image-optimiser'),
+					'unoptimized' => __('Unoptimized', 'shortpixel-image-optimiser'),
+					'prevented' => __('Blocked', 'shortpixer-image-optimiser'),
+		));
+
+		$editor_localize = ImageEditorController::localizeScript();
+		$editor_localize['mediafilters'] = $filters;
+		wp_localize_script('shortpixel-media', 'spio_media', $editor_localize);
 
 		wp_register_script( 'shortpixel-processor', plugins_url( '/res/js/shortpixel-processor.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery', 'shortpixel-tooltip' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
