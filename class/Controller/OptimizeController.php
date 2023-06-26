@@ -1226,7 +1226,7 @@ class OptimizeController
 								 {
 								 	  $value = UiHelper::formatNumber($value, 2);
 								 }
-								 else
+								 elseif (is_numeric($value))
 								 {
 								 		$value = UiHelper::formatNumber($value, 0);
 								 }
