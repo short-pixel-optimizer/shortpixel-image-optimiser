@@ -247,7 +247,7 @@ if ( ! defined( 'ABSPATH' ) ) {
               <th scope="row">&nbsp;</th>
               <td>
                 <div class='heavy-feature-virtual warning view-notice'>
-                  <p><?php printf(esc_html__('This feature has been disabled on offload mode for performance reasons. You can turn it back on using a %s filter hook %s ', 'shortpixel-image-optimiser' ),'<a href="">', '</a>'); ?></p>
+                  <p><?php printf(esc_html__('This feature has been disabled in offload mode for performance reasons. You can enable it again with a %s filter hook %s ', 'shortpixel-image-optimiser' ),'<a target="_blank" href="https://shortpixel.com/knowledge-base/article/577-performance-improvement-shortpixel-image-optimization-media-offload-plugin">', '</a>'); ?></p>
                 </div>
               </td>
             </tr>
@@ -272,7 +272,7 @@ if ( ! defined( 'ABSPATH' ) ) {
               <th scope="row">&nbsp;</th>
               <td>
                 <div class='heavy-feature-virtual warning view-notice'>
-                  <p><?php printf(esc_html__('This feature has been disabled on offload mode for performance reasons. You can turn it back on using a %s filter hook %s ', 'shortpixel-image-optimiser' ),'<a href="">', '</a>'); ?></p>
+                  <p><?php printf(esc_html__('This feature has been disabled in offload mode for performance reasons. You can enable it again with a %s filter hook %s ', 'shortpixel-image-optimiser' ),'<a target="_blank" href="https://shortpixel.com/knowledge-base/article/577-performance-improvement-shortpixel-image-optimization-media-offload-plugin">', '</a>'); ?></p>
                 </div>
               </td>
             </tr>

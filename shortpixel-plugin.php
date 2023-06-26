@@ -317,10 +317,10 @@ class ShortPixelPlugin {
 		// This filter is from ListMediaViewController for the media library grid display, executive script in shortpixel-media.js.
 
 		$filters = array('optimized' => array(
-					'all' => __('Any Shortpixel Status', 'shortpixel-image-optimiser'),
+					'all' => __('Any ShortPixel State', 'shortpixel-image-optimiser'),
 					'optimized' => __('Optimized', 'shortpixel-image-optimiser'),
 					'unoptimized' => __('Unoptimized', 'shortpixel-image-optimiser'),
-					'prevented' => __('Blocked', 'shortpixer-image-optimiser'),
+					'prevented' => __('Optimization Error', 'shortpixer-image-optimiser'),
 		));
 
 		$editor_localize = ImageEditorController::localizeScript();

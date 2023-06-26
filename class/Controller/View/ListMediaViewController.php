@@ -331,10 +331,10 @@ class ListMediaViewController extends \ShortPixel\ViewController
       $status   = filter_input(INPUT_GET, 'shortpixel_status', FILTER_UNSAFE_RAW );
 
       $options = array(
-          'all' => __('Any Shortpixel Status', 'shortpixel-image-optimiser'),
+          'all' => __('Any ShortPixel State', 'shortpixel-image-optimiser'),
           'optimized' => __('Optimized', 'shortpixel-image-optimiser'),
           'unoptimized' => __('Unoptimized', 'shortpixel-image-optimiser'),
-					'prevented' => __('Blocked', 'shortpixer-image-optimiser'),
+					'prevented' => __('Optimization Error', 'shortpixer-image-optimiser'),
         //  'pending' => __('Pending', 'shortpixel-image-optimiser'),
         //  'error' => __('Errors', 'shortpixel-image-optimiser'),
       );
