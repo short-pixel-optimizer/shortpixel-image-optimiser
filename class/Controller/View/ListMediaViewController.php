@@ -179,11 +179,12 @@ class ListMediaViewController extends \ShortPixel\ViewController
      if($column_name == 'wp-shortPixel')
      {
        $this->view = new \stdClass; // reset every row
+       $this->view->id = $id;
        $this->loadItem($id);
-			 if (property_exists($this->view, 'mediaItem') && is_object($this->view->mediaItem)) // can not be if not exists
-			 {
-       		$this->loadView(null, false);
-			 }
+
+	     $this->loadView(null, false);
+
+
      }
   }
 
@@ -196,8 +197,10 @@ class ListMediaViewController extends \ShortPixel\ViewController
 
 		 // Asking for something non-existing.
 		 if ($mediaItem === false)
+     {
+       $this->view->text = __('File Error. This could be not an image or the file is missing', 'shortpixel-image-optimiser');
 		 	 return;
-
+     }
      $this->view->mediaItem = $mediaItem;
 
      $actions = array();

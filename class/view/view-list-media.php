@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 ?>
 
-<div class='sp-column-info' id='sp-msg-<?php echo esc_attr($this->view->mediaItem->get('id') );?>'>
+<div class='sp-column-info' id='sp-msg-<?php echo esc_attr($this->view->id );?>'>
 <?php	if (isset($this->view->list_actions))
 	{
 	   echo $this->view->list_actions;
