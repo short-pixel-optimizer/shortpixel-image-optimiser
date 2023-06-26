@@ -31,6 +31,7 @@ class SettingsController extends \ShortPixel\ViewController
      protected $hide_api_key;
      protected $has_nextgen;
      protected $do_redirect = false;
+     protected $disable_heavy_features = false; // if virtual and stateless, might disable heavy file ops.
 
      protected $quotaData = null;
 
@@ -44,6 +45,8 @@ class SettingsController extends \ShortPixel\ViewController
      protected $display_part = 'settings';
 		 protected $all_display_parts = array('settings', 'adv-settings', 'cloudflare', 'debug', 'tools');
      protected $form_action = 'save-settings';
+
+
 
 		 protected static $instance;
 
@@ -545,7 +548,7 @@ class SettingsController extends \ShortPixel\ViewController
           $this->is_mainsite = $env->is_mainsite;
           $this->has_nextgen = $env->has_nextgen;
 
-          $this->disable_heavy_features = (\wpSPIO()->env()->hasOffload() && false === \wpSPIO()->env()->useVirtualHeavyFunctions()) ? true : false; 
+          $this->disable_heavy_features = (\wpSPIO()->env()->hasOffload() && false === \wpSPIO()->env()->useVirtualHeavyFunctions()) ? true : false;
 
           $this->display_part = (isset($_GET['part']) && in_array($_GET['part'], $this->all_display_parts) ) ? sanitize_text_field($_GET['part']) : 'settings';
       }

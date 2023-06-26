@@ -561,7 +561,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						 $wpmeta['width'] = $this->get('width');
  						 $wpmeta['height'] = $this->get('height');
 					}
-					$wpmeta['filesize'] = $this->getFileSize();
+          $filesize = $this->getFileSize();
+          if ($this->is_virtual() && $filesize == -1 && $this->getMeta('compressedSize') > 0)
+          {
+             $filesize = $this->getMeta('compressedSize');
+          }
+					$wpmeta['filesize'] = $filesize;
 
       }
 
@@ -640,7 +645,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 									$wpmeta['sizes'][$size]['height']  = $thumbnail->get('height');
 						 }
 
-						 	$wpmeta['sizes'][$size]['filesize'] = $thumbnail->getFileSize();
+             $filesize = $thumbnail->getFileSize();
+             if ($thumbnail->is_virtual() && $filesize == -1 && $thumbnail->getMeta('compressedSize') > 0)
+             {
+                $filesize = $thumbnail->getMeta('compressedSize');
+             }
+
+						 	$wpmeta['sizes'][$size]['filesize'] = $filesize;
 				 }
 
 

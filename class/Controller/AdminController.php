@@ -249,7 +249,7 @@ class AdminController extends \ShortPixel\Controller
         }
 
 
-        return $where; 
+        return $where;
     }
 
 
@@ -261,7 +261,7 @@ class AdminController extends \ShortPixel\Controller
   	 *
   	 * @return string
   	 */
-  	private function selected_filter_value( string $key, string $default ): string {
+  	private function selected_filter_value( $key, $default ) {
   		if ( wp_doing_ajax() ) {
   			if ( isset( $_REQUEST['query'][ $key ] ) ) {
   				$value = sanitize_text_field( $_REQUEST['query'][ $key ] );
