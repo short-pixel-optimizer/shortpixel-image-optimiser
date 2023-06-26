@@ -637,8 +637,12 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
             if ($this->is_virtual())
             {
                 $filepath = apply_filters('shortpixel/file/virtual/translate', $this->getFullPath(), $this);
-
                 $virtualFile = $fs->getFile($filepath);
+                // Seems stateless like google cloud doesn't like overwrites with declared delete
+                if ($this->virtual_status == self::$VIRTUAL_STATELESS)
+                {
+                    $virtualFile->delete();
+                }
                 $copyok = $tempFile->copy($virtualFile);
             }
             else

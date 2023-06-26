@@ -13,7 +13,6 @@ jQuery(document).ready(function () {
 			image_post_id = spio_media.post_id;
 			is_restorable = spio_media.is_restorable;
 			is_optimized = spio_media.is_optimized;
-			console.log('image editor started', image_post_id, spio_media);
 
 			if ('true' === is_restorable || 'true' === is_optimized)
 			{
@@ -43,6 +42,10 @@ jQuery(document).ready(function () {
 //jQuery(document).ready(function () {
 (function( $) {
 
+	if (typeof (wp.media) === 'undefined'  || typeof wp.media.frame === 'undefined')
+	{
+		 return;
+	}
 	var ShortPixelFilter = wp.media.view.AttachmentFilters.extend
 	({
 		id: 'shortpixel-media-filter',
