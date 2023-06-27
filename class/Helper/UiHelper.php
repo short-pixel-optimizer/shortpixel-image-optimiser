@@ -616,13 +616,13 @@ class UiHelper
 		 case 'reoptimize-smartcrop':
         $action['function'] = 'window.ShortPixelProcessor.screen.ReOptimize(' . $id . ',' . $compressionType . ',' . ImageModel::ACTION_SMARTCROP . ')';
         $action['type'] = 'js';
-        $action['text'] = __('Re-optimize with Smartcrop','shortpixel-image-optimiser');
+        $action['text'] = __('Re-optimize with SmartCrop','shortpixel-image-optimiser');
         $action['display'] = 'inline';
      break;
 		 case 'reoptimize-smartcropless':
         $action['function'] = 'window.ShortPixelProcessor.screen.ReOptimize(' . $id . ',' . $compressionType . ',' . ImageModel::ACTION_SMARTCROPLESS . ')';
         $action['type'] = 'js';
-        $action['text'] = __('Re-optimize without Smartcrop','shortpixel-image-optimiser');
+        $action['text'] = __('Re-optimize without SmartCrop','shortpixel-image-optimiser');
         $action['display'] = 'inline';
      break;
      case 'extendquota':
