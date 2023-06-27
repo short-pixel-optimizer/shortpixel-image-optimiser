@@ -44,13 +44,13 @@ class ImageEditorController
             $local['is_optimized'] = ($mediaImage->isOptimized()) ? 'true' : 'false';
 						$local['post_id'] = $post_id;
 
-						$local['optimized_text'] = sprintf(__('This image is optimized. It\'s strongly %s recommended %s to restore the image before editing it.  After saving the image all optimization data will be lost. When the image is not restored Shortpixel will re-optimize the result which could result in quality loss', 'shortpixel-image-optimiser'), '<strong>', '</strong>');
+						$local['optimized_text'] = sprintf(__('This image has been optimized by ShortPixel. It is strongly %s recommended %s to restore the image before editing it, because after saving the image all optimization data will be lost. If the image is not restored, Shortpixel will re-optimize the new image, which may result in a loss of quality. After finishing the edits, please optimize the image again by clicking "Optimize Now", as this will not happen automatically.', 'shortpixel-image-optimiser'), '<strong>', '</strong>');
 						$local['restore_link']  = 'javascript:window.ShortPixelProcessor.screen.RestoreItem(' . $post_id  . ')';
 
 
             if ($mediaImage->isRestorable())
             {
-						   $local['restore_link_text'] = __('Restore backup now', 'shortpixel-image-optimiser');
+						   $local['restore_link_text'] = __('Restore the backup now.', 'shortpixel-image-optimiser');
             }
             else {
               $local['restore_link_text'] = __(' (This item is not restorable) ', 'shortpixel-image-optimiser');
