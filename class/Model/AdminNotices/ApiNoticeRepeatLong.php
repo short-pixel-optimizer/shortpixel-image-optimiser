@@ -1,6 +1,10 @@
 <?php
 namespace ShortPixel\Model\AdminNotices;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
 
 class ApiNoticeRepeatLong extends \ShortPixel\Model\AdminNoticeModel

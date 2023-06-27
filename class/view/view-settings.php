@@ -2,6 +2,10 @@
 namespace ShortPixel;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 // #Todo Move this to some env or more appropiate place.
 $is_unlimited= (!is_null($this->quotaData) && $this->quotaData->unlimited) ? true : false;
 

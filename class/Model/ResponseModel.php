@@ -1,6 +1,10 @@
 <?php
 namespace ShortPixel\Model;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 use ShortPixel\Controller\ResponseController as ResponseController;
 
 
@@ -25,7 +29,7 @@ class ResponseModel
 	public $images_waiting;
 	public $images_total;
 
-	public $issue_type; // Optional - if there is any issue to report. 
+	public $issue_type; // Optional - if there is any issue to report.
  	public $message; // This can be base text, but decision textually is within responsecontroller.
 
 //	public $queueName;

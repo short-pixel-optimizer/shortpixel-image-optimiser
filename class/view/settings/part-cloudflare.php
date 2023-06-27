@@ -1,6 +1,9 @@
 <?php
 namespace ShortPixel;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
 ?>
 
     <section id="tab-cloudflare" class="<?php echo esc_attr(($this->display_part == 'cloudflare') ? 'sel-tab ' :''); ?>">

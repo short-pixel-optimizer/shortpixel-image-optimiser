@@ -1,5 +1,10 @@
 <?php
 namespace ShortPixel\Model\AdminNotices;
+
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 use ShortPixel\Controller\StatsController as StatsController;
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;

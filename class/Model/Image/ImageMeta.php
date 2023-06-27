@@ -1,6 +1,10 @@
 <?php
 namespace ShortPixel\Model\Image;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 // Base Class for ImageMeta
 class ImageMeta extends ImageThumbnailMeta
 {

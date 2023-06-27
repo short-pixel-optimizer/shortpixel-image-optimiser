@@ -18,8 +18,6 @@ class ShortPixelScreen extends ShortPixelScreenBase
 	{
 	//	super(MainScreen, processor);
 
-
-
 		// Hook up the button and all.
 			this.LoadPanels();
 			this.LoadActions();
@@ -29,7 +27,6 @@ class ShortPixelScreen extends ShortPixelScreenBase
 			window.addEventListener('shortpixel.bulk.onUpdatePanelStatus', this.EventPanelStatusUpdated.bind(this));
 			window.addEventListener('shortpixel.bulk.onSwitchPanel', this.EventPanelSwitched.bind(this));
 			window.addEventListener('shortpixel.reloadscreen', this.ReloadScreen.bind(this));
-
 
 			var processData = ShortPixelProcessorData.startData;
 			var initMedia = processData.media.stats;
@@ -814,7 +811,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
       {
 
           var control = element.getAttribute('data-control');
-              var hasCompareControl = element.hasAttribute('data-control-check');
+          var hasCompareControl = element.hasAttribute('data-control-check');
 
 
           var checker = document.querySelector('[' + control + ']');
@@ -840,7 +837,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
           }
           else if (hasCompareControl)
           {
-             compareControl = document.querySelector('[' +  + ']');
+             //compareControl = document.querySelector('[' + control + ']');
 
              if (value > compareValue )
                 var check = true;

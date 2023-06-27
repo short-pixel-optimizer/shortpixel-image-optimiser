@@ -1,5 +1,10 @@
 <?php
 namespace ShortPixel\Controller\View;
+
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 
@@ -24,6 +29,8 @@ class BulkViewController extends \ShortPixel\ViewController
   protected $quotaData;
   protected $pendingMeta;
   protected $selected_folders = array();
+
+	protected static $instance;
 
 
   public function load()

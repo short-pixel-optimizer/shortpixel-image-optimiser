@@ -1,5 +1,10 @@
 <?php
 namespace ShortPixel\Model\Image;
+
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use \ShortPixel\ShortPixelPng2Jpg as ShortPixelPng2Jpg;
 use ShortPixel\Controller\ResponseController as ResponseController;
@@ -53,7 +58,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	/** @var boolean */
 	private $justConverted = false; // check if legacy conversion happened on same run, to prevent double runs.
 
-
+	/** @var array */
 	private $optimizeData; // cache to prevent running this more than once per run.
 
 	/** @var string */
@@ -61,6 +66,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 	/** @var string */
 	protected $originalImageKey = 'shortpixel_original_donotuse';
+
+	/** @var array */
+	protected $forceSettings = array();  // option derives from setting or otherwise, request to be forced upon via UI to use specific value.
 
   public function __construct($post_id, $path)
   {
@@ -117,11 +125,20 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		 }
 
 		 $isSmartCrop = ($settings->useSmartcrop == true && $this->getExtension() !== 'pdf') ? true : false;
+		 $paramListArgs = array(); // args for the params, yes.
+
+		 if (isset($this->forceSettings['smartcrop']) && $this->getExtension() !== 'pdf')
+		 {
+			  $isSmartCrop = ($this->forceSettings['smartcrop'] == ImageModel::ACTION_SMARTCROP) ? true : false;
+
+		 }
+		 $paramListArgs['smartcrop'] = $isSmartCrop;
+
 		 $doubles = array(); // check via hash if same command / result is there.
 
      if ($this->isProcessable(true) || ($this->isProcessableAnyFileType() && $this->isOptimized()) )
 		 {
-				$paramList = $this->createParamList();
+				$paramList = $this->createParamList($paramListArgs);
 				$parameters['urls'][$this->mainImageKey] = $url;
 				$parameters['paths'][$this->mainImageKey] = $this->getFullPath();
 				$parameters['params'][$this->mainImageKey] = $paramList;
@@ -150,7 +167,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				 	$url = $thumbObj->getURL();
 			   }
 
-				 $paramList = $thumbObj->createParamList();
+				 $paramList = $thumbObj->createParamList($paramListArgs);
 				 $hash = md5( serialize($paramList) . $url); // Hash the paramlist + url to find identical results.
 
 // This thing fly to sep function? Retutrn liast  duplicat/double name => name
@@ -227,11 +244,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
      return $parameters;
   }
 
-
-
 	public function flushOptimizeData()
 	{
 		 $this->optimizeData = null;
+	}
+
+	public function doSetting($setting, $value)
+	{
+		  $this->forceSettings[$setting] = $value;
+			$this->flushOptimizeData();
 	}
 
   // Try to get the URL via WordPress
@@ -247,6 +268,23 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		 return $url;
   }
+
+	/** Return all urls of item.  This should -not- be used for optimization. Use getOptimizeUrls(). In use for cache
+	*/
+	public function getAllUrls()
+	{
+		$urls = array();
+		$urls[] = $this->getUrl();
+
+		$thumbs = $this->getThumbObjects();
+		foreach($thumbs as $thumbObj)
+		{
+			 $urls[] = $thumbObj->getUrl();
+		}
+
+		return $urls;
+
+	}
 
   public function getWPMetaData()
   {
@@ -306,6 +344,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        $height = (is_null($height)) ? $this->get('height') : $height;
     }
 
+		$this->width = $width;
+		$this->height = $height;
+
     if (is_null($this->getMeta('originalWidth')))
       $this->setMeta('originalWidth',$width);
 
@@ -320,12 +361,17 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           {
              if (isset($data['file']))
              {
+							 $width = (isset($data['width'])) ? $data['width'] : null;
+							 $height = (isset($data['height'])) ? $data['height'] : null;
                $thumbObj = $this->getThumbnailModel($this->getFileDir() . $data['file'], $name);
                $meta = new ImageThumbnailMeta();
-               $meta->originalWidth = (isset($data['width'])) ? $data['width'] : null; // get from WP
-               $meta->originalHeight = (isset($data['height'])) ? $data['height'] : null;
+               $meta->originalWidth = $width; // get from WP
+               $meta->originalHeight = $height;
 							 $thumbObj->setName($name); // name is size mostly
                $thumbObj->setMetaObj($meta);
+
+							 $thumbObj->width = $width;
+							 $thumbObj->height = $height;
 
 							 if (isset($data['filesize']))
 							 	$thumbObj->filesize = $data['filesize'];
@@ -382,7 +428,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       }
 
 			return $this->retinas;
-
   }
 
   protected function getWebps()
@@ -516,7 +561,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						 $wpmeta['width'] = $this->get('width');
  						 $wpmeta['height'] = $this->get('height');
 					}
-					$wpmeta['filesize'] = $this->getFileSize();
+          $filesize = $this->getFileSize();
+          if ($this->is_virtual() && $filesize == -1 && $this->getMeta('compressedSize') > 0)
+          {
+             $filesize = $this->getMeta('compressedSize');
+          }
+					$wpmeta['filesize'] = $filesize;
 
       }
 
@@ -563,7 +613,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 				 if (! is_object($thumbnail))
  			 	 {
-					 	Log::addError('Thumbnail with size name'  . $sizeName . ' is not registered in this image. This should not happen, skipping.', $thumbObjs);
+					 	Log::addError('Thumbnail with size name: '  . $sizeName . ' is not registered in this image. This should not happen, skipping.', $thumbObjs);
 						Log::addError('OptimizeData', $optimizeData);
 						continue;
  			 	 }
@@ -595,7 +645,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 									$wpmeta['sizes'][$size]['height']  = $thumbnail->get('height');
 						 }
 
-						 	$wpmeta['sizes'][$size]['filesize'] = $thumbnail->getFileSize();
+             $filesize = $thumbnail->getFileSize();
+             if ($thumbnail->is_virtual() && $filesize == -1 && $thumbnail->getMeta('compressedSize') > 0)
+             {
+                $filesize = $thumbnail->getMeta('compressedSize');
+             }
+
+						 	$wpmeta['sizes'][$size]['filesize'] = $filesize;
 				 }
 
 
@@ -1242,14 +1298,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 							 }
 						}
 				 }
-
-
 			}
 
 			if (true === $this->getMeta()->convertMeta()->hasPlaceHolder())
 			{
-		 				$placeholderFile = $fs->getFile($this->getFileDir() . $this->getMeta()->convertMeta()->getReplacementImageName());
-
+		 				$placeholderFile = $fs->getFile($this->getFileDir() . $this->getMeta()->convertMeta()->getReplacementImageBase() . '.jpg');
 						if (true === $placeholderFile->exists())
 						{
 								$placeholderFile->delete();
@@ -1257,7 +1310,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			}
 
 			if ($fileDelete === true)
-			   	parent::onDelete();
+			   	parent::onDelete($fileDelete);
 
 
       foreach($this->thumbnails as $thumbObj)
@@ -2638,6 +2691,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
       return array(
         'id' => $this->id,
+        'exists' => ($this->exists()) ? 'yes' : 'no',
+        'is_virtual' => ($this->is_virtual()) ? 'yes' : 'no',
         'image_meta' => $this->image_meta,
         'thumbnails' => $this->thumbnails,
         'retinas' => $this->retinas,
@@ -2717,6 +2772,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       {
           return;
       }
+
+			if ($this->is_virtual() && false === \wpSPIO()->env()->useVirtualHeavyFunctions() )
+			{
+					return;
+			}
 
 			if (defined('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES'))
 			{

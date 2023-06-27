@@ -186,9 +186,10 @@ class WPQ implements Queue
 	// Remove Items directly from queue. Expand this function when required (but use dequeue if possible). For now only support for item_id.
 	public function removeItems($args)
 	{
-									 if (isset($args['item_id']))
-									$this->DataProvider->removeRecords(array('item_id' => $args['item_id'] ));
-
+			 if (isset($args['item_id']))
+			 {
+						$this->DataProvider->removeRecords(array('item_id' => $args['item_id'] ));
+			 }
 	}
 
   // Dequeue a record, put it on done in queue.
@@ -249,7 +250,10 @@ class WPQ implements Queue
      //$this->updateQueue($queue);
      $this->setStatus('last_run', time(), false);
      if (! isset($args['priority']))
+		 {
       $this->setStatus('running', true, false);
+		 }
+
      $this->saveStatus();
 
      if ($items_left == 0)
@@ -272,12 +276,6 @@ class WPQ implements Queue
      if (! $this->options->mode == 'wait')
       return;
 
-  /*  $fields = array('status' => ShortQ::QSTATUS_WAITING, 'tries' => 'tries + 1');
-    $where = array('updated' => time() - $this->options->process_timeout,
-                  'status' => ShortQ::QSTATUS_INPROCESS);
-
-    $operators = array('updated' => '<=');
-*/
     $args = array('status' => ShortQ::QSTATUS_INPROCESS, 'updated' => array('value' => time() - ($this->options->process_timeout/1000), 'operator' => '<='));
 
     $items = $this->DataProvider->getItems($args);
@@ -297,18 +295,17 @@ class WPQ implements Queue
 			 }
     }
 
-		$this->setStatusCount('items', $updated, false);
-
-		if ($this->options->mode == 'wait')
+		if ($updated > 0)
 		{
-			$this->setStatusCount('in_process',- $updated, false);
+			if ($this->options->mode == 'wait')
+			{
+				$this->setStatusCount('in_process',- $updated, false);
+			}
+
+			$this->setStatusCount('items', $updated, true);
 		}
 
     return $updated;
-  /*  if ($result >= 0)
-    {
-      $this->resetInternalCounts();
-    } */
 
   }
 
@@ -336,7 +333,7 @@ class WPQ implements Queue
     if ($fatal)
     {
         $status = ShortQ::QSTATUS_FATAL;
-        $this->setStatusCount('fatal_errors', 1 );
+        $this->setStatusCount('fatal_errors', 1, false );
 				if ($this->options->mode == 'direct')
 				{
 					$this->setStatusCount('items', -1, false);
@@ -347,11 +344,12 @@ class WPQ implements Queue
 				}
     }
     else
-      $this->setStatusCount('errors', 1 );
+      $this->setStatusCount('errors', 1, false );
 
     $item->tries++;
     $this->DataProvider->itemUpdate($item, array('status' => $status, 'tries' => $item->tries));
 
+		$this->saveStatus();
   }
 
   public function updateItemValue(Item $item)
@@ -425,6 +423,7 @@ class WPQ implements Queue
 
   public function cleanQueue()
   {
+
      $this->DataProvider->removeRecords(array('status' => ShortQ::QSTATUS_DONE));
      $this->DataProvider->removeRecords(array('status' => ShortQ::QSTATUS_FATAL));
      $this->resetInternalCounts();
@@ -459,26 +458,6 @@ class WPQ implements Queue
       return $this->setStatus($name, $count + $change, $savenow);
   }
 
-
-  /** Creates a Queue Data Array to keep
-  */
-	/*
-  private function createStatus()
-  {
-
-
-  } */
-
-  /** Get the current status of this slug / queue */
-/*  protected function currentStatus()
-  {
-		 // This can happen when uninstalling/ removing queues.
-		 if (! isset($this->status['queues']) || ! isset($this->status['queues'][$this->qName]))
-		 		return false;
-		else
-     		return $this->status['queues'][$this->qName];
-  } */
-
   private function createQueue()
   {
 			if (is_null($this->status))
@@ -492,6 +471,7 @@ class WPQ implements Queue
       $this->saveStatus();
 
   }
+
 
   private function loadStatus()
   {
@@ -659,18 +639,12 @@ class WPQ implements Queue
      $this->setStatusCount('times_ran', 1, false );
      $this->saveStatus();
 
-    //@todo find some function to remove records, maybe check if all are either DONE OR FATAL
-  /*
-   Not true, if done are removed on queue finish it might impede getting stats from them. Since CheckQueue invokes both finishQueue and resetInternalCounter, removing from DB can end up with a 0 count, because the boss script is aware the queue is already empty.
-    if ($this->options->mode == 'direct') // only direct should be removed straight.
-    {
-       $args = array('status' => QSTATUS_DONE);
-       $this->DataProvider->removeRecords($args);
-    } */
-
-    //@todo find some way to report back what happened recently.
   }
 
+  public function install()
+  {
+			$this->DataProvider->install(true);
+  }
 
   /** Function to call when uninstalling the plugin. This will remove only this current queue
   */

@@ -1,5 +1,10 @@
 <?php
 namespace ShortPixel\Model\File;
+
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Helper\UtilHelper as UtilHelper;
@@ -55,7 +60,7 @@ class DirectoryModel extends \ShortPixel\Model
 			// When in trusted mode prevent filesystem checks as much as possible.
 			if (true === self::$TRUSTED_MODE)
 			{
-					$this->exists = true; 
+					$this->exists = true;
 					$this->is_writable = true;
 					$this->is_readable = true;
 			}

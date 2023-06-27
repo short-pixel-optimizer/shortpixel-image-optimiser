@@ -3,13 +3,17 @@
  * Plugin Name: ShortPixel Image Optimizer
  * Plugin URI: https://shortpixel.com/
  * Description: ShortPixel optimizes images automatically, while guarding the quality of your images. Check your <a href="/wp-admin/options-general.php?page=wp-shortpixel-settings" target="_blank">Settings &gt; ShortPixel</a> page on how to start optimizing your image library and make your website load faster.
- * Version: 5.2.3
+ * Version: 5.3.0
  * Author: ShortPixel - Convert WebP/AVIF & Optimize Images
  * Author URI: https://shortpixel.com
  * GitHub Plugin URI: https://github.com/short-pixel-optimizer/shortpixel-image-optimiser
  * Text Domain: shortpixel-image-optimiser
  * Domain Path: /lang
  */
+
+ if ( ! defined( 'ABSPATH' ) ) {
+ 	exit; // Exit if accessed directly.
+ }
 
 // Preventing double load crash.
 if (function_exists('wpSPIO'))
@@ -31,7 +35,7 @@ if (! defined('SHORTPIXEL_RESET_ON_ACTIVATE'))
 define('SHORTPIXEL_PLUGIN_FILE', __FILE__);
 define('SHORTPIXEL_PLUGIN_DIR', __DIR__);
 
-define('SHORTPIXEL_IMAGE_OPTIMISER_VERSION', "5.2.3");
+define('SHORTPIXEL_IMAGE_OPTIMISER_VERSION', "5.3.0");
 
 define('SHORTPIXEL_BACKUP', 'ShortpixelBackups');
 define('SHORTPIXEL_MAX_FAIL_RETRIES', 3);
@@ -43,8 +47,6 @@ if(!defined('SHORTPIXEL_USE_DOUBLE_WEBP_EXTENSION')) { //can be defined in wp-co
 if(!defined('SHORTPIXEL_USE_DOUBLE_AVIF_EXTENSION')) { //can be defined in wp-config.php
     define('SHORTPIXEL_USE_DOUBLE_AVIF_EXTENSION', false);
 }
-
-
 
 define('SHORTPIXEL_API', 'api.shortpixel.com');
 

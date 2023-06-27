@@ -1,4 +1,5 @@
 .settings_page_wp-shortpixel-settings {
+  /* TABS CONTROLS */
   /* In-view notice ( not on top, between the options ) - styled after WP notice */
 }
 .settings_page_wp-shortpixel-settings a {
@@ -6,6 +7,80 @@
 }
 .settings_page_wp-shortpixel-settings p {
   font-size: 14px;
+}
+.settings_page_wp-shortpixel-settings .clearfix {
+  zoom: 1;
+}
+.settings_page_wp-shortpixel-settings .clearfix:before, .settings_page_wp-shortpixel-settings .clearfix:after {
+  content: " ";
+  display: table;
+}
+.settings_page_wp-shortpixel-settings .clearfix:after {
+  clear: both;
+}
+.settings_page_wp-shortpixel-settings .form-table th {
+  width: 220px;
+}
+.settings_page_wp-shortpixel-settings .form-table td {
+  position: relative;
+}
+.settings_page_wp-shortpixel-settings .shortpixel-key-valid {
+  font-weight: bold;
+}
+.settings_page_wp-shortpixel-settings .shortpixel-key-valid .dashicons-yes:before {
+  font-size: 2em;
+  line-height: 25px;
+  color: #3485ba;
+  margin-left: -20px;
+}
+.settings_page_wp-shortpixel-settings article.sp-tabs {
+  position: relative;
+  display: block;
+  width: 100%;
+  /*height: 1100px;*/
+  margin: 2em auto;
+}
+.settings_page_wp-shortpixel-settings article.sp-tabs section {
+  position: absolute;
+  display: block;
+  top: 1.8em;
+  left: 0;
+  /*height: 1100px;*/
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 10px 20px;
+  /*background-color: #ddd;*/
+  /* border-radius: 5px; */
+  z-index: 0;
+}
+.settings_page_wp-shortpixel-settings article.sp-tabs section.sel-tab {
+  position: relative;
+  box-shadow: 0 3px 3px rgba(0, 0, 0, 0.1);
+}
+.settings_page_wp-shortpixel-settings article.sp-tabs section.sel-tab .wp-shortpixel-tab-content {
+  visibility: visible !important;
+}
+.settings_page_wp-shortpixel-settings article.sp-tabs section .wp-shortpixel-tab-content {
+  visibility: hidden;
+}
+.settings_page_wp-shortpixel-settings article.sp-tabs section:first-child {
+  z-index: 1;
+}
+.settings_page_wp-shortpixel-settings article.sp-tabs section h2 a:focus, .settings_page_wp-shortpixel-settings article.sp-tabs article.sp-tabs section#tab-resources a:focus {
+  box-shadow: none;
+  outline: none;
+}
+.settings_page_wp-shortpixel-settings article.sp-tabs section.sel-tab, .settings_page_wp-shortpixel-settings article.sp-tabs article.sp-tabs section.sel-tab h2 {
+  color: #333;
+  background-color: #fff;
+  z-index: 2;
+}
+.settings_page_wp-shortpixel-settings article.sp-tabs h2:before {
+  content: none;
+}
+.settings_page_wp-shortpixel-settings .sp-column-actions-template + .sp-column-info {
+  display: none;
 }
 .settings_page_wp-shortpixel-settings .button, .settings_page_wp-shortpixel-settings button:focus {
   color: #0f6a7d;

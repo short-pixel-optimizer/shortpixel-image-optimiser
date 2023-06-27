@@ -1,6 +1,10 @@
 <?php
 namespace ShortPixel\Helper;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 // Our newest Tools class
 class UtilHelper
 {
@@ -83,10 +87,21 @@ class UtilHelper
            $upload_dir = wp_upload_dir();
            $upload_base = trailingslashit($upload_dir['basedir']);
 
-           if ( ! $webp && ! $avif ) {
+           if (false === $webp && false === $avif ) {
                insert_with_markers( get_home_path() . '.htaccess', 'ShortPixelWebp', '');
-               insert_with_markers( $upload_base . '.htaccess', 'ShortPixelWebp', '');
+
+							 // Only empty these tags if the file actually exist, they are created by SPIO.
+							if (file_exists($upload_base . '.htaccess'))
+							{
+								 insert_with_markers( $upload_base . '.htaccess', 'ShortPixelWebp', '');
+							}
+
+
+							if (file_exists(trailingslashit(WP_CONTENT_DIR) . '.htaccess'))
+							{
                insert_with_markers( trailingslashit(WP_CONTENT_DIR) . '.htaccess', 'ShortPixelWebp', '');
+						 	}
+
            } else {
 
            $avif_rules = '
@@ -172,9 +187,14 @@ class UtilHelper
    * since the WP rewrite will not be active at that point (overruled) **/
     $rules = str_replace('RewriteEngine On', 'RewriteEngine On' . PHP_EOL . 'RewriteOptions Inherit', $rules);
 
-               insert_with_markers( $upload_base . '.htaccess', 'ShortPixelWebp', $rules);
-               insert_with_markers( trailingslashit(WP_CONTENT_DIR) . '.htaccess', 'ShortPixelWebp', $rules);
+							// Can shortcircuit (return false) the creation of subdirectory Htaccess files if this causes issues and is not needed.
+							 $bool = apply_filters('shortpixel/install/write_deep_htaccess', true);
 
+							 if (true === $bool)
+							 {
+               	insert_with_markers( $upload_base . '.htaccess', 'ShortPixelWebp', $rules);
+               	insert_with_markers( trailingslashit(WP_CONTENT_DIR) . '.htaccess', 'ShortPixelWebp', $rules);
+							 }
            }
     }
 } // class

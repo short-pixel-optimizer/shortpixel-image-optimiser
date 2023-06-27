@@ -1,7 +1,11 @@
 <?php
 namespace ShortPixel;
-use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Model\AccessModel as AccessModel;
 
 
@@ -42,6 +46,14 @@ class ViewController extends Controller
     $this->view->data = null;  // Data(base), to separate from regular view data
 
   }
+
+	public static function getInstance() {
+    if (is_null(static::$instance)) {
+        static::$instance = new static;
+    }
+
+    return static::$instance;
+}
 
   /* Check if postData has been submitted.
   * This function should always be called at any ACTION function ( load, load_$action etc ).

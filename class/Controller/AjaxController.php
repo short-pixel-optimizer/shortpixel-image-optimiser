@@ -5,6 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
+
 use ShortPixel\Controller\View\ListMediaViewController as ListMediaViewController;
 use ShortPixel\Controller\View\OtherMediaViewController as OtherMediaViewController;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
@@ -13,6 +14,8 @@ use ShortPixel\Notices\NoticeController as Notices;
 //use ShortPixel\Controller\BulkController as BulkController;
 use ShortPixel\Helper\UiHelper as UiHelper;
 use ShortPixel\Helper\InstallHelper as InstallHelper;
+
+use ShortPixel\Model\Image\ImageModel as ImageModel;
 
 
 // Class for containing all Ajax Related Actions.
@@ -107,7 +110,7 @@ class AjaxController
              if ($type == 'media')
              {
                ob_start();
-               $control = new ListMediaViewController();
+               $control = ListMediaViewController::getInstance();
                $control->doColumn('wp-shortPixel', $id);
                $result = ob_get_contents();
                ob_end_clean();
@@ -162,7 +165,6 @@ class AjaxController
         $this->checkNonce('ajax_request');
 				ErrorController::start(); // Capture fatal errors for us.
 
-
 			  // phpcs:ignore -- Nonce is checked
         $action = isset($_POST['screen_action']) ? sanitize_text_field($_POST['screen_action']) : false;
 				// phpcs:ignore -- Nonce is checked
@@ -200,6 +202,9 @@ class AjaxController
            case 'optimizeItem':
              $json = $this->optimizeItem($json, $data);
            break;
+					 case 'cancelOptimize':
+					 		$json = $this->cancelOptimize($json, $data);
+					 break;
            case 'createBulk':
              $json = $this->createBulk($json, $data);
            break;
@@ -276,6 +281,27 @@ class AjaxController
 					return $json;
     }
 
+		public function cancelOptimize($json, $data)
+		{
+			$id = intval($_POST['id']);
+			$type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';
+
+			$mediaItem = $this->getMediaItem($id, $type);
+
+			$mediaItem->dropFromQueue();
+
+			$json->$type->status = 1;
+			$json->$type->fileStatus = ImageModel::FILE_STATUS_SUCCESS; // great success!
+
+			$json->$type->item_id = $id;
+			$json->$type->result = new \stdClass;
+			$json->$type->result->message = __('Item removed from queue', 'shortpixel-image-optimiser');
+			$json->$type->result->is_done = true;
+
+			$json->status = true;
+			return $json;
+		}
+
     /* Integration for WP /LR Sync plugin  - https://meowapps.com/plugin/wplr-sync/
 		* @integration WP / LR Sync
     * @todo Test if it works with plugin intergration
@@ -312,11 +338,18 @@ class AjaxController
        $id = $data['id'];
        $type = $data['type'];
        $compressionType = isset($_POST['compressionType']) ? intval($_POST['compressionType']) : 0;
+			 $actionType = isset($_POST['actionType']) ? intval($_POST['actionType']) : null;
+
        $mediaItem = $this->getMediaItem($id, $type);
+
+				if ($actionType == ImageModel::ACTION_SMARTCROP || $actionType == ImageModel::ACTION_SMARTCROPLESS)
+				{
+						$args = array('smartcrop' => $actionType);
+				}
 
        $control = new OptimizeController();
 
-       $json->$type = $control->reOptimizeItem($mediaItem, $compressionType);
+       $json->$type = $control->reOptimizeItem($mediaItem, $compressionType, $args);
 			 $json->status = true;
        return $json;
     }

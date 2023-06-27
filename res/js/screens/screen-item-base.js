@@ -10,6 +10,12 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase
 	constructor(MainScreen, processor)
 	{
 		super(MainScreen, processor);
+
+	}
+
+	Init()
+	{
+		console.log('Item base');
 		window.addEventListener('shortpixel.' + this.type + '.resumeprocessing', this.processor.ResumeProcess.bind(this.processor));
 		window.addEventListener('shortpixel.RenderItemView', this.RenderItemView.bind(this) );
 	}
@@ -37,7 +43,7 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase
 					{
 						element.innerHTML = '';
 					//  var event = new CustomEvent('shortpixel.loadItemView', {detail: {'type' : type, 'id': result.id }}); // send for new item view.
-					var fileStatus = this.processor.fStatus[resultItem.result.status];
+					var fileStatus = this.processor.fStatus[resultItem.fileStatus];
 
 						if (fileStatus == 'FILE_SUCCESS' || fileStatus == 'FILE_RESTORED' || resultItem.result.is_done == true)
 						{
@@ -199,7 +205,18 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase
 				this.processor.AjaxRequest(data);
 		}
 
-		ReOptimize(id, compression)
+		CancelOptimizeItem(id)
+		{
+				var data = {};
+				data.id = id;
+				data.type = this.type;
+				data.screen_action = 'cancelOptimize';
+				// AjaxRequest should return result, which will go through Handleresponse, then LoaditemView.
+		//		this.SetMessageProcessing(id);
+				this.processor.AjaxRequest(data);
+		}
+
+		ReOptimize(id, compression, action)
 		{
 				var data = {
 					 id : id ,
@@ -207,6 +224,11 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase
 					 type: this.type,
 					 screen_action: 'reOptimizeItem'
 				};
+
+				if (typeof action !== 'undefined')
+				{
+					 data.actionType = action;
+				}
 
 			 if (! this.processor.CheckActive())
 					 data.callback = 'shortpixel.' + this.type + '.resumeprocessing';

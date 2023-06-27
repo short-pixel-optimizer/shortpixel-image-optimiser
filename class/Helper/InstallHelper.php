@@ -1,6 +1,10 @@
 <?php
 namespace ShortPixel\Helper;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Controller\BulkController as BulkController;
@@ -14,7 +18,6 @@ use ShortPixel\Helper\UtilHelper as UtilHelper;
 class InstallHelper
 {
 
-
   public static function activatePlugin()
   {
       self::deactivatePlugin();
@@ -23,13 +26,17 @@ class InstallHelper
       $env = wpSPIO()->env();
 
       if(\WPShortPixelSettings::getOpt('deliverWebp') == 3 && ! $env->is_nginx) {
-          UtilHelper::alterHtaccess(true,true); //add the htaccess lines
+          UtilHelper::alterHtaccess(true,true); //add the htaccess lines. Both are true because even if one option is now off in the past both fileformats could have been generated.
       }
 
       self::checkTables();
 
       AdminNoticesController::resetOldNotices();
       \WPShortPixelSettings::onActivate();
+
+      $optimizeController = new OptimizeController();
+      $q = $optimizeController->getQueue('media');
+      $q->getShortQ()->install(); // create table.
 
 			$settings->currentVersion = SHORTPIXEL_IMAGE_OPTIMISER_VERSION;
   }
@@ -60,16 +67,18 @@ class InstallHelper
 
 		// saved in settings object, reset all stats.
  		StatsController::getInstance()->reset();
-
   }
 
   public static function uninstallPlugin()
   {
-   // $settings = \wpSPIO()->settings();
- //   $env = \wpSPIO()->env();
-
     OptimizeController::uninstallPlugin();
 		ApiKeyController::uninstallPlugin();
+
+		delete_transient('bulk-secret');
+		delete_transient('othermedia_refresh_folder_delay');
+		delete_transient('avif_server_check');
+		delete_transient('quotaData');
+
   }
 
  // Removes everything  of SPIO 5.x .  Not recommended.
@@ -93,7 +102,9 @@ class InstallHelper
 		$settings::resetOptions();
 
 		if (! $env->is_nginx)
+		{
 			insert_with_markers( get_home_path() . '.htaccess', 'ShortPixelWebp', '');
+		}
 
 		self::removeTables();
 
@@ -153,13 +164,9 @@ class InstallHelper
 			global $wpdb;
     	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 
-
 			dbDelta(self::getFolderTableSQL());
-
-	    	dbDelta(self::getMetaTableSQL());
-
+	    dbDelta(self::getMetaTableSQL());
 			dbDelta(self::getPostMetaSQL());
-
 
 			self::checkIndexes();
 	}

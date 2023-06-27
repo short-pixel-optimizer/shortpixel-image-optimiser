@@ -3,6 +3,10 @@ namespace ShortPixel;
 use \ShortPixel\Controller\BulkController as BulkController;
 use \ShortPixel\Helper\UiHelper as UiHelper;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 $url = esc_url_raw(remove_query_arg('part'));
 
 $bulk = BulkController::getInstance();
@@ -57,7 +61,15 @@ $queueRunning = $bulk->isAnyBulkRunning();
 			</div>
 		</div>
 
+		<div class='option'>
+			<div class='name'><?php esc_html_e('Clear Optimization Errors','shortpixel-image-optimiser'); ?></div>
+			<div class='field'>
 
+				<a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_removePrevented', 'queue' => 'all', 'part' => 'tools', 'noheader' => true), $url)); ?>" class="button"><?php esc_html_e('Clear Optimization Errors','shortpixel-image-optimiser'); ?></a>
+				<p class='settings-info'><?php printf(esc_html__('Removes the blocks from the items where the optimization failed for some reason. This usually happens when the plugin is not able to save the backups. %sImportant!%s The cause of the error should be fixed, otherwise data corruption may occur.','shortpixel-image-optimiser') , '<b>','</b>'); ?> </p>
+
+			</div>
+		</div>
 
 		<hr />
 

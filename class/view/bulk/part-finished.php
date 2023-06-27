@@ -1,5 +1,9 @@
 <?php
 namespace ShortPixel;
+
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
 ?>
 <section class="panel finished" data-panel="finished">
   <div class="panel-container">
@@ -33,7 +37,9 @@ namespace ShortPixel;
     <?php $this->loadView('bulk/part-progressbar', false); ?>
 		<span class='hidden' data-check-media-total data-stats-media="total">0</span>
 
-		<div class='bulk-summary'>
+    <span class='hidden' data-check-media-customOperation data-stats-media="isCustomOperation">-1</span>
+
+		<div class='bulk-summary' data-check-visibility="false" data-control='data-check-media-customOperation'>
 		<p class='finished-paragraph'>
 			<?php printf(__('Congratulations, ShortPixel has optimized %s %s images and thumbs %s for your website! Yay to faster loading websites! %s', 'shortpixel-image-optimiser'), '<b>', '<span data-stats-total="total"></span>','</b>', '&#x1F389;');
 			?>

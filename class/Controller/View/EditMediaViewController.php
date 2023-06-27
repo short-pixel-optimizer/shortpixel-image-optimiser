@@ -1,13 +1,15 @@
 <?php
 namespace ShortPixel\Controller\View;
+
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Helper\UiHelper as UiHelper;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Controller\ErrorController as ErrorController;
-
-
-//use ShortPixel\Model\ImageModel as ImageModel;
 
 // Future contoller for the edit media metabox view.
 class EditMediaViewController extends \ShortPixel\ViewController
@@ -20,6 +22,9 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
       protected $imageModel;
       protected $hooked;
+
+			protected static $instance;
+
 
       public function __construct()
       {
@@ -53,7 +58,6 @@ class EditMediaViewController extends \ShortPixel\ViewController
           );
       }
 
-
       public function dometaBox($post)
       {
           $this->post_id = $post->ID;
@@ -73,11 +77,9 @@ class EditMediaViewController extends \ShortPixel\ViewController
 						return false;
 					}
 
-
-
           $this->view->status_message = null;
 
-          $this->view->text = UiHelper::getStatusText($this->imageModel);
+         	$this->view->text = UiHelper::getStatusText($this->imageModel);
           $this->view->list_actions = UiHelper::getListActions($this->imageModel);
           if ( count($this->view->list_actions) > 0)
             $this->view->list_actions = UiHelper::renderBurgerList($this->view->list_actions, $this->imageModel);
@@ -174,7 +176,6 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
 					if ($imageObj->isProcessable())
 					{
-						 //$urls = $imageObj->getOptimizeUrls();
 						 $optimizeData = $imageObj->getOptimizeData();
 						 $urls = $optimizeData['urls'];
 

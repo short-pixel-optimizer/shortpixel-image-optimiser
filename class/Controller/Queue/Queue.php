@@ -1,6 +1,10 @@
 <?php
 namespace ShortPixel\Controller\Queue;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\CacheController as CacheController;
@@ -352,7 +356,9 @@ abstract class Queue
 
 			if ($this->isCustomOperation())
 			{
+          Log::addTemp('Custom opreation detected', $this->getCustomDataItem('customOperation'));
 					  $stats->customOperation = $this->getCustomDataItem('customOperation');
+            $stats->isCustomOperation = '10'; // numeric value for the bulk JS
 			}
 
       $stats->total = $stats->in_queue + $stats->fatal_errors + $stats->errors + $stats->done + $stats->in_process;
@@ -369,6 +375,7 @@ abstract class Queue
         $stats->images = $this->countQueue();
       }
 
+      Log::addTemp('Stats', $stats);
       return $stats;
     }
 
@@ -595,9 +602,10 @@ abstract class Queue
 						}
 				}
 				// CompressionType can be integer, but not empty string. In cases empty string might happen, causing lossless optimization, which is not correct.
-        if (! is_null($imageModel->getMeta('compressionType')) && is_int($imageModel->getMeta('compressionType')))
+        if (! is_null($imageModel->getMeta('compressionType')) && is_numeric($imageModel->getMeta('compressionType')))
 				{
           $item->compressionType = $imageModel->getMeta('compressionType');
+
 				}
 
         // Former securi function, add timestamp to all URLS, for cache busting.

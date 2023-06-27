@@ -1,6 +1,10 @@
 <?php
 namespace ShortPixel;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 class Pantheon {
 
 	public static $is_pantheon = false;
@@ -18,7 +22,7 @@ class Pantheon {
 
 	public static function IsActive()
 	{
-		 return self::$is_pantheon; 
+		 return self::$is_pantheon;
 	}
 
 	public function flush_image_caches( $imageItem )

@@ -562,7 +562,10 @@ window.ShortPixelProcessor =
     {
   //    var data = event.detail;
       var nonce = this.nonce['itemview'];
-      this.worker.postMessage({action: 'getItemView', 'nonce' : this.nonce['itemview'], 'data': { 'id' : data.id, 'type' : data.type, 'callback' : 'shortpixel.RenderItemView'}});
+			if (this.worker !== null)
+			{
+      	this.worker.postMessage({action: 'getItemView', 'nonce' : this.nonce['itemview'], 'data': { 'id' : data.id, 'type' : data.type, 'callback' : 'shortpixel.RenderItemView'}});
+			}
     },
 
     AjaxRequest: function(data)

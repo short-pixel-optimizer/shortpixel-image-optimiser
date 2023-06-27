@@ -1,5 +1,10 @@
 <?php
 namespace ShortPixel\Model;
+
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 /** Loads a few environment variables handy to have nearby
@@ -36,6 +41,7 @@ class EnvironmentModel extends \ShortPixel\Model
 
     // Debug flag
     public $is_debug = false;
+		// Is the plugin configured to automatically optimize on upload hook?
     public $is_autoprocess = false;
 
     protected static $instance;
@@ -107,6 +113,9 @@ class EnvironmentModel extends \ShortPixel\Model
 				case 's3-offload':
 				  $plugin = 'amazon-s3-and-cloudfront/wordpress-s3.php';
 				break;
+				case 'woocommerce':
+					 $plugin = 'woocommerce/woocommerce.php';
+				break;
 				default:
 				 	$plugin = 'none';
 				break;
@@ -136,6 +145,29 @@ class EnvironmentModel extends \ShortPixel\Model
       return true;
     else
       return false;
+  }
+
+	public function hasOffload()
+	{
+			$off = \ShortPixel\External\Offload\Offloader::getInstance();
+			$name = $off->getOffloadName();
+			if (is_null($name))
+				return false;
+			else
+				return true;
+	}
+
+  public function getOffloadName()
+  {
+    $off = \ShortPixel\External\Offload\Offloader::getInstance();
+    $name = $off->getOffloadName();
+    return $name;
+  }
+
+  public function useVirtualHeavyFunctions()
+  {
+      $bool = apply_filters('shortpixel/file/virtual/heavy_features', true);
+      return $bool;
   }
 
   private function setServer()
@@ -217,7 +249,8 @@ class EnvironmentModel extends \ShortPixel\Model
        $this->is_screen_to_use = true;
        $this->is_our_screen = true;
 
-       if ($screen->id == 'media_page_wp-short-pixel-bulk')
+			 // Strpos instead of full screen id, because the first page (media_page) is not reliable and can change.
+       if ( strpos($screen->id, 'wp-short-pixel-bulk') !== false)
         $this->is_bulk_page = true;
     }
 		elseif (is_object($screen) && method_exists( $screen, 'is_block_editor' ) && $screen->is_block_editor() ) {

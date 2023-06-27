@@ -1,7 +1,11 @@
 <?php
 namespace ShortPixel;
-use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
+use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 
 // Gravity Forms integrations.
 class gravityForms

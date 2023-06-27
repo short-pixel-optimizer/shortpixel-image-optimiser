@@ -1,6 +1,10 @@
 <?php
 namespace ShortPixel\Model\AdminNotices;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 use \ShortPixel\Controller\CacheController as CacheController;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
@@ -13,6 +17,21 @@ class AvifNotice extends \ShortPixel\Model\AdminNoticeModel
 	protected $error_message;
 	protected $error_detail;
 
+	// Remove this.
+	public function __construct()
+	{
+		$this->callback = array($this, 'function_crash');
+
+		 parent::__construct();
+	}
+
+/*
+	public function function_crash()
+	{
+		echo 'Yall';
+		  return false;
+	}
+*/
 	protected function checkTrigger()
 	{
 			// No Automatic Trigger.

@@ -1,9 +1,11 @@
 <?php
 namespace ShortPixel;
+
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
 ?>
 <section class='spio-progressbar'>
-
-
 
   <div class="flex">
     <div class="select">

@@ -17,7 +17,6 @@ class ErrorController
 
 			public static function start()
 			{
-			//	var_dump(\wpSPIO()->env()->is_debug);
 					if (true === \wpSPIO()->env()->is_debug)
 					{
 				 		register_shutdown_function(array(self::class, 'checkErrors'));
@@ -38,6 +37,7 @@ class ErrorController
 					  return;
 				 }
 				 else {
+					 	echo json_encode();exit();
 					  ob_clean(); // try to scrub other stuff
 				 		echo '<PRE>' . $error['message'] .  ' in ' . $error['file']  . ' on line ' . $error['line'] . '<br> Last Item ID: ' . OptimizeController::getLastId() . '</PRE>';
 						exit(' <small><br> -Shortpixel Error Handler- </small>');

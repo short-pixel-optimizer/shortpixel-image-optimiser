@@ -1,5 +1,10 @@
 <?php
 namespace ShortPixel\Model\Image;
+
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Controller\ResponseController as ResponseController;
@@ -35,6 +40,10 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     const COMPRESSION_LOSSY = 1;
     const COMPRESSION_GLOSSY = 2;
 
+		const ACTION_SMARTCROP = 100;
+		const ACTION_SMARTCROPLESS = 101;
+
+
     // Extension that we process .
     const PROCESSABLE_EXTENSIONS = array('jpg', 'jpeg', 'gif', 'png', 'pdf');
 
@@ -50,7 +59,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		const P_BACKUP_EXISTS = 8;
 		const P_OPTIMIZE_PREVENTED = 9;
 		const P_DIRECTORY_NOTWRITABLE = 10;
-
 
 		// For restorable status
 		const P_RESTORABLE = 109;
@@ -629,8 +637,12 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
             if ($this->is_virtual())
             {
                 $filepath = apply_filters('shortpixel/file/virtual/translate', $this->getFullPath(), $this);
-
                 $virtualFile = $fs->getFile($filepath);
+                // Seems stateless like google cloud doesn't like overwrites with declared delete
+                if ($this->virtual_status == self::$VIRTUAL_STATELESS)
+                {
+                    $virtualFile->delete();
+                }
                 $copyok = $tempFile->copy($virtualFile);
             }
             else
@@ -772,7 +784,11 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         }
         else
         {
-          if (! $this->is_writable())
+					if ($this->is_virtual()) // Is_virtual, but no backup found ( see up )
+					{
+						$this->restorable_status = self::P_BACKUP_NOT_EXISTS;
+					}
+          elseif (! $this->is_writable())
           {
 						  $response = array(
 									'is_error' => true,
@@ -854,7 +870,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 						 $response = array(
 								 'is_error' => true,
 								 'issue_type' => ResponseController::ISSUE_FILE_NOTWRITABLE,
-								 'message' => __('BackupFile not writable. Check file and/or file permissions', 'shortpixel-image-optimiser'),
+								 'message' => __('The backup file is not writable. Check file and/or file permissions', 'shortpixel-image-optimiser'),
 
 						 );
 						 ResponseController::addData($this->get('id'), $response);
@@ -1226,7 +1242,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
        return \wpSPIO()->filesystem();
     }
 
-		protected function createParamList()
+		protected function createParamList($args = array())
 		{
 			$settings = \wpSPIO()->settings();
 
@@ -1236,7 +1252,15 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 		 $useSmartcrop = false;
 
-		 if ($settings->useSmartcrop == true && $this->getExtension() !== 'pdf')
+		 if (isset($args['smartcrop']) && $this->getExtension() !== 'pdf')
+		 {
+			  $useSmartcrop = $args['smartcrop'];
+		 }
+		 else {
+		 	 $useSmartCrop = $settings->useSmartcrop;
+		 }
+
+		 if ($useSmartcrop == true && $this->getExtension() !== 'pdf')
 		 {
 		 	$resize = 4 ;
 			$useSmartcrop = true;
@@ -1270,13 +1294,13 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 			 	$result = array('resize' => $resize, 'resize_width' => $width, 'resize_height' => $height);
 			}
 
+
 		 // Check if the image is not excluded
 		 $imageOk = ($this->isProcessable(true) || $this->isOptimized()) ? true : false ;
 
 		 $result['image'] = $this->isProcessable(true);
 		 $result['webp']  = ($imageOk && $this->isProcessableFileType('webp')) ? true : false;
 		 $result['avif']  = ($imageOk && $this->isProcessableFileType('avif')) ? true : false;
-
 		 return $result;
 
 		}

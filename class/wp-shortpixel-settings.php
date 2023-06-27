@@ -1,6 +1,9 @@
 <?php
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
 
 /** Settings Model **/
 class WPShortPixelSettings extends \ShortPixel\Model {

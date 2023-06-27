@@ -2,6 +2,9 @@
 namespace ShortPixel;
 use \ShortPixel\Helper\UiHelper as UiHelper;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
 ?>
 <section id="tab-adv-settings" class="clearfix <?php echo esc_attr(($this->display_part == 'adv-settings') ? ' sel-tab ' :''); ?> ">
     <h2><a class='tab-link' href='javascript:void(0);' data-id="tab-adv-settings"><?php esc_html_e('Advanced','shortpixel-image-optimiser');?></a></h2>
@@ -35,8 +38,6 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
         }
     }
 
-
-
     $excludePatterns = '';
     if($view->data->excludePatterns) {
         foreach($view->data->excludePatterns as $item) {
@@ -44,8 +45,6 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
         }
         $excludePatterns = substr($excludePatterns, 0, -2);
     }
-
-
     ?>
 
     <div class="wp-shortpixel-options wp-shortpixel-tab-content" style='visibility: hidden'>
@@ -86,7 +85,6 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
 											 <?php printf(esc_html__('Create %s AVIF versions %s of the images. Each image/thumbnail will use an additional credit. ','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/blog/what-is-avif-and-why-is-it-good/" target="_blank">', '</a>');?>
 										 </label>
 									 </div>
-
 
                    <?php if(strlen($deliverAVIFLabel)){ ?>
                                 <p class="sp-notice sp-notice-warning">
@@ -243,6 +241,18 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
 									 </div>
                 </td>
             </tr>
+
+            <?php if (true === $this->disable_heavy_features): ?>
+            <tr class="heavy-feature-virtual retina view-notice-row">
+              <th scope="row">&nbsp;</th>
+              <td>
+                <div class='heavy-feature-virtual warning view-notice'>
+                  <p><?php printf(esc_html__('This feature has been disabled in offload mode for performance reasons. You can enable it again with a %s filter hook %s ', 'shortpixel-image-optimiser' ),'<a target="_blank" href="https://shortpixel.com/knowledge-base/article/577-performance-improvement-shortpixel-image-optimization-media-offload-plugin">', '</a>'); ?></p>
+                </div>
+              </td>
+            </tr>
+          <?php endif; ?>
+
             <tr>
                 <th scope="row"><?php esc_html_e('Optimize other thumbnails','shortpixel-image-optimiser');?></th>
                 <td>
@@ -256,6 +266,18 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
 									 </div>
                 </td>
             </tr>
+
+            <?php if (true === $this->disable_heavy_features): ?>
+            <tr class="heavy-feature-virtual unlisted view-notice-row ">
+              <th scope="row">&nbsp;</th>
+              <td>
+                <div class='heavy-feature-virtual warning view-notice'>
+                  <p><?php printf(esc_html__('This feature has been disabled in offload mode for performance reasons. You can enable it again with a %s filter hook %s ', 'shortpixel-image-optimiser' ),'<a target="_blank" href="https://shortpixel.com/knowledge-base/article/577-performance-improvement-shortpixel-image-optimization-media-offload-plugin">', '</a>'); ?></p>
+                </div>
+              </td>
+            </tr>
+          <?php endif; ?>
+
             <tr>
                 <th scope="row"><?php esc_html_e('Convert PNG images to JPEG','shortpixel-image-optimiser');?></th>
                 <td>
@@ -341,7 +363,6 @@ use \ShortPixel\Helper\UiHelper as UiHelper;
 						);
 				 ?>
 				 <br /><br />
-
 			 </p>
 
                     <textarea name="excludePatterns" type="text" id="excludePatterns" placeholder="<?php

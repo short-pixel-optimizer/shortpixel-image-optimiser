@@ -1,7 +1,11 @@
 <?php
 namespace ShortPixel\Model\File;
-use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
 
 
@@ -35,6 +39,7 @@ class FileModel extends \ShortPixel\Model
   protected $is_readable = null;
   protected $is_file = null;
   protected $is_virtual = false;
+	protected $virtual_status = null;
 
   protected $status;
 
@@ -45,6 +50,9 @@ class FileModel extends \ShortPixel\Model
 
 	public static $TRUSTED_MODE = false;
 
+	// Constants for is_virtual . Virtual Remote is truly a remote file, not writable from machine. Stateless means it looks remote, but it's a protocol-based filesystem remote or not - that will accept writes / is_writable. Stateless also mean performance issue since it can't be 'translated' to a local path. All communication happens over http wrapper, so check should be very limited.
+	public static $VIRTUAL_REMOTE = 1;
+	public static $VIRTUAL_STATELESS = 2;
 
   /** Creates a file model object. FileModel files don't need to exist on FileSystem */
   public function __construct($path)
@@ -128,7 +136,12 @@ class FileModel extends \ShortPixel\Model
 
   public function is_writable()
   {
-    if ($this->is_virtual())
+		// Return when already asked / Stateless might set this
+		if (! is_null($this->is_writable))
+		{
+			 return $this->is_writable;
+		}
+    elseif ($this->is_virtual())
     {
        $this->is_writable = false;  // can't write to remote files
     }
@@ -152,7 +165,12 @@ class FileModel extends \ShortPixel\Model
 
 	public function is_directory_writable()
 	{
-		if ($this->is_virtual())
+		// Return when already asked / Stateless might set this
+		if (! is_null($this->is_directory_writable))
+		{
+			 return $this->is_directory_writable;
+		}
+		elseif ($this->is_virtual())
 		{
 			 $this->is_directory_writable = false;  // can't write to remote files
 		}
@@ -545,6 +563,7 @@ class FileModel extends \ShortPixel\Model
   protected function processPath($path)
   {
     $original_path = $path;
+
     $fs = \wpSPIO()->filesystem();
 
     if ($fs->pathIsUrl($path))
@@ -601,17 +620,27 @@ class FileModel extends \ShortPixel\Model
 		// When in trusted mode prevent filesystem checks as much as possible.
 		if (true === self::$TRUSTED_MODE)
 		{
+
+				// At this point file info might not be loaded, because it goes w/ construct -> processpath -> urlToPath etc on virtual files. And called via getFileInfo.  Using any of the file info functions can trigger a loop.
+				if (is_null($this->extension))
+				{
+						$extension = pathinfo($this->fullpath, PATHINFO_EXTENSION);
+				}
+				else {
+					$extension = $this->getExtension();
+				}
+
 				$this->exists = true;
 				$this->is_writable = true;
 				$this->is_directory_writable = true;
 				$this->is_readable = true;
 				$this->is_file = true;
 				// Set mime to prevent lookup in IsImage
-				$this->mime = 'image/' . $this->getExtension();
+				$this->mime = 'image/' . $extension;
 
 				if (is_null($this->filesize))
 				{
-					$this->filesize = 0; 
+					$this->filesize = 0;
 				}
 		}
 
@@ -631,6 +660,7 @@ class FileModel extends \ShortPixel\Model
      $url = str_replace(array('http:', 'https:'), '', $url);
      $fs = \wpSPIO()->filesystem();
 
+		 // The site URL domain is included in the URL string
      if (strpos($url, $site_url) !== false)
      {
        // try to replace URL for Path
@@ -646,22 +676,35 @@ class FileModel extends \ShortPixel\Model
 
      $this->is_virtual = true;
 
-		 // This filter checks if some supplier will be able to handle the file when needed.
-     $path = apply_filters('shortpixel/image/urltopath', false, $url);
+		 /* This filter checks if some supplier will be able to handle the file when needed.
+		 *   Use translate filter to correct filepath when needed.
+		 * Return could be true, or fileModel virtual constant
+		 */
+     $result = apply_filters('shortpixel/image/urltopath', false, $url);
 
-		 if ($path !== false)
-     {
-          $this->exists = true;
-          $this->is_readable = true;
-          $this->is_file = true;
-     }
-     else
-     {
-         $this->exists = false;
-         $this->is_readable = false;
-         $this->is_file = false;
-     }
+		 if ($result === false)
+		 {
+			 $this->exists = false;
+			 $this->is_readable = false;
+			 $this->is_file = false;
+		 }
+		 else {
+			 $this->exists = true;
+			 $this->is_readable = true;
+			 $this->is_file = true;
+		 }
 
+		 // If return is a stateless server, assume that it's writable and all that.
+		 if ($result === self::$VIRTUAL_STATELESS)
+		 {
+			  $this->is_writable = true;
+				$this->is_directory_writable = true;
+				$this->virtual_status = self::$VIRTUAL_STATELESS;
+		 }
+		 elseif ($result === self::$VIRTUAL_REMOTE)
+		 {
+			  $this->virtual_status = self::$VIRTUAL_REMOTE;
+		 }
 
      return false; // seems URL from other server, use virtual mode.
   }

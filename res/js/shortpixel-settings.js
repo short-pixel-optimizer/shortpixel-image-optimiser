@@ -30,8 +30,6 @@ var ShortPixelSettings = function()
 					modal.addEventListener('click', self.OpenModal.bind(self));
 			});
 
-
-
 	}
 
 

@@ -1,0 +1,90 @@
+
+
+.sp-column-info
+{
+		max-width: 300px; // fix for wide screen when the actions will move
+
+		.sp-column-actions  {
+	    max-width: 140px;
+	    float:right;
+	    text-align: right;
+			.button.button-smaller {
+			    margin-right: 0px;
+			}
+		}
+		.button.button-smaller {
+			 font-size: 13px;
+			 padding:0px 5px;
+			 margin-bottom: 4px;
+			 min-height:30px;
+
+			 float:right;
+	 }
+
+	 .thumbnails.optimized
+ 	 {
+		 	display: inline-block;
+			.thumb-wrapper
+			{
+			}
+
+	 }
+	 .sp-dropdown {
+	     position: relative;
+	     display: inline-block;
+	 }
+
+	 .sp-dropbtn.button {
+	     box-sizing: content-box;
+	     padding: 0 5px;
+	     font-size: 20px;
+	     line-height: 20px;
+	     /*background-color: #4CAF50;
+	     color: white;
+	     border: none;*/
+	     cursor: pointer;
+	 }
+
+
+	 /* Dropdown Content (Hidden by Default) */
+	 .sp-dropdown-content {
+	     display: none;
+	     right: 0;
+	     position: absolute;
+	     background-color: #f9f9f9;
+	     min-width: 200px;
+	     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+	     z-index: 1;
+	 }
+	 .rtl .sp-dropdown-content {
+	     right:auto;
+	     left: 0;
+	 }
+
+	 /* Links inside the dropdown */
+	 .sp-dropdown-content a {
+	     color: black;
+	     padding: 12px 16px;
+	     text-decoration: none;
+	     display: block;
+	 }
+
+	 /* Change color of dropdown links on hover */
+	 .sp-dropdown-content a:hover {background-color: #f1f1f1}
+
+	 /* Show the dropdown menu (use JS to add this class to the .dropdown-content container when the user clicks on the dropdown button) */
+	 .sp-dropdown.sp-show .sp-dropdown-content {display:block;}
+
+} // column
+/*
+.wp-core-ui .column-wp-shortPixel .sp-column-actions
+.wp-core-ui .column-wp-shortPixel
+.wp-core-ui.rtl .column-wp-shortPixel .sp-column-actions,
+.wp-core-ui.rtl .column-wp-shortPixel .button.button-smaller{
+    float:left;
+}
+
+th.sortable.column-wp-shortPixel a,
+th.sorted.column-wp-shortPixel a {
+    display: inline-block;
+}*/

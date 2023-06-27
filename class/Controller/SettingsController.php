@@ -1,5 +1,10 @@
 <?php
 namespace ShortPixel\Controller;
+
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notice;
 use ShortPixel\Helper\UiHelper as UiHelper;
@@ -26,6 +31,7 @@ class SettingsController extends \ShortPixel\ViewController
      protected $hide_api_key;
      protected $has_nextgen;
      protected $do_redirect = false;
+     protected $disable_heavy_features = false; // if virtual and stateless, might disable heavy file ops.
 
      protected $quotaData = null;
 
@@ -39,6 +45,10 @@ class SettingsController extends \ShortPixel\ViewController
      protected $display_part = 'settings';
 		 protected $all_display_parts = array('settings', 'adv-settings', 'cloudflare', 'debug', 'tools');
      protected $form_action = 'save-settings';
+
+
+
+		 protected static $instance;
 
       public function __construct()
       {
@@ -299,7 +309,6 @@ class SettingsController extends \ShortPixel\ViewController
 
 			}
 
-
 			public function action_debug_resetQueue()
 			{
 				 $queue = isset($_REQUEST['queue']) ? sanitize_text_field($_REQUEST['queue']) : null;
@@ -346,6 +355,24 @@ class SettingsController extends \ShortPixel\ViewController
 			 }
 
 
+				$this->doRedirect();
+			}
+
+			public function action_debug_removePrevented()
+			{
+				$this->loadEnv();
+				$this->checkPost();
+
+				global $wpdb;
+				$sql = 'delete from ' . $wpdb->postmeta . ' where meta_key = %s';
+
+				$sql = $wpdb->prepare($sql, '_shortpixel_prevent_optimize');
+
+				$wpdb->query($sql);
+
+				$message = __('Item blocks have been removed. It is recommended to create a backup before trying to optimize image.', 'shortpixel-image-optimiser');
+
+				Notice::addSuccess($message);
 				$this->doRedirect();
 			}
 
@@ -443,10 +470,7 @@ class SettingsController extends \ShortPixel\ViewController
          $this->view->allThumbSizes = UtilHelper::getWordPressImageSizes();
          $this->view->averageCompression = $statsControl->getAverageCompression();
          $this->view->savedBandwidth = UiHelper::formatBytes( intval($this->view->data->savedSpace) * 10000,2);
-         //$this->view->resources = wp_remote_post($this->model->httpProto . "://shortpixel.com/resources-frag");
 
-         /*if (is_wp_error($this->view->resources))
-            $this->view->resources = null; */
 
          $this->view->cloudflare_constant = defined('SHORTPIXEL_CFTOKEN') ? true : false;
 
@@ -523,6 +547,8 @@ class SettingsController extends \ShortPixel\ViewController
           $this->is_multisite = $env->is_multisite;
           $this->is_mainsite = $env->is_mainsite;
           $this->has_nextgen = $env->has_nextgen;
+
+          $this->disable_heavy_features = (\wpSPIO()->env()->hasOffload() && false === \wpSPIO()->env()->useVirtualHeavyFunctions()) ? true : false;
 
           $this->display_part = (isset($_GET['part']) && in_array($_GET['part'], $this->all_display_parts) ) ? sanitize_text_field($_GET['part']) : 'settings';
       }

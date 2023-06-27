@@ -1,7 +1,10 @@
 <?php
 namespace ShortPixel;
-?>
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+?>
 
 <div class="shortpixel-bulk-wrapper">
   <h1><?php esc_html_e('ShortPixel Bulk Processing', 'shortpixel-image-optimiser'); ?></h1>

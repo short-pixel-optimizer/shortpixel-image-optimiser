@@ -1,4 +1,10 @@
 <?php
+namespace ShortPixel;
+
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 use \ShortPixel\Controller\BulkController as BulkController;
 
 	$bulk = BulkController::getInstance();

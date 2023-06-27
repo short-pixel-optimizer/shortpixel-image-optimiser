@@ -1,6 +1,10 @@
 <?php
 namespace ShortPixel;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 $approx = $this->view->approx;
 ?>
 <section class='panel selection' data-panel="selection" data-status="loaded" >

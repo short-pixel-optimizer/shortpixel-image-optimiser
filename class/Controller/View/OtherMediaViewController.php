@@ -1,5 +1,10 @@
 <?php
 namespace ShortPixel\Controller\View;
+
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 
@@ -18,6 +23,8 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 {
       //$this->model = new
       protected $template = 'view-other-media';
+
+			protected static $instance;
 
       // Pagination .
       protected $items_per_page = 20;
@@ -206,7 +213,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
           $page = $this->currentPage;
 					if ($page <= 0)
 						$page = 1;
-						
+
           $controller = OtherMediaController::getInstance();
 
 					$hidden_ids = $controller->getHiddenDirectoryIDS();
@@ -419,7 +426,6 @@ class OtherMediaViewController extends \ShortPixel\ViewController
           $settings = \wpSPIO()->settings();
 
           $keyControl = ApiKeyController::getInstance();
-
 
 					$actions = UIHelper::getActions($item);
 

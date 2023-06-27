@@ -1,5 +1,10 @@
 <?php
 namespace ShortPixel;
+
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 class cacheRemover
@@ -16,6 +21,7 @@ class cacheRemover
     public function __construct()
     {
 			 $this->addHooks();
+			 $this->checkCaches();
     }
 
 		public static function getInstance()
@@ -101,7 +107,7 @@ class cacheRemover
             $this->removeFastestCache();
 
         if ($this->has_litespeed)
-            $this->litespeedReset($post_id);
+            $this->litespeedReset($imageItem);
 
     }
 
@@ -143,9 +149,20 @@ class cacheRemover
     		sg_cachepress_purge_cache();
     }
 
-    protected function litespeedReset($post_id)
+    protected function litespeedReset($imageItem)
     {
-      do_action('litespeed_media_reset', $post_id);
+      // Suppress the notices on purge. 
+      if (! defined( 'LITESPEED_PURGE_SILENT' ))
+      {
+         define('LITESPEED_PURGE_SILENT', true);
+      }
+
+			$urls = $imageItem->getAllUrls();
+			foreach($urls as $url)
+			{
+				 do_action('litespeed_purge_url', $url, false, true);
+			}
+  //    do_action('litespeed_media_reset', $post_id);
     }
 
 }

@@ -1,3 +1,80 @@
+.sp-column-info {
+  max-width: 300px;
+  /* Dropdown Content (Hidden by Default) */
+  /* Links inside the dropdown */
+  /* Change color of dropdown links on hover */
+  /* Show the dropdown menu (use JS to add this class to the .dropdown-content container when the user clicks on the dropdown button) */
+}
+.sp-column-info .sp-column-actions {
+  max-width: 140px;
+  float: right;
+  text-align: right;
+}
+.sp-column-info .sp-column-actions .button.button-smaller {
+  margin-right: 0px;
+}
+.sp-column-info .button.button-smaller {
+  font-size: 13px;
+  padding: 0px 5px;
+  margin-bottom: 4px;
+  min-height: 30px;
+  float: right;
+}
+.sp-column-info .thumbnails.optimized {
+  display: inline-block;
+}
+.sp-column-info .sp-dropdown {
+  position: relative;
+  display: inline-block;
+}
+.sp-column-info .sp-dropbtn.button {
+  box-sizing: content-box;
+  padding: 0 5px;
+  font-size: 20px;
+  line-height: 20px;
+  /*background-color: #4CAF50;
+  color: white;
+  border: none;*/
+  cursor: pointer;
+}
+.sp-column-info .sp-dropdown-content {
+  display: none;
+  right: 0;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 200px;
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+}
+.sp-column-info .rtl .sp-dropdown-content {
+  right: auto;
+  left: 0;
+}
+.sp-column-info .sp-dropdown-content a {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+}
+.sp-column-info .sp-dropdown-content a:hover {
+  background-color: #f1f1f1;
+}
+.sp-column-info .sp-dropdown.sp-show .sp-dropdown-content {
+  display: block;
+}
+
+/*
+.wp-core-ui .column-wp-shortPixel .sp-column-actions
+.wp-core-ui .column-wp-shortPixel
+.wp-core-ui.rtl .column-wp-shortPixel .sp-column-actions,
+.wp-core-ui.rtl .column-wp-shortPixel .button.button-smaller{
+    float:left;
+}
+
+th.sortable.column-wp-shortPixel a,
+th.sorted.column-wp-shortPixel a {
+    display: inline-block;
+}*/
 .view-edit-media a.debugModal {
   margin: 20px 0;
   display: inline-block;
@@ -127,9 +204,6 @@
 .sp-column-info {
   position: relative;
 }
-.sp-column-info .thumbnails.optimized {
-  position: relative;
-}
 .sp-column-info .thumbnails.optimized .thumb-wrapper {
   background: #fff;
   padding: 8px;
@@ -175,9 +249,7 @@
   display: block;
 }
 .sp-column-info .sp-column-actions {
-  position: absolute;
-  right: 10px;
-  top: 0;
+  margin: 10px;
 }
 .sp-column-info .thumbs-todo {
   position: relative;
@@ -249,25 +321,35 @@
   }
 }
 
+.compat-field-shortpixel-image-optimiser {
+  /*	.field, .sp-column-info, .sp-dropdown  {
+  		position: static;
+  	}
+  	*/
+}
+.compat-field-shortpixel-image-optimiser .sp-column-actions {
+  max-width: none;
+}
+.compat-field-shortpixel-image-optimiser .thumb-wrapper {
+  display: none !important;
+}
+.compat-field-shortpixel-image-optimiser .sp-dropdown.sp-show .sp-dropdown-content {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
 div.sp-modal-shade {
-  display: none;
-  /* Hidden by default */
-  position: fixed;
-  /* Stay in place */
-  z-index: 10000;
-  /* Sit on top - blame WP-admin for the z-index battle . */
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 10000; /* Sit on top - blame WP-admin for the z-index battle . */
   left: 0;
   top: 0;
-  width: 100%;
-  /* Full width */
-  height: 100%;
-  /* Full height */
-  overflow: auto;
-  /* Enable scroll if needed */
-  background: black;
-  /* Fallback color */
-  background: rgba(0, 0, 0, 0.4);
-  /* Black w/ opacity */
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background: rgb(0, 0, 0); /* Fallback color */
+  background: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
   opacity: 0.4;
 }
 
@@ -276,12 +358,9 @@ div.shortpixel-modal {
   /*margin: 8% auto;  15% from the top and centered */
   padding: 20px;
   border: 1px solid #888;
-  width: 30%;
-  /* Could be more or less, depending on screen size */
-  min-width: 300px;
-  /* Could be more or less, depending on screen size */
-  z-index: 100001;
-  /* Proper z-index */
+  width: 30%; /* Could be more or less, depending on screen size */
+  min-width: 300px; /* Could be more or less, depending on screen size */
+  z-index: 999999; /* Z-index wars :/ */
   position: fixed;
   top: 10%;
   left: 50%;

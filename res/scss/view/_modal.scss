@@ -18,7 +18,7 @@ div.shortpixel-modal {
     border: 1px solid #888;
     width: 30%; /* Could be more or less, depending on screen size */
     min-width: 300px; /* Could be more or less, depending on screen size */
-    z-index: 100001; /* Proper z-index */
+    z-index: 999999; /* Z-index wars :/ */
     position: fixed;
     top: 10%;
     left: 50%;

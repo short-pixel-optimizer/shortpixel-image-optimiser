@@ -1,5 +1,10 @@
 <?php
 namespace ShortPixel\Model;
+
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 class SettingsModel
@@ -50,7 +55,7 @@ class SettingsModel
 		);
 
 		protected $settings;
-		protected $states; 
+		protected $states;
 
 		public function __construct()
 		{

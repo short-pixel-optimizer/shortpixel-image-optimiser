@@ -32,16 +32,13 @@ var ShortPixel = function() {
                 + '</option><option value="shortpixel-glossy"> → ' + _spTr.redoGlossy
                 + '</option><option value="shortpixel-lossless"> → ' + _spTr.redoLossless
                 + '</option><option value="shortpixel-restore"> → ' + _spTr.restoreOriginal
+								+ '</option><option value="shortpixel-smartcrop"> → ' + _spTr.redoSmartcrop
+								+ '</option><option value="shortpixel-smartcropless"> → ' + _spTr.redoSmartcropless
                 + '</option>');
         }
 
         // Extracting the protected Array from within the 0 element of the parent array
         ShortPixel.setOptions(ShortPixelConstants[0]);
-
-       /* if(jQuery('#backup-folder-size').length) {
-            jQuery('#backup-folder-size').html(ShortPixel.getBackupSize());
-        } */
-
 
 				if (jQuery('#shortpixel-form-request-key').length > 0)
 				{
@@ -161,6 +158,28 @@ var ShortPixel = function() {
       }
     }
 
+    function checkHeavyFeatureWarning(name)
+    {
+       var inputName = (name == 'retina') ? 'optimizeRetina' : 'optimizeUnlisted';
+       var input = jQuery('input[name="' + inputName + '"]');
+
+       if (! input)
+         return;
+
+       var warningEl = jQuery('.heavy-feature-virtual.' + name );
+
+
+       if (input.is(':checked'))
+       {
+          //input.attr('disabled', true);
+          warningEl.fadeIn();
+       }
+       else {
+         //input.attr('disabled', false);
+         warningEl.fadeOut();
+       }
+    }
+
     function setupGeneralTab() {
 				// @todo Make something workable out of this
         var rad = 0;
@@ -216,14 +235,7 @@ var ShortPixel = function() {
                 this.defaultValue = elm.val();
             }
         });
-        /*
-        jQuery("#width").blur(function(e){
-            jQuery(this).val(Math.max(minWidth, parseInt(jQuery(this).val())));
-        });
-        jQuery("#height").blur(function(e){
-            jQuery(this).val(Math.max(minHeight, parseInt(jQuery(this).val())));
-        });
-        */
+
         jQuery('.shortpixel-confirm').on('click', function(event){
             var choice = confirm(event.target.getAttribute('data-confirm'));
             if (!choice) {
@@ -251,8 +263,6 @@ var ShortPixel = function() {
         });
         ShortPixel.checkSmartCropWarning();
 
-
-
     }
 
     function apiKeyChanged() {
@@ -278,6 +288,24 @@ var ShortPixel = function() {
                 jQuery('#wp_shortpixel_options').submit();
             }
         });
+
+        if (document.querySelector('.heavy-feature-virtual.retina') !== null)
+        {
+          jQuery('input[name="optimizeRetina"]').on('change', function()
+          {
+             ShortPixel.checkHeavyFeatureWarning('retina');
+          });
+          ShortPixel.checkHeavyFeatureWarning('retina');
+        }
+
+        if (document.querySelector('.heavy-feature-virtual.unlisted') !== null)
+        {
+          jQuery('input[name="optimizeUnlisted"]').on('change', function()
+          {
+             ShortPixel.checkHeavyFeatureWarning('unlisted');
+          });
+          ShortPixel.checkHeavyFeatureWarning('unlisted');
+        }
     }
 
     function checkThumbsUpdTotal(el) {
@@ -407,12 +435,6 @@ var ShortPixel = function() {
             }
         });
     }
-
-
-
-
-
-
 
     function browseContent(browseData) {
         browseData.action = 'shortpixel_browse_content';
@@ -749,6 +771,7 @@ var ShortPixel = function() {
         checkExifWarning    : checkExifWarning,
         checkBackUpWarning  : checkBackUpWarning,
 				checkSmartCropWarning: checkSmartCropWarning,
+        checkHeavyFeatureWarning : checkHeavyFeatureWarning,
         comparerData        : {
             cssLoaded   : false,
             jsLoaded    : false,

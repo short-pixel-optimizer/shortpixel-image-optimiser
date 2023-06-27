@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compressor, ima
 Requires at least: 4.8.0
 Tested up to: 6.2
 Requires PHP: 5.6
-Stable tag: 5.2.3
+Stable tag: 5.3.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -96,7 +96,7 @@ Check out <a href="https://shortpixel.com/pricing" target="_blank">our prices</a
 > ★★★★★ **Great image compression, solid plugin, equally great support.** [matters1959](https://wordpress.org/support/topic/support-shortpixel-image-optimiser/)
 > [more testimonials](https://wordpress.org/support/plugin/shortpixel-image-optimiser/reviews/?filter=5)
 
-[youtube https://www.youtube.com/watch?v=5EbX0Hsy6j4]
+[youtube https://www.youtube.com/watch?v=FVPWeNsJWss]
 
 Help us spread the word by recommending ShortPixel to your friends and collect **100 lifetime monthly additional image credits for each referred active user**. Make money by promoting a great plugin with our <a href="https://shortpixel.com/free-sign-up-affiliate" target="_blank">30% commission affiliate program</a>.
 
@@ -375,6 +375,28 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 5.3.0 =
+Release date: June 27, 2023
+* New: Added the ShortPixel box on the Media Library Grid view;
+* New: Added the option to re-optimize an image with or without Smart Cropping;
+* New: Added the images with errors to the Media Library filters, for easier retries;
+* New: Added an option in the plugin tools to reset the optimization errors;
+* Compat: Added integration with WordPress image editing features (crop, flip, rotate etc.);
+* Compat: Added integration for <a target="_blank" href="https://github.com/humanmade/S3-Uploads">S3 Uploads by HumanMade</a>;
+* Compat: Fixed integration with LiteSpeed Cache version 5.4 and older. Read more about it in our <a target="_blank" href="https://shortpixel.com/knowledge-base/article/264-how-to-deliver-the-webps-generated-with-shortpixel-with-the-litespeed-cache-plugin">knowledge base article</a>;
+* Compat: Fixed bulk processing when WP Media Recovery plugin is active;
+* Fix: ABSPATH die statement added to each file, for increased security;
+* Fix: Improved bulk processing statistics for large installations;
+* Fix: Improved the text and output of WP-CLI commands;
+* Fix: In some cases the transient used for bulk processing could get stuck and prevent automatic optimization;
+* Fix: When processing a non-optimized image with Bulk Actions from the Media Library, it was not optimized with the correct compression level;
+* Fix: Do not add `.htaccess` files in folders where it is not strictly necessary;
+* Fix: Interaction with the the database was improved and optimized when using an offloading solution;
+* Fix: In some cases an error was displayed when debug mode was enabled;
+* Fix: Not all file statuses were displayed correctly in the ShortPixel box of the Media Library;
+* Fix: Various text and layout improvements on the plugin pages;
+* Language: 24 new strings added, 3 updated, 0 fuzzed, and 0 deprecated.
 
 = 5.2.3 =
 Release date: May 26, 2023

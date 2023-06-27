@@ -1,6 +1,10 @@
 <?php
 namespace ShortPixel\Controller;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 use ShortPixel\Controller\Queue\MediaLibraryQueue as MediaLibraryQueue;
 use ShortPixel\Controller\Queue\CustomQueue as CustomQueue;
@@ -128,7 +132,6 @@ class OptimizeController
           $json->result->is_error = true;
           $json->result->is_done = true;
           $json->result->fileStatus = ImageModel::FILE_STATUS_ERROR;
-
         }
 				elseif($queue->isDuplicateActive($mediaItem))
 				{
@@ -277,7 +280,7 @@ class OptimizeController
 		*
 		* @param Object $mediaItem
 		*/
-		public function reOptimizeItem($mediaItem, $compressionType)
+		public function reOptimizeItem($mediaItem, $compressionType, $args = array())
     {
       $json = $this->restoreItem($mediaItem);
 
@@ -290,6 +293,11 @@ class OptimizeController
             $mediaItem = $fs->getImage($mediaItem->get('id'), $mediaItem->get('type'));
 
             $mediaItem->setMeta('compressionType', $compressionType);
+
+						if (isset($args['smartcrop']))
+						{
+							 $mediaItem->doSetting('smartcrop', $args['smartcrop']);
+						}
             $json = $this->addItemToQueue($mediaItem);
             return $json;
       }
@@ -306,8 +314,8 @@ class OptimizeController
         $customQ = $this->getQueue('custom');
 
 				// Clean queue upon starting a load.
-				$mediaQ->cleanQueue();
-				$customQ->cleanQueue();
+				//$mediaQ->cleanQueue();
+			  //$customQ->cleanQueue();
 
         $data = new \stdClass;
         $data->media = new \stdClass;
@@ -391,8 +399,6 @@ class OptimizeController
 
         $results->total = $this->calculateStatsTotals($results);
 				$results = $this->numberFormatStats($results);
-
-    //    $this->checkCleanQueue($results);
 
         return $results;
     }
@@ -1220,7 +1226,7 @@ class OptimizeController
 								 {
 								 	  $value = UiHelper::formatNumber($value, 2);
 								 }
-								 else
+								 elseif (is_numeric($value))
 								 {
 								 		$value = UiHelper::formatNumber($value, 0);
 								 }

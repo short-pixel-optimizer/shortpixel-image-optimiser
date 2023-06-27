@@ -1,6 +1,10 @@
 <?php
 namespace ShortPixel\Model\Converter;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Helper\UtilHelper as UtilHelper;
@@ -52,6 +56,11 @@ class ApiConverter extends MediaLibraryConverter
 
 				$placeholderFile = $fs->getFile(\wpSPIO()->plugin_path('res/img/fileformat-heic-placeholder.jpg'));
 
+				// Convert runs when putting imageModel to queue format in the Queue classs. This could run without optimization (before) taking place and when accidentally running it more than once results in duplicate files / backups (img-1, img-2 etc). Check placeholder and baseName to prevent this. Assume already done when it has it .
+				if ($this->imageModel->getMeta()->convertMeta()->hasPlaceHolder() && $this->imageModel->getMeta()->convertMeta()->getReplacementImageBase() !== false)
+				{
+					 return true;
+				}
 
 				// @todo Check replacementpath here. Rename main file - and backup - if numeration is needed.
 				// @todo Also placeholder probably needs to be done each time to block current job in progress.

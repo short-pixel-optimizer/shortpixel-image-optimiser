@@ -1,6 +1,10 @@
 <?php
  namespace ShortPixel\Model\Converter;
 
+ if ( ! defined( 'ABSPATH' ) ) {
+ 	exit; // Exit if accessed directly.
+ }
+
  use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
  use ShortPixel\Model\Image\ImageModel as ImageModel;
  use ShortPixel\Model\File\DirectoryModel as DirectoryModel;
@@ -17,6 +21,7 @@ class PNGConverter extends MediaLibraryConverter
 		protected $instance;
 
     protected $current_image; // The current PHP image resource in memory
+		protected $virtual_filesize;
 		protected $newFile; // The newFile Object.
 		protected $replacer; // Replacer class Object.
 
@@ -244,8 +249,15 @@ class PNGConverter extends MediaLibraryConverter
 
 			if ($bool = imagejpeg($bg, $replacementPath, 90)) {
 					Log::addDebug("PNG2JPG doConvert created JPEG at $replacementPath");
-					$newSize = filesize($replacementPath); // $uniqueFile->getFileSize();
-					$origSize = $this->imageModel->getFileSize();
+					$newSize = filesize($replacementPath); // This might invoke wrapper but ok
+
+					if (! is_null($this->virtual_filesize))
+					{
+						 $origSize = $this->virtual_filesize;
+					}
+					else {
+						$origSize = $this->imageModel->getFileSize();						
+					}
 
 					// Reload the file we just wrote.
 					$newFile = $fs->getFile($replacementPath);
@@ -387,6 +399,7 @@ class PNGConverter extends MediaLibraryConverter
 				if (is_object($tempFile))
 				{
 					 $imagePath = $tempFile->getFullPath();
+					 	$this->virtual_filesize = $tempFile->getFileSize();
 				}
 			}
 

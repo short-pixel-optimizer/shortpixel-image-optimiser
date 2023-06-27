@@ -1,5 +1,10 @@
 <?php
 namespace ShortPixel\Model;
+
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notice;
 use ShortPixel\Notices\NoticeController as Notices;

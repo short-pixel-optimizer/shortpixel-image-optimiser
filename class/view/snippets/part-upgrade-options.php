@@ -1,5 +1,9 @@
 <?php
 namespace ShortPixel;
+
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
 ?>
 
   <div id="shortPixelProposeUpgradeShade" class="sp-modal-shade" style="display:none;"></div>

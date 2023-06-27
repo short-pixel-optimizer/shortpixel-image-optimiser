@@ -1,11 +1,17 @@
 <?php
-namespace ShortPixel;
+namespace ShortPixel\External\Offload;
+
+use Shortpixel\Model\File\FileModel as FileModel;
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
+
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notice;
 
 use ShortPixel\Controller\QuotaController as QuotaController;
 use ShortPixel\Controller\ResponseController as ResponseController;
-
 
 // @integration WP Offload Media Lite
 class wpOffload
@@ -23,17 +29,17 @@ class wpOffload
     protected $is_cname = false;
     protected $cname;
 
-		private $sources; // cache for url > source_id lookup, to prevent duplicate queries.
+		private static $sources; // cache for url > source_id lookup, to prevent duplicate queries.
 
 		private static $offloadPrevented = array();
 
     // if might have to do these checks many times for each thumbnails, keep it fastish.
     //protected $retrievedCache = array();
 
-    public function __construct()
+    public function __construct($as3cf)
     {
        // This must be called before WordPress' init.
-       add_action('as3cf_init', array($this, 'init'));
+		 	  $this->init($as3cf);
     }
 
     public function init($as3cf)
@@ -104,7 +110,6 @@ class wpOffload
       add_filter('shortpixel/image/urltopath', array($this, 'checkIfOffloaded'), 10,2);
       add_filter('shortpixel/file/virtual/translate', array($this, 'getLocalPathByURL'));
 
-
       // for webp picture paths rendered via output
      // add_filter('shortpixel_webp_image_base', array($this, 'checkWebpRemotePath'), 10, 2);
       add_filter('shortpixel/front/webp_notfound', array($this, 'fixWebpRemotePath'), 10, 4);
@@ -112,9 +117,6 @@ class wpOffload
 
 			// Fix for updating source paths when converting
 			add_action('shortpixel/image/convertpng2jpg_success', array($this, 'updateOriginalPath'));
-
-
-
     }
 
     public function returnOriginalFile($file, $attach_id)
@@ -167,13 +169,6 @@ class wpOffload
     */
     public function image_restore($mediaItem, $id, $clean)
     {
-
-      /*if (false === $clean)
-			{
-				Log::addDebug('Restore was not clean ' . $id);
-        return false; // don't do anything until we have restored all ( for now )
-			} */
-
       $settings = \wpSPIO()->settings();
 
 			// Only medialibrary offloading supported.
@@ -219,23 +214,29 @@ class wpOffload
         return $mediaItem;
     }
 
+		/** Cache source requests to improve performance
+		* @param $url string  The URL that is being checked
+		* @param $source_id int  Source ID of the item URL to be cached
+		* @return int|boolean|null  Returns source_if or false ( not offloaded ) if found, returns null if not sourcecached.
+		*/
 		private function sourceCache($url, $source_id = null)
 		{
-			if ($source_id === null && isset($this->sources[$url]))
+			if ($source_id === null && isset(static::$sources[$url]))
 			{
-				$source_id = $this->sources[$url];
+				$source_id = static::$sources[$url];
 				return $source_id;
 			}
 			elseif ($source_id !== null)
 			{
-				 if (! isset($this->sources[$url]))
+				 if (! isset(static::$sources[$url]))
 				 {
-					  $this->sources[$url]  = $source_id;
+					  static::$sources[$url]  = $source_id;
 				 }
+
 				 return $source_id;
 			}
 
-			return false;
+			return null;
 		}
 
     public function checkIfOffloaded($bool, $url)
@@ -243,11 +244,13 @@ class wpOffload
 
 			$source_id = $this->sourceCache($url);
 
+			$orig_url = $url;
 
-			if (false === $source_id)
+			if (is_null($source_id))
 			{
 				$extension = substr($url, strrpos($url, '.') + 1);
 				// If these filetypes are not in the cache, they cannot be found via geSourceyIDByUrl method ( not in path DB ), so it's pointless to try. If they are offloaded, at some point the extra-info might load.
+
 				if ($extension == 'webp' || $extension == 'avif')
 				{
 					return false;
@@ -258,7 +261,7 @@ class wpOffload
 
       if ($source_id !== false)
 			{
-        return true;
+        return FileModel::$VIRTUAL_REMOTE;
 			}
       else
         return false;
@@ -267,8 +270,16 @@ class wpOffload
     protected function getSourceIDByURL($url)
     {
 			$source_id = $this->sourceCache($url); // check cache first.
+			$cacheHit = false; // prevent a cache hit to be cached again.
+			$raw_url = $url; // keep raw. If resolved, add the raw url to the cache.
 
-			if (false === $source_id) // check on the raw url.
+			// If in cache, we are done.
+			if (! is_null($source_id))
+			{
+				return $source_id;
+			}
+
+			if (is_null($source_id)) // check on the raw url.
 			{
       	$class = $this->getMediaClass();
 
@@ -279,27 +290,41 @@ class wpOffload
 					 $url = 'http://' . $url; //str_replace($parsedUrl['scheme'], 'https', $url);
 				}
 
-      	$source = $class::get_item_source_by_remote_url($url);
-				$source_id = isset($source['id']) ? intval($source['id']) : false;
+				$source_id = $this->sourceCache($url);
+
+				if(is_null($source_id))
+				{
+      		$source = $class::get_item_source_by_remote_url($url);
+					$source_id = isset($source['id']) ? intval($source['id']) : null;
+				}
+				else {
+					$cacheHit = true; // hit the cache. Yeah.
+					$this->sourceCache($raw_url, $source_id);
+				}
 			}
 
-			if (false === $source_id) // check now via the thumbnail hocus.
+
+			if (is_null($source_id)) // check now via the thumbnail hocus.
 			{
 				$pattern = '/(.*)-\d+[xX]\d+(\.\w+)/m';
 				$url = preg_replace($pattern, '$1$2', $url);
 
 				$source_id = $this->sourceCache($url); // check cache first.
 
-				if (false === $source_id)
+				if (is_null($source_id))
 				{
 					$source = $class::get_item_source_by_remote_url($url);
-					$source_id = isset($source['id']) ? intval($source['id']) : false;
+					$source_id = isset($source['id']) ? intval($source['id']) : null;
+				}
+				else {
+					$cacheHit = true;
+					$this->sourceCache($raw_url , $source_id);
 				}
 
       }
 
 			// Check issue with double extensions. If say double webp/avif is on, the double extension causes the URL not to be found (ie .jpg)
-			if (false === $source_id)
+			if (is_null($source_id))
 			{
 				 if (substr_count($parsedUrl['path'], '.') > 1)
 				 {
@@ -315,20 +340,31 @@ class wpOffload
 						// Retry
 						$source_id = $this->sourceCache($checkurl); // check cache first.
 
-						if (false === $source_id)
+						if (is_null($source_id))
 						{
 							$source = $class::get_item_source_by_remote_url($url);
-							$source_id = isset($source['id']) ? intval($source['id']) : false;
+							$source_id = isset($source['id']) ? intval($source['id']) : null;
 						}
-
+						else {
+							$cacheHit = true;
+							$this->sourceCache($raw_url , $source_id);
+						}
 
 				 }
 			}
 
-			if ($source_id !== false)
+			if(is_null($source_id))
 			{
+				 $source_id = false;
+			}
 
+			if (false === $cacheHit)
+			{
 				$this->sourceCache($url, $source_id);  // cache it.
+			}
+
+			if ($source_id !== false && false === $cacheHit)
+			{
 
 				// get item
 				$item = $this->getItemById($source_id);
@@ -356,31 +392,17 @@ class wpOffload
       return false;
     }
 
-    //** The thumbnails are not recorded by offload, but still offloaded.
-    /*private function checkIfThumbnail($original_url)
-    {
-        //$result = \attachment_url_to_postid($url);
-
-        if ($source_id !== false)
-				{
-					$this->sourceCache($url, $source_id);
-          return $source_id;
-				}
-        else
-          return false;
-
-    } */
-
 		// @param s3 based URL that which is needed for finding local path
 		// @return String Filepath.  Translated file path
     public function getLocalPathByURL($url)
     {
        $source_id = $this->getSourceIDByURL($url);
 
-       if ($source_id == false)
+       if ($source_id === false)
        {
         return false;
       }
+
        $item = $this->getItemById($source_id);
 
        $original_path = $item->original_source_path(); // $values['original_source_path'];
@@ -436,49 +458,6 @@ class wpOffload
  					// Add Web/Avifs back under new method.
 					$this->shouldPrevent = false;
 
-
-				/*	$fullPaths = $item->full_source_paths();
-					$extra_info = $item->extra_info();
-
-					$file_paths = $this->add_webp_paths($fullPaths);
-
-					if (! isset($extra_info['objects']))
-					 	$extra_info['objects']= array();
-
-
-					foreach ( $file_paths as $size => $size_file_path ) {
-						if ( $size === 'file' ) {
-							continue;
-						}
-
-						$new_object = array(
-							'source_file' => wp_basename( $size_file_path ),
-							'is_private'  => false,
-						);
-
-						$extra_info['objects'][ $size ] = $new_object;
-					}
-
-					if (count($file_paths) > 0)
-					{
-						 $item->set_extra_info($extra_info);
-					}
-
-					$offloaded_files = $item->offloaded_files();
-					// This should load the A3cf UploadHandler
-					$upload = \DeliciousBrains\WP_Offload_Media\Items\Upload_Handler::get_item_handler_key_name();
-          $itemHandler = $this->as3cf->get_item_handler($upload, array( 'offloaded_files' => $offloaded_files ));
-
-          $result = $itemHandler->handle($item); //handle it then.
-
-					if (is_wp_error($result))
-					{
-						 ResponseController::addData('is_error', true);
-						 ResponseController::addData('message', 'Offload failed, please checks debug logs when available');
-						 Log::addError('Failed offload result', $result);
-					}
-					*/
-
 					// The Handler doesn't work properly /w local removal if not the exact correct files are passed (?) . Offload does this probably via update metadata function, so let them sort it out with this . (until it breaks)
 
 					$meta = wp_get_attachment_metadata($id);
@@ -502,50 +481,7 @@ class wpOffload
 			 return $filepath;
 		}
 
-    /** This function will cut out the initial upload to S3Offload and rely solely on the image_upload function provided here, after shortpixel optimize.
-    * Function will only work when plugin is set to auto-optimize new entries to the media library
-    * Since S3-Offload 2.3 this will be called on every thumbnail ( changes in WP 5.3 )
-    */
-		/*
-    public function preventInitialUpload($bool, $data, $post_id, $old_provider_object)
-    {
-
-        $fs = \wpSPIO()->filesystem();
-				$settings = \WPSPIO()->settings();
-
-				$quotaController = quotaController::getInstance();
-				if ($quotaController->hasQuota() === false)
-				{
-					return false;
-				}
-        if (! $this->offloading)
-          return false;
-
-				if ($this->shouldPrevent === false) // if false is returned, it's NOT prevented, so on-going.
-						return false;
-
-        if (\wpSPIO()->env()->is_autoprocess)
-        {
-          // Don't prevent whaffever if shortpixel is already done. This can be caused by plugins doing a metadata update, we don't care then.
-          $mediaItem = $fs->getImage($post_id, 'media');
-          if ($mediaItem && ! $mediaItem->isOptimized())
-          {
-
-						$image_file = $mediaItem->getFileName();
-						if ($mediaItem->getExtension() == 'pdf' && ! $settings->optimizePdfs  )
-						{
-							 Log::addDebug('S3 Prevent Initial Upload detected PDF, which will not be optimized', $post_id);
-							 return false;
-						}
-
-            Log::addDebug('Preventing Initial Upload: ' . $post_id);
-            return true;
-          }
-        }
-        return $bool;
-    } */
-
-		/** This function will cut out the initial upload to S3Offload . This cuts it off in the new handle area, leaving other updating in tact.
+ 		/** This function will cut out the initial upload to S3Offload . This cuts it off in the new handle area, leaving other updating in tact.
 		*/
 		public function preventInitialUploadHandler($bool, $as3cf_item, $options)
 		{
@@ -562,10 +498,14 @@ class wpOffload
 				}
 
 				if (! $this->offloading)
+				{
 					return false;
+				}
 
 				if ($this->shouldPrevent === false) // if false is returned, it's NOT prevented, so on-going.
+				{
 						return false;
+				}
 
 				if (isset(self::$offloadPrevented[$post_id]))
 				{
@@ -574,25 +514,6 @@ class wpOffload
 					return $error;
 				}
 
-				/* if (\wpSPIO()->env()->is_autoprocess)
-				{
-					// Don't prevent whaffever if shortpixel is already done. This can be caused by plugins doing a metadata update, we don't care then.
-					$mediaItem = $fs->getImage($post_id, 'media');
-					if ($mediaItem && ! $mediaItem->isOptimized())
-					{
-
-						$image_file = $mediaItem->getFileName();
-						if ($mediaItem->getExtension() == 'pdf' && ! $settings->optimizePdfs  )
-						{
-							 Log::addDebug('S3 Prevent Initial Upload detected PDF, which will not be optimized', $post_id);
-							 return false;
-						}
-
-						Log::addDebug('Preventing Initial Upload: ' . $post_id);
-						$error = new \WP_Error( 'upload-prevented', 'No offloading at this time, thanks' );
-						return $error;
-					}
-				} */
 				Log::addDebug('Not preventing S3 Offload');
 				return $bool;
 		}
@@ -600,7 +521,13 @@ class wpOffload
 		public function updateOriginalPath($imageModel)
 		{
 				$post_id = $imageModel->get('id');
+
 				$item = $this->getItemById($post_id);
+
+				if (false === $item) // item not offloaded.
+				{
+					 return false;
+				}
 
 				$original_path = $item->original_path(); // Original path (non-scaled-)
 				$original_source_path = $item->original_source_path();
@@ -613,14 +540,6 @@ class wpOffload
 
 				$updated = false;
 
-/*Log::addTemp('Update Original Data', array(
-						'original_path' => $original_path,
-						'original_source_path' => $original_source_path,
-						'path' => $path,
-						'source_path' => $source_path,
-						'wp_original' => $wp_original,
-						'wp_source' => $wp_source,
-				)); */
 
 				// If image is replaced with another name, the original soruce path will not match.  This could also happen when an image is with -scaled as main is replaced by an image that doesn't have it.  In all cases update the table to reflect proper changes.
 				if (wp_basename($wp_original) !== wp_basename($original_path))
@@ -729,27 +648,6 @@ class wpOffload
       return $paths;
     }
 
-
-/*
-    public function checkWebpRemotePath($url, $original)
-    {
-      if ($url === false)
-      {
-        return $this->convertWebPRemotePath($url, $original);
-        //  return $url;
-      }
-      elseif($this->is_cname) // check this. the webp to picture will convert subdomains with CNAME to some local path when offloaded.
-      {
-          Log::addDebug('S3 active, checking on CNAME for path' . $this->cname, $url);
-          if (strpos($original, $this->cname) !== false)
-            return $this->convertWebPRemotePath($url, $original);
-      }
-
-      return $url;
-
-    }
-*/
-
     // GetbyURL can't find thumbnails, only the main image. Check via extrainfo method if we can find needed filetype
 		// @param $bool Boolean
 		// @param $fileObj FileModel  The webp file we are searching for
@@ -780,12 +678,8 @@ class wpOffload
 					 }
 			 }
 
-			 Log::addTemp('S3OFF File -- ' . $url . ' ' . $bool); 
-
 			 return $bool;
 
     }
 
 }
-
-$wpOff = new wpOffload();

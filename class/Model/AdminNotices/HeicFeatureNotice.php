@@ -1,6 +1,10 @@
 <?php
 namespace ShortPixel\Model\AdminNotices;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 class HeicFeatureNotice extends \ShortPixel\Model\AdminNoticeModel
 {
 	protected $key = 'MSG_FEATURE_HEIC';
@@ -14,16 +18,12 @@ class HeicFeatureNotice extends \ShortPixel\Model\AdminNoticeModel
 	protected function checkTrigger()
 	{
 // always fire(?)
+
 		return true;
 	}
 
 	protected function checkReset()
 	{
-		$settings = \wpSPIO()->settings();
-		 if ($settings->useSmartcrop == true)
-		 {
-			  return true;
-		 }
 		 return false;
 	}
 

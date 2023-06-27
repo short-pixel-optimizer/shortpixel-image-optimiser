@@ -1,5 +1,10 @@
 <?php
 namespace ShortPixel\Model;
+
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 
@@ -72,7 +77,23 @@ class CacheModel
     {
       $this->value = $item;
       $this->exists = true;
+			$this->checkExpiration($this->name);
     }
   }
+
+	/** It has been shown that sometimes the expire of the transient is lost, creating a persistent transient.  This can be harmful, especially in the case of bulk-secret which can create a situation were no client will optimize due to the hanging transient. */
+	private function checkExpiration($name)
+	{
+			$option = get_option('_transient_timeout_' . $name);
+			if (false !== $option && is_numeric($option))
+			{
+				 return true; // ok
+			}
+			else { // if hangs, delete it.
+				 $this->value = '';
+				 $this->delete();
+				 Log::addError('Found hanging transient with no expiration! ' . $name, $option);
+			}
+	}
 
 }

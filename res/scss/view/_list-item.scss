@@ -5,7 +5,7 @@
 
   .thumbnails.optimized
   {
-    position: relative;
+//    position: relative;
 
     .totals {
 
@@ -67,9 +67,8 @@
   }
   .sp-column-actions
   {
-     position: absolute;
-     right: 10px;
-     top: 0;
+
+		 margin: 10px;
   }
   .thumbs-todo
   {
@@ -114,4 +113,32 @@
 				vertical-align: top;
 		 }
   }
+}
+
+
+// Support for gallery view (td is annoying)
+.compat-field-shortpixel-image-optimiser
+{
+		// Don't relative to allow for overlay
+	/*	.field, .sp-column-info, .sp-dropdown  {
+			position: static;
+		}
+		*/
+		.sp-column-actions {
+			max-width: none;
+		}
+		// Don't show optimized thumbs thing at all.
+		.thumb-wrapper {
+			display: none !important;
+		}
+		.sp-dropdown.sp-show
+		{
+			.sp-dropdown-content
+			{
+					display: flex;
+					flex-direction: column;
+					position: relative;
+				}
+		}
+
 }

@@ -1,5 +1,10 @@
 <?php
 namespace ShortPixel;
+
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 /**
@@ -139,7 +144,6 @@ class ShortPixelImgToPictureWebp
 
 				if (false === $image->isParseable())
 				{
-					//Log::addTemp('Image not parseable', $image->getImageData());
 					 return $raw_image;
 				}
 
@@ -430,9 +434,6 @@ class FrontImage
 
 					 $this->attributes[$attr->nodeName] = $attr->nodeValue;
         }
-
-		//	Log::addTemp('Attributes', $this->attributes);
-			//Log::addTemp('Srcset', explode(',', $this->srcset));
 
 				$result = $this->setupSources();
 

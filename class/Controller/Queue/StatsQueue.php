@@ -1,6 +1,10 @@
 <?php
 namespace ShortPixel\Controller\Queue;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 use ShortPixel\ShortQ\ShortQ as ShortQ;
 use ShortPixel\Controller\CacheController as CacheController;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;

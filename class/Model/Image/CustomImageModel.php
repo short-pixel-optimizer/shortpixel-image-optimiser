@@ -1,5 +1,10 @@
 <?php
 namespace ShortPixel\Model\Image;
+
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
@@ -23,6 +28,9 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
     protected $is_stub = false;
 
     protected $is_main_file = true;
+
+		/** @var array */
+		protected $forceSettings = array();  // option derives from setting or otherwise, request to be forced upon via UI to use specific value.
 
     const FILE_STATUS_PREVENT = -10;
 
@@ -80,18 +88,36 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         else
           $url = $this->getURL();
 
+				 $settings = \wpSPIO()->settings();
+				 $isSmartCrop = ($settings->useSmartcrop == true && $this->getExtension() !== 'pdf') ? true : false;
+		 		 $paramListArgs = array(); // args for the params, yes.
+
+		 		 if (isset($this->forceSettings['smartcrop']) && $this->getExtension() !== 'pdf')
+		 		 {
+		 			  $isSmartCrop = ($this->forceSettings['smartcrop'] == ImageModel::ACTION_SMARTCROP) ? true : false;
+		 		 }
+				 $paramListArgs['smartcrop'] = $isSmartCrop;
+
         if ($this->isProcessable(true) || $this->isProcessableAnyFileType())
 				{
           $parameters['urls'][0] =  $url;
 					$parameters['paths'][0] = $this->getFullPath();
-					$parameters['params'][0] = $this->createParamList();
+					$parameters['params'][0] = $this->createParamList($paramListArgs);
 					$parameters['returnParams']['sizes'][0] =  $this->getFileName();
-  			}
 
+					if ($isSmartCrop )
+					{
+						 $parameters['returnParams']['fileSizes'][0] = $this->getFileSize();
+					}
+  			}
 
 				return $parameters;
 		}
 
+		public function doSetting($setting, $value)
+		{
+			  $this->forceSettings[$setting] = $value;
+		}
 
 		public function getURL()
 		{

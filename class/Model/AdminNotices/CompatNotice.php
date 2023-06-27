@@ -1,6 +1,10 @@
 <?php
 namespace ShortPixel\Model\AdminNotices;
 
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 class CompatNotice extends \ShortPixel\Model\AdminNoticeModel
 {
 	protected $key = 'MSG_COMPAT';

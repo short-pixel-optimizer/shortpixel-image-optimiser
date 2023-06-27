@@ -1,6 +1,10 @@
 <?php
-
 namespace ShortPixel\Model\Image;
+
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
+}
+
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use \Shortpixel\Model\File\FileModel as FileModel;
@@ -52,6 +56,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
       'path' => $this->getFullPath(),
 			'size' => $this->size,
       'exists' => ($this->exists()) ? 'yes' : 'no',
+      'is_virtual' => ($this->is_virtual()) ? 'yes' : 'no', 
 
     );
   }
@@ -78,6 +83,13 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 				$filebase = $virtualFile->getFileBase();
 	      $filepath = (string) $virtualFile->getFileDir();
 	      $extension = $virtualFile->getExtension();
+
+				// This function needs an hard check on file exists, which might not be wanted.
+				if (false === \wpSPIO()->env()->useVirtualHeavyFunctions())
+				{
+						return false;
+				}
+
 			}
 			else {
 				$filebase = $this->getFileBase();
@@ -237,7 +249,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 				else {
 //					 $fileBaseNoSize =
 					 $name = str_replace($mainFile->getFileBase(), $mainFile->getMeta()->convertMeta()->getReplacementImageBase(), $this->getFileName());
-					 Log::addDebug('New Thumbnail Backup Name: ' .  $name);
+
 					 return $name;
 				}
 			}
@@ -501,7 +513,15 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
       $fs = \wpSPIO()->filesystem();
       $filepath = apply_filters('shortpixel/file/virtual/translate', $this->getFullPath(), $this);
 
-      $result = $fs->downloadFile($this->getURL(), $filepath); // download remote file for backup.
+			$result = false;
+			if ($this->virtual_status == self::$VIRTUAL_REMOTE)
+			{
+      	$result = $fs->downloadFile($this->getURL(), $filepath); // download remote file for backup.
+			}
+			elseif ($this->virtual_status == self::$VIRTUAL_STATELESS)
+			{
+				 $result = $filepath;
+			}
 
       if ($result == false)
       {
