@@ -552,7 +552,7 @@ class UiHelper
 			case 'cancelOptimize':
 				 $action['function'] = 'window.ShortPixelProcessor.screen.CancelOptimizeItem(' . $id . ')';
 				 $action['type']  = 'js';
-				 $action['text'] = __('Cancel item optimizartion', 'shortpixel-image-optimiser');
+				 $action['text'] = __('Cancel item optimization', 'shortpixel-image-optimiser');
 				 $action['display'] = 'button';
 			break;
       case 'optimizethumbs':
