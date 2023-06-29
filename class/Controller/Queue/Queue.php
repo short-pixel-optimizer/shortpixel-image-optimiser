@@ -356,7 +356,6 @@ abstract class Queue
 
 			if ($this->isCustomOperation())
 			{
-          Log::addTemp('Custom opreation detected', $this->getCustomDataItem('customOperation'));
 					  $stats->customOperation = $this->getCustomDataItem('customOperation');
             $stats->isCustomOperation = '10'; // numeric value for the bulk JS
 			}
@@ -375,7 +374,6 @@ abstract class Queue
         $stats->images = $this->countQueue();
       }
 
-      Log::addTemp('Stats', $stats);
       return $stats;
     }
 

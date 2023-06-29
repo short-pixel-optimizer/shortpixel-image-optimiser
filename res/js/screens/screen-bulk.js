@@ -931,6 +931,10 @@ class ShortPixelScreen extends ShortPixelScreenBase
 		}
     var data = {screen_action: 'startRestoreAll', callback: 'shortpixel.startRestoreAll', queues: queues}; //
 
+    this.UpdatePanelStatus('loading', 'selection');
+    this.SwitchPanel('selection');
+
+
     // Prepare should happen after selecting what the optimize.
     window.addEventListener('shortpixel.startRestoreAll', this.PrepareBulk.bind(this), {'once': true} );
     window.addEventListener('shortpixel.bulk.onSwitchPanel', this.StartBulk.bind(this), {'once': true});

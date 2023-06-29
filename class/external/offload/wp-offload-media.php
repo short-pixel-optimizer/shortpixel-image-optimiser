@@ -1,7 +1,7 @@
 <?php
 namespace ShortPixel\External\Offload;
 
-use Shortpixel\Model\File\FileModel as FileModel;
+use ShortPixel\Model\File\FileModel as FileModel;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
@@ -243,20 +243,22 @@ class wpOffload
     {
 
 			$source_id = $this->sourceCache($url);
-
 			$orig_url = $url;
 
 			if (is_null($source_id))
 			{
 				$extension = substr($url, strrpos($url, '.') + 1);
-				// If these filetypes are not in the cache, they cannot be found via geSourceyIDByUrl method ( not in path DB ), so it's pointless to try. If they are offloaded, at some point the extra-info might load.
 
+				// If these filetypes are not in the cache, they cannot be found via geSourceyIDByUrl method ( not in path DB ), so it's pointless to try. If they are offloaded, at some point the extra-info might load.
 				if ($extension == 'webp' || $extension == 'avif')
 				{
 					return false;
 				}
 
      		$source_id = $this->getSourceIDByURL($url);
+
+			}
+			else {
 			}
 
       if ($source_id !== false)
@@ -264,7 +266,9 @@ class wpOffload
         return FileModel::$VIRTUAL_REMOTE;
 			}
       else
+			{
         return false;
+			}
     }
 
     protected function getSourceIDByURL($url)
@@ -295,6 +299,8 @@ class wpOffload
 				if(is_null($source_id))
 				{
       		$source = $class::get_item_source_by_remote_url($url);
+					$source2 = $class::get_item_source_by_remote_url($raw_url);
+
 					$source_id = isset($source['id']) ? intval($source['id']) : null;
 				}
 				else {
@@ -371,6 +377,7 @@ class wpOffload
 				if (is_object($item) && method_exists($item, 'extra_info'))
 				{
 					$baseUrl = str_replace(basename($url),'', $url);
+					//$rawBaseUrl =
 					$extra_info = $item->extra_info();
 
 					if (isset($extra_info['objects']))
@@ -385,11 +392,9 @@ class wpOffload
 						}
 					}
 				}
-
-				return $source_id;
 			}
 
-      return false;
+      return $source_id;
     }
 
 		// @param s3 based URL that which is needed for finding local path

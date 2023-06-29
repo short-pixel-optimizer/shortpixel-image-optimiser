@@ -294,7 +294,11 @@ class AdminController extends \ShortPixel\Controller
           $fs = \wpSPIO()->filesystem();
 
           $imageObj = $fs->getImage($post_id, 'media');
-          $imageObj->onDelete();
+          // In case entry is corrupted data, this might fail.
+          if (is_object($imageObj))
+          {
+            $imageObj->onDelete();
+          }
       }
 
     }

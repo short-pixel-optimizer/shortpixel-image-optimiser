@@ -1,13 +1,16 @@
 <?php
 namespace ShortPixel\Model\Image;
 
+use ShortPixel\Helper\DownloadHelper as DownloadHelper;
+
+
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
-use \Shortpixel\Model\File\FileModel as FileModel;
+use \ShortPixel\Model\File\FileModel as FileModel;
 
 // Represent a thumbnail image / limited image in mediaLibrary.
 class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
@@ -56,7 +59,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
       'path' => $this->getFullPath(),
 			'size' => $this->size,
       'exists' => ($this->exists()) ? 'yes' : 'no',
-      'is_virtual' => ($this->is_virtual()) ? 'yes' : 'no', 
+      'is_virtual' => ($this->is_virtual()) ? 'yes' : 'no',
 
     );
   }
@@ -516,7 +519,22 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 			$result = false;
 			if ($this->virtual_status == self::$VIRTUAL_REMOTE)
 			{
-      	$result = $fs->downloadFile($this->getURL(), $filepath); // download remote file for backup.
+          // filepath is translated. Check if this exists as a local copy, if not remotely download.
+        if ($filepath !== $this->getFullPath())
+        {
+            $fileObj = $fs->getFile($filepath);
+            $fileExists = $fileObj->exists();
+        }
+        else {
+           $fileExists = false;
+        }
+
+        if (false === $fileExists)
+        {
+            $downloadHelper = DownloadHelper::getInstance();
+            $result = $downloadHelper->downloadFile($this->getURL(), array('destinationPath' => $filepath));
+        }
+
 			}
 			elseif ($this->virtual_status == self::$VIRTUAL_STATELESS)
 			{

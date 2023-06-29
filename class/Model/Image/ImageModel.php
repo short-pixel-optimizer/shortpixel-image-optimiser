@@ -10,7 +10,7 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\ResponseController as ResponseController;
 use ShortPixel\Controller\ApiController as API;
 
-use Shortpixel\Model\File\FileModel as FileModel;
+use ShortPixel\Model\File\FileModel as FileModel;
 use ShortPixel\Model\AccessModel as AccessModel;
 
 use ShortPixel\Model\Converter\Converter as Converter;

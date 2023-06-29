@@ -39,6 +39,7 @@ class DownloadHelper
 			{
 					$defaults = array(
 						'expectedSize' => null,
+            'destinationPath' => null,
 
 					);
 					$args = wp_parse_args($args, $defaults);
@@ -83,8 +84,44 @@ class DownloadHelper
 					$fs = \wpSPIO()->filesystem();
 					$file = $fs->getFile($tempFile);
 
+          if (! is_null($args['destinationPath']))
+          {
+             $result = $this->moveDownload($file, $args['destinationPath']);
+             if (false === $result)
+             {
+               Log::addError('Failed to move Download', $args);
+               ResponseController::addData('is_error', true);
+               Responsecontroller::addData('message', __('Failed to move download to destination!', 'shortpixel-image-optimiser'));
+               return false;
+             }
+             else {
+               $file = $result;
+             }
+          }
+
 					return $file;
 			}
+
+      protected function moveDownload($fileObj, $destinationPath)
+      {
+          $fs = \wpSPIO()->filesystem();
+
+          $destinationFile = $fs->getFile($destinationPath);
+          // If file is non-existing, check directory and write-permissions.
+          if (false == $destinationFile->exists())
+          {
+            $dirObj =  $destinationFile->getFileDir();
+            $dirObj->check(true);
+          }
+
+          $result = $fileObj->copy($destinationFile);
+
+          if ($result === false)
+            return false;
+
+          return $destinationFile;
+
+      }
 
 			private function setPreferredProtocol($url, $reset = false) {
 		      //switch protocol based on the formerly detected working protocol

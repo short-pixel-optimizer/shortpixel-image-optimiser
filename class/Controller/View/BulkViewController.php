@@ -11,7 +11,7 @@ use ShortPixel\Notices\NoticeController as Notices;
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 use ShortPixel\Controller\QuotaController as QuotaController;
-use Shortpixel\Controller\OptimizeController as OptimizeController;
+use ShortPixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Controller\BulkController as BulkController;
 use ShortPixel\Controller\StatsController as StatsController;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;

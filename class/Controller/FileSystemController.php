@@ -432,8 +432,10 @@ Class FileSystemController extends \ShortPixel\Controller
     }
 
 		// @todo Deprecate this, move some functs perhaps to DownloadHelper.
+    // @todo Should not be in use anymore. Remove on next update / annoyance
     public function downloadFile($url, $destinationPath)
     {
+      Log::addWarn('Deprecated DownloadFile function invoked (FileSystemController)');
       $downloadTimeout = max(SHORTPIXEL_MAX_EXECUTION_TIME - 10, 15);
       $fs = \wpSPIO()->filesystem(); // @todo change this all to $this
     //  $fs = \wpSPIO()->fileSystem();

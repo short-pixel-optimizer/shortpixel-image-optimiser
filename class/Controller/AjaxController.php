@@ -86,7 +86,7 @@ class AjaxController
         $cachedObj->save();
       }
 
-      if (! $is_processor)
+      if (false === $is_processor)
       {
         $json = new \stdClass;
         $json->message = __('Processor is active in another window', 'shortpixel-image-optimiser');
@@ -250,8 +250,6 @@ class AjaxController
 
         }
         $this->send($json);
-
-
     }
 
     public function getMediaItem($id, $type)
@@ -433,10 +431,6 @@ class AjaxController
 
 				$types = array('media', 'custom');
         $result = $bulkControl->startBulk($types);
-//        $json->media = $result;
-
-    //    $result = $bulkControl->startBulk('custom');
-  //      $json->custom = $result;
 
         $this->send($result);
     }
@@ -497,18 +491,9 @@ class AjaxController
 			$type = $data['type'];
 			$mediaItem = $this->getMediaItem($id, $type);
 
-		//	$this->ajax_getItemView();
-
 		// Changed since updated function should detect what is what.
-		//	$mediaItem->deleteMeta(); // also does reset prevent.
-		//	delete_post_meta($id, '_shortpixel_was_converted');
-
 			$mediaItem->migrate();
-			//$mediaItem = $this->getMediaItem($id, $type);
 
-/*			$json->status = true;
-			$json->media->id = $id;
-			$json->media->itemView = ''; */
 			$json->status = true;
 			$json->media->id = $id;
 			$json->media->type = 'media';
@@ -545,15 +530,13 @@ class AjaxController
            }
         }
 
-
-
         $backupFile = $imageObj->getBackupFile();
         if (is_object($backupFile))
           $backup_url = $fs->pathToUrl($backupFile);
         else
           $backup_url = '';
 
-        $ret['origUrl'] = $backup_url; // $backupUrl . $urlBkPath . $meta->getName();
+        	$ret['origUrl'] = $backup_url; // $backupUrl . $urlBkPath . $meta->getName();
 
           $ret['optUrl'] = $imageObj->getURL(); // $uploadsUrl . $meta->getWebPath();
           $ret['width'] = $imageObj->getMeta('originalWidth'); // $meta->getActualWidth();
@@ -575,9 +558,7 @@ class AjaxController
                      $ret['width'] = $size[0];
                      $ret['height'] = $size[1];
                   }
-
               }
-
           }
 
         $this->send( (object) $ret);
@@ -619,11 +600,9 @@ class AjaxController
          $sendback = preg_replace('|[^a-z0-9-~+_.?#=&;,/:]|i', '', $sendback);
 
          $result = array('status' => 'no-quota', 'redirect' => $sendback);
-         //$has_quota = isset($result['APICallsRemaining']) && (intval($result['APICallsRemaining']) > 0) ? true : false;
          if (! $settings->quotaExceeded)
          {
             $result['status'] = 'has-quota';
-          //  $result['quota'] = $result['APICallsRemaining'];
          }
          else
          {
@@ -633,6 +612,11 @@ class AjaxController
          wp_send_json($result);
 
     }
+
+		public function ajax_addImageEditorData($data)
+		{
+
+		}
 
 		protected function loadLogFile($json, $data)
 		{

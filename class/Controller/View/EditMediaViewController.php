@@ -96,8 +96,10 @@ class EditMediaViewController extends \ShortPixel\ViewController
             $this->view->list_actions = '';
           }
 
-					// @todo remove this if not DEVMODE
-          $this->view->debugInfo = $this->getDebugInfo();
+          if(true === \wpSPIO()->env()->is_debug )
+          {
+            $this->view->debugInfo = $this->getDebugInfo();
+          }
 
           $this->loadView();
       }
