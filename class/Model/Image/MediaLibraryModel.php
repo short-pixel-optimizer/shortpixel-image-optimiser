@@ -344,6 +344,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        $height = (is_null($height)) ? $this->get('height') : $height;
     }
 
+
 		$this->width = $width;
 		$this->height = $height;
 
@@ -519,7 +520,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       }
 
       return $count;
-
   }
 
   public function handleOptimized($optimizeData, $args = array())
@@ -819,7 +819,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           if ($result)
           {
             $this->saveMeta();
-						//$metadata = $this->GetDbMeta();
           }
       }
       elseif (is_object($metadata) )
@@ -2693,6 +2692,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         'id' => $this->id,
         'exists' => ($this->exists()) ? 'yes' : 'no',
         'is_virtual' => ($this->is_virtual()) ? 'yes' : 'no',
+        'width' => $this->get('width'),
+        'height' => $this->get('height'),
         'image_meta' => $this->image_meta,
         'thumbnails' => $this->thumbnails,
         'retinas' => $this->retinas,

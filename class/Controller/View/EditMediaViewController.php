@@ -138,8 +138,6 @@ class EditMediaViewController extends \ShortPixel\ViewController
 					$ext = $imageObj->getMeta()->convertMeta()->getFileFormat();
 					$error = $imageObj->getMeta()->convertMeta()->getError(); // error code.
 					$stats[] = array(UiHelper::getConvertErrorReason($error, $ext), '');
-
-
 				}
 
         if ($resize == true)

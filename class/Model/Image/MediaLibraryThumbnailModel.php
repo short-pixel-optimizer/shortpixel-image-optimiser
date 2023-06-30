@@ -58,6 +58,8 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
       'name' => $this->name,
       'path' => $this->getFullPath(),
 			'size' => $this->size,
+      'width' => $this->get('width'),
+      'height' => $this->get('height'),
       'exists' => ($this->exists()) ? 'yes' : 'no',
       'is_virtual' => ($this->is_virtual()) ? 'yes' : 'no',
 
@@ -398,7 +400,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 	{
 			global $wpdb;
 
-
 			$sql = 'SELECT id FROM ' . $wpdb->prefix . 'shortpixel_postmeta WHERE attach_id = %d AND size = %s';
 			$sql = $wpdb->prepare($sql, $this->id, $this->size);
 
@@ -554,16 +555,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
     }
 
     return parent::createBackup();
-
-  }
-
-  private function setVirtualToReal($fullpath)
-  {
-    $this->resetStatus();
-    $this->fullpath = $fullpath;
-    $this->directory = null; //reset directory
-    $this->is_virtual = false; // stops being virtual
-    $this->setFileInfo();
   }
 
 	// @todo This is a breach of pattern to realize checking for changes to the main image path on conversion / duplicates.
@@ -572,10 +563,5 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 			$fs = \wpSPIO()->filesystem();
 			return $fs->getMediaImage($this->id, true, true);
 	}
-
-
-
-
-
 
 } // class

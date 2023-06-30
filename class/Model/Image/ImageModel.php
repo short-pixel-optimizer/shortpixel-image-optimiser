@@ -43,7 +43,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		const ACTION_SMARTCROP = 100;
 		const ACTION_SMARTCROPLESS = 101;
 
-
     // Extension that we process .
     const PROCESSABLE_EXTENSIONS = array('jpg', 'jpeg', 'gif', 'png', 'pdf');
 
@@ -126,8 +125,15 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
     protected function setImageSize()
     {
-      $this->width = false;  // to prevent is_null check on get to loop if something is off.
-      $this->height = false;
+      // to prevent is_null check on get to loop if something is off.
+      if (is_null($this->width))
+      {
+        $this->width = false;
+      }
+      if (is_null($this->height))
+      {
+        $this->height = false;
+      }
 
       if (! $this->isExtensionExcluded() && $this->isImage() && $this->is_readable() && ! $this->is_virtual() )
       {
@@ -140,6 +146,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
          {
           $this->height = $height;
          }
+      }
+      else {
+        Log::addWarn('Set Image Size called, but not executed ' . $this->getFullPath(), debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10));
       }
 
     }
@@ -644,12 +653,20 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                     $virtualFile->delete();
                 }
                 $copyok = $tempFile->copy($virtualFile);
+
+                // File has been copied to local system, set the path to real to be able to get file and image sizes.
+                if ($copyok)
+                {
+                  $this->setVirtualToReal($filepath);
+                }
             }
             else
+            {
                 $copyok = $tempFile->copy($this);
+            }
 
-            $optimizedSize  = $tempFile->getFileSize();
-            $this->setImageSize();
+             $this->setImageSize();
+             $optimizedSize  = $tempFile->getFileSize();
           } // else
 
           if ($copyok)
@@ -658,7 +675,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
              $this->setMeta('tsOptimized', time());
              $this->setMeta('compressedSize', $optimizedSize);
              $this->setMeta('originalSize', $originalSize);
-          //   $this->setMeta('improvement', $originalSize - $optimizedSize);
+
              if ($this->hasMeta('did_keepExif'))
               $this->setMeta('did_keepExif', $settings->keepExif);
              if ($this->hasMeta('did_cmyk2rgb'))
@@ -672,7 +689,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
              if ($settings->resizeImages)
              {
-
                $resizeWidth = $settings->resizeWidth;
                $resizeHeight = $settings->resizeHeight;
 
@@ -684,8 +700,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
                if ( ($resizeWidth == $width && $width != $originalWidth)  || ($resizeHeight == $height && $height != $originalHeight ) ) // resized.
                {
-                   $this->setMeta('resizeWidth', $this->get('width') );
-                   $this->setMeta('resizeHeight', $this->get('height') );
+                   $this->setMeta('resizeWidth', $width );
+                   $this->setMeta('resizeHeight', $height );
                    $this->setMeta('resize', true);
 									 $resizeType = ($settings->resizeType == 1) ? __('Cover', 'shortpixel-image-optimiser') : __('Contain', 'shortpixel-image-optimiser');
 									 $this->setMeta('resizeType', $resizeType);
@@ -693,7 +709,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                else
                  $this->setMeta('resize', false);
              }
-
           }
           else
           {
@@ -719,7 +734,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 					 'issue_type' => ResponseController::ISSUE_OPTIMIZED_NOFILE,
 					 'message' => __('Image is reporting as optimized, but file couldn\'t be found in the downloaded files', 'shortpixel-image-optimiser'),
 					 'fileName' => $this->getFileName(),
-
 				);
 
 				ResponseController::addData($this->get('id'), $response);
@@ -1121,6 +1135,15 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 			 return $bool;
 		}
 
+    protected function setVirtualToReal($fullpath)
+    {
+      $this->resetStatus();
+      $this->fullpath = $fullpath;
+      $this->directory = null; //reset directory
+      $this->is_virtual = false; // stops being virtual
+      $this->setFileInfo();
+    }
+
 		private function isProcessableSize($width, $height, $excludePattern)
 		{
 				$ranges = preg_split("/(x|×|X)/",$excludePattern);
@@ -1144,6 +1167,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 				}
 				return true;
 		}
+
 
     /** Convert Image Meta to A Class */
     protected function toClass()
@@ -1293,7 +1317,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 			 	$result = array('resize' => $resize, 'resize_width' => $width, 'resize_height' => $height);
 			}
-
 
 		 // Check if the image is not excluded
 		 $imageOk = ($this->isProcessable(true) || $this->isOptimized()) ? true : false ;
