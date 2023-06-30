@@ -144,6 +144,7 @@ class ShortPixelImgToPictureWebp
 
 				if (false === $image->isParseable())
 				{
+           Log::addTemp('not parsable', $raw_image);
 					 return $raw_image;
 				}
 
@@ -198,6 +199,7 @@ class ShortPixelImgToPictureWebp
                 {
                   if (! $thisfile->exists())
                   {
+                    Log::addTemp('Webp file not find in #1' . $thisfile->getFullPath());
 										// FILTER: boolean, object, string, filedir
                     $thisfile = $fileWebp_exists = apply_filters('shortpixel/front/webp_notfound', false, $thisfile, $image_url, $imageBase);
                   }
@@ -355,24 +357,7 @@ class ShortPixelImgToPictureWebp
       return $content;
     }
 
-    /**
-     * Makes a string with all attributes.
-     *
-     * @param $attribute_array
-     * @return string
-     */
-		 /*
-    public function create_attributes($attribute_array)
-    {
-        $attributes = '';
-        foreach ($attribute_array as $attribute => $value) {
-            $attributes .= $attribute . '="' . $value . '" ';
-        }
-
-        // Removes the extra space after the last attribute
-        return substr($attributes, 0, -1);
-    } */
-} // Convert
+} // Convert Class
 
 class FrontImage
 {
@@ -600,12 +585,17 @@ class FrontImage
 			$output = '<img src="' . $src . '" ';
 
 			// Get this from set attributes on class.
-			$attrs = array('id', 'alt', 'height', 'width', 'srcset', 'sizes', 'class');
+			$attrs = array('id', 'height', 'width', 'srcset', 'sizes', 'class');
 			foreach($attrs as $attr)
 			{
 				if (! is_null($this->{$attr}))
+        {
 					$output .= $attr . '="' . $this->{$attr} . '" ';
+        }
 			}
+
+      // Always output alt tag, because it's important to screen readers and otherwise.
+      $output .= 'alt="' . $this->alt . '"';
 
 			// Left over attributes that should be harmless, ie extra image data or other custom tags.
 			$leftAttrs = $this->getImageAttributes();
