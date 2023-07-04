@@ -163,14 +163,8 @@ class ListMediaViewController extends \ShortPixel\ViewController
 
   public function headerColumns($defaults)
   {
-
     $defaults['wp-shortPixel'] = __('ShortPixel Compression', 'shortpixel-image-optimiser');
-   /* if(current_user_can( 'manage_options' )) {
-        $defaults['wp-shortPixel'] .=
-                  '&nbsp;<a href="options-general.php?page=wp-shortpixel-settings&part=stats" title="'
-                . __('ShortPixel Statistics','shortpixel-image-optimiser')
-                . '"><span class="dashicons dashicons-dashboard"></span></a>';
-    } */
+
     return $defaults;
   }
 
@@ -183,8 +177,6 @@ class ListMediaViewController extends \ShortPixel\ViewController
        $this->loadItem($id);
 
 	     $this->loadView(null, false);
-
-
      }
   }
 
@@ -232,12 +224,6 @@ class ListMediaViewController extends \ShortPixel\ViewController
   {
     $this->loadView('snippets/part-comparer');
   }
-
-  /*public function registerSortable($columns)
-  {
-      $columns['wp-shortPixel'] = 'ShortPixel Compression';
-      return $columns;
-  } */
 
   public function filterBy($vars)
   {
@@ -338,8 +324,6 @@ class ListMediaViewController extends \ShortPixel\ViewController
           'optimized' => __('Optimized', 'shortpixel-image-optimiser'),
           'unoptimized' => __('Unoptimized', 'shortpixel-image-optimiser'),
 					'prevented' => __('Optimization Error', 'shortpixer-image-optimiser'),
-        //  'pending' => __('Pending', 'shortpixel-image-optimiser'),
-        //  'error' => __('Errors', 'shortpixel-image-optimiser'),
       );
 
       echo  "<select name='shortpixel_status' id='shortpixel_status'>\n";

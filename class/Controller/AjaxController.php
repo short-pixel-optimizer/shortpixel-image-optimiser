@@ -205,6 +205,9 @@ class AjaxController
 					 case 'cancelOptimize':
 					 		$json = $this->cancelOptimize($json, $data);
 					 break;
+					 case 'getItemEditWarning':
+					 	  $json = $this->getItemEditWarning($json, $data);
+					 break;
            case 'createBulk':
              $json = $this->createBulk($json, $data);
            break;
@@ -256,8 +259,22 @@ class AjaxController
     {
       $fs = \wpSPIO()->filesystem();
       return $fs->getImage($id, $type);
-
     }
+
+		public function getItemEditWarning($json, $data)
+		{
+			  $id = intval($_POST['id']);
+				$mediaItem = $this->getMediaItem($id, 'media');
+
+				if (is_object($mediaItem))
+				{
+					$json = new \stdClass;
+					$json->id = $id;
+					$json->is_restorable = ($mediaItem->isRestorable() ) ? 'true' : 'false';
+					$json->is_optimized = ($mediaItem->isOptimized()) ? 'true' : 'false';
+				}
+				return $json;
+		}
 
     /** Adds  a single Items to the Single queue */
     public function optimizeItem()

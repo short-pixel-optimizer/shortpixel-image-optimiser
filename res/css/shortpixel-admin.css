@@ -321,6 +321,20 @@ th.sorted.column-wp-shortPixel a {
   }
 }
 
+/** Style for Grid view popups */
+.shortpixel-popup-info {
+  display: flex;
+}
+.shortpixel-popup-info label {
+  min-width: 30%;
+  text-align: right;
+  margin-right: 4%;
+}
+.shortpixel-popup-info > div {
+  padding-left: 8px;
+  padding-bottom: 8px;
+}
+
 .compat-field-shortpixel-image-optimiser {
   /*	.field, .sp-column-info, .sp-dropdown  {
   		position: static;

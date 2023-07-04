@@ -247,7 +247,6 @@ class ShortPixelPlugin {
 		// Used by processor
 		 add_action( 'wp_ajax_shortpixel_get_item_view', array( AjaxController::getInstance(), 'ajax_getItemView' ) );
 
-		 
 		 add_action('wp_ajax_image_editor', array(AjaxController::getInstance(), 'ajax_addImageEditorData'));
 	}
 
@@ -375,12 +374,7 @@ class ShortPixelPlugin {
 			'fatalErrorStopText' => __('No items are being processed. To try again after solving the issues, please reload the page ', 'shortpixel-image-optimiser'),
 		) ;
 
-		//wp_localize_script('shortpixel-screen-base', 'ShortPixelProcessorTranslations', array(
-	//	));
-
-
 		wp_localize_script( 'shortpixel-screen-base', 'spio_screenStrings', $screen_localize);
-	//	wp_localize_script( 'shortpixel-screen-custom', 'spio_screenStrings', $screen_localize);
 
 		wp_register_script( 'shortpixel-screen-bulk', plugins_url( '/res/js/screens/screen-bulk.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery', 'shortpixel-processor', 'shortpixel-screen-base'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 

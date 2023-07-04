@@ -492,12 +492,24 @@ window.ShortPixelProcessor =
     {
       var mediaStatus = 100;
 			var customStatus = 100;
+      // If not statuses were returned, we are probably loading something via ajax, don't increase the defer / checks on the processing
+      var anyQueueStatus = false;
 
       if (typeof data.media !== 'undefined' && typeof data.media.qstatus !== 'undefined' )
+      {
+         anyQueueStatus = true;
          mediaStatus = data.media.qstatus;
+      }
       if (typeof data.custom !== 'undefined' && typeof data.custom.qstatus !== 'undefined')
+      {
+        anyQueueStatus = true;
         customStatus = data.custom.qstatus;
+      }
 
+      if (false === anyQueueStatus)
+      {
+         return false; // no further checks.
+      }
 
         // The lowest queue status (for now) equals earlier in process. Don't halt until both are done.
         if (mediaStatus <= customStatus)
@@ -564,14 +576,17 @@ window.ShortPixelProcessor =
       var nonce = this.nonce['itemview'];
 			if (this.worker !== null)
 			{
-      	this.worker.postMessage({action: 'getItemView', 'nonce' : this.nonce['itemview'], 'data': { 'id' : data.id, 'type' : data.type, 'callback' : 'shortpixel.RenderItemView'}});
+        if (typeof data.callback === 'undefined')
+        {
+           data.callback = 'shortpixel.RenderItemView';
+        }
+      	this.worker.postMessage({action: 'getItemView', 'nonce' : this.nonce['itemview'], 'data': { 'id' : data.id, 'type' : data.type, 'callback' : data.callback }});
 			}
     },
 
     AjaxRequest: function(data)
     {
        var localWorker = false;
-
        this.worker.postMessage({action: 'ajaxRequest', 'nonce' : this.nonce['ajaxRequest'], 'data': data });
     },
 		GetPluginUrl: function()
