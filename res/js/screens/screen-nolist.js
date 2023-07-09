@@ -9,11 +9,11 @@ class ShortPixelScreen extends ShortPixelScreenBase
     super.Init();
 
 
-console.log(window.plupload.Uploader);
+//console.log(window.plupload.Uploader);
   /*window.addEventListener('UploadFile',window.plupload.Uploader, function(file, ev){
     console.log(file, ev);
   } ); */
-
+/*
     window.plupload.Uploader.addEventListener('UploadFile', function (file, ev) {
         console.log('UploadFile Trigger', file, ev);
     });
@@ -27,6 +27,6 @@ console.log('jquery insides', wp.Uploader, window.plupload);
             }
         });
     })(jQuery);
-  }
+  } */
 
 } // class
