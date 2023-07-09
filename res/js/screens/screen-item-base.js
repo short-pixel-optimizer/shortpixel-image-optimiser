@@ -15,9 +15,12 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase
 
 	Init()
 	{
-		console.log('Item base');
+		super.Init();
+
 		window.addEventListener('shortpixel.' + this.type + '.resumeprocessing', this.processor.ResumeProcess.bind(this.processor));
 		window.addEventListener('shortpixel.RenderItemView', this.RenderItemView.bind(this) );
+
+
 	}
 
 	HandleImage(resultItem, type)

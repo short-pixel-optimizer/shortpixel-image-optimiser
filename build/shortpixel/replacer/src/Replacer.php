@@ -200,8 +200,10 @@ class Replacer
     global $wpdb;
     /* Search and replace in WP_POSTS */
     // Removed $wpdb->remove_placeholder_escape from here, not compatible with WP 4.8
+
     $posts_sql = $wpdb->prepare(
-      "SELECT ID, post_content FROM $wpdb->posts WHERE post_status = 'publish' AND post_content LIKE %s",
+      "SELECT ID, post_content FROM $wpdb->posts WHERE post_status in ('publish', 'future', 'draft', 'pending', 'private')
+				AND post_content LIKE %s",
       '%' . $base_url . '%');
 
     $rs = $wpdb->get_results( $posts_sql, ARRAY_A );
@@ -252,7 +254,7 @@ class Replacer
 	        {
 	          case "post": // special case.
 	              $sql = 'SELECT meta_id as id, meta_key, meta_value FROM ' . $wpdb->postmeta . '
-	                WHERE post_id in (SELECT ID from '. $wpdb->posts . ' where post_status = "publish") AND meta_value like %s';
+	                WHERE post_id in (SELECT ID from '. $wpdb->posts . ' where post_status in in ("publish", "future", "draft", "pending", "private") ) AND meta_value like %s';
 	              $type = 'post';
 
 	              $update_sql = ' UPDATE ' . $wpdb->postmeta . ' SET meta_value = %s WHERE meta_id = %d';

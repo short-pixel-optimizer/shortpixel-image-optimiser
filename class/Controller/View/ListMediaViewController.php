@@ -54,12 +54,11 @@ class ListMediaViewController extends \ShortPixel\ViewController
 
 		if(strpos($action, 'shortpixel') === 0 ) {
 		 		check_admin_referer('bulk-media');
-
-				// Nothing selected, nothing doin'
-				if (! isset($_GET['media']) || ! is_array($_GET['media']))
-					return;
-
 		}
+
+    // Nothing selected, nothing doin'
+    if (! isset($_GET['media']) || ! is_array($_GET['media']))
+      return;
 
 		 $fs = \wpSPIO()->filesystem();
 		 $optimizeController = new OptimizeController();

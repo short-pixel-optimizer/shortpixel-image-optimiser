@@ -70,7 +70,6 @@ class PackageLoader
             }
             spl_autoload_register(function ($classname) use ($namespace, $classpaths, $dir, $psr4) {
                 // Check if the namespace matches the class we are looking for
-
                 if (preg_match("#^".preg_quote($namespace)."#", $classname)) {
                     // Remove the namespace from the file path since it's psr4
                     if ($psr4) {

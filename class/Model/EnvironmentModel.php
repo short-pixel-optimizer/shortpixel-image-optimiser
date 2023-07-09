@@ -222,6 +222,7 @@ class EnvironmentModel extends \ShortPixel\Model
         'edit-post', // edit post
         'new-post',  // new post
         'edit-page', // all pages
+        'media', // add new item screen
     );
     $use_screens = apply_filters('shortpixel/init/optimize_on_screens', $use_screens);
 
