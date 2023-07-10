@@ -119,6 +119,14 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$settings = \wpSPIO()->settings();
 		$url = $this->getURL();
 
+    if ($this->hasOriginal())
+    {
+       $main_url = $this->getOriginalFile()->getUrl();
+    }
+    else {
+      $main_url = $url;
+    }
+
 		 if (! $url) // If the whole image URL can't be found
 		 {
 			return $parameters;
@@ -133,18 +141,22 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		 }
 		 $paramListArgs['smartcrop'] = $isSmartCrop;
+     $paramListArgs['url'] = $url;
+     $paramListArgs['main_url'] = $main_url;
 
 		 $doubles = array(); // check via hash if same command / result is there.
 
      if ($this->isProcessable(true) || ($this->isProcessableAnyFileType() && $this->isOptimized()) )
 		 {
 				$paramList = $this->createParamList($paramListArgs);
-				$parameters['urls'][$this->mainImageKey] = $url;
+				$parameters['urls'][$this->mainImageKey] = $paramList['url'];
 				$parameters['paths'][$this->mainImageKey] = $this->getFullPath();
 				$parameters['params'][$this->mainImageKey] = $paramList;
 				$parameters['returnParams']['sizes'][$this->mainImageKey] = $this->getFileName();
 
-				if ($isSmartCrop )
+        // If top URL is used, include filesize information
+
+				if ($paramList['url'] !== $paramListArgs['url']  )
 				{
 					 $parameters['returnParams']['fileSizes'][$this->mainImageKey] = $this->getFileSize();
 				}
@@ -162,12 +174,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			 if ($thumbObj->isThumbnailProcessable() || ($thumbObj->isProcessableAnyFileType() && $thumbObj->isOptimized()) )
 			 {
 
-				 if (! $isSmartCrop)
-				 {
 				 	$url = $thumbObj->getURL();
-			   }
+          $paramListArgs['url'] = $url;
+          $paramListArgs['main_url'] = $main_url;
 
 				 $paramList = $thumbObj->createParamList($paramListArgs);
+         $url = $paramList['url']; // createParamList also decides on URL.
 				 $hash = md5( serialize($paramList) . $url); // Hash the paramlist + url to find identical results.
 
 // This thing fly to sep function? Retutrn liast  duplicat/double name => name
@@ -211,7 +223,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					 $parameters['paths'][$name] =  $thumbObj->getFullPath();
 					 $parameters['params'][$name] = $paramList;
 					 $parameters['returnParams']['sizes'][$name] = $thumbObj->getFileName();
-					 if ($isSmartCrop)
+					 if ($paramList['url'] !== $paramListArgs['url'])
 					 {
 							$parameters['returnParams']['fileSizes'][$name] = $thumbObj->getFileSize();
 					 }
@@ -310,6 +322,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   protected function loadThumbnailsFromWP()
   {
     $wpmeta = $this->getWPMetaData();
+    $wpImageSizes = UtilHelper::getWordPressImageSizes();
+
     $width = null; $height = null;
 
     if (! isset($wpmeta['width']))
@@ -344,7 +358,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        $height = (is_null($height)) ? $this->get('height') : $height;
     }
 
-
 		$this->width = $width;
 		$this->height = $height;
 
@@ -353,7 +366,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
     if (is_null($this->getMeta('originalWidth')))
 			$this->setMeta('originalHeight',$height);
-
 
     $thumbnails = array();
     if (isset($wpmeta['sizes']))
@@ -373,6 +385,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 							 $thumbObj->width = $width;
 							 $thumbObj->height = $height;
+
+               if (isset($wpImageSizes[$name]))
+               {
+                  $thumbObj->setSizeDefinition($wpImageSizes[$name]);
+               }
 
 							 if (isset($data['filesize']))
 							 	$thumbObj->filesize = $data['filesize'];

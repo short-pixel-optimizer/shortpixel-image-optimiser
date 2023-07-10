@@ -27,7 +27,8 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
   protected $is_main_file = false;
 	protected $is_retina = false; // diffentiate from thumbnail / retina.
   protected $id; // this is the parent attachment id
-  protected $size; // size of image in WP, if applicable.
+  protected $size; // size name of image in WP, if applicable.
+  protected $sizeDefinition; // size width / height / crop according to WordPress
 
   public function __construct($path, $id, $size)
   {
@@ -44,12 +45,10 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
   protected function loadMeta()
   {
-
   }
 
   protected function saveMeta()
   {
-
   }
 
   public function __debugInfo() {
@@ -62,6 +61,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
       'height' => $this->get('height'),
       'exists' => ($this->exists()) ? 'yes' : 'no',
       'is_virtual' => ($this->is_virtual()) ? 'yes' : 'no',
+      'wordpress_size' => $this->sizeDefinition,
 
     );
   }
@@ -70,6 +70,11 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
   public function setName($name)
   {
      $this->name = $name;
+  }
+
+  public function setSizeDefinition($sizedef)
+  {
+      $this->sizeDefinition = $sizedef;
   }
 
 	public function setImageType($type)
@@ -115,8 +120,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
       return false;
   }
 
-
-
   public function isFileTypeNeeded($type = 'webp')
   {
       // pdf extension can be optimized, but don't come with these filetypes
@@ -135,7 +138,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
       else
         return false;
   }
-
 
 	// @param FileDelete can be false. I.e. multilang duplicates might need removal of metadata, but not images.
   public function onDelete($fileDelete = true)
@@ -258,7 +260,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 					 return $name;
 				}
 			}
-
 
 			return parent::getBackupFileName();
 	}

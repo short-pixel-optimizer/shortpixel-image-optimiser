@@ -152,9 +152,14 @@ window.ShortPixelProcessor =
       }
       else
       {
-         console.debug('Check Active: Processor not active - ' + this.remoteSecret + ' - ' + this.localSecret);
+         console.log('Check Active: Processor not active - ' + this.remoteSecret + ' - ' + this.localSecret);
+
+         /// This actually does nothing since remoteSecret need to be regotten. 
+         //window.setTimeout(this.CheckActive.bind(this), this.deferInterval);
+
          this.tooltip.ProcessEnd();
          this.StopProcess();
+
       }
 
       if (this.isManualPaused)

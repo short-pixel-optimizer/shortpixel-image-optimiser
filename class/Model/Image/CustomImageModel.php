@@ -97,6 +97,8 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 		 			  $isSmartCrop = ($this->forceSettings['smartcrop'] == ImageModel::ACTION_SMARTCROP) ? true : false;
 		 		 }
 				 $paramListArgs['smartcrop'] = $isSmartCrop;
+         $paramListArgs['main_url'] = $url;
+         $paramListArgs['url'] = $url;
 
         if ($this->isProcessable(true) || $this->isProcessableAnyFileType())
 				{
