@@ -534,7 +534,8 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
         if (false === $fileExists)
         {
             $downloadHelper = DownloadHelper::getInstance();
-            $result = $downloadHelper->downloadFile($this->getURL(), array('destinationPath' => $filepath));
+            $url = $this->getURL();
+            $result = $downloadHelper->downloadFile($url, array('destinationPath' => $filepath));
         }
 
 			}
@@ -542,11 +543,17 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 			{
 				 $result = $filepath;
 			}
+      else {
+        Log::addWarning('Virtual Status not set. Trying to blindly download vv DownloadHelper');
+        $downloadHelper = DownloadHelper::getInstance();
+        $url = $this->getURL();
+        $result = $downloadHelper->downloadFile($url, array('destinationPath' => $filepath));
+      }
 
       if ($result == false)
       {
         $this->preventNextTry(__('Fatal Issue: Remote virtual file could not be downloaded for backup', 'shortpixel-image-optimiser'));
-        Log::addError('Remote file download failed to: ' . $filepath, $this->getURL());
+        Log::addError('Remote file download failed from : ' . $url . ' to: ' . $filepath, $this->getURL());
         $this->error_message = __('Remote file could not be downloaded' . $this->getFullPath(), 'shortpixel-image-optimiser');
 
         return false;

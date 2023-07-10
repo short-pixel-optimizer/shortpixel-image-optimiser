@@ -12,6 +12,8 @@ use ShortPixel\Helper\UtilHelper as UtilHelper;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Controller\ErrorController as ErrorController;
 
+use ShortPixel\Model\File\FileModel as FileModel;
+
 // Future contoller for the edit media metabox view.
 class EditMediaViewController extends \ShortPixel\ViewController
 {
@@ -195,7 +197,15 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
 					if ($imageObj->is_virtual())
 					{
-						$debugInfo[] = array(__('Is Virtual true: '), $imageObj->getFullPath() );
+            $virtual = $imageObj->get('virtual_status');
+            if($virtual == FileModel::$VIRTUAL_REMOTE)
+              $vtext = 'Remote';
+            elseif($virtual == FileModel::$VIRTUAL_STATELESS)
+              $vtext = 'Stateless';
+            else
+              $vtext = 'Not set';
+
+						$debugInfo[] = array(__('Is Virtual: ') . $vtext, $imageObj->getFullPath() );
 					}
 
           $debugInfo[] = array(__('Size and Mime (ImageObj)'), $imageObj->get('width') . 'x' . $imageObj->get('height'). ' (' . $imageObj->get('mime') . ')');

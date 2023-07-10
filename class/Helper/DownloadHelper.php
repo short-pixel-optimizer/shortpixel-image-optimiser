@@ -55,12 +55,14 @@ class DownloadHelper
 
 					if(is_wp_error( $tempFile ))
 		      { //try to switch the default protocol
+               Log::addWarning('Download_URL failed, recheck protocol and try again');
 		          $fileURL = $this->setPreferredProtocol(urldecode($fileURL), true); //force recheck of the protocol
 		          $tempFile = \download_url($fileURL, $downloadTimeout);
 		      }
 
 					if (is_wp_error($tempFile))
 					{
+            Log::addWarning('Second Attempt failed, trying remote get', $tempFile);
 						//get_temp_dir
 						$tmpfname = tempnam(get_temp_dir(), 'spiotmp');
 

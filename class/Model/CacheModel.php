@@ -62,6 +62,7 @@ class CacheModel
 			 	return; // don't save transients without expiration
 		 }
      $this->exists = set_transient($this->name, $this->value, $this->expires);
+
   }
 
   public function delete()
@@ -85,11 +86,19 @@ class CacheModel
 	private function checkExpiration($name)
 	{
 			$option = get_option('_transient_timeout_' . $name);
+
 			if (false !== $option && is_numeric($option))
 			{
 				 return true; // ok
 			}
-			else { // if hangs, delete it.
+			else {
+
+        // Via object cache the expire info can't be retrieved. Customer is on it's own with this.
+         if (wp_using_ext_object_cache())
+         {
+            return true;
+         }
+
 				 $this->value = '';
 				 $this->delete();
 				 Log::addError('Found hanging transient with no expiration! ' . $name, $option);
