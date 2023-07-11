@@ -137,7 +137,7 @@ class ShortPixelScreenBase
 	{
 			if (typeof (wp.media) === 'undefined'  || typeof wp.media.frame === 'undefined')
 			{
-				console.log('No WP Media or Frame', wp);
+				//console.log('No WP Media or Frame', wp);
 				 this.ListenEditAttachment();
 				 return;
 			}

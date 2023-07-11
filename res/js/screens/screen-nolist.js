@@ -8,6 +8,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
   {
     super.Init();
 
+  }
 
 //console.log(window.plupload.Uploader);
   /*window.addEventListener('UploadFile',window.plupload.Uploader, function(file, ev){

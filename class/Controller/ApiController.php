@@ -41,6 +41,7 @@ class ApiController
     const ERR_POSTMETA_CORRUPT = -909;
     const ERR_UNKNOWN = -999;
 
+
     const DOWNLOAD_ARCHIVE = 7;
 
     private static $instance;
@@ -57,7 +58,6 @@ class ApiController
       $this->apiEndPoint = $settings->httpProto . '://' . SHORTPIXEL_API . '/v2/reducer.php';
       $this->apiDumpEndPoint = $settings->httpProto . '://' . SHORTPIXEL_API . '/v2/cleanup.php';
     }
-
 
   public static function getInstance()
   {

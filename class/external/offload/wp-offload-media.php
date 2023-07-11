@@ -180,7 +180,7 @@ class wpOffload
       // If there are excluded sizes, there are not in backups. might not be left on remote, or ( if delete ) on server, so just generate the images and move them.
       $mediaItem->wpCreateImageSizes();
 
-      $this->remove_remote($id);
+      $result = $this->remove_remote($id);
       $this->image_upload($mediaItem);
     }
 
@@ -197,6 +197,7 @@ class wpOffload
 				$itemHandler = $this->as3cf->get_item_handler($remove);
 
 				$result = $itemHandler->handle($a3cfItem, array( 'verify_exists_on_local' => false)); //handle it then.
+				return $result;
     }
 
 
@@ -441,17 +442,20 @@ class wpOffload
 
     public function image_upload($mediaLibraryObject)
     {
-        if (! $this->offloading)
-				{
-				  return false;
-				}
+				$id = $mediaLibraryObject->get('id');
+				$a3cfItem = $this->getItemById($id);
+
 				// Only medialibrary offloading supported.
 				if ('media' !== $mediaLibraryObject->get('type') )
 				{
 					 return false;
 				}
 
-				$id = $mediaLibraryObject->get('id');
+				if ( false === $a3cfItem)
+				{
+					 return false;
+				}
+
         $item = $this->getItemById($id, true);
 
         if ( $item === false && ! $this->as3cf->get_setting( 'copy-to-s3' ) ) {
@@ -464,13 +468,10 @@ class wpOffload
 					$this->shouldPrevent = false;
 
 					// The Handler doesn't work properly /w local removal if not the exact correct files are passed (?) . Offload does this probably via update metadata function, so let them sort it out with this . (until it breaks)
-
 					$meta = wp_get_attachment_metadata($id);
-
 					wp_update_attachment_metadata($id, $meta);
 
 					$this->shouldPrevent = true;
-
     }
 
 

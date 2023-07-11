@@ -1317,7 +1317,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
               $useSmartCrop = false;
             }
         }
-
      }
 		 elseif (true === $useSmartCrop) // these for clarity
 		 {
@@ -1350,7 +1349,14 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 			 $resize_width = $resize_height = 0; // can be not set.
  	 		 $width = $this->get('width');
 			 $height = $this->get('height');
-       $url = $args['main_url'];
+
+       if (true === $useSmartCrop)
+       {
+         $url = $args['main_url'];
+       }
+       else {
+         $url = $args['url'];
+       }
 
 			 if ($hasResizeSizes)
 			 {
