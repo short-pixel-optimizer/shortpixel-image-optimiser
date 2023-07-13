@@ -144,7 +144,6 @@ class ShortPixelImgToPictureWebp
 
 				if (false === $image->isParseable())
 				{
-           Log::addTemp('not parsable', $raw_image);
 					 return $raw_image;
 				}
 
@@ -199,7 +198,6 @@ class ShortPixelImgToPictureWebp
                 {
                   if (! $thisfile->exists())
                   {
-                    Log::addTemp('Webp file not find in #1' . $thisfile->getFullPath());
 										// FILTER: boolean, object, string, filedir
                     $thisfile = $fileWebp_exists = apply_filters('shortpixel/front/webp_notfound', false, $thisfile, $image_url, $imageBase);
                   }

@@ -128,6 +128,7 @@ class OptimizeController
 
         if (! $mediaItem->isProcessable())
         {
+          Log::addTemp('MediaItem', $mediaItem->getFullPath());
           $json->result->message = $mediaItem->getProcessableReason();
           $json->result->is_error = true;
           $json->result->is_done = true;

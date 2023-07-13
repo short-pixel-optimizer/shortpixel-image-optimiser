@@ -15,8 +15,6 @@ use \ShortPixel\Model\File\FileModel as FileModel;
 // Represent a thumbnail image / limited image in mediaLibrary.
 class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 {
-  //abstract protected function saveMeta();
-  //abstract protected function loadMeta();
 
   public $name;
 
@@ -38,8 +36,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
         $this->id = $id;
 				$this->imageType = self::IMAGE_TYPE_THUMB;
         $this->size = $size;
-        $this->setWebp();
-        $this->setAvif();
+
   }
 
 

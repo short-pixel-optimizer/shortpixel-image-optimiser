@@ -123,6 +123,25 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
       parent::__construct($path);
     }
 
+    /* Function to run on load-time ( loadMeta ) to check certain values and make sure all data is loaded properly and in case of missing data, to supplant that */
+    protected function verifyImage()
+    {
+
+      // Only get data from Image if not yet set in metadata.
+      if (is_null($this->getMeta('originalWidth')))
+        $this->setMeta('originalWidth', $this->get('width'));
+
+      if (is_null($this->getMeta('originalHeight')))
+        $this->setMeta('originalHeight', $this->get('height'));
+
+      if (is_null($this->getMeta('tsAdded')))
+        $things->setMeta('tsAdded', time());
+
+      $this->setWebp();
+      $this->setAvif();
+
+    }
+
     protected function setImageSize()
     {
       // to prevent is_null check on get to loop if something is off.
@@ -457,14 +476,22 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 	    if (! $file->is_virtual() && $file->exists())
 	      return $file;
 
+      // If we are in filtered special mode and indeed file doesn't not exist anymore, save it. . Metacheck implies that the imagetype was set before the check
+      if ( isset($metaCheck) && true === $metaCheck && false === $file->exists())
+      {
+          Log::addTemp('MetaCheck Nulling on -> ' . $this->get('name'));
+          $this->setMeta($type, null);
+      }
 	    return false;
 	  }
 
+    // @todo Deprecate this in favor of getImageType
 		public function getWebp()
 		{
 				return $this->getImageType('webp');
 		}
 
+    // @todo Deprecate this in favor of getImageType
 	  public function getAvif()
 	  {
 	    	return $this->getImageType('avif');
@@ -472,18 +499,20 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 	  protected function setWebp()
 	  {
-	      $webp = $this->getWebp();
+	      $webp = $this->getImageType('webp');
 	      if ($webp !== false && $webp->exists())
+        {
 	        $this->setMeta('webp', $webp->getFileName() );
-
+        }
 	  }
 
 	  protected function setAvif()
 	  {
-	      $avif = $this->getAvif();
+	      $avif = $this->getImageType('avif');
 	      if ($avif !== false && $avif->exists())
+        {
 	        $this->setMeta('avif', $avif->getFileName() );
-
+        }
 	  }
 
     public function setMeta($name, $value)
@@ -507,13 +536,21 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		// Indicates this image has changed data.  Parameters optional for future use.
 		protected function recordChanged($bool = true, $old_value = null, $new_value = null)
 		{
+      if ($bool === true)
+      {
+       Log::addTemp("Record change on : (" . var_export($bool, true) . ') ' . $this->name . ' updating ' . $old_value . ' to ' . $new_value, debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 7));
+      }
 			 $this->recordChanged = $bool; // Updated record for this image.
 		}
 
+    protected function didRecordChange()
+    {
+       return $this->recordChanged;
+    }
+
     public function hasMeta($name)
     {
-        return  (property_exists($this->image_meta, $name));
-
+        return (property_exists($this->image_meta, $name));
     }
 
     public function isOptimized()

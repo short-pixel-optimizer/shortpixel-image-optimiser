@@ -161,7 +161,7 @@ class ShortPixelPlugin {
 		add_action( 'shortpixel/hook/processqueue', array( $admin, 'processQueueHook' ) );
 
 		// Action for media library gallery view
-		add_filter('attachment_fields_to_edit', array($admin, 'editAttachmentScreen'), 10, 2);
+		//add_filter('attachment_fields_to_edit', array($admin, 'editAttachmentScreen'), 10, 2);
 		add_action('print_media_templates', array($admin, 'printComparer'));
 
 

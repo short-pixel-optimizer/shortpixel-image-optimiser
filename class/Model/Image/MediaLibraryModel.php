@@ -361,11 +361,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$this->width = $width;
 		$this->height = $height;
 
-    if (is_null($this->getMeta('originalWidth')))
-      $this->setMeta('originalWidth',$width);
-
-    if (is_null($this->getMeta('originalWidth')))
-			$this->setMeta('originalHeight',$height);
 
     $thumbnails = array();
     if (isset($wpmeta['sizes']))
@@ -841,6 +836,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       elseif (is_object($metadata) )
       {
           $this->image_meta->fromClass($metadata->image_meta);
+          //Log::addTemp('Meta from class', $metadata->image_meta);
 
           // Loads thumbnails from the WordPress installation to ensure fresh list, discover later added, etc.
           $thumbnails = $this->loadThumbnailsFromWP();
@@ -852,19 +848,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
                 $thumbMeta = new ImageThumbnailMeta();
                 $thumbMeta->fromClass($metadata->thumbnails[$name]); // Load Thumbnail data from our saved Meta in model
 
-                // Only get data from WordPress meta if we don't have that yet.
-
-                if (is_null($thumbMeta->originalWidth))
-                  $thumbObj->setMeta('originalWidth', $thumbObj->get('width'));
-
-                if (is_null($thumbMeta->originalHeight))
-                  $thumbObj->setMeta('originalHeight', $thumbObj->get('height'));
-
-                if (is_null($thumbMeta->tsAdded))
-                  $thumbObj->setMeta('tsAdded', time());
 
                 $thumbnails[$name]->setMetaObj($thumbMeta);
+                $thumbnails[$name]->verifyImage();
                 unset($metadata->thumbnails[$name]);
+
              }
           }
 
@@ -885,6 +873,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
                $newMeta->fromClass($thumbMeta);
                $thumbObj->setMetaObj($newMeta);
                $thumbObj->setName($name);
+               $thumbObj->verifyImage();
 
                if ($thumbObj->exists()) // if we exist.
                {
@@ -910,6 +899,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 										$retinaObj->setName($name);
 										$retinaObj->setImageType(self::IMAGE_TYPE_RETINA);
 										$retinaObj->is_retina = true;
+                    $retinaObj->verifyImage();
 
                     $this->retinas[$name] = $retinaObj;
                   }
@@ -928,9 +918,20 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						}
             $orFile->setMetaObj($orMeta);
 						$orFile->setName($this->originalImageKey);
+            $orFile->verifyImage();
             $this->original_file = $orFile;
           }
 
+          // New! @todo Move check functions to this, to check upon load and not randomly around
+          $this->verifyImage();
+
+          // If anything changed during load, and this is stored ( ie optimized ) images, update changes.
+          if (true === $this->didAnyRecordChange() && ! is_null($this->getMeta('databaseID')))
+          {
+              Log::addTemp('Load Meta detected data changes - Saving');
+              $this->saveMeta();
+              $this->resetRecordChanges();
+          }
 
       }
 
@@ -1255,10 +1256,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
  public function saveMeta()
  {
-	   global $wpdb;
-
+	 //  global $wpdb;
 		 $this->saveDBMeta();
-
   }
 
   /** Delete the ShortPixel Meta. */
@@ -1370,6 +1369,42 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						$this->dropFromQueue();
 				}
 			} */
+  }
+
+  /* Check if the metadata of this image has changed or not since load. */
+  protected function didAnyRecordChange()
+  {
+      if (true === $this->didRecordChange())
+      {
+          Log::addTemp('Any record: Main Image changed !');
+         return true;
+      }
+
+      $thumbObjs = $this->getThumbObjects();
+      foreach($thumbObjs as $thumbObj)
+      {
+         if (true === $thumbObj->didRecordChange())
+         {
+            Log::addTemp('Any record: ' . $thumbObj->get('name') . ' changed !');
+            return true;
+         }
+         else {
+           Log::addtemp($thumbObj->get('name') . ' did not change');
+         }
+      }
+
+      return false;
+  }
+
+  protected function resetRecordChanges()
+  {
+     $this->recordChanged(false);
+
+     $thumbObjs = $this->getThumbObjects();
+     foreach($thumbObjs as $thumbObj)
+     {
+        $thumbObj->recordChanged(false);
+     }
   }
 
 	public function dropFromQueue()

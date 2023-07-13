@@ -42,11 +42,11 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
         if ($id > 0)
 				{
           $bool = $this->loadMeta();
-					if ($bool)
+					/*if ($bool)
 					{
 				  	$this->setWebp();
 				  	$this->setAvif();
-					}
+					} */
 				}
         else
         {

@@ -284,6 +284,7 @@ class AjaxController
 
           $mediaItem = $this->getMediaItem($id, $type);
 
+
           // if order is given, remove barrier and file away.
           if ($mediaItem->isOptimizePrevented() !== false)
             $mediaItem->resetPrevent();
@@ -555,8 +556,8 @@ class AjaxController
 
         	$ret['origUrl'] = $backup_url; // $backupUrl . $urlBkPath . $meta->getName();
 
-          $ret['optUrl'] = $imageObj->getURL(); // $uploadsUrl . $meta->getWebPath();
-          $ret['width'] = $imageObj->getMeta('originalWidth'); // $meta->getActualWidth();
+          $ret['optUrl'] = $imageObj->getURL();
+          $ret['width'] = $imageObj->getMeta('originalWidth');
           $ret['height'] = $imageObj->getMeta('originalHeight');
 
           if (is_null($ret['width']) || $ret['width'] == false)
@@ -564,8 +565,8 @@ class AjaxController
 
               if (! $imageObj->is_virtual())
               {
-                $ret['width'] = $imageObj->get('width'); // $imageSizes[0];
-                $ret['height']= $imageObj->get('height'); //imageSizes[1];
+                $ret['width'] = $imageObj->get('width');
+                $ret['height']= $imageObj->get('height'); 
               }
               else
               {

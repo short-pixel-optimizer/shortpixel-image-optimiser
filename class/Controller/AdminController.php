@@ -43,7 +43,6 @@ class AdminController extends \ShortPixel\Controller
     */
     public function handleImageUploadHook($meta, $id)
     {
-
         // Media only hook
 				if ( in_array($id, self::$preventUploadHook))
 				{

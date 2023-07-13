@@ -114,7 +114,6 @@ class wpOffload
      // add_filter('shortpixel_webp_image_base', array($this, 'checkWebpRemotePath'), 10, 2);
       add_filter('shortpixel/front/webp_notfound', array($this, 'fixWebpRemotePath'), 10, 4);
 
-
 			// Fix for updating source paths when converting
 			add_action('shortpixel/image/convertpng2jpg_success', array($this, 'updateOriginalPath'));
     }
