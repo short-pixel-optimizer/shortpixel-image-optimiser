@@ -1,10 +1,10 @@
 <?php
- namespace ShortPixel;
+namespace ShortPixel;
 
  if ( ! defined( 'ABSPATH' ) ) {
   exit; // Exit if accessed directly.
  }
- 
+
  use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
  use ShortPixel\Model\Image\ImageModel as ImageModel;
  use ShortPixel\Model\Image\MediaLibraryModel as MediaLibraryModel;
