@@ -13,9 +13,8 @@
 		createFilters: function() {
 			 var filters = {};
 			 var optimizedfilter = spio_media.mediafilters.optimized;
-		//	 console.log(optimizedfilter);
-		//	 optimizedfilter.forEach(function (option, key)
-			 	for (const [key,value] of Object.entries(optimizedfilter))
+
+			 for (const [key,value] of Object.entries(optimizedfilter))
 			 {
 				  filters[key] =  {
 						 text: value,

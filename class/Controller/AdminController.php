@@ -9,7 +9,6 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 use ShortPixel\Controller\Queue\Queue as Queue;
 
-use \ShortPixel\ShortPixelPng2Jpg as ShortPixelPng2Jpg;
 use ShortPixel\Model\Converter\Converter as Converter;
 use ShortPixel\Model\Converter\ApiConverter as ApiConverter;
 

@@ -18,18 +18,18 @@
 window.ShortPixelProcessor =
 {
   //  spp: {},
-    isActive: false,
+    isActive: false, // Is the processor active in this window - at all - . Transient
     defaultInterval: 3000, // @todo customize this from backend var, hook filter.  default is onload interval
     interval: 3000, // is current interval. When nothing to be done increases
     deferInterval: 15000, // how long to wait between interval to check for new items.
     screen: null, // UI Object
-    tooltip: null,
-    isBulkPage: false,
+    tooltip: null, // Tooltip object to show in WP admin bar
+    isBulkPage: false, //  Bypass secret check when bulking, because customer explicitly requests it.
     localSecret: null, // Local processorkey stored (or empty)
     remoteSecret: null, // Remote key indicating who has process right ( or null )
     isManualPaused: false,  // tooltip pause :: do not set directly, but only trhough processor functions!
-    worker: null,
-    timer: null,
+    worker: null, // HTTP worker to send requests ( worker.js )
+    timer: null, // Timer to determine waiting time between actions
     waitingForAction: false, // used if init yields results that should pause the processor.
     timesEmpty: 0, // number of times queue came up empty.
     nonce: [],
@@ -154,7 +154,7 @@ window.ShortPixelProcessor =
       {
          console.log('Check Active: Processor not active - ' + this.remoteSecret + ' - ' + this.localSecret);
 
-         /// This actually does nothing since remoteSecret need to be regotten. 
+         /// This actually does nothing since remoteSecret need to be regotten.
          //window.setTimeout(this.CheckActive.bind(this), this.deferInterval);
 
          this.tooltip.ProcessEnd();
@@ -254,7 +254,7 @@ window.ShortPixelProcessor =
     },
     StopProcess: function(args)
     {
-        console.log('Stop Processing #' + this.timer);
+        console.log('Stop Processing Signal #' + this.timer);
 
 				// @todo this can probably go? Why would StopProcess cancel Manual pauses?
         if (this.isManualPaused == true) /// processor ends on status paused.
@@ -403,8 +403,7 @@ window.ShortPixelProcessor =
 						if (data.message)
 						{
 							 this.screen.HandleError(data.message);
-							 //var message = String(data.message); // whatever this is, cast to string
-							 //this.tooltip.AddNotice(message);
+
 							 this.Debug(data.message, 'error');
 						}
 
@@ -435,7 +434,6 @@ window.ShortPixelProcessor =
         if (response.has_error == true)
         {
            this.tooltip.AddNotice(response.message);
-           //this.screen.HandleError(response, type);
         }
 
         if (! this.screen)
@@ -557,7 +555,9 @@ window.ShortPixelProcessor =
 
           // React to status of the queue.
           if (typeof this.screen.QueueStatus == 'function')
+          {
            this.screen.QueueStatus(qstatus, data);
+          }
       }
     },
 
@@ -591,6 +591,11 @@ window.ShortPixelProcessor =
 
     AjaxRequest: function(data)
     {
+      if (this.worker === null)
+      {
+         this.LoadWorker(); // JIT worker loading
+      }
+      
        var localWorker = false;
        this.worker.postMessage({action: 'ajaxRequest', 'nonce' : this.nonce['ajaxRequest'], 'data': data });
     },
@@ -610,7 +615,6 @@ window.ShortPixelProcessor =
       if (messageType == 'error')
       {
           console.error('Error: ', message);
-
       }
 
     },

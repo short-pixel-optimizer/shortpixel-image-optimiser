@@ -7,27 +7,25 @@ class ShortPixelScreen extends ShortPixelScreenBase
   Init()
   {
     super.Init();
-
+    this.ListenPLUpload();
   }
 
-//console.log(window.plupload.Uploader);
-  /*window.addEventListener('UploadFile',window.plupload.Uploader, function(file, ev){
-    console.log(file, ev);
-  } ); */
-/*
-    window.plupload.Uploader.addEventListener('UploadFile', function (file, ev) {
-        console.log('UploadFile Trigger', file, ev);
-    });
 
-return;
-    (function($){
-console.log('jquery insides', wp.Uploader, window.plupload);
-        $.extend( uploader.prototype, {
-            success : function( file_attachment ){
-                console.log( file_attachment );
-            }
-        });
-    })(jQuery);
-  } */
+  // Only listening on the nolist ( and more specific -> media addnew) , since the post editor classic/ gutenberg and others have this interface otherwise hidden.
+  ListenPLUpload() {
+
+    // Most screen will not have uploader defined or ready.
+    if (typeof uploader === 'undefined' || uploader === null)
+    {
+       return;
+    }
+
+    var self = this;
+    uploader.bind('UploadComplete', function (up, file, response)
+    {
+        // Give processor a swoop when uploading is done, while respecting set boundaries.
+        self.processor.RunProcess();
+    });
+  }
 
 } // class
