@@ -265,7 +265,6 @@ class AjaxController
 		{
 			  $id = intval($_POST['id']);
 				$mediaItem = $this->getMediaItem($id, 'media');
-Log::addTemp("MediaItem in getItemeditWarning -- " . $id, $mediaItem);
 				if (is_object($mediaItem))
 				{
 					$json = new \stdClass;
@@ -274,9 +273,7 @@ Log::addTemp("MediaItem in getItemeditWarning -- " . $id, $mediaItem);
 					$json->is_optimized = ($mediaItem->isOptimized()) ? 'true' : 'false';
 				}
 				else {
-					Log::addTemp('Media Item not object?');
 				}
-			Log::addtemp('ItemEditWarning Response', $json);
 				return $json;
 		}
 

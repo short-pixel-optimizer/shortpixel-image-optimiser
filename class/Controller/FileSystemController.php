@@ -57,7 +57,6 @@ Class FileSystemController extends \ShortPixel\Controller
 					return false;
 
         $filepath = get_attached_file($id);
-      //  Log::addTemp('Attached file '. $filepath);
         $filepath = apply_filters('shortpixel_get_attached_file', $filepath, $id);
 
         // Somehow get_attached_file can return other random stuff.

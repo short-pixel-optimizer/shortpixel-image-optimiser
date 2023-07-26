@@ -835,7 +835,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       elseif (is_object($metadata) )
       {
           $this->image_meta->fromClass($metadata->image_meta);
-          //Log::addTemp('Meta from class', $metadata->image_meta);
 
           // Loads thumbnails from the WordPress installation to ensure fresh list, discover later added, etc.
           $thumbnails = $this->loadThumbnailsFromWP();
@@ -927,7 +926,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           // If anything changed during load, and this is stored ( ie optimized ) images, update changes.
           if (true === $this->didAnyRecordChange() && ! is_null($this->getMeta('databaseID')))
           {
-              Log::addTemp('Load Meta detected data changes - Saving');
               $this->saveMeta();
               $this->resetRecordChanges();
           }
@@ -1375,7 +1373,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   {
       if (true === $this->didRecordChange())
       {
-          Log::addTemp('Any record: Main Image changed !');
          return true;
       }
 
@@ -1384,11 +1381,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       {
          if (true === $thumbObj->didRecordChange())
          {
-            Log::addTemp('Any record: ' . $thumbObj->get('name') . ' changed !');
             return true;
          }
          else {
-           Log::addtemp($thumbObj->get('name') . ' did not change');
          }
       }
 

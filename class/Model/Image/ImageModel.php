@@ -479,7 +479,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
       // If we are in filtered special mode and indeed file doesn't not exist anymore, save it. . Metacheck implies that the imagetype was set before the check
       if ( isset($metaCheck) && true === $metaCheck && false === $file->exists())
       {
-          Log::addTemp('MetaCheck Nulling on -> ' . $this->get('name'));
           $this->setMeta($type, null);
       }
 	    return false;
@@ -536,10 +535,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		// Indicates this image has changed data.  Parameters optional for future use.
 		protected function recordChanged($bool = true, $old_value = null, $new_value = null)
 		{
-      if ($bool === true)
-      {
-       Log::addTemp("Record change on : (" . var_export($bool, true) . ') ' . $this->name . ' updating ' . $old_value . ' to ' . $new_value, debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 7));
-      }
 			 $this->recordChanged = $bool; // Updated record for this image.
 		}
 
