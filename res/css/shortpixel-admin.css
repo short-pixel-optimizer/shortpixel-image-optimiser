@@ -324,6 +324,7 @@ th.sorted.column-wp-shortPixel a {
 /** Style for Grid view popups */
 .shortpixel-popup-info {
   display: flex;
+  clear: both;
 }
 .shortpixel-popup-info label {
   min-width: 30%;
@@ -333,24 +334,6 @@ th.sorted.column-wp-shortPixel a {
 .shortpixel-popup-info > div {
   padding-left: 8px;
   padding-bottom: 8px;
-}
-
-.compat-field-shortpixel-image-optimiser {
-  /*	.field, .sp-column-info, .sp-dropdown  {
-  		position: static;
-  	}
-  	*/
-}
-.compat-field-shortpixel-image-optimiser .sp-column-actions {
-  max-width: none;
-}
-.compat-field-shortpixel-image-optimiser .thumb-wrapper {
-  display: none !important;
-}
-.compat-field-shortpixel-image-optimiser .sp-dropdown.sp-show .sp-dropdown-content {
-  display: flex;
-  flex-direction: column;
-  position: relative;
 }
 
 div.sp-modal-shade {

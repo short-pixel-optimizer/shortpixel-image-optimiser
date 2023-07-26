@@ -295,8 +295,6 @@ class ShortPixelPlugin {
 
 		wp_register_script( 'jquery.knob.min.js', plugins_url( '/res/js/jquery.knob.min.js', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
-		//wp_register_script( 'jquery.tooltip.min.js', plugins_url( '/res/js/jquery.tooltip.min.js', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
-
 		wp_register_script( 'shortpixel-debug', plugins_url( '/res/js/debug.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery', 'jquery-ui-draggable' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
 		wp_register_script( 'shortpixel-tooltip', plugins_url( '/res/js/shortpixel-tooltip.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
@@ -517,7 +515,7 @@ class ShortPixelPlugin {
 	}
 
 	/** This is separated from route to load in head, preventing unstyled content all the time */
-	public function load_admin_scripts( $hook_suffix ) {
+	 public function load_admin_scripts( $hook_suffix ) {
 		global $plugin_page;
 		$screen_id = $this->env()->screen_id;
 
@@ -551,6 +549,7 @@ class ShortPixelPlugin {
 			$this->load_script( 'shortpixel-media' );
 
 			$this->load_style( 'shortpixel-admin' );
+			$this->load_style( 'notices-module');
 		//	$this->load_style( 'shortpixel' );
 
 			if ( $this->env()->is_debug ) {
@@ -575,7 +574,12 @@ class ShortPixelPlugin {
 		elseif ( $this->env()->is_gutenberg_editor === true)
 		{
 			$this->load_script( $load_processor );
-			$this->load_script( 'shortpixel-screen-nolist' ); // screen
+			$this->load_script( 'shortpixel-screen-media' ); // screen
+			$this->load_script( 'shortpixel-media' );
+
+			$this->load_style( 'shortpixel-admin' );
+			$this->load_style( 'notices-module');
+
 		}
 		elseif (true === \wpSPIO()->env()->is_screen_to_use  )
 		{

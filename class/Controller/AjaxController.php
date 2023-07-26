@@ -265,7 +265,7 @@ class AjaxController
 		{
 			  $id = intval($_POST['id']);
 				$mediaItem = $this->getMediaItem($id, 'media');
-
+Log::addTemp("MediaItem in getItemeditWarning -- " . $id, $mediaItem);
 				if (is_object($mediaItem))
 				{
 					$json = new \stdClass;
@@ -273,6 +273,10 @@ class AjaxController
 					$json->is_restorable = ($mediaItem->isRestorable() ) ? 'true' : 'false';
 					$json->is_optimized = ($mediaItem->isOptimized()) ? 'true' : 'false';
 				}
+				else {
+					Log::addTemp('Media Item not object?');
+				}
+			Log::addtemp('ItemEditWarning Response', $json);
 				return $json;
 		}
 
@@ -566,7 +570,7 @@ class AjaxController
               if (! $imageObj->is_virtual())
               {
                 $ret['width'] = $imageObj->get('width');
-                $ret['height']= $imageObj->get('height'); 
+                $ret['height']= $imageObj->get('height');
               }
               else
               {

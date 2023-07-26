@@ -119,6 +119,7 @@
 .shortpixel-popup-info
 {
     display: flex;
+    clear: both;
     label {
       min-width: 30%;
       text-align: right;
@@ -126,36 +127,5 @@
     }
 
     > div { padding-left: 8px; padding-bottom: 8px; }
-
-
-
-}
-
-
-// Support for gallery view (td is annoying)
-// @todo This can probably be removed, replaced for above ^^
-.compat-field-shortpixel-image-optimiser
-{
-		// Don't relative to allow for overlay
-	/*	.field, .sp-column-info, .sp-dropdown  {
-			position: static;
-		}
-		*/
-		.sp-column-actions {
-			max-width: none;
-		}
-		// Don't show optimized thumbs thing at all.
-		.thumb-wrapper {
-			display: none !important;
-		}
-		.sp-dropdown.sp-show
-		{
-			.sp-dropdown-content
-			{
-					display: flex;
-					flex-direction: column;
-					position: relative;
-				}
-		}
 
 }

@@ -12,10 +12,13 @@ use ShortPixel\Controller\QuotaController as QuotaController;
 class AccessModel
 {
 
+  // Instance of class
 	private static $instance;
 
+  // Array of known SPIO Capabilities mapped to WordPress variants
 	private $caps;
 
+  // int  . The current user id
 	private $current_user_id;
 
 
@@ -46,9 +49,11 @@ class AccessModel
 	public static function getInstance()
 	{
 			 if (is_null(self::$instance))
+       {
 			 	 self::$instance = new AccessModel();
+       }
 
-				return self::$instance;
+			return self::$instance;
 	}
 
 	/** Check for allowing a notice

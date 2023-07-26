@@ -61,8 +61,8 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase
 			}
 			else
 			{
-				console.error('handleImage without Result');
-				console.log(resultItem);
+				console.error('handleImage without Result', resultItem);
+				
 			}
 
 			return false;
