@@ -12,6 +12,7 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 abstract class MediaLibraryConverter extends Converter
 {
 	protected $source_url;
+  protected $replacer; // Replacer class Object.
 
 
 	public function getUpdatedMeta()
