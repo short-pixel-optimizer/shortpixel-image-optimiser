@@ -949,6 +949,7 @@ class OptimizeController
 					else {
 						ResponseController::addData($item->item_id, 'message', __('File conversion failed.', 'shortpixel-image-optimiser'));
 						$q->itemFailed($item, true);
+            Log::addError('File conversion failed with data ', $successData);
 						$status = ApiController::STATUS_FAIL;
 					}
 

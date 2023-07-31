@@ -250,11 +250,4 @@ class ApiConverter extends MediaLibraryConverter
 
 		}
 
-
-
-
-
-
-
-
-}
+} // class

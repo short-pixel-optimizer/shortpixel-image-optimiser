@@ -14,6 +14,9 @@ use ShortPixel\Controller\ErrorController as ErrorController;
 
 use ShortPixel\Model\File\FileModel as FileModel;
 
+use ShortPixel\Helper\DownloadHelper as DownloadHelper;
+
+
 // Future contoller for the edit media metabox view.
 class EditMediaViewController extends \ShortPixel\ViewController
 {
@@ -84,6 +87,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
          	$this->view->text = UiHelper::getStatusText($this->imageModel);
           $this->view->list_actions = UiHelper::getListActions($this->imageModel);
+
           if ( count($this->view->list_actions) > 0)
             $this->view->list_actions = UiHelper::renderBurgerList($this->view->list_actions, $this->imageModel);
           else

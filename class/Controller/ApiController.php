@@ -447,12 +447,12 @@ class ApiController
 
 							 if (isset($returnDataList['fileSizes']))
 							 {
-								 $data['fileSize'] = $returnDataList['fileSizes'][$imageName];
+								  $data['fileSize'] = $returnDataList['fileSizes'][$imageName];
 							 }
 
 							 if (! isset($item->files[$imageName]))
 							 {
-							 	$imageList[$imageName] = $this->handleNewSuccess($item, $imageObject, $data);
+							 	  $imageList[$imageName] = $this->handleNewSuccess($item, $imageObject, $data);
 							 }
 							 else {
 							 }
