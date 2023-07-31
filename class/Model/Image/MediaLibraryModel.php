@@ -86,7 +86,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       }
 
 			if ($this->id > 0)
+      {
 			 	$this->loadMeta();
+      }
 
       if (false === $this->isExtensionExcluded())
       {
@@ -350,6 +352,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		{
 			 $this->filesize = $wpmeta['filesize'];
 		}
+
+    // if meta is (mostly) empty and no sizes ( no thumbnails ) and no width, this might not be image, nor processable.
+    if  (is_null($width) && ! isset($wpmeta['sizes']) && true === $this->isExtensionExcluded())
+    {
+        return array();
+    }
+
 
     if (is_null($width) || is_null($height) && ! $this->is_virtual())
     {
@@ -831,6 +840,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           {
             $this->saveMeta();
           }
+
       }
       elseif (is_object($metadata) )
       {
@@ -845,7 +855,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
              {
                 $thumbMeta = new ImageThumbnailMeta();
                 $thumbMeta->fromClass($metadata->thumbnails[$name]); // Load Thumbnail data from our saved Meta in model
-
 
                 $thumbnails[$name]->setMetaObj($thumbMeta);
                 $thumbnails[$name]->verifyImage();
@@ -931,13 +940,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           }
 
       }
-
-      // settings defaults
-      if (is_null($this->getMeta('originalHeight')))
-        $this->setMeta('originalHeight', $this->get('height') );
-
-      if (is_null($this->getMeta('originalWidth')))
-        $this->setMeta('originalWidth', $this->get('width') );
 
 				$this->loadLooseItems();
   }

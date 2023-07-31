@@ -37,7 +37,6 @@ class ErrorController
 					  return;
 				 }
 				 else {
-					 	
 					  ob_clean(); // try to scrub other stuff
 				 		echo '<PRE>' . $error['message'] .  ' in ' . $error['file']  . ' on line ' . $error['line'] . '<br> Last Item ID: ' . OptimizeController::getLastId() . '</PRE>';
 						exit(' <small><br> -Shortpixel Error Handler- </small>');

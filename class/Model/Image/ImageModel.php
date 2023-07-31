@@ -127,6 +127,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     protected function verifyImage()
     {
 
+Log::addTEmp('VerifyImage ' . $this->name);
       // Only get data from Image if not yet set in metadata.
       if (is_null($this->getMeta('originalWidth')))
         $this->setMeta('originalWidth', $this->get('width'));
@@ -166,9 +167,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
           $this->height = $height;
          }
       }
-      else {
-        Log::addWarn('Set Image Size called, but not executed ' . $this->getFullPath(), debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10));
-      }
+
 
     }
     /* Check if an image in theory could be processed. Check only exclusions, don't check status etc */
