@@ -223,7 +223,7 @@ class FrontImage
 						$sizeOutput = $this->dataTags['sizes'] . 'sizes="' . $this->sizes . '"';
 				}
 
-			  $output = '<source ' . $prefix . 'srcset="' . $srcset . '"' . $sizeOutput . ' type="image/' . $fileFormat . '">';
+			  $output = '<source ' . $prefix . 'srcset="' . $srcset . '" ' . $sizeOutput . ' type="image/' . $fileFormat . '">';
 
 				return $output;
 		}
