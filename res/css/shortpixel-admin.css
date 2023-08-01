@@ -325,15 +325,22 @@ th.sorted.column-wp-shortPixel a {
 .shortpixel-popup-info {
   display: flex;
   clear: both;
+  border-top: 1px solid #dcdcde;
+  margin: 12px 0;
 }
 .shortpixel-popup-info label {
   min-width: 30%;
   text-align: right;
   margin-right: 4%;
+  padding-top: 4px;
 }
 .shortpixel-popup-info > div {
   padding-left: 8px;
   padding-bottom: 8px;
+}
+
+.edit-attachment-frame .shortpixel-popup-info {
+  border: 0;
 }
 
 div.sp-modal-shade {

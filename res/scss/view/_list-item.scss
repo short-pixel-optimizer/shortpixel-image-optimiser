@@ -120,12 +120,23 @@
 {
     display: flex;
     clear: both;
+    border-top: 1px solid #dcdcde;
+    margin: 12px 0;
+  //  float: left;
+  //  width: 100%;
+
     label {
       min-width: 30%;
       text-align: right;
       margin-right: 4%;
+      padding-top: 4px;
     }
 
     > div { padding-left: 8px; padding-bottom: 8px; }
 
+}
+
+.edit-attachment-frame .shortpixel-popup-info
+{
+    border: 0;
 }
