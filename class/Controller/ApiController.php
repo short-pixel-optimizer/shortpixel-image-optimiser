@@ -41,6 +41,7 @@ class ApiController
     const ERR_POSTMETA_CORRUPT = -909;
     const ERR_UNKNOWN = -999;
 
+
     const DOWNLOAD_ARCHIVE = 7;
 
     private static $instance;
@@ -57,7 +58,6 @@ class ApiController
       $this->apiEndPoint = $settings->httpProto . '://' . SHORTPIXEL_API . '/v2/reducer.php';
       $this->apiDumpEndPoint = $settings->httpProto . '://' . SHORTPIXEL_API . '/v2/cleanup.php';
     }
-
 
   public static function getInstance()
   {
@@ -445,14 +445,15 @@ class ApiController
 								 'imageName' => $imageName,
 							 );
 
-							 if (isset($returnDataList['fileSizes']))
+               // Filesize might not be present, but also imageName ( only if smartcrop is done, might differ per image)
+							 if (isset($returnDataList['fileSizes']) && isset($returnDataList['fileSizes'][$imageName]))
 							 {
-								 $data['fileSize'] = $returnDataList['fileSizes'][$imageName];
+								  $data['fileSize'] = $returnDataList['fileSizes'][$imageName];
 							 }
 
 							 if (! isset($item->files[$imageName]))
 							 {
-							 	$imageList[$imageName] = $this->handleNewSuccess($item, $imageObject, $data);
+							 	  $imageList[$imageName] = $this->handleNewSuccess($item, $imageObject, $data);
 							 }
 							 else {
 							 }
@@ -572,8 +573,16 @@ class ApiController
 			$fileType = ($compressionType > 0) ? 'LossyURL' : 'LosslessURL';
 			$fileSize = ($compressionType > 0) ? 'LossySize' : 'LosslessSize';
 
-			$image['image']['url'] = $fileData->$fileType;
-			$image['image']['optimizedSize']  = intval($fileData->$fileSize);
+      // if originalURL and OptimizedURL is the same, API is returning it as the same item, aka not optimized.
+      if ($fileData->$fileType === $fileData->OriginalURL)
+      {
+        $image['image']['status'] = self::STATUS_UNCHANGED;
+      }
+      else
+      {
+        $image['image']['url'] = $fileData->$fileType;
+  			$image['image']['optimizedSize']  = intval($fileData->$fileSize);
+      }
 
 			// Don't download if the originalSize / OptimizedSize is the same ( same image ) . This can be non-opt result or it was not asked to be optimized( webp/avif only job i.e. )
 			if ($image['image']['originalSize'] == $image['image']['optimizedSize'])

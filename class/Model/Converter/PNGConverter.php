@@ -106,7 +106,6 @@ class PNGConverter extends MediaLibraryConverter
 
 			 $fs = \wpSPIO()->filesystem();
 
-
 			 $defaults = array(
 				 	'runReplacer' => true, // The replacer doesn't need running when the file is just uploaded and doing in handle upload hook.
 			 );
@@ -136,7 +135,6 @@ class PNGConverter extends MediaLibraryConverter
 			 }
 
 			 $args = wp_parse_args($args, $defaults);
-
 
 			 if ($this->forceConvertTransparent === false && $this->isTransparent())
 			 {
@@ -205,7 +203,7 @@ class PNGConverter extends MediaLibraryConverter
 			}
 			if (! is_int($height) && ! $height > 0)
 			{
-				 $height = imagesx($img);
+				 $height = imagesy($img);
 			}
 
 			Log::addDebug("PNG2JPG doConvert width $width height $height", memory_get_usage());
@@ -244,9 +242,8 @@ class PNGConverter extends MediaLibraryConverter
 			}
 
 			// check old filename, replace with uniqued filename.
-			// @todo Probably not needed anymore
-		//	$newUrl = str_replace($filename, $uniqueFile->getFileName(), $url);
 
+      /** Quality is set to 90 and not using WP defaults (or filter) for good reason. Lower settings very quickly degrade the libraries output quality.  Better to leave this hardcoded at 90 and let the Shortpixel API handle the optimization **/
 			if ($bool = imagejpeg($bg, $replacementPath, 90)) {
 					Log::addDebug("PNG2JPG doConvert created JPEG at $replacementPath");
 					$newSize = filesize($replacementPath); // This might invoke wrapper but ok
@@ -256,7 +253,7 @@ class PNGConverter extends MediaLibraryConverter
 						 $origSize = $this->virtual_filesize;
 					}
 					else {
-						$origSize = $this->imageModel->getFileSize();						
+						$origSize = $this->imageModel->getFileSize();
 					}
 
 					// Reload the file we just wrote.
@@ -399,7 +396,7 @@ class PNGConverter extends MediaLibraryConverter
 				if (is_object($tempFile))
 				{
 					 $imagePath = $tempFile->getFullPath();
-					 	$this->virtual_filesize = $tempFile->getFileSize();
+					 $this->virtual_filesize = $tempFile->getFileSize();
 				}
 			}
 

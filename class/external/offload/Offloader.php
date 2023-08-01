@@ -56,8 +56,12 @@ class Offloader
 					 $this->offloadName = 's3-uploads-human';
 					 return true;
 				}
-
-
+/* (Doesn't work)
+				elseif (function_exists('ud_check_stateless_media'))
+				{
+					 $this->offloadName = 'wp-stateless';
+					 return true;
+				} */
 				return false;
 		}
 
@@ -70,7 +74,7 @@ class Offloader
 						  self::$offload_instance = new wpOffload($as3cf);
 					}
 					else {
-						  Log::addError('Instance is not null - other virtual component has loaded!');
+						  Log::addError('Instance is not null - other virtual component has loaded! (' . $this->offloadName . ')');
 					}
 		}
 

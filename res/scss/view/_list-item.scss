@@ -115,30 +115,28 @@
   }
 }
 
-
-// Support for gallery view (td is annoying)
-.compat-field-shortpixel-image-optimiser
+/** Style for Grid view popups */
+.shortpixel-popup-info
 {
-		// Don't relative to allow for overlay
-	/*	.field, .sp-column-info, .sp-dropdown  {
-			position: static;
-		}
-		*/
-		.sp-column-actions {
-			max-width: none;
-		}
-		// Don't show optimized thumbs thing at all.
-		.thumb-wrapper {
-			display: none !important;
-		}
-		.sp-dropdown.sp-show
-		{
-			.sp-dropdown-content
-			{
-					display: flex;
-					flex-direction: column;
-					position: relative;
-				}
-		}
+    display: flex;
+    clear: both;
+    border-top: 1px solid #dcdcde;
+    margin: 12px 0;
+  //  float: left;
+  //  width: 100%;
 
+    label {
+      min-width: 30%;
+      text-align: right;
+      margin-right: 4%;
+      padding-top: 4px;
+    }
+
+    > div { padding-left: 8px; padding-bottom: 8px; }
+
+}
+
+.edit-attachment-frame .shortpixel-popup-info
+{
+    border: 0;
 }

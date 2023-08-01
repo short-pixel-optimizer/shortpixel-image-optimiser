@@ -1,19 +1,20 @@
 <?php
 namespace ShortPixel\Model\Image;
 
+use ShortPixel\Helper\DownloadHelper as DownloadHelper;
+
+
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
-use \Shortpixel\Model\File\FileModel as FileModel;
+use \ShortPixel\Model\File\FileModel as FileModel;
 
 // Represent a thumbnail image / limited image in mediaLibrary.
 class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 {
-  //abstract protected function saveMeta();
-  //abstract protected function loadMeta();
 
   public $name;
 
@@ -24,7 +25,8 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
   protected $is_main_file = false;
 	protected $is_retina = false; // diffentiate from thumbnail / retina.
   protected $id; // this is the parent attachment id
-  protected $size; // size of image in WP, if applicable.
+  protected $size; // size name of image in WP, if applicable.
+  protected $sizeDefinition; // size width / height / crop according to WordPress
 
   public function __construct($path, $id, $size)
   {
@@ -34,19 +36,16 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
         $this->id = $id;
 				$this->imageType = self::IMAGE_TYPE_THUMB;
         $this->size = $size;
-        $this->setWebp();
-        $this->setAvif();
+
   }
 
 
   protected function loadMeta()
   {
-
   }
 
   protected function saveMeta()
   {
-
   }
 
   public function __debugInfo() {
@@ -55,8 +54,11 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
       'name' => $this->name,
       'path' => $this->getFullPath(),
 			'size' => $this->size,
+      'width' => $this->get('width'),
+      'height' => $this->get('height'),
       'exists' => ($this->exists()) ? 'yes' : 'no',
-      'is_virtual' => ($this->is_virtual()) ? 'yes' : 'no', 
+      'is_virtual' => ($this->is_virtual()) ? 'yes' : 'no',
+      'wordpress_size' => $this->sizeDefinition,
 
     );
   }
@@ -65,6 +67,11 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
   public function setName($name)
   {
      $this->name = $name;
+  }
+
+  public function setSizeDefinition($sizedef)
+  {
+      $this->sizeDefinition = $sizedef;
   }
 
 	public function setImageType($type)
@@ -110,8 +117,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
       return false;
   }
 
-
-
   public function isFileTypeNeeded($type = 'webp')
   {
       // pdf extension can be optimized, but don't come with these filetypes
@@ -130,7 +135,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
       else
         return false;
   }
-
 
 	// @param FileDelete can be false. I.e. multilang duplicates might need removal of metadata, but not images.
   public function onDelete($fileDelete = true)
@@ -253,7 +257,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 					 return $name;
 				}
 			}
-
 
 			return parent::getBackupFileName();
 	}
@@ -395,7 +398,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 	{
 			global $wpdb;
 
-
 			$sql = 'SELECT id FROM ' . $wpdb->prefix . 'shortpixel_postmeta WHERE attach_id = %d AND size = %s';
 			$sql = $wpdb->prepare($sql, $this->id, $this->size);
 
@@ -516,17 +518,39 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 			$result = false;
 			if ($this->virtual_status == self::$VIRTUAL_REMOTE)
 			{
-      	$result = $fs->downloadFile($this->getURL(), $filepath); // download remote file for backup.
+          // filepath is translated. Check if this exists as a local copy, if not remotely download.
+        if ($filepath !== $this->getFullPath())
+        {
+            $fileObj = $fs->getFile($filepath);
+            $fileExists = $fileObj->exists();
+        }
+        else {
+           $fileExists = false;
+        }
+
+        if (false === $fileExists)
+        {
+            $downloadHelper = DownloadHelper::getInstance();
+            $url = $this->getURL();
+            $result = $downloadHelper->downloadFile($url, array('destinationPath' => $filepath));
+        }
+
 			}
 			elseif ($this->virtual_status == self::$VIRTUAL_STATELESS)
 			{
 				 $result = $filepath;
 			}
+      else {
+        Log::addWarning('Virtual Status not set. Trying to blindly download vv DownloadHelper');
+        $downloadHelper = DownloadHelper::getInstance();
+        $url = $this->getURL();
+        $result = $downloadHelper->downloadFile($url, array('destinationPath' => $filepath));
+      }
 
       if ($result == false)
       {
         $this->preventNextTry(__('Fatal Issue: Remote virtual file could not be downloaded for backup', 'shortpixel-image-optimiser'));
-        Log::addError('Remote file download failed to: ' . $filepath, $this->getURL());
+        Log::addError('Remote file download failed from : ' . $url . ' to: ' . $filepath, $this->getURL());
         $this->error_message = __('Remote file could not be downloaded' . $this->getFullPath(), 'shortpixel-image-optimiser');
 
         return false;
@@ -536,16 +560,6 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
     }
 
     return parent::createBackup();
-
-  }
-
-  private function setVirtualToReal($fullpath)
-  {
-    $this->resetStatus();
-    $this->fullpath = $fullpath;
-    $this->directory = null; //reset directory
-    $this->is_virtual = false; // stops being virtual
-    $this->setFileInfo();
   }
 
 	// @todo This is a breach of pattern to realize checking for changes to the main image path on conversion / duplicates.
@@ -554,10 +568,5 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 			$fs = \wpSPIO()->filesystem();
 			return $fs->getMediaImage($this->id, true, true);
 	}
-
-
-
-
-
 
 } // class

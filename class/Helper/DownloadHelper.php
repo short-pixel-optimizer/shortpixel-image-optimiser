@@ -39,52 +39,129 @@ class DownloadHelper
 			{
 					$defaults = array(
 						'expectedSize' => null,
-
+            'destinationPath' => null,
 					);
+
 					$args = wp_parse_args($args, $defaults);
+          $success = false;
 
 					Log::addDebug('Downloading file :' . $url, $args);
 
-					$fileURL = $this->setPreferredProtocol(urldecode($url));
+          $methods = array(
+              "download_url" => array(array($this, 'downloadURLMethod'), $url, false),
+              "download_url_force" => array(array($this, 'downloadURLMethod'), true),
+              "remote_get" => array(array($this, 'remoteGetMethod'), $url)
+          );
 
-					$downloadTimeout = max(ini_get('max_execution_time') - 10, 15);
-					$tempFile = \download_url($fileURL, $downloadTimeout);
+          foreach($methods as $name => $data)
+          {
+             $function = $data[0];
+             if (is_callable($function))
+             {
+                $result = call_user_func_array($function, array_slice($data, 1) );
 
-		      Log::addInfo(' Download ' . $fileURL . ' to : '. json_encode($tempFile) . '  (timeout: )' . $downloadTimeout);
+                if (false !== $result)
+                {
+                   $tempFile = $result;
+                   $success = true;
+                   break;
+                }
+             }
+          }
 
-					if(is_wp_error( $tempFile ))
-		      { //try to switch the default protocol
-		          $fileURL = $this->setPreferredProtocol(urldecode($fileURL), true); //force recheck of the protocol
-		          $tempFile = \download_url($fileURL, $downloadTimeout);
-		      }
-
-					if (is_wp_error($tempFile))
+					if (false === $success)
 					{
-						//get_temp_dir
-						$tmpfname = tempnam(get_temp_dir(), 'spiotmp');
-
-						$args_for_get = array(
-							'stream' => true,
-							'filename' => $tmpfname,
-							'timeout' => $downloadTimeout,
-						);
-
-						$tempFile = wp_remote_get( $url, $args_for_get );
-					}
-
-					if (is_wp_error($tempFile))
-					{
-						Log::addError('Failed to download File', $tempFile);
+						Log::addError('Failed to download File', $result);
 						ResponseController::addData('is_error', true);
-						Responsecontroller::addData('message', $tempFile->get_error_message());
+						//Responsecontroller::addData('message', $tempFile->get_error_message());
 						return false;
 					}
 
 					$fs = \wpSPIO()->filesystem();
 					$file = $fs->getFile($tempFile);
 
+          if (! is_null($args['destinationPath']))
+          {
+             $result = $this->moveDownload($file, $args['destinationPath']);
+             if (false === $result)
+             {
+               Log::addError('Failed to move Download', $args);
+               ResponseController::addData('is_error', true);
+               Responsecontroller::addData('message', __('Failed to move download to destination!', 'shortpixel-image-optimiser'));
+               return false;
+             }
+             else {
+               $file = $result;
+             }
+          }
+
 					return $file;
 			}
+
+      protected function moveDownload($fileObj, $destinationPath)
+      {
+          $fs = \wpSPIO()->filesystem();
+
+          $destinationFile = $fs->getFile($destinationPath);
+          // If file is non-existing, check directory and write-permissions.
+          if (false == $destinationFile->exists())
+          {
+            $dirObj =  $destinationFile->getFileDir();
+            $dirObj->check(true);
+          }
+
+          $result = $fileObj->copy($destinationFile);
+
+          if ($result === false)
+            return false;
+
+          return $destinationFile;
+
+      }
+
+      private function downloadURLMethod($url, $force = false)
+      {
+        $downloadTimeout = max(ini_get('max_execution_time') - 10, 15);
+
+        $url = $this->setPreferredProtocol(urldecode($url), $force);
+        $tempFile = \download_url($url, $downloadTimeout);
+
+        if (is_wp_error($tempFile))
+        {
+           Log::addError('Failed to Download File ', $tempFile);
+           Responsecontroller::addData('message', $tempFile->get_error_message());
+
+           return false;
+        }
+
+        return $tempFile;
+      }
+
+      private function remoteGetMethod($url)
+      {
+            //get_temp_dir
+            $tmpfname = tempnam(get_temp_dir(), 'spiotmp');
+            $downloadTimeout = max(ini_get('max_execution_time') - 10, 15);
+
+            $args_for_get = array(
+              'stream' => true,
+              'filename' => $tmpfname,
+              'timeout' => $downloadTimeout,
+            );
+
+            $response = wp_remote_get( $url, $args_for_get );
+
+            if (wp_remote_retrieve_response_code($response) == 200 && isset($response['filename']))
+            {
+                $filepath = $response['filename'];
+                return $filepath; // body is the full image is all went well.
+            }
+            else {
+               Log::addError('Wp Remote Get failed', $response);
+            }
+
+            return false;
+      }
 
 			private function setPreferredProtocol($url, $reset = false) {
 		      //switch protocol based on the formerly detected working protocol

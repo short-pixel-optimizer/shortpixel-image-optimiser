@@ -356,7 +356,6 @@ abstract class Queue
 
 			if ($this->isCustomOperation())
 			{
-          Log::addTemp('Custom opreation detected', $this->getCustomDataItem('customOperation'));
 					  $stats->customOperation = $this->getCustomDataItem('customOperation');
             $stats->isCustomOperation = '10'; // numeric value for the bulk JS
 			}
@@ -375,7 +374,6 @@ abstract class Queue
         $stats->images = $this->countQueue();
       }
 
-      Log::addTemp('Stats', $stats);
       return $stats;
     }
 
@@ -500,17 +498,12 @@ abstract class Queue
     // The 'avif / webp left imp. is commented out since both API / and OptimizeController don't play well with this.
     protected function imageModelToQueue(ImageModel $imageModel)
     {
-      //  $settings = \wpSPIO()->settings();
         $item = new \stdClass;
         $item->compressionType = \wpSPIO()->settings()->compressionType;
 
-//        $urls = $imageModel->getOptimizeUrls();
 				$data = $imageModel->getOptimizeData();
 				$urls = $data['urls'];
 				$params = $data['params'];
-
-		//		$imagePreview = UIHelper::findBestPreview($imageModel, 800, true);
-		//		$imagePreviewURL = (is_object($imagePreview)) ? $imagePreview->getURL() : false;
 
 				list($u, $baseCount) = $imageModel->getCountOptimizeData('thumbnails');
 				list($u, $webpCount) = $imageModel->getCountOptimizeData('webp');
@@ -562,8 +555,6 @@ abstract class Queue
 						}
 				}
 
-				//$converter =
-				// @todo Adapt this.
 				$converter = Converter::getConverter($imageModel, true);
 
 				if ($baseCount > 0 && is_object($converter) && $converter->isConvertable())

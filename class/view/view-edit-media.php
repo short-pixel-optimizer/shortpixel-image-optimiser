@@ -6,7 +6,6 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 ?>
-
 <div id='sp-msg-<?php echo( esc_attr($view->id) );?>' class='column-wp-shortPixel view-edit-media'>
 <?php // Debug Data
 if (! is_null($view->debugInfo) && is_array($view->debugInfo) && count($view->debugInfo) > 0 ):  ?>

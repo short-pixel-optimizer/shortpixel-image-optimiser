@@ -30,7 +30,7 @@ $approx = $this->view->approx;
            </span>
          </div>
 				 <div class='loading skip'>
-					 <span><p><button class='button' data-action="SkipPreparing"><?php _e('Start optimization now', 'shortpixel-image-optimiser'); ?></button></p>
+					 <span><p><button class='button' data-action="SkipPreparing"><?php _e('Start now', 'shortpixel-image-optimiser'); ?></button></p>
 
 					 </span>
 					 <span>

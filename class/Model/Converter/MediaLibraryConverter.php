@@ -8,9 +8,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 use ShortPixel\Replacer\Replacer as Replacer;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
+/* Abstract base to use for image converters. Handles media library related functions ( replacing )  */
 abstract class MediaLibraryConverter extends Converter
 {
 	protected $source_url;
+  protected $replacer; // Replacer class Object.
 
 
 	public function getUpdatedMeta()

@@ -1,7 +1,7 @@
 <?php
 namespace ShortPixel\External\Offload;
 
-use Shortpixel\Model\File\FileModel as FileModel;
+use ShortPixel\Model\File\FileModel as FileModel;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
@@ -114,7 +114,6 @@ class wpOffload
      // add_filter('shortpixel_webp_image_base', array($this, 'checkWebpRemotePath'), 10, 2);
       add_filter('shortpixel/front/webp_notfound', array($this, 'fixWebpRemotePath'), 10, 4);
 
-
 			// Fix for updating source paths when converting
 			add_action('shortpixel/image/convertpng2jpg_success', array($this, 'updateOriginalPath'));
     }
@@ -180,7 +179,7 @@ class wpOffload
       // If there are excluded sizes, there are not in backups. might not be left on remote, or ( if delete ) on server, so just generate the images and move them.
       $mediaItem->wpCreateImageSizes();
 
-      $this->remove_remote($id);
+      $result = $this->remove_remote($id);
       $this->image_upload($mediaItem);
     }
 
@@ -197,6 +196,7 @@ class wpOffload
 				$itemHandler = $this->as3cf->get_item_handler($remove);
 
 				$result = $itemHandler->handle($a3cfItem, array( 'verify_exists_on_local' => false)); //handle it then.
+				return $result;
     }
 
 
@@ -243,20 +243,22 @@ class wpOffload
     {
 
 			$source_id = $this->sourceCache($url);
-
 			$orig_url = $url;
 
 			if (is_null($source_id))
 			{
 				$extension = substr($url, strrpos($url, '.') + 1);
-				// If these filetypes are not in the cache, they cannot be found via geSourceyIDByUrl method ( not in path DB ), so it's pointless to try. If they are offloaded, at some point the extra-info might load.
 
+				// If these filetypes are not in the cache, they cannot be found via geSourceyIDByUrl method ( not in path DB ), so it's pointless to try. If they are offloaded, at some point the extra-info might load.
 				if ($extension == 'webp' || $extension == 'avif')
 				{
 					return false;
 				}
 
      		$source_id = $this->getSourceIDByURL($url);
+
+			}
+			else {
 			}
 
       if ($source_id !== false)
@@ -264,7 +266,9 @@ class wpOffload
         return FileModel::$VIRTUAL_REMOTE;
 			}
       else
+			{
         return false;
+			}
     }
 
     protected function getSourceIDByURL($url)
@@ -295,6 +299,8 @@ class wpOffload
 				if(is_null($source_id))
 				{
       		$source = $class::get_item_source_by_remote_url($url);
+					$source2 = $class::get_item_source_by_remote_url($raw_url);
+
 					$source_id = isset($source['id']) ? intval($source['id']) : null;
 				}
 				else {
@@ -371,6 +377,7 @@ class wpOffload
 				if (is_object($item) && method_exists($item, 'extra_info'))
 				{
 					$baseUrl = str_replace(basename($url),'', $url);
+					//$rawBaseUrl =
 					$extra_info = $item->extra_info();
 
 					if (isset($extra_info['objects']))
@@ -385,11 +392,9 @@ class wpOffload
 						}
 					}
 				}
-
-				return $source_id;
 			}
 
-      return false;
+      return $source_id;
     }
 
 		// @param s3 based URL that which is needed for finding local path
@@ -436,17 +441,20 @@ class wpOffload
 
     public function image_upload($mediaLibraryObject)
     {
-        if (! $this->offloading)
-				{
-				  return false;
-				}
+				$id = $mediaLibraryObject->get('id');
+				$a3cfItem = $this->getItemById($id);
+
 				// Only medialibrary offloading supported.
 				if ('media' !== $mediaLibraryObject->get('type') )
 				{
 					 return false;
 				}
 
-				$id = $mediaLibraryObject->get('id');
+				if ( false === $a3cfItem)
+				{
+					 return false;
+				}
+
         $item = $this->getItemById($id, true);
 
         if ( $item === false && ! $this->as3cf->get_setting( 'copy-to-s3' ) ) {
@@ -459,13 +467,10 @@ class wpOffload
 					$this->shouldPrevent = false;
 
 					// The Handler doesn't work properly /w local removal if not the exact correct files are passed (?) . Offload does this probably via update metadata function, so let them sort it out with this . (until it breaks)
-
 					$meta = wp_get_attachment_metadata($id);
-
 					wp_update_attachment_metadata($id, $meta);
 
 					$this->shouldPrevent = true;
-
     }
 
 

@@ -1,7 +1,7 @@
 <?php
 namespace ShortPixel\External\Offload;
 
-use Shortpixel\Model\File\FileModel as FileModel;
+use ShortPixel\Model\File\FileModel as FileModel;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
@@ -32,7 +32,6 @@ class VirtualFileSystem
 			 if ($offloadName = 's3-uploads-human')
 			 {
 				 return FileModel::$VIRTUAL_STATELESS;
-//				  return true;
 			 }
 
 			 if (file_exists($url))

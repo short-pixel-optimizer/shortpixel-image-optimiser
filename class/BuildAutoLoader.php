@@ -1,10 +1,6 @@
 <?php
 namespace ShortPixel;
 
-if ( ! defined( 'ABSPATH' ) ) {
- exit; // Exit if accessed directly.
-}
-
 class BuildAutoLoader
 {
 
@@ -36,7 +32,6 @@ class BuildAutoLoader
       // 'class/wp-short-pixel.php',
        'class/wp-shortpixel-settings.php',
       // 'class/view/shortpixel_view.php',
-       'class/shortpixel-png2jpg.php',
        'class/front/img-to-picture-webp.php',
     );
 
@@ -62,6 +57,7 @@ class BuildAutoLoader
 			'class/external/uncode.php',
 			'class/external/query-monitor.php',
 			'class/external/Woocommerce.php',
+      'class/external/themes/total-theme.php',
     );
 
     echo "Build Plugin.JSON ";

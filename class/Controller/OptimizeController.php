@@ -242,7 +242,7 @@ class OptimizeController
 				$now = function_exists('wp_date') ? wp_date( 'U', time() ) : time();
 
 				// Reset the whole thing after that.
-				$mediaItem = $fs->getImage($item_id, $mediaItem->get('type'));
+				$mediaItem = $fs->getImage($item_id, $mediaItem->get('type'), false);
 
 				// Dump this item from server if optimized in the last hour, since it can still be server-side cached.
 				if ( ( $now   - $optimized) < HOUR_IN_SECONDS )
@@ -949,6 +949,7 @@ class OptimizeController
 					else {
 						ResponseController::addData($item->item_id, 'message', __('File conversion failed.', 'shortpixel-image-optimiser'));
 						$q->itemFailed($item, true);
+            Log::addError('File conversion failed with data ', $successData);
 						$status = ApiController::STATUS_FAIL;
 					}
 

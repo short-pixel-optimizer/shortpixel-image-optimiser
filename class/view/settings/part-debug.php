@@ -1,8 +1,8 @@
 <?php
 namespace ShortPixel;
 use ShortPixel\Notices\NoticeController as NoticeController;
-use Shortpixel\Controller\StatsController as StatsController;
-use Shortpixel\Controller\OptimizeController as OptimizeController;
+use ShortPixel\Controller\StatsController as StatsController;
+use ShortPixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
 
 if ( ! defined( 'ABSPATH' ) ) {

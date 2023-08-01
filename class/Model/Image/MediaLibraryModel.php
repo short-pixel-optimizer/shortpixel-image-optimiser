@@ -6,7 +6,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-use \ShortPixel\ShortPixelPng2Jpg as ShortPixelPng2Jpg;
 use ShortPixel\Controller\ResponseController as ResponseController;
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
@@ -87,7 +86,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       }
 
 			if ($this->id > 0)
+      {
 			 	$this->loadMeta();
+      }
 
       if (false === $this->isExtensionExcluded())
       {
@@ -119,6 +120,14 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$settings = \wpSPIO()->settings();
 		$url = $this->getURL();
 
+    if ($this->hasOriginal())
+    {
+       $main_url = $this->getOriginalFile()->getUrl();
+    }
+    else {
+      $main_url = $url;
+    }
+
 		 if (! $url) // If the whole image URL can't be found
 		 {
 			return $parameters;
@@ -133,18 +142,22 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		 }
 		 $paramListArgs['smartcrop'] = $isSmartCrop;
+     $paramListArgs['url'] = $url;
+     $paramListArgs['main_url'] = $main_url;
 
 		 $doubles = array(); // check via hash if same command / result is there.
 
      if ($this->isProcessable(true) || ($this->isProcessableAnyFileType() && $this->isOptimized()) )
 		 {
 				$paramList = $this->createParamList($paramListArgs);
-				$parameters['urls'][$this->mainImageKey] = $url;
+				$parameters['urls'][$this->mainImageKey] = $paramList['url'];
 				$parameters['paths'][$this->mainImageKey] = $this->getFullPath();
 				$parameters['params'][$this->mainImageKey] = $paramList;
 				$parameters['returnParams']['sizes'][$this->mainImageKey] = $this->getFileName();
 
-				if ($isSmartCrop )
+        // If top URL is used, include filesize information
+
+				if ($paramList['url'] !== $paramListArgs['url']  )
 				{
 					 $parameters['returnParams']['fileSizes'][$this->mainImageKey] = $this->getFileSize();
 				}
@@ -162,12 +175,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			 if ($thumbObj->isThumbnailProcessable() || ($thumbObj->isProcessableAnyFileType() && $thumbObj->isOptimized()) )
 			 {
 
-				 if (! $isSmartCrop)
-				 {
 				 	$url = $thumbObj->getURL();
-			   }
+          $paramListArgs['url'] = $url;
+          $paramListArgs['main_url'] = $main_url;
 
 				 $paramList = $thumbObj->createParamList($paramListArgs);
+         $url = $paramList['url']; // createParamList also decides on URL.
 				 $hash = md5( serialize($paramList) . $url); // Hash the paramlist + url to find identical results.
 
 // This thing fly to sep function? Retutrn liast  duplicat/double name => name
@@ -211,7 +224,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					 $parameters['paths'][$name] =  $thumbObj->getFullPath();
 					 $parameters['params'][$name] = $paramList;
 					 $parameters['returnParams']['sizes'][$name] = $thumbObj->getFileName();
-					 if ($isSmartCrop)
+					 if ($paramList['url'] !== $paramListArgs['url'])
 					 {
 							$parameters['returnParams']['fileSizes'][$name] = $thumbObj->getFileSize();
 					 }
@@ -310,6 +323,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   protected function loadThumbnailsFromWP()
   {
     $wpmeta = $this->getWPMetaData();
+    $wpImageSizes = UtilHelper::getWordPressImageSizes();
+
     $width = null; $height = null;
 
     if (! isset($wpmeta['width']))
@@ -338,6 +353,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			 $this->filesize = $wpmeta['filesize'];
 		}
 
+    // if meta is (mostly) empty and no sizes ( no thumbnails ) and no width, this might not be image, nor processable.
+    if  (is_null($width) && ! isset($wpmeta['sizes']) && true === $this->isExtensionExcluded())
+    {
+        return array();
+    }
+
+
     if (is_null($width) || is_null($height) && ! $this->is_virtual())
     {
        $width = (is_null($width)) ? $this->get('width') : $width;
@@ -346,12 +368,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		$this->width = $width;
 		$this->height = $height;
-
-    if (is_null($this->getMeta('originalWidth')))
-      $this->setMeta('originalWidth',$width);
-
-    if (is_null($this->getMeta('originalWidth')))
-			$this->setMeta('originalHeight',$height);
 
 
     $thumbnails = array();
@@ -372,6 +388,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 							 $thumbObj->width = $width;
 							 $thumbObj->height = $height;
+
+               if (isset($wpImageSizes[$name]))
+               {
+                  $thumbObj->setSizeDefinition($wpImageSizes[$name]);
+               }
 
 							 if (isset($data['filesize']))
 							 	$thumbObj->filesize = $data['filesize'];
@@ -519,7 +540,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       }
 
       return $count;
-
   }
 
   public function handleOptimized($optimizeData, $args = array())
@@ -819,8 +839,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
           if ($result)
           {
             $this->saveMeta();
-						//$metadata = $this->GetDbMeta();
           }
+
       }
       elseif (is_object($metadata) )
       {
@@ -836,19 +856,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
                 $thumbMeta = new ImageThumbnailMeta();
                 $thumbMeta->fromClass($metadata->thumbnails[$name]); // Load Thumbnail data from our saved Meta in model
 
-                // Only get data from WordPress meta if we don't have that yet.
-
-                if (is_null($thumbMeta->originalWidth))
-                  $thumbObj->setMeta('originalWidth', $thumbObj->get('width'));
-
-                if (is_null($thumbMeta->originalHeight))
-                  $thumbObj->setMeta('originalHeight', $thumbObj->get('height'));
-
-                if (is_null($thumbMeta->tsAdded))
-                  $thumbObj->setMeta('tsAdded', time());
-
                 $thumbnails[$name]->setMetaObj($thumbMeta);
+                $thumbnails[$name]->verifyImage();
                 unset($metadata->thumbnails[$name]);
+
              }
           }
 
@@ -869,6 +880,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
                $newMeta->fromClass($thumbMeta);
                $thumbObj->setMetaObj($newMeta);
                $thumbObj->setName($name);
+               $thumbObj->verifyImage();
 
                if ($thumbObj->exists()) // if we exist.
                {
@@ -894,6 +906,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 										$retinaObj->setName($name);
 										$retinaObj->setImageType(self::IMAGE_TYPE_RETINA);
 										$retinaObj->is_retina = true;
+                    $retinaObj->verifyImage();
 
                     $this->retinas[$name] = $retinaObj;
                   }
@@ -912,18 +925,21 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						}
             $orFile->setMetaObj($orMeta);
 						$orFile->setName($this->originalImageKey);
+            $orFile->verifyImage();
             $this->original_file = $orFile;
           }
 
+          // New! @todo Move check functions to this, to check upon load and not randomly around
+          $this->verifyImage();
+
+          // If anything changed during load, and this is stored ( ie optimized ) images, update changes.
+          if (true === $this->didAnyRecordChange() && ! is_null($this->getMeta('databaseID')))
+          {
+              $this->saveMeta();
+              $this->resetRecordChanges();
+          }
 
       }
-
-      // settings defaults
-      if (is_null($this->getMeta('originalHeight')))
-        $this->setMeta('originalHeight', $this->get('height') );
-
-      if (is_null($this->getMeta('originalWidth')))
-        $this->setMeta('originalWidth', $this->get('width') );
 
 				$this->loadLooseItems();
   }
@@ -1239,10 +1255,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
  public function saveMeta()
  {
-	   global $wpdb;
-
+	 //  global $wpdb;
 		 $this->saveDBMeta();
-
   }
 
   /** Delete the ShortPixel Meta. */
@@ -1354,6 +1368,39 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 						$this->dropFromQueue();
 				}
 			} */
+  }
+
+  /* Check if the metadata of this image has changed or not since load. */
+  protected function didAnyRecordChange()
+  {
+      if (true === $this->didRecordChange())
+      {
+         return true;
+      }
+
+      $thumbObjs = $this->getThumbObjects();
+      foreach($thumbObjs as $thumbObj)
+      {
+         if (true === $thumbObj->didRecordChange())
+         {
+            return true;
+         }
+         else {
+         }
+      }
+
+      return false;
+  }
+
+  protected function resetRecordChanges()
+  {
+     $this->recordChanged(false);
+
+     $thumbObjs = $this->getThumbObjects();
+     foreach($thumbObjs as $thumbObj)
+     {
+        $thumbObj->recordChanged(false);
+     }
   }
 
 	public function dropFromQueue()
@@ -2693,6 +2740,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         'id' => $this->id,
         'exists' => ($this->exists()) ? 'yes' : 'no',
         'is_virtual' => ($this->is_virtual()) ? 'yes' : 'no',
+        'width' => $this->get('width'),
+        'height' => $this->get('height'),
         'image_meta' => $this->image_meta,
         'thumbnails' => $this->thumbnails,
         'retinas' => $this->retinas,

@@ -9,7 +9,6 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 use ShortPixel\Controller\Queue\Queue as Queue;
 
-use \ShortPixel\ShortPixelPng2Jpg as ShortPixelPng2Jpg;
 use ShortPixel\Model\Converter\Converter as Converter;
 use ShortPixel\Model\Converter\ApiConverter as ApiConverter;
 
@@ -43,7 +42,6 @@ class AdminController extends \ShortPixel\Controller
     */
     public function handleImageUploadHook($meta, $id)
     {
-
         // Media only hook
 				if ( in_array($id, self::$preventUploadHook))
 				{
@@ -235,8 +233,9 @@ class AdminController extends \ShortPixel\Controller
 
              break;
              case 'unoptimized':
-                $sql = " AND " . $wpdb->posts . '.ID not in ( SELECT attach_id FROM ' . $tableName . " WHERE parent = %d and status = %d) ";
-  					    $where .= $wpdb->prepare($sql, MediaLibraryModel::IMAGE_TYPE_MAIN, ImageModel::FILE_STATUS_SUCCESS);
+              // The parent <> %d exclusion is meant to also deselect duplicate items ( translations ) since they don't have a status, but shouldn't be in a list like this.
+                $sql = " AND " . $wpdb->posts . '.ID not in ( SELECT attach_id FROM ' . $tableName . " WHERE (parent = %d and status = %d) OR parent <> %d ) ";
+  					    $where .= $wpdb->prepare($sql, MediaLibraryModel::IMAGE_TYPE_MAIN, ImageModel::FILE_STATUS_SUCCESS, MediaLibraryModel::IMAGE_TYPE_MAIN);
              break;
              case 'optimized':
                 $sql = " AND " . $wpdb->posts . '.ID in ( SELECT attach_id FROM ' . $tableName . " WHERE parent = %d and status = %d) ";
@@ -294,7 +293,11 @@ class AdminController extends \ShortPixel\Controller
           $fs = \wpSPIO()->filesystem();
 
           $imageObj = $fs->getImage($post_id, 'media');
-          $imageObj->onDelete();
+          // In case entry is corrupted data, this might fail.
+          if (is_object($imageObj))
+          {
+            $imageObj->onDelete();
+          }
       }
 
     }
@@ -349,6 +352,7 @@ class AdminController extends \ShortPixel\Controller
 		/** Media library gallery view, attempt to add fields that looks like the SPIO status */
 		public function editAttachmentScreen($fields, $post)
 		{
+      return;
 				// Prevent this thing running on edit media screen. The media library grid is before the screen is set, so just check if we are not on the attachment window.
 				$screen_id = \wpSPIO()->env()->screen_id;
 				if ($screen_id == 'attachment')

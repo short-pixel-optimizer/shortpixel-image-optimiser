@@ -161,7 +161,7 @@ class ShortPixelPlugin {
 		add_action( 'shortpixel/hook/processqueue', array( $admin, 'processQueueHook' ) );
 
 		// Action for media library gallery view
-		add_filter('attachment_fields_to_edit', array($admin, 'editAttachmentScreen'), 10, 2);
+		//add_filter('attachment_fields_to_edit', array($admin, 'editAttachmentScreen'), 10, 2);
 		add_action('print_media_templates', array($admin, 'printComparer'));
 
 
@@ -247,6 +247,7 @@ class ShortPixelPlugin {
 		// Used by processor
 		 add_action( 'wp_ajax_shortpixel_get_item_view', array( AjaxController::getInstance(), 'ajax_getItemView' ) );
 
+		 add_action('wp_ajax_image_editor', array(AjaxController::getInstance(), 'ajax_addImageEditorData'));
 	}
 
 	/** Hook in our admin pages */
@@ -293,8 +294,6 @@ class ShortPixelPlugin {
 		wp_register_script( 'sp-file-tree', plugins_url( '/res/js/sp-file-tree.min.js', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
 		wp_register_script( 'jquery.knob.min.js', plugins_url( '/res/js/jquery.knob.min.js', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
-
-		//wp_register_script( 'jquery.tooltip.min.js', plugins_url( '/res/js/jquery.tooltip.min.js', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
 		wp_register_script( 'shortpixel-debug', plugins_url( '/res/js/debug.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery', 'jquery-ui-draggable' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
@@ -373,12 +372,7 @@ class ShortPixelPlugin {
 			'fatalErrorStopText' => __('No items are being processed. To try again after solving the issues, please reload the page ', 'shortpixel-image-optimiser'),
 		) ;
 
-		//wp_localize_script('shortpixel-screen-base', 'ShortPixelProcessorTranslations', array(
-	//	));
-
-
 		wp_localize_script( 'shortpixel-screen-base', 'spio_screenStrings', $screen_localize);
-	//	wp_localize_script( 'shortpixel-screen-custom', 'spio_screenStrings', $screen_localize);
 
 		wp_register_script( 'shortpixel-screen-bulk', plugins_url( '/res/js/screens/screen-bulk.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery', 'shortpixel-processor', 'shortpixel-screen-base'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
@@ -521,7 +515,7 @@ class ShortPixelPlugin {
 	}
 
 	/** This is separated from route to load in head, preventing unstyled content all the time */
-	public function load_admin_scripts( $hook_suffix ) {
+	 public function load_admin_scripts( $hook_suffix ) {
 		global $plugin_page;
 		$screen_id = $this->env()->screen_id;
 
@@ -555,6 +549,7 @@ class ShortPixelPlugin {
 			$this->load_script( 'shortpixel-media' );
 
 			$this->load_style( 'shortpixel-admin' );
+			$this->load_style( 'notices-module');
 		//	$this->load_style( 'shortpixel' );
 
 			if ( $this->env()->is_debug ) {
@@ -579,7 +574,12 @@ class ShortPixelPlugin {
 		elseif ( $this->env()->is_gutenberg_editor === true)
 		{
 			$this->load_script( $load_processor );
-			$this->load_script( 'shortpixel-screen-nolist' ); // screen
+			$this->load_script( 'shortpixel-screen-media' ); // screen
+			$this->load_script( 'shortpixel-media' );
+
+			$this->load_style( 'shortpixel-admin' );
+			$this->load_style( 'notices-module');
+
 		}
 		elseif (true === \wpSPIO()->env()->is_screen_to_use  )
 		{

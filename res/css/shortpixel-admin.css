@@ -321,22 +321,26 @@ th.sorted.column-wp-shortPixel a {
   }
 }
 
-.compat-field-shortpixel-image-optimiser {
-  /*	.field, .sp-column-info, .sp-dropdown  {
-  		position: static;
-  	}
-  	*/
-}
-.compat-field-shortpixel-image-optimiser .sp-column-actions {
-  max-width: none;
-}
-.compat-field-shortpixel-image-optimiser .thumb-wrapper {
-  display: none !important;
-}
-.compat-field-shortpixel-image-optimiser .sp-dropdown.sp-show .sp-dropdown-content {
+/** Style for Grid view popups */
+.shortpixel-popup-info {
   display: flex;
-  flex-direction: column;
-  position: relative;
+  clear: both;
+  border-top: 1px solid #dcdcde;
+  margin: 12px 0;
+}
+.shortpixel-popup-info label {
+  min-width: 30%;
+  text-align: right;
+  margin-right: 4%;
+  padding-top: 4px;
+}
+.shortpixel-popup-info > div {
+  padding-left: 8px;
+  padding-bottom: 8px;
+}
+
+.edit-attachment-frame .shortpixel-popup-info {
+  border: 0;
 }
 
 div.sp-modal-shade {
