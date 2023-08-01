@@ -254,7 +254,7 @@ class Replacer
 	        {
 	          case "post": // special case.
 	              $sql = 'SELECT meta_id as id, meta_key, meta_value FROM ' . $wpdb->postmeta . '
-	                WHERE post_id in (SELECT ID from '. $wpdb->posts . ' where post_status in in ("publish", "future", "draft", "pending", "private") ) AND meta_value like %s';
+	                WHERE post_id in (SELECT ID from '. $wpdb->posts . ' where post_status in ("publish", "future", "draft", "pending", "private") ) AND meta_value like %s';
 	              $type = 'post';
 
 	              $update_sql = ' UPDATE ' . $wpdb->postmeta . ' SET meta_value = %s WHERE meta_id = %d';

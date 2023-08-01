@@ -127,7 +127,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     protected function verifyImage()
     {
 
-Log::addTEmp('VerifyImage ' . $this->name);
       // Only get data from Image if not yet set in metadata.
       if (is_null($this->getMeta('originalWidth')))
         $this->setMeta('originalWidth', $this->get('width'));
