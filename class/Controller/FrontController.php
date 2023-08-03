@@ -64,12 +64,8 @@ class FrontController extends \ShortPixel\Controller
           return $content . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG is AMP -->' : '');
       }
 
-    //  $webpObj = new ShortPixelImgToPictureWebp();
-
       $content = $this->convert($content);
-
       return $content;
-    //  return $webpObj->convert($content);
   }
 
   public function startOutputBuffer() {
@@ -82,7 +78,7 @@ class FrontController extends \ShortPixel\Controller
   }
 
 
-  public function convert($content)
+  protected function convert($content)
   {
       // Don't do anything with the RSS feed.
       if (is_feed() || is_admin()) {
@@ -109,13 +105,11 @@ class FrontController extends \ShortPixel\Controller
 
     //	preg_match_all
       $content = preg_replace_callback('/<img[^>]*>/i', array($this, 'convertImage'), $content);
-      //$content = preg_replace_callback('/background.*[^:](url\(.*\)[,;])/im', array('self', 'convertInlineStyle'), $content);
 
       // [BS] No callback because we need preg_match_all
       $content = $this->testInlineStyle($content);
 
       return $content;
-
   }
 
   /** If lazy loading is happening, get source (src) from those values
@@ -207,6 +201,7 @@ class FrontController extends \ShortPixel\Controller
       $fs = \wpSPIO()->filesystem();
 
       $raw_image = $match[0];
+      //echo "ConvertImage"; var_dump(htmlentities($raw_image));
       // Raw Image HTML
       $image = new FrontImage($raw_image);
 
@@ -328,7 +323,7 @@ class FrontController extends \ShortPixel\Controller
 
   }
 
-  public function testInlineStyle($content)
+  protected function testInlineStyle($content)
   {
     //preg_match_all('/background.*[^:](url\(.*\))[;]/isU', $content, $matches);
     preg_match_all('/url\(.*\)/isU', $content, $matches);
@@ -340,12 +335,13 @@ class FrontController extends \ShortPixel\Controller
     return $content;
   }
 
+
   /** Function to convert inline CSS backgrounds to webp
   * @param $match Regex match for inline style
   * @return String Replaced (or not) content for webp.
   * @author Bas Schuiling
   */
-  public function convertInlineStyle($matches, $content)
+  protected function convertInlineStyle($matches, $content)
   {
 
     $fs = \wpSPIO()->filesystem();
@@ -422,8 +418,5 @@ class FrontController extends \ShortPixel\Controller
 
     return $content;
   }
-
-
-
 
 } // class

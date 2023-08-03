@@ -11,8 +11,9 @@
  * Domain Path: /lang
  */
 
+
  if ( ! defined( 'ABSPATH' ) ) {
- 	exit; // Exit if accessed directly.
+ 	exit('No Direct Access'); // Exit if accessed directly.
  }
 
 // Preventing double load crash.

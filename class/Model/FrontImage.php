@@ -244,7 +244,7 @@ class FrontImage
 			}
 
       // Always output alt tag, because it's important to screen readers and otherwise.
-      $output .= 'alt="' . $this->alt . '"';
+      $output .= 'alt="' . $this->alt . '" ';
 
 			// Left over attributes that should be harmless, ie extra image data or other custom tags.
 			$leftAttrs = $this->getImageAttributes();
