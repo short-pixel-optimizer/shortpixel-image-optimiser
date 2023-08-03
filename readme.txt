@@ -2,9 +2,9 @@
 Contributors: ShortPixel
 Tags: convert webp, optimize images, image optimization, resize, compressor, image, avif, compression, optimize, image optimiser, image compression, compress pdf, compress jpg, compress png, performance, photography, smush, scale, pictures
 Requires at least: 4.8.0
-Tested up to: 6.2
+Tested up to: 6.3
 Requires PHP: 5.6
-Stable tag: 5.3.0
+Stable tag: 5.4.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -375,6 +375,23 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 5.4.0 =
+Release date: August 1, 2023
+* New: Images are now processed directly on the "Add New Media" screen;
+* New: Support for WordPress image editing functions; a notification is now displayed when you use the editing features;
+* New: PNG-to-JPG conversion now replaces posts in states other than published, such as scheduled, pending, draft, etc;
+* Compat: Added additional checks when WP Offload Media is used together with Enable Media Replace;
+* Compat: Added integration with Total theme, thanks @AJ for the great support;
+* Fix: Improved the way the ShortPixel box loads on different screens;
+* Fix: Empty ALT tags on images are now preserved when using the PICTURE tag delivery method for next generation images;
+* Fix: The PICTURE tag delivery generated invalid HTML code due to a missing space (thanks @kittmedia for pointing these two out!);
+* Fix: Several minor fixes and improvements related to PNG-to-JPG conversion;
+* Fix: Resize information was not written corectly when using WP Offload Media and backups were not enabled;
+* Fix: Restoring backups when Offload is disabled now works without affecting image metadata;
+* Fix: When object cache was enabled, transients used for processing were recreated too often;
+* Fix: Improved thumbnail handling for SmartCropping: only cropped thumbnails are now send for SmartCropping;
+* Language: 1 new string added, 6 updated, 0 fuzzed, and 3 deprecated.
 
 = 5.3.0 =
 Release date: June 27, 2023
