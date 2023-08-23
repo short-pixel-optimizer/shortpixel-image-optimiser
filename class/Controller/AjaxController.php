@@ -285,7 +285,6 @@ class AjaxController
 
           $mediaItem = $this->getMediaItem($id, $type);
 
-
           // if order is given, remove barrier and file away.
           if ($mediaItem->isOptimizePrevented() !== false)
             $mediaItem->resetPrevent();
