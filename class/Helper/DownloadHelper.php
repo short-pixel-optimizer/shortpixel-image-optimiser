@@ -121,7 +121,12 @@ class DownloadHelper
 
       private function downloadURLMethod($url, $force = false)
       {
-        $downloadTimeout = max(ini_get('max_execution_time') - 10, 15);
+        $executionTime = ini_get('max_execution_time');
+        if (! is_numeric($executionTime)) // edge case
+        {
+           $executionTime = 0;
+        }
+        $downloadTimeout = max($executionTime - 10, 15);
 
         $url = $this->setPreferredProtocol(urldecode($url), $force);
         $tempFile = \download_url($url, $downloadTimeout);

@@ -44,7 +44,16 @@ class FrontImage
         }
 
         $dom = new \DOMDocument();
-        @$dom->loadHTML($this->raw);
+        libxml_use_internal_errors(true); // disable error emit from libxml
+
+        $result = $dom->loadHTML($this->raw, LIBXML_NOWARNING);
+
+        // HTML failed loading
+        if (false === $result)
+        {
+           return false;
+        }
+
         $image = $dom->getElementsByTagName('img')->item(0);
         $attributes = array();
 
