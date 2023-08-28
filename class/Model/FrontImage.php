@@ -78,6 +78,7 @@ class FrontImage
 					 $this->attributes[$attr->nodeName] = $attr->nodeValue;
         }
 
+        // Parse the directory path and other sources
 				$result = $this->setupSources();
 
 				if (true === $result)
@@ -159,6 +160,8 @@ class FrontImage
 		{
 				 if (! is_null($this->imageBase))
 			 		return $this->imageBase->getPath();
+
+        return null;
 		}
 
 		public function parseReplacement($args)

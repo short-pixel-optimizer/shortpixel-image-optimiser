@@ -438,6 +438,7 @@ class UiHelper
     elseif($mediaItem->isProcessable(true) && ! $mediaItem->isOptimized() && ! $mediaItem->isOptimizePrevented() && ! $optimizeController->isItemInQueue($mediaItem))
     {
        $actions['optimize'] = self::getAction('optimize', $id);
+       $actions['markCompleted']  = self::getAction('markCompleted', $id);
     }
 
 
@@ -473,7 +474,7 @@ class UiHelper
     {
        $text = UiHelper::renderSuccessText($mediaItem);
     }
-    elseif (! $mediaItem->isProcessable() && ! $mediaItem->isOptimized())
+    elseif (! $mediaItem->isProcessable() && ! $mediaItem->isOptimized() )
     {
 
        $text = __('Not Processable: ','shortpixel_image_optimiser');
@@ -498,6 +499,7 @@ class UiHelper
     if ($mediaItem->isOptimizePrevented() !== false)
     {
           $retry = self::getAction('retry', $mediaItem->get('id'));
+          $unmark = self::getAction('unMarkCompleted', $mediaItem->get('id'));
 					$redo_legacy = false;
 
 					if ($mediaItem->get('type') == 'media')
@@ -515,10 +517,22 @@ class UiHelper
 						}
 					}
 
-          $text .= "<div class='shortpixel-image-error'>" . esc_html($mediaItem->getReason('processable'));
-          $text .= "<span class='shortpixel-error-reset'>" . sprintf(__('After you have fixed this issue, you can %s click here to retry %s', 'shortpixel-image-optimiser'), '<a href="javascript:' . $retry['function'] . '">', '</a>');
+          $status = $mediaItem->getMeta('status');
+          $text = ''; // reset text
 
-          $text .= '</div>';
+          if (ImageModel::FILE_STATUS_MARKED_DONE == $status)
+          {
+            $text .= "<div class='shortpixel-image-notice'>" . esc_html($mediaItem->getReason('processable'));
+
+            $text .= "<p class='shortpixel-error-reset'>" . sprintf(__('%s Click to unmark as completed %s', 'shortpixel-image-optimiser'), '<a href="javascript:' . $unmark['function'] . '">', '</a>') . '</p>';
+            $text .= '</div>';
+          }
+          else {
+            $text .= "<div class='shortpixel-image-error'>" . esc_html($mediaItem->getReason('processable'));
+            $text .= "<span class='shortpixel-error-reset'>" . sprintf(__('After you have fixed this issue, you can %s click here to retry %s', 'shortpixel-image-optimiser'), '<a href="javascript:' . $retry['function'] . '">', '</a>') . '</span>';
+            $text .= '</div>';
+          }
+
 
 
 					if ($redo_legacy !== false)
@@ -534,6 +548,7 @@ class UiHelper
     return $text;
   }
 
+  // Defines all possible actions in the Ui
   public static function getAction($name, $id, $args = array())
   {
      $action = array('function' => '', 'type' => '', 'text' => '', 'display' => '');
@@ -555,6 +570,21 @@ class UiHelper
 				 $action['text'] = __('Cancel item optimization', 'shortpixel-image-optimiser');
 				 $action['display'] = 'button';
 			break;
+      case 'markCompleted':
+          $action['function'] = 'window.ShortPixelProcessor.screen.MarkCompleted(' . $id . ')';
+          $action['type']  = 'js';
+          $action['text'] = __('Mark as Completed', 'shortpixel-image-optimiser');
+          $action['display'] = 'button-secondary';
+          $action['layout'] = 'paragraph';
+          $action['title'] = __('This will cause the plugin to skip this image for optimization', 'shortpixel-image-optimiser');
+      break;
+      case 'unMarkCompleted':
+          $action['function'] = 'window.ShortPixelProcessor.screen.UnMarkCompleted(' . $id . ')';
+          $action['type']  = 'js';
+          $action['text'] = __('Click to unmark this item as done', 'shortpixel-image-optimiser');
+          $action['display'] = 'js';
+
+      break;
       case 'optimizethumbs':
           $action['function'] = 'window.ShortPixelProcessor.screen.Optimize(' . $id . ');';
           $action['type'] = 'js';

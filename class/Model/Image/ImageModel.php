@@ -35,6 +35,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     const FILE_STATUS_RESTORED = 3;
     const FILE_STATUS_TORESTORE = 4; // Used for Bulk Restore
 
+    const FILE_STATUS_PREVENT = -10;
+    const FILE_STATUS_MARKED_DONE = -11;
+
     // Compression Option Consts
     const COMPRESSION_LOSSLESS = 0;
     const COMPRESSION_LOSSY = 1;
@@ -101,6 +104,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		/** @var int */
 		protected $restorable_status = 0;
 
+    /** @var string */
+  	protected $optimizePreventedReason;
+    
 		// Public var that can be set by OptimizeController to prevent double queries.
 		/** @var boolean */
 		public $is_in_queue;

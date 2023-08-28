@@ -1,5 +1,13 @@
 .sp-column-info {
   max-width: 300px;
+  /*.button.button-smaller {
+  	 font-size: 13px;
+  	 padding:0px 5px;
+  	 margin-bottom: 4px;
+  	 min-height:30px;
+
+  	 float:right;
+  } */
   /* Dropdown Content (Hidden by Default) */
   /* Links inside the dropdown */
   /* Change color of dropdown links on hover */
@@ -12,13 +20,6 @@
 }
 .sp-column-info .sp-column-actions .button.button-smaller {
   margin-right: 0px;
-}
-.sp-column-info .button.button-smaller {
-  font-size: 13px;
-  padding: 0px 5px;
-  margin-bottom: 4px;
-  min-height: 30px;
-  float: right;
 }
 .sp-column-info .thumbnails.optimized {
   display: inline-block;
@@ -263,7 +264,7 @@ th.sorted.column-wp-shortPixel a {
 .sp-column-info h4 {
   margin: 0;
 }
-.sp-column-info .shortpixel-image-error {
+.sp-column-info .shortpixel-image-error, .sp-column-info .shortpixel-image-notice {
   display: block;
   border: 1px solid #ff0000;
   padding: 12px;
@@ -271,10 +272,13 @@ th.sorted.column-wp-shortPixel a {
   font-size: 14px;
   font-weight: 700;
 }
-.sp-column-info .shortpixel-image-error .shortpixel-error-reset {
+.sp-column-info .shortpixel-image-error .shortpixel-error-reset, .sp-column-info .shortpixel-image-notice .shortpixel-error-reset {
   font-weight: 500;
   font-size: 12px;
   display: block;
+}
+.sp-column-info .shortpixel-image-notice {
+  border: 1px solid #000;
 }
 
 .column-wp-shortPixel .message {

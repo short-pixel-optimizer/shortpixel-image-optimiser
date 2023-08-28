@@ -8,7 +8,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\ResponseController as ResponseController;
 
-
 class DownloadHelper
 {
 		  private static $instance;
@@ -135,7 +134,6 @@ class DownloadHelper
         {
            Log::addError('Failed to Download File ', $tempFile);
            Responsecontroller::addData('message', $tempFile->get_error_message());
-
            return false;
         }
 

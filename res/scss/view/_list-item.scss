@@ -82,7 +82,7 @@
   }
 
   h4 { margin: 0; }
-  .shortpixel-image-error {
+  .shortpixel-image-error, .shortpixel-image-notice {
       display: block;
       border: 1px solid #ff0000;
       padding: 12px;
@@ -97,6 +97,9 @@
          display: block;
       }
   } //error
+  .shortpixel-image-notice {
+     border: 1px solid #000;
+  }
 } // sp-column-info
 
 // The whole column

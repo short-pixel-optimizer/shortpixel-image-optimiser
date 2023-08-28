@@ -62,7 +62,7 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase
 			else
 			{
 				console.error('handleImage without Result', resultItem);
-				
+
 			}
 
 			return false;
@@ -255,5 +255,23 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase
 			 this.processor.AjaxRequest(data);
 		}
 
+		MarkCompleted(id)
+		{
+			var data = {};
+			data.id = id;
+			data.type = this.type;
+			data.screen_action = 'markCompleted';
+
+			this.processor.AjaxRequest(data);
+		}
+		UnMarkCompleted(id)
+		{
+			var data = {};
+			data.id = id;
+			data.type = this.type;
+			data.screen_action = 'unMarkCompleted';
+
+			this.processor.AjaxRequest(data);
+		}
 
 } // class

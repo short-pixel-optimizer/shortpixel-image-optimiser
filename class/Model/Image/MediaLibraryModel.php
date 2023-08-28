@@ -51,8 +51,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	/** @var boolean */
   protected $optimizePrevented; // cache if there is any reason to prevent optimizing
 
-	/** @var string */
-	protected $optimizePreventedReason;
 
 	/** @var boolean */
 	private $justConverted = false; // check if legacy conversion happened on same run, to prevent double runs.
@@ -1781,13 +1779,19 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   }
 
   /* Protect this image from being optimized. This flag should be unset by UX / Retry button on front */
-  protected function preventNextTry($reason = 1)
+  protected function preventNextTry($reason = 1, $status = self::FILE_STATUS_PREVENT)
   {
-      //Log::addError('Call resulted in preventNextTry on thumbnailModel');
-      //exit('Fatal error : Prevent Next Try should not be run on thumbnails');
       Log::addWarn($this->get('id') . ' preventing next try: ' . $reason);
-      update_post_meta($this->id, '_shortpixel_prevent_optimize', $reason);
 
+      update_post_meta($this->id, '_shortpixel_prevent_optimize', $reason);
+    //  update_post_meta($this->id, '_shortpixel_prevent_optimize_status', $status);
+      $this->setMeta('status', $status);
+      $this->saveMeta();
+  }
+
+  public function markCompleted($reason, $status)
+  {
+     return $this->preventNextTry($reason, $status);
   }
 
   public function isOptimizePrevented()
@@ -1798,6 +1802,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			 }
 
        $reason = get_post_meta($this->id, '_shortpixel_prevent_optimize', true);
+       //$status = get_post_meta($this->id, '_shortpixel_prevent_optimize_status', true);
 
        if ($reason === false || strlen($reason) == 0)
        {
@@ -1816,6 +1821,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   public function resetPrevent()
   {
       delete_post_meta($this->id, '_shortpixel_prevent_optimize');
+      $this->setMeta('status', self::FILE_STATUS_UNPROCESSED);
+      $this->saveMeta();
+      //delete_post_meta($this->id, '_shortpixel_prevent_optimize_status');
+
 			$this->optimizePrevented = null;
   }
 

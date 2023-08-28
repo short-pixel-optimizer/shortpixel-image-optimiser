@@ -19,18 +19,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 <?php endif;
 
 if (isset($this->view->actions)):
-  foreach($this->view->actions as $actionName => $action):
-    $classes = ($action['display'] == 'button') ? " button-smaller button-primary $actionName " : "$actionName";
-    $link = ($action['type'] == 'js') ? 'javascript:' . $action['function'] : $action['function'];
-		$newtab  = ($actionName == 'extendquota') ? 'target="_blank"' : '';
+  $this->loadView('snippets/part-single-actions', false);
 
-
-    ?>
-    	<a href="<?php echo $link ?>" <?php echo esc_attr($newtab); ?> class="<?php echo $classes ?>"><?php echo $action['text'] ?></a>
-
-
-    <?php
-  endforeach;
 
 endif;
 

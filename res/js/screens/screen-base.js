@@ -12,7 +12,6 @@ class ShortPixelScreenBase
 	{
 		 this.processor = processor;
 		 this.strings = spio_screenStrings;
-
 	}
 
 	// Function for subclasses to add more init. Seperated because of screens that need to call Process functions when starting.
@@ -37,7 +36,6 @@ class ShortPixelScreenBase
 				return;
 		}
 		el.prepend(notice);
-
 	}
 
 	// No actions at the base.
@@ -50,7 +48,7 @@ class ShortPixelScreenBase
 	{
 		if (this.processor.debugIsActive == 'false')
 			return; // stay silent when debug is not active.
-			
+
 		  var title = this.strings.fatalErrorStop;
 			var text = this.strings.fatalErrorStopText;
 
@@ -82,7 +80,6 @@ class ShortPixelScreenBase
 			notice.append(button);
 
 			return notice;
-
 	}
 
 	EventCloseErrorNotice(event)
@@ -137,4 +134,4 @@ class ShortPixelScreenBase
 
 
 
-}
+} // class

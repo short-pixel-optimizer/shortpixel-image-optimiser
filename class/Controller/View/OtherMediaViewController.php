@@ -449,29 +449,34 @@ class OtherMediaViewController extends \ShortPixel\ViewController
           ?>
 					<div id='sp-msg-<?php echo esc_attr($item->get('id')) ?>'  class='sp-column-info'><?php
 							$this->printItemActions($item);
-          echo "<div>" .  UiHelper::getStatusText($item) . "</div>";
 
+      //    if (false === $item->isOptimizePrevented() )
+        //{
+            echo "<div>" .  UiHelper::getStatusText($item) . "</div>";
+        //  }
            ?>
-					 </div>
-					 <?php
-
+         </div> <!-- sp-column-info -->
+        <?php
 			}
 
       // Use for view, also for renderItemView
 			public function printItemActions($item)
       {
-        $actions = UiHelper::getActions($item); // $this->getActions($item, $itemFile);
-
+        $this->view->actions = UiHelper::getActions($item); // $this->getActions($item, $itemFile);
 
         $list_actions = UiHelper::getListActions($item);
+
         if (count($list_actions) > 0)
           $list_actions = UiHelper::renderBurgerList($list_actions, $item);
         else
           $list_actions = '';
 
-        if (count($actions) > 0)
+        if (count($this->view->actions) > 0)
         {
-          foreach($actions as $actionName => $action):
+
+          $this->loadView('snippets/part-single-actions', false);
+
+          /*foreach($actions as $actionName => $action):
             $classes = ($action['display'] == 'button') ? " button-smaller button-primary $actionName " : "$actionName";
             $link = ($action['type'] == 'js') ? 'javascript:' . $action['function'] : $action['function'];
 						$newtab  = ($actionName == 'extendquota') ? 'target="_blank"' : '';
@@ -481,7 +486,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
             <a href="<?php echo $link ?>" class="<?php echo esc_attr($classes) ?>"><?php echo esc_html($action['text']) ?></a>
 
             <?php
-          endforeach;
+          endforeach; */
         }
         echo $list_actions;
       }

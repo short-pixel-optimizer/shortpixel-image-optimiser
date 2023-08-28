@@ -202,6 +202,12 @@ class AjaxController
            case 'optimizeItem':
              $json = $this->optimizeItem($json, $data);
            break;
+					 case 'markCompleted':
+					 	 $json = $this->markCompleted($json, $data);
+					 break;
+					 case 'unMarkCompleted':
+						 $json = $this->unMarkCompleted($json, $data);
+					 break;
 					 case 'cancelOptimize':
 					 		$json = $this->cancelOptimize($json, $data);
 					 break;
@@ -296,6 +302,57 @@ class AjaxController
           $json->$type = $control->addItemToQueue($mediaItem);
 					return $json;
     }
+
+		public function markCompleted()
+		{
+				$id = intval($_POST['id']);
+				$type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';
+
+				$mediaItem = $this->getMediaItem($id, $type);
+
+				$mediaItem->markCompleted(__('This item has been manually marked as completed', 'shortpixel-image-optimiser'), ImageModel::FILE_STATUS_MARKED_DONE);
+
+				$json = new \stdClass;
+				$json->$type = new \stdClass;
+
+				$json->$type->status = 1;
+				$json->$type->fileStatus = ImageModel::FILE_STATUS_SUCCESS; // great success!
+
+				$json->$type->item_id = $id;
+				$json->$type->result = new \stdClass;
+				$json->$type->result->message = __('Item marked as completed', 'shortpixel-image-optimiser');
+				$json->$type->result->is_done = true;
+
+				$json->status = true;
+
+				return $json;
+		}
+
+		public function unMarkCompleted()
+		{
+			$id = intval($_POST['id']);
+			$type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';
+
+			$mediaItem = $this->getMediaItem($id, $type);
+
+			$mediaItem->resetPrevent();
+
+			$json = new \stdClass;
+			$json->$type = new \stdClass;
+
+			$json->$type->status = 1;
+			$json->$type->fileStatus = ImageModel::FILE_STATUS_SUCCESS; // great success!
+
+			$json->$type->item_id = $id;
+			$json->$type->result = new \stdClass;
+			$json->$type->result->message = __('Item unmarked', 'shortpixel-image-optimiser');
+			$json->$type->result->is_done = true;
+
+			$json->status = true;
+
+			return $json;
+
+		}
 
 		public function cancelOptimize($json, $data)
 		{

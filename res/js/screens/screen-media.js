@@ -11,7 +11,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		{
 			super.Init();
       this.ListenGallery();
-
 		}
 
     RenderItemView(e)
