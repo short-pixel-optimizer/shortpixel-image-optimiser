@@ -282,7 +282,6 @@ abstract class Queue
 			  }
           }
 
-
           $this->q->additems($queue);
           $numitems = $this->q->enqueue();
 

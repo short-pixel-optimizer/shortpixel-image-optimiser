@@ -357,7 +357,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
         return array();
     }
 
-
     if (is_null($width) || is_null($height) && ! $this->is_virtual())
     {
        $width = (is_null($width)) ? $this->get('width') : $width;
@@ -366,7 +365,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		$this->width = $width;
 		$this->height = $height;
-
 
     $thumbnails = array();
     if (isset($wpmeta['sizes']))
