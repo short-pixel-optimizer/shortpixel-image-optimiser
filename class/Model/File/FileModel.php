@@ -569,13 +569,10 @@ class FileModel extends \ShortPixel\Model
     if ($fs->pathIsUrl($path))
     {
       $path = $this->UrlToPath($path);
-
     }
 
     if ($path === false) // don't process further
       return false;
-
-  //  $path = wp_normalize_path($path);
 
 		$path = UtilHelper::spNormalizePath($path);
 		$abspath = $fs->getWPAbsPath();
@@ -654,9 +651,17 @@ class FileModel extends \ShortPixel\Model
   */
   private function UrlToPath($url)
   {
-     //$uploadDir = wp_upload_dir();
 
-     $site_url = str_replace('http:', '', home_url('', 'http'));
+		 // If files is present, high chance that it's WPMU old style, which doesn't have in home_url the /files/ needed to properly replace and get the filepath . It would result in a /files/files path which is incorrect. 
+		 if (strpos($url, '/files/') !== false)
+		 {
+			 $uploadDir = wp_upload_dir();
+			 $site_url = str_replace(array('http:', 'https:'), '', $uploadDir['baseurl']);
+		 }
+		 else {
+			 $site_url = str_replace('http:', '', home_url('', 'http'));
+		 }
+
      $url = str_replace(array('http:', 'https:'), '', $url);
      $fs = \wpSPIO()->filesystem();
 
