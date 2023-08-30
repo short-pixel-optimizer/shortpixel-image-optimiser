@@ -275,9 +275,6 @@ class OtherMediaController extends \ShortPixel\Controller
 			if (! $this->hasFoldersTable())
 				return false;
 
-			$this->cleanUp();
-      $customFolders = $this->getActiveFolders();
-
       $cache = new CacheController();
       $refreshDelay = $cache->getItem('othermedia_refresh_folder_delay');
 
@@ -285,6 +282,10 @@ class OtherMediaController extends \ShortPixel\Controller
       {
         return true;
       }
+
+			$this->cleanUp();
+      $customFolders = $this->getActiveFolders();
+
       $refreshDelay->setExpires($expires);
       $refreshDelay->save();
 
@@ -310,7 +311,6 @@ class OtherMediaController extends \ShortPixel\Controller
 			 // Remove folders that are removed, and have no images in MetaTable.
 			 $sql = " DELETE FROM $folderTable WHERE status < 0 AND id NOT IN ( SELECT DISTINCT folder_id FROM $metaTable)";
 			 $result = $wpdb->query($sql);
-
 
 		}
 
@@ -439,6 +439,7 @@ class OtherMediaController extends \ShortPixel\Controller
 
     /* Get the custom Folders from DB, put them in model
     @return Array  Array database result
+    @todo Has been replaced by getItems in FoldersViewController
     */
     private function getFolders($args = array())
     {
@@ -448,6 +449,8 @@ class OtherMediaController extends \ShortPixel\Controller
           'remove_hidden' => true, // Query only active folders
           'path' => false,
           'only_count' => false,
+          'limit' => false,
+          'offset' => false,
       );
 
       $args = wp_parse_args($args, $defaults);
@@ -474,26 +477,18 @@ class OtherMediaController extends \ShortPixel\Controller
       {
           $sql .= ' AND id = %d';
           $prepare[] = $args['id'];
-          //$mask[] = '%d';
-          //$folders = $spMetaDao->getFolderByID($args['id']);
+
       }
       elseif($args['path'] !== false && strlen($args['path']) > 0)
       {
-          //$folders = $spMetaDao->getFolder($args['path']);
           $sql .= ' AND path = %s';
           $prepare[] = $args['path'];
-        //  $mask[] = $args['%s'];
-      }
-      else
-      {
-      //  $folders = $spMetaDao->getFolders();
       }
 
       if ($args['remove_hidden'])
       {
           $sql .= " AND status <> -1";
       }
-
 
       if (count($prepare) > 0)
         $sql = $wpdb->prepare($sql, $prepare);

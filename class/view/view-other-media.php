@@ -18,6 +18,7 @@ if ( isset($_GET['noheader']) ) {
 
 
 ?>
+
 <div class="wrap shortpixel-other-media">
     <h2>
         <?php esc_html_e('Custom Media optimized by ShortPixel','shortpixel-image-optimiser');?>
@@ -71,6 +72,17 @@ if ( isset($_GET['noheader']) ) {
     </div>
   </div>
 <?php endif; ?>
+
+<?php
+$file_url =  esc_url(add_query_arg('part', 'files', $this->url));
+$folder_url = esc_url(add_query_arg('part', 'folders', $this->url));
+?>
+
+<div class="custom-media-tabs">
+    <a href="<?php echo $file_url  ?>">(TODO) Files</a>
+    <a href="<?PHP echo $folder_url ?>">(TODO) Folders</a>
+</div>
+
 
     <div class='list-overview'>
       <div class='heading'>

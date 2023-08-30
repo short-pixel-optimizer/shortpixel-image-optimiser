@@ -451,6 +451,7 @@ class UiHelper
     $keyControl = ApiKeyController::getInstance();
     $quotaControl = QuotaController::getInstance();
 		$optimizeController = new OptimizeController();
+    $settings = \wpSPIO()->settings();
 
     $text = '';
 
@@ -467,7 +468,13 @@ class UiHelper
 				 $text  .= $mediaItem->getProcessableReason();
 			 }
 			 else {
-				 $text = __('This image was not found in our database. Refresh folders, or add this gallery', 'shortpixel-image-optimiser');
+         if (\wpSPIO()->env()->has_nextgen && false == $settings->includeNextGen)
+         {
+           $text = __('This image was not found in our database. Enable "Optimize nextgen galleries" in the settings, or add this folder manually. ', 'shortpixel-image-optimiser');
+         }
+         else {
+           $text = __('This image was not found in our database. Refresh folders, or add this gallery', 'shortpixel-image-optimiser');
+         }
 			 }
 		}
     elseif ($mediaItem->isOptimized())

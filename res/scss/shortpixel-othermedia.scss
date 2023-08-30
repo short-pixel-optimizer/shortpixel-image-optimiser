@@ -34,6 +34,21 @@
     }
   }
 
+  .custom-media-tabs
+  {
+     display: block;
+     margin: 20px 0;
+     a {
+       background: grey;
+       width: 100px;
+       margin-right: 20px;
+       padding: 15px;
+       display: inline-block;
+       color: #23282d;
+       text-align: center;
+     }
+  }
+
    .list-overview
    {
       width: 100%;

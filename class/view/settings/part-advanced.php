@@ -424,7 +424,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                 <th scope="row"><label for="additional-media"><?php esc_html_e('Custom media folders','shortpixel-image-optimiser');?></label></th>
                 <td>
 
-                    <?php if($view->customFolders) { ?>
+      <?php if($view->customFolders) { ?>
 
 			<div class="option-content">
 			    <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/46-how-to-optimize-images-in-wordpress-themes-and-plugins"></span></div>
@@ -507,6 +507,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                             </div>
                         <?php }?>
                       </div> <!-- shortpixel-folders-list -->
+                      <div class='folder-stats'> XX folders ( xx files )  </div>
 		      </div>
                     <?php } ?>
 
