@@ -610,16 +610,22 @@ class ShortPixelPlugin {
 
         switch ( $plugin_page ) {
             case 'wp-shortpixel-settings': // settings
-				$controller = 'ShortPixel\Controller\SettingsController';
-                break;
-            case 'wp-short-pixel-custom': // other media
+						$controller = 'ShortPixel\Controller\SettingsController';
+        	break;
+          case 'wp-short-pixel-custom': // other media
+						if ('folders'  === $template_part )
+						{
+							$controller = 'ShortPixel\Controller\View\OtherMediaFolderViewController';
+						}
+						else {
+							$controller = 'ShortPixel\Controller\View\OtherMediaViewController';
+						}
 
-				$controller = 'ShortPixel\Controller\View\OtherMediaViewController';
-                break;
-        case 'wp-short-pixel-bulk':
-					$controller = '\ShortPixel\Controller\View\BulkViewController';
-               break;
-            case null:
+        	break;
+        	case 'wp-short-pixel-bulk':
+						$controller = '\ShortPixel\Controller\View\BulkViewController';
+           break;
+           case null:
             default:
                 switch ( $screen_id ) {
 					case 'upload':

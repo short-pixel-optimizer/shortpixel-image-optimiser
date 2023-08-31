@@ -7,6 +7,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
+use ShortPixel\Helper\InstallHelper as InstallHelper;
+
 
 
 class OtherMediaFolderViewController extends \ShortPixel\ViewController
@@ -67,7 +69,7 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
         'path' => false,
         'only_count' => false,
         'limit' => 20,
-        'offset' => false,
+        'offset' => 0,
     );
 
     $args = wp_parse_args($args, $defaults);
@@ -105,6 +107,12 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
     if ($args['remove_hidden'])
     {
         $sql .= " AND status <> -1";
+    }
+
+    if ($args['limit'] > 0)
+    {
+
+       $sql .=  " LIMIT " . intval($args['limit']) . " OFFSET " . intval($args['offset']);
     }
 
     if (count($prepare) > 0)
@@ -304,6 +312,23 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
 
 
         return $output;
+    }
+
+    protected function getFilter() {
+        $filter = array();
+
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
+        $search = (isset($_GET['s'])) ? sanitize_text_field(wp_unslash($_GET['s'])) : '';
+        if(strlen($search) > 0) {
+          // phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
+            $filter['path'] = (object)array("operator" => "like", "value" =>"'%" . esc_sql($search) . "%'");
+        }
+        return $filter;
+    }
+
+    private function hasFoldersTable()
+    {
+      return InstallHelper::checkTableExists('shortpixel_folders');
     }
 
 
