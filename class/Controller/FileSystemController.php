@@ -251,18 +251,21 @@ Class FileSystemController extends \ShortPixel\Controller
 
     /** This function returns the Absolute Path of the WordPress installation where the **CONTENT** directory is located.
     * Normally this would be the same as ABSPATH, but there are installations out there with -cough- alternative approaches
+		* The Abspath is uses to replace against the domain URL ( home_url ).
     * @returns DirectoryModel  Either the ABSPATH or where the WP_CONTENT_DIR is located
     */
     public function getWPAbsPath()
     {
-        $wpContentAbs = str_replace( 'wp-content', '', WP_CONTENT_DIR);
+				$wpContentPos = strpos(WP_CONTENT_DIR, 'wp-content');
+        $wpContentAbs = substr(WP_CONTENT_DIR, 0, $wpContentPos); //str_replace( 'wp-content', '', WP_CONTENT_DIR);
         if (ABSPATH == $wpContentAbs)
           $abspath = ABSPATH;
         else
           $abspath = $wpContentAbs;
 
-				if (defined('UPLOADS')) // if this is set, lead.
-					$abspath = trailingslashit(ABSPATH) . UPLOADS;
+				// This is off for now, since we can't think of a way why this give a better result than riffing off the WP_CONTENT_DIR / ABSPATH . 
+				//if (defined('UPLOADS')) // if this is set, lead.
+				//	$abspath = trailingslashit(ABSPATH) . UPLOADS;
 
 //	$abspath = wp_normalize_path($abspath);
         $abspath = apply_filters('shortpixel/filesystem/abspath', $abspath );
