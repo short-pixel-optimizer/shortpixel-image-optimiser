@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compressor, ima
 Requires at least: 4.8.0
 Tested up to: 6.3
 Requires PHP: 5.6
-Stable tag: 5.4.0
+Stable tag: 5.4.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -375,6 +375,17 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 5.4.1 =
+Release date: September 4, 2023
+* Compat: a filter has been added that allows customizing the metadata migration paramaters;
+* Fix: a missing space broke the HTML structure in some cases when using the PICTURE tag delivery method for next generation images;
+* Fix: added fix for WebP path for old multisite setups still using blogs.dir folder structure;
+* Fix: custom uploads folders (by using constants) are now handled correctly in all cases;
+* Fix: added supplemental checks to prevent some isolated JS errors that occurred only in certain cases;
+* Fix: the plugin now only displays fatal errors when debug mode is enabled;
+* Fix: the Shortpixel typos are now corrected in ShortPixel;
+* Language: 0 new strings added, 4 updated, 0 fuzzed, and 0 deprecated.
 
 = 5.4.0 =
 Release date: August 1, 2023
