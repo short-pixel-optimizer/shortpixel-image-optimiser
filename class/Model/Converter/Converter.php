@@ -11,7 +11,7 @@ use ShortPixel\Model\File\DirectoryModel as DirectoryModel;
 use ShortPixel\Model\File\FileModel as FileModel;
 use ShortPixel\Controller\ResponseController as ResponseController;
 
-/* Shortpixel Image Optimiser Converters. Unified interface for handling conversion between file types */
+/* ShortPixel Image Optimiser Converters. Unified interface for handling conversion between file types */
 abstract class Converter
 {
 	  const CONVERTABLE_EXTENSIONS = array('png', 'heic');

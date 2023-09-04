@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 									<p><?php
 											_e('Trusted file mode is active. This means that ShortPixel will depend on the metadata and not check the fileystem while loading the UI. Information may be incorrect and error may occur during optimization ', 'shortpixel-image-optimiser');
 											?></p>
-									<?php if (true === \Shortpixel\Pantheon::IsActive())
+									<?php if (true === \ShortPixel\Pantheon::IsActive())
 									{
 										echo '<p>'; _e('(You are on Pantheon. This setting was automatically activated)'); echo '</p>';
 									}
