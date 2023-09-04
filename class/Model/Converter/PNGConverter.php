@@ -243,7 +243,7 @@ class PNGConverter extends MediaLibraryConverter
 
 			// check old filename, replace with uniqued filename.
 
-      /** Quality is set to 90 and not using WP defaults (or filter) for good reason. Lower settings very quickly degrade the libraries output quality.  Better to leave this hardcoded at 90 and let the Shortpixel API handle the optimization **/
+      /** Quality is set to 90 and not using WP defaults (or filter) for good reason. Lower settings very quickly degrade the libraries output quality.  Better to leave this hardcoded at 90 and let the ShortPixel API handle the optimization **/
 			if ($bool = imagejpeg($bg, $replacementPath, 90)) {
 					Log::addDebug("PNG2JPG doConvert created JPEG at $replacementPath");
 					$newSize = filesize($replacementPath); // This might invoke wrapper but ok

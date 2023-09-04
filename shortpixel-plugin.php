@@ -367,8 +367,8 @@ class ShortPixelPlugin {
 
 	  $screen_localize = array(
 			'startAction' => __('Processing... ','shortpixel-image-optimiser'),
-			'fatalError' => __('Shortpixel encountered a fatal error when optimizing images. Please check the issue below. If this is caused by a bug please contact our support', 'shortpixel-image-optimiser'),
-			'fatalErrorStop' => __('Shortpixel has encounted multiple errors and has now stopped processing', 'shortpixel-image-optimiser'),
+			'fatalError' => __('ShortPixel encountered a fatal error when optimizing images. Please check the issue below. If this is caused by a bug please contact our support', 'shortpixel-image-optimiser'),
+			'fatalErrorStop' => __('ShortPixel has encounted multiple errors and has now stopped processing', 'shortpixel-image-optimiser'),
 			'fatalErrorStopText' => __('No items are being processed. To try again after solving the issues, please reload the page ', 'shortpixel-image-optimiser'),
 		) ;
 

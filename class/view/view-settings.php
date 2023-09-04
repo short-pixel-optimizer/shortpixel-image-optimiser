@@ -46,7 +46,7 @@ $is_unlimited= (!is_null($this->quotaData) && $this->quotaData->unlimited) ? tru
                     ?>" target="_blank">
 												 <?php if ($is_unlimited)
 												 {
-													 printf(esc_html__('Shortpixel Unlimited', 'shortpixel-image-optimiser'));
+													 printf(esc_html__('ShortPixel Unlimited', 'shortpixel-image-optimiser'));
 												 }
 												 else
                          {
