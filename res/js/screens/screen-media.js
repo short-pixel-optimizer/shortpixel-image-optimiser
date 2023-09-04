@@ -14,7 +14,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
 		}
 
-
     RenderItemView(e)
     {
 				e.preventDefault();
@@ -96,10 +95,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
   			 var extended = detailsColumn.extend ({
             render: function()
             {
-              console.log('render', this);
                detailsColumn.prototype.render.apply( this );
-               //super.prototype.render.apply( this );
-
                this.fetchSPIOData(this.model.get( 'id' ));
 
                return this;
@@ -114,7 +110,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
               window.addEventListener('shortpixel.MediaRenderView', this.renderSPIOView.bind(this), {'once':true});
               self.processor.LoadItemView(data);
-
             },
 
             renderSPIOView: function(e, timed)
@@ -166,7 +161,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
         else {
           wp.media.view.Attachment.Details = extended;
         }
-
   	}
 
   	AjaxOptimizeWarningFromUnderscore(id)
@@ -182,12 +176,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
   		this.processor.AjaxRequest(data);
   	}
 
-    GalleryGridDetailsExtension()
-    {
-
-    }
-
-
   	CheckOptimizeWarning(event)
   	{
   		var data = event.detail;
@@ -200,7 +188,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
   		{
   			 this.ShowOptimizeWarning(image_post_id, is_restorable, is_optimized);
   		}
-
   	}
 
   	ShowOptimizeWarning(image_post_id, is_restorable, is_optimized)
@@ -266,7 +253,5 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
   		 window.ShortPixelProcessor.AjaxRequest(data);
   	 });
    }
-
-
 
 } // class

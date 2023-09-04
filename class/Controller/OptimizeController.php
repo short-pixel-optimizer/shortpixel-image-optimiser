@@ -272,7 +272,6 @@ class OptimizeController
 
         }
 
-
         return $json;
     }
 

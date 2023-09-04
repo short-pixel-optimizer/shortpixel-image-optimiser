@@ -70,6 +70,7 @@ class BulkController
            $options['numitems'] = 200;
 
         }
+				$options = apply_filters('shortpixel/bulk/custom_options', $options, $customOp);
         $Q->setCustomBulk($customOp, $options);
       }
 

@@ -14,7 +14,7 @@ use \ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 
-// extends DirectoryModel. Handles Shortpixel_meta database table
+// extends DirectoryModel. Handles ShortPixel_meta database table
 // Replacing main parts of shortpixel-folder
 class DirectoryOtherMediaModel extends DirectoryModel
 {

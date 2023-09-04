@@ -44,7 +44,16 @@ class FrontImage
         }
 
         $dom = new \DOMDocument();
-        @$dom->loadHTML($this->raw);
+        libxml_use_internal_errors(true); // disable error emit from libxml
+
+        $result = $dom->loadHTML($this->raw, LIBXML_NOWARNING);
+
+        // HTML failed loading
+        if (false === $result)
+        {
+           return false;
+        }
+
         $image = $dom->getElementsByTagName('img')->item(0);
         $attributes = array();
 
@@ -244,7 +253,7 @@ class FrontImage
 			}
 
       // Always output alt tag, because it's important to screen readers and otherwise.
-      $output .= 'alt="' . $this->alt . '"';
+      $output .= 'alt="' . $this->alt . '" ';
 
 			// Left over attributes that should be harmless, ie extra image data or other custom tags.
 			$leftAttrs = $this->getImageAttributes();
