@@ -629,7 +629,8 @@ class SettingsController extends \ShortPixel\ViewController
         $customFolderBase = $fs->getWPFileBase();
         $this->view->customFolderBase = $customFolderBase->getPath();
 
-        if ($this->has_nextgen)
+        /* This seems unused(?) 
+				if ($this->has_nextgen)
         {
           $ng = NextGenController::getInstance();
           $NGfolders = $ng->getGalleries();
@@ -641,7 +642,7 @@ class SettingsController extends \ShortPixel\ViewController
             $foldersArray[] = $fsFolder->getPath();
           }
 
-        }
+        } */
 
         return $customFolders;
       }

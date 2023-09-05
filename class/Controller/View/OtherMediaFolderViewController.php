@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 use ShortPixel\Helper\InstallHelper as InstallHelper;
-
+use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 
 
 class OtherMediaFolderViewController extends \ShortPixel\ViewController
@@ -28,9 +28,13 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
   protected $show_hidden = false;
   protected $has_hidden_items = false;
 
+	private $controller;
+
   public function __construct()
   {
     parent::__construct();
+
+		$this->controller = OtherMediaController::getInstance();
 
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
     $this->currentPage = isset($_GET['paged']) ? intval($_GET['paged']) : 1;
@@ -60,7 +64,20 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
       $this->loadView();
   }
 
-  private function getItems($args = array())
+	private function getItems($args = array())
+	{
+		  $results = $this->queryItems($args);
+			$items = array();
+
+			foreach($results as $index => $databaseObj)
+			{
+					$items[] = $this->controller->getFolderByID($databaseObj->id);
+			}
+
+			return $items;
+	}
+
+  private function queryItems($args = array())
   {
     global $wpdb;
     $defaults = array(
@@ -130,24 +147,24 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
   protected function getHeadings()
   {
      $headings = array(
-          'thumbnails' => array('title' => __('Thumbnail', 'shortpixel-image-optimiser'),
+
+          'checkbox' => array('title' => '&nbsp;',
                           'sortable' => false,
                           'orderby' => 'id',  // placeholder to allow sort on this.
                         ),
-           'name' =>  array('title' => __('Name', 'shortpixel-image-optimiser'),
+           'name' =>  array('title' => __('Folder Name', 'shortpixel-image-optimiser'),
                             'sortable' => true,
                             'orderby' => 'name',
                         ),
-           'folder' => array('title' => __('Folder', 'shortpixel-image-optimiser'),
+           'type' => array('title' => __('Type', 'shortpixel-image-optimiser'),
                             'sortable' => true,
                             'orderby' => 'path',
                         ),
-           'type' =>   array('title' => __('Type', 'shortpixel-image-optimiser'),
+           'files' =>   array('title' => __('Files', 'shortpixel-image-optimiser'),
                             'sortable' => false,
                             ),
-           'date' =>    array('title' => __('Date', 'shortpixel-image-optimiser'),
-                            'sortable' => true,
-                            'orderby' => 'ts_optimized',
+           'date' =>    array('title' => __('Last change', 'shortpixel-image-optimiser'),
+                            'sortable' => false,
                          ),
            'status' => array('title' => __('Status', 'shortpixel-image-optimiser'),
                             'sortable' => true,
@@ -157,6 +174,8 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
                              'sortable' => false,
                         ), */
     );
+
+		return $headings;
   }
 
     private function getPageArgs($args = array())
@@ -173,6 +192,50 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
       return $page_args; // has url
 
     }
+
+		// @todo duplicate of OtherMediaViewController which is not nice. 
+		protected function getDisplayHeading($heading)
+		{
+				$output = '';
+				$defaults = array('title' => '', 'sortable' => false);
+
+				$heading = wp_parse_args($heading, $defaults);
+				$title = $heading['title'];
+
+				if ($heading['sortable'])
+				{
+						//$current_order = isset($_GET['order']) ? $current_order : false;
+						//$current_orderby = isset($_GET['orderby']) ? $current_orderby : false;
+
+						$sorturl = add_query_arg('orderby', $heading['orderby'] );
+						$sorted = '';
+
+						if ($this->orderby == $heading['orderby'])
+						{
+							if ($this->order == 'desc')
+							{
+								$sorturl = add_query_arg('order', 'asc', $sorturl);
+								$sorted = 'sorted desc';
+							}
+							else
+							{
+								$sorturl = add_query_arg('order', 'desc', $sorturl);
+								$sorted = 'sorted asc';
+							}
+						}
+						else
+						{
+							$sorturl = add_query_arg('order', 'asc', $sorturl);
+						}
+						$output = '<a href="' . esc_url($sorturl) . '"><span>' . esc_html($title) . '</span><span class="sorting-indicator '. esc_attr($sorted) . '">&nbsp;</span></a>';
+				}
+				else
+				{
+					$output = $title;
+				}
+
+				return $output;
+		}
 
     protected function filterAllowedOrderBy($orderby)
     {
