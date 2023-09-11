@@ -251,6 +251,12 @@ class AjaxController
 					 case "redoLegacy":
 					 	  $this->redoLegacy($json, $data);
 					 break;
+					 case 'refreshFolder':
+					 		$json = $this->refreshFolder($json,$data);
+					 break;
+					 case 'removeCustomFolder':
+					 	 	 $json = $this->removeCustomFolder($json, $data);
+					 break;
 
            default:
               $json->$type->message = __('Ajaxrequest - no action found', 'shorpixel-image-optimiser');
@@ -638,6 +644,61 @@ class AjaxController
 
         $this->send( (object) $ret);
     }
+
+		protected function refreshFolder($json, $data)
+		{
+			$otherMediaController = OtherMediaController::getInstance();
+
+			$folder_id = isset($_POST['id']) ? intval($_POST['id']) : false;
+			$json->folder->message = '';
+
+
+			if (false === $folder_id)
+			{
+				$json->folder->is_error = true;
+				$json->folder->message = __('An error has occured: no folder id', 'shortpixel-image-optimiser');
+			}
+
+			$folderObj = $otherMediaController->getFolderByID($folder_id);
+
+			if (false === $folderObj)
+			{
+				 $json->folder->is_error = true;
+				 $json->folder->message = __('An error has occured: no folder object', 'shortpixel-image-optimiser');
+			}
+
+			$folderObj->refreshFolder(true);
+
+			$json->status = true;
+			$json->folder->fileCount = $folderObj->get('fileCount');
+			$json->folder->action = 'refresh';
+
+			return $json;
+		}
+
+		protected function removeCustomFolder($json, $data)
+		{
+			$folder_id = isset($_POST['id']) ? intval($_POST['id']) : false;
+
+			$otherMedia = OtherMediaController::getInstance();
+			$dirObj = $otherMedia->getFolderByID($folder_id);
+
+			if ($dirObj === false)
+			{
+				$json->folder->is_error = true;
+				$json->folder->message = __('An error has occured: no folder object', 'shortpixel-image-optimiser');
+				return;
+			}
+
+			$dirObj->delete();
+
+			$json->status = true;
+			$json->folder->message = __('Folder has been removed', 'shortpixel-image-optimiser');
+			$json->folder->is_done = true;
+			$json->folder->action = 'remove';
+
+			return $json;
+		}
 
     public function ajax_getBackupFolderSize()
     {

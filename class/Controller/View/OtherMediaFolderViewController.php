@@ -27,12 +27,15 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
   protected $search;
   protected $show_hidden = false;
   protected $has_hidden_items = false;
+  protected $customFolderBase;
 
 	private $controller;
 
   public function __construct()
   {
     parent::__construct();
+
+    $fs = \wpSPIO()->filesystem();
 
 		$this->controller = OtherMediaController::getInstance();
 
@@ -47,12 +50,17 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
     $this->show_hidden = isset($_GET['show_hidden']) ? sanitize_text_field(wp_unslash($_GET['show_hidden'])) : false;
 
+    $customFolderBase = $fs->getWPFileBase();
+    $this->customFolderBase = $customFolderBase->getPath();
+
+    $this->loadSettings();
   }
 
   /** Controller default action - overview */
   public function load()
   {
     //  $this->process_actions();
+    //
 
       $this->view->items = $this->getItems();
   //    $this->view->folders = $this->getItemFolders($this->view->items);
@@ -60,8 +68,45 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
       $this->view->pagination = $this->getPagination();
       $this->view->filter = $this->getFilter();
 
+
 //      $this->checkQueue();
       $this->loadView();
+  }
+
+  protected function loadSettings()
+  {
+
+    $settings = \wpSPIO()->settings();
+    $this->view->settings = new \stdclass;
+    $this->view->settings->includeNextGen = $settings->includeNextGen;
+
+    $this->view->title = __('Shortpixel Custom Folders', 'shortpixel-image-optimiser');
+
+  }
+
+  protected function getRowActions($item)
+  {
+
+     $actions = array();
+
+     $removeAction = array('remove' => array(
+        'function' => 'window.ShortPixelProcessor.screen.StopMonitoringFolder(' . intval($item->get('id')) . ')',
+        'type' => 'js',
+        'text' => __('Stop Monitoring', 'shortpixel-image-optimiser'),
+        'display' => 'inline',
+     ));
+
+     $refreshAction = array('refresh' => array(
+        'function' => 'window.ShortPixelProcessor.screen.RefreshFolder(' . intval($item->get('id')) . ')',
+        'type' => 'js',
+        'text' => __('Refresh Folder', 'shortpixel-image-optimiser'),
+        'display' => 'inline',
+     ));
+
+     $actions = array_merge($actions, $refreshAction);
+     $actions = array_merge($actions, $removeAction);
+
+     return $actions;
   }
 
 	private function getItems($args = array())
@@ -74,21 +119,29 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
 					$items[] = $this->controller->getFolderByID($databaseObj->id);
 			}
 
+      $this->total_items = $this->queryItems(array('limit' => -1, 'only_count' => true));
 			return $items;
 	}
 
   private function queryItems($args = array())
   {
     global $wpdb;
+
+    $page = $this->currentPage;
+    if ($page <= 0)
+      $page = 1;
+
     $defaults = array(
         'id' => false,  // Get folder by Id
         'remove_hidden' => true, // Query only active folders
         'path' => false,
         'only_count' => false,
-        'limit' => 20,
-        'offset' => 0,
+        'limit' => $this->items_per_page,
+        'offset' => ($page - 1) * $this->items_per_page,
     );
 
+
+    $filters = $this->getFilter();
     $args = wp_parse_args($args, $defaults);
 
     if (! $this->hasFoldersTable())
@@ -126,11 +179,13 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
         $sql .= " AND status <> -1";
     }
 
+    $sql .= ($this->orderby ? " ORDER BY " . $this->orderby . " " . $this->order . " " : "");
+
     if ($args['limit'] > 0)
     {
-
        $sql .=  " LIMIT " . intval($args['limit']) . " OFFSET " . intval($args['offset']);
     }
+
 
     if (count($prepare) > 0)
       $sql = $wpdb->prepare($sql, $prepare);
@@ -148,7 +203,7 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
   {
      $headings = array(
 
-          'checkbox' => array('title' => '&nbsp;',
+          'checkbox' => array('title' => '<input type="checkbox" name="select-all">',
                           'sortable' => false,
                           'orderby' => 'id',  // placeholder to allow sort on this.
                         ),
@@ -157,19 +212,23 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
                             'orderby' => 'name',
                         ),
            'type' => array('title' => __('Type', 'shortpixel-image-optimiser'),
-                            'sortable' => true,
+                            'sortable' => false,
                             'orderby' => 'path',
                         ),
            'files' =>   array('title' => __('Files', 'shortpixel-image-optimiser'),
                             'sortable' => false,
+                            'orderby' => 'files',
                             ),
            'date' =>    array('title' => __('Last change', 'shortpixel-image-optimiser'),
-                            'sortable' => false,
-                         ),
-           'status' => array('title' => __('Status', 'shortpixel-image-optimiser'),
                             'sortable' => true,
+                            'orderby' => 'ts_updated',
+                         ),
+          /* Status is only yes, or nextgen. Already in the Type string.  Status use for messages */
+           'status' => array('title' => __('Message', 'shortpixel-image-optimiser'),
+                            'sortable' => false,
                             'orderby' => 'status',
                         ),
+
           /* 'actions' => array('title' => __('Actions', 'shortpixel-image-optimiser'),
                              'sortable' => false,
                         ), */
@@ -184,7 +243,8 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
           'orderby' => $this->orderby,
           'order' => $this->order,
           's' => $this->search,
-          'paged' => $this->currentPage
+          'paged' => $this->currentPage,
+          'part' => 'folders',
       );
 
 
@@ -193,7 +253,7 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
 
     }
 
-		// @todo duplicate of OtherMediaViewController which is not nice. 
+		// @todo duplicate of OtherMediaViewController which is not nice.
 		protected function getDisplayHeading($heading)
 		{
 				$output = '';
@@ -263,7 +323,7 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
         $total = $this->total_items;
         $per_page = $this->items_per_page;
 
-        $pages = round($total / $per_page);
+        $pages = ceil($total / $per_page);
 
         if ($pages <= 1)
           return false; // no pages.

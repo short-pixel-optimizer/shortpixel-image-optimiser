@@ -255,11 +255,12 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 
 
       /** This is a workaround for doing wp_redirect when doing an action, which doesn't work due to the route. Long-term fix would be using Ajax for the actions */
+      /* @todo Seems unused - remove with next version if no trouble
       protected function rewriteHREF()
       {
           $rewrite = $this->url; //isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] :
           $this->view->rewriteHREF = '<script language="javascript"> history.pushState(null,null, "' . $rewrite . '"); </script>';
-      }
+      } */
 
 
       private function getPageArgs($args = array())
@@ -303,7 +304,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
           $total = $this->total_items;
           $per_page = $this->items_per_page;
 
-          $pages = round($total / $per_page);
+          $pages = ceil($total / $per_page);
 
           if ($pages <= 1)
             return false; // no pages.
@@ -420,6 +421,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
       /** Actions to list under the Image row
       * @param $item CustomImageModel
       */
+
       protected function getRowActions($item)
       {
 
@@ -437,10 +439,13 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 
 					));
 
-					if ($settings->quotaExceeded || ! $keyControl->keyIsVerified() )
-						$this->view->actions = $viewAction;
-					else
-						$this->view->actions = array_merge($viewAction,$actions);
+          $rowActions = array();
+          $rowActions = array_merge($rowActions, $viewAction);
+
+					if (false === $settings->quotaExceeded || true === $keyControl->keyIsVerified() )
+              $rowActions = array_merge($rowActions,$actions);
+
+					return $rowActions;
       }
 
 			// Function to sync output exactly with Media Library functions for consistency
@@ -462,6 +467,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
       // Use for view, also for renderItemView
 			public function printItemActions($item)
       {
+
         $this->view->actions = UiHelper::getActions($item); // $this->getActions($item, $itemFile);
 
         $list_actions = UiHelper::getListActions($item);

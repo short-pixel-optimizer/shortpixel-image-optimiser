@@ -271,6 +271,8 @@ var ShortPixel = function() {
     }
 
     function setupAdvancedTab() {
+
+      /* @TODO - Removed in favor of AjaxController method . Remove in next version
         jQuery("input.remove-folder-button").on('click', function(){
             var id = jQuery(this).data("value");
             var path = jQuery(this).data('name');
@@ -280,6 +282,7 @@ var ShortPixel = function() {
                 jQuery('#wp_shortpixel_options').submit();
             }
         });
+
         jQuery("input.recheck-folder-button").on('click', function(){
             var path = jQuery(this).data("value");
             var r = confirm( SPstringFormat(_spTr.areYouSureStopOptimizing, path));
@@ -288,6 +291,7 @@ var ShortPixel = function() {
                 jQuery('#wp_shortpixel_options').submit();
             }
         });
+        */
 
         if (document.querySelector('.heavy-feature-virtual.retina') !== null)
         {
@@ -527,6 +531,7 @@ var ShortPixel = function() {
         }
     }
 
+/* @todo Moved to custom screen - remove on next version
     function initFolderSelector() {
         jQuery(".select-folder-button").on('click', function(){
             jQuery(".sp-folder-picker-shade").fadeIn(100); //.css("display", "block");
@@ -580,7 +585,7 @@ var ShortPixel = function() {
             }
         });
     }
-
+*/
 
 
     // used in bulk restore all interface
@@ -753,7 +758,7 @@ var ShortPixel = function() {
         closeHelpPane       : closeHelpPane,
         checkQuota          : checkQuota,
         percentDial         : percentDial,
-        initFolderSelector  : initFolderSelector,
+      //  initFolderSelector  : initFolderSelector,
         browseContent       : browseContent,
         getBackupSize       : getBackupSize,
         newApiKey           : newApiKey,

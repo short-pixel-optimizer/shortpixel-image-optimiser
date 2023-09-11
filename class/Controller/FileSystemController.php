@@ -264,15 +264,13 @@ Class FileSystemController extends \ShortPixel\Controller
           $abspath = $wpContentAbs;
 
 				// If constants UPLOADS is defined -AND- there is a blogs.dir in it, add it like this. UPLOAD constant alone is not enough since it can cause ugly doublures in the path if there is another style config.
-				if (defined('UPLOADS') && strpos(UPLOADS, 'blogs.dir') !== false) // if this is set, lead.
+				if (defined('UPLOADS') && strpos(UPLOADS, 'blogs.dir') !== false)
         {
           $abspath = trailingslashit(ABSPATH) . UPLOADS;
         }
 
-
 //	$abspath = wp_normalize_path($abspath);
         $abspath = apply_filters('shortpixel/filesystem/abspath', $abspath );
-
 
         return $this->getDirectory($abspath);
     }

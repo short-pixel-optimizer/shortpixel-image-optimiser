@@ -1,14 +1,13 @@
 <?php
 namespace ShortPixel;
 
-// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
-if ( isset($_GET['noheader']) ) {
-    require_once(ABSPATH . 'wp-admin/admin-header.php');
+if ( ! defined( 'ABSPATH' ) ) {
+ exit; // Exit if accessed directly.
 }
 ?>
 <div class="wrap shortpixel-other-media">
     <h2>
-        <?php esc_html_e($title);?>
+        <?php esc_html_e($view->title);?>
     </h2>
 
     <div class='toolbar'>

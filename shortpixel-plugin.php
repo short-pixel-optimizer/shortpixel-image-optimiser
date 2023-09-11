@@ -535,7 +535,7 @@ class ShortPixelPlugin {
 
 			$this->load_style( 'shortpixel-admin' );
 			//$this->load_style( 'shortpixel' );
-			$this->load_style( 'sp-file-tree' );
+			//$this->load_style( 'sp-file-tree' );
 			$this->load_style( 'shortpixel-settings' );
 
 		} elseif ( $plugin_page == 'wp-short-pixel-bulk' ) {
@@ -556,10 +556,13 @@ class ShortPixelPlugin {
 				$this->load_script( 'shortpixel-debug' );
 			}
 
-		} elseif ( $plugin_page == 'wp-short-pixel-custom' ) {
+		} elseif ( $plugin_page == 'wp-short-pixel-custom' ) { // custom media
 		//	$this->load_style( 'shortpixel' );
-			$this->load_style( 'shortpixel-admin' );
 
+			$this->load_script( 'sp-file-tree' );
+
+			$this->load_style( 'shortpixel-admin' );
+			$this->load_style( 'sp-file-tree' );
 			$this->load_style( 'shortpixel-othermedia' );
 			$this->load_script( 'shortpixel-screen-custom' ); // screen
 

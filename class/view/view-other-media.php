@@ -142,10 +142,16 @@ $folder_url = esc_url(add_query_arg('part', 'folders', $this->url));
 							</div>
                 </a></span>
             <span class='filename'><?php echo esc_html($item->getFileName()) ?>
-                <div class="row-actions"><?php
-								if (isset($this->view->actions)):
+
+                <div class="row-actions">
+                  <span class='item-id'>#<?php echo esc_attr($item->get('id')); ?></span>
+
+                  <?php
+								if (isset($rowActions)):
 									$i = 0;
-								  foreach($this->view->actions as $actionName => $action):
+								  foreach($rowActions as $actionName => $action):
+
+
 								    $classes = ''; // ($action['display'] == 'button') ? " button-smaller button-primary $actionName " : "$actionName";
 								    $link = ($action['type'] == 'js') ? 'javascript:' . $action['function'] : $action['function'];
 										$newtab  = ($actionName == 'extendquota' || $actionName == 'view') ? 'target="_blank"' : '';
@@ -162,7 +168,7 @@ $folder_url = esc_url(add_query_arg('part', 'folders', $this->url));
 
 
                 ?>
-								<span class='item-id'>#<?php echo esc_attr($item->get('id')); ?></span>
+
 							</div>
             </span>
             <span class='folderpath'><?php echo  esc_html( (string) $item->getFileDir()); ?></span>

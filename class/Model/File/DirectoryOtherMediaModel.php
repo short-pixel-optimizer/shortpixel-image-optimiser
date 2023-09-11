@@ -285,6 +285,9 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
       $files = $fs->getFilesRecursive($this, $filter);
 
+      Log::addTemp('Filters', $filter);
+      Log::addTemp('Files Found', $files);
+
       \wpSPIO()->settings()->hasCustomFolders = time(); // note, check this against bulk when removing. Custom Media Bulk depends on having a setting.
     	$result = $this->addImages($files);
 
@@ -461,9 +464,9 @@ class DirectoryOtherMediaModel extends DirectoryModel
       global $wpdb;
 			if ( apply_filters('shortpixel/othermedia/addfiles', true, $files, $this) === false)
 			{
+        Log::addTemp('Hit Filter Block');
 				 return false;
 			}
-
 
       $values = array();
 
@@ -473,8 +476,6 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
       $fs = \wpSPIO()->filesystem();
 
-		//	Log::addDebug('activeFolders', $activeFolders);
-
       foreach($files as $fileObj)
       {
 					// Note that load is set to false here.
@@ -483,6 +484,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
 					// image already exists
           if ($imageObj->get('in_db') == true)
 					{
+            Log::addTemp('This image is in DB', $fileObj->getFullPath());
 						// Load meta to make it check the folder_id.
 						$imageObj->loadMeta();
 
@@ -501,6 +503,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
 					}
           elseif ($imageObj->isProcessable(true)) // Check strict on Processable here.
           {
+             Log::addTemp('Adding, folder id' . $this->id . ' -- ');
   	         $imageObj->setFolderId($this->id);
              $imageObj->saveMeta();
 
@@ -508,6 +511,9 @@ class DirectoryOtherMediaModel extends DirectoryModel
              {
                 $optimizeControl->addItemToQueue($imageObj);
              }
+          }
+          else {
+            Log::addTemp('This image is not processable', $fileObj->getFullPath());
           }
 
 
