@@ -2,7 +2,7 @@
 namespace ShortPixel\Replacer;
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-
+use ShortPixel\Replacer\Libraries\Unserialize\Unserialize;
 
 /** Module: Replacer.
 *
@@ -315,7 +315,17 @@ class Replacer
 	  private function replaceContent($content, $search, $replace, $in_deep = false)
 	  {
 	    //$is_serial = false;
-	    $content = maybe_unserialize($content);
+	    if ( true === is_serialized($content))
+			{
+				$serialized_content = $content; // use to return content back if incomplete classes are found, prevent destroying the original information
+	    	$content = Unserialize::unserialize($content, array('allowed_classes' => false));
+				// bail directly on incomplete classes. In < PHP 7.2 is_object is false on incomplete objects!
+				if (true === $this->checkIncomplete($content))
+				{
+					 return $serialized_content;
+				}
+			}
+
 	    $isJson = $this->isJSON($content);
 
 	    if ($isJson)
@@ -349,6 +359,11 @@ class Replacer
 	    }
 	    elseif(is_object($content)) // metadata objects, they exist.
 	    {
+				// bail directly on incomplete classes.
+				if (true === $this->checkIncomplete($content))
+				{
+					 return $serialized_content;
+				}
 	      foreach($content as $key => $value)
 	      {
 	        $content->{$key} = $this->replaceContent($value, $search, $replace, true); //str_replace($value, $search, $replace);
@@ -484,6 +499,11 @@ class Replacer
       $json = json_decode($content);
       return $json && $json != $content;
   }
+
+	private function checkIncomplete($var)
+	{
+		 return ($var instanceof \__PHP_Incomplete_Class);
+	}
 
 
 } // class

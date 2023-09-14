@@ -215,7 +215,7 @@ namespace ShortPixel\ShortPixelLogger;
 			$logDir = dirname($this->logPath);
 		  if (! is_dir($logDir) || ! is_writable($logDir))
 			{
-				error_log('ShortPixelLogger: Log Directory is not writable');
+				error_log('ShortpixelLogger: Log Directory is not writable');
 				$this->logFile = false;
 				return false;
 			}
@@ -223,7 +223,7 @@ namespace ShortPixel\ShortPixelLogger;
 			$file = fopen($this->logPath, 'a');
 			if ($file === false)
 			{
-				 error_log('ShortPixelLogger: File could not be opened / created: ' . $this->logPath);
+				 error_log('ShortpixelLogger: File could not be opened / created: ' . $this->logPath);
 				 $this->logFile = false;
 				 return $file;
 			}
