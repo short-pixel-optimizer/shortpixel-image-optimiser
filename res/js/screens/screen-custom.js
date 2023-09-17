@@ -5,6 +5,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
     isCustom = true;
     isMedia = true;
 		type = 'custom';
+    folderTree = null;
 
     Init()
   	{
@@ -113,28 +114,20 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
 
     InitFolderSelector()
     {
-/*
-      jQuery(".select-folder-button").on('click', function(){
-
-      });
-      */
 
       var openModalButton = document.querySelector('.open-selectfolder-modal');
-      openModalButton.addEventListener('click', this.OpenFolderModal.bind(this));
+      if (null !== openModalButton)
+        openModalButton.addEventListener('click', this.OpenFolderModal.bind(this));
 
       var closeModalButtons = document.querySelectorAll('.shortpixel-modal input.select-folder-cancel, .sp-folder-picker-shade')
 
       var self = this;
       closeModalButtons.forEach(function (button, index)
       {
-          button.addEventListener('click', this.CloseFolderModal);
+          button.addEventListener('click', self.CloseFolderModal.bind(self));
       });
 
-      jQuery(".shortpixel-modal input.select-folder-cancel, .sp-folder-picker-shade").on('click', function(){
-          jQuery(".sp-folder-picker-shade").fadeOut(100); //.css("display", "none");
-          jQuery(".shortpixel-modal.modal-folder-picker").addClass('shortpixel-hide');
-          jQuery(".shortpixel-modal.modal-folder-picker").hide();
-      });
+
       jQuery(".shortpixel-modal input.select-folder").on('click', function(e){
           //var subPath = jQuery("UL.jqueryFileTree LI.directory.selected A").attr("rel").trim();
 
@@ -158,8 +151,8 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
           if(subPath) {
               var fullPath = jQuery("#customFolderBase").val() + subPath;
               fullPath = fullPath.replace(/\/\//,'/');
-            //  console.debug('FullPath' + fullPath);
-              jQuery("#addCustomFolder").val(fullPath);
+
+              jQuery("#addCustomFolde Selected wp-content/ r").val(fullPath);
               jQuery("#addCustomFolderView").val(fullPath);
               jQuery(".sp-folder-picker-shade").fadeOut(100);
               jQuery(".shortpixel-modal.modal-folder-picker").css("display", "none");
@@ -173,30 +166,67 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
     OpenFolderModal()
     {
       var shade  = document.querySelector(".sp-folder-picker-shade");
-      this.FadeIn(shade, 500);
-    //  jQuery(".sp-folder-picker-shade").fadeIn(100); //.css("display", "block");
+    //  this.FadeIn(shade, 500);
+      this.Show(shade);
 
       var picker = document.querySelector(".shortpixel-modal.modal-folder-picker");
       picker.classList.remove('shortpixel-hide');
-      //picker.show();
-
-    //  jQuery(".shortpixel-modal.modal-folder-picker").removeClass('shortpixel-hide');
-    //  jQuery(".shortpixel-modal.modal-folder-picker").show();
-
+      picker.style.display = 'block';
 
       var picker = document.querySelector(".sp-folder-picker");
-      picker.parentElement.style.marginLeft = (-picker.width / 2);
 
+      if (null === this.folderTree)
+      {
+        this.folderTree = new ShortPixelFolderTree(picker, this.processor);
+        picker.addEventListener('shortpixel-folder.selected', this.HandleFolderSelectedEvent.bind(this));
+      }
 
-      picker.fileTree({
-          script: ShortPixel.browseContent,
-          multiFolder: false,
-      });
+      //this.FadeIn(picker, 500);
+      this.Show(picker);
+    }
+
+    HandleFolderSelectedEvent(e)
+    {
+        var data = e.detail;
+        var relpath = data.relpath;
+
+        var selectedField = document.querySelector('.sp-folder-picker-selected');
+        selectedField.textContent = relpath;
     }
 
     CloseFolderModal()
     {
-        // @todo FadeOut function here 
+      var shade  = document.querySelector(".sp-folder-picker-shade");
+    //  this.FadeOut(shade, 500);
+      this.Hide(shade);
+
+        // @todo FadeOut function here
+      var picker = document.querySelector('.shortpixel-modal.modal-folder-picker');
+    //  this.FadeOut(picker, 1000);
+      this.Hide(picker);
+    }
+
+    AddNewFolder()
+    {
+
+      var data = {};
+      data.id = id;
+      data.type = 'folder';
+      data.screen_action = 'addCustomFolder';
+      data.callback = 'shortpixel.folder.AddNewDirectory';
+
+      window.addEventListener('shortpixel.folder.AddNewDirectory', this.UpdateFolderViewEvent.bind(this), {'once':true});
+
+      this.processor.AjaxRequest(data);
+
+    }
+
+    UpdateFolderViewEvent()
+    {
+        var data = e.detail;
+
+        
+
     }
 
 

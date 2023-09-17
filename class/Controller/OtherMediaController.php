@@ -356,17 +356,21 @@ class OtherMediaController extends \ShortPixel\Controller
     }
 
 
-    public function ajaxBrowseContent()
+    public function browseFolder($postDir)
     {
+      $error = array('is_error' => true, 'message' => '');
+
       if ( ! $this->userIsAllowed )  {
-          wp_die(esc_html(__('You do not have sufficient permissions to access this page.','shortpixel-image-optimiser')));
+          $error['message'] = __('You do not have sufficient permissions to access this page.','shortpixel-image-optimiser');
+          return $error;
       }
+
       $fs = \wpSPIO()->filesystem();
       $rootDirObj = $fs->getWPFileBase();
       $path = $rootDirObj->getPath();
 
-			// @todo Add Nonce here
-      $postDir = isset($_POST['dir']) ? trim(sanitize_text_field(wp_unslash($_POST['dir']))) : null;
+      $folders = array();
+
       if (! is_null($postDir))
       {
          $postDir = rawurldecode($postDir);
@@ -382,10 +386,10 @@ class OtherMediaController extends \ShortPixel\Controller
       }
 
       $dirObj = $fs->getDirectory($path);
-
       if ($dirObj->getPath() !== $rootDirObj->getPath() && ! $dirObj->isSubFolderOf($rootDirObj))
       {
-        exit(esc_html(__('This directory seems not part of WordPress', 'shortpixel-image-optimiser')));
+        $error['message'] = __('This directory seems not part of WordPress', 'shortpixel-image-optimiser');
+        return $error;
       }
 
       if( $dirObj->exists() ) {
@@ -406,12 +410,12 @@ class OtherMediaController extends \ShortPixel\Controller
           }
 
           if( count($subdirs) > 0 ) {
-              echo "<ul class='jqueryFileTree'>";
+
+            //  echo "<ul class='jqueryFileTree'>";
               foreach($subdirs as $dir ) {
                   $returnDir = substr($dir->getPath(), strlen($rootDirObj->getPath())); // relative to root.
                   $dirpath = $dir->getPath();
                   $dirname = $dir->getName();
-                  // @todo Should in time be moved to othermedia_controller / check if media library
 
                   $htmlRel	= str_replace("'", "&apos;", $returnDir );
                   $htmlName	= htmlentities($dirname);
@@ -419,22 +423,38 @@ class OtherMediaController extends \ShortPixel\Controller
 
                   if( $dir->exists() ) {
                       //KEEP the spaces in front of the rel values - it's a trick to make WP Hide not replace the wp-content path
-                          echo "<li class='directory collapsed'><a rel=' " .esc_attr($htmlRel) . "'>" . esc_html($htmlName) . "</a></li>";
+                        //  echo "<li class='directory collapsed'><a rel=' " .esc_attr($htmlRel) . "'>" . esc_html($htmlName) . "</a></li>";
+                        $htmlRel = esc_attr($htmlRel);
+                       $folders[] = array(
+                          'relpath' => $htmlRel,
+                          'name' => esc_html($htmlName),
+                          'type' => 'folder',
+                       );
                   }
 
               }
 
-              echo "</ul>";
+          //    echo "</ul>";
           }
           elseif ($_POST['dir'] == '/')
           {
-            echo "<ul class='jqueryFileTree'>";
+            $error['message'] = __('No Directories found that can be added to Custom Folders', 'shortpixel-image-optimiser');
+            return $error;
+            /*    echo "<ul class='jqueryFileTree'>";
             esc_html_e('No Directories found that can be added to Custom Folders', 'shortpixel-image-optimiser');
-            echo "</ul>";
+            echo "</ul>"; */
+          }
+          else {
+            $error['message'] = 'Nothing found';
+            return $error;
           }
       }
+      else {
+        $error['message'] = 'Dir not existing';
+        return $error;
+      }
 
-      die();
+      return $folders;
     }
 
     /* Get the custom Folders from DB, put them in model

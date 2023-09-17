@@ -103,8 +103,15 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
         'display' => 'inline',
      ));
 
-     $actions = array_merge($actions, $refreshAction);
-     $actions = array_merge($actions, $removeAction);
+     $showFilesAction = array('showfiles' => array(
+        'function' => '-- ',
+        'type' => 'link',
+        'text' => __('Show all Files (todo)', 'shortpixel-image-optimiser'),
+        'display' => 'inline',
+     ));
+
+     $actions = array_merge($actions, $refreshAction, $removeAction, $showFilesAction);
+//     $actions = array_merge($actions, );
 
      return $actions;
   }

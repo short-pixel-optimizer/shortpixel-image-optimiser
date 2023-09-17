@@ -132,21 +132,47 @@ class ShortPixelScreenBase
 		 return parseInt(str);
 	}
 
-	FadeIn(element, duration = 600)
+
+	// ** FADE OUT FUNCTION **
+  FadeOut(el) {
+			el.style.opacity = 0;
+			el.style.display = 'none';
+
+			/*
+			el.style.opacity = 1;
+			(function fade() {
+					if ((el.style.opacity -= .1) < 0) {
+							el.style.display = "none";
+							el.style.opacity = 0;
+
+					} else {
+							requestAnimationFrame(fade);
+					}
+			})(); */
+	};
+
+	// ** FADE IN FUNCTION **
+	 FadeIn(el, display) {
+			el.style.opacity = 1;
+			el.style.display = "block";
+			/*
+			(function fade() {
+					var val = parseFloat(el.style.opacity);
+					if (!((val += .1) > 1)) {
+							el.style.opacity = val;
+							requestAnimationFrame(fade);
+					}
+			})(); */
+	};
+
+	Show(el)
 	{
-		 element.style.display = '';
-		 element.style.opacity = 0;
-		 var last = +new Date();
-  	 var tick = function() {
-	    	element.style.opacity = +element.style.opacity + (new Date() - last) / duration;
-	    	last = +new Date();
-	    	if (+element.style.opacity < 1) {
-	      	(window.requestAnimationFrame && requestAnimationFrame(tick)) || setTimeout(tick, 16);
-	    	}
-  	  };
-  		tick();
-		 //var op = window.getComputedStyle(el).getPropertyValue("opacity");
-		 //op += 0.1
+		 el.style.display = 'block';
+	}
+
+	Hide(el)
+	{
+		el.style.display = 'none'; 
 	}
 
 

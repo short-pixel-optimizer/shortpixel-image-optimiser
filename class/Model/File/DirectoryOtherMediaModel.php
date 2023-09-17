@@ -90,11 +90,18 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
 				$result = $wpdb->get_results($sql, ARRAY_A);
 
+        //var_dump($result2);
+
 				$stats = array();
-				foreach($result as $data)
+				foreach($result as $rawdata)
 				{
-					 $folder_id = $data['folder_id'];
-					 unset($data['folder_id']);
+					 $folder_id = $rawdata['folder_id'];
+
+           $data = array(
+             'optimized' => (int) $rawdata['optimized'],
+             'waiting' => (int) $rawdata['waiting'],
+             'total' => (int) $rawdata['total'],
+           );
 					 $stats[$folder_id] = $data;
 				}
 
@@ -120,7 +127,21 @@ class DirectoryOtherMediaModel extends DirectoryModel
 	          . "WHERE folder_id = %d";
 	      $sql = $wpdb->prepare($sql, $this->id);
 	      $res = $wpdb->get_row($sql, ARRAY_A);
-				return $res;
+
+        if (is_array($res))
+        {
+          $result = array(
+            'optimized' => (int) $res['optimized'],
+            'waiting' => (int) $res['waiting'],
+            'total' => (int) $res['total'],
+
+          );
+          return $result;
+        }
+        else {
+          return false;
+        }
+
 			}
 
   }

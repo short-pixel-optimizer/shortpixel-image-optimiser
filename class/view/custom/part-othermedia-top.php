@@ -62,9 +62,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 <?php
 $file_url =  esc_url(add_query_arg('part', 'files', $this->url));
 $folder_url = esc_url(add_query_arg('part', 'folders', $this->url));
+$scan_url = esc_url(add_query_arg('part', 'scan', $this->url));
 ?>
 
 <div class="custom-media-tabs">
     <a href="<?php echo $file_url  ?>">(TODO) Files</a>
     <a href="<?PHP echo $folder_url ?>">(TODO) Folders</a>
+    <a href="<?php echo $scan_url ?>">(Todo) Scan </a>
 </div>

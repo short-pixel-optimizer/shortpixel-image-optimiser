@@ -233,7 +233,7 @@ class ShortPixelPlugin {
 		add_action( 'wp_ajax_shortpixel_image_processing', array( AjaxController::getInstance(), 'ajax_processQueue' ) );
 
 		// Custom Media
-		add_action( 'wp_ajax_shortpixel_browse_content', array( OtherMediaController::getInstance(), 'ajaxBrowseContent' ) );
+	//	add_action( 'wp_ajax_shortpixel_browse_content', array( OtherMediaController::getInstance(), 'ajaxBrowseContent' ) );
 		add_action( 'wp_ajax_shortpixel_get_backup_size', array( AjaxController::getInstance(), 'ajax_getBackupFolderSize' ) );
 
 		add_action( 'wp_ajax_shortpixel_propose_upgrade', array( AjaxController::getInstance(), 'ajax_proposeQuotaUpgrade' ) );
@@ -291,7 +291,21 @@ class ShortPixelPlugin {
 
 
 		// FileTree in Settings
-		wp_register_script( 'sp-file-tree', plugins_url( '/res/js/sp-file-tree.min.js', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
+	/*	wp_register_script( 'sp-file-tree', plugins_url( '/res/js/sp-file-tree.min.js', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
+*/
+
+	 wp_register_script('shortpixel-folderbrowser', plugins_url('/res/js/shortpixel-folderbrowser.js', SHORTPIXEL_PLUGIN_FILE, array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true ));
+
+	 wp_localize_script('shortpixel-folderbrowser', 'spio_folderbrowser', array(
+		 		'strings' => array(
+						'loading' => __('Loading', 'shortpixel-image-optimiser'),
+						'empty_result' => __('No Directories found that can be added to Custom Folders', 'shortpixel-image-optimiser'),
+				),
+				'icons' => array(
+						'folder_closed' => plugins_url('res/img/filebrowser/folder-closed.svg', SHORTPIXEL_PLUGIN_FILE),
+						'folder_open' => plugins_url('res/img/filebrowser/folder-closed.svg', SHORTPIXEL_PLUGIN_FILE),
+				),
+	 ));
 
 		wp_register_script( 'jquery.knob.min.js', plugins_url( '/res/js/jquery.knob.min.js', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
@@ -455,7 +469,7 @@ class ShortPixelPlugin {
 
 	public function admin_styles() {
 
-		wp_register_style( 'sp-file-tree', plugins_url( '/res/css/sp-file-tree.min.css', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
+		wp_register_style( 'shortpixel-folderbrowser', plugins_url( '/res/css/shortpixel-folderbrowser.css', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
 
 		//wp_register_style( 'shortpixel', plugins_url( '/res/css/short-pixel.css', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
 
@@ -530,7 +544,7 @@ class ShortPixelPlugin {
 		if ( $plugin_page == 'wp-shortpixel-settings' ) {
 
 			$this->load_script( 'shortpixel-screen-nolist' ); // screen
-			$this->load_script( 'sp-file-tree' );
+	//		$this->load_script( 'sp-file-tree' );
 			$this->load_script( 'shortpixel-settings' );
 
 			$this->load_style( 'shortpixel-admin' );
@@ -559,10 +573,10 @@ class ShortPixelPlugin {
 		} elseif ( $plugin_page == 'wp-short-pixel-custom' ) { // custom media
 		//	$this->load_style( 'shortpixel' );
 
-			$this->load_script( 'sp-file-tree' );
+			$this->load_script( 'shortpixel-folderbrowser' );
 
 			$this->load_style( 'shortpixel-admin' );
-			$this->load_style( 'sp-file-tree' );
+			$this->load_style( 'shortpixel-folderbrowser' );
 			$this->load_style( 'shortpixel-othermedia' );
 			$this->load_script( 'shortpixel-screen-custom' ); // screen
 

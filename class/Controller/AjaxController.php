@@ -254,8 +254,15 @@ class AjaxController
 					 case 'refreshFolder':
 					 		$json = $this->refreshFolder($json,$data);
 					 break;
+					 // CUSTOM FOLDERS
 					 case 'removeCustomFolder':
 					 	 	 $json = $this->removeCustomFolder($json, $data);
+					 break;
+					 case 'browseFolders':
+					 		$json = $this->browseFolders($json, $data);
+					 break ;
+					 case 'addCustomFolder':
+					 		$json = $this->addCustomFolder($json, $data);
 					 break;
 
            default:
@@ -698,6 +705,53 @@ class AjaxController
 			$json->folder->action = 'remove';
 
 			return $json;
+		}
+
+		protected function addCustomFolder($json, $data)
+		{
+			  $relpath = isset($_POST['relpath']) ? sanitize_text_field($_POST['relpath']) : null;
+
+				$fs = \wpSPIO()->filesystem();
+
+				$customFolderBase = $fs->getWPFileBase();
+				$basePath = $customFolderBase->getPath();
+
+				$path = trailingslashit($basePath) . $relpath;
+
+				$otherMedia = OtherMediaController::getInstance();
+
+				$result = $otherMedia->addDirectory($path);
+
+				// @todo Formulate some response here that can be used on the row thingie.
+				//$json->folder->
+
+		}
+
+
+		protected function browseFolders($json, $data)
+		{
+			 //	$path = isset($_POST['baseFolder']) ? sanitize_text_field($_POST['baseFolder']) : null;
+
+
+				$relpath = isset($_POST['relPath']) ? sanitize_text_field($_POST['relPath']) : '';
+
+				$otherMediaController = OtherMediaController::getInstance();
+
+				$folders = $otherMediaController->browseFolder($relpath);
+
+				if (isset($folders['is_error']) && true == $folders['is_error'])
+				{
+					 $json->folder->is_error = true;
+					 $json->folder->message = $folders['message'];
+					 $folders = array();
+				}
+
+				$json->folder->folders = $folders;
+				$json->folder->relpath = $relpath;
+				$json->status = true;
+
+				return $json;
+
 		}
 
     public function ajax_getBackupFolderSize()
