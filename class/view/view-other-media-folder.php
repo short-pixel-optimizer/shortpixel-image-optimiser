@@ -14,9 +14,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 if ( isset($_GET['noheader']) ) {
     require_once(ABSPATH . 'wp-admin/admin-header.php');
 }
+
+$this->loadView('custom/part-othermedia-top');
+
+
  if($view->items):
 
-	 $this->loadView('custom/part-othermedia-top');
 
 
 ?>
@@ -42,7 +45,7 @@ if ( isset($_GET['noheader']) ) {
 
         </div>
         <input type="button" class="button button-info select-folder-cancel" value="<?php esc_html_e('Cancel','shortpixel-image-optimiser');?>" style="margin-right: 30px;">
-        <input type="button" class="button button-primary select-folder" value="<?php esc_html_e('Add','shortpixel-image-optimiser');?>">
+        <input type="button" class="button button-primary select-folder" value="<?php esc_html_e('Add','shortpixel-image-optimiser');?>" disabled>
 
         <span class='sp-folder-picker-selected'>&nbsp;</span>
     </div>

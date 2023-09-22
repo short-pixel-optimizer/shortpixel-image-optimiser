@@ -118,6 +118,7 @@ class OtherMediaController extends \ShortPixel\Controller
        return $folder;
     }
 
+
     public function getCustomImageByPath($path)
     {
          global $wpdb;
@@ -168,6 +169,7 @@ class OtherMediaController extends \ShortPixel\Controller
 			 // Check if this directory is allowed.
 			 if ($this->checkDirectoryRecursive($directory) === false)
 			 {
+         Log::addDebug('Check Recursive Directory not allowed');
 				 return false;
 			 }
 
@@ -417,6 +419,8 @@ class OtherMediaController extends \ShortPixel\Controller
                   $dirpath = $dir->getPath();
                   $dirname = $dir->getName();
 
+                  $folderObj = $this->getFolderByPath($dirpath);
+
                   $htmlRel	= str_replace("'", "&apos;", $returnDir );
                   $htmlName	= htmlentities($dirname);
                   //$ext	= preg_replace('/^.*\./', '', $file);
@@ -429,6 +433,7 @@ class OtherMediaController extends \ShortPixel\Controller
                           'relpath' => $htmlRel,
                           'name' => esc_html($htmlName),
                           'type' => 'folder',
+                          'is_active' => (true === $folderObj->get('in_db') && false === $folderObj->isRemoved()),
                        );
                   }
 

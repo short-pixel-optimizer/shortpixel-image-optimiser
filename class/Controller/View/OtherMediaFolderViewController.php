@@ -73,6 +73,18 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
       $this->loadView();
   }
 
+  public function singleItemView($folderObj)
+  {
+    ob_start();
+    $this->view->current_item = $folderObj;
+    $this->loadView('custom/part-single-folder', false);
+    $result = ob_get_contents();
+
+    ob_end_clean();
+
+    return $result;
+  }
+
   protected function loadSettings()
   {
 
@@ -81,6 +93,8 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
     $this->view->settings->includeNextGen = $settings->includeNextGen;
 
     $this->view->title = __('Shortpixel Custom Folders', 'shortpixel-image-optimiser');
+    $this->view->show_search = true;
+    $this->view->has_filters = true;
 
   }
 
@@ -123,7 +137,10 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
 
 			foreach($results as $index => $databaseObj)
 			{
-					$items[] = $this->controller->getFolderByID($databaseObj->id);
+          $db_id = $databaseObj->id;
+          $folderObj = $this->controller->getFolderByID($db_id);
+					$items[$db_id] = $folderObj;
+
 			}
 
       $this->total_items = $this->queryItems(array('limit' => -1, 'only_count' => true));

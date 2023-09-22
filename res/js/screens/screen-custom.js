@@ -6,6 +6,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
     isMedia = true;
 		type = 'custom';
     folderTree = null;
+    currentSelectedPath = null;
 
     Init()
   	{
@@ -119,7 +120,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
       if (null !== openModalButton)
         openModalButton.addEventListener('click', this.OpenFolderModal.bind(this));
 
-      var closeModalButtons = document.querySelectorAll('.shortpixel-modal input.select-folder-cancel, .sp-folder-picker-shade')
+      var closeModalButtons = document.querySelectorAll('.shortpixel-modal input.select-folder-cancel, .sp-folder-picker-shade');
 
       var self = this;
       closeModalButtons.forEach(function (button, index)
@@ -127,40 +128,12 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
           button.addEventListener('click', self.CloseFolderModal.bind(self));
       });
 
+      var addFolderButton = document.querySelector('.modal-folder-picker .select-folder')
+      if (null !== addFolderButton)
+      {
+        addFolderButton.addEventListener('click', this.AddNewFolderEvent.bind(this));
+      }
 
-      jQuery(".shortpixel-modal input.select-folder").on('click', function(e){
-          //var subPath = jQuery("UL.jqueryFileTree LI.directory.selected A").attr("rel").trim();
-
-          // @todo This whole thing might go, since we don't display files anymore in folderTree.
-
-          // check if selected item is a directory. If so, we are good.
-          var selected = jQuery('UL.jqueryFileTree LI.directory.selected');
-
-          // if not a file might be selected, check the nearest directory.
-          if (jQuery(selected).length == 0 )
-            var selected = jQuery('UL.jqueryFileTree LI.selected').parents('.directory');
-
-          // fail-saif check if there is really a rel.
-          var subPath = jQuery(selected).children('a').attr('rel');
-
-          if (typeof subPath === 'undefined') // nothing is selected
-            return;
-
-          subPath = subPath.trim();
-
-          if(subPath) {
-              var fullPath = jQuery("#customFolderBase").val() + subPath;
-              fullPath = fullPath.replace(/\/\//,'/');
-
-              jQuery("#addCustomFolde Selected wp-content/ r").val(fullPath);
-              jQuery("#addCustomFolderView").val(fullPath);
-              jQuery(".sp-folder-picker-shade").fadeOut(100);
-              jQuery(".shortpixel-modal.modal-folder-picker").css("display", "none");
-              jQuery('#saveAdvAddFolder').removeClass('hidden');
-          } else {
-              alert("Please select a folder from the list.");
-          }
-      });
     }
 
     OpenFolderModal()
@@ -185,13 +158,24 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
       this.Show(picker);
     }
 
-    HandleFolderSelectedEvent(e)
+    HandleFolderSelectedEvent(event)
     {
-        var data = e.detail;
+        var data = event.detail;
         var relpath = data.relpath;
 
         var selectedField = document.querySelector('.sp-folder-picker-selected');
         selectedField.textContent = relpath;
+
+        this.currentSelectedPath = relpath;
+
+        if (null !== this.currentSelectedPath)
+        {
+          var addFolderButton = document.querySelector('.modal-folder-picker .select-folder');
+          if (null !== addFolderButton)
+          {
+            addFolderButton.disabled = false;
+          }
+        }
     }
 
     CloseFolderModal()
@@ -206,11 +190,11 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
       this.Hide(picker);
     }
 
-    AddNewFolder()
+    AddNewFolderEvent(event)
     {
 
       var data = {};
-      data.id = id;
+      data.relpath = this.currentSelectedPath;
       data.type = 'folder';
       data.screen_action = 'addCustomFolder';
       data.callback = 'shortpixel.folder.AddNewDirectory';
@@ -221,12 +205,26 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
 
     }
 
-    UpdateFolderViewEvent()
+    UpdateFolderViewEvent(event)
     {
-        var data = e.detail;
+        var data = event.detail;
 
-        
+        if (data.folder.result.itemView)
+        {
+           var element = document.querySelector('.list-overview .item');
+           if (null !== element)
+           {
+                element.insertAdjacentHTML('beforebegin', data.folder.result.itemView);
+           }
+        }
 
+        this.CloseFolderModal();
+
+    }
+
+    StartFolderScan()
+    {
+       
     }
 
 

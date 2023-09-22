@@ -21,6 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
         </div>
 			<hr class='wp-header-end' />
 
+<?php if (property_exists($view, 'show_search') && true === $view->show_search):  ?>
       <div class="searchbox">
             <form method="get">
                 <input type="hidden" name="page" value="wp-short-pixel-custom" />
@@ -36,6 +37,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             </form>
       </div>
   </div>
+<?php endif;  ?>
 
 <?php if ($this->view->pagination !== false): ?>
   <div class='pagination tablenav'>

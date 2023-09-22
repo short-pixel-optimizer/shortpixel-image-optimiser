@@ -634,6 +634,10 @@ class ShortPixelPlugin {
 						{
 							$controller = 'ShortPixel\Controller\View\OtherMediaFolderViewController';
 						}
+						elseif('scan' === $template_part)
+						{
+							$controller = 'ShortPixel\Controller\View\OtherMediaScanViewController';							 
+						}
 						else {
 							$controller = 'ShortPixel\Controller\View\OtherMediaViewController';
 						}

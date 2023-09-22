@@ -17,7 +17,6 @@ $folder_id = $item->get('id');
 
 $type_display = ($item->get('is_nextgen') ) ? __('Nextgen', 'shortpixel-image-optimiser') . ":" : "";
 $stat = $item->getStats();
-//echo "<PRE>"; var_dump($stat); echo "</PRE>";
 
 
 $fullstatus = esc_html__("Optimized",'shortpixel-image-optimiser') . ": " . $stat['optimized'] . ", "

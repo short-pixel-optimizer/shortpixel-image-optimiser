@@ -2,6 +2,8 @@
   position: relative;
   border: 1px solid #000;
   margin: 8px 0;
+  max-height: 50vh;
+  overflow-y: scroll;
 }
 .sp-folder-picker .loading {
   background: rgba(0, 0, 0, 0.4);
@@ -53,6 +55,9 @@
   background: url("../img/filebrowser/folder-open.svg") center center;
   background-repeat: no-repeat;
   background-size: 20px 20px;
+}
+.sp-folder-picker .folder.is_active > a {
+  color: #ccc;
 }
 
 .modal-folder-picker .sp-folder-picker-selected {

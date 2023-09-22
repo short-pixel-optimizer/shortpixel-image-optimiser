@@ -466,7 +466,7 @@ class SettingsController extends \ShortPixel\ViewController
          $statsControl = StatsController::getInstance();
 
          $this->view->minSizes = $this->getMaxIntermediateImageSize();
-         $this->view->customFolders= $this->loadCustomFolders();
+      //   $this->view->customFolders= $this->loadCustomFolders();
          $this->view->allThumbSizes = UtilHelper::getWordPressImageSizes();
          $this->view->averageCompression = $statsControl->getAverageCompression();
          $this->view->savedBandwidth = UiHelper::formatBytes( intval($this->view->data->savedSpace) * 10000,2);
@@ -617,36 +617,24 @@ class SettingsController extends \ShortPixel\ViewController
 
       }
 
+/*
       protected function loadCustomFolders()
       {
 
         $otherMedia = OtherMediaController::getInstance();
 
-        $otherMedia->refreshFolders();
+        //$otherMedia->refreshFolders();
         $customFolders = $otherMedia->getActiveFolders();
         $fs = \wpSPIO()->filesystem();
 
         $customFolderBase = $fs->getWPFileBase();
         $this->view->customFolderBase = $customFolderBase->getPath();
 
-        /* This seems unused(?) 
-				if ($this->has_nextgen)
-        {
-          $ng = NextGenController::getInstance();
-          $NGfolders = $ng->getGalleries();
-          $foldersArray = array();
 
-          foreach($NGfolders as $folder)
-          {
-            $fsFolder = $fs->getDirectory($folder->getPath());
-            $foldersArray[] = $fsFolder->getPath();
-          }
-
-        } */
 
         return $customFolders;
       }
-
+*/
       // This is done before handing it off to the parent controller, to sanitize and check against model.
       protected function processPostData($post)
       {

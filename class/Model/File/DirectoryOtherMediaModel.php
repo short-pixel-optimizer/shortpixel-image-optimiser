@@ -26,6 +26,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
   protected $fileCount = 0; // inherent onreliable statistic in dbase. When insert / batch insert the folder count could not be updated, only on refreshFolder which is a relative heavy function to use on every file upload. Totals are better gotten from a stat-query, on request.
   protected $updated = 0;
   protected $created = 0;
+  protected $checked = 0;
   protected $path_md5;
 
   protected $is_nextgen = false;
@@ -90,8 +91,6 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
 				$result = $wpdb->get_results($sql, ARRAY_A);
 
-        //var_dump($result2);
-
 				$stats = array();
 				foreach($result as $rawdata)
 				{
@@ -155,6 +154,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
             'status' => $this->status,
             'file_count' => $this->fileCount,
             'ts_updated' => $this->timestampToDB($this->updated),
+            'ts_checked' => $this->timestampToDB($this->checked);
             'name' => $this->name,
             'path' => $this->getPath(),
         );
@@ -177,6 +177,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
 						}
 						else
 						{
+              $data['ts_created'] = $this->timestampToDB(time());
 							$this->id = $wpdb->insert($table, $data);
 							if ($this->id !== false)
 							{
@@ -317,9 +318,13 @@ class DirectoryOtherMediaModel extends DirectoryModel
       $stats = $this->getStats();
       $this->fileCount = $stats['total'];
 
+      $this->checked = time();
       $this->save();
 
   }
+
+
+  
 
 	/**  Check if a directory is allowed. Directory can't be media library, outside of root, or already existing in the database
 	* @param $silent If not allowed, don't generate notices.
@@ -473,7 +478,14 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
     private function DBtoTimestamp($date)
     {
-        return strtotime($date);
+        if (is_null($date))
+        {
+            $timestamp = time();
+        }
+        else {
+            $timestamp =strtotime($date);
+        }
+        return $timestamp;
     }
 
   /** This function is called by OtherMediaController / RefreshFolders. Other scripts should not call it
@@ -537,15 +549,9 @@ class DirectoryOtherMediaModel extends DirectoryModel
             Log::addTemp('This image is not processable', $fileObj->getFullPath());
           }
 
-
       }
-
   }
 
-		private function loadFolderById()
-		{
-
-		}
 
     private function loadFolderByPath($path)
     {
@@ -576,9 +582,10 @@ class DirectoryOtherMediaModel extends DirectoryModel
         if ($this->id > 0)
          $this->in_db = true;
 
-        $this->updated = isset($folder->ts_updated) ? $this->DBtoTimestamp($folder->ts_updated) : time();
-        $this->created = isset($folder->ts_created) ? $this->DBtoTimestamp($folder->ts_created) : time();
-        $this->fileCount = isset($folder->file_count) ? $folder->file_count : 0; // deprecated, do not rely on.
+        $this->updated = property_exists($folder,'ts_updated') ? $this->DBtoTimestamp($folder->ts_updated) : time();
+        $this->created = property_exists($folder,'ts_created') ? $this->DBtoTimestamp($folder->ts_created) : time();
+        $this->checked = property_exists($folder,'ts_checked') ? $this->DBtoTimestamp($folder->ts_checked) : time();
+        $this->fileCount = property_exists($folder,'file_count') ? $folder->file_count : 0; // deprecated, do not rely on.
 
         $this->status = $folder->status;
 

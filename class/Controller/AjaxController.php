@@ -8,6 +8,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use ShortPixel\Controller\View\ListMediaViewController as ListMediaViewController;
 use ShortPixel\Controller\View\OtherMediaViewController as OtherMediaViewController;
+use ShortPixel\Controller\View\OtherMediaFolderViewController as OtherMediaFolderViewController;
+
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 
@@ -494,7 +496,7 @@ class AjaxController
 				if ($doCustom)
 				{
 					$otherMediaController = OtherMediaController::getInstance();
-					$otherMediaController->refreshFolders(true);
+			//		$otherMediaController->refreshFolders(true); // phasing this out for a better approach
 				}
 
         $optimizeController = new OptimizeController();
@@ -720,19 +722,32 @@ class AjaxController
 
 				$otherMedia = OtherMediaController::getInstance();
 
+				// Result is a folder object
 				$result = $otherMedia->addDirectory($path);
 
+
 				// @todo Formulate some response here that can be used on the row thingie.
-				//$json->folder->
+				if (false === $result)
+				{
+					 $json->folder->is_error = true;
+					 $json->folder->message = __('Failed to add Folder', 'shortpixel-image-optimiser');
 
+				}
+				else {
+					$control = new OtherMediaFolderViewController();
+					$itemView = $control->singleItemView($result);
+
+					$json->folder->result = new \stdClass;
+					$json->folder->result->id = $result->get('id');
+					$json->folder->result->itemView = $itemView;
+
+				}
+
+				return $json;
 		}
-
 
 		protected function browseFolders($json, $data)
 		{
-			 //	$path = isset($_POST['baseFolder']) ? sanitize_text_field($_POST['baseFolder']) : null;
-
-
 				$relpath = isset($_POST['relPath']) ? sanitize_text_field($_POST['relPath']) : '';
 
 				$otherMediaController = OtherMediaController::getInstance();

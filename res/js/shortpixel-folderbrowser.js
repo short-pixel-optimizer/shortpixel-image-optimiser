@@ -101,11 +101,13 @@ class ShortPixelFolderTree
               li.dataset.relpath = element.relpath;
               li.classList.add('folder','closed');
 
+              if ( element.is_active && true === element.is_active)
+              {
+                 li.classList.add('is_active');
+              }
+
               var link = document.createElement('a');
 
-// @todo The use of image src for folder Icons is probably not the best since source should be switched out when selected
-            //  console.log(self.GetFolderIcon('folder_closed'));
-          //    link.appendChild(self.GetFolderIcon('folder_closed'));
               var icon = document.createElement('i');
               icon.classList.add('icon');
               link.appendChild(icon);
@@ -118,13 +120,25 @@ class ShortPixelFolderTree
         });
 
         parent.appendChild(ul); // add the tree.
-
     }
 
  // @Todo : find out how to keep track of previously selected items (and switch them out)
  // + Emit a singal (trigger event) to external when something is selected, so UX / hidden field can add them in custom.js
     ToggleFolderContentsEvent(e)
     {
+        var anchor = e.target;
+        var li = e.target.parentElement;
+        if (li.tagName !== 'LI')
+        {
+           var li = li.parentElement;
+        }
+
+        // Is classList is_active ( meaning already selected a custom folder ) do nothing with both selection and subfolders
+        if (true === li.classList.contains('is_active'))
+        {
+            return;
+        }
+
         // remove all previous selected thingies.
         var openElements = this.parentElement.querySelectorAll('.folder.selected');
         openElements.forEach(function (element)
@@ -132,13 +146,6 @@ class ShortPixelFolderTree
            element.classList.remove('selected');
            //element.classList.add('closed');
         });
-
-        var anchor = e.target;
-        var li = e.target.parentElement;
-        if (li.tagName !== 'LI')
-        {
-           var li = li.parentElement;
-        }
 
         var relpath = li.dataset.relpath;
         var childTree = document.querySelector('[data-loadpath="' + relpath + '"]');
