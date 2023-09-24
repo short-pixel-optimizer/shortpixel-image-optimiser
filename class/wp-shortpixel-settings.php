@@ -5,6 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
+
 /** Settings Model **/
 class WPShortPixelSettings extends \ShortPixel\Model {
     private $_apiKey = '';

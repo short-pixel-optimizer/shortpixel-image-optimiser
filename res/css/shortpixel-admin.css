@@ -154,54 +154,6 @@ th.sorted.column-wp-shortPixel a {
   color: red;
 }
 
-.shortpixel-other-media .sp-column-info .sp-column-actions {
-  max-width: 140px;
-  float: right;
-  text-align: right;
-}
-.shortpixel-other-media .message {
-  font-weight: 700;
-  margin: 8px 0;
-}
-.shortpixel-other-media .message img {
-  animation: cssload-spin 5000ms infinite linear;
-  -o-animation: cssload-spin 5000ms infinite linear;
-  -ms-animation: cssload-spin 5000ms infinite linear;
-  -webkit-animation: cssload-spin 5000ms infinite linear;
-  -moz-animation: cssload-spin 5000ms infinite linear;
-  vertical-align: top;
-}
-@keyframes loading-spin {
-  100% {
-    transform: rotate(360deg);
-    transform: rotate(360deg);
-  }
-}
-@-o-keyframes loading-spin {
-  100% {
-    -o-transform: rotate(360deg);
-    transform: rotate(360deg);
-  }
-}
-@-ms-keyframes loading-spin {
-  100% {
-    -ms-transform: rotate(360deg);
-    transform: rotate(360deg);
-  }
-}
-@-webkit-keyframes loading-spin {
-  100% {
-    -webkit-transform: rotate(360deg);
-    transform: rotate(360deg);
-  }
-}
-@-moz-keyframes loading-spin {
-  100% {
-    -moz-transform: rotate(360deg);
-    transform: rotate(360deg);
-  }
-}
-
 .sp-column-info {
   position: relative;
 }
@@ -348,16 +300,24 @@ th.sorted.column-wp-shortPixel a {
 }
 
 div.sp-modal-shade {
-  display: none; /* Hidden by default */
-  position: fixed; /* Stay in place */
-  z-index: 10000; /* Sit on top - blame WP-admin for the z-index battle . */
+  display: none;
+  /* Hidden by default */
+  position: fixed;
+  /* Stay in place */
+  z-index: 10000;
+  /* Sit on top - blame WP-admin for the z-index battle . */
   left: 0;
   top: 0;
-  width: 100%; /* Full width */
-  height: 100%; /* Full height */
-  overflow: auto; /* Enable scroll if needed */
-  background: rgb(0, 0, 0); /* Fallback color */
-  background: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+  width: 100%;
+  /* Full width */
+  height: 100%;
+  /* Full height */
+  overflow: auto;
+  /* Enable scroll if needed */
+  background: black;
+  /* Fallback color */
+  background: rgba(0, 0, 0, 0.4);
+  /* Black w/ opacity */
   opacity: 0.4;
 }
 
@@ -366,9 +326,12 @@ div.shortpixel-modal {
   /*margin: 8% auto;  15% from the top and centered */
   padding: 20px;
   border: 1px solid #888;
-  width: 30%; /* Could be more or less, depending on screen size */
-  min-width: 300px; /* Could be more or less, depending on screen size */
-  z-index: 999999; /* Z-index wars :/ */
+  width: 30%;
+  /* Could be more or less, depending on screen size */
+  min-width: 300px;
+  /* Could be more or less, depending on screen size */
+  z-index: 999999;
+  /* Z-index wars :/ */
   position: fixed;
   top: 10%;
   left: 50%;

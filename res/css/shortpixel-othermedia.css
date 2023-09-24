@@ -1,8 +1,3 @@
-@media (max-width: 1250px) {
-  #shortpixel-hs-blind, #shortpixel-hs-tools, #botbutton, #beacon-container {
-    display: none !important;
-  }
-}
 .shortpixel-other-media {
   margin-bottom: 120px;
 }
@@ -26,16 +21,23 @@
 }
 .shortpixel-other-media .custom-media-tabs {
   display: block;
-  margin: 20px 0;
+  margin: 20px 0 0 0;
 }
 .shortpixel-other-media .custom-media-tabs a {
-  background: grey;
+  background: #ddd;
   width: 100px;
-  margin-right: 20px;
+  margin-right: 0;
+  border-right: 1px solid #fff;
   padding: 15px;
   display: inline-block;
   color: #23282d;
   text-align: center;
+  text-decoration: none;
+  color: #23282d;
+  font-size: 14px;
+}
+.shortpixel-other-media .custom-media-tabs a.selected {
+  background: #fff;
 }
 .shortpixel-other-media .list-overview {
   width: 100%;
@@ -184,6 +186,19 @@
 }
 .shortpixel-other-media .list-overview .no-items p {
   font-size: 14px;
+}
+.shortpixel-other-media .scan-area {
+  margin: 20px 0;
+}
+.shortpixel-other-media .scan-area .result {
+  min-width: 500px;
+  margin: 20px 0;
+}
+.shortpixel-other-media .scan-area .result > div {
+  background: #fff;
+}
+.shortpixel-other-media .scan-area .result > div > span {
+  margin-right: 20px;
 }
 
 /*# sourceMappingURL=shortpixel-othermedia.css.map */

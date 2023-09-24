@@ -257,10 +257,10 @@ class ShortPixelPlugin {
 		$admin_pages[] = add_options_page( __( 'ShortPixel Settings', 'shortpixel-image-optimiser' ), 'ShortPixel', 'manage_options', 'wp-shortpixel-settings', array( $this, 'route' ) );
 
 		$otherMediaController = OtherMediaController::getInstance();
-		if ( $otherMediaController->hasCustomImages() ) {
+		//if ( $otherMediaController->hasCustomImages() ) {
 			/*translators: title and menu name for the Other media page*/
 			$admin_pages[] = add_media_page( __( 'Custom Media Optimized by ShortPixel', 'shortpixel-image-optimiser' ), __( 'Custom Media', 'shortpixel-image-optimiser' ), 'edit_others_posts', 'wp-short-pixel-custom', array( $this, 'route' ) );
-		}
+	//	}
 		/*translators: title and menu name for the Bulk Processing page*/
 		$admin_pages[] = add_media_page( __( 'ShortPixel Bulk Process', 'shortpixel-image-optimiser' ), __( 'Bulk ShortPixel', 'shortpixel-image-optimiser' ), 'edit_others_posts', 'wp-short-pixel-bulk', array( $this, 'route' ) );
 
@@ -636,7 +636,7 @@ class ShortPixelPlugin {
 						}
 						elseif('scan' === $template_part)
 						{
-							$controller = 'ShortPixel\Controller\View\OtherMediaScanViewController';							 
+							$controller = 'ShortPixel\Controller\View\OtherMediaScanViewController';
 						}
 						else {
 							$controller = 'ShortPixel\Controller\View\OtherMediaViewController';

@@ -15,12 +15,11 @@ if ( isset($_GET['noheader']) ) {
     require_once(ABSPATH . 'wp-admin/admin-header.php');
 }
 
+
+?>
+
+<?php
 $this->loadView('custom/part-othermedia-top');
-
-
- if($view->items):
-
-
 
 ?>
 
@@ -71,7 +70,7 @@ $this->loadView('custom/part-othermedia-top');
 			<div class='no-items'> <p>
 				<?php
 				if ($this->search === false):
-					printf(esc_html__('No images available. Go to %s Advanced Settings %s to configure additional folders to be optimized.','shortpixel-image-optimiser'), '<a href="options-general.php?page=wp-shortpixel-settings&part=adv-settings">', '</a>');
+					printf(esc_html__('No folders available. ','shortpixel-image-optimiser'), '<a href="options-general.php?page=wp-shortpixel-settings&part=adv-settings">', '</a>');
 				 else:
 					 echo esc_html__('Your search query didn\'t result in any images. ', 'shortpixel-image-optimiser');
 				endif; ?>
@@ -80,15 +79,14 @@ $this->loadView('custom/part-othermedia-top');
 
 		<?php endif; ?>
 
-									<?php
-        //  echo "<PRE>"; print_r($view->items); echo "</PRE>";
-									foreach($view->items as $index => $item) {
-                      $this->view->current_item = $item; // not the best pass
-                      $this->loadView('custom/part-single-folder', false);
+		<?php
+		foreach($view->items as $index => $item) {
+        $this->view->current_item = $item; // not the best pass
+        $this->loadView('custom/part-single-folder', false);
 
-									 }?>
-								</div> <!-- shortpixel-folders-list -->
+		 }?>
+				</div> <!-- shortpixel-folders-list -->
 
-	<?php endif; // view -> customerFolders
+	<?php // view -> customerFolders
 
   $this->loadView('custom/part-othermedia-bottom');

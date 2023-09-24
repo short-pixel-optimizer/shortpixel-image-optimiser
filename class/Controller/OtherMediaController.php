@@ -14,6 +14,8 @@ use ShortPixel\Model\File\DirectoryModel as DirectoryModel;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
 
 use ShortPixel\Helper\InstallHelper as InstallHelper;
+use ShortPixel\Helper\UtilHelper as UtilHelper;
+
 
 // Future contoller for the edit media metabox view.
 class OtherMediaController extends \ShortPixel\Controller
@@ -300,6 +302,79 @@ class OtherMediaController extends \ShortPixel\Controller
 
       return true;
     }
+
+		/* New structure for folder refresing based on checked value in database + interval.  Via Scan interface
+		*
+		* @param $args Array  ( force true / false )
+		* @return Array - Should return folder_id, folder_path, amount of new files / result / warning
+		*/
+		public function doNextRefreshableFolder($args = array())
+		{
+				$defaults = array(
+						'force' => false,
+						'interval' => apply_filters('shortpixel/othermedia/refreshfolder_interval', HOUR_IN_SECONDS),
+				);
+
+				$args = wp_parse_args($args, $defaults);
+
+				global $wpdb;
+
+				$folderTable = $this->getFolderTable();
+
+				$tsInterval = UtilHelper::timestampToDB(time() - $args['interval']);
+				$sql = 'SELECT id FROM ' . $folderTable . '	WHERE status >= 0 AND ts_checked <= %s OR ts_checked IS NULL ';
+				$sql = $wpdb->prepare($sql, $tsInterval);
+				Log::addTemp('doNextRefrehsIntervalQuery ', $sql );
+				$folder_id = $wpdb->get_var($sql);
+
+				if (is_null($folder_id))
+				{
+					 return false;
+				}
+
+				$directoryObj = $this->getFolderByID($folder_id);
+
+				$old_count = $directoryObj->get('fileCount');
+
+				$return = array(
+					'folder_id' => $folder_id,
+					'old_count' => $old_count,
+					'new_count' => null,
+					'path' => $directoryObj->getPath(),
+					'message' => '',
+
+				);
+
+				// Always force here since last updated / interval is decided by interal on the above query
+				$result = $directoryObj->refreshFolder($args['force']);
+
+				if (false === $result)
+				{
+					 $directoryObj->set('ts_checked', time()); // preventing loops here in case some wrong
+					 $directoryObj->save();
+
+					 // Probably should catch some notice here to return  @todo
+				}
+
+				$new_count = $directoryObj->get('fileCount');
+				$return['new_count'] = $new_count;
+
+				if ($old_count == $new_count)
+				{
+					 $message = __('No new files added', 'shortpixel-image-optimiser');
+				}
+				elseif ($old_count < $new_count)
+				{
+					$message = print_f(__(' %s files added', 'shortpixel-image-optimiser'), ($new_count-$old_count));
+				}
+				else {
+					$message = print_f(__(' %s files removed', 'shortpixel-image-optimiser'), ($old_count-$new_count));
+				}
+
+				$return['message'] = $message;
+
+				return $return;
+		}
 
 		/**
 		 * Function to clean the folders and meta from unused stuff

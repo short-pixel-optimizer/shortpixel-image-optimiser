@@ -38,6 +38,8 @@ class OtherMediaScanViewController extends \ShortPixel\ViewController
       $this->view->show_search = false;
       $this->view->has_filters = false;
 
+			$this->view->totalFolders = count($this->controller->getActiveDirectoryIDS());
+
       $this->loadView();
   }
 } // class

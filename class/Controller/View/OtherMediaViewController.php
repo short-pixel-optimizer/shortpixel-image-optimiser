@@ -40,8 +40,6 @@ class OtherMediaViewController extends \ShortPixel\ViewController
       {
         parent::__construct();
 
-
-
 				// 2015: https://github.com/WordPress/WordPress-Coding-Standards/issues/426 !
 				// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
         $this->currentPage = isset($_GET['paged']) ? intval($_GET['paged']) : 1;
@@ -66,6 +64,10 @@ class OtherMediaViewController extends \ShortPixel\ViewController
           $this->view->headings = $this->getHeadings();
           $this->view->pagination = $this->getPagination();
           $this->view->filter = $this->getFilter();
+
+					$this->view->title = __('Custom Media optimized by ShortPixel', 'shortpixel-image-optimiser');
+					$this->view->show_search = true;
+
 
     //      $this->checkQueue();
           $this->loadView();

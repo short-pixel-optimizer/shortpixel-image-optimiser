@@ -266,6 +266,9 @@ class AjaxController
 					 case 'addCustomFolder':
 					 		$json = $this->addCustomFolder($json, $data);
 					 break;
+					 case 'scanNextFolder':
+					 		$json = $this->scanNextFolder($json, $data);
+					 break;
 
            default:
               $json->$type->message = __('Ajaxrequest - no action found', 'shorpixel-image-optimiser');
@@ -766,6 +769,28 @@ class AjaxController
 				$json->status = true;
 
 				return $json;
+
+		}
+
+		protected function scanNextFolder($json, $data)
+		{
+			$otherMediaController = OtherMediaController::getInstance();
+
+			$result = $otherMediaController->doNextRefreshableFolder();
+
+			if ($result === false)
+			{
+				 $json->folder->is_done = true;
+				 $json->folder->result = new \stdClass;
+				 $json->folder->result->message = __('All Folders have been scanned!', 'shortpixel_image_optimiser');
+			}
+			else {
+
+					$json->folder->result = $result;
+			}
+
+Log::addTemp('Scan Next Folder Result', $json);
+			return $json;
 
 		}
 

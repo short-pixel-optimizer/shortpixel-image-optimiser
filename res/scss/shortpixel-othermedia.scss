@@ -1,11 +1,3 @@
-@media(max-width: 1250px)
-{
-  #shortpixel-hs-blind, #shortpixel-hs-tools, #botbutton, #beacon-container
-  {
-    display: none !important;
-  }
-}
-
 .shortpixel-other-media
 {
   margin-bottom: 120px; // leave space for the helpscout widget.
@@ -37,15 +29,24 @@
   .custom-media-tabs
   {
      display: block;
-     margin: 20px 0;
+     margin: 20px 0 0 0;
      a {
-       background: grey;
+       background: #ddd;
        width: 100px;
-       margin-right: 20px;
+     //  margin: 0 20px 0 0;
+		 	 margin-right: 0;
+			 border-right: 1px solid #fff;
        padding: 15px;
        display: inline-block;
        color: #23282d;
        text-align: center;
+			 text-decoration: none;
+			 color: #23282d;
+			 font-size: 14px;
+
+			 &.selected {
+				 background: #fff;
+			 }
      }
   }
 
@@ -248,4 +249,21 @@
       }
    }
 
-} // list
+	 .scan-area
+	 {
+		  margin: 20px 0;
+			.result
+			{
+				 min-width: 500px;
+				 margin: 20px 0;
+				 > div {
+					 background: #fff;
+
+					 > span {
+						 margin-right: 20px;
+					 }
+				 }
+			}
+	 }
+
+} // shortpixel-other-media

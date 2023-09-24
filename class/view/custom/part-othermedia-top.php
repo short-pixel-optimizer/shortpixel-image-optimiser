@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     <div class='toolbar'>
         <div>
           <?php
-          $nonce = wp_create_nonce( 'refresh_folders' );
+          $nonce = wp_create_nonce('refresh_folders');
           ?>
             <a href="<?php echo esc_url(admin_url('upload.php?page=wp-short-pixel-custom&sp-action=action_refreshfolders&_wpnonce=' . $nonce)); ?>" id="refresh" class="button button-primary" title="<?php esc_attr_e('Refresh custom folders content','shortpixel-image-optimiser');?>">
                 <?php esc_attr_e('Refresh folders','shortpixel-image-optimiser');?>
@@ -65,10 +65,29 @@ if ( ! defined( 'ABSPATH' ) ) {
 $file_url =  esc_url(add_query_arg('part', 'files', $this->url));
 $folder_url = esc_url(add_query_arg('part', 'folders', $this->url));
 $scan_url = esc_url(add_query_arg('part', 'scan', $this->url));
+
+$current_part = isset($_GET['part']) ? sanitize_text_field($_GET['part']) : 'files';
+
+$tabs = array(
+	'files' => array('link' => $file_url,
+									 'text' => __('Files', 'shortpixel-image-optimiser'),
+								 ),
+	 'folders' => array('link' => $folder_url,
+	 										'text' => __('Folders', 'shortpixel-image-optimiser'),
+ 								),
+		'scan' => array('link' => $scan_url,
+										'text' => __('Scan', 'shortpixel-image-optimiser'),
+
+	),
+);
+
 ?>
 
 <div class="custom-media-tabs">
-    <a href="<?php echo $file_url  ?>">(TODO) Files</a>
-    <a href="<?PHP echo $folder_url ?>">(TODO) Folders</a>
-    <a href="<?php echo $scan_url ?>">(Todo) Scan </a>
+		<?php foreach($tabs as $tabName => $tab)
+		{
+				$class = ($current_part == $tabName) ? ' class="selected" ' : '';
+
+				echo '<a href="' . $tab['link'] . '" ' . $class . '>' . $tab['text'] . '</a>';
+		} ?>
 </div>

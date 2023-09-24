@@ -13,6 +13,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
   		super.Init();
 
       this.InitFolderSelector();
+			this.InitScanButtons();
     //  window.addEventListener()
 
   	}
@@ -113,6 +114,15 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
        }
     }
 
+		InitScanButtons()
+		{
+			 var scanButton = document.querySelector('.scan-button');
+			 if (null !== scanButton)
+			 {
+				  scanButton.addEventListener('click', this.StartFolderScan.bind(this));
+			 }
+		}
+
     InitFolderSelector()
     {
 
@@ -212,20 +222,95 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
         if (data.folder.result.itemView)
         {
            var element = document.querySelector('.list-overview .item');
+					 var elementHeading = document.querySelector('.list-overview .heading');
+
            if (null !== element)
            {
                 element.insertAdjacentHTML('beforebegin', data.folder.result.itemView);
            }
+					 else if (null !== elementHeading) // In case list is empty.
+					 {
+						 		elementHeading.insertAdjacentHTML('afterend',  data.folder.result.itemView);
+								var noitems = document.querySelector('.list-overview .no-items');
+								if (null !== noitems)
+									noitems.remove();
+					 }
+
         }
 
         this.CloseFolderModal();
 
     }
 
-    StartFolderScan()
+    StartFolderScan(full)
     {
-       
+       if (typeof full === 'undefined')
+			 {
+				 	var full = false;
+			 }
+
+			 this.ScanFolder();
+
+
     }
+
+		ScanFolder()
+		{
+			var data = {};
+			data.type = 'folder';
+			data.screen_action = 'scanNextFolder';
+			data.callback = 'shortpixel.folder.ScannedDirectoryEvent';
+
+			window.addEventListener('shortpixel.folder.ScannedDirectoryEvent', this.ScannedDirectoryEvent.bind(this), {'once':true});
+
+			this.processor.AjaxRequest(data);
+		}
+
+
+		ScannedDirectoryEvent(event)
+		{
+			var data = event.detail;
+			data = data.folder;
+console.log(data);
+			var reportElement = document.querySelector('.scan-area .result');
+			if ( null === reportElement)
+			{
+				 console.error('Something wrong with reporting element');
+				 return false;
+			}
+
+			if (data.is_done === true)
+			{
+				// @todo Probably emit some done status here
+				var div = document.createElement('div');
+				div.textContent = data.result.message;
+
+				reportElement.appendChild(div);
+			}
+			else if (data.result)
+			{
+
+
+					var div = document.createElement('div');
+					var span_path = document.createElement('span');
+					var span_filecount = document.createElement('span');
+					var span_message = document.createElement('span');
+
+					span_path.textContent = data.result.path;
+					span_filecount.textContent = data.result.new_count;
+					span_message.textContent = data.result.message;
+
+					div.appendChild(span_path);
+					div.appendChild(span_filecount);
+					div.appendChild(span_message);
+					reportElement.appendChild(div);
+
+					this.ScanFolder();
+			}
+		}
+
+
+
 
 
 

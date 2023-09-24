@@ -423,124 +423,13 @@ if ( ! defined( 'ABSPATH' ) ) {
             <tr>
                 <th scope="row"><label for="additional-media"><?php esc_html_e('Custom media folders','shortpixel-image-optimiser');?></label></th>
                 <td>
-
-      <?php if($view->customFolders) { ?>
-
-			<div class="option-content">
-			    <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/46-how-to-optimize-images-in-wordpress-themes-and-plugins"></span></div>
-                        <div class="shortpixel-folders-list">
-                            <div class='heading'>
-                                <span><?php esc_html_e('Folder name','shortpixel-image-optimiser');?></span>
-                                <span><?php esc_html_e('Type &amp; Status','shortpixel-image-optimiser');?></span>
-                                <span><?php esc_html_e('Files','shortpixel-image-optimiser');?></span>
-                                <span><?php esc_html_e('Last change','shortpixel-image-optimiser');?></span>
-                                <span>&nbsp;</span>
-                                <span class='action'>&nbsp;</span>
-                            </div>
-
-                        <?php
-                        foreach($view->customFolders as $index => $dirObj) {
-                            $folder_id = $dirObj->get('id');
-
-                            $type_display = ($dirObj->get('is_nextgen') ) ? __('Nextgen', 'shortpixel-image-optimiser') . ":" : "";
-                            $stat = $dirObj->getStats();
-
-                            $fullstatus = esc_html__("Optimized",'shortpixel-image-optimiser') . ": " . $stat['optimized'] . ", "
-                                  . " " . esc_html__("Waiting",'shortpixel-image-optimiser') . ": " . $stat['waiting'] . ""
-                                  ;
-
-                            if ($stat['total'] == 0)
-                            {
-                              $optimize_status = __("Empty",'shortpixel-image-optimiser');
-                              $fullstatus = '';
-                            }
-                            elseif ($stat['total'] == $stat['optimized'])
-                            {
-                              $optimize_status = __("Optimized",'shortpixel-image-optimiser');
-                            }
-                            elseif ($stat['optimized'] > 0)
-                            {
-                               $optimize_status = __("Pending",'shortpixel-image-optimiser');
-                            }
-                            else
-                            {
-                              $optimize_status = __("Waiting",'shortpixel-image-optimiser');
-                            }
-
-                            $action =  __("Stop monitoring",'shortpixel-image-optimiser');
-
-                            $err = ''; // unused since failed is gone.
-                            if (! $dirObj->exists() && ! $err)
-                              $err = __('Directory does not exist', 'shortpixel-image-optimiser');
-
-
-                            if ($dirObj->get('is_nextgen') && $view->data->includeNextGen == 1)
-                              $action = false;
-
-
-                              $refreshUrl = add_query_arg(array('sp-action' => 'action_refreshfolder', 'folder_id' => $folder_id, 'part' => 'adv-settings'), $this->url); // has url
-                            ?>
-                            <div>
-                                <span class='folder folder-<?php echo esc_attr($dirObj->get('id')) ?>'><?php echo esc_html($dirObj->getPath()); ?></span>
-                                <span>
-                                    <?php if(!($stat['total'] == 0)) { ?>
-                                    <span title="<?php echo esc_attr($fullstatus); ?>" class='info-icon'>
-                                        <img alt='<?php esc_html_e('Info Icon', 'shortpixel-image-optimiser') ?>' src='<?php echo esc_url( wpSPIO()->plugin_url('res/img/info-icon.png' ));?>' style="margin-bottom: -2px;"/>
-                                    </span>&nbsp;<?php  }
-                                    echo esc_html($type_display. ' ' . $optimize_status . $err);
-                                    ?>
-                                </span>
-                                <span>
-                                    <?php echo esc_html($stat['total']); ?> files
-                                </span>
-                                <span>
-                                    <?php echo esc_html(UiHelper::formatTS($dirObj->get('updated'))) ?>
-                                </span>
-                                <span>
-                                  <a href='<?php echo esc_url($refreshUrl) ?>' title="<?php esc_html_e('Recheck for new images', 'shortpixel-image-optimiser'); ?>" class='refresh-folder'><i class='dashicons dashicons-update'>&nbsp;</i></a>
-                                </span>
-                                <span class='action'>
-                                  <?php if ($action): ?>
-                                    <input type="button" class="button remove-folder-button" data-value="<?php echo esc_attr($dirObj->get('id')); ?>" data-name="<?php echo esc_attr($dirObj->getPath()) ?>" title="<?php echo esc_attr($action . " " . $dirObj->getPath()); ?>"   value="<?php echo esc_attr($action); ?>">
-                                 <?php endif; ?>
-                                </span>
-                            </div>
-                        <?php }?>
-                      </div> <!-- shortpixel-folders-list -->
-                      <div class='folder-stats'> XX folders ( xx files )  </div>
-		      </div>
-                    <?php } ?>
-
-                    <div class='addCustomFolder'>
-
-                      <input type="hidden" name="removeFolder" id="removeFolder"/>
-                      <p class='add-folder-text'><strong><?php esc_html_e('Add a custom folder', 'shortpixel-image-optimiser'); ?></strong></p>
-                      <input type="text" name="addCustomFolderView" id="addCustomFolderView" class="regular-text" value="" disabled style="">&nbsp;
-                      <input type="hidden" name="addCustomFolder" id="addCustomFolder" value=""/>
-                      <input type="hidden" id="customFolderBase" value="<?php echo esc_attr($this->view->customFolderBase); ?>">
-
-                      <a class="button select-folder-button" title="<?php esc_html_e('Select the images folder on your server.','shortpixel-image-optimiser');?>" href="javascript:void(0);">
-                          <?php esc_html_e('Select','shortpixel-image-optimiser');?>
-                      </a>
-                    <input type="submit" name="save" id="saveAdvAddFolder" class="button button-primary hidden" title="<?php esc_html_e('Add this Folder','shortpixel-image-optimiser');?>" value="<?php esc_html_e('Add this Folder','shortpixel-image-optimiser');?>">
-                    <p class="settings-info">
-                        <?php printf(esc_html__('Use the Select... button to select site folders. ShortPixel will optimize images and PDFs from the specified folders and their subfolders. In the %s Custom Media list %s, under the Media menu, you can see the optimization status for each image or PDF in these folders.','shortpixel-image-optimiser'), '<a href="upload.php?page=wp-short-pixel-custom">', '</a>');?>
-                    </p>
-
-                    <div class="sp-modal-shade sp-folder-picker-shade"></div>
-                        <div class="shortpixel-modal modal-folder-picker shortpixel-hide">
-                            <div class="sp-modal-title"><?php esc_html_e('Select the images folder','shortpixel-image-optimiser');?></div>
-                            <div class="sp-folder-picker"></div>
-                            <input type="button" class="button button-info select-folder-cancel" value="<?php esc_html_e('Cancel','shortpixel-image-optimiser');?>" style="margin-right: 30px;">
-                            <input type="button" class="button button-primary select-folder" value="<?php esc_html_e('Select','shortpixel-image-optimiser');?>">
-                        </div>
-
-                    <script>
-                        jQuery(document).ready(function () {
-                            ShortPixel.initFolderSelector();
-                        });
-                    </script>
-                  </div> <!-- end of AddCustomFolder -->
+									<div class='switch_button'>
+										<label>
+											<input type="checkbox" class="switch" name="hide_custom_media" value="1" <?php checked( $view->data->HideCustomMedia, "1" );?>>
+											<div class="the_switch">&nbsp; </div>
+											<?php esc_html_e('Hide Custom media menu item','shortpixel-image-optimiser');?>
+										</label>
+									</div>
                 </td>
             </tr>
             <tr>

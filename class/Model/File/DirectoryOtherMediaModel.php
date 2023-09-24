@@ -154,11 +154,11 @@ class DirectoryOtherMediaModel extends DirectoryModel
             'status' => $this->status,
             'file_count' => $this->fileCount,
             'ts_updated' => $this->timestampToDB($this->updated),
-            'ts_checked' => $this->timestampToDB($this->checked);
+            'ts_checked' => $this->timestampToDB($this->checked),
             'name' => $this->name,
             'path' => $this->getPath(),
         );
-        $format = array('%d', '%d', '%s', '%s', '%s');
+        $format = array('%d', '%d', '%s', '%s', '%s', '%s');
         $table = $wpdb->prefix . 'shortpixel_folders';
 
         $is_new = false;
@@ -277,7 +277,6 @@ class DirectoryOtherMediaModel extends DirectoryModel
         $time = 0; //force refresh of the whole.
       }
 
-
 			if (! $this->checkDirectory(true))
 			{
 				Log::addWarn('Refreshing directory, something wrong in checkDirectory ' . $this->getPath());
@@ -323,8 +322,6 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
   }
 
-
-  
 
 	/**  Check if a directory is allowed. Directory can't be media library, outside of root, or already existing in the database
 	* @param $silent If not allowed, don't generate notices.
