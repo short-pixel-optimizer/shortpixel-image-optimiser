@@ -5,7 +5,6 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
-
 /** Settings Model **/
 class WPShortPixelSettings extends \ShortPixel\Model {
     private $_apiKey = '';
@@ -51,6 +50,8 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         'png2jpg' => array('key' => 'wp-short-pixel-png2jpg', 'default' => 0, 'group' => 'options'),
         'excludeSizes' => array('key' => 'wp-short-pixel-excludeSizes', 'default' => array(), 'group' => 'options'),
 				'currentVersion' => array('key' => 'wp-short-pixel-currentVersion', 'default' => null, 'group' => 'options'),
+				'HideCustomMedia' => array('key' => 'wp-short-hide-custom-media', 'default' => 1, 'group' => 'options'),
+
 
         //CloudFlare
         'cloudflareEmail'   => array( 'key' => 'wp-short-pixel-cloudflareAPIEmail', 'default' => '', 'group' => 'options'),
@@ -251,13 +252,6 @@ class WPShortPixelSettings extends \ShortPixel\Model {
 
     public function setOpt($key, $val) {
         $autoload = true;
-        /*if (isset(self::$_optionsMap[$key]))
-        {
-            if (self::$_optionsMap[$key]['group'] == 'options')
-               $autoload = true;  // add most used to autoload, because performance.
-
-        } */
-
         $ret = update_option($key, $val, $autoload);
 
         //hack for the situation when the option would just not update....

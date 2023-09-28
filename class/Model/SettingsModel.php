@@ -60,7 +60,7 @@ class SettingsModel
 		public function __construct()
 		{
 			 $this->checkLegacy();
-			 $this->loadSettings();
+			 $this->load();
 
 		}
 
@@ -94,7 +94,7 @@ class SettingsModel
 		protected function checkLegacy()
 		{
 				$this->deleteLegacy(); // very legacy, unused
-				$this->convertLegacy(); // legacy, move to new format.
+			//	$this->convertLegacy(); // legacy, move to new format.
 		}
 
 		public function convertLegacy()
