@@ -3,7 +3,7 @@
  * Plugin Name: ShortPixel Image Optimizer
  * Plugin URI: https://shortpixel.com/
  * Description: ShortPixel optimizes images automatically, while guarding the quality of your images. Check your <a href="/wp-admin/options-general.php?page=wp-shortpixel-settings" target="_blank">Settings &gt; ShortPixel</a> page on how to start optimizing your image library and make your website load faster.
- * Version: 5.4.2
+ * Version: 5.4.3
  * Author: ShortPixel - Convert WebP/AVIF & Optimize Images
  * Author URI: https://shortpixel.com
  * GitHub Plugin URI: https://github.com/short-pixel-optimizer/shortpixel-image-optimiser
@@ -36,7 +36,7 @@ if (! defined('SHORTPIXEL_RESET_ON_ACTIVATE'))
 define('SHORTPIXEL_PLUGIN_FILE', __FILE__);
 define('SHORTPIXEL_PLUGIN_DIR', __DIR__);
 
-define('SHORTPIXEL_IMAGE_OPTIMISER_VERSION', "5.4.2");
+define('SHORTPIXEL_IMAGE_OPTIMISER_VERSION', "5.4.3");
 
 define('SHORTPIXEL_BACKUP', 'ShortpixelBackups');
 define('SHORTPIXEL_MAX_FAIL_RETRIES', 3);
