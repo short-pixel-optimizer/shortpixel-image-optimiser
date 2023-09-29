@@ -138,7 +138,7 @@
          .filename
          {
            font-size: 14px;
-					 min-width: 150px;
+					 min-width: 350px;
          }
          .thumb
          {
@@ -249,6 +249,7 @@
       }
    }
 
+	 // Scan Tab
 	 .scan-area
 	 {
 		  margin: 20px 0;
@@ -256,12 +257,27 @@
 			{
 				 min-width: 500px;
 				 margin: 20px 0;
-				 > div {
-					 background: #fff;
 
-					 > span {
-						 margin-right: 20px;
-					 }
+			}
+			.result-table
+			{
+				 display: table;
+				 min-width: 300px;
+				 > div {
+					 	display: table-row;
+
+						background: #fff;
+						> span {
+							display: table-cell;
+							text-align: left;
+							padding: 4px 8px;
+						}
+				 }
+				 .message {
+					 padding: 4px 8px;
+					 font-weight: 700;
+					 display: table-caption;
+					 font-size: 1.1em;
 				 }
 			}
 	 }

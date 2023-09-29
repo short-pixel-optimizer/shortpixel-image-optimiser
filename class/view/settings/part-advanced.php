@@ -425,7 +425,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                 <td>
 									<div class='switch_button'>
 										<label>
-											<input type="checkbox" class="switch" name="hide_custom_media" value="1" <?php checked( $view->data->HideCustomMedia, "1" );?>>
+											<input type="checkbox" class="switch" name="hideCustomMedia" value="1" <?php checked( $view->data->hideCustomMedia, "1" );?>>
 											<div class="the_switch">&nbsp; </div>
 											<?php esc_html_e('Hide Custom media menu item','shortpixel-image-optimiser');?>
 										</label>

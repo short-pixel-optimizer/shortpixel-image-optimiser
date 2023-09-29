@@ -116,10 +116,14 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
 
 		InitScanButtons()
 		{
-			 var scanButton = document.querySelector('.scan-button');
-			 if (null !== scanButton)
+			 var scanButtons = document.querySelectorAll('.scan-button');
+			 var self = this;
+
+			 if (null !== scanButtons)
 			 {
-				  scanButton.addEventListener('click', this.StartFolderScan.bind(this));
+				 	scanButtons.forEach(function (scanButton) {
+						scanButton.addEventListener('click', self.StartFolderScanEvent.bind(self));
+					});
 			 }
 		}
 
@@ -164,7 +168,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
         picker.addEventListener('shortpixel-folder.selected', this.HandleFolderSelectedEvent.bind(this));
       }
 
-      //this.FadeIn(picker, 500);
       this.Show(picker);
     }
 
@@ -191,18 +194,15 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
     CloseFolderModal()
     {
       var shade  = document.querySelector(".sp-folder-picker-shade");
-    //  this.FadeOut(shade, 500);
       this.Hide(shade);
 
         // @todo FadeOut function here
       var picker = document.querySelector('.shortpixel-modal.modal-folder-picker');
-    //  this.FadeOut(picker, 1000);
       this.Hide(picker);
     }
 
     AddNewFolderEvent(event)
     {
-
       var data = {};
       data.relpath = this.currentSelectedPath;
       data.type = 'folder';
@@ -212,7 +212,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
       window.addEventListener('shortpixel.folder.AddNewDirectory', this.UpdateFolderViewEvent.bind(this), {'once':true});
 
       this.processor.AjaxRequest(data);
-
     }
 
     UpdateFolderViewEvent(event)
@@ -237,42 +236,68 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
 					 }
 
         }
-
         this.CloseFolderModal();
-
     }
 
-    StartFolderScan(full)
+    StartFolderScanEvent(event)
     {
-       if (typeof full === 'undefined')
+			 var element = event.target;
+
+			 var force = false;
+			 if ('mode' in element.dataset)
 			 {
-				 	var full = false;
+				  var force = true;
 			 }
 
-			 this.ScanFolder();
+		  var reportElement = document.querySelector('.scan-area .result-table');
+			while(reportElement.firstChild)
+			{
+				 reportElement.firstChild.remove();
+			}
 
+			var args = [];
+			args.force = force;
+
+			if (true === force)
+			{
+				var data = {};
+				data.type = 'folder';
+				data.screen_action = 'resetScanFolderChecked';
+				data.callback = 'shortpixel.folder.ScanFolder';
+
+				window.addEventListener('shortpixel.folder.ScanFolder', this.ScanFolder.bind(this, args), {'once':true});
+				this.processor.AjaxRequest(data);
+
+			}
+			else {
+				this.ScanFolder(args);
+			}
 
     }
 
-		ScanFolder()
+		ScanFolder(args)
 		{
 			var data = {};
 			data.type = 'folder';
 			data.screen_action = 'scanNextFolder';
 			data.callback = 'shortpixel.folder.ScannedDirectoryEvent';
 
-			window.addEventListener('shortpixel.folder.ScannedDirectoryEvent', this.ScannedDirectoryEvent.bind(this), {'once':true});
+			if (true === args.force)
+			{
+				 data.force = args.force;
+			}
+
+			window.addEventListener('shortpixel.folder.ScannedDirectoryEvent', this.ScannedDirectoryEvent.bind(this, args), {'once':true});
 
 			this.processor.AjaxRequest(data);
 		}
 
-
-		ScannedDirectoryEvent(event)
+		ScannedDirectoryEvent(args, event)
 		{
 			var data = event.detail;
 			data = data.folder;
-console.log(data);
-			var reportElement = document.querySelector('.scan-area .result');
+
+			var reportElement = document.querySelector('.scan-area .result-table');
 			if ( null === reportElement)
 			{
 				 console.error('Something wrong with reporting element');
@@ -283,6 +308,7 @@ console.log(data);
 			{
 				// @todo Probably emit some done status here
 				var div = document.createElement('div');
+				div.classList.add('message');
 				div.textContent = data.result.message;
 
 				reportElement.appendChild(div);
@@ -305,13 +331,8 @@ console.log(data);
 					div.appendChild(span_message);
 					reportElement.appendChild(div);
 
-					this.ScanFolder();
+					this.ScanFolder(args);
 			}
 		}
-
-
-
-
-
 
 } // class

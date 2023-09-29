@@ -103,7 +103,7 @@
 }
 .shortpixel-other-media .list-overview .item .filename {
   font-size: 14px;
-  min-width: 150px;
+  min-width: 350px;
 }
 .shortpixel-other-media .list-overview .item .thumb {
   min-width: 60px;
@@ -194,11 +194,24 @@
   min-width: 500px;
   margin: 20px 0;
 }
-.shortpixel-other-media .scan-area .result > div {
+.shortpixel-other-media .scan-area .result-table {
+  display: table;
+  min-width: 300px;
+}
+.shortpixel-other-media .scan-area .result-table > div {
+  display: table-row;
   background: #fff;
 }
-.shortpixel-other-media .scan-area .result > div > span {
-  margin-right: 20px;
+.shortpixel-other-media .scan-area .result-table > div > span {
+  display: table-cell;
+  text-align: left;
+  padding: 4px 8px;
+}
+.shortpixel-other-media .scan-area .result-table .message {
+  padding: 4px 8px;
+  font-weight: 700;
+  display: table-caption;
+  font-size: 1.1em;
 }
 
 /*# sourceMappingURL=shortpixel-othermedia.css.map */

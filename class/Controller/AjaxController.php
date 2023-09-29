@@ -269,7 +269,9 @@ class AjaxController
 					 case 'scanNextFolder':
 					 		$json = $this->scanNextFolder($json, $data);
 					 break;
-
+					 case 'resetScanFolderChecked';
+					 		$json = $this->resetScanFolderChecked($json, $data);
+					 break; 
            default:
               $json->$type->message = __('Ajaxrequest - no action found', 'shorpixel-image-optimiser');
               $json->error = self::NO_ACTION;
@@ -772,11 +774,24 @@ class AjaxController
 
 		}
 
-		protected function scanNextFolder($json, $data)
+		protected function resetScanFolderChecked($json, $data)
 		{
 			$otherMediaController = OtherMediaController::getInstance();
 
-			$result = $otherMediaController->doNextRefreshableFolder();
+			$otherMediaController->resetCheckedTimestamps();
+			return $json;
+		}
+
+		protected function scanNextFolder($json, $data)
+		{
+			$otherMediaController = OtherMediaController::getInstance();
+			$force = isset($_POST['force']) ? sanitize_text_field($_POST['force']) : null;
+
+			Log::addTemp('ScanNext', $data);
+			$args = array();
+			$args['force'] = $force;
+
+			$result = $otherMediaController->doNextRefreshableFolder($args);
 
 			if ($result === false)
 			{

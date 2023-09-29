@@ -16,9 +16,6 @@ if ( isset($_GET['noheader']) ) {
 }
 
 
-?>
-
-<?php
 $this->loadView('custom/part-othermedia-top');
 
 ?>
@@ -52,7 +49,6 @@ $this->loadView('custom/part-othermedia-top');
 
 </div> <!-- end of AddCustomFolder -->
 
-		<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/46-how-to-optimize-images-in-wordpress-themes-and-plugins"></span></div>
 
 <div class='list-overview'>
 	<div class='heading'>

@@ -117,10 +117,14 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
         'display' => 'inline',
      ));
 
+		 // @todo Get path of last one/two subdirectories and link to files page (?) or add a query for folder_id options.
+		 $url = add_query_arg('part', 'files', $this->url);
+		 $url = add_query_arg('folder_id', $item->get('id'), $url);
+
      $showFilesAction = array('showfiles' => array(
-        'function' => '-- ',
+        'function' => esc_url($url),
         'type' => 'link',
-        'text' => __('Show all Files (todo)', 'shortpixel-image-optimiser'),
+        'text' => __('Show all Files', 'shortpixel-image-optimiser'),
         'display' => 'inline',
      ));
 

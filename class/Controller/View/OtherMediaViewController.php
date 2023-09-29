@@ -205,6 +205,12 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 						// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
               $filter['path'] = (object)array("operator" => "like", "value" =>"'%" . esc_sql($search) . "%'");
           }
+
+				  $folderFilter =  (isset($_GET['folder_id'])) ? intval($_GET['folder_id']) : false;
+					if (false !== $folderFilter)
+					{
+						  $filter['folder_id'] = (object)array("operator" => "=", "value" =>"'" . esc_sql($folderFilter) . "'");
+					}
           return $filter;
       }
 

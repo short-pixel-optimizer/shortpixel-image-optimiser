@@ -471,7 +471,6 @@ class SettingsController extends \ShortPixel\ViewController
          $this->view->averageCompression = $statsControl->getAverageCompression();
          $this->view->savedBandwidth = UiHelper::formatBytes( intval($this->view->data->savedSpace) * 10000,2);
 
-
          $this->view->cloudflare_constant = defined('SHORTPIXEL_CFTOKEN') ? true : false;
 
          $settings = \wpSPIO()->settings();
@@ -666,35 +665,7 @@ class SettingsController extends \ShortPixel\ViewController
           // must be an array
           $post['excludeSizes'] = (isset($post['excludeSizes']) && is_array($post['excludeSizes']) ? $post['excludeSizes']: array());
 
-
-
-          // when adding a new custom folder
-          if (isset($post['addCustomFolder']) && strlen($post['addCustomFolder']) > 0)
-          {
-            $folderpath = sanitize_text_field(stripslashes($post['addCustomFolder']));
-
-            $otherMedia = OtherMediaController::getInstance();
-            $result = $otherMedia->addDirectory($folderpath);
-            if ($result)
-            {
-              Notice::addSuccess(__('Folder added successfully.','shortpixel-image-optimiser'));
-            }
-          }
-          unset($post['addCustomFolder']);
-
-          if(isset($post['removeFolder']) && intval($post['removeFolder']) > 0) {
-              $folder_id = intval($post['removeFolder']);
-              $otherMedia = OtherMediaController::getInstance();
-              $dirObj = $otherMedia->getFolderByID($folder_id);
-
-              if ($dirObj === false)
-                return;
-
-              $dirObj->delete();
-
-          }
-          unset($post['removeFolder']);
-
+/*
           if (isset($post['emptyBackup']))
           {
 						  if (wp_verify_nonce($_POST['tools-nonce'], 'empty-backup'))
@@ -708,7 +679,7 @@ class SettingsController extends \ShortPixel\ViewController
 
           }
           unset($post['emptyBackup']);
-
+*/
 
           $post = $this->processWebp($post);
           $post = $this->processExcludeFolders($post);

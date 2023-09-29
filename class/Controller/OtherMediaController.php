@@ -163,6 +163,16 @@ class OtherMediaController extends \ShortPixel\Controller
       return $result;
     }
 
+		public function showMenuItem()
+		{
+			  $settings = \wpSPIO()->settings();
+				if ( $settings->hideCustomMedia)
+				{
+					 return false;
+				}
+				return true;
+		}
+
 	   public function addDirectory($path)
     {
        $fs = \wpSPIO()->filesystem();
@@ -322,9 +332,10 @@ class OtherMediaController extends \ShortPixel\Controller
 				$folderTable = $this->getFolderTable();
 
 				$tsInterval = UtilHelper::timestampToDB(time() - $args['interval']);
-				$sql = 'SELECT id FROM ' . $folderTable . '	WHERE status >= 0 AND ts_checked <= %s OR ts_checked IS NULL ';
+				$sql = ' SELECT id FROM ' . $folderTable . '	WHERE status >= 0 AND (ts_checked <= %s OR ts_checked IS NULL)';
+
 				$sql = $wpdb->prepare($sql, $tsInterval);
-				Log::addTemp('doNextRefrehsIntervalQuery ', $sql );
+
 				$folder_id = $wpdb->get_var($sql);
 
 				if (is_null($folder_id))
@@ -342,7 +353,6 @@ class OtherMediaController extends \ShortPixel\Controller
 					'new_count' => null,
 					'path' => $directoryObj->getPath(),
 					'message' => '',
-
 				);
 
 				// Always force here since last updated / interval is decided by interal on the above query
@@ -374,6 +384,17 @@ class OtherMediaController extends \ShortPixel\Controller
 				$return['message'] = $message;
 
 				return $return;
+		}
+
+		public function resetCheckedTimestamps()
+		{
+				global $wpdb;
+				$folderTable = $this->getFolderTable();
+
+			  $sql = 'UPDATE ' . $folderTable . ' set ts_checked = NULL ';
+				Log::addTemp('Update Timestamps', $sql);
+				$wpdb->query($sql);
+
 		}
 
 		/**
