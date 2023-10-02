@@ -253,10 +253,25 @@
 	 .scan-area
 	 {
 		  margin: 20px 0;
+
+			.scan-actions
+			{
+				 > div {
+					 margin: 20px 0;
+					 transition:visibility 0.3s linear,opacity 0.3s linear;
+					 visibility: visible;
+					 opacity: 1;
+				 }
+				 .button {
+					 width: 200px;
+					 margin-right: 30px;
+				 }
+			}
 			.result
 			{
 				 min-width: 500px;
 				 margin: 20px 0;
+				 transition: 1s all;
 
 			}
 			.result-table
@@ -279,6 +294,10 @@
 					 display: table-caption;
 					 font-size: 1.1em;
 				 }
+			}
+			.not-visible {
+				visibility:  hidden !important;
+				opacity: 0 !important;
 			}
 	 }
 

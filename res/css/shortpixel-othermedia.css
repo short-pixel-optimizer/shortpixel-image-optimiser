@@ -190,9 +190,20 @@
 .shortpixel-other-media .scan-area {
   margin: 20px 0;
 }
+.shortpixel-other-media .scan-area .scan-actions > div {
+  margin: 20px 0;
+  transition: visibility 0.3s linear, opacity 0.3s linear;
+  visibility: visible;
+  opacity: 1;
+}
+.shortpixel-other-media .scan-area .scan-actions .button {
+  width: 200px;
+  margin-right: 30px;
+}
 .shortpixel-other-media .scan-area .result {
   min-width: 500px;
   margin: 20px 0;
+  transition: 1s all;
 }
 .shortpixel-other-media .scan-area .result-table {
   display: table;
@@ -212,6 +223,10 @@
   font-weight: 700;
   display: table-caption;
   font-size: 1.1em;
+}
+.shortpixel-other-media .scan-area .not-visible {
+  visibility: hidden !important;
+  opacity: 0 !important;
 }
 
 /*# sourceMappingURL=shortpixel-othermedia.css.map */

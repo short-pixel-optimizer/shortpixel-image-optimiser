@@ -360,7 +360,7 @@ class OtherMediaController extends \ShortPixel\Controller
 
 				if (false === $result)
 				{
-					 $directoryObj->set('ts_checked', time()); // preventing loops here in case some wrong
+					 $directoryObj->set('checked', time()); // preventing loops here in case some wrong
 					 $directoryObj->save();
 
 					 // Probably should catch some notice here to return  @todo

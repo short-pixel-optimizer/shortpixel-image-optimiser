@@ -6,8 +6,6 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
-$this->loadView('custom/part-othermedia-top');
-
 ?>
 
 <div class='sp-column-info' id='sp-msg-<?php echo esc_attr($this->view->id );?>'>

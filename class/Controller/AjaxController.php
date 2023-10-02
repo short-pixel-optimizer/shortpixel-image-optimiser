@@ -271,7 +271,7 @@ class AjaxController
 					 break;
 					 case 'resetScanFolderChecked';
 					 		$json = $this->resetScanFolderChecked($json, $data);
-					 break; 
+					 break;
            default:
               $json->$type->message = __('Ajaxrequest - no action found', 'shorpixel-image-optimiser');
               $json->error = self::NO_ACTION;
@@ -681,7 +681,12 @@ class AjaxController
 				 $json->folder->message = __('An error has occured: no folder object', 'shortpixel-image-optimiser');
 			}
 
-			$folderObj->refreshFolder(true);
+			$result = $folderObj->refreshFolder(true);
+
+			if (false === $result)
+			{
+				 $json->folder->message = $folderObj->get('last_message');
+			}
 
 			$json->status = true;
 			$json->folder->fileCount = $folderObj->get('fileCount');

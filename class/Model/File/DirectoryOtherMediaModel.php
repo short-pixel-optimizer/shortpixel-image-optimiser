@@ -33,6 +33,8 @@ class DirectoryOtherMediaModel extends DirectoryModel
   protected $in_db = false;
   protected $is_removed = false;
 
+  protected $last_message;
+
   //protected $stats;
 
 	protected static $stats;
@@ -290,12 +292,16 @@ class DirectoryOtherMediaModel extends DirectoryModel
       }
       elseif (! $this->exists())
       {
-        Notice::addError( sprintf(__('Folder %s does not exist! ', 'shortpixel-image-optimiser'), $this->getPath()) );
+				$message = sprintf(__('Folder %s does not exist! ', 'shortpixel-image-optimiser'), $this->getPath());
+				$this->last_message = $message;
+        Notice::addError( $message );
         return false;
       }
       elseif (! $this->is_writable())
       {
-        Notice::addWarning( sprintf(__('Folder %s is not writeable. Please check permissions and try again.','shortpixel-image-optimiser'),$this->getPath()) );
+				$message = sprintf(__('Folder %s is not writeable. Please check permissions and try again.','shortpixel-image-optimiser'),$this->getPath());
+				$this->last_message = $message;
+        Notice::addWarning( $message );
         return false;
       }
 
@@ -336,41 +342,56 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
        if (! $this->exists())
        {
-				 if ($silent === false)
+				 $message = __('Could not be added, directory not found: ' . $path ,'shortpixel-image-optimiser');
+				 $this->last_message = $message;
+
+				 if (false === $silent)
 				 {
-          Notice::addError(__('Could not be added, directory not found: ' . $path ,'shortpixel-image-optimiser'));
+          Notice::addError($message);
 				 }
           return false;
        }
        elseif (! $this->isSubFolderOf($rootDir) && $this->getPath() != $rootDir->getPath() )
        {
-				 if ($silent === false)
+				 $message = sprintf(__('The %s folder cannot be processed as it\'s not inside the root path of your website (%s).','shortpixel-image-optimiser'),$this->getPath(), $rootDir->getPath());
+				 $this->last_message = $message;
+
+				 if (false === $silent)
 			 	 {
-          Notice::addError( sprintf(__('The %s folder cannot be processed as it\'s not inside the root path of your website (%s).','shortpixel-image-optimiser'),$this->getPath(), $rootDir->getPath()));
+          Notice::addError( $message );
 				}
           return false;
        }
        elseif($this->isSubFolderOf($backupDir) || $this->getPath() == $backupDir->getPath() )
        {
-				 if ($silent === false)
+				 $message = __('This folder contains the ShortPixel Backups. Please select a different folder.','shortpixel-image-optimiser');
+				 $this->last_message = $message;
+
+				 if (false === $silent)
 				 {
-          Notice::addError( __('This folder contains the ShortPixel Backups. Please select a different folder.','shortpixel-image-optimiser'));
+          Notice::addError( $message );
 				}
           return false;
        }
        elseif( $otherMediaController->checkIfMediaLibrary($this) )
        {
-				 if ($silent === false)
+				 $message = __('This folder contains Media Library images. To optimize Media Library images please go to <a href="upload.php?mode=list">Media Library list view</a> or to <a href="upload.php?page=wp-short-pixel-bulk">ShortPixel Bulk page</a>.','shortpixel-image-optimiser');
+				 $this->last_message = $message;
+
+				 if (false === $silent)
 				 {
-          Notice::addError(__('This folder contains Media Library images. To optimize Media Library images please go to <a href="upload.php?mode=list">Media Library list view</a> or to <a href="upload.php?page=wp-short-pixel-bulk">ShortPixel Bulk page</a>.','shortpixel-image-optimiser'));
+          Notice::addError($message);
 				}
           return false;
        }
        elseif (! $this->is_writable())
        {
-				 if ($silent === false)
+				 $message = sprintf(__('Folder %s is not writeable. Please check permissions and try again.','shortpixel-image-optimiser'),$this->getPath());
+				 $this->last_message = $message;
+
+				 if (false === $silent)
 				 {
-         	Notice::addError( sprintf(__('Folder %s is not writeable. Please check permissions and try again.','shortpixel-image-optimiser'),$this->getPath()) );
+         	Notice::addError( $messge );
 			 	 }
          return false;
 
@@ -383,7 +404,8 @@ class DirectoryOtherMediaModel extends DirectoryModel
 				 {
 					   if ($this->isSubFolderOf($folder))
 						 {
-							 if ($silent === false)
+
+							 if (false === $silent)
 							 {
 							  Notice::addError(sprintf(__('This folder is a subfolder of an already existing Other Media folder. Folder %s can not be added', 'shortpixel-image-optimiser'), $this->getPath() ));
 							 }

@@ -379,14 +379,19 @@ class ShortPixelPlugin {
 
 		wp_register_script( 'shortpixel-screen-nolist', plugins_url( '/res/js/screens/screen-nolist.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery', 'shortpixel-processor', 'shortpixel-screen-base' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
-	  $screen_localize = array(
+	  $screen_localize = array(  // Item Base
 			'startAction' => __('Processing... ','shortpixel-image-optimiser'),
 			'fatalError' => __('ShortPixel encountered a fatal error when optimizing images. Please check the issue below. If this is caused by a bug please contact our support', 'shortpixel-image-optimiser'),
 			'fatalErrorStop' => __('ShortPixel has encounted multiple errors and has now stopped processing', 'shortpixel-image-optimiser'),
 			'fatalErrorStopText' => __('No items are being processed. To try again after solving the issues, please reload the page ', 'shortpixel-image-optimiser'),
-		) ;
 
-		wp_localize_script( 'shortpixel-screen-base', 'spio_screenStrings', $screen_localize);
+		);
+
+		$screen_localize_custom = array( // Custom Screen
+			'stopActionMessage' => __('Folder scan has stopped', 'shortpixel-image-optimiser'),
+		);
+
+		wp_localize_script( 'shortpixel-screen-base', 'spio_screenStrings', array_merge($screen_localize, $screen_localize_custom));
 
 		wp_register_script( 'shortpixel-screen-bulk', plugins_url( '/res/js/screens/screen-bulk.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery', 'shortpixel-processor', 'shortpixel-screen-base'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 

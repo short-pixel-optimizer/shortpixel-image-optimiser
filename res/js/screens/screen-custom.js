@@ -7,6 +7,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
 		type = 'custom';
     folderTree = null;
     currentSelectedPath = null;
+		stopSignal = false;
 
     Init()
   	{
@@ -71,7 +72,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
        if (data.folder)
        {
           var folder_id = data.folder.id;
-          if (true === data.folder.is_error)
+          if (data.folder.message)
           {
              var el = document.querySelector('.shortpixel-other-media .item.item-' + folder_id + ' .status');
              if (null !== el)
@@ -125,6 +126,14 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
 						scanButton.addEventListener('click', self.StartFolderScanEvent.bind(self));
 					});
 			 }
+
+			 var stopButton = document.querySelector('.scan-actions .stop-button');
+			 if (null !== stopButton)
+			 {
+				  stopButton.addEventListener('click', this.StopScanEvent.bind(this));
+			 }
+
+
 		}
 
     InitFolderSelector()
@@ -242,6 +251,8 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
     StartFolderScanEvent(event)
     {
 			 var element = event.target;
+			 this.stopSignal = false;
+			 this.ToggleScanInterface(true);
 
 			 var force = false;
 			 if ('mode' in element.dataset)
@@ -277,6 +288,10 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
 
 		ScanFolder(args)
 		{
+			if (true === this.stopSignal)
+			{
+				 return false;
+			}
 			var data = {};
 			data.type = 'folder';
 			data.screen_action = 'scanNextFolder';
@@ -310,13 +325,12 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
 				var div = document.createElement('div');
 				div.classList.add('message');
 				div.textContent = data.result.message;
+				this.ToggleScanInterface(false);
 
 				reportElement.appendChild(div);
 			}
 			else if (data.result)
 			{
-
-
 					var div = document.createElement('div');
 					var span_path = document.createElement('span');
 					var span_filecount = document.createElement('span');
@@ -331,8 +345,65 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
 					div.appendChild(span_message);
 					reportElement.appendChild(div);
 
-					this.ScanFolder(args);
+					var self = this;
+					setTimeout( function () { self.ScanFolder(args) }, 200);
 			}
+		}
+
+		StopScanEvent(event)
+		{
+			 this.stopSignal = true;
+
+			var reportElement = document.querySelector('.scan-area .result-table');
+ 			if ( null === reportElement)
+ 			{
+ 				 console.error('Something wrong with reporting element');
+ 				 return false;
+ 			}
+
+			var div = document.createElement('div');
+			div.classList.add('message');
+			div.textContent = this.strings.stopActionMessage;
+
+			reportElement.appendChild(div);
+
+			this.ToggleScanInterface(false);
+
+
+		}
+
+		ToggleScanInterface(show)
+		{
+				if (typeof show === 'undefined')
+				{
+					 var show = true;
+				}
+
+				var divs = document.querySelectorAll('.scan-actions > div');
+
+				divs.forEach(function(div){
+						if (div.classList.contains('action-scan') && true === show)
+						{
+								div.classList.add('not-visible');
+						}
+						else if (div.classList.contains('action-scan') && false === show) {
+								div.classList.remove('not-visible');
+						}
+						else if ( div.classList.contains('action-stop') && true === show)
+						{
+							div.classList.remove('not-visible');
+						}
+						else {
+							div.classList.add('not-visible');
+						}
+				});
+
+				var output = document.querySelector('.scan-area .output');
+				if (null !== output && true === show)
+				{
+					 output.classList.remove('not-visible');
+				}
+
 		}
 
 } // class
