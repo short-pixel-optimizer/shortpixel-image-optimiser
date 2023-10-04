@@ -7,7 +7,6 @@ class ShortPixelScreenBase
 	processor;
 	strings = [];
 
-
 	constructor(MainScreen, processor)
 	{
 		 this.processor = processor;
@@ -172,7 +171,7 @@ class ShortPixelScreenBase
 
 	Hide(el)
 	{
-		el.style.display = 'none'; 
+		el.style.display = 'none';
 	}
 
 

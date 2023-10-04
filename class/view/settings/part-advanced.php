@@ -335,17 +335,24 @@ if ( ! defined( 'ABSPATH' ) ) {
 									<div class="option-content">
 
 
-                    <?php foreach($view->allThumbSizes as $sizeKey => $sizeVal) {?>
-                        <span style="margin-right: 20px; white-space:nowrap; line-height: 24px;">
+                    <?php foreach($view->allThumbSizes as $sizeKey => $sizeVal) {
+										?>
+                        <span class="excludeSizeOption">
                           <label>
 
-                            <input name="excludeSizes[]" type="checkbox" id="excludeSizes_<?php echo esc_attr($sizeKey);?>" <?php
-														// @TODO This is unreadable
-														 echo esc_attr((in_array($sizeKey, $view->data->excludeSizes) ? 'checked' : ''));?>
-                                   value="<?php echo esc_attr($sizeKey);?>">&nbsp;<?php $w=$sizeVal['width']?$sizeVal['width'].'px':'*';$h=$sizeVal['height']?$sizeVal['height'].'px':'*';echo("$sizeKey ({$w} &times; {$h})");?>&nbsp;&nbsp;
+														<?php
+														$checked = in_array($sizeKey, $view->data->excludeSizes) ? 'checked' : '';
+														$width = isset($sizeVal['width']) ? $sizeVal['width'] : '*';
+														$height = isset($sizeVal['height']) ? $sizeVal['height'] : '*';
+
+														$label = ucfirst($sizeKey) . " ( $width &times $height )";
+
+														printf(' <input name="excludeSizes[]" type="checkbox" id="excludeSizes_%s" value="%s" %s>%s  ', esc_attr($sizeKey), esc_attr($sizeKey), $checked, $label);
+														?>
                             </label>
-                        </span><br>
-                    <?php } ?>
+                        </span>
+
+								    <?php } // exclude sizes ?>
 									</div>
                 </td>
             </tr>

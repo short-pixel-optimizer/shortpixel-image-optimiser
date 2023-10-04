@@ -411,49 +411,15 @@
 }
 
 /* Specific styles for advanced settings tab */
-#shortpixel-settings-tabs #tab-adv-settings .addCustomFolder {
-  margin: 10px 0;
+#shortpixel-settings-tabs #tab-adv-settings .excludeSizeOption {
+  margin-right: 20px;
+  white-space: nowrap;
+  line-height: 24px;
+  float: left;
+  clear: both;
 }
-#shortpixel-settings-tabs #tab-adv-settings .addCustomFolder .add-folder-text {
-  margin-left: 5px;
-}
-#shortpixel-settings-tabs #tab-adv-settings .addCustomFolder input[type=text] {
-  width: 50em;
-  max-width: 70%;
-}
-#shortpixel-settings-tabs #tab-adv-settings .addCustomFolder input[name=saveAdv] {
-  margin-left: 8px;
-}
-#shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list {
-  display: table;
-  border-collapse: separate;
-}
-#shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list div.heading {
-  width: auto;
-  display: table-header-group;
-  padding: 12px 16px 12px 12px;
-}
-#shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list div.heading span {
-  font-weight: 600;
-  font-size: 14px;
-}
-#shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list div {
-  display: table-row;
-}
-#shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list div > span {
-  display: table-cell;
-  padding: 5px 10px;
-  vertical-align: middle;
-  background-color: #eee;
-}
-#shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list div > span.action {
-  background-color: unset;
-}
-#shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list .refresh-folder {
-  text-decoration: none;
-}
-#shortpixel-settings-tabs #tab-adv-settings .shortpixel-folders-list .info-icon {
-  cursor: pointer;
+#shortpixel-settings-tabs #tab-adv-settings .excludeSizeOption input {
+  margin-right: 8px;
 }
 #shortpixel-settings-tabs #tab-adv-settings .deliverWebpTypes, #shortpixel-settings-tabs #tab-adv-settings .deliverWebpAlteringTypes {
   margin: 16px 0 16px 16px;
@@ -552,16 +518,24 @@ div.spio-inline-help span {
 }
 
 div.spio-modal-shade {
-  display: none; /* Hidden by default */
-  position: fixed; /* Stay in place */
-  z-index: 10; /* Sit on top */
+  display: none;
+  /* Hidden by default */
+  position: fixed;
+  /* Stay in place */
+  z-index: 10;
+  /* Sit on top */
   left: 0;
   top: 0;
-  width: 100%; /* Full width */
-  height: 100%; /* Full height */
-  overflow: auto; /* Enable scroll if needed */
-  background-color: rgb(0, 0, 0); /* Fallback color */
-  background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+  width: 100%;
+  /* Full width */
+  height: 100%;
+  /* Full height */
+  overflow: auto;
+  /* Enable scroll if needed */
+  background-color: black;
+  /* Fallback color */
+  background-color: rgba(0, 0, 0, 0.4);
+  /* Black w/ opacity */
 }
 
 div.spio-modal {
@@ -572,9 +546,12 @@ div.spio-modal {
   background-position: center;
   padding: 20px 16px 16px;
   border: 1px solid #888;
-  width: 30%; /* Could be more or less, depending on screen size */
-  min-width: 300px; /* Could be more or less, depending on screen size */
-  z-index: 100; /* Proper z-index */
+  width: 30%;
+  /* Could be more or less, depending on screen size */
+  min-width: 300px;
+  /* Could be more or less, depending on screen size */
+  z-index: 100;
+  /* Proper z-index */
   position: fixed;
   top: 10%;
   left: 50%;

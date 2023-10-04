@@ -192,7 +192,6 @@ class AjaxController
           unset($data['typeArray']);
         }
 
-				Log::addInfo('AjaxController: Action detected :' . $action);
         switch($action)
         {
            case 'restoreItem':
@@ -501,7 +500,6 @@ class AjaxController
 				if ($doCustom)
 				{
 					$otherMediaController = OtherMediaController::getInstance();
-			//		$otherMediaController->refreshFolders(true); // phasing this out for a better approach
 				}
 
         $optimizeController = new OptimizeController();

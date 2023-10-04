@@ -11,14 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     </h2>
 
     <div class='toolbar'>
-        <div>
-          <?php
-          $nonce = wp_create_nonce('refresh_folders');
-          ?>
-            <a href="<?php echo esc_url(admin_url('upload.php?page=wp-short-pixel-custom&sp-action=action_refreshfolders&_wpnonce=' . $nonce)); ?>" id="refresh" class="button button-primary" title="<?php esc_attr_e('Refresh custom folders content','shortpixel-image-optimiser');?>">
-                <?php esc_attr_e('Refresh folders','shortpixel-image-optimiser');?>
-            </a>
-        </div>
+
 			<hr class='wp-header-end' />
 
 <?php if (property_exists($view, 'show_search') && true === $view->show_search):  ?>
@@ -39,27 +32,14 @@ if ( ! defined( 'ABSPATH' ) ) {
   </div>
 <?php endif;  ?>
 
-<?php if ($this->view->pagination !== false): ?>
   <div class='pagination tablenav'>
-			<div class="view_switch">
-				<?php if ($this->has_hidden_items):
 
-					if ($this->show_hidden)
-					{
-						 printf('<a href="%s">%s</a>', esc_url(add_query_arg('show_hidden',false)), esc_html__('Back to normal items', 'shortpixel-image-optimiser'));
-					}
-					else
-					{
-						 printf('<a href="%s">%s</a>', esc_url(add_query_arg('show_hidden',true)), esc_html__('Show hidden items', 'shortpixel-image-optimiser'));
-					}
-
-		     endif; ?>
-			</div>
-      <div class='tablenav-pages'>
-        <?php echo $this->view->pagination; ?>
-    </div>
+			<?php if ($this->view->pagination !== false): ?>
+	      <div class='tablenav-pages'>
+	        <?php echo $this->view->pagination; ?>
+	    	</div>
+			<?php endif; ?>
   </div>
-<?php endif; ?>
 
 <?php
 $file_url =  esc_url(add_query_arg('part', 'files', $this->url));

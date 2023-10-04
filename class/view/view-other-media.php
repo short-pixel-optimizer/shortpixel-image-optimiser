@@ -20,8 +20,8 @@ $this->loadView('custom/part-othermedia-top');
 
 ?>
 
-
     <div class='list-overview'>
+
       <div class='heading'>
         <?php foreach($this->view->headings as $hname => $heading):
             $isSortable = $heading['sortable'];
@@ -52,9 +52,7 @@ $this->loadView('custom/part-othermedia-top');
         $folders = $this->view->folders;
 
         foreach($this->view->items as $item):
-
-
-          ?>
+        ?>
 
         <div class='item item-<?php echo esc_attr($item->get('id')) ?>'>
             <?php
@@ -104,10 +102,7 @@ $this->loadView('custom/part-othermedia-top');
 								  endforeach;
 
 								endif;
-
-
                 ?>
-
 							</div>
             </span>
             <span class='folderpath'><?php echo  esc_html( (string) $item->getFileDir()); ?></span>
@@ -118,15 +113,26 @@ $this->loadView('custom/part-othermedia-top');
 								<?php $this->doActionColumn($item); ?>
 	          </span>
 
-
-
-
         </div>
         <?php endforeach; ?>
       </div>
 
 
       <div class='pagination tablenav bottom'>
+				<div class="view_switch">
+					<?php if ($this->has_hidden_items || $this->show_hidden):
+
+						if ($this->show_hidden)
+						{
+							 printf('<a href="%s">%s</a>', esc_url(add_query_arg('show_hidden',false)), esc_html__('Back to normal items', 'shortpixel-image-optimiser'));
+						}
+						else
+						{
+							 printf('<a href="%s">%s</a>', esc_url(add_query_arg('show_hidden',true)), esc_html__('Show hidden items', 'shortpixel-image-optimiser'));
+						}
+
+					 endif; ?>
+				</div>
         <div class='tablenav-pages'>
             <?php echo $this->view->pagination; ?>
         </div>

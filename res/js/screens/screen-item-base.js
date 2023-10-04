@@ -6,11 +6,9 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase
 	type; // media / custom
 	currentMessage = '';
 
-
 	constructor(MainScreen, processor)
 	{
 		super(MainScreen, processor);
-
 	}
 
 	Init()
@@ -19,8 +17,6 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase
 
 		window.addEventListener('shortpixel.' + this.type + '.resumeprocessing', this.processor.ResumeProcess.bind(this.processor));
 		window.addEventListener('shortpixel.RenderItemView', this.RenderItemView.bind(this) );
-
-
 	}
 
 	HandleImage(resultItem, type)
@@ -215,7 +211,7 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase
 				data.type = this.type;
 				data.screen_action = 'cancelOptimize';
 				// AjaxRequest should return result, which will go through Handleresponse, then LoaditemView.
-		//		this.SetMessageProcessing(id);
+
 				this.processor.AjaxRequest(data);
 		}
 

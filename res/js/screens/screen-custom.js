@@ -15,8 +15,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
 
       this.InitFolderSelector();
 			this.InitScanButtons();
-    //  window.addEventListener()
-
   	}
 
     RenderItemView(e)
@@ -33,6 +31,17 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
         return false;
     }
 
+		// Check if the processor needs to start when items are being added / folders refreshed
+		CheckProcessorStart()
+		{
+			// If automedia is active, see if something is to process.
+			if (this.processor.IsAutoMediaActive())
+			{
+				 this.processor.SetInterval(-1);
+				 this.processor.RunProcess();
+			}
+		}
+
     RefreshFolder(id)
     {
         var data = {};
@@ -44,7 +53,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
         window.addEventListener('shortpixel.folder.HandleFolderResult', this.HandleFolderResult.bind(this), {'once':true});
 
         // AjaxRequest should return result, which will go through Handleresponse, then LoaditemView.
-        //this.SetMessageProcessing(id);
         this.processor.AjaxRequest(data);
     }
 
@@ -60,7 +68,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
          data.callback = 'shortpixel.folder.HandleFolderResult';
 
          window.addEventListener('shortpixel.folder.HandleFolderResult', this.HandleFolderResult.bind(this), {'once':true});
-
          this.processor.AjaxRequest(data);
        }
     }
@@ -113,6 +120,8 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
           }
 
        }
+
+			 this.CheckProcessorStart();
     }
 
 		InitScanButtons()
@@ -133,12 +142,10 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
 				  stopButton.addEventListener('click', this.StopScanEvent.bind(this));
 			 }
 
-
 		}
 
     InitFolderSelector()
     {
-
       var openModalButton = document.querySelector('.open-selectfolder-modal');
       if (null !== openModalButton)
         openModalButton.addEventListener('click', this.OpenFolderModal.bind(this));
@@ -156,7 +163,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
       {
         addFolderButton.addEventListener('click', this.AddNewFolderEvent.bind(this));
       }
-
     }
 
     OpenFolderModal()
@@ -205,7 +211,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
       var shade  = document.querySelector(".sp-folder-picker-shade");
       this.Hide(shade);
 
-        // @todo FadeOut function here
+      // @todo FadeOut function here
       var picker = document.querySelector('.shortpixel-modal.modal-folder-picker');
       this.Hide(picker);
     }
@@ -246,6 +252,9 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
 
         }
         this.CloseFolderModal();
+
+				this.CheckProcessorStart();
+
     }
 
     StartFolderScanEvent(event)
@@ -303,7 +312,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
 			}
 
 			window.addEventListener('shortpixel.folder.ScannedDirectoryEvent', this.ScannedDirectoryEvent.bind(this, args), {'once':true});
-
 			this.processor.AjaxRequest(data);
 		}
 
@@ -369,7 +377,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
 
 			this.ToggleScanInterface(false);
 
-
 		}
 
 		ToggleScanInterface(show)
@@ -403,7 +410,6 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
 				{
 					 output.classList.remove('not-visible');
 				}
-
 		}
 
 } // class

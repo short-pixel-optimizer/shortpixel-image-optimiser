@@ -551,6 +551,12 @@ class DirectoryOtherMediaModel extends DirectoryModel
 							 }
 						}
 
+						// If in Db, but not optimized and autoprocess is on; add to queue for optimizing
+						if (\wpSPIO()->env()->is_autoprocess && $imageObj->isProcessable(true))
+						{
+							 $optimizeControl->addItemToQueue($imageObj);
+						}
+
             continue;
 					}
           elseif ($imageObj->isProcessable(true)) // Check strict on Processable here.

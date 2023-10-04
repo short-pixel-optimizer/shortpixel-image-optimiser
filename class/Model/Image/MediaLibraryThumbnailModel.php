@@ -313,16 +313,17 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
   // !Important . This doubles as  checking excluded image sizes.
   protected function isSizeExcluded()
   {
-		if (true === $this->is_main_file)
-		{
-				return parent::isSizeExcluded();
-		}
 
     $excludeSizes = \wpSPIO()->settings()->excludeSizes;
     if (is_array($excludeSizes) && in_array($this->name, $excludeSizes))
 		{
 			$this->processable_status = self::P_EXCLUDE_SIZE;
       return true;
+		}
+
+		if (true === $this->is_main_file)
+		{
+				return parent::isSizeExcluded();
 		}
 		return false;
 	}

@@ -201,9 +201,6 @@ class UiHelper
 
 
 				$maxList = 10;
-        // Todo check if Webp / Acif is active, check for unoptimized items
-       // $processWebp = ($imageObj->isProcessableFileType('webp')) ? true : false;
-       // $processAvif = ($imageObj->isProcessableFileType('avif')) ? true : false;
 
 			 if (count($urls) > $maxList)
 			 {
@@ -483,7 +480,6 @@ class UiHelper
     }
     elseif (! $mediaItem->isProcessable() && ! $mediaItem->isOptimized() )
     {
-
        $text = __('Not Processable: ','shortpixel_image_optimiser');
        $text  .= $mediaItem->getProcessableReason();
     }

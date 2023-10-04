@@ -76,6 +76,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			// Set AFTER PARENT, because it's overwritten.
 			$this->imageType = self::IMAGE_TYPE_MAIN;
 			$this->image_meta = new ImageMeta();
+			$this->setName($this->mainImageKey); // by definition this is the case, used for isSizeExcluded
 
       // WP 5.3 and higher. Check for original file.
       if (function_exists('wp_get_original_image_path'))

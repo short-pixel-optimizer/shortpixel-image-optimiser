@@ -195,30 +195,6 @@ class SettingsController extends \ShortPixel\ViewController
 
 			}
 
-      /* Custom Media, refresh a single Folder */
-      public function action_refreshfolder()
-      {
-         $folder_id = isset($_REQUEST['folder_id']) ? intval($_REQUEST['folder_id']) : false;
-
-         if ($folder_id)
-         {
-            $otherMediaController = OtherMediaController::getInstance();
-            $dirObj = $otherMediaController->getFolderByID($folder_id);
-
-            if ($dirObj)
-            {
-               $dirObj->refreshFolder(true);
-            }
-
-         }
-				 else
-				 {
-				 	Log::addWarn('RefreshFolder without folder id '. $folder_id );
-				 }
-
-         $this->load();
-      }
-
 
 			public function action_debug_redirectBulk()
 			{
@@ -241,9 +217,6 @@ class SettingsController extends \ShortPixel\ViewController
 				{
 					 $this->doRedirect('bulk-removeLegacy');
 				}
-				//upload.php?page=wp-short-pixel-bulk&panel=bulk-migrate
-
-				//upload.php?page=wp-short-pixel-bulk&panel=bulk-restore
 
 			}
 
@@ -467,7 +440,16 @@ class SettingsController extends \ShortPixel\ViewController
 
          $this->view->minSizes = $this->getMaxIntermediateImageSize();
       //   $this->view->customFolders= $this->loadCustomFolders();
-         $this->view->allThumbSizes = UtilHelper::getWordPressImageSizes();
+
+				 $excludeOptions = UtilHelper::getWordPressImageSizes();
+				 /*$mainOptions = array(
+					 'shortpixel_main_donotuse' =>  '',
+					 'shortpixel_original_donotuse' => '',
+				 ); */
+
+				 $excludeOptions = $excludeOptions; //array_merge($mainOptions, $excludeOptions);
+
+         $this->view->allThumbSizes = $excludeOptions;
          $this->view->averageCompression = $statsControl->getAverageCompression();
          $this->view->savedBandwidth = UiHelper::formatBytes( intval($this->view->data->savedSpace) * 10000,2);
 

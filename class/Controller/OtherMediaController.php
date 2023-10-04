@@ -276,43 +276,6 @@ class OtherMediaController extends \ShortPixel\Controller
 
     }
 
-
-    /** Check directory structure for new files */
-    public function refreshFolders($force = false, $expires = null)
-    {
- 			// a little PHP 5.5. compat.
-			if (is_null($expires))
-			{
-				$expires = HOUR_IN_SECONDS;
-			}
-
-			if (! $this->hasFoldersTable())
-				return false;
-
-      $cache = new CacheController();
-      $refreshDelay = $cache->getItem('othermedia_refresh_folder_delay');
-
-      if ($refreshDelay->exists() && ! $force)
-      {
-        return true;
-      }
-
-			$this->cleanUp();
-      $customFolders = $this->getActiveFolders();
-
-      $refreshDelay->setExpires($expires);
-      $refreshDelay->save();
-
-      foreach($customFolders as $directory) {
-
-				$stats = $directory->getStats();
-				$forcenow = ($force || $stats['total'] === 0) ? true : false;
-	      $directory->refreshFolder($forcenow);
-      } // folders
-
-      return true;
-    }
-
 		/* New structure for folder refresing based on checked value in database + interval.  Via Scan interface
 		*
 		* @param $args Array  ( force true / false )

@@ -364,7 +364,7 @@ class ShortPixelPlugin {
 				'interval'          => $interval,
 				'deferInterval'     => $deferInterval,
 				'debugIsActive' 		=> (\wpSPIO()->env()->is_debug) ? 'true' : 'false',
-
+				'autoMediaLibrary'  => ($settings->autoMediaLibrary) ? 'true' : 'false',
             )
         );
 

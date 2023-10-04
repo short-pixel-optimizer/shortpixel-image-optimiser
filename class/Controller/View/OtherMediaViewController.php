@@ -73,21 +73,6 @@ class OtherMediaViewController extends \ShortPixel\ViewController
           $this->loadView();
       }
 
-			public function action_refreshfolders()
-			{
-				   if (isset($_REQUEST['_wpnonce']) && wp_verify_nonce( sanitize_key($_REQUEST['_wpnonce']), 'refresh_folders'))
-					 {
-						 	 $otherMediaController = OtherMediaController::getInstance();
-							 $otherMediaController->refreshFolders(true);
-					 }
-					 else
-					 {
-						  Log::addWarn('Incorrect nonce for refreshfolders');
-					 }
-
-					 $this->load();
-			}
-
 
       protected function getHeadings()
       {
@@ -342,8 +327,6 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 					 if (isset($page_args['paged']))
 					 	unset($page_args['paged']);
 
-
-
 					 // Try with controller URL, if not present, try with upload URL and page param.
 	         $admin_url = admin_url('upload.php');
 	         $url = (is_null($this->url)) ?  add_query_arg('page','wp-short-pixel-custom', $admin_url) : $this->url; // has url
@@ -351,7 +334,6 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 
 					 $url = remove_query_arg('page', $url);
 					 $page_args['page'] = 'wp-short-pixel-custom';
-
 
            $output = '<form method="GET" action="'. esc_attr($url) . '">';
 					 foreach($page_args as $arg => $val)
