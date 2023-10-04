@@ -266,7 +266,7 @@ class AdminController extends \ShortPixel\Controller
   				$value = sanitize_text_field( $_REQUEST['query'][ $key ] );
   			}
   		} else {
-  			if ( ! isset( $_REQUEST['filter_action'] ) || $_REQUEST['filter_action'] !== 'Filter' ) {
+  			if ( ! isset( $_REQUEST['filter_action'] )  ) {
   				return $default;
   			}
 
