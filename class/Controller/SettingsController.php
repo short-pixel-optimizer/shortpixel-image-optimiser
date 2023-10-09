@@ -442,12 +442,12 @@ class SettingsController extends \ShortPixel\ViewController
       //   $this->view->customFolders= $this->loadCustomFolders();
 
 				 $excludeOptions = UtilHelper::getWordPressImageSizes();
-				 /*$mainOptions = array(
+				 $mainOptions = array(
 					 'shortpixel_main_donotuse' =>  '',
 					 'shortpixel_original_donotuse' => '',
-				 ); */
+				 );
 
-				 $excludeOptions = $excludeOptions; //array_merge($mainOptions, $excludeOptions);
+				 $excludeOptions = array_merge($mainOptions, $excludeOptions);
 
          $this->view->allThumbSizes = $excludeOptions;
          $this->view->averageCompression = $statsControl->getAverageCompression();
@@ -578,7 +578,6 @@ class SettingsController extends \ShortPixel\ViewController
       {
         $quotaController = QuotaController::getInstance();
 
-
 				if ($force === true)
 				{
 					 $quotaController->forceCheckRemoteQuota();
@@ -598,24 +597,6 @@ class SettingsController extends \ShortPixel\ViewController
 
       }
 
-/*
-      protected function loadCustomFolders()
-      {
-
-        $otherMedia = OtherMediaController::getInstance();
-
-        //$otherMedia->refreshFolders();
-        $customFolders = $otherMedia->getActiveFolders();
-        $fs = \wpSPIO()->filesystem();
-
-        $customFolderBase = $fs->getWPFileBase();
-        $this->view->customFolderBase = $customFolderBase->getPath();
-
-
-
-        return $customFolders;
-      }
-*/
       // This is done before handing it off to the parent controller, to sanitize and check against model.
       protected function processPostData($post)
       {
@@ -647,28 +628,11 @@ class SettingsController extends \ShortPixel\ViewController
           // must be an array
           $post['excludeSizes'] = (isset($post['excludeSizes']) && is_array($post['excludeSizes']) ? $post['excludeSizes']: array());
 
-/*
-          if (isset($post['emptyBackup']))
-          {
-						  if (wp_verify_nonce($_POST['tools-nonce'], 'empty-backup'))
-							{
-								$dir = \wpSPIO()->filesystem()->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
-	              $dir->recursiveDelete();
-							}
-							else {
-								exit('Invalid Nonce in empty backups');
-							}
-
-          }
-          unset($post['emptyBackup']);
-*/
-
           $post = $this->processWebp($post);
           $post = $this->processExcludeFolders($post);
           $post = $this->processCloudFlare($post);
 
           parent::processPostData($post);
-
 
       }
 
@@ -684,8 +648,6 @@ class SettingsController extends \ShortPixel\ViewController
 			  $webpOn = isset($post['createWebp']) && $post['createWebp'] == 1;
 				$avifOn = isset($post['createAvif']) && $post['createAvif'] == 1;
 
-    //    if ($webpOn || $avifOn)
-    //    {
             if (isset($post['deliverWebp']) && $post['deliverWebp'] == 1)
             {
               $type = isset($post['deliverWebpType']) ? $post['deliverWebpType'] : '';
@@ -706,7 +668,6 @@ class SettingsController extends \ShortPixel\ViewController
                 $deliverwebp = 3;
               }
             }
-      //  }
 
         if (! $this->is_nginx && $deliverwebp == 3) // deliver webp/avif via htaccess, write rules
         {

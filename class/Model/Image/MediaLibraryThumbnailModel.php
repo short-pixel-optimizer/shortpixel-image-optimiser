@@ -325,6 +325,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 		{
 				return parent::isSizeExcluded();
 		}
+
 		return false;
 	}
 

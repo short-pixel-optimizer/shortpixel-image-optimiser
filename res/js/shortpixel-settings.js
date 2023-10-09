@@ -180,8 +180,6 @@ this.SendModal = function(elem)
 
 this.ReceiveModal = function(elem)
 {
-
-
 	 if (typeof elem.detail.settings.results !== 'undefined')
 	 {
 		 var modal = document.getElementById('spioSettingsModal');

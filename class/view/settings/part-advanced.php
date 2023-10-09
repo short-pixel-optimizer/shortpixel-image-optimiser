@@ -1,6 +1,8 @@
 <?php
 namespace ShortPixel;
 use \ShortPixel\Helper\UiHelper as UiHelper;
+use ShortPixel\Helper\UtilHelper as UtilHelper;
+
 
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
@@ -38,13 +40,6 @@ if ( ! defined( 'ABSPATH' ) ) {
         }
     }
 
-    $excludePatterns = '';
-    if($view->data->excludePatterns) {
-        foreach($view->data->excludePatterns as $item) {
-            $excludePatterns .= $item['type'] . ":" . $item['value'] . ", ";
-        }
-        $excludePatterns = substr($excludePatterns, 0, -2);
-    }
     ?>
 
     <div class="wp-shortpixel-options wp-shortpixel-tab-content" style='visibility: hidden'>
@@ -363,17 +358,58 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/88-how-to-exclude-images-from-being-optimized"></span></div>
 
 				<p class="settings-info" data-toggle="exclude-settings-expanded">
+
 						<?php
 						printf(esc_html__('Use this section to exclude images based on patterns (separated by commas). A pattern consists of a %s type:value %s pair and the accepted types are %s "name", "path", "size", "regex-name" and "regex-path" %s. A file is excluded if it matches any of the patterns. Examples can be found in the collapsible area below the exclusion list.','shortpixel-image-optimiser'),
 							'<b>','</b>',
 							'<b>','</b>'
 						);
 				 ?>
-				 <br /><br />
 			 </p>
 
                     <textarea name="excludePatterns" type="text" id="excludePatterns" placeholder="<?php
                         esc_html_e('name:keepbig, path:/full/path/to/exclude/, regex-name:/valid_regex/, size:1000x2000','shortpixel-image-optimiser');?>" rows="4" cols="60"><?php echo esc_html( $excludePatterns );?></textarea>
+<?php
+ $exclusions = UtilHelper::getExclusions();
+		$excludeArray = $exclusions; //(strlen($excludePatterns) > 0) ? explode(',', $excludePatterns) : array();
+		if (is_array($excludeArray) && count($excludeArray) > 0)
+		{
+				echo "<ul class='exclude-list'>";
+				foreach($excludeArray as $index => $option)
+				{
+					//	$option = trim($option);
+					//	$fields = explode(':', $option);
+						$type = $option['type'];
+						$value = $option['value'];
+						$apply = $option['apply'];
+
+						$option_code = json_encode($option);
+
+						switch($type)
+						{
+							 case 'name':
+							 	 $field_name = __('Filename', 'shortpixel-image-optimiser');
+							 break;
+							 case 'path':
+							 	$field_name = __('Path', 'shortpixel-image-optimiser');
+							 break;
+							 default:
+							 	 $field_name = __('Unknown', 'shortpixel-image-optimiser');
+							 break;
+						}
+
+
+						echo "<li>";
+						echo "<input type='hidden' name='exclusions[]' value='$option_code' />";
+						echo "<span>$field_name :</span><span>$value</span>" ;
+						echo "<span class='dashicons dashicons-remove'></span>";
+						echo "</li>";
+
+				}
+				echo "</ul>";
+		}
+
+?>
 
 			</div>
 
@@ -425,8 +461,47 @@ if ( ! defined( 'ABSPATH' ) ) {
 											</p>
 
 									</div>
+
+
+									<div class='new-exclusion'>
+										<h3>New Exclusion</h3>
+										<div>
+											<label>Type</label>
+											 <select>
+													<option>Name</option>
+													<option data-example="/path/">Path</option>
+													<option data-example="widthXheight-widthXheight">Size</option>
+													<option date-example="regex://regex">Regular Expression: Name</option>
+													<option data-example="regex://regex">Regular Expression: Path</option>
+											</select>
+										</div>
+
+										<div>
+											<label>Value</label>
+											<input type="text" name="exclusion-value" value="">
+										</div>
+
+										<div>
+											<label>Apply To:</label>
+											<select>
+													<option selected>All</option>
+													<option>Only Thumbnails</option>
+													<?php foreach($view->allThumbSizes as $name => $data)
+													{
+															echo "<option name='$name'>$name</option>";
+													} ?>
+											</select>
+										</div>
+										<div>
+											<button type="button" class="button">Add Exclusion</button>
+										</div>
+									</div>
+
+
                 </td>
-            </tr>
+            </tr> <-- Exclusiion -->
+
+
             <tr>
                 <th scope="row"><label for="additional-media"><?php esc_html_e('Custom media folders','shortpixel-image-optimiser');?></label></th>
                 <td>

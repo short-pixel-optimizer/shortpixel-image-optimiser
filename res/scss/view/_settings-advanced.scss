@@ -16,6 +16,45 @@
     margin: 16px 0 16px 16px;
 }
 
+ul.exclude-list {
+
+		 li {
+			 	float: left;
+				padding: 4px 12px;
+				border: 1px solid #1caecb;
+				background: #1caecb;
+				border-radius: 8px;
+				margin: 0 8px 0 0;
+				color: #fff;
+				span {
+					margin-left: 6px;
+				}
+		 }
+		 margin: 20px 0;
+}
+
+.new-exclusion
+{
+		border-top: 1px solid #ccc;
+		border-bottom: 1px solid #ccc;
+
+		> div
+		{
+			 margin: 8px 0;
+			 label
+			 {
+				 	min-width: 100px;
+					display: inline-block;
+			 }
+			 input, select {
+				 	min-width: 250px;
+			 }
+			 button {
+				 margin-left: 104px;
+			 }
+		}
+}
+
 .avifNoticeDisabled
 {
 	 padding: 12px 12px;

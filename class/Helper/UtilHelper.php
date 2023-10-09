@@ -74,6 +74,22 @@ class UtilHelper
 			return $new_path;
 		}
 
+		public static function getExclusions()
+		{
+			 $patterns = \wpSPIO()->settings()->excludePatterns;
+
+			 foreach($patterns as $index => $pattern)
+			 {
+				  if (! isset($pattern['apply']))
+					{
+						 $patterns[$index]['apply'] = 'all';
+					}
+
+			 }
+
+			 return $patterns;
+		}
+
 		public static function alterHtaccess($webp = false, $avif = false)
 		{
          // [BS] Backward compat. 11/03/2019 - remove possible settings from root .htaccess
