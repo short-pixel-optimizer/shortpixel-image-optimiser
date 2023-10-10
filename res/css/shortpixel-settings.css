@@ -424,6 +424,10 @@
 #shortpixel-settings-tabs #tab-adv-settings .deliverWebpTypes, #shortpixel-settings-tabs #tab-adv-settings .deliverWebpAlteringTypes {
   margin: 16px 0 16px 16px;
 }
+#shortpixel-settings-tabs #tab-adv-settings .new-exclusion-button {
+  float: left;
+  margin-right: 8px;
+}
 #shortpixel-settings-tabs #tab-adv-settings ul.exclude-list {
   margin: 20px 0;
 }
@@ -433,28 +437,74 @@
   border: 1px solid #1caecb;
   background: #1caecb;
   border-radius: 8px;
-  margin: 0 8px 0 0;
+  margin: 8px 8px 0 0;
   color: #fff;
 }
 #shortpixel-settings-tabs #tab-adv-settings ul.exclude-list li span {
   margin-left: 6px;
 }
+#shortpixel-settings-tabs #tab-adv-settings ul.exclude-list li span.dashicons-remove {
+  cursor: pointer;
+}
+#shortpixel-settings-tabs #tab-adv-settings ul.exclude-list li.has-error {
+  background: #ff0000;
+  border-color: #ff0000;
+}
+#shortpixel-settings-tabs #tab-adv-settings ul.exclude-list li.is-regex {
+  border-right: green;
+  border-right-width: 10px;
+  border-style: solid;
+}
+#shortpixel-settings-tabs #tab-adv-settings ul.exclude-list .not-visible {
+  display: none;
+}
 #shortpixel-settings-tabs #tab-adv-settings .new-exclusion {
   border-top: 1px solid #ccc;
   border-bottom: 1px solid #ccc;
-}
-#shortpixel-settings-tabs #tab-adv-settings .new-exclusion > div {
+  padding: 8px;
   margin: 8px 0;
 }
-#shortpixel-settings-tabs #tab-adv-settings .new-exclusion > div label {
+#shortpixel-settings-tabs #tab-adv-settings .new-exclusion h3 {
+  margin: 2px 0;
+}
+#shortpixel-settings-tabs #tab-adv-settings .new-exclusion.not-visible {
+  display: none;
+}
+#shortpixel-settings-tabs #tab-adv-settings .new-exclusion div {
+  margin: 8px 0;
+  height: auto;
+}
+#shortpixel-settings-tabs #tab-adv-settings .new-exclusion div label {
   min-width: 100px;
   display: inline-block;
 }
-#shortpixel-settings-tabs #tab-adv-settings .new-exclusion > div input, #shortpixel-settings-tabs #tab-adv-settings .new-exclusion > div select {
+#shortpixel-settings-tabs #tab-adv-settings .new-exclusion div input, #shortpixel-settings-tabs #tab-adv-settings .new-exclusion div select {
   min-width: 250px;
 }
-#shortpixel-settings-tabs #tab-adv-settings .new-exclusion > div button {
+#shortpixel-settings-tabs #tab-adv-settings .new-exclusion div input.small, #shortpixel-settings-tabs #tab-adv-settings .new-exclusion div select.small {
+  width: 80px;
+  min-width: 0;
+}
+#shortpixel-settings-tabs #tab-adv-settings .new-exclusion div button {
   margin-left: 104px;
+}
+#shortpixel-settings-tabs #tab-adv-settings .new-exclusion .not-visible {
+  visibility: hidden;
+  height: 0;
+  transition: 500ms height;
+}
+#shortpixel-settings-tabs #tab-adv-settings .new-exclusion .size-option > div {
+  margin: 8px 0;
+}
+#shortpixel-settings-tabs #tab-adv-settings .new-exclusion .size-option div label {
+  min-width: 110px;
+}
+#shortpixel-settings-tabs #tab-adv-settings .new-exclusion .thumbnail-option:not(.not-visible) {
+  height: 150px;
+  margin-left: 12px;
+}
+#shortpixel-settings-tabs #tab-adv-settings .new-exclusion .thumbnail-option:not(.not-visible):hover {
+  color: #000;
 }
 #shortpixel-settings-tabs #tab-adv-settings .avifNoticeDisabled {
   padding: 12px 12px;
@@ -550,24 +600,16 @@ div.spio-inline-help span {
 }
 
 div.spio-modal-shade {
-  display: none;
-  /* Hidden by default */
-  position: fixed;
-  /* Stay in place */
-  z-index: 10;
-  /* Sit on top */
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 10; /* Sit on top */
   left: 0;
   top: 0;
-  width: 100%;
-  /* Full width */
-  height: 100%;
-  /* Full height */
-  overflow: auto;
-  /* Enable scroll if needed */
-  background-color: black;
-  /* Fallback color */
-  background-color: rgba(0, 0, 0, 0.4);
-  /* Black w/ opacity */
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0, 0, 0); /* Fallback color */
+  background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
 }
 
 div.spio-modal {
@@ -578,12 +620,9 @@ div.spio-modal {
   background-position: center;
   padding: 20px 16px 16px;
   border: 1px solid #888;
-  width: 30%;
-  /* Could be more or less, depending on screen size */
-  min-width: 300px;
-  /* Could be more or less, depending on screen size */
-  z-index: 100;
-  /* Proper z-index */
+  width: 30%; /* Could be more or less, depending on screen size */
+  min-width: 300px; /* Could be more or less, depending on screen size */
+  z-index: 100; /* Proper z-index */
   position: fixed;
   top: 10%;
   left: 50%;

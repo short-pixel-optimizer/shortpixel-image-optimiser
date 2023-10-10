@@ -2,6 +2,7 @@
 namespace ShortPixel\Model\Image;
 
 use ShortPixel\Helper\DownloadHelper as DownloadHelper;
+use ShortPixel\Helper\UtilHelper as UtilHelper;
 
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -310,23 +311,22 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 	}
 
 
+
   // !Important . This doubles as  checking excluded image sizes.
   protected function isSizeExcluded()
   {
 
     $excludeSizes = \wpSPIO()->settings()->excludeSizes;
+
     if (is_array($excludeSizes) && in_array($this->name, $excludeSizes))
 		{
 			$this->processable_status = self::P_EXCLUDE_SIZE;
       return true;
 		}
 
-		if (true === $this->is_main_file)
-		{
-				return parent::isSizeExcluded();
-		}
+		$bool = parent::isSizeExcluded();
 
-		return false;
+		return $bool;
 	}
 
 	public function isProcessableFileType($type = 'webp')
@@ -337,6 +337,23 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
 			return parent::isProcessableFileType($type);
 	}
+
+  protected function getExcludePatterns()
+  {
+      $args = array(
+        'filter' => true,
+        'thumbname' => $this->name,
+        'is_thumbnail' => (true === $this->is_main_file) ? false : true,
+      );
+
+// @todo Find a way to cache IsProcessable perhaps due to amount of checks being done.  Should be release in flushOptimizeCache or elsewhere (?)
+
+      $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
+
+      $patterns = UtilHelper::getExclusions($args);
+    //  echo "<PRE>"; print_r($args); print_r($patterns); echo "</PRE>";
+      return $patterns;
+  }
 
   protected function excludeThumbnails()
   {

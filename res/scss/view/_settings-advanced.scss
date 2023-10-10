@@ -14,57 +14,118 @@
 
 	.deliverWebpTypes, .deliverWebpAlteringTypes {
     margin: 16px 0 16px 16px;
-}
+	}
 
-ul.exclude-list {
+	.new-exclusion-button {
+		 float: left;
+		 margin-right: 8px;
+	}
 
-		 li {
-			 	float: left;
-				padding: 4px 12px;
-				border: 1px solid #1caecb;
-				background: #1caecb;
-				border-radius: 8px;
-				margin: 0 8px 0 0;
-				color: #fff;
-				span {
-					margin-left: 6px;
-				}
+	ul.exclude-list {
+			 li {
+				 	float: left;
+					padding: 4px 12px;
+					border: 1px solid #1caecb;
+					background: #1caecb;
+					border-radius: 8px;
+					margin: 8px 8px 0 0;
+					color: #fff;
+					span {
+						margin-left: 6px;
+						&.dashicons-remove {
+							cursor: pointer;
+						}
+					}
+					&.has-error {
+						background: #ff0000;
+						border-color: #ff0000;
+					}
+					&.is-regex {
+						border-right: green;
+						border-right-width: 10px;
+						border-style: solid;
+					}
+			 }
+			 margin: 20px 0;
+			 .not-visible {
+				  display: none;
+			 }
+	}
+
+	.new-exclusion
+	{
+			border-top: 1px solid #ccc;
+			border-bottom: 1px solid #ccc;
+			padding: 8px;
+			margin: 8px 0;
+
+			h3 {
+					margin: 2px 0;
+			}
+			&.not-visible
+			{
+				 display: none;
+
+			}
+
+			 div
+			{
+				 margin: 8px 0;
+				 height: auto;
+				 label
+				 {
+					 	min-width: 100px;
+						display: inline-block;
+				 }
+				 input, select {
+					 	min-width: 250px;
+						&.small {
+							width: 80px;
+							min-width: 0;
+						}
+				 }
+				 button {
+					 margin-left: 104px;
+				 }
+
+			}
+
+			.not-visible
+			{
+				 visibility: hidden;
+				 height: 0;
+				 transition: 500ms height;
+			}
+
+			.size-option
+			{
+				 > div {
+					  margin: 8px 0;
+				 }
+				 div label
+				 {
+					  min-width: 110px;
+				 }
+			}
+			.thumbnail-option:not(.not-visible) {
+				 height: 150px;
+				 margin-left: 12px;
+				 &:hover {
+					  color: #000;
+				 }
+			}
+
+	}
+
+	.avifNoticeDisabled
+	{
+		 padding: 12px 12px;
+		 line-height: 26px;
+		 > .spio-inline-help {
+			  display: inline;
+				float: none;
 		 }
-		 margin: 20px 0;
-}
-
-.new-exclusion
-{
-		border-top: 1px solid #ccc;
-		border-bottom: 1px solid #ccc;
-
-		> div
-		{
-			 margin: 8px 0;
-			 label
-			 {
-				 	min-width: 100px;
-					display: inline-block;
-			 }
-			 input, select {
-				 	min-width: 250px;
-			 }
-			 button {
-				 margin-left: 104px;
-			 }
-		}
-}
-
-.avifNoticeDisabled
-{
-	 padding: 12px 12px;
-	 line-height: 26px;
-	 > .spio-inline-help {
-		  display: inline;
-			float: none;
-	 }
-}
-
+	}
 
 
 }

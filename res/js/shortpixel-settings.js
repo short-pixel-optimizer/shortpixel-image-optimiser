@@ -24,11 +24,36 @@ var ShortPixelSettings = function()
 					toggle.dispatchEvent(evInit);
 			});
 
+			// Modals
 			var modals = document.querySelectorAll('[data-action="open-modal"]');
 			modals.forEach(function (modal, index)
 			{
 					modal.addEventListener('click', self.OpenModal.bind(self));
 			});
+
+			// Events for the New Exclusion dialog
+			var newExclusionInputs = document.querySelectorAll('.new-exclusion select, .new-exclusion input, .new-exclusion button');
+			newExclusionInputs.forEach(function (input)
+			{
+				  if (input.name == 'addExclusion')
+					{
+						var eventType = 'click';
+					}
+					else {
+						var eventType = 'change';
+					}
+					input.addEventListener(eventType, self.NewExclusionUpdateEvent.bind(self));
+			});
+
+			// Remove buttons on the Exclude patterns to remove them
+			var exclusionRemoveButtons = document.querySelectorAll('.exclude-list li > .dashicons-remove');
+			exclusionRemoveButtons.forEach(function (input) {
+					input.addEventListener('click', self.RemoveExclusionEvent.bind(self));
+			});
+
+			var addNewExclusionButton = document.querySelector('.new-exclusion-button');
+			addNewExclusionButton.addEventListener('click', this.NewExclusionShowInterfaceEvent.bind(this));
+
 
 	}
 
@@ -213,6 +238,225 @@ this.SaveOnKey = function()
 	});
 }
 
+this.NewExclusionShowInterfaceEvent = function (event)
+{
+	 event.preventDefault();
+
+	 var element = document.querySelector('.new-exclusion');
+	 element.classList.remove('not-visible');
+}
+
+// EXCLUSIONS
+this.NewExclusionUpdateEvent = function(event)
+{
+	console.log(event);
+	var target = event.target;
+	var inputName = event.target.name;
+	switch(inputName)
+	{
+		 case 'exclusion-type':
+		 	 this.NewExclusionUpdateType(target);
+		 break;
+		 case 'apply-select':
+		 	 this.NewExclusionUpdateThumbType(target);
+		 break;
+		 case 'addExclusion':
+		 	 this.NewExclusionButtonAdd(target);
+		 break;
+		 case 'exclusion-exactsize':
+		 	 this.NewExclusionToggleSizeOption(target);
+		 break;
+
+	}
+}
+
+this.NewExclusionUpdateType = function(element)
+{
+	 	 var value = element.value;
+		 var selected = element.options[element.selectedIndex];
+		 var example = selected.dataset.example;
+		 if ( typeof example == 'undefined')
+		 {
+			  example = '';
+		 }
+
+		 var valueOption = document.querySelector('.new-exclusion .value-option');
+		 var sizeOption = document.querySelector('.new-exclusion .size-option');
+		 var regexOption = document.querySelector('.regex-option');
+		 var switchExactOption = document.querySelector('.exact-option');
+
+
+		 if (value == 'size')
+		 {
+ 			 	valueOption.classList.add('not-visible');
+				sizeOption.classList.remove('not-visible');
+				switchExactOption.classList.remove('not-visible');
+				regexOption.classList.add('not-visible');
+		 }
+		 else {
+			 valueOption.classList.remove('not-visible');
+			 sizeOption.classList.add('not-visible');
+			 switchExactOption.classList.add('not-visible');
+			 regexOption.classList.remove('not-visible');
+		 }
+
+		 var valueInput = document.querySelector('input[name="exclusion-value"]');
+		 if (null !== valueInput)
+		 {
+			  valueInput.placeholder = example;
+		 }
+}
+
+this.NewExclusionUpdateThumbType = function(element)
+{
+		 var value = element.value;
+
+		 var thumbSelect = document.querySelector('select[name="thumbnail-select"]');
+
+		 if (value == 'selected-thumbs')
+		 {
+			 	thumbSelect.classList.remove('not-visible');
+		 }
+		 else {
+		 		thumbSelect.classList.add('not-visible');
+		 }
+}
+
+this.NewExclusionButtonAdd = function(element)
+{
+	 	// compile all inputs to a json encoded string to add to UX
+		 var setting = {
+			 'type' : '',
+			 'value' :  '',
+			 'apply' : '',
+		 };
+
+		 var typeOption = document.querySelector('.new-exclusion select[name="exclusion-type"]');
+		 var valueOption = document.querySelector('.new-exclusion input[name="exclusion-value"]');
+		 var applyOption = document.querySelector('.new-exclusion select[name="apply-select"]');
+		 var regexOption = document.querySelector('.new-exclusion input[name="exclusion-regex"]');
+
+		 setting.type = typeOption.value;
+		 setting.value = valueOption.value;
+		 setting.apply = applyOption.value;
+
+		 // When selected thumbnails option is selected, add the thumbnails to the list.
+		 if ('selected-thumbs' == applyOption.value)
+		 {
+			  var thumbOption = document.querySelector('.new-exclusion select[name="thumbnail-select"]');
+				var thumblist  = [];
+				for(var i =0; i < thumbOption.selectedOptions.length; i++)
+				{
+					 thumblist.push(thumbOption.selectedOptions[i].value);
+				}
+
+				setting.thumblist = thumblist;
+		 }
+
+		 // Check for regular expression active on certain types
+		 if (true === regexOption.checked && (typeOption.value == 'name' || typeOption.value == 'path'))
+		 {
+			  setting.type = 'regex-' + setting.type;
+		 }
+
+		 // Options for size setting
+		 if ('size' == setting.type)
+		 {
+			 var exactOption = document.querySelector('.new-exclusion input[name="exclusion-exactsize"]');
+			 if (true === exactOption.checked)
+			 {
+					 var width = document.querySelector('.new-exclusion input[name="exclusion-width"]');
+					 var height = document.querySelector('.new-exclusion input[name="exclusion-height"]');
+					 setting.value = width.value + 'x' + height.value;
+			 }
+			 else {
+				 var minwidth = document.querySelector('.new-exclusion input[name="exclusion-minwidth"]');
+				 var maxwidth = document.querySelector('.new-exclusion input[name="exclusion-maxwidth"]');
+				 var minheight = document.querySelector('.new-exclusion input[name="exclusion-minheight"]');
+				 var maxheight = document.querySelector('.new-exclusion input[name="exclusion-maxheight"]');
+
+				 setting.value = minwidth.value + '-' + maxwidth.value + 'x' + minheight.value + '-' + maxheight.value;
+			 }
+
+		 }
+
+		 var listElement = document.querySelector('.exclude-list');
+		 var newElement = document.createElement('li');
+		 var inputElement = document.createElement('input');
+
+		 inputElement.type = 'hidden';
+		 inputElement.name = 'exclusions[]';
+		 console.log('Settings created: ', setting);
+		 inputElement.value = JSON.stringify(setting);
+
+		 newElement.appendChild(inputElement);
+
+		 var spans = [setting.type, setting.value , 'dashicons' ];
+
+		 for (var i = 0; i < spans.length; i++)
+		 {
+			   var spanElement = document.createElement('span');
+				 if (spans[i] == 'dashicons')
+				 {
+					  spanElement.classList.add('dashicons', 'dashicons-remove');
+						spanElement.addEventListener('click', this.RemoveExclusionEvent.bind(this));
+				 }
+				 else {
+				 	 spanElement.textContent = spans[i];
+				 }
+				 newElement.appendChild(spanElement);
+		 }
+
+		 listElement.appendChild(newElement);
+
+		 var noItemsItem = document.querySelector('.exclude-list .no-exclusion-item');
+		 if (noItemsItem !== null)
+	 	 {
+			  noItemsItem.classList.add('not-visible');
+		 }
+
+		 this.resetExclusionInputs();
+
+}
+
+this.NewExclusionToggleSizeOption = function(target)
+{
+	 	var sizeOptionRange = document.querySelector('.new-exclusion .size-option-range');
+		var sizeOptionExact = document.querySelector('.new-exclusion .size-option-exact');
+
+		if (true === target.checked)
+		{
+			 sizeOptionRange.classList.add('not-visible');
+			 sizeOptionExact.classList.remove('not-visible');
+		}
+		else {
+			sizeOptionRange.classList.remove('not-visible');
+			sizeOptionExact.classList.add('not-visible');
+
+		}
+}
+
+this.resetExclusionInputs = function()
+{
+	var typeOption = document.querySelector('.new-exclusion select[name="exclusion-type"]');
+	var valueOption = document.querySelector('.new-exclusion input[name="exclusion-value"]');
+	var applyOption = document.querySelector('.new-exclusion select[name="apply-select"]');
+
+	typeOption.selectedIndex = 0;
+	valueOption.value = '';
+	applyOption.selectedIndex = 0;
+
+	var ev = new CustomEvent('change');
+	typeOption.dispatchEvent(ev);
+	applyOption.dispatchEvent(ev);
+
+}
+
+this.RemoveExclusionEvent = function(event)
+{
+		 var element = event.target;
+		 element.parentElement.remove();
+}
 
  	this.Init();
 } // SPSettings

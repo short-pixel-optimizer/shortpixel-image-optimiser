@@ -106,7 +106,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
     /** @var string */
   	protected $optimizePreventedReason;
-    
+
 		// Public var that can be set by OptimizeController to prevent double queries.
 		/** @var boolean */
 		public $is_in_queue;
@@ -116,6 +116,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     abstract protected function loadMeta();
 
     abstract protected function getImprovements();
+    abstract protected function getExcludePatterns(); // get the Exclude Pattern(s) for -this- image to compare.
+
    // abstract protected function getOptimizeFileType();
 
     // Function to prevent image from doing anything automatically - after fatal error.
@@ -1059,9 +1061,11 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
          return false;
     }
 
+
+
     protected function isPathExcluded()
     {
-        $excludePatterns = \wpSPIO()->settings()->excludePatterns;
+       $excludePatterns = $this->getExcludePatterns();
 
         if(!$excludePatterns || !is_array($excludePatterns)) { return false; }
 
@@ -1144,7 +1148,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 		protected function isSizeExcluded()
 		{
-			$excludePatterns = \wpSPIO()->settings()->excludePatterns;
+			$excludePatterns = $this->getExcludePatterns();
 
 			if (! $excludePatterns || ! is_array($excludePatterns) ) // no patterns, nothing excluded
 				return false;
@@ -1182,6 +1186,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 		private function isProcessableSize($width, $height, $excludePattern)
 		{
+
 				$ranges = preg_split("/(x|×|X)/",$excludePattern);
 				$widthBounds = explode("-", $ranges[0]);
 				$minWidth = intval($widthBounds[0]);

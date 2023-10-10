@@ -73,6 +73,17 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
     }
 
+    protected function getExcludePatterns()
+    {
+        $args = array(
+          'filter' => true,
+          'is_custom' => true,
+        );
+
+        $patterns = UtilHelper::getExclusions($args);
+        return $patterns;
+    }
+
 		public function getOptimizeData()
 		{
 				$parameters = array(
@@ -474,7 +485,7 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
          {
 					  $this->processable_status = self::P_OPTIMIZE_PREVENTED;
             $this->optimizePreventedReason  = $this->getMeta('errorMessage');
-          
+
             return $this->getMeta('errorMessage');
          }
 

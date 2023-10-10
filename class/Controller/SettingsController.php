@@ -443,8 +443,8 @@ class SettingsController extends \ShortPixel\ViewController
 
 				 $excludeOptions = UtilHelper::getWordPressImageSizes();
 				 $mainOptions = array(
-					 'shortpixel_main_donotuse' =>  '',
-					 'shortpixel_original_donotuse' => '',
+					 'shortpixel_main_donotuse' =>  array('nice-name' => __('Main Image', 'shortpixel-image-optimiser')),
+					 'shortpixel_original_donotuse' => array('nice-name' => __('Original Image', 'shortpixel-image-optimiser')),
 				 );
 
 				 $excludeOptions = array_merge($mainOptions, $excludeOptions);
@@ -684,6 +684,36 @@ class SettingsController extends \ShortPixel\ViewController
       protected function processExcludeFolders($post)
       {
         $patterns = array();
+
+        $exclusions  = $post['exclusions'];
+        $accepted = array();
+        foreach($exclusions as $index => $exclusions)
+        {
+            $accepted[] = json_decode(html_entity_decode( stripslashes($exclusions)), true);
+
+
+        }
+
+        foreach($accepted as $index => $pair)
+        {
+          $pattern = $pair['value'];
+          $type = $pair['type'];
+          //$first = substr($pattern, 0,1);
+          if ($type == 'regex-name' || $type == 'regex-path')
+          {
+            if ( @preg_match($pattern, false) === false)
+            {
+               $accepted[$index]['has-error'] = true;
+               Notice::addWarning(sprintf(__('Regular Expression Pattern %s returned an error. Please check if the expression is correct. %s * Special characters should be escaped. %s * A regular expression must be contained between two slashes  ', 'shortpixel-image-optimiser'), $pattern, "<br>", "<br>" ));
+            }
+          }
+        }
+
+        $post['excludePatterns'] = $accepted;
+
+
+        return $post; // @todo The switch to check regex patterns or not.
+
         if(isset($post['excludePatterns']) && strlen($post['excludePatterns'])) {
             $items = explode(',', $post['excludePatterns']);
             foreach($items as $pat) {
@@ -715,7 +745,7 @@ class SettingsController extends \ShortPixel\ViewController
 						{
 						  if ( @preg_match($pattern, false) === false)
 							{
-								 Notice::addWarning(sprintf(__('Regular Expression Pattern %s returned an error. Please check if the expression is correct. %s * Special characters should be escaped. %s * A regular expression must be contained between two slashes  ', 'shortpixel-image-optimser'), $pattern, "<br>", "<br>" ));
+								 Notice::addWarning(sprintf(__('Regular Expression Pattern %s returned an error. Please check if the expression is correct. %s * Special characters should be escaped. %s * A regular expression must be contained between two slashes  ', 'shortpixel-image-optimiser'), $pattern, "<br>", "<br>" ));
 							}
 						}
 				}
