@@ -84,6 +84,12 @@ class cacheRemover
         // important - first check the available cache plugins
         $this->checkCaches();
 
+        $bool = apply_filters('shortpixel/external/flush_cache', true, $post_id, $imageItem);
+        if (false === $bool)
+        {
+           return false;
+        }
+
         // general WP
         if ($post_id > 0)
           clean_post_cache($post_id);
@@ -151,7 +157,7 @@ class cacheRemover
 
     protected function litespeedReset($imageItem)
     {
-      // Suppress the notices on purge. 
+      // Suppress the notices on purge.
       if (! defined( 'LITESPEED_PURGE_SILENT' ))
       {
          define('LITESPEED_PURGE_SILENT', true);
