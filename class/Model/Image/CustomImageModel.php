@@ -493,6 +493,12 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
          return false;
     }
 
+    // Only one item for now, so it's equal
+    public function isSomethingOptimized()
+    {
+       return $this->isOptimized();
+    }
+
     public function resetPrevent()
     {
 

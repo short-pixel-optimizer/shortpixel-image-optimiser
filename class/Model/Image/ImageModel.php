@@ -240,6 +240,21 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 				}
 		}
 
+    // Function to check if the reason it won't process is because user did some setting
+    public function isUserExcluded()
+    {
+        $reasons = array(
+            self::P_EXCLUDE_PATH,
+            self::P_EXCLUDE_SIZE,
+        );
+
+        if (in_array($this->processable_status, $reasons))
+        {
+           return true;
+        }
+        return false;
+    }
+
 
 
     public function exists($forceCheck = false)
@@ -864,7 +879,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 							ResponseController::addData($this->get('id'), $response);
 
 							$this->restorable_status = self::P_DIRECTORY_NOTWRITABLE;
-							Log::addWarn('Restore - Directory noot Writable ' . $this->getFileDir() );
+							Log::addWarn('Restore - Directory not Writable ' . $this->getFileDir() );
 					}
           elseif (! $this->hasBackup())
 					{

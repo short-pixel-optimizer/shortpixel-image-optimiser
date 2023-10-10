@@ -126,7 +126,8 @@ class OptimizeController
           $json->result->fileStatus = ImageModel::FILE_STATUS_ERROR;
         }
 
-        if (! $mediaItem->isProcessable())
+        // If is not processable and not user excluded (user via this way can force an optimize if needed) then don't do it!
+        if (false === $mediaItem->isProcessable())
         {
           $json->result->message = $mediaItem->getProcessableReason();
           $json->result->is_error = true;

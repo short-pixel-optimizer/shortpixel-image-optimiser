@@ -1816,6 +1816,23 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        }
   }
 
+  // Check if anything is optimized. Main image can't be relied upon as in the past since it can be excluded, so anything optimized is the check to show the optimized options like restore.
+  public function isSomethingOptimized()
+  {
+      if ($this->isOptimized())
+        return true;
+
+      $thumbs = $this->getThumbObjects();
+      foreach($thumbs as $thumbObj)
+      {
+          if ($thumbObj->isOptimized())
+          {
+             return true;
+          }
+      }
+      return false;
+  }
+
   public function resetPrevent()
   {
       delete_post_meta($this->id, '_shortpixel_prevent_optimize');

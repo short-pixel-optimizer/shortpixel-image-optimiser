@@ -193,7 +193,7 @@ class UiHelper
         $output .=  '<div class="filetype avif">' . sprintf(__('+%s Avif images ','shortpixel-image-optimiser') , $avifsTotal) . '</div>';
     }
 
-    if ($imageObj->isOptimized() && $imageObj->isProcessable())
+    if ($imageObj->isSomethingOptimized() && $imageObj->isProcessable())
     {
         list($urls, $optimizable) = $imageObj->getCountOptimizeData('thumbnails');
 				list($webpUrls, $webpCount)   =  $imageObj->getCountOptimizeData('webp');
@@ -301,7 +301,7 @@ class UiHelper
 			if ($id === 0)
 				return array();
 
-      if ($mediaItem->isOptimized() )
+      if ($mediaItem->isSomethingOptimized() )
       {
 						list($u, $optimizable) = $mediaItem->getCountOptimizeData('thumbnails');
 						list($u, $optimizableWebp)   =  $mediaItem->getCountOptimizeData('webp');
@@ -334,7 +334,7 @@ class UiHelper
           }
 
 
-          if ($mediaItem->hasBackup())
+          if ($mediaItem->isRestorable())
           {
             if ($mediaItem->get('type') == 'custom')
             {
@@ -358,6 +358,7 @@ class UiHelper
             }
 			 			if ($mediaItem->isRestorable())
 						{
+
 							 $compressionType = $mediaItem->getMeta('compressionType');
 		           switch($compressionType)
 		           {
@@ -386,7 +387,7 @@ class UiHelper
 							} // isRestorable
 						else
 						{
-							 //echo $mediaItem->getReason('restorable');
+
 						}
         } // hasBackup
 
@@ -437,7 +438,12 @@ class UiHelper
        $actions['optimize'] = self::getAction('optimize', $id);
        $actions['markCompleted']  = self::getAction('markCompleted', $id);
     }
-
+    /* @TODO This is off for now because imageModel doesn't know what URLs to actually send on this exclusions!
+    elseif ($mediaItem->isUserExcluded())
+    {
+      $actions['optimize'] = self::getAction('optimize', $id);
+      $actions['optimize']['text'] = __('Manual Optimize', 'shortpixel-image-optimiser');
+    } */
 
 
     return $actions;
@@ -474,11 +480,11 @@ class UiHelper
          }
 			 }
 		}
-    elseif ($mediaItem->isOptimized())
+    elseif ($mediaItem->isSomethingOptimized())
     {
        $text = UiHelper::renderSuccessText($mediaItem);
     }
-    elseif (! $mediaItem->isProcessable() && ! $mediaItem->isOptimized() )
+    elseif (false === $mediaItem->isProcessable()  )
     {
        $text = __('Not Processable: ','shortpixel_image_optimiser');
        $text  .= $mediaItem->getProcessableReason();

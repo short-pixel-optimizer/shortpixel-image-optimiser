@@ -85,6 +85,10 @@ class ApiController
 						 $item->result = $this->returnFailure(self::STATUS_FAIL, __('Item is already optimized', 'shortpixel-image-optimiser'));
 						 return $item;
 					}
+          /*elseif(true === $imageObj->isUserExcluded())
+          {
+            // Take a pass on this.
+          } */
 					else {
 						 $item->result = $this->returnFailure(self::STATUS_FAIL, __('Item is not processable and not optimized', 'shortpixel-image-optimiser'));
 						 return $item;
