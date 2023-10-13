@@ -15,6 +15,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
 
       this.InitFolderSelector();
 			this.InitScanButtons();
+      this.InitFileScreenAction();
   	}
 
     RenderItemView(e)
@@ -163,6 +164,48 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
       {
         addFolderButton.addEventListener('click', this.AddNewFolderEvent.bind(this));
       }
+    }
+
+    InitFileScreenAction()
+    {
+       var selectAll = document.querySelector('input[name="select-all"]');
+       selectAll.addEventListener('change', this.SelectAllItemsEvent.bind(this));
+
+       var bulkAction = document.querySelector('button[name="doBulkAction"]');
+       bulkAction.addEventListener('click', this.BulkActionEvent.bind(this));
+
+    }
+
+    SelectAllItemsEvent(event)
+    {
+       var parent = event.target;
+       var inputs = document.querySelectorAll('input[name="select[]"]');
+
+       var toggle = (true === parent.checked) ? true : false;
+
+       for(var i = 0; i < inputs.length; i++)
+       {
+         inputs[i].checked = toggle;
+
+       }
+
+    }
+
+    BulkActionEvent(event)
+    {
+       event.preventDefault();
+
+       var items = document.querySelectorAll('input[name="select[]"]:checked');
+       for (var i = 0; i < items.length; i++)
+       {
+           if (false == items[i].checked) // failsafe
+           {
+              continue;
+           }
+           var item_id = items[i].value;
+
+           wait(50);
+       }
     }
 
     OpenFolderModal()

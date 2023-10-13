@@ -20,7 +20,19 @@ $this->loadView('custom/part-othermedia-top');
 
 ?>
 
+
+<div class='extra-heading top'>
+  <span>&nbsp;</span>
+  <span>
+    <select name='bulk-actions'>
+     <option><?php _e('Bulk Actions', 'shortpixel-image-optimiser'); ?></option>
+     <option value='Optimize'><?php _e('Optimize','shortpixel-image-optimiser'); ?></option>
+     <option value='Restore'><?php _e('Restore', 'shortpixel-image-optimiser'); ?></option>
+   </select> <button class='button' type='button' name='doBulkAction'><?php _e('Apply', 'shortpixel-image-optimiser'); ?></button>
+  </span>
+</div>
     <div class='list-overview'>
+
 
       <div class='heading'>
         <?php foreach($this->view->headings as $hname => $heading):
@@ -70,6 +82,7 @@ $this->loadView('custom/part-othermedia-top');
               $is_heavy = ($filesize >= 500000 && $filesize > 0);
 
             ?>
+            <span><input type='checkbox' name='select[]' value="<?php echo $item->get('id'); ?>" /></span>
             <span><a href="<?php echo esc_attr($img_url); ?>" target="_blank">
                 <div class='thumb' <?php if($is_heavy)
 								{

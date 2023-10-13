@@ -77,6 +77,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
       protected function getHeadings()
       {
          $headings = array(
+              'checkbox' => array('title' => '<input type="checkbox" name="select-all">', 'sortable' => false),
               'thumbnails' => array('title' => __('Thumbnail', 'shortpixel-image-optimiser'),
                               'sortable' => false,
                               'orderby' => 'id',  // placeholder to allow sort on this.

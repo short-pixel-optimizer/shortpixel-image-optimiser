@@ -39,6 +39,19 @@
 .shortpixel-other-media .custom-media-tabs a.selected {
   background: #fff;
 }
+.shortpixel-other-media .extra-heading {
+  width: 100%;
+  background: #fff;
+  border-top: 1px solid #ccd0d4;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+.shortpixel-other-media .extra-heading span {
+  padding: 12px 0;
+  display: inline-block;
+}
+.shortpixel-other-media .extra-heading span:first-child {
+  width: 48px;
+}
 .shortpixel-other-media .list-overview {
   width: 100%;
   background: #fff;
