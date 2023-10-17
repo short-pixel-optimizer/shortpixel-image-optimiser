@@ -188,11 +188,13 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
     InitFileScreenAction()
     {
        var selectAll = document.querySelector('input[name="select-all"]');
-       selectAll.addEventListener('change', this.SelectAllItemsEvent.bind(this));
+       if (null !== selectAll)
+        selectAll.addEventListener('change', this.SelectAllItemsEvent.bind(this));
 
 
        var bulkAction = document.querySelector('button[name="doBulkAction"]');
-       bulkAction.addEventListener('click', this.BulkActionEvent.bind(this));
+       if (null !== bulkAction)
+        bulkAction.addEventListener('click', this.BulkActionEvent.bind(this));
 
     }
 
