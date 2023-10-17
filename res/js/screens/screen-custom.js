@@ -28,7 +28,26 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
             var element = document.getElementById('sp-msg-' + id);
             element.outerHTML = data.custom.itemView;
 
+            var isOptimizable = data.custom.is_optimizable;
+            var isRestorable = data.custom.is_restorable;
+
+            var inputSelect = document.querySelector('.item-' + id + ' input[name="select[]"]');
+
+            if (null === inputSelect)
+            {
+               console.warn('Checkbox not found ' + id);
+            }
+
+            inputSelect.classList.remove('is-optimizable', 'is-restorable');
+            if (true === isOptimizable)
+              inputSelect.classList.add('is-optimizable');
+
+            if (true === isRestorable)
+              inputSelect.classList.add('is-restorable');
+
+
         }
+
         return false;
     }
 
@@ -171,6 +190,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
        var selectAll = document.querySelector('input[name="select-all"]');
        selectAll.addEventListener('change', this.SelectAllItemsEvent.bind(this));
 
+
        var bulkAction = document.querySelector('button[name="doBulkAction"]');
        bulkAction.addEventListener('click', this.BulkActionEvent.bind(this));
 
@@ -194,18 +214,47 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
     BulkActionEvent(event)
     {
        event.preventDefault();
+       var target = event.target;
 
        var items = document.querySelectorAll('input[name="select[]"]:checked');
+       var selectBox = document.querySelector('select[name="bulk-actions"]');
+       var selectedAction = selectBox.options[selectBox.selectedIndex];
+       selectBox.selectedIndex = 0; // Return to default
+
+       var action = selectedAction.value;
+
+
        for (var i = 0; i < items.length; i++)
        {
-           if (false == items[i].checked) // failsafe
+           var item = items[i];
+           if (false == item.checked) // failsafe
            {
               continue;
            }
-           var item_id = items[i].value;
+           var item_id = item.value;
 
-           wait(50);
+           if ('optimize' === action)
+           {
+              if (item.classList.contains('is-optimizable'))
+              {
+               this.Optimize(item_id);
+              }
+           }
+           else if ('restore' === action)
+           {
+              if (item.classList.contains('is-restorable'))
+              {
+                this.RestoreItem(item_id);
+              }
+           }
+           else {
+           }
+
+           item.checked = false;
        }
+
+       var selectAll = document.querySelector('input[name="select-all"]');
+       selectAll.checked = false;
     }
 
     OpenFolderModal()

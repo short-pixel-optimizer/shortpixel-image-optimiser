@@ -26,8 +26,8 @@ $this->loadView('custom/part-othermedia-top');
   <span>
     <select name='bulk-actions'>
      <option><?php _e('Bulk Actions', 'shortpixel-image-optimiser'); ?></option>
-     <option value='Optimize'><?php _e('Optimize','shortpixel-image-optimiser'); ?></option>
-     <option value='Restore'><?php _e('Restore', 'shortpixel-image-optimiser'); ?></option>
+     <option value='optimize'><?php _e('Optimize','shortpixel-image-optimiser'); ?></option>
+     <option value='restore'><?php _e('Restore', 'shortpixel-image-optimiser'); ?></option>
    </select> <button class='button' type='button' name='doBulkAction'><?php _e('Apply', 'shortpixel-image-optimiser'); ?></button>
   </span>
 </div>
@@ -64,11 +64,25 @@ $this->loadView('custom/part-othermedia-top');
         $folders = $this->view->folders;
 
         foreach($this->view->items as $item):
+
+
         ?>
 
         <div class='item item-<?php echo esc_attr($item->get('id')) ?>'>
             <?php
-            //  $itemFile = $fs->getFile($item->path);
+
+              $allActions = array_merge(UiHelper::getActions($item), UiHelper::getListActions($item));
+
+              $checkBoxActions = array();
+              if (array_key_exists('optimize', $allActions))
+              {
+                  $checkBoxActions[] = 'is-optimizable';
+              }
+              if (array_key_exists('restore', $allActions))
+              {
+                  $checkBoxActions[] = 'is-restorable';
+              }
+
               $filesize = $item->getFileSize();
               $display_date = $this->getDisplayDate($item);
               $folder_id = $item->get('folder_id');
@@ -81,8 +95,12 @@ $this->loadView('custom/part-othermedia-top');
               $img_url = $fs->pathToUrl($item);
               $is_heavy = ($filesize >= 500000 && $filesize > 0);
 
+              $item_class = '';
+              if (count($checkBoxActions) > 0)
+              $item_class = ' class="' . implode(' ', $checkBoxActions) . '" ';
+
             ?>
-            <span><input type='checkbox' name='select[]' value="<?php echo $item->get('id'); ?>" /></span>
+            <span><input type='checkbox' name='select[]' value="<?php echo $item->get('id'); ?>" <?php echo $item_class ?>/></span>
             <span><a href="<?php echo esc_attr($img_url); ?>" target="_blank">
                 <div class='thumb' <?php if($is_heavy)
 								{
@@ -112,7 +130,7 @@ $this->loadView('custom/part-othermedia-top');
 								   	<a href="<?php echo $link ?>" <?php echo esc_attr($newtab); ?> class="<?php echo $classes ?>"><?php echo $action['text'] ?></a>
 								    <?php
 										$i++;
-								  endforeach;
+								  endforeach;UiHelper::getActions($item);
 
 								endif;
                 ?>

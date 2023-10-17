@@ -99,10 +99,10 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		protected $imageType;
 
 		/** @var int */
-    protected $processable_status = 0;
+    protected $processable_status = null;
 
 		/** @var int */
-		protected $restorable_status = 0;
+		protected $restorable_status = null;
 
     /** @var string */
   	protected $optimizePreventedReason;
@@ -180,6 +180,18 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     /* Check if an image in theory could be processed. Check only exclusions, don't check status etc */
     public function isProcessable()
     {
+        // isprocessable runs zillion times, so take the edge off a little.
+        if (! is_null($this->processable_status))
+        {
+            if (self::P_PROCESSABLE === $this->processable_status)
+            {
+               return true;
+            }
+            else {
+                return false;
+            }
+        }
+
         if ( $this->isOptimized() || ! $this->exists()  || $this->isPathExcluded() || $this->isExtensionExcluded() || $this->isSizeExcluded() || (! $this->is_virtual() && ! $this->is_writable()) || (! $this->is_virtual() && ! $this->is_directory_writable())
 				|| $this->isOptimizePrevented() !== false  )
         {
@@ -195,7 +207,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         }
         else
 				{
-					$this->processable_status = 0;
+					$this->processable_status = self::P_PROCESSABLE;
           return true;
 				}
     }

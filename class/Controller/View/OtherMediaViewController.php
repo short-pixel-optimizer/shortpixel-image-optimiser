@@ -446,10 +446,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 					<div id='sp-msg-<?php echo esc_attr($item->get('id')) ?>'  class='sp-column-info'><?php
 							$this->printItemActions($item);
 
-      //    if (false === $item->isOptimizePrevented() )
-        //{
             echo "<div>" .  UiHelper::getStatusText($item) . "</div>";
-        //  }
            ?>
          </div> <!-- sp-column-info -->
         <?php
@@ -473,17 +470,6 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 
           $this->loadView('snippets/part-single-actions', false);
 
-          /*foreach($actions as $actionName => $action):
-            $classes = ($action['display'] == 'button') ? " button-smaller button-primary $actionName " : "$actionName";
-            $link = ($action['type'] == 'js') ? 'javascript:' . $action['function'] : $action['function'];
-						$newtab  = ($actionName == 'extendquota') ? 'target="_blank"' : '';
-
-						// @todo Esc url is not successfull with JS links
-            ?>
-            <a href="<?php echo $link ?>" class="<?php echo esc_attr($classes) ?>"><?php echo esc_html($action['text']) ?></a>
-
-            <?php
-          endforeach; */
         }
         echo $list_actions;
       }

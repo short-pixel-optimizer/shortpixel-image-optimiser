@@ -170,7 +170,6 @@
 }
 .shortpixel-other-media .list-overview .item .sp-column-info .sp-column-actions {
   position: relative;
-  z-index: 2;
   top: 0;
 }
 @media (max-width: 1250px) {

@@ -339,7 +339,7 @@ class UiHelper
             if ($mediaItem->get('type') == 'custom')
             {
                 if ($mediaItem->getExtension() !== 'pdf') // no support for this
-                  $list_actions[] = self::getAction('compare-custom', $id);
+                  $list_actions['comparer'] = self::getAction('compare-custom', $id);
             }
             else
             {

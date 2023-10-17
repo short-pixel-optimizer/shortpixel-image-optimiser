@@ -107,6 +107,9 @@ class AjaxController
           $id = isset($_POST['id']) ? intval($_POST['id']) : false;
 					$result = '';
 
+
+					$item = \wpSPIO()->filesystem()->getImage($id, $type);
+
           if ($id > 0)
           {
              if ($type == 'media')
@@ -121,7 +124,6 @@ class AjaxController
              {
                 ob_start();
                 $control = new OtherMediaViewController();
-                $item = \wpSPIO()->filesystem()->getImage($id, 'custom');
                   $control->doActionColumn($item);
                 $result = ob_get_contents();
                 ob_end_clean();
@@ -131,6 +133,8 @@ class AjaxController
           $json = new \stdClass;
           $json->$type = new \stdClass;
           $json->$type->itemView = $result;
+					$json->$type->is_optimizable = $item->isProcessable();
+					$json->$type->is_restorable = $item->isRestorable();
           $json->$type->id = $id;
           $json->$type->results = null;
           $json->$type->is_error = false;
