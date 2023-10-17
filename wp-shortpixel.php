@@ -77,6 +77,7 @@ define('SHORTPIXEL_BACKUP_URL',
 
 //define('SHORTPIXEL_SILENT_MODE', true); // no global notifications. Can lead to data damage. After setting, reactivate plugin.
 //define('SHORTPIXEL_TRUSTED_MODE', false); // doesn't do any file checks on the view-side of things.
+// define('SHORTPIXEL_SKIP_FEEDBACK', true);
 
 // Starting logging services, early as possible.
 if (! defined('SHORTPIXEL_DEBUG'))
