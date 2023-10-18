@@ -459,12 +459,13 @@ class OptimizeController
 			{
 					$item = $this->handleAPIResult($item, $q);
 			}
-      elseif (property_exists($item, 'action'))
+      elseif (property_exists($item, 'action')) // ResultMessages in ResponseController
       {
             $item->result = new \stdClass;
             $item->result->is_done = true; // always done
             $item->result->is_error = false; // for now
             $item->result->apiStatus = ApiController::STATUS_NOT_API;
+            ResponseController::addData($item->item_id, 'action', $item->action);
 
 					 if ($imageObj === false) // not exist error.
 					 {
@@ -793,10 +794,6 @@ class OptimizeController
 									$result->apiStatus = ApiController::STATUS_UNCHANGED;
 
 							}
-							// Try to replace the item ID with the filename.
-						//	$item->result->message = substr_replace( $item->result->message,  $imageItem->getFileName() . ' ', strpos($item->result->message, '#' . $item->item_id), 0);
-             // $item->result->message .= sprintf(__('(cycle %d)', 'shortpixel-image-optimiser'), intval($item->tries) );
-
 
 							if ($retry_limit == $item->tries || $retry_limit == ($item->tries -1))
 							{

@@ -64,16 +64,19 @@ class SpioBulk extends SpioCommandBase
 	   *
 	   * [--queue=<name>]
 	   * : Either 'media' or 'custom'. Omit the parameter to process both queues.
-		 *
-		 * [--limit=<num>]
-		 * : Limit the amount of items being prepared.
-		 *
-	   * ---
+     * ---
 	   * default: media,custom
 	   * options:
 	   *   - media
 	   *   - custom
 	   * ---
+		 *
+		 * [--limit=<num>]
+		 * : Limit the amount of items being prepared.
+		 *
+		 * [--special=<migrate>]
+		 * : Run the migration
+
 	   *
 	   * ## EXAMPLES
 	   *
@@ -158,6 +161,8 @@ class SpioBulk extends SpioCommandBase
 	 * options:
 	 *   - media
 	 *   - custom
+   * [--special=<migrate>]
+   * : Run the migration
 	 * ---
 	 *
 	 * ## EXAMPLES
@@ -176,9 +181,21 @@ class SpioBulk extends SpioCommandBase
 
 			$queues = $this->getQueueArgument($assoc);
 
+      $operation = null;
+      if (isset($assoc['special']))
+      {
+         switch ($assoc['special'])
+         {
+            case 'migrate':
+              $operation = 'migrate';
+              $queues = array('media'); // can only have one bulk, this.
+            break;
+         }
+      }
+
 			foreach($queues as $qname)
 			{
-	    	$stats = $bulkControl->createNewBulk($qname);
+	    	$stats = $bulkControl->createNewBulk($qname, $operation);
 	    	$json->$qname->stats = $stats;
 
 				\WP_CLI::Line("Bulk $qname created. Ready to prepare");

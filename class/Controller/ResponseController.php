@@ -195,15 +195,20 @@ class ResponseController
 					 case ApiController::ERR_TIMEOUT:
 						 if (self::$screenOutput < self::OUTPUT_CLI)
 						 {
-							// 		$text .= ' ' . sprintf(__('in %s', 'shortpixel_image_optimiser'), $item->fileName);
 						 }
 					 break;
+           case ApiController::STATUS_NOT_API:
+              $action = (property_exists($item, 'action')) ? ucfirst($item->action) : __('Action', 'shortpixel-image-optimiser');
+              $filename = (property_exists($item, 'fileName')) ? $item->fileName : '';
+              $text = sprintf(__('%s completed for %s'), $action, $item->fileName);
+           break;
 				}
 
 				if (self::$screenOutput == self::OUTPUT_CLI)
 				{
 					 $text = '(' . self::$queueName . ' : ' . $item->fileName . ') ' . $text . ' ';
-					 $text .= sprintf(__('(cycle %d)', 'shortpixel-image-optimiser'), intval($item->tries) );
+           if ($item->tries > 0)
+					      $text .= sprintf(__('(cycle %d)', 'shortpixel-image-optimiser'), intval($item->tries) );
 				}
 
 				return $text;
