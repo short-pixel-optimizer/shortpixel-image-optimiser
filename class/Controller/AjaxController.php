@@ -158,13 +158,25 @@ class AjaxController
 
         $queues = array_filter(explode(',', $queue), 'trim');
 
-
         $control = new OptimizeController();
         $control->setBulk($isBulk);
         $result = $control->processQueue($queues);
 
         $this->send($result);
     }
+
+		/** Ajax function to recheck if something can be active. If client is doens't have the processor key, it will check later if the other client is 'done' or went away. */
+		public function recheckActive()
+		{
+			// If not processor, this ends the processing and sends JSON.
+			$this->checkProcessorKey();
+
+			$json = new \stdClass;
+			$json->message = __('Became processor', 'shortpixel-image-optimiser');
+			$json->status = true;
+			$this->send($json);
+
+		}
 
     public function ajaxRequest()
     {
@@ -274,6 +286,9 @@ class AjaxController
 					 break;
 					 case 'resetScanFolderChecked';
 					 		$json = $this->resetScanFolderChecked($json, $data);
+					 break;
+					 case 'recheckActive':
+					 		$json = $this->recheckActive($json, $data);
 					 break;
            default:
               $json->$type->message = __('Ajaxrequest - no action found', 'shorpixel-image-optimiser');

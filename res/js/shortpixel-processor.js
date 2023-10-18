@@ -31,6 +31,7 @@ window.ShortPixelProcessor =
 		autoMediaLibrary: false,
     worker: null, // HTTP worker to send requests ( worker.js )
     timer: null, // Timer to determine waiting time between actions
+    timer_recheckactive: null,
     waitingForAction: false, // used if init yields results that should pause the processor.
     timesEmpty: 0, // number of times queue came up empty.
     nonce: [],
@@ -153,6 +154,14 @@ window.ShortPixelProcessor =
 
          this.tooltip.ProcessEnd();
          this.StopProcess();
+
+         if (null === this.timer_recheckactive)
+         {
+           var threemin = 180000; // TTL for a processorkey is 2 minutes now, so wait a broad 3 and check again
+           this.timer_recheckactive = window.setTimeout(this.RecheckProcessor.bind(this), threemin );
+           console.log('Waiting for recheckActive ', this.timer_recheckactive);
+         }
+
       }
 
       if (this.isManualPaused)
@@ -167,6 +176,44 @@ window.ShortPixelProcessor =
           console.debug('Check Active : Waiting for action');
       }
       return this.isActive;
+    },
+    RecheckProcessor: function()
+    {
+        var data = {
+          'screen_action': 'recheckActive',
+          'callback': 'shortpixel.recheckActive',
+        };
+
+        window.addEventListener('shortpixel.recheckActive', this.RecheckedActiveEvent.bind(this), {'once': true});
+        this.AjaxRequest(data);
+
+    },
+    RecheckedActiveEvent: function(event)
+    {
+        var data = event.detail;
+
+        // cleanse the timer;
+        if (this.timer_recheckactive)
+        {
+           window.clearTimeout(this.timer_recheckactive);
+           this.timer_recheckactive = null;
+        }
+
+        if (true === data.status)
+        {
+            this.remoteSecret = data.processorKey;
+            var bool = this.CheckActive();
+            if (true === bool)
+            {
+               this.timesEmpty = 0; // reset the times empty to start fresh.
+               this.RunProcess();
+            }
+        }
+        else {
+          //  If key was not given, this should retrigger the next event.
+            this.CheckActive();
+        }
+
     },
     LoadWorker: function()
     {
@@ -217,11 +264,18 @@ window.ShortPixelProcessor =
         if (this.timer)
         {
           window.clearTimeout(this.timer);
+          this.timer = null;
         }
 
         if (! this.CheckActive())
         {
             return;
+        }
+
+        if (this.timer_recheckactive)
+        {
+           window.clearTimeout(this.timer_recheckactive);
+           this.timer_recheckactive = null;
         }
 
         console.log('Processor: Run Process in ' + this.interval);
@@ -230,7 +284,7 @@ window.ShortPixelProcessor =
     },
 		IsAutoMediaActive: function()
 		{
-				return this.autoMediaLibrary; 
+				return this.autoMediaLibrary;
 		},
     PauseProcess: function() // This is a manual intervention.
     {
@@ -239,6 +293,7 @@ window.ShortPixelProcessor =
       window.dispatchEvent(event);
       console.log('Processor: Process Paused');
       window.clearTimeout(this.timer);
+      this.timer = null;
 
     },
     StopProcess: function(args)
@@ -253,6 +308,7 @@ window.ShortPixelProcessor =
             window.dispatchEvent(event);
         }
         window.clearTimeout(this.timer);
+        this.timer = null;
 
         if (typeof args == 'object')
         {
@@ -416,7 +472,6 @@ window.ShortPixelProcessor =
     HandleResponse: function(response, type)
     {
         // Issue with the tooltip is when doing usual cycle of emptiness, a running icon is annoying to user. Once queries and yielded results, it might be said that the processor 'is running'
-				console.log('Handle Response');
         if (response.stats)
           this.tooltip.DoingProcess();
 

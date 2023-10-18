@@ -31,10 +31,10 @@ onmessage = function(e)
       SpWorker.AjaxRequest(data);
      break;
 		 case 'updateLocalSecret':
-
 		  var key = e.data.key;
 		  SpWorker.UpdateLocalSecret(key);
 		 break;
+
   }
 
 }
@@ -155,6 +155,7 @@ var SpWorker = {
       this.action = 'shortpixel_image_processing';
       this.Fetch(data);
    }
+
 
 
 } // worker
