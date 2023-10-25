@@ -355,7 +355,6 @@ class OtherMediaController extends \ShortPixel\Controller
 				$folderTable = $this->getFolderTable();
 
 			  $sql = 'UPDATE ' . $folderTable . ' set ts_checked = NULL ';
-				Log::addTemp('Update Timestamps', $sql);
 				$wpdb->query($sql);
 
 		}

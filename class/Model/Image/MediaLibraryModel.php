@@ -101,6 +101,21 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			return array_values($data['urls']);
 	}
 
+  // Cancel any exclusions set by user. This is meant to be able to manually optimize an image that has been excluded otherwise. Just to keep things simple. Run this before getting any URLs or OptimizeData.
+  public function cancelUserExclusions()
+  {
+      parent::cancelUserExclusions();
+
+      $thumbs = $this->getThumbObjects();
+      foreach($thumbs as $thumbnailObj)
+      {
+          $thumbnailObj->cancelUserExclusions();
+      }
+
+      // reset optimizedata if any
+      $this->optimizeData = null;
+  }
+
 	// Path will only return the filepath.  For reasons, see getOptimizeFileType
   public function getOptimizeData()
   {
@@ -641,8 +656,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
          {
 					  continue;
 				 }
-         if (!$thumbnail->isProcessable())
+         // Catch serious issues witht thumbnails, ignore the user ones. if they come back, try to process.
+         if (!$thumbnail->isProcessable()  && false === $thumbnail->isUserExcluded() )
 				 {
+           Log::addWarn('Optimized thumbnail signalled as not processable :' . $sizeName);
            continue; // when excluded.
 				 }
 
@@ -1444,12 +1461,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				 return false;
 			}
 
-			// The exclude size on the main image - via regex - if fails, prevents the whole thing from optimization.
-			/*if ($this->processable_status == ImageModel::P_EXCLUDE_SIZE || $this->processable_status == ImageModel::P_EXCLUDE_PATH)
-			{
-				 return $bool;
-			} */
-
       if (! $bool) // if parent is not processable, check if thumbnails are, can still have a work to do.
       {
 
@@ -1486,8 +1497,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       return $bool;
   }
 
-
-
   public function isRestorable()
   {
       $bool = true;
@@ -1515,8 +1524,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
       return $bool;
   }
-
-
 
   public function conversionPrepare($args = array())
 	{

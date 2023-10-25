@@ -192,7 +192,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
             }
         }
 
-        if ( $this->isOptimized() || ! $this->exists()  || $this->isPathExcluded() || $this->isExtensionExcluded() || $this->isSizeExcluded() || (! $this->is_virtual() && ! $this->is_writable()) || (! $this->is_virtual() && ! $this->is_directory_writable())
+        if ( $this->isOptimized() || ! $this->exists()  || (! $this->is_virtual() && ! $this->is_writable()) || (! $this->is_virtual() && ! $this->is_directory_writable() || $this->isPathExcluded() || $this->isExtensionExcluded() || $this->isSizeExcluded() )
 				|| $this->isOptimizePrevented() !== false  )
         {
           if(! $this->is_writable() && $this->processable_status == 0)
@@ -267,7 +267,13 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         return false;
     }
 
-
+    public function cancelUserExclusions()
+    {
+       if ($this->isUserExcluded())
+       {
+          $this->processable_status = 0;
+       }
+    }
 
     public function exists($forceCheck = false)
     {
@@ -351,6 +357,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
       return $message;
     }
+
+
 
     public function isImage()
     {
@@ -736,6 +744,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
           if ($copyok)
           {
+             $this->processable_status = self::P_IS_OPTIMIZED; // don't let this linger
+
              $this->setMeta('status', self::FILE_STATUS_SUCCESS);
              $this->setMeta('tsOptimized', time());
              $this->setMeta('compressedSize', $optimizedSize);

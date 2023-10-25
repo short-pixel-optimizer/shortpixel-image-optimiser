@@ -236,12 +236,17 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase
 				this.processor.AjaxRequest(data);
 		}
 
-		Optimize(id)
+		Optimize(id, force)
 		{
 			 var data = {
 					id: id,
 					type: this.type,
 					screen_action: 'optimizeItem'
+			 }
+
+			 if (typeof force !== 'undefined' && true == force)
+			 {
+				  data.flags = 'force'; 
 			 }
 
 			 if (! this.processor.CheckActive())

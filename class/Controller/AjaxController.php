@@ -326,6 +326,7 @@ class AjaxController
     {
           $id = intval($_POST['id']);
           $type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';
+					$flags = isset($_POST['flags']) ? sanitize_text_field($_POST['flags']) : false;
 
           $mediaItem = $this->getMediaItem($id, $type);
 
@@ -337,7 +338,13 @@ class AjaxController
           $json = new \stdClass;
           $json->$type = new \stdClass;
 
-          $json->$type = $control->addItemToQueue($mediaItem);
+					$args = array();
+					if ('force' === $flags)
+					{
+						 $args['forceExclusion'] =  true;
+					}
+
+          $json->$type = $control->addItemToQueue($mediaItem, $args);
 					return $json;
     }
 
@@ -809,7 +816,6 @@ class AjaxController
 			$otherMediaController = OtherMediaController::getInstance();
 			$force = isset($_POST['force']) ? sanitize_text_field($_POST['force']) : null;
 
-			Log::addTemp('ScanNext', $data);
 			$args = array();
 			$args['force'] = $force;
 
@@ -826,7 +832,6 @@ class AjaxController
 					$json->folder->result = $result;
 			}
 
-Log::addTemp('Scan Next Folder Result', $json);
 			return $json;
 
 		}

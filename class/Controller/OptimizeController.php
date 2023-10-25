@@ -81,8 +81,13 @@ class OptimizeController
 		* @param Object $mediaItem
     @return int Number of Items added
     */
-    public function addItemToQueue($mediaItem)
+    public function addItemToQueue($mediaItem, $args = array())
     {
+        $defaults = array(
+            'forceExclusion' => false,
+        );
+        $args = wp_parse_args($args, $defaults);
+
         $fs = \wpSPIO()->filesystem();
 
 				$json = $this->getJsonResponse();
@@ -102,7 +107,6 @@ class OptimizeController
 					ResponseController::addData($item->item_id, 'message', $item->result->message);
 
 					Log::addWarn('Item with id ' . $json->result->item_id . ' is not restorable,');
-
 					 return $json;
 				}
 
@@ -113,7 +117,9 @@ class OptimizeController
 
         // Manual Optimization order should always go trough
         if ($mediaItem->isOptimizePrevented() !== false)
+        {
             $mediaItem->resetPrevent();
+        }
 
         $queue = $this->getQueue($mediaItem->get('type'));
 
@@ -126,11 +132,19 @@ class OptimizeController
           $json->result->fileStatus = ImageModel::FILE_STATUS_ERROR;
         }
 
+        $is_processable = $mediaItem->isProcessable();
+        // Allow processable to be overridden when using the manual optimize button
+        if (false === $is_processable && true === $mediaItem->isUserExcluded() && true === $args['forceExclusion'] )
+        {
+          $mediaItem->cancelUserExclusions();
+          $is_processable = true;
+        }
+
         // If is not processable and not user excluded (user via this way can force an optimize if needed) then don't do it!
-        if (false === $mediaItem->isProcessable())
+        if (false === $is_processable)
         {
           $json->result->message = $mediaItem->getProcessableReason();
-          $json->result->is_error = true;
+          $json->result->is_error = false;
           $json->result->is_done = true;
           $json->result->fileStatus = ImageModel::FILE_STATUS_ERROR;
         }
@@ -143,12 +157,11 @@ class OptimizeController
 				}
         else
         {
-          $result = $queue->addSingleItem($mediaItem); // 1 if ok, 0 if not found, false is not processable
+          $result = $queue->addSingleItem($mediaItem, $args); // 1 if ok, 0 if not found, false is not processable
           if ($result->numitems > 0)
           {
             $json->result->message = sprintf(__('Item %s added to Queue. %d items in Queue', 'shortpixel-image-optimiser'), $mediaItem->getFileName(), $result->numitems);
             $json->status = 1;
-
           }
           else
           {
@@ -447,11 +460,13 @@ class OptimizeController
 			$qtype = $q->getType();
 			$qtype = strtolower($qtype);
 
+      // Options contained in the queue item for extra uh options
+      $options = (property_exists($item, 'options')) ? $item->options : array();
+
 			$imageObj = $fs->getImage($item->item_id, $qtype);
 			if (is_object($imageObj))
 			{
 				ResponseController::addData($item->item_id, 'fileName', $imageObj->getFileName());
-
 			}
 
 			// If item is blocked (handling success), skip over. This can happen if internet is slow or process too fast.
@@ -491,6 +506,18 @@ class OptimizeController
       }
       else // as normal
       {
+        $is_processable = $imageObj->isProcessable();
+        // Allow processable to be overridden when using the manual optimize button - ignore when this happens already to be in queue.
+
+        if (false === $is_processable )
+        {
+          if (is_object($options) && property_exists($options,'forceExclusion') && true == $options->forceExclusion)
+          {
+            $imageObj->cancelUserExclusions();
+          }
+
+        }
+
 				$item = $api->processMediaItem($item, $imageObj);
 
       }
@@ -752,6 +779,7 @@ class OptimizeController
            if ($imageItem->isProcessable() && $result->apiStatus !== ApiController::STATUS_NOT_API)
            {
               Log::addDebug('Item with ID' . $imageItem->item_id . ' still has processables (with dump)', $imageItem->getOptimizeUrls());
+
  						  $api = $this->getAPI();
 							$newItem = new \stdClass;
 							$newItem->urls = $imageItem->getOptimizeUrls();

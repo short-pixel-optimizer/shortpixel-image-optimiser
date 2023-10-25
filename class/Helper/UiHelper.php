@@ -22,8 +22,6 @@ class UiHelper
 	public static function setOutputHandler($name)
 	{
 		 	self::$outputMode = $name;
-
-
 	}
 
   public static function renderBurgerList($actions, $imageObj)
@@ -438,12 +436,12 @@ class UiHelper
        $actions['optimize'] = self::getAction('optimize', $id);
        $actions['markCompleted']  = self::getAction('markCompleted', $id);
     }
-    /* @TODO This is off for now because imageModel doesn't know what URLs to actually send on this exclusions!
+    /* @TODO This is off for now because imageModel doesn't know what URLs to actually send on this exclusions! */
     elseif ($mediaItem->isUserExcluded())
     {
-      $actions['optimize'] = self::getAction('optimize', $id);
-      $actions['optimize']['text'] = __('Manual Optimize', 'shortpixel-image-optimiser');
-    } */
+      $actions['optimize'] = self::getAction('forceOptimize', $id);
+//      $actions['optimize']['text'] = __('Manual Optimize', 'shortpixel-image-optimiser');
+    }
 
 
     return $actions;
@@ -572,6 +570,12 @@ class UiHelper
          $action['type']  = 'js';
          $action['text'] = __('Optimize Now', 'shortpixel-image-optimiser');
          $action['display'] = 'button';
+      break;
+      case 'forceOptimize':
+        $action['function'] = 'window.ShortPixelProcessor.screen.Optimize(' . $id . ', true)';
+        $action['type']  = 'js';
+        $action['text'] = __('Override exclusions and optimize now', 'shortpixel-image-optimiser');
+        $action['display'] = 'button';
       break;
 			case 'cancelOptimize':
 				 $action['function'] = 'window.ShortPixelProcessor.screen.CancelOptimizeItem(' . $id . ')';
