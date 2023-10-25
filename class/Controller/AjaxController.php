@@ -465,7 +465,7 @@ class AjaxController
 						$args = array('smartcrop' => $actionType);
 				}
 
-       $control = new OptimizeController();
+       $control = new OptimizeController();	 
 
        $json->$type = $control->reOptimizeItem($mediaItem, $compressionType, $args);
 			 $json->status = true;

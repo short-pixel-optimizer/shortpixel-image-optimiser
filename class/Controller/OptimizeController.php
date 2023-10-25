@@ -303,15 +303,25 @@ class OptimizeController
 					$fs->flushImageCache();
 
           // Hard reload since metadata probably removed / changed but still loaded, which might enqueue wrong files.
-            $mediaItem = $fs->getImage($mediaItem->get('id'), $mediaItem->get('type'));
-
+            $mediaItem = $fs->getImage($mediaItem->get('id'), $mediaItem->get('type'), false);
             $mediaItem->setMeta('compressionType', $compressionType);
+
+            Log::addtemp("mediaItem", $mediaItem);
 
 						if (isset($args['smartcrop']))
 						{
 							 $mediaItem->doSetting('smartcrop', $args['smartcrop']);
 						}
-            $json = $this->addItemToQueue($mediaItem);
+
+            // This is a user triggered thing. If the whole thing is user excluxed, but one ones this, then ok.
+            $args = array();
+            if (false === $mediaItem->isProcessable() && true === $mediaItem->isUserExcluded())
+            {
+               $args['forceExclusion'] = true;
+            }
+
+
+            $json = $this->addItemToQueue($mediaItem, $args);
             return $json;
       }
 

@@ -276,6 +276,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		 $this->optimizeData = null;
 	}
 
+  // Overwrite a settin for optimization
 	public function doSetting($setting, $value)
 	{
 		  $this->forceSettings[$setting] = $value;

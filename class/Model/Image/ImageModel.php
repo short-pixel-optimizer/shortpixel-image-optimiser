@@ -999,6 +999,10 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 					$this->mime = null;
 
 				}
+
+        // Reset statii
+        $this->restorable_status = null;
+        $this->processable_status = null;
         return $bool;
     }
 
