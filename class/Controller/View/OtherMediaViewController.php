@@ -68,7 +68,6 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 					$this->view->title = __('Custom Media optimized by ShortPixel', 'shortpixel-image-optimiser');
 					$this->view->show_search = true;
 
-
     //      $this->checkQueue();
           $this->loadView();
       }

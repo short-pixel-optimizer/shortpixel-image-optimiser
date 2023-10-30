@@ -33,8 +33,10 @@ $this->loadView('custom/part-othermedia-top');
 
   <span class='custom-filter'>
     <form method="get" action="<?php echo $this->url ?>" >
+      <input type='hidden' name='page' value='wp-short-pixel-custom'>
     <?php $this->printFilter(); ?>
      <button class='button' type='submit'><?php _e('Filter', 'shortpixel-image-optimiser'); ?></button>
+   </form>
   </span>
 
 </div>

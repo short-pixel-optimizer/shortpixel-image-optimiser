@@ -439,7 +439,6 @@ class SettingsController extends \ShortPixel\ViewController
          $statsControl = StatsController::getInstance();
 
          $this->view->minSizes = $this->getMaxIntermediateImageSize();
-      //   $this->view->customFolders= $this->loadCustomFolders();
 
 				 $excludeOptions = UtilHelper::getWordPressImageSizes();
 				 $mainOptions = array(
