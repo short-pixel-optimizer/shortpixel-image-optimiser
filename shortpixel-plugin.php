@@ -618,6 +618,8 @@ class ShortPixelPlugin {
      */
 	public function route() {
 		global $plugin_page;
+		//ar_dump($plugin_page);
+		//exit($plugin_page);
 		// $this->initPluginRunTime(); // Not in use currently.
 		$default_action = 'load'; // generic action on controller.
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form

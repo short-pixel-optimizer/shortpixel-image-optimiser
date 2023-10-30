@@ -348,7 +348,7 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
 
 // @todo Find a way to cache IsProcessable perhaps due to amount of checks being done.  Should be release in flushOptimizeCache or elsewhere (?)
 
-      $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
+  //    $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
 
       $patterns = UtilHelper::getExclusions($args);
     //  echo "<PRE>"; print_r($args); print_r($patterns); echo "</PRE>";

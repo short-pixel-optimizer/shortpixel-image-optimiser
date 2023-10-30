@@ -30,6 +30,13 @@ $this->loadView('custom/part-othermedia-top');
      <option value='restore'><?php _e('Restore', 'shortpixel-image-optimiser'); ?></option>
    </select> <button class='button' type='button' name='doBulkAction'><?php _e('Apply', 'shortpixel-image-optimiser'); ?></button>
   </span>
+
+  <span class='custom-filter'>
+    <form method="get" action="<?php echo $this->url ?>" >
+    <?php $this->printFilter(); ?>
+     <button class='button' type='submit'><?php _e('Filter', 'shortpixel-image-optimiser'); ?></button>
+  </span>
+
 </div>
     <div class='list-overview'>
 

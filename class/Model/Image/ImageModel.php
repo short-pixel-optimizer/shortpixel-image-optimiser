@@ -1116,6 +1116,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
                 $pattern = trim($item["value"]);
                 $target = ($type == "name") ? $this->getFileName() : $this->getFullPath();
 
+
                 if ($type == 'regex-name' || $type == 'regex-path')
                 {
                     $result = $this->matchExludeRegexPattern($target, $pattern);

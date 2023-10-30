@@ -197,6 +197,32 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 					{
 						  $filter['folder_id'] = (object)array("operator" => "=", "value" =>"'" . esc_sql($folderFilter) . "'");
 					}
+
+          $statusFilter = isset($_GET['custom-status']) ? sanitize_text_field($_GET['custom-status']) : false;
+          if (false !== $statusFilter)
+					{
+              $operator = '=';
+              $value = false;
+
+              switch($statusFilter)
+              {
+                 case 'optimized':
+                    $value = ImageModel::FILE_STATUS_SUCCESS;
+                 break;
+                 case 'unoptimized':
+                     $value = ImageModel::FILE_STATUS_UNPROCESSED;
+                 break;
+                 case 'prevented':
+                      $value = 0;
+                      $operator = '<';
+                 break;
+              }
+              if (false !== $value)
+              {
+						        $filter['status'] = (object)array("operator" => $operator, "value" =>"'" . esc_sql($value) . "'");
+              }
+					}
+
           return $filter;
       }
 
@@ -245,17 +271,6 @@ class OtherMediaViewController extends \ShortPixel\ViewController
           $results = $wpdb->get_results($sql);
           return $results;
       }
-
-
-
-      /** This is a workaround for doing wp_redirect when doing an action, which doesn't work due to the route. Long-term fix would be using Ajax for the actions */
-      /* @todo Seems unused - remove with next version if no trouble
-      protected function rewriteHREF()
-      {
-          $rewrite = $this->url; //isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] :
-          $this->view->rewriteHREF = '<script language="javascript"> history.pushState(null,null, "' . $rewrite . '"); </script>';
-      } */
-
 
       private function getPageArgs($args = array())
       {
@@ -472,6 +487,28 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 
         }
         echo $list_actions;
+      }
+
+      public function printFilter()
+      {
+            $status   = filter_input(INPUT_GET, 'custom-status', FILTER_UNSAFE_RAW );
+
+            $options = array(
+                'all' => __('Any ShortPixel State', 'shortpixel-image-optimiser'),
+                'optimized' => __('Optimized', 'shortpixel-image-optimiser'),
+                'unoptimized' => __('Unoptimized', 'shortpixel-image-optimiser'),
+                'prevented' => __('Optimization Error', 'shortpixer-image-optimiser'),
+
+            );
+
+            echo  "<select name='custom-status' id='status'>\n";
+            foreach($options as $optname => $optval)
+            {
+                $selected = ($status == $optname) ? esc_attr('selected') : '';
+                echo "<option value='". esc_attr($optname) . "' $selected >" . esc_html($optval) . "</option>\n";
+            }
+            echo "</select>";
+
       }
 
 

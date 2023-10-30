@@ -306,8 +306,6 @@ class OptimizeController
             $mediaItem = $fs->getImage($mediaItem->get('id'), $mediaItem->get('type'), false);
             $mediaItem->setMeta('compressionType', $compressionType);
 
-            Log::addtemp("mediaItem", $mediaItem);
-
 						if (isset($args['smartcrop']))
 						{
 							 $mediaItem->doSetting('smartcrop', $args['smartcrop']);
