@@ -122,7 +122,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
 			}
 			else {
 				global $wpdb;
-	      $sql = "SELECT SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) optimized, "
+	      $sql = "SELECT SUM(CASE WHEN status = 2 OR status = -11 THEN 1 ELSE 0 END) optimized, "
 	          . "SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END) waiting, count(*) total "
 	          . "FROM  " . $wpdb->prefix . "shortpixel_meta "
 	          . "WHERE folder_id = %d";
@@ -279,6 +279,9 @@ class DirectoryOtherMediaModel extends DirectoryModel
         $time = 0; //force refresh of the whole.
       }
 
+      $stats = $this->getStats();
+      $total_before = $stats['total'];
+
 			if (! $this->checkDirectory(true))
 			{
 				Log::addWarn('Refreshing directory, something wrong in checkDirectory ' . $this->getPath());
@@ -313,16 +316,22 @@ class DirectoryOtherMediaModel extends DirectoryModel
       $files = $fs->getFilesRecursive($this, $filter);
 
       \wpSPIO()->settings()->hasCustomFolders = time(); // note, check this against bulk when removing. Custom Media Bulk depends on having a setting.
+
     	$result = $this->addImages($files);
 
     	// Reset stat.
 			unset(self::$stats[$this->id]);
+
       $stats = $this->getStats();
       $this->fileCount = $stats['total'];
 
       $this->checked = time();
       $this->save();
 
+      $stats['new'] = $stats['total'] - $total_before;
+      Log::addTemp('Stats', $stats);
+
+      return $stats;
   }
 
 
@@ -523,6 +532,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
 			$activeFolders = $otherMediaControl->getActiveDirectoryIDS();
 
       $fs = \wpSPIO()->filesystem();
+
 
       foreach($files as $fileObj)
       {

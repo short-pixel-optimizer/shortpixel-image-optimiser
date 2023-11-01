@@ -465,7 +465,7 @@ class AjaxController
 						$args = array('smartcrop' => $actionType);
 				}
 
-       $control = new OptimizeController();	 
+       $control = new OptimizeController();
 
        $json->$type = $control->reOptimizeItem($mediaItem, $compressionType, $args);
 			 $json->status = true;
@@ -711,6 +711,21 @@ class AjaxController
 			{
 				 $json->folder->message = $folderObj->get('last_message');
 			}
+			else { // result is stats
+					$stats = $result;
+				 	if ($stats['new'] > 0)
+					{
+						 $message = sprintf(__('%s new files found ( %s waiting %s optimized)', 'shortpixel-image-optimiser'), $stats['new'], $stats['waiting'], $stats['optimized']);
+					}
+					else
+					{
+						 $message = sprintf(__('No new files found ( %s waiting %s optimized)', 'shortpixel-image-optimiser'), $stats['waiting'], $stats['optimized']);
+					}
+
+					$json->folder->message = $message;
+
+			}
+
 
 			$json->status = true;
 			$json->folder->fileCount = $folderObj->get('fileCount');
