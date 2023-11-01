@@ -54,10 +54,14 @@
 
 	.new-exclusion
 	{
-			border-top: 1px solid #ccc;
-			border-bottom: 1px solid #ccc;
+	//		border-top: 1px solid #ccc;
+			border: 1px solid #ccc;
+			box-shadow: 2px 2px 1px #ccc;
 			padding: 8px;
 			margin: 8px 0;
+			display: inline-block;
+			background: #fff;
+			position: relative;
 
 			h3 {
 					margin: 2px 0;
@@ -74,7 +78,7 @@
 				 height: auto;
 				 label
 				 {
-					 	min-width: 100px;
+					 	min-width: 110px;
 						display: inline-block;
 				 }
 				 input, select {
@@ -84,8 +88,23 @@
 							min-width: 0;
 						}
 				 }
+				 &.button-actions
+				 {
+					  margin-left: 114px;
+				 }
 				 button {
-					 margin-left: 104px;
+					// margin-left: 104px;
+					 min-width: 75px;
+					 padding: 8px 6px;
+					 &[name="removeExclusion"]
+					 {
+						  background: #ff0000;
+							border-color: #ff0000;
+							padding: 4px;
+							position: absolute;
+							top: 10px;
+							right: 10px;
+					 }
 				 }
 
 			}

@@ -360,7 +360,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 				<p class="settings-info" data-toggle="exclude-settings-expanded">
 
-          <button class='button button-primary new-exclusion-button' type='button'>Add new Exclusion</button>
+          <button class='button button-primary new-exclusion-button' type='button' name="addExclusion">
+            <?php _e('Add new Exclusion', 'shortpixel-image-optimiser'); ?>
+          </button>
 
 						<?php
 						printf(esc_html__('Use this section to exclude images based on patterns (separated by commas). A pattern consists of a %s type:value %s pair and the accepted types are %s "name", "path", "size", "regex-name" and "regex-path" %s. A file is excluded if it matches any of the patterns. Examples can be found in the collapsible area below the exclusion list.','shortpixel-image-optimiser'),
@@ -428,10 +430,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 		if (is_array($excludeArray) && count($excludeArray) > 0)
 		{
 				echo "<ul class='exclude-list'>";
+        echo '<input type="hidden" name="new-index" value="' . count($excludeArray)  -1 . '">';
+        $i = 0;
 				foreach($excludeArray as $index => $option)
 				{
-					//	$option = trim($option);
-					//	$fields = explode(':', $option);
+            $exclude_id  = 'id="exclude-' . $i . '"';
 						$type = $option['type'];
 						$value = $option['value'];
 						$apply = $option['apply'];
@@ -499,14 +502,15 @@ if ( ! defined( 'ABSPATH' ) ) {
             }
 
 
-						echo "<li $class $title>";
+						echo "<li $class $title $exclude_id>";
+
 						echo "<input type='hidden' name='exclusions[]' value='$option_code' />";
-						echo "<span>$field_name :</span><span>$value</span>";
+						echo "<span>$field_name :</span>
+                  <span>$value</span>";
             echo "<span>$apply_name</span>";
-						echo "<span class='dashicons dashicons-remove'></span>";
-
+					
 						echo "</li>";
-
+            $i++;
 				}
 				echo "</ul>";
 		}
@@ -519,7 +523,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 			</div>
 
 					  <div class='new-exclusion not-visible'>
-								<h3><?php _e('New Exclusion' ,'shortpixel-image-optimiser'); ?></h3>
+                <input type="hidden" name="edit-exclusion" value="">
+								<h3 class='new-title not-visible'><?php _e('New Exclusion' ,'shortpixel-image-optimiser'); ?></h3>
+                <h3 class='edit-title not-visible'><?php _e('Edit Exclusion' ,'shortpixel-image-optimiser'); ?></h3>
 								<div>
 									<label><?php _e('Type', 'shortpixel-image-optimiser'); ?></label>
 									 <select name="exclusion-type" class='new-exclusion-type'>
@@ -602,9 +608,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 									</select>
 
 								</div>
-								<div>
-									<button type="button" class="button button-primary" name="addExclusion">
+								<div class='button-actions'>
+                  <button type="button" class="button" name='cancelEditExclusion'><?php _e('Close', 'shortpixel-image-optimiser'); ?></button>
+
+									<button type="button" class="button button-primary not-visible" name="addExclusion">
                     <?php _e('Add Exclusion', 'shortpixel-image-optimiser'); ?></button>
+
+                    <button type="button" class="button button-primary not-visible" name="updateExclusion">
+                        <?php _e("Update", 'shortpixel-image-optimiser');  ?>
+                    </button>
+
+                  <button type="button" class="button button-primary not-visible" name="removeExclusion">
+                      <?php _e("Remove", 'shortpixel-image-optimiser');  ?>
+                  </button>
+
 								</div>
 							</div>
 

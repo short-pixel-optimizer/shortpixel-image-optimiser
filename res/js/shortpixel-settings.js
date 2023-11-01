@@ -17,7 +17,6 @@ var ShortPixelSettings = function()
 
 			toggles.forEach(function (toggle, index)
 			{
-				//	var target = (action.getAttribute('data-toggle')) ? action.getAttribute('data-toggle') : 'click';
 					toggle.addEventListener('change', self.DoToggleAction.bind(self));
 
 					var evInit = new CustomEvent('change',  {detail : { init: true }} );
@@ -32,31 +31,34 @@ var ShortPixelSettings = function()
 			});
 
 			// Events for the New Exclusion dialog
-			var newExclusionInputs = document.querySelectorAll('.new-exclusion select, .new-exclusion input, .new-exclusion button');
+			var newExclusionInputs = document.querySelectorAll('.new-exclusion select, .new-exclusion input, .new-exclusion button', 'input[name="removeExclusion"]', 'button[name="cancelEditExclusion"]');
 			newExclusionInputs.forEach(function (input)
 			{
-				  if (input.name == 'addExclusion')
+					switch (input.name)
 					{
-						var eventType = 'click';
+						 	case 'addExclusion':
+							case 'removeExclusion':
+							case 'cancelEditExclusion':
+							case 'updateExclusion':
+								var eventType = 'click';
+							break;
+							default:
+								var eventType = 'change';
+							break;
 					}
-					else {
-						var eventType = 'change';
-					}
+
 					input.addEventListener(eventType, self.NewExclusionUpdateEvent.bind(self));
 			});
 
-			// Remove buttons on the Exclude patterns to remove them
-			var exclusionRemoveButtons = document.querySelectorAll('.exclude-list li > .dashicons-remove');
-			exclusionRemoveButtons.forEach(function (input) {
-					input.addEventListener('click', self.RemoveExclusionEvent.bind(self));
+			 var exclusionItems = document.querySelectorAll('.exclude-list li');
+			exclusionItems.forEach(function (input) {
+					input.addEventListener('click', self.NewExclusionShowInterfaceEvent.bind(self));
 			});
+
 
 			var addNewExclusionButton = document.querySelector('.new-exclusion-button');
 			addNewExclusionButton.addEventListener('click', this.NewExclusionShowInterfaceEvent.bind(this));
-
-
 	}
-
 
 	this.DoToggleAction = function(event)
 	{
@@ -240,16 +242,67 @@ this.SaveOnKey = function()
 
 this.NewExclusionShowInterfaceEvent = function (event)
 {
+	 this.ResetExclusionInputs();
 	 event.preventDefault();
 
 	 var element = document.querySelector('.new-exclusion');
-	 element.classList.remove('not-visible');
+	 element.classList.remove('not-visible', 'hidden');
+
+	 var cancelButton = document.querySelector('.new-exclusion .button-actions button[name="cancelEditExclusion"]');
+	 cancelButton.classList.remove('not-visible', 'hidden');
+
+	 var updateButton = document.querySelector('.new-exclusion .button-actions button[name="updateExclusion"]');
+
+
+	 if (event.target.name == 'addExclusion')
+	 {
+		  var mode = 'new';
+			var id = 'new';
+			var title = document.querySelector('.new-exclusion h3.new-title');
+			var button = document.querySelector('.new-exclusion .button-actions button[name="addExclusion"]');
+
+	 }
+	 else {
+	 	  var mode = 'edit';
+
+			if (event.target.id)
+			{
+				 var id = event.target.id;
+				 var parent = event.target;
+			}
+			else {
+				 var id = event.target.parentElement.id;
+				 var parent = event.target.parentElement;
+			}
+			var title = document.querySelector('.new-exclusion h3.edit-title');
+			var button = document.querySelector('.new-exclusion .button-actions button[name="removeExclusion"]');
+			var input = document.querySelector('.new-exclusion input[name="edit-exclusion"]')
+
+			updateButton.classList.remove('not-visible', 'hidden');
+
+			input.value = id;
+			var dataElement = parent.querySelector('input').value;
+			var data = JSON.parse(dataElement);
+			this.ReadWriteExclusionForm(data)
+
+
+	 }
+
+ 	 title.classList.remove('not-visible', 'hidden');
+	 button.classList.remove('not-visible', 'hidden');
+
+}
+
+this.HideExclusionInterface = function()
+{
+	var element = document.querySelector('.new-exclusion');
+	element.classList.add('not-visible');
+
 }
 
 // EXCLUSIONS
 this.NewExclusionUpdateEvent = function(event)
 {
-	console.log(event);
 	var target = event.target;
 	var inputName = event.target.name;
 	switch(inputName)
@@ -265,6 +318,15 @@ this.NewExclusionUpdateEvent = function(event)
 		 break;
 		 case 'exclusion-exactsize':
 		 	 this.NewExclusionToggleSizeOption(target);
+		 break;
+		 case 'removeExclusion':
+		 	 this.RemoveExclusion(target);
+		 break;
+		 case 'cancelEditExclusion':
+		 	 this.HideExclusionInterface();
+		 break;
+		 case 'updateExclusion':
+		 	 this.UpdateExclusion();
 		 break;
 
 	}
@@ -322,88 +384,179 @@ this.NewExclusionUpdateThumbType = function(element)
 		 }
 }
 
-this.NewExclusionButtonAdd = function(element)
+
+this.ReadWriteExclusionForm = function(setting)
 {
 	 	// compile all inputs to a json encoded string to add to UX
-		 var setting = {
-			 'type' : '',
-			 'value' :  '',
-			 'apply' : '',
-		 };
+	 	 if (null === setting || typeof setting === 'undefined')
+		 {
+			 var setting = {
+				 'type' : '',
+				 'value' :  '',
+				 'apply' : '',
+			 };
+
+			 var mode = 'read';
+		 }
+		 else {
+		 	 var mode = 'write';
+		 }
+
+		 var strings = {};
 
 		 var typeOption = document.querySelector('.new-exclusion select[name="exclusion-type"]');
 		 var valueOption = document.querySelector('.new-exclusion input[name="exclusion-value"]');
 		 var applyOption = document.querySelector('.new-exclusion select[name="apply-select"]');
 		 var regexOption = document.querySelector('.new-exclusion input[name="exclusion-regex"]');
 
-		 setting.type = typeOption.value;
-		 setting.value = valueOption.value;
-		 setting.apply = applyOption.value;
+		 if ('read' === mode)
+	 	 {
+		 	setting.type = typeOption.value;
+		 	setting.value = valueOption.value;
+		 	setting.apply = applyOption.value;
+
+			strings.type = typeOption.options[typeOption.selectedIndex].innerText;
+			strings.apply = applyOption.options[applyOption.selectedIndex].innerText;
+		}
+		else {
+			if (setting.type.indexOf('regex') != -1)
+			{
+				 typeOption.value = setting.type.replace('regex-', '');
+			}
+			else {
+				typeOption.value = setting.type;
+			}
+			valueOption.value = setting.value;
+			applyOption.value = setting.apply;
+		}
 
 		 // When selected thumbnails option is selected, add the thumbnails to the list.
 		 if ('selected-thumbs' == applyOption.value)
 		 {
 			  var thumbOption = document.querySelector('.new-exclusion select[name="thumbnail-select"]');
 				var thumblist  = [];
-				for(var i =0; i < thumbOption.selectedOptions.length; i++)
+				if ('read' === mode)
 				{
-					 thumblist.push(thumbOption.selectedOptions[i].value);
-				}
-
+					for(var i =0; i < thumbOption.selectedOptions.length; i++)
+					{
+						 thumblist.push(thumbOption.selectedOptions[i].value);
+					}
 				setting.thumblist = thumblist;
+				}
+				else if ('write' === mode){
+					 for (var i = 0; i < thumbOption.options.length; i++)
+				 	 {
+						 	if (setting.thumblist.indexOf(thumbOption[i].value) != -1)
+							{
+								 thumbOption[i].selected = true;
+							}
+				 	 }
+
+					 this.NewExclusionUpdateThumbType(applyOption);
+				}
 		 }
 
 		 // Check for regular expression active on certain types
-		 if (true === regexOption.checked && (typeOption.value == 'name' || typeOption.value == 'path'))
+		 if ('read' === mode && true === regexOption.checked && (typeOption.value == 'name' || typeOption.value == 'path'))
 		 {
 			  setting.type = 'regex-' + setting.type;
 		 }
+		 else if ('write' === mode)
+		 {
+			   if (setting.type.indexOf('regex') != -1)
+				 {
+					  regexOption.checked = true;
+				 }
+		 }
+
 
 		 // Options for size setting
-		 if ('size' == setting.type)
+		 if ('size' === setting.type)
 		 {
 			 var exactOption = document.querySelector('.new-exclusion input[name="exclusion-exactsize"]');
-			 if (true === exactOption.checked)
+
+			 var width = document.querySelector('.new-exclusion input[name="exclusion-width"]');
+			 var height = document.querySelector('.new-exclusion input[name="exclusion-height"]');
+
+			 var minwidth = document.querySelector('.new-exclusion input[name="exclusion-minwidth"]');
+			 var maxwidth = document.querySelector('.new-exclusion input[name="exclusion-maxwidth"]');
+			 var minheight = document.querySelector('.new-exclusion input[name="exclusion-minheight"]');
+			 var maxheight = document.querySelector('.new-exclusion input[name="exclusion-maxheight"]');
+
+
+			 if ('read' === mode)
 			 {
-					 var width = document.querySelector('.new-exclusion input[name="exclusion-width"]');
-					 var height = document.querySelector('.new-exclusion input[name="exclusion-height"]');
-					 setting.value = width.value + 'x' + height.value;
+				 if (true === exactOption.checked)
+				 {
+						 setting.value = width.value + 'x' + height.value;
+				 }
+				 else {
+					 setting.value = minwidth.value + '-' + maxwidth.value + 'x' + minheight.value + '-' + maxheight.value;
+				 }
 			 }
-			 else {
-				 var minwidth = document.querySelector('.new-exclusion input[name="exclusion-minwidth"]');
-				 var maxwidth = document.querySelector('.new-exclusion input[name="exclusion-maxwidth"]');
-				 var minheight = document.querySelector('.new-exclusion input[name="exclusion-minheight"]');
-				 var maxheight = document.querySelector('.new-exclusion input[name="exclusion-maxheight"]');
+			 else if ('write' === mode)
+			 {
+				 	var value = setting.value;
+					var split = value.split(/(x|×|X)/);
 
-				 setting.value = minwidth.value + '-' + maxwidth.value + 'x' + minheight.value + '-' + maxheight.value;
+					if (value.indexOf('-') === -1)
+					{
+							exactOption.checked = true;
+							width.value = split[0]; // in this split 1 is the X symbol
+							height.value = split[2];
+					}
+					else {
+						  var widths = split[0].split('-'); // split the split for widths
+							var heights = split[2].split('-');
+
+							minwidth.value = widths[0];
+							maxwidth.value = widths[1];
+
+							minheight.value = heights[0];
+							maxheight.value = heights[1];
+					}
+
+					this.NewExclusionUpdateType(typeOption)
+					this.NewExclusionToggleSizeOption(exactOption);
 			 }
-
 		 }
+		 if ('read' === mode)
+		 {
+		 	 return [setting, strings];
+		 }
+}
+
+this.NewExclusionButtonAdd = function(element)
+{
+		 var result = this.ReadWriteExclusionForm(null);
+		 var setting = result[0];
+		 var strings = result[1];
 
 		 var listElement = document.querySelector('.exclude-list');
 		 var newElement = document.createElement('li');
 		 var inputElement = document.createElement('input');
 
+		 var newIndexInput = document.querySelector('.exclude-list input[name="new-index"]');
+		 var newIndex = parseInt(newIndexInput.value) + 1;
+		 newIndexInput.value = newIndex;
+
+		 newElement.id = 'exclude-' + newIndex;
+		 newElement.addEventListener('click', this.NewExclusionShowInterfaceEvent.bind(this));
+
 		 inputElement.type = 'hidden';
 		 inputElement.name = 'exclusions[]';
-		 console.log('Settings created: ', setting);
 		 inputElement.value = JSON.stringify(setting);
+
 
 		 newElement.appendChild(inputElement);
 
-		 var spans = [setting.type, setting.value , 'dashicons' ];
+		 var spans = [strings.type, setting.value, strings.apply];
 
 		 for (var i = 0; i < spans.length; i++)
 		 {
 			   var spanElement = document.createElement('span');
-				 if (spans[i] == 'dashicons')
-				 {
-					  spanElement.classList.add('dashicons', 'dashicons-remove');
-						spanElement.addEventListener('click', this.RemoveExclusionEvent.bind(this));
-				 }
-				 else {
-				 	 spanElement.textContent = spans[i];
-				 }
+			 	 spanElement.textContent = spans[i];
+
 				 newElement.appendChild(spanElement);
 		 }
 
@@ -415,7 +568,8 @@ this.NewExclusionButtonAdd = function(element)
 			  noItemsItem.classList.add('not-visible');
 		 }
 
-		 this.resetExclusionInputs();
+		 this.ResetExclusionInputs();
+		 this.HideExclusionInterface();
 
 }
 
@@ -432,30 +586,116 @@ this.NewExclusionToggleSizeOption = function(target)
 		else {
 			sizeOptionRange.classList.remove('not-visible');
 			sizeOptionExact.classList.add('not-visible');
-
 		}
 }
 
-this.resetExclusionInputs = function()
+this.ResetExclusionInputs = function()
 {
 	var typeOption = document.querySelector('.new-exclusion select[name="exclusion-type"]');
 	var valueOption = document.querySelector('.new-exclusion input[name="exclusion-value"]');
 	var applyOption = document.querySelector('.new-exclusion select[name="apply-select"]');
 
-	typeOption.selectedIndex = 0;
-	valueOption.value = '';
-	applyOption.selectedIndex = 0;
+ 	var inputs = document.querySelectorAll('.new-exclusion input, .new-exclusion select');
+	for (var i = 0; i < inputs.length; i++)
+	{
+			var input = inputs[i];
+			if (input.tagName == 'SELECT')
+			{
+				 input.selectedIndex = 0;
+			}
+			else if (input.type == 'checkbox')
+			{
+				 input.checked = false;
+			}
+			else {
+					input.value = '';
+			}
+	}
+
 
 	var ev = new CustomEvent('change');
 	typeOption.dispatchEvent(ev);
 	applyOption.dispatchEvent(ev);
 
+	// reset title and buttons.
+	var titles = document.querySelectorAll('.new-exclusion h3');
+	var buttons = document.querySelectorAll('.new-exclusion .button-actions button');
+
+	for(var i = 0; i < titles.length; i++)
+	{
+		 titles[i].classList.add('not-visible', 'hidden');
+
+	}
+
+	for (var i = 0; i < buttons.length; i++)
+	{
+		 buttons[i].classList.add('not-visible', 'hidden');
+	}
+
+	var exactOption = document.querySelector('.new-exclusion input[name="exclusion-exactsize"]');
+
+	exactOption.checked = false
+
+
 }
 
-this.RemoveExclusionEvent = function(event)
+this.UpdateExclusion = function()
 {
-		 var element = event.target;
-		 element.parentElement.remove();
+	var id = document.querySelector('.new-exclusion input[name="edit-exclusion"]');
+	var result = this.ReadWriteExclusionForm();
+	var setting = result[0];
+	var strings = result[1];
+
+	if (id)
+	{
+			var element = document.querySelector('.exclude-list #' +id.value + ' input');
+			var liElement = document.querySelector('.exclude-list #' +id.value);
+
+			var removeChildren = [];
+			if (null !== element)
+			{
+				 element.value = JSON.stringify(setting);
+
+				 // Can't directly remove children, because it messes with the collection index.
+				 Array.from(liElement.children).forEach ( function (child, index){
+				 if (child.tagName == 'SPAN')
+					 {
+						 removeChildren.push(child)
+						}
+				 });
+
+				 for(var i = 0; i < removeChildren.length; i++ )
+				 {
+					  removeChildren[i].remove();
+				 }
+
+				 var spans = [strings.type, setting.value, strings.apply];
+				 for (var j = 0; j < spans.length; j++)
+				 {
+						 var spanElement = document.createElement('span');
+						 spanElement.textContent = spans[j];
+						 liElement.appendChild(spanElement);
+				 }
+			}
+	}
+
+	this.HideExclusionInterface();
+
+}
+
+this.RemoveExclusion = function()
+{
+		 var id = document.querySelector('.new-exclusion input[name="edit-exclusion"]');
+		 if (id)
+		 {
+			   var element = document.querySelector('.exclude-list #' +id.value);
+				 if (null !== element)
+				 {
+					  element.remove();
+				 }
+		 }
+
+		 this.HideExclusionInterface();
 }
 
  	this.Init();

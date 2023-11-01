@@ -59,14 +59,15 @@
      span {
        &:first-child {
          width: 48px;
+
+       }
+       &.custom-filter
+       {
+          margin-left:12px;
        }
         padding: 12px 0;
         display: inline-block;
      }
-     button {
-
-     }
-
    }
 
    .list-overview,

@@ -52,6 +52,9 @@
 .shortpixel-other-media .extra-heading span:first-child {
   width: 48px;
 }
+.shortpixel-other-media .extra-heading span.custom-filter {
+  margin-left: 12px;
+}
 .shortpixel-other-media .list-overview {
   width: 100%;
   background: #fff;
