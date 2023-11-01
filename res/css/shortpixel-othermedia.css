@@ -101,7 +101,7 @@
 .shortpixel-other-media .list-overview .item:nth-child(odd) {
   background-color: #f9f9f9;
 }
-.shortpixel-other-media .list-overview .item span:last-child {
+.shortpixel-other-media .list-overview .item > span:last-child {
   min-width: 400px;
   max-width: 400px;
 }

@@ -180,7 +180,6 @@
 }
 .sp-column-info .sp-column-actions {
   margin: 10px;
-  z-index: 2;
   position: relative;
 }
 .sp-column-info .thumbs-todo {
@@ -191,7 +190,7 @@
   display: none;
 }
 .sp-column-info .thumbs-todo h4:hover ~ span {
-  display: block;
+  display: inline-block;
 }
 .sp-column-info h4 {
   margin: 0;
