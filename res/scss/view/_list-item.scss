@@ -67,16 +67,16 @@
   }
   .sp-column-actions
   {
-
 		 margin: 10px;
+     z-index: 2; // prevent overlap of text
+     position: relative;
   }
   .thumbs-todo
   {
      position: relative;
+     display: inline-block;
      span {
          display: none;
-        // border: 1px solid #ccc;
-
       }
      h4:hover ~ span { display: block; }
   }

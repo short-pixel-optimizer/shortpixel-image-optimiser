@@ -180,9 +180,12 @@
 }
 .sp-column-info .sp-column-actions {
   margin: 10px;
+  z-index: 2;
+  position: relative;
 }
 .sp-column-info .thumbs-todo {
   position: relative;
+  display: inline-block;
 }
 .sp-column-info .thumbs-todo span {
   display: none;
