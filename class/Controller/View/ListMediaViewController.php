@@ -139,6 +139,12 @@ class ListMediaViewController extends \ShortPixel\ViewController
 								if ($mediaItem->isOptimized())
 									$res = $optimizeController->restoreItem($mediaItem);
 						break;
+            case 'mark-completed':
+                 if ($mediaItem->isProcessable())
+                 {
+                   $mediaItem->markCompleted(__('This item has been manually marked as completed', 'shortpixel-image-optimiser'), ImageModel::FILE_STATUS_MARKED_DONE);
+                 }
+            break;
 				 }
 
 		 }

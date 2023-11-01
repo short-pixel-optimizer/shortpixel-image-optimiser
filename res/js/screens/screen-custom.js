@@ -249,6 +249,14 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
                 this.RestoreItem(item_id);
               }
            }
+           else if ('mark-completed' === action)
+           {
+             if (item.classList.contains('is-optimizable'))
+             {
+               this.MarkCompleted(item_id);
+             }
+
+           }
            else {
            }
 

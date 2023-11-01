@@ -34,6 +34,7 @@ var ShortPixel = function() {
                 + '</option><option value="shortpixel-restore"> → ' + _spTr.restoreOriginal
 								+ '</option><option value="shortpixel-smartcrop"> → ' + _spTr.redoSmartcrop
 								+ '</option><option value="shortpixel-smartcropless"> → ' + _spTr.redoSmartcropless
+                + '</option><option value="shortpixel-mark-completed"> → ' + _spTr.markCompleted
                 + '</option>');
         }
 
@@ -198,10 +199,7 @@ var ShortPixel = function() {
                 if(this !== prev) {
                     prev = this;
                 }
-                // Warns once that changing compressType is only for new images.
-            //    if(typeof ShortPixel.setupGeneralTabAlert !== 'undefined') return;
-              //  alert(_spTr.alertOnlyAppliesToNewImages);
-              //  ShortPixel.setupGeneralTabAlert = 1;
+
 							 if (this.value == savedCompression)
   					 		jQuery('.compression-notice-row').addClass('shortpixel-hide');
 							else
@@ -456,23 +454,6 @@ var ShortPixel = function() {
         return browseResponse;
     }
 
-    function getBackupSize(element) {
-       /* Off until we found something better.
-			 var browseData = { 'action': 'shortpixel_get_backup_size', nonce: ShortPixelConstants[0].nonce_ajaxrequest };
-        var browseResponse = "";
-        jQuery.ajax({
-            type: "POST",
-            url: ShortPixel.AJAX_URL,
-            data: browseData,
-            success: function(response) {
-                 browseResponse = response;
-								 element.dataset.value = browseResponse;
-								 element.textContent = browseResponse;
-            },
-            //async: false
-        });
-        return browseResponse; */
-     }
 
     function newApiKey(event) {
 				event.preventDefault();
@@ -531,63 +512,6 @@ var ShortPixel = function() {
         }
     }
 
-/* @todo Moved to custom screen - remove on next version
-    function initFolderSelector() {
-        jQuery(".select-folder-button").on('click', function(){
-            jQuery(".sp-folder-picker-shade").fadeIn(100); //.css("display", "block");
-						jQuery(".shortpixel-modal.modal-folder-picker").removeClass('shortpixel-hide');
-						jQuery(".shortpixel-modal.modal-folder-picker").show();
-
-
-            var picker = jQuery(".sp-folder-picker");
-            picker.parent().css('margin-left', -picker.width() / 2);
-            picker.fileTree({
-                script: ShortPixel.browseContent,
-                multiFolder: false,
-            });
-        });
-        jQuery(".shortpixel-modal input.select-folder-cancel, .sp-folder-picker-shade").on('click', function(){
-            jQuery(".sp-folder-picker-shade").fadeOut(100); //.css("display", "none");
-						jQuery(".shortpixel-modal.modal-folder-picker").addClass('shortpixel-hide');
-            jQuery(".shortpixel-modal.modal-folder-picker").hide();
-        });
-        jQuery(".shortpixel-modal input.select-folder").on('click', function(e){
-            //var subPath = jQuery("UL.jqueryFileTree LI.directory.selected A").attr("rel").trim();
-
-            // @todo This whole thing might go, since we don't display files anymore in folderTree.
-
-            // check if selected item is a directory. If so, we are good.
-            var selected = jQuery('UL.jqueryFileTree LI.directory.selected');
-
-            // if not a file might be selected, check the nearest directory.
-            if (jQuery(selected).length == 0 )
-              var selected = jQuery('UL.jqueryFileTree LI.selected').parents('.directory');
-
-            // fail-saif check if there is really a rel.
-            var subPath = jQuery(selected).children('a').attr('rel');
-
-            if (typeof subPath === 'undefined') // nothing is selected
-              return;
-
-            subPath = subPath.trim();
-
-            if(subPath) {
-                var fullPath = jQuery("#customFolderBase").val() + subPath;
-                fullPath = fullPath.replace(/\/\//,'/');
-              //  console.debug('FullPath' + fullPath);
-                jQuery("#addCustomFolder").val(fullPath);
-                jQuery("#addCustomFolderView").val(fullPath);
-                jQuery(".sp-folder-picker-shade").fadeOut(100);
-                jQuery(".shortpixel-modal.modal-folder-picker").css("display", "none");
-                jQuery('#saveAdvAddFolder').removeClass('hidden');
-            } else {
-                alert("Please select a folder from the list.");
-            }
-        });
-    }
-*/
-
-
     // used in bulk restore all interface
     function checkRandomAnswer(e)
     {
@@ -607,7 +531,6 @@ var ShortPixel = function() {
         }
 
     }
-
 
     function openImageMenu(e) {
             e.preventDefault();
@@ -760,7 +683,6 @@ var ShortPixel = function() {
         percentDial         : percentDial,
       //  initFolderSelector  : initFolderSelector,
         browseContent       : browseContent,
-        getBackupSize       : getBackupSize,
         newApiKey           : newApiKey,
         proposeUpgrade      : proposeUpgrade,
         closeProposeUpgrade : closeProposeUpgrade,

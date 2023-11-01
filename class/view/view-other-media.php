@@ -28,6 +28,7 @@ $this->loadView('custom/part-othermedia-top');
      <option><?php _e('Bulk Actions', 'shortpixel-image-optimiser'); ?></option>
      <option value='optimize'><?php _e('Optimize','shortpixel-image-optimiser'); ?></option>
      <option value='restore'><?php _e('Restore', 'shortpixel-image-optimiser'); ?></option>
+     <option value="mark-completed"><?php _e('Mark completed', 'shortpixel-image-optimiser'); ?></option>
    </select> <button class='button' type='button' name='doBulkAction'><?php _e('Apply', 'shortpixel-image-optimiser'); ?></button>
   </span>
 
