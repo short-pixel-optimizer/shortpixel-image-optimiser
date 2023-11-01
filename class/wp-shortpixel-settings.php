@@ -148,7 +148,8 @@ class WPShortPixelSettings extends \ShortPixel\Model {
 				{
         	delete_option(self::$_optionsMap['removeSettingsOnDeletePlugin']['key']);
 				}
-        // Dismissed now via Notices Controller.
+
+        
 
     }
 

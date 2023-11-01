@@ -723,7 +723,6 @@ class AjaxController
 					}
 
 					$json->folder->message = $message;
-
 			}
 
 
