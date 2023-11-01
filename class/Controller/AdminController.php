@@ -179,6 +179,32 @@ class AdminController extends \ShortPixel\Controller
 				}
 		}
 
+    public function scanCustomFoldersHook($args = array() )
+    {
+      $defaults = array(
+        'force' => false,
+        'wait' => 3,
+      );
+
+      $args = wp_parse_args($args, $defaults);
+
+      $otherMediaController = OtherMediaController::getInstance();
+
+      $running = true;
+
+      while (true === $running)
+      {
+        $result = $otherMediaController->doNextRefreshableFolder($args);
+        if (false === $result) // stop on false return. 
+        {
+           $running = false;
+        }
+        sleep($args['wait']);
+
+      }
+
+    }
+
 		// WP functions that are not loaded during Cron Time.
 		protected function loadCronCompat()
 		{

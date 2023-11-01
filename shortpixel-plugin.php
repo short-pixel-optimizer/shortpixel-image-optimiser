@@ -159,6 +159,7 @@ class ShortPixelPlugin {
 
 		// Action / hook for who wants to use CRON. Please refer to manual / support to prevent loss of credits.
 		add_action( 'shortpixel/hook/processqueue', array( $admin, 'processQueueHook' ) );
+		add_action( 'shortpixel/hook/scancustomfolders', array($admin, 'scanCustomFoldersHook'));
 
 		// Action for media library gallery view
 		//add_filter('attachment_fields_to_edit', array($admin, 'editAttachmentScreen'), 10, 2);

@@ -329,7 +329,6 @@ class DirectoryOtherMediaModel extends DirectoryModel
       $this->save();
 
       $stats['new'] = $stats['total'] - $total_before;
-      Log::addTemp('Stats', $stats);
 
       return $stats;
   }
