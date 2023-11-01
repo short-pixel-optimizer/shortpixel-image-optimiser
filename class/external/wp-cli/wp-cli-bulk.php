@@ -143,10 +143,8 @@ class SpioBulk extends SpioCommandBase
 							}
 
 				}
-
-
+        
 				\WP_CLI::log('Automatic Bulk ended');
-				$this->status($args, $assoc);
 		}
 
 	 /**

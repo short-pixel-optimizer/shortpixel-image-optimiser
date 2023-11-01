@@ -346,7 +346,6 @@ class SpioCommandBase
 
 				$this->last_combinedStatus = $combinedStatus;
 
-      //  if ($mediaResult->status !==)
       return true;
     }
 
