@@ -73,6 +73,8 @@
   .thumbs-todo
   {
      position: relative;
+     float: left; // this all because inline-block doesn't play nice in media library, while in custom it overlaps the burger menu
+    clear: left;
      span {
          display: none;
       }
