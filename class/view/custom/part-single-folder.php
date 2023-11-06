@@ -15,15 +15,17 @@ $item = $this->view->current_item;
 
 $folder_id = $item->get('id');
 
-$type_display = ($item->get('is_nextgen') ) ? __('Nextgen', 'shortpixel-image-optimiser') . ":" : "";
+$type_display =   ($item->get('is_nextgen') ) ? __('Nextgen', 'shortpixel-image-optimiser') : __('Custom Media', 'shortpixel-image-optimiser');
 $stat = $item->getStats();
 
 
-$fullstatus = esc_html__("Optimized",'shortpixel-image-optimiser') . ": " . $stat['optimized'] . ", "
-      . " " . esc_html__("Waiting",'shortpixel-image-optimiser') . ": " . $stat['waiting'] . ""
+$fullstatus = esc_html__("Optimized",'shortpixel-image-optimiser') . ": " . $stat['optimized'] . "\n"
+      . "" . esc_html__("Unoptimized",'shortpixel-image-optimiser') . ": " . $stat['waiting'] . "\n"
       ;
+//$fullstatus .= ($item->get('is_nextgen') ) ? __('Nextgen', 'shortpixel-image-optimiser') : "";
 
 
+/*
 if ($stat['total'] == 0)
 {
   $optimize_status = __("Empty",'shortpixel-image-optimiser');
@@ -41,6 +43,8 @@ else
 {
   $optimize_status = __("Waiting",'shortpixel-image-optimiser');
 }
+*/
+
 
 //	$action =  __("Stop monitoring",'shortpixel-image-optimiser');
 
@@ -86,14 +90,16 @@ if ($item->get('is_nextgen') && $view->settings->includeNextGen == 1)
 
     </span>
     <span>
-        <?php if(!($stat['total'] == 0)) { ?>
-        <span title="<?php echo esc_attr($fullstatus); ?>" class='info-icon'>
-            <img alt='<?php esc_html_e('Info Icon', 'shortpixel-image-optimiser') ?>' src='<?php echo esc_url( wpSPIO()->plugin_url('res/img/info-icon.png' ));?>' style="margin-bottom: -2px;"/>
-        </span>&nbsp;<?php  }
-        echo esc_html($type_display. ' ' . $optimize_status . $err);
-        ?>
+        <?php echo $type_display; ?>
     </span>
     <span>
+
+        <span title="<?php echo esc_attr($fullstatus); ?>" class='info-icon'>
+            <img alt='<?php esc_html_e('Info Icon', 'shortpixel-image-optimiser') ?>' src='<?php echo esc_url( wpSPIO()->plugin_url('res/img/info-icon.png' ));?>' style="margin-bottom: -2px;"/>
+        </span>&nbsp;<?php
+        //echo esc_html($type_display. ' ' );
+        ?>
+
         <span class='files-number'><?php
           echo esc_html($stat['optimized']);
           echo '/';

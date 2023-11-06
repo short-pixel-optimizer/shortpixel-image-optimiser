@@ -53,9 +53,10 @@ $this->loadView('custom/part-othermedia-top');
 <div class='list-overview'>
 	<div class='heading'>
 		<?php foreach($this->view->headings as $hname => $heading):
-				$isSortable = $heading['sortable'];
+
+          $title_context = (isset($heading['title_context'])) ? ' title="'. esc_attr($heading['title_context']) . '"' : '';
 		?>
-			<span class='heading <?php echo esc_attr($hname) ?>'>
+			<span class='heading <?php echo esc_attr($hname);?>' <?php echo $title_context ?> >
 					<?php echo $this->getDisplayHeading($heading); ?>
 			</span>
 

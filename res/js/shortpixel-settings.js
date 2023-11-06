@@ -536,7 +536,7 @@ this.NewExclusionButtonAdd = function(element)
 		 var newElement = document.createElement('li');
 		 var inputElement = document.createElement('input');
 
-		 var newIndexInput = document.querySelector('.exclude-list input[name="new-index"]');
+		 var newIndexInput = document.getElementById('new-exclusion-index');
 		 var newIndex = parseInt(newIndexInput.value) + 1;
 		 newIndexInput.value = newIndex;
 

@@ -22,7 +22,6 @@ class PNGConverter extends MediaLibraryConverter
 
     protected $current_image; // The current PHP image resource in memory
 		protected $virtual_filesize;
-		protected $newFile; // The newFile Object.
 		protected $replacer; // Replacer class Object.
 
 		protected $converterActive = false;

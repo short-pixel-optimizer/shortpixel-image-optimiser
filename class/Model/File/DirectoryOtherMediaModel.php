@@ -89,7 +89,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
 			if (is_null(self::$stats))
 			{
 				global $wpdb;
-			 	$sql = 'SELECT SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) optimized, SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END) waiting, count(*) total, folder_id FROM  ' . $wpdb->prefix . 'shortpixel_meta GROUP BY folder_id';
+			 	$sql = 'SELECT SUM(CASE WHEN status = 2 OR status = -11 THEN 1 ELSE 0 END) optimized, SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END) waiting, count(*) total, folder_id FROM  ' . $wpdb->prefix . 'shortpixel_meta GROUP BY folder_id';
 
 				$result = $wpdb->get_results($sql, ARRAY_A);
 
