@@ -570,6 +570,8 @@ this.NewExclusionButtonAdd = function(element)
 
 		 this.ResetExclusionInputs();
 		 this.HideExclusionInterface();
+		 this.ShowExclusionSaveWarning();
+
 
 }
 
@@ -680,7 +682,17 @@ this.UpdateExclusion = function()
 	}
 
 	this.HideExclusionInterface();
+	this.ShowExclusionSaveWarning();
 
+}
+
+this.ShowExclusionSaveWarning = function()
+{
+	  var reminder = document.querySelector('.exclusion-save-reminder');
+		if (reminder)
+		{
+			 reminder.classList.remove('hidden');
+		}
 }
 
 this.RemoveExclusion = function()
@@ -696,6 +708,8 @@ this.RemoveExclusion = function()
 		 }
 
 		 this.HideExclusionInterface();
+		 this.ShowExclusionSaveWarning();
+
 }
 
  	this.Init();

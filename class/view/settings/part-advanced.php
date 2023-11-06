@@ -528,7 +528,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 ?>
 
-			</div>
+</div> <!-- option-content -->
 
 					  <div class='new-exclusion not-visible'>
                 <input type="hidden" name="edit-exclusion" value="">
@@ -631,7 +631,9 @@ if ( ! defined( 'ABSPATH' ) ) {
                   </button>
 
 								</div>
-							</div>
+							</div> <!-- new exclusion -->
+
+              <p class='exclusion-save-reminder hidden'><?php _e('Reminder: Save the settings for the exclusion changes take effect', 'shortpixel-image-optimiser'); ?></p>
 
                 </td>
             </tr> <!--- exclusions -->

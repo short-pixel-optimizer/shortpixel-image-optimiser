@@ -519,6 +519,10 @@
 #shortpixel-settings-tabs #tab-adv-settings .new-exclusion .thumbnail-option:not(.not-visible):hover {
   color: #000;
 }
+#shortpixel-settings-tabs #tab-adv-settings .exclusion-save-reminder {
+  margin: 10px 0;
+  font-weight: 500;
+}
 #shortpixel-settings-tabs #tab-adv-settings .avifNoticeDisabled {
   padding: 12px 12px;
   line-height: 26px;
