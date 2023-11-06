@@ -36,6 +36,10 @@
   color: #23282d;
   font-size: 14px;
 }
+.shortpixel-other-media .custom-media-tabs a:focus {
+  border: 0;
+  text-decoration: none;
+}
 .shortpixel-other-media .custom-media-tabs a.selected {
   background: #fff;
 }
@@ -242,6 +246,10 @@
 .shortpixel-other-media .scan-area .not-visible {
   visibility: hidden !important;
   opacity: 0 !important;
+}
+.shortpixel-other-media .scan-area .scan-help {
+  max-width: 750px;
+  border-top: 1px solid #ccc;
 }
 
 /*# sourceMappingURL=shortpixel-othermedia.css.map */

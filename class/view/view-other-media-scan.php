@@ -13,7 +13,6 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
-
 // phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
 if ( isset($_GET['noheader']) ) {
     require_once(ABSPATH . 'wp-admin/admin-header.php');
@@ -35,9 +34,9 @@ if ( isset($_GET['noheader']) ) {
 
 		<div class='action-scan'>
 			<button type="button" name="scan" class='scan-button button button-primary'>
-				<?php _e('Update all folders', 'shortpixel-image-optimiser'); ?>
+				<?php _e('Refresh all folders', 'shortpixel-image-optimiser'); ?>
 			</button>
-			<label><?php _e('Updates all folders from the last update known. This will be faster', 'shortpixel-image-optimiser'); ?>
+			<label><?php _e('Refresh all folders starting from last update time. This will be faster.', 'shortpixel-image-optimiser'); ?>
 			</label>
 		</div>
 
@@ -68,4 +67,13 @@ if ( isset($_GET['noheader']) ) {
 			</div>
   </div>
 
-</div>
+  <div class='scan-help'>
+    <p><?php printf(__('If new images are regularly added to your Custom Media folders from outside WordPress (e.g. via (S)FTP or SSH), you must manually click on "Refresh all folders" so that the new images are recognized and optimized. Alternatively, you can also set up a regular cron job as described in our %s Knowledge Base %s.', 'shortpixel-image-optimiser'),
+    '<a href="https://shortpixel.com/knowledge-base/article/543-how-to-schedule-a-cron-event-to-run-shortpixel-image-optimizer" target="_blank">', '</a>'
+    ); ?></p>
+  </div>
+
+
+</div> <!-- / scan-area -->
+
+</div> <!--- wrap from othermedia-top -->

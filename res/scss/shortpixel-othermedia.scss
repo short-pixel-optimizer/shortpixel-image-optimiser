@@ -43,6 +43,10 @@
 			 text-decoration: none;
 			 color: #23282d;
 			 font-size: 14px;
+       &:focus {
+          border: 0;
+          text-decoration: none;
+       }
 
 			 &.selected {
 				 background: #fff;
@@ -319,6 +323,12 @@
 				visibility:  hidden !important;
 				opacity: 0 !important;
 			}
-	 }
+
+      .scan-help
+      {
+         max-width: 750px;
+         border-top: 1px solid #ccc;
+      }
+	 } // scan-area
 
 } // shortpixel-other-media
