@@ -195,7 +195,7 @@ class AdminController extends \ShortPixel\Controller
       while (true === $running)
       {
         $result = $otherMediaController->doNextRefreshableFolder($args);
-        if (false === $result) // stop on false return. 
+        if (false === $result) // stop on false return.
         {
            $running = false;
         }
@@ -264,11 +264,15 @@ class AdminController extends \ShortPixel\Controller
   					    $where .= $wpdb->prepare($sql, MediaLibraryModel::IMAGE_TYPE_MAIN, ImageModel::FILE_STATUS_SUCCESS, MediaLibraryModel::IMAGE_TYPE_MAIN);
              break;
              case 'optimized':
-                $sql = " AND " . $wpdb->posts . '.ID in ( SELECT attach_id FROM ' . $tableName . " WHERE parent = %d and status = %d) ";
+                $sql = ' AND ' . $wpdb->posts . '.ID in ( SELECT attach_id FROM ' . $tableName . ' WHERE parent = %d and status = %d) ';
    					    $where .= $wpdb->prepare($sql, MediaLibraryModel::IMAGE_TYPE_MAIN, ImageModel::FILE_STATUS_SUCCESS);
              break;
              case 'prevented':
-                $sql = " AND " . $wpdb->posts . '.ID in ( SELECT post_id FROM ' . $wpdb->postmeta . " WHERE meta_key = %s) ";
+
+                $sql = sprintf('AND %s.ID in (SELECT post_id FROM %s WHERE meta_key = %%s)', $wpdb->posts, $wpdb->postmeta);
+
+                $sql .= sprintf(' AND %s.ID not in ( SELECT attach_id FROM %s WHERE parent = 0 and status = %s)', $wpdb->posts, $tableName, ImageModel::FILE_STATUS_MARKED_DONE);
+
                 $where = $wpdb->prepare($sql, '_shortpixel_prevent_optimize');
             break;
         }

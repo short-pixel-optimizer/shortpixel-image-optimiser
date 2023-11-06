@@ -58,13 +58,22 @@ $this->loadView('custom/part-othermedia-top');
         <?php if (count($this->view->items) == 0) : ?>
           <div class='no-items'> <p>
             <?php
-            if ($this->search === false):
-							$folder_url = esc_url(add_query_arg('part', 'folders', $this->url));
 
-              printf(esc_html__('No images available. Go to %s Folders %s to configure additional folders to be optimized.','shortpixel-image-optimiser'), '<a href="'. esc_url($folder_url) . '">', '</a>');
-             else:
-               echo esc_html__('Your search query didn\'t result in any images. ', 'shortpixel-image-optimiser');
-            endif; ?>
+            if (true === $view->hasSearch)
+            {
+              echo esc_html__('Your search query didn\'t result in any images. ', 'shortpixel-image-optimiser');
+             }
+             elseif (true === $view->hasFilter )
+             {
+               printf(esc_html__('Filter didn\'t yield any results.  %s Show all Items %s ', 'shortpixel-image-optimiser'), "<a href='$this->url'>",'</a>');
+             }
+             else
+             {
+               $folder_url = esc_url(add_query_arg('part', 'folders', $this->url));
+
+               printf(esc_html__('No images available. Go to %s Folders %s to configure additional folders to be optimized.','shortpixel-image-optimiser'), '<a href="'. esc_url($folder_url) . '">', '</a>');
+
+             } ?>
           </p>
           </div>
 

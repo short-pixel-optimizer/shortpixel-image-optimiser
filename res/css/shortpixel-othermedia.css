@@ -37,8 +37,9 @@
   font-size: 14px;
 }
 .shortpixel-other-media .custom-media-tabs a:focus {
-  border: 0;
+  outline: none;
   text-decoration: none;
+  box-shadow: none;
 }
 .shortpixel-other-media .custom-media-tabs a.selected {
   background: #fff;

@@ -44,8 +44,9 @@
 			 color: #23282d;
 			 font-size: 14px;
        &:focus {
-          border: 0;
+          outline: none;
           text-decoration: none;
+          box-shadow: none;
        }
 
 			 &.selected {

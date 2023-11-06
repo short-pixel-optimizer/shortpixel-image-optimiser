@@ -33,6 +33,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
       protected $order;
       protected $orderby;
       protected $search;
+
 			protected $show_hidden = false;
 			protected $has_hidden_items = false;
 
@@ -63,6 +64,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
           $this->view->folders = $this->getItemFolders($this->view->items);
           $this->view->headings = $this->getHeadings();
           $this->view->pagination = $this->getPagination();
+
           $this->view->filter = $this->getFilter();
 
 					$this->view->title = __('Custom Media optimized by ShortPixel', 'shortpixel-image-optimiser');
@@ -184,9 +186,14 @@ class OtherMediaViewController extends \ShortPixel\ViewController
       protected function getFilter() {
           $filter = array();
 
+          $this->view->hasFilter = false;
+          $this->view->hasSearch = false;
+
 					// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
 					$search = (isset($_GET['s'])) ? sanitize_text_field(wp_unslash($_GET['s'])) : '';
           if(strlen($search) > 0) {
+
+            $this->view->hasSearch = true;
 						// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
               $filter['path'] = (object)array("operator" => "like", "value" =>"'%" . esc_sql($search) . "%'");
           }
@@ -194,6 +201,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 				  $folderFilter =  (isset($_GET['folder_id'])) ? intval($_GET['folder_id']) : false;
 					if (false !== $folderFilter)
 					{
+              $this->view->hasFilter = true;
 						  $filter['folder_id'] = (object)array("operator" => "=", "value" =>"'" . esc_sql($folderFilter) . "'");
 					}
 
@@ -202,6 +210,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 					{
               $operator = '=';
               $value = false;
+              $this->view->hasFilter = true;
 
               switch($statusFilter)
               {
@@ -212,13 +221,21 @@ class OtherMediaViewController extends \ShortPixel\ViewController
                      $value = ImageModel::FILE_STATUS_UNPROCESSED;
                  break;
                  case 'prevented':
-                      $value = 0;
-                      $operator = '<';
+                    //  $value = 0;
+                    //  $operator = '<';
+                    $filter['status'] = (object) array('field' => 'status',
+                      'operator' => "<", 'value' => "0");
+
+                    $filter['status2'] = (object) array('field' => 'status',
+                      'operator' => '<>', 'value' => ImageModel::FILE_STATUS_MARKED_DONE
+                  );
+
                  break;
               }
               if (false !== $value)
               {
 						        $filter['status'] = (object)array("operator" => $operator, "value" =>"'" . esc_sql($value) . "'");
+
               }
 					}
 
@@ -251,6 +268,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
           $sql = "SELECT COUNT(id) as count FROM " . $wpdb->prefix . "shortpixel_meta where folder_id in ( " . $dirs  . ") ";
 
           foreach($filters as $field => $value) {
+              $field  = property_exists($value, 'field')  ? $value->field : $field;
               $sql .= " AND $field " . $value->operator . " ". $value->value . " ";
           }
 
@@ -259,6 +277,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
           $sql = "SELECT * FROM " . $wpdb->prefix . "shortpixel_meta where folder_id in ( " . $dirs  . ") ";
 
           foreach($filters as $field => $value) {
+              $field  = property_exists($value, 'field')  ? $value->field : $field;
               $sql .= " AND $field " . $value->operator . " ". $value->value . " ";
           }
 
