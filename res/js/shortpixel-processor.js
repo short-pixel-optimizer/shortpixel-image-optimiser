@@ -76,6 +76,7 @@ window.ShortPixelProcessor =
 
         this.isBulkPage = ShortPixelProcessorData.isBulkPage;
         this.localSecret = localStorage.getItem('bulkSecret');
+
         this.remoteSecret = ShortPixelProcessorData.bulkSecret;
 				this.debugIsActive = ShortPixelProcessorData.debugIsActive;
 
@@ -177,6 +178,7 @@ window.ShortPixelProcessor =
       }
       return this.isActive;
     },
+
     RecheckProcessor: function()
     {
         var data = {
@@ -201,7 +203,13 @@ window.ShortPixelProcessor =
 
         if (true === data.status)
         {
-            this.remoteSecret = data.processorKey;
+            if (typeof data.processorKey !== 'undefined')
+            {
+              this.remoteSecret = data.processorKey;
+            }
+            else { // this happens when it's released, but client doens't have a localsecret, the remotesecret is not returned by request. Set to null and go probably should work in all cases.
+              this.remoteSecret = null;
+            }
             var bool = this.CheckActive();
             if (true === bool)
             {

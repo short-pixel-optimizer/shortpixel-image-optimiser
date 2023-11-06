@@ -166,7 +166,7 @@ class AjaxController
     }
 
 		/** Ajax function to recheck if something can be active. If client is doens't have the processor key, it will check later if the other client is 'done' or went away. */
-		public function recheckActive()
+		protected function recheckActive()
 		{
 			// If not processor, this ends the processing and sends JSON.
 			$this->checkProcessorKey();

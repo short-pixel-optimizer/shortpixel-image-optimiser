@@ -52,7 +52,10 @@ var ShortPixelSettings = function()
 
 			 var exclusionItems = document.querySelectorAll('.exclude-list li');
 			exclusionItems.forEach(function (input) {
-					input.addEventListener('click', self.NewExclusionShowInterfaceEvent.bind(self));
+				  if (false == input.classList.contains('no-exclusion-item'))
+					{
+						input.addEventListener('click', self.NewExclusionShowInterfaceEvent.bind(self));
+					}
 			});
 
 

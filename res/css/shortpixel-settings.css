@@ -441,6 +441,9 @@
   color: #fff;
   cursor: pointer;
 }
+#shortpixel-settings-tabs #tab-adv-settings ul.exclude-list li.no-exclusion-item {
+  cursor: default;
+}
 #shortpixel-settings-tabs #tab-adv-settings ul.exclude-list li span {
   margin-left: 6px;
 }

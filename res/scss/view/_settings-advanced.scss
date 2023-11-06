@@ -31,6 +31,10 @@
 					margin: 8px 8px 0 0;
 					color: #fff;
 					cursor: pointer;
+					&.no-exclusion-item
+					{
+						 cursor: default;
+					}
 					span {
 						margin-left: 6px;
 

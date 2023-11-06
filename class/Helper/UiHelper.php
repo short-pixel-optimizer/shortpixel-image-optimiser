@@ -436,8 +436,7 @@ class UiHelper
        $actions['optimize'] = self::getAction('optimize', $id);
        $actions['markCompleted']  = self::getAction('markCompleted', $id);
     }
-    /* @TODO This is off for now because imageModel doesn't know what URLs to actually send on this exclusions! */
-    elseif ($mediaItem->isUserExcluded())
+    elseif ($mediaItem->isUserExcluded() && false == $mediaItem->isSomethingOptimized())
     {
       $actions['optimize'] = self::getAction('forceOptimize', $id);
 //      $actions['optimize']['text'] = __('Manual Optimize', 'shortpixel-image-optimiser');
