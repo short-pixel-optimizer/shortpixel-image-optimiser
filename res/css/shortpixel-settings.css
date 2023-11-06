@@ -439,12 +439,10 @@
   border-radius: 8px;
   margin: 8px 8px 0 0;
   color: #fff;
+  cursor: pointer;
 }
 #shortpixel-settings-tabs #tab-adv-settings ul.exclude-list li span {
   margin-left: 6px;
-}
-#shortpixel-settings-tabs #tab-adv-settings ul.exclude-list li span.dashicons-remove {
-  cursor: pointer;
 }
 #shortpixel-settings-tabs #tab-adv-settings ul.exclude-list li.has-error {
   background: #ff0000;

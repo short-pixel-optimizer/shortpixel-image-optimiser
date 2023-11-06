@@ -498,7 +498,13 @@ if ( ! defined( 'ABSPATH' ) ) {
             $title = '';
             if ('selected-thumbs' == $apply)
             {
-               $title = 'title="' . implode(',', $thumblist) . '"';
+               $thumbTitles = array();
+               foreach($thumblist as $thumbName)
+               {
+                  $thumb = $view->allThumbSizes[$thumbName];
+                  $thumbTitles[] = (isset($thumb['nice-name'])) ? $thumb['nice-name'] : $thumbName;
+               }
+               $title = 'title="' . implode(', ', $thumbTitles) . '"';
             }
 
 

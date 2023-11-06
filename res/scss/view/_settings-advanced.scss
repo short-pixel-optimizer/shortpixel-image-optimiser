@@ -30,11 +30,10 @@
 					border-radius: 8px;
 					margin: 8px 8px 0 0;
 					color: #fff;
+					cursor: pointer;
 					span {
 						margin-left: 6px;
-						&.dashicons-remove {
-							cursor: pointer;
-						}
+
 					}
 					&.has-error {
 						background: #ff0000;
