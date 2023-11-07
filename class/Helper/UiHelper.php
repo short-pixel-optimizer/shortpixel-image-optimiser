@@ -435,15 +435,14 @@ class UiHelper
        $actions['extendquota'] = self::getAction('extendquota', $id);
        $actions['checkquota'] = self::getAction('checkquota', $id);
     }
-    elseif($mediaItem->isProcessable() && ! $mediaItem->isOptimized() && ! $mediaItem->isOptimizePrevented() && ! $optimizeController->isItemInQueue($mediaItem))
+    elseif($mediaItem->isProcessable() && ! $mediaItem->isSomethingOptimized() && ! $mediaItem->isOptimizePrevented() && ! $optimizeController->isItemInQueue($mediaItem))
     {
        $actions['optimize'] = self::getAction('optimize', $id);
        $actions['markCompleted']  = self::getAction('markCompleted', $id);
     }
-    elseif ($mediaItem->isUserExcluded() && false == $mediaItem->isSomethingOptimized())
+    elseif ($mediaItem->isUserExcluded() && false === $mediaItem->isSomethingOptimized())
     {
       $actions['optimize'] = self::getAction('forceOptimize', $id);
-//      $actions['optimize']['text'] = __('Manual Optimize', 'shortpixel-image-optimiser');
     }
 
 
