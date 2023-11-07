@@ -344,6 +344,18 @@
 .settings_page_wp-shortpixel-settings section.banner .image {
   flex: 1;
 }
+.settings_page_wp-shortpixel-settings section.banner .image a {
+  display: inline-block;
+  outline: none;
+  border: 0;
+  text-decoration: none;
+}
+.settings_page_wp-shortpixel-settings section.banner .image a:focus {
+  box-shadow: none;
+}
+.settings_page_wp-shortpixel-settings section.banner .image img {
+  width: 200px;
+}
 .settings_page_wp-shortpixel-settings section.banner .line {
   flex: 3;
 }
@@ -355,10 +367,10 @@
 }
 .settings_page_wp-shortpixel-settings section.banner .button-wrap .button {
   background: #ff0000;
-  padding: 8px;
+  padding: 4px;
   font-weight: 700;
   font-size: 20px;
-  margin: 8px;
+  margin: 12px;
   color: #fff;
   text-transform: uppercase;
 }
