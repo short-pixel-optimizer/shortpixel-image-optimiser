@@ -92,17 +92,21 @@ class UiHelper
     if ($imageObj->get('thumbnails'))
     {
       $thumbsTotal = count($imageObj->get('thumbnails'));  //
-      $thumbsDone =  (isset($improvements['thumbnails'])) ? count($improvements['thumbnails']) : 0;
+      //$thumbsDone =  (isset($improvements['thumbnails'])) ? count($improvements['thumbnails']) : 0;
+      $thumbsDone = $imageObj->count('optimized', array('thumbs_only' => true));
+      $excludedThumbs = $imageObj->count('user_excluded', array('thumbs_only' => true));
     }
 
     if (isset($improvements['thumbnails']))
     {
+       $excluded = ($excludedThumbs > 0) ? sprintf(__('(%s excluded)', 'shortpixel-image-optimiser'), $excludedThumbs) : '';
 
        $output .= '<div class="thumbnails optimized">';
        if ($thumbsTotal > $thumbsDone)
-         $output .= '<div class="totals">' . sprintf(__('+%s of %s thumbnails optimized','shortpixel-image-optimiser'), self::formatNumber($thumbsDone,0), self::formatNumber($thumbsTotal,0)) . '</div>';
+         $output .= '<div class="totals">' . sprintf(__('+%s of %s thumbnails optimized','shortpixel-image-optimiser'), self::formatNumber($thumbsDone,0), self::formatNumber($thumbsTotal,0)) . ' ' .   $excluded . '</div>';
+
        elseif ($thumbsDone > 0)
-         $output .= '<div class="totals">' . sprintf(__('+%s thumbnails optimized','shortpixel-image-optimiser'), self::formatNumber($thumbsDone, 0)) . '</div>';
+         $output .= '<div class="totals">' . sprintf(__('+%s thumbnails optimized','shortpixel-image-optimiser'), self::formatNumber($thumbsDone, 0)) . ' ' . $excluded . '</div>';
 
 			 $improvs = array();
 

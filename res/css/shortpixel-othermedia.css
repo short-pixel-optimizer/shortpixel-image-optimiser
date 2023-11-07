@@ -171,6 +171,9 @@
   display: inline-block;
   position: relative;
 }
+.shortpixel-other-media .list-overview .item .sp-column-info .thumbs-todo {
+  display: inline-block;
+}
 @media (max-width: 1550px) {
   .shortpixel-other-media .list-overview .item .sp-column-info {
     width: auto;

@@ -255,6 +255,11 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     // Function to check if the reason it won't process is because user did some setting
     public function isUserExcluded()
     {
+      if (is_null($this->processable_status))
+      {
+         $this->isProcessable();
+      }
+
         $reasons = array(
             self::P_EXCLUDE_PATH,
             self::P_EXCLUDE_SIZE,

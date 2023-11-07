@@ -229,16 +229,21 @@
            display: inline-block;
 					 position: relative;
 
+           .thumbs-todo
+           {
+             display: inline-block;
+           }
+
            @media(max-width: 1550px) {
                width: auto;
            }
 					 .sp-column-actions
 					 {
 						  position: relative;
-					//	z-index: 2;
-				//			right: 15px;
 							top: 0;
+
 					 }
+
          }
       }
       @media(max-width: 1250px)
@@ -272,7 +277,7 @@
           font-size: 14px;
         }
       }
-   }
+   } // list-overview
 
 	 // Scan Tab
 	 .scan-area

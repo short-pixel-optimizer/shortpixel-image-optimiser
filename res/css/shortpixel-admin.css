@@ -184,8 +184,6 @@
 }
 .sp-column-info .thumbs-todo {
   position: relative;
-  float: left;
-  clear: left;
 }
 .sp-column-info .thumbs-todo span {
   display: none;

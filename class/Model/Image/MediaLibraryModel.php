@@ -534,12 +534,20 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   }
 
   // @todo Needs unit test.
-  public function count($type)
+  public function count($type, $args = array())
   {
+      $defaults = array(
+        'thumbs_only' => false,
+      );
+
+      $args = wp_parse_args($args, $defaults);
+
+      $count = 0;
+
       switch($type)
       {
          case 'thumbnails' :
-           $count = count($this->thumbnails);
+           $count = count($this->get('thumbnails'));
          break;
          case 'webps':
             $count = count(array_unique($this->getWebps()));
@@ -550,6 +558,39 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
          case 'retinas':
            $count = count(array_unique($this->getRetinas()));
          break;
+
+         case 'optimized':
+            if (false === $args['thumbs_only'] && $this->isOptimized() )
+            {
+                $count++;
+            }
+
+            foreach($this->get('thumbnails') as $name => $object)
+            {
+               if ($object->isOptimized())
+               {
+                  $count++;
+               }
+            }
+
+         break;
+         case 'user_excluded':
+
+             if (false === $args['thumbs_only'] && $this->isUserExcluded() )
+             {
+                 $count++;
+             }
+
+             foreach($this->get('thumbnails') as $name => $object)
+             {
+                if ($object->isUserExcluded())
+                {
+                   $count++;
+                }
+             }
+
+         break;
+
       }
 
       return $count;
