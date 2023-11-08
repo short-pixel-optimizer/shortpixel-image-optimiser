@@ -343,6 +343,7 @@
 }
 .settings_page_wp-shortpixel-settings section.banner .image {
   flex: 1;
+  text-align: right;
 }
 .settings_page_wp-shortpixel-settings section.banner .image a {
   display: inline-block;
@@ -354,20 +355,21 @@
   box-shadow: none;
 }
 .settings_page_wp-shortpixel-settings section.banner .image img {
-  width: 200px;
+  width: 180px;
 }
 .settings_page_wp-shortpixel-settings section.banner .line {
-  flex: 3;
+  flex: 2;
 }
 .settings_page_wp-shortpixel-settings section.banner .line h3 {
   color: #00d0e5;
 }
 .settings_page_wp-shortpixel-settings section.banner .button-wrap {
-  flex: 2;
+  flex: 1;
+  text-align: left;
 }
 .settings_page_wp-shortpixel-settings section.banner .button-wrap .button {
   background: #ff0000;
-  padding: 4px;
+  padding: 4px 12px;
   font-weight: 700;
   font-size: 20px;
   margin: 12px;
