@@ -401,7 +401,7 @@
   section.banner
   {
      width: 100%;
-     background-color: #dcfdff;
+     background-color: #fff;
      display: flex;
      align-items: center;
      border: 1px solid #ccc;
@@ -433,7 +433,11 @@
 		 }
      .line {
         flex: 2;
-        h3 { color: #00d0e5 };
+
+        h3 {
+					color: #00d0e5;
+					font-size: 22px;
+				};
 
      }
      .button-wrap

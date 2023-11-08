@@ -329,7 +329,7 @@
 }
 .settings_page_wp-shortpixel-settings section.banner {
   width: 100%;
-  background-color: #dcfdff;
+  background-color: #fff;
   display: flex;
   align-items: center;
   border: 1px solid #ccc;
@@ -362,6 +362,7 @@
 }
 .settings_page_wp-shortpixel-settings section.banner .line h3 {
   color: #00d0e5;
+  font-size: 22px;
 }
 .settings_page_wp-shortpixel-settings section.banner .button-wrap {
   flex: 1;
