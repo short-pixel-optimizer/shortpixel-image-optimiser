@@ -201,7 +201,7 @@ class FrontController extends \ShortPixel\Controller
       $fs = \wpSPIO()->filesystem();
 
       $raw_image = $match[0];
-      //echo "ConvertImage"; var_dump(htmlentities($raw_image));
+
       // Raw Image HTML
       $image = new FrontImage($raw_image);
 

@@ -1,6 +1,9 @@
 <?php
 namespace ShortPixel\Helper;
 
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+
+
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
@@ -44,6 +47,7 @@ class UtilHelper
 					$sizes[ $size ][ 'width' ] = intval( get_option( "{$size}_size_w" ) );
 					$sizes[ $size ][ 'height' ] = intval( get_option( "{$size}_size_h" ) );
 					$sizes[ $size ][ 'crop' ] = get_option( "{$size}_crop" ) ? get_option( "{$size}_crop" ) : false;
+          $sizes[ $size ][ 'nice-name'] = ucfirst($size);
 			}
 			if(function_exists('wp_get_additional_image_sizes')) {
 					$sizes = array_merge($sizes, wp_get_additional_image_sizes());
@@ -73,6 +77,74 @@ class UtilHelper
 				}
 			return $new_path;
 		}
+
+		public static function getExclusions($args = array())
+		{
+       $defaults = array(
+          'filter' => false,
+          'thumbname' => null,
+          'is_thumbnail' => false,
+          'is_custom' => false,
+       );
+
+       $args = wp_parse_args($args, $defaults);
+
+			 $patterns = \wpSPIO()->settings()->excludePatterns;
+       $matches = array();
+
+			 foreach($patterns as $index => $pattern)
+			 {
+				  if (! isset($pattern['apply']))
+					{
+						 $patterns[$index]['apply'] = 'all';
+					}
+
+          if (true === $args['filter'])
+          {
+             if (true === self::matchExclusion($patterns[$index], $args))
+             {
+               $matches[] = $pattern;
+             }
+          }
+			 }
+
+       if (true === $args['filter'])
+       {
+        return $matches;
+       }
+       else
+			    return $patterns;
+		}
+
+    protected static function matchExclusion($pattern, $options)
+    {
+      $apply = $pattern['apply'];
+      $thumblist = isset($pattern['thumblist']) ? $pattern['thumblist'] : array();
+      $bool = false;
+
+      if ($apply === 'all')
+      {
+        $bool = true;
+      }
+      elseif ($apply == 'only-thumbs' && true === $options['is_thumbnail'])
+      {
+         $bool = true;
+      }
+      elseif ($apply == 'only-custom' && true === $options['is_custom'])
+      {
+         $bool = true;
+      }
+      elseif (count($thumblist) > 0 && ! is_null($options['thumbname']))
+      {
+         $thumbname = $options['thumbname'];
+         if (in_array($thumbname, $thumblist))
+         {
+            $bool = true;
+         }
+      }
+      return $bool;
+    }
+
 
 		public static function alterHtaccess($webp = false, $avif = false)
 		{

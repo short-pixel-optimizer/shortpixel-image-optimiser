@@ -1,0 +1,68 @@
+.sp-folder-picker {
+  position: relative;
+  border: 1px solid #000;
+  margin: 8px 0;
+  max-height: 50vh;
+  overflow-y: scroll;
+}
+.sp-folder-picker .loading {
+  background: rgba(0, 0, 0, 0.4);
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+.sp-folder-picker .loading h3 {
+  font-size: 30px;
+  font-weight: bold;
+  left: 50%;
+  color: #fff;
+  text-align: center;
+}
+.sp-folder-picker ul {
+  margin-top: 8px;
+  margin-left: 35px;
+}
+.sp-folder-picker ul.expanded {
+  display: block;
+}
+.sp-folder-picker ul.collapsed {
+  display: none;
+}
+.sp-folder-picker .folder {
+  line-height: 20px;
+}
+.sp-folder-picker .folder i {
+  margin-right: 8px;
+  vertical-align: top;
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+}
+.sp-folder-picker .folder a {
+  cursor: pointer;
+  color: #000;
+}
+.sp-folder-picker .folder.selected > a {
+  font-weight: 700;
+}
+.sp-folder-picker .folder.closed > a > i {
+  background: url("../img/filebrowser/folder-closed.svg") center center;
+  background-repeat: no-repeat;
+  background-size: 20px 20px;
+  fill: #ff0000;
+}
+.sp-folder-picker .folder.open > a > i {
+  background: url("../img/filebrowser/folder-open.svg") center center;
+  background-repeat: no-repeat;
+  background-size: 20px 20px;
+}
+.sp-folder-picker .folder.is_active > a {
+  color: #ccc;
+}
+
+.modal-folder-picker .sp-folder-picker-selected {
+  display: inline-block;
+  padding: 6px 0;
+}
+
+/*# sourceMappingURL=shortpixel-folderbrowser.css.map */

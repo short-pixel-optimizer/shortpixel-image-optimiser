@@ -76,8 +76,14 @@ abstract class Queue
     * @param ImageModel $mediaItem An ImageModel (CustomImageModel or MediaLibraryModel) object
     * @return mixed
     */
-    public function addSingleItem(ImageModel $imageModel)
+    public function addSingleItem(ImageModel $imageModel, $args = array())
     {
+
+       $defaults = array(
+          'forceExclusion' => false,
+       );
+       $args = wp_parse_args($args, $defaults);
+
        $qItem = $this->imageModelToQueue($imageModel);
        $counts = $qItem->counts;
 
@@ -88,9 +94,16 @@ abstract class Queue
 				  $media_id = $imageModel->getParent();
 			 }
 
+       if (count($args) > 0)
+       {
+          $qItem->options = $args;
+       }
+
 			 $result = new \stdClass;
 
        $item = array('id' => $media_id, 'value' => $qItem, 'item_count' => $counts->creditCount);
+
+
        $this->q->addItems(array($item), false);
        $numitems = $this->q->withRemoveDuplicates()->enqueue(); // enqueue returns numitems
 
@@ -595,7 +608,6 @@ abstract class Queue
         if (! is_null($imageModel->getMeta('compressionType')) && is_numeric($imageModel->getMeta('compressionType')))
 				{
           $item->compressionType = $imageModel->getMeta('compressionType');
-
 				}
 
         // Former securi function, add timestamp to all URLS, for cache busting.

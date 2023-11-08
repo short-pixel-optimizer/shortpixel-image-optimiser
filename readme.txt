@@ -2,9 +2,9 @@
 Contributors: ShortPixel
 Tags: convert webp, optimize images, image optimization, resize, compressor, image, avif, compression, optimize, image optimiser, image compression, compress pdf, compress jpg, compress png, performance, photography, smush, scale, pictures
 Requires at least: 4.8.0
-Tested up to: 6.3
+Tested up to: 6.4
 Requires PHP: 5.6
-Stable tag: 5.4.3
+Stable tag: 5.5.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -328,6 +328,10 @@ add_filter('shortpixel/init/optimize_on_screens', function ($screens) {
 `add_filter('shortpixel/image/filecheck', function () { return true; });`
 This filter forces a file check for WebP/AVIF in case they were manually removed from disk.
 
+If you want to disable the automatic cache flush that is triggered after image optimization, you can use this filter:
+
+`add_filter( 'shortpixel/external/flush_cache', function() { return false; } );`
+
 In order to define custom thumbnails to be picked up by the optimization you have two options, both comma separated defines:
 
 `define('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES', '_tl,_tr');`
@@ -345,6 +349,10 @@ Enable the "Trusted mode" in case the file system has limitations and is very sl
 `define('SHORTPIXEL_TRUSTED_MODE', true);`
 
 This will simply skip file check operations and if the Media Library loads very slowly or freezes, you might want to try adding the constant above to your wp-config.php file.
+
+Disable the feedback survey when the plugin is deactivated:
+
+`define('SHORTPIXEL_SKIP_FEEDBACK', true);`
 
 Hide the Cloudflare settings by defining these constants in wp-config.php:
 
@@ -375,6 +383,23 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 5.5.0 =
+Release date: November 8, 2023
+* New: The Custom Media folders have been redesigned, more features have been added and everything has been moved to Media -> Custom Media;
+* New: The exclusions have been redesigned to provide a simpler and more flexible mechanism;
+* New: The ability to override exclusions and manually optimize excluded images has been added;
+* New: The ability to mark images as completed (optimized) has been added;
+* New: Added migration of optimization data to WP-CLI;
+* New: Added constant to disable the feedback survey when the plugin is deactivated;
+* Compat: Added proper validation and integration for the Swift AI plugin;
+* Compat: Added filter to suppress cache clearing for various cache plugins (useful for large websites);
+* Fix: If an image has been excluded, it can now be restored from the backup;
+* Fix: Envira and Soliloquy have been added to the list of pages where processing is performed automatically;
+* Fix: Websites with many Custom Media folders and/or NextGen galleries should no longer hang;
+* Fix: Added some checks and validations to avoid `open_basedir` warnings;
+* Fix: Updated wording and banners throughout the plugin;
+* Language: 94 new strings added, 3 updated, 5 fuzzed and 33 deprecated.
 
 = 5.4.3 =
 Release date: September 28, 2023

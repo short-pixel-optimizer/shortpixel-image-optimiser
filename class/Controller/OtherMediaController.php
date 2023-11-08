@@ -14,6 +14,8 @@ use ShortPixel\Model\File\DirectoryModel as DirectoryModel;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
 
 use ShortPixel\Helper\InstallHelper as InstallHelper;
+use ShortPixel\Helper\UtilHelper as UtilHelper;
+
 
 // Future contoller for the edit media metabox view.
 class OtherMediaController extends \ShortPixel\Controller
@@ -118,6 +120,7 @@ class OtherMediaController extends \ShortPixel\Controller
        return $folder;
     }
 
+
     public function getCustomImageByPath($path)
     {
          global $wpdb;
@@ -160,6 +163,16 @@ class OtherMediaController extends \ShortPixel\Controller
       return $result;
     }
 
+		public function showMenuItem()
+		{
+			  $settings = \wpSPIO()->settings();
+				if ( $settings->hideCustomMedia)
+				{
+					 return false;
+				}
+				return true;
+		}
+
 	   public function addDirectory($path)
     {
        $fs = \wpSPIO()->filesystem();
@@ -168,6 +181,7 @@ class OtherMediaController extends \ShortPixel\Controller
 			 // Check if this directory is allowed.
 			 if ($this->checkDirectoryRecursive($directory) === false)
 			 {
+         Log::addDebug('Check Recursive Directory not allowed');
 				 return false;
 			 }
 
@@ -210,7 +224,7 @@ class OtherMediaController extends \ShortPixel\Controller
 				 $subDirs = $directory->getSubDirectories();
 				 foreach($subDirs as $subDir)
 				 {
-					  if ($subDir->checkDirectory() === false)
+					  if ($subDir->checkDirectory(true) === false)
 						{
 							 return false;
 						}
@@ -262,41 +276,88 @@ class OtherMediaController extends \ShortPixel\Controller
 
     }
 
+		/* New structure for folder refresing based on checked value in database + interval.  Via Scan interface
+		*
+		* @param $args Array  ( force true / false )
+		* @return Array - Should return folder_id, folder_path, amount of new files / result / warning
+		*/
+		public function doNextRefreshableFolder($args = array())
+		{
+				$defaults = array(
+						'force' => false,
+						'interval' => apply_filters('shortpixel/othermedia/refreshfolder_interval', HOUR_IN_SECONDS),
+				);
 
-    /** Check directory structure for new files */
-    public function refreshFolders($force = false, $expires = null)
-    {
- 			// a little PHP 5.5. compat.
-			if (is_null($expires))
-			{
-				$expires = HOUR_IN_SECONDS;
-			}
+				$args = wp_parse_args($args, $defaults);
 
-			if (! $this->hasFoldersTable())
-				return false;
+				global $wpdb;
 
-			$this->cleanUp();
-      $customFolders = $this->getActiveFolders();
+				$folderTable = $this->getFolderTable();
 
-      $cache = new CacheController();
-      $refreshDelay = $cache->getItem('othermedia_refresh_folder_delay');
+				$tsInterval = UtilHelper::timestampToDB(time() - $args['interval']);
+				$sql = ' SELECT id FROM ' . $folderTable . '	WHERE status >= 0 AND (ts_checked <= %s OR ts_checked IS NULL)';
 
-      if ($refreshDelay->exists() && ! $force)
-      {
-        return true;
-      }
-      $refreshDelay->setExpires($expires);
-      $refreshDelay->save();
+				$sql = $wpdb->prepare($sql, $tsInterval);
 
-      foreach($customFolders as $directory) {
+				$folder_id = $wpdb->get_var($sql);
 
-				$stats = $directory->getStats();
-				$forcenow = ($force || $stats['total'] === 0) ? true : false;
-	      $directory->refreshFolder($forcenow);
-      } // folders
+				if (is_null($folder_id))
+				{
+					 return false;
+				}
 
-      return true;
-    }
+				$directoryObj = $this->getFolderByID($folder_id);
+
+				$old_count = $directoryObj->get('fileCount');
+
+				$return = array(
+					'folder_id' => $folder_id,
+					'old_count' => $old_count,
+					'new_count' => null,
+					'path' => $directoryObj->getPath(),
+					'message' => '',
+				);
+
+				// Always force here since last updated / interval is decided by interal on the above query
+				$result = $directoryObj->refreshFolder($args['force']);
+
+				if (false === $result)
+				{
+					 $directoryObj->set('checked', time()); // preventing loops here in case some wrong
+					 $directoryObj->save();
+
+					 // Probably should catch some notice here to return  @todo
+				}
+
+				$new_count = $directoryObj->get('fileCount');
+				$return['new_count'] = $new_count;
+
+				if ($old_count == $new_count)
+				{
+					 $message = __('No new files added', 'shortpixel-image-optimiser');
+				}
+				elseif ($old_count < $new_count)
+				{
+					$message = print_f(__(' %s files added', 'shortpixel-image-optimiser'), ($new_count-$old_count));
+				}
+				else {
+					$message = print_f(__(' %s files removed', 'shortpixel-image-optimiser'), ($old_count-$new_count));
+				}
+
+				$return['message'] = $message;
+
+				return $return;
+		}
+
+		public function resetCheckedTimestamps()
+		{
+				global $wpdb;
+				$folderTable = $this->getFolderTable();
+
+			  $sql = 'UPDATE ' . $folderTable . ' set ts_checked = NULL ';
+				$wpdb->query($sql);
+
+		}
 
 		/**
 		 * Function to clean the folders and meta from unused stuff
@@ -310,7 +371,6 @@ class OtherMediaController extends \ShortPixel\Controller
 			 // Remove folders that are removed, and have no images in MetaTable.
 			 $sql = " DELETE FROM $folderTable WHERE status < 0 AND id NOT IN ( SELECT DISTINCT folder_id FROM $metaTable)";
 			 $result = $wpdb->query($sql);
-
 
 		}
 
@@ -356,17 +416,21 @@ class OtherMediaController extends \ShortPixel\Controller
     }
 
 
-    public function ajaxBrowseContent()
+    public function browseFolder($postDir)
     {
+      $error = array('is_error' => true, 'message' => '');
+
       if ( ! $this->userIsAllowed )  {
-          wp_die(esc_html(__('You do not have sufficient permissions to access this page.','shortpixel-image-optimiser')));
+          $error['message'] = __('You do not have sufficient permissions to access this page.','shortpixel-image-optimiser');
+          return $error;
       }
+
       $fs = \wpSPIO()->filesystem();
       $rootDirObj = $fs->getWPFileBase();
       $path = $rootDirObj->getPath();
 
-			// @todo Add Nonce here
-      $postDir = isset($_POST['dir']) ? trim(sanitize_text_field(wp_unslash($_POST['dir']))) : null;
+      $folders = array();
+
       if (! is_null($postDir))
       {
          $postDir = rawurldecode($postDir);
@@ -382,10 +446,10 @@ class OtherMediaController extends \ShortPixel\Controller
       }
 
       $dirObj = $fs->getDirectory($path);
-
       if ($dirObj->getPath() !== $rootDirObj->getPath() && ! $dirObj->isSubFolderOf($rootDirObj))
       {
-        exit(esc_html(__('This directory seems not part of WordPress', 'shortpixel-image-optimiser')));
+        $error['message'] = __('This directory seems not part of WordPress', 'shortpixel-image-optimiser');
+        return $error;
       }
 
       if( $dirObj->exists() ) {
@@ -406,12 +470,14 @@ class OtherMediaController extends \ShortPixel\Controller
           }
 
           if( count($subdirs) > 0 ) {
-              echo "<ul class='jqueryFileTree'>";
+
+            //  echo "<ul class='jqueryFileTree'>";
               foreach($subdirs as $dir ) {
                   $returnDir = substr($dir->getPath(), strlen($rootDirObj->getPath())); // relative to root.
                   $dirpath = $dir->getPath();
                   $dirname = $dir->getName();
-                  // @todo Should in time be moved to othermedia_controller / check if media library
+
+                  $folderObj = $this->getFolderByPath($dirpath);
 
                   $htmlRel	= str_replace("'", "&apos;", $returnDir );
                   $htmlName	= htmlentities($dirname);
@@ -419,26 +485,44 @@ class OtherMediaController extends \ShortPixel\Controller
 
                   if( $dir->exists() ) {
                       //KEEP the spaces in front of the rel values - it's a trick to make WP Hide not replace the wp-content path
-                          echo "<li class='directory collapsed'><a rel=' " .esc_attr($htmlRel) . "'>" . esc_html($htmlName) . "</a></li>";
+                        //  echo "<li class='directory collapsed'><a rel=' " .esc_attr($htmlRel) . "'>" . esc_html($htmlName) . "</a></li>";
+                        $htmlRel = esc_attr($htmlRel);
+                       $folders[] = array(
+                          'relpath' => $htmlRel,
+                          'name' => esc_html($htmlName),
+                          'type' => 'folder',
+                          'is_active' => (true === $folderObj->get('in_db') && false === $folderObj->isRemoved()),
+                       );
                   }
 
               }
 
-              echo "</ul>";
+          //    echo "</ul>";
           }
           elseif ($_POST['dir'] == '/')
           {
-            echo "<ul class='jqueryFileTree'>";
+            $error['message'] = __('No Directories found that can be added to Custom Folders', 'shortpixel-image-optimiser');
+            return $error;
+            /*    echo "<ul class='jqueryFileTree'>";
             esc_html_e('No Directories found that can be added to Custom Folders', 'shortpixel-image-optimiser');
-            echo "</ul>";
+            echo "</ul>"; */
+          }
+          else {
+            $error['message'] = 'Nothing found';
+            return $error;
           }
       }
+      else {
+        $error['message'] = 'Dir not existing';
+        return $error;
+      }
 
-      die();
+      return $folders;
     }
 
     /* Get the custom Folders from DB, put them in model
     @return Array  Array database result
+    @todo Has been replaced by getItems in FoldersViewController
     */
     private function getFolders($args = array())
     {
@@ -448,6 +532,8 @@ class OtherMediaController extends \ShortPixel\Controller
           'remove_hidden' => true, // Query only active folders
           'path' => false,
           'only_count' => false,
+          'limit' => false,
+          'offset' => false,
       );
 
       $args = wp_parse_args($args, $defaults);
@@ -474,26 +560,18 @@ class OtherMediaController extends \ShortPixel\Controller
       {
           $sql .= ' AND id = %d';
           $prepare[] = $args['id'];
-          //$mask[] = '%d';
-          //$folders = $spMetaDao->getFolderByID($args['id']);
+
       }
       elseif($args['path'] !== false && strlen($args['path']) > 0)
       {
-          //$folders = $spMetaDao->getFolder($args['path']);
           $sql .= ' AND path = %s';
           $prepare[] = $args['path'];
-        //  $mask[] = $args['%s'];
-      }
-      else
-      {
-      //  $folders = $spMetaDao->getFolders();
       }
 
       if ($args['remove_hidden'])
       {
           $sql .= " AND status <> -1";
       }
-
 
       if (count($prepare) > 0)
         $sql = $wpdb->prepare($sql, $prepare);

@@ -16,63 +16,34 @@ if ( isset($_GET['noheader']) ) {
     require_once(ABSPATH . 'wp-admin/admin-header.php');
 }
 
+$this->loadView('custom/part-othermedia-top');
 
 ?>
-<div class="wrap shortpixel-other-media">
-    <h2>
-        <?php esc_html_e('Custom Media optimized by ShortPixel','shortpixel-image-optimiser');?>
-    </h2>
 
-    <div class='toolbar'>
-        <div>
-          <?php
-          $nonce = wp_create_nonce( 'refresh_folders' );
-          ?>
-            <a href="<?php echo esc_url(admin_url('upload.php?page=wp-short-pixel-custom&sp-action=action_refreshfolders&_wpnonce=' . $nonce)); ?>" id="refresh" class="button button-primary" title="<?php esc_attr_e('Refresh custom folders content','shortpixel-image-optimiser');?>">
-                <?php esc_attr_e('Refresh folders','shortpixel-image-optimiser');?>
-            </a>
-        </div>
-			<hr class='wp-header-end' />
 
-      <div class="searchbox">
-            <form method="get">
-                <input type="hidden" name="page" value="wp-short-pixel-custom" />
-                <input type='hidden' name='order' value="<?php echo esc_attr($this->order) ?>" />
-                <input type="hidden" name="orderby" value="<?php echo esc_attr($this->orderby) ?>" />
+<div class='extra-heading top'>
+  <span>&nbsp;</span>
+  <span>
+    <select name='bulk-actions'>
+     <option><?php _e('Bulk Actions', 'shortpixel-image-optimiser'); ?></option>
+     <option value='optimize'><?php _e('Optimize','shortpixel-image-optimiser'); ?></option>
+     <option value='restore'><?php _e('Restore', 'shortpixel-image-optimiser'); ?></option>
+     <option value="mark-completed"><?php _e('Mark completed', 'shortpixel-image-optimiser'); ?></option>
+   </select> <button class='button' type='button' name='doBulkAction'><?php _e('Apply', 'shortpixel-image-optimiser'); ?></button>
+  </span>
 
-                <p class="search-form">
-                  <label><?php esc_html_e('Search', 'shortpixel-image-optimiser'); ?></label>
-                  <input type="text" name="s" value="<?php echo esc_attr($this->search) ?>" />
+  <span class='custom-filter'>
+    <form method="get" action="<?php echo $this->url ?>" >
+      <input type='hidden' name='page' value='wp-short-pixel-custom'>
+    <?php $this->printFilter(); ?>
+     <button class='button' type='submit'><?php _e('Filter', 'shortpixel-image-optimiser'); ?></button>
+   </form>
+  </span>
 
-                </p>
-
-            </form>
-      </div>
-  </div>
-
-<?php if ($this->view->pagination !== false): ?>
-  <div class='pagination tablenav'>
-			<div class="view_switch">
-				<?php if ($this->has_hidden_items):
-
-					if ($this->show_hidden)
-					{
-						 printf('<a href="%s">%s</a>', esc_url(add_query_arg('show_hidden',false)), esc_html__('Back to normal items', 'shortpixel-image-optimiser'));
-					}
-					else
-					{
-						 printf('<a href="%s">%s</a>', esc_url(add_query_arg('show_hidden',true)), esc_html__('Show hidden items', 'shortpixel-image-optimiser'));
-					}
-
-		     endif; ?>
-			</div>
-      <div class='tablenav-pages'>
-        <?php echo $this->view->pagination; ?>
-    </div>
-  </div>
-<?php endif; ?>
-
+</div>
     <div class='list-overview'>
+
+
       <div class='heading'>
         <?php foreach($this->view->headings as $hname => $heading):
             $isSortable = $heading['sortable'];
@@ -87,11 +58,22 @@ if ( isset($_GET['noheader']) ) {
         <?php if (count($this->view->items) == 0) : ?>
           <div class='no-items'> <p>
             <?php
-            if ($this->search === false):
-              printf(esc_html__('No images available. Go to %s Advanced Settings %s to configure additional folders to be optimized.','shortpixel-image-optimiser'), '<a href="options-general.php?page=wp-shortpixel-settings&part=adv-settings">', '</a>');
-             else:
-               echo esc_html__('Your search query didn\'t result in any images. ', 'shortpixel-image-optimiser');
-            endif; ?>
+
+            if (true === $view->hasSearch)
+            {
+              echo esc_html__('Your search query didn\'t result in any images. ', 'shortpixel-image-optimiser');
+             }
+             elseif (true === $view->hasFilter )
+             {
+               printf(esc_html__('Filter didn\'t yield any results.  %s Show all Items %s ', 'shortpixel-image-optimiser'), "<a href='$this->url'>",'</a>');
+             }
+             else
+             {
+               $folder_url = esc_url(add_query_arg('part', 'folders', $this->url));
+
+               printf(esc_html__('No images available. Go to %s Folders %s to configure additional folders to be optimized.','shortpixel-image-optimiser'), '<a href="'. esc_url($folder_url) . '">', '</a>');
+
+             } ?>
           </p>
           </div>
 
@@ -103,11 +85,23 @@ if ( isset($_GET['noheader']) ) {
         foreach($this->view->items as $item):
 
 
-          ?>
+        ?>
 
         <div class='item item-<?php echo esc_attr($item->get('id')) ?>'>
             <?php
-            //  $itemFile = $fs->getFile($item->path);
+
+              $allActions = array_merge(UiHelper::getActions($item), UiHelper::getListActions($item));
+
+              $checkBoxActions = array();
+              if (array_key_exists('optimize', $allActions))
+              {
+                  $checkBoxActions[] = 'is-optimizable';
+              }
+              if (array_key_exists('restore', $allActions))
+              {
+                  $checkBoxActions[] = 'is-restorable';
+              }
+
               $filesize = $item->getFileSize();
               $display_date = $this->getDisplayDate($item);
               $folder_id = $item->get('folder_id');
@@ -120,7 +114,12 @@ if ( isset($_GET['noheader']) ) {
               $img_url = $fs->pathToUrl($item);
               $is_heavy = ($filesize >= 500000 && $filesize > 0);
 
+              $item_class = '';
+              if (count($checkBoxActions) > 0)
+              $item_class = ' class="' . implode(' ', $checkBoxActions) . '" ';
+
             ?>
+            <span><input type='checkbox' name='select[]' value="<?php echo $item->get('id'); ?>" <?php echo $item_class ?>/></span>
             <span><a href="<?php echo esc_attr($img_url); ?>" target="_blank">
                 <div class='thumb' <?php if($is_heavy)
 								{
@@ -130,10 +129,16 @@ if ( isset($_GET['noheader']) ) {
 							</div>
                 </a></span>
             <span class='filename'><?php echo esc_html($item->getFileName()) ?>
-                <div class="row-actions"><?php
-								if (isset($this->view->actions)):
+
+                <div class="row-actions">
+                  <span class='item-id'>#<?php echo esc_attr($item->get('id')); ?></span>
+
+                  <?php
+								if (isset($rowActions)):
 									$i = 0;
-								  foreach($this->view->actions as $actionName => $action):
+								  foreach($rowActions as $actionName => $action):
+
+
 								    $classes = ''; // ($action['display'] == 'button') ? " button-smaller button-primary $actionName " : "$actionName";
 								    $link = ($action['type'] == 'js') ? 'javascript:' . $action['function'] : $action['function'];
 										$newtab  = ($actionName == 'extendquota' || $actionName == 'view') ? 'target="_blank"' : '';
@@ -144,13 +149,10 @@ if ( isset($_GET['noheader']) ) {
 								   	<a href="<?php echo $link ?>" <?php echo esc_attr($newtab); ?> class="<?php echo $classes ?>"><?php echo $action['text'] ?></a>
 								    <?php
 										$i++;
-								  endforeach;
+								  endforeach;UiHelper::getActions($item);
 
 								endif;
-
-
                 ?>
-								<span class='item-id'>#<?php echo esc_attr($item->get('id')); ?></span>
 							</div>
             </span>
             <span class='folderpath'><?php echo  esc_html( (string) $item->getFileDir()); ?></span>
@@ -161,15 +163,26 @@ if ( isset($_GET['noheader']) ) {
 								<?php $this->doActionColumn($item); ?>
 	          </span>
 
-
-
-
         </div>
         <?php endforeach; ?>
       </div>
 
 
       <div class='pagination tablenav bottom'>
+				<div class="view_switch">
+					<?php if ($this->has_hidden_items || $this->show_hidden):
+
+						if ($this->show_hidden)
+						{
+							 printf('<a href="%s">%s</a>', esc_url(add_query_arg('show_hidden',false)), esc_html__('Back to normal items', 'shortpixel-image-optimiser'));
+						}
+						else
+						{
+							 printf('<a href="%s">%s</a>', esc_url(add_query_arg('show_hidden',true)), esc_html__('Show hidden items', 'shortpixel-image-optimiser'));
+						}
+
+					 endif; ?>
+				</div>
         <div class='tablenav-pages'>
             <?php echo $this->view->pagination; ?>
         </div>

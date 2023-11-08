@@ -37,6 +37,7 @@ class AdminNoticesController extends \ShortPixel\Controller
         'LegacyNotice',
         'ListviewNotice',
 				'HeicFeatureNotice',
+        'NewExclusionFormat',
     );
     protected $adminNotices; // Models
 

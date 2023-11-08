@@ -16,17 +16,19 @@ if ( defined('SHORTPIXEL_NO_BANNER') && SHORTPIXEL_NO_BANNER == true)
 
 <section class='wso banner'>
     <span class="image">
-      <img src="<?php echo \wpSPIO()->plugin_url() ?>res/img/robo-winky.png" />
+      <a href="https://fastpixel.io/?utm_source=SPIO" target="_blank">
+      <img src="<?php echo \wpSPIO()->plugin_url() ?>res/img/fastpixel-logo.svg" />
+    </a>
     </span>
     <span class="line"><h3>
-      <?php printf(__('ARE YOU CONCERNED WITH YOUR %s %s SITE SPEED? %s', 'shortpixel-image-optimiser'),'<br>', '<span class="red">','</span>'); ?>
+      <?php printf(__('FAST%sPIXEL%s - the new website accelerator plugin from ShortPixel', 'shortpixel-image-optimiser'), '<span class="red">','</span>'); ?>
       </h3>
     </span>
-    <span class="line"><h3>
+  <!--  <span class="line"><h3>
        <?php printf(__('ALLOW ShortPixel SPECIALISTS TO %s FIND THE  SOLUTION FOR YOU.', 'shortpixel-image-optimiser'), '<br>'); ?>
      </h3>
-    </span>
+   </span> -->
   <span class="button-wrap">
-      <a href="https://wso.shortpixel.com/?utm_source=SPIO" target="_blank" class='button' ><?php _e('Find out more', 'shortpixel-image-optimiser'); ?></a>
+      <a href="https://fastpixel.io/?utm_source=SPIO" target="_blank" class='button' ><?php _e('TRY NOW!', 'shortpixel-image-optimiser'); ?></a>
   </span>
 </section>

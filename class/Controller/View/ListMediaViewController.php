@@ -139,6 +139,12 @@ class ListMediaViewController extends \ShortPixel\ViewController
 								if ($mediaItem->isOptimized())
 									$res = $optimizeController->restoreItem($mediaItem);
 						break;
+            case 'mark-completed':
+                 if ($mediaItem->isProcessable())
+                 {
+                   $mediaItem->markCompleted(__('This item has been manually marked as completed', 'shortpixel-image-optimiser'), ImageModel::FILE_STATUS_MARKED_DONE);
+                 }
+            break;
 				 }
 
 		 }
@@ -223,91 +229,6 @@ class ListMediaViewController extends \ShortPixel\ViewController
   {
     $this->loadView('snippets/part-comparer');
   }
-
-  public function filterBy($vars)
-  {
-		// Must return postID's  as ID
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
-    if ( 'upload.php' == $GLOBALS['pagenow'] && isset( $_GET['shortpixel_status'] ) ) {
-
-				// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
-      $status = sanitize_text_field(wp_unslash($_GET['shortpixel_status']));
-
-			if ($status == 'all')
-			{
-				 return $vars; // nono
-			}
-			switch ($status)
-			{
-				 case 'opt':
-				 	$filter = 'optimized';
-				 break;
-				 case 'unopt':
-				 default:
-				 	$filter = 'unoptimized';
-				 break;
-				 case 'prevented':
-				 	$filter = 'prevented';
-				 break;
-			}
-
-			$vars['shortpixel-filter']  = $filter;
-
-    }
-
-    return $vars;
-  }
-
-  /* @handles posts_request */
-	public function parseQuery($request, $wpquery)
-	{
-		global $wpdb;
-
-		 if (isset($wpquery->query_vars['shortpixel-filter']) || isset($wpquery->query_vars['shortpixel-order']) )
-		 {
-			  $filter = isset($wpquery->query_vars['shortpixel-filter']) ? $wpquery->query_vars['shortpixel-filter'] : false ;
-
-				if ($filter == 'optimized')
-				{
-					 $fileStatus = ImageModel::FILE_STATUS_SUCCESS;
-				}
-				elseif ($filter == 'unoptimized') {
-				}
-
-			  $tableName = UtilHelper::getPostMetaTable();
-				$post_pos = strpos($request, '1=1');
-			  $post_where = substr($request, $post_pos);
-
-				if ($filter && $filter == 'optimized')
-				{
-					$where = " AND " . $wpdb->posts . '.ID in ( SELECT attach_id FROM ' . $tableName . " WHERE parent = %d and status = %d) ";
-					$where = $wpdb->prepare($where, MediaLibraryModel::IMAGE_TYPE_MAIN, ImageModel::FILE_STATUS_SUCCESS);
-
-					$sql = substr_replace($request, $where, ($post_pos + strlen($post_pos)) ,0);
-
-				}
-				elseif ($filter && $filter == 'unoptimized')
-				{
-					 $where = " AND " . $wpdb->posts . '.ID not in ( SELECT attach_id FROM ' . $tableName . " WHERE parent = %d and status = %d) ";
-					 $where = $wpdb->prepare($where, MediaLibraryModel::IMAGE_TYPE_MAIN, ImageModel::FILE_STATUS_SUCCESS);
-
-					  $sql = substr_replace($request, $where, ($post_pos + strlen($post_pos)) ,0);
-				}
-				elseif($filter && $filter == 'prevented')
-				{
-					 $where = " AND " . $wpdb->posts . '.ID in ( SELECT post_id FROM ' . $wpdb->postmeta . " WHERE meta_key = %s) ";
-					 $where = $wpdb->prepare($where, '_shortpixel_prevent_optimize');
-					 $sql = substr_replace($request, $where, ($post_pos + strlen($post_pos)) ,0);
-
-				}
-
-				return $sql;
-		 }
-
-		 return $request;
-	}
-
-
 
   /*
   * @hook restrict_manage_posts

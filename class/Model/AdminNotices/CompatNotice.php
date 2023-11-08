@@ -25,7 +25,6 @@ class CompatNotice extends \ShortPixel\Model\AdminNoticeModel
 
 	protected function getMessage()
 	{
-//		$conflicts = \ShortPixelTools::getConflictingPlugins();
 		$conflicts = $this->getData('conflicts');
 		if (! is_array($conflicts))
 			$conflicts = array();
@@ -137,12 +136,17 @@ class CompatNotice extends \ShortPixel\Model\AdminNoticeModel
 							=> array(
 											'action' => 'Deactivate',
 											'data' => 'swift-performance/performance.php',
-							),
-							'Swift Performance Lite'
+						),
+            'Swift AI'
+              => array(
+                      'action' => 'Deactivate',
+                      'data' => 'swift-ai/main.php',
+            ),
+						'Swift Performance Lite'
 								=> array(
 												'action' => 'Deactivate',
 												'data' => 'swift-performance-lite/performance.php',
-								),
+						),
 						 //DEACTIVATED TEMPORARILY - it seems that the customers get scared.
 					/* 'Jetpack by WordPress.com - The Speed up image load times Option'
 							=> array(
@@ -182,14 +186,34 @@ class CompatNotice extends \ShortPixel\Model\AdminNoticeModel
 					$page = ( isset($path['page']) ) ? $path['page'] : null;
 					$details = ( isset($path['details']) ) ? $path['details'] : null;
 					if(is_plugin_active($data)) {
+
+              // Local checks for things. If too much this needs some other impl.
 							if( $data == 'jetpack/jetpack.php' ){
 									$jetPackPhoton = get_option('jetpack_active_modules') ? in_array('photon', get_option('jetpack_active_modules')) : false;
 									if( !$jetPackPhoton ){ continue; }
 							}
+
+              if ($data == 'swift-performance/performance.php' || $data == 'swift-ai/main.php')
+              {
+                  if (false === $this->checkSwiftActive())
+                  {
+                     continue;
+                  }
+              }
+
 							$found[] = array( 'name' => $name, 'action'=> $action, 'path' => $data, 'href' => $href , 'page' => $page, 'details' => $details);
 					}
 			}
 			return $found;
 	}
+
+  private function checkSwiftActive()
+  {
+     if ( function_exists('swift3_check_option') && true == swift3_check_option('optimize-images', 'on'))
+     {
+        return true;
+     }
+     return false;
+  }
 
 }

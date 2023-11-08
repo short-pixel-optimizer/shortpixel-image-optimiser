@@ -6,11 +6,9 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase
 	type; // media / custom
 	currentMessage = '';
 
-
 	constructor(MainScreen, processor)
 	{
 		super(MainScreen, processor);
-
 	}
 
 	Init()
@@ -19,8 +17,6 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase
 
 		window.addEventListener('shortpixel.' + this.type + '.resumeprocessing', this.processor.ResumeProcess.bind(this.processor));
 		window.addEventListener('shortpixel.RenderItemView', this.RenderItemView.bind(this) );
-
-
 	}
 
 	HandleImage(resultItem, type)
@@ -62,7 +58,7 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase
 			else
 			{
 				console.error('handleImage without Result', resultItem);
-				
+
 			}
 
 			return false;
@@ -215,7 +211,7 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase
 				data.type = this.type;
 				data.screen_action = 'cancelOptimize';
 				// AjaxRequest should return result, which will go through Handleresponse, then LoaditemView.
-		//		this.SetMessageProcessing(id);
+
 				this.processor.AjaxRequest(data);
 		}
 
@@ -240,12 +236,17 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase
 				this.processor.AjaxRequest(data);
 		}
 
-		Optimize(id)
+		Optimize(id, force)
 		{
 			 var data = {
 					id: id,
 					type: this.type,
 					screen_action: 'optimizeItem'
+			 }
+
+			 if (typeof force !== 'undefined' && true == force)
+			 {
+				  data.flags = 'force'; 
 			 }
 
 			 if (! this.processor.CheckActive())
@@ -255,5 +256,23 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase
 			 this.processor.AjaxRequest(data);
 		}
 
+		MarkCompleted(id)
+		{
+			var data = {};
+			data.id = id;
+			data.type = this.type;
+			data.screen_action = 'markCompleted';
+
+			this.processor.AjaxRequest(data);
+		}
+		UnMarkCompleted(id)
+		{
+			var data = {};
+			data.id = id;
+			data.type = this.type;
+			data.screen_action = 'unMarkCompleted';
+
+			this.processor.AjaxRequest(data);
+		}
 
 } // class

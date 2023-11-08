@@ -287,13 +287,13 @@ class SpioCommandBase
 		           foreach($qresult->results as $item)
 		           {
 								   // Non-result results can happen ( ie. with PNG conversion ). Probably just ignore.
-								 	 if (! is_object($item->result))
+								 	 if (false === property_exists($item, 'result') || ! is_object($item->result))
 									 {
 										  continue;
 									 }
 
-		               $result = $item->result;
-									 $counts = $item->counts;
+		               $result = (true === property_exists($item, 'result')) ? $item->result : null;
+									 $counts = (true === property_exists($item, 'counts')) ? $item->counts : null;
 
 									 $apiStatus = property_exists($result, 'apiStatus') ? $result->apiStatus : null;
 
@@ -346,7 +346,6 @@ class SpioCommandBase
 
 				$this->last_combinedStatus = $combinedStatus;
 
-      //  if ($mediaResult->status !==)
       return true;
     }
 
@@ -356,7 +355,7 @@ class SpioCommandBase
 				$apiStatus = property_exists($result, 'apiStatus') ? $result->apiStatus : null;
 
 
-					if ($apiStatus == ApiController::STATUS_SUCCESS)
+					if ($apiStatus === ApiController::STATUS_SUCCESS)
 					{
 							\WP_CLI::line(' ');
 							\WP_CLI::line('---------------------------------------');
@@ -405,6 +404,13 @@ class SpioCommandBase
 							 }
 
 				 } // success
+         elseif ($apiStatus === ApiController::STATUS_NOT_API)
+         {
+             $message = property_exists($result, 'message') ? $result->message : '';
+
+             \WP_CLI::line($message);
+
+         }
 				 else
 				 {
 					  if ($result->is_error)
@@ -443,7 +449,6 @@ class SpioCommandBase
 
 				$queue = $this->getQueueArgument($assoc);
 				$startupData = $this->getStatus();
-
 
 				$items = array();
 				$fields = array('queue name', 'in queue', 'in process', 'fatal errors', 'done', 'total', 'preparing', 'running', 'finished');

@@ -173,7 +173,7 @@ class QuotaController
 				{
 						AdminNoticesController::resetQuotaNotices();
 				}
-				Log::addDebug('Reset Quota Exceeded and reset Notices');
+		//		Log::addDebug('Reset Quota Exceeded and reset Notices');
        	$settings->quotaExceeded = 0;
     }
 
@@ -356,7 +356,7 @@ class QuotaController
               $this->setQuotaExceeded();
 					}
 
-          Log::addDebug('GetQuotaInformation Result ', $dataArray);
+      //    Log::addDebug('GetQuotaInformation Result ', $dataArray);
           return $dataArray;
     }
 

@@ -78,9 +78,9 @@ class ApiController
 				$item->result = $this->returnFailure(self::STATUS_FAIL, __('Item seems invalid, removed or corrupted.', 'shortpixel-image-optimiser'));
 				return $item;
 			}
-		 	elseif (! $imageObj->isProcessable() || $imageObj->isOptimizePrevented() == true)
+		 	elseif (false === $imageObj->isProcessable() || $imageObj->isOptimizePrevented() == true)
 			{
-					if ($imageObj->isOptimized())
+					if ($imageObj->isOptimized()) // This only looks at main item
 					{
 						 $item->result = $this->returnFailure(self::STATUS_FAIL, __('Item is already optimized', 'shortpixel-image-optimiser'));
 						 return $item;

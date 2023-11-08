@@ -7,12 +7,10 @@ class ShortPixelScreenBase
 	processor;
 	strings = [];
 
-
 	constructor(MainScreen, processor)
 	{
 		 this.processor = processor;
 		 this.strings = spio_screenStrings;
-
 	}
 
 	// Function for subclasses to add more init. Seperated because of screens that need to call Process functions when starting.
@@ -37,7 +35,6 @@ class ShortPixelScreenBase
 				return;
 		}
 		el.prepend(notice);
-
 	}
 
 	// No actions at the base.
@@ -50,7 +47,7 @@ class ShortPixelScreenBase
 	{
 		if (this.processor.debugIsActive == 'false')
 			return; // stay silent when debug is not active.
-			
+
 		  var title = this.strings.fatalErrorStop;
 			var text = this.strings.fatalErrorStopText;
 
@@ -82,7 +79,6 @@ class ShortPixelScreenBase
 			notice.append(button);
 
 			return notice;
-
 	}
 
 	EventCloseErrorNotice(event)
@@ -136,5 +132,48 @@ class ShortPixelScreenBase
 	}
 
 
+	// ** FADE OUT FUNCTION **
+  FadeOut(el) {
+			el.style.opacity = 0;
+			el.style.display = 'none';
 
-}
+			/*
+			el.style.opacity = 1;
+			(function fade() {
+					if ((el.style.opacity -= .1) < 0) {
+							el.style.display = "none";
+							el.style.opacity = 0;
+
+					} else {
+							requestAnimationFrame(fade);
+					}
+			})(); */
+	};
+
+	// ** FADE IN FUNCTION **
+	 FadeIn(el, display) {
+			el.style.opacity = 1;
+			el.style.display = "block";
+			/*
+			(function fade() {
+					var val = parseFloat(el.style.opacity);
+					if (!((val += .1) > 1)) {
+							el.style.opacity = val;
+							requestAnimationFrame(fade);
+					}
+			})(); */
+	};
+
+	Show(el)
+	{
+		 el.style.display = 'block';
+	}
+
+	Hide(el)
+	{
+		el.style.display = 'none';
+	}
+
+
+
+} // class

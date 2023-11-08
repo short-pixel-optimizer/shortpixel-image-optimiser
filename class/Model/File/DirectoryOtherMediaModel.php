@@ -26,11 +26,14 @@ class DirectoryOtherMediaModel extends DirectoryModel
   protected $fileCount = 0; // inherent onreliable statistic in dbase. When insert / batch insert the folder count could not be updated, only on refreshFolder which is a relative heavy function to use on every file upload. Totals are better gotten from a stat-query, on request.
   protected $updated = 0;
   protected $created = 0;
+  protected $checked = 0;
   protected $path_md5;
 
   protected $is_nextgen = false;
   protected $in_db = false;
   protected $is_removed = false;
+
+  protected $last_message;
 
   //protected $stats;
 
@@ -86,15 +89,20 @@ class DirectoryOtherMediaModel extends DirectoryModel
 			if (is_null(self::$stats))
 			{
 				global $wpdb;
-			 	$sql = 'SELECT SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) optimized, SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END) waiting, count(*) total, folder_id FROM  ' . $wpdb->prefix . 'shortpixel_meta GROUP BY folder_id';
+			 	$sql = 'SELECT SUM(CASE WHEN status = 2 OR status = -11 THEN 1 ELSE 0 END) optimized, SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END) waiting, count(*) total, folder_id FROM  ' . $wpdb->prefix . 'shortpixel_meta GROUP BY folder_id';
 
 				$result = $wpdb->get_results($sql, ARRAY_A);
 
 				$stats = array();
-				foreach($result as $data)
+				foreach($result as $rawdata)
 				{
-					 $folder_id = $data['folder_id'];
-					 unset($data['folder_id']);
+					 $folder_id = $rawdata['folder_id'];
+
+           $data = array(
+             'optimized' => (int) $rawdata['optimized'],
+             'waiting' => (int) $rawdata['waiting'],
+             'total' => (int) $rawdata['total'],
+           );
 					 $stats[$folder_id] = $data;
 				}
 
@@ -114,13 +122,27 @@ class DirectoryOtherMediaModel extends DirectoryModel
 			}
 			else {
 				global $wpdb;
-	      $sql = "SELECT SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) optimized, "
+	      $sql = "SELECT SUM(CASE WHEN status = 2 OR status = -11 THEN 1 ELSE 0 END) optimized, "
 	          . "SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END) waiting, count(*) total "
 	          . "FROM  " . $wpdb->prefix . "shortpixel_meta "
 	          . "WHERE folder_id = %d";
 	      $sql = $wpdb->prepare($sql, $this->id);
 	      $res = $wpdb->get_row($sql, ARRAY_A);
-				return $res;
+
+        if (is_array($res))
+        {
+          $result = array(
+            'optimized' => (int) $res['optimized'],
+            'waiting' => (int) $res['waiting'],
+            'total' => (int) $res['total'],
+
+          );
+          return $result;
+        }
+        else {
+          return false;
+        }
+
 			}
 
   }
@@ -134,10 +156,11 @@ class DirectoryOtherMediaModel extends DirectoryModel
             'status' => $this->status,
             'file_count' => $this->fileCount,
             'ts_updated' => $this->timestampToDB($this->updated),
+            'ts_checked' => $this->timestampToDB($this->checked),
             'name' => $this->name,
             'path' => $this->getPath(),
         );
-        $format = array('%d', '%d', '%s', '%s', '%s');
+        $format = array('%d', '%d', '%s', '%s', '%s', '%s');
         $table = $wpdb->prefix . 'shortpixel_folders';
 
         $is_new = false;
@@ -156,6 +179,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
 						}
 						else
 						{
+              $data['ts_created'] = $this->timestampToDB(time());
 							$this->id = $wpdb->insert($table, $data);
 							if ($this->id !== false)
 							{
@@ -255,6 +279,8 @@ class DirectoryOtherMediaModel extends DirectoryModel
         $time = 0; //force refresh of the whole.
       }
 
+      $stats = $this->getStats();
+      $total_before = $stats['total'];
 
 			if (! $this->checkDirectory(true))
 			{
@@ -269,12 +295,16 @@ class DirectoryOtherMediaModel extends DirectoryModel
       }
       elseif (! $this->exists())
       {
-        Notice::addError( sprintf(__('Folder %s does not exist! ', 'shortpixel-image-optimiser'), $this->getPath()) );
+				$message = sprintf(__('Folder %s does not exist! ', 'shortpixel-image-optimiser'), $this->getPath());
+				$this->last_message = $message;
+        Notice::addError( $message );
         return false;
       }
       elseif (! $this->is_writable())
       {
-        Notice::addWarning( sprintf(__('Folder %s is not writeable. Please check permissions and try again.','shortpixel-image-optimiser'),$this->getPath()) );
+				$message = sprintf(__('Folder %s is not writeable. Please check permissions and try again.','shortpixel-image-optimiser'),$this->getPath());
+				$this->last_message = $message;
+        Notice::addWarning( $message );
         return false;
       }
 
@@ -286,16 +316,23 @@ class DirectoryOtherMediaModel extends DirectoryModel
       $files = $fs->getFilesRecursive($this, $filter);
 
       \wpSPIO()->settings()->hasCustomFolders = time(); // note, check this against bulk when removing. Custom Media Bulk depends on having a setting.
+
     	$result = $this->addImages($files);
 
     	// Reset stat.
 			unset(self::$stats[$this->id]);
+
       $stats = $this->getStats();
       $this->fileCount = $stats['total'];
 
+      $this->checked = time();
       $this->save();
 
+      $stats['new'] = $stats['total'] - $total_before;
+
+      return $stats;
   }
+
 
 	/**  Check if a directory is allowed. Directory can't be media library, outside of root, or already existing in the database
 	* @param $silent If not allowed, don't generate notices.
@@ -310,41 +347,56 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
        if (! $this->exists())
        {
-				 if ($silent === false)
+				 $message = __('Could not be added, directory not found: ' . $path ,'shortpixel-image-optimiser');
+				 $this->last_message = $message;
+
+				 if (false === $silent)
 				 {
-          Notice::addError(__('Could not be added, directory not found: ' . $path ,'shortpixel-image-optimiser'));
+          Notice::addError($message);
 				 }
           return false;
        }
        elseif (! $this->isSubFolderOf($rootDir) && $this->getPath() != $rootDir->getPath() )
        {
-				 if ($silent === false)
+				 $message = sprintf(__('The %s folder cannot be processed as it\'s not inside the root path of your website (%s).','shortpixel-image-optimiser'),$this->getPath(), $rootDir->getPath());
+				 $this->last_message = $message;
+
+				 if (false === $silent)
 			 	 {
-          Notice::addError( sprintf(__('The %s folder cannot be processed as it\'s not inside the root path of your website (%s).','shortpixel-image-optimiser'),$this->getPath(), $rootDir->getPath()));
+          Notice::addError( $message );
 				}
           return false;
        }
        elseif($this->isSubFolderOf($backupDir) || $this->getPath() == $backupDir->getPath() )
        {
-				 if ($silent === false)
+				 $message = __('This folder contains the ShortPixel Backups. Please select a different folder.','shortpixel-image-optimiser');
+				 $this->last_message = $message;
+
+				 if (false === $silent)
 				 {
-          Notice::addError( __('This folder contains the ShortPixel Backups. Please select a different folder.','shortpixel-image-optimiser'));
+          Notice::addError( $message );
 				}
           return false;
        }
        elseif( $otherMediaController->checkIfMediaLibrary($this) )
        {
-				 if ($silent === false)
+				 $message = __('This folder contains Media Library images. To optimize Media Library images please go to <a href="upload.php?mode=list">Media Library list view</a> or to <a href="upload.php?page=wp-short-pixel-bulk">ShortPixel Bulk page</a>.','shortpixel-image-optimiser');
+				 $this->last_message = $message;
+
+				 if (false === $silent)
 				 {
-          Notice::addError(__('This folder contains Media Library images. To optimize Media Library images please go to <a href="upload.php?mode=list">Media Library list view</a> or to <a href="upload.php?page=wp-short-pixel-bulk">ShortPixel Bulk page</a>.','shortpixel-image-optimiser'));
+          Notice::addError($message);
 				}
           return false;
        }
        elseif (! $this->is_writable())
        {
-				 if ($silent === false)
+				 $message = sprintf(__('Folder %s is not writeable. Please check permissions and try again.','shortpixel-image-optimiser'),$this->getPath());
+				 $this->last_message = $message;
+
+				 if (false === $silent)
 				 {
-         	Notice::addError( sprintf(__('Folder %s is not writeable. Please check permissions and try again.','shortpixel-image-optimiser'),$this->getPath()) );
+         	Notice::addError( $messge );
 			 	 }
          return false;
 
@@ -357,7 +409,8 @@ class DirectoryOtherMediaModel extends DirectoryModel
 				 {
 					   if ($this->isSubFolderOf($folder))
 						 {
-							 if ($silent === false)
+
+							 if (false === $silent)
 							 {
 							  Notice::addError(sprintf(__('This folder is a subfolder of an already existing Other Media folder. Folder %s can not be added', 'shortpixel-image-optimiser'), $this->getPath() ));
 							 }
@@ -449,7 +502,14 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
     private function DBtoTimestamp($date)
     {
-        return strtotime($date);
+        if (is_null($date))
+        {
+            $timestamp = time();
+        }
+        else {
+            $timestamp =strtotime($date);
+        }
+        return $timestamp;
     }
 
   /** This function is called by OtherMediaController / RefreshFolders. Other scripts should not call it
@@ -464,7 +524,6 @@ class DirectoryOtherMediaModel extends DirectoryModel
 				 return false;
 			}
 
-
       $values = array();
 
       $optimizeControl = new OptimizeController();
@@ -473,7 +532,6 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
       $fs = \wpSPIO()->filesystem();
 
-		//	Log::addDebug('activeFolders', $activeFolders);
 
       foreach($files as $fileObj)
       {
@@ -497,9 +555,15 @@ class DirectoryOtherMediaModel extends DirectoryModel
 							 }
 						}
 
+						// If in Db, but not optimized and autoprocess is on; add to queue for optimizing
+						if (\wpSPIO()->env()->is_autoprocess && $imageObj->isProcessable())
+						{
+							 $optimizeControl->addItemToQueue($imageObj);
+						}
+
             continue;
 					}
-          elseif ($imageObj->isProcessable(true)) // Check strict on Processable here.
+          elseif ($imageObj->isProcessable()) // Check strict on Processable here.
           {
   	         $imageObj->setFolderId($this->id);
              $imageObj->saveMeta();
@@ -509,16 +573,12 @@ class DirectoryOtherMediaModel extends DirectoryModel
                 $optimizeControl->addItemToQueue($imageObj);
              }
           }
-
+          else {
+          }
 
       }
-
   }
 
-		private function loadFolderById()
-		{
-
-		}
 
     private function loadFolderByPath($path)
     {
@@ -549,9 +609,10 @@ class DirectoryOtherMediaModel extends DirectoryModel
         if ($this->id > 0)
          $this->in_db = true;
 
-        $this->updated = isset($folder->ts_updated) ? $this->DBtoTimestamp($folder->ts_updated) : time();
-        $this->created = isset($folder->ts_created) ? $this->DBtoTimestamp($folder->ts_created) : time();
-        $this->fileCount = isset($folder->file_count) ? $folder->file_count : 0; // deprecated, do not rely on.
+        $this->updated = property_exists($folder,'ts_updated') ? $this->DBtoTimestamp($folder->ts_updated) : time();
+        $this->created = property_exists($folder,'ts_created') ? $this->DBtoTimestamp($folder->ts_created) : time();
+        $this->checked = property_exists($folder,'ts_checked') ? $this->DBtoTimestamp($folder->ts_checked) : time();
+        $this->fileCount = property_exists($folder,'file_count') ? $folder->file_count : 0; // deprecated, do not rely on.
 
         $this->status = $folder->status;
 

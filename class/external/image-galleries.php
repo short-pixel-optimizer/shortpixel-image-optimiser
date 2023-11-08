@@ -8,11 +8,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 
-class CustomSuffixes
+// Image gallery plugins that require a few small extra's
+class ImageGalleries
 {
   public function __construct()
   {
       add_action('admin_init', array($this, 'addConstants'));
+      add_filter('shortpixel/init/optimize_on_screens', array($this, 'add_screen_loads'));
   }
 
   // This adds constants for mentioned plugins checking for specific suffixes on addUnlistedImages.
@@ -40,6 +42,19 @@ class CustomSuffixes
 
   }
 
+  public function add_screen_loads($screens)
+  {
+
+     // Envira Gallery Lite
+     $screens[] = 'edit-envira';
+     $screens[] = 'envira';
+
+     // Solo Cuy 
+     $screens[] = 'edit-soliloquy';
+     $screens[] = 'soliloquy';
+     return $screens;
+  }
+
 	public function envira_suffixes($suffixes)
 	{
 
@@ -52,4 +67,4 @@ class CustomSuffixes
 
 
 } // class
-$c = new CustomSuffixes();
+$c = new ImageGalleries();

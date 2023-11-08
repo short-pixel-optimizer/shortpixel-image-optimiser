@@ -33,14 +33,13 @@ class OtherMediaViewController extends \ShortPixel\ViewController
       protected $order;
       protected $orderby;
       protected $search;
+
 			protected $show_hidden = false;
 			protected $has_hidden_items = false;
 
       public function __construct()
       {
         parent::__construct();
-
-
 
 				// 2015: https://github.com/WordPress/WordPress-Coding-Standards/issues/426 !
 				// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
@@ -65,31 +64,21 @@ class OtherMediaViewController extends \ShortPixel\ViewController
           $this->view->folders = $this->getItemFolders($this->view->items);
           $this->view->headings = $this->getHeadings();
           $this->view->pagination = $this->getPagination();
+
           $this->view->filter = $this->getFilter();
+
+					$this->view->title = __('Custom Media optimized by ShortPixel', 'shortpixel-image-optimiser');
+					$this->view->show_search = true;
 
     //      $this->checkQueue();
           $this->loadView();
       }
 
-			public function action_refreshfolders()
-			{
-				   if (isset($_REQUEST['_wpnonce']) && wp_verify_nonce( sanitize_key($_REQUEST['_wpnonce']), 'refresh_folders'))
-					 {
-						 	 $otherMediaController = OtherMediaController::getInstance();
-							 $otherMediaController->refreshFolders(true);
-					 }
-					 else
-					 {
-						  Log::addWarn('Incorrect nonce for refreshfolders');
-					 }
-
-					 $this->load();
-			}
-
 
       protected function getHeadings()
       {
          $headings = array(
+              'checkbox' => array('title' => '<input type="checkbox" name="select-all">', 'sortable' => false),
               'thumbnails' => array('title' => __('Thumbnail', 'shortpixel-image-optimiser'),
                               'sortable' => false,
                               'orderby' => 'id',  // placeholder to allow sort on this.
@@ -197,12 +186,59 @@ class OtherMediaViewController extends \ShortPixel\ViewController
       protected function getFilter() {
           $filter = array();
 
+          $this->view->hasFilter = false;
+          $this->view->hasSearch = false;
+
 					// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
 					$search = (isset($_GET['s'])) ? sanitize_text_field(wp_unslash($_GET['s'])) : '';
           if(strlen($search) > 0) {
+
+            $this->view->hasSearch = true;
 						// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
               $filter['path'] = (object)array("operator" => "like", "value" =>"'%" . esc_sql($search) . "%'");
           }
+
+				  $folderFilter =  (isset($_GET['folder_id'])) ? intval($_GET['folder_id']) : false;
+					if (false !== $folderFilter)
+					{
+              $this->view->hasFilter = true;
+						  $filter['folder_id'] = (object)array("operator" => "=", "value" =>"'" . esc_sql($folderFilter) . "'");
+					}
+
+          $statusFilter = isset($_GET['custom-status']) ? sanitize_text_field($_GET['custom-status']) : false;
+          if (false !== $statusFilter)
+					{
+              $operator = '=';
+              $value = false;
+              $this->view->hasFilter = true;
+
+              switch($statusFilter)
+              {
+                 case 'optimized':
+                    $value = ImageModel::FILE_STATUS_SUCCESS;
+                 break;
+                 case 'unoptimized':
+                     $value = ImageModel::FILE_STATUS_UNPROCESSED;
+                 break;
+                 case 'prevented':
+                    //  $value = 0;
+                    //  $operator = '<';
+                    $filter['status'] = (object) array('field' => 'status',
+                      'operator' => "<", 'value' => "0");
+
+                    $filter['status2'] = (object) array('field' => 'status',
+                      'operator' => '<>', 'value' => ImageModel::FILE_STATUS_MARKED_DONE
+                  );
+
+                 break;
+              }
+              if (false !== $value)
+              {
+						        $filter['status'] = (object)array("operator" => $operator, "value" =>"'" . esc_sql($value) . "'");
+
+              }
+					}
+
           return $filter;
       }
 
@@ -232,6 +268,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
           $sql = "SELECT COUNT(id) as count FROM " . $wpdb->prefix . "shortpixel_meta where folder_id in ( " . $dirs  . ") ";
 
           foreach($filters as $field => $value) {
+              $field  = property_exists($value, 'field')  ? $value->field : $field;
               $sql .= " AND $field " . $value->operator . " ". $value->value . " ";
           }
 
@@ -240,6 +277,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
           $sql = "SELECT * FROM " . $wpdb->prefix . "shortpixel_meta where folder_id in ( " . $dirs  . ") ";
 
           foreach($filters as $field => $value) {
+              $field  = property_exists($value, 'field')  ? $value->field : $field;
               $sql .= " AND $field " . $value->operator . " ". $value->value . " ";
           }
 
@@ -251,16 +289,6 @@ class OtherMediaViewController extends \ShortPixel\ViewController
           $results = $wpdb->get_results($sql);
           return $results;
       }
-
-
-
-      /** This is a workaround for doing wp_redirect when doing an action, which doesn't work due to the route. Long-term fix would be using Ajax for the actions */
-      protected function rewriteHREF()
-      {
-          $rewrite = $this->url; //isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] :
-          $this->view->rewriteHREF = '<script language="javascript"> history.pushState(null,null, "' . $rewrite . '"); </script>';
-      }
-
 
       private function getPageArgs($args = array())
       {
@@ -303,7 +331,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
           $total = $this->total_items;
           $per_page = $this->items_per_page;
 
-          $pages = round($total / $per_page);
+          $pages = ceil($total / $per_page);
 
           if ($pages <= 1)
             return false; // no pages.
@@ -333,8 +361,6 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 					 if (isset($page_args['paged']))
 					 	unset($page_args['paged']);
 
-
-
 					 // Try with controller URL, if not present, try with upload URL and page param.
 	         $admin_url = admin_url('upload.php');
 	         $url = (is_null($this->url)) ?  add_query_arg('page','wp-short-pixel-custom', $admin_url) : $this->url; // has url
@@ -342,7 +368,6 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 
 					 $url = remove_query_arg('page', $url);
 					 $page_args['page'] = 'wp-short-pixel-custom';
-
 
            $output = '<form method="GET" action="'. esc_attr($url) . '">';
 					 foreach($page_args as $arg => $val)
@@ -420,6 +445,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
       /** Actions to list under the Image row
       * @param $item CustomImageModel
       */
+
       protected function getRowActions($item)
       {
 
@@ -437,10 +463,13 @@ class OtherMediaViewController extends \ShortPixel\ViewController
 
 					));
 
-					if ($settings->quotaExceeded || ! $keyControl->keyIsVerified() )
-						$this->view->actions = $viewAction;
-					else
-						$this->view->actions = array_merge($viewAction,$actions);
+          $rowActions = array();
+          $rowActions = array_merge($rowActions, $viewAction);
+
+					if (false === $settings->quotaExceeded || true === $keyControl->keyIsVerified() )
+              $rowActions = array_merge($rowActions,$actions);
+
+					return $rowActions;
       }
 
 			// Function to sync output exactly with Media Library functions for consistency
@@ -449,41 +478,55 @@ class OtherMediaViewController extends \ShortPixel\ViewController
           ?>
 					<div id='sp-msg-<?php echo esc_attr($item->get('id')) ?>'  class='sp-column-info'><?php
 							$this->printItemActions($item);
-          echo "<div>" .  UiHelper::getStatusText($item) . "</div>";
 
+            echo "<div>" .  UiHelper::getStatusText($item) . "</div>";
            ?>
-					 </div>
-					 <?php
-
+         </div> <!-- sp-column-info -->
+        <?php
 			}
 
       // Use for view, also for renderItemView
 			public function printItemActions($item)
       {
-        $actions = UiHelper::getActions($item); // $this->getActions($item, $itemFile);
 
+        $this->view->actions = UiHelper::getActions($item); // $this->getActions($item, $itemFile);
 
         $list_actions = UiHelper::getListActions($item);
+
         if (count($list_actions) > 0)
           $list_actions = UiHelper::renderBurgerList($list_actions, $item);
         else
           $list_actions = '';
 
-        if (count($actions) > 0)
+        if (count($this->view->actions) > 0)
         {
-          foreach($actions as $actionName => $action):
-            $classes = ($action['display'] == 'button') ? " button-smaller button-primary $actionName " : "$actionName";
-            $link = ($action['type'] == 'js') ? 'javascript:' . $action['function'] : $action['function'];
-						$newtab  = ($actionName == 'extendquota') ? 'target="_blank"' : '';
 
-						// @todo Esc url is not successfull with JS links
-            ?>
-            <a href="<?php echo $link ?>" class="<?php echo esc_attr($classes) ?>"><?php echo esc_html($action['text']) ?></a>
+          $this->loadView('snippets/part-single-actions', false);
 
-            <?php
-          endforeach;
         }
         echo $list_actions;
+      }
+
+      public function printFilter()
+      {
+            $status   = filter_input(INPUT_GET, 'custom-status', FILTER_UNSAFE_RAW );
+
+            $options = array(
+                'all' => __('Any ShortPixel State', 'shortpixel-image-optimiser'),
+                'optimized' => __('Optimized', 'shortpixel-image-optimiser'),
+                'unoptimized' => __('Unoptimized', 'shortpixel-image-optimiser'),
+                'prevented' => __('Optimization Error', 'shortpixer-image-optimiser'),
+
+            );
+
+            echo  "<select name='custom-status' id='status'>\n";
+            foreach($options as $optname => $optval)
+            {
+                $selected = ($status == $optname) ? esc_attr('selected') : '';
+                echo "<option value='". esc_attr($optname) . "' $selected >" . esc_html($optval) . "</option>\n";
+            }
+            echo "</select>";
+
       }
 
 

@@ -1,0 +1,81 @@
+// Shortpixel FolderTree Component
+
+.sp-folder-picker
+{
+    position :relative;
+    border: 1px solid #000;
+    margin: 8px 0;
+    max-height: 50vh;
+    overflow-y: scroll;
+
+    .loading {
+      background: rgba(0,0,0,0.4);
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      h3 {
+          font-size: 30px;
+          font-weight: bold;
+          left: 50%;
+          color: #fff;
+          text-align: center;
+      }
+    }
+
+    ul {
+      margin-top: 8px;
+      margin-left: 35px;
+      &.expanded {
+         display: block;
+      }
+      &.collapsed {
+         display: none;
+      }
+    }
+
+    // item
+    .folder
+    {
+       line-height: 20px;
+       i {
+         margin-right: 8px;
+         vertical-align: top;
+         width: 20px;
+         height: 20px;
+         display: inline-block;
+       }
+       a {
+          cursor: pointer;
+          color: #000;
+        }
+        &.selected > a {
+            font-weight: 700;
+        }
+        &.closed > a > i {
+          background: url('../img/filebrowser/folder-closed.svg') center center;
+          background-repeat: no-repeat;
+          background-size: 20px 20px;
+          fill: #ff0000;
+        }
+        &.open > a > i {
+          background: url('../img/filebrowser/folder-open.svg') center center;
+          background-repeat: no-repeat;
+          background-size: 20px 20px;
+        }
+        &.is_active > a {
+           color: #ccc;
+        }
+    }
+
+
+} // sp-folder-picker
+
+// The whole modal space
+.modal-folder-picker
+{
+  .sp-folder-picker-selected {
+     display: inline-block;
+     padding: 6px 0;
+  }
+
+}

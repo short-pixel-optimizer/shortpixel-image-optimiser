@@ -13,7 +13,7 @@ abstract class MediaLibraryConverter extends Converter
 {
 	protected $source_url;
   protected $replacer; // Replacer class Object.
-
+  protected $newFile; // The newFile Object.
 
 	public function getUpdatedMeta()
 	{

@@ -14,6 +14,7 @@ class ImageMeta extends ImageThumbnailMeta
 
 	protected $convertMeta;
 
+
 	public function __construct()
 	{
 		parent::__construct();
@@ -45,9 +46,9 @@ class ImageMeta extends ImageThumbnailMeta
 	}
 
 
-		public function convertMeta()
-		{
-			 return $this->convertMeta;
-		}
+	public function convertMeta()
+	{
+		 return $this->convertMeta;
+	}
 
 } // class

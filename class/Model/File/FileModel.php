@@ -577,11 +577,18 @@ class FileModel extends \ShortPixel\Model
 		$path = UtilHelper::spNormalizePath($path);
 		$abspath = $fs->getWPAbsPath();
 
+
 		// Prevent file operation below if trusted.
 		if (true === self::$TRUSTED_MODE)
 		{
 			 return $path;
 		}
+
+    // Check if some openbasedir is active.
+    if (true === $this->fileIsRestricted($path))
+    {
+      $path = $this->relativeToFullPath($path);
+    }
 
     if ( is_file($path) && ! is_dir($path) ) // if path and file exist, all should be okish.
     {
@@ -643,6 +650,32 @@ class FileModel extends \ShortPixel\Model
 
 	}
 
+  /** Check if path is allowed within openbasedir restrictions. This is an attempt to limit notices in file funtions if so.  Most likely the path will be relative in that case.
+  * @param String Path as String
+  */
+  private function fileIsRestricted($path)
+  {
+     $basedir = ini_get('open_basedir');
+
+     if (false === $basedir || strlen($basedir) == 0)
+     {
+         return false;
+     }
+
+     $restricted = true;
+     $basedirs = preg_split('/:|;/i', $basedir);
+
+     foreach($basedirs as $basepath)
+     {
+          if (strpos($path, $basepath) !== false)
+          {
+             $restricted = false;
+             break;
+          }
+     }
+
+     return $restricted;
+  }
 
   /** Resolve an URL to a local path
   *  This partially comes from WordPress functions attempting the same
@@ -652,7 +685,7 @@ class FileModel extends \ShortPixel\Model
   private function UrlToPath($url)
   {
 
-		 // If files is present, high chance that it's WPMU old style, which doesn't have in home_url the /files/ needed to properly replace and get the filepath . It would result in a /files/files path which is incorrect. 
+		 // If files is present, high chance that it's WPMU old style, which doesn't have in home_url the /files/ needed to properly replace and get the filepath . It would result in a /files/files path which is incorrect.
 		 if (strpos($url, '/files/') !== false)
 		 {
 			 $uploadDir = wp_upload_dir();
@@ -730,7 +763,7 @@ class FileModel extends \ShortPixel\Model
         return $path;
 
       // if the file plainly exists, it's usable /**
-      if (file_exists($path))
+      if (false === $this->fileIsRestricted($path) && file_exists($path))
       {
         return $path;
       }

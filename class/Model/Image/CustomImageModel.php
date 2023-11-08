@@ -32,7 +32,6 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 		/** @var array */
 		protected $forceSettings = array();  // option derives from setting or otherwise, request to be forced upon via UI to use specific value.
 
-    const FILE_STATUS_PREVENT = -10;
 
 		// @param int $id
     public function __construct($id)
@@ -72,6 +71,17 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 			$data = $this->getOptimizeData();
 			return array_values($data['urls']);
 
+    }
+
+    protected function getExcludePatterns()
+    {
+        $args = array(
+          'filter' => true,
+          'is_custom' => true,
+        );
+
+        $patterns = UtilHelper::getExclusions($args);
+        return $patterns;
     }
 
 		public function getOptimizeData()
@@ -455,24 +465,38 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 
     }
 
-    protected function preventNextTry($reason = '')
+    protected function preventNextTry($reason = '', $status = self::FILE_STATUS_PREVENT)
     {
         $this->setMeta('errorMessage', $reason);
-        $this->setMeta('status', SELF::FILE_STATUS_PREVENT);
+        $this->setMeta('status', $status);
         $this->saveMeta();
+    }
+
+    public function markCompleted($reason, $status)
+    {
+       return $this->preventNextTry($reason, $status);
     }
 
     public function isOptimizePrevented()
     {
          $status = $this->getMeta('status');
 
-         if ($status == self::FILE_STATUS_PREVENT )
+         if ($status == self::FILE_STATUS_PREVENT || $status == self::FILE_STATUS_MARKED_DONE )
          {
 					  $this->processable_status = self::P_OPTIMIZE_PREVENTED;
+            $this->optimizePreventedReason  = $this->getMeta('errorMessage');
+
             return $this->getMeta('errorMessage');
          }
 
+
          return false;
+    }
+
+    // Only one item for now, so it's equal
+    public function isSomethingOptimized()
+    {
+       return $this->isOptimized();
     }
 
     public function resetPrevent()

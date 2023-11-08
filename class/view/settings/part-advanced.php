@@ -1,6 +1,8 @@
 <?php
 namespace ShortPixel;
 use \ShortPixel\Helper\UiHelper as UiHelper;
+use ShortPixel\Helper\UtilHelper as UtilHelper;
+
 
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
@@ -38,13 +40,6 @@ if ( ! defined( 'ABSPATH' ) ) {
         }
     }
 
-    $excludePatterns = '';
-    if($view->data->excludePatterns) {
-        foreach($view->data->excludePatterns as $item) {
-            $excludePatterns .= $item['type'] . ":" . $item['value'] . ", ";
-        }
-        $excludePatterns = substr($excludePatterns, 0, -2);
-    }
     ?>
 
     <div class="wp-shortpixel-options wp-shortpixel-tab-content" style='visibility: hidden'>
@@ -335,17 +330,25 @@ if ( ! defined( 'ABSPATH' ) ) {
 									<div class="option-content">
 
 
-                    <?php foreach($view->allThumbSizes as $sizeKey => $sizeVal) {?>
-                        <span style="margin-right: 20px; white-space:nowrap; line-height: 24px;">
+                    <?php foreach($view->allThumbSizes as $sizeKey => $sizeVal) {
+										?>
+                        <span class="excludeSizeOption">
                           <label>
 
-                            <input name="excludeSizes[]" type="checkbox" id="excludeSizes_<?php echo esc_attr($sizeKey);?>" <?php
-														// @TODO This is unreadable
-														 echo esc_attr((in_array($sizeKey, $view->data->excludeSizes) ? 'checked' : ''));?>
-                                   value="<?php echo esc_attr($sizeKey);?>">&nbsp;<?php $w=$sizeVal['width']?$sizeVal['width'].'px':'*';$h=$sizeVal['height']?$sizeVal['height'].'px':'*';echo("$sizeKey ({$w} &times; {$h})");?>&nbsp;&nbsp;
+														<?php
+														$checked = in_array($sizeKey, $view->data->excludeSizes) ? 'checked' : '';
+														$width = isset($sizeVal['width']) ? $sizeVal['width'] : '*';
+														$height = isset($sizeVal['height']) ? $sizeVal['height'] : '*';
+
+                            $name = isset($sizeVal['nice-name']) ? $sizeVal['nice-name'] : ucfirst($sizeKey);
+														$label = $name . " ( $width &times $height )";
+
+														printf(' <input name="excludeSizes[]" type="checkbox" id="excludeSizes_%s" value="%s" %s>%s  ', esc_attr($sizeKey), esc_attr($sizeKey), $checked, $label);
+														?>
                             </label>
-                        </span><br>
-                    <?php } ?>
+                        </span>
+
+								    <?php } // exclude sizes ?>
 									</div>
                 </td>
             </tr>
@@ -356,190 +359,293 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/88-how-to-exclude-images-from-being-optimized"></span></div>
 
 				<p class="settings-info" data-toggle="exclude-settings-expanded">
+
+          <button class='button button-primary new-exclusion-button' type='button' name="addExclusion">
+            <?php _e('Add new Exclusion', 'shortpixel-image-optimiser'); ?>
+          </button>
+
 						<?php
-						printf(esc_html__('Use this section to exclude images based on patterns (separated by commas). A pattern consists of a %s type:value %s pair and the accepted types are %s "name", "path", "size", "regex-name" and "regex-path" %s. A file is excluded if it matches any of the patterns. Examples can be found in the collapsible area below the exclusion list.','shortpixel-image-optimiser'),
+						printf(esc_html__('Use this section to exclude images based on patterns. There are three types of exclusions: based on the file name, on the file path or on the file size. Each exclusion type can be applied to: all images and thumbnails of that image (including the scaled or original image), only thumbnails (in this case the original and scaled images are not excluded), only Custom Media images (in this case the items from the Media Library are not excluded) or only for a selection of thumbnails of your choice. Examples can be found in the fold-out area below.','shortpixel-image-optimiser'),
 							'<b>','</b>',
 							'<b>','</b>'
 						);
-				 ?>
-				 <br /><br />
+            ?>
+
 			 </p>
 
-                    <textarea name="excludePatterns" type="text" id="excludePatterns" placeholder="<?php
-                        esc_html_e('name:keepbig, path:/full/path/to/exclude/, regex-name:/valid_regex/, size:1000x2000','shortpixel-image-optimiser');?>" rows="4" cols="60"><?php echo esc_html( $excludePatterns );?></textarea>
+       <p  class="settings-info">
+           <label><input type='checkbox' class='shortpixel-hide' data-toggle='exclude-settings-expanded'> >> <?php		printf(esc_html__('See examples')); ?></label>
+        </p>
 
-			</div>
+        <div class='exclude-settings-expanded toggleTarget ' id="exclude-settings-expanded">
+          <p  class="settings-info">
+          <?php
+              printf(esc_html__('For the %s"Name"%s type, only the file name is matched, i.e. if you enter %s"flower.jpg"%s in the "Value" field, ShortPixel excludes all JPEG images ending in "flower" (lower case). If, on the other hand, you enter %s"logo"%s in the "Value" field, all images – PNG/JPEG/GIF – that contain the word "logo" in their name will be excluded: "nicelogo.jpg", "alllogos.png", "logo.gif"..', 'shortpixel-image-optimiser'),
+              '<b>','</b>',
+              '<b>','</b>',
+              '<b>','</b>'
+              );
+          ?>
 
-									 <p  class="settings-info">
-										 										 <label><input type='checkbox' class='shortpixel-hide' data-toggle='exclude-settings-expanded'> >> <?php		printf(esc_html__('See examples')); ?></label>
-                    </p>
+        </p>
+        <br />
+        <p  class="settings-info">
+          <?php
+              printf(esc_html__('With the %s"Path"%s type, the entire path is matched (useful for excluding certain (sub)directories altogether). For example, if you enter %s"2022"%s in the "Value" field, all images uploaded in 2022 will be excluded, but also images that contain 2022 in the file name (as this is also part of the path). If you only want to exclude images uploaded in 2022, enter %s"/2022/"%s instead.','shortpixel-image-optimiser'),
+              '<b>','</b>',
+              '<b>','</b>',
+              '<b>','</b>'
+              );
+              ?>
+            </p>
+            <br />
+            <p  class="settings-info">
+          <?php
+              printf(esc_html__('For both types mentioned above ("Name" and "Path") you can activate the option %s"Check as regular expression"%s. It works in the same way, but requires a valid regular expression between slashes in the "Value" field. Special characters should be preceded by a \ as an escape character. For example, %s/[0-9]+[^\/]*\.(PNG|png)/%s in the "Value" field for the "Name" type excludes all PNG images that have a numeric prefix.','shortpixel-image-optimiser'),
+              '<b>','</b>',
+              '<b>','</b>'
+            );
+            ?>
+          </p>
+          <br />
+          <p  class="settings-info">
+            <?php
+              printf(esc_html__('The %s"Size"%s type is applied to all images and thumbnails whose size is within the specified range. You can either use intervals or specify an exact size if you enable the %s"Exact sizes"%s option.','shortpixel-image-optimiser'),
+              '<b>','</b>',
+              '<b>','</b>'
+            );
+            ?>
+          </p>
 
-										<div class='exclude-settings-expanded toggleTarget ' id="exclude-settings-expanded">
-											<p  class="settings-info">
-											<?php
-													printf(esc_html__('For the pattern %s"name"%s, only the file name is matched, e.g. the pattern %sname:flower.jpg%s tells ShortPixel to exclude all JPEG images ending in “flower” (lowercase). At the same time, the pattern %sname:logo%s,excludes all images – PNG/JPEG/GIF – that contain the word “logo”  in their name: “nicelogo.jpg”, “alllogos.png”, “logo.gif”.', 'shortpixel-image-optimiser'),
-													'<b>','</b>',
-													'<b>','</b>',
-													'<b>','</b>'
-													);
-											?>
+      </div>
 
-										</p>
-										<br />
-										<p  class="settings-info">
-											<?php
-													printf(esc_html__('For the %s"path"%s pattern, the entire path is matched (useful to exclude certain (sub)-directories altogether). For example, %spath:2022%s excludes all images uploaded in 2022, but also excludes images that contain 2022 in the filename (since this is also part of the path). If you want to exclude only the images uploaded in 2022, use %spath:/2022/%s instead.','shortpixel-image-optimiser'),
-													'<b>','</b>',
-													'<b>','</b>',
-													'<b>','</b>'
-													);
-													?>
-												</p>
-												<br />
-												<p  class="settings-info">
-											<?php
-													printf(esc_html__('%s"regex-path"%s and %s"regex-name"%s work the same way, but require a valid regular expression placed between slashes. Special characters should be escaped by prefixing them with \ . For example %sregex-name:/[0-9]+[^\/]*\.(PNG|png)/%s excludes all PNG images that have a numeric prefix.','shortpixel-image-optimiser'),
-													'<b>','</b>',
-													'<b>','</b>',
-													'<b>','</b>'
-												);
-												?>
-											</p>
-											<br />
-											<p  class="settings-info">
-												<?php
-													printf(esc_html__('The %s"size"%s type, which applies only to Media Library images, excludes the main images (not thumbnails) whose size is in the specified range. The format for the "size" exclusion type is: %sminWidth-maxWidthxminHeight-maxHeight%s, for example %ssize:1000-1100x2000-2200%s. You can also specify a exact size, for example, %s1000x2000%s.','shortpixel-image-optimiser'),
-													'<b>','</b>',
-													'<b>','</b>',
-													'<b>','</b>',
-													'<b>','</b>'
-												);
-												?>
-											</p>
 
-									</div>
+<?php
+ $exclusions = UtilHelper::getExclusions();
+		$excludeArray = $exclusions; //(strlen($excludePatterns) > 0) ? explode(',', $excludePatterns) : array();
+
+		if (is_array($excludeArray) && count($excludeArray) > 0)
+		{
+				echo "<ul class='exclude-list'>";
+        echo '<input type="hidden" id="new-exclusion-index" name="new-index" value="' . (count($excludeArray)  -1) . '">';
+        $i = 0;
+				foreach($excludeArray as $index => $option)
+				{
+            $exclude_id  = 'id="exclude-' . $i . '"';
+						$type = $option['type'];
+						$value = $option['value'];
+						$apply = $option['apply'];
+            $thumblist = isset($option['thumblist']) ? $option['thumblist'] : array();
+            $hasError = (isset($option['has-error']) && true == $option['has-error']) ? true : false;
+
+						$option_code = json_encode($option);
+
+						switch($type)
+						{
+							 case 'name':
+               case 'regex-name':
+							 	 $field_name = __('Name', 'shortpixel-image-optimiser');
+							 break;
+							 case 'path':
+               case 'regex-path':
+							 	$field_name = __('Path', 'shortpixel-image-optimiser');
+							 break;
+               case 'size':
+                 $field_name = __('Size', 'shortpixel-image-optimiser');
+               break;
+							 default:
+							 	 $field_name = __('Unknown', 'shortpixel-image-optimiser');
+							 break;
+						}
+
+            switch($apply)
+            {
+               case 'all':
+                  $apply_name = __('All', 'shortpixel-image-optimiser');
+               break;
+               case 'only-thumbs':
+                  $apply_name = __('Thumbnails', 'shortpixel-image-optimiser');
+               break;
+               case 'only-custom':
+                  $apply_name = __('Custom Media', 'shortpixel-image-optimiser');
+               break;
+               case 'selected-thumbs':
+                  $apply_name = __('Selected Images', 'shortpixel-image-optimiser');
+               break;
+            }
+
+            $classes = array();
+            if (true === $hasError)
+            {
+               $classes[] = 'has-error';
+            }
+
+            if (strpos($type, 'regex') !== false)
+            {
+                $classes[] = 'is-regex';
+            }
+
+            $class = '';
+            if (count($classes) > 0)
+            {
+               $class = 'class="' . implode(' ', $classes) . '"';
+            }
+
+
+            $title = '';
+            if ('selected-thumbs' == $apply)
+            {
+               $thumbTitles = array();
+               foreach($thumblist as $thumbName)
+               {
+                  $thumb = $view->allThumbSizes[$thumbName];
+                  $thumbTitles[] = (isset($thumb['nice-name'])) ? $thumb['nice-name'] : $thumbName;
+               }
+               $title = 'title="' . implode(', ', $thumbTitles) . '"';
+            }
+
+
+						echo "<li $class $title $exclude_id>";
+
+						echo "<input type='hidden' name='exclusions[]' value='$option_code' />";
+						echo "<span>$field_name :</span>
+                  <span>$value</span>";
+            echo "<span>$apply_name</span>";
+
+						echo "</li>";
+            $i++;
+				}
+				echo "</ul>";
+		}
+    else {
+      echo '<input type="hidden" id="new-exclusion-index" name="new-index" value="0">';
+
+       echo '<ul class="exclude-list"><li class="no-exclusion-item">' . __('No exclusions', 'shortpixel-image-optimiser') . '</li></ul>';
+    }
+
+?>
+
+</div> <!-- option-content -->
+
+					  <div class='new-exclusion not-visible'>
+                <input type="hidden" name="edit-exclusion" value="">
+								<h3 class='new-title not-visible'><?php _e('New Exclusion' ,'shortpixel-image-optimiser'); ?></h3>
+                <h3 class='edit-title not-visible'><?php _e('Edit Exclusion' ,'shortpixel-image-optimiser'); ?></h3>
+								<div>
+									<label><?php _e('Type:', 'shortpixel-image-optimiser'); ?></label>
+									 <select name="exclusion-type" class='new-exclusion-type'>
+											<option value='name'><?php _e('Name', 'shortpixel-image-optimiser'); ?></option>
+											<option value='path' data-example="/path/"><?php _e('Path', 'shortpixel-image-optimiser'); ?></option>
+											<option value='size' data-example="widthXheight-widthXheight"><?php _e('Size', 'shortpixel-image-optimiser'); ?></option>
+
+									</select>
+
+								</div>
+
+                <div class='regex-option'>
+                  <label>&nbsp;</label>
+                  <div class='switch_button'>
+                    <label>
+                      <input type="checkbox" class="switch" name="exclusion-regex">
+                      <div class="the_switch">&nbsp; </div>
+                      <?php esc_html_e('Check as regular expression','shortpixel-image-optimiser');?>
+                    </label>
+                  </div>
+                </div>
+
+								<div class='value-option '>
+									<label><?php _e('Value:', 'shortpixel-image-optimiser'); ?></label>
+									<input type="text" name="exclusion-value" value="">
+								</div>
+
+                <div class='size-option not-visible'>
+                    <div class='exact-option'>
+                      <label>&nbsp;</label>
+                      <div class='switch_button'>
+                        <label>
+                          <input type="checkbox" class="switch" name="exclusion-exactsize">
+                          <div class="the_switch">&nbsp; </div>
+                          <?php esc_html_e('Exact sizes','shortpixel-image-optimiser');?>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div class='size-option-range'>
+                      <div class='width'>
+											    <label><?php _e('Width between:', 'shortpixel-image-optimiser'); ?></label>
+                          <input type="number" class='small' name="exclusion-minwidth" value="">px -
+                          <input type="number" class='small' name="exclusion-maxwidth" value="">px
+                      </div>
+                      <div class='height'>
+                          <label><?php _e('Height between:', 'shortpixel-image-optimiser'); ?></label>
+                          <input type="number" class='small' name="exclusion-minheight" value="">px -
+                          <input type="number" class='small' name="exclusion-maxheight" value="">px
+                      </div>
+                    </div>
+
+                    <div class='size-option-exact not-visible'>
+                      <div class='exact'>
+                        <label>
+                          <?php _e('Exact size:', 'shortpixel-image-optimiser'); ?></label>
+                          <input type="number" class='small' name="exclusion-width" value="">px x
+                          <input type="number" class='small' name="exclusion-height" value="">px
+                       </div>
+										</div>
+                </div>
+
+								<div>
+									<label><?php _e('Apply To:', 'shortpixel-image-optimiser'); ?></label>
+									<select name='apply-select' class='thumbnail-type-option'>
+											<option value='all'><?php _e('All Images', 'shortpixel-image-optimiser'); ?></option>
+											<option value='only-thumbs'><?php _e('Only Thumbnails','shortpixel-image-optimiser'); ?>
+                      </option>
+                      <option value='only-custom'><?php _e('Only Custom Media images', 'shortpixel-image-optimiser'); ?>
+                      </option>
+                      <option value='selected-thumbs'><?php _e('Select thumbnails', 'shortpixel-image-optimiser'); ?></option>
+                  </select>
+
+                  <select multiple="multiple" name='thumbnail-select' class='not-visible thumbnail-option'>
+											<?php foreach($view->allThumbSizes as $name => $data)
+											{
+                          $nice_name = isset($data['nice-name']) ? $data['nice-name'] : $name;
+													echo "<option value='$name'>$nice_name</option>";
+											} ?>
+									</select>
+
+								</div>
+								<div class='button-actions'>
+                  <button type="button" class="button" name='cancelEditExclusion'><?php _e('Close', 'shortpixel-image-optimiser'); ?></button>
+
+									<button type="button" class="button button-primary not-visible" name="addExclusion">
+                    <?php _e('Add Exclusion', 'shortpixel-image-optimiser'); ?></button>
+
+                    <button type="button" class="button button-primary not-visible" name="updateExclusion">
+                        <?php _e("Update", 'shortpixel-image-optimiser');  ?>
+                    </button>
+
+                  <button type="button" class="button button-primary not-visible" name="removeExclusion">
+                      <?php _e("Remove", 'shortpixel-image-optimiser');  ?>
+                  </button>
+
+								</div>
+							</div> <!-- new exclusion -->
+
+              <p class='exclusion-save-reminder hidden'><?php _e('Reminder: Save the settings for the exclusion changes to take effect!', 'shortpixel-image-optimiser'); ?></p>
+
                 </td>
-            </tr>
+            </tr> <!--- exclusions -->
+
+
             <tr>
-                <th scope="row"><label for="additional-media"><?php esc_html_e('Custom media folders','shortpixel-image-optimiser');?></label></th>
+                <th scope="row"><label for="additional-media"><?php esc_html_e('Custom Media folders','shortpixel-image-optimiser');?></label></th>
                 <td>
-
-                    <?php if($view->customFolders) { ?>
-
-			<div class="option-content">
-			    <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/46-how-to-optimize-images-in-wordpress-themes-and-plugins"></span></div>
-                        <div class="shortpixel-folders-list">
-                            <div class='heading'>
-                                <span><?php esc_html_e('Folder name','shortpixel-image-optimiser');?></span>
-                                <span><?php esc_html_e('Type &amp; Status','shortpixel-image-optimiser');?></span>
-                                <span><?php esc_html_e('Files','shortpixel-image-optimiser');?></span>
-                                <span><?php esc_html_e('Last change','shortpixel-image-optimiser');?></span>
-                                <span>&nbsp;</span>
-                                <span class='action'>&nbsp;</span>
-                            </div>
-
-                        <?php
-                        foreach($view->customFolders as $index => $dirObj) {
-                            $folder_id = $dirObj->get('id');
-
-                            $type_display = ($dirObj->get('is_nextgen') ) ? __('Nextgen', 'shortpixel-image-optimiser') . ":" : "";
-                            $stat = $dirObj->getStats();
-
-                            $fullstatus = esc_html__("Optimized",'shortpixel-image-optimiser') . ": " . $stat['optimized'] . ", "
-                                  . " " . esc_html__("Waiting",'shortpixel-image-optimiser') . ": " . $stat['waiting'] . ""
-                                  ;
-
-                            if ($stat['total'] == 0)
-                            {
-                              $optimize_status = __("Empty",'shortpixel-image-optimiser');
-                              $fullstatus = '';
-                            }
-                            elseif ($stat['total'] == $stat['optimized'])
-                            {
-                              $optimize_status = __("Optimized",'shortpixel-image-optimiser');
-                            }
-                            elseif ($stat['optimized'] > 0)
-                            {
-                               $optimize_status = __("Pending",'shortpixel-image-optimiser');
-                            }
-                            else
-                            {
-                              $optimize_status = __("Waiting",'shortpixel-image-optimiser');
-                            }
-
-                            $action =  __("Stop monitoring",'shortpixel-image-optimiser');
-
-                            $err = ''; // unused since failed is gone.
-                            if (! $dirObj->exists() && ! $err)
-                              $err = __('Directory does not exist', 'shortpixel-image-optimiser');
-
-
-                            if ($dirObj->get('is_nextgen') && $view->data->includeNextGen == 1)
-                              $action = false;
-
-
-                              $refreshUrl = add_query_arg(array('sp-action' => 'action_refreshfolder', 'folder_id' => $folder_id, 'part' => 'adv-settings'), $this->url); // has url
-                            ?>
-                            <div>
-                                <span class='folder folder-<?php echo esc_attr($dirObj->get('id')) ?>'><?php echo esc_html($dirObj->getPath()); ?></span>
-                                <span>
-                                    <?php if(!($stat['total'] == 0)) { ?>
-                                    <span title="<?php echo esc_attr($fullstatus); ?>" class='info-icon'>
-                                        <img alt='<?php esc_html_e('Info Icon', 'shortpixel-image-optimiser') ?>' src='<?php echo esc_url( wpSPIO()->plugin_url('res/img/info-icon.png' ));?>' style="margin-bottom: -2px;"/>
-                                    </span>&nbsp;<?php  }
-                                    echo esc_html($type_display. ' ' . $optimize_status . $err);
-                                    ?>
-                                </span>
-                                <span>
-                                    <?php echo esc_html($stat['total']); ?> files
-                                </span>
-                                <span>
-                                    <?php echo esc_html(UiHelper::formatTS($dirObj->get('updated'))) ?>
-                                </span>
-                                <span>
-                                  <a href='<?php echo esc_url($refreshUrl) ?>' title="<?php esc_html_e('Recheck for new images', 'shortpixel-image-optimiser'); ?>" class='refresh-folder'><i class='dashicons dashicons-update'>&nbsp;</i></a>
-                                </span>
-                                <span class='action'>
-                                  <?php if ($action): ?>
-                                    <input type="button" class="button remove-folder-button" data-value="<?php echo esc_attr($dirObj->get('id')); ?>" data-name="<?php echo esc_attr($dirObj->getPath()) ?>" title="<?php echo esc_attr($action . " " . $dirObj->getPath()); ?>"   value="<?php echo esc_attr($action); ?>">
-                                 <?php endif; ?>
-                                </span>
-                            </div>
-                        <?php }?>
-                      </div> <!-- shortpixel-folders-list -->
-		      </div>
-                    <?php } ?>
-
-                    <div class='addCustomFolder'>
-
-                      <input type="hidden" name="removeFolder" id="removeFolder"/>
-                      <p class='add-folder-text'><strong><?php esc_html_e('Add a custom folder', 'shortpixel-image-optimiser'); ?></strong></p>
-                      <input type="text" name="addCustomFolderView" id="addCustomFolderView" class="regular-text" value="" disabled style="">&nbsp;
-                      <input type="hidden" name="addCustomFolder" id="addCustomFolder" value=""/>
-                      <input type="hidden" id="customFolderBase" value="<?php echo esc_attr($this->view->customFolderBase); ?>">
-
-                      <a class="button select-folder-button" title="<?php esc_html_e('Select the images folder on your server.','shortpixel-image-optimiser');?>" href="javascript:void(0);">
-                          <?php esc_html_e('Select','shortpixel-image-optimiser');?>
-                      </a>
-                    <input type="submit" name="save" id="saveAdvAddFolder" class="button button-primary hidden" title="<?php esc_html_e('Add this Folder','shortpixel-image-optimiser');?>" value="<?php esc_html_e('Add this Folder','shortpixel-image-optimiser');?>">
-                    <p class="settings-info">
-                        <?php printf(esc_html__('Use the Select... button to select site folders. ShortPixel will optimize images and PDFs from the specified folders and their subfolders. In the %s Custom Media list %s, under the Media menu, you can see the optimization status for each image or PDF in these folders.','shortpixel-image-optimiser'), '<a href="upload.php?page=wp-short-pixel-custom">', '</a>');?>
-                    </p>
-
-                    <div class="sp-modal-shade sp-folder-picker-shade"></div>
-                        <div class="shortpixel-modal modal-folder-picker shortpixel-hide">
-                            <div class="sp-modal-title"><?php esc_html_e('Select the images folder','shortpixel-image-optimiser');?></div>
-                            <div class="sp-folder-picker"></div>
-                            <input type="button" class="button button-info select-folder-cancel" value="<?php esc_html_e('Cancel','shortpixel-image-optimiser');?>" style="margin-right: 30px;">
-                            <input type="button" class="button button-primary select-folder" value="<?php esc_html_e('Select','shortpixel-image-optimiser');?>">
-                        </div>
-
-                    <script>
-                        jQuery(document).ready(function () {
-                            ShortPixel.initFolderSelector();
-                        });
-                    </script>
-                  </div> <!-- end of AddCustomFolder -->
+									<div class='switch_button'>
+										<label>
+											<input type="checkbox" class="switch" name="hideCustomMedia" value="1" <?php checked( $view->data->hideCustomMedia, "1" );?>>
+											<div class="the_switch">&nbsp; </div>
+											<?php esc_html_e('Hide Custom Media menu item','shortpixel-image-optimiser');?>
+										</label>
+									</div>
                 </td>
             </tr>
             <tr>

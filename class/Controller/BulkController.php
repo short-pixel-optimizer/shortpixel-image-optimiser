@@ -36,7 +36,6 @@ class BulkController
    */
    public function createNewBulk($type = 'media', $customOp = null)
    {
-   //  $this->q->createNewBulk();
       $optimizeController = new OptimizeController();
       $optimizeController->setBulk(true);
 

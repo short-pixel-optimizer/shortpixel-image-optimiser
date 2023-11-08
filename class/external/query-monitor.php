@@ -24,9 +24,7 @@ class QueryMonitor
 
 	public function panelEnd($qmObj, $outputters)
 	{
-//		echo "<PRE>"; var_dump(get_class_methods($qmObj));
-//		 var_dump(get_class_methods($outputters));
-	// var_dump($outputters);
+
 	}
 
 }

@@ -1,6 +1,7 @@
 <?php
 namespace ShortPixel\Model\Image;
 
+
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
@@ -34,6 +35,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     const FILE_STATUS_SUCCESS = 2;
     const FILE_STATUS_RESTORED = 3;
     const FILE_STATUS_TORESTORE = 4; // Used for Bulk Restore
+
+    const FILE_STATUS_PREVENT = -10;
+    const FILE_STATUS_MARKED_DONE = -11;
 
     // Compression Option Consts
     const COMPRESSION_LOSSLESS = 0;
@@ -96,10 +100,13 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		protected $imageType;
 
 		/** @var int */
-    protected $processable_status = 0;
+    protected $processable_status = null;
 
 		/** @var int */
-		protected $restorable_status = 0;
+		protected $restorable_status = null;
+
+    /** @var string */
+  	protected $optimizePreventedReason;
 
 		// Public var that can be set by OptimizeController to prevent double queries.
 		/** @var boolean */
@@ -110,6 +117,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     abstract protected function loadMeta();
 
     abstract protected function getImprovements();
+    abstract protected function getExcludePatterns(); // get the Exclude Pattern(s) for -this- image to compare.
+
    // abstract protected function getOptimizeFileType();
 
     // Function to prevent image from doing anything automatically - after fatal error.
@@ -172,7 +181,19 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     /* Check if an image in theory could be processed. Check only exclusions, don't check status etc */
     public function isProcessable()
     {
-        if ( $this->isOptimized() || ! $this->exists()  || $this->isPathExcluded() || $this->isExtensionExcluded() || $this->isSizeExcluded() || (! $this->is_virtual() && ! $this->is_writable()) || (! $this->is_virtual() && ! $this->is_directory_writable())
+        // isprocessable runs zillion times, so take the edge off a little.
+        if (! is_null($this->processable_status))
+        {
+            if (self::P_PROCESSABLE === $this->processable_status)
+            {
+               return true;
+            }
+            else {
+                return false;
+            }
+        }
+
+        if ( $this->isOptimized() || ! $this->exists()  || (! $this->is_virtual() && ! $this->is_writable()) || (! $this->is_virtual() && ! $this->is_directory_writable() || $this->isPathExcluded() || $this->isExtensionExcluded() || $this->isSizeExcluded() )
 				|| $this->isOptimizePrevented() !== false  )
         {
           if(! $this->is_writable() && $this->processable_status == 0)
@@ -187,7 +208,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         }
         else
 				{
-					$this->processable_status = 0;
+					$this->processable_status = self::P_PROCESSABLE;
           return true;
 				}
     }
@@ -232,7 +253,33 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 				}
 		}
 
+    // Function to check if the reason it won't process is because user did some setting
+    public function isUserExcluded()
+    {
+      if (is_null($this->processable_status))
+      {
+         $this->isProcessable();
+      }
 
+        $reasons = array(
+            self::P_EXCLUDE_PATH,
+            self::P_EXCLUDE_SIZE,
+        );
+
+        if (in_array($this->processable_status, $reasons))
+        {
+           return true;
+        }
+        return false;
+    }
+
+    public function cancelUserExclusions()
+    {
+       if ($this->isUserExcluded())
+       {
+          $this->processable_status = 0;
+       }
+    }
 
     public function exists($forceCheck = false)
     {
@@ -316,6 +363,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
       return $message;
     }
+
+
 
     public function isImage()
     {
@@ -701,6 +750,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
           if ($copyok)
           {
+             $this->processable_status = self::P_IS_OPTIMIZED; // don't let this linger
+
              $this->setMeta('status', self::FILE_STATUS_SUCCESS);
              $this->setMeta('tsOptimized', time());
              $this->setMeta('compressedSize', $optimizedSize);
@@ -856,7 +907,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 							ResponseController::addData($this->get('id'), $response);
 
 							$this->restorable_status = self::P_DIRECTORY_NOTWRITABLE;
-							Log::addWarn('Restore - Directory noot Writable ' . $this->getFileDir() );
+							Log::addWarn('Restore - Directory not Writable ' . $this->getFileDir() );
 					}
           elseif (! $this->hasBackup())
 					{
@@ -954,6 +1005,10 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 					$this->mime = null;
 
 				}
+
+        // Reset statii
+        $this->restorable_status = null;
+        $this->processable_status = null;
         return $bool;
     }
 
@@ -1053,9 +1108,11 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
          return false;
     }
 
+
+
     protected function isPathExcluded()
     {
-        $excludePatterns = \wpSPIO()->settings()->excludePatterns;
+       $excludePatterns = $this->getExcludePatterns();
 
         if(!$excludePatterns || !is_array($excludePatterns)) { return false; }
 
@@ -1064,6 +1121,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
             if(in_array($type, array("name", "path", 'regex-name','regex-path'))) {
                 $pattern = trim($item["value"]);
                 $target = ($type == "name") ? $this->getFileName() : $this->getFullPath();
+
 
                 if ($type == 'regex-name' || $type == 'regex-path')
                 {
@@ -1138,7 +1196,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 		protected function isSizeExcluded()
 		{
-			$excludePatterns = \wpSPIO()->settings()->excludePatterns;
+			$excludePatterns = $this->getExcludePatterns();
 
 			if (! $excludePatterns || ! is_array($excludePatterns) ) // no patterns, nothing excluded
 				return false;
@@ -1176,6 +1234,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 		private function isProcessableSize($width, $height, $excludePattern)
 		{
+
 				$ranges = preg_split("/(x|×|X)/",$excludePattern);
 				$widthBounds = explode("-", $ranges[0]);
 				$minWidth = intval($widthBounds[0]);

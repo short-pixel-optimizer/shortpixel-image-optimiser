@@ -8,6 +8,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use ShortPixel\Controller\View\ListMediaViewController as ListMediaViewController;
 use ShortPixel\Controller\View\OtherMediaViewController as OtherMediaViewController;
+use ShortPixel\Controller\View\OtherMediaFolderViewController as OtherMediaFolderViewController;
+
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Notices\NoticeController as Notices;
 
@@ -105,6 +107,9 @@ class AjaxController
           $id = isset($_POST['id']) ? intval($_POST['id']) : false;
 					$result = '';
 
+
+					$item = \wpSPIO()->filesystem()->getImage($id, $type);
+
           if ($id > 0)
           {
              if ($type == 'media')
@@ -119,7 +124,6 @@ class AjaxController
              {
                 ob_start();
                 $control = new OtherMediaViewController();
-                $item = \wpSPIO()->filesystem()->getImage($id, 'custom');
                   $control->doActionColumn($item);
                 $result = ob_get_contents();
                 ob_end_clean();
@@ -129,6 +133,8 @@ class AjaxController
           $json = new \stdClass;
           $json->$type = new \stdClass;
           $json->$type->itemView = $result;
+					$json->$type->is_optimizable = $item->isProcessable();
+					$json->$type->is_restorable = $item->isRestorable();
           $json->$type->id = $id;
           $json->$type->results = null;
           $json->$type->is_error = false;
@@ -152,13 +158,25 @@ class AjaxController
 
         $queues = array_filter(explode(',', $queue), 'trim');
 
-
         $control = new OptimizeController();
         $control->setBulk($isBulk);
         $result = $control->processQueue($queues);
 
         $this->send($result);
     }
+
+		/** Ajax function to recheck if something can be active. If client is doens't have the processor key, it will check later if the other client is 'done' or went away. */
+		protected function recheckActive()
+		{
+			// If not processor, this ends the processing and sends JSON.
+			$this->checkProcessorKey();
+
+			$json = new \stdClass;
+			$json->message = __('Became processor', 'shortpixel-image-optimiser');
+			$json->status = true;
+			$this->send($json);
+
+		}
 
     public function ajaxRequest()
     {
@@ -190,7 +208,6 @@ class AjaxController
           unset($data['typeArray']);
         }
 
-				Log::addInfo('AjaxController: Action detected :' . $action);
         switch($action)
         {
            case 'restoreItem':
@@ -202,6 +219,12 @@ class AjaxController
            case 'optimizeItem':
              $json = $this->optimizeItem($json, $data);
            break;
+					 case 'markCompleted':
+					 	 $json = $this->markCompleted($json, $data);
+					 break;
+					 case 'unMarkCompleted':
+						 $json = $this->unMarkCompleted($json, $data);
+					 break;
 					 case 'cancelOptimize':
 					 		$json = $this->cancelOptimize($json, $data);
 					 break;
@@ -245,7 +268,28 @@ class AjaxController
 					 case "redoLegacy":
 					 	  $this->redoLegacy($json, $data);
 					 break;
-
+					 case 'refreshFolder':
+					 		$json = $this->refreshFolder($json,$data);
+					 break;
+					 // CUSTOM FOLDERS
+					 case 'removeCustomFolder':
+					 	 	 $json = $this->removeCustomFolder($json, $data);
+					 break;
+					 case 'browseFolders':
+					 		$json = $this->browseFolders($json, $data);
+					 break ;
+					 case 'addCustomFolder':
+					 		$json = $this->addCustomFolder($json, $data);
+					 break;
+					 case 'scanNextFolder':
+					 		$json = $this->scanNextFolder($json, $data);
+					 break;
+					 case 'resetScanFolderChecked';
+					 		$json = $this->resetScanFolderChecked($json, $data);
+					 break;
+					 case 'recheckActive':
+					 		$json = $this->recheckActive($json, $data);
+					 break;
            default:
               $json->$type->message = __('Ajaxrequest - no action found', 'shorpixel-image-optimiser');
               $json->error = self::NO_ACTION;
@@ -282,6 +326,7 @@ class AjaxController
     {
           $id = intval($_POST['id']);
           $type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';
+					$flags = isset($_POST['flags']) ? sanitize_text_field($_POST['flags']) : false;
 
           $mediaItem = $this->getMediaItem($id, $type);
 
@@ -293,9 +338,66 @@ class AjaxController
           $json = new \stdClass;
           $json->$type = new \stdClass;
 
-          $json->$type = $control->addItemToQueue($mediaItem);
+					$args = array();
+					if ('force' === $flags)
+					{
+						 $args['forceExclusion'] =  true;
+					}
+
+          $json->$type = $control->addItemToQueue($mediaItem, $args);
 					return $json;
     }
+
+		public function markCompleted()
+		{
+				$id = intval($_POST['id']);
+				$type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';
+
+				$mediaItem = $this->getMediaItem($id, $type);
+
+				$mediaItem->markCompleted(__('This item has been manually marked as completed', 'shortpixel-image-optimiser'), ImageModel::FILE_STATUS_MARKED_DONE);
+
+				$json = new \stdClass;
+				$json->$type = new \stdClass;
+
+				$json->$type->status = 1;
+				$json->$type->fileStatus = ImageModel::FILE_STATUS_SUCCESS; // great success!
+
+				$json->$type->item_id = $id;
+				$json->$type->result = new \stdClass;
+				$json->$type->result->message = __('Item marked as completed', 'shortpixel-image-optimiser');
+				$json->$type->result->is_done = true;
+
+				$json->status = true;
+
+				return $json;
+		}
+
+		public function unMarkCompleted()
+		{
+			$id = intval($_POST['id']);
+			$type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';
+
+			$mediaItem = $this->getMediaItem($id, $type);
+
+			$mediaItem->resetPrevent();
+
+			$json = new \stdClass;
+			$json->$type = new \stdClass;
+
+			$json->$type->status = 1;
+			$json->$type->fileStatus = ImageModel::FILE_STATUS_SUCCESS; // great success!
+
+			$json->$type->item_id = $id;
+			$json->$type->result = new \stdClass;
+			$json->$type->result->message = __('Item unmarked', 'shortpixel-image-optimiser');
+			$json->$type->result->is_done = true;
+
+			$json->status = true;
+
+			return $json;
+
+		}
 
 		public function cancelOptimize($json, $data)
 		{
@@ -424,7 +526,6 @@ class AjaxController
 				if ($doCustom)
 				{
 					$otherMediaController = OtherMediaController::getInstance();
-					$otherMediaController->refreshFolders(true);
 				}
 
         $optimizeController = new OptimizeController();
@@ -581,6 +682,173 @@ class AjaxController
 
         $this->send( (object) $ret);
     }
+
+		protected function refreshFolder($json, $data)
+		{
+			$otherMediaController = OtherMediaController::getInstance();
+
+			$folder_id = isset($_POST['id']) ? intval($_POST['id']) : false;
+			$json->folder->message = '';
+
+
+			if (false === $folder_id)
+			{
+				$json->folder->is_error = true;
+				$json->folder->message = __('An error has occured: no folder id', 'shortpixel-image-optimiser');
+			}
+
+			$folderObj = $otherMediaController->getFolderByID($folder_id);
+
+			if (false === $folderObj)
+			{
+				 $json->folder->is_error = true;
+				 $json->folder->message = __('An error has occured: no folder object', 'shortpixel-image-optimiser');
+			}
+
+			$result = $folderObj->refreshFolder(true);
+
+			if (false === $result)
+			{
+				 $json->folder->message = $folderObj->get('last_message');
+			}
+			else { // result is stats
+					$stats = $result;
+				 	if ($stats['new'] > 0)
+					{
+						 $message = sprintf(__('%s new files found ( %s waiting %s optimized)', 'shortpixel-image-optimiser'), $stats['new'], $stats['waiting'], $stats['optimized']);
+					}
+					else
+					{
+						 $message = sprintf(__('No new files found ( %s waiting %s optimized)', 'shortpixel-image-optimiser'), $stats['waiting'], $stats['optimized']);
+					}
+
+					$json->folder->message = $message;
+			}
+
+
+			$json->status = true;
+			$json->folder->fileCount = $folderObj->get('fileCount');
+			$json->folder->action = 'refresh';
+
+			return $json;
+		}
+
+		protected function removeCustomFolder($json, $data)
+		{
+			$folder_id = isset($_POST['id']) ? intval($_POST['id']) : false;
+
+			$otherMedia = OtherMediaController::getInstance();
+			$dirObj = $otherMedia->getFolderByID($folder_id);
+
+			if ($dirObj === false)
+			{
+				$json->folder->is_error = true;
+				$json->folder->message = __('An error has occured: no folder object', 'shortpixel-image-optimiser');
+				return;
+			}
+
+			$dirObj->delete();
+
+			$json->status = true;
+			$json->folder->message = __('Folder has been removed', 'shortpixel-image-optimiser');
+			$json->folder->is_done = true;
+			$json->folder->action = 'remove';
+
+			return $json;
+		}
+
+		protected function addCustomFolder($json, $data)
+		{
+			  $relpath = isset($_POST['relpath']) ? sanitize_text_field($_POST['relpath']) : null;
+
+				$fs = \wpSPIO()->filesystem();
+
+				$customFolderBase = $fs->getWPFileBase();
+				$basePath = $customFolderBase->getPath();
+
+				$path = trailingslashit($basePath) . $relpath;
+
+				$otherMedia = OtherMediaController::getInstance();
+
+				// Result is a folder object
+				$result = $otherMedia->addDirectory($path);
+
+
+				// @todo Formulate some response here that can be used on the row thingie.
+				if (false === $result)
+				{
+					 $json->folder->is_error = true;
+					 $json->folder->message = __('Failed to add Folder', 'shortpixel-image-optimiser');
+
+				}
+				else {
+					$control = new OtherMediaFolderViewController();
+					$itemView = $control->singleItemView($result);
+
+					$json->folder->result = new \stdClass;
+					$json->folder->result->id = $result->get('id');
+					$json->folder->result->itemView = $itemView;
+
+				}
+
+				return $json;
+		}
+
+		protected function browseFolders($json, $data)
+		{
+				$relpath = isset($_POST['relPath']) ? sanitize_text_field($_POST['relPath']) : '';
+
+				$otherMediaController = OtherMediaController::getInstance();
+
+				$folders = $otherMediaController->browseFolder($relpath);
+
+				if (isset($folders['is_error']) && true == $folders['is_error'])
+				{
+					 $json->folder->is_error = true;
+					 $json->folder->message = $folders['message'];
+					 $folders = array();
+				}
+
+				$json->folder->folders = $folders;
+				$json->folder->relpath = $relpath;
+				$json->status = true;
+
+				return $json;
+
+		}
+
+		protected function resetScanFolderChecked($json, $data)
+		{
+			$otherMediaController = OtherMediaController::getInstance();
+
+			$otherMediaController->resetCheckedTimestamps();
+			return $json;
+		}
+
+		protected function scanNextFolder($json, $data)
+		{
+			$otherMediaController = OtherMediaController::getInstance();
+			$force = isset($_POST['force']) ? sanitize_text_field($_POST['force']) : null;
+
+			$args = array();
+			$args['force'] = $force;
+
+			$result = $otherMediaController->doNextRefreshableFolder($args);
+
+			if ($result === false)
+			{
+				 $json->folder->is_done = true;
+				 $json->folder->result = new \stdClass;
+				 $json->folder->result->message = __('All Folders have been scanned!', 'shortpixel_image_optimiser');
+			}
+			else {
+
+					$json->folder->result = $result;
+			}
+
+			return $json;
+
+		}
 
     public function ajax_getBackupFolderSize()
     {

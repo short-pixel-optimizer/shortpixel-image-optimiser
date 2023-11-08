@@ -1,6 +1,9 @@
 <?php
 namespace ShortPixel\Model;
 
+use ShortPixel\Model\Image\ImageModel as ImageModel;
+
+
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
@@ -78,7 +81,10 @@ class FrontImage
 					 $this->attributes[$attr->nodeName] = $attr->nodeValue;
         }
 
+
+        // Parse the directory path and other sources
 				$result = $this->setupSources();
+
 
 				if (true === $result)
 					$this->image_loaded = true;
@@ -159,6 +165,8 @@ class FrontImage
 		{
 				 if (! is_null($this->imageBase))
 			 		return $this->imageBase->getPath();
+
+        return null;
 		}
 
 		public function parseReplacement($args)
@@ -210,6 +218,14 @@ class FrontImage
 				 return false;
 			}
 
+      // Filter out extension that are not for us.
+      if (false === $this->checkExtensionConvertable($src))
+      {
+          return false;
+      }
+
+
+
 			$fs = \wpSPIO()->filesystem();
 			$fileObj = $fs->getFile($src);
 			$fileDir = $fileObj->getFileDir();
@@ -219,6 +235,20 @@ class FrontImage
 			// If (! is_hnull $srcset)
 			// Get first item from srcset ( remove the size ? , then feed it to FS, get directory from it.
 		}
+
+    /*** Check if the extension is something we want to check
+    * @param String The URL source of the image.
+    **/
+    private function checkExtensionConvertable($source)
+    {
+       $extension = substr($source, strrpos($source, '.') + 1);
+       if (in_array($extension, ImageModel::PROCESSABLE_EXTENSIONS))
+       {
+          return true;
+       }
+       return false;
+
+    }
 
 		protected function buildSource($sources, $fileFormat)
 		{

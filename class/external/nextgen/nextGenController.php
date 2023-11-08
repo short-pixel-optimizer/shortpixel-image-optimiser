@@ -45,7 +45,8 @@ class NextGenController
 			add_action('ngg_delete_image', array($this, 'OnDeleteImage'),10, 2); // this works only on single images!
 
       add_action('shortpixel/othermedia/folder/load', array($this, 'loadFolder'), 10, 2);
-			add_action('shortpixel/othermedia/addfiles', array($this, 'checkAddFiles'), 10, 3);
+      // Off because this causes bad UX ( refresh folder but no images added)
+			//add_action('shortpixel/othermedia/addfiles', array($this, 'checkAddFiles'), 10, 3);
 
       add_filter( 'ngg_manage_images_columns', array( $controller, 'nggColumns' ) );
       add_filter( 'ngg_manage_images_number_of_columns', array( $controller, 'nggCountColumns' ) );

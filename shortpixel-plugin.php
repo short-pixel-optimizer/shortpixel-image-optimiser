@@ -159,6 +159,7 @@ class ShortPixelPlugin {
 
 		// Action / hook for who wants to use CRON. Please refer to manual / support to prevent loss of credits.
 		add_action( 'shortpixel/hook/processqueue', array( $admin, 'processQueueHook' ) );
+		add_action( 'shortpixel/hook/scancustomfolders', array($admin, 'scanCustomFoldersHook'));
 
 		// Action for media library gallery view
 		//add_filter('attachment_fields_to_edit', array($admin, 'editAttachmentScreen'), 10, 2);
@@ -233,7 +234,7 @@ class ShortPixelPlugin {
 		add_action( 'wp_ajax_shortpixel_image_processing', array( AjaxController::getInstance(), 'ajax_processQueue' ) );
 
 		// Custom Media
-		add_action( 'wp_ajax_shortpixel_browse_content', array( OtherMediaController::getInstance(), 'ajaxBrowseContent' ) );
+	//	add_action( 'wp_ajax_shortpixel_browse_content', array( OtherMediaController::getInstance(), 'ajaxBrowseContent' ) );
 		add_action( 'wp_ajax_shortpixel_get_backup_size', array( AjaxController::getInstance(), 'ajax_getBackupFolderSize' ) );
 
 		add_action( 'wp_ajax_shortpixel_propose_upgrade', array( AjaxController::getInstance(), 'ajax_proposeQuotaUpgrade' ) );
@@ -257,7 +258,7 @@ class ShortPixelPlugin {
 		$admin_pages[] = add_options_page( __( 'ShortPixel Settings', 'shortpixel-image-optimiser' ), 'ShortPixel', 'manage_options', 'wp-shortpixel-settings', array( $this, 'route' ) );
 
 		$otherMediaController = OtherMediaController::getInstance();
-		if ( $otherMediaController->hasCustomImages() ) {
+		if ( $otherMediaController->showMenuItem() ) {
 			/*translators: title and menu name for the Other media page*/
 			$admin_pages[] = add_media_page( __( 'Custom Media Optimized by ShortPixel', 'shortpixel-image-optimiser' ), __( 'Custom Media', 'shortpixel-image-optimiser' ), 'edit_others_posts', 'wp-short-pixel-custom', array( $this, 'route' ) );
 		}
@@ -291,7 +292,21 @@ class ShortPixelPlugin {
 
 
 		// FileTree in Settings
-		wp_register_script( 'sp-file-tree', plugins_url( '/res/js/sp-file-tree.min.js', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
+	/*	wp_register_script( 'sp-file-tree', plugins_url( '/res/js/sp-file-tree.min.js', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
+*/
+
+	 wp_register_script('shortpixel-folderbrowser', plugins_url('/res/js/shortpixel-folderbrowser.js', SHORTPIXEL_PLUGIN_FILE, array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true ));
+
+	 wp_localize_script('shortpixel-folderbrowser', 'spio_folderbrowser', array(
+		 		'strings' => array(
+						'loading' => __('Loading', 'shortpixel-image-optimiser'),
+						'empty_result' => __('No Directories found that can be added to Custom Folders', 'shortpixel-image-optimiser'),
+				),
+				'icons' => array(
+						'folder_closed' => plugins_url('res/img/filebrowser/folder-closed.svg', SHORTPIXEL_PLUGIN_FILE),
+						'folder_open' => plugins_url('res/img/filebrowser/folder-closed.svg', SHORTPIXEL_PLUGIN_FILE),
+				),
+	 ));
 
 		wp_register_script( 'jquery.knob.min.js', plugins_url( '/res/js/jquery.knob.min.js', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
@@ -310,6 +325,8 @@ class ShortPixelPlugin {
 		wp_localize_script( 'shortpixel-tooltip', 'spio_tooltipStrings', $tooltip_localize);
 
 		wp_register_script( 'shortpixel-settings', plugins_url( 'res/js/shortpixel-settings.js', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
+
+
 
 		wp_register_script('shortpixel-media', plugins_url('res/js/shortpixel-media.js',  SHORTPIXEL_PLUGIN_FILE), array('jquery'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
@@ -350,7 +367,7 @@ class ShortPixelPlugin {
 				'interval'          => $interval,
 				'deferInterval'     => $deferInterval,
 				'debugIsActive' 		=> (\wpSPIO()->env()->is_debug) ? 'true' : 'false',
-
+				'autoMediaLibrary'  => ($settings->autoMediaLibrary) ? 'true' : 'false',
             )
         );
 
@@ -365,14 +382,19 @@ class ShortPixelPlugin {
 
 		wp_register_script( 'shortpixel-screen-nolist', plugins_url( '/res/js/screens/screen-nolist.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery', 'shortpixel-processor', 'shortpixel-screen-base' ), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
-	  $screen_localize = array(
+	  $screen_localize = array(  // Item Base
 			'startAction' => __('Processing... ','shortpixel-image-optimiser'),
 			'fatalError' => __('ShortPixel encountered a fatal error when optimizing images. Please check the issue below. If this is caused by a bug please contact our support', 'shortpixel-image-optimiser'),
 			'fatalErrorStop' => __('ShortPixel has encounted multiple errors and has now stopped processing', 'shortpixel-image-optimiser'),
 			'fatalErrorStopText' => __('No items are being processed. To try again after solving the issues, please reload the page ', 'shortpixel-image-optimiser'),
-		) ;
 
-		wp_localize_script( 'shortpixel-screen-base', 'spio_screenStrings', $screen_localize);
+		);
+
+		$screen_localize_custom = array( // Custom Screen
+			'stopActionMessage' => __('Folder scan has stopped', 'shortpixel-image-optimiser'),
+		);
+
+		wp_localize_script( 'shortpixel-screen-base', 'spio_screenStrings', array_merge($screen_localize, $screen_localize_custom));
 
 		wp_register_script( 'shortpixel-screen-bulk', plugins_url( '/res/js/screens/screen-bulk.js', SHORTPIXEL_PLUGIN_FILE ), array( 'jquery', 'shortpixel-processor', 'shortpixel-screen-base'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
@@ -413,39 +435,25 @@ class ShortPixelPlugin {
 		}
 
 		$jsTranslation = array(
-			'optimizeWithSP'              => __( 'Optimize with ShortPixel', 'shortpixel-image-optimiser' ),
+			'optimizeWithSP'              => __( 'ShortPixel', 'shortpixel-image-optimiser' ),
 			'redoLossy'                   => __( 'Re-optimize Lossy', 'shortpixel-image-optimiser' ),
 			'redoGlossy'                  => __( 'Re-optimize Glossy', 'shortpixel-image-optimiser' ),
 			'redoLossless'                => __( 'Re-optimize Lossless', 'shortpixel-image-optimiser' ),
 			'redoSmartcrop'               => __( 'Re-optimize with SmartCrop', 'shortpixel-image-optimiser'),
 			'redoSmartcropless'           => __( 'Re-optimize without SmartCrop', 'shortpixel-image-optimiser'),
 			'restoreOriginal'             => __( 'Restore Originals', 'shortpixel-image-optimiser' ),
-			'changeMLToListMode'          => __( 'In order to access the ShortPixel Optimization actions and info, please change to {0}List View{1}List View{2}Dismiss{3}', 'shortpixel-image-optimiser' ),
-			'alertOnlyAppliesToNewImages' => __( 'This type of optimization will apply to new uploaded images. Images that were already processed will not be re-optimized unless you restart the bulk process.', 'shortpixel-image-optimiser' ),
+			'markCompleted' 							=> __('Mark as completed' ,'shortpixel-image-optimiser'),
 			'areYouSureStopOptimizing'    => __( 'Are you sure you want to stop optimizing the folder {0}?', 'shortpixel-image-optimiser' ),
-			'reducedBy'                   => __( 'Reduced by', 'shortpixel-image-optimiser' ),
-			'bonusProcessing'             => __( 'Bonus processing', 'shortpixel-image-optimiser' ),
-			'plusXthumbsOpt'              => __( '+{0} thumbnails optimized', 'shortpixel-image-optimiser' ),
-			'plusXretinasOpt'             => __( '+{0} Retina images optimized', 'shortpixel-image-optimiser' ),
-			'optXThumbs'                  => __( 'Optimize {0} thumbnails', 'shortpixel-image-optimiser' ),
-			'reOptimizeAs'                => __( 'Reoptimize {0}', 'shortpixel-image-optimiser' ),
-			'restoreBackup'               => __( 'Restore backup', 'shortpixel-image-optimiser' ),
-			'getApiKey'                   => __( 'Get API Key', 'shortpixel-image-optimiser' ),
-			'extendQuota'                 => __( 'Extend Quota', 'shortpixel-image-optimiser' ),
-			'check__Quota'                => __( 'Check&nbsp;&nbsp;Quota', 'shortpixel-image-optimiser' ),
-			'retry'                       => __( 'Retry', 'shortpixel-image-optimiser' ),
-			'thisContentNotProcessable'   => __( 'This content is not processable.', 'shortpixel-image-optimiser' ),
-			'imageWaitOptThumbs'          => __( 'Image waiting to optimize thumbnails', 'shortpixel-image-optimiser' ),
 			'pleaseDoNotSetLesserSize'    => __( "Please do not set a {0} less than the {1} of the largest thumbnail which is {2}, to be able to still regenerate all your thumbnails in case you'll ever need this.", 'shortpixel-image-optimiser' ),
 			'pleaseDoNotSetLesser1024'    => __( "Please do not set a {0} less than 1024, to be able to still regenerate all your thumbnails in case you'll ever need this.", 'shortpixel-image-optimiser' ),
 			'confirmBulkRestore'          => __( 'Are you sure you want to restore from backup all the images in your Media Library optimized with ShortPixel?', 'shortpixel-image-optimiser' ),
 			'confirmBulkCleanup'          => __( "Are you sure you want to cleanup the ShortPixel metadata info for the images in your Media Library optimized with ShortPixel? This will make ShortPixel 'forget' that it optimized them and will optimize them again if you re-run the Bulk Optimization process.", 'shortpixel-image-optimiser' ),
-			'confirmBulkCleanupPending'   => __( 'Are you sure you want to cleanup the pending metadata?', 'shortpixel-image-optimiser' ),
 			'alertDeliverWebPAltered'     => __( "Warning: Using this method alters the structure of the rendered HTML code (IMG tags get included in PICTURE tags), which, in some rare \ncases, can lead to CSS/JS inconsistencies.\n\nPlease test this functionality thoroughly after activating!\n\nIf you notice any issue, just deactivate it and the HTML will will revert to the previous state.", 'shortpixel-image-optimiser' ),
 			'alertDeliverWebPUnaltered'   => __( 'This option will serve both WebP and the original image using the same URL, based on the web browser capabilities, please make sure you\'re serving the images from your server and not using a CDN which caches the images.', 'shortpixel-image-optimiser' ),
 			'originalImage'               => __( 'Original image', 'shortpixel-image-optimiser' ),
 			'optimizedImage'              => __( 'Optimized image', 'shortpixel-image-optimiser' ),
 			'loading'                     => __( 'Loading...', 'shortpixel-image-optimiser' ),
+
 		);
 
 		wp_localize_script( 'shortpixel', '_spTr', $jsTranslation );
@@ -455,7 +463,7 @@ class ShortPixelPlugin {
 
 	public function admin_styles() {
 
-		wp_register_style( 'sp-file-tree', plugins_url( '/res/css/sp-file-tree.min.css', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
+		wp_register_style( 'shortpixel-folderbrowser', plugins_url( '/res/css/shortpixel-folderbrowser.css', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
 
 		//wp_register_style( 'shortpixel', plugins_url( '/res/css/short-pixel.css', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION );
 
@@ -530,12 +538,12 @@ class ShortPixelPlugin {
 		if ( $plugin_page == 'wp-shortpixel-settings' ) {
 
 			$this->load_script( 'shortpixel-screen-nolist' ); // screen
-			$this->load_script( 'sp-file-tree' );
+	//		$this->load_script( 'sp-file-tree' );
 			$this->load_script( 'shortpixel-settings' );
 
 			$this->load_style( 'shortpixel-admin' );
 			//$this->load_style( 'shortpixel' );
-			$this->load_style( 'sp-file-tree' );
+			//$this->load_style( 'sp-file-tree' );
 			$this->load_style( 'shortpixel-settings' );
 
 		} elseif ( $plugin_page == 'wp-short-pixel-bulk' ) {
@@ -556,10 +564,13 @@ class ShortPixelPlugin {
 				$this->load_script( 'shortpixel-debug' );
 			}
 
-		} elseif ( $plugin_page == 'wp-short-pixel-custom' ) {
+		} elseif ( $plugin_page == 'wp-short-pixel-custom' ) { // custom media
 		//	$this->load_style( 'shortpixel' );
-			$this->load_style( 'shortpixel-admin' );
 
+			$this->load_script( 'shortpixel-folderbrowser' );
+
+			$this->load_style( 'shortpixel-admin' );
+			$this->load_style( 'shortpixel-folderbrowser' );
 			$this->load_style( 'shortpixel-othermedia' );
 			$this->load_script( 'shortpixel-screen-custom' ); // screen
 
@@ -596,6 +607,8 @@ class ShortPixelPlugin {
      */
 	public function route() {
 		global $plugin_page;
+		//ar_dump($plugin_page);
+		//exit($plugin_page);
 		// $this->initPluginRunTime(); // Not in use currently.
 		$default_action = 'load'; // generic action on controller.
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
@@ -610,16 +623,26 @@ class ShortPixelPlugin {
 
         switch ( $plugin_page ) {
             case 'wp-shortpixel-settings': // settings
-				$controller = 'ShortPixel\Controller\SettingsController';
-                break;
-            case 'wp-short-pixel-custom': // other media
+						$controller = 'ShortPixel\Controller\SettingsController';
+        	break;
+          case 'wp-short-pixel-custom': // other media
+						if ('folders'  === $template_part )
+						{
+							$controller = 'ShortPixel\Controller\View\OtherMediaFolderViewController';
+						}
+						elseif('scan' === $template_part)
+						{
+							$controller = 'ShortPixel\Controller\View\OtherMediaScanViewController';
+						}
+						else {
+							$controller = 'ShortPixel\Controller\View\OtherMediaViewController';
+						}
 
-				$controller = 'ShortPixel\Controller\View\OtherMediaViewController';
-                break;
-        case 'wp-short-pixel-bulk':
-					$controller = '\ShortPixel\Controller\View\BulkViewController';
-               break;
-            case null:
+        	break;
+        	case 'wp-short-pixel-bulk':
+						$controller = '\ShortPixel\Controller\View\BulkViewController';
+           break;
+           case null:
             default:
                 switch ( $screen_id ) {
 					case 'upload':

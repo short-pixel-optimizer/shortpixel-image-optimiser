@@ -51,8 +51,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	/** @var boolean */
   protected $optimizePrevented; // cache if there is any reason to prevent optimizing
 
-	/** @var string */
-	protected $optimizePreventedReason;
 
 	/** @var boolean */
 	private $justConverted = false; // check if legacy conversion happened on same run, to prevent double runs.
@@ -78,6 +76,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			// Set AFTER PARENT, because it's overwritten.
 			$this->imageType = self::IMAGE_TYPE_MAIN;
 			$this->image_meta = new ImageMeta();
+			$this->setName($this->mainImageKey); // by definition this is the case, used for isSizeExcluded
 
       // WP 5.3 and higher. Check for original file.
       if (function_exists('wp_get_original_image_path'))
@@ -101,6 +100,21 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			$data = $this->getOptimizeData();
 			return array_values($data['urls']);
 	}
+
+  // Cancel any exclusions set by user. This is meant to be able to manually optimize an image that has been excluded otherwise. Just to keep things simple. Run this before getting any URLs or OptimizeData.
+  public function cancelUserExclusions()
+  {
+      parent::cancelUserExclusions();
+
+      $thumbs = $this->getThumbObjects();
+      foreach($thumbs as $thumbnailObj)
+      {
+          $thumbnailObj->cancelUserExclusions();
+      }
+
+      // reset optimizedata if any
+      $this->optimizeData = null;
+  }
 
 	// Path will only return the filepath.  For reasons, see getOptimizeFileType
   public function getOptimizeData()
@@ -262,6 +276,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		 $this->optimizeData = null;
 	}
 
+  // Overwrite a settin for optimization
 	public function doSetting($setting, $value)
 	{
 		  $this->forceSettings[$setting] = $value;
@@ -519,12 +534,20 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   }
 
   // @todo Needs unit test.
-  public function count($type)
+  public function count($type, $args = array())
   {
+      $defaults = array(
+        'thumbs_only' => false,
+      );
+
+      $args = wp_parse_args($args, $defaults);
+
+      $count = 0;
+
       switch($type)
       {
          case 'thumbnails' :
-           $count = count($this->thumbnails);
+           $count = count($this->get('thumbnails'));
          break;
          case 'webps':
             $count = count(array_unique($this->getWebps()));
@@ -535,6 +558,39 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
          case 'retinas':
            $count = count(array_unique($this->getRetinas()));
          break;
+
+         case 'optimized':
+            if (false === $args['thumbs_only'] && $this->isOptimized() )
+            {
+                $count++;
+            }
+
+            foreach($this->get('thumbnails') as $name => $object)
+            {
+               if ($object->isOptimized())
+               {
+                  $count++;
+               }
+            }
+
+         break;
+         case 'user_excluded':
+
+             if (false === $args['thumbs_only'] && $this->isUserExcluded() )
+             {
+                 $count++;
+             }
+
+             foreach($this->get('thumbnails') as $name => $object)
+             {
+                if ($object->isUserExcluded())
+                {
+                   $count++;
+                }
+             }
+
+         break;
+
       }
 
       return $count;
@@ -642,8 +698,10 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
          {
 					  continue;
 				 }
-         if (!$thumbnail->isProcessable())
+         // Catch serious issues witht thumbnails, ignore the user ones. if they come back, try to process.
+         if (!$thumbnail->isProcessable()  && false === $thumbnail->isUserExcluded() )
 				 {
+           Log::addWarn('Optimized thumbnail signalled as not processable :' . $sizeName);
            continue; // when excluded.
 				 }
 
@@ -857,7 +915,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
                 $thumbnails[$name]->setMetaObj($thumbMeta);
                 $thumbnails[$name]->verifyImage();
                 unset($metadata->thumbnails[$name]);
-
              }
           }
 
@@ -1446,12 +1503,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				 return false;
 			}
 
-			// The exclude size on the main image - via regex - if fails, prevents the whole thing from optimization.
-			if ($this->processable_status == ImageModel::P_EXCLUDE_SIZE || $this->processable_status == ImageModel::P_EXCLUDE_PATH)
-			{
-				 return $bool;
-			}
-
       if (! $bool) // if parent is not processable, check if thumbnails are, can still have a work to do.
       {
 
@@ -1488,8 +1539,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       return $bool;
   }
 
-
-
   public function isRestorable()
   {
       $bool = true;
@@ -1517,8 +1566,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
       return $bool;
   }
-
-
 
   public function conversionPrepare($args = array())
 	{
@@ -1779,13 +1826,19 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   }
 
   /* Protect this image from being optimized. This flag should be unset by UX / Retry button on front */
-  protected function preventNextTry($reason = 1)
+  protected function preventNextTry($reason = 1, $status = self::FILE_STATUS_PREVENT)
   {
-      //Log::addError('Call resulted in preventNextTry on thumbnailModel');
-      //exit('Fatal error : Prevent Next Try should not be run on thumbnails');
       Log::addWarn($this->get('id') . ' preventing next try: ' . $reason);
-      update_post_meta($this->id, '_shortpixel_prevent_optimize', $reason);
 
+      update_post_meta($this->id, '_shortpixel_prevent_optimize', $reason);
+    //  update_post_meta($this->id, '_shortpixel_prevent_optimize_status', $status);
+      $this->setMeta('status', $status);
+      $this->saveMeta();
+  }
+
+  public function markCompleted($reason, $status)
+  {
+     return $this->preventNextTry($reason, $status);
   }
 
   public function isOptimizePrevented()
@@ -1796,6 +1849,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			 }
 
        $reason = get_post_meta($this->id, '_shortpixel_prevent_optimize', true);
+       //$status = get_post_meta($this->id, '_shortpixel_prevent_optimize_status', true);
 
        if ($reason === false || strlen($reason) == 0)
        {
@@ -1811,9 +1865,30 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
        }
   }
 
+  // Check if anything is optimized. Main image can't be relied upon as in the past since it can be excluded, so anything optimized is the check to show the optimized options like restore.
+  public function isSomethingOptimized()
+  {
+      if ($this->isOptimized())
+        return true;
+
+      $thumbs = $this->getThumbObjects();
+      foreach($thumbs as $thumbObj)
+      {
+          if ($thumbObj->isOptimized())
+          {
+             return true;
+          }
+      }
+      return false;
+  }
+
   public function resetPrevent()
   {
       delete_post_meta($this->id, '_shortpixel_prevent_optimize');
+      $this->setMeta('status', self::FILE_STATUS_UNPROCESSED);
+      $this->saveMeta();
+      //delete_post_meta($this->id, '_shortpixel_prevent_optimize_status');
+
 			$this->optimizePrevented = null;
   }
 
