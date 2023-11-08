@@ -29,14 +29,14 @@ if ( isset($_GET['noheader']) ) {
 
   <div class='scan-actions'>
 		<h2><?php _e('Actions', 'shortpixel-image-optimiser') ?></h2>
-		<p><?php printf(__('Scan folders for images not yet included in custom media. If you want to only check a specific folders you can do so in the %sfolders section%s', 'shortpixel-image-optimiser'), '<a href="' . $folder_url . '">', '</a>'); ?>
+		<p><?php printf(__('Scan folders for images that are not yet included in custom media. If you only want to check specific folders, you can do this in the %sFolders tab%s.', 'shortpixel-image-optimiser'), '<a href="' . $folder_url . '">', '</a>'); ?>
 		</p>
 
 		<div class='action-scan'>
 			<button type="button" name="scan" class='scan-button button button-primary'>
 				<?php _e('Refresh all folders', 'shortpixel-image-optimiser'); ?>
 			</button>
-			<label><?php _e('Refresh all folders starting from last update time. This will be faster.', 'shortpixel-image-optimiser'); ?>
+			<label><?php _e('Refresh all folders since the last refresh time. This is faster.', 'shortpixel-image-optimiser'); ?>
 			</label>
 		</div>
 
@@ -45,7 +45,7 @@ if ( isset($_GET['noheader']) ) {
 				 <?php _e('Full scan of all folders', 'shortpixel-image-optimiser'); ?>
 			</button>
 			<label>
-				<?php _e('Fully scan all folders and check all files.  ', 'shortpixel-image-optimiser'); ?>
+				<?php _e('Fully scan all folders and check all files again.', 'shortpixel-image-optimiser'); ?>
 			</label>
 
 		</div>
