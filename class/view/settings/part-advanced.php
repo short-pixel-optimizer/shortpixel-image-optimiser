@@ -430,7 +430,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 		if (is_array($excludeArray) && count($excludeArray) > 0)
 		{
 				echo "<ul class='exclude-list'>";
-        echo '<input type="hidden" id="new-exclusion-index" name="new-index" value="' . count($excludeArray)  -1 . '">';
+        echo '<input type="hidden" id="new-exclusion-index" name="new-index" value="' . (count($excludeArray)  -1) . '">';
         $i = 0;
 				foreach($excludeArray as $index => $option)
 				{
