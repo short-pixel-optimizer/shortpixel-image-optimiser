@@ -60,7 +60,8 @@ var ShortPixelSettings = function()
 
 
 			var addNewExclusionButton = document.querySelector('.new-exclusion-button');
-			addNewExclusionButton.addEventListener('click', this.NewExclusionShowInterfaceEvent.bind(this));
+			if (false === null)
+				addNewExclusionButton.addEventListener('click', this.NewExclusionShowInterfaceEvent.bind(this));
 	}
 
 	this.DoToggleAction = function(event)
