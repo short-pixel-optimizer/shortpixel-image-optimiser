@@ -133,8 +133,8 @@ class AjaxController
           $json = new \stdClass;
           $json->$type = new \stdClass;
           $json->$type->itemView = $result;
-					$json->$type->is_optimizable = $item->isProcessable();
-					$json->$type->is_restorable = $item->isRestorable();
+					$json->$type->is_optimizable = (false !== $item) ? $item->isProcessable() : false;
+					$json->$type->is_restorable = (false !== $item)  ? $item->isRestorable() : false;
           $json->$type->id = $id;
           $json->$type->results = null;
           $json->$type->is_error = false;
