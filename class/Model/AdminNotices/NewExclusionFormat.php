@@ -15,6 +15,11 @@ class NewExclusionFormat extends \ShortPixel\Model\AdminNoticeModel
 	{
       $patterns = \wpSPIO()->settings()->excludePatterns;
 
+      if (! is_array($patterns))
+      {
+         return false; 
+      }
+
       foreach($patterns as $index => $pattern)
       {
         if (! isset($pattern['apply']))
