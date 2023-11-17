@@ -808,7 +808,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
           }
           return true;
 
-        Log::addWarn('Could not find images of this item in tempfile -' . $this->id . '(' . $this->getFullPath() . ')', array_keys($downloadResults) );
+        Log::addWarn('Could not find images of this item in tempfile -' . $this->id . '(' . $this->getFullPath() . ')', array_keys($results) );
 
 				$response = array(
 					 'is_error' => true,
@@ -832,7 +832,15 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
              $webpResult = $this->handleWebp($tmpFile);
               if ($webpResult === false)
-                Log::addWarn('Webps available, but copy failed ' . $downloadResults['webp']['file']->getFullPath());
+              {
+                if (is_object($tmpFile))
+                {
+                  Log::addWarn('Webps available, but copy failed ' . $tmpFile->getFullPath());
+                }
+                else {
+                  Log::addWarn('Webps available, but tmpFile not object / failed ', $downloadResult['webp']);
+                }
+              }
               else
                 $this->setMeta('webp', $webpResult->getFileName());
           }
