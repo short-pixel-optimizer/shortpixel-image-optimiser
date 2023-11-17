@@ -24,22 +24,23 @@ class FileModel extends \ShortPixel\Model
 
   // File info
   protected $fullpath = null;
-	protected $rawfullpath = null;
+  protected $rawfullpath = null;
   protected $filename = null; // filename + extension
   protected $filebase = null; // filename without extension
   protected $directory = null;
   protected $extension = null;
   protected $mime = null;
-	protected $filesize = null;
+  protected $permissions = null;
+  protected $filesize = null;
 
   // File Status
   protected $exists = null;
   protected $is_writable = null;
-	protected $is_directory_writable = null;
+  protected $is_directory_writable = null;
   protected $is_readable = null;
   protected $is_file = null;
   protected $is_virtual = false;
-	protected $virtual_status = null;
+  protected $virtual_status = null;
 
   protected $status;
 
@@ -117,6 +118,7 @@ class FileModel extends \ShortPixel\Model
       $this->exists = null;
       $this->is_virtual = null;
 			$this->filesize = null;
+	    $this->permissions = null;
   }
 
 	/**
@@ -126,7 +128,14 @@ class FileModel extends \ShortPixel\Model
   {
     if (true === $forceCheck || is_null($this->exists))
     {
-      $this->exists = (@file_exists($this->fullpath) && is_file($this->fullpath));
+      if (true === $this->fileIsRestricted($this->fullpath))
+      {
+          $this->exists = false;
+      }
+      else {
+          $this->exists = (@file_exists($this->fullpath) && is_file($this->fullpath));
+      }
+
     }
 
     $this->exists = apply_filters('shortpixel_image_exists', $this->exists, $this->fullpath, $this); //legacy
@@ -366,7 +375,6 @@ class FileModel extends \ShortPixel\Model
   {
       $sourcePath = $this->getFullPath();
       $destinationPath = $destination->getFullPath();
-
       Log::addDebug("Copy from $sourcePath to $destinationPath ");
 
       if (! strlen($sourcePath) > 0 || ! strlen($destinationPath) > 0)
@@ -426,7 +434,7 @@ class FileModel extends \ShortPixel\Model
   {
      if ($this->exists())
 		 {
-      	\wp_delete_file($this->fullpath);  // delete file hook via wp_delete_file
+      \wp_delete_file($this->fullpath);  // delete file hook via wp_delete_file
 		 }
 		 else
 		 {
@@ -810,13 +818,19 @@ class FileModel extends \ShortPixel\Model
       //    return $originalPath;
   }
 
-  /*private function getUploadPath()
+	public function getPermissions()
   {
-    $upload_dir = wp_upload_dir(null, false, false);
-    $basedir = $upload_dir['basedir'];
+		if (is_null($this->permissions))
+			$this->permissions = fileperms($this->getFullPath()) & 0777;
 
-    return $basedir;
-  } */
+    return $this->permissions;
+  }
+
+	// @tozo Lazy IMplementation / copy, should be brought in line w/ other attributes.
+  public function setPermissions($permissions)
+  {
+    @chmod($this->fullpath, $permissions);
+  }
 
 
   /** Fix for multibyte pathnames and pathinfo which doesn't take into regard the locale.

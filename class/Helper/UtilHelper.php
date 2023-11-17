@@ -92,6 +92,11 @@ class UtilHelper
 			 $patterns = \wpSPIO()->settings()->excludePatterns;
        $matches = array();
 
+       if (false === is_array($patterns))
+       {
+          return array();
+       }
+
 			 foreach($patterns as $index => $pattern)
 			 {
 				  if (! isset($pattern['apply']))

@@ -684,6 +684,11 @@ class SettingsController extends \ShortPixel\ViewController
       {
         $patterns = array();
 
+        if (false === isset($post['exclusions']))
+        {
+           return $post;
+        }
+
         $exclusions  = $post['exclusions'];
         $accepted = array();
         foreach($exclusions as $index => $exclusions)

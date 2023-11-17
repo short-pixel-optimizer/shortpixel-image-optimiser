@@ -336,7 +336,8 @@ if ( ! defined( 'ABSPATH' ) ) {
                           <label>
 
 														<?php
-														$checked = in_array($sizeKey, $view->data->excludeSizes) ? 'checked' : '';
+                            $excludeSizes = property_exists($view->data, 'excludeSize') ? $view->data->excludeSizes : array();
+														$checked = in_array($sizeKey, $excludeSizes) ? 'checked' : '';
 														$width = isset($sizeVal['width']) ? $sizeVal['width'] : '*';
 														$height = isset($sizeVal['height']) ? $sizeVal['height'] : '*';
 

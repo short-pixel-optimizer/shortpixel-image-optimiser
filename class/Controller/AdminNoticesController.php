@@ -36,7 +36,7 @@ class AdminNoticesController extends \ShortPixel\Controller
    //     'SmartcropNotice',
         'LegacyNotice',
         'ListviewNotice',
-				'HeicFeatureNotice',
+		//		'HeicFeatureNotice',
         'NewExclusionFormat',
     );
     protected $adminNotices; // Models
@@ -77,6 +77,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 		public static function resetOldNotices()
 		{
 			Notices::removeNoticeByID('MSG_FEATURE_SMARTCROP');
+      Notices::removeNoticeByID('MSG_FEATURE_HEIC');
 
 		}
 

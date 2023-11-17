@@ -136,12 +136,17 @@ Class FileSystemController extends \ShortPixel\Controller
       $imageObj = false;
 
       if ($type == 'media')
+      {
         $imageObj = $this->getMediaImage($id, $useCache);
+      }
       elseif($type == 'custom')
+      {
         $imageObj = $this->getCustomImage($id, $useCache);
+      }
       else
+      {
         Log::addError('FileSystemController GetImage - no correct type given: ' . $type);
-
+      }
       return $imageObj;
     }
 
