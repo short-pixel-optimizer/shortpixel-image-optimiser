@@ -1485,7 +1485,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		 $result['webp']  = ($imageOk && $this->isProcessableFileType('webp')) ? true : false;
 		 $result['avif']  = ($imageOk && $this->isProcessableFileType('avif')) ? true : false;
 
-     $result = apply_filters('shortpixel/image/imageparamlist', result, $this->id, $this);
+     $result = apply_filters('shortpixel/image/imageparamlist', $result, $this->id, $this);
 		 return $result;
 
 		}
