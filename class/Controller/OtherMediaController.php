@@ -431,7 +431,7 @@ class OtherMediaController extends \ShortPixel\Controller
 
       $folders = array();
 
-      if (! is_null($postDir))
+      if (! is_null($postDir) && strlen($postDir) > 0)
       {
          $postDir = rawurldecode($postDir);
          $children = explode('/', $postDir );
@@ -473,7 +473,9 @@ class OtherMediaController extends \ShortPixel\Controller
 
             //  echo "<ul class='jqueryFileTree'>";
               foreach($subdirs as $dir ) {
+
                   $returnDir = substr($dir->getPath(), strlen($rootDirObj->getPath())); // relative to root.
+
                   $dirpath = $dir->getPath();
                   $dirname = $dir->getName();
 

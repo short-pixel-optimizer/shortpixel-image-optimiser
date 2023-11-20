@@ -261,8 +261,17 @@ Class FileSystemController extends \ShortPixel\Controller
     */
     public function getWPAbsPath()
     {
+
 				$wpContentPos = strpos(WP_CONTENT_DIR, 'wp-content');
-        $wpContentAbs = substr(WP_CONTENT_DIR, 0, $wpContentPos); //str_replace( 'wp-content', '', WP_CONTENT_DIR);
+        // Check if Content DIR actually has wp-content in it.
+        if (false !== $wpContentPos)
+        {
+          $wpContentAbs = substr(WP_CONTENT_DIR, 0, $wpContentPos); //str_replace( 'wp-content', '', WP_CONTENT_DIR);
+        }
+        else {
+          $wpContentAbs = WP_CONTENT_DIR;
+        }
+
         if (ABSPATH == $wpContentAbs)
           $abspath = ABSPATH;
         else
@@ -274,7 +283,6 @@ Class FileSystemController extends \ShortPixel\Controller
           $abspath = trailingslashit(ABSPATH) . UPLOADS;
         }
 
-//	$abspath = wp_normalize_path($abspath);
         $abspath = apply_filters('shortpixel/filesystem/abspath', $abspath );
 
         return $this->getDirectory($abspath);

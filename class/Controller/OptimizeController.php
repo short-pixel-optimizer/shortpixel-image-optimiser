@@ -472,10 +472,15 @@ class OptimizeController
       $options = (property_exists($item, 'options')) ? $item->options : array();
 
 			$imageObj = $fs->getImage($item->item_id, $qtype);
+
 			if (is_object($imageObj))
 			{
 				ResponseController::addData($item->item_id, 'fileName', $imageObj->getFileName());
 			}
+      else {
+         // If image doesn't produce object, bail out.
+         return $this->handleAPIResult($item, $q);     
+      }
 
 			// If item is blocked (handling success), skip over. This can happen if internet is slow or process too fast.
 			if (property_exists($item, 'blocked') && true === $item->blocked )

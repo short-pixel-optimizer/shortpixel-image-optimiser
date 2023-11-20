@@ -369,7 +369,7 @@
      .flex {
        display: flex;
      }
-     .env .flex {
+     .env .flex, .fs .flex {
         flex-wrap: wrap;
         max-width: 450px;
         span {

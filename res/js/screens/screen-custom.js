@@ -168,8 +168,10 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
     {
       var openModalButton = document.querySelector('.open-selectfolder-modal');
       if (null !== openModalButton)
+      {
         openModalButton.addEventListener('click', this.OpenFolderModal.bind(this));
-
+      }
+      
       var closeModalButtons = document.querySelectorAll('.shortpixel-modal input.select-folder-cancel, .sp-folder-picker-shade');
 
       var self = this;
