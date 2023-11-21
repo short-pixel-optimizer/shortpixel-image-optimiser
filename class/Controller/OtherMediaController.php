@@ -101,7 +101,6 @@ class OtherMediaController extends \ShortPixel\Controller
 			return $results;
 		}
 
-
     public function getFolderByID($id)
     {
         $folders = $this->getFolders(array('id' => $id));
@@ -119,7 +118,6 @@ class OtherMediaController extends \ShortPixel\Controller
        $folder = new DirectoryOtherMediaModel($path);
        return $folder;
     }
-
 
     public function getCustomImageByPath($path)
     {

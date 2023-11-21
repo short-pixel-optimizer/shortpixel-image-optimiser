@@ -64,5 +64,11 @@
   display: inline-block;
   padding: 6px 0;
 }
+.modal-folder-picker .folder-message {
+  border: 1px solid #ff0000;
+  margin: 8px 0;
+  padding: 8px 8px 8px 12px;
+  font-weight: 500;
+}
 
 /*# sourceMappingURL=shortpixel-folderbrowser.css.map */

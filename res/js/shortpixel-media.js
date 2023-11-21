@@ -2,7 +2,7 @@
 
 (function( $) {
 
-	if (typeof (wp.media) === 'undefined'  || typeof wp.media.frame === 'undefined')
+	if (typeof wp.media === 'undefined'  || typeof wp.media.frame === 'undefined')
 	{
 		 return;
 	}

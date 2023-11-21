@@ -329,14 +329,14 @@ if ( ! defined( 'ABSPATH' ) ) {
                     <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/113-how-can-i-optimize-only-certain-thumbnail-sizes"></span></div>
 									<div class="option-content">
 
-
-                    <?php foreach($view->allThumbSizes as $sizeKey => $sizeVal) {
+                    <?php
+                    foreach($view->allThumbSizes as $sizeKey => $sizeVal) {
 										?>
                         <span class="excludeSizeOption">
                           <label>
 
 														<?php
-                            $excludeSizes = property_exists($view->data, 'excludeSize') ? $view->data->excludeSizes : array();
+                            $excludeSizes = property_exists($view->data, 'excludeSizes') ? $view->data->excludeSizes : array();
 														$checked = in_array($sizeKey, $excludeSizes) ? 'checked' : '';
 														$width = isset($sizeVal['width']) ? $sizeVal['width'] : '*';
 														$height = isset($sizeVal['height']) ? $sizeVal['height'] : '*';

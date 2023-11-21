@@ -157,9 +157,10 @@ class AdminNoticesController extends \ShortPixel\Controller
                         continue;
                     }
 
-                    // Todo change this to new keys
+                    // @Todo change this to new keys
                     if ($notice->getID() == 'MSG_QUOTA_REACHED' || $notice->getID() == 'MSG_UPGRADE_MONTH') //|| $notice->getID() == AdminNoticesController::MSG_UPGRADE_BULK
                     {
+                        // @todo check if this is still needed.
                         wp_enqueue_script('jquery.knob.min.js');
                         wp_enqueue_script('shortpixel');
                     }
