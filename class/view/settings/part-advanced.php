@@ -361,7 +361,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 				<p class="settings-info" data-toggle="exclude-settings-expanded">
 
-          <button class='button button-primary new-exclusion-button' type='button' name="addExclusion">
+          <button class='button button-primary new-exclusion-button' type='button' name="addNewExclusion">
             <?php _e('Add new Exclusion', 'shortpixel-image-optimiser'); ?>
           </button>
 
