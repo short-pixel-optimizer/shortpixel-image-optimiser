@@ -20,6 +20,8 @@ use ShortPixel\Controller\Queue\MediaLibraryQueue as MediaLibraryQueue;
 use ShortPixel\Controller\Queue\CustomQueue as CustomQueue;
 
 use ShortPixel\Helper\InstallHelper as InstallHelper;
+use ShortPixel\Helper\UiHelper as UiHelper;
+
 
 use ShortPixel\Model\AccessModel as AccessModel;
 
@@ -326,7 +328,7 @@ class ShortPixelPlugin {
 
 		wp_register_script( 'shortpixel-settings', plugins_url( 'res/js/shortpixel-settings.js', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
-
+		wp_localize_script('shortpixel-settings', 'settings_strings', UiHelper::getSettingsStrings(false));
 
 		wp_register_script('shortpixel-media', plugins_url('res/js/shortpixel-media.js',  SHORTPIXEL_PLUGIN_FILE), array('jquery'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
@@ -607,8 +609,7 @@ class ShortPixelPlugin {
      */
 	public function route() {
 		global $plugin_page;
-		//ar_dump($plugin_page);
-		//exit($plugin_page);
+
 		// $this->initPluginRunTime(); // Not in use currently.
 		$default_action = 'load'; // generic action on controller.
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form

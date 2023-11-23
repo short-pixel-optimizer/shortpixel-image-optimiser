@@ -441,39 +441,30 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 						$option_code = json_encode($option);
 
+            $typeStrings  = UiHelper::getSettingsStrings('exclusion_types');
+            $applyStrings = UiHelper::getSettingsStrings('exclusion_apply');
+
+
+            $apply_name = isset($applyStrings[$apply]) ? $applyStrings[$apply] : '';
+
 						switch($type)
 						{
 							 case 'name':
                case 'regex-name':
-							 	 $field_name = __('Name', 'shortpixel-image-optimiser');
+							 	 $field_name = $typeStrings['name'];
 							 break;
 							 case 'path':
                case 'regex-path':
-							 	$field_name = __('Path', 'shortpixel-image-optimiser');
+							 	$field_name = $typeStrings['path']; // __('Path', 'shortpixel-image-optimiser');
 							 break;
                case 'size':
-                 $field_name = __('Size', 'shortpixel-image-optimiser');
+                 $field_name = $typeStrings['size']; // __('Size', 'shortpixel-image-optimiser');
                break;
 							 default:
 							 	 $field_name = __('Unknown', 'shortpixel-image-optimiser');
 							 break;
 						}
 
-            switch($apply)
-            {
-               case 'all':
-                  $apply_name = __('All', 'shortpixel-image-optimiser');
-               break;
-               case 'only-thumbs':
-                  $apply_name = __('Thumbnails', 'shortpixel-image-optimiser');
-               break;
-               case 'only-custom':
-                  $apply_name = __('Custom Media', 'shortpixel-image-optimiser');
-               break;
-               case 'selected-thumbs':
-                  $apply_name = __('Selected Images', 'shortpixel-image-optimiser');
-               break;
-            }
 
             $classes = array();
             if (true === $hasError)
@@ -602,7 +593,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                       </option>
                       <option value='only-custom'><?php _e('Only Custom Media images', 'shortpixel-image-optimiser'); ?>
                       </option>
-                      <option value='selected-thumbs'><?php _e('Select thumbnails', 'shortpixel-image-optimiser'); ?></option>
+                      <option value='selected-thumbs'><?php _e('Selected thumbnails', 'shortpixel-image-optimiser'); ?></option>
                   </select>
 
                   <select multiple="multiple" name='thumbnail-select' class='not-visible thumbnail-option'>
