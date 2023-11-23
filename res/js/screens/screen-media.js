@@ -74,7 +74,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
     ListenGallery()
   	{
   	   	var self = this;
-  			if (typeof (wp.media) === 'undefined')
+  			if (typeof wp.media === 'undefined')
   			{
   				 this.ListenEditAttachment(); // Edit Media edit attachment screen
   				 return;

@@ -303,11 +303,11 @@
 .settings_page_wp-shortpixel-settings section#tab-debug .flex {
   display: flex;
 }
-.settings_page_wp-shortpixel-settings section#tab-debug .env .flex {
+.settings_page_wp-shortpixel-settings section#tab-debug .env .flex, .settings_page_wp-shortpixel-settings section#tab-debug .fs .flex {
   flex-wrap: wrap;
   max-width: 450px;
 }
-.settings_page_wp-shortpixel-settings section#tab-debug .env .flex span {
+.settings_page_wp-shortpixel-settings section#tab-debug .env .flex span, .settings_page_wp-shortpixel-settings section#tab-debug .fs .flex span {
   width: 45%;
   padding: 4px;
 }

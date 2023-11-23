@@ -849,6 +849,37 @@ class UiHelper
 
 	}
 
+  /* Strings on settings page that need to be available for both JS and PHP  */
+  public static function getSettingsStrings($name = false)
+  {
+
+      $strings = array(
+      );
+
+      $exclusion_types = array(
+          'name' => __('Name', 'shortpixel-image-optimiser'),
+          'path' => __('Path', 'shortpixel-image-optimiser'),
+          'size' => __('Size', 'shortpixel-image-optimiser'),
+      );
+
+      $exclusion_apply = array(
+           'all' => __('All', 'shortpixel-image-optimiser'),
+           'only-thumbs' => __('Only Thumbnails', 'shortpixel-image-optimiser'),
+           'only-custom' =>  __('Only Custom Media Images', 'shortpixel-image-optimiser'),
+           'selected-thumbs' => __('Selected Images', 'shortpixel-image-optimiser'),
+      );
+
+      $strings['exclusion_types'] = $exclusion_types;
+      $strings['exclusion_apply'] = $exclusion_apply;
+
+      if ($name !== false && isset($strings[$name]))
+      {
+         return $strings[$name];
+      }
+
+      return $strings;
+  }
+
 
 
 } // class

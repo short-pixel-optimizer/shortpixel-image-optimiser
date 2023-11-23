@@ -101,7 +101,6 @@ class OtherMediaController extends \ShortPixel\Controller
 			return $results;
 		}
 
-
     public function getFolderByID($id)
     {
         $folders = $this->getFolders(array('id' => $id));
@@ -119,7 +118,6 @@ class OtherMediaController extends \ShortPixel\Controller
        $folder = new DirectoryOtherMediaModel($path);
        return $folder;
     }
-
 
     public function getCustomImageByPath($path)
     {
@@ -166,11 +164,11 @@ class OtherMediaController extends \ShortPixel\Controller
 		public function showMenuItem()
 		{
 			  $settings = \wpSPIO()->settings();
-				if ( $settings->hideCustomMedia)
+				if ( $settings->showCustomMedia)
 				{
-					 return false;
+					 return true;
 				}
-				return true;
+				return false;
 		}
 
 	   public function addDirectory($path)
@@ -431,7 +429,7 @@ class OtherMediaController extends \ShortPixel\Controller
 
       $folders = array();
 
-      if (! is_null($postDir))
+      if (! is_null($postDir) && strlen($postDir) > 0)
       {
          $postDir = rawurldecode($postDir);
          $children = explode('/', $postDir );
@@ -473,7 +471,9 @@ class OtherMediaController extends \ShortPixel\Controller
 
             //  echo "<ul class='jqueryFileTree'>";
               foreach($subdirs as $dir ) {
+
                   $returnDir = substr($dir->getPath(), strlen($rootDirObj->getPath())); // relative to root.
+
                   $dirpath = $dir->getPath();
                   $dirname = $dir->getName();
 

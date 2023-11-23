@@ -44,9 +44,13 @@ $this->loadView('custom/part-othermedia-top');
         <input type="button" class="button button-primary select-folder" value="<?php esc_html_e('Add','shortpixel-image-optimiser');?>" disabled>
 
         <span class='sp-folder-picker-selected'>&nbsp;</span>
+        <div class="folder-message hidden ">&nbsp;</div>
     </div>
 
 
+    <div class='add-folder-message'>
+
+    </div>
 </div> <!-- end of AddCustomFolder -->
 
 

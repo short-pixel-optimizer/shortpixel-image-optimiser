@@ -14,6 +14,7 @@ $opt = new OptimizeController();
 $q = $opt->getQueue('media');
 
 $env = \wpSPIO()->env();
+$fs = \wpSPIO()->filesystem();
 
 $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->url);
 ?>
@@ -56,9 +57,21 @@ $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->u
 				<span>Backup Folder</span><span><?php echo esc_html((defined('SHORTPIXEL_BACKUP_FOLDER')) ? SHORTPIXEL_BACKUP_FOLDER : 'not defined'); ?></span>
 				<span>Backup URL</span><span><?php echo esc_html((defined('SHORTPIXEL_BACKUP_URL')) ? SHORTPIXEL_BACKUP_URL : 'not defined'); ?></span>
 
+        <span>
 
 
 		</div>
+  </div> <!-- /env -->
+
+  <div class='fs'>
+    <h3><?php esc_html_e('FileSystem', 'shortpixel'); ?></h3>
+    <div class='flex'>
+       <span>WpFileBase</span><span><?php var_export($fs->getWPFileBase()); ?></span>
+       <span>Upload Base</span><span><?php var_export($fs->getWPUploadBase()); ?></span>
+       <span>WPAbspath</span><span><?php var_export($fs->getWPAbsPath()); ?></span>
+
+    </div>
+
   </div>
 
   <div class='settings'>

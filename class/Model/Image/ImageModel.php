@@ -1066,7 +1066,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
             $result = false;
 
-            if (! $target->exists()) // don't copy if exists.
+            if (false === $target->exists()) // don't copy if exists.
             {
 							$result = $tempFile->copy($target);
 						}
@@ -1081,7 +1081,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 							return false;
 						}
             return $target;
-      //   }
 
          return false;
     }

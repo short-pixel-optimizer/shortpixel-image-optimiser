@@ -44,6 +44,12 @@ class DirectoryModel extends \ShortPixel\Model
   {
       $fs = \wpSPIO()->filesystem();
 
+      // Test if path actually has someting, otherwise just bail.
+      if (strlen(trim($path)) == 0)
+      {
+         return false;
+      }
+
       if ($fs->pathIsUrl($path))
       {
         $pathinfo = pathinfo($path);
@@ -77,6 +83,7 @@ class DirectoryModel extends \ShortPixel\Model
         */
         $pathinfo = pathinfo($path);
 
+
         if (isset($pathinfo['extension']))
         {
           $path = $pathinfo['dirname'];
@@ -102,13 +109,6 @@ class DirectoryModel extends \ShortPixel\Model
       //basename($this->path);
       $this->name = $dir->getFileName();
 
-		// Off the keep resources  / not sure if needed.
-    //  if (file_exists($this->path))
-    //  {
-    //    $this->exists();
-    //  $this->is_writable();
-    //    $this->is_readable();
-    //  }
   }
 
   public function __toString()

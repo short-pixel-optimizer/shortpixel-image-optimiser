@@ -329,14 +329,14 @@ if ( ! defined( 'ABSPATH' ) ) {
                     <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/113-how-can-i-optimize-only-certain-thumbnail-sizes"></span></div>
 									<div class="option-content">
 
-
-                    <?php foreach($view->allThumbSizes as $sizeKey => $sizeVal) {
+                    <?php
+                    foreach($view->allThumbSizes as $sizeKey => $sizeVal) {
 										?>
                         <span class="excludeSizeOption">
                           <label>
 
 														<?php
-                            $excludeSizes = property_exists($view->data, 'excludeSize') ? $view->data->excludeSizes : array();
+                            $excludeSizes = property_exists($view->data, 'excludeSizes') ? $view->data->excludeSizes : array();
 														$checked = in_array($sizeKey, $excludeSizes) ? 'checked' : '';
 														$width = isset($sizeVal['width']) ? $sizeVal['width'] : '*';
 														$height = isset($sizeVal['height']) ? $sizeVal['height'] : '*';
@@ -361,7 +361,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 				<p class="settings-info" data-toggle="exclude-settings-expanded">
 
-          <button class='button button-primary new-exclusion-button' type='button' name="addExclusion">
+          <button class='button button-primary new-exclusion-button' type='button' name="addNewExclusion">
             <?php _e('Add new Exclusion', 'shortpixel-image-optimiser'); ?>
           </button>
 
@@ -441,39 +441,30 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 						$option_code = json_encode($option);
 
+            $typeStrings  = UiHelper::getSettingsStrings('exclusion_types');
+            $applyStrings = UiHelper::getSettingsStrings('exclusion_apply');
+
+
+            $apply_name = isset($applyStrings[$apply]) ? $applyStrings[$apply] : '';
+
 						switch($type)
 						{
 							 case 'name':
                case 'regex-name':
-							 	 $field_name = __('Name', 'shortpixel-image-optimiser');
+							 	 $field_name = $typeStrings['name'];
 							 break;
 							 case 'path':
                case 'regex-path':
-							 	$field_name = __('Path', 'shortpixel-image-optimiser');
+							 	$field_name = $typeStrings['path']; // __('Path', 'shortpixel-image-optimiser');
 							 break;
                case 'size':
-                 $field_name = __('Size', 'shortpixel-image-optimiser');
+                 $field_name = $typeStrings['size']; // __('Size', 'shortpixel-image-optimiser');
                break;
 							 default:
 							 	 $field_name = __('Unknown', 'shortpixel-image-optimiser');
 							 break;
 						}
 
-            switch($apply)
-            {
-               case 'all':
-                  $apply_name = __('All', 'shortpixel-image-optimiser');
-               break;
-               case 'only-thumbs':
-                  $apply_name = __('Thumbnails', 'shortpixel-image-optimiser');
-               break;
-               case 'only-custom':
-                  $apply_name = __('Custom Media', 'shortpixel-image-optimiser');
-               break;
-               case 'selected-thumbs':
-                  $apply_name = __('Selected Images', 'shortpixel-image-optimiser');
-               break;
-            }
 
             $classes = array();
             if (true === $hasError)
@@ -602,7 +593,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                       </option>
                       <option value='only-custom'><?php _e('Only Custom Media images', 'shortpixel-image-optimiser'); ?>
                       </option>
-                      <option value='selected-thumbs'><?php _e('Select thumbnails', 'shortpixel-image-optimiser'); ?></option>
+                      <option value='selected-thumbs'><?php _e('Selected thumbnails', 'shortpixel-image-optimiser'); ?></option>
                   </select>
 
                   <select multiple="multiple" name='thumbnail-select' class='not-visible thumbnail-option'>
@@ -642,9 +633,9 @@ if ( ! defined( 'ABSPATH' ) ) {
                 <td>
 									<div class='switch_button'>
 										<label>
-											<input type="checkbox" class="switch" name="hideCustomMedia" value="1" <?php checked( $view->data->hideCustomMedia, "1" );?>>
+											<input type="checkbox" class="switch" name="showCustomMedia" value="1" <?php checked( $view->data->showCustomMedia, "1" );?>>
 											<div class="the_switch">&nbsp; </div>
-											<?php esc_html_e('Hide Custom Media menu item','shortpixel-image-optimiser');?>
+											<?php esc_html_e('Show Custom Media menu item','shortpixel-image-optimiser');?>
 										</label>
 									</div>
                 </td>

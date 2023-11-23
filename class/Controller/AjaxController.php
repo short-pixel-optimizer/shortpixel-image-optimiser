@@ -775,6 +775,7 @@ class AjaxController
 
 
 				// @todo Formulate some response here that can be used on the row thingie.
+				$result = false;
 				if (false === $result)
 				{
 					 $json->folder->is_error = true;

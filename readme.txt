@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compressor, ima
 Requires at least: 4.8.0
 Tested up to: 6.4
 Requires PHP: 5.6
-Stable tag: 5.5.1
+Stable tag: 5.5.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -386,6 +386,16 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 5.5.2 =
+Release date: November 24, 2023
+* Fix: The excluded thumbnails are no longer checked out when saving the settings;
+* Fix: Adding new exclusions is now fixed;
+* Fix: Updated the wording of exclusions to make them consistent;
+* Fix: An error was displayed in the logs if an image could not be loaded at all;
+* Fix: An error is now displayed when a Custom Media folder cannot be added instead of silently crashing the page;
+* Fix: If WP_CONTENT_DIR does not contain wp-content, adding a Custom Media folder failed;
+* Language: 8 new strings added, 2 updated, 0 fuzzed and 7 deprecated.
 
 = 5.5.1 =
 Release date: November 17, 2023

@@ -168,7 +168,9 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
     {
       var openModalButton = document.querySelector('.open-selectfolder-modal');
       if (null !== openModalButton)
+      {
         openModalButton.addEventListener('click', this.OpenFolderModal.bind(this));
+      }
 
       var closeModalButtons = document.querySelectorAll('.shortpixel-modal input.select-folder-cancel, .sp-folder-picker-shade');
 
@@ -326,16 +328,32 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
       data.screen_action = 'addCustomFolder';
       data.callback = 'shortpixel.folder.AddNewDirectory';
 
+      // @todo this message logic should prob. become part of the folder selector js proper.
+      var messageEl = document.querySelector('.modal-folder-picker .folder-message');
+      if (null !== messageEl)
+      {
+           if ( false == messageEl.classList.contains('hidden'))
+           {
+               messageEl.classList.add('hidden');
+           }
+      }
+
       window.addEventListener('shortpixel.folder.AddNewDirectory', this.UpdateFolderViewEvent.bind(this), {'once':true});
 
       this.processor.AjaxRequest(data);
+
+
     }
 
     UpdateFolderViewEvent(event)
     {
         var data = event.detail;
 
-        if (data.folder.result.itemView)
+        // not for us.
+        if (false === data.folder)
+          return false;
+
+        if (data.folder.result && data.folder.result.itemView)
         {
            var element = document.querySelector('.list-overview .item');
 					 var elementHeading = document.querySelector('.list-overview .heading');
@@ -352,10 +370,19 @@ class ShortPixelScreen extends ShortPixelScreenItemBase
 									noitems.remove();
 					 }
 
-        }
-        this.CloseFolderModal();
+          this.CloseFolderModal();
+   				this.CheckProcessorStart();
 
-				this.CheckProcessorStart();
+        }
+        else if (data.folder.is_error == true && data.folder.message)
+        {
+           var messageEl = document.querySelector('.modal-folder-picker .folder-message');
+           if (null !== messageEl)
+           {
+               messageEl.textContent = data.folder.message;
+               messageEl.classList.remove('hidden');
+           }
+        }
 
     }
 

@@ -396,7 +396,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
 				 if (false === $silent)
 				 {
-         	Notice::addError( $messge );
+         	Notice::addError( $message );
 			 	 }
          return false;
 
