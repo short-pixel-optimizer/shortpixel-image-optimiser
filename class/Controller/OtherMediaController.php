@@ -164,11 +164,11 @@ class OtherMediaController extends \ShortPixel\Controller
 		public function showMenuItem()
 		{
 			  $settings = \wpSPIO()->settings();
-				if ( $settings->hideCustomMedia)
+				if ( $settings->showCustomMedia)
 				{
-					 return false;
+					 return true;
 				}
-				return true;
+				return false;
 		}
 
 	   public function addDirectory($path)
