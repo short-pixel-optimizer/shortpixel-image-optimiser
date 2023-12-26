@@ -136,6 +136,11 @@ class CustomImageModel extends \ShortPixel\Model\Image\ImageModel
 			  return \wpSPIO()->filesystem()->pathToUrl($this);
 		}
 
+    public function getAllUrls()
+    {
+        return array($this->getURL());
+    }
+
     public function count($type)
     {
       // everything is 1 on 1 in the customModel
