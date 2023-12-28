@@ -258,9 +258,7 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
                             'orderby' => 'status',
                         ),
 
-          /* 'actions' => array('title' => __('Actions', 'shortpixel-image-optimiser'),
-                             'sortable' => false,
-                        ), */
+
     );
 
 		return $headings;
