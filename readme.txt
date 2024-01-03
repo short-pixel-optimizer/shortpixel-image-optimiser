@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compressor, ima
 Requires at least: 4.8.0
 Tested up to: 6.4
 Requires PHP: 5.6
-Stable tag: 5.5.2
+Stable tag: 5.5.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -386,6 +386,14 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 5.5.3 =
+Release date: January 3, 2024
+* Fix: in some cases, an error was displayed when adding a folder to Custom Media, even if the folder was added correctly;
+* Fix: for WebP files uploaded directly to the Media Library, the plugin could remove the wrong files during certain operations;
+* Fix: bulk processing of Custom Media could lead to errors in some cases;
+* Fix: a PHP Warning was displayed on the Custom Media page if no items were present;
+* Language: 0 new strings added, 0 updated, 0 fuzzed and 0 deprecated.
 
 = 5.5.2 =
 Release date: November 24, 2023
