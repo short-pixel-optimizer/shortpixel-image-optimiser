@@ -1028,6 +1028,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     {
         if ($this->hasBackup())
         {
+
            $file = $this->getBackupFile();
            $file->delete();
         }
@@ -1035,12 +1036,15 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         $webp = $this->getWebp();
         $avif = $this->getAvif();
 
-        if ($webp !== false && $webp->exists())
+        if ($webp !== false && $webp->exists() && $this->getExtension() !== 'webp')
+        {
           $webp->delete();
+        }
 
-        if ($avif !== false && $avif->exists())
+        if ($avif !== false && $avif->exists() && $this->getExtension() !== 'avif')
+        {
            $avif->delete();
-
+        }
     }
 
 

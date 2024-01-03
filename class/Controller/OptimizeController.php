@@ -479,7 +479,7 @@ class OptimizeController
 			}
       else {
          // If image doesn't produce object, bail out.
-         return $this->handleAPIResult($item, $q);     
+         return $this->handleAPIResult($item, $q);
       }
 
 			// If item is blocked (handling success), skip over. This can happen if internet is slow or process too fast.
@@ -1033,6 +1033,7 @@ class OptimizeController
                 $thumb = $imageObj->getThumbnail($sizeName);
                 if ($thumb !== false)
                 {
+
                   $thumb->setMeta('status', ImageModel::FILE_STATUS_UNPROCESSED);
 									$thumb->onDelete();
 

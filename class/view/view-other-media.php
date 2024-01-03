@@ -46,7 +46,6 @@ $this->loadView('custom/part-othermedia-top');
 
       <div class='heading'>
         <?php foreach($this->view->headings as $hname => $heading):
-            $isSortable = $heading['sortable'];
         ?>
           <span class='heading <?php echo esc_attr($hname) ?>'>
               <?php echo $this->getDisplayHeading($heading); ?>

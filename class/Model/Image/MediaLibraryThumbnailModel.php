@@ -141,7 +141,9 @@ class MediaLibraryThumbnailModel extends \ShortPixel\Model\Image\ImageModel
   public function onDelete($fileDelete = true)
   {
 			if ($fileDelete == true)
+      {
       	$bool = parent::onDelete();
+      }
 			else {
 				$bool = true;
 			}

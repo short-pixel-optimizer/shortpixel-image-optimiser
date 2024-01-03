@@ -102,9 +102,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
                                 'sortable' => true,
                                 'orderby' => 'status',
                             ),
-              /* 'actions' => array('title' => __('Actions', 'shortpixel-image-optimiser'),
-                                 'sortable' => false,
-                            ), */
+
         );
 
         $keyControl = ApiKeyController::getInstance();

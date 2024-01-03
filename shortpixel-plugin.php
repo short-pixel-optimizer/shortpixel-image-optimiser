@@ -22,7 +22,6 @@ use ShortPixel\Controller\Queue\CustomQueue as CustomQueue;
 use ShortPixel\Helper\InstallHelper as InstallHelper;
 use ShortPixel\Helper\UiHelper as UiHelper;
 
-
 use ShortPixel\Model\AccessModel as AccessModel;
 
 
