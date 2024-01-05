@@ -148,6 +148,7 @@ class AjaxController
         $this->checkNonce('processing');
         $this->checkProcessorKey();
 
+
 				ErrorController::start(); // Capture fatal errors for us.
 
         // Notice that POST variables are always string, so 'true', not true.
@@ -1000,6 +1001,7 @@ class AjaxController
           $json->processorKey = $pKey;
 
         wp_send_json($json);
+
         exit();
     }
 

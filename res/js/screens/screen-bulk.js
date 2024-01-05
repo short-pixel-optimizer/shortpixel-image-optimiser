@@ -326,6 +326,11 @@ class ShortPixelScreen extends ShortPixelScreenBase
 
           } // empty queue, no items, start.
       }
+      if (qStatus == 'PREPARING_OVERLIMIT' && 'selection' === this.currentPanel)
+      {
+          var limitEl = document.querySelector('.load.wrapper .loading.overlimit');
+          limitEl.style.display = 'block';
+      }
 
   }
   HandleImage(resultItem, type)
@@ -578,6 +583,19 @@ class ShortPixelScreen extends ShortPixelScreenBase
           });
       }
   }
+
+  HandleError(data)
+  {
+      if (data.http_status && data.http_status == 500)
+      {
+          // change text to clarify
+          data.http_text = this.strings.fatalError500;
+          super.HandleError(data);
+      }
+  }
+
+
+
 	/** HandleError is used for item errors. The latter have a result object embedded and more information */
   HandleItemError(result, type)
   {

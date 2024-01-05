@@ -93,8 +93,6 @@ class EditMediaViewController extends \ShortPixel\ViewController
           else
             $this->view->list_actions = '';
 
-          //$this->imageModel->cancelUserExclusions();
-
           $this->view->actions = UiHelper::getActions($this->imageModel);
           $this->view->stats = $this->getStatistics();
 

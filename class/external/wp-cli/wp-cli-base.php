@@ -188,6 +188,8 @@ class SpioCommandBase
         else
           $wait = 3;
 
+        \WP_CLI::line('Process Started. Please wait for results. This can take a while');
+
 				// Prepare limit
 				if (isset($assoc['limit']))
 				{
