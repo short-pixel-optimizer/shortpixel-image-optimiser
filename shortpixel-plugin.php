@@ -440,6 +440,7 @@ class ShortPixelPlugin {
 
 		$jsTranslation = array(
 			'optimizeWithSP'              => __( 'ShortPixel', 'shortpixel-image-optimiser' ),
+			'optimize'              => __( 'Optimize', 'shortpixel-image-optimiser' ),
 			'redoLossy'                   => __( 'Re-optimize Lossy', 'shortpixel-image-optimiser' ),
 			'redoGlossy'                  => __( 'Re-optimize Glossy', 'shortpixel-image-optimiser' ),
 			'redoLossless'                => __( 'Re-optimize Lossless', 'shortpixel-image-optimiser' ),
