@@ -147,6 +147,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			return $parameters;
 		 }
 
+     // Is smartcrop setting on?
 		 $isSmartCrop = ($settings->useSmartcrop == true && $this->getExtension() !== 'pdf') ? true : false;
 		 $paramListArgs = array(); // args for the params, yes.
 
@@ -189,15 +190,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 			 if ($thumbObj->isThumbnailProcessable() || ($thumbObj->isProcessableAnyFileType() && $thumbObj->isOptimized()) )
 			 {
 
-				 	$url = $thumbObj->getURL();
-          $paramListArgs['url'] = $url;
-          $paramListArgs['main_url'] = $main_url;
+				 $url = $thumbObj->getURL();
+         $paramListArgs['url'] = $url;
+         $paramListArgs['main_url'] = $main_url;
 
 				 $paramList = $thumbObj->createParamList($paramListArgs);
          $url = $paramList['url']; // createParamList also decides on URL.
 				 $hash = md5( serialize($paramList) . $url); // Hash the paramlist + url to find identical results.
 
-// This thing fly to sep function? Retutrn liast  duplicat/double name => name
+         // Return last  duplicate/double name => name if hash found
 				 if (isset($doubles[$hash]))
 				 {
 					  $doubleName = $doubles[$hash];
@@ -242,6 +243,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					 {
 							$parameters['returnParams']['fileSizes'][$name] = $thumbObj->getFileSize();
 					 }
+
 					 $doubles[$hash]  = $name;
 			 	}
 
@@ -1884,9 +1886,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
   public function resetPrevent()
   {
       delete_post_meta($this->id, '_shortpixel_prevent_optimize');
-      $this->setMeta('status', self::FILE_STATUS_UNPROCESSED);
-      $this->saveMeta();
-      //delete_post_meta($this->id, '_shortpixel_prevent_optimize_status');
+
+      if ($this->getMeta('status')  < 0)
+      {
+        $this->setMeta('status', self::FILE_STATUS_UNPROCESSED);
+        $this->saveMeta();
+      }
 
 			$this->optimizePrevented = null;
   }
@@ -2333,7 +2338,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	// Function to be called only by migrate all bulk and certain debug cases.
 	public function migrate()
 	{
-		$this->resetPrevent();
+		//$this->resetPrevent();
 
 		// Don't double.
 		if ($this->justConverted === true)
@@ -2401,8 +2406,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
       $data = $metadata['ShortPixel'];
 
       if (count($data) == 0)  // This can happen. Empty array is still nothing to convert.
-
+      {
         return false;
+      }
 
 			// Waiting for processing is a state where it's not optimized, or should be.
 			// The last check is because it seems that it can be both improved and waiting something ( sigh ) // 04/07/22

@@ -57,7 +57,6 @@ class FrontController extends \ShortPixel\Controller
   * @return String Converted content
   */
   public function convertImgToPictureAddWebp($content) {
-
       if(function_exists('is_amp_endpoint') && is_amp_endpoint()) {
           //for AMP pages the <picture> tag is not allowed
 					// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
@@ -70,6 +69,7 @@ class FrontController extends \ShortPixel\Controller
 
   public function startOutputBuffer() {
       $env = wpSPIO()->env();
+
       if ($env->is_admin || $env->is_ajaxcall)
         return;
 
@@ -100,7 +100,7 @@ class FrontController extends \ShortPixel\Controller
       if (! class_exists('DOMDocument'))
       {
         Log::addWarn('Webp Active, but DomDocument class not found ( missing xmldom library )');
-        return false;
+        return $content;
       }
 
     //	preg_match_all
