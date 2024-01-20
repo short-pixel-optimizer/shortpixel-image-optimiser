@@ -27,7 +27,8 @@ var ShortPixel = function() {
         //are we on media list?
         if( jQuery('table.wp-list-table.media').length > 0) {
             //register a bulk action
-            jQuery('select[name^="action"] option:last-child').before('<option value="shortpixel-optimize"> → ' + _spTr.optimize
+            jQuery('select[name^="action"] option:last-child').before('<option value="shortpixel-optimize">' + _spTr.optimizeWithSP
+                + '</option><option value="shortpixel-optimize"> → ' + _spTr.optimize
                 + '</option><option value="shortpixel-optimize"> → ' + _spTr.redoLossy
                 + '</option><option value="shortpixel-lossy"> → ' + _spTr.redoLossy
                 + '</option><option value="shortpixel-glossy"> → ' + _spTr.redoGlossy

@@ -269,6 +269,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				 }
 		 }
 
+
 		 $this->optimizeData = $parameters;
      return $parameters;
   }
@@ -917,6 +918,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
                 $thumbnails[$name]->setMetaObj($thumbMeta);
                 $thumbnails[$name]->verifyImage();
                 unset($metadata->thumbnails[$name]);
+
              }
           }
 
@@ -988,6 +990,8 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
           // New! @todo Move check functions to this, to check upon load and not randomly around
           $this->verifyImage();
+
+
 
           // If anything changed during load, and this is stored ( ie optimized ) images, update changes.
           if (true === $this->didAnyRecordChange() && ! is_null($this->getMeta('databaseID')))

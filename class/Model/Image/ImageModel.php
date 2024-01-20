@@ -38,6 +38,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
     const FILE_STATUS_PREVENT = -10;
     const FILE_STATUS_MARKED_DONE = -11;
+    const FILE_STATUS_BAD_METADATA = -12;
 
     // Compression Option Consts
     const COMPRESSION_LOSSLESS = 0;
