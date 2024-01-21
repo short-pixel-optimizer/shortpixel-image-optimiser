@@ -39,7 +39,7 @@ $approx = $this->view->approx;
 				</div>
 
         <div class='loading overlimit'>
-              <p><?php _e('Shortpixel has detected that the preparation runs out of resources. The plugin will try to complete the process but might be slower. Increase memory, disabled heavy plugins or lower the amount of items prepared per load', 'shortpixel-image-optimiser'); ?></p>
+              <p><?php _e('ShortPixel has detected that there are no more resources available during preparation. The plugin will try to complete the process, but may be slower. Increase memory, disable heavy plugins or reduce the number of prepared items per load.', 'shortpixel-image-optimiser'); ?></p>
 
         </div>
 
