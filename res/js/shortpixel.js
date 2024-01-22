@@ -29,7 +29,6 @@ var ShortPixel = function() {
             //register a bulk action
             jQuery('select[name^="action"] option:last-child').before('<option value="shortpixel-optimize">' + _spTr.optimizeWithSP
                 + '</option><option value="shortpixel-optimize"> → ' + _spTr.optimize
-                + '</option><option value="shortpixel-optimize"> → ' + _spTr.redoLossy
                 + '</option><option value="shortpixel-lossy"> → ' + _spTr.redoLossy
                 + '</option><option value="shortpixel-glossy"> → ' + _spTr.redoGlossy
                 + '</option><option value="shortpixel-lossless"> → ' + _spTr.redoLossless
