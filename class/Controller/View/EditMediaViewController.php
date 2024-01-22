@@ -83,6 +83,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 						return false;
 					}
 
+
           $this->view->status_message = null;
 
          	$this->view->text = UiHelper::getStatusText($this->imageModel);
@@ -92,8 +93,6 @@ class EditMediaViewController extends \ShortPixel\ViewController
             $this->view->list_actions = UiHelper::renderBurgerList($this->view->list_actions, $this->imageModel);
           else
             $this->view->list_actions = '';
-
-          //$this->imageModel->cancelUserExclusions();
 
           $this->view->actions = UiHelper::getActions($this->imageModel);
           $this->view->stats = $this->getStatistics();

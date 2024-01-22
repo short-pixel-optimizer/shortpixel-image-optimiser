@@ -10,6 +10,7 @@ namespace ShortPixel\ShortPixelLogger;
  {
    static protected $instance = null;
    protected $start_time;
+   protected $memoryLimit; // to be used for memory logs only.
 
    protected $is_active = false;
    protected $is_manual_request = false;
@@ -106,14 +107,19 @@ namespace ShortPixel\ShortPixelLogger;
 
      if ($this->is_active && $this->is_manual_request && $user_is_administrator )
      {
-          $content_url = content_url();
-          $logPath = $this->logPath;
-          $pathpos = strpos($logPath, 'wp-content') + strlen('wp-content');
-          $logPart = substr($logPath, $pathpos);
-          $logLink = $content_url . $logPart;
+
+         $logPath = $this->logPath;
+         $uploads = wp_get_upload_dir();
+
+
+     		  if ( 0 === strpos( $logPath, $uploads['basedir'] ) ) { // Simple as it should, filepath and basedir share.
+                     // Replace file location with url location.
+                     $logLink = str_replace( $uploads['basedir'], $uploads['baseurl'], $logPath );
+     		  }
+
 
          $this->view = new \stdClass;
-         $this->view->logLink = $logLink;
+         $this->view->logLink = 'view-source:' . esc_url($logLink);
          add_action('admin_footer', array($this, 'loadView'));
      }
    }
@@ -215,13 +221,25 @@ namespace ShortPixel\ShortPixelLogger;
 			$logDir = dirname($this->logPath);
 		  if (! is_dir($logDir) || ! is_writable($logDir))
 			{
-				error_log('ShortpixelLogger: Log Directory is not writable');
+				error_log('ShortpixelLogger: Log Directory is not writable : ' . $logDir);
 				$this->logFile = false;
 				return false;
 			}
 
+      $file = false;
+      if (file_exists($this->logPath))
+      {
+         if (! is_writable($this->logPath))
+         {
+            error_log('ShortPixelLogger: File Exists, but not writable: ' . $this->logPath);
+            $this->logFile = false;
+            return $file;
+         }
+      }
+
 			$file = fopen($this->logPath, 'a');
-			if ($file === false)
+
+      if ($file === false)
 			{
 				 error_log('ShortpixelLogger: File could not be opened / created: ' . $this->logPath);
 				 $this->logFile = false;
@@ -248,8 +266,13 @@ namespace ShortPixel\ShortPixelLogger;
         $data = array_filter($args['data']);
         if (count($data) > 0)
         {
+          // @todo This should probably be a formatter function to handle multiple stuff?
           foreach($data as $item)
           {
+              if (is_bool($item))
+              {
+                 $item = (true === $item) ? 'true' : 'false';
+              }
               $line .= $item . PHP_EOL;
           }
         }
@@ -274,75 +297,6 @@ namespace ShortPixel\ShortPixelLogger;
      }
    }
 
-   public static function addError($message, $args = array())
-   {
-      $level = DebugItem::LEVEL_ERROR;
-      $log = self::getInstance();
-      $log->addLog($message, $level, $args);
-   }
-   public static function addWarn($message, $args = array())
-   {
-     $level = DebugItem::LEVEL_WARN;
-     $log = self::getInstance();
-     $log->addLog($message, $level, $args);
-   }
-   // Alias, since it goes wrong so often.
-   public static function addWarning($message, $args = array())
-   {
-      self::addWarn($message, $args);
-   }
-   public static function addInfo($message, $args = array())
-   {
-     $level = DebugItem::LEVEL_INFO;
-     $log = self::getInstance();
-     $log->addLog($message, $level, $args);
-   }
-   public static function addDebug($message, $args = array())
-   {
-     $level = DebugItem::LEVEL_DEBUG;
-     $log = self::getInstance();
-     $log->addLog($message, $level, $args);
-   }
-
-   /** These should be removed every release. They are temporary only for d'bugging the current release */
-   public static function addTemp($message, $args = array())
-   {
-     self::addDebug($message, $args);
-   }
-
-   public static function logLevel($level)
-   {
-      $log = self::getInstance();
-      static::addInfo('Changing Log level' . $level);
-      $log->setLogLevel($level);
-   }
-
-   public static function getLogLevel()
-   {
-     $log = self::getInstance();
-     return $log->getEnv('logLevel');
-   }
-
-   public static function isManualDebug()
-   {
-        $log = self::getInstance();
-        return $log->getEnv('is_manual_request');
-   }
-
-   public static function getLogPath()
-   {
-     $log = self::getInstance();
-     return $log->getEnv('logPath');
-   }
-
-   /** Function to test if the debugger is active
-   * @return boolean true when active.
-   */
-   public static function debugIsActive()
-   {
-      $log = self::getInstance();
-      return $log->getEnv('is_active');
-   }
 
    protected function monitorHooks()
    {
@@ -386,5 +340,124 @@ namespace ShortPixel\ShortPixelLogger;
        }
    }
 
+   public function addMemoryLog($message, $args = array())
+   {
+      if (is_null($this->memoryLimit))
+      {
+        $this->memoryLimit = $this->unitToInt(ini_get('memory_limit'));
+      }
 
+      $usage = memory_get_usage();
+      $percentage = round(($usage / $this->memoryLimit) * 100, 2);
+      $memmsg = sprintf("( %s / %s - %s %%)",
+         $this->formatBytes($usage),
+         $this->formatBytes($this->memoryLimit),
+         $percentage
+      );
+      $level = DebugItem::LEVEL_DEBUG;
+      $this->addLog($message . ' ' . $memmsg, $level, $args);
+
+   }
+
+   private function unitToInt($s)
+   {
+     return (int)preg_replace_callback('/(\-?\d+)(.?)/', function ($m) {
+         return $m[1] * pow(1024, strpos('BKMG', $m[2]));
+     }, strtoupper($s));
+   }
+
+   private function formatBytes($size, $precision = 2)
+   {
+       $base = log($size, 1024);
+       $suffixes = array('', 'K', 'M', 'G', 'T');
+
+       if (0 === $size)
+       {
+         return 0;
+       }
+
+      $calculation = pow(1024, $base - floor($base));
+      if (is_nan($calculation))
+      {
+         return 0;
+      }
+
+       return round($calculation, $precision) .' '. $suffixes[floor($base)];
+   }
+
+   public static function addError($message, $args = array())
+   {
+      $level = DebugItem::LEVEL_ERROR;
+      $log = self::getInstance();
+      $log->addLog($message, $level, $args);
+   }
+   public static function addWarn($message, $args = array())
+   {
+     $level = DebugItem::LEVEL_WARN;
+     $log = self::getInstance();
+     $log->addLog($message, $level, $args);
+   }
+   // Alias, since it goes wrong so often.
+   public static function addWarning($message, $args = array())
+   {
+      self::addWarn($message, $args);
+   }
+   public static function addInfo($message, $args = array())
+   {
+     $level = DebugItem::LEVEL_INFO;
+     $log = self::getInstance();
+     $log->addLog($message, $level, $args);
+   }
+   public static function addDebug($message, $args = array())
+   {
+     $level = DebugItem::LEVEL_DEBUG;
+     $log = self::getInstance();
+     $log->addLog($message, $level, $args);
+   }
+
+   public static function addMemory($message, $args = array())
+   {
+      $log = self::getInstance();
+      $log->addMemoryLog($message, $args);
+   }
+
+   /** These should be removed every release. They are temporary only for d'bugging the current release */
+   public static function addTemp($message, $args = array())
+   {
+     self::addDebug($message, $args);
+   }
+
+   public static function logLevel($level)
+   {
+      $log = self::getInstance();
+      static::addInfo('Changing Log level' . $level);
+      $log->setLogLevel($level);
+   }
+
+   public static function getLogLevel()
+   {
+     $log = self::getInstance();
+     return $log->getEnv('logLevel');
+   }
+
+   public static function isManualDebug()
+   {
+        $log = self::getInstance();
+        return $log->getEnv('is_manual_request');
+   }
+
+   public static function getLogPath()
+   {
+     $log = self::getInstance();
+     return $log->getEnv('logPath');
+   }
+
+   /** Function to test if the debugger is active
+   * @return boolean true when active.
+   */
+   public static function debugIsActive()
+   {
+      $log = self::getInstance();
+      return $log->getEnv('is_active');
+   }
  } // class debugController

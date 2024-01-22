@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compressor, ima
 Requires at least: 4.8.0
 Tested up to: 6.4
 Requires PHP: 5.6
-Stable tag: 5.5.3
+Stable tag: 5.5.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -248,6 +248,9 @@ where `APIKEY` is the API Key received upon sign up.
 = Will ShortPixel work if my website is using CloudFare? =
     Absolutely! Sometimes you'll need to make sure you whitelist some IPs, just <a href="https://shortpixel.com/contact">contact us</a> and we'll assist you with that.
 
+= Where do I report security bugs found in this plugin? =
+Please report security bugs found in the source code of the ShortPixel Image Optimizer plugin through the [Patchstack Vulnerability Disclosure Program](https://patchstack.com/database/vdp/shortpixel-image-optimiser). The Patchstack team will assist you with verification, CVE assignment, and notify the developers of this plugin.
+
 = I’m stuck. What do I do? =
 
 The ShortPixel team is here to help. <a href="https://shortpixel.com/contact">Contact us</a>!
@@ -387,12 +390,25 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 
 == Changelog ==
 
+= 5.5.4 =
+Release date: January 22, 2024
+* Tweak: The messages displayed when executing WP-CLI "auto" commands have been improved;
+* Tweak: More options and flexibility for the filter used when creating the `.htaccess` rules (for WebP delivery);
+* Tweak: Added a check and mechanism to prevent running out of memory if the bulk process preparation fails due to lack of memory;
+* Tweak: Added back the "Optimize" option in the "Bulk actions" section in the list view of the Media Library;
+* Compat: Added integration with the "Media File Renamer" plugin;
+* Fix: Under PHP 8.1+, a notice was displayed when re-optimizations were performed;
+* Fix: A PHP warning was displayed converting optimization metadata via WP-CLI;
+* Fix: Multiple exclusion checkboxes in the plugin settings can now be selected with the SHIFT key;
+* Fix: Converting optimization metadata without backups could cause the main images to be incorrectly set to unprocessed;
+* Language: 4 new strings added, 0 updated, 0 fuzzed, and 0 deprecated.
+
 = 5.5.3 =
 Release date: January 3, 2024
-* Fix: in some cases, an error was displayed when adding a folder to Custom Media, even if the folder was added correctly;
-* Fix: for WebP files uploaded directly to the Media Library, the plugin could remove the wrong files during certain operations;
-* Fix: bulk processing of Custom Media could lead to errors in some cases;
-* Fix: a PHP Warning was displayed on the Custom Media page if no items were present;
+* Fix: In some cases, an error was displayed when adding a folder to Custom Media, even if the folder was added correctly;
+* Fix: For WebP files uploaded directly to the Media Library, the plugin could remove the wrong files during certain operations;
+* Fix: Bulk processing of Custom Media could lead to errors in some cases;
+* Fix: A PHP Warning was displayed on the Custom Media page if no items were present;
 * Language: 0 new strings added, 0 updated, 0 fuzzed and 0 deprecated.
 
 = 5.5.2 =

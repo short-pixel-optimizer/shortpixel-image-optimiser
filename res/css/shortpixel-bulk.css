@@ -531,6 +531,12 @@
   margin: 30px auto;
   padding-left: 90px;
 }
+.shortpixel-bulk-wrapper section.panel.selection .load.wrapper .loading.overlimit {
+  display: none;
+  padding: 6px 8px;
+  border: 1px solid #dba617;
+  color: #646970;
+}
 .shortpixel-bulk-wrapper section.panel.selection .option-block {
   margin: 0 auto 35px;
   width: 80%;

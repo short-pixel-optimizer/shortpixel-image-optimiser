@@ -76,7 +76,7 @@ abstract class Model
           if ($value !== null)
             $postData[$name] = $value;
           else {
-            Log::addWarn("Provided field $name not part of model " . get_class() );
+            Log::addWarn("Provided field $name not part of model " . get_class($this) );
           }
       }
 
@@ -111,7 +111,7 @@ abstract class Model
     if (! isset($this->model[$name]))
     {
       return null;
-      Log::addWarn("Provided field $name not part of model " . get_class() );
+      Log::addWarn("Provided field $name not part of model " . get_class($this) );
     }
 
 

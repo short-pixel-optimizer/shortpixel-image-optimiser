@@ -46,6 +46,10 @@ class EnvironmentModel extends \ShortPixel\Model
 
     protected static $instance;
 
+    public $executionLimit;
+    public $executionStart;
+    public $memoryLimit;
+
 
   public function __construct()
   {
@@ -176,13 +180,19 @@ class EnvironmentModel extends \ShortPixel\Model
     $this->is_apache = ! empty($_SERVER["SERVER_SOFTWARE"]) && strpos(strtolower(wp_unslash($_SERVER["SERVER_SOFTWARE"])), 'apache') !== false ? true : false;
     $this->is_gd_installed = function_exists('imagecreatefrompng') && function_exists('imagejpeg');
     $this->is_curl_installed = function_exists('curl_init');
+
+    $this->memoryLimit = $this->unitToInt(ini_get('memory_limit'));
+
+    $this->executionStart = time();
+    $this->executionLimit = intval(ini_get('max_execution_time'));
+
   }
 
 
   private function setWordPress()
   {
     $this->is_multisite = (function_exists("is_multisite") && is_multisite()) ? true : false;
-    $this->is_mainsite = (function_exists('is_main_site') && true === is_main_site()) ? true : false; 
+    $this->is_mainsite = (function_exists('is_main_site') && true === is_main_site()) ? true : false;
 
     $this->determineFrontBack();
 
@@ -322,6 +332,72 @@ class EnvironmentModel extends \ShortPixel\Model
 		 }
 		 return false;
 	}
+
+
+   // function to limit runtimes in seconds..
+   public function IsOverTimeLimit()
+      {
+          $limit = $this->executionLimit;
+          $start = $this->executionStart;
+
+          // No Limits
+          if ($limit <= 0)
+            return false;
+
+          $elapsed = time() - $start;
+          if ($elapsed <= 0)
+          {
+            return false;
+          }
+
+          $limit_perc  = round($limit/100 * apply_filters('spio/process/max_execution', 90));
+
+          if ($limit_perc <= $elapsed)
+          {
+              Log::addInfo('Process almost over execution time! - ' . $limit_perc . ' usage: ' . $elapsed );
+              return true;
+          }
+
+          return false;
+      }
+
+      // @todo Add in Env or in ShortPixelLogger item that can track exec. time / memory and write to debug output.
+      public function IsOverMemoryLimit($runCount)
+      {
+          $memory_limit = $this->memoryLimit;
+          if (-1 === $memory_limit)
+          {
+             return false;
+          }
+
+          $current_mem = memory_get_usage();
+
+          $percentage_limit = 90;
+          $limit = round($memory_limit/100 * apply_filters('spio/process/max_memory', $percentage_limit));
+
+          if ($current_mem >= $limit)
+          {
+            Log::addInfo('Process over maximum memory! ' . $runCount . ' runs - Current Mem / Limit ' . $current_mem .  ' ' . $limit . ' ( ' . $percentage_limit . ' %)');
+
+             return true;
+          }
+          else {
+            return false;
+          }
+
+      }
+
+      private function unitToInt($s)
+      {
+        if ((int) $s < 0)
+        {
+           return -1; // unlimited
+        }
+
+        return (int)preg_replace_callback('/(\-?\d+)(.?)/', function ($m) {
+            return $m[1] * pow(1024, strpos('BKMG', $m[2]));
+        }, strtoupper($s));
+      }
 
 
 

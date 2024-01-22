@@ -121,7 +121,7 @@ class BulkController
 	       $q->startBulk();
 			 }
 
-       return $optimizeControl->processQueue($types);
+       return  $q->getStats(); //$optimizeControl->processQueue($types);
    }
 
    public function finishBulk($type = 'media')

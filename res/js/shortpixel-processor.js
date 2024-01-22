@@ -44,6 +44,7 @@ window.ShortPixelProcessor =
        10: 'QUEUE_EMPTY',
        2:  'PREPARING',
        3:  'PREPARING_DONE',
+       5:  'PREPARING_OVERLIMIT',
        11: 'PREPARING_RECOUNT',
     },
     fStatus: { // FileStatus of ImageModel
@@ -360,7 +361,8 @@ window.ShortPixelProcessor =
     {
       var data = message.data;
 
-      if (data.status == true && data.response) // data status is from shortpixel worker, not the response object
+      // data status is from shortpixel worker, not the response object. If false, it means an error on the HTTP level
+      if (data.status == true && data.response)
       {
           var response = data.response;
 					var handledError = false; // prevent passing to regular queueHandler is some action is taken.
@@ -377,7 +379,6 @@ window.ShortPixelProcessor =
           }
           if ( response.status == false)
           {
-
              // This is error status, or a usual shutdown, i.e. when process is in another browser.
              var error = this.aStatusError[response.error];
              if (error == 'PROCESSOR_ACTIVE')
@@ -579,7 +580,7 @@ window.ShortPixelProcessor =
       if (typeof combinedStatus !== 'undefined')
       {
          var qstatus = this.qStatus[combinedStatus];
-          if (qstatus == 'QUEUE_ITEMS' || qstatus == "PREPARING")
+          if (qstatus == 'QUEUE_ITEMS' || qstatus == "PREPARING" || qstatus == 'PREPARING_OVERLIMIT')
           {
             console.log('Qstatus Preparing or items returns');
              this.timesEmpty = 0;

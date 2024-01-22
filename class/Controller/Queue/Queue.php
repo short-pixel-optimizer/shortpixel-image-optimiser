@@ -26,6 +26,7 @@ abstract class Queue
     // Result status for Run function
     const RESULT_ITEMS = 1;
     const RESULT_PREPARING = 2;
+    const RESULT_PREPARING_OVERLIMIT = 5;
     const RESULT_PREPARING_DONE = 3;
     const RESULT_EMPTY = 4;
     const RESULT_QUEUE_EMPTY = 10;
@@ -137,15 +138,19 @@ abstract class Queue
             $result->qstatus = self::RESULT_PREPARING;
             $result->items = $prepared['items']; // number of items.
             $result->images = $prepared['images'];
+
+            if (true === $prepared['overlimit'])
+            {
+               $result->qstatus = self::RESULT_PREPARING_OVERLIMIT;
+            }
+
             if ($prepared['items'] == 0)
             {
-
                Log::addDebug( $this->queueName . ' Queue, prepared came back as zero ', array($prepared, $result->items));
                if ($prepared['results'] == 0) /// This means no results, empty query.
                {
                 $result->qstatus = self::RESULT_PREPARING_DONE;
                }
-
             }
        }
        elseif ($this->getStatus('bulk_running') == true) // this is a bulk queue, don't start automatically.
@@ -181,8 +186,11 @@ abstract class Queue
 
     protected function prepareItems($items)
     {
-        $return = array('items' => 0, 'images' => 0, 'results' => 0);
+        do_action('shortpixel/queue/prepare_items');
+        $return = array('items' => 0, 'images' => 0, 'results' => 0,
+      'overlimit' => false);
 				$settings = \wpSPIO()->settings();
+        $env = \wpSPIO()->env();
 
           if (count($items) == 0)
           {
@@ -201,14 +209,16 @@ abstract class Queue
 					if (is_null($operation))
 						$operation = false;
 
+          $i = 0;
 
           // maybe while on the whole function, until certain time has elapsed?
           foreach($items as $item_id)
           {
+
 							// Migrate shouldn't load image object at all since that would trigger the conversion.
 							  if ($operation == 'migrate' || $operation == 'removeLegacy')
 								{
-                    $qObject = new \stdClass;  //$this->imageModelToQueue($mediaItem);
+                    $qObject = new \stdClass;
                     $qObject->action = $operation;
                     $queue[] = array('id' => $item_id, 'value' => $qObject, 'item_count' => 1);
 
@@ -218,15 +228,14 @@ abstract class Queue
 								$mediaItem = $fs->getImage($item_id, $this->getType() );
 
             //checking if the $mediaItem actually exists
-            if ( $mediaItem ) {
-                if ($mediaItem->isProcessable() && $mediaItem->isOptimizePrevented() == false && ! $operation) // Checking will be done when processing queue.
-                {
+            if ( is_object($mediaItem) ) {
 
-										// If PDF and not enabled, not processing.
-										if ($mediaItem->getExtension() == 'pdf' && ! $settings->optimizePdfs)
-										{
-											continue;
-										}
+                if ('pdf' === $mediaItem->getExtension() && false === $settings->optimizePdfs)
+                {
+                    continue;
+                }
+                elseif ($mediaItem->isProcessable() && $mediaItem->isOptimizePrevented() === false && ! $operation) // Checking will be done when processing queue.
+                {
 
 										if ($this->isDuplicateActive($mediaItem, $queue))
 										{
@@ -261,7 +270,7 @@ abstract class Queue
                       {
                           if ($mediaItem->isRestorable())
                           {
-                            $qObject = new \stdClass; //$this->imageModelToQueue($mediaItem);
+                            $qObject = new \stdClass;
                             $qObject->action = 'restore';
                             $queue[] = array('id' => $mediaItem->get('id'), 'value' => $qObject);
                           }
@@ -281,19 +290,28 @@ abstract class Queue
 									 }
 
                 }
-			  }
-			  else
-			  {
+    			  }
+    			  else
+    			  {
+        				 $response = array(
+        					 	'is_error' => true,
+        						'item_type' => ResponseController::ISSUE_QUEUE_FAILED,
+        						'message ' => ' Enqueing of item failed : invalid post content or post type',
+        				 );
+        				 	ResponseController::addData($item_id, $response);
+        				  Log::addWarn('The item with id ' . $item_id . ' cannot be processed because it is either corrupted or an invalid post type');
+        			}
 
-				 $response = array(
-					 	'is_error' => true,
-						'item_type' => ResponseController::ISSUE_QUEUE_FAILED,
-						'message ' => ' Enqueing of item failed : invalid post content or post type',
-				 );
-				 	ResponseController::addData($item_id, $response);
-				  Log::addWarn('The item with id ' . $item_id . ' cannot be processed because it is either corrupted or an invalid post type');
-			  }
-          }
+              if (true === $env->IsOverMemoryLimit($i) || true === $env->IsOverTimeLimit())
+              {
+                 Log::addMemory('PrepareItems: OverLimit! Breaking on index ' . $i);
+                 $this->q->setStatus('last_item_id', $item_id);
+                 $return['overlimit'] = true; // lockout return
+                 break;
+              }
+
+              $i++;
+        } // Loop Items
 
           $this->q->additems($queue);
           $numitems = $this->q->enqueue();

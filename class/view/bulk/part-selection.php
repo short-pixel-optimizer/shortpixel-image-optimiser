@@ -37,6 +37,13 @@ $approx = $this->view->approx;
 	 						 <p><?php _e("Clicking this button will start optimization of the items added to the queue. The remaining items can be processed in a new bulk. After completion, you can start bulk and the system will continue with the unprocessed images.",'shortpixel-image-optimiser'); ?></p>
 						</span>
 				</div>
+
+        <div class='loading overlimit'>
+              <p><?php _e('ShortPixel has detected that there are no more resources available during preparation. The plugin will try to complete the process, but may be slower. Increase memory, disable heavy plugins or reduce the number of prepared items per load.', 'shortpixel-image-optimiser'); ?></p>
+
+        </div>
+
+
        </div>
 
        <div class="interface wrapper">

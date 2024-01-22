@@ -58,6 +58,7 @@ class BuildAutoLoader
 			'class/external/query-monitor.php',
 			'class/external/Woocommerce.php',
       'class/external/themes/total-theme.php',
+      'class/external/MediaFileRenamer.php',
     );
 
     echo "Build Plugin.JSON ";

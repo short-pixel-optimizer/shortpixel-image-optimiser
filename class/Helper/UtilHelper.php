@@ -262,16 +262,48 @@ class UtilHelper
 
     /** In uploads and on, it needs Inherit. Otherwise things such as the 404 error page will not be loaded properly
    * since the WP rewrite will not be active at that point (overruled) **/
-    $rules = str_replace('RewriteEngine On', 'RewriteEngine On' . PHP_EOL . 'RewriteOptions Inherit', $rules);
+              $deepOptions = array('uploads' => array('useInherit' => true),
+                    'wp_content' => array('useInherit' => true)
+            );
+            $deepOptionsFiltered = apply_filters('shortpixel/install/write_deep_htaccess', $deepOptions);
 
-							// Can shortcircuit (return false) the creation of subdirectory Htaccess files if this causes issues and is not needed.
-							 $bool = apply_filters('shortpixel/install/write_deep_htaccess', true);
+            // Previous filter used a boolean. This is backward compat.
+            if (true === $deepOptionsFiltered)
+            {
+               $deepOptionsFiltered = $deepOptions;
+            }
+            elseif (false === $deepOptionsFiltered)
+            {
+               return;
+            }
 
-							 if (true === $bool)
-							 {
-               	insert_with_markers( $upload_base . '.htaccess', 'ShortPixelWebp', $rules);
-               	insert_with_markers( trailingslashit(WP_CONTENT_DIR) . '.htaccess', 'ShortPixelWebp', $rules);
-							 }
-           }
-    }
+            if (is_array($deepOptionsFiltered))
+            {
+               foreach($deepOptionsFiltered as $name => $options)
+               {
+                    $inherit = isset($options['useInherit'])  ? $options['useInherit'] : true; // default to true.
+
+
+                   if (true === $inherit)
+                   {
+                      $deepRules = str_replace('RewriteEngine On', 'RewriteEngine On' . PHP_EOL . 'RewriteOptions Inherit', $rules);
+                   }
+                   else {
+                      $deepRules = $rules;
+                   }
+
+                   if ('uploads' === $name)
+                   {
+                      insert_with_markers( $upload_base . '.htaccess', 'ShortPixelWebp', $deepRules);
+                   }
+                   elseif('wp_content' === $name)
+                   {
+                     insert_with_markers( trailingslashit(WP_CONTENT_DIR) . '.htaccess', 'ShortPixelWebp', $deepRules);
+                   }
+                 }
+
+            }
+
+        }
+    } // alter htaccess
 } // class

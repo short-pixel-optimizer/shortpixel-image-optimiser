@@ -79,7 +79,7 @@ class MediaLibraryQueue extends Queue
 
      foreach($results as $item_id)
      {
-          $items[] = $item_id; //$fs->getImage($item_id, 'media');
+          $items[] = $item_id; 
      }
 
      // Remove failed object, ie if getImage returned false.

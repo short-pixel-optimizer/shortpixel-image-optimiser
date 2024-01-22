@@ -65,6 +65,9 @@ var ShortPixelSettings = function()
 			{
 				addNewExclusionButton.addEventListener('click', this.NewExclusionShowInterfaceEvent.bind(this));
 			}
+
+			var size_select = new ShiftSelect('input[name^="excludeSizes[]"]');
+
 	}
 
 	this.DoToggleAction = function(event)

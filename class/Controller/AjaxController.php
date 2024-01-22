@@ -148,6 +148,7 @@ class AjaxController
         $this->checkNonce('processing');
         $this->checkProcessorKey();
 
+
 				ErrorController::start(); // Capture fatal errors for us.
 
         // Notice that POST variables are always string, so 'true', not true.
@@ -459,7 +460,8 @@ class AjaxController
 			 $actionType = isset($_POST['actionType']) ? intval($_POST['actionType']) : null;
 
        $mediaItem = $this->getMediaItem($id, $type);
-
+			 $args = array();
+			 
 				if ($actionType == ImageModel::ACTION_SMARTCROP || $actionType == ImageModel::ACTION_SMARTCROPLESS)
 				{
 						$args = array('smartcrop' => $actionType);
@@ -1000,6 +1002,7 @@ class AjaxController
           $json->processorKey = $pKey;
 
         wp_send_json($json);
+
         exit();
     }
 

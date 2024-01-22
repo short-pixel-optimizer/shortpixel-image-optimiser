@@ -325,7 +325,9 @@ class ShortPixelPlugin {
 
 		wp_localize_script( 'shortpixel-tooltip', 'spio_tooltipStrings', $tooltip_localize);
 
-		wp_register_script( 'shortpixel-settings', plugins_url( 'res/js/shortpixel-settings.js', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
+		wp_register_script( 'shortpixel-settings', plugins_url( 'res/js/shortpixel-settings.js', SHORTPIXEL_PLUGIN_FILE ), array('shortpixel-shiftselect'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
+
+		wp_register_script('shortpixel-shiftselect', plugins_url('res/js/shift-select.js', SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
 		wp_localize_script('shortpixel-settings', 'settings_strings', UiHelper::getSettingsStrings(false));
 
@@ -388,6 +390,7 @@ class ShortPixelPlugin {
 			'fatalError' => __('ShortPixel encountered a fatal error when optimizing images. Please check the issue below. If this is caused by a bug please contact our support', 'shortpixel-image-optimiser'),
 			'fatalErrorStop' => __('ShortPixel has encounted multiple errors and has now stopped processing', 'shortpixel-image-optimiser'),
 			'fatalErrorStopText' => __('No items are being processed. To try again after solving the issues, please reload the page ', 'shortpixel-image-optimiser'),
+			'fatalError500' => __('A fatal error HTTP 500 has occurred. On the bulk screen, this may be caused by the script running out of memory. Check your error log, increase memory or disable heavy plugins.')
 
 		);
 
@@ -437,6 +440,7 @@ class ShortPixelPlugin {
 
 		$jsTranslation = array(
 			'optimizeWithSP'              => __( 'ShortPixel', 'shortpixel-image-optimiser' ),
+			'optimize'              => __( 'Optimize', 'shortpixel-image-optimiser' ),
 			'redoLossy'                   => __( 'Re-optimize Lossy', 'shortpixel-image-optimiser' ),
 			'redoGlossy'                  => __( 'Re-optimize Glossy', 'shortpixel-image-optimiser' ),
 			'redoLossless'                => __( 'Re-optimize Lossless', 'shortpixel-image-optimiser' ),
