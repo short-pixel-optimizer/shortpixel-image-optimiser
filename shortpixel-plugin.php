@@ -145,7 +145,11 @@ class ShortPixelPlugin {
 		// defer notices a little to allow other hooks ( notable adminnotices )
 
 		$optimizeController = new OptimizeController();
-		add_action( 'shortpixel-thumbnails-regenerated', array( $optimizeController, 'thumbnailsChangedHook' ), 10, 4 );
+		add_action( 'shortpixel-thumbnails-regenerated', array( $optimizeController, 'thumbnailsChangedHookLegacy' ), 10, 4 );
+		add_action( 'rta/image/thumbnails_regenerated', array( $optimizeController, 'thumbnailsChangedHook' ), 10, 2 );
+		add_action( 'rta/image/thumbnails_removed', array( $optimizeController, 'thumbnailsChangedHook' ), 10, 2 );
+
+
 
 		// Media Library - Actions to route screen
 		add_action( 'load-upload.php', array( $this, 'route' ) );

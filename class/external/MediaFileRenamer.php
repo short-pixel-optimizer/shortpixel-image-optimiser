@@ -19,7 +19,6 @@ class MediaFileRenamer
 
   public function logPath($post, $oldpath, $newpath)
   {
-     Log::addTemp('Path Rename! ' . $oldpath . ' ' . $newpath);
 
      $fs = \wpSPIO()->filesystem();
 
@@ -34,10 +33,8 @@ class MediaFileRenamer
 
          $backupFile->move($newBackupFile);
 
-         Log::addTemp('NewBackup', $newBackupFile);
      }
      else {
-       Log::addTemp('No backup for ' . $oldFile->getFullPath());
      }
 
   }
