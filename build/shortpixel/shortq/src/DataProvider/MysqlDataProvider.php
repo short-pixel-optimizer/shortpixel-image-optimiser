@@ -444,10 +444,19 @@ class MysqlDataProvider implements DataProvider
         'all' => false,
         'item_id' => null,
         'items' => null,
+        'check_safe' => false,
      );
 
      global $wpdb;
      $args = wp_parse_args($args, $defaults);
+
+     if (true === $args['check_safe'])
+     {
+         if (false === $this->check())
+         {
+            return false;
+         }
+     }
 
      $data = array($this->qName, $this->slug);
      $delete_sql = 'DELETE FROM ' . $this->table . ' where queue_name = %s and plugin_slug = %s';
