@@ -98,13 +98,15 @@ class AccessModel
 		 switch($name)
 		 {
 			  case 'avif':
-					$quotaControl = QuotaController::getInstance();
+					/* no longer!
+          $quotaControl = QuotaController::getInstance();
+
 					$quota = $quotaControl->getQuota();
 
 					if (property_exists($quota, 'unlimited') && $quota->unlimited === true)
 					{
 						$available = false;
-					}
+					} */
 
 				break;
 				case 'webp':

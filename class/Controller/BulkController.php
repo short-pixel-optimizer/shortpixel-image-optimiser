@@ -139,7 +139,7 @@ class BulkController
 		 // When finishing, remove the Legacy Notice
 		 if ($op == 'migrate')
 		 {
-       Log::addTemp('Reset legacy notice'); 
+       Log::addTemp('Reset legacy notice');
 			 	AdminNoticesController::resetLegacyNotice();
 		 }
 

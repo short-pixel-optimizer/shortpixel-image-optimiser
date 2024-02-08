@@ -616,7 +616,6 @@ class ApiController
 						}
 				}
 			}
-
 			if (property_exists($fileData, "AVIF" . $fileType))
 			{
 				$type = "AVIF" . $fileType;
