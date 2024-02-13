@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compressor, ima
 Requires at least: 4.8.0
 Tested up to: 6.4
 Requires PHP: 5.6
-Stable tag: 5.5.4
+Stable tag: 5.5.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -389,6 +389,13 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 5.5.5 =
+Release date: February 13, 2024
+* Compat: Added new hooks to be used by the Regenerate Thumbnails Advanced plugin;
+* Compat: Adjusted the settings limitations for the new Unlimited plans;
+* Fix: Added an additional check to prevent database table errors when the plugin is removed;
+* Language: 0 new strings added, 1 updated, 0 fuzzed and 0 deprecated.
 
 = 5.5.4 =
 Release date: January 22, 2024

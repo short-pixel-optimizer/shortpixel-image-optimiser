@@ -135,9 +135,11 @@ class BulkController
 
 		 $op = $q->getCustomDataItem('customOperation');
 
+     Log::addTemp('OP', $op);
 		 // When finishing, remove the Legacy Notice
 		 if ($op == 'migrate')
 		 {
+       Log::addTemp('Reset legacy notice');
 			 	AdminNoticesController::resetLegacyNotice();
 		 }
 

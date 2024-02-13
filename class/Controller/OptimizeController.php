@@ -1007,19 +1007,30 @@ class OptimizeController
 		* @integration Regenerate Thumbnails Advanced
 		* Called via Hook when plugins like RegenerateThumbnailsAdvanced Update an thumbnail
 		*/
-    public function thumbnailsChangedHook($postId, $originalMeta, $regeneratedSizes = array(), $bulk = false)
+    public function thumbnailsChangedHookLegacy($postId, $originalMeta, $regeneratedSizes = array(), $bulk = false)
+    {
+        $this->thumbnailsChangedHook($postId, $regeneratedSizes);
+    }
+
+    public function thumbnailsChangedHook($post_id, $sizes)
     {
        $fs = \wpSPIO()->filesystem();
        $settings = \wpSPIO()->settings();
-       $imageObj = $fs->getMediaImage($postId);
+       $imageObj = $fs->getMediaImage($post_id);
 
-			 Log::addDebug('Regenerated Thumbnails reported', $regeneratedSizes);
+       if (! is_object($imageObj))
+       {
+          Log::addWarn('Thumbnails changed on something thats not object', $imageObj);
+          return false;
+       }
 
-       if (count($regeneratedSizes) == 0)
+			 Log::addDebug('Regenerated Thumbnails reported', $sizes);
+
+       if (count($sizes) == 0)
         return;
 
         $metaUpdated = false;
-        foreach($regeneratedSizes as $sizeName => $size) {
+        foreach($sizes as $sizeName => $size) {
             if(isset($size['file']))
             {
 
@@ -1029,9 +1040,12 @@ class OptimizeController
                 {
 
                   $thumb->setMeta('status', ImageModel::FILE_STATUS_UNPROCESSED);
-									$thumb->onDelete();
+									$thumb->onDelete(true);
 
                   $metaUpdated = true;
+                }
+                else {
+                  Log::addDebug('Could not find thumbnail to update: ', $thumb);
                 }
             }
         }

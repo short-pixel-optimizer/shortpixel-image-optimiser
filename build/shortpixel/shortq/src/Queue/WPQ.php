@@ -651,9 +651,8 @@ class WPQ implements Queue
   public function unInstall()
   {
       // Remove the Queued Items
-
-      // @todo this will only remove the records of current queue, probably not good for uninstall
-      $this->DataProvider->removeRecords(array('all' => true));
+    
+      $this->DataProvider->removeRecords(array('all' => true, 'check_safe' => true));
 
       // Unset the WP Option queue
       //unset($this->status

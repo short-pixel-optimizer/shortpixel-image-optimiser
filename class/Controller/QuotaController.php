@@ -283,7 +283,7 @@ class QuotaController
               $response = wp_remote_get($requestURL, $args);
               $comm['C: ' . (number_format(microtime(true) - $time, 2))] = array("sent" => "POST: " . $requestURL, "args" => $args, "received" => $response);
           }
-          Log::addInfo("API STATUS COMM: " . json_encode($comm));
+    //      Log::addInfo("API STATUS COMM: " . json_encode($comm));
 
           $defaultData = array(
               "APIKeyValid" => false,
@@ -356,7 +356,7 @@ class QuotaController
               $this->setQuotaExceeded();
 					}
 
-      //    Log::addDebug('GetQuotaInformation Result ', $dataArray);
+          Log::addDebug('GetQuotaInformation Result ', $dataArray);
           return $dataArray;
     }
 
