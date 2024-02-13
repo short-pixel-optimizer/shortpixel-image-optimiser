@@ -297,7 +297,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 											<label>
 												<input type="checkbox" class="switch" name="png2jpgForce" value="1" <?php checked(($view->data->png2jpg > 1), true);?> <?php echo($this->is_gd_installed ? '' : 'disabled') ?>>
 												<div class="the_switch">&nbsp; </div>
-												<?php esc_html_e('Also force the conversion of images with transparency.','shortpixel-image-optimiser'); ?>
+												<?php esc_html_e('Also force the conversion of images with transparency (the transparency will be lost).','shortpixel-image-optimiser'); ?>
 											</label>
 										</div>
 
