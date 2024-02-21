@@ -48,6 +48,16 @@ class CompatNotice extends \ShortPixel\Model\AdminNoticeModel
 		return $message;
 	}
 
+  protected function checkReset()
+  {
+      $conflictPlugins = $this->getConflictingPlugins();
+      if (count ($conflictPlugins) === 0)
+      {
+         return true;
+      }
+      return false;      
+  }
+
 	protected function getConflictingPlugins() {
 			$settings = \wpSPIO()->settings();
 

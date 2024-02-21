@@ -12,6 +12,7 @@ use ShortPixel\Controller\FileSystemController as FileSystemController;
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
 use ShortPixel\Controller\StatsController as StatsController;
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
+use ShortPixel\Notices\NoticeController as Notices;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
 
 
@@ -247,7 +248,7 @@ class InstallHelper
           file_count int,
           status SMALLINT NOT NULL DEFAULT 0,
           parent SMALLINT DEFAULT 0,
-          ts_checked timestamp, 
+          ts_checked timestamp,
           ts_updated timestamp,
           ts_created timestamp,
           PRIMARY KEY id (id)

@@ -878,6 +878,7 @@ class FileModel extends \ShortPixel\Model
           'fullpath' => $this->fullpath,
           'filename' => $this->filename,
           'filebase' => $this->filebase,
+          'directory' => $this->directory->getPath(),
           'exists' => $this->exists,
           'is_writable' => $this->is_writable,
           'is_readable' => $this->is_readable,
