@@ -6,9 +6,22 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
+
+$datastring= '';
+if (property_exists($this->view, 'infoData'))
+{
+
+	 foreach($this->view->infoData as $key => $data)
+	 {
+		 	$datastring .= ' data-' . $key . '="' . $data . '"';
+	 }
+}
+
 ?>
 
-<div class='sp-column-info' id='sp-msg-<?php echo esc_attr($this->view->id );?>'>
+<div class='sp-column-info <?php echo $this->view->infoClass ?>'
+	 	  <?php echo $datastring; ?> 
+			id='sp-msg-<?php echo esc_attr($this->view->id );?>'>
 <?php	if (isset($this->view->list_actions))
 	{
 	   echo $this->view->list_actions;

@@ -40,7 +40,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     const FILE_STATUS_MARKED_DONE = -11;
     const FILE_STATUS_BAD_METADATA = -12;
 
-    // Compression Option Consts
+    // Compression Option Consts - must be replicated in screen-base.js
     const COMPRESSION_LOSSLESS = 0;
     const COMPRESSION_LOSSY = 1;
     const COMPRESSION_GLOSSY = 2;
