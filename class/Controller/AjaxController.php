@@ -438,6 +438,13 @@ class AjaxController
       $json = $control->addItemToQueue($mediaItem);
     }
 
+		// @param Row of something in llr_sync table. This changed
+		public function onWpLrSyncMedia($row)
+		{
+			$attachment_id = $row->wp_id;
+			return $this->onWpLrUpdateMedia($attachment_id);
+		}
+
     protected function restoreItem($json, $data)
     {
       $id = $data['id'];
@@ -461,7 +468,7 @@ class AjaxController
 
        $mediaItem = $this->getMediaItem($id, $type);
 			 $args = array();
-			 
+
 				if ($actionType == ImageModel::ACTION_SMARTCROP || $actionType == ImageModel::ACTION_SMARTCROPLESS)
 				{
 						$args = array('smartcrop' => $actionType);

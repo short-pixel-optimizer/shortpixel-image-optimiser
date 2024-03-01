@@ -201,7 +201,9 @@ class ShortPixelPlugin {
 		add_action( 'mime_types', array( $admin, 'addMimes' ) );
 
 		// integration with WP/LR Sync plugin
-		add_action( 'wplr_update_media', array( AjaxController::getInstance(), 'onWpLrUpdateMedia' ), 10, 2 );
+		//add_action( 'wplr_update_media', array( AjaxController::getInstance(), 'onWpLrUpdateMedia' ), 10, 2 );
+		add_action( 'wplr_sync_media', array( AjaxController::getInstance(), 'onWpLrSyncMedia' ), 10, 2 );
+
 		add_action( 'admin_bar_menu', array( $admin, 'toolbar_shortpixel_processing' ), 999 );
 
 		// Image Editor Actions
