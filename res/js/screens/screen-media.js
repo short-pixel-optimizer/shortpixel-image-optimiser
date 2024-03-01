@@ -95,7 +95,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
             render: function()
             {
                detailsColumn.prototype.render.apply( this );
-               this.fetchSPIOData(this.model.get( 'id' ));
+               if(typeof this.fetchSPIOData === 'function') this.fetchSPIOData(this.model.get( 'id' ));
 
                return this;
             },
