@@ -431,17 +431,26 @@ class AjaxController
 
       // Get and remove Meta
       $mediaItem = \wpSPIO()->filesystem()->getImage($imageId, 'media');
+			Log::addTemp('Getting image, sending delete from', $mediaItem);
+
       $mediaItem->onDelete();
+
+			// Flush and reaquire image to make sure it doesn't stay previous state. 
+			\wpSPIO()->filesystem()->flushImage($mediaItem);
+		  $mediaItem = \wpSPIO()->filesystem()->getImage($imageId, 'media', false);
 
       // Optimize
       $control = new OptimizeController();
       $json = $control->addItemToQueue($mediaItem);
+			Log::addTemp('Enqueued Item', $json);
+
     }
 
 		// @param Row of something in llr_sync table. This changed
 		public function onWpLrSyncMedia($row)
 		{
 			$attachment_id = $row->wp_id;
+			Log::addTemp('onWplrSyncMedia', $row);
 			return $this->onWpLrUpdateMedia($attachment_id);
 		}
 
