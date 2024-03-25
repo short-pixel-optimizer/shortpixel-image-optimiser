@@ -83,6 +83,11 @@ class EditMediaViewController extends \ShortPixel\ViewController
 						return false;
 					}
 
+
+          $converter = new \ShortPixel\Model\Converter\PNGConverter($this->imageModel);
+          var_dump($converter->isTransparent());
+
+
           $this->view->status_message = null;
 
          	$this->view->text = UiHelper::getStatusText($this->imageModel);
@@ -252,6 +257,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
           $debugInfo['wpmetadata'] = array(__('WordPress Get Attachment Metadata'), $meta );
 					$debugInfo[] = array('', '<hr>');
+
 
 
 						if ($imageObj->hasBackup())
