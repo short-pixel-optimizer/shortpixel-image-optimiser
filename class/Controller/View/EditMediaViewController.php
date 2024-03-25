@@ -84,10 +84,6 @@ class EditMediaViewController extends \ShortPixel\ViewController
 					}
 
 
-          $converter = new \ShortPixel\Model\Converter\PNGConverter($this->imageModel);
-          var_dump($converter->isTransparent());
-
-
           $this->view->status_message = null;
 
          	$this->view->text = UiHelper::getStatusText($this->imageModel);
