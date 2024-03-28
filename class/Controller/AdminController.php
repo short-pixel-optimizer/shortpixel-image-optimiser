@@ -131,7 +131,7 @@ class AdminController extends \ShortPixel\Controller
     {
         $args = array(
             'max_runs' => 3,
-            'run_once' => true,
+            'run_once' => false,
             'bulk' => $bulk,
         );
 
@@ -147,6 +147,7 @@ class AdminController extends \ShortPixel\Controller
 					'bulk' => false,
           'max_runs' => -1, // if < 0 run until end, otherwise cut out at some point.
 				);
+
 
 				if (wp_doing_cron())
 				{
