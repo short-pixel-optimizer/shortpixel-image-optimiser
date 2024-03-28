@@ -74,6 +74,7 @@ class ShortPixelPlugin {
 		$front        = new Controller\FrontController();
 		$admin        = Controller\AdminController::getInstance();
 		$adminNotices = Controller\AdminNoticesController::getInstance(); // Hook in the admin notices.
+		$cron = Controller\CronController::getInstance();  // cron jobs
 
 		$this->initHooks();
 		$this->ajaxHooks();

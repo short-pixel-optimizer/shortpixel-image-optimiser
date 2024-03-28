@@ -343,8 +343,6 @@ class OptimizeController
         return $data;
     }
 
-
-
     // Processing Part
 
     // next tick of items to do.

@@ -400,10 +400,8 @@ class SettingsController extends \ShortPixel\ViewController
             $this->keyModel->checkKey($check_key);
           }
 
-
 					// Every save, force load the quota. One reason, because of the HTTP Auth settings refresh.
 					$this->loadQuotaData(true);
-
           // end
 
           if ($this->do_redirect)

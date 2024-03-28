@@ -14,7 +14,8 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 
 			// bind DoAction, for bulk actions in Media Libbrary to event
 			var actionEl = document.getElementById('doaction');
-			actionEl.addEventListener('click', this.BulkActionEvent.bind(this));
+      if (actionEl !== null)
+			   actionEl.addEventListener('click', this.BulkActionEvent.bind(this));
 
 		}
 

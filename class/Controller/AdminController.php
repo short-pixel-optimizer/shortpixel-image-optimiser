@@ -126,6 +126,18 @@ class AdminController extends \ShortPixel\Controller
 			return $url;
 		}
 
+    /* Function to process Hook coming from the WP cron system */
+    public function processCronHook($bulk)
+    {
+        $args = array(
+            'max_runs' => 3,
+            'run_once' => true,
+            'bulk' => $bulk,
+        );
+
+        return $this->processQueueHook($args);
+    }
+
 		public function processQueueHook($args = array())
 		{
 				$defaults = array(
@@ -133,6 +145,7 @@ class AdminController extends \ShortPixel\Controller
 					'run_once' => false, //  If true queue must be run at least every few minutes. If false, it tries to complete all.
 					'queues' => array('media','custom'),
 					'bulk' => false,
+          'max_runs' => -1, // if < 0 run until end, otherwise cut out at some point.
 				);
 
 				if (wp_doing_cron())
@@ -155,6 +168,7 @@ class AdminController extends \ShortPixel\Controller
 
 				$running = true;
 				$i = 0;
+        $max_runs = $args['max_runs'];
 
 				while($running)
 				{
@@ -175,6 +189,11 @@ class AdminController extends \ShortPixel\Controller
 										}
 								}
 
+              $i++;
+              if($max_runs > 0 && $i >= $max_runs)
+              {
+                 break;
+              }
 							sleep($args['wait']);
 				}
 		}

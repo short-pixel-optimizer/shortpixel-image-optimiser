@@ -165,7 +165,19 @@ if ( ! defined( 'ABSPATH' ) ) {
                 </td>
             </tr>
 
-
+            <tr>
+                <th scope="row"><?php esc_html_e('Process items in background ','shortpixel-image-optimiser');?></th>
+                <td>
+                    <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/521-settings-optimize-media-on-upload"></span></div>
+									 <div class='switch_button'>
+										 <label>
+											 <input type="checkbox" class="switch" name="doBackgroundProcess" id='doBackgroundProcess' value="1" <?php checked( $view->data->doBackgroundProcess, "1" );?>>
+											 <div class="the_switch">&nbsp; </div>
+											 	<?php esc_html_e('Process items in the background using cron jobs','shortpixel-image-optimiser');?>
+									 </label>
+									 </div>
+                </td>
+            </tr>
 
 						<?php if ( $view->data->frontBootstrap == 1):  ?>
 

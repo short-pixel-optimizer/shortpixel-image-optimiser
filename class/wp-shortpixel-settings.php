@@ -45,6 +45,7 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         'siteAuthUser' => array('key' => 'wp-short-pixel-site-auth-user', 'default' => null, 'group' => 'options'),
         'siteAuthPass' => array('key' => 'wp-short-pixel-site-auth-pass', 'default' => null, 'group' => 'options'),
         'autoMediaLibrary' => array('key' => 'wp-short-pixel-auto-media-library', 'default' => 1, 'group' => 'options'),
+        'doBackgroundProcess' => array('key' => 'wp-short-pixel-backgroundprocess', 'default' => 0, 'group' => 'options'),
         'optimizePdfs' => array('key' => 'wp-short-pixel-optimize-pdfs', 'default' => 1, 'group' => 'options'),
         'excludePatterns' => array('key' => 'wp-short-pixel-exclude-patterns', 'default' => array(), 'group' => 'options'),
         'png2jpg' => array('key' => 'wp-short-pixel-png2jpg', 'default' => 0, 'group' => 'options'),
@@ -116,6 +117,7 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         'siteAuthPass' => array('s' => 'string'), // string
         'frontBootstrap' => array('s' =>'boolean'), // checkbox
         'autoMediaLibrary' => array('s' => 'boolean'), // checkbox
+        'doBackgroundProcess' => array('s' => 'boolean'), // checkbox
         'excludeSizes' => array('s' => 'array'), // Array
         'cloudflareEmail' => array('s' => 'string'), // string
         'cloudflareAuthKey' => array('s' => 'string'), // string

@@ -665,10 +665,6 @@ abstract class Queue
       return $urls;
     }
 
-    private function countQueueItem()
-    {
-
-    }
 
 		// Check if item is in queue. Considered not in queue if status is done.
 		public function isItemInQueue($item_id)
