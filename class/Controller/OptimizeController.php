@@ -162,6 +162,10 @@ class OptimizeController
           {
             $json->result->message = sprintf(__('Item %s added to Queue. %d items in Queue', 'shortpixel-image-optimiser'), $mediaItem->getFileName(), $result->numitems);
             $json->status = 1;
+
+            // Check if background process is active / this needs activating.
+            $cronController = CronController::getInstance();
+            $cronController->checkNewJobs();
           }
           else
           {

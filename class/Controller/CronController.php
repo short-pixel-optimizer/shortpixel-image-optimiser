@@ -87,6 +87,15 @@ class CronController
   }
 
 
+  public function checkNewJobs()
+  {
+       if ( true === $this->is_active)
+       {
+          Log::addTemp('Scheduler, checkNewJobs');
+          $this->scheduler();
+       }
+  }
+
   protected function scheduler()
   {
     //  Log::addTemp('Scheduler', var_export($this->is_active, true));
@@ -114,16 +123,18 @@ class CronController
       $items = $data->total->stats->awaiting;
       $is_running = $data->total->stats->is_running;
 
-       if (false === $is_running)
+
+      // Only queue must have a run command, nothing else.
+       if ('bulk' === $queue_type && false === $is_running)
        {
           return false; // no queues running
        }
 
        if ($items  > 0)
        {
-          Log::addTemp("Scheduling!" . $options['cron_name'], $data->total->stats);
           wp_schedule_event(time(), 'spio_minute', $options['cron_name'], $args);
        }
+
 
   }
 
@@ -136,7 +147,6 @@ class CronController
 
        if (false !== wp_next_scheduled ($name, $args))
        {
-         Log::addTemp('Unschedule Event - not active');
          $bool = wp_unschedule_event(wp_next_scheduled($name, $args), $name, $args);
        }
     }
@@ -150,7 +160,6 @@ class CronController
       if ($data->total->stats->awaiting == 0)
       {
          $name = $options['cron_name'];
-         Log::addTemp('Unschedule Event - empty ' . $queue_type);
          $bool = wp_unschedule_event(wp_next_scheduled($name, $args), $name, $args);
       }
   }
