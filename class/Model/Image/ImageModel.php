@@ -1155,10 +1155,20 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     protected function isExtensionExcluded()
     {
 
+       if ('pdf' === $this->getExtension())
+       {
+         $settings = \wpSPIO()->settings();
+         if (! $settings->optimizePdfs )
+         {
+            return true;
+         }
+       }
+
         if (! is_null($this->getExtension()) && in_array( strtolower($this->getExtension()) , self::PROCESSABLE_EXTENSIONS))
         {
             return false;
         }
+
 
 				// If extension not in allowed list, check converters.
 				// @todo Most likely move this higher up the chain.
@@ -1174,6 +1184,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 							}
 					}
 				}
+
+
         $this->processable_status = self::P_EXCLUDE_EXTENSION;
         return true;
     }
