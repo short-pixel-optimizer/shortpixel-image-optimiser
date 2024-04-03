@@ -19,8 +19,8 @@ if (property_exists($this->view, 'infoData'))
 
 ?>
 
-<div class='sp-column-info <?php echo $this->view->infoClass ?>'
-	 	  <?php echo $datastring; ?> 
+<div class='sp-column-info <?php echo property_exists($this->view, 'infoClass') ? $this->view->infoClass : '' ?>'
+	 	  <?php echo $datastring; ?>
 			id='sp-msg-<?php echo esc_attr($this->view->id );?>'>
 <?php	if (isset($this->view->list_actions))
 	{
@@ -31,7 +31,7 @@ if (property_exists($this->view, 'infoData'))
       <p><?php  echo $this->view->text;  ?></p>
 <?php endif;
 
-if (isset($this->view->actions)):
+if (property_exists($this->view, 'actions')):
   $this->loadView('snippets/part-single-actions', false);
 
 
