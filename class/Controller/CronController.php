@@ -42,9 +42,9 @@ class CronController
 
   public function cron_schedules($schedules)
   {
-        $schedules['spio_minute'] = array(
-          'interval' => 60,
-          'display' => __('Shortpixel one minute', 'shortpixel-image-optimiser')
+        $schedules['spio_interval'] = array(
+          'interval' => apply_filters('shortpixel/cron/interval', 60),
+          'display' => __('Shortpixel cron interval', 'shortpixel-image-optimiser')
         );
     /*    $schedules['spio_15min'] = array(
           'interval' => 60 * 15,
@@ -77,7 +77,6 @@ class CronController
       }
 
       $this->cron_options = $crons;
-
   }
 
   protected function checkActive()
@@ -91,29 +90,26 @@ class CronController
   {
        if ( true === $this->is_active)
        {
-          Log::addTemp('Scheduler, checkNewJobs');
           $this->scheduler();
        }
   }
 
   protected function scheduler()
   {
-    //  Log::addTemp('Scheduler', var_export($this->is_active, true));
+         foreach($this->cron_options as $type => $options)
+         {
+            $name = $options['cron_name'];
+            $args = array('bulk' => $options['bulk']);
 
-           foreach($this->cron_options as $type => $options)
-           {
-              $name = $options['cron_name'];
-              $args = array('bulk' => $options['bulk']);
-
-              if ( false === wp_next_scheduled($name, $args))
-              {
-                $this->scheduleEvent($type, $options, $args);
-              }
-              else  {
-                // check if still items, or how do we do this (@todo)
-                $this->checkevent($type, $options, $args);
-              }
-           }
+            if ( false === wp_next_scheduled($name, $args))
+            {
+              $this->scheduleEvent($type, $options, $args);
+            }
+            else  {
+              // check if still items, or how do we do this (@todo)
+              $this->checkevent($type, $options, $args);
+            }
+         }
   }
 
   protected function scheduleEvent($queue_type, $options, $args)
@@ -132,9 +128,8 @@ class CronController
 
        if ($items  > 0)
        {
-          wp_schedule_event(time(), 'spio_minute', $options['cron_name'], $args);
+          wp_schedule_event(time(), 'spio_interval', $options['cron_name'], $args);
        }
-
 
   }
 

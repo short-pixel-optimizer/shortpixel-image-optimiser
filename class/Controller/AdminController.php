@@ -130,9 +130,12 @@ class AdminController extends \ShortPixel\Controller
     public function processCronHook($bulk)
     {
         $args = array(
-            'max_runs' => 3,
+            'max_runs' => 10,
             'run_once' => false,
             'bulk' => $bulk,
+            'source' => 'cron',
+            'timelimit' => 50,
+            'wait' => 1,
         );
 
         return $this->processQueueHook($args);
@@ -144,10 +147,11 @@ class AdminController extends \ShortPixel\Controller
 					'wait' => 3, // amount of time to wait for next round. Prevents high loads
 					'run_once' => false, //  If true queue must be run at least every few minutes. If false, it tries to complete all.
 					'queues' => array('media','custom'),
-					'bulk' => false,
+					'bulk' => false, // changing this might change important behavior
           'max_runs' => -1, // if < 0 run until end, otherwise cut out at some point.
+          'source' => 'hook', // not used but can be used in the filter to see what type of job is running
+          'timelimit' => false, //timelimit in seconds or false
 				);
-
 
 				if (wp_doing_cron())
 				{
@@ -155,8 +159,12 @@ class AdminController extends \ShortPixel\Controller
 				}
 
 				$args = wp_parse_args($args, $defaults);
+        $args = apply_filters('shortpixel/process_hook/options', $args);
+
 
 			  $control = new OptimizeController();
+        $env = \wpSPIO()->env();
+
 				if ($args['bulk'] === true)
 				{
 					 $control->setBulk(true);
@@ -170,6 +178,7 @@ class AdminController extends \ShortPixel\Controller
 				$running = true;
 				$i = 0;
         $max_runs = $args['max_runs'];
+        $timelimit = $args['timelimit'];
 
 				while($running)
 				{
@@ -193,6 +202,11 @@ class AdminController extends \ShortPixel\Controller
               $i++;
               if($max_runs > 0 && $i >= $max_runs)
               {
+                 break;
+              }
+              if ($timelimit !== false && true === $env->IsOverTimeLimit(['limit' => $timelimit]))
+              {
+                 Log::addDebug('Hook: over timelimit detected, returning', $timelimit);
                  break;
               }
 							sleep($args['wait']);
@@ -228,10 +242,16 @@ class AdminController extends \ShortPixel\Controller
 		// WP functions that are not loaded during Cron Time.
 		protected function loadCronCompat()
 		{
-			  if (! function_exists('download_url'))
+			  if (false === function_exists('download_url'))
 				{
-					 include(ABSPATH . "wp-admin/includes/admin.php");
+					 include_once(ABSPATH . "wp-admin/includes/admin.php");
 				}
+
+         if (false === function_exists('wp_generate_attachment_metadata'))
+         {
+           include_once(ABSPATH . 'wp-admin/includes/image.php' );
+         }
+
 		}
 
     /** Filter for Medialibrary items in list and grid view. Because grid uses ajax needs to be caught more general.
