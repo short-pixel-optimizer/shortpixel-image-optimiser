@@ -22,6 +22,8 @@ class CronController
   public function __construct()
   {
      $this->checkActive();
+     add_filter( 'cron_schedules', array($this,'cron_schedules') );
+
      // No need to load anything
      if (false === $this->is_active)
      {
@@ -56,7 +58,6 @@ class CronController
 
   protected function init()
   {
-      add_filter( 'cron_schedules', array($this,'cron_schedules') );
 
       // Defaults
       $crons = array(
