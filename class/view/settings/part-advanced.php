@@ -171,11 +171,14 @@ if ( ! defined( 'ABSPATH' ) ) {
                     <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/521-settings-optimize-media-on-upload"></span></div>
 									 <div class='switch_button'>
 										 <label>
-											 <input type="checkbox" class="switch" name="doBackgroundProcess" id='doBackgroundProcess' value="1" <?php checked( $view->data->doBackgroundProcess, "1" );?>>
+											 <input type="checkbox" class="switch" name="doBackgroundProcess" id='doBackgroundProcess' value="1" <?php checked( $view->data->doBackgroundProcess, "1" );?> data-toggle="background_warning">
 											 <div class="the_switch">&nbsp; </div>
 											 	<?php esc_html_e('Process items in the background using cron jobs','shortpixel-image-optimiser');?>
 									 </label>
 									 </div>
+                   <div class='view-notice warning toggleTarget' id="background_warning">
+                     <p class=""><?php _e('I acknowledge that background optimization may halt when there are no visitors on the website.', 'shortpixel-image-optimiser'); ?></p>
+                   </div>
                 </td>
             </tr>
 

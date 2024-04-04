@@ -4,6 +4,8 @@ namespace ShortPixel;
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
+
+$settings = \wpSPIO()->settings();
 ?>
 <section class="panel process" data-panel="process" >
   <div class="panel-container">
@@ -34,7 +36,16 @@ if ( ! defined( 'ABSPATH' ) ) {
       </div>
     </h3>
 
-    <p class='description'><?php esc_html_e('ShortPixel is processing your images. Please keep this window open to complete the process.', 'shortpixel-image-optimiser'); ?> </p>
+    <?php
+     if ($settings->doBackgroundProcess): ?>
+      <p class="description">
+        <?php printf(esc_html('ShortPixel is processing your images. You have activated the option for background processing. Therefore, you can close this browser window and visit it later to check the status of bulk processing. Please note that as long as this browser window is open, processing will take place here and not in the background. %sRead more%s'), '<strong>','</strong>'); ?>
+      </p>
+    <?php else: ?>
+      <p class='description'>
+        <?php esc_html_e('ShortPixel is processing your images. Please keep this window open to complete the process.', 'shortpixel-image-optimiser'); ?>
+      </p>
+    <?php endif; ?>
 
     <?php $this->loadView('bulk/part-progressbar', false); ?>
 

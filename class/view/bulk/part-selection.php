@@ -160,13 +160,30 @@ $approx = $this->view->approx;
 		     </div>
 			<?php else : ?>
 				<div class="option warning"><?php printf(esc_html__('The creation of AVIF files is not possible with this license type. %s Read more %s ','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/555-how-does-the-unlimited-plan-work" target="_blank">', '</a>'); ?>
-
-
 				</div>
-				 </div>
 			<?php endif;  ?>
 
-		 </div>
+        <div class='optiongroup'>
+          <div class='switch_button'>
+
+            <label>
+              <input type="checkbox" class="switch" id="background_checkbox" name="background_checkbox"
+               <?php checked(\wpSPIO()->settings()->doBackgroundProcess); ?>  data-action="ChangeBackgroundProcessSettingEvent" data-event="change"/>
+              <div class="the_switch">&nbsp; </div>
+            </label>
+
+          </div>
+          <h4><label for="background_checkbox">
+            <?php printf(esc_html__('Optimize images in the background' ,'shortpixel-image-optimiser') ); ?>
+          </label></h4>
+         <div class="option"><?php printf(esc_html__('Activating this option allows you to close the browser window after initiating bulk processing. However, on websites with few visitors or those on shared hosting, this process may be interrupted or significantly slower. It\'s important to monitor server resource utilization and consider the usual browser-based bulk optimization process in such cases. %s Read more %s.','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
+         </div>
+         <div class='option warning
+         <?php echo (\wpSPIO()->settings()->doBackgroundProcess) ? '' : 'hidden' ?>'>
+         <p><?php _e('I acknowledge that background optimization may halt when there are no visitors on the website.', 'shortpixel-image-optimiser'); ?></p></div>
+
+       </div>
+		 </div> <!-- option block -->
 
  	 	 <div class="option-block">
        <div class='optiongroup' data-check-visibility="false" data-control="data-check-approx-total">

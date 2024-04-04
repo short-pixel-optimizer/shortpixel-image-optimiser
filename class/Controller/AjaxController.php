@@ -435,7 +435,7 @@ class AjaxController
 
       $mediaItem->onDelete();
 
-			// Flush and reaquire image to make sure it doesn't stay previous state. 
+			// Flush and reaquire image to make sure it doesn't stay previous state.
 			\wpSPIO()->filesystem()->flushImage($mediaItem);
 		  $mediaItem = \wpSPIO()->filesystem()->getImage($imageId, 'media', false);
 
@@ -523,6 +523,8 @@ class AjaxController
         $doCustom = filter_var(sanitize_text_field($_POST['customActive']), FILTER_VALIDATE_BOOLEAN);
         $doWebp = filter_var(sanitize_text_field($_POST['webpActive']), FILTER_VALIDATE_BOOLEAN);
         $doAvif = filter_var(sanitize_text_field($_POST['avifActive']), FILTER_VALIDATE_BOOLEAN);
+				$backgroundProcess = filter_var(sanitize_text_field($_POST['backgroundProcess']), FILTER_VALIDATE_BOOLEAN);
+
 
 				// Can be hidden
 				if (isset($_POST['thumbsActive']))
@@ -533,6 +535,7 @@ class AjaxController
 
         \wpSPIO()->settings()->createWebp = $doWebp;
 				\wpSPIO()->settings()->createAvif = $doAvif;
+				\wpSPIO()->settings()->doBackgroundProcess = $backgroundProcess;
 
         $bulkControl = BulkController::getInstance();
 
