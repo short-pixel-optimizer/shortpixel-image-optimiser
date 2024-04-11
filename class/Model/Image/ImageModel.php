@@ -905,7 +905,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 							$this->restorable_status = self::P_FILE_NOTWRITABLE;
               Log::addWarn('Restore - Not Writable ' . $this->getFullPath() );
           }
-					elseif (! $this->is_directory_writable())
+					elseif (false === $this->is_directory_writable())
 					{
 							$response = array(
 									'is_error' => true,
@@ -918,7 +918,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 							$this->restorable_status = self::P_DIRECTORY_NOTWRITABLE;
 							Log::addWarn('Restore - Directory not Writable ' . $this->getFileDir() );
 					}
-          elseif (! $this->hasBackup())
+          elseif (false ===  $this->hasBackup())
 					{
 						$this->restorable_status = self::P_BACKUP_NOT_EXISTS;
 						$response = array(
@@ -928,7 +928,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 						);
 						ResponseController::addData($this->get('id'), $response);
-            Log::addDebug('Backup not found for file: ', $this->getFullPath());
 					}
            return false;
         }

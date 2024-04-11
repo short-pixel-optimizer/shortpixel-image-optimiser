@@ -43,16 +43,29 @@ abstract class Converter
 				$this->imageModel->getMeta()->convertMeta()->setFileFormat($imageModel->getExtension());
 		}
 
+    // Check what the converter is for ( extension-wise ) OR if the converter is API or another method.
+    //
 		public function isConverterFor($extension)
 		{
 			 if ($extension === $this->imageModel->getMeta()->convertMeta()->getFileFormat())
 			 {
 				  return true;
 			 }
+       elseif ('api' == $extension && strpos(strtolower(get_class($this)), 'apiconverter') !== false)
+       {
+          return true;
+       }
+
 			 return false;
 		}
 
 		// ForConversion:  Return empty if file can't be converted or is already converrted
+		/**
+     * Gets the converter for this ImageModel. Must be from media (for now) and is checked by the extension. Adding converters can be done by adding said extension.
+     * @param  Object  $imageModel          ImageModel object
+     * @param  boolean $forConversion       If requesting for conversion, less checks are performed.
+     * @return object|boolean               Object or false
+     */
 		public static function getConverter($imageModel, $forConversion = false)
 		{
 			  $extension = $imageModel->getExtension();
@@ -89,7 +102,6 @@ abstract class Converter
 					 		return false;
 					 }
 				}
-
 
 				return $converter;
 		}
@@ -149,8 +161,6 @@ abstract class Converter
 
 		}
 
-
-
 		private static function getConverterByExt($ext, $imageModel)
 		{
 					$converter = false;
@@ -160,12 +170,16 @@ abstract class Converter
 							$converter = new PNGConverter($imageModel);
 						 break;
 						 case 'heic':
+             case 'tiff':
+             case 'tif':
+               case 'bmp':
 							$converter = new ApiConverter($imageModel);
 						 break;
 
+            //   $converter = new BMPConverter($imageModel);
+            // break;
 					}
 					return $converter;
-
 		}
 
 

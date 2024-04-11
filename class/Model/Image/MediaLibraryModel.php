@@ -1579,12 +1579,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$bool = false;
 
 		$defaults = array(
-			'checksum' => 1,
-			'replacementPath' => null,
+			'checksum' => 1, // use by pngconverter
+			'replacementPath' => null, // use by apiconverter, but no effect (@todo ?)
+      'backup_thumbnails' => true,  // used by bmpconverter, no specials for thumbs
 		);
 		$args = wp_parse_args($args, $defaults);
 
-		if ($settings->backupImages == 1)
+		if (1 == $settings->backupImages)
 		{
 			// only one file needed.
 			if ($this->isScaled())
@@ -1600,7 +1601,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				 $response = array(
 						'is_error' => true,
 						'item_type' => ResponseController::ISSUE_FILE_NOTWRITABLE,
-						'message ' => __('ConvertPNG could not create backup. Please check file permissions', 'shortpixel-image-optimiser'),
+						'message ' => __('ConvertPrepare could not create backup. Please check file permissions', 'shortpixel-image-optimiser'),
 				 );
 					ResponseController::addData($this->get('id'), $response);
 
@@ -1613,16 +1614,19 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				 return false;
 			 }
 
-			 $thumbObjs = $this->getThumbObjects();
-			 foreach($thumbObjs as $thumbObj)
-			 {
-				 $result = $thumbObj->createBackup();
-				 if (false === $result)
-				 {
-					  Log::addWarning('Backup failed on Thumbitem ' . $thumbObj->getFullPath());
-				 }
-			 }
 
+       if (true === $args['backup_thumbnails'])
+       {
+  			 $thumbObjs = $this->getThumbObjects();
+  			 foreach($thumbObjs as $thumbObj)
+  			 {
+  				 $result = $thumbObj->createBackup();
+  				 if (false === $result)
+  				 {
+  					  Log::addWarning('Backup failed on Thumbitem ' . $thumbObj->getFullPath());
+  				 }
+  			 } // foreach
+       } // args
 		}
 
 		// Saving Meta to keep filesizes in case everything is offload-deleted.
@@ -1672,6 +1676,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		 $defaults = array(
 			 'checksum' => 1,
 			 'omit_backup' => true,
+       'skip_thumbnails' => false,
 	 			);
 
  	   $args = wp_parse_args($args, $defaults);
@@ -1691,21 +1696,29 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$this->thumbnails = $this->loadThumbnailsFromWP();
 		$this->retinas = null;
 
-		$thumbnails = $this->getThumbObjects();
 
-		 foreach($thumbnails as $thumbObj)
-		 {
-				 $file = $fs->getFile($thumbObj->getFileDir() . $thumbObj->getFileBase() . '.jpg');
+    if (false === $args['skip_thumbnails'])
+    {
+    		$thumbnails = $this->getThumbObjects();
 
-				 if ($thumbObj->exists()) // if new exists, remove old
-				 {
-						 $thumbObj->delete(); // remove the old file.
-						 $thumbObj->fullpath = $file->getFullPath();
-						 $thumbObj->resetStatus();
-						 $thumbObj->setFileInfo();
-				 }
+    		 foreach($thumbnails as $thumbObj)
+    		 {
+             // Delete thumbnail with the old extension, if exists.
+    				 $file = $fs->getFile($thumbObj->getFileDir() . $thumbObj->getFileBase() . '.jpg');
 
-		 }
+    				 if ($thumbObj->exists()) // if new exists, remove old
+    				 {
+                 if($thumbObj->getExtension() !== 'jpg')
+                 {
+    						   $thumbObj->delete(); // remove the old file.
+                 }
+    						 $thumbObj->fullpath = $file->getFullPath();
+    						 $thumbObj->resetStatus();
+    						 $thumbObj->setFileInfo();
+    				 }
+
+    		 }
+    }
 
 		$this->wp_metadata = null;  // Remove caching on this one.
 

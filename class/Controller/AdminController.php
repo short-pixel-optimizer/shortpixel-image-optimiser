@@ -72,7 +72,10 @@ class AdminController extends \ShortPixel\Controller
 				if ($mediaItem->isProcessable())
 				{
 					$converter = Converter::getConverter($mediaItem, true);
-					if (is_object($converter) && $converter->isConvertable())
+
+
+          // Convert only done by PNG atm, the rest is done via ImageModelToQueue.
+          if (is_object($converter) && $converter->isConvertable())
 					{
 							$args = array('runReplacer' => false);
 
@@ -99,8 +102,6 @@ class AdminController extends \ShortPixel\Controller
 		// Placeholder function for heic and such, return placeholder URL in image to help w/ database replacements after conversion.
 		public function checkPlaceHolder($url, $post_id)
 		{
-			 if (false === strpos($url, 'heic'))
-			 	 return $url;
 
 			$extension = pathinfo($url,  PATHINFO_EXTENSION);
 			if (false === in_array($extension, ApiConverter::CONVERTABLE_EXTENSIONS))

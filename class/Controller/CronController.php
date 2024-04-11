@@ -22,6 +22,7 @@ class CronController
   public function __construct()
   {
      $this->checkActive();
+     // Important that the schedules filter always goes for unscheduling, even when non-active.
      add_filter( 'cron_schedules', array($this,'cron_schedules') );
 
      // No need to load anything

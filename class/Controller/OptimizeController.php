@@ -533,6 +533,12 @@ class OptimizeController
       return $item;
     }
 
+    /**
+     * Try to convert a PNGfile to JPG. This is done on the local server.  The file should be converted and then re-added to the queue to be processed as a JPG ( if success ) or continue as PNG ( if not success )
+     * @param  Object $item                 Queued item
+     * @param  Object $mediaQ               Queue object
+     * @return Object         Returns queue item
+     */
     protected function convertPNG($item, $mediaQ)
     {
 			$item->blocked = true;
@@ -580,7 +586,7 @@ class OptimizeController
 			$item->blocked = false;
 			$mediaQ->updateItem($item);
 
-// @todo Turn this back on!
+      // Add converted items to the queue for the process
       $this->addItemToQueue($imageObj);
 
       return $item;
@@ -872,8 +878,13 @@ class OptimizeController
 			unset($debugItem->_queueItem);
 			unset($debugItem->counts);
 
-			Log::addDebug('Optimizecontrol - Item has a result ', $debugItem);
-
+      if (property_exists($debugItem, 'result'))
+      {
+        Log::addDebug('Optimizecontrol - Item has a result ', $debugItem->result);
+      }
+      else {
+          Log::addDebug('Optimizecontrol - Item has a result ', $debugItem);
+      }
 
 			ResponseController::addData($item->item_id, array(
 				'is_error' => $item->result->is_error,
@@ -899,12 +910,23 @@ class OptimizeController
     }
 
 
+    /**
+     * [Handles one optimized image and extra filetypes]
+     * @param  [object] $q                         [queue object]
+     * @param  [object] $item                      [item stdclass object. The whole optimize data item]
+     * @param  [object] $mediaObj                  [imageModel of the optimized collection]
+     * @param  [array] $successData               [all successdata received so far]
+     * @return [int]              [status integer, one of apicontroller status constants]
+     */
 		protected function handleOptimizedItem($q, $item, $mediaObj, $successData)
 		{
 				$imageArray = $successData['files'];
 
 				$downloadHelper = DownloadHelper::getInstance();
 				$converter = Converter::getConverter($mediaObj, true);
+
+        Log::addTemp('SuccessData, HandleOptimizeItem', $successData);
+        Log::addTemp('Item', $item);
 
 				$item->blocked = true;
 				$q->updateItem($item);
@@ -971,7 +993,7 @@ class OptimizeController
 
 				$converter = Converter::getConverter($mediaObj, true);
 				$optimizedArgs = array();
-				if (is_object($converter) && $converter->isConverterFor('heic') )
+				if (is_object($converter) && $converter->isConverterFor('api') )
 				{
 					$optimizedResult = $converter->handleConverted($successData);
 					if (true === $optimizedResult)
@@ -990,6 +1012,11 @@ class OptimizeController
 				}
 				else
 				{
+          if (is_object($converter) && $converter->isConverterFor('bmp'))
+          {
+              $successData = $converter->handleConvertedFilter($mediaObj);
+          }
+
 					$optimizedResult = $mediaObj->handleOptimized($successData);
 					if (true === $optimizedResult)
 					  $status = ApiController::STATUS_SUCCESS;

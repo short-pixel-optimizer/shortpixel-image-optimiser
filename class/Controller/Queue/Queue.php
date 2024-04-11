@@ -526,8 +526,14 @@ abstract class Queue
 
     // This is a general implementation - This should be done only once!
     // The 'avif / webp left imp. is commented out since both API / and OptimizeController don't play well with this.
-    protected function imageModelToQueue(ImageModel $imageModel)
+    protected function imageModelToQueue(ImageModel $imageModel, $args = array())
     {
+        $defaults = array(
+            'debug_active' => false, // prevent write actions if called via debugger
+        );
+
+        $args = wp_parse_args($args, $defaults);
+
         $item = new \stdClass;
         $item->compressionType = \wpSPIO()->settings()->compressionType;
 
@@ -586,14 +592,14 @@ abstract class Queue
 				}
 
 				$converter = Converter::getConverter($imageModel, true);
-
+//var_dump($converter->isConverterFor('api'));
 				if ($baseCount > 0 && is_object($converter) && $converter->isConvertable())
 				{
 		        if ($converter->isConverterFor('png'))  // Flag is set in Is_Processable in mediaLibraryModel, when settings are on, image is png.
 		        {
 		          $item->action = 'png2jpg';
 		        }
-						elseif($converter->isConverterFor('heic'))
+						elseif($converter->isConverterFor('api'))
 						{
 							  foreach($data['params'] as $sizeName => $sizeData)
 								{
@@ -604,10 +610,13 @@ abstract class Queue
 								}
 
 								// Run converter to create backup and make placeholder to block similar heics from overwriting.
-								$args = array('runReplacer' => false);
-								$converter->convert($args);
+								$converter_args = array('runReplacer' => false);
+                if (false === $args['debug_active'])
+                {
+								  $converter->prepareQueue($converter_args);
+                }
 
-								//Lossless because thumbnails will otherwise be derived of compressed image, leaving to double compr..
+								//Lossless because thumbnails will otherwise be derived of compressed image, leaving to double compression. 
 								if (property_exists($item, 'compressionType'))
 								{
 									 $item->compressionTypeRequested = $item->compressionType;
@@ -650,7 +659,7 @@ abstract class Queue
 		// @internal
 		public function _debug_imageModelToQueue($imageModel)
 		{
-			 return $this->imageModelToQueue($imageModel);
+			 return $this->imageModelToQueue($imageModel, ['debug_active' => true]);
 		}
 
     protected function timestampURLS($urls, $id)
