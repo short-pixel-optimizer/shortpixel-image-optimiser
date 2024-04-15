@@ -17,7 +17,7 @@ class UncodeController
 	 protected function addHooks()
 	 {
 		  add_action('uncode_delete_crop_image', array($this, 'removedMetaData'), 10, 2);
-      add_action( 'uncode_after_new_crop', 'after_new_crop', 10, 5 );
+      add_action( 'uncode_after_new_crop', array($this, 'after_new_crop'), 10, 5 );
 	 }
 
 	 public function removedMetaData($attach_id, $filePath)
