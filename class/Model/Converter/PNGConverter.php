@@ -96,6 +96,12 @@ class PNGConverter extends MediaLibraryConverter
 			 return false;
 		}
 
+    public function filterQueue($item, $args = array())
+    {
+       $item->action = 'png2jpg';
+       return $item;
+    }
+
 		public function convert($args = array())
 		{
 			 if (! $this->isConvertable($this->imageModel))

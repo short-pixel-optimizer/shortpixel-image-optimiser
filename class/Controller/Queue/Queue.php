@@ -591,46 +591,6 @@ abstract class Queue
 						}
 				}
 
-				$converter = Converter::getConverter($imageModel, true);
-//var_dump($converter->isConverterFor('api'));
-				if ($baseCount > 0 && is_object($converter) && $converter->isConvertable())
-				{
-		        if ($converter->isConverterFor('png'))  // Flag is set in Is_Processable in mediaLibraryModel, when settings are on, image is png.
-		        {
-		          $item->action = 'png2jpg';
-		        }
-						elseif($converter->isConverterFor('api'))
-						{
-							  foreach($data['params'] as $sizeName => $sizeData)
-								{
-									 if (isset($sizeData['convertto']))
-									 {
-										  $data['params'][$sizeName]['convertto'] = 'jpg';
-									 }
-								}
-
-								// Run converter to create backup and make placeholder to block similar heics from overwriting.
-								$converter_args = array('runReplacer' => false);
-                if (false === $args['debug_active'])
-                {
-								  $converter->prepareQueue($converter_args);
-                }
-
-								//Lossless because thumbnails will otherwise be derived of compressed image, leaving to double compression. 
-								if (property_exists($item, 'compressionType'))
-								{
-									 $item->compressionTypeRequested = $item->compressionType;
-								}
-								// Process Heic as Lossless so we don't have double opts.
-								$item->compressionType = ImageModel::COMPRESSION_LOSSLESS;
-
-								// Reset counts
-								$counts->baseCount = 1; // count the base images.
-								$counts->avifCount = 0;
-								$counts->webpCount = 0;
-								$counts->creditCount = 1;
-						}
-				}
 				// CompressionType can be integer, but not empty string. In cases empty string might happen, causing lossless optimization, which is not correct.
         if (! is_null($imageModel->getMeta('compressionType')) && is_numeric($imageModel->getMeta('compressionType')))
 				{
@@ -652,6 +612,13 @@ abstract class Queue
 				}
 		//		$item->preview = $imagePreviewURL;
         $item->counts = $counts;
+
+        // Converter can alter the data for this item, based on conversion needs
+        $converter = Converter::getConverter($imageModel, true);
+        if ($baseCount > 0 && is_object($converter) && $converter->isConvertable())
+        {
+           $converter->filterQueue($item, $args);
+        }
 
         return $item;
     }

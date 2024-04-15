@@ -83,6 +83,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 						return false;
 					}
 
+ //wp_generate_attachment_metadata($this->post_id, $this->imageModel->getFullPath());
 
           $this->view->status_message = null;
 

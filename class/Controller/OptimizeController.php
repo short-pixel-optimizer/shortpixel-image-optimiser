@@ -1012,9 +1012,9 @@ class OptimizeController
 				}
 				else
 				{
-          if (is_object($converter) && $converter->isConverterFor('bmp'))
+          if (is_object($converter))
           {
-              $successData = $converter->handleConvertedFilter($mediaObj);
+              $successData = $converter->handleConvertedFilter($successData);
           }
 
 					$optimizedResult = $mediaObj->handleOptimized($successData);

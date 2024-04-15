@@ -37,11 +37,35 @@ abstract class Converter
 		abstract protected function setupReplacer();
 		abstract protected function setTarget($file);
 
+    // Prepare item for adding to queue, adding data, doing backup perhaps.
+    abstract public function filterQueue($item, $args = array());
+
 		public function __construct($imageModel)
 		{
 				$this->imageModel = $imageModel;
 				$this->imageModel->getMeta()->convertMeta()->setFileFormat($imageModel->getExtension());
 		}
+
+    private static function getConverterByExt($ext, $imageModel)
+    {
+          $converter = false;
+          switch($ext)
+          {
+             case 'png':
+              $converter = new PNGConverter($imageModel);
+             break;
+             case 'heic':
+             case 'tiff':
+             case 'tif':
+
+              $converter = new ApiConverter($imageModel);
+             break;
+             case 'bmp':
+               $converter = new BMPConverter($imageModel);
+             break;
+          }
+          return $converter;
+    }
 
     // Check what the converter is for ( extension-wise ) OR if the converter is API or another method.
     //
@@ -106,6 +130,11 @@ abstract class Converter
 				return $converter;
 		}
 
+    public function handleConvertedFilter($successData)
+    {
+       return $successData;
+    }
+
 		/** Own function to get a unique filename since the WordPress wp_unique_filename seems to not function properly w/ thumbnails */
     protected function unique_file(DirectoryModel $dir, FileModel $file, $number = 0)
     {
@@ -159,27 +188,6 @@ abstract class Converter
 
 			return $newPath;
 
-		}
-
-		private static function getConverterByExt($ext, $imageModel)
-		{
-					$converter = false;
-					switch($ext)
-					{
-						 case 'png':
-							$converter = new PNGConverter($imageModel);
-						 break;
-						 case 'heic':
-             case 'tiff':
-             case 'tif':
-               case 'bmp':
-							$converter = new ApiConverter($imageModel);
-						 break;
-
-            //   $converter = new BMPConverter($imageModel);
-            // break;
-					}
-					return $converter;
 		}
 
 

@@ -8,6 +8,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Helper\UtilHelper as UtilHelper;
+use ShortPixel\Model\Image\ImageModel as ImageModel;
+
 
 class ApiConverter extends MediaLibraryConverter
 {
@@ -40,12 +42,48 @@ class ApiConverter extends MediaLibraryConverter
 			 }
 		}
 
+
+    public function filterQueue($item, $args = array())
+    {
+      foreach($item->paramlist as $index => $data)
+      {
+        if (isset($item->paramlist[$index]['convertto']))
+        {
+          $item->paramlist[$index]['convertto'] = 'jpg';
+        }
+
+      }
+
+      // Run converter to create backup and make placeholder to block similar heics from overwriting.
+      $converter_args = array('runReplacer' => false);
+       if (false === $args['debug_active'])
+       {
+        $this->prepareQueue($converter_args);
+       }
+
+      //Lossless because thumbnails will otherwise be derived of compressed image, leaving to double compression.
+      if (property_exists($item, 'compressionType'))
+      {
+         $item->compressionTypeRequested = $item->compressionType;
+      }
+      // Process Heic as Lossless so we don't have double opts.
+      $item->compressionType = ImageModel::COMPRESSION_LOSSLESS;
+
+      // Reset counts
+      $item->counts->baseCount = 1; // count the base images.
+      $item->counts->avifCount = 0;
+      $item->counts->webpCount = 0;
+      $item->counts->creditCount = 1;
+
+      return $item;
+    }
+
   	/**
      * Prepare to use the converter on the imageModel. Called in queue.php
      * @param  array  $args      Parameters for the function (runreplacer now - will replace urls)
      * @return bool       success or not.
      */
-		public function prepareQueue($args = array())
+		protected function prepareQueue($args = array())
 		{
       // Turning off replacer, since it's always called off in Api?
 			$defaults = array(

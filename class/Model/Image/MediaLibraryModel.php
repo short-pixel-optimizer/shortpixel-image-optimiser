@@ -1931,14 +1931,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
     $cleanRestore = true;
 		$wpmeta = wp_get_attachment_metadata($this->get('id'));
 
-
 		// Get them early in case the filename changes ( ie png to jpg ) because it will stop getting it.
 		$WPMLduplicates = $this->getWPMLDuplicates();
 
 
 		$is_resized = $this->getMeta('resize');
 		$convertMeta = $this->getMeta()->convertMeta();
-		$was_converted = $convertMeta->isConverted() && true == $convertMeta->omitBackup();
+		$was_converted = $convertMeta->isConverted();
 		$converter = Converter::getConverter( clone $this); // ugly, but no way around.
 
 		// ** Warning - This will also reset metadata ****
@@ -1958,6 +1957,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		if ($was_converted)
 		{
+      Log::addTemp('WasConverted');
 			 if ($bool)
 			 {
 			 	$bool = $this->restoreConversion($convertMeta, $converter);
@@ -2193,7 +2193,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 					$toRemove[] = $this;
 			}
-			else
+			elseif (true === $destination->exists() && $destination->extension() == $ext)
+      {
+          Log::addInfo('Destination exists, but is of correct extension, so fine?');
+      }
+      else
 			{
 				 Log::addError('Restoring Converted image not possible, target already exists');
 					ResponseController::addData('message', __('Restore PNG2JPG : Restoring to target that already exists', 'shortpixel-image-optimiser'));
@@ -2227,11 +2231,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
     		}
 
-				// Fullpath now will still be .jpg
-				// PNGconvert is first, because some plugins check for _attached_file metadata and prevent deleting files if still connected to media library. Exmaple: polylang.
-				$converter->restore();
-
-				foreach($toRemove as $fileObj)
+        foreach($toRemove as $fileObj)
 				{
 					 if (false === $this->is_virtual())
 					 {
@@ -2244,6 +2244,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					 	$fileObj->image_meta = new ImageThumbNailMeta();
 					 }
 				}
+        
+				// Fullpath now will still be .jpg
+				// PNGconvert is first, because some plugins check for _attached_file metadata and prevent deleting files if still connected to media library. Exmaple: polylang.
+				$converter->restore();
+
+
 
 				$this->wp_metadata = null;  // restore changes the metadata.
 				$this->thumbnails = $this->loadThumbnailsFromWP();

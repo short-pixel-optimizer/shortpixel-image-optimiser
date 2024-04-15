@@ -886,14 +886,14 @@ class FileModel extends \ShortPixel\Model
     public function __debuginfo()
     {
        return [
-          'fullpath' => $this->fullpath,
-          'filename' => $this->filename,
-          'filebase' => $this->filebase,
-          'directory' => $this->directory->getPath(),
-          'exists' => $this->exists,
-          'is_writable' => $this->is_writable,
-          'is_readable' => $this->is_readable,
-					'is_virtual' => $this->is_virtual,
+          'fullpath' => $this->getFullPath(),
+          'filename' => $this->getFileName(),
+          'filebase' => $this->getFileBase(),
+          'directory' => $this->getFileDir()->getPath(),
+          'exists' => $this->exists(),
+          'is_writable' => $this->is_writable(),
+          'is_readable' => $this->is_readable(),
+					'is_virtual' => $this->is_virtual(),
        ];
     }
 

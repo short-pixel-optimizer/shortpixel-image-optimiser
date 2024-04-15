@@ -26,22 +26,21 @@ class BMPConverter extends MediaLibraryConverter
     return false;
   }
 
-  public function prepareQueue($args = array())
+  public function filterQueue($item, $args = array())
   {
+    // Create backup and such.
     $conversion_args = array(
-        'replacementPath' => $replacementPath,
         'backup_thumbnails' => false, // no need for this. either they should be optimized, or generated after the run
     );
 
-    $prepared = $this->imageModel->conversionPrepare($conversion_args);
-    if (false === $prepared)
+    if (false === $args['debug_active'])
     {
-       return false;
+        $this->imageModel->conversionPrepare($conversion_args);
     }
-
+    return $item;
   }
 
-  public function handleConvertedFilter($mediaObj)
+  public function handleConvertedFilter($optimizeData)
   {
     $this->setupReplacer();
     $fs = \wpSPIO()->filesystem();
@@ -84,12 +83,66 @@ class BMPConverter extends MediaLibraryConverter
       return $successData;
     }
 
-    $res = $this->imageModel->conversionSuccess(['skip_thumbnails' => true]);
+    $tempFile = $fs->getFile($mainFile['image']['file']);
+    $res = $tempFile->copy($replacementFile);
 
-    return $succesData;
+
+    $this->setTarget($replacementFile);
+    $this->updateMetaData([
+        'generate_metadata' => false,
+        'success' => true
+    ]);
+
+    $result = $this->replacer->replace();
+
+    $res = $this->imageModel->conversionSuccess(['skip_thumbnails' => true, 'omit_backup' => true]);
+
+
+    return $optimizeData;
 
 
   } // handleConverterFilter
 
 
+  public function getCheckSum()
+  {
+     return 1; // done or not.
+  }
+
+  public function convert($args = [])
+  {
+
+  }
+
+  public function restore()
+  {
+    $params = array(
+      'restore' => true,
+    );
+    $fs = \wpSPIO()->filesystem();
+
+Log::addTemp("BmPConverter REstore");
+    $this->setupReplacer();
+
+    $oldFileName = $this->imageModel->getFileName(); // Old File Name, Still .jpg
+    $newFileName =  $this->imageModel->getFileBase() . '.bmp';
+
+    if ($this->imageModel->isScaled())
+    {
+       $oldFileName = $this->imageModel->getOriginalFile()->getFileName();
+       $newFileName = $this->imageModel->getOriginalFile()->getFileBase() . '.bmp';
+    }
+
+    $fsNewFile = $fs->getFile($this->imageModel->getFileDir() . $newFileName);
+
+    $this->newFile = $fsNewFile;
+    $this->setTarget($fsNewFile);
+
+    $this->updateMetaData($params);
+    $result = $this->replacer->replace();
+
+    $fs->flushImageCache();
+
+
+  }
 }
