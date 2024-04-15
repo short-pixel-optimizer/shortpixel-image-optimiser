@@ -1937,7 +1937,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		$is_resized = $this->getMeta('resize');
 		$convertMeta = $this->getMeta()->convertMeta();
-		$was_converted = $convertMeta->isConverted();
+		$was_converted = $convertMeta->isConverted() && true == $convertMeta->omitBackup() ;
 		$converter = Converter::getConverter( clone $this); // ugly, but no way around.
 
 		// ** Warning - This will also reset metadata ****
@@ -2244,7 +2244,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					 	$fileObj->image_meta = new ImageThumbNailMeta();
 					 }
 				}
-        
+
 				// Fullpath now will still be .jpg
 				// PNGconvert is first, because some plugins check for _attached_file metadata and prevent deleting files if still connected to media library. Exmaple: polylang.
 				$converter->restore();
