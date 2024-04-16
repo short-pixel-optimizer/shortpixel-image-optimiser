@@ -63,6 +63,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		const P_BACKUP_EXISTS = 8;
 		const P_OPTIMIZE_PREVENTED = 9;
 		const P_DIRECTORY_NOTWRITABLE = 10;
+    const P_EXCLUDE_EXTENSION_PDF = 11;
 
 		// For restorable status
 		const P_RESTORABLE = 109;
@@ -320,6 +321,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
          break;
          case self::P_EXCLUDE_EXTENSION:
             $message = __('Image Extension not processable', 'shortpixel-image-optimiser');
+         break;
+         case self::P_EXCLUDE_EXTENSION_PDF:
+            $message = sprintf(__('PDF processing is not enabled in the %ssettings%s', 'shortpixel-image-optimiser'), '<a href="' .  esc_url(admin_url('options-general.php?page=wp-shortpixel-settings&part=adv-settings')) . '">', '</a>');
          break;
          case self::P_EXCLUDE_SIZE:
             $message = __('Image Size Excluded', 'shortpixel-image-optimiser');
@@ -1159,6 +1163,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
          $settings = \wpSPIO()->settings();
          if (! $settings->optimizePdfs )
          {
+           $this->processable_status = self::P_EXCLUDE_EXTENSION_PDF;
+
             return true;
          }
        }
