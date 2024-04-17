@@ -149,7 +149,7 @@ class ShortPixelPlugin {
 		add_action( 'shortpixel-thumbnails-regenerated', array( $optimizeController, 'thumbnailsChangedHookLegacy' ), 10, 4 );
 		add_action( 'rta/image/thumbnails_regenerated', array( $optimizeController, 'thumbnailsChangedHook' ), 10, 2 );
 		add_action( 'rta/image/thumbnails_removed', array( $optimizeController, 'thumbnailsChangedHook' ), 10, 2 );
-
+		add_action('rta/image/scaled_image_regenerated', array($optimizeController, 'scaledImageChangedHook'), 10, 2);
 
 
 		// Media Library - Actions to route screen

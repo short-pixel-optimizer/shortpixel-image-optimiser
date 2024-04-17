@@ -73,7 +73,6 @@ class AdminController extends \ShortPixel\Controller
 				{
 					$converter = Converter::getConverter($mediaItem, true);
 
-
           // Convert only done by PNG atm, the rest is done via ImageModelToQueue.
           if (is_object($converter) && $converter->isConvertable())
 					{

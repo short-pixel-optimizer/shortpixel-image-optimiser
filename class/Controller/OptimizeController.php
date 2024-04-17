@@ -1082,14 +1082,65 @@ class OptimizeController
         if ($metaUpdated)
            $imageObj->saveMeta();
 
+
+
 				if (\wpSPIO()->env()->is_autoprocess)
 				{
-						if($imageObj->isOptimized())
+            $imageObj = $fs->getMediaImage($post_id, false);
+						if($imageObj->isProcessable())
 						{
 
 							$this->addItemToQueue($imageObj);
 						}
 				}
+    }
+
+
+    public function scaledImageChangedHook($post_id, $removed = false)
+    {
+        $fs = \wpSPIO()->filesystem();
+        $settings = \wpSPIO()->settings();
+        $imageObj = $fs->getMediaImage($post_id);
+
+
+        if ($imageObj->isScaled())
+        {
+          $imageObj->setMeta('status', ImageModel::FILE_STATUS_UNPROCESSED);
+          $webp = $imageObj->getWebp();
+          if (is_object($webp) && $webp->exists())
+            $webp->delete();
+
+            $avif = $imageObj->getAvif('avif');
+            if (is_object($avif) && $avif->exists())
+              $avif->delete();
+
+          // Normally we would use onDelete for this to remove all meta, but since image is the whole object and it would remove all meta, this is not possible.
+          $imageObj->setmeta('webp', null);
+          $imageObj->setmeta('avif', null);
+          $imageObj->setmeta('compressedSize', null);
+          $imageObj->setmeta('compressionType', null);
+          $imageObj->setmeta('originalWidth', null);
+          $imageObj->setmeta('originalHeight', null);
+          $imageObj->setmeta('tsOptimized', null);
+
+
+          if ($imageObj->hasBackup())
+          {
+             $backup = $imageObj->getBackupFile();
+             $backup->delete();
+          }
+        }
+
+        $imageObj->saveMeta();
+
+        if (false === $removed && \wpSPIO()->env()->is_autoprocess)
+        {
+            $imageObj = $fs->getMediaImage($post_id, false);
+            if($imageObj->isProcessable())
+            {
+              $this->addItemToQueue($imageObj);
+            }
+        }
     }
 
 
