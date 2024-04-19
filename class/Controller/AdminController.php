@@ -69,6 +69,21 @@ class AdminController extends \ShortPixel\Controller
 					}
 				}
 
+        $handleImage = apply_filters('shortpixel/media/uploadhook', true, $mediaItem, $meta, $id);
+
+        // Short-circuit in certain cases if needed.
+        if (false === $handleImage)
+        {
+           Log::addTemp('Returned false on the uploadhook -' . $id);
+           return $meta;
+        }
+
+        // Load compat stuff if ajax, just to be sure. When null is meta, this can be an integration
+        if (wp_doing_ajax() || is_null($meta))
+        {
+          $this->loadCronCompat();
+        }
+
 				if ($mediaItem->isProcessable())
 				{
 					$converter = Converter::getConverter($mediaItem, true);

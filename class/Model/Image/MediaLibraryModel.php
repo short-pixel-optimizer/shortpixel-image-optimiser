@@ -1340,7 +1340,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	// FileDelete param for subclass compat.
   public function onDelete($fileDelete = false)
   {
-			//$WPMLduplicates = $this->getWPMLDuplicates();
+			$WPMLduplicates = $this->getWPMLDuplicates();
 
 			$fileDelete = (count($WPMLduplicates) == 0) ? true : false;
 			$fs = \wpSPIO()->filesystem();
