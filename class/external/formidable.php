@@ -44,12 +44,17 @@ class Formidable
        {
            foreach($_POST['item_meta'] as $field_id => $meta_id)
            {
+             // array can contain non numeric or empty values.
+             if (! is_numeric($meta_id))
+             {
+              continue;
+             }
+
               $mediaItem = $fs->getMediaImage($meta_id);
               if (is_object($mediaItem) && $mediaItem->isProcessable())
               {
                  $adminController = AdminController::getInstance();
                  $adminController->handleImageUploadHook(null, $meta_id);
-
               }
            }
 
