@@ -48,8 +48,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		const ACTION_SMARTCROP = 100;
 		const ACTION_SMARTCROPLESS = 101;
 
-    // Extension that we process .
-    const PROCESSABLE_EXTENSIONS = array('jpg', 'jpeg', 'gif', 'png', 'pdf', 'bmp', 'tiff');
+    // Extension that we process . Minus the one that one MediaLibraryModel should handle, so it doesn't touch the thumbns.
+    const PROCESSABLE_EXTENSIONS = array('jpg', 'jpeg', 'gif', 'png', 'pdf');
 
     //
     const P_PROCESSABLE = 0;

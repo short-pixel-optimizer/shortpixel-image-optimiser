@@ -33,11 +33,6 @@ class OptimizeController
 
 		protected static $lastId; // Last item_id received / send. For catching errors.
 
-    public function __construct()
-    {
-
-    }
-
     // If OptimizeController should use the bulkQueues.
     public function setBulk($bool)
     {

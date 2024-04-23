@@ -57,12 +57,12 @@ abstract class Converter
              case 'heic':
              case 'tiff':
              case 'tif':
-
+             case 'bmp':
               $converter = new ApiConverter($imageModel);
              break;
-             case 'bmp':
-               $converter = new BMPConverter($imageModel);
-             break;
+
+              //$converter = new BMPConverter($imageModel);
+             //break;
           }
           return $converter;
     }

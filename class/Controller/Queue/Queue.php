@@ -108,7 +108,6 @@ abstract class Queue
        $this->q->addItems(array($item), false);
        $numitems = $this->q->withRemoveDuplicates()->enqueue(); // enqueue returns numitems
 
-      // $this->q->setStatus('preparing', $preparing, true); // add single should not influence preparing status.
        $result = $this->getQStatus($result, $numitems);
        $result->numitems = $numitems;
 

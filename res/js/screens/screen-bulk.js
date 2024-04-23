@@ -1134,7 +1134,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
      var target = event.target;
      var settingParent = target.closest('.optiongroup');
      var warningEl = settingParent.querySelector('.warning');
-     console.log(settingParent, warningEl);
+     //console.log(settingParent, warningEl);
      if (true === target.checked)
      {
         warningEl.classList.remove('hidden');

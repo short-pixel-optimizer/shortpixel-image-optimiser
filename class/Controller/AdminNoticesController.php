@@ -270,10 +270,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 
                 Notices::makePersistent($new_notice, $id, MONTH_IN_SECONDS);
             }
-
-
         }
-
     }
 
     public function proposeUpgradePopup() {
@@ -367,10 +364,6 @@ class AdminNoticesController extends \ShortPixel\Controller
 
         return $notices;
     }
-
-
-
-
 
     public function pluginUpdateMessage($data, $response)
     {

@@ -167,6 +167,7 @@ class CronController
       $optimizeController = new OptimizeController();
       if ('bulk' === $queue_type)
       {
+
          $optimizeController->setBulk(true);
       }
       else {

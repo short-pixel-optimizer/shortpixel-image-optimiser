@@ -67,6 +67,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	/** @var array */
 	protected $forceSettings = array();  // option derives from setting or otherwise, request to be forced upon via UI to use specific value.
 
+  const PROCESSABLE_EXTENSIONS = array('jpg', 'jpeg', 'gif', 'png', 'pdf', 'bmp', 'tiff');
+
+
   public function __construct($post_id, $path)
   {
       $this->id = $post_id;
@@ -119,7 +122,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	// Path will only return the filepath.  For reasons, see getOptimizeFileType
   public function getOptimizeData()
   {
-		if (! is_null($this->optimizeData))
+
+
+    $include_thumbs = true;
+    if (false === in_array($this->getExtension(), ImageModel::PROCESSABLE_EXTENSIONS))
+    {
+        $include_thumbs = false;
+    }
+
+		if (! is_null($this->optimizeData) && true === $include_thumbs)
 		{
 			return $this->optimizeData;
 		}
@@ -180,6 +191,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				$hash = md5( serialize($paramList) . $url);
 				$doubles[$hash] = $this->mainImageKey;
 		 }
+
+     if (false === $include_thumbs)
+     {
+        return $parameters;
+     }
 
 		 $thumbObjs = $this->getThumbObjects();
 
