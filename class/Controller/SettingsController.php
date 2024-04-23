@@ -54,6 +54,7 @@ class SettingsController extends \ShortPixel\ViewController
       {
           $this->model = \wpSPIO()->settings();
 
+
 					//@todo Streamline this mess. Should run through controller mostly. Risk of desync otherwise.
 					$keyControl = ApiKeyController::getInstance();
           $this->keyModel = $keyControl->getKeyModel(); //new ApiKeyModel();
@@ -460,13 +461,15 @@ class SettingsController extends \ShortPixel\ViewController
          $this->loadView('view-settings');
       }
 
-			 protected function avifServerCheck()
+			protected function avifServerCheck()
       {
     			$noticeControl = AdminNoticesController::getInstance();
 					$notice = $noticeControl->getNoticeByKey('MSG_AVIF_ERROR');
 
-					$notice->check();
-
+          if (is_object($notice))
+          {
+					     $notice->check();
+          }
       }
 
       protected function loadStatistics()

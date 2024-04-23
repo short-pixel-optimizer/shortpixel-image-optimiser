@@ -11,7 +11,7 @@ class ShiftSelect
        var checkList =  document.querySelectorAll(selector);
        if (checkList.length == 0)
        {
-          console.error('No Checklist');
+         return; 
        }
 
        for (let i = 0; i < checkList.length; i++)
@@ -28,7 +28,7 @@ class ShiftSelect
         let inBetween = false;
         let changeEvent = new Event('change');
         var target = event.target;
-        
+
         // Selection happens because of ranges.
         window.getSelection().removeAllRanges();
 

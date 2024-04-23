@@ -267,6 +267,8 @@ class AdminController extends \ShortPixel\Controller
            include_once(ABSPATH . 'wp-admin/includes/image.php' );
          }
 
+
+
 		}
 
     /** Filter for Medialibrary items in list and grid view. Because grid uses ajax needs to be caught more general.
