@@ -293,7 +293,7 @@ class OtherMediaController extends \ShortPixel\Controller
 				$folderTable = $this->getFolderTable();
 
 				$tsInterval = UtilHelper::timestampToDB(time() - $args['interval']);
-				$sql = ' SELECT id FROM ' . $folderTable . '	WHERE status >= 0 AND (ts_checked <= %s OR ts_checked IS NULL)';
+				$sql = ' SELECT id FROM ' . $folderTable . '	WHERE status >= 0 AND (ts_checked <= %s OR ts_checked IS NULL) order by ts_checked ASC';
 
 				$sql = $wpdb->prepare($sql, $tsInterval);
 
