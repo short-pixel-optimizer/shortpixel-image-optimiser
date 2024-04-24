@@ -86,7 +86,7 @@ var SpWorker = {
 					 		console.error('Worker.js reporting issue on catch', error);
 					 }
 					 else {
-					 	console.log('stopped but not complaining!');
+					 	console.log('stopped but not complaining!', error);
 					 }
 					return false;
 				});

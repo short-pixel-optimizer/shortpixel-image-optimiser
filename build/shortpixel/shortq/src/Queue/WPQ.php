@@ -385,9 +385,9 @@ class WPQ implements Queue
       $num = $this->getStatus('items'); //$queue->items;
       if ($num <= 0)
       { // This creates lots of data / sql's and issues.
-        $this->checkQueue(); // check and update left records before checking on Dprovider.
-        $num = $this->DataProvider->itemCount();
-        $this->setStatus('items', $num);
+      //  $this->checkQueue(); // check and update left records before checking on Dprovider.
+        //$num = $this->DataProvider->itemCount();
+        //$this->setStatus('items', $num);
       }
       return (int) $num;
   }
@@ -455,6 +455,12 @@ class WPQ implements Queue
       }
 
       $count = $this->getStatus($name);
+      if ($count + $change < 0)
+      {
+       // Weird problem that would trigger sometimes with background active.
+       $this->resetInternalCounts();
+       $count = $this->getStatus($name);
+      }
       return $this->setStatus($name, $count + $change, $savenow);
   }
 
@@ -523,6 +529,7 @@ class WPQ implements Queue
 			 $status['queues'][$this->qName]  = $currentStatus;
 		 }
      $res = update_option($this->statusName, $status);
+     wp_cache_delete($this->statusName, 'options');
   }
 
   /** Check Queue. This function intends to keep internal counts consistent with dataprovider without doing queries every run .
