@@ -71,7 +71,9 @@ class ShortPixelPlugin {
 			return;
 		}
 
+
 		$cron = Controller\CronController::getInstance();  // cron jobs - must be low init to function!
+			
 		$front        = new Controller\FrontController();
 		$admin        = Controller\AdminController::getInstance();
 		$adminNotices = Controller\AdminNoticesController::getInstance(); // Hook in the admin notices.

@@ -121,7 +121,6 @@ class BMPConverter extends MediaLibraryConverter
     );
     $fs = \wpSPIO()->filesystem();
 
-Log::addTemp("BmPConverter REstore");
     $this->setupReplacer();
 
     $oldFileName = $this->imageModel->getFileName(); // Old File Name, Still .jpg

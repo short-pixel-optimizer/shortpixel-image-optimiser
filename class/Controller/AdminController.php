@@ -74,7 +74,6 @@ class AdminController extends \ShortPixel\Controller
         // Short-circuit in certain cases if needed.
         if (false === $handleImage)
         {
-           Log::addTemp('Returned false on the uploadhook -' . $id);
            return $meta;
         }
 

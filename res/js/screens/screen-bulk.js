@@ -301,7 +301,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
           console.log('Queue status: preparing done');
 
           this.SwitchPanel('summary');
- 					this.UpdatePanelStatus('loaded', 'selection');
+ 					this.UpdatePanelStatus('loaded', 'selection'); // back to default
 				  this.processor.SetInterval(-1); // back to default.
 
       }
@@ -324,6 +324,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
           else
           {
               this.SwitchPanel('dashboard'); // seems we are just at the begin.
+              this.UpdatePanelStatus('loaded', 'selection'); // back to default just in case
               this.processor.StopProcess();
 
           } // empty queue, no items, start.

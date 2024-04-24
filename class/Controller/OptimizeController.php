@@ -27,7 +27,7 @@ use ShortPixel\Model\Converter\Converter as Converter;
 class OptimizeController
 {
     //protected static $instance;
-    protected static $results;
+    //protected static $results;
 
     protected $isBulk = false; // if queueSystem should run on BulkQueues;
 
@@ -919,9 +919,6 @@ class OptimizeController
 
 				$downloadHelper = DownloadHelper::getInstance();
 				$converter = Converter::getConverter($mediaObj, true);
-
-        Log::addTemp('SuccessData, HandleOptimizeItem', $successData);
-        Log::addTemp('Item', $item);
 
 				$item->blocked = true;
 				$q->updateItem($item);

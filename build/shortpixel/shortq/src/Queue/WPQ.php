@@ -384,7 +384,7 @@ class WPQ implements Queue
     //  $queue = $this->getQueueStatus();
       $num = $this->getStatus('items'); //$queue->items;
       if ($num <= 0)
-      {
+      { // This creates lots of data / sql's and issues.
         $this->checkQueue(); // check and update left records before checking on Dprovider.
         $num = $this->DataProvider->itemCount();
         $this->setStatus('items', $num);
@@ -537,6 +537,8 @@ class WPQ implements Queue
     $tasks_inprocess = $this->getStatus('in_process');
     $tasks_error = $this->getStatus('errors');
 
+    $preparing = $this->getStatus('preparing');
+
     $mode = $this->options->mode;
     $update_at_end = false;
 
@@ -576,7 +578,8 @@ class WPQ implements Queue
 
     if ($tasks_open > 0 || $tasks_inprocess > 0)
       return true;
-    else {
+    elseif (false === $preparing) // preparing queues might have zero items, but no reason to finish them since items may come
+    {
       $this->finishQueue();
       return false;
     }
@@ -651,7 +654,7 @@ class WPQ implements Queue
   public function unInstall()
   {
       // Remove the Queued Items
-    
+
       $this->DataProvider->removeRecords(array('all' => true, 'check_safe' => true));
 
       // Unset the WP Option queue

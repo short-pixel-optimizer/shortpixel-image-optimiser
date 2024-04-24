@@ -243,7 +243,6 @@ class SpioBulk extends SpioCommandBase
 
 				foreach($queues as $queue_name)
 				{
-           Log::addTemp('FinishBulk - ' . $queue_name);
 					 $bulkControl->finishBulk($queue_name);
 
 				}

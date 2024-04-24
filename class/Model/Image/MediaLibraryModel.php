@@ -1973,7 +1973,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 		if ($was_converted)
 		{
-      Log::addTemp('WasConverted');
 			 if ($bool)
 			 {
 			 	$bool = $this->restoreConversion($convertMeta, $converter);

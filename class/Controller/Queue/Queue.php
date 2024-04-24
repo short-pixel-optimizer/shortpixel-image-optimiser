@@ -436,9 +436,7 @@ abstract class Queue
 
     protected function getStatus($name = false)
     {
-        if ($name == 'items')
-          return $this->q->itemCount(); // This one also recounts once queue returns 0
-        elseif ($name == 'custom_data')
+        if ($name == 'custom_data')
         {
             $customData = $this->q->getStatus('custom_data');
             if (! is_object($customData))

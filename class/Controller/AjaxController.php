@@ -431,7 +431,6 @@ class AjaxController
 
       // Get and remove Meta
       $mediaItem = \wpSPIO()->filesystem()->getImage($imageId, 'media');
-			Log::addTemp('Getting image, sending delete from', $mediaItem);
 
       $mediaItem->onDelete();
 
@@ -442,7 +441,6 @@ class AjaxController
       // Optimize
       $control = new OptimizeController();
       $json = $control->addItemToQueue($mediaItem);
-			Log::addTemp('Enqueued Item', $json);
 
     }
 
@@ -450,7 +448,6 @@ class AjaxController
 		public function onWpLrSyncMedia($row)
 		{
 			$attachment_id = $row->wp_id;
-			Log::addTemp('onWplrSyncMedia', $row);
 			return $this->onWpLrUpdateMedia($attachment_id);
 		}
 
@@ -540,9 +537,13 @@ class AjaxController
         $bulkControl = BulkController::getInstance();
 
         if (! $doMedia)
+				{
           $bulkControl->finishBulk('media');
+				}
         if (! $doCustom)
+				{
           $bulkControl->finishBulk('custom');
+				}
 
 				if ($doCustom)
 				{

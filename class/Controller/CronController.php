@@ -32,7 +32,10 @@ class CronController
         return;
      }
      $this->init();
-     $this->scheduler();
+     if (false === wp_doing_ajax())
+     {
+       $this->scheduler();
+     }
   }
 
   public static function getInstance()
@@ -167,7 +170,6 @@ class CronController
       $optimizeController = new OptimizeController();
       if ('bulk' === $queue_type)
       {
-
          $optimizeController->setBulk(true);
       }
       else {
