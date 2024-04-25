@@ -38,6 +38,7 @@ class AdminNoticesController extends \ShortPixel\Controller
         'ListviewNotice',
 		//		'HeicFeatureNotice',
         'NewExclusionFormat',
+        'LitespeedCache',
     );
     protected $adminNotices; // Models
 
