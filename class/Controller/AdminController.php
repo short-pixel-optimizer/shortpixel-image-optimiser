@@ -232,13 +232,18 @@ class AdminController extends \ShortPixel\Controller
       $defaults = array(
         'force' => false,
         'wait' => 3,
+        'amount' => -1,  // amount of directories to refresh.
+        'interval' => 6 * HOUR_IN_SECONDS,
       );
 
       $args = wp_parse_args($args, $defaults);
 
       $otherMediaController = OtherMediaController::getInstance();
 
+Log::addTemp("Scan Custom Folders Hook", $args);
+
       $running = true;
+      $i = 0;
 
       while (true === $running)
       {
@@ -248,6 +253,13 @@ class AdminController extends \ShortPixel\Controller
            $running = false;
         }
         sleep($args['wait']);
+
+        $i++;
+        if ($args['amount'] > 0 && $i >= $args['amount'])
+        {
+           Log::addTemp($args['amount'] . ' lower than ' . $i . ' breaking');
+           break;
+        }
 
       }
 

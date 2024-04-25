@@ -284,6 +284,7 @@ class OtherMediaController extends \ShortPixel\Controller
 				$defaults = array(
 						'force' => false,
 						'interval' => apply_filters('shortpixel/othermedia/refreshfolder_interval', HOUR_IN_SECONDS),
+
 				);
 
 				$args = wp_parse_args($args, $defaults);
@@ -299,6 +300,8 @@ class OtherMediaController extends \ShortPixel\Controller
 
 				$folder_id = $wpdb->get_var($sql);
 
+Log::addTemp('SQL', $sql);
+ Log::addTemp('Checking Folder_id', $folder_id);
 				if (is_null($folder_id))
 				{
 					 return false;

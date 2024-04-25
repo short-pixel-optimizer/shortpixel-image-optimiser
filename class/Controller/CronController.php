@@ -17,7 +17,8 @@ class CronController
   protected $cron_options = array();
   protected $cron_hooks = array();
 
-  protected $is_active = false;
+  protected $background_is_active = false;
+  protected $custom_is_active = false;
 
   public function __construct()
   {
@@ -26,15 +27,17 @@ class CronController
      add_filter( 'cron_schedules', array($this,'cron_schedules') );
 
      // No need to load anything
-     if (false === $this->is_active)
+     if (false === $this->background_is_active)
      {
-        $this->removeAll();
+        $this->bulkRemoveAll();
         return;
      }
+
      $this->init();
      if (false === wp_doing_ajax())
      {
-       $this->scheduler();
+       $this->bulk_scheduler();
+       $this->custom_scheduler();
      }
   }
 
@@ -52,10 +55,6 @@ class CronController
           'interval' => apply_filters('shortpixel/cron/interval', 60),
           'display' => __('Shortpixel cron interval', 'shortpixel-image-optimiser')
         );
-    /*    $schedules['spio_15min'] = array(
-          'interval' => 60 * 15,
-          'display' => __('Shortpixel 15 minutes', 'shortpixel-image-optimiser')
-        ); */
 
         return $schedules;
   }
@@ -64,7 +63,7 @@ class CronController
   {
 
       // Defaults
-      $crons = array(
+      $background_crons = array(
           'single' => array(
               'cron_name' => 'spio-single-cron',
               'bulk' => false,
@@ -76,30 +75,43 @@ class CronController
           ),
       );
 
-      foreach($crons as $name => $options)
+      $custom_crons = array(
+          'directory' => array(
+              'cron_name' => 'spio-refresh-dir',
+          )
+      );
+
+      foreach($background_crons as $name => $options)
       {
          add_action($options['cron_name'], array(AdminController::getInstance(), 'processCronHook'));
       }
 
-      $this->cron_options = $crons;
+      foreach ($custom_crons as $name => $options)
+      {
+         add_action($options['cron_name'], array(AdminController::getInstance(), 'scanCustomFoldersHook'));
+      }
+
+      $this->cron_options = $background_crons;
   }
 
   protected function checkActive()
   {
       $settings = \wpSPIO()->settings();
-      $this->is_active = ($settings->doBackgroundProcess) ? true : false;
+      $this->background_is_active = ($settings->doBackgroundProcess) ? true : false;
+
+      $this->custom_is_active = apply_filters('shortpixel/othermedia/cron_directoryrefresh', true);
   }
 
 
   public function checkNewJobs()
   {
-       if ( true === $this->is_active)
+       if ( true === $this->background_is_active)
        {
-          $this->scheduler();
+          $this->bulk_scheduler();
        }
   }
 
-  protected function scheduler()
+  protected function bulk_scheduler()
   {
          foreach($this->cron_options as $type => $options)
          {
@@ -108,16 +120,37 @@ class CronController
 
             if ( false === wp_next_scheduled($name, $args))
             {
-              $this->scheduleEvent($type, $options, $args);
+              $this->bulkScheduleEvent($type, $options, $args);
             }
             else  {
               // check if still items, or how do we do this (@todo)
-              $this->checkevent($type, $options, $args);
+              $this->bulkCheckevent($type, $options, $args);
             }
          }
   }
 
-  protected function scheduleEvent($queue_type, $options, $args)
+  protected function custom_scheduler()
+  {
+      $name = 'spio-refresh-dir';
+      $args = array( 'args' => [
+          'amount' => 3]
+      );
+
+      $scheduled = wp_next_scheduled($name, $args);
+      $add_cron = apply_filters('shortpixel/othermedia/do_cron', true);
+
+      if (false == $scheduled && true === $add_cron)
+      {
+          wp_schedule_event(time(), 'hourly', $name, $args);
+      }
+      elseif(false !== $scheduled && false === $add_cron)
+      {
+           wp_unschedule_event(wp_next_scheduled($name, $args), $name, $args);
+      }
+
+  }
+
+  protected function bulkScheduleEvent($queue_type, $options, $args)
   {
       $data = $this->getQueueData($queue_type);
 
@@ -138,7 +171,7 @@ class CronController
 
   }
 
-  protected function removeAll()
+  protected function bulkRemoveAll()
   {
     foreach($this->cron_options as $type => $options)
     {
@@ -152,7 +185,7 @@ class CronController
     }
   }
 
-  protected function checkEvent($queue_type, $options, $args)
+  protected function bulkCheckEvent($queue_type, $options, $args)
   {
       $data = $this->getQueueData($queue_type);
 
