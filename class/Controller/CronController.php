@@ -18,7 +18,6 @@ class CronController
   protected $cron_hooks = array();
 
   protected $background_is_active = false;
-  protected $custom_is_active = false;
 
   public function __construct()
   {
@@ -99,7 +98,6 @@ class CronController
       $settings = \wpSPIO()->settings();
       $this->background_is_active = ($settings->doBackgroundProcess) ? true : false;
 
-      $this->custom_is_active = apply_filters('shortpixel/othermedia/cron_directoryrefresh', true);
   }
 
 
@@ -137,7 +135,7 @@ class CronController
       );
 
       $scheduled = wp_next_scheduled($name, $args);
-      $add_cron = apply_filters('shortpixel/othermedia/do_cron', true);
+      $add_cron = apply_filters('shortpixel/othermedia/add_cron', true);
 
       if (false == $scheduled && true === $add_cron)
       {
