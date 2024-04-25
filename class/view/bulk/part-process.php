@@ -39,7 +39,10 @@ $settings = \wpSPIO()->settings();
     <?php
      if ($settings->doBackgroundProcess): ?>
       <p class="description">
-        <?php printf(esc_html('ShortPixel is processing your images. You have activated the option for background processing. Therefore, you can close this browser window and visit it later to check the status of bulk processing. Please note that as long as this browser window is open, processing will take place here and not in the background. %sRead more%s'), '<strong>','</strong>'); ?>
+
+        <?php
+        $link = 'https://shortpixel.com/knowledge-base/article/584-background-processing-using-cron-jobs-in-shortpixel-image-optimizer';
+        printf(esc_html('ShortPixel is processing your images. You have activated the option for background processing. Therefore, you can close this browser window and visit it later to check the status of bulk processing. Please note that as long as this browser window is open, processing will take place here and not in the background. %sRead more%s'), '<strong><a href="' . esc_attr($link) . '" target="_blank">','</a></strong>'); ?>
       </p>
     <?php else: ?>
       <p class='description'>
