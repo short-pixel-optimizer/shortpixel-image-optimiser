@@ -174,7 +174,9 @@ $approx = $this->view->approx;
 
           </div>
           <h4><label for="background_checkbox">
+
             <?php printf(esc_html__('Optimize images in the background' ,'shortpixel-image-optimiser') ); ?>
+              <span class='new'><?php _e('New!', 'shortpixel-image-optimiser'); ?></span>
           </label></h4>
          <div class="option"><?php printf(esc_html__('Activating this option allows you to close the browser window after initiating bulk processing. However, on websites with few visitors or those on shared hosting, this process may be interrupted or significantly slower. It\'s important to monitor server resource utilization and consider the usual browser-based bulk optimization process in such cases. %s Read more %s.','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
          </div>
