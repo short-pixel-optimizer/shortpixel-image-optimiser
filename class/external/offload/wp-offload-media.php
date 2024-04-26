@@ -221,6 +221,13 @@ class wpOffload
 		*/
 		private function sourceCache($url, $source_id = null)
 		{
+			 // remove scheme, this causes issues wit hte checkIfOffloaded is confused about the scheme. In general one might optimize this by checking without schemes in general, but this probably bites with the different offload container options
+			 $parsedUrl = parse_url($url);
+			 if (isset($parsedUrl['scheme']))
+			 {
+				  $url = str_replace($parsedUrl['scheme'], '', $url);
+			 }
+
 			if ($source_id === null && isset(static::$sources[$url]))
 			{
 				$source_id = static::$sources[$url];
@@ -242,6 +249,7 @@ class wpOffload
     public function checkIfOffloaded($bool, $url)
     {
 
+// @TODO SOURCE CACHE NEEDS SOME WORK SINCE WEBP/AVIF IS NOT BEING LOADED IN FIXWEBP WHICH IT SHOULD
 			$source_id = $this->sourceCache($url);
 			$orig_url = $url;
 
@@ -277,6 +285,7 @@ class wpOffload
 			$cacheHit = false; // prevent a cache hit to be cached again.
 			$raw_url = $url; // keep raw. If resolved, add the raw url to the cache.
 
+
 			// If in cache, we are done.
 			if (! is_null($source_id))
 			{
@@ -289,9 +298,16 @@ class wpOffload
 
 				$parsedUrl = parse_url($url);
 
-				if (! isset($parsedUrl['scheme']) || ! in_array($parsedUrl['scheme'], array('http','https')))
+				if (
+					(! isset($parsedUrl['scheme'])
+					|| ! in_array($parsedUrl['scheme'], array('http','https')))
+
+				)
 				{
-					 $url = 'http://' . $url; //str_replace($parsedUrl['scheme'], 'https', $url);
+					 if (substr($url, 0, 2) === '//')
+					 	 $url = 'https:' . $url;
+					 else
+					 	 $url = 'https://' . $url; //str_replace($parsedUrl['scheme'], 'https', $url);
 				}
 
 				$source_id = $this->sourceCache($url);
@@ -299,7 +315,6 @@ class wpOffload
 				if(is_null($source_id))
 				{
       		$source = $class::get_item_source_by_remote_url($url);
-					$source2 = $class::get_item_source_by_remote_url($raw_url);
 
 					$source_id = isset($source['id']) ? intval($source['id']) : null;
 				}
@@ -393,6 +408,7 @@ class wpOffload
 					}
 				}
 			}
+
 
       return $source_id;
     }
@@ -660,30 +676,32 @@ class wpOffload
 		// @param $imagebaseDir DirectoryModel  The remote path / path this all takes place at.
     public function fixWebpRemotePath($bool, $fileObj, $url, $imagebaseDir)
     {
-			 $source_id = $this->getSourceIDByURL($url);
-			 if (false === $source_id)
-			 		return false;
+			// @TODO THIS FUNCTION IN GENERAL PROBABLY SHOULD NOT LOAD ANY DATABASE QUERIES BUT DIRECTLY FROM CACHE(?)
+			 $extension = $fileObj->getExtension();
+			 $fs = \wpSPIO()->filesystem();
 
-			 $item = $this->getItemById($source_id);
-			 $extra_info = $item->extra_info();
-
-			 if (! isset( $extra_info['objects'] ) || ! is_array( $extra_info['objects'] ) )
-			 	return false;
-
-			 $bool = false;
-
-			 foreach($extra_info['objects'] as $data)
+			 $webpUrl = $fileObj->getFullPath();
+			 $main_is_loaded = $this->sourceCache($url); // main image, check if loaded.
+			 if ($fs->pathIsURL($webpUrl))
 			 {
-				   $sourceFile = $data['source_file'];
-					 if ($sourceFile == $fileObj->getFileName())
-					 {
-						  $bool = true;
-							return $fileObj;
-							break;
-					 }
+				  $url = $webpUrl;
+					$res = $this->sourceCache($url);
+
+				 if (is_null($res) && ! is_null($main_is_loaded))
+				 {
+					 return false;
+				 }
 			 }
 
-			 return $bool;
+			 $source_id = $this->getSourceIDByURL($url);
+
+			 if (false === $source_id)
+			 {
+			 		return false;
+			 }
+			 else {
+			 		return $fileObj;
+			 }
 
     }
 
