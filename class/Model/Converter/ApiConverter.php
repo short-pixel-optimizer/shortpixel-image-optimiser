@@ -106,6 +106,10 @@ class ApiConverter extends MediaLibraryConverter
         {
           $placeholderFile = $fs->getFile(\wpSPIO()->plugin_path('res/img/fileformat-tiff-placeholder.jpg'));
         }
+				elseif ('bmp' === $extension)
+				{
+					$placeholderFile = $fs->getFile(\wpSPIO()->plugin_path('res/img/fileformat-bmp-placeholder.jpg'));
+				}
         else { // wrong file better than no file.
           $placeholderFile = $fs->getFile(\wpSPIO()->plugin_path('res/img/fileformat-heic-placeholder.jpg'));
 
