@@ -23,7 +23,6 @@ class CronController
      // Important that the schedules filter always goes for unscheduling, even when non-active.
      add_filter( 'cron_schedules', array($this,'cron_schedules') );
 
-
      $this->init();
      if (false === wp_doing_ajax())
      {
@@ -102,7 +101,6 @@ class CronController
   {
       $settings = \wpSPIO()->settings();
       $this->background_is_active = ($settings->doBackgroundProcess) ? true : false;
-
   }
 
 
@@ -112,6 +110,12 @@ class CronController
        {
           $this->bulk_scheduler();
        }
+  }
+
+  public function onDeactivate()
+  {
+      $this->bulkRemoveAll();
+      $this->custom_scheduler(true);
   }
 
   protected function bulk_scheduler()
@@ -132,7 +136,7 @@ class CronController
          }
   }
 
-  protected function custom_scheduler()
+  protected function custom_scheduler($unschedule = false)
   {
       $name = 'spio-refresh-dir';
       $args = array( 'args' => [
@@ -142,11 +146,11 @@ class CronController
       $scheduled = wp_next_scheduled($name, $args);
       $add_cron = apply_filters('shortpixel/othermedia/add_cron', true);
 
-      if (false == $scheduled && true === $add_cron)
+      if (false == $scheduled && true === $add_cron && false === $unschedule)
       {
           wp_schedule_event(time(), 'spio_interval_30min', $name, $args);
       }
-      elseif(false !== $scheduled && false === $add_cron)
+      elseif(false !== $scheduled && (false === $add_cron || true == $unschedule) )
       {
            wp_unschedule_event(wp_next_scheduled($name, $args), $name, $args);
       }

@@ -7,6 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
+use ShortPixel\Controller\CronController as CronController;
 use ShortPixel\Controller\BulkController as BulkController;
 use ShortPixel\Controller\FileSystemController as FileSystemController;
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
@@ -68,6 +69,7 @@ class InstallHelper
 
 		// saved in settings object, reset all stats.
  		StatsController::getInstance()->reset();
+    CronController::getInstance()->onDeactivate();
   }
 
   public static function uninstallPlugin()
