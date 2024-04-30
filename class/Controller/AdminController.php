@@ -266,7 +266,7 @@ class AdminController extends \ShortPixel\Controller
 
       $otherMediaController = OtherMediaController::getInstance();
 
-Log::addTemp("Scan Custom Folders Hook", $args);
+      $args = apply_filters('shortpixel/othermedia/scan_custom_folder', $args);
 
       $running = true;
       $i = 0;
