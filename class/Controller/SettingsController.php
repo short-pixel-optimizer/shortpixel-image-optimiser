@@ -275,7 +275,7 @@ class SettingsController extends \ShortPixel\ViewController
 					else
 					{
 						$model = $adminNoticesController->getNoticeByKey($key);
-						if ($model)
+						if (is_object($model))
 							$model->addManual();
 					}
 				}

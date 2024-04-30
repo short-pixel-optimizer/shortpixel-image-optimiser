@@ -188,8 +188,13 @@ $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->u
 		 ?>
 				<select name="notice_constant">
 					 <option value="trigger-all">Trigger All</option>
-					<?php foreach($notices as $key => $noticeObj)
+
+					<?php
+          if (is_array($notices))
+          {
+            foreach($notices as $key => $noticeObj)
 						echo "<option value='$key'>$key </option>";
+          }
 						?>
 				</select>
 				<button class="button" type="submit">Trigger this Notice</button>

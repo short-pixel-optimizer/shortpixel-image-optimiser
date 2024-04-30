@@ -2878,10 +2878,18 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					return;
 			}
 
+
 			self::$unlistedNoticeChecked = true;
 
 			$settings = \wpSPIO()->settings();
 			$control = AdminNoticesController::getInstance();
+
+      // Silent mode has no notices.
+      if ($control->isSilentMode())
+      {
+         return;
+      }
+
 			$notice =  $control->getNoticeByKey('MSG_UNLISTED_FOUND');
 
 			// already active
@@ -2889,7 +2897,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				return;
 
 			// already notice.
-			if (is_object($notice->getNoticeObj()))
+			if (is_object($notice) && is_object($notice->getNoticeObj()))
 			{
 				 return;
 			}
