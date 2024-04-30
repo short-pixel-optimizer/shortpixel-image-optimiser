@@ -7,8 +7,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
-
-
 class CronController
 {
 
@@ -25,17 +23,19 @@ class CronController
      // Important that the schedules filter always goes for unscheduling, even when non-active.
      add_filter( 'cron_schedules', array($this,'cron_schedules') );
 
-     // No need to load anything
-     if (false === $this->background_is_active)
-     {
-        $this->bulkRemoveAll();
-        return;
-     }
 
      $this->init();
      if (false === wp_doing_ajax())
      {
-       $this->bulk_scheduler();
+       // No need to load anything
+       if (false === $this->background_is_active)
+       {
+          $this->bulkRemoveAll();
+       }
+       else {
+          $this->bulk_scheduler();
+       }
+
        $this->custom_scheduler();
      }
   }
@@ -56,7 +56,7 @@ class CronController
         );
 
         $schedules['spio_interval_30min'] = array(
-          'interval' => apply_filters('shortpixel/cron/interval', 30),
+          'interval' => apply_filters('shortpixel/cron/interval', 30 * MINUTE_IN_SECONDS),
           'display' => __('Shortpixel cron interval', 'shortpixel-image-optimiser')
         );
 
