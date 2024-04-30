@@ -293,7 +293,7 @@ class PNGConverter extends MediaLibraryConverter
 					Log::addDebug('PNG2jPG Converted');
 			}
 
-			$fs->flushImageCache();
+			$fs->flushImage($this->imageModel);
 
 			return true;
 		}

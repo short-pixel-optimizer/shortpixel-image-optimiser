@@ -51,7 +51,6 @@ class ApiConverter extends MediaLibraryConverter
         {
           $item->paramlist[$index]['convertto'] = 'jpg';
         }
-
       }
 
       // Run converter to create backup and make placeholder to block similar heics from overwriting.
@@ -115,15 +114,12 @@ class ApiConverter extends MediaLibraryConverter
 
         }
 
-
 				// Convert runs when putting imageModel to queue format in the Queue classs. This could run without optimization (before) taking place and when accidentally running it more than once results in duplicate files / backups (img-1, img-2 etc). Check placeholder and baseName to prevent this. Assume already done when it has it .
 				if ($this->imageModel->getMeta()->convertMeta()->hasPlaceHolder() && $this->imageModel->getMeta()->convertMeta()->getReplacementImageBase() !== false)
 				{
 					 return true;
 				}
 
-				// @todo Check replacementpath here. Rename main file - and backup - if numeration is needed.
-				// @todo Also placeholder probably needs to be done each time to block current job in progress.
         $replacementPath = $this->getReplacementPath();
 
 				if (false === $replacementPath)
@@ -137,7 +133,10 @@ class ApiConverter extends MediaLibraryConverter
 				$replaceFile = $fs->getFile($replacementPath);
 				// If filebase (filename without extension) is not the same, this indicates that a double is there and it's enumerated. Move backup accordingly.
 
+
 				$destinationFile = $fs->getFile($replacementPath);
+
+        // Create placeholder here.
 				$copyok = $placeholderFile->copy($destinationFile);
 
 				if ($copyok)
@@ -158,6 +157,9 @@ class ApiConverter extends MediaLibraryConverter
 					{
 						 return false;
 					}
+
+          // Don't offload until the API file has been returned properly.
+          do_action('shortpixel/converter/prevent-offload', $this->imageModel->get('id'));
 
 // Turning off replacer, since it's always called off in Api?
 				//	$this->setTarget($destinationFile);

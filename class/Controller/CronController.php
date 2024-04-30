@@ -55,6 +55,11 @@ class CronController
           'display' => __('Shortpixel cron interval', 'shortpixel-image-optimiser')
         );
 
+        $schedules['spio_interval_30min'] = array(
+          'interval' => apply_filters('shortpixel/cron/interval', 30),
+          'display' => __('Shortpixel cron interval', 'shortpixel-image-optimiser')
+        );
+
         return $schedules;
   }
 
@@ -131,7 +136,7 @@ class CronController
   {
       $name = 'spio-refresh-dir';
       $args = array( 'args' => [
-          'amount' => 3]
+          'amount' => 10]
       );
 
       $scheduled = wp_next_scheduled($name, $args);
@@ -139,7 +144,7 @@ class CronController
 
       if (false == $scheduled && true === $add_cron)
       {
-          wp_schedule_event(time(), 'hourly', $name, $args);
+          wp_schedule_event(time(), 'spio_interval_30min', $name, $args);
       }
       elseif(false !== $scheduled && false === $add_cron)
       {

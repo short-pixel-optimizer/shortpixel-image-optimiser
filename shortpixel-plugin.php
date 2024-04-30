@@ -73,7 +73,7 @@ class ShortPixelPlugin {
 
 
 		$cron = Controller\CronController::getInstance();  // cron jobs - must be low init to function!
-			
+
 		$front        = new Controller\FrontController();
 		$admin        = Controller\AdminController::getInstance();
 		$adminNotices = Controller\AdminNoticesController::getInstance(); // Hook in the admin notices.
@@ -185,7 +185,8 @@ class ShortPixelPlugin {
 
 						add_action( 'enable-media-replace-upload-done', array( $admin, 'handleReplaceEnqueue' ), 10, 3 );
 
-				add_filter( 'wp_generate_attachment_metadata', array( $admin, 'handleImageUploadHook' ), 10, 2 );
+				add_filter( 'wp_generate_attachment_metadata', array( $admin, 'handleImageUploadHook' ), 5, 2 );
+				add_action('add_attachment', array($admin, 'addAttachmentHook'));
 				// @integration MediaPress
 				add_filter( 'mpp_generate_metadata', array( $admin, 'handleImageUploadHook' ), 10, 2 );
 			}
@@ -305,7 +306,7 @@ class ShortPixelPlugin {
 	/*	wp_register_script( 'sp-file-tree', plugins_url( '/res/js/sp-file-tree.min.js', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 */
 
-	 wp_register_script('shortpixel-folderbrowser', plugins_url('/res/js/shortpixel-folderbrowser.js', SHORTPIXEL_PLUGIN_FILE, array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true ));
+	 wp_register_script('shortpixel-folderbrowser', plugins_url('/res/js/shortpixel-folderbrowser.js', SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
 	 wp_localize_script('shortpixel-folderbrowser', 'spio_folderbrowser', array(
 		 		'strings' => array(

@@ -37,11 +37,29 @@ class AdminController extends \ShortPixel\Controller
       return self::$instance;
     }
 
+
+
+    public function addAttachmentHook($post_id)
+    {
+           $fs = \wpSPIO()->filesystem();
+          $mediaItem = $fs->getImage($post_id, 'media');
+          $converter = Converter::getConverter($mediaItem, true);
+
+            if (is_object($converter) && $converter->isConvertable())
+            {
+              do_action('shortpixel/converter/prevent-offload', $post_id);
+            }
+
+    }
+
+
     /** Handling upload actions
     * @hook wp_generate_attachment_metadata
     */
     public function handleImageUploadHook($meta, $id)
     {
+        Log::addTemp('Handle Image Upload');
+
         // Media only hook
 				if ( in_array($id, self::$preventUploadHook))
 				{
@@ -92,9 +110,12 @@ class AdminController extends \ShortPixel\Controller
 					{
 							$args = array('runReplacer' => false);
 
-						 	$converter->convert($args);
-							$mediaItem = $fs->getImage($id, 'media');
+						 	$res = $converter->convert($args);
+							$mediaItem = $fs->getImage($id, 'media', false);
+
 							$meta = $converter->getUpdatedMeta();
+
+              //do_action('shortpixel/converter/prevent-offload-off', $id);
 					}
 
         	$control = new OptimizeController();
@@ -107,6 +128,11 @@ class AdminController extends \ShortPixel\Controller
     }
 
 
+    /**
+     * Prevent autohandling image for integrations, i.e. when external source wants to generate thumbnails or edit attachments
+     * @param  integer $id            media id
+     * @return null
+     */
 		public function preventImageHook($id)
 		{
 			  self::$preventUploadHook[] = $id;

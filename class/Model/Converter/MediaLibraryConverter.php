@@ -115,6 +115,7 @@ abstract class MediaLibraryConverter extends Converter
 
 			$metadata = wp_get_attachment_metadata($attach_id);
 
+
 			if (true === $params['generate_metadata'])
 			{
 				$attachment = get_post( $attach_id );

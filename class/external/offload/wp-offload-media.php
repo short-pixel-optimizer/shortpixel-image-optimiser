@@ -71,47 +71,26 @@ class wpOffload
         $this->offloading = false;
       }
 
-    /*	// Lets see if this can be without
-			if ('cloudfront' === $this->as3cf->get_setting( 'domain' ))
-      {
-        $this->is_cname = true;
-        $this->cname = $this->as3cf->get_setting( 'cloudfront' );
-      } */
-
-  //    $provider = $this->as3cf->get_provider();
       add_action('shortpixel/image/optimised', array($this, 'image_upload'), 10);
       add_action('shortpixel/image/after_restore', array($this, 'image_restore'), 10, 3); // hit this when restoring.
 			add_action('shortpixel-thumbnails-before-regenerate', array($this, 'remove_remote'), 10);
 			add_action('shortpixel/converter/prevent-offload', array($this, 'preventOffload'), 10);
 			add_action('shortpixel/converter/prevent-offload-off', array($this, 'preventOffloadOff'), 10);
 
-     // add_action('shortpixel_restore_after_pathget', array($this, 'remove_remote')); // not optimal -> has to do w/ doRestore and when URL/PATH is available when not on server .
-
-      // Seems this better served by _after? If it fails, it's removed from remote w/o filechange.
-    //  add_action('shortpixel/image/convertpng2jpg_before', array($this, 'remove_remote'));
       add_filter('as3cf_attachment_file_paths', array($this, 'add_webp_paths'));
 
-
-			//	add_filter('as3cf_remove_source_files_from_provider', array($this, 'remove_webp_paths'), 10);
-	//		add_action('shortpixel/image/convertpng2jpg_success', array($this, 'image_converted'), 10);
-				add_filter('as3cf_remove_source_files_from_provider', array($this, 'remove_webp_paths'));
+			add_filter('as3cf_remove_source_files_from_provider', array($this, 'remove_webp_paths'));
 
 
-    //  add_filter('shortpixel/restore/targetfile', array($this, 'returnOriginalFile'),10,2);
-     add_filter('as3cf_pre_update_attachment_metadata', array($this, 'preventUpdateMetaData'), 10,4);
-		 add_filter('as3cf_pre_handle_item_upload', array($this, 'preventInitialUploadHandler'), 10,3);
+     	add_filter('as3cf_pre_update_attachment_metadata', array($this, 'preventUpdateMetaData'), 10,4);
+		 	add_filter('as3cf_pre_handle_item_upload', array($this, 'preventInitialUploadHandler'), 10,3);
 
-		 //add_filter('as3cf_get_attached_file', array($this, 'fixScaledUrl'), 10, 4);
-		 add_filter('shortpixel_get_original_image_path', array($this, 'checkScaledUrl'), 10,2);
-		// add_filter('as3cf_get_attached_file_noop', array($this, 'fixScaledUrl'), 10,4);
+		 	add_filter('shortpixel_get_original_image_path', array($this, 'checkScaledUrl'), 10,2);
 
-      //add_filter('shortpixel_get_attached_file', array($this, 'get_raw_attached_file'),10, 2);
-    //  add_filter('shortpixel_get_original_image_path', array($this, 'get_raw_original_path'), 10, 2);
       add_filter('shortpixel/image/urltopath', array($this, 'checkIfOffloaded'), 10,2);
       add_filter('shortpixel/file/virtual/translate', array($this, 'getLocalPathByURL'));
 
       // for webp picture paths rendered via output
-     // add_filter('shortpixel_webp_image_base', array($this, 'checkWebpRemotePath'), 10, 2);
       add_filter('shortpixel/front/webp_notfound', array($this, 'fixWebpRemotePath'), 10, 4);
 
 			// Fix for updating source paths when converting
@@ -248,8 +227,6 @@ class wpOffload
 
     public function checkIfOffloaded($bool, $url)
     {
-
-// @TODO SOURCE CACHE NEEDS SOME WORK SINCE WEBP/AVIF IS NOT BEING LOADED IN FIXWEBP WHICH IT SHOULD
 			$source_id = $this->sourceCache($url);
 			$orig_url = $url;
 
@@ -285,7 +262,6 @@ class wpOffload
 			$cacheHit = false; // prevent a cache hit to be cached again.
 			$raw_url = $url; // keep raw. If resolved, add the raw url to the cache.
 
-
 			// If in cache, we are done.
 			if (! is_null($source_id))
 			{
@@ -307,7 +283,7 @@ class wpOffload
 					 if (substr($url, 0, 2) === '//')
 					 	 $url = 'https:' . $url;
 					 else
-					 	 $url = 'https://' . $url; //str_replace($parsedUrl['scheme'], 'https', $url);
+					 	 $url = 'https://' . $url;
 				}
 
 				$source_id = $this->sourceCache($url);
@@ -323,7 +299,6 @@ class wpOffload
 					$this->sourceCache($raw_url, $source_id);
 				}
 			}
-
 
 			if (is_null($source_id)) // check now via the thumbnail hocus.
 			{
@@ -535,7 +510,6 @@ class wpOffload
 					return $error;
 				}
 
-				Log::addDebug('Not preventing S3 Offload');
 				return $bool;
 		}
 
@@ -560,7 +534,6 @@ class wpOffload
 				$wp_source = trim(get_attached_file($post_id, apply_filters( 'emr_unfiltered_get_attached_file', true )));
 
 				$updated = false;
-
 
 				// If image is replaced with another name, the original soruce path will not match.  This could also happen when an image is with -scaled as main is replaced by an image that doesn't have it.  In all cases update the table to reflect proper changes.
 				if (wp_basename($wp_original) !== wp_basename($original_path))
@@ -656,7 +629,6 @@ class wpOffload
     public function add_webp_paths($paths)
     {
         $paths = $this->getWebpPaths($paths, true);
-				 //Log::addDebug('Add S3 Paths - ', array($paths));
         return $paths;
     }
 
@@ -664,8 +636,6 @@ class wpOffload
     public function remove_webp_paths($paths)
     {
       $paths = $this->getWebpPaths($paths, false);
-      //Log::addDebug('Remove S3 Paths', array($paths));
-
       return $paths;
     }
 
@@ -676,7 +646,6 @@ class wpOffload
 		// @param $imagebaseDir DirectoryModel  The remote path / path this all takes place at.
     public function fixWebpRemotePath($bool, $fileObj, $url, $imagebaseDir)
     {
-			// @TODO THIS FUNCTION IN GENERAL PROBABLY SHOULD NOT LOAD ANY DATABASE QUERIES BUT DIRECTLY FROM CACHE(?)
 			 $extension = $fileObj->getExtension();
 			 $fs = \wpSPIO()->filesystem();
 
