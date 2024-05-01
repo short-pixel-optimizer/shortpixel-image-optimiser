@@ -51,12 +51,12 @@ class CronController
   {
         $schedules['spio_interval'] = array(
           'interval' => apply_filters('shortpixel/cron/interval', 60),
-          'display' => __('Shortpixel cron interval', 'shortpixel-image-optimiser')
+          'display' => __('ShortPixel cron interval', 'shortpixel-image-optimiser')
         );
 
         $schedules['spio_interval_30min'] = array(
           'interval' => apply_filters('shortpixel/cron/interval', 30 * MINUTE_IN_SECONDS),
-          'display' => __('Shortpixel cron interval', 'shortpixel-image-optimiser')
+          'display' => __('ShortPixel cron interval', 'shortpixel-image-optimiser')
         );
 
         return $schedules;

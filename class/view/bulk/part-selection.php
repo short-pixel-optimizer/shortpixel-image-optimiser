@@ -175,14 +175,15 @@ $approx = $this->view->approx;
           </div>
           <h4><label for="background_checkbox">
 
-            <?php printf(esc_html__('Optimize images in the background' ,'shortpixel-image-optimiser') ); ?>
+            <?php printf(esc_html__('Background Mode' ,'shortpixel-image-optimiser') ); ?>
               <span class='new'><?php _e('New!', 'shortpixel-image-optimiser'); ?></span>
           </label></h4>
-         <div class="option"><?php printf(esc_html__('Activating this option allows you to close the browser window after initiating bulk processing. However, on websites with few visitors or those on shared hosting, this process may be interrupted or significantly slower. It\'s important to monitor server resource utilization and consider the usual browser-based bulk optimization process in such cases. %s Read more %s.','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
+            <?php $link = 'https://shortpixel.com/knowledge-base/article/584-background-processing-using-cron-jobs-in-shortpixel-image-optimizer'; ?>
+         <div class="option"><?php printf(esc_html__('Utilize this feature to optimize images without the need to keep a browser window open. Please be aware that on websites with low traffic or shared hosting, this method of optimization might be considerably slower. If you observe a significant increase in server resource usage or processing time, consider switching to browser-based optimization. %sRead more%s.','shortpixel-image-optimiser'), '<strong><a href="' . esc_attr($link) . '" target="_blank">', '</a></strong>'); ?>
          </div>
          <div class='option warning
          <?php echo (\wpSPIO()->settings()->doBackgroundProcess) ? '' : 'hidden' ?>'>
-         <p><?php _e('I acknowledge that background optimization may halt when there are no visitors on the website.', 'shortpixel-image-optimiser'); ?></p></div>
+         <p><?php _e('I understand that background optimization may pause if there are no visitors on the website.', 'shortpixel-image-optimiser'); ?></p></div>
 
        </div>
 		 </div> <!-- option block -->
