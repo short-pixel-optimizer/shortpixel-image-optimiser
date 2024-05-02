@@ -30,11 +30,10 @@
       font-style: normal;
     }
 
+		// This one can't be limited in width, because it breaks frontpage bulk.
     p.description
     {
        font-size: 14px;
-       max-width: 80%;
-
        margin: 15px 0 15px 15px;
     }
 

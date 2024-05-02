@@ -8,6 +8,11 @@
 .settings_page_wp-shortpixel-settings p {
   font-size: 14px;
 }
+.settings_page_wp-shortpixel-settings .new {
+  color: #ff0000;
+  font-weight: 500;
+  margin-left: 2px;
+}
 .settings_page_wp-shortpixel-settings .clearfix {
   zoom: 1;
 }
