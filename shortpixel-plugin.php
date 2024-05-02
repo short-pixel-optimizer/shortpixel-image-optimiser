@@ -135,11 +135,11 @@ class ShortPixelPlugin {
 
 	}
 
-
 	/** Hooks for all WordPress related hooks
      * For now hooks in the lowInit, asap.
      */
 	public function initHooks() {
+
 		add_action( 'admin_menu', array( $this, 'admin_pages' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_scripts' ) ); // admin scripts
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_styles' ) ); // admin styles
@@ -177,6 +177,7 @@ class ShortPixelPlugin {
 		// Placeholder function for heic and such, return placeholder URL in image to help w/ database replacements after conversion.
 		add_filter('wp_get_attachment_url', array($admin, 'checkPlaceHolder'), 10, 2);
 
+		/** When automagically process images when uploaded is on */
 		if ( $this->env()->is_autoprocess ) {
 			// compat filter to shortcircuit this in cases.  (see external - visualcomposer)
 			if ( apply_filters( 'shortpixel/init/automedialibrary', true ) ) {
@@ -192,7 +193,9 @@ class ShortPixelPlugin {
 			}
 		}
 
-		load_plugin_textdomain( 'shortpixel-image-optimiser', false, plugin_basename( dirname( SHORTPIXEL_PLUGIN_FILE ) ) . '/lang' );
+
+
+	  load_plugin_textdomain( 'shortpixel-image-optimiser', false, plugin_basename( dirname( SHORTPIXEL_PLUGIN_FILE ) ) . '/lang' );
 
 		$isAdminUser = $access->userIsAllowed('is_admin_user');
 
@@ -237,6 +240,11 @@ class ShortPixelPlugin {
 			  add_filter('pre_get_posts', array($admin, 'filter_listener'));
 		}
 
+		if ($this->env()->is_multisite)
+		{
+			 //add_action('network_admin_menu', [$this, 'admin_network_pages']) ;
+		}
+
 	}
 
 	protected function ajaxHooks() {
@@ -277,6 +285,11 @@ class ShortPixelPlugin {
 		$admin_pages[] = add_media_page( __( 'ShortPixel Bulk Process', 'shortpixel-image-optimiser' ), __( 'Bulk ShortPixel', 'shortpixel-image-optimiser' ), 'edit_others_posts', 'wp-short-pixel-bulk', array( $this, 'route' ) );
 
 		$this->admin_pages = $admin_pages;
+	}
+
+	public function admin_network_pages()
+	{
+		  	add_menu_page(__('Shortpixel MU', 'shortpixel-image-optimiser'), __('Shortpixel', 'shortpixel_image_optimiser'), 'manage_sites', 'shortpixel-network-settings', [$this, 'route'] );
 	}
 
 
@@ -550,7 +563,7 @@ class ShortPixelPlugin {
 			$this->load_style( 'shortpixel-toolbar' );
 		}
 
-		if ( $plugin_page == 'wp-shortpixel-settings' ) {
+		if ( $plugin_page == 'wp-shortpixel-settings' || $plugin_page == 'shortpixel-network-settings' ) {
 
 			$this->load_script( 'shortpixel-screen-nolist' ); // screen
 	//		$this->load_script( 'sp-file-tree' );
@@ -639,6 +652,9 @@ class ShortPixelPlugin {
             case 'wp-shortpixel-settings': // settings
 						$controller = 'ShortPixel\Controller\SettingsController';
         	break;
+					 case 'shortpixel-network-settings':
+					 	$controller = 'ShortPixel\Controller\View\MultiSiteViewController';
+					break;
           case 'wp-short-pixel-custom': // other media
 						if ('folders'  === $template_part )
 						{

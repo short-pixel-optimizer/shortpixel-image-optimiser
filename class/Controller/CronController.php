@@ -148,7 +148,12 @@ class CronController
 
       if (false == $scheduled && true === $add_cron && false === $unschedule)
       {
-          wp_schedule_event(time(), 'spio_interval_30min', $name, $args);
+        $otherMediaController = OtherMediaController::getInstance();
+        if (true === $otherMediaController->hasCustomImages())
+        {
+                wp_schedule_event(time(), 'spio_interval_30min', $name, $args);
+        }
+      
       }
       elseif(false !== $scheduled && (false === $add_cron || true == $unschedule) )
       {

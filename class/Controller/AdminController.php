@@ -49,7 +49,6 @@ class AdminController extends \ShortPixel\Controller
             {
               do_action('shortpixel/converter/prevent-offload', $post_id);
             }
-
     }
 
 
