@@ -104,6 +104,7 @@ class ShortPixelFeedback {
                 left: 0;
                 width: 100%;
                 height: 100%;
+                z-index: 5;
             }
             .shortpixel-deactivate-form-wrapper {
                 position: relative;

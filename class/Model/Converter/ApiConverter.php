@@ -8,14 +8,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Helper\UtilHelper as UtilHelper;
+use ShortPixel\Model\Image\ImageModel as ImageModel;
+
 
 class ApiConverter extends MediaLibraryConverter
 {
 
-	const CONVERTABLE_EXTENSIONS = array( 'heic');
+	const CONVERTABLE_EXTENSIONS = array( 'heic', 'tiff', 'tif', 'bmp');
 
 	protected $requestAPIthumbnails = true;
-
 
 		public function isConvertable()
 		{
@@ -41,9 +42,49 @@ class ApiConverter extends MediaLibraryConverter
 			 }
 		}
 
-		// Create placeholder here.
-		public function convert($args = array())
+
+    public function filterQueue($item, $args = array())
+    {
+      foreach($item->paramlist as $index => $data)
+      {
+        if (isset($item->paramlist[$index]['convertto']))
+        {
+          $item->paramlist[$index]['convertto'] = 'jpg';
+        }
+      }
+
+      // Run converter to create backup and make placeholder to block similar heics from overwriting.
+      $converter_args = array('runReplacer' => false);
+       if (false === $args['debug_active'])
+       {
+        $this->prepareQueue($converter_args);
+       }
+
+      //Lossless because thumbnails will otherwise be derived of compressed image, leaving to double compression.
+      if (property_exists($item, 'compressionType'))
+      {
+         $item->compressionTypeRequested = $item->compressionType;
+      }
+      // Process Heic as Lossless so we don't have double opts.
+      $item->compressionType = ImageModel::COMPRESSION_LOSSLESS;
+
+      // Reset counts
+      $item->counts->baseCount = 1; // count the base images.
+      $item->counts->avifCount = 0;
+      $item->counts->webpCount = 0;
+      $item->counts->creditCount = 1;
+
+      return $item;
+    }
+
+  	/**
+     * Prepare to use the converter on the imageModel. Called in queue.php
+     * @param  array  $args      Parameters for the function (runreplacer now - will replace urls)
+     * @return bool       success or not.
+     */
+		protected function prepareQueue($args = array())
 		{
+      // Turning off replacer, since it's always called off in Api?
 			$defaults = array(
 				 'runReplacer' => true, // The replacer doesn't need running when the file is just uploaded and doing in handle upload hook.
 			);
@@ -54,7 +95,24 @@ class ApiConverter extends MediaLibraryConverter
 
 				$fs = \wpSPIO()->filesystem();
 
-				$placeholderFile = $fs->getFile(\wpSPIO()->plugin_path('res/img/fileformat-heic-placeholder.jpg'));
+        $extension = $this->imageModel->getExtension();
+
+        if ('heic' === $extension)
+        {
+				      $placeholderFile = $fs->getFile(\wpSPIO()->plugin_path('res/img/fileformat-heic-placeholder.jpg'));
+        }
+        elseif ('tiff' === $extension || 'tif' === $extension)
+        {
+          $placeholderFile = $fs->getFile(\wpSPIO()->plugin_path('res/img/fileformat-tiff-placeholder.jpg'));
+        }
+				elseif ('bmp' === $extension)
+				{
+					$placeholderFile = $fs->getFile(\wpSPIO()->plugin_path('res/img/fileformat-bmp-placeholder.jpg'));
+				}
+        else { // wrong file better than no file.
+          $placeholderFile = $fs->getFile(\wpSPIO()->plugin_path('res/img/fileformat-heic-placeholder.jpg'));
+
+        }
 
 				// Convert runs when putting imageModel to queue format in the Queue classs. This could run without optimization (before) taking place and when accidentally running it more than once results in duplicate files / backups (img-1, img-2 etc). Check placeholder and baseName to prevent this. Assume already done when it has it .
 				if ($this->imageModel->getMeta()->convertMeta()->hasPlaceHolder() && $this->imageModel->getMeta()->convertMeta()->getReplacementImageBase() !== false)
@@ -62,9 +120,8 @@ class ApiConverter extends MediaLibraryConverter
 					 return true;
 				}
 
-				// @todo Check replacementpath here. Rename main file - and backup - if numeration is needed.
-				// @todo Also placeholder probably needs to be done each time to block current job in progress.
-				$replacementPath = $this->getReplacementPath();
+        $replacementPath = $this->getReplacementPath();
+
 				if (false === $replacementPath)
 				{
 					Log::addWarn('ApiConverter replacement path failed');
@@ -76,36 +133,49 @@ class ApiConverter extends MediaLibraryConverter
 				$replaceFile = $fs->getFile($replacementPath);
 				// If filebase (filename without extension) is not the same, this indicates that a double is there and it's enumerated. Move backup accordingly.
 
+
 				$destinationFile = $fs->getFile($replacementPath);
+
+        // Create placeholder here.
 				$copyok = $placeholderFile->copy($destinationFile);
 
 				if ($copyok)
 				{
-					$this->imageModel->getMeta()->convertMeta()->setFileFormat('heic');
+					$this->imageModel->getMeta()->convertMeta()->setFileFormat($extension);
 					$this->imageModel->getMeta()->convertMeta()->setPlaceHolder(true);
 					$this->imageModel->getMeta()->convertMeta()->setReplacementImageBase($destinationFile->getFileBase());
 					$this->imageModel->saveMeta();
 
-
 					// @todo Wip . Moved from handleConverted.
 					// Backup basically. Do this first.
-					$conversion_args = array('replacementPath' => $replacementPath);
+					$conversion_args = array(
+              'replacementPath' => $replacementPath,
+              'backup_thumbnails' => false, // no need for this. either they should be optimized, or generated after the run
+          );
 					$prepared = $this->imageModel->conversionPrepare($conversion_args);
 					if (false === $prepared)
 					{
 						 return false;
 					}
 
-					$this->setTarget($destinationFile);
+          // Don't offload until the API file has been returned properly.
+          do_action('shortpixel/converter/prevent-offload', $this->imageModel->get('id'));
+
+// Turning off replacer, since it's always called off in Api?
+				//	$this->setTarget($destinationFile);
+
 				//	$params = array('success' => true, 'generate_metadata' => false);
 				//	$this->updateMetaData($params);
 
 					$fs->flushImage($this->imageModel);
 
-					if (true === $args['runReplacer'])
+          // Turning off all replacer, since it's always called off in Api?
+					/*
+           if (true === $args['runReplacer'])
+
 					{
 						$result = $this->replacer->replace();
-					}
+					} */
 
 				}
 				else {
@@ -115,6 +185,12 @@ class ApiConverter extends MediaLibraryConverter
 
 				return true;
 		}
+
+    /** Currently not in use */
+    public function convert($args = array())
+    {
+       return;
+    }
 
 		// Restore from original file. Search and replace everything else to death.
 		public function restore()
@@ -156,18 +232,7 @@ class ApiConverter extends MediaLibraryConverter
 			$this->setupReplacer();
 			$fs = \wpSPIO()->filesystem();
 
-
-/*			$replacementPath = $this->getReplacementPath();
-			if (false === $replacementPath)
-			{
-				Log::addWarn('ApiConverter replacement path failed');
-				$this->imageModel->getMeta()->convertMeta()->setError(self::ERROR_PATHFAIL);
-
-				return false; // @todo Add ResponseController something here.
-			}
-
-			$replacementFile = $fs->getFile($replacementPath);
-*/
+      $extension = $this->imageModel->getExtension();
 			$replacementBase = $this->imageModel->getMeta()->convertMeta()->getReplacementImageBase();
 			if (false === $replacementBase)
 			{
@@ -183,9 +248,6 @@ class ApiConverter extends MediaLibraryConverter
 			if (true === $this->imageModel->getMeta()->convertMeta()->hasPlaceHolder())
 			{
 				 $this->imageModel->getMeta()->convertMeta()->setPlaceHolder(false);
-				// $this->imageModel->getMeta()->convertMeta()->setReplacementImageBase(false);
-
-		//		 $attach_id = $this->imageModel->get('id');
 
 				// ReplacementFile as source should not point to the placeholder file
 				 $this->source_url = $fs->pathToUrl($replacementFile);
@@ -193,8 +255,6 @@ class ApiConverter extends MediaLibraryConverter
 
 				 $replacementFile->delete();
 			}
-
-
 
 			if (isset($optimizeData['files']) && isset($optimizeData['data']))
 			{
@@ -222,7 +282,6 @@ class ApiConverter extends MediaLibraryConverter
 			}
 
 			$tempFile = $fs->getFile($mainFile['image']['file']);
-
 			$res = $tempFile->copy($replacementFile);
 
 			if (true === $res)
@@ -230,15 +289,17 @@ class ApiConverter extends MediaLibraryConverter
 				 $this->newFile = $replacementFile;
 				 $tempFile->delete();
 
-				 $params = array('success' => true);
+         $generate_metadata = true;
+
+				 $params = array(
+            'success' => true,
+            'generate_metadata' => $generate_metadata,
+         );
 				 $this->updateMetaData($params);
 
 				 $result = true;
 
-				// if (true === $args['runReplacer'])
-			//	 {
-					 $result = $this->replacer->replace();
-			//	 }
+				 $result = $this->replacer->replace();
 
 				 // Conversion done, but backup results.
 				 $this->imageModel->conversionSuccess(array('omit_backup' => false));

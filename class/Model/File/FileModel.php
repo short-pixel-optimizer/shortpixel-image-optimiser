@@ -40,6 +40,7 @@ class FileModel extends \ShortPixel\Model
   protected $is_readable = null;
   protected $is_file = null;
   protected $is_virtual = false;
+  protected $is_restricted = null;
   protected $virtual_status = null;
 
   protected $status;
@@ -117,6 +118,7 @@ class FileModel extends \ShortPixel\Model
       $this->is_file = null;
       $this->exists = null;
       $this->is_virtual = null;
+      $this->is_restricted = null;
 			$this->filesize = null;
 	    $this->permissions = null;
   }
@@ -663,6 +665,11 @@ class FileModel extends \ShortPixel\Model
   */
   private function fileIsRestricted($path)
   {
+    if (! is_null($this->is_restricted))
+    {
+       return $this->is_restricted;
+    }
+
      $basedir = ini_get('open_basedir');
 
      if (false === $basedir || strlen($basedir) == 0)
@@ -681,6 +688,10 @@ class FileModel extends \ShortPixel\Model
              break;
           }
      }
+
+     $restricted = apply_filters('shortpixel/file/basedir_check', $restricted);
+
+     $this->is_restricted = $restricted;
 
      return $restricted;
   }
@@ -875,13 +886,14 @@ class FileModel extends \ShortPixel\Model
     public function __debuginfo()
     {
        return [
-          'fullpath' => $this->fullpath,
-          'filename' => $this->filename,
-          'filebase' => $this->filebase,
-          'exists' => $this->exists,
-          'is_writable' => $this->is_writable,
-          'is_readable' => $this->is_readable,
-					'is_virtual' => $this->is_virtual,
+          'fullpath' => $this->getFullPath(),
+          'filename' => $this->getFileName(),
+          'filebase' => $this->getFileBase(),
+          'directory' => $this->getFileDir()->getPath(),
+          'exists' => $this->exists(),
+          'is_writable' => $this->is_writable(),
+          'is_readable' => $this->is_readable(),
+					'is_virtual' => $this->is_virtual(),
        ];
     }
 

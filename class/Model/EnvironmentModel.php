@@ -335,9 +335,14 @@ class EnvironmentModel extends \ShortPixel\Model
 
 
    // function to limit runtimes in seconds..
-   public function IsOverTimeLimit()
+   public function IsOverTimeLimit($args = array())
       {
-          $limit = $this->executionLimit;
+          $defaults = array(
+              'limit' => $this->executionLimit
+          );
+
+          $args = wp_parse_args($args, $defaults);
+          $limit = $args['limit'];
           $start = $this->executionStart;
 
           // No Limits
@@ -345,11 +350,14 @@ class EnvironmentModel extends \ShortPixel\Model
             return false;
 
           $elapsed = time() - $start;
+
           if ($elapsed <= 0)
           {
             return false;
           }
 
+
+          // max execution is the percentage of max execution time one can take upon.
           $limit_perc  = round($limit/100 * apply_filters('spio/process/max_execution', 90));
 
           if ($limit_perc <= $elapsed)

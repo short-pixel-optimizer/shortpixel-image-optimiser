@@ -9,6 +9,8 @@ use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 use ShortPixel\Controller\QuotaController as QuotaController;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+
 
 use ShortPixel\Model\AccessModel as AccessModel;
 
@@ -792,7 +794,7 @@ class UiHelper
 	public static function formatNumber($number, $precision = 2)
 	{
 			global $wp_locale;
-			$decimalpoint = isset($wp_locale->number_format['decimal_point']) ? $wp_locale->number_format['decimal_point'] : false;
+			$decimalpoint = isset($wp_locale->number_format['decimal_point']) ? $wp_locale->number_format['decimal_point'] : '.';
 			$number =  number_format_i18n( (float) $number, $precision);
 
  			$hasDecimal = (strpos($number, $decimalpoint) === false) ? false : true;

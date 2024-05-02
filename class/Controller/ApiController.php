@@ -704,10 +704,16 @@ class ApiController
       return $result;
   }
 
-	// If this returns false, the resultSize is bigger, thus should be oversize.
+	/**
+   *  Function to check if the filesize of the imagetype (webp/avif) is smaller, or within bounds of size to be stored. If not, the webp is not downloaded and uses.
+   *
+   * @param  Integer $fileSize                 Filesize of the original
+   * @param  Integer $resultSize               Filesize of the optimized image
+   * @return [type]             [description]
+   */
 	private function checkFileSizeMargin($fileSize, $resultSize)
 	{
-			// This is ok.
+			// If the original filesize is bigger, it means we made it smaller, rejoice and allow.
 			if ($fileSize >= $resultSize)
 				return true;
 
@@ -717,8 +723,15 @@ class ApiController
 
 		  $percentage = apply_filters('shortpixel/api/filesizeMargin', 5);
 
+      // If the percentage is lower than 0, stop checking. This is a way to short-circuit this check in case optimized images always should be used.
+      if ($percentage < 0)
+      {
+         return true;
+      }
+
 			$increase = (($resultSize - $fileSize) / $fileSize) * 100;
 
+      // If the size bigger is within the defined margins, still use it .
 			if ($increase <= $percentage)
 				return true;
 

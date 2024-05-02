@@ -262,6 +262,8 @@ class FrontController extends \ShortPixel\Controller
                 if (! $thisfile->exists())
                 {
                   // FILTER: boolean, object, string, filedir
+
+								 // Return fileObj if you want to live.
                   $thisfile = $fileWebp_exists = apply_filters('shortpixel/front/webp_notfound', false, $thisfile, $image_url, $imageBase);
                 }
 
@@ -269,7 +271,6 @@ class FrontController extends \ShortPixel\Controller
                 {
                     // base url + found filename + optional condition ( in case of sourceset, as in 1400w or similar)
                     $webpCount++;
-
                      $lastwebp = $image_url_base . $thisfile->getFileName() . $image_condition;
                      $srcsetWebP[] = $lastwebp;
                      break;

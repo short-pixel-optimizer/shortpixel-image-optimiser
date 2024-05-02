@@ -38,11 +38,14 @@ class AdminNoticesController extends \ShortPixel\Controller
         'ListviewNotice',
 		//		'HeicFeatureNotice',
         'NewExclusionFormat',
+        'LitespeedCache',
     );
     protected $adminNotices; // Models
 
     private $remote_message_endpoint = 'https://api.shortpixel.com/v2/notices.php';
     private $remote_readme_endpoint = 'https://plugins.svn.wordpress.org/shortpixel-image-optimiser/trunk/readme.txt';
+
+    private $silent_mode = false;
 
     public function __construct()
     {
@@ -53,8 +56,10 @@ class AdminNoticesController extends \ShortPixel\Controller
 
         // no persistent notifications with this flag set.
         if (defined('SHORTPIXEL_SILENT_MODE') && SHORTPIXEL_SILENT_MODE === true)
+        {
+            $this->silent_mode = true;
             return;
-
+        }
         add_action('admin_notices', array($this, 'check_admin_notices'), 5); // run before the plugin admin notices
 
 				$this->initNotices();
@@ -109,6 +114,11 @@ class AdminNoticesController extends \ShortPixel\Controller
     public static function resetLegacyNotice()
     {
         Notices::removeNoticeByID('MSG_CONVERT_LEGACY');
+    }
+
+    public function isSilentMode()
+    {
+       return $this->silent_mode;
     }
 
     public function displayNotices()
@@ -186,6 +196,7 @@ class AdminNoticesController extends \ShortPixel\Controller
     {
         foreach($this->definedNotices as $className)
         {
+
             $ns = '\ShortPixel\Model\AdminNotices\\' . $className;
             $class = new $ns();
             $this->adminNotices[$class->getKey()] = $class;
@@ -222,11 +233,10 @@ class AdminNoticesController extends \ShortPixel\Controller
     public function invokeLegacyNotice()
     {
         $noticeModel = $this->getNoticeByKey('MSG_CONVERT_LEGACY');
-        if (! $noticeModel->isDismissed())
+        if (is_object($noticeModel) && false ==  $noticeModel->isDismissed())
         {
             $noticeModel->addManual();
         }
-
     }
 
 
@@ -270,10 +280,7 @@ class AdminNoticesController extends \ShortPixel\Controller
 
                 Notices::makePersistent($new_notice, $id, MONTH_IN_SECONDS);
             }
-
-
         }
-
     }
 
     public function proposeUpgradePopup() {
@@ -367,10 +374,6 @@ class AdminNoticesController extends \ShortPixel\Controller
 
         return $notices;
     }
-
-
-
-
 
     public function pluginUpdateMessage($data, $response)
     {

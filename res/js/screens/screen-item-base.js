@@ -17,6 +17,8 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase
 
 		window.addEventListener('shortpixel.' + this.type + '.resumeprocessing', this.processor.ResumeProcess.bind(this.processor));
 		window.addEventListener('shortpixel.RenderItemView', this.RenderItemView.bind(this) );
+
+
 	}
 
 	HandleImage(resultItem, type)
@@ -246,7 +248,7 @@ class ShortPixelScreenItemBase extends ShortPixelScreenBase
 
 			 if (typeof force !== 'undefined' && true == force)
 			 {
-				  data.flags = 'force'; 
+				  data.flags = 'force';
 			 }
 
 			 if (! this.processor.CheckActive())

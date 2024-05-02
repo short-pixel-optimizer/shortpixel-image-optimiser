@@ -59,6 +59,7 @@ class BuildAutoLoader
 			'class/external/Woocommerce.php',
       'class/external/themes/total-theme.php',
       'class/external/MediaFileRenamer.php',
+      'class/external/formidable.php',
     );
 
     echo "Build Plugin.JSON ";

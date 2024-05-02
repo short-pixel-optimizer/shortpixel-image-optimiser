@@ -431,12 +431,25 @@ class AjaxController
 
       // Get and remove Meta
       $mediaItem = \wpSPIO()->filesystem()->getImage($imageId, 'media');
+
       $mediaItem->onDelete();
+
+			// Flush and reaquire image to make sure it doesn't stay previous state.
+			\wpSPIO()->filesystem()->flushImage($mediaItem);
+		  $mediaItem = \wpSPIO()->filesystem()->getImage($imageId, 'media', false);
 
       // Optimize
       $control = new OptimizeController();
       $json = $control->addItemToQueue($mediaItem);
+
     }
+
+		// @param Row of something in llr_sync table. This changed
+		public function onWpLrSyncMedia($row)
+		{
+			$attachment_id = $row->wp_id;
+			return $this->onWpLrUpdateMedia($attachment_id);
+		}
 
     protected function restoreItem($json, $data)
     {
@@ -461,7 +474,7 @@ class AjaxController
 
        $mediaItem = $this->getMediaItem($id, $type);
 			 $args = array();
-			 
+
 				if ($actionType == ImageModel::ACTION_SMARTCROP || $actionType == ImageModel::ACTION_SMARTCROPLESS)
 				{
 						$args = array('smartcrop' => $actionType);
@@ -507,6 +520,8 @@ class AjaxController
         $doCustom = filter_var(sanitize_text_field($_POST['customActive']), FILTER_VALIDATE_BOOLEAN);
         $doWebp = filter_var(sanitize_text_field($_POST['webpActive']), FILTER_VALIDATE_BOOLEAN);
         $doAvif = filter_var(sanitize_text_field($_POST['avifActive']), FILTER_VALIDATE_BOOLEAN);
+				$backgroundProcess = filter_var(sanitize_text_field($_POST['backgroundProcess']), FILTER_VALIDATE_BOOLEAN);
+
 
 				// Can be hidden
 				if (isset($_POST['thumbsActive']))
@@ -517,13 +532,18 @@ class AjaxController
 
         \wpSPIO()->settings()->createWebp = $doWebp;
 				\wpSPIO()->settings()->createAvif = $doAvif;
+				\wpSPIO()->settings()->doBackgroundProcess = $backgroundProcess;
 
         $bulkControl = BulkController::getInstance();
 
         if (! $doMedia)
+				{
           $bulkControl->finishBulk('media');
+				}
         if (! $doCustom)
+				{
           $bulkControl->finishBulk('custom');
+				}
 
 				if ($doCustom)
 				{

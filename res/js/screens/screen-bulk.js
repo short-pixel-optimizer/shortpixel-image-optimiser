@@ -261,6 +261,8 @@ class ShortPixelScreen extends ShortPixelScreenBase
      data.customActive = (document.getElementById('custom_checkbox').checked) ? true : false;
      data.webpActive = (document.getElementById('webp_checkbox').checked) ? true : false;
      data.avifActive = (document.getElementById('avif_checkbox').checked) ? true : false;
+     data.backgroundProcess = (document.getElementById('background_checkbox').checked) ? true : false;
+
 
 		 if (document.getElementById('thumbnails_checkbox') !== null)
 		 		data.thumbsActive = (document.getElementById('thumbnails_checkbox').checked) ? true : false;
@@ -299,7 +301,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
           console.log('Queue status: preparing done');
 
           this.SwitchPanel('summary');
- 					this.UpdatePanelStatus('loaded', 'selection');
+ 					this.UpdatePanelStatus('loaded', 'selection'); // back to default
 				  this.processor.SetInterval(-1); // back to default.
 
       }
@@ -322,6 +324,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
           else
           {
               this.SwitchPanel('dashboard'); // seems we are just at the begin.
+              this.UpdatePanelStatus('loaded', 'selection'); // back to default just in case
               this.processor.StopProcess();
 
           } // empty queue, no items, start.
@@ -498,6 +501,7 @@ class ShortPixelScreen extends ShortPixelScreenBase
       data.customActive = (document.getElementById('custom_checkbox').checked) ? true : false;
       data.webpActive = (document.getElementById('webp_checkbox').checked) ? true : false;
       data.avifActive = (document.getElementById('avif_checkbox').checked) ? true : false;
+      data.backgroundProcess = (document.getElementById('background_checkbox').checked) ? true : false;
 
       window.addEventListener('shortpixel.applySelectionDone', function (e) { this.SwitchPanel('summary'); }.bind(this) , {'once': true} );
       this.processor.AjaxRequest(data);
@@ -1125,6 +1129,24 @@ class ShortPixelScreen extends ShortPixelScreenBase
 		 var shade = document.getElementById('LogModal-Shade');
 		 shade.style.display = 'none';
 	}
+
+  ChangeBackgroundProcessSettingEvent(event)
+  {
+     var target = event.target;
+     var settingParent = target.closest('.optiongroup');
+     var warningEl = settingParent.querySelector('.warning');
+     //console.log(settingParent, warningEl);
+     if (true === target.checked)
+     {
+        warningEl.classList.remove('hidden');
+     }
+     else {
+        warningEl.classList.add('hidden');
+     }
+
+
+
+  }
 
 
 } // Screen

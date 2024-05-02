@@ -40,7 +40,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     const FILE_STATUS_MARKED_DONE = -11;
     const FILE_STATUS_BAD_METADATA = -12;
 
-    // Compression Option Consts
+    // Compression Option Consts - must be replicated in screen-base.js
     const COMPRESSION_LOSSLESS = 0;
     const COMPRESSION_LOSSY = 1;
     const COMPRESSION_GLOSSY = 2;
@@ -48,7 +48,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		const ACTION_SMARTCROP = 100;
 		const ACTION_SMARTCROPLESS = 101;
 
-    // Extension that we process .
+    // Extension that we process . Minus the one that one MediaLibraryModel should handle, so it doesn't touch the thumbns.
     const PROCESSABLE_EXTENSIONS = array('jpg', 'jpeg', 'gif', 'png', 'pdf');
 
     //
@@ -63,6 +63,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		const P_BACKUP_EXISTS = 8;
 		const P_OPTIMIZE_PREVENTED = 9;
 		const P_DIRECTORY_NOTWRITABLE = 10;
+    const P_EXCLUDE_EXTENSION_PDF = 11;
 
 		// For restorable status
 		const P_RESTORABLE = 109;
@@ -320,6 +321,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
          break;
          case self::P_EXCLUDE_EXTENSION:
             $message = __('Image Extension not processable', 'shortpixel-image-optimiser');
+         break;
+         case self::P_EXCLUDE_EXTENSION_PDF:
+            $message = sprintf(__('PDF processing is not enabled in the %ssettings%s', 'shortpixel-image-optimiser'), '<a href="' .  esc_url(admin_url('options-general.php?page=wp-shortpixel-settings&part=adv-settings')) . '">', '</a>');
          break;
          case self::P_EXCLUDE_SIZE:
             $message = __('Image Size Excluded', 'shortpixel-image-optimiser');
@@ -905,7 +909,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 							$this->restorable_status = self::P_FILE_NOTWRITABLE;
               Log::addWarn('Restore - Not Writable ' . $this->getFullPath() );
           }
-					elseif (! $this->is_directory_writable())
+					elseif (false === $this->is_directory_writable())
 					{
 							$response = array(
 									'is_error' => true,
@@ -918,7 +922,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 							$this->restorable_status = self::P_DIRECTORY_NOTWRITABLE;
 							Log::addWarn('Restore - Directory not Writable ' . $this->getFileDir() );
 					}
-          elseif (! $this->hasBackup())
+          elseif (false ===  $this->hasBackup())
 					{
 						$this->restorable_status = self::P_BACKUP_NOT_EXISTS;
 						$response = array(
@@ -928,7 +932,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 						);
 						ResponseController::addData($this->get('id'), $response);
-            Log::addDebug('Backup not found for file: ', $this->getFullPath());
 					}
            return false;
         }
@@ -1155,10 +1158,22 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
     protected function isExtensionExcluded()
     {
 
+       if ('pdf' === $this->getExtension())
+       {
+         $settings = \wpSPIO()->settings();
+         if (! $settings->optimizePdfs )
+         {
+           $this->processable_status = self::P_EXCLUDE_EXTENSION_PDF;
+
+            return true;
+         }
+       }
+
         if (! is_null($this->getExtension()) && in_array( strtolower($this->getExtension()) , self::PROCESSABLE_EXTENSIONS))
         {
             return false;
         }
+
 
 				// If extension not in allowed list, check converters.
 				// @todo Most likely move this higher up the chain.
@@ -1174,6 +1189,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 							}
 					}
 				}
+
+
         $this->processable_status = self::P_EXCLUDE_EXTENSION;
         return true;
     }

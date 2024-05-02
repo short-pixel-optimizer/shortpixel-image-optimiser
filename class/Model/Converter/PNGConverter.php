@@ -96,6 +96,12 @@ class PNGConverter extends MediaLibraryConverter
 			 return false;
 		}
 
+    public function filterQueue($item, $args = array())
+    {
+       $item->action = 'png2jpg';
+       return $item;
+    }
+
 		public function convert($args = array())
 		{
 			 if (! $this->isConvertable($this->imageModel))
@@ -259,7 +265,7 @@ class PNGConverter extends MediaLibraryConverter
 					$newFile = $fs->getFile($replacementPath);
 
 
-					if($newSize > $origSize * 0.95 || $newSize == 0) {
+					if(false === $this->checkFileSizeMargin($origSize, $newSize)) {
 							//if the image is not 5% smaller, don't bother.
 							//if the size is 0, a conversion (or disk write) problem happened, go on with the PNG
 							Log::addDebug("PNG2JPG converted image is larger ($newSize vs. $origSize), keeping the PNG");
@@ -287,10 +293,50 @@ class PNGConverter extends MediaLibraryConverter
 					Log::addDebug('PNG2jPG Converted');
 			}
 
-			$fs->flushImageCache();
+			$fs->flushImage($this->imageModel);
 
 			return true;
 		}
+
+    /**
+     *  Function to check if the filesize of the imagetype (webp/avif) is smaller, or within bounds of size to be stored. If not, the webp is not downloaded and uses.
+     *
+     * @param  Integer $fileSize                 Filesize of the original
+     * @param  Integer $resultSize               Filesize of the optimized image
+     * @return [type]             [description]
+     */
+    private function checkFileSizeMargin($fileSize, $resultSize)
+    {
+        // If the original filesize is bigger, it means we made it smaller, rejoice and allow.
+        if ($fileSize >= $resultSize)
+          return true;
+
+        // Fine suppose, but crashes the increase
+        if ($fileSize == 0)
+          return true;
+
+        // Indicates write issues
+        if ($resultSize == 0)
+        {
+           return false;
+        }
+
+        $percentage = apply_filters('shortpixel/pngconverter/filesizeMargin', 0);
+
+        // If the percentage is lower than 0, stop checking. This is a way to short-circuit this check in case optimized images always should be used.
+        if ($percentage < 0)
+        {
+           return true;
+        }
+
+        $increase = (($resultSize - $fileSize) / $fileSize) * 100;
+
+        // If the size bigger is within the defined margins, still use it .
+        if ($increase <= $percentage)
+          return true;
+
+        return false;
+    }
 
 		public function restore()
 		{
@@ -321,20 +367,23 @@ class PNGConverter extends MediaLibraryConverter
 			$fs->flushImageCache();
 
 		}
-
-		protected function isTransparent() {
+    /** Checks if imageModel is transparent. Returns boolean.  --Note-- this is a  heavy function that might load the entire image multiple times and cause memory issues!
+    *
+    *  @return Boolean Transparent true of false.
+    */
+		public function isTransparent() {
 				$isTransparent = false;
 				$transparent_pixel = $bg = false;
 
 				$imagePath = $this->imageModel->getFullPath();
 
 				// Check for transparency at the bit path.
-				if(ord(file_get_contents($imagePath, false, null, 25, 1)) & 4) {
+				/* if(ord(file_get_contents($imagePath, false, null, 25, 1)) & 4) {
 						Log::addDebug("PNG2JPG: 25th byte has third bit 1 - transparency");
 						$isTransparent = true;
 						//		return true;
 				} else {
-
+        */
 						$contents = file_get_contents($imagePath);
 						if (stripos($contents, 'PLTE') !== false && stripos($contents, 'tRNS') !== false) {
 								$isTransparent = true;
@@ -362,7 +411,7 @@ class PNGConverter extends MediaLibraryConverter
 												}
 											}
 						}
-				} // non-transparant.
+			//	} // non-transparant.
 
 				Log::addDebug("PNG2JPG is " . (false ===  $isTransparent ? " not" : "") . " transparent");
 

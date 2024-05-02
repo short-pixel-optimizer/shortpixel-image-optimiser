@@ -71,6 +71,9 @@ class ShortPixelPlugin {
 			return;
 		}
 
+
+		$cron = Controller\CronController::getInstance();  // cron jobs - must be low init to function!
+
 		$front        = new Controller\FrontController();
 		$admin        = Controller\AdminController::getInstance();
 		$adminNotices = Controller\AdminNoticesController::getInstance(); // Hook in the admin notices.
@@ -91,7 +94,7 @@ class ShortPixelPlugin {
 			// This runs activation thing. Should be -after- init
 			$this->check_plugin_version();
 
-		$notices             = Notices::getInstance(); // This hooks the ajax listener
+			$notices             = Notices::getInstance(); // This hooks the ajax listener
 			$quotaController = QuotaController::getInstance();
 			$quotaController->getQuota();
 
@@ -132,11 +135,11 @@ class ShortPixelPlugin {
 
 	}
 
-
 	/** Hooks for all WordPress related hooks
      * For now hooks in the lowInit, asap.
      */
 	public function initHooks() {
+
 		add_action( 'admin_menu', array( $this, 'admin_pages' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_scripts' ) ); // admin scripts
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_styles' ) ); // admin styles
@@ -148,7 +151,7 @@ class ShortPixelPlugin {
 		add_action( 'shortpixel-thumbnails-regenerated', array( $optimizeController, 'thumbnailsChangedHookLegacy' ), 10, 4 );
 		add_action( 'rta/image/thumbnails_regenerated', array( $optimizeController, 'thumbnailsChangedHook' ), 10, 2 );
 		add_action( 'rta/image/thumbnails_removed', array( $optimizeController, 'thumbnailsChangedHook' ), 10, 2 );
-
+		add_action('rta/image/scaled_image_regenerated', array($optimizeController, 'scaledImageChangedHook'), 10, 2);
 
 
 		// Media Library - Actions to route screen
@@ -174,6 +177,7 @@ class ShortPixelPlugin {
 		// Placeholder function for heic and such, return placeholder URL in image to help w/ database replacements after conversion.
 		add_filter('wp_get_attachment_url', array($admin, 'checkPlaceHolder'), 10, 2);
 
+		/** When automagically process images when uploaded is on */
 		if ( $this->env()->is_autoprocess ) {
 			// compat filter to shortcircuit this in cases.  (see external - visualcomposer)
 			if ( apply_filters( 'shortpixel/init/automedialibrary', true ) ) {
@@ -182,13 +186,16 @@ class ShortPixelPlugin {
 
 						add_action( 'enable-media-replace-upload-done', array( $admin, 'handleReplaceEnqueue' ), 10, 3 );
 
-				add_filter( 'wp_generate_attachment_metadata', array( $admin, 'handleImageUploadHook' ), 10, 2 );
+				add_filter( 'wp_generate_attachment_metadata', array( $admin, 'handleImageUploadHook' ), 5, 2 );
+				add_action('add_attachment', array($admin, 'addAttachmentHook'));
 				// @integration MediaPress
 				add_filter( 'mpp_generate_metadata', array( $admin, 'handleImageUploadHook' ), 10, 2 );
 			}
 		}
 
-		load_plugin_textdomain( 'shortpixel-image-optimiser', false, plugin_basename( dirname( SHORTPIXEL_PLUGIN_FILE ) ) . '/lang' );
+
+
+	  load_plugin_textdomain( 'shortpixel-image-optimiser', false, plugin_basename( dirname( SHORTPIXEL_PLUGIN_FILE ) ) . '/lang' );
 
 		$isAdminUser = $access->userIsAllowed('is_admin_user');
 
@@ -201,7 +208,9 @@ class ShortPixelPlugin {
 		add_action( 'mime_types', array( $admin, 'addMimes' ) );
 
 		// integration with WP/LR Sync plugin
-		add_action( 'wplr_update_media', array( AjaxController::getInstance(), 'onWpLrUpdateMedia' ), 10, 2 );
+		//add_action( 'wplr_update_media', array( AjaxController::getInstance(), 'onWpLrUpdateMedia' ), 10, 2 );
+		add_action( 'wplr_sync_media', array( AjaxController::getInstance(), 'onWpLrSyncMedia' ), 10, 2 );
+
 		add_action( 'admin_bar_menu', array( $admin, 'toolbar_shortpixel_processing' ), 999 );
 
 		// Image Editor Actions
@@ -229,6 +238,11 @@ class ShortPixelPlugin {
 		if (is_admin())
 		{
 			  add_filter('pre_get_posts', array($admin, 'filter_listener'));
+		}
+
+		if ($this->env()->is_multisite)
+		{
+			 //add_action('network_admin_menu', [$this, 'admin_network_pages']) ;
 		}
 
 	}
@@ -273,6 +287,11 @@ class ShortPixelPlugin {
 		$this->admin_pages = $admin_pages;
 	}
 
+	public function admin_network_pages()
+	{
+		  	add_menu_page(__('Shortpixel MU', 'shortpixel-image-optimiser'), __('Shortpixel', 'shortpixel_image_optimiser'), 'manage_sites', 'shortpixel-network-settings', [$this, 'route'], $this->plugin_url('res/img/shortpixel.png') );
+	}
+
 
 	/** All scripts should be registed, not enqueued here (unless global wp-admin is needed )
      *
@@ -300,7 +319,7 @@ class ShortPixelPlugin {
 	/*	wp_register_script( 'sp-file-tree', plugins_url( '/res/js/sp-file-tree.min.js', SHORTPIXEL_PLUGIN_FILE ), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 */
 
-	 wp_register_script('shortpixel-folderbrowser', plugins_url('/res/js/shortpixel-folderbrowser.js', SHORTPIXEL_PLUGIN_FILE, array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true ));
+	 wp_register_script('shortpixel-folderbrowser', plugins_url('/res/js/shortpixel-folderbrowser.js', SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
 
 	 wp_localize_script('shortpixel-folderbrowser', 'spio_folderbrowser', array(
 		 		'strings' => array(
@@ -544,7 +563,7 @@ class ShortPixelPlugin {
 			$this->load_style( 'shortpixel-toolbar' );
 		}
 
-		if ( $plugin_page == 'wp-shortpixel-settings' ) {
+		if ( $plugin_page == 'wp-shortpixel-settings' || $plugin_page == 'shortpixel-network-settings' ) {
 
 			$this->load_script( 'shortpixel-screen-nolist' ); // screen
 	//		$this->load_script( 'sp-file-tree' );
@@ -633,6 +652,9 @@ class ShortPixelPlugin {
             case 'wp-shortpixel-settings': // settings
 						$controller = 'ShortPixel\Controller\SettingsController';
         	break;
+					 case 'shortpixel-network-settings':
+					 	$controller = 'ShortPixel\Controller\View\MultiSiteViewController';
+					break;
           case 'wp-short-pixel-custom': // other media
 						if ('folders'  === $template_part )
 						{

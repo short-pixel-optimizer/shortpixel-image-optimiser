@@ -46,13 +46,12 @@ class SettingsController extends \ShortPixel\ViewController
 		 protected $all_display_parts = array('settings', 'adv-settings', 'cloudflare', 'debug', 'tools');
      protected $form_action = 'save-settings';
 
-
-
 		 protected static $instance;
 
       public function __construct()
       {
           $this->model = \wpSPIO()->settings();
+
 
 					//@todo Streamline this mess. Should run through controller mostly. Risk of desync otherwise.
 					$keyControl = ApiKeyController::getInstance();
@@ -274,7 +273,7 @@ class SettingsController extends \ShortPixel\ViewController
 					else
 					{
 						$model = $adminNoticesController->getNoticeByKey($key);
-						if ($model)
+						if (is_object($model))
 							$model->addManual();
 					}
 				}
@@ -400,10 +399,8 @@ class SettingsController extends \ShortPixel\ViewController
             $this->keyModel->checkKey($check_key);
           }
 
-
 					// Every save, force load the quota. One reason, because of the HTTP Auth settings refresh.
 					$this->loadQuotaData(true);
-
           // end
 
           if ($this->do_redirect)
@@ -442,7 +439,7 @@ class SettingsController extends \ShortPixel\ViewController
 
 				 $excludeOptions = UtilHelper::getWordPressImageSizes();
 				 $mainOptions = array(
-					 'shortpixel_main_donotuse' =>  array('nice-name' => __('Main Image', 'shortpixel-image-optimiser')),
+					 'shortpixel_main_donotuse' =>  array('nice-name' => __('Main (scaled) Image', 'shortpixel-image-optimiser')),
 					 'shortpixel_original_donotuse' => array('nice-name' => __('Original Image', 'shortpixel-image-optimiser')),
 				 );
 
@@ -462,13 +459,15 @@ class SettingsController extends \ShortPixel\ViewController
          $this->loadView('view-settings');
       }
 
-			 protected function avifServerCheck()
+			protected function avifServerCheck()
       {
     			$noticeControl = AdminNoticesController::getInstance();
 					$notice = $noticeControl->getNoticeByKey('MSG_AVIF_ERROR');
 
-					$notice->check();
-
+          if (is_object($notice))
+          {
+					     $notice->check();
+          }
       }
 
       protected function loadStatistics()

@@ -52,8 +52,6 @@ class BulkViewController extends \ShortPixel\ViewController
 
     if ( ! $keyControl->keyIsVerified() )
     {
-        $adminNoticesController = AdminNoticesController::getInstance();
-
         $this->view->error = true;
         $this->view->errorTitle = __('Missing API Key', 'shortpixel_image_optimiser');
         $this->view->errorContent = $this->getActivationNotice();

@@ -11,6 +11,12 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 		{
 			super.Init();
       this.ListenGallery();
+
+			// bind DoAction, for bulk actions in Media Libbrary to event
+			var actionEl = document.getElementById('doaction');
+      if (actionEl !== null)
+			   actionEl.addEventListener('click', this.BulkActionEvent.bind(this));
+
 		}
 
     RenderItemView(e)
@@ -33,6 +39,101 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
 				}
         return false; // callback shouldn't do more, see processor.
     }
+
+		BulkActionEvent(event)
+		{
+
+			 var actionSelect = document.querySelector('select[name="action"]');
+			 if ( null === actionSelect)
+			  return ;
+
+	     var actionValue = actionSelect.value;
+
+			 // Check if we have a shortpixel event
+			  if (actionValue.includes('shortpixel'))
+				{
+						event.preventDefault();
+						var items = document.querySelectorAll('input[name="media[]"]:checked');
+
+						for (var i = 0; i < items.length; i++)
+						{
+							 var media_id = items[i].value;
+							 var column = document.getElementById('sp-msg-' + media_id);
+							 var optimizable = column.classList.contains('is-optimizable');
+							 var restorable = column.classList.contains('is-restorable');
+
+							 var compressionType = column.dataset.compression;
+
+							 switch(actionValue)
+							 {
+								 	case 'shortpixel-optimize':
+											if (optimizable)
+											{
+												 this.Optimize(media_id);
+											}
+									break;
+									case 'shortpixel-glossy':
+									case 'shortpixel-lossy':
+									case 'shortpixel-lossless':
+									case 'shortpixel-smartcrop':
+									case 'shortpixel-smartcropless':
+
+										  switch(actionValue)
+											{
+												case 'shortpixel-glossy':
+												  var compression = this.imageConstants.COMPRESSION_GLOSSY;
+												break;
+												case 'shortpixel-lossless':
+											  	var compression = this.imageConstants.COMPRESSION_LOSSLESS;
+												break;
+												case 'shortpixel-lossy':
+												  var compression = this.imageConstants.COMPRESSION_LOSSY;
+												break;
+												case 'shortpixel-smartcrop':
+													 var action = this.imageConstants.ACTION_SMARTCROP;
+												break;
+												case 'shortpixel-smartcropless':
+													 var action = this.imageConstants.ACTION_SMARTCROPLESS;
+												break;
+											}
+
+											if (typeof action === 'undefined' && compressionType == compression)
+											{
+													items[i].checked = false
+													continue; // no need for compression. Should probably not work when actionstuff is happening.
+											}
+											else {
+												 compressionType = compression;
+											}
+
+											if (restorable)
+											{
+												 	this.ReOptimize(media_id, compressionType, action);
+											}
+
+									break;
+									case 'shortpixel-restore':
+											if (restorable)
+											{
+												 this.RestoreItem(media_id);
+											}
+									break;
+									case 'shortpixel-mark-completed':
+									{
+										if (optimizable)
+										{
+											 this.MarkCompleted(media_id);
+										}
+									}
+							 }
+							 items[i].checked = false;
+
+						} // for Loop
+
+						var selectAllCheck = document.getElementById('cb-select-all-1');
+						selectAllCheck.checked = false;
+				} // actionvalue shortpixel check
+		}
 
 		HandleImage(resultItem, type)
 		{
@@ -95,7 +196,7 @@ class ShortPixelScreen extends ShortPixelScreenItemBase //= function (MainScreen
             render: function()
             {
                detailsColumn.prototype.render.apply( this );
-               this.fetchSPIOData(this.model.get( 'id' ));
+               if(typeof this.fetchSPIOData === 'function') this.fetchSPIOData(this.model.get( 'id' ));
 
                return this;
             },

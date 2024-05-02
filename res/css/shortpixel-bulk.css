@@ -573,6 +573,11 @@
   padding-left: 8px;
   color: #000;
 }
+.shortpixel-bulk-wrapper section.panel.selection .optiongroup .new {
+  color: #ff0000;
+  font-weight: 500;
+  margin-left: 2px;
+}
 .shortpixel-bulk-wrapper section.panel.selection .count_limited {
   color: #ff0000;
 }

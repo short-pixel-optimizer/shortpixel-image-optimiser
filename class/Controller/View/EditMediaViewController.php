@@ -83,7 +83,6 @@ class EditMediaViewController extends \ShortPixel\ViewController
 						return false;
 					}
 
-
           $this->view->status_message = null;
 
          	$this->view->text = UiHelper::getStatusText($this->imageModel);
@@ -255,6 +254,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 					$debugInfo[] = array('', '<hr>');
 
 
+
 						if ($imageObj->hasBackup())
             	$backupFile = $imageObj->getBackupFile();
 						else {
@@ -315,6 +315,7 @@ class EditMediaViewController extends \ShortPixel\ViewController
 
               $url = $thumbObj->getURL(); //$fs->pathToURL($thumbObj); //wp_get_attachment_image_src($this->post_id, $size);
               $filename = $thumbObj->getFullPath();
+              $fileDir = $thumbObj->getFileDir();
 
 							$backupFile = $thumbObj->getBackupFile();
 							if ($thumbObj->hasBackup())
@@ -338,7 +339,8 @@ class EditMediaViewController extends \ShortPixel\ViewController
 					$dbid = $thumbObj->getMeta('databaseID');
 
               $debugInfo[] = array('', "<div class='$size previewwrapper'><img src='" . $url . "'><p class='label'>
-							<b>URL:</b> $url ( $display_size - $width X $height ) <br><b>FileName:</b>  $filename <br> <b> $backupText </b> $backup </p>
+							<b>URL:</b> $url ( $display_size - $width X $height ) <br><b>FileName:</b>  $filename <br>
+              <b>FileDir:</b> $fileDir <br> <b> $backupText </b> $backup </p>
 							<p><b>Processable: </b> $processable <br> <b>Restorable:</b>  $restorable <br> <b>Record:</b> $hasrecord ($dbid) </p>
 							<hr></div>");
             }

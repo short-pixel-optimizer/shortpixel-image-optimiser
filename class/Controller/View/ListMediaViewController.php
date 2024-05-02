@@ -60,6 +60,9 @@ class ListMediaViewController extends \ShortPixel\ViewController
     if (! isset($_GET['media']) || ! is_array($_GET['media']))
       return;
 
+		// In general this code superceded by javascript handling if that works properly. @todo remove if so
+		return;
+
 		 $fs = \wpSPIO()->filesystem();
 		 $optimizeController = new OptimizeController();
 		 $items = array_filter($_GET['media'], 'intval');
@@ -183,6 +186,7 @@ class ListMediaViewController extends \ShortPixel\ViewController
 
 	     $this->loadView(null, false);
      }
+
   }
 
   public function loadItem($id)
@@ -204,7 +208,9 @@ class ListMediaViewController extends \ShortPixel\ViewController
      $list_actions = array();
 
     $this->view->text = UiHelper::getStatusText($mediaItem);
-    $this->view->list_actions = UiHelper::getListActions($mediaItem);
+
+		$list_actions = UiHelper::getListActions($mediaItem);
+    $this->view->list_actions = $list_actions;
 
     if ( count($this->view->list_actions) > 0)
 		{
@@ -215,7 +221,36 @@ class ListMediaViewController extends \ShortPixel\ViewController
       $this->view->list_actions = '';
 		}
 
-    $this->view->actions = UiHelper::getActions($mediaItem);
+		$actions = UiHelper::getActions($mediaItem);
+    $this->view->actions = $actions;
+
+
+		$allActions = array_merge($list_actions, $actions);
+		$checkBoxActions = array();
+		if (array_key_exists('optimize', $allActions))
+		{
+				$checkBoxActions[] = 'is-optimizable';
+		}
+		if (array_key_exists('restore', $allActions))
+		{
+				$checkBoxActions[] = 'is-restorable';
+		}
+
+		$infoData  = array(); // stuff to write as data-tag.
+
+		if ($mediaItem->isOptimized())
+		{
+				$compressionType = $mediaItem->getMeta('compressionType');
+		}
+		else {
+				$compressionType = \wpSPIO()->settings()->compressionType;
+		}
+
+
+		$infoData['compression'] = $compressionType;
+
+		$this->view->infoClass = implode(' ', $checkBoxActions);
+		$this->view->infoData = $infoData;
     //$this->view->actions = $actions;
 
     if (! $this->userIsAllowed)

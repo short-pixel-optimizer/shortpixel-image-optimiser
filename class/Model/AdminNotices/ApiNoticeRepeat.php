@@ -31,7 +31,7 @@ class ApiNoticeRepeat extends \ShortPixel\Model\AdminNoticeModel
 			$firstNotice = $controller->getNoticeByKey('MSG_NO_APIKEY');
 
 			// Check if first notice is there, and not dismissed, then don't repeat.
-			if ($firstNotice->isDismissed() === false)
+			if (is_object($firstNotice) && $firstNotice->isDismissed() === false)
 			{
 				 return false;
 			}

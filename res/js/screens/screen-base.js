@@ -7,6 +7,16 @@ class ShortPixelScreenBase
 	processor;
 	strings = [];
 
+	// ImageModel Constants
+	imageConstants = {
+		 COMPRESSION_LOSSLESS: 0,
+		 COMPRESSION_LOSSY: 1,
+		 COMPRESSION_GLOSSY: 2,
+		 ACTION_SMARTCROP: 100,
+		 ACTION_SMARTCROPLESS: 101,
+	};
+
+
 	constructor(MainScreen, processor)
 	{
 		 this.processor = processor;

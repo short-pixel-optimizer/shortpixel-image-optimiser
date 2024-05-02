@@ -24,6 +24,10 @@ abstract class AdminNoticeModel
 
 	 protected $data;
 
+
+   abstract protected function checkTrigger();
+   abstract protected function getMessage();
+
 	 // No stuff loading here, low init
 	 public function __construct()
 	 {
@@ -146,10 +150,6 @@ abstract class AdminNoticeModel
 				return false;
 	 }
 
-// ?? abstract proteced removeCondition();
-
-	 abstract protected function checkTrigger();
-	 abstract protected function getMessage();
 
 
 }

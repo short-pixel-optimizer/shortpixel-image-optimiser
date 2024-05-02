@@ -6,9 +6,22 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
+
+$datastring= '';
+if (property_exists($this->view, 'infoData'))
+{
+
+	 foreach($this->view->infoData as $key => $data)
+	 {
+		 	$datastring .= ' data-' . $key . '="' . $data . '"';
+	 }
+}
+
 ?>
 
-<div class='sp-column-info' id='sp-msg-<?php echo esc_attr($this->view->id );?>'>
+<div class='sp-column-info <?php echo property_exists($this->view, 'infoClass') ? $this->view->infoClass : '' ?>'
+	 	  <?php echo $datastring; ?>
+			id='sp-msg-<?php echo esc_attr($this->view->id );?>'>
 <?php	if (isset($this->view->list_actions))
 	{
 	   echo $this->view->list_actions;
@@ -18,7 +31,7 @@ if ( ! defined( 'ABSPATH' ) ) {
       <p><?php  echo $this->view->text;  ?></p>
 <?php endif;
 
-if (isset($this->view->actions)):
+if (property_exists($this->view, 'actions')):
   $this->loadView('snippets/part-single-actions', false);
 
 

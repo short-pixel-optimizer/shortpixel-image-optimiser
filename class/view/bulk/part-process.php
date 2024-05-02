@@ -4,6 +4,8 @@ namespace ShortPixel;
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
+
+$settings = \wpSPIO()->settings();
 ?>
 <section class="panel process" data-panel="process" >
   <div class="panel-container">
@@ -34,7 +36,19 @@ if ( ! defined( 'ABSPATH' ) ) {
       </div>
     </h3>
 
-    <p class='description'><?php esc_html_e('ShortPixel is processing your images. Please keep this window open to complete the process.', 'shortpixel-image-optimiser'); ?> </p>
+    <?php
+     if ($settings->doBackgroundProcess): ?>
+      <p class="description">
+
+        <?php
+        $link = 'https://shortpixel.com/knowledge-base/article/584-background-processing-using-cron-jobs-in-shortpixel-image-optimizer';
+        printf(esc_html('ShortPixel is optimizing your images in the background. You can close this browser window now and reopen it at any time to check the status of the bulk processing. %sLearn more%s','shortpixel-image-optimiser'), '<strong><a href="' . esc_attr($link) . '" target="_blank">','</a></strong>'); ?>
+      </p>
+    <?php else: ?>
+      <p class='description'>
+        <?php esc_html_e('ShortPixel is processing your images. Please keep this window open to complete the process.', 'shortpixel-image-optimiser'); ?>
+      </p>
+    <?php endif; ?>
 
     <?php $this->loadView('bulk/part-progressbar', false); ?>
 

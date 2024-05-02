@@ -283,17 +283,19 @@ class OtherMediaController extends \ShortPixel\Controller
 		{
 				$defaults = array(
 						'force' => false,
-						'interval' => apply_filters('shortpixel/othermedia/refreshfolder_interval', HOUR_IN_SECONDS),
+						'interval' => HOUR_IN_SECONDS,
+
 				);
 
 				$args = wp_parse_args($args, $defaults);
 
+        $args['interval'] = apply_filters('shortpixel/othermedia/refreshfolder_interval', $args['interval'], $args);
 				global $wpdb;
 
 				$folderTable = $this->getFolderTable();
 
 				$tsInterval = UtilHelper::timestampToDB(time() - $args['interval']);
-				$sql = ' SELECT id FROM ' . $folderTable . '	WHERE status >= 0 AND (ts_checked <= %s OR ts_checked IS NULL)';
+				$sql = ' SELECT id FROM ' . $folderTable . '	WHERE status >= 0 AND (ts_checked <= %s OR ts_checked IS NULL) order by ts_checked ASC';
 
 				$sql = $wpdb->prepare($sql, $tsInterval);
 

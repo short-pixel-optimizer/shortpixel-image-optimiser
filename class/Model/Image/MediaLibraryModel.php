@@ -67,6 +67,9 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	/** @var array */
 	protected $forceSettings = array();  // option derives from setting or otherwise, request to be forced upon via UI to use specific value.
 
+  const PROCESSABLE_EXTENSIONS = array('jpg', 'jpeg', 'gif', 'png', 'pdf', 'bmp', 'tiff', 'tif');
+
+
   public function __construct($post_id, $path)
   {
       $this->id = $post_id;
@@ -119,7 +122,15 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 	// Path will only return the filepath.  For reasons, see getOptimizeFileType
   public function getOptimizeData()
   {
-		if (! is_null($this->optimizeData))
+
+    // The thumbnails included in the parent ImageModels are the ones that are not converted and thus also optimize all thumbnails.  Prevent adding thumbnails in the optimizeData if not so.
+    $include_thumbs = true;
+    if (false === in_array($this->getExtension(), ImageModel::PROCESSABLE_EXTENSIONS))
+    {
+        $include_thumbs = false;
+    }
+
+		if (! is_null($this->optimizeData) && true === $include_thumbs)
 		{
 			return $this->optimizeData;
 		}
@@ -180,6 +191,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				$hash = md5( serialize($paramList) . $url);
 				$doubles[$hash] = $this->mainImageKey;
 		 }
+
+     if (false === $include_thumbs)
+     {
+        return $parameters;
+     }
 
 		 $thumbObjs = $this->getThumbObjects();
 
@@ -1579,12 +1595,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$bool = false;
 
 		$defaults = array(
-			'checksum' => 1,
-			'replacementPath' => null,
+			'checksum' => 1, // use by pngconverter
+			'replacementPath' => null, // use by apiconverter, but no effect (@todo ?)
+      'backup_thumbnails' => true,  // used by bmpconverter, no specials for thumbs
 		);
 		$args = wp_parse_args($args, $defaults);
 
-		if ($settings->backupImages == 1)
+		if (1 == $settings->backupImages)
 		{
 			// only one file needed.
 			if ($this->isScaled())
@@ -1600,7 +1617,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				 $response = array(
 						'is_error' => true,
 						'item_type' => ResponseController::ISSUE_FILE_NOTWRITABLE,
-						'message ' => __('ConvertPNG could not create backup. Please check file permissions', 'shortpixel-image-optimiser'),
+						'message ' => __('ConvertPrepare could not create backup. Please check file permissions', 'shortpixel-image-optimiser'),
 				 );
 					ResponseController::addData($this->get('id'), $response);
 
@@ -1613,16 +1630,19 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				 return false;
 			 }
 
-			 $thumbObjs = $this->getThumbObjects();
-			 foreach($thumbObjs as $thumbObj)
-			 {
-				 $result = $thumbObj->createBackup();
-				 if (false === $result)
-				 {
-					  Log::addWarning('Backup failed on Thumbitem ' . $thumbObj->getFullPath());
-				 }
-			 }
 
+       if (true === $args['backup_thumbnails'])
+       {
+  			 $thumbObjs = $this->getThumbObjects();
+  			 foreach($thumbObjs as $thumbObj)
+  			 {
+  				 $result = $thumbObj->createBackup();
+  				 if (false === $result)
+  				 {
+  					  Log::addWarning('Backup failed on Thumbitem ' . $thumbObj->getFullPath());
+  				 }
+  			 } // foreach
+       } // args
 		}
 
 		// Saving Meta to keep filesizes in case everything is offload-deleted.
@@ -1672,6 +1692,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		 $defaults = array(
 			 'checksum' => 1,
 			 'omit_backup' => true,
+       'skip_thumbnails' => false,
 	 			);
 
  	   $args = wp_parse_args($args, $defaults);
@@ -1691,21 +1712,29 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 		$this->thumbnails = $this->loadThumbnailsFromWP();
 		$this->retinas = null;
 
-		$thumbnails = $this->getThumbObjects();
 
-		 foreach($thumbnails as $thumbObj)
-		 {
-				 $file = $fs->getFile($thumbObj->getFileDir() . $thumbObj->getFileBase() . '.jpg');
+    if (false === $args['skip_thumbnails'])
+    {
+    		$thumbnails = $this->getThumbObjects();
 
-				 if ($thumbObj->exists()) // if new exists, remove old
-				 {
-						 $thumbObj->delete(); // remove the old file.
-						 $thumbObj->fullpath = $file->getFullPath();
-						 $thumbObj->resetStatus();
-						 $thumbObj->setFileInfo();
-				 }
+    		 foreach($thumbnails as $thumbObj)
+    		 {
+             // Delete thumbnail with the old extension, if exists.
+    				 $file = $fs->getFile($thumbObj->getFileDir() . $thumbObj->getFileBase() . '.jpg');
 
-		 }
+    				 if ($thumbObj->exists()) // if new exists, remove old
+    				 {
+                 if($thumbObj->getExtension() !== 'jpg')
+                 {
+    						   $thumbObj->delete(); // remove the old file.
+                 }
+    						 $thumbObj->fullpath = $file->getFullPath();
+    						 $thumbObj->resetStatus();
+    						 $thumbObj->setFileInfo();
+    				 }
+
+    		 }
+    }
 
 		$this->wp_metadata = null;  // Remove caching on this one.
 
@@ -1918,14 +1947,13 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
     $cleanRestore = true;
 		$wpmeta = wp_get_attachment_metadata($this->get('id'));
 
-
 		// Get them early in case the filename changes ( ie png to jpg ) because it will stop getting it.
 		$WPMLduplicates = $this->getWPMLDuplicates();
 
 
 		$is_resized = $this->getMeta('resize');
 		$convertMeta = $this->getMeta()->convertMeta();
-		$was_converted = $convertMeta->isConverted() && true == $convertMeta->omitBackup();
+		$was_converted = $convertMeta->isConverted() && true == $convertMeta->omitBackup() ;
 		$converter = Converter::getConverter( clone $this); // ugly, but no way around.
 
 		// ** Warning - This will also reset metadata ****
@@ -2180,7 +2208,11 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 					$toRemove[] = $this;
 			}
-			else
+			elseif (true === $destination->exists() && $destination->extension() == $ext)
+      {
+          Log::addInfo('Destination exists, but is of correct extension, so fine?');
+      }
+      else
 			{
 				 Log::addError('Restoring Converted image not possible, target already exists');
 					ResponseController::addData('message', __('Restore PNG2JPG : Restoring to target that already exists', 'shortpixel-image-optimiser'));
@@ -2214,11 +2246,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
     		}
 
-				// Fullpath now will still be .jpg
-				// PNGconvert is first, because some plugins check for _attached_file metadata and prevent deleting files if still connected to media library. Exmaple: polylang.
-				$converter->restore();
-
-				foreach($toRemove as $fileObj)
+        foreach($toRemove as $fileObj)
 				{
 					 if (false === $this->is_virtual())
 					 {
@@ -2231,6 +2259,12 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					 	$fileObj->image_meta = new ImageThumbNailMeta();
 					 }
 				}
+
+				// Fullpath now will still be .jpg
+				// PNGconvert is first, because some plugins check for _attached_file metadata and prevent deleting files if still connected to media library. Exmaple: polylang.
+				$converter->restore();
+
+
 
 				$this->wp_metadata = null;  // restore changes the metadata.
 				$this->thumbnails = $this->loadThumbnailsFromWP();
@@ -2844,10 +2878,18 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 					return;
 			}
 
+
 			self::$unlistedNoticeChecked = true;
 
 			$settings = \wpSPIO()->settings();
 			$control = AdminNoticesController::getInstance();
+
+      // Silent mode has no notices.
+      if ($control->isSilentMode())
+      {
+         return;
+      }
+
 			$notice =  $control->getNoticeByKey('MSG_UNLISTED_FOUND');
 
 			// already active
@@ -2855,7 +2897,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				return;
 
 			// already notice.
-			if (is_object($notice->getNoticeObj()))
+			if (is_object($notice) && is_object($notice->getNoticeObj()))
 			{
 				 return;
 			}

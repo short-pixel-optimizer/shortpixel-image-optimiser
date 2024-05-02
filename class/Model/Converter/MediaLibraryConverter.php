@@ -92,15 +92,17 @@ abstract class MediaLibraryConverter extends Converter
 			// Update post mime on attachment
 			if (isset($params['success']) && true === $params['success'])
 			{
-				$newExt = $this->imageModel->getMeta()->convertMeta()->getFileFormat();
-				$newGuid = str_replace($guid, $newExt, 'jpg'); // This probable doesn't work bcause doesn't update Guid with this function.
+				$fromExt = $this->imageModel->getMeta()->convertMeta()->getFileFormat();
+        $toExt = 'jpg';
+				$newGuid = str_replace($fromExt, $toExt, $guid); // This probable doesn't work bcause doesn't update Guid with this function.
 				$post_ar = array('ID' => $attach_id, 'post_mime_type' => 'image/jpeg', 'guid' => $newGuid);
 			}
 			elseif ( isset($params['restore']) && true === $params['restore'] )
 			{
-				$oldExt = $this->imageModel->getMeta()->convertMeta()->getFileFormat();
-				$newGuid = str_replace($guid, 'jpg', $oldExt);
-				$post_ar = array('ID' => $attach_id, 'post_mime_type' => 'image/png', 'guid' => $newGuid);
+        $fromExt = 'jpg';
+				$toExt = $this->imageModel->getMeta()->convertMeta()->getFileFormat();
+				$newGuid = str_replace($fromExt, $toExt, $guid);
+				$post_ar = array('ID' => $attach_id, 'post_mime_type' => 'image/' . $toExt, 'guid' => $newGuid);
 			}
 
 			$result = wp_update_post($post_ar);
@@ -113,15 +115,16 @@ abstract class MediaLibraryConverter extends Converter
 
 			$metadata = wp_get_attachment_metadata($attach_id);
 
+
 			if (true === $params['generate_metadata'])
 			{
 				$attachment = get_post( $attach_id );
-
 				$new_metadata = wp_generate_attachment_metadata($attach_id, $newFile->getFullPath());
-
 			}
-			else {
-				$new_metadata = array();
+			else { // when not regenarting the metadata, ie bmp
+        $file = $metadata['file'];
+        $replace = str_replace($fromExt, $toExt, $file);
+				$new_metadata = array('file' => $replace);
 			}
 
 			// Metadata might not be array when add_attachment is calling this hook via AdminController ( PNG2JPG)

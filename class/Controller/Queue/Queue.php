@@ -108,7 +108,6 @@ abstract class Queue
        $this->q->addItems(array($item), false);
        $numitems = $this->q->withRemoveDuplicates()->enqueue(); // enqueue returns numitems
 
-      // $this->q->setStatus('preparing', $preparing, true); // add single should not influence preparing status.
        $result = $this->getQStatus($result, $numitems);
        $result->numitems = $numitems;
 
@@ -437,9 +436,7 @@ abstract class Queue
 
     protected function getStatus($name = false)
     {
-        if ($name == 'items')
-          return $this->q->itemCount(); // This one also recounts once queue returns 0
-        elseif ($name == 'custom_data')
+        if ($name == 'custom_data')
         {
             $customData = $this->q->getStatus('custom_data');
             if (! is_object($customData))
@@ -526,8 +523,14 @@ abstract class Queue
 
     // This is a general implementation - This should be done only once!
     // The 'avif / webp left imp. is commented out since both API / and OptimizeController don't play well with this.
-    protected function imageModelToQueue(ImageModel $imageModel)
+    protected function imageModelToQueue(ImageModel $imageModel, $args = array())
     {
+        $defaults = array(
+            'debug_active' => false, // prevent write actions if called via debugger
+        );
+
+        $args = wp_parse_args($args, $defaults);
+
         $item = new \stdClass;
         $item->compressionType = \wpSPIO()->settings()->compressionType;
 
@@ -585,43 +588,6 @@ abstract class Queue
 						}
 				}
 
-				$converter = Converter::getConverter($imageModel, true);
-
-				if ($baseCount > 0 && is_object($converter) && $converter->isConvertable())
-				{
-		        if ($converter->isConverterFor('png'))  // Flag is set in Is_Processable in mediaLibraryModel, when settings are on, image is png.
-		        {
-		          $item->action = 'png2jpg';
-		        }
-						elseif($converter->isConverterFor('heic'))
-						{
-							  foreach($data['params'] as $sizeName => $sizeData)
-								{
-									 if (isset($sizeData['convertto']))
-									 {
-										  $data['params'][$sizeName]['convertto'] = 'jpg';
-									 }
-								}
-
-								// Run converter to create backup and make placeholder to block similar heics from overwriting.
-								$args = array('runReplacer' => false);
-								$converter->convert($args);
-
-								//Lossless because thumbnails will otherwise be derived of compressed image, leaving to double compr..
-								if (property_exists($item, 'compressionType'))
-								{
-									 $item->compressionTypeRequested = $item->compressionType;
-								}
-								// Process Heic as Lossless so we don't have double opts.
-								$item->compressionType = ImageModel::COMPRESSION_LOSSLESS;
-
-								// Reset counts
-								$counts->baseCount = 1; // count the base images.
-								$counts->avifCount = 0;
-								$counts->webpCount = 0;
-								$counts->creditCount = 1;
-						}
-				}
 				// CompressionType can be integer, but not empty string. In cases empty string might happen, causing lossless optimization, which is not correct.
         if (! is_null($imageModel->getMeta('compressionType')) && is_numeric($imageModel->getMeta('compressionType')))
 				{
@@ -644,13 +610,20 @@ abstract class Queue
 		//		$item->preview = $imagePreviewURL;
         $item->counts = $counts;
 
+        // Converter can alter the data for this item, based on conversion needs
+        $converter = Converter::getConverter($imageModel, true);
+        if ($baseCount > 0 && is_object($converter) && $converter->isConvertable())
+        {
+           $converter->filterQueue($item, $args);
+        }
+
         return $item;
     }
 
 		// @internal
 		public function _debug_imageModelToQueue($imageModel)
 		{
-			 return $this->imageModelToQueue($imageModel);
+			 return $this->imageModelToQueue($imageModel, ['debug_active' => true]);
 		}
 
     protected function timestampURLS($urls, $id)
@@ -665,10 +638,6 @@ abstract class Queue
       return $urls;
     }
 
-    private function countQueueItem()
-    {
-
-    }
 
 		// Check if item is in queue. Considered not in queue if status is done.
 		public function isItemInQueue($item_id)

@@ -1,3 +1,240 @@
+= 5.0.9 =
+Release date August 29th, 2022
+* Fix: one of the processing queues was flooded in certain situations, on sites with many concurrent editors;
+* Fix: the file name was missing in the bulk processing preview;
+* Fix: the queues were deleted when activating the plugin; now they are preserved and bulk processing can continue after updating/reactivating the plugin;
+* Fix: retina backups were not removed when an image was deleted from the Media Library;
+* Fix: NGG screen check caused processor to load on plugin/dashboard pages;
+* Fix: stats were saved incorrectly when the plugin was deactivated;
+* Fix: some PHP notices were displayed due to numbering format for Polish language;
+* Fix: various minor fixes, error code handling and code cleanup;
+* Fix: screenshots were updated to reflect the latest version of the plugin;
+* Fix: updates to wording throughout the plugin and in the readme file;
+* Language: 1 new string added, 0 updated, 0 fuzzed, and 1 deprecated.
+
+= 5.0.8 =
+Release date August 8th, 2022
+* Fix: the `Previous Bulks` now displays the number of credits used instead of the number of Media Library items, to avoid confusion;
+* Fix: the notification for migrating the old format of optimization information was not getting triggered anymore;
+* Fix: excluded images and/or thumbnails can now be restored from the backup;
+* Fix: added prevention for double database queries when checking if an item is already in the queue;
+* Fix: the bulk restore and bulk migration of optimization data can now be done even if out of credits;
+* Fix: reduced the number of database table checks done on wp-admin pages to the minimum possible;
+* Fix: the out-of-quota message was not always showing up properly;
+* Fix: the bulk migration of the optimization data now marks as optimized the images that have proper backups in place;
+* Fix: the thousands separators are now displayed properly for all languages;
+* Fix: the optimized/unoptimized Media Library filter has proper pagination and also works with WPML;
+* Fix: in case the optimization percentage is an integer, drop the `.00` (83.00% -> 83%);
+* Fix: improved the settings and bulk pages load time for sites with a huge number of items in the Media Library;
+* Fix: properly save the optimization information even if the filename is huge;
+* Fix: the `Optimize now` button wasn't showing up on Custom Media right after restoring an item from the backup;
+* Fix: more fixes for multisite installs where the old `blogs.dir` folder structure is used;
+* Fix: multiple fixes and improvements for WP-CLI, including more detailed embedded docs and examples;
+* Fix: multiple fixes and improvements to the whole exclusions module;
+* Fix: multiple fixes and improvements in handling how retina images are optimized;
+* Fix: various small fixes and improvements to the debug mode of the plugin;
+* Tweak: `CTRL+S` can now be used to save settings (you're welcome!);
+* Tweak: added support for bulk processing via the processing hook;
+* Tweak: various wording and text updates in the plugin and the readme file;
+* Language: 10 new strings added, 8 updated, 0 fuzzed, and 2 obsoleted.
+
+= 5.0.7 =
+Release date July 26th, 2022
+* Fix: the notification about credits used had some test data, resulting in wrong information (sorry again!);
+* Language: 0 new strings added, 0 updated, 0 fuzzed, and 0 obsoleted.
+
+= 5.0.6 =
+Release date July 25th, 2022
+* Fix: the "Search and Migrate All" tool now contains a fix for many cases where the message "Could not create backup" shows up;
+* Fix: a fatal error was crashing the plugin settings in PHP 7.2;
+* Fix: in certain cases, the optimization was looping due to WooCommerce's thumbnail system;
+* Fix: in some cases, WooCommerce as well as other plugins were returning a wrong thumbnail URL and this case was not treated properly;
+* Fix: optimization wasn't working correctly for multisite installs with the very old `blogs.dir` setup;
+* Fix: some notifications could not be properly dismissed (sorry for that!);
+* Fix: the integration with WP Offload Media has been enhanced for the case where the media files are not stored anymore on the local server;
+* Fix: some errors were showing up in certain cases where the next generation image delivery was active together with the WP Offload Media plugin;
+* Fix: the error box was not showing up anymore at the end of the bulk processing, or it was displaying wrong counts;
+* Fix: the "Optimize Now" action from the Custom Media had a wrong link;
+* Fix: in some cases, the bulk processing wasn't displaying the correct step for migration/restore operations;
+* Fix: the deactivation feedback was sent even if no selection was made in the pop-up;
+* Fix: the optimized/unoptimized filter was also displaying private posts;
+* Fix: various small fixes and code improvements to make the ShortPixel support team's lives easier;
+* Tweak: added a "processing" message when a new action is manually requested by the user;
+* Tweak: added a tool-tip for the number of items currently in the processing queue;
+* Tweak: added the resize type (cover/contain) on the image edit screen;
+* Language: 10 new strings added, 2 updated, 0 fuzzed, and 6 obsoleted.
+
+= 5.0.5 =
+Release date July 7th, 2022
+* Fix: in some cases the legacy optimization data was not migrated properly, resulting in backup-related errors;
+* Fix: added the possibility to redo the migration of the optimization data when the backups exist;
+* Fix: significantly reduced the number of queries when WP Offload Media is in use, as this was causing slowness in some cases;
+* Fix: the automatic processing now works correctly when using the block editor as well as on other pages where it was broken;
+* Fix: the unlisted thumbnails were not processed correctly and showed up as not optimized;
+* Fix: the integration with the Photo Engine and WP/LR Sync plugins works properly again;
+* Fix: the filter in the Media Library was making the image name go away;
+* Fix: changing the API Key now resets correctly the credits information;
+* Fix: removed a persistent notification about a potential insufficient quota;
+* Fix: the "Optimize now" button works correctly in Custom Media;
+* Fix: the "Extend quota" button works correctly in the Media Library;
+* Fix: other folders from the `wp-content/uplods` folder can now be added as Custom Media folders;
+* Fix: the size exclusions were not working as expected for thumbnails;
+* Fix: updated various pieces of code in accordance with the WordPress Coding Standards;
+* Tweak: the wait time between checking if there is anything to optimize has been lowered;
+* Tweak: added a `clear` function for WP-CLI, to clear the existing queue(s);
+* Language: 3 new string added, 0 updated, 0 fuzzed, and 7 obsoleted.
+
+= 5.0.4 =
+Release date June 22nd, 2022
+* Fix: some notifications could not be dismissed because of a jQuery error, kudos to @KZeni for the fix;
+* Fix: a JS typo was preventing certain actions from completing in the Media Library;
+* Fix: an error was showing up in the bulk when the legacy format date field was missing or incorrect;
+* Language: 0 new string added, 0 updated, 0 fuzzed, and 0 obsoleted.
+
+= 5.0.3 =
+Release date June 21st, 2022
+* Fix: the plugin now recognizes the offloaded WebP/AVIF files, when they are not also present anymore on the server;
+* Fix: in some cases, the bulk and manual optimization was stuck due to some errors related to the legacy optimization information;
+* Fix: when saving the settings, the credits quota and other API-related data will be sent to the API, for faster sync;
+* Fix: when having the backups turned off, a placeholder image was displayed instead of the original one;
+* Fix: an empty space was sometimes shown on some pages, as a result of some dismissed notifications;
+* Fix: various small fixes around the plugin processing engine, for increased speed and stability;
+* Fix: updated various pieces of code in accordance with the WordPress Coding Standards;
+* Language: 1 new string added, 0 updated, 0 fuzzed, and 0 obsoleted.
+
+= 5.0.2 =
+Release date June 16th, 2022
+* Fix: an uncaught error was fixed for the sites running without the `fileinfo` PHP extension that is needed by the plugin to get the mime type of the files;
+* Fix: the resize switch from the settings wasn't properly working;
+* Fix: a hidden modal in the dashboard was taking up a lot of empty space;
+* Fix: some popups in the settings were always getting triggered in WordPress versions 5.5 and below;
+* Fix: if the admin bar tooltip cannot load for any reason, let the JS processor continue its job;
+* Fix: advancing from step 2 of the bulk process was sometimes blocked;
+* Tweak: improved the notification text and updated the link around the legacy metadata migration;
+* Tweak: the legacy conversion notification is now hidden when out of credits;
+* Language: 0 new strings added, 3 updated, 0 fuzzed, and 0 obsoleted.
+
+= 5.0.1 =
+Release date June 14th, 2022
+* Fix: a fatal error showed up in some cases right after updating the plugin, which is now fixed;
+* Language: 0 new strings added, 0 updated, 0 fuzzed, and 0 obsoleted.
+
+= 5.0.0 =
+Release date June 14th, 2022
+
+We hope today is a lucky day because SPIO 5 is super cool, excellent, and faster. Now, bug-free! Just kidding :-) read on for the changelog and be kind to us in reporting issues. The dev team will be eternally grateful!
+* New: this is a major rewrite of the plugin, where all the processing engine has been completely changed, as well as other major parts of the plugin;
+* New: the optimization information is moved to custom tables in the database in order to avoid the situation when re-optimization occurs because ShortPixel optimization data was wiped;
+* New: the whole bulk processing has been reworked and streamlined into a very nice 4 steps process, with more details and clarity about what is going to be processed;
+* New: the JavaScript processor that is in charge of processing everything that needs to be optimized has been completely rewritten, adding more clarity and details;
+* New: added WP-CLI support for most of the operations that can be performed with the plugin; please check the knowledge base for more details;
+* New: due to the new bulk and JS processor, WebP and/or AVIF files can be generated without the need to re-optimize the whole Media Library;
+* New: added more features for Custom Media, such as Cloudflare integration, displaying the internal ID for easier tracking, checks for permissions when adding new folders, and other smaller fixes;
+* New: the settings were reorganized and refreshed, a Tools tab was added and tooltips are now available for an easier understanding of the functionalities;
+* New: Breaking Change! regex exclusions are now moved to their own type `regex-name` and `regex-path`; if you are using regex exclusions please check them in detail and adjust as necessary;
+* New: added the possibility for double AVIF extension that works in a similar manner to the double WebP extension;
+* Tweak: removed `Process in the front-end` option due to performance issues; the same effect can now be achieved with WP-CLI commands;
+* Tweak: Breaking Change! due to the code changes, some of the filters in version 4 are now deprecated; please check again your integrations if you used a filter in version 4;
+* Tweak: removed the integration with Cloudflare Global API Key for security reasons, please use the Cloudflare Token instead;
+* Fix: the image size is now updated correctly in the database (following the change in WordPress 6.0);
+* Fix: in some cases, when running out of credits, the PDF upload wasn't possible;
+* Fix: the optimized/unoptimized filter in Media Library works correctly now;
+* Fix: a confirmation message shows up again when saving settings;
+* Language: pretty much all strings were either added, updated, fuzzed, or obsoleted, therefore we didn't lose time in counting them; we hope you will understand.
+
+= 4.22.10 =
+Release date June 2nd, 2022
+* Fix: updated all `add_query_arg` and `remove_query_arg` functions for enhanced security;
+* Fix: in some cases, the offloading via WP Offload Media wasn't properly done when converting from PNG to JPG;
+* Fix: PDF files weren't offloaded via WP Offload Media  when running out of credits;
+* Fix: removed the backups folder calculation because it was making the settings page very slow in certain cases;
+* Fix: removed the consumed credits from the statistics tab, because it wasn't working correctly;
+* Fix: increased the default image resize options;
+* Fix: a potential fatal error on PHP 8 was corrected;
+* Tweak: added a new filter for the requests that are sent to the optimization API, documented above in the Developers section;
+* Language: 0 new strings added, 0 updated, 0 fuzzed, and 0 obsoleted.
+
+= 4.22.9 =
+Release date March 31st, 2022
+* Fix: fixed the integration with the WP Media Offload plugin, which was broken in version 3.6.0;
+* Fix: added support for offloading AVIF files via WP Media Offload;
+* Fix: PDF files were not offloaded via WP Media Offload if the process PDF option wasn't enabled in SPIO;
+* Fix: added support for delivering animated gif files as WebP when using the .htaccess method;
+* Fix: the link for the plugin settings was leading to a 404 in the network admin of a multisite install;
+* Tweak: added 2 new constants for adding the HTTP basic authentication credentials directly in wp-config.php;
+* Tweak: added a notification in case of downgrading from the upcoming SPIO 5 version;
+* Compat: added integration with Pantheon cache, thanks to @TrilipuT & @LogicEveryWhere;
+* Language: 3 new strings added, 0 updated, 0 fuzzed, and 0 obsoleted.
+
+= 4.22.8 =
+Release date February 8th, 2022
+* Fix: an error was occurring on new installs when using PHP8;
+* Fix: when uploading an image through Gutenberg's image block, the optimization wasn't getting triggered;
+* Fix: wrong path for `picturefill.js` that was used only in certain cases on IE;
+* Language: 0 new string added, 0 updated, 0 fuzzed, and 0 obsoleted.
+
+= 4.22.7 =
+Release date January 17th, 2022
+* Fix: switched all requests to the API to https to avoid insecure warnings;
+* Fix: certain excludes by path were seen as regex-only and weren't processed correctly;
+* Fix: the upgrade pop-up was not considering properly AVIF & WebP when proposing upgrade options;
+* Fix: in certain cases, on Custom Media, there were some PHP Notices related to backups;
+* Fix: AVIF files weren't removed when deleting an image from the Media Library;
+* Fix: when the option to optimize images added in the front-end was enabled, some unnecessary calls to the backend were made in some cases;
+* Language: 0 new string added, 0 updated, 0 fuzzed, and 0 obsoleted.
+
+= 4.22.6 =
+Release date October 11th, 2021
+* Fix: the plugin is now checking for the `UPLOADS` constant when building the paths on MultiSite installs;
+* Fix: in certain specific cases, a fatal error was triggered when the backup couldn't be restored;
+* Fix: if the automatic Media Library optimization is disabled, the plugin will also disable the front-end processing option;
+* Fix: removed inaccurate statistics from the bulk screen summary until the next major release;
+* Language: 0 new string added, 0 updated, 0 fuzzed, and 0 obsoleted.
+
+= 4.22.5 =
+Release date August 31st, 2021
+* Fix: in some cases, the MIME type of other files than images were wrongly set to `image/jpg`;
+* Fix: when restoring from backup a PNG that was converted to JPG, the MIME type wasn't set back to `image/png`;
+* Fix: in case backup fails for any reason, the image in discussion will be skipped (so the original one won't get overwritten);
+* Language: 0 new string added, 0 updated, 0 fuzzed, and 0 obsoleted.
+
+= 4.22.4 =
+Release date August 25th, 2021
+* Compat: Added a notification system for the cases when AVIF files cannot be delivered with the current server/host settings;
+* Compat: bumped the minimum supported PHP version to 5.6;
+* Language: 5 new string added, 0 updated, 0 fuzzed, and 0 obsoleted.
+
+= 4.22.3 =
+Release date July 28th, 2021
+* Fix: Error when using WordPress 5.8 Widget editor;
+* Fix: Error when using WP-Offload and WebP image could not be detected;
+* Fix: PNG2JPG when using WP without date directory format would incorrectly add ./ to filename;
+* Fix: Unregistered retina files could throw off optimization;
+* Fix: Easy Watermark plugin changed its main file, so it couldn't be properly detected;
+* Language: 0 new string added, 0 updated, 0 fuzzed, and 0 obsoleted.
+
+= 4.22.2 =
+Release date May 12th, 2021
+* Fix: the Bulk screen reflects better the extra credits used for WebP and/or AVIF creation;
+* Language: 1 new string added, 0 updated, 0 fuzzed, and 0 obsoleted.
+
+= 4.22.1 =
+Release date May 5th, 2021
+* Fix: undefined variable notice;
+* Fix: some strings had the wrong translation domain;
+* Fix: WSO banner can now be hidden either with a constant or with a filter;
+* Language: 0 new strings added, 0 updated, 0 fuzzed, and 0 obsoleted.
+
+= 4.22.0 =
+Release date April 28th, 2021
+* New: ability to generate and serve the AVIF version of the images;
+* New: WebP and AVIF files can now be delivered without conditioning of the generation of such files;
+* Fix: Keep the `loading=lazy` attribute on `IMG` tags when delivering next-generation images using the `picture` method;
+* Fix: Custom database tables were created without primary keys and that caused issues in some cases;
+* Fix: Empty alt tag should not be stripped with WebP delivery;
+* Fix: bug when using S3-offload in combination with Webp delivery;
+* Fix: fixes, additions, and tweaks to the plugin notifications system;
+* Language: 9 new strings added, 14 updated, 0 fuzzed, and 0 obsoleted.
 = 4.21.2 =
 
 Release date March 15th, 2021

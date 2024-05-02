@@ -30,11 +30,10 @@
       font-style: normal;
     }
 
+		// This one can't be limited in width, because it breaks frontpage bulk.
     p.description
     {
        font-size: 14px;
-       //max-width: 650px;
-
        margin: 15px 0 15px 15px;
     }
 
@@ -668,7 +667,11 @@
 						 color: #000;
 					 }
         }
-
+				.new {
+					 color: #ff0000;
+					 font-weight: 500;
+					 margin-left: 2px;
+				}
       }
 
 			.count_limited
