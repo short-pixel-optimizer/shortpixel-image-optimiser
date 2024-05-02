@@ -35,7 +35,7 @@ class UnlistedNotice extends \ShortPixel\Model\AdminNoticeModel
 				</a> also has these thumbnails that are not listed in the metadata: '  . (implode(', ', $unlistedFiles)) . '
 				</p>';
 
-		$message .= '<p>' . sprintf(__('You can enable optimizing %s Unlisted Images %s in the %s settings %s', 'shortpixel-image-optimiser'), '<b>', '</b>', '<a href="'. $admin_url . '">','</a>') . '</p>';
+		$message .= '<p>' . sprintf(__('You can enable %s Optimize other thumbnails %s in the %s Advanced settings %s', 'shortpixel-image-optimiser'), '<b>', '</b>', '<a href="'. $admin_url . '">','</a>') . '</p>';
 
 		return $message;
 

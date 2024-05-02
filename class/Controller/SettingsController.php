@@ -439,7 +439,7 @@ class SettingsController extends \ShortPixel\ViewController
 
 				 $excludeOptions = UtilHelper::getWordPressImageSizes();
 				 $mainOptions = array(
-					 'shortpixel_main_donotuse' =>  array('nice-name' => __('Main Image', 'shortpixel-image-optimiser')),
+					 'shortpixel_main_donotuse' =>  array('nice-name' => __('Main (scaled) Image', 'shortpixel-image-optimiser')),
 					 'shortpixel_original_donotuse' => array('nice-name' => __('Original Image', 'shortpixel-image-optimiser')),
 				 );
 

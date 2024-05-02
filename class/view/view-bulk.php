@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
   <div id="processPaused" class="processor-paused" data-action="ResumeBulk"><span class='dashicons dashicons-controls-pause' data-action="ResumeBulk"></span>
 		<?php esc_html_e('The Bulk Processing is paused, please click to resume','shortpixel-image-optimiser'); ?>
-    <p class='small'><?php _e('If you have background processing active, note that this process will continue', 'shortpixel-image-optimiser'); ?></p>
+    <p class='small'><?php _e('If you have activated background mode, please note that this process will continue', 'shortpixel-image-optimiser'); ?></p>
   </div>
 
   <div id="processorOverQuota" class="processor-overquota">
