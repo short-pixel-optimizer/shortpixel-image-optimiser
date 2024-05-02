@@ -31,6 +31,9 @@ $is_unlimited= (!is_null($this->quotaData) && $this->quotaData->unlimited) ? tru
     ?>" target="_blank">
         <?php esc_html_e('ShortPixel account','shortpixel-image-optimiser');?>
     </a>
+    | <a href="mailto:help@shortpixel.com?subject=SPIO Feature Request"><?php _e('Feature Request', 'shortpixel-image-optimiser'); ?>
+    </a>
+    | <a href="https://wordpress.org/support/plugin/shortpixel-image-optimiser/reviews/#new-post" target="_blank">   <?php _e('Rate Us', 'shortpixel-image-optimiser'); ?><img src="<?php echo esc_attr(\wpSPIO()->plugin_url('res/img/stars.png')); ?>" width="80" /></a>
   </div>
 
     <?php if ( round($view->averageCompression) > 20 ): ?>

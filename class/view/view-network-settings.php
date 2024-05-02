@@ -9,10 +9,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 $delivery_settings = $this->view->settings['delivery'];
 
+
 ?>
 
-<div class="wrap is-shortpixel-settings-page">
+<div class="wrap is-shortpixel-settings-page multi-site-settings">
 <h1>
+    <img src="<?php echo esc_url(\wpSPIO()->plugin_url('res/img/svg/sp-logo-regular.svg')) ?>" width="50" />
     <?php esc_html_e('ShortPixel Network Settings','shortpixel-image-optimiser');?>
 </h1>
 
