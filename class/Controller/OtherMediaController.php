@@ -338,10 +338,10 @@ class OtherMediaController extends \ShortPixel\Controller
 				}
 				elseif ($old_count < $new_count)
 				{
-					$message = print_f(__(' %s files added', 'shortpixel-image-optimiser'), ($new_count-$old_count));
+					$message = printf(__(' %s files added', 'shortpixel-image-optimiser'), ($new_count-$old_count));
 				}
 				else {
-					$message = print_f(__(' %s files removed', 'shortpixel-image-optimiser'), ($old_count-$new_count));
+					$message = printf(__(' %s files removed', 'shortpixel-image-optimiser'), ($old_count-$new_count));
 				}
 
 				$return['message'] = $message;
