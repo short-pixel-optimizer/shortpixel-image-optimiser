@@ -24,37 +24,30 @@ $delivery_settings = $this->view->settings['delivery'];
   <div class='section-wrapper'>
     <form name='wp_shortpixel_options' action='<?php echo esc_url(add_query_arg('noheader', 'true')) ?>'  method='post' id='wp_shortpixel_options'>
       <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
-
+      <section id="multi-site" class="clearfix sel-tab">
+        <h2>&nbsp;</h2>
 
         <h4>Deliver the next generation versions of the images in the front-end: </h4>
         <hr>
 
 
         <div class='option'>
-          <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/126-which-webp-files-delivery-method-is-the-best-for-me"></span></div>
-         <div class='switch_button'>
-           <label>
-             <input type="checkbox" class="switapch" name="delivery_enable" data-toggle="deliverTypes" value="1" <?php checked( ($delivery_settings['delivery_enable']), true);?>>
-             <div class="the_switch">&nbsp; </div>
-             <?php esc_html_e('Enable site-wide settings','shortpixel-image-optimiser');?>
-           </label>
-         </div>
+          <?php $this->printInlineHelp("https://shortpixel.com/knowledge-base/article/126-which-webp-files-delivery-method-is-the-best-for-me");
+          ?>
+
+          <?php $this->printSwitchButton(
+                ['name' => 'delivery_enable',
+                 'checked' => $delivery_settings['delivery_enable'],
+                 'label' => esc_html__('Enable site-wide settings','shortpixel-image-optimiser')
+                ]);
+          ?>
+
         </div>
+
 
         <div class='delivery-options-wrapper flex option'>
 
         </div>
-
-
-        <div class="deliverWebpSettings">
-            <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/126-which-webp-files-delivery-method-is-the-best-for-me"></span></div>
-           <div class='switch_button'>
-             <label>
-               <input type="checkbox" class="switch" name="delivery_enable" data-toggle="deliverTypes" value="1" <?php checked( ($delivery_settings['delivery_enable']), true);?>>
-               <div class="the_switch">&nbsp; </div>
-               <?php esc_html_e('Enable site-wide settings','shortpixel-image-optimiser');?>
-             </label>
-           </div>
 
 
             <ul class="deliverWebpTypes toggleTarget" id="deliverTypes">
@@ -77,6 +70,7 @@ $delivery_settings = $this->view->settings['delivery'];
 
                     <ul class="deliverWebpAlteringTypes toggleTarget" id="deliverAlteringTypes">
                         <li>
+
                             <input type="radio" name="deliverWebpAlteringType" id="deliverWebpAlteredWP" <?php checked( ($delivery_settings['deliver_picture'] == true && $delivery_settings['delivery_method'] == 'hooks'), true);?> value="deliverWebpAlteredWP">
                             <label for="deliverWebpAlteredWP">
                                 <?php esc_html_e('Only via Wordpress hooks (like the_content, the_excerpt, etc)');?>
@@ -104,10 +98,11 @@ $delivery_settings = $this->view->settings['delivery'];
                     <?php } ?>
                 </li>
             </ul>
-        </div>
+
+      </section> <!-- //tab -->
 
     </form>
-  </div>
+  </div> <!-- /section-wrapper -->
 
 
 </article>

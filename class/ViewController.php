@@ -107,7 +107,6 @@ class ViewController extends Controller
         return false;
 			}
 
-
       $view = $this->view;
       $controller = $this;
 
@@ -123,8 +122,36 @@ class ViewController extends Controller
 				self::$viewsLoaded[] = $template;
       }
 
+  }
+
+  protected function printInlineHelp($url)
+  {
+      $output = '<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="' .  esc_html__('Click for more info', 'shortpixel-image-optimiser') . '" data-link="' . esc_url($url) . '"></span></div>';
+      echo $output;
 
   }
+
+  protected function printSwitchButton($args)
+  {
+    $defaults = array(
+        'name' => '',
+        'checked' => false,
+        'label' => ''
+    );
+
+
+    $output = '<div class="switch_button">
+      <label>
+        <input type="checkbox" class="switch" name="' . esc_attr($args['name']) . '" data-toggle="deliverTypes" value="1" ' . checked($args['checked'], true, false) .  '>
+        <div class="the_switch">&nbsp; </div>
+        ' . esc_html($args['label']) . '
+      </label>
+    </div>';
+
+    echo $output;
+  }
+
+
 
   /** Accepts POST data, maps, checks missing fields, and applies sanitization to it.
   * @param array $post POST data
