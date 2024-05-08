@@ -92,6 +92,11 @@ abstract class Converter
      */
 		public static function getConverter($imageModel, $forConversion = false)
 		{
+        if (! is_object($imageModel))
+        {
+           return false;
+        }
+        
 			  $extension = $imageModel->getExtension();
 
 				$converter = false;
