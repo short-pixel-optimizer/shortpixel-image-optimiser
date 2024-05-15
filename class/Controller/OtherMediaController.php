@@ -386,7 +386,7 @@ class OtherMediaController extends \ShortPixel\Controller
     }
 
     /* Check if this directory is part of the MediaLibrary */
-    private function checkifMediaLibrary(DirectoryModel $directory)
+    public function checkifMediaLibrary(DirectoryModel $directory)
     {
       $fs = \wpSPIO()->filesystem();
       $uploadDir = $fs->getWPUploadBase();
