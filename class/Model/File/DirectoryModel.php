@@ -430,8 +430,10 @@ class DirectoryModel extends \ShortPixel\Model
     $dirArray = array();
     foreach ($dirIt as $fileInfo)
     { // IsDot must go first here, or there is possiblity to run into openbasedir restrictions.
+
        if (! $fileInfo->isDot() && $fileInfo->isDir() && $fileInfo->isReadable())
        {
+
 				 if ('ShortPixel\Model\File\DirectoryOtherMediaModel' == get_called_class())
 				 {
 				 	$dir = new DirectoryOtherMediaModel($fileInfo->getRealPath());
@@ -442,7 +444,9 @@ class DirectoryModel extends \ShortPixel\Model
 				 }
 
          if ($dir->exists())
+         {
             $dirArray[] = $dir;
+         }
        }
 
     }

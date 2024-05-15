@@ -106,6 +106,11 @@ class ShortPixelFolderTree
                  li.classList.add('is_active');
               }
 
+              if ( element.is_disabled && true === element.is_disabled)
+              {
+                  li.classList.add('is_active');
+              }
+
               var link = document.createElement('a');
 
               var icon = document.createElement('i');
