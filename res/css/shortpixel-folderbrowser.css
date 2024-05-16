@@ -1,7 +1,8 @@
 .sp-folder-picker {
   position: relative;
   border: 1px solid #000;
-  margin: 8px 0;
+  margin: 12px 0;
+  padding: 4px 0;
   max-height: 50vh;
   overflow-y: scroll;
 }
@@ -69,6 +70,9 @@
   margin: 8px 0;
   padding: 8px 8px 8px 12px;
   font-weight: 500;
+}
+.modal-folder-picker .description {
+  margin: 12px 0;
 }
 
 /*# sourceMappingURL=shortpixel-folderbrowser.css.map */
