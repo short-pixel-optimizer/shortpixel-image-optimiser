@@ -45,7 +45,7 @@ $this->loadView('custom/part-othermedia-top');
 
         <span class='sp-folder-picker-selected'>&nbsp;</span>
         <div class="folder-message hidden"></div>
-        <div class='description'><?php _e('Greyed-out folders are either already active in custom media, or part of WordPress media library', 'shortpixel-image-optimiser'); ?></div>
+        <div class='description'><?php _e('The greyed out folders are either already active in Custom Media folders or part of the WordPress Media Library', 'shortpixel-image-optimiser'); ?></div>
     </div>
 
 
