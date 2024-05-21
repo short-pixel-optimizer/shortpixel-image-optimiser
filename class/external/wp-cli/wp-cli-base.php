@@ -390,15 +390,15 @@ class SpioCommandBase
 
 									if (! is_null($counts))
 									{
-										 $baseMsg = sprintf(' This job, %d credit(s) were used. %d for images ', $counts->creditCount,
-										 $counts->baseCount);
+										$baseMsg = sprintf(' This job, %d filess were processed: %d images', $counts->creditCount,
+										$counts->baseCount);
 
-										 if ($counts->webpCount > 0)
-										 	 $baseMsg .= sprintf(', %d for webps ', $counts->webpCount);
+										if ($counts->webpCount > 0)
+											$baseMsg .= sprintf(', %d WebPs ', $counts->webpCount);
 										if ( $counts->avifCount > 0)
-											 $baseMsg .= sprintf(', %d for avifs ', $counts->avifCount);
+											$baseMsg .= sprintf(', %d AVIFs ', $counts->avifCount);
 
-										 \WP_CLI::line($baseMsg);
+										\WP_CLI::line($baseMsg);
 									}
 									\WP_CLI::line(' ');
 									\WP_CLI::line('---------------------------------------');

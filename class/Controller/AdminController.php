@@ -41,8 +41,15 @@ class AdminController extends \ShortPixel\Controller
 
     public function addAttachmentHook($post_id)
     {
-           $fs = \wpSPIO()->filesystem();
+          $fs = \wpSPIO()->filesystem();
+          
+          // If attachment doesn't come back as an valid image
           $mediaItem = $fs->getImage($post_id, 'media');
+          if (false === $mediaItem)
+          {
+             return;
+          }
+
           $converter = Converter::getConverter($mediaItem, true);
 
             if (is_object($converter) && $converter->isConvertable())

@@ -314,7 +314,7 @@ class FileModel extends \ShortPixel\Model
 
   public function getFileSize()
   {
-		if (! is_null($this->filesize))
+		if (false === is_null($this->filesize))
 		{
 			 return $this->filesize;
 		}

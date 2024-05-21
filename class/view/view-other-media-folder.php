@@ -36,7 +36,7 @@ $this->loadView('custom/part-othermedia-top');
 
 <div class="sp-modal-shade sp-folder-picker-shade" ></div>
     <div class="shortpixel-modal modal-folder-picker shortpixel-hide">
-        <div class="sp-modal-title"><?php esc_html_e('Select the images folder','shortpixel-image-optimiser');?></div>
+        <div class="sp-modal-title"><?php esc_html_e('Select folder to add','shortpixel-image-optimiser');?></div>
         <div class="sp-folder-picker">
 
         </div>
@@ -44,7 +44,8 @@ $this->loadView('custom/part-othermedia-top');
         <input type="button" class="button button-primary select-folder" value="<?php esc_html_e('Add','shortpixel-image-optimiser');?>" disabled>
 
         <span class='sp-folder-picker-selected'>&nbsp;</span>
-        <div class="folder-message hidden ">&nbsp;</div>
+        <div class="folder-message hidden"></div>
+        <div class='description'><?php _e('The greyed out folders are either already active in Custom Media folders or part of the WordPress Media Library', 'shortpixel-image-optimiser'); ?></div>
     </div>
 
 

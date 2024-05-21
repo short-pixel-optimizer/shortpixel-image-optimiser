@@ -84,7 +84,7 @@ class QuotaController
           $DateNow = time();
 
           $DateSubscription = strtotime($quotaData['APILastRenewalDate']);
-          $DaysToReset =  30 - ( (int) (  ( $DateNow  - $DateSubscription) / 84600) % 30);
+          $DaysToReset =  30 - ( (int) (  ( $DateNow  - $DateSubscription) / DAY_IN_SECONDS) % 30);
 
           $quota = (object) [
               'unlimited' => isset($quotaData['Unlimited']) ? $quotaData['Unlimited'] : false,

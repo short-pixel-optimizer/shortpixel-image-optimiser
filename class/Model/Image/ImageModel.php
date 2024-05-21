@@ -64,6 +64,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		const P_OPTIMIZE_PREVENTED = 9;
 		const P_DIRECTORY_NOTWRITABLE = 10;
     const P_EXCLUDE_EXTENSION_PDF = 11;
+    const P_IMAGE_ZERO_SIZE = 12;
 
 		// For restorable status
 		const P_RESTORABLE = 109;
@@ -196,7 +197,8 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         }
 
         if ( $this->isOptimized() || ! $this->exists()  || (! $this->is_virtual() && ! $this->is_writable()) || (! $this->is_virtual() && ! $this->is_directory_writable() || $this->isPathExcluded() || $this->isExtensionExcluded() || $this->isSizeExcluded() )
-				|| $this->isOptimizePrevented() !== false  )
+				|| $this->isOptimizePrevented() !== false
+        || ! $this->isFileSizeOK() )
         {
           if(! $this->is_writable() && $this->processable_status == 0)
 					{
@@ -361,6 +363,9 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 				 case self::P_NOT_OPTIMIZED:
 				 		$message = __('Image is not optimized', 'shortpixel-image-optimiser');
 				 break;
+         case self::P_IMAGE_ZERO_SIZE:
+            $message = __('File seems emtpy, or failure on image size', 'shortpixel-image-optimiser');
+         break;
          default:
             $message = __(sprintf('Unknown Issue, Code %s',  $this->processable_status), 'shortpixel-image-optimiser');
          break;
@@ -1251,6 +1256,23 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
 			 return $bool;
 		}
+
+    protected function isFileSizeOK()
+    {
+      //var_dump($this->getFileName() . ' ' . $this->getFileSize());
+
+    //  clearstatcache();
+      //var_dump(filesize($this->getFullPath())); echo "<BR>";
+        if ($this->is_virtual() || $this->getFileSize() > 0 )
+        {
+
+           return true;
+        }
+        else {
+          $this->processable_status = static::P_IMAGE_ZERO_SIZE;
+          return false;
+        }
+    }
 
     protected function setVirtualToReal($fullpath)
     {

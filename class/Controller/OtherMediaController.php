@@ -27,6 +27,8 @@ class OtherMediaController extends \ShortPixel\Controller
 
     protected static $instance;
 
+
+
     public function __construct()
     {
         parent::__construct();
@@ -338,10 +340,10 @@ class OtherMediaController extends \ShortPixel\Controller
 				}
 				elseif ($old_count < $new_count)
 				{
-					$message = print_f(__(' %s files added', 'shortpixel-image-optimiser'), ($new_count-$old_count));
+					$message = printf(__(' %s files added', 'shortpixel-image-optimiser'), ($new_count-$old_count));
 				}
 				else {
-					$message = print_f(__(' %s files removed', 'shortpixel-image-optimiser'), ($old_count-$new_count));
+					$message = printf(__(' %s files removed', 'shortpixel-image-optimiser'), ($old_count-$new_count));
 				}
 
 				$return['message'] = $message;
@@ -374,6 +376,15 @@ class OtherMediaController extends \ShortPixel\Controller
 
 		}
 
+    private function checkDirStatus()
+    {
+        $status = 0;
+
+
+
+        return $status;
+    }
+
     /* Check if this directory is part of the MediaLibrary */
     public function checkifMediaLibrary(DirectoryModel $directory)
     {
@@ -386,11 +397,13 @@ class OtherMediaController extends \ShortPixel\Controller
         // if it's the uploads base dir, check if the library is year-based, then allow. If all files are in uploads root, don't allow.
       if ($directory->getPath() == $uploadDir->getPath() )
 			{
-				 if ($is_year_based)
+        // uploads always return ok, since if not-date-based still have 'other' folders that might be relevant.
+        return false;
+				 /*if ($is_year_based)
 				 {
 					 	return false;
 				 }
-         return true;
+         return true; */
 			}
       elseif (! $directory->isSubFolderOf($uploadDir))// The easy check. No subdir of uploads, no problem.
 			{
@@ -415,7 +428,6 @@ class OtherMediaController extends \ShortPixel\Controller
 			}
     }
 
-
     public function browseFolder($postDir)
     {
       $error = array('is_error' => true, 'message' => '');
@@ -439,8 +451,9 @@ class OtherMediaController extends \ShortPixel\Controller
          foreach($children as $child)
          {
             if ($child == '.' || $child == '..')
+            {
               continue;
-
+            }
              $path .= '/' . $child;
          }
       }
@@ -454,25 +467,26 @@ class OtherMediaController extends \ShortPixel\Controller
 
       if( $dirObj->exists() ) {
 
-          //$dir = $fs->getDirectory($postDir);
-    //      $files = $dirObj->getFiles();
           $subdirs = $fs->sortFiles($dirObj->getSubDirectories()); // runs through FS sort.
 
 
-          foreach($subdirs as $index => $dir) // weed out the media library subdirectories.
+        /*  foreach($subdirs as $index => $dir) // weed out the media library subdirectories.
           {
-            $dirname = $dir->getName();
+             $dirname = $dir->getName();
+          //   $status = $this->checkifMediaLibrary($dir);
+
 						// @todo This should probably be checked via getBackupDirectory or so, not hardcoded ShortipxelBackups
             if($dirname == 'ShortpixelBackups' || $this->checkifMediaLibrary($dir) )
             {
-               unset($subdirs[$index]);
+              // unset($subdirs[$index]);
             }
-          }
+          } */
 
           if( count($subdirs) > 0 ) {
+              $i = 0;
 
-            //  echo "<ul class='jqueryFileTree'>";
               foreach($subdirs as $dir ) {
+
 
                   $returnDir = substr($dir->getPath(), strlen($rootDirObj->getPath())); // relative to root.
 
@@ -487,27 +501,36 @@ class OtherMediaController extends \ShortPixel\Controller
 
                   if( $dir->exists() ) {
                       //KEEP the spaces in front of the rel values - it's a trick to make WP Hide not replace the wp-content path
-                        //  echo "<li class='directory collapsed'><a rel=' " .esc_attr($htmlRel) . "'>" . esc_html($htmlName) . "</a></li>";
-                        $htmlRel = esc_attr($htmlRel);
-                       $folders[] = array(
+                      //KEEP
+                      $is_active = (true === $folderObj->get('in_db') && false === $folderObj->isRemoved());
+
+
+                       $htmlRel = esc_attr($htmlRel);
+                       $folders[$i] = array(
                           'relpath' => $htmlRel,
                           'name' => esc_html($htmlName),
                           'type' => 'folder',
                           'is_active' => (true === $folderObj->get('in_db') && false === $folderObj->isRemoved()),
+                          'is_disabled' => false,
+                          'fullpath' => $dirpath,
                        );
+
+
+                       if($dirpath == trailingslashit(SHORTPIXEL_BACKUP_FOLDER) || $this->checkifMediaLibrary($dir) )
+                       {
+                          $folders[$i]['is_disabled']  = true;
+                         // unset($subdirs[$index]);
+                       }
                   }
 
+                  $i++;
               }
 
-          //    echo "</ul>";
           }
           elseif ($_POST['dir'] == '/')
           {
             $error['message'] = __('No Directories found that can be added to Custom Folders', 'shortpixel-image-optimiser');
             return $error;
-            /*    echo "<ul class='jqueryFileTree'>";
-            esc_html_e('No Directories found that can be added to Custom Folders', 'shortpixel-image-optimiser');
-            echo "</ul>"; */
           }
           else {
             $error['message'] = 'Nothing found';

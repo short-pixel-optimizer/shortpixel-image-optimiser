@@ -51,7 +51,6 @@ var SpWorker = {
 
    Fetch: async function (data)
    {
-
       var params = new URLSearchParams();
       params.append('action', this.action);
       params.append('bulk-secret', this.secret);

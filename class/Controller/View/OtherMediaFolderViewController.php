@@ -92,7 +92,7 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
     $this->view->settings = new \stdclass;
     $this->view->settings->includeNextGen = $settings->includeNextGen;
 
-    $this->view->title = __('ShortPixel Custom Folders', 'shortpixel-image-optimiser');
+    $this->view->title = __('ShortPixel Custom Media Folders', 'shortpixel-image-optimiser');
     $this->view->show_search = true;
     $this->view->has_filters = true;
 
