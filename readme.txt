@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compressor
 Requires at least: 4.8.0
 Tested up to: 6.5
 Requires PHP: 5.6
-Stable tag: 5.6.0
+Stable tag: 5.6.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -104,6 +104,7 @@ Help us spread the word by recommending ShortPixel to your friends and collect *
 
 **Other plugins by ShortPixel**
 
+* [FastPixel Caching](https://wordpress.org/plugins/fastpixel-website-accelerator/) - WP Optimization made easy
 * [ShortPixel Adaptive Images](https://wordpress.org/plugins/shortpixel-adaptive-images/) - On-the-fly image optimization & CDN delivery
 * [Enable Media Replace](https://wordpress.org/plugins/enable-media-replace/) - Easily replace images or files in Media Library
 * [reGenerate Thumbnails Advanced](https://wordpress.org/plugins/regenerate-thumbnails-advanced/) - Easily regenerate thumbnails
@@ -391,6 +392,16 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 5.6.1 =
+Release date: May 21, 2024
+* Fix: Folders from the uploads folder can now be selected as Custom Media even if the year/month structure is not used;
+* Fix: In certain cases PHP errors were generated when trying to optimize or even upload images;
+* Fix: Some typos caused warnings in some cases;
+* Fix: Fixed a typo regarding the number of seconds in a day (kudos to @JusGu for pointing this out);
+* Fix: Images with a size of 0Kb are no longer processed;
+* Compat: The integration with Formidable Forms now works directly in the Media Library (no need for Custom Media anymore);
+* Language: 5 new strings added, 2 updated, 1 fuzzed, and 2 deprecated.
 
 = 5.6.0 =
 Release date: May 2, 2024
