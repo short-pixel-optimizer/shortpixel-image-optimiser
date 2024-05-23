@@ -4,6 +4,7 @@ namespace ShortPixel;
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
+
 ?>
 
 <section id="tab-settings" class="<?php echo ($this->display_part == 'settings') ? 'sel-tab' :''; ?>" >
@@ -17,6 +18,8 @@ if ( ! defined( 'ABSPATH' ) ) {
     <table class="form-table">
         <tbody>
 					<?php
+
+
  if (true === \wpSPIO()->env()->useTrustedMode())
 					{
 						?>
@@ -349,11 +352,11 @@ if ( ! defined( 'ABSPATH' ) ) {
                     <div class="resize-type-wrap" <?php echo( $view->data->resizeImages ? '' : 'style="display:none;"' );?>>
                         <div class="resize-options-wrap">
                             <label title="<?php esc_html_e('Sizes will be greater or equal to the corresponding value. For example, if you set the resize dimensions at 1000x1200, an image of 2000x3000px will be resized to 1000x1500px while an image of 3000x2000px will be resized to 1800x1200px','shortpixel-image-optimiser');?>">
-                                <input type="radio" name="resizeType" id="resize_type_outer" value="outer" <?php $view->data->resizeType == 'inner' ? '' : 'checked'; ?>>
+                                <input type="radio" name="resizeType" id="resize_type_outer" value="outer" <?php echo esc_attr($view->data->resizeType) == 'inner' ? '' : 'checked'; ?>>
                                 <?php esc_html_e( 'Cover', 'shortpixel-image-optimiser' ); ?>
                             </label><br>
                             <label title="<?php esc_html_e('Sizes will be smaller or equal to the corresponding value. For example, if you set the resize dimensions at 1000x1200, an image of 2000x3000px will be resized to 800x1200px while an image of 3000x2000px will be resized to 1000x667px','shortpixel-image-optimiser');?>">
-                                <input type="radio" name="resizeType" id="resize_type_inner" value="inner" <?php $view->data->resizeType == 'inner' ? 'checked' : ''; ?>>
+                                <input type="radio" name="resizeType" id="resize_type_inner" value="inner" <?php echo esc_attr($view->data->resizeType) == 'inner' ? 'checked' : ''; ?>>
                                 <?php esc_html_e( 'Contain', 'shortpixel-image-optimiser' ); ?>
                             </label><br>
                             <div style="display:inline-block;margin-top: 15px;"><a href="https://shortpixel.com/knowledge-base/article/208-can-shortpixel-automatically-resize-new-image-uploads" class="shortpixel-help-link" target="_blank">

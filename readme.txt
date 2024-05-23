@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compressor
 Requires at least: 4.8.0
 Tested up to: 6.5
 Requires PHP: 5.6
-Stable tag: 5.6.1
+Stable tag: 5.6.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -392,6 +392,11 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 5.6.2 =
+Release date: May 23, 2024
+* Fix: The Cover or Contain setting for resizing was not retained when saving;
+* Language: 0 new strings added, 0 updated, 0 fuzzed, and 0 deprecated.
 
 = 5.6.1 =
 Release date: May 21, 2024
