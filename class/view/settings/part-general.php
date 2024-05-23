@@ -18,7 +18,6 @@ if ( ! defined( 'ABSPATH' ) ) {
     <table class="form-table">
         <tbody>
 					<?php
-					echo "<PRE>"; print_r($view->data->resizeType); echo "</PRE>";
 
 
  if (true === \wpSPIO()->env()->useTrustedMode())
