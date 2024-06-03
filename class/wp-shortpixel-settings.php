@@ -151,8 +151,6 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         	delete_option(self::$_optionsMap['removeSettingsOnDeletePlugin']['key']);
 				}
 
-
-
     }
 
     public static function onDeactivate() {
@@ -205,7 +203,6 @@ class WPShortPixelSettings extends \ShortPixel\Model {
 					 delete_option($option);
 				}
     }
-
 
     public function __get($name)
     {
