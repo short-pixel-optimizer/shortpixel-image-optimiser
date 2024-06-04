@@ -23,7 +23,7 @@ class InstallHelper
   public static function activatePlugin()
   {
       self::deactivatePlugin();
-      $settings = \wpSPIO()->settings();
+
 
       $env = wpSPIO()->env();
 
@@ -40,13 +40,13 @@ class InstallHelper
       $q = $optimizeController->getQueue('media');
       $q->getShortQ()->install(); // create table.
 
+      $settings = \wpSPIO()->settings();
 			$settings->currentVersion = SHORTPIXEL_IMAGE_OPTIMISER_VERSION;
   }
 
   public static function deactivatePlugin()
   {
-
-    $settings = \wpSPIO()->settings();
+    $settings = new \WPShortPixelSettings(); // \wpSPIO()->settings();
 		$settings::onDeactivate();
 
     $env = wpSPIO()->env();
@@ -88,7 +88,8 @@ class InstallHelper
 	public static function hardUninstall()
 	{
 		$env = \wpSPIO()->env();
-		$settings = \wpSPIO()->settings();
+    $settings = new \WPShortPixelSettings(); // \wpSPIO()->settings();
+
 
 
 		$nonce = (isset($_POST['tools-nonce'])) ? sanitize_key($_POST['tools-nonce']) : null;
