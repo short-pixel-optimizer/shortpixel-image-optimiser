@@ -46,7 +46,6 @@ class StatsController extends \ShortPixel\Controller
         }
 
         $stat = $this->model->getStat(array_shift($params));
-
         for($i = 0; $i < count($params); $i++)
         {
             $stat = $stat->grab($params[$i]);

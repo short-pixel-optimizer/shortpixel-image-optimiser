@@ -20,8 +20,8 @@ class StatsModel
 {
 
   // Below are counted and saved in settings
-  protected $totalOptimized; // combined filesize of optimized images
-  protected $totalOriginal;  // combined filesize of original images
+  //protected $totalOptimized; // combined filesize of optimized images
+  //protected $totalOriginal;  // combined filesize of original images
 
   // There are gotten via SQL and saved in stats
   //protected $totalImages;
@@ -90,14 +90,18 @@ class StatsModel
   {
     $settings = \wpSPIO()->settings();
 
-    $this->totalOptimized = $settings->totalOptimized;
-    $this->totalOriginal = $settings->totalOriginal;
+  //  $this->totalOptimized = $settings->totalOptimized;
+  //  $this->totalOriginal = $settings->totalOriginal;
 
-    $stats = $settings->currentStats;
+    $stats = array_filter($settings->currentStats);
 
     // Legacy. Stats from < 5.0 are loaded somehow. Don't load them.
     if (isset($stats['APIKeyValid']))
+		{
       $stats = $this->defaults;
+		}
+
+		$stats = array_merge($stats, $this->defaults); // merge like args to ensure full structure present.
 
     $this->lastUpdate = (isset($stats['time'])) ? $stats['time'] : 0;
 
@@ -149,7 +153,6 @@ class StatsModel
   public function getStat($type)
   {
       $this->currentStat = null;
-
       if (isset($this->stats[$type]))
       {
          $this->currentStat = $this->stats[$type];
@@ -161,11 +164,10 @@ class StatsModel
 
   public function grab($data)
   {
-
      if (is_null($this->currentStat))
           return null;
 
-       if (array_key_exists($data, $this->currentStat))
+       if (is_array($this->currentStat) && array_key_exists($data, $this->currentStat))
        {
           $this->currentStat = $this->currentStat[$data];
           $this->path[] = $data;

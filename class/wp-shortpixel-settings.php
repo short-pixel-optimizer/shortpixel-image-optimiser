@@ -1,6 +1,8 @@
 <?php
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
+use ShortPixel\Model\SettingsModel as SettingsModel;
+
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
@@ -21,7 +23,7 @@ class WPShortPixelSettings extends \ShortPixel\Model {
 
     private static $_optionsMap = array(
         //This one is accessed also directly via get_option
-      //  'frontBootstrap' => array('key' => 'wp-short-pixel-front-bootstrap', 'default' => null, 'group' => 'options'), //set to 1 when need the plugin active for logged in user in the front-end
+        'frontBootstrap' => array('key' => 'wp-short-pixel-front-bootstrap', 'default' => null, 'group' => 'options'), //set to 1 when need the plugin active for logged in user in the front-end
       //  'lastBackAction' => array('key' => 'wp-short-pixel-last-back-action', 'default' => null, 'group' => 'state'), //when less than 10 min. passed from this timestamp, the front-bootstrap is ineffective.
 
         //optimization options
@@ -74,9 +76,9 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         'thumbsCount' => array('key' => 'wp-short-pixel-thumbnail-count', 'default' => 0, 'group' => 'state'),
         'under5Percent' => array('key' => 'wp-short-pixel-files-under-5-percent', 'default' => 0, 'group' => 'state'),
         'savedSpace' => array('key' => 'wp-short-pixel-savedSpace', 'default' => 0, 'group' => 'state'),
-        'apiRetries' => array('key' => 'wp-short-pixel-api-retries', 'default' => 0, 'group' => 'state'),
-        'totalOptimized' => array('key' => 'wp-short-pixel-total-optimized', 'default' => 0, 'group' => 'state'),
-        'totalOriginal' => array('key' => 'wp-short-pixel-total-original', 'default' => 0, 'group' => 'state'),
+       // 'apiRetries' => array('key' => 'wp-short-pixel-api-retries', 'default' => 0, 'group' => 'state'),
+      //  'totalOptimized' => array('key' => 'wp-short-pixel-total-optimized', 'default' => 0, 'group' => 'state'),
+      //  'totalOriginal' => array('key' => 'wp-short-pixel-total-original', 'default' => 0, 'group' => 'state'),
         'quotaExceeded' => array('key' => 'wp-short-pixel-quota-exceeded', 'default' => 0, 'group' => 'state'),
         'httpProto' => array('key' => 'wp-short-pixel-protocol', 'default' => 'https', 'group' => 'state'),
         'downloadProto' => array('key' => 'wp-short-pixel-download-protocol', 'default' => null, 'group' => 'state'),
@@ -151,7 +153,22 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         	delete_option(self::$_optionsMap['removeSettingsOnDeletePlugin']['key']);
 				} */
 
-        //$settingsModel = 
+        $settingsModel = SettingsModel::getInstance();
+				$updated = false;
+
+				foreach(self::$_optionsMap as $option_name => $data)
+				{
+					 $value = self::getOpt($data['key'], $data['default']);
+					 $bool = $settingsModel->setIfEmpty($option_name, $value);
+
+					 // Remove setting if set, or if it doesn't exist in model anymore
+					 if (true === $bool || false === $settingsModel->exists($option_name))
+					 {
+						  delete_option($data['key']);
+					 		$updated = true;
+					 }
+				}
+
 
     }
 
@@ -203,6 +220,13 @@ class WPShortPixelSettings extends \ShortPixel\Model {
           'wp-short-pixel-cloudflareAPIEmail',
           'wp-short-pixel-cloudflareAuthKey',
           'wp-short-pixel-front-bootstrap',
+					'wp-short-pixel-api-retries',
+					'wp-short-pixel-total-optimized',
+					'wp-short-pixel-total-original',
+					'wp-short-pixel-download-archive',
+					'wp-short-pixel-converted-png2jpg',
+
+
         ];
 
 				$toRemove = array_merge($bulkLegacyOptions, $removedStats, $removedOptions, $settingsRevamp);

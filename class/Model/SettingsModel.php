@@ -7,13 +7,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
-class SettingsModel
+class SettingsModel extends \ShortPixel\Model
 {
 		protected static $instance;
 
 		private $option_name = 'spio_settings';
 
 		private $state_name = 'spio_states';
+
+		private $updated = false;
 
 
 		protected $model = array(
@@ -50,6 +52,20 @@ class SettingsModel
         'savedSpace' => array('s' => 'skip'),
         'fileCount' => array('s' => 'skip'), // int
         'under5Percent' => array('s' => 'skip'), // int
+				'doBackgroundProcess' => array('s' => 'boolean'), // checkbox'
+				'showCustomMedia' => array('s' => 'boolean'),
+				'mediaLibraryViewMode' => array('s' => 'int'), // set in installhelper
+				'currentVersion' => array('s' => 'string'), // last known version of plugin. Used for updating
+				'hasCustomFolders' => array('s' => 'int'), // timestamp used for custom folders
+				'quotaExceeded' => array('s' => 'int'), // indicator for quota
+				'httpProto' => array('s' => 'string'), // Less than optimal setting for using http(s)
+				'downloadProto' => array('s' => 'string'), // Less than optimal setting for using http(s) when Downloading
+				'activationDate' => array('s' => 'int'), // date of activation
+				'redirectedSettings' => array('s' => 'int'), // controls initial redirect to SPIO settings
+				'unlistedCounter' => array('s' => 'int'), // counter to prevent checking unlisted files too much
+				'currentStats' => array('s' => 'array'), // whatever the current stats are.
+
+
     );
 
 		protected $settings;
@@ -62,6 +78,7 @@ class SettingsModel
 
 		}
 
+
 		public static function getInstance()
 		{
 			 if (is_null(self::$instance))
@@ -73,11 +90,13 @@ class SettingsModel
 
 		protected function load()
 		{
-			 $settings = get_option($this->option_name);
+			 $this->settings = get_option($this->option_name);
+			 register_shutdown_function(array($this, 'onShutdown'));
 		}
 
 		protected function save()
 		{
+				Log::addTemp('Save Settings', $this->settings);
 				update_option($this->option_name, $this->settings);
 		}
 
@@ -98,7 +117,9 @@ class SettingsModel
     {
       if (isset($this->model[$name]))
       {
+				Log::addTemp('Setting updated - ' . $name, $value);
         $this->settings[$name] =  $this->sanitize($name, $value);
+				$this->updated = true;
       }
       else {
          Log::addWarn('Setting ' . $name . ' not defined in settingsModel');
@@ -107,13 +128,48 @@ class SettingsModel
 
     public function setIfEmpty($name, $value)
     {
-        if (! isset($this->settings[$name]))
+        if (true === $this->exists($name) && false === $this->isset($name))
         {
            $this->set($name, $value);
+					 return true;
         }
+
+				return false;
     }
 
-  //  public static function 
+		// Simple function which can be expanded.
+		public function exists($name)
+		{
+			  return (isset($this->module[$name])) ? true : false;
+		}
+
+		public function isset($name)
+		{
+			return (isset($this->settings[$name])) ? true : false;
+
+		}
+
+		public function deleteOption($name)
+		{
+				if ($this->exists($name) && $this->isset($name))
+				{
+					 unset($this->settings[$name]);
+					 $this->save();
+				}
+		}
+
+		private function onShutdown()
+		{
+				if (true === $this->updated)
+				{
+						Log::addTemp('Saving Settings');
+						$this->save();
+				}
+
+		}
+
+
+  //  public static function
 
 
 

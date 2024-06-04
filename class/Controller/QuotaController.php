@@ -200,6 +200,7 @@ class QuotaController
           }
 
           $requestURL = $settings->httpProto . '://' . SHORTPIXEL_API . '/v2/api-status.php';
+					Log::addTemp('RequestURL' . $requestURL);
           $args = array(
               'timeout'=> 15, // wait for 15 secs.
               'body' => array('key' => $apiKey)

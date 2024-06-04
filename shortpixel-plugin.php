@@ -731,8 +731,9 @@ class ShortPixelPlugin {
 
 		if ( $version !== $db_version ) {
 			InstallHelper::activatePlugin();
-		}
 			$this->settings()->currentVersion = $version;
+
+		}
 	}
 
 

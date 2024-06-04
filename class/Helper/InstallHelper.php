@@ -57,12 +57,13 @@ class InstallHelper
 		}
 
     // save remove.
+		/* @ToDO !! Reactivcate this :
     $fs = new FileSystemController();
     $log = $fs->getFile(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
 
     if ($log->exists())
      $log->delete();
-
+*/
     global $wpdb;
     $sql = "delete from " . $wpdb->options . " where option_name like '%_transient_shortpixel%'";
     $wpdb->query($sql); // remove transients.
