@@ -21,7 +21,7 @@ class WPShortPixelSettings extends \ShortPixel\Model {
 
     private static $_optionsMap = array(
         //This one is accessed also directly via get_option
-        'frontBootstrap' => array('key' => 'wp-short-pixel-front-bootstrap', 'default' => null, 'group' => 'options'), //set to 1 when need the plugin active for logged in user in the front-end
+      //  'frontBootstrap' => array('key' => 'wp-short-pixel-front-bootstrap', 'default' => null, 'group' => 'options'), //set to 1 when need the plugin active for logged in user in the front-end
       //  'lastBackAction' => array('key' => 'wp-short-pixel-last-back-action', 'default' => null, 'group' => 'state'), //when less than 10 min. passed from this timestamp, the front-bootstrap is ineffective.
 
         //optimization options
@@ -54,8 +54,8 @@ class WPShortPixelSettings extends \ShortPixel\Model {
 				'showCustomMedia' => array('key' => 'wp-short-pixel-show-custom-media', 'default' => 1, 'group' => 'options'),
 
         //CloudFlare
-        'cloudflareEmail'   => array( 'key' => 'wp-short-pixel-cloudflareAPIEmail', 'default' => '', 'group' => 'options'),
-        'cloudflareAuthKey' => array( 'key' => 'wp-short-pixel-cloudflareAuthKey', 'default' => '', 'group' => 'options'),
+        /*'cloudflareEmail'   => array( 'key' => 'wp-short-pixel-cloudflareAPIEmail', 'default' => '', 'group' => 'options'),
+        'cloudflareAuthKey' => array( 'key' => 'wp-short-pixel-cloudflareAuthKey', 'default' => '', 'group' => 'options'), */
         'cloudflareZoneID'  => array( 'key' => 'wp-short-pixel-cloudflareAPIZoneID', 'default' => '', 'group' => 'options'),
         'cloudflareToken'   => array( 'key' => 'wp-short-pixel-cloudflareToken', 'default' => '', 'group' => 'options'),
 
@@ -115,12 +115,12 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         'excludePatterns' => array('s' => 'exception'), //  - processed, multi-layer, so skip
         'siteAuthUser' => array('s' => 'string'), // string
         'siteAuthPass' => array('s' => 'string'), // string
-        'frontBootstrap' => array('s' =>'boolean'), // checkbox
+      //  'frontBootstrap' => array('s' =>'boolean'), // checkbox
         'autoMediaLibrary' => array('s' => 'boolean'), // checkbox
         'doBackgroundProcess' => array('s' => 'boolean'), // checkbox
         'excludeSizes' => array('s' => 'array'), // Array
-        'cloudflareEmail' => array('s' => 'string'), // string
-        'cloudflareAuthKey' => array('s' => 'string'), // string
+      //  'cloudflareEmail' => array('s' => 'string'), // string
+      //  'cloudflareAuthKey' => array('s' => 'string'), // string
         'cloudflareZoneID' => array('s' => 'string'), // string
         'cloudflareToken' => array('s' => 'string'),
         'savedSpace' => array('s' => 'skip'),
@@ -142,14 +142,16 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         }
         update_option( 'wp-short-pixel-activation-date', time(), 'no');
 
-			  delete_option( 'wp-short-pixel-bulk-last-status'); // legacy shizzle
         delete_option( 'wp-short-pixel-current-total-files');
-				delete_option('wp-short-pixel-remove-settings-on-delete-plugin');
+				//delete_option('wp-short-pixel-remove-settings-on-delete-plugin');
 
+        /*
 				if (isset(self::$_optionsMap['removeSettingsOnDeletePlugin']) && isset(self::$_optionsMap['removeSettingsOnDeletePlugin']['key']))
 				{
         	delete_option(self::$_optionsMap['removeSettingsOnDeletePlugin']['key']);
-				}
+				} */
+
+        //$settingsModel = 
 
     }
 
@@ -196,7 +198,14 @@ class WPShortPixelSettings extends \ShortPixel\Model {
 						'wp-short-pixel-front-bootstrap',
 				);
 
-				$toRemove = array_merge($bulkLegacyOptions, $removedStats, $removedOptions);
+        // Settings completely removed during the settings redo
+        $settingsRevamp = [
+          'wp-short-pixel-cloudflareAPIEmail',
+          'wp-short-pixel-cloudflareAuthKey',
+          'wp-short-pixel-front-bootstrap',
+        ];
+
+				$toRemove = array_merge($bulkLegacyOptions, $removedStats, $removedOptions, $settingsRevamp);
 
 				foreach($toRemove as $option)
 				{

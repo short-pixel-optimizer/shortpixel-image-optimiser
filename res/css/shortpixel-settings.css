@@ -555,32 +555,36 @@
   float: none;
 }
 
-.cf_switch label {
-  width: 100%;
-  margin: 0 -2px;
-  background-color: #e2faff;
-  display: inline-block;
-}
-.cf_switch label span {
-  padding: 8px 0px 8px 15px;
-  display: block;
-}
-.cf_switch label input {
-  display: none;
-}
-.cf_switch label input:checked + span {
-  background-color: #0085ba;
-  color: #F7F7F7;
-}
-.cf_switch.global-hidden label {
-  cursor: default;
-}
-.cf_switch.global-hidden input:checked + span {
-  background-color: #fff;
-  color: #000;
-  padding-left: 0;
-}
+/*
+.cf_switch
+{
 
+  label {
+    width: 100%;
+  	margin: 0 -2px;
+  	background-color: #e2faff;
+  	display: inline-block;
+
+
+    span
+    {
+      padding:8px 0px 8px 15px;
+      display:block;
+    }
+    input {
+      display: none;
+    }
+    input:checked + span
+    {
+      background-color:#0085ba;
+      color:#F7F7F7;
+    }
+  }
+
+
+
+}
+*/
 #tab-tools .button {
   min-height: 44px;
 }

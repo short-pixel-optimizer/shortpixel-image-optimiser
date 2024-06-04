@@ -184,30 +184,6 @@ if ( ! defined( 'ABSPATH' ) ) {
                 </td>
             </tr>
 
-						<?php if ( $view->data->frontBootstrap == 1):  ?>
-
-
-            <tr id="frontBootstrapRow">
-                <th scope="row"><?php esc_html_e('Process in the front-end','shortpixel-image-optimiser');?></th>
-                <td>
-                    <input name="frontBootstrap" type="checkbox" id="frontBootstrap" value="1" <?php checked( $view->data->frontBootstrap, '1' );?>>
-                    <label for="frontBootstrap"><?php esc_html_e('Automatically optimize images added by users in front-end of the site.','shortpixel-image-optimiser');?></label>
-
-                </td>
-            </tr>
-						<tr>
-							<th scope='row'>&nbsp;</th>
-							<td>
-                             <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/536-why-is-the-option-process-in-the-front-end-gone"></span></div>
-								<div class='view-notice warning'><p><?php esc_html_e('Important. From version 5 the front processing option is no longer available. There will be no processing on the frontend. To enable optimizing images without visiting the backend, please see the options available for command line optimization.', 'shortpixel-image-optimiser') ?></p>
-									<p><?php esc_html_e('To turn off this message, click the checkbox and save settings', 'shortpixel-image-optimiser'); ?></p>
-								</div>
-							</td>
-						</tr>
-
-					<?php endif; ?>
-
-
 
             <?php if($this->has_nextgen) { ?>
             <tr>

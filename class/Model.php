@@ -15,9 +15,8 @@ abstract class Model
     $data = array();
     foreach($this->model as $item => $options)
     {
-
-      $data[$item] = $this->{$item};
-
+      //if (property_exists($this, $item))
+        $data[$item] = $this->{$item};
     }
     return $data;
   }
@@ -123,10 +122,12 @@ abstract class Model
   {
     return (string) sanitize_text_field($string);
   }
+
   public function sanitizeInteger($int)
   {
     return intval($int);
   }
+
   public function sanitizeBoolean($bool)
   {
       return ($bool) ? true : false;

@@ -12,7 +12,9 @@ class SettingsModel
 		protected static $instance;
 
 		private $option_name = 'spio_settings';
+
 		private $state_name = 'spio_states';
+
 
 		protected $model = array(
         'apiKey' => array('s' => 'string'), // string
@@ -50,16 +52,12 @@ class SettingsModel
         'under5Percent' => array('s' => 'skip'), // int
     );
 
-		protected $state = array(
-
-		);
-
 		protected $settings;
-		protected $states;
+	//	protected $states;
 
 		public function __construct()
 		{
-			 $this->checkLegacy();
+			 //$this->checkLegacy();
 			 $this->load();
 
 		}
@@ -91,126 +89,32 @@ class SettingsModel
 			 }
 		}
 
-		protected function checkLegacy()
-		{
-				$this->deleteLegacy(); // very legacy, unused
-			//	$this->convertLegacy(); // legacy, move to new format.
-		}
+    public function __set($name, $value)
+    {
+      $this->set($name, $value);
+    }
 
-		public function convertLegacy()
-		{
-				$options = array(
-		        //optimization options
-		        'apiKey' => array('key' => 'wp-short-pixel-apiKey'),
-		        'verifiedKey' => array('key' => 'wp-short-pixel-verifiedKey'),
-		        'compressionType' => array('key' => 'wp-short-pixel-compression'),
-		        'processThumbnails' => array('key' => 'wp-short-process_thumbnails'),
-						'useSmartcrop' => array('key' => 'wpspio-usesmartcrop'),
-		        'keepExif' => array('key' => 'wp-short-pixel-keep-exif'),
-		        'CMYKtoRGBconversion' => array('key' => 'wp-short-pixel_cmyk2rgb'),
-		        'createWebp' => array('key' => 'wp-short-create-webp'),
-		        'createAvif' => array('key' => 'wp-short-create-avif'),
-		        'deliverWebp' => array('key' => 'wp-short-pixel-create-webp-markup'),
-		        'optimizeRetina' => array('key' => 'wp-short-pixel-optimize-retina'),
-		        'optimizeUnlisted' => array('key' => 'wp-short-pixel-optimize-unlisted'),
-		        'backupImages' => array('key' => 'wp-short-backup_images'),
-		        'resizeImages' => array('key' => 'wp-short-pixel-resize-images'),
-		        'resizeType' => array('key' => 'wp-short-pixel-resize-type'),
-		        'resizeWidth' => array('key' => 'wp-short-pixel-resize-width'),
-		        'resizeHeight' => array('key' => 'wp-short-pixel-resize-height'),
-		        'siteAuthUser' => array('key' => 'wp-short-pixel-site-auth-user'),
-		        'siteAuthPass' => array('key' => 'wp-short-pixel-site-auth-pass'),
-		        'autoMediaLibrary' => array('key' => 'wp-short-pixel-auto-media-library'),
-		        'optimizePdfs' => array('key' => 'wp-short-pixel-optimize-pdfs'),
-		        'excludePatterns' => array('key' => 'wp-short-pixel-exclude-patterns'),
-		        'png2jpg' => array('key' => 'wp-short-pixel-png2jpg'),
-		        'excludeSizes' => array('key' => 'wp-short-pixel-excludeSizes'),
-						'currentVersion' => array('key' => 'wp-short-pixel-currentVersion'),
+    protected function set($name, $value)
+    {
+      if (isset($this->model[$name]))
+      {
+        $this->settings[$name] =  $this->sanitize($name, $value);
+      }
+      else {
+         Log::addWarn('Setting ' . $name . ' not defined in settingsModel');
+      }
+    }
 
-		        //CloudFlare
-		        'cloudflareEmail'   => array( 'key' => 'wp-short-pixel-cloudflareAPIEmail'),
-		        'cloudflareAuthKey' => array( 'key' => 'wp-short-pixel-cloudflareAuthKey'),
-		        'cloudflareZoneID'  => array( 'key' => 'wp-short-pixel-cloudflareAPIZoneID'),
-		        'cloudflareToken'   => array( 'key' => 'wp-short-pixel-cloudflareToken'),
+    public function setIfEmpty($name, $value)
+    {
+        if (! isset($this->settings[$name]))
+        {
+           $this->set($name, $value);
+        }
+    }
 
-		        //optimize other images than the ones in Media Library
-		        'includeNextGen' => array('key' => 'wp-short-pixel-include-next-gen'),
-		        'hasCustomFolders' => array('key' => 'wp-short-pixel-has-custom-folders'),
-		        'customBulkPaused' => array('key' => 'wp-short-pixel-custom-bulk-paused'),
+  //  public static function 
 
-		        //stats, notices, etc.
-						// @todo Most of this can go. See state machine comment.
 
-		        'currentStats' => array('key' => 'wp-short-pixel-current-total-files'),
-		        'fileCount' => array('key' => 'wp-short-pixel-fileCount'),
-		        'thumbsCount' => array('key' => 'wp-short-pixel-thumbnail-count'),
-		        'under5Percent' => array('key' => 'wp-short-pixel-files-under-5-percent'),
-		        'savedSpace' => array('key' => 'wp-short-pixel-savedSpace'),
-		        'apiRetries' => array('key' => 'wp-short-pixel-api-retries'),
-		        'totalOptimized' => array('key' => 'wp-short-pixel-total-optimized'),
-		        'totalOriginal' => array('key' => 'wp-short-pixel-total-original'),
-		        'quotaExceeded' => array('key' => 'wp-short-pixel-quota-exceeded'),
-		        'httpProto' => array('key' => 'wp-short-pixel-protocol'),
-		        'downloadProto' => array('key' => 'wp-short-pixel-download-protocol'),
-
-						'downloadArchive' => array('key' => 'wp-short-pixel-download-archive'),
-
-		        'activationDate' => array('key' => 'wp-short-pixel-activation-date'),
-		        'mediaLibraryViewMode' => array('key' => 'wp-short-pixel-view-mode'),
-		        'redirectedSettings' => array('key' => 'wp-short-pixel-redirected-settings'),
-		        'convertedPng2Jpg' => array('key' => 'wp-short-pixel-converted-png2jpg'),
-		    );
-		}
-
-		private function deleteLegacy()
-		{
-			delete_option('wp-short-pixel-activation-notice');
-			delete_option('wp-short-pixel-bulk-last-status'); // legacy shizzle
-			delete_option('wp-short-pixel-current-total-files');
-			delete_option('wp-short-pixel-remove-settings-on-delete-plugin');
-
-			// Bulk State machine legacy
-			$bulkLegacyOptions = array(
-					'wp-short-pixel-bulk-type',
-					'wp-short-pixel-bulk-last-status',
-					'wp-short-pixel-query-id-start',
-					'wp-short-pixel-query-id-stop',
-					'wp-short-pixel-bulk-count',
-					'wp-short-pixel-bulk-previous-percent',
-					'wp-short-pixel-bulk-processed-items',
-					'wp-short-pixel-bulk-done-count',
-					'wp-short-pixel-last-bulk-start-time',
-					'wp-short-pixel-last-bulk-success-time',
-					'wp-short-pixel-bulk-running-time',
-					'wp-short-pixel-cancel-pointer',
-					'wp-short-pixel-skip-to-custom',
-					'wp-short-pixel-bulk-ever-ran',
-					'wp-short-pixel-flag-id',
-					'wp-short-pixel-failed-imgs',
-					'bulkProcessingStatus',
-					'wp-short-pixel-prioritySkip',
-			);
-
-			$removedStats = array(
-					'wp-short-pixel-helpscout-optin',
-					'wp-short-pixel-activation-notice',
-					'wp-short-pixel-dismissed-notices',
-					'wp-short-pixel-media-alert',
-			);
-
-			$removedOptions = array(
-					'wp-short-pixel-remove-settings-on-delete-plugin',
-					'wp-short-pixel-custom-bulk-paused',
-					'wp-short-pixel-last-back-action',
-					'wp-short-pixel-front-bootstrap',
-			);
-
-			$toRemove = array_merge($bulkLegacyOptions, $removedStats, $removedOptions);
-
-			foreach($toRemove as $option)
-			{
-				 delete_option($option);
-			}
-		}
 
 } // class

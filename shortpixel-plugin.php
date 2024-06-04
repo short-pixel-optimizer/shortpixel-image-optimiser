@@ -23,7 +23,7 @@ use ShortPixel\Helper\InstallHelper as InstallHelper;
 use ShortPixel\Helper\UiHelper as UiHelper;
 
 use ShortPixel\Model\AccessModel as AccessModel;
-
+use ShortPixel\Model\SettingsModel as SettingsModel;
 
 /** Plugin class
  * This class is meant for: WP Hooks, init of runtime and Controller Routing.
@@ -106,7 +106,7 @@ class ShortPixelPlugin {
      */
 	public function settings() {
 		if ( is_null( $this->settings ) ) {
-			$this->settings = new \WPShortPixelSettings();
+			$this->settings = SettingsModel::getInstance(); // new \WPShortPixelSettings();
 		}
 
 		return $this->settings;
@@ -726,7 +726,7 @@ class ShortPixelPlugin {
 	}
 
 	protected function check_plugin_version() {
-           $version     = SHORTPIXEL_IMAGE_OPTIMISER_VERSION;
+      $version     = SHORTPIXEL_IMAGE_OPTIMISER_VERSION;
 			$db_version = $this->settings()->currentVersion;
 
 		if ( $version !== $db_version ) {

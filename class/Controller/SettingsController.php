@@ -13,6 +13,7 @@ use ShortPixel\Helper\InstallHelper as InstallHelper;
 
 use ShortPixel\Model\ApiKeyModel as ApiKeyModel;
 use ShortPixel\Model\AccessModel as AccessModel;
+use ShortPixel\Model\SettingsModel as SettingsModel;
 
 use ShortPixel\NextGenController as NextGenController;
 
@@ -431,7 +432,6 @@ class SettingsController extends \ShortPixel\ViewController
          $this->view->data->apiKey = $keyController->getKeyForDisplay();
 
          $this->loadStatistics();
-				 $this->checkCloudFlare();
 
          $statsControl = StatsController::getInstance();
 
@@ -447,7 +447,7 @@ class SettingsController extends \ShortPixel\ViewController
 
          $this->view->allThumbSizes = $excludeOptions;
          $this->view->averageCompression = $statsControl->getAverageCompression();
-         $this->view->savedBandwidth = UiHelper::formatBytes( intval($this->view->data->savedSpace) * 10000,2);
+        // $this->view->savedBandwidth = UiHelper::formatBytes( intval($this->view->data->savedSpace) * 10000,2);
 
          $this->view->cloudflare_constant = defined('SHORTPIXEL_CFTOKEN') ? true : false;
 
@@ -491,26 +491,7 @@ class SettingsController extends \ShortPixel\ViewController
 				*/
       }
 
-			/** @todo Remove this check in Version 5.1 including all data on the old CF token */
-			protected function checkCloudFlare()
-			{
-          $settings = \wpSPIO()->settings();
 
-
-				 $authkey = $settings->cloudflareAuthKey;
-				 $this->view->hide_cf_global = true;
-
-				 if (strlen($authkey) > 0)
-				 {
-					 $message = '<h3> ' . __('Cloudflare', 'shortpixel-image-optimiser') . '</h3>';
-					 $message .= '<p>' . __('It appears that you are using the Cloudflare Global API key. As it is not as safe as the Cloudflare Token, it will be removed in the next version. Please, switch to the token.', 'shortpixel-image-optimiser') . '</p>';
-				 	 $message .= '<p>' . sprintf(__('%s How to set up the Cloudflare Token %s', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/325-using-shortpixel-image-optimizer-with-cloudflare-api-token" target="_blank">', '</a>') . '</p>';
-
-					  Notice::addNormal($message);
-						$this->view->hide_cf_global = false;
-				 }
-
-			}
 
       /** Checks on things and set them for information. */
       protected function loadEnv()
@@ -628,7 +609,7 @@ class SettingsController extends \ShortPixel\ViewController
 
           $post = $this->processWebp($post);
           $post = $this->processExcludeFolders($post);
-          $post = $this->processCloudFlare($post);
+        //  $post = $this->processCloudFlare($post);
 
           parent::processPostData($post);
 
@@ -693,8 +674,6 @@ class SettingsController extends \ShortPixel\ViewController
         foreach($exclusions as $index => $exclusions)
         {
             $accepted[] = json_decode(html_entity_decode( stripslashes($exclusions)), true);
-
-
         }
 
         foreach($accepted as $index => $pair)
@@ -756,25 +735,6 @@ class SettingsController extends \ShortPixel\ViewController
         return $post;
       }
 
-      protected function processCloudFlare($post)
-      {
-        if (isset($post['cf_auth_switch']) && $post['cf_auth_switch'] == 'token')
-        {
-            if (isset($post['cloudflareAuthKey']))
-              unset($post['cloudflareAuthKey']);
-
-            if (isset($post['cloudflareEmail']))
-              unset($post['cloudflareEmail']);
-
-        }
-        elseif (isset($post['cloudflareAuthKey']) && $post['cf_auth_switch'] == 'global')
-        {
-            if (isset($post['cloudflareToken']))
-               unset($post['cloudflareToken']);
-        }
-
-        return $post;
-      }
 
 
       protected function doRedirect($redirect = 'self')
