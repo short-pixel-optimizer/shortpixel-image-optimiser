@@ -21,49 +21,43 @@ class SettingsModel extends \ShortPixel\Model
 		protected $model = array(
 //        'apiKey' => array('s' => 'string'), // string
 //        'verifiedKey' => array('s' => 'int'), // string
-        'compressionType' => array('s' => 'int', 'default' => 1), // int
-        'resizeWidth' => array('s' => 'int' , 'default' => 0), // int
-        'resizeHeight' => array('s' => 'int', 'default' => 0), // int
-        'processThumbnails' => array('s' => 'boolean', 'default' => true), // checkbox
-				'useSmartcrop' => array('s' => 'boolean', 'default' => false),
-        'backupImages' => array('s' => 'boolean', 'default' => true), // checkbox
-        'keepExif' => array('s' => 'int', 'default' => 0), // checkbox
-        'resizeImages' => array('s' => 'boolean', 'default' => false),
-        'resizeType' => array('s' => 'string', 'default' => null),
-        'includeNextGen' => array('s' => 'boolean', ), // checkbox
-        'png2jpg' => array('s' => 'int'), // checkbox
-        'CMYKtoRGBconversion' => array('s' => 'boolean'), //checkbox
-        'createWebp' => array('s' => 'boolean'), // checkbox
-        'createAvif' => array('s' => 'boolean'),  // checkbox
-        'deliverWebp' => array('s' => 'int'), // checkbox
-        'optimizeRetina' => array('s' => 'boolean'), // checkbox
-        'optimizeUnlisted' => array('s' => 'boolean'), // $checkbox
-        'optimizePdfs' => array('s' => 'boolean'), //checkbox
-        'excludePatterns' => array('s' => 'exception'), //  - processed, multi-layer, so skip
-        'siteAuthUser' => array('s' => 'string'), // string
-        'siteAuthPass' => array('s' => 'string'), // string
-        'frontBootstrap' => array('s' =>'boolean'), // checkbox
-        'autoMediaLibrary' => array('s' => 'boolean'), // checkbox
-        'excludeSizes' => array('s' => 'array'), // Array
-        'cloudflareEmail' => array('s' => 'string'), // string
-        'cloudflareAuthKey' => array('s' => 'string'), // string
-        'cloudflareZoneID' => array('s' => 'string'), // string
-        'cloudflareToken' => array('s' => 'string'),
-        'savedSpace' => array('s' => 'skip'),
-        'fileCount' => array('s' => 'skip'), // int
-        'under5Percent' => array('s' => 'skip'), // int
-				'doBackgroundProcess' => array('s' => 'boolean'), // checkbox'
-				'showCustomMedia' => array('s' => 'boolean'),
-				'mediaLibraryViewMode' => array('s' => 'int'), // set in installhelper
-				'currentVersion' => array('s' => 'string'), // last known version of plugin. Used for updating
-				'hasCustomFolders' => array('s' => 'int'), // timestamp used for custom folders
-				'quotaExceeded' => array('s' => 'int'), // indicator for quota
-				'httpProto' => array('s' => 'string'), // Less than optimal setting for using http(s)
-				'downloadProto' => array('s' => 'string'), // Less than optimal setting for using http(s) when Downloading
-				'activationDate' => array('s' => 'int'), // date of activation
-				'redirectedSettings' => array('s' => 'int'), // controls initial redirect to SPIO settings
-				'unlistedCounter' => array('s' => 'int'), // counter to prevent checking unlisted files too much
-				'currentStats' => array('s' => 'array'), // whatever the current stats are.
+        'compressionType' => ['s' => 'int', 'default' => 1], // int
+        'resizeWidth' => ['s' => 'int' , 'default' => 0], // int
+        'resizeHeight' => ['s' => 'int', 'default' => 0], // int
+        'processThumbnails' => ['s' => 'boolean', 'default' => true], // checkbox
+				'useSmartcrop' => ['s' => 'boolean', 'default' => false],
+        'backupImages' => ['s' => 'boolean', 'default' => true], // checkbox
+        'keepExif' => ['s' => 'int', 'default' => 0], // checkbox
+        'resizeImages' => ['s' => 'boolean', 'default' => false],
+        'resizeType' => ['s' => 'string', 'default' => null],
+        'includeNextGen' => ['s' => 'boolean', 'default' =>  false ], // checkbox
+        'png2jpg' => ['s' => 'int', 'default' => 0], // checkbox
+        'CMYKtoRGBconversion' => ['s' => 'boolean', 'default' => true], //checkbox
+        'createWebp' => ['s' => 'boolean', 'default' => false], // checkbox
+        'createAvif' => ['s' => 'boolean', 'default' => false],  // checkbox
+        'deliverWebp' => ['s' => 'int', 'default' => 0], // checkbox
+        'optimizeRetina' => ['s' => 'boolean', 'default' => false], // checkbox
+        'optimizeUnlisted' => ['s' => 'boolean', 'default' => false], // checkbox
+        'optimizePdfs' => ['s' => 'boolean', 'default' => true], //checkbox
+        'excludePatterns' => ['s' => 'exception', 'default' => array()], //  - processed, multi-layer, so skip
+        'siteAuthUser' => ['s' => 'string', 'default' => ''], // string
+        'siteAuthPass' => ['s' => 'string', 'default' => ''], // string
+        'autoMediaLibrary' => ['s' => 'boolean', 'default' => true], // checkbox
+        'excludeSizes' => ['s' => 'array', 'default' => array()], // Array
+        'cloudflareZoneID' => ['s' => 'string', 'default' => ''], // string
+        'cloudflareToken' => ['s' => 'string', 'default' => ''],
+				'doBackgroundProcess' => ['s' => 'boolean', 'default' => false], // checkbox'
+				'showCustomMedia' => ['s' => 'boolean', 'default' => true],
+				'mediaLibraryViewMode' => ['s' => 'int', 'default' => false], // set in installhelper
+				'currentVersion' => ['s' => 'string', 'default' => null], // last known version of plugin. Used for updating
+				'hasCustomFolders' => ['s' => 'int', 'default' => false], // timestamp used for custom folders
+				'quotaExceeded' => ['s' => 'int', 'default' => 0], // indicator for quota
+				'httpProto' => ['s' => 'string', 'default' => 'https'], // Less than optimal setting for using http(s)
+				'downloadProto' => ['s' => 'string', 'default' => 'https'], // Less than optimal setting for using http(s) when Downloading
+				'activationDate' => ['s' => 'int', 'default' => null], // date of activation
+				'redirectedSettings' => ['s' => 'int', 'default' => null], // controls initial redirect to SPIO settings
+				'unlistedCounter' => ['s' => 'int', 'default' => 0], // counter to prevent checking unlisted files too much
+				'currentStats' => ['s' => 'array', 'default' => array()], // whatever the current stats are.
     );
 
 		//$defaults = array(
@@ -107,6 +101,10 @@ class SettingsModel extends \ShortPixel\Model
 			 {
 				  return $this->sanitize($name, $this->settings[$name]);
 			 }
+       elseif (isset($this->model[$name]))
+       {
+          return $this->model[$name]['default'];
+       }
 		}
 
     public function __set($name, $value)
