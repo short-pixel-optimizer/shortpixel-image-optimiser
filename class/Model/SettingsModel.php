@@ -21,16 +21,16 @@ class SettingsModel extends \ShortPixel\Model
 		protected $model = array(
 //        'apiKey' => array('s' => 'string'), // string
 //        'verifiedKey' => array('s' => 'int'), // string
-        'compressionType' => array('s' => 'int'), // int
-        'resizeWidth' => array('s' => 'int'), // int
-        'resizeHeight' => array('s' => 'int'), // int
-        'processThumbnails' => array('s' => 'boolean'), // checkbox
-				'useSmartcrop' => array('s' => 'boolean'),
-        'backupImages' => array('s' => 'boolean'), // checkbox
-        'keepExif' => array('s' => 'int'), // checkbox
-        'resizeImages' => array('s' => 'boolean'),
-        'resizeType' => array('s' => 'string'),
-        'includeNextGen' => array('s' => 'boolean'), // checkbox
+        'compressionType' => array('s' => 'int', 'default' => 1), // int
+        'resizeWidth' => array('s' => 'int' , 'default' => 0), // int
+        'resizeHeight' => array('s' => 'int', 'default' => 0), // int
+        'processThumbnails' => array('s' => 'boolean', 'default' => true), // checkbox
+				'useSmartcrop' => array('s' => 'boolean', 'default' => false),
+        'backupImages' => array('s' => 'boolean', 'default' => true), // checkbox
+        'keepExif' => array('s' => 'int', 'default' => 0), // checkbox
+        'resizeImages' => array('s' => 'boolean', 'default' => false),
+        'resizeType' => array('s' => 'string', 'default' => null),
+        'includeNextGen' => array('s' => 'boolean', ), // checkbox
         'png2jpg' => array('s' => 'int'), // checkbox
         'CMYKtoRGBconversion' => array('s' => 'boolean'), //checkbox
         'createWebp' => array('s' => 'boolean'), // checkbox
@@ -64,9 +64,11 @@ class SettingsModel extends \ShortPixel\Model
 				'redirectedSettings' => array('s' => 'int'), // controls initial redirect to SPIO settings
 				'unlistedCounter' => array('s' => 'int'), // counter to prevent checking unlisted files too much
 				'currentStats' => array('s' => 'array'), // whatever the current stats are.
-
-
     );
+
+		//$defaults = array(
+
+		//);
 
 		protected $settings;
 	//	protected $states;
