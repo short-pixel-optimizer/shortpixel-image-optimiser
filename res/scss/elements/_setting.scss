@@ -1,0 +1,32 @@
+// A settings setting (tm)
+
+setting{
+
+  padding: 12px 0 12px 0;
+  display: flex;
+  align-items: center;
+
+  // main title of setting
+  name {
+    width: 220px;
+    min-width: 220px;
+    font-size: 14px;
+    font-weight: 700;
+    display: inline-block;
+    padding: 20px 10px 20px 0;
+    box-sizing: border-box;
+  }
+
+  content {
+     padding: 15px 10px;
+  }
+  // additional information
+  info {
+     display: block;
+     padding-top: 0px;
+     color: #818181;
+     font-size: 13px !important;
+     margin: 4px 0;
+  }
+
+} // setting

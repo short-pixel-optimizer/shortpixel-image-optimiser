@@ -588,34 +588,34 @@
 #tab-tools .button {
   min-height: 44px;
 }
-#tab-tools .option {
+#tab-tools .option, #tab-tools setting {
   clear: both;
   display: flex;
   margin: 25px 0;
 }
-#tab-tools .option div.name {
+#tab-tools .option div.name, #tab-tools setting div.name {
   width: 220px;
   font-weight: 700;
   display: inline-block;
   flex: 0 0 auto;
   font-size: 14px;
 }
-#tab-tools .option div.field {
+#tab-tools .option div.field, #tab-tools .option content, #tab-tools setting div.field, #tab-tools setting content {
   display: inline-block;
   vertical-align: middle;
 }
-#tab-tools .option div.field .button {
+#tab-tools .option div.field .button, #tab-tools .option content .button, #tab-tools setting div.field .button, #tab-tools setting content .button {
   min-width: 200px;
   font-weight: 700;
   text-align: center;
   padding: 6px 8px;
 }
-#tab-tools .option div.field .button.danger {
+#tab-tools .option div.field .button.danger, #tab-tools .option content .button.danger, #tab-tools setting div.field .button.danger, #tab-tools setting content .button.danger {
   color: #fff;
   background: #ff0000;
   border: 1px solid #ff0000;
 }
-#tab-tools .option div.field.queue-warning {
+#tab-tools .option div.field.queue-warning, #tab-tools .option content.queue-warning, #tab-tools setting div.field.queue-warning, #tab-tools setting content.queue-warning {
   border: 1px solid #ff0000;
   font-weight: 700;
   padding: 6px 8px;
@@ -633,20 +633,15 @@
   margin-left: 15px;
 }
 
-div.spio-inline-help {
-  float: right;
-  margin-left: 15px;
-}
-div.spio-inline-help span {
+i.documentation {
   font-size: 1.8em;
   color: #1caecb;
   cursor: pointer;
 }
 
 div.spio-modal-shade {
-  display: none; /* Hidden by default */
   position: fixed; /* Stay in place */
-  z-index: 10; /* Sit on top */
+  z-index: 10; /* Sit on top - zindex wars  */
   left: 0;
   top: 0;
   width: 100%; /* Full width */
@@ -664,14 +659,20 @@ div.spio-modal {
   background-position: center;
   padding: 20px 16px 16px;
   border: 1px solid #888;
-  width: 30%; /* Could be more or less, depending on screen size */
+  width: 40%; /* Could be more or less, depending on screen size */
+  max-width: 100%;
   min-width: 300px; /* Could be more or less, depending on screen size */
   z-index: 100; /* Proper z-index */
   position: fixed;
   top: 10%;
-  left: 50%;
+  left: 30%;
+  height: 60%;
   max-height: 90%;
   overflow-y: auto;
+}
+div.spio-modal iframe {
+  width: 100%;
+  height: 500px;
 }
 div.spio-modal .spio-close-help-button {
   position: absolute;
@@ -691,6 +692,31 @@ div.spio-modal-title {
 
 .spio-hide {
   display: none;
+}
+
+setting {
+  padding: 12px 0 12px 0;
+  display: flex;
+  align-items: center;
+}
+setting name {
+  width: 220px;
+  min-width: 220px;
+  font-size: 14px;
+  font-weight: 700;
+  display: inline-block;
+  padding: 20px 10px 20px 0;
+  box-sizing: border-box;
+}
+setting content {
+  padding: 15px 10px;
+}
+setting info {
+  display: block;
+  padding-top: 0px;
+  color: #818181;
+  font-size: 13px !important;
+  margin: 4px 0;
 }
 
 /*# sourceMappingURL=shortpixel-settings.css.map */

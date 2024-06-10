@@ -2,7 +2,7 @@
 #tab-tools
 {
 	.button { min-height: 44px; }
-	.option{
+	.option, setting {
 			clear: both;
 			display: flex;
 			margin: 25px 0;
@@ -13,7 +13,7 @@
 					flex : 0 0 auto;
 					font-size: 14px;
 			}
-			div.field {
+			div.field, content {
 				 display: inline-block;
 				 vertical-align: middle;
 	//			 margin-left: 220px;

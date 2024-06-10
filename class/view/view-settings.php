@@ -109,5 +109,5 @@ $is_unlimited= (!is_null($this->quotaData) && $this->quotaData->unlimited) ? tru
 </article>
 <?php $this->loadView('settings/part-wso'); ?>
 
-<?php $this->loadView('snippets/part-inline-help'); ?>
+<?php //$this->loadView('snippets/part-inline-help'); ?>
 <?php $this->loadView('snippets/part-inline-modal'); ?>

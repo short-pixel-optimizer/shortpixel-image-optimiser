@@ -72,7 +72,6 @@ class ApiKeyModel extends \ShortPixel\Model
   {
  		$apikeySettings = get_option($this->option_name, null);
 
-
 		if (is_null($apikeySettings))
 		{
 			$this->apiKey = get_option($this->legacy_model['apiKey']['key'], false);
