@@ -47,6 +47,10 @@ abstract class Model
       case 'array':
       case 'Array':
         $value = $this->sanitizeArray($value);
+				if (is_null($value))
+				{
+					Log::addWarn('Field ' . $name . ' is of type Array, but Array not provided');
+				}
       break;
       case 'exception': // for exceptional situations. The data will not be sanitized! Need to do this elsewhere.
         return $value;
@@ -137,7 +141,6 @@ abstract class Model
   {
       if (! is_array($array))
       {
-        Log::addWarn('Field is of type Array, but Array not provided');
         return null;
       }
       $new_array = array();

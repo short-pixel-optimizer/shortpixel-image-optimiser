@@ -29,7 +29,7 @@ class ApiKeyModel extends \ShortPixel\Model
 
   protected static $notified = array();
 
-  protected $model = array(
+  protected $legacy_model = array(
        'apiKey' => array('s' => 'string',
                           'key' => 'wp-short-pixel-apiKey',
                         ),
@@ -44,7 +44,18 @@ class ApiKeyModel extends \ShortPixel\Model
                         ),
   );
 
-  public $shortPixel;
+	protected $model = array(
+       'apiKey' => array('s' => 'string',
+       ),
+       'apiKeyTried' => array('s' => 'string',
+       ),
+       'verifiedKey' => array('s' => 'boolean',
+       ),
+       'redirectedSettings' => array('s' => 'int',
+        ),
+  );
+
+	private $option_name =  'spio_key';
 
   /** Constructor. Check for constants, load the key */
   public function __construct()
@@ -59,10 +70,36 @@ class ApiKeyModel extends \ShortPixel\Model
   */
   public function loadKey()
   {
-    $this->apiKey = get_option($this->model['apiKey']['key'], false);
-    $this->verifiedKey = get_option($this->model['verifiedKey']['key'], false);
-    $this->redirectedSettings = get_option($this->model['redirectedSettings']['key'], false);
-    $this->apiKeyTried = get_option($this->model['apiKeyTried']['key'], false);
+ 		$apikeySettings = get_option($this->option_name, null);
+
+
+		if (is_null($apikeySettings))
+		{
+			$this->apiKey = get_option($this->legacy_model['apiKey']['key'], false);
+	    $this->verifiedKey = get_option($this->legacy_model['verifiedKey']['key'], false);
+	    $this->redirectedSettings = get_option($this->legacy_model['redirectedSettings']['key'], false);
+	    $this->apiKeyTried = get_option($this->legacy_model['apiKeyTried']['key'], false);
+
+				$apikeySettings = [
+						'apiKey' => $this->apiKey,
+						'verifiedKey' => $this->verifiedKey,
+						'redirectedSettings' => $this->redirectedSettings,
+						'apiKeyTried' => $this->apiKeyTried,
+				];
+
+			 delete_option($this->legacy_model['apiKey']['key']);
+			 delete_option($this->legacy_model['verifiedKey']['key']);
+			 delete_option($this->legacy_model['redirectedSettings']['key']);
+			 delete_option($this->legacy_model['apiKeyTried']['key']);
+
+			 $this->update();
+		}
+
+		$this->apiKey = $apikeySettings['apiKey'];
+		$this->verifiedKey = $apikeySettings['verifiedKey'];
+		$this->redirectedSettings = $apikeySettings['redirectedSettings'];
+		$this->apiKeyTried = $apikeySettings['apiKeyTried'];
+
 
     if ($this->key_is_constant)
     {
@@ -80,11 +117,20 @@ class ApiKeyModel extends \ShortPixel\Model
 
   protected function update()
   {
-      update_option($this->model['apiKey']['key'], trim($this->apiKey));
+      /*update_option($this->model['apiKey']['key'], trim($this->apiKey));
       update_option($this->model['verifiedKey']['key'], $this->verifiedKey);
       update_option($this->model['redirectedSettings']['key'], $this->redirectedSettings);
-      update_option($this->model['apiKeyTried']['key'], $this->apiKeyTried);
+      update_option($this->model['apiKeyTried']['key'], $this->apiKeyTried); */
 
+			$apikeySettings = [
+					'apiKey' => trim($this->apiKey),
+					'verifiedKey' => $this->verifiedKey,
+					'redirectedSettings' => $this->redirectedSettings,
+					'apiKeyTried' => $this->apiKeyTried,
+			];
+
+			$res = update_option($this->option_name, $apikeySettings);
+			return $res;
   }
 
   /** Resets the last APIkey that was attempted with validation
@@ -115,7 +161,7 @@ class ApiKeyModel extends \ShortPixel\Model
 
 			$valid = false;
 
-      if (strlen($key) == 0)
+      if (is_null($key) || strlen($key) == 0)
       {
         // first-timers, redirect to nokey screen
         $this->checkRedirect(); // this should be a one-time thing.
@@ -202,11 +248,12 @@ class ApiKeyModel extends \ShortPixel\Model
     AdminNoticesController::resetIntegrationNotices();
 
 		// Remove them all
-		delete_option($this->model['apiKey']['key']);
-		delete_option($this->model['verifiedKey']['key']);
-		delete_option($this->model['redirectedSettings']['key']);
-		delete_option($this->model['apiKeyTried']['key']);
+		delete_option($this->legacy_model['apiKey']['key']);
+		delete_option($this->legacy_model['verifiedKey']['key']);
+		delete_option($this->legacy_model['redirectedSettings']['key']);
+		delete_option($this->legacy_model['apiKeyTried']['key']);
 
+    delete_option($this->option_name);
    // $this->update();
 
   }

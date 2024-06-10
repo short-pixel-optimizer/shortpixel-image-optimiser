@@ -61,7 +61,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
                   if($showApiKey) {
                       $canValidate = true;?>
-                      <input name="key" type="text" id="key" value="<?php echo esc_attr( $view->data->apiKey );?>"
+                      <input name="apiKey" type="text" id="key" value="<?php echo esc_attr( $view->data->apiKey );?>"
                          class="regular-text" <?php echo($editApiKey ? "" : 'disabled') ?> <?php echo $this->is_verifiedkey ? 'onkeyup="ShortPixel.apiKeyChanged()"' : '' ?>>
                     <?php
                       }

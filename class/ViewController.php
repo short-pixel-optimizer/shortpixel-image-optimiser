@@ -58,8 +58,9 @@ class ViewController extends Controller
 
   /* Check if postData has been submitted.
   * This function should always be called at any ACTION function ( load, load_$action etc ).
+	* @param Object Model  Alternate model to check form values against.
   */
-  protected function checkPost()
+  protected function checkPost($model = null)
   {
 
 		if(count($_POST) === 0) // no post, nothing to check, return silent.
@@ -78,7 +79,7 @@ class ViewController extends Controller
      // unset($_POST['sp-nonce']);
      // unset($_POST['_wp_http_referer']);
       $this->is_form_submit = true;
-      $this->processPostData($_POST);
+      $this->processPostData($_POST, $model);
 
     }
 		return true;
@@ -156,7 +157,7 @@ class ViewController extends Controller
   /** Accepts POST data, maps, checks missing fields, and applies sanitization to it.
   * @param array $post POST data
   */
-  protected function processPostData($post)
+  protected function processPostData($post, $model = null)
   {
 
     // If there is something to map, map.
@@ -172,7 +173,7 @@ class ViewController extends Controller
       }
     }
 
-    if (is_null($this->model))
+    if (is_null($this->model) && is_null($model))
     {
       foreach($post as $name => $value )
       {
@@ -182,7 +183,11 @@ class ViewController extends Controller
     }
     else
     {
-      $model = $this->model;
+		  // When (default) model is not supplied, that the viewControllers.
+			if (is_null($model))
+			{
+      	$model = $this->model;
+			}
       $this->postData = $model->getSanitizedData($post);
     }
 

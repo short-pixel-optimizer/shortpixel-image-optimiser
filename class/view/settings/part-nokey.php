@@ -110,7 +110,7 @@ $adminEmail = get_bloginfo('admin_email');
                     $canValidate = true;
 
               ?>
-                  <input name="key" type="text" id="key" value="<?php echo esc_attr( $view->data->apiKey );?>"
+                  <input name="apiKey" type="text" id="key" value="<?php echo esc_attr( $view->data->apiKey );?>"
                      class="regular-text" <?php echo($editApiKey ? "" : 'disabled') ?> >
                 <?php
                   }

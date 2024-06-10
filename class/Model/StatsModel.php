@@ -93,7 +93,14 @@ class StatsModel
   //  $this->totalOptimized = $settings->totalOptimized;
   //  $this->totalOriginal = $settings->totalOriginal;
 
-    $stats = array_filter($settings->currentStats);
+    $stats = $settings->currentStats;
+
+		if (! is_array($stats))
+		{
+			 $stats = $this->defaults;
+		}
+
+		$stats = array_filter($stats);
 
     // Legacy. Stats from < 5.0 are loaded somehow. Don't load them.
     if (isset($stats['APIKeyValid']))

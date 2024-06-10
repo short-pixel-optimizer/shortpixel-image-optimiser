@@ -39,7 +39,6 @@ class SettingsController extends \ShortPixel\ViewController
      protected $keyModel;
 
      protected $mapper = array(
-       'key' => 'apiKey',
        'cmyk2rgb' => 'CMYKtoRGBconversion',
      );
 
@@ -89,6 +88,7 @@ class SettingsController extends \ShortPixel\ViewController
       public function action_addkey()
       {
         $this->loadEnv();
+
         $this->checkPost();
 
         Log::addDebug('Settings Action - addkey ', array($this->is_form_submit, $this->postData) );
@@ -374,12 +374,7 @@ class SettingsController extends \ShortPixel\ViewController
               AdminNoticesController::resetIntegrationNotices();
           }
 
-          $check_key = false;
-          if (isset($this->postData['apiKey']))
-          {
-              $check_key = $this->postData['apiKey'];
-              unset($this->postData['apiKey']); // unset, since keyModel does the saving.
-          }
+
 
 					// If the compression type setting changes, remove all queued items to prevent further optimizing with a wrong type.
 					if (intval($this->postData['compressionType']) !== intval($this->model->compressionType))
@@ -391,13 +386,6 @@ class SettingsController extends \ShortPixel\ViewController
           foreach($this->postData as $name => $value)
           {
             $this->model->{$name} = $value;
-          }
-
-          // first save all other settings ( like http credentials etc ), then check
-          if (! $this->keyModel->is_constant() && $check_key !== false) // don't allow settings key if there is a constant
-          {
-            $this->keyModel->resetTried(); // reset the tried api keys on a specific post request.
-            $this->keyModel->checkKey($check_key);
           }
 
 					// Every save, force load the quota. One reason, because of the HTTP Auth settings refresh.
@@ -577,32 +565,33 @@ class SettingsController extends \ShortPixel\ViewController
       }
 
       // This is done before handing it off to the parent controller, to sanitize and check against model.
-      protected function processPostData($post)
+      protected function processPostData($post, $model = null)
       {
 
           if (isset($post['display_part']) && strlen($post['display_part']) > 0)
           {
               $this->display_part = sanitize_text_field($post['display_part']);
           }
-          unset($post['display_part']);
+     //     unset($post['display_part']);
 
           // analyse the save button
           if (isset($post['save_bulk']))
           {
             $this->do_redirect = true;
           }
-          unset($post['save_bulk']);
-          unset($post['save']);
+     //     unset($post['save_bulk']);
+    //      unset($post['save']);
 
           // handle 'reverse' checkbox.
           $keepExif = isset($post['removeExif']) ? 0 : 1;
           $post['keepExif'] = $keepExif;
-          unset($post['removeExif']);
+        //  unset($post['removeExif']);
+
 
           // checkbox overloading
           $png2jpg = (isset($post['png2jpg']) ? (isset($post['png2jpgForce']) ? 2 : 1): 0);
           $post['png2jpg'] = $png2jpg;
-          unset($post['png2jpgForce']);
+         // unset($post['png2jpgForce']);
 
           // must be an array
           $post['excludeSizes'] = (isset($post['excludeSizes']) && is_array($post['excludeSizes']) ? $post['excludeSizes']: array());
@@ -610,6 +599,59 @@ class SettingsController extends \ShortPixel\ViewController
           $post = $this->processWebp($post);
           $post = $this->processExcludeFolders($post);
         //  $post = $this->processCloudFlare($post);
+
+					$check_key = false;
+					Log::addTemp("POST", $post);
+
+					if (isset($post['apiKey']))
+					{
+							$check_key = sanitize_text_field($post['apiKey']);
+							unset($post['apiKey']); // unset, since keyModel does the saving.
+					}
+
+					// first save all other settings ( like http credentials etc ), then check
+          if (! $this->keyModel->is_constant() && $check_key !== false) // don't allow settings key if there is a constant
+          {
+            $this->keyModel->resetTried(); // reset the tried api keys on a specific post request.
+            $this->keyModel->checkKey($check_key);
+          }
+
+				// Field that are in form for other purpososes, but are not part of model and should not be saved.
+					$ignore_fields = array(
+							'display_part',
+							'save_bulk',
+							'save',
+							'removeExif',
+							'png2jpgForce',
+							'sp-nonce',
+							'_wp_http_referer',
+							'validate', // validate button from nokey part
+							'new-index',
+							'edit-exclusion',
+							'exclusion-type',
+							'exclusion-value',
+							'exclusion-minwidth',
+							'exclusion-maxwidth',
+							'exclusion-minheight',
+							'exclusion-maxheight',
+							'exclusion-width',
+							'exclusion-height',
+							'apply-select',
+							'screen_action',
+							'tools-nonce',
+							'confirm',
+							'tos',  // toss checkbox in nokey
+							'pluginemail'
+							
+					);
+
+					foreach($ignore_fields as $ignore)
+					{
+						 if (isset($post[$ignore]))
+						 {
+						 		unset($post[$ignore]);
+						 }
+					}
 
           parent::processPostData($post);
 

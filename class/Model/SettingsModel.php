@@ -19,8 +19,8 @@ class SettingsModel extends \ShortPixel\Model
 
 
 		protected $model = array(
-        'apiKey' => array('s' => 'string'), // string
-        'verifiedKey' => array('s' => 'int'), // string
+//        'apiKey' => array('s' => 'string'), // string
+//        'verifiedKey' => array('s' => 'int'), // string
         'compressionType' => array('s' => 'int'), // int
         'resizeWidth' => array('s' => 'int'), // int
         'resizeHeight' => array('s' => 'int'), // int
@@ -96,7 +96,6 @@ class SettingsModel extends \ShortPixel\Model
 
 		protected function save()
 		{
-				Log::addTemp('Save Settings', $this->settings);
 				update_option($this->option_name, $this->settings);
 		}
 
@@ -117,7 +116,6 @@ class SettingsModel extends \ShortPixel\Model
     {
       if (isset($this->model[$name]))
       {
-				Log::addTemp('Setting updated - ' . $name, $value);
         $this->settings[$name] =  $this->sanitize($name, $value);
 				$this->updated = true;
       }
