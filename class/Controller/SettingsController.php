@@ -22,7 +22,6 @@ class SettingsController extends \ShortPixel\ViewController
 
      //env
      protected $is_nginx;
-     protected $is_verifiedkey;
      protected $is_htaccess_writable;
 		 protected $is_gd_installed;
 		 protected $is_curl_installed;
@@ -52,7 +51,7 @@ class SettingsController extends \ShortPixel\ViewController
 
 
 					$keyControl = ApiKeyController::getInstance();
-          $this->keyModel = $keyControl->getKeyModel(); 
+          $this->keyModel = $keyControl->getKeyModel();
 
 
           parent::__construct();
@@ -400,14 +399,14 @@ class SettingsController extends \ShortPixel\ViewController
       /* Loads the view data and the view */
       public function load_settings()
       {
-         if ($this->is_verifiedkey) // supress quotaData alerts when handing unset API's.
-          $this->loadQuotaData();
-        else
-          InstallHelper::checkTables();
-
          $this->view->data = (Object) $this->model->getData();
 
 				 $this->loadAPiKeyData();
+
+         if ($this->view->key->is_verifiedkey) // supress quotaData alerts when handing unset API's.
+          $this->loadQuotaData();
+        else
+          InstallHelper::checkTables();
 
          $statsControl = StatsController::getInstance();
 
@@ -449,6 +448,7 @@ class SettingsController extends \ShortPixel\ViewController
 				 $keyObj->apiKey = $keyController->getKeyForDisplay();
 
 				 $showApiKey = false;
+
 				 if (true === $keyObj->hide_api_key)
 				 {
 					  $keyObj->apiKey = '***************';

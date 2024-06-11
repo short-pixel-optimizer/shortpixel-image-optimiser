@@ -31,6 +31,7 @@
 }
 .wrap.is-shortpixel-settings-page .shortpixel-key-valid {
   font-weight: bold;
+  margin-left: 25px;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-key-valid .dashicons-yes:before {
   font-size: 2em;

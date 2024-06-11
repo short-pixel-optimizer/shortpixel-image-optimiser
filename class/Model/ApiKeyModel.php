@@ -61,7 +61,7 @@ class ApiKeyModel extends \ShortPixel\Model
   public function __construct()
   {
     $this->key_is_constant = (defined("SHORTPIXEL_API_KEY")) ? true : false;
-    $this->key_is_hidden = (defined("SHORTPIXEL_HIDE_API_KEY")) ? SHORTPIXEL_HIDE_API_KEY : false;
+    $this->key_is_hidden = (defined("SHORTPIXEL_HIDE_API_KEY")) ? (bool) SHORTPIXEL_HIDE_API_KEY : false;
 
   }
 
@@ -94,7 +94,7 @@ class ApiKeyModel extends \ShortPixel\Model
 			 $this->update();
 		}
 
-		$this->apiKey = $apikeySettings['apiKey'];
+		$this->apiKey = isset($apikeySettings['apiKey']) ? $apikeySettings['apiKey'] : '';
 		$this->verifiedKey = $apikeySettings['verifiedKey'];
 		$this->redirectedSettings = $apikeySettings['redirectedSettings'];
 		$this->apiKeyTried = $apikeySettings['apiKeyTried'];
@@ -103,13 +103,16 @@ class ApiKeyModel extends \ShortPixel\Model
     if ($this->key_is_constant)
     {
         $key = SHORTPIXEL_API_KEY;
-    }
-    else
-    {
-        $key = $this->apiKey;
+        if (isset($apikeySettings['apiKey']))
+        {
+            $this->apiKey = '';
+            $this->update();
+        }
+        $this->apiKey = $key;
     }
 
-    $valid = $this->checkKey($key);
+
+    $valid = $this->checkKey($this->apiKey);
 
     return $valid;
   }
@@ -128,7 +131,9 @@ class ApiKeyModel extends \ShortPixel\Model
 					'apiKeyTried' => $this->apiKeyTried,
 			];
 
-			$res = update_option($this->option_name, $apikeySettings);
+
+			$res = update_option($this->option_name, $apikeySettings, true);
+
 			return $res;
   }
 
@@ -273,7 +278,10 @@ class ApiKeyModel extends \ShortPixel\Model
         Notice::addError(sprintf(__('Error during verifying API key: %s','shortpixel-image-optimiser'), $quotaData['Message'] ));
      }
      elseif ($checked_key) {
-        $this->apiKey = $key;
+        if (false === $this->is_constant_key)
+        {
+          $this->apiKey = $key;
+        }
         $this->verifiedKey = $checked_key;
         $this->processNewKey($quotaData);
         $this->update();

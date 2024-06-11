@@ -46,12 +46,12 @@ if (true === \wpSPIO()->env()->useTrustedMode())
           <content>
 
 						<input name="apiKey" type="text" id="key" value="<?php echo esc_attr( $view->key->apiKey );?>"
-							 class="regular-text" <?php echo($view->key->is_editable ? "" : 'disabled') ?> 'onkeyup="ShortPixel.apiKeyChanged()'>
+							 class="regular-text" <?php echo($view->key->is_editable ? "" : 'disabled') ?> 'onkeyup="ShortPixel.apiKeyChanged()"'>
 						 <button type="button" id="validate" class="button button-primary" title="<?php esc_html_e('Validate the provided API key','shortpixel-image-optimiser');?>"
 								onclick="ShortPixel.validateKey(this)" <?php echo $view->key->is_editable ? "" : "disabled"?> >
 								<?php esc_html_e('Save settings & validate','shortpixel-image-optimiser');?>
 						</button>
-						<span class="shortpixel-key-valid" <?php echo $this->is_verifiedkey ? '' : 'style="display:none;"' ?>>
+						<span class="shortpixel-key-valid" <?php echo $view->key->is_verifiedkey ? '' : 'style="display:none;"' ?>>
 								<span class="dashicons dashicons-yes"></span><?php esc_html_e('Your API key is valid.','shortpixel-image-optimiser');?>
 						</span>
 					<info>
