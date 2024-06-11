@@ -28,8 +28,6 @@ class SettingsController extends \ShortPixel\ViewController
 		 protected $is_curl_installed;
      protected $is_multisite;
      protected $is_mainsite;
-     protected $is_constant_key;
-     protected $hide_api_key;
      protected $has_nextgen;
      protected $do_redirect = false;
      protected $disable_heavy_features = false; // if virtual and stateless, might disable heavy file ops.
@@ -53,14 +51,8 @@ class SettingsController extends \ShortPixel\ViewController
           $this->model = \wpSPIO()->settings();
 
 
-					//@todo Streamline this mess. Should run through controller mostly. Risk of desync otherwise.
 					$keyControl = ApiKeyController::getInstance();
-          $this->keyModel = $keyControl->getKeyModel(); //new ApiKeyModel();
-
-         // $this->keyModel->loadKey();
-          $this->is_verifiedkey = $this->keyModel->is_verified();
-          $this->is_constant_key = $this->keyModel->is_constant();
-          $this->hide_api_key = $this->keyModel->is_hidden();
+          $this->keyModel = $keyControl->getKeyModel(); 
 
 
           parent::__construct();
@@ -413,13 +405,9 @@ class SettingsController extends \ShortPixel\ViewController
         else
           InstallHelper::checkTables();
 
-				 $keyController = ApiKeyController::getInstance();
-
          $this->view->data = (Object) $this->model->getData();
 
-         $this->view->data->apiKey = $keyController->getKeyForDisplay();
-
-         $this->loadStatistics();
+				 $this->loadAPiKeyData();
 
          $statsControl = StatsController::getInstance();
 
@@ -447,6 +435,42 @@ class SettingsController extends \ShortPixel\ViewController
          $this->loadView('view-settings');
       }
 
+			protected function loadAPiKeyData()
+			{
+				 $keyController = ApiKeyController::getInstance();
+
+				 $keyObj = new \stdClass;
+//				 $this->view->key = new \stdClass;
+				 // $this->keyModel->loadKey();
+
+				 $keyObj->is_verifiedkey = $this->keyModel->is_verified();
+				 $keyObj->is_constant_key = $this->keyModel->is_constant();
+				 $keyObj->hide_api_key = $this->keyModel->is_hidden();
+				 $keyObj->apiKey = $keyController->getKeyForDisplay();
+
+				 $showApiKey = false;
+				 if (true === $keyObj->hide_api_key)
+				 {
+					  $keyObj->apiKey = '***************';
+				 }
+				 elseif($this->is_multisite && $keyObj->is_constant_key)
+				 {
+					 $keyObj->apiKey = esc_html__('Multisite API Key','shortpixel-image-optimiser');
+				 }
+				 else {
+				 	 $showApiKey = true;
+				 }
+
+				 $canValidate = false;
+
+
+				 $keyObj->is_editable = (! $keyObj->is_constant_key && $showApiKey) ? true : false; ;
+				 $keyObj->can_validate = $canValidate;
+
+
+				 $this->view->key = $keyObj;
+			}
+
 			protected function avifServerCheck()
       {
     			$noticeControl = AdminNoticesController::getInstance();
@@ -457,29 +481,6 @@ class SettingsController extends \ShortPixel\ViewController
 					     $notice->check();
           }
       }
-
-      protected function loadStatistics()
-      {
-				/*
-        $statsControl = StatsController::getInstance();
-        $stats = new \stdClass;
-
-        $stats->totalOptimized = $statsControl->find('totalOptimized');
-        $stats->totalOriginal = $statsControl->find('totalOriginal');
-        $stats->mainOptimized = $statsControl->find('media', 'images');
-
-
-        // used in part-g eneral
-        $stats->thumbnailsToProcess =  $statsControl->thumbNailsToOptimize(); // $totalImages - $totalOptimized;
-
-//        $stats->totalFiles = $statsControl->find('media', '')
-
-
-        $this->view->stats = $stats;
-				*/
-      }
-
-
 
       /** Checks on things and set them for information. */
       protected function loadEnv()
@@ -642,7 +643,7 @@ class SettingsController extends \ShortPixel\ViewController
 							'confirm',
 							'tos',  // toss checkbox in nokey
 							'pluginemail'
-							
+
 					);
 
 					foreach($ignore_fields as $ignore)

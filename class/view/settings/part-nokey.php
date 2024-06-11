@@ -7,26 +7,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
-$canValidate = false;
-// Several conditions for showing API key.
-if ($this->hide_api_key)
-  $showApiKey = false;
-elseif($this->is_multisite && $this->is_constant_key)
-  $showApiKey = false;
-else {
-  $showApiKey = true;  // is_mainsite, multisite, no constant.
-}
-
-$editApiKey = (! $this->is_constant_key && $showApiKey) ? true : false;
-
 // Notices for fringe cases
-if (! $this->is_verifiedkey && $this->hide_api_key && ! $this->is_constant_key)
+if (! $view->key->is_verifiedkey && $view->key->hide_api_key && ! $view->key->is_constant_key)
 {
   Notice::addError(__('wp-config.php is hiding the API key, but no API key was found. Remove the constant, or define the SHORTPIXEL_API_KEY constant as well', 'shortpixel-image-optimiser'));
 }
-elseif ($this->is_constant_key && ! $this->is_verifiedkey)
+elseif ($view->key->is_constant_key && ! $view->key->is_verifiedkey)
 {
-  $dkey = ($this->hide_api_key) ? '' : '(' . SHORTPIXEL_API_KEY.  ')';
+  $dkey = ($view->key->hide_api_key) ? '' : '(' . SHORTPIXEL_API_KEY.  ')';
   Notice::addError(sprintf(__('Constant API Key is not verified. Please check if this is a valid API key %s'),$dkey));
 }
 
@@ -38,10 +26,15 @@ $adminEmail = get_bloginfo('admin_email');
       <?php esc_html_e('Join ShortPixel','shortpixel-image-optimiser');?></a>
     </h2>
 <div class="wp-shortpixel-options wp-shortpixel-tab-content">
-<?php if($showApiKey): ?>
 	 <!-- // @todo Inline CSS on whole page-->
   <h3><?php esc_html_e('Request an API Key:','shortpixel-image-optimiser');?></h3>
-<p style='font-size: 14px'><?php esc_html_e('If you don\'t have an API Key, you can request one for free. Just press the "Request Key" button after checking that the e-mail is correct.','shortpixel-image-optimiser');?></p>
+<p><?php esc_html_e('If you don\'t have an API Key, you can request one for free. Just press the "Request Key" button after checking that the e-mail is correct.','shortpixel-image-optimiser');?></p>
+
+<settinglist>
+
+
+</settinglist>
+
 
 <table class="form-table">
     <tbody>
@@ -86,11 +79,11 @@ $adminEmail = get_bloginfo('admin_email');
         </tr>
     </tbody>
 </table>
-<?php endif; ?>
+
 <h3>
     <?php esc_html_e('Already have an API Key:','shortpixel-image-optimiser');?>
 </h3>
-<p style='font-size: 14px'>
+<p>
     <?php esc_html_e('If you already have an API Key please input it below and press Validate.','shortpixel-image-optimiser');?>
 </p>
 
@@ -103,27 +96,10 @@ $adminEmail = get_bloginfo('admin_email');
         <tr>
             <th scope="row"><label for="key"><?php esc_html_e('API Key:','shortpixel-image-optimiser');?></label></th>
             <td>
-              <?php
-              if($showApiKey) {
 
-                  if (! $this->is_constant_key)
-                    $canValidate = true;
+							<input name="apiKey" type="text" id="key" value="<?php echo esc_attr( $view->key->apiKey );?>"
+								 class="regular-text">
 
-              ?>
-                  <input name="apiKey" type="text" id="key" value="<?php echo esc_attr( $view->data->apiKey );?>"
-                     class="regular-text" <?php echo($editApiKey ? "" : 'disabled') ?> >
-                <?php
-                  }
-                  elseif(defined("SHORTPIXEL_API_KEY")) {
-                    $canValidate = true;?>
-                    <input name="key" type="text" id="key" disabled="true" placeholder="<?php
-                    if( $this->hide_api_key ) {
-                        echo esc_html("********************");
-                    } else {
-                        esc_html_e('Multisite API Key','shortpixel-image-optimiser');
-                    }
-                    ?>" class="regular-text">
-                <?php } ?>
                     <input type="hidden" name="validate" id="valid" value="validate"/>
                     <span class="spinner" id="pluginemail_spinner" style="float:none;"></span>
                     <button type="submit" id="validate" class="button button-primary" title="<?php esc_html_e('Validate the provided API key','shortpixel-image-optimiser');?>"
@@ -131,9 +107,6 @@ $adminEmail = get_bloginfo('admin_email');
                         <?php esc_html_e('Validate','shortpixel-image-optimiser');?>
                     </button>
 
-                <?php if($this->is_constant_key) { ?>
-                    <p class="settings-info"><?php esc_html_e('Key defined in wp-config.php.','shortpixel-image-optimiser');?></p>
-                <?php } ?>
 
             </td>
         </tr>

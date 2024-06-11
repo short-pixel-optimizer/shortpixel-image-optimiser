@@ -45,6 +45,22 @@ if (true === \wpSPIO()->env()->useTrustedMode())
           </name>
           <content>
 
+						<input name="apiKey" type="text" id="key" value="<?php echo esc_attr( $view->key->apiKey );?>"
+							 class="regular-text" <?php echo($view->key->is_editable ? "" : 'disabled') ?> 'onkeyup="ShortPixel.apiKeyChanged()'>
+						 <button type="button" id="validate" class="button button-primary" title="<?php esc_html_e('Validate the provided API key','shortpixel-image-optimiser');?>"
+								onclick="ShortPixel.validateKey(this)" <?php echo $view->key->is_editable ? "" : "disabled"?> >
+								<?php esc_html_e('Save settings & validate','shortpixel-image-optimiser');?>
+						</button>
+						<span class="shortpixel-key-valid" <?php echo $this->is_verifiedkey ? '' : 'style="display:none;"' ?>>
+								<span class="dashicons dashicons-yes"></span><?php esc_html_e('Your API key is valid.','shortpixel-image-optimiser');?>
+						</span>
+					<info>
+							<?php if ($view->key->is_constant_key)
+							{
+							 		esc_html_e('Key defined in wp-config.php.','shortpixel-image-optimiser');
+							}
+							?>
+					</info>
           </content>
 
     </settinglist>
@@ -53,58 +69,6 @@ if (true === \wpSPIO()->env()->useTrustedMode())
     <table class="form-table">
         <tbody>
 
-            <tr>
-                <th scope="row"><label for="key"><?php esc_html_e('API Key:','shortpixel-image-optimiser');?></label></th>
-                <td>
-
-                  <?php
-                  $canValidate = false;
-                  // Several conditions for showing API key.
-                  if ($this->hide_api_key)
-                    $showApiKey = false;
-                  elseif($this->is_multisite && $this->is_constant_key)
-                    $showApiKey = false;
-                  else {
-                    $showApiKey = true;  // is_mainsite, multisite, no constant.
-                  }
-
-                  $editApiKey = (! $this->is_constant_key && $showApiKey) ? true : false; ;
-
-                  if($showApiKey) {
-                      $canValidate = true;?>
-                      <input name="apiKey" type="text" id="key" value="<?php echo esc_attr( $view->data->apiKey );?>"
-                         class="regular-text" <?php echo($editApiKey ? "" : 'disabled') ?> <?php echo $this->is_verifiedkey ? 'onkeyup="ShortPixel.apiKeyChanged()"' : '' ?>>
-                    <?php
-                      }
-                      elseif(defined("SHORTPIXEL_API_KEY")) {
-                        $canValidate = true;?>
-                        <input name="key" type="text" id="key" disabled="true" placeholder="<?php
-                        if( $this->hide_api_key ) {
-                            echo("********************");
-                        } else {
-                            esc_html_e('Multisite API Key','shortpixel-image-optimiser');
-                        }
-                        ?>" class="regular-text">
-                    <?php } ?>
-                        <input type="hidden" name="validate" id="valid" value=""/>
-                        <span class="spinner" id="pluginemail_spinner" style="float:none;"></span>
-                         <button type="button" id="validate" class="button button-primary" title="<?php esc_html_e('Validate the provided API key','shortpixel-image-optimiser');?>"
-                            onclick="ShortPixel.validateKey(this)" <?php echo $canValidate ? "" : "disabled"?> <?php echo $this->is_verifiedkey ? 'style="display:none;"' : '' ?>>
-                            <?php esc_html_e('Save settings & validate','shortpixel-image-optimiser');?>
-                        </button>
-                        <span class="shortpixel-key-valid" <?php echo $this->is_verifiedkey ? '' : 'style="display:none;"' ?>>
-                            <span class="dashicons dashicons-yes"></span><?php esc_html_e('Your API key is valid.','shortpixel-image-optimiser');?>
-                        </span>
-                    <?php if($this->is_constant_key) { ?>
-                        <p class="settings-info"><?php esc_html_e('Key defined in wp-config.php.','shortpixel-image-optimiser');?></p>
-                    <?php } ?>
-
-                </td>
-            </tr>
-    <?php if (! $this->is_verifiedkey) { //if invalid key we display the link to the API Key ?>
-        </tbody>
-    </table>
-    <?php } else { //if valid key we display the rest of the options ?>
             <tr>
                 <th scope="row">
                     <label for="compressionType"><?php esc_html_e('Compression type:','shortpixel-image-optimiser');?></label>
@@ -399,7 +363,6 @@ if (true === \wpSPIO()->env()->useTrustedMode())
     </table>
 
 
-  <?php } ?>
   <p class="submit">
       <input type="submit" name="save" id="save" class="button button-primary" title="<?php esc_attr_e('Save Changes','shortpixel-image-optimiser');?>" value="<?php esc_attr_e('Save Changes','shortpixel-image-optimiser');?>"> &nbsp;
       <input type="submit" name="save_bulk" id="bulk" class="button button-primary" title="<?php esc_attr_e('Save and go to the Bulk Processing page','shortpixel-image-optimiser');?>" value="<?php esc_attr_e('Save and Go to Bulk Process','shortpixel-image-optimiser');?>"> &nbsp;

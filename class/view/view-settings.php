@@ -20,14 +20,14 @@ $is_unlimited= (!is_null($this->quotaData) && $this->quotaData->unlimited) ? tru
 
 		<?php if (! $is_unlimited): ?>
     <a href="https://shortpixel.com/<?php
-        echo esc_attr(($view->data->apiKey ? "login/". $view->data->apiKey . '/spio-unlimited': "pricing"));
+        echo esc_attr(($view->key->apiKey ? "login/". $view->key->apiKey . '/spio-unlimited': "pricing"));
     ?>" target="_blank"><?php esc_html_e( 'Buy credits', 'shortpixel-image-optimiser' );?></a> |
 	  <?php endif; ?>
 
     <a href="https://shortpixel.com/knowledge-base/" target="_blank"><?php esc_html_e('Knowledge Base','shortpixel-image-optimiser');?></a> |
     <a href="https://shortpixel.com/contact" target="_blank"><?php esc_html_e('Contact Support','shortpixel-image-optimiser');?></a> |
     <a href="https://shortpixel.com/<?php
-        echo esc_attr(($view->data->apiKey ? "login/". $view->data->apiKey . "/dashboard" : "login"));
+        echo esc_attr(($view->key->apiKey ? "login/". $view->key->apiKey . "/dashboard" : "login"));
     ?>" target="_blank">
         <?php esc_html_e('ShortPixel account','shortpixel-image-optimiser');?>
     </a>
@@ -67,13 +67,13 @@ $is_unlimited= (!is_null($this->quotaData) && $this->quotaData->unlimited) ? tru
 
 
 <article id="shortpixel-settings-tabs" class="sp-tabs">
-    <?php if (! $this->is_verifiedkey)
+    <?php if (! $view->key->is_verifiedkey)
     {
       $this->loadView('settings/part-nokey');
     } ?>
 
   <?php
-    if ($this->is_verifiedkey):
+    if ($view->key->is_verifiedkey):
       ?>
       <div class='section-wrapper'>
 				<form name='wp_shortpixel_options' action='<?php echo esc_url(add_query_arg('noheader', 'true')) ?>'  method='post' id='wp_shortpixel_options'>
