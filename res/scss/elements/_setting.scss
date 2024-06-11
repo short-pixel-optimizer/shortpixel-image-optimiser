@@ -26,7 +26,25 @@ setting{
      padding-top: 0px;
      color: #818181;
      font-size: 13px !important;
-     margin: 4px 0;
+     margin: 6px 0;
   }
 
 } // setting
+
+
+settinggrid
+{
+  min-height: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+    > setting {
+      display: flex;
+      flex-basis: calc(50% - 40px);
+      justify-content: center;
+      flex-direction: column;
+      align-items: flex-start;
+      margin-left: 2%;
+
+    }
+}

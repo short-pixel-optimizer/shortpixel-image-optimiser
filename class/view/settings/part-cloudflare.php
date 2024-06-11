@@ -34,7 +34,33 @@ if ( ! defined( 'ABSPATH' ) ) {
                     </label>
                 </switch>
               </setting>
-
+              <setting>
+               <switch>
+                   <label>
+                     <input type="checkbox" class="switch" name="processThumbnails" value="1" <?php checked($view->data->processThumbnails, '1');?>>
+                     <div class="the_switch">&nbsp; </div>
+                     <?php printf(esc_html__('Apply compression also to %s image thumbnails.%s ','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
+                   </label>
+               </switch>
+             </setting>
+             <setting>
+              <switch>
+                  <label>
+                    <input type="checkbox" class="switch" name="processThumbnails" value="1" <?php checked($view->data->processThumbnails, '1');?>>
+                    <div class="the_switch">&nbsp; </div>
+                    <?php printf(esc_html__('Apply compression also to %s image thumbnails.%s ','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
+                  </label>
+              </switch>
+            </setting>
+            <setting>
+             <switch>
+                 <label>
+                   <input type="checkbox" class="switch" name="processThumbnails" value="1" <?php checked($view->data->processThumbnails, '1');?>>
+                   <div class="the_switch">&nbsp; </div>
+                   <?php printf(esc_html__('Apply compression also to %s image thumbnails.%s ','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
+                 </label>
+             </switch>
+           </setting>
             </settinggrid>
 
             <settinglist>

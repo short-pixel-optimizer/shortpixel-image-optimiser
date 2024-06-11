@@ -397,9 +397,6 @@
 .wrap.is-shortpixel-settings-page .view-notice.warning, .wrap.is-shortpixel-settings-page .compression-notice.warning {
   border-left-color: #ffb900;
 }
-.wrap.is-shortpixel-settings-page .compression-notice {
-  margin-top: -20px;
-}
 .wrap.is-shortpixel-settings-page .view-notice-row {
   display: none;
 }
@@ -591,7 +588,7 @@
 #tab-tools .option, #tab-tools setting {
   clear: both;
   display: flex;
-  margin: 25px 0;
+  margin: 15px 0;
 }
 #tab-tools .option div.name, #tab-tools setting div.name {
   width: 220px;
@@ -716,7 +713,22 @@ setting info {
   padding-top: 0px;
   color: #818181;
   font-size: 13px !important;
-  margin: 4px 0;
+  margin: 6px 0;
+}
+
+settinggrid {
+  min-height: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+}
+settinggrid > setting {
+  display: flex;
+  flex-basis: calc(50% - 40px);
+  justify-content: center;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-left: 2%;
 }
 
 /*# sourceMappingURL=shortpixel-settings.css.map */

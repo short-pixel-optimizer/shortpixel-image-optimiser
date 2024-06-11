@@ -278,24 +278,16 @@
 }
 
 div.sp-modal-shade {
-  display: none;
-  /* Hidden by default */
-  position: fixed;
-  /* Stay in place */
-  z-index: 10000;
-  /* Sit on top - blame WP-admin for the z-index battle . */
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 10000; /* Sit on top - blame WP-admin for the z-index battle . */
   left: 0;
   top: 0;
-  width: 100%;
-  /* Full width */
-  height: 100%;
-  /* Full height */
-  overflow: auto;
-  /* Enable scroll if needed */
-  background: black;
-  /* Fallback color */
-  background: rgba(0, 0, 0, 0.4);
-  /* Black w/ opacity */
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background: rgb(0, 0, 0); /* Fallback color */
+  background: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
   opacity: 0.4;
 }
 
@@ -304,12 +296,9 @@ div.shortpixel-modal {
   /*margin: 8% auto;  15% from the top and centered */
   padding: 20px;
   border: 1px solid #888;
-  width: 30%;
-  /* Could be more or less, depending on screen size */
-  min-width: 300px;
-  /* Could be more or less, depending on screen size */
-  z-index: 999999;
-  /* Z-index wars :/ */
+  width: 30%; /* Could be more or less, depending on screen size */
+  min-width: 300px; /* Could be more or less, depending on screen size */
+  z-index: 999999; /* Z-index wars :/ */
   position: fixed;
   top: 10%;
   left: 50%;
@@ -439,35 +428,35 @@ body.debug-model-active {
   margin-bottom: 16px;
 }
 
-.switch_button {
+.switch_button, switch {
   line-height: 12px;
   margin: 2px -5px 10px -5px;
   display: inline-block;
 }
-.switch_button label {
+.switch_button label, switch label {
   padding: 8px 5px;
 }
-.switch_button label:focus {
+.switch_button label:focus, switch label:focus {
   outline: none;
 }
-.switch_button input {
+.switch_button input[type=checkbox], switch input[type=checkbox] {
   display: none;
 }
-.switch_button input:checked ~ .the_switch {
+.switch_button input[type=checkbox]:checked ~ .the_switch, switch input[type=checkbox]:checked ~ .the_switch {
   background: #7cdce4;
 }
-.switch_button input:checked ~ .the_switch:after {
+.switch_button input[type=checkbox]:checked ~ .the_switch:after, switch input[type=checkbox]:checked ~ .the_switch:after {
   left: 20px;
   background: #1caecb;
 }
-.switch_button input:disabled ~ .the_switch {
+.switch_button input[type=checkbox]:disabled ~ .the_switch, switch input[type=checkbox]:disabled ~ .the_switch {
   background: #d5d5d5;
   pointer-events: none;
 }
-.switch_button input:disabled ~ .the_switch:after {
+.switch_button input[type=checkbox]:disabled ~ .the_switch:after, switch input[type=checkbox]:disabled ~ .the_switch:after {
   background: #bcbdbc;
 }
-.switch_button .the_switch {
+.switch_button .the_switch, switch .the_switch {
   margin: 8px 15px 8px 0;
   position: relative;
   display: inline-block;
@@ -478,7 +467,7 @@ body.debug-model-active {
   cursor: pointer;
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.25) !important;
 }
-.switch_button .the_switch:after {
+.switch_button .the_switch:after, switch .the_switch:after {
   position: absolute;
   left: -2px;
   top: -5px;
@@ -493,10 +482,10 @@ body.debug-model-active {
   -o-transition: left 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), padding 0.5s ease, margin 0.5s ease !important;
   transition: left 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), padding 0.5s ease, margin 0.5s ease !important;
 }
-.switch_button .the_switch:active:after {
+.switch_button .the_switch:active:after, switch .the_switch:active:after {
   transform: scale(0.9, 0.85);
 }
-.switch_button .the_switch:focus {
+.switch_button .the_switch:focus, switch .the_switch:focus {
   outline: none;
 }
 

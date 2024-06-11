@@ -423,7 +423,6 @@ class AjaxController
 
     /* Integration for WP /LR Sync plugin  - https://meowapps.com/plugin/wplr-sync/
 		* @integration WP / LR Sync
-    * @todo Test if it works with plugin intergration
     *
     */
     public function onWpLrUpdateMedia($imageId)
@@ -795,8 +794,6 @@ class AjaxController
 				// Result is a folder object
 				$result = $otherMedia->addDirectory($path);
 
-
-				// @todo Formulate some response here that can be used on the row thingie.
 				if (false === $result)
 				{
 					 $json->folder->is_error = true;

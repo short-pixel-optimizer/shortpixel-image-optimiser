@@ -356,7 +356,6 @@ class EnvironmentModel extends \ShortPixel\Model
             return false;
           }
 
-
           // max execution is the percentage of max execution time one can take upon.
           $limit_perc  = round($limit/100 * apply_filters('spio/process/max_execution', 90));
 

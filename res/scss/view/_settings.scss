@@ -256,7 +256,9 @@
 			}
 
       .wp-shortpixel-tab-content
-      { opacity: 0; }
+      { opacity: 0;
+
+			}
       &.sel-tab .wp-shortpixel-tab-content
       {
         opacity: 1;
@@ -485,11 +487,7 @@
       border-left-color: #ffb900;
     }
   }
-	// lazy reposition.
-	.compression-notice
-	{
-		margin-top: -20px;
-	}
+
 
   .view-notice-row
   {
