@@ -117,6 +117,9 @@ class EnvironmentModel extends \ShortPixel\Model
 				case 's3-offload':
 				  $plugin = 'amazon-s3-and-cloudfront/wordpress-s3.php';
 				break;
+        case 's3-offload-pro':
+          $plugin = 'amazon-s3-and-cloudfront-pro/amazon-s3-and-cloudfront-pro.php';
+        break;
 				case 'woocommerce':
 					 $plugin = 'woocommerce/woocommerce.php';
 				break;
@@ -124,6 +127,7 @@ class EnvironmentModel extends \ShortPixel\Model
 				 	$plugin = 'none';
 				break;
 		 }
+     //http://tunnel.vrijwazig.org:8080/wp-admin/plugins.php?action=deactivate&plugin=amazon-s3-and-cloudfront-pro%2Famazon-s3-and-cloudfront-pro.php&plugin_status=all&paged=1&s&_wpnonce=2aad3b7a58
 
 		 if (!function_exists('is_plugin_active')) {
     	include_once(ABSPATH . 'wp-admin/includes/plugin.php');

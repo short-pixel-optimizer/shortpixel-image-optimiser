@@ -64,6 +64,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
           </content>
         </setting>
 
+         <!-- compression type -->
           <setting id='compression-type'>
               <name>
                   <?php esc_html_e('Compression type:','shortpixel-image-optimiser');?>
@@ -114,128 +115,131 @@ if (true === \wpSPIO()->env()->useTrustedMode())
               </warning>
           </setting>
 
+          <!-- / compression type  -->
+
+          <!-- Thumbnail compression -->
+          <setting>
+            <name>
+              <?php esc_html_e('Thumbnail compression:','shortpixel-image-optimiser');?>
+            </name>
+            <content>
+                <switch>
+                  <label>
+                    <input type="checkbox" class="switch" name="processThumbnails" value="1" <?php checked($view->data->processThumbnails, '1');?>>
+                    <div class="the_switch">&nbsp; </div>
+                    <?php printf(esc_html__('Apply compression also to %s image thumbnails.%s ','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
+                  </label>
+                </switch>
+                <info>
+                      <?php printf(esc_html__('It is highly recommended that you optimize the thumbnails as they are usually the images most viewed by end users and can generate most traffic. %s Please note that thumbnails count up to your total quota.','shortpixel-image-optimiser'), '<br>'); ?>
+                </info>
+            </content>
+          </setting>
+          <!-- // Thumbnail compression -->
+
+          <!-- Enable Smartcrop -->
+            <setting>
+              <name>
+                  <?php esc_html_e('Enable SmartCrop:','shortpixel-image-optimiser');?>
+              </name>
+              <content>
+                <switch>
+                  <label>
+                    <input type="checkbox" class="switch" name="useSmartcrop" value="1" <?php checked($view->data->useSmartcrop, '1');?>>
+                    <div class="the_switch">&nbsp; </div>
+                    <?php printf(esc_html__('Enable %s Smart cropping %s of the images where applicable.','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
+                  </label>
+                </switch>
+
+                <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/182-what-is-smart-cropping"></i>
+
+                <info>
+                  <?php printf(esc_html__('Generate subject-centered thumbnails using ShortPixel\'s AI engine (%sexample%s). The new thumbnails look sharper (and can be slightly bigger) than the ones created by WordPress. Ideal for e-commerce websites and blogs where the images sell the products/content.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/182-what-is-smart-cropping" target="_blank">', '</a>'); ?>
+                </info>
+                <?php
+                $smartcrop = (
+                  true === \wpSPIO()->env()->plugin_active('s3-offload') ||
+                  true === \wpSPIO()->env()->plugin_active('s3-offload-pro')
+                ) ? 1 : 0; ?>
+              </content>
+                <warning id="smartcrop-warning" data-smartcrop="<?php echo esc_attr($smartcrop) ?>">
+                    <message>
+    									<?php esc_html_e('It looks like you have the Offload Media plugin enabled. Please note that SmartCropping will not work if you have set the Offload Media plugin to remove files from the server, and strange effects may occur! We recommend you to disable this option in this case.', 'shortpixel-image-optimiser'); ?>
+                    </message>
+                </warning>
+            </setting>
+          <!-- // Enable Smartcrop -->
+
+          <!-- Backup -->
+            <setting>
+              <name>
+                <?php esc_html_e('Backup','shortpixel-image-optimiser');?>
+              </name>
+              <content>
+                <switch>
+                  <label>
+                    <input type="checkbox" class="switch" name="backupImages" value="1" <?php checked($view->data->backupImages, '1');?>>
+                    <div class="the_switch">&nbsp; </div>
+                   <?php esc_html_e('Create a backup of the original images, saved on your server in /wp-content/uploads/ShortpixelBackups/.','shortpixel-image-optimiser');?>
+                  </label>
+                </switch>
+                <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/515-settings-image-backup"></i>
+                <info>
+                  <?php esc_html_e('You can remove the backup folder at any moment but it is best to keep a local/cloud copy, in case you want to restore the optimized files to originals or re-optimize the images using a different compression type.','shortpixel-image-optimiser');?>
+                </info>
+              </content>
+              <warning id="backup-warning">
+                <message>
+                  <?php esc_html_e('Make sure you have a backup in place. When optimizing, ShortPixel will overwrite your images without recovery, which may result in lost images.', 'shortpixel-image-optimiser') ?>
+                </message>
+              </warning>
+            </setting>
+          <!-- // Backup -->
+
+          <!-- Remove Exif -->
+          <setting>
+            <name>
+              <?php esc_html_e('Remove EXIF','shortpixel-image-optimiser');?>
+            </name>
+            <content>
+              <switch>
+                <label>
+                  <input type="checkbox" class="switch" name="removeExif" value="1" <?php checked($view->data->keepExif, 0);?>>
+                  <div class="the_switch">&nbsp; </div>
+                  <?php esc_html_e('Remove the EXIF tag of the image (recommended).','shortpixel-image-optimiser');?>
+                </label>
+              </switch>
+              <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/483-spai-remove-exif"></i>
+            </content>
+            <warning id="exif-warning">
+              <message>
+                <?php printf(esc_html__('Warning - Converting from PNG to JPG will %s not %s keep the EXIF information!'), "<strong>","</strong>"); ?>
+              </message>
+            </warning>
+            <?php $imagick = (\wpSPIO()->env()->hasImagick()) ? 1 : 0; ?>
+            <warning id="exif-imagick-warning" data-imagick="<?php echo esc_attr($imagick) ?>">
+                <message>
+                  <?php printf(esc_html__('Warning - Imagick library not detected on server. WordPress will use another library to resize images, which may result in loss of EXIF information'), "<strong>","</strong>"); ?>
+                </message>
+            </warning>
+          </setting>
+          <!-- // Remove Exif -->
+
+          <!-- Resize Large Image -->
+          <setting>
+            <name>
+              <?php esc_html_e('Resize large images','shortpixel-image-optimiser');?>
+            </name>
+            <content>
+
+            </content>
+          </setting>
+          <!-- / Resize Large Image -->
     </settinglist>
 
 
     <table class="form-table">
         <tbody>
-
-
-
-						<tr class="compression-notice-row shortpixel-hide">
-							<th scope="row">&nbsp;</th>
-							<td>
-								<div class='compression-notice warning'>
-									<p><?php printf(esc_html__('This compression type will apply only to new or unprocessed images. Images that were already processed will not be re-optimized. If you want to change the compression type of already optimized images, %s restore them from the backup %s first.', 'shortpixel-image-optimiser' ),'<a href="options-general.php?page=wp-shortpixel-settings&part=tools">', '</a>'); ?></p>
-									<p><?php esc_html_e('The current optimization processes in the queue will be stopped.', 'shortpixel-image-optimiser'); ?></p>
-
-								</div>
-							</td>
-						</tr>
-
-            <tr>
-                <th scope="row"><?php esc_html_e('Thumbnail compression:','shortpixel-image-optimiser');?></th>
-                <td>
-                    <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/511-settings-also-include-thumbnails"></span></div>
-										<div class='switch_button'>
-				              <label>
-				                <input type="checkbox" class="switch" name="processThumbnails" value="1" <?php checked($view->data->processThumbnails, '1');?>>
-				                <div class="the_switch">&nbsp; </div>
-												<?php printf(esc_html__('Apply compression also to %s image thumbnails.%s ','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
-									    </label>
-				            </div>
-
-                    <p class="settings-info">
-                        <?php printf(esc_html__('It is highly recommended that you optimize the thumbnails as they are usually the images most viewed by end users and can generate most traffic. %s Please note that thumbnails count up to your total quota.','shortpixel-image-optimiser'), '<br>'); ?>
-                    </p>
-
-                </td>
-            </tr>
-
-						<tr>
-                <th scope="row"><?php esc_html_e('Enable SmartCrop:','shortpixel-image-optimiser');?></th>
-                <td>
-                    <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/182-what-is-smart-cropping"></span></div>
-                    <div class='switch_button'>
-				              <label>
-				                <input type="checkbox" class="switch" name="useSmartcrop" value="1" <?php checked($view->data->useSmartcrop, '1');?>>
-				                <div class="the_switch">&nbsp; </div>
-												<?php printf(esc_html__('Enable %s Smart cropping %s of the images where applicable.','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
-									    </label>
-				            </div>
-
-                    <p class="settings-info">
-                        <?php printf(esc_html__('Generate subject-centered thumbnails using ShortPixel\'s AI engine (%sexample%s). The new thumbnails look sharper (and can be slightly bigger) than the ones created by WordPress. Ideal for e-commerce websites and blogs where the images sell the products/content.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/182-what-is-smart-cropping" target="_blank">', '</a>'); ?>
-                    </p>
-
-                </td>
-            </tr>
-
-						<?php
-						$smartcrop = (true === \wpSPIO()->env()->plugin_active('s3-offload')) ? 1 : 0; ?>
-						<tr class='smartcrop_warning view-notice-row' data-smartcrop="<?php echo esc_attr($smartcrop) ?>" >
-								<th scope="row">&nbsp;</th>
-								<td>
-									<div class='view-notice warning'><p>
-										<?php esc_html_e('It looks like you have the Offload Media plugin enabled. Please note that SmartCropping will not work if you have set the Offload Media plugin to remove files from the server, and strange effects may occur! We recommend you to disable this option in this case.', 'shortpixel-image-optimiser'); ?>
-									</p>
-								</div>
-								</td>
-						</tr>
-
-            <tr>
-                <th scope="row"><?php esc_html_e('Backup','shortpixel-image-optimiser');?></th>
-                <td>
-
-
-										 <div class='switch_button'>
-
-											 <label>
-												 <input type="checkbox" class="switch" name="backupImages" value="1" <?php checked($view->data->backupImages, '1');?>>
-												 <div class="the_switch">&nbsp; </div>
-												<?php esc_html_e('Create a backup of the original images, saved on your server in /wp-content/uploads/ShortpixelBackups/.','shortpixel-image-optimiser');?>
-											 </label>
-										 </div>
-											 <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/515-settings-image-backup"></span></div>
-	                    <p class="settings-info"><?php esc_html_e('You can remove the backup folder at any moment but it is best to keep a local/cloud copy, in case you want to restore the optimized files to originals or re-optimize the images using a different compression type.','shortpixel-image-optimiser');?></p>
-                </td>
-            </tr>
-
-            <tr class='view-notice-row backup_warning'>
-              <th scope='row'>&nbsp;</th>
-              <td><div class='view-notice warning'><p><?php esc_html_e('Make sure you have a backup in place. When optimizing, ShortPixel will overwrite your images without recovery, which may result in lost images.', 'shortpixel-image-optimiser') ?></p></div></td>
-            </tr>
-
-            <tr>
-                <th scope="row"><?php esc_html_e('Remove EXIF','shortpixel-image-optimiser');?></th>
-                <td>
-                    <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/483-spai-remove-exif"></span></div>
-									<div class='switch_button'>
-										<label>
-											<input type="checkbox" class="switch" name="removeExif" value="1" <?php checked($view->data->keepExif, 0);?>>
-											<div class="the_switch">&nbsp; </div>
-											<?php esc_html_e('Remove the EXIF tag of the image (recommended).','shortpixel-image-optimiser');?>
-										</label>
-									</div>
-
-
-                </td>
-            </tr>
-            <tr class='exif_warning view-notice-row'>
-                <th scope="row">&nbsp;</th>
-                <td>
-                  <div class='view-notice warning'><p><?php printf(esc_html__('Warning - Converting from PNG to JPG will %s not %s keep the EXIF information!'), "<strong>","</strong>"); ?></p></div>
-                </td>
-            </tr>
-
-
-            <?php $imagick = (\wpSPIO()->env()->hasImagick()) ? 1 : 0; ?>
-            <tr class='exif_imagick_warning view-notice-row' data-imagick="<?php echo esc_attr($imagick) ?>">
-                  <th scope="row">&nbsp;</th>
-                  <td>
-                    <div class='view-notice warning'><p><?php printf(esc_html__('Warning - Imagick library not detected on server. WordPress will use another library to resize images, which may result in loss of EXIF information'), "<strong>","</strong>"); ?></p></div>
-                  </td>
-            </tr>
 
             <tr>
               <?php  $resizeDisabled = (! $this->view->data->resizeImages) ? 'disabled' : '';
@@ -252,8 +256,6 @@ if (true === \wpSPIO()->env()->useTrustedMode())
 												</label>
 											</div>
 
-
-
                     <input type="number" min="1" max="20000" name="resizeWidth" id="width" style="width:80px" class="resize-sizes"
                            value="<?php echo esc_attr( $view->data->resizeWidth > 0 ? $view->data->resizeWidth : min(1200, $view->minSizes['width']) );?>" <?php echo esc_attr( $resizeDisabled );?>/> <?php
                            esc_html_e('pixels wide &times;','shortpixel-image-optimiser');?>
@@ -268,65 +270,10 @@ if (true === \wpSPIO()->env()->useTrustedMode())
 
                     <p class="settings-info">
                         <?php esc_html_e('Recommended for large photos, like the ones taken with your phone. Saved space can go up to 80% or more after resizing. Please note that this option does not prevent thumbnails from being created that should  be larger than the selected dimensions, but these thumbnails will also be resized to the dimensions selected here.','shortpixel-image-optimiser');?>
-
-
                     </p>
-                    <?php if(false) { ?>
-                    <div style="margin-top: 10px;">
-                        <input type="radio" name="resizeType" id="resize_type_outer" value="outer" <?php echo($view->data->resizeType == 'inner' ? '' : 'checked') ?> style="margin: -50px 10px 60px 0;">
-                        <img alt="<?php esc_html_e('Resize outer','shortpixel-image-optimiser'); ?>" src="<?php echo esc_url(wpSPIO()->plugin_url('res/img/resize-outer.png' ));?>"
-                             srcset='<?php echo esc_url(wpSPIO()->plugin_url('res/img/resize-outer.png' ));?> 1x, <?php echo esc_url(wpSPIO()->plugin_url('res/img/resize-outer@2x.png' ));?> 2x'
-                             title="<?php esc_html_e('Sizes will be greater or equal to the corresponding value. For example, if you set the resize dimensions at 1000x1200, an image of 2000x3000px will be resized to 1000x1500px while an image of 3000x2000px will be resized to 1800x1200px','shortpixel-image-optimiser');?>">
-                        <input type="radio" name="resizeType" id="resize_type_inner" value="inner" <?php echo esc_attr($view->data->resizeType == 'inner' ? 'checked' : '') ?> style="margin: -50px 10px 60px 35px;">
-                        <img alt="<?php esc_html_e('Resize inner','shortpixel-image-optimiser'); ?>" src="<?php echo esc_url(wpSPIO()->plugin_url('res/img/resize-inner.png' ));?>"
-                             srcset='<?php echo esc_url(wpSPIO()->plugin_url('res/img/resize-inner.png' ));?> 1x, <?php echo esc_url(wpSPIO()->plugin_url('res/img/resize-inner@2x.png' ));?> 2x'
-                             title="<?php esc_html_e('Sizes will be smaller or equal to the corresponding value. For example, if you set the resize dimensions at 1000x1200, an image of 2000x3000px will be resized to 800x1200px while an image of 3000x2000px will be resized to 1000x667px','shortpixel-image-optimiser');?>">
 
-                    </div>
-                    <?php } ?>
 
-                    <style>
-                        .presentation-wrap {
-                            padding: 10px;
-                            text-align: center;
-                            display: flex;
-                            justify-content: center;
-                            width: 600px;
-                        }
-                        @media(max-width: 1280px) {
-                            .presentation-wrap {
-                                width: 460px;
-                            }
-                        }
-                        @media(max-width: 1140px) {
-                            .presentation-wrap {
-                                width: 320px;
-                            }
-                        }
-                        .presentation-wrap img {
-                            margin-auto;
-                        }
-                        .spai-resize-frame {
-                            position: absolute;
-                            border: 2px dashed #fd1d1d;
-                        }
-                        .spai-resize-frame:after {
-                            font-size: 10px;
-                            font-weight: bold;
-                            position: absolute;
-                            bottom: -15px;
-                            right: 0;
-                            color: red;
-                        }
-                        .resize-options-wrap {
-                            margin: 10px 20px 0 20px;
-                            float: left;
-                        }
-                        .resize-type-wrap label {
-                            display: inline-block;
-                            padding: 15px 0 0 0;
-                        }
-                    </style>
+        
                     <div class="resize-type-wrap" <?php echo( $view->data->resizeImages ? '' : 'style="display:none;"' );?>>
                         <div class="resize-options-wrap">
                             <label title="<?php esc_html_e('Sizes will be greater or equal to the corresponding value. For example, if you set the resize dimensions at 1000x1200, an image of 2000x3000px will be resized to 1000x1500px while an image of 3000x2000px will be resized to 1800x1200px','shortpixel-image-optimiser');?>">

@@ -21,13 +21,14 @@ setting{
   content {
      padding: 15px 10px;
      flex-basis: calc(100% - 250px);
+     font-size: 14px;
   }
   // additional information
   info {
      display: block;
      padding-top: 0px;
      color: #818181;
-     font-size: 13px !important;
+     font-size: 13px;
      margin: 6px 0;
   }
 
@@ -35,7 +36,8 @@ setting{
       border-left: 4px solid #ffb900;
       box-shadow: 0 1px 1px 0 rgba( 0, 0, 0, 0.1 );
       padding: 8px;
-      margin-left: 230px;
+//      margin-left: 230px;
+      margin: 4px 0 12px 230px;
       flex-basis: 100%;
       display: none;
 
@@ -51,7 +53,6 @@ setting{
       &.display {
           display: block;
       }
-
   }
 
 } // setting

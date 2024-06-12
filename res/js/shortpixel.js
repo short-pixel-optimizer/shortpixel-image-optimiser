@@ -129,34 +129,34 @@ var ShortPixel = function() {
     function checkExifWarning()
     {
       if (! jQuery('input[name="removeExif"]').is(':checked') && jQuery('input[name="png2jpg"]').is(':checked') )
-        jQuery('.exif_warning').fadeIn();
+        jQuery('#exif-warning').fadeIn();
       else
-        jQuery('.exif_warning').fadeOut();
+        jQuery('#exif-warning').fadeOut();
 
-      if (! jQuery('input[name="removeExif"]').is(':checked') && jQuery('.exif_imagick_warning').data('imagick') <= 0)
-        jQuery('.exif_imagick_warning').fadeIn();
+      if (! jQuery('input[name="removeExif"]').is(':checked') && jQuery('#exif-imagick-warning').data('imagick') <= 0)
+        jQuery('#exif-imagick-warning').fadeIn();
       else
-        jQuery('.exif_imagick_warning').fadeOut();
+        jQuery('#exif-imagick-warning').fadeOut();
 
     }
 
 		function checkSmartCropWarning()
 		{
-			if (jQuery('input[name="useSmartcrop"]').is(':checked') && jQuery('.smartcrop_warning').data('smartcrop') == 1 )
-        jQuery('.smartcrop_warning').fadeIn();
+			if (jQuery('input[name="useSmartcrop"]').is(':checked') && jQuery('#smartcrop-warning').data('smartcrop') == 1 )
+        jQuery('#smartcrop-warning').fadeIn();
       else
-        jQuery('.smartcrop_warning').fadeOut();
+        jQuery('#smartcrop-warning').fadeOut();
 
 		}
 
     function checkBackUpWarning()
     {
-      if (! jQuery('input[name="backupImages"]').is(':checked') )
+      if (false === jQuery('input[name="backupImages"]').is(':checked') )
       {
-        jQuery('.backup_warning').fadeIn();
+        jQuery('#backup-warning').fadeIn();
       }
       else {
-        jQuery('.backup_warning').fadeOut();
+        jQuery('#backup-warning').fadeOut();
       }
     }
 
