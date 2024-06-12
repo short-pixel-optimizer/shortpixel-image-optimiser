@@ -64,7 +64,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
           </content>
         </setting>
 
-          <setting>
+          <setting id='compression-type'>
               <name>
                   <?php esc_html_e('Compression type:','shortpixel-image-optimiser');?>
               </name>

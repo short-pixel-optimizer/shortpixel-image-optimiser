@@ -173,11 +173,9 @@ var ShortPixel = function() {
 
        if (input.is(':checked'))
        {
-          //input.attr('disabled', true);
           warningEl.fadeIn();
        }
        else {
-         //input.attr('disabled', false);
          warningEl.fadeOut();
        }
     }
@@ -202,9 +200,9 @@ var ShortPixel = function() {
                 }
 
 							 if (this.value == savedCompression)
-  					 		jQuery('.compression-notice-row').addClass('shortpixel-hide');
+  					 		jQuery('#compression-type warning').removeClass('display');
 							else
-							  jQuery('.compression-notice-row').removeClass('shortpixel-hide');
+							  jQuery('#compression-type warning').addClass('display');
             };
         }
 
@@ -270,27 +268,6 @@ var ShortPixel = function() {
     }
 
     function setupAdvancedTab() {
-
-      /* @TODO - Removed in favor of AjaxController method . Remove in next version
-        jQuery("input.remove-folder-button").on('click', function(){
-            var id = jQuery(this).data("value");
-            var path = jQuery(this).data('name');
-            var r = confirm( SPstringFormat(_spTr.areYouSureStopOptimizing, path) );
-            if (r == true) {
-                jQuery("#removeFolder").val(id);
-                jQuery('#wp_shortpixel_options').submit();
-            }
-        });
-
-        jQuery("input.recheck-folder-button").on('click', function(){
-            var path = jQuery(this).data("value");
-            var r = confirm( SPstringFormat(_spTr.areYouSureStopOptimizing, path));
-            if (r == true) {
-                jQuery("#recheckFolder").val(path);
-                jQuery('#wp_shortpixel_options').submit();
-            }
-        });
-        */
 
         if (document.querySelector('.heavy-feature-virtual.retina') !== null)
         {
@@ -363,13 +340,7 @@ var ShortPixel = function() {
         var tab = target.replace("tab-",""),
             beacon = "",
             section = jQuery("section#" +target);
-          //  url = location.href.replace(location.hash,"") + '#' + tab;
-        /*if(history.pushState) {
-            history.pushState(null, null, url);
-        }
-        else {
-            location.hash = url;
-        } */
+
 				if (section.length == 0)
 				{
 					 tab = 'settings'; // if tab does not exist.
@@ -394,7 +365,6 @@ var ShortPixel = function() {
 						window.dispatchEvent(event);
 
         }
-
     }
 
     // Fixes the height of the current active tab.
@@ -410,8 +380,6 @@ var ShortPixel = function() {
         jQuery('#shortpixel-hs-blind').remove();
     }
 
-
-
     function checkQuota() {
         var data = {
           action:'shortpixel_check_quota',
@@ -425,7 +393,6 @@ var ShortPixel = function() {
             window.location.href = result.redirect;
         });
     }
-
 
     function percentDial(query, size) {
         jQuery(query).knob({

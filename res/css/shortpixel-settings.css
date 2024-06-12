@@ -692,6 +692,7 @@ setting {
   padding: 12px 0 12px 0;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
 }
 setting name {
   width: 220px;
@@ -704,6 +705,7 @@ setting name {
 }
 setting content {
   padding: 15px 10px;
+  flex-basis: calc(100% - 250px);
 }
 setting info {
   display: block;
@@ -711,6 +713,25 @@ setting info {
   color: #818181;
   font-size: 13px !important;
   margin: 6px 0;
+}
+setting warning {
+  border-left: 4px solid #ffb900;
+  box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.1);
+  padding: 8px;
+  margin-left: 230px;
+  flex-basis: 100%;
+  display: none;
+}
+setting warning h4 {
+  margin: 0;
+  font-size: 16px;
+}
+setting warning p {
+  color: #333;
+  font-size: 13px;
+}
+setting warning.display {
+  display: block;
 }
 
 settinggrid {

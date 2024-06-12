@@ -5,6 +5,7 @@ setting{
   padding: 12px 0 12px 0;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
 
   // main title of setting
   name {
@@ -19,6 +20,7 @@ setting{
 
   content {
      padding: 15px 10px;
+     flex-basis: calc(100% - 250px);
   }
   // additional information
   info {
@@ -27,6 +29,29 @@ setting{
      color: #818181;
      font-size: 13px !important;
      margin: 6px 0;
+  }
+
+  warning {
+      border-left: 4px solid #ffb900;
+      box-shadow: 0 1px 1px 0 rgba( 0, 0, 0, 0.1 );
+      padding: 8px;
+      margin-left: 230px;
+      flex-basis: 100%;
+      display: none;
+
+      h4 {
+        margin: 0;
+        font-size: 16px;
+      }
+
+      p {
+         color: #333;
+         font-size: 13px;
+      }
+      &.display {
+          display: block;
+      }
+
   }
 
 } // setting
