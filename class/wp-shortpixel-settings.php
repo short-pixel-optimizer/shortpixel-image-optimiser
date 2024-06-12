@@ -64,7 +64,7 @@ class WPShortPixelSettings extends \ShortPixel\Model {
         //optimize other images than the ones in Media Library
         'includeNextGen' => array('key' => 'wp-short-pixel-include-next-gen', 'default' => null, 'group' => 'options'),
         'hasCustomFolders' => array('key' => 'wp-short-pixel-has-custom-folders', 'default' => false, 'group' => 'options'),
-        'customBulkPaused' => array('key' => 'wp-short-pixel-custom-bulk-paused', 'default' => false, 'group' => 'options'),
+        //'customBulkPaused' => array('key' => 'wp-short-pixel-custom-bulk-paused', 'default' => false, 'group' => 'options'),
 
         //uninstall
   //      'removeSettingsOnDeletePlugin' => array('key' => 'wp-short-pixel-remove-settings-on-delete-plugin', 'default' => false, 'group' => 'options'),
@@ -228,9 +228,6 @@ class WPShortPixelSettings extends \ShortPixel\Model {
           'wp-short-pixel-savedSpace',
           'wp-short-pixel-fileCount',
           'wp-short-pixel-files-under-5-percent',
-
-
-
         ];
 
 				$toRemove = array_merge($bulkLegacyOptions, $removedStats, $removedOptions, $settingsRevamp);

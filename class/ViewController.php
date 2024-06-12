@@ -60,7 +60,7 @@ class ViewController extends Controller
   * This function should always be called at any ACTION function ( load, load_$action etc ).
 	* @param Object Model  Alternate model to check form values against.
   */
-  protected function checkPost($model = null)
+  protected function checkPost()
   {
 
 		if(count($_POST) === 0) // no post, nothing to check, return silent.
@@ -76,10 +76,9 @@ class ViewController extends Controller
     elseif (isset($_POST) && count($_POST) > 0)
     {
       check_admin_referer( $this->form_action, 'sp-nonce' ); // extra check, when we are wrong here, it dies.
-     // unset($_POST['sp-nonce']);
-     // unset($_POST['_wp_http_referer']);
+
       $this->is_form_submit = true;
-      $this->processPostData($_POST, $model);
+      $this->processPostData($_POST);
 
     }
 		return true;
@@ -152,12 +151,10 @@ class ViewController extends Controller
     echo $output;
   }
 
-
-
   /** Accepts POST data, maps, checks missing fields, and applies sanitization to it.
   * @param array $post POST data
   */
-  protected function processPostData($post, $model = null)
+  protected function processPostData($post)
   {
 
     // If there is something to map, map.
@@ -183,12 +180,7 @@ class ViewController extends Controller
     }
     else
     {
-		  // When (default) model is not supplied, that the viewControllers.
-			if (is_null($model))
-			{
-      	$model = $this->model;
-			}
-      $this->postData = $model->getSanitizedData($post);
+      $this->postData = $this->model->getSanitizedData($post);
     }
 
     return $this->postData;

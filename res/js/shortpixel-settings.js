@@ -68,6 +68,11 @@ var ShortPixelSettings = function()
 
 			var size_select = new ShiftSelect('input[name^="excludeSizes[]"]');
 
+			var compressionRadios = document.querySelectorAll('.shortpixel-compression-options input[type="radio"]');
+			for (var i = 0; i < compressionRadios.length; i++)
+			{
+				 compressionRadios[i].addEventListener('change', this.CompressionTypeChangeEvent.bind(this));
+			}
 	}
 
 	this.DoToggleAction = function(event)
@@ -300,6 +305,26 @@ this.NewExclusionShowInterfaceEvent = function (event)
 
  	 title.classList.remove('not-visible', 'hidden');
 	 button.classList.remove('not-visible', 'hidden');
+
+}
+
+//** When compressiontype changes, also update the information
+this.CompressionTypeChangeEvent = function(event)
+{
+	  var target = event.target;
+		var className = target.className;
+
+    var elements = document.querySelectorAll('.shortpixel-compression .settings-info');
+		for (var i = 0; i < elements.length; i++)
+		{
+			  var element = elements[i];
+				element.style.display = 'none';
+				if (element.classList.contains(className))
+				{
+					 element.style.display = 'inline-block';
+				}
+		}
+
 
 }
 

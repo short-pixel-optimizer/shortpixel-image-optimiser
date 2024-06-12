@@ -52,7 +52,6 @@ class QuotaController
           return $this->quotaData;
 
         $cache = new CacheController();
-
         $cacheData = $cache->getItem(self::CACHE_NAME);
 
         if (! $cacheData->exists() )
@@ -191,7 +190,6 @@ class QuotaController
           $keyControl = ApiKeyController::getInstance();
           $apiKey = $keyControl->forceGetApiKey();
         }
-
 
         $settings = \wpSPIO()->settings();
 

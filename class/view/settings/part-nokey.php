@@ -70,7 +70,7 @@ $adminEmail = get_bloginfo('admin_email');
               </info>
       </content>
   </setting>
-
+  </form>
 </settinglist>
 
 <h3>

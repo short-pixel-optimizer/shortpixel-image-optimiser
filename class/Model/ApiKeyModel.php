@@ -271,14 +271,13 @@ class ApiKeyModel extends \ShortPixel\Model
 
     $checked_key = ($quotaData['APIKeyValid']) ? true : false;
 
-
      if (! $checked_key)
      {
 			  Log::addError('Key is not validated', $quotaData['Message']);
         Notice::addError(sprintf(__('Error during verifying API key: %s','shortpixel-image-optimiser'), $quotaData['Message'] ));
      }
      elseif ($checked_key) {
-        if (false === $this->is_constant_key)
+        if (false === $this->is_constant())
         {
           $this->apiKey = $key;
         }
@@ -289,10 +288,10 @@ class ApiKeyModel extends \ShortPixel\Model
      return $this->verifiedKey;
   }
 
-
   /** Process some things when key has been added. This is from original wp-short-pixel.php */
   protected function processNewKey($quotaData)
   {
+
     //display notification
     $urlParts = explode("/", get_site_url());
     if( $quotaData['DomainCheck'] == 'NOT Accessible'){
@@ -317,7 +316,6 @@ class ApiKeyModel extends \ShortPixel\Model
 
     AdminNoticesController::resetAPINotices();
   }
-
 
   protected function NoticeApiKeyLength($key)
   {
@@ -345,7 +343,6 @@ class ApiKeyModel extends \ShortPixel\Model
    $quotaData = $qControl->remoteValidateKey($key);
 
    return $quotaData;
-
 
   }
 

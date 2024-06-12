@@ -286,7 +286,6 @@ class OtherMediaController extends \ShortPixel\Controller
 				$defaults = array(
 						'force' => false,
 						'interval' => HOUR_IN_SECONDS,
-
 				);
 
 				$args = wp_parse_args($args, $defaults);
@@ -300,7 +299,6 @@ class OtherMediaController extends \ShortPixel\Controller
 				$sql = ' SELECT id FROM ' . $folderTable . '	WHERE status >= 0 AND (ts_checked <= %s OR ts_checked IS NULL) order by ts_checked ASC';
 
 				$sql = $wpdb->prepare($sql, $tsInterval);
-
 				$folder_id = $wpdb->get_var($sql);
 
 				if (is_null($folder_id))
@@ -309,7 +307,6 @@ class OtherMediaController extends \ShortPixel\Controller
 				}
 
 				$directoryObj = $this->getFolderByID($folder_id);
-
 				$old_count = $directoryObj->get('fileCount');
 
 				$return = array(
@@ -327,7 +324,6 @@ class OtherMediaController extends \ShortPixel\Controller
 				{
 					 $directoryObj->set('checked', time()); // preventing loops here in case some wrong
 					 $directoryObj->save();
-
 					 // Probably should catch some notice here to return  @todo
 				}
 

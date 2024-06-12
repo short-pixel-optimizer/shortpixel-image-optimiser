@@ -49,10 +49,8 @@ class SettingsController extends \ShortPixel\ViewController
       {
           $this->model = \wpSPIO()->settings();
 
-
 					$keyControl = ApiKeyController::getInstance();
           $this->keyModel = $keyControl->getKeyModel();
-
 
           parent::__construct();
       }
@@ -74,7 +72,6 @@ class SettingsController extends \ShortPixel\ViewController
         $this->load_settings();
       }
 
-
       // this is the nokey form, submitting api key
       public function action_addkey()
       {
@@ -82,10 +79,10 @@ class SettingsController extends \ShortPixel\ViewController
 
         $this->checkPost();
 
-        Log::addDebug('Settings Action - addkey ', array($this->is_form_submit, $this->postData) );
-        if ($this->is_form_submit && isset($this->postData['apiKey']))
+        if ($this->is_form_submit && isset($_POST['apiKey']))
         {
-            $apiKey = $this->postData['apiKey'];
+            $apiKey = sanitize_text_field($_POST['apiKey']);
+
             if (strlen(trim($apiKey)) == 0) // display notice when submitting empty API key
             {
               Notice::addError(sprintf(__("The key you provided has %s characters. The API key should have 20 characters, letters and numbers only.",'shortpixel-image-optimiser'), strlen($apiKey) ));
@@ -93,7 +90,7 @@ class SettingsController extends \ShortPixel\ViewController
             else
             {
               $this->keyModel->resetTried();
-              $this->keyModel->checkKey($this->postData['apiKey']);
+              $this->keyModel->checkKey($apiKey);
             }
         }
 
@@ -318,7 +315,6 @@ class SettingsController extends \ShortPixel\ViewController
 						 Notice::addSuccess($message);
 			 }
 
-
 				$this->doRedirect();
 			}
 
@@ -350,8 +346,6 @@ class SettingsController extends \ShortPixel\ViewController
 				exit('reloading settings would cause processorKey to be set again');
 			}
 
-
-
       public function processSave()
       {
           // Split this in the several screens. I.e. settings, advanced, Key Request IF etc.
@@ -364,8 +358,6 @@ class SettingsController extends \ShortPixel\ViewController
               // Reset any integration notices when updating settings.
               AdminNoticesController::resetIntegrationNotices();
           }
-
-
 
 					// If the compression type setting changes, remove all queued items to prevent further optimizing with a wrong type.
 					if (intval($this->postData['compressionType']) !== intval($this->model->compressionType))
@@ -568,31 +560,24 @@ class SettingsController extends \ShortPixel\ViewController
       // This is done before handing it off to the parent controller, to sanitize and check against model.
       protected function processPostData($post, $model = null)
       {
-
           if (isset($post['display_part']) && strlen($post['display_part']) > 0)
           {
               $this->display_part = sanitize_text_field($post['display_part']);
           }
-     //     unset($post['display_part']);
 
           // analyse the save button
           if (isset($post['save_bulk']))
           {
             $this->do_redirect = true;
           }
-     //     unset($post['save_bulk']);
-    //      unset($post['save']);
 
           // handle 'reverse' checkbox.
           $keepExif = isset($post['removeExif']) ? 0 : 1;
           $post['keepExif'] = $keepExif;
-        //  unset($post['removeExif']);
-
 
           // checkbox overloading
           $png2jpg = (isset($post['png2jpg']) ? (isset($post['png2jpgForce']) ? 2 : 1): 0);
           $post['png2jpg'] = $png2jpg;
-         // unset($post['png2jpgForce']);
 
           // must be an array
           $post['excludeSizes'] = (isset($post['excludeSizes']) && is_array($post['excludeSizes']) ? $post['excludeSizes']: array());
@@ -602,20 +587,21 @@ class SettingsController extends \ShortPixel\ViewController
         //  $post = $this->processCloudFlare($post);
 
 					$check_key = false;
-					Log::addTemp("POST", $post);
 
-					if (isset($post['apiKey']))
+					/*   This can't be here, no actions in the data check, because of actions
+          if (isset($post['apiKey']))
+
 					{
 							$check_key = sanitize_text_field($post['apiKey']);
 							unset($post['apiKey']); // unset, since keyModel does the saving.
 					}
 
 					// first save all other settings ( like http credentials etc ), then check
-          if (! $this->keyModel->is_constant() && $check_key !== false) // don't allow settings key if there is a constant
+          if (false === $this->keyModel->is_constant() && $check_key !== false) // don't allow settings key if there is a constant
           {
             $this->keyModel->resetTried(); // reset the tried api keys on a specific post request.
             $this->keyModel->checkKey($check_key);
-          }
+          } */
 
 				// Field that are in form for other purpososes, but are not part of model and should not be saved.
 					$ignore_fields = array(

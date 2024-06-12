@@ -12,11 +12,9 @@ class SettingsModel extends \ShortPixel\Model
 		protected static $instance;
 
 		private $option_name = 'spio_settings';
-
 		private $state_name = 'spio_states';
 
 		private $updated = false;
-
 
 		protected $model = array(
 //        'apiKey' => array('s' => 'string'), // string
@@ -73,7 +71,6 @@ class SettingsModel extends \ShortPixel\Model
 			 $this->load();
 
 		}
-
 
 		public static function getInstance()
 		{
@@ -156,6 +153,10 @@ class SettingsModel extends \ShortPixel\Model
 				}
 		}
 
+    /**
+     * PHP shutdown function, check if settings are updated and save on closing time.
+     * @return null
+     */
 		private function onShutdown()
 		{
 				if (true === $this->updated)
@@ -163,12 +164,7 @@ class SettingsModel extends \ShortPixel\Model
 						Log::addTemp('Saving Settings');
 						$this->save();
 				}
-
 		}
-
-
-  //  public static function
-
 
 
 } // class
