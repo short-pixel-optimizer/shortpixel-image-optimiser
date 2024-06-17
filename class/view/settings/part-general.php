@@ -231,86 +231,79 @@ if (true === \wpSPIO()->env()->useTrustedMode())
               <?php esc_html_e('Resize large images','shortpixel-image-optimiser');?>
             </name>
             <content>
+							<?php  $resizeDisabled = (! $this->view->data->resizeImages) ? 'disabled' : '';
+								 // @todo Inline styling here can be decluttered.
+							?>
+							<input type="hidden" id="min-resizeWidth" value="<?php echo esc_attr($view->minSizes['width']);?>" data-nicename="<?php esc_html_e('Width', 'shortpixel-image-optimiser'); ?>" />
+
+							<input type="hidden" id="min-resizeHeight" value="<?php echo esc_attr($view->minSizes['height']);?>" data-nicename="<?php esc_html_e('Height', 'shortpixel-image-optimiser'); ?>"/>
+
+							<div class='switch_button'>
+								<label>
+									<input type="checkbox" class="switch" name="resizeImages" id='resize' value="1" <?php checked($view->data->resizeImages, true);?>>
+									<div class="the_switch">&nbsp; </div>
+									<?php esc_html_e('to maximum','shortpixel-image-optimiser') ?>
+								</label>
+							</div>
+
+						<input type="number" min="1" max="20000" name="resizeWidth" id="width" style="width:80px" class="resize-sizes"
+									 value="<?php echo esc_attr( $view->data->resizeWidth > 0 ? $view->data->resizeWidth : min(1200, $view->minSizes['width']) );?>" <?php echo esc_attr( $resizeDisabled );?>/> <?php
+									 esc_html_e('pixels wide &times;','shortpixel-image-optimiser');?>
+
+						<input type="number" min="1" max="20000" name="resizeHeight" id="height" class="resize-sizes" style="width:80px"
+									 value="<?php echo esc_attr( $view->data->resizeHeight > 0 ? $view->data->resizeHeight : min(1200, $view->minSizes['height']) );?>" <?php echo esc_attr( $resizeDisabled );?>/> <?php
+									 esc_html_e('pixels high (preserves the original aspect ratio and doesn\'t crop the image)','shortpixel-image-optimiser');?>
+
+
+							<info>
+								<?php esc_html_e('Recommended for large photos, like the ones taken with your phone. Saved space can go up to 80% or more after resizing. Please note that this option does not prevent thumbnails from being created that should  be larger than the selected dimensions, but these thumbnails will also be resized to the dimensions selected here.','shortpixel-image-optimiser');?>
+							</info>
 
             </content>
           </setting>
           <!-- / Resize Large Image -->
+
+					<!-- Resize Details -->
+					<setting>
+							<name>&nbsp;</name>
+							<content>
+								<div class="resize-type-wrap" <?php echo( $view->data->resizeImages ? '' : 'style="display:none;"' );?>>
+										<div class="resize-options-wrap">
+												<label title="<?php esc_html_e('Sizes will be greater or equal to the corresponding value. For example, if you set the resize dimensions at 1000x1200, an image of 2000x3000px will be resized to 1000x1500px while an image of 3000x2000px will be resized to 1800x1200px','shortpixel-image-optimiser');?>">
+														<input type="radio" name="resizeType" id="resize_type_outer" value="outer" <?php echo esc_attr($view->data->resizeType) == 'inner' ? '' : 'checked'; ?>>
+														<?php esc_html_e( 'Cover', 'shortpixel-image-optimiser' ); ?>
+												</label><br>
+												<label title="<?php esc_html_e('Sizes will be smaller or equal to the corresponding value. For example, if you set the resize dimensions at 1000x1200, an image of 2000x3000px will be resized to 800x1200px while an image of 3000x2000px will be resized to 1000x667px','shortpixel-image-optimiser');?>">
+														<input type="radio" name="resizeType" id="resize_type_inner" value="inner" <?php echo esc_attr($view->data->resizeType) == 'inner' ? 'checked' : ''; ?>>
+														<?php esc_html_e( 'Contain', 'shortpixel-image-optimiser' ); ?>
+												</label><br>
+												<div style="display:inline-block;margin-top: 15px;"><a href="https://shortpixel.com/knowledge-base/article/208-can-shortpixel-automatically-resize-new-image-uploads" class="shortpixel-help-link" target="_blank">
+
+																<span class="dashicons dashicons-editor-help"></span><?php esc_html_e('What is this?','shortpixel-image-optimiser');?></a>
+												</div>
+
+										</div>
+										<?php
+										$resize_width  = (int) ( $view->data->resizeWidth > 0 ? $view->data->resizeWidth : min( 1200, $view->minSizes[ 'width' ] ) );
+										$resize_height = (int) ( $view->data->resizeHeight > 0 ? $view->data->resizeHeight : min( 1200, $view->minSizes[ 'height' ] ) );
+										$ratio         = $resize_height / $resize_width;
+
+										$frame_style = 'padding-top:' . round( ( $ratio < 1.5 ? ( $ratio < 0.5 ? 0.5 : $ratio ) : 1.5 ) * 100, 0 ) . '%;';
+
+										$image_size = getimagesize( wpSPIO()->plugin_path( 'res/img/resize-type.png' ) );
+										?>
+										<div class="presentation-wrap">
+												<div class="spai-resize-frame"></div>
+												<img class="spai-resize-img" src="<?php echo esc_url(wpSPIO()->plugin_url('res/img/resize-type.png'));?>" data-width="300" data-height="160"
+														 srcset="<?php echo esc_url(wpSPIO()->plugin_url('res/img/resize-type@2x.png'));?> 2x" alt="">
+										</div>
+
+								</div>
+							</content>
+
+					<!-- / Resize Details -->
+
     </settinglist>
-
-
-    <table class="form-table">
-        <tbody>
-
-            <tr>
-              <?php  $resizeDisabled = (! $this->view->data->resizeImages) ? 'disabled' : '';
-                 // @todo Inline styling here can be decluttered.
-              ?>
-                <th scope="row"><?php esc_html_e('Resize large images','shortpixel-image-optimiser');?></th>
-                <td>
-
-											<div class='switch_button'>
-												<label>
-													<input type="checkbox" class="switch" name="resizeImages" id='resize' value="1" <?php checked($view->data->resizeImages, true);?>>
-													<div class="the_switch">&nbsp; </div>
-													<?php esc_html_e('to maximum','shortpixel-image-optimiser') ?>
-												</label>
-											</div>
-
-                    <input type="number" min="1" max="20000" name="resizeWidth" id="width" style="width:80px" class="resize-sizes"
-                           value="<?php echo esc_attr( $view->data->resizeWidth > 0 ? $view->data->resizeWidth : min(1200, $view->minSizes['width']) );?>" <?php echo esc_attr( $resizeDisabled );?>/> <?php
-                           esc_html_e('pixels wide &times;','shortpixel-image-optimiser');?>
-
-                    <input type="number" min="1" max="20000" name="resizeHeight" id="height" class="resize-sizes" style="width:80px"
-                           value="<?php echo esc_attr( $view->data->resizeHeight > 0 ? $view->data->resizeHeight : min(1200, $view->minSizes['height']) );?>" <?php echo esc_attr( $resizeDisabled );?>/> <?php
-                           esc_html_e('pixels high (preserves the original aspect ratio and doesn\'t crop the image)','shortpixel-image-optimiser');?>
-
-                    <input type="hidden" id="min-resizeWidth" value="<?php echo esc_attr($view->minSizes['width']);?>" data-nicename="<?php esc_html_e('Width', 'shortpixel-image-optimiser'); ?>" />
-
-                    <input type="hidden" id="min-resizeHeight" value="<?php echo esc_attr($view->minSizes['height']);?>" data-nicename="<?php esc_html_e('Height', 'shortpixel-image-optimiser'); ?>"/>
-
-                    <p class="settings-info">
-                        <?php esc_html_e('Recommended for large photos, like the ones taken with your phone. Saved space can go up to 80% or more after resizing. Please note that this option does not prevent thumbnails from being created that should  be larger than the selected dimensions, but these thumbnails will also be resized to the dimensions selected here.','shortpixel-image-optimiser');?>
-                    </p>
-
-
-        
-                    <div class="resize-type-wrap" <?php echo( $view->data->resizeImages ? '' : 'style="display:none;"' );?>>
-                        <div class="resize-options-wrap">
-                            <label title="<?php esc_html_e('Sizes will be greater or equal to the corresponding value. For example, if you set the resize dimensions at 1000x1200, an image of 2000x3000px will be resized to 1000x1500px while an image of 3000x2000px will be resized to 1800x1200px','shortpixel-image-optimiser');?>">
-                                <input type="radio" name="resizeType" id="resize_type_outer" value="outer" <?php echo esc_attr($view->data->resizeType) == 'inner' ? '' : 'checked'; ?>>
-                                <?php esc_html_e( 'Cover', 'shortpixel-image-optimiser' ); ?>
-                            </label><br>
-                            <label title="<?php esc_html_e('Sizes will be smaller or equal to the corresponding value. For example, if you set the resize dimensions at 1000x1200, an image of 2000x3000px will be resized to 800x1200px while an image of 3000x2000px will be resized to 1000x667px','shortpixel-image-optimiser');?>">
-                                <input type="radio" name="resizeType" id="resize_type_inner" value="inner" <?php echo esc_attr($view->data->resizeType) == 'inner' ? 'checked' : ''; ?>>
-                                <?php esc_html_e( 'Contain', 'shortpixel-image-optimiser' ); ?>
-                            </label><br>
-                            <div style="display:inline-block;margin-top: 15px;"><a href="https://shortpixel.com/knowledge-base/article/208-can-shortpixel-automatically-resize-new-image-uploads" class="shortpixel-help-link" target="_blank">
-
-                                    <span class="dashicons dashicons-editor-help"></span><?php esc_html_e('What is this?','shortpixel-image-optimiser');?></a>
-                            </div>
-
-                        </div>
-                        <?php
-                        $resize_width  = (int) ( $view->data->resizeWidth > 0 ? $view->data->resizeWidth : min( 1200, $view->minSizes[ 'width' ] ) );
-                        $resize_height = (int) ( $view->data->resizeHeight > 0 ? $view->data->resizeHeight : min( 1200, $view->minSizes[ 'height' ] ) );
-                        $ratio         = $resize_height / $resize_width;
-
-                        $frame_style = 'padding-top:' . round( ( $ratio < 1.5 ? ( $ratio < 0.5 ? 0.5 : $ratio ) : 1.5 ) * 100, 0 ) . '%;';
-
-                        $image_size = getimagesize( wpSPIO()->plugin_path( 'res/img/resize-type.png' ) );
-                        ?>
-                        <div class="presentation-wrap">
-                            <div class="spai-resize-frame"></div>
-                            <img class="spai-resize-img" src="<?php echo esc_url(wpSPIO()->plugin_url('res/img/resize-type.png'));?>" data-width="300" data-height="160"
-                                 srcset="<?php echo esc_url(wpSPIO()->plugin_url('res/img/resize-type@2x.png'));?> 2x" alt="">
-                        </div>
-
-                    </div>
-
-                </td>
-            </tr>
-        </tbody>
-    </table>
 
 
   <p class="submit">

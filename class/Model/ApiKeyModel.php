@@ -187,7 +187,12 @@ class ApiKeyModel extends \ShortPixel\Model
       {
         $this->NoticeApiKeyLength($key);
         Log::addDebug('Key Wrong Length');
-        $valid = $this->verifiedKey; // if we already had a verified key, and a wrong new one is giving keep status.
+
+				// Don't validate is wrong key is constant. 
+				if (false === $this->key_is_constant)
+				{
+        	$valid = $this->verifiedKey; // if we already had a verified key, and a wrong new one is giving keep status.
+				}
       }
       elseif( ($key != $this->apiKey || ! $this->verifiedKey) && $key != $this->apiKeyTried)
       {
@@ -200,7 +205,7 @@ class ApiKeyModel extends \ShortPixel\Model
       }
 
       // if key is not valid on load, means not valid at all
-      if (! $valid)
+      if (false === $valid)
       {
         $this->verifiedKey = false;
         $this->key_is_verified = false;

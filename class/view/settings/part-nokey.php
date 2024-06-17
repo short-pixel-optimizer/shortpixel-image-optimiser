@@ -10,15 +10,22 @@ if ( ! defined( 'ABSPATH' ) ) {
 // Notices for fringe cases
 if (! $view->key->is_verifiedkey && $view->key->hide_api_key && ! $view->key->is_constant_key)
 {
-  Notice::addError(__('wp-config.php is hiding the API key, but no API key was found. Remove the constant, or define the SHORTPIXEL_API_KEY constant as well', 'shortpixel-image-optimiser'));
+
+	$error_message = __('wp-config.php is hiding the API key, but no API key was found. Remove the constant, or define the SHORTPIXEL_API_KEY constant as well', 'shortpixel-image-optimiser');
+	Notice::addError($error_message);
 }
 elseif ($view->key->is_constant_key && ! $view->key->is_verifiedkey)
 {
   $dkey = ($view->key->hide_api_key) ? '' : '(' . SHORTPIXEL_API_KEY.  ')';
-  Notice::addError(sprintf(__('Constant API Key is not verified. Please check if this is a valid API key %s'),$dkey));
+	$error_message = sprintf(__('Constant API Key is not verified. Please check if this is a valid API key %s'),$dkey);
+  Notice::addError($error_message);
 }
 
 $adminEmail = get_bloginfo('admin_email');
+
+//var_dump($view->key->is_editable);
+// When key is not editable, basically all fields should be off.
+$disabled = ($view->key->is_editable) ? '' : 'disabled';
 
 ?>
 <section id="tab-settings" class="sel-tab" >
@@ -39,12 +46,13 @@ $adminEmail = get_bloginfo('admin_email');
   <setting>
       <name for="pluginemail"><?php esc_html_e('E-mail address:','shortpixel-image-optimiser');?></name>
       <content>
-              <input name="pluginemail" type="text" id="pluginemail" value="<?php echo esc_attr( sanitize_email($adminEmail) );?>" class="regular-text">
+              <input name="pluginemail" type="text" id="pluginemail" value="<?php echo esc_attr( sanitize_email($adminEmail) );?>" class="regular-text" <?php echo $disabled ?> />
 
               <span class="spinner" id="pluginemail_spinner" style="float:none;"></span>
 
               <button type="submit" id="request_key" class="button button-primary" title="<?php esc_html_e('Request a new API key','shortpixel-image-optimiser');?>"
-                 href="https://shortpixel.com/free-sign-up?pluginemail=<?php echo esc_attr( esc_url($adminEmail) );?>">
+                 href="https://shortpixel.com/free-sign-up?pluginemail=<?php echo esc_attr( esc_url($adminEmail) );?>"
+								 <?php echo $disabled ?>  >
                  <?php esc_html_e('Request Key','shortpixel-image-optimiser');?>
               </button>
 
@@ -90,15 +98,20 @@ $adminEmail = get_bloginfo('admin_email');
       </name>
       <content>
         <input name="apiKey" type="text" id="key" value="<?php echo esc_attr( $view->key->apiKey );?>"
-           class="regular-text">
+           class="regular-text" <?php echo $disabled ?>>
 
               <input type="hidden" name="validate" id="valid" value="validate"/>
               <span class="spinner" id="pluginemail_spinner" style="float:none;"></span>
-              <button type="submit" id="validate" class="button button-primary" title="<?php esc_html_e('Validate the provided API key','shortpixel-image-optimiser');?>"
+              <button type="submit" id="validate" class="button button-primary" title="<?php esc_html_e('Validate the provided API key','shortpixel-image-optimiser');?>" <?php echo $disabled ?>
                   >
                   <?php esc_html_e('Validate','shortpixel-image-optimiser');?>
               </button>
       </content>
+			<?php if (isset($error_message)): ?>
+				<error class='display'>
+					<?php echo $error_message; ?>
+				</error>
+			<?php endif; ?>
   </setting>
 
   </form>
