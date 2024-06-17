@@ -50,8 +50,8 @@ setting{
          color: #333;
          font-size: 13px;
       }
-      &.display {
-          display: block;
+      &.is-visible {
+          display: inline-block;
       }
   }
 	error {

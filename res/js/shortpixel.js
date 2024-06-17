@@ -308,7 +308,7 @@ var ShortPixel = function() {
         });
 
 
-        jQuery('input[type=radio][name=deliverWebpType]').on('change', function(e) {
+  /*      jQuery('input[type=radio][name=deliverWebpType]').on('change', function(e) {
 						// shortpixel-settings init trigger events for toggles, ignore this when so.
 						if (e.detail && e.detail.init && e.detail.init === true)
 						{
@@ -326,7 +326,7 @@ var ShortPixel = function() {
             } else if(this.value == 'deliverWebpUnaltered') {
                 window.alert(_spTr.alertDeliverWebPUnaltered);
             }
-        });
+        }); */
 
 				// Init active tab
 				var activeTab = document.querySelector('section.sel-tab');

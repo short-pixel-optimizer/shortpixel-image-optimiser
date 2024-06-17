@@ -42,148 +42,193 @@ if ( ! defined( 'ABSPATH' ) ) {
 
     ?>
 
+
+    <settinglist>
+
+        <!-- next generation -->
+        <setting>
+          <name>
+            <?php esc_html_e('Next Generation Images','shortpixel-image-optimiser');?>
+          </name>
+          <content>
+
+            <switch>
+              <label>
+                <input type="checkbox" class="switch" name="createWebp" value="1" <?php checked( $view->data->createWebp, "1" );?>>
+                <div class="the_switch">&nbsp; </div>
+                 <?php printf(esc_html__('Create %s WebP versions %s of the images. Each image/thumbnail will use an additional credit unless you use the %s Unlimited plan. %s','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/blog/how-webp-images-can-speed-up-your-site/" target="_blank">', '</a>', '<a href="https://shortpixel.com/knowledge-base/article/555-how-does-the-unlimited-plan-work" target="_blank">', '</a>' );?>
+              </label>
+            </switch>
+
+              <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/286-how-to-serve-webp-files-using-spio"></i>
+
+          </content>
+        </setting>
+        <!-- /next generation -->
+
+        <!-- avif -->
+        <setting>
+            <name>&nbsp;</name>
+            <content>
+              <?php
+                $avifEnabled = $this->access()->isFeatureAvailable('avif');
+                $createAvifChecked = ($view->data->createAvif == 1 && $avifEnabled === true) ? true : false;
+                $disabled = ($avifEnabled === false) ? 'disabled' : '';
+                $avifEnabledNotice = false;
+                if ($avifEnabled == false)
+                {
+                   $avifEnabledNotice = '<div class="sp-notice sp-notice-warning  avifNoticeDisabled">';
+                   $avifEnabledNotice .=  __('The creation of AVIF files is not possible with this license type.', 'shortpixel-image-optimiser') ;
+                   $avifEnabledNotice .=  '<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/555-how-does-the-unlimited-plan-work"></span></div>';
+                   $avifEnabledNotice .= '</div>';
+                }
+              ?>
+
+            <switch>
+               <label>
+                 <input type="checkbox" class="switch" name="createAvif" value="1" <?php echo $disabled ?> <?php checked( $createAvifChecked );?>>
+                 <div class="the_switch">&nbsp; </div>
+                 <?php printf(esc_html__('Create %s AVIF versions %s of the images. Each image/thumbnail will use an additional credit. ','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/blog/what-is-avif-and-why-is-it-good/" target="_blank">', '</a>');?>
+               </label>
+             </switch>
+
+             <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/467-how-to-create-and-serve-avif-files-using-shortpixel-image-optimizer"></i>
+
+             <?php if(strlen($deliverAVIFLabel)){ ?>
+                          <p class="sp-notice sp-notice-warning">
+                         <?php echo ( $deliverAVIFLabel );?>
+                          </p>
+             <?php } ?>
+             <?php if ($avifEnabledNotice !== false) {  echo $avifEnabledNotice;  } ?>
+
+            </content>
+        </setting>
+        <!-- // avif -->
+
+        <setting>
+          <name> &nbsp; </name>
+          <content>
+THIS NEEDS DOING
+           <switch>
+             <label>
+               <input type="checkbox" class="switch" name="deliverWebp" data-toggle="deliverTypes" value="1" <?php checked( ($view->data->deliverWebp > 0), true);?>>
+               <div class="the_switch">&nbsp; </div>
+               <?php esc_html_e('Deliver the next generation versions of the images in the front-end:','shortpixel-image-optimiser');?>
+             </label>
+          </switch>
+          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/126-which-webp-files-delivery-method-is-the-best-for-me"></i>
+
+            <ul class="deliverWebpTypes toggleTarget" id="deliverTypes">
+                <li>
+                    <input type="radio" name="deliverWebpType" id="deliverWebpAltered" <?php checked( ($view->data->deliverWebp >= 1 && $view->data->deliverWebp <= 2), true); ?> <?php echo esc_attr( $deliverWebpAlteredDisabled );?> value="deliverWebpAltered" data-toggle="deliverAlteringTypes">
+                    <label for="deliverWebpAltered">
+                        <?php esc_html_e('Using the &lt;PICTURE&gt; tag syntax','shortpixel-image-optimiser');?>
+                    </label>
+
+                    <?php if($deliverWebpAlteredDisabledNotice){ ?>
+                        <p class="sp-notice">
+                            <?php esc_html_e('After the option to work on .htaccess was selected, the .htaccess file has become unaccessible / read-only. Please make the .htaccess file writeable again to be able to further set this option up.','shortpixel-image-optimiser')?>
+                        </p>
+                    <?php } ?>
+
+                    <p class="settings-info">
+                         <?php esc_html_e('Each &lt;img&gt; will be replaced with a &lt;picture&gt; tag that will also provide AVIF and WebP images for browsers that support it.  You don\'t need to activate this if you\'re using the Cache Enabler plugin because your AVIF\WebP images are already handled by this plugin. <strong>Please run some tests before using this option!</strong> If the styles that your theme is using rely on the position of your &lt;img&gt; tags, you may experience display problems.','shortpixel-image-optimiser'); ?>
+                        <strong><?php esc_html_e('You can revert anytime to the previous state just by deactivating the option.','shortpixel-image-optimiser'); ?></strong>
+                    </p>
+                    <warning id="deliverAlteringTypes">
+                       <message>
+  <?php _e( "Warning: Using this method alters the structure of the rendered HTML code (IMG tags get included in PICTURE tags), which, in some rare \ncases, can lead to CSS/JS inconsistencies.\n\nPlease test this functionality thoroughly after activating!\n\nIf you notice any issue, just deactivate it and the HTML will will revert to the previous state.", 'shortpixel-image-optimiser' ); ?>
+                        </message>
+                    </warning>
+
+                    <ul class="deliverWebpAlteringTypes toggleTarget" >
+                        <li>
+                            <input type="radio" name="deliverWebpAlteringType" id="deliverWebpAlteredWP" <?php checked(($view->data->deliverWebp == 2), true);?> value="deliverWebpAlteredWP">
+                            <label for="deliverWebpAlteredWP">
+                                <?php esc_html_e('Only via Wordpress hooks (like the_content, the_excerpt, etc)');?>
+                            </label>
+                        </li>
+                        <li>
+                            <input type="radio" name="deliverWebpAlteringType" id="deliverWebpAlteredGlobal" <?php checked(($view->data->deliverWebp == 1),true)?>  value="deliverWebpAlteredGlobal">
+                            <label for="deliverWebpAlteredGlobal">
+                                <?php esc_html_e('Global (processes the whole output buffer before sending the HTML to the browser)','shortpixel-image-optimiser');?>
+                            </label>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <input type="radio" name="deliverWebpType" id="deliverWebpUnaltered" <?php checked(($view->data->deliverWebp == 3), true);?> <?php echo esc_attr( $deliverWebpUnalteredDisabled );?> value="deliverWebpUnaltered" data-toggle="deliverAlteringTypes" data-toggle-reverse>
+
+                    <label for="deliverWebpUnaltered">
+                        <?php esc_html_e('Without altering the page code (via .htaccess)','shortpixel-image-optimiser')?>
+                    </label>
+
+                    <warning id="deliverAlteringTypes" >
+                      <message>
+                        <?php _e( 'This option will serve both WebP and the original image using the same URL, based on the web browser capabilities, please make sure you\'re serving the images from your server and not using a CDN which caches the images.', 'shortpixel-image-optimiser' ) ?>
+                      </message>
+                    </warning>
+                    <?php if(strlen($deliverWebpUnalteredLabel)){ ?>
+                        <p class="sp-notice sp-notice-warning"><strong>
+                            <?php echo( $deliverWebpUnalteredLabel );?>
+                         </strong>
+                        </p>
+                    <?php } ?>
+                </li>
+            </ul>
+          </content>
+
+        </setting>
+
+        <!-- Optimize Media On Upload -->
+        <setting>
+          <name>
+            <?php esc_html_e('Optimize media on upload','shortpixel-image-optimiser');?>
+          </name>
+          <content>
+
+             <switch>
+                 <label>
+                   <input type="checkbox" class="switch" name="autoMediaLibrary" id='autoMediaLibrary' value="1" <?php checked( $view->data->autoMediaLibrary, "1" );?>>
+                   <div class="the_switch">&nbsp; </div>
+                    <?php esc_html_e('Automatically optimize images after they are uploaded (recommended).','shortpixel-image-optimiser');?>
+               </label>
+            </switch>
+            <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/521-settings-optimize-media-on-upload"></i>
+
+          </content>
+        </setting>
+        <!-- // Optimize -->
+
+        <setting>
+          <name>
+            <?php esc_html_e('Background mode','shortpixel-image-optimiser');?>
+            <span class='new'><?php _e('New!', 'shortpixel-image-optimiser'); ?></span>
+          </name>
+          <content>
+
+           <switch>
+               <label>
+                 <input type="checkbox" class="switch" name="doBackgroundProcess" id='doBackgroundProcess' value="1" <?php checked( $view->data->doBackgroundProcess, "1" );?> data-toggle="background_warning">
+                 <div class="the_switch">&nbsp; </div>
+                  <?php esc_html_e('Utilize this feature to optimize images without the need to keep a browser window open, using cron jobs.','shortpixel-image-optimiser');?>
+             </label>
+          </switch>
+           <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/584-background-processing-using-cron-jobs-in-shortpixel-image-optimizer"></i>
+
+          </content>
+          <warning  id="background_warning">
+              <message>
+              <?php _e('I understand that background optimization may pause if there are no visitors on the website.', 'shortpixel-image-optimiser'); ?>
+            </message>
+          </warning>
+        </setting>
+
+    </settinglist>
+
     <div class="wp-shortpixel-options wp-shortpixel-tab-content" style='visibility: hidden'>
     <table class="form-table">
         <tbody>
-            <tr>
-                <th scope="row"><?php esc_html_e('Next Generation Images','shortpixel-image-optimiser');?></th>
-                <td>
-                    <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/286-how-to-serve-webp-files-using-spio"></span></div>
-									 <div class='switch_button'>
-										 <label>
-											 <input type="checkbox" class="switch" name="createWebp" value="1" <?php checked( $view->data->createWebp, "1" );?>>
-											 <div class="the_switch">&nbsp; </div>
-											  <?php printf(esc_html__('Create %s WebP versions %s of the images. Each image/thumbnail will use an additional credit unless you use the %s Unlimited plan. %s','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/blog/how-webp-images-can-speed-up-your-site/" target="_blank">', '</a>', '<a href="https://shortpixel.com/knowledge-base/article/555-how-does-the-unlimited-plan-work" target="_blank">', '</a>' );?>
-										 </label>
-									 </div>
-
-                    <p>&nbsp;</p>
-										<?php
-											$avifEnabled = $this->access()->isFeatureAvailable('avif');
-											$createAvifChecked = ($view->data->createAvif == 1 && $avifEnabled === true) ? true : false;
-											$disabled = ($avifEnabled === false) ? 'disabled' : '';
-											$avifEnabledNotice = false;
-											if ($avifEnabled == false)
-											{
-												 $avifEnabledNotice = '<div class="sp-notice sp-notice-warning  avifNoticeDisabled">';
-												 $avifEnabledNotice .=  __('The creation of AVIF files is not possible with this license type.', 'shortpixel-image-optimiser') ;
-												 $avifEnabledNotice .=  '<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/555-how-does-the-unlimited-plan-work"></span></div>';
-												 $avifEnabledNotice .= '</div>';
-											}
-										?>
-
-                    <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/467-how-to-create-and-serve-avif-files-using-shortpixel-image-optimizer"></span></div>
-									 <div class='switch_button'>
-										 <label>
-											 <input type="checkbox" class="switch" name="createAvif" value="1" <?php echo $disabled ?> <?php checked( $createAvifChecked );?>>
-											 <div class="the_switch">&nbsp; </div>
-											 <?php printf(esc_html__('Create %s AVIF versions %s of the images. Each image/thumbnail will use an additional credit. ','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/blog/what-is-avif-and-why-is-it-good/" target="_blank">', '</a>');?>
-										 </label>
-									 </div>
-
-                   <?php if(strlen($deliverAVIFLabel)){ ?>
-                                <p class="sp-notice sp-notice-warning">
-                               <?php echo ( $deliverAVIFLabel );?>
-                                </p>
-                   <?php } ?>
-									 <?php if ($avifEnabledNotice !== false) {  echo $avifEnabledNotice;  } ?>
-
-                    <p>&nbsp;</p>
-
-                    <div class="deliverWebpSettings">
-                        <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/126-which-webp-files-delivery-method-is-the-best-for-me"></span></div>
-											 <div class='switch_button'>
-												 <label>
-													 <input type="checkbox" class="switch" name="deliverWebp" data-toggle="deliverTypes" value="1" <?php checked( ($view->data->deliverWebp > 0), true);?>>
-													 <div class="the_switch">&nbsp; </div>
-													 <?php esc_html_e('Deliver the next generation versions of the images in the front-end:','shortpixel-image-optimiser');?>
-												 </label>
-											 </div>
-
-
-                        <ul class="deliverWebpTypes toggleTarget" id="deliverTypes">
-                            <li>
-                                <input type="radio" name="deliverWebpType" id="deliverWebpAltered" <?php checked( ($view->data->deliverWebp >= 1 && $view->data->deliverWebp <= 2), true); ?> <?php echo esc_attr( $deliverWebpAlteredDisabled );?> value="deliverWebpAltered" data-toggle="deliverAlteringTypes">
-                                <label for="deliverWebpAltered">
-                                    <?php esc_html_e('Using the &lt;PICTURE&gt; tag syntax','shortpixel-image-optimiser');?>
-                                </label>
-
-                                <?php if($deliverWebpAlteredDisabledNotice){ ?>
-                                    <p class="sp-notice">
-                                        <?php esc_html_e('After the option to work on .htaccess was selected, the .htaccess file has become unaccessible / read-only. Please make the .htaccess file writeable again to be able to further set this option up.','shortpixel-image-optimiser')?>
-                                    </p>
-                                <?php } ?>
-
-                                <p class="settings-info">
-                                     <?php esc_html_e('Each &lt;img&gt; will be replaced with a &lt;picture&gt; tag that will also provide AVIF and WebP images for browsers that support it.  You don\'t need to activate this if you\'re using the Cache Enabler plugin because your AVIF\WebP images are already handled by this plugin. <strong>Please run some tests before using this option!</strong> If the styles that your theme is using rely on the position of your &lt;img&gt; tags, you may experience display problems.','shortpixel-image-optimiser'); ?>
-                                    <strong><?php esc_html_e('You can revert anytime to the previous state just by deactivating the option.','shortpixel-image-optimiser'); ?></strong>
-                                </p>
-
-                                <ul class="deliverWebpAlteringTypes toggleTarget" id="deliverAlteringTypes">
-                                    <li>
-                                        <input type="radio" name="deliverWebpAlteringType" id="deliverWebpAlteredWP" <?php checked(($view->data->deliverWebp == 2), true);?> value="deliverWebpAlteredWP">
-                                        <label for="deliverWebpAlteredWP">
-                                            <?php esc_html_e('Only via Wordpress hooks (like the_content, the_excerpt, etc)');?>
-                                        </label>
-                                    </li>
-                                    <li>
-                                        <input type="radio" name="deliverWebpAlteringType" id="deliverWebpAlteredGlobal" <?php checked(($view->data->deliverWebp == 1),true)?>  value="deliverWebpAlteredGlobal">
-                                        <label for="deliverWebpAlteredGlobal">
-                                            <?php esc_html_e('Global (processes the whole output buffer before sending the HTML to the browser)','shortpixel-image-optimiser');?>
-                                        </label>
-                                    </li>
-                                </ul>
-                            </li>
-                            <li>
-                                <input type="radio" name="deliverWebpType" id="deliverWebpUnaltered" <?php checked(($view->data->deliverWebp == 3), true);?> <?php echo esc_attr( $deliverWebpUnalteredDisabled );?> value="deliverWebpUnaltered" data-toggle="deliverAlteringTypes" data-toggle-reverse>
-
-                                <label for="deliverWebpUnaltered">
-                                    <?php esc_html_e('Without altering the page code (via .htaccess)','shortpixel-image-optimiser')?>
-                                </label>
-                                <?php if(strlen($deliverWebpUnalteredLabel)){ ?>
-                                    <p class="sp-notice sp-notice-warning"><strong>
-                                        <?php echo( $deliverWebpUnalteredLabel );?>
-																			</strong>
-                                    </p>
-                                <?php } ?>
-                            </li>
-                        </ul>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row"><?php esc_html_e('Optimize media on upload','shortpixel-image-optimiser');?></th>
-                <td>
-                    <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/521-settings-optimize-media-on-upload"></span></div>
-									 <div class='switch_button'>
-										 <label>
-											 <input type="checkbox" class="switch" name="autoMediaLibrary" id='autoMediaLibrary' value="1" <?php checked( $view->data->autoMediaLibrary, "1" );?>>
-											 <div class="the_switch">&nbsp; </div>
-											 	<?php esc_html_e('Automatically optimize images after they are uploaded (recommended).','shortpixel-image-optimiser');?>
-									 </label>
-									 </div>
-                </td>
-            </tr>
-
-            <tr>
-                <th scope="row"><?php esc_html_e('Background mode','shortpixel-image-optimiser');?>
-	              <span class='new'><?php _e('New!', 'shortpixel-image-optimiser'); ?></span>
-		</th>
-                <td>
-                    <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/584-background-processing-using-cron-jobs-in-shortpixel-image-optimizer"></span></div>
-									 <div class='switch_button'>
-										 <label>
-											 <input type="checkbox" class="switch" name="doBackgroundProcess" id='doBackgroundProcess' value="1" <?php checked( $view->data->doBackgroundProcess, "1" );?> data-toggle="background_warning">
-											 <div class="the_switch">&nbsp; </div>
-											 	<?php esc_html_e('Utilize this feature to optimize images without the need to keep a browser window open, using cron jobs.','shortpixel-image-optimiser');?>
-									 </label>
-									 </div>
-                   <div class='view-notice warning toggleTarget' id="background_warning">
-                     <p class=""><?php _e('I understand that background optimization may pause if there are no visitors on the website.', 'shortpixel-image-optimiser'); ?></p>
-                   </div>
-                </td>
-            </tr>
-
 
             <?php if($this->has_nextgen) { ?>
             <tr>

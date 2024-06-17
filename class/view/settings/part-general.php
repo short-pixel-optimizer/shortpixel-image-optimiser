@@ -107,7 +107,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
               </content>
 
               <warning id='compression-notice'>
-                    <h4>Changing compression type</h4>
+                    <h4><?php _e('Changing compression type', 'shortpixel-image-optimiser'); ?></h4>
                     <message>
                       <p><?php printf(esc_html__('This compression type will apply only to new or unprocessed images. Images that were already processed will not be re-optimized. If you want to change the compression type of already optimized images, %s restore them from the backup %s first.', 'shortpixel-image-optimiser' ),'<a href="options-general.php?page=wp-shortpixel-settings&part=tools">', '</a>'); ?></p>
                       <p><?php esc_html_e('The current optimization processes in the queue will be stopped.', 'shortpixel-image-optimiser'); ?></p>
@@ -246,62 +246,52 @@ if (true === \wpSPIO()->env()->useTrustedMode())
 								</label>
 							</div>
 
-						<input type="number" min="1" max="20000" name="resizeWidth" id="width" style="width:80px" class="resize-sizes"
+						<input type="number" min="1" max="20000" name="resizeWidth" id="width" class="resize-sizes"
 									 value="<?php echo esc_attr( $view->data->resizeWidth > 0 ? $view->data->resizeWidth : min(1200, $view->minSizes['width']) );?>" <?php echo esc_attr( $resizeDisabled );?>/> <?php
 									 esc_html_e('pixels wide &times;','shortpixel-image-optimiser');?>
 
-						<input type="number" min="1" max="20000" name="resizeHeight" id="height" class="resize-sizes" style="width:80px"
+						<input type="number" min="1" max="20000" name="resizeHeight" id="height" class="resize-sizes"
 									 value="<?php echo esc_attr( $view->data->resizeHeight > 0 ? $view->data->resizeHeight : min(1200, $view->minSizes['height']) );?>" <?php echo esc_attr( $resizeDisabled );?>/> <?php
 									 esc_html_e('pixels high (preserves the original aspect ratio and doesn\'t crop the image)','shortpixel-image-optimiser');?>
 
-
 							<info>
 								<?php esc_html_e('Recommended for large photos, like the ones taken with your phone. Saved space can go up to 80% or more after resizing. Please note that this option does not prevent thumbnails from being created that should  be larger than the selected dimensions, but these thumbnails will also be resized to the dimensions selected here.','shortpixel-image-optimiser');?>
+                <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/208-can-shortpixel-automatically-resize-new-image-uploads"></i>
 							</info>
 
+              <div class="resize-type-wrap" <?php echo( $view->data->resizeImages ? '' : 'style="display:none;"' );?>>
+                  <div class="resize-options-wrap">
+                      <label title="<?php esc_html_e('Sizes will be greater or equal to the corresponding value. For example, if you set the resize dimensions at 1000x1200, an image of 2000x3000px will be resized to 1000x1500px while an image of 3000x2000px will be resized to 1800x1200px','shortpixel-image-optimiser');?>">
+                          <input type="radio" name="resizeType" id="resize_type_outer" value="outer" <?php echo esc_attr($view->data->resizeType) == 'inner' ? '' : 'checked'; ?>>
+                          <?php esc_html_e( 'Cover', 'shortpixel-image-optimiser' ); ?>
+                      </label><br>
+                      <label title="<?php esc_html_e('Sizes will be smaller or equal to the corresponding value. For example, if you set the resize dimensions at 1000x1200, an image of 2000x3000px will be resized to 800x1200px while an image of 3000x2000px will be resized to 1000x667px','shortpixel-image-optimiser');?>">
+                          <input type="radio" name="resizeType" id="resize_type_inner" value="inner" <?php echo esc_attr($view->data->resizeType) == 'inner' ? 'checked' : ''; ?>>
+                          <?php esc_html_e( 'Contain', 'shortpixel-image-optimiser' ); ?>
+                      </label><br>
+
+
+                  </div>
+                  <?php
+                  $resize_width  = (int) ( $view->data->resizeWidth > 0 ? $view->data->resizeWidth : min( 1200, $view->minSizes[ 'width' ] ) );
+                  $resize_height = (int) ( $view->data->resizeHeight > 0 ? $view->data->resizeHeight : min( 1200, $view->minSizes[ 'height' ] ) );
+                  $ratio         = $resize_height / $resize_width;
+
+                  $frame_style = 'padding-top:' . round( ( $ratio < 1.5 ? ( $ratio < 0.5 ? 0.5 : $ratio ) : 1.5 ) * 100, 0 ) . '%;';
+
+                  $image_size = getimagesize( wpSPIO()->plugin_path( 'res/img/resize-type.png' ) );
+                  ?>
+                  <div class="presentation-wrap">
+                      <div class="spai-resize-frame"></div>
+                      <img class="spai-resize-img" src="<?php echo esc_url(wpSPIO()->plugin_url('res/img/resize-type.png'));?>" data-width="300" data-height="160"
+                           srcset="<?php echo esc_url(wpSPIO()->plugin_url('res/img/resize-type@2x.png'));?> 2x" alt="">
+                  </div>
+
+              </div>
             </content>
           </setting>
           <!-- / Resize Large Image -->
 
-					<!-- Resize Details -->
-					<setting>
-							<name>&nbsp;</name>
-							<content>
-								<div class="resize-type-wrap" <?php echo( $view->data->resizeImages ? '' : 'style="display:none;"' );?>>
-										<div class="resize-options-wrap">
-												<label title="<?php esc_html_e('Sizes will be greater or equal to the corresponding value. For example, if you set the resize dimensions at 1000x1200, an image of 2000x3000px will be resized to 1000x1500px while an image of 3000x2000px will be resized to 1800x1200px','shortpixel-image-optimiser');?>">
-														<input type="radio" name="resizeType" id="resize_type_outer" value="outer" <?php echo esc_attr($view->data->resizeType) == 'inner' ? '' : 'checked'; ?>>
-														<?php esc_html_e( 'Cover', 'shortpixel-image-optimiser' ); ?>
-												</label><br>
-												<label title="<?php esc_html_e('Sizes will be smaller or equal to the corresponding value. For example, if you set the resize dimensions at 1000x1200, an image of 2000x3000px will be resized to 800x1200px while an image of 3000x2000px will be resized to 1000x667px','shortpixel-image-optimiser');?>">
-														<input type="radio" name="resizeType" id="resize_type_inner" value="inner" <?php echo esc_attr($view->data->resizeType) == 'inner' ? 'checked' : ''; ?>>
-														<?php esc_html_e( 'Contain', 'shortpixel-image-optimiser' ); ?>
-												</label><br>
-												<div style="display:inline-block;margin-top: 15px;"><a href="https://shortpixel.com/knowledge-base/article/208-can-shortpixel-automatically-resize-new-image-uploads" class="shortpixel-help-link" target="_blank">
-
-																<span class="dashicons dashicons-editor-help"></span><?php esc_html_e('What is this?','shortpixel-image-optimiser');?></a>
-												</div>
-
-										</div>
-										<?php
-										$resize_width  = (int) ( $view->data->resizeWidth > 0 ? $view->data->resizeWidth : min( 1200, $view->minSizes[ 'width' ] ) );
-										$resize_height = (int) ( $view->data->resizeHeight > 0 ? $view->data->resizeHeight : min( 1200, $view->minSizes[ 'height' ] ) );
-										$ratio         = $resize_height / $resize_width;
-
-										$frame_style = 'padding-top:' . round( ( $ratio < 1.5 ? ( $ratio < 0.5 ? 0.5 : $ratio ) : 1.5 ) * 100, 0 ) . '%;';
-
-										$image_size = getimagesize( wpSPIO()->plugin_path( 'res/img/resize-type.png' ) );
-										?>
-										<div class="presentation-wrap">
-												<div class="spai-resize-frame"></div>
-												<img class="spai-resize-img" src="<?php echo esc_url(wpSPIO()->plugin_url('res/img/resize-type.png'));?>" data-width="300" data-height="160"
-														 srcset="<?php echo esc_url(wpSPIO()->plugin_url('res/img/resize-type@2x.png'));?> 2x" alt="">
-										</div>
-
-								</div>
-							</content>
-
-					<!-- / Resize Details -->
 
     </settinglist>
 

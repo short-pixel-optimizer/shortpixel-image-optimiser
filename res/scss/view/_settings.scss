@@ -557,6 +557,10 @@
 					display: inline-block;
 					padding: 15px 0 0 0;
 			}
+			input[name="resizeWidth"], input[name="resizeHeight"]
+			{
+				 width: 80px;
+			}
 
 	} // tab-settings
 } // end of settings
