@@ -101,35 +101,62 @@ class EnvironmentModel extends \ShortPixel\Model
 		 return false;
 	}
 
-	public function plugin_active($name)
+  /**
+   * Checks if a plugin is active. This uses the WP is_plugin_active with addiotional checks. Also should be able to provide alternate ways since is_plugin_active is fallible.
+   * @param  [type]  $name               Name of the plugin
+   * @param  boolean $type                Check against all options ( in case plugin has i.e. pro version, by name )
+   * @return boolean  Active or not
+   */
+	public function plugin_active($name, $type = 'all')
 	{
-		 switch($name)
-		 {
-			  case 'wpml':
-					$plugin = 'sitepress-multilingual-cms/sitepress.php';
-				break;
-				case 'polylang':
-					$plugin = 'polylang/polylang.php';
-				break;
-				case 'spai':
-					$plugin = 'shortpixel-adaptive-images/short-pixel-ai.php';
-				break;
-				case 's3-offload':
-				  $plugin = 'amazon-s3-and-cloudfront/wordpress-s3.php';
-				break;
-				case 'woocommerce':
-					 $plugin = 'woocommerce/woocommerce.php';
-				break;
-				default:
-				 	$plugin = 'none';
-				break;
-		 }
+     if (!function_exists('is_plugin_active')) {
+      include_once(ABSPATH . 'wp-admin/includes/plugin.php');
+     }
 
-		 if (!function_exists('is_plugin_active')) {
-    	include_once(ABSPATH . 'wp-admin/includes/plugin.php');
-		 }
+     $plugins = [
+       'wpml' => 'sitepress-multilingual-cms/sitepress.php',
+       'polylang' => ['normal' => 'polylang/polylang.php',
+                      'pro' => 'polylang-pro/polylang.php'],
+       'spai' => 'shortpixel-adaptive-images/short-pixel-ai.php',
+       's3-offload' => ['lite' => 'amazon-s3-and-cloudfront/wordpress-s3.php',
+                        'pro' => 'amazon-s3-and-cloudfront-pro/amazon-s3-and-cloudfront-pro.php'],
+        'woocommerce' => 'woocommerce/woocommerce.php',
+        'envira' => [ 'lite' => 'envira-gallery-lite/envira-gallery-lite.php',
+                      'pro' => 'envira-gallery/envira-gallery.php',
+                    ],
+        'soliquy' => ['lite' => 'soliloquy-lite/soliloquy-lite.php',
+                      'pro' => 'soliloquy/soliloquy.php',
+                  ],
 
-		 return \is_plugin_active($plugin);
+     ];
+
+     if (false === isset($plugins[$name]))
+     {
+        return false;
+     }
+
+     if (is_array($plugins[$name]))
+     {
+      $check_plugins = $plugins[$name];
+     }
+     else {
+       $check_plugins = [$plugins[$name]];
+     }
+
+     if ($type !== 'all')
+     {
+        $check_plugins = [$plugins[$name][$type]];
+     }
+
+     foreach($check_plugins as $index => $slug)
+     {
+        if (true === is_plugin_active($slug))
+        {
+           return true;
+        }
+     }
+
+     return false;
 	}
 
   //https://www.php.net/manual/en/function.sys-getloadavg.php
@@ -356,7 +383,6 @@ class EnvironmentModel extends \ShortPixel\Model
             return false;
           }
 
-
           // max execution is the percentage of max execution time one can take upon.
           $limit_perc  = round($limit/100 * apply_filters('spio/process/max_execution', 90));
 
@@ -369,7 +395,6 @@ class EnvironmentModel extends \ShortPixel\Model
           return false;
       }
 
-      // @todo Add in Env or in ShortPixelLogger item that can track exec. time / memory and write to debug output.
       public function IsOverMemoryLimit($runCount)
       {
           $memory_limit = $this->memoryLimit;
