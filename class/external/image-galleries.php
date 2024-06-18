@@ -23,11 +23,9 @@ class ImageGalleries
   public function addConstants()
   {
     //if( !defined('SHORTPIXEL_CUSTOM_THUMB_SUFFIXES')) {
-        if(\is_plugin_active('envira-gallery/envira-gallery.php') ||
-					 \is_plugin_active('soliloquy-lite/soliloquy-lite.php') ||
-					 \is_plugin_active('soliloquy/soliloquy.php') ||
-					 \is_plugin_active('envira-gallery-lite/envira-gallery-lite.php')
-			 )
+
+
+    if (\wpSPIO()->env()->plugin_active('envira') || \wpSPIO()->env()->plugin_active('soliquy') )
 		{
 
 						add_filter('shortpixel/image/unlisted_suffixes', array($this, 'envira_suffixes'));
@@ -49,7 +47,7 @@ class ImageGalleries
      $screens[] = 'edit-envira';
      $screens[] = 'envira';
 
-     // Solo Cuy 
+     // Solo Cuy
      $screens[] = 'edit-soliloquy';
      $screens[] = 'soliloquy';
      return $screens;
