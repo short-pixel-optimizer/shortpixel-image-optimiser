@@ -1840,7 +1840,7 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 
 						}
 					}
-		}  // wpml
+		}  // polylang
 		if ($env->plugin_active('polylang')) // polylang
 		{
 				// unholy sql where guid is duplicated.
