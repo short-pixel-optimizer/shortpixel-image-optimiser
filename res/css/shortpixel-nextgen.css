@@ -5,14 +5,22 @@
   min-width: 150px;
   margin-bottom: 5px;
 }
+#ngg_page_content .sp-column-info .button-smaller.button-primary {
+  font-weight: 700;
+}
 #ngg_page_content .sp-column-info .sp-column-actions {
   float: right;
   position: absolute;
   right: 10px;
   top: 0;
+  margin-top: 0;
+}
+#ngg_page_content .sp-column-info .sp-column-actions button.button {
+  padding: 0 8px !important;
 }
 #ngg_page_content .sp-column-info .button {
   background-color: black;
+  color: #fff;
 }
 #ngg_page_content .sp-column-info .dashicons::before {
   font-family: dashicons;

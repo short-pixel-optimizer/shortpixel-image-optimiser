@@ -83,7 +83,7 @@ class SettingsModel extends \ShortPixel\Model
 
 		protected function load()
 		{
-			 $this->settings = get_option($this->option_name);
+			 $this->settings = get_option($this->option_name, array());
 			 register_shutdown_function(array($this, 'onShutdown'));
 		}
 
@@ -152,6 +152,7 @@ class SettingsModel extends \ShortPixel\Model
 					 $this->save();
 				}
 		}
+
 
     /**
      * PHP shutdown function, check if settings are updated and save on closing time.

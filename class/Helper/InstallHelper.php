@@ -57,15 +57,14 @@ class InstallHelper
 		}
 
     // save remove.
-		/* @ToDO !! Reactivcate this :
     $fs = new FileSystemController();
     $log = $fs->getFile(SHORTPIXEL_BACKUP_FOLDER . "/shortpixel_log");
 
     if ($log->exists())
      $log->delete();
-*/
+
     global $wpdb;
-    $sql = "delete from " . $wpdb->options . " where option_name like '%_transient_shortpixel%'";
+    $sql = "delete from " . $wpdb->options . " where option_name like '%_transient_shortpixel%' or option_name like '%_transient_timeout_shortpixel%'";
     $wpdb->query($sql); // remove transients.
 
 		// saved in settings object, reset all stats.
@@ -83,6 +82,7 @@ class InstallHelper
 		delete_transient('avif_server_check');
 		delete_transient('quotaData');
 
+
   }
 
  // Removes everything  of SPIO 5.x .  Not recommended.
@@ -90,8 +90,6 @@ class InstallHelper
 	{
 		$env = \wpSPIO()->env();
     $settings = new \WPShortPixelSettings(); // \wpSPIO()->settings();
-
-
 
 		$nonce = (isset($_POST['tools-nonce'])) ? sanitize_key($_POST['tools-nonce']) : null;
 		if ( ! wp_verify_nonce( $nonce, 'remove-all' ) ) {
@@ -105,6 +103,8 @@ class InstallHelper
 		BulkController::uninstallPlugin();
 
 		$settings::resetOptions();
+    // new settings
+    delete_option('spio_settings');
 
 		if (! $env->is_nginx)
 		{
