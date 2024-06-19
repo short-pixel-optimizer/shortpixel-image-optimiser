@@ -128,10 +128,11 @@ var ShortPixel = function() {
 
     function checkExifWarning()
     {
+      // There is more than one warning for this
       if (! jQuery('input[name="removeExif"]').is(':checked') && jQuery('input[name="png2jpg"]').is(':checked') )
-        jQuery('#exif-warning').fadeIn();
+        jQuery('.exif-warning').fadeIn();
       else
-        jQuery('#exif-warning').fadeOut();
+        jQuery('.exif-warning').fadeOut();
 
       if (! jQuery('input[name="removeExif"]').is(':checked') && jQuery('#exif-imagick-warning').data('imagick') <= 0)
         jQuery('#exif-imagick-warning').fadeIn();

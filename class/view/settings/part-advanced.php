@@ -41,6 +41,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     }
 
     ?>
+    <div class="wp-shortpixel-options wp-shortpixel-tab-content" style='visibility: hidden'>
 
 
     <settinglist>
@@ -224,173 +225,264 @@ THIS NEEDS DOING
           </warning>
         </setting>
 
+      <!-- Nextgen setting -->
+      <?php if($this->has_nextgen) : ?>
+       <setting>
+         <name>
+           <?php esc_html_e('NextGen','shortpixel-image-optimiser');?>
+         </name>
+         <content>
+           <switch>
+             <label>
+               <input name="includeNextGen" type="checkbox" id="nextGen" value='1' <?php echo  checked($view->data->includeNextGen,'1' );?>>
+
+             <div class="the_switch">&nbsp; </div>
+             <?php esc_html_e('Optimize NextGen galleries.','shortpixel-image-optimiser');?>
+           </label>
+         </switch>
+
+         </content>
+      </setting>
+      <?php endif; ?>
+      <!-- // Nextgen setting -->
+
+
+      <setting>
+        <name>
+            <?php esc_html_e('Optimize PDFs','shortpixel-image-optimiser');?>
+        </name>
+        <content>
+          <switch>
+
+            <label>
+              <input type="checkbox" class="switch" name="optimizePdfs" value="1" <?php checked( $view->data->optimizePdfs, "1" );?>>
+              <div class="the_switch">&nbsp; </div>
+              <?php esc_html_e('Also optimize PDF documents.','shortpixel-image-optimiser');?>
+            </label>
+          </switch>
+
+           <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/520-settings-optimize-pdfs"></i>
+        </content>
+     </setting>
+
+     <setting>
+        <name>
+            <?php esc_html_e('Optimize Retina images','shortpixel-image-optimiser');?>
+        </name>
+        <content>
+
+          <switch>
+            <label>
+              <input type="checkbox" class="switch" name="optimizeRetina" value="1" <?php checked( $view->data->optimizeRetina, "1" );?>>
+              <div class="the_switch">&nbsp; </div>
+                 <?php esc_html_e('Also optimize the Retina images (@2x) if they exist.','shortpixel-image-optimiser');?>
+             </label>
+          </switch>
+           <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/518-settings-optimize-retina-images"></i>
+        </content>
+
+        <warning class='heavy-feature-virtual retina'>
+          <message>
+              <?php printf(esc_html__('This feature has been disabled in offload mode for performance reasons. You can enable it again with a %s filter hook %s ', 'shortpixel-image-optimiser' ),'<a target="_blank" href="https://shortpixel.com/knowledge-base/article/577-performance-improvement-shortpixel-image-optimization-media-offload-plugin">', '</a>'); ?>
+          </message>
+        </warning>
+    </setting>
+
+    <setting>
+        <name>
+            <?php esc_html_e('Optimize other thumbnails','shortpixel-image-optimiser');?>
+        </name>
+        <content>
+          <switch>
+            <label>
+              <input type="checkbox" class="switch" name="optimizeUnlisted" value="1" <?php checked( $view->data->optimizeUnlisted, "1" );?>>
+              <div class="the_switch">&nbsp; </div>
+                 <?php esc_html_e('Also optimize unlisted thumbnails, if found.','shortpixel-image-optimiser');?>
+             </label>
+          </switch>
+
+           <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/519-settings---optimize-other-thumbs"></i>
+        </content>
+        <warning class="heavy-feature-virtual unlisted">
+            <message>
+              <?php printf(esc_html__('This feature has been disabled in offload mode for performance reasons. You can enable it again with a %s filter hook %s ', 'shortpixel-image-optimiser' ),'<a target="_blank" href="https://shortpixel.com/knowledge-base/article/577-performance-improvement-shortpixel-image-optimization-media-offload-plugin">', '</a>'); ?>
+            </message>
+        </warning>
+    </setting>
+
+    <!-- convert png2jpg -->
+    <setting>
+      <name>
+        <?php esc_html_e('Convert PNG images to JPEG','shortpixel-image-optimiser');?>
+      </name>
+      <content>
+        <switch class='option-png2jpg'>
+          <label>
+            <input type="checkbox" class="switch" name="png2jpg" value="1" <?php checked( ($view->data->png2jpg > 0), true);?> <?php echo($this->is_gd_installed ? '' : 'disabled') ?> data-toggle="png2jpgforce">
+            <div class="the_switch">&nbsp; </div>
+            <?php esc_html_e('Automatically convert the PNG images to JPEG, if possible.','shortpixel-image-optimiser'); ?>
+          </label>
+        </switch>
+
+        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/516-settings-convert-png-images-to-jpeg"></i>
+
+
+        <switch class='switch_button option-png2jpgforce toggleTarget suboption' id="png2jpgforce">
+          <p>&nbsp;</p>
+          <label>
+            <input type="checkbox" class="switch" name="png2jpgForce" value="1" <?php checked(($view->data->png2jpg > 1), true);?> <?php echo($this->is_gd_installed ? '' : 'disabled') ?>>
+            <div class="the_switch">&nbsp; </div>
+            <?php esc_html_e('Also force the conversion of images with transparency (the transparency will be lost).','shortpixel-image-optimiser'); ?>
+          </label>
+        </switch>
+
+      </content>
+      <?php  if(false === $this->is_gd_installed): ?>
+
+      <warning class='is-visible'>
+        <message>
+            <?php esc_html_e('You need PHP GD with support for JPEG and PNG files for this feature. Please ask your hosting 	provider to install it.','shortpixel-image-optimiser');  ?>
+        </message>
+     </warning>
+     <?php endif; ?>
+
+     <warning class='exif-warning'>
+       <message>
+          <?php printf(esc_html__('Warning - Converting from PNG to JPG will %s not %s keep the EXIF information!', 'shortpixel-image-optimiser'), "<strong>","</strong>"); ?>
+       </message>
+    </warning>
+  </setting>
+  <!-- // convert png2jpg -->
+
+    <!-- Cmyk to rgb -->
+    <setting>
+        <name>
+            <?php esc_html_e('CMYK to RGB conversion','shortpixel-image-optimiser');?>
+        </name>
+        <content>
+
+          <switch>
+            <label>
+              <input type="checkbox" class="switch" name="cmyk2rgb" value="1" <?php checked( $view->data->CMYKtoRGBconversion, "1" );?>>
+              <div class="the_switch">&nbsp; </div>
+              <?php esc_html_e('Adjust your images\' colors for computer and mobile displays.','shortpixel-image-optimiser');?>
+            </label>
+          </switch>
+
+          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/517-settings---cmyk-to-rgb-conversion"></i>
+
+        </content>
+     </setting>
+     <!-- // Cmyk to rgb -->
+
+     <!-- Exclude thumbnails -->
+     <setting>
+        <name>
+            <?php esc_html_e('Exclude thumbnail sizes','shortpixel-image-optimiser');?>
+        </name>
+        <content>
+
+          <?php
+          foreach($view->allThumbSizes as $sizeKey => $sizeVal) {
+          ?>
+              <span class="excludeSizeOption">
+                <label>
+
+                  <?php
+                  $excludeSizes = property_exists($view->data, 'excludeSizes') ? $view->data->excludeSizes : array();
+                  $checked = in_array($sizeKey, $excludeSizes) ? 'checked' : '';
+                  $width = isset($sizeVal['width']) ? $sizeVal['width'] : '*';
+                  $height = isset($sizeVal['height']) ? $sizeVal['height'] : '*';
+
+                  $name = isset($sizeVal['nice-name']) ? $sizeVal['nice-name'] : ucfirst($sizeKey);
+                  $label = $name . " ( $width &times $height )";
+
+                  printf(' <input name="excludeSizes[]" type="checkbox" id="excludeSizes_%s" value="%s" %s>%s  ', esc_attr($sizeKey), esc_attr($sizeKey), $checked, $label);
+                  ?>
+                  </label>
+              </span>
+
+          <?php } // exclude sizes ?>
+
+          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/113-how-can-i-optimize-only-certain-thumbnail-sizes"></i>
+        </content>
+     </setting>
+    <!-- // Exclude thumbnails -->
+
+    <!-- Exclude patterns -->
+    <setting>
+        <name>
+          <?php esc_html_e('Exclude patterns','shortpixel-image-optimiser');?>
+        </name>
+        <content>
+          <button class='button button-primary new-exclusion-button' type='button' name="addNewExclusion">
+            <?php _e('Add new Exclusion', 'shortpixel-image-optimiser'); ?>
+          </button>
+            <info>
+              <?php
+              printf(esc_html__('Use this section to exclude images based on patterns. There are three types of exclusions: based on the file name, on the file path or on the file size. Each exclusion type can be applied to: all images and thumbnails of that image (including the scaled or original image), only thumbnails (in this case the original and scaled images are not excluded), only Custom Media images (in this case the items from the Media Library are not excluded) or only for a selection of thumbnails of your choice. Examples can be found in the fold-out area below.','shortpixel-image-optimiser'),
+                '<b>','</b>',
+                '<b>','</b>'
+              );
+              ?>
+              <p  class="settings-info">
+                  <label><input type='checkbox' class='shortpixel-hide' data-toggle='exclude-settings-expanded'> >> <?php		printf(esc_html__('See examples')); ?></label>
+               </p>
+
+               <div class='exclude-settings-expanded toggleTarget ' id="exclude-settings-expanded">
+                 <p  class="settings-info">
+                 <?php
+                     printf(esc_html__('For the %s"Name"%s type, only the file name is matched, i.e. if you enter %s"flower.jpg"%s in the "Value" field, ShortPixel excludes all JPEG images ending in "flower" (lower case). If, on the other hand, you enter %s"logo"%s in the "Value" field, all images – PNG/JPEG/GIF – that contain the word "logo" in their name will be excluded: "nicelogo.jpg", "alllogos.png", "logo.gif"..', 'shortpixel-image-optimiser'),
+                     '<b>','</b>',
+                     '<b>','</b>',
+                     '<b>','</b>'
+                     );
+                 ?>
+
+               </p>
+               <br />
+               <p  class="settings-info">
+                 <?php
+                     printf(esc_html__('With the %s"Path"%s type, the entire path is matched (useful for excluding certain (sub)directories altogether). For example, if you enter %s"2022"%s in the "Value" field, all images uploaded in 2022 will be excluded, but also images that contain 2022 in the file name (as this is also part of the path). If you only want to exclude images uploaded in 2022, enter %s"/2022/"%s instead.','shortpixel-image-optimiser'),
+                     '<b>','</b>',
+                     '<b>','</b>',
+                     '<b>','</b>'
+                     );
+                     ?>
+                   </p>
+                   <br />
+                   <p  class="settings-info">
+                 <?php
+                     printf(esc_html__('For both types mentioned above ("Name" and "Path") you can activate the option %s"Check as regular expression"%s. It works in the same way, but requires a valid regular expression between slashes in the "Value" field. Special characters should be preceded by a \ as an escape character. For example, %s/[0-9]+[^\/]*\.(PNG|png)/%s in the "Value" field for the "Name" type excludes all PNG images that have a numeric prefix.','shortpixel-image-optimiser'),
+                     '<b>','</b>',
+                     '<b>','</b>'
+                   );
+                   ?>
+                 </p>
+                 <br />
+                 <p  class="settings-info">
+                   <?php
+                     printf(esc_html__('The %s"Size"%s type is applied to all images and thumbnails whose size is within the specified range. You can either use intervals or specify an exact size if you enable the %s"Exact sizes"%s option.','shortpixel-image-optimiser'),
+                     '<b>','</b>',
+                     '<b>','</b>'
+                   );
+                   ?>
+                 </p>
+              </div> <!-- foldout -->            
+            </info>
+
+
+
+        </content>
+    </setting>
+    <!-- // Exclude patterns -->
+
     </settinglist>
 
-    <div class="wp-shortpixel-options wp-shortpixel-tab-content" style='visibility: hidden'>
     <table class="form-table">
         <tbody>
 
-            <?php if($this->has_nextgen) { ?>
-            <tr>
-                <th scope="row"><?php esc_html_e('NextGen','shortpixel-image-optimiser');?></th>
-                <td>
-									<div class='switch_button'>
-										<label>
-                    	<input name="includeNextGen" type="checkbox" id="nextGen" value='1' <?php echo  checked($view->data->includeNextGen,'1' );?>>
 
-										<div class="the_switch">&nbsp; </div>
-										<?php esc_html_e('Optimize NextGen galleries.','shortpixel-image-optimiser');?>
-									</label>
-								</div>
-
-                </td>
-            </tr>
-            <?php } ?>
-            <tr>
-                <th scope="row"><?php esc_html_e('Optimize PDFs','shortpixel-image-optimiser');?></th>
-                <td>
-                    <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/520-settings-optimize-pdfs"></span></div>
-									 <div class='switch_button'>
-
-										 <label>
-											 <input type="checkbox" class="switch" name="optimizePdfs" value="1" <?php checked( $view->data->optimizePdfs, "1" );?>>
-											 <div class="the_switch">&nbsp; </div>
-											 <?php esc_html_e('Also optimize PDF documents.','shortpixel-image-optimiser');?>
-										 </label>
-									 </div>
-
-                </td>
-            </tr>
-            <tr>
-                <th scope="row"><?php esc_html_e('Optimize Retina images','shortpixel-image-optimiser');?></th>
-                <td>
-                    <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/518-settings-optimize-retina-images"></span></div>
-									 <div class='switch_button'>
-										 <label>
-											 <input type="checkbox" class="switch" name="optimizeRetina" value="1" <?php checked( $view->data->optimizeRetina, "1" );?>>
-											 <div class="the_switch">&nbsp; </div>
-											 		<?php esc_html_e('Also optimize the Retina images (@2x) if they exist.','shortpixel-image-optimiser');?>
-								 			</label>
-									 </div>
-                </td>
-            </tr>
-
-            <?php if (true === $this->disable_heavy_features): ?>
-            <tr class="heavy-feature-virtual retina view-notice-row">
-              <th scope="row">&nbsp;</th>
-              <td>
-                <div class='heavy-feature-virtual warning view-notice'>
-                  <p><?php printf(esc_html__('This feature has been disabled in offload mode for performance reasons. You can enable it again with a %s filter hook %s ', 'shortpixel-image-optimiser' ),'<a target="_blank" href="https://shortpixel.com/knowledge-base/article/577-performance-improvement-shortpixel-image-optimization-media-offload-plugin">', '</a>'); ?></p>
-                </div>
-              </td>
-            </tr>
-          <?php endif; ?>
-
-            <tr>
-                <th scope="row"><?php esc_html_e('Optimize other thumbnails','shortpixel-image-optimiser');?></th>
-                <td>
-                    <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/519-settings---optimize-other-thumbs"></span></div>
-									 <div class='switch_button'>
-										 <label>
-											 <input type="checkbox" class="switch" name="optimizeUnlisted" value="1" <?php checked( $view->data->optimizeUnlisted, "1" );?>>
-											 <div class="the_switch">&nbsp; </div>
-													<?php esc_html_e('Also optimize unlisted thumbnails, if found.','shortpixel-image-optimiser');?>
-											</label>
-									 </div>
-                </td>
-            </tr>
-
-            <?php if (true === $this->disable_heavy_features): ?>
-            <tr class="heavy-feature-virtual unlisted view-notice-row ">
-              <th scope="row">&nbsp;</th>
-              <td>
-                <div class='heavy-feature-virtual warning view-notice'>
-                  <p><?php printf(esc_html__('This feature has been disabled in offload mode for performance reasons. You can enable it again with a %s filter hook %s ', 'shortpixel-image-optimiser' ),'<a target="_blank" href="https://shortpixel.com/knowledge-base/article/577-performance-improvement-shortpixel-image-optimization-media-offload-plugin">', '</a>'); ?></p>
-                </div>
-              </td>
-            </tr>
-          <?php endif; ?>
-
-            <tr>
-                <th scope="row"><?php esc_html_e('Convert PNG images to JPEG','shortpixel-image-optimiser');?></th>
-                <td>
-                    <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/516-settings-convert-png-images-to-jpeg"></span></div>
-									 <div class='switch_button option-png2jpg'>
-										 <label>
-											 <input type="checkbox" class="switch" name="png2jpg" value="1" <?php checked( ($view->data->png2jpg > 0), true);?> <?php echo($this->is_gd_installed ? '' : 'disabled') ?> data-toggle="png2jpgforce">
-											 <div class="the_switch">&nbsp; </div>
-											 <?php esc_html_e('Automatically convert the PNG images to JPEG, if possible.','shortpixel-image-optimiser'); ?>
-										 </label>
-									 </div>
-
-								 <?php  if(!$this->is_gd_installed):
-								  ?>
-									 <div style="color:red;"><?php esc_html_e('You need PHP GD with support for JPEG and PNG files for this feature. Please ask your hosting 	provider to install it.','shortpixel-image-optimiser');  ?>
-									 </div>
-								 <?php endif; ?>
-
-
-										<div class='switch_button option-png2jpgforce toggleTarget suboption' id="png2jpgforce">
-											<p>&nbsp;</p>
-											<label>
-												<input type="checkbox" class="switch" name="png2jpgForce" value="1" <?php checked(($view->data->png2jpg > 1), true);?> <?php echo($this->is_gd_installed ? '' : 'disabled') ?>>
-												<div class="the_switch">&nbsp; </div>
-												<?php esc_html_e('Also force the conversion of images with transparency (the transparency will be lost).','shortpixel-image-optimiser'); ?>
-											</label>
-										</div>
-
-                </td>
-            </tr>
-            <tr class='exif_warning view-notice-row'>
-                <th scope="row">&nbsp;</th>
-                <td>
-                   <div class='view-notice warning'><p><?php printf(esc_html__('Warning - Converting from PNG to JPG will %s not %s keep the EXIF information!', 'shortpixel-image-optimiser'), "<strong>","</strong>"); ?></p></div>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row"><?php esc_html_e('CMYK to RGB conversion','shortpixel-image-optimiser');?></th>
-                <td>
-                    <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/517-settings---cmyk-to-rgb-conversion"></span></div>
-									 <div class='switch_button'>
-										 <label>
-											 <input type="checkbox" class="switch" name="cmyk2rgb" value="1" <?php checked( $view->data->CMYKtoRGBconversion, "1" );?>>
-											 <div class="the_switch">&nbsp; </div>
-											 <?php esc_html_e('Adjust your images\' colors for computer and mobile displays.','shortpixel-image-optimiser');?>
-										 </label>
-									 </div>
-
-                </td>
-            </tr>
-            <tr>
-                <th scope="row"><label for="excludeSizes"><?php esc_html_e('Exclude thumbnail sizes','shortpixel-image-optimiser');?></label></th>
-                <td>
-                    <div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/113-how-can-i-optimize-only-certain-thumbnail-sizes"></span></div>
-									<div class="option-content">
-
-                    <?php
-                    foreach($view->allThumbSizes as $sizeKey => $sizeVal) {
-										?>
-                        <span class="excludeSizeOption">
-                          <label>
-
-														<?php
-                            $excludeSizes = property_exists($view->data, 'excludeSizes') ? $view->data->excludeSizes : array();
-														$checked = in_array($sizeKey, $excludeSizes) ? 'checked' : '';
-														$width = isset($sizeVal['width']) ? $sizeVal['width'] : '*';
-														$height = isset($sizeVal['height']) ? $sizeVal['height'] : '*';
-
-                            $name = isset($sizeVal['nice-name']) ? $sizeVal['nice-name'] : ucfirst($sizeKey);
-														$label = $name . " ( $width &times $height )";
-
-														printf(' <input name="excludeSizes[]" type="checkbox" id="excludeSizes_%s" value="%s" %s>%s  ', esc_attr($sizeKey), esc_attr($sizeKey), $checked, $label);
-														?>
-                            </label>
-                        </span>
-
-								    <?php } // exclude sizes ?>
-									</div>
-                </td>
-            </tr>
             <tr>
                 <th scope="row"><label for="excludePatterns"><?php esc_html_e('Exclude patterns','shortpixel-image-optimiser');?></label></th>
                 <td>

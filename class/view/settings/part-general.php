@@ -158,8 +158,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                 </info>
                 <?php
                 $smartcrop = (
-                  true === \wpSPIO()->env()->plugin_active('s3-offload') ||
-                  true === \wpSPIO()->env()->plugin_active('s3-offload-pro')
+                  true === \wpSPIO()->env()->plugin_active('s3-offload')
                 ) ? 1 : 0; ?>
               </content>
                 <warning id="smartcrop-warning" data-smartcrop="<?php echo esc_attr($smartcrop) ?>">
@@ -211,7 +210,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
               </switch>
               <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/483-spai-remove-exif"></i>
             </content>
-            <warning id="exif-warning">
+            <warning class="exif-warning">
               <message>
                 <?php printf(esc_html__('Warning - Converting from PNG to JPG will %s not %s keep the EXIF information!'), "<strong>","</strong>"); ?>
               </message>

@@ -198,6 +198,7 @@ class EnvironmentModel extends \ShortPixel\Model
   public function useVirtualHeavyFunctions()
   {
       $bool = apply_filters('shortpixel/file/virtual/heavy_features', true);
+      return false;
       return $bool;
   }
 
