@@ -75,6 +75,7 @@ var ShortPixelSettings = function()
 			}
 	}
 
+	// Elements with data-toggle active 
 	this.DoToggleAction = function(event)
 	{
 			event.preventDefault();
@@ -112,9 +113,9 @@ var ShortPixelSettings = function()
 
 	// Get the natural height of the element
 	var getHeight = function () {
-		elem.style.display = 'block'; // Make it visible
+		//elem.style.display = 'block'; // Make it visible
 		var height = elem.scrollHeight + 'px'; // Get it's height
-		elem.style.display = ''; //  Hide it again
+	//	elem.style.display = ''; //  Hide it again
 		return height;
 	};
 

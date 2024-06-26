@@ -117,9 +117,17 @@ THIS NEEDS DOING
                <?php esc_html_e('Deliver the next generation versions of the images in the front-end:','shortpixel-image-optimiser');?>
              </label>
           </switch>
-          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/126-which-webp-files-delivery-method-is-the-best-for-me"></i>
 
-            <ul class="deliverWebpTypes toggleTarget" id="deliverTypes">
+          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/126-which-webp-files-delivery-method-is-the-best-for-me"></i>
+        </content>
+      </setting>
+
+      <setting class='toggleTarget' id="deliverTypes">
+        <name>
+          Method
+        </name>
+        <content>
+            <ul class="deliverWebpTypes ">
                 <li>
                     <input type="radio" name="deliverWebpType" id="deliverWebpAltered" <?php checked( ($view->data->deliverWebp >= 1 && $view->data->deliverWebp <= 2), true); ?> <?php echo esc_attr( $deliverWebpAlteredDisabled );?> value="deliverWebpAltered" data-toggle="deliverAlteringTypes">
                     <label for="deliverWebpAltered">
@@ -132,15 +140,11 @@ THIS NEEDS DOING
                         </p>
                     <?php } ?>
 
-                    <p class="settings-info">
+                    <info>
                          <?php esc_html_e('Each &lt;img&gt; will be replaced with a &lt;picture&gt; tag that will also provide AVIF and WebP images for browsers that support it.  You don\'t need to activate this if you\'re using the Cache Enabler plugin because your AVIF\WebP images are already handled by this plugin. <strong>Please run some tests before using this option!</strong> If the styles that your theme is using rely on the position of your &lt;img&gt; tags, you may experience display problems.','shortpixel-image-optimiser'); ?>
                         <strong><?php esc_html_e('You can revert anytime to the previous state just by deactivating the option.','shortpixel-image-optimiser'); ?></strong>
-                    </p>
-                    <warning id="deliverAlteringTypes">
-                       <message>
-  <?php _e( "Warning: Using this method alters the structure of the rendered HTML code (IMG tags get included in PICTURE tags), which, in some rare \ncases, can lead to CSS/JS inconsistencies.\n\nPlease test this functionality thoroughly after activating!\n\nIf you notice any issue, just deactivate it and the HTML will will revert to the previous state.", 'shortpixel-image-optimiser' ); ?>
-                        </message>
-                    </warning>
+                    </info>
+
 
                     <ul class="deliverWebpAlteringTypes toggleTarget" >
                         <li>
@@ -164,11 +168,7 @@ THIS NEEDS DOING
                         <?php esc_html_e('Without altering the page code (via .htaccess)','shortpixel-image-optimiser')?>
                     </label>
 
-                    <warning id="deliverAlteringTypes" >
-                      <message>
-                        <?php _e( 'This option will serve both WebP and the original image using the same URL, based on the web browser capabilities, please make sure you\'re serving the images from your server and not using a CDN which caches the images.', 'shortpixel-image-optimiser' ) ?>
-                      </message>
-                    </warning>
+
                     <?php if(strlen($deliverWebpUnalteredLabel)){ ?>
                         <p class="sp-notice sp-notice-warning"><strong>
                             <?php echo( $deliverWebpUnalteredLabel );?>
@@ -178,7 +178,16 @@ THIS NEEDS DOING
                 </li>
             </ul>
           </content>
-
+          <warning id="deliverAlteringTypes">
+             <message>
+<?php _e( "Warning: Using this method alters the structure of the rendered HTML code (IMG tags get included in PICTURE tags), which, in some rare \ncases, can lead to CSS/JS inconsistencies.\n\nPlease test this functionality thoroughly after activating!\n\nIf you notice any issue, just deactivate it and the HTML will will revert to the previous state.", 'shortpixel-image-optimiser' ); ?>
+              </message>
+          </warning>
+          <warning id="deliverAlteringTypes" >
+            <message>
+              <?php _e( 'This option will serve both WebP and the original image using the same URL, based on the web browser capabilities, please make sure you\'re serving the images from your server and not using a CDN which caches the images.', 'shortpixel-image-optimiser' ) ?>
+            </message>
+          </warning>
         </setting>
 
         <!-- Optimize Media On Upload -->

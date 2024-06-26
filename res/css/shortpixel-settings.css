@@ -738,6 +738,9 @@ setting {
   align-items: center;
   flex-wrap: wrap;
 }
+setting.toggleTarget.is-visible {
+  display: flex !important;
+}
 setting name {
   width: 220px;
   min-width: 220px;

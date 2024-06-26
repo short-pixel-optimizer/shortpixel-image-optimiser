@@ -7,6 +7,12 @@ setting{
   align-items: center;
   flex-wrap: wrap;
 
+  // when showing on a toggle, force flex.
+  &.toggleTarget.is-visible
+  {
+     display: flex !important;
+  }
+
   // main title of setting
   name {
     width: 220px;

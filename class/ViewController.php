@@ -126,7 +126,8 @@ class ViewController extends Controller
 
   protected function printInlineHelp($url)
   {
-      $output = '<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="' .  esc_html__('Click for more info', 'shortpixel-image-optimiser') . '" data-link="' . esc_url($url) . '"></span></div>';
+
+      $output = '<i class="documentation dashicons dashicons-editor-help" data-link="' . esc_url($url).  '"></i>';
       echo $output;
 
   }
@@ -140,13 +141,13 @@ class ViewController extends Controller
     );
 
 
-    $output = '<div class="switch_button">
+    $output = '<switch>
       <label>
-        <input type="checkbox" class="switch" name="' . esc_attr($args['name']) . '" data-toggle="deliverTypes" value="1" ' . checked($args['checked'], true, false) .  '>
+        <input type="checkbox" class="switch" name="' . esc_attr($args['name']) . '" value="1" ' . checked($args['checked'], true, false) .  '>
         <div class="the_switch">&nbsp; </div>
         ' . esc_html($args['label']) . '
       </label>
-    </div>';
+    </switch>';
 
     echo $output;
   }

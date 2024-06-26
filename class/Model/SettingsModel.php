@@ -9,10 +9,9 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 class SettingsModel extends \ShortPixel\Model
 {
-		protected static $instance;
+		private static $instance;
 
 		private $option_name = 'spio_settings';
-		private $state_name = 'spio_states';
 
 		private $updated = false;
 
@@ -58,18 +57,11 @@ class SettingsModel extends \ShortPixel\Model
 				'currentStats' => ['s' => 'array', 'default' => array()], // whatever the current stats are.
     );
 
-		//$defaults = array(
-
-		//);
-
-		protected $settings;
-	//	protected $states;
+		private $settings;
 
 		public function __construct()
 		{
-			 //$this->checkLegacy();
 			 $this->load();
-
 		}
 
 		public static function getInstance()
@@ -158,7 +150,7 @@ class SettingsModel extends \ShortPixel\Model
      * PHP shutdown function, check if settings are updated and save on closing time.
      * @return null
      */
-		private function onShutdown()
+		protected function onShutdown()
 		{
 				if (true === $this->updated)
 				{
