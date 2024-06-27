@@ -12,6 +12,7 @@ use ShortPixel\Controller\QuotaController as QuotaController;
 use ShortPixel\Controller\AjaxController as AjaxController;
 use ShortPixel\Controller\AdminController as AdminController;
 use ShortPixel\Controller\ImageEditorController as ImageEditorController;
+use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 use ShortPixel\NextGenController as NextGenController;
@@ -224,8 +225,10 @@ class ShortPixelPlugin {
 			$settings     = $this->settings();
 			$stats        = $settings->currentStats;
 			$totalCredits = isset( $stats['APICallsQuotaNumeric'] ) ? $stats['APICallsQuotaNumeric'] + $stats['APICallsQuotaOneTimeNumeric'] : 0;
-		//	Log::addTemp('Stats here', $stats);
-			if ( true || ! $settings->verifiedKey || $totalCredits < 4000 ) {
+			$keyControl = ApiKeyController::getInstance();
+
+
+			if ( true || false === $keyControl->keyIsVerified() || $totalCredits < 4000 ) {
 				require_once 'class/view/shortpixel-feedback.php';
 				new ShortPixelFeedback( SHORTPIXEL_PLUGIN_FILE, 'shortpixel-image-optimiser' );
 			}

@@ -6,6 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 
 
 class ApiNotice extends \ShortPixel\Model\AdminNoticeModel
@@ -26,7 +27,8 @@ class ApiNotice extends \ShortPixel\Model\AdminNoticeModel
 
 	protected function checkTrigger()
 	{
-			if (\wpSPIO()->settings()->verifiedKey)
+			$keyControl = ApiKeyController::getInstance();
+			if ($keyControl->keyIsVerified())
 			{
 				return false;
 			}
@@ -37,9 +39,10 @@ class ApiNotice extends \ShortPixel\Model\AdminNoticeModel
 
   protected function checkReset()
   {
-    Log::addTemp('Verify key ', \wpSPIO()->settings()->verifiedKey);
-    if (\wpSPIO()->settings()->verifiedKey)
-    {
+    
+		$keyControl = ApiKeyController::getInstance();
+		if ($keyControl->keyIsVerified())
+		{
       return true;
     }
     return false;

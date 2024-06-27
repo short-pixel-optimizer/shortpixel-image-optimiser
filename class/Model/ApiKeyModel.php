@@ -29,6 +29,7 @@ class ApiKeyModel extends \ShortPixel\Model
 
   protected static $notified = array();
 
+
   protected $legacy_model = array(
        'apiKey' => array('s' => 'string',
                           'key' => 'wp-short-pixel-apiKey',
@@ -188,7 +189,7 @@ class ApiKeyModel extends \ShortPixel\Model
         $this->NoticeApiKeyLength($key);
         Log::addDebug('Key Wrong Length');
 
-				// Don't validate is wrong key is constant. 
+				// Don't validate is wrong key is constant.
 				if (false === $this->key_is_constant)
 				{
         	$valid = $this->verifiedKey; // if we already had a verified key, and a wrong new one is giving keep status.

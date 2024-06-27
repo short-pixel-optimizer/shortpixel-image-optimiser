@@ -6,6 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
+use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 
 class ApiNoticeRepeat extends \ShortPixel\Model\AdminNoticeModel
 {
@@ -14,7 +15,9 @@ class ApiNoticeRepeat extends \ShortPixel\Model\AdminNoticeModel
 
 	protected function checkTrigger()
 	{
-			if (\wpSPIO()->settings()->verifiedKey)
+			$keyControl = ApiKeyController::getInstance();
+
+			if (true === $keyControl->keyIsVerified())
 			{
 				return false;
 			}

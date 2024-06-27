@@ -94,6 +94,9 @@ class SettingsModel extends \ShortPixel\Model
        {
           return $this->model[$name]['default'];
        }
+			 else {
+			 	Log::addWarn('Call for non-existing setting: ' . $name);
+			 }
 		}
 
     public function __set($name, $value)

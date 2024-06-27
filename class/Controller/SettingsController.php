@@ -11,7 +11,6 @@ use ShortPixel\Helper\UiHelper as UiHelper;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
 use ShortPixel\Helper\InstallHelper as InstallHelper;
 
-use ShortPixel\Model\ApiKeyModel as ApiKeyModel;
 use ShortPixel\Model\AccessModel as AccessModel;
 use ShortPixel\Model\SettingsModel as SettingsModel;
 
@@ -66,7 +65,7 @@ class SettingsController extends \ShortPixel\ViewController
         {
           $this->model->redirectedSettings = 2; // Prevents any redirects after loading settings
         }
-        
+
         if ($this->is_form_submit)
         {
           $this->processSave();
@@ -398,7 +397,7 @@ class SettingsController extends \ShortPixel\ViewController
 
 				 $this->loadAPiKeyData();
 
-         if ($this->view->key->is_verifiedkey) // supress quotaData alerts when handing unset API's.
+         if ($this->keyModel->is_verified()) // supress quotaData alerts when handing unset API's.
           $this->loadQuotaData();
         else
           InstallHelper::checkTables();
