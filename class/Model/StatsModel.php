@@ -94,7 +94,6 @@ class StatsModel
   //  $this->totalOriginal = $settings->totalOriginal;
 
     $stats = $settings->currentStats;
-Log::addTemp('Stats load', $stats);
 		if (! is_array($stats))
 		{
 			 $stats = $this->defaults;
@@ -108,7 +107,7 @@ Log::addTemp('Stats load', $stats);
       $stats = $this->defaults;
 		}
 
-		$stats = array_merge($stats, $this->defaults); // merge like args to ensure full structure present.
+		$stats = array_merge($this->defaults, $stats); // merge like args to ensure full structure present.
 
     $this->lastUpdate = (isset($stats['time'])) ? $stats['time'] : 0;
 
@@ -117,7 +116,9 @@ Log::addTemp('Stats load', $stats);
        $this->stats = $stats;
     }
     else
+		{
       $this->stats = $this->defaults;
+		}
 
   }
 
@@ -126,13 +127,11 @@ Log::addTemp('Stats load', $stats);
      $settings = \wpSPIO()->settings();
      $stats = $this->stats;
      $stats['time'] = time();
-     Log::addTemp('Saving fresh stats', $stats);
      $settings->currentStats = $stats;
   }
 
   public function reset()
   {
-      Log::addTemp('Stats reset');
       $this->stats = $this->defaults;
 			\wpSPIO()->settings()->deleteOption('currentStats');
 

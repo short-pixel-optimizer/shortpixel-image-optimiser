@@ -81,7 +81,7 @@ class SettingsModel extends \ShortPixel\Model
 
 		protected function save()
 		{
-				update_option($this->option_name, $this->settings);
+				$res = update_option($this->option_name, $this->settings);
 		}
 
 		public function __get($name)

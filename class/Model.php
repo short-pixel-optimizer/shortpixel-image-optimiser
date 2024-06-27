@@ -146,9 +146,18 @@ abstract class Model
       $new_array = array();
       foreach($array as $key => $value)
       {
-        $newkey = $this->sanitizeString($key);
-        $newval = $this->sanitizeString($value);
-        $new_array[$newkey] = $newval ;
+				$newkey = $this->sanitizeString($key);
+
+				if (true === is_array($value))
+				{
+					 $newval = $this->sanitizeArray($value);
+				}
+				else {
+					  $newval = $this->sanitizeString($value);
+				}
+
+				$new_array[$newkey] = $newval ;
+
       }
 
       return $new_array;

@@ -224,7 +224,7 @@ class ShortPixelPlugin {
 			$settings     = $this->settings();
 			$stats        = $settings->currentStats;
 			$totalCredits = isset( $stats['APICallsQuotaNumeric'] ) ? $stats['APICallsQuotaNumeric'] + $stats['APICallsQuotaOneTimeNumeric'] : 0;
-			Log::addTemp('Stats here', $stats);
+		//	Log::addTemp('Stats here', $stats);
 			if ( true || ! $settings->verifiedKey || $totalCredits < 4000 ) {
 				require_once 'class/view/shortpixel-feedback.php';
 				new ShortPixelFeedback( SHORTPIXEL_PLUGIN_FILE, 'shortpixel-image-optimiser' );
