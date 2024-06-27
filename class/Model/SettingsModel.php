@@ -105,6 +105,7 @@ class SettingsModel extends \ShortPixel\Model
     {
       if (isset($this->model[$name]))
       {
+      //   Log::addTrace('Setting changed: ' . $name);
         $this->settings[$name] =  $this->sanitize($name, $value);
 				$this->updated = true;
       }

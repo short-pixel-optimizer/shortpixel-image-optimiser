@@ -5,6 +5,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+
+
 class ApiNotice extends \ShortPixel\Model\AdminNoticeModel
 {
 	protected $key = 'MSG_NO_APIKEY';
@@ -31,6 +34,16 @@ class ApiNotice extends \ShortPixel\Model\AdminNoticeModel
 			// If not key is verified.
 			return true;
 	}
+
+  protected function checkReset()
+  {
+    Log::addTemp('Verify key ', \wpSPIO()->settings()->verifiedKey);
+    if (\wpSPIO()->settings()->verifiedKey)
+    {
+      return true;
+    }
+    return false;
+  }
 
 	protected function getMessage()
 	{

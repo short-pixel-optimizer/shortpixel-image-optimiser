@@ -50,6 +50,7 @@ abstract class AdminNoticeModel
 			 return false;
 		 }
 
+Log::addTemp('Notice', $this->notice);
 		 if (is_null($this->notice) && $this->checkTrigger() === true)
 		 {
 			  $this->add();

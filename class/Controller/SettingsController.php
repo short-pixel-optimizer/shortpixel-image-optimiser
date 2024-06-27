@@ -62,8 +62,11 @@ class SettingsController extends \ShortPixel\ViewController
         $this->loadEnv();
         $this->checkPost(); // sets up post data
 
-        $this->model->redirectedSettings = 2; // Prevents any redirects after loading settings
-
+        if (2 !== $this->model->redirectedSettings)
+        {
+          $this->model->redirectedSettings = 2; // Prevents any redirects after loading settings
+        }
+        
         if ($this->is_form_submit)
         {
           $this->processSave();

@@ -94,7 +94,7 @@ class StatsModel
   //  $this->totalOriginal = $settings->totalOriginal;
 
     $stats = $settings->currentStats;
-
+Log::addTemp('Stats load', $stats);
 		if (! is_array($stats))
 		{
 			 $stats = $this->defaults;
@@ -126,12 +126,13 @@ class StatsModel
      $settings = \wpSPIO()->settings();
      $stats = $this->stats;
      $stats['time'] = time();
-
+     Log::addTemp('Saving fresh stats', $stats);
      $settings->currentStats = $stats;
   }
 
   public function reset()
   {
+      Log::addTemp('Stats reset');
       $this->stats = $this->defaults;
 			\wpSPIO()->settings()->deleteOption('currentStats');
 
@@ -467,6 +468,7 @@ class StatsModel
          $sql = $wpdb->prepare($sql, ImageModel::FILE_STATUS_SUCCESS);
        }
 
+Log::addTemp('Custom SQl', $sql);
         $count = $wpdb->get_var($sql);
         return $count;
 
