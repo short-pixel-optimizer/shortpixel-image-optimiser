@@ -134,11 +134,6 @@ THIS NEEDS DOING
                         <?php esc_html_e('Using the &lt;PICTURE&gt; tag syntax','shortpixel-image-optimiser');?>
                     </label>
 
-                    <?php if($deliverWebpAlteredDisabledNotice){ ?>
-                        <p class="sp-notice">
-                            <?php esc_html_e('After the option to work on .htaccess was selected, the .htaccess file has become unaccessible / read-only. Please make the .htaccess file writeable again to be able to further set this option up.','shortpixel-image-optimiser')?>
-                        </p>
-                    <?php } ?>
 
                     <info>
                          <?php esc_html_e('Each &lt;img&gt; will be replaced with a &lt;picture&gt; tag that will also provide AVIF and WebP images for browsers that support it.  You don\'t need to activate this if you\'re using the Cache Enabler plugin because your AVIF\WebP images are already handled by this plugin. <strong>Please run some tests before using this option!</strong> If the styles that your theme is using rely on the position of your &lt;img&gt; tags, you may experience display problems.','shortpixel-image-optimiser'); ?>
@@ -146,7 +141,7 @@ THIS NEEDS DOING
                     </info>
 
 
-                    <ul class="deliverWebpAlteringTypes toggleTarget" >
+                    <ul class="deliverWebpAlteringTypesPicture toggleTarget" >
                         <li>
                             <input type="radio" name="deliverWebpAlteringType" id="deliverWebpAlteredWP" <?php checked(($view->data->deliverWebp == 2), true);?> value="deliverWebpAlteredWP">
                             <label for="deliverWebpAlteredWP">
@@ -162,7 +157,7 @@ THIS NEEDS DOING
                     </ul>
                 </li>
                 <li>
-                    <input type="radio" name="deliverWebpType" id="deliverWebpUnaltered" <?php checked(($view->data->deliverWebp == 3), true);?> <?php echo esc_attr( $deliverWebpUnalteredDisabled );?> value="deliverWebpUnaltered" data-toggle="deliverAlteringTypes" data-toggle-reverse>
+                    <input type="radio" name="deliverWebpType" id="deliverWebpUnaltered" <?php checked(($view->data->deliverWebp == 3), true);?> <?php echo esc_attr( $deliverWebpUnalteredDisabled );?> value="deliverWebpUnaltered" data-toggle="deliverAlteringTypes">
 
                     <label for="deliverWebpUnaltered">
                         <?php esc_html_e('Without altering the page code (via .htaccess)','shortpixel-image-optimiser')?>
@@ -178,16 +173,24 @@ THIS NEEDS DOING
                 </li>
             </ul>
           </content>
-          <warning id="deliverAlteringTypes">
+          <warning id="deliverAlteringTypesPicture">
              <message>
 <?php _e( "Warning: Using this method alters the structure of the rendered HTML code (IMG tags get included in PICTURE tags), which, in some rare \ncases, can lead to CSS/JS inconsistencies.\n\nPlease test this functionality thoroughly after activating!\n\nIf you notice any issue, just deactivate it and the HTML will will revert to the previous state.", 'shortpixel-image-optimiser' ); ?>
               </message>
           </warning>
-          <warning id="deliverAlteringTypes" >
+          <warning id="deliverAlteringTypesHtaccess" >
             <message>
               <?php _e( 'This option will serve both WebP and the original image using the same URL, based on the web browser capabilities, please make sure you\'re serving the images from your server and not using a CDN which caches the images.', 'shortpixel-image-optimiser' ) ?>
             </message>
           </warning>
+
+          <?php if($deliverWebpAlteredDisabledNotice): ?>
+          <warning class='is-visible'>
+              <message>
+                  <?php esc_html_e('After the option to work on .htaccess was selected, the .htaccess file has become unaccessible / read-only. Please make the .htaccess file writeable again to be able to further set this option up.','shortpixel-image-optimiser')?>
+              </message>
+          </warning>
+        <?php endif; ?>
         </setting>
 
         <!-- Optimize Media On Upload -->

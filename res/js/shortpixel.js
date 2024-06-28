@@ -101,6 +101,7 @@ var ShortPixel = function() {
 			}, 1000);
     }
 
+    // Settings part-general
     function validateKey(button){
         jQuery('#valid').val('validate');
 
@@ -113,6 +114,8 @@ var ShortPixel = function() {
         }
     });
 
+
+    // Settings part-general
     function enableResize(elm) {
         if(jQuery(elm).is(':checked')) {
             jQuery("#width,#height").prop("disabled", false);
@@ -161,6 +164,7 @@ var ShortPixel = function() {
       }
     }
 
+    // Settings part-advanced. (for offload)
     function checkHeavyFeatureWarning(name)
     {
        var inputName = (name == 'retina') ? 'optimizeRetina' : 'optimizeUnlisted';

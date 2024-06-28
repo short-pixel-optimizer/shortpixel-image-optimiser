@@ -17,7 +17,7 @@ var ShortPixelSettings = function()
 
 			toggles.forEach(function (toggle, index)
 			{
-					toggle.addEventListener('change', self.DoToggleAction.bind(self));
+					toggle.addEventListener('change', self.DoToggleActionEvent.bind(self));
 
 					var evInit = new CustomEvent('change',  {detail : { init: true }} );
 					toggle.dispatchEvent(evInit);
@@ -75,13 +75,21 @@ var ShortPixelSettings = function()
 			}
 	}
 
-	// Elements with data-toggle active 
-	this.DoToggleAction = function(event)
+	// Elements with data-toggle active
+	this.DoToggleActionEvent = function(event)
 	{
 			event.preventDefault();
 
 			var checkbox = event.target;
-			var target = document.getElementById(checkbox.getAttribute('data-toggle'));
+			var field_id = checkbox.getAttribute('data-toggle');
+			var target = document.getElementById(field_id);
+			// Allow multiple elements to be toggled, which will not work with id. In due time all should be transferred to use class-based toggle
+			var targetClasses = document.querySelectorAll('.' + field_id);
+
+			if (checkbox.type === 'radio')
+			{
+				 
+			}
 
 		  if (typeof checkbox.dataset.toggleReverse !== 'undefined')
 			{
@@ -97,16 +105,35 @@ var ShortPixelSettings = function()
 				 return false;
 			}
 
+			var show = false;
 			if (checked)
 			{
-			  // target.classList.add('is-visible');
-				this.ShowElement(target);
+				show = true;
 			}
-			else
+
+console.log(show, target, targetClasses);
+			if (target !== null)
 			{
-				this.HideElement(target);
-  			//	target.classList.remove('is-visible');
+				 if (show)
+				 {
+				 	this.ShowElement(target);
+				}
+				else {
+					 this.HideElement(target);
+				}
 			}
+
+		 	for (var i = 0; i < targetClasses.length; i++)
+			{
+				  if (show)
+					{
+						this.ShowElement(targetClasses[i]);
+					}
+					else {
+						this.HideElement(targetClasses[i]);
+					}
+			}
+
 	}
 
 	this.ShowElement = function (elem) {
