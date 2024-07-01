@@ -6,7 +6,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-use ShortPixel\Notices\NoticeController as Notices;
 use ShortPixel\Helper\InstallHelper as InstallHelper;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 

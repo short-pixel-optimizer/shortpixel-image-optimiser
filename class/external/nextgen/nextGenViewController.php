@@ -5,7 +5,6 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
-use ShortPixel\Notices\NoticeController as Notice;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 use ShortPixel\Helper\UiHelper as UiHelper;

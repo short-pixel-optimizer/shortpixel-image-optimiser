@@ -143,14 +143,7 @@ class NextGenController
 		 }
 		 return $array;
 	}
-  /** Enables nextGen, add galleries to custom folders
-  * @param boolean $silent Throw a notice or not. This seems to be based if nextgen was already activated previously or not.
-  */
-  /*
-  public function nextGenEnabled($silent)
-  {
-    $this->addNextGenGalleriesToCustom($silent);
-  }  */
+
 
   /** Tries to find a nextgen gallery for a shortpixel folder.
   * Purpose is to test if this folder is a nextgen gallery

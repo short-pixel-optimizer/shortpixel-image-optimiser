@@ -6,7 +6,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-use ShortPixel\Notices\NoticeController as Notices;
 
 use ShortPixel\Model\File\DirectoryOtherMediaModel as DirectoryOtherMediaModel;
 use ShortPixel\Model\File\DirectoryModel as DirectoryModel;

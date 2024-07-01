@@ -6,7 +6,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-use ShortPixel\Notices\NoticeController as Notices;
 
 // @todo Clean up unused lines in this file. (cloudflare)
 class CloudFlareAPI {
@@ -22,11 +21,6 @@ class CloudFlareAPI {
     private $cf_exists = true;
 
     private $api_url = 'https://api.cloudflare.com/client/v4/zones/';
-
-    /*public function __construct($cloudflareEmail, $cloudflareAuthKey, $cloudflareZoneID) {
-        $this->set_up($cloudflareEmail, $cloudflareAuthKey, $cloudflareZoneID);
-        $this->set_up_required_hooks();
-    } */
 
     public function __construct()
     {
@@ -53,10 +47,6 @@ class CloudFlareAPI {
           $this->config_ok = true;
         }
 
-        if (empty($this->zone_id))
-        {
-          //Log::addWarn('CF - ZoneID setting is obligatory');
-        }
 
         $this->setup_done = true;
     }
@@ -87,9 +77,6 @@ class CloudFlareAPI {
 
 
         // Fetch CloudFlare API credentials
-        /*$cloudflare_auth_email = $this->_cloudflareEmail;
-        $cloudflare_auth_key   = $this->_cloudflareAuthKey;
-        $cloudflare_zone_id    = $this->_cloudflareZoneID; */
 
             // Fetch all WordPress install possible thumbnail sizes ( this will not return the full size option )
             $fetch_images_sizes   = get_intermediate_image_sizes();
@@ -101,23 +88,6 @@ class CloudFlareAPI {
                 $fetch_images_sizes[] = 'full';
             }
 
-/*
-            if ( $imageItem->getType() == 'media' ) {
-                // The item is a Media Library item, fetch the URL for each image size
-                foreach ( $fetch_images_sizes as $size ) {
-                    // 0 - url; 1 - width; 2 - height
-                    $image_attributes = wp_get_attachment_image_src( $image_id, $size );
-                    // Append to the list
-                    array_push( $purge_array, $image_attributes[0] );
-                }
-            } else {
-                // The item is a Custom Media item
-                $fs = \wpSPIO()->filesystem();
-                $item = $fs->getImage( $image_id, 'custom' );
-                $item_url = $fs->pathToUrl( $item );
-                array_push( $purge_array, $item_url );
-            }
-			*/
 						$fs = \wpSPIO()->filesystem();
 
 						$image_paths[] = $imageItem->getURL();
@@ -161,12 +131,6 @@ class CloudFlareAPI {
                 // Encode the data into JSON before send
                 $dispatch_purge_info = function_exists('wp_json_encode') ? wp_json_encode( $prepare_request_info ) : json_encode( $prepare_request_info );
 
-                // Set headers for remote API to authenticate for the request
-      /*          $dispatch_header = array(
-                    'X-Auth-Email: ' . $cloudflare_auth_email,
-                    'X-Auth-Key: ' . $cloudflare_auth_key,
-                    'Content-Type: application/json'
-                ); */
 
                 $response = $this->delete_url_cache_request_action($image_paths);
 

@@ -14,7 +14,7 @@ use ShortPixel\Helper\UtilHelper as UtilHelper;
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 use ShortPixel\Controller\QuotaController as QuotaController;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
-use ShortPixel\Notices\NoticeController as Notice;
+
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\Model\Image\MediaLibraryModel as MediaLibraryModel;
 
