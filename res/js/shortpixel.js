@@ -393,8 +393,6 @@ var ShortPixel = function() {
         };
 
         jQuery.post(ShortPixel.AJAX_URL, data, function(result) {
-            console.log("quota refreshed");
-            console.log(result);
             window.location.href = result.redirect;
         });
     }
@@ -471,7 +469,6 @@ var ShortPixel = function() {
             },
 						complete: function(response, status)
 						{
-							 //console.log(response, status);
 
 						}
         });
@@ -534,15 +531,11 @@ var ShortPixel = function() {
             this.comparerData.cssLoaded = 2;
         }
         if(this.comparerData.jsLoaded === false) {
-            jQuery.getScript(this.WP_PLUGIN_URL + '/res/js/jquery.twentytwenty.min.js', function(){
+             jQuery.getScript(this.WP_PLUGIN_URL + '/res/js/jquery.twentytwenty.min.js', function(){
                 ShortPixel.comparerData.jsLoaded = 2;
-                /*   What should this do?
-                if(ShortPixel.comparerData.origUrl.length > 0) {
-                    ShortPixel.displayComparerPopup(ShortPixel.comparerData.width, ShortPixel.comparerData.height, ShortPixel.comparerData.origUrl, ShortPixel.comparerData.optUrl);
-                } */
+
             });
             this.comparerData.jsLoaded = 1;
-            //jQuery(".sp-close-button").click(ShortPixel.closeComparerPopup);
         }
         if(this.comparerData.origUrl === false) {
                if (typeof type == 'undefined')
@@ -613,7 +606,6 @@ var ShortPixel = function() {
         });
         imgOpt.attr("src", imgOptimized);
 
-        console.log('Popup Loaded! ', modal);
     }
 
     function closeComparerPopup(e) {
@@ -623,6 +615,7 @@ var ShortPixel = function() {
         jQuery(document).unbind('keyup.sp_modal_active');
         jQuery('.sp-modal-shade').off('click');
         jQuery(".sp-close-button").off('click');
+
     }
 
     function convertPunycode(url) {

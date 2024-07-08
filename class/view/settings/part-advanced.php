@@ -141,7 +141,7 @@ THIS NEEDS DOING
                     </info>
 
 
-                    <ul class="deliverWebpAlteringTypesPicture toggleTarget" >
+                    <ul class="deliverWebpAlteringTypes toggleTarget" >
                         <li>
                             <input type="radio" name="deliverWebpAlteringType" id="deliverWebpAlteredWP" <?php checked(($view->data->deliverWebp == 2), true);?> value="deliverWebpAlteredWP">
                             <label for="deliverWebpAlteredWP">

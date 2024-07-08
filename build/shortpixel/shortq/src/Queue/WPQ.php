@@ -667,9 +667,7 @@ class WPQ implements Queue
       // Unset the WP Option queue
       //unset($this->status
       unset($this->status['queues'][$this->qName]);
-      $this->currentStatus = false; 
-error_log('count Q' . count($this->status['queues']) . ' ' . $this->qName);
-error_log(var_export($this->status['queues'], true));
+
       if (count($this->status['queues']) == 0)
         delete_option($this->statusName);
       else

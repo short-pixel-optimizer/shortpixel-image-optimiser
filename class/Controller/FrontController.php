@@ -57,7 +57,7 @@ class FrontController extends \ShortPixel\Controller
   * @return String Converted content
   */
   public function convertImgToPictureAddWebp($content) {
-      if(function_exists('is_amp_endpoint') && is_amp_endpoint()) {
+      if(function_exists('amp_is_request') && amp_is_request()) {
           //for AMP pages the <picture> tag is not allowed
 					// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
           return $content . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG is AMP -->' : '');
@@ -75,6 +75,7 @@ class FrontController extends \ShortPixel\Controller
 
       $call = array($this, 'convertImgToPictureAddWebp');
       ob_start( $call );
+
   }
 
 
