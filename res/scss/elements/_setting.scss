@@ -46,6 +46,8 @@ setting{
       margin: 4px 0 12px 230px;
       flex-basis: 100%;
       display: none;
+      opacity: 0;
+      transition: opacity 300ms;
 
       h4 {
         margin: 0;

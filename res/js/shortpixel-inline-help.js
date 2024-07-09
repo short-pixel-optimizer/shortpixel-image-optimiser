@@ -36,7 +36,6 @@ document.addEventListener("DOMContentLoaded", function(){
        helpMain.appendChild(title);
        helpMain.appendChild(body);
 
-
        var helpShade = document.createElement('div');
        helpShade.id = 'spio-inline-shade';
        helpShade.classList.add('spio-modal-shade');

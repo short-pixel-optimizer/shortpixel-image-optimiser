@@ -161,7 +161,10 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                   true === \wpSPIO()->env()->plugin_active('s3-offload')
                 ) ? 1 : 0; ?>
               </content>
-                <warning id="smartcrop-warning" data-smartcrop="<?php echo esc_attr($smartcrop) ?>">
+
+              <input type='checkbox' name='offload-active' class='shortpixel-hide' value='1' <?php echo ($smartcrop === 1) ? 'checked' : '' ?> />
+
+                <warning id="smartcrop-warning">
                     <message>
     									<?php esc_html_e('It looks like you have the Offload Media plugin enabled. Please note that SmartCropping will not work if you have set the Offload Media plugin to remove files from the server, and strange effects may occur! We recommend you to disable this option in this case.', 'shortpixel-image-optimiser'); ?>
                     </message>

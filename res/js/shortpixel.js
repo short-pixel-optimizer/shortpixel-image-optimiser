@@ -128,42 +128,6 @@ var ShortPixel = function() {
         }
     }
 
-
-    function checkExifWarning()
-    {
-      // There is more than one warning for this
-      if (! jQuery('input[name="removeExif"]').is(':checked') && jQuery('input[name="png2jpg"]').is(':checked') )
-        jQuery('.exif-warning').fadeIn();
-      else
-        jQuery('.exif-warning').fadeOut();
-
-      if (! jQuery('input[name="removeExif"]').is(':checked') && jQuery('#exif-imagick-warning').data('imagick') <= 0)
-        jQuery('#exif-imagick-warning').fadeIn();
-      else
-        jQuery('#exif-imagick-warning').fadeOut();
-
-    }
-
-		function checkSmartCropWarning()
-		{
-			if (jQuery('input[name="useSmartcrop"]').is(':checked') && jQuery('#smartcrop-warning').data('smartcrop') == 1 )
-        jQuery('#smartcrop-warning').fadeIn();
-      else
-        jQuery('#smartcrop-warning').fadeOut();
-
-		}
-
-    function checkBackUpWarning()
-    {
-      if (false === jQuery('input[name="backupImages"]').is(':checked') )
-      {
-        jQuery('#backup-warning').fadeIn();
-      }
-      else {
-        jQuery('#backup-warning').fadeOut();
-      }
-    }
-
     // Settings part-advanced. (for offload)
     function checkHeavyFeatureWarning(name)
     {
@@ -178,10 +142,10 @@ var ShortPixel = function() {
 
        if (input.is(':checked'))
        {
-          warningEl.fadeIn();
+          warningEl.animate({ opacity: 1 });
        }
        else {
-         warningEl.fadeOut();
+         warningEl.animate({ opacity: 0 });
        }
     }
 
@@ -247,23 +211,6 @@ var ShortPixel = function() {
             return true;
         });
 
-        jQuery('input[name="removeExif"], input[name="png2jpg"]').on('change', function()
-        {
-            ShortPixel.checkExifWarning();
-        });
-        ShortPixel.checkExifWarning();
-
-        jQuery('input[name="backupImages"]').on('change', function()
-        {
-           ShortPixel.checkBackUpWarning();
-        });
-        ShortPixel.checkBackUpWarning();
-
-				jQuery('input[name="useSmartcrop"]').on('change', function()
-        {
-           ShortPixel.checkSmartCropWarning();
-        });
-        ShortPixel.checkSmartCropWarning();
 
     }
 
@@ -311,27 +258,6 @@ var ShortPixel = function() {
             var theID = jQuery(e.target).data("id");
             ShortPixel.switchSettingsTab( theID );
         });
-
-
-  /*      jQuery('input[type=radio][name=deliverWebpType]').on('change', function(e) {
-						// shortpixel-settings init trigger events for toggles, ignore this when so.
-						if (e.detail && e.detail.init && e.detail.init === true)
-						{
-								return false;
-						}
-            if (this.value == 'deliverWebpAltered') {
-                if(window.confirm(_spTr.alertDeliverWebPAltered)){
-                    var selectedItems = jQuery('input[type=radio][name=deliverWebpAlteringType]:checked').length;
-                    if (selectedItems == 0) {
-                        jQuery('#deliverWebpAlteredWP').prop('checked',true);
-                    }
-                } else {
-                    jQuery(this).prop('checked', false);
-                }
-            } else if(this.value == 'deliverWebpUnaltered') {
-                window.alert(_spTr.alertDeliverWebPUnaltered);
-            }
-        }); */
 
 				// Init active tab
 				var activeTab = document.querySelector('section.sel-tab');
@@ -661,9 +587,9 @@ var ShortPixel = function() {
         displayComparerPopup: displayComparerPopup,
         closeComparerPopup  : closeComparerPopup,
         convertPunycode     : convertPunycode,
-        checkExifWarning    : checkExifWarning,
-        checkBackUpWarning  : checkBackUpWarning,
-				checkSmartCropWarning: checkSmartCropWarning,
+      //  checkExifWarning    : checkExifWarning,
+      //  checkBackUpWarning  : checkBackUpWarning,
+			//	checkSmartCropWarning: checkSmartCropWarning,
         checkHeavyFeatureWarning : checkHeavyFeatureWarning,
         comparerData        : {
             cssLoaded   : false,

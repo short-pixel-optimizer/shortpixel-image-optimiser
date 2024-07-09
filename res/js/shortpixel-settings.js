@@ -12,24 +12,39 @@ var ShortPixelSettings = function()
 
 	this.InitActions = function()
 	{
-			var toggles = document.querySelectorAll('[data-toggle]');
 			var self = this;
 
-			toggles.forEach(function (toggle, index)
-			{
-					toggle.addEventListener('change', self.DoToggleActionEvent.bind(self));
-
-					var evInit = new CustomEvent('change',  {detail : { init: true }} );
-					toggle.dispatchEvent(evInit);
-			});
+			this.InitToggle();
+			this.InitExclusions();
+			this.InitWarnings();
 
 			// Modals
 			var modals = document.querySelectorAll('[data-action="open-modal"]');
 			modals.forEach(function (modal, index)
 			{
-					modal.addEventListener('click', self.OpenModal.bind(self));
+					modal.addEventListener('click', self.OpenModalEvent.bind(self));
 			});
 
+	}
+
+	this.InitToggle = function()
+	{
+		var toggles = document.querySelectorAll('[data-toggle]');
+		var self = this;
+
+		toggles.forEach(function (toggle, index)
+		{
+				toggle.addEventListener('change', self.DoToggleActionEvent.bind(self));
+
+				var evInit = new CustomEvent('change',  {detail : { init: true }} );
+				toggle.dispatchEvent(evInit);
+		});
+
+	}
+
+	this.InitExclusions = function()
+	{
+		 	var self = this;
 			// Events for the New Exclusion dialog
 			var newExclusionInputs = document.querySelectorAll('.new-exclusion select, .new-exclusion input, .new-exclusion button, input[name="removeExclusion"], button[name="cancelEditExclusion"]');
 
@@ -37,7 +52,7 @@ var ShortPixelSettings = function()
 			{
 					switch (input.name)
 					{
-						 	case 'addExclusion':
+							case 'addExclusion':
 							case 'removeExclusion':
 							case 'cancelEditExclusion':
 							case 'updateExclusion':
@@ -53,7 +68,7 @@ var ShortPixelSettings = function()
 
 			 var exclusionItems = document.querySelectorAll('.exclude-list li');
 			 exclusionItems.forEach(function (input) {
-				  if (false == input.classList.contains('no-exclusion-item'))
+					if (false == input.classList.contains('no-exclusion-item'))
 					{
 						input.addEventListener('click', self.NewExclusionShowInterfaceEvent.bind(self));
 					}
@@ -75,6 +90,63 @@ var ShortPixelSettings = function()
 			}
 	}
 
+	this.InitWarnings = function()
+	{
+		var self = this;
+
+		var ifAllChecked = (elements, mode) =>
+		{
+			 	var checked = ('reverse' == mode) ? false : true ;
+
+			 for (var i = 0; i < elements.length; i++)
+			 {
+				  if (elements[i].checked === false)
+					{
+						 checked = ('reverse' == mode) ? true : false;
+
+						 return checked;
+					}
+			 }
+			 return checked;
+		}
+
+		var updateShowWarning = (elements, warning, mode) => {
+				for(var i = 0; i < elements.length; i++)
+				{
+					 elements[i].addEventListener('change', function (event)
+					 {
+						 event.preventDefault();
+						 if (ifAllChecked(elements, mode))
+						 {
+								self.ShowElement(warning)
+						 }
+						 else {
+								self.HideElement(warning);
+						 }
+					 });
+				}
+		}
+
+		var remove_elements = document.querySelectorAll('input[name="removeExif"], input[name="png2jpg"]');
+		var warning = document.querySelector('.exif-warning');
+
+		updateShowWarning(remove_elements, warning);
+
+		var elements = document.querySelectorAll('input[name="backupImages"]');
+  	var warning =  document.querySelector('#backup-warning');
+
+		updateShowWarning(elements, warning, 'reverse');
+
+		var elements = document.querySelectorAll('input[name="offload-active"], input[name="useSmartcrop"]');
+		var warning = document.querySelector('#smartcrop-warning');
+
+		updateShowWarning(elements, warning);
+
+
+	}
+
+
+
 	// Elements with data-toggle active
 	this.DoToggleActionEvent = function(event)
 	{
@@ -88,7 +160,7 @@ var ShortPixelSettings = function()
 
 			if (checkbox.type === 'radio')
 			{
-				 
+
 			}
 
 		  if (typeof checkbox.dataset.toggleReverse !== 'undefined')
@@ -111,7 +183,6 @@ var ShortPixelSettings = function()
 				show = true;
 			}
 
-console.log(show, target, targetClasses);
 			if (target !== null)
 			{
 				 if (show)
@@ -138,45 +209,28 @@ console.log(show, target, targetClasses);
 
 	this.ShowElement = function (elem) {
 
-	// Get the natural height of the element
-	var getHeight = function () {
-		//elem.style.display = 'block'; // Make it visible
-		var height = elem.scrollHeight + 'px'; // Get it's height
-	//	elem.style.display = ''; //  Hide it again
-		return height;
-	};
+		elem.classList.add('is-visible'); // Make the element visible
 
-	var height = getHeight(); // Get the natural height
-	elem.classList.add('is-visible'); // Make the element visible
-	elem.style.height = height; // Update the max-height
-
-	// Once the transition is complete, remove the inline max-height so the content can scale responsively
-	window.setTimeout(function () {
-		elem.style.height = '';
-	}, 350);
+		// Once the transition is complete, remove the inline max-height so the content can scale responsively
+		window.setTimeout(function () {
+				elem.style.opacity = 1;
+		}, 150);
 
 };
 
 // Hide an element
 this.HideElement = function (elem) {
 
-	// Give the element a height to change from
-	elem.style.height = elem.scrollHeight + 'px';
+	elem.style.opacity = 0;
+		// When the transition is complete, hide it
+		window.setTimeout(function () {
+			elem.classList.remove('is-visible');
 
-	// Set the height back to 0
-	window.setTimeout(function () {
-		elem.style.height = '0';
-	}, 1);
-
-	// When the transition is complete, hide it
-	window.setTimeout(function () {
-		elem.classList.remove('is-visible');
-	}, 350);
-
+		}, 300);
 };
 
 
-this.OpenModal = function(elem)
+this.OpenModalEvent = function(elem)
 {
 		var target = elem.target;
 		var targetElem = document.getElementById(target.dataset.target);
@@ -352,7 +406,6 @@ this.CompressionTypeChangeEvent = function(event)
 					 element.style.display = 'inline-block';
 				}
 		}
-
 
 }
 
