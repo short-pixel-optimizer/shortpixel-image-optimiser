@@ -224,13 +224,18 @@ class ListMediaViewController extends \ShortPixel\ViewController
 		$actions = UiHelper::getActions($mediaItem);
     $this->view->actions = $actions;
 
-
 		$allActions = array_merge($list_actions, $actions);
-		$checkBoxActions = array();
-		if (array_key_exists('optimize', $allActions))
-		{
-				$checkBoxActions[] = 'is-optimizable';
-		}
+
+  	$checkBoxActions = array();
+    foreach($allActions as $action => $data)
+    {
+        if (isset($data['is-optimizable']))
+        {
+           $checkBoxActions[] = 'is-optimizable';
+        }
+    }
+
+
 		if (array_key_exists('restore', $allActions))
 		{
 				$checkBoxActions[] = 'is-restorable';

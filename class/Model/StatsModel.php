@@ -467,7 +467,6 @@ class StatsModel
          $sql = $wpdb->prepare($sql, ImageModel::FILE_STATUS_SUCCESS);
        }
 
-Log::addTemp('Custom SQl', $sql);
         $count = $wpdb->get_var($sql);
         return $count;
 
