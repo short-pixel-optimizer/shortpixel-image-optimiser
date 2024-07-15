@@ -574,12 +574,14 @@ class UiHelper
          $action['type']  = 'js';
          $action['text'] = __('Optimize Now', 'shortpixel-image-optimiser');
          $action['display'] = 'button';
+         $action['is-optimizable'] = true;
       break;
       case 'forceOptimize':
         $action['function'] = 'window.ShortPixelProcessor.screen.Optimize(' . $id . ', true)';
         $action['type']  = 'js';
         $action['text'] = __('Override exclusions and optimize now', 'shortpixel-image-optimiser');
         $action['display'] = 'button';
+        $action['is-optimizable'] = true;
       break;
 			case 'cancelOptimize':
 				 $action['function'] = 'window.ShortPixelProcessor.screen.CancelOptimizeItem(' . $id . ')';
@@ -607,6 +609,7 @@ class UiHelper
           $action['type'] = 'js';
           $action['text']  = '';
           $action['display'] = 'inline';
+          $action['is-optimizable'] = true;
       break;
 
       case 'retry':
@@ -614,6 +617,7 @@ class UiHelper
          $action['type']  = 'js';
          $action['text'] = __('Retry', 'shortpixel-image-optimiser') ;
          $action['display'] = 'button';
+         $action['is-optimizable'] = true;
      break;
 		 case 'redo_legacy':
 		 			$action['function'] = 'window.ShortPixelProcessor.screen.RedoLegacy(' . $id . ');';
