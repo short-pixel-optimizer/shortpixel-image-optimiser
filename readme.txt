@@ -2,9 +2,9 @@
 Contributors: ShortPixel
 Tags: convert webp, optimize images, image optimization, resize, compressor
 Requires at least: 4.8.0
-Tested up to: 6.5
+Tested up to: 6.6
 Requires PHP: 5.6
-Stable tag: 5.6.2
+Stable tag: 5.6.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -392,6 +392,13 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 5.6.3 =
+Release date: July 16, 2024
+* Compat: Integration with Polylang Pro is fixed;
+* Fix: Some bulk actions in the list view of the Media Library did not work;
+* Fix: PHP warning was displayed when an existing Custom Media folder was no longer present on the disk;
+* Language: 0 new strings added, 0 updated, 0 fuzzed, and 0 deprecated.
 
 = 5.6.2 =
 Release date: May 23, 2024

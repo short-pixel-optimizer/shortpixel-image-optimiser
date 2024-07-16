@@ -347,7 +347,7 @@ class DirectoryOtherMediaModel extends DirectoryModel
 
        if (! $this->exists())
        {
-				 $message = __('Could not be added, directory not found: ' . $path ,'shortpixel-image-optimiser');
+				 $message = sprintf(__('Could not be added, directory not found: %s ','shortpixel-image-optimiser'),  $this->getPath() );
 				 $this->last_message = $message;
 
 				 if (false === $silent)
