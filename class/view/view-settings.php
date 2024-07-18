@@ -20,12 +20,24 @@ if ( ! defined( 'ABSPATH' ) ) {
 <article class='shortpixel-settings'>
 		<menu>
 			<ul>
-				<li><a href="?overview"><?php _e("Overview", "shortpixel-image-optimiser"); ?></a></li>
-				<li><a href="?optimisation"><?php _e("Image optimisation", "shortpixel-image-optimiser"); ?></a></li>
-				<li><a href="?processing"><?php _e("Processing", "shortpixel-image-optimiser"); ?></a></li>
-				<li><a href="?webp"><?php _e("Webp/Avif", "shortpixel-image-optimiser"); ?></a></li>
-				<li><a href="?delivery"><?php _e("Delivery", "shortpixel-image-optimiser"); ?></a></li>
-				<li><a href="?cdn"><?php _e("CDN", "shortpixel-image-optimiser"); ?></a></li>
+				<li class='active'>
+          <a href="<?php echo $this->settingLink('dashboard'); ?>"><?php _e("Dashboard", "shortpixel-image-optimiser"); ?></a>
+        </li>
+				<li><a href="<?php echo $this->settingLink('optimisation'); ?>">
+          <?php _e("Image optimisation", "shortpixel-image-optimiser"); ?>
+        </a></li>
+				<li><a href="<?php echo $this->settingLink('processing'); ?>">
+          <?php _e("Processing", "shortpixel-image-optimiser"); ?>
+        </a></li>
+				<li><a href="<?php echo $this->settingLink('webp'); ?>">
+          <?php _e("Webp/Avif", "shortpixel-image-optimiser"); ?>
+        </a></li>
+				<li><a href="<?php echo $this->settingLink('delivery'); ?>">
+          <?php _e("Delivery", "shortpixel-image-optimiser"); ?>
+        </a></li>
+				<li><a href="<?php echo $this->settingLink('cdn'); ?>">
+          <?php _e("CDN", "shortpixel-image-optimiser"); ?>
+        </a></li>
 				<li><a href="?overview"><?php _e("Exclusions", "shortpixel-image-optimiser"); ?></a></li>
 				<li><a href="?overview"><?php _e("Tools", "shortpixel-image-optimiser"); ?></a></li>
 				<li><a href="?overview"><?php _e("Notifications", "shortpixel-image-optimiser"); ?></a></li>

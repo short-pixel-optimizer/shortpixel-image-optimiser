@@ -72,10 +72,8 @@ var ShortPixel = function() {
     }
 
     function isEmailValid(email) {
-      //  return /^\w+([\.+-]?\w+)*@\w+([\.-]?\w+)*(\.\w{1,63})+$/.test(email);
-
 				var regex = /^\S+@\S+\.\S+$/;
-					return regex.test(email);
+				return regex.test(email);
     }
 
     function updateSignupEmail() {
@@ -153,9 +151,9 @@ var ShortPixel = function() {
 				// @todo Make something workable out of this
         var rad = 0;
 
-        if (typeof document.wp_shortpixel_options !== 'undefined')
+        /*if (typeof document.wp_shortpixel_options !== 'undefined')
           rad = document.wp_shortpixel_options.compressionType;
-
+        */
 				if (document.getElementById('compressionType-database') !== null)
 					var savedCompression = document.getElementById('compressionType-database').value;
 				else
@@ -288,8 +286,7 @@ var ShortPixel = function() {
             jQuery("section").removeClass("sel-tab");
             jQuery('section .wp-shortpixel-tab-content').fadeOut(50);
             jQuery(section).addClass("sel-tab");
-            //ShortPixel.adjustSettingsTabs();
-            //jQuery(section).find('.wp-shortpixel-tab-content').fadeIn(50);
+
             jQuery(section).find('.wp-shortpixel-tab-content').fadeIn(50, ShortPixel.adjustSettingsTabs);
 
 						var event = new CustomEvent('shortpixel.ui.settingsTabLoad', { detail : {tabName: tab, section: section }});
@@ -303,13 +300,13 @@ var ShortPixel = function() {
         jQuery('.wso.banner').css('opacity', 1);
     }
 
-    function closeHelpPane() {
+  /*  function closeHelpPane() {
         jQuery('#shortpixel-hs-button-blind').remove();
         jQuery('#shortpixel-hs-tools').remove();
         jQuery('#hs-beacon').remove();
         jQuery('#botbutton').remove();
         jQuery('#shortpixel-hs-blind').remove();
-    }
+    } */
 
     function checkQuota() {
         var data = {
@@ -335,7 +332,7 @@ var ShortPixel = function() {
         });
     }
 
-    function browseContent(browseData) {
+  /*function browseContent(browseData) {
         browseData.action = 'shortpixel_browse_content';
 
         var browseResponse = "";
@@ -349,7 +346,7 @@ var ShortPixel = function() {
             async: false
         });
         return browseResponse;
-    }
+    } */
 
 
     function newApiKey(event) {
@@ -570,11 +567,11 @@ var ShortPixel = function() {
         initSettings        : initSettings,
         switchSettingsTab   : switchSettingsTab,
         adjustSettingsTabs  : adjustSettingsTabsHeight,
-        closeHelpPane       : closeHelpPane,
+      //  closeHelpPane       : closeHelpPane,
         checkQuota          : checkQuota,
         percentDial         : percentDial,
       //  initFolderSelector  : initFolderSelector,
-        browseContent       : browseContent,
+    //    browseContent       : browseContent,
         newApiKey           : newApiKey,
         proposeUpgrade      : proposeUpgrade,
         closeProposeUpgrade : closeProposeUpgrade,

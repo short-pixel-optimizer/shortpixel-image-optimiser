@@ -5,9 +5,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
+
 ?>
 
-<section id="tab-settings" class="<?php echo ($this->display_part == 'settings') ? 'sel-tab' :''; ?>" >
+<section id="tab-settings" class="<?php echo ($this->display_part == 'settings') ? 'sel-tab setting-tab' :'setting-tab'; ?>" data-part="settings" >
     <h2><a class='tab-link' href='javascript:void(0);' data-id="tab-settings">
       <?php esc_html_e('General','shortpixel-image-optimiser');?></a>
     </h2>
@@ -38,6 +39,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
     <!-- general settings -->
     <settinglist>
 
+        <h2><?php esc_html_e('General','shortpixel-image-optimiser');?></h2>
         <!-- Api Key -->
         <setting>
           <name>

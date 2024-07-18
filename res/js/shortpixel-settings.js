@@ -4,6 +4,9 @@
 var ShortPixelSettings = function()
 {
 
+	 var menu_tabs = {};
+	 var current_tab = '';
+
 	 this.Init = function()
 	 {
 			this.InitActions();
@@ -17,6 +20,7 @@ var ShortPixelSettings = function()
 			this.InitToggle();
 			this.InitExclusions();
 			this.InitWarnings();
+			this.InitMenu();
 
 			// Modals
 			var modals = document.querySelectorAll('[data-action="open-modal"]');
@@ -142,10 +146,71 @@ var ShortPixelSettings = function()
 
 		updateShowWarning(elements, warning);
 
+	}
+
+	this.InitMenu = function()
+	{
+		  var menu_elements = document.querySelectorAll('menu ul li a');
+
+			for (var i = 0; i < menu_elements.length; i++)
+			{
+				  menu_elements[i].addEventListener('click', this.SwitchMenuTabEvent);
+			}
+
+			var tab_elements = document.querySelectorAll('[data-tab]');
+			for (var i = 0; i < tab_elements.length; i++)
+			{
+					var name = tab_elements[i].dataset.part;
+					this.menu_tabs[name] = tab_elements[i];
+			}
+
+			var params = new URLSearchParams(uri);
+			if (params.has('part'))
+			{
+				 var part = params.get('part');
+				 var event = new CustomEvent('click', { detail : {tabName: tab, section: section }});
+				 window.dispatchEvent(event);
+			}
 
 	}
 
+	this.SwitchMenuTabEvent = function(event)
+	{
+		 event.preventDefault();
 
+		 var targetLink = event.target;
+		 var uri = targetLink.href;
+		 var displayPartEl = document.querySelector('input[name="display_part"]');
+		 var current_tab = displayPartEl.value;
+
+	//	 var oldMenuItem = document.querySelector('active');
+
+		 var params = new URLSearchParams(uri);
+		 var new_tab = params.get('part');
+
+		 // If same, do nothing.
+		 if (current_tab == new_tab)
+		 {
+			  return;
+		 }
+
+		// oldMenuItem.classList.remove('active');
+		 targetLink.classList.add('active');
+
+     // Update Uri
+
+	   if (uri.indexOf("?") > 0) {
+	       //var clean_uri = uri.substring(0, uri.indexOf("?"));
+	       //clean_uri += '?' + jQuery.param({'page':'wp-shortpixel-settings', 'part': tab});
+	       window.history.replaceState({}, document.title, uri);
+	   }
+
+
+
+		 var event = new CustomEvent('shortpixel.ui.settingsTabLoad', { detail : {tabName: tab, section: section }});
+		 window.dispatchEvent(event);
+
+	}
 
 	// Elements with data-toggle active
 	this.DoToggleActionEvent = function(event)
@@ -352,14 +417,12 @@ this.NewExclusionShowInterfaceEvent = function (event)
 
 	 var updateButton = document.querySelector('.new-exclusion .button-actions button[name="updateExclusion"]');
 
-
 	 if (event.target.name == 'addNewExclusion')
 	 {
 		  var mode = 'new';
 			var id = 'new';
 			var title = document.querySelector('.new-exclusion h3.new-title');
 			var button = document.querySelector('.new-exclusion .button-actions button[name="addExclusion"]');
-
 	 }
 	 else {
 	 	  var mode = 'edit';
@@ -383,7 +446,6 @@ this.NewExclusionShowInterfaceEvent = function (event)
 			var dataElement = parent.querySelector('input').value;
 			var data = JSON.parse(dataElement);
 			this.ReadWriteExclusionForm(data)
-
 
 	 }
 
@@ -690,7 +752,6 @@ this.NewExclusionButtonAdd = function(element)
 		 this.HideExclusionInterface();
 		 this.ShowExclusionSaveWarning();
 
-
 }
 
 this.NewExclusionToggleSizeOption = function(target)
@@ -732,7 +793,6 @@ this.ResetExclusionInputs = function()
 			}
 	}
 
-
 	var ev = new CustomEvent('change');
 	typeOption.dispatchEvent(ev);
 	applyOption.dispatchEvent(ev);
@@ -744,7 +804,6 @@ this.ResetExclusionInputs = function()
 	for(var i = 0; i < titles.length; i++)
 	{
 		 titles[i].classList.add('not-visible', 'hidden');
-
 	}
 
 	for (var i = 0; i < buttons.length; i++)
@@ -753,9 +812,7 @@ this.ResetExclusionInputs = function()
 	}
 
 	var exactOption = document.querySelector('.new-exclusion input[name="exclusion-exactsize"]');
-
 	exactOption.checked = false
-
 
 }
 

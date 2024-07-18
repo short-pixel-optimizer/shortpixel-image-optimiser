@@ -1,34 +1,68 @@
 
-.shortpixel-settings
+.shortpixel-settings // main wrapper
 {
 	  width: 100%;
 		display: flex;
+		background: #fff;
 
 
-		menu {
+		menu { // left-hand menu.
 			 width: 30%;
 			 max-width: 300px;
 
 			 ul {
 				  list-style: none;
 					li {
-						padding: 12px 8px;
 						border: 1px solid #ccc;
 						margin: 12px 0;
 						text-align: center;
 							a {
+								padding: 12px 8px;
+
 								font-size: 14px;
 								font-weight: 700;
 								color: #000;
 								text-decoration: none;
+								display: inline-block;
+								width: 100%;
+
+							}
+							&.active {
+								 background: #0f6a7d;
+								 a {
+									  color: #fff;
+								 }
 							}
 					}
+
 			 }
 		}
-		section.wrapper
+		section.wrapper // wrapper of the settings tab.
 		{
 			 width: calc(100% - 30% - 5%);
 			 margin-left: 5%;
-			 
+
+			 .setting-tab
+			 {
+					color: #333;
+					z-index: 2;
+					&.sel-tab {
+							position: relative;
+							//box-shadow: 0 3px 3px rgba(0,0,0,0.1);
+							.wp-shortpixel-tab-content {
+									visibility: visible !important;
+								}
+			 		}
+
+					settinglist
+					{
+						h2 { // title
+							 font-size: 24px;
+							 outline: 0;
+							 text-decoration: none;
+							 color: #0f6a7d;
+						}
+					} // settinglist
+				}
 		}
-}
+} // shortpixel-settings

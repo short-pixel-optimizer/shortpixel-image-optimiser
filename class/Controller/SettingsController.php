@@ -499,6 +499,12 @@ class SettingsController extends \ShortPixel\ViewController
           $this->display_part = (isset($_GET['part']) && in_array($_GET['part'], $this->all_display_parts) ) ? sanitize_text_field($_GET['part']) : 'settings';
       }
 
+      protected function settingLink($part)
+      {
+          return esc_url(admin_url('options-general.php?page=wp-shortpixel-settings&part=' . $part ));
+
+      }
+
       /* Temporary function to check if HTaccess is writable.
       * HTaccess is writable if it exists *and* is_writable, or can be written if directory is writable.
       */
