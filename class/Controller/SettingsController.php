@@ -420,6 +420,9 @@ class SettingsController extends \ShortPixel\ViewController
 
          $this->view->cloudflare_constant = defined('SHORTPIXEL_CFTOKEN') ? true : false;
 
+				 $this->view->is_unlimited= (!is_null($this->quotaData) && $this->quotaData->unlimited) ? true : false;
+
+
          $settings = \wpSPIO()->settings();
 
 				 if ($this->view->data->createAvif == 1)

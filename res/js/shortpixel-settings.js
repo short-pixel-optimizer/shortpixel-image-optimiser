@@ -153,6 +153,7 @@ var ShortPixelSettings = function()
 			event.preventDefault();
 
 			var checkbox = event.target;
+		//	checkbox.disabled = true;
 			var field_id = checkbox.getAttribute('data-toggle');
 			var target = document.getElementById(field_id);
 			// Allow multiple elements to be toggled, which will not work with id. In due time all should be transferred to use class-based toggle
@@ -173,7 +174,7 @@ var ShortPixelSettings = function()
 
 			if (target === null)
 			{
-				 console.error('Target element ID not found', checkbox);
+				 console.error('Target element ID not found', checkbox, field_id);
 				 return false;
 			}
 
@@ -205,6 +206,7 @@ var ShortPixelSettings = function()
 					}
 			}
 
+			//checkbox.disabled = false;
 	}
 
 	this.ShowElement = function (elem) {

@@ -1,3 +1,31 @@
+.shortpixel-settings {
+  width: 100%;
+  display: flex;
+}
+.shortpixel-settings menu {
+  width: 30%;
+  max-width: 300px;
+}
+.shortpixel-settings menu ul {
+  list-style: none;
+}
+.shortpixel-settings menu ul li {
+  padding: 12px 8px;
+  border: 1px solid #ccc;
+  margin: 12px 0;
+  text-align: center;
+}
+.shortpixel-settings menu ul li a {
+  font-size: 14px;
+  font-weight: 700;
+  color: #000;
+  text-decoration: none;
+}
+.shortpixel-settings section.wrapper {
+  width: 65%;
+  margin-left: 5%;
+}
+
 .wrap.is-shortpixel-settings-page {
   /* TABS CONTROLS */
   /* In-view notice ( not on top, between the options ) - styled after WP notice */
@@ -678,15 +706,22 @@ i.documentation {
 }
 
 div.spio-modal-shade {
-  position: fixed; /* Stay in place */
-  z-index: 10; /* Sit on top - zindex wars  */
+  position: fixed;
+  /* Stay in place */
+  z-index: 10;
+  /* Sit on top - zindex wars  */
   left: 0;
   top: 0;
-  width: 100%; /* Full width */
-  height: 100%; /* Full height */
-  overflow: auto; /* Enable scroll if needed */
-  background-color: rgb(0, 0, 0); /* Fallback color */
-  background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+  width: 100%;
+  /* Full width */
+  height: 100%;
+  /* Full height */
+  overflow: auto;
+  /* Enable scroll if needed */
+  background-color: black;
+  /* Fallback color */
+  background-color: rgba(0, 0, 0, 0.4);
+  /* Black w/ opacity */
 }
 
 div.spio-modal {
@@ -697,10 +732,13 @@ div.spio-modal {
   background-position: center;
   padding: 20px 16px 16px;
   border: 1px solid #888;
-  width: 40%; /* Could be more or less, depending on screen size */
+  width: 40%;
+  /* Could be more or less, depending on screen size */
   max-width: 100%;
-  min-width: 300px; /* Could be more or less, depending on screen size */
-  z-index: 100; /* Proper z-index */
+  min-width: 300px;
+  /* Could be more or less, depending on screen size */
+  z-index: 100;
+  /* Proper z-index */
   position: fixed;
   top: 10%;
   left: 30%;

@@ -129,7 +129,7 @@ THIS NEEDS DOING
         <content>
             <ul class="deliverWebpTypes ">
                 <li>
-                    <input type="radio" name="deliverWebpType" id="deliverWebpAltered" <?php checked( ($view->data->deliverWebp >= 1 && $view->data->deliverWebp <= 2), true); ?> <?php echo esc_attr( $deliverWebpAlteredDisabled );?> value="deliverWebpAltered" data-toggle="deliverAlteringTypes">
+                    <input type="radio" name="deliverWebpType" id="deliverWebpAltered" <?php checked( ($view->data->deliverWebp >= 1 && $view->data->deliverWebp <= 2), true); ?> <?php echo esc_attr( $deliverWebpAlteredDisabled );?> value="deliverWebpAltered" data-toggle="deliverAlteringTypesPicture">
                     <label for="deliverWebpAltered">
                         <?php esc_html_e('Using the &lt;PICTURE&gt; tag syntax','shortpixel-image-optimiser');?>
                     </label>
@@ -141,20 +141,7 @@ THIS NEEDS DOING
                     </info>
 
 
-                    <ul class="deliverWebpAlteringTypes toggleTarget" >
-                        <li>
-                            <input type="radio" name="deliverWebpAlteringType" id="deliverWebpAlteredWP" <?php checked(($view->data->deliverWebp == 2), true);?> value="deliverWebpAlteredWP">
-                            <label for="deliverWebpAlteredWP">
-                                <?php esc_html_e('Only via Wordpress hooks (like the_content, the_excerpt, etc)');?>
-                            </label>
-                        </li>
-                        <li>
-                            <input type="radio" name="deliverWebpAlteringType" id="deliverWebpAlteredGlobal" <?php checked(($view->data->deliverWebp == 1),true)?>  value="deliverWebpAlteredGlobal">
-                            <label for="deliverWebpAlteredGlobal">
-                                <?php esc_html_e('Global (processes the whole output buffer before sending the HTML to the browser)','shortpixel-image-optimiser');?>
-                            </label>
-                        </li>
-                    </ul>
+
                 </li>
                 <li>
                     <input type="radio" name="deliverWebpType" id="deliverWebpUnaltered" <?php checked(($view->data->deliverWebp == 3), true);?> <?php echo esc_attr( $deliverWebpUnalteredDisabled );?> value="deliverWebpUnaltered" data-toggle="deliverAlteringTypes">
@@ -163,6 +150,20 @@ THIS NEEDS DOING
                         <?php esc_html_e('Without altering the page code (via .htaccess)','shortpixel-image-optimiser')?>
                     </label>
 
+										<ul id="deliverAlteringTypes" class="toggleTarget" >
+                        <li>
+                            <input type="radio" name="deliverWebpAlteringType" id="deliverWebpAlteredWP" <?php checked(($view->data->deliverWebp == 2), true);?> value="deliverWebpAlteredWP">
+                            <label for="deliverWebpAlteredWP">
+                                <?php esc_html_e('Only via Wordpress hooks (like the_content, the_excerpt, etc)');?>
+                            </label>
+                        </li>
+                        <li>
+                            <input type="radio" name="deliverWebpAlteringType" id="deliverWebpAlteredGlobal" <?php checked(($view->data->deliverWebp == 1),true)?>  value="deliverWebpAlteredGlobal" data-toggle="deliverAlteringTypesHtaccess">
+                            <label for="deliverWebpAlteredGlobal">
+                                <?php esc_html_e('Global (processes the whole output buffer before sending the HTML to the browser)','shortpixel-image-optimiser');?>
+                            </label>
+                        </li>
+                    </ul>
 
                     <?php if(strlen($deliverWebpUnalteredLabel)){ ?>
                         <p class="sp-notice sp-notice-warning"><strong>
