@@ -1,3 +1,25 @@
+.wrap.is-shortpixel-settings-page header {
+  background: #fff;
+  text-align: center;
+  display: flex;
+  padding: 8px 16px;
+  justify-content: space-between;
+}
+.wrap.is-shortpixel-settings-page header h1 {
+  line-height: 50px;
+}
+.wrap.is-shortpixel-settings-page header img {
+  vertical-align: bottom;
+  margin-right: 8px;
+}
+.wrap.is-shortpixel-settings-page button {
+  color: #fff;
+  background: green;
+  padding: 4px;
+  border: 0;
+  margin: 4px;
+}
+
 .shortpixel-settings {
   width: 100%;
   display: flex;
@@ -23,11 +45,10 @@
   text-decoration: none;
   display: inline-block;
   width: 100%;
+  box-sizing: border-box;
 }
-.shortpixel-settings menu ul li.active {
+.shortpixel-settings menu ul li a.active {
   background: #0f6a7d;
-}
-.shortpixel-settings menu ul li.active a {
   color: #fff;
 }
 .shortpixel-settings section.wrapper {
@@ -37,12 +58,11 @@
 .shortpixel-settings section.wrapper .setting-tab {
   color: #333;
   z-index: 2;
+  display: none;
 }
-.shortpixel-settings section.wrapper .setting-tab.sel-tab {
+.shortpixel-settings section.wrapper .setting-tab.active {
   position: relative;
-}
-.shortpixel-settings section.wrapper .setting-tab.sel-tab .wp-shortpixel-tab-content {
-  visibility: visible !important;
+  display: block;
 }
 .shortpixel-settings section.wrapper .setting-tab settinglist h2 {
   font-size: 24px;

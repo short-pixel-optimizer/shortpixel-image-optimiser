@@ -1,5 +1,41 @@
 
-.shortpixel-settings // main wrapper
+// The whole settings page.
+.wrap.is-shortpixel-settings-page
+{
+
+	// The Header
+	header
+	{
+
+		  background: #fff;
+			text-align: center;
+			display: flex;
+			padding: 8px 16px;
+			justify-content: space-between;
+
+			h1 {
+				line-height: 50px;	
+			}
+			img {
+				vertical-align: bottom;
+				margin-right: 8px;
+			}
+
+
+	}
+	// Items for whole page, including header.
+	button {
+			color: #fff;
+			background: green;
+			padding: 4px;
+			border: 0;
+			margin: 4px; // see if this works.
+			// @todo probably something for icon left /right here.
+	}
+
+}
+
+.shortpixel-settings // main wrapper. Items for settings minus header.
 {
 	  width: 100%;
 		display: flex;
@@ -16,6 +52,7 @@
 						border: 1px solid #ccc;
 						margin: 12px 0;
 						text-align: center;
+
 							a {
 								padding: 12px 8px;
 
@@ -25,14 +62,15 @@
 								text-decoration: none;
 								display: inline-block;
 								width: 100%;
+								box-sizing: border-box;
 
+								&.active {
+									 background: #0f6a7d;
+							 	  color: #fff;
+
+								}
 							}
-							&.active {
-								 background: #0f6a7d;
-								 a {
-									  color: #fff;
-								 }
-							}
+
 					}
 
 			 }
@@ -46,12 +84,10 @@
 			 {
 					color: #333;
 					z-index: 2;
-					&.sel-tab {
+					display: none;
+					&.active {
 							position: relative;
-							//box-shadow: 0 3px 3px rgba(0,0,0,0.1);
-							.wp-shortpixel-tab-content {
-									visibility: visible !important;
-								}
+							display: block;
 			 		}
 
 					settinglist

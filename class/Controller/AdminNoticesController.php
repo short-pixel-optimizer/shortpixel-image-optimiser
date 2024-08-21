@@ -68,7 +68,7 @@ class AdminNoticesController extends \ShortPixel\Controller
     public static function getInstance()
     {
         if (is_null(self::$instance))
-            self::$instance = new AdminNoticesController();
+            self::$instance = new static();
 
         return self::$instance;
     }

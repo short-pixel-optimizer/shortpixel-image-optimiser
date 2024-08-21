@@ -1,19 +1,22 @@
 'use strict'
 
 // New Class for Settings Section.
-var ShortPixelSettings = function()
+class ShortPixelSettings
 {
 
-	 var menu_tabs = {};
-	 var current_tab = '';
+	 tab_elements = {};
+	 menu_elements = [];
+	 current_tab; // string, the name of the tab.
+	 root; // top of settings page.
 
-	 this.Init = function()
+	 Init()
 	 {
+		  this.root = document.querySelector('article.shortpixel-settings');
 			this.InitActions();
 			this.SaveOnKey();
 	 }
 
-	this.InitActions = function()
+	InitActions()
 	{
 			var self = this;
 
@@ -31,7 +34,7 @@ var ShortPixelSettings = function()
 
 	}
 
-	this.InitToggle = function()
+	InitToggle()
 	{
 		var toggles = document.querySelectorAll('[data-toggle]');
 		var self = this;
@@ -46,7 +49,7 @@ var ShortPixelSettings = function()
 
 	}
 
-	this.InitExclusions = function()
+	InitExclusions()
 	{
 		 	var self = this;
 			// Events for the New Exclusion dialog
@@ -94,7 +97,7 @@ var ShortPixelSettings = function()
 			}
 	}
 
-	this.InitWarnings = function()
+	InitWarnings()
 	{
 		var self = this;
 
@@ -148,45 +151,63 @@ var ShortPixelSettings = function()
 
 	}
 
-	this.InitMenu = function()
+	InitMenu()
 	{
-		  var menu_elements = document.querySelectorAll('menu ul li a');
+		  var menu_elements = this.root.querySelectorAll('menu ul li a');
+			this.menu_elements = menu_elements;
 
+			// Bind change event to all menu items.
 			for (var i = 0; i < menu_elements.length; i++)
 			{
-				  menu_elements[i].addEventListener('click', this.SwitchMenuTabEvent);
+					var element = menu_elements[i];
+				  element.addEventListener('click', this.SwitchMenuTabEvent.bind(this));
+
 			}
 
-			var tab_elements = document.querySelectorAll('[data-tab]');
+			// Load all menu tabs
+			var tab_elements = document.querySelectorAll('[data-part]');
 			for (var i = 0; i < tab_elements.length; i++)
 			{
 					var name = tab_elements[i].dataset.part;
-					this.menu_tabs[name] = tab_elements[i];
+					this.tab_elements[name] = tab_elements[i];
 			}
 
+			// Discover current tab
+		//	var displayPartEl = document.querySelector('input[name="display_part"]');
+		//	this.current_tab = displayPartEl.value;
+
+			var uri = window.location.href.toString();
 			var params = new URLSearchParams(uri);
 			if (params.has('part'))
 			{
+
 				 var part = params.get('part');
-				 var event = new CustomEvent('click', { detail : {tabName: tab, section: section }});
-				 window.dispatchEvent(event);
+				 var target = this.root.querySelector('menu [data-link="' + part + '"]');
+
+				 if (target === null)
+				 {
+					  console.error('Tab ' +  part + ' not found');
+						return;
+				 }
+
+				 var event = new CustomEvent('click');
+				 target.dispatchEvent(event);
 			}
+
 
 	}
 
-	this.SwitchMenuTabEvent = function(event)
+	SwitchMenuTabEvent(event)
 	{
 		 event.preventDefault();
 
 		 var targetLink = event.target;
 		 var uri = targetLink.href;
-		 var displayPartEl = document.querySelector('input[name="display_part"]');
-		 var current_tab = displayPartEl.value;
 
-	//	 var oldMenuItem = document.querySelector('active');
-
+		 var current_tab = this.current_tab;
 		 var params = new URLSearchParams(uri);
 		 var new_tab = params.get('part');
+
 
 		 // If same, do nothing.
 		 if (current_tab == new_tab)
@@ -194,31 +215,51 @@ var ShortPixelSettings = function()
 			  return;
 		 }
 
-		// oldMenuItem.classList.remove('active');
+		 var newTabEl = this.tab_elements[new_tab];
+		 if (typeof newTabEl !== 'undefined')
+		 {
+		 	newTabEl.classList.add('active');
+		 }
+
+		 var currentTabEl = this.tab_elements[current_tab];
+		 // Happens when no active tab ( ie just started )
+		 if (typeof currentTabEl !== 'undefined')
+		 {
+		 	currentTabEl.classList.remove('active');
+		 }
+
+		 for (var i = 0; i < this.menu_elements.length; i++)
+		 {
+			  if (this.menu_elements[i].classList.contains('active'))
+				{
+			  	this.menu_elements[i].classList.remove('active');
+				}
+		 }
+		 // Add active to the new tab.
 		 targetLink.classList.add('active');
 
-     // Update Uri
+		 this.current_tab = new_tab;
 
+     // Update Uri
 	   if (uri.indexOf("?") > 0) {
-	       //var clean_uri = uri.substring(0, uri.indexOf("?"));
-	       //clean_uri += '?' + jQuery.param({'page':'wp-shortpixel-settings', 'part': tab});
 	       window.history.replaceState({}, document.title, uri);
 	   }
 
-
-
-		 var event = new CustomEvent('shortpixel.ui.settingsTabLoad', { detail : {tabName: tab, section: section }});
+		 var section = ''; // #todo figure out what the idea of section was
+		 var event = new CustomEvent('shortpixel.ui.settingsTabLoad', { detail : {tabName: new_tab, section: section }});
 		 window.dispatchEvent(event);
+
+
 
 	}
 
 	// Elements with data-toggle active
-	this.DoToggleActionEvent = function(event)
+	DoToggleActionEvent(event)
 	{
 			event.preventDefault();
 
 			var checkbox = event.target;
-		//	checkbox.disabled = true;
+
 			var field_id = checkbox.getAttribute('data-toggle');
 			var target = document.getElementById(field_id);
 			// Allow multiple elements to be toggled, which will not work with id. In due time all should be transferred to use class-based toggle
@@ -274,7 +315,7 @@ var ShortPixelSettings = function()
 			//checkbox.disabled = false;
 	}
 
-	this.ShowElement = function (elem) {
+	ShowElement(elem) {
 
 		elem.classList.add('is-visible'); // Make the element visible
 
@@ -286,7 +327,7 @@ var ShortPixelSettings = function()
 };
 
 // Hide an element
-this.HideElement = function (elem) {
+HideElement(elem) {
 
 	elem.style.opacity = 0;
 		// When the transition is complete, hide it
@@ -297,7 +338,7 @@ this.HideElement = function (elem) {
 };
 
 
-this.OpenModalEvent = function(elem)
+OpenModalEvent(elem)
 {
 		var target = elem.target;
 		var targetElem = document.getElementById(target.dataset.target);
@@ -324,7 +365,7 @@ this.OpenModalEvent = function(elem)
 
 }
 
-this.CloseModal = function(elem)
+CloseModal(elem)
 {
 	var shade = document.getElementById('spioSettingsModalShade');
 	var modal = document.getElementById('spioSettingsModal');
@@ -334,7 +375,7 @@ this.CloseModal = function(elem)
 
 }
 
-this.SendModal = function(elem)
+SendModal(elem)
 {
 	var modal = document.getElementById('spioSettingsModal');
 	var body = modal.querySelector('.spio-modal-body');
@@ -369,7 +410,7 @@ this.SendModal = function(elem)
 
 }
 
-this.ReceiveModal = function(elem)
+ReceiveModal(elem)
 {
 	 if (typeof elem.detail.settings.results !== 'undefined')
 	 {
@@ -386,7 +427,7 @@ this.ReceiveModal = function(elem)
 
 }
 
-this.SaveOnKey = function()
+SaveOnKey()
 {
 	var saveForm = document.getElementById('wp_shortpixel_options');
 	if (saveForm === null)
@@ -404,7 +445,7 @@ this.SaveOnKey = function()
 	});
 }
 
-this.NewExclusionShowInterfaceEvent = function (event)
+NewExclusionShowInterfaceEvent(event)
 {
 	 this.ResetExclusionInputs();
 	 event.preventDefault();
@@ -455,7 +496,7 @@ this.NewExclusionShowInterfaceEvent = function (event)
 }
 
 //** When compressiontype changes, also update the information
-this.CompressionTypeChangeEvent = function(event)
+CompressionTypeChangeEvent(event)
 {
 	  var target = event.target;
 		var className = target.className;
@@ -473,7 +514,7 @@ this.CompressionTypeChangeEvent = function(event)
 
 }
 
-this.HideExclusionInterface = function()
+HideExclusionInterface()
 {
 	var element = document.querySelector('.new-exclusion');
 	element.classList.add('not-visible');
@@ -481,7 +522,7 @@ this.HideExclusionInterface = function()
 }
 
 // EXCLUSIONS
-this.NewExclusionUpdateEvent = function(event)
+NewExclusionUpdateEvent(event)
 {
 	var target = event.target;
 	var inputName = event.target.name;
@@ -512,7 +553,7 @@ this.NewExclusionUpdateEvent = function(event)
 	}
 }
 
-this.NewExclusionUpdateType = function(element)
+NewExclusionUpdateType(element)
 {
 	 	 var value = element.value;
 		 var selected = element.options[element.selectedIndex];
@@ -549,7 +590,7 @@ this.NewExclusionUpdateType = function(element)
 		 }
 }
 
-this.NewExclusionUpdateThumbType = function(element)
+NewExclusionUpdateThumbType(element)
 {
 		 var value = element.value;
 
@@ -565,7 +606,7 @@ this.NewExclusionUpdateThumbType = function(element)
 }
 
 
-this.ReadWriteExclusionForm = function(setting)
+ReadWriteExclusionForm(setting)
 {
 	 	// compile all inputs to a json encoded string to add to UX
 	 	 if (null === setting || typeof setting === 'undefined')
@@ -706,7 +747,7 @@ this.ReadWriteExclusionForm = function(setting)
 		 }
 }
 
-this.NewExclusionButtonAdd = function(element)
+NewExclusionButtonAdd(element)
 {
 		 var result = this.ReadWriteExclusionForm(null);
 		 var setting = result[0];
@@ -754,7 +795,7 @@ this.NewExclusionButtonAdd = function(element)
 
 }
 
-this.NewExclusionToggleSizeOption = function(target)
+NewExclusionToggleSizeOption(target)
 {
 	 	var sizeOptionRange = document.querySelector('.new-exclusion .size-option-range');
 		var sizeOptionExact = document.querySelector('.new-exclusion .size-option-exact');
@@ -770,7 +811,7 @@ this.NewExclusionToggleSizeOption = function(target)
 		}
 }
 
-this.ResetExclusionInputs = function()
+ResetExclusionInputs()
 {
 	var typeOption = document.querySelector('.new-exclusion select[name="exclusion-type"]');
 	var valueOption = document.querySelector('.new-exclusion input[name="exclusion-value"]');
@@ -816,7 +857,7 @@ this.ResetExclusionInputs = function()
 
 }
 
-this.UpdateExclusion = function()
+UpdateExclusion()
 {
 	var id = document.querySelector('.new-exclusion input[name="edit-exclusion"]');
 	var result = this.ReadWriteExclusionForm();
@@ -861,7 +902,7 @@ this.UpdateExclusion = function()
 
 }
 
-this.ShowExclusionSaveWarning = function()
+ShowExclusionSaveWarning()
 {
 	  var reminder = document.querySelector('.exclusion-save-reminder');
 		if (reminder)
@@ -870,7 +911,7 @@ this.ShowExclusionSaveWarning = function()
 		}
 }
 
-this.RemoveExclusion = function()
+RemoveExclusion()
 {
 		 var id = document.querySelector('.new-exclusion input[name="edit-exclusion"]');
 		 if (id)
@@ -887,10 +928,10 @@ this.RemoveExclusion = function()
 
 }
 
- 	this.Init();
-} // SPSettings
+} // SPSettings  class
 
 
 document.addEventListener("DOMContentLoaded", function(){
 	  var s = new ShortPixelSettings();
+		s.Init();
 });

@@ -38,8 +38,8 @@ class SettingsController extends \ShortPixel\ViewController
        'cmyk2rgb' => 'CMYKtoRGBconversion',
      );
 
-     protected $display_part = 'settings';
-		 protected $all_display_parts = array('settings', 'adv-settings', 'cloudflare', 'debug', 'tools');
+     protected $display_part = 'dashboard';
+		 protected $all_display_parts = array('dashboard', 'optimisation', 'cloudflare', 'debug', 'tools');
      protected $form_action = 'save-settings';
 
 		 protected static $instance;
@@ -499,9 +499,14 @@ class SettingsController extends \ShortPixel\ViewController
           $this->display_part = (isset($_GET['part']) && in_array($_GET['part'], $this->all_display_parts) ) ? sanitize_text_field($_GET['part']) : 'settings';
       }
 
-      protected function settingLink($part)
+      protected function settingLink($part, $title)
       {
-          return esc_url(admin_url('options-general.php?page=wp-shortpixel-settings&part=' . $part ));
+          $link = esc_url(admin_url('options-general.php?page=wp-shortpixel-settings&part=' . $part ));
+          $active = ($this->display_part == $part) ? ' class="active" ' : '';
+          $html = sprintf('<a href="%s" data-link="%s" %s >%s</a>', $link, $part, $active, $title);
+
+          return $html;
+
 
       }
 

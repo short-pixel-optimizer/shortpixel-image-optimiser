@@ -885,6 +885,20 @@ class UiHelper
       return $strings;
   }
 
+  public static function getIcon($path, $args = array())
+  {
+      $defaults = array(
+
+      );
+
+      $icon_url = plugins_url($path, SHORTPIXEL_PLUGIN_FILE);
+
+      $html = sprintf('<img src="%s" class="icon" />', esc_attr($icon_url));
+
+      return $html;
+
+  }
+
 
 
 } // class

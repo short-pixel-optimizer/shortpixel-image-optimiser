@@ -258,13 +258,13 @@ var ShortPixel = function() {
         });
 
 				// Init active tab
-				var activeTab = document.querySelector('section.sel-tab');
+			/*	var activeTab = document.querySelector('section.sel-tab');
 				if (activeTab !== null);
-				ShortPixel.switchSettingsTab(activeTab.getAttribute('id'));
+				ShortPixel.switchSettingsTab(activeTab.getAttribute('id')); */
     }
 
     // Switch between settings tabs.
-    function switchSettingsTab(target){
+    /*function switchSettingsTab(target){
 
         var tab = target.replace("tab-",""),
             beacon = "",
@@ -279,7 +279,7 @@ var ShortPixel = function() {
         if (uri.indexOf("?") > 0) {
             var clean_uri = uri.substring(0, uri.indexOf("?"));
             clean_uri += '?' + jQuery.param({'page':'wp-shortpixel-settings', 'part': tab});
-            window.history.replaceState({}, document.title, clean_uri);
+          //  window.history.replaceState({}, document.title, clean_uri);
         }
 
         if(section.length > 0){
@@ -293,7 +293,7 @@ var ShortPixel = function() {
 						window.dispatchEvent(event);
 
         }
-    }
+    } */
 
     // Fixes the height of the current active tab.
     function adjustSettingsTabsHeight(){
@@ -565,7 +565,7 @@ var ShortPixel = function() {
         setupAdvancedTab    : setupAdvancedTab,
         checkThumbsUpdTotal : checkThumbsUpdTotal,
         initSettings        : initSettings,
-        switchSettingsTab   : switchSettingsTab,
+      //  switchSettingsTab   : switchSettingsTab,
         adjustSettingsTabs  : adjustSettingsTabsHeight,
       //  closeHelpPane       : closeHelpPane,
         checkQuota          : checkQuota,

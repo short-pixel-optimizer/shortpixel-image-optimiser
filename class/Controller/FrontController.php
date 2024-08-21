@@ -83,7 +83,7 @@ class FrontController extends \ShortPixel\Controller
   {
       // Don't do anything with the RSS feed.
       if (is_feed() || is_admin()) {
-          Log::addInfo('SPDBG convert is_feed or is_admin');
+          //Log::addInfo('SPDBG convert is_feed or is_admin');
           return $content; // . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!--  -->' : '');
       }
 

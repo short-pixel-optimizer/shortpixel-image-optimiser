@@ -528,6 +528,13 @@ class ApiController
   // handleResponse function
 
 
+  /**
+   * When API signals it's done optimizing an image.
+   * @param  Object $item                   Queue Item object with all settings
+   * @param  Object $fileData               API response with image URLS
+   * @param  Array $data                   Data is filename, imagename, filesize (optionally) from returnDataList
+   * @return Array           Array with processed image data (url, size, webp, avif)
+   */
 	private function handleNewSuccess($item, $fileData, $data)
 	{
 			$compressionType = property_exists($item, 'compressionType') ? $item->compressionType : $settings->compressionType;

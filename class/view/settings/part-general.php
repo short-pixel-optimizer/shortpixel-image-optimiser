@@ -8,15 +8,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 ?>
 
-<section id="tab-settings" class="<?php echo ($this->display_part == 'settings') ? 'sel-tab setting-tab' :'setting-tab'; ?>" data-part="settings" >
-    <h2><a class='tab-link' href='javascript:void(0);' data-id="tab-settings">
-      <?php esc_html_e('General','shortpixel-image-optimiser');?></a>
-    </h2>
+<section id="tab-settings" class="<?php echo ($this->display_part == 'dashboard') ? 'active setting-tab' :'setting-tab'; ?>" data-part="dashboard" >
 
-    <div class="wp-shortpixel-options wp-shortpixel-tab-content" style="visibility: hidden">
-
-      <?php
-
+    <?php
 
 if (true === \wpSPIO()->env()->useTrustedMode())
       {
@@ -304,6 +298,5 @@ if (true === \wpSPIO()->env()->useTrustedMode())
       <input type="submit" name="save" id="save" class="button button-primary" title="<?php esc_attr_e('Save Changes','shortpixel-image-optimiser');?>" value="<?php esc_attr_e('Save Changes','shortpixel-image-optimiser');?>"> &nbsp;
       <input type="submit" name="save_bulk" id="bulk" class="button button-primary" title="<?php esc_attr_e('Save and go to the Bulk Processing page','shortpixel-image-optimiser');?>" value="<?php esc_attr_e('Save and Go to Bulk Process','shortpixel-image-optimiser');?>"> &nbsp;
   </p>
-</div>
 
 </section>

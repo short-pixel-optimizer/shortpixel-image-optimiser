@@ -19,12 +19,11 @@ $fs = \wpSPIO()->filesystem();
 $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->url);
 ?>
 
-<section id="tab-debug" class="<?php echo esc_attr(($this->display_part == 'debug') ? ' sel-tab ' :''); ?>">
+<section id="tab-debug" class="<?php echo esc_attr(($this->display_part == 'debug') ? 'active setting-tab' :'setting-tab'); ?>" data-part="debug">
   <h2><a class='tab-link' href='javascript:void(0);' data-id="tab-debug">
     <?php esc_html_e('Debug','shortpixel-image-optimiser');?></a>
   </h2>
 
-<div class="wp-shortpixel-options wp-shortpixel-tab-content" style="visibility: hidden">
   <div class='env'>
     <h3><?php esc_html_e('Environment', 'shortpixel'); ?></h3>
     <div class='flex'>
@@ -274,5 +273,4 @@ $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->u
 		</form>
 </div>
 
-</div> <!-- tab-content -->
 </section>

@@ -71,7 +71,6 @@ class ShortPixelPlugin {
 			return;
 		}
 
-
 		$cron = Controller\CronController::getInstance();  // cron jobs - must be low init to function!
 
 		$front        = new Controller\FrontController();
