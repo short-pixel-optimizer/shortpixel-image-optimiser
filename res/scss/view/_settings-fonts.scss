@@ -1,0 +1,18 @@
+$font-path: "../fonts/";
+
+@font-face {
+    // This is parsed as a normal function call that takes a quoted string.
+    src: url($font-path + "Roboto-Regular.ttf") format("truetype");
+    font-family: "Roboto";
+    font-style: normal;
+    font-weight: 400;
+}
+
+@font-face {
+    // This is parsed as a normal function call that takes an arithmetic
+    // expression.
+    src: url($font-path + "Roboto-Bold.ttf") format("truetype");
+    font-family: "Roboto";
+    font-style: normal;
+    font-weight: 700;
+}

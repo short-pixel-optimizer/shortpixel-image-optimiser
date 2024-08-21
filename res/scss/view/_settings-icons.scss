@@ -1,0 +1,24 @@
+
+$icon-path: '../images/icon/';
+
+$default:  'default.svg';
+$disabled:  'disabled.svg';
+$selected: 'selected.svg';
+
+
+$icons: cdn, dashboard, debug, delivery, feedback, help, image_optimization, image_processing, notifications, tools, webp_avif;
+
+@each $icon in $icons {
+
+  .shortpixel-icon-#{$icon} {
+    background-image: url($icon-path + $icon + '/default.svg');
+    width: 25px;
+    height: 25px;
+    display: inline-block;
+    background-repeat: no-repeat;
+    background-size: cover;
+    filter: invert(100%) sepia(0%) saturate(0%) hue-rotate(199deg) brightness(105%) contrast(101%);
+    line-height: 25px;
+    vertical-align: middle;
+  }
+}

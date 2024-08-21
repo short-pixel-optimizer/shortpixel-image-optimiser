@@ -499,10 +499,14 @@ class SettingsController extends \ShortPixel\ViewController
           $this->display_part = (isset($_GET['part']) && in_array($_GET['part'], $this->all_display_parts) ) ? sanitize_text_field($_GET['part']) : 'settings';
       }
 
-      protected function settingLink($part, $title)
+      protected function settingLink($part, $title, $icon = false)
       {
           $link = esc_url(admin_url('options-general.php?page=wp-shortpixel-settings&part=' . $part ));
           $active = ($this->display_part == $part) ? ' class="active" ' : '';
+          if (false !== $icon)
+          {
+             $title = '<i class="' . esc_attr($icon) . '"></i>' . $title;
+          }
           $html = sprintf('<a href="%s" data-link="%s" %s >%s</a>', $link, $part, $active, $title);
 
           return $html;

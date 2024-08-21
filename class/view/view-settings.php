@@ -11,13 +11,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 <div class="wrap is-shortpixel-settings-page">
 <header>
   <h1>
-      <?php echo UIHelper::getIcon('res/img/robo-slider.png'); ?>
-      <?php esc_html_e('ShortPixel Plugin Settings','shortpixel-image-optimiser');?>
+      <?php echo UIHelper::getIcon('res/images/illustration/logo_settings.svg'); ?>
+      <?php //esc_html_e('ShortPixel Plugin Settings','shortpixel-image-optimiser');?>
   </h1>
 
   <div class='top-buttons'>
-    <button>Notifications</button>
-    <button>Others</button>
+    <button><i class='shortpixel-icon-notifications'></i><?php _e('Notifications','shortpixel-image-optimiser'); ?></button>
+    <button><i class='shortpixel-icon-'></i><?php _e('Advanced', 'shortpixel-image-optimiser'); ?></button>
   </div>
 </header>
 
@@ -35,15 +35,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<menu>
 			<ul>
 				<li>
-          <?php echo $this->settingLink('dashboard', __("Dashboard", "shortpixel-image-optimiser")); ?>
+          <?php echo $this->settingLink('overview', __("Overview", "shortpixel-image-optimiser"), 'shortpixel-icon-dashboard'); ?>
         </li>
 				<li>
           <?php echo $this->settingLink('optimisation', __("Image optimisation", "shortpixel-image-optimiser")); ?>
         </li>
-				<li>
-          <?php echo $this->settingLink('processing', __("Processing", "shortpixel-image-optimiser")); ?>
-        </li>
-				<li>
+        <li>
           <?php echo $this->settingLink('webp', __("Webp/Avif", "shortpixel-image-optimiser")); ?>
         </li>
 				<li>
@@ -52,11 +49,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<li>
           <?php echo $this->settingLink('cdn', __("CDN", "shortpixel-image-optimiser")); ?>
         </li>
-				<li><a href="?overview"><?php _e("Exclusions", "shortpixel-image-optimiser"); ?></a></li>
+
 				<li>
           <?php echo $this->settingLink('tools', __("Tools", "shortpixel-image-optimiser")); ?>
         </li>
-				<li><a href="?overview"><?php _e("Notifications", "shortpixel-image-optimiser"); ?></a></li>
+
+        <li>
+          <?php echo $this->settingLink('knowledge', __("Knowledgebase / Help", "shortpixel-image-optimiser")); ?>
+        </li>
+
+        <li>
+          <?php echo $this->settingLink('feedback', __("Feedback", "shortpixel-image-optimiser")); ?>
+        </li>
+
         <?php
           if (Log::debugIsActive())
           { ?>

@@ -3,6 +3,7 @@
 .wrap.is-shortpixel-settings-page
 {
 
+
 	// The Header
 	header
 	{
@@ -14,7 +15,7 @@
 			justify-content: space-between;
 
 			h1 {
-				line-height: 50px;	
+				line-height: 50px;
 			}
 			img {
 				vertical-align: bottom;
@@ -26,10 +27,16 @@
 	// Items for whole page, including header.
 	button {
 			color: #fff;
-			background: green;
-			padding: 4px;
+			background: #1ABDCA;
+			padding: 10px 6px;
 			border: 0;
 			margin: 4px; // see if this works.
+			font-family: 'Roboto';
+			font-weight: 700;
+
+
+	//		text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25), 0px 4px 4px rgba(0, 0, 0, 0.25);
+
 			// @todo probably something for icon left /right here.
 	}
 
@@ -64,6 +71,12 @@
 								width: 100%;
 								box-sizing: border-box;
 
+								i {
+									margin-right: 6px;
+									width: 16px;
+									height: 16px;
+									filter: none;
+								}
 								&.active {
 									 background: #0f6a7d;
 							 	  color: #fff;
