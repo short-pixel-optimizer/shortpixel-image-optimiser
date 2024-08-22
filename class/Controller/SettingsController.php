@@ -38,7 +38,7 @@ class SettingsController extends \ShortPixel\ViewController
        'cmyk2rgb' => 'CMYKtoRGBconversion',
      );
 
-     protected $display_part = 'dashboard';
+     protected $display_part = 'overview';
 		 protected $all_display_parts = array('dashboard', 'optimisation', 'cloudflare', 'debug', 'tools');
      protected $form_action = 'save-settings';
 

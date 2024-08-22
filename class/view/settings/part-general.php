@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 ?>
 
-<section id="tab-settings" class="<?php echo ($this->display_part == 'dashboard') ? 'active setting-tab' :'setting-tab'; ?>" data-part="dashboard" >
+<section id="tab-settings" class="<?php echo ($this->display_part == 'optimisation') ? 'active setting-tab' :'setting-tab'; ?>" data-part="optimisation" >
 
     <?php
 

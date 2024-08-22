@@ -40,19 +40,17 @@
 	}
 
 	.shortpixel-key-valid {
-	    font-weight: bold;
-			margin-left: 25px;
-			.dashicons-yes:before {
-			    font-size: 2em;
-			    line-height: 25px;
-			    color: #3485ba;
-			    margin-left: -20px;
-			}
+	  //  font-weight: bold;
+		//	margin-left: 25px;
+		margin-top: 16px;
+		display: inline-block;
+
 	}
 
 
 	/* TABS CONTROLS */
-	article.sp-tabs {
+
+	/* article.sp-tabs {
 	    position: relative;
 	    display: block;
 	    width: 100%;
@@ -94,7 +92,7 @@
 		h2:before {
 		    content: none;
 		}
-	} // article
+	} */ // article
 
 	.sp-column-actions-template + .sp-column-info {
 	    display: none;
@@ -117,11 +115,11 @@
 
 		}
 	}
-	.submit {
+	/* .submit {
 		.button {
 			min-height: 44px;
 		}
-	}
+	} */
   .top-menu
   {
       font-size: 18px;
@@ -138,7 +136,6 @@
 
 		.links
 		{
-
 	    	a { font-size: 18px; margin-right: 8px; white-space: nowrap; line-height: 26px;}
 			padding-right: 195px;
 			flex: 12 4 auto;

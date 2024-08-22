@@ -16,8 +16,8 @@ if ( ! defined( 'ABSPATH' ) ) {
   </h1>
 
   <div class='top-buttons'>
-    <button><i class='shortpixel-icon-notifications'></i><?php _e('Notifications','shortpixel-image-optimiser'); ?></button>
-    <button><i class='shortpixel-icon-'></i><?php _e('Advanced', 'shortpixel-image-optimiser'); ?></button>
+    <button><i class='shortpixel-icon notifications'></i><?php _e('Notifications','shortpixel-image-optimiser'); ?></button>
+    <button><i class='shortpixel-icon switch'></i><?php _e('Advanced', 'shortpixel-image-optimiser'); ?></button>
   </div>
 </header>
 
@@ -35,19 +35,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<menu>
 			<ul>
 				<li>
-          <?php echo $this->settingLink('overview', __("Overview", "shortpixel-image-optimiser"), 'shortpixel-icon-dashboard'); ?>
+          <?php echo $this->settingLink('overview', __("Overview", "shortpixel-image-optimiser"), 'shortpixel-icon dashboard'); ?>
         </li>
 				<li>
-          <?php echo $this->settingLink('optimisation', __("Image optimisation", "shortpixel-image-optimiser")); ?>
+          <?php echo $this->settingLink('optimisation', __("Image optimisation", "shortpixel-image-optimiser"), 'shortpixel-icon image_optimization'); ?>
         </li>
         <li>
-          <?php echo $this->settingLink('webp', __("Webp/Avif", "shortpixel-image-optimiser")); ?>
+          <?php echo $this->settingLink('webp', __("Webp/Avif", "shortpixel-image-optimiser"), 'shortpixel-icon webp_avif'); ?>
         </li>
 				<li>
-          <?php echo $this->settingLink('delivery', __("Delivery", "shortpixel-image-optimiser")); ?>
+          <?php echo $this->settingLink('delivery', __("Delivery", "shortpixel-image-optimiser"), 'shortpixel-icon delivery'); ?>
         </li>
 				<li>
-          <?php echo $this->settingLink('cdn', __("CDN", "shortpixel-image-optimiser")); ?>
+          <?php echo $this->settingLink('cdn', __("CDN", "shortpixel-image-optimiser"), 'shortpixel-icon cdn'); ?>
         </li>
 
 				<li>
@@ -55,11 +55,11 @@ if ( ! defined( 'ABSPATH' ) ) {
         </li>
 
         <li>
-          <?php echo $this->settingLink('knowledge', __("Knowledgebase / Help", "shortpixel-image-optimiser")); ?>
+          <?php echo $this->settingLink('knowledge', __("Knowledgebase / Help", "shortpixel-image-optimiser"), 'shortpixel-icon help'); ?>
         </li>
 
         <li>
-          <?php echo $this->settingLink('feedback', __("Feedback", "shortpixel-image-optimiser")); ?>
+          <?php echo $this->settingLink('feedback', __("Feedback", "shortpixel-image-optimiser"), 'shortpixel-icon feedback'); ?>
         </li>
 
         <?php
@@ -73,7 +73,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 			</ul>
 		</menu>
 		<section class="wrapper">
-					<?php $this->loadView('settings/part-general'); ?>
+          <?php $this->loadView('settings/part-overview'); ?>
+          <?php $this->loadView('settings/part-general'); ?>
           <?php $this->loadView('settings/part-optimisation'); ?>
 
           <?php $this->loadView('settings/part-tools'); ?>
