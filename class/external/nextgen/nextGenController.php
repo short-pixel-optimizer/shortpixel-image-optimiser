@@ -20,11 +20,12 @@ class NextGenController
   protected static $instance;
 //  protected $view;
 	private $enableOverride = false; // when activating NG will not report active yet, but try to refresh folders. Do so.
+	private $is_ngg_screen = false; // is current screen NGG.
 
 // ngg_created_new_gallery
   public function __construct()
   {
-    add_filter('shortpixel/init/optimize_on_screens', array($this, 'add_screen_loads'));
+    add_filter('shortpixel/init/optimize_on_screens', array($this, 'add_screen_loads'), 10, 2);
 
     add_action('plugins_loaded', array($this, 'hooks'));
     add_action('deactivate_nextgen-gallery/nggallery.php', array($this, 'resetNotification'));
@@ -32,6 +33,7 @@ class NextGenController
 
   public function hooks()
   {
+
 		$controller = new NextGenViewController();
 
     if ($this->optimizeNextGen()) // if optimization is on, hook.
@@ -55,6 +57,10 @@ class NextGenController
 			add_filter('ngg_manage_gallery_fields', array($this, 'refreshFolderOnLoad'), 10, 2);
 
     }
+
+		add_action('current_screen', array($this, 'checkCurrentScreen'), 50);
+
+
 
   }
 
@@ -87,8 +93,9 @@ class NextGenController
 
   public function isNextGenScreen()
   {
-      $screens = $this->add_screen_loads(array());
-			if (! is_admin())
+			return $this->is_ngg_screen;
+     // $screens = $this->add_screen_loads(array());
+		/*	if (! is_admin())
 			{
 				 return false;
 			}
@@ -102,7 +109,7 @@ class NextGenController
         return true;
       else
         return false;
-
+ 				*/
   }
 
   /** called from settingController when enabling the nextGen settings */
@@ -113,20 +120,58 @@ class NextGenController
   }
 
 
-  public function add_screen_loads($use_screens)
+  public function add_screen_loads($use_screens, $screen)
   {
-
+/*
+The screen IDS seem to be have changed, trying a more definitive solution
     $use_screens[] = 'toplevel_page_nextgen-gallery'; // toplevel
     $use_screens[] = 'nextgen-gallery_page_ngg_addgallery';  // add gallery
     $use_screens[] = 'nextgen-gallery_page_nggallery-manage-album'; // manage album
     $use_screens[] = 'nextgen-gallery_page_nggallery-manage-gallery'; // manage toplevel gallery
     $use_screens[] = 'nggallery-manage-images'; // images in gallery overview
+*/
+
+	 $screen_pos = ['ngg', 'nggallery', 'nextgen-gallery'];
+
+
+	 if (property_exists($screen, 'ngg'))
+	 {
+		 	$use_screens[] = $screen->id;
+			$this->is_ngg_screen = true;
+
+	 }
+	 else
+	 {
+		 	foreach($screen_pos as $pos)
+			{
+				  $index = strpos($screen->id, $pos);
+					if ($index !== -1)
+					{
+						 $use_screens[]= $screen->id;
+						 $this->is_ngg_screen = true;
+					}
+			}
+	 }
+
+
 
     return $use_screens;
   }
 
+	public function checkCurrentScreen($screen)
+	{
+
+		if ($this->isNextGenScreen())
+		{
+				$controller = new NextGenViewController();
+					add_action('admin_footer', [$controller, 'loadComparer']);
+		}
+	}
+
+
   public function loadNextGenItem($unknown, $picture)
   {
+			 // @todo The view controller is re-instanced all the time while also doing permanent hooks work in the top, which is not great.
        $viewController = new NextGenViewController();
        $viewController->loadItem($picture);
   }

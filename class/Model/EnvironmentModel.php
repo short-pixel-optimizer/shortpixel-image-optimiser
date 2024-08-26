@@ -261,7 +261,7 @@ class EnvironmentModel extends \ShortPixel\Model
         'edit-page', // all pages
         'media', // add new item screen
     );
-    $use_screens = apply_filters('shortpixel/init/optimize_on_screens', $use_screens);
+    $use_screens = apply_filters('shortpixel/init/optimize_on_screens', $use_screens, $screen);
 
     $this->screen_id = $screen->id;
     if(is_array($use_screens) && in_array($screen->id, $use_screens)) {

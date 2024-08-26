@@ -13,7 +13,7 @@ class ImageGalleries
   public function __construct()
   {
       add_action('admin_init', array($this, 'addConstants'));
-      add_filter('shortpixel/init/optimize_on_screens', array($this, 'add_screen_loads'));
+      add_filter('shortpixel/init/optimize_on_screens', array($this, 'add_screen_loads'), 10, 2);
   }
 
   // This adds constants for mentioned plugins checking for specific suffixes on addUnlistedImages.
@@ -39,7 +39,7 @@ class ImageGalleries
 
   }
 
-  public function add_screen_loads($screens)
+  public function add_screen_loads($screens, $screen)
   {
 
      // Envira Gallery Lite

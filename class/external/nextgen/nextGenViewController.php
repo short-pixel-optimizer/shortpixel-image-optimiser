@@ -37,11 +37,16 @@ class NextGenViewController extends \ShortPixel\ViewController
    public function nggColumnHeader( $default ) {
 
 		 	 wp_enqueue_style('dashicons');
-			 $this->loadView('snippets/part-comparer');
 
 
        return __('ShortPixel Compression','shortpixel-image-optimiser');
    }
+
+	 public function loadComparer()
+	 {
+		  $this->loadView('snippets/part-comparer');
+
+	 }
 
    public function loadItem( $nextGenObj ) {
 
