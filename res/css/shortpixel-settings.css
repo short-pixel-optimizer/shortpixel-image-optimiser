@@ -10,6 +10,9 @@
   font-style: normal;
   font-weight: 700;
 }
+.wrap.is-shortpixel-settings-page.simple .is-advanced {
+  display: none;
+}
 .wrap.is-shortpixel-settings-page header {
   background: #fff;
   text-align: center;

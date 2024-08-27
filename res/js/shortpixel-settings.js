@@ -24,6 +24,7 @@ class ShortPixelSettings
 			this.InitExclusions();
 			this.InitWarnings();
 			this.InitMenu();
+			this.ViewModeSwitch();
 
 			// Modals
 			var modals = document.querySelectorAll('[data-action="open-modal"]');

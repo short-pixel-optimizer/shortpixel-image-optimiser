@@ -41,6 +41,7 @@ class SettingsController extends \ShortPixel\ViewController
      protected $display_part = 'overview';
 		 protected $all_display_parts = array('dashboard', 'optimisation', 'cloudflare', 'debug', 'tools');
      protected $form_action = 'save-settings';
+     protected $view_mode = 'simple'; // advanced or simple
 
 		 protected static $instance;
 
@@ -428,6 +429,8 @@ class SettingsController extends \ShortPixel\ViewController
 				 if ($this->view->data->createAvif == 1)
            $this->avifServerCheck();
 
+         // Set viewMode
+         $this->view_mode = $this->view->data->viewMode;
          $this->loadView('view-settings');
       }
 

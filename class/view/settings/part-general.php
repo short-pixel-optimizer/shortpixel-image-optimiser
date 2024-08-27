@@ -33,9 +33,9 @@ if (true === \wpSPIO()->env()->useTrustedMode())
     <!-- general settings -->
     <settinglist>
 
-        <h2><?php esc_html_e('General','shortpixel-image-optimiser');?></h2>
+        <h2><?php esc_html_e('Image optimization','shortpixel-image-optimiser');?></h2>
         <!-- Api Key -->
-        <setting>
+       <!-- <setting>
           <name>
             <?php esc_html_e('API Key:','shortpixel-image-optimiser'); ?>
           </name>
@@ -58,7 +58,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
 							?>
 					</info>
           </content>
-        </setting>
+        </setting> -->
 
          <!-- compression type -->
           <setting id='compression-type'>

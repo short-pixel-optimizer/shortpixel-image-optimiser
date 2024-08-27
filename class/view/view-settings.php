@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 ?>
 
-<div class="wrap is-shortpixel-settings-page">
+<div class="wrap is-shortpixel-settings-page <?php echo esc_attr($this->view_mode); ?> ">
 <header>
   <h1>
       <?php echo UIHelper::getIcon('res/images/illustration/logo_settings.svg'); ?>
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
   <div class='top-buttons'>
     <button><i class='shortpixel-icon notifications'></i><?php _e('Notifications','shortpixel-image-optimiser'); ?></button>
-    <button><i class='shortpixel-icon switch'></i><?php _e('Advanced', 'shortpixel-image-optimiser'); ?></button>
+    <button id="viewmode-toggle"><i class='shortpixel-icon switch'></i><?php _e('Advanced', 'shortpixel-image-optimiser'); ?></button>
   </div>
 </header>
 
@@ -50,7 +50,7 @@ if ( ! defined( 'ABSPATH' ) ) {
           <?php echo $this->settingLink('cdn', __("CDN", "shortpixel-image-optimiser"), 'shortpixel-icon cdn'); ?>
         </li>
 
-				<li>
+				<li class='is-advanced'>
           <?php echo $this->settingLink('tools', __("Tools", "shortpixel-image-optimiser")); ?>
         </li>
 

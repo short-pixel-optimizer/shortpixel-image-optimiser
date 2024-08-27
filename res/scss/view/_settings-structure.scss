@@ -3,6 +3,13 @@
 .wrap.is-shortpixel-settings-page
 {
 
+	&.simple
+	{
+		 .is-advanced
+		 {
+			  display: none;
+		 }
+	}
 
 	// The Header
 	header
