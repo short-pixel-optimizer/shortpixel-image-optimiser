@@ -33,7 +33,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
     <!-- general settings -->
     <settinglist>
 
-        <h2><?php esc_html_e('Image optimization','shortpixel-image-optimiser');?></h2>
+        <h2><?php esc_html_e('Image Optimization Settings','shortpixel-image-optimiser');?></h2>
         <!-- Api Key -->
        <!-- <setting>
           <name>
@@ -113,19 +113,23 @@ if (true === \wpSPIO()->env()->useTrustedMode())
 
           <!-- / compression type  -->
 
+					<h3><?php _e('What to Optimize', 'shortpixel-image-optimiser'); ?></h3>
+
           <!-- Thumbnail compression -->
           <setting>
-            <name>
-              <?php esc_html_e('Thumbnail compression:','shortpixel-image-optimiser');?>
-            </name>
+
             <content>
                 <switch>
                   <label>
                     <input type="checkbox" class="switch" name="processThumbnails" value="1" <?php checked($view->data->processThumbnails, '1');?>>
                     <div class="the_switch">&nbsp; </div>
-                    <?php printf(esc_html__('Apply compression also to %s image thumbnails.%s ','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
+										<?php esc_html_e('Thumbnail compression:','shortpixel-image-optimiser');?>
+
                   </label>
                 </switch>
+								<name>
+                    <?php printf(esc_html__('Apply compression also to %s image thumbnails.%s ','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
+								</name>
                 <info>
                       <?php printf(esc_html__('It is highly recommended that you optimize the thumbnails as they are usually the images most viewed by end users and can generate most traffic. %s Please note that thumbnails count up to your total quota.','shortpixel-image-optimiser'), '<br>'); ?>
                 </info>

@@ -24,7 +24,7 @@ class ShortPixelSettings
 			this.InitExclusions();
 			this.InitWarnings();
 			this.InitMenu();
-			this.ViewModeSwitch();
+			this.InitModeSwitcher();
 
 			// Modals
 			var modals = document.querySelectorAll('[data-action="open-modal"]');
@@ -195,6 +195,22 @@ class ShortPixelSettings
 				 target.dispatchEvent(event);
 			}
 
+
+	}
+
+	InitModeSwitcher()
+	{
+      var switcher = document.getElementById('viewmode-toggle');
+			if (null == switcher)
+			{
+						return;
+			}
+
+			switcher.addEventListener('click', this.SwitchViewModeEvent.bind(this));
+	}
+
+  SwitchViewModeEvent(event)
+	{
 
 	}
 

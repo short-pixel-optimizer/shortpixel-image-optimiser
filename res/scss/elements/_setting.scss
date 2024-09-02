@@ -2,10 +2,14 @@
 
 setting{
 
-  padding: 12px 0 12px 0;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
+  padding: 12px;
+	background-color: #F4FBFC;
+	margin: 10px 0;
+	display: block;
+  //display: flex;
+ // align-items: center;
+  //flex-wrap: wrap;
+	//flex-direction: column;
 
   // when showing on a toggle, force flex.
   &.toggleTarget.is-visible
@@ -15,11 +19,11 @@ setting{
 
   // main title of setting
   name {
-    width: 220px;
-    min-width: 220px;
+//    width: 220px;
+//    min-width: 220px;
     font-size: 14px;
     font-weight: 700;
-    display: inline-block;
+    display: block;
     padding: 20px 10px 20px 0;
     box-sizing: border-box;
   }

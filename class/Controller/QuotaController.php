@@ -102,6 +102,7 @@ class QuotaController
               ],
           ];
 
+
           $quota->total = (object) [
               'total' => $quota->monthly->total + $quota->onetime->total,
               'consumed'  => $quota->monthly->consumed + $quota->onetime->consumed,

@@ -39,7 +39,7 @@ class SettingsController extends \ShortPixel\ViewController
      );
 
      protected $display_part = 'overview';
-		 protected $all_display_parts = array('dashboard', 'optimisation', 'cloudflare', 'debug', 'tools');
+		 protected $all_display_parts = array('overview', 'dashboard', 'optimisation', 'cloudflare', 'debug', 'tools');
      protected $form_action = 'save-settings';
      protected $view_mode = 'simple'; // advanced or simple
 
@@ -499,7 +499,7 @@ class SettingsController extends \ShortPixel\ViewController
 
           $this->disable_heavy_features = (\wpSPIO()->env()->hasOffload() && false === \wpSPIO()->env()->useVirtualHeavyFunctions()) ? true : false;
 
-          $this->display_part = (isset($_GET['part']) && in_array($_GET['part'], $this->all_display_parts) ) ? sanitize_text_field($_GET['part']) : 'settings';
+          $this->display_part = (isset($_GET['part']) && in_array($_GET['part'], $this->all_display_parts) ) ? sanitize_text_field($_GET['part']) : 'overview';
       }
 
       protected function settingLink($part, $title, $icon = false)

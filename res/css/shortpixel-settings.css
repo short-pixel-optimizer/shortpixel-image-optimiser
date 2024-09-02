@@ -104,12 +104,29 @@
 }
 .shortpixel-settings section.wrapper .setting-tab settinglist h2 {
   font-size: 24px;
+  font-family: "Roboto";
+  font-weight: 700;
   outline: 0;
   text-decoration: none;
   color: #0f6a7d;
 }
+.shortpixel-settings section.wrapper .setting-tab settinglist h3 {
+  font-size: 18px;
+  font-family: "Roboto";
+  font-weight: 700;
+}
 .shortpixel-settings settinglist {
   display: block;
+}
+
+.setting-tab .shortpixel-compression-options label.lossy {
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+  border: 1px solid;
+}
+.setting-tab .shortpixel-compression-options label:last-child {
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
 }
 
 .wrap.is-shortpixel-settings-page {
@@ -1059,20 +1076,18 @@ div.spio-modal-title {
 }
 
 setting {
-  padding: 12px 0 12px 0;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
+  padding: 12px;
+  background-color: #F4FBFC;
+  margin: 10px 0;
+  display: block;
 }
 setting.toggleTarget.is-visible {
   display: flex !important;
 }
 setting name {
-  width: 220px;
-  min-width: 220px;
   font-size: 14px;
   font-weight: 700;
-  display: inline-block;
+  display: block;
   padding: 20px 10px 20px 0;
   box-sizing: border-box;
 }
