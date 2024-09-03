@@ -1,0 +1,17 @@
+// Optimisation tab
+.setting-tab
+{
+	 	.shortpixel-compression-options
+		{
+			  label.lossy {
+					 border-top-left-radius: 6px;
+					 border-bottom-left-radius: 6px;
+					 border: 1px solid;
+				}
+				label:last-child {
+					border-top-right-radius: 6px;
+					border-bottom-right-radius: 6px;
+
+				}
+		}
+} //setting-tab
