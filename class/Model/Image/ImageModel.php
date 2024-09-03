@@ -1231,7 +1231,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 		protected function isSizeExcluded()
 		{
 			$excludePatterns = $this->getExcludePatterns();
-
 			if (! $excludePatterns || ! is_array($excludePatterns) ) // no patterns, nothing excluded
 				return false;
 

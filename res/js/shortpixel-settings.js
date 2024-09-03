@@ -174,8 +174,8 @@ class ShortPixelSettings
 			}
 
 			// Discover current tab
-		//	var displayPartEl = document.querySelector('input[name="display_part"]');
-		//	this.current_tab = displayPartEl.value;
+			var displayPartEl = document.querySelector('input[name="display_part"]');
+			this.current_tab = displayPartEl.value;
 
 			var uri = window.location.href.toString();
 			var params = new URLSearchParams(uri);
@@ -256,6 +256,8 @@ class ShortPixelSettings
 		 targetLink.classList.add('active');
 
 		 this.current_tab = new_tab;
+		 var displayPartEl = document.querySelector('input[name="display_part"]');
+		 displayPartEl.value = new_tab;
 
      // Update Uri
 	   if (uri.indexOf("?") > 0) {

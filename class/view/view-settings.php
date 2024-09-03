@@ -87,9 +87,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 		</section>
 </article>
-
 </form>
 
+<div class='debug'><PRE>
+  <?php print_r($this->view->data); ?>
+</PRE></div>
 
 <article id="shortpixel-settings-tabs" class="sp-tabs">
     <?php if (! $view->key->is_verifiedkey)
