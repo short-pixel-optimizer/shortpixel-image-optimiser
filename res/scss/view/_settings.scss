@@ -1,9 +1,6 @@
 
 // in our own scope.
-.wrap.is-shortpixel-settings-page
-{
-	@import '../elements/colors';
-	@import '../elements/breakpoints';
+
 
 	a {
 		color: $color-darkest;
@@ -484,38 +481,7 @@
 	// ####### SETTINGS TAB (GENERAL)
 	#tab-settings
 	{
-			.shortpixel-compression
-			{
-				  strong
-					{
-						 line-height: 22px;
-					}
-					.shortpixel-compression-options {
-						display: inline-block;
-				}
-				label {
-				    width:158px;
-				    margin: 0 -2px;
-				    background-color:$color-light;
-				    font-weight: bold;
-				    display: inline-block;
-						cursor: pointer;
-						span {
-						    text-align:center;
-						    font-size: 16px;
-						    padding:8px 0px;
-						    display:block;
-						}
-						input {
-						    display: none;
-								&:checked + span {
-								    background-color:$color-darkest;
-								    color:#FFF;
-								}
-						}
 
-				}
-			}
 			.presentation-wrap {
 					padding: 10px;
 					text-align: center;
@@ -560,4 +526,3 @@
 			}
 
 	} // tab-settings
-} // end of settings

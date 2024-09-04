@@ -3,7 +3,7 @@
 setting{
 
   padding: 12px;
-	background-color: #F4FBFC;
+	background-color: $blue_background;
 	margin: 10px 0;
 	display: block;
   //display: flex;
@@ -26,6 +26,8 @@ setting{
     display: block;
     padding: 20px 10px 20px 0;
     box-sizing: border-box;
+    color: $blue_closed;
+
   }
 
   content {
@@ -69,6 +71,17 @@ setting{
 	error {
 		 border-left-color: #ff0000;
 	}
+
+  switch
+  {
+     label {
+        font-weight: 700;
+     }
+
+     +name, +info {
+        margin-left: 70px;
+     }
+  }
 
 } // setting
 

@@ -1,7 +1,4 @@
 
-// The whole settings page.
-.wrap.is-shortpixel-settings-page
-{
 
 	&.simple
 	{
@@ -35,7 +32,7 @@
 	// Items for whole page, including header.
 	button {
 			color: #fff;
-			background: #1ABDCA;
+			background: $blue_default;
 			padding: 8px 6px;
 			border: 0;
 			margin: 4px; // see if this works.
@@ -53,12 +50,11 @@
 				 filter: brightness(0) saturate(100%) invert(100%) sepia(100%) saturate(0%) hue-rotate(251deg) brightness(108%) contrast(108%);;
 			}
 
-	//		text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25), 0px 4px 4px rgba(0, 0, 0, 0.25);
 
 			// @todo probably something for icon left /right here.
 	}
 
-}
+
 
 .shortpixel-settings // main article wrapper. Items for settings minus header.
 {
@@ -85,7 +81,7 @@
 
 								font-size: 14px;
 								font-weight: 700;
-								color: #000;
+								color: $blue_closed;
 								text-decoration: none;
 								display: inline-block;
 								width: 100%;
@@ -98,10 +94,10 @@
 									filter: none;
 								}
 								&.active {
-									 background: #0f6a7d;
-							 	  color: #fff;
+									// background: #0f6a7d;
+							 	  color: $black_default;
 									i {
-										filter: brightness(0) saturate(100%) invert(100%) sepia(92%) saturate(270%) hue-rotate(177deg) brightness(122%) contrast(100%);
+										filter: $filter_black;
 									}
 								}
 							}
@@ -140,7 +136,7 @@
 						h3 {
 							  font-size: 18px;
 								font-family: 'Roboto';
-								font-weight: 700; 
+								font-weight: 700;
 						}
 					} // settinglist
 				}

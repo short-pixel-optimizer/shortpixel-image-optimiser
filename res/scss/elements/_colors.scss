@@ -4,3 +4,13 @@ $color-dark: #1cbecb;
 $color-light: #d1f5fd;
 
 $color-brokenwhite: #F5F5F5;
+
+$blue_default: #1ABDCA;
+$blue_closed : #116C7E;
+$blue_open :  #92D5E3;
+$blue_background: #F4FBFC;
+
+$black_default: #001E24;
+
+// https://angel-rs.github.io/css-color-filter-generator/
+$filter_black: brightness(0) saturate(100%);

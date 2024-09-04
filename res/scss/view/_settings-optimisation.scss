@@ -3,15 +3,53 @@
 {
 	 	.shortpixel-compression-options
 		{
-			  label.lossy {
+			  label.lossy span{
 					 border-top-left-radius: 6px;
 					 border-bottom-left-radius: 6px;
-					 border: 1px solid;
+					 border: 0px solid;
 				}
-				label:last-child {
+				label.lossless span {
 					border-top-right-radius: 6px;
 					border-bottom-right-radius: 6px;
+					border: 0px solid;
 
 				}
+
+				strong
+				{
+					 line-height: 22px;
+				}
+				.shortpixel-compression-options {
+					display: inline-block;
+			}
+			label {
+					width:158px;
+			//		margin: 0 -2px;
+					font-weight: bold;
+					display: inline-block;
+					cursor: pointer;
+			//		border-right: 1px solid #fff;
+					span {
+							text-align:center;
+							font-size: 16px;
+							padding:8px 0px;
+							display:block;
+							background-color: $blue_default;
+							color:#FFF;
+					}
+					input {
+							display: none;
+							&:checked + span {
+									background-color:$blue_closed;
+							}
+					}
+
+			}
+
+		}
+
+		.shortpixel-compression
+		{
+
 		}
 } //setting-tab
