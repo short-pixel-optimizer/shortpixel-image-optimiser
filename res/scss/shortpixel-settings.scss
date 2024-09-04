@@ -1,9 +1,10 @@
 
+@import 'view/settings-fonts';
+
 .wrap.is-shortpixel-settings-page
 {
   @import 'elements/colors';
 	@import 'elements/breakpoints';
-  @import 'view/settings-fonts';
   @import 'view/settings-structure';
   @import 'view/settings-optimisation';
   @import 'view/settings';

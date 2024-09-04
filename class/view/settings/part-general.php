@@ -116,14 +116,13 @@ if (true === \wpSPIO()->env()->useTrustedMode())
 					<h3><?php _e('What to Optimize', 'shortpixel-image-optimiser'); ?></h3>
 
           <!-- Thumbnail compression -->
-          <setting>
-
+          <setting class='switch'>
             <content>
                 <switch>
                   <label>
                     <input type="checkbox" class="switch" name="processThumbnails" value="1" <?php checked($view->data->processThumbnails, '1');?>>
                     <div class="the_switch">&nbsp; </div>
-										<?php esc_html_e('Thumbnail compression:','shortpixel-image-optimiser');?>
+										<?php esc_html_e('Optimize Thumbnails','shortpixel-image-optimiser');?>
 
                   </label>
                 </switch>
@@ -138,7 +137,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
           <!-- // Thumbnail compression -->
 
           <!-- Enable Smartcrop -->
-            <setting>
+            <setting class='switch'>
               <name>
                   <?php esc_html_e('Enable SmartCrop:','shortpixel-image-optimiser');?>
               </name>

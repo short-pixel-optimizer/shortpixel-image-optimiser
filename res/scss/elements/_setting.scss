@@ -77,11 +77,14 @@ setting{
      label {
         font-weight: 700;
      }
-
-     +name, +info {
-        margin-left: 70px;
-     }
   }
+
+	&.switch
+	{
+		name, info {
+			 margin-left: 70px;
+		}
+	}
 
 } // setting
 
