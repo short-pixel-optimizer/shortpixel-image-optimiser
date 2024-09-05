@@ -146,4 +146,37 @@
 			 display: block;
 
 		}
+
+		flexbox {
+			 display: flex;
+
+			 &.width_half {
+				 > *
+				 {
+					 width: 50%;
+				 }
+			 }
+
+			 &.column
+			 {
+				  flex-direction: column;
+			 }
+		}
+		gridbox
+		{
+			 display: grid;
+			 &.width_half
+			 {
+				 grid-template-columns: repeat(2, 50%);
+				 setting:nth-child(1n) {
+					 margin-right: 15px;
+				 }
+
+			 }
+			 &.width_70
+			 {
+				  grid-template-columns:  70% 30%;
+			 }
+
+		}
 } // shortpixel-settings

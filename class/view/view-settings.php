@@ -76,6 +76,7 @@ if ( ! defined( 'ABSPATH' ) ) {
           <?php $this->loadView('settings/part-overview'); ?>
           <?php $this->loadView('settings/part-general'); ?>
           <?php $this->loadView('settings/part-optimisation'); ?>
+          <?php $this->loadView('settings/part-webp'); ?>
 
           <?php $this->loadView('settings/part-tools'); ?>
           <?php

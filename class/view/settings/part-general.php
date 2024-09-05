@@ -34,37 +34,14 @@ if (true === \wpSPIO()->env()->useTrustedMode())
     <settinglist>
 
         <h2><?php esc_html_e('Image Optimization Settings','shortpixel-image-optimiser');?></h2>
-        <!-- Api Key -->
-       <!-- <setting>
-          <name>
-            <?php esc_html_e('API Key:','shortpixel-image-optimiser'); ?>
-          </name>
-          <content>
-
-						<input name="apiKey" type="text" id="key" value="<?php echo esc_attr( $view->key->apiKey );?>"
-							 class="regular-text" <?php echo($view->key->is_editable ? "" : 'disabled') ?> 'onkeyup="ShortPixel.apiKeyChanged()"'>
-						 <button type="button" id="validate" class="button button-primary" title="<?php esc_html_e('Validate the provided API key','shortpixel-image-optimiser');?>"
-								onclick="ShortPixel.validateKey(this)" <?php echo $view->key->is_editable ? "" : "disabled"?> >
-								<?php esc_html_e('Save settings & validate','shortpixel-image-optimiser');?>
-						</button>
-						<span class="shortpixel-key-valid" <?php echo $view->key->is_verifiedkey ? '' : 'style="display:none;"' ?>>
-								<span class="dashicons dashicons-yes"></span><?php esc_html_e('Your API key is valid.','shortpixel-image-optimiser');?>
-						</span>
-					<info>
-							<?php if ($view->key->is_constant_key)
-							{
-							 		esc_html_e('Key defined in wp-config.php.','shortpixel-image-optimiser');
-							}
-							?>
-					</info>
-          </content>
-        </setting> -->
 
          <!-- compression type -->
           <setting id='compression-type'>
-              <name>
-                  <?php esc_html_e('Compression type:','shortpixel-image-optimiser');?>
-              </name>
+            <name>
+                <?php esc_html_e('Compression type:','shortpixel-image-optimiser');?>
+            </name>
+
+            <gridbox class='width_70'>
               <content class='shortpixel-compression'>
                 <input type="hidden" id="compressionType-database" value="<?php echo esc_attr($view->data->compressionType) ?>">
 
@@ -81,19 +58,21 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                             <input type="radio" class="shortpixel-radio-lossless" name="compressionType" value="0" <?php echo( $view->data->compressionType == 0 ? "checked" : "" );?>><span><?php esc_html_e('Lossless','shortpixel-image-optimiser');?></span>
                         </label>
 
-                  <?php printf(esc_html__('%s Run a few tests%s to help you decide.', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/online-image-compression" style="margin-left:20px;" target="_blank">', '</a>'); ?>
-                </div>
-
                   <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/11-lossy-glossy-or-lossless-which-one-is-the-best-for-me"></i>
 
-                  <info>
+                </div>
+
+
+                <info>
+                    <?php printf(esc_html__('%s Run a few tests%s to help you decide.', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/online-image-compression" style="margin-left:20px;" target="_blank">', '</a>'); ?>
+
                     <p class="settings-info shortpixel-radio-info shortpixel-radio-lossy" <?php echo( $view->data->compressionType == 1 ? "" : 'style="display:none"' );?>>
                         <?php printf(esc_html__('%sLossy SmartCompression (recommended): %s offers the best compression rate. %s What is SmartCompress? %s This is the recommended option for most users, producing results that look the same as the original to the human eye.','shortpixel-image-optimiser'),'<b>','</b>', '<a href="https://shortpixel.com/blog/introducing-smartcompress/" target="_blank" class="shortpixel-help-link"><span class="dashicons dashicons-editor-help"></span>', '</a><br />');?>
                     </p>
                     <p class="settings-info shortpixel-radio-info shortpixel-radio-glossy" <?php echo( $view->data->compressionType == 2 ? "" : 'style="display:none"' );?>>
                         <?php printf(esc_html__('%sGlossy SmartCompression: %s creates images that are almost pixel-perfect identical with the originals. %s What is SmartCompress? %s Best option for photographers and other professionals that use very high quality images on their sites and want the best compression while keeping the quality untouched.','shortpixel-image-optimiser'), '<b>','</b>', '<a href="https://shortpixel.com/blog/introducing-smartcompress/" target="_blank" class="shortpixel-help-link"><span class="dashicons dashicons-editor-help"></span>', '</a><br>');?>
 
-  </p>
+                    </p>
                     <p class="settings-info shortpixel-radio-info shortpixel-radio-lossless" <?php echo( $view->data->compressionType == 0 ? "" : 'style="display:none"' );?>>
                         <?php printf(esc_html__('%s Lossless compression: %s the resulting image is pixel-identical with the original image. %sMake sure not a single pixel looks different in the optimized image compared with the original.
                         In some rare cases you will need to use this type of compression. Some technical drawings or images from vector graphics are possible situations.','shortpixel-image-optimiser'),'<b>','</b>', '<br>');?>
@@ -101,6 +80,9 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                   </info>
 
               </content>
+
+              <content>What is SmartCompression</content>
+            </gridbox>
 
               <warning id='compression-notice'>
                     <h4><?php _e('Changing compression type', 'shortpixel-image-optimiser'); ?></h4>
@@ -110,10 +92,11 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                     </message>
               </warning>
           </setting>
-
           <!-- / compression type  -->
 
 					<h3><?php _e('What to Optimize', 'shortpixel-image-optimiser'); ?></h3>
+
+          <gridbox class='width_half'>
 
           <!-- Thumbnail compression -->
           <setting class='switch'>
@@ -177,20 +160,19 @@ if (true === \wpSPIO()->env()->useTrustedMode())
          </setting>
 
          <!-- Optimize retina -->
-          <setting>
-             <name>
-                 <?php esc_html_e('Optimize Retina images','shortpixel-image-optimiser');?>
-             </name>
+          <setting class='switch'>
              <content>
-
                <switch>
                  <label>
                    <input type="checkbox" class="switch" name="optimizeRetina" value="1" <?php checked( $view->data->optimizeRetina, "1" );?>>
                    <div class="the_switch">&nbsp; </div>
-                      <?php esc_html_e('Also optimize the Retina images (@2x) if they exist.','shortpixel-image-optimiser');?>
+                   <?php esc_html_e('Optimize Retina images','shortpixel-image-optimiser');?>
                   </label>
                </switch>
-                <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/518-settings-optimize-retina-images"></i>
+              <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/518-settings-optimize-retina-images"></i>
+              <name>
+                  <?php esc_html_e('Also optimize the Retina images (@2x) if they exist.','shortpixel-image-optimiser');?>
+              </name>
              </content>
 
              <warning class='heavy-feature-virtual retina'>
@@ -199,6 +181,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                </message>
              </warning>
          </setting>
+
 
          <!-- Nextgen setting -->
          <?php if($this->has_nextgen) : ?>
@@ -250,34 +233,26 @@ if (true === \wpSPIO()->env()->useTrustedMode())
             </setting>
           <!-- // Backup -->
 
+        </gridbox>
+
           <h3><?php _e('Conversions', 'shortpixel-image-optimiser'); ?></h3>
 
-
+          <gridbox class='width_half'>
           <!-- convert png2jpg -->
-          <setting>
-            <name>
-              <?php esc_html_e('Convert PNG images to JPEG','shortpixel-image-optimiser');?>
-            </name>
+          <setting class='switch'>
             <content>
               <switch class='option-png2jpg'>
                 <label>
-                  <input type="checkbox" class="switch" name="png2jpg" value="1" <?php checked( ($view->data->png2jpg > 0), true);?> <?php echo($this->is_gd_installed ? '' : 'disabled') ?> data-toggle="png2jpgforce">
+                  <input type="checkbox" class="switch" name="png2jpg" value="1" <?php checked( ($view->data->png2jpg > 0), true);?> <?php echo($this->is_gd_installed ? '' : 'disabled') ?> >
                   <div class="the_switch">&nbsp; </div>
-                  <?php esc_html_e('Automatically convert the PNG images to JPEG, if possible.','shortpixel-image-optimiser'); ?>
+                <?php esc_html_e('Convert PNG images to JPEG','shortpixel-image-optimiser');?>
                 </label>
               </switch>
 
               <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/516-settings-convert-png-images-to-jpeg"></i>
-
-
-              <switch class='switch_button option-png2jpgforce toggleTarget suboption' id="png2jpgforce">
-                <p>&nbsp;</p>
-                <label>
-                  <input type="checkbox" class="switch" name="png2jpgForce" value="1" <?php checked(($view->data->png2jpg > 1), true);?> <?php echo($this->is_gd_installed ? '' : 'disabled') ?>>
-                  <div class="the_switch">&nbsp; </div>
-                  <?php esc_html_e('Also force the conversion of images with transparency (the transparency will be lost).','shortpixel-image-optimiser'); ?>
-                </label>
-              </switch>
+              <name>
+                  <?php esc_html_e('Automatically convert the PNG images to JPEG, if possible.','shortpixel-image-optimiser'); ?>
+              </name>
             </content>
 
             <?php  if(false === $this->is_gd_installed): ?>
@@ -297,23 +272,39 @@ if (true === \wpSPIO()->env()->useTrustedMode())
         </setting>
         <!-- // convert png2jpg -->
 
+        <!-- Force convert -->
+        <setting class='switch'>
+          <content>
+          <switch class='switch_button option-png2jpgforce suboption' id="png2jpgforce">
+            <label>
+              <input type="checkbox" class="switch" name="png2jpgForce" value="1" <?php checked(($view->data->png2jpg > 1), true);?> <?php echo($this->is_gd_installed ? '' : 'disabled') ?>>
+              <div class="the_switch">&nbsp; </div>
+              <?php esc_html_e('Force conversion of images when transparent', 'shortpixel-image-optimiser'); ?>
+            </label>
+          </switch>
+          <name>
+            <?php esc_html_e('The transparency will be lost.','shortpixel-image-optimiser'); ?>
+          </name>
+        </content>
+        </setting>
+
         <!-- Cmyk to rgb -->
-        <setting>
-            <name>
-                <?php esc_html_e('CMYK to RGB conversion','shortpixel-image-optimiser');?>
-            </name>
+        <setting class='switch'>
             <content>
 
               <switch>
                 <label>
                   <input type="checkbox" class="switch" name="cmyk2rgb" value="1" <?php checked( $view->data->CMYKtoRGBconversion, "1" );?>>
                   <div class="the_switch">&nbsp; </div>
-                  <?php esc_html_e('Adjust your images\' colors for computer and mobile displays.','shortpixel-image-optimiser');?>
+
+                  <?php esc_html_e('CMYK to RGB conversion','shortpixel-image-optimiser');?>
                 </label>
               </switch>
 
               <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/517-settings---cmyk-to-rgb-conversion"></i>
-
+              <name>
+                  <?php esc_html_e('Adjust your images\' colors for computer and mobile displays.','shortpixel-image-optimiser');?>
+              </name>
             </content>
          </setting>
          <!-- // Cmyk to rgb -->
@@ -348,6 +339,8 @@ if (true === \wpSPIO()->env()->useTrustedMode())
             </warning>
           </setting>
           <!-- // Remove Exif -->
+
+        </gridbox>
 
           <h3><?php _e('Smartcrop & Resize', 'shortpixel-image-optimiser'); ?></h3>
 
@@ -385,11 +378,13 @@ if (true === \wpSPIO()->env()->useTrustedMode())
             </setting>
           <!-- // Enable Smartcrop -->
 
+<!--
+          <div class='cross-border'>
+              <span class='text'>OR</span> <hr>
+          </div>
+-->
           <!-- Resize Large Image -->
           <setting>
-            <name>
-              <?php esc_html_e('Resize large images','shortpixel-image-optimiser');?>
-            </name>
             <content>
 							<?php  $resizeDisabled = (! $this->view->data->resizeImages) ? 'disabled' : '';
 								 // @todo Inline styling here can be decluttered.
@@ -398,13 +393,17 @@ if (true === \wpSPIO()->env()->useTrustedMode())
 
 							<input type="hidden" id="min-resizeHeight" value="<?php echo esc_attr($view->minSizes['height']);?>" data-nicename="<?php esc_html_e('Height', 'shortpixel-image-optimiser'); ?>"/>
 
-							<div class='switch_button'>
+							<switch>
 								<label>
 									<input type="checkbox" class="switch" name="resizeImages" id='resize' value="1" <?php checked($view->data->resizeImages, true);?>>
-									<div class="the_switch">&nbsp; </div>
-									<?php esc_html_e('to maximum','shortpixel-image-optimiser') ?>
+              		<div class="the_switch">&nbsp; </div>
+                  <?php esc_html_e('Resize large images','shortpixel-image-optimiser');?>
 								</label>
-							</div>
+							</switch>
+
+
+            <p>
+            <?php esc_html_e('Resize to maximum','shortpixel-image-optimiser') ?>
 
 						<input type="number" min="1" max="20000" name="resizeWidth" id="width" class="resize-sizes"
 									 value="<?php echo esc_attr( $view->data->resizeWidth > 0 ? $view->data->resizeWidth : min(1200, $view->minSizes['width']) );?>" <?php echo esc_attr( $resizeDisabled );?>/> <?php
@@ -413,7 +412,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
 						<input type="number" min="1" max="20000" name="resizeHeight" id="height" class="resize-sizes"
 									 value="<?php echo esc_attr( $view->data->resizeHeight > 0 ? $view->data->resizeHeight : min(1200, $view->minSizes['height']) );?>" <?php echo esc_attr( $resizeDisabled );?>/> <?php
 									 esc_html_e('pixels high ','shortpixel-image-optimiser');?>
-
+            </p>
 							<info>
 
 								<?php esc_html_e('Preserves the original aspect ratio and doesn\'t crop the image.  Recommended for large photos, like the ones taken with your phone. Saved space can go up to 80% or more after resizing. Please note that this option does not prevent thumbnails from being created that should  be larger than the selected dimensions, but these thumbnails will also be resized to the dimensions selected here.','shortpixel-image-optimiser');?>

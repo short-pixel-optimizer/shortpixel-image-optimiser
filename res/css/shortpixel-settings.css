@@ -230,6 +230,27 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page .shortpixel-settings settinglist {
   display: block;
 }
+.wrap.is-shortpixel-settings-page .shortpixel-settings flexbox {
+  display: flex;
+}
+.wrap.is-shortpixel-settings-page .shortpixel-settings flexbox.width_half > * {
+  width: 50%;
+}
+.wrap.is-shortpixel-settings-page .shortpixel-settings flexbox.column {
+  flex-direction: column;
+}
+.wrap.is-shortpixel-settings-page .shortpixel-settings gridbox {
+  display: grid;
+}
+.wrap.is-shortpixel-settings-page .shortpixel-settings gridbox.width_half {
+  grid-template-columns: repeat(2, 50%);
+}
+.wrap.is-shortpixel-settings-page .shortpixel-settings gridbox.width_half setting:nth-child(1n) {
+  margin-right: 15px;
+}
+.wrap.is-shortpixel-settings-page .shortpixel-settings gridbox.width_70 {
+  grid-template-columns: 70% 30%;
+}
 .wrap.is-shortpixel-settings-page .setting-tab .shortpixel-compression-options label.lossy span {
   border-top-left-radius: 6px;
   border-bottom-left-radius: 6px;
@@ -274,6 +295,25 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page .setting-tab input[name=resizeHeight] {
   background-image: url("../images/icon/arrows-up-down.svg");
+}
+.wrap.is-shortpixel-settings-page .setting-tab .cross-border hr {
+  border: 2px solid #92D5E3;
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin-top: -10px;
+  z-index: 1;
+}
+.wrap.is-shortpixel-settings-page .setting-tab .cross-border .text {
+  text-align: center;
+  background: #fff;
+  padding: 6px;
+  display: inline-block;
+  z-index: 2;
+  padding: 0 6px;
+  font-size: 16px;
+  position: relative;
+  margin-left: 40%;
 }
 .wrap.is-shortpixel-settings-page a {
   color: #0f6a7d;

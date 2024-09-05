@@ -68,5 +68,30 @@
 			 background-image: url('../images/icon/arrows-up-down.svg')
 		}
 
+		// Visual OR in the resize settings.
+		.cross-border
+		{
+
+			 hr {
+				  border: 2px solid $blue_open;
+					position: absolute;
+					left: 0;
+					right: 0;
+					margin-top: -10px;
+					z-index: 1;
+			 }
+			 .text {
+				  text-align: center;
+					background: #fff;
+					padding: 6px;
+					display: inline-block;
+					z-index: 2;
+					padding: 0 6px;
+					font-size: 16px;
+					position: relative;
+					margin-left: 40%;
+			 }
+		}
+
 
 } //setting-tab
