@@ -52,4 +52,21 @@
 		{
 
 		}
+
+		// Resize inputs
+		input[name="resizeWidth"], input[name="resizeHeight"]
+		{
+			 width: 100px;
+			 background: url('../images/icon/arrows-left-right.svg') 4px center no-repeat  #fff;
+			 padding-left: 25px;
+			 border: 1px solid $blue_default;
+
+		}
+
+		input[name="resizeHeight"]
+		{
+			 background-image: url('../images/icon/arrows-up-down.svg')
+		}
+
+
 } //setting-tab

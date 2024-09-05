@@ -127,7 +127,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                   </label>
                 </switch>
 								<name>
-                    <?php printf(esc_html__('Apply compression also to %s image thumbnails.%s ','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
+                    <?php printf(esc_html__('Apply compression to %s image thumbnails.%s ','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
 								</name>
                 <info>
                       <?php printf(esc_html__('It is highly recommended that you optimize the thumbnails as they are usually the images most viewed by end users and can generate most traffic. %s Please note that thumbnails count up to your total quota.','shortpixel-image-optimiser'), '<br>'); ?>
@@ -136,22 +136,236 @@ if (true === \wpSPIO()->env()->useTrustedMode())
           </setting>
           <!-- // Thumbnail compression -->
 
+          <!--- Optimize Other Image -->
+          <setting class='switch'>
+              <content>
+                <switch>
+                  <label>
+                    <input type="checkbox" class="switch" name="optimizeUnlisted" value="1" <?php checked( $view->data->optimizeUnlisted, "1" );?>>
+                    <div class="the_switch">&nbsp; </div>
+                      <?php esc_html_e('Optimize unlisted thumbnails','shortpixel-image-optimiser');?>
+                   </label>
+                </switch>
+                <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/519-settings---optimize-other-thumbs"></i>
+                <name>
+                  <?php esc_html_e('Optimize unlisted thumbnails, if found.','shortpixel-image-optimiser');?>
+                </name>
+
+              </content>
+              <warning class="heavy-feature-virtual unlisted">
+                  <message>
+                    <?php printf(esc_html__('This feature has been disabled in offload mode for performance reasons. You can enable it again with a %s filter hook %s ', 'shortpixel-image-optimiser' ),'<a target="_blank" href="https://shortpixel.com/knowledge-base/article/577-performance-improvement-shortpixel-image-optimization-media-offload-plugin">', '</a>'); ?>
+                  </message>
+              </warning>
+          </setting>
+
+
+          <setting class='switch'>
+            <content>
+              <switch>
+                <label>
+                  <input type="checkbox" class="switch" name="optimizePdfs" value="1" <?php checked( $view->data->optimizePdfs, "1" );?>>
+                  <div class="the_switch">&nbsp; </div>
+                  <?php esc_html_e('Optimize PDFs','shortpixel-image-optimiser');?>
+                </label>
+              </switch>
+               <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/520-settings-optimize-pdfs"></i>
+               <name>
+                 <?php esc_html_e('Also optimize PDF documents.','shortpixel-image-optimiser');?>
+               </name>
+            </content>
+         </setting>
+
+         <!-- Optimize retina -->
+          <setting>
+             <name>
+                 <?php esc_html_e('Optimize Retina images','shortpixel-image-optimiser');?>
+             </name>
+             <content>
+
+               <switch>
+                 <label>
+                   <input type="checkbox" class="switch" name="optimizeRetina" value="1" <?php checked( $view->data->optimizeRetina, "1" );?>>
+                   <div class="the_switch">&nbsp; </div>
+                      <?php esc_html_e('Also optimize the Retina images (@2x) if they exist.','shortpixel-image-optimiser');?>
+                  </label>
+               </switch>
+                <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/518-settings-optimize-retina-images"></i>
+             </content>
+
+             <warning class='heavy-feature-virtual retina'>
+               <message>
+                   <?php printf(esc_html__('This feature has been disabled in offload mode for performance reasons. You can enable it again with a %s filter hook %s ', 'shortpixel-image-optimiser' ),'<a target="_blank" href="https://shortpixel.com/knowledge-base/article/577-performance-improvement-shortpixel-image-optimization-media-offload-plugin">', '</a>'); ?>
+               </message>
+             </warning>
+         </setting>
+
+         <!-- Nextgen setting -->
+         <?php if($this->has_nextgen) : ?>
+          <setting>
+            <name>
+              <?php esc_html_e('NextGen','shortpixel-image-optimiser');?>
+            </name>
+            <content>
+              <switch>
+                <label>
+                  <input name="includeNextGen" type="checkbox" id="nextGen" value='1' <?php echo  checked($view->data->includeNextGen,'1' );?>>
+
+                <div class="the_switch">&nbsp; </div>
+                <?php esc_html_e('Optimize NextGen galleries.','shortpixel-image-optimiser');?>
+              </label>
+            </switch>
+
+            </content>
+         </setting>
+         <?php endif; ?>
+         <!-- // Nextgen setting -->
+
+          <!-- Backup -->
+            <setting class='switch'>
+              <content>
+                <switch>
+                  <label>
+                    <input type="checkbox" class="switch" name="backupImages" value="1" <?php checked($view->data->backupImages, '1');?>>
+                    <div class="the_switch">&nbsp; </div>
+                    <?php esc_html_e('Backup Originals','shortpixel-image-optimiser');?>
+
+                  </label>
+                </switch>
+                <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/515-settings-image-backup"></i>
+                <name>
+                  <?php esc_html_e('Create a backup of the original images, saved on your server in /wp-content/uploads/ShortpixelBackups/.','shortpixel-image-optimiser');?>
+                </name>
+
+
+                <info>
+                  <?php esc_html_e('You can remove the backup folder at any moment but it is best to keep a local/cloud copy, in case you want to restore the optimized files to originals or re-optimize the images using a different compression type.','shortpixel-image-optimiser');?>
+                </info>
+              </content>
+              <warning id="backup-warning">
+                <message>
+                  <?php esc_html_e('Make sure you have a backup in place. When optimizing, ShortPixel will overwrite your images without recovery, which may result in lost images.', 'shortpixel-image-optimiser') ?>
+                </message>
+              </warning>
+            </setting>
+          <!-- // Backup -->
+
+          <h3><?php _e('Conversions', 'shortpixel-image-optimiser'); ?></h3>
+
+
+          <!-- convert png2jpg -->
+          <setting>
+            <name>
+              <?php esc_html_e('Convert PNG images to JPEG','shortpixel-image-optimiser');?>
+            </name>
+            <content>
+              <switch class='option-png2jpg'>
+                <label>
+                  <input type="checkbox" class="switch" name="png2jpg" value="1" <?php checked( ($view->data->png2jpg > 0), true);?> <?php echo($this->is_gd_installed ? '' : 'disabled') ?> data-toggle="png2jpgforce">
+                  <div class="the_switch">&nbsp; </div>
+                  <?php esc_html_e('Automatically convert the PNG images to JPEG, if possible.','shortpixel-image-optimiser'); ?>
+                </label>
+              </switch>
+
+              <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/516-settings-convert-png-images-to-jpeg"></i>
+
+
+              <switch class='switch_button option-png2jpgforce toggleTarget suboption' id="png2jpgforce">
+                <p>&nbsp;</p>
+                <label>
+                  <input type="checkbox" class="switch" name="png2jpgForce" value="1" <?php checked(($view->data->png2jpg > 1), true);?> <?php echo($this->is_gd_installed ? '' : 'disabled') ?>>
+                  <div class="the_switch">&nbsp; </div>
+                  <?php esc_html_e('Also force the conversion of images with transparency (the transparency will be lost).','shortpixel-image-optimiser'); ?>
+                </label>
+              </switch>
+            </content>
+
+            <?php  if(false === $this->is_gd_installed): ?>
+
+            <warning class='is-visible'>
+              <message>
+                  <?php esc_html_e('You need PHP GD with support for JPEG and PNG files for this feature. Please ask your hosting 	provider to install it.','shortpixel-image-optimiser');  ?>
+              </message>
+           </warning>
+           <?php endif; ?>
+
+           <warning class='exif-warning'>
+             <message>
+                <?php printf(esc_html__('Warning - Converting from PNG to JPG will %s not %s keep the EXIF information!', 'shortpixel-image-optimiser'), "<strong>","</strong>"); ?>
+             </message>
+          </warning>
+        </setting>
+        <!-- // convert png2jpg -->
+
+        <!-- Cmyk to rgb -->
+        <setting>
+            <name>
+                <?php esc_html_e('CMYK to RGB conversion','shortpixel-image-optimiser');?>
+            </name>
+            <content>
+
+              <switch>
+                <label>
+                  <input type="checkbox" class="switch" name="cmyk2rgb" value="1" <?php checked( $view->data->CMYKtoRGBconversion, "1" );?>>
+                  <div class="the_switch">&nbsp; </div>
+                  <?php esc_html_e('Adjust your images\' colors for computer and mobile displays.','shortpixel-image-optimiser');?>
+                </label>
+              </switch>
+
+              <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/517-settings---cmyk-to-rgb-conversion"></i>
+
+            </content>
+         </setting>
+         <!-- // Cmyk to rgb -->
+
+          <!-- Remove Exif -->
+          <setting class='switch'>
+            <content>
+              <switch>
+                <label>
+                  <input type="checkbox" class="switch" name="removeExif" value="1" <?php checked($view->data->keepExif, 0);?>>
+                  <div class="the_switch">&nbsp; </div>
+                  <?php esc_html_e('Remove EXIF','shortpixel-image-optimiser');?>
+
+                </label>
+              </switch>
+              <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/483-spai-remove-exif"></i>
+              <name>
+                <?php esc_html_e('Remove the EXIF tag of the image (recommended).','shortpixel-image-optimiser');?>
+
+              </name>
+            </content>
+            <warning class="exif-warning">
+              <message>
+                <?php printf(esc_html__('Warning - Converting from PNG to JPG will %s not %s keep the EXIF information!'), "<strong>","</strong>"); ?>
+              </message>
+            </warning>
+            <?php $imagick = (\wpSPIO()->env()->hasImagick()) ? 1 : 0; ?>
+            <warning id="exif-imagick-warning" data-imagick="<?php echo esc_attr($imagick) ?>">
+                <message>
+                  <?php printf(esc_html__('Warning - Imagick library not detected on server. WordPress will use another library to resize images, which may result in loss of EXIF information'), "<strong>","</strong>"); ?>
+                </message>
+            </warning>
+          </setting>
+          <!-- // Remove Exif -->
+
+          <h3><?php _e('Smartcrop & Resize', 'shortpixel-image-optimiser'); ?></h3>
+
           <!-- Enable Smartcrop -->
             <setting class='switch'>
-              <name>
-                  <?php esc_html_e('Enable SmartCrop:','shortpixel-image-optimiser');?>
-              </name>
               <content>
                 <switch>
                   <label>
                     <input type="checkbox" class="switch" name="useSmartcrop" value="1" <?php checked($view->data->useSmartcrop, '1');?>>
                     <div class="the_switch">&nbsp; </div>
-                    <?php printf(esc_html__('Enable %s Smart cropping %s of the images where applicable.','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
+                    <?php esc_html_e('Enable SmartCrop:','shortpixel-image-optimiser');?>
+
                   </label>
                 </switch>
-
                 <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/182-what-is-smart-cropping"></i>
-
+                <name>
+                    <?php printf(esc_html__('%s Smart crop %s images where applicable.','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
+                </name>
                 <info>
                   <?php printf(esc_html__('Generate subject-centered thumbnails using ShortPixel\'s AI engine (%sexample%s). The new thumbnails look sharper (and can be slightly bigger) than the ones created by WordPress. Ideal for e-commerce websites and blogs where the images sell the products/content.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/182-what-is-smart-cropping" target="_blank">', '</a>'); ?>
                 </info>
@@ -170,61 +384,6 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                 </warning>
             </setting>
           <!-- // Enable Smartcrop -->
-
-          <!-- Backup -->
-            <setting>
-              <name>
-                <?php esc_html_e('Backup','shortpixel-image-optimiser');?>
-              </name>
-              <content>
-                <switch>
-                  <label>
-                    <input type="checkbox" class="switch" name="backupImages" value="1" <?php checked($view->data->backupImages, '1');?>>
-                    <div class="the_switch">&nbsp; </div>
-                   <?php esc_html_e('Create a backup of the original images, saved on your server in /wp-content/uploads/ShortpixelBackups/.','shortpixel-image-optimiser');?>
-                  </label>
-                </switch>
-                <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/515-settings-image-backup"></i>
-                <info>
-                  <?php esc_html_e('You can remove the backup folder at any moment but it is best to keep a local/cloud copy, in case you want to restore the optimized files to originals or re-optimize the images using a different compression type.','shortpixel-image-optimiser');?>
-                </info>
-              </content>
-              <warning id="backup-warning">
-                <message>
-                  <?php esc_html_e('Make sure you have a backup in place. When optimizing, ShortPixel will overwrite your images without recovery, which may result in lost images.', 'shortpixel-image-optimiser') ?>
-                </message>
-              </warning>
-            </setting>
-          <!-- // Backup -->
-
-          <!-- Remove Exif -->
-          <setting>
-            <name>
-              <?php esc_html_e('Remove EXIF','shortpixel-image-optimiser');?>
-            </name>
-            <content>
-              <switch>
-                <label>
-                  <input type="checkbox" class="switch" name="removeExif" value="1" <?php checked($view->data->keepExif, 0);?>>
-                  <div class="the_switch">&nbsp; </div>
-                  <?php esc_html_e('Remove the EXIF tag of the image (recommended).','shortpixel-image-optimiser');?>
-                </label>
-              </switch>
-              <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/483-spai-remove-exif"></i>
-            </content>
-            <warning class="exif-warning">
-              <message>
-                <?php printf(esc_html__('Warning - Converting from PNG to JPG will %s not %s keep the EXIF information!'), "<strong>","</strong>"); ?>
-              </message>
-            </warning>
-            <?php $imagick = (\wpSPIO()->env()->hasImagick()) ? 1 : 0; ?>
-            <warning id="exif-imagick-warning" data-imagick="<?php echo esc_attr($imagick) ?>">
-                <message>
-                  <?php printf(esc_html__('Warning - Imagick library not detected on server. WordPress will use another library to resize images, which may result in loss of EXIF information'), "<strong>","</strong>"); ?>
-                </message>
-            </warning>
-          </setting>
-          <!-- // Remove Exif -->
 
           <!-- Resize Large Image -->
           <setting>
@@ -253,10 +412,11 @@ if (true === \wpSPIO()->env()->useTrustedMode())
 
 						<input type="number" min="1" max="20000" name="resizeHeight" id="height" class="resize-sizes"
 									 value="<?php echo esc_attr( $view->data->resizeHeight > 0 ? $view->data->resizeHeight : min(1200, $view->minSizes['height']) );?>" <?php echo esc_attr( $resizeDisabled );?>/> <?php
-									 esc_html_e('pixels high (preserves the original aspect ratio and doesn\'t crop the image)','shortpixel-image-optimiser');?>
+									 esc_html_e('pixels high ','shortpixel-image-optimiser');?>
 
 							<info>
-								<?php esc_html_e('Recommended for large photos, like the ones taken with your phone. Saved space can go up to 80% or more after resizing. Please note that this option does not prevent thumbnails from being created that should  be larger than the selected dimensions, but these thumbnails will also be resized to the dimensions selected here.','shortpixel-image-optimiser');?>
+
+								<?php esc_html_e('Preserves the original aspect ratio and doesn\'t crop the image.  Recommended for large photos, like the ones taken with your phone. Saved space can go up to 80% or more after resizing. Please note that this option does not prevent thumbnails from being created that should  be larger than the selected dimensions, but these thumbnails will also be resized to the dimensions selected here.','shortpixel-image-optimiser');?>
                 <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/208-can-shortpixel-automatically-resize-new-image-uploads"></i>
 							</info>
 
@@ -297,9 +457,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
     </settinglist>
 
 
-  <p class="submit">
-      <input type="submit" name="save" id="save" class="button button-primary" title="<?php esc_attr_e('Save Changes','shortpixel-image-optimiser');?>" value="<?php esc_attr_e('Save Changes','shortpixel-image-optimiser');?>"> &nbsp;
-      <input type="submit" name="save_bulk" id="bulk" class="button button-primary" title="<?php esc_attr_e('Save and go to the Bulk Processing page','shortpixel-image-optimiser');?>" value="<?php esc_attr_e('Save and Go to Bulk Process','shortpixel-image-optimiser');?>"> &nbsp;
-  </p>
+
+    <?php $this->loadView('settings/part-savebuttons', false); ?>
 
 </section>

@@ -49,11 +49,13 @@ setting{
       box-shadow: 0 1px 1px 0 rgba( 0, 0, 0, 0.1 );
       padding: 8px;
 //      margin-left: 230px;
-      margin: 4px 0 12px 230px;
+      margin: 4px 0 12px 0px;
       flex-basis: 100%;
       display: none;
       opacity: 0;
       transition: opacity 300ms;
+      background: #fff;
+      max-width: 700px;
 
       h4 {
         margin: 0;
@@ -65,7 +67,7 @@ setting{
          font-size: 13px;
       }
       &.is-visible {
-          display: inline-block;
+          display: block;
       }
   }
 	error {
@@ -81,7 +83,7 @@ setting{
 
 	&.switch
 	{
-		name, info {
+		name, info, warning, error {
 			 margin-left: 70px;
 		}
 	}

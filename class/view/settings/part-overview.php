@@ -97,6 +97,6 @@ if ( ! defined( 'ABSPATH' ) ) {
     </setting>
   </settinglist>
 
-  <?php $this->loadView('settings/part-savebuttons'); ?>
+  <?php $this->loadView('settings/part-savebuttons', false); ?>
 
 </section>

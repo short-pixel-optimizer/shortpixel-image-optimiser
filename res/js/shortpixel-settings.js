@@ -139,16 +139,30 @@ class ShortPixelSettings
 		var warning = document.querySelector('.exif-warning');
 
 		updateShowWarning(remove_elements, warning);
+		if (ifAllChecked(remove_elements, '')) // warning are hid by default, show them if on load relevant.
+		{
+			 this.ShowElement(warning);
+		}
 
 		var elements = document.querySelectorAll('input[name="backupImages"]');
   	var warning =  document.querySelector('#backup-warning');
 
 		updateShowWarning(elements, warning, 'reverse');
+		if (ifAllChecked(elements, 'reverse'))
+		{
+			 this.ShowElement(warning);
+		}
+
 
 		var elements = document.querySelectorAll('input[name="offload-active"], input[name="useSmartcrop"]');
 		var warning = document.querySelector('#smartcrop-warning');
 
 		updateShowWarning(elements, warning);
+		if (ifAllChecked(elements, ''))
+		{
+			 this.ShowElement(warning);
+		}
+
 
 	}
 

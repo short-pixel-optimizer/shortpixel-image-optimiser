@@ -1,5 +1,11 @@
 
+
+// Font family not working in wraps
 @import 'view/settings-fonts';
+
+// This one loads at end of body, so needs global as well
+@import 'view/inline-help';
+
 
 .wrap.is-shortpixel-settings-page
 {
@@ -12,7 +18,6 @@
   @import 'view/settings-advanced';
 
   @import 'view/settings-tools';
-  @import 'view/inline-help';
   @import 'view/settings-icons';
 
   @import 'elements/setting';
