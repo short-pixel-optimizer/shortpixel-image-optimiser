@@ -291,6 +291,10 @@ class AjaxController
 					 case 'recheckActive':
 					 		$json = $this->recheckActive($json, $data);
 					 break;
+					 case 'settings/changemode':
+					 	Log::addTemp('changemode', $data);
+					 		$json = \wpSPIO()->settings()->handleChangeMode($data);
+					 break;
            default:
               $json->$type->message = __('Ajaxrequest - no action found', 'shorpixel-image-optimiser');
               $json->error = self::NO_ACTION;

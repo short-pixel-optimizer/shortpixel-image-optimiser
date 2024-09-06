@@ -6,6 +6,12 @@
 		 {
 			  display: none;
 		 }
+		 #viewmode-toggle .advanced { display: none; }
+	}
+
+	&.advanced
+	{
+		 #viewmode-toggle .simple { display: none; }
 	}
 
 	// The Header

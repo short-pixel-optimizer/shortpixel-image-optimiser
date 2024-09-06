@@ -186,6 +186,20 @@ class SettingsController extends \ShortPixel\ViewController
 
 			}
 
+      public function handleChangeMode($data)
+      {
+          //$user_id = get_current_user_id();
+          $new_mode = isset($_POST['new_mode']) ? sanitize_text_field($_POST['new_mode']) : false;
+
+          if(false === $new_mode)
+          {
+             return false;
+          }
+
+          update_user_option('shortpixel-settings-mode', $new_mode);
+
+      }
+
 
 			public function action_debug_redirectBulk()
 			{
@@ -349,7 +363,8 @@ class SettingsController extends \ShortPixel\ViewController
 				exit('reloading settings would cause processorKey to be set again');
 			}
 
-      public function processSave()
+
+      protected function processSave()
       {
           // Split this in the several screens. I.e. settings, advanced, Key Request IF etc.
           if (isset($this->postData['includeNextGen']) && $this->postData['includeNextGen'] == 1)
@@ -430,7 +445,10 @@ class SettingsController extends \ShortPixel\ViewController
            $this->avifServerCheck();
 
          // Set viewMode
-         $this->view_mode = $this->view->data->viewMode;
+         $view_mode = get_user_option('shortpixel-settings-mode');
+         if (false === $view_mode)
+          $view_mode = $this->view_mode;
+         $this->view_mode = $view_mode;
          $this->loadView('view-settings');
       }
 

@@ -7,6 +7,7 @@ class ShortPixelSettings
 	 tab_elements = {};
 	 menu_elements = [];
 	 current_tab; // string, the name of the tab.
+	 current_mode = 'simple';
 	 root; // top of settings page.
 
 	 Init()
@@ -225,7 +226,25 @@ class ShortPixelSettings
 
   SwitchViewModeEvent(event)
 	{
+		var new_mode = (this.current_mode == 'simple') ? 'advanced' : 'simple';
 
+		var data = {};
+		data.type = 'settings';
+		data.screen_action = 'settings/changemode';
+		data.new_mode = new_mode;
+
+		window.ShortPixelProcessor.AjaxRequest(data);
+
+		// Perhaps this.root should point to this one.
+		var rootElement = document.querySelector('.wrap.is-shortpixel-settings-page');
+
+		if (null !== rootElement)
+		{
+			  rootElement.classList.remove('simple','advanced');
+				rootElement.classList.add(new_mode);
+		}
+
+		this.current_mode = new_mode;
 	}
 
 	SwitchMenuTabEvent(event)

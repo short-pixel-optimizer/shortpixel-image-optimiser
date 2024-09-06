@@ -17,7 +17,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 
   <div class='top-buttons'>
     <button><i class='shortpixel-icon notifications'></i><?php _e('Notifications','shortpixel-image-optimiser'); ?></button>
-    <button id="viewmode-toggle"><i class='shortpixel-icon switch'></i><?php _e('Advanced', 'shortpixel-image-optimiser'); ?></button>
+    <button id="viewmode-toggle"><i class='shortpixel-icon switch'></i>
+      <span class='advanced'><?php _e('Advanced', 'shortpixel-image-optimiser'); ?></span>
+      <span class='simple'><?php _e('Simple', 'shortpixel-image-optimiser'); ?></span>
+    </button>
   </div>
 </header>
 
@@ -85,6 +88,7 @@ if ( ! defined( 'ABSPATH' ) ) {
           <?php $this->loadView('settings/part-optimisation'); ?>
           <?php $this->loadView('settings/part-processing'); ?>
           <?php $this->loadView('settings/part-webp'); ?>
+
 
           <?php $this->loadView('settings/part-tools'); ?>
           <?php

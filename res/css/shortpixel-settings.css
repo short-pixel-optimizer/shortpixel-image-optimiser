@@ -127,6 +127,12 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page.simple .is-advanced {
   display: none;
 }
+.wrap.is-shortpixel-settings-page.simple #viewmode-toggle .advanced {
+  display: none;
+}
+.wrap.is-shortpixel-settings-page.advanced #viewmode-toggle .simple {
+  display: none;
+}
 .wrap.is-shortpixel-settings-page header {
   background: #fff;
   text-align: center;

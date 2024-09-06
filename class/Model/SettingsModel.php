@@ -55,7 +55,6 @@ class SettingsModel extends \ShortPixel\Model
 				'redirectedSettings' => ['s' => 'int', 'default' => null], // controls initial redirect to SPIO settings
 				'unlistedCounter' => ['s' => 'int', 'default' => 0], // counter to prevent checking unlisted files too much
 				'currentStats' => ['s' => 'array', 'default' => array()], // whatever the current stats are.
-        'viewMode' => ['s' => 'string', 'default' => 'simple'], // To show all settings, or limited amount.
 
     );
 

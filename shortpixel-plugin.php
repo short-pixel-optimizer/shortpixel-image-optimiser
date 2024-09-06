@@ -347,6 +347,7 @@ class ShortPixelPlugin {
 		wp_register_script('shortpixel-shiftselect', plugins_url('res/js/shift-select.js', SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
 		wp_localize_script('shortpixel-settings', 'settings_strings', UiHelper::getSettingsStrings(false));
+		
 
 		wp_register_script('shortpixel-media', plugins_url('res/js/shortpixel-media.js',  SHORTPIXEL_PLUGIN_FILE), array('jquery'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
