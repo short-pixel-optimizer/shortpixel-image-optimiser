@@ -40,6 +40,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<li>
           <?php echo $this->settingLink('optimisation', __("Image optimisation", "shortpixel-image-optimiser"), 'shortpixel-icon image_optimization'); ?>
         </li>
+        <li class='is_advanced'>
+          <?php echo $this->settingLink('processing', __("Processing", "shortpixel-image-optimiser"), 'shortpixel-icon processing'); ?>
+        </li>
+        <li>
+          <?php echo $this->settingLink('cdn', __("Exclusions", "shortpixel-image-optimiser"), 'shortpixel-icon exclude'); ?>
+        </li>
+
         <li>
           <?php echo $this->settingLink('webp', __("Webp/Avif", "shortpixel-image-optimiser"), 'shortpixel-icon webp_avif'); ?>
         </li>
@@ -76,6 +83,7 @@ if ( ! defined( 'ABSPATH' ) ) {
           <?php $this->loadView('settings/part-overview'); ?>
           <?php $this->loadView('settings/part-general'); ?>
           <?php $this->loadView('settings/part-optimisation'); ?>
+          <?php $this->loadView('settings/part-processing'); ?>
           <?php $this->loadView('settings/part-webp'); ?>
 
           <?php $this->loadView('settings/part-tools'); ?>

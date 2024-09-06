@@ -44,30 +44,31 @@ if( $this->is_nginx ){
 
 <settinglist>
 
+  <h2><?php esc_html_e('Next Generation Images','shortpixel-image-optimiser');?></h2>
+
   <!-- next generation -->
-  <setting>
-    <name>
-      <?php esc_html_e('Next Generation Images','shortpixel-image-optimiser');?>
-    </name>
+  <setting class='switch'>
+
     <content>
 
       <switch>
         <label>
           <input type="checkbox" class="switch" name="createWebp" value="1" <?php checked( $view->data->createWebp, "1" );?>>
           <div class="the_switch">&nbsp; </div>
-           <?php printf(esc_html__('Create %s WebP versions %s of the images. Each image/thumbnail will use an additional credit unless you use the %s Unlimited plan. %s','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/blog/how-webp-images-can-speed-up-your-site/" target="_blank">', '</a>', '<a href="https://shortpixel.com/knowledge-base/article/555-how-does-the-unlimited-plan-work" target="_blank">', '</a>' );?>
+          <?php esc_html_e('Create Webp Images'); ?>
         </label>
       </switch>
 
         <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/286-how-to-serve-webp-files-using-spio"></i>
 
-    </content>
+      </content>
+      <info>           <?php printf(esc_html__('Create %s WebP versions %s of the images. Each image/thumbnail will use an additional credit unless you use the %s Unlimited plan. %s','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/blog/how-webp-images-can-speed-up-your-site/" target="_blank">', '</a>', '<a href="https://shortpixel.com/knowledge-base/article/555-how-does-the-unlimited-plan-work" target="_blank">', '</a>' );?></info>
   </setting>
   <!-- /next generation -->
 
   <!-- avif -->
-  <setting>
-      <name>&nbsp;</name>
+  <setting class='switch'>
+
       <content>
         <?php
           $avifEnabled = $this->access()->isFeatureAvailable('avif');
@@ -82,16 +83,16 @@ if( $this->is_nginx ){
              $avifEnabledNotice .= '</div>';
           }
         ?>
-
       <switch>
          <label>
            <input type="checkbox" class="switch" name="createAvif" value="1" <?php echo $disabled ?> <?php checked( $createAvifChecked );?>>
            <div class="the_switch">&nbsp; </div>
-           <?php printf(esc_html__('Create %s AVIF versions %s of the images. Each image/thumbnail will use an additional credit. ','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/blog/what-is-avif-and-why-is-it-good/" target="_blank">', '</a>');?>
+           <?php esc_html_e('Create Avif Images'); ?>
          </label>
        </switch>
 
        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/467-how-to-create-and-serve-avif-files-using-shortpixel-image-optimizer"></i>
+
 
        <?php if(strlen($deliverAVIFLabel)){ ?>
                     <p class="sp-notice sp-notice-warning">
@@ -101,6 +102,9 @@ if( $this->is_nginx ){
        <?php if ($avifEnabledNotice !== false) {  echo $avifEnabledNotice;  } ?>
 
       </content>
+      <info>
+         <?php printf(esc_html__('Create %s AVIF versions %s of the images. Each image/thumbnail will use an additional credit. ','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/blog/what-is-avif-and-why-is-it-good/" target="_blank">', '</a>');?>
+      </info>
   </setting>
   <!-- // avif -->
 
