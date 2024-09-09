@@ -31,8 +31,8 @@ class CloudFlareAPI {
 
     public function setup()
     {
-        $this->email =   \wpSPIO()->settings()->cloudflareEmail;
-        $this->authkey = \wpSPIO()->settings()->cloudflareAuthKey;
+      //  $this->email =   \wpSPIO()->settings()->cloudflareEmail;
+      //  $this->authkey = \wpSPIO()->settings()->cloudflareAuthKey;
         $this->zone_id =  (defined('SHORTPIXEL_CFZONE') ) ? SHORTPIXEL_CFZONE : \wpSPIO()->settings()->cloudflareZoneID;
 
         $this->token = (defined('SHORTPIXEL_CFTOKEN') ) ? SHORTPIXEL_CFTOKEN : \wpSPIO()->settings()->cloudflareToken;
@@ -42,10 +42,12 @@ class CloudFlareAPI {
           $this->use_token = true;
           $this->config_ok = true;
         }
-        elseif(! empty($this->email) && ! empty($this->authkey) && ! empty($this->zone_id))
+
+        // Removed
+      /*  elseif(! empty($this->email) && ! empty($this->authkey) && ! empty($this->zone_id))
         {
           $this->config_ok = true;
-        }
+        } */
 
 
         $this->setup_done = true;
@@ -76,6 +78,7 @@ class CloudFlareAPI {
     private function start_cloudflare_cache_purge_process( $imageItem ) {
 
 
+Log::addTemp('Checking CloudFlare');
         // Fetch CloudFlare API credentials
 
             // Fetch all WordPress install possible thumbnail sizes ( this will not return the full size option )
@@ -133,7 +136,7 @@ class CloudFlareAPI {
 
 
                 $response = $this->delete_url_cache_request_action($image_paths);
-
+Log::addTemp('RESPONSE', $response);
                 // Start the process of cache purge
             /*    $request_response = $this->delete_url_cache_request_action( "https://api.cloudflare.com/client/v4/zones/" . $cloudflare_zone_id . "/purge_cache", $dispatch_purge_info, $dispatch_header ); */
 

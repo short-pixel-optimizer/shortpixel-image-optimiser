@@ -43,7 +43,7 @@ class SettingsModel extends \ShortPixel\Model
         'excludeSizes' => ['s' => 'array', 'default' => array()], // Array
         'cloudflareZoneID' => ['s' => 'string', 'default' => ''], // string
         'cloudflareToken' => ['s' => 'string', 'default' => ''],
-				'doBackgroundProcess' => ['s' => 'boolean', 'default' => false], // checkbox'
+				'doBackgroundProcess' => ['s' => 'boolean', 'default' => false], // checkbox
 				'showCustomMedia' => ['s' => 'boolean', 'default' => true],
 				'mediaLibraryViewMode' => ['s' => 'int', 'default' => false], // set in installhelper
 				'currentVersion' => ['s' => 'string', 'default' => null], // last known version of plugin. Used for updating
@@ -132,7 +132,7 @@ class SettingsModel extends \ShortPixel\Model
 		// Simple function which can be expanded.
 		public function exists($name)
 		{
-			  return (isset($this->module[$name])) ? true : false;
+			  return (isset($this->model[$name])) ? true : false;
 		}
 
 		public function isset($name)

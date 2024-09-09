@@ -12,10 +12,10 @@ setting{
 	//flex-direction: column;
 
   // when showing on a toggle, force flex.
-  &.toggleTarget.is-visible
+/*  &.toggleTarget.is-visible
   {
-     display: flex !important;
-  }
+     //display: flex !important;
+  } */
 
   // main title of setting
   name {
@@ -34,6 +34,7 @@ setting{
      padding: 15px 10px;
      flex-basis: calc(100% - 250px);
      font-size: 14px;
+     display: inline-block;
   }
   // additional information
   info {
@@ -89,21 +90,3 @@ setting{
 	}
 
 } // setting
-
-
-settinggrid
-{
-  min-height: 100%;
-  display: flex;
-  flex-wrap: wrap;
-  flex-direction: row;
-    > setting {
-      display: flex;
-      flex-basis: calc(50% - 40px);
-      justify-content: center;
-      flex-direction: column;
-      align-items: flex-start;
-      margin-left: 2%;
-
-    }
-}

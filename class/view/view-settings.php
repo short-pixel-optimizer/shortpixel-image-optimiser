@@ -41,23 +41,24 @@ if ( ! defined( 'ABSPATH' ) ) {
           <?php echo $this->settingLink('overview', __("Overview", "shortpixel-image-optimiser"), 'shortpixel-icon dashboard'); ?>
         </li>
 				<li>
-          <?php echo $this->settingLink('optimisation', __("Image optimisation", "shortpixel-image-optimiser"), 'shortpixel-icon image_optimization'); ?>
+          <?php echo $this->settingLink('optimisation', __("Image optimisation", "shortpixel-image-optimiser"), 'shortpixel-icon optimization'); ?>
         </li>
-        <li class='is_advanced'>
+        <li class='is-advanced'>
           <?php echo $this->settingLink('processing', __("Processing", "shortpixel-image-optimiser"), 'shortpixel-icon processing'); ?>
         </li>
-        <li>
-          <?php echo $this->settingLink('cdn', __("Exclusions", "shortpixel-image-optimiser"), 'shortpixel-icon exclude'); ?>
-        </li>
-
         <li>
           <?php echo $this->settingLink('webp', __("Webp/Avif", "shortpixel-image-optimiser"), 'shortpixel-icon webp_avif'); ?>
         </li>
 				<li>
           <?php echo $this->settingLink('delivery', __("Delivery", "shortpixel-image-optimiser"), 'shortpixel-icon delivery'); ?>
         </li>
+
 				<li>
           <?php echo $this->settingLink('cdn', __("CDN", "shortpixel-image-optimiser"), 'shortpixel-icon cdn'); ?>
+        </li>
+
+        <li>
+          <?php echo $this->settingLink('exclusions', __("Exclusions", "shortpixel-image-optimiser"), 'shortpixel-icon exclude'); ?>
         </li>
 
 				<li class='is-advanced'>
@@ -88,6 +89,8 @@ if ( ! defined( 'ABSPATH' ) ) {
           <?php $this->loadView('settings/part-optimisation'); ?>
           <?php $this->loadView('settings/part-processing'); ?>
           <?php $this->loadView('settings/part-webp'); ?>
+          <?php $this->loadView('settings/part-cdn'); ?>
+          <?php $this->loadView('settings/part-exclusions'); ?>
 
 
           <?php $this->loadView('settings/part-tools'); ?>
@@ -121,23 +124,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 	        <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
 
         <?php
-        $this->loadView('settings/part-general');
-        $this->loadView('settings/part-advanced');
-        if (! $this->view->cloudflare_constant)
+      //  $this->loadView('settings/part-general');
+      //  $this->loadView('settings/part-advanced');
+        if (! $this->view->cloudflare_constant) // @todo
         {
-          $this->loadView('settings/part-cloudflare');
+          //$this->loadView('settings/part-cloudflare');
         }
-        if ($view->averageCompression !== null)
-        {
-    //     $this->loadView('settings/part-statistics');
-        }
+
 
         ?>
 			</form>
 			<?php
 				if (Log::debugIsActive())
         {
-          $this->loadView('settings/part-debug');
+          //$this->loadView('settings/part-debug');
         }
 				?>
 			</div> <!-- wrappur -->

@@ -186,20 +186,6 @@ class SettingsController extends \ShortPixel\ViewController
 
 			}
 
-      public function handleChangeMode($data)
-      {
-          //$user_id = get_current_user_id();
-          $new_mode = isset($_POST['new_mode']) ? sanitize_text_field($_POST['new_mode']) : false;
-
-          if(false === $new_mode)
-          {
-             return false;
-          }
-
-          update_user_option('shortpixel-settings-mode', $new_mode);
-
-      }
-
 
 			public function action_debug_redirectBulk()
 			{

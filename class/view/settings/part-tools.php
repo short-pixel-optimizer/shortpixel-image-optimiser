@@ -14,7 +14,7 @@ $queueRunning = $bulk->isAnyBulkRunning();
 
 ?>
 
-<section id="tab-tools" class="clearfix <?php echo ($this->display_part == 'tools') ? 'active setting-tab' :'setting-tab'; ?>" data-part="tools">
+<section id="tab-tools" class="<?php echo ($this->display_part == 'tools') ? 'active setting-tab' :'setting-tab'; ?>" data-part="tools">
 
 	<p><?php printf(esc_html__('The tools provided below are designed to make bulk changes to your image and optimization data. Therefore, it is %s very important %s that you back up your entire website before running them. ', 'shortpixel-image-optimiser'), '<b>', '</b>'); ?></p>
 

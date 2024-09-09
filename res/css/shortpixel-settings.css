@@ -321,6 +321,46 @@ div.spio-modal-title {
   position: relative;
   margin-left: 40%;
 }
+.wrap.is-shortpixel-settings-page .setting-tab .presentation-wrap {
+  padding: 10px;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  width: 600px;
+}
+.wrap.is-shortpixel-settings-page .setting-tab .presentation-wrap img {
+  margin: auto;
+}
+@media (max-width: 1280px) {
+  .wrap.is-shortpixel-settings-page .setting-tab .presentation-wrap {
+    width: 460px;
+  }
+}
+@media (max-width: 1140px) {
+  .wrap.is-shortpixel-settings-page .setting-tab .presentation-wrap {
+    width: 320px;
+  }
+}
+.wrap.is-shortpixel-settings-page .setting-tab .spai-resize-frame {
+  position: absolute;
+  border: 2px dashed #fd1d1d;
+}
+.wrap.is-shortpixel-settings-page .setting-tab .spai-resize-frame:after {
+  font-size: 10px;
+  font-weight: bold;
+  position: absolute;
+  bottom: -15px;
+  right: 0;
+  color: red;
+}
+.wrap.is-shortpixel-settings-page .setting-tab .resize-options-wrap {
+  margin: 10px 20px 0 20px;
+  float: left;
+}
+.wrap.is-shortpixel-settings-page .setting-tab .resize-type-wrap label {
+  display: inline-block;
+  padding: 15px 0 0 0;
+}
 .wrap.is-shortpixel-settings-page a {
   color: #0f6a7d;
 }
@@ -331,22 +371,6 @@ div.spio-modal-title {
   color: #ff0000;
   font-weight: 500;
   margin-left: 2px;
-}
-.wrap.is-shortpixel-settings-page .clearfix {
-  zoom: 1;
-}
-.wrap.is-shortpixel-settings-page .clearfix:before, .wrap.is-shortpixel-settings-page .clearfix:after {
-  content: " ";
-  display: table;
-}
-.wrap.is-shortpixel-settings-page .clearfix:after {
-  clear: both;
-}
-.wrap.is-shortpixel-settings-page .form-table th {
-  width: 220px;
-}
-.wrap.is-shortpixel-settings-page .form-table td {
-  position: relative;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-key-valid {
   margin-top: 16px;
@@ -447,9 +471,6 @@ div.spio-modal-title {
     height: 100px;
   }
 }
-.wrap.is-shortpixel-settings-page .wp-shortpixel-tab-content {
-  transition: all 1000ms linear;
-}
 .wrap.is-shortpixel-settings-page .red {
   color: #ff0000;
 }
@@ -464,107 +485,23 @@ div.spio-modal-title {
   text-decoration: none;
   margin-top: -1px;
 }
-.wrap.is-shortpixel-settings-page article.sp-tabs section p.settings-info {
-  padding-top: 0px;
-  color: #818181;
-  font-size: 13px !important;
-}
-.wrap.is-shortpixel-settings-page article.sp-tabs section p.settings-info.shortpixel-settings-error {
-  color: #c32525;
-}
-.wrap.is-shortpixel-settings-page article.sp-tabs section .wp-shortpixel-tab-content {
-  opacity: 0;
-}
-.wrap.is-shortpixel-settings-page article.sp-tabs section.sel-tab .wp-shortpixel-tab-content {
-  opacity: 1;
-}
-.wrap.is-shortpixel-settings-page article.sp-tabs section .option-content {
+.wrap.is-shortpixel-settings-page section.setting-tab .option-content {
   display: inline-block;
 }
-.wrap.is-shortpixel-settings-page article.sp-tabs section .suboption {
-  margin-left: 20px;
-}
-.wrap.is-shortpixel-settings-page article.sp-tabs section .toggleTarget {
+.wrap.is-shortpixel-settings-page section.setting-tab .toggleTarget {
   display: none;
   opacity: 0;
   height: 0;
   overflow: hidden;
   transition: height 350ms ease-in-out, opacity 750ms ease-in-out;
 }
-.wrap.is-shortpixel-settings-page article.sp-tabs section .modalTarget {
+.wrap.is-shortpixel-settings-page section.setting-tab .modalTarget {
   display: none;
 }
-.wrap.is-shortpixel-settings-page article.sp-tabs section .toggleTarget.is-visible {
+.wrap.is-shortpixel-settings-page section.setting-tab .toggleTarget.is-visible {
   display: block;
   opacity: 1;
   height: auto;
-}
-.wrap.is-shortpixel-settings-page article.sp-tabs section h2 {
-  position: absolute;
-  font-size: 1.3em;
-  font-weight: normal;
-  width: 180px;
-  height: 1.8em;
-  top: -1.8em;
-  left: 10px;
-  padding: 0;
-  margin: 0;
-  color: #999;
-  background-color: #ddd;
-}
-@media (max-width: 991px) {
-  .wrap.is-shortpixel-settings-page article.sp-tabs section h2 {
-    width: 140px;
-  }
-}
-.wrap.is-shortpixel-settings-page article.sp-tabs section h2 a {
-  display: block;
-  width: 100%;
-  line-height: 1.8em;
-  text-align: center;
-  text-decoration: none;
-  color: #23282d;
-  outline: 0 none;
-}
-.wrap.is-shortpixel-settings-page article.sp-tabs section.sel-tab h2 {
-  color: #333;
-  background-color: #fff;
-  z-index: 2;
-}
-.wrap.is-shortpixel-settings-page article.sp-tabs section:nth-of-type(2) h2 {
-  left: 192px;
-}
-@media (max-width: 991px) {
-  .wrap.is-shortpixel-settings-page article.sp-tabs section:nth-of-type(2) h2 {
-    left: 152px;
-  }
-}
-.wrap.is-shortpixel-settings-page article.sp-tabs section:nth-of-type(3) h2 {
-  left: 374px;
-}
-@media (max-width: 991px) {
-  .wrap.is-shortpixel-settings-page article.sp-tabs section:nth-of-type(3) h2 {
-    left: 294px;
-  }
-}
-.wrap.is-shortpixel-settings-page article.sp-tabs section:nth-of-type(4) h2 {
-  left: 556px;
-}
-@media (max-width: 991px) {
-  .wrap.is-shortpixel-settings-page article.sp-tabs section:nth-of-type(4) h2 {
-    left: 436px;
-  }
-}
-.wrap.is-shortpixel-settings-page article.sp-tabs section:nth-of-type(5) h2 {
-  left: 738px;
-}
-@media (max-width: 991px) {
-  .wrap.is-shortpixel-settings-page article.sp-tabs section:nth-of-type(5) h2 {
-    left: 578px;
-  }
-}
-.wrap.is-shortpixel-settings-page article.sp-tabs section:nth-of-type(6) h2 {
-  left: 920px;
 }
 .wrap.is-shortpixel-settings-page section#tab-debug h2 {
   left: 738px;
@@ -663,46 +600,6 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page .view-notice-row {
   display: none;
-}
-.wrap.is-shortpixel-settings-page #tab-settings .presentation-wrap {
-  padding: 10px;
-  text-align: center;
-  display: flex;
-  justify-content: center;
-  width: 600px;
-}
-.wrap.is-shortpixel-settings-page #tab-settings .presentation-wrap img {
-  margin: auto;
-}
-@media (max-width: 1280px) {
-  .wrap.is-shortpixel-settings-page #tab-settings .presentation-wrap {
-    width: 460px;
-  }
-}
-@media (max-width: 1140px) {
-  .wrap.is-shortpixel-settings-page #tab-settings .presentation-wrap {
-    width: 320px;
-  }
-}
-.wrap.is-shortpixel-settings-page #tab-settings .spai-resize-frame {
-  position: absolute;
-  border: 2px dashed #fd1d1d;
-}
-.wrap.is-shortpixel-settings-page #tab-settings .spai-resize-frame:after {
-  font-size: 10px;
-  font-weight: bold;
-  position: absolute;
-  bottom: -15px;
-  right: 0;
-  color: red;
-}
-.wrap.is-shortpixel-settings-page #tab-settings .resize-options-wrap {
-  margin: 10px 20px 0 20px;
-  float: left;
-}
-.wrap.is-shortpixel-settings-page #tab-settings .resize-type-wrap label {
-  display: inline-block;
-  padding: 15px 0 0 0;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper {
   display: flex;
@@ -804,28 +701,28 @@ div.spio-modal-title {
   height: 12px;
   margin-right: 4px;
 }
-.wrap.is-shortpixel-settings-page #shortpixel-settings-tabs #tab-adv-settings .excludeSizeOption {
+.wrap.is-shortpixel-settings-page .excludeSizeOption {
   margin-right: 20px;
   white-space: nowrap;
   line-height: 24px;
   float: left;
   clear: both;
 }
-.wrap.is-shortpixel-settings-page #shortpixel-settings-tabs #tab-adv-settings .excludeSizeOption input {
+.wrap.is-shortpixel-settings-page .excludeSizeOption input {
   margin-right: 8px;
 }
-.wrap.is-shortpixel-settings-page #shortpixel-settings-tabs #tab-adv-settings .deliverWebpTypes, .wrap.is-shortpixel-settings-page #shortpixel-settings-tabs #tab-adv-settings .deliverWebpAlteringTypes {
+.wrap.is-shortpixel-settings-page .deliverWebpTypes, .wrap.is-shortpixel-settings-page .deliverWebpAlteringTypes {
   margin: 16px 0 16px 16px;
   padding: 2px;
 }
-.wrap.is-shortpixel-settings-page #shortpixel-settings-tabs #tab-adv-settings .new-exclusion-button {
+.wrap.is-shortpixel-settings-page .new-exclusion-button {
   float: left;
   margin-right: 8px;
 }
-.wrap.is-shortpixel-settings-page #shortpixel-settings-tabs #tab-adv-settings ul.exclude-list {
+.wrap.is-shortpixel-settings-page ul.exclude-list {
   margin: 20px 0;
 }
-.wrap.is-shortpixel-settings-page #shortpixel-settings-tabs #tab-adv-settings ul.exclude-list li {
+.wrap.is-shortpixel-settings-page ul.exclude-list li {
   float: left;
   padding: 4px 12px;
   border: 1px solid #1caecb;
@@ -835,25 +732,25 @@ div.spio-modal-title {
   color: #fff;
   cursor: pointer;
 }
-.wrap.is-shortpixel-settings-page #shortpixel-settings-tabs #tab-adv-settings ul.exclude-list li.no-exclusion-item {
+.wrap.is-shortpixel-settings-page ul.exclude-list li.no-exclusion-item {
   cursor: default;
 }
-.wrap.is-shortpixel-settings-page #shortpixel-settings-tabs #tab-adv-settings ul.exclude-list li span {
+.wrap.is-shortpixel-settings-page ul.exclude-list li span {
   margin-left: 6px;
 }
-.wrap.is-shortpixel-settings-page #shortpixel-settings-tabs #tab-adv-settings ul.exclude-list li.has-error {
+.wrap.is-shortpixel-settings-page ul.exclude-list li.has-error {
   background: #ff0000;
   border-color: #ff0000;
 }
-.wrap.is-shortpixel-settings-page #shortpixel-settings-tabs #tab-adv-settings ul.exclude-list li.is-regex {
+.wrap.is-shortpixel-settings-page ul.exclude-list li.is-regex {
   border-right: green;
   border-right-width: 10px;
   border-style: solid;
 }
-.wrap.is-shortpixel-settings-page #shortpixel-settings-tabs #tab-adv-settings ul.exclude-list .not-visible {
+.wrap.is-shortpixel-settings-page ul.exclude-list .not-visible {
   display: none;
 }
-.wrap.is-shortpixel-settings-page #shortpixel-settings-tabs #tab-adv-settings .new-exclusion {
+.wrap.is-shortpixel-settings-page .new-exclusion {
   border: 1px solid #ccc;
   box-shadow: 2px 2px 1px #ccc;
   padding: 8px;
@@ -862,35 +759,35 @@ div.spio-modal-title {
   background: #fff;
   position: relative;
 }
-.wrap.is-shortpixel-settings-page #shortpixel-settings-tabs #tab-adv-settings .new-exclusion h3 {
+.wrap.is-shortpixel-settings-page .new-exclusion h3 {
   margin: 2px 0;
 }
-.wrap.is-shortpixel-settings-page #shortpixel-settings-tabs #tab-adv-settings .new-exclusion.not-visible {
+.wrap.is-shortpixel-settings-page .new-exclusion.not-visible {
   display: none;
 }
-.wrap.is-shortpixel-settings-page #shortpixel-settings-tabs #tab-adv-settings .new-exclusion div {
+.wrap.is-shortpixel-settings-page .new-exclusion div {
   margin: 8px 0;
   height: auto;
 }
-.wrap.is-shortpixel-settings-page #shortpixel-settings-tabs #tab-adv-settings .new-exclusion div label {
+.wrap.is-shortpixel-settings-page .new-exclusion div label {
   min-width: 110px;
   display: inline-block;
 }
-.wrap.is-shortpixel-settings-page #shortpixel-settings-tabs #tab-adv-settings .new-exclusion div input, .wrap.is-shortpixel-settings-page #shortpixel-settings-tabs #tab-adv-settings .new-exclusion div select {
+.wrap.is-shortpixel-settings-page .new-exclusion div input, .wrap.is-shortpixel-settings-page .new-exclusion div select {
   min-width: 250px;
 }
-.wrap.is-shortpixel-settings-page #shortpixel-settings-tabs #tab-adv-settings .new-exclusion div input.small, .wrap.is-shortpixel-settings-page #shortpixel-settings-tabs #tab-adv-settings .new-exclusion div select.small {
+.wrap.is-shortpixel-settings-page .new-exclusion div input.small, .wrap.is-shortpixel-settings-page .new-exclusion div select.small {
   width: 80px;
   min-width: 0;
 }
-.wrap.is-shortpixel-settings-page #shortpixel-settings-tabs #tab-adv-settings .new-exclusion div.button-actions {
+.wrap.is-shortpixel-settings-page .new-exclusion div.button-actions {
   margin-left: 114px;
 }
-.wrap.is-shortpixel-settings-page #shortpixel-settings-tabs #tab-adv-settings .new-exclusion div button {
+.wrap.is-shortpixel-settings-page .new-exclusion div button {
   min-width: 75px;
   padding: 8px 6px;
 }
-.wrap.is-shortpixel-settings-page #shortpixel-settings-tabs #tab-adv-settings .new-exclusion div button[name=removeExclusion] {
+.wrap.is-shortpixel-settings-page .new-exclusion div button[name=removeExclusion] {
   background: #ff0000;
   border-color: #ff0000;
   padding: 4px;
@@ -898,33 +795,33 @@ div.spio-modal-title {
   top: 10px;
   right: 10px;
 }
-.wrap.is-shortpixel-settings-page #shortpixel-settings-tabs #tab-adv-settings .new-exclusion .not-visible {
+.wrap.is-shortpixel-settings-page .new-exclusion .not-visible {
   visibility: hidden;
   height: 0;
   transition: 500ms height;
 }
-.wrap.is-shortpixel-settings-page #shortpixel-settings-tabs #tab-adv-settings .new-exclusion .size-option > div {
+.wrap.is-shortpixel-settings-page .new-exclusion .size-option > div {
   margin: 8px 0;
 }
-.wrap.is-shortpixel-settings-page #shortpixel-settings-tabs #tab-adv-settings .new-exclusion .size-option div label {
+.wrap.is-shortpixel-settings-page .new-exclusion .size-option div label {
   min-width: 110px;
 }
-.wrap.is-shortpixel-settings-page #shortpixel-settings-tabs #tab-adv-settings .new-exclusion .thumbnail-option:not(.not-visible) {
+.wrap.is-shortpixel-settings-page .new-exclusion .thumbnail-option:not(.not-visible) {
   height: 150px;
   margin-left: 12px;
 }
-.wrap.is-shortpixel-settings-page #shortpixel-settings-tabs #tab-adv-settings .new-exclusion .thumbnail-option:not(.not-visible):hover {
+.wrap.is-shortpixel-settings-page .new-exclusion .thumbnail-option:not(.not-visible):hover {
   color: #000;
 }
-.wrap.is-shortpixel-settings-page #shortpixel-settings-tabs #tab-adv-settings .exclusion-save-reminder {
+.wrap.is-shortpixel-settings-page .exclusion-save-reminder {
   margin: 10px 0;
   font-weight: 500;
 }
-.wrap.is-shortpixel-settings-page #shortpixel-settings-tabs #tab-adv-settings .avifNoticeDisabled {
+.wrap.is-shortpixel-settings-page .avifNoticeDisabled {
   padding: 12px 12px;
   line-height: 26px;
 }
-.wrap.is-shortpixel-settings-page #shortpixel-settings-tabs #tab-adv-settings .avifNoticeDisabled > .spio-inline-help {
+.wrap.is-shortpixel-settings-page .avifNoticeDisabled > .spio-inline-help {
   display: inline;
   float: none;
 }
@@ -1003,11 +900,11 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page .shortpixel-icon.help {
   background-image: url("../images/icon/help.svg");
 }
-.wrap.is-shortpixel-settings-page .shortpixel-icon.image_optimization {
-  background-image: url("../images/icon/image_optimization.svg");
+.wrap.is-shortpixel-settings-page .shortpixel-icon.optimization {
+  background-image: url("../images/icon/optimization.svg");
 }
-.wrap.is-shortpixel-settings-page .shortpixel-icon.image_processing {
-  background-image: url("../images/icon/image_processing.svg");
+.wrap.is-shortpixel-settings-page .shortpixel-icon.processing {
+  background-image: url("../images/icon/processing.svg");
 }
 .wrap.is-shortpixel-settings-page .shortpixel-icon.notifications {
   background-image: url("../images/icon/notifications.svg");
@@ -1069,9 +966,10 @@ div.spio-modal-title {
   background-color: #F4FBFC;
   margin: 10px 0;
   display: block;
-}
-.wrap.is-shortpixel-settings-page setting.toggleTarget.is-visible {
-  display: flex !important;
+  /*  &.toggleTarget.is-visible
+    {
+       //display: flex !important;
+    } */
 }
 .wrap.is-shortpixel-settings-page setting name {
   font-size: 14px;
@@ -1085,6 +983,7 @@ div.spio-modal-title {
   padding: 15px 10px;
   flex-basis: calc(100% - 250px);
   font-size: 14px;
+  display: inline-block;
 }
 .wrap.is-shortpixel-settings-page setting info {
   display: block;
@@ -1124,20 +1023,6 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page setting.switch name, .wrap.is-shortpixel-settings-page setting.switch info, .wrap.is-shortpixel-settings-page setting.switch warning, .wrap.is-shortpixel-settings-page setting.switch error {
   margin-left: 70px;
-}
-.wrap.is-shortpixel-settings-page settinggrid {
-  min-height: 100%;
-  display: flex;
-  flex-wrap: wrap;
-  flex-direction: row;
-}
-.wrap.is-shortpixel-settings-page settinggrid > setting {
-  display: flex;
-  flex-basis: calc(50% - 40px);
-  justify-content: center;
-  flex-direction: column;
-  align-items: flex-start;
-  margin-left: 2%;
 }
 
 /*# sourceMappingURL=shortpixel-settings.css.map */

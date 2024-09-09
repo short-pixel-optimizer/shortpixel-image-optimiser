@@ -12,7 +12,7 @@ class ShortPixelSettings
 
 	 Init()
 	 {
-		  this.root = document.querySelector('article.shortpixel-settings');
+		  this.root = document.querySelector('.wrap.is-shortpixel-settings-page');
 			this.InitActions();
 			this.SaveOnKey();
 	 }
@@ -221,13 +221,20 @@ class ShortPixelSettings
 						return;
 			}
 
+			if (this.root.classList.contains('simple'))
+			{
+				 this.current_mode = 'simple';
+			}
+			else {
+				 this.current_mode = 'advanced';
+			}
+
 			switcher.addEventListener('click', this.SwitchViewModeEvent.bind(this));
 	}
 
   SwitchViewModeEvent(event)
 	{
 		var new_mode = (this.current_mode == 'simple') ? 'advanced' : 'simple';
-
 		var data = {};
 		data.type = 'settings';
 		data.screen_action = 'settings/changemode';
@@ -235,14 +242,8 @@ class ShortPixelSettings
 
 		window.ShortPixelProcessor.AjaxRequest(data);
 
-		// Perhaps this.root should point to this one.
-		var rootElement = document.querySelector('.wrap.is-shortpixel-settings-page');
-
-		if (null !== rootElement)
-		{
-			  rootElement.classList.remove('simple','advanced');
-				rootElement.classList.add(new_mode);
-		}
+	  this.root.classList.remove('simple','advanced');
+		this.root.classList.add(new_mode);
 
 		this.current_mode = new_mode;
 	}

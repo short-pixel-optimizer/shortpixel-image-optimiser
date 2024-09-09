@@ -40,7 +40,7 @@ if( $this->is_nginx ){
 
 ?>
 
-<section id="tab-settings" class="<?php echo ($this->display_part == 'webp') ? 'active setting-tab' :'setting-tab'; ?>" data-part="webp" >
+<section id="tab-webp" class="<?php echo ($this->display_part == 'webp') ? 'active setting-tab' :'setting-tab'; ?>" data-part="webp" >
 
 <settinglist>
 
@@ -111,7 +111,6 @@ if( $this->is_nginx ){
   <setting>
     <name> &nbsp; </name>
     <content>
-THIS NEEDS DOING
      <switch>
        <label>
          <input type="checkbox" class="switch" name="deliverWebp" data-toggle="deliverTypes" value="1" <?php checked( ($view->data->deliverWebp > 0), true);?>>
@@ -121,15 +120,30 @@ THIS NEEDS DOING
     </switch>
 
     <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/126-which-webp-files-delivery-method-is-the-best-for-me"></i>
+
+
+
   </content>
 </setting>
 
-<setting class='toggleTarget' id="deliverTypes">
-  <name>
-    Method
-  </name>
+<setting>
+
   <content>
-      <ul class="deliverWebpTypes ">
+
+    <switch>
+      <label>
+        <input type="checkbox" class="switch" name="deliverWebp" data-toggle="deliverTypes" value="1" <?php checked( ($view->data->deliverWebp > 0), true);?>>
+        <div class="the_switch">&nbsp; </div>
+        <?php esc_html_e('Deliver the next generation versions of the images in the front-end:','shortpixel-image-optimiser');?>
+      </label>
+   </switch>
+
+   <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/126-which-webp-files-delivery-method-is-the-best-for-me"></i>
+
+
+
+
+      <ul id="deliverTypes" class="deliverWebpTypes ">
           <li>
               <input type="radio" name="deliverWebpType" id="deliverWebpAltered" <?php checked( ($view->data->deliverWebp >= 1 && $view->data->deliverWebp <= 2), true); ?> <?php echo esc_attr( $deliverWebpAlteredDisabled );?> value="deliverWebpAltered" data-toggle="deliverAlteringTypesPicture">
               <label for="deliverWebpAltered">
@@ -146,6 +160,7 @@ THIS NEEDS DOING
 
           </li>
           <li>
+              <hr>
               <input type="radio" name="deliverWebpType" id="deliverWebpUnaltered" <?php checked(($view->data->deliverWebp == 3), true);?> <?php echo esc_attr( $deliverWebpUnalteredDisabled );?> value="deliverWebpUnaltered" data-toggle="deliverAlteringTypes">
 
               <label for="deliverWebpUnaltered">
@@ -198,5 +213,5 @@ THIS NEEDS DOING
 
 </settinglist>
 
-
+  <?php $this->loadView('settings/part-savebuttons', false); ?>
 </section>

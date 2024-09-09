@@ -293,7 +293,7 @@ class AjaxController
 					 break;
 					 case 'settings/changemode':
 					 	Log::addTemp('changemode', $data);
-					 		$json = \wpSPIO()->settings()->handleChangeMode($data);
+					 		$this->handleChangeMode($data);
 					 break;
            default:
               $json->$type->message = __('Ajaxrequest - no action found', 'shorpixel-image-optimiser');
@@ -642,6 +642,20 @@ class AjaxController
 			$json->media->id = $id;
 			$json->media->type = 'media';
 			$this->send($json);
+		}
+
+		public function handleChangeMode($data)
+		{
+				$user_id = get_current_user_id();
+				$new_mode = isset($_POST['new_mode']) ? sanitize_text_field($_POST['new_mode']) : false;
+
+				if(false === $new_mode)
+				{
+					 return false;
+				}
+
+				update_user_option($user_id, 'shortpixel-settings-mode', $new_mode);
+
 		}
 
     /** Data for the compare function */

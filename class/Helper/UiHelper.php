@@ -862,9 +862,9 @@ class UiHelper
       );
 
       $exclusion_types = array(
-          'name' => __('Name', 'shortpixel-image-optimiser'),
-          'path' => __('Path', 'shortpixel-image-optimiser'),
-          'size' => __('Size', 'shortpixel-image-optimiser'),
+          'name' => __('Image Name', 'shortpixel-image-optimiser'),
+          'path' => __('Image Path', 'shortpixel-image-optimiser'),
+          'size' => __('Image Size', 'shortpixel-image-optimiser'),
       );
 
       $exclusion_apply = array(

@@ -16,25 +16,7 @@
   	margin-left: 2px;
 	}
 
-	.clearfix {
-	    zoom: 1;
-			&:before, &:after {
-				content: " ";
-		    display: table;
-			}
-			&:after {
-				clear: both;
-			}
-	}
 
-	.form-table {
-		th {
-	    width: 220px;
-		}
-		td {
-		    position: relative;
-		}
-	}
 
 	.shortpixel-key-valid {
 	  //  font-weight: bold;
@@ -202,10 +184,7 @@
 		} // optimized thing
   } // top menu
 
-  .wp-shortpixel-tab-content
-  {
-    transition: all 1000ms linear;
-  }
+
   .red {
      color: #ff0000;
   }
@@ -230,37 +209,13 @@
 	}
 
   //tabs
-  article.sp-tabs
+  section.setting-tab
   {
-    section // inside the tab
-    {
-			p.settings-info {
-			    padding-top: 0px;
-			    color: #818181;
-			    font-size:13px !important;
-			}
-			p.settings-info.shortpixel-settings-error {
-			    color: #c32525;
-			}
-
-      .wp-shortpixel-tab-content
-      { opacity: 0;
-
-			}
-      &.sel-tab .wp-shortpixel-tab-content
-      {
-        opacity: 1;
-      }
-
-
 			.option-content
 			{
 				 display: inline-block;
 			}
-			.suboption // if you are child of main option, indent left.
-			{
-				margin-left: 20px;
-			}
+
 
 				.toggleTarget
 				{
@@ -283,77 +238,9 @@
 					height: auto;
 
 				}
-    }
-    section h2 {
-      position: absolute;
-      font-size: 1.3em;
-      font-weight: normal;
-      width: 180px;
-      height: 1.8em;
-      top: -1.8em;
-      left: 10px;
-      padding: 0;
-      margin: 0;
-      color: #999;
-      background-color: #ddd;
-		@include breakpoint(0, 991px)
-		{
-			width: 140px;
-		}
-      a {
-          display: block;
-          width: 100%;
-          line-height: 1.8em;
-          text-align: center;
-          text-decoration: none;
-          color: #23282d;
-          outline: 0 none;
-      }
-    }
-		section.sel-tab h2
-		{
-			color: #333;
-			background-color: #fff;
-			z-index: 2;
-		}
-  }
 
-  article.sp-tabs section:nth-of-type(2) h2 {
-      left: 192px;
-	  @include breakpoint(0, 991px)
-	  {
-		  left: 152px;
-	  }
-  }
-  article.sp-tabs section:nth-of-type(3) h2 {
-      left: 374px;
-	  @include breakpoint(0, 991px)
-	  {
-		  left: 294px;
-	  }
-  }
-  article.sp-tabs section:nth-of-type(4) h2 {
-      left: 556px;
-	  @include breakpoint(0, 991px)
-	  {
-		  left: 436px;
-	  }
-  }
-  article.sp-tabs section:nth-of-type(5) h2 {
-      left: 738px;
-	  @include breakpoint(0, 991px)
-	  {
-		  left: 578px;
-	  }
-  }
-  article.sp-tabs section:nth-of-type(6) h2 {
-      left: 920px;
-  }
 
-	//debug-tab is now after the other tabs, because of form issues.
-	article.sp-tabs section#tab-debug {
-
-	}
+  }
 
   section#tab-debug
   {
@@ -482,44 +369,7 @@
 	#tab-settings
 	{
 
-			.presentation-wrap {
-					padding: 10px;
-					text-align: center;
-					display: flex;
-					justify-content: center;
-					width: 600px;
-					img {
-							margin: auto;
-					}
-					@include breakpoint(0, 1280px)
-					{
-						  width: 460px;
-					}
-					@include breakpoint(0, 1140px)
-					{
-								width: 320px;
-					}
-			}
-			.spai-resize-frame {
-					position: absolute;
-					border: 2px dashed #fd1d1d;
-					&:after {
-							font-size: 10px;
-							font-weight: bold;
-							position: absolute;
-							bottom: -15px;
-							right: 0;
-							color: red;
-					}
-			}
-			.resize-options-wrap {
-					margin: 10px 20px 0 20px;
-					float: left;
-			}
-			.resize-type-wrap label {
-					display: inline-block;
-					padding: 15px 0 0 0;
-			}
+
 
 
 	} // tab-settings
