@@ -9,8 +9,6 @@ use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 
 // @todo Clean up unused lines in this file. (cloudflare)
 class CloudFlareAPI {
-    private $email; // $_cloudflareEmail
-    private $authkey; // $_cloudflareAuthKey
     private $zone_id; // $_cloudflareZoneID
     private $token;
 
@@ -31,8 +29,7 @@ class CloudFlareAPI {
 
     public function setup()
     {
-      //  $this->email =   \wpSPIO()->settings()->cloudflareEmail;
-      //  $this->authkey = \wpSPIO()->settings()->cloudflareAuthKey;
+
         $this->zone_id =  (defined('SHORTPIXEL_CFZONE') ) ? SHORTPIXEL_CFZONE : \wpSPIO()->settings()->cloudflareZoneID;
 
         $this->token = (defined('SHORTPIXEL_CFTOKEN') ) ? SHORTPIXEL_CFTOKEN : \wpSPIO()->settings()->cloudflareToken;
@@ -42,13 +39,6 @@ class CloudFlareAPI {
           $this->use_token = true;
           $this->config_ok = true;
         }
-
-        // Removed
-      /*  elseif(! empty($this->email) && ! empty($this->authkey) && ! empty($this->zone_id))
-        {
-          $this->config_ok = true;
-        } */
-
 
         $this->setup_done = true;
     }
@@ -77,8 +67,6 @@ class CloudFlareAPI {
      */
     private function start_cloudflare_cache_purge_process( $imageItem ) {
 
-
-Log::addTemp('Checking CloudFlare');
         // Fetch CloudFlare API credentials
 
             // Fetch all WordPress install possible thumbnail sizes ( this will not return the full size option )

@@ -77,23 +77,24 @@
 	    display: none;
 	}
 
-	.button, button:focus
-	{
-		color: $color-darkest;
-		border-color: $color-darkest;
-	}
+
 	.button-primary, .button-primary:focus {
 		background-color: $color-darkest;
 		border-color: $color-darkest;
 		color: #fff;
-
 		&:hover
 		{
 			background-color: $color-dark;
 			border-color: $color-darkest;
 
 		}
+
 	}
+
+	button {
+		 cursor:pointer;
+	}
+
 	/* .submit {
 		.button {
 			min-height: 44px;
@@ -286,9 +287,8 @@
      border: 1px solid #ccc;
      margin-top: 35px;
      margin-bottom: 45px;
-
      position: relative;
-     opacity: 0;
+
 
      span {
        text-align: center;

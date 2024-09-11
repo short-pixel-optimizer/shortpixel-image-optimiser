@@ -86,11 +86,10 @@ class ApiKeyModel extends \ShortPixel\Model
 						'redirectedSettings' => $this->redirectedSettings,
 						'apiKeyTried' => $this->apiKeyTried,
 				];
-//Log::addTemp('Transplanting ApiKey shizzle', $apikeySettings);
-/*			 delete_option($this->legacy_model['apiKey']['key']);
+			 delete_option($this->legacy_model['apiKey']['key']);
 			 delete_option($this->legacy_model['verifiedKey']['key']);
 			 delete_option($this->legacy_model['redirectedSettings']['key']);
-			 delete_option($this->legacy_model['apiKeyTried']['key']); */
+			 delete_option($this->legacy_model['apiKeyTried']['key']);
 
 			 $this->update();
 		}

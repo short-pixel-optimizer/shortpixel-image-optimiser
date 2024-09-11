@@ -213,9 +213,9 @@ if ( ! defined( 'ABSPATH' ) ) {
                          <div>
                            <label><?php _e('Type:', 'shortpixel-image-optimiser'); ?></label>
                             <select name="exclusion-type" class='new-exclusion-type'>
-                               <option value='name'><?php _e('Name', 'shortpixel-image-optimiser'); ?></option>
-                               <option value='path' data-example="/path/"><?php _e('Path', 'shortpixel-image-optimiser'); ?></option>
-                               <option value='size' data-example="widthXheight-widthXheight"><?php _e('Size', 'shortpixel-image-optimiser'); ?></option>
+                               <option value='name'><?php _e('Image Name', 'shortpixel-image-optimiser'); ?></option>
+                               <option value='path' data-example="/path/"><?php _e('Image Path', 'shortpixel-image-optimiser'); ?></option>
+                               <option value='size' data-example="widthXheight-widthXheight"><?php _e('Image Size', 'shortpixel-image-optimiser'); ?></option>
 
                            </select>
 

@@ -197,8 +197,9 @@ class EnvironmentModel extends \ShortPixel\Model
 
   public function useVirtualHeavyFunctions()
   {
-      $bool = apply_filters('shortpixel/file/virtual/heavy_features', true);
-      return false;
+      $bool = ($this->hasOffload()) ? false : true; // If has WP Offload, by default don't use.
+      
+      $bool = apply_filters('shortpixel/file/virtual/heavy_features', $bool);
       return $bool;
   }
 

@@ -45,25 +45,30 @@ if ( ! defined( 'ABSPATH' ) ) {
   </div>
 
   <div class='wrapper middle-row'>
-     <div class='panel first-panel'>
+     <div class='panel first-panel dashboard-optimize'>
+
         <i class='shortpixel-icon box-archive'></i>
-        <?php _e('Optimize new Images', 'shortpixel-image-optimizer'); ?>
+        <h4><?php _e('Optimize new Images', 'shortpixel-image-optimizer'); ?></h4>
 
-        <span><i class='shortpixel-icon ok'></i>Blabla sentence</span>
+        <span><i class='shortpixel-icon status-icon ok'></i><span class='status-line'>Blabla sentence</span></span>
         <button>Take Action <i class='shortpixel-icon arrow-right'></i></button>
-     </div>
-     <div class='panel second-panel'>
-       <i class='shortpixel-icon box-archive'></i>
-       <?php _e('Optimize new Images', 'shortpixel-image-optimizer'); ?>
 
-       <span><i class='shortpixel-icon ok'></i>Blabla sentence</span>
+     </div>
+     <div class='panel second-panel dashboard-bulk'>
+       <i class='shortpixel-icon switch'></i>
+       <h4><?php _e('Bulk Actions', 'shortpixel-image-optimizer'); ?></h4>
+
+       <span><i class='shortpixel-icon status-icon ok'></i><span class='status-line'>Blabla sentence</span></span>
        <button>Take Action <i class='shortpixel-icon arrow-right'></i></button>
      </div>
-     <div class='panel third-panel'>
-       <i class='shortpixel-icon box-archive'></i>
-       <?php _e('Optimize new Images', 'shortpixel-image-optimizer'); ?>
 
-       <span><i class='shortpixel-icon ok'></i>Blabla sentence</span>
+     <div class='panel third-panel dashboard-webp'>
+
+       <i class='shortpixel-icon photo'></i>
+       <h4><?php _e('Webp/Avif', 'shortpixel-image-optimizer'); ?></h4>
+
+       <span><i class='shortpixel-icon status-icon ok'></i>
+         <span class='status-line'>Blabla sentence</span></span>
        <button>Take Action <i class='shortpixel-icon arrow-right'></i></button>
      </div>
   </div>

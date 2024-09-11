@@ -126,26 +126,6 @@ var ShortPixel = function() {
         }
     }
 
-    // Settings part-advanced. (for offload)
-    function checkHeavyFeatureWarning(name)
-    {
-       var inputName = (name == 'retina') ? 'optimizeRetina' : 'optimizeUnlisted';
-       var input = jQuery('input[name="' + inputName + '"]');
-
-       if (! input)
-         return;
-
-       var warningEl = jQuery('.heavy-feature-virtual.' + name );
-
-
-       if (input.is(':checked'))
-       {
-          warningEl.animate({ opacity: 1 });
-       }
-       else {
-         warningEl.animate({ opacity: 0 });
-       }
-    }
 
     function setupGeneralTab() {
 				// @todo Make something workable out of this
@@ -217,26 +197,7 @@ var ShortPixel = function() {
         jQuery(".wp-shortpixel-options button#validate").css("display", "inline-block");
     }
 
-    function setupAdvancedTab() {
 
-        if (document.querySelector('.heavy-feature-virtual.retina') !== null)
-        {
-          jQuery('input[name="optimizeRetina"]').on('change', function()
-          {
-             ShortPixel.checkHeavyFeatureWarning('retina');
-          });
-          ShortPixel.checkHeavyFeatureWarning('retina');
-        }
-
-        if (document.querySelector('.heavy-feature-virtual.unlisted') !== null)
-        {
-          jQuery('input[name="optimizeUnlisted"]').on('change', function()
-          {
-             ShortPixel.checkHeavyFeatureWarning('unlisted');
-          });
-          ShortPixel.checkHeavyFeatureWarning('unlisted');
-        }
-    }
 
     function checkThumbsUpdTotal(el) {
         var total = jQuery("#" +(el.checked ? "total" : "main")+ "ToProcess").val();
@@ -245,11 +206,9 @@ var ShortPixel = function() {
     }
 
     function initSettings() {
-        ShortPixel.adjustSettingsTabs();
+      //  ShortPixel.adjustSettingsTabs();
         ShortPixel.setupGeneralTab(); // certain alerts.
-        jQuery( window ).on('resize', function() {
-            ShortPixel.adjustSettingsTabs();
-        });
+
 
 
         jQuery("article.sp-tabs a.tab-link").on('click', function(e){
@@ -296,9 +255,9 @@ var ShortPixel = function() {
     } */
 
     // Fixes the height of the current active tab.
-    function adjustSettingsTabsHeight(){
+  /*  function adjustSettingsTabsHeight(){
         jQuery('.wso.banner').css('opacity', 1);
-    }
+    } */
 
   /*  function closeHelpPane() {
         jQuery('#shortpixel-hs-button-blind').remove();
@@ -562,11 +521,9 @@ var ShortPixel = function() {
         enableResize        : enableResize,
         setupGeneralTab     : setupGeneralTab,
         apiKeyChanged       : apiKeyChanged,
-        setupAdvancedTab    : setupAdvancedTab,
         checkThumbsUpdTotal : checkThumbsUpdTotal,
         initSettings        : initSettings,
       //  switchSettingsTab   : switchSettingsTab,
-        adjustSettingsTabs  : adjustSettingsTabsHeight,
       //  closeHelpPane       : closeHelpPane,
         checkQuota          : checkQuota,
         percentDial         : percentDial,
@@ -587,7 +544,6 @@ var ShortPixel = function() {
       //  checkExifWarning    : checkExifWarning,
       //  checkBackUpWarning  : checkBackUpWarning,
 			//	checkSmartCropWarning: checkSmartCropWarning,
-        checkHeavyFeatureWarning : checkHeavyFeatureWarning,
         comparerData        : {
             cssLoaded   : false,
             jsLoaded    : false,

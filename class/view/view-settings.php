@@ -26,12 +26,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 <?php $this->loadView('settings/part-header'); ?>
 
+  <input type='checkbox' name='heavy_features' value='1' <?php echo ($this->disable_heavy_features) ? 'checked' : '' ?> class='shortpixel-hide' />
+  
 
 <hr class='wp-header-end'>
 
 <form name='wp_shortpixel_options' action='<?php echo esc_url(add_query_arg('noheader', 'true')) ?>'  method='post' id='wp_shortpixel_options'>
+
   <input type='hidden' name='display_part' value="<?php echo esc_attr($this->display_part) ?>" />
   <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
+
+
 
 
 <article class='shortpixel-settings'>

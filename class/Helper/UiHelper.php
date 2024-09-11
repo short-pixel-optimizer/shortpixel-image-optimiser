@@ -874,8 +874,15 @@ class UiHelper
            'selected-thumbs' => __('Selected Images', 'shortpixel-image-optimiser'),
       );
 
+      $dashboard_string = [
+            'ok' => __('Everything ok', 'shortpixel-image-optimiser'),
+            'warning' => __('Improvement possible', 'shortpixel-image-optimiser'),
+            'alert' => __('Action needed', 'shortpixel-image-optimiser'),
+      ];
+
       $strings['exclusion_types'] = $exclusion_types;
       $strings['exclusion_apply'] = $exclusion_apply;
+      $strings['dashboard_strings'] = $dashboard_string;
 
       if ($name !== false && isset($strings[$name]))
       {
