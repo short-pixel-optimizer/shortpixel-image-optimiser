@@ -186,7 +186,6 @@ class SettingsController extends \ShortPixel\ViewController
 
 			}
 
-
 			public function action_debug_redirectBulk()
 			{
 				$this->checkPost();
@@ -208,7 +207,6 @@ class SettingsController extends \ShortPixel\ViewController
 				{
 					 $this->doRedirect('bulk-removeLegacy');
 				}
-
 			}
 
       /** Button in part-debug, routed via custom Action */
@@ -218,7 +216,6 @@ class SettingsController extends \ShortPixel\ViewController
 					$this->checkPost();
           $statsController = StatsController::getInstance();
           $statsController->reset();
-
 					$this->doRedirect();
       }
 
@@ -229,19 +226,15 @@ class SettingsController extends \ShortPixel\ViewController
 					$this->checkPost();
           $quotaController = QuotaController::getInstance();
           $quotaController->forceCheckRemoteQuota();
-
           $this->doRedirect();
       }
 
       public function action_debug_resetNotices()
       {
-
           $this->loadEnv();
 					$this->checkPost();
           Notice::resetNotices();
           $nControl = new Notice(); // trigger reload.
-
-
           $this->doRedirect();
       }
 
@@ -270,7 +263,6 @@ class SettingsController extends \ShortPixel\ViewController
 					}
 				}
 				$this->doRedirect();
-
 			}
 
 			public function action_debug_resetQueue()
@@ -298,7 +290,6 @@ class SettingsController extends \ShortPixel\ViewController
 								{
 										$q->resetQueue();
 								}
-
 						 }
 						 else
 						 {
@@ -313,7 +304,6 @@ class SettingsController extends \ShortPixel\ViewController
 						 {
 								 $message = sprintf(__('All items in the %s queue have been removed and the process is stopped', 'shortpixel-image-optimiser'), $queue);
  						 }
-
 
 						 Notice::addSuccess($message);
 			 }
@@ -348,7 +338,6 @@ class SettingsController extends \ShortPixel\ViewController
 				$cacheControl->deleteItem('bulk-secret');
 				exit('reloading settings would cause processorKey to be set again');
 			}
-
 
       protected function processSave()
       {
@@ -398,6 +387,7 @@ class SettingsController extends \ShortPixel\ViewController
          $this->view->data = (Object) $this->model->getData();
 
 				 $this->loadAPiKeyData();
+         $this->loadDashBoardInfo();
 
          if ($this->keyModel->is_verified()) // supress quotaData alerts when handing unset API's.
           $this->loadQuotaData();
@@ -436,6 +426,17 @@ class SettingsController extends \ShortPixel\ViewController
           $view_mode = $this->view_mode;
          $this->view_mode = $view_mode;
          $this->loadView('view-settings');
+      }
+
+
+// Basically this whole premise is impossible.
+      public function loadDashBoardInfo()
+      {
+        $bulkController = BulkController::getInstance();
+        $logs = $bulkController->getLogs();
+
+        $this->view->dashboard  = new \stdClass;
+      //  var_dump($logs);
       }
 
 			protected function loadAPiKeyData()

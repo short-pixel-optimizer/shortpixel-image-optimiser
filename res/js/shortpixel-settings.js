@@ -252,6 +252,11 @@ class ShortPixelSettings
 		var checks = [':not(:checked)', ':not(:checked)', ':not(:checked)'];
 		updateShowWarning({elements: elements, warnings: warnings, checks: checks, functions: dashboardFunctions});
 
+		var elements = root.querySelectorAll('input[name="createWebp"],input[name="deliverWebp"]');
+		var warnings = root.querySelectorAll('.panel.dashboard-webp');
+		var checks = [':not(:checked)', ':not(:checked)'];
+
+		updateShowWarning({elements: elements, warnings: warnings, checks: checks, functions: dashboardFunctions});
 
 	}
 

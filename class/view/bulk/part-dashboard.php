@@ -1,5 +1,7 @@
 <?php
 namespace ShortPixel;
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+use ShortPixel\Helper\UiHelper as UiHelper;
 
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
@@ -9,10 +11,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 <section class='dashboard panel active' data-panel="dashboard" style='display: block'  >
   <div class="panel-container">
 
-
-    <h3 class="heading"><span><img src="<?php echo esc_url(\wpSPIO()->plugin_url('res/img/robo-slider.png')); ?>"></span>
-      <?php esc_html_e('Welcome to the Bulk Processing page!', 'shortpixel-image-optimiser'); ?>
+  <div class="bulk-welcome">
+    <h3 class="heading">
+      <?php printf(esc_html__('Welcome to the Bulk Processing page!', 'shortpixel-image-optimiser')); ?>
     </h3>
+    <?php echo UIHelper::getIcon('res/images/illustration/bulk_welcome.svg'); ?>
+  </div>
 
     <div class='interface wrapper'>
 
@@ -26,6 +30,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<div class='dashboard-text'>
 	      <p class='description'><?php esc_html_e('Here you can (re)optimize your Media Library or Custom Media folders from your website.', 'shortpixel-image-optimiser'); ?></p>
 
+<!--
 				<p class='description'><?php
 					printf(__('If you have any question don\'t hesitate to %s contact us %s %s, we are friendly and helpful, 24/7. %s
 	Also, if you have a minute please leave a %s review %s for us, it always brings joy to our team! %s','shortpixel-image-optimiser'),
@@ -38,7 +43,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 					'&#x1F913');
 				?>
 
-				</p>
+      </p> -->
 			</div>
  </div>
 

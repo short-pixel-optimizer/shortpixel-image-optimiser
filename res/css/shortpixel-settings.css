@@ -124,15 +124,6 @@ div.spio-modal-title {
   /* In-view notice ( not on top, between the options ) - styled after WP notice */
   /* Specific styles for advanced settings tab */
 }
-.wrap.is-shortpixel-settings-page.simple .is-advanced {
-  display: none;
-}
-.wrap.is-shortpixel-settings-page.simple #viewmode-toggle .advanced {
-  display: none;
-}
-.wrap.is-shortpixel-settings-page.advanced #viewmode-toggle .simple {
-  display: none;
-}
 .wrap.is-shortpixel-settings-page header {
   background: #fff;
   text-align: center;
@@ -166,6 +157,110 @@ div.spio-modal-title {
   width: 14px;
   height: 14px;
   filter: brightness(0) saturate(100%) invert(100%) sepia(100%) saturate(0%) hue-rotate(251deg) brightness(108%) contrast(108%);
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon {
+  width: 25px;
+  height: 25px;
+  display: inline-block;
+  background-repeat: no-repeat;
+  background-size: cover;
+  line-height: 25px;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.cdn {
+  background-image: url("../images/icon/cdn.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.dashboard {
+  background-image: url("../images/icon/dashboard.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.debug {
+  background-image: url("../images/icon/debug.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.delivery {
+  background-image: url("../images/icon/delivery.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.feedback {
+  background-image: url("../images/icon/feedback.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.help {
+  background-image: url("../images/icon/help.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.optimization {
+  background-image: url("../images/icon/optimization.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.processing {
+  background-image: url("../images/icon/processing.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.notifications {
+  background-image: url("../images/icon/notifications.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.tools {
+  background-image: url("../images/icon/tools.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.webp_avif {
+  background-image: url("../images/icon/webp_avif.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.photo {
+  background-image: url("../images/icon/photo.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.box-archive {
+  background-image: url("../images/icon/box-archive.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.bulk {
+  background-image: url("../images/icon/bulk.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.ok {
+  background-image: url("../images/icon/ok.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.warning {
+  background-image: url("../images/icon/warning.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.alert {
+  background-image: url("../images/icon/alert.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.arrow-right {
+  background-image: url("../images/icon/arrow-right.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.key {
+  background-image: url("../images/icon/key.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.save {
+  background-image: url("../images/icon/save.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.switch {
+  background-image: url("../images/icon/switch.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.arrows-left-right {
+  background-image: url("../images/icon/arrows-left-right.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.arrows-up-down {
+  background-image: url("../images/icon/arrows-up-down.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-illustration {
+  display: inline-block;
+  background-repeat: no-repeat;
+  background-size: cover;
+  width: 50px;
+  height: 50px;
+}
+.wrap.is-shortpixel-settings-page .shortpixel-illustration.wizzard-done {
+  background-image: url("../images/illustration/wizzard-done.svg");
+  width: 70px;
+  height: 70px;
+}
+.wrap.is-shortpixel-settings-page .shortpixel-illustration.cocktail {
+  background-image: url("../images/illustration/cocktail.svg");
+  height: 104px;
+}
+.wrap.is-shortpixel-settings-page.simple .is-advanced {
+  display: none;
+}
+.wrap.is-shortpixel-settings-page.simple #viewmode-toggle .advanced {
+  display: none;
+}
+.wrap.is-shortpixel-settings-page.advanced #viewmode-toggle .simple {
+  display: none;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings {
   width: 95%;
@@ -884,101 +979,6 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page #tab-tools .danger-zone > p {
   margin-left: 15px;
-}
-.wrap.is-shortpixel-settings-page .shortpixel-icon {
-  width: 25px;
-  height: 25px;
-  display: inline-block;
-  background-repeat: no-repeat;
-  background-size: cover;
-  line-height: 25px;
-  vertical-align: middle;
-  margin-right: 4px;
-}
-.wrap.is-shortpixel-settings-page .shortpixel-icon.cdn {
-  background-image: url("../images/icon/cdn.svg");
-}
-.wrap.is-shortpixel-settings-page .shortpixel-icon.dashboard {
-  background-image: url("../images/icon/dashboard.svg");
-}
-.wrap.is-shortpixel-settings-page .shortpixel-icon.debug {
-  background-image: url("../images/icon/debug.svg");
-}
-.wrap.is-shortpixel-settings-page .shortpixel-icon.delivery {
-  background-image: url("../images/icon/delivery.svg");
-}
-.wrap.is-shortpixel-settings-page .shortpixel-icon.feedback {
-  background-image: url("../images/icon/feedback.svg");
-}
-.wrap.is-shortpixel-settings-page .shortpixel-icon.help {
-  background-image: url("../images/icon/help.svg");
-}
-.wrap.is-shortpixel-settings-page .shortpixel-icon.optimization {
-  background-image: url("../images/icon/optimization.svg");
-}
-.wrap.is-shortpixel-settings-page .shortpixel-icon.processing {
-  background-image: url("../images/icon/processing.svg");
-}
-.wrap.is-shortpixel-settings-page .shortpixel-icon.notifications {
-  background-image: url("../images/icon/notifications.svg");
-}
-.wrap.is-shortpixel-settings-page .shortpixel-icon.tools {
-  background-image: url("../images/icon/tools.svg");
-}
-.wrap.is-shortpixel-settings-page .shortpixel-icon.webp_avif {
-  background-image: url("../images/icon/webp_avif.svg");
-}
-.wrap.is-shortpixel-settings-page .shortpixel-icon.photo {
-  background-image: url("../images/icon/photo.svg");
-}
-.wrap.is-shortpixel-settings-page .shortpixel-icon.box-archive {
-  background-image: url("../images/icon/box-archive.svg");
-}
-.wrap.is-shortpixel-settings-page .shortpixel-icon.bulk {
-  background-image: url("../images/icon/bulk.svg");
-}
-.wrap.is-shortpixel-settings-page .shortpixel-icon.ok {
-  background-image: url("../images/icon/ok.svg");
-}
-.wrap.is-shortpixel-settings-page .shortpixel-icon.warning {
-  background-image: url("../images/icon/warning.svg");
-}
-.wrap.is-shortpixel-settings-page .shortpixel-icon.alert {
-  background-image: url("../images/icon/alert.svg");
-}
-.wrap.is-shortpixel-settings-page .shortpixel-icon.arrow-right {
-  background-image: url("../images/icon/arrow-right.svg");
-}
-.wrap.is-shortpixel-settings-page .shortpixel-icon.key {
-  background-image: url("../images/icon/key.svg");
-}
-.wrap.is-shortpixel-settings-page .shortpixel-icon.save {
-  background-image: url("../images/icon/save.svg");
-}
-.wrap.is-shortpixel-settings-page .shortpixel-icon.switch {
-  background-image: url("../images/icon/switch.svg");
-}
-.wrap.is-shortpixel-settings-page .shortpixel-icon.arrows-left-right {
-  background-image: url("../images/icon/arrows-left-right.svg");
-}
-.wrap.is-shortpixel-settings-page .shortpixel-icon.arrows-up-down {
-  background-image: url("../images/icon/arrows-up-down.svg");
-}
-.wrap.is-shortpixel-settings-page .shortpixel-illustration {
-  display: inline-block;
-  background-repeat: no-repeat;
-  background-size: cover;
-  width: 50px;
-  height: 50px;
-}
-.wrap.is-shortpixel-settings-page .shortpixel-illustration.wizzard-done {
-  background-image: url("../images/illustration/wizzard-done.svg");
-  width: 70px;
-  height: 70px;
-}
-.wrap.is-shortpixel-settings-page .shortpixel-illustration.cocktail {
-  background-image: url("../images/illustration/cocktail.svg");
-  height: 104px;
 }
 .wrap.is-shortpixel-settings-page setting {
   padding: 12px;

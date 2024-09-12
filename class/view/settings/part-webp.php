@@ -108,23 +108,6 @@ if( $this->is_nginx ){
   </setting>
   <!-- // avif -->
 
-  <setting>
-    <name> &nbsp; </name>
-    <content>
-     <switch>
-       <label>
-         <input type="checkbox" class="switch" name="deliverWebp" data-toggle="deliverTypes" value="1" <?php checked( ($view->data->deliverWebp > 0), true);?>>
-         <div class="the_switch">&nbsp; </div>
-         <?php esc_html_e('Deliver the next generation versions of the images in the front-end:','shortpixel-image-optimiser');?>
-       </label>
-    </switch>
-
-    <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/126-which-webp-files-delivery-method-is-the-best-for-me"></i>
-
-
-
-  </content>
-</setting>
 
 <setting>
 
