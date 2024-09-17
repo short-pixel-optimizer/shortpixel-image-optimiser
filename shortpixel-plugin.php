@@ -347,7 +347,7 @@ class ShortPixelPlugin {
 		wp_register_script('shortpixel-shiftselect', plugins_url('res/js/shift-select.js', SHORTPIXEL_PLUGIN_FILE), array(), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
 		wp_localize_script('shortpixel-settings', 'settings_strings', UiHelper::getSettingsStrings(false));
-		
+
 
 		wp_register_script('shortpixel-media', plugins_url('res/js/shortpixel-media.js',  SHORTPIXEL_PLUGIN_FILE), array('jquery'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
@@ -425,10 +425,10 @@ class ShortPixelPlugin {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
 		$panel = isset( $_GET['panel'] ) ? sanitize_text_field( wp_unslash($_GET['panel']) ) : false;
 
-		$bulkLocalize = array(
+		$bulkLocalize = [
 			'endBulk'   => __( 'This will stop the bulk processing and take you back to the start. Are you sure you want to do this?', 'shortpixel-image-optimiser' ),
-			'reloadURL' => admin_url( 'upload.php?page=wp-short-pixel-bulk' ),
-		);
+			'reloadURL' => admin_url( 'upload.php?page=wp-short-pixel-bulk'),
+		];
 		if ( $panel ) {
 			$bulkLocalize['panel'] = $panel;
         }

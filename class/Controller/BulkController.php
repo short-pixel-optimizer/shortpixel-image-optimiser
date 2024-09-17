@@ -106,6 +106,39 @@ class BulkController
 			 return $bool;
 	 }
 
+   // Check if any bulk queue is on custom operation ( they always run in tandem, so no matter )
+   public function getAnyCustomOperation()
+   {
+
+    $op = $this->getCustomOperation('media');
+
+    if ($op !== false)
+    {
+       return $op;
+    }
+
+    $op = $this->getCustomOperation('custom');
+
+    if ($op !== false)
+    {
+       return $op;
+    }
+
+    return false;
+
+   }
+
+   public function getCustomOperation($qname)
+   {
+     $optimizeControl = new OptimizeController();
+     $optimizeControl->setBulk(true);
+
+     $q = $optimizeControl->getQueue($qname);
+
+     $op = $q->getCustomDataItem('customOperation');
+     return $op;
+   }
+
    /*** Start the bulk run. Must deliver all queues at once due to processQueue bundling */
    public function startBulk($types = 'media')
    {
@@ -143,6 +176,8 @@ class BulkController
 
      $q->resetQueue();
    }
+
+
 
    public function getLogs()
    {

@@ -36,6 +36,8 @@ class BulkViewController extends \ShortPixel\ViewController
   {
     $quota = QuotaController::getInstance();
     $optimizeController = new OptimizeController();
+    $bulkController = BulkController::getInstance();
+
 
     $this->view->quotaData = $quota->getQuota();
 
@@ -72,9 +74,33 @@ class BulkViewController extends \ShortPixel\ViewController
 		$this->view->buyMoreHref = 'https://shortpixel.com/' . ($keyControl->getKeyForDisplay() ? 'login/' . $keyControl->getKeyForDisplay() . '/spio-unlimited' : 'pricing');
 
 
+    $custom_operation_media = $bulkController->getCustomOperation('media');
+    $custom_operation_custom = $bulkController->getCustomOperation('custom');
+
+    $this->view->customOperationMedia = (false !== $custom_operation_media) ? $this->getCustomLabel($custom_operation_media) : false;
+    $this->view->customOperationCustom = (false !== $custom_operation_custom) ? $this->getCustomLabel($custom_operation_custom) : false;
+
 
     $this->loadView();
 
+  }
+
+  private function getCustomLabel($operation)
+  {
+      switch($operation)
+      {
+          case 'bulk-restore';
+            $label = __('Bulk Restore', 'shortpixel-image-optimiser');
+          break;
+          case 'migrate':
+            $label = __('Migrate data', 'shortpixel-image-optimiser');
+          break;
+          case 'removeLegacy':
+            $label = __('Remove Legacy Data', 'shortpixel-image-optimiser');
+          break;
+      }
+
+      return $label;
   }
 
 	// Double with ApiNotice . @todo Fix.

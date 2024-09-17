@@ -951,6 +951,9 @@
   background: #F6F9FF;
   border: 1px solid #EBF5FF;
 }
+.wrap.is-shortpixel-bulk-page section.panel.process .bulk-summary .heading .special-op, .wrap.is-shortpixel-bulk-page section.panel.finished .bulk-summary .heading .special-op {
+  color: #EC2C25;
+}
 .wrap.is-shortpixel-bulk-page section.panel.process .bulk-summary .line-progressbar, .wrap.is-shortpixel-bulk-page section.panel.finished .bulk-summary .line-progressbar {
   width: 100px;
   height: 20px;
