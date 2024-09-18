@@ -345,7 +345,6 @@ class OptimizeController
     // Processing Part
 
     // next tick of items to do.
-    // @todo Implement a switch to toggle all processing off.
     /* Processes one tick of the queue
     *
     * @return Object JSON object detailing results of run

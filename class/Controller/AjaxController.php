@@ -492,10 +492,8 @@ class AjaxController
 
     protected function finishBulk($json, $data)
     {
-			Log::addTemp('Ajax - Finish Bulk');
        $bulkControl = BulkController::getInstance();
 
-			 Log::addTemp('AnyCustom', $bulkControl->getAnyCustomOperation());
  			 if ( false !== $bulkControl->getAnyCustomOperation())
  			 {
  				  $json->redirect = add_query_arg(['page' => 'wp-shortpixel-settings', 'part' => 'tools'], admin_url('options-general.php'));
@@ -506,7 +504,6 @@ class AjaxController
 
        $json->status = 1;
 
-Log::addTemp('json return', $json);
        return $json;
     }
 

@@ -1,5 +1,7 @@
 <?php
 namespace ShortPixel;
+use ShortPixel\Helper\UiHelper as UiHelper;
+
 
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
@@ -81,7 +83,12 @@ if (true === \wpSPIO()->env()->useTrustedMode())
 
               </content>
 
-              <content>What is SmartCompression</content>
+              <content>
+                <?php echo UIHelper::getIcon('res/images/illustration/robo_info.svg'); ?>
+                  <?php esc_html_e('What is SmartCompression', 'shortpixel-image-optimiser'); ?>
+
+
+              </content>
             </gridbox>
 
               <warning id='compression-notice'>
@@ -101,14 +108,13 @@ if (true === \wpSPIO()->env()->useTrustedMode())
           <!-- Thumbnail compression -->
           <setting class='switch'>
             <content>
-                <switch>
-                  <label>
-                    <input type="checkbox" class="switch" name="processThumbnails" value="1" <?php checked($view->data->processThumbnails, '1');?>>
-                    <div class="the_switch">&nbsp; </div>
-										<?php esc_html_e('Optimize Thumbnails','shortpixel-image-optimiser');?>
+              <?php $this->printSwitchButton(
+                    ['name' => 'processThumbnails',
+                     'checked' => $view->data->processThumbnails,
+                     'label' => esc_html__('Optimize Thumbnails','shortpixel-image-optimiser')
+                    ]);
+              ?>
 
-                  </label>
-                </switch>
 								<name>
                     <?php printf(esc_html__('Apply compression to %s image thumbnails.%s ','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
 								</name>
@@ -122,13 +128,13 @@ if (true === \wpSPIO()->env()->useTrustedMode())
           <!--- Optimize Other Image -->
           <setting class='switch'>
               <content>
-                <switch>
-                  <label>
-                    <input type="checkbox" class="switch" name="optimizeUnlisted" value="1" <?php checked( $view->data->optimizeUnlisted, "1" );?>>
-                    <div class="the_switch">&nbsp; </div>
-                      <?php esc_html_e('Optimize unlisted thumbnails','shortpixel-image-optimiser');?>
-                   </label>
-                </switch>
+                <?php $this->printSwitchButton(
+                      ['name' => 'optimizeUnlisted',
+                       'checked' => $view->data->optimizeUnlisted,
+                       'label' => esc_html__('Optimize unlisted thumbnails','shortpixel-image-optimiser')
+                      ]);
+                ?>
+
                 <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/519-settings---optimize-other-thumbs"></i>
                 <name>
                   <?php esc_html_e('Optimize unlisted thumbnails, if found.','shortpixel-image-optimiser');?>
@@ -145,13 +151,12 @@ if (true === \wpSPIO()->env()->useTrustedMode())
 
           <setting class='switch'>
             <content>
-              <switch>
-                <label>
-                  <input type="checkbox" class="switch" name="optimizePdfs" value="1" <?php checked( $view->data->optimizePdfs, "1" );?>>
-                  <div class="the_switch">&nbsp; </div>
-                  <?php esc_html_e('Optimize PDFs','shortpixel-image-optimiser');?>
-                </label>
-              </switch>
+              <?php $this->printSwitchButton(
+                    ['name' => 'optimizePdfs',
+                     'checked' => $view->data->optimizePdfs,
+                     'label' => esc_html__('Optimize PDFs','shortpixel-image-optimiser')
+                    ]);
+              ?>
                <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/520-settings-optimize-pdfs"></i>
                <name>
                  <?php esc_html_e('Also optimize PDF documents.','shortpixel-image-optimiser');?>
@@ -162,13 +167,13 @@ if (true === \wpSPIO()->env()->useTrustedMode())
          <!-- Optimize retina -->
           <setting class='switch'>
              <content>
-               <switch>
-                 <label>
-                   <input type="checkbox" class="switch" name="optimizeRetina" value="1" <?php checked( $view->data->optimizeRetina, "1" );?>>
-                   <div class="the_switch">&nbsp; </div>
-                   <?php esc_html_e('Optimize Retina images','shortpixel-image-optimiser');?>
-                  </label>
-               </switch>
+               <?php $this->printSwitchButton(
+                     ['name' => 'optimizeRetina',
+                      'checked' => $view->data->optimizeRetina,
+                      'label' => esc_html__('Optimize Retina images','shortpixel-image-optimiser')
+                     ]);
+               ?>
+
               <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/518-settings-optimize-retina-images"></i>
               <name>
                   <?php esc_html_e('Also optimize the Retina images (@2x) if they exist.','shortpixel-image-optimiser');?>
@@ -190,15 +195,12 @@ if (true === \wpSPIO()->env()->useTrustedMode())
               <?php esc_html_e('NextGen','shortpixel-image-optimiser');?>
             </name>
             <content>
-              <switch>
-                <label>
-                  <input name="includeNextGen" type="checkbox" id="nextGen" value='1' <?php echo  checked($view->data->includeNextGen,'1' );?>>
-
-                <div class="the_switch">&nbsp; </div>
-                <?php esc_html_e('Optimize NextGen galleries.','shortpixel-image-optimiser');?>
-              </label>
-            </switch>
-
+              <?php $this->printSwitchButton(
+                    ['name' => 'includeNextGen',
+                     'checked' => $view->data->includeNextGen,
+                     'label' => esc_html__('Optimize NextGen galleries','shortpixel-image-optimiser')
+                    ]);
+              ?>
             </content>
          </setting>
          <?php endif; ?>
@@ -214,6 +216,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
           <!-- convert png2jpg -->
           <setting class='switch'>
             <content>
+
               <switch class='option-png2jpg'>
                 <label>
                   <input type="checkbox" class="switch" name="png2jpg" value="1" <?php checked( ($view->data->png2jpg > 0), true);?> <?php echo($this->is_gd_installed ? '' : 'disabled') ?> >
@@ -265,15 +268,12 @@ if (true === \wpSPIO()->env()->useTrustedMode())
         <setting class='switch'>
             <content>
 
-              <switch>
-                <label>
-                  <input type="checkbox" class="switch" name="cmyk2rgb" value="1" <?php checked( $view->data->CMYKtoRGBconversion, "1" );?>>
-                  <div class="the_switch">&nbsp; </div>
-
-                  <?php esc_html_e('CMYK to RGB conversion','shortpixel-image-optimiser');?>
-                </label>
-              </switch>
-
+              <?php $this->printSwitchButton(
+                    ['name' => 'cmyk2rgb',
+                     'checked' => $view->data->CMYKtoRGBconversion,
+                     'label' => esc_html__('CMYK to RGB conversion','shortpixel-image-optimiser')
+                    ]);
+              ?>
               <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/517-settings---cmyk-to-rgb-conversion"></i>
               <name>
                   <?php esc_html_e('Adjust your images\' colors for computer and mobile displays.','shortpixel-image-optimiser');?>
@@ -285,6 +285,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
           <!-- Remove Exif -->
           <setting class='switch'>
             <content>
+
               <switch>
                 <label>
                   <input type="checkbox" class="switch" name="removeExif" value="1" <?php checked($view->data->keepExif, 0);?>>

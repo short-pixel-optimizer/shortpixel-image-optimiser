@@ -137,11 +137,15 @@ class ViewController extends Controller
     $defaults = array(
         'name' => '',
         'checked' => false,
-        'label' => ''
+        'label' => '',
+        'switch_class' => false,
     );
 
+    $args = wp_parse_args($args, $defaults);
 
-    $output = '<switch>
+    $switchclass = ($args['switch_class'] !== false) ? $args['switch_class'] : '';
+
+    $output = '<switch ' . $switchclass . '>
       <label>
         <input type="checkbox" class="switch" name="' . esc_attr($args['name']) . '" value="1" ' . checked($args['checked'], true, false) .  '>
         <div class="the_switch">&nbsp; </div>
