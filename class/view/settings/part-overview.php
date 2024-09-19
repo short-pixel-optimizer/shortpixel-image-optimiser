@@ -50,7 +50,8 @@ if ( ! defined( 'ABSPATH' ) ) {
         <i class='shortpixel-icon box-archive'></i>
         <h4><?php _e('Optimize new Images', 'shortpixel-image-optimizer'); ?></h4>
 
-        <span><i class='shortpixel-icon status-icon ok'></i><span class='status-line'>Blabla sentence</span></span>
+        <span class='status-wrapper'><i class='shortpixel-icon status-icon ok'></i><span class='status-line'></span></span>
+
         <button>Take Action <i class='shortpixel-icon arrow-right'></i></button>
 
      </div>
@@ -58,7 +59,8 @@ if ( ! defined( 'ABSPATH' ) ) {
        <i class='shortpixel-icon switch'></i>
        <h4><?php _e('Bulk Actions', 'shortpixel-image-optimizer'); ?></h4>
 
-       <span><i class='shortpixel-icon status-icon ok'></i><span class='status-line'>Blabla sentence</span></span>
+        <span class='status-wrapper'><i class='shortpixel-icon status-icon ok'></i><span class='status-line'></span></span>
+        
        <button>Take Action <i class='shortpixel-icon arrow-right'></i></button>
      </div>
 
@@ -67,8 +69,8 @@ if ( ! defined( 'ABSPATH' ) ) {
        <i class='shortpixel-icon photo'></i>
        <h4><?php _e('Webp/Avif', 'shortpixel-image-optimizer'); ?></h4>
 
-       <span><i class='shortpixel-icon status-icon ok'></i>
-         <span class='status-line'>Blabla sentence</span></span>
+        <span class='status-wrapper'><i class='shortpixel-icon status-icon ok'></i><span class='status-line'></span></span>
+
        <button>Take Action <i class='shortpixel-icon arrow-right'></i></button>
      </div>
   </div>

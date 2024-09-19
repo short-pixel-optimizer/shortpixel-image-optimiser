@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 <?php $this->loadView('settings/part-header'); ?>
 
   <input type='checkbox' name='heavy_features' value='1' <?php echo ($this->disable_heavy_features) ? 'checked' : '' ?> class='shortpixel-hide' />
-  
+
 
 <hr class='wp-header-end'>
 
@@ -36,8 +36,8 @@ if ( ! defined( 'ABSPATH' ) ) {
   <input type='hidden' name='display_part' value="<?php echo esc_attr($this->display_part) ?>" />
   <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
 
-
-
+<!--
+Part Overview Here. The plugin runs ActivePlugin each time the settings are saved and the logs are being deleted which is kinda bad. Thanks / Cheerio.  -->
 
 <article class='shortpixel-settings'>
 		<menu>
@@ -67,7 +67,7 @@ if ( ! defined( 'ABSPATH' ) ) {
         </li>
 
 				<li class='is-advanced'>
-          <?php echo $this->settingLink('tools', __("Tools", "shortpixel-image-optimiser")); ?>
+          <?php echo $this->settingLink('tools', __("Tools", "shortpixel-image-optimiser") , 'shortpixel-icon tools'); ?>
         </li>
 
         <li>

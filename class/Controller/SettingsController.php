@@ -48,7 +48,6 @@ class SettingsController extends \ShortPixel\ViewController
       public function __construct()
       {
           $this->model = \wpSPIO()->settings();
-
 					$keyControl = ApiKeyController::getInstance();
           $this->keyModel = $keyControl->getKeyModel();
 
@@ -436,7 +435,7 @@ class SettingsController extends \ShortPixel\ViewController
         $logs = $bulkController->getLogs();
 
         $this->view->dashboard  = new \stdClass;
-      //  var_dump($logs);
+
       }
 
 			protected function loadAPiKeyData()

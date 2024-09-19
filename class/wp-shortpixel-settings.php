@@ -93,6 +93,8 @@ class WPShortPixelSettings extends \ShortPixel\Model {
 				'unlistedCounter' => array('key' => 'wp-short-pixel-unlisted-counter', 'default' => 0, 'group' => 'state'),
     );
 
+
+
     // This  array --  field_name -> (s)anitize mask
     protected $model = array(
         'apiKey' => array('s' => 'string'), // string
@@ -126,10 +128,9 @@ class WPShortPixelSettings extends \ShortPixel\Model {
       //  'cloudflareAuthKey' => array('s' => 'string'), // string
         'cloudflareZoneID' => array('s' => 'string'), // string
         'cloudflareToken' => array('s' => 'string'),
-        'savedSpace' => array('s' => 'skip'),
-        'fileCount' => array('s' => 'skip'), // int
-        'under5Percent' => array('s' => 'skip'), // int
+
 				'showCustomMedia' => array('s' => 'boolean'),
+        'currentStats' => array('s' => 'array')
     );
 
       public static function resetOptions() {
@@ -165,7 +166,7 @@ class WPShortPixelSettings extends \ShortPixel\Model {
 					 // Remove setting if set, or if it doesn't exist in model anymore
 					 if (true === $bool || false === $settingsModel->exists($option_name))
 					 {
-              Log::addTemp('Would delete non-existing? setting ' . $option_name);
+              Log::AddTrace('Would delete non-existing? setting ' . $option_name);
 						 // delete_option($data['key']);
 					 		$updated = true;
 					 }

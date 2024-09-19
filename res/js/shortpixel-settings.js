@@ -500,20 +500,85 @@ DashBoardWarningEvent(warning, matches)
 	 var status = (true === matches.allMatches) ? 'alert' : (true === matches.someMatch) ? 'warning' : 'ok';
 
 	 dashBox.classList.remove('ok', 'alert', 'warning');
-	 dashBox.classList.add(status);
+	 dashBox.classList.add(status)
 
- 	 var statusIcon = dashBox.querySelector('.status-icon');
+	 // Remove all status-lines ( rebuild )
+	 var statusWrapper = dashBox.querySelector('.status-wrapper');
+	 if (null === statusWrapper)
+	 {
+		  console.log('issue with statuswrapper');
+			return;
+	 }
+ 	 Array.from(statusWrapper.children).forEach(e => e.remove());
+
+	 var statusIcon = document.createElement('i');
+	 statusIcon.classList.add('shortpixel-icon', 'static-icon', status);
+
+  if (matches.matches.length > 0)
+	{
+			for(var i = 0; i < matches.matches.length; i++ )
+			{
+				var input = matches.matches[i];
+				var statusLine = document.createElement('span');
+				statusLine.classList.add('status-line');
+
+				if (input.dataset.dashboard)
+				{
+
+			 		statusLine.textContent = input.dataset.dashboard;
+				}
+				else {
+				  var linestring = this.strings.dashboard_strings[status];
+		 		  statusLine.textContent = linestring;
+				}
+
+				statusWrapper.appendChild(statusLine).appendChild(statusIcon.cloneNode());
+//				statusWrapper.;
+			}
+		 	// Add Not ok status.
+	}
+	else {
+		 // Add OK status
+		 var statusLine = document.createElement('span');
+		 statusLine.classList.add('status-line');
+		 var linestring = this.strings.dashboard_strings[status];
+		 statusLine.textContent = linestring;
+
+		 statusWrapper.appendChild(statusLine).appendChild(statusIcon);
+		 //statusWrapper.;
+	}
+
+
+
+/*	 dashBox.querySelector('.status-icon');
 	 if (null !== statusIcon)
 	 {
 		  statusIcon.classList.remove('ok', 'warning', 'alert');
 			statusIcon.classList.add(status);
-	 }
+	 } */
 
-	 var statusLine = dashBox.querySelector('.status-line');
+
+
+	/* var statusLine = dashBox.querySelector('.status-line');
 	 if (null !== statusLine)
 	 {
 		  var linestring = this.strings.dashboard_strings[status];
 		  statusLine.textContent = linestring;
+	 } */
+
+
+	 // Button display
+	 var button = dashBox.querySelector('button');
+	 if ('ok' === status)
+	 {
+			if (false === button.classList.contains('shortpixel-hide'))
+			{
+					button.classList.add('shortpixel-hide');
+			}
+	 }
+	 else if (true === button.classList.contains('shortpixel-hide'))
+	 {
+		 		button.classList.remove('shortpixel-hide');
 	 }
 
 }

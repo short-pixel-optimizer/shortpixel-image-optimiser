@@ -51,14 +51,13 @@ if( $this->is_nginx ){
 
     <content>
 
-      <switch>
-        <label>
-          <input type="checkbox" class="switch" name="createWebp" value="1" <?php checked( $view->data->createWebp, "1" );?>>
-          <div class="the_switch">&nbsp; </div>
-          <?php esc_html_e('Create Webp Images'); ?>
-        </label>
-      </switch>
-
+      <?php $this->printSwitchButton(
+            ['name' => 'createWebp',
+             'checked' => $view->data->createWebp,
+             'label' => esc_html__('Create Webp Images','shortpixel-image-optimiser'),
+             'data' => ['data-dashboard="' . __('Recommend adding Webp', 'shortpixel-image-optimiser') . '"'],
+            ]);
+      ?>
         <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/286-how-to-serve-webp-files-using-spio"></i>
 
       </content>
@@ -72,8 +71,8 @@ if( $this->is_nginx ){
       <content>
         <?php
           $avifEnabled = $this->access()->isFeatureAvailable('avif');
-          $createAvifChecked = ($view->data->createAvif == 1 && $avifEnabled === true) ? true : false;
-          $disabled = ($avifEnabled === false) ? 'disabled' : '';
+          $createAvifChecked = ($view->data->createAvif == 1 && $avifEnabled === true) ? 1 : 0;
+          $disabled = ($avifEnabled === false) ? true : false;
           $avifEnabledNotice = false;
           if ($avifEnabled == false)
           {
@@ -83,13 +82,13 @@ if( $this->is_nginx ){
              $avifEnabledNotice .= '</div>';
           }
         ?>
-      <switch>
-         <label>
-           <input type="checkbox" class="switch" name="createAvif" value="1" <?php echo $disabled ?> <?php checked( $createAvifChecked );?>>
-           <div class="the_switch">&nbsp; </div>
-           <?php esc_html_e('Create Avif Images'); ?>
-         </label>
-       </switch>
+        <?php $this->printSwitchButton(
+              ['name' => 'createAvif',
+               'checked' => $createAvifChecked,
+               'label' => esc_html__('Create Avif Images','shortpixel-image-optimiser'),
+               'disabled' => $disabled,
+              ]);
+        ?>
 
        <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/467-how-to-create-and-serve-avif-files-using-shortpixel-image-optimizer"></i>
 
@@ -113,13 +112,23 @@ if( $this->is_nginx ){
 
   <content>
 
+<!--
     <switch>
       <label>
         <input type="checkbox" class="switch" name="deliverWebp" data-toggle="deliverTypes" value="1" <?php checked( ($view->data->deliverWebp > 0), true);?>>
         <div class="the_switch">&nbsp; </div>
         <?php esc_html_e('Deliver the next generation versions of the images in the front-end:','shortpixel-image-optimiser');?>
       </label>
-   </switch>
+   </switch>  -->
+
+   <?php $this->printSwitchButton(
+         ['name' => 'deliverWebp',
+          'checked' =>  ($view->data->deliverWebp > 0) ? 1 : 0,
+          'label' => esc_html__('Deliver the next generation versions of the images in the front-end:','shortpixel-image-optimiser'),
+          'disabled' => $disabled,
+          'data' => ['data-toggle="deliverTypes"', 'data-dashboard="' . __('Modern format not being deliverd', 'shortpixel-image-optimiser') . '"'],
+         ]);
+   ?>
 
    <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/126-which-webp-files-delivery-method-is-the-best-for-me"></i>
 

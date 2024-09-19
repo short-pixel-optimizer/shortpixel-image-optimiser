@@ -33,9 +33,7 @@ $queueRunning = $bulk->isAnyBulkRunning();
       <h2><?php _e('Tools', 'shortpixel-image-optimiser'); ?></h2>
 
         <setting>
-            <name>
-              <?php esc_html_e('Migrate data', 'shortpixel-image-optimiser'); ?>
-            </name>
+
             <content>
               <a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_redirectBulk', 'bulk' => 'migrate', 'noheader' => true), $url)); ?>" class="button">
                   <?php esc_html_e('Search and Migrate All', 'shortpixel-image-optimiser'); ?>
@@ -47,12 +45,15 @@ $queueRunning = $bulk->isAnyBulkRunning();
                   <?php printf(esc_html__('ShortPixel Image Optimizer version 5.0 brings a new format for saving the image optimization information. If you have upgraded from a version prior to version 5.0, you may want to convert all your image data to the new format. This conversion will speed up the plugin and ensure that all data is preserved. %s Check your image data after doing the conversion! %s', 'shortpixel-image-optimiser'), '<br><b>', '</b>') ?>
                 </info>
             </content>
+    <!--        <name>
+              <?php esc_html_e('Migrate data', 'shortpixel-image-optimiser'); ?>
+            </name> -->
         </setting>
 
         <setting>
-            <name>
+          <!--  <name>
               <?php esc_html_e('Clear Queue','shortpixel-image-optimiser'); ?>
-            </name>
+            </name> -->
             <content>
         				<a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_resetQueue', 'queue' => 'all', 'part' => 'tools', 'noheader' => true), $url)); ?>" class="button"><?php esc_html_e('Clear the Queue','shortpixel-image-optimiser'); ?></a>
 
@@ -63,9 +64,9 @@ $queueRunning = $bulk->isAnyBulkRunning();
         </setting>
 
         <setting>
-            <name>
+        <!--    <name>
               <?php esc_html_e('Clear Optimization Errors','shortpixel-image-optimiser'); ?>
-            </name>
+            </name> -->
             <content>
         				<a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_removePrevented', 'queue' => 'all', 'part' => 'tools', 'noheader' => true), $url)); ?>" class="button"><?php esc_html_e('Clear Optimization Errors','shortpixel-image-optimiser'); ?></a>
 
@@ -90,7 +91,7 @@ $queueRunning = $bulk->isAnyBulkRunning();
        <!-- Bulk Restore -->
        <setting>
          <name>
-              <?php esc_html_e('Remove data','shortpixel-image-optimiser'); ?>
+              <?php esc_html_e('Undo optimization: Restore all images to original state','shortpixel-image-optimiser'); ?>
          </name>
          <content>
            <a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_redirectBulk', 'bulk' => 'restore', 'noheader' => true), $url)) ?>" class="button danger"><?php _e('Bulk Restore', 'shortpixel-image-optimiser'); ?></a>
@@ -104,9 +105,9 @@ $queueRunning = $bulk->isAnyBulkRunning();
 
       <!-- Remove Legacy Data -->
       <setting>
-        <name>
+      <!--  <name>
             &nbsp;
-        </name>
+        </name> -->
         <content>
 						<a href="<?php echo esc_url(add_query_arg(array('sp-action' => 'action_debug_redirectBulk', 'bulk' => 'removeLegacy', 'noheader' => true), $url)); ?>" class="button danger"><?php esc_html_e('Remove Legacy Data'); ?></a>
 
@@ -118,9 +119,9 @@ $queueRunning = $bulk->isAnyBulkRunning();
 
      <!-- Remove All Data -->
      <setting>
-       <name>
+       <!-- <name>
           &nbsp;
-       </name>
+       </name> -->
        <content>
          <button type="button" class='button danger' data-action="open-modal" data-target="ToolsRemoveAll">
                        <?php esc_html_e('Remove all ShortPixel Data', 'shortpixel-image-optimiser'); ?></button>
@@ -150,9 +151,9 @@ $queueRunning = $bulk->isAnyBulkRunning();
 
     <!-- Remove Backups -->
     <setting>
-      <name>
+      <!-- <name>
         &nbsp;
-      </name>
+      </name> -->
       <content>
         <button type="button" class='button danger' data-action="open-modal" data-target="ToolsRemoveBackup">
                       <?php esc_html_e('Remove backups', 'shortpixel-image-optimiser'); ?></button>

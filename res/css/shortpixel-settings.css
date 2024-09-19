@@ -761,7 +761,8 @@ div.spio-modal-title {
   filter: brightness(0) saturate(100%) invert(20%) sepia(95%) saturate(6009%) hue-rotate(360deg) brightness(99%) contrast(125%);
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel .status-line {
-  margin-left: 4px;
+  margin: 4px 4px 4px 15px;
+  display: inline-block;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel button {
   height: 40px;
@@ -938,7 +939,6 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page #tab-tools .option, .wrap.is-shortpixel-settings-page #tab-tools setting {
   clear: both;
-  display: flex;
   margin: 15px 0;
 }
 .wrap.is-shortpixel-settings-page #tab-tools .option div.name, .wrap.is-shortpixel-settings-page #tab-tools setting div.name {
@@ -994,7 +994,7 @@ div.spio-modal-title {
   font-size: 14px;
   font-weight: 700;
   display: block;
-  padding: 20px 10px 20px 0;
+  padding: 20px 10px 0 0;
   box-sizing: border-box;
   color: #116C7E;
 }
@@ -1004,9 +1004,14 @@ div.spio-modal-title {
   font-size: 14px;
   display: inline-block;
 }
+.wrap.is-shortpixel-settings-page setting content inputlabel {
+  min-width: 100px;
+  font-weight: 700;
+  display: inline-block;
+}
 .wrap.is-shortpixel-settings-page setting info {
   display: block;
-  padding-top: 0px;
+  padding-top: 10px;
   color: #818181;
   font-size: 13px;
   margin: 6px 0;
@@ -1039,9 +1044,6 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page setting switch label {
   font-weight: 700;
-}
-.wrap.is-shortpixel-settings-page setting.switch name, .wrap.is-shortpixel-settings-page setting.switch info, .wrap.is-shortpixel-settings-page setting.switch warning, .wrap.is-shortpixel-settings-page setting.switch error {
-  margin-left: 70px;
 }
 
 /*# sourceMappingURL=shortpixel-settings.css.map */

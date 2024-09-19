@@ -139,19 +139,27 @@ class ViewController extends Controller
         'checked' => false,
         'label' => '',
         'switch_class' => false,
+        'data' => [],
+        'disabled' => false,
     );
 
     $args = wp_parse_args($args, $defaults);
 
-    $switchclass = ($args['switch_class'] !== false) ? $args['switch_class'] : '';
+    $switchclass = ($args['switch_class'] !== false) ? 'class="' . $args['switch_class'] . '"' : '';
+    $checked = checked($args['checked'], true, false);
+    $name = esc_attr($args['name']);
+    $label = esc_attr($args['label']);
 
-    $output = '<switch ' . $switchclass . '>
+    $data = implode(' ', $args['data']);
+    $disabled = (true === $args['disabled']) ? 'disabled' : '';
+
+    $output = sprintf('<switch %s>
       <label>
-        <input type="checkbox" class="switch" name="' . esc_attr($args['name']) . '" value="1" ' . checked($args['checked'], true, false) .  '>
-        <div class="the_switch">&nbsp; </div>
-        ' . esc_html($args['label']) . '
+        <input type="checkbox" class="switch" name="%s" value="1" %s %s %s>
+        <div class="the_switch">&nbsp;</div>
+        %s
       </label>
-    </switch>';
+    </switch>', $switchclass, $name, $checked, $disabled, $data, $label);
 
     echo $output;
   }

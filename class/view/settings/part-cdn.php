@@ -22,8 +22,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
       <content>
         <?php if (! defined('SHORTPIXEL_HTTP_AUTH_USER')): ?>
-        <input name="siteAuthUser" type="text" id="siteAuthUser" value="<?php echo( esc_html(wp_unslash($view->data->siteAuthUser )));?>" class="regular-text" placeholder="<?php esc_html_e('User','shortpixel-image-optimiser');?>" style="margin-bottom: 8px"><br>
-        <input name="siteAuthPass" type="text" id="siteAuthPass" value="<?php echo( esc_html(wp_unslash($view->data->siteAuthPass )));?>" class="regular-text" placeholder="<?php esc_html_e('Password','shortpixel-image-optimiser');?>" style="margin-bottom: 8px">
+        <inputlabel>User</inputlabel> <input name="siteAuthUser" type="text" id="siteAuthUser" value="<?php echo( esc_html(wp_unslash($view->data->siteAuthUser )));?>" class="regular-text" placeholder="<?php esc_html_e('User','shortpixel-image-optimiser');?>" style="margin-bottom: 8px"><br>
+        <inputlabel>Password</inputlabel> <input name="siteAuthPass" type="password" id="siteAuthPass" value="<?php echo( esc_html(wp_unslash($view->data->siteAuthPass )));?>" class="regular-text" placeholder="<?php esc_html_e('Password','shortpixel-image-optimiser');?>" style="margin-bottom: 8px">
         <info>
             <?php printf(esc_html__('Only fill in these fields if your site (front-end) is not publicly accessible and visitors need a user/pass to connect to it.
                       If you don\'t know what is this then just %sleave the fields empty%s.','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
@@ -53,9 +53,8 @@ if(! $this->is_curl_installed) {
 
 <settinglist>
    <setting>
-      <name><?php esc_html_e('Zone ID', 'shortpixel-image-optimiser'); ?></name>
       <content>
-        <input name="cloudflareZoneID" type="text" id="cloudflare-zone-id" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>
+      <inputlabel>Zone ID  </inputlabel> <input name="cloudflareZoneID" type="text" id="cloudflare-zone-id" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>
                value="<?php echo( esc_attr(wp_unslash($view->data->cloudflareZoneID))); ?>"
                class="regular-text">
         <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/160-cloudlfare"></i>
@@ -63,10 +62,19 @@ if(! $this->is_curl_installed) {
         <info>
             <?php esc_html_e('You can find this in your Cloudflare account in the "Overview" section for your domain.','shortpixel-image-optimiser');?>
         </info>
-      </content>
+
+        <inputlabel>Token</inputlabel> <input name="cloudflareToken" type="text"  id="cloudflare-token" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>  value="<?php echo esc_attr($view->data->cloudflareToken) ?>" class='regular-text' autocomplete="off">
+        <info>
+            <?php printf(esc_html__('Enter your %s site token %s for authentication. This token needs %s Cache Purge permission %s! ', 'shortpixel-image-optimiser'), '<a href="https://dash.cloudflare.com/profile/api-tokens" target="_blank">', '</a>', '<a href="https://shortpixel.com/knowledge-base/article/325-using-shortpixel-image-optimizer-with-cloudflare-api-token" target="_blank">', '</a>'); ?>
+        </info>
+        <p><a href="https://shortpixel.com/knowledge-base/article/325-using-shortpixel-image-optimizer-with-cloudflare-api-token" target="_blank" class="shortpixel-help-link">
+              <?php esc_html_e('How to set it up','shortpixel-image-optimiser');?>
+          </a></p>
+     </content>
    </setting>
 
 
+<!--
    <setting>
       <name><?php esc_html_e('Cloudflare Token', 'shortpixel-image-optimiser'); ?>
       </name>
@@ -80,7 +88,7 @@ if(! $this->is_curl_installed) {
           </a></p>
      </content>
   </setting>
-
+-->
 </settinglist>
 
 
