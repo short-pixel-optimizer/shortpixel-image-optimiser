@@ -41,6 +41,28 @@
              width: 30%;
           }
        }
+       // Specific layout for top row boxes.
+       &.top-row
+       {
+
+           .average-optimization
+           {
+
+             .opt-circle-average
+             {
+                width: 150px;
+                height: 160px;
+                text {
+                   dominant-baseline: central;
+                }
+             }
+
+
+           }
+
+       }
+
+       // Specific layout for second row boxes
        &.middle-row
        {
           margin: 20px 0;

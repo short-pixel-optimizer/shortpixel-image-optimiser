@@ -134,8 +134,6 @@ class ApiKeyModel extends \ShortPixel\Model
 
 			$res = update_option($this->option_name, $apikeySettings, true);
 
-      Log::addTemp('Update Option' . var_export($res, true), $apikeySettings);
-
 			return $res;
   }
 

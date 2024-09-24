@@ -35,7 +35,6 @@ class Formidable
         // Seems form submit temporary.
         if (is_numeric($value))
         {
-          Log::addTemp('Numeric post meta on formidable, preventing');
            return false;
         }
 
@@ -54,14 +53,12 @@ class Formidable
 
        if (false === isset($_POST['item_meta']) || false === is_array($_POST['item_meta']))
        {
-          Log::addTemp('Not Post item meta here');
           return;
        }
 
        $fields = $this->getFileUploadFields($form_id);
        if (false === $fields)
        {
-          Log::addTemp('Form fields didnt contain uploads');
           return;
        }
 
@@ -113,13 +110,11 @@ class Formidable
 
     private function checkMediaLibrary($item_id)
     {
-      Log::addTemp('Checking Media Lib: ' . $item_id);
       $fs = \wpSPIO()->filesystem();
 
       $mediaItem = $fs->getMediaImage($item_id);
       if (is_object($mediaItem) && $mediaItem->isProcessable())
       {
-         Log::addTemp('Adding item - ' . $item_id);
          $adminController = AdminController::getInstance();
          $adminController->handleImageUploadHook(null, $item_id);
       }

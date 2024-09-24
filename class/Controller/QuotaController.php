@@ -199,7 +199,7 @@ class QuotaController
           }
 
           $requestURL = $settings->httpProto . '://' . SHORTPIXEL_API . '/v2/api-status.php';
-					Log::addTemp('RequestURL' . $requestURL);
+
           $args = array(
               'timeout'=> 15, // wait for 15 secs.
               'body' => array('key' => $apiKey)
@@ -240,9 +240,11 @@ class QuotaController
               $args['body']['pass'] = stripslashes($settings->siteAuthPass);
               $argsStr .= '&user=' . urlencode($args['body']['user']) . '&pass=' . urlencode($args['body']['pass']);
           }
+          /* TF?
           if($settings !== false) {
+
               $args['body']['Settings'] = $settings;
-          }
+          } */
 
           $time = microtime(true);
           $comm = array();

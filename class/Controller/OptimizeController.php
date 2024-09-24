@@ -419,6 +419,7 @@ class OptimizeController
       $result = $Q->run();
       $results = array();
 
+
 			ResponseController::setQ($Q);
 
       // Items is array in case of a dequeue items.

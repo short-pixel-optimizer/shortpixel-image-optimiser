@@ -36,8 +36,6 @@ if ( ! defined( 'ABSPATH' ) ) {
   <input type='hidden' name='display_part' value="<?php echo esc_attr($this->display_part) ?>" />
   <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
 
-<!--
-Part Overview Here. The plugin runs ActivePlugin each time the settings are saved and the logs are being deleted which is kinda bad. Thanks / Cheerio.  -->
 
 <article class='shortpixel-settings'>
 		<menu>

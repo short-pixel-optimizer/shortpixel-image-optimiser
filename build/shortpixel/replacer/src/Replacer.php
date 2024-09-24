@@ -443,7 +443,6 @@ class Replacer
 			 			$in_deep === false && (is_array($content) || is_object($content))
 						)
 			{
-				Log::addTemp('Content is array or object - not json, - maybe serializing');
 				$content = maybe_serialize($content);
 			}
 	    return $content;

@@ -104,7 +104,7 @@ class ShortPixelPlugin {
      * @return SettingsModel The settings model object.
      */
 	public function settings() {
-			return SettingsModel::getInstance(); 
+			return SettingsModel::getInstance();
 	}
 
 	/** Function to get all enviromental variables

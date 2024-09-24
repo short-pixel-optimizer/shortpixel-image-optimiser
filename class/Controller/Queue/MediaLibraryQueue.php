@@ -84,7 +84,6 @@ class MediaLibraryQueue extends Queue
      $results = $wpdb->get_col($sqlmeta);
 
      $items = array();
-
      foreach($results as $item_id)
      {
           $items[] = $item_id;
@@ -118,7 +117,6 @@ class MediaLibraryQueue extends Queue
 
      $results = $wpdb->get_col($sql);
 
-Log::addTemp('Sql Res Media ', $results);
      $items = array();
 
      foreach($results as $item_id)

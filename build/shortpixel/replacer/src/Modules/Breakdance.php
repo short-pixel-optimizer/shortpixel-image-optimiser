@@ -86,8 +86,6 @@ class Breakdance
            return $content;
         }
 
-        Log::addTemp('using tree loader');
-
         $meta_id = $meta_row['meta_id'];
         $post_id = $meta_row['post_id'];
 

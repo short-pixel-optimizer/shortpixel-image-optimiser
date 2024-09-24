@@ -234,7 +234,6 @@ class InstallHelper
 			if (self::checkTableExists('shortpixel_postmeta') === true)
 			{
 					$sql = 'DROP TABLE  ' . $wpdb->prefix . 'shortpixel_postmeta';
-					error_log('Dropping postmeta' . $sql);
 					$wpdb->query($sql);
 			}
 	}

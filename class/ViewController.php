@@ -193,7 +193,7 @@ class ViewController extends Controller
     }
     else
     {
-      $this->postData = $this->model->getSanitizedData($post);
+      $this->postData = $this->model->getSanitizedData($post, false);
     }
 
     return $this->postData;

@@ -141,6 +141,7 @@ abstract class Queue
               $prepared = $this->prepareBulkRestore();
             }
             else {
+
               $prepared = $this->prepare();
             }
 

@@ -124,7 +124,7 @@ class CloudFlareAPI {
 
 
                 $response = $this->delete_url_cache_request_action($image_paths);
-Log::addTemp('RESPONSE', $response);
+
                 // Start the process of cache purge
             /*    $request_response = $this->delete_url_cache_request_action( "https://api.cloudflare.com/client/v4/zones/" . $cloudflare_zone_id . "/purge_cache", $dispatch_purge_info, $dispatch_header ); */
 

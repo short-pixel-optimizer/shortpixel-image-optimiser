@@ -292,7 +292,7 @@ class AjaxController
 					 		$json = $this->recheckActive($json, $data);
 					 break;
 					 case 'settings/changemode':
-					 	Log::addTemp('changemode', $data);
+
 					 		$this->handleChangeMode($data);
 					 break;
            default:

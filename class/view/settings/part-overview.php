@@ -5,6 +5,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
+$total_circle = 289.027;
+$total =round($view->averageCompression);
+
+if( $total  >0 ) {
+		$total_circle = round($total_circle-($total_circle * $total /100));
+}
 
 ?>
 
@@ -20,8 +26,8 @@ if ( ! defined( 'ABSPATH' ) ) {
         <i class='shortpixel-illustration cocktail'></i>
      </div>
      <div class='panel second-panel'>
-       <div class='average-optimization'>
-           <p><?php esc_html_e('Average Optimization','shortpixel-image-optimiser'); ?></p>
+       <div class='average-optimization '>
+           <h4><?php esc_html_e('Average Optimization','shortpixel-image-optimiser'); ?></h4>
            <svg class="opt-circle-average" viewBox="-10 0 150 140">
                          <path class="trail" d="
                              M 50,50
@@ -35,9 +41,11 @@ if ( ! defined( 'ABSPATH' ) ) {
                              m 0,-46
                              a 46,46 0 1 1 0,92
                              a 46,46 0 1 1 0,-92
-                             " stroke-width="16" fill-opacity="0" style="stroke-dasharray: 289.027px, 289.027px; stroke-dashoffset: 180px;">
+                             " stroke-width="16" fill-opacity="0" style="stroke-dasharray: 289.027px, 289.027px; stroke-dashoffset: <?php echo $total_circle ?>px;">
                          </path>
-                         <text class="text" x="50" y="50"><?php esc_html_e('N/A', 'shortpixel-image-optimiser'); ?></text>
+                         <text class="text" x="50" y="50"><?php
+                         echo $view->averageCompression;
+                          ?> %</text>
              </svg>
 
        </div>
@@ -60,7 +68,7 @@ if ( ! defined( 'ABSPATH' ) ) {
        <h4><?php _e('Bulk Actions', 'shortpixel-image-optimizer'); ?></h4>
 
         <span class='status-wrapper'><i class='shortpixel-icon status-icon ok'></i><span class='status-line'></span></span>
-        
+
        <button>Take Action <i class='shortpixel-icon arrow-right'></i></button>
      </div>
 

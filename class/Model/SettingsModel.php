@@ -160,7 +160,6 @@ class SettingsModel extends \ShortPixel\Model
 		{
 				if (true === $this->updated)
 				{
-						Log::addTemp('Saving Settings');
 						$this->save();
 				}
 		}

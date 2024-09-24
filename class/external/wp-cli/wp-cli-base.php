@@ -266,9 +266,14 @@ class SpioCommandBase
 				foreach($queueTypes as $qname)
 				{
 
-					$qresult = $results->$qname; // qname really is type.
 
-	        if (! is_null($qresult->message))
+					$qresult = property_exists($results, $qname) ? $results->$qname : null; // qname really is type.
+          if (is_null($qresult))
+          {
+             continue;
+          }
+
+	        if (property_exists($qresult, 'message') && ! is_null($qresult->message))
 	        {
 
 						// Queue Empty not interesting for CLI.

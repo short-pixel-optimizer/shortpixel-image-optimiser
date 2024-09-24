@@ -29,7 +29,9 @@ abstract class Model
   protected function sanitize($name, $value)
   {
     if (! isset($this->model[$name]))
+    {
       return null;
+    }
 
     // if no sanitize method is set, default to strictest string.
     $sanitize = isset($this->model[$name]['s']) ? $this->model[$name]['s'] : 'string';

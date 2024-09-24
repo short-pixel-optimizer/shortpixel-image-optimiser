@@ -132,8 +132,6 @@ class CustomQueue extends Queue
         $items[] = $item_id;
      }
 
-     Log::addTemp('Items res custom', $items);
-
      return array_filter($items);
    }
 

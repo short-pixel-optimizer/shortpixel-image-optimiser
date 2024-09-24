@@ -1,7 +1,5 @@
 
 // in our own scope.
-
-
 	a {
 		color: $color-darkest;
 
@@ -144,27 +142,7 @@
 
 				z-index: 10;
 
-				.opt-circle-average {
-						width: 100px;
-						height: 100px;
-						.trail {
-							stroke: #ddd;
-						}
-						.path {
-							stroke: $color-dark;
-							stroke-linecap: round;
-							transition: stroke-dashoffset 0.5s ease 0s;
-						}
-						.text {
 
-							fill: #1FBEC9;
-							font-size: 28px;
-							font-weight: 700;
-							dominant-baseline: middle;
-							text-anchor: middle;
-						}
-
-				}
 				span {
 					margin: 0;
 					font-size: 12px;
@@ -364,6 +342,30 @@
   {
     display: none;
   }
+
+	// average optimization graphic circle
+	.opt-circle-average {
+			width: 100px;
+			height: 100px;
+			.trail {
+				stroke: #ddd;
+			}
+			.path {
+				stroke: $color-dark;
+				stroke-linecap: round;
+				transition: stroke-dashoffset 0.5s ease 0s;
+			}
+			.text {
+
+				fill: #1FBEC9;
+				font-size: 28px;
+				font-weight: 700;
+				dominant-baseline: middle;
+				text-anchor: middle;
+			}
+
+	}
+
 
 	// ####### SETTINGS TAB (GENERAL)
 	#tab-settings

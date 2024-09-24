@@ -531,25 +531,6 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page .top-menu div.sp-bulk-summary {
   z-index: 10;
 }
-.wrap.is-shortpixel-settings-page .top-menu div.sp-bulk-summary .opt-circle-average {
-  width: 100px;
-  height: 100px;
-}
-.wrap.is-shortpixel-settings-page .top-menu div.sp-bulk-summary .opt-circle-average .trail {
-  stroke: #ddd;
-}
-.wrap.is-shortpixel-settings-page .top-menu div.sp-bulk-summary .opt-circle-average .path {
-  stroke: #1cbecb;
-  stroke-linecap: round;
-  transition: stroke-dashoffset 0.5s ease 0s;
-}
-.wrap.is-shortpixel-settings-page .top-menu div.sp-bulk-summary .opt-circle-average .text {
-  fill: #1FBEC9;
-  font-size: 28px;
-  font-weight: 700;
-  dominant-baseline: middle;
-  text-anchor: middle;
-}
 .wrap.is-shortpixel-settings-page .top-menu div.sp-bulk-summary span {
   margin: 0;
   font-size: 12px;
@@ -694,6 +675,25 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page .view-notice-row {
   display: none;
 }
+.wrap.is-shortpixel-settings-page .opt-circle-average {
+  width: 100px;
+  height: 100px;
+}
+.wrap.is-shortpixel-settings-page .opt-circle-average .trail {
+  stroke: #ddd;
+}
+.wrap.is-shortpixel-settings-page .opt-circle-average .path {
+  stroke: #1cbecb;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.5s ease 0s;
+}
+.wrap.is-shortpixel-settings-page .opt-circle-average .text {
+  fill: #1FBEC9;
+  font-size: 28px;
+  font-weight: 700;
+  dominant-baseline: middle;
+  text-anchor: middle;
+}
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper {
   display: flex;
 }
@@ -723,6 +723,13 @@ div.spio-modal-title {
   display: flex;
   flex-direction: column;
   width: 30%;
+}
+.wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .average-optimization .opt-circle-average {
+  width: 150px;
+  height: 160px;
+}
+.wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .average-optimization .opt-circle-average text {
+  dominant-baseline: central;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row {
   margin: 20px 0;
