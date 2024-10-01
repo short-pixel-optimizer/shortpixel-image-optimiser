@@ -13,6 +13,8 @@ class ApiNotice extends \ShortPixel\Model\AdminNoticeModel
 {
 	protected $key = 'MSG_NO_APIKEY';
 
+  protected $exclude_screens = ['settings_page_wp-shortpixel-settings'];
+
 	public function load()
 	{
 		$activationDate = \wpSPIO()->settings()->activationDate;
@@ -39,7 +41,7 @@ class ApiNotice extends \ShortPixel\Model\AdminNoticeModel
 
   protected function checkReset()
   {
-    
+
 		$keyControl = ApiKeyController::getInstance();
 		if ($keyControl->keyIsVerified())
 		{

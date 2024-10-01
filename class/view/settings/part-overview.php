@@ -12,18 +12,24 @@ if( $total  >0 ) {
 		$total_circle = round($total_circle-($total_circle * $total /100));
 }
 
+
+$dashboard = $view->dashboard;
+$mainblock = $dashboard->mainblock;
 ?>
 
 <section id="tab-overview" class="<?php echo ($this->display_part == 'overview') ? 'active setting-tab' :'setting-tab'; ?>" data-part="overview" >
 
   <div class='wrapper top-row'>
      <div class='panel first-panel'>
-       <i class='shortpixel-icon ok'></i>
+       <i class='shortpixel-icon mainblock-status <?php echo $mainblock->icon ?>'></i>
        <span>
-         <h4>Everything running smoothly.</h4>
-         <p>Stay calm and carry on </p>
+         <h4><?php echo $mainblock->header ?></h4>
+         <p><?php echo $mainblock->message ?></p>
        </span>
-        <i class='shortpixel-illustration cocktail'></i>
+
+        <?php if (true === $mainblock->cocktail) : ?>
+          <i class='shortpixel-illustration cocktail'></i>
+        <?php endif; ?>
      </div>
      <div class='panel second-panel'>
        <div class='average-optimization '>

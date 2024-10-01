@@ -28,9 +28,15 @@
                margin: 0 20px;
 
              }
-             i.ok {
-               width: 70px;
-               height: 70px;
+             i.mainblock-status {
+               &.ok {
+                 width: 70px;
+                 height: 70px;
+               }
+               &.alert {
+                  width: 70px;
+                  height: 75px;
+               }
              }
              margin-right: 20px;
           }

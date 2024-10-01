@@ -52,7 +52,6 @@ class SettingsModel extends \ShortPixel\Model
 				'httpProto' => ['s' => 'string', 'default' => 'https'], // Less than optimal setting for using http(s)
 				'downloadProto' => ['s' => 'string', 'default' => 'https'], // Less than optimal setting for using http(s) when Downloading
 				'activationDate' => ['s' => 'int', 'default' => null], // date of activation
-				'redirectedSettings' => ['s' => 'int', 'default' => null], // controls initial redirect to SPIO settings
 				'unlistedCounter' => ['s' => 'int', 'default' => 0], // counter to prevent checking unlisted files too much
 				'currentStats' => ['s' => 'array', 'default' => array()], // whatever the current stats are.
         'currentVersion' => ['s' => 'string', 'default' => ''],

@@ -2,6 +2,7 @@
 namespace ShortPixel;
 use ShortPixel\Notices\NoticeController as Notice;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+use ShortPixel\Helper\UiHelper as UiHelper;
 
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
@@ -23,16 +24,26 @@ elseif ($view->key->is_constant_key && ! $view->key->is_verifiedkey)
 
 $adminEmail = get_bloginfo('admin_email');
 
-//var_dump($view->key->is_editable);
+
 // When key is not editable, basically all fields should be off.
 $disabled = ($view->key->is_editable) ? '' : 'disabled';
 
 ?>
-<section id="tab-settings" class="sel-tab" >
-    <h2><a class='tab-link' href='javascript:void(0);' data-id="tab-settings">
+<section id="tab-nokey" class="<?php echo ($this->display_part == 'nokey') ? 'active setting-tab' :'setting-tab'; ?>" data-part="nokey" >
+
+  <h1><?php _e('Welcome Onboard!', 'shortpixel-image-optimiser'); ?></h1>
+  <div class='onboarding-logo'>
+        <?php echo UIHelper::getIcon('res/images/illustration/onboarding.svg'); ?>
+  </div>
+
+    <progressbar>
+
+    </progressbar>
+
+    <!--  <h2><a class='tab-link' href='javascript:void(0);' data-id="tab-settings">
       <?php esc_html_e('Join ShortPixel','shortpixel-image-optimiser');?></a>
-    </h2>
-<div class="wp-shortpixel-options wp-shortpixel-tab-content">
+    </h2> -->
+
 	 <!-- // @todo Inline CSS on whole page-->
   <h3><?php esc_html_e('Request an API Key:','shortpixel-image-optimiser');?></h3>
 <p><?php esc_html_e('If you don\'t have an API Key, you can request one for free. Just press the "Request Key" button after checking that the e-mail is correct.','shortpixel-image-optimiser');?></p>
@@ -92,6 +103,7 @@ $disabled = ($view->key->is_editable) ? '' : 'disabled';
   <form method="POST" action="<?php echo esc_url(add_query_arg(array('noheader' => 'true', 'sp-action' => 'action_addkey'))) ?>" id="shortpixel-form-nokey">
   <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
 
+
   <setting>
       <name>
           <?php esc_html_e('API Key:','shortpixel-image-optimiser');?>
@@ -118,5 +130,4 @@ $disabled = ($view->key->is_editable) ? '' : 'disabled';
 </settinglist>
 
 
-</div> <!-- tab content -->
 </section>

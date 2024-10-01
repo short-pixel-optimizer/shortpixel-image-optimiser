@@ -20,7 +20,6 @@ $queueRunning = $bulk->isAnyBulkRunning();
 
 		<?php if ($queueRunning === true): ?>
 		<div class='option'>
-			<div class='name'>&nbsp;</div>
 
 			<div class='field action queue-warning'>
 				 	<?php esc_html_e('It looks like a bulk process is still active. Please note that bulk actions will reset running bulk processes. ', 'shortpixel-image-optimiser'); ?>

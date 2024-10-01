@@ -69,24 +69,26 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                     <?php printf(esc_html__('%s Run a few tests%s to help you decide.', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/online-image-compression" style="margin-left:20px;" target="_blank">', '</a>'); ?>
 
                     <p class="settings-info shortpixel-radio-info shortpixel-radio-lossy" <?php echo( $view->data->compressionType == 1 ? "" : 'style="display:none"' );?>>
-                        <?php printf(esc_html__('%sLossy SmartCompression (recommended): %s offers the best compression rate. %s What is SmartCompress? %s This is the recommended option for most users, producing results that look the same as the original to the human eye.','shortpixel-image-optimiser'),'<b>','</b>', '<a href="https://shortpixel.com/blog/introducing-smartcompress/" target="_blank" class="shortpixel-help-link"><span class="dashicons dashicons-editor-help"></span>', '</a><br />');?>
+                        <?php printf(esc_html__('%sLossy SmartCompression (recommended): %s offers the best compression rate. %s What is SmartCompress? %s This is the recommended option for most users, producing results that look the same as the original to the human eye.','shortpixel-image-optimiser'),'<b>','</b>', '<a href="https://shortpixel.com/blog/introducing-smartcompress/" target="_blank" class="shortpixel-help-link"><span class="dashicons dashicons-editor-help"></span>', '</a><br /><br />');?>
                     </p>
                     <p class="settings-info shortpixel-radio-info shortpixel-radio-glossy" <?php echo( $view->data->compressionType == 2 ? "" : 'style="display:none"' );?>>
-                        <?php printf(esc_html__('%sGlossy SmartCompression: %s creates images that are almost pixel-perfect identical with the originals. %s What is SmartCompress? %s Best option for photographers and other professionals that use very high quality images on their sites and want the best compression while keeping the quality untouched.','shortpixel-image-optimiser'), '<b>','</b>', '<a href="https://shortpixel.com/blog/introducing-smartcompress/" target="_blank" class="shortpixel-help-link"><span class="dashicons dashicons-editor-help"></span>', '</a><br>');?>
+                        <?php printf(esc_html__('%sGlossy SmartCompression: %s creates images that are almost pixel-perfect identical with the originals. %s What is SmartCompress? %s Best option for photographers and other professionals that use very high quality images on their sites and want the best compression while keeping the quality untouched.','shortpixel-image-optimiser'), '<b>','</b>', '<a href="https://shortpixel.com/blog/introducing-smartcompress/" target="_blank" class="shortpixel-help-link"><span class="dashicons dashicons-editor-help"></span>', '</a><br><br>');?>
 
                     </p>
                     <p class="settings-info shortpixel-radio-info shortpixel-radio-lossless" <?php echo( $view->data->compressionType == 0 ? "" : 'style="display:none"' );?>>
                         <?php printf(esc_html__('%s Lossless compression: %s the resulting image is pixel-identical with the original image. %sMake sure not a single pixel looks different in the optimized image compared with the original.
-                        In some rare cases you will need to use this type of compression. Some technical drawings or images from vector graphics are possible situations.','shortpixel-image-optimiser'),'<b>','</b>', '<br>');?>
+                        In some rare cases you will need to use this type of compression. Some technical drawings or images from vector graphics are possible situations.','shortpixel-image-optimiser'),'<b>','</b>', '<br><br>');?>
                     </p>
                   </info>
 
               </content>
 
-              <content>
+              <content class='smart-compression-explainer' >
                 <?php echo UIHelper::getIcon('res/images/illustration/robo_info.svg'); ?>
-                  <?php esc_html_e('What is SmartCompression', 'shortpixel-image-optimiser'); ?>
+                  <h4><?php esc_html_e('What is SmartCompression', 'shortpixel-image-optimiser'); ?></h4>
 
+                  <?php _e('Images that look just good as the original, but with the smallest possible file size', 'shortpixel-image-optimiser'); ?>
+                  <a href="https://shortpixel.com/blog/introducing-smartcompress/" target="_blank" class="shortpixel-help-link"><?php _e('Learn more', 'shortpixel-image-optimiser'); ?></a>
 
               </content>
             </gridbox>

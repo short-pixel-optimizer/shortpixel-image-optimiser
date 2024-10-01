@@ -162,7 +162,6 @@ class ApiKeyModel extends \ShortPixel\Model
   */
   public function checkKey($key)
   {
-
 			$valid = false;
 
       if (is_null($key) || strlen($key) == 0)

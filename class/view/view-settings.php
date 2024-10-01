@@ -12,7 +12,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 <header>
   <h1>
       <?php echo UIHelper::getIcon('res/images/illustration/logo_settings.svg'); ?>
-      <?php //esc_html_e('ShortPixel Plugin Settings','shortpixel-image-optimiser');?>
   </h1>
 
   <div class='top-buttons'>
@@ -127,8 +126,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	        <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
 
         <?php
-      //  $this->loadView('settings/part-general');
-      //  $this->loadView('settings/part-advanced');
         if (! $this->view->cloudflare_constant) // @todo
         {
           //$this->loadView('settings/part-cloudflare');
@@ -137,12 +134,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
         ?>
 			</form>
-			<?php
-				if (Log::debugIsActive())
-        {
-          //$this->loadView('settings/part-debug');
-        }
-				?>
+
 			</div> <!-- wrappur -->
       <?php
     endif;

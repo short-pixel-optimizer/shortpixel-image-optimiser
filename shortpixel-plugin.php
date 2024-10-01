@@ -646,7 +646,7 @@ class ShortPixelPlugin {
 
         switch ( $plugin_page ) {
             case 'wp-shortpixel-settings': // settings
-						$controller = 'ShortPixel\Controller\SettingsController';
+						$controller = 'ShortPixel\Controller\View\SettingsViewController';
         	break;
 					 case 'shortpixel-network-settings':
 					 	$controller = 'ShortPixel\Controller\View\MultiSiteViewController';

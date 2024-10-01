@@ -1,5 +1,5 @@
 <?php
-namespace ShortPixel\Controller;
+namespace ShortPixel\Controller\View;
 
 if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
@@ -13,14 +13,43 @@ use ShortPixel\Helper\InstallHelper as InstallHelper;
 
 use ShortPixel\Model\AccessModel as AccessModel;
 use ShortPixel\Model\SettingsModel as SettingsModel;
+use ShortPixel\Model\ApiKeyModel as ApiKeyModel;
+
+use ShortPixel\Controller\ApiKeyController as ApiKeyController;
+use ShortPixel\Controller\BulkController as BulkController;
+use ShortPixel\Controller\StatsController as StatsController;
+
 
 use ShortPixel\NextGenController as NextGenController;
 
-class SettingsController
+class SettingsViewController extends \ShortPixel\ViewController
 {
 
+     //env
+     protected $is_nginx;
+     protected $is_htaccess_writable;
+		 protected $is_gd_installed;
+		 protected $is_curl_installed;
+     protected $is_multisite;
+     protected $is_mainsite;
+     protected $has_nextgen;
+     protected $do_redirect = false;
+     protected $disable_heavy_features = false; // if virtual and stateless, might disable heavy file ops.
+
+     protected $quotaData = null;
+
+     protected $keyModel;
+
+     protected $mapper = array(
+       'cmyk2rgb' => 'CMYKtoRGBconversion',
+     );
+
+     protected $display_part = 'overview';
+		 protected $all_display_parts = array('overview', 'dashboard', 'optimisation', 'cloudflare', 'debug', 'tools');
+     protected $form_action = 'save-settings';
+     protected $view_mode = 'simple'; // advanced or simple
+
 		 protected static $instance;
-     protected $model;
 
       public function __construct()
       {
@@ -28,7 +57,7 @@ class SettingsController
 					$keyControl = ApiKeyController::getInstance();
           $this->keyModel = $keyControl->getKeyModel();
 
-        //  parent::__construct();
+          parent::__construct();
       }
 
       // default action of controller
@@ -38,12 +67,13 @@ class SettingsController
         $this->loadEnv();
         $this->checkPost(); // sets up post data
 
-        /* This should be done now in ApiKeyModel
-        if (2 !== $this->model->redirectedSettings)
+      /*
+         This should be done now in ApiKeyModel
+      if (2 !== $this->model->redirectedSettings)
 
         {
           $this->model->redirectedSettings = 2; // Prevents any redirects after loading settings
-        } */
+        } */;
 
         if ($this->is_form_submit)
         {
@@ -143,11 +173,10 @@ class SettingsController
 	        if($body->Status == 'success') {
 	            $key = trim($body->Details);
 							$valid = $this->keyModel->checkKey($key);
-	            //$validityData = $this->getQuotaInformation($key, true, true);
 
 	            if($valid === true) {
 	                \ShortPixel\Controller\AdminNoticesController::resetAPINotices();
-	                /* Notice::addSuccess(__('Great, you successfully claimed your API Key! Please take a few moments to review the plugin settings below before starting to optimize your images.','shortpixel-image-optimiser')); */
+
 	            }
 	        }
 					elseif($body->Status == 'existing')
@@ -422,6 +451,26 @@ Log::addTemp('PostData', $this->postData);
         $logs = $bulkController->getLogs();
 
         $this->view->dashboard  = new \stdClass;
+        $mainblock = new \stdClass;
+
+        $mainblock->ok = true;
+        $mainblock->icon = 'ok';
+        $mainblock->cocktail = true;
+        $mainblock->header = __('Everything running smoothly.', 'shortpixel-image-optimiser');
+        $mainblock->message = __('Stay calm and carry on ', 'shortpixel-image-optimiser');
+
+        if (false === $this->view->key->is_verifiedkey)
+        {
+
+            $mainblock->ok = false;
+            $mainblock->header = __('Issue with API Key', 'shortpixel-image-optimiser');
+            $mainblock->message = __('Add your API Key to start optimizing', 'shortpixel-image-optimiser');
+            $mainblock->cocktail = false;
+            $mainblock->icon = 'alert';
+
+        }
+
+        $this->view->dashboard->mainblock = $mainblock;
 
       }
 

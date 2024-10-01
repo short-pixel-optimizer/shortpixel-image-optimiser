@@ -77,6 +77,7 @@ class ViewController extends Controller
     {
       check_admin_referer( $this->form_action, 'sp-nonce' ); // extra check, when we are wrong here, it dies.
 
+Log::addTemp($_POST);
       $this->is_form_submit = true;
       $this->processPostData($_POST);
 
