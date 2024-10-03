@@ -46,10 +46,8 @@ class MediaLibraryQueue extends Queue
 
    protected function prepare()
    {
-
       $items = $this->queryPostMeta();
       return $this->prepareItems($items);
-
    }
 
    protected function prepareBulkRestore()
