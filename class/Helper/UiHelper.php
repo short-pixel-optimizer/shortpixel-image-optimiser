@@ -460,6 +460,9 @@ class UiHelper
 
     $text = '';
 
+		$access = AccessModel::getInstance();
+
+
     if (! $keyControl->keyIsVerified())
     {
       $text = __('Invalid API Key. <a href="options-general.php?page=wp-shortpixel-settings">Check your Settings</a>','shortpixel-image-optimiser');
@@ -504,7 +507,10 @@ class UiHelper
 			 $text = '<p>' . __('This item is waiting to be processed', 'shortpixel-image-optimiser') . '</p>';
 			 $action = self::getAction('cancelOptimize', $mediaItem->get('id'));
 
-			 $text .= '<p><a href="javascript:' . $action['function'] . '">' . $action['text'] . '</a></p>';
+			 if ($access->imageIsEditable($mediaItem))
+			 {
+			 	$text .= '<p><a href="javascript:' . $action['function'] . '">' . $action['text'] . '</a></p>';
+		 	 }
 		}
 
     if ($mediaItem->isOptimizePrevented() !== false)

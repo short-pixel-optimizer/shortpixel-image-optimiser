@@ -280,7 +280,7 @@ class OtherMediaViewController extends \ShortPixel\ViewController
           }
 
 
-          $sql  .= ($this->orderby ? " ORDER BY " . $this->orderby . " " . $this->order . " " : "")
+					$sql  .= ($this->orderby ? " ORDER BY " . sanitize_sql_orderby($this->orderby . " " . $this->order) . " " : "")
                   . " LIMIT " . $this->items_per_page . " OFFSET " . ($page - 1) * $this->items_per_page;
 
 

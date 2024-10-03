@@ -18,6 +18,8 @@ use ShortPixel\Helper\UiHelper as UiHelper;
 use ShortPixel\Helper\InstallHelper as InstallHelper;
 
 use ShortPixel\Model\Image\ImageModel as ImageModel;
+use ShortPixel\Model\AccessModel as AccessModel;
+
 
 
 // Class for containing all Ajax Related Actions.
@@ -29,6 +31,7 @@ class AjaxController
     const APIKEY_FAILED = -4;
     const NOQUOTA = -5;
     const SERVER_ERROR = -6;
+		const NO_ACCESS = -7;
 
     private static $instance;
 
@@ -40,7 +43,7 @@ class AjaxController
       return self::$instance;
     }
 
-    // Support for JS Processor
+		// Support for JS Processor - also used by localize to get for init.
     public function getProcessorKey()
     {
       // Get a Secret Key.
@@ -55,7 +58,7 @@ class AjaxController
       return $secretKey;
     }
 
-    public function checkProcessorKey()
+		protected function checkProcessorKey()
     {
       $processKey = $this->getProcessorKey();
 			// phpcs:ignore -- Nonce is checked
@@ -110,6 +113,8 @@ class AjaxController
 
 					$item = \wpSPIO()->filesystem()->getImage($id, $type);
 
+					$this->checkImageAccess($item);
+
           if ($id > 0)
           {
              if ($type == 'media')
@@ -146,7 +151,9 @@ class AjaxController
     public function ajax_processQueue()
     {
         $this->checkNonce('processing');
+				$this->checkActionAccess('processQueue', 'is_author');
         $this->checkProcessorKey();
+
 
 
 				ErrorController::start(); // Capture fatal errors for us.
@@ -209,86 +216,107 @@ class AjaxController
           unset($data['typeArray']);
         }
 
+
+				// First Item action,  alphabet.  Second general actions, alpha.
         switch($action)
         {
-           case 'restoreItem':
-              $json = $this->restoreItem($json, $data);
-           break;
-           case 'reOptimizeItem':
+					case 'cancelOptimize':
+						 $json = $this->cancelOptimize($json, $data);
+					break;
+					case 'getItemEditWarning': // Has to do with image editor
+						 $json = $this->getItemEditWarning($json, $data);
+					break;
+					case 'markCompleted':
+						$json = $this->markCompleted($json, $data);
+					break;
+					case 'optimizeItem':
+						$json = $this->optimizeItem($json, $data);
+					break;
+					case "redoLegacy":
+						 $this->redoLegacy($json, $data);
+					break;
+          case 'restoreItem':
+             $json = $this->restoreItem($json, $data);
+          break;
+          case 'reOptimizeItem':
              $json = $this->reOptimizeItem($json, $data);
-           break;
-           case 'optimizeItem':
-             $json = $this->optimizeItem($json, $data);
-           break;
-					 case 'markCompleted':
-					 	 $json = $this->markCompleted($json, $data);
-					 break;
+          break;
 					 case 'unMarkCompleted':
 						 $json = $this->unMarkCompleted($json, $data);
 					 break;
-					 case 'cancelOptimize':
-					 		$json = $this->cancelOptimize($json, $data);
-					 break;
-					 case 'getItemEditWarning':
-					 	  $json = $this->getItemEditWarning($json, $data);
-					 break;
-           case 'createBulk':
-             $json = $this->createBulk($json, $data);
-           break;
-           case 'applyBulkSelection':
+
+					 case 'applyBulkSelection':
+						 $this->checkActionAccess($action, 'is_editor');
              $json = $this->applyBulkSelection($json, $data);
            break;
-           case 'startBulk':
-             $json = $this->startBulk($json, $data);
+           case 'createBulk':
+					 	 $this->checkActionAccess($action, 'is_editor');
+             $json = $this->createBulk($json, $data);
            break;
-           case 'finishBulk':
+					 case 'finishBulk':
+					 	 $this->checkActionAccess($action, 'is_editor');
              $json = $this->finishBulk($json, $data);
            break;
+           case 'startBulk':
+					 	 $this->checkActionAccess($action, 'is_editor');
+             $json = $this->startBulk($json, $data);
+           break;
            case 'startRestoreAll':
+							$this->checkActionAccess($action, 'is_admin_user');
               $json = $this->startRestoreAll($json,$data);
            break;
            case 'startMigrateAll':
+					 		$this->checkActionAccess($action, 'is_admin_user');
               $json = $this->startMigrateAll($json, $data);
            break;
 					 case 'startRemoveLegacy':
+					 		$this->checkActionAccess($action, 'is_admin_user');
 					 		$json = $this->startRemoveLegacy($json, $data);
 					 break;
 					 case "toolsRemoveAll":
+					 		 $this->checkActionAccess($action, 'is_admin_user');
 					 		 $json = $this->removeAllData($json, $data);
 					 break;
 					 case "toolsRemoveBackup":
+					 		 $this->checkActionAccess($action, 'is_admin_user');
 					 		 $json = $this->removeBackup($json, $data);
 					 break;
 					 case 'request_new_api_key': // @todo Dunnoo why empty, should go if not here.
 
 					 break;
 					 case "loadLogFile":
+							$this->checkActionAccess($action, 'is_editor');
 					  	$data['logFile'] = isset($_POST['loadFile']) ? sanitize_text_field($_POST['loadFile']) : null;
 					 		$json = $this->loadLogFile($json, $data);
 					 break;
-					 case "redoLegacy":
-					 	  $this->redoLegacy($json, $data);
-					 break;
+
 					 case 'refreshFolder':
+					 		$this->checkActionAccess($action, 'is_editor');
 					 		$json = $this->refreshFolder($json,$data);
 					 break;
 					 // CUSTOM FOLDERS
 					 case 'removeCustomFolder':
+					 			$this->checkActionAccess($action, 'is_editor');
 					 	 	 $json = $this->removeCustomFolder($json, $data);
 					 break;
 					 case 'browseFolders':
+					 		$this->checkActionAccess($action, 'is_editor');
 					 		$json = $this->browseFolders($json, $data);
 					 break ;
 					 case 'addCustomFolder':
+					 		$this->checkActionAccess($action, 'is_editor');
 					 		$json = $this->addCustomFolder($json, $data);
 					 break;
 					 case 'scanNextFolder':
+					 		$this->checkActionAccess($action, 'is_editor');
 					 		$json = $this->scanNextFolder($json, $data);
 					 break;
 					 case 'resetScanFolderChecked';
+					 		$this->checkActionAccess($action, 'is_editor');
 					 		$json = $this->resetScanFolderChecked($json, $data);
 					 break;
 					 case 'recheckActive':
+					 		$this->checkActionAccess($action, 'is_editor');
 					 		$json = $this->recheckActive($json, $data);
 					 break;
            default:
@@ -300,16 +328,18 @@ class AjaxController
         $this->send($json);
     }
 
-    public function getMediaItem($id, $type)
+		protected function getMediaItem($id, $type)
     {
       $fs = \wpSPIO()->filesystem();
       return $fs->getImage($id, $type);
     }
 
-		public function getItemEditWarning($json, $data)
+		protected function getItemEditWarning($json, $data)
 		{
 			  $id = intval($_POST['id']);
 				$mediaItem = $this->getMediaItem($id, 'media');
+				$this->checkImageAccess($mediaItem);
+
 				if (is_object($mediaItem))
 				{
 					$json = new \stdClass;
@@ -323,13 +353,15 @@ class AjaxController
 		}
 
     /** Adds  a single Items to the Single queue */
-    public function optimizeItem()
+		protected function optimizeItem()
     {
           $id = intval($_POST['id']);
           $type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';
 					$flags = isset($_POST['flags']) ? sanitize_text_field($_POST['flags']) : false;
 
           $mediaItem = $this->getMediaItem($id, $type);
+
+					$this->checkImageAccess($mediaItem);
 
           // if order is given, remove barrier and file away.
           if ($mediaItem->isOptimizePrevented() !== false)
@@ -349,12 +381,14 @@ class AjaxController
 					return $json;
     }
 
-		public function markCompleted()
+		protected function markCompleted()
 		{
 				$id = intval($_POST['id']);
 				$type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';
 
 				$mediaItem = $this->getMediaItem($id, $type);
+
+				$this->checkImageAccess($mediaItem);
 
 				$mediaItem->markCompleted(__('This item has been manually marked as completed', 'shortpixel-image-optimiser'), ImageModel::FILE_STATUS_MARKED_DONE);
 
@@ -374,12 +408,14 @@ class AjaxController
 				return $json;
 		}
 
-		public function unMarkCompleted()
+		protected function unMarkCompleted()
 		{
 			$id = intval($_POST['id']);
 			$type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';
 
 			$mediaItem = $this->getMediaItem($id, $type);
+
+			$this->checkImageAccess($mediaItem);
 
 			$mediaItem->resetPrevent();
 
@@ -400,12 +436,15 @@ class AjaxController
 
 		}
 
-		public function cancelOptimize($json, $data)
+		protected function cancelOptimize($json, $data)
 		{
 			$id = intval($_POST['id']);
 			$type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';
 
 			$mediaItem = $this->getMediaItem($id, $type);
+
+			$this->checkImageAccess($mediaItem);
+
 
 			$mediaItem->dropFromQueue();
 
@@ -457,6 +496,10 @@ class AjaxController
       $type =$data['type'];
 
       $mediaItem = $this->getMediaItem($id, $type);
+
+			$this->checkImageAccess($mediaItem);
+
+
       $control = new OptimizeController();
 
       $json->$type = $control->restoreItem($mediaItem);
@@ -473,6 +516,9 @@ class AjaxController
 			 $actionType = isset($_POST['actionType']) ? intval($_POST['actionType']) : null;
 
        $mediaItem = $this->getMediaItem($id, $type);
+
+			 $this->checkImageAccess($mediaItem);
+
 			 $args = array();
 
 				if ($actionType == ImageModel::ACTION_SMARTCROP || $actionType == ImageModel::ACTION_SMARTCROPLESS)
@@ -632,6 +678,8 @@ class AjaxController
 			$type = $data['type'];
 			$mediaItem = $this->getMediaItem($id, $type);
 
+			$this->checkImageAccess($mediaItem);
+
 		// Changed since updated function should detect what is what.
 			$mediaItem->migrate();
 
@@ -645,6 +693,7 @@ class AjaxController
     public function ajax_getComparerData() {
 
         $this->checkNonce('ajax_request');
+
 
         $type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';
         $id = isset($_POST['id']) ? intval($_POST['id']) : false;
@@ -660,6 +709,8 @@ class AjaxController
         $ret = array();
         $fs = \wpSPIO()->filesystem();
         $imageObj = $fs->getImage($id, $type);
+
+				$this->checkImageAccess($imageObj);
 
         // With PDF, the thumbnail called 'full' is the image, the main is the PDF file
         if ($imageObj->getExtension() == 'pdf')
@@ -875,6 +926,7 @@ class AjaxController
     public function ajax_getBackupFolderSize()
     {
         $this->checkNonce('ajax_request');
+				$this->checkActionAccess($action, 'is_editor');
 
         $dirObj = \wpSPIO()->filesystem()->getDirectory(SHORTPIXEL_BACKUP_FOLDER);
 
@@ -886,6 +938,7 @@ class AjaxController
     public function ajax_proposeQuotaUpgrade()
     {
          $this->checkNonce('ajax_request');
+				 $this->checkActionAccess('propose_upgrade', 'is_editor');
 
          $notices = AdminNoticesController::getInstance();
          $notices->proposeUpgradeRemote();
@@ -895,6 +948,7 @@ class AjaxController
     public function ajax_checkquota()
     {
          $this->checkNonce('ajax_request');
+				 $this->checkActionAccess($action, 'is_editor');
 
          $quotaController = QuotaController::getInstance();
          $quotaController->forceCheckRemoteQuota();
@@ -921,10 +975,11 @@ class AjaxController
 
     }
 
+/*
 		public function ajax_addImageEditorData($data)
 		{
 
-		}
+		} */
 
 		protected function loadLogFile($json, $data)
 		{
@@ -991,7 +1046,7 @@ class AjaxController
 		}
 
     protected function checkNonce($action)
-    {
+		{
       if (! wp_verify_nonce($_POST['nonce'], $action))
       {
 
@@ -1010,6 +1065,53 @@ class AjaxController
 
     }
 
+		protected function checkActionAccess($action, $access)
+		{
+				$accessModel = AccessModel::getInstance();
+
+				$bool = $accessModel->userIsAllowed($access);
+
+				if ($bool === false)
+				{
+						$json = new \stdClass;
+						$json->message = __('This user is not allowed to perform this action', 'shortpixel-image-optimiser');
+						$json->action = $action;
+						$json->status = false;
+						$json->error = self::NO_ACCESS;
+						$this->send($json);
+						exit();
+				}
+
+				return true;
+		}
+
+		protected function checkImageAccess($mediaItem)
+		{
+
+			$accessModel = AccessModel::getInstance();
+			if (is_object($mediaItem))
+			{
+				$bool = $accessModel->imageIsEditable($mediaItem);
+				$id =$mediaItem->get('id');
+			}
+			else {
+				$bool = false;
+				$id = false;
+			}
+
+			if ($bool === false)
+			{
+				$json = new \stdClass;
+				$json->message = __('This user is not allowed to edit this image', 'shortpixel-image-optimiser');
+				$json->status = false;
+				$json->id = $id;
+				$json->error = self::NO_ACCESS;
+				$this->send($json);
+				exit();
+			}
+
+			return true;
+		}
 
     protected function send($json)
     {
