@@ -1037,6 +1037,7 @@ div.spio-modal-title {
   box-sizing: border-box;
   color: #116C7E;
 }
+<<<<<<< HEAD
 .wrap.is-shortpixel-settings-page setting content {
   padding: 15px 10px;
   flex-basis: calc(100% - 250px);
@@ -1047,6 +1048,49 @@ div.spio-modal-title {
   min-width: 100px;
   font-weight: 700;
   display: inline-block;
+=======
+
+div.spio-modal-shade {
+  display: none;
+  /* Hidden by default */
+  position: fixed;
+  /* Stay in place */
+  z-index: 10;
+  /* Sit on top */
+  left: 0;
+  top: 0;
+  width: 100%;
+  /* Full width */
+  height: 100%;
+  /* Full height */
+  overflow: auto;
+  /* Enable scroll if needed */
+  background-color: black;
+  /* Fallback color */
+  background-color: rgba(0, 0, 0, 0.4);
+  /* Black w/ opacity */
+}
+
+div.spio-modal {
+  background-color: #fefefe;
+  /*margin: 8% auto;  15% from the top and centered */
+  background-image: url("../img/spinner2.gif");
+  background-repeat: no-repeat;
+  background-position: center;
+  padding: 20px 16px 16px;
+  border: 1px solid #888;
+  width: 30%;
+  /* Could be more or less, depending on screen size */
+  min-width: 300px;
+  /* Could be more or less, depending on screen size */
+  z-index: 100;
+  /* Proper z-index */
+  position: fixed;
+  top: 10%;
+  left: 50%;
+  max-height: 90%;
+  overflow-y: auto;
+>>>>>>> hotfix-5.6.4
 }
 .wrap.is-shortpixel-settings-page setting info {
   display: block;

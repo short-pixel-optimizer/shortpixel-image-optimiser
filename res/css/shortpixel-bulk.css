@@ -601,7 +601,11 @@
   color: #ccc;
   margin-top: 8px;
 }
+<<<<<<< HEAD
 .wrap.is-shortpixel-bulk-page section.panel.selection .spio-progressbar .select .line {
+=======
+.shortpixel-bulk-wrapper section.panel.selection .spio-progressbar .select .line {
+>>>>>>> hotfix-5.6.4
   background: linear-gradient(90deg, #1fbec9 0%, #1fbec9 49.9%, #cccccc 50%, #cccccc 100%);
 }
 .wrap.is-shortpixel-bulk-page section.panel.selection .spio-progressbar .select .text, .wrap.is-shortpixel-bulk-page section.panel.selection .spio-progressbar .select .step {
@@ -741,7 +745,11 @@
 .wrap.is-shortpixel-bulk-page section.panel.summary .spio-progressbar .select .step {
   border-color: #1FBEC9;
 }
+<<<<<<< HEAD
 .wrap.is-shortpixel-bulk-page section.panel.summary .spio-progressbar .summary .line {
+=======
+.shortpixel-bulk-wrapper section.panel.summary .spio-progressbar .summary .line {
+>>>>>>> hotfix-5.6.4
   background: linear-gradient(90deg, #1fbec9 0%, #1fbec9 49.9%, #cccccc 50%, #cccccc 100%);
 }
 .wrap.is-shortpixel-bulk-page section.panel.summary .spio-progressbar .summary .text, .wrap.is-shortpixel-bulk-page section.panel.summary .spio-progressbar .summary .step {
@@ -883,7 +891,11 @@
 .wrap.is-shortpixel-bulk-page section.panel.process .spio-progressbar .select .step, .wrap.is-shortpixel-bulk-page section.panel.process .spio-progressbar .summary .step, .wrap.is-shortpixel-bulk-page section.panel.finished .spio-progressbar .select .step, .wrap.is-shortpixel-bulk-page section.panel.finished .spio-progressbar .summary .step {
   border-color: #1FBEC9;
 }
+<<<<<<< HEAD
 .wrap.is-shortpixel-bulk-page section.panel.process .spio-progressbar .process .line, .wrap.is-shortpixel-bulk-page section.panel.finished .spio-progressbar .process .line {
+=======
+.shortpixel-bulk-wrapper section.panel.process .spio-progressbar .process .line, .shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .process .line {
+>>>>>>> hotfix-5.6.4
   background: linear-gradient(90deg, #1fbec9 0%, #1fbec9 49.9%, #cccccc 50%, #cccccc 100%);
 }
 .wrap.is-shortpixel-bulk-page section.panel.process .spio-progressbar .process .text, .wrap.is-shortpixel-bulk-page section.panel.process .spio-progressbar .process .step, .wrap.is-shortpixel-bulk-page section.panel.finished .spio-progressbar .process .text, .wrap.is-shortpixel-bulk-page section.panel.finished .spio-progressbar .process .step {
@@ -1125,7 +1137,11 @@
 .wrap.is-shortpixel-bulk-page section.panel.finished .spio-progressbar .select .step, .wrap.is-shortpixel-bulk-page section.panel.finished .spio-progressbar .summary .step, .wrap.is-shortpixel-bulk-page section.panel.finished .spio-progressbar .process .step {
   border-color: #1FBEC9;
 }
+<<<<<<< HEAD
 .wrap.is-shortpixel-bulk-page section.panel.finished .spio-progressbar .result .line {
+=======
+.shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .result .line {
+>>>>>>> hotfix-5.6.4
   background: linear-gradient(90deg, #1fbec9 0%, #1fbec9 49.9%, #cccccc 50%, #cccccc 100%);
 }
 .wrap.is-shortpixel-bulk-page section.panel.finished .spio-progressbar .result .text, .wrap.is-shortpixel-bulk-page section.panel.finished .spio-progressbar .result .step {
