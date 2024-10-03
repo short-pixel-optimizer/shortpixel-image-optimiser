@@ -285,6 +285,7 @@ class ShortPixelSettings
 			var displayPartEl = this.root.querySelector('input[name="display_part"]');
 			this.current_tab = displayPartEl.value;
 
+			/* Not sure why this is here, since display_part from html already sets the display part to the query string if there. 
 			var uri = window.location.href.toString();
 			var params = new URLSearchParams(uri);
 			if (params.has('part'))
@@ -301,7 +302,7 @@ class ShortPixelSettings
 
 				 var event = new CustomEvent('click');
 				 target.dispatchEvent(event);
-			}
+			} */
 
 
 	}

@@ -17,15 +17,22 @@ i.documentation {
 }
 
 div.spio-modal-shade {
-  position: fixed; /* Stay in place */
-  z-index: 10; /* Sit on top - zindex wars  */
+  position: fixed;
+  /* Stay in place */
+  z-index: 10;
+  /* Sit on top - zindex wars  */
   left: 0;
   top: 0;
-  width: 100%; /* Full width */
-  height: 100%; /* Full height */
-  overflow: auto; /* Enable scroll if needed */
-  background-color: rgb(0, 0, 0); /* Fallback color */
-  background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+  width: 100%;
+  /* Full width */
+  height: 100%;
+  /* Full height */
+  overflow: auto;
+  /* Enable scroll if needed */
+  background-color: black;
+  /* Fallback color */
+  background-color: rgba(0, 0, 0, 0.4);
+  /* Black w/ opacity */
 }
 
 div.spio-modal {
@@ -36,10 +43,13 @@ div.spio-modal {
   background-position: center;
   padding: 20px 16px 16px;
   border: 1px solid #888;
-  width: 40%; /* Could be more or less, depending on screen size */
+  width: 40%;
+  /* Could be more or less, depending on screen size */
   max-width: 100%;
-  min-width: 300px; /* Could be more or less, depending on screen size */
-  z-index: 100; /* Proper z-index */
+  min-width: 300px;
+  /* Could be more or less, depending on screen size */
+  z-index: 100;
+  /* Proper z-index */
   position: fixed;
   top: 10%;
   left: 30%;
@@ -71,7 +81,8 @@ div.spio-modal-title {
   display: none;
 }
 
-.wrap.is-shortpixel-settings-page { /* TABS CONTROLS */
+.wrap.is-shortpixel-settings-page {
+  /* TABS CONTROLS */
   /* .submit {
   	.button {
   		min-height: 44px;
@@ -95,7 +106,7 @@ div.spio-modal-title {
   vertical-align: bottom;
   margin-right: 8px;
 }
-.wrap.is-shortpixel-settings-page button {
+.wrap.is-shortpixel-settings-page header .top-buttons button {
   color: #fff;
   background: #1ABDCA;
   padding: 8px 6px;
@@ -105,11 +116,11 @@ div.spio-modal-title {
   font-weight: 700;
   border-radius: 6px;
 }
-.wrap.is-shortpixel-settings-page button i.switch {
+.wrap.is-shortpixel-settings-page header .top-buttons button i.switch {
   width: 18px;
   height: 12px;
 }
-.wrap.is-shortpixel-settings-page button i.notifications {
+.wrap.is-shortpixel-settings-page header .top-buttons button i.notifications {
   width: 14px;
   height: 14px;
   filter: brightness(0) saturate(100%) invert(100%) sepia(100%) saturate(0%) hue-rotate(251deg) brightness(108%) contrast(108%);
@@ -218,12 +229,37 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page.advanced #viewmode-toggle .simple {
   display: none;
 }
+.wrap.is-shortpixel-settings-page.onboarding menu {
+  display: none;
+}
+.wrap.is-shortpixel-settings-page.onboarding .shortpixel-settings section.wrapper {
+  margin: 0 auto;
+}
 .wrap.is-shortpixel-settings-page .shortpixel-settings {
   width: 95%;
   display: flex;
   background: #fff;
   border-radius: 16px;
   margin: 0 auto;
+}
+.wrap.is-shortpixel-settings-page .shortpixel-settings button {
+  color: #fff;
+  background: #1ABDCA;
+  padding: 8px 6px;
+  border: 0;
+  margin: 4px;
+  font-family: "Roboto";
+  font-weight: 700;
+  border-radius: 6px;
+}
+.wrap.is-shortpixel-settings-page .shortpixel-settings button i.switch {
+  width: 18px;
+  height: 12px;
+}
+.wrap.is-shortpixel-settings-page .shortpixel-settings button i.notifications {
+  width: 14px;
+  height: 14px;
+  filter: brightness(0) saturate(100%) invert(100%) sepia(100%) saturate(0%) hue-rotate(251deg) brightness(108%) contrast(108%);
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings menu {
   width: 25%;
@@ -919,8 +955,23 @@ div.spio-modal-title {
   display: inline;
   float: none;
 }
+.wrap.is-shortpixel-settings-page #tab-nokey h1 {
+  font-size: 36px;
+  text-align: center;
+  margin: 20px 0;
+}
+.wrap.is-shortpixel-settings-page #tab-nokey .onboarding-logo {
+  text-align: center;
+}
 .wrap.is-shortpixel-settings-page #tab-nokey .onboarding-logo img {
   width: 400px;
+}
+.wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper {
+  display: flex;
+  justify-content: space-between;
+}
+.wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist {
+  flex: 0 0 50%;
 }
 .wrap.is-shortpixel-settings-page #tab-tools .button {
   min-height: 44px;

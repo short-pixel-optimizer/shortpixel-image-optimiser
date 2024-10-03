@@ -18,7 +18,7 @@ use ShortPixel\Model\ApiKeyModel as ApiKeyModel;
 use ShortPixel\Controller\ApiKeyController as ApiKeyController;
 use ShortPixel\Controller\BulkController as BulkController;
 use ShortPixel\Controller\StatsController as StatsController;
-
+use ShortPixel\Controller\QuotaController as QuotaController;
 
 use ShortPixel\NextGenController as NextGenController;
 
@@ -435,12 +435,24 @@ Log::addTemp('PostData', $this->postData);
 				 if ($this->view->data->createAvif == 1)
            $this->avifServerCheck();
 
+
+
          // Set viewMode
-         $view_mode = get_user_option('shortpixel-settings-mode');
-         if (false === $view_mode)
-          $view_mode = $this->view_mode;
-         $this->view_mode = $view_mode;
-         $this->loadView('view-settings');
+				 if (false === $this->view->key->is_verifiedkey)
+				 {
+					 	$view_mode = 'onboarding';
+						$this->display_part = 'nokey';
+				 }
+				 else {
+					 $view_mode = get_user_option('shortpixel-settings-mode');
+	         if (false === $view_mode)
+	          $view_mode = $this->view_mode;
+
+				 }
+
+				 $this->view_mode = $view_mode;
+
+				 $this->loadView('view-settings');
       }
 
 

@@ -44,11 +44,16 @@ $disabled = ($view->key->is_editable) ? '' : 'disabled';
       <?php esc_html_e('Join ShortPixel','shortpixel-image-optimiser');?></a>
     </h2> -->
 
+
+		<div class='onboarding-join-wrapper'>
+
 	 <!-- // @todo Inline CSS on whole page-->
-  <h3><?php esc_html_e('Request an API Key:','shortpixel-image-optimiser');?></h3>
-<p><?php esc_html_e('If you don\'t have an API Key, you can request one for free. Just press the "Request Key" button after checking that the e-mail is correct.','shortpixel-image-optimiser');?></p>
+
 
 <settinglist>
+
+	<h2><?php esc_html_e('New Customer','shortpixel-image-optimiser');?></h2>
+<p><?php esc_html_e('If you don\'t have an API Key, you can request one for free. Just press the "Request Key" button after checking that the e-mail is correct.','shortpixel-image-optimiser');?></p>
 
   <form method="POST" action="<?php echo esc_url(add_query_arg(array('noheader' => 'true', 'sp-action' => 'action_request_new_key'))) ?>"
       id="shortpixel-form-request-key">
@@ -92,14 +97,14 @@ $disabled = ($view->key->is_editable) ? '' : 'disabled';
   </form>
 </settinglist>
 
-<h3>
-    <?php esc_html_e('Already have an API Key:','shortpixel-image-optimiser');?>
-</h3>
-<p>
-    <?php esc_html_e('If you already have an API Key please input it below and press Validate.','shortpixel-image-optimiser');?>
-</p>
-
 <settinglist>
+	<h2>
+			<?php esc_html_e('Existing Customer','shortpixel-image-optimiser');?>
+	</h2>
+	<p>
+	    <?php esc_html_e('If you already have an API Key please input it below and press Validate.','shortpixel-image-optimiser');?>
+	</p>
+
   <form method="POST" action="<?php echo esc_url(add_query_arg(array('noheader' => 'true', 'sp-action' => 'action_addkey'))) ?>" id="shortpixel-form-nokey">
   <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
 
@@ -128,6 +133,10 @@ $disabled = ($view->key->is_editable) ? '' : 'disabled';
 
   </form>
 </settinglist>
+
+</div> <!-- // Join Wrapper -->
+
+
 
 
 </section>

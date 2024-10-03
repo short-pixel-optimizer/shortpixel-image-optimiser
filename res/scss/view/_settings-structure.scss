@@ -12,6 +12,12 @@
 		 #viewmode-toggle .simple { display: none; }
 	}
 
+	&.onboarding
+	{
+		 menu { display: none } // remove the menu
+		 .shortpixel-settings section.wrapper { margin: 0 auto; } // center the wrapper.
+	}
+
 
 .shortpixel-settings // main article wrapper. Items for settings minus header.
 {
@@ -21,6 +27,29 @@
 		border-radius: 16px;
 		margin: 0 auto;
 
+		// Items for whole page
+		button {
+				color: #fff;
+				background: $blue_default;
+				padding: 8px 6px;
+				border: 0;
+				margin: 4px; // see if this works.
+				font-family: 'Roboto';
+				font-weight: 700;
+				border-radius: 6px;
+				i.switch {
+					 width: 18px;
+					 height: 12px;
+				}
+				i.notifications
+				{
+					 width: 14px;
+					 height: 14px;
+					 filter: brightness(0) saturate(100%) invert(100%) sepia(100%) saturate(0%) hue-rotate(251deg) brightness(108%) contrast(108%);;
+				}
+
+				// @todo probably something for icon left /right here.
+		}
 
 		menu { // left-hand menu.
 			 width: 25%;

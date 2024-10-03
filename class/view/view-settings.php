@@ -86,6 +86,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 			</ul>
 		</menu>
 		<section class="wrapper">
+			
           <?php $this->loadView('settings/part-overview'); ?>
           <?php $this->loadView('settings/part-general'); ?>
           <?php $this->loadView('settings/part-optimisation'); ?>
@@ -93,6 +94,8 @@ if ( ! defined( 'ABSPATH' ) ) {
           <?php $this->loadView('settings/part-webp'); ?>
           <?php $this->loadView('settings/part-cdn'); ?>
           <?php $this->loadView('settings/part-exclusions'); ?>
+
+					<?php $this->loadView('settings/part-nokey'); ?>
 
 
           <?php $this->loadView('settings/part-tools'); ?>
@@ -114,7 +117,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 <article id="shortpixel-settings-tabs" class="sp-tabs">
     <?php if (! $view->key->is_verifiedkey)
     {
-      $this->loadView('settings/part-nokey');
     } ?>
 
   <?php
