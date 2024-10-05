@@ -17,6 +17,20 @@ if ( ! defined( 'ABSPATH' ) ) {
     <?php esc_html_e('CDN','shortpixel-image-optimiser');?>
   </h2>
 
+	<?php $this->printSwitchButton(
+				['name' => 'useCDN',
+				 'checked' =>  ($view->data->useCDN > 0) ? 1 : 0,
+				 'label' => esc_html__('Use a CDN to deliver images','shortpixel-image-optimiser'),
+				]);
+	?>
+
+	<setting>
+		<name><?php esc_html_e('CDN Domain', 'shortpixel-image-optimiser'); ?></name>
+		<content>
+				<input type="text" name="CDNDomain" value="<?php echo esc_attr($view->data->CDNDomain) ?>">
+			</content>
+		</setting>
+
   <setting>
       <name><?php esc_html_e('HTTP AUTH credentials','shortpixel-image-optimiser');?></name>
 

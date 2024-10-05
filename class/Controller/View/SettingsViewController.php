@@ -47,7 +47,7 @@ class SettingsViewController extends \ShortPixel\ViewController
      );
 
      protected $display_part = 'overview';
-		 protected $all_display_parts = array('overview', 'dashboard', 'optimisation', 'cloudflare', 'debug', 'tools');
+		 protected $all_display_parts = array('overview', 'dashboard', 'optimisation','webp', 'cdn','exlusions', 'debug', 'tools');
      protected $form_action = 'save-settings';
      protected $view_mode = 'simple'; // advanced or simple
 

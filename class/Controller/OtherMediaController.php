@@ -36,7 +36,7 @@ class OtherMediaController extends \ShortPixel\Controller
     public static function getInstance()
     {
         if (is_null(self::$instance))
-           self::$instance = new OtherMediaController();
+					 self::$instance = new static();
 
         return self::$instance;
     }

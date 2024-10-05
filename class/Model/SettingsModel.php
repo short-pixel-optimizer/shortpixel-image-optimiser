@@ -55,6 +55,8 @@ class SettingsModel extends \ShortPixel\Model
 				'unlistedCounter' => ['s' => 'int', 'default' => 0], // counter to prevent checking unlisted files too much
 				'currentStats' => ['s' => 'array', 'default' => array()], // whatever the current stats are.
         'currentVersion' => ['s' => 'string', 'default' => ''],
+				'useCDN' => ['s' => 'boolean', 'default' => false],
+				'CDNDomain' => ['s' => 'string', 'default' => ''],
 
     );
 
