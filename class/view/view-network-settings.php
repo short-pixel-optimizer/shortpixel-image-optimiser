@@ -7,9 +7,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 
-$delivery_settings = $this->view->settings['delivery'];
-
-
 ?>
 
 <div class="wrap is-shortpixel-settings-page multi-site-settings">
@@ -30,20 +27,24 @@ $delivery_settings = $this->view->settings['delivery'];
         <h4>Deliver the next generation versions of the images in the front-end: </h4>
         <hr>
 
+        <settinglist>
+          <setting>
+            <name>
+                &nbsp;
+            </name>
+            <content>
+              <?php $this->printSwitchButton(
+                    ['name' => 'delivery_enable',
+                     'checked' => $delivery_settings['delivery_enable'],
+                     'label' => esc_html__('Enable site-wide settings','shortpixel-image-optimiser')
+                    ]);
+              ?>
+              <?php $this->printInlineHelp("https://shortpixel.com/knowledge-base/article/126-which-webp-files-delivery-method-is-the-best-for-me");
+              ?>
+            </content>
+          </setting>
 
-        <div class='option'>
-          <?php $this->printInlineHelp("https://shortpixel.com/knowledge-base/article/126-which-webp-files-delivery-method-is-the-best-for-me");
-          ?>
-
-          <?php $this->printSwitchButton(
-                ['name' => 'delivery_enable',
-                 'checked' => $delivery_settings['delivery_enable'],
-                 'label' => esc_html__('Enable site-wide settings','shortpixel-image-optimiser')
-                ]);
-          ?>
-
-        </div>
-
+        </settinglist>
 
         <div class='delivery-options-wrapper flex option'>
 

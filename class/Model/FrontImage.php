@@ -40,6 +40,15 @@ class FrontImage
 				$this->loadImageDom();
 		}
 
+		public function __get($attr)
+		{
+				if (property_exists($this, $attr) && ! is_null($attr))
+				{
+							return $this->$attr;
+				}
+				return null;
+		}
+
 		public function loadImageDom()
     {
         if (function_exists("mb_convert_encoding")) {
@@ -160,6 +169,7 @@ class FrontImage
 
 			 return $data;
 		}
+
 
 		public function getImageBase()
 		{

@@ -1,15 +1,24 @@
-.shortpixel-bulk-wrapper
+// Font family not working in wraps
+@import 'elements/fonts';
+
+
+// Root element
+.wrap.is-shortpixel-bulk-page
 {
 	@import 'elements/colors';
 	@import 'elements/animation';
+	@import 'elements/header';
+	@import 'elements/icons';
+
+	@import 'bulk/dashboard';
 
   /** GENERAL STYLES **/
-    h1 {
+  /*  h1 {
       font-size: 23px;
       font-weight: 400;
       line-height: 30px;
       margin: 30px 0;
-    }
+    } */
 
     h3.heading {
       margin: 15px 0 15px 0px;
@@ -184,8 +193,8 @@
 
     .screen-wrapper
     {
-        background: #fff;
-        width: 90%;
+  //      background: #fff;
+        width: 100%;
         min-height: 80vh;
         position: relative;
       //  overflow: hidden;
@@ -244,8 +253,9 @@
         opacity: 0;
         transition: opacity 500ms ease-in;
         margin: 15px 0;
-
 				padding-bottom: 35px;
+				background: #fff;
+
 
 
         &.active
@@ -359,118 +369,7 @@
 
 		 }
 
-/**** DASHBOARD ***/
-    section.panel.dashboard
-    {
-       h3.heading { border:0 ;
-        }
 
-
-       .bulk-wrapper
-       {
-            background: url('../img/bulk/dashboard-background.svg') no-repeat;
-            background-size: cover;
-            background-position: center;
-            background-color: #116C7D;
-            text-align: center;
-            height: 150px;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            .dashboard-image {
-
-              z-index: 1;
-              position: absolute;
-              left: 0; right: 0;
-
-            }
-            button
-            {
-               color: #ffffff;
-               //background: linear-gradient(to left, $color-darkest, $color-dark);
-               border-radius: 3px;
-               width: 250px;
-               height: 65px;
-               transition: all 0.5s linear;
-							 font-weight: 700;
-						//	 font-size: 16px;
-							 letter-spacing: 0.3px;
-							 border: 1px solid #ccc;
-
-               &:hover
-               {
-                //  background: linear-gradient(to left, #3b9ea5, #50d9e2);
-								background:  $color-darkest;
-								//	  background: linear-gradient(to left, $color-dark, $color-darkest);
-									height: 80px;
-									width: 300px;
-
-                  transition: all 1s linear;
-
-								//	color: #000;
-				//	transition: all 0.5s linear;
-               }
-               &:disabled {
-                 color: #ccc;
-                 background: #0e5358;
-               }
-               span
-               {
-								 margin-right: 16px;
-                 // vertical-align: middle;
-               }
-            }
-       } // bulk wrapper
-
-			 .dashboard-text {
-				  margin: 0 auto;
-					width: 50%;
-					p {
-						line-height: 25px;
-					}
-			 }
-
-       .dashboard-log
-       {
-          display: table;
-          width: 80%;
-          margin: 0 auto;
-          h3 { display: table-caption; text-align: center;}
-          > div {
-            display: table-row;
-            > span { display: table-cell; padding: 8px 8px 8px 0; }
-          }
-          .head
-          {
-            span {
-              font-weight: 700;
-              padding-left: 15px;
-            }
-          }
-          .data
-          {
-            span {
-              border-bottom: 1px solid #EBF5FF;
-              border-top: 1px solid #EBF5FF;
-              &:first-child { border-left: 1px solid #EBF5FF; }
-              &:last-child {  border-right: 1px solid #EBF5FF; }
-              font-size: 15px;
-              padding-left: 10px;
-              &.date {
-                 color: #1FBEC9;
-                 background: url('../img/bulk/checkmark.svg') left center no-repeat;
-                 padding-left: 29px;
-              }
-            }
-						&.custom
-						{
-
-						}
-          }
-       }
-
-    } // Section
 
     section.spio-progressbar
     {
@@ -912,6 +811,10 @@
         .heading {
            background: #F6F9FF;
            border: 1px solid #EBF5FF;
+					 .special-op
+					 {
+						  color: #EC2C25;
+					 }
         }
 
         .line-progressbar

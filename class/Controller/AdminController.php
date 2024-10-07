@@ -42,7 +42,7 @@ class AdminController extends \ShortPixel\Controller
     public function addAttachmentHook($post_id)
     {
           $fs = \wpSPIO()->filesystem();
-          
+
           // If attachment doesn't come back as an valid image
           $mediaItem = $fs->getImage($post_id, 'media');
           if (false === $mediaItem)
@@ -64,7 +64,6 @@ class AdminController extends \ShortPixel\Controller
     */
     public function handleImageUploadHook($meta, $id)
     {
-        Log::addTemp('Handle Image Upload');
 
         // Media only hook
 				if ( in_array($id, self::$preventUploadHook))
@@ -289,7 +288,6 @@ class AdminController extends \ShortPixel\Controller
         $i++;
         if ($args['amount'] > 0 && $i >= $args['amount'])
         {
-           Log::addTemp($args['amount'] . ' lower than ' . $i . ' breaking');
            break;
         }
 

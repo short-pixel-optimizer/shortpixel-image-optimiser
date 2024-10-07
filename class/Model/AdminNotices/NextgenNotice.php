@@ -5,6 +5,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
+use ShortPixel\Controller\ApiKeyController as ApiKeyController;
+
 class NextgenNotice extends \ShortPixel\Model\AdminNoticeModel
 {
 	protected $key = 'MSG_INTEGRATION_NGGALLERY';
@@ -13,8 +15,9 @@ class NextgenNotice extends \ShortPixel\Model\AdminNoticeModel
 	{
 
 		$settings = \wpSPIO()->settings();
+		$keyControl = ApiKeyController::getInstance();
 
-		if (! $settings->verifiedKey)
+		if (false === $keyControl->keyIsVerified())
 		{
 			return false; // no key, no integrations.
 		}

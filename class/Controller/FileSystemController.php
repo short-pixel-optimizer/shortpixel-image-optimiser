@@ -455,52 +455,7 @@ Class FileSystemController extends \ShortPixel\Controller
 
     }
 
-		// @todo Deprecate this, move some functs perhaps to DownloadHelper.
-    // @todo Should not be in use anymore. Remove on next update / annoyance
-    public function downloadFile($url, $destinationPath)
-    {
-      Log::addWarn('Deprecated DownloadFile function invoked (FileSystemController)');
-      $downloadTimeout = max(SHORTPIXEL_MAX_EXECUTION_TIME - 10, 15);
-      $fs = \wpSPIO()->filesystem(); // @todo change this all to $this
-    //  $fs = \wpSPIO()->fileSystem();
-      $destinationFile = $fs->getFile($destinationPath);
-
-      $args_for_get = array(
-        'stream' => true,
-        'filename' => $destinationPath,
-				'timeout' => $downloadTimeout,
-      );
-
-      $response = wp_remote_get( $url, $args_for_get );
-
-      if(is_wp_error( $response )) {
-        Log::addError('Download file failed', array($url, $response->get_error_messages(), $response->get_error_codes() ));
-
-        // Try to get it then via this way.
-        $response = download_url($url, $downloadTimeout);
-        if (!is_wp_error($response)) // response when alright is a tmp filepath. But given path can't be trusted since that can be reason for fail.
-        {
-          $tmpFile = $fs->getFile($response);
-          $result = $tmpFile->move($destinationFile);
-
-        } // download_url ..
-        else {
-          Log::addError('Secondary download failed', array($url, $response->get_error_messages(), $response->get_error_codes() ));
-        }
-      }
-      else { // success, at least the download.
-          $destinationFile = $fs->getFile($response['filename']);
-      }
-
-      Log::addDebug('Remote Download attempt result', array($url, $destinationPath));
-      if ($destinationFile->exists())
-        return true;
-      else
-        return false;
-    }
-
-
-
+	
     /** Get all files from a directory tree, starting at given dir.
     * @param DirectoryModel $dir to recursive into
     * @param Array $filters Collection of optional filters as accepted by FileFilter in directoryModel

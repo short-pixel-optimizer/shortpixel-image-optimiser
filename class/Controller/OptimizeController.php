@@ -345,7 +345,6 @@ class OptimizeController
     // Processing Part
 
     // next tick of items to do.
-    // @todo Implement a switch to toggle all processing off.
     /* Processes one tick of the queue
     *
     * @return Object JSON object detailing results of run
@@ -420,6 +419,7 @@ class OptimizeController
       $result = $Q->run();
       $results = array();
 
+
 			ResponseController::setQ($Q);
 
       // Items is array in case of a dequeue items.
@@ -493,7 +493,6 @@ class OptimizeController
            switch($item->action)
            {
               case 'restore';
-//							 Log::addError('Restore tick is off in sendToProcessing!');
                  $imageObj->restore(array('keep_in_queue' => true));
               break;
               case 'migrate':

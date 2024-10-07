@@ -56,7 +56,7 @@ class CronController
 
         $schedules['spio_interval_30min'] = array(
           'interval' => apply_filters('shortpixel/cron/interval', 30 * MINUTE_IN_SECONDS),
-          'display' => __('ShortPixel cron interval', 'shortpixel-image-optimiser')
+          'display' => __('ShortPixel 30 min interval', 'shortpixel-image-optimiser')
         );
 
         return $schedules;
@@ -153,7 +153,7 @@ class CronController
         {
                 wp_schedule_event(time(), 'spio_interval_30min', $name, $args);
         }
-      
+
       }
       elseif(false !== $scheduled && (false === $add_cron || true == $unschedule) )
       {

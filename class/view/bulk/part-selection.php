@@ -13,7 +13,7 @@ $approx = $this->view->approx;
 				<?php echo  ($this->view->approx->custom->has_custom === true) ? 1 : 0;  ?>
 			</span>
 
-      <h3 class="heading"><span><img src="<?php echo esc_url(\wpSPIO()->plugin_url('res/img/robo-slider.png')); ?>"></span>
+      <h3 class="heading">
         <?php esc_html_e('ShortPixel Bulk Optimization - Select Images', 'shortpixel-image-optimiser'); ?>
       </h3>
 

@@ -1,0 +1,126 @@
+/**** DASHBOARD ***/
+    section.panel.dashboard
+    {
+       max-width: 80%;
+
+       h3.heading { border:0 ;
+        }
+
+
+       .bulk-wrapper
+       {
+
+            text-align: center;
+            height: 150px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            .dashboard-image {
+
+              z-index: 1;
+              position: absolute;
+              left: 0; right: 0;
+
+            }
+            button
+            {
+               color: #ffffff;
+               background-color: $blue_default;
+               //background: linear-gradient(to left, $color-darkest, $color-dark);
+               border-radius: 6px;
+               width: 250px;
+               height: 65px;
+               transition: all 0.5s linear;
+							 font-weight: 700;
+						//	 font-size: 16px;
+							 letter-spacing: 0.3px;
+							 border: 1px solid $blue_default;
+
+               &:hover
+               {
+                //  background: linear-gradient(to left, #3b9ea5, #50d9e2);
+								background:  $color-darkest;
+								//	  background: linear-gradient(to left, $color-dark, $color-darkest);
+									height: 70px;
+									width: 270px;
+
+                  transition: all 1s linear;
+
+								//	color: #000;
+				//	transition: all 0.5s linear;
+               }
+               &:disabled {
+                 color: #ccc;
+                 background: #0e5358;
+               }
+               span
+               {
+								 margin-right: 16px;
+                 // vertical-align: middle;
+               }
+            }
+       } // bulk wrapper
+
+			 .bulk-welcome
+			 {
+
+					background-color: #C7EDF4;
+          h3 {
+            font-size: 28px;
+            font-weight: 700;
+            text-align: center;
+            padding-top: 16px;
+            margin-top: 0;
+          }
+
+			 }
+
+			 .dashboard-text {
+				  margin: 0 auto;
+					width: 50%;
+					p {
+						line-height: 25px;
+					}
+			 }
+
+       .dashboard-log
+       {
+          display: table;
+          width: 80%;
+          margin: 0 auto;
+          h3 { display: table-caption; text-align: center;}
+          > div {
+            display: table-row;
+            > span { display: table-cell; padding: 8px 8px 8px 0; }
+          }
+          .head
+          {
+            span {
+              font-weight: 700;
+              padding-left: 15px;
+            }
+          }
+          .data
+          {
+            span {
+              border-bottom: 1px solid #EBF5FF;
+              border-top: 1px solid #EBF5FF;
+              &:first-child { border-left: 1px solid #EBF5FF; }
+              &:last-child {  border-right: 1px solid #EBF5FF; }
+              font-size: 15px;
+              padding-left: 10px;
+              &.date {
+                 color: #1FBEC9;
+                 background: url('../img/bulk/checkmark.svg') left center no-repeat;
+                 padding-left: 29px;
+              }
+            }
+						&.custom
+						{
+
+						}
+          }
+       }
+
+    } // Section

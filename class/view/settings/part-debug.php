@@ -19,22 +19,21 @@ $fs = \wpSPIO()->filesystem();
 $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->url);
 ?>
 
-<section id="tab-debug" class="<?php echo esc_attr(($this->display_part == 'debug') ? ' sel-tab ' :''); ?>">
+<section id="tab-debug" class="<?php echo esc_attr(($this->display_part == 'debug') ? 'active setting-tab' :'setting-tab'); ?>" data-part="debug">
   <h2><a class='tab-link' href='javascript:void(0);' data-id="tab-debug">
     <?php esc_html_e('Debug','shortpixel-image-optimiser');?></a>
   </h2>
 
-<div class="wp-shortpixel-options wp-shortpixel-tab-content" style="visibility: hidden">
   <div class='env'>
     <h3><?php esc_html_e('Environment', 'shortpixel'); ?></h3>
     <div class='flex'>
       <span>NGINX</span><span><?php var_export($this->is_nginx); ?></span>
-      <span>KeyVerified</span><span><?php var_export($this->is_verifiedkey); ?></span>
+      <span>KeyVerified</span><span><?php var_export($view->key->is_verifiedkey); ?></span>
       <span>HtAccess writable</span><span><?php var_export($this->is_htaccess_writable); ?></span>
       <span>Multisite</span><span><?php var_export($this->is_multisite); ?></span>
       <span>Main site</span><span><?php var_export($this->is_mainsite); ?></span>
-      <span>Constant key</span><span><?php var_export($this->is_constant_key); ?></span>
-      <span>Hide Key</span><span><?php var_export($this->hide_api_key); ?></span>
+      <span>Constant key</span><span><?php var_export($view->key->is_constant_key); ?></span>
+      <span>Hide Key</span><span><?php var_export($view->key->hide_api_key); ?></span>
       <span>Has Nextgen</span><span><?php var_export($this->has_nextgen); ?></span>
 			<span>Has Offload</span><span><?php
         $offload = \wpSPIO()->env()->hasOffload();
@@ -78,7 +77,7 @@ $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->u
 
   <div class='settings'>
     <h3><?php esc_html_e('Settings', 'shortpixel'); ?></h3>
-    <?php $local = $this->view->data;
+    <?php $local = $this->view->key;
       $local->apiKey = strlen($local->apiKey) . ' chars'; ?>
     <pre><?php var_export($local); ?></pre>
   </div>
@@ -274,5 +273,4 @@ $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->u
 		</form>
 </div>
 
-</div> <!-- tab-content -->
 </section>

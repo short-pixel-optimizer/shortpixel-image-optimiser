@@ -31,6 +31,8 @@ class EnvironmentModel extends \ShortPixel\Model
     public $is_front = false;
     public $is_admin = false;
     public $is_ajaxcall = false;
+		public $is_jsoncall = false;
+		public $is_croncall = false;
 
     private $screen_is_set = false;
     public $is_screen_to_use = false; // where shortpixel optimizer loads
@@ -197,7 +199,9 @@ class EnvironmentModel extends \ShortPixel\Model
 
   public function useVirtualHeavyFunctions()
   {
-      $bool = apply_filters('shortpixel/file/virtual/heavy_features', true);
+      $bool = ($this->hasOffload()) ? false : true; // If has WP Offload, by default don't use.
+
+      $bool = apply_filters('shortpixel/file/virtual/heavy_features', $bool);
       return $bool;
   }
 
@@ -223,10 +227,9 @@ class EnvironmentModel extends \ShortPixel\Model
 
     $this->determineFrontBack();
 
-    if (wp_doing_ajax())
-    {
-      $this->is_ajaxcall = true;
-    }
+    $this->is_ajaxcall = wp_doing_ajax();
+		$this->is_jsoncall = wp_is_json_request();
+		$this->is_croncall = wp_doing_cron();
 
     $this->is_debug = Log::debugIsActive();
 
@@ -260,7 +263,7 @@ class EnvironmentModel extends \ShortPixel\Model
         'edit-page', // all pages
         'media', // add new item screen
     );
-    $use_screens = apply_filters('shortpixel/init/optimize_on_screens', $use_screens);
+    $use_screens = apply_filters('shortpixel/init/optimize_on_screens', $use_screens, $screen);
 
     $this->screen_id = $screen->id;
     if(is_array($use_screens) && in_array($screen->id, $use_screens)) {

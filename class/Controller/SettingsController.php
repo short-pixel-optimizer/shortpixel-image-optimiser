@@ -11,60 +11,24 @@ use ShortPixel\Helper\UiHelper as UiHelper;
 use ShortPixel\Helper\UtilHelper as UtilHelper;
 use ShortPixel\Helper\InstallHelper as InstallHelper;
 
-use ShortPixel\Model\ApiKeyModel as ApiKeyModel;
 use ShortPixel\Model\AccessModel as AccessModel;
 use ShortPixel\Model\SettingsModel as SettingsModel;
 
 use ShortPixel\NextGenController as NextGenController;
 
-class SettingsController extends \ShortPixel\ViewController
+class SettingsController
 {
 
-     //env
-     protected $is_nginx;
-     protected $is_verifiedkey;
-     protected $is_htaccess_writable;
-		 protected $is_gd_installed;
-		 protected $is_curl_installed;
-     protected $is_multisite;
-     protected $is_mainsite;
-     protected $is_constant_key;
-     protected $hide_api_key;
-     protected $has_nextgen;
-     protected $do_redirect = false;
-     protected $disable_heavy_features = false; // if virtual and stateless, might disable heavy file ops.
-
-     protected $quotaData = null;
-
-     protected $keyModel;
-
-     protected $mapper = array(
-       'key' => 'apiKey',
-       'cmyk2rgb' => 'CMYKtoRGBconversion',
-     );
-
-     protected $display_part = 'settings';
-		 protected $all_display_parts = array('settings', 'adv-settings', 'cloudflare', 'debug', 'tools');
-     protected $form_action = 'save-settings';
-
 		 protected static $instance;
+     protected $model;
 
       public function __construct()
       {
           $this->model = \wpSPIO()->settings();
-
-
-					//@todo Streamline this mess. Should run through controller mostly. Risk of desync otherwise.
 					$keyControl = ApiKeyController::getInstance();
-          $this->keyModel = $keyControl->getKeyModel(); //new ApiKeyModel();
+          $this->keyModel = $keyControl->getKeyModel();
 
-         // $this->keyModel->loadKey();
-          $this->is_verifiedkey = $this->keyModel->is_verified();
-          $this->is_constant_key = $this->keyModel->is_constant();
-          $this->hide_api_key = $this->keyModel->is_hidden();
-
-
-          parent::__construct();
+        //  parent::__construct();
       }
 
       // default action of controller
@@ -74,7 +38,12 @@ class SettingsController extends \ShortPixel\ViewController
         $this->loadEnv();
         $this->checkPost(); // sets up post data
 
-        $this->model->redirectedSettings = 2; // Prevents any redirects after loading settings
+        /* This should be done now in ApiKeyModel
+        if (2 !== $this->model->redirectedSettings)
+
+        {
+          $this->model->redirectedSettings = 2; // Prevents any redirects after loading settings
+        } */
 
         if ($this->is_form_submit)
         {
@@ -84,17 +53,16 @@ class SettingsController extends \ShortPixel\ViewController
         $this->load_settings();
       }
 
-
       // this is the nokey form, submitting api key
       public function action_addkey()
       {
         $this->loadEnv();
+
         $this->checkPost();
 
-        Log::addDebug('Settings Action - addkey ', array($this->is_form_submit, $this->postData) );
-        if ($this->is_form_submit && isset($this->postData['apiKey']))
+        if ($this->is_form_submit && isset($_POST['apiKey']))
         {
-            $apiKey = $this->postData['apiKey'];
+            $apiKey = sanitize_text_field($_POST['apiKey']);
             if (strlen(trim($apiKey)) == 0) // display notice when submitting empty API key
             {
               Notice::addError(sprintf(__("The key you provided has %s characters. The API key should have 20 characters, letters and numbers only.",'shortpixel-image-optimiser'), strlen($apiKey) ));
@@ -102,7 +70,7 @@ class SettingsController extends \ShortPixel\ViewController
             else
             {
               $this->keyModel->resetTried();
-              $this->keyModel->checkKey($this->postData['apiKey']);
+              $this->keyModel->checkKey($apiKey);
             }
         }
 
@@ -195,7 +163,6 @@ class SettingsController extends \ShortPixel\ViewController
 
 			}
 
-
 			public function action_debug_redirectBulk()
 			{
 				$this->checkPost();
@@ -217,7 +184,6 @@ class SettingsController extends \ShortPixel\ViewController
 				{
 					 $this->doRedirect('bulk-removeLegacy');
 				}
-
 			}
 
       /** Button in part-debug, routed via custom Action */
@@ -227,7 +193,6 @@ class SettingsController extends \ShortPixel\ViewController
 					$this->checkPost();
           $statsController = StatsController::getInstance();
           $statsController->reset();
-
 					$this->doRedirect();
       }
 
@@ -238,19 +203,15 @@ class SettingsController extends \ShortPixel\ViewController
 					$this->checkPost();
           $quotaController = QuotaController::getInstance();
           $quotaController->forceCheckRemoteQuota();
-
           $this->doRedirect();
       }
 
       public function action_debug_resetNotices()
       {
-
           $this->loadEnv();
 					$this->checkPost();
           Notice::resetNotices();
           $nControl = new Notice(); // trigger reload.
-
-
           $this->doRedirect();
       }
 
@@ -279,7 +240,6 @@ class SettingsController extends \ShortPixel\ViewController
 					}
 				}
 				$this->doRedirect();
-
 			}
 
 			public function action_debug_resetQueue()
@@ -307,7 +267,6 @@ class SettingsController extends \ShortPixel\ViewController
 								{
 										$q->resetQueue();
 								}
-
 						 }
 						 else
 						 {
@@ -323,10 +282,8 @@ class SettingsController extends \ShortPixel\ViewController
 								 $message = sprintf(__('All items in the %s queue have been removed and the process is stopped', 'shortpixel-image-optimiser'), $queue);
  						 }
 
-
 						 Notice::addSuccess($message);
 			 }
-
 
 				$this->doRedirect();
 			}
@@ -359,9 +316,7 @@ class SettingsController extends \ShortPixel\ViewController
 				exit('reloading settings would cause processorKey to be set again');
 			}
 
-
-
-      public function processSave()
+      protected function processSave()
       {
           // Split this in the several screens. I.e. settings, advanced, Key Request IF etc.
           if (isset($this->postData['includeNextGen']) && $this->postData['includeNextGen'] == 1)
@@ -374,30 +329,25 @@ class SettingsController extends \ShortPixel\ViewController
               AdminNoticesController::resetIntegrationNotices();
           }
 
-          $check_key = false;
-          if (isset($this->postData['apiKey']))
-          {
-              $check_key = $this->postData['apiKey'];
-              unset($this->postData['apiKey']); // unset, since keyModel does the saving.
-          }
-
+Log::addTemp('PostData', $this->postData);
 					// If the compression type setting changes, remove all queued items to prevent further optimizing with a wrong type.
 					if (intval($this->postData['compressionType']) !== intval($this->model->compressionType))
 					{
 						 OptimizeController::resetQueues();
 					}
 
+          if (isset($_POST['apiKey']) && false === $this->keyModel->is_constant())
+          // first save all other settings ( like http credentials etc ), then check
+          {
+              $check_key = sanitize_text_field($_POST['apiKey']);
+              $this->keyModel->resetTried(); // reset the tried api keys on a specific post request.
+              $this->keyModel->checkKey($check_key);
+          }
+
           // write checked and verified post data to model. With normal models, this should just be call to update() function
           foreach($this->postData as $name => $value)
           {
             $this->model->{$name} = $value;
-          }
-
-          // first save all other settings ( like http credentials etc ), then check
-          if (! $this->keyModel->is_constant() && $check_key !== false) // don't allow settings key if there is a constant
-          {
-            $this->keyModel->resetTried(); // reset the tried api keys on a specific post request.
-            $this->keyModel->checkKey($check_key);
           }
 
 					// Every save, force load the quota. One reason, because of the HTTP Auth settings refresh.
@@ -420,18 +370,15 @@ class SettingsController extends \ShortPixel\ViewController
       /* Loads the view data and the view */
       public function load_settings()
       {
-         if ($this->is_verifiedkey) // supress quotaData alerts when handing unset API's.
+         $this->view->data = (Object) $this->model->getData();
+
+				 $this->loadAPiKeyData();
+         $this->loadDashBoardInfo();
+
+         if ($this->keyModel->is_verified()) // supress quotaData alerts when handing unset API's.
           $this->loadQuotaData();
         else
           InstallHelper::checkTables();
-
-				 $keyController = ApiKeyController::getInstance();
-
-         $this->view->data = (Object) $this->model->getData();
-
-         $this->view->data->apiKey = $keyController->getKeyForDisplay();
-
-         $this->loadStatistics();
 
          $statsControl = StatsController::getInstance();
 
@@ -451,13 +398,67 @@ class SettingsController extends \ShortPixel\ViewController
 
          $this->view->cloudflare_constant = defined('SHORTPIXEL_CFTOKEN') ? true : false;
 
+				 $this->view->is_unlimited= (!is_null($this->quotaData) && $this->quotaData->unlimited) ? true : false;
+
+
          $settings = \wpSPIO()->settings();
 
 				 if ($this->view->data->createAvif == 1)
            $this->avifServerCheck();
 
+         // Set viewMode
+         $view_mode = get_user_option('shortpixel-settings-mode');
+         if (false === $view_mode)
+          $view_mode = $this->view_mode;
+         $this->view_mode = $view_mode;
          $this->loadView('view-settings');
       }
+
+
+// Basically this whole premise is impossible.
+      public function loadDashBoardInfo()
+      {
+        $bulkController = BulkController::getInstance();
+        $logs = $bulkController->getLogs();
+
+        $this->view->dashboard  = new \stdClass;
+
+      }
+
+			protected function loadAPiKeyData()
+			{
+				 $keyController = ApiKeyController::getInstance();
+
+				 $keyObj = new \stdClass;
+//				 $this->view->key = new \stdClass;
+				 // $this->keyModel->loadKey();
+
+				 $keyObj->is_verifiedkey = $this->keyModel->is_verified();
+				 $keyObj->is_constant_key = $this->keyModel->is_constant();
+				 $keyObj->hide_api_key = $this->keyModel->is_hidden();
+				 $keyObj->apiKey = $keyController->getKeyForDisplay();
+
+				 $showApiKey = false;
+
+				 if (true === $keyObj->hide_api_key)
+				 {
+					  $keyObj->apiKey = '***************';
+				 }
+				 elseif($this->is_multisite && $keyObj->is_constant_key)
+				 {
+					 $keyObj->apiKey = esc_html__('Multisite API Key','shortpixel-image-optimiser');
+				 }
+				 else {
+				 	 $showApiKey = true;
+				 }
+
+				 $canValidate = false;
+
+				 $keyObj->is_editable = (! $keyObj->is_constant_key && $showApiKey) ? true : false; ;
+				 $keyObj->can_validate = $canValidate;
+
+				 $this->view->key = $keyObj;
+			}
 
 			protected function avifServerCheck()
       {
@@ -469,29 +470,6 @@ class SettingsController extends \ShortPixel\ViewController
 					     $notice->check();
           }
       }
-
-      protected function loadStatistics()
-      {
-				/*
-        $statsControl = StatsController::getInstance();
-        $stats = new \stdClass;
-
-        $stats->totalOptimized = $statsControl->find('totalOptimized');
-        $stats->totalOriginal = $statsControl->find('totalOriginal');
-        $stats->mainOptimized = $statsControl->find('media', 'images');
-
-
-        // used in part-g eneral
-        $stats->thumbnailsToProcess =  $statsControl->thumbNailsToOptimize(); // $totalImages - $totalOptimized;
-
-//        $stats->totalFiles = $statsControl->find('media', '')
-
-
-        $this->view->stats = $stats;
-				*/
-      }
-
-
 
       /** Checks on things and set them for information. */
       protected function loadEnv()
@@ -508,9 +486,24 @@ class SettingsController extends \ShortPixel\ViewController
           $this->is_mainsite = $env->is_mainsite;
           $this->has_nextgen = $env->has_nextgen;
 
-          $this->disable_heavy_features = (\wpSPIO()->env()->hasOffload() && false === \wpSPIO()->env()->useVirtualHeavyFunctions()) ? true : false;
+          $this->disable_heavy_features = (false === \wpSPIO()->env()->useVirtualHeavyFunctions()) ? true : false;
 
-          $this->display_part = (isset($_GET['part']) && in_array($_GET['part'], $this->all_display_parts) ) ? sanitize_text_field($_GET['part']) : 'settings';
+          $this->display_part = (isset($_GET['part']) && in_array($_GET['part'], $this->all_display_parts) ) ? sanitize_text_field($_GET['part']) : 'overview';
+      }
+
+      protected function settingLink($part, $title, $icon = false)
+      {
+          $link = esc_url(admin_url('options-general.php?page=wp-shortpixel-settings&part=' . $part ));
+          $active = ($this->display_part == $part) ? ' class="active" ' : '';
+          if (false !== $icon)
+          {
+             $title = '<i class="' . esc_attr($icon) . '"></i>' . $title;
+          }
+          $html = sprintf('<a href="%s" data-link="%s" %s >%s</a>', $link, $part, $active, $title);
+
+          return $html;
+
+
       }
 
       /* Temporary function to check if HTaccess is writable.
@@ -577,32 +570,26 @@ class SettingsController extends \ShortPixel\ViewController
       }
 
       // This is done before handing it off to the parent controller, to sanitize and check against model.
-      protected function processPostData($post)
+      protected function processPostData($post, $model = null)
       {
-
           if (isset($post['display_part']) && strlen($post['display_part']) > 0)
           {
               $this->display_part = sanitize_text_field($post['display_part']);
           }
-          unset($post['display_part']);
 
           // analyse the save button
           if (isset($post['save_bulk']))
           {
             $this->do_redirect = true;
           }
-          unset($post['save_bulk']);
-          unset($post['save']);
 
           // handle 'reverse' checkbox.
           $keepExif = isset($post['removeExif']) ? 0 : 1;
           $post['keepExif'] = $keepExif;
-          unset($post['removeExif']);
 
           // checkbox overloading
           $png2jpg = (isset($post['png2jpg']) ? (isset($post['png2jpgForce']) ? 2 : 1): 0);
           $post['png2jpg'] = $png2jpg;
-          unset($post['png2jpgForce']);
 
           // must be an array
           $post['excludeSizes'] = (isset($post['excludeSizes']) && is_array($post['excludeSizes']) ? $post['excludeSizes']: array());
@@ -610,6 +597,60 @@ class SettingsController extends \ShortPixel\ViewController
           $post = $this->processWebp($post);
           $post = $this->processExcludeFolders($post);
         //  $post = $this->processCloudFlare($post);
+
+					$check_key = false;
+
+					/*   This can't be here, no actions in the data check, because of actions
+          if (isset($post['apiKey']))
+
+					{
+							$check_key = sanitize_text_field($post['apiKey']);
+							unset($post['apiKey']); // unset, since keyModel does the saving.
+					}
+
+					// first save all other settings ( like http credentials etc ), then check
+          if (false === $this->keyModel->is_constant() && $check_key !== false) // don't allow settings key if there is a constant
+          {
+            $this->keyModel->resetTried(); // reset the tried api keys on a specific post request.
+            $this->keyModel->checkKey($check_key);
+          } */
+
+				// Field that are in form for other purpososes, but are not part of model and should not be saved.
+					$ignore_fields = array(
+							'display_part',
+							'save_bulk',
+							'save',
+							'removeExif',
+							'png2jpgForce',
+							'sp-nonce',
+							'_wp_http_referer',
+							'validate', // validate button from nokey part
+							'new-index',
+							'edit-exclusion',
+							'exclusion-type',
+							'exclusion-value',
+							'exclusion-minwidth',
+							'exclusion-maxwidth',
+							'exclusion-minheight',
+							'exclusion-maxheight',
+							'exclusion-width',
+							'exclusion-height',
+							'apply-select',
+							'screen_action',
+							'tools-nonce',
+							'confirm',
+							'tos',  // toss checkbox in nokey
+							'pluginemail'
+
+					);
+
+					foreach($ignore_fields as $ignore)
+					{
+						 if (isset($post[$ignore]))
+						 {
+						 		unset($post[$ignore]);
+						 }
+					}
 
           parent::processPostData($post);
 

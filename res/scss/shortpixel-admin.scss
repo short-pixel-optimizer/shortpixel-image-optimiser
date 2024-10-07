@@ -21,7 +21,7 @@
 	 margin-bottom: 16px;
 }
 
-.switch_button
+.switch_button, switch
 {
 //	margin-left: -5px;
 	line-height: 12px;
@@ -35,7 +35,7 @@
 			outline: none;
 		}
 	}
-	input { display: none;
+	input[type="checkbox"] { display: none;
 		&:checked ~ .the_switch { background: #7cdce4; } // background of bar when active
 		&:checked ~ .the_switch:after {
 			left: 20px;

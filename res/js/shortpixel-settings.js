@@ -1,43 +1,76 @@
 'use strict'
 
 // New Class for Settings Section.
-var ShortPixelSettings = function()
+class ShortPixelSettings
 {
 
-	 this.Init = function()
+	 tab_elements = {};
+	 menu_elements = [];
+	 current_tab; // string, the name of the tab.
+	 current_mode = 'simple';
+	 root; // top of settings page.
+	 strings;
+
+	 Init()
 	 {
+		  this.root = document.querySelector('.wrap.is-shortpixel-settings-page');
 			this.InitActions();
 			this.SaveOnKey();
 	 }
 
-	this.InitActions = function()
+	InitActions()
 	{
-			var toggles = document.querySelectorAll('[data-toggle]');
+		  console.time('init');
 			var self = this;
+			this.strings = settings_strings;
 
-			toggles.forEach(function (toggle, index)
-			{
-					toggle.addEventListener('change', self.DoToggleAction.bind(self));
+			console.time('inits');
+			this.InitToggle();
+			this.InitExclusions();
+			console.timeLog('inits', 'afterExcl');
+			this.InitWarnings();
+			console.timeLog('inits', 'afterwarn');
+			this.InitMenu();
+			this.InitModeSwitcher();
+			console.timeEnd('inits');
 
-					var evInit = new CustomEvent('change',  {detail : { init: true }} );
-					toggle.dispatchEvent(evInit);
-			});
+
 
 			// Modals
-			var modals = document.querySelectorAll('[data-action="open-modal"]');
+			var modals = this.root.querySelectorAll('[data-action="open-modal"]');
 			modals.forEach(function (modal, index)
 			{
-					modal.addEventListener('click', self.OpenModal.bind(self));
+					modal.addEventListener('click', self.OpenModalEvent.bind(self));
 			});
+			console.timeEnd('init');
+	}
 
+	InitToggle()
+	{
+		var toggles = this.root.querySelectorAll('[data-toggle]');
+		var self = this;
+
+		toggles.forEach(function (toggle, index)
+		{
+				toggle.addEventListener('change', self.DoToggleActionEvent.bind(self));
+
+				var evInit = new CustomEvent('change',  {detail : { init: true }} );
+				toggle.dispatchEvent(evInit);
+		});
+
+	}
+
+	InitExclusions()
+	{
+		 	var self = this;
 			// Events for the New Exclusion dialog
-			var newExclusionInputs = document.querySelectorAll('.new-exclusion select, .new-exclusion input, .new-exclusion button, input[name="removeExclusion"], button[name="cancelEditExclusion"]');
+			var newExclusionInputs = this.root.querySelectorAll('.new-exclusion select, .new-exclusion input, .new-exclusion button, input[name="removeExclusion"], button[name="cancelEditExclusion"]');
 
 			newExclusionInputs.forEach(function (input)
 			{
 					switch (input.name)
 					{
-						 	case 'addExclusion':
+							case 'addExclusion':
 							case 'removeExclusion':
 							case 'cancelEditExclusion':
 							case 'updateExclusion':
@@ -51,16 +84,16 @@ var ShortPixelSettings = function()
 					input.addEventListener(eventType, self.NewExclusionUpdateEvent.bind(self));
 			});
 
-			 var exclusionItems = document.querySelectorAll('.exclude-list li');
+			 var exclusionItems = this.root.querySelectorAll('.exclude-list li');
 			 exclusionItems.forEach(function (input) {
-				  if (false == input.classList.contains('no-exclusion-item'))
+					if (false == input.classList.contains('no-exclusion-item'))
 					{
 						input.addEventListener('click', self.NewExclusionShowInterfaceEvent.bind(self));
 					}
 			});
 
 
-			var addNewExclusionButton = document.querySelector('.new-exclusion-button');
+			var addNewExclusionButton = this.root.querySelector('.new-exclusion-button');
 			if (addNewExclusionButton !== null)
 			{
 				addNewExclusionButton.addEventListener('click', this.NewExclusionShowInterfaceEvent.bind(this));
@@ -68,14 +101,321 @@ var ShortPixelSettings = function()
 
 			var size_select = new ShiftSelect('input[name^="excludeSizes[]"]');
 
+			var compressionRadios = this.root.querySelectorAll('.shortpixel-compression-options input[type="radio"]');
+			for (var i = 0; i < compressionRadios.length; i++)
+			{
+				 compressionRadios[i].addEventListener('change', this.CompressionTypeChangeEvent.bind(this));
+			}
 	}
 
-	this.DoToggleAction = function(event)
+	InitWarnings()
+	{
+		var self = this;
+
+		var checkMatches = (elements, checks) =>
+		{
+				var allMatches = true;
+				var someMatch = false;
+				var matches = [];
+
+				for (var i = 0; i < elements.length; i++)
+				{
+					  if (elements[i].matches(checks[i]))
+						{
+							 someMatch = true;
+							 matches.push(elements[i]);
+						}
+						else {
+							 allMatches = false;
+						}
+				}
+
+				return { allMatches : allMatches, someMatch: someMatch, matches: matches}
+
+		}
+
+
+		var showHideFunctions = {
+				'onTrue' : this.ShowElement,
+				'onFalse': this.HideElement
+		};
+
+		var updateShowWarning = (args) => {
+
+				var defaults = {
+						functions : showHideFunctions,
+				//		checkFunction: ifAllChecked,
+				}
+
+				args = { ...defaults, ...args };
+
+				if (typeof args.elements === 'undefined')
+				{
+					 console.error('No elements in updateShowWarning', args);
+					 return false;
+				}
+
+				if (typeof args.warnings === 'undefined')
+				{
+					 console.error('Function needs one or more warning elements', args);
+					 return false;
+				}
+
+				if (typeof args.checks === 'undefined' || args.elements.length !== args.checks.length)
+				{
+					 console.error('Checks must be provided and same length as elements', args);
+					 return false;
+				}
+
+				for(var i = 0; i < args.elements.length; i++)
+				{
+					 args.elements[i].addEventListener('change', function (event)
+					 {
+						 event.preventDefault();
+						 var matches = checkMatches(args.elements, args.checks);
+
+						 if (true === matches.allMatches)
+						 {
+							args.functions.onTrue.call(this, args.warnings, matches);
+						 }
+						 else if (false === matches.someMatch)
+						 {
+						  args.functions.onFalse.call(this, args.warnings, matches);
+						 }
+						 else
+						 {
+							  if (typeof args.functions.onAny !== 'undefined')
+								{
+									 args.functions.onAny.call(this, args.warnings, matches);
+								}
+								else {
+									 args.functions.onFalse.call(this, args.warnings, matches);
+								}
+						 }
+					 }.bind(this));
+				} // set the eventlisteners
+
+				var matches = checkMatches(args.elements, args.checks);
+				if (true == matches.allMatches)
+				{
+					args.functions.onTrue.call(this, args.warnings, matches);
+				}
+				else if (typeof args.functions.onAny !== 'undefined')
+				{
+					 args.functions.onAny.call(this, args.warnings, matches);
+				}
+
+		}
+
+		var root = this.root;
+
+	 	var el = root.querySelector('input[name="removeExif"]');
+		var remove_elements = root.querySelectorAll('input[name="removeExif"], input[name="png2jpg"]');
+		var checks = [':checked', ':not(:checked)'];
+
+
+		// General checks //
+		var warning = root.querySelectorAll('.exif-warning');
+		updateShowWarning({ elements: remove_elements, warnings: warning, checks: checks});
+
+		var elements = root.querySelectorAll('input[name="backupImages"]');
+  	var warning =  root.querySelectorAll('#backup-warning');
+		var checks = [':not(:checked)'];
+		updateShowWarning({elements: elements, warnings: warning, checks: checks});
+
+		var elements = root.querySelectorAll('input[name="offload-active"], input[name="useSmartcrop"]');
+		var warning = root.querySelectorAll('#smartcrop-warning');
+		var checks = [':checked', ':checked'];
+		updateShowWarning({elements: elements, warnings: warning, checks: checks});
+
+		var elements = root.querySelectorAll('input[name="heavy_features"], input[name="optimizeUnlisted"]');
+		var warning = root.querySelectorAll('.heavy-feature-virtual.unlisted');
+		var checks = [':checked', ':checked'];
+		updateShowWarning({elements: elements, warnings: warning, checks: checks});
+
+		var elements = root.querySelectorAll('input[name="heavy_features"], input[name="optimizeRetina"]');
+		var warning = root.querySelectorAll('.heavy-feature-virtual.retina');
+		var checks = [':checked', ':checked'];
+		updateShowWarning({elements: elements, warnings: warning, checks: checks});
+
+		// Checks for the dashboard boxes
+		// What can be send back match wise, can be 'allmatches' for red and 'anymatches' for yellow warning and let the dashboard function figure it out how to display that ( and which text? )
+		var dashboardFunctions = {
+ 			  'onTrue' : this.DashBoardWarningEvent,
+				'onFalse' : this.DashBoardWarningEvent,
+				'onAny': this.DashBoardWarningEvent,
+		}
+
+		// First box (optimize) dashboard warning
+		var elements = root.querySelectorAll('input[name="autoMediaLibrary"], input[name="backupImages"], input[name="doBackgroundProcess"]');
+		var warnings = root.querySelectorAll('.panel.dashboard-optimize');
+		var checks = [':not(:checked)', ':not(:checked)', ':not(:checked)'];
+		updateShowWarning({elements: elements, warnings: warnings, checks: checks, functions: dashboardFunctions});
+
+		var elements = root.querySelectorAll('input[name="createWebp"],input[name="deliverWebp"]');
+		var warnings = root.querySelectorAll('.panel.dashboard-webp');
+		var checks = [':not(:checked)', ':not(:checked)'];
+
+		updateShowWarning({elements: elements, warnings: warnings, checks: checks, functions: dashboardFunctions});
+
+	}
+
+	InitMenu()
+	{
+		  var menu_elements = this.root.querySelectorAll('menu ul li a');
+			this.menu_elements = menu_elements;
+
+			// Bind change event to all menu items.
+			for (var i = 0; i < menu_elements.length; i++)
+			{
+					var element = menu_elements[i];
+				  element.addEventListener('click', this.SwitchMenuTabEvent.bind(this));
+
+			}
+
+			// Load all menu tabs
+			var tab_elements = this.root.querySelectorAll('[data-part]');
+			for (var i = 0; i < tab_elements.length; i++)
+			{
+					var name = tab_elements[i].dataset.part;
+					this.tab_elements[name] = tab_elements[i];
+			}
+
+			// Discover current tab
+			var displayPartEl = this.root.querySelector('input[name="display_part"]');
+			this.current_tab = displayPartEl.value;
+
+			/* Not sure why this is here, since display_part from html already sets the display part to the query string if there.
+			var uri = window.location.href.toString();
+			var params = new URLSearchParams(uri);
+			if (params.has('part'))
+			{
+
+				 var part = params.get('part');
+				 var target = this.root.querySelector('menu [data-link="' + part + '"]');
+
+				 if (target === null)
+				 {
+					  console.error('Tab ' +  part + ' not found');
+						return;
+				 }
+
+				 var event = new CustomEvent('click');
+				 target.dispatchEvent(event);
+			} */
+
+
+	}
+
+	InitModeSwitcher()
+	{
+      var switcher = document.getElementById('viewmode-toggle');
+			if (null == switcher)
+			{
+						return;
+			}
+
+			if (this.root.classList.contains('simple'))
+			{
+				 this.current_mode = 'simple';
+			}
+			else {
+				 this.current_mode = 'advanced';
+			}
+
+			switcher.addEventListener('click', this.SwitchViewModeEvent.bind(this));
+	}
+
+  SwitchViewModeEvent(event)
+	{
+		var new_mode = (this.current_mode == 'simple') ? 'advanced' : 'simple';
+		var data = {};
+		data.type = 'settings';
+		data.screen_action = 'settings/changemode';
+		data.new_mode = new_mode;
+
+		window.ShortPixelProcessor.AjaxRequest(data);
+
+	  this.root.classList.remove('simple','advanced');
+		this.root.classList.add(new_mode);
+
+		this.current_mode = new_mode;
+	}
+
+	SwitchMenuTabEvent(event)
+	{
+		 event.preventDefault();
+
+		 var targetLink = event.target;
+		 var uri = targetLink.href;
+
+		 var current_tab = this.current_tab;
+		 var params = new URLSearchParams(uri);
+		 var new_tab = params.get('part');
+
+
+		 // If same, do nothing.
+		 if (current_tab == new_tab)
+		 {
+			  return;
+		 }
+
+		 var newTabEl = this.tab_elements[new_tab];
+		 if (typeof newTabEl !== 'undefined')
+		 {
+		 	newTabEl.classList.add('active');
+		 }
+
+		 var currentTabEl = this.tab_elements[current_tab];
+		 // Happens when no active tab ( ie just started )
+		 if (typeof currentTabEl !== 'undefined')
+		 {
+		 	currentTabEl.classList.remove('active');
+		 }
+
+		 for (var i = 0; i < this.menu_elements.length; i++)
+		 {
+			  if (this.menu_elements[i].classList.contains('active'))
+				{
+			  	this.menu_elements[i].classList.remove('active');
+				}
+		 }
+		 // Add active to the new tab.
+		 targetLink.classList.add('active');
+
+		 this.current_tab = new_tab;
+		 var displayPartEl = this.root.querySelector('input[name="display_part"]');
+		 displayPartEl.value = new_tab;
+
+     // Update Uri
+	   if (uri.indexOf("?") > 0) {
+	       window.history.replaceState({}, document.title, uri);
+	   }
+
+		 var section = ''; // #todo figure out what the idea of section was
+		 var event = new CustomEvent('shortpixel.ui.settingsTabLoad', { detail : {tabName: new_tab, section: section }});
+		 window.dispatchEvent(event);
+
+
+
+	}
+
+	// Elements with data-toggle active
+	DoToggleActionEvent(event)
 	{
 			event.preventDefault();
 
 			var checkbox = event.target;
-			var target = document.getElementById(checkbox.getAttribute('data-toggle'));
+
+			var field_id = checkbox.getAttribute('data-toggle');
+			var target = document.getElementById(field_id);
+			// Allow multiple elements to be toggled, which will not work with id. In due time all should be transferred to use class-based toggle
+			var targetClasses = this.root.querySelectorAll('.' + field_id);
+
+			if (checkbox.type === 'radio')
+			{
+
+			}
 
 		  if (typeof checkbox.dataset.toggleReverse !== 'undefined')
 			{
@@ -87,63 +427,167 @@ var ShortPixelSettings = function()
 
 			if (target === null)
 			{
-				 console.error('Target element ID not found', checkbox);
+				 console.error('Target element ID not found', checkbox, field_id);
 				 return false;
 			}
 
+			var show = false;
 			if (checked)
 			{
-			  // target.classList.add('is-visible');
-				this.ShowElement(target);
+				show = true;
 			}
-			else
+
+			if (target !== null)
 			{
-				this.HideElement(target);
-  			//	target.classList.remove('is-visible');
+				 if (show)
+				 {
+				 	this.ShowElement([target]);
+				}
+				else {
+					 this.HideElement([target]);
+				}
 			}
+
+		 	for (var i = 0; i < targetClasses.length; i++)
+			{
+				  if (show)
+					{
+						this.ShowElement([targetClasses[i]]);
+					}
+					else {
+						this.HideElement([targetClasses[i]]);
+					}
+			}
+
+			//checkbox.disabled = false;
 	}
 
-	this.ShowElement = function (elem) {
+	ShowElement(elems) {
 
-	// Get the natural height of the element
-	var getHeight = function () {
-		elem.style.display = 'block'; // Make it visible
-		var height = elem.scrollHeight + 'px'; // Get it's height
-		elem.style.display = ''; //  Hide it again
-		return height;
-	};
+		for (var i = 0; i < elems.length; i++)
+		{
+			var element = elems[i];
+			element.classList.add('is-visible'); // Make the element visible
 
-	var height = getHeight(); // Get the natural height
-	elem.classList.add('is-visible'); // Make the element visible
-	elem.style.height = height; // Update the max-height
+			// Once the transition is complete, remove the inline max-height so the content can scale responsively
+			window.setTimeout(function () {
+					element.style.opacity = 1;
+			}, 150);
 
-	// Once the transition is complete, remove the inline max-height so the content can scale responsively
-	window.setTimeout(function () {
-		elem.style.height = '';
-	}, 350);
+		}
 
 };
 
 // Hide an element
-this.HideElement = function (elem) {
+HideElement(elems) {
 
-	// Give the element a height to change from
-	elem.style.height = elem.scrollHeight + 'px';
+	for (var i = 0; i < elems.length; i++)
+	{
+		var element = elems[i];
+		element.style.opacity = 0;
+			// When the transition is complete, hide it
+			window.setTimeout(function () {
+				element.classList.remove('is-visible');
 
-	// Set the height back to 0
-	window.setTimeout(function () {
-		elem.style.height = '0';
-	}, 1);
-
-	// When the transition is complete, hide it
-	window.setTimeout(function () {
-		elem.classList.remove('is-visible');
-	}, 350);
+			}, 300);
+	}
 
 };
 
+DashBoardWarningEvent(warning, matches)
+{
+	 console.log(warning, matches);
+	 var dashBox = warning[0];
+	 var status = (true === matches.allMatches) ? 'alert' : (true === matches.someMatch) ? 'warning' : 'ok';
 
-this.OpenModal = function(elem)
+	 dashBox.classList.remove('ok', 'alert', 'warning');
+	 dashBox.classList.add(status)
+
+	 // Remove all status-lines ( rebuild )
+	 var statusWrapper = dashBox.querySelector('.status-wrapper');
+	 if (null === statusWrapper)
+	 {
+		  console.log('issue with statuswrapper');
+			return;
+	 }
+ 	 Array.from(statusWrapper.children).forEach(e => e.remove());
+
+	 var statusIcon = document.createElement('i');
+	 statusIcon.classList.add('shortpixel-icon', 'static-icon', status);
+
+  if (matches.matches.length > 0)
+	{
+			for(var i = 0; i < matches.matches.length; i++ )
+			{
+				var input = matches.matches[i];
+				var statusLine = document.createElement('span');
+				statusLine.classList.add('status-line');
+
+				if (input.dataset.dashboard)
+				{
+
+			 		statusLine.textContent = input.dataset.dashboard;
+				}
+				else {
+				  var linestring = this.strings.dashboard_strings[status];
+		 		  statusLine.textContent = linestring;
+				}
+
+				statusWrapper.appendChild(statusLine).appendChild(statusIcon.cloneNode());
+//				statusWrapper.;
+			}
+		 	// Add Not ok status.
+	}
+	else {
+		 // Add OK status
+		 var statusLine = document.createElement('span');
+		 statusLine.classList.add('status-line');
+		 var linestring = this.strings.dashboard_strings[status];
+		 statusLine.textContent = linestring;
+
+		 statusWrapper.appendChild(statusLine).appendChild(statusIcon);
+		 //statusWrapper.;
+	}
+
+
+
+/*	 dashBox.querySelector('.status-icon');
+	 if (null !== statusIcon)
+	 {
+		  statusIcon.classList.remove('ok', 'warning', 'alert');
+			statusIcon.classList.add(status);
+	 } */
+
+
+
+	/* var statusLine = dashBox.querySelector('.status-line');
+	 if (null !== statusLine)
+	 {
+		  var linestring = this.strings.dashboard_strings[status];
+		  statusLine.textContent = linestring;
+	 } */
+
+
+	 // Button display
+	 var button = dashBox.querySelector('button');
+	 if ('ok' === status)
+	 {
+			if (false === button.classList.contains('shortpixel-hide'))
+			{
+					button.classList.add('shortpixel-hide');
+			}
+	 }
+	 else if (true === button.classList.contains('shortpixel-hide'))
+	 {
+		 		button.classList.remove('shortpixel-hide');
+	 }
+
+}
+
+
+
+
+OpenModalEvent(elem)
 {
 		var target = elem.target;
 		var targetElem = document.getElementById(target.dataset.target);
@@ -170,7 +614,7 @@ this.OpenModal = function(elem)
 
 }
 
-this.CloseModal = function(elem)
+CloseModal(elem)
 {
 	var shade = document.getElementById('spioSettingsModalShade');
 	var modal = document.getElementById('spioSettingsModal');
@@ -180,7 +624,7 @@ this.CloseModal = function(elem)
 
 }
 
-this.SendModal = function(elem)
+SendModal(elem)
 {
 	var modal = document.getElementById('spioSettingsModal');
 	var body = modal.querySelector('.spio-modal-body');
@@ -215,7 +659,7 @@ this.SendModal = function(elem)
 
 }
 
-this.ReceiveModal = function(elem)
+ReceiveModal(elem)
 {
 	 if (typeof elem.detail.settings.results !== 'undefined')
 	 {
@@ -232,7 +676,7 @@ this.ReceiveModal = function(elem)
 
 }
 
-this.SaveOnKey = function()
+SaveOnKey()
 {
 	var saveForm = document.getElementById('wp_shortpixel_options');
 	if (saveForm === null)
@@ -250,27 +694,25 @@ this.SaveOnKey = function()
 	});
 }
 
-this.NewExclusionShowInterfaceEvent = function (event)
+NewExclusionShowInterfaceEvent(event)
 {
 	 this.ResetExclusionInputs();
 	 event.preventDefault();
 
-	 var element = document.querySelector('.new-exclusion');
+	 var element = this.root.querySelector('.new-exclusion');
 	 element.classList.remove('not-visible', 'hidden');
 
-	 var cancelButton = document.querySelector('.new-exclusion .button-actions button[name="cancelEditExclusion"]');
+	 var cancelButton = this.root.querySelector('.new-exclusion .button-actions button[name="cancelEditExclusion"]');
 	 cancelButton.classList.remove('not-visible', 'hidden');
 
-	 var updateButton = document.querySelector('.new-exclusion .button-actions button[name="updateExclusion"]');
-
+	 var updateButton = this.root.querySelector('.new-exclusion .button-actions button[name="updateExclusion"]');
 
 	 if (event.target.name == 'addNewExclusion')
 	 {
 		  var mode = 'new';
 			var id = 'new';
-			var title = document.querySelector('.new-exclusion h3.new-title');
-			var button = document.querySelector('.new-exclusion .button-actions button[name="addExclusion"]');
-
+			var title = this.root.querySelector('.new-exclusion h3.new-title');
+			var button = this.root.querySelector('.new-exclusion .button-actions button[name="addExclusion"]');
 	 }
 	 else {
 	 	  var mode = 'edit';
@@ -284,9 +726,9 @@ this.NewExclusionShowInterfaceEvent = function (event)
 				 var id = event.target.parentElement.id;
 				 var parent = event.target.parentElement;
 			}
-			var title = document.querySelector('.new-exclusion h3.edit-title');
-			var button = document.querySelector('.new-exclusion .button-actions button[name="removeExclusion"]');
-			var input = document.querySelector('.new-exclusion input[name="edit-exclusion"]')
+			var title = this.root.querySelector('.new-exclusion h3.edit-title');
+			var button = this.root.querySelector('.new-exclusion .button-actions button[name="removeExclusion"]');
+			var input = this.root.querySelector('.new-exclusion input[name="edit-exclusion"]')
 
 			updateButton.classList.remove('not-visible', 'hidden');
 
@@ -295,7 +737,6 @@ this.NewExclusionShowInterfaceEvent = function (event)
 			var data = JSON.parse(dataElement);
 			this.ReadWriteExclusionForm(data)
 
-
 	 }
 
  	 title.classList.remove('not-visible', 'hidden');
@@ -303,15 +744,34 @@ this.NewExclusionShowInterfaceEvent = function (event)
 
 }
 
-this.HideExclusionInterface = function()
+//** When compressiontype changes, also update the information
+CompressionTypeChangeEvent(event)
 {
-	var element = document.querySelector('.new-exclusion');
+	  var target = event.target;
+		var className = target.className;
+
+    var elements = this.root.querySelectorAll('.shortpixel-compression .settings-info');
+		for (var i = 0; i < elements.length; i++)
+		{
+			  var element = elements[i];
+				element.style.display = 'none';
+				if (element.classList.contains(className))
+				{
+					 element.style.display = 'inline-block';
+				}
+		}
+
+}
+
+HideExclusionInterface()
+{
+	var element = this.root.querySelector('.new-exclusion');
 	element.classList.add('not-visible');
 
 }
 
 // EXCLUSIONS
-this.NewExclusionUpdateEvent = function(event)
+NewExclusionUpdateEvent(event)
 {
 	var target = event.target;
 	var inputName = event.target.name;
@@ -342,7 +802,7 @@ this.NewExclusionUpdateEvent = function(event)
 	}
 }
 
-this.NewExclusionUpdateType = function(element)
+NewExclusionUpdateType(element)
 {
 	 	 var value = element.value;
 		 var selected = element.options[element.selectedIndex];
@@ -352,10 +812,10 @@ this.NewExclusionUpdateType = function(element)
 			  example = '';
 		 }
 
-		 var valueOption = document.querySelector('.new-exclusion .value-option');
-		 var sizeOption = document.querySelector('.new-exclusion .size-option');
-		 var regexOption = document.querySelector('.regex-option');
-		 var switchExactOption = document.querySelector('.exact-option');
+		 var valueOption = this.root.querySelector('.new-exclusion .value-option');
+		 var sizeOption = this.root.querySelector('.new-exclusion .size-option');
+		 var regexOption = this.root.querySelector('.regex-option');
+		 var switchExactOption = this.root.querySelector('.exact-option');
 
 
 		 if (value == 'size')
@@ -372,18 +832,18 @@ this.NewExclusionUpdateType = function(element)
 			 regexOption.classList.remove('not-visible');
 		 }
 
-		 var valueInput = document.querySelector('input[name="exclusion-value"]');
+		 var valueInput = this.root.querySelector('input[name="exclusion-value"]');
 		 if (null !== valueInput)
 		 {
 			  valueInput.placeholder = example;
 		 }
 }
 
-this.NewExclusionUpdateThumbType = function(element)
+NewExclusionUpdateThumbType(element)
 {
 		 var value = element.value;
 
-		 var thumbSelect = document.querySelector('select[name="thumbnail-select"]');
+		 var thumbSelect = this.root.querySelector('select[name="thumbnail-select"]');
 
 		 if (value == 'selected-thumbs')
 		 {
@@ -395,7 +855,7 @@ this.NewExclusionUpdateThumbType = function(element)
 }
 
 
-this.ReadWriteExclusionForm = function(setting)
+ReadWriteExclusionForm(setting)
 {
 	 	// compile all inputs to a json encoded string to add to UX
 	 	 if (null === setting || typeof setting === 'undefined')
@@ -414,10 +874,10 @@ this.ReadWriteExclusionForm = function(setting)
 
 		 var strings = {};
 
-		 var typeOption = document.querySelector('.new-exclusion select[name="exclusion-type"]');
-		 var valueOption = document.querySelector('.new-exclusion input[name="exclusion-value"]');
-		 var applyOption = document.querySelector('.new-exclusion select[name="apply-select"]');
-		 var regexOption = document.querySelector('.new-exclusion input[name="exclusion-regex"]');
+		 var typeOption = this.root.querySelector('.new-exclusion select[name="exclusion-type"]');
+		 var valueOption = this.root.querySelector('.new-exclusion input[name="exclusion-value"]');
+		 var applyOption = this.root.querySelector('.new-exclusion select[name="apply-select"]');
+		 var regexOption = this.root.querySelector('.new-exclusion input[name="exclusion-regex"]');
 
 		 if ('read' === mode)
 	 	 {
@@ -443,7 +903,7 @@ this.ReadWriteExclusionForm = function(setting)
 		 // When selected thumbnails option is selected, add the thumbnails to the list.
 		 if ('selected-thumbs' == applyOption.value)
 		 {
-			  var thumbOption = document.querySelector('.new-exclusion select[name="thumbnail-select"]');
+			  var thumbOption = this.root.querySelector('.new-exclusion select[name="thumbnail-select"]');
 				var thumblist  = [];
 				if ('read' === mode)
 				{
@@ -483,15 +943,15 @@ this.ReadWriteExclusionForm = function(setting)
 		 // Options for size setting
 		 if ('size' === setting.type)
 		 {
-			 var exactOption = document.querySelector('.new-exclusion input[name="exclusion-exactsize"]');
+			 var exactOption = this.root.querySelector('.new-exclusion input[name="exclusion-exactsize"]');
 
-			 var width = document.querySelector('.new-exclusion input[name="exclusion-width"]');
-			 var height = document.querySelector('.new-exclusion input[name="exclusion-height"]');
+			 var width = this.root.querySelector('.new-exclusion input[name="exclusion-width"]');
+			 var height = this.root.querySelector('.new-exclusion input[name="exclusion-height"]');
 
-			 var minwidth = document.querySelector('.new-exclusion input[name="exclusion-minwidth"]');
-			 var maxwidth = document.querySelector('.new-exclusion input[name="exclusion-maxwidth"]');
-			 var minheight = document.querySelector('.new-exclusion input[name="exclusion-minheight"]');
-			 var maxheight = document.querySelector('.new-exclusion input[name="exclusion-maxheight"]');
+			 var minwidth = this.root.querySelector('.new-exclusion input[name="exclusion-minwidth"]');
+			 var maxwidth = this.root.querySelector('.new-exclusion input[name="exclusion-maxwidth"]');
+			 var minheight = this.root.querySelector('.new-exclusion input[name="exclusion-minheight"]');
+			 var maxheight = this.root.querySelector('.new-exclusion input[name="exclusion-maxheight"]');
 
 
 			 if ('read' === mode)
@@ -536,13 +996,13 @@ this.ReadWriteExclusionForm = function(setting)
 		 }
 }
 
-this.NewExclusionButtonAdd = function(element)
+NewExclusionButtonAdd(element)
 {
 		 var result = this.ReadWriteExclusionForm(null);
 		 var setting = result[0];
 		 var strings = result[1];
 
-		 var listElement = document.querySelector('.exclude-list');
+		 var listElement = this.root.querySelector('.exclude-list');
 		 var newElement = document.createElement('li');
 		 var inputElement = document.createElement('input');
 
@@ -572,7 +1032,7 @@ this.NewExclusionButtonAdd = function(element)
 
 		 listElement.appendChild(newElement);
 
-		 var noItemsItem = document.querySelector('.exclude-list .no-exclusion-item');
+		 var noItemsItem = this.root.querySelector('.exclude-list .no-exclusion-item');
 		 if (noItemsItem !== null)
 	 	 {
 			  noItemsItem.classList.add('not-visible');
@@ -582,13 +1042,12 @@ this.NewExclusionButtonAdd = function(element)
 		 this.HideExclusionInterface();
 		 this.ShowExclusionSaveWarning();
 
-
 }
 
-this.NewExclusionToggleSizeOption = function(target)
+NewExclusionToggleSizeOption(target)
 {
-	 	var sizeOptionRange = document.querySelector('.new-exclusion .size-option-range');
-		var sizeOptionExact = document.querySelector('.new-exclusion .size-option-exact');
+	 	var sizeOptionRange = this.root.querySelector('.new-exclusion .size-option-range');
+		var sizeOptionExact = this.root.querySelector('.new-exclusion .size-option-exact');
 
 		if (true === target.checked)
 		{
@@ -601,13 +1060,13 @@ this.NewExclusionToggleSizeOption = function(target)
 		}
 }
 
-this.ResetExclusionInputs = function()
+ResetExclusionInputs()
 {
-	var typeOption = document.querySelector('.new-exclusion select[name="exclusion-type"]');
-	var valueOption = document.querySelector('.new-exclusion input[name="exclusion-value"]');
-	var applyOption = document.querySelector('.new-exclusion select[name="apply-select"]');
+	var typeOption = this.root.querySelector('.new-exclusion select[name="exclusion-type"]');
+	var valueOption = this.root.querySelector('.new-exclusion input[name="exclusion-value"]');
+	var applyOption = this.root.querySelector('.new-exclusion select[name="apply-select"]');
 
- 	var inputs = document.querySelectorAll('.new-exclusion input, .new-exclusion select');
+ 	var inputs = this.root.querySelectorAll('.new-exclusion input, .new-exclusion select');
 	for (var i = 0; i < inputs.length; i++)
 	{
 			var input = inputs[i];
@@ -624,19 +1083,17 @@ this.ResetExclusionInputs = function()
 			}
 	}
 
-
 	var ev = new CustomEvent('change');
 	typeOption.dispatchEvent(ev);
 	applyOption.dispatchEvent(ev);
 
 	// reset title and buttons.
-	var titles = document.querySelectorAll('.new-exclusion h3');
-	var buttons = document.querySelectorAll('.new-exclusion .button-actions button');
+	var titles = this.root.querySelectorAll('.new-exclusion h3');
+	var buttons = this.root.querySelectorAll('.new-exclusion .button-actions button');
 
 	for(var i = 0; i < titles.length; i++)
 	{
 		 titles[i].classList.add('not-visible', 'hidden');
-
 	}
 
 	for (var i = 0; i < buttons.length; i++)
@@ -644,24 +1101,22 @@ this.ResetExclusionInputs = function()
 		 buttons[i].classList.add('not-visible', 'hidden');
 	}
 
-	var exactOption = document.querySelector('.new-exclusion input[name="exclusion-exactsize"]');
-
+	var exactOption = this.root.querySelector('.new-exclusion input[name="exclusion-exactsize"]');
 	exactOption.checked = false
-
 
 }
 
-this.UpdateExclusion = function()
+UpdateExclusion()
 {
-	var id = document.querySelector('.new-exclusion input[name="edit-exclusion"]');
+	var id = this.root.querySelector('.new-exclusion input[name="edit-exclusion"]');
 	var result = this.ReadWriteExclusionForm();
 	var setting = result[0];
 	var strings = result[1];
 
 	if (id)
 	{
-			var element = document.querySelector('.exclude-list #' +id.value + ' input');
-			var liElement = document.querySelector('.exclude-list #' +id.value);
+			var element = this.root.querySelector('.exclude-list #' +id.value + ' input');
+			var liElement = this.root.querySelector('.exclude-list #' +id.value);
 
 			var removeChildren = [];
 			if (null !== element)
@@ -684,7 +1139,7 @@ this.UpdateExclusion = function()
 				 var spans = [strings.type, setting.value, strings.apply];
 				 for (var j = 0; j < spans.length; j++)
 				 {
-						 var spanElement = document.createElement('span');
+						 var spanElement = this.root.createElement('span');
 						 spanElement.textContent = spans[j];
 						 liElement.appendChild(spanElement);
 				 }
@@ -696,21 +1151,21 @@ this.UpdateExclusion = function()
 
 }
 
-this.ShowExclusionSaveWarning = function()
+ShowExclusionSaveWarning()
 {
-	  var reminder = document.querySelector('.exclusion-save-reminder');
+	  var reminder = this.root.querySelector('.exclusion-save-reminder');
 		if (reminder)
 		{
 			 reminder.classList.remove('hidden');
 		}
 }
 
-this.RemoveExclusion = function()
+RemoveExclusion()
 {
-		 var id = document.querySelector('.new-exclusion input[name="edit-exclusion"]');
+		 var id = this.root.querySelector('.new-exclusion input[name="edit-exclusion"]');
 		 if (id)
 		 {
-			   var element = document.querySelector('.exclude-list #' +id.value);
+			   var element = this.root.querySelector('.exclude-list #' +id.value);
 				 if (null !== element)
 				 {
 					  element.remove();
@@ -722,10 +1177,10 @@ this.RemoveExclusion = function()
 
 }
 
- 	this.Init();
-} // SPSettings
+} // SPSettings  class
 
 
 document.addEventListener("DOMContentLoaded", function(){
 	  var s = new ShortPixelSettings();
+		s.Init();
 });

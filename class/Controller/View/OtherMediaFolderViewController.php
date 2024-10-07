@@ -6,7 +6,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
-use ShortPixel\Notices\NoticeController as Notices;
 use ShortPixel\Helper\InstallHelper as InstallHelper;
 use ShortPixel\Controller\OtherMediaController as OtherMediaController;
 
@@ -207,7 +206,7 @@ class OtherMediaFolderViewController extends \ShortPixel\ViewController
         $sql .= " AND status <> -1";
     }
 
-    $sql .= ($this->orderby ? " ORDER BY " . $this->orderby . " " . $this->order . " " : "");
+		$sql .= ($this->orderby ? " ORDER BY " . sanitize_sql_orderby($this->orderby . " " . $this->order) . " " : "");
 
     if ($args['limit'] > 0)
     {

@@ -47,6 +47,8 @@ class FileModel extends \ShortPixel\Model
 
   protected $backupDirectory;
 
+  private $basedirs; // cache basedirs
+
   const FILE_OK = 1;
   const FILE_UNKNOWN_ERROR = 2;
 
@@ -670,15 +672,40 @@ class FileModel extends \ShortPixel\Model
        return $this->is_restricted;
     }
 
-     $basedir = ini_get('open_basedir');
 
-     if (false === $basedir || strlen($basedir) == 0)
-     {
-         return false;
-     }
+      if (! is_null($this->basedirs))
+      {
+         $basedirs = $this->basedirs;
+         if (false === $basedirs) // if no restrictions are set, return false.
+         {
+            return false;
+         }
+      }
+      else {
+        $basedir = ini_get('open_basedir');
 
-     $restricted = true;
-     $basedirs = preg_split('/:|;/i', $basedir);
+        if (false === $basedir || strlen($basedir) == 0)
+        {
+            $this->basedirs = false;
+            return false;
+        }
+
+        $restricted = true;
+        $basedirs = preg_split('/:|;/i', $basedir);
+
+        foreach($basedirs as $basedir)
+        {
+           // check realpath for symlinked shared hosts and this kind of fun, to prevent false positives
+           $realdir = trailingslashit(realpath($basedir));
+           if (! in_array($realdir, $basedirs))
+           {
+             $basedirs[] = $realdir;
+           }
+        }
+
+        $this->basedirs = $basedirs;
+
+      }
 
      foreach($basedirs as $basepath)
      {
@@ -689,7 +716,7 @@ class FileModel extends \ShortPixel\Model
           }
      }
 
-     $restricted = apply_filters('shortpixel/file/basedir_check', $restricted);
+     $restricted = apply_filters('shortpixel/file/basedir_check', $restricted, $path, $basedirs);
 
      $this->is_restricted = $restricted;
 

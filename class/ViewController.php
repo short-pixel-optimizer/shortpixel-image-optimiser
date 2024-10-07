@@ -58,6 +58,7 @@ class ViewController extends Controller
 
   /* Check if postData has been submitted.
   * This function should always be called at any ACTION function ( load, load_$action etc ).
+	* @param Object Model  Alternate model to check form values against.
   */
   protected function checkPost()
   {
@@ -75,8 +76,8 @@ class ViewController extends Controller
     elseif (isset($_POST) && count($_POST) > 0)
     {
       check_admin_referer( $this->form_action, 'sp-nonce' ); // extra check, when we are wrong here, it dies.
-     // unset($_POST['sp-nonce']);
-     // unset($_POST['_wp_http_referer']);
+
+Log::addTemp($_POST);
       $this->is_form_submit = true;
       $this->processPostData($_POST);
 
@@ -126,7 +127,8 @@ class ViewController extends Controller
 
   protected function printInlineHelp($url)
   {
-      $output = '<div class="spio-inline-help"><span class="dashicons dashicons-editor-help" title="' .  esc_html__('Click for more info', 'shortpixel-image-optimiser') . '" data-link="' . esc_url($url) . '"></span></div>';
+
+      $output = '<i class="documentation dashicons dashicons-editor-help" data-link="' . esc_url($url).  '"></i>';
       echo $output;
 
   }
@@ -136,22 +138,32 @@ class ViewController extends Controller
     $defaults = array(
         'name' => '',
         'checked' => false,
-        'label' => ''
+        'label' => '',
+        'switch_class' => false,
+        'data' => [],
+        'disabled' => false,
     );
 
+    $args = wp_parse_args($args, $defaults);
 
-    $output = '<div class="switch_button">
+    $switchclass = ($args['switch_class'] !== false) ? 'class="' . $args['switch_class'] . '"' : '';
+    $checked = checked($args['checked'], true, false);
+    $name = esc_attr($args['name']);
+    $label = esc_attr($args['label']);
+
+    $data = implode(' ', $args['data']);
+    $disabled = (true === $args['disabled']) ? 'disabled' : '';
+
+    $output = sprintf('<switch %s>
       <label>
-        <input type="checkbox" class="switch" name="' . esc_attr($args['name']) . '" data-toggle="deliverTypes" value="1" ' . checked($args['checked'], true, false) .  '>
-        <div class="the_switch">&nbsp; </div>
-        ' . esc_html($args['label']) . '
+        <input type="checkbox" class="switch" name="%s" value="1" %s %s %s>
+        <div class="the_switch">&nbsp;</div>
+        %s
       </label>
-    </div>';
+    </switch>', $switchclass, $name, $checked, $disabled, $data, $label);
 
     echo $output;
   }
-
-
 
   /** Accepts POST data, maps, checks missing fields, and applies sanitization to it.
   * @param array $post POST data
@@ -172,7 +184,7 @@ class ViewController extends Controller
       }
     }
 
-    if (is_null($this->model))
+    if (is_null($this->model) && is_null($model))
     {
       foreach($post as $name => $value )
       {
@@ -182,8 +194,7 @@ class ViewController extends Controller
     }
     else
     {
-      $model = $this->model;
-      $this->postData = $model->getSanitizedData($post);
+      $this->postData = $this->model->getSanitizedData($post, false);
     }
 
     return $this->postData;

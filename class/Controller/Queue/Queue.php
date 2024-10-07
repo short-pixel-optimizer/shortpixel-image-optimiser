@@ -36,6 +36,7 @@ abstract class Queue
 
 
     abstract protected function prepare();
+    abstract protected function prepareBulkRestore();
     abstract public function getType();
 
     public function createNewBulk()
@@ -131,9 +132,20 @@ abstract class Queue
        $result->qstatus = self::RESULT_UNKNOWN;
        $result->items = null;
 
+       $custom_operation = $this->getCustomDataItem('customOperation');
+
        if ( $this->getStatus('preparing') === true) // When preparing a queue for bulk
        {
-            $prepared = $this->prepare();
+            if (false !== $custom_operation && 'bulk-restore' === $custom_operation)
+            {
+              $prepared = $this->prepareBulkRestore();
+            }
+            else {
+
+              $prepared = $this->prepare();
+            }
+
+
             $result->qstatus = self::RESULT_PREPARING;
             $result->items = $prepared['items']; // number of items.
             $result->images = $prepared['images'];

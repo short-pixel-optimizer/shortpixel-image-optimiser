@@ -1,8 +1,4 @@
 /* Specific styles for advanced settings tab */
-
-#shortpixel-settings-tabs  #tab-adv-settings
-{
-
 	.excludeSizeOption {
 		 margin-right: 20px;
 		 white-space:nowrap;
@@ -14,6 +10,7 @@
 
 	.deliverWebpTypes, .deliverWebpAlteringTypes {
     margin: 16px 0 16px 16px;
+		padding: 2px; // allow to full draw of checkbox
 	}
 
 	.new-exclusion-button {
@@ -22,6 +19,7 @@
 	}
 
 	ul.exclude-list {
+			min-height: 30px;
 			 li {
 				 	float: left;
 					padding: 4px 12px;
@@ -154,6 +152,3 @@
 				float: none;
 		 }
 	}
-
-
-}

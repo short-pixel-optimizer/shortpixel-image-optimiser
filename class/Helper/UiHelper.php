@@ -41,7 +41,6 @@ class UiHelper
     {
         $link = ($actionData['type'] == 'js') ? 'javascript:' . $actionData['function'] : $actionData['function'];
         $output .= "<a href='" . $link . "' class='" . esc_attr($actionName) . "' >" . esc_html($actionData['text']) . "</a>";
-
     }
 
     $output .= "</div> <!--sp-dropdown-content--> </div> <!--sp-dropdown--> </div> <!--sp-column-actions--> ";
@@ -460,6 +459,9 @@ class UiHelper
 
     $text = '';
 
+		$access = AccessModel::getInstance();
+
+
     if (! $keyControl->keyIsVerified())
     {
       $text = __('Invalid API Key. <a href="options-general.php?page=wp-shortpixel-settings">Check your Settings</a>','shortpixel-image-optimiser');
@@ -504,7 +506,10 @@ class UiHelper
 			 $text = '<p>' . __('This item is waiting to be processed', 'shortpixel-image-optimiser') . '</p>';
 			 $action = self::getAction('cancelOptimize', $mediaItem->get('id'));
 
-			 $text .= '<p><a href="javascript:' . $action['function'] . '">' . $action['text'] . '</a></p>';
+			 if ($access->imageIsEditable($mediaItem))
+			 {
+			 	$text .= '<p><a href="javascript:' . $action['function'] . '">' . $action['text'] . '</a></p>';
+		 	 }
 		}
 
     if ($mediaItem->isOptimizePrevented() !== false)
@@ -863,9 +868,9 @@ class UiHelper
       );
 
       $exclusion_types = array(
-          'name' => __('Name', 'shortpixel-image-optimiser'),
-          'path' => __('Path', 'shortpixel-image-optimiser'),
-          'size' => __('Size', 'shortpixel-image-optimiser'),
+          'name' => __('Image Name', 'shortpixel-image-optimiser'),
+          'path' => __('Image Path', 'shortpixel-image-optimiser'),
+          'size' => __('Image Size', 'shortpixel-image-optimiser'),
       );
 
       $exclusion_apply = array(
@@ -875,8 +880,15 @@ class UiHelper
            'selected-thumbs' => __('Selected Images', 'shortpixel-image-optimiser'),
       );
 
+      $dashboard_string = [
+            'ok' => __('Everything ok', 'shortpixel-image-optimiser'),
+            'warning' => __('Improvement possible', 'shortpixel-image-optimiser'),
+            'alert' => __('Action needed', 'shortpixel-image-optimiser'),
+      ];
+
       $strings['exclusion_types'] = $exclusion_types;
       $strings['exclusion_apply'] = $exclusion_apply;
+      $strings['dashboard_strings'] = $dashboard_string;
 
       if ($name !== false && isset($strings[$name]))
       {
@@ -884,6 +896,20 @@ class UiHelper
       }
 
       return $strings;
+  }
+
+  public static function getIcon($path, $args = array())
+  {
+      $defaults = array(
+
+      );
+
+      $icon_url = plugins_url($path, SHORTPIXEL_PLUGIN_FILE);
+
+      $html = sprintf('<img src="%s" class="icon" />', esc_attr($icon_url));
+
+      return $html;
+
   }
 
 

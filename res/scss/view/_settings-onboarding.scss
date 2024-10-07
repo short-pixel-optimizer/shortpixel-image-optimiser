@@ -1,0 +1,30 @@
+#tab-nokey
+{
+
+ h1 {
+	  font-size: 36px;
+		text-align: center;
+		margin: 20px 0;
+ }
+  .onboarding-logo
+  {
+		 text-align: center;
+      img {
+        width: 400px;
+      }
+
+
+  }
+
+	.onboarding-join-wrapper
+	{
+		 display: flex;
+//		 flex: 1;
+		 justify-content: space-between;
+		 settinglist {
+			 flex: 0 0 50%;
+		 }
+	}
+
+
+} // tab-nokey

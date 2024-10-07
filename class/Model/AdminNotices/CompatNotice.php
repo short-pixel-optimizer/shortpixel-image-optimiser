@@ -13,6 +13,7 @@ class CompatNotice extends \ShortPixel\Model\AdminNoticeModel
 	protected function checkTrigger()
 	{
 			$conflictPlugins = $this->getConflictingPlugins();
+
 			if (count($conflictPlugins) > 0)
 			{
 				$this->addData('conflicts', $conflictPlugins);
@@ -55,7 +56,7 @@ class CompatNotice extends \ShortPixel\Model\AdminNoticeModel
       {
          return true;
       }
-      return false;      
+      return false;
   }
 
 	protected function getConflictingPlugins() {
@@ -142,6 +143,10 @@ class CompatNotice extends \ShortPixel\Model\AdminNoticeModel
 										'action' => 'Deactivate',
 										'data' => 'regenerate-thumbnails-and-delete-unused/regenerate_wpregenerate.php',
 						),
+            'Resmushit' => [
+                    'action' => 'Deactivate',
+                    'data' => 'resmushit-image-optimizer/resmushit.php',
+            ],
 						'Swift Performance'
 							=> array(
 											'action' => 'Deactivate',

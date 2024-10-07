@@ -7,6 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use ShortPixel\ShortQ\ShortQ as ShortQ;
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+use ShortPixel\Model\Image\ImageModel as ImageModel;
 
 class CustomQueue extends Queue
 {
@@ -40,14 +41,21 @@ class CustomQueue extends Queue
    }
 
 
-   public function prepare()
+   protected function prepare()
    {
       $items = $this->queryItems();
 
       return $this->prepareItems($items);
    }
 
-   public function queryItems()
+   protected function prepareBulkRestore()
+   {
+      $items = $this->queryOptimizedItems();
+
+      return $this->prepareItems($items);
+   }
+
+   private function queryItems()
    {
      $last_id = $this->getStatus('last_item_id');
      $limit = $this->q->getOption('enqueue_limit');
@@ -56,7 +64,7 @@ class CustomQueue extends Queue
 
      global $wpdb;
 
-     $folderSQL = ' SELECT id FROM ' . $wpdb->prefix . 'shortpixel_folders where status >= 0';
+     $folderSQL = ' SELECT id FROM ' . $wpdb->prefix . 'shortpixel_folders where status >= 0 ';
      $folderRow = $wpdb->get_col($folderSQL);
 
      // No Active Folders, No Items.
@@ -66,10 +74,11 @@ class CustomQueue extends Queue
      // List of prepared (%d) for the folders.
      $query_arr = join( ',', array_fill( 0, count( $folderRow ), '%d' ) );
 
-     $sql = 'SELECT id FROM ' . $wpdb->prefix . 'shortpixel_meta WHERE folder_id in ( ';
+     $sql = 'SELECT id FROM ' . $wpdb->prefix . 'shortpixel_meta WHERE status <> %d AND folder_id in ( ';
 
      $sql .= $query_arr . ') ';
-     $prepare = $folderRow;
+     $prepare[] = ImageModel::FILE_STATUS_SUCCESS; // Query anything else than success, since that is done.
+     $prepare = array_merge($prepare, $folderRow);
 
      if ($last_id > 0)
      {
@@ -85,10 +94,6 @@ class CustomQueue extends Queue
 
      $results = $wpdb->get_col($sql);
 
-     $fs = \wpSPIO()->filesystem();
-
-
-
      foreach($results as $item_id)
      {
           $items[] = $item_id; //$fs->getImage($item_id, 'custom');
@@ -97,5 +102,38 @@ class CustomQueue extends Queue
      return array_filter($items);
    }
 
+   private function queryOptimizedItems()
+   {
+     global $wpdb;
 
-}
+     $last_id = $this->getStatus('last_item_id');
+     $limit = $this->q->getOption('enqueue_limit');
+     $prepare = [];
+     $items = [];
+
+     $sql = 'SELECT id FROM ' . $wpdb->prefix . 'shortpixel_meta WHERE status = %d  ';
+     $prepare[] = ImageModel::FILE_STATUS_SUCCESS;
+
+     if ($last_id > 0)
+     {
+        $sql .= " AND id < %d ";
+        $prepare [] = intval($last_id);
+     }
+
+     $sql .= ' order by id DESC limit %d';
+     $prepare[] = $limit;
+
+     $sql = $wpdb->prepare($sql, $prepare);
+
+     $results = $wpdb->get_col($sql);
+
+     foreach($results as $item_id)
+     {
+        $items[] = $item_id;
+     }
+
+     return array_filter($items);
+   }
+
+
+} // class

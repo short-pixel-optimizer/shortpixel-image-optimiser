@@ -29,7 +29,9 @@ abstract class Model
   protected function sanitize($name, $value)
   {
     if (! isset($this->model[$name]))
+    {
       return null;
+    }
 
     // if no sanitize method is set, default to strictest string.
     $sanitize = isset($this->model[$name]['s']) ? $this->model[$name]['s'] : 'string';
@@ -47,6 +49,10 @@ abstract class Model
       case 'array':
       case 'Array':
         $value = $this->sanitizeArray($value);
+				if (is_null($value))
+				{
+					Log::addWarn('Field ' . $name . ' is of type Array, but Array not provided');
+				}
       break;
       case 'exception': // for exceptional situations. The data will not be sanitized! Need to do this elsewhere.
         return $value;
@@ -137,15 +143,23 @@ abstract class Model
   {
       if (! is_array($array))
       {
-        Log::addWarn('Field is of type Array, but Array not provided');
         return null;
       }
       $new_array = array();
       foreach($array as $key => $value)
       {
-        $newkey = $this->sanitizeString($key);
-        $newval = $this->sanitizeString($value);
-        $new_array[$newkey] = $newval ;
+				$newkey = $this->sanitizeString($key);
+
+				if (true === is_array($value))
+				{
+					 $newval = $this->sanitizeArray($value);
+				}
+				else {
+					  $newval = $this->sanitizeString($value);
+				}
+
+				$new_array[$newkey] = $newval ;
+
       }
 
       return $new_array;

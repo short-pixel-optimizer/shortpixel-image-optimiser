@@ -1372,7 +1372,6 @@ class MediaLibraryModel extends \ShortPixel\Model\Image\MediaLibraryThumbnailMod
 				 if ($this->hasBackup($args))
 				 {
 					  $file = $this->getBackupFile($args);
-
 						if ($file->exists())
 							$file->delete();
 				 }
