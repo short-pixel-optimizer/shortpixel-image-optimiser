@@ -381,6 +381,18 @@ Log::addTemp('PostData', $this->postData);
             $this->model->{$name} = $value;
           }
 
+					// Check at the model if any checkboxes are not checked.
+					$data = $this->model->getData();
+
+					foreach($data as $name => $value)
+					{
+							$type = $this->model->getType($name);
+							if ('boolean' === $type && ! isset($this->postData[$name]))
+							{
+								 $this->model->{$name} = false; 
+							}
+					}
+
 					// Every save, force load the quota. One reason, because of the HTTP Auth settings refresh.
 					$this->loadQuotaData(true);
           // end

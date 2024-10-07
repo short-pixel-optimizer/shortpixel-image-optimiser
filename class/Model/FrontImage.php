@@ -170,6 +170,7 @@ class FrontImage
 			 return $data;
 		}
 
+
 		public function getImageBase()
 		{
 				 if (! is_null($this->imageBase))

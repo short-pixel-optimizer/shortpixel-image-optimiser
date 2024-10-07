@@ -13,6 +13,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 {
 
 		protected $cdn_domain;
+		protected $cdn_arguments = [];
 
 		public function __construct()
 		{
@@ -24,9 +25,70 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 				}
 
 				$settings = wpSPIO()->settings();
+				$this->setDefaultCDNArgs();
 				$this->loadCDNDomain();
 
 				$this->startOutputBuffer('processFront');
+
+		}
+
+		protected function setDefaultCDNArgs()
+		{
+				$settings = \wpSPIO()->settings();
+				$env = \wpSPIO()->env();
+
+				$args = ['q_orig'];
+
+				$use_webp = $settings->deliverWebp;
+				$use_avif =  $settings->deliverAvif;
+
+				$webp_double = $env->useDoubleWebpExtension();
+				$avif_double = $env->useDoubleAvifExtension();
+
+				if ($use_webp && $use_avif)
+				{
+					 $args[] = 'to_auto';
+				}
+				elseif ($use_webp && ! $use_avif)
+				{
+					 $args[] = 'to_webp';
+				}
+				else {
+					 $args[] = 'to_avif'; 
+				}
+
+		/*		if ($use_webp && ! $use_avif)
+				{
+					 $args[] = ($webp_double) ? 's_d_webp' : 's_webp';
+				}
+				elseif (! $use_webp && $use_avif)
+				{
+					 $args[] = ($avif_double) ? 's_d_avif' : 's_avif';
+				}
+				elseif($use_webp && $use_avif && ! $webp_double && ! $avif_double)
+				{
+					 $args[] = 's_webp_avif';
+				}
+				elseif ($use_webp && $webp_double && ! $avif_double)
+				{
+						$args[] = 's_d_webp_avif';
+				} */
+
+
+				if (true === $settings->deliverWebp)
+				{
+						$webp  = ($env->useDoubleWebpExtension()) ? 's_webp' : 'd_webp';
+						$args[] = $webp;
+				}
+				if (true === $settings->deliverAvif)
+				{
+						$avif  = ($env->useDoubleAvifExtension()) ? 's_avif' : 'd_avif';
+						$args[] = $avif;
+				}
+
+				$this->cdn_arguments = $args;
+
+
 
 		}
 
@@ -46,8 +108,8 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 		protected function loadCDNDomain()
 		{
-			//$cdn_domain = $settings->CDNDomain;
-			$cdn_domain = 'https://cdn.shortpixel.ai/spio';
+			$settings = \wpSPIO()->settings();
+			$cdn_domain = $settings->CDNDomain;
 
 			$this->cdn_domain = $cdn_domain;
 		}
@@ -72,20 +134,25 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 				 $imageObj = new FrontImage($match);
 				 $src = $imageObj->src;
 
-				 $imageData[] = $src;
+				 if (! is_null($src))
+				 {
+	 				 $imageData[] = $src;
+				 }
 				 // Additional sources.
 				 $imageData = array_merge($imageData, $imageObj->getImageData());
 
 
 			}
-
+Log::addTemp('imageData', $imageData);
 			return $imageData;
 		}
 
 		protected function getUpdatedUrls($urls)
 		{
+		//	Log::addTemp('URLS', $urls);
 			for ($i = 0; $i < count($urls); $i++)
 			{
+				 $src = $urls[$i];
 				 $urls[$i] = $this->replaceImage($urls[$i]);
 			}
 
@@ -105,9 +172,9 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 					 $src = str_replace($parsedUrl['scheme'] . "://", '', $src);
 				} */
 
-				$cdn_prefix = trailingslashit($domain) . trailingslashit($this->findDomainArguments($src));
+				$cdn_prefix = trailingslashit($domain) . trailingslashit($this->findCDNArguments($src));
 
-				$new_src = $cdn_prefix . $src;
+				$new_src = $cdn_prefix . trim($src);
 
 				/* If need to replace.
 				if (strpos($src, $site_url) !== false)
@@ -134,9 +201,13 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		//maybe Shortpixel CDn specific?
 		// @param src string for future (?)
 		// @return Space separated list of settings for SPIO CDN.
-		protected function findDomainArguments($src)
+		protected function findCDNArguments($src)
 		{
-				return 'to_auto,q_orig,ret_img';
+				$arguments = $this->cdn_arguments;
+
+				$string = implode(',', $arguments);
+
+				return  $string;
 		}
 
 

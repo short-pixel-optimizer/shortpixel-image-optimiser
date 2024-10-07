@@ -13,7 +13,7 @@ use ShortPixel\Model\FrontImage as FrontImage;
 use ShortPixel\ShortPixelImgToPictureWebp as ShortPixelImgToPictureWebp;
 
 /** Handle everything that SP is doing front-wise */
-class FrontController extends \ShortPixel\Controller\Front\PageConverter
+class PictureController extends \ShortPixel\Controller\Front\PageConverter
 {
   // DeliverWebp option settings for front-end delivery of webp
   const WEBP_GLOBAL = 1;
@@ -22,14 +22,15 @@ class FrontController extends \ShortPixel\Controller\Front\PageConverter
 
   public function __construct()
   {
-
+			add_action('init', [$this, 'initWebpHooks']);
+//			$this->initWebpHooks();
   }
 
-  protected function initWebpHooks()
+	public function initWebpHooks()
   {
     $webp_option = \wpSPIO()->settings()->deliverWebp;
-
-    if ( $webp_option ) {  // @tood Replace this function with the one in ENV.
+Log::addTemp('Picture, webp option ' .  $webp_option);
+		if ($webp_option ) {  // @tood Replace this function with the one in ENV.
         if(UtilHelper::shortPixelIsPluginActive('shortpixel-adaptive-images/short-pixel-ai.php')) {
             Notices::addWarning(__('Please deactivate the ShortPixel Image Optimizer\'s
                 <a href="options-general.php?page=wp-shortpixel-settings&part=adv-settings">Deliver the next generation versions of the images in the front-end</a>
@@ -37,8 +38,11 @@ class FrontController extends \ShortPixel\Controller\Front\PageConverter
         }
         elseif( $webp_option == self::WEBP_GLOBAL ){
             //add_action( 'wp_head', array($this, 'addPictureJs') ); // adds polyfill JS to the header || Removed. Browsers without picture support?
-            add_action( 'init',  array($this, 'startOutputBuffer'), 1 ); // start output buffer to capture content
-        } elseif ($webp_option == self::WEBP_WP){
+					 // add_action( 'init',  array($this, 'startOutputBuffer'), 1 ); // start output buffer to capture content
+						$this->startOutputBuffer('convertImgToPictureAddWebp');
+
+        } else {
+						Log::addTemp('Setting Filters');
             add_filter( 'the_content', array($this, 'convertImgToPictureAddWebp'), 10000 ); // priority big, so it will be executed last
             add_filter( 'the_excerpt', array($this, 'convertImgToPictureAddWebp'), 10000 );
             add_filter( 'post_thumbnail_html', array($this,'convertImgToPictureAddWebp') );
@@ -52,26 +56,16 @@ class FrontController extends \ShortPixel\Controller\Front\PageConverter
   * @return String Converted content
   */
   public function convertImgToPictureAddWebp($content) {
+
       if(function_exists('amp_is_request') && amp_is_request()) {
           //for AMP pages the <picture> tag is not allowed
 					// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form
           return $content . (isset($_GET['SHORTPIXEL_DEBUG']) ? '<!-- SPDBG is AMP -->' : '');
       }
-
       $content = $this->convert($content);
       return $content;
   }
 
-  public function startOutputBuffer() {
-      $env = wpSPIO()->env();
-
-      if ($env->is_admin || $env->is_ajaxcall)
-        return;
-
-      $call = array($this, 'convertImgToPictureAddWebp');
-      ob_start( $call );
-
-  }
 
 
   protected function convert($content)

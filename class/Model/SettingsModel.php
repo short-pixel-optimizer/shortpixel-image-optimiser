@@ -44,7 +44,7 @@ class SettingsModel extends \ShortPixel\Model
         'cloudflareZoneID' => ['s' => 'string', 'default' => ''], // string
         'cloudflareToken' => ['s' => 'string', 'default' => ''],
 				'doBackgroundProcess' => ['s' => 'boolean', 'default' => false], // checkbox
-				'showCustomMedia' => ['s' => 'boolean', 'default' => true],
+				'showCustomMedia' => ['s' => 'boolean', 'default' => true], // checkbox 
 				'mediaLibraryViewMode' => ['s' => 'int', 'default' => false], // set in installhelper
 				'currentVersion' => ['s' => 'string', 'default' => null], // last known version of plugin. Used for updating
 				'hasCustomFolders' => ['s' => 'int', 'default' => false], // timestamp used for custom folders
@@ -56,7 +56,7 @@ class SettingsModel extends \ShortPixel\Model
 				'currentStats' => ['s' => 'array', 'default' => array()], // whatever the current stats are.
         'currentVersion' => ['s' => 'string', 'default' => ''],
 				'useCDN' => ['s' => 'boolean', 'default' => false],
-				'CDNDomain' => ['s' => 'string', 'default' => ''],
+				'CDNDomain' => ['s' => 'string', 'default' => 'https://cdn.shortpixel.ai/spio'],
 
     );
 

@@ -5,6 +5,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
+use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
+
 
 class FrontController extends \ShortPixel\Controller
 {
@@ -22,6 +24,7 @@ class FrontController extends \ShortPixel\Controller
 				if (\wpSPIO()->env()->is_front) // if is front.
 				{
 					$settings = \wpSPIO()->settings();
+					Log::addTemp('Deliver ' . $settings->deliverWebp);
 
 					if (true === $settings->useCDN)
 					{
