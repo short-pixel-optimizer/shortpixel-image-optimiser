@@ -7,6 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use ShortPixel\ShortPixelLogger\ShortPixelLogger as Log;
 use ShortPixel\Model\FrontImage as FrontImage;
+use ShortPixel\Model\Image\ImageModel as ImageModel;
 
 
 class CDNController extends \ShortPixel\Controller\Front\PageConverter
@@ -37,7 +38,27 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 				$settings = \wpSPIO()->settings();
 				$env = \wpSPIO()->env();
 
-				$args = ['q_orig'];
+
+        $compressionType = $settings->compressionType;
+        // Depend this on the SPIO setting
+				$args = ['ret_img'];
+
+        switch($compressionType)
+        {
+           case ImageModel::COMPRESSION_LOSSY:
+              $compressionArg = 'q_lossy';
+           break;
+           case ImageModel::COMPRESSION_GLOSSY:
+              $compressionArg = 'q_glossy';
+           break;
+           case ImageModel::COMPRESSION_LOSSLESS:
+           default:
+              $compressionArg = 'q_lossless';
+           break;
+        }
+
+        // Perhaps later if need to override in webp/avif check
+        $args[] = $compressionArg;
 
 				$use_webp = $settings->deliverWebp;
 				$use_avif =  $settings->deliverAvif;
@@ -54,8 +75,11 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 					 $args[] = 'to_webp';
 				}
 				else {
-					 $args[] = 'to_avif'; 
+					 $args[] = 'to_avif';
 				}
+
+        // Retina argument, add.
+
 
 		/*		if ($use_webp && ! $use_avif)
 				{

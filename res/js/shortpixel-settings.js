@@ -406,24 +406,18 @@ class ShortPixelSettings
 			event.preventDefault();
 
 			var checkbox = event.target;
+			var checkboxes = [];
 
-			var field_id = checkbox.getAttribute('data-toggle');
-			var target = document.getElementById(field_id);
-			// Allow multiple elements to be toggled, which will not work with id. In due time all should be transferred to use class-based toggle
-			var targetClasses = this.root.querySelectorAll('.' + field_id);
+			checkboxes.push(checkbox);
 
-			if (checkbox.type === 'radio')
-			{
+			//var field_id = checkbox.getAttribute('data-toggle');
+			var targets = [];
 
-			}
+	//		var target = document.getElementById(field_id);
+	//		if (null !== target)
+	//			targets.push(target);
 
-		  if (typeof checkbox.dataset.toggleReverse !== 'undefined')
-			{
-				var checked = ! checkbox.checked;
-			}
-			else {
-				var checked = checkbox.checked;
-			}
+return false; 
 
 			if (target === null)
 			{
@@ -431,34 +425,80 @@ class ShortPixelSettings
 				 return false;
 			}
 
-			var show = false;
-			if (checked)
+			// If radio, add all to the event.
+			if (checkbox.type === 'radio')
 			{
-				show = true;
-			}
-
-			if (target !== null)
-			{
-				 if (show)
-				 {
-				 	this.ShowElement([target]);
-				}
-				else {
-					 this.HideElement([target]);
-				}
-			}
-
-		 	for (var i = 0; i < targetClasses.length; i++)
-			{
-				  if (show)
+					var radios = document.querySelectorAll('input[name="' + checkbox.name + '"]');
+				//	checkboxes = otherRadios;
+					checkboxes = radios;
+					/*for (var i = 0; i < radios.length; i++)
 					{
-						this.ShowElement([targetClasses[i]]);
+						var field_id = radios[i].getAttribute('data-toggle');
+					//	var target = document.getElementById(field_id);
+						if (null !== target)
+						{
+							 checkboxes.push()
+					//		 targets.push(target);
+						}
+					} */
+
+			}
+
+			for (var i = 0; i < checkboxes.length; i++)
+			{
+
+				  var checkbox = checkboxes[i];
+
+					var field_id = checkbox.getAttribute('data-toggle');
+					var target = document.getElementById(field_id);
+
+
+
+					// Allow multiple elements to be toggled, which will not work with id. In due time all should be transferred to use class-based toggle
+					var targetClasses = this.root.querySelectorAll('.' + field_id);
+
+					if (targetClasses.length == 0)
+					{
+						 console.error('No Targetclasses. Old format!' + field_id);
+					}
+
+				  if (typeof checkbox.dataset.toggleReverse !== 'undefined')
+					{
+						var checked = ! checkbox.checked;
 					}
 					else {
-						this.HideElement([targetClasses[i]]);
+						var checked = checkbox.checked;
 					}
-			}
 
+
+					var show = false;
+					if (checked)
+					{
+						show = true;
+					}
+
+					if (target !== null)
+					{
+						 if (show)
+						 {
+						 	this.ShowElement([target]);
+						}
+						else {
+							 this.HideElement([target]);
+						}
+					}
+
+				 	for (var i = 0; i < targetClasses.length; i++)
+					{
+						  if (show)
+							{
+								this.ShowElement([targetClasses[i]]);
+							}
+							else {
+								this.HideElement([targetClasses[i]]);
+							}
+					}
+			} // for
 			//checkbox.disabled = false;
 	}
 

@@ -23,6 +23,12 @@
 		 justify-content: space-between;
 		 settinglist {
 			 flex: 0 0 50%;
+       background-color: #F4FBFC;
+       padding: 12px;
+       margin-top: 30px;
+       &:first-child {
+          border-right: 8px solid #fff;
+       }
 		 }
 	}
 

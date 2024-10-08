@@ -102,7 +102,7 @@ $disabled = ($view->key->is_editable) ? '' : 'disabled';
 			<?php esc_html_e('Existing Customer','shortpixel-image-optimiser');?>
 	</h2>
 	<p>
-	    <?php esc_html_e('If you already have an API Key please input it below and press Validate.','shortpixel-image-optimiser');?>
+	    <?php esc_html_e('Welcome back! If you already have an API Key please input it below and press Validate.','shortpixel-image-optimiser');?>
 	</p>
 
   <form method="POST" action="<?php echo esc_url(add_query_arg(array('noheader' => 'true', 'sp-action' => 'action_addkey'))) ?>" id="shortpixel-form-nokey">

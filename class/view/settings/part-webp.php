@@ -132,31 +132,11 @@ if( $this->is_nginx ){
 
    <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/126-which-webp-files-delivery-method-is-the-best-for-me"></i>
 
-
-
-
       <ul id="deliverTypes" class="deliverWebpTypes ">
           <li>
               <input type="radio" name="deliverWebpType" id="deliverWebpAltered" <?php checked( ($view->data->deliverWebp >= 1 && $view->data->deliverWebp <= 2), true); ?> <?php echo esc_attr( $deliverWebpAlteredDisabled );?> value="deliverWebpAltered" data-toggle="deliverAlteringTypesPicture">
               <label for="deliverWebpAltered">
                   <?php esc_html_e('Using the &lt;PICTURE&gt; tag syntax','shortpixel-image-optimiser');?>
-              </label>
-
-
-              <info>
-                   <?php esc_html_e('Each &lt;img&gt; will be replaced with a &lt;picture&gt; tag that will also provide AVIF and WebP images for browsers that support it.  You don\'t need to activate this if you\'re using the Cache Enabler plugin because your AVIF\WebP images are already handled by this plugin. <strong>Please run some tests before using this option!</strong> If the styles that your theme is using rely on the position of your &lt;img&gt; tags, you may experience display problems.','shortpixel-image-optimiser'); ?>
-                  <strong><?php esc_html_e('You can revert anytime to the previous state just by deactivating the option.','shortpixel-image-optimiser'); ?></strong>
-              </info>
-
-
-
-          </li>
-          <li>
-              <hr>
-              <input type="radio" name="deliverWebpType" id="deliverWebpUnaltered" <?php checked(($view->data->deliverWebp == 3), true);?> <?php echo esc_attr( $deliverWebpUnalteredDisabled );?> value="deliverWebpUnaltered" data-toggle="deliverAlteringTypes">
-
-              <label for="deliverWebpUnaltered">
-                  <?php esc_html_e('Without altering the page code (via .htaccess)','shortpixel-image-optimiser')?>
               </label>
 
               <ul id="deliverAlteringTypes" class="toggleTarget" >
@@ -173,6 +153,20 @@ if( $this->is_nginx ){
                       </label>
                   </li>
               </ul>
+
+              <info>
+                   <?php esc_html_e('Each &lt;img&gt; will be replaced with a &lt;picture&gt; tag that will also provide AVIF and WebP images for browsers that support it.  You don\'t need to activate this if you\'re using the Cache Enabler plugin because your AVIF\WebP images are already handled by this plugin. <strong>Please run some tests before using this option!</strong> If the styles that your theme is using rely on the position of your &lt;img&gt; tags, you may experience display problems.','shortpixel-image-optimiser'); ?>
+                  <strong><?php esc_html_e('You can revert anytime to the previous state just by deactivating the option.','shortpixel-image-optimiser'); ?></strong>
+              </info>
+
+          </li>
+          <li>
+              <hr>
+              <input type="radio" name="deliverWebpType" id="deliverWebpUnaltered" <?php checked(($view->data->deliverWebp == 3), true);?> <?php echo esc_attr( $deliverWebpUnalteredDisabled );?> value="deliverWebpUnaltered" data-toggle="deliverAlteringTypes">
+
+              <label for="deliverWebpUnaltered">
+                  <?php esc_html_e('Without altering the page code (via .htaccess)','shortpixel-image-optimiser')?>
+              </label>
 
               <?php if(strlen($deliverWebpUnalteredLabel)){ ?>
                   <p class="sp-notice sp-notice-warning"><strong>
