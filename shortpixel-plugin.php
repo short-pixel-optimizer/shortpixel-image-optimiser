@@ -98,6 +98,8 @@ class ShortPixelPlugin {
 			$quotaController = QuotaController::getInstance();
 			$quotaController->getQuota();
 
+			load_plugin_textdomain( 'shortpixel-image-optimiser', false, plugin_basename( dirname( SHORTPIXEL_PLUGIN_FILE ) ) . '/lang' );
+
 	}
 
 	/** Function to get plugin settings
@@ -192,10 +194,6 @@ class ShortPixelPlugin {
 				add_filter( 'mpp_generate_metadata', array( $admin, 'handleImageUploadHook' ), 10, 2 );
 			}
 		}
-
-
-
-	  load_plugin_textdomain( 'shortpixel-image-optimiser', false, plugin_basename( dirname( SHORTPIXEL_PLUGIN_FILE ) ) . '/lang' );
 
 		$isAdminUser = $access->userIsAllowed('is_admin_user');
 
