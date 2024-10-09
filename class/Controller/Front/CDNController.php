@@ -80,26 +80,28 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
         // Retina argument, add.
 
+        $webpArg = '';
 
-		/*		if ($use_webp && ! $use_avif)
+				if ($use_webp)
 				{
-					 $args[] = ($webp_double) ? 's_d_webp' : 's_webp';
+					$webpArg = ($webp_double) ? 's_dwebp' : 's_webp';
+          if ($use_avif)
+          {
+             $webpArg .= ($avif_double) ? ':davif' : ':avif';
+          }
 				}
 				elseif (! $use_webp && $use_avif)
 				{
-					 $args[] = ($avif_double) ? 's_d_avif' : 's_avif';
+					 $webpArg = ($avif_double) ? 's_davif' : 's_avif';
 				}
-				elseif($use_webp && $use_avif && ! $webp_double && ! $avif_double)
-				{
-					 $args[] = 's_webp_avif';
-				}
-				elseif ($use_webp && $webp_double && ! $avif_double)
-				{
-						$args[] = 's_d_webp_avif';
-				} */
+
+        if (strlen($webpArg) > 0)
+        {
+           $args[] = $webpArg;
+        }
 
 
-				if (true === $settings->deliverWebp)
+			/*	if (true === $settings->deliverWebp)
 				{
 						$webp  = ($env->useDoubleWebpExtension()) ? 's_webp' : 'd_webp';
 						$args[] = $webp;
@@ -108,7 +110,7 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 				{
 						$avif  = ($env->useDoubleAvifExtension()) ? 's_avif' : 'd_avif';
 						$args[] = $avif;
-				}
+				} */
 
 				$this->cdn_arguments = $args;
 

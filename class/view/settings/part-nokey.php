@@ -47,10 +47,10 @@ $disabled = ($view->key->is_editable) ? '' : 'disabled';
 
 		<div class='onboarding-join-wrapper'>
 
-	 <!-- // @todo Inline CSS on whole page-->
+	 <!-- // @todo Remove Inline CSS on whole page-->
 
 
-<settinglist>
+<settinglist class='new-customer now-active'>
 
 	<h2><?php esc_html_e('New Customer','shortpixel-image-optimiser');?></h2>
 <p><?php esc_html_e('If you don\'t have an API Key, you can request one for free. Just press the "Request Key" button after checking that the e-mail is correct.','shortpixel-image-optimiser');?></p>
@@ -66,12 +66,13 @@ $disabled = ($view->key->is_editable) ? '' : 'disabled';
 
               <span class="spinner" id="pluginemail_spinner" style="float:none;"></span>
 
+<!--
               <button type="submit" id="request_key" class="button button-primary" title="<?php esc_html_e('Request a new API key','shortpixel-image-optimiser');?>"
                  href="https://shortpixel.com/free-sign-up?pluginemail=<?php echo esc_attr( esc_url($adminEmail) );?>"
 								 <?php echo $disabled ?>  >
                  <?php esc_html_e('Request Key','shortpixel-image-optimiser');?>
               </button>
-
+-->
               <info>
                 <p class="settings-info shortpixel-settings-error" style='display:none;' id='pluginemail-error'>
                     <b><?php esc_html_e('Please provide a valid e-mail address.', 'shortpixel-image-optimiser');?></b>
@@ -97,7 +98,7 @@ $disabled = ($view->key->is_editable) ? '' : 'disabled';
   </form>
 </settinglist>
 
-<settinglist>
+<settinglist class='existing customer'>
 	<h2>
 			<?php esc_html_e('Existing Customer','shortpixel-image-optimiser');?>
 	</h2>
@@ -119,10 +120,10 @@ $disabled = ($view->key->is_editable) ? '' : 'disabled';
 
               <input type="hidden" name="validate" id="valid" value="validate"/>
               <span class="spinner" id="pluginemail_spinner" style="float:none;"></span>
-              <button type="submit" id="validate" class="button button-primary" title="<?php esc_html_e('Validate the provided API key','shortpixel-image-optimiser');?>" <?php echo $disabled ?>
+            <!--  <button type="submit" id="validate" class="button button-primary" title="<?php esc_html_e('Validate the provided API key','shortpixel-image-optimiser');?>" <?php echo $disabled ?>
                   >
                   <?php esc_html_e('Validate','shortpixel-image-optimiser');?>
-              </button>
+              </button> -->
       </content>
 			<?php if (isset($error_message)): ?>
 				<error class='display'>
@@ -133,10 +134,17 @@ $disabled = ($view->key->is_editable) ? '' : 'disabled';
 
   </form>
 </settinglist>
+</label>
+
+
 
 </div> <!-- // Join Wrapper -->
 
+<settinglist class='onboard-submit'>
+  <button type="submit" name="add-key"><?php esc_html_e('Continue', 'shortpixel-image-optimiser'); ?></button>
+  <input type="hidden" name="method-selected" value="new-key" />
 
+</settinglist>
 
 
 

@@ -348,6 +348,9 @@ class ShortPixelPlugin {
 
 		wp_localize_script('shortpixel-settings', 'settings_strings', UiHelper::getSettingsStrings(false));
 
+		wp_register_script( 'shortpixel-onboarding', plugins_url( 'res/js/shortpixel-onboarding.js', SHORTPIXEL_PLUGIN_FILE ), array('shortpixel-settings'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
+
+
 
 		wp_register_script('shortpixel-media', plugins_url('res/js/shortpixel-media.js',  SHORTPIXEL_PLUGIN_FILE), array('jquery'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
@@ -564,6 +567,8 @@ class ShortPixelPlugin {
 			$this->load_script( 'shortpixel-screen-nolist' ); // screen
 	//		$this->load_script( 'sp-file-tree' );
 			$this->load_script( 'shortpixel-settings' );
+			// @todo Load onboarding only when no api key / onboarding required 
+			$this->load_script('shortpixel-onboarding');
 
 			$this->load_style( 'shortpixel-admin' );
 			//$this->load_style( 'shortpixel' );

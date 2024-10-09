@@ -16,6 +16,11 @@ class ShortPixelSettings
 		  this.root = document.querySelector('.wrap.is-shortpixel-settings-page');
 			this.InitActions();
 			this.SaveOnKey();
+
+
+			// @todo if this fires directly, probably missed by onboarding. Need some other way
+			var ev = new CustomEvent('shortpixel.settings.loaded');
+			document.dispatchEvent(ev);
 	 }
 
 	InitActions()
@@ -409,15 +414,7 @@ class ShortPixelSettings
 			var checkboxes = [];
 
 			checkboxes.push(checkbox);
-
-			//var field_id = checkbox.getAttribute('data-toggle');
 			var targets = [];
-
-	//		var target = document.getElementById(field_id);
-	//		if (null !== target)
-	//			targets.push(target);
-
-return false; 
 
 			if (target === null)
 			{
@@ -428,31 +425,22 @@ return false;
 			// If radio, add all to the event.
 			if (checkbox.type === 'radio')
 			{
-					var radios = document.querySelectorAll('input[name="' + checkbox.name + '"]');
-				//	checkboxes = otherRadios;
-					checkboxes = radios;
-					/*for (var i = 0; i < radios.length; i++)
-					{
-						var field_id = radios[i].getAttribute('data-toggle');
-					//	var target = document.getElementById(field_id);
-						if (null !== target)
-						{
-							 checkboxes.push()
-					//		 targets.push(target);
-						}
-					} */
+					var checkboxes = document.querySelectorAll('input[name="' + checkbox.name + '"]');
 
 			}
 
 			for (var i = 0; i < checkboxes.length; i++)
 			{
 
+					if (i > 100)
+					{
+						console.error('unclear loop');
+						break;
+					}
 				  var checkbox = checkboxes[i];
 
 					var field_id = checkbox.getAttribute('data-toggle');
 					var target = document.getElementById(field_id);
-
-
 
 					// Allow multiple elements to be toggled, which will not work with id. In due time all should be transferred to use class-based toggle
 					var targetClasses = this.root.querySelectorAll('.' + field_id);
@@ -488,7 +476,7 @@ return false;
 						}
 					}
 
-				 	for (var i = 0; i < targetClasses.length; i++)
+				 	for (var j = 0; j < targetClasses.length; j++)
 					{
 						  if (show)
 							{
@@ -499,7 +487,7 @@ return false;
 							}
 					}
 			} // for
-			//checkbox.disabled = false;
+
 	}
 
 	ShowElement(elems) {

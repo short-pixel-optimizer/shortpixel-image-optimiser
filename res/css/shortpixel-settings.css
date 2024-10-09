@@ -960,13 +960,21 @@ div.spio-modal-title {
   justify-content: space-between;
 }
 .wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist {
-  flex: 0 0 50%;
-  background-color: #F4FBFC;
+  background-color: #116C7E;
   padding: 12px;
   margin-top: 30px;
 }
+.wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist setting {
+  background-color: #116C7E;
+}
 .wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist:first-child {
   border-right: 8px solid #fff;
+}
+.wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist.now-active {
+  background-color: #F4FBFC;
+}
+.wrap.is-shortpixel-settings-page #tab-nokey .onboarding-join-wrapper settinglist.now-active setting {
+  background-color: #F4FBFC;
 }
 .wrap.is-shortpixel-settings-page #tab-tools .button {
   min-height: 44px;
