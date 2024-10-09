@@ -126,7 +126,7 @@
   margin: 0;
   padding: 12px;
   background: #1FB5BF;
-  background: linear-gradient(90deg, #0f6a7d 0%, rgb(15, 106, 125) 0%, #1cbecb 100%);
+  background: linear-gradient(90deg, #0f6a7d 0%, #0f6a7d 0%, #1cbecb 100%);
   width: 100%;
   font-size: 16px;
   color: #ffffff;
@@ -258,7 +258,7 @@
   display: none;
   margin: 25px 0;
   width: 90%;
-  background: rgb(31, 190, 201);
+  background: #1fbec9;
   border: 1px solid #ccc;
   font-size: 26px;
   line-height: 26px;
@@ -409,7 +409,7 @@
   flex-grow: 1;
 }
 .shortpixel-bulk-wrapper section.spio-progressbar .flex > div.result .line {
-  background: linear-gradient(90deg, rgb(204, 204, 204) 0%, rgb(204, 204, 204) 49.9%, rgb(255, 255, 255) 51%, rgb(255, 255, 255) 100%);
+  background: linear-gradient(90deg, #cccccc 0%, #cccccc 49.9%, white 51%, white 100%);
 }
 .shortpixel-bulk-wrapper section.spio-progressbar .flex > div.select .line {
   width: 50%;
@@ -451,7 +451,7 @@
   margin-top: 8px;
 }
 .shortpixel-bulk-wrapper section.panel.selection .spio-progressbar .select .line {
-  background: linear-gradient(90deg, rgb(31, 190, 201) 0%, rgb(31, 190, 201) 49.9%, rgb(204, 204, 204) 50%, rgb(204, 204, 204) 100%);
+  background: linear-gradient(90deg, #1fbec9 0%, #1fbec9 49.9%, #cccccc 50%, #cccccc 100%);
 }
 .shortpixel-bulk-wrapper section.panel.selection .spio-progressbar .select .text, .shortpixel-bulk-wrapper section.panel.selection .spio-progressbar .select .step {
   color: #EC2C25;
@@ -591,7 +591,7 @@
   border-color: #1FBEC9;
 }
 .shortpixel-bulk-wrapper section.panel.summary .spio-progressbar .summary .line {
-  background: linear-gradient(90deg, rgb(31, 190, 201) 0%, rgb(31, 190, 201) 49.9%, rgb(204, 204, 204) 50%, rgb(204, 204, 204) 100%);
+  background: linear-gradient(90deg, #1fbec9 0%, #1fbec9 49.9%, #cccccc 50%, #cccccc 100%);
 }
 .shortpixel-bulk-wrapper section.panel.summary .spio-progressbar .summary .text, .shortpixel-bulk-wrapper section.panel.summary .spio-progressbar .summary .step {
   color: #EC2C25;
@@ -733,7 +733,7 @@
   border-color: #1FBEC9;
 }
 .shortpixel-bulk-wrapper section.panel.process .spio-progressbar .process .line, .shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .process .line {
-  background: linear-gradient(90deg, rgb(31, 190, 201) 0%, rgb(31, 190, 201) 49.9%, rgb(204, 204, 204) 50%, rgb(204, 204, 204) 100%);
+  background: linear-gradient(90deg, #1fbec9 0%, #1fbec9 49.9%, #cccccc 50%, #cccccc 100%);
 }
 .shortpixel-bulk-wrapper section.panel.process .spio-progressbar .process .text, .shortpixel-bulk-wrapper section.panel.process .spio-progressbar .process .step, .shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .process .text, .shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .process .step {
   color: #EC2C25;
@@ -849,8 +849,8 @@
   position: absolute;
   top: 0;
   width: 300px;
-  background: rgba(15, 106, 125, 0.3137254902);
-  background: linear-gradient(90deg, rgb(15, 106, 125) 0%, rgb(15, 106, 125) 0%, rgba(0, 212, 255, 0) 100%);
+  background: #0f6a7d50;
+  background: linear-gradient(90deg, #0f6a7d 0%, #0f6a7d 0%, rgba(0, 212, 255, 0) 100%);
   color: #fff;
   font-size: 20px;
   padding: 15px;
@@ -972,7 +972,7 @@
   border-color: #1FBEC9;
 }
 .shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .result .line {
-  background: linear-gradient(90deg, rgb(31, 190, 201) 0%, rgb(31, 190, 201) 49.9%, rgb(204, 204, 204) 50%, rgb(204, 204, 204) 100%);
+  background: linear-gradient(90deg, #1fbec9 0%, #1fbec9 49.9%, #cccccc 50%, #cccccc 100%);
 }
 .shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .result .text, .shortpixel-bulk-wrapper section.panel.finished .spio-progressbar .result .step {
   color: #EC2C25;

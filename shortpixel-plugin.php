@@ -98,6 +98,8 @@ class ShortPixelPlugin {
 			$quotaController = QuotaController::getInstance();
 			$quotaController->getQuota();
 
+			load_plugin_textdomain( 'shortpixel-image-optimiser', false, plugin_basename( dirname( SHORTPIXEL_PLUGIN_FILE ) ) . '/lang' );
+
 	}
 
 	/** Function to get plugin settings
@@ -193,10 +195,6 @@ class ShortPixelPlugin {
 			}
 		}
 
-
-
-	  load_plugin_textdomain( 'shortpixel-image-optimiser', false, plugin_basename( dirname( SHORTPIXEL_PLUGIN_FILE ) ) . '/lang' );
-
 		$isAdminUser = $access->userIsAllowed('is_admin_user');
 
 		$this->env()->setDefaultViewModeList();// set default mode as list. only @ first run
@@ -267,7 +265,7 @@ class ShortPixelPlugin {
 		// Used by processor
 		 add_action( 'wp_ajax_shortpixel_get_item_view', array( AjaxController::getInstance(), 'ajax_getItemView' ) );
 
-		 add_action('wp_ajax_image_editor', array(AjaxController::getInstance(), 'ajax_addImageEditorData'));
+	//	 add_action('wp_ajax_image_editor', array(AjaxController::getInstance(), 'ajax_addImageEditorData'));
 	}
 
 	/** Hook in our admin pages */
