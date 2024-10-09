@@ -4,7 +4,7 @@ Tags: convert webp, optimize images, image optimization, resize, compressor
 Requires at least: 4.8.0
 Tested up to: 6.6
 Requires PHP: 5.6
-Stable tag: 5.6.3
+Stable tag: 5.6.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -392,6 +392,13 @@ Add HTTP basic authentication credentials by defining these constants in wp-conf
 8. Check other optimized images' status - themes or other plugins' images. (Media>Other Media)
 
 == Changelog ==
+
+= 5.6.4 =
+Release date: October 9, 2024
+* Fix: A Broken Access Control vulnerability has been fixed (safely disclosed by the PatchStack team - thanks!);
+* Fix: An SQL injection vulnerability has been patched (also safely disclosed by the PatchStack team);
+* Fix: Moved loading of the plugin text domain to the init hook to increase compatibility;
+* Language: 2 new strings added, 0 updated, 0 fuzzed, and 0 deprecated.
 
 = 5.6.3 =
 Release date: July 16, 2024
