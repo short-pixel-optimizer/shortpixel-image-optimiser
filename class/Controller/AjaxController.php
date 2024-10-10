@@ -156,8 +156,6 @@ class AjaxController
 				$this->checkActionAccess('processQueue', 'is_author');
         $this->checkProcessorKey();
 
-
-
 				ErrorController::start(); // Capture fatal errors for us.
 
         // Notice that POST variables are always string, so 'true', not true.
@@ -185,13 +183,14 @@ class AjaxController
 			$json->message = __('Became processor', 'shortpixel-image-optimiser');
 			$json->status = true;
 			$this->send($json);
-
 		}
 
     public function ajaxRequest()
     {
         $this->checkNonce('ajax_request');
 				ErrorController::start(); // Capture fatal errors for us.
+
+				$this->checkActionAccess('ajax', 'is_author');
 
 			  // phpcs:ignore -- Nonce is checked
         $action = isset($_POST['screen_action']) ? sanitize_text_field($_POST['screen_action']) : false;
