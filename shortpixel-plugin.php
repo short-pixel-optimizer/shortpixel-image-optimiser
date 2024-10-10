@@ -257,10 +257,9 @@ class ShortPixelPlugin {
 		add_action( 'wp_ajax_shortpixel_propose_upgrade', array( AjaxController::getInstance(), 'ajax_proposeQuotaUpgrade' ) );
 		add_action( 'wp_ajax_shortpixel_check_quota', array( AjaxController::getInstance(), 'ajax_checkquota' ) );
 
-		// @todo should probably go through ajaxrequest.
-		add_action( 'wp_ajax_shortpixel_get_comparer_data', array( AjaxController::getInstance(), 'ajax_getComparerData' ) );
 
 		add_action( 'wp_ajax_shortpixel_ajaxRequest', array( AjaxController::getInstance(), 'ajaxRequest' ) );
+		add_action( 'wp_ajax_shortpixel_settingsRequest', array( AjaxController::getInstance(), 'settingsRequest'));
 
 		// Used by processor
 		 add_action( 'wp_ajax_shortpixel_get_item_view', array( AjaxController::getInstance(), 'ajax_getItemView' ) );
@@ -348,9 +347,8 @@ class ShortPixelPlugin {
 
 		wp_localize_script('shortpixel-settings', 'settings_strings', UiHelper::getSettingsStrings(false));
 
+
 		wp_register_script( 'shortpixel-onboarding', plugins_url( 'res/js/shortpixel-onboarding.js', SHORTPIXEL_PLUGIN_FILE ), array('shortpixel-settings'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true );
-
-
 
 		wp_register_script('shortpixel-media', plugins_url('res/js/shortpixel-media.js',  SHORTPIXEL_PLUGIN_FILE), array('jquery'), SHORTPIXEL_IMAGE_OPTIMISER_VERSION, true);
 
@@ -387,8 +385,8 @@ class ShortPixelPlugin {
 				'workerURL'         => plugins_url( 'res/js/shortpixel-worker.js', SHORTPIXEL_PLUGIN_FILE ),
 				'nonce_process'     => wp_create_nonce( 'processing' ),
 				'nonce_exit'        => wp_create_nonce( 'exit_process' ),
-				'nonce_itemview'    => wp_create_nonce( 'item_view' ),
 				'nonce_ajaxrequest' => wp_create_nonce( 'ajax_request' ),
+				'nonce_settingsrequest' => wp_create_nonce('settings_request'),
 				'startData'         => ( \wpSPIO()->env()->is_screen_to_use ) ? $optimizeController->getStartupData() : false,
 				'interval'          => $interval,
 				'deferInterval'     => $deferInterval,
@@ -565,14 +563,13 @@ class ShortPixelPlugin {
 		if ( $plugin_page == 'wp-shortpixel-settings' || $plugin_page == 'shortpixel-network-settings' ) {
 
 			$this->load_script( 'shortpixel-screen-nolist' ); // screen
-	//		$this->load_script( 'sp-file-tree' );
 			$this->load_script( 'shortpixel-settings' );
-			// @todo Load onboarding only when no api key / onboarding required 
+
+			// @todo Load onboarding only when no api key / onboarding required
 			$this->load_script('shortpixel-onboarding');
 
 			$this->load_style( 'shortpixel-admin' );
-			//$this->load_style( 'shortpixel' );
-			//$this->load_style( 'sp-file-tree' );
+
 			$this->load_style( 'shortpixel-settings' );
 
 		} elseif ( $plugin_page == 'wp-short-pixel-bulk' ) {

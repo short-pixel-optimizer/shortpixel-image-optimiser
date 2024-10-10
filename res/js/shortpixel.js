@@ -400,6 +400,7 @@ var ShortPixel = function() {
             if(!shown) e.target.parentElement.classList.add("sp-show");
     }
 
+// @todo Comparer should probably move to screen-base js
     function loadComparer(id, type) {
         this.comparerData.origUrl = false;
          if(this.comparerData.cssLoaded === false) {
@@ -419,13 +420,14 @@ var ShortPixel = function() {
             });
             this.comparerData.jsLoaded = 1;
         }
+
         if(this.comparerData.origUrl === false) {
                if (typeof type == 'undefined')
                   var type = 'media';  // default.
             jQuery.ajax({
                 type: "POST",
                 url: ShortPixel.AJAX_URL,
-                data: { action : 'shortpixel_get_comparer_data', id : id, type: type, nonce: ShortPixelConstants[0].nonce_ajaxrequest },
+								data: { action: 'shortpixel_ajaxRequest', screen_action : 'getComparerData', id : id, type: type, nonce: ShortPixelProcessorData.nonce_ajaxrequest },
                 success: function(response) {
                   //  data = JSON.parse(response);
 

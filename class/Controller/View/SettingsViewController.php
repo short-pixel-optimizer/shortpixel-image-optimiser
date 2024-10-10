@@ -50,6 +50,8 @@ class SettingsViewController extends \ShortPixel\ViewController
 		 protected $all_display_parts = array('overview', 'dashboard', 'optimisation','webp', 'cdn','exlusions', 'debug', 'tools');
      protected $form_action = 'save-settings';
      protected $view_mode = 'simple'; // advanced or simple
+		 protected $is_ajax_save = false; // checker if saved via ajax ( aka no redirect / json return )
+		 protected $notices_added = []; // Added notices this run, to report via ajax.
 
 		 protected static $instance;
 
@@ -84,6 +86,12 @@ class SettingsViewController extends \ShortPixel\ViewController
 
         $this->load_settings();
       }
+
+			public function saveForm()
+			{
+				 $this->loadEnv();
+
+			}
 
       // this is the nokey form, submitting api key
       public function action_addkey()
@@ -360,20 +368,11 @@ class SettingsViewController extends \ShortPixel\ViewController
               AdminNoticesController::resetIntegrationNotices();
           }
 
-Log::addTemp('PostData', $this->postData);
 					// If the compression type setting changes, remove all queued items to prevent further optimizing with a wrong type.
 					if (intval($this->postData['compressionType']) !== intval($this->model->compressionType))
 					{
 						 OptimizeController::resetQueues();
 					}
-
-          if (isset($_POST['apiKey']) && false === $this->keyModel->is_constant())
-          // first save all other settings ( like http credentials etc ), then check
-          {
-              $check_key = sanitize_text_field($_POST['apiKey']);
-              $this->keyModel->resetTried(); // reset the tried api keys on a specific post request.
-              $this->keyModel->checkKey($check_key);
-          }
 
           // write checked and verified post data to model. With normal models, this should just be call to update() function
           foreach($this->postData as $name => $value)
@@ -389,7 +388,7 @@ Log::addTemp('PostData', $this->postData);
 							$type = $this->model->getType($name);
 							if ('boolean' === $type && ! isset($this->postData[$name]))
 							{
-								 $this->model->{$name} = false; 
+								 $this->model->{$name} = false;
 							}
 					}
 
@@ -397,17 +396,20 @@ Log::addTemp('PostData', $this->postData);
 					$this->loadQuotaData(true);
           // end
 
-          if ($this->do_redirect)
+					if ($this->do_redirect)
+					{
             $this->doRedirect('bulk');
-          else {
+					}
+					elseif (false === $this->is_ajax_save) {
 
 						$noticeController = Notice::getInstance();
 						$notice = Notice::addSuccess(__('Settings Saved', 'shortpixel-image-optimiser'));
 						$notice->is_removable = false;
 						$noticeController->update();
 
-            $this->doRedirect();
+
           }
+					  $this->doRedirect();
       }
 
       /* Loads the view data and the view */
@@ -644,8 +646,11 @@ Log::addTemp('PostData', $this->postData);
 
       }
 
-      // This is done before handing it off to the parent controller, to sanitize and check against model.
-      protected function processPostData($post, $model = null)
+
+			/** This is done before handing it off to the parent controller, to sanitize and check against model.
+			* @param $post Array (raw) $_POST object
+			**/
+      protected function processPostData($post)
       {
           if (isset($post['display_part']) && strlen($post['display_part']) > 0)
           {
@@ -657,6 +662,21 @@ Log::addTemp('PostData', $this->postData);
           {
             $this->do_redirect = true;
           }
+
+					if (isset($_POST['apiKey']) && false === $this->keyModel->is_constant())
+					// first save all other settings ( like http credentials etc ), then check
+					{
+							$check_key = sanitize_text_field($_POST['apiKey']);
+							$this->keyModel->resetTried(); // reset the tried api keys on a specific post request.
+							$this->keyModel->checkKey($check_key);
+							unset($post['apiKey']);
+					}
+
+					if (isset($post['ajaxSave']) && $post['ajaxSave'] === 'true')
+					{
+						 $this->is_ajax_save = true;
+						 unset($post['ajaxSave']);
+					}
 
           // handle 'reverse' checkbox.
           $keepExif = isset($post['removeExif']) ? 0 : 1;
@@ -852,9 +872,18 @@ Log::addTemp('PostData', $this->postData);
       }
 
 
-
+			/**
+			* Each form save / action results in redirect
+			*
+			**/
       protected function doRedirect($redirect = 'self')
       {
+
+				if (true === $this->is_ajax_save)
+				{
+					$this->handleAjaxSave($redirect);
+				}
+
         if ($redirect == 'self')
         {
 
@@ -883,6 +912,32 @@ Log::addTemp('PostData', $this->postData);
         wp_redirect($url);
         exit();
       }
+
+			protected function handleAjaxSave($redirect)
+			{
+				Log::addTemp('AJAX SAve');
+						// Intercept new notices and add them
+						// Return JSON object with status of save action
+						$json = new \stdClass;
+						$json->result = true;
+
+						$noticeController = Notice::getInstance();
+
+						$json->notices = $noticeController->getNewNotices();
+						if(count($json->notices) > 0)
+						{
+							$json->display_notices = [];
+							foreach($json->notices as $notice)
+							{
+								$json->display_notices[] = $notice;
+							}
+						}
+						$json->redirect = $redirect;
+
+						$noticeController->update(); // dismiss one-time ponies
+						wp_send_json($json);
+						exit();
+			}
 
 
 }

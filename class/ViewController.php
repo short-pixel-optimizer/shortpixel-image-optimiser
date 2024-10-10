@@ -11,7 +11,7 @@ use ShortPixel\Model\AccessModel as AccessModel;
 
 class ViewController extends Controller
 {
-  protected static $controllers = array();
+ // protected static $controllers = array();
 	protected static $viewsLoaded = array();
 
   protected static $instance;
@@ -32,10 +32,12 @@ class ViewController extends Controller
 
   public static function init()
   {
-    foreach (get_declared_classes() as $class) {
+	 /*
+	 Not sure why this is here
+	 foreach (get_declared_classes() as $class) {
       if (is_subclass_of($class, 'ShortPixel\Controller') )
         self::$controllers[] = $class;
-    }
+		} */
   }
 
   public function __construct()
@@ -77,7 +79,6 @@ class ViewController extends Controller
     {
       check_admin_referer( $this->form_action, 'sp-nonce' ); // extra check, when we are wrong here, it dies.
 
-Log::addTemp($_POST);
       $this->is_form_submit = true;
       $this->processPostData($_POST);
 

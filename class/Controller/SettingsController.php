@@ -16,7 +16,7 @@ use ShortPixel\Model\SettingsModel as SettingsModel;
 
 use ShortPixel\NextGenController as NextGenController;
 
-class SettingsController
+class SettingsController extends \ShortPixel\Controller
 {
 
 		 protected static $instance;
@@ -28,30 +28,29 @@ class SettingsController
 					$keyControl = ApiKeyController::getInstance();
           $this->keyModel = $keyControl->getKeyModel();
 
-        //  parent::__construct();
+          parent::__construct();
+
+					$this->load();
       }
 
-      // default action of controller
-      public function load()
-      {
+			/* Loads the view data and the view */
+			public function load()
+			{
+			 if (false === $this->keyModel->is_verified()) // supress quotaData alerts when handing unset API's.
+			 {
+				InstallHelper::checkTables();
+			 }
 
-        $this->loadEnv();
-        $this->checkPost(); // sets up post data
+			}
 
-        /* This should be done now in ApiKeyModel
-        if (2 !== $this->model->redirectedSettings)
+			public function getInstance()
+			{
+				if (is_null(self::$instance))
+				 self::$instance = new static();
 
-        {
-          $this->model->redirectedSettings = 2; // Prevents any redirects after loading settings
-        } */
+			 return self::$instance;
+			}
 
-        if ($this->is_form_submit)
-        {
-          $this->processSave();
-        }
-
-        $this->load_settings();
-      }
 
       // this is the nokey form, submitting api key
       public function action_addkey()
@@ -367,207 +366,6 @@ Log::addTemp('PostData', $this->postData);
           }
       }
 
-      /* Loads the view data and the view */
-      public function load_settings()
-      {
-         $this->view->data = (Object) $this->model->getData();
-
-				 $this->loadAPiKeyData();
-         $this->loadDashBoardInfo();
-
-         if ($this->keyModel->is_verified()) // supress quotaData alerts when handing unset API's.
-          $this->loadQuotaData();
-        else
-          InstallHelper::checkTables();
-
-         $statsControl = StatsController::getInstance();
-
-         $this->view->minSizes = $this->getMaxIntermediateImageSize();
-
-				 $excludeOptions = UtilHelper::getWordPressImageSizes();
-				 $mainOptions = array(
-					 'shortpixel_main_donotuse' =>  array('nice-name' => __('Main (scaled) Image', 'shortpixel-image-optimiser')),
-					 'shortpixel_original_donotuse' => array('nice-name' => __('Original Image', 'shortpixel-image-optimiser')),
-				 );
-
-				 $excludeOptions = array_merge($mainOptions, $excludeOptions);
-
-         $this->view->allThumbSizes = $excludeOptions;
-         $this->view->averageCompression = $statsControl->getAverageCompression();
-        // $this->view->savedBandwidth = UiHelper::formatBytes( intval($this->view->data->savedSpace) * 10000,2);
-
-         $this->view->cloudflare_constant = defined('SHORTPIXEL_CFTOKEN') ? true : false;
-
-				 $this->view->is_unlimited= (!is_null($this->quotaData) && $this->quotaData->unlimited) ? true : false;
-
-
-         $settings = \wpSPIO()->settings();
-
-				 if ($this->view->data->createAvif == 1)
-           $this->avifServerCheck();
-
-         // Set viewMode
-         $view_mode = get_user_option('shortpixel-settings-mode');
-         if (false === $view_mode)
-          $view_mode = $this->view_mode;
-         $this->view_mode = $view_mode;
-         $this->loadView('view-settings');
-      }
-
-
-// Basically this whole premise is impossible.
-      public function loadDashBoardInfo()
-      {
-        $bulkController = BulkController::getInstance();
-        $logs = $bulkController->getLogs();
-
-        $this->view->dashboard  = new \stdClass;
-
-      }
-
-			protected function loadAPiKeyData()
-			{
-				 $keyController = ApiKeyController::getInstance();
-
-				 $keyObj = new \stdClass;
-//				 $this->view->key = new \stdClass;
-				 // $this->keyModel->loadKey();
-
-				 $keyObj->is_verifiedkey = $this->keyModel->is_verified();
-				 $keyObj->is_constant_key = $this->keyModel->is_constant();
-				 $keyObj->hide_api_key = $this->keyModel->is_hidden();
-				 $keyObj->apiKey = $keyController->getKeyForDisplay();
-
-				 $showApiKey = false;
-
-				 if (true === $keyObj->hide_api_key)
-				 {
-					  $keyObj->apiKey = '***************';
-				 }
-				 elseif($this->is_multisite && $keyObj->is_constant_key)
-				 {
-					 $keyObj->apiKey = esc_html__('Multisite API Key','shortpixel-image-optimiser');
-				 }
-				 else {
-				 	 $showApiKey = true;
-				 }
-
-				 $canValidate = false;
-
-				 $keyObj->is_editable = (! $keyObj->is_constant_key && $showApiKey) ? true : false; ;
-				 $keyObj->can_validate = $canValidate;
-
-				 $this->view->key = $keyObj;
-			}
-
-			protected function avifServerCheck()
-      {
-    			$noticeControl = AdminNoticesController::getInstance();
-					$notice = $noticeControl->getNoticeByKey('MSG_AVIF_ERROR');
-
-          if (is_object($notice))
-          {
-					     $notice->check();
-          }
-      }
-
-      /** Checks on things and set them for information. */
-      protected function loadEnv()
-      {
-          $env = wpSPIO()->env();
-
-          $this->is_nginx = $env->is_nginx;
-          $this->is_gd_installed = $env->is_gd_installed;
-          $this->is_curl_installed = $env->is_curl_installed;
-
-          $this->is_htaccess_writable = $this->HTisWritable();
-
-          $this->is_multisite = $env->is_multisite;
-          $this->is_mainsite = $env->is_mainsite;
-          $this->has_nextgen = $env->has_nextgen;
-
-          $this->disable_heavy_features = (false === \wpSPIO()->env()->useVirtualHeavyFunctions()) ? true : false;
-
-          $this->display_part = (isset($_GET['part']) && in_array($_GET['part'], $this->all_display_parts) ) ? sanitize_text_field($_GET['part']) : 'overview';
-      }
-
-      protected function settingLink($part, $title, $icon = false)
-      {
-          $link = esc_url(admin_url('options-general.php?page=wp-shortpixel-settings&part=' . $part ));
-          $active = ($this->display_part == $part) ? ' class="active" ' : '';
-          if (false !== $icon)
-          {
-             $title = '<i class="' . esc_attr($icon) . '"></i>' . $title;
-          }
-          $html = sprintf('<a href="%s" data-link="%s" %s >%s</a>', $link, $part, $active, $title);
-
-          return $html;
-
-
-      }
-
-      /* Temporary function to check if HTaccess is writable.
-      * HTaccess is writable if it exists *and* is_writable, or can be written if directory is writable.
-      */
-      private function HTisWritable()
-      {
-          if ($this->is_nginx)
-            return false;
-
-					$file = \wpSPIO()->filesystem()->getFile(get_home_path() . '.htaccess');
-					if ($file->is_writable())
-					{
-						 return true;
-					}
-
-          return false;
-      }
-
-      protected function getMaxIntermediateImageSize() {
-          global $_wp_additional_image_sizes;
-
-          $width = 0;
-          $height = 0;
-          $get_intermediate_image_sizes = get_intermediate_image_sizes();
-
-          // Create the full array with sizes and crop info
-          if(is_array($get_intermediate_image_sizes)) foreach( $get_intermediate_image_sizes as $_size ) {
-              if ( in_array( $_size, array( 'thumbnail', 'medium', 'large' ) ) ) {
-                  $width = max($width, get_option( $_size . '_size_w' ));
-                  $height = max($height, get_option( $_size . '_size_h' ));
-                  //$sizes[ $_size ]['crop'] = (bool) get_option( $_size . '_crop' );
-              } elseif ( isset( $_wp_additional_image_sizes[ $_size ] ) ) {
-                  $width = max($width, $_wp_additional_image_sizes[ $_size ]['width']);
-                  $height = max($height, $_wp_additional_image_sizes[ $_size ]['height']);
-                  //'crop' =>  $_wp_additional_image_sizes[ $_size ]['crop']
-              }
-          }
-          return array('width' => max(100, $width), 'height' => max(100, $height));
-      }
-
-			// @param Force.  needed on settings save because it sends off the HTTP Auth
-      protected function loadQuotaData($force = false)
-      {
-        $quotaController = QuotaController::getInstance();
-
-				if ($force === true)
-				{
-					 $quotaController->forceCheckRemoteQuota();
-					 $this->quotaData = null;
-				}
-
-        if (is_null($this->quotaData))
-          $this->quotaData = $quotaController->getQuota(); //$this->shortPixel->checkQuotaAndAlert();
-
-
-        $quotaData = $this->quotaData;
-
-        $remainingImages = $quotaData->total->remaining; // $quotaData['APICallsRemaining'];
-        $remainingImages = ( $remainingImages < 0 ) ? 0 : $this->formatNumber($remainingImages, 0);
-
-        $this->view->remainingImages = $remainingImages;
-
-      }
 
       // This is done before handing it off to the parent controller, to sanitize and check against model.
       protected function processPostData($post, $model = null)
@@ -778,36 +576,7 @@ Log::addTemp('PostData', $this->postData);
 
 
 
-      protected function doRedirect($redirect = 'self')
-      {
-        if ($redirect == 'self')
-        {
-
-          $url = esc_url_raw(add_query_arg('part', $this->display_part));
-          $url = remove_query_arg('noheader', $url); // has url
-          $url = remove_query_arg('sp-action', $url); // has url
-
-        }
-        elseif($redirect == 'bulk')
-        {
-          $url = admin_url("upload.php?page=wp-short-pixel-bulk");
-        }
-				elseif($redirect == 'bulk-migrate')
-				{
-					 $url = admin_url('upload.php?page=wp-short-pixel-bulk&panel=bulk-migrate');
-				}
-				elseif ($redirect == 'bulk-restore')
-				{
-						$url = admin_url('upload.php?page=wp-short-pixel-bulk&panel=bulk-restore');
-				}
-				elseif ($redirect == 'bulk-removeLegacy')
-				{
-						$url = admin_url('upload.php?page=wp-short-pixel-bulk&panel=bulk-removeLegacy');
-				}
-
-        wp_redirect($url);
-        exit();
-      }
 
 
-}
+
+} // class

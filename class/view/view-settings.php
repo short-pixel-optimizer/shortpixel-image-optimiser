@@ -86,7 +86,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 			</ul>
 		</menu>
 		<section class="wrapper">
-			
+
           <?php $this->loadView('settings/part-overview'); ?>
           <?php $this->loadView('settings/part-general'); ?>
           <?php $this->loadView('settings/part-optimisation'); ?>
@@ -109,6 +109,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 		</section>
 </article>
 </form>
+
+<section class='ajax-save-done'>
+	<h1>
+		<?php echo UIHelper::getIcon('res/img/robo-cool.png'); ?>
+		<?php _e('Settings Saved', 'shortpixel-image-optimiser'); ?> </h1>
+	<h3> <span class='notice_count'>X</span> new notices </h3>
+</section>
 
 <div class='debug'><PRE>
   <?php print_r($this->view->data); ?>

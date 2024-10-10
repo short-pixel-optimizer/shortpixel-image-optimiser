@@ -14,9 +14,11 @@ class ShortPixelSettings
 	 Init()
 	 {
 		  this.root = document.querySelector('.wrap.is-shortpixel-settings-page');
-			this.InitActions();
-			this.SaveOnKey();
 
+
+			this.InitActions();
+			this.InitAjaxForm();
+			this.SaveOnKey();
 
 			// @todo if this fires directly, probably missed by onboarding. Need some other way
 			var ev = new CustomEvent('shortpixel.settings.loaded');
@@ -62,6 +64,16 @@ class ShortPixelSettings
 				var evInit = new CustomEvent('change',  {detail : { init: true }} );
 				toggle.dispatchEvent(evInit);
 		});
+
+	}
+
+	InitAjaxForm()
+	{
+			var forms = this.root.querySelectorAll('form');
+			for (var i = 0; i < forms.length; i++)
+			{
+				 forms[i].addEventListener('submit', this.FormSendEvent);
+			}
 
 	}
 
@@ -409,6 +421,7 @@ class ShortPixelSettings
 	DoToggleActionEvent(event)
 	{
 			event.preventDefault();
+			console.log('DoToggleActionEvent');
 
 			var checkbox = event.target;
 			var checkboxes = [];
@@ -425,7 +438,8 @@ class ShortPixelSettings
 			// If radio, add all to the event.
 			if (checkbox.type === 'radio')
 			{
-					var checkboxes = document.querySelectorAll('input[name="' + checkbox.name + '"]');
+					var checkboxes = this.root.querySelectorAll('input[name="' + checkbox.name + '"]');
+					console.log('Checkboxes, doing', checkboxes);
 
 			}
 
@@ -464,6 +478,8 @@ class ShortPixelSettings
 					{
 						show = true;
 					}
+
+					console.log(checkbox, field_id, checked);
 
 					if (target !== null)
 					{
@@ -505,6 +521,71 @@ class ShortPixelSettings
 		}
 
 };
+
+FormSendEvent(event)
+{
+	 event.preventDefault();
+	 //console.log(event);
+
+	 var form = event.target;
+	 var formData = new FormData(event.target);
+
+	 formData.append('ajaxSave', 'true');
+	 formData.append('action', 'shortpixel_settingsRequest');
+	 formData.append('screen_action', 'form_submit');
+	 formData.append('form-nonce', formData.get('nonce'));
+	 formData.set('nonce', ShortPixelProcessorData.nonce_settingsrequest);
+
+	 console.log(formData);
+	 //var data = [];
+	// data.form = formdata;
+	 //data.screen_action = 'form_submit';
+	 //window.ShortPixelProcessor.SettingsRequest(data);
+
+	 //const url = new URL(window.location.href);
+	 const url = ShortPixel.AJAX_URL;
+
+	 var response = fetch(url, {
+  	method: 'POST',
+  	body: formData
+		}).then((response) => {
+  		// do something with response here...
+			console.log('response', response);
+			if (response.ok)
+			{
+					let saveDialog = document.querySelector('.ajax-save-done');
+					saveDialog.classList.add('show');
+
+					response.json().then((json) => {
+						console.log('json', json);
+						if (json.notices)
+						{
+								var notice_count = saveDialog.querySelector('.notice_count');
+								notice_count.textContent = json.notices.length;
+						}
+						if (json.display_notices)
+						{
+								let anchor = document.querySelector('.wp-header-end')
+								for (let i = 0; i < json.display_notices.length; i++)
+								{
+									//	var node =
+									//	anchor.parentNode.insertBefore(json.display_notices[i], anchor.nextSibling);
+									anchor.insertAdjacentHTML('afterend', json.display_notices[i]);
+								}
+						}
+
+					});
+
+
+					window.setTimeout(function () {
+						 saveDialog.classList.remove('show')
+					}, 2000);
+			}
+		});
+
+
+
+}
 
 // Hide an element
 HideElement(elems) {
@@ -613,8 +694,6 @@ DashBoardWarningEvent(warning, matches)
 }
 
 
-
-
 OpenModalEvent(elem)
 {
 		var target = elem.target;
@@ -706,20 +785,24 @@ ReceiveModal(elem)
 
 SaveOnKey()
 {
+
 	var saveForm = document.getElementById('wp_shortpixel_options');
 	if (saveForm === null)
 		return false; // no form no save.
 
-	window.addEventListener('keydown', function(event) {
+
+	 window.addEventListener('keydown', function(event) {
 
     if (! (event.key == 's' || event.key == 'S')  || ! event.ctrlKey)
 		{
 			return true;
 		}
-		document.getElementById('wp_shortpixel_options').submit();
+
+		let submitButton = document.getElementById('save');
+		saveForm.requestSubmit(submitButton);
     event.preventDefault();
     return false;
-	});
+	}.bind(this));
 }
 
 NewExclusionShowInterfaceEvent(event)

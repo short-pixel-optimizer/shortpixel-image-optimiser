@@ -20,6 +20,8 @@ use ShortPixel\Helper\InstallHelper as InstallHelper;
 use ShortPixel\Model\Image\ImageModel as ImageModel;
 use ShortPixel\Model\AccessModel as AccessModel;
 
+// @todo This should probably become settingscontroller, for saving
+use ShortPixel\Controller\View\SettingsViewController as SettingsViewController;
 
 
 // Class for containing all Ajax Related Actions.
@@ -38,7 +40,7 @@ class AjaxController
     public static function getInstance()
     {
        if (is_null(self::$instance))
-         self::$instance = new AjaxController();
+				 self::$instance = new static();
 
       return self::$instance;
     }
@@ -101,9 +103,8 @@ class AjaxController
       }
     }
 
-    public function ajax_getItemView()
+		protected function getItemView()
     {
-        $this->checkNonce('item_view');
 				// phpcs:ignore -- Nonce is checked
           $type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';
 				// phpcs:ignore -- Nonce is checked
@@ -145,7 +146,8 @@ class AjaxController
           $json->$type->is_error = false;
           $json->status = true;
 
-          $this->send($json);
+					return $json;
+				 // $this->send($json);
     }
 
     public function ajax_processQueue()
@@ -225,6 +227,12 @@ class AjaxController
 					break;
 					case 'getItemEditWarning': // Has to do with image editor
 						 $json = $this->getItemEditWarning($json, $data);
+					break;
+					case 'getComparerData':
+							$json = $this->getComparerData($json, $data);
+					break;
+					case 'getItemView':
+							$json = $this->getItemView($json, $data);
 					break;
 					case 'markCompleted':
 						$json = $this->markCompleted($json, $data);
@@ -331,6 +339,39 @@ class AjaxController
         }
         $this->send($json);
     }
+
+		public function settingsRequest()
+		{
+			Log::addTemp('Ajax settings request');
+			$this->checkNonce('settings_request');
+			ErrorController::start(); // Capture fatal errors for us.
+
+			$action = isset($_POST['screen_action']) ? sanitize_text_field($_POST['screen_action']) : false;
+
+			$this->checkActionAccess($action, 'is_admin_user');
+
+
+			switch($action)
+			{
+					case 'form_submit':
+						 $this->settingsFormSubmit();
+					break;
+					default:
+						Log::addError('Issue with settingsRequest, not valid action');
+						exit('0');
+					break;
+			}
+
+		}
+
+		protected function settingsFormSubmit()
+		{
+				 $viewController =  new SettingsViewController();
+				 $viewController->load();
+				 exit();
+		}
+
+
 
 		protected function getMediaItem($id, $type)
     {
@@ -712,9 +753,7 @@ class AjaxController
 		}
 
     /** Data for the compare function */
-    public function ajax_getComparerData() {
-
-        $this->checkNonce('ajax_request');
+		protected function getComparerData($json, $data) {
 
 
         $type = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : 'media';

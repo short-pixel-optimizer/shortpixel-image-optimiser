@@ -139,7 +139,8 @@ if( $this->is_nginx ){
                   <?php esc_html_e('Using the &lt;PICTURE&gt; tag syntax','shortpixel-image-optimiser');?>
               </label>
 
-              <ul id="deliverAlteringTypes" class="toggleTarget" >
+							<br><br>
+							<ul  class="toggleTarget deliverAlteringTypesPicture" >
                   <li>
                       <input type="radio" name="deliverWebpAlteringType" id="deliverWebpAlteredWP" <?php checked(($view->data->deliverWebp == 2), true);?> value="deliverWebpAlteredWP">
                       <label for="deliverWebpAlteredWP">
@@ -162,7 +163,7 @@ if( $this->is_nginx ){
           </li>
           <li>
               <hr>
-              <input type="radio" name="deliverWebpType" id="deliverWebpUnaltered" <?php checked(($view->data->deliverWebp == 3), true);?> <?php echo esc_attr( $deliverWebpUnalteredDisabled );?> value="deliverWebpUnaltered" data-toggle="deliverAlteringTypes">
+              <input type="radio" name="deliverWebpType" id="deliverWebpUnaltered" <?php checked(($view->data->deliverWebp == 3), true);?> <?php echo esc_attr( $deliverWebpUnalteredDisabled );?> value="deliverWebpUnaltered">
 
               <label for="deliverWebpUnaltered">
                   <?php esc_html_e('Without altering the page code (via .htaccess)','shortpixel-image-optimiser')?>

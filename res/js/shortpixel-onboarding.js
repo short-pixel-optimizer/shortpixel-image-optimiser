@@ -1,9 +1,5 @@
 'use strict';
 
-
-document.addEventListener('shortpixel.settings.loaded', ShortPixelOnboarding.Init());
-
-
 class ShortPixelOnboarding
 {
 
@@ -39,3 +35,4 @@ class ShortPixelOnboarding
 
     }
 }
+document.addEventListener('shortpixel.settings.loaded', ShortPixelOnboarding.Init);
