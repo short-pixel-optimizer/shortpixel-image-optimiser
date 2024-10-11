@@ -20,6 +20,7 @@ use ShortPixel\Controller\BulkController as BulkController;
 use ShortPixel\Controller\StatsController as StatsController;
 use ShortPixel\Controller\QuotaController as QuotaController;
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
+use ShortPixel\Controller\OptimizeController as OptimizeController;
 
 
 use ShortPixel\NextGenController as NextGenController;
@@ -936,7 +937,7 @@ class SettingsViewController extends \ShortPixel\ViewController
 						{
 							$json->redirect = $redirect;
 						}
-						
+
 						$noticeController->update(); // dismiss one-time ponies
 						wp_send_json($json);
 						exit();

@@ -199,38 +199,16 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 				$parsedUrl = parse_url($src);
 
-				/*if (isset($parsedUrl['scheme']))
-				{
-					 $src = str_replace($parsedUrl['scheme'] . "://", '', $src);
-				} */
-
 				$cdn_prefix = trailingslashit($domain) . trailingslashit($this->findCDNArguments($src));
-
 				$new_src = $cdn_prefix . trim($src);
-
-				/* If need to replace.
-				if (strpos($src, $site_url) !== false)
-				{
-					 Log::addTEmp('Replacing');
-						$new_src = str_replace($site_url, $domain, $src);
-				}
-				*/
 
 				return $new_src;
 		}
 
 		protected function replaceContent($content, $urls, $new_urls)
 		{
-
-	//		$urls = array_merge($urls, array_unique(array_map('esc_url', $urls)));
-	//		$new_urls = array_merge($new_urls, array_unique(array_map('esc_url', $new_urls)));
-
 			Log::addTemp('Urls' . count($urls), $urls);
 			Log::addTEmp('new urls' . count($new_urls), $new_urls);
-
-// @todo Seems URLS with url-encoding is not replaced properly, ie.
-//  https://secure.gravatar.com/avatar/a29fae50419a25fb110f77af6487019b?s=26&#038;d=mm&#038;r=g
-//  https://secure.gravatar.com/avatar/a29fae50419a25fb110f77af6487019b?s=26&d=mm&r=g ( source URL )
 
 			$count = 0;
 			$content = str_replace($urls, $new_urls, $content, $count);
