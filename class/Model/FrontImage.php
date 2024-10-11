@@ -84,6 +84,7 @@ class FrontImage
 
 					 if (property_exists($this, $attr->nodeName))
 					 {
+					//	 Log::addTemp('Set ' . $attr->nodeName, $attr->nodeValue);
 						  $this->{$attr->nodeName} = $attr->nodeValue;
 					 }
 

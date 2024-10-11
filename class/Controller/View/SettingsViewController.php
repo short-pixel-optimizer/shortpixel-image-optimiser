@@ -932,8 +932,11 @@ class SettingsViewController extends \ShortPixel\ViewController
 								$json->display_notices[] = $notice;
 							}
 						}
-						$json->redirect = $redirect;
-
+						if ($redirect !== 'self')
+						{
+							$json->redirect = $redirect;
+						}
+						
 						$noticeController->update(); // dismiss one-time ponies
 						wp_send_json($json);
 						exit();

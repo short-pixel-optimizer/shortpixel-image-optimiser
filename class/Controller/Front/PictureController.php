@@ -57,6 +57,10 @@ Log::addTemp('Picture, webp option ' .  $webp_option);
   */
   public function convertImgToPictureAddWebp($content) {
 
+			if (false === $this->checkPreProcess())
+			{
+				 return $content;
+			}
       if(function_exists('amp_is_request') && amp_is_request()) {
           //for AMP pages the <picture> tag is not allowed
 					// phpcs:ignore WordPress.Security.NonceVerification.Recommended  -- This is not a form

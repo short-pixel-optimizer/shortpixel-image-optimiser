@@ -16,15 +16,9 @@ class FrontController extends \ShortPixel\Controller
 
 		public function __construct()
 		{
-				// Class ::
-				// Figure out with Front Class is active ( or not ) .
-				// Init the Output buffer listener ( or partial one? )
-				// Give task to relevant class.
-
 				if (\wpSPIO()->env()->is_front) // if is front.
 				{
 					$settings = \wpSPIO()->settings();
-					Log::addTemp('Deliver ' . $settings->deliverWebp);
 
 					if (true === $settings->useCDN)
 					{

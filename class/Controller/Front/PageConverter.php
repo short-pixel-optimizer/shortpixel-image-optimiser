@@ -12,6 +12,7 @@ class PageConverter extends \ShortPixel\Controller
 {
 
 	protected $site_url;
+	protected $status_header = -1;
 
 	public function __construct()
 	{
@@ -21,31 +22,49 @@ class PageConverter extends \ShortPixel\Controller
 	protected function shouldConvert()
 	{
 		$env = wpSPIO()->env();
-		if ($env->is_admin || $env->is_ajaxcall || $env->is_jsoncall || $env->is_croncall)
+		if ($env->is_admin || $env->is_ajaxcall || $env->is_jsoncall || $env->is_croncall )
 		{
-			Log::addTemp('DENIED PAGE' . $_SERVER['REQUEST_URI']);
+	//		Log::addTemp('DENIED PAGE' . $_SERVER['REQUEST_URI']);
 			return false;
 		}
 
-		// Doesn't seem to work like this .  @todo The front processor is also triggered when an image / other document is not found and instead the 404 page is returned by WP .  Need to detect this somehow, since it's extra load.
-		/* if (is_404())
-		{
-		} */
+//		 $env->detectImage404()
+	 add_filter('status_header', [$this, 'status_header_sent'], 10, 2);
+
 
 		return true;
 	}
 
 	protected function startOutputBuffer($callback) {
+
 			$call = array($this, $callback);
 			ob_start( $call );
 
 	}
 
-	// Parse the URL src of the image to see components.
-	protected function parseImageSource($src)
+	// Function to check just before doing the conversion if anything popped up that should prevent it.
+	protected function checkPreProcess()
 	{
+		 if (404 == $this->status_header)
+		 {
+				return false;
+		 }
+		 return true;
+	}
 
+	public function status_header_sent($status, $code)
+	{
+		$this->status_header = $code;
+		 return $status;
+	}
 
+	// Try to detect if WP is redirect /serving an image 404 . In that case don't convert since this page will not be shown (?)
+	protected function detectImage404()
+	{
+			$url = (isset($_SERVER['REDIRECT_URL'])) ? $_SERVER['REDIRECT_URL'] : false;
+			if (false === $url)
+			{ return false;
+			}
 	}
 
 }

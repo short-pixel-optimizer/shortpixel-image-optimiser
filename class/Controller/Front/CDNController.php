@@ -43,7 +43,9 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
         // Depend this on the SPIO setting
 				$args = ['ret_img'];
 
-        switch($compressionType)
+
+				/* Not used for now.
+				switch($compressionType)
         {
            case ImageModel::COMPRESSION_LOSSY:
               $compressionArg = 'q_lossy';
@@ -55,13 +57,14 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
            default:
               $compressionArg = 'q_lossless';
            break;
-        }
+				} */
+				$compressionArg = 'q_orig';
 
         // Perhaps later if need to override in webp/avif check
         $args[] = $compressionArg;
 
-				$use_webp = $settings->deliverWebp;
-				$use_avif =  $settings->deliverAvif;
+				$use_webp = $settings->createWebp;
+				$use_avif =  $settings->createAvif;
 
 				$webp_double = $env->useDoubleWebpExtension();
 				$avif_double = $env->useDoubleAvifExtension();
@@ -74,11 +77,9 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 				{
 					 $args[] = 'to_webp';
 				}
-				else {
+				elseif ($use_avif && ! $use_webp) {
 					 $args[] = 'to_avif';
 				}
-
-        // Retina argument, add.
 
         $webpArg = '';
 
@@ -114,13 +115,16 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 				$this->cdn_arguments = $args;
 
-
-
 		}
 
 		protected function processFront($content)
 		{
+				if (false === $this->checkPreProcess())
+				{
+					 return $content;
+				}
 				Log::addTemp('Processing Front', $_SERVER['REQUEST_URI']);
+
 			//	Log::addTemp('Server URL', get_site_url());
 				$args = [];
 				$matches = $this->fetchMatches($content, $args);
@@ -162,14 +166,16 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 				 if (! is_null($src))
 				 {
-	 				 $imageData[] = $src;
+					 $imageData[] = strtok($src, ' ');
 				 }
 				 // Additional sources.
-				 $imageData = array_merge($imageData, $imageObj->getImageData());
+				 $moreData = array_map([$this, 'trimURL'],$imageObj->getImageData());
+				 // Merge and remove doubles.
+				 $imageData = array_unique(array_merge($imageData, $moreData)); // pick out uniques.
 
+				 $imageData = array_values($this->addEscapedUrls($imageData)); // reset indexes
 
 			}
-Log::addTemp('imageData', $imageData);
 			return $imageData;
 		}
 
@@ -215,13 +221,22 @@ Log::addTemp('imageData', $imageData);
 
 		protected function replaceContent($content, $urls, $new_urls)
 		{
+
+	//		$urls = array_merge($urls, array_unique(array_map('esc_url', $urls)));
+	//		$new_urls = array_merge($new_urls, array_unique(array_map('esc_url', $new_urls)));
+
 			Log::addTemp('Urls' . count($urls), $urls);
 			Log::addTEmp('new urls' . count($new_urls), $new_urls);
 
+// @todo Seems URLS with url-encoding is not replaced properly, ie.
+//  https://secure.gravatar.com/avatar/a29fae50419a25fb110f77af6487019b?s=26&#038;d=mm&#038;r=g
+//  https://secure.gravatar.com/avatar/a29fae50419a25fb110f77af6487019b?s=26&d=mm&r=g ( source URL )
 
-				$content = str_replace($urls, $new_urls, $content);
+			$count = 0;
+			$content = str_replace($urls, $new_urls, $content, $count);
 
-				return $content;
+Log::addTemp("Content replaced $count instances");
+			return $content;
 		}
 
 		//maybe Shortpixel CDn specific?
@@ -234,6 +249,28 @@ Log::addTemp('imageData', $imageData);
 				$string = implode(',', $arguments);
 
 				return  $string;
+		}
+
+		// Function not only to trim, but also remove extra stuff like '200w' declarations in srcset.
+		private function trimURL($url)
+		{
+				$url = trim(strtok($url, ' '));
+				return $url;
+		}
+
+		// Something in source the Url's can escaped which is undone by domDocument. Still add them to the replacement array, otherwise they won't be replaced properly.
+		private function addEscapedUrls($urls)
+		{
+				$new_urls = $urls;
+				foreach($urls as $url)
+				{
+						$escaped = esc_url($url);
+						if ($escaped !== $url)
+						{
+							 $new_urls[] = esc_url($url);
+						}
+				}
+				return $new_urls;
 		}
 
 
