@@ -49,14 +49,14 @@ if ( ! defined( 'ABSPATH' ) ) {
           <?php echo $this->settingLink('processing', __("Processing", "shortpixel-image-optimiser"), 'shortpixel-icon processing'); ?>
         </li>
         <li>
-          <?php echo $this->settingLink('webp', __("Webp/Avif", "shortpixel-image-optimiser"), 'shortpixel-icon webp_avif'); ?>
+					<?php echo $this->settingLink('webp', __("Webp/Avif & CDN", "shortpixel-image-optimiser"), 'shortpixel-icon webp_avif'); ?>
         </li>
 				<li>
           <?php echo $this->settingLink('delivery', __("Delivery", "shortpixel-image-optimiser"), 'shortpixel-icon delivery'); ?>
         </li>
 
 				<li>
-          <?php echo $this->settingLink('cdn', __("CDN", "shortpixel-image-optimiser"), 'shortpixel-icon cdn'); ?>
+					<?php echo $this->settingLink('cdn', __("Integrations", "shortpixel-image-optimiser"), 'shortpixel-icon cdn'); ?>
         </li>
 
         <li>

@@ -349,13 +349,23 @@ class AjaxController
 
 			$this->checkActionAccess($action, 'is_admin_user');
 
-
 			switch($action)
 			{
 					case 'form_submit':
-						 $this->settingsFormSubmit();
+					case 'action_addkey':
+					case 'action_debug_redirectBulk':
+					case 'action_debug_removePrevented':
+					case 'action_debug_removeProcessorKey':
+					case 'action_debug_resetNotices':
+					case 'action_debug_resetQueue':
+					case 'action_debug_resetquota':
+					case 'action_debug_resetStats':
+					case 'action_debug_triggerNotice':
+					case 'action_request_new_key':
+						 $this->settingsFormSubmit($action);
 					break;
 					default:
+
 						Log::addError('Issue with settingsRequest, not valid action');
 						exit('0');
 					break;
@@ -363,10 +373,17 @@ class AjaxController
 
 		}
 
-		protected function settingsFormSubmit()
+		protected function settingsFormSubmit($action)
 		{
 				 $viewController =  new SettingsViewController();
-				 $viewController->load();
+				 if (method_exists($viewController, $action))
+				 {
+						$viewController->$action();
+				 }
+				 else {
+				 		$viewController->load();
+				 }
+
 				 exit();
 		}
 

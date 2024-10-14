@@ -525,7 +525,6 @@ class ShortPixelSettings
 FormSendEvent(event)
 {
 	 event.preventDefault();
-	 //console.log(event);
 
 	 var form = event.target;
 	 var formData = new FormData(event.target);
@@ -536,12 +535,12 @@ FormSendEvent(event)
 	 formData.append('form-nonce', formData.get('nonce'));
 	 formData.set('nonce', ShortPixelProcessorData.nonce_settingsrequest);
 
-	 console.log(formData);
-	 //var data = [];
-	// data.form = formdata;
-	 //data.screen_action = 'form_submit';
-	 //window.ShortPixelProcessor.SettingsRequest(data);
-
+	 // Special Actions
+	 let formaction_parsed = URL.parse(form.action);
+	 if (formaction_parsed.searchParams && formaction_parsed.searchParams.has('sp-action'))
+	 {
+				formData.set('screen_action', formaction_parsed.searchParams.get('sp-action'));
+	 }
 	 //const url = new URL(window.location.href);
 	 const url = ShortPixel.AJAX_URL;
 
@@ -572,6 +571,16 @@ FormSendEvent(event)
 									//	anchor.parentNode.insertBefore(json.display_notices[i], anchor.nextSibling);
 									anchor.insertAdjacentHTML('afterend', json.display_notices[i]);
 								}
+						}
+						if (json.redirect)
+						{
+							 if (json.redirect == 'reload')
+							 {
+										window.location.reload();
+							 }
+							 else {
+									 window.location.href = json.redirect;
+							 }
 						}
 
 					});

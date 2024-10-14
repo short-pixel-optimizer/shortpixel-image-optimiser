@@ -21,7 +21,7 @@ use ShortPixel\Controller\StatsController as StatsController;
 use ShortPixel\Controller\QuotaController as QuotaController;
 use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
-
+use ShortPixel\Controller\CacheController as CacheController;
 
 use ShortPixel\NextGenController as NextGenController;
 
@@ -229,11 +229,12 @@ class SettingsViewController extends \ShortPixel\ViewController
       /** Button in part-debug, routed via custom Action */
       public function action_debug_resetStats()
       {
+					Log::addTemp('Action reset Stats');
           $this->loadEnv();
 					$this->checkPost();
           $statsController = StatsController::getInstance();
           $statsController->reset();
-					$this->doRedirect();
+					$this->doRedirect('reload');
       }
 
       public function action_debug_resetquota()
@@ -243,7 +244,7 @@ class SettingsViewController extends \ShortPixel\ViewController
 					$this->checkPost();
           $quotaController = QuotaController::getInstance();
           $quotaController->forceCheckRemoteQuota();
-          $this->doRedirect();
+					$this->doRedirect('reload');
       }
 
       public function action_debug_resetNotices()
@@ -252,7 +253,7 @@ class SettingsViewController extends \ShortPixel\ViewController
 					$this->checkPost();
           Notice::resetNotices();
           $nControl = new Notice(); // trigger reload.
-          $this->doRedirect();
+					$this->doRedirect('reload');
       }
 
 			public function action_debug_triggerNotice()
@@ -325,7 +326,7 @@ class SettingsViewController extends \ShortPixel\ViewController
 						 Notice::addSuccess($message);
 			 }
 
-				$this->doRedirect();
+				$this->doRedirect('reload');
 			}
 
 			public function action_debug_removePrevented()
@@ -353,7 +354,7 @@ class SettingsViewController extends \ShortPixel\ViewController
 
 				$cacheControl = new CacheController();
 				$cacheControl->deleteItem('bulk-secret');
-				exit('reloading settings would cause processorKey to be set again');
+				exit('reloading settings would cause processorKey to be set again. Navigate away');
 			}
 
       protected function processSave()
@@ -498,6 +499,16 @@ class SettingsViewController extends \ShortPixel\ViewController
             $mainblock->icon = 'alert';
 
         }
+				else { // If not errors
+						 $statsController = StatsController::getInstance();
+
+						 $media_total = $statsController->find('media', 'images');
+						 $custom_total = $statsController->find('custom', 'images');
+
+						 $custom_text = ($custom_total > 0) ? sprintf(esc_html__('and %s custom images ', 'shortpixel-image-optimiser'), $custom_total) : '';
+						 $mainblock->message = sprintf(esc_html__('%s media items %s optimized', 'shortpixel-image-optimiser'), $media_total, $custom_text);
+				}
+
 
         $this->view->dashboard->mainblock = $mainblock;
 
