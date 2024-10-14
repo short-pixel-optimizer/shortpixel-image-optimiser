@@ -1,6 +1,6 @@
 === ShortPixel Image Optimizer - Optimize Images, Convert WebP & AVIF ===
 Contributors: ShortPixel
-Tags: convert webp, optimize images, image optimization, resize, compressor
+Tags: compress images, optimize images, convert webp, image optimization, resize
 Requires at least: 4.8.0
 Tested up to: 6.6
 Requires PHP: 5.6
@@ -8,25 +8,26 @@ Stable tag: 5.6.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Optimize images & PDFs smartly. Create and compress next-gen WebP and AVIF formats. Smart crop and resize.
+Boost your site’s speed instantly! Optimize images and PDFs with one click, bulk compress to WebP and AVIF, use lazy loading, and resize images.
 
 == Description ==
 
-**Optimize images and create WebP/AVIF versions with an easy-to-use, comprehensive, lightweight, stable and frequently updated freemium image compression plugin supported by the friendly team that created it.**
+###The Ultimate Image Optimization Plugin for Wordpress###
+
+**Boost your site’s speed instantly! Optimize images and PDFs with one click, bulk compress to WebP and AVIF, use lazy loading, and resize images.**
 
 Increase your website's SEO ranking, number of visitors, and ultimately your sales by optimising any image or PDF document on your website.
 ShortPixel is an easy to use, lightweight, install-and-forget-about-it <a href="https://shortpixel.com" target="_blank">image optimization</a> plugin that can compress all your past images and PDF documents with a single click. New images are automatically resized/rescaled and optimized on the fly, in the background. It's also compatible with any gallery, slider or eCommerce plugin.
 
-**Ready for a quick DEMO? Test our plugin <a href="https://demo.tastewp.com/shortpixel-image-optimiser" target="_blank">here</a> and <a href="https://wpsandbox.net/" target="_blank">here</a>.**
-Or you can create a staging copy of your site using <a href="https://wp-staging.com/" target="_blank">WP Staging</a> and test it there.
+= Ready for a Quick DEMO of the Top Image Optimization Tool? = 
+Test our plugin <a href="https://demo.tastewp.com/shortpixel-image-optimiser" target="_blank">here</a>.
+Make an instant <a href="https://shortpixel.com/image-compression-test" target="_blank">image compression test</a> of your site or <a href="https://shortpixel.com/online-image-compression" target="_blank">compress some images</a> to test our optimization algorithms.
 
 Short Pixel uses minimal resources and works well with any shared, cloud, VPS or dedicated web hosting. It can optimize any image you have on your website even the images that aren't listed in Media Library like those in galleries like <a href="https://wordpress.org/plugins/nextgen-gallery/" target="_blank">NextGEN</a>, <a href="https://wordpress.org/plugins/modula-best-grid-gallery/" target="_blank">Modula</a> or added directly via FTP!
 
 Both lossy and lossless image compression are available for the most common image types (JPG, PNG, GIF, WebP, and AVIF) plus PDF files.
 We also offer **glossy** JPEG compression which is a very high-quality lossy optimization algorithm. Specially designed for photographers!
 Optimized images mean better user experience, better PageSpeed Insights or GTmetrix results, better Google PageRank, and more visitors.
-
-Make an instant <a href="https://shortpixel.com/image-compression-test" target="_blank">image compression test</a> of your site or <a href="https://shortpixel.com/online-image-compression" target="_blank">compress some images</a> to test our optimization algorithms.
 
 **<a href="https://shortpixel.com/spio-unlimited/" target="_blank">New Plan: ShortPixel Unlimited</a>**
 
@@ -258,6 +259,25 @@ Please report security bugs found in the source code of the ShortPixel Image Opt
 
 The ShortPixel team is here to help. <a href="https://shortpixel.com/contact">Contact us</a>!
 
+= How do I compress images without losing quality in WordPress? =
+
+The best way to compress images without losing quality in WordPress is by using the ShortPixel plugin. ShortPixel automatically compresses images using Lossless, Lossy, or Glossy image compression algorithms, ensuring the visual quality remains intact for the human eye while significantly reducing file sizes. Once installed, it can optimize your images automatically, improving your website's loading speed and SEO performance. You can bulk optimize existing images or automatically compress new ones as you upload them, all without sacrificing quality, making it an ideal solution for maintaining high-quality images and a fast-loading website.
+
+= What is image optimization? =
+
+Image optimization is the process of reducing the file size of images without compromising their quality to improve website performance. This can be done using tools like ShortPixel, which compresses images, converts them to next-gen formats like WebP, and ensures they are properly sized for visitors' viewports. Optimized images help improve website speed, enhance user experience, and boost SEO rankings by reducing page load time and bandwidth usage.
+
+= How to optimize a WordPress image? =
+
+The best way to optimize a WordPress image is by using the ShortPixel plugin. ShortPixel automatically optimizes images with both lossless and lossy compression options, reducing file size while preserving visual quality. Once the plugin is installed, it can optimize images automatically, improving your site's load speed and SEO. You can bulk optimize existing images or new uploads, ensuring fast site performance without sacrificing image quality, making it an ideal solution for WordPress image optimization.
+
+= How to SEO optimize images? =
+
+To optimize images for SEO in WordPress, use the ShortPixel plugin to compress and convert them to WebP or AVIF image formats without losing quality, reducing load times—a key SEO factor. Add descriptive file names and ALT text with relevant keywords to help search engines understand what your images are about. Additionally, resize images to appropriate dimensions. ShortPixel automates this entire process, helping improve both your SEO rankings and site speed with just a few clicks.
+
+= How do you optimize images for performance? =
+
+To optimize images for performance in WordPress, use the ShortPixel plugin to compress images without sacrificing quality, reducing file sizes for faster load times. Convert images to efficient formats like WebP and ensure they are properly resized to fit your site’s design. ShortPixel automates this process with just a few clicks, boosting your website's speed, improving user experience, and enhancing SEO—all key factors for optimal performance.
 
 == Actions and Filters for Developers ==
 
