@@ -204,7 +204,7 @@
 				.toggleTarget.is-visible
 				{
 					display: block;
-					opacity: 1;
+		//			opacity: 1;
 					height: auto;
 
 				}
@@ -334,7 +334,6 @@
     display: none;
   }
 
-	// average optimization graphic circle
 	.opt-circle-average {
 			width: 100px;
 			height: 100px;
@@ -355,4 +354,34 @@
 				text-anchor: middle;
 			}
 
+	}
+
+	#tab-help
+	{
+		  	.help-center
+				{
+						background: $blue_background;
+						border-radius: 8px;
+						padding: 18px;
+					  display: flex;
+						> div {
+								border-right: 2px solid $blue_open;
+								margin: 0 10px;
+								display: flex;
+								flex-direction: column;
+								align-items: center;
+								width: 33%;
+								text-align: center;
+								justify-content: flex-end;
+								.main-icon .icon {
+									 width: 40px;
+
+								}
+								//p { font-size: 10px; }
+								&:last-child
+								{
+									 border: 0;
+								}
+						}
+				}
 	}

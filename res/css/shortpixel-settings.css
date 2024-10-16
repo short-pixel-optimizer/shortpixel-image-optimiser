@@ -193,6 +193,9 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page .shortpixel-icon.arrows-up-down {
   background-image: url("../images/icon/arrows-up-down.svg");
 }
+.wrap.is-shortpixel-settings-page .shortpixel-icon.help-circle {
+  background-image: url("../images/icon/help-circle.svg");
+}
 .wrap.is-shortpixel-settings-page .shortpixel-illustration {
   display: inline-block;
   background-repeat: no-repeat;
@@ -231,7 +234,7 @@ div.spio-modal-title {
   border-radius: 16px;
   margin: 0 auto;
 }
-.wrap.is-shortpixel-settings-page .shortpixel-settings button {
+.wrap.is-shortpixel-settings-page .shortpixel-settings button, .wrap.is-shortpixel-settings-page .shortpixel-settings .button-setting {
   color: #fff;
   background: #1ABDCA;
   padding: 8px 6px;
@@ -240,12 +243,13 @@ div.spio-modal-title {
   font-family: "Roboto";
   font-weight: 700;
   border-radius: 6px;
+  text-decoration: none;
 }
-.wrap.is-shortpixel-settings-page .shortpixel-settings button i.switch {
+.wrap.is-shortpixel-settings-page .shortpixel-settings button i.switch, .wrap.is-shortpixel-settings-page .shortpixel-settings .button-setting i.switch {
   width: 18px;
   height: 12px;
 }
-.wrap.is-shortpixel-settings-page .shortpixel-settings button i.notifications {
+.wrap.is-shortpixel-settings-page .shortpixel-settings button i.notifications, .wrap.is-shortpixel-settings-page .shortpixel-settings .button-setting i.notifications {
   width: 14px;
   height: 14px;
   filter: brightness(0) saturate(100%) invert(100%) sepia(100%) saturate(0%) hue-rotate(251deg) brightness(108%) contrast(108%);
@@ -599,7 +603,6 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page section.setting-tab .toggleTarget.is-visible {
   display: block;
-  opacity: 1;
   height: auto;
 }
 .wrap.is-shortpixel-settings-page section#tab-debug h2 {
@@ -717,6 +720,28 @@ div.spio-modal-title {
   font-weight: 700;
   dominant-baseline: middle;
   text-anchor: middle;
+}
+.wrap.is-shortpixel-settings-page #tab-help .help-center {
+  background: #F4FBFC;
+  border-radius: 8px;
+  padding: 18px;
+  display: flex;
+}
+.wrap.is-shortpixel-settings-page #tab-help .help-center > div {
+  border-right: 2px solid #92D5E3;
+  margin: 0 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 33%;
+  text-align: center;
+  justify-content: flex-end;
+}
+.wrap.is-shortpixel-settings-page #tab-help .help-center > div .main-icon .icon {
+  width: 40px;
+}
+.wrap.is-shortpixel-settings-page #tab-help .help-center > div:last-child {
+  border: 0;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper {
   display: flex;

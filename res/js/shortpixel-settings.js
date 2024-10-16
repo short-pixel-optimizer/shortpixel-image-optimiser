@@ -39,8 +39,6 @@ class ShortPixelSettings
 			this.InitModeSwitcher();
 			console.timeEnd('inits');
 
-
-
 			// Modals
 			var modals = this.root.querySelectorAll('[data-action="open-modal"]');
 			modals.forEach(function (modal, index)
@@ -61,6 +59,12 @@ class ShortPixelSettings
 
 				var evInit = new CustomEvent('change',  {detail : { init: true }} );
 				toggle.dispatchEvent(evInit);
+		});
+
+		toggles = this.root.querySelectorAll('[data-exclude]');
+		toggles.forEach(function(toggle,index)
+		{
+			  toggle.addEventListener('change', self.DoToggleExcludeEvent.bind(self));
 		});
 
 	}
@@ -438,7 +442,6 @@ class ShortPixelSettings
 			{
 					var checkboxes = this.root.querySelectorAll('input[name="' + checkbox.name + '"]');
 					console.log('Checkboxes, doing', checkboxes);
-
 			}
 
 			for (var i = 0; i < checkboxes.length; i++)
@@ -494,14 +497,27 @@ class ShortPixelSettings
 					{
 						  if (show)
 							{
-								this.ShowElement([targetClasses[i]]);
+								this.ShowElement([targetClasses[j]]);
 							}
 							else {
-								this.HideElement([targetClasses[i]]);
+								this.HideElement([targetClasses[j]]);
 							}
 					}
 			} // for
 
+	}
+
+	DoToggleExcludeEvent(event)
+	{
+		 var checkbox = event.target;
+
+		 if (true == checkbox.checked)
+		 {
+			   var excludeInput = this.root.querySelector('input[name="' + checkbox.dataset.exclude + '"]');
+				 var ev = new CustomEvent('change');
+				 excludeInput.checked = false;
+				 excludeInput.dispatchEvent(ev);
+		 }
 	}
 
 	ShowElement(elems) {
@@ -510,6 +526,7 @@ class ShortPixelSettings
 		{
 			var element = elems[i];
 			element.classList.add('is-visible'); // Make the element visible
+			//element.style.display = 'block';
 
 			// Once the transition is complete, remove the inline max-height so the content can scale responsively
 			window.setTimeout(function () {
@@ -517,6 +534,23 @@ class ShortPixelSettings
 			}, 150);
 
 		}
+
+};
+
+// Hide an element
+HideElement(elems) {
+
+	for (var i = 0; i < elems.length; i++)
+	{
+		var element = elems[i];
+		element.style.opacity = 0;
+			// When the transition is complete, hide it
+			window.setTimeout(function () {
+				element.classList.remove('is-visible');
+				//element.style.display = 'none';
+
+			}, 300);
+	}
 
 };
 
@@ -627,21 +661,7 @@ FormResponseEvent(json)
 		}, 2000);
 }
 
-// Hide an element
-HideElement(elems) {
 
-	for (var i = 0; i < elems.length; i++)
-	{
-		var element = elems[i];
-		element.style.opacity = 0;
-			// When the transition is complete, hide it
-			window.setTimeout(function () {
-				element.classList.remove('is-visible');
-
-			}, 300);
-	}
-
-};
 
 DashBoardWarningEvent(warning, matches)
 {

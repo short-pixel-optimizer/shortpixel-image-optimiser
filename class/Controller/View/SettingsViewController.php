@@ -48,7 +48,7 @@ class SettingsViewController extends \ShortPixel\ViewController
      );
 
      protected $display_part = 'overview';
-		 protected $all_display_parts = array('overview', 'dashboard', 'optimisation','webp', 'cdn','exlusions', 'debug', 'tools');
+		 protected $all_display_parts = array('overview', 'optimisation','webp', 'cdn','exlusions', 'debug', 'tools', 'help');
      protected $form_action = 'save-settings';
      protected $view_mode = 'simple'; // advanced or simple
 		 protected $is_ajax_save = false; // checker if saved via ajax ( aka no redirect / json return )

@@ -46,21 +46,19 @@ if ( ! defined( 'ABSPATH' ) ) {
           <?php echo $this->settingLink('optimisation', __("Image optimisation", "shortpixel-image-optimiser"), 'shortpixel-icon optimization'); ?>
         </li>
         <li class='is-advanced'>
+          <?php echo $this->settingLink('exclusions', __("Exclusions", "shortpixel-image-optimiser"), 'shortpixel-icon exclude'); ?>
+        </li>
+
+        <li class='is-advanced'>
           <?php echo $this->settingLink('processing', __("Processing", "shortpixel-image-optimiser"), 'shortpixel-icon processing'); ?>
         </li>
         <li>
 					<?php echo $this->settingLink('webp', __("Webp/Avif & CDN", "shortpixel-image-optimiser"), 'shortpixel-icon webp_avif'); ?>
         </li>
-				<li>
-          <?php echo $this->settingLink('delivery', __("Delivery", "shortpixel-image-optimiser"), 'shortpixel-icon delivery'); ?>
-        </li>
 
-				<li>
+
+				<li class='is-advanced'>
 					<?php echo $this->settingLink('cdn', __("Integrations", "shortpixel-image-optimiser"), 'shortpixel-icon cdn'); ?>
-        </li>
-
-        <li>
-          <?php echo $this->settingLink('exclusions', __("Exclusions", "shortpixel-image-optimiser"), 'shortpixel-icon exclude'); ?>
         </li>
 
 				<li class='is-advanced'>
@@ -68,18 +66,14 @@ if ( ! defined( 'ABSPATH' ) ) {
         </li>
 
         <li>
-          <?php echo $this->settingLink('knowledge', __("Knowledgebase / Help", "shortpixel-image-optimiser"), 'shortpixel-icon help'); ?>
-        </li>
-
-        <li>
-          <?php echo $this->settingLink('feedback', __("Feedback", "shortpixel-image-optimiser"), 'shortpixel-icon feedback'); ?>
+          <?php echo $this->settingLink('help', __("Help Center", "shortpixel-image-optimiser"), 'shortpixel-icon help-circle'); ?>
         </li>
 
         <?php
           if (Log::debugIsActive())
           { ?>
   			<li>
-          <?php echo $this->settingLink('debug', __("Debug", "shortpixel-image-optimiser")); ?>
+          <?php echo $this->settingLink('debug', __("Debug", "shortpixel-image-optimiser"), 'shortpixel-icon debug'); ?>
         </li>
         <?php } ?>
 
@@ -88,16 +82,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<section class="wrapper">
 
           <?php $this->loadView('settings/part-overview'); ?>
-          <?php $this->loadView('settings/part-general'); ?>
           <?php $this->loadView('settings/part-optimisation'); ?>
           <?php $this->loadView('settings/part-processing'); ?>
           <?php $this->loadView('settings/part-webp'); ?>
           <?php $this->loadView('settings/part-cdn'); ?>
           <?php $this->loadView('settings/part-exclusions'); ?>
+          <?php $this->loadView('settings/part-help'); ?>
 
 					<?php $this->loadView('settings/part-nokey'); ?>
-
-
           <?php $this->loadView('settings/part-tools'); ?>
           <?php
             if (Log::debugIsActive())

@@ -28,7 +28,7 @@
 		margin: 0 auto;
 
 		// Items for whole page
-		button {
+		button, .button-setting {
 				color: #fff;
 				background: $blue_default;
 				padding: 8px 6px;
@@ -37,6 +37,7 @@
 				font-family: 'Roboto';
 				font-weight: 700;
 				border-radius: 6px;
+				text-decoration: none;
 				i.switch {
 					 width: 18px;
 					 height: 12px;

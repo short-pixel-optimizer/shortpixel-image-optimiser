@@ -123,6 +123,9 @@ class ViewController extends Controller
         include($template_path);
 				self::$viewsLoaded[] = $template;
       }
+      else {
+        Log::addTemp("Not loading $template ? ");
+      }
 
   }
 

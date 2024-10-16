@@ -29,7 +29,7 @@ class PictureController extends \ShortPixel\Controller\Front\PageConverter
 	public function initWebpHooks()
   {
     $webp_option = \wpSPIO()->settings()->deliverWebp;
-Log::addTemp('Picture, webp option ' .  $webp_option);
+
 		if ($webp_option ) {  // @tood Replace this function with the one in ENV.
         if(UtilHelper::shortPixelIsPluginActive('shortpixel-adaptive-images/short-pixel-ai.php')) {
             Notices::addWarning(__('Please deactivate the ShortPixel Image Optimizer\'s
@@ -42,7 +42,7 @@ Log::addTemp('Picture, webp option ' .  $webp_option);
 						$this->startOutputBuffer('convertImgToPictureAddWebp');
 
         } else {
-						Log::addTemp('Setting Filters');
+
             add_filter( 'the_content', array($this, 'convertImgToPictureAddWebp'), 10000 ); // priority big, so it will be executed last
             add_filter( 'the_excerpt', array($this, 'convertImgToPictureAddWebp'), 10000 );
             add_filter( 'post_thumbnail_html', array($this,'convertImgToPictureAddWebp') );
@@ -97,8 +97,10 @@ Log::addTemp('Picture, webp option ' .  $webp_option);
         return $content;
       }
 
-    //	preg_match_all
-      $content = preg_replace_callback('/<img[^>]*>/i', array($this, 'convertImage'), $content);
+
+      $pattern = '/<img[^>]*>/i';
+      $count = 0;
+      $content = preg_replace_callback($pattern, array($this, 'convertImage'), $content);
 
       // [BS] No callback because we need preg_match_all
       $content = $this->testInlineStyle($content);
@@ -195,7 +197,8 @@ Log::addTemp('Picture, webp option ' .  $webp_option);
       $fs = \wpSPIO()->filesystem();
 
       $raw_image = $match[0];
-
+      Log::addTemp('Match', $match);
+//Log::addTemp('raw_image', $raw_image);
       // Raw Image HTML
       $image = new FrontImage($raw_image);
 

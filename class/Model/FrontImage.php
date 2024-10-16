@@ -84,7 +84,6 @@ class FrontImage
 
 					 if (property_exists($this, $attr->nodeName))
 					 {
-					//	 Log::addTemp('Set ' . $attr->nodeName, $attr->nodeValue);
 						  $this->{$attr->nodeName} = $attr->nodeValue;
 					 }
 
@@ -319,7 +318,7 @@ class FrontImage
 			$dontuse = array_merge($dontuse, array('id', 'alt', 'height', 'width', 'srcset', 'sizes', 'class'));
 
 			$attributes = $this->attributes;
-
+Log::addTemp('attributes', $attributes);
 			$leftAttrs = array();
 			foreach($attributes as $name => $value)
 			{

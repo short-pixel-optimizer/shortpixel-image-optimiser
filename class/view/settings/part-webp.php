@@ -126,13 +126,13 @@ if( $this->is_nginx ){
           'checked' =>  ($view->data->deliverWebp > 0) ? 1 : 0,
           'label' => esc_html__('Deliver the next generation versions of the images in the front-end:','shortpixel-image-optimiser'),
           'disabled' => $disabled,
-          'data' => ['data-toggle="deliverTypes"', 'data-dashboard="' . __('Modern format not being deliverd', 'shortpixel-image-optimiser') . '"'],
+          'data' => ['data-toggle="deliverTypes"', 'data-dashboard="' . __('Modern format not being deliverd', 'shortpixel-image-optimiser') . '"', 'data-exclude="useCDN"'],
          ]);
    ?>
 
    <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/126-which-webp-files-delivery-method-is-the-best-for-me"></i>
 
-      <ul id="deliverTypes" class="deliverWebpTypes ">
+      <ul id="deliverTypes" class="deliverWebpTypes toggleTarget">
           <li>
               <input type="radio" name="deliverWebpType" id="deliverWebpAltered" <?php checked( ($view->data->deliverWebp >= 1 && $view->data->deliverWebp <= 2), true); ?> <?php echo esc_attr( $deliverWebpAlteredDisabled );?> value="deliverWebpAltered" data-toggle="deliverAlteringTypesPicture">
               <label for="deliverWebpAltered">
@@ -197,6 +197,23 @@ if( $this->is_nginx ){
     </warning>
   <?php endif; ?>
   </setting>
+
+  <setting class='switch'>
+    <content>
+  <?php $this->printSwitchButton(
+        ['name' => 'useCDN',
+         'checked' =>  ($view->data->useCDN > 0) ? 1 : 0,
+         'label' => esc_html__('Use a CDN to deliver images','shortpixel-image-optimiser'),
+         'data' => ['data-toggle="useCDN"', 'data-exclude="deliverWebp"'],
+        ]);
+  ?>
+  </content>
+  <name class='useCDN toggleTarget'><?php esc_html_e('CDN Domain', 'shortpixel-image-optimiser'); ?></name>
+  <content class='useCDN toggleTarget'>
+      <input type="text" name="CDNDomain" class='regular-text' value="<?php echo esc_attr($view->data->CDNDomain) ?>">
+      <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/how-to-serve-the-images-from-a-custom-domain/"></i>
+    </content>
+</setting>
 
 </settinglist>
 

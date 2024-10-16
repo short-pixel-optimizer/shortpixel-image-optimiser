@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 ?>
 
-<section id="tab-settings" class="<?php echo ($this->display_part == 'exclusions') ? 'active setting-tab' :'setting-tab'; ?>" data-part="exclusions" >
+<section id="tab-exclusions" class="<?php echo ($this->display_part == 'exclusions') ? 'active setting-tab' :'setting-tab'; ?>" data-part="exclusions" >
 
 <settinglist>
 
