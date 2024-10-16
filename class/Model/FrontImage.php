@@ -289,18 +289,18 @@ class FrontImage
 			{
 				if (! is_null($this->{$attr}))
         {
-					$output .= $attr . '="' . $this->{$attr} . '" ';
+					$output .= $attr . '="' . \esc_attr($this->{$attr}) . '" ';
         }
 			}
 
       // Always output alt tag, because it's important to screen readers and otherwise.
-      $output .= 'alt="' . $this->alt . '" ';
+      $output .= 'alt="' . \esc_attr($this->alt) . '" ';
 
 			// Left over attributes that should be harmless, ie extra image data or other custom tags.
 			$leftAttrs = $this->getImageAttributes();
 			foreach($leftAttrs as $name => $value)
 			{
-	 				$output .= $name . '="' . $value . '" ';
+	 				$output .= $name . '="' . \esc_attr($value) . '" ';
 			}
 
 			$output .= ' > '; // ending image.
