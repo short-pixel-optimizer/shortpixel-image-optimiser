@@ -126,7 +126,6 @@ class SettingsViewController extends \ShortPixel\ViewController
 
 					$email = isset($_POST['pluginemail']) ? trim(sanitize_text_field($_POST['pluginemail'])) : null;
 
-Log::addTemp('Email', $email);
 					// Not a proper form post.
 					if (is_null($email))
 					{

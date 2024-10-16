@@ -70,7 +70,7 @@ class ShortPixelSettings
 			var forms = this.root.querySelectorAll('form');
 			for (var i = 0; i < forms.length; i++)
 			{
-				 forms[i].addEventListener('submit', this.FormSendEvent);
+				 forms[i].addEventListener('submit', this.FormSendEvent.bind(this));
 			}
 
 	}
@@ -539,8 +539,9 @@ FormSendEvent(event)
 	 //const url = new URL(window.location.href);
 
 
-	 this.DoAjaxRequest(formData, this.FormResponseEvent);
-
+	 this.DoAjaxRequest(formData, this.FormResponseEvent).then( (json) => {
+			 this.FormResponseEvent(json);
+	 }) ;
 }
 
 
@@ -594,37 +595,23 @@ FormResponseEvent(json)
 		saveDialog.classList.add('show');
 
 			console.log('json', json);
+			if (json.redirect)
+			{
+				 if (json.redirect == 'reload')
+				 {
+							window.location.reload();
+				 }
+				 else {
+						 window.location.href = json.redirect;
+				 }
+			}
+
 			if (json.notices)
 			{
-					let saveDialog = document.querySelector('.ajax-save-done');
-					saveDialog.classList.add('show');
 
-					response.json().then((json) => {
-						console.log('json', json);
-						if (json.redirect)
-						{
-							 if (json.redirect == 'reload')
-							 {
-										window.location.reload();
-							 }
-							 else {
-									 window.location.href = json.redirect;
-							 }
-						}
-						else {  // only do notices on this screen if there is no redirecting happening.
-							if (json.notices)
-							{
-									var notice_count = saveDialog.querySelector('.notice_count');
-									notice_count.textContent = json.notices.length;
-							}
+					var notice_count = saveDialog.querySelector('.notice_count');
+					notice_count.textContent = json.notices.length;
 
-						}
-
-					});
-
-					window.setTimeout(function () {
-						 saveDialog.classList.remove('show')
-					}, 2000);
 			}
 			if (json.display_notices)
 			{
@@ -634,7 +621,6 @@ FormResponseEvent(json)
 						anchor.insertAdjacentHTML('afterend', json.display_notices[i]);
 					}
 			}
-
 
 		window.setTimeout(function () {
 			 saveDialog.classList.remove('show')
