@@ -376,6 +376,7 @@ class AjaxController
 		protected function settingsFormSubmit($action)
 		{
 				 $viewController =  new SettingsViewController();
+				 Log::addTemp('Settings Form Submit Action ' . $action);
 				 if (method_exists($viewController, $action))
 				 {
 						$viewController->$action();
@@ -384,10 +385,8 @@ class AjaxController
 				 		$viewController->load();
 				 }
 
-				 exit();
+				 exit('ajaxcontroller - formsubmit');
 		}
-
-
 
 		protected function getMediaItem($id, $type)
     {

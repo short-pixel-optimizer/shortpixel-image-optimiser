@@ -104,18 +104,19 @@ class SettingsViewController extends \ShortPixel\ViewController
         if ($this->is_form_submit && isset($_POST['apiKey']))
         {
             $apiKey = sanitize_text_field($_POST['apiKey']);
-            if (strlen(trim($apiKey)) == 0) // display notice when submitting empty API key
-            {
-              Notice::addError(sprintf(__("The key you provided has %s characters. The API key should have 20 characters, letters and numbers only.",'shortpixel-image-optimiser'), strlen($apiKey) ));
-            }
-            else
-            {
-              $this->keyModel->resetTried();
-              $this->keyModel->checkKey($apiKey);
-            }
+
+            $this->keyModel->resetTried();
+            $this->keyModel->checkKey($apiKey);
+
         }
 
-        $this->doRedirect();
+        if (true === $this->keyModel->is_verified())
+        {
+          $this->doRedirect('reload');
+        }
+        else {
+          $this->doRedirect();
+        }
       }
 
 			public function action_request_new_key()
@@ -125,6 +126,7 @@ class SettingsViewController extends \ShortPixel\ViewController
 
 					$email = isset($_POST['pluginemail']) ? trim(sanitize_text_field($_POST['pluginemail'])) : null;
 
+Log::addTemp('Email', $email);
 					// Not a proper form post.
 					if (is_null($email))
 					{
@@ -132,26 +134,12 @@ class SettingsViewController extends \ShortPixel\ViewController
 						return;
 					}
 
-					// Old code starts here.
-	        if( $this->keyModel->is_verified() === true) {
-	            $this->load(); // already verified?
-							return;
-	        }
 
 					$bodyArgs = array(
 							'plugin_version' => SHORTPIXEL_IMAGE_OPTIMISER_VERSION,
 							'email' => $email,
 							'ip' => isset($_SERVER["HTTP_X_FORWARDED_FOR"]) ? sanitize_text_field($_SERVER["HTTP_X_FORWARDED_FOR"]) : sanitize_text_field($_SERVER['REMOTE_ADDR']),
 					);
-
-					$affl_id = false;
-					$affl_id = (defined('SHORTPIXEL_AFFILIATE_ID')) ? SHORTPIXEL_AFFILIATE_ID : false;
-					$affl_id = apply_filters('shortpixel/settings/affiliate', $affl_id); // /af/bla35
-
-					if ($affl_id !== false)
-					{
-						 $bodyArgs['affiliate'] = $affl_id;
- 					}
 
 	        $params = array(
 	            'method' => 'POST',
@@ -198,7 +186,7 @@ class SettingsViewController extends \ShortPixel\ViewController
 					{
 						 Notice::addError( __('Unexpected error obtaining the ShortPixel key. Please contact support about this:', 'shortpixel-image-optimiser') . '  ' . json_encode($body) );
 					}
-
+Log::addTemp('Response', $body);
 					$this->doRedirect();
 
 			}
@@ -941,7 +929,7 @@ class SettingsViewController extends \ShortPixel\ViewController
 							$json->display_notices = [];
 							foreach($json->notices as $notice)
 							{
-								$json->display_notices[] = $notice;
+								$json->display_notices[] = $notice->getForDisplay();
 							}
 						}
 						if ($redirect !== 'self')

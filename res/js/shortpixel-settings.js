@@ -15,13 +15,11 @@ class ShortPixelSettings
 	 {
 		  this.root = document.querySelector('.wrap.is-shortpixel-settings-page');
 
-
 			this.InitActions();
 			this.InitAjaxForm();
 			this.SaveOnKey();
 
-			// @todo if this fires directly, probably missed by onboarding. Need some other way
-			var ev = new CustomEvent('shortpixel.settings.loaded');
+			var ev = new CustomEvent('shortpixel.settings.loaded', { detail: { 'root' : this.root, 'settings' : this }});
 			document.dispatchEvent(ev);
 	 }
 
@@ -529,11 +527,8 @@ FormSendEvent(event)
 	 var form = event.target;
 	 var formData = new FormData(event.target);
 
-	 formData.append('ajaxSave', 'true');
-	 formData.append('action', 'shortpixel_settingsRequest');
 	 formData.append('screen_action', 'form_submit');
 	 formData.append('form-nonce', formData.get('nonce'));
-	 formData.set('nonce', ShortPixelProcessorData.nonce_settingsrequest);
 
 	 // Special Actions
 	 let formaction_parsed = URL.parse(form.action);
@@ -542,36 +537,70 @@ FormSendEvent(event)
 				formData.set('screen_action', formaction_parsed.searchParams.get('sp-action'));
 	 }
 	 //const url = new URL(window.location.href);
-	 const url = ShortPixel.AJAX_URL;
 
-	 var response = fetch(url, {
-  	method: 'POST',
-  	body: formData
-		}).then((response) => {
-  		// do something with response here...
-			console.log('response', response);
-			if (response.ok)
+
+	 this.DoAjaxRequest(formData, this.FormResponseEvent);
+
+}
+
+
+async DoAjaxRequest(formData, responseOkCallBack, responseErrorCallback)
+{
+
+	formData.append('action', 'shortpixel_settingsRequest');
+	formData.append('ajaxSave', 'true');
+
+
+	if (false === formData.has('nonce'))
+	{
+				formData.append('nonce', ShortPixelProcessorData.nonce_settingsrequest);
+	}
+
+	const url = ShortPixel.AJAX_URL;
+
+	if (typeof responseOkCallBack !== 'function')
+	{
+			responseOkCallBack = (response) => { console.log(response); };
+	}
+	if (typeof responseErrorCallback !== 'function')
+	{
+		 responseErrorCallback = (response) => { console.error(response) };
+	}
+
+
+	var response = await fetch(url, {
+	 method: 'POST',
+	 body: formData
+ })
+
+
+json = null;
+var json;
+if (response.ok)
+{
+	console.log('this', this);
+	 json = await response.json();
+	 console.log('json ajax', json);
+	 return json;
+
+}
+
+
+}
+
+FormResponseEvent(json)
+{
+		let saveDialog = document.querySelector('.ajax-save-done');
+		saveDialog.classList.add('show');
+
+			console.log('json', json);
+			if (json.notices)
 			{
 					let saveDialog = document.querySelector('.ajax-save-done');
 					saveDialog.classList.add('show');
 
 					response.json().then((json) => {
 						console.log('json', json);
-						if (json.notices)
-						{
-								var notice_count = saveDialog.querySelector('.notice_count');
-								notice_count.textContent = json.notices.length;
-						}
-						if (json.display_notices)
-						{
-								let anchor = document.querySelector('.wp-header-end')
-								for (let i = 0; i < json.display_notices.length; i++)
-								{
-									//	var node =
-									//	anchor.parentNode.insertBefore(json.display_notices[i], anchor.nextSibling);
-									anchor.insertAdjacentHTML('afterend', json.display_notices[i]);
-								}
-						}
 						if (json.redirect)
 						{
 							 if (json.redirect == 'reload')
@@ -582,18 +611,34 @@ FormSendEvent(event)
 									 window.location.href = json.redirect;
 							 }
 						}
+						else {  // only do notices on this screen if there is no redirecting happening.
+							if (json.notices)
+							{
+									var notice_count = saveDialog.querySelector('.notice_count');
+									notice_count.textContent = json.notices.length;
+							}
+
+						}
 
 					});
-
 
 					window.setTimeout(function () {
 						 saveDialog.classList.remove('show')
 					}, 2000);
 			}
-		});
+			if (json.display_notices)
+			{
+					let anchor = document.querySelector('.wp-header-end')
+					for (let i = 0; i < json.display_notices.length; i++)
+					{
+						anchor.insertAdjacentHTML('afterend', json.display_notices[i]);
+					}
+			}
 
 
-
+		window.setTimeout(function () {
+			 saveDialog.classList.remove('show')
+		}, 2000);
 }
 
 // Hide an element

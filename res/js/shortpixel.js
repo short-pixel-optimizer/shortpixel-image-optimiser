@@ -70,12 +70,12 @@ var ShortPixel = function() {
             ShortPixel[opt] = options[opt];
         }
     }
-
+/*
     function isEmailValid(email) {
 				var regex = /^\S+@\S+\.\S+$/;
 				return regex.test(email);
     }
-
+*/
     function updateSignupEmail() {
 
 				clearTimeout( ShortPixel.updateTimer );
@@ -517,7 +517,7 @@ var ShortPixel = function() {
         init                : init,
         didInit             : false,
         setOptions          : setOptions,
-        isEmailValid        : isEmailValid,
+        //isEmailValid        : isEmailValid,
         updateSignupEmail   : updateSignupEmail,
         validateKey         : validateKey,
         enableResize        : enableResize,

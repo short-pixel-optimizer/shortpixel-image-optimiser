@@ -1258,10 +1258,6 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 
     protected function isFileSizeOK()
     {
-      //var_dump($this->getFileName() . ' ' . $this->getFileSize());
-
-    //  clearstatcache();
-      //var_dump(filesize($this->getFullPath())); echo "<BR>";
         if ($this->is_virtual() || $this->getFileSize() > 0 )
         {
 
