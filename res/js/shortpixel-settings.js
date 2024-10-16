@@ -423,7 +423,6 @@ class ShortPixelSettings
 	DoToggleActionEvent(event)
 	{
 			event.preventDefault();
-			console.log('DoToggleActionEvent');
 
 			var checkbox = event.target;
 			var checkboxes = [];
@@ -441,29 +440,20 @@ class ShortPixelSettings
 			if (checkbox.type === 'radio')
 			{
 					var checkboxes = this.root.querySelectorAll('input[name="' + checkbox.name + '"]');
-					console.log('Checkboxes, doing', checkboxes);
 			}
 
 			for (var i = 0; i < checkboxes.length; i++)
 			{
-
-					if (i > 100)
-					{
-						console.error('unclear loop');
-						break;
-					}
 				  var checkbox = checkboxes[i];
 
 					var field_id = checkbox.getAttribute('data-toggle');
 					var target = document.getElementById(field_id);
 
+
 					// Allow multiple elements to be toggled, which will not work with id. In due time all should be transferred to use class-based toggle
+					// This can return null, in case of radio buttons where only one has a data-toggle set.
 					var targetClasses = this.root.querySelectorAll('.' + field_id);
 
-					if (targetClasses.length == 0)
-					{
-						 console.error('No Targetclasses. Old format!' + field_id);
-					}
 
 				  if (typeof checkbox.dataset.toggleReverse !== 'undefined')
 					{
@@ -473,14 +463,11 @@ class ShortPixelSettings
 						var checked = checkbox.checked;
 					}
 
-
 					var show = false;
 					if (checked)
 					{
 						show = true;
 					}
-
-					console.log(checkbox, field_id, checked);
 
 					if (target !== null)
 					{
@@ -665,7 +652,7 @@ FormResponseEvent(json)
 
 DashBoardWarningEvent(warning, matches)
 {
-	 console.log(warning, matches);
+	 
 	 var dashBox = warning[0];
 	 var status = (true === matches.allMatches) ? 'alert' : (true === matches.someMatch) ? 'warning' : 'ok';
 

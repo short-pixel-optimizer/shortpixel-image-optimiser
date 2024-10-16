@@ -56,7 +56,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 					<?php echo $this->settingLink('webp', __("Webp/Avif & CDN", "shortpixel-image-optimiser"), 'shortpixel-icon webp_avif'); ?>
         </li>
 
-
 				<li class='is-advanced'>
 					<?php echo $this->settingLink('cdn', __("Integrations", "shortpixel-image-optimiser"), 'shortpixel-icon cdn'); ?>
         </li>

@@ -56,7 +56,7 @@ if ( ! defined( 'ABSPATH' ) ) {
      </name>
 
     </content>
-    <warning  id="background_warning">
+    <warning class="background_warning">
         <message>
         <?php _e('I understand that background optimization may pause if there are no visitors on the website.', 'shortpixel-image-optimiser'); ?>
       </message>

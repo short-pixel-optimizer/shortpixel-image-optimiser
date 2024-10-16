@@ -132,7 +132,7 @@ if( $this->is_nginx ){
 
    <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/126-which-webp-files-delivery-method-is-the-best-for-me"></i>
 
-      <ul id="deliverTypes" class="deliverWebpTypes toggleTarget">
+      <ul id="deliverTypes" class="deliverTypes deliverWebpTypes toggleTarget">
           <li>
               <input type="radio" name="deliverWebpType" id="deliverWebpAltered" <?php checked( ($view->data->deliverWebp >= 1 && $view->data->deliverWebp <= 2), true); ?> <?php echo esc_attr( $deliverWebpAlteredDisabled );?> value="deliverWebpAltered" data-toggle="deliverAlteringTypesPicture">
               <label for="deliverWebpAltered">
@@ -140,7 +140,7 @@ if( $this->is_nginx ){
               </label>
 
 							<br><br>
-							<ul  class="toggleTarget deliverAlteringTypesPicture" >
+							<ul class="toggleTarget deliverAlteringTypesPicture" >
                   <li>
                       <input type="radio" name="deliverWebpAlteringType" id="deliverWebpAlteredWP" <?php checked(($view->data->deliverWebp == 2), true);?> value="deliverWebpAlteredWP">
                       <label for="deliverWebpAlteredWP">
@@ -183,7 +183,7 @@ if( $this->is_nginx ){
 <?php _e( "Warning: Using this method alters the structure of the rendered HTML code (IMG tags get included in PICTURE tags), which, in some rare \ncases, can lead to CSS/JS inconsistencies.\n\nPlease test this functionality thoroughly after activating!\n\nIf you notice any issue, just deactivate it and the HTML will will revert to the previous state.", 'shortpixel-image-optimiser' ); ?>
         </message>
     </warning>
-    <warning id="deliverAlteringTypesHtaccess" >
+    <warning class="deliverAlteringTypesHtaccess" >
       <message>
         <?php _e( 'This option will serve both WebP and the original image using the same URL, based on the web browser capabilities, please make sure you\'re serving the images from your server and not using a CDN which caches the images.', 'shortpixel-image-optimiser' ) ?>
       </message>
