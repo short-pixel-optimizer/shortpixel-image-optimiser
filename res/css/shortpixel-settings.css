@@ -71,7 +71,8 @@ div.spio-modal-title {
   display: none;
 }
 
-.wrap.is-shortpixel-settings-page { /* TABS CONTROLS */
+.wrap.is-shortpixel-settings-page {
+  /* TABS CONTROLS */
   /* .submit {
   	.button {
   		min-height: 44px;
@@ -124,6 +125,24 @@ div.spio-modal-title {
   vertical-align: middle;
   margin-right: 4px;
 }
+.wrap.is-shortpixel-settings-page .shortpixel-icon.alert {
+  background-image: url("../images/icon/alert.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.arrow-right {
+  background-image: url("../images/icon/arrow-right.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.arrows-left-right {
+  background-image: url("../images/icon/arrows-left-right.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.arrows-up-down {
+  background-image: url("../images/icon/arrows-up-down.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.box-archive {
+  background-image: url("../images/icon/box-archive.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.bulk {
+  background-image: url("../images/icon/bulk.svg");
+}
 .wrap.is-shortpixel-settings-page .shortpixel-icon.cdn {
   background-image: url("../images/icon/cdn.svg");
 }
@@ -135,6 +154,12 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page .shortpixel-icon.delivery {
   background-image: url("../images/icon/delivery.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.exclusions {
+  background-image: url("../images/icon/exclusions.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.edit {
+  background-image: url("../images/icon/edit.svg");
 }
 .wrap.is-shortpixel-settings-page .shortpixel-icon.feedback {
   background-image: url("../images/icon/feedback.svg");
@@ -154,29 +179,20 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page .shortpixel-icon.tools {
   background-image: url("../images/icon/tools.svg");
 }
+.wrap.is-shortpixel-settings-page .shortpixel-icon.trash {
+  background-image: url("../images/icon/trash.svg");
+}
 .wrap.is-shortpixel-settings-page .shortpixel-icon.webp_avif {
   background-image: url("../images/icon/webp_avif.svg");
 }
 .wrap.is-shortpixel-settings-page .shortpixel-icon.photo {
   background-image: url("../images/icon/photo.svg");
 }
-.wrap.is-shortpixel-settings-page .shortpixel-icon.box-archive {
-  background-image: url("../images/icon/box-archive.svg");
-}
-.wrap.is-shortpixel-settings-page .shortpixel-icon.bulk {
-  background-image: url("../images/icon/bulk.svg");
-}
 .wrap.is-shortpixel-settings-page .shortpixel-icon.ok {
   background-image: url("../images/icon/ok.svg");
 }
 .wrap.is-shortpixel-settings-page .shortpixel-icon.warning {
   background-image: url("../images/icon/warning.svg");
-}
-.wrap.is-shortpixel-settings-page .shortpixel-icon.alert {
-  background-image: url("../images/icon/alert.svg");
-}
-.wrap.is-shortpixel-settings-page .shortpixel-icon.arrow-right {
-  background-image: url("../images/icon/arrow-right.svg");
 }
 .wrap.is-shortpixel-settings-page .shortpixel-icon.key {
   background-image: url("../images/icon/key.svg");
@@ -186,12 +202,6 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page .shortpixel-icon.switch {
   background-image: url("../images/icon/switch.svg");
-}
-.wrap.is-shortpixel-settings-page .shortpixel-icon.arrows-left-right {
-  background-image: url("../images/icon/arrows-left-right.svg");
-}
-.wrap.is-shortpixel-settings-page .shortpixel-icon.arrows-up-down {
-  background-image: url("../images/icon/arrows-up-down.svg");
 }
 .wrap.is-shortpixel-settings-page .shortpixel-icon.help-circle {
   background-image: url("../images/icon/help-circle.svg");
@@ -801,9 +811,6 @@ div.spio-modal-title {
   height: 40px;
   filter: brightness(0) saturate(100%) invert(58%) sepia(24%) saturate(4079%) hue-rotate(125deg) brightness(97%) contrast(101%);
 }
-.wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel > i:first-child.switch {
-  width: 60px;
-}
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel span {
   line-height: 14px;
   margin: 16px 0 24px;
@@ -869,122 +876,9 @@ div.spio-modal-title {
   height: 12px;
   margin-right: 4px;
 }
-.wrap.is-shortpixel-settings-page .excludeSizeOption {
-  margin-right: 20px;
-  white-space: nowrap;
-  line-height: 24px;
-  float: left;
-  clear: both;
-}
-.wrap.is-shortpixel-settings-page .excludeSizeOption input {
-  margin-right: 8px;
-}
 .wrap.is-shortpixel-settings-page .deliverWebpTypes, .wrap.is-shortpixel-settings-page .deliverAlteringTypesPicture {
   margin: 16px 0 16px 16px;
   padding: 2px;
-}
-.wrap.is-shortpixel-settings-page .new-exclusion-button {
-  float: left;
-  margin-right: 8px;
-}
-.wrap.is-shortpixel-settings-page ul.exclude-list {
-  min-height: 30px;
-  margin: 20px 0;
-}
-.wrap.is-shortpixel-settings-page ul.exclude-list li {
-  float: left;
-  padding: 4px 12px;
-  border: 1px solid #1caecb;
-  background: #1caecb;
-  border-radius: 8px;
-  margin: 8px 8px 0 0;
-  color: #fff;
-  cursor: pointer;
-}
-.wrap.is-shortpixel-settings-page ul.exclude-list li.no-exclusion-item {
-  cursor: default;
-}
-.wrap.is-shortpixel-settings-page ul.exclude-list li span {
-  margin-left: 6px;
-}
-.wrap.is-shortpixel-settings-page ul.exclude-list li.has-error {
-  background: #ff0000;
-  border-color: #ff0000;
-}
-.wrap.is-shortpixel-settings-page ul.exclude-list li.is-regex {
-  border-right: green;
-  border-right-width: 10px;
-  border-style: solid;
-}
-.wrap.is-shortpixel-settings-page ul.exclude-list .not-visible {
-  display: none;
-}
-.wrap.is-shortpixel-settings-page .new-exclusion {
-  border: 1px solid #ccc;
-  box-shadow: 2px 2px 1px #ccc;
-  padding: 8px;
-  margin: 8px 0;
-  display: inline-block;
-  background: #fff;
-  position: relative;
-}
-.wrap.is-shortpixel-settings-page .new-exclusion h3 {
-  margin: 2px 0;
-}
-.wrap.is-shortpixel-settings-page .new-exclusion.not-visible {
-  display: none;
-}
-.wrap.is-shortpixel-settings-page .new-exclusion div {
-  margin: 8px 0;
-  height: auto;
-}
-.wrap.is-shortpixel-settings-page .new-exclusion div label {
-  min-width: 110px;
-  display: inline-block;
-}
-.wrap.is-shortpixel-settings-page .new-exclusion div input, .wrap.is-shortpixel-settings-page .new-exclusion div select {
-  min-width: 250px;
-}
-.wrap.is-shortpixel-settings-page .new-exclusion div input.small, .wrap.is-shortpixel-settings-page .new-exclusion div select.small {
-  width: 80px;
-  min-width: 0;
-}
-.wrap.is-shortpixel-settings-page .new-exclusion div.button-actions {
-  margin-left: 114px;
-}
-.wrap.is-shortpixel-settings-page .new-exclusion div button {
-  min-width: 75px;
-  padding: 8px 6px;
-}
-.wrap.is-shortpixel-settings-page .new-exclusion div button[name=removeExclusion] {
-  background: #ff0000;
-  border-color: #ff0000;
-  padding: 4px;
-  position: absolute;
-  top: 10px;
-  right: 10px;
-}
-.wrap.is-shortpixel-settings-page .new-exclusion .not-visible {
-  visibility: hidden;
-  height: 0;
-  transition: 500ms height;
-}
-.wrap.is-shortpixel-settings-page .new-exclusion .size-option > div {
-  margin: 8px 0;
-}
-.wrap.is-shortpixel-settings-page .new-exclusion .size-option div label {
-  min-width: 110px;
-}
-.wrap.is-shortpixel-settings-page .new-exclusion .thumbnail-option:not(.not-visible) {
-  height: 150px;
-  margin-left: 12px;
-}
-.wrap.is-shortpixel-settings-page .new-exclusion .thumbnail-option:not(.not-visible):hover {
-  color: #000;
-}
-.wrap.is-shortpixel-settings-page .exclusion-save-reminder {
-  margin: 10px 0;
-  font-weight: 500;
 }
 .wrap.is-shortpixel-settings-page .avifNoticeDisabled {
   padding: 12px 12px;
@@ -993,6 +887,142 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page .avifNoticeDisabled > .spio-inline-help {
   display: inline;
   float: none;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-thumbnail-setting content {
+  column-count: 3;
+  column-width: 220px;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-thumbnail-setting content > span {
+  margin-right: 20px;
+  white-space: nowrap;
+  line-height: 24px;
+  float: left;
+  clear: both;
+  font-size: 12px;
+  color: #116C7E;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-thumbnail-setting content > span input {
+  margin-right: 8px;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting name label {
+  float: right;
+  margin-right: 12px;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion-button {
+  width: 100%;
+  display: block;
+  border: 4px dashed #ccc;
+  font-size: 20px;
+  background: #fff;
+  color: #92D5E3;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting ul.exclude-list {
+  min-height: 30px;
+  margin: 20px 0;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting ul.exclude-list li {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #116C7E;
+  padding: 4px 12px;
+  background: #fff;
+  border-radius: 8px;
+  margin: 8px 8px 0 0;
+  cursor: pointer;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting ul.exclude-list li.no-exclusion-item {
+  cursor: default;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting ul.exclude-list li span {
+  margin-left: 6px;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting ul.exclude-list li.has-error {
+  background: #ff0000;
+  border-color: #ff0000;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting ul.exclude-list li.is-regex {
+  border-right: green;
+  border-right-width: 10px;
+  border-style: solid;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting ul.exclude-list .not-visible {
+  display: none;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion {
+  border: 3px solid #116C7E;
+  padding: 16px 0;
+  margin: 0 16px;
+  display: inline-block;
+  background: #fff;
+  position: relative;
+  width: 100%;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion h3 {
+  padding: 8px 0;
+  border-bottom: 1px solid #92D5E3;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion + .new-exclusion-button {
+  display: none;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion.not-visible {
+  display: none;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion.not-visible + .new-exclusion-button {
+  display: block;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div {
+  margin: 8px 0;
+  height: auto;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div label {
+  min-width: 110px;
+  display: inline-block;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div input, .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div select {
+  min-width: 250px;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div input.small, .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div select.small {
+  width: 80px;
+  min-width: 0;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div.button-actions {
+  margin-left: 114px;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div button {
+  min-width: 75px;
+  padding: 8px 6px;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div button[name=removeExclusion] {
+  background: #ff0000;
+  border-color: #ff0000;
+  padding: 4px;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion .not-visible {
+  visibility: hidden;
+  height: 0;
+  transition: 500ms height;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion .size-option > div {
+  margin: 8px 0;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion .size-option div label {
+  min-width: 110px;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion .thumbnail-option:not(.not-visible) {
+  height: 150px;
+  margin-left: 12px;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion .thumbnail-option:not(.not-visible):hover {
+  color: #000;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclusion-save-reminder {
+  margin: 10px 0;
+  font-weight: 500;
 }
 .wrap.is-shortpixel-settings-page #tab-nokey h1 {
   font-size: 36px;

@@ -1,0 +1,204 @@
+
+#tab-exclusions
+{
+
+  .exclude-thumbnail-setting
+  {
+
+
+
+
+    content
+    {
+    //  display: grid;
+    //  grid-template-columns: 1fr 1fr 1fr;
+    //  grid-template-rows: 1fr 1fr 1fr;
+    //  column-gap: 5px;
+    //  grid-auto-flow: column;
+      column-count: 3;
+      column-width: 220px;
+    > span {
+       margin-right: 20px;
+       white-space:nowrap;
+       line-height: 24px;
+       float: left;
+       clear: both;
+       font-size: 12px;
+       color: $blue_closed;
+       input { margin-right: 8px; }
+    }
+
+    }
+
+  } // setting
+
+  .exclude-patterns-setting
+  {
+    name
+    {
+       label
+       {
+         float: right;
+         margin-right: 12px;
+       }
+    }
+    .new-exclusion-button {
+    //   float: left;
+    //   margin-right: 8px;
+      width: 100%;
+      display: block;
+    //  height: 250px;
+      border: 4px dashed #ccc;
+      font-size: 20px;
+      background: #fff;
+      color: $blue_open;
+    }
+
+    ul.exclude-list {
+        min-height: 30px;
+         li {
+      //      float: left;
+            display: flex;
+            justify-content: space-between;
+            div {
+
+            }
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid $blue_closed;
+            padding: 4px 12px;
+          //  border: 1px solid #1caecb;
+            background: #fff;
+            border-radius: 8px;
+            margin: 8px 8px 0 0;
+            //color: #fff;
+            cursor: pointer;
+            &.no-exclusion-item
+            {
+               cursor: default;
+            }
+            span {
+              margin-left: 6px;
+
+            }
+            &.has-error {
+              background: #ff0000;
+              border-color: #ff0000;
+            }
+            &.is-regex {
+              border-right: green;
+              border-right-width: 10px;
+              border-style: solid;
+            }
+         }
+         margin: 20px 0;
+         .not-visible {
+            display: none;
+         }
+    }
+
+    .new-exclusion
+    {
+    //		border-top: 1px solid #ccc;
+        border: 3px solid $blue_closed;
+      //  box-shadow: 2px 2px 1px #ccc;
+        padding: 16px 0;
+        margin: 0 16px;
+        display: inline-block;
+        background: #fff;
+        position: relative;
+        width: 100%;
+
+        h3 {
+            padding: 8px 0;
+            border-bottom: 1px solid $blue_open;
+        }
+        +.new-exclusion-button
+        {
+           display: none;
+        }
+        &.not-visible
+        {
+           display: none;
+
+           + .new-exclusion-button
+           {
+              display: block;
+           }
+        }
+
+
+         div
+        {
+           margin: 8px 0;
+           height: auto;
+           label
+           {
+              min-width: 110px;
+              display: inline-block;
+           }
+           input, select {
+              min-width: 250px;
+              &.small {
+                width: 80px;
+                min-width: 0;
+              }
+           }
+           &.button-actions
+           {
+              margin-left: 114px;
+           }
+           button {
+            // margin-left: 104px;
+             min-width: 75px;
+             padding: 8px 6px;
+             &[name="removeExclusion"]
+             {
+                background: #ff0000;
+                border-color: #ff0000;
+                padding: 4px;
+                position: absolute;
+                top: 10px;
+                right: 10px;
+             }
+           }
+
+        }
+
+        .not-visible
+        {
+           visibility: hidden;
+           height: 0;
+           transition: 500ms height;
+        }
+
+        .size-option
+        {
+           > div {
+              margin: 8px 0;
+           }
+           div label
+           {
+              min-width: 110px;
+           }
+        }
+        .thumbnail-option:not(.not-visible) {
+           height: 150px;
+           margin-left: 12px;
+           &:hover {
+              color: #000;
+           }
+        }
+
+    }
+  } // setting
+
+
+
+  .exclusion-save-reminder
+  {
+     margin: 10px 0;
+     font-weight: 500;
+  }
+
+}

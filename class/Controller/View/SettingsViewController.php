@@ -48,7 +48,7 @@ class SettingsViewController extends \ShortPixel\ViewController
      );
 
      protected $display_part = 'overview';
-		 protected $all_display_parts = array('overview', 'optimisation','webp', 'cdn','exlusions', 'debug', 'tools', 'help');
+		 protected $all_display_parts = array('overview', 'optimisation','webp', 'cdn','exclusions', 'debug', 'tools', 'help');
      protected $form_action = 'save-settings';
      protected $view_mode = 'simple'; // advanced or simple
 		 protected $is_ajax_save = false; // checker if saved via ajax ( aka no redirect / json return )
@@ -94,20 +94,34 @@ class SettingsViewController extends \ShortPixel\ViewController
 
 			}
 
+      public function indicateAjaxSave()
+      {
+           $this->is_ajax_save = true;
+      }
+
       // this is the nokey form, submitting api key
       public function action_addkey()
       {
         $this->loadEnv();
+        Log::addTemp('Action addkey start' . $this->is_form_submit);
 
-        $this->checkPost();
+        $this->checkPost(false);
 
         if ($this->is_form_submit && isset($_POST['apiKey']))
         {
             $apiKey = sanitize_text_field($_POST['apiKey']);
 
+            if (strlen(trim($apiKey)) == 0) // display notice when submitting empty API key
+            {
+              Notice::addError(sprintf(__("The key you provided has %s characters. The API key should have 20 characters, letters and numbers only.",'shortpixel-image-optimiser'), strlen($apiKey) ));
+            }
+            else
+            {
+
             $this->keyModel->resetTried();
             $this->keyModel->checkKey($apiKey);
-
+            Log::addTemp('Checked key');
+            }
         }
 
         if (true === $this->keyModel->is_verified())
@@ -122,7 +136,7 @@ class SettingsViewController extends \ShortPixel\ViewController
 			public function action_request_new_key()
 			{
 					$this->loadEnv();
- 	        $this->checkPost();
+ 	        $this->checkPost(false);
 
 					$email = isset($_POST['pluginemail']) ? trim(sanitize_text_field($_POST['pluginemail'])) : null;
 
@@ -185,14 +199,13 @@ class SettingsViewController extends \ShortPixel\ViewController
 					{
 						 Notice::addError( __('Unexpected error obtaining the ShortPixel key. Please contact support about this:', 'shortpixel-image-optimiser') . '  ' . json_encode($body) );
 					}
-Log::addTemp('Response', $body);
 					$this->doRedirect();
 
 			}
 
 			public function action_debug_redirectBulk()
 			{
-				$this->checkPost();
+				$this->checkPost(false);
 
 				OptimizeController::resetQueues();
 
@@ -218,7 +231,7 @@ Log::addTemp('Response', $body);
       {
 					Log::addTemp('Action reset Stats');
           $this->loadEnv();
-					$this->checkPost();
+					$this->checkPost(false);
           $statsController = StatsController::getInstance();
           $statsController->reset();
 					$this->doRedirect('reload');
@@ -228,7 +241,7 @@ Log::addTemp('Response', $body);
       {
 
           $this->loadEnv();
-					$this->checkPost();
+					$this->checkPost(false);
           $quotaController = QuotaController::getInstance();
           $quotaController->forceCheckRemoteQuota();
 					$this->doRedirect('reload');
@@ -237,7 +250,7 @@ Log::addTemp('Response', $body);
       public function action_debug_resetNotices()
       {
           $this->loadEnv();
-					$this->checkPost();
+					$this->checkPost(false);
           Notice::resetNotices();
           $nControl = new Notice(); // trigger reload.
 					$this->doRedirect('reload');
@@ -245,7 +258,7 @@ Log::addTemp('Response', $body);
 
 			public function action_debug_triggerNotice()
 			{
-				$this->checkPost();
+				$this->checkPost(false);
 				$key = isset($_REQUEST['notice_constant']) ? sanitize_text_field($_REQUEST['notice_constant']) : false;
 
 				if ($key !== false)
@@ -274,7 +287,7 @@ Log::addTemp('Response', $body);
 			{
 				 $queue = isset($_REQUEST['queue']) ? sanitize_text_field($_REQUEST['queue']) : null;
 				 $this->loadEnv();
-				 $this->checkPost();
+				 $this->checkPost(false);
 
 				 if (! is_null($queue))
 				 {
@@ -319,7 +332,7 @@ Log::addTemp('Response', $body);
 			public function action_debug_removePrevented()
 			{
 				$this->loadEnv();
-				$this->checkPost();
+				$this->checkPost(false);
 
 				global $wpdb;
 				$sql = 'delete from ' . $wpdb->postmeta . ' where meta_key = %s';
@@ -336,8 +349,7 @@ Log::addTemp('Response', $body);
 
 			public function action_debug_removeProcessorKey()
 			{
-				//$this->loadEnv();
-				$this->checkPost();
+				$this->checkPost(false);
 
 				$cacheControl = new CacheController();
 				$cacheControl->deleteItem('bulk-secret');
@@ -662,20 +674,6 @@ Log::addTemp('Response', $body);
             $this->do_redirect = true;
           }
 
-					if (isset($_POST['apiKey']) && false === $this->keyModel->is_constant())
-					// first save all other settings ( like http credentials etc ), then check
-					{
-							$check_key = sanitize_text_field($_POST['apiKey']);
-							$this->keyModel->resetTried(); // reset the tried api keys on a specific post request.
-							$this->keyModel->checkKey($check_key);
-							unset($post['apiKey']);
-					}
-
-					if (isset($post['ajaxSave']) && $post['ajaxSave'] === 'true')
-					{
-						 $this->is_ajax_save = true;
-						 unset($post['ajaxSave']);
-					}
 
           // handle 'reverse' checkbox.
           $keepExif = isset($post['removeExif']) ? 0 : 1;
@@ -693,21 +691,20 @@ Log::addTemp('Response', $body);
         //  $post = $this->processCloudFlare($post);
 
 					$check_key = false;
-
-					/*   This can't be here, no actions in the data check, because of actions
-          if (isset($post['apiKey']))
-
+Log::addTemp("view postdata", $post);
+          if (isset($post['apiKey']) && false === $this->keyModel->is_constant())
 					{
 							$check_key = sanitize_text_field($post['apiKey']);
-							unset($post['apiKey']); // unset, since keyModel does the saving.
-					}
+		          $this->keyModel->resetTried(); // reset the tried api keys on a specific post request.
+              $this->keyModel->checkKey($check_key);
 
-					// first save all other settings ( like http credentials etc ), then check
-          if (false === $this->keyModel->is_constant() && $check_key !== false) // don't allow settings key if there is a constant
-          {
-            $this->keyModel->resetTried(); // reset the tried api keys on a specific post request.
-            $this->keyModel->checkKey($check_key);
-          } */
+            if (false === $this->keyModel->is_verified())
+            {
+                $this->doRedirect('reload');
+            }
+            unset($post['apiKey']); // unset, since keyModel does the saving.
+
+          }
 
 				// Field that are in form for other purpososes, but are not part of model and should not be saved.
 					$ignore_fields = array(
@@ -734,7 +731,10 @@ Log::addTemp('Response', $body);
 							'tools-nonce',
 							'confirm',
 							'tos',  // toss checkbox in nokey
-							'pluginemail'
+							'pluginemail',
+              'nonce',
+              'action',
+              'form-nonce',
 
 					);
 
@@ -914,7 +914,7 @@ Log::addTemp('Response', $body);
 
 			protected function handleAjaxSave($redirect)
 			{
-				Log::addTemp('AJAX SAve');
+				Log::addTrace('AJAX SAve');
 						// Intercept new notices and add them
 						// Return JSON object with status of save action
 						$json = new \stdClass;
@@ -936,6 +936,7 @@ Log::addTemp('Response', $body);
 							$json->redirect = $redirect;
 						}
 
+Log::addTemp('Json Response', $json);
 						$noticeController->update(); // dismiss one-time ponies
 						wp_send_json($json);
 						exit();

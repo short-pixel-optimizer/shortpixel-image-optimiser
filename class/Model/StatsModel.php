@@ -90,9 +90,6 @@ class StatsModel
   {
     $settings = \wpSPIO()->settings();
 
-  //  $this->totalOptimized = $settings->totalOptimized;
-  //  $this->totalOriginal = $settings->totalOriginal;
-
     $stats = $settings->currentStats;
 		if (! is_array($stats))
 		{
@@ -200,6 +197,8 @@ class StatsModel
   {
       $path = $this->path;
       $data = -1;
+
+      Log::addTemp('Fetching stat data');
 
       if ($path[0] == 'period' && $path[1] == 'months' && isset($path[2]))
       {
@@ -395,6 +394,7 @@ class StatsModel
 			if (is_null($count) && strpos($wpdb->last_error, 'exist') !== false)
 			{
 				 InstallHelper::checkTables();
+         Log::addError('StatsModel WPDB error', $wpdb->last_error);
 				 return 0;
 			}
 

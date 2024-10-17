@@ -83,8 +83,8 @@ class ShortPixelSettings
 	{
 		 	var self = this;
 			// Events for the New Exclusion dialog
-			var newExclusionInputs = this.root.querySelectorAll('.new-exclusion select, .new-exclusion input, .new-exclusion button, input[name="removeExclusion"], button[name="cancelEditExclusion"]');
-
+			var newExclusionInputs = this.root.querySelectorAll('.new-exclusion select, .new-exclusion input, .new-exclusion button, button[name="cancelEditExclusion"]');
+console.log(newExclusionInputs);
 			newExclusionInputs.forEach(function (input)
 			{
 					switch (input.name)
@@ -103,7 +103,7 @@ class ShortPixelSettings
 					input.addEventListener(eventType, self.NewExclusionUpdateEvent.bind(self));
 			});
 
-			 var exclusionItems = this.root.querySelectorAll('.exclude-list li');
+			 var exclusionItems = this.root.querySelectorAll('.exclude-list li i.edit');
 			 exclusionItems.forEach(function (input) {
 					if (false == input.classList.contains('no-exclusion-item'))
 					{
@@ -111,6 +111,13 @@ class ShortPixelSettings
 					}
 			});
 
+			var exclusionItems = this.root.querySelectorAll('.exclude-list li i.remove');
+			exclusionItems.forEach(function (input) {
+				 if (false == input.classList.contains('no-exclusion-item'))
+				 {
+					 input.addEventListener('click', self.RemoveExclusion.bind(self));
+				 }
+		 });
 
 			var addNewExclusionButton = this.root.querySelector('.new-exclusion-button');
 			if (addNewExclusionButton !== null)
@@ -652,7 +659,7 @@ FormResponseEvent(json)
 
 DashBoardWarningEvent(warning, matches)
 {
-	 
+
 	 var dashBox = warning[0];
 	 var status = (true === matches.allMatches) ? 'alert' : (true === matches.someMatch) ? 'warning' : 'ok';
 
@@ -933,6 +940,7 @@ NewExclusionUpdateEvent(event)
 {
 	var target = event.target;
 	var inputName = event.target.name;
+	console.log('Update Event - Target Name ' + inputName);
 	switch(inputName)
 	{
 		 case 'exclusion-type':
@@ -1157,6 +1165,7 @@ ReadWriteExclusionForm(setting)
 NewExclusionButtonAdd(element)
 {
 		 var result = this.ReadWriteExclusionForm(null);
+		 console.log('newExlcbuttonAdd', result);
 		 var setting = result[0];
 		 var strings = result[1];
 
@@ -1297,7 +1306,7 @@ UpdateExclusion()
 				 var spans = [strings.type, setting.value, strings.apply];
 				 for (var j = 0; j < spans.length; j++)
 				 {
-						 var spanElement = this.root.createElement('span');
+						 var spanElement = document.createElement('span');
 						 spanElement.textContent = spans[j];
 						 liElement.appendChild(spanElement);
 				 }
@@ -1318,7 +1327,7 @@ ShowExclusionSaveWarning()
 		}
 }
 
-RemoveExclusion()
+RemoveExclusion(target)
 {
 		 var id = this.root.querySelector('.new-exclusion input[name="edit-exclusion"]');
 		 if (id)

@@ -60,9 +60,9 @@ class ViewController extends Controller
 
   /* Check if postData has been submitted.
   * This function should always be called at any ACTION function ( load, load_$action etc ).
-	* @param Object Model  Alternate model to check form values against.
+	*
   */
-  protected function checkPost()
+  protected function checkPost($processPostData = true)
   {
 
 		if(count($_POST) === 0) // no post, nothing to check, return silent.
@@ -80,7 +80,11 @@ class ViewController extends Controller
       check_admin_referer( $this->form_action, 'sp-nonce' ); // extra check, when we are wrong here, it dies.
 
       $this->is_form_submit = true;
-      $this->processPostData($_POST);
+      if (true === $processPostData) // only processData on form save. 
+      {
+          $this->processPostData($_POST);
+      }
+
 
     }
 		return true;

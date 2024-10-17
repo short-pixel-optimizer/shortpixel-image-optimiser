@@ -376,6 +376,7 @@ class AjaxController
 		protected function settingsFormSubmit($action)
 		{
 				 $viewController =  new SettingsViewController();
+				 $viewController->indicateAjaxSave(); // set ajax save method
 				 Log::addTemp('Settings Form Submit Action ' . $action);
 				 if (method_exists($viewController, $action))
 				 {

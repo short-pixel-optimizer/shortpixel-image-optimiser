@@ -111,7 +111,7 @@ $disabled = ($view->key->is_editable) ? '' : 'disabled';
           <?php esc_html_e('API Key:','shortpixel-image-optimiser');?>
       </name>
       <content>
-        <input name="apiKey" type="text" id="key" value="<?php echo esc_attr( $view->key->apiKey );?>"
+        <input name="login_apiKey" type="text" id="key" value="<?php echo esc_attr( $view->key->apiKey );?>"
            class="regular-text" <?php echo $disabled ?>>
 
               <input type="hidden" name="validate" id="valid" value="validate"/>
@@ -139,7 +139,6 @@ $disabled = ($view->key->is_editable) ? '' : 'disabled';
 <settinglist class='onboard-submit'>
 
   <button type="button" name="add-key"><?php esc_html_e('Continue', 'shortpixel-image-optimiser'); ?></button>
-  <input type="hidden" name="method-selected" value="new-key" />
 
 </settinglist>
 

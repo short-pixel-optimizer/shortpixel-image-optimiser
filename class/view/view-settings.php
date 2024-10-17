@@ -46,7 +46,7 @@ if ( ! defined( 'ABSPATH' ) ) {
           <?php echo $this->settingLink('optimisation', __("Image optimisation", "shortpixel-image-optimiser"), 'shortpixel-icon optimization'); ?>
         </li>
         <li class='is-advanced'>
-          <?php echo $this->settingLink('exclusions', __("Exclusions", "shortpixel-image-optimiser"), 'shortpixel-icon exclude'); ?>
+          <?php echo $this->settingLink('exclusions', __("Exclusions", "shortpixel-image-optimiser"), 'shortpixel-icon exclusions'); ?>
         </li>
 
         <li class='is-advanced'>

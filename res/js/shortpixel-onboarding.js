@@ -100,15 +100,12 @@ class ShortPixelOnboarding
           else {
              formData.append(email.name, email.value);
              formData.append('screen_action', 'action_request_new_key');
-
-            // formData.append('screen_action', '')
           }
 
        }
        else if(activePanel.classList.contains('existing-customer'))
        {
-           let apiKey = activePanel.querySelector('input[name="apiKey"]');
-
+           let apiKey = activePanel.querySelector('input[name="login_apiKey"]');
            formData.append('apiKey', apiKey.value);
            formData.append('screen_action', 'action_addkey');
        }

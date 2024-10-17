@@ -163,7 +163,6 @@ class ApiKeyModel extends \ShortPixel\Model
   public function checkKey($key)
   {
 			$valid = false;
-
       if (is_null($key) || strlen($key) == 0)
       {
         // first-timers, redirect to nokey screen
@@ -185,7 +184,7 @@ class ApiKeyModel extends \ShortPixel\Model
       elseif (strlen($key) <> 20 && $key != $this->apiKeyTried)
       {
         $this->NoticeApiKeyLength($key);
-        Log::addDebug('Key Wrong Length');
+        Log::addDebug('Key Wrong Length: ' . $key);
 
 				// Don't validate is wrong key is constant.
 				if (false === $this->key_is_constant)
@@ -262,7 +261,6 @@ class ApiKeyModel extends \ShortPixel\Model
 		delete_option($this->legacy_model['apiKeyTried']['key']);
 
     delete_option($this->option_name);
-   // $this->update();
 
   }
 

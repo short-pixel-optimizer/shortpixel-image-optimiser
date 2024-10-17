@@ -14,17 +14,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 <settinglist>
 
+  <h2><?php esc_html_e('Exclusions','shortpixel-image-optimiser');?></h2>
+
   <!-- Exclude thumbnails -->
-  <setting>
+  <setting class='exclude-thumbnail-setting'>
      <name>
          <?php esc_html_e('Exclude thumbnail sizes','shortpixel-image-optimiser');?>
+                <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/113-how-can-i-optimize-only-certain-thumbnail-sizes"></i>
      </name>
      <content>
 
        <?php
        foreach($view->allThumbSizes as $sizeKey => $sizeVal) {
        ?>
-           <span class="excludeSizeOption">
+           <span>
              <label>
 
                <?php
@@ -43,20 +46,61 @@ if ( ! defined( 'ABSPATH' ) ) {
 
        <?php } // exclude sizes ?>
 
-       <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/113-how-can-i-optimize-only-certain-thumbnail-sizes"></i>
+
      </content>
   </setting>
  <!-- // Exclude thumbnails -->
 
  <!-- Exclude patterns -->
- <setting>
+ <setting class='exclude-patterns-setting'>
      <name>
        <?php esc_html_e('Exclude patterns','shortpixel-image-optimiser');?>
+       <label><input type='checkbox' class='shortpixel-hide' data-toggle='exclude-settings-expanded'> >> <?php		printf(esc_html__('See examples')); ?></label>
+
      </name>
+     <info>
+       <div class='exclude-settings-expanded toggleTarget ' id="exclude-settings-expanded">
+         <p  class="settings-info">
+         <?php
+             printf(esc_html__('For the %s"Name"%s type, only the file name is matched, i.e. if you enter %s"flower.jpg"%s in the "Value" field, ShortPixel excludes all JPEG images ending in "flower" (lower case). If, on the other hand, you enter %s"logo"%s in the "Value" field, all images – PNG/JPEG/GIF – that contain the word "logo" in their name will be excluded: "nicelogo.jpg", "alllogos.png", "logo.gif"..', 'shortpixel-image-optimiser'),
+             '<b>','</b>',
+             '<b>','</b>',
+             '<b>','</b>'
+             );
+         ?>
+
+       </p>
+       <br />
+       <p  class="settings-info">
+         <?php
+             printf(esc_html__('With the %s"Path"%s type, the entire path is matched (useful for excluding certain (sub)directories altogether). For example, if you enter %s"2022"%s in the "Value" field, all images uploaded in 2022 will be excluded, but also images that contain 2022 in the file name (as this is also part of the path). If you only want to exclude images uploaded in 2022, enter %s"/2022/"%s instead.','shortpixel-image-optimiser'),
+             '<b>','</b>',
+             '<b>','</b>',
+             '<b>','</b>'
+             );
+             ?>
+           </p>
+           <br />
+           <p  class="settings-info">
+         <?php
+             printf(esc_html__('For both types mentioned above ("Name" and "Path") you can activate the option %s"Check as regular expression"%s. It works in the same way, but requires a valid regular expression between slashes in the "Value" field. Special characters should be preceded by a \ as an escape character. For example, %s/[0-9]+[^\/]*\.(PNG|png)/%s in the "Value" field for the "Name" type excludes all PNG images that have a numeric prefix.','shortpixel-image-optimiser'),
+             '<b>','</b>',
+             '<b>','</b>'
+           );
+           ?>
+         </p>
+         <br />
+         <p  class="settings-info">
+           <?php
+             printf(esc_html__('The %s"Size"%s type is applied to all images and thumbnails whose size is within the specified range. You can either use intervals or specify an exact size if you enable the %s"Exact sizes"%s option.','shortpixel-image-optimiser'),
+             '<b>','</b>',
+             '<b>','</b>'
+           );
+           ?>
+         </p>
+      </div> <!-- foldout -->
+     </info>
      <content>
-       <button class='button button-primary new-exclusion-button' type='button' name="addNewExclusion">
-         <?php _e('Add new Exclusion', 'shortpixel-image-optimiser'); ?>
-       </button>
          <info>
            <?php
            printf(esc_html__('Use this section to exclude images based on patterns. There are three types of exclusions: based on the file name, on the file path or on the file size. Each exclusion type can be applied to: all images and thumbnails of that image (including the scaled or original image), only thumbnails (in this case the original and scaled images are not excluded), only Custom Media images (in this case the items from the Media Library are not excluded) or only for a selection of thumbnails of your choice. Examples can be found in the fold-out area below.','shortpixel-image-optimiser'),
@@ -64,51 +108,26 @@ if ( ! defined( 'ABSPATH' ) ) {
              '<b>','</b>'
            );
            ?>
-           <p  class="settings-info">
-               <label><input type='checkbox' class='shortpixel-hide' data-toggle='exclude-settings-expanded'> >> <?php		printf(esc_html__('See examples')); ?></label>
-            </p>
-
-            <div class='exclude-settings-expanded toggleTarget ' id="exclude-settings-expanded">
-              <p  class="settings-info">
-              <?php
-                  printf(esc_html__('For the %s"Name"%s type, only the file name is matched, i.e. if you enter %s"flower.jpg"%s in the "Value" field, ShortPixel excludes all JPEG images ending in "flower" (lower case). If, on the other hand, you enter %s"logo"%s in the "Value" field, all images – PNG/JPEG/GIF – that contain the word "logo" in their name will be excluded: "nicelogo.jpg", "alllogos.png", "logo.gif"..', 'shortpixel-image-optimiser'),
-                  '<b>','</b>',
-                  '<b>','</b>',
-                  '<b>','</b>'
-                  );
-              ?>
-
-            </p>
-            <br />
-            <p  class="settings-info">
-              <?php
-                  printf(esc_html__('With the %s"Path"%s type, the entire path is matched (useful for excluding certain (sub)directories altogether). For example, if you enter %s"2022"%s in the "Value" field, all images uploaded in 2022 will be excluded, but also images that contain 2022 in the file name (as this is also part of the path). If you only want to exclude images uploaded in 2022, enter %s"/2022/"%s instead.','shortpixel-image-optimiser'),
-                  '<b>','</b>',
-                  '<b>','</b>',
-                  '<b>','</b>'
-                  );
-                  ?>
-                </p>
-                <br />
-                <p  class="settings-info">
-              <?php
-                  printf(esc_html__('For both types mentioned above ("Name" and "Path") you can activate the option %s"Check as regular expression"%s. It works in the same way, but requires a valid regular expression between slashes in the "Value" field. Special characters should be preceded by a \ as an escape character. For example, %s/[0-9]+[^\/]*\.(PNG|png)/%s in the "Value" field for the "Name" type excludes all PNG images that have a numeric prefix.','shortpixel-image-optimiser'),
-                  '<b>','</b>',
-                  '<b>','</b>'
-                );
-                ?>
-              </p>
-              <br />
-              <p  class="settings-info">
-                <?php
-                  printf(esc_html__('The %s"Size"%s type is applied to all images and thumbnails whose size is within the specified range. You can either use intervals or specify an exact size if you enable the %s"Exact sizes"%s option.','shortpixel-image-optimiser'),
-                  '<b>','</b>',
-                  '<b>','</b>'
-                );
-                ?>
-              </p>
-           </div> <!-- foldout -->
          </info>
+
+
+
+         <?php
+         $exclusion_format = "
+            <li %s %s %s >
+              <input type='hidden' name='exclusions[]' value='%s' />
+              <span>%s <br> %s </span>
+              <span>" . esc_html('Apply to:', 'shortpixel-image-optimiser') .  " <br> %s </span>
+              <span class='regular_expression %s'>" . esc_html('Regular expression', 'shortpixel-image-optimiser') . "<br> %s</span>
+              <span> <i class='shortpixel-icon edit'></i>
+              <i class='shortpixel-icon remove trash'></i> </span>
+            </li>
+         ";
+         ?>
+
+         <div id='exclusion-format' class='hidden'>
+            <?php echo $exclusion_format; ?>
+         </div>
 
          <?php
           $exclusions = UtilHelper::getExclusions();
@@ -119,6 +138,9 @@ if ( ! defined( 'ABSPATH' ) ) {
                  echo "<ul class='exclude-list'>";
                  echo '<input type="hidden" id="new-exclusion-index" name="new-index" value="' . (count($excludeArray)  -1) . '">';
                  $i = 0;
+
+
+
                  foreach($excludeArray as $index => $option)
                  {
                      $exclude_id  = 'id="exclude-' . $i . '"';
@@ -185,15 +207,8 @@ if ( ! defined( 'ABSPATH' ) ) {
                         $title = 'title="' . implode(', ', $thumbTitles) . '"';
                      }
 
+                     printf($exclusion_format, $class, $title, $exclude_id, $option_code, $field_name, $value, $apply_name, '', 'Yesno' );
 
-                     echo "<li $class $title $exclude_id>";
-
-                     echo "<input type='hidden' name='exclusions[]' value='$option_code' />";
-                     echo "<span>$field_name :</span>
-                           <span>$value</span>";
-                     echo "<span>$apply_name</span>";
-
-                     echo "</li>";
                      $i++;
                  }
                  echo "</ul>";
@@ -203,13 +218,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 
                 echo '<ul class="exclude-list"><li class="no-exclusion-item">' . __('No exclusions', 'shortpixel-image-optimiser') . '</li></ul>';
              }
-
          ?>
-
                      <div class='new-exclusion not-visible'>
+                         <!-- HEADER -->
                          <input type="hidden" name="edit-exclusion" value="">
                          <h3 class='new-title not-visible'><?php _e('New Exclusion' ,'shortpixel-image-optimiser'); ?></h3>
                          <h3 class='edit-title not-visible'><?php _e('Edit Exclusion' ,'shortpixel-image-optimiser'); ?></h3>
+
+
                          <div>
                            <label><?php _e('Type:', 'shortpixel-image-optimiser'); ?></label>
                             <select name="exclusion-type" class='new-exclusion-type'>
@@ -218,8 +234,13 @@ if ( ! defined( 'ABSPATH' ) ) {
                                <option value='size' data-example="widthXheight-widthXheight"><?php _e('Image Size', 'shortpixel-image-optimiser'); ?></option>
 
                            </select>
-
                          </div>
+
+                         <div class='value-option '>
+                           <label><?php _e('Value:', 'shortpixel-image-optimiser'); ?></label>
+                           <input type="text" name="exclusion-value" value="">
+                         </div>
+
 
                          <div class='regex-option'>
                            <label>&nbsp;</label>
@@ -232,10 +253,6 @@ if ( ! defined( 'ABSPATH' ) ) {
                            </div>
                          </div>
 
-                         <div class='value-option '>
-                           <label><?php _e('Value:', 'shortpixel-image-optimiser'); ?></label>
-                           <input type="text" name="exclusion-value" value="">
-                         </div>
 
                          <div class='size-option not-visible'>
                              <div class='exact-option'>
@@ -309,12 +326,14 @@ if ( ! defined( 'ABSPATH' ) ) {
                          </div>
                        </div> <!-- new exclusion -->
 
+                       <button class='button button-primary new-exclusion-button' type='button' name="addNewExclusion">
+                         <?php _e('Add new Exclusion', 'shortpixel-image-optimiser'); ?>
+                       </button>
 
              <info class='exclusion-save-reminder hidden'><?php _e('Reminder: Save the settings for the   exclusion changes to take effect!', 'shortpixel-image-optimiser'); ?></info>
      </content>
  </setting>
  <!-- // Exclude patterns -->
-
 
 </settinglist>
 
