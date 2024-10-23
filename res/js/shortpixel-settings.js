@@ -67,6 +67,11 @@ class ShortPixelSettings
 			  toggle.addEventListener('change', self.DoToggleExcludeEvent.bind(self));
 		});
 
+		// ApiKeyField toggle
+		var keyField = this.root.querySelector('.apifield i.eye');
+		keyField.addEventListener('click', self.ToggleApiFieldEvent.bind(self));
+
+
 	}
 
 	InitAjaxForm()
@@ -310,27 +315,6 @@ console.log(newExclusionInputs);
 			// Discover current tab
 			var displayPartEl = this.root.querySelector('input[name="display_part"]');
 			this.current_tab = displayPartEl.value;
-
-			/* Not sure why this is here, since display_part from html already sets the display part to the query string if there.
-			var uri = window.location.href.toString();
-			var params = new URLSearchParams(uri);
-			if (params.has('part'))
-			{
-
-				 var part = params.get('part');
-				 var target = this.root.querySelector('menu [data-link="' + part + '"]');
-
-				 if (target === null)
-				 {
-					  console.error('Tab ' +  part + ' not found');
-						return;
-				 }
-
-				 var event = new CustomEvent('click');
-				 target.dispatchEvent(event);
-			} */
-
-
 	}
 
 	InitModeSwitcher()
@@ -1007,6 +991,7 @@ NewExclusionUpdateType(element)
 
 NewExclusionUpdateThumbType(element)
 {
+	return;
 		 var value = element.value;
 
 		 var thumbSelect = this.root.querySelector('select[name="thumbnail-select"]');
@@ -1162,6 +1147,8 @@ ReadWriteExclusionForm(setting)
 		 }
 }
 
+
+// Function to add an exclusion to the interface.
 NewExclusionButtonAdd(element)
 {
 		 var result = this.ReadWriteExclusionForm(null);
@@ -1170,46 +1157,69 @@ NewExclusionButtonAdd(element)
 		 var strings = result[1];
 
 		 var listElement = this.root.querySelector('.exclude-list');
-		 var newElement = document.createElement('li');
-		 var inputElement = document.createElement('input');
+		// var newElement = document.createElement('li');
+		//var inputElement = document.createElement('input');
 
 		 var newIndexInput = document.getElementById('new-exclusion-index');
 		 var newIndex = parseInt(newIndexInput.value) + 1;
-		 newIndexInput.value = newIndex;
+		 //newIndexInput.value = newIndex;
 
-		 newElement.id = 'exclude-' + newIndex;
-		 newElement.addEventListener('click', this.NewExclusionShowInterfaceEvent.bind(this));
+		 newIndex = 'exclude-' + newIndex;
+		 //newElement.addEventListener('click', this.NewExclusionShowInterfaceEvent.bind(this));
 
-		 inputElement.type = 'hidden';
-		 inputElement.name = 'exclusions[]';
-		 inputElement.value = JSON.stringify(setting);
-
-
-		 newElement.appendChild(inputElement);
-
-		 var spans = [strings.type, setting.value, strings.apply];
-
-		 for (var i = 0; i < spans.length; i++)
-		 {
-			   var spanElement = document.createElement('span');
-			 	 spanElement.textContent = spans[i];
-
-				 newElement.appendChild(spanElement);
-		 }
-
-		 listElement.appendChild(newElement);
+		// inputElement.type = 'hidden';
+		 //inputElement.name = 'exclusions[]';
+		 var input_value = JSON.stringify(setting);
 
 		 var noItemsItem = this.root.querySelector('.exclude-list .no-exclusion-item');
+		 var itemClass = '';
+		 var title = '';
 		 if (noItemsItem !== null)
 	 	 {
-			  noItemsItem.classList.add('not-visible');
+			//  noItemsItem.classList.add('not-visible');
+				 itemClass = 'not-visible';
 		 }
+
+		 var format = document.getElementById('exclusion-format').innerHTML;
+		 console.log(format);
+
+		 var sprintf = (str, ...argv) => !argv.length ? str :
+		     sprintf(str = str.replace(sprintf.token||"$", argv.shift()), ...argv);
+		 sprintf.token = '%s';
+
+//  $class, $title, $exclude_id, $option_code, $field_name, $value, $apply_name, '', 'Yesno'
+//
+		 var newHTML = sprintf(format, itemClass, title,  newIndex, input_value, strings.type, setting.value, strings.apply, '', 'yesno'  );
+
+	//	 let textNode = document.createTextNode(newHTML);
+	//	 let divNode = document.createElement('div');
+	//	 divNode.append(textNode);
+		 var newHTML =  this.DecodeHtmlEntities(newHTML);
+	//	 var spans = [strings.type, setting.value, strings.apply];
+
+
+		 //listElement.appendChild(newElement);
+		 listElement.insertAdjacentHTML('beforeend', newHTML);
+
 
 		 this.ResetExclusionInputs();
 		 this.HideExclusionInterface();
 		 this.ShowExclusionSaveWarning();
-
 }
+
+DecodeHtmlEntities(str) {
+    const entities = {
+        '&lt;': '<',
+        '&gt;': '>',
+        '&amp;': '&',
+        '&quot;': '"',
+        '&apos;': "'"
+    };
+
+    return str.replace(/&[a-zA-Z0-9#]+;/g, (match) => entities[match] || match);
+}
+
+
 
 NewExclusionToggleSizeOption(target)
 {
@@ -1341,8 +1351,23 @@ RemoveExclusion(target)
 
 		 this.HideExclusionInterface();
 		 this.ShowExclusionSaveWarning();
+}
+
+ToggleApiFieldEvent(event)
+{
+	 event.preventDefault();
+
+	 var apiKeyField = this.root.querySelector('input[name="apiKey"]');
+	 if (apiKeyField.type == 'password')
+	 {
+		  apiKeyField.type = 'text';
+	 }
+	 else {
+	 	 apiKeyField.type = 'password';
+	 }
 
 }
+
 
 } // SPSettings  class
 

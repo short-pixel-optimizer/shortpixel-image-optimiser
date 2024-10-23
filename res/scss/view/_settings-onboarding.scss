@@ -70,7 +70,7 @@
         button.notice-dismiss {
           display: none;
         }
-     
+
   }
   .onboard-submit
   {
@@ -91,3 +91,62 @@
   }
 
 } // tab-nokey
+
+
+// Quicktour highlight syste
+&.page-quick-tour  // quick tour active on root element
+{
+
+}
+&.step-1-active { // highlight each step
+   .step-1-highlight {
+      border: 3px solid $blue_closed;
+   }
+}
+
+.quick-tour
+{
+   position: absolute;
+   z-index: 9;
+   width: 60%;
+   display: flex;
+   left: 30%;
+   top: 50px;
+   filter: unset;
+
+   .ufo  {
+        img {
+          width: 110px;
+        }
+   }
+   .content-wrapper
+   {
+      border: 2px solid $blue_default;
+      width: 500px;
+    //  height: 140px;
+      background: #fff;
+      margin-left: 8px;
+
+      // default state.
+      .step
+      {
+         h4 {
+            font-size: 14px;
+         }
+         display: none;
+         &.active
+         {
+            display: inline-block;
+         }
+      }
+
+   } // content wrapper
+   .navigation
+   {
+       button.hide { display: none; }
+   }
+   .close {
+      cursor: pointer;
+      float: right;
+   }
+}

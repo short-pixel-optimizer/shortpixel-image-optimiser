@@ -57,6 +57,7 @@ class SettingsModel extends \ShortPixel\Model
         'currentVersion' => ['s' => 'string', 'default' => ''],
 				'useCDN' => ['s' => 'boolean', 'default' => false],
 				'CDNDomain' => ['s' => 'string', 'default' => 'https://cdn.shortpixel.ai/spio'],
+        'redirectedSettings' => ['s' => 'int', 'default' => 0],
 
     );
 
@@ -111,7 +112,6 @@ class SettingsModel extends \ShortPixel\Model
     {
       if (isset($this->model[$name]))
       {
-      //   Log::addTrace('Setting changed: ' . $name);
         $this->settings[$name] =  $this->sanitize($name, $value);
 				$this->updated = true;
       }
@@ -166,6 +166,5 @@ class SettingsModel extends \ShortPixel\Model
 						$this->save();
 				}
 		}
-
 
 } // class

@@ -1137,7 +1137,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
         if(!$excludePatterns || !is_array($excludePatterns)) { return false; }
 
         foreach($excludePatterns as $item) {
-            $type = trim($item["type"]);
+            $type = (isset($item['type'])) ? trim($item["type"]) : '';
             if(in_array($type, array("name", "path", 'regex-name','regex-path'))) {
                 $pattern = trim($item["value"]);
                 $target = ($type == "name") ? $this->getFileName() : $this->getFullPath();
@@ -1237,7 +1237,7 @@ abstract class ImageModel extends \ShortPixel\Model\File\FileModel
 			$bool = false;
 
 			foreach($excludePatterns as $item) {
-					$type = trim($item["type"]);
+					$type = (isset($item['type'])) ? trim($item["type"]) : '';
 					if($type == "size") {
 
 							$width = $this->get('width');

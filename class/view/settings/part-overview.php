@@ -5,6 +5,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  exit; // Exit if accessed directly.
 }
 
+use \ShortPixel\Helper\UiHelper as UiHelper;
+
+
 $total_circle = 289.027;
 $total =round($view->averageCompression);
 
@@ -15,15 +18,17 @@ if( $total  >0 ) {
 
 $dashboard = $view->dashboard;
 $mainblock = $dashboard->mainblock;
+$bulkblock = $dashboard->bulkblock;
 ?>
 
 <section id="tab-overview" class="<?php echo ($this->display_part == 'overview') ? 'active setting-tab' :'setting-tab'; ?>" data-part="overview" >
 
-  <div class='wrapper top-row'>
+  <div class='wrapper top-row step-1-highlight'>
      <div class='panel first-panel'>
        <i class='shortpixel-icon mainblock-status <?php echo $mainblock->icon ?>'></i>
        <span>
          <h4><?php echo $mainblock->header ?></h4>
+         <hr>
          <p><?php echo $mainblock->message ?></p>
        </span>
 
@@ -55,6 +60,12 @@ $mainblock = $dashboard->mainblock;
              </svg>
 
        </div>
+       <?php if ($view->averageCompression > 30): ?>
+         <div class='rating'>
+          <?php echo UiHelper::getIcon('res/images/icon/7stars.svg'); ?>
+          <a class='button button-setting' href='https://wordpress.org/support/plugin/shortpixel-image-optimiser/reviews/#new-post' target="_blank"><?php esc_html_e('Rate us', 'shortpixel-image-optimiser'); ?></a>
+        </div>
+       <?php endif; ?>
      </div>
   </div>
 
@@ -69,13 +80,18 @@ $mainblock = $dashboard->mainblock;
         <button>Take Action <i class='shortpixel-icon arrow-right'></i></button>
 
      </div>
+
      <div class='panel second-panel dashboard-bulk'>
        <i class='shortpixel-icon switch'></i>
        <h4><?php _e('Bulk Actions', 'shortpixel-image-optimizer'); ?></h4>
 
-        <span class='status-wrapper'><i class='shortpixel-icon status-icon ok'></i><span class='status-line'></span></span>
 
-       <button>Take Action <i class='shortpixel-icon arrow-right'></i></button>
+        <span class='status-wrapper'><i class='shortpixel-icon status-icon <?php echo $bulkblock->icon ?>'></i><span class='status-line'><?php echo $bulkblock->message ?></span></span>
+
+      <?php if (true == $bulkblock->show_button): ?>
+        <button><?php _e('Go to Bulk Processing', 'shortpixel-image-optimiser'); ?><i class='shortpixel-icon arrow-right'></i></button>
+     <?php endif; ?>
+
      </div>
 
      <div class='panel third-panel dashboard-webp'>
@@ -96,13 +112,17 @@ $mainblock = $dashboard->mainblock;
       </name>
       <content>
 
-        <input name="apiKey" type="text" id="key" value="<?php echo esc_attr( $view->key->apiKey );?>"
-           class="regular-text" <?php echo($view->key->is_editable ? "" : 'disabled') ?> 'onkeyup="ShortPixel.apiKeyChanged()"'>
-         <button type="button" id="validate" class="button button-primary" title="<?php esc_html_e('Validate the provided API key','shortpixel-image-optimiser');?>"
+        <div class='apifield'>
+          <input name="apiKey" type="password" id="key" value="<?php echo esc_attr( $view->key->apiKey );?>"
+           class="regular-text" <?php echo($view->key->is_editable ? "" : 'disabled') ?> >
+           <i class="shortpixel-icon eye"></i>
+        </div>
+
+      <!--   <button type="button" id="validate" class="button button-primary" title="<?php esc_html_e('Validate the provided API key','shortpixel-image-optimiser');?>"
             onclick="ShortPixel.validateKey(this)" <?php echo $view->key->is_editable ? "" : "disabled"?> >
             <i class='shortpixel-icon save'></i>
             <?php esc_html_e('Save settings & validate','shortpixel-image-optimiser');?>
-        </button>
+        </button> -->
 
       <info>
           <?php if ($view->key->is_constant_key)

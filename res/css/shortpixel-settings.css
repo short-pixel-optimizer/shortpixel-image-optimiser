@@ -161,6 +161,9 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page .shortpixel-icon.edit {
   background-image: url("../images/icon/edit.svg");
 }
+.wrap.is-shortpixel-settings-page .shortpixel-icon.eye {
+  background-image: url("../images/icon/eye.svg");
+}
 .wrap.is-shortpixel-settings-page .shortpixel-icon.feedback {
   background-image: url("../images/icon/feedback.svg");
 }
@@ -222,10 +225,10 @@ div.spio-modal-title {
   background-image: url("../images/illustration/cocktail.svg");
   height: 104px;
 }
-.wrap.is-shortpixel-settings-page.simple .is-advanced {
+.wrap.is-shortpixel-settings-page.simple .is-advanced, .wrap.is-shortpixel-settings-page.quick-tour .is-advanced {
   display: none;
 }
-.wrap.is-shortpixel-settings-page.simple #viewmode-toggle .advanced {
+.wrap.is-shortpixel-settings-page.simple #viewmode-toggle .advanced, .wrap.is-shortpixel-settings-page.quick-tour #viewmode-toggle .advanced {
   display: none;
 }
 .wrap.is-shortpixel-settings-page.advanced #viewmode-toggle .simple {
@@ -794,6 +797,18 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .average-optimization .opt-circle-average text {
   dominant-baseline: central;
 }
+.wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .rating {
+  display: flex;
+  justify-content: space-between;
+  width: 70%;
+  margin: 0 0 10px 0;
+}
+.wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .rating img {
+  width: 90px;
+}
+.wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .rating .button {
+  padding: 2px 8px;
+}
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row {
   margin: 20px 0;
 }
@@ -860,7 +875,8 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page #tab-overview settinglist setting input {
   border: 1px solid #1ABDCA;
-  background: url("../images/icon/key.svg") no-repeat 1% center #fff;
+  background: url("../images/icon/key.svg") 1% center no-repeat;
+  background-color: #fff;
   padding-left: 30px;
   height: 36px;
 }
@@ -875,6 +891,15 @@ div.spio-modal-title {
   width: 12px;
   height: 12px;
   margin-right: 4px;
+}
+.wrap.is-shortpixel-settings-page #tab-overview settinglist setting .apifield {
+  position: relative;
+}
+.wrap.is-shortpixel-settings-page #tab-overview settinglist setting .apifield i {
+  position: absolute;
+  right: 3px;
+  top: 5px;
+  cursor: pointer;
 }
 .wrap.is-shortpixel-settings-page .deliverWebpTypes, .wrap.is-shortpixel-settings-page .deliverAlteringTypesPicture {
   margin: 16px 0 16px 16px;
@@ -896,8 +921,6 @@ div.spio-modal-title {
   margin-right: 20px;
   white-space: nowrap;
   line-height: 24px;
-  float: left;
-  clear: both;
   font-size: 12px;
   color: #116C7E;
 }
@@ -951,17 +974,22 @@ div.spio-modal-title {
   display: none;
 }
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion {
-  border: 3px solid #116C7E;
+  border: 1px solid #116C7E;
   padding: 16px 0;
-  margin: 0 16px;
   display: inline-block;
   background: #fff;
   position: relative;
   width: 100%;
 }
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion .grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion h3 {
-  padding: 8px 0;
+  padding: 8px 16px;
   border-bottom: 1px solid #92D5E3;
+  margin: 0;
 }
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion + .new-exclusion-button {
   display: none;
@@ -972,6 +1000,11 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion.not-visible + .new-exclusion-button {
   display: block;
 }
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion .thumbnail-select .thumbnail-options {
+  column-count: 3;
+  font-size: 12px;
+  color: #116C7E;
+}
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div {
   margin: 8px 0;
   height: auto;
@@ -979,9 +1012,6 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div label {
   min-width: 110px;
   display: inline-block;
-}
-.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div input, .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div select {
-  min-width: 250px;
 }
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div input.small, .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div select.small {
   width: 80px;
@@ -993,6 +1023,10 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div button {
   min-width: 75px;
   padding: 8px 6px;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div button i {
+  width: 15px;
+  height: 15px;
 }
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion div button[name=removeExclusion] {
   background: #ff0000;
@@ -1080,6 +1114,39 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page #tab-nokey .onboard-submit setting error {
   width: 100%;
+}
+.wrap.is-shortpixel-settings-page.step-1-active .step-1-highlight {
+  border: 3px solid #116C7E;
+}
+.wrap.is-shortpixel-settings-page .quick-tour {
+  position: absolute;
+  z-index: 9;
+  width: 60%;
+  display: flex;
+  left: 30%;
+  top: 50px;
+  filter: unset;
+}
+.wrap.is-shortpixel-settings-page .quick-tour .ufo img {
+  width: 110px;
+}
+.wrap.is-shortpixel-settings-page .quick-tour .content-wrapper {
+  border: 2px solid #1ABDCA;
+  width: 500px;
+  background: #fff;
+  margin-left: 8px;
+}
+.wrap.is-shortpixel-settings-page .quick-tour .content-wrapper .step {
+  display: none;
+}
+.wrap.is-shortpixel-settings-page .quick-tour .content-wrapper .step h4 {
+  font-size: 14px;
+}
+.wrap.is-shortpixel-settings-page .quick-tour .content-wrapper .step.active {
+  display: inline-block;
+}
+.wrap.is-shortpixel-settings-page .quick-tour .navigation button.hide {
+  display: none;
 }
 .wrap.is-shortpixel-settings-page #tab-tools .button {
   min-height: 44px;

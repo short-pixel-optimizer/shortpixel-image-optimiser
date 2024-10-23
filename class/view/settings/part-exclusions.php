@@ -126,7 +126,9 @@ if ( ! defined( 'ABSPATH' ) ) {
          ?>
 
          <div id='exclusion-format' class='hidden'>
-            <?php echo $exclusion_format; ?>
+
+            <?php echo htmlspecialchars( $exclusion_format); ?>
+
          </div>
 
          <?php
@@ -144,7 +146,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                  foreach($excludeArray as $index => $option)
                  {
                      $exclude_id  = 'id="exclude-' . $i . '"';
-                     $type = $option['type'];
+                     $type = (isset($option['type'])) ? $option['type'] : '';
                      $value = $option['value'];
                      $apply = $option['apply'];
                      $thumblist = isset($option['thumblist']) ? $option['thumblist'] : array();
@@ -226,6 +228,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                          <h3 class='edit-title not-visible'><?php _e('Edit Exclusion' ,'shortpixel-image-optimiser'); ?></h3>
 
 
+                      <div class='grid'>
                          <div>
                            <label><?php _e('Type:', 'shortpixel-image-optimiser'); ?></label>
                             <select name="exclusion-type" class='new-exclusion-type'>
@@ -236,58 +239,48 @@ if ( ! defined( 'ABSPATH' ) ) {
                            </select>
                          </div>
 
-                         <div class='value-option '>
-                           <label><?php _e('Value:', 'shortpixel-image-optimiser'); ?></label>
-                           <input type="text" name="exclusion-value" value="">
-                         </div>
+                         <div class='value-and-size'>
 
-
-                         <div class='regex-option'>
-                           <label>&nbsp;</label>
-                           <div class='switch_button'>
-                             <label>
-                               <input type="checkbox" class="switch" name="exclusion-regex">
-                               <div class="the_switch">&nbsp; </div>
-                               <?php esc_html_e('Check as regular expression','shortpixel-image-optimiser');?>
-                             </label>
-                           </div>
-                         </div>
-
-
-                         <div class='size-option not-visible'>
-                             <div class='exact-option'>
-                               <label>&nbsp;</label>
-                               <div class='switch_button'>
-                                 <label>
-                                   <input type="checkbox" class="switch" name="exclusion-exactsize">
-                                   <div class="the_switch">&nbsp; </div>
-                                   <?php esc_html_e('Exact sizes','shortpixel-image-optimiser');?>
-                                 </label>
-                               </div>
+                             <div class='value-option '>
+                               <label><?php _e('Value:', 'shortpixel-image-optimiser'); ?></label>
+                               <input type="text" name="exclusion-value" value="">
                              </div>
 
-                             <div class='size-option-range'>
-                               <div class='width'>
-                                   <label><?php _e('Width between:', 'shortpixel-image-optimiser'); ?></label>
-                                   <input type="number" class='small' name="exclusion-minwidth" value="">px -
-                                   <input type="number" class='small' name="exclusion-maxwidth" value="">px
-                               </div>
-                               <div class='height'>
-                                   <label><?php _e('Height between:', 'shortpixel-image-optimiser'); ?></label>
-                                   <input type="number" class='small' name="exclusion-minheight" value="">px -
-                                   <input type="number" class='small' name="exclusion-maxheight" value="">px
-                               </div>
-                             </div>
+                             <div class='size-option not-visible'>
+                                 <div class='exact-option'>
+                                   <label>&nbsp;</label>
+                                   <div class='switch_button'>
+                                     <label>
+                                       <input type="checkbox" class="switch" name="exclusion-exactsize">
+                                       <div class="the_switch">&nbsp; </div>
+                                       <?php esc_html_e('Exact sizes','shortpixel-image-optimiser');?>
+                                     </label>
+                                   </div>
+                                 </div>
 
-                             <div class='size-option-exact not-visible'>
-                               <div class='exact'>
-                                 <label>
-                                   <?php _e('Exact size:', 'shortpixel-image-optimiser'); ?></label>
-                                   <input type="number" class='small' name="exclusion-width" value="">px x
-                                   <input type="number" class='small' name="exclusion-height" value="">px
-                                </div>
+                                 <div class='size-option-range'>
+                                   <div class='width'>
+                                       <label><?php _e('Width between:', 'shortpixel-image-optimiser'); ?></label>
+                                       <input type="number" class='small' name="exclusion-minwidth" value="">px -
+                                       <input type="number" class='small' name="exclusion-maxwidth" value="">px
+                                   </div>
+                                   <div class='height'>
+                                       <label><?php _e('Height between:', 'shortpixel-image-optimiser'); ?></label>
+                                       <input type="number" class='small' name="exclusion-minheight" value="">px -
+                                       <input type="number" class='small' name="exclusion-maxheight" value="">px
+                                   </div>
+                                 </div>
+
+                                 <div class='size-option-exact not-visible'>
+                                   <div class='exact'>
+                                     <label>
+                                       <?php _e('Exact size:', 'shortpixel-image-optimiser'); ?></label>
+                                       <input type="number" class='small' name="exclusion-width" value="">px x
+                                       <input type="number" class='small' name="exclusion-height" value="">px
+                                    </div>
+                                 </div>
                              </div>
-                         </div>
+                        </div> <!-- value / size container -->
 
                          <div>
                            <label><?php _e('Apply To:', 'shortpixel-image-optimiser'); ?></label>
@@ -299,25 +292,45 @@ if ( ! defined( 'ABSPATH' ) ) {
                                </option>
                                <option value='selected-thumbs'><?php _e('Selected thumbnails', 'shortpixel-image-optimiser'); ?></option>
                            </select>
+                         </div>
 
-                           <select multiple="multiple" name='thumbnail-select' class='not-visible thumbnail-option'>
+                        <div class='regex-option'>
+                          <label>&nbsp;</label>
+                          <div class='switch_button'>
+                            <label>
+                              <input type="checkbox" class="switch" name="exclusion-regex">
+                              <div class="the_switch">&nbsp; </div>
+                              <?php esc_html_e('Check as regular expression','shortpixel-image-optimiser');?>
+                            </label>
+                          </div>
+                        </div>
+
+                      </div> <!-- // grid -->
+
+
+
+                         <div class='thumbnail-select'>
+                           <h4>Selected Thumbnails <hr></h4>
+                           <div class='thumbnail-options'>
                                <?php foreach($view->allThumbSizes as $name => $data)
                                {
                                    $nice_name = isset($data['nice-name']) ? $data['nice-name'] : $name;
-                                   echo "<option value='$name'>$nice_name</option>";
+                              //     echo "<option value='$name'>$nice_name</option>";
+                                printf('<label><input type="checkbox" name="thumbnail-select[]" value="%s" > %s </label>', $name, $nice_name);
                                } ?>
-                           </select>
-
+                          </div>
                          </div>
                          <div class='button-actions'>
-                           <button type="button" class="button" name='cancelEditExclusion'><?php _e('Close', 'shortpixel-image-optimiser'); ?></button>
 
                            <button type="button" class="button button-primary not-visible" name="addExclusion">
-                             <?php _e('Add Exclusion', 'shortpixel-image-optimiser'); ?></button>
+                             <i class="shortpixel-icon save"> </i>
+                             <?php _e('Save', 'shortpixel-image-optimiser'); ?></button>
 
                              <button type="button" class="button button-primary not-visible" name="updateExclusion">
                                  <?php _e("Update", 'shortpixel-image-optimiser');  ?>
                              </button>
+
+                           <button type="button" class="button" name='cancelEditExclusion'><?php _e('Close', 'shortpixel-image-optimiser'); ?></button>
 
                            <button type="button" class="button button-primary not-visible" name="removeExclusion">
                                <?php _e("Remove", 'shortpixel-image-optimiser');  ?>

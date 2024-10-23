@@ -16,6 +16,8 @@ class BulkController
    protected static $instance;
    protected static $logName = 'shortpixel-bulk-logs';
 
+   protected $logs;
+
    public function __construct()
    {
 
@@ -177,12 +179,14 @@ class BulkController
      $q->resetQueue();
    }
 
-
-
    public function getLogs()
    {
-        $logs = get_option(self::$logName, array());
-        return $logs;
+        if (is_null($this->logs))
+        {
+          $logs = get_option(self::$logName, array());
+          $this->logs = $logs;
+        }
+        return $this->logs;
    }
 
 	 public function getLog($logName)
@@ -196,6 +200,8 @@ class BulkController
 			 else
 			 	return false;
 	 }
+
+
 
 	 public function getLogData($fileName)
 	 {

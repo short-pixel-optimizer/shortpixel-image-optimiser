@@ -9,10 +9,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 ?>
 
 <div class="wrap is-shortpixel-settings-page <?php echo esc_attr($this->view_mode); ?> ">
+
 <header>
   <h1>
       <?php echo UIHelper::getIcon('res/images/illustration/logo_settings.svg'); ?>
   </h1>
+
 
   <div class='top-buttons'>
     <button><i class='shortpixel-icon notifications'></i><?php _e('Notifications','shortpixel-image-optimiser'); ?></button>
@@ -23,21 +25,23 @@ if ( ! defined( 'ABSPATH' ) ) {
   </div>
 </header>
 
-<?php $this->loadView('settings/part-header'); ?>
+<?php //$this->loadView('settings/part-header'); ?>
 
   <input type='checkbox' name='heavy_features' value='1' <?php echo ($this->disable_heavy_features) ? 'checked' : '' ?> class='shortpixel-hide' />
 
 
 <hr class='wp-header-end'>
 
-<form name='wp_shortpixel_options' action='<?php echo esc_url(add_query_arg('noheader', 'true')) ?>'  method='post' id='wp_shortpixel_options'>
-
-  <input type='hidden' name='display_part' value="<?php echo esc_attr($this->display_part) ?>" />
-  <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
 
 
 <article class='shortpixel-settings'>
-		<menu>
+  <?php if ($this->view->data->redirectedSettings < 3)
+  {
+    $this->loadView('settings/part-quicktour');
+  }
+  ?>
+
+  <menu>
 			<ul>
 				<li>
           <?php echo $this->settingLink('overview', __("Overview", "shortpixel-image-optimiser"), 'shortpixel-icon dashboard'); ?>
@@ -79,6 +83,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 			</ul>
 		</menu>
 		<section class="wrapper">
+      <form name='wp_shortpixel_options' action='<?php echo esc_url(add_query_arg('noheader', 'true')) ?>'  method='post' id='wp_shortpixel_options'>
+
+        <input type='hidden' name='display_part' value="<?php echo esc_attr($this->display_part) ?>" />
+        <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
 
           <?php $this->loadView('settings/part-overview'); ?>
           <?php $this->loadView('settings/part-optimisation'); ?>
@@ -89,6 +97,7 @@ if ( ! defined( 'ABSPATH' ) ) {
           <?php $this->loadView('settings/part-help'); ?>
 
 					<?php $this->loadView('settings/part-nokey'); ?>
+      </form>
           <?php $this->loadView('settings/part-tools'); ?>
           <?php
             if (Log::debugIsActive())

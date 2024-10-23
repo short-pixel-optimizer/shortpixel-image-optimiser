@@ -23,6 +23,8 @@ use ShortPixel\Controller\AdminNoticesController as AdminNoticesController;
 use ShortPixel\Controller\OptimizeController as OptimizeController;
 use ShortPixel\Controller\CacheController as CacheController;
 
+use ShortPixel\Controller\View\BulkViewController as BulkViewController;
+
 use ShortPixel\NextGenController as NextGenController;
 
 class SettingsViewController extends \ShortPixel\ViewController
@@ -72,13 +74,11 @@ class SettingsViewController extends \ShortPixel\ViewController
         $this->loadEnv();
         $this->checkPost(); // sets up post data
 
-      /*
-         This should be done now in ApiKeyModel
-      if (2 !== $this->model->redirectedSettings)
 
+        if ($this->model->redirectedSettings < 2)
         {
           $this->model->redirectedSettings = 2; // Prevents any redirects after loading settings
-        } */;
+        };
 
         if ($this->is_form_submit)
         {
@@ -202,6 +202,40 @@ class SettingsViewController extends \ShortPixel\ViewController
 					$this->doRedirect();
 
 			}
+
+      public function action_end_quick_tour()
+      {
+          $this->loadEnv();
+          $this->checkPost(false);
+
+          $this->model->redirectedSettings = 3;
+          Log::addTemp('Set RedirectedSe');
+          $this->doRedirect('reload');
+      }
+
+      public function action_debug_editSetting()
+      {
+        Log::addTEmp("ActioN: Edit Settings", $_POST);
+        $this->loadEnv();
+        $this->checkPost(false);
+
+        $setting_name =  isset($_POST['edit_setting']) ? sanitize_text_field($_POST['edit_setting']) : false;
+        $new_value = isset($_POST['new_value']) ? sanitize_text_field($_POST['new_value']) : false;
+      //  $apiKeyModel = (isset($_POST['apiKeySettings']) && 'true' == $_POST['apikeySettings'])  ? true : false;
+
+      // @todo ApiKeyModel will not really work, for no autosave/ public save, only via keychecks. Will be an issue when updating redirectedSettings, probably move back to settings where it was.
+        if ($setting_name !== false && $new_value !== false)
+        {
+        //    $model = ($apiKeyModel) ? $this->keyModel : $this->model;
+            $model = $this->model;
+            if ($model->exists($setting_name))
+            {
+               $this->model->$setting_name = $new_value;
+            }
+        }
+
+        $this->doRedirect();
+      }
 
 			public function action_debug_redirectBulk()
 			{
@@ -440,6 +474,7 @@ class SettingsViewController extends \ShortPixel\ViewController
 
          $this->view->allThumbSizes = $excludeOptions;
          $this->view->averageCompression = $statsControl->getAverageCompression();
+
         // $this->view->savedBandwidth = UiHelper::formatBytes( intval($this->view->data->savedSpace) * 10000,2);
 
          $this->view->cloudflare_constant = defined('SHORTPIXEL_CFTOKEN') ? true : false;
@@ -453,13 +488,16 @@ class SettingsViewController extends \ShortPixel\ViewController
            $this->avifServerCheck();
 
 
-
          // Set viewMode
 				 if (false === $this->view->key->is_verifiedkey)
 				 {
 					 	$view_mode = 'onboarding';
 						$this->display_part = 'nokey';
 				 }
+         elseif(true === true) // @todo The quick tour starter here.
+         {
+            $view_mode = 'page-quick-tour';
+         }
 				 else {
 					 $view_mode = get_user_option('shortpixel-settings-mode');
 	         if (false === $view_mode)
@@ -490,7 +528,6 @@ class SettingsViewController extends \ShortPixel\ViewController
 
         if (false === $this->view->key->is_verifiedkey)
         {
-
             $mainblock->ok = false;
             $mainblock->header = __('Issue with API Key', 'shortpixel-image-optimiser');
             $mainblock->message = __('Add your API Key to start optimizing', 'shortpixel-image-optimiser');
@@ -505,12 +542,35 @@ class SettingsViewController extends \ShortPixel\ViewController
 						 $custom_total = $statsController->find('custom', 'images');
 
 						 $custom_text = ($custom_total > 0) ? sprintf(esc_html__('and %s custom images ', 'shortpixel-image-optimiser'), $custom_total) : '';
-						 $mainblock->message = sprintf(esc_html__('%s media items %s optimized', 'shortpixel-image-optimiser'), $media_total, $custom_text);
+             $mainblock->message = '';
+
+             if ($media_total > 0)
+             {
+						         $mainblock->message = sprintf(esc_html__('%s media items %s optimized', 'shortpixel-image-optimiser'), $media_total, $custom_text);
+             }
+
 				}
 
+        $BulkViewController = BulkViewController::getInstance();
 
+        $logs = $BulkViewController->getLogs();
+        $date = '';
+
+        if (count($logs) > 0)
+        {
+           $latest = $logs[0];
+           $date = $latest['date'];
+        }
+
+        $message = (count($logs) == 0) ? esc_html__('No bulk was ran', 'shortpixel-image-optimiser') : sprintf(__(' Last bulk ran on:  %s','shortpixel-image-optimiser'), '<br>' . $date );
+
+        $bulkblock = new \stdClass;
+        $bulkblock->icon = 'ok';
+        $bulkblock->message = $message;
+        $bulkblock->show_button = (count($logs) == 0) ? true : false;
+
+        $this->view->dashboard->bulkblock = $bulkblock;
         $this->view->dashboard->mainblock = $mainblock;
-
       }
 
 			protected function loadAPiKeyData()
@@ -525,6 +585,7 @@ class SettingsViewController extends \ShortPixel\ViewController
 				 $keyObj->is_constant_key = $this->keyModel->is_constant();
 				 $keyObj->hide_api_key = $this->keyModel->is_hidden();
 				 $keyObj->apiKey = $keyController->getKeyForDisplay();
+        // $keyObj->redirectedSettings =
 
 				 $showApiKey = false;
 
@@ -590,8 +651,6 @@ class SettingsViewController extends \ShortPixel\ViewController
           $html = sprintf('<a href="%s" data-link="%s" %s >%s</a>', $link, $part, $active, $title);
 
           return $html;
-
-
       }
 
       /* Temporary function to check if HTaccess is writable.
@@ -691,7 +750,7 @@ class SettingsViewController extends \ShortPixel\ViewController
         //  $post = $this->processCloudFlare($post);
 
 					$check_key = false;
-Log::addTemp("view postdata", $post);
+
           if (isset($post['apiKey']) && false === $this->keyModel->is_constant())
 					{
 							$check_key = sanitize_text_field($post['apiKey']);
@@ -914,7 +973,7 @@ Log::addTemp("view postdata", $post);
 
 			protected function handleAjaxSave($redirect)
 			{
-				Log::addTrace('AJAX SAve');
+				Log::addTemp('AJAX SAve');
 						// Intercept new notices and add them
 						// Return JSON object with status of save action
 						$json = new \stdClass;

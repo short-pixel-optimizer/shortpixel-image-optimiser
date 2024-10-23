@@ -5,6 +5,9 @@ class ShortPixelOnboarding
 
     root;
     settings;
+    buttons = [];
+    steps = [];
+    step_counter;
 
     constructor(data)
     {
@@ -16,7 +19,6 @@ class ShortPixelOnboarding
 
     Init()
     {
-      console.log('init onboard');
       this.InitActions();
     }
 
@@ -27,6 +29,12 @@ class ShortPixelOnboarding
 
          var addButton = this.root.querySelector('button[name="add-key"]');
          addButton.addEventListener('click', this.AddKeyEvent.bind(this));
+
+         var quickTour = this.root.querySelector('.quick-tour');
+         if (quickTour !== null)
+         {
+            this.InitQuickTour();
+         }
     }
 
     InitNewKeySwitch()
@@ -154,6 +162,124 @@ class ShortPixelOnboarding
     IsEmailValid(email) {
         var regex = /^\S+@\S+\.\S+$/;
         return regex.test(email);
+    }
+
+    InitQuickTour()
+    {
+         var buttons = this.root.querySelectorAll('.quick-tour .navigation button');
+         for (var i = 0; i < buttons.length; i++)
+         {
+            let button = buttons[i];
+            button.addEventListener('click', this.QuickTourActionEvent.bind(this));
+            button.disable = () => { button.classList.add('hide'); };
+            button.enable = () => { button.classList.remove('hide'); };
+            this.buttons.push(button);
+         }
+
+         var closeButton = this.root.querySelector('.quick-tour .close');
+         closeButton.addEventListener('click', this.QuickTourCloseEvent.bind(this));
+
+         this.steps = this.root.querySelectorAll('.quick-tour .steps .step');
+         this.step_counter = this.root.querySelector('.quick-tour .navigation .step_count');
+
+         this.step_counter.innerText = '1/' + this.steps.length;
+
+
+
+    }
+
+    QuickTourActionEvent(event)
+    {
+       event.preventDefault();
+
+       for (var i = 0; i < this.steps.length; i++)
+       {
+          if (this.steps[i].classList.contains('active'))
+          {
+             var current_step_number = i;
+             var current_step = this.steps[i];
+             console.log('current_step', current_step_number);
+             break;
+          }
+       }
+
+       var next_step_number = current_step_number+1;
+       var previous_step_number = current_step_number-1;
+
+      var previous_button = this.buttons[0];
+       var next_button = this.buttons[1];
+
+       if (event.target.classList.contains('next') && next_step_number < this.steps.length)
+       {
+            this.QuickTourSwitchToItem(next_step_number);
+            var new_step = next_step_number;
+       }
+       else if (previous_step_number >= 0 && event.target.classList.contains('previous'))
+       {
+          this.QuickTourSwitchToItem(previous_step_number);
+          var new_step = previous_step_number;
+       }
+       else {
+
+         console.log('no steps done', event.target, next_step_number, previous_step_number);
+         return;
+       }
+
+       current_step.classList.remove('active');
+       this.root.classList.remove('step-' + current_step_number + '-active');
+       this.step_counter.innerText = (new_step +1) + '/' + this.steps.length;
+
+       if (new_step === (this.steps.length-1))
+       {
+          console.log('next step number at end?');
+          next_button.disable();
+       }
+       else {
+          next_button.enable();
+       }
+       if (new_step < 0)
+       {
+          previous_button.disable();
+       }
+       else {
+          previous_button.enable();
+       }
+    }
+
+    QuickTourSwitchToItem(item_number)
+    {
+       this.steps[item_number].classList.add('active');
+       if (typeof this.steps[item_number].dataset.screen !== 'undefined')
+       {
+           var ev = new CustomEvent('click');
+           var menuItem = this.root.querySelector('menu ul [data-link="' + this.steps[item_number].dataset.screen + '"]');
+           if (menuItem !== null)
+           {
+              menuItem.dispatchEvent(ev);
+           }
+       }
+
+
+       this.root.classList.add('step-' + item_number + '-active');
+
+
+    }
+
+    QuickTourCloseEvent(event)
+    {
+       event.preventDefault();
+
+       var formData = new FormData();
+       var spNonce = this.root.querySelector('input[name="sp-nonce"]').value;
+       formData.append('sp-nonce', spNonce);
+       formData.append('screen_action', 'action_end_quick_tour');
+
+       this.settings.DoAjaxRequest(formData, null, null).then( (json) => {
+           this.root.querySelector('.quick-tour').remove();
+           window.location.reload();
+
+       }) ;
+
     }
 
 }

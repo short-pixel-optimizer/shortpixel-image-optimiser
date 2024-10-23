@@ -362,6 +362,8 @@ class AjaxController
 					case 'action_debug_resetStats':
 					case 'action_debug_triggerNotice':
 					case 'action_request_new_key':
+					case 'action_debug_editSetting':
+					case 'action_end_quick_tour':
 						 $this->settingsFormSubmit($action);
 					break;
 					default:

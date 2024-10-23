@@ -42,12 +42,12 @@ var ShortPixel = function() {
         // Extracting the protected Array from within the 0 element of the parent array
         ShortPixel.setOptions(ShortPixelConstants[0]);
 
-				if (jQuery('#shortpixel-form-request-key').length > 0)
+				/*if (jQuery('#shortpixel-form-request-key').length > 0)
 				{
 					  jQuery('#pluginemail').on('change, keyup', jQuery.proxy(this.updateSignupEmail, this));
 						jQuery('#request_key').on('mouseenter', jQuery.proxy(this.updateSignupEmail, this));
 						jQuery('#request_key').on('click', jQuery.proxy(this.newApiKey, this));
-				}
+				} */
 
         if (window.ShortPixelProcessor)
 				{
@@ -192,10 +192,10 @@ var ShortPixel = function() {
 
     }
 
-    function apiKeyChanged() {
+    /* function apiKeyChanged() {
         jQuery(".wp-shortpixel-options .shortpixel-key-valid").css("display", "none");
         jQuery(".wp-shortpixel-options button#validate").css("display", "inline-block");
-    }
+    } */
 
 
 
@@ -522,7 +522,7 @@ var ShortPixel = function() {
         validateKey         : validateKey,
         enableResize        : enableResize,
         setupGeneralTab     : setupGeneralTab,
-        apiKeyChanged       : apiKeyChanged,
+  //      apiKeyChanged       : apiKeyChanged,
         checkThumbsUpdTotal : checkThumbsUpdTotal,
         initSettings        : initSettings,
       //  switchSettingsTab   : switchSettingsTab,
