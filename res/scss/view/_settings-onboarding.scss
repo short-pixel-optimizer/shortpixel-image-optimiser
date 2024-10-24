@@ -98,11 +98,27 @@
 {
 
 }
+/*
 &.step-1-active { // highlight each step
    .step-1-highlight {
-      border: 3px solid $blue_closed;
+      border: 3px solid $green_highlight;
    }
 }
+*/
+[class*='step-highlight-']
+{
+    border: 0px solid $green_highlight;
+    transition: 0.2s border linear;
+}
+
+@for $i from 0 through 6
+{
+  &.active-step-#{$i} .step-highlight-#{$i} { // highlight each step
+        border-width: 3px;
+  }
+
+}
+
 
 .quick-tour
 {
@@ -112,6 +128,8 @@
    display: flex;
    left: 30%;
    top: 50px;
+   text-align: center;
+   padding: 8px;
    filter: unset;
 
    .ufo  {
@@ -121,11 +139,14 @@
    }
    .content-wrapper
    {
-      border: 2px solid $blue_default;
+      border: 3px solid $green_highlight;
+      border-radius: 6px;
       width: 500px;
     //  height: 140px;
       background: #fff;
       margin-left: 8px;
+      position: relative;
+      padding: 8px 12px 8px;
 
       // default state.
       .step
@@ -139,14 +160,61 @@
             display: inline-block;
          }
       }
+      div.close
+      {
+         position: absolute;
+         right: 4px;
+         top: 4px;
+      //   width: 14px;
+        // height: 14px;
+         .shortpixel-icon
+         {
+            width:  14px;
+            height: 14px;
+
+         }
+      }
 
    } // content wrapper
    .navigation
    {
-       button.hide { display: none; }
+       text-align: center;
+       .step_count { display: none; }
+       .stepdot
+       {
+          width: 10px;
+          height: 11px;
+          border: 0;
+          background: $color-grey;
+          border-radius: 50%;
+          display: inline-block;
+          margin-right: 4px;
+          cursor: pointer;
+          &.active {
+             background: $blue_default;
+          }
+       }
+       button.show-start .next {
+            display: none;
+       }
+       button.show-next .start {
+            display: none;
+       }
+       .shortpixel-icon
+       {
+          width: 14px;
+          height: 14px;
+       }
+       .hide { display: none; }
+
    }
    .close {
-      cursor: pointer;
-      float: right;
+    cursor: pointer;
+  //    float: right;
+
+  //    svg { fill: $blue_default; }
+//      margin-right: 4px;
+//      margin-top: 4px;
+//      color: $blue_default;
    }
 }

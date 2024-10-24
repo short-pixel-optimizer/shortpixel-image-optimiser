@@ -35,7 +35,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 
 <article class='shortpixel-settings'>
-  <?php if ($this->view->data->redirectedSettings < 3)
+  <?php if ($this->view->data->redirectedSettings < 3 && $view->key->is_verifiedkey)
   {
     $this->loadView('settings/part-quicktour');
   }

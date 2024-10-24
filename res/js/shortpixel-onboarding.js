@@ -8,6 +8,7 @@ class ShortPixelOnboarding
     buttons = [];
     steps = [];
     step_counter;
+    stepdots;
 
     constructor(data)
     {
@@ -173,24 +174,46 @@ class ShortPixelOnboarding
             button.addEventListener('click', this.QuickTourActionEvent.bind(this));
             button.disable = () => { button.classList.add('hide'); };
             button.enable = () => { button.classList.remove('hide'); };
+            button.showNext = () => { button.classList.remove('show-start'); button.classList.add('show-next'); };
             this.buttons.push(button);
          }
 
-         var closeButton = this.root.querySelector('.quick-tour .close');
-         closeButton.addEventListener('click', this.QuickTourCloseEvent.bind(this));
+         var stepdots = this.root.querySelectorAll('.quick-tour .navigation .stepdot');
+         for (var i = 0;  i < stepdots.length; i++)
+         {
+            let stepdot = stepdots[i];
+            stepdot.addEventListener('click', this.QuickTourActionEvent.bind(this));
+            stepdot.disable = () => { button.classList.remove('active'); };
+            stepdot.enable = () => { button.classList.add('active'); };
+
+         }
+
+         this.stepdots = stepdots;
+
+         var closeButtons = this.root.querySelectorAll('.quick-tour .close');
+         for (var i = 0; i < closeButtons.length; i++)
+         {
+           closeButtons[i].addEventListener('click', this.QuickTourCloseEvent.bind(this));
+
+         }
 
          this.steps = this.root.querySelectorAll('.quick-tour .steps .step');
          this.step_counter = this.root.querySelector('.quick-tour .navigation .step_count');
 
          this.step_counter.innerText = '1/' + this.steps.length;
 
-
-
+         this.root.classList.add('active-step-' + 0);
     }
 
     QuickTourActionEvent(event)
     {
        event.preventDefault();
+
+       var target = event.target;
+       if (target.type !== 'button' && false == target.classList.contains('stepdot'))
+       {
+          target = target.closest('button');
+       }
 
        for (var i = 0; i < this.steps.length; i++)
        {
@@ -206,44 +229,76 @@ class ShortPixelOnboarding
        var next_step_number = current_step_number+1;
        var previous_step_number = current_step_number-1;
 
-      var previous_button = this.buttons[0];
-       var next_button = this.buttons[1];
+      //var previous_button = this.buttons[0];
+      var next_button = this.buttons[0];
+      var end_button = this.buttons[1];
 
-       if (event.target.classList.contains('next') && next_step_number < this.steps.length)
+       if (target.classList.contains('next') && next_step_number < this.steps.length)
        {
             this.QuickTourSwitchToItem(next_step_number);
             var new_step = next_step_number;
        }
-       else if (previous_step_number >= 0 && event.target.classList.contains('previous'))
+    /*   else if (previous_step_number >= 0 && target.classList.contains('previous'))
        {
           this.QuickTourSwitchToItem(previous_step_number);
           var new_step = previous_step_number;
+       } */
+       else if (target.classList.contains('stepdot')) {
+
+          var new_step = event.target.dataset.step;
+          if (new_step !== current_step_number)
+          {
+            this.QuickTourSwitchToItem(new_step);
+          }
        }
        else {
-
          console.log('no steps done', event.target, next_step_number, previous_step_number);
          return;
        }
 
+       // Somebody click on active dot.
+       if (new_step == current_step_number)
+       {
+          return;
+       }
+
        current_step.classList.remove('active');
-       this.root.classList.remove('step-' + current_step_number + '-active');
+       this.root.classList.remove('active-step-' + current_step_number);
        this.step_counter.innerText = (new_step +1) + '/' + this.steps.length;
 
-       if (new_step === (this.steps.length-1))
+console.log('newstep', new_step, this.steps.length-1);
+       if (new_step == (this.steps.length-1))
        {
           console.log('next step number at end?');
           next_button.disable();
+          end_button.enable();
        }
        else {
+          end_button.disable();
+          if (new_step > 0)
+          {
+              next_button.showNext();
+          }
           next_button.enable();
+          if (new_step == 1)
+          {
+            for (var i = 0; i < this.stepdots.length; i++)
+            {
+               this.stepdots[i].classList.remove('active','hide');
+            }
+          }
        }
-       if (new_step < 0)
+
+      this.stepdots[new_step-1].classList.add('active');
+      if (current_step_number > 0)
+        this.stepdots[current_step_number-1].classList.remove('active');
+             /* if (new_step < 0)
        {
           previous_button.disable();
        }
        else {
           previous_button.enable();
-       }
+       } */
     }
 
     QuickTourSwitchToItem(item_number)
@@ -259,10 +314,7 @@ class ShortPixelOnboarding
            }
        }
 
-
-       this.root.classList.add('step-' + item_number + '-active');
-
-
+       this.root.classList.add('active-step-' + item_number);
     }
 
     QuickTourCloseEvent(event)
@@ -273,6 +325,8 @@ class ShortPixelOnboarding
        var spNonce = this.root.querySelector('input[name="sp-nonce"]').value;
        formData.append('sp-nonce', spNonce);
        formData.append('screen_action', 'action_end_quick_tour');
+
+       this.QuickTourSwitchToItem(0);
 
        this.settings.DoAjaxRequest(formData, null, null).then( (json) => {
            this.root.querySelector('.quick-tour').remove();

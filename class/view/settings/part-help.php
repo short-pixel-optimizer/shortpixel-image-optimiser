@@ -10,7 +10,7 @@ use ShortPixel\Helper\UiHelper as UiHelper;
 
 <section id="tab-help" class="<?php echo ($this->display_part == 'help') ? 'active setting-tab' :'setting-tab'; ?>" data-part="help" >
 
-  <div class='help-center panels'>
+  <div class='help-center panels step-highlight-4'>
       <div>
           <span class='main-icon'><?php echo UIHelper::getIcon('res/images/icon/help.svg'); ?></span>
           <h4><?php _e('Knowledge base', 'shortpixel-image-optimiser'); ?></h4>

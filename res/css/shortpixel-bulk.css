@@ -87,6 +87,9 @@
 .wrap.is-shortpixel-bulk-page .shortpixel-icon.cdn {
   background-image: url("../images/icon/cdn.svg");
 }
+.wrap.is-shortpixel-bulk-page .shortpixel-icon.close {
+  background-image: url("../images/icon/close.svg");
+}
 .wrap.is-shortpixel-bulk-page .shortpixel-icon.dashboard {
   background-image: url("../images/icon/dashboard.svg");
 }
@@ -119,6 +122,12 @@
 }
 .wrap.is-shortpixel-bulk-page .shortpixel-icon.notifications {
   background-image: url("../images/icon/notifications.svg");
+}
+.wrap.is-shortpixel-bulk-page .shortpixel-icon.robo {
+  background-image: url("../images/icon/robo.svg");
+}
+.wrap.is-shortpixel-bulk-page .shortpixel-icon.rocket {
+  background-image: url("../images/icon/rocket.svg");
 }
 .wrap.is-shortpixel-bulk-page .shortpixel-icon.tools {
   background-image: url("../images/icon/tools.svg");

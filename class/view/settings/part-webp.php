@@ -44,10 +44,10 @@ if( $this->is_nginx ){
 
 <settinglist>
 
-  <h2><?php esc_html_e('Next Generation Images','shortpixel-image-optimiser');?></h2>
+  <h2><?php esc_html_e('Deliver Next Generation Images & CDN','shortpixel-image-optimiser');?></h2>
 
   <!-- next generation -->
-  <setting class='switch'>
+  <setting class='switch step-highlight-3'>
 
     <content>
 
@@ -66,7 +66,7 @@ if( $this->is_nginx ){
   <!-- /next generation -->
 
   <!-- avif -->
-  <setting class='switch'>
+  <setting class='switch step-highlight-3'>
 
       <content>
         <?php
@@ -108,18 +108,10 @@ if( $this->is_nginx ){
   <!-- // avif -->
 
 
-<setting>
+<setting class='switch step-highlight-3'>
 
   <content>
 
-<!--
-    <switch>
-      <label>
-        <input type="checkbox" class="switch" name="deliverWebp" data-toggle="deliverTypes" value="1" <?php checked( ($view->data->deliverWebp > 0), true);?>>
-        <div class="the_switch">&nbsp; </div>
-        <?php esc_html_e('Deliver the next generation versions of the images in the front-end:','shortpixel-image-optimiser');?>
-      </label>
-   </switch>  -->
 
    <?php $this->printSwitchButton(
          ['name' => 'deliverWebp',
@@ -198,7 +190,7 @@ if( $this->is_nginx ){
   <?php endif; ?>
   </setting>
 
-  <setting class='switch'>
+  <setting class='switch step-highlight-3'>
     <content>
   <?php $this->printSwitchButton(
         ['name' => 'useCDN',

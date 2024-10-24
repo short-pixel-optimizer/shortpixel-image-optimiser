@@ -13,8 +13,7 @@
        margin-right: 20px;
        white-space:nowrap;
        line-height: 24px;
-      // float: left;
-    //   clear: both;
+
        font-size: 12px;
        color: $blue_closed;
        input { margin-right: 8px; }
@@ -23,6 +22,23 @@
     }
 
   } // setting
+
+  .grid-thumbnails
+  {
+
+      column-count: 3;
+      column-width: 220px;
+    > span {
+       margin-right: 20px;
+       white-space:nowrap;
+       line-height: 24px;
+       display: inherit;
+       font-size: 12px;
+       color: $blue_closed;
+       input { margin-right: 8px; }
+    }
+
+  }
 
   .exclude-patterns-setting
   {
@@ -49,8 +65,11 @@
     ul.exclude-list {
         min-height: 30px;
          li {
-            display: flex;
-            justify-content: space-between;
+          //  display: flex;
+          //  justify-content: space-between;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+
             div {
             }
             width: 100%;
@@ -61,7 +80,9 @@
             border-radius: 8px;
             margin: 8px 8px 0 0;
             cursor: pointer;
-
+            .regular-container {
+               display: none;
+            }
             &.no-exclusion-item
             {
                cursor: default;
@@ -71,14 +92,19 @@
 
             }
             &.has-error {
-              background: #ff0000;
-              border-color: #ff0000;
+              //background: #ff0000;
+            //  border-color: #ff0000;
+              border: 2px solid #ff0000;
             }
             &.is-regex {
-              border-right: green;
-              border-right-width: 10px;
-              border-style: solid;
+            //  border-right: green;
+            //  border-right-width: 10px;
+              //border-style: solid;
+              .regular-container {
+                display: inline;
+              }
             }
+
          }
          margin: 20px 0;
          .not-visible {
@@ -89,11 +115,12 @@
     .new-exclusion
     {
         border: 1px solid $blue_closed;
-        padding: 16px 0;
+        padding: 16px;
         display: inline-block;
         background: #fff;
         position: relative;
         width: 100%;
+        box-sizing: border-box;
 
         .grid
         {
@@ -120,23 +147,28 @@
               display: block;
            }
         }
-
+/*
         .thumbnail-select
         {
            .thumbnail-options
            {
              column-count: 3;
+             column-width: 220px;
+           > span {
+              margin-right: 20px;
+              white-space:nowrap;
+              line-height: 24px;
+             // float: left;
+           //   clear: both;
+              font-size: 12px;
+              color: $blue_closed;
+              input { margin-right: 8px; }
 
-            // margin-right: 20px;
-          //   white-space:nowrap;
-            // line-height: 24px;
-          //   float: left;
-          //   clear: both;
-             font-size: 12px;
-             color: $blue_closed;
+
            }
+         }
         }
-
+*/
 
          div
         {

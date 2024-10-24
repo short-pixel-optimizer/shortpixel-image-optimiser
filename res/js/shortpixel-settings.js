@@ -89,7 +89,7 @@ class ShortPixelSettings
 		 	var self = this;
 			// Events for the New Exclusion dialog
 			var newExclusionInputs = this.root.querySelectorAll('.new-exclusion select, .new-exclusion input, .new-exclusion button, button[name="cancelEditExclusion"]');
-console.log(newExclusionInputs);
+
 			newExclusionInputs.forEach(function (input)
 			{
 					switch (input.name)
@@ -591,9 +591,7 @@ json = null;
 var json;
 if (response.ok)
 {
-	console.log('this', this);
 	 json = await response.json();
-	 console.log('json ajax', json);
 	 return json;
 
 }
@@ -606,7 +604,6 @@ FormResponseEvent(json)
 		let saveDialog = document.querySelector('.ajax-save-done');
 		saveDialog.classList.add('show');
 
-			console.log('json', json);
 			if (json.redirect)
 			{
 				 if (json.redirect == 'reload')
@@ -654,7 +651,7 @@ DashBoardWarningEvent(warning, matches)
 	 var statusWrapper = dashBox.querySelector('.status-wrapper');
 	 if (null === statusWrapper)
 	 {
-		  console.log('issue with statuswrapper');
+		  console.error('issue with statuswrapper');
 			return;
 	 }
  	 Array.from(statusWrapper.children).forEach(e => e.remove());
@@ -693,27 +690,7 @@ DashBoardWarningEvent(warning, matches)
 		 statusLine.textContent = linestring;
 
 		 statusWrapper.appendChild(statusLine).appendChild(statusIcon);
-		 //statusWrapper.;
 	}
-
-
-
-/*	 dashBox.querySelector('.status-icon');
-	 if (null !== statusIcon)
-	 {
-		  statusIcon.classList.remove('ok', 'warning', 'alert');
-			statusIcon.classList.add(status);
-	 } */
-
-
-
-	/* var statusLine = dashBox.querySelector('.status-line');
-	 if (null !== statusLine)
-	 {
-		  var linestring = this.strings.dashboard_strings[status];
-		  statusLine.textContent = linestring;
-	 } */
-
 
 	 // Button display
 	 var button = dashBox.querySelector('button');
@@ -862,34 +839,34 @@ NewExclusionShowInterfaceEvent(event)
 			var id = 'new';
 			var title = this.root.querySelector('.new-exclusion h3.new-title');
 			var button = this.root.querySelector('.new-exclusion .button-actions button[name="addExclusion"]');
+			button.classList.remove('hidden', 'not-visible');
 	 }
 	 else {
 	 	  var mode = 'edit';
 
-			if (event.target.id)
-			{
-				 var id = event.target.id;
-				 var parent = event.target;
-			}
-			else {
-				 var id = event.target.parentElement.id;
-				 var parent = event.target.parentElement;
-			}
+			let mainEl = event.target.closest('li');
+			var id = mainEl.id;
+
+
+			var exclusionModal = this.root.querySelector('.new-exclusion');
+		//	event.target.closest('li').after(exclusionModal);
+			//exclusionModal.parentElement = event.target.closest('li').after(exclusionModal);
+
 			var title = this.root.querySelector('.new-exclusion h3.edit-title');
-			var button = this.root.querySelector('.new-exclusion .button-actions button[name="removeExclusion"]');
+			//var button = this.root.querySelector('.new-exclusion .button-actions button[name="removeExclusion"]');
 			var input = this.root.querySelector('.new-exclusion input[name="edit-exclusion"]')
 
 			updateButton.classList.remove('not-visible', 'hidden');
 
 			input.value = id;
-			var dataElement = parent.querySelector('input').value;
+			var dataElement = event.target.closest('li').querySelector('input').value;
 			var data = JSON.parse(dataElement);
 			this.ReadWriteExclusionForm(data)
 
 	 }
 
  	 title.classList.remove('not-visible', 'hidden');
-	 button.classList.remove('not-visible', 'hidden');
+	 //button.classList.remove('not-visible', 'hidden');
 
 }
 
@@ -919,12 +896,12 @@ HideExclusionInterface()
 
 }
 
-// EXCLUSIONS
+// EXCLUSIONS - this is not conclusive, some elements have direct events .  This needs some brushing up to make more consistent.
 NewExclusionUpdateEvent(event)
 {
 	var target = event.target;
 	var inputName = event.target.name;
-	console.log('Update Event - Target Name ' + inputName);
+
 	switch(inputName)
 	{
 		 case 'exclusion-type':
@@ -991,10 +968,14 @@ NewExclusionUpdateType(element)
 
 NewExclusionUpdateThumbType(element)
 {
-	return;
 		 var value = element.value;
 
-		 var thumbSelect = this.root.querySelector('select[name="thumbnail-select"]');
+		 var thumbSelect = this.root.querySelector('div.thumbnail-select');
+		 if (null === thumbSelect)
+		 {
+			  console.error('Something wrong with the thumbnails selector');
+				return false;
+		 }
 
 		 if (value == 'selected-thumbs')
 		 {
@@ -1040,7 +1021,7 @@ ReadWriteExclusionForm(setting)
 			strings.apply = applyOption.options[applyOption.selectedIndex].innerText;
 		}
 		else {
-			if (setting.type.indexOf('regex') != -1)
+			if (setting.type && setting.type.indexOf('regex') != -1)
 			{
 				 typeOption.value = setting.type.replace('regex-', '');
 			}
@@ -1054,22 +1035,25 @@ ReadWriteExclusionForm(setting)
 		 // When selected thumbnails option is selected, add the thumbnails to the list.
 		 if ('selected-thumbs' == applyOption.value)
 		 {
-			  var thumbOption = this.root.querySelector('.new-exclusion select[name="thumbnail-select"]');
+			  var thumbOptions = this.root.querySelectorAll('.new-exclusion input[name="thumbnail-select[]"]');
 				var thumblist  = [];
 				if ('read' === mode)
 				{
-					for(var i =0; i < thumbOption.selectedOptions.length; i++)
+					for(var i =0; i < thumbOptions.length; i++)
 					{
-						 thumblist.push(thumbOption.selectedOptions[i].value);
+						 if (thumbOptions[i].checked == true)
+						 {
+						 	thumblist.push(thumbOptions[i].value);
+						 }
 					}
 				setting.thumblist = thumblist;
 				}
 				else if ('write' === mode){
-					 for (var i = 0; i < thumbOption.options.length; i++)
+					 for (var i = 0; i < thumbOptions.length; i++)
 				 	 {
-						 	if (setting.thumblist.indexOf(thumbOption[i].value) != -1)
+						 	if (setting.thumblist.indexOf(thumbOptions[i].value) != -1)
 							{
-								 thumbOption[i].selected = true;
+								 thumbOptions[i].checked = true;
 							}
 				 	 }
 
@@ -1084,7 +1068,7 @@ ReadWriteExclusionForm(setting)
 		 }
 		 else if ('write' === mode)
 		 {
-			   if (setting.type.indexOf('regex') != -1)
+			   if (setting.type && setting.type.indexOf('regex') != -1)
 				 {
 					  regexOption.checked = true;
 				 }
@@ -1149,26 +1133,26 @@ ReadWriteExclusionForm(setting)
 
 
 // Function to add an exclusion to the interface.
-NewExclusionButtonAdd(element)
+NewExclusionButtonAdd(target, update)
 {
 		 var result = this.ReadWriteExclusionForm(null);
-		 console.log('newExlcbuttonAdd', result);
+
 		 var setting = result[0];
 		 var strings = result[1];
 
 		 var listElement = this.root.querySelector('.exclude-list');
-		// var newElement = document.createElement('li');
-		//var inputElement = document.createElement('input');
 
-		 var newIndexInput = document.getElementById('new-exclusion-index');
-		 var newIndex = parseInt(newIndexInput.value) + 1;
-		 //newIndexInput.value = newIndex;
+		 if (typeof update === 'undefined')
+		 {
+			 var newIndexInput = document.getElementById('new-exclusion-index');
+			 var newIndex = parseInt(newIndexInput.value) + 1;
+			 newIndexInput.value = newIndex;
+			 var newIndexString = 'id="exclude-' + newIndex + '"';
+		 }
+		 else {
+		 	 var newIndexString = 'id="' + update + '"';
+		 }
 
-		 newIndex = 'exclude-' + newIndex;
-		 //newElement.addEventListener('click', this.NewExclusionShowInterfaceEvent.bind(this));
-
-		// inputElement.type = 'hidden';
-		 //inputElement.name = 'exclusions[]';
 		 var input_value = JSON.stringify(setting);
 
 		 var noItemsItem = this.root.querySelector('.exclude-list .no-exclusion-item');
@@ -1176,30 +1160,47 @@ NewExclusionButtonAdd(element)
 		 var title = '';
 		 if (noItemsItem !== null)
 	 	 {
-			//  noItemsItem.classList.add('not-visible');
 				 itemClass = 'not-visible';
 		 }
 
+		 if (setting.type && setting.type.indexOf('regex') != -1)
+		 {
+			  itemClass += ' is-regex';
+		 }
+
 		 var format = document.getElementById('exclusion-format').innerHTML;
-		 console.log(format);
 
 		 var sprintf = (str, ...argv) => !argv.length ? str :
 		     sprintf(str = str.replace(sprintf.token||"$", argv.shift()), ...argv);
 		 sprintf.token = '%s';
 
 //  $class, $title, $exclude_id, $option_code, $field_name, $value, $apply_name, '', 'Yesno'
-//
-		 var newHTML = sprintf(format, itemClass, title,  newIndex, input_value, strings.type, setting.value, strings.apply, '', 'yesno'  );
+		 var newHTML = sprintf(format, 'class="' + itemClass + '"', title,  newIndexString, input_value, strings.type, setting.value, strings.apply, '', ''  );
 
-	//	 let textNode = document.createTextNode(newHTML);
-	//	 let divNode = document.createElement('div');
-	//	 divNode.append(textNode);
 		 var newHTML =  this.DecodeHtmlEntities(newHTML);
-	//	 var spans = [strings.type, setting.value, strings.apply];
 
+		 if (typeof update !== 'undefined')
+		 {
+			 	let updateEl = listElement.querySelector('#' + update);
+				updateEl.outerHTML = newHTML;
+		 }
+		 else {
+			 listElement.insertAdjacentHTML('beforeend', newHTML);
+		 }
 
-		 //listElement.appendChild(newElement);
-		 listElement.insertAdjacentHTML('beforeend', newHTML);
+		 if (typeof update === 'undefined')
+		 {
+			 var newElement = listElement.querySelector('#exclude-' + newIndex);
+		 }
+		 else {
+		 	 var newElement = listElement.querySelector('#' + update);
+		 }
+
+		 var editButton = newElement.querySelector('i.edit');
+		 editButton.addEventListener('click', this.NewExclusionShowInterfaceEvent.bind(this));
+
+		 var removeButton = newElement.querySelector('i.remove');
+		 removeButton.addEventListener('click', this.RemoveExclusion.bind(this));
 
 
 		 this.ResetExclusionInputs();
@@ -1286,9 +1287,12 @@ ResetExclusionInputs()
 UpdateExclusion()
 {
 	var id = this.root.querySelector('.new-exclusion input[name="edit-exclusion"]');
-	var result = this.ReadWriteExclusionForm();
-	var setting = result[0];
-	var strings = result[1];
+//	var result = this.ReadWriteExclusionForm();
+//	var setting = result[0];
+//	var strings = result[1];
+
+	this.NewExclusionButtonAdd(null, id.value);
+	return;
 
 	if (id)
 	{
@@ -1337,19 +1341,14 @@ ShowExclusionSaveWarning()
 		}
 }
 
-RemoveExclusion(target)
+RemoveExclusion(event)
 {
-		 var id = this.root.querySelector('.new-exclusion input[name="edit-exclusion"]');
-		 if (id)
-		 {
-			   var element = this.root.querySelector('.exclude-list #' +id.value);
-				 if (null !== element)
-				 {
-					  element.remove();
-				 }
-		 }
+		event.preventDefault();
+		var target = event.target;
+		 //var id = this.root.querySelector('.new-exclusion input[name="edit-exclusion"]');
+		 var element = target.closest('li');
+		 element.remove();
 
-		 this.HideExclusionInterface();
 		 this.ShowExclusionSaveWarning();
 }
 

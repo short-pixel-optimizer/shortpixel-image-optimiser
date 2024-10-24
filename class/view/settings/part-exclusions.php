@@ -117,8 +117,8 @@ if ( ! defined( 'ABSPATH' ) ) {
             <li %s %s %s >
               <input type='hidden' name='exclusions[]' value='%s' />
               <span>%s <br> %s </span>
-              <span>" . esc_html('Apply to:', 'shortpixel-image-optimiser') .  " <br> %s </span>
-              <span class='regular_expression %s'>" . esc_html('Regular expression', 'shortpixel-image-optimiser') . "<br> %s</span>
+              <span>" . esc_html__('Apply to:', 'shortpixel-image-optimiser') .  " <br> %s </span>
+              <span class='regular_expression'><span class='regular-container %s'>" . esc_html__('Regular expression', 'shortpixel-image-optimiser') . " %s</span>&nbsp;</span>
               <span> <i class='shortpixel-icon edit'></i>
               <i class='shortpixel-icon remove trash'></i> </span>
             </li>
@@ -209,7 +209,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                         $title = 'title="' . implode(', ', $thumbTitles) . '"';
                      }
 
-                     printf($exclusion_format, $class, $title, $exclude_id, $option_code, $field_name, $value, $apply_name, '', 'Yesno' );
+                     printf($exclusion_format, $class, $title, $exclude_id, $option_code, $field_name, $value, $apply_name, '', '' );
 
                      $i++;
                  }
@@ -228,7 +228,6 @@ if ( ! defined( 'ABSPATH' ) ) {
                          <h3 class='edit-title not-visible'><?php _e('Edit Exclusion' ,'shortpixel-image-optimiser'); ?></h3>
 
 
-                      <div class='grid'>
                          <div>
                            <label><?php _e('Type:', 'shortpixel-image-optimiser'); ?></label>
                             <select name="exclusion-type" class='new-exclusion-type'>
@@ -305,18 +304,24 @@ if ( ! defined( 'ABSPATH' ) ) {
                           </div>
                         </div>
 
-                      </div> <!-- // grid -->
-
-
 
                          <div class='thumbnail-select'>
                            <h4>Selected Thumbnails <hr></h4>
-                           <div class='thumbnail-options'>
-                               <?php foreach($view->allThumbSizes as $name => $data)
+                           <div class='grid-thumbnails'>
+                               <?php foreach($view->allThumbSizes as $key => $data)
                                {
-                                   $nice_name = isset($data['nice-name']) ? $data['nice-name'] : $name;
+                                  // $nice_name = isset($data['nice-name']) ? $data['nice-name'] : $name;
+                                   $width = isset($data['width']) ? $data['width'] : '*';
+                                   $height = isset($data['height']) ? $data['height'] : '*';
+
+                                   $name = isset($data['nice-name']) ? $data['nice-name'] : ucfirst($key);
+                                   $label = $name . " ( $width &times $height )";
+
+
+                                   //$checked = in_array($sizeKey, $thumbnailselect) ? 'checked' : '';
+
                               //     echo "<option value='$name'>$nice_name</option>";
-                                printf('<label><input type="checkbox" name="thumbnail-select[]" value="%s" > %s </label>', $name, $nice_name);
+                                printf('<span><label><input type="checkbox" name="thumbnail-select[]" value="%s" > %s </label></span>', $key, $label);
                                } ?>
                           </div>
                          </div>

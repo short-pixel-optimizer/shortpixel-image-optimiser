@@ -87,7 +87,7 @@ $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->u
  <pre><?php var_export($this->keyModel->getData()); ?></pre>
 
 
-    <form method="POST" action="<?php echo esc_url(add_query_arg(['sp-action' => 'action_debug_editSetting'],$debugUrl)) ?>">
+<!--    <form method="POST" action="<?php echo esc_url(add_query_arg(['sp-action' => 'action_debug_editSetting'],$debugUrl)) ?>">
 
       <?php wp_nonce_field($this->form_action, 'sp-nonce'); ?>
       <input type='hidden' name="apikeySettings" value="true">
@@ -103,7 +103,7 @@ $debugUrl = add_query_arg(array('part' => 'debug', 'noheader' => true), $this->u
     <button class='button' type='submit'>Update</button>
 </form>
 
-
+-->
     <?php $settings = (array) $this->view->data;
      ksort($settings);
     ?>

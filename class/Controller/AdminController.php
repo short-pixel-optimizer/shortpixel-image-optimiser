@@ -37,8 +37,6 @@ class AdminController extends \ShortPixel\Controller
       return self::$instance;
     }
 
-
-
     public function addAttachmentHook($post_id)
     {
           $fs = \wpSPIO()->filesystem();

@@ -23,7 +23,7 @@ $bulkblock = $dashboard->bulkblock;
 
 <section id="tab-overview" class="<?php echo ($this->display_part == 'overview') ? 'active setting-tab' :'setting-tab'; ?>" data-part="overview" >
 
-  <div class='wrapper top-row step-1-highlight'>
+  <div class='wrapper top-row step-highlight-1'>
      <div class='panel first-panel'>
        <i class='shortpixel-icon mainblock-status <?php echo $mainblock->icon ?>'></i>
        <span>
@@ -69,7 +69,7 @@ $bulkblock = $dashboard->bulkblock;
      </div>
   </div>
 
-  <div class='wrapper middle-row'>
+  <div class='wrapper middle-row step-highlight-1'>
      <div class='panel first-panel dashboard-optimize'>
 
         <i class='shortpixel-icon box-archive'></i>

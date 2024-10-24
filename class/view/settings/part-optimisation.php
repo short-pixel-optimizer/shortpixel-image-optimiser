@@ -33,12 +33,12 @@ if (true === \wpSPIO()->env()->useTrustedMode())
       ?>
 
     <!-- general settings -->
-    <settinglist>
+    <settinglist >
 
         <h2><?php esc_html_e('Image Optimization Settings','shortpixel-image-optimiser');?></h2>
 
          <!-- compression type -->
-          <setting id='compression-type'>
+          <setting id='compression-type' class="step-highlight-2">
             <name>
                 <?php esc_html_e('Compression type:','shortpixel-image-optimiser');?>
             </name>
@@ -110,7 +110,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
           <gridbox class='width_half'>
 
           <!-- Thumbnail compression -->
-          <setting class='switch'>
+          <setting class='switch' class="step-highlight-2">
             <content>
               <?php $this->printSwitchButton(
                     ['name' => 'processThumbnails',
@@ -323,7 +323,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
           <h3><?php _e('Smartcrop & Resize', 'shortpixel-image-optimiser'); ?></h3>
 
           <!-- Enable Smartcrop -->
-            <setting class='switch'>
+            <setting class='switch step-highlight-2'>
               <content>
                 <switch>
                   <label>
@@ -362,7 +362,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
           </div>
 -->
           <!-- Resize Large Image -->
-          <setting>
+          <setting class="step-highlight-2">
             <content>
 							<?php  $resizeDisabled = (! $this->view->data->resizeImages) ? 'disabled' : '';
 								 // @todo Inline styling here can be decluttered.
