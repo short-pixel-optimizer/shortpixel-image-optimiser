@@ -17,15 +17,22 @@ i.documentation {
 }
 
 div.spio-modal-shade {
-  position: fixed; /* Stay in place */
-  z-index: 10; /* Sit on top - zindex wars  */
+  position: fixed;
+  /* Stay in place */
+  z-index: 10;
+  /* Sit on top - zindex wars  */
   left: 0;
   top: 0;
-  width: 100%; /* Full width */
-  height: 100%; /* Full height */
-  overflow: auto; /* Enable scroll if needed */
-  background-color: rgb(0, 0, 0); /* Fallback color */
-  background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+  width: 100%;
+  /* Full width */
+  height: 100%;
+  /* Full height */
+  overflow: auto;
+  /* Enable scroll if needed */
+  background-color: black;
+  /* Fallback color */
+  background-color: rgba(0, 0, 0, 0.4);
+  /* Black w/ opacity */
 }
 
 div.spio-modal {
@@ -36,10 +43,13 @@ div.spio-modal {
   background-position: center;
   padding: 20px 16px 16px;
   border: 1px solid #888;
-  width: 40%; /* Could be more or less, depending on screen size */
+  width: 40%;
+  /* Could be more or less, depending on screen size */
   max-width: 100%;
-  min-width: 300px; /* Could be more or less, depending on screen size */
-  z-index: 100; /* Proper z-index */
+  min-width: 300px;
+  /* Could be more or less, depending on screen size */
+  z-index: 100;
+  /* Proper z-index */
   position: fixed;
   top: 10%;
   left: 30%;
@@ -977,14 +987,18 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting ul.exclude-list li {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr auto;
+  color: #116C7E;
   width: 100%;
   box-sizing: border-box;
   border: 1px solid #116C7E;
-  padding: 4px 12px;
+  padding: 8px 12px;
   background: #fff;
   border-radius: 8px;
   margin: 8px 8px 0 0;
   cursor: pointer;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting ul.exclude-list li b {
+  margin-bottom: 4px;
 }
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting ul.exclude-list li .regular-container {
   display: none;
@@ -1000,6 +1014,10 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting ul.exclude-list li.is-regex .regular-container {
   display: inline;
+}
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting ul.exclude-list li .shortpixel-icon {
+  width: 30px;
+  height: 30px;
 }
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting ul.exclude-list .not-visible {
   display: none;

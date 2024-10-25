@@ -116,8 +116,8 @@ if ( ! defined( 'ABSPATH' ) ) {
          $exclusion_format = "
             <li %s %s %s >
               <input type='hidden' name='exclusions[]' value='%s' />
-              <span>%s <br> %s </span>
-              <span>" . esc_html__('Apply to:', 'shortpixel-image-optimiser') .  " <br> %s </span>
+							<span><b>%s </b><br> %s </span>
+							<span><b>" . esc_html__('Apply to:', 'shortpixel-image-optimiser') .  "</b><br> %s </span>
               <span class='regular_expression'><span class='regular-container %s'>" . esc_html__('Regular expression', 'shortpixel-image-optimiser') . " %s</span>&nbsp;</span>
               <span> <i class='shortpixel-icon edit'></i>
               <i class='shortpixel-icon remove trash'></i> </span>
@@ -134,14 +134,11 @@ if ( ! defined( 'ABSPATH' ) ) {
          <?php
           $exclusions = UtilHelper::getExclusions();
              $excludeArray = $exclusions;
+						 $newIndex = (is_array($excludeArray) && count($excludeArray) > 0) ? (count($excludeArray) -1) : 0;
 
-             if (is_array($excludeArray) && count($excludeArray) > 0)
-             {
                  echo "<ul class='exclude-list'>";
-                 echo '<input type="hidden" id="new-exclusion-index" name="new-index" value="' . (count($excludeArray)  -1) . '">';
+								 echo '<input type="hidden" id="new-exclusion-index" name="new-index" value="' . $newIndex . '">';
                  $i = 0;
-
-
 
                  foreach($excludeArray as $index => $option)
                  {
@@ -214,12 +211,8 @@ if ( ! defined( 'ABSPATH' ) ) {
                      $i++;
                  }
                  echo "</ul>";
-             }
-             else {
-               echo '<input type="hidden" id="new-exclusion-index" name="new-index" value="0">';
 
-                echo '<ul class="exclude-list"><li class="no-exclusion-item">' . __('No exclusions', 'shortpixel-image-optimiser') . '</li></ul>';
-             }
+
          ?>
                      <div class='new-exclusion not-visible'>
                          <!-- HEADER -->

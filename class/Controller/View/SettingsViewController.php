@@ -860,6 +860,7 @@ class SettingsViewController extends \ShortPixel\ViewController
 
         if (false === isset($post['exclusions']))
         {
+					 $post['excludePatterns'] = [];
            return $post;
         }
 

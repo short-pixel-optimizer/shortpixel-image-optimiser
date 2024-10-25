@@ -69,13 +69,17 @@
           //  justify-content: space-between;
             display: grid;
             grid-template-columns: 1fr 1fr 1fr auto;
+						color: $blue_closed;
+						b {
+							margin-bottom: 4px;
+						}
 
             div {
             }
             width: 100%;
             box-sizing: border-box;
             border: 1px solid $blue_closed;
-            padding: 4px 12px;
+						padding: 8px 12px;
             background: #fff;
             border-radius: 8px;
             margin: 8px 8px 0 0;
@@ -104,6 +108,11 @@
                 display: inline;
               }
             }
+						.shortpixel-icon
+						{
+								width: 30px;
+								height: 30px;
+						}
 
          }
          margin: 20px 0;

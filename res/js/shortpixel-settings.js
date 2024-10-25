@@ -108,7 +108,7 @@ class ShortPixelSettings
 					input.addEventListener(eventType, self.NewExclusionUpdateEvent.bind(self));
 			});
 
-			 var exclusionItems = this.root.querySelectorAll('.exclude-list li i.edit');
+			 var exclusionItems = this.root.querySelectorAll('.exclude-list li i.edit, .exclude-list li');
 			 exclusionItems.forEach(function (input) {
 					if (false == input.classList.contains('no-exclusion-item'))
 					{
@@ -1158,10 +1158,10 @@ NewExclusionButtonAdd(target, update)
 		 var noItemsItem = this.root.querySelector('.exclude-list .no-exclusion-item');
 		 var itemClass = '';
 		 var title = '';
-		 if (noItemsItem !== null)
+		 /*if (noItemsItem !== null)
 	 	 {
 				 itemClass = 'not-visible';
-		 }
+		 } */
 
 		 if (setting.type && setting.type.indexOf('regex') != -1)
 		 {
