@@ -144,8 +144,8 @@ if ( ! defined( 'ABSPATH' ) ) {
                  {
                      $exclude_id  = 'id="exclude-' . $i . '"';
                      $type = (isset($option['type'])) ? $option['type'] : '';
-                     $value = $option['value'];
-                     $apply = $option['apply'];
+										 $value = isset($option['value']) ? $option['value'] : '';
+										 $apply = isset($option['apply']) ? $option['apply'] : '';
                      $thumblist = isset($option['thumblist']) ? $option['thumblist'] : array();
                      $hasError = (isset($option['has-error']) && true == $option['has-error']) ? true : false;
 

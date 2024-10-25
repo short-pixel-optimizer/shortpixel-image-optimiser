@@ -1345,7 +1345,6 @@ RemoveExclusion(event)
 {
 		event.preventDefault();
 		var target = event.target;
-		 //var id = this.root.querySelector('.new-exclusion input[name="edit-exclusion"]');
 		 var element = target.closest('li');
 		 element.remove();
 
