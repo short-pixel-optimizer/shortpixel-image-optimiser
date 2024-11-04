@@ -615,30 +615,50 @@ div.spio-modal-title {
   text-decoration: none;
   margin-top: -1px;
 }
+.wrap.is-shortpixel-settings-page .ajax-save-done .shortpixel-icon.ok {
+  width: 30px;
+  height: 30px;
+  align-items: start;
+  margin-right: 10px;
+}
 .wrap.is-shortpixel-settings-page .ajax-save-done {
   position: fixed;
-  bottom: 0;
+  bottom: 0.8rem;
   width: 60%;
   background-color: #fff;
-  border: 2px solid #000;
+  border: 0px solid #000;
   left: 20%;
-  border-radius: 25px 25px 0 0;
+  border-radius: 1rem;
+  box-shadow: 0 0.3rem 0.8rem 0.3rem grey;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 16px;
+  padding: 5px;
   z-index: 10;
-  transition: all 1s ease-out;
+  transition: all 40s ease-out;
   margin-bottom: -1000px;
 }
 .wrap.is-shortpixel-settings-page .ajax-save-done.show {
   margin: 0;
   transition: all 1s ease-in;
 }
-.wrap.is-shortpixel-settings-page .ajax-save-done h1 {
-  font-size: 48px;
-  display: inherit;
+.wrap.is-shortpixel-settings-page .ajax-save-done .shortpixel-icon.ok {
+  width: 30px;
+  height: 30px;
+  margin-right: 0.2rem;
+}
+.wrap.is-shortpixel-settings-page .ajax-save-done h2 {
+  display: flex;
+  font-size: 20px;
+  margin: 0;
+  margin-bottom: 4px;
   margin-left: 16px;
+  color: #00C898;
+}
+.wrap.is-shortpixel-settings-page .ajax-save-done h3 {
+  margin-top: 0;
+  font-size: 14px;
+  margin-left: 52px;
+  color: #0f6a7d;
 }
 .wrap.is-shortpixel-settings-page section.setting-tab .option-content {
   display: inline-block;

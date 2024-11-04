@@ -118,9 +118,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 </form>
 
 <section class='ajax-save-done'>
-	<h1>
-		<?php echo UIHelper::getIcon('res/img/robo-cool.png'); ?>
-		<?php _e('Settings Saved', 'shortpixel-image-optimiser'); ?> </h1>
+	<h2>
+        <span class="shortpixel-icon ok" aria-hidden="true"></span>
+		<?php _e('Settings Saved', 'shortpixel-image-optimiser'); ?> </h2>
 	<h3> <span class='notice_count'>X</span> new notices </h3>
 </section>
 
