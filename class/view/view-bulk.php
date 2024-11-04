@@ -15,10 +15,12 @@ if ( ! defined( 'ABSPATH' ) ) {
       <?php //esc_html_e('ShortPixel Plugin Settings','shortpixel-image-optimiser');?>
   </h1>
 
+<!--
   <div class='top-buttons'>
     <button><i class='shortpixel-icon notifications'></i><?php _e('Notifications','shortpixel-image-optimiser'); ?></button>
 
   </div>
+-->
 </header>
 
 <div class="shortpixel-bulk-wrapper">

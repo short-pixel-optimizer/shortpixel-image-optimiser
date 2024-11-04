@@ -15,14 +15,14 @@ if ( ! defined( 'ABSPATH' ) ) {
       <?php echo UIHelper::getIcon('res/images/illustration/logo_settings.svg'); ?>
   </h1>
 
-
+<!--
   <div class='top-buttons'>
     <button><i class='shortpixel-icon notifications'></i><?php _e('Notifications','shortpixel-image-optimiser'); ?></button>
     <button id="viewmode-toggle"><i class='shortpixel-icon switch'></i>
       <span class='advanced'><?php _e('Advanced', 'shortpixel-image-optimiser'); ?></span>
       <span class='simple'><?php _e('Simple', 'shortpixel-image-optimiser'); ?></span>
     </button>
-  </div>
+  </div>-->
 </header>
 
 <?php //$this->loadView('settings/part-header'); ?>
@@ -47,7 +47,7 @@ if ( ! defined( 'ABSPATH' ) ) {
           <?php echo $this->settingLink('overview', __("Overview", "shortpixel-image-optimiser"), 'shortpixel-icon dashboard'); ?>
         </li>
 				<li>
-          <?php echo $this->settingLink('optimisation', __("Image optimisation", "shortpixel-image-optimiser"), 'shortpixel-icon optimization'); ?>
+          <?php echo $this->settingLink('optimisation', __("Image Optimization", "shortpixel-image-optimiser"), 'shortpixel-icon optimization'); ?>
         </li>
         <li class='is-advanced'>
           <?php echo $this->settingLink('exclusions', __("Exclusions", "shortpixel-image-optimiser"), 'shortpixel-icon exclusions'); ?>
@@ -57,11 +57,11 @@ if ( ! defined( 'ABSPATH' ) ) {
           <?php echo $this->settingLink('processing', __("Processing", "shortpixel-image-optimiser"), 'shortpixel-icon processing'); ?>
         </li>
         <li>
-					<?php echo $this->settingLink('webp', __("Webp/Avif & CDN", "shortpixel-image-optimiser"), 'shortpixel-icon webp_avif'); ?>
+					<?php echo $this->settingLink('webp', __("WebP/AVIF & CDN", "shortpixel-image-optimiser"), 'shortpixel-icon webp_avif'); ?>
         </li>
 
 				<li class='is-advanced'>
-					<?php echo $this->settingLink('cdn', __("Integrations", "shortpixel-image-optimiser"), 'shortpixel-icon cdn'); ?>
+					<?php echo $this->settingLink('cdn', __("Integrations", "shortpixel-image-optimiser"), 'shortpixel-icon integrations'); ?>
         </li>
 
 				<li class='is-advanced'>
@@ -81,6 +81,13 @@ if ( ! defined( 'ABSPATH' ) ) {
         <?php } ?>
 
 			</ul>
+			<div class="adv_switcher">
+				<?php esc_html_e('Advanced Mode','shortpixel-image-optimiser');?>
+                		<label class="adv_switch" id="viewmode-toggles">
+                        		<input type="checkbox">
+					<span class="adv_slider"></span>
+            		    	</label>
+			</div>
 		</menu>
 		<section class="wrapper">
       <form name='wp_shortpixel_options' action='<?php echo esc_url(add_query_arg('noheader', 'true')) ?>'  method='post' id='wp_shortpixel_options'>

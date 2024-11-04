@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
   <div class="bulk-welcome">
     <h3 class="heading">
-      <?php printf(esc_html__('Welcome to the Bulk Processing page!', 'shortpixel-image-optimiser')); ?>
+      <?php printf(esc_html__('ShortPixel Bulk Image Optimization', 'shortpixel-image-optimiser')); ?>
     </h3>
     <?php echo UIHelper::getIcon('res/images/illustration/bulk_welcome.svg'); ?>
   </div>
@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
       <div class='bulk-wrapper'>
         <button type="button" class="button-primary button" id="start-optimize" data-action="open-panel" data-panel="selection" <?php echo ($this->view->error) ? "disabled" : ''; ?>  >
             <span class='dashicons dashicons-controls-play'>&nbsp;</span>
-						<p><?php esc_html_e('Start optimizing','shortpixel-image-optimiser'); ?></p>
+						<p><?php esc_html_e('Start Optimization','shortpixel-image-optimiser'); ?></p>
         </button>
       </div>
 

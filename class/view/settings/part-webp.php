@@ -54,8 +54,8 @@ if( $this->is_nginx ){
       <?php $this->printSwitchButton(
             ['name' => 'createWebp',
              'checked' => $view->data->createWebp,
-             'label' => esc_html__('Create Webp Images','shortpixel-image-optimiser'),
-             'data' => ['data-dashboard="' . __('Recommend adding Webp', 'shortpixel-image-optimiser') . '"'],
+             'label' => esc_html__('Create WebP Images','shortpixel-image-optimiser'),
+             'data' => ['data-dashboard="' . __('Recommend adding WebP', 'shortpixel-image-optimiser') . '"'],
             ]);
       ?>
         <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/286-how-to-serve-webp-files-using-spio"></i>
@@ -85,7 +85,7 @@ if( $this->is_nginx ){
         <?php $this->printSwitchButton(
               ['name' => 'createAvif',
                'checked' => $createAvifChecked,
-               'label' => esc_html__('Create Avif Images','shortpixel-image-optimiser'),
+               'label' => esc_html__('Create AVIF Images','shortpixel-image-optimiser'),
                'disabled' => $disabled,
               ]);
         ?>
@@ -116,9 +116,9 @@ if( $this->is_nginx ){
    <?php $this->printSwitchButton(
          ['name' => 'deliverWebp',
           'checked' =>  ($view->data->deliverWebp > 0) ? 1 : 0,
-          'label' => esc_html__('Deliver the next generation versions of the images in the front-end:','shortpixel-image-optimiser'),
+          'label' => esc_html__('Deliver the next generation versions of the images locally:','shortpixel-image-optimiser'),
           'disabled' => $disabled,
-          'data' => ['data-toggle="deliverTypes"', 'data-dashboard="' . __('Modern format not being deliverd', 'shortpixel-image-optimiser') . '"', 'data-exclude="useCDN"'],
+          'data' => ['data-toggle="deliverTypes"', 'data-dashboard="' . __('Next-gen format not being deliverd', 'shortpixel-image-optimiser') . '"', 'data-exclude="useCDN"'],
          ]);
    ?>
 
@@ -195,7 +195,8 @@ if( $this->is_nginx ){
   <?php $this->printSwitchButton(
         ['name' => 'useCDN',
          'checked' =>  ($view->data->useCDN > 0) ? 1 : 0,
-         'label' => esc_html__('Use a CDN to deliver images','shortpixel-image-optimiser'),
+         'label' => esc_html__('Deliver the next generation images using the ShortPixel CDN:','shortpixel-image-optimiser'),
+
          'data' => ['data-toggle="useCDN"', 'data-exclude="deliverWebp"'],
         ]);
   ?>

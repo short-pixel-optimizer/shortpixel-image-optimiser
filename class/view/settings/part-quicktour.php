@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
         </div>
         <div class='step step-1' data-screen='overview'>
             <p>
-            This is the Overview page, where you will see from a quick look the status of your site's media files. Besides statistics you will also have actionabile points to improve the performance of your website
+            This is the Overview page, where you will see from a quick look the status of your site's media files. Besides statistics you will also have actionable points to improve the performance of your website
           </p>
         </div>
         <div class='step step-2' data-screen='optimisation'>
@@ -61,7 +61,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                 <span class='next'>Next <i class='shortpixel-icon arrow-right'></i></span>
           </button>
           <button type="button" class='close hide'>
-            <i class='shortpixel-icon robo'></i> Start optimize your images
+            <i class='shortpixel-icon robo'></i> Start images optimization
           </button>
       </div>
    </div>

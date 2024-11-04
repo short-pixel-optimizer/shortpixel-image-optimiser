@@ -69,15 +69,15 @@ if (true === \wpSPIO()->env()->useTrustedMode())
 
 
                     <p class="settings-info shortpixel-radio-info shortpixel-radio-lossy" <?php echo( $view->data->compressionType == 1 ? "" : 'style="display:none"' );?>>
-                        <?php printf(esc_html__('%sLossy SmartCompression (recommended): %s offers the best compression rate.  This is the recommended option for most users, producing results that look the same as the original to the human eye.','shortpixel-image-optimiser'),'<b>','</b>');?>
+                        <?php printf(esc_html__('%sLossy SmartCompression (recommended): %s offers the best compression rate.  This option is recommended for most users, as it produces results that appear identical to the original to the human eye.','shortpixel-image-optimiser'),'<b>','</b>');?>
                     </p>
                     <p class="settings-info shortpixel-radio-info shortpixel-radio-glossy" <?php echo( $view->data->compressionType == 2 ? "" : 'style="display:none"' );?>>
-                        <?php printf(esc_html__('%sGlossy SmartCompression: %s creates images that are almost pixel-perfect identical with the originals. Best option for photographers and other professionals that use very high quality images on their sites and want the best compression while keeping the quality untouched.','shortpixel-image-optimiser'), '<b>','</b>');?>
+                        <?php printf(esc_html__('%sGlossy SmartCompression: %s creates images that are nearly pixel-perfect replicas of the originals. It is the best option for photographers and other professionals who use high-quality images on their sites and want optimal compression without compromising quality.','shortpixel-image-optimiser'), '<b>','</b>');?>
 
                     </p>
                     <p class="settings-info shortpixel-radio-info shortpixel-radio-lossless" <?php echo( $view->data->compressionType == 0 ? "" : 'style="display:none"' );?>>
-                        <?php printf(esc_html__('%s Lossless compression: %s the resulting image is pixel-identical with the original image. %sMake sure not a single pixel looks different in the optimized image compared with the original.
-                        In some rare cases you will need to use this type of compression. Some technical drawings or images from vector graphics are possible situations.','shortpixel-image-optimiser'),'<b>','</b>', '<br><br>');?>
+                        <?php printf(esc_html__('%s Lossless compression: %s the resulting image is pixel-identical to the original. %sEnsure that not a single pixel differs between the optimized image and the original.
+                        This type of compression may be necessary in rare cases, such as with certain technical drawings or images from vector graphics.','shortpixel-image-optimiser'),'<b>','</b>', '<br><br>');?>
                     </p>
 
                     <?php printf(esc_html__('%s Run a few tests%s to help you decide.', 'shortpixel-image-optimiser'), '<a href="https://shortpixel.com/online-image-compression" target="_blank">', '</a>'); ?>
@@ -87,7 +87,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
 
               <content class='smart-compression-explainer' >
                 <?php echo UIHelper::getIcon('res/images/illustration/robo_info.svg'); ?>
-                  <h4><?php esc_html_e('What is SmartCompression', 'shortpixel-image-optimiser'); ?></h4>
+                  <h4><?php esc_html_e('What is SmartCompression?', 'shortpixel-image-optimiser'); ?></h4>
 
                   <?php _e('Images that look just good as the original, but with the smallest possible file size', 'shortpixel-image-optimiser'); ?>
                   <a href="https://shortpixel.com/blog/introducing-smartcompress/" target="_blank" class="shortpixel-help-link"><?php _e('Learn more', 'shortpixel-image-optimiser'); ?></a>
@@ -300,7 +300,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
               </switch>
               <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/483-spai-remove-exif"></i>
               <name>
-                <?php esc_html_e('Remove the EXIF tag of the image (recommended).','shortpixel-image-optimiser');?>
+                <?php esc_html_e('Remove the EXIF data of the image (recommended).','shortpixel-image-optimiser');?>
 
               </name>
             </content>
@@ -320,7 +320,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
 
         </gridbox>
 
-          <h3><?php _e('Smartcrop & Resize', 'shortpixel-image-optimiser'); ?></h3>
+          <h3><?php _e('SmartCrop & Resize', 'shortpixel-image-optimiser'); ?></h3>
 
           <!-- Enable Smartcrop -->
             <setting class='switch step-highlight-2'>

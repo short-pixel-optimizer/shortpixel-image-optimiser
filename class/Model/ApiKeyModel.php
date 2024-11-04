@@ -310,9 +310,9 @@ class ApiKeyModel extends \ShortPixel\Model
       return;
 
     $KeyLength = strlen($key);
-    $notice =  sprintf(__("The key you provided has %s characters. The API key should have 20 characters, letters and numbers only.",'shortpixel-image-optimiser'), $KeyLength)
+    $notice =  sprintf(__("The API Key you provided has %s characters, but it should contain exactly 20 characters, using only letters and numbers.",'shortpixel-image-optimiser'), $KeyLength)
                . "<BR> <b>"
-               . __('Please check that the API key is the same as the one you received in your confirmation email.','shortpixel-image-optimiser')
+               . __('Please check that the API Key is the same as the one you received in your sign-up email.','shortpixel-image-optimiser')
                . "</b><BR> "
                . __('If this problem persists, please contact us at ','shortpixel-image-optimiser')
                . "<a href='mailto:help@shortpixel.com?Subject=API Key issues' target='_top'>help@shortpixel.com</a>"

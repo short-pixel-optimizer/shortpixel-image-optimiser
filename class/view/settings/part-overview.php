@@ -63,7 +63,7 @@ $bulkblock = $dashboard->bulkblock;
        <?php if ($view->averageCompression > 30): ?>
          <div class='rating'>
           <?php echo UiHelper::getIcon('res/images/icon/7stars.svg'); ?>
-          <a class='button button-setting' href='https://wordpress.org/support/plugin/shortpixel-image-optimiser/reviews/#new-post' target="_blank"><?php esc_html_e('Rate us', 'shortpixel-image-optimiser'); ?></a>
+          <a class='button button-setting' href='https://wordpress.org/support/plugin/shortpixel-image-optimiser/reviews/?filter=5' target="_blank"><?php esc_html_e('Rate us', 'shortpixel-image-optimiser'); ?></a>
         </div>
        <?php endif; ?>
      </div>
@@ -82,7 +82,7 @@ $bulkblock = $dashboard->bulkblock;
      </div>
 
      <div class='panel second-panel dashboard-bulk'>
-       <i class='shortpixel-icon switch'></i>
+       <i class='shortpixel-icon bulk'></i>
        <h4><?php _e('Bulk Actions', 'shortpixel-image-optimizer'); ?></h4>
 
 
@@ -97,7 +97,7 @@ $bulkblock = $dashboard->bulkblock;
      <div class='panel third-panel dashboard-webp'>
 
        <i class='shortpixel-icon photo'></i>
-       <h4><?php _e('Webp/Avif', 'shortpixel-image-optimizer'); ?></h4>
+       <h4><?php _e('WebP/AVIF', 'shortpixel-image-optimizer'); ?></h4>
 
         <span class='status-wrapper'><i class='shortpixel-icon status-icon ok'></i><span class='status-line'></span></span>
 

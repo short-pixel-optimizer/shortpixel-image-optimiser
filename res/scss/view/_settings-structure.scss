@@ -25,7 +25,7 @@
 		display: flex;
 		background: #fff;
 		border-radius: 16px;
-		margin: 0 auto;
+		margin: 10px auto;
 
 		// Items for whole page
 		button, .button-setting {
@@ -56,24 +56,28 @@
 		menu { // left-hand menu.
 			 width: 25%;
 			 max-width: 200px;
+			 padding-left: 25px;
 
 			 ul {
 				  list-style: none;
+				  border-bottom: 2px solid;
+  				  border-color: #92D5E3;
+				  padding-bottom: 4px;
 					li {
 					//	border: 1px solid #ccc;
-						margin: 4px 0;
+						margin: 6px 0;
 						text-align: left;
 
 							a {
 								padding: 6px 4px;
 
-								font-size: 14px;
+								font-size: 1rem;
 								font-weight: 700;
 								color: $blue_closed;
 								text-decoration: none;
 								display: inline-block;
 								width: 100%;
-								box-sizing: border-box;
+								//box-sizing: border-box;
 
 								i {
 									margin-right: 8px;
@@ -83,16 +87,28 @@
 								}
 								&.active {
 									// background: #0f6a7d;
-							 	  color: $black_default;
+							 	  	color: $blue_default;
 									i {
-										filter: $filter_black;
+									//	filter: $filter_black;
 									}
+								}
+								&:focus {
+									box-shadow: none;
 								}
 							}
 
 					}
 
 			 }
+			 div.adv_switcher {
+				padding-top: 20px;
+				padding-left: 5px;
+				padding-bottom: 20px;
+				font-size: 1rem;
+				font-weight: bold;
+				border-bottom: 2px solid;
+				border-color: #92D5E3;
+			}
 		}
 		section.wrapper // wrapper of the settings tab.
 		{
@@ -127,7 +143,10 @@
 								font-weight: 700;
 						}
 					} // settinglist
+				div.save button.save-bulk i.bulk {
+					filter: brightness(0%) invert(1);
 				}
+			}
 		} // section.wrapper
 		settinglist
 		{

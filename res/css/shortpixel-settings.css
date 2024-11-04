@@ -17,22 +17,15 @@ i.documentation {
 }
 
 div.spio-modal-shade {
-  position: fixed;
-  /* Stay in place */
-  z-index: 10;
-  /* Sit on top - zindex wars  */
+  position: fixed; /* Stay in place */
+  z-index: 10; /* Sit on top - zindex wars  */
   left: 0;
   top: 0;
-  width: 100%;
-  /* Full width */
-  height: 100%;
-  /* Full height */
-  overflow: auto;
-  /* Enable scroll if needed */
-  background-color: black;
-  /* Fallback color */
-  background-color: rgba(0, 0, 0, 0.4);
-  /* Black w/ opacity */
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0, 0, 0); /* Fallback color */
+  background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
 }
 
 div.spio-modal {
@@ -43,13 +36,10 @@ div.spio-modal {
   background-position: center;
   padding: 20px 16px 16px;
   border: 1px solid #888;
-  width: 40%;
-  /* Could be more or less, depending on screen size */
+  width: 40%; /* Could be more or less, depending on screen size */
   max-width: 100%;
-  min-width: 300px;
-  /* Could be more or less, depending on screen size */
-  z-index: 100;
-  /* Proper z-index */
+  min-width: 300px; /* Could be more or less, depending on screen size */
+  z-index: 100; /* Proper z-index */
   position: fixed;
   top: 10%;
   left: 30%;
@@ -105,6 +95,10 @@ div.spio-modal-title {
   padding: 8px 16px;
   justify-content: space-between;
   align-items: center;
+  margin-left: -22px;
+  margin-top: -10px;
+  margin-right: -22px;
+  margin-bottom: 10px;
 }
 .wrap.is-shortpixel-settings-page header h1 {
   line-height: 50px;
@@ -112,6 +106,10 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page header img {
   vertical-align: bottom;
   margin-right: 8px;
+  margin-left: 1.1em;
+}
+.wrap.is-shortpixel-settings-page header .top-buttons {
+  margin-right: 4em;
 }
 .wrap.is-shortpixel-settings-page header .top-buttons button {
   color: #fff;
@@ -160,9 +158,6 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page .shortpixel-icon.bulk {
   background-image: url("../images/icon/bulk.svg");
 }
-.wrap.is-shortpixel-settings-page .shortpixel-icon.cdn {
-  background-image: url("../images/icon/cdn.svg");
-}
 .wrap.is-shortpixel-settings-page .shortpixel-icon.close {
   background-image: url("../images/icon/close.svg");
 }
@@ -189,6 +184,9 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page .shortpixel-icon.help {
   background-image: url("../images/icon/help.svg");
+}
+.wrap.is-shortpixel-settings-page .shortpixel-icon.integrations {
+  background-image: url("../images/icon/integrations.svg");
 }
 .wrap.is-shortpixel-settings-page .shortpixel-icon.optimization {
   background-image: url("../images/icon/optimization.svg");
@@ -271,7 +269,7 @@ div.spio-modal-title {
   display: flex;
   background: #fff;
   border-radius: 16px;
-  margin: 0 auto;
+  margin: 10px auto;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings button, .wrap.is-shortpixel-settings-page .shortpixel-settings .button-setting {
   color: #fff;
@@ -296,23 +294,26 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page .shortpixel-settings menu {
   width: 25%;
   max-width: 200px;
+  padding-left: 25px;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings menu ul {
   list-style: none;
+  border-bottom: 2px solid;
+  border-color: #92D5E3;
+  padding-bottom: 4px;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings menu ul li {
-  margin: 4px 0;
+  margin: 6px 0;
   text-align: left;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings menu ul li a {
   padding: 6px 4px;
-  font-size: 14px;
+  font-size: 1rem;
   font-weight: 700;
   color: #116C7E;
   text-decoration: none;
   display: inline-block;
   width: 100%;
-  box-sizing: border-box;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings menu ul li a i {
   margin-right: 8px;
@@ -321,10 +322,19 @@ div.spio-modal-title {
   filter: none;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings menu ul li a.active {
-  color: #001E24;
+  color: #1ABDCA;
 }
-.wrap.is-shortpixel-settings-page .shortpixel-settings menu ul li a.active i {
-  filter: brightness(0) saturate(100%);
+.wrap.is-shortpixel-settings-page .shortpixel-settings menu ul li a:focus {
+  box-shadow: none;
+}
+.wrap.is-shortpixel-settings-page .shortpixel-settings menu div.adv_switcher {
+  padding-top: 20px;
+  padding-left: 5px;
+  padding-bottom: 20px;
+  font-size: 1rem;
+  font-weight: bold;
+  border-bottom: 2px solid;
+  border-color: #92D5E3;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper {
   width: 65%;
@@ -351,6 +361,9 @@ div.spio-modal-title {
   font-size: 18px;
   font-family: "Roboto";
   font-weight: 700;
+}
+.wrap.is-shortpixel-settings-page .shortpixel-settings section.wrapper .setting-tab div.save button.save-bulk i.bulk {
+  filter: brightness(0%) invert(1);
 }
 .wrap.is-shortpixel-settings-page .shortpixel-settings settinglist {
   display: block;
@@ -861,6 +874,7 @@ div.spio-modal-title {
   width: 12px;
   height: 12px;
   margin-right: 4px;
+  margin-bottom: 1px;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel.warning i {
   filter: brightness(0) saturate(100%) invert(72%) sepia(57%) saturate(456%) hue-rotate(353deg) brightness(105%) contrast(95%);

@@ -29,6 +29,10 @@
   padding: 8px 16px;
   justify-content: space-between;
   align-items: center;
+  margin-left: -22px;
+  margin-top: -10px;
+  margin-right: -22px;
+  margin-bottom: 10px;
 }
 .wrap.is-shortpixel-bulk-page header h1 {
   line-height: 50px;
@@ -36,6 +40,10 @@
 .wrap.is-shortpixel-bulk-page header img {
   vertical-align: bottom;
   margin-right: 8px;
+  margin-left: 1.1em;
+}
+.wrap.is-shortpixel-bulk-page header .top-buttons {
+  margin-right: 4em;
 }
 .wrap.is-shortpixel-bulk-page header .top-buttons button {
   color: #fff;
@@ -84,9 +92,6 @@
 .wrap.is-shortpixel-bulk-page .shortpixel-icon.bulk {
   background-image: url("../images/icon/bulk.svg");
 }
-.wrap.is-shortpixel-bulk-page .shortpixel-icon.cdn {
-  background-image: url("../images/icon/cdn.svg");
-}
 .wrap.is-shortpixel-bulk-page .shortpixel-icon.close {
   background-image: url("../images/icon/close.svg");
 }
@@ -113,6 +118,9 @@
 }
 .wrap.is-shortpixel-bulk-page .shortpixel-icon.help {
   background-image: url("../images/icon/help.svg");
+}
+.wrap.is-shortpixel-bulk-page .shortpixel-icon.integrations {
+  background-image: url("../images/icon/integrations.svg");
 }
 .wrap.is-shortpixel-bulk-page .shortpixel-icon.optimization {
   background-image: url("../images/icon/optimization.svg");
@@ -533,7 +541,7 @@
   transition: all 900ms;
 }
 .wrap.is-shortpixel-bulk-page .processor-paused:hover {
-  background: #1ca9b3;
+  background: rgb(27.5926724138, 169.1163793103, 178.9073275862);
 }
 .wrap.is-shortpixel-bulk-page .processor-paused .dashicons {
   margin-right: 6px;
@@ -1170,7 +1178,7 @@
   transition: all 0.5s ease;
 }
 .wrap.is-shortpixel-bulk-page section.panel.finished nav button.finish:hover {
-  background: #24d1dd;
+  background: rgb(36.2392241379, 209.2887931034, 221.2607758621);
 }
 .wrap.is-shortpixel-bulk-page .part-debug {
   background: #000;

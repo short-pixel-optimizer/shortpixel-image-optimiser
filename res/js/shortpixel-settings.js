@@ -319,21 +319,20 @@ class ShortPixelSettings
 
 	InitModeSwitcher()
 	{
-      var switcher = document.getElementById('viewmode-toggle');
+      var switcher = document.getElementById('viewmode-toggles');
 			if (null == switcher)
 			{
 						return;
 			}
-
-			if (this.root.classList.contains('simple'))
+			if (this.root.classList.contains('advanced') || switcher.checked)
+			{
+				 this.current_mode = 'advanced';
+			}
+			else	
 			{
 				 this.current_mode = 'simple';
 			}
-			else {
-				 this.current_mode = 'advanced';
-			}
-
-			switcher.addEventListener('click', this.SwitchViewModeEvent.bind(this));
+			switcher.addEventListener('change', this.SwitchViewModeEvent.bind(this));
 	}
 
   SwitchViewModeEvent(event)

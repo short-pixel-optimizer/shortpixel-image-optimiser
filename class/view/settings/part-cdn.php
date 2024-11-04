@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 <settinglist>
 
   <h2>
-    <?php esc_html_e('CDN','shortpixel-image-optimiser');?>
+    <?php esc_html_e('Integrations','shortpixel-image-optimiser');?>
   </h2>
 
   <setting>

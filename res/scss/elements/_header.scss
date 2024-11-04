@@ -8,6 +8,10 @@ header
     padding: 8px 16px;
     justify-content: space-between;
     align-items: center;
+    margin-left: -22px;
+    margin-top: -10px;
+    margin-right: -22px;
+    margin-bottom: 10px;
 
     h1 {
       line-height: 50px;
@@ -15,9 +19,11 @@ header
     img {
       vertical-align: bottom;
       margin-right: 8px;
+      margin-left: 1.1em;
     }
 		.top-buttons
 		{
+			margin-right: 4em;
 			// Items for whole page, including header.
 			button {
 					color: #fff;

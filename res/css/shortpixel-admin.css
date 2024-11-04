@@ -278,24 +278,16 @@
 }
 
 div.sp-modal-shade {
-  display: none;
-  /* Hidden by default */
-  position: fixed;
-  /* Stay in place */
-  z-index: 10000;
-  /* Sit on top - blame WP-admin for the z-index battle . */
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 10000; /* Sit on top - blame WP-admin for the z-index battle . */
   left: 0;
   top: 0;
-  width: 100%;
-  /* Full width */
-  height: 100%;
-  /* Full height */
-  overflow: auto;
-  /* Enable scroll if needed */
-  background: black;
-  /* Fallback color */
-  background: rgba(0, 0, 0, 0.4);
-  /* Black w/ opacity */
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background: rgb(0, 0, 0); /* Fallback color */
+  background: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
   opacity: 0.4;
 }
 
@@ -304,12 +296,9 @@ div.shortpixel-modal {
   /*margin: 8% auto;  15% from the top and centered */
   padding: 20px;
   border: 1px solid #888;
-  width: 30%;
-  /* Could be more or less, depending on screen size */
-  min-width: 300px;
-  /* Could be more or less, depending on screen size */
-  z-index: 999999;
-  /* Z-index wars :/ */
+  width: 30%; /* Could be more or less, depending on screen size */
+  min-width: 300px; /* Could be more or less, depending on screen size */
+  z-index: 999999; /* Z-index wars :/ */
   position: fixed;
   top: 10%;
   left: 50%;
@@ -514,6 +503,67 @@ body.debug-model-active {
 }
 .switch_button .the_switch:focus, switch .the_switch:focus {
   outline: none;
+}
+
+.adv_switch {
+  position: relative;
+  display: inline-block;
+  width: 45px;
+  height: 19px;
+  bottom: 2px;
+  left: 20px;
+}
+.adv_switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.adv_switch .adv_slider {
+  position: absolute;
+  cursor: pointer;
+  background-color: #D7D7D7;
+  border-radius: 34px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  transition: 0.4s;
+}
+.adv_switch .adv_slider::before {
+  position: absolute;
+  content: "";
+  height: 13px;
+  width: 13px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #A9A9A9;
+  border-radius: 50%;
+  transition: 0.4s;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+}
+.adv_switch .adv_slider::after {
+  position: absolute;
+  content: "OFF";
+  color: white;
+  font-size: 10px;
+  top: 45%;
+  transform: translateY(-50%);
+  right: 5px;
+  transition: 0.4s;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  font-weight: bold;
+}
+.adv_switch input:checked + .adv_slider {
+  background-color: #00C898;
+}
+.adv_switch input:checked + .adv_slider::before {
+  transform: translateX(26px);
+  background-color: #fff;
+}
+.adv_switch input:checked + .adv_slider::after {
+  content: "ON";
+  left: 8px;
+  right: auto;
 }
 
 /*# sourceMappingURL=shortpixel-admin.css.map */
