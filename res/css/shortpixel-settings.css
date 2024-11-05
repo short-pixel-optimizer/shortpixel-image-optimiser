@@ -615,23 +615,18 @@ div.spio-modal-title {
   text-decoration: none;
   margin-top: -1px;
 }
-.wrap.is-shortpixel-settings-page .ajax-save-done .shortpixel-icon.ok {
-  width: 30px;
-  height: 30px;
-  align-items: start;
-  margin-right: 10px;
-}
 .wrap.is-shortpixel-settings-page .ajax-save-done {
   position: fixed;
-  bottom: 0.8rem;
+  bottom: 2em;
+  transform: translateX(30%);
   width: 60%;
+  height: 47px;
   background-color: #fff;
   border: 0px solid #000;
-  left: 20%;
-  border-radius: 1rem;
+  border-radius: 0.7rem;
   box-shadow: 0 0.3rem 0.8rem 0.3rem grey;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   padding: 5px;
   z-index: 10;
   transition: all 40s ease-out;
@@ -639,26 +634,33 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page .ajax-save-done.show {
   margin: 0;
-  transition: all 1s ease-in;
+  transition: all 2s ease-in;
+}
+.wrap.is-shortpixel-settings-page .ajax-save-done .icon-container {
+  display: flex;
+  justify-content: left;
+  align-items: center;
 }
 .wrap.is-shortpixel-settings-page .ajax-save-done .shortpixel-icon.ok {
   width: 30px;
   height: 30px;
-  margin-right: 0.2rem;
+}
+.wrap.is-shortpixel-settings-page .ajax-save-done .text-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  padding-left: 0.5rem;
 }
 .wrap.is-shortpixel-settings-page .ajax-save-done h2 {
-  display: flex;
-  font-size: 20px;
+  font-size: 14px;
   margin: 0;
-  margin-bottom: 4px;
-  margin-left: 16px;
   color: #00C898;
 }
 .wrap.is-shortpixel-settings-page .ajax-save-done h3 {
-  margin-top: 0;
-  font-size: 14px;
-  margin-left: 52px;
-  color: #0f6a7d;
+  font-size: 12px;
+  margin: 0;
+  color: #116C7E;
 }
 .wrap.is-shortpixel-settings-page section.setting-tab .option-content {
   display: inline-block;

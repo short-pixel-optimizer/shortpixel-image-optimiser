@@ -117,12 +117,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 </article>
 </form>
 
-<section class='ajax-save-done'>
-	<h2>
-        <span class="shortpixel-icon ok" aria-hidden="true"></span>
-		<?php _e('Settings Saved', 'shortpixel-image-optimiser'); ?> </h2>
-	<h3> <span class='notice_count'>X</span> new notices </h3>
-</section>
+    <section class='ajax-save-done'>
+        <div class="icon-container">
+            <span class="shortpixel-icon ok" aria-hidden="true"></span>
+        </div>
+        <div class="text-container">
+            <h2><?php _e('Setting successfully saved! ', 'shortpixel-image-optimiser'); ?></h2>
+            <h3><span class='notice_count'>X</span> new notices</h3>
+        </div>
+    </section>
 
 <div class='debug'><PRE>
   <?php print_r($this->view->data); ?>
