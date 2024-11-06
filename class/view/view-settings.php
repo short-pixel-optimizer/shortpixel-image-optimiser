@@ -122,7 +122,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             <span class="shortpixel-icon ok" aria-hidden="true"></span>
         </div>
         <div class="text-container">
-            <h2><?php _e('Setting successfully saved! ', 'shortpixel-image-optimiser'); ?></h2>
+            <h2><?php _e('Settings successfully saved! ', 'shortpixel-image-optimiser'); ?></h2>
             <h3><span class='notice_count'>X</span> new notices</h3>
         </div>
     </section>
