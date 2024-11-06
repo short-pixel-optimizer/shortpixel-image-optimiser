@@ -184,7 +184,7 @@
   height: 104px;
 }
 .wrap.is-shortpixel-bulk-page section.panel.dashboard {
-  max-width: 90%;
+  max-width: 95%;
   margin: 20px auto;
   border-radius: 16px 16px 0px 0px;
 }
@@ -566,9 +566,9 @@
   background: #ff0000;
   line-height: 26px;
   padding: 20px 0;
-  border-radius: 3px;
-  margin: 25px 0;
-  width: 90%;
+  border-radius: 16px;
+  margin: 25px auto;
+  width: 95%;
   text-align: center;
 }
 .wrap.is-shortpixel-bulk-page .processor-overquota h3 {
