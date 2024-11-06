@@ -601,6 +601,26 @@ div.spio-modal-title {
     height: 100px;
   }
 }
+.wrap.is-shortpixel-settings-page .upgrade-banner {
+  width: 220px;
+  margin: 16px 9px 7px 2px;
+  background-color: #F4FBFC;
+}
+.wrap.is-shortpixel-settings-page .upgrade-banner .banner-line-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: -1px;
+  font-family: Roboto;
+  font-weight: 400;
+  color: #116C7E;
+}
+.wrap.is-shortpixel-settings-page .upgrade-banner .shortpixel-icon.ok {
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  margin-left: 10px;
+}
 .wrap.is-shortpixel-settings-page .red {
   color: #ff0000;
 }

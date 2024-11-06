@@ -118,6 +118,35 @@
 		} // optimized thing
   } // top menu
 
+  .upgrade-banner
+  {
+	  //height: 180px;
+	  width: 220px;
+	  margin: 16px 9px 7px 2px;
+	  background-color: $blue_background;
+
+	  .banner-line-container {
+		  display: flex;
+		  flex-direction: row;
+		  align-items: center;
+		  margin-bottom: -1px;
+		  font-family: Roboto;
+		  font-weight: 400;
+		  color: $blue_closed;
+	  }
+
+		  .shortpixel-icon.ok {
+			  width: 18px;
+			  height: 18px;
+			  margin-right: 8px;
+			  margin-left: 10px;
+		  }
+	      p {
+
+
+		  }
+  }
+
 
   .red {
      color: #ff0000;

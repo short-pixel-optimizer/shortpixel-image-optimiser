@@ -88,6 +88,32 @@ if ( ! defined( 'ABSPATH' ) ) {
 					<span class="adv_slider"></span>
             		    	</label>
 			</div>
+
+          <div class='upgrade-banner'>
+              <div class="robo-container">
+                  <span class="shortpixel-icon robo"></span>
+              </div>
+              <div class="banner-line-container">
+                  <span class="shortpixel-icon ok"></span>
+                  <p><?php _e('Feature 1 lorem ipsum ', 'shortpixel-image-optimiser'); ?></p>
+              </div>
+              <div class="banner-line-container">
+                  <span class="shortpixel-icon ok"></span>
+                  <p><?php _e('Feature 1 lorem ipsum ', 'shortpixel-image-optimiser'); ?></p>
+              </div>
+              <div class="banner-line-container">
+                  <span class="shortpixel-icon ok"></span>
+                  <p><?php _e('Feature 1 lorem ipsum ', 'shortpixel-image-optimiser'); ?></p>
+              </div>
+              <div class="banner-line-container">
+                  <span class="shortpixel-icon ok"></span>
+                  <p><?php _e('Feature 1 lorem ipsum ', 'shortpixel-image-optimiser'); ?></p>
+              </div>
+          </div>
+
+
+
+
 		</menu>
 		<section class="wrapper">
       <form name='wp_shortpixel_options' action='<?php echo esc_url(add_query_arg('noheader', 'true')) ?>'  method='post' id='wp_shortpixel_options'>
