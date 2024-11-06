@@ -20,7 +20,7 @@ $queueRunning = $bulk->isAnyBulkRunning();
     <settinglist>
       <h2><?php _e('Tools', 'shortpixel-image-optimiser'); ?></h2>
 
-	<p><?php printf(esc_html__('The tools provided below are designed to make bulk changes to your image and optimization data. Therefore, it is %s very important %s that you back up your entire website before running them. ', 'shortpixel-image-optimiser'), '<b>', '</b>'); ?></p>
+	<p><?php printf(esc_html__('The tools below are designed for making bulk changes to your image and optimization data. It is %s highly recommended %s to back up your entire website before using them. ', 'shortpixel-image-optimiser'), '<b>', '</b>'); ?></p>
 
 		<?php if ($queueRunning === true): ?>
 		<div class='option'>
@@ -41,7 +41,7 @@ $queueRunning = $bulk->isAnyBulkRunning();
                 <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/539-spio-5-tells-me-to-convert-legacy-data-what-is-this"></i>
 
                 <info>
-                  <?php printf(esc_html__('ShortPixel Image Optimizer version 5.0 brings a new format for saving the image optimization information. If you have upgraded from a version prior to version 5.0, you may want to convert all your image data to the new format. This conversion will speed up the plugin and ensure that all data is preserved. %s Check your image data after doing the conversion! %s', 'shortpixel-image-optimiser'), '<br><b>', '</b>') ?>
+                  <?php printf(esc_html__('ShortPixel Image Optimizer version 5.0 brings a new format for saving the image optimization information. If you have upgraded from a version prior to version 5.0, you may want to convert all your image data to the new format. This conversion will speed up the plugin and ensure that all data is preserved. %sThis process is also useful for resolving errors that may occur during optimization due to leftover metadata.%s', 'shortpixel-image-optimiser'), '<br><b>', '</b>') ?>
                 </info>
             </content>
     <!--        <name>

@@ -61,7 +61,7 @@ if( $this->is_nginx ){
         <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/286-how-to-serve-webp-files-using-spio"></i>
 
       </content>
-      <info>           <?php printf(esc_html__('Create %s WebP versions %s of the images. Each image/thumbnail will use an additional credit unless you use the %s Unlimited plan. %s','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/blog/how-webp-images-can-speed-up-your-site/" target="_blank">', '</a>', '<a href="https://shortpixel.com/knowledge-base/article/555-how-does-the-unlimited-plan-work" target="_blank">', '</a>' );?></info>
+      <info>           <?php printf(esc_html__('Generate %s WebP versions %s of images. Each image or thumbnail will use an additional credit unless you are on the %sUnlimited plan.%s','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/blog/how-webp-images-can-speed-up-your-site/" target="_blank">', '</a>', '<a href="https://shortpixel.com/knowledge-base/article/555-how-does-the-unlimited-plan-work" target="_blank">', '</a>' );?></info>
   </setting>
   <!-- /next generation -->
 
@@ -102,7 +102,7 @@ if( $this->is_nginx ){
 
       </content>
       <info>
-         <?php printf(esc_html__('Create %s AVIF versions %s of the images. Each image/thumbnail will use an additional credit. ','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/blog/what-is-avif-and-why-is-it-good/" target="_blank">', '</a>');?>
+         <?php printf(esc_html__('Generate %s AVIF versions %s of images. Each image or thumbnail will use an additional credit unless you are on the %sUnlimited plan.%s','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/blog/what-is-avif-and-why-is-it-good/" target="_blank">', '</a>', '<a href="https://shortpixel.com/knowledge-base/article/555-how-does-the-unlimited-plan-work" target="_blank">', '</a>' );?>
       </info>
   </setting>
   <!-- // avif -->
@@ -116,7 +116,7 @@ if( $this->is_nginx ){
    <?php $this->printSwitchButton(
          ['name' => 'deliverWebp',
           'checked' =>  ($view->data->deliverWebp > 0) ? 1 : 0,
-          'label' => esc_html__('Deliver the next generation versions of the images locally:','shortpixel-image-optimiser'),
+          'label' => esc_html__('Serve WebP/AVIF images from locally hosted files (without using a CDN):','shortpixel-image-optimiser'),
           'disabled' => $disabled,
           'data' => ['data-toggle="deliverTypes"', 'data-dashboard="' . __('Next-gen format not being deliverd', 'shortpixel-image-optimiser') . '"', 'data-exclude="useCDN"'],
          ]);
@@ -148,8 +148,8 @@ if( $this->is_nginx ){
               </ul>
 
               <info>
-                   <?php esc_html_e('Each &lt;img&gt; will be replaced with a &lt;picture&gt; tag that will also provide AVIF and WebP images for browsers that support it.  You don\'t need to activate this if you\'re using the Cache Enabler plugin because your AVIF\WebP images are already handled by this plugin. <strong>Please run some tests before using this option!</strong> If the styles that your theme is using rely on the position of your &lt;img&gt; tags, you may experience display problems.','shortpixel-image-optimiser'); ?>
-                  <strong><?php esc_html_e('You can revert anytime to the previous state just by deactivating the option.','shortpixel-image-optimiser'); ?></strong>
+                   <?php printf(esc_html__('Each &lt;img&gt; tag will be replaced with a &lt;picture&gt; tag, providing AVIF and WebP versions for browsers that support them. You don\'t need to enable this option if you\'re using the Cache Enabler plugin, as it already handles AVIF and WebP images. %sPlease test thoroughly before enabling this option!%s If your theme\'s styles depend on the position of your &lt;img&gt; tags, display issues may occur.','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
+                  <strong><?php esc_html_e('You can revert to the original state at any time by simply deactivating the option and flushing your WordPress cache.','shortpixel-image-optimiser'); ?></strong>
               </info>
 
           </li>
@@ -172,12 +172,12 @@ if( $this->is_nginx ){
     </content>
     <warning id="deliverAlteringTypesPicture">
        <message>
-<?php _e( "Warning: Using this method alters the structure of the rendered HTML code (IMG tags get included in PICTURE tags), which, in some rare \ncases, can lead to CSS/JS inconsistencies.\n\nPlease test this functionality thoroughly after activating!\n\nIf you notice any issue, just deactivate it and the HTML will will revert to the previous state.", 'shortpixel-image-optimiser' ); ?>
+<?php _e( "Warning: Enabling this method changes the structure of the rendered HTML by wrapping &lt;img&gt; tags inside &lt;picture&gt; tags. In rare cases, this may lead to CSS or JavaScript inconsistencies.\n\nPlease test thoroughly after activating!\n\nIf you notice any issues, simply deactivat the option, flush any cache that may be active and the HTML will will revert to its original state.", 'shortpixel-image-optimiser' ); ?>
         </message>
     </warning>
     <warning class="deliverAlteringTypesHtaccess" >
       <message>
-        <?php _e( 'This option will serve both WebP and the original image using the same URL, based on the web browser capabilities, please make sure you\'re serving the images from your server and not using a CDN which caches the images.', 'shortpixel-image-optimiser' ) ?>
+        <?php _e( 'This option will serve both WebP/AVIF and the original image from the same URL, depending on the web browser\'s capabilities. Make sure the images are served directly from your server, not through a CDN that may cache them. If you make any changes, remember to flush your cache to ensure the updates are properly applied.', 'shortpixel-image-optimiser' ) ?>
       </message>
     </warning>
 

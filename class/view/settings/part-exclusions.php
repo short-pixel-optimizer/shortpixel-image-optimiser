@@ -62,7 +62,7 @@ if ( ! defined( 'ABSPATH' ) ) {
        <div class='exclude-settings-expanded toggleTarget ' id="exclude-settings-expanded">
          <p  class="settings-info">
          <?php
-             printf(esc_html__('For the %s"Name"%s type, only the file name is matched, i.e. if you enter %s"flower.jpg"%s in the "Value" field, ShortPixel excludes all JPEG images ending in "flower" (lower case). If, on the other hand, you enter %s"logo"%s in the "Value" field, all images – PNG/JPEG/GIF – that contain the word "logo" in their name will be excluded: "nicelogo.jpg", "alllogos.png", "logo.gif"..', 'shortpixel-image-optimiser'),
+             printf(esc_html__('%s"Name type:"%s Matches based on the file name only. For example, if you enter %s"flower.jpg"%s in the "Value" field, ShortPixel will exclude all JPEG images ending in "flower" (case-sensitive). Alternatively, you enter %s"logo"%s, all files (PNG/JPEG/GIF/PDF) containing "logo" in the file name will be excluded, such as: "nicelogo.jpg", "alllogos.png" or "logo.gif".', 'shortpixel-image-optimiser'),
              '<b>','</b>',
              '<b>','</b>',
              '<b>','</b>'
@@ -73,7 +73,7 @@ if ( ! defined( 'ABSPATH' ) ) {
        <br />
        <p  class="settings-info">
          <?php
-             printf(esc_html__('With the %s"Path"%s type, the entire path is matched (useful for excluding certain (sub)directories altogether). For example, if you enter %s"2022"%s in the "Value" field, all images uploaded in 2022 will be excluded, but also images that contain 2022 in the file name (as this is also part of the path). If you only want to exclude images uploaded in 2022, enter %s"/2022/"%s instead.','shortpixel-image-optimiser'),
+             printf(esc_html__('%s"Path type:"%s Matches based on the entire file path, which is useful for excluding specific directories or subdirectories. For instance, entering %s"2022"%s in the "Value" field will exclude all images uploaded in 2022, as well as any images with "2022" in the file name (since this is part of the path). To exclude only images uploaded in 2022, use %s"/2022/"%s instead.','shortpixel-image-optimiser'),
              '<b>','</b>',
              '<b>','</b>',
              '<b>','</b>'
@@ -83,7 +83,9 @@ if ( ! defined( 'ABSPATH' ) ) {
            <br />
            <p  class="settings-info">
          <?php
-             printf(esc_html__('For both types mentioned above ("Name" and "Path") you can activate the option %s"Check as regular expression"%s. It works in the same way, but requires a valid regular expression between slashes in the "Value" field. Special characters should be preceded by a \ as an escape character. For example, %s/[0-9]+[^\/]*\.(PNG|png)/%s in the "Value" field for the "Name" type excludes all PNG images that have a numeric prefix.','shortpixel-image-optimiser'),
+             printf(esc_html__('For both %s"Name"%s and %s"Path"%s types you can enable the %s"Check as regular expression"%s option. This works similarly but requires a valid regular expression between slashes in the "Value" field. Special characters should be escaped with a backslash (\). For instance, using %s/[0-9]+[^\/]*\.(PNG|png)/%s in the "Value" field for the "Name" type will exclude all PNG images with a numeric prefix.','shortpixel-image-optimiser'),
+             '<b>','</b>',
+             '<b>','</b>',
              '<b>','</b>',
              '<b>','</b>'
            );
@@ -92,7 +94,7 @@ if ( ! defined( 'ABSPATH' ) ) {
          <br />
          <p  class="settings-info">
            <?php
-             printf(esc_html__('The %s"Size"%s type is applied to all images and thumbnails whose size is within the specified range. You can either use intervals or specify an exact size if you enable the %s"Exact sizes"%s option.','shortpixel-image-optimiser'),
+             printf(esc_html__('%s"Size type:"%s Applies to all images and thumbnails within the specified size range. You can set intervals or specify an exact size if the %s"Exact sizes"%s option is enabled.','shortpixel-image-optimiser'),
              '<b>','</b>',
              '<b>','</b>'
            );
@@ -103,7 +105,7 @@ if ( ! defined( 'ABSPATH' ) ) {
      <content>
          <info>
            <?php
-           printf(esc_html__('Use this section to exclude images based on patterns. There are three types of exclusions: based on the file name, on the file path or on the file size. Each exclusion type can be applied to: all images and thumbnails of that image (including the scaled or original image), only thumbnails (in this case the original and scaled images are not excluded), only Custom Media images (in this case the items from the Media Library are not excluded) or only for a selection of thumbnails of your choice. Examples can be found in the fold-out area below.','shortpixel-image-optimiser'),
+           printf(esc_html__('Use this section to exclude images based on specific patterns. There are three exclusion types: by file name, file path or file size. Each exclusion type can be applied to: all images and their thumbnails (including scaled or original images), only thumbnails (in which case the original and scaled images are not excluded), only Custom Media images (Media Library items are not affected by this exclusion) or a specific selection of thumbnails. Examples can be found in the fold-out section below.','shortpixel-image-optimiser'),
              '<b>','</b>',
              '<b>','</b>'
            );

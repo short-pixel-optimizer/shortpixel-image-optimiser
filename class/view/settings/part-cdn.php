@@ -25,8 +25,8 @@ if ( ! defined( 'ABSPATH' ) ) {
         <inputlabel>User</inputlabel> <input name="siteAuthUser" type="text" id="siteAuthUser" value="<?php echo( esc_html(wp_unslash($view->data->siteAuthUser )));?>" class="regular-text" placeholder="<?php esc_html_e('User','shortpixel-image-optimiser');?>" style="margin-bottom: 8px"><br>
         <inputlabel>Password</inputlabel> <input name="siteAuthPass" type="password" id="siteAuthPass" value="<?php echo( esc_html(wp_unslash($view->data->siteAuthPass )));?>" class="regular-text" placeholder="<?php esc_html_e('Password','shortpixel-image-optimiser');?>" style="margin-bottom: 8px">
         <info>
-            <?php printf(esc_html__('Only fill in these fields if your site (front-end) is not publicly accessible and visitors need a user/pass to connect to it.
-                      If you don\'t know what is this then just %sleave the fields empty%s.','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
+            <?php printf(esc_html__('Only fill in these fields if your website\'s front end is not publicly accessible and requires a username and password for visitors to connect.
+                      If you\'re unsure, simply %sleave these fields empty%s. Please note that the CDN delivery method will not work if your site is protected by HTTP AUTH.','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
         </info>
         <?php else:  ?>
             <p><?php esc_html_e('The HTTP AUTH credentials have been defined in the wp-config file.', 'shortpixel-image-optimiser'); ?></p>
@@ -45,7 +45,7 @@ if(! $this->is_curl_installed) {
 ?>
 
 <p>
-  <?php esc_html_e("If you are using Cloudflare on your site, we recommend that you to fill in the details below. This will allow ShortPixel to work seamlessly with Cloudflare, so that any image optimized/restored by ShortPixel is automatically updated on Cloudflare as well.",'shortpixel-image-optimiser');?>
+  <?php esc_html_e("If you are using Cloudflare on your site, we recommend filling in the details below. This allows ShortPixel to work seamlessly with Cloudflare, ensuring that any images optimized or restored by ShortPixel are automatically updated on Cloudflare as well.",'shortpixel-image-optimiser');?>
   <i class="documentation dashicons dashicons-editor-help" title="Click for more info" data-link="https://shortpixel.com/knowledge-base/article/160-cloudlfare"></i>
 </p>
 
@@ -65,7 +65,7 @@ if(! $this->is_curl_installed) {
 
         <inputlabel>Token</inputlabel> <input name="cloudflareToken" type="text"  id="cloudflare-token" <?php echo(! $this->is_curl_installed ? 'disabled' : '');?>  value="<?php echo esc_attr($view->data->cloudflareToken) ?>" class='regular-text' autocomplete="off">
         <info>
-            <?php printf(esc_html__('Enter your %s site token %s for authentication. This token needs %s Cache Purge permission %s! ', 'shortpixel-image-optimiser'), '<a href="https://dash.cloudflare.com/profile/api-tokens" target="_blank">', '</a>', '<a href="https://shortpixel.com/knowledge-base/article/325-using-shortpixel-image-optimizer-with-cloudflare-api-token" target="_blank">', '</a>'); ?>
+            <?php printf(esc_html__('Enter your %s site token %s for authentication. This token must have %s Cache Purge permission %s! ', 'shortpixel-image-optimiser'), '<a href="https://dash.cloudflare.com/profile/api-tokens" target="_blank">', '</a>', '<a href="https://shortpixel.com/knowledge-base/article/using-shortpixel-image-optimizer-with-cloudflare-api-token" target="_blank">', '</a>'); ?>
         </info>
         <p><a href="https://shortpixel.com/knowledge-base/article/325-using-shortpixel-image-optimizer-with-cloudflare-api-token" target="_blank" class="shortpixel-help-link">
               <?php esc_html_e('How to set it up','shortpixel-image-optimiser');?>

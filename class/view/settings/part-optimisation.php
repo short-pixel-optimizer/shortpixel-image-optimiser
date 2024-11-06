@@ -123,7 +123,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                     <?php printf(esc_html__('Apply compression to %s image thumbnails.%s ','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
 								</name>
                 <info>
-                      <?php printf(esc_html__('It is highly recommended that you optimize the thumbnails as they are usually the images most viewed by end users and can generate most traffic. %s Please note that thumbnails count up to your total quota.','shortpixel-image-optimiser'), '<br>'); ?>
+                      <?php printf(esc_html__('It is highly recommended to optimize thumbnails, as they are often the images most viewed by end users and can generate the most traffic. %s Please note that thumbnails count toward your total quota.','shortpixel-image-optimiser'), '<br>'); ?>
                 </info>
             </content>
           </setting>
@@ -338,7 +338,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                     <?php printf(esc_html__('%s Smart crop %s images where applicable.','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
                 </name>
                 <info>
-                  <?php printf(esc_html__('Generate subject-centered thumbnails using ShortPixel\'s AI engine (%sexample%s). The new thumbnails look sharper (and can be slightly bigger) than the ones created by WordPress. Ideal for e-commerce websites and blogs where the images sell the products/content.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/182-what-is-smart-cropping" target="_blank">', '</a>'); ?>
+                  <?php printf(esc_html__('Generate subject-centered thumbnails using ShortPixel\'s AI engine (%ssee sexample%s). These new thumbnails appear sharper and may be slightly larger than those created by WordPress, making them ideal for e-commerce websites and blogs where images are key to showcasing products and content.','shortpixel-image-optimiser'), '<a href="https://shortpixel.com/knowledge-base/article/182-what-is-smart-cropping" target="_blank">', '</a>'); ?>
                 </info>
                 <?php
                 $smartcrop = (
@@ -393,7 +393,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
             </p>
 							<info>
 
-								<?php esc_html_e('Preserves the original aspect ratio and doesn\'t crop the image.  Recommended for large photos, like the ones taken with your phone. Saved space can go up to 80% or more after resizing. Please note that this option does not prevent thumbnails from being created that should  be larger than the selected dimensions, but these thumbnails will also be resized to the dimensions selected here.','shortpixel-image-optimiser');?>
+								<?php esc_html_e('Preserves the original aspect ratio without cropping the image. Recommended for large photos, such as those taken with a smartphone. This can save up to 80% or more in storage space after resizing. Please note that this option does not prevent thumbnails from being created at dimensions larger than the selected size; however, these thumbnails will also be resized to match the dimensions chosen here.','shortpixel-image-optimiser');?>
                 <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/208-can-shortpixel-automatically-resize-new-image-uploads"></i>
 							</info>
 

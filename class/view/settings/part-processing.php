@@ -82,7 +82,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 
         <info>
-          <?php esc_html_e('You can remove the backup folder at any moment but it is best to keep a local/cloud copy, in case you want to restore the optimized files to originals or re-optimize the images using a different compression type.','shortpixel-image-optimiser');?>
+          <?php printf(esc_html__('You can delete the backup folder at any time, but it is best to %skeep a local or cloud copy.%s This way, you can easily restore the optimized files to their originals or re-optimize the images with a different compression type if needed.','shortpixel-image-optimiser'),
+             '<a href="https://shortpixel.com/knowledge-base/article/where-is-the-backup-folder-located/" target="_blank">','</a>'
+             );
+         ?>
         </info>
       </content>
       <warning id="backup-warning">
@@ -104,7 +107,7 @@ if ( ! defined( 'ABSPATH' ) ) {
       ?>
 
       <name>
-        <?php esc_html_e('Show Custom Media menu item','shortpixel-image-optimiser');?>
+        <?php esc_html_e('Display the Media > Custom Media menu, which allows optimization of images not listed in the Media Library.','shortpixel-image-optimiser');?>
 
       </name>
 
