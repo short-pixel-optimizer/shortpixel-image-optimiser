@@ -184,7 +184,9 @@
   height: 104px;
 }
 .wrap.is-shortpixel-bulk-page section.panel.dashboard {
-  max-width: 80%;
+  max-width: 90%;
+  margin: 20px auto;
+  border-radius: 16px 16px 0px 0px;
 }
 .wrap.is-shortpixel-bulk-page section.panel.dashboard h3.heading {
   border: 0;
@@ -229,6 +231,7 @@
 }
 .wrap.is-shortpixel-bulk-page section.panel.dashboard .bulk-welcome {
   background-color: #C7EDF4;
+  border-radius: 16px 16px 0px 0px;
 }
 .wrap.is-shortpixel-bulk-page section.panel.dashboard .bulk-welcome h3 {
   font-size: 28px;
@@ -283,7 +286,8 @@
 }
 .wrap.is-shortpixel-bulk-page h3.heading {
   margin: 15px 0 15px 0px;
-  padding-left: 10px;
+  padding-left: 15px;
+  padding-bottom: 12px;
   font-size: 20px;
   font-weight: 400;
   line-height: 42px;
@@ -483,12 +487,15 @@
   margin: 15px 0;
   padding-bottom: 35px;
   background: #fff;
+  border-radius: 16px 16px 0px 0px;
 }
 .wrap.is-shortpixel-bulk-page .panel.active {
   visibility: visible;
   opacity: 1;
   z-index: 5;
   position: relative;
+  width: 95%;
+  margin: auto;
 }
 .wrap.is-shortpixel-bulk-page .panel .panel-container {
   z-index: 5;
@@ -527,8 +534,8 @@
 }
 .wrap.is-shortpixel-bulk-page .processor-paused {
   display: none;
-  margin: 25px 0;
-  width: 90%;
+  margin: 25px auto;
+  width: 95%;
   background: rgb(31, 190, 201);
   border: 1px solid #ccc;
   font-size: 26px;
@@ -536,7 +543,7 @@
   padding: 26px 0;
   text-align: center;
   z-index: 10;
-  border-radius: 3px;
+  border-radius: 16px;
   cursor: pointer;
   transition: all 900ms;
 }
