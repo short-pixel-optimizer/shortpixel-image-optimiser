@@ -167,6 +167,9 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page .shortpixel-icon.close {
   background-image: url("../images/icon/close.svg");
 }
+.wrap.is-shortpixel-settings-page .shortpixel-icon.cart {
+  background-image: url("../images/icon/cart.svg");
+}
 .wrap.is-shortpixel-settings-page .shortpixel-icon.dashboard {
   background-image: url("../images/icon/dashboard.svg");
 }
@@ -604,15 +607,31 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page .upgrade-banner {
   width: 220px;
+  height: 270px;
   margin: 16px 9px 7px 2px;
+  border-radius: 0.7rem;
   background-color: #F4FBFC;
+}
+.wrap.is-shortpixel-settings-page .upgrade-banner .robo-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.wrap.is-shortpixel-settings-page .upgrade-banner .robo-from-banner {
+  margin-right: 8px;
+  margin-left: 10px;
+}
+.wrap.is-shortpixel-settings-page .upgrade-banner h2 {
+  font-family: Roboto, serif;
+  font-weight: 700;
+  color: #116C7E;
 }
 .wrap.is-shortpixel-settings-page .upgrade-banner .banner-line-container {
   display: flex;
   flex-direction: row;
   align-items: center;
-  margin-bottom: -1px;
-  font-family: Roboto;
+  height: 30px;
+  font-family: Roboto, serif;
   font-weight: 400;
   color: #116C7E;
 }
@@ -621,6 +640,20 @@ div.spio-modal-title {
   height: 18px;
   margin-right: 8px;
   margin-left: 10px;
+}
+.wrap.is-shortpixel-settings-page .upgrade-banner button.upgrade {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 130px;
+  height: 30px;
+  margin-left: 13px;
+  margin-top: 13px;
+  background: #ED332B;
+}
+.wrap.is-shortpixel-settings-page .upgrade-banner .shortpixel-icon.cart {
+  height: 18px;
+  width: 18px;
 }
 .wrap.is-shortpixel-settings-page .red {
   color: #ff0000;

@@ -91,24 +91,32 @@ if ( ! defined( 'ABSPATH' ) ) {
 
           <div class='upgrade-banner'>
               <div class="robo-container">
-                  <span class="shortpixel-icon robo"></span>
+                  <div class="robo-from-banner"> <?php echo UIHelper::getIcon('res/img/robo-slider.png'); ?></div>
+                  <h2><?php _e('Upgrade to ShortPixel Unlimited', 'shortpixel-image-optimiser'); ?> </h2>
               </div>
               <div class="banner-line-container">
                   <span class="shortpixel-icon ok"></span>
-                  <p><?php _e('Feature 1 lorem ipsum ', 'shortpixel-image-optimiser'); ?></p>
+                  <p><?php _e('Unlimited credits ', 'shortpixel-image-optimiser'); ?></p>
               </div>
               <div class="banner-line-container">
                   <span class="shortpixel-icon ok"></span>
-                  <p><?php _e('Feature 1 lorem ipsum ', 'shortpixel-image-optimiser'); ?></p>
+                  <p><?php _e('Unlimited websites ', 'shortpixel-image-optimiser'); ?></p>
               </div>
               <div class="banner-line-container">
                   <span class="shortpixel-icon ok"></span>
-                  <p><?php _e('Feature 1 lorem ipsum ', 'shortpixel-image-optimiser'); ?></p>
+                  <p><?php _e('Unlimited WebP/AVIF ', 'shortpixel-image-optimiser'); ?></p>
               </div>
               <div class="banner-line-container">
                   <span class="shortpixel-icon ok"></span>
-                  <p><?php _e('Feature 1 lorem ipsum ', 'shortpixel-image-optimiser'); ?></p>
+                  <p><?php _e('SmartCompress ', 'shortpixel-image-optimiser'); ?></p>
               </div>
+              <div class='banner-upgrade-button'>
+                  <button type="button" class="upgrade" id="upgrade" onclick="window.open('https://shortpixel.com/ms/af/KZYK08Q28044', '_blank');">
+                      <i class="shortpixel-icon cart"></i>
+                      <?php _e('Upgrade Now', 'shortpixel-image-optimizer'); ?>
+                  </button>
+              </div>
+
           </div>
 
 
