@@ -50,6 +50,12 @@
          margin-right: 12px;
        }
     }
+    info
+    {
+       .exclude-settings-expanded p {
+	  margin: 5px 0;
+       }
+    }
     .new-exclusion-button {
     //   float: left;
     //   margin-right: 8px;
@@ -63,7 +69,7 @@
     }
 
     ul.exclude-list {
-        min-height: 30px;
+       // min-height: 30px;
          li {
           //  display: flex;
           //  justify-content: space-between;

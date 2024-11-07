@@ -130,9 +130,7 @@ if( $this->is_nginx ){
               <label for="deliverWebpAltered">
                   <?php esc_html_e('Using the &lt;PICTURE&gt; tag syntax','shortpixel-image-optimiser');?>
               </label>
-
-							<br><br>
-							<ul class="toggleTarget deliverAlteringTypesPicture" >
+		<ul class="toggleTarget deliverAlteringTypesPicture" >
                   <li>
                       <input type="radio" name="deliverWebpAlteringType" id="deliverWebpAlteredWP" <?php checked(($view->data->deliverWebp == 2), true);?> value="deliverWebpAlteredWP">
                       <label for="deliverWebpAlteredWP">

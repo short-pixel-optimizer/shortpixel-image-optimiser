@@ -14,6 +14,14 @@ i.documentation {
   font-size: 1.8em;
   color: #1caecb;
   cursor: pointer;
+  position: relative;
+  top: 3px;
+}
+i.documentation.up {
+  top: -3px;
+}
+i.documentation.down {
+  top: 10px;
 }
 
 div.spio-modal-shade {
@@ -49,7 +57,7 @@ div.spio-modal {
 }
 div.spio-modal iframe {
   width: 100%;
-  height: 500px;
+  height: 625px;
 }
 div.spio-modal .spio-close-help-button {
   position: absolute;
@@ -92,21 +100,19 @@ div.spio-modal-title {
   background: #fff;
   text-align: center;
   display: flex;
-  padding: 8px 16px;
   justify-content: space-between;
   align-items: center;
-  margin-left: -22px;
-  margin-top: -10px;
-  margin-right: -22px;
-  margin-bottom: 10px;
+  width: 95%;
+  margin: 10px auto;
+  border-radius: 16px;
 }
 .wrap.is-shortpixel-settings-page header h1 {
   line-height: 50px;
 }
 .wrap.is-shortpixel-settings-page header img {
   vertical-align: bottom;
+  padding-bottom: 5px;
   margin-right: 8px;
-  margin-left: 1.1em;
 }
 .wrap.is-shortpixel-settings-page header .top-buttons {
   margin-right: 4em;
@@ -528,11 +534,6 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page .sp-column-actions-template + .sp-column-info {
   display: none;
-}
-.wrap.is-shortpixel-settings-page .button-primary, .wrap.is-shortpixel-settings-page .button-primary:focus {
-  background-color: #0f6a7d;
-  border-color: #0f6a7d;
-  color: #fff;
 }
 .wrap.is-shortpixel-settings-page .button-primary:hover, .wrap.is-shortpixel-settings-page .button-primary:focus:hover {
   background-color: #1cbecb;
@@ -1030,6 +1031,9 @@ div.spio-modal-title {
   float: right;
   margin-right: 12px;
 }
+.wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting info .exclude-settings-expanded p {
+  margin: 5px 0;
+}
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting .new-exclusion-button {
   width: 100%;
   display: block;
@@ -1039,7 +1043,6 @@ div.spio-modal-title {
   color: #92D5E3;
 }
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting ul.exclude-list {
-  min-height: 30px;
   margin: 20px 0;
 }
 .wrap.is-shortpixel-settings-page #tab-exclusions .exclude-patterns-setting ul.exclude-list li {
@@ -1401,12 +1404,12 @@ div.spio-modal-title {
   font-size: 14px;
   font-weight: 700;
   display: block;
-  padding: 20px 10px 0 0;
+  padding: 6px 10px 0 0;
   box-sizing: border-box;
   color: #116C7E;
 }
 .wrap.is-shortpixel-settings-page setting content {
-  padding: 15px 10px;
+  padding: 5px 10px;
   flex-basis: calc(100% - 250px);
   font-size: 14px;
   display: inline-block;
@@ -1418,7 +1421,6 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page setting info {
   display: block;
-  padding-top: 10px;
   color: #818181;
   font-size: 13px;
   margin: 6px 0;

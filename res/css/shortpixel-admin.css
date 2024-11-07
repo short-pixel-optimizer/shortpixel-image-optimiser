@@ -546,7 +546,7 @@ body.debug-model-active {
   content: "OFF";
   color: white;
   font-size: 10px;
-  top: 45%;
+  top: 9px;
   transform: translateY(-50%);
   right: 5px;
   transition: 0.4s;

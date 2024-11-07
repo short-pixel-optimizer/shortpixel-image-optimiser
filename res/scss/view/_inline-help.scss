@@ -6,6 +6,14 @@ i.documentation {
   font-size: 1.8em;
   color: #1caecb;
   cursor: pointer;
+  position:relative;
+  top: 3px;
+  &.up {
+    top: -3px;
+  }
+  &.down {
+    top: 10px;
+  }
 } // question
 
 
@@ -44,7 +52,7 @@ div.spio-modal {
     overflow-y: auto;
     iframe {
         width: 100%;
-        height: 500px;
+        height: 625px;
     }
 		.spio-close-help-button {
 			 position:absolute;

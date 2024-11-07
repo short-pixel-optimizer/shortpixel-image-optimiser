@@ -24,14 +24,14 @@ setting{
     font-size: 14px;
     font-weight: 700;
     display: block;
-    padding: 20px 10px 0 0;
+    padding: 6px 10px 0 0;
     box-sizing: border-box;
     color: $blue_closed;
 
   }
  
   content {
-     padding: 15px 10px;
+     padding: 5px 10px;
      flex-basis: calc(100% - 250px);
      font-size: 14px;
      display: inline-block;
@@ -48,7 +48,6 @@ setting{
   // additional information
   info {
      display: block;
-     padding-top: 10px;
      color: #818181;
      font-size: 13px;
      margin: 6px 0;

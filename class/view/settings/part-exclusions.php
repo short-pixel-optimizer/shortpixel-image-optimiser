@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
   <setting class='exclude-thumbnail-setting'>
      <name>
          <?php esc_html_e('Exclude thumbnail sizes','shortpixel-image-optimiser');?>
-                <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/113-how-can-i-optimize-only-certain-thumbnail-sizes"></i>
+                <i class='documentation up dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/113-how-can-i-optimize-only-certain-thumbnail-sizes"></i>
      </name>
      <content>
 

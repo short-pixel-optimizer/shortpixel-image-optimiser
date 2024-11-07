@@ -119,9 +119,10 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                     ]);
               ?>
 
-								<name>
+                <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-optimize-thumbnails/"></i>
+		<name>
                     <?php printf(esc_html__('Apply compression to %s image thumbnails.%s ','shortpixel-image-optimiser'), '<strong>', '</strong>'); ?>
-								</name>
+		</name>
                 <info>
                       <?php printf(esc_html__('It is highly recommended to optimize thumbnails, as they are often the images most viewed by end users and can generate the most traffic. %s Please note that thumbnails count toward your total quota.','shortpixel-image-optimiser'), '<br>'); ?>
                 </info>
@@ -262,6 +263,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
               <?php esc_html_e('Force conversion of images when transparent', 'shortpixel-image-optimiser'); ?>
             </label>
           </switch>
+          <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/settings-force-conversion-of-images-when-transparent/"></i>
           <name>
             <?php esc_html_e('The transparency will be lost.','shortpixel-image-optimiser'); ?>
           </name>
@@ -329,7 +331,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                   <label>
                     <input type="checkbox" class="switch" name="useSmartcrop" value="1" <?php checked($view->data->useSmartcrop, '1');?>>
                     <div class="the_switch">&nbsp; </div>
-                    <?php esc_html_e('Enable SmartCrop:','shortpixel-image-optimiser');?>
+                    <?php esc_html_e('Enable SmartCrop','shortpixel-image-optimiser');?>
 
                   </label>
                 </switch>
@@ -378,7 +380,7 @@ if (true === \wpSPIO()->env()->useTrustedMode())
                   <?php esc_html_e('Resize large images','shortpixel-image-optimiser');?>
 								</label>
 							</switch>
-
+                					<i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/208-can-shortpixel-automatically-resize-new-image-uploads"></i>
 
             <p>
             <?php esc_html_e('Resize to maximum','shortpixel-image-optimiser') ?>
@@ -394,7 +396,6 @@ if (true === \wpSPIO()->env()->useTrustedMode())
 							<info>
 
 								<?php esc_html_e('Preserves the original aspect ratio without cropping the image. Recommended for large photos, such as those taken with a smartphone. This can save up to 80% or more in storage space after resizing. Please note that this option does not prevent thumbnails from being created at dimensions larger than the selected size; however, these thumbnails will also be resized to match the dimensions chosen here.','shortpixel-image-optimiser');?>
-                <i class='documentation dashicons dashicons-editor-help' data-link="https://shortpixel.com/knowledge-base/article/208-can-shortpixel-automatically-resize-new-image-uploads"></i>
 							</info>
 
               <div class="resize-type-wrap" <?php echo( $view->data->resizeImages ? '' : 'style="display:none;"' );?>>

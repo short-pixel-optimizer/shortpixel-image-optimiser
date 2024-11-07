@@ -26,21 +26,19 @@
   background: #fff;
   text-align: center;
   display: flex;
-  padding: 8px 16px;
   justify-content: space-between;
   align-items: center;
-  margin-left: -22px;
-  margin-top: -10px;
-  margin-right: -22px;
-  margin-bottom: 10px;
+  width: 95%;
+  margin: 10px auto;
+  border-radius: 16px;
 }
 .wrap.is-shortpixel-bulk-page header h1 {
   line-height: 50px;
 }
 .wrap.is-shortpixel-bulk-page header img {
   vertical-align: bottom;
+  padding-bottom: 5px;
   margin-right: 8px;
-  margin-left: 1.1em;
 }
 .wrap.is-shortpixel-bulk-page header .top-buttons {
   margin-right: 4em;
