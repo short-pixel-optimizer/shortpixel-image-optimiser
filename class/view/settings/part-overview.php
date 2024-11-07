@@ -105,38 +105,56 @@ $bulkblock = $dashboard->bulkblock;
      </div>
   </div>
 
-  <settinglist>
-    <setting>
-      <name>
-        <?php esc_html_e('API Key:','shortpixel-image-optimiser'); ?>
-      </name>
-      <content>
+    <settinglist>
+        <closed-apikey-dropdown>
+            <name>
+                <?php esc_html_e('API Key & Account Information ', 'shortpixel-image-optimiser'); ?>
+            </name>
+            <info>
+                <?php if ($view->key->is_constant_key) {
+                    esc_html_e('Key defined in wp-config.php.', 'shortpixel-image-optimiser');
+                } ?>
+                <span class="shortpixel-key-valid" <?php echo $view->key->is_verifiedkey ? '' : 'style="display:none;"' ?>>
+                <i class="shortpixel-icon ok"></i><?php esc_html_e('Yey! Your API Key is Valid.', 'shortpixel-image-optimiser'); ?>
+            </span>
+            </info>
+            <span class="toggle-link">
+            <span class="toggle-text">Show API Key</span>
+            <span class="shortpixel-icon chevron" ></span>
+        </span>
+        </closed-apikey-dropdown>
 
-        <div class='apifield'>
-          <input name="apiKey" type="password" id="key" value="<?php echo esc_attr( $view->key->apiKey );?>"
-           class="regular-text" <?php echo($view->key->is_editable ? "" : 'disabled') ?> >
-           <i class="shortpixel-icon eye"></i>
-        </div>
+        <hr>
 
-      <!--   <button type="button" id="validate" class="button button-primary" title="<?php esc_html_e('Validate the provided API key','shortpixel-image-optimiser');?>"
-            onclick="ShortPixel.validateKey(this)" <?php echo $view->key->is_editable ? "" : "disabled"?> >
-            <i class='shortpixel-icon save'></i>
-            <?php esc_html_e('Save settings & validate','shortpixel-image-optimiser');?>
-        </button> -->
+        <content style="display: none;"> <!-- Initially hidden -->
+            <div class='apifield'>
+                <input name="apiKey" type="password" id="key" value="<?php echo esc_attr($view->key->apiKey); ?>"
+                       class="regular-text" <?php echo($view->key->is_editable ? '' : 'disabled') ?>>
+                <i class="shortpixel-icon eye"></i>
+            </div>
 
-      <info>
-          <?php if ($view->key->is_constant_key)
-          {
-              esc_html_e('Key defined in wp-config.php.','shortpixel-image-optimiser');
-          }
-          ?>
-          <span class="shortpixel-key-valid" <?php echo $view->key->is_verifiedkey ? '' : 'style="display:none;"' ?>>
-              <i class="shortpixel-icon ok"></i><?php esc_html_e('Your API key is valid.','shortpixel-image-optimiser');?>
-          </span>
-      </info>
-      </content>
-    </setting>
-  </settinglist>
+            <button type="button" id="validate" class="button button-primary" title="<?php esc_html_e('Validate the provided API key','shortpixel-image-optimiser');?>"
+                    onclick="ShortPixel.validateKey(this)" <?php echo $view->key->is_editable ? '' : 'disabled' ?>>
+                <i class='shortpixel-icon save'></i>
+                <?php esc_html_e('Save settings & validate', 'shortpixel-image-optimiser'); ?>
+            </button>
+        </content>
+    </settinglist>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggleText = document.querySelector('.toggle-text');
+            const toggleChevron = document.querySelector('.shortpixel-icon.chevron');
+            const content = document.querySelector('settinglist > content');
+
+            document.querySelector('.toggle-link').addEventListener('click', function () {
+                const isVisible = content.style.display === 'flex';
+                content.style.display = isVisible ? 'none' : 'flex';
+                toggleText.textContent = isVisible ? 'Show API Key' : 'Hide API Key';
+                toggleChevron.style.transform = isVisible ? 'rotate(0deg)' : 'rotate(180deg)';
+            });
+        });
+    </script>
 
   <?php $this->loadView('settings/part-savebuttons', false); ?>
 

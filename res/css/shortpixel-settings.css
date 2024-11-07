@@ -164,6 +164,9 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page .shortpixel-icon.bulk {
   background-image: url("../images/icon/bulk.svg");
 }
+.wrap.is-shortpixel-settings-page .shortpixel-icon.chevron {
+  background-image: url("../images/icon/chevron.svg");
+}
 .wrap.is-shortpixel-settings-page .shortpixel-icon.close {
   background-image: url("../images/icon/close.svg");
 }
@@ -532,7 +535,6 @@ div.spio-modal-title {
   margin-left: 2px;
 }
 .wrap.is-shortpixel-settings-page .shortpixel-key-valid {
-  margin-top: 16px;
   display: inline-block;
 }
 .wrap.is-shortpixel-settings-page .sp-column-actions-template + .sp-column-info {
@@ -981,43 +983,78 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page #tab-overview settinglist {
   background: #F4FBFC;
   border-radius: 6px;
+  width: 100%;
+  height: 125px;
+  top: 404px;
 }
-.wrap.is-shortpixel-settings-page #tab-overview settinglist setting {
+.wrap.is-shortpixel-settings-page #tab-overview settinglist closed-apikey-dropdown {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: flex-start;
   align-content: center;
+  margin: 18px;
 }
-.wrap.is-shortpixel-settings-page #tab-overview settinglist setting name, .wrap.is-shortpixel-settings-page #tab-overview settinglist setting content {
-  padding: 12px 0 0 0;
+.wrap.is-shortpixel-settings-page #tab-overview settinglist closed-apikey-dropdown name, .wrap.is-shortpixel-settings-page #tab-overview settinglist closed-apikey-dropdown info {
+  padding: 12px;
 }
-.wrap.is-shortpixel-settings-page #tab-overview settinglist setting input {
+.wrap.is-shortpixel-settings-page #tab-overview settinglist closed-apikey-dropdown .toggle-link {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  color: #0073aa;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.wrap.is-shortpixel-settings-page #tab-overview settinglist closed-apikey-dropdown .shortpixel-icon.chevron {
+  height: 8px;
+  width: 12px;
+  transition: transform 0.3s ease;
+  margin-left: 5px;
+}
+.wrap.is-shortpixel-settings-page #tab-overview settinglist content {
+  display: none;
+  flex-direction: row;
+  align-items: flex-start;
+  align-content: center;
+  margin: 20px;
+}
+.wrap.is-shortpixel-settings-page #tab-overview settinglist content input {
   border: 1px solid #1ABDCA;
   background: url("../images/icon/key.svg") 1% center no-repeat;
   background-color: #fff;
   padding-left: 30px;
   height: 36px;
 }
-.wrap.is-shortpixel-settings-page #tab-overview settinglist setting button {
+.wrap.is-shortpixel-settings-page #tab-overview settinglist content button {
   padding: 4px 16px;
   color: #fff;
   background: #1ABDCA;
   box-sizing: border-box;
-  margin: 0;
+  margin: 0 0 0 10px;
 }
-.wrap.is-shortpixel-settings-page #tab-overview settinglist setting button i {
+.wrap.is-shortpixel-settings-page #tab-overview settinglist content button i {
   width: 12px;
   height: 12px;
-  margin-right: 4px;
+  margin-leftt: 12px;
 }
-.wrap.is-shortpixel-settings-page #tab-overview settinglist setting .apifield {
+.wrap.is-shortpixel-settings-page #tab-overview settinglist content .apifield {
   position: relative;
 }
-.wrap.is-shortpixel-settings-page #tab-overview settinglist setting .apifield i {
+.wrap.is-shortpixel-settings-page #tab-overview settinglist content .apifield i {
   position: absolute;
   right: 3px;
   top: 5px;
+  margin-bottom: 10px;
   cursor: pointer;
+}
+.wrap.is-shortpixel-settings-page #tab-overview settinglist #toggle-content:checked ~ content {
+  display: flex;
+}
+.wrap.is-shortpixel-settings-page #tab-overview settinglist #toggle-content:checked + closed-apikey-dropdown .toggle-text {
+  content: "Hide API Key";
+}
+.wrap.is-shortpixel-settings-page #tab-overview settinglist #toggle-content:checked + closed-apikey-dropdown .shortpixel-icon {
+  transform: rotate(180deg);
 }
 .wrap.is-shortpixel-settings-page .deliverWebpTypes, .wrap.is-shortpixel-settings-page .deliverAlteringTypesPicture {
   margin: 16px 0 16px 16px;

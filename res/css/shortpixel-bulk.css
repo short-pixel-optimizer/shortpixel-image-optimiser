@@ -90,8 +90,14 @@
 .wrap.is-shortpixel-bulk-page .shortpixel-icon.bulk {
   background-image: url("../images/icon/bulk.svg");
 }
+.wrap.is-shortpixel-bulk-page .shortpixel-icon.chevron {
+  background-image: url("../images/icon/chevron.svg");
+}
 .wrap.is-shortpixel-bulk-page .shortpixel-icon.close {
   background-image: url("../images/icon/close.svg");
+}
+.wrap.is-shortpixel-bulk-page .shortpixel-icon.cart {
+  background-image: url("../images/icon/cart.svg");
 }
 .wrap.is-shortpixel-bulk-page .shortpixel-icon.dashboard {
   background-image: url("../images/icon/dashboard.svg");

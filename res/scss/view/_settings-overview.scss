@@ -143,7 +143,7 @@
           } // PANEL
        }
        div {
-         background: #F4FBFC;
+         background: $blue_background;
          border-radius: 6px;
 
        }
@@ -151,21 +151,56 @@
 
     settinglist
     {
-       background: #F4FBFC;
-       border-radius: 6px;
+      background: $blue_background;
+      border-radius: 6px;
+      width: 100%;
+      height: 125px;
+      top: 404px;
 
-       setting
-       {
 
-           display: flex;
-           flex-direction: column;
+
+
+
+      closed-apikey-dropdown{
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            align-content: center;
+            margin: 18px;
+
+            name, info
+            {
+              padding: 12px;
+            }
+
+
+        .toggle-link {
+          display: flex;
+          align-items: center;
+          font-size: 16px;
+          color: #0073aa;
+          cursor: pointer;
+          text-decoration: underline;
+        }
+
+        .shortpixel-icon.chevron {
+          height: 8px;
+          width: 12px;
+          transition: transform 0.3s ease;
+          margin-left: 5px;
+        }
+      }
+
+
+
+         content{
+           display: none;
+           flex-direction: row;
            align-items: flex-start;
            align-content: center;
+           margin: 20px;
 
-           name, content
-           {
-              padding: 12px 0 0 0 ;
-           }
+
            input {
               border: 1px solid #1ABDCA;
 
@@ -179,11 +214,11 @@
               color: #fff;
               background: #1ABDCA;
               box-sizing: border-box;
-              margin: 0;
+              margin: 0 0 0 10px;
               i {
                  width: 12px;
                  height: 12px;
-                 margin-right: 4px;
+                 margin-leftt: 12px;
               }
 
            }
@@ -194,10 +229,24 @@
                   position: absolute;
                   right: 3px;
                   top: 5px;
+                  margin-bottom: 10px;
                   cursor: pointer;
                }
            }
-       }
+
+         }
+
+      #toggle-content:checked ~ content {
+        display: flex;
+      }
+
+      #toggle-content:checked + closed-apikey-dropdown .toggle-text {
+        content: 'Hide API Key';
+      }
+
+      #toggle-content:checked + closed-apikey-dropdown .shortpixel-icon {
+        transform: rotate(180deg);
+      }
     }
 
 
