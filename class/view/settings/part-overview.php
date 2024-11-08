@@ -115,7 +115,7 @@ $bulkblock = $dashboard->bulkblock;
                     esc_html_e('Key defined in wp-config.php.', 'shortpixel-image-optimiser');
                 } ?>
                 <span class="shortpixel-key-valid" <?php echo $view->key->is_verifiedkey ? '' : 'style="display:none;"' ?>>
-                <i class="shortpixel-icon ok"></i><?php esc_html_e('Yey! Your API Key is Valid.', 'shortpixel-image-optimiser'); ?>
+                <?php esc_html_e('Yey! Your API Key is Valid ', 'shortpixel-image-optimiser'); ?><i class="shortpixel-icon ok"></i>
             </span>
             </info>
             <span class="toggle-link">
