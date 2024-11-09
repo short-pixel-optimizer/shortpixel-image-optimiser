@@ -105,7 +105,9 @@ $bulkblock = $dashboard->bulkblock;
      </div>
   </div>
 
+
     <settinglist>
+        <input type="checkbox" id="toggle-content" style="display: none;">
         <closed-apikey-dropdown>
             <name>
                 <?php esc_html_e('API Key & Account Information ', 'shortpixel-image-optimiser'); ?>
@@ -118,16 +120,16 @@ $bulkblock = $dashboard->bulkblock;
                 <?php esc_html_e('Yey! Your API Key is Valid ', 'shortpixel-image-optimiser'); ?><i class="shortpixel-icon ok"></i>
             </span>
             </info>
-            <span class="toggle-link">
-            <span class="toggle-text">Show API Key</span>
-            <span class="shortpixel-icon chevron" ></span>
-        </span>
+            <label for="toggle-content" class="toggle-link">
+                <span class="toggle-text">Show API Key</span>
+                <span class="shortpixel-icon chevron"></span>
+            </label>
         </closed-apikey-dropdown>
 
         <hr>
 
-        <content style="display: none;"> <!-- Initially hidden -->
-            <div class='apifield'>
+        <content>
+            <div class="apifield">
                 <input name="apiKey" type="password" id="key" value="<?php echo esc_attr($view->key->apiKey); ?>"
                        class="regular-text" <?php echo($view->key->is_editable ? '' : 'disabled') ?>>
                 <i class="shortpixel-icon eye"></i>
@@ -141,20 +143,21 @@ $bulkblock = $dashboard->bulkblock;
         </content>
     </settinglist>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const toggleText = document.querySelector('.toggle-text');
-            const toggleChevron = document.querySelector('.shortpixel-icon.chevron');
-            const content = document.querySelector('settinglist > content');
+    <!--  <script>
+          document.addEventListener('DOMContentLoaded', function () {
+              const toggleText = document.querySelector('.toggle-text');
+              const toggleChevron = document.querySelector('.shortpixel-icon.chevron');
+              const content = document.querySelector('content');
 
-            document.querySelector('.toggle-link').addEventListener('click', function () {
-                const isVisible = content.style.display === 'flex';
-                content.style.display = isVisible ? 'none' : 'flex';
-                toggleText.textContent = isVisible ? 'Show API Key' : 'Hide API Key';
-                toggleChevron.style.transform = isVisible ? 'rotate(0deg)' : 'rotate(180deg)';
-            });
-        });
-    </script>
+              document.querySelector('.toggle-link').addEventListener('click', function () {
+                  const isVisible = content.style.opacity === '1';
+                  content.style.opacity = isVisible ? '0' : '1';
+                  content.style.maxHeight = isVisible ? '0' : '220px';
+                  toggleText.textContent = isVisible ? 'Show API Key' : 'Hide API Key';
+                  toggleChevron.style.transform = isVisible ? 'rotate(0deg)' : 'rotate(180deg)';
+              });
+          });
+      </script>-->
 
   <?php $this->loadView('settings/part-savebuttons', false); ?>
 

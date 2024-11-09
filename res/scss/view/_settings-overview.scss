@@ -149,14 +149,15 @@
        }
     }
 
-    settinglist
-    {
-      background: $blue_background;
-      border-radius: 6px;
-      width: 100%;
-      height: 125px;
-      top: 404px;
-      margin-bottom: 10px;
+  settinglist {
+    background: $blue_background;
+    border-radius: 6px;
+    width: 100%;
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.3s ease;
+    max-height: 125px;
+    margin-bottom: 10px;
+  }
 
       closed-apikey-dropdown{
             display: flex;
@@ -198,7 +199,7 @@
         color: #0073aa;
         cursor: pointer;
         text-decoration: underline;
-        line-height: 14.06px;
+        line-height: 14px;
         text-align: right;
         margin-top: 20px;
         margin-right: 10px;
@@ -208,70 +209,82 @@
         //  font-weight: 400;
         //}
       }
+
       closed-apikey-dropdown + hr {
         width: 96%;
         margin: 0 auto;
         border: none;
         border-top: 1px solid $blue_open;
         height: 1px;
-
+        transition: max-height 0.3s ease, opacity 0.3s ease;
       }
 
-         content{
-           display: none;
-           flex-direction: row;
-           align-items: flex-start;
-           align-content: center;
-           margin: 20px;
-
-
-           input {
-              border: 1px solid #1ABDCA;
-
-              background: url('../images/icon/key.svg') 1% center no-repeat;
-              background-color: #fff;
-              padding-left: 30px;
-              height: 36px;
-           }
-           button {
-              padding: 4px 16px;
-              color: #fff;
-              background: #1ABDCA;
-              box-sizing: border-box;
-              margin: 0 0 0 10px;
-              i {
-                 width: 12px;
-                 height: 12px;
-                 margin-leftt: 12px;
-              }
-
-           }
-           .apifield
-           {
-               position: relative;
-               i {
-                  position: absolute;
-                  right: 3px;
-                  top: 5px;
-                  margin-bottom: 10px;
-                  cursor: pointer;
-               }
-           }
-
-         }
-
-      #toggle-content:checked ~ content {
+      content {
+        opacity: 1;
+        //max-height: 100px;
+        overflow: hidden;
+        transition: max-height 0.3s ease, opacity 0.3s ease;
         display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        margin: 20px;
       }
 
-      #toggle-content:checked + closed-apikey-dropdown .toggle-text {
-        content: 'Hide API Key';
+      content input {
+        border: 1px solid $blue_default;
+        background: url('../images/icon/key.svg') 1% center no-repeat;
+        background-color: #fff;
+        padding-left: 30px;
+        height: 36px;
       }
 
-      #toggle-content:checked + closed-apikey-dropdown .shortpixel-icon {
+      content button {
+        padding: 4px 16px;
+        color: #fff;
+        background: #1ABDCA;
+        box-sizing: border-box;
+        margin: 0 0 0 10px;
+      }
+
+      content button i {
+        width: 12px;
+        height: 12px;
+        margin-leftt: 12px;
+      }
+
+      content .apifield {
+        position: relative;
+      }
+
+      content .apifield i {
+        position: absolute;
+        right: 3px;
+        top: 5px;
+        margin-bottom: 10px;
+        cursor: pointer;
+      }
+
+      //collapse content and hr(line) when unchecked
+      #toggle-content:not(:checked) ~ content,
+      #toggle-content:not(:checked) ~ closed-apikey-dropdown + hr {
+        opacity: 0;
+        max-height: 0;
+        overflow: hidden;
+      }
+
+      //expand them when checked
+      #toggle-content:checked ~ content,
+      #toggle-content:checked ~ closed-apikey-dropdown + hr {
+        opacity: 1;
+        max-height: 200px;
+      }
+
+      //rotation of little arrow(chevron from figma)
+      #toggle-content:checked + closed-apikey-dropdown .shortpixel-icon.chevron {
         transform: rotate(180deg);
       }
-    }
+
+
 
 
 }
