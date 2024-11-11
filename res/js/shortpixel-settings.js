@@ -320,16 +320,20 @@ class ShortPixelSettings
 	InitModeSwitcher()
 	{
       var switcher = document.getElementById('viewmode-toggles');
+			var checkbox = switcher.querySelector('input[type="checkbox"]');
+
 			if (null == switcher)
 			{
 						return;
 			}
-			if (this.root.classList.contains('advanced') || switcher.checked)
+			if (this.root.classList.contains('advanced') || checkbox.checked)
 			{
+				 checkbox.checked = true;
 				 this.current_mode = 'advanced';
 			}
-			else	
+			else
 			{
+				 checkbox.checked = false;
 				 this.current_mode = 'simple';
 			}
 			switcher.addEventListener('change', this.SwitchViewModeEvent.bind(this));

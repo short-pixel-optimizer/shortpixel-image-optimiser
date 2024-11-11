@@ -487,14 +487,13 @@ class SettingsViewController extends \ShortPixel\ViewController
 				 if ($this->view->data->createAvif == 1)
            $this->avifServerCheck();
 
-
          // Set viewMode
 				 if (false === $this->view->key->is_verifiedkey)
 				 {
 					 	$view_mode = 'onboarding';
 						$this->display_part = 'nokey';
 				 }
-         elseif(true === true) // @todo The quick tour starter here.
+         elseif($this->view->data->redirectedSettings < 3 && $this->view->key->is_verifiedkey)
          {
             $view_mode = 'page-quick-tour';
          }

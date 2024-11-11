@@ -15,14 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
       <?php echo UIHelper::getIcon('res/images/illustration/logo_settings.svg'); ?>
   </h1>
 
-<!--
-  <div class='top-buttons'>
-    <button><i class='shortpixel-icon notifications'></i><?php _e('Notifications','shortpixel-image-optimiser'); ?></button>
-    <button id="viewmode-toggle"><i class='shortpixel-icon switch'></i>
-      <span class='advanced'><?php _e('Advanced', 'shortpixel-image-optimiser'); ?></span>
-      <span class='simple'><?php _e('Simple', 'shortpixel-image-optimiser'); ?></span>
-    </button>
-  </div>-->
+
 </header>
 
 <?php //$this->loadView('settings/part-header'); ?>
@@ -84,7 +77,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<div class="adv_switcher">
 				<?php esc_html_e('Advanced Mode','shortpixel-image-optimiser');?>
                 		<label class="adv_switch" id="viewmode-toggles">
-                        		<input type="checkbox">
+                        		<input type="checkbox" <?php echo ('advanced' == $this->view_mode) ? 'checked' : '' ?> >
 					<span class="adv_slider"></span>
             		    	</label>
 			</div>
