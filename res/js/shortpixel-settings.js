@@ -540,7 +540,7 @@ FormSendEvent(event)
 	 event.preventDefault();
 
 	 var form = event.target;
-	 var formData = new FormData(event.target);
+	 var formData = new FormData(event.target, event.submitter);
 
 	 formData.append('screen_action', 'form_submit');
 	 formData.append('form-nonce', formData.get('nonce'));

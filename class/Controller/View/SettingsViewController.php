@@ -500,7 +500,9 @@ class SettingsViewController extends \ShortPixel\ViewController
 				 else {
 					 $view_mode = get_user_option('shortpixel-settings-mode');
 	         if (false === $view_mode)
+           {
 	          $view_mode = $this->view_mode;
+           }
 
 				 }
 
@@ -727,10 +729,11 @@ class SettingsViewController extends \ShortPixel\ViewController
           }
 
           // analyse the save button
-          if (isset($post['save_bulk']))
+          if (isset($post['save-bulk']))
           {
             $this->do_redirect = true;
           }
+
 
 
           // handle 'reverse' checkbox.
@@ -767,7 +770,7 @@ class SettingsViewController extends \ShortPixel\ViewController
 				// Field that are in form for other purpososes, but are not part of model and should not be saved.
 					$ignore_fields = array(
 							'display_part',
-							'save_bulk',
+							'save-bulk',
 							'save',
 							'removeExif',
 							'png2jpgForce',
@@ -937,10 +940,6 @@ class SettingsViewController extends \ShortPixel\ViewController
       protected function doRedirect($redirect = 'self')
       {
 
-				if (true === $this->is_ajax_save)
-				{
-					$this->handleAjaxSave($redirect);
-				}
 
         if ($redirect == 'self')
         {
@@ -967,13 +966,18 @@ class SettingsViewController extends \ShortPixel\ViewController
 						$url = admin_url('upload.php?page=wp-short-pixel-bulk&panel=bulk-removeLegacy');
 				}
 
+        if (true === $this->is_ajax_save)
+				{
+					$this->handleAjaxSave($redirect, $url);
+				}
+
         wp_redirect($url);
         exit();
       }
 
-			protected function handleAjaxSave($redirect)
+			protected function handleAjaxSave($redirect, $url = false)
 			{
-				Log::addTemp('AJAX SAve');
+				Log::addTemp('AJAX SAve' . $redirect);
 						// Intercept new notices and add them
 						// Return JSON object with status of save action
 						$json = new \stdClass;
@@ -992,7 +996,8 @@ class SettingsViewController extends \ShortPixel\ViewController
 						}
 						if ($redirect !== 'self')
 						{
-							$json->redirect = $redirect;
+
+							$json->redirect = ($url !== false) ? $url : $redirect;
 						}
 
 Log::addTemp('Json Response', $json);
