@@ -24,7 +24,7 @@
 
 		 settinglist {
 			 //flex: 0 0 50%;
-       background-color: #fff; //#F4FBFC;
+       background-color: #fff; //$blue_background;
        width: 50%;
        padding: 12px;
        margin-top: 30px;
@@ -38,12 +38,12 @@
        }
        &.now-active
        {
-         background-color: #F4FBFC;
+         background-color: $blue_background;
       //   transition: all ease-out 0.5s;
          border: 1px solid #000;
 
          setting {
-           background-color: #F4FBFC ;
+           background-color: $blue_background ;
 
          }
        }

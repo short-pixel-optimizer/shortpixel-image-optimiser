@@ -1,11 +1,13 @@
 @import 'elements/animation';
 @import 'elements/actionbar';
+@import 'elements/colors';
 
 @import 'view/edit-media';
 //@import 'view/other-media';
 @import 'view/list-item';
 @import 'view/modal';
 @import 'view/debug';
+
 
 
 // General Styles ( mostly from style.css )
@@ -103,7 +105,7 @@ transition         : left 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), padding 
   .adv_slider {
     position: absolute;
     cursor: pointer;
-    background-color: #D7D7D7; // Unchecked background color
+    background-color: $color-grey; // Unchecked background color
     border-radius: 34px;
     top: 0;
     left: 0;
@@ -142,7 +144,7 @@ transition         : left 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), padding 
 
   // Change background color when checked
   input:checked + .adv_slider {
-    background-color: #00C898; // Checked background color
+    background-color: $green_highlight; // Checked background color
 
     // Move the circle to the right and change its color when checked
     &::before {

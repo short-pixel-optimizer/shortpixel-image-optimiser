@@ -105,7 +105,7 @@
 					font-weight: 700;
 					border-radius: 3px;
 					white-space: nowrap;
-					color: #0f6a7d;
+					color: $color-darkest;
 				}
 				@include breakpoint(0,1500px)
 				{
@@ -141,7 +141,7 @@
 	  	h2{
 			font-family: Roboto, serif;
 			font-weight: 700;
-			color: $blue_closed;
+			color: $blue_dark;
 		}
 
 	  .banner-line-container {
@@ -152,7 +152,7 @@
 		  height: 30px;
 		  font-family: Roboto, serif;
 		  font-weight: 400;
-		  color: $blue_closed;
+		  color: $blue_dark;
 	  }
 
 		  .shortpixel-icon.ok {
@@ -263,7 +263,7 @@
 		h3 {
 			font-weight: 400;
 			margin: 0;
-			color: $blue_closed;
+			color: $blue_dark;
 		}
 	}
 
@@ -454,7 +454,7 @@
 						padding: 18px;
 					  display: flex;
 						> div {
-								border-right: 2px solid $blue_open;
+								border-right: 2px solid $blue_light;
 								margin: 0 10px;
 								display: flex;
 								flex-direction: column;

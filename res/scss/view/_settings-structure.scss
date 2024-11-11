@@ -61,7 +61,7 @@
 			 ul {
 				  list-style: none;
 				  border-bottom: 2px solid;
-  				  border-color: #92D5E3;
+  				  border-color: $blue_light;
 				  padding-bottom: 4px;
 					li {
 					//	border: 1px solid #ccc;
@@ -73,7 +73,7 @@
 
 								font-size: 1rem;
 								font-weight: 700;
-								color: $blue_closed;
+								color: $blue_dark;
 								text-decoration: none;
 								display: inline-block;
 								width: 100%;
@@ -86,7 +86,7 @@
 									filter: none;
 								}
 								&.active {
-									// background: #0f6a7d;
+									// background: $color-darkest;
 							 	  	color: $blue_default;
 									i {
 									//	filter: $filter_black;
@@ -107,7 +107,7 @@
 				font-size: 1rem;
 				font-weight: bold;
 				border-bottom: 2px solid;
-				border-color: #92D5E3;
+				border-color: $blue_light;
 			}
 		}
 		section.wrapper // wrapper of the settings tab.
@@ -135,7 +135,7 @@
 							 font-weight: 700;
 							 outline: 0;
 							 text-decoration: none;
-							 color: #0f6a7d;
+							 color: $color-darkest;
 						}
 						h3 {
 							  font-size: 18px;

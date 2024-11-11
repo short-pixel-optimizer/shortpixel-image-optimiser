@@ -40,7 +40,7 @@
 					input {
 							display: none;
 							&:checked + span {
-									background-color:$blue_closed;
+									background-color:$blue_dark;
 							}
 					}
 
@@ -83,7 +83,7 @@
 		{
 
 			 hr {
-				  border: 2px solid $blue_open;
+				  border: 2px solid $blue_light;
 					position: absolute;
 					left: 0;
 					right: 0;
