@@ -422,6 +422,7 @@ div.spio-modal-title {
   width: 158px;
   font-weight: bold;
   display: inline-block;
+  margin-right: 1px;
   cursor: pointer;
 }
 .wrap.is-shortpixel-settings-page .setting-tab .shortpixel-compression-options label span {
@@ -884,6 +885,26 @@ div.spio-modal-title {
   align-items: center;
   box-sizing: border-box;
 }
+.wrap.is-shortpixel-settings-page #tab-overview .wrapper .dashboard-button {
+  color: #fff;
+  background: #1ABDCA;
+  padding: 8px 6px;
+  border: 0;
+  margin: 4px;
+  font-family: "Roboto";
+  font-weight: 700;
+  border-radius: 6px;
+  text-decoration: none;
+}
+.wrap.is-shortpixel-settings-page #tab-overview .wrapper .dashboard-button i.switch {
+  width: 18px;
+  height: 12px;
+}
+.wrap.is-shortpixel-settings-page #tab-overview .wrapper .dashboard-button i.notifications {
+  width: 14px;
+  height: 14px;
+  filter: brightness(0) saturate(100%) invert(100%) sepia(100%) saturate(0%) hue-rotate(251deg) brightness(108%) contrast(108%);
+}
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row {
   display: flex;
 }
@@ -966,15 +987,18 @@ div.spio-modal-title {
   margin: 4px 4px 4px 15px;
   display: inline-block;
 }
-.wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel button {
+.wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel button, .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel .dashboard-button {
   height: 40px;
   padding: 10px 12px;
+  box-sizing: border-box;
 }
-.wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel button i.arrow-right {
+.wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel button i.arrow-right, .wrap.is-shortpixel-settings-page #tab-overview .wrapper.middle-row > .panel .dashboard-button i.arrow-right {
   width: 10px;
   height: 10px;
   margin-left: 4px;
   margin-right: 4px;
+  filter: brightness(0) saturate(100%) invert(100%) sepia(100%) saturate(20%) hue-rotate(283deg) brightness(105%) contrast(105%);
+  vertical-align: baseline;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper div {
   background: #F4FBFC;

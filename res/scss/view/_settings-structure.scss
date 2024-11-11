@@ -1,3 +1,30 @@
+
+// @todo Probably should go to a mixin section
+
+@mixin shortpixel-button {
+		color: #fff;
+		background: $blue_default;
+		padding: 8px 6px;
+		border: 0;
+		margin: 4px; // see if this works.
+		font-family: 'Roboto';
+		font-weight: 700;
+		border-radius: 6px;
+		text-decoration: none;
+		i.switch {
+			 width: 18px;
+			 height: 12px;
+		}
+		i.notifications
+		{
+			 width: 14px;
+			 height: 14px;
+			 filter: brightness(0) saturate(100%) invert(100%) sepia(100%) saturate(0%) hue-rotate(251deg) brightness(108%) contrast(108%);;
+		}
+
+		// @todo probably something for icon left /right here.
+}
+
 	&.simple, &.quick-tour
 	{
 		 .is-advanced
@@ -21,6 +48,7 @@
 
 .shortpixel-settings // main article wrapper. Items for settings minus header.
 {
+
 	  width: 95%;
 		display: flex;
 		background: #fff;
@@ -28,28 +56,11 @@
 		margin: 10px auto;
 
 		// Items for whole page
-		button, .button-setting {
-				color: #fff;
-				background: $blue_default;
-				padding: 8px 6px;
-				border: 0;
-				margin: 4px; // see if this works.
-				font-family: 'Roboto';
-				font-weight: 700;
-				border-radius: 6px;
-				text-decoration: none;
-				i.switch {
-					 width: 18px;
-					 height: 12px;
-				}
-				i.notifications
-				{
-					 width: 14px;
-					 height: 14px;
-					 filter: brightness(0) saturate(100%) invert(100%) sepia(100%) saturate(0%) hue-rotate(251deg) brightness(108%) contrast(108%);;
-				}
 
-				// @todo probably something for icon left /right here.
+
+		button, .button-setting
+		{
+			 @include shortpixel-button;
 		}
 
 

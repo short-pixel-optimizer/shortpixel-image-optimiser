@@ -32,44 +32,74 @@ if ( ! defined( 'ABSPATH' ) ) {
   {
     $this->loadView('settings/part-quicktour');
   }
+
+
   ?>
 
   <menu>
 			<ul>
 				<li>
-          <?php echo $this->settingLink('overview', __("Overview", "shortpixel-image-optimiser"), 'shortpixel-icon dashboard'); ?>
+          <?php echo $this->settingLink([
+              'part' => 'overview',
+              'title' =>  __("Overview", "shortpixel-image-optimiser"),
+              'icon' => 'shortpixel-icon dashboard',
+            ]); ?>
         </li>
 				<li>
-          <?php echo $this->settingLink('optimisation', __("Image Optimization", "shortpixel-image-optimiser"), 'shortpixel-icon optimization'); ?>
+          <?php echo $this->settingLink([
+            'part' => 'optimisation',
+            'title' => __("Image Optimization", "shortpixel-image-optimiser"),
+            'icon' => 'shortpixel-icon optimization']); ?>
         </li>
         <li class='is-advanced'>
-          <?php echo $this->settingLink('exclusions', __("Exclusions", "shortpixel-image-optimiser"), 'shortpixel-icon exclusions'); ?>
+          <?php echo $this->settingLink([
+              'part' => 'exclusions',
+              'title' => __("Exclusions", "shortpixel-image-optimiser"),
+              'icon' => 'shortpixel-icon exclusions']); ?>
         </li>
 
         <li class='is-advanced'>
-          <?php echo $this->settingLink('processing', __("Processing", "shortpixel-image-optimiser"), 'shortpixel-icon processing'); ?>
+          <?php echo $this->settingLink([
+            'part' => 'processing',
+            'title' => __("Processing", "shortpixel-image-optimiser"),
+            'icon' => 'shortpixel-icon processing']); ?>
         </li>
         <li>
-					<?php echo $this->settingLink('webp', __("WebP/AVIF & CDN", "shortpixel-image-optimiser"), 'shortpixel-icon webp_avif'); ?>
+					<?php echo $this->settingLink([
+            'part' => 'webp',
+            'title' => __("WebP/AVIF & CDN", "shortpixel-image-optimiser"),
+            'icon' => 'shortpixel-icon webp_avif']); ?>
         </li>
 
 				<li class='is-advanced'>
-					<?php echo $this->settingLink('cdn', __("Integrations", "shortpixel-image-optimiser"), 'shortpixel-icon integrations'); ?>
+					<?php echo $this->settingLink([
+            'part' => 'cdn',
+            'title' => __("Integrations", "shortpixel-image-optimiser"),
+            'icon' => 'shortpixel-icon integrations']); ?>
         </li>
 
 				<li class='is-advanced'>
-          <?php echo $this->settingLink('tools', __("Tools", "shortpixel-image-optimiser") , 'shortpixel-icon tools'); ?>
+          <?php echo $this->settingLink([
+            'part' => 'tools',
+            'title' => __("Tools", "shortpixel-image-optimiser"),
+            'icon' => 'shortpixel-icon tools']); ?>
         </li>
 
         <li>
-          <?php echo $this->settingLink('help', __("Help Center", "shortpixel-image-optimiser"), 'shortpixel-icon help-circle'); ?>
+          <?php echo $this->settingLink([
+            'part' => 'help',
+            'title' => __("Help Center", "shortpixel-image-optimiser"),
+            'icon' => 'shortpixel-icon help-circle']); ?>
         </li>
 
         <?php
           if (Log::debugIsActive())
           { ?>
   			<li>
-          <?php echo $this->settingLink('debug', __("Debug", "shortpixel-image-optimiser"), 'shortpixel-icon debug'); ?>
+          <?php echo $this->settingLink([
+              'part' => 'debug',
+              'title' => __("Debug", "shortpixel-image-optimiser"),
+              'icon' => 'shortpixel-icon debug']); ?>
         </li>
         <?php } ?>
 
@@ -150,7 +180,7 @@ if ( ! defined( 'ABSPATH' ) ) {
         </div>
         <div class="text-container">
             <h2><?php _e('Settings successfully saved! ', 'shortpixel-image-optimiser'); ?></h2>
-            <h3><span class='notice_count'>X</span> new notices</h3>
+            <h3 class='after-save-notices'><span class='notice_count'>X</span> <?php _e('new notices', 'shortpixel-image-optimiser'); ?></h3>
         </div>
     </section>
 

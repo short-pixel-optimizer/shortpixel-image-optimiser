@@ -77,7 +77,14 @@ $bulkblock = $dashboard->bulkblock;
 
         <span class='status-wrapper'><i class='shortpixel-icon status-icon ok'></i><span class='status-line'></span></span>
 
-        <button>Take Action <i class='shortpixel-icon arrow-right'></i></button>
+        <?php echo $this->settingLink([
+           'part' => 'optimisation',
+           'title' => __("Take Action", "shortpixel-image-optimiser"),
+           'icon' => 'shortpixel-icon arrow-right',
+           'icon_position' => 'right',
+           'class' => 'dashboard-button'
+         ]);
+         ?>
 
      </div>
 
@@ -89,7 +96,9 @@ $bulkblock = $dashboard->bulkblock;
         <span class='status-wrapper'><i class='shortpixel-icon status-icon <?php echo $bulkblock->icon ?>'></i><span class='status-line'><?php echo $bulkblock->message ?></span></span>
 
       <?php if (true == $bulkblock->show_button): ?>
-        <button><?php _e('Go to Bulk Processing', 'shortpixel-image-optimiser'); ?><i class='shortpixel-icon arrow-right'></i></button>
+
+        <a class="dashboard-button" href="<?php echo $bulkblock->link ?>"><?php _e('Go to Bulk Processing', 'shortpixel-image-optimiser'); ?><i class='shortpixel-icon arrow-right'></i></a>
+
      <?php endif; ?>
 
      </div>
@@ -101,7 +110,15 @@ $bulkblock = $dashboard->bulkblock;
 
         <span class='status-wrapper'><i class='shortpixel-icon status-icon ok'></i><span class='status-line'></span></span>
 
-       <button>Take Action <i class='shortpixel-icon arrow-right'></i></button>
+   <?php echo $this->settingLink([
+      'part' => 'webp',
+      'title' => __("Take Action", "shortpixel-image-optimiser"),
+      'icon' => 'shortpixel-icon arrow-right',
+      'icon_position' => 'right',
+      'class' => 'dashboard-button'
+    ]);
+    ?>
+
      </div>
   </div>
 
@@ -143,8 +160,10 @@ $bulkblock = $dashboard->bulkblock;
         </content>
     </settinglist>
 
+ <!-- @todo Can this be removed? -->
     <!--  <script>
           document.addEventListener('DOMContentLoaded', function () {
+
               const toggleText = document.querySelector('.toggle-text');
               const toggleChevron = document.querySelector('.shortpixel-icon.chevron');
               const content = document.querySelector('content');

@@ -25,19 +25,14 @@ class ShortPixelSettings
 
 	InitActions()
 	{
-		  console.time('init');
 			var self = this;
 			this.strings = settings_strings;
 
-			console.time('inits');
 			this.InitToggle();
 			this.InitExclusions();
-			console.timeLog('inits', 'afterExcl');
 			this.InitWarnings();
-			console.timeLog('inits', 'afterwarn');
 			this.InitMenu();
 			this.InitModeSwitcher();
-			console.timeEnd('inits');
 
 			// Modals
 			var modals = this.root.querySelectorAll('[data-action="open-modal"]');
@@ -45,7 +40,6 @@ class ShortPixelSettings
 			{
 					modal.addEventListener('click', self.OpenModalEvent.bind(self));
 			});
-			console.timeEnd('init');
 	}
 
 	InitToggle()
@@ -293,7 +287,8 @@ class ShortPixelSettings
 
 	InitMenu()
 	{
-		  var menu_elements = this.root.querySelectorAll('menu ul li a');
+		  //var menu_elements = this.root.querySelectorAll('menu ul li a');
+			var menu_elements = this.root.querySelectorAll('[data-link]');
 			this.menu_elements = menu_elements;
 
 			// Bind change event to all menu items.
@@ -392,9 +387,15 @@ class ShortPixelSettings
 				{
 			  	this.menu_elements[i].classList.remove('active');
 				}
+
+				if (this.menu_elements[i].dataset.link == new_tab)
+				{
+					 this.menu_elements[i].classList.add('active');
+				}
+
 		 }
 		 // Add active to the new tab.
-		 targetLink.classList.add('active');
+		// targetLink.classList.add('active');
 
 		 this.current_tab = new_tab;
 		 var displayPartEl = this.root.querySelector('input[name="display_part"]');
@@ -408,8 +409,6 @@ class ShortPixelSettings
 		 var section = ''; // #todo figure out what the idea of section was
 		 var event = new CustomEvent('shortpixel.ui.settingsTabLoad', { detail : {tabName: new_tab, section: section }});
 		 window.dispatchEvent(event);
-
-
 
 	}
 
@@ -605,7 +604,7 @@ if (response.ok)
 FormResponseEvent(json)
 {
 		let saveDialog = document.querySelector('.ajax-save-done');
-		saveDialog.classList.add('show');
+		var noticeLine = saveDialog.querySelector('.after-save-notices');
 
 			if (json.redirect)
 			{
@@ -618,12 +617,14 @@ FormResponseEvent(json)
 				 }
 			}
 
-			if (json.notices)
+			if (json.notices && json.notices.length > 0)
 			{
-
 					var notice_count = saveDialog.querySelector('.notice_count');
 					notice_count.textContent = json.notices.length;
-
+					noticeLine.classList.remove('shortpixel-hide');
+			}
+			else {
+				noticeLine.classList.add('shortpixel-hide');
 			}
 			if (json.display_notices)
 			{
@@ -633,6 +634,8 @@ FormResponseEvent(json)
 						anchor.insertAdjacentHTML('afterend', json.display_notices[i]);
 					}
 			}
+
+		saveDialog.classList.add('show');
 
 		window.setTimeout(function () {
 			 saveDialog.classList.remove('show')
@@ -696,7 +699,13 @@ DashBoardWarningEvent(warning, matches)
 	}
 
 	 // Button display
-	 var button = dashBox.querySelector('button');
+	 var button = dashBox.querySelector('button,.dashboard-button');
+	 if (null === button)
+	 {
+		  console.error('dash button not found');
+			return;
+	 }
+	 
 	 if ('ok' === status)
 	 {
 			if (false === button.classList.contains('shortpixel-hide'))

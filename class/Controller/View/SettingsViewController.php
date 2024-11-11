@@ -543,7 +543,7 @@ class SettingsViewController extends \ShortPixel\ViewController
 						 $custom_total = $statsController->find('custom', 'images');
 
 						 $custom_text = ($custom_total > 0) ? sprintf(esc_html__('and %s custom images ', 'shortpixel-image-optimiser'), $custom_total) : '';
-             $mainblock->message = '';
+            // $mainblock->message = '';
 
              if ($media_total > 0)
              {
@@ -568,6 +568,7 @@ class SettingsViewController extends \ShortPixel\ViewController
         $bulkblock = new \stdClass;
         $bulkblock->icon = 'ok';
         $bulkblock->message = $message;
+        $bulkblock->link = admin_url("upload.php?page=wp-short-pixel-bulk");
         $bulkblock->show_button = (count($logs) == 0) ? true : false;
 
         $this->view->dashboard->bulkblock = $bulkblock;
@@ -641,15 +642,37 @@ class SettingsViewController extends \ShortPixel\ViewController
           $this->display_part = (isset($_GET['part']) && in_array($_GET['part'], $this->all_display_parts) ) ? sanitize_text_field($_GET['part']) : 'overview';
       }
 
-      protected function settingLink($part, $title, $icon = false)
+      protected function settingLink($args)
       {
-          $link = esc_url(admin_url('options-general.php?page=wp-shortpixel-settings&part=' . $part ));
-          $active = ($this->display_part == $part) ? ' class="active" ' : '';
-          if (false !== $icon)
+          $defaults = [
+             'part' => '',
+             'title' => __('Title', 'shortpixel-image-optimiser'),
+             'icon' => false,
+             'icon_position' => 'left',
+             'class' => 'anchor-link',
+
+          ];
+
+          $args = wp_parse_args($args, $defaults);
+
+          $link = esc_url(admin_url('options-general.php?page=wp-shortpixel-settings&part=' . $args['part'] ));
+          $active = ($this->display_part == $args['part']) ? ' active ' : '';
+
+          $title = $args['title'];
+
+          $class = $active . $args['class'];
+
+          if (false !== $args['icon'])
           {
-             $title = '<i class="' . esc_attr($icon) . '"></i>' . $title;
+             $icon  = '<i class="' . esc_attr($args['icon']) . '"></i>';
+             if ($args['icon_position'] == 'left')
+               $title = $icon . $title;
+             else
+               $title = $title . $icon;
+
           }
-          $html = sprintf('<a href="%s" data-link="%s" %s >%s</a>', $link, $part, $active, $title);
+
+          $html = sprintf('<a href="%s" class="%s" data-link="%s" %s >%s</a>', $link, $class, $args['part'], $active, $title);
 
           return $html;
       }
@@ -733,8 +756,6 @@ class SettingsViewController extends \ShortPixel\ViewController
           {
             $this->do_redirect = true;
           }
-
-
 
           // handle 'reverse' checkbox.
           $keepExif = isset($post['removeExif']) ? 0 : 1;

@@ -4,6 +4,7 @@
 #tab-overview
 {
 
+
     .wrapper {
        display: flex;
 
@@ -15,6 +16,11 @@
             box-sizing: border-box;
 
        }
+       .dashboard-button
+       {
+          @include shortpixel-button;
+       }
+
        &.top-row
        {
           display: flex;
@@ -129,15 +135,18 @@
               display: inline-block;
             }
 
-            button {
+            button, .dashboard-button {
                height: 40px;
                padding: 10px 12px;
+               box-sizing: border-box;
                i.arrow-right
                {
                   width: 10px;
                   height: 10px;
                   margin-left: 4px;
                   margin-right: 4px;
+                  filter: $filter_white;
+                  vertical-align: baseline;
                }
             }
           } // PANEL
