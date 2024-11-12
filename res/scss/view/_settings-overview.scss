@@ -27,8 +27,45 @@
           .first-panel
           {
              display: flex;
-             padding: 40px 20px;
+             flex-direction: column;
+             padding: 40px 20px 10px 20px;
              width: 70%;
+            .first-line{
+              display: flex;
+              flex-direction: row;
+              align-items: center;
+            }
+            .second-line{
+              display: flex;
+              flex-direction: row;
+              align-items: center;
+              align-self: flex-start;
+              color: $blue_default;
+
+            }
+            .second-line .file{
+              width: 20px;
+              height: 25px;
+              }
+            .second-line .optimized{
+                font-weight: 700;
+                font-size: 30px;
+            }
+            .second-line .optimized-message{
+              font-family: Roboto, sans-serif;
+              font-weight: 400;
+              color: $blue_dark;
+              //font-size: 15px;
+            }
+
+            hr {
+              width: 96%;
+              margin-top: 20px;
+              border: none;
+              border-top: 1px solid $blue_light;
+              height: 1px;
+            }
+
              i
              {
                margin: 0 20px;
@@ -163,7 +200,7 @@
     border-radius: 6px;
     width: 100%;
     overflow: hidden;
-    transition: max-height 0.3s ease, opacity 0.3s ease;
+    transition: all;
     max-height: 125px;
     margin-bottom: 10px;
   }
@@ -236,7 +273,7 @@
         display: flex;
         flex-direction: row;
         align-items: flex-start;
-        margin: 20px;
+        margin: 10px;
       }
 
       content input {
@@ -258,7 +295,7 @@
       content button i {
         width: 12px;
         height: 12px;
-        margin-leftt: 12px;
+        margin-left: 12px;
       }
 
       content .apifield {

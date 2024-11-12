@@ -25,17 +25,26 @@ $bulkblock = $dashboard->bulkblock;
 
   <div class='wrapper top-row step-highlight-1'>
      <div class='panel first-panel'>
-       <i class='shortpixel-icon mainblock-status <?php echo $mainblock->icon ?>'></i>
-       <span>
-         <h4><?php echo $mainblock->header ?></h4>
-         <hr>
-         <p><?php echo $mainblock->message ?></p>
-       </span>
 
-        <?php if (true === $mainblock->cocktail) : ?>
-          <i class='shortpixel-illustration cocktail'></i>
-        <?php endif; ?>
+       <div class="first-line">
+         <i class='shortpixel-icon mainblock-status <?php echo $mainblock->icon ?>'></i>
+            <h4><?php echo $mainblock->header ?></h4>
+            <?php if (true === $mainblock->cocktail) : ?>
+               <i class='shortpixel-illustration cocktail'></i>
+           <?php endif; ?>
+
+        </div>
+         <hr>
+         <div class="second-line">
+         <div class="optimized"><?php echo $mainblock->optimized ?></div>
+             <i class='shortpixel-icon file'></i>
+             <div class="optimized-message"><?php esc_html_e('Optimized items from the Media Library and Custom Media', 'shortpixel-image-optimiser'); ?></div>
+         </div>
+
+
+
      </div>
+
      <div class='panel second-panel'>
        <div class='average-optimization '>
            <h4><?php esc_html_e('Average Optimization','shortpixel-image-optimiser'); ?></h4>

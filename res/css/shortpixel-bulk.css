@@ -117,6 +117,9 @@
 .wrap.is-shortpixel-bulk-page .shortpixel-icon.eye {
   background-image: url("../images/icon/eye.svg");
 }
+.wrap.is-shortpixel-bulk-page .shortpixel-icon.file {
+  background-image: url("../images/icon/file.svg");
+}
 .wrap.is-shortpixel-bulk-page .shortpixel-icon.feedback {
   background-image: url("../images/icon/feedback.svg");
 }

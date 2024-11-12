@@ -191,6 +191,9 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page .shortpixel-icon.eye {
   background-image: url("../images/icon/eye.svg");
 }
+.wrap.is-shortpixel-settings-page .shortpixel-icon.file {
+  background-image: url("../images/icon/file.svg");
+}
 .wrap.is-shortpixel-settings-page .shortpixel-icon.feedback {
   background-image: url("../images/icon/feedback.svg");
 }
@@ -910,9 +913,42 @@ div.spio-modal-title {
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .first-panel {
   display: flex;
-  padding: 40px 20px;
+  flex-direction: column;
+  padding: 40px 20px 10px 20px;
   width: 70%;
   margin-right: 20px;
+}
+.wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .first-panel .first-line {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .first-panel .second-line {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  align-self: flex-start;
+  color: #1ABDCA;
+}
+.wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .first-panel .second-line .file {
+  width: 20px;
+  height: 25px;
+}
+.wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .first-panel .second-line .optimized {
+  font-weight: 700;
+  font-size: 30px;
+}
+.wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .first-panel .second-line .optimized-message {
+  font-family: Roboto, sans-serif;
+  font-weight: 400;
+  color: #116C7E;
+}
+.wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .first-panel hr {
+  width: 96%;
+  margin-top: 20px;
+  border: none;
+  border-top: 1px solid #92D5E3;
+  height: 1px;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .first-panel i {
   margin: 0 20px;
@@ -1009,7 +1045,7 @@ div.spio-modal-title {
   border-radius: 6px;
   width: 100%;
   overflow: hidden;
-  transition: max-height 0.3s ease, opacity 0.3s ease;
+  transition: all;
   max-height: 125px;
   margin-bottom: 10px;
 }
@@ -1067,7 +1103,7 @@ div.spio-modal-title {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  margin: 20px;
+  margin: 10px;
 }
 .wrap.is-shortpixel-settings-page #tab-overview content input {
   border: 1px solid #1ABDCA;
@@ -1086,7 +1122,7 @@ div.spio-modal-title {
 .wrap.is-shortpixel-settings-page #tab-overview content button i {
   width: 12px;
   height: 12px;
-  margin-leftt: 12px;
+  margin-left: 12px;
 }
 .wrap.is-shortpixel-settings-page #tab-overview content .apifield {
   position: relative;

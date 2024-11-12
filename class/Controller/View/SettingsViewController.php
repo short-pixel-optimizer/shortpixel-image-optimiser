@@ -548,6 +548,8 @@ class SettingsViewController extends \ShortPixel\ViewController
              if ($media_total > 0)
              {
 						         $mainblock->message = sprintf(esc_html__('%s media items %s optimized', 'shortpixel-image-optimiser'), $media_total, $custom_text);
+                                 $total_sum = intval($media_total) + intval($custom_text);
+                                 $mainblock->optimized = sprintf(esc_html__('%s', 'shortpixel-image-optimiser'), $total_sum);
              }
 
 				}
