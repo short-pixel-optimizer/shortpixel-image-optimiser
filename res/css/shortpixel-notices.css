@@ -82,6 +82,7 @@
 .shortpixel.shortpixel-notice .content .button-primary {
   background-color: #0f6a7d;
   border-color: #0f6a7d;
+  color: #fff;
 }
 .shortpixel.shortpixel-notice .content .button-primary:hover {
   background-color: #1cbecb;

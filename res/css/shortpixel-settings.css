@@ -927,12 +927,13 @@ div.spio-modal-title {
   display: flex;
   flex-direction: row;
   align-items: center;
-  align-self: flex-start;
+  align-self: auto;
   color: #1ABDCA;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .first-panel .second-line .file {
   width: 20px;
   height: 25px;
+  margin: 0 10px 0 5px;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .first-panel .second-line .optimized {
   font-weight: 700;
@@ -942,6 +943,7 @@ div.spio-modal-title {
   font-family: Roboto, sans-serif;
   font-weight: 400;
   color: #116C7E;
+  align-self: center;
 }
 .wrap.is-shortpixel-settings-page #tab-overview .wrapper.top-row .first-panel hr {
   width: 96%;

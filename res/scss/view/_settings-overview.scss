@@ -39,13 +39,14 @@
               display: flex;
               flex-direction: row;
               align-items: center;
-              align-self: flex-start;
+              align-self: auto;
               color: $blue_default;
 
             }
             .second-line .file{
               width: 20px;
               height: 25px;
+              margin: 0 10px 0 5px;
               }
             .second-line .optimized{
                 font-weight: 700;
@@ -55,6 +56,7 @@
               font-family: Roboto, sans-serif;
               font-weight: 400;
               color: $blue_dark;
+              align-self: center;
               //font-size: 15px;
             }
 

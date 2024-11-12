@@ -555,7 +555,7 @@
   transition: all 900ms;
 }
 .wrap.is-shortpixel-bulk-page .processor-paused:hover {
-  background: #1ca9b3;
+  background: rgb(27.5926724138, 169.1163793103, 178.9073275862);
 }
 .wrap.is-shortpixel-bulk-page .processor-paused .dashicons {
   margin-right: 6px;
@@ -1192,7 +1192,7 @@
   transition: all 0.5s ease;
 }
 .wrap.is-shortpixel-bulk-page section.panel.finished nav button.finish:hover {
-  background: #24d1dd;
+  background: rgb(36.2392241379, 209.2887931034, 221.2607758621);
 }
 .wrap.is-shortpixel-bulk-page .part-debug {
   background: #000;
