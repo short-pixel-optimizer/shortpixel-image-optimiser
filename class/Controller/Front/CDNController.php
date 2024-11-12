@@ -16,6 +16,8 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 		protected $cdn_domain;
 		protected $cdn_arguments = [];
 
+    protected $skip_rules = [];
+
 		public function __construct()
 		{
 				parent::__construct();
@@ -42,22 +44,6 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
         $compressionType = $settings->compressionType;
         // Depend this on the SPIO setting
 				$args = ['ret_img'];
-
-
-				/* Not used for now.
-				switch($compressionType)
-        {
-           case ImageModel::COMPRESSION_LOSSY:
-              $compressionArg = 'q_lossy';
-           break;
-           case ImageModel::COMPRESSION_GLOSSY:
-              $compressionArg = 'q_glossy';
-           break;
-           case ImageModel::COMPRESSION_LOSSLESS:
-           default:
-              $compressionArg = 'q_lossless';
-           break;
-				} */
 				$compressionArg = 'q_orig';
 
         // Perhaps later if need to override in webp/avif check
@@ -102,18 +88,11 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
         }
 
 
-			/*	if (true === $settings->deliverWebp)
-				{
-						$webp  = ($env->useDoubleWebpExtension()) ? 's_webp' : 'd_webp';
-						$args[] = $webp;
-				}
-				if (true === $settings->deliverAvif)
-				{
-						$avif  = ($env->useDoubleAvifExtension()) ? 's_avif' : 'd_avif';
-						$args[] = $avif;
-				} */
-
 				$this->cdn_arguments = $args;
+
+        $this->regex_exclusions = apply_filters('shortpixel/front/cdn/regex_exclude',[
+            '*gravatar.com*'
+        ]);
 
 		}
 
@@ -176,6 +155,10 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 				 $imageData = array_values($this->addEscapedUrls($imageData)); // reset indexes
 
 			}
+
+      // Apply exlusions on URL's here.
+      $imageData = $this->applyRegexExclusions($imageData);
+
 			return $imageData;
 		}
 
@@ -207,13 +190,10 @@ class CDNController extends \ShortPixel\Controller\Front\PageConverter
 
 		protected function replaceContent($content, $urls, $new_urls)
 		{
-			Log::addTemp('Urls' . count($urls), $urls);
-			Log::addTEmp('new urls' . count($new_urls), $new_urls);
 
 			$count = 0;
 			$content = str_replace($urls, $new_urls, $content, $count);
 
-Log::addTemp("Content replaced $count instances");
 			return $content;
 		}
 

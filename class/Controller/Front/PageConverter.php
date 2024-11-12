@@ -13,6 +13,7 @@ class PageConverter extends \ShortPixel\Controller
 
 	protected $site_url;
 	protected $status_header = -1;
+  protected $regex_exclusions = [];
 
 	public function __construct()
 	{
@@ -30,7 +31,6 @@ class PageConverter extends \ShortPixel\Controller
 
 //		 $env->detectImage404()
 	 add_filter('status_header', [$this, 'status_header_sent'], 10, 2);
-
 
 		return true;
 	}
@@ -66,5 +66,30 @@ class PageConverter extends \ShortPixel\Controller
 			{ return false;
 			}
 	}
+
+
+  // @param imageData Array with URLS
+  protected function applyRegexExclusions($imageData)
+  {
+       $patterns = $this->regex_exclusions;
+       if (! is_array($patterns) || count($patterns) == 0 )
+       {
+          return $imageData;
+       }
+
+       $allMatches = [];
+       foreach($patterns as $pattern)
+       {
+         $matches = preg_grep($pattern, $imageData);
+         if (false !== $matches)
+         {
+            $allMatches = array_merge($allMatches, $matches);
+         }
+
+       }
+
+       $imageData = array_diff($imageData, $allMatches);
+       return array_values($imageData); // reset indexes
+  }
 
 }
